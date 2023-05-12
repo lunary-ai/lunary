@@ -1,0 +1,9 @@
+{
+  "deno.testing.enable": false,
+  "deno.unstable": true,
+  "deno.config": "./functions/deno.json",
+  "deno.enablePaths": [
+    "./functions"
+  ],
+  "deno.enable": true
+}

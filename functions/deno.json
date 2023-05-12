@@ -1,0 +1,14 @@
+{
+  "imports": {
+    "std/": "https://deno.land/std@0.183.0/",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.7.1"
+  },
+  "fmt": {
+    "options": {
+      "semiColons": false
+    }
+  },
+  "tasks": {
+    "dev": "export $(cat ../.env | xargs) && deno run -A --watch  report/index.ts"
+  }
+}
