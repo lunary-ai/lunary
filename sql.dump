@@ -1,0 +1,5 @@
+-- DROP materialized view convos;
+
+CREATE materialized view convos as SELECT count(*) as events, app, convo as id, min(timestamp) as start, max(timestamp) as end FROM events GROUP BY convo, app;
+
+SELECT * from convos;
