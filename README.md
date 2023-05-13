@@ -8,6 +8,4 @@ Analyse and log your LLM outputs.
 
 2.`cp .env.example .env` and fill in the values
 
-3. Deploy the Deno functions with `deno deploy` or fly.io
-
-
+3. Deploy the `web` folder to Vercel or others
