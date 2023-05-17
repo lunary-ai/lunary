@@ -28,9 +28,13 @@ export function useEvents(convoId: string) {
   const { supabaseClient } = useSessionContext()
 
   const { data: events, isLoading } = useQuery(
-    supabaseClient.from("events").select("*").eq("convo", convoId).order("id", {
-      ascending: true,
-    }),
+    supabaseClient
+      .from("events")
+      .select("*")
+      .eq("convo", convoId)
+      .order("timestamp", {
+        ascending: true,
+      }),
     {
       revalidateOnFocus: true,
       revalidateOnReconnect: true,

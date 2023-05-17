@@ -8,8 +8,6 @@ export default function AppAnalytics() {
 
   const { convos, loading } = useConvos(id as string)
 
-  console.log(convos)
-
   return (
     <Stack>
       <Title>App Analytics</Title>

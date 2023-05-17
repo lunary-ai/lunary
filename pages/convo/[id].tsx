@@ -28,7 +28,6 @@ import {
   IconRobot,
   IconTimelineEvent,
   IconUser,
-  IconUserBolt,
 } from "@tabler/icons-react"
 import { useRouter } from "next/router"
 
@@ -141,6 +140,48 @@ const mapType = {
   },
 }
 
+// Format the event timestamp
+// And if relevant, add the time it took from the preceding event
+const timeLabel = (events, i) => {
+  const { timestamp, type } = events[i]
+
+  const time = new Date(timestamp).toLocaleTimeString()
+
+  const previousEvents = events.slice(0, i).reverse()
+
+  let took = 0
+  if (type === "assistant:message") {
+    const lastUserMessage = previousEvents.find(
+      ({ type }) => type === "user:message"
+    )
+
+    if (lastUserMessage) {
+      took =
+        new Date(timestamp).getTime() -
+        new Date(lastUserMessage.timestamp).getTime()
+    }
+  } else if (type === "llm:stream") {
+    const lastUserMessage = previousEvents.find(
+      ({ type }) => type === "user:message"
+    )
+
+    if (lastUserMessage) {
+      took =
+        new Date(timestamp).getTime() -
+        new Date(lastUserMessage.timestamp).getTime()
+    }
+  } else if (type === "llm:result") {
+    const lastCall = previousEvents.find(({ type }) => type === "llm:call")
+
+    if (lastCall) {
+      took =
+        new Date(timestamp).getTime() - new Date(lastCall.timestamp).getTime()
+    }
+  }
+
+  return `${time} ${took > 0 ? `(took ${(took / 1000).toFixed(2)}s)` : ""}`
+}
+
 export default function AppAnalytics() {
   const router = useRouter()
   const { id } = router.query
@@ -221,10 +262,9 @@ export default function AppAnalytics() {
           </Tabs.Panel>
           <Tabs.Panel value="details" p="md">
             <Timeline>
-              {events.map(({ id: eventId, timestamp, type, message }) => {
+              {events.map((event, i) => {
+                const { id: eventId, timestamp, type, message } = event
                 const { name, color, Icon } = mapType[type]
-
-                if (!Icon) return
 
                 return (
                   <Timeline.Item
@@ -244,7 +284,7 @@ export default function AppAnalytics() {
                       <Text>{message}</Text>
                     </Spoiler>
                     <Text size="xs" mt={4}>
-                      {new Date(timestamp).toLocaleTimeString()}
+                      {timeLabel(events, i)}
                     </Text>
                   </Timeline.Item>
                 )
