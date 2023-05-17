@@ -2,15 +2,17 @@
  * Ingests events from the client SDKs and stores them in the DB.
  */
 
-import { NextApiRequest, NextApiResponse } from "next"
 import { supabaseAdmin } from "@/lib/supabaseClient"
+import { NextRequest } from "next/server"
+import cors from "@/lib/cors"
 
 interface Event {
   type: string
-  appId: string
-  convoId: string
+  app: string
+  convo: string
   timestamp: string
   returnId?: string
+  tags?: string[]
   model?: string
   message?: string
   history?: []
@@ -20,10 +22,10 @@ export const config = {
   runtime: "edge",
 }
 
-const handleEvent = async (event: Event): Promise<void> => {
+const handleEvent = async (events: Event[]): Promise<void> => {
   try {
-    console.log("Ingesting event in Supabase", event)
-    const { data, error } = await supabaseAdmin.from("events").insert([event])
+    console.log("Ingesting event in Supabase", events)
+    const { data, error } = await supabaseAdmin.from("events").insert(events)
 
     if (error) throw error
 
@@ -33,19 +35,23 @@ const handleEvent = async (event: Event): Promise<void> => {
   }
 }
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  const { event } = req.body
+export default async function handler(req: NextRequest) {
+  if (req.method !== "POST")
+    return new Response(null, { status: 404, statusText: "Not Found" })
+
+  const { events } = await req.json()
+
+  if (!events || !Array.isArray(events))
+    return cors(req, new Response("Missing events payload.", { status: 400 }))
 
   try {
-    console.log("Received event: ", event)
-    await handleEvent(event)
+    console.log("Received events: ", events)
+
+    await handleEvent(events)
   } catch (e) {
     console.error(`Error handling event.`)
     console.error(e)
   }
 
-  res.status(200).json({})
+  return cors(req, new Response(null, { status: 200 }))
 }

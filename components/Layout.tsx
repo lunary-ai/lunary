@@ -1,11 +1,9 @@
 import { Container, AppShell } from "@mantine/core"
 
-import { IconDashboard, IconHome, IconSearch } from "@tabler/icons-react"
-
-import { useSessionContext, useUser } from "@supabase/auth-helpers-react"
+import { useSessionContext } from "@supabase/auth-helpers-react"
 
 import Router, { useRouter } from "next/router"
-import { useEffect, useState, ReactNode } from "react"
+import { useEffect, ReactNode } from "react"
 import Navbar from "@/components/Navbar"
 
 import { Notifications } from "@mantine/notifications"
@@ -16,6 +14,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const { session, isLoading } = useSessionContext()
 
   useEffect(() => {
+    console.log(session, isLoading, router.pathname)
     if (
       !session &&
       !isLoading &&

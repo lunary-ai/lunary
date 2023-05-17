@@ -39,7 +39,7 @@ function LoginPage() {
   const user = useUser()
 
   useEffect(() => {
-    if (user) Router.push("/app/")
+    if (user) Router.push("/")
   }, [user])
 
   const handleMagicLogin = async ({ email }: { email: string }) => {
@@ -86,7 +86,7 @@ function LoginPage() {
     )
 
     if (ok) {
-      Router.push("/events/")
+      Router.push("/")
     }
 
     setLoading(false)
