@@ -24,7 +24,8 @@ export const config = {
 
 const handleEvent = async (events: Event[]): Promise<void> => {
   try {
-    console.log("Ingesting event in Supabase", events)
+    // Log maximum length is 4096 bytes.
+    console.log("Ingesting: " + JSON.stringify(events).substring(0, 3500))
     const { data, error } = await supabaseAdmin.from("events").insert(events)
 
     if (error) throw error
