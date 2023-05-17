@@ -1,5 +1,21 @@
 -- DROP materialized view convos;
 
-CREATE materialized view convos as SELECT count(*) as events, app, convo as id, min(timestamp) as start, max(timestamp) as end FROM events GROUP BY convo, app;
+CREATE MATERIALIZED VIEW convos AS 
+SELECT 
+    convo as id,
+    app,
+    COUNT(*) FILTER (WHERE type LIKE '%:message%') AS messages,
+    (SELECT ARRAY_AGG(DISTINCT u_tag) FROM (SELECT unnest(tags) AS u_tag FROM events e2 WHERE e2.convo = e1.convo) sub) AS tags,
+    COUNT(*) FILTER (WHERE type = 'llm:call') AS calls,
+    MIN(timestamp) AS start,
+    MAX(timestamp) AS end,
+    (SELECT message FROM events e2 WHERE e2.convo = e1.convo AND e2.type = 'user:message' ORDER BY timestamp LIMIT 1) AS first_message
+FROM 
+    events e1
+GROUP BY 
+    convo, app;
 
-SELECT * from convos;
+
+-- SELECT * from convos;
+
+REFRESH MATERIALIZED VIEW convos;

@@ -24,15 +24,13 @@ export function useApps() {
   return { apps, loading: isLoading, insert }
 }
 
-export function useEvents(appId: string, convoId: string) {
+export function useEvents(convoId: string) {
   const { supabaseClient } = useSessionContext()
 
   const { data: events, isLoading } = useQuery(
-    supabaseClient
-      .from("events")
-      .select("*")
-      .eq("app", appId)
-      .eq("convo", convoId),
+    supabaseClient.from("events").select("*").eq("convo", convoId).order("id", {
+      ascending: true,
+    }),
     {
       revalidateOnFocus: true,
       revalidateOnReconnect: true,

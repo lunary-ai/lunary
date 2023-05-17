@@ -1,5 +1,5 @@
 import { useConvos } from "@/utils/supabaseHooks"
-import { Card, Loader, Stack, Table, Text, Title } from "@mantine/core"
+import { Badge, Card, Loader, Stack, Table, Text, Title } from "@mantine/core"
 import { useRouter } from "next/router"
 
 export default function AppAnalytics() {
@@ -7,6 +7,8 @@ export default function AppAnalytics() {
   const { id } = router.query
 
   const { convos, loading } = useConvos(id as string)
+
+  console.log(convos)
 
   return (
     <Stack>
@@ -28,23 +30,43 @@ export default function AppAnalytics() {
             >
               <thead>
                 <tr>
+                  <th>Prompt</th>
                   <th>Start</th>
                   <th>End</th>
                   <th>LLM calls</th>
                   <th>Messages</th>
-                  <th>Tokens Used</th>
+                  <th>Tags</th>
                 </tr>
               </thead>
               <tbody>
-                {convos.map(({ id, start, end, events }) => (
-                  <tr key={id}>
-                    <td>{new Date(start).toLocaleString()}</td>
-                    <td>{new Date(end).toLocaleString()}</td>
-                    <td>{events}</td>
-                    <td></td>
-                    <td></td>
-                  </tr>
-                ))}
+                {convos.map(
+                  ({
+                    first_message,
+                    id: convoId,
+                    start,
+                    end,
+                    calls,
+                    messages,
+                    tags,
+                  }) => (
+                    <tr
+                      key={convoId}
+                      sx={{ cursor: "pointer" }}
+                      onClick={() => router.push(`/convo/${convoId}`)}
+                    >
+                      <td>{first_message}</td>
+                      <td>{new Date(start).toLocaleString()}</td>
+                      <td>{new Date(end).toLocaleString()}</td>
+                      <td>{calls}</td>
+                      <td>{messages}</td>
+                      <td>
+                        {tags.map((t) => (
+                          <Badge key={t}>{t}</Badge>
+                        ))}
+                      </td>
+                    </tr>
+                  )
+                )}
               </tbody>
             </Table>
           ) : (
