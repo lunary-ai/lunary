@@ -32,7 +32,7 @@ const handleEvent = async (events: Event[]): Promise<void> => {
 
     console.log("Response from supa: ", data)
   } catch (e: any) {
-    console.error(e.message)
+    console.error(e?.message?.substring(0, 2000))
   }
 }
 
@@ -47,9 +47,9 @@ export default async function handler(req: NextRequest) {
 
   try {
     await handleEvent(events)
-  } catch (e) {
+  } catch (e: any) {
     console.error(`Error handling event.`)
-    console.error(e)
+    console.error(e?.message?.substring(0, 2000))
   }
 
   return cors(req, new Response(null, { status: 200 }))
