@@ -2,10 +2,16 @@
 
 Analyse and log your LLM outputs.
 
+
 ## Self-hosting
 
-1. Setup a Supabase project or self-host it yourself
+1. Setup a new Supabase project (or [self-host it yourself](https://supabase.com/docs/guides/self-hosting/)]
 
-2.`cp .env.example .env` and fill in the values
+2. Run the `setup-dump.sql` file content
 
-3. Deploy the `web` folder to Vercel or others
+2. `cp .env.example .env` and fill in the values
+
+3. Deploy this repo to folder to Vercel or any other hosting service
+
+4. Done
+

@@ -25,7 +25,7 @@ export const config = {
 const handleEvent = async (events: Event[]): Promise<void> => {
   try {
     // Log maximum length is 4096 bytes.
-    console.log("Ingesting: " + JSON.stringify(events).substring(0, 3500))
+    console.log("Ingesting: " + JSON.stringify(events).substring(0, 3000))
     const { data, error } = await supabaseAdmin.from("events").insert(events)
 
     if (error) throw error
@@ -46,8 +46,6 @@ export default async function handler(req: NextRequest) {
     return cors(req, new Response("Missing events payload.", { status: 400 }))
 
   try {
-    console.log("Received events: ", events)
-
     await handleEvent(events)
   } catch (e) {
     console.error(`Error handling event.`)
