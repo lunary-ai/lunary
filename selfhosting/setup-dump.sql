@@ -1,39 +1,35 @@
 -- Table Definition
-CREATE TABLE "public"."apps" (
-    "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+CREATE TABLE IF NOT EXISTS "public"."apps" (
+    "id" uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
     "created_at" timestamptz DEFAULT now(),
     "owner" uuid,
-    "name" text NOT NULL,
-    PRIMARY KEY ("id")
+    "name" text NOT NULL
 );
 
 -- Table Definition
-CREATE TABLE "public"."events" (
-    "id" int8 NOT NULL,
+CREATE TABLE IF NOT EXISTS "public"."events" (
+    "id" int8 GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     "timestamp" timestamptz DEFAULT now(),
     "app" uuid NOT NULL,
     "message" text,
     "history" _jsonb,
+    "extra" jsonb,
     "type" text,
     "convo" uuid,
     "tags" _text,
-    "model" text,
-    PRIMARY KEY ("id")
+    "model" text
 );
 
 -- Table Definition
-CREATE TABLE "public"."profiles" (
-    "id" uuid NOT NULL,
-    "updated_at" timestamptz,
-    PRIMARY KEY ("id")
+CREATE TABLE IF NOT EXISTS "public"."profiles" (
+    "id" uuid NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+    "updated_at" timestamptz
 );
 
 ALTER TABLE "public"."apps" ADD FOREIGN KEY ("owner") REFERENCES "auth"."users"("id") ON DELETE SET NULL;
 ALTER TABLE "public"."events" ADD FOREIGN KEY ("app") REFERENCES "public"."apps"("id") ON DELETE CASCADE;
 ALTER TABLE "public"."profiles" ADD FOREIGN KEY ("id") REFERENCES "auth"."users"("id");
 
-
--- DROP materialized view convos;
 
 CREATE MATERIALIZED VIEW convos AS 
 SELECT 
@@ -56,7 +52,7 @@ CREATE extension IF NOT EXISTS pg_cron;
 SELECT
   cron.schedule(
     'refresh-every-fifteen',
-    '*/15 * * * *', -- every 15 minutes
+    '*/10 * * * *', -- every 15 minutes
     $$
         REFRESH MATERIALIZED VIEW convos;
     $$
