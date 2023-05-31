@@ -8,7 +8,7 @@ export function useApps() {
   const { supabaseClient } = useSessionContext()
 
   const { data: apps, isLoading } = useQuery(
-    supabaseClient.from("apps").select("name,owner,id"),
+    supabaseClient.from("app").select("name,owner,id"),
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
@@ -27,7 +27,11 @@ export function useApps() {
 export function useEvents(convoId: string) {
   const { supabaseClient } = useSessionContext()
 
-  const { data: events, isLoading } = useQuery(
+  const {
+    data: events,
+
+    isLoading,
+  } = useQuery(
     supabaseClient
       .from("events")
       .select("*")
@@ -47,11 +51,17 @@ export function useEvents(convoId: string) {
 export function useConvos(appId: string) {
   const { supabaseClient } = useSessionContext()
 
-  const { data: convos, isLoading } = useQuery(
+  const {
+    data: convos,
+    error,
+    isLoading,
+  } = useQuery(
     supabaseClient
-      .from("convos")
-      .select("*", { count: "exact" })
-      .eq("app", appId),
+      .rpc("get_convos", {
+        _app: appId,
+        _offset: 0,
+      })
+      .select("*"),
     {
       revalidateOnFocus: true,
       revalidateOnReconnect: true,

@@ -22,21 +22,34 @@ export const config = {
   runtime: "edge",
 }
 
-const handleEvent = async (events: Event[]): Promise<void> => {
+const handleEvents = async (events: Event[]): Promise<void> => {
   try {
-    console.log(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
-    )
+    const res = await supabaseAdmin.rpc("upsert_convo", {
+      _id: events[0].convo,
+      _app: events[0].app,
+      _tags: events[0].tags,
+    })
 
-    const { data, error } = await supabaseAdmin.from("events").insert(events)
+    console.log(res)
+
+    // remove tags (only used for convos) and clean timestamp from events
+    const cleanedEvents = events.map((event: Event) => {
+      const { tags, timestamp, ...rest } = event
+
+      return {
+        ...rest,
+        timestamp: new Date(timestamp),
+      }
+    })
+
+    const { data, error } = await supabaseAdmin
+      .from("event")
+      .insert(cleanedEvents)
 
     if (error) throw error
-
-    console.log("Response from supa: ", data)
   } catch (e: any) {
     // Log maximum length is 4096 bytes.
-    console.error(e?.message?.substring(0, 3000))
+    console.error(e?.message?.substring(0, 2000))
   }
 }
 
@@ -50,7 +63,8 @@ export default async function handler(req: NextRequest) {
     return cors(req, new Response("Missing events payload.", { status: 400 }))
 
   try {
-    await handleEvent(events)
+    console.log(`Ingesting ${events.length} events.`)
+    await handleEvents(events)
   } catch (e: any) {
     console.error(`Error handling event.`)
     console.error(e?.message?.substring(0, 2000))
