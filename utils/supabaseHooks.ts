@@ -33,7 +33,7 @@ export function useEvents(convoId: string) {
     isLoading,
   } = useQuery(
     supabaseClient
-      .from("events")
+      .from("event")
       .select("*")
       .eq("convo", convoId)
       .order("timestamp", {
@@ -51,11 +51,7 @@ export function useEvents(convoId: string) {
 export function useConvos(appId: string) {
   const { supabaseClient } = useSessionContext()
 
-  const {
-    data: convos,
-    error,
-    isLoading,
-  } = useQuery(
+  const { data: convos, isLoading } = useQuery(
     supabaseClient
       .rpc("get_convos", {
         _app: appId,

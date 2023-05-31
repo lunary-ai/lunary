@@ -115,15 +115,21 @@ const mapType = {
     Icon: IconAnalyze,
   },
 
-  error: {
+  "log:error": {
     name: "Error",
     color: "red",
     Icon: IconBug,
   },
 
-  log: {
+  "log:info": {
     name: "Log",
     color: "gray",
+    Icon: IconCodeDots,
+  },
+
+  "log:warn": {
+    name: "Warning",
+    color: "yellow",
     Icon: IconCodeDots,
   },
 
