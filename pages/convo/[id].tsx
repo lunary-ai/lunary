@@ -1,4 +1,6 @@
 import { useEvents } from "@/utils/supabaseHooks"
+import { useRouter } from "next/router"
+
 import {
   Anchor,
   Avatar,
@@ -29,7 +31,6 @@ import {
   IconTimelineEvent,
   IconUser,
 } from "@tabler/icons-react"
-import { useRouter } from "next/router"
 
 const ChatMessage = ({ message, type }: { message: string; type: string }) => {
   const isBot = type === "assistant:message"
@@ -55,6 +56,8 @@ const averageTimeToStream = (events: any[]) => {
   const userMessages = events.filter(({ type }) => type === "user:message")
   const streamingEvents = events.filter(({ type }) => type === "llm:stream")
 
+  if (!userMessages.length || !streamingEvents.length) return 0
+
   const responseTimes = userMessages
     .map(({ timestamp }, index) => {
       if (!streamingEvents[index]) return 0
@@ -78,6 +81,8 @@ const averageResponseTime = (events: any[]) => {
   const assistantMessages = events.filter(
     ({ type }) => type === "assistant:message"
   )
+
+  if (!userMessages.length || !assistantMessages.length) return 0
 
   const responseTimes = userMessages
     .map(({ timestamp }, index) => {
@@ -154,6 +159,8 @@ const timeLabel = (events, i) => {
   const time = new Date(timestamp).toLocaleTimeString()
 
   const previousEvents = events.slice(0, i).reverse()
+
+  if (!previousEvents.length) return ""
 
   let took = 0
   if (type === "assistant:message") {
