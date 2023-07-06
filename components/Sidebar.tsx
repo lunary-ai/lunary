@@ -12,6 +12,7 @@ import {
   IconFileInvoice,
   IconGraph,
   IconLogout,
+  IconRobot,
   IconSettings,
   IconTool,
   IconUsers,
@@ -26,7 +27,7 @@ import Link from "next/link"
 
 const menu = [
   { label: "Analytics", icon: IconGraph, link: "/analytics" },
-  { label: "Agents", icon: IconTool, link: "/agents" },
+  { label: "Agents", icon: IconRobot, link: "/agents" },
   { label: "Generations", icon: IconBrandOpenai, link: "/generations" },
   { label: "Users", icon: IconUsers, link: "/users" },
   { label: "Settings", icon: IconSettings, link: "/settings" },

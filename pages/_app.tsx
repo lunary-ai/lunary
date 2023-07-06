@@ -25,6 +25,7 @@ export default function App(props: AppProps) {
         initialSession={pageProps.initialSession}
       >
         <MantineProvider
+          withNormalizeCSS
           theme={{
             colorScheme: "light",
             defaultRadius: "md",

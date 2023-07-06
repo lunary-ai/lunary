@@ -2,9 +2,10 @@ import ChatMessage from "@/components/ChatMessage"
 import DataTable from "@/components/DataTable"
 import { Database } from "@/utils/supaTypes"
 import { useGenerations } from "@/utils/supabaseHooks"
-import { Badge, Stack, Title } from "@mantine/core"
+import { Anchor, Badge, Box, Modal, Stack, Title } from "@mantine/core"
 
 import { createColumnHelper, ColumnDef } from "@tanstack/react-table"
+import { useState } from "react"
 
 const columnHelper = createColumnHelper<any>()
 
@@ -14,6 +15,38 @@ const getLastMessage = (messages) => {
   }
 
   return messages
+}
+
+const MessageViewer = ({ data }) => {
+  const [expand, setExpand] = useState(false)
+
+  if (!data) return null
+
+  const obj = Array.isArray(data) ? data : [data]
+
+  return (
+    <>
+      <Modal opened={expand} onClose={() => setExpand(false)}>
+        <Stack>
+          {obj.map((message) => (
+            <ChatMessage key={message.id} data={message} />
+          ))}
+        </Stack>
+      </Modal>
+
+      <Box onClick={() => setExpand(true)} sx={{ cursor: "pointer" }}>
+        <ChatMessage inline={true} data={getLastMessage(obj)} />
+        {obj.length > 1 && (
+          <Anchor onClick={() => setExpand(true)}>View all</Anchor>
+        )}
+      </Box>
+      <style jsx>{`
+        :global(.mantine-Modal-inner) {
+          padding-left: 0; // weird centering bug
+        }
+      `}</style>
+    </>
+  )
 }
 
 const columns = [
@@ -62,23 +95,17 @@ const columns = [
       a.original.prompt_tokens -
       (b.original.completion_tokens + b.original.prompt_tokens),
     cell: (info) => info.getValue(),
-    accessorFn: (row) => `${row.completion_tokens} + ${row.prompt_tokens}`,
+    accessorFn: (row) => `${row.prompt_tokens} + ${row.completion_tokens}`,
   },
   columnHelper.accessor("input", {
     header: "Prompt",
     enableSorting: false,
-    enableHiding: true,
-    cell: (props) => (
-      <ChatMessage inline={true} data={getLastMessage(props.getValue())} />
-    ),
+    cell: (props) => <MessageViewer data={props.getValue()} />,
   }),
   columnHelper.accessor("output", {
     header: "Response",
     enableSorting: false,
-    enableHiding: true,
-    cell: (props) => (
-      <ChatMessage inline={true} data={getLastMessage(props.getValue())} />
-    ),
+    cell: (props) => <MessageViewer data={props.getValue()} />,
   }),
 ]
 
