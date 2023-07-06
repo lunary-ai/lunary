@@ -1,4 +1,3 @@
-import { useConvos } from "@/utils/supabaseHooks"
 import { Badge, Card, Loader, Stack, Table, Text, Title } from "@mantine/core"
 import { useRouter } from "next/router"
 
@@ -6,16 +5,12 @@ export default function AppAnalytics() {
   const router = useRouter()
   const { id } = router.query
 
-  const { convos, loading } = useConvos(id as string)
-
   return (
     <Stack>
       <Title>App Analytics</Title>
       <p>App ID: {id}</p>
 
-      {loading && <Loader />}
-
-      <Card>
+      {/* <Card>
         <Stack>
           <Title order={3}>Conversations</Title>
           {convos?.length ? (
@@ -70,8 +65,8 @@ export default function AppAnalytics() {
           ) : (
             <Text>Integrate the module in your app to start recording.</Text>
           )}
-        </Stack>
-      </Card>
+        </Stack> 
+      </Card>*/}
     </Stack>
   )
 }

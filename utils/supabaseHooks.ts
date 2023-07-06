@@ -2,17 +2,63 @@ import {
   useInsertMutation,
   useQuery,
 } from "@supabase-cache-helpers/postgrest-swr"
-import { useSessionContext } from "@supabase/auth-helpers-react"
+
+import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
+import { useMantineTheme } from "@mantine/core"
+import { useLocalStorage } from "@mantine/hooks"
+import { Database } from "./supaTypes"
+
+const options = {
+  // revalidateOnFocus: false,
+  // revalidateOnReconnect: false,
+  dedupingInterval: 10000,
+}
+
+// Make a number seed from the ID, then use that to pick a color from the Mantine colors
+const getUserColor = (theme, id: string) => {
+  const seed = id
+    .split("")
+    .map((char) => char.charCodeAt(0))
+    .reduce((acc, curr) => acc + curr, 0)
+  const colors = Object.keys(theme.colors)
+
+  const userColor = colors[seed % colors.length]
+
+  const finalColor = theme.colors[userColor][4]
+  return finalColor
+}
+
+export const useProfile = () => {
+  const supabaseClient = useSupabaseClient<Database>()
+
+  const user = useUser()
+
+  const theme = useMantineTheme()
+
+  const { data: profile, isLoading } = useQuery(
+    user
+      ? supabaseClient
+          .from("profiles")
+          .select("*")
+          .match({ id: user?.id })
+          .single()
+      : null,
+    options
+  )
+
+  if (profile) {
+    profile.color = getUserColor(theme, profile.id)
+  }
+
+  return { profile, loading: isLoading }
+}
 
 export function useApps() {
-  const { supabaseClient } = useSessionContext()
+  const supabaseClient = useSupabaseClient<Database>()
 
   const { data: apps, isLoading } = useQuery(
     supabaseClient.from("app").select("name,owner,id"),
-    {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-    }
+    options
   )
 
   const { trigger: insert } = useInsertMutation(
@@ -24,45 +70,55 @@ export function useApps() {
   return { apps, loading: isLoading, insert }
 }
 
-export function useEvents(convoId: string) {
-  const { supabaseClient } = useSessionContext()
+export function useCurrentApp() {
+  const { apps, loading } = useApps()
 
-  const {
-    data: events,
+  const [appId, setAppId] = useLocalStorage({
+    key: "appId",
+    defaultValue: null,
+  })
 
-    isLoading,
-  } = useQuery(
-    supabaseClient
-      .from("event")
-      .select("*")
-      .eq("convo", convoId)
-      .order("timestamp", {
-        ascending: true,
-      }),
-    {
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-    }
-  )
+  const app = apps?.find((app) => app.id === appId)
 
-  return { events, loading: isLoading }
+  return { app, loading, setAppId }
 }
 
-export function useConvos(appId: string) {
-  const { supabaseClient } = useSessionContext()
+export function useAgentRuns() {
+  const supabaseClient = useSupabaseClient<Database>()
+  const { app } = useCurrentApp()
 
-  const { data: convos, isLoading } = useQuery(
+  const { data: agentRuns, isLoading } = useQuery(
     supabaseClient
-      .rpc("get_convos", {
-        _app: appId,
-        _offset: 0,
+      .from("agent_run")
+      .select("*")
+      .order("created_at", {
+        ascending: true,
       })
-      .select("*"),
-    {
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-    }
+      .eq("app", app?.id)
+      .limit(100),
+    options
   )
 
-  return { convos, loading: isLoading }
+  return { agentRuns, loading: isLoading }
+}
+
+export function useGenerations() {
+  const supabaseClient = useSupabaseClient<Database>()
+  const { app } = useCurrentApp()
+
+  const { data: generations, isLoading } = useQuery(
+    supabaseClient
+      .from("llm_run")
+      .select("*")
+      .order("created_at", {
+        ascending: true,
+      })
+      .eq("app", app?.id)
+      .limit(100),
+    options
+  )
+
+  console.log(generations)
+
+  return { generations, loading: isLoading }
 }

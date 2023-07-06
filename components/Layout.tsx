@@ -7,6 +7,7 @@ import { useEffect, ReactNode } from "react"
 import Navbar from "@/components/Navbar"
 
 import { Notifications } from "@mantine/notifications"
+import Sidebar from "./Sidebar"
 
 export default function Layout({ children }: { children: ReactNode }) {
   const router = useRouter()
@@ -14,7 +15,6 @@ export default function Layout({ children }: { children: ReactNode }) {
   const { session, isLoading } = useSessionContext()
 
   useEffect(() => {
-    console.log(session, isLoading, router.pathname)
     if (
       !session &&
       !isLoading &&
@@ -28,8 +28,13 @@ export default function Layout({ children }: { children: ReactNode }) {
     <>
       <Notifications position="top-right" />
 
-      <AppShell header={<Navbar />} sx={{ backgroundColor: "#fafafa" }}>
-        <Container size={800}>{children}</Container>
+      <AppShell
+        padding={"xl"}
+        header={<Navbar />}
+        navbar={session && <Sidebar />}
+        sx={{ backgroundColor: "#fafafa" }}
+      >
+        {children}
       </AppShell>
     </>
   )

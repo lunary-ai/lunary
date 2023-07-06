@@ -6,50 +6,246 @@ import { supabaseAdmin } from "@/lib/supabaseClient"
 import { NextRequest } from "next/server"
 import cors from "@/lib/cors"
 
-interface Event {
+export interface Event {
   type: string
   app: string
-  convo: string
-  timestamp: string
-  returnId?: string
-  tags?: string[]
-  model?: string
+  event?: string
+  agentRunId?: string
+  toolRunId?: string
+  convo?: string
+  timestamp: number
+  input?: any
+  name?: string
+  output?: any
   message?: string
-  history?: []
+  extra?: Record<string, unknown>
+  error?: {
+    message: string
+    stack?: string
+  }
+  [key: string]: unknown
 }
 
 export const config = {
   runtime: "edge",
 }
 
-const handleEvents = async (events: Event[]): Promise<void> => {
-  try {
-    const res = await supabaseAdmin.rpc("upsert_convo", {
-      _id: events[0].convo,
-      _app: events[0].app,
-      _tags: events[0].tags,
-    })
+const cleanEvent = (event: any): Event => {
+  const { timestamp, ...rest } = event
 
-    console.log(res)
+  return {
+    ...rest,
+    timestamp: new Date(timestamp),
+  }
+}
 
-    // remove tags (only used for convos) and clean timestamp from events
-    const cleanedEvents = events.map((event: Event) => {
-      const { tags, timestamp, ...rest } = event
+const registerLLMEvent = async (event: Event): Promise<void> => {
+  const {
+    timestamp,
+    app,
+    event: eventName,
+    agentRunId,
+    toolRunId,
+    input,
+    output,
+    name,
+    promptTokens,
+    completionTokens,
+    extra,
+    error,
+  } = event
 
-      return {
-        ...rest,
-        timestamp: new Date(timestamp),
-      }
-    })
+  const table = supabaseAdmin.from("llm_run")
 
-    const { data, error } = await supabaseAdmin
-      .from("event")
-      .insert(cleanedEvents)
+  switch (eventName) {
+    case "start":
+      // insert new llm_run
 
-    if (error) throw error
-  } catch (e: any) {
-    // Log maximum length is 4096 bytes.
-    console.error(e?.message?.substring(0, 2000))
+      await table.insert({
+        id: agentRunId,
+        app,
+        model: name,
+        params: extra,
+        agent_run: agentRunId,
+        tool_run: toolRunId,
+        created_at: timestamp,
+        input,
+      })
+
+      break
+    case "end":
+      // update llm_run with end time, output and status success
+
+      await table
+        .update({
+          ended_at: timestamp,
+          output,
+          status: "success",
+          prompt_tokens: promptTokens,
+          completion_tokens: completionTokens,
+        })
+        .match({ id: agentRunId })
+
+      break
+    case "error":
+      // update llm_run with end time and status error
+
+      await table
+        .update({
+          ended_at: timestamp,
+          status: "error",
+          error,
+        })
+        .match({ id: agentRunId })
+
+      break
+    case "stream":
+      // update "stream_lag" in llm_run
+      break
+  }
+}
+
+const registerAgentEvent = async (event: Event): Promise<void> => {
+  const {
+    event: eventName,
+    agentRunId,
+    toolRunId,
+    timestamp,
+    app,
+    name,
+    input,
+    output,
+    extra,
+    error,
+  } = event
+
+  const table = supabaseAdmin.from("agent_run")
+
+  switch (eventName) {
+    case "start":
+      // insert new agent_run
+
+      await table.insert({
+        id: agentRunId,
+        name,
+        created_at: timestamp,
+        app,
+        input,
+      })
+
+      break
+    case "end":
+      // update agent_run with end time, output and status success
+
+      await table
+        .update({
+          ended_at: timestamp,
+          status: "success",
+          output,
+        })
+        .match({ id: agentRunId })
+
+      break
+    case "error":
+      // update agent_run with end time and status error
+
+      await table
+        .update({
+          ended_at: timestamp,
+          status: "error",
+          error,
+        })
+        .match({ id: agentRunId })
+
+      break
+  }
+}
+
+const registerToolEvent = async (event: Event): Promise<void> => {
+  const {
+    app,
+    event: eventName,
+    agentRunId,
+    toolRunId,
+    name,
+    input,
+    timestamp,
+    output,
+    extra,
+    error,
+  } = event
+
+  const table = supabaseAdmin.from("tool_run")
+
+  switch (eventName) {
+    case "start":
+      // insert new tool_run
+
+      await table.insert({
+        id: toolRunId,
+        created_at: timestamp,
+        app,
+        agent_run: agentRunId,
+        name,
+        input,
+        output,
+      })
+
+      break
+    case "end":
+      // update tool_run with end time, output and status success
+      await table
+        .update({
+          ended_at: timestamp,
+          output,
+          status: "success",
+        })
+        .match({ id: toolRunId })
+
+      break
+    case "error":
+      // update tool_run with end time and status error
+      await table
+        .update({
+          ended_at: timestamp,
+          status: "error",
+          error,
+        })
+        .match({ id: toolRunId })
+
+      break
+  }
+}
+
+const registerLogEvent = async (event: Event): Promise<void> => {
+  const { event: eventName, app, agentRunId, toolRunId, message, extra } = event
+
+  await supabaseAdmin.from("log").insert({
+    agent_run: agentRunId,
+    tool_run: toolRunId,
+    app,
+    level: eventName,
+    message,
+    extra,
+  })
+}
+
+const registerEvent = async (event: Event): Promise<void> => {
+  const { type } = event
+
+  switch (type) {
+    case "llm":
+      await registerLLMEvent(event)
+      break
+    case "agent":
+      await registerAgentEvent(event)
+      break
+    case "tool":
+      await registerToolEvent(event)
+      break
+    case "log":
+      await registerLogEvent(event)
+      break
   }
 }
 
@@ -64,9 +260,16 @@ export default async function handler(req: NextRequest) {
 
   try {
     console.log(`Ingesting ${events.length} events.`)
-    await handleEvents(events)
+
+    // Event processing order is important for foreign key constraints
+    const sorted = events.sort((a, b) => a.timestamp - b.timestamp)
+
+    for (const event of sorted) {
+      await registerEvent(cleanEvent(event))
+    }
   } catch (e: any) {
     console.error(`Error handling event.`)
+    // Edge functions logs are limited to 2kb
     console.error(e?.message?.substring(0, 2000))
   }
 

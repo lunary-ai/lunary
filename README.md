@@ -15,3 +15,11 @@ Analyse and log your LLM outputs.
 
 4. Done
 
+## Todo 
+
+[ ] Update setup-dump.sql to latest
+[ ] Users support
+[ ] Sidebar layout 
+[ ] Agent view
+[ ] Generations view
+[ ] Tools views 

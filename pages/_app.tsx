@@ -3,16 +3,16 @@ import Head from "next/head"
 import { MantineProvider } from "@mantine/core"
 import "../styles/globals.css"
 
-import { createBrowserSupabaseClient } from "@supabase/auth-helpers-nextjs"
+import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs"
 import { SessionContextProvider } from "@supabase/auth-helpers-react"
 
-import { useState } from "react"
-
 import Layout from "@/components/Layout"
+import { Database } from "@/utils/supaTypes"
+import { useState } from "react"
 
 export default function App(props: AppProps) {
   const { Component, pageProps } = props
-  const [supabase] = useState(() => createBrowserSupabaseClient())
+  const [supabase] = useState(() => createPagesBrowserClient<Database>())
 
   return (
     <>
