@@ -1,10 +1,10 @@
 import ChatMessage from "@/components/ChatMessage"
 import DataTable from "@/components/DataTable"
-import { Database } from "@/utils/supaTypes"
+
 import { useGenerations } from "@/utils/supabaseHooks"
 import { Anchor, Badge, Box, Modal, Stack, Title } from "@mantine/core"
 
-import { createColumnHelper, ColumnDef } from "@tanstack/react-table"
+import { createColumnHelper } from "@tanstack/react-table"
 import { useState } from "react"
 
 const columnHelper = createColumnHelper<any>()
@@ -26,7 +26,12 @@ const MessageViewer = ({ data }) => {
 
   return (
     <>
-      <Modal opened={expand} onClose={() => setExpand(false)}>
+      <Modal
+        title="Chat History"
+        size="lg"
+        opened={expand}
+        onClose={() => setExpand(false)}
+      >
         <Stack>
           {obj.map((message) => (
             <ChatMessage key={message.id} data={message} />

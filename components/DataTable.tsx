@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { memo, useState } from "react"
 
 import {
   createColumnHelper,
@@ -10,11 +10,13 @@ import {
 } from "@tanstack/react-table"
 import { Card, Table } from "@mantine/core"
 
-export default function DataTable({ columns, data = [] }) {
+const emptyArray = []
+
+export default function DataTable({ data, columns = [] }) {
   const [sorting, setSorting] = useState<SortingState>([])
 
   const table = useReactTable({
-    data: data,
+    data: data ?? emptyArray, // So it doesn't break when data is undefined because of reference
     columns,
     getCoreRowModel: getCoreRowModel(),
     state: {

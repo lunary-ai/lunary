@@ -2,6 +2,12 @@
 
 Analyse and log your LLM outputs.
 
+Features:
+* Super simple to self host (deploy to Vercel)
+* Analyse your usage across models
+* Track and log agent runs
+
+
 
 ## Self-hosting
 
@@ -19,7 +25,7 @@ Analyse and log your LLM outputs.
 
 [ ] Update setup-dump.sql to latest
 [ ] Users support
-[ ] Sidebar layout 
-[ ] Agent view
-[ ] Generations view
+[x] Sidebar layout 
+[x] Agent view
+[x] Generations view
 [ ] Tools views 

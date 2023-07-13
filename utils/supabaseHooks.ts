@@ -83,19 +83,34 @@ export function useCurrentApp() {
   return { app, loading, setAppId }
 }
 
-export function useAgentRuns() {
+export function useAgents() {
+  const supabaseClient = useSupabaseClient<Database>()
+  const { app } = useCurrentApp()
+
+  const { data: agents, isLoading } = useQuery(
+    supabaseClient.from("agents").select("*").eq("app", app?.id).limit(100),
+    options
+  )
+
+  return { agents, loading: isLoading }
+}
+
+export function useAgentRuns(agentName: string) {
   const supabaseClient = useSupabaseClient<Database>()
   const { app } = useCurrentApp()
 
   const { data: agentRuns, isLoading } = useQuery(
-    supabaseClient
-      .from("agent_run")
-      .select("*")
-      .order("created_at", {
-        ascending: true,
-      })
-      .eq("app", app?.id)
-      .limit(100),
+    agentName
+      ? supabaseClient
+          .from("agent_run")
+          .select("*")
+          .order("created_at", {
+            ascending: true,
+          })
+          .eq("name", agentName)
+          .eq("app", app?.id)
+          .limit(100)
+      : null,
     options
   )
 

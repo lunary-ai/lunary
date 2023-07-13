@@ -9,6 +9,7 @@ import {
   Select,
 } from "@mantine/core"
 import { useLocalStorage } from "@mantine/hooks"
+import { useUser } from "@supabase/auth-helpers-react"
 
 import { IconAnalyze, IconHelp, IconMessage } from "@tabler/icons-react"
 import Image from "next/image"
@@ -19,6 +20,7 @@ export default function Navbar() {
   const { apps } = useApps()
 
   const { app, setAppId, loading } = useCurrentApp()
+  const user = useUser()
 
   return (
     <Header height={60} p="md">
@@ -31,7 +33,7 @@ export default function Navbar() {
             </Group>
           </Anchor>
 
-          {!loading && (
+          {!loading && user && (
             <Select
               size="xs"
               placeholder="Select an app"
