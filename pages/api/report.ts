@@ -44,6 +44,7 @@ const registerLLMEvent = async (event: Event): Promise<void> => {
     timestamp,
     app,
     event: eventName,
+    runId,
     agentRunId,
     toolRunId,
     input,
@@ -56,15 +57,16 @@ const registerLLMEvent = async (event: Event): Promise<void> => {
   } = event
 
   const table = supabaseAdmin.from("llm_run")
+  let query = null
 
   switch (eventName) {
     case "start":
       // insert new llm_run
 
-      await table.insert({
-        id: agentRunId,
+      query = table.insert({
+        id: runId,
         app,
-        model: name,
+        model: name || "unknown",
         params: extra,
         agent_run: agentRunId,
         tool_run: toolRunId,
@@ -76,7 +78,7 @@ const registerLLMEvent = async (event: Event): Promise<void> => {
     case "end":
       // update llm_run with end time, output and status success
 
-      await table
+      query = table
         .update({
           ended_at: timestamp,
           output,
@@ -84,24 +86,30 @@ const registerLLMEvent = async (event: Event): Promise<void> => {
           prompt_tokens: promptTokens,
           completion_tokens: completionTokens,
         })
-        .match({ id: agentRunId })
+        .match({ id: runId })
 
       break
     case "error":
       // update llm_run with end time and status error
 
-      await table
+      query = table
         .update({
           ended_at: timestamp,
           status: "error",
           error,
         })
-        .match({ id: agentRunId })
+        .match({ id: runId })
 
       break
     case "stream":
       // update "stream_lag" in llm_run
       break
+  }
+
+  if (query) {
+    const { error } = await query
+
+    if (error) throw error
   }
 }
 
@@ -121,13 +129,15 @@ const registerAgentEvent = async (event: Event): Promise<void> => {
 
   const table = supabaseAdmin.from("agent_run")
 
+  let query = null
+
   switch (eventName) {
     case "start":
       // insert new agent_run
 
-      await table.insert({
+      query = table.insert({
         id: agentRunId,
-        name,
+        name: name || "unknown",
         created_at: timestamp,
         app,
         input,
@@ -137,7 +147,7 @@ const registerAgentEvent = async (event: Event): Promise<void> => {
     case "end":
       // update agent_run with end time, output and status success
 
-      await table
+      query = table
         .update({
           ended_at: timestamp,
           status: "success",
@@ -149,7 +159,7 @@ const registerAgentEvent = async (event: Event): Promise<void> => {
     case "error":
       // update agent_run with end time and status error
 
-      await table
+      query = table
         .update({
           ended_at: timestamp,
           status: "error",
@@ -158,6 +168,12 @@ const registerAgentEvent = async (event: Event): Promise<void> => {
         .match({ id: agentRunId })
 
       break
+  }
+
+  if (query) {
+    const { error } = await query
+
+    if (error) throw error
   }
 }
 
@@ -177,11 +193,13 @@ const registerToolEvent = async (event: Event): Promise<void> => {
 
   const table = supabaseAdmin.from("tool_run")
 
+  let query = null
+
   switch (eventName) {
     case "start":
       // insert new tool_run
 
-      await table.insert({
+      query = table.insert({
         id: toolRunId,
         created_at: timestamp,
         app,
@@ -194,7 +212,7 @@ const registerToolEvent = async (event: Event): Promise<void> => {
       break
     case "end":
       // update tool_run with end time, output and status success
-      await table
+      query = table
         .update({
           ended_at: timestamp,
           output,
@@ -205,7 +223,7 @@ const registerToolEvent = async (event: Event): Promise<void> => {
       break
     case "error":
       // update tool_run with end time and status error
-      await table
+      query = table
         .update({
           ended_at: timestamp,
           status: "error",
@@ -215,12 +233,18 @@ const registerToolEvent = async (event: Event): Promise<void> => {
 
       break
   }
+
+  if (query) {
+    const { error } = await query
+
+    if (error) throw error
+  }
 }
 
 const registerLogEvent = async (event: Event): Promise<void> => {
   const { event: eventName, app, agentRunId, toolRunId, message, extra } = event
 
-  await supabaseAdmin.from("log").insert({
+  const { error } = await supabaseAdmin.from("log").insert({
     agent_run: agentRunId,
     tool_run: toolRunId,
     app,
@@ -228,6 +252,8 @@ const registerLogEvent = async (event: Event): Promise<void> => {
     message,
     extra,
   })
+
+  if (error) throw error
 }
 
 const registerEvent = async (event: Event): Promise<void> => {
@@ -258,19 +284,19 @@ export default async function handler(req: NextRequest) {
   if (!events || !Array.isArray(events))
     return cors(req, new Response("Missing events payload.", { status: 400 }))
 
-  try {
-    console.log(`Ingesting ${events.length} events.`)
+  console.log(`Ingesting ${events.length} events.`)
 
-    // Event processing order is important for foreign key constraints
-    const sorted = events.sort((a, b) => a.timestamp - b.timestamp)
+  // Event processing order is important for foreign key constraints
+  const sorted = events.sort((a, b) => a.timestamp - b.timestamp)
 
-    for (const event of sorted) {
+  for (const event of sorted) {
+    try {
       await registerEvent(cleanEvent(event))
+    } catch (e: any) {
+      console.error(`Error handling event.`)
+      // Edge functions logs are limited to 2kb
+      console.error(e)
     }
-  } catch (e: any) {
-    console.error(`Error handling event.`)
-    // Edge functions logs are limited to 2kb
-    console.error(e?.message?.substring(0, 2000))
   }
 
   return cors(req, new Response(null, { status: 200 }))

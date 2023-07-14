@@ -7,6 +7,7 @@ import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
 import { useMantineTheme } from "@mantine/core"
 import { useLocalStorage } from "@mantine/hooks"
 import { Database } from "./supaTypes"
+import { useEffect } from "react"
 
 const options = {
   // revalidateOnFocus: false,
@@ -77,6 +78,12 @@ export function useCurrentApp() {
     key: "appId",
     defaultValue: null,
   })
+
+  useEffect(() => {
+    if (!appId && apps?.length) {
+      setAppId(apps[0].id)
+    }
+  }, [apps])
 
   const app = apps?.find((app) => app.id === appId)
 

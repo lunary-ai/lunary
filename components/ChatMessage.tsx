@@ -1,4 +1,11 @@
-import { Paper, ScrollArea, Spoiler, Text } from "@mantine/core"
+import {
+  Code,
+  Paper,
+  ScrollArea,
+  Spoiler,
+  Text,
+  useMantineTheme,
+} from "@mantine/core"
 
 const typesColors = {
   ai: "blue",
@@ -13,6 +20,8 @@ const tc = (theme, role) => {
 }
 
 export default function ChatMessage({ data, inline = false }) {
+  const theme = useMantineTheme()
+
   return (
     <Paper
       p={8}
@@ -26,7 +35,10 @@ export default function ChatMessage({ data, inline = false }) {
         </Text>
       )}
       <Spoiler maxHeight={50} showLabel="..." hideLabel="↑">
-        <Text>{data?.text}</Text>
+        <Code color={tc(theme, data?.role)} block>
+          {data?.text}
+        </Code>
+        {data?.kwargs && <>{data?.kwargs}</>}
       </Spoiler>
     </Paper>
   )

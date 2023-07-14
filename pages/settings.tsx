@@ -1,14 +1,14 @@
+import { useCurrentApp } from "@/utils/supabaseHooks"
 import { Badge, Card, Loader, Stack, Table, Text, Title } from "@mantine/core"
 import { useRouter } from "next/router"
 
 export default function AppAnalytics() {
-  // const router = useRouter()
-  // const { id } = router.query
+  const { app } = useCurrentApp()
 
   return (
     <Stack>
       <Title>Your App</Title>
-      <p>App ID: {}</p>
+      <p>App ID for tracking: {app?.id}</p>
     </Stack>
   )
 }
