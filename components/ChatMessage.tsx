@@ -35,10 +35,20 @@ export default function ChatMessage({ data, inline = false }) {
         </Text>
       )}
       <Spoiler maxHeight={50} showLabel="..." hideLabel="↑">
-        <Code color={tc(theme, data?.role)} block>
-          {data?.text}
-        </Code>
-        {data?.kwargs && <>{data?.kwargs}</>}
+        {data?.text && (
+          <Code color={tc(theme, data?.role)} block>
+            {data?.text}
+          </Code>
+        )}
+        {data?.function_call && (
+          <Text>
+            {`Call function "${
+              data?.function_call.name
+            }" with arguments ${JSON.stringify(
+              data?.function_call?.arguments
+            )}`}
+          </Text>
+        )}
       </Spoiler>
     </Paper>
   )

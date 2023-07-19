@@ -26,18 +26,20 @@ const MessageViewer = ({ data }) => {
 
   return (
     <>
-      <Modal
-        title="Chat History"
-        size="lg"
-        opened={expand}
-        onClose={() => setExpand(false)}
-      >
-        <Stack>
-          {obj.map((message) => (
-            <ChatMessage key={message.id} data={message} />
-          ))}
-        </Stack>
-      </Modal>
+      {expand && (
+        <Modal
+          title="Chat History"
+          size="lg"
+          opened={expand}
+          onClose={() => setExpand(false)}
+        >
+          <Stack>
+            {obj.map((message) => (
+              <ChatMessage key={message.id} data={message} />
+            ))}
+          </Stack>
+        </Modal>
+      )}
 
       <Box onClick={() => setExpand(true)} sx={{ cursor: "pointer" }}>
         <ChatMessage inline={true} data={getLastMessage(obj)} />
@@ -57,6 +59,8 @@ const MessageViewer = ({ data }) => {
 const columns = [
   columnHelper.accessor("created_at", {
     header: "Time",
+    size: 60,
+    enableResizing: false,
     sortingFn: (a, b) =>
       new Date(a.getValue("created_at")).getTime() -
       new Date(b.getValue("created_at")).getTime(),
@@ -64,11 +68,13 @@ const columns = [
   }),
   columnHelper.accessor("model", {
     header: "Model",
+    size: 80,
     cell: (props) => <Badge color="blue">{props.getValue()}</Badge>,
   }),
   columnHelper.accessor("status", {
     id: "status",
     header: "Status",
+    size: 60,
     cell: (props) => (
       <Badge color={props.getValue() === "success" ? "green" : "red"}>
         {props.getValue()}
@@ -78,6 +84,7 @@ const columns = [
   {
     id: "duration",
     header: "Duration",
+    size: 25,
     cell: (props) => {
       if (!props.getValue()) return null
       return `${(props.getValue() / 1000).toFixed(2)}s`
@@ -94,6 +101,7 @@ const columns = [
   },
   {
     header: "Tokens",
+    size: 25,
     id: "tokens",
     sortingFn: (a, b) =>
       a.original.completion_tokens +
@@ -104,11 +112,13 @@ const columns = [
   },
   columnHelper.accessor("input", {
     header: "Prompt",
+    size: 200,
     enableSorting: false,
     cell: (props) => <MessageViewer data={props.getValue()} />,
   }),
   columnHelper.accessor("output", {
     header: "Response",
+    size: 200,
     enableSorting: false,
     cell: (props) => <MessageViewer data={props.getValue()} />,
   }),

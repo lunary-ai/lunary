@@ -1,7 +1,6 @@
 import { memo, useState } from "react"
 
 import {
-  createColumnHelper,
   flexRender,
   getCoreRowModel,
   useReactTable,
@@ -18,6 +17,7 @@ export default function DataTable({ data, columns = [] }) {
   const table = useReactTable({
     data: data ?? emptyArray, // So it doesn't break when data is undefined because of reference
     columns,
+    columnResizeMode: "onChange",
     getCoreRowModel: getCoreRowModel(),
     state: {
       sorting,
@@ -28,13 +28,17 @@ export default function DataTable({ data, columns = [] }) {
 
   return (
     <Card withBorder p={0}>
-      <Table striped>
+      <Table striped withColumnBorders w={table.getCenterTotalSize()}>
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
                 return (
-                  <th key={header.id} colSpan={header.colSpan}>
+                  <th
+                    key={header.id}
+                    colSpan={header.colSpan}
+                    style={{ width: header.getSize() }}
+                  >
                     {header.isPlaceholder ? null : (
                       <div
                         {...{
@@ -54,6 +58,16 @@ export default function DataTable({ data, columns = [] }) {
                         }[header.column.getIsSorted() as string] ?? null}
                       </div>
                     )}
+
+                    <div
+                      {...{
+                        onMouseDown: header.getResizeHandler(),
+                        onTouchStart: header.getResizeHandler(),
+                        className: `resizer ${
+                          header.column.getIsResizing() ? "isResizing" : ""
+                        }`,
+                      }}
+                    />
                   </th>
                 )
               })}
@@ -64,7 +78,12 @@ export default function DataTable({ data, columns = [] }) {
           {table.getRowModel().rows.map((row) => (
             <tr key={row.id}>
               {row.getVisibleCells().map((cell) => (
-                <td key={cell.id}>
+                <td
+                  key={cell.id}
+                  style={{
+                    width: cell.column.getSize(),
+                  }}
+                >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
               ))}
@@ -72,6 +91,48 @@ export default function DataTable({ data, columns = [] }) {
           ))}
         </tbody>
       </Table>
+      <style global jsx>{`
+        table {
+          width: 100% !important;
+          table-layout: fixed;
+        }
+
+        th {
+          position: relative;
+        }
+
+        tr {
+          width: fit-content;
+          height: 30px;
+        }
+
+        .resizer {
+          position: absolute;
+          right: 0;
+          top: 0;
+          height: 100%;
+          width: 5px;
+          background: rgba(0, 0, 0, 0.5);
+          cursor: col-resize;
+          user-select: none;
+          touch-action: none;
+        }
+
+        .resizer.isResizing {
+          background: blue;
+          opacity: 1;
+        }
+
+        @media (hover: hover) {
+          .resizer {
+            opacity: 0;
+          }
+
+          *:hover > .resizer {
+            opacity: 1;
+          }
+        }
+      `}</style>
     </Card>
   )
 }
