@@ -2,9 +2,9 @@
 
 # 🤖 LLMonitor
 
-**Monitoring for your <span style="background-color: rgb(219, 234, 254);">AI apps</span>**
+**Monitoring for <span style="background-color: rgb(219, 234, 254);">AI apps and agent</span>**
 
-[website](https://llmonitor.com) - [demo](https://app.llmonitor.com/demo) - [![npm version](https://badge.fury.io/js/llmonitor.svg)](https://badge.fury.io/js/llmonitor)
+[website](https://llmonitor.com) - [docs](https://llmonitor.com/docs) - [demo](https://app.llmonitor.com/demo) - [![npm version](https://badge.fury.io/js/llmonitor.svg)](https://badge.fury.io/js/llmonitor)
 
 ---  
 
@@ -23,23 +23,15 @@ Currently, a [JS client](https://github.com/llmonitor/llmonitor-js) is available
 
 ## Todo 
 
-[ ] Update setup-dump.sql to latest
-[ ] Users support
-[ ] Embedding models analytics
-[ ] Tools views 
-[ ] Agents alert
-[x] Sidebar layout 
-[x] Agent view
-[x] Generations view
-
-## Self-hosting
-
-1. Setup a new [Supabase](https://supabase.com) project (recommended to [self-host it yourself](https://supabase.com/docs/guides/self-hosting/)]
-
-2. Connect to the database and run the `setup-dump.sql` file content
-
-2. `cp .env.example .env` and fill in the values
-
-3. Deploy this repo to folder to Vercel or any other hosting service
-
-4. Done
+- [x] Analytics dashboard
+- [ ] Demo dashboard
+- [ ] Agent debugger
+- [ ] Add search on agent and LLM pages
+- [ ] Update `setup-dump.sql` to latest
+- [ ] Users support
+- [ ] Embedding models analytics
+- [ ] Tools views 
+- [ ] Agents alert
+- [x] Sidebar layout 
+- [x] Agent view
+- [x] Generations view

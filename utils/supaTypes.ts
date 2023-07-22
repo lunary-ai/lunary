@@ -3,58 +3,12 @@ export type Json =
   | number
   | boolean
   | null
-  | { [key: string]: Json }
+  | { [key: string]: Json | undefined }
   | Json[]
 
 export interface Database {
   public: {
     Tables: {
-      agent_run: {
-        Row: {
-          app: string | null
-          created_at: string | null
-          ended_at: string | null
-          error: Json | null
-          id: string
-          input: Json | null
-          name: string | null
-          output: Json | null
-          status: string | null
-          tags: string[] | null
-        }
-        Insert: {
-          app?: string | null
-          created_at?: string | null
-          ended_at?: string | null
-          error?: Json | null
-          id?: string
-          input?: Json | null
-          name?: string | null
-          output?: Json | null
-          status?: string | null
-          tags?: string[] | null
-        }
-        Update: {
-          app?: string | null
-          created_at?: string | null
-          ended_at?: string | null
-          error?: Json | null
-          id?: string
-          input?: Json | null
-          name?: string | null
-          output?: Json | null
-          status?: string | null
-          tags?: string[] | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "agent_run_app_fkey"
-            columns: ["app"]
-            referencedRelation: "app"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
       app: {
         Row: {
           created_at: string | null
@@ -83,108 +37,35 @@ export interface Database {
           }
         ]
       }
-      llm_run: {
-        Row: {
-          agent_run: string | null
-          app: string
-          completion_tokens: number | null
-          created_at: string | null
-          ended_at: string | null
-          error: Json | null
-          id: string
-          input: Json | null
-          model: string | null
-          output: Json | null
-          params: Json | null
-          prompt_tokens: number | null
-          status: string | null
-          tags: string[] | null
-        }
-        Insert: {
-          agent_run?: string | null
-          app: string
-          completion_tokens?: number | null
-          created_at?: string | null
-          ended_at?: string | null
-          error?: Json | null
-          id?: string
-          input?: Json | null
-          model?: string | null
-          output?: Json | null
-          params?: Json | null
-          prompt_tokens?: number | null
-          status?: string | null
-          tags?: string[] | null
-        }
-        Update: {
-          agent_run?: string | null
-          app?: string
-          completion_tokens?: number | null
-          created_at?: string | null
-          ended_at?: string | null
-          error?: Json | null
-          id?: string
-          input?: Json | null
-          model?: string | null
-          output?: Json | null
-          params?: Json | null
-          prompt_tokens?: number | null
-          status?: string | null
-          tags?: string[] | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "llm_run_agent_run_fkey"
-            columns: ["agent_run"]
-            referencedRelation: "agent_run"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "llm_run_app_fkey"
-            columns: ["app"]
-            referencedRelation: "app"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
       log: {
         Row: {
-          agent_run: string | null
           app: string
           created_at: string | null
           extra: Json | null
           id: number
           level: string | null
           message: string | null
-          tool_run: string | null
+          run: string | null
         }
         Insert: {
-          agent_run?: string | null
           app: string
           created_at?: string | null
           extra?: Json | null
           id?: number
           level?: string | null
           message?: string | null
-          tool_run?: string | null
+          run?: string | null
         }
         Update: {
-          agent_run?: string | null
           app?: string
           created_at?: string | null
           extra?: Json | null
           id?: number
           level?: string | null
           message?: string | null
-          tool_run?: string | null
+          run?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "log_agent_run_fkey"
-            columns: ["agent_run"]
-            referencedRelation: "agent_run"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "log_app_fkey"
             columns: ["app"]
@@ -192,9 +73,9 @@ export interface Database {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "log_tool_run_fkey"
-            columns: ["tool_run"]
-            referencedRelation: "tool_run"
+            foreignKeyName: "log_run_fkey"
+            columns: ["run"]
+            referencedRelation: "run"
             referencedColumns: ["id"]
           }
         ]
@@ -221,10 +102,10 @@ export interface Database {
           }
         ]
       }
-      tool_run: {
+      run: {
         Row: {
-          agent_run: string | null
-          app: string
+          app: string | null
+          completion_tokens: number | null
           created_at: string | null
           ended_at: string | null
           error: Json | null
@@ -232,11 +113,16 @@ export interface Database {
           input: Json | null
           name: string | null
           output: Json | null
+          params: Json | null
+          parent_run: string | null
+          prompt_tokens: number | null
           status: string | null
+          tags: string[] | null
+          type: string
         }
         Insert: {
-          agent_run?: string | null
-          app: string
+          app?: string | null
+          completion_tokens?: number | null
           created_at?: string | null
           ended_at?: string | null
           error?: Json | null
@@ -244,11 +130,16 @@ export interface Database {
           input?: Json | null
           name?: string | null
           output?: Json | null
+          params?: Json | null
+          parent_run?: string | null
+          prompt_tokens?: number | null
           status?: string | null
+          tags?: string[] | null
+          type: string
         }
         Update: {
-          agent_run?: string | null
-          app?: string
+          app?: string | null
+          completion_tokens?: number | null
           created_at?: string | null
           ended_at?: string | null
           error?: Json | null
@@ -256,17 +147,39 @@ export interface Database {
           input?: Json | null
           name?: string | null
           output?: Json | null
+          params?: Json | null
+          parent_run?: string | null
+          prompt_tokens?: number | null
           status?: string | null
+          tags?: string[] | null
+          type?: string
         }
         Relationships: [
           {
-            foreignKeyName: "tool_run_agent_run_fkey"
-            columns: ["agent_run"]
-            referencedRelation: "agent_run"
+            foreignKeyName: "run_app_fkey"
+            columns: ["app"]
+            referencedRelation: "app"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "tool_run_app_fkey"
+            foreignKeyName: "run_parent_run_fkey"
+            columns: ["parent_run"]
+            referencedRelation: "run"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+    }
+    Views: {
+      agents: {
+        Row: {
+          app: string | null
+          count: number | null
+          name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "run_app_fkey"
             columns: ["app"]
             referencedRelation: "app"
             referencedColumns: ["id"]
@@ -274,33 +187,19 @@ export interface Database {
         ]
       }
     }
-    Views: {
-      [_ in never]: never
-    }
     Functions: {
-      get_convos: {
+      get_runs_usage: {
         Args: {
-          _app: string
-          _offset?: number
+          app_id: string
+          days: number
         }
         Returns: {
-          id: string
-          app: string
-          tags: string[]
-          messages: number
-          calls: number
-          start: string
-          end: string
-          first_message: string
+          model: string
+          completion_tokens: number
+          prompt_tokens: number
+          errors: number
+          success: number
         }[]
-      }
-      upsert_convo: {
-        Args: {
-          _id: string
-          _app: string
-          _tags: string[]
-        }
-        Returns: undefined
       }
     }
     Enums: {

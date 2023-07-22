@@ -1,38 +1,21 @@
-import ChatMessage from "@/components/ChatMessage"
 import DataTable from "@/components/DataTable"
-import JsonViewer from "@/components/JSONViewer"
+import JsonViewer from "@/components/JsonViewer"
 import ObjectViewer from "@/components/ObjectViewer"
 
-import { useAgentRuns, useAgents, useGenerations } from "@/utils/supabaseHooks"
-import {
-  Anchor,
-  Badge,
-  Box,
-  Modal,
-  SegmentedControl,
-  Select,
-  Spoiler,
-  Stack,
-  Title,
-} from "@mantine/core"
+import { useAgents, useRuns } from "@/utils/supabaseHooks"
+import { Badge, Select, Spoiler, Stack, Title } from "@mantine/core"
 import { useLocalStorage } from "@mantine/hooks"
 
 import { createColumnHelper } from "@tanstack/react-table"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect } from "react"
 
 const columnHelper = createColumnHelper<any>()
-
-const getLastMessage = (messages) => {
-  if (Array.isArray(messages)) {
-    return messages[messages.length - 1]
-  }
-
-  return messages
-}
 
 const columns = [
   columnHelper.accessor("created_at", {
     header: "Time",
+    size: 40,
+    enableResizing: false,
     sortingFn: (a, b) =>
       new Date(a.getValue("created_at")).getTime() -
       new Date(b.getValue("created_at")).getTime(),
@@ -40,11 +23,13 @@ const columns = [
   }),
   columnHelper.accessor("name", {
     header: "Agent",
+    size: 60,
     cell: (props) => <Badge color="blue">{props.getValue()}</Badge>,
   }),
   columnHelper.accessor("status", {
     id: "status",
     header: "Status",
+    size: 40,
     cell: (props) => (
       <Badge color={props.getValue() === "success" ? "green" : "red"}>
         {props.getValue()}
@@ -54,6 +39,7 @@ const columns = [
   {
     id: "duration",
     header: "Duration",
+    size: 25,
     cell: (props) => {
       if (!props.getValue()) return null
       return `${(props.getValue() / 1000).toFixed(2)}s`
@@ -91,7 +77,7 @@ export default function Generations() {
     defaultValue: null,
   })
 
-  const { agentRuns } = useAgentRuns(agentName)
+  const { runs } = useRuns("agent", agentName)
 
   useEffect(() => {
     if (!agentName && agents?.length > 0) {
@@ -110,7 +96,7 @@ export default function Generations() {
         onChange={setAgentName}
       />
 
-      <DataTable columns={columns} data={agentRuns} />
+      <DataTable columns={columns} data={runs} />
     </Stack>
   )
 }

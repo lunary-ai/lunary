@@ -8,6 +8,7 @@ import {
   Highlight,
   Mark,
   Paper,
+  PasswordInput,
   Stack,
   Text,
   TextInput,
@@ -30,14 +31,15 @@ function SignupPage() {
     initialValues: {
       email: "",
       name: "",
+      password: "",
       companyName: "",
-      howDidYouHear: "",
-      position: "",
     },
 
     validate: {
       email: (val) => (/^\S+@\S+$/.test(val) ? null : "Invalid email"),
       name: (val) => (val.length <= 2 ? "Your name that short :) ?" : null),
+      password: (val) =>
+        val.length < 6 ? "Password must be at least 6 characters" : null,
     },
   })
 
@@ -60,7 +62,7 @@ function SignupPage() {
       supabaseClient.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/app/team`,
+          emailRedirectTo: `${window.location.origin}/`,
           data: {
             name,
           },
@@ -95,27 +97,27 @@ function SignupPage() {
             <form onSubmit={form.onSubmit(handleSignup)}>
               <Stack>
                 <TextInput
-                  label="Full Name"
+                  label="Name"
                   description="Only used to address you properly."
                   icon={<IconUser size={16} />}
                   placeholder="Your full name"
-                  value={form.values.name}
-                  onChange={(event) =>
-                    form.setFieldValue("name", event.currentTarget.value)
-                  }
                   error={form.errors.name && "This field is required"}
+                  {...form.getInputProps("name")}
                 />
 
                 <TextInput
                   icon={<IconAt size={16} />}
                   label="Email"
-                  description="We'll send you a confirmation email."
-                  value={form.values.email}
-                  onChange={(event) =>
-                    form.setFieldValue("email", event.currentTarget.value)
-                  }
                   error={form.errors.email && "Invalid email"}
                   placeholder="Your email"
+                  {...form.getInputProps("email")}
+                />
+
+                <PasswordInput
+                  label="Password"
+                  error={form.errors.password && "Invalid password"}
+                  placeholder="Your password"
+                  {...form.getInputProps("password")}
                 />
 
                 <Button
@@ -125,7 +127,7 @@ function SignupPage() {
                   fullWidth
                   loading={loading}
                 >
-                  {`Begin →`}
+                  {`Sign Up →`}
                 </Button>
               </Stack>
             </form>
@@ -147,14 +149,7 @@ function SignupPage() {
 
             <p>We are actively working on this product.</p>
             <p>Have any feature request or issue?</p>
-            <p>Make sure to let us know via the livechat.</p>
-            <p>
-              Have more complicated needs? Feel free to{" "}
-              <Anchor href="https://savvycal.com/vince/chat" target="_blank">
-                book a video call
-              </Anchor>{" "}
-              with us.
-            </p>
+            <p>Email vince@llmonitor.com</p>
           </>
         )}
       </Paper>

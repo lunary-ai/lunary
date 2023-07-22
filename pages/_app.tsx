@@ -3,6 +3,7 @@ import Head from "next/head"
 import { MantineProvider } from "@mantine/core"
 import "../styles/globals.css"
 
+
 import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs"
 import { SessionContextProvider } from "@supabase/auth-helpers-react"
 

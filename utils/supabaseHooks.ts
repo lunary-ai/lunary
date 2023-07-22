@@ -102,45 +102,35 @@ export function useAgents() {
   return { agents, loading: isLoading }
 }
 
-export function useAgentRuns(agentName: string) {
+export function useRuns(type: string, name?: string) {
   const supabaseClient = useSupabaseClient<Database>()
   const { app } = useCurrentApp()
 
-  const { data: agentRuns, isLoading } = useQuery(
-    agentName
-      ? supabaseClient
-          .from("agent_run")
-          .select("*")
-          .order("created_at", {
-            ascending: true,
-          })
-          .eq("name", agentName)
-          .eq("app", app?.id)
-          .limit(100)
-      : null,
-    options
-  )
+  let query = supabaseClient
+    .from("run")
+    .select("*")
+    .order("created_at", {
+      ascending: true,
+    })
+    .eq("type", type)
+    .eq("app", app?.id)
 
-  return { agentRuns, loading: isLoading }
+  if (name) {
+    query = query.eq("name", name)
+  }
+
+  const { data: runs, isLoading } = useQuery(query.limit(200), options)
+
+  return { runs, loading: isLoading }
 }
 
-export function useGenerations() {
+export function useRun(runId: string) {
   const supabaseClient = useSupabaseClient<Database>()
-  const { app } = useCurrentApp()
 
-  const { data: generations, isLoading } = useQuery(
-    supabaseClient
-      .from("llm_run")
-      .select("*")
-      .order("created_at", {
-        ascending: true,
-      })
-      .eq("app", app?.id)
-      .limit(100),
+  const { data: run, isLoading } = useQuery(
+    supabaseClient.from("run").select("*").eq("id", runId).single(),
     options
   )
 
-  console.log(generations)
-
-  return { generations, loading: isLoading }
+  return { run, loading: isLoading }
 }

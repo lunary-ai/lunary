@@ -9,9 +9,8 @@ import {
 } from "@mantine/core"
 
 import { useForm } from "@mantine/form"
-import { notifications } from "@mantine/notifications"
 import { useSessionContext, useUser } from "@supabase/auth-helpers-react"
-import { IconAt, IconCheck } from "@tabler/icons-react"
+import { IconAt } from "@tabler/icons-react"
 
 import Router from "next/router"
 import { useEffect, useState } from "react"
@@ -19,7 +18,6 @@ import errorHandler from "@/utils/errorHandler"
 
 function LoginPage() {
   const [loading, setLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
 
   const { supabaseClient } = useSessionContext()
 
@@ -31,8 +29,8 @@ function LoginPage() {
 
     validate: {
       email: (val) => (/^\S+@\S+$/.test(val) ? null : "Invalid email"),
-      //password: (val) =>
-      //        val.length < 6 ? "Password must be at least 6 characters" : null,
+      password: (val) =>
+        val.length < 5 ? "Password must be at least 5 characters" : null,
     },
   })
 
@@ -42,33 +40,31 @@ function LoginPage() {
     if (user) Router.push("/")
   }, [user])
 
-  const handleMagicLogin = async ({ email }: { email: string }) => {
-    setLoading(true)
+  // const handleMagicLogin = async ({ email }: { email: string }) => {
+  //   setLoading(true)
 
-    const ok = await errorHandler(
-      supabaseClient.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/app/`,
-          shouldCreateUser: false,
-        },
-      })
-    )
+  //   const ok = await errorHandler(
+  //     supabaseClient.auth.signInWithOtp({
+  //       email,
+  //       options: {
+  //         emailRedirectTo: `${window.location.origin}/app/`,
+  //         shouldCreateUser: false,
+  //       },
+  //     })
+  //   )
 
-    console.log(ok)
+  //   if (ok) {
+  //     notifications.show({
+  //       icon: <IconCheck size={18} />,
+  //       color: "teal",
+  //       title: "Email sent 💌",
+  //       message:
+  //         "Check your emails to verify your email. Please check your spam folder as we currently have deliverability issues.",
+  //     })
 
-    if (ok) {
-      notifications.show({
-        icon: <IconCheck size={18} />,
-        color: "teal",
-        title: "Email sent 💌",
-        message:
-          "Check your emails to verify your email. Please check your spam folder as we currently have deliverability issues.",
-      })
-
-      setLoading(false)
-    }
-  }
+  //     setLoading(false)
+  //   }
+  // }
 
   const handleLoginWithPassword = async ({
     email,
@@ -77,8 +73,6 @@ function LoginPage() {
     email: string
     password: string
   }) => {
-    if (!password?.length) return handleMagicLogin({ email })
-
     setLoading(true)
 
     const ok = await errorHandler(
@@ -104,7 +98,6 @@ function LoginPage() {
             <TextInput
               icon={<IconAt size={16} />}
               label="Email"
-              description="Enter your email."
               value={form.values.email}
               onChange={(event) =>
                 form.setFieldValue("email", event.currentTarget.value)
@@ -113,36 +106,24 @@ function LoginPage() {
               placeholder="Your email"
             />
 
-            {showPassword && (
-              <TextInput
-                type="password"
-                label="Password"
-                description="Enter your password or leave empty for a magic login link."
-                value={form.values.password}
-                onChange={(event) =>
-                  form.setFieldValue("password", event.currentTarget.value)
-                }
-                error={
-                  form.errors.password &&
-                  "Password must be at least 6 characters"
-                }
-                placeholder="Your password"
-              />
-            )}
+            <TextInput
+              type="password"
+              label="Password"
+              value={form.values.password}
+              onChange={(event) =>
+                form.setFieldValue("password", event.currentTarget.value)
+              }
+              error={
+                form.errors.password && "Password must be at least 6 characters"
+              }
+              placeholder="Your password"
+            />
 
             <Button mt="md" type="submit" fullWidth loading={loading}>
-              {form.values.password ? "Login with Password" : "Send Login Link"}
+              Login
             </Button>
           </Stack>
         </form>
-
-        {!showPassword && (
-          <Text size="sm" mt="md" align="center">
-            <Anchor onClick={() => setShowPassword(!showPassword)}>
-              Use password instead
-            </Anchor>
-          </Text>
-        )}
       </Paper>
     </Container>
   )

@@ -1,8 +1,9 @@
 import ChatMessage from "@/components/ChatMessage"
 import DataTable from "@/components/DataTable"
+import JsonViewer from "@/components/JsonViewer"
 
-import { useGenerations } from "@/utils/supabaseHooks"
-import { Anchor, Badge, Box, Modal, Stack, Title } from "@mantine/core"
+import { useRuns } from "@/utils/supabaseHooks"
+import { Anchor, Badge, Box, Modal, Spoiler, Stack, Title } from "@mantine/core"
 
 import { createColumnHelper } from "@tanstack/react-table"
 import { useState } from "react"
@@ -59,6 +60,7 @@ const MessageViewer = ({ data }) => {
 const columns = [
   columnHelper.accessor("created_at", {
     header: "Time",
+    id: "created_at",
     size: 60,
     enableResizing: false,
     sortingFn: (a, b) =>
@@ -66,7 +68,7 @@ const columns = [
       new Date(b.getValue("created_at")).getTime(),
     cell: (info) => new Date(info.getValue()).toLocaleTimeString(),
   }),
-  columnHelper.accessor("model", {
+  columnHelper.accessor("name", {
     header: "Model",
     size: 80,
     cell: (props) => <Badge color="blue">{props.getValue()}</Badge>,
@@ -100,15 +102,15 @@ const columns = [
     },
   },
   {
-    header: "Tokens",
+    header: "Total tokens",
     size: 25,
     id: "tokens",
     sortingFn: (a, b) =>
       a.original.completion_tokens +
       a.original.prompt_tokens -
       (b.original.completion_tokens + b.original.prompt_tokens),
-    cell: (info) => info.getValue(),
-    accessorFn: (row) => `${row.prompt_tokens} + ${row.completion_tokens}`,
+    cell: (props) => props.getValue(),
+    accessorFn: (row) => row.prompt_tokens + row.completion_tokens,
   },
   columnHelper.accessor("input", {
     header: "Prompt",
@@ -116,21 +118,27 @@ const columns = [
     enableSorting: false,
     cell: (props) => <MessageViewer data={props.getValue()} />,
   }),
-  columnHelper.accessor("output", {
+  {
     header: "Response",
+    id: "response",
     size: 200,
     enableSorting: false,
-    cell: (props) => <MessageViewer data={props.getValue()} />,
-  }),
+    cell: (props) => (
+      <Spoiler hideLabel="hide" showLabel="show" maxHeight={60}>
+        {props.getValue()?.text ?? props.getValue()?.message}
+      </Spoiler>
+    ),
+    accessorFn: (row) => row.output ?? row.error,
+  },
 ]
 
 export default function Generations() {
-  const { generations } = useGenerations()
+  const { runs } = useRuns("llm")
 
   return (
     <Stack>
       <Title>Generations</Title>
-      <DataTable columns={columns} data={generations} />
+      <DataTable columns={columns} data={runs} />
     </Stack>
   )
 }

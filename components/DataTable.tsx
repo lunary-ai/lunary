@@ -7,12 +7,18 @@ import {
   getSortedRowModel,
   SortingState,
 } from "@tanstack/react-table"
-import { Card, Table } from "@mantine/core"
+import { Card, Group, Table } from "@mantine/core"
+import { IconChevronDown, IconChevronUp } from "@tabler/icons-react"
 
 const emptyArray = []
 
 export default function DataTable({ data, columns = [] }) {
-  const [sorting, setSorting] = useState<SortingState>([])
+  const [sorting, setSorting] = useState<SortingState>([
+    {
+      id: "created_at",
+      desc: true,
+    },
+  ])
 
   const table = useReactTable({
     data: data ?? emptyArray, // So it doesn't break when data is undefined because of reference
@@ -40,23 +46,24 @@ export default function DataTable({ data, columns = [] }) {
                     style={{ width: header.getSize() }}
                   >
                     {header.isPlaceholder ? null : (
-                      <div
-                        {...{
-                          className: header.column.getCanSort()
-                            ? "cursor-pointer select-none"
-                            : "",
-                          onClick: header.column.getToggleSortingHandler(),
-                        }}
+                      <Group
+                        spacing={4}
+                        onClick={header.column.getToggleSortingHandler()}
+                        style={
+                          header.column.getCanSort()
+                            ? { cursor: "pointer" }
+                            : {}
+                        }
                       >
                         {flexRender(
                           header.column.columnDef.header,
                           header.getContext()
                         )}
                         {{
-                          asc: " 🔼",
-                          desc: " 🔽",
+                          asc: <IconChevronUp size={14} />,
+                          desc: <IconChevronDown size={14} />,
                         }[header.column.getIsSorted() as string] ?? null}
-                      </div>
+                      </Group>
                     )}
 
                     <div

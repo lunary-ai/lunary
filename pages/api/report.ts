@@ -10,8 +10,7 @@ export interface Event {
   type: string
   app: string
   event?: string
-  agentRunId?: string
-  toolRunId?: string
+  parentRunId?: string
   convo?: string
   timestamp: number
   input?: any
@@ -39,14 +38,14 @@ const cleanEvent = (event: any): Event => {
   }
 }
 
-const registerLLMEvent = async (event: Event): Promise<void> => {
+const registerRunEvent = async (event: Event): Promise<void> => {
   const {
     timestamp,
+    type,
     app,
     event: eventName,
     runId,
-    agentRunId,
-    toolRunId,
+    parentRunId,
     input,
     output,
     name,
@@ -56,21 +55,19 @@ const registerLLMEvent = async (event: Event): Promise<void> => {
     error,
   } = event
 
-  const table = supabaseAdmin.from("llm_run")
+  const table = supabaseAdmin.from("run")
   let query = null
 
   switch (eventName) {
     case "start":
-      // insert new llm_run
-
       query = table.insert({
+        type,
         id: runId,
+        created_at: timestamp,
         app,
         model: name || "unknown",
         params: extra,
-        agent_run: agentRunId,
-        tool_run: toolRunId,
-        created_at: timestamp,
+        parent_run: parentRunId,
         input,
       })
 
@@ -90,8 +87,6 @@ const registerLLMEvent = async (event: Event): Promise<void> => {
 
       break
     case "error":
-      // update llm_run with end time and status error
-
       query = table
         .update({
           ended_at: timestamp,
@@ -102,135 +97,6 @@ const registerLLMEvent = async (event: Event): Promise<void> => {
 
       break
     case "stream":
-      // update "stream_lag" in llm_run
-      break
-  }
-
-  if (query) {
-    const { error } = await query
-
-    if (error) throw error
-  }
-}
-
-const registerAgentEvent = async (event: Event): Promise<void> => {
-  const {
-    event: eventName,
-    agentRunId,
-    toolRunId,
-    timestamp,
-    app,
-    name,
-    input,
-    output,
-    extra,
-    error,
-  } = event
-
-  const table = supabaseAdmin.from("agent_run")
-
-  let query = null
-
-  switch (eventName) {
-    case "start":
-      // insert new agent_run
-
-      query = table.insert({
-        id: agentRunId,
-        name: name || "unknown",
-        created_at: timestamp,
-        app,
-        input,
-      })
-
-      break
-    case "end":
-      // update agent_run with end time, output and status success
-
-      query = table
-        .update({
-          ended_at: timestamp,
-          status: "success",
-          output,
-        })
-        .match({ id: agentRunId })
-
-      break
-    case "error":
-      // update agent_run with end time and status error
-
-      query = table
-        .update({
-          ended_at: timestamp,
-          status: "error",
-          error,
-        })
-        .match({ id: agentRunId })
-
-      break
-  }
-
-  if (query) {
-    const { error } = await query
-
-    if (error) throw error
-  }
-}
-
-const registerToolEvent = async (event: Event): Promise<void> => {
-  const {
-    app,
-    event: eventName,
-    agentRunId,
-    toolRunId,
-    name,
-    input,
-    timestamp,
-    output,
-    extra,
-    error,
-  } = event
-
-  const table = supabaseAdmin.from("tool_run")
-
-  let query = null
-
-  switch (eventName) {
-    case "start":
-      // insert new tool_run
-
-      query = table.insert({
-        id: toolRunId,
-        created_at: timestamp,
-        app,
-        agent_run: agentRunId,
-        name,
-        input,
-        output,
-      })
-
-      break
-    case "end":
-      // update tool_run with end time, output and status success
-      query = table
-        .update({
-          ended_at: timestamp,
-          output,
-          status: "success",
-        })
-        .match({ id: toolRunId })
-
-      break
-    case "error":
-      // update tool_run with end time and status error
-      query = table
-        .update({
-          ended_at: timestamp,
-          status: "error",
-          error,
-        })
-        .match({ id: toolRunId })
-
       break
   }
 
@@ -242,15 +108,14 @@ const registerToolEvent = async (event: Event): Promise<void> => {
 }
 
 const registerLogEvent = async (event: Event): Promise<void> => {
-  const { event: eventName, app, agentRunId, toolRunId, message, extra } = event
+  const { event: eventName, app, parentRunId, message, extra } = event
 
   const { error } = await supabaseAdmin.from("log").insert({
-    agent_run: agentRunId,
-    tool_run: toolRunId,
+    parent_run: parentRunId,
     app,
     level: eventName,
     message,
-    extra,
+    extra: extra || {},
   })
 
   if (error) throw error
@@ -261,13 +126,9 @@ const registerEvent = async (event: Event): Promise<void> => {
 
   switch (type) {
     case "llm":
-      await registerLLMEvent(event)
-      break
     case "agent":
-      await registerAgentEvent(event)
-      break
     case "tool":
-      await registerToolEvent(event)
+      await registerRunEvent(event)
       break
     case "log":
       await registerLogEvent(event)

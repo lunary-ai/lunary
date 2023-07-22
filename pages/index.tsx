@@ -66,7 +66,7 @@ export default function Home() {
       </Modal>
       <Stack>
         {apps?.map((app) => (
-          <Anchor href={`/app/${app.id}`} key={app.id} component={Link}>
+          <Anchor href={`/analytics`} key={app.id} component={Link}>
             <Card key={app.id}>
               <Title order={4}>{app.name}</Title>
               <Group>
