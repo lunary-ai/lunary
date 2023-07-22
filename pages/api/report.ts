@@ -10,14 +10,17 @@ export interface Event {
   type: string
   app: string
   event?: string
+  runId?: string
   parentRunId?: string
   convo?: string
-  timestamp: number
+  timestamp: string
   input?: any
   name?: string
   output?: any
   message?: string
-  extra?: Record<string, unknown>
+  extra?: any
+  promptTokens?: number
+  completionTokens?: number
   error?: {
     message: string
     stack?: string
@@ -34,7 +37,7 @@ const cleanEvent = (event: any): Event => {
 
   return {
     ...rest,
-    timestamp: new Date(timestamp),
+    timestamp: new Date(timestamp).toISOString(),
   }
 }
 
@@ -111,7 +114,7 @@ const registerLogEvent = async (event: Event): Promise<void> => {
   const { event: eventName, app, parentRunId, message, extra } = event
 
   const { error } = await supabaseAdmin.from("log").insert({
-    parent_run: parentRunId,
+    run: parentRunId,
     app,
     level: eventName,
     message,
