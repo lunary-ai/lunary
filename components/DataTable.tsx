@@ -10,9 +10,10 @@ import {
 import { Card, Group, Table } from "@mantine/core"
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-react"
 
+// outside for reference
 const emptyArray = []
 
-export default function DataTable({ data, columns = [] }) {
+export default function DataTable({ data, columns = [], onRowClicked }) {
   const [sorting, setSorting] = useState<SortingState>([
     {
       id: "created_at",
@@ -83,7 +84,19 @@ export default function DataTable({ data, columns = [] }) {
         </thead>
         <tbody>
           {table.getRowModel().rows.map((row) => (
-            <tr key={row.id}>
+            <tr
+              key={row.id}
+              onClick={
+                onRowClicked ? () => onRowClicked(row.original) : undefined
+              }
+              style={
+                onRowClicked
+                  ? {
+                      cursor: "pointer",
+                    }
+                  : {}
+              }
+            >
               {row.getVisibleCells().map((cell) => (
                 <td
                   key={cell.id}

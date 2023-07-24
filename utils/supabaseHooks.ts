@@ -124,6 +124,22 @@ export function useRuns(type: string, name?: string) {
   return { runs, loading: isLoading }
 }
 
+export function useGroupedRunsWithUsage(range) {
+  const supabaseClient = useSupabaseClient()
+  const { app } = useCurrentApp()
+
+  const { data: usage, isLoading } = useQuery(
+    app
+      ? supabaseClient.rpc("get_runs_usage", {
+          app_id: app.id,
+          days: range,
+        })
+      : null
+  )
+
+  return { usage, loading: isLoading }
+}
+
 export function useRun(runId: string) {
   const supabaseClient = useSupabaseClient<Database>()
 

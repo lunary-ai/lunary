@@ -1,5 +1,5 @@
 import BarList from "@/components/BarList"
-import { useCurrentApp } from "@/utils/supabaseHooks"
+import { useCurrentApp, useGroupedRunsWithUsage } from "@/utils/supabaseHooks"
 import {
   Card,
   Container,
@@ -26,19 +26,7 @@ const AnalyticsCard = ({ title, children }) => (
 export default function Analytics() {
   const [range, setRange] = useState(7)
 
-  const supabaseClient = useSupabaseClient()
-  const { app } = useCurrentApp()
-
-  const { data: usage, isLoading } = useQuery(
-    app
-      ? supabaseClient.rpc("get_runs_usage", {
-          app_id: app.id,
-          days: range,
-        })
-      : null
-  )
-
-  console.log(usage)
+  const { usage } = useGroupedRunsWithUsage(range)
 
   return (
     <Container size="lg">
@@ -57,12 +45,9 @@ export default function Analytics() {
             ]}
           />
         </Group>
-
-        <SimpleGrid cols={3} spacing="md">
-          <AnalyticsCard title="Tokens">
-            {isLoading && <Text>Loading...</Text>}
-
-            {usage && (
+        {usage && (
+          <SimpleGrid cols={3} spacing="md">
+            <AnalyticsCard title="Tokens">
               <BarList
                 data={usage
                   .filter((u) => u.type === "llm")
@@ -84,13 +69,9 @@ export default function Analytics() {
                   }))}
                 headers={["Model", "Tokens"]}
               />
-            )}
-          </AnalyticsCard>
+            </AnalyticsCard>
 
-          <AnalyticsCard title="Requests">
-            {isLoading && <Text>Loading...</Text>}
-
-            {usage && (
+            <AnalyticsCard title="Requests">
               <BarList
                 data={usage
                   .filter((u) => u.type === "llm")
@@ -112,10 +93,32 @@ export default function Analytics() {
                   }))}
                 headers={["Model", "Total"]}
               />
-            )}
-          </AnalyticsCard>
-          <AnalyticsCard title="Agents">Agents</AnalyticsCard>
-        </SimpleGrid>
+            </AnalyticsCard>
+            <AnalyticsCard title="Agents">
+              <BarList
+                data={usage
+                  .filter((u) => u.type === "agent")
+                  .map((model) => ({
+                    value: model.name,
+                    count: model.success + model.errors,
+                    composedBy: [
+                      {
+                        value: "Success",
+                        count: model.success,
+                        color: "green",
+                      },
+                      {
+                        value: "Errors",
+                        count: model.errors,
+                        color: "red",
+                      },
+                    ],
+                  }))}
+                headers={["Model", "Total"]}
+              />
+            </AnalyticsCard>
+          </SimpleGrid>
+        )}
       </Stack>
     </Container>
   )

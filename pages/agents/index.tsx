@@ -1,12 +1,14 @@
 import DataTable from "@/components/DataTable"
-import JsonViewer from "@/components/JsonViewer"
-import ObjectViewer from "@/components/ObjectViewer"
+import SmartViewer from "@/components/SmartViewer"
+import JsonViewer from "@/components/SmartViewer/JsonViewer"
+import ObjectViewer from "@/components/SmartViewer/ObjectViewer"
 
-import { useAgents, useRuns } from "@/utils/supabaseHooks"
+import { useGroupedRunsWithUsage, useRuns } from "@/utils/supabaseHooks"
 import { Badge, Select, Spoiler, Stack, Title } from "@mantine/core"
 import { useLocalStorage } from "@mantine/hooks"
 
 import { createColumnHelper } from "@tanstack/react-table"
+import Router from "next/router"
 import { useEffect } from "react"
 
 const columnHelper = createColumnHelper<any>()
@@ -57,21 +59,26 @@ const columns = [
   columnHelper.accessor("input", {
     header: "Input",
     enableSorting: false,
-    cell: (props) => <ObjectViewer data={props.getValue()} />,
+    cell: (props) => <SmartViewer data={props.getValue()} compact />,
   }),
   columnHelper.accessor("output", {
     header: "Response",
     enableSorting: false,
     cell: (props) => (
-      <Spoiler maxHeight={50} showLabel="..." hideLabel="↑">
-        <JsonViewer data={props.getValue()} />
-      </Spoiler>
+      <SmartViewer
+        data={props.getValue()}
+        error={props.row.original.error}
+        compact
+      />
     ),
   }),
 ]
 
 export default function Generations() {
-  const { agents, loading } = useAgents()
+  const { usage } = useGroupedRunsWithUsage(30)
+
+  const agents = usage?.filter((u) => u.type === "agent") || []
+
   const [agentName, setAgentName] = useLocalStorage<string | null>({
     key: "agentName",
     defaultValue: null,
@@ -96,7 +103,11 @@ export default function Generations() {
         onChange={setAgentName}
       />
 
-      <DataTable columns={columns} data={runs} />
+      <DataTable
+        columns={columns}
+        data={runs}
+        onRowClicked={(row) => Router.push(`/agents/${row.id}`)}
+      />
     </Stack>
   )
 }

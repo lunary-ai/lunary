@@ -19,24 +19,29 @@ const tc = (theme, role) => {
   return theme.colors[color][2]
 }
 
-export default function ChatMessage({ data, inline = false }) {
+export default function ChatMessage({ data, compact = false }) {
   const theme = useMantineTheme()
 
   return (
     <Paper
-      p={8}
+      p={12}
       sx={(theme) => ({
         backgroundColor: tc(theme, data?.role),
       })}
     >
-      {!inline && (
+      {!compact && (
         <Text size="xs" sx={{ color: "gray" }}>
           {data?.role}
         </Text>
       )}
-      <Spoiler maxHeight={50} showLabel="..." hideLabel="↑">
+      <Spoiler
+        mt="sm"
+        maxHeight={compact ? 50 : 200}
+        showLabel="..."
+        hideLabel="↑"
+      >
         {data?.text && (
-          <Code color={tc(theme, data?.role)} block>
+          <Code color={typesColors[data?.role]} block>
             {data?.text}
           </Code>
         )}
@@ -50,6 +55,16 @@ export default function ChatMessage({ data, inline = false }) {
           </Text>
         )}
       </Spoiler>
+      <style jsx>{`
+        :global(pre) {
+          white-space: pre-wrap;
+        }
+
+        :global(pre code) {
+          padding: 10px;
+          display: block;
+        }
+      `}</style>
     </Paper>
   )
 }

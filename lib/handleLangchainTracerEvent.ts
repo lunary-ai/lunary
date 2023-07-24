@@ -130,18 +130,20 @@ const parseDate = (date) => {
 }
 
 const handleLangchainTracerEvent = async (id, rawEvent, operation) => {
-  let event: any = recursiveToCamel(rawEvent)
+  const event: any = recursiveToCamel(rawEvent)
 
   if (operation === "update") {
     event.status = event.error ? "error" : "success"
   }
 
-  if (event.run_type === "chain" && event.name === "AgentExecutor") {
+  // Langchain agents are actually chains, so use this custom metadata to
+  // allow the user to specify them
+  const agentName = event.extra?.metadata?.agentName
+  if (event.runType === "chain" && agentName) {
     event.runType = "agent"
 
     // Allow the user to set a custom name for the agent
-    const customName = event.extra?.metadata?.agentName
-    if (customName) event.name = customName
+    event.name = agentName
   }
 
   if (event.runType === "llm") {
@@ -154,7 +156,7 @@ const handleLangchainTracerEvent = async (id, rawEvent, operation) => {
     startTime,
     endTime,
     parentRunId,
-    name, // in case of LLM run will be vendor "OpenAI", in case of agent run will be "AgentExecutor"
+    name, // in case of LLM run will be vendor "OpenAI"
     status,
     inputs,
     outputs,

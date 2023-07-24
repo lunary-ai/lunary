@@ -1,12 +1,12 @@
-import { Container, AppShell } from "@mantine/core"
+import { useEffect, ReactNode } from "react"
+import { AppShell } from "@mantine/core"
+import { Notifications } from "@mantine/notifications"
 
 import { useSessionContext } from "@supabase/auth-helpers-react"
 
 import Router, { useRouter } from "next/router"
-import { useEffect, ReactNode } from "react"
-import Navbar from "@/components/Navbar"
 
-import { Notifications } from "@mantine/notifications"
+import Navbar from "./Navbar"
 import Sidebar from "./Sidebar"
 
 export default function Layout({ children }: { children: ReactNode }) {

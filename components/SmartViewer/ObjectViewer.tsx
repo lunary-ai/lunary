@@ -1,6 +1,10 @@
 import { Button, Group } from "@mantine/core"
 import { useMemo, useState } from "react"
 
+const checkIsMessage = (obj) => {
+  return !!obj.text
+}
+
 export default function ObjectViewer({ data }) {
   const [selected, setSelected] = useState(null)
 
@@ -32,6 +36,15 @@ export default function ObjectViewer({ data }) {
       }
     })
   }, [parsed])
+
+  const isMessages = useMemo(() => {
+    if (!data) return false
+    return Array.isArray(parsed)
+      ? parsed.every(checkIsMessage)
+      : checkIsMessage(parsed)
+  }, [parsed])
+
+  if (!data?.startsWith("{")) return data
 
   return (
     <Group>

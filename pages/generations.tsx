@@ -1,61 +1,15 @@
-import ChatMessage from "@/components/ChatMessage"
+import ChatMessage from "@/components/SmartViewer/ChatMessage"
 import DataTable from "@/components/DataTable"
-import JsonViewer from "@/components/JsonViewer"
+import JsonViewer from "@/components/SmartViewer/JsonViewer"
 
 import { useRuns } from "@/utils/supabaseHooks"
 import { Anchor, Badge, Box, Modal, Spoiler, Stack, Title } from "@mantine/core"
 
 import { createColumnHelper } from "@tanstack/react-table"
 import { useState } from "react"
+import SmartViewer from "@/components/SmartViewer"
 
 const columnHelper = createColumnHelper<any>()
-
-const getLastMessage = (messages) => {
-  if (Array.isArray(messages)) {
-    return messages[messages.length - 1]
-  }
-
-  return messages
-}
-
-const MessageViewer = ({ data }) => {
-  const [expand, setExpand] = useState(false)
-
-  if (!data) return null
-
-  const obj = Array.isArray(data) ? data : [data]
-
-  return (
-    <>
-      {expand && (
-        <Modal
-          title="Chat History"
-          size="lg"
-          opened={expand}
-          onClose={() => setExpand(false)}
-        >
-          <Stack>
-            {obj.map((message) => (
-              <ChatMessage key={message.id} data={message} />
-            ))}
-          </Stack>
-        </Modal>
-      )}
-
-      <Box onClick={() => setExpand(true)} sx={{ cursor: "pointer" }}>
-        <ChatMessage inline={true} data={getLastMessage(obj)} />
-        {obj.length > 1 && (
-          <Anchor onClick={() => setExpand(true)}>View all</Anchor>
-        )}
-      </Box>
-      <style jsx>{`
-        :global(.mantine-Modal-inner) {
-          padding-left: 0; // weird centering bug
-        }
-      `}</style>
-    </>
-  )
-}
 
 const columns = [
   columnHelper.accessor("created_at", {
@@ -116,20 +70,21 @@ const columns = [
     header: "Prompt",
     size: 200,
     enableSorting: false,
-    cell: (props) => <MessageViewer data={props.getValue()} />,
+    cell: (props) => <SmartViewer data={props.getValue()} compact />,
   }),
-  {
+  columnHelper.accessor("output", {
     header: "Response",
-    id: "response",
+    id: "output",
     size: 200,
     enableSorting: false,
     cell: (props) => (
-      <Spoiler hideLabel="hide" showLabel="show" maxHeight={60}>
-        {props.getValue()?.text ?? props.getValue()?.message}
-      </Spoiler>
+      <SmartViewer
+        data={props.getValue()}
+        error={props.row.original.error}
+        compact
+      />
     ),
-    accessorFn: (row) => row.output ?? row.error,
-  },
+  }),
 ]
 
 export default function Generations() {

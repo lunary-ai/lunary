@@ -8,11 +8,9 @@ import {
   Text,
   Select,
 } from "@mantine/core"
-import { useLocalStorage } from "@mantine/hooks"
 import { useUser } from "@supabase/auth-helpers-react"
 
 import { IconAnalyze, IconHelp, IconMessage } from "@tabler/icons-react"
-import Image from "next/image"
 
 import Link from "next/link"
 
