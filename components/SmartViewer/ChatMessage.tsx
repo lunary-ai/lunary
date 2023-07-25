@@ -24,22 +24,18 @@ export default function ChatMessage({ data, compact = false }) {
 
   return (
     <Paper
-      p={12}
+      p={compact ? 0 : 12}
+      pt={compact ? 0 : 8}
       sx={(theme) => ({
         backgroundColor: tc(theme, data?.role),
       })}
     >
       {!compact && (
-        <Text size="xs" sx={{ color: "gray" }}>
+        <Text size="xs" color={typesColors[data?.role] + ".9"}>
           {data?.role}
         </Text>
       )}
-      <Spoiler
-        mt="sm"
-        maxHeight={compact ? 50 : 200}
-        showLabel="..."
-        hideLabel="↑"
-      >
+      <Spoiler mt={5} maxHeight={300} showLabel="Show all ↓" hideLabel="↑">
         {data?.text && (
           <Code color={typesColors[data?.role]} block>
             {data?.text}

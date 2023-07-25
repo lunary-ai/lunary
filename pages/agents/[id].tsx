@@ -1,3 +1,5 @@
+import DurationBadge from "@/components/DurationBadge"
+import TokensBadge from "@/components/TokensBadge"
 import SmartViewer from "@/components/SmartViewer"
 import JsonViewer from "@/components/SmartViewer/JsonViewer"
 import StatusBadge from "@/components/StatusBadge"
@@ -35,10 +37,6 @@ const TraceTree = ({ parentId, runs, onSelect, firstDate }) => {
 
   const run = runs.find((run) => run.id === parentId)
 
-  const duration = run?.ended_at
-    ? new Date(run?.ended_at).getTime() - new Date(run?.created_at).getTime()
-    : NaN
-
   const timeAfterFirst =
     new Date(run.created_at).getTime() - new Date(firstDate).getTime()
 
@@ -57,21 +55,7 @@ const TraceTree = ({ parentId, runs, onSelect, firstDate }) => {
           <Badge variant="outline" color={typeColor[run.type]}>
             {run.type}
           </Badge>
-          {duration && (
-            <Badge
-              variant="outline"
-              color="blue"
-              pl={0}
-              leftSection={
-                <ThemeIcon variant="subtle" size="sm">
-                  <IconClock size={12} />
-                </ThemeIcon>
-              }
-              sx={{ textTransform: "none" }}
-            >
-              {(duration / 1000).toFixed(2)}s
-            </Badge>
-          )}
+          <DurationBadge createdAt={run.created_at} endedAt={run.ended_at} />
 
           <Text c="dimmed" fz="xs">
             T + {(timeAfterFirst / 1000).toFixed(2)}s
@@ -120,11 +104,14 @@ export default function AgentRun({}) {
     })
   )
 
-  const duration = run?.ended_at
-    ? new Date(run?.ended_at).getTime() - new Date(run?.created_at).getTime()
-    : NaN
-
   if (!run) return <>Loading...</>
+
+  const totalTokens = relatedRuns?.reduce((acc, run) => {
+    if (run.type === "llm") {
+      return acc + run.completion_tokens + run.prompt_tokens
+    }
+    return acc
+  }, 0)
 
   const focusedRun = relatedRuns?.find((run) => run.id === focused)
 
@@ -132,14 +119,10 @@ export default function AgentRun({}) {
     <Stack>
       <Title order={1}>{run.name}</Title>
       <Group>
-        <Badge color={run.status === "success" ? "green" : "red"}>
-          {run.status}
-        </Badge>
-        <Text>
-          {`Started at ${new Date(run.created_at).toLocaleString()} ${
-            duration ? `and lasted ${(duration / 1000).toFixed(2)}s` : ""
-          } `}
-        </Text>
+        <StatusBadge status={run.status} />
+        <Text>{`Started at ${new Date(run.created_at).toLocaleString()}`}</Text>
+        <TokensBadge tokens={totalTokens} />
+        <DurationBadge createdAt={run.created_at} endedAt={run.ended_at} />
       </Group>
 
       <Grid>
@@ -162,9 +145,19 @@ export default function AgentRun({}) {
           <Card withBorder>
             {focusedRun && (
               <Stack>
-                <Text>Input</Text>
+                <Group>
+                  <Text weight="bold">Input</Text>
+                  {focusedRun.type === "llm" && (
+                    <TokensBadge tokens={focusedRun.prompt_tokens} />
+                  )}
+                </Group>
                 <SmartViewer data={focusedRun.input} />
-                <Text>Output</Text>
+                <Group>
+                  <Text weight="bold">Output</Text>
+                  {focusedRun.type === "llm" && (
+                    <TokensBadge tokens={focusedRun.completion_tokens} />
+                  )}
+                </Group>
                 <SmartViewer
                   data={focusedRun.output}
                   error={focusedRun.error}

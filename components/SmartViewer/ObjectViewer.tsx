@@ -37,13 +37,6 @@ export default function ObjectViewer({ data }) {
     })
   }, [parsed])
 
-  const isMessages = useMemo(() => {
-    if (!data) return false
-    return Array.isArray(parsed)
-      ? parsed.every(checkIsMessage)
-      : checkIsMessage(parsed)
-  }, [parsed])
-
   if (!data?.startsWith("{")) return data
 
   return (

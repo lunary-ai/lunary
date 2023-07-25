@@ -7,7 +7,7 @@
  * - Text
  */
 
-import { Code } from "@mantine/core"
+import { Code, Spoiler } from "@mantine/core"
 import { useMemo } from "react"
 import ObjectViewer from "./ObjectViewer"
 import MessageViewer from "./MessageViewer"
@@ -55,7 +55,11 @@ export default function SmartViewer({
   }, [parsed])
 
   return (
-    <>
+    <Spoiler
+      maxHeight={compact ? 60 : 500}
+      showLabel="Show more ↓"
+      hideLabel="↑"
+    >
       {error && (
         <pre>
           <Code color="red">{error}</Code>
@@ -85,6 +89,7 @@ export default function SmartViewer({
       <style jsx>{`
         pre {
           white-space: pre-wrap;
+          margin: 0;
         }
 
         pre :global(code) {
@@ -92,6 +97,6 @@ export default function SmartViewer({
           display: block;
         }
       `}</style>
-    </>
+    </Spoiler>
   )
 }

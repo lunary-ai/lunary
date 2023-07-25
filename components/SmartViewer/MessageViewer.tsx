@@ -48,7 +48,7 @@ export default function MessageViewer({ data, compact }) {
         )}
 
         {obj.length > 1 && compact && (
-          <Anchor onClick={() => setExpand(true)}>View all</Anchor>
+          <Anchor onClick={() => setExpand(true)}>View full history</Anchor>
         )}
       </Box>
       <style jsx>{`
