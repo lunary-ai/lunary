@@ -12,6 +12,7 @@ import {
   Modal,
 } from "@mantine/core"
 import { useForm } from "@mantine/form"
+import { notifications } from "@mantine/notifications"
 import { useUser } from "@supabase/auth-helpers-react"
 
 import { IconAnalyze, IconHelp, IconMessage } from "@tabler/icons-react"
@@ -19,15 +20,15 @@ import { IconAnalyze, IconHelp, IconMessage } from "@tabler/icons-react"
 import Link from "next/link"
 import { useState } from "react"
 
-const sendMessage = async ({ message, type }) => {
+const sendMessage = async ({ message }) => {
   const currentPage = window.location.pathname
 
   return await errorHandler(
     fetch("/api/user/feedback", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message, type, currentPage }),
-    }).then((res) => res.json())
+      body: JSON.stringify({ message, currentPage }),
+    })
   )
 }
 
@@ -48,11 +49,7 @@ const Feedback = ({ close }) => {
   const send = async ({ feedback }) => {
     setLoading(true)
 
-    const ok = await sendMessage({ message: feedback, type: "feedback" })
-
-    analytics.track("Feedback", {
-      feedback,
-    })
+    const ok = await sendMessage({ message: feedback })
 
     setLoading(false)
 
