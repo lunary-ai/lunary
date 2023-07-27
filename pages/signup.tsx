@@ -46,7 +46,7 @@ function SignupPage() {
   const user = useUser()
 
   useEffect(() => {
-    if (user) Router.push("/events/")
+    if (user) Router.push("/")
   }, [user])
 
   const handleSignup = async ({
@@ -129,6 +129,11 @@ function SignupPage() {
                 >
                   {`Sign Up →`}
                 </Button>
+
+                <Text size="sm" style={{ textAlign: "center" }}>
+                  {`Already have an account? `}
+                  <Anchor href="/login">Log In</Anchor>
+                </Text>
               </Stack>
             </form>
           </>

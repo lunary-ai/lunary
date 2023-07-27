@@ -39,7 +39,7 @@ export const useProfile = () => {
   const { data: profile, isLoading } = useQuery(
     user
       ? supabaseClient
-          .from("profiles")
+          .from("profile")
           .select("*")
           .match({ id: user?.id })
           .single()
@@ -63,7 +63,7 @@ export function useApps() {
   )
 
   const { trigger: insert } = useInsertMutation(
-    supabaseClient.from("apps"),
+    supabaseClient.from("app"),
     ["id"],
     "name,owner"
   )

@@ -122,6 +122,11 @@ function LoginPage() {
             <Button mt="md" type="submit" fullWidth loading={loading}>
               Login
             </Button>
+
+            <Text size="sm" style={{ textAlign: "center" }}>
+              {`Don't have an account? `}
+              <Anchor href="/signup">Sign Up</Anchor>
+            </Text>
           </Stack>
         </form>
       </Paper>

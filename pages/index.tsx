@@ -33,16 +33,35 @@ export default function Home() {
         Observability (logs + analytics) for <Mark>LLM-powered apps</Mark>.
       </Text>
 
-      <Group position="apart">
-        <Title order={3}>Your Apps</Title>
-        <Button
-          onClick={() => {
-            setModalOpened(true)
-          }}
-        >
-          + New app
-        </Button>
-      </Group>
+      {!apps?.length ? (
+        <Card p="xl" w={600} withBorder>
+          <Stack align="start">
+            <Title order={3}>
+              Start by adding an app to get a tracking ID.
+            </Title>
+            <Button
+              size="md"
+              onClick={() => {
+                setModalOpened(true)
+              }}
+            >
+              + Create one
+            </Button>
+          </Stack>
+        </Card>
+      ) : (
+        <Group position="apart">
+          <Title order={3}>Your Apps</Title>
+          <Button
+            onClick={() => {
+              setModalOpened(true)
+            }}
+          >
+            + New app
+          </Button>
+        </Group>
+      )}
+
       <Modal
         opened={modalOpened}
         onClose={() => setModalOpened(false)}
@@ -50,6 +69,7 @@ export default function Home() {
       >
         <Group>
           <TextInput
+            placeholder="App name"
             value={newAppName}
             onChange={(e) => setNewAppName(e.currentTarget.value)}
           />
@@ -57,6 +77,7 @@ export default function Home() {
             onClick={async () => {
               // @ts-ignore
               await insert({ name: newAppName, owner: user.id })
+              console.log({ name: newAppName, owner: user.id })
               setModalOpened(false)
             }}
           >

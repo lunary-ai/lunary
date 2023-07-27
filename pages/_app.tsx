@@ -9,6 +9,7 @@ import { SessionContextProvider } from "@supabase/auth-helpers-react"
 import Layout from "@/components/Layout"
 import { Database } from "@/utils/supaTypes"
 import { useState } from "react"
+import Link from "next/link"
 
 export default function App(props: AppProps) {
   const { Component, pageProps } = props
@@ -32,6 +33,13 @@ export default function App(props: AppProps) {
             primaryColor: "pink",
             headings: {
               fontWeight: 700,
+            },
+            components: {
+              Anchor: {
+                defaultProps: {
+                  component: Link,
+                },
+              },
             },
           }}
         >
