@@ -1,6 +1,8 @@
 <div align="center">
 
-# ![](https://llmonitor.com/logo.png | width=50) LLMonitor
+<img src="https://llmonitor.com/logo.png" style='border-radius: 12px;' width="50"/> 
+
+# LLMonitor
 
 **Monitoring for AI apps and agent**
 
