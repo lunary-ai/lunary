@@ -9,8 +9,8 @@
 
 import { Code, Spoiler } from "@mantine/core"
 import { useMemo } from "react"
-import ObjectViewer from "./ObjectViewer"
 import MessageViewer from "./MessageViewer"
+import { JsonView, darkStyles, defaultStyles } from "react-json-view-lite"
 
 const checkIsMessage = (obj) => {
   return !!obj.text
@@ -27,7 +27,7 @@ export default function SmartViewer({
 }) {
   const parsed = useMemo(() => {
     if (!data) return null
-    if (typeof data === "string" && data.startsWith("{")) {
+    if (typeof data === "string" && data?.startsWith("{")) {
       try {
         return JSON.parse(data)
       } catch (e) {
@@ -71,11 +71,19 @@ export default function SmartViewer({
           {isObject ? (
             isMessages ? (
               <MessageViewer data={parsed} compact={compact} />
-            ) : isFatObject ? (
-              <ObjectViewer data={parsed} />
             ) : (
               <pre>
-                <Code color="blue">{JSON.stringify(parsed, null, 2)}</Code>
+                <Code color="blue">
+                  {isFatObject ? (
+                    <JsonView
+                      data={parsed}
+                      shouldInitiallyExpand={(level) => level < 1}
+                      style={defaultStyles}
+                    />
+                  ) : (
+                    JSON.stringify(parsed, null, 2)
+                  )}
+                </Code>
               </pre>
             )
           ) : (
@@ -95,6 +103,20 @@ export default function SmartViewer({
         pre :global(code) {
           padding: 10px;
           display: block;
+        }
+
+        /* Fixes for json-view-lite */
+        pre :global(code div[role="list"] > div) {
+          padding-left: 8px;
+        }
+
+        /* Hide first expander btn */
+        pre :global(code > div > div > span[role="button"]) {
+          display: none;
+        }
+
+        pre :global(code span[role="button"]) {
+          cursor: pointer;
         }
       `}</style>
     </Spoiler>

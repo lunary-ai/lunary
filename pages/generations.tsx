@@ -1,12 +1,9 @@
-import ChatMessage from "@/components/SmartViewer/ChatMessage"
 import DataTable from "@/components/DataTable"
-import JsonViewer from "@/components/SmartViewer/JsonViewer"
 
 import { useRuns } from "@/utils/supabaseHooks"
-import { Anchor, Badge, Box, Modal, Spoiler, Stack, Title } from "@mantine/core"
+import { Badge, Stack, Title } from "@mantine/core"
 
 import { createColumnHelper } from "@tanstack/react-table"
-import { useState } from "react"
 import SmartViewer from "@/components/SmartViewer"
 
 const columnHelper = createColumnHelper<any>()

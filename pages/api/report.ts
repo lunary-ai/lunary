@@ -10,9 +10,10 @@ export interface Event {
   type: string
   app: string
   event?: string
+  level?: string
   runId?: string
   parentRunId?: string
-  convo?: string
+  // convo?: string
   timestamp: string
   input?: any
   name?: string
@@ -68,7 +69,7 @@ const registerRunEvent = async (event: Event): Promise<void> => {
         id: runId,
         created_at: timestamp,
         app,
-        model: name || "unknown",
+        name,
         params: extra,
         parent_run: parentRunId,
         input,
@@ -129,6 +130,7 @@ const registerEvent = async (event: Event): Promise<void> => {
 
   switch (type) {
     case "llm":
+    case "chain":
     case "agent":
     case "tool":
       await registerRunEvent(event)

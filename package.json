@@ -30,6 +30,7 @@
     "next": "13.4.2",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-json-view-lite": "^0.9.7",
     "typescript": "5.0.4",
     "vercel-email": "^0.0.6"
   },
