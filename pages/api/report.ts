@@ -16,12 +16,15 @@ export interface Event {
   // convo?: string
   timestamp: string
   input?: any
+  tags?: string[]
   name?: string
   output?: any
   message?: string
   extra?: any
-  promptTokens?: number
-  completionTokens?: number
+  tokensUsage?: {
+    prompt: number
+    completion: number
+  }
   error?: {
     message: string
     stack?: string
@@ -51,10 +54,10 @@ const registerRunEvent = async (event: Event): Promise<void> => {
     runId,
     parentRunId,
     input,
+    tags,
     output,
     name,
-    promptTokens,
-    completionTokens,
+    tokensUsage,
     extra,
     error,
   } = event
@@ -69,7 +72,9 @@ const registerRunEvent = async (event: Event): Promise<void> => {
         id: runId,
         created_at: timestamp,
         app,
+        tags: tags.length ? tags : null,
         name,
+        status: "started",
         params: extra,
         parent_run: parentRunId,
         input,
@@ -84,8 +89,8 @@ const registerRunEvent = async (event: Event): Promise<void> => {
           ended_at: timestamp,
           output,
           status: "success",
-          prompt_tokens: promptTokens,
-          completion_tokens: completionTokens,
+          prompt_tokens: tokensUsage?.prompt,
+          completion_tokens: tokensUsage?.completion,
         })
         .match({ id: runId })
 

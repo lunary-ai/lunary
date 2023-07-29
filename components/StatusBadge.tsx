@@ -1,8 +1,19 @@
 import { Badge, ThemeIcon } from "@mantine/core"
 import { IconCheck, IconCross, IconX } from "@tabler/icons-react"
 
+const getColor = (status) => {
+  switch (status) {
+    case "success":
+      return "green"
+    case "error":
+      return "red"
+    default:
+      return "blue"
+  }
+}
+
 export default function StatusBadge({ status, minimal = false }) {
-  const color = status === "success" ? "green" : "red"
+  const color = getColor(status)
 
   if (minimal)
     return (

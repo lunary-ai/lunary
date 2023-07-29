@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🤖 LLMonitor
+# ![](https://llmonitor.com/logo.png | width=50) LLMonitor
 
-**Monitoring for <span style="background-color: rgb(219, 234, 254);">AI apps and agent</span>**
+**Monitoring for AI apps and agent**
 
 [website](https://llmonitor.com) - [docs](https://llmonitor.com/docs) - [demo](https://app.llmonitor.com/demo) - [![npm version](https://badge.fury.io/js/llmonitor.svg)](https://badge.fury.io/js/llmonitor)
 
@@ -23,15 +23,13 @@ Currently, a [JS client](https://github.com/llmonitor/llmonitor-js) is available
 
 ## Todo 
 
-- [x] Analytics dashboard
 - [ ] Demo dashboard
-- [ ] Agent debugger
-- [ ] Add search on agent and LLM pages
-- [ ] Update `setup-dump.sql` to latest
-- [ ] Users support
-- [ ] Embedding models analytics
-- [ ] Tools views 
-- [ ] Agents alert
-- [x] Sidebar layout 
-- [x] Agent view
-- [x] Generations view
+- [ ] Search on agent and LLM pages
+- [ ] Date filtering on agent and LLM pages
+- [ ] Users Tracking
+- [ ] Embeddings analytics
+- [ ] Tools views
+
+## License
+
+This project is licensed under the Apache 2.0 License.
