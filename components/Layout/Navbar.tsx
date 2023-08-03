@@ -1,3 +1,4 @@
+import { analytics } from "@/utils/analytics"
 import errorHandler from "@/utils/errorHandler"
 import { useApps, useCurrentApp } from "@/utils/supabaseHooks"
 import {
@@ -18,7 +19,7 @@ import { useUser } from "@supabase/auth-helpers-react"
 import { IconAnalyze, IconHelp, IconMessage } from "@tabler/icons-react"
 
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 const sendMessage = async ({ message }) => {
   const currentPage = window.location.pathname
@@ -92,6 +93,14 @@ export default function Navbar() {
 
   const { app, setAppId, loading } = useCurrentApp()
   const user = useUser()
+
+  useEffect(() => {
+    if (user) {
+      analytics?.identify(user.id, {
+        email: user.email,
+      })
+    }
+  }, [user])
 
   return (
     <Header height={60} p="md">

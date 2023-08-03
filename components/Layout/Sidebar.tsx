@@ -86,14 +86,14 @@ export default function Sidebar() {
               </Menu.Target>
               <Menu.Dropdown ml="lg">
                 <Menu.Label>Account</Menu.Label>
-                <Menu.Item
+                {/* <Menu.Item
                   icon={<IconFileInvoice size={16} />}
                   onClick={() => {
                     Router.push("/billing")
                   }}
                 >
                   Billing
-                </Menu.Item>
+                </Menu.Item> */}
                 <Menu.Item
                   color="red"
                   icon={<IconLogout size={16} />}
