@@ -21,7 +21,7 @@ import { useSessionContext } from "@supabase/auth-helpers-react"
 
 import Router, { useRouter } from "next/router"
 import { useProfile } from "@/utils/supabaseHooks"
-import UserAvatar from "../UserAvatar"
+import UserAvatar from "@/components/Blocks/UserAvatar"
 import Link from "next/link"
 
 const menu = [

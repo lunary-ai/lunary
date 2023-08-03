@@ -1,10 +1,10 @@
-import DataTable from "@/components/DataTable"
+import DataTable from "@/components/Blocks/DataTable"
 
 import { useRuns } from "@/utils/supabaseHooks"
 import { Badge, Stack, Title } from "@mantine/core"
 
 import { createColumnHelper } from "@tanstack/react-table"
-import SmartViewer from "@/components/SmartViewer"
+import SmartViewer from "@/components/Blocks/SmartViewer"
 
 const columnHelper = createColumnHelper<any>()
 

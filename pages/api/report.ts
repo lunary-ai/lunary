@@ -50,6 +50,8 @@ const registerRunEvent = async (event: Event): Promise<void> => {
     timestamp,
     type,
     app,
+    userId,
+    userProps,
     event: eventName,
     runId,
     parentRunId,
@@ -65,11 +67,34 @@ const registerRunEvent = async (event: Event): Promise<void> => {
   const table = supabaseAdmin.from("run")
   let query = null
 
+  let internalUserId
+  // Only do on start event to save on DB calls and have correct lastSeen
+  if (userId && eventName === "start") {
+    const { data, error } = await supabaseAdmin
+      .from("app_user")
+      .upsert(
+        {
+          external_id: userId,
+          last_seen: timestamp,
+          app: app,
+          props: userProps,
+        },
+        { onConflict: "external_id, app" }
+      )
+      .select()
+      .single()
+
+    if (error) throw error
+
+    internalUserId = data.id
+  }
+
   switch (eventName) {
     case "start":
       query = table.insert({
         type,
         id: runId,
+        user: internalUserId,
         created_at: timestamp,
         app,
         tags: tags.length ? tags : null,

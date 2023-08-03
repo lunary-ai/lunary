@@ -48,6 +48,7 @@ export const useProfile = () => {
   )
 
   if (profile) {
+    // @ts-ignore
     profile.color = getUserColor(theme, profile.id)
   }
 
@@ -138,6 +139,18 @@ export function useGroupedRunsWithUsage(range) {
   )
 
   return { usage, loading: isLoading }
+}
+
+export function useUsers() {
+  const supabaseClient = useSupabaseClient()
+  const { app } = useCurrentApp()
+
+  const { data: users, isLoading } = useQuery(
+    supabaseClient.from("app_user").select("*").eq("app", app?.id).limit(500),
+    options
+  )
+
+  return { users, loading: isLoading }
 }
 
 export function useRun(runId: string) {

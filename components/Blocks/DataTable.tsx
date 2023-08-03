@@ -13,7 +13,11 @@ import { IconChevronDown, IconChevronUp } from "@tabler/icons-react"
 // outside for reference
 const emptyArray = []
 
-export default function DataTable({ data, columns = [], onRowClicked }) {
+export default function DataTable({
+  data,
+  columns = [],
+  onRowClicked = undefined,
+}) {
   const [sorting, setSorting] = useState<SortingState>([
     {
       id: "created_at",

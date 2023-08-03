@@ -1,4 +1,4 @@
-import CopyText from "@/components/CopyText"
+import CopyText from "@/components/Blocks/CopyText"
 import { useCurrentApp } from "@/utils/supabaseHooks"
 import { Stack, Text, Title } from "@mantine/core"
 

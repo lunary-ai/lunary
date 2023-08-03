@@ -1,5 +1,5 @@
-import BarList from "@/components/BarList"
-import { useCurrentApp, useGroupedRunsWithUsage } from "@/utils/supabaseHooks"
+import BarList from "@/components/Blocks/BarList"
+import { useGroupedRunsWithUsage } from "@/utils/supabaseHooks"
 import {
   Card,
   Container,
@@ -10,8 +10,6 @@ import {
   Text,
   Title,
 } from "@mantine/core"
-import { useQuery } from "@supabase-cache-helpers/postgrest-swr"
-import { useSupabaseClient } from "@supabase/auth-helpers-react"
 import { useState } from "react"
 
 const AnalyticsCard = ({ title, children }) => (

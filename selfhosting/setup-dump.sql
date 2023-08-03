@@ -59,6 +59,7 @@ ALTER TABLE "public"."run" ADD FOREIGN KEY ("parent_run") REFERENCES "public"."r
 ALTER TABLE "public"."run" ADD FOREIGN KEY ("app") REFERENCES "public"."app"("id") ON DELETE CASCADE;
 
 
+
 --
 -- Name: app; Type: ROW SECURITY; Schema: public; Owner: -
 --
@@ -129,6 +130,17 @@ CREATE POLICY log_owner_policy ON public.log USING ((( SELECT app.owner
 CREATE POLICY run_owner_policy ON public.run USING ((( SELECT app.owner
    FROM public.app
   WHERE (app.id = run.app)) = auth.uid()));
+
+
+
+--
+-- Name: run run_owner_policy; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY app_user_owner_policy ON public.app_user USING ((( SELECT app.owner
+   FROM public.app
+  WHERE (app.id = app_user.app)) = auth.uid()));
+
 
 
 

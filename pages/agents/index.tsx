@@ -1,10 +1,8 @@
-import DataTable from "@/components/DataTable"
-import SmartViewer from "@/components/SmartViewer"
-import JsonViewer from "@/components/SmartViewer/JsonViewer"
-import ObjectViewer from "@/components/SmartViewer/ObjectViewer"
+import DataTable from "@/components/Blocks/DataTable"
+import SmartViewer from "@/components/Blocks/SmartViewer"
 
 import { useGroupedRunsWithUsage, useRuns } from "@/utils/supabaseHooks"
-import { Badge, Select, Spoiler, Stack, Title } from "@mantine/core"
+import { Badge, Select, Stack, Title } from "@mantine/core"
 import { useLocalStorage } from "@mantine/hooks"
 
 import { createColumnHelper } from "@tanstack/react-table"

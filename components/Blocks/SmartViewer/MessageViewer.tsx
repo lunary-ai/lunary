@@ -1,6 +1,6 @@
 import { useState } from "react"
 
-import ChatMessage from "@/components/SmartViewer/ChatMessage"
+import ChatMessage from "@/components/Blocks/SmartViewer/ChatMessage"
 import { Anchor, Box, Modal, Stack } from "@mantine/core"
 
 const getLastMessage = (messages) => {

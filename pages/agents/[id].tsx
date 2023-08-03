@@ -1,29 +1,25 @@
-import DurationBadge from "@/components/DurationBadge"
-import TokensBadge from "@/components/TokensBadge"
-import SmartViewer from "@/components/SmartViewer"
-import JsonViewer from "@/components/SmartViewer/JsonViewer"
-import StatusBadge from "@/components/StatusBadge"
-import { useRun } from "@/utils/supabaseHooks"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/router"
+
 import {
   Badge,
   Card,
   Code,
-  Flex,
   Grid,
   Group,
-  Select,
-  SimpleGrid,
-  Spoiler,
   Stack,
   Text,
-  ThemeIcon,
   Title,
 } from "@mantine/core"
+
+import DurationBadge from "@/components/Blocks/DurationBadge"
+import TokensBadge from "@/components/Blocks/TokensBadge"
+import SmartViewer from "@/components/Blocks/SmartViewer"
+import StatusBadge from "@/components/Blocks/StatusBadge"
+
+import { useRun } from "@/utils/supabaseHooks"
 import { useQuery } from "@supabase-cache-helpers/postgrest-swr"
 import { useSupabaseClient } from "@supabase/auth-helpers-react"
-import { IconClock } from "@tabler/icons-react"
-import { useRouter } from "next/router"
-import { useEffect, useState } from "react"
 
 const typeColor = {
   llm: "yellow",
