@@ -8,12 +8,30 @@ import { SessionContextProvider } from "@supabase/auth-helpers-react"
 
 import Layout from "@/components/Layout"
 import { Database } from "@/utils/supaTypes"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
+
+import { useRouter } from "next/router"
+import { analytics } from "@/utils/analytics"
 
 export default function App(props: AppProps) {
   const { Component, pageProps } = props
+  const router = useRouter()
+
   const [supabase] = useState(() => createPagesBrowserClient<Database>())
+
+  const handleRouteChange = async () => {
+    analytics?.page()
+  }
+
+  useEffect(() => {
+    handleRouteChange()
+
+    router.events.on("routeChangeComplete", handleRouteChange)
+    return () => {
+      router.events.off("routeChangeComplete", handleRouteChange)
+    }
+  }, [])
 
   return (
     <>
