@@ -149,6 +149,24 @@ export function useGroupedRunsWithUsage(range, user_id = undefined) {
   return { usage, loading: isLoading }
 }
 
+export function useDailyUsage(range, user_id = undefined) {
+  const supabaseClient = useSupabaseClient()
+  const { app } = useCurrentApp()
+
+  const { data: dailyUsage, isLoading } = useQuery(
+    app
+      ? supabaseClient.rpc("get_runs_usage_daily", {
+          app_id: app.id,
+          user_id,
+          days: range,
+        })
+      : null,
+    hardOptions
+  )
+
+  return { dailyUsage, loading: isLoading }
+}
+
 export function useRun(runId: string) {
   const supabaseClient = useSupabaseClient<Database>()
 

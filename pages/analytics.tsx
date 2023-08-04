@@ -1,6 +1,7 @@
 import AnalyticsCard from "@/components/Blocks/AnalyticsCard"
 import BarList from "@/components/Blocks/BarList"
-import { useGroupedRunsWithUsage } from "@/utils/supabaseHooks"
+import LineChart from "@/components/Blocks/LineChart"
+import { useDailyUsage, useGroupedRunsWithUsage } from "@/utils/supabaseHooks"
 import {
   Container,
   Group,
@@ -15,6 +16,9 @@ export default function Analytics() {
   const [range, setRange] = useState(7)
 
   const { usage } = useGroupedRunsWithUsage(range)
+  const { dailyUsage } = useDailyUsage(range)
+
+  console.log({ dailyUsage })
 
   return (
     <Container size="lg">
@@ -106,6 +110,38 @@ export default function Analytics() {
               />
             </AnalyticsCard>
           </SimpleGrid>
+        )}
+        {dailyUsage && (
+          <>
+            <AnalyticsCard title="Tokens">
+              <LineChart
+                range={range}
+                height={300}
+                splitBy="name"
+                data={dailyUsage
+                  .filter((u) => u.type === "llm")
+                  .map((p) => ({
+                    ...p,
+                    tokens: p.completion_tokens + p.prompt_tokens,
+                  }))}
+                props={["tokens"]}
+              />
+            </AnalyticsCard>
+            <AnalyticsCard title="Agents">
+              <LineChart
+                range={range}
+                height={300}
+                splitBy="name"
+                data={dailyUsage
+                  .filter((u) => u.type === "agent")
+                  .map((p) => ({
+                    ...p,
+                    runs: p.success + p.errors,
+                  }))}
+                props={["runs"]}
+              />
+            </AnalyticsCard>
+          </>
         )}
       </Stack>
     </Container>
