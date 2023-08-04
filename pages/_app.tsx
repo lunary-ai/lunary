@@ -14,6 +14,9 @@ import Link from "next/link"
 import { useRouter } from "next/router"
 import { analytics } from "@/utils/analytics"
 
+import { PostHogProvider } from "posthog-js/react"
+import posthog from "posthog-js"
+
 export default function App(props: AppProps) {
   const { Component, pageProps } = props
   const router = useRouter()
@@ -39,33 +42,35 @@ export default function App(props: AppProps) {
         <title>LLMonitor</title>
       </Head>
 
-      <SessionContextProvider
-        supabaseClient={supabase}
-        initialSession={pageProps.initialSession}
-      >
-        <MantineProvider
-          withNormalizeCSS
-          theme={{
-            colorScheme: "light",
-            defaultRadius: "md",
-            primaryColor: "pink",
-            headings: {
-              fontWeight: 700,
-            },
-            components: {
-              Anchor: {
-                defaultProps: {
-                  component: Link,
+      <PostHogProvider client={posthog}>
+        <SessionContextProvider
+          supabaseClient={supabase}
+          initialSession={pageProps.initialSession}
+        >
+          <MantineProvider
+            withNormalizeCSS
+            theme={{
+              colorScheme: "light",
+              defaultRadius: "md",
+              // primaryColor: "pink",
+              headings: {
+                fontWeight: 700,
+              },
+              components: {
+                Anchor: {
+                  defaultProps: {
+                    component: Link,
+                  },
                 },
               },
-            },
-          }}
-        >
-          <Layout>
-            <Component {...pageProps} />
-          </Layout>
-        </MantineProvider>
-      </SessionContextProvider>
+            }}
+          >
+            <Layout>
+              <Component {...pageProps} />
+            </Layout>
+          </MantineProvider>
+        </SessionContextProvider>
+      </PostHogProvider>
     </>
   )
 }

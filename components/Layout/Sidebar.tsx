@@ -38,7 +38,7 @@ function NavbarLink({ icon: Icon, label, link, active }) {
       <Link href={link}>
         <ThemeIcon
           variant={active ? "filled" : "light"}
-          color={"pink.4"}
+          color={"blue.4"}
           size="lg"
         >
           <Icon size="1.1rem" />

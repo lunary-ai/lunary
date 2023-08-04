@@ -1,25 +1,15 @@
+import AnalyticsCard from "@/components/Blocks/AnalyticsCard"
 import BarList from "@/components/Blocks/BarList"
 import { useGroupedRunsWithUsage } from "@/utils/supabaseHooks"
 import {
-  Card,
   Container,
   Group,
   SegmentedControl,
   SimpleGrid,
   Stack,
-  Text,
   Title,
 } from "@mantine/core"
 import { useState } from "react"
-
-const AnalyticsCard = ({ title, children }) => (
-  <Card withBorder>
-    <Text c="dimmed" tt="uppercase" fw={700} fz="xs">
-      {title}
-    </Text>
-    {children}
-  </Card>
-)
 
 export default function Analytics() {
   const [range, setRange] = useState(7)

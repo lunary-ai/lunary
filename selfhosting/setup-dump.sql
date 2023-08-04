@@ -149,26 +149,28 @@ CREATE POLICY app_user_owner_policy ON public.app_user USING ((( SELECT app.owne
 -- Name: get_related_runs(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.get_related_runs(run_id uuid) RETURNS TABLE(created_at timestamp with time zone, tags text[], app uuid, id uuid, status text, name text, ended_at timestamp with time zone, error jsonb, input jsonb, output jsonb, params jsonb, type text, parent_run uuid, completion_tokens integer, prompt_tokens integer)
-    LANGUAGE plpgsql
-    AS $$
+CREATE OR REPLACE FUNCTION public.get_runs_usage(app_id uuid, days integer, user_id int8 DEFAULT NULL)
+ RETURNS TABLE(name text, type text, completion_tokens bigint, prompt_tokens bigint, errors bigint, success bigint)
+ LANGUAGE plpgsql
+AS $function$
 BEGIN
-    RETURN QUERY
-    WITH RECURSIVE related_runs AS (
-        SELECT r1.*
-        FROM run r1
-        WHERE r1.id = run_id
-
-        UNION ALL
-
-        SELECT r2.*
-        FROM run r2
-        INNER JOIN related_runs rr ON rr.id = r2.parent_run
-    )
-    SELECT rr.created_at, rr.tags, rr.app, rr.id, rr.status, rr.name, rr.ended_at, rr.error, rr.input, rr.output, 
-           rr.params, rr.type, rr.parent_run, rr.completion_tokens, rr.prompt_tokens
-    FROM related_runs rr;
-END; $$;
+    RETURN QUERY 
+    SELECT 
+        run.name,
+        run.type,
+        COALESCE(SUM(run.completion_tokens), 0) AS completion_tokens,
+        COALESCE(SUM(run.prompt_tokens), 0) AS prompt_tokens,
+        SUM(CASE WHEN run.status = 'error' THEN 1 ELSE 0 END) AS errors,
+        SUM(CASE WHEN run.status = 'success' THEN 1 ELSE 0 END) AS success
+    FROM 
+        run
+    WHERE 
+        run.app = app_id AND
+        run.created_at >= NOW() - INTERVAL '1 day' * days AND
+        (user_id IS NULL OR run.user = user_id)  -- this line filters by user_id when it is not null
+    GROUP BY
+        run.name, run.type;
+END; $function$
 
 
 --

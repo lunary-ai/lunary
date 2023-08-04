@@ -9,10 +9,16 @@ import { useLocalStorage } from "@mantine/hooks"
 import { Database } from "./supaTypes"
 import { useEffect } from "react"
 
-const options = {
-  // revalidateOnFocus: false,
-  // revalidateOnReconnect: false,
+const softOptions = {
   dedupingInterval: 10000,
+}
+
+// For queries where up to date data is less important
+// cache more aggressively
+const hardOptions = {
+  revalidateOnFocus: false,
+  revalidateOnReconnect: false,
+  dedupingInterval: 60000,
 }
 
 // Make a number seed from the ID, then use that to pick a color from the Mantine colors
@@ -44,7 +50,7 @@ export const useProfile = () => {
           .match({ id: user?.id })
           .single()
       : null,
-    options
+    hardOptions
   )
 
   if (profile) {
@@ -60,7 +66,7 @@ export function useApps() {
 
   const { data: apps, isLoading } = useQuery(
     supabaseClient.from("app").select("name,owner,id"),
-    options
+    softOptions
   )
 
   const { trigger: insert } = useInsertMutation(
@@ -97,13 +103,13 @@ export function useAgents() {
 
   const { data: agents, isLoading } = useQuery(
     supabaseClient.from("agents").select("*").eq("app", app?.id).limit(100),
-    options
+    softOptions
   )
 
   return { agents, loading: isLoading }
 }
 
-export function useRuns(type: string, name?: string) {
+export function useRuns(type: string, match?: any) {
   const supabaseClient = useSupabaseClient<Database>()
   const { app } = useCurrentApp()
 
@@ -116,16 +122,16 @@ export function useRuns(type: string, name?: string) {
     .eq("type", type)
     .eq("app", app?.id)
 
-  if (name) {
-    query = query.eq("name", name)
+  if (match) {
+    query = query.match(match)
   }
 
-  const { data: runs, isLoading } = useQuery(query.limit(200), options)
+  const { data: runs, isLoading } = useQuery(query.limit(200), softOptions)
 
   return { runs, loading: isLoading }
 }
 
-export function useGroupedRunsWithUsage(range) {
+export function useGroupedRunsWithUsage(range, user_id = undefined) {
   const supabaseClient = useSupabaseClient()
   const { app } = useCurrentApp()
 
@@ -133,24 +139,14 @@ export function useGroupedRunsWithUsage(range) {
     app
       ? supabaseClient.rpc("get_runs_usage", {
           app_id: app.id,
+          user_id,
           days: range,
         })
-      : null
+      : null,
+    hardOptions
   )
 
   return { usage, loading: isLoading }
-}
-
-export function useUsers() {
-  const supabaseClient = useSupabaseClient()
-  const { app } = useCurrentApp()
-
-  const { data: users, isLoading } = useQuery(
-    supabaseClient.from("app_user").select("*").eq("app", app?.id).limit(500),
-    options
-  )
-
-  return { users, loading: isLoading }
 }
 
 export function useRun(runId: string) {
@@ -158,8 +154,31 @@ export function useRun(runId: string) {
 
   const { data: run, isLoading } = useQuery(
     supabaseClient.from("run").select("*").eq("id", runId).single(),
-    options
+    softOptions
   )
 
   return { run, loading: isLoading }
+}
+
+export function useAppUsers() {
+  const supabaseClient = useSupabaseClient()
+  const { app } = useCurrentApp()
+
+  const { data: users, isLoading } = useQuery(
+    supabaseClient.from("app_user").select("*").eq("app", app?.id).limit(500),
+    softOptions
+  )
+
+  return { users, loading: isLoading }
+}
+
+export function useAppUser(id: string) {
+  const supabaseClient = useSupabaseClient<Database>()
+
+  const { data: user, isLoading } = useQuery(
+    id && supabaseClient.from("app_user").select("*").eq("id", id).single(),
+    hardOptions
+  )
+
+  return { user, loading: isLoading }
 }
