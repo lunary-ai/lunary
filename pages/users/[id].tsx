@@ -1,33 +1,12 @@
-import { useEffect, useMemo, useState } from "react"
+import { useMemo } from "react"
 import { useRouter } from "next/router"
 
-import {
-  Badge,
-  Card,
-  Code,
-  Grid,
-  Group,
-  SimpleGrid,
-  Stack,
-  Tabs,
-  Text,
-  Title,
-} from "@mantine/core"
+import { Card, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core"
 
-import DurationBadge from "@/components/Blocks/DurationBadge"
 import TokensBadge from "@/components/Blocks/TokensBadge"
 import SmartViewer from "@/components/Blocks/SmartViewer"
-import StatusBadge from "@/components/Blocks/StatusBadge"
 
-import {
-  useAppUser,
-  useGroupedRunsWithUsage,
-  useRun,
-  useRuns,
-} from "@/utils/supabaseHooks"
-import { useQuery } from "@supabase-cache-helpers/postgrest-swr"
-import { useSupabaseClient } from "@supabase/auth-helpers-react"
-import { JsonView } from "react-json-view-lite"
+import { useAppUser, useGroupedRunsWithUsage } from "@/utils/supabaseHooks"
 import AnalyticsCard from "@/components/Blocks/AnalyticsCard"
 import BarList from "@/components/Blocks/BarList"
 
@@ -37,7 +16,7 @@ export default function UserDetails({}) {
 
   const { user } = useAppUser(id as string)
 
-  const { usage } = useGroupedRunsWithUsage(90, parseInt(id as string))
+  const { usage } = useGroupedRunsWithUsage(90, id && parseInt(id as string))
 
   const totalTokens = useMemo(
     () =>

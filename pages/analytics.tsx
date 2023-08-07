@@ -18,8 +18,6 @@ export default function Analytics() {
   const { usage } = useGroupedRunsWithUsage(range)
   const { dailyUsage } = useDailyUsage(range)
 
-  console.log({ dailyUsage })
-
   return (
     <Container size="lg">
       <Stack>
