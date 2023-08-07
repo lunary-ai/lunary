@@ -194,7 +194,7 @@ export function useAppUser(id: string) {
   const supabaseClient = useSupabaseClient<Database>()
 
   const { data: user, isLoading } = useQuery(
-    id && supabaseClient.from("app_user").select("*").eq("id", id).single(),
+    supabaseClient.from("app_user").select("*").eq("id", id).single(),
     hardOptions
   )
 
