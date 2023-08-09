@@ -6,9 +6,12 @@ import { Card, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core"
 import TokensBadge from "@/components/Blocks/TokensBadge"
 import SmartViewer from "@/components/Blocks/SmartViewer"
 
-import { useAppUser, useGroupedRunsWithUsage } from "@/utils/supabaseHooks"
-import AnalyticsCard from "@/components/Blocks/AnalyticsCard"
-import BarList from "@/components/Blocks/BarList"
+import { useAppUser, useRunsUsage } from "@/utils/supabaseHooks"
+import AnalyticsCard from "@/components/Blocks/Analytics/AnalyticsCard"
+import BarList from "@/components/Blocks/Analytics/BarList"
+import UsageAnalytics from "@/components/Blocks/Analytics/UsageSummary"
+import AgentSummary from "@/components/Blocks/Analytics/AgentSummary"
+import UsageSummary from "@/components/Blocks/Analytics/UsageSummary"
 
 export default function UserDetails({}) {
   const router = useRouter()
@@ -16,7 +19,7 @@ export default function UserDetails({}) {
 
   const { user } = useAppUser(id as string)
 
-  const { usage } = useGroupedRunsWithUsage(90, id && parseInt(id as string))
+  const { usage } = useRunsUsage(90, id && parseInt(id as string))
 
   const totalTokens = useMemo(
     () =>
@@ -55,76 +58,8 @@ export default function UserDetails({}) {
 
       {usage && (
         <SimpleGrid cols={3} spacing="md">
-          <AnalyticsCard title="Tokens">
-            <BarList
-              data={usage
-                .filter((u) => u.type === "llm")
-                .map((model) => ({
-                  value: model.name,
-                  count: model.completion_tokens + model.prompt_tokens,
-                  composedBy: [
-                    {
-                      value: "Completion",
-                      count: model.completion_tokens,
-                      color: "purple",
-                    },
-                    {
-                      value: "Prompt",
-                      count: model.prompt_tokens,
-                      color: "cyan",
-                    },
-                  ],
-                }))}
-              headers={["Model", "Tokens"]}
-            />
-          </AnalyticsCard>
-
-          <AnalyticsCard title="Requests">
-            <BarList
-              data={usage
-                .filter((u) => u.type === "llm")
-                .map((model) => ({
-                  value: model.name,
-                  count: model.success + model.errors,
-                  composedBy: [
-                    {
-                      value: "Success",
-                      count: model.success,
-                      color: "green",
-                    },
-                    {
-                      value: "Errors",
-                      count: model.errors,
-                      color: "red",
-                    },
-                  ],
-                }))}
-              headers={["Model", "Total"]}
-            />
-          </AnalyticsCard>
-          <AnalyticsCard title="Agents">
-            <BarList
-              data={usage
-                .filter((u) => u.type === "agent")
-                .map((model) => ({
-                  value: model.name,
-                  count: model.success + model.errors,
-                  composedBy: [
-                    {
-                      value: "Success",
-                      count: model.success,
-                      color: "green",
-                    },
-                    {
-                      value: "Errors",
-                      count: model.errors,
-                      color: "red",
-                    },
-                  ],
-                }))}
-              headers={["Model", "Total"]}
-            />
-          </AnalyticsCard>
+          <UsageSummary usage={usage} />
+          <AgentSummary usage={usage} />
         </SimpleGrid>
       )}
     </Stack>

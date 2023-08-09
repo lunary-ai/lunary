@@ -223,6 +223,30 @@ BEGIN
         date, run.name, run.type;
 END; $function$
 
+CREATE OR REPLACE FUNCTION public.get_runs_usage_by_user(app_id uuid, days integer)
+ RETURNS TABLE(user_id bigint, name text, type text, completion_tokens bigint, prompt_tokens bigint, errors bigint, success bigint)
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+    RETURN QUERY 
+    SELECT 
+        run.user as user_id,
+        run.name,
+        run.type,
+        COALESCE(SUM(run.completion_tokens), 0) AS completion_tokens,
+        COALESCE(SUM(run.prompt_tokens), 0) AS prompt_tokens,
+        SUM(CASE WHEN run.status = 'error' THEN 1 ELSE 0 END) AS errors,
+        SUM(CASE WHEN run.status = 'success' THEN 1 ELSE 0 END) AS success
+    FROM 
+        run
+    WHERE 
+        run.app = app_id AND
+        run.created_at >= NOW() - INTERVAL '1 day' * days
+    GROUP BY
+        user_id, run.name, run.type;
+END; $function$
+    
+
 
 --
 -- Name: handle_new_user(); Type: FUNCTION; Schema: public; Owner: -

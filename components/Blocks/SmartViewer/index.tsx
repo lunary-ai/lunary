@@ -62,7 +62,9 @@ export default function SmartViewer({
     >
       {error && (
         <pre>
-          <Code color="red">{error}</Code>
+          <Code color="red">
+            {typeof error === "object" ? JSON.stringify(error, null, 2) : error}
+          </Code>
         </pre>
       )}
 

@@ -97,7 +97,7 @@ const registerRunEvent = async (event: Event): Promise<void> => {
         user: internalUserId,
         created_at: timestamp,
         app,
-        tags: tags.length ? tags : null,
+        tags: tags?.length ? tags : null,
         name,
         status: "started",
         params: extra,
@@ -135,7 +135,7 @@ const registerRunEvent = async (event: Event): Promise<void> => {
   }
 
   if (query) {
-    const { error } = await query
+    const { error, data } = await query
 
     if (error) throw error
   }
@@ -187,6 +187,7 @@ export default async function handler(req: NextRequest) {
 
   for (const event of sorted) {
     try {
+      console.log(event)
       await registerEvent(cleanEvent(event))
     } catch (e: any) {
       console.error(`Error handling event.`)

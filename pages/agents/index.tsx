@@ -1,7 +1,7 @@
 import { useEffect } from "react"
 import Router from "next/router"
 
-import { Select, Stack, Title } from "@mantine/core"
+import { Group, Loader, Select, Stack, Title } from "@mantine/core"
 import { useLocalStorage } from "@mantine/hooks"
 
 import DataTable from "@/components/Blocks/DataTable"
@@ -14,7 +14,7 @@ import {
   timeColumn,
   userColumn,
 } from "@/utils/datatable"
-import { useGroupedRunsWithUsage, useRuns } from "@/utils/supabaseHooks"
+import { useRunsUsage, useRuns } from "@/utils/supabaseHooks"
 
 const columns = [
   timeColumn("created_at", "Time"),
@@ -26,7 +26,7 @@ const columns = [
 ]
 
 export default function Generations() {
-  const { usage } = useGroupedRunsWithUsage(30)
+  const { usage } = useRunsUsage(30)
 
   const agents = usage?.filter((u) => u.type === "agent") || []
 
@@ -35,7 +35,7 @@ export default function Generations() {
     defaultValue: null,
   })
 
-  const { runs } = useRuns("agent", { name: agentName })
+  const { runs, loading } = useRuns("agent", { name: agentName })
 
   useEffect(() => {
     if (!agentName && agents?.length > 0) {
@@ -45,7 +45,10 @@ export default function Generations() {
 
   return (
     <Stack>
-      <Title>Agents</Title>
+      <Group>
+        <Title>Agents</Title>
+        {loading && <Loader />}
+      </Group>
 
       <Select
         w={200}

@@ -1,7 +1,15 @@
-import AnalyticsCard from "@/components/Blocks/AnalyticsCard"
-import BarList from "@/components/Blocks/BarList"
-import LineChart from "@/components/Blocks/LineChart"
-import { useDailyUsage, useGroupedRunsWithUsage } from "@/utils/supabaseHooks"
+import AgentSummary from "@/components/Blocks/Analytics/AgentSummary"
+import AnalyticsCard from "@/components/Blocks/Analytics/AnalyticsCard"
+import BarList from "@/components/Blocks/Analytics/BarList"
+import LineChart from "@/components/Blocks/Analytics/LineChart"
+import UsageSummary from "@/components/Blocks/Analytics/UsageSummary"
+import { formatCost } from "@/utils/calcCosts"
+import {
+  useRunsUsageByDay,
+  useRunsUsage,
+  useRunsUsageByUser,
+  useAppUsers,
+} from "@/utils/supabaseHooks"
 import {
   Container,
   Group,
@@ -12,14 +20,36 @@ import {
 } from "@mantine/core"
 import { useState } from "react"
 
+const calculateDailyCost = (usage) => {
+  // calculate using calcRunCost, reduce by model, and filter by type llm
+  // reduce by day
+
+  const cost = usage.reduce((acc, curr) => {
+    const { date, cost } = curr
+
+    if (!acc[date]) acc[date] = 0
+    acc[date] += cost
+
+    return acc
+  }, {})
+
+  const final = Object.keys(cost).map((date) => ({
+    date,
+    cost: cost[date],
+  }))
+
+  return final
+}
+
 export default function Analytics() {
   const [range, setRange] = useState(7)
 
-  const { usage } = useGroupedRunsWithUsage(range)
-  const { dailyUsage } = useDailyUsage(range)
+  const { usage } = useRunsUsage(range)
+  const { dailyUsage } = useRunsUsageByDay(range)
+  const { usersWithUsage } = useAppUsers(range)
 
   return (
-    <Container size="lg">
+    <Container size="lg" my="lg">
       <Stack>
         <Group position="apart">
           <Title>Analytics</Title>
@@ -36,75 +66,39 @@ export default function Analytics() {
           />
         </Group>
         {usage && (
-          <SimpleGrid cols={3} spacing="md">
-            <AnalyticsCard title="Tokens">
+          <SimpleGrid
+            cols={3}
+            breakpoints={[{ maxWidth: "md", cols: 1, spacing: "sm" }]}
+            spacing="md"
+          >
+            <UsageSummary usage={usage} />
+            <AgentSummary usage={usage} />
+            <AnalyticsCard title="Top Users">
               <BarList
-                data={usage
-                  .filter((u) => u.type === "llm")
-                  .map((model) => ({
-                    value: model.name,
-                    count: model.completion_tokens + model.prompt_tokens,
-                    composedBy: [
-                      {
-                        value: "Completion",
-                        count: model.completion_tokens,
-                        color: "purple",
-                      },
-                      {
-                        value: "Prompt",
-                        count: model.prompt_tokens,
-                        color: "cyan",
-                      },
-                    ],
+                customMetric={{
+                  label: "users",
+                  value: usersWithUsage.length,
+                }}
+                data={usersWithUsage
+                  .sort((a, b) => a.cost - b.cost)
+                  .map((u) => ({
+                    value: u.external_id,
+                    agentRuns: u.agentRuns,
+                    cost: u.cost,
                   }))}
-                headers={["Model", "Tokens"]}
-              />
-            </AnalyticsCard>
+                columns={[
+                  {
+                    name: "User",
+                    bar: true,
+                  },
 
-            <AnalyticsCard title="Requests">
-              <BarList
-                data={usage
-                  .filter((u) => u.type === "llm")
-                  .map((model) => ({
-                    value: model.name,
-                    count: model.success + model.errors,
-                    composedBy: [
-                      {
-                        value: "Success",
-                        count: model.success,
-                        color: "green",
-                      },
-                      {
-                        value: "Errors",
-                        count: model.errors,
-                        color: "red",
-                      },
-                    ],
-                  }))}
-                headers={["Model", "Total"]}
-              />
-            </AnalyticsCard>
-            <AnalyticsCard title="Agents">
-              <BarList
-                data={usage
-                  .filter((u) => u.type === "agent")
-                  .map((model) => ({
-                    value: model.name,
-                    count: model.success + model.errors,
-                    composedBy: [
-                      {
-                        value: "Success",
-                        count: model.success,
-                        color: "green",
-                      },
-                      {
-                        value: "Errors",
-                        count: model.errors,
-                        color: "red",
-                      },
-                    ],
-                  }))}
-                headers={["Model", "Total"]}
+                  {
+                    name: "Cost",
+                    key: "cost",
+                    render: formatCost,
+                    main: true,
+                  },
+                ]}
               />
             </AnalyticsCard>
           </SimpleGrid>
@@ -114,7 +108,7 @@ export default function Analytics() {
             <AnalyticsCard title="Tokens">
               <LineChart
                 range={range}
-                height={300}
+                height={230}
                 splitBy="name"
                 data={dailyUsage
                   .filter((u) => u.type === "llm")
@@ -125,10 +119,18 @@ export default function Analytics() {
                 props={["tokens"]}
               />
             </AnalyticsCard>
+            <AnalyticsCard title="Cost Usage">
+              <LineChart
+                range={range}
+                height={230}
+                data={calculateDailyCost(dailyUsage)}
+                props={["cost"]}
+              />
+            </AnalyticsCard>
             <AnalyticsCard title="Agents">
               <LineChart
                 range={range}
-                height={300}
+                height={230}
                 splitBy="name"
                 data={dailyUsage
                   .filter((u) => u.type === "agent")

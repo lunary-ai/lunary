@@ -8,6 +8,7 @@ import { useMantineTheme } from "@mantine/core"
 import { useLocalStorage } from "@mantine/hooks"
 import { Database } from "./supaTypes"
 import { useEffect } from "react"
+import { calcRunCost } from "./calcCosts"
 
 const softOptions = {
   dedupingInterval: 10000,
@@ -34,6 +35,12 @@ const getUserColor = (theme, id: string) => {
   const finalColor = theme.colors[userColor][4]
   return finalColor
 }
+
+const extendWithCosts = (data: any[]) =>
+  data?.map((r) => ({
+    ...r,
+    cost: calcRunCost(r),
+  }))
 
 export const useProfile = () => {
   const supabaseClient = useSupabaseClient<Database>()
@@ -131,7 +138,7 @@ export function useRuns(type: string, match?: any) {
   return { runs, loading: isLoading }
 }
 
-export function useGroupedRunsWithUsage(range, user_id = undefined) {
+export function useRunsUsage(range, user_id = undefined) {
   const supabaseClient = useSupabaseClient()
   const { app } = useCurrentApp()
 
@@ -143,13 +150,13 @@ export function useGroupedRunsWithUsage(range, user_id = undefined) {
           days: range,
         })
       : null,
-    hardOptions
+    softOptions
   )
 
-  return { usage, loading: isLoading }
+  return { usage: extendWithCosts(usage), loading: isLoading }
 }
 
-export function useDailyUsage(range, user_id = undefined) {
+export function useRunsUsageByDay(range, user_id = undefined) {
   const supabaseClient = useSupabaseClient()
   const { app } = useCurrentApp()
 
@@ -164,7 +171,54 @@ export function useDailyUsage(range, user_id = undefined) {
     hardOptions
   )
 
-  return { dailyUsage, loading: isLoading }
+  return { dailyUsage: extendWithCosts(dailyUsage), loading: isLoading }
+}
+
+export function useRunsUsageByUser(range) {
+  const supabaseClient = useSupabaseClient()
+  const { app } = useCurrentApp()
+
+  const { data: usageByUser, isLoading } = useQuery(
+    app
+      ? supabaseClient.rpc("get_runs_usage_by_user", {
+          app_id: app.id,
+          days: range,
+        })
+      : null,
+    hardOptions
+  )
+
+  const reduceUsersUsage = (usage) => {
+    const userData = []
+
+    const uniqueUserIds = Array.from(new Set(usage.map((u) => u.user_id)))
+
+    for (let id of uniqueUserIds) {
+      const userUsage = usage.filter((u) => u.user_id === id)
+      const totalCost = userUsage.reduce((acc, curr) => {
+        acc += curr.cost
+        return acc
+      }, 0)
+
+      const totalAgentRuns = userUsage.reduce((acc, curr) => {
+        acc += curr.success + curr.errors
+        return acc
+      }, 0)
+
+      userData.push({
+        user_id: id,
+        agentRuns: totalAgentRuns,
+        cost: totalCost,
+      })
+    }
+
+    return userData
+  }
+
+  return {
+    usageByUser: reduceUsersUsage(extendWithCosts(usageByUser || [])),
+    loading: isLoading,
+  }
 }
 
 export function useRun(runId: string) {
@@ -178,7 +232,7 @@ export function useRun(runId: string) {
   return { run, loading: isLoading }
 }
 
-export function useAppUsers() {
+export function useAppUsers(usageRange = 30) {
   const supabaseClient = useSupabaseClient()
   const { app } = useCurrentApp()
 
@@ -187,7 +241,18 @@ export function useAppUsers() {
     softOptions
   )
 
-  return { users, loading: isLoading }
+  const { usageByUser } = useRunsUsageByUser(usageRange)
+
+  const usersWithUsage = users?.map((u) => {
+    const usage = usageByUser.find((uu) => uu.user_id === u.id)
+
+    return {
+      ...u,
+      ...usage,
+    }
+  })
+
+  return { usersWithUsage, loading: isLoading }
 }
 
 export function useAppUser(id: string) {

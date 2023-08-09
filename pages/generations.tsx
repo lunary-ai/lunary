@@ -1,7 +1,7 @@
 import DataTable from "@/components/Blocks/DataTable"
 
 import { useRuns } from "@/utils/supabaseHooks"
-import { Badge, Stack, Title } from "@mantine/core"
+import { Badge, Group, Loader, Stack, Title } from "@mantine/core"
 
 import { createColumnHelper } from "@tanstack/react-table"
 import SmartViewer from "@/components/Blocks/SmartViewer"
@@ -13,6 +13,7 @@ import {
   timeColumn,
   userColumn,
   nameColumn,
+  costColumn,
 } from "@/utils/datatable"
 
 const columns = [
@@ -31,16 +32,21 @@ const columns = [
     cell: (props) => props.getValue(),
     accessorFn: (row) => row.prompt_tokens + row.completion_tokens,
   },
+  costColumn(),
   inputColumn("Prompt"),
   outputColumn("Result"),
 ]
 
 export default function Generations() {
-  const { runs } = useRuns("llm")
+  const { runs, loading } = useRuns("llm")
 
   return (
     <Stack>
-      <Title>Generations</Title>
+      <Group>
+        <Title>Generations</Title>
+        {loading && <Loader />}
+      </Group>
+
       <DataTable columns={columns} data={runs} />
     </Stack>
   )
