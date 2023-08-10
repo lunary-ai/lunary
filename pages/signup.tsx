@@ -51,22 +51,24 @@ function SignupPage() {
 
   const handleSignup = async ({
     email,
+    password,
     name,
   }: {
     email: string
+    password: string
     name: string
   }) => {
     setLoading(true)
 
     const ok = await errorHandler(
-      supabaseClient.auth.signInWithOtp({
+      supabaseClient.auth.signUp({
         email,
+        password,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
             name,
           },
-          shouldCreateUser: true,
         },
       })
     )
