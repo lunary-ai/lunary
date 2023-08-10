@@ -91,7 +91,6 @@ export default function Analytics() {
                     name: "User",
                     bar: true,
                   },
-
                   {
                     name: "Cost",
                     key: "cost",
