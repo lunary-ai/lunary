@@ -1,3 +1,4 @@
+import { useState } from "react"
 import AgentSummary from "@/components/Blocks/Analytics/AgentSummary"
 import AnalyticsCard from "@/components/Blocks/Analytics/AnalyticsCard"
 import BarList from "@/components/Blocks/Analytics/BarList"
@@ -7,7 +8,6 @@ import { formatCost } from "@/utils/calcCosts"
 import {
   useRunsUsageByDay,
   useRunsUsage,
-  useRunsUsageByUser,
   useAppUsers,
 } from "@/utils/supabaseHooks"
 import {
@@ -18,7 +18,6 @@ import {
   Stack,
   Title,
 } from "@mantine/core"
-import { useState } from "react"
 
 const calculateDailyCost = (usage) => {
   // calculate using calcRunCost, reduce by model, and filter by type llm
@@ -65,14 +64,20 @@ export default function Analytics() {
             ]}
           />
         </Group>
-        {usage && (
-          <SimpleGrid
-            cols={3}
-            breakpoints={[{ maxWidth: "md", cols: 1, spacing: "sm" }]}
-            spacing="md"
-          >
-            <UsageSummary usage={usage} />
-            <AgentSummary usage={usage} />
+
+        <SimpleGrid
+          cols={3}
+          breakpoints={[{ maxWidth: "md", cols: 1, spacing: "sm" }]}
+          spacing="md"
+        >
+          {usage && (
+            <>
+              <UsageSummary usage={usage} />
+              <AgentSummary usage={usage} />
+            </>
+          )}
+
+          {usersWithUsage && (
             <AnalyticsCard title="Top Users">
               <BarList
                 customMetric={{
@@ -100,8 +105,9 @@ export default function Analytics() {
                 ]}
               />
             </AnalyticsCard>
-          </SimpleGrid>
-        )}
+          )}
+        </SimpleGrid>
+
         {dailyUsage && (
           <>
             <AnalyticsCard title="Tokens">

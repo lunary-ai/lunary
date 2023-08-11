@@ -22,8 +22,6 @@ const BarList = ({ data, columns, customMetric }: BarListProps) => {
   const main = dataColumns.find((col) => col.main) || dataColumns[0]
   const mainTotal = data.reduce((acc, item) => acc + (item[main.key] || 0), 0)
 
-  console.log({ main, mainTotal, dataColumns })
-
   if (!data) return <>No data.</>
 
   return (
