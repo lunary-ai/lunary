@@ -70,10 +70,3 @@ export const calcRunCost = (run) => {
   const outputCost = (modelCost.outputCost * run.completion_tokens) / 1000
   return inputCost + outputCost
 }
-
-export const formatCost = (cost) => {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(cost || 0)
-}
