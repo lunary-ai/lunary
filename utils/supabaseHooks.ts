@@ -142,7 +142,7 @@ export function useRuns(type: string, match?: any) {
 
   const { data: runs, isLoading } = useQuery(query.limit(200), softOptions)
 
-  return { runs, loading: isLoading }
+  return { runs: extendWithCosts(runs), loading: isLoading }
 }
 
 export function useRunsUsage(range, user_id = undefined) {

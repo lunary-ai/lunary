@@ -2,7 +2,9 @@ export const formatCost = (cost) => {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-  }).format(cost || 0)
+    maximumSignificantDigits: 3,
+    // maximumFractionDigits: 2,
+  }).format(cost)
 }
 
 export const formatLargeNumber = (number) => {
