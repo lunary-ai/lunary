@@ -4,7 +4,7 @@ import AnalyticsCard from "@/components/Blocks/Analytics/AnalyticsCard"
 import BarList from "@/components/Blocks/Analytics/BarList"
 import LineChart from "@/components/Blocks/Analytics/LineChart"
 import UsageSummary from "@/components/Blocks/Analytics/UsageSummary"
-import { formatCost } from "@/utils/calcCosts"
+import { formatCost } from "@/utils/format"
 import {
   useRunsUsageByDay,
   useRunsUsage,
@@ -49,7 +49,7 @@ export default function Analytics() {
 
   return (
     <Container size="lg" my="lg">
-      <Stack>
+      <Stack spacing={40}>
         <Group position="apart">
           <Title>Analytics</Title>
           <SegmentedControl
@@ -78,7 +78,7 @@ export default function Analytics() {
           )}
 
           {usersWithUsage && (
-            <AnalyticsCard title="Top Users">
+            <AnalyticsCard title="Users">
               <BarList
                 customMetric={{
                   label: "users",
@@ -87,9 +87,17 @@ export default function Analytics() {
                 data={usersWithUsage
                   .sort((a, b) => a.cost - b.cost)
                   .map((u) => ({
-                    value: u.external_id,
+                    value: u.props?.email ?? u.external_id,
                     agentRuns: u.agentRuns,
                     cost: u.cost,
+                    barSections: [
+                      {
+                        value: "cost",
+                        tooltip: "Cost",
+                        count: u.cost,
+                        color: "teal.2",
+                      },
+                    ],
                   }))}
                 columns={[
                   {
@@ -110,42 +118,42 @@ export default function Analytics() {
 
         {dailyUsage && (
           <>
-            <AnalyticsCard title="Tokens">
-              <LineChart
-                range={range}
-                height={230}
-                splitBy="name"
-                data={dailyUsage
-                  .filter((u) => u.type === "llm")
-                  .map((p) => ({
-                    ...p,
-                    tokens: p.completion_tokens + p.prompt_tokens,
-                  }))}
-                props={["tokens"]}
-              />
-            </AnalyticsCard>
-            <AnalyticsCard title="Cost Usage">
-              <LineChart
-                range={range}
-                height={230}
-                data={calculateDailyCost(dailyUsage)}
-                props={["cost"]}
-              />
-            </AnalyticsCard>
-            <AnalyticsCard title="Agents">
-              <LineChart
-                range={range}
-                height={230}
-                splitBy="name"
-                data={dailyUsage
-                  .filter((u) => u.type === "agent")
-                  .map((p) => ({
-                    ...p,
-                    runs: p.success + p.errors,
-                  }))}
-                props={["runs"]}
-              />
-            </AnalyticsCard>
+            <LineChart
+              range={range}
+              title="Tokens"
+              height={230}
+              splitBy="name"
+              data={dailyUsage
+                .filter((u) => u.type === "llm")
+                .map((p) => ({
+                  ...p,
+                  tokens: p.completion_tokens + p.prompt_tokens,
+                }))}
+              props={["tokens"]}
+            />
+
+            <LineChart
+              title="Cost Usage"
+              range={range}
+              height={230}
+              formatter={formatCost}
+              data={calculateDailyCost(dailyUsage)}
+              props={["cost"]}
+            />
+
+            <LineChart
+              range={range}
+              title="Agents"
+              height={230}
+              splitBy="name"
+              data={dailyUsage
+                .filter((u) => u.type === "agent")
+                .map((p) => ({
+                  ...p,
+                  runs: p.success + p.errors,
+                }))}
+              props={["runs"]}
+            />
           </>
         )}
       </Stack>

@@ -1,3 +1,4 @@
+import { formatCost, formatLargeNumber } from "@/utils/format"
 import AnalyticsCard from "./AnalyticsCard"
 import BarList from "./BarList"
 
@@ -16,13 +17,13 @@ export default function UsageSummary({ usage }) {
                 value: "Completion",
                 tooltip: "Completion Tokens",
                 count: model.completion_tokens,
-                color: "purple",
+                color: "purple.4",
               },
               {
                 value: "Prompt",
                 tooltip: "Prompt Tokens",
                 count: model.prompt_tokens,
-                color: "cyan",
+                color: "cyan.3",
               },
             ],
           }))}
@@ -35,15 +36,12 @@ export default function UsageSummary({ usage }) {
             name: "Tokens",
             key: "tokens",
             main: true,
+            render: formatLargeNumber,
           },
           {
             name: "Cost",
             key: "cost",
-            render: (val: number) =>
-              new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: "USD",
-              }).format(val),
+            render: formatCost,
           },
         ]}
       />

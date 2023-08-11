@@ -2,7 +2,7 @@ import { createColumnHelper } from "@tanstack/react-table"
 import { Anchor, Badge } from "@mantine/core"
 import SmartViewer from "@/components/Blocks/SmartViewer"
 import { useAppUser } from "./supabaseHooks"
-import { calcRunCost, formatCost, getFormattedRunCost } from "./calcCosts"
+import { formatCost } from "./format"
 const columnHelper = createColumnHelper<any>()
 
 export const timeColumn = (timeColumn, label = "Time") => {

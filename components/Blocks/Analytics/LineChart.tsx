@@ -1,4 +1,4 @@
-import { Box, useMantineTheme } from "@mantine/core"
+import { Box, Card, Text, Title, useMantineTheme } from "@mantine/core"
 import {
   AreaChart,
   Area,
@@ -10,6 +10,7 @@ import {
 } from "recharts"
 
 import { eachDayOfInterval, format, parseISO } from "date-fns"
+import { formatLargeNumber } from "@/utils/format"
 
 const slugify = (str) => {
   return str
@@ -62,9 +63,35 @@ function prepareDataForRecharts(data, splitBy, props, range) {
   )
 }
 
+const formatDate = (date) =>
+  new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  })
+
+const CustomizedAxisTick = ({ x, y, payload, index, data }) => {
+  // Hide the first and last tick
+  if (index === 0 || index === data.length - 1) {
+    return null
+  }
+
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text x={0} y={0} dy={16} textAnchor="middle" fill="#666">
+        {new Date(payload.value).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        })}
+      </text>
+    </g>
+  )
+}
+
 const LineChart = ({
   data,
+  title,
   props,
+  formatter = formatLargeNumber,
   height = 300,
   splitBy = undefined,
   range,
@@ -76,84 +103,112 @@ const LineChart = ({
   const cleanedData = prepareDataForRecharts(data, splitBy, props, range)
 
   return (
-    <Box mt="sm">
-      <ResponsiveContainer width="100%" height={height}>
-        <AreaChart
-          width={500}
-          height={400}
-          data={cleanedData}
-          margin={{
-            top: 10,
-            right: 0,
-            left: 0,
-            bottom: 0,
-          }}
-        >
-          <CartesianGrid
-            strokeDasharray="3 3"
-            horizontal={true}
-            vertical={false}
-          />
-          <XAxis
-            dataKey="date"
-            tick={{ transform: "translate(0, 6)" }}
-            interval="preserveStartEnd"
-            tickLine={false}
-            axisLine={false}
-            tickFormatter={(date) =>
-              new Date(date).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-              })
-            }
-            padding={{ left: 10, right: 10 }}
-            minTickGap={5}
-          />
-
-          <Tooltip />
-
-          {Object.keys(cleanedData[0])
-            .filter((prop) => prop !== "date")
-            .map((prop, i) => (
-              <>
-                <defs key={prop}>
-                  <linearGradient
-                    color={theme.colors[colors[i % colors.length]][6]}
-                    id={slugify(prop)}
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop
-                      offset="5%"
-                      stopColor="currentColor"
-                      stopOpacity={0.4}
-                    />
-                    <stop
-                      offset="95%"
-                      stopColor="currentColor"
-                      stopOpacity={0}
-                    />
-                  </linearGradient>
-                </defs>
-                <Area
-                  type="monotone"
-                  color={theme.colors[colors[i % colors.length]][4]}
-                  dataKey={prop}
-                  stackId="1"
-                  stroke="currentColor"
-                  dot={false}
-                  fill={`url(#${slugify(prop)})`}
-                  strokeWidth={2}
-                  strokeLinejoin="round"
-                  strokeLinecap="round"
+    <Card withBorder p={0}>
+      <Text c="dimmed" tt="uppercase" fw={700} fz="xs" m="md">
+        {title}
+      </Text>
+      <Box mt="sm">
+        <ResponsiveContainer width="100%" height={height}>
+          <AreaChart
+            width={500}
+            height={420}
+            data={cleanedData}
+            margin={{
+              top: 10,
+              right: 0,
+              left: 0,
+              bottom: 10,
+            }}
+          >
+            <CartesianGrid
+              strokeDasharray="3 3"
+              horizontal={true}
+              vertical={false}
+            />
+            <XAxis
+              dataKey="date"
+              tick={({ x, y, payload, index }) => (
+                <CustomizedAxisTick
+                  x={x}
+                  y={y}
+                  payload={payload}
+                  index={index}
+                  data={cleanedData}
                 />
-              </>
-            ))}
-        </AreaChart>
-      </ResponsiveContainer>
-    </Box>
+              )}
+              style={{
+                marginLeft: 20,
+              }}
+              interval="preserveStartEnd"
+              tickLine={false}
+              axisLine={false}
+              minTickGap={10}
+              max={5}
+            />
+
+            <Tooltip
+              formatter={formatter}
+              content={({ active, payload, label }) => {
+                if (active && payload && payload.length) {
+                  return (
+                    <Card shadow="md" withBorder>
+                      <Title order={3} size="sm">
+                        {formatDate(label)}
+                      </Title>
+                      {payload.map((item) => (
+                        <Text>{`${item.name}: ${formatter(item.value)}`}</Text>
+                      ))}
+                    </Card>
+                  )
+                }
+
+                return null
+              }}
+            />
+
+            {Object.keys(cleanedData[0])
+              .filter((prop) => prop !== "date")
+              .map((prop, i) => (
+                <>
+                  <defs key={prop}>
+                    <linearGradient
+                      color={theme.colors[colors[i % colors.length]][6]}
+                      id={slugify(prop)}
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop
+                        offset="5%"
+                        stopColor="currentColor"
+                        stopOpacity={0.4}
+                      />
+                      <stop
+                        offset="95%"
+                        stopColor="currentColor"
+                        stopOpacity={0}
+                      />
+                    </linearGradient>
+                  </defs>
+                  <Area
+                    type="monotone"
+                    color={theme.colors[colors[i % colors.length]][4]}
+                    dataKey={prop}
+                    stackId="1"
+                    stroke="currentColor"
+                    dot={false}
+                    fill={`url(#${slugify(prop)})`}
+                    strokeWidth={2}
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                  />
+                </>
+              ))}
+          </AreaChart>
+        </ResponsiveContainer>
+      </Box>
+    </Card>
   )
 }
 

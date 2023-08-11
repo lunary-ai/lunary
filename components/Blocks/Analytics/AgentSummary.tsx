@@ -16,13 +16,13 @@ export default function AgentSummary({ usage }) {
                 value: "Success",
                 tooltip: "Successful Runs",
                 count: model.success,
-                color: "green",
+                color: "green.3",
               },
               {
                 value: "Errors",
                 tooltip: "Errors",
                 count: model.errors,
-                color: "red",
+                color: "red.4",
               },
             ],
           }))}

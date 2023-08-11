@@ -82,7 +82,7 @@ const BarList = ({ data, columns, customMetric }: BarListProps) => {
                     sections={item.barSections?.map(
                       ({ count, color, tooltip }) => ({
                         value: (count / mainTotal) * 100,
-                        color: color + ".4",
+                        color,
                         tooltip,
                       })
                     )}
@@ -121,9 +121,12 @@ const BarList = ({ data, columns, customMetric }: BarListProps) => {
           .progressTd :global(.mantine-Text-root) {
             z-index: 1;
             position: relative;
-            top: -2px;
-            left: 50%;
-            transform: translateX(-25%);
+            top: -3px;
+
+            left: 0;
+            right: 0;
+
+            text-align: center;
           }
         `}</style>
       </Table>

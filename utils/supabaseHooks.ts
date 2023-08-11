@@ -90,14 +90,21 @@ export function useCurrentApp() {
 
   const [appId, setAppId] = useLocalStorage({
     key: "appId",
-    defaultValue: null,
+    defaultValue: undefined,
+    // getInitialValueInEffect: true,
   })
 
   useEffect(() => {
-    if (!appId && apps?.length) {
+    if (
+      typeof window !== "undefined" &&
+      typeof window.localStorage !== "undefined" &&
+      !appId &&
+      apps?.length &&
+      !loading
+    ) {
       setAppId(apps[0].id)
     }
-  }, [apps])
+  }, [apps, loading])
 
   const app = apps?.find((app) => app.id === appId)
 
