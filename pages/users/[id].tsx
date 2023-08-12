@@ -1,15 +1,10 @@
-import { useMemo } from "react"
 import { useRouter } from "next/router"
 
 import { Card, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core"
 
-import TokensBadge from "@/components/Blocks/TokensBadge"
 import SmartViewer from "@/components/Blocks/SmartViewer"
 
 import { useAppUser, useRunsUsage } from "@/utils/supabaseHooks"
-import AnalyticsCard from "@/components/Blocks/Analytics/AnalyticsCard"
-import BarList from "@/components/Blocks/Analytics/BarList"
-import UsageAnalytics from "@/components/Blocks/Analytics/UsageSummary"
 import AgentSummary from "@/components/Blocks/Analytics/AgentSummary"
 import UsageSummary from "@/components/Blocks/Analytics/UsageSummary"
 import AppUserAvatar from "@/components/Blocks/AppUserAvatar"

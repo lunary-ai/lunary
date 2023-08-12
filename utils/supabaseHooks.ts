@@ -6,9 +6,8 @@ import {
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
 import { useMantineTheme } from "@mantine/core"
 import { Database } from "./supaTypes"
-import { useContext, useEffect, useMemo, useState } from "react"
+import { useContext, useEffect } from "react"
 import { calcRunCost } from "./calcCosts"
-import { useForceUpdate } from "@mantine/hooks"
 import { AppContext } from "./context"
 
 const softOptions = {
@@ -97,42 +96,9 @@ export function useApps() {
   return { apps, loading: isLoading, insert }
 }
 
-const ls = typeof window !== "undefined" ? window.localStorage : null
-
-// export function useCurrentApp() {
-// const { apps, loading } = useApps()
-
-// const [appId, setAppId] = useState() //<string>(ls?.getItem("app-id"))
-
-// useEffect(() => {
-//   if (appId && apps) {
-//     console.log(`App id changed to ${appId}`)
-
-//     ls?.setItem("app-id", appId)
-//   }
-// }, [appId, apps])
-
-// useEffect(() => {
-//   if (ls && !appId && apps?.length && !loading) {
-//     console.log("Setting app id to", apps[0].id)
-//     setAppId(apps[0].id)
-//   }
-// }, [apps, loading])
-
-//   const app = useMemo(
-//     () => apps?.find((app) => app.id === appId),
-//     [appId, apps]
-//   )
-//   console.log(`Current app is ${app?.name} / ${app?.id}`)
-
-//   return { app, loading, setAppId }
-// }
-
 export function useRuns(type: string, match?: any) {
   const supabaseClient = useSupabaseClient<Database>()
   const { app } = useContext(AppContext)
-
-  console.log(`From useRuns, app is ${app?.name} / ${app?.id}`)
 
   let query = supabaseClient
     .from("run")
@@ -150,9 +116,7 @@ export function useRuns(type: string, match?: any) {
     query = query.match(match)
   }
 
-  const { data: runs, isLoading, isValidating } = useQuery(query, softOptions)
-
-  console.log({ runs, isLoading, isValidating })
+  const { data: runs, isLoading } = useQuery(query, softOptions)
 
   return { runs: extendWithCosts(runs), loading: isLoading }
 }
@@ -162,13 +126,11 @@ export function useRunsUsage(range, user_id = undefined) {
   const { app } = useContext(AppContext)
 
   const { data: usage, isLoading } = useQuery(
-    app
-      ? supabaseClient.rpc("get_runs_usage", {
-          app_id: app.id,
-          user_id,
-          days: range,
-        })
-      : null,
+    supabaseClient.rpc("get_runs_usage", {
+      app_id: app?.id,
+      user_id,
+      days: range,
+    }),
     softOptions
   )
 
@@ -180,13 +142,11 @@ export function useRunsUsageByDay(range, user_id = undefined) {
   const { app } = useContext(AppContext)
 
   const { data: dailyUsage, isLoading } = useQuery(
-    app
-      ? supabaseClient.rpc("get_runs_usage_daily", {
-          app_id: app.id,
-          user_id,
-          days: range,
-        })
-      : null,
+    supabaseClient.rpc("get_runs_usage_daily", {
+      app_id: app?.id,
+      user_id,
+      days: range,
+    }),
     hardOptions
   )
 
@@ -198,12 +158,10 @@ export function useRunsUsageByUser(range) {
   const { app } = useContext(AppContext)
 
   const { data: usageByUser, isLoading } = useQuery(
-    app
-      ? supabaseClient.rpc("get_runs_usage_by_user", {
-          app_id: app.id,
-          days: range,
-        })
-      : null,
+    supabaseClient.rpc("get_runs_usage_by_user", {
+      app_id: app?.id,
+      days: range,
+    }),
     hardOptions
   )
 

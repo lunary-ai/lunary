@@ -25,7 +25,7 @@ function AppUserAvatar({
   size?: MantineNumberSize
 }) {
   // use user.id (int) as seed for random color
-  const color = colors[user.id % colors.length]
+  const color = colors[user?.id % colors.length]
 
   if (!user) return null
 
