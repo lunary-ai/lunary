@@ -1,6 +1,7 @@
 import { analytics } from "@/utils/analytics"
+import { AppContext } from "@/utils/context"
 import errorHandler from "@/utils/errorHandler"
-import { useApps, useCurrentApp } from "@/utils/supabaseHooks"
+import { useApps } from "@/utils/supabaseHooks"
 import {
   Header,
   Anchor,
@@ -19,7 +20,7 @@ import { useUser } from "@supabase/auth-helpers-react"
 import { IconAnalyze, IconHelp, IconMessage } from "@tabler/icons-react"
 
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 
 const sendMessage = async ({ message }) => {
   const currentPage = window.location.pathname
@@ -88,19 +89,29 @@ const Feedback = ({ close }) => {
 }
 
 export default function Navbar() {
-  const { apps } = useApps()
   const [opened, setOpened] = useState(null)
 
-  const { app, setAppId, loading } = useCurrentApp()
+  const { app, setApp } = useContext(AppContext)
+
+  const { apps, loading } = useApps()
+
   const user = useUser()
 
   useEffect(() => {
     if (user) {
       analytics?.identify(user.id, {
         email: user.email,
+        name: user.user_metadata?.name,
       })
     }
   }, [user])
+
+  // Select first app if none selected
+  useEffect(() => {
+    if (!app && apps?.length && !loading) {
+      setApp(apps[0])
+    }
+  }, [app, apps, loading])
 
   return (
     <Header height={60} p="md">
@@ -126,7 +137,7 @@ export default function Navbar() {
               size="xs"
               placeholder="Select an app"
               value={app?.id}
-              onChange={(value) => setAppId(value)}
+              onChange={(id) => setApp(apps.find((app) => app.id === id))}
               data={apps?.map((app) => ({ value: app.id, label: app.name }))}
             />
           )}

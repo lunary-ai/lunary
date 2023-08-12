@@ -1,9 +1,11 @@
 import CopyText from "@/components/Blocks/CopyText"
-import { useCurrentApp } from "@/utils/supabaseHooks"
+import { AppContext } from "@/utils/context"
+
 import { Stack, Text, Title } from "@mantine/core"
+import { useContext } from "react"
 
 export default function AppAnalytics() {
-  const { app } = useCurrentApp()
+  const { app } = useContext(AppContext)
 
   return (
     <Stack>

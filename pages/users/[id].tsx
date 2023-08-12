@@ -12,6 +12,9 @@ import BarList from "@/components/Blocks/Analytics/BarList"
 import UsageAnalytics from "@/components/Blocks/Analytics/UsageSummary"
 import AgentSummary from "@/components/Blocks/Analytics/AgentSummary"
 import UsageSummary from "@/components/Blocks/Analytics/UsageSummary"
+import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
+import { formatAppUser } from "@/utils/format"
+import CopyText from "@/components/Blocks/CopyText"
 
 export default function UserDetails({}) {
   const router = useRouter()
@@ -21,21 +24,20 @@ export default function UserDetails({}) {
 
   const { usage } = useRunsUsage(90, id && parseInt(id as string))
 
-  const totalTokens = useMemo(
-    () =>
-      usage?.reduce(
-        (acc, cur) => acc + cur.completion_tokens + cur.prompt_tokens,
-        0
-      ),
-    [usage]
-  )
-
   return (
     <Stack>
-      <Card withBorder>
+      <Title order={2}>User Details</Title>
+      <Card withBorder w={400}>
         <Group>
           <Stack>
-            <Title order={2}>{user?.external_id}</Title>
+            <Group>
+              <AppUserAvatar user={user} />
+              <Title order={3}>{formatAppUser(user)}</Title>
+            </Group>
+            <Group spacing={3}>
+              <Text>ID:</Text>
+              <CopyText value={user?.external_id} />
+            </Group>
             <Group>
               <Text>{`Last seen:  ${new Date(user?.last_seen).toLocaleString(
                 undefined,
@@ -47,15 +49,12 @@ export default function UserDetails({}) {
                 }
               )}`}</Text>
             </Group>
-            <Group>
-              <Text>Last 3 month usage: </Text>
-              <TokensBadge tokens={totalTokens} />
-            </Group>
+
+            {user?.props && <SmartViewer data={user.props} />}
           </Stack>
-          {user?.props && <SmartViewer data={user.props} />}
         </Group>
       </Card>
-
+      <Title order={2}>Last 3 months usage</Title>
       {usage && (
         <SimpleGrid cols={3} spacing="md">
           <UsageSummary usage={usage} />

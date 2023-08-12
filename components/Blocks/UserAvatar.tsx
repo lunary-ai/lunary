@@ -12,7 +12,11 @@ function UserAvatar({ profile, size = "md" }) {
       }}
     >
       <Text color="white">
-        {profile?.name?.split(" ").map((name: string) => name[0])}
+        {profile?.name
+          ?.split(" ")
+          .map((n) => n[0])
+          .slice(0, 2)
+          .join("")}
       </Text>
     </Avatar>
   )

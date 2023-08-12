@@ -72,13 +72,13 @@ function SignupPage() {
         },
       })
     )
+
     if (ok) {
       notifications.show({
         icon: <IconCheck size={18} />,
         color: "teal",
         title: "Email sent 💌",
-        message:
-          "Check your emails to verify your email. Please check your spam folder as we currently have deliverability issues.",
+        message: "Check your emails to verify your email.",
       })
 
       setStep(2)
@@ -147,16 +147,9 @@ function SignupPage() {
               Check your emails to finish signing up.
             </Text>
 
-            <p>
-              <Mark>
-                Please check your spam folder as we currently have
-                deliverability issues.
-              </Mark>
-            </p>
-
-            <p>We are actively working on this product.</p>
-            <p>Have any feature request or issue?</p>
-            <p>Email vince@llmonitor.com</p>
+            <Text>We are actively working on this product.</Text>
+            <Text>Have any feature request or issue?</Text>
+            <Text>Email: vince@llmonitor.com</Text>
           </>
         )}
       </Paper>

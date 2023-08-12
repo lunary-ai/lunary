@@ -4,7 +4,7 @@ import AnalyticsCard from "@/components/Blocks/Analytics/AnalyticsCard"
 import BarList from "@/components/Blocks/Analytics/BarList"
 import LineChart from "@/components/Blocks/Analytics/LineChart"
 import UsageSummary from "@/components/Blocks/Analytics/UsageSummary"
-import { formatCost } from "@/utils/format"
+import { formatAppUser, formatCost } from "@/utils/format"
 import {
   useRunsUsageByDay,
   useRunsUsage,
@@ -18,6 +18,7 @@ import {
   Stack,
   Title,
 } from "@mantine/core"
+import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 
 const calculateDailyCost = (usage) => {
   // calculate using calcRunCost, reduce by model, and filter by type llm
@@ -84,10 +85,10 @@ export default function Analytics() {
                   label: "users",
                   value: usersWithUsage.length,
                 }}
+                filterZero={false}
                 data={usersWithUsage
                   .sort((a, b) => a.cost - b.cost)
                   .map((u) => ({
-                    value: u.props?.email ?? u.external_id,
                     agentRuns: u.agentRuns,
                     cost: u.cost,
                     barSections: [
@@ -98,11 +99,17 @@ export default function Analytics() {
                         color: "teal.2",
                       },
                     ],
+                    ...u,
                   }))}
                 columns={[
                   {
                     name: "User",
-                    bar: true,
+                    render: (u, row) => (
+                      <Group my={-4} spacing="sm">
+                        <AppUserAvatar size={30} user={row} />
+                        {formatAppUser(row)}
+                      </Group>
+                    ),
                   },
                   {
                     name: "Cost",

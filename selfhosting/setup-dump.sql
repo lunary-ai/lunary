@@ -2,6 +2,8 @@
 -- Table Definition
 CREATE TABLE IF NOT EXISTS "public"."profile" (
     "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+    "name" text,
+    "email" text,
     "updated_at" timestamptz,
     PRIMARY KEY ("id")
 );

@@ -25,23 +25,23 @@ const columns = [
   outputColumn(),
 ]
 
-export default function Generations() {
-  const { usage } = useRunsUsage(30)
+export default function Agents() {
+  // const { usage } = useRunsUsage(30)
 
-  const agents = usage?.filter((u) => u.type === "agent") || []
+  // const agents = usage?.filter((u) => u.type === "agent") || []
 
-  const [agentName, setAgentName] = useLocalStorage<string | null>({
-    key: "agentName",
-    defaultValue: null,
-  })
+  // const [agentName, setAgentName] = useLocalStorage<string | null>({
+  //   key: "agentName",
+  //   defaultValue: null,
+  // })
 
-  const { runs, loading } = useRuns("agent", { name: agentName })
+  const { runs, loading } = useRuns("agent")
 
-  useEffect(() => {
-    if (!agentName && agents?.length > 0) {
-      setAgentName(agents[0].name)
-    }
-  }, [agents])
+  // useEffect(() => {
+  //   if (!agentName && agents?.length > 0) {
+  //     setAgentName(agents[0].name)
+  //   }
+  // }, [agents])
 
   return (
     <Stack>
@@ -50,12 +50,12 @@ export default function Generations() {
         {loading && <Loader />}
       </Group>
 
-      <Select
+      {/* <Select
         w={200}
         data={(agents || []).map((a) => ({ value: a.name, label: a.name }))}
         value={agentName}
         onChange={setAgentName}
-      />
+      /> */}
 
       <DataTable
         columns={columns}

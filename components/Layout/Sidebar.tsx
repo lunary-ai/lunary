@@ -9,7 +9,6 @@ import {
 
 import {
   IconBrandOpenai,
-  IconFileInvoice,
   IconGraph,
   IconLogout,
   IconRobot,
@@ -17,7 +16,7 @@ import {
   IconUsers,
 } from "@tabler/icons-react"
 
-import { useSessionContext } from "@supabase/auth-helpers-react"
+import { useSessionContext, useUser } from "@supabase/auth-helpers-react"
 
 import Router, { useRouter } from "next/router"
 import { useProfile } from "@/utils/supabaseHooks"
@@ -54,6 +53,7 @@ export default function Sidebar() {
   const { supabaseClient } = useSessionContext()
 
   const { profile } = useProfile()
+  const user = useUser()
 
   const isActive = (link: string) => router.pathname === link
 

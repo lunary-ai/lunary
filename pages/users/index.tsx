@@ -1,20 +1,29 @@
 import DataTable from "@/components/Blocks/DataTable"
 
 import { useAppUsers } from "@/utils/supabaseHooks"
-import { Stack, Title } from "@mantine/core"
+import { Group, Stack, Text, Title } from "@mantine/core"
 
 import { costColumn, timeColumn } from "@/utils/datatable"
-import { createColumnHelper } from "@tanstack/react-table"
 
 import Router from "next/router"
-
-const columnHelper = createColumnHelper<any>()
+import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
+import { formatAppUser } from "@/utils/format"
 
 const columns = [
-  columnHelper.accessor("external_id", {
-    header: "ID",
+  {
+    header: "User",
     size: 80,
-  }),
+    id: "users",
+    cell: (props) => {
+      const user = props.row.original
+      return (
+        <Group spacing={8}>
+          <AppUserAvatar size={40} user={user} />
+          <Text weight={500}>{formatAppUser(user)}</Text>
+        </Group>
+      )
+    },
+  },
   timeColumn("created_at", "First Seen"),
   timeColumn("last_seen", "Last Seen"),
   costColumn(),

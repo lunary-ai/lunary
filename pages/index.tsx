@@ -5,6 +5,7 @@ import {
   Card,
   Code,
   Group,
+  Loader,
   Mark,
   Modal,
   Stack,
@@ -23,17 +24,19 @@ export default function Home() {
   const [modalOpened, setModalOpened] = useState(false)
   const [newAppName, setNewAppName] = useState("")
 
-  const { apps, insert } = useApps()
+  const { apps, insert, loading } = useApps()
   const user = useUser()
 
   return (
     <Stack>
-      <Title>LLMonitor</Title>
+      <Title>llmonitor</Title>
       <Text>
-        Observability (logs + analytics) for <Mark>LLM-powered apps</Mark>.
+        Open-source observability for <Mark>LLM-powered apps</Mark>.
       </Text>
 
-      {!apps?.length ? (
+      {loading && <Loader />}
+
+      {apps && !apps.length ? (
         <Card p="xl" w={600} withBorder>
           <Stack align="start">
             <Title order={3}>

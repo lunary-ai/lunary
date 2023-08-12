@@ -5,10 +5,11 @@ import {
 
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
 import { useMantineTheme } from "@mantine/core"
-import { useLocalStorage } from "@mantine/hooks"
 import { Database } from "./supaTypes"
-import { useEffect } from "react"
+import { useContext, useEffect, useMemo, useState } from "react"
 import { calcRunCost } from "./calcCosts"
+import { useForceUpdate } from "@mantine/hooks"
+import { AppContext } from "./context"
 
 const softOptions = {
   dedupingInterval: 10000,
@@ -53,7 +54,7 @@ export const useProfile = () => {
     user
       ? supabaseClient
           .from("profile")
-          .select("*")
+          .select("id,email,name,updated_at")
           .match({ id: user?.id })
           .single()
       : null,
@@ -64,6 +65,17 @@ export const useProfile = () => {
     // @ts-ignore
     profile.color = getUserColor(theme, profile.id)
   }
+
+  // Make sure the profile is up to date
+  useEffect(() => {
+    if (user && profile && !profile.email) {
+      // Update profile
+      supabaseClient
+        .from("profile")
+        .update({ email: user.email, name: user.user_metadata.full_name })
+        .match({ id: user.id })
+    }
+  }, [profile, user])
 
   return { profile, loading: isLoading }
 }
@@ -85,69 +97,69 @@ export function useApps() {
   return { apps, loading: isLoading, insert }
 }
 
-export function useCurrentApp() {
-  const { apps, loading } = useApps()
+const ls = typeof window !== "undefined" ? window.localStorage : null
 
-  const [appId, setAppId] = useLocalStorage({
-    key: "appId",
-    defaultValue: undefined,
-    // getInitialValueInEffect: true,
-  })
+// export function useCurrentApp() {
+// const { apps, loading } = useApps()
 
-  useEffect(() => {
-    if (
-      typeof window !== "undefined" &&
-      typeof window.localStorage !== "undefined" &&
-      !appId &&
-      apps?.length &&
-      !loading
-    ) {
-      setAppId(apps[0].id)
-    }
-  }, [apps, loading])
+// const [appId, setAppId] = useState() //<string>(ls?.getItem("app-id"))
 
-  const app = apps?.find((app) => app.id === appId)
+// useEffect(() => {
+//   if (appId && apps) {
+//     console.log(`App id changed to ${appId}`)
 
-  return { app, loading, setAppId }
-}
+//     ls?.setItem("app-id", appId)
+//   }
+// }, [appId, apps])
 
-export function useAgents() {
-  const supabaseClient = useSupabaseClient<Database>()
-  const { app } = useCurrentApp()
+// useEffect(() => {
+//   if (ls && !appId && apps?.length && !loading) {
+//     console.log("Setting app id to", apps[0].id)
+//     setAppId(apps[0].id)
+//   }
+// }, [apps, loading])
 
-  const { data: agents, isLoading } = useQuery(
-    supabaseClient.from("agents").select("*").eq("app", app?.id).limit(100),
-    softOptions
-  )
+//   const app = useMemo(
+//     () => apps?.find((app) => app.id === appId),
+//     [appId, apps]
+//   )
+//   console.log(`Current app is ${app?.name} / ${app?.id}`)
 
-  return { agents, loading: isLoading }
-}
+//   return { app, loading, setAppId }
+// }
 
 export function useRuns(type: string, match?: any) {
   const supabaseClient = useSupabaseClient<Database>()
-  const { app } = useCurrentApp()
+  const { app } = useContext(AppContext)
+
+  console.log(`From useRuns, app is ${app?.name} / ${app?.id}`)
 
   let query = supabaseClient
     .from("run")
-    .select("*")
+    .select(
+      "id,user,type,name,created_at,ended_at,app,input,output,parent_run,prompt_tokens,completion_tokens,status,tags,error,params"
+    )
     .order("created_at", {
       ascending: true,
     })
     .eq("type", type)
     .eq("app", app?.id)
+    .limit(200)
 
   if (match) {
     query = query.match(match)
   }
 
-  const { data: runs, isLoading } = useQuery(query.limit(200), softOptions)
+  const { data: runs, isLoading, isValidating } = useQuery(query, softOptions)
+
+  console.log({ runs, isLoading, isValidating })
 
   return { runs: extendWithCosts(runs), loading: isLoading }
 }
 
 export function useRunsUsage(range, user_id = undefined) {
   const supabaseClient = useSupabaseClient()
-  const { app } = useCurrentApp()
+  const { app } = useContext(AppContext)
 
   const { data: usage, isLoading } = useQuery(
     app
@@ -165,7 +177,7 @@ export function useRunsUsage(range, user_id = undefined) {
 
 export function useRunsUsageByDay(range, user_id = undefined) {
   const supabaseClient = useSupabaseClient()
-  const { app } = useCurrentApp()
+  const { app } = useContext(AppContext)
 
   const { data: dailyUsage, isLoading } = useQuery(
     app
@@ -183,7 +195,7 @@ export function useRunsUsageByDay(range, user_id = undefined) {
 
 export function useRunsUsageByUser(range) {
   const supabaseClient = useSupabaseClient()
-  const { app } = useCurrentApp()
+  const { app } = useContext(AppContext)
 
   const { data: usageByUser, isLoading } = useQuery(
     app
@@ -241,7 +253,7 @@ export function useRun(runId: string) {
 
 export function useAppUsers(usageRange = 30) {
   const supabaseClient = useSupabaseClient()
-  const { app } = useCurrentApp()
+  const { app } = useContext(AppContext)
 
   const { data: users, isLoading } = useQuery(
     supabaseClient.from("app_user").select("*").eq("app", app?.id).limit(500),

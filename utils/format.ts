@@ -1,4 +1,4 @@
-export const formatCost = (cost) => {
+export const formatCost = (cost = 0) => {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
@@ -11,4 +11,9 @@ export const formatLargeNumber = (number) => {
   return new Intl.NumberFormat("en-US", { notation: "compact" }).format(
     number || 0
   )
+}
+
+export const formatAppUser = (user) => {
+  if (!user) return
+  return user.props?.name ?? user.props?.email ?? user.external_id
 }

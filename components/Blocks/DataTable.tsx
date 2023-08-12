@@ -38,7 +38,7 @@ export default function DataTable({
   })
 
   return (
-    <Card withBorder p={0}>
+    <Card withBorder p={0} radius={0}>
       <Table striped withColumnBorders w={table.getCenterTotalSize()}>
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (

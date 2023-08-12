@@ -155,8 +155,10 @@ const LineChart = ({
                       <Title order={3} size="sm">
                         {formatDate(label)}
                       </Title>
-                      {payload.map((item) => (
-                        <Text>{`${item.name}: ${formatter(item.value)}`}</Text>
+                      {payload.map((item, i) => (
+                        <Text key={i}>{`${item.name}: ${formatter(
+                          item.value
+                        )}`}</Text>
                       ))}
                     </Card>
                   )

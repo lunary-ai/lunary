@@ -2,7 +2,7 @@
 
 <img src="https://llmonitor.com/logo.png" style='border-radius: 12px;' width="50"/>
 
-# LLMonitor
+# 📈 llmonitor
 
 **Monitoring for AI apps and agent**
 
@@ -12,28 +12,19 @@
 
 </div>
 
-Features:
-
-- Simple to self host (deploy to Vercel & Supabase)
-- Use with any model, not just OpenAI
-- Log agent runs and identify errors with full history
-- Records completion requests, search and explore request history in the dashboard
-- Latency and token analytics
+- 🧑‍💻 Simple to self-host (deploy to Vercel & Supabase)
+- 💵 Cost, token & latency analytics
+- 👪 Track users
+- 🐛 Debug agents with traces
+- 🔍 Inspect full requests
+- 🤖 Use with any model, not just OpenAI
+- 📦 Integrate in 2 minutes
 
 Currently, a [JS client](https://github.com/llmonitor/llmonitor-js) is available with Python in the works.
 
-- Doesn't add latency with an extra endpoint
-- Langchain support
+## 📚 Documentation
 
-## Todo
-
-- [ ] Demo dashboard
-- [ ] Demo dashboard
-- [ ] Search on agent and LLM pages
-- [ ] Date filtering on agent and LLM pages
-- [x] Users Tracking
-- [ ] Embeddings analytics
-- [ ] Tools views
+Full documentation is available [on the website](https://llmonitor.com/docs/intro).
 
 ## License
 

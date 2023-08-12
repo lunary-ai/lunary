@@ -2,7 +2,7 @@ import { createColumnHelper } from "@tanstack/react-table"
 import { Anchor, Badge } from "@mantine/core"
 import SmartViewer from "@/components/Blocks/SmartViewer"
 import { useAppUser } from "./supabaseHooks"
-import { formatCost } from "./format"
+import { formatAppUser, formatCost } from "./format"
 const columnHelper = createColumnHelper<any>()
 
 export const timeColumn = (timeColumn, label = "Time") => {
@@ -94,12 +94,11 @@ export const userColumn = () => {
     size: 60,
     cell: (props) => {
       const userId = props.getValue()
-
       const { user } = useAppUser(userId)
 
       if (!userId) return null
 
-      return <Anchor href={`/users/${userId}`}>{user?.external_id}</Anchor>
+      return <Anchor href={`/users/${userId}`}>{formatAppUser(user)}</Anchor>
     },
   })
 }
@@ -132,7 +131,7 @@ export const nameColumn = (label = "Name") => {
 export const costColumn = () => {
   return columnHelper.accessor("cost", {
     header: "Cost",
-    size: 25,
+    size: 40,
     cell: (props) => {
       const cost = props.getValue()
       return formatCost(cost)
