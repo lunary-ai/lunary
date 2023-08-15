@@ -128,7 +128,7 @@ export default function Navbar() {
           <Anchor component={Link} href="/">
             <Group spacing="sm">
               <IconAnalyze />
-              <Text weight="bold">LLMonitor</Text>
+              <Text weight="bold">llmonitor</Text>
             </Group>
           </Anchor>
 

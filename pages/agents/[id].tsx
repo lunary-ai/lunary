@@ -122,7 +122,7 @@ export default function AgentRun({}) {
       </Group>
 
       <Grid>
-        <Grid.Col span={5}>
+        <Grid.Col span={6}>
           <Card withBorder>
             <Title order={2} mb="md">
               Trace
@@ -137,7 +137,7 @@ export default function AgentRun({}) {
             )}
           </Card>
         </Grid.Col>
-        <Grid.Col span={7}>
+        <Grid.Col span={6}>
           <Card withBorder>
             {focusedRun && (
               <Stack>

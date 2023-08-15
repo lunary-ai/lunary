@@ -39,7 +39,7 @@ export default function App(props: AppProps) {
   return (
     <>
       <Head>
-        <title>LLMonitor</title>
+        <title>llmonitor</title>
       </Head>
 
       <PostHogProvider client={posthog}>

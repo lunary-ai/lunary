@@ -17,10 +17,10 @@ export default async function handler(req: NextRequest) {
   } = await supabase.auth.getUser()
 
   await Email.send({
-    to: "team@llmonitor.com",
+    to: "vince@llmonitor.com",
     from: "feedback@llmonitor.com",
     replyTo: user.email,
-    subject: `[LLMonitor] Feedback left by ${user.email} from ${currentPage}`,
+    subject: `[llmonitor] Feedback left by ${user.email} from ${currentPage}`,
     text: message,
   })
 
