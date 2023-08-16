@@ -6,7 +6,7 @@
 
 **Monitoring for AI apps and agent**
 
-[website](https://llmonitor.com) - [docs](https://llmonitor.com/docs) - [demo](https://app.llmonitor.com/demo) - [![npm version](https://badge.fury.io/js/llmonitor.svg)](https://badge.fury.io/js/llmonitor)
+[website](https://llmonitor.com) - [docs](https://llmonitor.com/docs) - [demo](https://app.llmonitor.com/demo) - [![npm version](https://badge.fury.io/js/llmonitor.svg)](https://badge.fury.io/js/llmonitor) = ![Discord](https://img.shields.io/badge/Discord-Join%20Chat-violet?labelColor=purple&style=flat&logo=discord&logoColor=white)
 
 ---
 
@@ -25,6 +25,10 @@ Currently, a [JS client](https://github.com/llmonitor/llmonitor-js) is available
 ## 📚 Documentation
 
 Full documentation is available [on the website](https://llmonitor.com/docs/intro).
+
+## 🙋 Support
+
+Chat with us on [Discord](https://discord.gg/8PafSG58kK) or email one of the founders at vince@llmonitor.com.
 
 ## License
 
