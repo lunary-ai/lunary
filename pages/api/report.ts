@@ -187,12 +187,11 @@ export default async function handler(req: NextRequest) {
 
   for (const event of sorted) {
     try {
-      console.log(event)
       await registerEvent(cleanEvent(event))
     } catch (e: any) {
-      console.error(`Error handling event.`)
+      console.error(`Error ingesting event.`)
       // Edge functions logs are limited to 2kb
-      console.error(e)
+      console.error(e.message)
     }
   }
 
