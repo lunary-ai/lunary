@@ -1,3 +1,4 @@
+import { formatLargeNumber } from "@/utils/format"
 import { useProfile } from "@/utils/supabaseHooks"
 import {
   Badge,
@@ -9,9 +10,11 @@ import {
   Loader,
   Container,
   Button,
+  Alert,
 } from "@mantine/core"
 import { modals } from "@mantine/modals"
 import { useSupabaseClient } from "@supabase/auth-helpers-react"
+import { IconInfoTriangle } from "@tabler/icons-react"
 import Script from "next/script"
 import { use, useEffect, useState } from "react"
 
@@ -40,7 +43,7 @@ export default function Billing() {
 
   if (loading) return <Loader />
 
-  const percent = (usage / 30000) * 100
+  const percent = 101 // (usage / 30000) * 100
 
   return (
     <Container>
@@ -48,27 +51,40 @@ export default function Billing() {
         <Title>Billing</Title>
 
         <Text size="lg">
-          You are currently on a <Badge>{profile?.plan}</Badge> plan.
+          You are currently on the <Badge>{profile?.plan}</Badge> plan.
         </Text>
 
         {profile?.plan === "free" && (
-          <Button
-            onClick={() =>
-              modals.openContextModal({ modal: "upgrade", innerProps: {} })
-            }
-            w={300}
-          >
-            Upgrade to Pro
-          </Button>
+          <>
+            {percent > 99 && (
+              <Alert
+                color="red"
+                variant="outline"
+                icon={<IconInfoTriangle />}
+                title="Allowance Reached"
+              >
+                You have reached your monthly request allowance. Please upgrade
+                to keep access to your data.
+              </Alert>
+            )}
+            <Button
+              onClick={() =>
+                modals.openContextModal({ modal: "upgrade", innerProps: {} })
+              }
+              w={300}
+            >
+              Upgrade to Pro
+            </Button>
+          </>
         )}
 
         <Card withBorder radius="md" padding="xl">
           <Stack spacing="sm">
             <Text fz="md" fw={700} c="dimmed">
-              Monthly Queries Allowance
+              Monthly Requests Allowance
             </Text>
             <Text fz="lg" fw={500}>
-              {usage} / 30.000 requests
+              {formatLargeNumber(usage)} / {formatLargeNumber(30000)} requests
             </Text>
             <Progress
               value={percent}
