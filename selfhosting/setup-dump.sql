@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS "public"."profile" (
     "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
     "name" text,
     "email" text,
+    "plan" text NOT NULL DEFAULT 'free',
     "updated_at" timestamptz,
     PRIMARY KEY ("id")
 );

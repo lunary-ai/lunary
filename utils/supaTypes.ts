@@ -119,18 +119,21 @@ export interface Database {
           email: string | null
           id: string
           name: string | null
+          plan: string
           updated_at: string | null
         }
         Insert: {
           email?: string | null
           id: string
           name?: string | null
+          plan?: string
           updated_at?: string | null
         }
         Update: {
           email?: string | null
           id?: string
           name?: string | null
+          plan?: string
           updated_at?: string | null
         }
         Relationships: [
