@@ -1,7 +1,7 @@
 import { analytics } from "@/utils/analytics"
 import { AppContext } from "@/utils/context"
 import errorHandler from "@/utils/errorHandler"
-import { useApps } from "@/utils/supabaseHooks"
+import { useApps, useProfile } from "@/utils/supabaseHooks"
 import {
   Header,
   Anchor,
@@ -14,10 +14,17 @@ import {
   Modal,
 } from "@mantine/core"
 import { useForm } from "@mantine/form"
+import { modals } from "@mantine/modals"
 import { notifications } from "@mantine/notifications"
 import { useUser } from "@supabase/auth-helpers-react"
 
-import { IconAnalyze, IconHelp, IconMessage } from "@tabler/icons-react"
+import {
+  IconAnalyze,
+  IconHelp,
+  IconMessage,
+  IconStar,
+  IconStarFilled,
+} from "@tabler/icons-react"
 
 import Link from "next/link"
 import { useContext, useEffect, useState } from "react"
@@ -96,6 +103,7 @@ export default function Navbar() {
   const { apps, loading } = useApps()
 
   const user = useUser()
+  const { profile } = useProfile()
 
   useEffect(() => {
     if (user) {
@@ -144,6 +152,23 @@ export default function Navbar() {
         </Group>
 
         <Group>
+          {profile?.plan === "free" && (
+            <Button
+              onClick={() =>
+                modals.openContextModal({
+                  modal: "upgrade",
+                  innerProps: {},
+                })
+              }
+              size="xs"
+              variant="gradient"
+              gradient={{ from: "#0788ff", to: "#9900ff", deg: 30 }}
+              leftIcon={<IconStarFilled size={16} />}
+            >
+              Upgrade
+            </Button>
+          )}
+
           <Button
             component="a"
             href="https://llmonitor.com/docs"

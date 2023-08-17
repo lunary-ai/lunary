@@ -53,7 +53,7 @@ export const useProfile = () => {
     user
       ? supabaseClient
           .from("profile")
-          .select("id,email,name,updated_at")
+          .select("id,email,name,updated_at,plan")
           .match({ id: user?.id })
           .single()
       : null,
