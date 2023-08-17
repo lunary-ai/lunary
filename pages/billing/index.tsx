@@ -43,7 +43,7 @@ export default function Billing() {
 
   if (loading) return <Loader />
 
-  const percent = 101 // (usage / 30000) * 100
+  const percent = (usage / 30000) * 100
 
   return (
     <Container>
