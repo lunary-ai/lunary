@@ -9,6 +9,9 @@ import {
   Title,
 } from "@mantine/core"
 import { IconBrandDiscord, IconMessage } from "@tabler/icons-react"
+import CopyText from "../Blocks/CopyText"
+import { useContext } from "react"
+import { AppContext } from "@/utils/context"
 
 export default function Empty({
   what,
@@ -17,8 +20,10 @@ export default function Empty({
   what: string
   Icon?: React.ComponentType<any>
 }) {
+  const { app } = useContext(AppContext)
+
   return (
-    <Center>
+    <Center mih="70vh">
       <Card withBorder p={50} w="fit-content">
         <Stack align="start" spacing="xl">
           <ThemeIcon size={72} radius="lg">
@@ -36,6 +41,9 @@ export default function Empty({
           >
             Documentation &rarr;
           </Button>
+          <Text>
+            Tracking ID: <CopyText value={app?.id} />
+          </Text>
           <Text size="xl">
             Any issue? Get help from a founder on Discord or by email.
           </Text>

@@ -10,6 +10,7 @@ import Layout from "@/components/Layout"
 import { Database } from "@/utils/supaTypes"
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { Analytics } from "@vercel/analytics/react"
 
 import { useRouter } from "next/router"
 import { analytics } from "@/utils/analytics"
@@ -69,6 +70,7 @@ export default function App(props: AppProps) {
               <Component {...pageProps} />
             </Layout>
           </MantineProvider>
+          <Analytics />
         </SessionContextProvider>
       </PostHogProvider>
     </>
