@@ -12,9 +12,14 @@ export default class _Document extends Document {
       <Html>
         <Head>
           {process.env.NEXT_PUBLIC_CUSTOM_SCRIPT && (
-            <Script id="custom-script">
-              {process.env.NEXT_PUBLIC_CUSTOM_SCRIPT}
-            </Script>
+            <Script
+              id="custom-script"
+              dangerouslySetInnerHTML={{
+                __html: process.env.NEXT_PUBLIC_CUSTOM_SCRIPT,
+              }}
+              onLoad={() => console.log("Custom script loaded.")}
+              onError={() => console.log("Custom script failed to load.")}
+            />
           )}
         </Head>
         <body>
