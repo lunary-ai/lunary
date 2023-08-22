@@ -17,12 +17,14 @@ import {
 import { CopyButton, ActionIcon, Tooltip } from "@mantine/core"
 import { IconCopy, IconCheck } from "@tabler/icons-react"
 import { useUser } from "@supabase/auth-helpers-react"
-import { useState } from "react"
+import { useContext, useState } from "react"
 import Link from "next/link"
+import { AppContext } from "@/utils/context"
 
 export default function Home() {
   const [modalOpened, setModalOpened] = useState(false)
   const [newAppName, setNewAppName] = useState("")
+  const { setApp } = useContext(AppContext)
 
   const { apps, insert, loading } = useApps()
   const user = useUser()
@@ -80,7 +82,7 @@ export default function Home() {
             onClick={async () => {
               // @ts-ignore
               await insert({ name: newAppName, owner: user.id })
-              console.log({ name: newAppName, owner: user.id })
+
               setModalOpened(false)
             }}
           >
@@ -90,7 +92,14 @@ export default function Home() {
       </Modal>
       <Stack>
         {apps?.map((app) => (
-          <Anchor href={`/analytics`} key={app.id} component={Link}>
+          <Anchor
+            href={`/analytics`}
+            key={app.id}
+            component={Link}
+            onClick={() => {
+              setApp(app)
+            }}
+          >
             <Card key={app.id}>
               <Title order={4}>{app.name}</Title>
               <Group>

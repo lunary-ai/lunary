@@ -19,6 +19,8 @@ import {
   Title,
 } from "@mantine/core"
 import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
+import Empty from "@/components/Layout/Empty"
+import { IconChartAreaLine } from "@tabler/icons-react"
 
 const calculateDailyCost = (usage) => {
   // calculate using calcRunCost, reduce by model, and filter by type llm
@@ -44,9 +46,20 @@ const calculateDailyCost = (usage) => {
 export default function Analytics() {
   const [range, setRange] = useState(7)
 
-  const { usage } = useRunsUsage(range)
-  const { dailyUsage } = useRunsUsageByDay(range)
-  const { usersWithUsage } = useAppUsers(range)
+  const { usage, loading: usageLoading } = useRunsUsage(range)
+  const { dailyUsage, loading: dailyUsageLoading } = useRunsUsageByDay(range)
+  const { usersWithUsage, loading: usersLoading } = useAppUsers(range)
+
+  const loading = usageLoading || dailyUsageLoading || usersLoading
+
+  if (
+    !loading &&
+    !usage?.length &&
+    !dailyUsage?.length &&
+    !usersWithUsage?.length
+  ) {
+    return <Empty Icon={IconChartAreaLine} what="data" />
+  }
 
   return (
     <Container size="lg" my="lg">

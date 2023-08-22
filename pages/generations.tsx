@@ -15,6 +15,8 @@ import {
   nameColumn,
   costColumn,
 } from "@/utils/datatable"
+import Empty from "@/components/Layout/Empty"
+import { IconBrandOpenai } from "@tabler/icons-react"
 
 const columns = [
   timeColumn("created_at"),
@@ -39,6 +41,10 @@ const columns = [
 
 export default function Generations() {
   const { runs, loading } = useRuns("llm")
+
+  if (!loading && runs.length === 0) {
+    return <Empty Icon={IconBrandOpenai} what="requests" />
+  }
 
   return (
     <Stack>

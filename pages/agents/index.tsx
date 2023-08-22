@@ -1,8 +1,6 @@
-import { useEffect } from "react"
 import Router from "next/router"
 
-import { Group, Loader, Select, Stack, Title } from "@mantine/core"
-import { useLocalStorage } from "@mantine/hooks"
+import { Group, Loader, Stack, Title } from "@mantine/core"
 
 import DataTable from "@/components/Blocks/DataTable"
 
@@ -14,7 +12,9 @@ import {
   timeColumn,
   userColumn,
 } from "@/utils/datatable"
-import { useRunsUsage, useRuns } from "@/utils/supabaseHooks"
+import { useRuns } from "@/utils/supabaseHooks"
+import Empty from "@/components/Layout/Empty"
+import { IconRobot } from "@tabler/icons-react"
 
 const columns = [
   timeColumn("created_at", "Time"),
@@ -26,27 +26,16 @@ const columns = [
 ]
 
 export default function Agents() {
-  // const { usage } = useRunsUsage(30)
-
-  // const agents = usage?.filter((u) => u.type === "agent") || []
-
-  // const [agentName, setAgentName] = useLocalStorage<string | null>({
-  //   key: "agentName",
-  //   defaultValue: null,
-  // })
-
   const { runs, loading } = useRuns("agent")
 
-  // useEffect(() => {
-  //   if (!agentName && agents?.length > 0) {
-  //     setAgentName(agents[0].name)
-  //   }
-  // }, [agents])
+  if (!loading && runs.length === 0) {
+    return <Empty Icon={IconRobot} what="agents traces" />
+  }
 
   return (
     <Stack>
       <Group>
-        <Title>Agents</Title>
+        <Title>Agents Traces</Title>
         {loading && <Loader />}
       </Group>
 

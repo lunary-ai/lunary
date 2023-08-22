@@ -8,6 +8,8 @@ import { costColumn, timeColumn } from "@/utils/datatable"
 import Router from "next/router"
 import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 import { formatAppUser } from "@/utils/format"
+import Empty from "@/components/Layout/Empty"
+import { IconUsers } from "@tabler/icons-react"
 
 const columns = [
   {
@@ -30,7 +32,11 @@ const columns = [
 ]
 
 export default function Users() {
-  const { usersWithUsage } = useAppUsers()
+  const { usersWithUsage, loading } = useAppUsers()
+
+  if (!loading && usersWithUsage.length === 0) {
+    return <Empty Icon={IconUsers} what="users" />
+  }
 
   return (
     <Stack>
