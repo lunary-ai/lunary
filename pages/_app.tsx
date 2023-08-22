@@ -17,6 +17,7 @@ import { analytics } from "@/utils/analytics"
 
 import { PostHogProvider } from "posthog-js/react"
 import posthog from "posthog-js"
+import Script from "next/script"
 
 export default function App(props: AppProps) {
   const { Component, pageProps } = props
@@ -71,6 +72,16 @@ export default function App(props: AppProps) {
             </Layout>
           </MantineProvider>
           <Analytics />
+          {process.env.NEXT_PUBLIC_CUSTOM_SCRIPT && (
+            <Script
+              id="custom-script"
+              dangerouslySetInnerHTML={{
+                __html: process.env.NEXT_PUBLIC_CUSTOM_SCRIPT,
+              }}
+              onLoad={() => console.log("Custom script loaded.")}
+              onError={() => console.log("Custom script failed to load.")}
+            />
+          )}
         </SessionContextProvider>
       </PostHogProvider>
     </>

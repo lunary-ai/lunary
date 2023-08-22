@@ -10,18 +10,7 @@ export default class _Document extends Document {
   render() {
     return (
       <Html>
-        <Head>
-          {process.env.NEXT_PUBLIC_CUSTOM_SCRIPT && (
-            <Script
-              id="custom-script"
-              dangerouslySetInnerHTML={{
-                __html: process.env.NEXT_PUBLIC_CUSTOM_SCRIPT,
-              }}
-              onLoad={() => console.log("Custom script loaded.")}
-              onError={() => console.log("Custom script failed to load.")}
-            />
-          )}
-        </Head>
+        <Head />
         <body>
           <Main />
           <NextScript />
