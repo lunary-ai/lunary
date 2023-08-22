@@ -160,6 +160,7 @@ const registerEvent = async (event: Event): Promise<void> => {
 
   switch (type) {
     case "llm":
+    case "embed":
     case "chain":
     case "agent":
     case "tool":
