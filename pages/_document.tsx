@@ -12,10 +12,9 @@ export default class _Document extends Document {
       <Html>
         <Head>
           {process.env.NEXT_PUBLIC_CUSTOM_SCRIPT && (
-            <Script
-              src={process.env.NEXT_PUBLIC_CUSTOM_SCRIPT}
-              strategy="afterInteractive"
-            />
+            <Script id="custom-script">
+              {process.env.NEXT_PUBLIC_CUSTOM_SCRIPT}
+            </Script>
           )}
         </Head>
         <body>
