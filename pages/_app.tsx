@@ -27,30 +27,30 @@ export default function App(props: AppProps) {
         supabaseClient={supabase}
         initialSession={pageProps.initialSession}
       >
-        <AnalyticsWrapper>
-          <MantineProvider
-            withNormalizeCSS
-            theme={{
-              colorScheme: "light",
-              defaultRadius: "md",
-              // primaryColor: "pink",
-              headings: {
-                fontWeight: 700,
-              },
-              components: {
-                Anchor: {
-                  defaultProps: {
-                    component: Link,
-                  },
+        <MantineProvider
+          withNormalizeCSS
+          theme={{
+            colorScheme: "light",
+            defaultRadius: "md",
+            // primaryColor: "pink",
+            headings: {
+              fontWeight: 700,
+            },
+            components: {
+              Anchor: {
+                defaultProps: {
+                  component: Link,
                 },
               },
-            }}
-          >
+            },
+          }}
+        >
+          <AnalyticsWrapper>
             <Layout>
               <Component {...pageProps} />
             </Layout>
-          </MantineProvider>
-        </AnalyticsWrapper>
+          </AnalyticsWrapper>
+        </MantineProvider>
       </SessionContextProvider>
     </>
   )
