@@ -1,14 +1,22 @@
+import analytics from "@/utils/analytics"
+
 import { List, Stack, Title } from "@mantine/core"
 import { ContextModalProps } from "@mantine/modals"
 import { IconCheck } from "@tabler/icons-react"
 
 import Script from "next/script"
+import { useEffect } from "react"
+
 const UpgradeModal = ({
   context,
   id,
   innerProps,
 }: ContextModalProps<{ modalBody: string }>) => {
   if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) return null
+
+  useEffect(() => {
+    analytics.track("Upgrade Modal")
+  }, [])
 
   return (
     <>

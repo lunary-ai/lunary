@@ -20,6 +20,7 @@ import { useSessionContext, useUser } from "@supabase/auth-helpers-react"
 import { IconAt, IconCheck, IconUser } from "@tabler/icons-react"
 
 import errorHandler from "@/utils/errorHandler"
+import analytics from "@/utils/analytics"
 
 function SignupPage() {
   const [loading, setLoading] = useState(false)
@@ -72,6 +73,8 @@ function SignupPage() {
         },
       })
     )
+
+    analytics.track("Signup", { email, name })
 
     if (ok) {
       notifications.show({

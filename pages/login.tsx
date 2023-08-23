@@ -15,6 +15,7 @@ import { IconAt } from "@tabler/icons-react"
 import Router from "next/router"
 import { useEffect, useState } from "react"
 import errorHandler from "@/utils/errorHandler"
+import analytics from "@/utils/analytics"
 
 function LoginPage() {
   const [loading, setLoading] = useState(false)
@@ -78,6 +79,8 @@ function LoginPage() {
     const ok = await errorHandler(
       supabaseClient.auth.signInWithPassword({ email, password })
     )
+
+    analytics.track("Login", { method: "password" })
 
     if (ok) {
       Router.push("/")

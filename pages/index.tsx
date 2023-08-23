@@ -1,3 +1,6 @@
+import { useContext, useState } from "react"
+import Link from "next/link"
+
 import { useApps } from "@/utils/supabaseHooks"
 import {
   Anchor,
@@ -9,17 +12,19 @@ import {
   Mark,
   Modal,
   Stack,
+  CopyButton,
+  ActionIcon,
+  Tooltip,
   Text,
   TextInput,
   Title,
 } from "@mantine/core"
 
-import { CopyButton, ActionIcon, Tooltip } from "@mantine/core"
 import { IconCopy, IconCheck } from "@tabler/icons-react"
 import { useUser } from "@supabase/auth-helpers-react"
-import { useContext, useState } from "react"
-import Link from "next/link"
+
 import { AppContext } from "@/utils/context"
+import analytics from "@/utils/analytics"
 
 export default function Home() {
   const [modalOpened, setModalOpened] = useState(false)
@@ -28,6 +33,17 @@ export default function Home() {
 
   const { apps, insert, loading } = useApps()
   const user = useUser()
+
+  const createApp = async () => {
+    // @ts-ignore
+    await insert({ name: newAppName, owner: user.id })
+
+    setModalOpened(false)
+
+    analytics.track("Create App", {
+      name: newAppName,
+    })
+  }
 
   return (
     <Stack>
@@ -78,16 +94,7 @@ export default function Home() {
             value={newAppName}
             onChange={(e) => setNewAppName(e.currentTarget.value)}
           />
-          <Button
-            onClick={async () => {
-              // @ts-ignore
-              await insert({ name: newAppName, owner: user.id })
-
-              setModalOpened(false)
-            }}
-          >
-            Create
-          </Button>
+          <Button onClick={createApp}>Create</Button>
         </Group>
       </Modal>
       <Stack>

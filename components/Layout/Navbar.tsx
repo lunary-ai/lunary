@@ -1,4 +1,4 @@
-import { analytics } from "@/utils/analytics"
+import analytics from "@/utils/analytics"
 import { AppContext } from "@/utils/context"
 import errorHandler from "@/utils/errorHandler"
 import { useApps, useProfile } from "@/utils/supabaseHooks"
@@ -107,7 +107,7 @@ export default function Navbar() {
 
   useEffect(() => {
     if (user) {
-      analytics?.identify(user.id, {
+      analytics.identify(user.id, {
         email: user.email,
         name: user.user_metadata?.name,
       })
