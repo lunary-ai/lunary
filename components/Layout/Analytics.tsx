@@ -23,34 +23,30 @@ export default function AnalyticsWrapper({ children }) {
   }, [])
 
   return (
-    <PostHogProvider client={posthog}>
-      <Head>
-        {process.env.NEXT_PUBLIC_CUSTOM_SCRIPT && (
-          <Script
-            id="custom-script"
-            dangerouslySetInnerHTML={{
-              __html: process.env.NEXT_PUBLIC_CUSTOM_SCRIPT,
-            }}
-            onLoad={() => console.log("Custom script loaded.")}
-            onError={() => console.log("Custom script failed to load.")}
-          />
-        )}
+    <>
+      {process.env.NEXT_PUBLIC_CUSTOM_SCRIPT && (
+        <Script
+          id="custom-script"
+          dangerouslySetInnerHTML={{
+            __html: process.env.NEXT_PUBLIC_CUSTOM_SCRIPT,
+          }}
+          onLoad={() => console.log("Custom script loaded.")}
+          onError={() => console.log("Custom script failed to load.")}
+        />
+      )}
 
-        {process.env.NEXT_PUBLIC_LIVECHAT_SCRIPT && (
-          <Script
-            id="livechat-script"
-            dangerouslySetInnerHTML={{
-              __html: process.env.NEXT_PUBLIC_LIVECHAT_SCRIPT,
-            }}
-            onLoad={() => console.log("LiveChat script loaded.")}
-            onError={() => console.log("LiveChat script failed to load.")}
-          />
-        )}
-      </Head>
-
-      {children}
-
+      {process.env.NEXT_PUBLIC_LIVECHAT_SCRIPT && (
+        <Script
+          id="livechat-script"
+          dangerouslySetInnerHTML={{
+            __html: process.env.NEXT_PUBLIC_LIVECHAT_SCRIPT,
+          }}
+          onLoad={() => console.log("LiveChat script loaded.")}
+          onError={() => console.log("LiveChat script failed to load.")}
+        />
+      )}
+      <PostHogProvider client={posthog}>{children}</PostHogProvider>
       <Analytics />
-    </PostHogProvider>
+    </>
   )
 }
