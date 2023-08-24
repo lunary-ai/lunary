@@ -18,7 +18,7 @@
 - 🤖 Use with any model, not just OpenAI
 - 📦 Integrate in 2 minutes
 
-<video controls width="900"><source src="https://llmonitor.com/videos/demo-annotated.mp4"></video>
+<video controls width="900" src="https://llmonitor.com/videos/demo-annotated.mp4"></video>
 
 ## ⚙️ Integration
 
