@@ -6,7 +6,8 @@
 
 [website](https://llmonitor.com) - [docs](https://llmonitor.com/docs) - [pricing](https://llmonitor.com/docs) - [self host](https://llmonitor.com/docs/self-host)
 
-[![npm version](https://badge.fury.io/js/llmonitor.svg)](https://badge.fury.io/js/llmonitor) - ![Discord](https://img.shields.io/badge/Discord-Join%20Chat-violet?labelColor=purple&style=flat&logo=discord&logoColor=white)
+[![npm version](https://badge.fury.io/js/llmonitor.svg)](https://badge.fury.io/js/llmonitor) ![Discord](https://img.shields.io/badge/Discord-Join%20Chat-violet?labelColor=purple&style=flat&logo=discord&logoColor=white) ![GitHub last commit (by committer)](https://img.shields.io/github/last-commit/llmonitor/llmonitor) ![GitHub commit activity (branch)](https://img.shields.io/github/commit-activity/w/llmonitor/llmonitor)
+
 
 </div>
 
