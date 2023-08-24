@@ -60,6 +60,10 @@ With the hosted version:
 
 Chat with us on [Discord](https://discord.gg/8PafSG58kK) or email one of the founders: [vince [at] llmonitor.com](mailto:vince@llmonitor.com).
 
+## 👨‍👩‍👧 Team
+
+Made by [@vincelwt](https://twitter.com/vincelwt) and Hugh.
+
 ## License
 
 This project is licensed under the Apache 2.0 License.
