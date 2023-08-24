@@ -1,14 +1,12 @@
 <div align="center">
 
-<img src="https://llmonitor.com/logo.png" style='border-radius: 12px;' width="50"/>
-
 # 📈 llmonitor
 
-**Monitoring for AI apps and agent**
+**Open-source monitoring & observability for AI apps and agents**
 
-[website](https://llmonitor.com) - [docs](https://llmonitor.com/docs) - [demo](https://app.llmonitor.com/demo) - [![npm version](https://badge.fury.io/js/llmonitor.svg)](https://badge.fury.io/js/llmonitor) = ![Discord](https://img.shields.io/badge/Discord-Join%20Chat-violet?labelColor=purple&style=flat&logo=discord&logoColor=white)
+[website](https://llmonitor.com) - [docs](https://llmonitor.com/docs) - [demo](https://app.llmonitor.com/demo)
 
----
+[![npm version](https://badge.fury.io/js/llmonitor.svg)](https://badge.fury.io/js/llmonitor) - ![Discord](https://img.shields.io/badge/Discord-Join%20Chat-violet?labelColor=purple&style=flat&logo=discord&logoColor=white)
 
 </div>
 
@@ -20,7 +18,22 @@
 - 🤖 Use with any model, not just OpenAI
 - 📦 Integrate in 2 minutes
 
-Currently, a [JS client](https://github.com/llmonitor/llmonitor-js) is available with Python in the works.
+<video controls width="900"><source src="https://llmonitor.com/videos/demo-annotated.mp4"></video>
+
+## ⚙️ Integration
+
+Modules available for:
+
+- [JavaScript](https://github.com/llmonitor/llmonitor-js)
+- Python (coming soon)
+
+LLMonitor natively supports:
+
+- LangChain (JS & Python)
+- OpenAI module
+- LiteLLM
+
+Additionally you can use it with any framework by wrapping the relevant methods.
 
 ## 📚 Documentation
 

@@ -8,7 +8,6 @@ import posthog from "posthog-js"
 import { Analytics } from "@vercel/analytics/react"
 
 import analytics from "@/utils/analytics"
-import Head from "next/head"
 
 export default function AnalyticsWrapper({ children }) {
   const router = useRouter()
