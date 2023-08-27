@@ -1,5 +1,14 @@
+import { Input } from "@mantine/core"
+
+interface ModelCost {
+  models: string[]
+  maxTokens: number
+  inputCost: number
+  outputCost: number
+}
+
 // Costs are in USD per 1000 tokens
-const MODEL_COSTS = [
+const MODEL_COSTS: ModelCost[] = [
   {
     models: [
       "gpt-3.5-turbo",
@@ -7,25 +16,31 @@ const MODEL_COSTS = [
       "gpt-3.5-turbo-0613",
       "gpt-3.5-turbo-0301",
     ],
-    maxTokens: 4000,
+    maxTokens: 4096,
     inputCost: 0.0015,
     outputCost: 0.002,
   },
   {
+    models: ["text-davinci-003"],
+    maxTokens: 4097,
+    inputCost: 0.002,
+    outputCost: 0.002,
+  },
+  {
     models: ["gpt-35-turbo-16k", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-16k-0613"],
-    maxTokens: 16000,
+    maxTokens: 16384,
     inputCost: 0.003,
     outputCost: 0.004,
   },
   {
     models: ["gpt-4", "gpt-4-0613"],
-    maxTokens: 8000,
+    maxTokens: 8192,
     inputCost: 0.03,
     outputCost: 0.06,
   },
   {
     models: ["gpt-4-32k", "gpt-4-32k-0314", "gpt-4-32k-0613"],
-    maxTokens: 8000,
+    maxTokens: 8192,
     inputCost: 0.06,
     outputCost: 0.12,
   },
