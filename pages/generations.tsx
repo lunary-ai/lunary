@@ -42,7 +42,7 @@ const columns = [
 export default function Generations() {
   const { runs, loading } = useRuns("llm")
 
-  if (!loading && runs.length === 0) {
+  if (!loading && runs?.length === 0) {
     return <Empty Icon={IconBrandOpenai} what="requests" />
   }
 
