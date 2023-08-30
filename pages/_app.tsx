@@ -20,8 +20,6 @@ export default function App(props: AppProps) {
 
   return (
     <>
-      <DefaultSeo title="Dashboard" titleTemplate=" | LLMonitor" />
-
       <SessionContextProvider
         supabaseClient={supabase}
         initialSession={pageProps.initialSession}
@@ -46,6 +44,11 @@ export default function App(props: AppProps) {
         >
           <AnalyticsWrapper>
             <Layout>
+              <DefaultSeo
+                title="Dashboard"
+                titleTemplate=" | LLMonitor"
+                defaultTitle="Dashboard | LLMonitor"
+              />
               <Component {...pageProps} />
             </Layout>
           </AnalyticsWrapper>

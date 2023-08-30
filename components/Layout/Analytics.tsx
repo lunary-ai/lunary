@@ -26,8 +26,11 @@ export default function AnalyticsWrapper({ children }) {
     <>
       <PlausibleProvider
         domain="app.llmonitor.com,rollup.llmonitor.com"
-        // @ts-ignore
-        scriptProps={{ src: "/p/js/script.js", "data-api": "/p/event" }}
+        scriptProps={{
+          src: "https://llmonitor.com/p/js/script.js",
+          // @ts-ignore
+          "data-api": "https://llmonitor.com/p/event",
+        }}
         customDomain="llmonitor.com"
       >
         {process.env.NEXT_PUBLIC_CUSTOM_SCRIPT && (
