@@ -10,6 +10,7 @@ import UsageSummary from "@/components/Blocks/Analytics/UsageSummary"
 import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 import { formatAppUser } from "@/utils/format"
 import CopyText from "@/components/Blocks/CopyText"
+import { NextSeo } from "next-seo"
 
 export default function UserDetails({}) {
   const router = useRouter()
@@ -21,6 +22,7 @@ export default function UserDetails({}) {
 
   return (
     <Stack>
+      <NextSeo title={formatAppUser(user)} />
       <Title order={2}>User Details</Title>
       <Card withBorder w={400}>
         <Group>

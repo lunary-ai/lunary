@@ -10,6 +10,7 @@ import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 import { formatAppUser } from "@/utils/format"
 import Empty from "@/components/Layout/Empty"
 import { IconUsers } from "@tabler/icons-react"
+import { NextSeo } from "next-seo"
 
 const columns = [
   {
@@ -40,6 +41,7 @@ export default function Users() {
 
   return (
     <Stack>
+      <NextSeo title="Users" />
       <Title>Users</Title>
       <DataTable
         columns={columns}
