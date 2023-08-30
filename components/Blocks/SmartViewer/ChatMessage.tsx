@@ -41,13 +41,11 @@ export default function ChatMessage({ data, compact = false }) {
             {data?.text}
           </Code>
         )}
-        {data?.function_call && (
+        {data?.functionCall && (
           <Text>
             {`Call function "${
-              data?.function_call.name
-            }" with arguments ${JSON.stringify(
-              data?.function_call?.arguments
-            )}`}
+              data?.functionCall.name
+            }" with arguments ${JSON.stringify(data?.functionCall?.arguments)}`}
           </Text>
         )}
       </Spoiler>
