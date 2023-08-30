@@ -7,7 +7,7 @@ import { NextRequest } from "next/server"
 import cors from "@/lib/cors"
 
 export interface Event {
-  type: string
+  type: "llm" | "embed" | "chain" | "agent" | "tool" | "log" | "retriever"
   app: string
   event?: string
   level?: string
