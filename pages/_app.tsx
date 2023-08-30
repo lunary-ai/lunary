@@ -46,7 +46,7 @@ export default function App(props: AppProps) {
             <Layout>
               <DefaultSeo
                 title="Dashboard"
-                titleTemplate=" | LLMonitor"
+                titleTemplate="%s | LLMonitor"
                 defaultTitle="Dashboard | LLMonitor"
               />
               <Component {...pageProps} />
