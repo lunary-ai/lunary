@@ -15,8 +15,8 @@ import {
 import { modals } from "@mantine/modals"
 import { useSupabaseClient } from "@supabase/auth-helpers-react"
 import { IconInfoTriangle } from "@tabler/icons-react"
-import Script from "next/script"
-import { use, useEffect, useState } from "react"
+import { NextSeo } from "next-seo"
+import { useEffect, useState } from "react"
 
 export default function Billing() {
   const { profile, loading } = useProfile()
@@ -47,6 +47,7 @@ export default function Billing() {
 
   return (
     <Container>
+      <NextSeo title="Billing" />
       <Stack>
         <Title>Billing</Title>
 
