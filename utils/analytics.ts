@@ -51,7 +51,7 @@ const identify = (userId: string, traits: any) => {
   posthog?.identify(userId, traits)
 
   // @ts-ignore
-  gosquared._gs("identify", traits)
+  w.gosquared("identify", traits)
 }
 
 const analytics = {
