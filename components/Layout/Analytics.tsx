@@ -25,7 +25,7 @@ export default function AnalyticsWrapper({ children }) {
   return (
     <>
       <PlausibleProvider
-        domain="llmonitor.com"
+        domain="app.llmonitor.com,rollup.llmonitor.com"
         // @ts-ignore
         scriptProps={{ src: "/p/js/script.js", "data-api": "/p/event" }}
         customDomain="llmonitor.com"
