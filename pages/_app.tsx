@@ -11,6 +11,7 @@ import { Database } from "@/utils/supaTypes"
 import { useState } from "react"
 import Link from "next/link"
 import AnalyticsWrapper from "@/components/Layout/Analytics"
+import { DefaultSeo } from "next-seo"
 
 export default function App(props: AppProps) {
   const { Component, pageProps } = props
@@ -19,10 +20,6 @@ export default function App(props: AppProps) {
 
   return (
     <>
-      <Head>
-        <title>llmonitor</title>
-      </Head>
-
       <SessionContextProvider
         supabaseClient={supabase}
         initialSession={pageProps.initialSession}
@@ -47,6 +44,11 @@ export default function App(props: AppProps) {
         >
           <AnalyticsWrapper>
             <Layout>
+              <DefaultSeo
+                title="Dashboard"
+                titleTemplate="%s | LLMonitor"
+                defaultTitle="Dashboard | LLMonitor"
+              />
               <Component {...pageProps} />
             </Layout>
           </AnalyticsWrapper>

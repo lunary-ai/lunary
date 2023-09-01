@@ -1,5 +1,7 @@
 import {
   Code,
+  Highlight,
+  Mark,
   Paper,
   ScrollArea,
   Spoiler,
@@ -20,8 +22,6 @@ const tc = (theme, role) => {
 }
 
 export default function ChatMessage({ data, compact = false }) {
-  const theme = useMantineTheme()
-
   return (
     <Paper
       p={compact ? 0 : 12}
@@ -41,13 +41,20 @@ export default function ChatMessage({ data, compact = false }) {
             {data?.text}
           </Code>
         )}
-        {data?.function_call && (
+        {data?.functionCall && (
           <Text>
-            {`Call function "${
-              data?.function_call.name
-            }" with arguments ${JSON.stringify(
-              data?.function_call?.arguments
-            )}`}
+            <Code color={typesColors[data?.role]} block>
+              <Text w={300} color={typesColors[data?.role]} mb="xs">
+                {`function call: `}
+                <Text span weight="bolder">
+                  {data?.functionCall?.name}
+                </Text>
+              </Text>
+
+              {typeof data?.functionCall?.arguments === "string"
+                ? data?.functionCall?.arguments
+                : JSON.stringify(data?.functionCall?.arguments, null, 2)}
+            </Code>
           </Text>
         )}
       </Spoiler>

@@ -11,11 +11,20 @@ if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
   })
 }
 
-const gosquared = {
+const w = {
   // @ts-ignore
-  get _gs() {
+  get gosquared() {
     if (typeof window !== "undefined" && typeof window["_gs"] !== "undefined")
       return window["_gs"]
+
+    return () => {}
+  },
+  get plausible() {
+    if (
+      typeof window !== "undefined" &&
+      typeof window["plausible"] !== "undefined"
+    )
+      return window["plausible"]
 
     return () => {}
   },
@@ -24,13 +33,16 @@ const gosquared = {
 const handleRouteChange = async () => {
   posthog?.capture("$pageview")
 
-  gosquared._gs("track")
+  w.gosquared("track")
 }
 
 const track = (event: string, data?: any) => {
   posthog?.capture(event, data)
 
-  gosquared._gs("event", event, data)
+  w.gosquared("event", event, data)
+  w.plausible(event, { props: data })
+
+  // plau
 
   va.track(event, data)
 }
@@ -39,7 +51,7 @@ const identify = (userId: string, traits: any) => {
   posthog?.identify(userId, traits)
 
   // @ts-ignore
-  gosquared._gs("identify", traits)
+  w.gosquared("identify", traits)
 }
 
 const analytics = {

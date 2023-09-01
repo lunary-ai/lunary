@@ -17,6 +17,7 @@ import {
 } from "@/utils/datatable"
 import Empty from "@/components/Layout/Empty"
 import { IconBrandOpenai } from "@tabler/icons-react"
+import { NextSeo } from "next-seo"
 
 const columns = [
   timeColumn("created_at"),
@@ -48,6 +49,7 @@ export default function Generations() {
 
   return (
     <Stack>
+      <NextSeo title="Requests" />
       <Group>
         <Title>Generations</Title>
         {loading && <Loader />}

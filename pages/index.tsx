@@ -25,6 +25,7 @@ import { useUser } from "@supabase/auth-helpers-react"
 
 import { AppContext } from "@/utils/context"
 import analytics from "@/utils/analytics"
+import { NextSeo } from "next-seo"
 
 export default function Home() {
   const [modalOpened, setModalOpened] = useState(false)
@@ -47,6 +48,7 @@ export default function Home() {
 
   return (
     <Stack>
+      <NextSeo title="Dashboard" />
       <Title>llmonitor</Title>
       <Text>
         Open-source observability for <Mark>LLM-powered apps</Mark>.

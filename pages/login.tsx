@@ -16,6 +16,7 @@ import Router from "next/router"
 import { useEffect, useState } from "react"
 import errorHandler from "@/utils/errorHandler"
 import analytics from "@/utils/analytics"
+import { NextSeo } from "next-seo"
 
 function LoginPage() {
   const [loading, setLoading] = useState(false)
@@ -91,6 +92,7 @@ function LoginPage() {
 
   return (
     <Container py={100} size={400}>
+      <NextSeo title="Login" />
       <Paper radius="md" p="xl" withBorder>
         <Text size="lg" mb="xl" weight={500}>
           Welcome back.
