@@ -26,9 +26,9 @@ const columns = [
 ]
 
 export default function Agents() {
-  const { runs, loading } = useRuns("agent")
+  const { runs, loading } = useRuns("agent", {}, true)
 
-  if (!loading && runs.length === 0) {
+  if (!loading && runs?.length === 0) {
     return <Empty Icon={IconRobot} what="agents traces" />
   }
 
