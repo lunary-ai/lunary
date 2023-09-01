@@ -13,6 +13,43 @@ import Link from "next/link"
 import AnalyticsWrapper from "@/components/Layout/Analytics"
 import { DefaultSeo } from "next-seo"
 
+import localFont from "next/font/local"
+
+const circularPro = localFont({
+  display: "swap",
+  fallback: [
+    "-apple-system",
+    "BlinkMacSystemFont",
+    "Segoe UI",
+    "Roboto",
+    "Helvetica",
+    "Arial",
+    "sans-serif",
+  ],
+  src: [
+    {
+      path: "../public/fonts/circular-pro-book.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/circular-pro-medium.woff2",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/circular-pro-bold.woff2",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/circular-pro-black.woff2",
+      weight: "900",
+      style: "normal",
+    },
+  ],
+})
+
 export default function App(props: AppProps) {
   const { Component, pageProps } = props
 
@@ -20,6 +57,18 @@ export default function App(props: AppProps) {
 
   return (
     <>
+      <style jsx global>{`
+        html {
+          font-family: ${circularPro.style.fontFamily};
+        }
+      `}</style>
+      <Head>
+        <link
+          href="https://llmonitor.com/logo.png"
+          rel="icon"
+          type="image/png"
+        />
+      </Head>
       <SessionContextProvider
         supabaseClient={supabase}
         initialSession={pageProps.initialSession}
@@ -30,6 +79,7 @@ export default function App(props: AppProps) {
             colorScheme: "light",
             defaultRadius: "md",
             // primaryColor: "pink",
+            fontFamily: circularPro.style.fontFamily,
             headings: {
               fontWeight: 700,
             },

@@ -70,7 +70,11 @@ export default function Billing() {
             )}
             <Button
               onClick={() =>
-                modals.openContextModal({ modal: "upgrade", innerProps: {} })
+                modals.openContextModal({
+                  modal: "upgrade",
+                  size: 800,
+                  innerProps: {},
+                })
               }
               w={300}
             >
