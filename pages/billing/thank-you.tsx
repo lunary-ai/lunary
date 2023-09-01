@@ -1,8 +1,10 @@
 import { Anchor, Center, Container, Stack, Text, Title } from "@mantine/core"
+import { NextSeo } from "next-seo"
 
 export default function ThankYou() {
   return (
     <Container size="lg" my="lg">
+      <NextSeo title="Thank You" />
       <Center h="50vh">
         <Stack>
           <Text size={60}>🎉</Text>

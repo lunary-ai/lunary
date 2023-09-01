@@ -21,6 +21,7 @@ import {
 import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 import Empty from "@/components/Layout/Empty"
 import { IconChartAreaLine } from "@tabler/icons-react"
+import { NextSeo } from "next-seo"
 
 const calculateDailyCost = (usage) => {
   // calculate using calcRunCost, reduce by model, and filter by type llm
@@ -63,6 +64,7 @@ export default function Analytics() {
 
   return (
     <Container size="lg" my="lg">
+      <NextSeo title="Analytics" />
       <Stack spacing={40}>
         <Group position="apart">
           <Title>Analytics</Title>

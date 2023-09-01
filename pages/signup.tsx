@@ -21,6 +21,7 @@ import { IconAt, IconCheck, IconUser } from "@tabler/icons-react"
 
 import errorHandler from "@/utils/errorHandler"
 import analytics from "@/utils/analytics"
+import { NextSeo } from "next-seo"
 
 function SignupPage() {
   const [loading, setLoading] = useState(false)
@@ -92,6 +93,7 @@ function SignupPage() {
 
   return (
     <Container py={100} size={400}>
+      <NextSeo title="Sign Up" />
       <Paper radius="md" p="xl" withBorder>
         {step === 1 ? (
           <>

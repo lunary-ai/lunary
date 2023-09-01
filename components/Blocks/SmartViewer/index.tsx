@@ -10,10 +10,10 @@
 import { Code, Spoiler } from "@mantine/core"
 import { useMemo } from "react"
 import MessageViewer from "./MessageViewer"
-import { JsonView, darkStyles, defaultStyles } from "react-json-view-lite"
+import { JsonView, defaultStyles } from "react-json-view-lite"
 
 const checkIsMessage = (obj) => {
-  return !!obj.text
+  return typeof obj?.text === "string" || typeof obj?.functionCall === "object"
 }
 
 export default function SmartViewer({
