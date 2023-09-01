@@ -96,7 +96,7 @@ export function useApps() {
   return { apps, loading: isLoading, insert }
 }
 
-export function useRuns(type: string, match?: any) {
+export function useRuns(type: string, match?: any, withoutParent = false) {
   const supabaseClient = useSupabaseClient<Database>()
   const { app } = useContext(AppContext)
 
@@ -114,6 +114,10 @@ export function useRuns(type: string, match?: any) {
 
   if (match) {
     query = query.match(match)
+  }
+
+  if (withoutParent) {
+    query = query.filter("parent_run", "is", null)
   }
 
   const { data: runs, isLoading } = useQuery(query, softOptions)

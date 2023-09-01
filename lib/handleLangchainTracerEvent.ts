@@ -129,7 +129,7 @@ const parseDate = (date) => {
   return null
 }
 
-const handleLangchainTracerEvent = async (id, rawEvent, operation) => {
+export const handleLangchainTracerEvent = async (id, rawEvent, operation) => {
   const event: any = recursiveToCamel(rawEvent)
 
   if (operation === "update") {
