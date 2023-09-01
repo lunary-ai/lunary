@@ -178,13 +178,17 @@ export default async function handler(req: NextRequest) {
 
   const { events } = await req.json()
 
-  if (!events || !Array.isArray(events))
+  if (!events) {
+    console.log("Missing events payload.")
     return cors(req, new Response("Missing events payload.", { status: 400 }))
-
-  console.log(`Ingesting ${events.length} events.`)
+  }
 
   // Event processing order is important for foreign key constraints
-  const sorted = events.sort((a, b) => a.timestamp - b.timestamp)
+  const sorted = (Array.isArray(events) ? events : [events]).sort(
+    (a, b) => a.timestamp - b.timestamp
+  )
+
+  console.log(`Ingesting ${sorted.length} events.`)
 
   for (const event of sorted) {
     try {
