@@ -25,7 +25,8 @@ function prepareDataForRecharts(data, splitBy, props, range) {
   const output = []
 
   const uniqueSplitByValues =
-    splitBy && Array.from(new Set(data.map((item) => item[splitBy].toString())))
+    splitBy &&
+    Array.from(new Set(data.map((item) => item[splitBy]?.toString())))
 
   // Initialize map with dates as keys and empty data as values
   eachDayOfInterval({
@@ -43,7 +44,7 @@ function prepareDataForRecharts(data, splitBy, props, range) {
           dayData[`${splitByValue} ${prop}`] =
             data.find(
               (item) =>
-                item[splitBy].toString() === splitByValue &&
+                item[splitBy]?.toString() === splitByValue &&
                 format(parseISO(item.date), "yyyy-MM-dd") === date
             )?.[prop] || 0
         }
