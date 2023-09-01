@@ -157,6 +157,7 @@ export default function Navbar() {
               onClick={() =>
                 modals.openContextModal({
                   modal: "upgrade",
+                  size: 800,
                   innerProps: {},
                 })
               }

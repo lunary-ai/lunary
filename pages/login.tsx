@@ -6,11 +6,12 @@ import {
   Stack,
   Text,
   TextInput,
+  Title,
 } from "@mantine/core"
 
 import { useForm } from "@mantine/form"
 import { useSessionContext, useUser } from "@supabase/auth-helpers-react"
-import { IconAt } from "@tabler/icons-react"
+import { IconAnalyze, IconAt } from "@tabler/icons-react"
 
 import Router from "next/router"
 import { useEffect, useState } from "react"
@@ -91,50 +92,59 @@ function LoginPage() {
   }
 
   return (
-    <Container py={100} size={400}>
+    <Container py={100} size={600}>
       <NextSeo title="Login" />
-      <Paper radius="md" p="xl" withBorder>
-        <Text size="lg" mb="xl" weight={500}>
-          Welcome back.
-        </Text>
+      <Stack align="center" spacing={50}>
+        <Stack align="center">
+          <IconAnalyze color={"#206dce"} size={60} />
+          <Title order={2} weight={700} size={40} ta="center">
+            Welcome back.
+          </Title>
+        </Stack>
+        <Paper radius="md" p="xl" withBorder miw={350}>
+          <Text size="lg" mb="xl" weight={500}>
+            Sign In
+          </Text>
 
-        <form onSubmit={form.onSubmit(handleLoginWithPassword)}>
-          <Stack>
-            <TextInput
-              icon={<IconAt size={16} />}
-              label="Email"
-              value={form.values.email}
-              onChange={(event) =>
-                form.setFieldValue("email", event.currentTarget.value)
-              }
-              error={form.errors.email && "Invalid email"}
-              placeholder="Your email"
-            />
+          <form onSubmit={form.onSubmit(handleLoginWithPassword)}>
+            <Stack>
+              <TextInput
+                icon={<IconAt size={16} />}
+                label="Email"
+                value={form.values.email}
+                onChange={(event) =>
+                  form.setFieldValue("email", event.currentTarget.value)
+                }
+                error={form.errors.email && "Invalid email"}
+                placeholder="Your email"
+              />
 
-            <TextInput
-              type="password"
-              label="Password"
-              value={form.values.password}
-              onChange={(event) =>
-                form.setFieldValue("password", event.currentTarget.value)
-              }
-              error={
-                form.errors.password && "Password must be at least 6 characters"
-              }
-              placeholder="Your password"
-            />
+              <TextInput
+                type="password"
+                label="Password"
+                value={form.values.password}
+                onChange={(event) =>
+                  form.setFieldValue("password", event.currentTarget.value)
+                }
+                error={
+                  form.errors.password &&
+                  "Password must be at least 6 characters"
+                }
+                placeholder="Your password"
+              />
 
-            <Button mt="md" type="submit" fullWidth loading={loading}>
-              Login
-            </Button>
+              <Button mt="md" type="submit" fullWidth loading={loading}>
+                Login
+              </Button>
 
-            <Text size="sm" style={{ textAlign: "center" }}>
-              {`Don't have an account? `}
-              <Anchor href="/signup">Sign Up</Anchor>
-            </Text>
-          </Stack>
-        </form>
-      </Paper>
+              <Text size="sm" style={{ textAlign: "center" }}>
+                {`Don't have an account? `}
+                <Anchor href="/signup">Sign Up</Anchor>
+              </Text>
+            </Stack>
+          </form>
+        </Paper>
+      </Stack>
     </Container>
   )
 }

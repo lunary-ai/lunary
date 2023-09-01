@@ -24,12 +24,10 @@ export default function Layout({ children }: { children: ReactNode }) {
     defaultValue: null,
   })
 
+  const isAuthPage = ["/login", "/signup"].includes(router.pathname)
+
   useEffect(() => {
-    if (
-      !session &&
-      !isLoading &&
-      !["/login", "/signup"].includes(router.pathname)
-    ) {
+    if (!session && !isLoading && !isAuthPage) {
       Router.push("/login")
     }
   }, [session, isLoading, router.pathname])
@@ -41,7 +39,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         <AppContext.Provider value={{ app, setApp }}>
           <AppShell
             padding={"xl"}
-            header={<Navbar />}
+            header={!isAuthPage && <Navbar />}
             navbar={session && <Sidebar />}
             sx={{ backgroundColor: "#fafafa" }}
           >
