@@ -47,7 +47,7 @@ import { UpgradeBody } from "@/components/Layout/UpgradeModal"
 
 function SignupPage() {
   const [loading, setLoading] = useState(false)
-  const [step, setStep] = useState(3)
+  const [step, setStep] = useState(1)
 
   const { supabaseClient } = useSessionContext()
 
