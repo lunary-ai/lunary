@@ -73,6 +73,11 @@ export default function App(props: AppProps) {
         supabaseClient={supabase}
         initialSession={pageProps.initialSession}
       >
+        <DefaultSeo
+          title="Dashboard"
+          titleTemplate="%s | LLMonitor"
+          defaultTitle="Dashboard | LLMonitor"
+        />
         <MantineProvider
           withNormalizeCSS
           theme={{
@@ -94,11 +99,6 @@ export default function App(props: AppProps) {
         >
           <AnalyticsWrapper>
             <Layout>
-              <DefaultSeo
-                title="Dashboard"
-                titleTemplate="%s | LLMonitor"
-                defaultTitle="Dashboard | LLMonitor"
-              />
               <Component {...pageProps} />
             </Layout>
           </AnalyticsWrapper>
