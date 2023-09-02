@@ -98,7 +98,7 @@ function LoginPage() {
         <Stack align="center">
           <IconAnalyze color={"#206dce"} size={60} />
           <Title order={2} weight={700} size={40} ta="center">
-            Welcome back.
+            Welcome back
           </Title>
         </Stack>
         <Paper radius="md" p="xl" withBorder miw={350}>

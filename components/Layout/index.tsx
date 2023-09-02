@@ -16,6 +16,7 @@ import UpgradeModal from "./UpgradeModal"
 
 export default function Layout({ children }: { children: ReactNode }) {
   const router = useRouter()
+  const isAuthPage = ["/login", "/signup"].includes(router.pathname)
 
   const { session, isLoading } = useSessionContext()
 
@@ -24,13 +25,13 @@ export default function Layout({ children }: { children: ReactNode }) {
     defaultValue: null,
   })
 
-  const isAuthPage = ["/login", "/signup"].includes(router.pathname)
-
   useEffect(() => {
     if (!session && !isLoading && !isAuthPage) {
       Router.push("/login")
     }
   }, [session, isLoading, router.pathname])
+
+  if (!session && !isAuthPage) return null
 
   return (
     <>
@@ -38,9 +39,10 @@ export default function Layout({ children }: { children: ReactNode }) {
       <ModalsProvider modals={{ upgrade: UpgradeModal }}>
         <AppContext.Provider value={{ app, setApp }}>
           <AppShell
+            mih={"100vh"}
             padding={"xl"}
             header={!isAuthPage && <Navbar />}
-            navbar={session && <Sidebar />}
+            navbar={!isAuthPage && <Sidebar />}
             sx={{ backgroundColor: "#fafafa" }}
           >
             {children}
