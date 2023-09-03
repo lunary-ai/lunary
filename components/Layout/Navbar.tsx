@@ -146,7 +146,7 @@ export default function Navbar() {
               placeholder="Select an app"
               value={app?.id}
               onChange={(id) => setApp(apps.find((app) => app.id === id))}
-              data={apps?.map((app) => ({ value: app.id, label: app.name }))}
+              data={apps.map((app) => ({ value: app.id, label: app.name }))}
             />
           )}
         </Group>
@@ -181,13 +181,13 @@ export default function Navbar() {
             Docs
           </Button>
 
-          <Button
+          {/* <Button
             size="xs"
             leftIcon={<IconMessage size={18} />}
             onClick={() => setOpened("feedback")}
           >
             Feedback
-          </Button>
+          </Button> */}
         </Group>
       </Flex>
     </Header>

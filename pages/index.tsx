@@ -1,4 +1,4 @@
-import { useContext, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 import Link from "next/link"
 
 import { useApps } from "@/utils/supabaseHooks"
@@ -26,6 +26,7 @@ import { useUser } from "@supabase/auth-helpers-react"
 import { AppContext } from "@/utils/context"
 import analytics from "@/utils/analytics"
 import { NextSeo } from "next-seo"
+import Router from "next/router"
 
 export default function Home() {
   const [modalOpened, setModalOpened] = useState(false)
@@ -36,8 +37,7 @@ export default function Home() {
   const user = useUser()
 
   const createApp = async () => {
-    // @ts-ignore
-    await insert({ name: newAppName, owner: user.id })
+    await insert([{ name: newAppName, owner: user.id }])
 
     setModalOpened(false)
 
@@ -46,44 +46,35 @@ export default function Home() {
     })
   }
 
+  // If there are no apps, directly create one with
+  // the user's projectName
+  useEffect(() => {
+    if (user && !loading && !apps?.length) {
+      const appName: string = user?.user_metadata.projectName || "Project #1"
+
+      insert([{ name: appName, owner: user.id }]).then((app) => {
+        setApp(app[0])
+        Router.push("/analytics")
+      })
+    }
+  }, [user, loading, apps])
+
   return (
     <Stack>
       <NextSeo title="Dashboard" />
-      <Title>llmonitor</Title>
-      <Text>
-        Open-source observability for <Mark>LLM-powered apps</Mark>.
-      </Text>
 
       {loading && <Loader />}
 
-      {apps && !apps.length ? (
-        <Card p="xl" w={600} withBorder>
-          <Stack align="start">
-            <Title order={3}>
-              Start by adding an app to get a tracking ID.
-            </Title>
-            <Button
-              size="md"
-              onClick={() => {
-                setModalOpened(true)
-              }}
-            >
-              + Create one
-            </Button>
-          </Stack>
-        </Card>
-      ) : (
-        <Group position="apart">
-          <Title order={3}>Your Apps</Title>
-          <Button
-            onClick={() => {
-              setModalOpened(true)
-            }}
-          >
-            + New app
-          </Button>
-        </Group>
-      )}
+      <Group position="apart">
+        <Title order={3}>Your Apps</Title>
+        <Button
+          onClick={() => {
+            setModalOpened(true)
+          }}
+        >
+          + New app
+        </Button>
+      </Group>
 
       <Modal
         opened={modalOpened}
