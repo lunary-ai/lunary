@@ -106,7 +106,7 @@ export function useRuns(type: string, match?: any, withoutParent = false) {
       "id,user,type,name,created_at,ended_at,app,input,output,parent_run,prompt_tokens,completion_tokens,status,tags,error,params"
     )
     .order("created_at", {
-      ascending: true,
+      ascending: false,
     })
     .eq("type", type)
     .eq("app", app?.id)
@@ -121,6 +121,7 @@ export function useRuns(type: string, match?: any, withoutParent = false) {
   }
 
   const { data: runs, isLoading } = useQuery(query, softOptions)
+  runs?.reverse()
 
   return { runs: extendWithCosts(runs), loading: isLoading }
 }
