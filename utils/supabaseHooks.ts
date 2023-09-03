@@ -1,4 +1,5 @@
 import {
+  useDeleteMutation,
   useInsertMutation,
   useQuery,
 } from "@supabase-cache-helpers/postgrest-swr"
@@ -90,10 +91,14 @@ export function useApps() {
   const { trigger: insert } = useInsertMutation(
     supabaseClient.from("app"),
     ["id"],
-    "name,owner"
+    "name,owner,id"
   )
 
-  return { apps, loading: isLoading, insert }
+  const { trigger: drop } = useDeleteMutation(supabaseClient.from("app"), [
+    "id",
+  ])
+
+  return { apps, loading: isLoading, insert, drop }
 }
 
 export function useRuns(type: string, match?: any, withoutParent = false) {

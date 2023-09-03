@@ -56,7 +56,6 @@ export default function Sidebar() {
   const { supabaseClient } = useSessionContext()
 
   const { profile } = useProfile()
-  const user = useUser()
 
   const { app } = useContext(AppContext)
 

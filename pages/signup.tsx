@@ -81,10 +81,12 @@ function SignupPage() {
     email,
     password,
     name,
+    projectName,
   }: {
     email: string
     password: string
     name: string
+    projectName: string
   }) => {
     setLoading(true)
 
@@ -96,6 +98,7 @@ function SignupPage() {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
             name,
+            projectName,
           },
         },
       })

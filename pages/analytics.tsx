@@ -11,8 +11,10 @@ import {
   useAppUsers,
 } from "@/utils/supabaseHooks"
 import {
+  Center,
   Container,
   Group,
+  Loader,
   SegmentedControl,
   SimpleGrid,
   Stack,
@@ -61,6 +63,13 @@ export default function Analytics() {
   ) {
     return <Empty Icon={IconChartAreaLine} what="data" />
   }
+
+  if (loading)
+    return (
+      <Center h="60vh">
+        <Loader />
+      </Center>
+    )
 
   return (
     <Container size="lg" my="lg">

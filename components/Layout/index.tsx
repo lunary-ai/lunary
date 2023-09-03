@@ -42,7 +42,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             mih={"100vh"}
             padding={"xl"}
             header={!isAuthPage && <Navbar />}
-            navbar={!isAuthPage && <Sidebar />}
+            navbar={!isAuthPage && app && <Sidebar />}
             sx={{ backgroundColor: "#fafafa" }}
           >
             {children}
