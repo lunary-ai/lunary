@@ -296,20 +296,7 @@ function SignupPage() {
 
         {step === 3 && (
           <>
-            <UpgradeBody />
-
-            <Text>
-              Free plan gets you 1k events per day, forever.{" "}
-              <Anchor href="" onClick={() => setStep(4)} color="blue">
-                Skip to dashboard →
-              </Anchor>
-            </Text>
-          </>
-        )}
-
-        {step === 4 && (
-          <>
-            <Confetti recycle={false} numberOfPieces={600} />
+            <Confetti recycle={false} numberOfPieces={500} />
 
             <Stack align="center">
               <IconAnalyze color={"#206dce"} size={60} />
