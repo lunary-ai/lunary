@@ -1,10 +1,10 @@
-import Email from "vercel-email"
 import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs"
 import { NextRequest, NextResponse } from "next/server"
+import { sendEmail } from "@/lib/sendEmail"
+import { FEEDBACK_EMAIL } from "@/lib/emails"
 
-export const config = {
-  runtime: "edge",
-}
+export const runtime = "edge"
+export const dynamic = "force-dynamic"
 
 export default async function handler(req: NextRequest) {
   const res = NextResponse.next()
@@ -16,13 +16,7 @@ export default async function handler(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  await Email.send({
-    to: "vince@llmonitor.com",
-    from: "feedback@llmonitor.com",
-    replyTo: user.email,
-    subject: `[llmonitor] Feedback left by ${user.email} from ${currentPage}`,
-    text: message,
-  })
+  await sendEmail(FEEDBACK_EMAIL(user.email, message, currentPage))
 
-  new NextResponse("ok")
+  return new NextResponse("ok")
 }

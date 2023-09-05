@@ -296,7 +296,7 @@ function SignupPage() {
 
         {step === 3 && (
           <>
-            <Confetti recycle={false} numberOfPieces={500} />
+            <Confetti recycle={false} numberOfPieces={500} gravity={0.3} />
 
             <Stack align="center">
               <IconAnalyze color={"#206dce"} size={60} />

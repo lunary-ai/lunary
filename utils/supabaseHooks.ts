@@ -66,17 +66,6 @@ export const useProfile = () => {
     profile.color = getUserColor(theme, profile.id)
   }
 
-  // Make sure the profile is up to date
-  useEffect(() => {
-    if (user && profile && !profile.email) {
-      // Update profile
-      supabaseClient
-        .from("profile")
-        .update({ email: user.email, name: user.user_metadata.full_name })
-        .match({ id: user.id })
-    }
-  }, [profile, user])
-
   return { profile, loading: isLoading }
 }
 
