@@ -46,35 +46,9 @@ export default function Home() {
     })
   }
 
-  // If there are no apps, directly create one with
-  // the user's projectName
-  useEffect(() => {
-    if (user && !loading && !apps?.length) {
-      const appName: string = user?.user_metadata.projectName || "Project #1"
-
-      insert([{ name: appName, owner: user.id }]).then((app) => {
-        setApp(app[0])
-        Router.push("/analytics")
-      })
-    }
-  }, [user, loading, apps])
-
   return (
     <Stack>
       <NextSeo title="Dashboard" />
-
-      {loading && <Loader />}
-
-      <Group position="apart">
-        <Title order={3}>Your Apps</Title>
-        <Button
-          onClick={() => {
-            setModalOpened(true)
-          }}
-        >
-          + New app
-        </Button>
-      </Group>
 
       <Modal
         opened={modalOpened}
@@ -90,47 +64,81 @@ export default function Home() {
           <Button onClick={createApp}>Create</Button>
         </Group>
       </Modal>
-      <Stack>
-        {apps?.map((app) => (
-          <Anchor
-            href={`/analytics`}
-            key={app.id}
-            component={Link}
-            onClick={() => {
-              setApp(app)
-            }}
-          >
-            <Card key={app.id}>
-              <Title order={4}>{app.name}</Title>
-              <Group>
-                <Text>
-                  Tracking ID: <Code color="pink">{app.id}</Code>
-                </Text>
-                <CopyButton value={app.id} timeout={2000}>
-                  {({ copied, copy }) => (
-                    <Tooltip
-                      label={copied ? "Copied" : "Copy"}
-                      withArrow
-                      position="right"
-                    >
-                      <ActionIcon
-                        color={copied ? "pink" : "gray"}
-                        onClick={copy}
-                      >
-                        {copied ? (
-                          <IconCheck size="1rem" />
-                        ) : (
-                          <IconCopy size="1rem" />
-                        )}
-                      </ActionIcon>
-                    </Tooltip>
-                  )}
-                </CopyButton>
-              </Group>
-            </Card>
-          </Anchor>
-        ))}
-      </Stack>
+
+      {loading && <Loader />}
+
+      {apps && !apps.length ? (
+        <Card p="xl" w={600} withBorder>
+          <Stack align="start">
+            <Title order={3}>
+              Start by adding an app to get a tracking ID.
+            </Title>
+            <Button
+              size="md"
+              onClick={() => {
+                setModalOpened(true)
+              }}
+            >
+              + Create one
+            </Button>
+          </Stack>
+        </Card>
+      ) : (
+        <>
+          <Group position="apart">
+            <Title order={3}>Your Apps</Title>
+            <Button
+              onClick={() => {
+                setModalOpened(true)
+              }}
+            >
+              + New app
+            </Button>
+          </Group>
+
+          <Stack>
+            {apps?.map((app) => (
+              <Anchor
+                href={`/analytics`}
+                key={app.id}
+                component={Link}
+                onClick={() => {
+                  setApp(app)
+                }}
+              >
+                <Card key={app.id}>
+                  <Title order={4}>{app.name}</Title>
+                  <Group>
+                    <Text>
+                      Tracking ID: <Code color="pink">{app.id}</Code>
+                    </Text>
+                    <CopyButton value={app.id} timeout={2000}>
+                      {({ copied, copy }) => (
+                        <Tooltip
+                          label={copied ? "Copied" : "Copy"}
+                          withArrow
+                          position="right"
+                        >
+                          <ActionIcon
+                            color={copied ? "pink" : "gray"}
+                            onClick={copy}
+                          >
+                            {copied ? (
+                              <IconCheck size="1rem" />
+                            ) : (
+                              <IconCopy size="1rem" />
+                            )}
+                          </ActionIcon>
+                        </Tooltip>
+                      )}
+                    </CopyButton>
+                  </Group>
+                </Card>
+              </Anchor>
+            ))}
+          </Stack>
+        </>
+      )}
     </Stack>
   )
 }

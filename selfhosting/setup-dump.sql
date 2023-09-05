@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS "public"."profile" (
 CREATE TABLE "public"."app" (
     "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
     "created_at" timestamptz DEFAULT now(),
-    "owner" uuid,
+    "owner" uuid  NOT NULL,
     "name" text NOT NULL,
     PRIMARY KEY ("id")
 );
@@ -51,14 +51,12 @@ CREATE TABLE "public"."run" (
     PRIMARY KEY ("id")
 );
 
-;
-;
-;
-ALTER TABLE "public"."app" ADD FOREIGN KEY ("owner") REFERENCES "auth"."users"("id") ON DELETE SET NULL;
+
+ALTER TABLE "public"."app" ADD FOREIGN KEY ("owner") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 ALTER TABLE "public"."log" ADD FOREIGN KEY ("run") REFERENCES "public"."run"("id") ON DELETE CASCADE;
-ALTER TABLE "public"."log" ADD FOREIGN KEY ("app") REFERENCES "public"."app"("id");
-ALTER TABLE "public"."profile" ADD FOREIGN KEY ("id") REFERENCES "auth"."users"("id");
-ALTER TABLE "public"."run" ADD FOREIGN KEY ("parent_run") REFERENCES "public"."run"("id") ON DELETE SET NULL;
+ALTER TABLE "public"."log" ADD FOREIGN KEY ("app") REFERENCES "public"."app"("id") ON DELETE CASCADE;
+ALTER TABLE "public"."profile" ADD FOREIGN KEY ("id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+ALTER TABLE "public"."run" ADD FOREIGN KEY ("parent_run") REFERENCES "public"."run"("id") ON DELETE CASCADE;
 ALTER TABLE "public"."run" ADD FOREIGN KEY ("app") REFERENCES "public"."app"("id") ON DELETE CASCADE;
 
 
@@ -250,21 +248,6 @@ BEGIN
 END; $function$
     
 
-
---
--- Name: handle_new_user(); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.handle_new_user() RETURNS trigger
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'public'
-    AS $$
-begin
-  insert into public.profile (id)
-  values (new.id);
-  return new;
-end;
-$$;
 
 --
 -- Name: users on_auth_user_created; Type: TRIGGER; Schema: auth; Owner: -

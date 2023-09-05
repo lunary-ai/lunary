@@ -12,6 +12,7 @@ import {
   Select,
   Textarea,
   Modal,
+  Popover,
 } from "@mantine/core"
 import { useForm } from "@mantine/form"
 import { modals } from "@mantine/modals"
@@ -41,7 +42,7 @@ const sendMessage = async ({ message }) => {
   )
 }
 
-const Feedback = ({ close }) => {
+const Feedback = ({}) => {
   const [loading, setLoading] = useState(false)
 
   const form = useForm({
@@ -68,26 +69,20 @@ const Feedback = ({ close }) => {
         message: "Thank you for your feedback! We will get back to you soon.",
         color: "blue",
       })
-
-      close()
     }
   }
 
   return (
     <form onSubmit={form.onSubmit(send)}>
-      <Text mb="md">
-        We are always happy to hear from you. If you have any questions or
-        suggestions, please let us know.
-      </Text>
-
       <Textarea
-        placeholder="Leave your feedback here"
+        placeholder="What can we do better?"
         inputMode="text"
+        minRows={4}
         {...form.getInputProps("feedback")}
       />
 
-      <Group position="right" mt="md">
-        <Button type="submit" loading={loading}>
+      <Group position="right" mt="xs">
+        <Button type="submit" size="xs" color="dark" loading={loading}>
           Send
         </Button>
       </Group>
@@ -123,14 +118,6 @@ export default function Navbar() {
 
   return (
     <Header height={60} p="md">
-      <Modal
-        centered
-        title="Send Feedback"
-        opened={opened === "feedback"}
-        onClose={() => setOpened(null)}
-      >
-        <Feedback close={() => setOpened(null)} />
-      </Modal>
       <Flex align="center" justify="space-between" h="100%">
         <Group>
           <Anchor component={Link} href="/">
@@ -152,6 +139,24 @@ export default function Navbar() {
         </Group>
 
         <Group>
+          <Popover
+            width={400}
+            position="bottom"
+            arrowSize={10}
+            withArrow
+            shadow="sm"
+            trapFocus
+          >
+            <Popover.Target>
+              <Button size="xs" leftIcon={<IconMessage size={18} />}>
+                Feedback
+              </Button>
+            </Popover.Target>
+            <Popover.Dropdown>
+              <Feedback />
+            </Popover.Dropdown>
+          </Popover>
+
           {profile?.plan === "free" && (
             <Button
               onClick={() =>
@@ -180,14 +185,6 @@ export default function Navbar() {
           >
             Docs
           </Button>
-
-          {/* <Button
-            size="xs"
-            leftIcon={<IconMessage size={18} />}
-            onClick={() => setOpened("feedback")}
-          >
-            Feedback
-          </Button> */}
         </Group>
       </Flex>
     </Header>

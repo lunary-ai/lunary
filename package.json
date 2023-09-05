@@ -38,8 +38,7 @@
     "react-dom": "18.2.0",
     "react-json-view-lite": "^0.9.8",
     "recharts": "^2.7.3",
-    "typescript": "5.1.6",
-    "vercel-email": "^0.0.6"
+    "typescript": "5.1.6"
   },
   "prettier": {
     "semi": false
