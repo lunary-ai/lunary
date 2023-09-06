@@ -14,6 +14,7 @@ import {
   IconLogout,
   IconRobot,
   IconSettings,
+  IconStethoscope,
   IconUsers,
 } from "@tabler/icons-react"
 
@@ -28,8 +29,9 @@ import { AppContext } from "@/utils/context"
 
 const menu = [
   { label: "Analytics", icon: IconGraph, link: "/analytics" },
-  { label: "Agents", icon: IconRobot, link: "/agents" },
+  { label: "Traces", icon: IconRobot, link: "/agents" },
   { label: "Generations", icon: IconBrandOpenai, link: "/generations" },
+  { label: "Tests", icon: IconStethoscope, link: "/tests" },
   { label: "Users", icon: IconUsers, link: "/users" },
   { label: "Settings", icon: IconSettings, link: "/settings" },
 ]

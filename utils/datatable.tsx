@@ -65,6 +65,29 @@ export const statusColumn = () => {
   })
 }
 
+export const tagsColumn = () => {
+  return columnHelper.accessor("tags", {
+    header: "Tags",
+    size: 60,
+    cell: (props) => {
+      const tags = props.getValue()
+      if (!tags) return null
+
+      return tags.map((tag) => (
+        <Badge
+          key={tag}
+          variant="outline"
+          sx={{
+            textTransform: "none",
+          }}
+        >
+          {tag}
+        </Badge>
+      ))
+    },
+  })
+}
+
 export const inputColumn = (label = "input") => {
   return columnHelper.accessor("input", {
     header: label,
