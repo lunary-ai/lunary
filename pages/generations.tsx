@@ -14,6 +14,7 @@ import {
   userColumn,
   nameColumn,
   costColumn,
+  tagsColumn,
 } from "@/utils/datatable"
 import Empty from "@/components/Layout/Empty"
 import { IconBrandOpenai } from "@tabler/icons-react"
@@ -36,6 +37,7 @@ const columns = [
     accessorFn: (row) => row.prompt_tokens + row.completion_tokens,
   },
   costColumn(),
+  tagsColumn(),
   inputColumn("Prompt"),
   outputColumn("Result"),
 ]
