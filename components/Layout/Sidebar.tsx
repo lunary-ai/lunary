@@ -12,6 +12,7 @@ import {
   IconFileInvoice,
   IconGraph,
   IconLogout,
+  IconMessages,
   IconRobot,
   IconSettings,
   IconStethoscope,
@@ -31,8 +32,9 @@ const menu = [
   { label: "Analytics", icon: IconGraph, link: "/analytics" },
   { label: "Traces", icon: IconRobot, link: "/agents" },
   { label: "Generations", icon: IconBrandOpenai, link: "/generations" },
-  { label: "Tests", icon: IconStethoscope, link: "/tests" },
   { label: "Users", icon: IconUsers, link: "/users" },
+  { label: "Tests", icon: IconStethoscope, link: "/tests" },
+  { label: "Chats", icon: IconMessages, link: "/chats" },
   { label: "Settings", icon: IconSettings, link: "/settings" },
 ]
 
