@@ -159,6 +159,8 @@ function SignupPage() {
                           <TextInput
                             icon={<IconAt size={16} />}
                             label="Email"
+                            type="email"
+                            autoComplete="email"
                             error={form.errors.email && "Invalid email"}
                             placeholder="Your email"
                             {...form.getInputProps("email")}
@@ -166,6 +168,7 @@ function SignupPage() {
 
                           <PasswordInput
                             label="Password"
+                            autoComplete="new-password"
                             onKeyPress={(e) => {
                               if (e.key === "Enter") {
                                 nextStep()
@@ -201,6 +204,7 @@ function SignupPage() {
 
                           <TextInput
                             label="Full Name"
+                            autoComplete="name"
                             description="Only used to address you properly."
                             icon={<IconUser size={16} />}
                             placeholder="Your full name"
