@@ -8,7 +8,6 @@
 
 [![npm version](https://badge.fury.io/js/llmonitor.svg)](https://badge.fury.io/js/llmonitor) ![Discord](https://img.shields.io/badge/Discord-Join%20Chat-violet?labelColor=purple&style=flat&logo=discord&logoColor=white) ![GitHub last commit (by committer)](https://img.shields.io/github/last-commit/llmonitor/llmonitor) ![GitHub commit activity (branch)](https://img.shields.io/github/commit-activity/w/llmonitor/llmonitor)
 
-
 </div>
 
 ## Features
@@ -17,23 +16,28 @@ LLMonitor helps AI devs monitor their apps in production, with features such as:
 
 - 💵 Cost, token & latency analytics
 - 👪 Track users
-- 🐛 Debug agents with traces
+- 🐛 Traces to debug easily
 - 🔍 Inspect full requests
-- 🤖 Use with any model, not just OpenAI
-- 📦 Integrate in 2 minutes
+- 🖲️ Collect feedback from users (soon)
+- 🧪 Unit tests for your agents (soon)
+- 🏷️ Label and create fine-tuning datasets (soon)
+
+It also designed to be:
+
+- 🤖 Usable with any model, not just OpenAI
+- 📦 Easy to integrate (2 minutes)
 - 🧑‍💻 Simple to self-host (deploy to Vercel & Supabase)
 
 ## Demo
 
 https://github.com/LLMonitor/llmonitor/assets/5092466/a2b4ba9b-4afb-46e3-9b6b-faf7ddb4a931
 
-
 ## ⚙️ Integration
 
 Modules available for:
 
 - [JavaScript](https://github.com/llmonitor/llmonitor-js)
-- Python (coming soon)
+- [Python](https://github.com/llmonitor/llmonitor-py)
 
 LLMonitor natively supports:
 
@@ -52,6 +56,7 @@ Full documentation is available [on the website](https://llmonitor.com/docs/intr
 We offer [a hosted version](https://llmonitor.com) with a free plan of up to 1k requests / days.
 
 With the hosted version:
+
 - 👷 don't worry about devops or managing updates
 - 🙋 get priority 1:1 support with our team
 - 🇪🇺 your data is stored safely in Europe

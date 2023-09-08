@@ -94,6 +94,11 @@ export default function App(props: AppProps) {
                   component: Link,
                 },
               },
+              Button: {
+                defaultProps: {
+                  fw: "500",
+                },
+              },
             },
           }}
         >
