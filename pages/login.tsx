@@ -111,6 +111,8 @@ function LoginPage() {
               <TextInput
                 icon={<IconAt size={16} />}
                 label="Email"
+                type="email"
+                autoComplete="email"
                 value={form.values.email}
                 onChange={(event) =>
                   form.setFieldValue("email", event.currentTarget.value)
@@ -121,6 +123,7 @@ function LoginPage() {
 
               <TextInput
                 type="password"
+                autoComplete="current-password"
                 label="Password"
                 value={form.values.password}
                 onChange={(event) =>
