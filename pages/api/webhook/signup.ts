@@ -1,4 +1,5 @@
 import { WELCOME_EMAIL } from "@/lib/emails"
+import { sendTelegramMessage } from "@/lib/notifications"
 import { sendEmail } from "@/lib/sendEmail"
 import { supabaseAdmin } from "@/lib/supabaseClient"
 import { NextRequest, NextResponse } from "next/server"
@@ -46,6 +47,12 @@ export default async function handler(req: NextRequest) {
   const appId = data.id
 
   await sendEmail(WELCOME_EMAIL(email, name, appId))
+
+  await sendTelegramMessage(
+    `<b>🔔 New signup from ${email}</b>
+    
+${name} is building ${projectName}.`
+  )
 
   new NextResponse("ok")
 }
