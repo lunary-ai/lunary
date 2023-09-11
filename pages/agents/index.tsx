@@ -26,7 +26,7 @@ const columns = [
 ]
 
 export default function Agents() {
-  const { runs, loading } = useRuns("agent", {}, true)
+  const { runs, loading, validating, loadMore } = useRuns("agent", {}, true)
 
   if (!loading && runs?.length === 0) {
     return <Empty Icon={IconRobot} what="agents traces" />
@@ -39,16 +39,11 @@ export default function Agents() {
         {loading && <Loader />}
       </Group>
 
-      {/* <Select
-        w={200}
-        data={(agents || []).map((a) => ({ value: a.name, label: a.name }))}
-        value={agentName}
-        onChange={setAgentName}
-      /> */}
-
       <DataTable
         columns={columns}
         data={runs}
+        loadMore={loadMore}
+        loading={loading || validating}
         onRowClicked={(row) => Router.push(`/agents/${row.id}`)}
       />
     </Stack>

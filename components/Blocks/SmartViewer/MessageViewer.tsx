@@ -1,7 +1,5 @@
-import { useState } from "react"
-
 import ChatMessage from "@/components/Blocks/SmartViewer/ChatMessage"
-import { Anchor, Box, Modal, Stack } from "@mantine/core"
+import { Box, Stack } from "@mantine/core"
 
 const getLastMessage = (messages) => {
   if (Array.isArray(messages)) {
@@ -12,47 +10,20 @@ const getLastMessage = (messages) => {
 }
 
 export default function MessageViewer({ data, compact }) {
-  const [expand, setExpand] = useState(false)
-
   const obj = Array.isArray(data) ? data : [data]
 
   return (
     <>
-      {expand && (
-        <Modal
-          title="Chat History"
-          size="lg"
-          opened={expand}
-          onClose={() => setExpand(false)}
-        >
-          <Stack>
-            {obj.map((message) => (
-              <ChatMessage key={message.id} data={message} />
-            ))}
-          </Stack>
-        </Modal>
+      {compact ? (
+        <ChatMessage data={getLastMessage(obj)} compact />
+      ) : (
+        <Stack>
+          {obj.map((message) => (
+            <ChatMessage key={message.id} data={message} />
+          ))}
+        </Stack>
       )}
 
-      <Box
-        onClick={() => compact && setExpand(true)}
-        sx={{ cursor: "pointer" }}
-      >
-        {compact ? (
-          <ChatMessage data={getLastMessage(obj)} compact />
-        ) : (
-          <Stack>
-            {obj.map((message) => (
-              <ChatMessage key={message.id} data={message} />
-            ))}
-          </Stack>
-        )}
-
-        {obj.length > 1 && compact && (
-          <Anchor component="a" onClick={() => setExpand(true)}>
-            View full history
-          </Anchor>
-        )}
-      </Box>
       <style jsx>{`
         :global(.mantine-Modal-inner) {
           padding-left: 0; // weird centering bug

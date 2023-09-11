@@ -1,6 +1,8 @@
 import {
   useDeleteMutation,
   useInsertMutation,
+  useOffsetInfiniteQuery,
+  useOffsetInfiniteScrollQuery,
   useQuery,
 } from "@supabase-cache-helpers/postgrest-swr"
 
@@ -104,7 +106,7 @@ export function useRuns(type: string, match?: any, withoutParent = false) {
     })
     .eq("type", type)
     .eq("app", app?.id)
-    .limit(200)
+  // .limit(200)
 
   if (match) {
     query = query.match(match)
@@ -114,10 +116,20 @@ export function useRuns(type: string, match?: any, withoutParent = false) {
     query = query.filter("parent_run", "is", null)
   }
 
-  const { data: runs, isLoading } = useQuery(query, softOptions)
-  runs?.reverse()
+  const {
+    data: runs,
+    isLoading,
+    isValidating,
+    loadMore,
+  } = useOffsetInfiniteScrollQuery(query, { ...softOptions, pageSize: 10 })
+  // runs?.reverse()
 
-  return { runs: extendWithCosts(runs), loading: isLoading }
+  return {
+    runs: extendWithCosts(runs),
+    loading: isLoading,
+    validating: isValidating,
+    loadMore,
+  }
 }
 
 export function useRunsUsage(range, user_id = undefined) {
@@ -244,6 +256,10 @@ export function useAppUsers(usageRange = 30) {
 
 export function useAppUser(id: string) {
   const supabaseClient = useSupabaseClient<Database>()
+
+  if (!id) {
+    return { user: null, loading: false }
+  }
 
   const { data: user, isLoading } = useQuery(
     supabaseClient.from("app_user").select("*").eq("id", id).single(),

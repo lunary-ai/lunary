@@ -2,7 +2,7 @@ import { createColumnHelper } from "@tanstack/react-table"
 import { Anchor, Badge } from "@mantine/core"
 import SmartViewer from "@/components/Blocks/SmartViewer"
 import { useAppUser } from "./supabaseHooks"
-import { formatAppUser, formatCost } from "./format"
+import { formatAppUser, formatCost, formatDateTime } from "./format"
 const columnHelper = createColumnHelper<any>()
 
 export const timeColumn = (timeColumn, label = "Time") => {
@@ -20,12 +20,7 @@ export const timeColumn = (timeColumn, label = "Time") => {
       if (isToday) {
         return new Date(info.getValue()).toLocaleTimeString("en-US")
       } else {
-        return new Date(info.getValue()).toLocaleString("en-US", {
-          month: "short",
-          day: "numeric",
-          hour: "numeric",
-          minute: "numeric",
-        })
+        return formatDateTime(info.getValue())
       }
     },
   })

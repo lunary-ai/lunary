@@ -7,10 +7,11 @@
  * - Text
  */
 
-import { Code, Spoiler } from "@mantine/core"
+import { Code, Highlight, Spoiler } from "@mantine/core"
 import { useMemo } from "react"
 import MessageViewer from "./MessageViewer"
 import { JsonView, defaultStyles } from "react-json-view-lite"
+import ChatMessage from "./ChatMessage"
 
 const checkIsMessage = (obj) => {
   return typeof obj?.text === "string" || typeof obj?.functionCall === "object"
@@ -55,33 +56,31 @@ export default function SmartViewer({
   }, [parsed])
 
   return (
-    <Spoiler
-      maxHeight={compact ? 60 : 500}
-      showLabel="Show more ↓"
-      onClick={(e) => e.stopPropagation()}
-      hideLabel="↑"
-    >
-      {error && (
-        <pre>
-          <Code color="red">
-            {typeof error.stack === "string"
-              ? compact
-                ? error.message || error.stack
-                : error.stack
-              : typeof error === "object"
-              ? JSON.stringify(error, null, 2)
-              : error}
-          </Code>
-        </pre>
-      )}
+    <Spoiler maxHeight={500} showLabel="Show more ↓" hideLabel="Show less ↑">
+      <pre className={compact ? "compact" : ""}>
+        {error && (
+          <ChatMessage
+            data={{
+              role: "error",
+              text:
+                typeof error.stack === "string"
+                  ? compact
+                    ? error.message || error.stack
+                    : error.stack
+                  : typeof error === "object"
+                  ? JSON.stringify(error, null, 2)
+                  : error,
+            }}
+            compact={compact}
+          />
+        )}
 
-      {data && (
-        <>
-          {isObject ? (
-            isMessages ? (
-              <MessageViewer data={parsed} compact={compact} />
-            ) : (
-              <pre>
+        {data && (
+          <>
+            {isObject ? (
+              isMessages ? (
+                <MessageViewer data={parsed} compact={compact} />
+              ) : (
                 <Code color="blue">
                   {isFatObject ? (
                     <JsonView
@@ -93,20 +92,24 @@ export default function SmartViewer({
                     JSON.stringify(parsed, null, 2)
                   )}
                 </Code>
-              </pre>
-            )
-          ) : (
-            <pre>
+              )
+            ) : (
               <Code color="blue">{parsed}</Code>
-            </pre>
-          )}
-        </>
-      )}
+            )}
+          </>
+        )}
+      </pre>
 
       <style jsx>{`
         pre {
           white-space: pre-wrap;
           margin: 0;
+        }
+
+        pre.compact {
+          max-height: 96px;
+          overflow: hidden;
+          width: 100%;
         }
 
         pre :global(code) {

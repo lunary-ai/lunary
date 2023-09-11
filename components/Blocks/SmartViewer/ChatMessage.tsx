@@ -1,18 +1,12 @@
-import {
-  Code,
-  Highlight,
-  Mark,
-  Paper,
-  ScrollArea,
-  Spoiler,
-  Text,
-  useMantineTheme,
-} from "@mantine/core"
+import { Code, Paper, Spoiler, Text } from "@mantine/core"
 
 const typesColors = {
-  ai: "blue",
-  human: "green",
-  system: "red",
+  ai: "green",
+  human: "blue",
+  user: "blue",
+  error: "red",
+  function: "violet",
+  system: "gray",
 }
 
 const tc = (theme, role) => {
@@ -35,7 +29,7 @@ export default function ChatMessage({ data, compact = false }) {
           {data?.role}
         </Text>
       )}
-      <Spoiler mt={5} maxHeight={300} showLabel="Show all ↓" hideLabel="↑">
+      <Spoiler mt={5} maxHeight={300} showLabel="Show all ↓" hideLabel="Hide ↑">
         {data?.text && (
           <Code color={typesColors[data?.role]} block>
             {data?.text}

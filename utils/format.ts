@@ -17,3 +17,12 @@ export const formatAppUser = (user) => {
   if (!user) return ""
   return user.props?.name ?? user.props?.email ?? user.external_id
 }
+
+export const formatDateTime = (date) => {
+  return new Date(date).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+  })
+}
