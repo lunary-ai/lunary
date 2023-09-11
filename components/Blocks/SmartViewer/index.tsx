@@ -22,7 +22,7 @@ export default function SmartViewer({
   compact = false,
 }: {
   data: any
-  error?: string
+  error?: any
   compact?: boolean
 }) {
   const parsed = useMemo(() => {
@@ -64,7 +64,13 @@ export default function SmartViewer({
       {error && (
         <pre>
           <Code color="red">
-            {typeof error === "object" ? JSON.stringify(error, null, 2) : error}
+            {typeof error.stack === "string"
+              ? compact
+                ? error.message || error.stack
+                : error.stack
+              : typeof error === "object"
+              ? JSON.stringify(error, null, 2)
+              : error}
           </Code>
         </pre>
       )}
