@@ -143,14 +143,39 @@ CREATE POLICY app_user_owner_policy ON public.app_user USING ((( SELECT app.owne
   WHERE (app.id = app_user.app)) = auth.uid()));
 
 
-
-
-
 --
 -- Name: get_related_runs(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE OR REPLACE FUNCTION public.get_runs_usage(app_id uuid, days integer, user_id int8 DEFAULT NULL)
+CREATE OR REPLACE FUNCTION public.get_related_runs(run_id uuid)
+ RETURNS TABLE(created_at timestamp with time zone, tags text[], app uuid, id uuid, status text, name text, ended_at timestamp with time zone, error jsonb, input jsonb, output jsonb, params jsonb, type text, parent_run uuid, completion_tokens integer, prompt_tokens integer)
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+    RETURN QUERY
+    WITH RECURSIVE related_runs AS (
+        SELECT r1.*
+        FROM run r1
+        WHERE r1.id = run_id
+
+        UNION ALL
+
+        SELECT r2.*
+        FROM run r2
+        INNER JOIN related_runs rr ON rr.id = r2.parent_run
+    )
+    SELECT rr.created_at, rr.tags, rr.app, rr.id, rr.status, rr.name, rr.ended_at, rr.error, rr.input, rr.output, 
+           rr.params, rr.type, rr.parent_run, rr.completion_tokens, rr.prompt_tokens
+    FROM related_runs rr;
+END; $function$
+
+
+
+--
+-- Name: get_runs_usage(uuid, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE OR REPLACE FUNCTION public.get_runs_usage(app_id uuid, days integer, user_id bigint DEFAULT NULL::bigint)
  RETURNS TABLE(name text, type text, completion_tokens bigint, prompt_tokens bigint, errors bigint, success bigint)
  LANGUAGE plpgsql
 AS $function$
@@ -168,36 +193,10 @@ BEGIN
     WHERE 
         run.app = app_id AND
         run.created_at >= NOW() - INTERVAL '1 day' * days AND
-        (user_id IS NULL OR run.user = user_id)  -- this line filters by user_id when it is not null
-    GROUP BY
+        (user_id IS NULL OR run.user = user_id)  AND
+    	(run.type != 'agent' OR run.parent_run IS NULL)
+GROUP BY
         run.name, run.type;
-END; $function$
-
-
---
--- Name: get_runs_usage(uuid, integer); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.get_runs_usage(app_id uuid, days integer) RETURNS TABLE(name text, type text, completion_tokens bigint, prompt_tokens bigint, errors bigint, success bigint)
-    LANGUAGE plpgsql
-    AS $$
-BEGIN
-    RETURN QUERY 
-    SELECT 
-        run.name,
-        run.type,
-        COALESCE(SUM(run.completion_tokens), 0) AS completion_tokens,
-        COALESCE(SUM(run.prompt_tokens), 0) AS prompt_tokens,
-        SUM(CASE WHEN run.status = 'error' THEN 1 ELSE 0 END) AS errors,
-        SUM(CASE WHEN run.status = 'success' THEN 1 ELSE 0 END) AS success
-    FROM 
-        run
-    WHERE 
-        run.app = app_id AND
-        run.created_at >= NOW() - INTERVAL '1 day' * days
-    GROUP BY
-        run.name, run.type;
-END; $$;
 
 
 CREATE OR REPLACE FUNCTION public.get_runs_usage_daily(app_id uuid, days integer, user_id integer DEFAULT NULL)
@@ -219,7 +218,8 @@ BEGIN
     WHERE 
         run.app = app_id AND
         run.created_at >= NOW() - INTERVAL '1 day' * days AND
-        (user_id IS NULL OR run.user = user_id)
+        (user_id IS NULL OR run.user = user_id) AND
+    	(run.type != 'agent' OR run.parent_run IS NULL)
     GROUP BY
         date, run.name, run.type;
 END; $function$
@@ -242,18 +242,13 @@ BEGIN
         run
     WHERE 
         run.app = app_id AND
-        run.created_at >= NOW() - INTERVAL '1 day' * days
+        run.created_at >= NOW() - INTERVAL '1 day' * days AND
+    	(run.type != 'agent' OR run.parent_run IS NULL)
     GROUP BY
         user_id, run.name, run.type;
 END; $function$
     
 
-
---
--- Name: users on_auth_user_created; Type: TRIGGER; Schema: auth; Owner: -
---
-
-CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 --
 -- Name: idx_run_parent_run; Type: INDEX; Schema: public; Owner: -
