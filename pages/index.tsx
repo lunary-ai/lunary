@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react"
+import { useContext, useState } from "react"
 import Link from "next/link"
 
 import { useApps } from "@/utils/supabaseHooks"
@@ -9,7 +9,6 @@ import {
   Code,
   Group,
   Loader,
-  Mark,
   Modal,
   Stack,
   CopyButton,
@@ -26,7 +25,6 @@ import { useUser } from "@supabase/auth-helpers-react"
 import { AppContext } from "@/utils/context"
 import analytics from "@/utils/analytics"
 import { NextSeo } from "next-seo"
-import Router from "next/router"
 
 export default function Home() {
   const [modalOpened, setModalOpened] = useState(false)
