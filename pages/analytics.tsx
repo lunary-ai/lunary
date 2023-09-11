@@ -64,7 +64,7 @@ export default function Analytics() {
     return <Empty Icon={IconChartAreaLine} what="data" />
   }
 
-  if (loading)
+  if (loading && !usage && !dailyUsage && !usersWithUsage)
     return (
       <Center h="60vh">
         <Loader />

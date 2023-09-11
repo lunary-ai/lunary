@@ -212,8 +212,19 @@ export function useAppUsers(usageRange = 30) {
   const supabaseClient = useSupabaseClient()
   const { app } = useContext(AppContext)
 
+  const maxLastSeen = new Date(
+    new Date().getTime() - usageRange * 24 * 60 * 60 * 1000
+  )
+    .toISOString()
+    .slice(0, 10)
+
   const { data: users, isLoading } = useQuery(
-    supabaseClient.from("app_user").select("*").eq("app", app?.id).limit(500),
+    supabaseClient
+      .from("app_user")
+      .select("id,app,external_id,created_at,last_seen,props")
+      .eq("app", app?.id)
+      .gt("last_seen", maxLastSeen)
+      .limit(100),
     softOptions
   )
 

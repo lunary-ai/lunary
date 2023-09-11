@@ -58,6 +58,7 @@ export default function SmartViewer({
     <Spoiler
       maxHeight={compact ? 60 : 500}
       showLabel="Show more ↓"
+      onClick={(e) => e.stopPropagation()}
       hideLabel="↑"
     >
       {error && (

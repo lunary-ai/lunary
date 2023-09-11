@@ -39,7 +39,12 @@ export default function DataTable({
 
   return (
     <Card withBorder p={0}>
-      <Table striped withColumnBorders w={table.getCenterTotalSize()}>
+      <Table
+        striped
+        withColumnBorders
+        w={table.getCenterTotalSize()}
+        highlightOnHover={!!onRowClicked}
+      >
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
