@@ -85,7 +85,7 @@ export default function Home() {
         </Card>
       ) : (
         <>
-          <Group position="apart">
+          <Group>
             <Title order={3}>Your Apps</Title>
             <Button
               onClick={() => {
@@ -98,43 +98,43 @@ export default function Home() {
 
           <Stack>
             {apps?.map((app) => (
-              <Anchor
-                href={`/analytics`}
-                key={app.id}
-                component={Link}
-                onClick={() => {
-                  setApp(app)
-                }}
-              >
-                <Card key={app.id}>
+              <Card key={app.id}>
+                <Anchor
+                  href={`/analytics`}
+                  key={app.id}
+                  component={Link}
+                  onClick={() => {
+                    setApp(app)
+                  }}
+                >
                   <Title order={4}>{app.name}</Title>
-                  <Group>
-                    <Text>
-                      Tracking ID: <Code color="pink">{app.id}</Code>
-                    </Text>
-                    <CopyButton value={app.id} timeout={2000}>
-                      {({ copied, copy }) => (
-                        <Tooltip
-                          label={copied ? "Copied" : "Copy"}
-                          withArrow
-                          position="right"
+                </Anchor>
+                <Group>
+                  <Text>
+                    Tracking ID: <Code color="pink">{app.id}</Code>
+                  </Text>
+                  <CopyButton value={app.id} timeout={2000}>
+                    {({ copied, copy }) => (
+                      <Tooltip
+                        label={copied ? "Copied" : "Copy"}
+                        withArrow
+                        position="right"
+                      >
+                        <ActionIcon
+                          color={copied ? "pink" : "gray"}
+                          onClick={copy}
                         >
-                          <ActionIcon
-                            color={copied ? "pink" : "gray"}
-                            onClick={copy}
-                          >
-                            {copied ? (
-                              <IconCheck size="1rem" />
-                            ) : (
-                              <IconCopy size="1rem" />
-                            )}
-                          </ActionIcon>
-                        </Tooltip>
-                      )}
-                    </CopyButton>
-                  </Group>
-                </Card>
-              </Anchor>
+                          {copied ? (
+                            <IconCheck size="1rem" />
+                          ) : (
+                            <IconCopy size="1rem" />
+                          )}
+                        </ActionIcon>
+                      </Tooltip>
+                    )}
+                  </CopyButton>
+                </Group>
+              </Card>
             ))}
           </Stack>
         </>
