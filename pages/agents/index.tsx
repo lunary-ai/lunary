@@ -33,7 +33,7 @@ export default function Agents() {
   }
 
   return (
-    <Stack>
+    <Stack h={"calc(100vh - var(--navbar-size))"}>
       <Group>
         <Title>Agents Traces</Title>
         {loading && <Loader />}

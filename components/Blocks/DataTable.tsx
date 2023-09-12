@@ -11,7 +11,8 @@ import {
 import { Card, Group, Table, Text } from "@mantine/core"
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-react"
 
-import { useVirtual } from "react-virtual"
+import { useVirtual } from "@tanstack/react-virtual"
+
 import { useDebouncedState } from "@mantine/hooks"
 
 // outside for reference
@@ -33,7 +34,6 @@ export default function DataTable({
 
   //we need a reference to the scrolling element for logic down below
   const tableContainerRef = useRef<HTMLDivElement>(null)
-  const [scrollY, setScrollY] = useDebouncedState(0, 100)
 
   const table = useReactTable({
     data: data ?? emptyArray, // So it doesn't break when data is undefined because of reference
@@ -49,53 +49,53 @@ export default function DataTable({
 
   const { rows } = table.getRowModel()
 
-  //V irtualizing is optional, but might be necessary if we are going to potentially have hundreds or thousands of rows
   const rowVirtualizer = useVirtual({
-    parentRef: tableContainerRef,
     size: rows.length,
-    overscan: 10,
+    parentRef: tableContainerRef,
   })
-  const { virtualItems: virtualRows, totalSize } = rowVirtualizer
-  const paddingTop = virtualRows.length > 0 ? virtualRows?.[0]?.start || 0 : 0
+
+  const items = rowVirtualizer.virtualItems
+  const paddingTop = items.length > 0 ? items[0].start : 0
   const paddingBottom =
-    virtualRows.length > 0
-      ? totalSize - (virtualRows?.[virtualRows.length - 1]?.end || 0)
+    items.length > 0
+      ? rowVirtualizer.totalSize - items[items.length - 1].end
       : 0
 
   //called on scroll and possibly on mount to fetch more data as the user scrolls and reaches bottom of table
+  const fetchMoreOnBottomReached = useCallback(
+    (containerRefElement?: HTMLDivElement | null) => {
+      if (containerRefElement) {
+        const { scrollHeight, scrollTop, clientHeight } = containerRefElement
+        //once the user has scrolled within 300px of the bottom of the table, fetch more data if there is any
+        if (
+          scrollHeight - scrollTop - clientHeight < 300 &&
+          !loading &&
+          loadMore
+        ) {
+          loadMore()
+        }
+      }
+    },
+    [loadMore, loading]
+  )
+
+  //a check on mount and after a fetch to see if the table is already scrolled to the bottom and immediately needs to fetch more data
   useEffect(() => {
-    if (!loadMore || loading) return
-
-    const bottomOfTable =
-      tableContainerRef.current?.getBoundingClientRect().bottom
-
-    const distanceFromBottom = window.innerHeight - bottomOfTable
-
-    console.log({ distanceFromBottom })
-
-    if (Math.abs(distanceFromBottom) < 300) {
-      console.log("fetching more")
-      loadMore()
-    }
-  }, [loadMore, loading, scrollY])
-
-  useEffect(() => {
-    window.addEventListener("scroll", () => {
-      setScrollY(window.scrollY)
-    })
-    return () => {
-      window.removeEventListener("scroll", () => {
-        setScrollY(window.scrollY)
-      })
-    }
-  }, [setScrollY])
+    fetchMoreOnBottomReached(tableContainerRef.current)
+  }, [fetchMoreOnBottomReached])
 
   return (
     <Card withBorder p={0}>
-      <div ref={tableContainerRef}>
+      <div
+        ref={tableContainerRef}
+        className="tableContainer"
+        onScroll={(e) => {
+          fetchMoreOnBottomReached(e.currentTarget)
+        }}
+      >
         <Table
           striped
-          withColumnBorders
+          // withColumnBorders
           w={table.getCenterTotalSize()}
           highlightOnHover={!!onRowClicked}
         >
@@ -151,11 +151,12 @@ export default function DataTable({
                 <td style={{ height: `${paddingTop}px` }} />
               </tr>
             )}
-            {virtualRows.map((virtualRow) => {
+            {items.map((virtualRow) => {
               const row = rows[virtualRow.index]
               return (
                 <tr
                   key={row.id}
+                  ref={virtualRow.measureRef}
                   onClick={
                     onRowClicked ? () => onRowClicked(row.original) : undefined
                   }
@@ -197,13 +198,30 @@ export default function DataTable({
         )}
       </div>
       <style global jsx>{`
+        .tableContainer {
+          height: 100%;
+          overflow-y: scroll;
+          overflow-x: hidden;
+        }
+
         table {
           width: 100% !important;
           table-layout: fixed;
         }
 
+        thead {
+          position: sticky;
+          top: 0;
+          z-index: 1;
+          background: white;
+        }
+
         th {
           position: relative;
+          border-bottom: 1px solid #ddd;
+          border-right: 1px solid #ddd;
+          text-overflow: ellipsis;
+          overflow: clip;
         }
 
         tr {

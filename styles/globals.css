@@ -1,3 +1,7 @@
+:root {
+  --navbar-size: 110px;
+}
+
 body {
   margin: 0;
   padding: 0;
