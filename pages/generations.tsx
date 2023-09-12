@@ -61,7 +61,7 @@ export default function Generations() {
   }
 
   return (
-    <Stack>
+    <Stack h={"calc(100vh - var(--navbar-size))"}>
       <NextSeo title="Requests" />
       <Group>
         <Title>Generations</Title>
