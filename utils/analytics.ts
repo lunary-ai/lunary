@@ -1,5 +1,4 @@
 import posthog from "posthog-js"
-import va from "@vercel/analytics"
 
 if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
   posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
@@ -41,10 +40,6 @@ const track = (event: string, data?: any) => {
 
   w.gosquared("event", event, data)
   w.plausible(event, { props: data })
-
-  // plau
-
-  va.track(event, data)
 }
 
 const identify = (userId: string, traits: any) => {
