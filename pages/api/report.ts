@@ -7,7 +7,16 @@ import { NextRequest } from "next/server"
 import cors from "@/lib/cors"
 
 export interface Event {
-  type: "llm" | "embed" | "chain" | "agent" | "tool" | "log" | "retriever"
+  type:
+    | "llm"
+    | "embed"
+    | "chain"
+    | "agent"
+    | "tool"
+    | "log"
+    | "retriever"
+    | "chat"
+    | "convo"
   app: string
   event?: string
   level?: string
@@ -21,6 +30,7 @@ export interface Event {
   output?: any
   message?: string
   extra?: any
+  feedback?: any
   tokensUsage?: {
     prompt: number
     completion: number
@@ -87,6 +97,18 @@ const registerRunEvent = async (event: Event): Promise<void> => {
     if (error) throw error
 
     internalUserId = data.id
+  } else if (!userId && eventName === "start" && parentRunId) {
+    // Check if parent run has a user to cascade
+    // This allow user id to correctly cascade if for example it's set on the frontend and not passed to the backend
+    const { data, error } = await supabaseAdmin
+      .from("run")
+      .select("user")
+      .match({ id: parentRunId })
+      .single()
+
+    if (error) throw error
+
+    internalUserId = data.user
   }
 
   switch (eventName) {
@@ -130,6 +152,13 @@ const registerRunEvent = async (event: Event): Promise<void> => {
         .match({ id: runId })
 
       break
+    case "feedback":
+      query = table
+        .update({
+          feedback: extra,
+        })
+        .match({ id: runId })
+
     case "stream":
       break
   }
@@ -163,6 +192,9 @@ const registerEvent = async (event: Event): Promise<void> => {
     case "embed":
     case "chain":
     case "agent":
+    case "retriever":
+    case "chat":
+    case "convo":
     case "tool":
       await registerRunEvent(event)
       break

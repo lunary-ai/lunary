@@ -106,7 +106,6 @@ export function useRuns(type: string, match?: any, withoutParent = false) {
     })
     .eq("type", type)
     .eq("app", app?.id)
-  // .limit(200)
 
   if (match) {
     query = query.match(match)
@@ -122,7 +121,6 @@ export function useRuns(type: string, match?: any, withoutParent = false) {
     isValidating,
     loadMore,
   } = useOffsetInfiniteScrollQuery(query, { ...softOptions, pageSize: 10 })
-  // runs?.reverse()
 
   return {
     runs: extendWithCosts(runs),

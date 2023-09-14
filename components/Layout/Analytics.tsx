@@ -6,8 +6,6 @@ import { PostHogProvider } from "posthog-js/react"
 import PlausibleProvider from "next-plausible"
 import posthog from "posthog-js"
 
-import { Analytics } from "@vercel/analytics/react"
-
 import analytics from "@/utils/analytics"
 
 export default function AnalyticsWrapper({ children }) {
@@ -54,8 +52,12 @@ export default function AnalyticsWrapper({ children }) {
             onError={() => console.log("LiveChat script failed to load.")}
           />
         )}
-        <PostHogProvider client={posthog}>{children}</PostHogProvider>
-        <Analytics />
+
+        {process.env.NEXT_PUBLIC_POSTHOG_KEY ? (
+          <PostHogProvider client={posthog}>{children}</PostHogProvider>
+        ) : (
+          children
+        )}
       </PlausibleProvider>
     </>
   )
