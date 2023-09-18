@@ -193,12 +193,11 @@ export default function Chats() {
       <Group>
         <Title>Chats and Feedbacks</Title>
         {loading && <Loader />}
+        <Alert>
+          This feature is currently in <b>alpha</b>. Contact us with details on
+          what you're building to help us improve it.
+        </Alert>
       </Group>
-
-      <Alert title="Alpha Feature">
-        This feature is currently in alpha. Contact us with details on what
-        you're building to help us improve it.
-      </Alert>
 
       <Drawer
         opened={!!selected}
