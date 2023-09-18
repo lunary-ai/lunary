@@ -165,20 +165,20 @@ export const completeRunUsage = async (run) => {
   )
     return run.tokensUsage
 
-  const modelName = run.name?.replace("gpt-35", "gpt-3.5") // Azure fix
-
   const tokensUsage = run.tokensUsage || {}
 
   try {
-    const enc = await encodingForModel(modelName)
-
     // get run input
 
     const { data: runData, error } = await supabaseAdmin
       .from("run")
-      .select("input,params")
+      .select("input,params,name")
       .match({ id: run.runId })
       .single()
+
+    // Get model name (in older sdk it wasn't sent in "end" event)
+    const modelName = runData.name?.replace("gpt-35", "gpt-3.5") // Azure fix
+    const enc = await encodingForModel(modelName)
 
     if (!tokensUsage.prompt && runData?.input) {
       const inputTokens = Array.isArray(runData.input)

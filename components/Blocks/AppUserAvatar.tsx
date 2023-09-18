@@ -1,7 +1,5 @@
 import { formatAppUser } from "@/utils/format"
-import { Database } from "@/utils/supaTypes"
-import { Avatar, MantineNumberSize, MantineSize } from "@mantine/core"
-import App from "next/app"
+import { Anchor, Avatar, Group, MantineNumberSize } from "@mantine/core"
 import { memo } from "react"
 
 const colors = [
@@ -20,9 +18,11 @@ const colors = [
 function AppUserAvatar({
   user,
   size = "md",
+  withName = false,
 }: {
   user: any
   size?: MantineNumberSize
+  withName?: boolean
 }) {
   // use user.id (int) as seed for random color
   const color = colors[user?.id % colors.length]
@@ -32,9 +32,14 @@ function AppUserAvatar({
   const nameOrEmail = formatAppUser(user)
 
   return (
-    <Avatar lh={0.4} radius="xl" color={color} size={size}>
-      {nameOrEmail?.slice(0, 2)?.toUpperCase()}
-    </Avatar>
+    <Group spacing="sm">
+      <Avatar lh={0.4} radius="xl" color={color} size={size}>
+        {nameOrEmail?.slice(0, 2)?.toUpperCase()}
+      </Avatar>
+      {withName && (
+        <Anchor href={`/users/${user.id}`}>{formatAppUser(user)}</Anchor>
+      )}
+    </Group>
   )
 }
 

@@ -11,7 +11,7 @@ import { Code, Highlight, Spoiler } from "@mantine/core"
 import { useMemo } from "react"
 import MessageViewer from "./MessageViewer"
 import { JsonView, defaultStyles } from "react-json-view-lite"
-import ChatMessage from "./ChatMessage"
+import { ChatMessage } from "./Message"
 
 const checkIsMessage = (obj) => {
   return typeof obj?.text === "string" || typeof obj?.functionCall === "object"
