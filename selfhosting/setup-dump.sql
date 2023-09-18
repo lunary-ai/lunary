@@ -44,8 +44,10 @@ CREATE TABLE "public"."run" (
     "input" jsonb,
     "output" jsonb,
     "params" jsonb,
+    "feedback" jsonb,
     "type" text NOT NULL,
     "parent_run" uuid,
+    "retry_of" uuid,
     "completion_tokens" int4,
     "prompt_tokens" int4,
     PRIMARY KEY ("id")
@@ -57,6 +59,7 @@ ALTER TABLE "public"."log" ADD FOREIGN KEY ("run") REFERENCES "public"."run"("id
 ALTER TABLE "public"."log" ADD FOREIGN KEY ("app") REFERENCES "public"."app"("id") ON DELETE CASCADE;
 ALTER TABLE "public"."profile" ADD FOREIGN KEY ("id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 ALTER TABLE "public"."run" ADD FOREIGN KEY ("parent_run") REFERENCES "public"."run"("id") ON DELETE CASCADE;
+ALTER TABLE "public"."run" ADD FOREIGN KEY ("retry_of") REFERENCES "public"."run"("id") ON DELETE CASCADE;
 ALTER TABLE "public"."run" ADD FOREIGN KEY ("app") REFERENCES "public"."app"("id") ON DELETE CASCADE;
 
 
