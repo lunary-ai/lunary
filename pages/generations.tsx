@@ -79,6 +79,9 @@ export default function Generations() {
         {selected && (
           <Stack>
             <Text size="sm">Model: {selected.name}</Text>
+            {typeof selected.params?.temperature !== "undefined" && (
+              <Text size="sm">Temperature: {selected.params?.temperature}</Text>
+            )}
 
             <Group position="apart">
               <Text weight="bold" size="sm">
