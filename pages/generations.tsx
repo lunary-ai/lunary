@@ -28,6 +28,7 @@ import { NextSeo } from "next-seo"
 import { useState } from "react"
 import { useDisclosure } from "@mantine/hooks"
 import { formatDateTime } from "@/utils/format"
+import TokensBadge from "@/components/Blocks/TokensBadge"
 
 const columns = [
   timeColumn("created_at"),
@@ -79,9 +80,19 @@ export default function Generations() {
           <Stack>
             <Text size="sm">Model: {selected.name}</Text>
 
-            <Text size="sm">Input</Text>
+            <Group position="apart">
+              <Text weight="bold" size="sm">
+                Input
+              </Text>
+              <TokensBadge tokens={selected.prompt_tokens} />
+            </Group>
             <SmartViewer data={selected.input} />
-            <Text size="sm">{selected.error ? "Error" : "Output"}</Text>
+            <Group position="apart">
+              <Text weight="bold" size="sm">
+                {selected.error ? "Error" : "Output"}
+              </Text>
+              <TokensBadge tokens={selected.completion_tokens} />
+            </Group>
             <SmartViewer data={selected.output} error={selected.error} />
           </Stack>
         )}

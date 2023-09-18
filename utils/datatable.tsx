@@ -2,7 +2,8 @@ import { createColumnHelper } from "@tanstack/react-table"
 import { Anchor, Badge } from "@mantine/core"
 import SmartViewer from "@/components/Blocks/SmartViewer"
 import { useAppUser } from "./supabaseHooks"
-import { formatAppUser, formatCost, formatDateTime } from "./format"
+import { formatAppUser, formatCost, formatDateTime, msToTime } from "./format"
+import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 const columnHelper = createColumnHelper<any>()
 
 export const timeColumn = (timeColumn, label = "Time") => {
@@ -26,14 +27,18 @@ export const timeColumn = (timeColumn, label = "Time") => {
   })
 }
 
-export const durationColumn = () => {
+export const durationColumn = (unit = "s") => {
   return {
     id: "duration",
     header: "Duration",
     size: 25,
     cell: (props) => {
       if (!props.getValue()) return null
-      return `${(props.getValue() / 1000).toFixed(2)}s`
+      if (unit === "s") {
+        return `${(props.getValue() / 1000).toFixed(2)}s`
+      } else if (unit === "full") {
+        return msToTime(props.getValue())
+      }
     },
     accessorFn: (row) => {
       if (!row.ended_at) {
@@ -116,7 +121,7 @@ export const userColumn = () => {
 
       if (!userId) return null
 
-      return <Anchor href={`/users/${userId}`}>{formatAppUser(user)}</Anchor>
+      return <AppUserAvatar size="sm" user={user} withName />
     },
   })
 }

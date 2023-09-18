@@ -1,81 +1,225 @@
+import { NextSeo } from "next-seo"
+import Router from "next/router"
+import { useMemo, useState } from "react"
+
+import DataTable from "@/components/Blocks/DataTable"
+import Feedback from "@/components/Blocks/Feedback"
+import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
+import { BubbleMessage } from "@/components/Blocks/SmartViewer/Message"
+import Empty from "@/components/Layout/Empty"
+
+import {
+  durationColumn,
+  inputColumn,
+  timeColumn,
+  userColumn,
+} from "@/utils/datatable"
+
+import { formatDateTime } from "@/utils/format"
+import { useAppUser, useRuns } from "@/utils/supabaseHooks"
+
 import {
   Alert,
-  Badge,
-  Card,
-  Code,
+  Button,
+  Drawer,
   Group,
-  Overlay,
+  Loader,
   Stack,
   Table,
+  Text,
   Title,
 } from "@mantine/core"
 
-import { NextSeo } from "next-seo"
+import { IconMessages, IconNeedleThread } from "@tabler/icons-react"
+import { createColumnHelper } from "@tanstack/react-table"
 
-export default function Tests() {
+const columnHelper = createColumnHelper<any>()
+
+const columns = [
+  timeColumn("created_at"),
+  durationColumn("full"),
+  userColumn(),
+  inputColumn("Opening Message"),
+  columnHelper.accessor("feedbacks", {
+    header: "Feedback left",
+    size: 100,
+    cell: (props) => {
+      const run = props.row.original
+
+      const { runs } = useRuns("chat", {
+        notInfinite: true,
+        match: { parent_run: run.id },
+        not: ["feedback", "is", null],
+        select: "feedback",
+      })
+
+      const allFeedbacks = runs?.map((run) => run.feedback)
+
+      return (
+        <Group spacing="xs">
+          {allFeedbacks?.map((feedback) => (
+            <Feedback data={feedback} />
+          ))}
+        </Group>
+      )
+    },
+  }),
+]
+
+const ChatReplay = ({ run }) => {
+  const { runs, loading } = useRuns("chat", {
+    match: { parent_run: run.id },
+    notInfinite: true,
+  })
+
+  const { user } = useAppUser(run.user)
+
+  // Each chat run has input = user message, output = bot message
+  const messages = useMemo(
+    () =>
+      runs &&
+      runs
+        .filter((run) => run.type === "chat")
+        .sort(
+          (a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        )
+        .map((run) => {
+          return [
+            {
+              role: "user",
+              content: run.input,
+              timestamp: run.created_at,
+            },
+            {
+              role: "ai",
+              content: run.output,
+              took:
+                new Date(run.ended_at).getTime() -
+                new Date(run.created_at).getTime(),
+              timestamp: run.ended_at,
+              feedback: run.feedback,
+            },
+          ]
+        })
+        .flat(),
+    [runs]
+  )
+
   return (
     <Stack>
-      <NextSeo title="Tests" />
+      <Table
+        withBorder
+        horizontalSpacing="md"
+        verticalSpacing="sm"
+        withColumnBorders
+      >
+        <thead>
+          <tr>
+            <th>User</th>
+            <td>
+              {user ? (
+                <AppUserAvatar size="sm" user={user} withName />
+              ) : (
+                "Unknown"
+              )}
+            </td>
+          </tr>
+          <tr>
+            <th>First message</th>
+            <td>{formatDateTime(run.created_at)}</td>
+          </tr>
+          <tr>
+            <th>Last message</th>
+            <td>{formatDateTime(run.ended_at)}</td>
+          </tr>
+          <tr>
+            <th>Messages</th>
+            <td>{messages?.length}</td>
+          </tr>
+        </thead>
+      </Table>
+      <Button
+        variant="outline"
+        onClick={() => {
+          Router.push(`/traces/${run.id}`)
+        }}
+        rightIcon={<IconNeedleThread size={16} />}
+      >
+        View trace
+      </Button>
+
+      <Title order={3}>Replay</Title>
+
+      {messages && (
+        <Stack spacing={0}>
+          {messages?.map(({ role, content, took, feedback }) => (
+            <>
+              <BubbleMessage
+                role={role}
+                content={content}
+                extra={
+                  <>
+                    {took && (
+                      <Text color="dimmed" size="xs">
+                        {took}ms
+                      </Text>
+                    )}
+
+                    {feedback && <Feedback data={feedback} />}
+                  </>
+                }
+              />
+            </>
+          ))}
+        </Stack>
+      )}
+    </Stack>
+  )
+}
+
+export default function Chats() {
+  const { runs, loading, validating, loadMore } = useRuns("convo")
+
+  const [selected, setSelected] = useState(null)
+
+  if (!loading && runs?.length === 0) {
+    return <Empty Icon={IconMessages} what="conversations" />
+  }
+
+  return (
+    <Stack h={"calc(100vh - var(--navbar-size))"}>
+      <NextSeo title="Chats" />
       <Group>
         <Title>Chats and Feedbacks</Title>
+        {loading && <Loader />}
       </Group>
 
-      <Alert title="Contact Us to request access">
-        Chat Replays and Feedbacks features are currently invite-only. Contact
-        us with details on what you're building to request access.
+      <Alert title="Alpha Feature">
+        This feature is currently in alpha. Contact us with details on what
+        you're building to help us improve it.
       </Alert>
 
-      <Card>
-        <Overlay blur={1.5} opacity={0.2} />
-        <Table horizontalSpacing="sm" verticalSpacing="lg">
-          <thead>
-            <tr>
-              <th>User</th>
-              <th>Opener</th>
-              <th>Messages</th>
-              <th>Feedbacks</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>john@apple.com</td>
-              <td>List my unread emails</td>
-              <td>
-                <Group>
-                  <Badge variant="outline" color="indigo">
-                    8
-                  </Badge>
-                </Group>
-              </td>
-              <td>👍👍👎</td>
-            </tr>
-            <tr>
-              <td>emelyn@tesla.com</td>
-              <td>Who is John's supervisor</td>
-              <td>
-                <Group>
-                  <Badge variant="outline" color="indigo">
-                    2
-                  </Badge>
-                </Group>
-              </td>
-              <td>👎</td>
-            </tr>
-            <tr>
-              <td>chloe@hey.com</td>
-              <td>List top 10 customers by LTV</td>
-              <td>
-                <Group>
-                  <Badge variant="outline" color="indigo">
-                    4
-                  </Badge>
-                </Group>
-              </td>
-              <td>👍</td>
-            </tr>
-          </tbody>
-        </Table>
-      </Card>
+      <Drawer
+        opened={!!selected}
+        keepMounted
+        position="right"
+        title={<Title order={3}>Chat details</Title>}
+        onClose={() => setSelected(null)}
+      >
+        {selected && <ChatReplay run={selected} />}
+      </Drawer>
+
+      <DataTable
+        onRowClicked={(row) => {
+          setSelected(row)
+          // setSelected(row.original)
+        }}
+        loading={loading || validating}
+        loadMore={loadMore}
+        columns={columns}
+        data={runs}
+      />
     </Stack>
   )
 }

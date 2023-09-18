@@ -30,7 +30,7 @@ import { AppContext } from "@/utils/context"
 
 const menu = [
   { label: "Analytics", icon: IconGraph, link: "/analytics" },
-  { label: "Traces", icon: IconRobot, link: "/agents" },
+  { label: "Traces", icon: IconRobot, link: "/traces" },
   { label: "Generations", icon: IconBrandOpenai, link: "/generations" },
   { label: "Users", icon: IconUsers, link: "/users" },
   { label: "Tests", icon: IconStethoscope, link: "/tests" },

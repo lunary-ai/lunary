@@ -92,14 +92,25 @@ export function useApps() {
   return { apps, loading: isLoading, insert, drop }
 }
 
-export function useRuns(type: string, match?: any, withoutParent = false) {
+export function useRuns(
+  type: string,
+  config: {
+    notInfinite?: boolean
+    match?: any
+    filter?: Array<any>
+    not?: Array<any>
+    select?: string
+  } = {}
+) {
   const supabaseClient = useSupabaseClient<Database>()
   const { app } = useContext(AppContext)
+
+  const { notInfinite, match, select, filter, not } = config
 
   let query = supabaseClient
     .from("run")
     .select(
-      "id,user,type,name,created_at,ended_at,app,input,output,parent_run,prompt_tokens,completion_tokens,status,tags,error,params"
+      select || "*" // "id,user,type,name,created_at,ended_at,app,input,output,parent_run,prompt_tokens,completion_tokens,status,tags,error,params,feedback,retry_of"
     )
     .order("created_at", {
       ascending: false,
@@ -111,16 +122,23 @@ export function useRuns(type: string, match?: any, withoutParent = false) {
     query = query.match(match)
   }
 
-  if (withoutParent) {
-    query = query.filter("parent_run", "is", null)
+  if (filter) {
+    query = query.filter(...filter)
+  }
+
+  if (not) {
+    query = query.not(...not)
   }
 
   const {
     data: runs,
     isLoading,
     isValidating,
+    // @ts-ignore
     loadMore,
-  } = useOffsetInfiniteScrollQuery(query, { ...softOptions, pageSize: 10 })
+  } = !notInfinite
+    ? useOffsetInfiniteScrollQuery(query, { ...softOptions, pageSize: 10 })
+    : useQuery(query.limit(100), { ...softOptions })
 
   return {
     runs: extendWithCosts(runs),
@@ -216,6 +234,18 @@ export function useRun(runId: string) {
   )
 
   return { run, loading: isLoading }
+}
+
+export function useRelatedRuns(runId: string) {
+  const supabaseClient = useSupabaseClient<Database>()
+
+  const { data: relatedRuns, isLoading } = useQuery(
+    supabaseClient.rpc("get_related_runs", {
+      run_id: runId,
+    })
+  )
+
+  return { relatedRuns: extendWithCosts(relatedRuns), loading: isLoading }
 }
 
 export function useAppUsers(usageRange = 30) {
