@@ -5,6 +5,7 @@
 import { supabaseAdmin } from "@/lib/supabaseClient"
 import { NextRequest } from "next/server"
 import cors from "@/lib/cors"
+import { completeRunUsage } from "@/lib/countTokens"
 
 export interface Event {
   type:
@@ -46,16 +47,52 @@ export const config = {
   runtime: "edge",
 }
 
-const cleanEvent = (event: any): Event => {
-  const { timestamp, ...rest } = event
+const uuidFromSeed = async (seed: string): Promise<string> => {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(seed)
+  const hash = await crypto.subtle.digest("SHA-256", data)
+  const hashArray = Array.from(new Uint8Array(hash))
+  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
+  return (
+    hashHex.substring(0, 8) +
+    "-" +
+    hashHex.substring(8, 12) +
+    "-" +
+    "4" +
+    hashHex.substring(13, 16) +
+    "-a" +
+    hashHex.substring(17, 20) +
+    "-" +
+    hashHex.substring(20, 32)
+  )
+}
+
+/* Enabled the user to use any string as run ids.
+ * Useful for example for interop with Vercel'AI SDK as they use their own run ids format.
+ * This function will convert any string to a valid UUID.
+ */
+const ensureIsUUID = async (id: string): Promise<string> => {
+  if (!id || id.length === 36) return id // TODO: better check
+  else return await uuidFromSeed(id)
+}
+
+const cleanEvent = async (event: any): Promise<Event> => {
+  const { timestamp, runId, parentRunId, ...rest } = event
 
   return {
     ...rest,
+    tokensUsage: await completeRunUsage(event),
+    runId: await ensureIsUUID(runId),
+    parentRunId: await ensureIsUUID(parentRunId),
     timestamp: new Date(timestamp).toISOString(),
   }
 }
 
-const registerRunEvent = async (event: Event): Promise<void> => {
+const registerRunEvent = async (
+  event: Event,
+  insertedIds: Set<string>,
+  allowRetry = true
+): Promise<void> => {
   const {
     timestamp,
     type,
@@ -97,18 +134,38 @@ const registerRunEvent = async (event: Event): Promise<void> => {
     if (error) throw error
 
     internalUserId = data.id
-  } else if (!userId && eventName === "start" && parentRunId) {
-    // Check if parent run has a user to cascade
-    // This allow user id to correctly cascade if for example it's set on the frontend and not passed to the backend
+  }
+
+  if (eventName === "start" && parentRunId && !insertedIds.has(parentRunId)) {
+    // Check if parent run exists (only necessary if we haven't just inserted it)
+
     const { data, error } = await supabaseAdmin
       .from("run")
       .select("user")
       .match({ id: parentRunId })
       .single()
 
-    if (error) throw error
+    if (error) {
+      // Could be that the parent run is not yet created
+      // For example if the server-side event reached here before the frontend event, will throw foreign-key constraint error
+      // So we retry once after 5s
+      // A cleaner solution would be to use a queue, but this is simpler for now
 
-    internalUserId = data.user
+      console.error(`Error getting parent run user: ${error.message}`)
+
+      if (!allowRetry) throw error
+
+      console.log("Retrying insertion in 2s in case parent not inserted yet...")
+
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+
+      return await registerRunEvent(event, insertedIds, false)
+    }
+
+    // This allow user id to correctly cascade to childs runs if for example it's set on the frontend and not passed to the backend
+    if (data?.user) {
+      internalUserId = data?.user
+    }
   }
 
   switch (eventName) {
@@ -167,6 +224,8 @@ const registerRunEvent = async (event: Event): Promise<void> => {
     const { error, data } = await query
 
     if (error) throw error
+
+    insertedIds.add(runId)
   }
 }
 
@@ -184,7 +243,10 @@ const registerLogEvent = async (event: Event): Promise<void> => {
   if (error) throw error
 }
 
-const registerEvent = async (event: Event): Promise<void> => {
+const registerEvent = async (
+  event: Event,
+  insertedIds: Set<string>
+): Promise<void> => {
   const { type } = event
 
   switch (type) {
@@ -196,7 +258,7 @@ const registerEvent = async (event: Event): Promise<void> => {
     case "chat":
     case "convo":
     case "tool":
-      await registerRunEvent(event)
+      await registerRunEvent(event, insertedIds)
       break
     case "log":
       await registerLogEvent(event)
@@ -205,10 +267,13 @@ const registerEvent = async (event: Event): Promise<void> => {
 }
 
 export default async function handler(req: NextRequest) {
-  if (req.method !== "POST")
-    return new Response(null, { status: 404, statusText: "Not Found" })
+  if (req.method === "OPTIONS") {
+    return cors(req, new Response(null, { status: 200 }))
+  }
 
   const { events } = await req.json()
+
+  const insertedIds = new Set<string>()
 
   if (!events) {
     console.log("Missing events payload.")
@@ -220,11 +285,11 @@ export default async function handler(req: NextRequest) {
     (a, b) => a.timestamp - b.timestamp
   )
 
-  console.log(`Ingesting ${sorted.length} events.`)
-
   for (const event of sorted) {
     try {
-      await registerEvent(cleanEvent(event))
+      const cleanedEvent = await cleanEvent(event)
+      // console.log(cleanedEvent)
+      await registerEvent(cleanedEvent, insertedIds)
     } catch (e: any) {
       console.error(`Error ingesting event.`)
       // Edge functions logs are limited to 2kb
