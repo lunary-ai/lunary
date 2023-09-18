@@ -1,5 +1,54 @@
 import { supabaseAdmin } from "@/lib/supabaseClient"
-import { encodingForModel, getEncoding } from "js-tiktoken"
+
+// Don't import all otherwise function over 1mb, too big for Vercel
+// import gpt2 from "./ranks/gpt2"; useless
+// import p50k_edit from "./ranks/p50k_edit"; useless
+// import r50k_base from "js-tiktoken/ranks/r50k_base";
+
+// @ts-ignore
+import p50k_base from "js-tiktoken/ranks/p50k_base"
+// @ts-ignore
+import cl100k_base from "js-tiktoken/ranks/cl100k_base"
+
+import { Tiktoken, getEncodingNameForModel } from "js-tiktoken/lite"
+
+const cache = {}
+
+async function getRareEncoding(
+  encoding,
+  extendedSpecialTokens?: Record<string, number>
+) {
+  if (!(encoding in cache)) {
+    console.log("Fetching tiktoken encoding from CDN")
+    const res = await fetch(`https://tiktoken.pages.dev/js/${encoding}.json`)
+
+    if (!res.ok) throw new Error("Failed to fetch encoding")
+    cache[encoding] = await res.json()
+  }
+  return new Tiktoken(cache[encoding], extendedSpecialTokens)
+}
+
+async function getEncoding(
+  encoding,
+  extendSpecialTokens?: Record<string, number>
+) {
+  switch (encoding) {
+    case "gpt2":
+    case "r50k_base":
+    case "p50k_base":
+      return await getRareEncoding(encoding, extendSpecialTokens)
+    case "p50k_base":
+      return new Tiktoken(p50k_base, extendSpecialTokens)
+    case "cl100k_base":
+      return new Tiktoken(cl100k_base, extendSpecialTokens)
+    default:
+      throw new Error("Unknown encoding")
+  }
+}
+
+async function encodingForModel(model) {
+  return await getEncoding(getEncodingNameForModel(model))
+}
 
 /**
  * Returns a function signature block in the format used by OpenAI internally:
@@ -39,7 +88,6 @@ function formatFunctionSpecsAsTypescriptNS(functions) {
   }
 
   function functionSignature(fSpec) {
-    console.log("fSpec", fSpec)
     return [
       `// ${fSpec.description}`,
       `type ${fSpec.name} = (_: {`,
@@ -60,7 +108,7 @@ function formatFunctionSpecsAsTypescriptNS(functions) {
  *
  */
 
-function numTokensFromMessages(
+async function numTokensFromMessages(
   messages,
   functions,
   model = "gpt-3.5-turbo-0613"
@@ -69,10 +117,10 @@ function numTokensFromMessages(
   let encoding
 
   try {
-    encoding = encodingForModel(model)
+    encoding = await encodingForModel(model)
   } catch (error) {
     console.warn("Warning: model not found. Using cl100k_base encoding.")
-    encoding = getEncoding("cl100k_base")
+    encoding = await getEncoding("cl100k_base")
   }
 
   tokensPerMessage = 3
@@ -119,14 +167,10 @@ export const completeRunUsage = async (run) => {
 
   const modelName = run.name?.replace("gpt-35", "gpt-3.5") // Azure fix
 
-  console.log("model name", modelName)
-  console.log("token usage", run.tokensUsage)
-
   const tokensUsage = run.tokensUsage || {}
 
   try {
-    console.log(`Completing usage for ${modelName}`)
-    const enc = encodingForModel(modelName)
+    const enc = await encodingForModel(modelName)
 
     // get run input
 
@@ -138,7 +182,7 @@ export const completeRunUsage = async (run) => {
 
     if (!tokensUsage.prompt && runData?.input) {
       const inputTokens = Array.isArray(runData.input)
-        ? numTokensFromMessages(
+        ? await numTokensFromMessages(
             runData.input,
             // @ts-ignore
             runData.params?.functions,
@@ -171,7 +215,7 @@ export const completeRunUsage = async (run) => {
 
     return tokensUsage
   } catch (e) {
-    console.error(e)
+    console.error(`Error while computing tokens usage for run ${run.runId}`, e)
     return run.tokensUsage
   }
 }
