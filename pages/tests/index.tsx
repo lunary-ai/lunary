@@ -66,7 +66,7 @@ export default function Tests() {
       </Alert>
 
       <Card>
-        <Overlay blur={1.5} opacity={0.2} />
+        <Overlay blur={1.5} opacity={0.2} zIndex={0} />
         <Table horizontalSpacing="sm" verticalSpacing="lg">
           <thead>
             <tr>
