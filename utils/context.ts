@@ -1,11 +1,11 @@
 import { createContext } from "react"
 
 type AppContextType = {
-  app?: any
-  setApp?: (app: any) => void
+  appId?: string
+  setAppId?: (app: string) => void
 }
 
 export const AppContext = createContext<AppContextType>({
-  app: undefined,
-  setApp: () => {},
+  appId: undefined,
+  setAppId: () => {},
 })

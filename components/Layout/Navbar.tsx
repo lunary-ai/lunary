@@ -1,7 +1,6 @@
 import analytics from "@/utils/analytics"
-import { AppContext } from "@/utils/context"
 import errorHandler from "@/utils/errorHandler"
-import { useApps, useProfile } from "@/utils/supabaseHooks"
+import { useApps, useCurrentApp, useProfile } from "@/utils/supabaseHooks"
 import {
   Header,
   Anchor,
@@ -11,7 +10,6 @@ import {
   Text,
   Select,
   Textarea,
-  Modal,
   Popover,
 } from "@mantine/core"
 import { useForm } from "@mantine/form"
@@ -23,12 +21,11 @@ import {
   IconAnalyze,
   IconHelp,
   IconMessage,
-  IconStar,
   IconStarFilled,
 } from "@tabler/icons-react"
 
 import Link from "next/link"
-import { useContext, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 
 const sendMessage = async ({ message }) => {
   const currentPage = window.location.pathname
@@ -91,9 +88,7 @@ const Feedback = ({}) => {
 }
 
 export default function Navbar() {
-  const [opened, setOpened] = useState(null)
-
-  const { app, setApp } = useContext(AppContext)
+  const { app, setAppId } = useCurrentApp()
 
   const { apps, loading } = useApps()
 
@@ -112,7 +107,7 @@ export default function Navbar() {
   // Select first app if none selected
   useEffect(() => {
     if (!app && apps?.length && !loading) {
-      setApp(apps[0])
+      setAppId(apps[0].id)
     }
   }, [app, apps, loading])
 
@@ -132,7 +127,7 @@ export default function Navbar() {
               size="xs"
               placeholder="Select an app"
               value={app?.id}
-              onChange={(id) => setApp(apps.find((app) => app.id === id))}
+              onChange={(id) => setAppId(id)}
               data={apps.map((app) => ({ value: app.id, label: app.name }))}
             />
           )}
