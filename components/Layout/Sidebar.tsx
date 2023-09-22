@@ -19,14 +19,12 @@ import {
   IconUsers,
 } from "@tabler/icons-react"
 
-import { useSessionContext, useUser } from "@supabase/auth-helpers-react"
+import { useSessionContext } from "@supabase/auth-helpers-react"
 
 import Router, { useRouter } from "next/router"
 import { useProfile } from "@/utils/supabaseHooks"
 import UserAvatar from "@/components/Blocks/UserAvatar"
 import Link from "next/link"
-import { useContext } from "react"
-import { AppContext } from "@/utils/context"
 
 const menu = [
   { label: "Analytics", icon: IconGraph, link: "/analytics" },
@@ -61,8 +59,6 @@ export default function Sidebar() {
 
   const { profile } = useProfile()
 
-  const { app } = useContext(AppContext)
-
   const isActive = (link: string) => router.pathname === link
 
   const links = menu.map((item) => (
@@ -72,11 +68,9 @@ export default function Sidebar() {
   return (
     <Navbar height="calc(100vh - 45px)" width={{ base: 80 }} px="md" py="xl">
       <Navbar.Section grow>
-        {app && (
-          <Stack spacing="xl" align="center">
-            {links}
-          </Stack>
-        )}
+        <Stack spacing="xl" align="center">
+          {links}
+        </Stack>
       </Navbar.Section>
 
       {profile && (

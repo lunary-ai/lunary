@@ -21,6 +21,7 @@ import { useAppUser, useRuns } from "@/utils/supabaseHooks"
 import {
   Alert,
   Button,
+  Card,
   Drawer,
   Group,
   Loader,
@@ -108,37 +109,32 @@ const ChatReplay = ({ run }) => {
 
   return (
     <Stack>
-      <Table
-        withBorder
-        horizontalSpacing="md"
-        verticalSpacing="sm"
-        withColumnBorders
-      >
-        <thead>
-          <tr>
-            <th>User</th>
-            <td>
+      <Card withBorder>
+        <Stack spacing="xs">
+          <Group position="apart">
+            <Text>User</Text>
+            <Text>
               {user ? (
                 <AppUserAvatar size="sm" user={user} withName />
               ) : (
                 "Unknown"
               )}
-            </td>
-          </tr>
-          <tr>
-            <th>First message</th>
-            <td>{formatDateTime(run.created_at)}</td>
-          </tr>
-          <tr>
-            <th>Last message</th>
-            <td>{formatDateTime(run.ended_at)}</td>
-          </tr>
-          <tr>
-            <th>Messages</th>
-            <td>{messages?.length}</td>
-          </tr>
-        </thead>
-      </Table>
+            </Text>
+          </Group>
+          <Group position="apart">
+            <Text>First message</Text>
+            <Text>{formatDateTime(run.created_at)}</Text>
+          </Group>
+          <Group position="apart">
+            <Text>Last message</Text>
+            <Text>{formatDateTime(run.ended_at)}</Text>
+          </Group>
+          <Group position="apart">
+            <Text>Messages</Text>
+            <Text>{messages?.length}</Text>
+          </Group>
+        </Stack>
+      </Card>
       <Button
         variant="outline"
         onClick={() => {

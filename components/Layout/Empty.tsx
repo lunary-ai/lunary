@@ -10,8 +10,7 @@ import {
 } from "@mantine/core"
 import { IconBrandDiscord, IconMessage } from "@tabler/icons-react"
 import CopyText from "../Blocks/CopyText"
-import { useContext } from "react"
-import { AppContext } from "@/utils/context"
+import { useCurrentApp } from "@/utils/supabaseHooks"
 
 export default function Empty({
   what,
@@ -20,7 +19,7 @@ export default function Empty({
   what: string
   Icon?: React.ComponentType<any>
 }) {
-  const { app } = useContext(AppContext)
+  const { app } = useCurrentApp()
 
   return (
     <Center mih="70vh">

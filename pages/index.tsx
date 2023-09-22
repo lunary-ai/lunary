@@ -1,7 +1,7 @@
-import { useContext, useState } from "react"
+import { useState } from "react"
 import Link from "next/link"
 
-import { useApps } from "@/utils/supabaseHooks"
+import { useApps, useCurrentApp } from "@/utils/supabaseHooks"
 import {
   Anchor,
   Button,
@@ -22,14 +22,13 @@ import {
 import { IconCopy, IconCheck } from "@tabler/icons-react"
 import { useUser } from "@supabase/auth-helpers-react"
 
-import { AppContext } from "@/utils/context"
 import analytics from "@/utils/analytics"
 import { NextSeo } from "next-seo"
 
 export default function Home() {
   const [modalOpened, setModalOpened] = useState(false)
   const [newAppName, setNewAppName] = useState("")
-  const { setApp } = useContext(AppContext)
+  const { setAppId } = useCurrentApp()
 
   const { apps, insert, loading } = useApps()
   const user = useUser()
@@ -102,7 +101,7 @@ export default function Home() {
                   key={app.id}
                   component={Link}
                   onClick={() => {
-                    setApp(app)
+                    setAppId(app.id)
                   }}
                 >
                   <Title order={4}>{app.name}</Title>

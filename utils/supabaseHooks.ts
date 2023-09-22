@@ -1,15 +1,15 @@
 import {
   useDeleteMutation,
   useInsertMutation,
-  useOffsetInfiniteQuery,
   useOffsetInfiniteScrollQuery,
   useQuery,
+  useUpdateMutation,
 } from "@supabase-cache-helpers/postgrest-swr"
 
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
 import { useMantineTheme } from "@mantine/core"
 import { Database } from "./supaTypes"
-import { useContext, useEffect } from "react"
+import { useContext } from "react"
 import { calcRunCost } from "./calcCosts"
 import { AppContext } from "./context"
 
@@ -85,11 +85,27 @@ export function useApps() {
     "name,owner,id"
   )
 
+  const { trigger: update } = useUpdateMutation(
+    supabaseClient.from("app"),
+    ["id"],
+    "name,id"
+  )
+
   const { trigger: drop } = useDeleteMutation(supabaseClient.from("app"), [
     "id",
   ])
 
-  return { apps, loading: isLoading, insert, drop }
+  return { apps, loading: isLoading, insert, drop, update }
+}
+
+export function useCurrentApp() {
+  const { appId, setAppId } = useContext(AppContext)
+
+  const { apps, loading } = useApps()
+
+  const app = apps?.find((a) => a.id === appId)
+
+  return { app, setAppId, loading }
 }
 
 export function useRuns(
@@ -103,7 +119,7 @@ export function useRuns(
   } = {}
 ) {
   const supabaseClient = useSupabaseClient<Database>()
-  const { app } = useContext(AppContext)
+  const { appId } = useContext(AppContext)
 
   const { notInfinite, match, select, filter, not } = config
 
@@ -116,17 +132,19 @@ export function useRuns(
       ascending: false,
     })
     .eq("type", type)
-    .eq("app", app?.id)
+    .eq("app", appId)
 
   if (match) {
     query = query.match(match)
   }
 
   if (filter) {
+    // @ts-ignore
     query = query.filter(...filter)
   }
 
   if (not) {
+    // @ts-ignore
     query = query.not(...not)
   }
 
@@ -150,11 +168,11 @@ export function useRuns(
 
 export function useRunsUsage(range, user_id = undefined) {
   const supabaseClient = useSupabaseClient()
-  const { app } = useContext(AppContext)
+  const { appId } = useContext(AppContext)
 
   const { data: usage, isLoading } = useQuery(
     supabaseClient.rpc("get_runs_usage", {
-      app_id: app?.id,
+      app_id: appId,
       user_id,
       days: range,
     }),
@@ -166,11 +184,11 @@ export function useRunsUsage(range, user_id = undefined) {
 
 export function useRunsUsageByDay(range, user_id = undefined) {
   const supabaseClient = useSupabaseClient()
-  const { app } = useContext(AppContext)
+  const { appId } = useContext(AppContext)
 
   const { data: dailyUsage, isLoading } = useQuery(
     supabaseClient.rpc("get_runs_usage_daily", {
-      app_id: app?.id,
+      app_id: appId,
       user_id,
       days: range,
     }),
@@ -182,11 +200,11 @@ export function useRunsUsageByDay(range, user_id = undefined) {
 
 export function useRunsUsageByUser(range) {
   const supabaseClient = useSupabaseClient()
-  const { app } = useContext(AppContext)
+  const { appId } = useContext(AppContext)
 
   const { data: usageByUser, isLoading } = useQuery(
     supabaseClient.rpc("get_runs_usage_by_user", {
-      app_id: app?.id,
+      app_id: appId,
       days: range,
     }),
     hardOptions
@@ -250,7 +268,7 @@ export function useRelatedRuns(runId: string) {
 
 export function useAppUsers(usageRange = 30) {
   const supabaseClient = useSupabaseClient()
-  const { app } = useContext(AppContext)
+  const { appId } = useContext(AppContext)
 
   const maxLastSeen = new Date(
     new Date().getTime() - usageRange * 24 * 60 * 60 * 1000
@@ -262,7 +280,7 @@ export function useAppUsers(usageRange = 30) {
     supabaseClient
       .from("app_user")
       .select("id,app,external_id,created_at,last_seen,props")
-      .eq("app", app?.id)
+      .eq("app", appId)
       .gt("last_seen", maxLastSeen)
       .limit(100),
     softOptions

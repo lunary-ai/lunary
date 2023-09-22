@@ -1,7 +1,6 @@
 import CopyText from "@/components/Blocks/CopyText"
 import UserAvatar from "@/components/Blocks/UserAvatar"
-import { AppContext } from "@/utils/context"
-import { useApps, useProfile } from "@/utils/supabaseHooks"
+import { useApps, useCurrentApp, useProfile } from "@/utils/supabaseHooks"
 
 import {
   Alert,
@@ -10,31 +9,39 @@ import {
   Card,
   Center,
   Container,
+  FocusTrap,
   Group,
   Overlay,
   Popover,
   Stack,
   Table,
   Text,
+  TextInput,
   Title,
 } from "@mantine/core"
 import { modals } from "@mantine/modals"
 import {
   IconBrandOpenai,
-  IconCsv,
   IconDownload,
+  IconPencil,
   IconUserPlus,
 } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import Router from "next/router"
-import { useContext } from "react"
+import { useState } from "react"
 
 export default function AppAnalytics() {
-  const { app, setApp } = useContext(AppContext)
+  const { app, setAppId } = useCurrentApp()
+  const [focused, setFocused] = useState(false)
 
   const { profile } = useProfile()
 
-  const { drop } = useApps()
+  const { drop, update } = useApps()
+
+  const applyRename = (e) => {
+    setFocused(false)
+    update({ id: app.id, name: e.target.value })
+  }
 
   return (
     <Container>
@@ -43,7 +50,28 @@ export default function AppAnalytics() {
         <Stack>
           <Card withBorder p="lg">
             <Stack>
-              <Title order={3}>{app?.name}</Title>
+              {focused ? (
+                <FocusTrap>
+                  <TextInput
+                    defaultValue={app?.name}
+                    variant="unstyled"
+                    h={40}
+                    px={10}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") applyRename(e)
+                    }}
+                    onBlur={(e) => applyRename(e)}
+                  />
+                </FocusTrap>
+              ) : (
+                <Title
+                  order={3}
+                  onClick={() => setFocused(true)}
+                  style={{ cursor: "pointer" }}
+                >
+                  {app?.name} <IconPencil size={16} />
+                </Title>
+              )}
               <Text>
                 App ID for tracking: <CopyText value={app?.id} />
               </Text>
@@ -81,12 +109,12 @@ export default function AppAnalytics() {
                   <td>
                     <Group>
                       <UserAvatar profile={profile} />
-                      <Text>{profile.name}</Text>
+                      <Text>{profile?.name}</Text>
 
                       <Badge color="blue">You</Badge>
                     </Group>
                   </td>
-                  <td>{profile.email}</td>
+                  <td>{profile?.email}</td>
                   <td>Owner</td>
                 </tr>
               </tbody>
@@ -157,7 +185,7 @@ export default function AppAnalytics() {
                   color="red"
                   onClick={() => {
                     drop({ id: app.id })
-                    setApp(null)
+                    setAppId(null)
                     Router.push("/")
                   }}
                 >

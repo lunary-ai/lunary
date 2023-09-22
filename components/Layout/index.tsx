@@ -20,8 +20,8 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   const { session, isLoading } = useSessionContext()
 
-  const [app, setApp] = useLocalStorage({
-    key: "app",
+  const [appId, setAppId] = useLocalStorage({
+    key: "appId",
     defaultValue: null,
   })
 
@@ -37,12 +37,12 @@ export default function Layout({ children }: { children: ReactNode }) {
     <>
       <Notifications position="top-right" />
       <ModalsProvider modals={{ upgrade: UpgradeModal }}>
-        <AppContext.Provider value={{ app, setApp }}>
+        <AppContext.Provider value={{ appId, setAppId }}>
           <AppShell
             mih={"100vh"}
             padding={"xl"}
             header={!isAuthPage && <Navbar />}
-            navbar={!isAuthPage && app && <Sidebar />}
+            navbar={!isAuthPage && appId && <Sidebar />}
             sx={{ backgroundColor: "#fafafa" }}
           >
             {children}
