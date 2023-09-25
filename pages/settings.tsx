@@ -61,7 +61,7 @@ function Invite() {
       variant="light"
       onClick={() =>
         modals.openContextModal({
-          modal: "invite",
+          modal: "upgrade",
           size: 800,
           innerProps: {},
         })
