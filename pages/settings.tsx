@@ -37,6 +37,43 @@ import Router from "next/router"
 import { useState } from "react"
 import { Database } from "../utils/supaTypes"
 
+function Invite() {
+  const { team } = useTeam()
+  const { profile } = useProfile()
+
+  if (profile?.team_owner) {
+    return null
+  }
+
+  if (team?.plan === "pro") {
+    return (
+      <Text>
+        Invite link:{" "}
+        <CopyText
+          value={`https://app.llmonitor.com/join?team=${profile?.id}`}
+        />
+      </Text>
+    )
+  }
+
+  return (
+    <Button
+      variant="light"
+      onClick={() =>
+        modals.openContextModal({
+          modal: "invite",
+          size: 800,
+          innerProps: {},
+        })
+      }
+      sx={{ float: "right" }}
+      leftIcon={<IconUserPlus size={16} />}
+    >
+      Invite
+    </Button>
+  )
+}
+
 export default function AppAnalytics() {
   const { app, setAppId } = useCurrentApp()
   const [focused, setFocused] = useState(false)
@@ -96,29 +133,7 @@ export default function AppAnalytics() {
           <Card withBorder p={0}>
             <Group position="apart" align="center" p="lg">
               <Title order={3}>Team</Title>
-              {team?.plan === "pro" ? (
-                <Text>
-                  Invite link:{" "}
-                  <CopyText
-                    value={`https://app.llmonitor.com/join?team=${profile?.id}`}
-                  />
-                </Text>
-              ) : (
-                <Button
-                  variant="light"
-                  onClick={() =>
-                    modals.openContextModal({
-                      modal: "invite",
-                      size: 800,
-                      innerProps: {},
-                    })
-                  }
-                  sx={{ float: "right" }}
-                  leftIcon={<IconUserPlus size={16} />}
-                >
-                  Invite
-                </Button>
-              )}
+              <Invite />
             </Group>
 
             <Table striped verticalSpacing="lg" horizontalSpacing="lg">
