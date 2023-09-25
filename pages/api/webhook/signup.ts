@@ -18,7 +18,7 @@ export default async function handler(req: NextRequest) {
   const {
     email,
     id,
-    raw_user_meta_data: { projectName, name },
+    raw_user_meta_data: { projectName, name, teamOwner },
   } = record
 
   // create profile
@@ -28,6 +28,7 @@ export default async function handler(req: NextRequest) {
       id,
       email,
       name,
+      team_owner: teamOwner,
     },
   ])
 

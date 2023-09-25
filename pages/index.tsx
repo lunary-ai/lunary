@@ -1,7 +1,7 @@
 import { useState } from "react"
 import Link from "next/link"
 
-import { useApps, useCurrentApp } from "@/utils/supabaseHooks"
+import { useApps, useCurrentApp, useProfile } from "@/utils/supabaseHooks"
 import {
   Anchor,
   Button,
@@ -32,6 +32,7 @@ export default function Home() {
 
   const { apps, insert, loading } = useApps()
   const user = useUser()
+  const { profile } = useProfile()
 
   const createApp = async () => {
     await insert([{ name: newAppName, owner: user.id }])
@@ -84,13 +85,15 @@ export default function Home() {
         <>
           <Group>
             <Title order={3}>Your Apps</Title>
-            <Button
-              onClick={() => {
-                setModalOpened(true)
-              }}
-            >
-              + New app
-            </Button>
+            {!profile?.team_owner && (
+              <Button
+                onClick={() => {
+                  setModalOpened(true)
+                }}
+              >
+                + New app
+              </Button>
+            )}
           </Group>
 
           <Stack>

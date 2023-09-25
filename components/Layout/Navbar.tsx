@@ -1,16 +1,16 @@
 import analytics from "@/utils/analytics"
 import errorHandler from "@/utils/errorHandler"
-import { useApps, useCurrentApp, useProfile } from "@/utils/supabaseHooks"
+import { useApps, useCurrentApp, useTeam } from "@/utils/supabaseHooks"
 import {
-  Header,
   Anchor,
   Button,
   Flex,
   Group,
-  Text,
-  Select,
-  Textarea,
+  Header,
   Popover,
+  Select,
+  Text,
+  Textarea,
 } from "@mantine/core"
 import { useForm } from "@mantine/form"
 import { modals } from "@mantine/modals"
@@ -93,7 +93,7 @@ export default function Navbar() {
   const { apps, loading } = useApps()
 
   const user = useUser()
-  const { profile } = useProfile()
+  const { team } = useTeam()
 
   useEffect(() => {
     if (user) {
@@ -152,7 +152,7 @@ export default function Navbar() {
             </Popover.Dropdown>
           </Popover>
 
-          {profile?.plan === "free" && (
+          {team?.plan === "free" && (
             <Button
               onClick={() =>
                 modals.openContextModal({
