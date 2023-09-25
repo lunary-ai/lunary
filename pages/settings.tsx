@@ -91,6 +91,7 @@ export default function AppAnalytics() {
                 }
                 sx={{ float: "right" }}
                 leftIcon={<IconUserPlus size={16} />}
+                disabled
               >
                 Invite
               </Button>
