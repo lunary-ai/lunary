@@ -56,7 +56,7 @@ export const useProfile = () => {
     user
       ? supabaseClient
           .from("profile")
-          .select("id,email,name,updated_at,plan")
+          .select("id,email,name,updated_at,plan,team_owner")
           .match({ id: user?.id })
           .single()
       : null,
@@ -71,11 +71,58 @@ export const useProfile = () => {
   return { profile, loading: isLoading }
 }
 
+export const useTeam = () => {
+  const supabaseClient = useSupabaseClient<Database>()
+  const { profile: user } = useProfile()
+  const theme = useMantineTheme()
+
+  const ownerId = user?.team_owner || user?.id
+  const { data, isLoading } = useQuery(
+    user
+      ? supabaseClient
+          .from("profile")
+          .select("*")
+          .or(`id.eq.${ownerId},team_owner.eq.${ownerId}`)
+      : null,
+    hardOptions
+  )
+
+  const users = data
+    ?.map((user) => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.team_owner ? "Member" : "Owner",
+      plan: user.plan,
+      color: getUserColor(theme, user.id),
+    }))
+    .sort((a, b) => {
+      if (a.role === "Owner" && b.role === "Member") return -1
+      if (a.role === "Member" && b.role === "Owner") return 1
+      return 0
+    })
+
+  const team = {
+    plan: users && users[0].plan,
+    users,
+  }
+
+  return { team, loading: isLoading }
+}
+
 export function useApps() {
   const supabaseClient = useSupabaseClient<Database>()
+  const { team } = useTeam()
+
+  const owner = team?.users && team.users[0]
 
   const { data: apps, isLoading } = useQuery(
-    supabaseClient.from("app").select("name,owner,id"),
+    owner?.id
+      ? supabaseClient
+          .from("app")
+          .select("name,owner,id")
+          .match({ owner: owner.id })
+      : null,
     softOptions
   )
 
