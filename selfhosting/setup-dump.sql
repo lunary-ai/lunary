@@ -198,8 +198,9 @@ BEGIN
         run.created_at >= NOW() - INTERVAL '1 day' * days AND
         (user_id IS NULL OR run.user = user_id)  AND
     	(run.type != 'agent' OR run.parent_run IS NULL)
-GROUP BY
-        run.name, run.type;
+    GROUP BY
+            run.name, run.type;
+END; $function$
 
 
 CREATE OR REPLACE FUNCTION public.get_runs_usage_daily(app_id uuid, days integer, user_id integer DEFAULT NULL)
