@@ -54,6 +54,11 @@ export default function AppAnalytics() {
     update({ id: app.id, name: e.target.value })
   }
 
+  const inviteHandler = () => {
+    if (team.plan === "pro") {
+    }
+  }
+
   return (
     <Container>
       <Stack>
@@ -91,20 +96,29 @@ export default function AppAnalytics() {
           <Card withBorder p={0}>
             <Group position="apart" align="center" p="lg">
               <Title order={3}>Team</Title>
-              <Button
-                variant="light"
-                onClick={() =>
-                  modals.openContextModal({
-                    modal: "upgrade",
-                    size: 800,
-                    innerProps: {},
-                  })
-                }
-                sx={{ float: "right" }}
-                leftIcon={<IconUserPlus size={16} />}
-              >
-                Invite
-              </Button>
+              {team?.plan === "pro" ? (
+                <Text>
+                  Invite link:{" "}
+                  <CopyText
+                    value={`https://app.llmonitor.com/join?team=${profile?.id}`}
+                  />
+                </Text>
+              ) : (
+                <Button
+                  variant="light"
+                  onClick={() =>
+                    modals.openContextModal({
+                      modal: "invite",
+                      size: 800,
+                      innerProps: {},
+                    })
+                  }
+                  sx={{ float: "right" }}
+                  leftIcon={<IconUserPlus size={16} />}
+                >
+                  Invite
+                </Button>
+              )}
             </Group>
 
             <Table striped verticalSpacing="lg" horizontalSpacing="lg">
