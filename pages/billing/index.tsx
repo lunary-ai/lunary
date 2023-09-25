@@ -45,6 +45,8 @@ export default function Billing() {
 
   const percent = (usage / 30000) * 100
 
+  const seatAllowance = team?.plan === "free" ? 1 : 5
+
   return (
     <Container>
       <NextSeo title="Billing" />
@@ -106,9 +108,14 @@ export default function Billing() {
               Seat Allowance
             </Text>
             <Text fz="lg" fw={500}>
-              1 / 1 users
+              1 / {seatAllowance} users
             </Text>
-            <Progress value={100} size="lg" color="orange" radius="xl" />
+            <Progress
+              value={(team?.users?.length / seatAllowance) * 100}
+              size="lg"
+              color="orange"
+              radius="xl"
+            />
           </Stack>
         </Card>
       </Stack>
