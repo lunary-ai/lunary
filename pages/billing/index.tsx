@@ -35,7 +35,6 @@ export default function Billing() {
           new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
         )
         .then(({ count }) => {
-          console.log(count)
           setUsage(count)
         })
     }
@@ -85,22 +84,24 @@ export default function Billing() {
           </>
         )}
 
-        <Card withBorder radius="md" padding="xl">
-          <Stack spacing="sm">
-            <Text fz="md" fw={700} c="dimmed">
-              Monthly Requests Allowance
-            </Text>
-            <Text fz="lg" fw={500}>
-              {formatLargeNumber(usage)} / {formatLargeNumber(30000)} requests
-            </Text>
-            <Progress
-              value={percent}
-              size="lg"
-              radius="xl"
-              color={percent > 99 ? "red" : "blue"}
-            />
-          </Stack>
-        </Card>
+        {team.plan === "free" && (
+          <Card withBorder radius="md" padding="xl">
+            <Stack spacing="sm">
+              <Text fz="md" fw={700} c="dimmed">
+                Monthly Requests Allowance
+              </Text>
+              <Text fz="lg" fw={500}>
+                {formatLargeNumber(usage)} / {formatLargeNumber(30000)} requests
+              </Text>
+              <Progress
+                value={percent}
+                size="lg"
+                radius="xl"
+                color={percent > 99 ? "red" : "blue"}
+              />
+            </Stack>
+          </Card>
+        )}
 
         <Card withBorder radius="md" padding="xl">
           <Stack spacing="sm">
@@ -108,7 +109,7 @@ export default function Billing() {
               Seat Allowance
             </Text>
             <Text fz="lg" fw={500}>
-              1 / {seatAllowance} users
+              {team?.users?.length} / {seatAllowance} users
             </Text>
             <Progress
               value={(team?.users?.length / seatAllowance) * 100}
