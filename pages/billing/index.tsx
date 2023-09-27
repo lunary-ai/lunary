@@ -35,7 +35,6 @@ export default function Billing() {
           new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
         )
         .then(({ count }) => {
-          console.log(count)
           setUsage(count)
         })
     }
@@ -109,7 +108,7 @@ export default function Billing() {
               Seat Allowance
             </Text>
             <Text fz="lg" fw={500}>
-              1 / {seatAllowance} users
+              {team?.users?.length} / {seatAllowance} users
             </Text>
             <Progress
               value={(team?.users?.length / seatAllowance) * 100}
