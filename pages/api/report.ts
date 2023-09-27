@@ -111,6 +111,8 @@ const registerRunEvent = async (
     error,
   } = event
 
+  let parentRunIdToUse = parentRunId
+
   const table = supabaseAdmin.from("run")
   let query = null
 
@@ -136,13 +138,17 @@ const registerRunEvent = async (
     internalUserId = data.id
   }
 
-  if (eventName === "start" && parentRunId && !insertedIds.has(parentRunId)) {
+  if (
+    eventName === "start" &&
+    parentRunIdToUse &&
+    !insertedIds.has(parentRunIdToUse)
+  ) {
     // Check if parent run exists (only necessary if we haven't just inserted it)
 
     const { data, error } = await supabaseAdmin
       .from("run")
       .select("user")
-      .match({ id: parentRunId })
+      .match({ id: parentRunIdToUse })
       .single()
 
     if (error) {
@@ -153,13 +159,18 @@ const registerRunEvent = async (
 
       console.error(`Error getting parent run user: ${error.message}`)
 
-      if (!allowRetry) throw error
+      if (allowRetry) {
+        console.log(
+          "Retrying insertion in 2s in case parent not inserted yet..."
+        )
 
-      console.log("Retrying insertion in 2s in case parent not inserted yet...")
+        await new Promise((resolve) => setTimeout(resolve, 2000))
 
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      return await registerRunEvent(event, insertedIds, false)
+        return await registerRunEvent(event, insertedIds, false)
+      } else {
+        // Prevent foreign key constraint error
+        parentRunIdToUse = null
+      }
     }
 
     // This allow user id to correctly cascade to childs runs if for example it's set on the frontend and not passed to the backend
@@ -180,7 +191,7 @@ const registerRunEvent = async (
         name,
         status: "started",
         params: extra,
-        parent_run: parentRunId,
+        parent_run: parentRunIdToUse,
         input,
       })
 
