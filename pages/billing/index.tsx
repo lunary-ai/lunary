@@ -43,7 +43,7 @@ export default function Billing() {
 
   if (loading) return <Loader />
 
-  const percent = (usage / 30000) * 100
+  const percent = team?.plan === "pro" ? (usage / 30000) * 100 : 1
 
   const seatAllowance = team?.plan === "free" ? 1 : 5
 
@@ -91,7 +91,8 @@ export default function Billing() {
               Monthly Requests Allowance
             </Text>
             <Text fz="lg" fw={500}>
-              {formatLargeNumber(usage)} / {formatLargeNumber(30000)} requests
+              {formatLargeNumber(usage)} /{" "}
+              {team?.plan === "free" ? formatLargeNumber(30000) : "∞"} requests
             </Text>
             <Progress
               value={percent}
