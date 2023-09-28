@@ -50,7 +50,7 @@ function Invite() {
       <Text>
         Invite link:{" "}
         <CopyText
-          value={`https://app.llmonitor.com/join?team=${profile?.id}`}
+          value={`${window.location.origin}/join?team=${profile?.id}`}
         />
       </Text>
     )
