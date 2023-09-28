@@ -46,6 +46,9 @@ function Invite() {
   }
 
   if (team?.plan === "pro") {
+    if (team.users.length === 5) {
+      return <Badge color="orange">Seat allowance exceeded</Badge>
+    }
     return (
       <Text>
         Invite link:{" "}
