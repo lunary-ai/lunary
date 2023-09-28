@@ -59,7 +59,7 @@ export default function Sidebar() {
 
   const { profile } = useProfile()
 
-  const isActive = (link: string) => router.pathname === link
+  const isActive = (link: string) => router.pathname.startsWith(link)
 
   const links = menu.map((item) => (
     <NavbarLink {...item} active={isActive(item.link)} key={item.label} />
