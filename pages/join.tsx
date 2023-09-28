@@ -3,6 +3,7 @@ import {
   Anchor,
   Button,
   Container,
+  Flex,
   Group,
   Paper,
   PasswordInput,
@@ -33,7 +34,49 @@ import analytics from "@/utils/analytics"
 import { NextSeo } from "next-seo"
 import { notifications } from "@mantine/notifications"
 import Confetti from "react-confetti"
-export default function Join() {
+import { supabaseAdmin } from "../lib/supabaseClient"
+
+export async function getServerSideProps(context) {
+  const teamOwnerId = context.query.team
+  const { count } = await supabaseAdmin
+    .from("profile")
+    .select("*", { count: "exact", head: true })
+    .match({ team_owner: teamOwnerId })
+
+  return { props: { teamSize: count + 1 } }
+}
+
+function TeamFull({ owner }) {
+  return (
+    <Container py={100} size={600}>
+      <NextSeo title="Signup" />
+      <Stack align="center" spacing={30}>
+        <IconAnalyze color={"#206dce"} size={60} />
+        <Title order={2} weight={700} size={40} ta="center">
+          Sorry, {owner}'s team is full
+        </Title>
+
+        <Flex align="center" gap={30}>
+          <Button size="md" onClick={() => Router.push("/")}>
+            Go back home
+          </Button>
+          <Anchor
+            component="button"
+            type="button"
+            onClick={() => {
+              try {
+                window._gs("chat", "show")
+              } catch (e) {}
+            }}
+          >
+            Contact support →
+          </Anchor>
+        </Flex>
+      </Stack>
+    </Container>
+  )
+}
+export default function Join({ teamSize }) {
   const searchParams = useSearchParams()
   const ownerId = searchParams.get("team")
 
@@ -46,6 +89,7 @@ export default function Join() {
 
   useEffect(() => {
     if (ownerId) {
+      // TODO: server side
       supabaseClient
         .from("profile")
         .select("name")
@@ -137,9 +181,14 @@ export default function Join() {
     setStep(step + 1)
   }
 
+  if (teamSize === 5) {
+    return <TeamFull owner={owner} />
+  }
+
   return (
     <Container py={100} size={600}>
-      <NextSeo title="Login" />
+      <NextSeo title="Join" />
+
       <Stack align="center" spacing={50}>
         <Stack align="center">
           <IconAnalyze color={"#206dce"} size={60} />
