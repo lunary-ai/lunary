@@ -40,3 +40,37 @@ Thanks
 Vince`,
   }
 }
+
+export const UPGRADE_EMAIL = (email: string, name: string) => {
+  return {
+    subject: `welcome to llmonitor pro`,
+    to: [email],
+    from: process.env.GENERIC_SENDER,
+    text: `Hi ${extractFirstName(name)},
+
+Your account has been upgraded to the pro plan.
+
+The extra features and higher limits are now available to you.
+
+Reply to this email if you have any question.
+
+The LLMonitor team`,
+  }
+}
+
+export const CANCELED_EMAIL = (email: string, name: string) => {
+  return {
+    subject: `sorry to see you go`,
+    to: [email],
+    from: process.env.GENERIC_SENDER,
+    text: `Hi ${extractFirstName(name)},
+
+Your account has been downgraded to the free plan.
+
+We're sorry to see you go.
+
+Would you mind telling us why you canceled? We're always looking to improve.
+
+Thank you for trying LLMonitor.`,
+  }
+}

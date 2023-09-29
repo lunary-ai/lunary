@@ -1,33 +1,28 @@
 import analytics from "@/utils/analytics"
 
 import { ContextModalProps } from "@mantine/modals"
-import { IconAnalyze, IconCheck, IconCircleCheck } from "@tabler/icons-react"
+import { IconAnalyze, IconCircleCheck } from "@tabler/icons-react"
 
 import {
-  Anchor,
   Badge,
-  Box,
   Button,
   Card,
-  Container,
-  Grid,
   Group,
   List,
   Mark,
-  Paper,
-  PasswordInput,
   SimpleGrid,
   Stack,
   Text,
-  TextInput,
   ThemeIcon,
   Title,
 } from "@mantine/core"
 
-import Script from "next/script"
 import { useEffect } from "react"
+import { useTeam } from "@/utils/supabaseHooks"
 
 export const UpgradeBody = () => {
+  const { team } = useTeam()
+
   return (
     <>
       <Stack align="center" ta="center">
@@ -61,7 +56,7 @@ export const UpgradeBody = () => {
             >
               Pro
             </Text>
-            <Badge variant="outline">-60%</Badge>
+            <Badge variant="outline">-30%</Badge>
           </Group>
 
           <Group my={20} align="center" spacing={10}>
@@ -69,7 +64,7 @@ export const UpgradeBody = () => {
               <Text span td="line-through" size={20}>
                 $69
               </Text>
-              {` 29$`}
+              {` 49$`}
               <Text span size={20}>
                 / mo
               </Text>
@@ -93,7 +88,7 @@ export const UpgradeBody = () => {
 
           <Button
             size="md"
-            href="https://buy.stripe.com/00gdSVbFdaLY5qMfYZ?prefilled_promo_code=BETA40"
+            href={`https://buy.stripe.com/00gdSVbFdaLY5qMfYZ?prefilled_promo_code=BETA20&client_reference_id=${team?.id}`}
             fullWidth
             component="a"
             variant="gradient"
@@ -101,7 +96,7 @@ export const UpgradeBody = () => {
             color="violet"
             mt={40}
           >
-            Claim -60% forever
+            Claim -30% forever
           </Button>
         </Card>
         <Card p="xl" withBorder>
@@ -146,7 +141,7 @@ export const UpgradeBody = () => {
           <Button
             size="md"
             component="a"
-            href="https://buy.stripe.com/14k02538HcU6g5q7su?prefilled_promo_code=BETALIFETIME"
+            href={`https://buy.stripe.com/14k02538HcU6g5q7su?prefilled_promo_code=BETALIFETIME&client_reference_id=${team?.ownerId}`}
             target="_blank"
             fullWidth
             variant="gradient"
