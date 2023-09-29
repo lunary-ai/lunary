@@ -88,7 +88,7 @@ export const UpgradeBody = () => {
 
           <Button
             size="md"
-            href={`https://buy.stripe.com/00gdSVbFdaLY5qMfYZ?prefilled_promo_code=BETA20&client_reference_id=${team?.id}`}
+            href={`${process.env.NEXT_PUBLIC_STRIPE_PRO_LINK}&client_reference_id=${team?.id}`}
             fullWidth
             component="a"
             variant="gradient"
@@ -141,7 +141,7 @@ export const UpgradeBody = () => {
           <Button
             size="md"
             component="a"
-            href={`https://buy.stripe.com/14k02538HcU6g5q7su?prefilled_promo_code=BETALIFETIME&client_reference_id=${team?.ownerId}`}
+            href={`${process.env.NEXT_PUBLIC_STRIPE_PRO_LINK}&client_reference_id=${team?.id}`}
             target="_blank"
             fullWidth
             variant="gradient"

@@ -92,6 +92,7 @@ export const useTeam = () => {
       id: user.id,
       name: user.name,
       email: user.email,
+      stripe_customer: user.stripe_customer,
       role: user.team_owner ? "Member" : "Owner",
       plan: user.plan,
       color: getUserColor(theme, user.id),

@@ -1,4 +1,4 @@
-import { headers } from "next/headers"
+import { buffer } from "micro"
 import { supabaseAdmin } from "@/lib/supabaseClient"
 import { sendEmail } from "@/lib/sendEmail"
 import { CANCELED_EMAIL, UPGRADE_EMAIL } from "@/lib/emails"
@@ -6,11 +6,19 @@ import { sendTelegramMessage } from "@/lib/notifications"
 import Stripe from "stripe"
 import stripe from "@/lib/stripe"
 
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+}
+
 // Webhook for subscription start, update profile plan to 'pro' & send email
 // Webhook for subscription end, update profile plan to 'free'
 
 const setupSubscription = async (object) => {
   const { customer, client_reference_id, email, mode, subscription } = object
+
+  console.log(`🔥 setupSubscription: ${JSON.stringify(object)}`)
 
   if (mode !== "subscription") return
 
@@ -22,7 +30,7 @@ const setupSubscription = async (object) => {
       plan: "pro",
     })
     .eq("id", client_reference_id)
-    .select("name")
+    .select("name,email")
     .single()
 
   if (error) {
@@ -37,6 +45,8 @@ const setupSubscription = async (object) => {
 }
 
 const cancelSubscription = async (object) => {
+  console.log(`🔥 cancelSubscription: ${JSON.stringify(object)}`)
+
   const { customer } = object
 
   const { error, data } = await supabaseAdmin
@@ -59,18 +69,25 @@ const cancelSubscription = async (object) => {
   await sendTelegramMessage(`<b>😭💔 ${email} just canceled</b>`)
 }
 
-export async function POST(req: Request) {
-  const body = await req.text()
-  const sig = headers().get("Stripe-Signature") as string
+export default async function StripeWebhook(req, res) {
+  const buf = await buffer(req)
+  const sig = req.headers["stripe-signature"]
+
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
   let event: Stripe.Event
 
+  if (req.method !== "POST") {
+    res.setHeader("Allow", "POST")
+    res.status(405).end("Method Not Allowed")
+    return
+  }
+
   try {
     if (!sig || !webhookSecret) return
-    event = stripe.webhooks.constructEvent(body, sig, webhookSecret)
+    event = stripe.webhooks.constructEvent(buf, sig, webhookSecret)
   } catch (err: any) {
     console.log(`❌ Error message: ${err.message}`)
-    return new Response(`Webhook Error: ${err.message}`, { status: 400 })
+    return res.status(400).send(`Webhook Error: ${err.message}`)
   }
 
   try {
@@ -88,11 +105,9 @@ export async function POST(req: Request) {
         console.warn(`Unhandled event type ${event.type}`)
     }
   } catch (error) {
-    console.log(error)
-    return new Response("Webhook handler failed. View logs.", {
-      status: 400,
-    })
+    console.error(error)
+    return res.status(400).send(`Webhook Error: ${error.message}`)
   }
 
-  return new Response(JSON.stringify({ received: true }))
+  res.json({ received: true })
 }
