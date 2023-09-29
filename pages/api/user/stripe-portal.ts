@@ -10,8 +10,13 @@ export default async function handler(req: NextRequest) {
 
   const session = await stripe.billingPortal.sessions.create({
     customer,
-    return_url: origin,
+    return_url: origin + "/billing",
   })
 
-  return NextResponse.redirect(session.url)
+  return new NextResponse(JSON.stringify({ url: session.url }), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
 }

@@ -48,7 +48,28 @@ export default function Billing() {
 
   if (loading) return <Loader />
 
+  console.log(team)
+
   const percent = team?.plan === "pro" ? (usage / 30000) * 100 : 1
+
+  const redirectToCustomerPortal = async () => {
+    const body = await fetch("/api/user/stripe-portal", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        customer: team.stripe_customer,
+        origin: window.location.origin,
+      }),
+    })
+
+    const { url } = await body.json()
+
+    // redirect to stripe portal
+
+    window.location.href = url
+  }
 
   return (
     <Container>
@@ -72,7 +93,7 @@ export default function Billing() {
                     title="Allowance Reached"
                   >
                     You have reached your monthly request allowance. Please
-                    upgrade to keep access to your data.
+                    upgrade to keep your data from being deleted.
                   </Alert>
                 )}
                 <Button
@@ -93,7 +114,7 @@ export default function Billing() {
             <Card withBorder radius="md" padding="xl">
               <Stack spacing="sm">
                 <Text fz="md" fw={700} c="dimmed">
-                  Monthly Requests Allowance
+                  Monthly Usage
                 </Text>
                 <Text fz="lg" fw={500}>
                   {formatLargeNumber(usage)} /{" "}
@@ -127,15 +148,14 @@ export default function Billing() {
             </Card>
 
             {team.stripe_customer && (
-              <Card>
-                <Title order={3}>Manage billing</Title>
+              <Card withBorder radius="md" padding="xl">
+                <Title order={3} mb="lg">
+                  Customer Portal
+                </Title>
 
-                <form
-                  method="post"
-                  action={`/api/user/stripe-portal?customer=${team.stripe_customer}`}
-                >
-                  <Button type="submit">Customer portal</Button>
-                </form>
+                <Button size="sm" onClick={redirectToCustomerPortal}>
+                  Manage Billing
+                </Button>
               </Card>
             )}
           </>

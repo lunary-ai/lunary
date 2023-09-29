@@ -30,6 +30,7 @@
     "eslint": "8.40.0",
     "eslint-config-next": "13.4.2",
     "js-tiktoken": "^1.0.7",
+    "micro": "^10.0.1",
     "next": "^13.4.13",
     "next-plausible": "^3.11.1",
     "next-seo": "^6.1.0",
