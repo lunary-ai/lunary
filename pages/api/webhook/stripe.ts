@@ -16,9 +16,7 @@ export const config = {
 // Webhook for subscription end, update profile plan to 'free'
 
 const setupSubscription = async (object) => {
-  const { customer, client_reference_id, email, mode, subscription } = object
-
-  console.log(`🔥 setupSubscription: ${JSON.stringify(object)}`)
+  const { customer, client_reference_id, mode, subscription } = object
 
   if (mode !== "subscription") return
 
@@ -33,11 +31,13 @@ const setupSubscription = async (object) => {
     .select("name,email")
     .single()
 
+  console.log(data)
+
   if (error) {
     throw error
   }
 
-  const { name } = data
+  const { name, email } = data
 
   await sendEmail(UPGRADE_EMAIL(email, name))
 
