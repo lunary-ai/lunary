@@ -102,8 +102,12 @@ export const useTeam = () => {
       return 0
     })
 
+  const owner = users?.find((u) => u.id === ownerId)
+
   const team = {
-    plan: users && users[0].plan,
+    id: owner?.id,
+    stripe_customer: owner?.stripe_customer,
+    plan: owner?.plan,
     users,
   }
 

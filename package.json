@@ -39,6 +39,7 @@
     "react-dom": "18.2.0",
     "react-json-view-lite": "^0.9.8",
     "recharts": "^2.7.3",
+    "stripe": "^13.7.0",
     "typescript": "5.1.6"
   },
   "prettier": {

@@ -18,6 +18,12 @@ import { IconInfoTriangle } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { useEffect, useState } from "react"
 
+const seatAllowance = {
+  free: 1,
+  pro: 5,
+  custom: 100,
+}
+
 export default function Billing() {
   const { team, loading } = useTeam()
   const supabaseClient = useSupabaseClient()
@@ -44,80 +50,96 @@ export default function Billing() {
 
   const percent = team?.plan === "pro" ? (usage / 30000) * 100 : 1
 
-  const seatAllowance = team?.plan === "free" ? 1 : 5
-
   return (
     <Container>
       <NextSeo title="Billing" />
       <Stack>
         <Title>Billing</Title>
 
-        <Text size="lg">
-          You are currently on the <Badge>{team?.plan}</Badge> plan.
-        </Text>
-
-        {team?.plan === "free" && (
+        {team && (
           <>
-            {percent > 99 && (
-              <Alert
-                color="red"
-                variant="outline"
-                icon={<IconInfoTriangle />}
-                title="Allowance Reached"
-              >
-                You have reached your monthly request allowance. Please upgrade
-                to keep access to your data.
-              </Alert>
+            <Text size="lg">
+              You are currently on the <Badge>{team.plan}</Badge> plan.
+            </Text>
+
+            {team.plan === "free" && (
+              <>
+                {percent > 99 && (
+                  <Alert
+                    color="red"
+                    variant="outline"
+                    icon={<IconInfoTriangle />}
+                    title="Allowance Reached"
+                  >
+                    You have reached your monthly request allowance. Please
+                    upgrade to keep access to your data.
+                  </Alert>
+                )}
+                <Button
+                  onClick={() =>
+                    modals.openContextModal({
+                      modal: "upgrade",
+                      size: 800,
+                      innerProps: {},
+                    })
+                  }
+                  w={300}
+                >
+                  Upgrade to Pro
+                </Button>
+              </>
             )}
-            <Button
-              onClick={() =>
-                modals.openContextModal({
-                  modal: "upgrade",
-                  size: 800,
-                  innerProps: {},
-                })
-              }
-              w={300}
-            >
-              Upgrade to Pro
-            </Button>
+
+            <Card withBorder radius="md" padding="xl">
+              <Stack spacing="sm">
+                <Text fz="md" fw={700} c="dimmed">
+                  Monthly Requests Allowance
+                </Text>
+                <Text fz="lg" fw={500}>
+                  {formatLargeNumber(usage)} /{" "}
+                  {team.plan === "free" ? formatLargeNumber(30000) : "∞"}{" "}
+                  requests
+                </Text>
+                <Progress
+                  value={percent}
+                  size="lg"
+                  radius="xl"
+                  color={percent > 99 ? "red" : "blue"}
+                />
+              </Stack>
+            </Card>
+
+            <Card withBorder radius="md" padding="xl">
+              <Stack spacing="sm">
+                <Text fz="md" fw={700} c="dimmed">
+                  Seat Allowance
+                </Text>
+                <Text fz="lg" fw={500}>
+                  {team.users?.length} / {seatAllowance[team.plan]} users
+                </Text>
+                <Progress
+                  value={(team.users?.length / seatAllowance[team.plan]) * 100}
+                  size="lg"
+                  color="orange"
+                  radius="xl"
+                />
+              </Stack>
+            </Card>
+
+            {team.stripe_customer && (
+              <Card>
+                <Title order={3}>Manage billing</Title>
+
+                <form
+                  method="post"
+                  action={`/api/user/stripe-portal?customer=${team.stripe_customer}`}
+                >
+                  <Button type="submit">Customer portal</Button>
+                </form>
+              </Card>
+            )}
           </>
         )}
-
-        <Card withBorder radius="md" padding="xl">
-          <Stack spacing="sm">
-            <Text fz="md" fw={700} c="dimmed">
-              Monthly Requests Allowance
-            </Text>
-            <Text fz="lg" fw={500}>
-              {formatLargeNumber(usage)} /{" "}
-              {team?.plan === "free" ? formatLargeNumber(30000) : "∞"} requests
-            </Text>
-            <Progress
-              value={percent}
-              size="lg"
-              radius="xl"
-              color={percent > 99 ? "red" : "blue"}
-            />
-          </Stack>
-        </Card>
-
-        <Card withBorder radius="md" padding="xl">
-          <Stack spacing="sm">
-            <Text fz="md" fw={700} c="dimmed">
-              Seat Allowance
-            </Text>
-            <Text fz="lg" fw={500}>
-              {team?.users?.length} / {seatAllowance} users
-            </Text>
-            <Progress
-              value={(team?.users?.length / seatAllowance) * 100}
-              size="lg"
-              color="orange"
-              radius="xl"
-            />
-          </Stack>
-        </Card>
       </Stack>
     </Container>
   )
