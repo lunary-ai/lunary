@@ -36,6 +36,7 @@ export default function Empty({
             size="lg"
             variant="outline"
             component="a"
+            target="_blank"
             href="https://llmonitor.com/docs/"
           >
             Documentation &rarr;
