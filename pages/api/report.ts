@@ -299,7 +299,7 @@ export default async function handler(req: NextRequest) {
   for (const event of sorted) {
     try {
       const cleanedEvent = await cleanEvent(event)
-      // console.log(cleanedEvent)
+
       await registerEvent(cleanedEvent, insertedIds)
     } catch (e: any) {
       console.error(`Error ingesting event.`)

@@ -1,5 +1,4 @@
 import analytics from "@/utils/analytics"
-import errorHandler from "@/utils/errorHandler"
 import { useApps, useCurrentApp, useTeam } from "@/utils/supabaseHooks"
 import {
   Anchor,
@@ -7,14 +6,10 @@ import {
   Flex,
   Group,
   Header,
-  Popover,
   Select,
   Text,
-  Textarea,
 } from "@mantine/core"
-import { useForm } from "@mantine/form"
 import { modals } from "@mantine/modals"
-import { notifications } from "@mantine/notifications"
 import { useUser } from "@supabase/auth-helpers-react"
 
 import {
@@ -25,67 +20,8 @@ import {
 } from "@tabler/icons-react"
 
 import Link from "next/link"
-import { useEffect, useState } from "react"
-
-const sendMessage = async ({ message }) => {
-  const currentPage = window.location.pathname
-
-  return await errorHandler(
-    fetch("/api/user/feedback", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message, currentPage }),
-    })
-  )
-}
-
-const Feedback = ({}) => {
-  const [loading, setLoading] = useState(false)
-
-  const form = useForm({
-    initialValues: {
-      feedback: "",
-    },
-
-    validate: {
-      feedback: (value) =>
-        value.trim().length > 5 ? null : "Tell us a bit more",
-    },
-  })
-
-  const send = async ({ feedback }) => {
-    setLoading(true)
-
-    const ok = await sendMessage({ message: feedback })
-
-    setLoading(false)
-
-    if (ok) {
-      notifications.show({
-        title: "Feedback sent",
-        message: "Thank you for your feedback! We will get back to you soon.",
-        color: "blue",
-      })
-    }
-  }
-
-  return (
-    <form onSubmit={form.onSubmit(send)}>
-      <Textarea
-        placeholder="What can we do better?"
-        inputMode="text"
-        minRows={4}
-        {...form.getInputProps("feedback")}
-      />
-
-      <Group position="right" mt="xs">
-        <Button type="submit" size="xs" color="dark" loading={loading}>
-          Send
-        </Button>
-      </Group>
-    </form>
-  )
-}
+import Script from "next/script"
+import { useEffect } from "react"
 
 export default function Navbar() {
   const { app, setAppId } = useCurrentApp()
@@ -101,6 +37,21 @@ export default function Navbar() {
         email: user.email,
         name: user.user_metadata?.name,
       })
+
+      const win = window as any
+
+      if (typeof win.Featurebase !== "function") {
+        win.Featurebase = function () {
+          // eslint-disable-next-line prefer-rest-params
+          ;(win.Featurebase.q = win.Featurebase.q || []).push(arguments)
+        }
+      }
+      win.Featurebase("initialize_feedback_widget", {
+        organization: "llmonitor",
+        theme: "light",
+        // placement: "right",
+        email: user?.email,
+      })
     }
   }, [user])
 
@@ -113,6 +64,8 @@ export default function Navbar() {
 
   return (
     <Header height={60} p="md">
+      <Script src="https://do.featurebase.app/js/sdk.js" id="featurebase-sdk" />
+
       <Flex align="center" justify="space-between" h="100%">
         <Group>
           <Anchor component={Link} href="/">
@@ -134,23 +87,13 @@ export default function Navbar() {
         </Group>
 
         <Group>
-          <Popover
-            width={400}
-            position="bottom"
-            arrowSize={10}
-            withArrow
-            shadow="sm"
-            trapFocus
+          <Button
+            size="xs"
+            leftIcon={<IconMessage size={18} />}
+            data-featurebase-feedback
           >
-            <Popover.Target>
-              <Button size="xs" leftIcon={<IconMessage size={18} />}>
-                Feedback
-              </Button>
-            </Popover.Target>
-            <Popover.Dropdown>
-              <Feedback />
-            </Popover.Dropdown>
-          </Popover>
+            Feedback
+          </Button>
 
           {team?.plan === "free" && (
             <Button
