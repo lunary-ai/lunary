@@ -9,6 +9,7 @@ import {
   inputColumn,
   nameColumn,
   outputColumn,
+  tagsColumn,
   timeColumn,
   userColumn,
 } from "@/utils/datatable"
@@ -21,6 +22,7 @@ const columns = [
   nameColumn("Agent"),
   durationColumn(),
   userColumn(),
+  tagsColumn(),
   inputColumn("Input"),
   outputColumn(),
 ]
@@ -37,7 +39,7 @@ export default function Agents() {
   return (
     <Stack h={"calc(100vh - var(--navbar-size))"}>
       <Group>
-        <Title>Agents Traces</Title>
+        <Title>Traces</Title>
         {loading && <Loader />}
       </Group>
 

@@ -11,6 +11,7 @@ import Empty from "@/components/Layout/Empty"
 import {
   durationColumn,
   inputColumn,
+  tagsColumn,
   timeColumn,
   userColumn,
 } from "@/utils/datatable"
@@ -26,7 +27,6 @@ import {
   Group,
   Loader,
   Stack,
-  Table,
   Text,
   Title,
 } from "@mantine/core"
@@ -41,6 +41,7 @@ const columns = [
   durationColumn("full"),
   userColumn(),
   inputColumn("Opening Message"),
+  tagsColumn(),
   columnHelper.accessor("feedbacks", {
     header: "Feedback left",
     size: 100,
