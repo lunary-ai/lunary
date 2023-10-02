@@ -8,11 +8,16 @@ import {
 } from "@mantine/core"
 
 import {
+  IconActivity,
   IconBrandOpenai,
+  IconCreditCard,
+  IconFile,
   IconFileInvoice,
   IconGraph,
   IconLogout,
   IconMessages,
+  IconRefresh,
+  IconRoad,
   IconRobot,
   IconSettings,
   IconStethoscope,
@@ -89,10 +94,38 @@ export default function Sidebar() {
                 </ActionIcon>
               </Menu.Target>
               <Menu.Dropdown ml="lg">
+                <Menu.Label>LLMonitor</Menu.Label>
+                <Menu.Item
+                  icon={<IconActivity size={16} />}
+                  component={Link}
+                  target="_blank"
+                  href="https://feedback.llmonitor.com/roadmap"
+                >
+                  Roadmap
+                </Menu.Item>
+
+                <Menu.Item
+                  icon={<IconRefresh size={16} />}
+                  component={Link}
+                  target="_blank"
+                  href="https://feedback.llmonitor.com/changelog"
+                >
+                  Changelog
+                </Menu.Item>
+
+                <Menu.Item
+                  icon={<IconFile size={16} />}
+                  component="a"
+                  target="_blank"
+                  href="https://llmonitor.com/docs"
+                >
+                  Documentation
+                </Menu.Item>
+
                 <Menu.Label>Account</Menu.Label>
                 {process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY && (
                   <Menu.Item
-                    icon={<IconFileInvoice size={16} />}
+                    icon={<IconCreditCard size={16} />}
                     onClick={() => {
                       Router.push("/billing")
                     }}

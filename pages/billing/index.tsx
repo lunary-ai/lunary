@@ -48,8 +48,6 @@ export default function Billing() {
 
   if (loading) return <Loader />
 
-  console.log(team)
-
   const percent = team?.plan === "pro" ? (usage / 30000) * 100 : 1
 
   const redirectToCustomerPortal = async () => {

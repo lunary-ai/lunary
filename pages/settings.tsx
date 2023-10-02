@@ -25,7 +25,6 @@ import {
   Title,
 } from "@mantine/core"
 import { modals } from "@mantine/modals"
-import { useSupabaseClient } from "@supabase/auth-helpers-react"
 import {
   IconBrandOpenai,
   IconDownload,
@@ -35,7 +34,6 @@ import {
 import { NextSeo } from "next-seo"
 import Router from "next/router"
 import { useState } from "react"
-import { Database } from "../utils/supaTypes"
 
 function Invite() {
   const { team } = useTeam()
@@ -80,8 +78,6 @@ function Invite() {
 export default function AppAnalytics() {
   const { app, setAppId } = useCurrentApp()
   const [focused, setFocused] = useState(false)
-
-  const supabaseClient = useSupabaseClient<Database>()
 
   const { profile } = useProfile()
 
