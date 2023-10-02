@@ -71,6 +71,7 @@ export default function Generations() {
 
       <Drawer
         opened={!!selected}
+        size="lg"
         keepMounted
         position="right"
         title={selected ? formatDateTime(selected.created_at) : ""}
