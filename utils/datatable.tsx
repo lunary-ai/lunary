@@ -1,8 +1,8 @@
 import { createColumnHelper } from "@tanstack/react-table"
-import { Anchor, Badge } from "@mantine/core"
+import { Badge } from "@mantine/core"
 import SmartViewer from "@/components/Blocks/SmartViewer"
 import { useAppUser } from "./supabaseHooks"
-import { formatAppUser, formatCost, formatDateTime, msToTime } from "./format"
+import { formatCost, formatDateTime, msToTime } from "./format"
 import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 const columnHelper = createColumnHelper<any>()
 
