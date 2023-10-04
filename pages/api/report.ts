@@ -287,7 +287,7 @@ export default async function handler(req: NextRequest) {
   const insertedIds = new Set<string>()
 
   if (!events) {
-    console.log("Missing events payload.")
+    console.error("Missing events payload.")
     return cors(req, new Response("Missing events payload.", { status: 400 }))
   }
 
