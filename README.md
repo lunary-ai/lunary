@@ -67,7 +67,7 @@ Chat with us on [Discord](https://discord.gg/8PafSG58kK) or email one of the fou
 
 ## 👨‍👩‍👧 Team
 
-Made by [@vincelwt](https://twitter.com/vincelwt) and Hugh.
+Made by [@vincelwt](https://twitter.com/vincelwt) and [Hugh](https://github.com/hughcrt).
 
 ## License
 
