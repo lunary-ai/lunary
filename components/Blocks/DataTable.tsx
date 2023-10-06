@@ -13,8 +13,6 @@ import { IconChevronDown, IconChevronUp } from "@tabler/icons-react"
 
 import { useVirtual } from "@tanstack/react-virtual"
 
-import { useDebouncedState } from "@mantine/hooks"
-
 // outside for reference
 const emptyArray = []
 

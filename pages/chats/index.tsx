@@ -10,6 +10,7 @@ import Empty from "@/components/Layout/Empty"
 
 import {
   durationColumn,
+  feedbackColumn,
   inputColumn,
   tagsColumn,
   timeColumn,
@@ -42,30 +43,7 @@ const columns = [
   userColumn(),
   inputColumn("Opening Message"),
   tagsColumn(),
-  columnHelper.accessor("feedbacks", {
-    header: "Feedback left",
-    size: 100,
-    cell: (props) => {
-      const run = props.row.original
-
-      const { runs } = useRuns("chat", {
-        notInfinite: true,
-        match: { parent_run: run.id },
-        not: ["feedback", "is", null],
-        select: "feedback",
-      })
-
-      const allFeedbacks = runs?.map((run) => run.feedback)
-
-      return (
-        <Group spacing="xs">
-          {allFeedbacks?.map((feedback) => (
-            <Feedback data={feedback} />
-          ))}
-        </Group>
-      )
-    },
-  }),
+  feedbackColumn(true),
 ]
 
 const ChatReplay = ({ run }) => {

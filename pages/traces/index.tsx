@@ -6,6 +6,7 @@ import DataTable from "@/components/Blocks/DataTable"
 
 import {
   durationColumn,
+  feedbackColumn,
   inputColumn,
   nameColumn,
   outputColumn,
@@ -22,6 +23,7 @@ const columns = [
   nameColumn("Agent"),
   durationColumn(),
   userColumn(),
+  feedbackColumn(true),
   tagsColumn(),
   inputColumn("Input"),
   outputColumn(),
