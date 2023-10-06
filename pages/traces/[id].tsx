@@ -50,7 +50,14 @@ const TraceTree = ({ parentId, runs, onSelect, firstDate }) => {
           <Badge variant="outline" color={typeColor[run.type]}>
             {run.type}
           </Badge>
-          <DurationBadge createdAt={run.created_at} endedAt={run.ended_at} />
+          {run.ended_at && (
+            <DurationBadge createdAt={run.created_at} endedAt={run.ended_at} />
+          )}
+          {run.type === "llm" && run.cost && (
+            <Badge variant="outline" color="dark">
+              {formatCost(run.cost)}
+            </Badge>
+          )}
 
           <Text c="dimmed" fz="xs">
             T + {(timeAfterFirst / 1000).toFixed(2)}s
@@ -125,7 +132,9 @@ export default function AgentRun({}) {
             {formatCost(totalCost)}
           </Badge>
         )}
-        <DurationBadge createdAt={run.created_at} endedAt={run.ended_at} />
+        {run.ended_at && (
+          <DurationBadge createdAt={run.created_at} endedAt={run.ended_at} />
+        )}
       </Group>
 
       <Grid>

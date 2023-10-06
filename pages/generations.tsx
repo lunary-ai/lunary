@@ -21,12 +21,13 @@ import {
   nameColumn,
   costColumn,
   tagsColumn,
+  feedbackColumn,
 } from "@/utils/datatable"
 import Empty from "@/components/Layout/Empty"
 import { IconBrandOpenai } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { useState } from "react"
-import { useDisclosure } from "@mantine/hooks"
+
 import { formatDateTime } from "@/utils/format"
 import TokensBadge from "@/components/Blocks/TokensBadge"
 
@@ -47,6 +48,7 @@ const columns = [
     accessorFn: (row) => row.prompt_tokens + row.completion_tokens,
   },
   costColumn(),
+  feedbackColumn(),
   tagsColumn(),
   inputColumn("Prompt"),
   outputColumn("Result"),

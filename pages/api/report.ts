@@ -221,9 +221,20 @@ const registerRunEvent = async (
 
       break
     case "feedback":
+      // get previous feedback to merge
+
+      const { data, error } = await supabaseAdmin
+        .from("run")
+        .select("feedback")
+        .match({ id: runId })
+        .maybeSingle()
+
       query = table
         .update({
-          feedback: extra,
+          feedback: {
+            ...(data?.feedback || {}),
+            ...extra,
+          },
         })
         .match({ id: runId })
 

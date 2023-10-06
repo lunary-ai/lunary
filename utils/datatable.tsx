@@ -1,9 +1,10 @@
 import { createColumnHelper } from "@tanstack/react-table"
-import { Badge } from "@mantine/core"
+import { Badge, Group } from "@mantine/core"
 import SmartViewer from "@/components/Blocks/SmartViewer"
-import { useAppUser } from "./supabaseHooks"
+import { useAppUser, useRelatedRuns } from "./supabaseHooks"
 import { formatCost, formatDateTime, msToTime } from "./format"
 import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
+import Feedback from "@/components/Blocks/Feedback"
 const columnHelper = createColumnHelper<any>()
 
 export const timeColumn = (timeColumn, label = "Time") => {
@@ -159,5 +160,37 @@ export const costColumn = () => {
       const cost = props.getValue()
       return formatCost(cost)
     },
+  })
+}
+
+export const feedbackColumn = (withRelatedRuns = false) => {
+  const cell = withRelatedRuns
+    ? (props) => {
+        const run = props.row.original
+
+        const { relatedRuns } = useRelatedRuns(run.id)
+
+        const allFeedbacks = [run, ...(relatedRuns || [])]
+          .filter((run) => run.feedback)
+          .map((run) => run.feedback)
+
+        return (
+          <Group spacing="xs">
+            {allFeedbacks?.map((feedback, i) => (
+              <Feedback data={feedback} key={i} />
+            ))}
+          </Group>
+        )
+      }
+    : (props) => {
+        const run = props.row.original
+
+        return <Feedback data={run.feedback} />
+      }
+
+  return columnHelper.accessor("feedbacks", {
+    header: "Feedback",
+    size: 100,
+    cell,
   })
 }
