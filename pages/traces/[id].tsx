@@ -143,6 +143,7 @@ export default function AgentRun({}) {
             <Title order={2} mb="md">
               Trace
             </Title>
+
             {relatedRuns && (
               <TraceTree
                 onSelect={setFocused}
