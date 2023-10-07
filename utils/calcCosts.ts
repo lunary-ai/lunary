@@ -15,6 +15,7 @@ const MODEL_COSTS: ModelCost[] = [
       "gpt-35-turbo",
       "gpt-3.5-turbo-0613",
       "gpt-3.5-turbo-0301",
+      "gpt-3.5-turbo-instruct",
     ],
     maxTokens: 4096,
     inputCost: 0.0015,
@@ -33,7 +34,7 @@ const MODEL_COSTS: ModelCost[] = [
     outputCost: 0.004,
   },
   {
-    models: ["gpt-4", "gpt-4-0613"],
+    models: ["gpt-4", "gpt-4-0613", "gpt-4-0314"],
     maxTokens: 8192,
     inputCost: 0.03,
     outputCost: 0.06,
