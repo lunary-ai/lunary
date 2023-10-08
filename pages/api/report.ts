@@ -316,7 +316,7 @@ export default async function handler(req: NextRequest) {
       console.error(`
       Error ingesting event.
       - Message: ${e.message}
-      - Input: ${JSON.stringify(req.json())}`)
+      - Input: ${JSON.stringify(events)}`)
     }
   }
 
