@@ -40,7 +40,6 @@ export default function UpdatePassword() {
   console.log(user)
 
   const handlePasswordReset = async ({ password }: { password: string }) => {
-    alert("asldkj")
     setLoading(true)
 
     const ok = await errorHandler(supabaseClient.auth.updateUser({ password }))
