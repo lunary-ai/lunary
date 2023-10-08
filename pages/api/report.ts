@@ -316,6 +316,7 @@ export default async function handler(req: NextRequest) {
       console.error(`Error ingesting event.`)
       // Edge functions logs are limited to 2kb
       console.error(e.message)
+      console.error("Input: ", events)
     }
   }
 
