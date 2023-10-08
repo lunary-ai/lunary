@@ -313,9 +313,10 @@ export default async function handler(req: NextRequest) {
 
       await registerEvent(cleanedEvent, insertedIds)
     } catch (e: any) {
-      console.error(`Error ingesting event.
-      Message: ${e.message}
-      Input: ${events}`)
+      console.error(`
+      Error ingesting event.
+      - Message: ${e.message}
+      - Input: ${JSON.stringify(req.json())}`)
     }
   }
 
