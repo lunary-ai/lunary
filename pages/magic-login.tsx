@@ -28,13 +28,10 @@ function LoginPage() {
   const form = useForm({
     initialValues: {
       email: "",
-      password: "",
     },
 
     validate: {
       email: (val) => (/^\S+@\S+$/.test(val) ? null : "Invalid email"),
-      password: (val) =>
-        val.length < 5 ? "Password must be at least 5 characters" : null,
     },
   })
 
@@ -70,28 +67,6 @@ function LoginPage() {
     }
   }
 
-  const handleLoginWithPassword = async ({
-    email,
-    password,
-  }: {
-    email: string
-    password: string
-  }) => {
-    setLoading(true)
-
-    const ok = await errorHandler(
-      supabaseClient.auth.signInWithPassword({ email, password })
-    )
-
-    analytics.track("Login", { method: "password" })
-
-    if (ok) {
-      Router.push("/")
-    }
-
-    setLoading(false)
-  }
-
   return (
     <Container py={100} size={600}>
       <NextSeo title="Login" />
@@ -107,7 +82,7 @@ function LoginPage() {
             Sign In
           </Text>
 
-          <form onSubmit={form.onSubmit(handleLoginWithPassword)}>
+          <form onSubmit={form.onSubmit(handleMagicLogin)}>
             <Stack>
               <TextInput
                 icon={<IconAt size={16} />}
@@ -120,21 +95,6 @@ function LoginPage() {
                 }
                 error={form.errors.email && "Invalid email"}
                 placeholder="Your email"
-              />
-
-              <TextInput
-                type="password"
-                autoComplete="current-password"
-                label="Password"
-                value={form.values.password}
-                onChange={(event) =>
-                  form.setFieldValue("password", event.currentTarget.value)
-                }
-                error={
-                  form.errors.password &&
-                  "Password must be at least 6 characters"
-                }
-                placeholder="Your password"
               />
 
               <Button mt="md" type="submit" fullWidth loading={loading}>
