@@ -1,20 +1,16 @@
-import { useEffect, useState } from "react"
 import Router from "next/router"
+import { useEffect, useState } from "react"
 
 import {
   Anchor,
-  Badge,
   Box,
   Button,
-  Card,
   Container,
   Grid,
   Group,
   List,
-  Mark,
   Paper,
   PasswordInput,
-  SimpleGrid,
   Stack,
   Text,
   TextInput,
@@ -40,10 +36,9 @@ import {
   IconUser,
 } from "@tabler/icons-react"
 
-import errorHandler from "@/utils/errorHandler"
 import analytics from "@/utils/analytics"
+import errorHandler from "@/utils/errorHandler"
 import { NextSeo } from "next-seo"
-import { UpgradeBody } from "@/components/Layout/UpgradeModal"
 
 function SignupPage() {
   const [loading, setLoading] = useState(false)

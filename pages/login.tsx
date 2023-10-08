@@ -44,32 +44,6 @@ function LoginPage() {
     if (user) Router.push("/")
   }, [user])
 
-  const handleMagicLogin = async ({ email }: { email: string }) => {
-    setLoading(true)
-
-    const ok = await errorHandler(
-      supabaseClient.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/app/`,
-          shouldCreateUser: false,
-        },
-      })
-    )
-
-    if (ok) {
-      notifications.show({
-        icon: <IconCheck size={18} />,
-        color: "teal",
-        title: "Email sent 💌",
-        message:
-          "Check your emails to verify your email. Please check your spam folder as we currently have deliverability issues.",
-      })
-
-      setLoading(false)
-    }
-  }
-
   const handleLoginWithPassword = async ({
     email,
     password,
@@ -122,20 +96,30 @@ function LoginPage() {
                 placeholder="Your email"
               />
 
-              <TextInput
-                type="password"
-                autoComplete="current-password"
-                label="Password"
-                value={form.values.password}
-                onChange={(event) =>
-                  form.setFieldValue("password", event.currentTarget.value)
-                }
-                error={
-                  form.errors.password &&
-                  "Password must be at least 6 characters"
-                }
-                placeholder="Your password"
-              />
+              <div>
+                <TextInput
+                  type="password"
+                  autoComplete="current-password"
+                  label="Password"
+                  value={form.values.password}
+                  onChange={(event) =>
+                    form.setFieldValue("password", event.currentTarget.value)
+                  }
+                  error={
+                    form.errors.password &&
+                    "Password must be at least 6 characters"
+                  }
+                  placeholder="Your password"
+                />
+                <Anchor
+                  display="block"
+                  pt="xs"
+                  size="sm"
+                  href="/request-password-reset"
+                >
+                  Forgot password?
+                </Anchor>
+              </div>
 
               <Button mt="md" type="submit" fullWidth loading={loading}>
                 Login

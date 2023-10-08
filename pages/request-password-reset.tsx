@@ -1,27 +1,22 @@
 import {
-  Anchor,
-  Button,
+  Text,
   Container,
   Paper,
   Stack,
-  Text,
-  TextInput,
   Title,
+  TextInput,
+  Button,
+  PasswordInput,
 } from "@mantine/core"
-
 import { useForm } from "@mantine/form"
-import { useSessionContext, useUser } from "@supabase/auth-helpers-react"
-import { IconAnalyze, IconAt, IconCheck } from "@tabler/icons-react"
-
-import errorHandler from "@/utils/errorHandler"
-import { notifications } from "@mantine/notifications"
+import { IconAnalyze, IconAt } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
-import Router from "next/router"
-import { useEffect, useState } from "react"
+import { useState } from "react"
+import errorHandler from "../utils/errorHandler"
+import { useSessionContext, useUser } from "@supabase/auth-helpers-react"
 
-function LoginPage() {
+export default function PasswordReset() {
   const [loading, setLoading] = useState(false)
-
   const { supabaseClient } = useSessionContext()
 
   const form = useForm({
@@ -34,36 +29,16 @@ function LoginPage() {
     },
   })
 
-  const user = useUser()
-
-  useEffect(() => {
-    if (user) Router.push("/")
-  }, [user])
-
-  const handleMagicLogin = async ({ email }: { email: string }) => {
+  async function handlePasswordReset({ email }) {
     setLoading(true)
 
     const ok = await errorHandler(
-      supabaseClient.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          shouldCreateUser: false,
-        },
+      supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/update-password`,
       })
     )
 
-    if (ok) {
-      notifications.show({
-        icon: <IconCheck size={18} />,
-        color: "teal",
-        title: "Email sent 💌",
-        message:
-          "Check your emails to verify your email. Please check your spam folder as we currently have deliverability issues.",
-      })
-
-      setLoading(false)
-    }
+    setLoading(false)
   }
 
   return (
@@ -73,21 +48,21 @@ function LoginPage() {
         <Stack align="center">
           <IconAnalyze color={"#206dce"} size={60} />
           <Title order={2} weight={700} size={40} ta="center">
-            Welcome back
+            Forgot password
           </Title>
         </Stack>
+
         <Paper radius="md" p="xl" withBorder miw={350}>
           <Text size="lg" mb="xl" weight={500}>
-            Sign In
+            Reset password
           </Text>
 
-          <form onSubmit={form.onSubmit(handleMagicLogin)}>
+          <form onSubmit={form.onSubmit(handlePasswordReset)}>
             <Stack>
               <TextInput
                 icon={<IconAt size={16} />}
                 label="Email"
                 type="email"
-                autoComplete="email"
                 value={form.values.email}
                 onChange={(event) =>
                   form.setFieldValue("email", event.currentTarget.value)
@@ -97,13 +72,8 @@ function LoginPage() {
               />
 
               <Button mt="md" type="submit" fullWidth loading={loading}>
-                Login
+                Submit
               </Button>
-
-              <Text size="sm" style={{ textAlign: "center" }}>
-                {`Don't have an account? `}
-                <Anchor href="/signup">Sign Up</Anchor>
-              </Text>
             </Stack>
           </form>
         </Paper>
@@ -111,5 +81,3 @@ function LoginPage() {
     </Container>
   )
 }
-
-export default LoginPage

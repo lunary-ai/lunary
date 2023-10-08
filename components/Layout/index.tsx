@@ -16,9 +16,14 @@ import UpgradeModal from "./UpgradeModal"
 
 export default function Layout({ children }: { children: ReactNode }) {
   const router = useRouter()
-  const isAuthPage = ["/login", "/signup", "/join", "/magic-login"].includes(
-    router.pathname
-  )
+  const isAuthPage = [
+    "/login",
+    "/signup",
+    "/join",
+    "/magic-login",
+    "/request-password-reset",
+    "/update-password",
+  ].includes(router.pathname)
 
   const { session, isLoading } = useSessionContext()
 
