@@ -48,7 +48,7 @@ function LoginPage() {
       supabaseClient.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/app/`,
+          emailRedirectTo: `${window.location.origin}/`,
           shouldCreateUser: false,
         },
       })
