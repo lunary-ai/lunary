@@ -161,7 +161,7 @@ const registerRunEvent = async (
       // So we retry once after 5s
       // A cleaner solution would be to use a queue, but this is simpler for now
 
-      console.error(`Error getting parent run user: ${error.message}`)
+      console.warn(`Error getting parent run user: ${error.message}`)
 
       if (allowRetry) {
         console.log(
