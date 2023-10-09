@@ -42,7 +42,7 @@ export default function Empty({
             Documentation &rarr;
           </Button>
           <Text>
-            Tracking ID: <CopyText value={app?.id} />
+            App ID: <CopyText value={app?.id} />
           </Text>
           <Text size="xl">
             Any issue? Get help from a founder on Discord or by email.

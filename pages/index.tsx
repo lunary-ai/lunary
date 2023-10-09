@@ -69,7 +69,7 @@ export default function Home() {
         <Card p="xl" w={600} withBorder>
           <Stack align="start">
             <Title order={3}>
-              Start by adding an app to get a tracking ID.
+              Start by adding an app to get an app tracking ID.
             </Title>
             <Button
               size="md"
