@@ -103,13 +103,17 @@ const registerRunEvent = async (
     runId,
     parentRunId,
     input,
-    tags,
     output,
     name,
     tokensUsage,
     extra,
     error,
   } = event
+
+  let tags = event.tags
+  if (typeof tags === "string") {
+    tags = [tags]
+  }
 
   let parentRunIdToUse = parentRunId
 
@@ -187,7 +191,7 @@ const registerRunEvent = async (
         user: internalUserId,
         created_at: timestamp,
         app,
-        tags: tags?.length ? tags : null,
+        tags,
         name,
         status: "started",
         params: extra,
