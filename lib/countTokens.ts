@@ -190,10 +190,6 @@ export const completeRunUsage = async (run) => {
           )
         : enc.encode(JSON.stringify(runData.input)).length
 
-      console.log(
-        `We have ${inputTokens} tokens in input vs ${tokensUsage.prompt} recorded`
-      )
-
       tokensUsage.prompt = inputTokens
     }
 
