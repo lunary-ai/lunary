@@ -165,7 +165,7 @@ export default function AgentRun({}) {
                   )}
                 </Group>
                 <SmartViewer data={focusedRun.input} />
-                {!!focusedRun.output && (
+                {(focusedRun.output || focusedRun.error) && (
                   <>
                     <Group>
                       <Text weight="bold">Output</Text>
