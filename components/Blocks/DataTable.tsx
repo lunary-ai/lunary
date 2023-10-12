@@ -64,9 +64,9 @@ export default function DataTable({
     (containerRefElement?: HTMLDivElement | null) => {
       if (containerRefElement) {
         const { scrollHeight, scrollTop, clientHeight } = containerRefElement
-        //once the user has scrolled within 300px of the bottom of the table, fetch more data if there is any
+        //once the user has scrolled within 600px of the bottom of the table, fetch more data if there is any
         if (
-          scrollHeight - scrollTop - clientHeight < 300 &&
+          scrollHeight - scrollTop - clientHeight < 600 &&
           !loading &&
           loadMore
         ) {
