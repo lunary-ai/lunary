@@ -216,6 +216,8 @@ export function useTest2(search) {
     })
   }
 
+  query.eq("app", appId)
+
   const {
     data: runs,
     isLoading,
