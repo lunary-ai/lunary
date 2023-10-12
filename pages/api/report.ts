@@ -72,15 +72,17 @@ const uuidFromSeed = async (seed: string): Promise<string> => {
  * This function will convert any string to a valid UUID.
  */
 const ensureIsUUID = async (id: string): Promise<string> => {
+  if (typeof id !== "string") return undefined
   if (!id || id.length === 36) return id // TODO: better check
   else return await uuidFromSeed(id)
 }
 
 const cleanEvent = async (event: any): Promise<Event> => {
-  const { timestamp, runId, parentRunId, ...rest } = event
+  const { timestamp, runId, parentRunId, tags, ...rest } = event
 
   return {
     ...rest,
+    tags: typeof tags === "string" ? [tags] : tags,
     tokensUsage: await completeRunUsage(event),
     runId: await ensureIsUUID(runId),
     parentRunId: await ensureIsUUID(parentRunId),
@@ -103,17 +105,13 @@ const registerRunEvent = async (
     runId,
     parentRunId,
     input,
+    tags,
     output,
     name,
     tokensUsage,
     extra,
     error,
   } = event
-
-  let tags = event.tags
-  if (typeof tags === "string") {
-    tags = [tags]
-  }
 
   let parentRunIdToUse = parentRunId
 
@@ -308,7 +306,7 @@ export default async function handler(req: NextRequest) {
 
   // Event processing order is important for foreign key constraints
   const sorted = (Array.isArray(events) ? events : [events]).sort(
-    (a, b) => a.timestamp - b.timestamp
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
   )
 
   for (const event of sorted) {
