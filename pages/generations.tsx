@@ -1,35 +1,29 @@
 import DataTable from "@/components/Blocks/DataTable"
 
-import { useRuns } from "@/utils/supabaseHooks"
-import {
-  Button,
-  Drawer,
-  Group,
-  Loader,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core"
+import { useRuns, useTest2 } from "@/utils/supabaseHooks"
+import { Drawer, Group, Input, Stack, Text, Title } from "@mantine/core"
 
 import SmartViewer from "@/components/Blocks/SmartViewer"
 import {
+  costColumn,
   durationColumn,
+  feedbackColumn,
   inputColumn,
+  nameColumn,
   outputColumn,
+  tagsColumn,
   timeColumn,
   userColumn,
-  nameColumn,
-  costColumn,
-  tagsColumn,
-  feedbackColumn,
 } from "@/utils/datatable"
-import Empty from "@/components/Layout/Empty"
-import { IconBrandOpenai } from "@tabler/icons-react"
+import { IconBrandOpenai, IconSearch } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { useState } from "react"
 
-import { formatDateTime } from "@/utils/format"
 import TokensBadge from "@/components/Blocks/TokensBadge"
+import { formatDateTime } from "@/utils/format"
+import useSWR from "swr"
+import Empty from "../components/Layout/Empty"
+import { useDebouncedState } from "@mantine/hooks"
 
 const columns = [
   timeColumn("created_at"),
@@ -55,20 +49,29 @@ const columns = [
 ]
 
 export default function Generations() {
-  const { runs, loading, validating, loadMore } = useRuns("llm")
+  // const { runs, loading, validating, loadMore } = useRuns("llm")
+  const [query, setQuery] = useDebouncedState(null, 1000)
+  const { runs, loading, validating, loadMore } = useTest2(query)
+  console.log(runs)
 
   const [selected, setSelected] = useState(null)
 
-  if (!loading && runs?.length === 0) {
+  if (!loading && runs?.length === 0 && query === null) {
     return <Empty Icon={IconBrandOpenai} what="requests" />
   }
+
+  console.log(query)
 
   return (
     <Stack h={"calc(100vh - var(--navbar-size))"}>
       <NextSeo title="Requests" />
-      <Group>
+      <Group position="apart">
         <Title>Generations</Title>
-        {loading && <Loader />}
+        <Input
+          icon={<IconSearch />}
+          defaultValue={query}
+          onChange={(event) => setQuery(event.currentTarget.value)}
+        />
       </Group>
 
       <Drawer
@@ -107,7 +110,6 @@ export default function Generations() {
       <DataTable
         onRowClicked={(row) => {
           setSelected(row)
-          // setSelected(row.original)
         }}
         loading={loading || validating}
         loadMore={loadMore}

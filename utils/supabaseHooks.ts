@@ -1,5 +1,6 @@
 import {
   useDeleteMutation,
+  useInfiniteOffsetPaginationQuery,
   useInsertMutation,
   useOffsetInfiniteScrollQuery,
   useQuery,
@@ -9,9 +10,10 @@ import {
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
 import { useMantineTheme } from "@mantine/core"
 import { Database } from "./supaTypes"
-import { useContext } from "react"
+import { useContext, useState } from "react"
 import { calcRunCost } from "./calcCosts"
 import { AppContext } from "./context"
+import useSWRInfinite from "swr/infinite"
 
 const softOptions = {
   dedupingInterval: 10000,
@@ -158,6 +160,75 @@ export function useCurrentApp() {
   const app = apps?.find((a) => a.id === appId)
 
   return { app, setAppId, loading }
+}
+
+export function useTest(searchPattern) {
+  const supabaseClient = useSupabaseClient<Database>()
+  const { appId } = useContext(AppContext)
+  const pageSize = 10
+
+  const fetcher = async (pageIndex, pageSize, searchPattern) => {
+    const { data, error } = await supabaseClient.rpc("get_runs", {
+      limit_num: pageSize,
+    })
+    if (error) throw error
+    return data
+  }
+
+  const { data, error, isLoading, isValidating, setSize, size } =
+    useSWRInfinite(
+      (index) => [index, pageSize, searchPattern],
+      (pageIndex, pageSize, searchPattern) =>
+        fetcher(pageIndex, pageSize, searchPattern)
+    )
+
+  const runs = data ? [].concat(...data) : []
+  const isReachingEnd = data && data[data.length - 1]?.length < pageSize
+
+  const loadMore = () => {
+    if (!isLoading && !isReachingEnd) {
+      setSize(size + 1)
+    }
+  }
+
+  return {
+    runs: extendWithCosts(runs),
+    loading: isLoading,
+    validating: isValidating,
+    loadMore,
+  }
+}
+
+export function useTest2(search) {
+  const supabaseClient = useSupabaseClient<Database>()
+  const { appId } = useContext(AppContext)
+
+  let query
+  if (search === null || search === "") {
+    console.log(1)
+    query = supabaseClient.from("run").select("*").order("created_at", {
+      ascending: false,
+    })
+  } else {
+    console.log(2)
+    query = supabaseClient.rpc("get_runs", {
+      search_pattern: search,
+    })
+  }
+
+  const {
+    data: runs,
+    isLoading,
+    isValidating,
+    loadMore,
+  } = useOffsetInfiniteScrollQuery(query, { ...softOptions, pageSize: 100 })
+
+  return {
+    runs: extendWithCosts(runs),
+    loading: isLoading,
+    validating: isValidating,
+    loadMore,
+  }
 }
 
 export function useRuns(
