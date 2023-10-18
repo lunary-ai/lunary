@@ -1,9 +1,10 @@
 import Router from "next/router"
 
-import { Group, Loader, Stack, Title } from "@mantine/core"
+import { Group, Input, Stack, Title } from "@mantine/core"
 
 import DataTable from "@/components/Blocks/DataTable"
 
+import Empty from "@/components/Layout/Empty"
 import {
   durationColumn,
   feedbackColumn,
@@ -14,9 +15,9 @@ import {
   timeColumn,
   userColumn,
 } from "@/utils/datatable"
-import { useRuns } from "@/utils/supabaseHooks"
-import Empty from "@/components/Layout/Empty"
-import { IconRobot } from "@tabler/icons-react"
+import { useTraces } from "@/utils/supabaseHooks"
+import { useDebouncedState } from "@mantine/hooks"
+import { IconRobot, IconSearch } from "@tabler/icons-react"
 
 const columns = [
   timeColumn("created_at", "Time"),
@@ -29,10 +30,9 @@ const columns = [
   outputColumn(),
 ]
 
-export default function Agents() {
-  const { runs, loading, validating, loadMore } = useRuns("agent", {
-    filter: ["parent_run", "is", null],
-  })
+export default function Traces() {
+  const [query, setQuery] = useDebouncedState(null, 1000)
+  const { runs, loading, validating, loadMore } = useTraces(query)
 
   if (!loading && runs?.length === 0) {
     return <Empty Icon={IconRobot} what="agents traces" />
@@ -40,9 +40,15 @@ export default function Agents() {
 
   return (
     <Stack h={"calc(100vh - var(--navbar-size))"}>
-      <Group>
+      <Group position="apart">
         <Title>Traces</Title>
-        {loading && <Loader />}
+        <Input
+          icon={<IconSearch size={16} />}
+          w={500}
+          placeholder="Type to filter"
+          defaultValue={query}
+          onChange={(event) => setQuery(event.currentTarget.value)}
+        />
       </Group>
 
       <DataTable

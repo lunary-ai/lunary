@@ -1,6 +1,6 @@
 import DataTable from "@/components/Blocks/DataTable"
 
-import { useRuns, useTest2 } from "@/utils/supabaseHooks"
+import { useGenerations } from "@/utils/supabaseHooks"
 import { Drawer, Group, Input, Stack, Text, Title } from "@mantine/core"
 
 import SmartViewer from "@/components/Blocks/SmartViewer"
@@ -21,9 +21,8 @@ import { useState } from "react"
 
 import TokensBadge from "@/components/Blocks/TokensBadge"
 import { formatDateTime } from "@/utils/format"
-import useSWR from "swr"
-import Empty from "../components/Layout/Empty"
 import { useDebouncedState } from "@mantine/hooks"
+import Empty from "../components/Layout/Empty"
 
 const columns = [
   timeColumn("created_at"),
@@ -49,10 +48,8 @@ const columns = [
 ]
 
 export default function Generations() {
-  // const { runs, loading, validating, loadMore } = useRuns("llm")
   const [query, setQuery] = useDebouncedState(null, 1000)
-  const { runs, loading, validating, loadMore } = useTest2(query)
-  console.log(runs)
+  const { runs, loading, validating, loadMore } = useGenerations(query)
 
   const [selected, setSelected] = useState(null)
 
@@ -65,15 +62,14 @@ export default function Generations() {
       <NextSeo title="Requests" />
       <Group position="apart">
         <Title>Generations</Title>
+        <Input
+          icon={<IconSearch size={16} />}
+          w={500}
+          placeholder="Type to filter"
+          defaultValue={query}
+          onChange={(event) => setQuery(event.currentTarget.value)}
+        />
       </Group>
-
-      <Input
-        icon={<IconSearch size={16} />}
-        w={500}
-        placeholder="Type to filter"
-        defaultValue={query}
-        onChange={(event) => setQuery(event.currentTarget.value)}
-      />
 
       <Drawer
         opened={!!selected}
