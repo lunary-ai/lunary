@@ -213,15 +213,47 @@ export function useModelNames() {
   return { modelNames }
 }
 
-export function useGenerations(search, modelNames: string[]) {
+export function useTags() {
+  const supabaseClient = useSupabaseClient<Database>()
+  const { appId } = useContext(AppContext)
+
+  const query = supabaseClient.rpc("get_tags", {
+    app_id: appId,
+  })
+
+  const { data: tags } = useQuery<string[]>(query)
+  return { tags }
+}
+
+export function useUsers() {
+  const supabaseClient = useSupabaseClient<Database>()
+  const { appId } = useContext(AppContext)
+
+  const query = supabaseClient.rpc("get_users", {
+    app_id: appId,
+  })
+
+  const { data: users } = useQuery<string[]>(query)
+  return { users }
+}
+
+export function useGenerations(
+  search,
+  modelNames: string[] = [],
+  users: string[] = [],
+  tags: string[] = []
+) {
   const supabaseClient = useSupabaseClient<Database>()
   const { appId } = useContext(AppContext)
 
   let query
   if (search === null || search === "") {
-    query = supabaseClient.from("run").select("*").order("created_at", {
-      ascending: false,
-    })
+    query = supabaseClient
+      .from("run")
+      .select("*, app_user!inner(external_id)")
+      .order("created_at", {
+        ascending: false,
+      })
   } else {
     query = supabaseClient.rpc("get_runs", {
       search_pattern: search,
@@ -234,6 +266,15 @@ export function useGenerations(search, modelNames: string[]) {
     query.in("name", modelNames)
   }
 
+  if (users.length > 0) {
+    query.in("app_user.external_id", users)
+  }
+
+  if (tags.length > 0) {
+    query.contains("tags", tags)
+  }
+
+  console.log(query)
   const {
     data: runs,
     isLoading,
