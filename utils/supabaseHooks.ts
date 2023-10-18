@@ -260,7 +260,6 @@ export function useGenerations(
   query.eq("app", appId)
 
   if (modelNames.length > 0) {
-    console.log(modelNames)
     query.in("name", modelNames)
   }
 
