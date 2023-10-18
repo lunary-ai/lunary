@@ -12,6 +12,7 @@ import { useMemo } from "react"
 import MessageViewer from "./MessageViewer"
 import { JsonView, defaultStyles } from "react-json-view-lite"
 import { ChatMessage } from "./Message"
+import ProtectedText from "../ProtectedText"
 
 const checkIsMessage = (obj) => {
   return typeof obj?.text === "string" || typeof obj?.functionCall === "object"
@@ -76,7 +77,7 @@ export default function SmartViewer({
         )}
 
         {data && (
-          <>
+          <ProtectedText>
             {isObject ? (
               isMessages ? (
                 <MessageViewer data={parsed} compact={compact} />
@@ -96,7 +97,7 @@ export default function SmartViewer({
             ) : (
               <Code color="blue">{parsed}</Code>
             )}
-          </>
+          </ProtectedText>
         )}
       </pre>
 

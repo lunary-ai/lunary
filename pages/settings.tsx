@@ -96,7 +96,7 @@ export default function AppAnalytics() {
   }
 
   return (
-    <Container>
+    <Container className="unblockable">
       <Stack>
         <NextSeo title="Settings" />
         <Stack>

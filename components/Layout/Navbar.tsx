@@ -1,6 +1,7 @@
 import analytics from "@/utils/analytics"
 import { useApps, useCurrentApp, useTeam } from "@/utils/supabaseHooks"
 import {
+  Alert,
   Anchor,
   Button,
   Flex,
@@ -13,7 +14,9 @@ import { modals } from "@mantine/modals"
 import { useUser } from "@supabase/auth-helpers-react"
 
 import {
+  IconAlertTriangle,
   IconAnalyze,
+  IconExclamationMark,
   IconHelp,
   IconMessage,
   IconStarFilled,
@@ -63,68 +66,92 @@ export default function Navbar() {
   }, [app, apps, loading])
 
   return (
-    <Header height={60} p="md">
-      <Script src="https://do.featurebase.app/js/sdk.js" id="featurebase-sdk" />
+    <>
+      <Header height={60} p="md">
+        <Script
+          src="https://do.featurebase.app/js/sdk.js"
+          id="featurebase-sdk"
+        />
 
-      <Flex align="center" justify="space-between" h="100%">
-        <Group>
-          <Anchor component={Link} href="/">
-            <Group spacing="sm">
-              <IconAnalyze />
-              <Text weight="bold">llmonitor</Text>
-            </Group>
-          </Anchor>
+        <Flex align="center" justify="space-between" h="100%">
+          <Group>
+            <Anchor component={Link} href="/">
+              <Group spacing="sm">
+                <IconAnalyze />
+                <Text weight="bold">llmonitor</Text>
+              </Group>
+            </Anchor>
 
-          {!loading && user && apps?.length && (
-            <Select
-              size="xs"
-              placeholder="Select an app"
-              value={app?.id}
-              onChange={(id) => setAppId(id)}
-              data={apps.map((app) => ({ value: app.id, label: app.name }))}
-            />
-          )}
-        </Group>
+            {!loading && user && apps?.length && (
+              <Select
+                size="xs"
+                placeholder="Select an app"
+                value={app?.id}
+                onChange={(id) => setAppId(id)}
+                data={apps.map((app) => ({ value: app.id, label: app.name }))}
+              />
+            )}
+          </Group>
 
-        <Group>
-          <Button
-            size="xs"
-            leftIcon={<IconMessage size={18} />}
-            data-featurebase-feedback
-          >
-            Feedback
-          </Button>
+          <Group>
+            {team.limited ? (
+              <Button
+                color="orange"
+                size="xs"
+                onClick={() =>
+                  modals.openContextModal({
+                    modal: "upgrade",
+                    size: 800,
+                    innerProps: {},
+                  })
+                }
+                leftIcon={<IconAlertTriangle size={16} />}
+              >
+                Events limit reached. Click here to upgrade & restore access.
+              </Button>
+            ) : (
+              <>
+                <Button
+                  size="xs"
+                  leftIcon={<IconMessage size={18} />}
+                  data-featurebase-feedback
+                >
+                  Feedback
+                </Button>
 
-          {team?.plan === "free" && (
-            <Button
-              onClick={() =>
-                modals.openContextModal({
-                  modal: "upgrade",
-                  size: 800,
-                  innerProps: {},
-                })
-              }
-              size="xs"
-              variant="gradient"
-              gradient={{ from: "#0788ff", to: "#9900ff", deg: 30 }}
-              leftIcon={<IconStarFilled size={16} />}
-            >
-              Upgrade
-            </Button>
-          )}
+                <Button
+                  component="a"
+                  href="https://llmonitor.com/docs"
+                  size="xs"
+                  target="_blank"
+                  variant="outline"
+                  leftIcon={<IconHelp size={18} />}
+                >
+                  Docs
+                </Button>
+              </>
+            )}
 
-          <Button
-            component="a"
-            href="https://llmonitor.com/docs"
-            size="xs"
-            target="_blank"
-            variant="outline"
-            leftIcon={<IconHelp size={18} />}
-          >
-            Docs
-          </Button>
-        </Group>
-      </Flex>
-    </Header>
+            {team?.plan === "free" && (
+              <Button
+                onClick={() =>
+                  modals.openContextModal({
+                    modal: "upgrade",
+                    size: 800,
+                    innerProps: {},
+                  })
+                }
+                size="xs"
+                variant="gradient"
+                gradient={{ from: "#0788ff", to: "#9900ff", deg: 30 }}
+                leftIcon={<IconStarFilled size={16} />}
+              >
+                Upgrade
+              </Button>
+            )}
+          </Group>
+        </Flex>
+      </Header>
+    </>
   )
 }

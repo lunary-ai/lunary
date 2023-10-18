@@ -25,7 +25,7 @@ export const UpgradeBody = () => {
 
   return (
     <>
-      <Stack align="center" ta="center">
+      <Stack align="center" ta="center" className="unblockable">
         <IconAnalyze color={"#206dce"} size={60} />
         <Title order={2} weight={700} size={40} ta="center">
           Limited time offer

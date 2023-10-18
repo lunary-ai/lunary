@@ -9,3 +9,22 @@ body {
   text-rendering: optimizelegibility;
   -webkit-font-smoothing: antialiased;
 }
+
+/* .limited table td, */
+.limited .mantine-Badge-inner,
+.limited .protected,
+.limited code,
+.limited table .mantine-Text-root {
+  filter: blur(4px);
+}
+
+.limited .recharts-responsive-container {
+  filter: blur(7px);
+}
+
+.unblockable pre,
+.unblockable code,
+.unblockable .mantine-Badge-inner,
+.unblockable .mantine-Text-root {
+  filter: none !important;
+}

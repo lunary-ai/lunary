@@ -5,6 +5,7 @@ import { useAppUser, useRelatedRuns } from "./supabaseHooks"
 import { formatCost, formatDateTime, msToTime } from "./format"
 import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 import Feedback from "@/components/Blocks/Feedback"
+import ProtectedText from "@/components/Blocks/ProtectedText"
 const columnHelper = createColumnHelper<any>()
 
 export const timeColumn = (timeColumn, label = "Time") => {
@@ -60,7 +61,7 @@ export const statusColumn = () => {
     size: 60,
     cell: (props) => (
       <Badge color={props.getValue() === "success" ? "green" : "red"}>
-        {props.getValue()}
+        <ProtectedText>{props.getValue()}</ProtectedText>
       </Badge>
     ),
   })
