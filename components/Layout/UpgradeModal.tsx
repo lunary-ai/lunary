@@ -36,7 +36,7 @@ export const UpgradeBody = () => {
           <Mark>{` the lowest price we'll ever offer. `}</Mark>
         </Text>
         <Text size="lg" mt="xs" mb="xl" weight={500}>
-          Unlock unlimited usage & team access, support development and get
+          Unlock higher usage & team access, support development and get
           involved in the product's future.
         </Text>
       </Stack>
@@ -80,7 +80,7 @@ export const UpgradeBody = () => {
               </ThemeIcon>
             }
           >
-            <List.Item>Unlimited projects & events</List.Item>
+            <List.Item>10k events / day</List.Item>
             <List.Item>Invite 5 team members</List.Item>
             <List.Item>Unlimited data retention</List.Item>
             <List.Item>1-on-1 support</List.Item>

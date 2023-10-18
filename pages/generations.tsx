@@ -60,8 +60,6 @@ export default function Generations() {
     return <Empty Icon={IconBrandOpenai} what="requests" />
   }
 
-  console.log(query)
-
   return (
     <Stack h={"calc(100vh - var(--navbar-size))"}>
       <NextSeo title="Requests" />
