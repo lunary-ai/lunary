@@ -1,7 +1,15 @@
 import DataTable from "@/components/Blocks/DataTable"
 
-import { useGenerations } from "@/utils/supabaseHooks"
-import { Drawer, Group, Input, Stack, Text, Title } from "@mantine/core"
+import { useGenerations, useModelNames } from "@/utils/supabaseHooks"
+import {
+  Drawer,
+  Group,
+  Input,
+  MultiSelect,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core"
 
 import SmartViewer from "@/components/Blocks/SmartViewer"
 import {
@@ -48,8 +56,13 @@ const columns = [
 ]
 
 export default function Generations() {
+  let { modelNames } = useModelNames()
   const [query, setQuery] = useDebouncedState(null, 1000)
-  const { runs, loading, validating, loadMore } = useGenerations(query)
+  const [selectedModels, setSelectedModels] = useState([])
+  const { runs, loading, validating, loadMore } = useGenerations(
+    query,
+    selectedModels
+  )
 
   const [selected, setSelected] = useState(null)
 
@@ -62,13 +75,22 @@ export default function Generations() {
       <NextSeo title="Requests" />
       <Group position="apart">
         <Title>Generations</Title>
-        <Input
-          icon={<IconSearch size={16} />}
-          w={500}
-          placeholder="Type to filter"
-          defaultValue={query}
-          onChange={(event) => setQuery(event.currentTarget.value)}
-        />
+
+        <Group>
+          <MultiSelect
+            placeholder="Model"
+            data={modelNames || []}
+            clearable
+            onChange={setSelectedModels}
+          />
+          <Input
+            icon={<IconSearch size={16} />}
+            w={500}
+            placeholder="Type to filter"
+            defaultValue={query}
+            onChange={(event) => setQuery(event.currentTarget.value)}
+          />
+        </Group>
       </Group>
 
       <Drawer
