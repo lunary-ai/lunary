@@ -201,19 +201,54 @@ export function useTest(searchPattern) {
   }
 }
 
-export function useTest2(search) {
+export function useGenerations(search) {
   const supabaseClient = useSupabaseClient<Database>()
   const { appId } = useContext(AppContext)
 
   let query
   if (search === null || search === "") {
-    console.log(1)
     query = supabaseClient.from("run").select("*").order("created_at", {
       ascending: false,
     })
   } else {
-    console.log(2)
     query = supabaseClient.rpc("get_runs", {
+      search_pattern: search,
+    })
+  }
+
+  query.eq("app", appId)
+
+  const {
+    data: runs,
+    isLoading,
+    isValidating,
+    loadMore,
+  } = useOffsetInfiniteScrollQuery(query, { ...softOptions, pageSize: 100 })
+
+  return {
+    runs: extendWithCosts(runs),
+    loading: isLoading,
+    validating: isValidating,
+    loadMore,
+  }
+}
+
+export function useTraces(search) {
+  const supabaseClient = useSupabaseClient<Database>()
+  const { appId } = useContext(AppContext)
+
+  let query
+  if (search === null || search === "") {
+    query = supabaseClient
+      .from("run")
+      .select("*")
+      .order("created_at", {
+        ascending: false,
+      })
+      .eq("type", "agent")
+      .is("parent_run", null)
+  } else {
+    query = supabaseClient.rpc("get_trace_runs_roots", {
       search_pattern: search,
     })
   }
