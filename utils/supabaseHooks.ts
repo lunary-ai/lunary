@@ -94,6 +94,7 @@ export const useTeam = () => {
       id: user.id,
       name: user.name,
       email: user.email,
+      limited: user.limited,
       stripe_customer: user.stripe_customer,
       role: user.team_owner ? "Member" : "Owner",
       plan: user.plan,
@@ -111,6 +112,7 @@ export const useTeam = () => {
     id: owner?.id,
     stripe_customer: owner?.stripe_customer,
     plan: owner?.plan,
+    limited: owner?.limited,
     users,
   }
 

@@ -1,5 +1,6 @@
 import { Badge, ThemeIcon } from "@mantine/core"
 import { IconCheck, IconCross, IconX } from "@tabler/icons-react"
+import ProtectedText from "./ProtectedText"
 
 const getColor = (status) => {
   switch (status) {
@@ -26,5 +27,9 @@ export default function StatusBadge({ status, minimal = false }) {
       </ThemeIcon>
     )
 
-  return <Badge color={color}>{status}</Badge>
+  return (
+    <Badge color={color}>
+      <ProtectedText>{status}</ProtectedText>
+    </Badge>
+  )
 }

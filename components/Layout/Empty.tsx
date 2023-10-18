@@ -22,7 +22,7 @@ export default function Empty({
   const { app } = useCurrentApp()
 
   return (
-    <Center mih="70vh">
+    <Center mih="70vh" className="unblockable">
       <Card withBorder p={50} w="fit-content">
         <Stack align="start" spacing="xl">
           <ThemeIcon size={72} radius="lg">

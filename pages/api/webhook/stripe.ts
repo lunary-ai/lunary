@@ -26,12 +26,11 @@ const setupSubscription = async (object) => {
       stripe_customer: customer,
       stripe_subscription: subscription,
       plan: "pro",
+      limited: false,
     })
     .eq("id", client_reference_id)
     .select("name,email")
     .single()
-
-  console.log(data)
 
   if (error) {
     throw error

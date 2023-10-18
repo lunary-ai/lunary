@@ -8,6 +8,7 @@ import {
   ThemeIcon,
 } from "@mantine/core"
 import { IconRobot, IconUser } from "@tabler/icons-react"
+import ProtectedText from "../ProtectedText"
 
 const typesColors = {
   ai: "green",
@@ -42,7 +43,7 @@ export function ChatMessage({ data, compact = false }) {
       <Spoiler mt={5} maxHeight={300} showLabel="Show all ↓" hideLabel="Hide ↑">
         {data?.text && (
           <Code color={typesColors[data?.role]} block>
-            {data?.text}
+            <ProtectedText>{data?.text}</ProtectedText>
           </Code>
         )}
         {data?.functionCall && (
@@ -55,9 +56,11 @@ export function ChatMessage({ data, compact = false }) {
                 </Text>
               </Text>
 
-              {typeof data?.functionCall?.arguments === "string"
-                ? data?.functionCall?.arguments
-                : JSON.stringify(data?.functionCall?.arguments, null, 2)}
+              <ProtectedText>
+                {typeof data?.functionCall?.arguments === "string"
+                  ? data?.functionCall?.arguments
+                  : JSON.stringify(data?.functionCall?.arguments, null, 2)}
+              </ProtectedText>
             </Code>
           </Text>
         )}
