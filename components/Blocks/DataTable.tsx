@@ -192,8 +192,13 @@ export default function DataTable({
           </tbody>
         </Table>
         {loading && (
-          <Text m="auto" p="md" color="dimmed" size="xs">
+          <Text m="auto" p="md" color="dimmed" size="xs" ta="center">
             Fetching...
+          </Text>
+        )}
+        {!items.length && !loading && (
+          <Text m="auto" p="md" color="dimmed" size="xs" ta="center">
+            No data
           </Text>
         )}
       </div>

@@ -67,12 +67,15 @@ export default function Generations() {
       <NextSeo title="Requests" />
       <Group position="apart">
         <Title>Generations</Title>
-        <Input
-          icon={<IconSearch />}
-          defaultValue={query}
-          onChange={(event) => setQuery(event.currentTarget.value)}
-        />
       </Group>
+
+      <Input
+        icon={<IconSearch size={16} />}
+        w={500}
+        placeholder="Type to filter"
+        defaultValue={query}
+        onChange={(event) => setQuery(event.currentTarget.value)}
+      />
 
       <Drawer
         opened={!!selected}
