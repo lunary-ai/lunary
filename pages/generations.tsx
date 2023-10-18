@@ -101,12 +101,12 @@ export default function Generations() {
           clearable
           onChange={setSelectedModels}
         />
-        <MultiSelect
+        {/* <MultiSelect
           placeholder="Users"
           data={users || []}
           clearable
           onChange={setSelectedUsers}
-        />
+        /> */}
         <MultiSelect
           placeholder="Tags"
           data={tags || []}
