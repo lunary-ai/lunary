@@ -1,7 +1,13 @@
 import DataTable from "@/components/Blocks/DataTable"
 
-import { useGenerations, useModelNames } from "@/utils/supabaseHooks"
 import {
+  useGenerations,
+  useModelNames,
+  useTags,
+  useUsers,
+} from "@/utils/supabaseHooks"
+import {
+  Box,
   Drawer,
   Group,
   Input,
@@ -59,38 +65,61 @@ export default function Generations() {
   let { modelNames } = useModelNames()
   const [query, setQuery] = useDebouncedState(null, 1000)
   const [selectedModels, setSelectedModels] = useState([])
+  const [selectedTags, setSelectedTags] = useState([])
+  const [selectedUsers, setSelectedUsers] = useState([])
+
   const { runs, loading, validating, loadMore } = useGenerations(
     query,
-    selectedModels
+    selectedModels,
+    selectedUsers,
+    selectedTags
   )
+  const { tags } = useTags()
+  const { users } = useUsers()
 
   const [selected, setSelected] = useState(null)
 
-  if (!loading && runs?.length === 0 && query === null) {
+  if (
+    !loading &&
+    runs?.length === 0 &&
+    query === null &&
+    selectedModels.length === 0 &&
+    selectedTags.length === 0 &&
+    selectedUsers.length === 0
+  ) {
     return <Empty Icon={IconBrandOpenai} what="requests" />
   }
 
   return (
     <Stack h={"calc(100vh - var(--navbar-size))"}>
       <NextSeo title="Requests" />
-      <Group position="apart">
-        <Title>Generations</Title>
-
-        <Group>
-          <MultiSelect
-            placeholder="Model"
-            data={modelNames || []}
-            clearable
-            onChange={setSelectedModels}
-          />
-          <Input
-            icon={<IconSearch size={16} />}
-            w={500}
-            placeholder="Type to filter"
-            defaultValue={query}
-            onChange={(event) => setQuery(event.currentTarget.value)}
-          />
-        </Group>
+      <Title>Generations</Title>
+      <Group position="right">
+        <MultiSelect
+          placeholder="Model"
+          data={modelNames || []}
+          clearable
+          onChange={setSelectedModels}
+        />
+        <MultiSelect
+          placeholder="Users"
+          data={users || []}
+          clearable
+          onChange={setSelectedUsers}
+        />
+        <MultiSelect
+          placeholder="Tags"
+          data={tags || []}
+          clearable
+          onChange={setSelectedTags}
+        />
+        <Input
+          icon={<IconSearch size={16} />}
+          w={300}
+          placeholder="Type to filter"
+          defaultValue={query}
+          onChange={(event) => setQuery(event.currentTarget.value)}
+        />
       </Group>
 
       <Drawer
