@@ -201,7 +201,19 @@ export function useTest(searchPattern) {
   }
 }
 
-export function useGenerations(search) {
+export function useModelNames() {
+  const supabaseClient = useSupabaseClient<Database>()
+  const { appId } = useContext(AppContext)
+
+  const query = supabaseClient.rpc("get_model_names", {
+    app_id: appId,
+  })
+
+  const { data: modelNames } = useQuery<string[]>(query)
+  return { modelNames }
+}
+
+export function useGenerations(search, modelNames: string[]) {
   const supabaseClient = useSupabaseClient<Database>()
   const { appId } = useContext(AppContext)
 
@@ -217,6 +229,10 @@ export function useGenerations(search) {
   }
 
   query.eq("app", appId)
+
+  if (modelNames.length > 0) {
+    query.in("name", modelNames)
+  }
 
   const {
     data: runs,
