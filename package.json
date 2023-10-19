@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
+    "@json2csv/plainjs": "^7.0.3",
     "@mantine/core": "^6.0.20",
     "@mantine/form": "^6.0.20",
     "@mantine/hooks": "^6.0.20",
@@ -35,6 +36,7 @@
     "next": "^13.4.13",
     "next-plausible": "^3.11.1",
     "next-seo": "^6.1.0",
+    "postgres": "^3.4.0",
     "posthog-js": "^1.76.0",
     "react": "18.2.0",
     "react-confetti": "^6.1.0",
