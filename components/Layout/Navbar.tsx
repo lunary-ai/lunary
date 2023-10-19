@@ -16,6 +16,7 @@ import { useUser } from "@supabase/auth-helpers-react"
 import {
   IconAlertTriangle,
   IconAnalyze,
+  IconBolt,
   IconExclamationMark,
   IconHelp,
   IconMessage,
@@ -144,7 +145,7 @@ export default function Navbar() {
                 size="xs"
                 variant="gradient"
                 gradient={{ from: "#0788ff", to: "#9900ff", deg: 30 }}
-                leftIcon={<IconStarFilled size={16} />}
+                leftIcon={<IconBolt size={16} />}
               >
                 Upgrade
               </Button>
