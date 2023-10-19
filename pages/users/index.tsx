@@ -17,6 +17,7 @@ const columns = [
     header: "User",
     size: 80,
     id: "users",
+    enableHiding: false,
     cell: (props) => {
       const user = props.row.original
       return (
