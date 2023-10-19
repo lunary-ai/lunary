@@ -4,10 +4,10 @@ import {
   useGenerations,
   useModelNames,
   useTags,
-  useUsers,
+  useTeam,
 } from "@/utils/supabaseHooks"
 import {
-  Box,
+  Button,
   Drawer,
   Group,
   Input,
@@ -29,14 +29,15 @@ import {
   timeColumn,
   userColumn,
 } from "@/utils/datatable"
-import { IconBrandOpenai, IconSearch } from "@tabler/icons-react"
+import { IconBrandOpenai, IconDownload, IconSearch } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
-import { useState } from "react"
+import { useContext, useState } from "react"
 
 import TokensBadge from "@/components/Blocks/TokensBadge"
 import { formatDateTime } from "@/utils/format"
 import { useDebouncedState } from "@mantine/hooks"
 import Empty from "../components/Layout/Empty"
+import { AppContext } from "../utils/context"
 
 const columns = [
   timeColumn("created_at"),
@@ -61,31 +62,44 @@ const columns = [
   outputColumn("Result"),
 ]
 
+function buildExportUrl(appId: string, query: string | null) {
+  const url = new URL("/api/generation/export", window.location.origin)
+
+  url.searchParams.append("appId", appId)
+
+  if (query) {
+    url.searchParams.append("search", query)
+  }
+
+  return url.toString()
+}
+
 export default function Generations() {
   let { modelNames } = useModelNames()
   const [query, setQuery] = useDebouncedState(null, 1000)
   const [selectedModels, setSelectedModels] = useState([])
   const [selectedTags, setSelectedTags] = useState([])
-  const [selectedUsers, setSelectedUsers] = useState([])
+
+  const { appId } = useContext(AppContext)
 
   const { runs, loading, validating, loadMore } = useGenerations(
     query,
     selectedModels,
-    selectedUsers,
     selectedTags
   )
   const { tags } = useTags()
-  const { users } = useUsers()
+  const { team } = useTeam()
 
   const [selected, setSelected] = useState(null)
+
+  const exportUrl = buildExportUrl(appId, query)
 
   if (
     !loading &&
     runs?.length === 0 &&
     query === null &&
     selectedModels.length === 0 &&
-    selectedTags.length === 0 &&
-    selectedUsers.length === 0
+    selectedTags.length === 0
   ) {
     return <Empty Icon={IconBrandOpenai} what="requests" />
   }
@@ -93,7 +107,15 @@ export default function Generations() {
   return (
     <Stack h={"calc(100vh - var(--navbar-size))"}>
       <NextSeo title="Requests" />
-      <Title>Generations</Title>
+      <Group position="apart">
+        <Title>Generations</Title>
+        {team.plan === "pro" && (
+          <Button leftIcon={<IconDownload />} component="a" href={exportUrl}>
+            Export to CSV
+          </Button>
+        )}
+      </Group>
+
       <Group position="right">
         <MultiSelect
           placeholder="Model"
