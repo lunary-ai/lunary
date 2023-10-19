@@ -39,35 +39,40 @@ const handleRouteChange = async () => {
 }
 
 const track = (event: string, data?: any) => {
-  posthog?.capture(event, data)
+  try {
+    posthog?.capture(event, data)
 
-  // w.gosquared("event", event, data)
-  w.plausible(event, { props: data })
+    w.plausible(event, { props: data })
 
-  w.crisp.push([
-    "set",
-    "session:event",
-    // [[["product_bought", { price: "$200", name: "iPhone 6S" }, "red"]]],
-    [[[event, data]]],
-  ])
+    w.crisp.push(["set", "session:event", [[[event, data]]]])
+  } catch (e) {
+    console.error(e)
+  }
 }
 
 const identify = (userId: string, traits: any) => {
-  posthog?.identify(userId, traits)
+  try {
+    posthog?.identify(userId, traits)
 
-  if (traits.email) w.crisp.push(["set", "user:email", traits.email])
-  if (traits.name) w.crisp.push(["set", "user:nickname", traits.name])
+    if (traits.email) w.crisp.push(["set", "user:email", traits.email])
+    if (traits.name) w.crisp.push(["set", "user:nickname", traits.name])
 
-  w.crisp.push([
-    "set",
-    "session:data",
-    [
+    w.crisp.push([
+      "set",
+      "session:data",
       [
-        ...Object.entries(traits).map(([key, value]) => [key, value]),
-        ["user_id", userId],
+        [
+          ...Object.entries(traits)
+            .map(([key, value]) => [key, value])
+            .filter(([key]) => key !== "email" && key !== "name")
+            .filter(([key, value]) => value),
+          ["user-id", userId],
+        ],
       ],
-    ],
-  ])
+    ])
+  } catch (e) {
+    console.error(e)
+  }
 }
 
 const analytics = {
