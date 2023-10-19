@@ -313,9 +313,7 @@ function SignupPage() {
                 <Button
                   variant="outline"
                   onClick={() => {
-                    try {
-                      window._gs("chat", "show")
-                    } catch (e) {}
+                    $crisp.push(["do", "chat:open"])
                   }}
                   rightIcon={<IconMessageBolt size={18} />}
                 >

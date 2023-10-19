@@ -12,9 +12,12 @@ if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
 
 const w = {
   // @ts-ignore
-  get gosquared() {
-    if (typeof window !== "undefined" && typeof window["_gs"] !== "undefined")
-      return window["_gs"]
+  get crisp() {
+    if (
+      typeof window !== "undefined" &&
+      typeof window["$crisp"] !== "undefined"
+    )
+      return window["$crisp"]
 
     return () => {}
   },
@@ -32,21 +35,39 @@ const w = {
 const handleRouteChange = async () => {
   posthog?.capture("$pageview")
 
-  w.gosquared("track")
+  // w.gosquared("track")
 }
 
 const track = (event: string, data?: any) => {
   posthog?.capture(event, data)
 
-  w.gosquared("event", event, data)
+  // w.gosquared("event", event, data)
   w.plausible(event, { props: data })
+
+  w.crisp.push([
+    "set",
+    "session:event",
+    // [[["product_bought", { price: "$200", name: "iPhone 6S" }, "red"]]],
+    [[[event, data]]],
+  ])
 }
 
 const identify = (userId: string, traits: any) => {
   posthog?.identify(userId, traits)
 
-  // @ts-ignore
-  w.gosquared("identify", traits)
+  if (traits.email) w.crisp.push(["set", "user:email", traits.email])
+  if (traits.name) w.crisp.push(["set", "user:nickname", traits.name])
+
+  w.crisp.push([
+    "set",
+    "session:data",
+    [
+      [
+        ...Object.entries(traits).map(([key, value]) => [key, value]),
+        ["user_id", userId],
+      ],
+    ],
+  ])
 }
 
 const analytics = {

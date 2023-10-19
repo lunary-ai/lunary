@@ -64,9 +64,7 @@ function TeamFull({ owner }) {
             component="button"
             type="button"
             onClick={() => {
-              try {
-                window._gs("chat", "show")
-              } catch (e) {}
+              $crisp.push(["do", "chat:open"])
             }}
           >
             Contact support →
@@ -304,9 +302,7 @@ export default function Join({ teamSize }) {
                       <Button
                         variant="outline"
                         onClick={() => {
-                          try {
-                            window._gs("chat", "show")
-                          } catch (e) {}
+                          $crisp.push(["do", "chat:open"])
                         }}
                         rightIcon={<IconMessageBolt size={18} />}
                       >

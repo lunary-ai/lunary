@@ -8,7 +8,7 @@ import {
   ThemeIcon,
   Title,
 } from "@mantine/core"
-import { IconBrandDiscord, IconMessage } from "@tabler/icons-react"
+import { IconBrandDiscord, IconMail, IconMessage } from "@tabler/icons-react"
 import CopyText from "../Blocks/CopyText"
 import { useCurrentApp } from "@/utils/supabaseHooks"
 
@@ -51,6 +51,16 @@ export default function Empty({
             <Button
               size="lg"
               leftIcon={<IconMessage size={22} />}
+              color="blue"
+              onClick={() => {
+                $crisp.push(["do", "chat:open"])
+              }}
+            >
+              Send Chat
+            </Button>
+            <Button
+              size="lg"
+              leftIcon={<IconMail size={22} />}
               color="teal"
               component="a"
               href="mailto:vince@llmonitor.com"
