@@ -28,16 +28,16 @@ export const UpgradeBody = () => {
       <Stack align="center" ta="center" className="unblockable">
         <IconAnalyze color={"#206dce"} size={60} />
         <Title order={2} weight={700} size={40} ta="center">
-          Limited time offer
+          Upgrade your plan
         </Title>
 
-        <Text size="xl" mt="xs" weight={500}>
-          Upgrade now and lock in{" "}
+        {/* <Text size="xl" mt="xs" weight={500}>
+          Upgrade now and secure{" "}
           <Mark>{` the lowest price we'll ever offer. `}</Mark>
-        </Text>
+        </Text> */}
         <Text size="lg" mt="xs" mb="xl" weight={500}>
-          Unlock higher usage & team access, support development and get
-          involved in the product's future.
+          Unlock higher usage and team access, support development, and get
+          involved in the future of the product.
         </Text>
       </Stack>
 
@@ -56,17 +56,17 @@ export const UpgradeBody = () => {
             >
               Pro
             </Text>
-            <Badge variant="outline">-30%</Badge>
+            <Badge variant="outline">-50%</Badge>
           </Group>
 
           <Group my={20} align="center" spacing={10}>
             <Title order={3} size={30}>
               <Text span td="line-through" size={20}>
-                $69
+                $50
               </Text>
-              {` 49$`}
+              {` $25`}
               <Text span size={20}>
-                / mo
+                {` / mo`}
               </Text>
             </Title>
           </Group>
@@ -80,9 +80,9 @@ export const UpgradeBody = () => {
               </ThemeIcon>
             }
           >
-            <List.Item>10k events / day</List.Item>
-            <List.Item>Invite 5 team members</List.Item>
-            <List.Item>Unlimited data retention</List.Item>
+            <List.Item>5k events / day</List.Item>
+            <List.Item>Invite 4 team members</List.Item>
+            <List.Item>Export data</List.Item>
             <List.Item>1-on-1 support</List.Item>
           </List>
 
@@ -96,7 +96,7 @@ export const UpgradeBody = () => {
             color="violet"
             mt={40}
           >
-            Claim -30% forever
+            Claim -50% forever
           </Button>
         </Card>
         <Card p="xl" withBorder>
@@ -107,19 +107,16 @@ export const UpgradeBody = () => {
               variant="gradient"
               gradient={{ from: "teal", to: "lime", deg: 45 }}
             >
-              Lifetime
+              Unlimited
             </Text>
-            <Badge color="teal" variant="outline">
-              -70%
-            </Badge>
           </Group>
 
           <Group my={20} align="center" spacing={10}>
             <Title order={3} size={30}>
-              <Text span td="line-through" size={20}>
-                {`$1999`}
+              {` $95`}
+              <Text span size={20}>
+                {` / mo`}
               </Text>
-              {` $599`}
             </Title>
           </Group>
           <List
@@ -132,9 +129,9 @@ export const UpgradeBody = () => {
               </ThemeIcon>
             }
           >
-            <List.Item>Pay once, access forever</List.Item>
-            <List.Item>All the benefits of Pro</List.Item>
-            <List.Item>Your company featured on our GitHub</List.Item>
+            <List.Item>10 team members</List.Item>
+            <List.Item>20k events per day</List.Item>
+            <List.Item>API access</List.Item>
             <List.Item>Early access to new features</List.Item>
           </List>
 
@@ -144,14 +141,19 @@ export const UpgradeBody = () => {
             href={`${process.env.NEXT_PUBLIC_STRIPE_PRO_LINK}&client_reference_id=${team?.id}`}
             target="_blank"
             fullWidth
-            variant="gradient"
-            gradient={{ from: "teal", to: "lime", deg: 25 }}
+            variant="outline"
+            color="teal"
+            // gradient={{ from: "teal", to: "lime", deg: 25 }}
             mt={40}
           >
-            Get lifetime access
+            Upgrade now
           </Button>
         </Card>
       </SimpleGrid>
+      <Text ta="center" size="sm" mt="lg">
+        Cancel you subscription in 1 click any time. <Mark>30 days</Mark>{" "}
+        money-back guarantee.
+      </Text>
     </>
   )
 }
