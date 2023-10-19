@@ -12,8 +12,6 @@ import { Card, Group, Table, Text } from "@mantine/core"
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-react"
 
 import { useVirtual } from "@tanstack/react-virtual"
-import { useTeam } from "@/utils/supabaseHooks"
-import ProtectedText from "./ProtectedText"
 
 // outside for reference
 const emptyArray = []

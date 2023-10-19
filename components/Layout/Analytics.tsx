@@ -1,5 +1,5 @@
 import { useRouter } from "next/router"
-import { useEffect } from "react"
+import { useEffect, Component } from "react"
 import Script from "next/script"
 
 import { PostHogProvider } from "posthog-js/react"
@@ -7,6 +7,20 @@ import PlausibleProvider from "next-plausible"
 import posthog from "posthog-js"
 
 import analytics from "@/utils/analytics"
+
+import { Crisp } from "crisp-sdk-web"
+
+class CrispChat extends Component {
+  componentDidMount() {
+    if (process.env.NEXT_PUBLIC_CRISP_ID) {
+      Crisp.configure(process.env.NEXT_PUBLIC_CRISP_ID)
+    }
+  }
+
+  render() {
+    return null
+  }
+}
 
 export default function AnalyticsWrapper({ children }) {
   const router = useRouter()
@@ -22,6 +36,7 @@ export default function AnalyticsWrapper({ children }) {
 
   return (
     <>
+      <CrispChat />
       <PlausibleProvider
         domain="app.llmonitor.com,rollup.llmonitor.com"
         scriptProps={{
@@ -39,17 +54,6 @@ export default function AnalyticsWrapper({ children }) {
             }}
             onLoad={() => console.log("Custom script loaded.")}
             onError={() => console.log("Custom script failed to load.")}
-          />
-        )}
-
-        {process.env.NEXT_PUBLIC_LIVECHAT_SCRIPT && (
-          <Script
-            id="livechat-script"
-            dangerouslySetInnerHTML={{
-              __html: process.env.NEXT_PUBLIC_LIVECHAT_SCRIPT,
-            }}
-            onLoad={() => console.log("LiveChat script loaded.")}
-            onError={() => console.log("LiveChat script failed to load.")}
           />
         )}
 
