@@ -13,6 +13,7 @@ export const timeColumn = (timeColumn, label = "Time") => {
     header: label,
     id: timeColumn,
     size: 60,
+    enableHiding: false,
     enableResizing: false,
     sortingFn: (a, b) =>
       new Date(a.getValue(timeColumn)).getTime() -
@@ -33,6 +34,7 @@ export const durationColumn = (unit = "s") => {
   return {
     id: "duration",
     header: "Duration",
+    enableHiding: false,
     size: 25,
     cell: (props) => {
       if (!props.getValue()) return null
@@ -58,6 +60,7 @@ export const statusColumn = () => {
   return columnHelper.accessor("status", {
     id: "status",
     header: "Status",
+    enableHiding: false,
     size: 60,
     cell: (props) => (
       <Badge color={props.getValue() === "success" ? "green" : "red"}>
@@ -71,6 +74,7 @@ export const tagsColumn = () => {
   return columnHelper.accessor("tags", {
     header: "Tags",
     size: 60,
+    enableHiding: true,
     cell: (props) => {
       const tags = props.getValue()
       if (!tags) return null
@@ -94,6 +98,7 @@ export const inputColumn = (label = "input") => {
   return columnHelper.accessor("input", {
     header: label,
     size: 200,
+    enableHiding: false,
     enableSorting: false,
     cell: (props) => <SmartViewer data={props.getValue()} compact />,
   })
@@ -102,6 +107,7 @@ export const inputColumn = (label = "input") => {
 export const outputColumn = (label = "Response") => {
   return columnHelper.accessor("output", {
     header: label,
+    enableHiding: false,
     enableSorting: false,
     cell: (props) => (
       <SmartViewer
@@ -116,6 +122,7 @@ export const outputColumn = (label = "Response") => {
 export const userColumn = () => {
   return columnHelper.accessor("user", {
     header: "User",
+    enableHiding: true,
     size: 60,
     cell: (props) => {
       const userId = props.getValue()
@@ -131,6 +138,7 @@ export const userColumn = () => {
 export const nameColumn = (label = "Name") => {
   return columnHelper.accessor("name", {
     header: label,
+    enableHiding: false,
     size: 80,
     cell: (props) => {
       const status = props.row.original.status
@@ -157,6 +165,7 @@ export const costColumn = () => {
   return columnHelper.accessor("cost", {
     header: "Cost",
     size: 40,
+    enableHiding: false,
     cell: (props) => {
       const cost = props.getValue()
       return formatCost(cost)
@@ -189,9 +198,10 @@ export const feedbackColumn = (withRelatedRuns = false) => {
         return <Feedback data={run.feedback} />
       }
 
-  return columnHelper.accessor("feedbacks", {
+  return columnHelper.accessor("feedback", {
     header: "Feedback",
     size: 100,
+    enableHiding: true,
     cell,
   })
 }

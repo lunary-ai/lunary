@@ -47,6 +47,7 @@ const columns = [
     header: "Tokens",
     size: 25,
     id: "tokens",
+    enableHiding: false,
     sortingFn: (a, b) =>
       a.original.completion_tokens +
       a.original.prompt_tokens -
