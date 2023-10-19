@@ -240,7 +240,6 @@ export function useUsers() {
 export function useGenerations(
   search,
   modelNames: string[] = [],
-  users: string[] = [],
   tags: string[] = []
 ) {
   const supabaseClient = useSupabaseClient<Database>()
@@ -248,9 +247,13 @@ export function useGenerations(
 
   let query
   if (search === null || search === "") {
-    query = supabaseClient.from("run").select("*").order("created_at", {
-      ascending: false,
-    })
+    query = supabaseClient
+      .from("run")
+      .select("*")
+      .order("created_at", {
+        ascending: false,
+      })
+      .eq("type", "llm")
   } else {
     query = supabaseClient.rpc("get_runs", {
       search_pattern: search,
@@ -262,10 +265,6 @@ export function useGenerations(
   if (modelNames.length > 0) {
     query.in("name", modelNames)
   }
-
-  // if (users.length > 0) {
-  //   // query.in("app_user.external_id", users)
-  // }
 
   if (tags.length > 0) {
     query.contains("tags", tags)

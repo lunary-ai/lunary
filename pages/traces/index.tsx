@@ -34,7 +34,7 @@ export default function Traces() {
   const [query, setQuery] = useDebouncedState(null, 1000)
   const { runs, loading, validating, loadMore } = useTraces(query)
 
-  if (!loading && runs?.length === 0) {
+  if (!loading && runs?.length === 0 && query === null) {
     return <Empty Icon={IconRobot} what="agents traces" />
   }
 
