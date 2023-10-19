@@ -183,17 +183,15 @@ export default function DataTable({
                     .getAllColumns()
                     .filter((column) => column.getCanHide())
                     .map((column) => (
-                      <Menu.Item key={column.id}>
+                      <Menu.Item
+                        key={column.id}
+                        onClick={() => column.toggleVisibility()}
+                      >
                         <Group>
                           <Checkbox
                             size="xs"
                             radius="sm"
                             checked={column.getIsVisible()}
-                            onChange={(event) =>
-                              column.toggleVisibility(
-                                event.currentTarget.checked
-                              )
-                            }
                           />
                           {column.columnDef.header}
                         </Group>
