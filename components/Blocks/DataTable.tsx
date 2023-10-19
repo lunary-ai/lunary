@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import {
   flexRender,
@@ -6,16 +6,29 @@ import {
   useReactTable,
   getSortedRowModel,
   SortingState,
-  Row,
   VisibilityState,
 } from "@tanstack/react-table"
-import { Card, Group, Table, Text } from "@mantine/core"
-import { IconChevronDown, IconChevronUp } from "@tabler/icons-react"
+import {
+  ActionIcon,
+  Card,
+  Checkbox,
+  Group,
+  Menu,
+  Table,
+  Text,
+} from "@mantine/core"
+import {
+  IconChevronDown,
+  IconChevronUp,
+  IconColumns3,
+} from "@tabler/icons-react"
 
 import { useVirtual } from "@tanstack/react-virtual"
 
 // outside for reference
 const emptyArray = []
+
+const AUTO_HIDABLE_COLUMNS = ["feedback", "tags", "user"]
 
 export default function DataTable({
   data,
@@ -90,18 +103,13 @@ export default function DataTable({
   useEffect(() => {
     if (!table || !rows?.length) return
     table.getAllColumns().forEach((column) => {
-      const isHiddable = column.getCanHide()
-      if (!isHiddable) return
+      if (!AUTO_HIDABLE_COLUMNS.includes(column.id)) return
 
       const isUsed = rows.some((row) => row.original[column.id])
 
       column.toggleVisibility(isUsed)
     })
   }, [table, rows])
-
-  const hiddenColumns = table
-    .getAllLeafColumns()
-    .filter((column) => !column.getIsVisible())
 
   return (
     <>
@@ -164,6 +172,35 @@ export default function DataTable({
                   })}
                 </tr>
               ))}
+              <Menu withArrow shadow="sm" closeOnItemClick={false}>
+                <Menu.Target>
+                  <ActionIcon pos="absolute" right={10} top={5}>
+                    <IconColumns3 size={16} />
+                  </ActionIcon>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  {table
+                    .getAllColumns()
+                    .filter((column) => column.getCanHide())
+                    .map((column) => (
+                      <Menu.Item key={column.id}>
+                        <Group>
+                          <Checkbox
+                            size="xs"
+                            radius="sm"
+                            checked={column.getIsVisible()}
+                            onChange={(event) =>
+                              column.toggleVisibility(
+                                event.currentTarget.checked
+                              )
+                            }
+                          />
+                          {column.columnDef.header}
+                        </Group>
+                      </Menu.Item>
+                    ))}
+                </Menu.Dropdown>
+              </Menu>
             </thead>
             <tbody>
               {paddingTop > 0 && (
@@ -284,12 +321,12 @@ export default function DataTable({
           }
         `}</style>
       </Card>
-      {!!hiddenColumns.length && (
+      {/* {!!hiddenColumns.length && (
         <Text color="dimmed" size="xs">
           {`The following unused columns were hidden: `}
           {hiddenColumns.map((c) => c.id).join(", ")}
         </Text>
-      )}
+      )} */}
     </>
   )
 }
