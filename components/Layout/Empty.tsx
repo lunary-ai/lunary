@@ -44,9 +44,7 @@ export default function Empty({
           <Text>
             App ID: <CopyText value={app?.id} />
           </Text>
-          <Text size="xl">
-            Any issue? Get help from a founder on Discord or by email.
-          </Text>
+          <Text size="xl">Any issue? Get help from a founder.</Text>
           <Group>
             <Button
               size="lg"
