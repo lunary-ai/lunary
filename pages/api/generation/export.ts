@@ -33,6 +33,8 @@ export default async function handler(
     tagsFilter = sql`and r.tags && ${tags}`
   }
 
+  console.log(tags)
+
   // TODO: app users
   // TODO: cost
   const rows = await sql`
@@ -43,14 +45,11 @@ export default async function handler(
         when r.ended_at is not null then extract(epoch from (r.ended_at - r.created_at)) 
         else null 
       end as duration,
-      u.external_id as user_id,
       coalesce(completion_tokens, 0) + coalesce(prompt_tokens, 0) as tokens,
       tags as tags,
-      input as prompt,
       coalesce(output, error) as result
     from
       run r 
-      left join app_user u on u.app = r.app
     where
       r.app = ${appId}
       and r.type = 'llm'
