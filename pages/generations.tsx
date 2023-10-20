@@ -63,13 +63,26 @@ const columns = [
   outputColumn("Result"),
 ]
 
-function buildExportUrl(appId: string, query: string | null) {
+function buildExportUrl(
+  appId: string,
+  query: string | null,
+  models: string[],
+  tags: string[]
+) {
   const url = new URL("/api/generation/export", window.location.origin)
 
   url.searchParams.append("appId", appId)
 
   if (query) {
     url.searchParams.append("search", query)
+  }
+
+  if (models.length > 0) {
+    url.searchParams.append("models", models.join(","))
+  }
+
+  if (tags.length > 0) {
+    url.searchParams.append("tags", tags.join(","))
   }
 
   return url.toString()
@@ -94,7 +107,7 @@ export default function Generations() {
 
   const [selected, setSelected] = useState(null)
 
-  const exportUrl = buildExportUrl(appId, query)
+  const exportUrl = buildExportUrl(appId, query, selectedModels, selectedTags)
 
   if (!loading && !app?.activated) {
     return <Empty Icon={IconBrandOpenai} what="requests" />
@@ -119,12 +132,6 @@ export default function Generations() {
           clearable
           onChange={setSelectedModels}
         />
-        {/* <MultiSelect
-          placeholder="Users"
-          data={users || []}
-          clearable
-          onChange={setSelectedUsers}
-        /> */}
         <MultiSelect
           placeholder="Tags"
           data={tags || []}
