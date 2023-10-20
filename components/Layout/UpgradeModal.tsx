@@ -83,7 +83,7 @@ export const UpgradeBody = () => {
             <List.Item>5k events / day</List.Item>
             <List.Item>Invite 4 team members</List.Item>
             <List.Item>Export data</List.Item>
-            <List.Item>1-on-1 support</List.Item>
+            <List.Item>Advanced Analytics</List.Item>
           </List>
 
           <Button

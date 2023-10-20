@@ -1,4 +1,14 @@
-import { Box, Card, Text, Title, useMantineTheme } from "@mantine/core"
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  Center,
+  Overlay,
+  Text,
+  Title,
+  useMantineTheme,
+} from "@mantine/core"
 import {
   AreaChart,
   Area,
@@ -11,6 +21,8 @@ import {
 
 import { eachDayOfInterval, format, parseISO } from "date-fns"
 import { formatLargeNumber } from "@/utils/format"
+import { IconBolt } from "@tabler/icons-react"
+import { modals } from "@mantine/modals"
 
 const slugify = (str) => {
   return str
@@ -19,10 +31,29 @@ const slugify = (str) => {
     .replace(/[^\w-]+/g, "")
 }
 
-function prepareDataForRecharts(data, splitBy, props, range) {
+const generateFakeData = (range: number) => {
+  const data = []
+  for (let i = 0; i < range; i++) {
+    const date = new Date()
+    date.setDate(date.getDate() - i)
+    const users = Math.floor(Math.random() * 6000) + 4000
+    data.push({
+      date: date.toISOString().split("T")[0],
+      users: users,
+    })
+  }
+  return data
+}
+
+function prepareDataForRecharts(
+  data: any[],
+  splitBy: string | undefined,
+  props: string[],
+  range: number
+): any[] {
   // Create a map to hold the processed data
   // const dataMap = {}
-  const output = []
+  const output: any[] = []
 
   const uniqueSplitByValues =
     splitBy &&
@@ -30,13 +61,13 @@ function prepareDataForRecharts(data, splitBy, props, range) {
 
   // Initialize map with dates as keys and empty data as values
   eachDayOfInterval({
-    // substract 'range' amount of days for start date
+    // subtract 'range' amount of days for start date
     start: new Date(new Date().getTime() - range * 24 * 60 * 60 * 1000),
     end: new Date(),
   }).forEach((day) => {
     const date = format(day, "yyyy-MM-dd")
 
-    const dayData = { date }
+    const dayData: { [key: string]: any } = { date }
 
     for (let prop of props) {
       if (splitBy) {
@@ -92,6 +123,7 @@ const LineChart = ({
   data,
   title,
   props,
+  blocked,
   formatter = formatLargeNumber,
   height = 300,
   splitBy = undefined,
@@ -101,14 +133,46 @@ const LineChart = ({
 
   const colors = ["blue", "pink", "indigo", "green", "violet", "yellow"]
 
-  const cleanedData = prepareDataForRecharts(data, splitBy, props, range)
+  const cleanedData = prepareDataForRecharts(
+    blocked ? generateFakeData(range) : data,
+    splitBy,
+    props,
+    range
+  )
 
   return (
     <Card withBorder p={0}>
       <Text c="dimmed" tt="uppercase" fw={700} fz="xs" m="md">
         {title}
       </Text>
-      <Box mt="sm">
+      <Box mt="sm" pos="relative">
+        {blocked && (
+          <Overlay blur={5} opacity={0.3} p="lg" zIndex={1}>
+            <Center h="100%">
+              <Alert title="Advanced Analytics" ta="center">
+                Upgrade to <b>Pro</b> to unlock this chart
+                <br />
+                <Button
+                  mt="md"
+                  onClick={() =>
+                    modals.openContextModal({
+                      modal: "upgrade",
+                      size: 800,
+                      innerProps: {},
+                    })
+                  }
+                  size="xs"
+                  variant="gradient"
+                  gradient={{ from: "#0788ff", to: "#9900ff", deg: 30 }}
+                  leftIcon={<IconBolt size={16} />}
+                >
+                  Upgrade
+                </Button>
+              </Alert>
+            </Center>
+          </Overlay>
+        )}
+
         <ResponsiveContainer width="100%" height={height}>
           <AreaChart
             width={500}

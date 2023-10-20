@@ -1,6 +1,7 @@
 import DataTable from "@/components/Blocks/DataTable"
 
 import {
+  useCurrentApp,
   useGenerations,
   useModelNames,
   useTags,
@@ -81,6 +82,7 @@ export default function Generations() {
   const [selectedTags, setSelectedTags] = useState([])
 
   const { appId } = useContext(AppContext)
+  const { app } = useCurrentApp()
 
   const { runs, loading, validating, loadMore } = useGenerations(
     query,
@@ -94,13 +96,7 @@ export default function Generations() {
 
   const exportUrl = buildExportUrl(appId, query)
 
-  if (
-    !loading &&
-    runs?.length === 0 &&
-    query === null &&
-    selectedModels.length === 0 &&
-    selectedTags.length === 0
-  ) {
+  if (!loading && !app?.activated) {
     return <Empty Icon={IconBrandOpenai} what="requests" />
   }
 

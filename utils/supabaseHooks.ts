@@ -10,7 +10,7 @@ import {
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
 import { useMantineTheme } from "@mantine/core"
 import { Database } from "./supaTypes"
-import { useContext, useState } from "react"
+import { use, useContext, useEffect, useState } from "react"
 import { calcRunCost } from "./calcCosts"
 import { AppContext } from "./context"
 import useSWRInfinite from "swr/infinite"
@@ -156,10 +156,22 @@ export function useApps() {
 
 export function useCurrentApp() {
   const { appId, setAppId } = useContext(AppContext)
+  const supabaseClient = useSupabaseClient<Database>()
+
+  const { count } = useQuery(
+    supabaseClient
+      .from("run")
+      .select("id", { count: "exact", head: true })
+      .eq("app", appId)
+      .limit(1)
+  )
 
   const { apps, loading } = useApps()
 
   const app = apps?.find((a) => a.id === appId)
+
+  // @ts-ignore
+  if (app) app.activated = !!count
 
   return { app, setAppId, loading }
 }
