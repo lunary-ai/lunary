@@ -39,6 +39,7 @@ import { formatDateTime } from "@/utils/format"
 import { useDebouncedState } from "@mantine/hooks"
 import Empty from "../components/Layout/Empty"
 import { AppContext } from "../utils/context"
+import { modals } from "@mantine/modals"
 
 const columns = [
   timeColumn("created_at"),
@@ -88,6 +89,33 @@ function buildExportUrl(
   return url.toString()
 }
 
+function ExportButton({ url }: { url: string }) {
+  const { team } = useTeam()
+
+  if (team.plan === "pro") {
+    return (
+      <Button leftIcon={<IconDownload />} component="a" href={url}>
+        Export to CSV
+      </Button>
+    )
+  }
+
+  return (
+    <Button
+      leftIcon={<IconDownload />}
+      onClick={() =>
+        modals.openContextModal({
+          modal: "upgrade",
+          size: 800,
+          innerProps: {},
+        })
+      }
+    >
+      Export to CSV
+    </Button>
+  )
+}
+
 export default function Generations() {
   let { modelNames } = useModelNames()
   const [query, setQuery] = useDebouncedState(null, 1000)
@@ -118,11 +146,7 @@ export default function Generations() {
       <NextSeo title="Requests" />
       <Group position="apart">
         <Title>Generations</Title>
-        {team.plan === "pro" && (
-          <Button leftIcon={<IconDownload />} component="a" href={exportUrl}>
-            Export to CSV
-          </Button>
-        )}
+        <ExportButton url={exportUrl} />
       </Group>
 
       <Group position="right">
