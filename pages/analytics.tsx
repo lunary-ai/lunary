@@ -9,6 +9,8 @@ import {
   useRunsUsageByDay,
   useRunsUsage,
   useAppUsers,
+  useCurrentApp,
+  useTeam,
 } from "@/utils/supabaseHooks"
 import {
   Center,
@@ -48,6 +50,9 @@ const calculateDailyCost = (usage) => {
 
 export default function Analytics() {
   const [range, setRange] = useState(7)
+  const { app } = useCurrentApp()
+
+  const { team } = useTeam()
 
   const { usage, loading: usageLoading } = useRunsUsage(range)
   const { dailyUsage, loading: dailyUsageLoading } = useRunsUsageByDay(range)
@@ -55,21 +60,16 @@ export default function Analytics() {
 
   const loading = usageLoading || dailyUsageLoading || usersLoading
 
-  if (
-    !loading &&
-    !usage?.length &&
-    !dailyUsage?.length &&
-    !usersWithUsage?.length
-  ) {
-    return <Empty Icon={IconChartAreaLine} what="data" />
-  }
-
   if (loading && !usage && !dailyUsage && !usersWithUsage)
     return (
       <Center h="60vh">
         <Loader />
       </Center>
     )
+
+  if (!loading && !app?.activated) {
+    return <Empty Icon={IconChartAreaLine} what="data" />
+  }
 
   return (
     <Container size="lg" my="lg">
@@ -185,6 +185,42 @@ export default function Analytics() {
                 }))}
               props={["runs"]}
             />
+
+            {team?.plan === "free" && (
+              <>
+                <LineChart
+                  blocked={true}
+                  props={["users"]}
+                  range={range}
+                  title="Cost per user"
+                  height={230}
+                />
+
+                <LineChart
+                  blocked={true}
+                  range={range}
+                  props={["users"]}
+                  title="Errors over time"
+                  height={230}
+                />
+
+                <LineChart
+                  blocked={true}
+                  range={range}
+                  props={["users"]}
+                  title="Avg latency"
+                  height={230}
+                />
+
+                <LineChart
+                  blocked={true}
+                  range={range}
+                  props={["users"]}
+                  title="Positive feedback"
+                  height={230}
+                />
+              </>
+            )}
           </>
         )}
       </Stack>
