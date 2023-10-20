@@ -26,6 +26,7 @@ import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 import Empty from "@/components/Layout/Empty"
 import { IconChartAreaLine } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
+import ErrorBoundary from "@/components/Blocks/ErrorBoundary"
 
 const calculateDailyCost = (usage) => {
   // calculate using calcRunCost, reduce by model, and filter by type llm
@@ -67,7 +68,7 @@ export default function Analytics() {
       </Center>
     )
 
-  if (!loading && !app?.activated) {
+  if (!loading && app && !app.activated) {
     return <Empty Icon={IconChartAreaLine} what="data" />
   }
 

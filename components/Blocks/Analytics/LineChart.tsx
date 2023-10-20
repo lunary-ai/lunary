@@ -23,6 +23,7 @@ import { eachDayOfInterval, format, parseISO } from "date-fns"
 import { formatLargeNumber } from "@/utils/format"
 import { IconBolt } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
+import ErrorBoundary from "../ErrorBoundary"
 
 const slugify = (str) => {
   return str
@@ -54,6 +55,8 @@ function prepareDataForRecharts(
   // Create a map to hold the processed data
   // const dataMap = {}
   const output: any[] = []
+
+  if (!data) data = []
 
   const uniqueSplitByValues =
     splitBy &&
@@ -119,7 +122,7 @@ const CustomizedAxisTick = ({ x, y, payload, index, data }) => {
   )
 }
 
-const LineChart = ({
+const LineChartComponent = ({
   data,
   title,
   props,
@@ -207,8 +210,8 @@ const LineChart = ({
               interval="preserveStartEnd"
               tickLine={false}
               axisLine={false}
-              minTickGap={10}
-              max={5}
+              // minTickGap={5}
+              max={7}
             />
 
             <Tooltip
@@ -233,50 +236,57 @@ const LineChart = ({
               }}
             />
 
-            {Object.keys(cleanedData[0])
-              .filter((prop) => prop !== "date")
-              .map((prop, i) => (
-                <>
-                  <defs key={prop}>
-                    <linearGradient
-                      color={theme.colors[colors[i % colors.length]][6]}
-                      id={slugify(prop)}
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop
-                        offset="5%"
-                        stopColor="currentColor"
-                        stopOpacity={0.4}
-                      />
-                      <stop
-                        offset="95%"
-                        stopColor="currentColor"
-                        stopOpacity={0}
-                      />
-                    </linearGradient>
-                  </defs>
-                  <Area
-                    type="monotone"
-                    color={theme.colors[colors[i % colors.length]][4]}
-                    dataKey={prop}
-                    stackId="1"
-                    stroke="currentColor"
-                    dot={false}
-                    fill={`url(#${slugify(prop)})`}
-                    strokeWidth={2}
-                    strokeLinejoin="round"
-                    strokeLinecap="round"
-                  />
-                </>
-              ))}
+            {cleanedData[0] &&
+              Object.keys(cleanedData[0])
+                .filter((prop) => prop !== "date")
+                .map((prop, i) => (
+                  <>
+                    <defs key={prop}>
+                      <linearGradient
+                        color={theme.colors[colors[i % colors.length]][6]}
+                        id={slugify(prop)}
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="currentColor"
+                          stopOpacity={0.4}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="currentColor"
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <Area
+                      type="monotone"
+                      color={theme.colors[colors[i % colors.length]][4]}
+                      dataKey={prop}
+                      stackId="1"
+                      stroke="currentColor"
+                      dot={false}
+                      fill={`url(#${slugify(prop)})`}
+                      strokeWidth={2}
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                    />
+                  </>
+                ))}
           </AreaChart>
         </ResponsiveContainer>
       </Box>
     </Card>
   )
 }
+
+const LineChart = (props) => (
+  <ErrorBoundary>
+    <LineChartComponent {...props} />
+  </ErrorBoundary>
+)
 
 export default LineChart
