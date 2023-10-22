@@ -28,3 +28,9 @@ body {
 .unblockable .mantine-Text-root {
   filter: none !important;
 }
+
+.mantine-Modal-inner {
+  /* fix modal unaligned content */
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}

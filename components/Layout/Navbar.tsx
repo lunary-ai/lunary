@@ -1,7 +1,6 @@
 import analytics from "@/utils/analytics"
 import { useApps, useCurrentApp, useTeam } from "@/utils/supabaseHooks"
 import {
-  Alert,
   Anchor,
   Button,
   Flex,
@@ -17,10 +16,8 @@ import {
   IconAlertTriangle,
   IconAnalyze,
   IconBolt,
-  IconExclamationMark,
   IconHelp,
   IconMessage,
-  IconStarFilled,
 } from "@tabler/icons-react"
 
 import Link from "next/link"

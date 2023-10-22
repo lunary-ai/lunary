@@ -176,43 +176,6 @@ export function useCurrentApp() {
   return { app, setAppId, loading }
 }
 
-export function useTest(searchPattern) {
-  const supabaseClient = useSupabaseClient<Database>()
-  const { appId } = useContext(AppContext)
-  const pageSize = 10
-
-  const fetcher = async (pageIndex, pageSize, searchPattern) => {
-    const { data, error } = await supabaseClient.rpc("get_runs", {
-      limit_num: pageSize,
-    })
-    if (error) throw error
-    return data
-  }
-
-  const { data, error, isLoading, isValidating, setSize, size } =
-    useSWRInfinite(
-      (index) => [index, pageSize, searchPattern],
-      (pageIndex, pageSize, searchPattern) =>
-        fetcher(pageIndex, pageSize, searchPattern)
-    )
-
-  const runs = data ? [].concat(...data) : []
-  const isReachingEnd = data && data[data.length - 1]?.length < pageSize
-
-  const loadMore = () => {
-    if (!isLoading && !isReachingEnd) {
-      setSize(size + 1)
-    }
-  }
-
-  return {
-    runs: extendWithCosts(runs),
-    loading: isLoading,
-    validating: isValidating,
-    loadMore,
-  }
-}
-
 export function useModelNames() {
   const supabaseClient = useSupabaseClient<Database>()
   const { appId } = useContext(AppContext)

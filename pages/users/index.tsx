@@ -42,7 +42,7 @@ export default function Users() {
   return (
     <Stack>
       <NextSeo title="Users" />
-      <Title>Users</Title>
+
       <DataTable
         columns={columns}
         data={usersWithUsage}

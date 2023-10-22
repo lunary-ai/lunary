@@ -20,14 +20,16 @@ import {
   IconSettings,
   IconStethoscope,
   IconUsers,
+  IconBolt,
 } from "@tabler/icons-react"
 
 import { useSessionContext } from "@supabase/auth-helpers-react"
 
 import Router, { useRouter } from "next/router"
-import { useProfile } from "@/utils/supabaseHooks"
+import { useProfile, useTeam } from "@/utils/supabaseHooks"
 import UserAvatar from "@/components/Blocks/UserAvatar"
 import Link from "next/link"
+import { modals } from "@mantine/modals"
 
 const menu = [
   { label: "Analytics", icon: IconGraph, link: "/analytics" },
@@ -61,6 +63,7 @@ export default function Sidebar() {
   const { supabaseClient } = useSessionContext()
 
   const { profile } = useProfile()
+  const { team } = useTeam()
 
   const isActive = (link: string) => router.pathname.startsWith(link)
 
@@ -122,15 +125,34 @@ export default function Sidebar() {
 
                 <Menu.Label>Account</Menu.Label>
                 {process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY && (
-                  <Menu.Item
-                    icon={<IconCreditCard size={16} />}
-                    onClick={() => {
-                      Router.push("/billing")
-                    }}
-                  >
-                    Billing
-                  </Menu.Item>
+                  <>
+                    {team?.plan === "free" && (
+                      <Menu.Item
+                        onClick={() =>
+                          modals.openContextModal({
+                            modal: "upgrade",
+                            size: 800,
+                            innerProps: {},
+                          })
+                        }
+                        color="purple"
+                        icon={<IconBolt size={16} />}
+                      >
+                        Upgrade
+                      </Menu.Item>
+                    )}
+
+                    <Menu.Item
+                      icon={<IconCreditCard size={16} />}
+                      onClick={() => {
+                        Router.push("/billing")
+                      }}
+                    >
+                      Billing
+                    </Menu.Item>
+                  </>
                 )}
+
                 <Menu.Item
                   color="red"
                   icon={<IconLogout size={16} />}
