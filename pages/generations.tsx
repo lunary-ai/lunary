@@ -11,11 +11,10 @@ import {
   Button,
   Drawer,
   Group,
-  Input,
+  Menu,
   MultiSelect,
   Stack,
   Text,
-  Title,
 } from "@mantine/core"
 
 import SmartViewer from "@/components/Blocks/SmartViewer"
@@ -30,7 +29,12 @@ import {
   timeColumn,
   userColumn,
 } from "@/utils/datatable"
-import { IconBrandOpenai, IconDownload, IconSearch } from "@tabler/icons-react"
+import {
+  IconArrowBarUp,
+  IconBrandOpenai,
+  IconFileExport,
+  IconPlus,
+} from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { useContext, useState } from "react"
 
@@ -40,6 +44,7 @@ import { useDebouncedState } from "@mantine/hooks"
 import Empty from "../components/Layout/Empty"
 import { AppContext } from "../utils/context"
 import { modals } from "@mantine/modals"
+import SearchBar from "@/components/Blocks/SearchBar"
 
 const columns = [
   timeColumn("created_at"),
@@ -89,36 +94,11 @@ function buildExportUrl(
   return url.toString()
 }
 
-function ExportButton({ url }: { url: string }) {
-  const { team } = useTeam()
-
-  if (team.plan === "pro") {
-    return (
-      <Button leftIcon={<IconDownload />} component="a" href={url}>
-        Export to CSV
-      </Button>
-    )
-  }
-
-  return (
-    <Button
-      leftIcon={<IconDownload />}
-      onClick={() =>
-        modals.openContextModal({
-          modal: "upgrade",
-          size: 800,
-          innerProps: {},
-        })
-      }
-    >
-      Export to CSV
-    </Button>
-  )
-}
-
 export default function Generations() {
   let { modelNames } = useModelNames()
-  const [query, setQuery] = useDebouncedState(null, 1000)
+  const [query, setQuery] = useDebouncedState(null, 500)
+
+  const [filters, setFilters] = useState([])
   const [selectedModels, setSelectedModels] = useState([])
   const [selectedTags, setSelectedTags] = useState([])
 
@@ -141,34 +121,75 @@ export default function Generations() {
     return <Empty Icon={IconBrandOpenai} what="requests" />
   }
 
+  function exportButton({ url }: { url: string }) {
+    if (team.plan === "pro") {
+      return {
+        component: "a",
+        href: url,
+      }
+    } else {
+      return {
+        onClick: () => {
+          modals.openContextModal({
+            modal: "upgrade",
+            size: 800,
+            innerProps: {},
+          })
+        },
+      }
+    }
+  }
+
   return (
     <Stack h={"calc(100vh - var(--navbar-size))"}>
       <NextSeo title="Requests" />
       <Group position="apart">
-        <Title>Generations</Title>
-        <ExportButton url={exportUrl} />
-      </Group>
+        <Group>
+          <SearchBar query={query} setQuery={setQuery} />
 
-      <Group position="right">
-        <MultiSelect
-          placeholder="Model"
-          data={modelNames || []}
-          clearable
-          onChange={setSelectedModels}
-        />
-        <MultiSelect
-          placeholder="Tags"
-          data={tags || []}
-          clearable
-          onChange={setSelectedTags}
-        />
-        <Input
-          icon={<IconSearch size={16} />}
-          w={300}
-          placeholder="Type to filter"
-          defaultValue={query}
-          onChange={(event) => setQuery(event.currentTarget.value)}
-        />
+          {modelNames?.length && (
+            <MultiSelect
+              placeholder="Model"
+              size="xs"
+              miw={80}
+              w="fit-content"
+              data={modelNames}
+              clearable
+              onChange={setSelectedModels}
+            />
+          )}
+          {tags?.length && (
+            <MultiSelect
+              placeholder="Tags"
+              size="xs"
+              miw={100}
+              w="fit-content"
+              data={tags}
+              clearable
+              onChange={setSelectedTags}
+            />
+          )}
+        </Group>
+        <Menu withArrow shadow="sm" position="bottom-end">
+          <Menu.Target>
+            <Button
+              variant="outline"
+              size="xs"
+              leftIcon={<IconArrowBarUp size={16} />}
+            >
+              Actions
+            </Button>
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Item
+              color="dark"
+              icon={<IconFileExport size={16} />}
+              {...exportButton(exportUrl)}
+            >
+              Export to CSV
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
       </Group>
 
       <Drawer
@@ -184,6 +205,10 @@ export default function Generations() {
             <Text size="sm">Model: {selected.name}</Text>
             {typeof selected.params?.temperature !== "undefined" && (
               <Text size="sm">Temperature: {selected.params?.temperature}</Text>
+            )}
+
+            {typeof selected.params?.max_tokens !== "undefined" && (
+              <Text size="sm">Max tokens: {selected.params?.max_tokens}</Text>
             )}
 
             <Group position="apart">

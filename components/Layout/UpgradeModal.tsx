@@ -80,7 +80,7 @@ export const UpgradeBody = () => {
               </ThemeIcon>
             }
           >
-            <List.Item>5k events / day</List.Item>
+            <List.Item>5k events per day</List.Item>
             <List.Item>Invite 4 team members</List.Item>
             <List.Item>Export data</List.Item>
             <List.Item>Advanced Analytics</List.Item>
@@ -129,8 +129,8 @@ export const UpgradeBody = () => {
               </ThemeIcon>
             }
           >
-            <List.Item>10 team members</List.Item>
             <List.Item>20k events per day</List.Item>
+            <List.Item>10 team members</List.Item>
             <List.Item>API access</List.Item>
             <List.Item>Early access to new features</List.Item>
           </List>
@@ -151,8 +151,8 @@ export const UpgradeBody = () => {
         </Card>
       </SimpleGrid>
       <Text ta="center" size="sm" mt="lg">
-        Cancel you subscription in 1 click any time. <Mark>30 days</Mark>{" "}
-        money-back guarantee.
+        Cancel your subscription at any time with just 1 click.{" "}
+        <Mark>30 days</Mark> money-back guarantee.
       </Text>
     </>
   )

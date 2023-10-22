@@ -18,6 +18,7 @@ import {
 import { useTraces } from "@/utils/supabaseHooks"
 import { useDebouncedState } from "@mantine/hooks"
 import { IconRobot, IconSearch } from "@tabler/icons-react"
+import SearchBar from "@/components/Blocks/SearchBar"
 
 const columns = [
   timeColumn("created_at", "Time"),
@@ -40,16 +41,7 @@ export default function Traces() {
 
   return (
     <Stack h={"calc(100vh - var(--navbar-size))"}>
-      <Group position="apart">
-        <Title>Traces</Title>
-        <Input
-          icon={<IconSearch size={16} />}
-          w={500}
-          placeholder="Type to filter"
-          defaultValue={query}
-          onChange={(event) => setQuery(event.currentTarget.value)}
-        />
-      </Group>
+      <SearchBar query={query} setQuery={setQuery} />
 
       <DataTable
         columns={columns}

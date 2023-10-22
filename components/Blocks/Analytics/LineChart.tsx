@@ -58,6 +58,8 @@ function prepareDataForRecharts(
 
   if (!data) data = []
 
+  // get all the possible values for the splitBy prop
+  // will be 1 chart per value
   const uniqueSplitByValues =
     splitBy &&
     Array.from(new Set(data.map((item) => item[splitBy]?.toString())))
@@ -143,14 +145,21 @@ const LineChartComponent = ({
     range
   )
 
+  const hasData = blocked
+    ? true
+    : cleanedData?.length &&
+      (splitBy ? Object.keys(cleanedData[0]).length > 1 : data?.length)
+
+  if (!blocked) console.log({ hasData, data, splitBy, props, cleanedData })
+
   return (
-    <Card withBorder p={0}>
+    <Card withBorder p={0} className="lineChart">
       <Text c="dimmed" tt="uppercase" fw={700} fz="xs" m="md">
         {title}
       </Text>
       <Box mt="sm" pos="relative">
         {blocked && (
-          <Overlay blur={5} opacity={0.3} p="lg" zIndex={1}>
+          <Overlay blur={5} opacity={0.1} p="lg" zIndex={1}>
             <Center h="100%">
               <Alert title="Advanced Analytics" ta="center">
                 Upgrade to <b>Pro</b> to unlock this chart
@@ -176,11 +185,19 @@ const LineChartComponent = ({
           </Overlay>
         )}
 
+        {!hasData && (
+          <Overlay blur={5} opacity={0.1} p="lg" zIndex={1}>
+            <Center h="100%" ta="center">
+              <Alert ta="center">No data available for this period</Alert>
+            </Center>
+          </Overlay>
+        )}
+
         <ResponsiveContainer width="100%" height={height}>
           <AreaChart
             width={500}
             height={420}
-            data={cleanedData}
+            data={hasData ? cleanedData : []}
             margin={{
               top: 10,
               right: 0,
@@ -188,11 +205,13 @@ const LineChartComponent = ({
               bottom: 10,
             }}
           >
-            <CartesianGrid
-              strokeDasharray="3 3"
-              horizontal={true}
-              vertical={false}
-            />
+            {hasData && (
+              <CartesianGrid
+                strokeDasharray="3 3"
+                horizontal={true}
+                vertical={false}
+              />
+            )}
             <XAxis
               dataKey="date"
               tick={({ x, y, payload, index }) => (
@@ -210,7 +229,7 @@ const LineChartComponent = ({
               interval="preserveStartEnd"
               tickLine={false}
               axisLine={false}
-              // minTickGap={5}
+              minTickGap={5}
               max={7}
             />
 
@@ -279,6 +298,11 @@ const LineChartComponent = ({
           </AreaChart>
         </ResponsiveContainer>
       </Box>
+      <style jsx>{`
+        :global(.lineChart .mantine-Alert-title) {
+          justify-content: center;
+        }
+      `}</style>
     </Card>
   )
 }

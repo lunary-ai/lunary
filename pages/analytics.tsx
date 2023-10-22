@@ -61,7 +61,7 @@ export default function Analytics() {
 
   const loading = usageLoading || dailyUsageLoading || usersLoading
 
-  if (loading && !usage && !dailyUsage && !usersWithUsage)
+  if (loading)
     return (
       <Center h="60vh">
         <Loader />

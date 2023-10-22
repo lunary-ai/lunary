@@ -177,7 +177,7 @@ export const completeRunUsage = async (run) => {
       .single()
 
     // Get model name (in older sdk it wasn't sent in "end" event)
-    const modelName = runData.name?.replace("gpt-35", "gpt-3.5") // Azure fix
+    const modelName = runData.name?.replaceAll("gpt-35", "gpt-3.5") // Azure fix
     const enc = await encodingForModel(modelName)
 
     if (!tokensUsage.prompt && runData?.input) {
@@ -194,17 +194,12 @@ export const completeRunUsage = async (run) => {
     }
 
     if (!tokensUsage.completion && run.output) {
-      //
       const outputString =
         typeof run.output === "object" && run.output.text
           ? run.output.text
           : JSON.stringify(run.output)
 
       const outputTokens = enc.encode(outputString).length
-
-      console.log(
-        `We have ${outputTokens} tokens in output vs ${tokensUsage.completion} recorded`
-      )
 
       tokensUsage.completion = outputTokens
     }
