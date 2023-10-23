@@ -10,7 +10,6 @@ export default async function handler(
 ) {
   // TODO: server side protection for free plan users
   let { appId, search, models, tags } = req.query
-  console.log(req.query)
   models = models?.split(",") || []
   tags = tags?.split(",") || []
 
@@ -32,8 +31,6 @@ export default async function handler(
   if (tags.length > 0) {
     tagsFilter = sql`and r.tags && ${tags}`
   }
-
-  console.log(tags)
 
   // TODO: app users
   // TODO: cost

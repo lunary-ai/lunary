@@ -121,7 +121,7 @@ export default function Generations() {
     return <Empty Icon={IconBrandOpenai} what="requests" />
   }
 
-  function exportButton({ url }: { url: string }) {
+  function exportButton(url: string) {
     if (team.plan === "pro") {
       return {
         component: "a",

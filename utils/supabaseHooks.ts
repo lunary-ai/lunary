@@ -242,7 +242,7 @@ export function useGenerations(
   }
 
   if (tags.length > 0) {
-    query.contains("tags", tags)
+    query.overlaps("tags", tags)
   }
 
   const {
