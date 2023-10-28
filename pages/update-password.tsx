@@ -1,24 +1,21 @@
 import {
-  Anchor,
   Button,
   Container,
   Paper,
   PasswordInput,
   Stack,
   Text,
-  TextInput,
   Title,
 } from "@mantine/core"
 
 import { useForm } from "@mantine/form"
 import { useSessionContext, useUser } from "@supabase/auth-helpers-react"
-import { IconAnalyze, IconAt, IconCheck } from "@tabler/icons-react"
+import { IconAnalyze, IconCheck } from "@tabler/icons-react"
 
-import analytics from "@/utils/analytics"
 import errorHandler from "@/utils/errorHandler"
 import { NextSeo } from "next-seo"
 import Router from "next/router"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { notifications } from "@mantine/notifications"
 
 export default function UpdatePassword() {

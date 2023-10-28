@@ -6,14 +6,13 @@ import {
   Title,
   TextInput,
   Button,
-  PasswordInput,
 } from "@mantine/core"
 import { useForm } from "@mantine/form"
 import { IconAnalyze, IconAt, IconCheck } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { useState } from "react"
 import errorHandler from "../utils/errorHandler"
-import { useSessionContext, useUser } from "@supabase/auth-helpers-react"
+import { useSessionContext } from "@supabase/auth-helpers-react"
 import { notifications } from "@mantine/notifications"
 
 export default function PasswordReset() {
