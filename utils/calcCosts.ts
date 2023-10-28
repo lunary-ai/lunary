@@ -1,5 +1,3 @@
-import { Input } from "@mantine/core"
-
 interface ModelCost {
   models: string[]
   maxTokens: number
@@ -11,8 +9,17 @@ interface ModelCost {
 const MODEL_COSTS: ModelCost[] = [
   {
     models: [
+      "ft:gpt-3.5-turbo-0613",
+      "ft:gpt-3.5-turbo-0301",
+      "ft:gpt-3.5-turbo",
+    ],
+    maxTokens: 4096,
+    inputCost: 0.012,
+    outputCost: 0.016,
+  },
+  {
+    models: [
       "gpt-3.5-turbo",
-      "gpt-35-turbo",
       "gpt-3.5-turbo-0613",
       "gpt-3.5-turbo-0301",
       "gpt-3.5-turbo-instruct",
@@ -28,7 +35,7 @@ const MODEL_COSTS: ModelCost[] = [
     outputCost: 0.002,
   },
   {
-    models: ["gpt-35-turbo-16k", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-16k-0613"],
+    models: ["gpt-3.5-turbo-16k", "gpt-3.5-turbo-16k-0613"],
     maxTokens: 16384,
     inputCost: 0.003,
     outputCost: 0.004,
@@ -78,10 +85,17 @@ const MODEL_COSTS: ModelCost[] = [
 ]
 
 export const calcRunCost = (run) => {
-  const modelCost = MODEL_COSTS.find((c) => c.models.includes(run.name))
-  if (!modelCost) {
-    return 0
-  }
+  if (run.type !== "llm" || !run.name) return 0
+
+  const modelCost = MODEL_COSTS.find((c) =>
+    c.models.find((m) =>
+      // Azure models have a different naming scheme
+      run.name?.replaceAll("gpt-35", "gpt-3.5").includes(m)
+    )
+  )
+
+  if (!modelCost) return 0
+
   const inputCost = (modelCost.inputCost * run.prompt_tokens) / 1000
   const outputCost = (modelCost.outputCost * run.completion_tokens) / 1000
   return inputCost + outputCost
