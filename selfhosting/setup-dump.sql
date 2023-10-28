@@ -262,14 +262,14 @@ CREATE TABLE public.log (
 
 CREATE TABLE public.profile (
     id uuid NOT NULL,
-    updated_at timestamp with time zone,
     email text,
     name text,
     plan text DEFAULT 'free'::text NOT NULL,
     team_owner uuid,
     stripe_customer text,
     stripe_subscription text,
-    limited boolean
+    limited boolean,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 ALTER TABLE ONLY public.api_key
