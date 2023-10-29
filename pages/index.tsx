@@ -45,7 +45,7 @@ export default function Home() {
   }
 
   return (
-    <Stack>
+    <Stack sx={{ flexBasis: "100%" }}>
       <NextSeo title="Dashboard" />
 
       <Modal
