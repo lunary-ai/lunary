@@ -73,23 +73,20 @@ export default function Analytics() {
   }
 
   return (
-    <Container size="lg" my="lg">
+    <Container size="xl" my="lg" sx={{ maxWidth: "70rem" }}>
       <NextSeo title="Analytics" />
       <Stack spacing={40}>
-        <Group position="apart">
-          <Title>Analytics</Title>
-          <SegmentedControl
-            w={300}
-            value={range.toString()}
-            onChange={(val) => setRange(parseInt(val))}
-            data={[
-              { label: "24H", value: "1" },
-              { label: "7D", value: "7" },
-              { label: "30D", value: "30" },
-              { label: "90D", value: "90" },
-            ]}
-          />
-        </Group>
+        <SegmentedControl
+          w={300}
+          value={range.toString()}
+          onChange={(val) => setRange(parseInt(val))}
+          data={[
+            { label: "24H", value: "1" },
+            { label: "7D", value: "7" },
+            { label: "30D", value: "30" },
+            { label: "90D", value: "90" },
+          ]}
+        />
 
         <SimpleGrid
           cols={3}

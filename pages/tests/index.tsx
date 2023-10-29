@@ -1,34 +1,25 @@
-import DataTable from "@/components/Blocks/DataTable"
-
-import { useRuns } from "@/utils/supabaseHooks"
 import {
   Alert,
   Badge,
   Card,
   Code,
+  Container,
   Group,
-  Loader,
   Overlay,
   Stack,
   Table,
-  Text,
   Title,
 } from "@mantine/core"
 
-import { createColumnHelper } from "@tanstack/react-table"
-import SmartViewer from "@/components/Blocks/SmartViewer"
 import {
+  costColumn,
   durationColumn,
   inputColumn,
+  nameColumn,
   outputColumn,
-  statusColumn,
   timeColumn,
   userColumn,
-  nameColumn,
-  costColumn,
 } from "@/utils/datatable"
-import Empty from "@/components/Layout/Empty"
-import { IconBrandOpenai } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 
 const columns = [
@@ -54,11 +45,8 @@ const columns = [
 
 export default function Tests() {
   return (
-    <Stack>
+    <Stack sx={{ flexBasis: "100%" }}>
       <NextSeo title="Tests" />
-      <Group>
-        <Title>Testing Suite</Title>
-      </Group>
 
       <Alert title="Contact Us to request access">
         The testing suite is currently invite-only. Contact us with details on
