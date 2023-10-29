@@ -1,16 +1,16 @@
 import DataTable from "@/components/Blocks/DataTable"
 
-import { useAppUsers } from "@/utils/supabaseHooks"
-import { Group, Stack, Text, Title } from "@mantine/core"
+import { useAppUsersList } from "@/utils/supabaseHooks"
+import { Group, Stack, Text } from "@mantine/core"
 
 import { costColumn, timeColumn } from "@/utils/datatable"
 
-import Router from "next/router"
 import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
-import { formatAppUser } from "@/utils/format"
 import Empty from "@/components/Layout/Empty"
+import { formatAppUser } from "@/utils/format"
 import { IconUsers } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
+import Router from "next/router"
 
 const columns = [
   {
@@ -33,9 +33,9 @@ const columns = [
 ]
 
 export default function Users() {
-  const { usersWithUsage, loading } = useAppUsers()
+  const { users, loading, loadMore, validating } = useAppUsersList()
 
-  if (!loading && usersWithUsage.length === 0) {
+  if (!loading && users.length === 0) {
     return <Empty Icon={IconUsers} what="users" />
   }
 
@@ -45,8 +45,10 @@ export default function Users() {
 
       <DataTable
         columns={columns}
-        data={usersWithUsage}
+        data={users}
         onRowClicked={(row) => Router.push(`/users/${row.id}`)}
+        loading={loading || validating}
+        loadMore={loadMore}
       />
     </Stack>
   )

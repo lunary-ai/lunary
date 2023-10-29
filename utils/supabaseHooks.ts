@@ -1,19 +1,17 @@
 import {
   useDeleteMutation,
-  useInfiniteOffsetPaginationQuery,
   useInsertMutation,
   useOffsetInfiniteScrollQuery,
   useQuery,
   useUpdateMutation,
 } from "@supabase-cache-helpers/postgrest-swr"
 
-import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
 import { useMantineTheme } from "@mantine/core"
-import { Database } from "./supaTypes"
-import { use, useContext, useEffect, useState } from "react"
+import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
+import { useContext } from "react"
 import { calcRunCost } from "./calcCosts"
 import { AppContext } from "./context"
-import useSWRInfinite from "swr/infinite"
+import { Database } from "./supaTypes"
 
 const softOptions = {
   dedupingInterval: 10000,
@@ -387,7 +385,7 @@ export function useRunsUsageByDay(range, user_id = undefined) {
   return { dailyUsage: extendWithCosts(dailyUsage), loading: isLoading }
 }
 
-export function useRunsUsageByUser(range) {
+export function useRunsUsageByUser(range = null) {
   const supabaseClient = useSupabaseClient()
   const { appId } = useContext(AppContext)
 
@@ -455,6 +453,43 @@ export function useRelatedRuns(runId: string) {
   return { relatedRuns: extendWithCosts(relatedRuns), loading: isLoading }
 }
 
+export function useAppUsersList() {
+  const supabaseClient = useSupabaseClient()
+  const { appId } = useContext(AppContext)
+
+  const {
+    data: users,
+    isLoading,
+    loadMore,
+    isValidating,
+  } = useOffsetInfiniteScrollQuery(
+    supabaseClient
+      .from("app_user")
+      .select("id,app,external_id,created_at,last_seen,props")
+      .eq("app", appId)
+      .order("last_seen", { ascending: false }),
+    { ...softOptions, pageSize: 100 }
+  )
+
+  const { usageByUser } = useRunsUsageByUser()
+
+  const usersWithUsage = users?.map((u) => {
+    const usage = usageByUser.find((uu) => uu.user_id === u.id)
+
+    return {
+      ...u,
+      ...usage,
+    }
+  })
+
+  return {
+    users: usersWithUsage,
+    loading: isLoading,
+    validating: isValidating,
+    loadMore,
+  }
+}
+
 export function useAppUsers(usageRange = 30) {
   const supabaseClient = useSupabaseClient()
   const { appId } = useContext(AppContext)
@@ -470,8 +505,7 @@ export function useAppUsers(usageRange = 30) {
       .from("app_user")
       .select("id,app,external_id,created_at,last_seen,props")
       .eq("app", appId)
-      .gt("last_seen", maxLastSeen)
-      .limit(100),
+      .gt("last_seen", maxLastSeen),
     softOptions
   )
 
