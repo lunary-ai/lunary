@@ -72,7 +72,7 @@ export default function Sidebar() {
   ))
 
   return (
-    <Navbar width={{ base: 80 }} px="md" py="xl">
+    <Navbar height="calc(100vh - 45px)" width={{ base: 80 }} px="md" py="xl">
       <Navbar.Section grow>
         <Stack spacing="xl" align="center">
           {links}

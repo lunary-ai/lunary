@@ -65,7 +65,7 @@ export default function Navbar() {
 
   return (
     <>
-      <Header height={60} p="md" sx={{ flexShrink: 0 }}>
+      <Header height={60} p="md">
         <Script
           src="https://do.featurebase.app/js/sdk.js"
           id="featurebase-sdk"

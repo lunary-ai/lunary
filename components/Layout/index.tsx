@@ -1,19 +1,19 @@
-import { Box, Flex } from "@mantine/core"
+import { useEffect, ReactNode } from "react"
+import { AppShell } from "@mantine/core"
 import { Notifications } from "@mantine/notifications"
-import { ReactNode, useEffect } from "react"
 
 import { useSessionContext } from "@supabase/auth-helpers-react"
 
 import Router, { useRouter } from "next/router"
 
-import { AppContext } from "@/utils/context"
 import Navbar from "./Navbar"
 import Sidebar from "./Sidebar"
+import { AppContext } from "@/utils/context"
 
-import { useTeam } from "@/utils/supabaseHooks"
 import { useLocalStorage } from "@mantine/hooks"
 import { ModalsProvider } from "@mantine/modals"
 import UpgradeModal from "./UpgradeModal"
+import { useTeam } from "@/utils/supabaseHooks"
 
 export default function Layout({ children }: { children: ReactNode }) {
   const router = useRouter()
@@ -48,20 +48,16 @@ export default function Layout({ children }: { children: ReactNode }) {
       <Notifications position="top-right" />
       <ModalsProvider modals={{ upgrade: UpgradeModal }}>
         <AppContext.Provider value={{ appId, setAppId }}>
-          <Flex
-            direction="column"
-            sx={{ height: "100vh", backgroundColor: "#fafafa" }}
-            className={team?.limited ? "limited" : ""}
+          <AppShell
+            mih={"100vh"}
+            padding={"xl"}
+            className={team && team.limited ? "limited" : ""}
+            header={!isAuthPage && <Navbar />}
+            navbar={!isAuthPage && appId && <Sidebar />}
+            sx={{ backgroundColor: "#fafafa" }}
           >
-            {!isAuthPage && <Navbar />}
-
-            <Flex sx={{ flex: 1, overflow: "hidden" }}>
-              {!isAuthPage && <Sidebar />}
-              <Box p="20px" w="100%" sx={{ overflowY: "auto" }}>
-                {children}
-              </Box>
-            </Flex>
-          </Flex>
+            {children}
+          </AppShell>
         </AppContext.Provider>
       </ModalsProvider>
     </>
