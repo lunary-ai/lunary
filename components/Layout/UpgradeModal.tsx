@@ -18,7 +18,7 @@ import {
 } from "@mantine/core"
 
 import { useEffect } from "react"
-import { useTeam } from "@/utils/supabaseHooks"
+import { useTeam } from "@/utils/dataHooks"
 
 export const UpgradeBody = () => {
   const { team } = useTeam()

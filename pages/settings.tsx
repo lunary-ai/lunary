@@ -1,11 +1,15 @@
+import { useState } from "react"
+
+import LineChart from "@/components/Blocks/Analytics/LineChart"
 import CopyText from "@/components/Blocks/CopyText"
 import UserAvatar from "@/components/Blocks/UserAvatar"
 import {
+  useAppSWR,
   useApps,
   useCurrentApp,
   useProfile,
   useTeam,
-} from "@/utils/supabaseHooks"
+} from "@/utils/dataHooks"
 
 import {
   Alert,
@@ -33,7 +37,8 @@ import {
 } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import Router from "next/router"
-import { useState } from "react"
+
+import { Label, ReferenceLine } from "recharts"
 
 function Invite() {
   const { team } = useTeam()
@@ -90,10 +95,9 @@ export default function AppAnalytics() {
     update({ id: app.id, name: e.target.value })
   }
 
-  const inviteHandler = () => {
-    if (team.plan === "pro") {
-    }
-  }
+  const { data: appUsage } = useAppSWR("/analytics/usage")
+
+  const allowedLimit = team?.plan === "pro" ? 5000 : 1000
 
   return (
     <Container className="unblockable">
@@ -129,6 +133,7 @@ export default function AppAnalytics() {
               </Text>
             </Stack>
           </Card>
+
           <Card withBorder p={0}>
             <Group position="apart" align="center" p="lg">
               <Title order={3}>Team</Title>
@@ -163,6 +168,35 @@ export default function AppAnalytics() {
               </tbody>
             </Table>
           </Card>
+
+          {/* <Card withBorder p="lg"> */}
+          <LineChart
+            title={<Title order={3}>Usage</Title>}
+            range={30}
+            data={appUsage}
+            formatter={(val) => `${val} runs`}
+            props={["count"]}
+            chartExtra={
+              <ReferenceLine
+                y={allowedLimit}
+                fontWeight={600}
+                ifOverflow="extendDomain"
+                stroke="red"
+                strokeDasharray="3 3"
+              >
+                <Label
+                  position="insideTop"
+                  fontSize={14}
+                  fill="#d00"
+                  style={{ backgroundColor: "rgba(0,0,0,0.5)", padding: "2px" }}
+                >
+                  plan limit
+                </Label>
+              </ReferenceLine>
+            }
+          />
+          {/* </Card> */}
+
           <Card withBorder p="lg">
             <Overlay blur={2} opacity={0.3} p="lg" zIndex={1}>
               <Center h="100%">

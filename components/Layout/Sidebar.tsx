@@ -26,7 +26,7 @@ import {
 import { useSessionContext } from "@supabase/auth-helpers-react"
 
 import Router, { useRouter } from "next/router"
-import { useProfile, useTeam } from "@/utils/supabaseHooks"
+import { useProfile, useTeam } from "@/utils/dataHooks"
 import UserAvatar from "@/components/Blocks/UserAvatar"
 import Link from "next/link"
 import { modals } from "@mantine/modals"

@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next"
 import postgres from "postgres"
 import { Parser } from "@json2csv/plainjs"
+import { ensureAppIsLogged } from "@/lib/ensureAppIsLogged"
 
 const sql = postgres(process.env.DB_URI)
 
@@ -8,6 +9,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  await ensureAppIsLogged(req, res)
+
   // TODO: server side protection for free plan users
   let { appId, search, models, tags } = req.query
   models = models?.split(",") || []

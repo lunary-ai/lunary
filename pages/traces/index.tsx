@@ -15,7 +15,7 @@ import {
   timeColumn,
   userColumn,
 } from "@/utils/datatable"
-import { useTraces } from "@/utils/supabaseHooks"
+import { useTraces } from "@/utils/dataHooks"
 import { useDebouncedState } from "@mantine/hooks"
 import { IconRobot, IconSearch } from "@tabler/icons-react"
 import SearchBar from "@/components/Blocks/SearchBar"

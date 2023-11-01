@@ -18,7 +18,7 @@ import {
 } from "@/utils/datatable"
 
 import { formatDateTime } from "@/utils/format"
-import { useAppUser, useRuns } from "@/utils/supabaseHooks"
+import { useAppUser, useRuns } from "@/utils/dataHooks"
 
 import {
   Alert,
