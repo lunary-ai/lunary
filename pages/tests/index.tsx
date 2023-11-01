@@ -1,6 +1,6 @@
 import DataTable from "@/components/Blocks/DataTable"
 
-import { useRuns } from "@/utils/supabaseHooks"
+import { useRuns } from "@/utils/dataHooks"
 import {
   Alert,
   Badge,

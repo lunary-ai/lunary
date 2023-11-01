@@ -1,4 +1,4 @@
-import { useTeam } from "@/utils/supabaseHooks"
+import { useTeam } from "@/utils/dataHooks"
 import { cloneElement, Children } from "react"
 
 export default function ProtectedText({ children }) {

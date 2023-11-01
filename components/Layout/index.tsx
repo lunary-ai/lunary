@@ -13,7 +13,7 @@ import { AppContext } from "@/utils/context"
 import { useLocalStorage } from "@mantine/hooks"
 import { ModalsProvider } from "@mantine/modals"
 import UpgradeModal from "./UpgradeModal"
-import { useTeam } from "@/utils/supabaseHooks"
+import { useTeam } from "@/utils/dataHooks"
 
 export default function Layout({ children }: { children: ReactNode }) {
   const router = useRouter()

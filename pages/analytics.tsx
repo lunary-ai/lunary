@@ -11,7 +11,7 @@ import {
   useAppUsers,
   useCurrentApp,
   useTeam,
-} from "@/utils/supabaseHooks"
+} from "@/utils/dataHooks"
 import {
   Center,
   Container,

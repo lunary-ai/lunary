@@ -12,6 +12,7 @@ import { useContext } from "react"
 import { calcRunCost } from "./calcCosts"
 import { AppContext } from "./context"
 import { Database } from "./supaTypes"
+import useSWR from "swr"
 
 const softOptions = {
   dedupingInterval: 10000,
@@ -536,4 +537,25 @@ export function useAppUser(id: string) {
   )
 
   return { user, loading: isLoading }
+}
+
+// Universal SWR hook for the current app
+export function useAppSWR(url: string, props: any = {}) {
+  const { app } = useCurrentApp()
+
+  const { data, isValidating } = useSWR(
+    app ? app.id + url : null,
+    () =>
+      fetch(`/api/${url}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        // automatically append the app id to the request
+        body: JSON.stringify({ ...props, appId: app.id }),
+      }).then((res) => res.json()),
+    softOptions
+  )
+
+  return { data, loading: isValidating }
 }

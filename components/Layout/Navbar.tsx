@@ -1,5 +1,5 @@
 import analytics from "@/utils/analytics"
-import { useApps, useCurrentApp, useTeam } from "@/utils/supabaseHooks"
+import { useApps, useCurrentApp, useTeam } from "@/utils/dataHooks"
 import {
   Anchor,
   Button,

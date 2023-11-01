@@ -6,7 +6,7 @@ import {
   useModelNames,
   useTags,
   useTeam,
-} from "@/utils/supabaseHooks"
+} from "@/utils/dataHooks"
 import {
   Button,
   Drawer,

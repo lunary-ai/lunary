@@ -10,7 +10,7 @@ import {
 } from "@mantine/core"
 import { IconBrandDiscord, IconMail, IconMessage } from "@tabler/icons-react"
 import CopyText from "../Blocks/CopyText"
-import { useCurrentApp } from "@/utils/supabaseHooks"
+import { useCurrentApp } from "@/utils/dataHooks"
 
 export default function Empty({
   what,

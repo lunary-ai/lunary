@@ -1,6 +1,6 @@
 import DataTable from "@/components/Blocks/DataTable"
 
-import { useAppUsersList } from "@/utils/supabaseHooks"
+import { useAppUsersList } from "@/utils/dataHooks"
 import { Group, Stack, Text } from "@mantine/core"
 
 import { costColumn, timeColumn } from "@/utils/datatable"

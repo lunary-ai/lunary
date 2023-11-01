@@ -1,7 +1,7 @@
 import { createColumnHelper } from "@tanstack/react-table"
 import { Badge, Group } from "@mantine/core"
 import SmartViewer from "@/components/Blocks/SmartViewer"
-import { useAppUser, useRelatedRuns } from "./supabaseHooks"
+import { useAppUser, useRelatedRuns } from "./dataHooks"
 import { formatCost, formatDateTime, msToTime } from "./format"
 import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 import Feedback from "@/components/Blocks/Feedback"

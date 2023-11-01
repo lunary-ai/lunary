@@ -1,5 +1,5 @@
 import { formatLargeNumber } from "@/utils/format"
-import { useProfile, useTeam } from "@/utils/supabaseHooks"
+import { useProfile, useTeam } from "@/utils/dataHooks"
 import {
   Badge,
   Stack,

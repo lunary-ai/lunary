@@ -17,7 +17,7 @@ import TokensBadge from "@/components/Blocks/TokensBadge"
 import SmartViewer from "@/components/Blocks/SmartViewer"
 import StatusBadge from "@/components/Blocks/StatusBadge"
 
-import { useRelatedRuns, useRun } from "@/utils/supabaseHooks"
+import { useRelatedRuns, useRun } from "@/utils/dataHooks"
 import { capitalize, formatCost } from "@/utils/format"
 
 const typeColor = {

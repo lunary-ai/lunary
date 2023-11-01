@@ -133,6 +133,7 @@ const LineChartComponent = ({
   height = 300,
   splitBy = undefined,
   range,
+  chartExtra,
 }) => {
   const theme = useMantineTheme()
 
@@ -154,9 +155,15 @@ const LineChartComponent = ({
 
   return (
     <Card withBorder p={0} className="lineChart">
-      <Text c="dimmed" tt="uppercase" fw={700} fz="xs" m="md">
-        {title}
-      </Text>
+      {typeof title === "string" ? (
+        <Text c="dimmed" tt="uppercase" fw={700} fz="xs" m="md">
+          {title}
+        </Text>
+      ) : (
+        <Box m="lg" mb="sm">
+          {title}
+        </Box>
+      )}
       <Box mt="sm" pos="relative">
         {blocked && (
           <Overlay blur={5} opacity={0.1} p="lg" zIndex={1}>
@@ -295,6 +302,8 @@ const LineChartComponent = ({
                     />
                   </>
                 ))}
+
+            {chartExtra}
           </AreaChart>
         </ResponsiveContainer>
       </Box>

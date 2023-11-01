@@ -1,7 +1,7 @@
 import { useState } from "react"
 import Link from "next/link"
 
-import { useApps, useCurrentApp, useProfile } from "@/utils/supabaseHooks"
+import { useApps, useCurrentApp, useProfile } from "@/utils/dataHooks"
 import {
   Anchor,
   Button,
