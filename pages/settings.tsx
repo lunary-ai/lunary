@@ -195,9 +195,8 @@ export default function AppAnalytics() {
               </ReferenceLine>
             }
           />
-          {/* </Card> */}
 
-          <Card withBorder p="lg">
+          {/* <Card withBorder p="lg">
             <Overlay blur={2} opacity={0.3} p="lg" zIndex={1}>
               <Center h="100%">
                 <Alert title="Datasets">
@@ -243,7 +242,8 @@ export default function AppAnalytics() {
                 </Button>
               </Group>
             </Stack>
-          </Card>
+          </Card> */}
+
           {!profile?.team_owner && (
             <Card withBorder p="lg" sx={{ overflow: "visible" }}>
               <Title mb="md" order={4}>
