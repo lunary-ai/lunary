@@ -166,6 +166,7 @@ export default function Chats() {
     <Stack h={"calc(100vh - var(--navbar-size))"}>
       <NextSeo title="Chats" />
       <Group>
+        <Title>Chats and Feedbacks</Title>
         {loading && <Loader />}
         <Alert>
           This feature is currently in <b>alpha</b>. Contact us with details on
