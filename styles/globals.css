@@ -25,7 +25,8 @@ body {
 .unblockable pre,
 .unblockable code,
 .unblockable .mantine-Badge-inner,
-.unblockable .mantine-Text-root {
+.unblockable .mantine-Text-root,
+.unblockable .recharts-responsive-container {
   filter: none !important;
 }
 
