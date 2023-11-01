@@ -63,7 +63,7 @@ With the hosted version:
 
 ## 🙋 Support
 
-Chat with us on [Discord](https://discord.gg/8PafSG58kK) or email one of the founders: [vince [at] llmonitor.com](mailto:vince@llmonitor.com).
+Need help or have questions? Chat with us on [Discord](https://discord.gg/8PafSG58kK) or email one of the founders: [vince [at] llmonitor.com](mailto:vince@llmonitor.com). We're here to support you every step of the way.
 
 ## 👨‍👩‍👧 Team
 
