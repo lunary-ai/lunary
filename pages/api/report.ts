@@ -4,7 +4,7 @@
 
 import { supabaseAdmin } from "@/lib/supabaseClient"
 import { NextRequest } from "next/server"
-import cors from "@/lib/cors"
+import cors from "@/lib/api/cors"
 import { completeRunUsage } from "@/lib/countTokens"
 
 export interface Event {

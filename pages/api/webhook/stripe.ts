@@ -5,6 +5,7 @@ import { CANCELED_EMAIL, UPGRADE_EMAIL } from "@/lib/emails"
 import { sendTelegramMessage } from "@/lib/notifications"
 import Stripe from "stripe"
 import stripe from "@/lib/stripe"
+import { apiWrapper } from "@/lib/api/helpers"
 
 export const config = {
   api: {
@@ -68,7 +69,7 @@ const cancelSubscription = async (object) => {
   await sendTelegramMessage(`<b>😭💔 ${email} just canceled</b>`)
 }
 
-export default async function StripeWebhook(req, res) {
+export default apiWrapper(async function StripeWebhook(req, res) {
   const buf = await buffer(req)
   const sig = req.headers["stripe-signature"]
 
@@ -109,4 +110,4 @@ export default async function StripeWebhook(req, res) {
   }
 
   res.json({ received: true })
-}
+})

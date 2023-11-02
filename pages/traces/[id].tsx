@@ -14,11 +14,11 @@ import {
 
 import DurationBadge from "@/components/Blocks/DurationBadge"
 import TokensBadge from "@/components/Blocks/TokensBadge"
-import SmartViewer from "@/components/Blocks/SmartViewer"
 import StatusBadge from "@/components/Blocks/StatusBadge"
 
 import { useRelatedRuns, useRun } from "@/utils/dataHooks"
 import { capitalize, formatCost } from "@/utils/format"
+import RunInputOutput from "@/components/Blocks/RunIO"
 
 const typeColor = {
   llm: "yellow",
@@ -155,32 +155,16 @@ export default function AgentRun({}) {
           </Card>
         </Grid.Col>
         <Grid.Col span={6}>
-          <Card withBorder>
-            {focusedRun && (
-              <Stack>
-                <Group>
-                  <Text weight="bold">Input</Text>
-                  {focusedRun.type === "llm" && (
-                    <TokensBadge tokens={focusedRun.prompt_tokens} />
-                  )}
-                </Group>
-                <SmartViewer data={focusedRun.input} />
-                {(focusedRun.output || focusedRun.error) && (
-                  <>
-                    <Group>
-                      <Text weight="bold">Output</Text>
-                      {focusedRun.type === "llm" && (
-                        <TokensBadge tokens={focusedRun.completion_tokens} />
-                      )}
-                    </Group>
-                    <SmartViewer
-                      data={focusedRun.output}
-                      error={focusedRun.error}
-                    />
-                  </>
-                )}
-              </Stack>
-            )}
+          <Card
+            withBorder
+            style={{
+              position: "sticky",
+              top: 85,
+              maxHeight: "calc(100vh - 90px)",
+              overflow: "auto",
+            }}
+          >
+            {focusedRun && <RunInputOutput run={focusedRun} />}
           </Card>
         </Grid.Col>
       </Grid>
