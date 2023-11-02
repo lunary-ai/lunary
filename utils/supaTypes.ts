@@ -9,28 +9,62 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      api_key: {
+        Row: {
+          api_key: string
+          created_at: string
+          id: number
+          org_id: string
+        }
+        Insert: {
+          api_key?: string
+          created_at?: string
+          id?: number
+          org_id?: string
+        }
+        Update: {
+          api_key?: string
+          created_at?: string
+          id?: number
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_key_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "profile"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       app: {
         Row: {
           created_at: string | null
           id: string
           name: string
-          owner: string | null
+          owner: string
         }
         Insert: {
           created_at?: string | null
           id?: string
           name: string
-          owner?: string | null
+          owner: string
         }
         Update: {
           created_at?: string | null
           id?: string
           name?: string
-          owner?: string | null
+          owner?: string
         }
         Relationships: [
           {
             foreignKeyName: "app_owner_fkey"
+            columns: ["owner"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "app_owner_fkey1"
             columns: ["owner"]
             referencedRelation: "users"
             referencedColumns: ["id"]
@@ -107,40 +141,134 @@ export interface Database {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "log_app_fkey1"
+            columns: ["app"]
+            referencedRelation: "app"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "log_run_fkey"
+            columns: ["run"]
+            referencedRelation: "run"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "log_run_fkey1"
             columns: ["run"]
             referencedRelation: "run"
             referencedColumns: ["id"]
           }
         ]
       }
-      profile: {
+      org: {
         Row: {
-          email: string | null
+          admin_id: string
+          created_at: string | null
           id: string
-          name: string | null
-          plan: string
-          updated_at: string | null
+          name: string
         }
         Insert: {
-          email?: string | null
-          id: string
-          name?: string | null
-          plan?: string
-          updated_at?: string | null
+          admin_id: string
+          created_at?: string | null
+          id?: string
+          name: string
         }
         Update: {
-          email?: string | null
+          admin_id?: string
+          created_at?: string | null
           id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      org_member: {
+        Row: {
+          created_at: string | null
+          member_id: string
+          org_id: string
+          role: Database["public"]["Enums"]["org_member_role"]
+        }
+        Insert: {
+          created_at?: string | null
+          member_id: string
+          org_id: string
+          role: Database["public"]["Enums"]["org_member_role"]
+        }
+        Update: {
+          created_at?: string | null
+          member_id?: string
+          org_id?: string
+          role?: Database["public"]["Enums"]["org_member_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_member_member_id_fkey"
+            columns: ["member_id"]
+            referencedRelation: "profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_member_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "org"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      profile: {
+        Row: {
+          ai_allowance: number
+          created_at: string | null
+          email: string | null
+          id: string
+          limited: boolean | null
+          name: string | null
+          plan: string
+          stripe_customer: string | null
+          stripe_subscription: string | null
+          team_owner: string | null
+        }
+        Insert: {
+          ai_allowance?: number
+          created_at?: string | null
+          email?: string | null
+          id: string
+          limited?: boolean | null
           name?: string | null
           plan?: string
-          updated_at?: string | null
+          stripe_customer?: string | null
+          stripe_subscription?: string | null
+          team_owner?: string | null
+        }
+        Update: {
+          ai_allowance?: number
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          limited?: boolean | null
+          name?: string | null
+          plan?: string
+          stripe_customer?: string | null
+          stripe_subscription?: string | null
+          team_owner?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "profile_id_fkey"
             columns: ["id"]
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_id_fkey1"
+            columns: ["id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_team_owner_fkey"
+            columns: ["team_owner"]
+            referencedRelation: "profile"
             referencedColumns: ["id"]
           }
         ]
@@ -152,6 +280,7 @@ export interface Database {
           created_at: string | null
           ended_at: string | null
           error: Json | null
+          feedback: Json | null
           id: string
           input: Json | null
           name: string | null
@@ -159,6 +288,7 @@ export interface Database {
           params: Json | null
           parent_run: string | null
           prompt_tokens: number | null
+          retry_of: string | null
           status: string | null
           tags: string[] | null
           type: string
@@ -170,6 +300,7 @@ export interface Database {
           created_at?: string | null
           ended_at?: string | null
           error?: Json | null
+          feedback?: Json | null
           id?: string
           input?: Json | null
           name?: string | null
@@ -177,6 +308,7 @@ export interface Database {
           params?: Json | null
           parent_run?: string | null
           prompt_tokens?: number | null
+          retry_of?: string | null
           status?: string | null
           tags?: string[] | null
           type: string
@@ -188,6 +320,7 @@ export interface Database {
           created_at?: string | null
           ended_at?: string | null
           error?: Json | null
+          feedback?: Json | null
           id?: string
           input?: Json | null
           name?: string | null
@@ -195,6 +328,7 @@ export interface Database {
           params?: Json | null
           parent_run?: string | null
           prompt_tokens?: number | null
+          retry_of?: string | null
           status?: string | null
           tags?: string[] | null
           type?: string
@@ -208,8 +342,26 @@ export interface Database {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "run_app_fkey1"
+            columns: ["app"]
+            referencedRelation: "app"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "run_parent_run_fkey"
             columns: ["parent_run"]
+            referencedRelation: "run"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "run_parent_run_fkey1"
+            columns: ["parent_run"]
+            referencedRelation: "run"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "run_retry_of_fkey"
+            columns: ["retry_of"]
             referencedRelation: "run"
             referencedColumns: ["id"]
           },
@@ -226,6 +378,12 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
+      get_model_names: {
+        Args: {
+          app_id: string
+        }
+        Returns: string[]
+      }
       get_related_runs: {
         Args: {
           run_id: string
@@ -246,6 +404,32 @@ export interface Database {
           parent_run: string
           completion_tokens: number
           prompt_tokens: number
+          feedback: Json
+        }[]
+      }
+      get_runs: {
+        Args: {
+          search_pattern: string
+        }
+        Returns: {
+          app: string | null
+          completion_tokens: number | null
+          created_at: string | null
+          ended_at: string | null
+          error: Json | null
+          feedback: Json | null
+          id: string
+          input: Json | null
+          name: string | null
+          output: Json | null
+          params: Json | null
+          parent_run: string | null
+          prompt_tokens: number | null
+          retry_of: string | null
+          status: string | null
+          tags: string[] | null
+          type: string
+          user: number | null
         }[]
       }
       get_runs_usage: {
@@ -266,7 +450,7 @@ export interface Database {
       get_runs_usage_by_user: {
         Args: {
           app_id: string
-          days: number
+          days?: number
         }
         Returns: {
           user_id: number
@@ -294,9 +478,92 @@ export interface Database {
           success: number
         }[]
       }
+      get_tags: {
+        Args: {
+          app_id: string
+        }
+        Returns: string[]
+      }
+      get_trace_runs_roots: {
+        Args: {
+          search_pattern: string
+        }
+        Returns: {
+          app: string | null
+          completion_tokens: number | null
+          created_at: string | null
+          ended_at: string | null
+          error: Json | null
+          feedback: Json | null
+          id: string
+          input: Json | null
+          name: string | null
+          output: Json | null
+          params: Json | null
+          parent_run: string | null
+          prompt_tokens: number | null
+          retry_of: string | null
+          status: string | null
+          tags: string[] | null
+          type: string
+          user: number | null
+        }[]
+      }
+      get_users: {
+        Args: {
+          app_id: string
+        }
+        Returns: string[]
+      }
+      gtrgm_compress: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      gtrgm_decompress: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      gtrgm_in: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      gtrgm_options: {
+        Args: {
+          "": unknown
+        }
+        Returns: undefined
+      }
+      gtrgm_out: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      set_limit: {
+        Args: {
+          "": number
+        }
+        Returns: number
+      }
+      show_limit: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      show_trgm: {
+        Args: {
+          "": string
+        }
+        Returns: unknown
+      }
     }
     Enums: {
-      [_ in never]: never
+      org_member_role: "member" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
