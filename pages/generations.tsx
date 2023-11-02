@@ -31,7 +31,11 @@ import {
 } from "@/utils/datatable"
 import {
   IconArrowBarUp,
+  IconBraces,
+  IconBrackets,
+  IconBracketsAngle,
   IconBrandOpenai,
+  IconCurlyLoop,
   IconFileExport,
   IconPlus,
 } from "@tabler/icons-react"
@@ -45,6 +49,7 @@ import Empty from "../components/Layout/Empty"
 import { AppContext } from "../utils/context"
 import { modals } from "@mantine/modals"
 import SearchBar from "@/components/Blocks/SearchBar"
+import RunInputOutput from "@/components/Blocks/RunIO"
 
 const columns = [
   timeColumn("created_at"),
@@ -188,6 +193,14 @@ export default function Generations() {
             >
               Export to CSV
             </Menu.Item>
+            <Menu.Item
+              color="dark"
+              disabled
+              icon={<IconBraces size={16} />}
+              // {...exportButton(exportUrl)}
+            >
+              Export to JSONL
+            </Menu.Item>
           </Menu.Dropdown>
         </Menu>
       </Group>
@@ -200,33 +213,7 @@ export default function Generations() {
         title={selected ? formatDateTime(selected.created_at) : ""}
         onClose={() => setSelected(null)}
       >
-        {selected && (
-          <Stack>
-            <Text size="sm">Model: {selected.name}</Text>
-            {typeof selected.params?.temperature !== "undefined" && (
-              <Text size="sm">Temperature: {selected.params?.temperature}</Text>
-            )}
-
-            {typeof selected.params?.max_tokens !== "undefined" && (
-              <Text size="sm">Max tokens: {selected.params?.max_tokens}</Text>
-            )}
-
-            <Group position="apart">
-              <Text weight="bold" size="sm">
-                Input
-              </Text>
-              <TokensBadge tokens={selected.prompt_tokens} />
-            </Group>
-            <SmartViewer data={selected.input} />
-            <Group position="apart">
-              <Text weight="bold" size="sm">
-                {selected.error ? "Error" : "Output"}
-              </Text>
-              <TokensBadge tokens={selected.completion_tokens} />
-            </Group>
-            <SmartViewer data={selected.output} error={selected.error} />
-          </Stack>
-        )}
+        {selected && <RunInputOutput run={selected} />}
       </Drawer>
 
       <DataTable

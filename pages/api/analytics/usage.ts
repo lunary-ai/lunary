@@ -1,10 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next"
 import postgres from "postgres"
-import { ensureAppIsLogged } from "@/lib/ensureAppIsLogged"
+import { ensureAppIsLogged } from "@/lib/api/ensureAppIsLogged"
+import { apiWrapper } from "@/lib/api/helpers"
 
 const sql = postgres(process.env.DB_URI)
 
-export default async function handler(
+export default apiWrapper(async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -30,4 +31,4 @@ export default async function handler(
   `
 
   return res.status(200).json(rows)
-}
+})
