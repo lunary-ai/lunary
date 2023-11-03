@@ -346,7 +346,7 @@ function Playground() {
               />
 
               <ParamItem
-                name="Presency Penalty"
+                name="Presence Penalty"
                 value={
                   <NumberInput
                     min={-2}
