@@ -162,92 +162,55 @@ export interface Database {
       }
       org: {
         Row: {
-          admin_id: string
           created_at: string | null
           id: string
           name: string
         }
         Insert: {
-          admin_id: string
           created_at?: string | null
           id?: string
           name: string
         }
         Update: {
-          admin_id?: string
           created_at?: string | null
           id?: string
           name?: string
         }
         Relationships: []
       }
-      org_member: {
-        Row: {
-          created_at: string | null
-          member_id: string
-          org_id: string
-          role: Database["public"]["Enums"]["org_member_role"]
-        }
-        Insert: {
-          created_at?: string | null
-          member_id: string
-          org_id: string
-          role: Database["public"]["Enums"]["org_member_role"]
-        }
-        Update: {
-          created_at?: string | null
-          member_id?: string
-          org_id?: string
-          role?: Database["public"]["Enums"]["org_member_role"]
-        }
-        Relationships: [
-          {
-            foreignKeyName: "org_member_member_id_fkey"
-            columns: ["member_id"]
-            referencedRelation: "profile"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "org_member_org_id_fkey"
-            columns: ["org_id"]
-            referencedRelation: "org"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
       profile: {
         Row: {
-          ai_allowance: number
           created_at: string | null
           email: string | null
           id: string
           limited: boolean | null
           name: string | null
           plan: string
+          play_allowance: number
           stripe_customer: string | null
           stripe_subscription: string | null
           team_owner: string | null
         }
         Insert: {
-          ai_allowance?: number
           created_at?: string | null
           email?: string | null
           id: string
           limited?: boolean | null
           name?: string | null
           plan?: string
+          play_allowance?: number
           stripe_customer?: string | null
           stripe_subscription?: string | null
           team_owner?: string | null
         }
         Update: {
-          ai_allowance?: number
           created_at?: string | null
           email?: string | null
           id?: string
           limited?: boolean | null
           name?: string | null
           plan?: string
+          play_allowance?: number
           stripe_customer?: string | null
           stripe_subscription?: string | null
           team_owner?: string | null
@@ -563,7 +526,7 @@ export interface Database {
       }
     }
     Enums: {
-      org_member_role: "member" | "admin"
+      orge_user_role: "member" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
