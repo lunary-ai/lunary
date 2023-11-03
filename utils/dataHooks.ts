@@ -53,20 +53,19 @@ export const useProfile = () => {
 
   const query = supabaseClient
     .from("profile")
-    // TODO: why postgREST column alias are not working with supabase?
-    .select("*,org(*,name,plan,profile(*))")
+    .select("*,org(*,profile(*))")
     .match({ id: user?.id })
-  // .single()
+    .single()
 
   const { data: profile, isLoading } = useQuery(
     user ? query : null,
     hardOptions,
   )
 
-  console.log(profile)
+  console.log(profile?.org)
   const users =
     profile &&
-    profile[0].org?.profile?.sort((a, b) => {
+    profile.org.profile?.sort((a, b) => {
       if (a.role === "admin" && b.role === "member") return -1
       if (a.role === "member" && b.role === "admin") return 1
       return 0
@@ -74,16 +73,14 @@ export const useProfile = () => {
 
   const profileWithOrg = profile
     ? {
-        ...profile[0],
+        ...profile,
         color: getUserColor(theme, user.id),
         org: {
-          ...profile[0].org,
+          ...profile.org,
           users,
         },
       }
     : null
-
-  console.log(profileWithOrg)
 
   return { profile: profileWithOrg, loading: isLoading }
 }
@@ -106,7 +103,7 @@ export function useApps() {
   const { trigger: insert } = useInsertMutation(
     supabaseClient.from("app"),
     ["id"],
-    "name,owner,id",
+    "name,org_id,id",
   )
 
   const { trigger: update } = useUpdateMutation(
