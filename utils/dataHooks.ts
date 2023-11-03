@@ -99,7 +99,6 @@ export function useApps() {
     softOptions,
   )
 
-  // TODO
   const { trigger: insert } = useInsertMutation(
     supabaseClient.from("app"),
     ["id"],
