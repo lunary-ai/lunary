@@ -1,5 +1,5 @@
 import { formatLargeNumber } from "@/utils/format"
-import { useProfile, useProfile } from "@/utils/dataHooks"
+import { useProfile } from "@/utils/dataHooks"
 import {
   Badge,
   Stack,
