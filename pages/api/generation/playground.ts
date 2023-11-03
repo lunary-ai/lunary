@@ -29,7 +29,20 @@ const convertInputToOpenAIMessages = (input: any[]) => {
 export const runtime = "edge"
 
 export default edgeWrapper(async function handler(req: Request) {
-  await ensureAppIsLogged(req)
+  const supabase = await ensureAppIsLogged(req)
+
+  const teamOwner = await supabase
+    .from("profile")
+    .select("play_allowance")
+    .eq("id", req.user.id)
+    .single()
+
+  // remove 1 to 'play_allowance' to either logged user or team_owner
+  const { data: user } = await supabase
+    .from("profile")
+    .select("play_allowance")
+    .eq("id", req.user.id)
+    .single()
 
   const { model, run } = await req.json()
 

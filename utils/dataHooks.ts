@@ -94,6 +94,7 @@ export const useTeam = () => {
       name: user.name,
       email: user.email,
       limited: user.limited,
+      playAllowance: user.play_allowance,
       stripe_customer: user.stripe_customer,
       role: user.team_owner ? "Member" : "Owner",
       plan: user.plan,
@@ -110,6 +111,7 @@ export const useTeam = () => {
   const team = {
     id: owner?.id,
     stripe_customer: owner?.stripe_customer,
+    playAllowance: owner?.playAllowance,
     plan: owner?.plan,
     limited: owner?.limited,
     users,
