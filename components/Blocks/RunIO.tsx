@@ -1,13 +1,28 @@
-import { Button, Group, Stack, Text, Tooltip } from "@mantine/core"
+import {
+  ActionIcon,
+  Button,
+  Card,
+  CopyButton,
+  Group,
+  Stack,
+  Text,
+  Tooltip,
+} from "@mantine/core"
 import SmartViewer from "./SmartViewer"
 import TokensBadge from "./TokensBadge"
-import { IconInfoCircle, IconPencilShare, IconShare } from "@tabler/icons-react"
+import {
+  IconCheck,
+  IconCopy,
+  IconInfoCircle,
+  IconPencilShare,
+  IconShare,
+} from "@tabler/icons-react"
 import Link from "next/link"
 
 const isChatMessages = (obj) => {
   return Array.isArray(obj)
     ? obj.every((m) => typeof m.text === "string" && typeof m.role === "string")
-    : false
+    : typeof obj.text === "string" && typeof obj.role === "string"
 }
 
 // This is the component that renders the input and output of a run
@@ -16,13 +31,24 @@ const isChatMessages = (obj) => {
 const ParamItem = ({ name, value }) => (
   <Group>
     <Text size="sm">{name}: </Text>
-    {typeof value === "string" || typeof value === "number" ? (
-      <Text size="sm">{value}</Text>
-    ) : (
-      value
-    )}
+    <Text size="sm">
+      {typeof value === "string" || typeof value === "number"
+        ? value
+        : JSON.stringify(value)}
+    </Text>
   </Group>
 )
+
+const PARAMS = {
+  temperature: "Temperature",
+  max_tokens: "Max tokens",
+  top_p: "Top P",
+  top_k: "Top K",
+  logit_bias: "Logit bias",
+  presence_penalty: "Presence penalty",
+  frequency_penalty: "Frequency penalty",
+  stop: "Stop",
+}
 
 export default function RunInputOutput({ run }) {
   const canEnablePlayground =
@@ -31,33 +57,59 @@ export default function RunInputOutput({ run }) {
   return (
     <Stack>
       {run.type === "llm" && (
-        <Group position="apart" align="start">
-          <Stack>
-            <ParamItem name="Model" value={run.name} />
+        <Card withBorder>
+          <Group position="apart" align="start">
+            <Stack spacing="xs">
+              <ParamItem name="Model" value={run.name} />
 
-            {typeof run.params?.temperature !== "undefined" && (
-              <ParamItem name="Temperature" value={run.params?.temperature} />
+              {Object.entries(PARAMS).map(
+                ([key, name]) =>
+                  typeof run.params?.[key] !== "undefined" && (
+                    <ParamItem name={name} value={run.params?.[key]} />
+                  )
+              )}
+            </Stack>
+
+            {canEnablePlayground && (
+              <Stack>
+                <Button
+                  variant="outline"
+                  size="xs"
+                  w="fit-content"
+                  display="inline"
+                  rightIcon={<IconPencilShare size={14} />}
+                  component={Link}
+                  href={`/play/${run.id}`}
+                >
+                  Open in playground
+                </Button>
+                <CopyButton
+                  value={`https://app.llmonitor.com/play/${run.id}`}
+                  timeout={2000}
+                >
+                  {({ copied, copy }) => (
+                    <Button
+                      variant="link"
+                      size="xs"
+                      mt={-6}
+                      color={copied ? "teal" : "gray"}
+                      onClick={copy}
+                      leftIcon={
+                        copied ? (
+                          <IconCheck size="1rem" />
+                        ) : (
+                          <IconCopy size="1rem" />
+                        )
+                      }
+                    >
+                      Copy link
+                    </Button>
+                  )}
+                </CopyButton>
+              </Stack>
             )}
-
-            {typeof run.params?.max_tokens !== "undefined" && (
-              <ParamItem name="Max tokens" value={run.params?.max_tokens} />
-            )}
-          </Stack>
-
-          {canEnablePlayground && (
-            <Button
-              variant="outline"
-              size="xs"
-              w="fit-content"
-              display="inline"
-              rightIcon={<IconPencilShare size={14} />}
-              component={Link}
-              href={`/play/${run.id}`}
-            >
-              Open in playground
-            </Button>
-          )}
-        </Group>
+          </Group>
+        </Card>
       )}
 
       <Group position="apart">

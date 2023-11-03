@@ -111,6 +111,10 @@ function Playground() {
           return console.error(error)
         }
 
+        if (!Array.isArray(data.input)) {
+          data.input = [data.input]
+        }
+
         if (data) setRun(data)
 
         setLoading(false)
@@ -131,64 +135,68 @@ function Playground() {
   }
 
   const runPlayground = async () => {
-    if (team?.playAllowances <= 0) {
-      modals.openContextModal({
-        modal: "upgrade",
-        size: 800,
-        innerProps: {},
-      })
-    }
+    // if (team?.playAllowances <= 0) {
+    //   modals.openContextModal({
+    //     modal: "upgrade",
+    //     size: 800,
+    //     innerProps: {},
+    //   })
+    // }
 
     setStreaming(true)
 
-    const fetchResponse = await fetch("/api/generation/playground", {
-      method: "POST",
-      body: JSON.stringify({ run, model, appId: app.id }),
-    })
+    try {
+      const fetchResponse = await fetch("/api/generation/playground", {
+        method: "POST",
+        body: JSON.stringify({ run, model, appId: app.id }),
+      })
 
-    const reader = fetchResponse.body.getReader()
+      const reader = fetchResponse.body.getReader()
 
-    let streamedResponse = ""
-    let responseMessage = {
-      content: "",
-      role: "assistant",
-    }
-
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) {
-        break
+      let streamedResponse = ""
+      let responseMessage = {
+        content: "",
+        role: "assistant",
       }
-      // Update the chat state with the new message tokens.
-      streamedResponse += createChunkDecoder()(value)
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) {
+          break
+        }
+        // Update the chat state with the new message tokens.
+        streamedResponse += createChunkDecoder()(value)
+
+        if (streamedResponse.startsWith('{"function_call":')) {
+          // While the function call is streaming, it will be a string.
+          responseMessage["function_call"] = streamedResponse
+        } else {
+          responseMessage["content"] = streamedResponse
+        }
+
+        mutate({
+          output: convertOpenAImessage(responseMessage),
+        })
+
+        // The request has been aborted, stop reading the stream.
+        // if (abortControllerRef.current === null) {
+        // reader.cancel()
+        // break
+        // }
+      }
 
       if (streamedResponse.startsWith('{"function_call":')) {
-        // While the function call is streaming, it will be a string.
-        responseMessage["function_call"] = streamedResponse
-      } else {
-        responseMessage["content"] = streamedResponse
+        // Once the stream is complete, the function call is parsed into an object.
+        const parsedFunctionCall = JSON.parse(streamedResponse).function_call
+
+        responseMessage["function_call"] = parsedFunctionCall
+
+        mutate({
+          output: convertOpenAImessage(responseMessage),
+        })
       }
-
-      mutate({
-        output: convertOpenAImessage(responseMessage),
-      })
-
-      // The request has been aborted, stop reading the stream.
-      // if (abortControllerRef.current === null) {
-      // reader.cancel()
-      // break
-      // }
-    }
-
-    if (streamedResponse.startsWith('{"function_call":')) {
-      // Once the stream is complete, the function call is parsed into an object.
-      const parsedFunctionCall = JSON.parse(streamedResponse).function_call
-
-      responseMessage["function_call"] = parsedFunctionCall
-
-      mutate({
-        output: convertOpenAImessage(responseMessage),
-      })
+    } catch (e) {
+      console.error(e)
     }
 
     setStreaming(false)
@@ -206,38 +214,39 @@ function Playground() {
                 <Text weight="bold" size="sm">
                   Input
                 </Text>
-                {run?.input?.map((message, i) => (
-                  <Box pos="relative" key={i}>
-                    <ChatMessage
-                      data={message}
-                      key={i}
-                      editable={true}
-                      onChange={(newMessage) => {
-                        const newInput = run.input
-                        newInput[i] = newMessage
-                        mutate({
-                          input: newInput,
-                        })
-                      }}
-                    />
-                    <ActionIcon
-                      pos="absolute"
-                      top={4}
-                      right={4}
-                      size="sm"
-                      color="red"
-                      onClick={() => {
-                        const newInput = run.input
-                        newInput.splice(i, 1)
-                        mutate({
-                          input: newInput,
-                        })
-                      }}
-                    >
-                      <IconCircleMinus size={12} />
-                    </ActionIcon>
-                  </Box>
-                ))}
+                {Array.isArray(run?.input) &&
+                  run?.input?.map((message, i) => (
+                    <Box pos="relative" key={i}>
+                      <ChatMessage
+                        data={message}
+                        key={i}
+                        editable={true}
+                        onChange={(newMessage) => {
+                          const newInput = run.input
+                          newInput[i] = newMessage
+                          mutate({
+                            input: newInput,
+                          })
+                        }}
+                      />
+                      <ActionIcon
+                        pos="absolute"
+                        top={4}
+                        right={4}
+                        size="sm"
+                        color="red"
+                        onClick={() => {
+                          const newInput = run.input
+                          newInput.splice(i, 1)
+                          mutate({
+                            input: newInput,
+                          })
+                        }}
+                      >
+                        <IconCircleMinus size={12} />
+                      </ActionIcon>
+                    </Box>
+                  ))}
 
                 <ActionIcon
                   mx="auto"
@@ -294,7 +303,7 @@ function Playground() {
                     precision={2}
                     size="xs"
                     value={run.params?.temperature}
-                    w={100}
+                    w={90}
                     onChange={(value) =>
                       mutate({
                         params: { ...run.params, temperature: value },
@@ -314,7 +323,7 @@ function Playground() {
                     step={100}
                     size="xs"
                     value={run.params?.max_tokens}
-                    w={100}
+                    w={90}
                     onChange={(value) =>
                       mutate({
                         params: { ...run.params, max_tokens: value },
@@ -325,7 +334,7 @@ function Playground() {
               />
 
               <ParamItem
-                name="Frequency Penalty"
+                name="Freq. Penalty"
                 value={
                   <NumberInput
                     min={-2}
@@ -335,7 +344,7 @@ function Playground() {
                     step={0.1}
                     size="xs"
                     value={run.params?.frequency_penalty}
-                    w={100}
+                    w={90}
                     onChange={(value) =>
                       mutate({
                         params: { ...run.params, frequency_penalty: value },
@@ -346,7 +355,7 @@ function Playground() {
               />
 
               <ParamItem
-                name="Presence Penalty"
+                name="Pres. Penalty"
                 value={
                   <NumberInput
                     min={-2}
@@ -356,7 +365,7 @@ function Playground() {
                     defaultValue={0}
                     size="xs"
                     value={run.params?.presence_penalty}
-                    w={100}
+                    w={90}
                     onChange={(value) =>
                       mutate({
                         params: { ...run.params, presence_penalty: value },
@@ -377,7 +386,7 @@ function Playground() {
                     step={0.1}
                     size="xs"
                     value={run.params?.top_p}
-                    w={100}
+                    w={90}
                     onChange={(value) =>
                       mutate({
                         params: { ...run.params, top_p: value },

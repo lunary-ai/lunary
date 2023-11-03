@@ -17,11 +17,12 @@ const OPENROUTER_MODELS = [
 const ANTHROPIC_MODELS = ["claude-2"]
 
 const convertInputToOpenAIMessages = (input: any[]) => {
-  return input.map(({ role, text, functionCall }) => {
+  return input.map(({ role, text, functionCall, name }) => {
     return {
       role: role.replace("ai", "assistant"),
       content: text,
-      // function_call: functionCall || undefined,
+      function_call: functionCall || undefined,
+      name: name || undefined,
     }
   })
 }
@@ -31,18 +32,7 @@ export const runtime = "edge"
 export default edgeWrapper(async function handler(req: Request) {
   const supabase = await ensureAppIsLogged(req)
 
-  const teamOwner = await supabase
-    .from("profile")
-    .select("play_allowance")
-    .eq("id", req.user.id)
-    .single()
-
-  // remove 1 to 'play_allowance' to either logged user or team_owner
-  const { data: user } = await supabase
-    .from("profile")
-    .select("play_allowance")
-    .eq("id", req.user.id)
-    .single()
+  // TODO: substract 1 from the number of `play_allowance` left
 
   const { model, run } = await req.json()
 
