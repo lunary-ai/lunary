@@ -27,7 +27,7 @@ import {
 import { useSessionContext } from "@supabase/auth-helpers-react"
 
 import Router, { useRouter } from "next/router"
-import { useProfile, useTeam } from "@/utils/dataHooks"
+import { useProfile } from "@/utils/dataHooks"
 import UserAvatar from "@/components/Blocks/UserAvatar"
 import Link from "next/link"
 import { modals } from "@mantine/modals"
@@ -52,7 +52,7 @@ function NavbarLink({ icon: Icon, label, link, active }) {
           color={"blue.4"}
           size="lg"
         >
-          <Icon size="1.1rem" />
+          <Icon size="17px" />
         </ThemeIcon>
       </Link>
     </Tooltip>
@@ -65,7 +65,6 @@ export default function Sidebar() {
   const { supabaseClient } = useSessionContext()
 
   const { profile } = useProfile()
-  const { team } = useTeam()
 
   const isActive = (link: string) => router.pathname.startsWith(link)
 
@@ -128,7 +127,7 @@ export default function Sidebar() {
                 <Menu.Label>Account</Menu.Label>
                 {process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY && (
                   <>
-                    {team?.plan === "free" && (
+                    {profile?.org.plan === "free" && (
                       <Menu.Item
                         onClick={() =>
                           modals.openContextModal({

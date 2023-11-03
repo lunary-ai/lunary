@@ -8,19 +8,15 @@ import {
   useApps,
   useCurrentApp,
   useProfile,
-  useTeam,
 } from "@/utils/dataHooks"
 
 import {
-  Alert,
   Badge,
   Button,
   Card,
-  Center,
   Container,
   FocusTrap,
   Group,
-  Overlay,
   Popover,
   Stack,
   Table,
@@ -29,34 +25,28 @@ import {
   Title,
 } from "@mantine/core"
 import { modals } from "@mantine/modals"
-import {
-  IconBrandOpenai,
-  IconDownload,
-  IconPencil,
-  IconUserPlus,
-} from "@tabler/icons-react"
+import { IconPencil, IconUserPlus } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import Router from "next/router"
 
 import { Label, ReferenceLine } from "recharts"
 
 function Invite() {
-  const { team } = useTeam()
   const { profile } = useProfile()
 
   if (profile?.team_owner) {
     return null
   }
 
-  if (team?.plan === "pro") {
-    if (team.users.length === 5) {
+  if (profile?.plan === "pro") {
+    if (profile?.org.users.length === 5) {
       return <Badge color="orange">Seat allowance exceeded</Badge>
     }
     return (
       <Text>
         Invite link:{" "}
         <CopyText
-          value={`${window.location.origin}/join?team=${profile?.id}`}
+          value={`${window.location.origin}/join?orgId=${profile?.org.id}`}
         />
       </Text>
     )
@@ -86,8 +76,6 @@ export default function AppAnalytics() {
 
   const { profile } = useProfile()
 
-  const { team } = useTeam()
-
   const { drop, update } = useApps()
 
   const applyRename = (e) => {
@@ -97,7 +85,7 @@ export default function AppAnalytics() {
 
   const { data: appUsage } = useAppSWR("/analytics/usage")
 
-  const allowedLimit = team?.plan === "pro" ? 5000 : 1000
+  const allowedLimit = profile?.org.plan === "pro" ? 5000 : 1000
 
   return (
     <Container className="unblockable">
@@ -149,7 +137,7 @@ export default function AppAnalytics() {
                 </tr>
               </thead>
               <tbody>
-                {team?.users?.map((user, i) => (
+                {profile?.org.users?.map((user, i) => (
                   <tr key={i}>
                     <td>
                       <Group>

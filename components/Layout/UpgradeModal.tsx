@@ -18,10 +18,10 @@ import {
 } from "@mantine/core"
 
 import { useEffect } from "react"
-import { useTeam } from "@/utils/dataHooks"
+import { useProfile } from "../../utils/dataHooks"
 
 export const UpgradeBody = () => {
-  const { team } = useTeam()
+  const { profile } = useProfile()
 
   return (
     <>
@@ -88,7 +88,7 @@ export const UpgradeBody = () => {
 
           <Button
             size="md"
-            href={`${process.env.NEXT_PUBLIC_STRIPE_PRO_LINK}&client_reference_id=${team?.id}`}
+            href={`${process.env.NEXT_PUBLIC_STRIPE_PRO_LINK}&client_reference_id=${profile?.org.id}`}
             fullWidth
             component="a"
             variant="gradient"

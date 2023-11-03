@@ -34,7 +34,6 @@ export default function UpdatePassword() {
   })
 
   const user = useUser()
-  console.log(user)
 
   const handlePasswordReset = async ({ password }: { password: string }) => {
     setLoading(true)

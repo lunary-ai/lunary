@@ -1,6 +1,6 @@
 import SmartViewer from "@/components/Blocks/SmartViewer"
 import { ChatMessage } from "@/components/Blocks/SmartViewer/Message"
-import { useCurrentApp, useTeam } from "@/utils/dataHooks"
+import { useCurrentApp, useOrg, useProfile } from "@/utils/dataHooks"
 import { Database } from "@/utils/supaTypes"
 import {
   ActionIcon,
@@ -85,7 +85,7 @@ function Playground() {
   const [streaming, setStreaming] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  const { team } = useTeam()
+  const { profile } = useProfile()
 
   const [model, setModel] = useLocalStorage({
     key: "p-model",

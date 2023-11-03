@@ -13,7 +13,7 @@ import { AppContext } from "@/utils/context"
 import { useLocalStorage } from "@mantine/hooks"
 import { ModalsProvider } from "@mantine/modals"
 import UpgradeModal from "./UpgradeModal"
-import { useTeam } from "@/utils/dataHooks"
+import { useProfile } from "../../utils/dataHooks"
 
 export default function Layout({ children }: { children: ReactNode }) {
   const router = useRouter()
@@ -26,7 +26,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     "/update-password",
   ].includes(router.pathname)
 
-  const { team } = useTeam()
+  const { profile } = useProfile()
 
   const { session, isLoading } = useSessionContext()
 
@@ -51,7 +51,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           <AppShell
             mih={"100vh"}
             padding={"xl"}
-            className={team && team.limited ? "limited" : ""}
+            className={profile?.org.limited ? "limited" : ""}
             header={!isAuthPage && <Navbar />}
             navbar={!isAuthPage && appId && <Sidebar />}
             sx={{ backgroundColor: "#fafafa" }}

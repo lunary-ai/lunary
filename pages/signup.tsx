@@ -50,9 +50,9 @@ function SignupPage() {
     initialValues: {
       email: "",
       name: "",
+      orgName: "",
       projectName: "Project #1",
       password: "",
-      companyName: "",
     },
 
     validate: {
@@ -76,11 +76,13 @@ function SignupPage() {
     email,
     password,
     name,
+    orgName,
     projectName,
   }: {
     email: string
     password: string
     name: string
+    orgName: string
     projectName: string
   }) => {
     setLoading(true)
@@ -93,10 +95,11 @@ function SignupPage() {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
             name,
+            orgName,
             projectName,
           },
         },
-      })
+      }),
     )
 
     analytics.track("Signup", { email, name })
@@ -205,8 +208,24 @@ function SignupPage() {
                             placeholder="Your full name"
                             error={form.errors.name && "This field is required"}
                             {...form.getInputProps("name")}
+                            onChange={(e) => {
+                              form.setFieldValue("name", e.target.value)
+                              form.setFieldValue(
+                                "orgName",
+                                e.target.value + "'s Org",
+                              )
+                            }}
                           />
 
+                          <TextInput
+                            label="Organization Name"
+                            description="Can be changed later"
+                            icon={<IconUser size={16} />}
+                            placeholder="Your Organization name"
+                            error={form.errors.name && "This field is required"}
+                            required={true}
+                            {...form.getInputProps("orgName")}
+                          />
                           <TextInput
                             label="Project Name"
                             description="Can be changed later."

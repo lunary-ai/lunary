@@ -37,23 +37,30 @@ import Confetti from "react-confetti"
 import { supabaseAdmin } from "../lib/supabaseClient"
 
 export async function getServerSideProps(context) {
-  const teamOwnerId = context.query.team
-  const { count } = await supabaseAdmin
-    .from("profile")
-    .select("*", { count: "exact", head: true })
-    .match({ team_owner: teamOwnerId })
+  const { orgId } = context.query
 
-  return { props: { teamSize: count + 1 } }
+  const { data: org } = await supabaseAdmin
+    .from("org")
+    .select("*")
+    .eq("id", orgId)
+    .single()
+
+  const { count: orgUserCount } = await supabaseAdmin
+    .from("org_user")
+    .select("*", { count: "exact", head: true })
+    .eq("org_id", orgId)
+
+  return { props: { orgUserCount, orgName: org.name, orgId } }
 }
 
-function TeamFull({ owner }) {
+function TeamFull({ orgName }) {
   return (
     <Container py={100} size={600}>
       <NextSeo title="Signup" />
       <Stack align="center" spacing={30}>
         <IconAnalyze color={"#206dce"} size={60} />
         <Title order={2} weight={700} size={40} ta="center">
-          Sorry, {owner}'s team is full
+          Sorry, ${orgName} is full
         </Title>
 
         <Flex align="center" gap={30}>
@@ -74,34 +81,21 @@ function TeamFull({ owner }) {
     </Container>
   )
 }
-export default function Join({ teamSize }) {
-  const searchParams = useSearchParams()
-  const ownerId = searchParams.get("team")
+export default function Join({ orgUserCount, orgName }) {
+  const { supabaseClient } = useSessionContext()
 
-  const [owner, setOwner] = useState("")
+  const searchParams = useSearchParams()
+  const orgId = searchParams.get("team")
 
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
-
-  const { supabaseClient } = useSessionContext()
-
-  useEffect(() => {
-    if (ownerId) {
-      // TODO: server side
-      supabaseClient
-        .from("profile")
-        .select("name")
-        .match({ id: ownerId })
-        .then(({ data }) => setOwner(data[0].name))
-    }
-  }, [ownerId])
 
   const form = useForm({
     initialValues: {
       email: "",
       name: "",
       password: "",
-      companyName: "",
+      orgName: "",
     },
 
     validate: {
@@ -137,11 +131,10 @@ export default function Join({ teamSize }) {
         options: {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
-            name,
-            teamOwner: ownerId,
+            orgId,
           },
         },
-      })
+      }),
     )
 
     analytics.track("Signup", { email, name })
@@ -173,8 +166,8 @@ export default function Join({ teamSize }) {
     setStep(step + 1)
   }
 
-  if (teamSize > 4) {
-    return <TeamFull owner={owner} />
+  if (orgUserCount > 4) {
+    return <TeamFull orgName={orgName} />
   }
 
   return (
@@ -185,7 +178,7 @@ export default function Join({ teamSize }) {
         <Stack align="center">
           <IconAnalyze color={"#206dce"} size={60} />
           <Title order={2} weight={700} size={40} ta="center">
-            Join {owner}'s team
+            Join {orgName}
           </Title>
         </Stack>
         <Paper radius="md" p="xl" withBorder miw={350}>

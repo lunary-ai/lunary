@@ -42,18 +42,21 @@ export interface Database {
           created_at: string | null
           id: string
           name: string
+          org_id: string | null
           owner: string
         }
         Insert: {
           created_at?: string | null
           id?: string
           name: string
+          org_id?: string | null
           owner: string
         }
         Update: {
           created_at?: string | null
           id?: string
           name?: string
+          org_id?: string | null
           owner?: string
         }
         Relationships: [
@@ -164,17 +167,32 @@ export interface Database {
         Row: {
           created_at: string | null
           id: string
+          limited: boolean
           name: string
+          plan: Database["public"]["Enums"]["org_plan"]
+          play_allowance: number
+          stripe_customer: string | null
+          stripe_subscription: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
+          limited?: boolean
           name: string
+          plan: Database["public"]["Enums"]["org_plan"]
+          play_allowance?: number
+          stripe_customer?: string | null
+          stripe_subscription?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
+          limited?: boolean
           name?: string
+          plan?: Database["public"]["Enums"]["org_plan"]
+          play_allowance?: number
+          stripe_customer?: string | null
+          stripe_subscription?: string | null
         }
         Relationships: []
       }
@@ -185,8 +203,10 @@ export interface Database {
           id: string
           limited: boolean | null
           name: string | null
+          org_id: string | null
           plan: string
           play_allowance: number
+          role: Database["public"]["Enums"]["user_role"] | null
           stripe_customer: string | null
           stripe_subscription: string | null
           team_owner: string | null
@@ -197,8 +217,10 @@ export interface Database {
           id: string
           limited?: boolean | null
           name?: string | null
+          org_id?: string | null
           plan?: string
           play_allowance?: number
+          role?: Database["public"]["Enums"]["user_role"] | null
           stripe_customer?: string | null
           stripe_subscription?: string | null
           team_owner?: string | null
@@ -209,8 +231,10 @@ export interface Database {
           id?: string
           limited?: boolean | null
           name?: string | null
+          org_id?: string | null
           plan?: string
           play_allowance?: number
+          role?: Database["public"]["Enums"]["user_role"] | null
           stripe_customer?: string | null
           stripe_subscription?: string | null
           team_owner?: string | null
@@ -226,6 +250,12 @@ export interface Database {
             foreignKeyName: "profile_id_fkey1"
             columns: ["id"]
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "org"
             referencedColumns: ["id"]
           },
           {
@@ -526,7 +556,8 @@ export interface Database {
       }
     }
     Enums: {
-      orge_user_role: "member" | "admin"
+      org_plan: "free" | "pro" | "unlimited"
+      user_role: "member" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never

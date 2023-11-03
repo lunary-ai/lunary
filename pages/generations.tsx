@@ -4,8 +4,8 @@ import {
   useCurrentApp,
   useGenerations,
   useModelNames,
+  useProfile,
   useTags,
-  useTeam,
 } from "@/utils/dataHooks"
 import {
   Button,
@@ -78,7 +78,7 @@ function buildExportUrl(
   appId: string,
   query: string | null,
   models: string[],
-  tags: string[]
+  tags: string[],
 ) {
   const url = new URL("/api/generation/export", window.location.origin)
 
@@ -113,10 +113,10 @@ export default function Generations() {
   const { runs, loading, validating, loadMore } = useGenerations(
     query,
     selectedModels,
-    selectedTags
+    selectedTags,
   )
   const { tags } = useTags()
-  const { team } = useTeam()
+  const { profile } = useProfile()
 
   const [selected, setSelected] = useState(null)
 
@@ -127,7 +127,7 @@ export default function Generations() {
   }
 
   function exportButton(url: string) {
-    if (team.plan === "pro") {
+    if (profile?.org.plan === "pro") {
       return {
         component: "a",
         href: url,

@@ -48,104 +48,71 @@ const extendWithCosts = (data: any[]) =>
 
 export const useProfile = () => {
   const supabaseClient = useSupabaseClient<Database>()
-
   const user = useUser()
-
   const theme = useMantineTheme()
+
+  const query = supabaseClient
+    .from("profile")
+    // TODO: why postgREST column alias are not working with supabase?
+    .select("*,org(*,name,plan,profile(*))")
+    .match({ id: user?.id })
+  // .single()
 
   const { data: profile, isLoading } = useQuery(
-    user
-      ? supabaseClient
-          .from("profile")
-          .select("id,email,name,created_at,plan,team_owner")
-          .match({ id: user?.id })
-          .single()
-      : null,
-    hardOptions
+    user ? query : null,
+    hardOptions,
   )
 
-  if (profile) {
-    // @ts-ignore
-    profile.color = getUserColor(theme, profile.id)
-  }
-
-  return { profile, loading: isLoading }
-}
-
-export const useTeam = () => {
-  const supabaseClient = useSupabaseClient<Database>()
-  const { profile: user } = useProfile()
-  const theme = useMantineTheme()
-
-  const ownerId = user?.team_owner || user?.id
-  const { data, isLoading } = useQuery(
-    user
-      ? supabaseClient
-          .from("profile")
-          .select("*")
-          .or(`id.eq.${ownerId},team_owner.eq.${ownerId}`)
-      : null,
-    hardOptions
-  )
-
-  const users = data
-    ?.map((user) => ({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      limited: user.limited,
-      playAllowance: user.play_allowance,
-      stripe_customer: user.stripe_customer,
-      role: user.team_owner ? "Member" : "Owner",
-      plan: user.plan,
-      color: getUserColor(theme, user.id),
-    }))
-    .sort((a, b) => {
-      if (a.role === "Owner" && b.role === "Member") return -1
-      if (a.role === "Member" && b.role === "Owner") return 1
+  console.log(profile)
+  const users =
+    profile &&
+    profile[0].org?.profile?.sort((a, b) => {
+      if (a.role === "admin" && b.role === "member") return -1
+      if (a.role === "member" && b.role === "admin") return 1
       return 0
     })
 
-  const owner = users?.find((u) => u.id === ownerId)
+  const profileWithOrg = profile
+    ? {
+        ...profile[0],
+        color: getUserColor(theme, user.id),
+        org: {
+          ...profile[0].org,
+          users,
+        },
+      }
+    : null
 
-  const team = {
-    id: owner?.id,
-    stripe_customer: owner?.stripe_customer,
-    playAllowance: owner?.playAllowance,
-    plan: owner?.plan,
-    limited: owner?.limited,
-    users,
-  }
+  console.log(profileWithOrg)
 
-  return { team, loading: isLoading }
+  return { profile: profileWithOrg, loading: isLoading }
 }
 
 export function useApps() {
   const supabaseClient = useSupabaseClient<Database>()
-  const { team } = useTeam()
+  const { profile } = useProfile()
 
-  const owner = team?.users && team.users[0]
+  const query = supabaseClient
+    .from("app")
+    .select("id,name")
+    .eq("org_id", profile?.org?.id)
 
   const { data: apps, isLoading } = useQuery(
-    owner?.id
-      ? supabaseClient
-          .from("app")
-          .select("name,owner,id")
-          .match({ owner: owner.id })
-      : null,
-    softOptions
+    profile?.org ? query : null,
+    softOptions,
   )
 
+  // TODO
   const { trigger: insert } = useInsertMutation(
     supabaseClient.from("app"),
     ["id"],
-    "name,owner,id"
+    "name,owner,id",
   )
 
   const { trigger: update } = useUpdateMutation(
     supabaseClient.from("app"),
     ["id"],
-    "name,id"
+    "name,id",
   )
 
   const { trigger: drop } = useDeleteMutation(supabaseClient.from("app"), [
@@ -164,7 +131,7 @@ export function useCurrentApp() {
       .from("run")
       .select("id", { count: "exact", head: true })
       .eq("app", appId)
-      .limit(1)
+      .limit(1),
   )
 
   const { apps, loading } = useApps()
@@ -216,7 +183,7 @@ export function useUsers() {
 export function useGenerations(
   search,
   modelNames: string[] = [],
-  tags: string[] = []
+  tags: string[] = [],
 ) {
   const supabaseClient = useSupabaseClient<Database>()
   const { appId } = useContext(AppContext)
@@ -306,7 +273,7 @@ export function useRuns(
     filter?: Array<any>
     not?: Array<any>
     select?: string
-  } = {}
+  } = {},
 ) {
   const supabaseClient = useSupabaseClient<Database>()
   const { appId } = useContext(AppContext)
@@ -316,7 +283,7 @@ export function useRuns(
   let query = supabaseClient
     .from("run")
     .select(
-      select || "*" // "id,user,type,name,created_at,ended_at,app,input,output,parent_run,prompt_tokens,completion_tokens,status,tags,error,params,feedback,retry_of"
+      select || "*", // "id,user,type,name,created_at,ended_at,app,input,output,parent_run,prompt_tokens,completion_tokens,status,tags,error,params,feedback,retry_of"
     )
     .order("created_at", {
       ascending: false,
@@ -366,7 +333,7 @@ export function useRunsUsage(range, user_id = undefined) {
       user_id,
       days: range,
     }),
-    softOptions
+    softOptions,
   )
 
   return { usage: extendWithCosts(usage), loading: isLoading }
@@ -382,7 +349,7 @@ export function useRunsUsageByDay(range, user_id = undefined) {
       user_id,
       days: range,
     }),
-    hardOptions
+    hardOptions,
   )
 
   return { dailyUsage: extendWithCosts(dailyUsage), loading: isLoading }
@@ -397,7 +364,7 @@ export function useRunsUsageByUser(range = null) {
       app_id: appId,
       days: range,
     }),
-    hardOptions
+    hardOptions,
   )
 
   const reduceUsersUsage = (usage) => {
@@ -438,7 +405,7 @@ export function useRun(runId: string) {
 
   const { data: run, isLoading } = useQuery(
     supabaseClient.from("run").select("*").eq("id", runId).single(),
-    softOptions
+    softOptions,
   )
 
   return { run, loading: isLoading }
@@ -450,7 +417,7 @@ export function useRelatedRuns(runId: string) {
   const { data: relatedRuns, isLoading } = useQuery(
     supabaseClient.rpc("get_related_runs", {
       run_id: runId,
-    })
+    }),
   )
 
   return { relatedRuns: extendWithCosts(relatedRuns), loading: isLoading }
@@ -471,7 +438,7 @@ export function useAppUsersList() {
       .select("id,app,external_id,created_at,last_seen,props")
       .eq("app", appId)
       .order("last_seen", { ascending: false }),
-    { ...softOptions, pageSize: 100 }
+    { ...softOptions, pageSize: 100 },
   )
 
   const { usageByUser } = useRunsUsageByUser()
@@ -498,7 +465,7 @@ export function useAppUsers(usageRange = 30) {
   const { appId } = useContext(AppContext)
 
   const maxLastSeen = new Date(
-    new Date().getTime() - usageRange * 24 * 60 * 60 * 1000
+    new Date().getTime() - usageRange * 24 * 60 * 60 * 1000,
   )
     .toISOString()
     .slice(0, 10)
@@ -509,7 +476,7 @@ export function useAppUsers(usageRange = 30) {
       .select("id,app,external_id,created_at,last_seen,props")
       .eq("app", appId)
       .gt("last_seen", maxLastSeen),
-    softOptions
+    softOptions,
   )
 
   const { usageByUser } = useRunsUsageByUser(usageRange)
@@ -535,7 +502,7 @@ export function useAppUser(id: string) {
 
   const { data: user, isLoading } = useQuery(
     supabaseClient.from("app_user").select("*").eq("id", id).single(),
-    hardOptions
+    hardOptions,
   )
 
   return { user, loading: isLoading }
@@ -556,7 +523,7 @@ export function useAppSWR(url: string, props: any = {}) {
         // automatically append the app id to the request
         body: JSON.stringify({ ...props, appId: app.id }),
       }).then((res) => res.json()),
-    softOptions
+    softOptions,
   )
 
   return { data, loading: isValidating }

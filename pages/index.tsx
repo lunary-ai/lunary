@@ -125,9 +125,9 @@ export default function Home() {
                           onClick={copy}
                         >
                           {copied ? (
-                            <IconCheck size="1rem" />
+                            <IconCheck size="16px" />
                           ) : (
-                            <IconCopy size="1rem" />
+                            <IconCopy size="16px" />
                           )}
                         </ActionIcon>
                       </Tooltip>
