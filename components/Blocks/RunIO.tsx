@@ -7,11 +7,12 @@ import {
   Stack,
   Switch,
   Text,
+  Tooltip,
 } from "@mantine/core"
 import SmartViewer from "./SmartViewer"
 import TokensBadge from "./TokensBadge"
 import { useEffect, useState } from "react"
-import { IconBolt, IconCirclePlus } from "@tabler/icons-react"
+import { IconBolt, IconCirclePlus, IconInfoCircle } from "@tabler/icons-react"
 
 import { ChatMessage } from "./SmartViewer/Message"
 import { useCurrentApp } from "@/utils/dataHooks"
@@ -144,90 +145,106 @@ export default function RunInputOutput({ run }) {
 
   return (
     <Stack>
-      {canEnablePlayground && (
-        <ParamItem
-          name="Playground (edit & re-run)"
-          value={
-            <Switch
-              size="sm"
-              w={40}
-              checked={editMode}
-              onChange={() => setEditMode(!editMode)}
+      {runToRender.type === "llm" && (
+        <>
+          {canEnablePlayground && (
+            <ParamItem
+              name={
+                <Group spacing={4}>
+                  {`Playground `}
+                  <Tooltip
+                    withArrow
+                    label="Edit your prompts and experiment with variations of the prompt in realtime."
+                  >
+                    <IconInfoCircle size={12} />
+                  </Tooltip>
+                </Group>
+              }
+              value={
+                <Switch
+                  size="sm"
+                  w={40}
+                  checked={editMode}
+                  onChange={() => setEditMode(!editMode)}
+                />
+              }
             />
-          }
-        />
-      )}
+          )}
 
-      <ParamItem
-        name="Model"
-        value={
-          editMode ? (
-            <Select
-              size="xs"
-              data={availableModels}
-              value={model}
-              w={200}
-              onChange={setModel}
-              searchable
-              inputMode="search"
+          <ParamItem
+            name="Model"
+            value={
+              editMode ? (
+                <Select
+                  size="xs"
+                  data={availableModels}
+                  value={model}
+                  w={200}
+                  onChange={setModel}
+                  searchable
+                  inputMode="search"
+                />
+              ) : (
+                runToRender.name
+              )
+            }
+          />
+
+          {(typeof runToRender.params?.temperature !== "undefined" ||
+            editMode) && (
+            <ParamItem
+              name="Temperature"
+              value={
+                editMode ? (
+                  <NumberInput
+                    min={0}
+                    max={2}
+                    step={0.1}
+                    precision={2}
+                    size="xs"
+                    value={runToRender.params?.temperature}
+                    w={150}
+                    onChange={(value) =>
+                      setTempRun({
+                        ...tempRun,
+                        params: { ...tempRun.params, temperature: value },
+                      })
+                    }
+                  />
+                ) : (
+                  runToRender.params?.temperature
+                )
+              }
             />
-          ) : (
-            runToRender.name
-          )
-        }
-      />
+          )}
 
-      {(typeof runToRender.params?.temperature !== "undefined" || editMode) && (
-        <ParamItem
-          name="Temperature"
-          value={
-            editMode ? (
-              <NumberInput
-                min={0}
-                max={2}
-                step={0.1}
-                precision={2}
-                size="xs"
-                value={runToRender.params?.temperature}
-                w={150}
-                onChange={(value) =>
-                  setTempRun({
-                    ...tempRun,
-                    params: { ...tempRun.params, temperature: value },
-                  })
-                }
-              />
-            ) : (
-              runToRender.params?.temperature
-            )
-          }
-        />
-      )}
-
-      {(typeof runToRender.params?.max_tokens !== "undefined" || editMode) && (
-        <ParamItem
-          name="Max tokens"
-          value={
-            editMode ? (
-              <NumberInput
-                min={1}
-                max={32000}
-                step={100}
-                size="xs"
-                value={runToRender.params?.max_tokens}
-                w={150}
-                onChange={(value) =>
-                  setTempRun({
-                    ...tempRun,
-                    params: { ...tempRun.params, max_tokens: value },
-                  })
-                }
-              />
-            ) : (
-              runToRender.params?.max_tokens
-            )
-          }
-        />
+          {(typeof runToRender.params?.max_tokens !== "undefined" ||
+            editMode) && (
+            <ParamItem
+              name="Max tokens"
+              value={
+                editMode ? (
+                  <NumberInput
+                    min={1}
+                    max={32000}
+                    step={100}
+                    size="xs"
+                    value={runToRender.params?.max_tokens}
+                    w={150}
+                    onChange={(value) =>
+                      setTempRun({
+                        ...tempRun,
+                        params: { ...tempRun.params, max_tokens: value },
+                      })
+                    }
+                  />
+                ) : (
+                  runToRender.params?.max_tokens
+                )
+              }
+            />
+          )}
+        </>
       )}
 
       <Group position="apart">

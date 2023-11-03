@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next"
-import postgres from "postgres"
 import { ensureAppIsLogged } from "@/lib/api/ensureAppIsLogged"
 import { apiWrapper } from "@/lib/api/helpers"
+import postgres from "postgres"
 
 const sql = postgres(process.env.DB_URI)
 
@@ -14,7 +14,6 @@ export default apiWrapper(async function handler(
   const { appId } = req.body
 
   // Get number of runs each day in the last 30 days, even if 0
-
   const rows = await sql`
     select
       date_trunc('day', r.created_at) as date,
