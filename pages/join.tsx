@@ -100,7 +100,6 @@ export default function Join({ teamSize }) {
     initialValues: {
       email: "",
       name: "",
-      projectName: "Project #1",
       password: "",
       companyName: "",
     },
@@ -108,8 +107,6 @@ export default function Join({ teamSize }) {
     validate: {
       email: (val) => (/^\S+@\S+$/.test(val) ? null : "Invalid email"),
       name: (val) => (val.length <= 2 ? "Your name that short :) ?" : null),
-      projectName: (val) =>
-        val.length <= 1 ? "Can you pick something longer?" : null,
 
       password: (val) =>
         val.length < 6 ? "Password must be at least 6 characters" : null,
@@ -131,7 +128,6 @@ export default function Join({ teamSize }) {
     email: string
     password: string
     name: string
-    projectName: string
   }) => {
     setLoading(true)
 
@@ -143,7 +139,6 @@ export default function Join({ teamSize }) {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
             name,
-            projectName,
             teamOwner: ownerId,
           },
         },
@@ -179,7 +174,7 @@ export default function Join({ teamSize }) {
     setStep(step + 1)
   }
 
-  if (teamSize === 5) {
+  if (teamSize > 4) {
     return <TeamFull owner={owner} />
   }
 
