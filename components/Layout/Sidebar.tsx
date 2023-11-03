@@ -21,6 +21,7 @@ import {
   IconStethoscope,
   IconUsers,
   IconBolt,
+  IconPlayerPlay,
 } from "@tabler/icons-react"
 
 import { useSessionContext } from "@supabase/auth-helpers-react"
@@ -36,8 +37,9 @@ const menu = [
   { label: "Generations", icon: IconBrandOpenai, link: "/generations" },
   { label: "Traces", icon: IconListTree, link: "/traces" },
   { label: "Users", icon: IconUsers, link: "/users" },
-  { label: "Tests", icon: IconStethoscope, link: "/tests" },
   { label: "Chats", icon: IconMessages, link: "/chats" },
+  { label: "Playground", icon: IconPlayerPlay, link: "/play" },
+  { label: "Evaluations", icon: IconStethoscope, link: "/evaluations" },
   { label: "Settings", icon: IconSettings, link: "/settings" },
 ]
 

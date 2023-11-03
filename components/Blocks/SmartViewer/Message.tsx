@@ -71,37 +71,7 @@ export function ChatMessage({
         </Text>
       )}
       <Spoiler mt={5} maxHeight={300} showLabel="Show all ↓" hideLabel="Hide ↑">
-        {typeof data?.text === "string" && (
-          <Code color={typesColors[data?.role]} block>
-            <ProtectedText>
-              {editable ? (
-                <Textarea
-                  value={data?.text}
-                  variant="unstyled"
-                  p={0}
-                  styles={{
-                    root: {
-                      fontFamily: "inherit",
-                      fontSize: "inherit",
-                    },
-                    input: {
-                      padding: "0 !important",
-                      fontFamily: "inherit",
-                      fontSize: "inherit",
-                    },
-                  }}
-                  autosize
-                  minRows={1}
-                  onChange={(e) => onChange({ ...data, text: e.target.value })}
-                  style={{ width: "100%" }}
-                />
-              ) : (
-                data?.text
-              )}
-            </ProtectedText>
-          </Code>
-        )}
-        {data?.functionCall && (
+        {data?.functionCall ? (
           <Text>
             <Code color={typesColors[data?.role]} block>
               <Text w={300} color={typesColors[data?.role]} mb="xs">
@@ -118,6 +88,39 @@ export function ChatMessage({
               </ProtectedText>
             </Code>
           </Text>
+        ) : (
+          typeof data?.text === "string" && (
+            <Code color={typesColors[data?.role]} block>
+              <ProtectedText>
+                {editable ? (
+                  <Textarea
+                    value={data?.text}
+                    variant="unstyled"
+                    p={0}
+                    styles={{
+                      root: {
+                        fontFamily: "inherit",
+                        fontSize: "inherit",
+                      },
+                      input: {
+                        padding: "0 !important",
+                        fontFamily: "inherit",
+                        fontSize: "inherit",
+                      },
+                    }}
+                    autosize
+                    minRows={1}
+                    onChange={(e) =>
+                      onChange({ ...data, text: e.target.value })
+                    }
+                    style={{ width: "100%" }}
+                  />
+                ) : (
+                  data?.text
+                )}
+              </ProtectedText>
+            </Code>
+          )
         )}
       </Spoiler>
       <style jsx>{`

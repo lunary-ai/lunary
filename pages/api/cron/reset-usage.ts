@@ -67,11 +67,11 @@ RETURNING *;`
 // - 1000 for 'unlimited' and 'enterprise' users
 
 const resetAIallowance = async () => {
-  await sql`UPDATE "public"."profile" p SET ai_allowance = 3 WHERE p.plan = 'free';`
+  await sql`UPDATE "public"."profile" p SET play_allowance = 3 WHERE p.plan = 'free';`
 
-  await sql`UPDATE "public"."profile" p SET ai_allowance = 10 WHERE p.plan = 'pro';`
+  await sql`UPDATE "public"."profile" p SET play_allowance = 10 WHERE p.plan = 'pro';`
 
-  await sql`UPDATE "public"."profile" p SET ai_allowance = 1000 WHERE p.plan = 'unlimited' OR p.plan = 'enterprise';`
+  await sql`UPDATE "public"."profile" p SET play_allowance = 1000 WHERE p.plan = 'unlimited' OR p.plan = 'enterprise';`
 }
 
 export default apiWrapper(async function handler(

@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react"
+
 import { useSearchParams } from "next/navigation"
 import {
   Anchor,
@@ -21,14 +23,12 @@ import {
   IconBrandDiscord,
   IconCalendar,
   IconCheck,
-  IconFolderBolt,
   IconMail,
   IconMessageBolt,
   IconUser,
 } from "@tabler/icons-react"
 
 import Router from "next/router"
-import { useEffect, useState } from "react"
 import errorHandler from "@/utils/errorHandler"
 import analytics from "@/utils/analytics"
 import { NextSeo } from "next-seo"
@@ -123,7 +123,6 @@ export default function Join({ teamSize }) {
     email,
     password,
     name,
-    projectName,
   }: {
     email: string
     password: string

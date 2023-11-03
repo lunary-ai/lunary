@@ -80,7 +80,7 @@ export const UpgradeBody = () => {
               </ThemeIcon>
             }
           >
-            <List.Item>5k events per day</List.Item>
+            <List.Item>4k events per day</List.Item>
             <List.Item>Invite 4 team members</List.Item>
             <List.Item>Export data</List.Item>
             <List.Item>Advanced Analytics</List.Item>
@@ -131,6 +131,7 @@ export const UpgradeBody = () => {
           >
             <List.Item>20k events per day</List.Item>
             <List.Item>10 team members</List.Item>
+            <List.Item>Full Playground Access</List.Item>
             <List.Item>API access</List.Item>
             <List.Item>Early access to new features</List.Item>
           </List>
@@ -143,7 +144,6 @@ export const UpgradeBody = () => {
             fullWidth
             variant="outline"
             color="teal"
-            // gradient={{ from: "teal", to: "lime", deg: 25 }}
             mt={40}
           >
             Upgrade now
