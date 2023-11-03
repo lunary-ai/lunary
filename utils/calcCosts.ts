@@ -65,19 +65,19 @@ const MODEL_COSTS: ModelCost[] = [
     outputCost: 0.03268,
   },
   {
-    models: ["text-bison-001"],
+    models: ["text-bison-001", "text-bison"],
     maxTokens: 8192,
     inputCost: 0.004,
     outputCost: 0.004,
   },
   {
-    models: ["chat-bison-001"],
+    models: ["chat-bison-001", "chat-bison"],
     maxTokens: 4096,
     inputCost: 0.002,
     outputCost: 0.002,
   },
   {
-    models: ["command-nightly"],
+    models: ["command-nightly", "command"],
     maxTokens: 4096,
     inputCost: 0.015,
     outputCost: 0.015,

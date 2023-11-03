@@ -17,9 +17,9 @@ const errorHandler = async (promise: Promise<any>) => {
       autoClose: 10000,
       message: error.error_description || error.message || error,
     })
-    // @ts-ignore
-    // TODO: Make  this work
-    // window.newrelic?.noticeError(error)
+
+    // TODO: Sentry or other error tracking
+
     return null
   }
 }
