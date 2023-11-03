@@ -2,9 +2,11 @@ import {
   Code,
   Flex,
   Paper,
+  Select,
   Space,
   Spoiler,
   Text,
+  Textarea,
   ThemeIcon,
 } from "@mantine/core"
 import { IconRobot, IconUser } from "@tabler/icons-react"
@@ -26,7 +28,18 @@ const tc = (theme, role) => {
 }
 
 // Use for logging AI chat queries
-export function ChatMessage({ data, compact = false }) {
+// Editable is used for the playground
+export function ChatMessage({
+  data,
+  editable = false,
+  onChange,
+  compact = false,
+}: {
+  data: any
+  editable?: boolean
+  onChange?: any
+  compact?: boolean
+}) {
   return (
     <Paper
       p={compact ? 0 : 12}
@@ -37,16 +50,28 @@ export function ChatMessage({ data, compact = false }) {
     >
       {!compact && (
         <Text size="xs" color={typesColors[data?.role] + ".9"}>
-          {data?.role}
+          {editable ? (
+            <Select
+              variant="unstyled"
+              size="xs"
+              w={75}
+              styles={{
+                input: {
+                  color: "inherit",
+                },
+              }}
+              color={typesColors[data?.role]}
+              value={data?.role}
+              data={["ai", "user", "system", "function"]}
+              onChange={(role) => onChange({ ...data, role })}
+            />
+          ) : (
+            data?.role
+          )}
         </Text>
       )}
       <Spoiler mt={5} maxHeight={300} showLabel="Show all ↓" hideLabel="Hide ↑">
-        {data?.text && (
-          <Code color={typesColors[data?.role]} block>
-            <ProtectedText>{data?.text}</ProtectedText>
-          </Code>
-        )}
-        {data?.functionCall && (
+        {data?.functionCall ? (
           <Text>
             <Code color={typesColors[data?.role]} block>
               <Text w={300} color={typesColors[data?.role]} mb="xs">
@@ -63,6 +88,39 @@ export function ChatMessage({ data, compact = false }) {
               </ProtectedText>
             </Code>
           </Text>
+        ) : (
+          typeof data?.text === "string" && (
+            <Code color={typesColors[data?.role]} block>
+              <ProtectedText>
+                {editable ? (
+                  <Textarea
+                    value={data?.text}
+                    variant="unstyled"
+                    p={0}
+                    styles={{
+                      root: {
+                        fontFamily: "inherit",
+                        fontSize: "inherit",
+                      },
+                      input: {
+                        padding: "0 !important",
+                        fontFamily: "inherit",
+                        fontSize: "inherit",
+                      },
+                    }}
+                    autosize
+                    minRows={1}
+                    onChange={(e) =>
+                      onChange({ ...data, text: e.target.value })
+                    }
+                    style={{ width: "100%" }}
+                  />
+                ) : (
+                  data?.text
+                )}
+              </ProtectedText>
+            </Code>
+          )
         )}
       </Spoiler>
       <style jsx>{`

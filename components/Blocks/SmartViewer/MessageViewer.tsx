@@ -1,5 +1,5 @@
 import { ChatMessage } from "@/components/Blocks/SmartViewer/Message"
-import { Box, Stack } from "@mantine/core"
+import { Stack } from "@mantine/core"
 
 const getLastMessage = (messages) => {
   if (Array.isArray(messages)) {

@@ -1,3 +1,4 @@
+import { edgeWrapper, jsonResponse } from "@/lib/api/helpers"
 import { WELCOME_EMAIL } from "@/lib/emails"
 import { sendTelegramMessage } from "@/lib/notifications"
 import { sendEmail } from "@/lib/sendEmail"
@@ -8,7 +9,7 @@ export const runtime = "edge"
 export const dynamic = "force-dynamic"
 
 // This sets up the user profile after signing up
-export default async function handler(req: NextRequest) {
+export default edgeWrapper(async function handler(req: NextRequest) {
   const { type, table, record } = await req.json()
 
   if (type !== "INSERT" || table !== "users") {
@@ -55,5 +56,5 @@ export default async function handler(req: NextRequest) {
 ${name} is building ${projectName}.`
   )
 
-  new NextResponse("ok")
-}
+  return jsonResponse(200, { ok: true })
+})
