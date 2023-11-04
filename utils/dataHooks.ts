@@ -145,7 +145,7 @@ export function useCurrentApp() {
 
   const activated = !!count
 
-  const appWithActivated = activated ? { ...app, activated } : null
+  const appWithActivated = app ? { ...app, activated } : null
 
   return { app: appWithActivated, setAppId, loading }
 }
