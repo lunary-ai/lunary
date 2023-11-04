@@ -10,12 +10,12 @@ const sql = postgres(process.env.DB_URI)
 const updateLimitedStatus = async () => {
   // set limited = false for all users that have been under the limit
   // for the last 3 days
-  const alreadyLimited = await sql`UPDATE "public"."profile" p
+  const alreadyLimited = await sql`UPDATE "public"."org" p
     SET limited = false 
     WHERE limited = true AND p.id NOT IN (
       SELECT p.id
       FROM "public"."profile" p
-      JOIN "public"."app" a ON a.owner = p.id
+      JOIN "public"."app" a ON a.org_id = p.id
       JOIN "public"."run" r ON r.app = a.id
       WHERE r.created_at >= CURRENT_DATE - INTERVAL '3 days'
       GROUP BY p.id
@@ -31,8 +31,8 @@ const updateLimitedStatus = async () => {
       p.id,
       DATE(r.created_at) AS run_date,
       COUNT(r.id) AS daily_runs
-    FROM "public"."profile" p
-    JOIN "public"."app" a ON a.owner = p.id
+    FROM "public"."org" p
+    JOIN "public"."app" a ON a.org_id = p.id
     JOIN "public"."run" r ON r.app = a.id
     WHERE r.created_at >= CURRENT_DATE - INTERVAL '3 days'
     GROUP BY p.id, run_date
@@ -46,7 +46,7 @@ over_limit_users AS (
     GROUP BY id
     HAVING COUNT(run_date) >= 2
 )
-UPDATE "public"."profile" 
+UPDATE "public"."org" 
 SET limited = TRUE 
 WHERE id IN (SELECT id FROM over_limit_users)
 RETURNING *;`
@@ -56,27 +56,27 @@ RETURNING *;`
     if (alreadyLimited.find((u) => u.id === user.id)) continue
 
     await sendTelegramMessage(
-      `⛔ limited ${user.email} because too many events`
+      `⛔ limited ${user.email} because too many events`,
     )
   }
 }
 
-// reset profile.ai_allowance:
+// reset org.ai_allowance:
 // - 3 for free users
 // - 10 for 'pro' users
 // - 1000 for 'unlimited' and 'enterprise' users
 
 const resetAIallowance = async () => {
-  await sql`UPDATE "public"."profile" p SET play_allowance = 3 WHERE p.plan = 'free';`
+  await sql`UPDATE "profile"."org" o SET play_allowance = 3 WHERE o.plan = 'free';`
 
-  await sql`UPDATE "public"."profile" p SET play_allowance = 10 WHERE p.plan = 'pro';`
+  await sql`UPDATE "profile"."org" o SET play_allowance = 10 WHERE o.plan = 'pro';`
 
-  await sql`UPDATE "public"."profile" p SET play_allowance = 1000 WHERE p.plan = 'unlimited' OR p.plan = 'enterprise';`
+  await sql`UPDATE "profile"."org" o SET play_allowance = 1000 WHERE o.plan = 'unlimited' OR o.plan = 'custom';`
 }
 
 export default apiWrapper(async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   const authHeader = req.headers["authorization"]
 

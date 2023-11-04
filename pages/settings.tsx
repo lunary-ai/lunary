@@ -8,19 +8,15 @@ import {
   useApps,
   useCurrentApp,
   useProfile,
-  useTeam,
 } from "@/utils/dataHooks"
 
 import {
-  Alert,
   Badge,
   Button,
   Card,
-  Center,
   Container,
   FocusTrap,
   Group,
-  Overlay,
   Popover,
   Stack,
   Table,
@@ -29,34 +25,24 @@ import {
   Title,
 } from "@mantine/core"
 import { modals } from "@mantine/modals"
-import {
-  IconBrandOpenai,
-  IconDownload,
-  IconPencil,
-  IconUserPlus,
-} from "@tabler/icons-react"
+import { IconPencil, IconUserPlus } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import Router from "next/router"
 
 import { Label, ReferenceLine } from "recharts"
 
 function Invite() {
-  const { team } = useTeam()
   const { profile } = useProfile()
 
-  if (profile?.team_owner) {
-    return null
-  }
-
-  if (team?.plan === "pro") {
-    if (team.users.length === 5) {
+  if (profile?.org?.plan === "pro") {
+    if (profile?.org.users.length === 5) {
       return <Badge color="orange">Seat allowance exceeded</Badge>
     }
     return (
       <Text>
         Invite link:{" "}
         <CopyText
-          value={`${window.location.origin}/join?team=${profile?.id}`}
+          value={`${window.location.origin}/join?orgId=${profile?.org.id}`}
         />
       </Text>
     )
@@ -68,8 +54,10 @@ function Invite() {
       onClick={() =>
         modals.openContextModal({
           modal: "upgrade",
-          size: 800,
-          innerProps: {},
+          size: 900,
+          innerProps: {
+            highlight: "team",
+          },
         })
       }
       sx={{ float: "right" }}
@@ -80,24 +68,48 @@ function Invite() {
   )
 }
 
-export default function AppAnalytics() {
-  const { app, setAppId } = useCurrentApp()
+function RenamableField({ defaultValue, onRename }) {
   const [focused, setFocused] = useState(false)
-
-  const { profile } = useProfile()
-
-  const { team } = useTeam()
-
-  const { drop, update } = useApps()
 
   const applyRename = (e) => {
     setFocused(false)
-    update({ id: app.id, name: e.target.value })
+    onRename(e.target.value)
   }
+
+  return focused ? (
+    <FocusTrap>
+      <TextInput
+        defaultValue={defaultValue}
+        variant="unstyled"
+        h={40}
+        px={10}
+        onKeyPress={(e) => {
+          if (e.key === "Enter") applyRename(e)
+        }}
+        onBlur={(e) => applyRename(e)}
+      />
+    </FocusTrap>
+  ) : (
+    <Title
+      order={3}
+      onClick={() => setFocused(true)}
+      style={{ cursor: "pointer" }}
+    >
+      {defaultValue} <IconPencil size={16} />
+    </Title>
+  )
+}
+
+export default function AppAnalytics() {
+  const { app, setAppId } = useCurrentApp()
+
+  const { profile, updateOrg, mutate } = useProfile()
+
+  const { drop, update } = useApps()
 
   const { data: appUsage } = useAppSWR("/analytics/usage")
 
-  const allowedLimit = team?.plan === "pro" ? 5000 : 1000
+  const allowedLimit = profile?.org.plan === "pro" ? 5000 : 1000
 
   return (
     <Container className="unblockable">
@@ -106,28 +118,10 @@ export default function AppAnalytics() {
         <Stack>
           <Card withBorder p="lg">
             <Stack>
-              {focused ? (
-                <FocusTrap>
-                  <TextInput
-                    defaultValue={app?.name}
-                    variant="unstyled"
-                    h={40}
-                    px={10}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") applyRename(e)
-                    }}
-                    onBlur={(e) => applyRename(e)}
-                  />
-                </FocusTrap>
-              ) : (
-                <Title
-                  order={3}
-                  onClick={() => setFocused(true)}
-                  style={{ cursor: "pointer" }}
-                >
-                  {app?.name} <IconPencil size={16} />
-                </Title>
-              )}
+              <RenamableField
+                defaultValue={app?.name}
+                onRename={(name) => update({ id: app.id, name })}
+              />
               <Text>
                 App ID for tracking: <CopyText value={app?.id} />
               </Text>
@@ -136,7 +130,14 @@ export default function AppAnalytics() {
 
           <Card withBorder p={0}>
             <Group position="apart" align="center" p="lg">
-              <Title order={3}>Team</Title>
+              <RenamableField
+                defaultValue={profile?.org.name}
+                onRename={(name) => {
+                  updateOrg({ id: profile.org.id, name })
+                  mutate()
+                }}
+              />
+
               <Invite />
             </Group>
 
@@ -149,7 +150,7 @@ export default function AppAnalytics() {
                 </tr>
               </thead>
               <tbody>
-                {team?.users?.map((user, i) => (
+                {profile?.org.users?.map((user, i) => (
                   <tr key={i}>
                     <td>
                       <Group>
@@ -244,7 +245,7 @@ export default function AppAnalytics() {
             </Stack>
           </Card> */}
 
-          {!profile?.team_owner && (
+          {profile?.role === "admin" && (
             <Card withBorder p="lg" sx={{ overflow: "visible" }}>
               <Title mb="md" order={4}>
                 Danger Zone

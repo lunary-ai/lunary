@@ -66,7 +66,7 @@ export default function RunInputOutput({ run }) {
                 ([key, name]) =>
                   typeof run.params?.[key] !== "undefined" && (
                     <ParamItem name={name} value={run.params?.[key]} />
-                  )
+                  ),
               )}
             </Stack>
 
@@ -96,9 +96,9 @@ export default function RunInputOutput({ run }) {
                       onClick={copy}
                       leftIcon={
                         copied ? (
-                          <IconCheck size="1rem" />
+                          <IconCheck size="16px" />
                         ) : (
-                          <IconCopy size="1rem" />
+                          <IconCopy size="16px" />
                         )
                       }
                     >

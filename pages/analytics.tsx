@@ -10,7 +10,7 @@ import {
   useRunsUsage,
   useAppUsers,
   useCurrentApp,
-  useTeam,
+  useProfile,
 } from "@/utils/dataHooks"
 import {
   Center,
@@ -53,7 +53,7 @@ export default function Analytics() {
   const [range, setRange] = useState(7)
   const { app } = useCurrentApp()
 
-  const { team } = useTeam()
+  const { profile } = useProfile()
 
   const { usage, loading: usageLoading } = useRunsUsage(range)
   const { dailyUsage, loading: dailyUsageLoading } = useRunsUsageByDay(range)
@@ -68,7 +68,7 @@ export default function Analytics() {
       </Center>
     )
 
-  if (!loading && app && !app.activated) {
+  if (!loading && !app?.activated) {
     return <Empty Icon={IconChartAreaLine} what="data" />
   }
 
@@ -187,7 +187,7 @@ export default function Analytics() {
               props={["runs"]}
             />
 
-            {team?.plan === "free" && (
+            {profile?.org.plan === "free" && (
               <>
                 <LineChart
                   blocked={true}

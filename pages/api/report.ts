@@ -6,6 +6,7 @@ import { supabaseAdmin } from "@/lib/supabaseClient"
 import { NextRequest } from "next/server"
 import cors from "@/lib/api/cors"
 import { completeRunUsage } from "@/lib/countTokens"
+import { Json } from "../../utils/supaTypes"
 
 export interface Event {
   type:
@@ -93,7 +94,7 @@ const cleanEvent = async (event: any): Promise<Event> => {
 const registerRunEvent = async (
   event: Event,
   insertedIds: Set<string>,
-  allowRetry = true
+  allowRetry = true,
 ): Promise<void> => {
   const {
     timestamp,
@@ -120,7 +121,8 @@ const registerRunEvent = async (
 
   let internalUserId
   // Only do on start event to save on DB calls and have correct lastSeen
-  if (userId && eventName === "start") {
+  if (typeof userId === "string" && eventName === "start") {
+    userId
     const { data, error } = await supabaseAdmin
       .from("app_user")
       .upsert(
@@ -128,9 +130,9 @@ const registerRunEvent = async (
           external_id: userId,
           last_seen: timestamp,
           app: app,
-          props: userProps,
+          props: userProps as Json,
         },
-        { onConflict: "external_id, app" }
+        { onConflict: "external_id, app" },
       )
       .select()
       .single()
@@ -163,7 +165,7 @@ const registerRunEvent = async (
 
       if (allowRetry) {
         console.log(
-          "Retrying insertion in 2s in case parent not inserted yet..."
+          "Retrying insertion in 2s in case parent not inserted yet...",
         )
 
         await new Promise((resolve) => setTimeout(resolve, 2000))
@@ -269,7 +271,7 @@ const registerLogEvent = async (event: Event): Promise<void> => {
 
 const registerEvent = async (
   event: Event,
-  insertedIds: Set<string>
+  insertedIds: Set<string>,
 ): Promise<void> => {
   const { type } = event
 
@@ -306,7 +308,7 @@ export default async function handler(req: NextRequest) {
 
   // Event processing order is important for foreign key constraints
   const sorted = (Array.isArray(events) ? events : [events]).sort(
-    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
   )
 
   for (const event of sorted) {

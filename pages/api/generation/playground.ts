@@ -3,8 +3,10 @@ import { OpenAIStream, StreamingTextResponse } from "ai"
 import OpenAI from "openai"
 
 import { completion } from "litellm"
-import { ensureAppIsLogged } from "@/lib/api/ensureAppIsLogged"
+import { ensureIsLogged } from "@/lib/api/ensureAppIsLogged"
 import { edgeWrapper } from "@/lib/api/helpers"
+
+export const runtime = "edge"
 
 const OPENROUTER_MODELS = [
   "mistralai/mistral-7b-instruct",
@@ -27,12 +29,32 @@ const convertInputToOpenAIMessages = (input: any[]) => {
   })
 }
 
-export const runtime = "edge"
+const substractPlayAllowance = async (session, supabase) => {
+  const { data: profile, error } = await supabase
+    .from("profile")
+    .select("id, org(id, play_allowance)")
+    .match({ id: session.user.id })
+    .single()
+
+  if (error) throw error
+
+  if (profile.org?.play_allowance <= 0) {
+    throw new Error(
+      "No allowance left today. Wait tomorrow or upgrade to continue using the playground.",
+    )
+  }
+
+  // don't await to go faster
+  await supabase
+    .from("org")
+    .update({ play_allowance: profile.org.play_allowance - 1 })
+    .eq("id", profile.org.id)
+}
 
 export default edgeWrapper(async function handler(req: Request) {
-  const supabase = await ensureAppIsLogged(req)
+  const { session, supabase } = await ensureIsLogged(req)
 
-  // TODO: substract 1 from the number of `play_allowance` left
+  await substractPlayAllowance(session, supabase)
 
   const { model, run } = await req.json()
 
@@ -69,8 +91,13 @@ export default edgeWrapper(async function handler(req: Request) {
     messages,
     temperature: run.params?.temperature,
     max_tokens: run.params?.max_tokens,
-    stream: true,
+    top_p: run.params?.top_p,
+    top_k: run.params?.top_k,
+    presence_penalty: run.params?.presence_penalty,
+    frequency_penalty: run.params?.frequency_penalty,
+    stop: run.params?.stop,
     functions: run.params?.functions,
+    stream: true,
   })
 
   const stream = OpenAIStream(response)

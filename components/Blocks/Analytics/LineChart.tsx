@@ -50,7 +50,7 @@ function prepareDataForRecharts(
   data: any[],
   splitBy: string | undefined,
   props: string[],
-  range: number
+  range: number,
 ): any[] {
   // Create a map to hold the processed data
   // const dataMap = {}
@@ -81,13 +81,13 @@ function prepareDataForRecharts(
             data.find(
               (item) =>
                 item[splitBy]?.toString() === splitByValue &&
-                format(parseISO(item.date), "yyyy-MM-dd") === date
+                format(parseISO(item.date), "yyyy-MM-dd") === date,
             )?.[prop] || 0
         }
       } else {
         dayData[prop] =
           data.find(
-            (item) => format(parseISO(item.date), "yyyy-MM-dd") === date
+            (item) => format(parseISO(item.date), "yyyy-MM-dd") === date,
           )?.[prop] || 0
       }
     }
@@ -96,7 +96,7 @@ function prepareDataForRecharts(
   })
 
   return output.sort(
-    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
   )
 }
 
@@ -143,15 +143,13 @@ const LineChartComponent = ({
     blocked ? generateFakeData(range) : data,
     splitBy,
     props,
-    range
+    range,
   )
 
   const hasData = blocked
     ? true
     : cleanedData?.length &&
       (splitBy ? Object.keys(cleanedData[0]).length > 1 : data?.length)
-
-  if (!blocked) console.log({ hasData, data, splitBy, props, cleanedData })
 
   return (
     <Card withBorder p={0} className="lineChart">
@@ -176,8 +174,10 @@ const LineChartComponent = ({
                   onClick={() =>
                     modals.openContextModal({
                       modal: "upgrade",
-                      size: 800,
-                      innerProps: {},
+                      size: 900,
+                      innerProps: {
+                        highlight: "analytics",
+                      },
                     })
                   }
                   size="xs"
@@ -251,7 +251,7 @@ const LineChartComponent = ({
                       </Title>
                       {payload.map((item, i) => (
                         <Text key={i}>{`${item.name}: ${formatter(
-                          item.value
+                          item.value,
                         )}`}</Text>
                       ))}
                     </Card>

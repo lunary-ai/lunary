@@ -1,9 +1,9 @@
-import { useTeam } from "@/utils/dataHooks"
 import { cloneElement, Children } from "react"
+import { useProfile } from "../../utils/dataHooks"
 
 export default function ProtectedText({ children }) {
-  const { team } = useTeam()
-  const limited = team && team.limited
+  const { profile } = useProfile()
+  const limited = profile?.org.limited
 
   const replaceText = (child) => {
     if (child && typeof child.props.children === "string") {

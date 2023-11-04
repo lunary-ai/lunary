@@ -44,7 +44,7 @@ const track = (event: string, data?: any) => {
 
     w.plausible(event, { props: data })
 
-    w.crisp.push(["set", "session:event", [[[event, data]]]])
+    w?.crisp?.push(["set", "session:event", [[[event, data]]]])
   } catch (e) {
     console.error(e)
   }
@@ -54,10 +54,12 @@ const identify = (userId: string, traits: any) => {
   try {
     posthog?.identify(userId, traits)
 
-    if (traits.email) w.crisp.push(["set", "user:email", traits.email])
-    if (traits.name) w.crisp.push(["set", "user:nickname", traits.name])
+    // TODO: w.crisp.push undefined?
+    if (!w?.crisp?.push) return
+    if (traits.email) w?.crisp?.push(["set", "user:email", traits.email])
+    if (traits.name) w?.crisp?.push(["set", "user:nickname", traits.name])
 
-    w.crisp.push([
+    w?.crisp.push([
       "set",
       "session:data",
       [

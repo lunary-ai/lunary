@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next"
-import { ensureAppIsLogged } from "@/lib/api/ensureAppIsLogged"
+import { ensureHasAccessToApp } from "@/lib/api/ensureAppIsLogged"
 import { apiWrapper } from "@/lib/api/helpers"
 import postgres from "postgres"
 
@@ -7,9 +7,9 @@ const sql = postgres(process.env.DB_URI)
 
 export default apiWrapper(async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
-  await ensureAppIsLogged(req, res)
+  await ensureHasAccessToApp(req, res)
 
   const { appId } = req.body
 
