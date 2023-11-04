@@ -25,8 +25,6 @@ export default async function handler(req: NextRequest) {
       return new NextResponse()
     }
 
-    await supabaseAdmin.from("profile").insert({ id: userId, email, name })
-
     if (signupMethod === "signup") {
       // First user in Org (/signup)
 
@@ -41,8 +39,7 @@ export default async function handler(req: NextRequest) {
       // Add user to Org as admin
       await supabaseAdmin
         .from("profile")
-        .update({ org_id: org.id, role: "admin" })
-        .eq("id", userId)
+        .insert({ id: userId, name, email, org_id: org.id, role: "admin" })
         .throwOnError()
 
       // Create first app
@@ -65,8 +62,7 @@ export default async function handler(req: NextRequest) {
       // Add user to Org as member
       await supabaseAdmin
         .from("profile")
-        .update({ org_id: orgId, role: "member" })
-        .eq("id", userId)
+        .insert({ id: userId, name, email, org_id: orgId, role: "member" })
         .throwOnError()
     }
 
