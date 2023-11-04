@@ -1,6 +1,11 @@
-CREATE TYPE user_role AS ENUM ('member', 'admin');
+-- alter table profile drop column org_id drop column role;
+-- alter table app drop column org_id;
+-- drop table org;
 
+
+CREATE TYPE user_role AS ENUM ('member', 'admin');
 CREATE TYPE org_plan AS ENUM ('free', 'pro', 'unlimited', 'custom');
+
 CREATE TABLE public.org (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
@@ -59,7 +64,10 @@ ALTER TABLE public.org DROP COLUMN admin_id;
 
 --- Change apps to reference orgs directly
 ALTER TABLE public.app
-ADD COLUMN org_id uuid;
+ADD COLUMN org_id uuid
+ADD FOREIGN KEY (org_id)
+REFERENCES org(id);
+
 
 --- Update the app table to set the org_id based on the owner's profile
 UPDATE public.app a
@@ -67,16 +75,11 @@ SET org_id = p.org_id
 FROM public.profile p
 WHERE a.owner = p.id;
 
-ALTER TABLE app 
-ADD FOREIGN KEY (org_id)
-REFERENCES org(id);
+
 
 ALTER TABLE app
-ALTER COLUMN owner DROP NOT NULL;
+ALTER COLUMN org_id DROP NOT NULL;
 
-
-
-ALTER TABLE org DROP COLUMN admin_id;
 
 ALTER TABLE public.profile
 ADD FOREIGN KEY (org_id)

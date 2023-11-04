@@ -145,7 +145,9 @@ export function useCurrentApp() {
 
   const activated = !!count
 
-  return { app: { ...app, activated }, setAppId, loading }
+  const appWithActivated = activated ? { ...app, activated } : null
+
+  return { app: appWithActivated, setAppId, loading }
 }
 
 export function useModelNames() {

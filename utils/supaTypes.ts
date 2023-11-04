@@ -61,6 +61,12 @@ export interface Database {
         }
         Relationships: [
           {
+            foreignKeyName: "app_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "org"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "app_owner_fkey"
             columns: ["owner"]
             referencedRelation: "users"
@@ -167,7 +173,7 @@ export interface Database {
         Row: {
           created_at: string | null
           id: string
-          limited: boolean
+          limited: boolean | null
           name: string
           plan: Database["public"]["Enums"]["org_plan"]
           play_allowance: number
@@ -177,7 +183,7 @@ export interface Database {
         Insert: {
           created_at?: string | null
           id?: string
-          limited?: boolean
+          limited?: boolean | null
           name: string
           plan: Database["public"]["Enums"]["org_plan"]
           play_allowance?: number
@@ -187,7 +193,7 @@ export interface Database {
         Update: {
           created_at?: string | null
           id?: string
-          limited?: boolean
+          limited?: boolean | null
           name?: string
           plan?: Database["public"]["Enums"]["org_plan"]
           play_allowance?: number
@@ -214,7 +220,7 @@ export interface Database {
         Insert: {
           created_at?: string | null
           email?: string | null
-          id: string
+          id?: string
           limited?: boolean | null
           name?: string | null
           org_id?: string | null
