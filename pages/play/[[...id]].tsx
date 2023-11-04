@@ -85,7 +85,7 @@ function Playground() {
   const [streaming, setStreaming] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  const { profile } = useProfile()
+  const { profile, mutate: revalidateProfile } = useProfile()
 
   const [model, setModel] = useLocalStorage({
     key: "p-model",
@@ -135,13 +135,13 @@ function Playground() {
   }
 
   const runPlayground = async () => {
-    // if (team?.playAllowances <= 0) {
-    //   modals.openContextModal({
-    //     modal: "upgrade",
-    //     size: 800,
-    //     innerProps: {},
-    //   })
-    // }
+    if (profile.org?.play_allowance <= 0) {
+      modals.openContextModal({
+        modal: "upgrade",
+        size: 800,
+        innerProps: {},
+      })
+    }
 
     setStreaming(true)
 
@@ -198,6 +198,8 @@ function Playground() {
     } catch (e) {
       console.error(e)
     }
+
+    revalidateProfile()
 
     setStreaming(false)
   }

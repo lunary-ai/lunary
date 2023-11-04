@@ -75,95 +75,88 @@ export default function Billing() {
       <Stack>
         <Title>Billing</Title>
 
-        {team && (
+        <Text size="lg">
+          You are currently on the <Badge>{profile?.org?.plan}</Badge> plan.
+        </Text>
+
+        {profile?.org?.plan === "free" && (
           <>
-            <Text size="lg">
-              You are currently on the <Badge>{team.plan}</Badge> plan.
-            </Text>
-
-            {team.plan === "free" && (
-              <>
-                {percent > 99 && (
-                  <Alert
-                    color="red"
-                    variant="outline"
-                    icon={<IconInfoTriangle />}
-                    title="Allowance Reached"
-                  >
-                    You have reached your monthly request allowance. Please
-                    upgrade to keep your data from being deleted.
-                  </Alert>
-                )}
-                <Button
-                  onClick={() =>
-                    modals.openContextModal({
-                      modal: "upgrade",
-                      size: 800,
-                      innerProps: {},
-                    })
-                  }
-                  w={300}
-                >
-                  Upgrade to Pro
-                </Button>
-              </>
+            {percent > 99 && (
+              <Alert
+                color="red"
+                variant="outline"
+                icon={<IconInfoTriangle />}
+                title="Allowance Reached"
+              >
+                You have reached your monthly request allowance. Please upgrade
+                to keep your data from being deleted.
+              </Alert>
             )}
-
-            <Card withBorder radius="md" padding="xl">
-              <Stack spacing="sm">
-                <Text fz="md" fw={700} c="dimmed">
-                  Monthly Usage
-                </Text>
-                <Text fz="lg" fw={500}>
-                  {formatLargeNumber(usage)} /{" "}
-                  {profile?.org.plan === "free"
-                    ? formatLargeNumber(30000)
-                    : "∞"}{" "}
-                  requests
-                </Text>
-                <Progress
-                  value={percent}
-                  size="lg"
-                  radius="xl"
-                  color={percent > 99 ? "red" : "blue"}
-                />
-              </Stack>
-            </Card>
-
-            <Card withBorder radius="md" padding="xl">
-              <Stack spacing="sm">
-                <Text fz="md" fw={700} c="dimmed">
-                  Seat Allowance
-                </Text>
-                <Text fz="lg" fw={500}>
-                  {profile?.org.users?.length} /{" "}
-                  {seatAllowance[profile?.org.plan]} users
-                </Text>
-                <Progress
-                  value={
-                    (profile?.org.users.length /
-                      seatAllowance[profile?.org.plan]) *
-                    100
-                  }
-                  size="lg"
-                  color="orange"
-                  radius="xl"
-                />
-              </Stack>
-            </Card>
-
-            {profile.org.stripe_customer && (
-              <Card withBorder radius="md" padding="xl">
-                <Title order={3} mb="lg">
-                  Customer Portal
-                </Title>
-
-                <Button size="sm" onClick={redirectToCustomerPortal}>
-                  Manage Billing
-                </Button>
-              </Card>
-            )}
+            <Button
+              onClick={() =>
+                modals.openContextModal({
+                  modal: "upgrade",
+                  size: 800,
+                  innerProps: {},
+                })
+              }
+              w={300}
+            >
+              Upgrade to Pro
+            </Button>
           </>
+        )}
+
+        <Card withBorder radius="md" padding="xl">
+          <Stack spacing="sm">
+            <Text fz="md" fw={700} c="dimmed">
+              Monthly Usage
+            </Text>
+            <Text fz="lg" fw={500}>
+              {formatLargeNumber(usage)} /{" "}
+              {profile?.org.plan === "free" ? formatLargeNumber(30000) : "∞"}{" "}
+              requests
+            </Text>
+            <Progress
+              value={percent}
+              size="lg"
+              radius="xl"
+              color={percent > 99 ? "red" : "blue"}
+            />
+          </Stack>
+        </Card>
+
+        <Card withBorder radius="md" padding="xl">
+          <Stack spacing="sm">
+            <Text fz="md" fw={700} c="dimmed">
+              Seat Allowance
+            </Text>
+            <Text fz="lg" fw={500}>
+              {profile?.org.users?.length} / {seatAllowance[profile?.org.plan]}{" "}
+              users
+            </Text>
+            <Progress
+              value={
+                (profile?.org.users.length / seatAllowance[profile?.org.plan]) *
+                100
+              }
+              size="lg"
+              color="orange"
+              radius="xl"
+            />
+          </Stack>
+        </Card>
+
+        {profile.org.stripe_customer && (
+          <Card withBorder radius="md" padding="xl">
+            <Title order={3} mb="lg">
+              Customer Portal
+            </Title>
+
+            <Button size="sm" onClick={redirectToCustomerPortal}>
+              Manage Billing
+            </Button>
+          </Card>
         )}
       </Stack>
     </Container>

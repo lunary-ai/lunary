@@ -1,6 +1,6 @@
 CREATE TYPE user_role AS ENUM ('member', 'admin');
 
-CREATE TYPE org_plan AS ENUM ('free', 'pro', 'unlimited');
+CREATE TYPE org_plan AS ENUM ('free', 'pro', 'unlimited', 'custom');
 CREATE TABLE public.org (
     id uuid DEFAULT extensions.uuid_generate_v4() NOT NULL,
     created_at timestamp with time zone DEFAULT now(),

@@ -35,7 +35,7 @@ export default function Home() {
   const { profile } = useProfile()
 
   const createApp = async () => {
-    await insert([{ name: newAppName, owner: user.id }])
+    await insert([{ name: newAppName, owner: user.id, org_id: profile.org_id }])
 
     setModalOpened(false)
 
@@ -85,15 +85,13 @@ export default function Home() {
         <>
           <Group>
             <Title order={3}>Your Apps</Title>
-            {!profile?.team_owner && (
-              <Button
-                onClick={() => {
-                  setModalOpened(true)
-                }}
-              >
-                + New app
-              </Button>
-            )}
+            <Button
+              onClick={() => {
+                setModalOpened(true)
+              }}
+            >
+              + New app
+            </Button>
           </Group>
 
           <Stack>

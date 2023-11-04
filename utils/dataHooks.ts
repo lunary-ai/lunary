@@ -57,12 +57,12 @@ export const useProfile = () => {
     .match({ id: user?.id })
     .single()
 
-  const { data: profile, isLoading } = useQuery(
-    user ? query : null,
-    hardOptions,
-  )
+  const {
+    data: profile,
+    mutate,
+    isLoading,
+  } = useQuery(user ? query : null, hardOptions)
 
-  console.log(profile?.org)
   const users =
     profile &&
     profile.org.profile?.sort((a, b) => {
@@ -82,7 +82,7 @@ export const useProfile = () => {
       }
     : null
 
-  return { profile: profileWithOrg, loading: isLoading }
+  return { profile: profileWithOrg, loading: isLoading, mutate }
 }
 
 export function useApps() {

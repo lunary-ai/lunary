@@ -1,16 +1,16 @@
 import { NextApiRequest, NextApiResponse } from "next"
-import postgres from "postgres"
 import { Parser } from "@json2csv/plainjs"
-import { ensureAppIsLogged } from "@/lib/api/ensureAppIsLogged"
+import { ensureHasAccessToApp } from "@/lib/api/ensureAppIsLogged"
 import { apiWrapper } from "@/lib/api/helpers"
+import postgres from "postgres"
 
 const sql = postgres(process.env.DB_URI)
 
 export default apiWrapper(async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
-  await ensureAppIsLogged(req, res)
+  await ensureHasAccessToApp(req, res)
 
   // TODO: server side protection for free plan users
   let { appId, search, models, tags } = req.query

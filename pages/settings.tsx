@@ -34,11 +34,7 @@ import { Label, ReferenceLine } from "recharts"
 function Invite() {
   const { profile } = useProfile()
 
-  if (profile?.team_owner) {
-    return null
-  }
-
-  if (profile?.plan === "pro") {
+  if (profile?.org?.plan === "pro") {
     if (profile?.org.users.length === 5) {
       return <Badge color="orange">Seat allowance exceeded</Badge>
     }
@@ -232,7 +228,7 @@ export default function AppAnalytics() {
             </Stack>
           </Card> */}
 
-          {!profile?.team_owner && (
+          {profile.role === "admin" && (
             <Card withBorder p="lg" sx={{ overflow: "visible" }}>
               <Title mb="md" order={4}>
                 Danger Zone

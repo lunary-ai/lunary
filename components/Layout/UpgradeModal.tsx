@@ -23,6 +23,9 @@ import { useProfile } from "../../utils/dataHooks"
 export const UpgradeBody = () => {
   const { profile } = useProfile()
 
+  const isFree = profile?.org.plan === "free"
+  const isPro = profile?.org.plan === "pro"
+
   return (
     <>
       <Stack align="center" ta="center" className="unblockable">
@@ -56,14 +59,16 @@ export const UpgradeBody = () => {
             >
               Pro
             </Text>
-            <Badge variant="outline">-50%</Badge>
+            {isFree && <Badge variant="outline">-50%</Badge>}
           </Group>
 
           <Group my={20} align="center" spacing={10}>
             <Title order={3} size={30}>
-              <Text span td="line-through" size={20}>
-                $50
-              </Text>
+              {isFree && (
+                <Text span td="line-through" size={20}>
+                  $50
+                </Text>
+              )}
               {` $25`}
               <Text span size={20}>
                 {` / mo`}
@@ -86,18 +91,26 @@ export const UpgradeBody = () => {
             <List.Item>Advanced Analytics</List.Item>
           </List>
 
-          <Button
-            size="md"
-            href={`${process.env.NEXT_PUBLIC_STRIPE_PRO_LINK}&client_reference_id=${profile?.org.id}`}
-            fullWidth
-            component="a"
-            variant="gradient"
-            gradient={{ from: "violet", to: "blue", deg: 45 }}
-            color="violet"
-            mt={40}
-          >
-            Claim -50% forever
-          </Button>
+          {isFree && (
+            <Button
+              size="md"
+              href={`${process.env.NEXT_PUBLIC_STRIPE_PRO_LINK}&client_reference_id=${profile?.org.id}`}
+              fullWidth
+              component="a"
+              variant="gradient"
+              gradient={{ from: "violet", to: "blue", deg: 45 }}
+              color="violet"
+              mt={40}
+            >
+              Claim -50% forever
+            </Button>
+          )}
+
+          {isPro && (
+            <Text size="lg" mt="xs" mb="xl" weight={500}>
+              (Your current plan.)
+            </Text>
+          )}
         </Card>
         <Card p="xl" withBorder>
           <Group spacing={6}>
@@ -133,13 +146,13 @@ export const UpgradeBody = () => {
             <List.Item>10 team members</List.Item>
             <List.Item>Full Playground Access</List.Item>
             <List.Item>API access</List.Item>
-            <List.Item>Early access to new features</List.Item>
+            {/* <List.Item>Early access to new features</List.Item> */}
           </List>
 
           <Button
             size="md"
             component="a"
-            href={`${process.env.NEXT_PUBLIC_STRIPE_PRO_LINK}&client_reference_id=${team?.id}`}
+            href={`${process.env.NEXT_PUBLIC_STRIPE_PRO_LINK}&client_reference_id=${profile.org?.id}`}
             target="_blank"
             fullWidth
             variant="outline"
