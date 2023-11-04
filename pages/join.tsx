@@ -85,7 +85,7 @@ export default function Join({ orgUserCount, orgName }) {
   const { supabaseClient } = useSessionContext()
 
   const searchParams = useSearchParams()
-  const orgId = searchParams.get("team")
+  const orgId = searchParams.get("orgId")
 
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
@@ -129,7 +129,7 @@ export default function Join({ orgUserCount, orgName }) {
         options: {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
-            signupMehod: "join",
+            signupMethod: "join",
             orgId,
           },
         },
