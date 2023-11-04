@@ -129,6 +129,7 @@ export default function Join({ orgUserCount, orgName }) {
         options: {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
+            signupMehod: "join",
             orgId,
           },
         },
