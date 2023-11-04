@@ -17,7 +17,7 @@ export default async function handler(req: NextRequest) {
       record: {
         email,
         id: userId,
-        raw_user_meta_data: { projectName, name, orgId },
+        raw_user_meta_data: { projectName, name, orgId, signupMethod },
       },
     } = await req.json()
 
@@ -27,13 +27,7 @@ export default async function handler(req: NextRequest) {
 
     await supabaseAdmin.from("profile").insert({ id: userId, email, name })
 
-    const { count } = await supabaseAdmin
-      .from("profile")
-      .select("*", { count: "exact", head: true })
-      .eq("id", userId)
-      .throwOnError()
-
-    if (count === 1) {
+    if (signupMethod === "signup") {
       // First user in Org (/signup)
 
       // Create new Org
@@ -65,7 +59,7 @@ export default async function handler(req: NextRequest) {
         `<b>🔔 New signup from ${email}</b><br/>${name} is building ${projectName}.`,
       )
       await sendEmail(WELCOME_EMAIL(email, name, appId))
-    } else {
+    } else if (signupMethod === "join") {
       // New user in existing Org (/join)
 
       // Add user to Org as member

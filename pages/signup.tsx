@@ -93,6 +93,7 @@ function SignupPage() {
         options: {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
+            signupMethod: "signup",
             name,
             projectName,
           },
