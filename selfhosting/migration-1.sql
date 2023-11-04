@@ -69,7 +69,12 @@ WHERE a.owner = p.id;
 
 ALTER TABLE app 
 ADD FOREIGN KEY (org_id)
-REFERENCES org(id)
+REFERENCES org(id);
+
+ALTER TABLE app
+ALTER COLUMN owner DROP NOT NULL;
+
+
 
 ALTER TABLE org DROP COLUMN admin_id;
 

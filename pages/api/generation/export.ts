@@ -11,9 +11,15 @@ export default apiWrapper(async function handler(
   res: NextApiResponse,
 ) {
   await ensureHasAccessToApp(req, res)
-
   // TODO: server side protection for free plan users
+
   let { appId, search, models, tags } = req.query
+  if (models! instanceof Array || tags instanceof Array) {
+    return res.status(422).json({
+      error: 'Invalid input: "models" and "tags" must be of type Array.',
+    })
+  }
+
   models = models?.split(",") || []
   tags = tags?.split(",") || []
 

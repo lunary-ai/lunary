@@ -46,7 +46,7 @@ export async function getServerSideProps(context) {
     .single()
 
   const { count: orgUserCount } = await supabaseAdmin
-    .from("org_user")
+    .from("profile")
     .select("*", { count: "exact", head: true })
     .eq("org_id", orgId)
 

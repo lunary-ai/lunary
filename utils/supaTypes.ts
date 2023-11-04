@@ -43,21 +43,21 @@ export interface Database {
           id: string
           name: string
           org_id: string | null
-          owner: string
+          owner: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
           name: string
           org_id?: string | null
-          owner: string
+          owner?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
           name?: string
           org_id?: string | null
-          owner?: string
+          owner?: string | null
         }
         Relationships: [
           {

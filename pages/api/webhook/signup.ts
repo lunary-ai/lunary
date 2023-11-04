@@ -27,7 +27,7 @@ export default async function handler(req: NextRequest) {
   await supabaseAdmin.from("profile").insert({ id: userId, email, name })
 
   const { count } = await supabaseAdmin
-    .from("org_user")
+    .from("org_user") // TODO
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
 
@@ -51,7 +51,7 @@ export default async function handler(req: NextRequest) {
       data: { id: appId },
     } = await supabaseAdmin
       .from("app")
-      .insert({ name: projectName, owner: userId })
+      .insert({ name: projectName, org_id: orgId })
       .select()
       .single()
 
@@ -62,6 +62,7 @@ export default async function handler(req: NextRequest) {
   } else {
     // New user in existing Org (/join)
 
+    // TODO
     // Add user to Org as member
     await supabaseAdmin
       .from("org_member")

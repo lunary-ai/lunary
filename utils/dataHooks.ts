@@ -53,7 +53,7 @@ export const useProfile = () => {
 
   const query = supabaseClient
     .from("profile")
-    .select("*,org(*,profile(*))")
+    .select("*,org(*,users:profile(*))")
     .match({ id: user?.id })
     .single()
 
@@ -63,18 +63,16 @@ export const useProfile = () => {
     isLoading,
   } = useQuery(user ? query : null, hardOptions)
 
-  const users =
-    profile &&
-    profile.org.profile
-      ?.sort((a, b) => {
-        if (a.role === "admin" && b.role === "member") return -1
-        if (a.role === "member" && b.role === "admin") return 1
-        return 0
-      })
-      .map((u) => ({
-        ...u,
-        color: getUserColor(theme, u.id),
-      }))
+  const users = profile?.org.users
+    ?.sort((a, b) => {
+      if (a.role === "admin" && b.role === "member") return -1
+      if (a.role === "member" && b.role === "admin") return 1
+      return 0
+    })
+    .map((u) => ({
+      ...u,
+      color: getUserColor(theme, u.id),
+    }))
 
   const profileWithOrg = profile
     ? {
@@ -145,10 +143,9 @@ export function useCurrentApp() {
 
   const app = apps?.find((a) => a.id === appId)
 
-  // @ts-ignore
-  if (app) app.activated = !!count
+  const activated = !!count
 
-  return { app, setAppId, loading }
+  return { app: { ...app, activated }, setAppId, loading }
 }
 
 export function useModelNames() {

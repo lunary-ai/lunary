@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { ReactNode, useCallback, useEffect, useRef, useState } from "react"
 
 import {
   flexRender,
@@ -193,7 +193,7 @@ export default function DataTable({
                             radius="sm"
                             checked={column.getIsVisible()}
                           />
-                          {column.columnDef.header}
+                          {column.columnDef.header as ReactNode}
                         </Group>
                       </Menu.Item>
                     ))}
