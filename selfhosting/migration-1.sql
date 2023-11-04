@@ -27,11 +27,14 @@ ADD COLUMN role user_role;
 
 --- Create orgs and add org_id to admins
 WITH inserted_orgs AS (
-  INSERT INTO public.org (name, admin_id, plan)
+  INSERT INTO public.org (name, admin_id, plan, play_allowance, stripe_customer, stripe_subscription)
   SELECT 
     COALESCE(p.name, p.email) || '''s org', 
     p.id, 
-    p.plan::org_plan
+    p.plan::org_plan,
+    play_allowance,
+    stripe_customer,
+    stripe_subscription
   FROM public.profile p
   WHERE p.team_owner is null
   RETURNING id, admin_id

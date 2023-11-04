@@ -21,27 +21,33 @@ const setupSubscription = async (object) => {
 
   if (mode !== "subscription") return
 
-  const { error, data } = await supabaseAdmin
-    .from("profile")
+  const { data: org } = await supabaseAdmin
+    .from("org")
     .update({
       stripe_customer: customer,
       stripe_subscription: subscription,
       plan: "pro",
       limited: false,
+      play_allowance: 10,
     })
     .eq("id", client_reference_id)
-    .select("name,email")
+    .select("id,name")
     .single()
+    .throwOnError()
 
-  if (error) {
-    throw error
-  }
+  const { data: users } = await supabaseAdmin
+    .from("profile")
+    .select("email,name")
+    .eq("org_id", org.id)
+    .throwOnError()
 
-  const { name, email } = data
+  const emailPromises = users.map((user) => {
+    return sendEmail(UPGRADE_EMAIL(user.email, user.name))
+  })
 
-  await sendEmail(UPGRADE_EMAIL(email, name))
+  await Promise.all(emailPromises)
 
-  await sendTelegramMessage(`<b>💸 ${email} just upgraded</b>`)
+  await sendTelegramMessage(`<b>💸${org} just upgraded their plan</b>`)
 }
 
 const cancelSubscription = async (object) => {
@@ -49,24 +55,29 @@ const cancelSubscription = async (object) => {
 
   const { customer } = object
 
-  const { error, data } = await supabaseAdmin
-    .from("profile")
+  const { data: org } = await supabaseAdmin
+    .from("org")
     .update({
       plan: "free",
     })
     .eq("stripe_customer", customer)
-    .select("name,email")
+    .select("id,name")
     .single()
+    .throwOnError()
 
-  if (error) {
-    throw error
-  }
+  const { data: users } = await supabaseAdmin
+    .from("profile")
+    .select("email,name")
+    .eq("org_id", org.id)
+    .throwOnError()
 
-  const { name, email } = data
+  const emailPromises = users.map((user) => {
+    return sendEmail(CANCELED_EMAIL(user.email, user.name))
+  })
 
-  await sendEmail(CANCELED_EMAIL(email, name))
+  await Promise.all(emailPromises)
 
-  await sendTelegramMessage(`<b>😭💔 ${email} just canceled</b>`)
+  await sendTelegramMessage(`<b>😭💔 ${org.name} just canceled their plan</b>`)
 }
 
 export default apiWrapper(async function StripeWebhook(req, res) {
