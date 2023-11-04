@@ -13,7 +13,7 @@ export const SuperCopyButton = ({ value }) => (
     {({ copied, copy }) => (
       <Tooltip label={copied ? "Copied" : "Copy"} withArrow position="right">
         <ActionIcon color={copied ? "teal" : "gray"} onClick={copy}>
-          {copied ? <IconCheck size="1rem" /> : <IconCopy size="1rem" />}
+          {copied ? <IconCheck size="16px" /> : <IconCopy size="16px" />}
         </ActionIcon>
       </Tooltip>
     )}

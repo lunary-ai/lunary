@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { ReactNode, useCallback, useEffect, useRef, useState } from "react"
 
 import {
   flexRender,
@@ -92,7 +92,7 @@ export default function DataTable({
         }
       }
     },
-    [loadMore, loading]
+    [loadMore, loading],
   )
 
   //a check on mount and after a fetch to see if the table is already scrolled to the bottom and immediately needs to fetch more data
@@ -149,7 +149,7 @@ export default function DataTable({
                           >
                             {flexRender(
                               header.column.columnDef.header,
-                              header.getContext()
+                              header.getContext(),
                             )}
                             {{
                               asc: <IconChevronUp size={14} />,
@@ -193,7 +193,7 @@ export default function DataTable({
                             radius="sm"
                             checked={column.getIsVisible()}
                           />
-                          {column.columnDef.header}
+                          {column.columnDef.header as ReactNode}
                         </Group>
                       </Menu.Item>
                     ))}
@@ -234,7 +234,7 @@ export default function DataTable({
                       >
                         {flexRender(
                           cell.column.columnDef.cell,
-                          cell.getContext()
+                          cell.getContext(),
                         )}
                       </td>
                     ))}

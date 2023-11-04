@@ -17,7 +17,7 @@ LLMonitor helps AI devs monitor their apps in production, with features such as:
 - 💵 Cost, token & latency analytics
 - 👪 Track users
 - 🐛 Traces to debug easily
-- 🔍 Inspect full requests
+- 🔍 Inspect & edit prompts
 - 🏷️ Label and export fine-tuning datasets
 - 🖲️ Collect feedback from users
 - 🧪 Unit tests & prompt evaluations (soon)

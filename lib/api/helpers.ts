@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next"
 import { NextRequest, NextResponse } from "next/server"
 
 /**
- * Returns a Response object with a JSON body for edge functions
+ * Edge functions helper to return a JSON res
  */
 export function jsonResponse(status: number, data: any, init?: ResponseInit) {
   return new NextResponse(JSON.stringify(data), {

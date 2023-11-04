@@ -1,31 +1,26 @@
 import {
+  SupabaseClient,
   createMiddlewareClient,
   createPagesServerClient,
 } from "@supabase/auth-helpers-nextjs"
 import { NextResponse } from "next/server"
 import { jsonResponse } from "./helpers"
+import { Database } from "@/utils/supaTypes"
 
 // Ensure the user is logged in and has access to the app
 // Works for both Edge functions and normal API routes
-export const ensureAppIsLogged = async (req, res = null) => {
+export const ensureIsLogged = async (req, res = null) => {
   // if no res, that means we're on an Edge function
-
-  let supabase
-  let appId
+  let supabase: SupabaseClient<Database>
   let isEdge = false
 
   if (!res) {
     const res = NextResponse.next()
 
-    // Clone otherwise the next await ...json() will fail
-    appId = (await req.clone().json()).appId
-
     supabase = createMiddlewareClient({ req, res })
 
     isEdge = true
   } else {
-    appId = (req.body || req.query).appId
-
     supabase = createPagesServerClient({ req, res })
   }
 
@@ -44,6 +39,24 @@ export const ensureAppIsLogged = async (req, res = null) => {
     return isEdge ? jsonResponse(401, error) : res.status(401).json(error)
   }
 
+  return { session, supabase }
+}
+
+export const ensureHasAccessToApp = async (req, res = null) => {
+  const { session, supabase } = await ensureIsLogged(req, res)
+
+  let appId
+  let isEdge = false
+
+  if (!res) {
+    // Clone otherwise the next await ...json() will fail
+    appId = (await req.clone().json()).appId
+
+    isEdge = true
+  } else {
+    appId = (req.body || req.query).appId
+  }
+
   // Try getting the app with RLS to make sure the user has access to it
   const { data: app } = await supabase
     .from("app")
@@ -52,13 +65,8 @@ export const ensureAppIsLogged = async (req, res = null) => {
     .single()
 
   if (!app) {
-    const error = {
-      error: "not_found",
-      description: "The app does not exist",
-    }
-
-    return isEdge ? jsonResponse(404, error) : res.status(404).json(error)
+    throw new Error("The app does not exist or you don't have access to it")
   }
 
-  return supabase
+  return { session, supabase, app }
 }

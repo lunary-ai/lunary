@@ -1,5 +1,5 @@
 import analytics from "@/utils/analytics"
-import { useApps, useCurrentApp, useTeam } from "@/utils/dataHooks"
+import { useApps, useCurrentApp, useProfile } from "@/utils/dataHooks"
 import {
   Anchor,
   Button,
@@ -27,10 +27,10 @@ import { useEffect } from "react"
 export default function Navbar() {
   const { app, setAppId } = useCurrentApp()
 
+  const { profile } = useProfile()
   const { apps, loading } = useApps()
 
   const user = useUser()
-  const { team } = useTeam()
 
   useEffect(() => {
     if (user) {
@@ -92,15 +92,17 @@ export default function Navbar() {
           </Group>
 
           <Group>
-            {team.limited ? (
+            {profile?.org.limited ? (
               <Button
                 color="orange"
                 size="xs"
                 onClick={() =>
                   modals.openContextModal({
                     modal: "upgrade",
-                    size: 800,
-                    innerProps: {},
+                    size: 900,
+                    innerProps: {
+                      highlight: "events",
+                    },
                   })
                 }
                 leftIcon={<IconAlertTriangle size={16} />}
@@ -130,12 +132,12 @@ export default function Navbar() {
               </>
             )}
 
-            {team?.plan === "free" && (
+            {profile?.org.plan === "free" && (
               <Button
                 onClick={() =>
                   modals.openContextModal({
                     modal: "upgrade",
-                    size: 800,
+                    size: 900,
                     innerProps: {},
                   })
                 }
