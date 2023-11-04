@@ -1,5 +1,6 @@
 import SmartViewer from "@/components/Blocks/SmartViewer"
 import { ChatMessage } from "@/components/Blocks/SmartViewer/Message"
+import Paywall from "@/components/Layout/Paywall"
 import { useCurrentApp, useOrg, useProfile } from "@/utils/dataHooks"
 import { Database } from "@/utils/supaTypes"
 import {
@@ -20,7 +21,13 @@ import {
 import { useLocalStorage } from "@mantine/hooks"
 import { modals } from "@mantine/modals"
 import { useSupabaseClient } from "@supabase/auth-helpers-react"
-import { IconBolt, IconCircleMinus, IconCirclePlus } from "@tabler/icons-react"
+import {
+  IconBolt,
+  IconCircleMinus,
+  IconCirclePlus,
+  IconPlayerPlay,
+  IconPlayerPlayFilled,
+} from "@tabler/icons-react"
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
 
@@ -72,6 +79,13 @@ const defaultRun = {
 
   error: null,
 }
+
+const FEATURE_LIST = [
+  "Edit captured requests live",
+  "Optimize prompts",
+  "Share results with your team",
+  "Test brand-new models such as Mistral, Claude v2, Bison & more.",
+]
 
 function Playground() {
   const router = useRouter()
@@ -138,7 +152,7 @@ function Playground() {
     if (profile.org?.play_allowance <= 0) {
       modals.openContextModal({
         modal: "upgrade",
-        size: 800,
+        size: 900,
         innerProps: {
           highlight: "play",
         },
@@ -207,213 +221,221 @@ function Playground() {
   }
 
   return (
-    <Container size="lg">
-      <Grid>
-        <Grid.Col span={9}>
-          <Card withBorder>
-            {loading ? (
-              <Loader />
-            ) : (
+    <Paywall
+      Icon={IconPlayerPlayFilled}
+      plan="pro"
+      feature="AI Playground"
+      description="Tweak your prompts and test new models."
+      list={FEATURE_LIST}
+    >
+      <Container size="lg">
+        <Grid>
+          <Grid.Col span={9}>
+            <Card withBorder>
+              {loading ? (
+                <Loader />
+              ) : (
+                <Stack>
+                  <Text weight="bold" size="sm">
+                    Input
+                  </Text>
+                  {Array.isArray(run?.input) &&
+                    run?.input?.map((message, i) => (
+                      <Box pos="relative" key={i}>
+                        <ChatMessage
+                          data={message}
+                          key={i}
+                          editable={true}
+                          onChange={(newMessage) => {
+                            const newInput = run.input
+                            newInput[i] = newMessage
+                            mutate({
+                              input: newInput,
+                            })
+                          }}
+                        />
+                        <ActionIcon
+                          pos="absolute"
+                          top={4}
+                          right={4}
+                          size="sm"
+                          color="red"
+                          onClick={() => {
+                            const newInput = run.input
+                            newInput.splice(i, 1)
+                            mutate({
+                              input: newInput,
+                            })
+                          }}
+                        >
+                          <IconCircleMinus size={12} />
+                        </ActionIcon>
+                      </Box>
+                    ))}
+
+                  <ActionIcon
+                    mx="auto"
+                    mt="xs"
+                    onClick={() =>
+                      mutate({
+                        input: [...run.input, { text: " ", role: "user" }],
+                      })
+                    }
+                  >
+                    <IconCirclePlus size={16} />
+                  </ActionIcon>
+
+                  {(run.input || run.error) && (
+                    <>
+                      <Group position="apart">
+                        <Text weight="bold" size="sm">
+                          {run.error ? "Error" : "Output"}
+                        </Text>
+                      </Group>
+                      <SmartViewer data={run.output} error={run.error} />
+                    </>
+                  )}
+                </Stack>
+              )}
+            </Card>
+          </Grid.Col>
+          <Grid.Col span={3}>
+            <Card withBorder style={{ overflow: "visible" }}>
               <Stack>
-                <Text weight="bold" size="sm">
-                  Input
-                </Text>
-                {Array.isArray(run?.input) &&
-                  run?.input?.map((message, i) => (
-                    <Box pos="relative" key={i}>
-                      <ChatMessage
-                        data={message}
-                        key={i}
-                        editable={true}
-                        onChange={(newMessage) => {
-                          const newInput = run.input
-                          newInput[i] = newMessage
-                          mutate({
-                            input: newInput,
-                          })
-                        }}
-                      />
-                      <ActionIcon
-                        pos="absolute"
-                        top={4}
-                        right={4}
-                        size="sm"
-                        color="red"
-                        onClick={() => {
-                          const newInput = run.input
-                          newInput.splice(i, 1)
-                          mutate({
-                            input: newInput,
-                          })
-                        }}
-                      >
-                        <IconCircleMinus size={12} />
-                      </ActionIcon>
-                    </Box>
-                  ))}
-
-                <ActionIcon
-                  mx="auto"
-                  mt="xs"
-                  onClick={() =>
-                    mutate({
-                      input: [...run.input, { text: " ", role: "user" }],
-                    })
+                <ParamItem
+                  name="Model"
+                  value={
+                    <Select
+                      size="xs"
+                      data={availableModels}
+                      value={model}
+                      w={150}
+                      onChange={setModel}
+                      searchable
+                      autoCorrect="off"
+                      inputMode="search"
+                    />
                   }
+                />
+
+                <ParamItem
+                  name="Temperature"
+                  value={
+                    <NumberInput
+                      min={0}
+                      max={2}
+                      step={0.1}
+                      precision={2}
+                      size="xs"
+                      value={run.params?.temperature}
+                      w={90}
+                      onChange={(value) =>
+                        mutate({
+                          params: { ...run.params, temperature: value },
+                        })
+                      }
+                    />
+                  }
+                />
+
+                <ParamItem
+                  name="Max tokens"
+                  value={
+                    <NumberInput
+                      min={1}
+                      defaultValue={1000}
+                      max={32000}
+                      step={100}
+                      size="xs"
+                      value={run.params?.max_tokens}
+                      w={90}
+                      onChange={(value) =>
+                        mutate({
+                          params: { ...run.params, max_tokens: value },
+                        })
+                      }
+                    />
+                  }
+                />
+
+                <ParamItem
+                  name="Freq. Penalty"
+                  value={
+                    <NumberInput
+                      min={-2}
+                      max={2}
+                      defaultValue={0}
+                      precision={2}
+                      step={0.1}
+                      size="xs"
+                      value={run.params?.frequency_penalty}
+                      w={90}
+                      onChange={(value) =>
+                        mutate({
+                          params: { ...run.params, frequency_penalty: value },
+                        })
+                      }
+                    />
+                  }
+                />
+
+                <ParamItem
+                  name="Pres. Penalty"
+                  value={
+                    <NumberInput
+                      min={-2}
+                      max={2}
+                      precision={2}
+                      step={0.1}
+                      defaultValue={0}
+                      size="xs"
+                      value={run.params?.presence_penalty}
+                      w={90}
+                      onChange={(value) =>
+                        mutate({
+                          params: { ...run.params, presence_penalty: value },
+                        })
+                      }
+                    />
+                  }
+                />
+
+                <ParamItem
+                  name="Top P"
+                  value={
+                    <NumberInput
+                      min={0.1}
+                      max={1}
+                      defaultValue={1}
+                      precision={2}
+                      step={0.1}
+                      size="xs"
+                      value={run.params?.top_p}
+                      w={90}
+                      onChange={(value) =>
+                        mutate({
+                          params: { ...run.params, top_p: value },
+                        })
+                      }
+                    />
+                  }
+                />
+
+                <Button
+                  leftIcon={<IconBolt size={16} />}
+                  size="xs"
+                  disabled={loading}
+                  onClick={runPlayground}
+                  loading={streaming}
                 >
-                  <IconCirclePlus size={16} />
-                </ActionIcon>
-
-                {(run.input || run.error) && (
-                  <>
-                    <Group position="apart">
-                      <Text weight="bold" size="sm">
-                        {run.error ? "Error" : "Output"}
-                      </Text>
-                    </Group>
-                    <SmartViewer data={run.output} error={run.error} />
-                  </>
-                )}
+                  Run
+                </Button>
               </Stack>
-            )}
-          </Card>
-        </Grid.Col>
-        <Grid.Col span={3}>
-          <Card withBorder style={{ overflow: "visible" }}>
-            <Stack>
-              <ParamItem
-                name="Model"
-                value={
-                  <Select
-                    size="xs"
-                    data={availableModels}
-                    value={model}
-                    w={150}
-                    onChange={setModel}
-                    searchable
-                    autoCorrect="off"
-                    inputMode="search"
-                  />
-                }
-              />
-
-              <ParamItem
-                name="Temperature"
-                value={
-                  <NumberInput
-                    min={0}
-                    max={2}
-                    step={0.1}
-                    precision={2}
-                    size="xs"
-                    value={run.params?.temperature}
-                    w={90}
-                    onChange={(value) =>
-                      mutate({
-                        params: { ...run.params, temperature: value },
-                      })
-                    }
-                  />
-                }
-              />
-
-              <ParamItem
-                name="Max tokens"
-                value={
-                  <NumberInput
-                    min={1}
-                    defaultValue={1000}
-                    max={32000}
-                    step={100}
-                    size="xs"
-                    value={run.params?.max_tokens}
-                    w={90}
-                    onChange={(value) =>
-                      mutate({
-                        params: { ...run.params, max_tokens: value },
-                      })
-                    }
-                  />
-                }
-              />
-
-              <ParamItem
-                name="Freq. Penalty"
-                value={
-                  <NumberInput
-                    min={-2}
-                    max={2}
-                    defaultValue={0}
-                    precision={2}
-                    step={0.1}
-                    size="xs"
-                    value={run.params?.frequency_penalty}
-                    w={90}
-                    onChange={(value) =>
-                      mutate({
-                        params: { ...run.params, frequency_penalty: value },
-                      })
-                    }
-                  />
-                }
-              />
-
-              <ParamItem
-                name="Pres. Penalty"
-                value={
-                  <NumberInput
-                    min={-2}
-                    max={2}
-                    precision={2}
-                    step={0.1}
-                    defaultValue={0}
-                    size="xs"
-                    value={run.params?.presence_penalty}
-                    w={90}
-                    onChange={(value) =>
-                      mutate({
-                        params: { ...run.params, presence_penalty: value },
-                      })
-                    }
-                  />
-                }
-              />
-
-              <ParamItem
-                name="Top P"
-                value={
-                  <NumberInput
-                    min={0.1}
-                    max={1}
-                    defaultValue={1}
-                    precision={2}
-                    step={0.1}
-                    size="xs"
-                    value={run.params?.top_p}
-                    w={90}
-                    onChange={(value) =>
-                      mutate({
-                        params: { ...run.params, top_p: value },
-                      })
-                    }
-                  />
-                }
-              />
-
-              <Button
-                leftIcon={<IconBolt size={16} />}
-                size="xs"
-                disabled={loading}
-                onClick={runPlayground}
-                loading={streaming}
-              >
-                Run
-              </Button>
-            </Stack>
-          </Card>
-        </Grid.Col>
-      </Grid>
-    </Container>
+            </Card>
+          </Grid.Col>
+        </Grid>
+      </Container>
+    </Paywall>
   )
 }
 

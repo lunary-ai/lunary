@@ -62,7 +62,7 @@ const ChatReplay = ({ run }) => {
         .filter((run) => run.type === "chat")
         .sort(
           (a, b) =>
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
         )
         .map((run) => {
           return [
@@ -83,7 +83,7 @@ const ChatReplay = ({ run }) => {
           ]
         })
         .flat(),
-    [runs]
+    [runs],
   )
 
   return (
@@ -165,14 +165,7 @@ export default function Chats() {
   return (
     <Stack h={"calc(100vh - var(--navbar-size))"}>
       <NextSeo title="Chats" />
-      <Group>
-        <Title>Chats and Feedbacks</Title>
-        {loading && <Loader />}
-        <Alert>
-          This feature is currently in <b>alpha</b>. Contact us with details on
-          what you're building to help us improve it.
-        </Alert>
-      </Group>
+      {loading && <Loader />}
 
       <Drawer
         opened={!!selected}
@@ -187,7 +180,6 @@ export default function Chats() {
       <DataTable
         onRowClicked={(row) => {
           setSelected(row)
-          // setSelected(row.original)
         }}
         loading={loading || validating}
         loadMore={loadMore}
