@@ -55,7 +55,9 @@ function Invite() {
         modals.openContextModal({
           modal: "upgrade",
           size: 800,
-          innerProps: {},
+          innerProps: {
+            highlight: "team",
+          },
         })
       }
       sx={{ float: "right" }}
@@ -66,18 +68,44 @@ function Invite() {
   )
 }
 
-export default function AppAnalytics() {
-  const { app, setAppId } = useCurrentApp()
+function RenamableField({ defaultValue, onRename }) {
   const [focused, setFocused] = useState(false)
-
-  const { profile } = useProfile()
-
-  const { drop, update } = useApps()
 
   const applyRename = (e) => {
     setFocused(false)
-    update({ id: app.id, name: e.target.value })
+    onRename(e.target.value)
   }
+
+  return focused ? (
+    <FocusTrap>
+      <TextInput
+        defaultValue={defaultValue}
+        variant="unstyled"
+        h={40}
+        px={10}
+        onKeyPress={(e) => {
+          if (e.key === "Enter") applyRename(e)
+        }}
+        onBlur={(e) => applyRename(e)}
+      />
+    </FocusTrap>
+  ) : (
+    <Title
+      order={3}
+      onClick={() => setFocused(true)}
+      style={{ cursor: "pointer" }}
+    >
+      {defaultValue} <IconPencil size={16} />
+    </Title>
+  )
+}
+
+export default function AppAnalytics() {
+  const { app, setAppId } = useCurrentApp()
+
+  const { profile, updateOrg, mutate } = useProfile()
+
+  const { drop, update } = useApps()
 
   const { data: appUsage } = useAppSWR("/analytics/usage")
 
@@ -90,28 +118,10 @@ export default function AppAnalytics() {
         <Stack>
           <Card withBorder p="lg">
             <Stack>
-              {focused ? (
-                <FocusTrap>
-                  <TextInput
-                    defaultValue={app?.name}
-                    variant="unstyled"
-                    h={40}
-                    px={10}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") applyRename(e)
-                    }}
-                    onBlur={(e) => applyRename(e)}
-                  />
-                </FocusTrap>
-              ) : (
-                <Title
-                  order={3}
-                  onClick={() => setFocused(true)}
-                  style={{ cursor: "pointer" }}
-                >
-                  {app?.name} <IconPencil size={16} />
-                </Title>
-              )}
+              <RenamableField
+                defaultValue={app?.name}
+                onRename={(name) => update({ id: app.id, name })}
+              />
               <Text>
                 App ID for tracking: <CopyText value={app?.id} />
               </Text>
@@ -120,7 +130,14 @@ export default function AppAnalytics() {
 
           <Card withBorder p={0}>
             <Group position="apart" align="center" p="lg">
-              <Title order={3}>Team</Title>
+              <RenamableField
+                defaultValue={profile?.org.name}
+                onRename={(name) => {
+                  updateOrg({ id: profile.org.id, name })
+                  mutate()
+                }}
+              />
+
               <Invite />
             </Group>
 
@@ -228,7 +245,7 @@ export default function AppAnalytics() {
             </Stack>
           </Card> */}
 
-          {profile.role === "admin" && (
+          {profile?.role === "admin" && (
             <Card withBorder p="lg" sx={{ overflow: "visible" }}>
               <Title mb="md" order={4}>
                 Danger Zone

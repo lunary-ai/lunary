@@ -97,12 +97,14 @@ export default function Billing() {
                 modals.openContextModal({
                   modal: "upgrade",
                   size: 800,
-                  innerProps: {},
+                  innerProps: {
+                    highlight: "events",
+                  },
                 })
               }
               w={300}
             >
-              Upgrade to Pro
+              Upgrade
             </Button>
           </>
         )}

@@ -39,6 +39,7 @@ import {
 import analytics from "@/utils/analytics"
 import errorHandler from "@/utils/errorHandler"
 import { NextSeo } from "next-seo"
+import SocialProof from "@/components/Blocks/SocialProof"
 
 function SignupPage() {
   const [loading, setLoading] = useState(false)
@@ -50,7 +51,7 @@ function SignupPage() {
     initialValues: {
       email: "",
       name: "",
-      orgName: "",
+
       projectName: "Project #1",
       password: "",
     },
@@ -76,13 +77,11 @@ function SignupPage() {
     email,
     password,
     name,
-    orgName,
     projectName,
   }: {
     email: string
     password: string
     name: string
-    orgName: string
     projectName: string
   }) => {
     setLoading(true)
@@ -95,7 +94,6 @@ function SignupPage() {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
             name,
-            orgName,
             projectName,
           },
         },
@@ -144,7 +142,7 @@ function SignupPage() {
                 llmonitor cloud
               </Title>
             </Stack>
-            <Grid gutter={50} align="center">
+            <Grid gutter={50} align="center" mb="sm">
               <Grid.Col span={12} md={6}>
                 <Paper radius="md" p="xl" withBorder>
                   <form onSubmit={form.onSubmit(handleSignup)}>
@@ -218,15 +216,6 @@ function SignupPage() {
                           />
 
                           <TextInput
-                            label="Organization Name"
-                            description="Can be changed later"
-                            icon={<IconUser size={16} />}
-                            placeholder="Your Organization name"
-                            error={form.errors.name && "This field is required"}
-                            required={true}
-                            {...form.getInputProps("orgName")}
-                          />
-                          <TextInput
                             label="Project Name"
                             description="Can be changed later."
                             icon={<IconFolderBolt size={16} />}
@@ -291,24 +280,21 @@ function SignupPage() {
                       </Text>
                     </List.Item>
                     <List.Item>
-                      <Text weight="bold">
-                        Start collecting data immediately
-                      </Text>
+                      <Text weight="bold">Collect data immediately</Text>
                       <Text>
-                        Integrate with developer-friendly SDKs, with native
-                        support for LangChain and OpenAI.
+                        Integrate with dev-friendly SDKs, with native support
+                        for LangChain and OpenAI.
                       </Text>
                     </List.Item>
                     <List.Item>
-                      <Text weight="bold">No configuration required</Text>
-                      <Text>
-                        Start getting insights without any complicated setup.
-                      </Text>
+                      <Text weight="bold">No config required</Text>
+                      <Text>Get insights without complicated setup.</Text>
                     </List.Item>
                   </List>
                 </Box>
               </Grid.Col>
             </Grid>
+            <SocialProof />
           </>
         )}
 

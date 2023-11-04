@@ -175,7 +175,9 @@ const LineChartComponent = ({
                     modals.openContextModal({
                       modal: "upgrade",
                       size: 800,
-                      innerProps: {},
+                      innerProps: {
+                        highlight: "analytics",
+                      },
                     })
                   }
                   size="xs"

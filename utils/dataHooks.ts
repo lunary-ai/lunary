@@ -65,11 +65,16 @@ export const useProfile = () => {
 
   const users =
     profile &&
-    profile.org.profile?.sort((a, b) => {
-      if (a.role === "admin" && b.role === "member") return -1
-      if (a.role === "member" && b.role === "admin") return 1
-      return 0
-    })
+    profile.org.profile
+      ?.sort((a, b) => {
+        if (a.role === "admin" && b.role === "member") return -1
+        if (a.role === "member" && b.role === "admin") return 1
+        return 0
+      })
+      .map((u) => ({
+        ...u,
+        color: getUserColor(theme, u.id),
+      }))
 
   const profileWithOrg = profile
     ? {
@@ -82,7 +87,13 @@ export const useProfile = () => {
       }
     : null
 
-  return { profile: profileWithOrg, loading: isLoading, mutate }
+  const { trigger: updateOrg } = useUpdateMutation(
+    supabaseClient.from("org"),
+    ["id"],
+    "name,id",
+  )
+
+  return { profile: profileWithOrg, loading: isLoading, mutate, updateOrg }
 }
 
 export function useApps() {

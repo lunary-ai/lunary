@@ -95,13 +95,11 @@ export default function Join({ orgUserCount, orgName }) {
       email: "",
       name: "",
       password: "",
-      orgName: "",
     },
 
     validate: {
       email: (val) => (/^\S+@\S+$/.test(val) ? null : "Invalid email"),
       name: (val) => (val.length <= 2 ? "Your name that short :) ?" : null),
-
       password: (val) =>
         val.length < 6 ? "Password must be at least 6 characters" : null,
     },

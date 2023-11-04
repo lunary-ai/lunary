@@ -138,7 +138,9 @@ export default function Generations() {
           modals.openContextModal({
             modal: "upgrade",
             size: 800,
-            innerProps: {},
+            innerProps: {
+              highlight: "export",
+            },
           })
         },
       }

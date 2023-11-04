@@ -16,7 +16,7 @@ export default async function handler(req: NextRequest) {
     record: {
       email,
       id: userId,
-      raw_user_meta_data: { projectName, name, orgName, orgId },
+      raw_user_meta_data: { projectName, name, orgId },
     },
   } = await req.json()
 
@@ -37,7 +37,7 @@ export default async function handler(req: NextRequest) {
     // Create new Org
     const { data: org } = await supabaseAdmin
       .from("org")
-      .insert({ name: orgName, plan: "free" })
+      .insert({ name: `${name}'s Org`, plan: "free" })
       .select()
       .single()
 
@@ -56,7 +56,7 @@ export default async function handler(req: NextRequest) {
       .single()
 
     await sendTelegramMessage(
-      `<b>🔔 New signup from ${email}</b><br/>${name} is building ${projectName} in Org ${orgName}.`,
+      `<b>🔔 New signup from ${email}</b><br/>${name} is building ${projectName}.`,
     )
     await sendEmail(WELCOME_EMAIL(email, name, appId))
   } else {

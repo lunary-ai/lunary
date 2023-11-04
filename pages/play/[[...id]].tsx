@@ -139,7 +139,9 @@ function Playground() {
       modals.openContextModal({
         modal: "upgrade",
         size: 800,
-        innerProps: {},
+        innerProps: {
+          highlight: "play",
+        },
       })
     }
 
@@ -289,7 +291,7 @@ function Playground() {
                     w={150}
                     onChange={setModel}
                     searchable
-                    autoCorrect={false}
+                    autoCorrect="off"
                     inputMode="search"
                   />
                 }

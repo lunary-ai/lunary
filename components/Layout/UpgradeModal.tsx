@@ -4,12 +4,15 @@ import { ContextModalProps } from "@mantine/modals"
 import { IconAnalyze, IconCircleCheck } from "@tabler/icons-react"
 
 import {
+  Avatar,
   Badge,
   Button,
   Card,
   Group,
+  Highlight,
   List,
   Mark,
+  Rating,
   SimpleGrid,
   Stack,
   Text,
@@ -19,8 +22,32 @@ import {
 
 import { useEffect } from "react"
 import { useProfile } from "../../utils/dataHooks"
+import SocialProof from "../Blocks/SocialProof"
 
-export const UpgradeBody = () => {
+const PlanFeatures = ({ features, highlight }) => {
+  return (
+    <List
+      spacing="sm"
+      size="sm"
+      center
+      icon={
+        <ThemeIcon color="teal" size={24} radius="xl">
+          <IconCircleCheck size={16} />
+        </ThemeIcon>
+      }
+    >
+      {features.map(({ title, id }) => (
+        <List.Item key={id}>
+          <Highlight highlight={highlight === id ? title : ""}>
+            {title}
+          </Highlight>
+        </List.Item>
+      ))}
+    </List>
+  )
+}
+
+export const UpgradeBody = ({ highlight }) => {
   const { profile } = useProfile()
 
   const isFree = profile?.org.plan === "free"
@@ -29,7 +56,7 @@ export const UpgradeBody = () => {
   return (
     <>
       <Stack align="center" ta="center" className="unblockable">
-        <IconAnalyze color={"#206dce"} size={60} />
+        <IconAnalyze color={"#206dce"} size={50} />
         <Title order={2} weight={700} size={40} ta="center">
           Upgrade your plan
         </Title>
@@ -39,8 +66,7 @@ export const UpgradeBody = () => {
           <Mark>{` the lowest price we'll ever offer. `}</Mark>
         </Text> */}
         <Text size="lg" mt="xs" mb="xl" weight={500}>
-          Unlock higher usage and team access, support development, and get
-          involved in the future of the product.
+          Unlock higher usage & powerful features to improve your AI's quality.
         </Text>
       </Stack>
 
@@ -75,21 +101,16 @@ export const UpgradeBody = () => {
               </Text>
             </Title>
           </Group>
-          <List
-            spacing="sm"
-            size="sm"
-            center
-            icon={
-              <ThemeIcon color="teal" size={24} radius="xl">
-                <IconCircleCheck size={16} />
-              </ThemeIcon>
-            }
-          >
-            <List.Item>4k events per day</List.Item>
-            <List.Item>Invite 4 team members</List.Item>
-            <List.Item>Export data</List.Item>
-            <List.Item>Advanced Analytics</List.Item>
-          </List>
+
+          <PlanFeatures
+            features={[
+              { id: "events", title: "4k events per day" },
+              { id: "team", title: "4 team members" },
+              { id: "export", title: "Export data" },
+              { id: "analytics", title: "Advanced Analytics" },
+            ]}
+            highlight={highlight}
+          />
 
           {isFree && (
             <Button
@@ -132,22 +153,20 @@ export const UpgradeBody = () => {
               </Text>
             </Title>
           </Group>
-          <List
-            spacing="sm"
-            size="sm"
-            center
-            icon={
-              <ThemeIcon color="teal" size={24} radius="xl">
-                <IconCircleCheck size={16} />
-              </ThemeIcon>
-            }
-          >
-            <List.Item>20k events per day</List.Item>
-            <List.Item>10 team members</List.Item>
-            <List.Item>Full Playground Access</List.Item>
-            <List.Item>API access</List.Item>
-            {/* <List.Item>Early access to new features</List.Item> */}
-          </List>
+
+          <Text mb="xs" size="sm" mt={-10}>
+            Everything in Pro, plus:
+          </Text>
+
+          <PlanFeatures
+            features={[
+              { id: "events", title: "20k events per day" },
+              { id: "team", title: "10 team members" },
+              { id: "play", title: "Unlimited AI Playground" },
+              { id: "api", title: "API access" },
+            ]}
+            highlight={highlight}
+          />
 
           <Button
             size="md"
@@ -167,6 +186,9 @@ export const UpgradeBody = () => {
         Cancel your subscription at any time with just 1 click.{" "}
         <Mark>30 days</Mark> money-back guarantee.
       </Text>
+      <Card w="fit-content" mx="auto" mt="md">
+        <SocialProof />
+      </Card>
     </>
   )
 }
@@ -175,7 +197,7 @@ const UpgradeModal = ({
   context,
   id,
   innerProps,
-}: ContextModalProps<{ modalBody: string }>) => {
+}: ContextModalProps<{ highlight: string }>) => {
   if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) return null
 
   useEffect(() => {
@@ -184,7 +206,7 @@ const UpgradeModal = ({
 
   return (
     <Stack p={60} pt={0}>
-      <UpgradeBody />
+      <UpgradeBody highlight={innerProps?.highlight} />
     </Stack>
   )
 }

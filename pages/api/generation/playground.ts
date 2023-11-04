@@ -40,7 +40,7 @@ const substractPlayAllowance = async (session, supabase) => {
 
   if (profile.org?.play_allowance <= 0) {
     throw new Error(
-      "No allowance left. Please upgrade to continue using the playground.",
+      "No allowance left today. Wait tomorrow or upgrade to continue using the playground.",
     )
   }
 
@@ -53,8 +53,6 @@ const substractPlayAllowance = async (session, supabase) => {
 
 export default edgeWrapper(async function handler(req: Request) {
   const { session, supabase } = await ensureIsLogged(req)
-
-  console.log("session", session)
 
   await substractPlayAllowance(session, supabase)
 

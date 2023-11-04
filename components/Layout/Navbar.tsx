@@ -100,7 +100,9 @@ export default function Navbar() {
                   modals.openContextModal({
                     modal: "upgrade",
                     size: 800,
-                    innerProps: {},
+                    innerProps: {
+                      highlight: "events",
+                    },
                   })
                 }
                 leftIcon={<IconAlertTriangle size={16} />}
