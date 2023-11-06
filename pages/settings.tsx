@@ -104,7 +104,6 @@ export default function AppAnalytics() {
   const { app, setAppId } = useCurrentApp()
 
   const { profile, updateOrg, mutate } = useProfile()
-
   const { drop, update } = useApps()
 
   const { data: appUsage } = useAppSWR("/analytics/usage")
@@ -170,6 +169,19 @@ export default function AppAnalytics() {
             </Table>
           </Card>
 
+          <Card withBorder p="lg">
+            <Group position="apart" align="center">
+              <Title order={3}>Api Key</Title>
+              {/* <Button onClick={() => alert("TODO")}>
+                Refresh Api Key
+              </Button> */}
+            </Group>
+
+            <Stack mt="md">
+              <CopyText value={profile?.org.apiKey} />
+            </Stack>
+          </Card>
+
           {/* <Card withBorder p="lg"> */}
           <LineChart
             title={<Title order={3}>Usage</Title>}
@@ -196,54 +208,6 @@ export default function AppAnalytics() {
               </ReferenceLine>
             }
           />
-
-          {/* <Card withBorder p="lg">
-            <Overlay blur={2} opacity={0.3} p="lg" zIndex={1}>
-              <Center h="100%">
-                <Alert title="Datasets">
-                  This feature is currently invite-only. Contact us with details
-                  on what you're building to request access.
-                </Alert>
-              </Center>
-            </Overlay>
-            <Stack spacing="md">
-              <Title order={4}>Export dataset</Title>
-
-              <Text weight="semibold">Select conditions:</Text>
-
-              <Group spacing="xs">
-                <Button variant="outline" compact>
-                  model = "gpt-4"
-                </Button>
-
-                <Text>and</Text>
-                <Button variant="outline" compact>
-                  feedback: "thumbs" = "up"
-                </Button>
-
-                <Text>and</Text>
-                <Button variant="outline" compact>
-                  contains tag: "training"
-                </Button>
-              </Group>
-
-              <Text weight="semibold">Download:</Text>
-
-              <Group>
-                <Button variant="light" leftIcon={<IconDownload size={16} />}>
-                  .csv
-                </Button>
-                <Button
-                  variant="light"
-                  color="cyan"
-                  leftIcon={<IconDownload size={16} />}
-                  rightIcon={<IconBrandOpenai size={16} />}
-                >
-                  OpenAI .jsonl
-                </Button>
-              </Group>
-            </Stack>
-          </Card> */}
 
           {profile?.role === "admin" && (
             <Card withBorder p="lg" sx={{ overflow: "visible" }}>
