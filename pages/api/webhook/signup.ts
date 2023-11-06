@@ -66,7 +66,7 @@ export default edgeWrapper(async function handler(req: NextRequest) {
     `<b>🔔 New signup from ${email}</b>
     
 ${name} is ${
-      signupMethod === "join" ? `building ${projectName}.` : "joining an org."
+      signupMethod === "signup" ? `building ${projectName}.` : "joining an org."
     }`,
   )
 
