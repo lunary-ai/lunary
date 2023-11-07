@@ -50,7 +50,7 @@ function LoginPage() {
           emailRedirectTo: `${window.location.origin}/`,
           shouldCreateUser: false,
         },
-      })
+      }),
     )
 
     if (ok) {

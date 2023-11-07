@@ -54,7 +54,7 @@ function LoginPage() {
     setLoading(true)
 
     const ok = await errorHandler(
-      supabaseClient.auth.signInWithPassword({ email, password })
+      supabaseClient.auth.signInWithPassword({ email, password }),
     )
 
     analytics.track("Login", { method: "password" })

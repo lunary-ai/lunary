@@ -30,11 +30,11 @@ const recursiveToCamel = (item: unknown): unknown => {
     Object.entries(item as Record<string, unknown>).map(
       ([key, value]: [string, unknown]) => [
         key.replace(/([-_][a-z])/gi, (c) =>
-          c.toUpperCase().replace(/[-_]/g, "")
+          c.toUpperCase().replace(/[-_]/g, ""),
         ),
         recursiveToCamel(value),
-      ]
-    )
+      ],
+    ),
   )
 }
 
@@ -188,7 +188,7 @@ export const handleLangchainTracerEvent = async (id, rawEvent, operation) => {
 
   // remove null values so we don't overwrite existing data with null
   const strippedData = Object.fromEntries(
-    Object.entries(data).filter(([_, v]) => v != null)
+    Object.entries(data).filter(([_, v]) => v != null),
   )
 
   let query = table[operation](strippedData)

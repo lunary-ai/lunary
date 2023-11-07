@@ -34,7 +34,7 @@ export interface Database {
             columns: ["org_id"]
             referencedRelation: "profile"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       app: {
@@ -77,7 +77,7 @@ export interface Database {
             columns: ["owner"]
             referencedRelation: "users"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       app_user: {
@@ -111,7 +111,7 @@ export interface Database {
             columns: ["app"]
             referencedRelation: "app"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       log: {
@@ -166,7 +166,7 @@ export interface Database {
             columns: ["run"]
             referencedRelation: "run"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       org: {
@@ -272,7 +272,7 @@ export interface Database {
             columns: ["team_owner"]
             referencedRelation: "profile"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       run: {
@@ -372,7 +372,7 @@ export interface Database {
             columns: ["user"]
             referencedRelation: "app_user"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
     }
@@ -573,4 +573,3 @@ export interface Database {
     }
   }
 }
-

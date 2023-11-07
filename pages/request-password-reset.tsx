@@ -35,7 +35,7 @@ export default function PasswordReset() {
     const ok = await errorHandler(
       supabaseClient.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/update-password`,
-      })
+      }),
     )
 
     if (ok) {
