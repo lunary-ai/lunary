@@ -38,7 +38,14 @@ function AppUserAvatar({
         {nameOrEmail?.slice(0, 2)?.toUpperCase()}
       </Avatar>
       {withName && (
-        <Anchor href={`/users/${user.id}`}>
+        <Anchor
+          sx={{
+            maxWidth: "100%",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+          href={`/users/${user.id}`}
+        >
           <ProtectedText>{formatAppUser(user)}</ProtectedText>
         </Anchor>
       )}
