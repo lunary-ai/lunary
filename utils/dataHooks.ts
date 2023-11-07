@@ -53,7 +53,7 @@ export const useProfile = () => {
 
   const query = supabaseClient
     .from("profile")
-    .select("*,org(*,users:profile(*))")
+    .select("*,org(*,apiKey:api_key,users:profile(*))")
     .match({ id: user?.id })
     .single()
 

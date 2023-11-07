@@ -54,6 +54,7 @@ export default apiWrapper(async function handler(
       end as duration,
       coalesce(completion_tokens, 0) + coalesce(prompt_tokens, 0) as tokens,
       tags as tags,
+      input as prompt,
       coalesce(output, error) as result
     from
       run r 
