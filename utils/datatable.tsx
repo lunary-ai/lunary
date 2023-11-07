@@ -81,6 +81,7 @@ export const tagsColumn = () => {
           variant="outline"
           sx={{
             textTransform: "none",
+            maxWidth: "100%",
           }}
         >
           {tag}
