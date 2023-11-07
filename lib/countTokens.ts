@@ -65,6 +65,50 @@ async function encodingForModel(model) {
   return await getEncoding(encodingName)
 }
 
+const GOOGLE_MODELS = [
+  "chat-bison-001",
+  "code-bison-001",
+  "text-bison-001",
+  "codechat-bison-001",
+]
+
+async function countGoogleTokens(model, input) {
+  const prepareData = (input) => {
+    const messages = Array.isArray(input) ? input : [input]
+
+    return messages.map((message) => {
+      return {
+        content: typeof message === "string" ? message : message.text,
+      }
+    })
+  }
+
+  try {
+    const options = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        prompt: {
+          messages: prepareData(input),
+        },
+      }),
+    }
+
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta3/models/${model}:countMessageTokens?key=${process.env.PALM_API_KEY}`,
+      options,
+    )
+    const data = await res.json()
+
+    return data.tokenCount
+  } catch (e) {
+    console.error("Error while counting tokens with Google API", e)
+    return
+  }
+}
+
 /**
  * Returns a function signature block in the format used by OpenAI internally:
  * https://community.openai.com/t/how-to-calculate-the-tokens-when-using-function-call/266573/6
@@ -173,7 +217,6 @@ async function numTokensFromMessages(
 
 // If model is openai and it's missing some token usage, we can try to compute it
 export const completeRunUsage = async (run) => {
-  console.log(`Counting tokens for run ${run.runId} model ${run.name}`)
   if (
     run.type !== "llm" ||
     run.event !== "end" ||
@@ -194,33 +237,45 @@ export const completeRunUsage = async (run) => {
 
     // Get model name (in older sdk it wasn't sent in "end" event)
     const modelName = runData.name?.replaceAll("gpt-35", "gpt-3.5") // Azure fix
-    const enc = await encodingForModel(modelName)
 
-    if (!tokensUsage.prompt && runData?.input) {
-      const inputTokens = Array.isArray(runData.input)
-        ? await numTokensFromMessages(
-            runData.input,
-            // @ts-ignore
-            runData.params?.functions || runData.params?.tools,
-            modelName,
-          )
-        : enc.encode(JSON.stringify(runData.input)).length
+    const isGoogleModel = GOOGLE_MODELS.find((model) =>
+      modelName.includes(model),
+    )
+    if (isGoogleModel) {
+      // For Google models we need to use their API to count tokens
 
+      const inputTokens = await countGoogleTokens(isGoogleModel, runData.input)
       tokensUsage.prompt = inputTokens
-    }
 
-    if (!tokensUsage.completion && run.output) {
-      const outputString =
-        typeof run.output === "object" && run.output.text
-          ? run.output.text
-          : JSON.stringify(run.output)
-
-      const outputTokens = enc.encode(outputString).length
-
+      const outputTokens = await countGoogleTokens(isGoogleModel, run.output)
       tokensUsage.completion = outputTokens
-    }
+    } else {
+      const enc = await encodingForModel(modelName)
 
-    console.log(`Computed tokens for run ${run.runId}`, tokensUsage)
+      if (!tokensUsage.prompt && runData?.input) {
+        const inputTokens = Array.isArray(runData.input)
+          ? await numTokensFromMessages(
+              runData.input,
+              // @ts-ignore
+              runData.params?.functions || runData.params?.tools,
+              modelName,
+            )
+          : enc.encode(JSON.stringify(runData.input)).length
+
+        tokensUsage.prompt = inputTokens
+      }
+
+      if (!tokensUsage.completion && run.output) {
+        const outputString =
+          typeof run.output === "object" && run.output.text
+            ? run.output.text
+            : JSON.stringify(run.output)
+
+        const outputTokens = enc.encode(outputString).length
+
+        tokensUsage.completion = outputTokens
+      }
+    }
 
     return tokensUsage
   } catch (e) {
