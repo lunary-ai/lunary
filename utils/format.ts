@@ -9,7 +9,7 @@ export const formatCost = (cost = 0) => {
 
 export const formatLargeNumber = (number) => {
   return new Intl.NumberFormat("en-US", { notation: "compact" }).format(
-    number || 0
+    number || 0,
   )
 }
 
