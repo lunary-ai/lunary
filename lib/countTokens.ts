@@ -16,11 +16,21 @@ const cache = {}
 
 async function getRareEncoding(
   encoding,
-  extendedSpecialTokens?: Record<string, number>
+  extendedSpecialTokens?: Record<string, number>,
 ) {
   if (!(encoding in cache)) {
-    console.log("Fetching tiktoken encoding from CDN")
-    const res = await fetch(`https://tiktoken.pages.dev/js/${encoding}.json`)
+    let url
+    switch (encoding) {
+      case "claude":
+        url = `https://cdn.jsdelivr.net/gh/anthropics/anthropic-tokenizer-typescript@main/claude.json`
+        break
+      default:
+        url = `https://tiktoken.pages.dev/js/${encoding}.json`
+    }
+
+    console.log(url)
+
+    const res = await fetch(url)
 
     if (!res.ok) throw new Error("Failed to fetch encoding")
     cache[encoding] = await res.json()
@@ -30,9 +40,10 @@ async function getRareEncoding(
 
 async function getEncoding(
   encoding,
-  extendSpecialTokens?: Record<string, number>
+  extendSpecialTokens?: Record<string, number>,
 ) {
   switch (encoding) {
+    case "claude":
     case "gpt2":
     case "r50k_base":
     case "p50k_base":
@@ -47,7 +58,11 @@ async function getEncoding(
 }
 
 async function encodingForModel(model) {
-  return await getEncoding(getEncodingNameForModel(model))
+  const encodingName = model.includes("claude")
+    ? "claude"
+    : getEncodingNameForModel(model)
+
+  return await getEncoding(encodingName)
 }
 
 /**
@@ -111,7 +126,7 @@ function formatFunctionSpecsAsTypescriptNS(functions) {
 async function numTokensFromMessages(
   messages,
   functions,
-  model = "gpt-3.5-turbo-0613"
+  model = "gpt-3.5-turbo-0613",
 ) {
   let tokensPerMessage, tokensPerName
   let encoding
@@ -133,7 +148,7 @@ async function numTokensFromMessages(
     numTokens += tokensPerMessage
     for (let [key, value] of Object.entries(message)) {
       numTokens += encoding.encode(
-        typeof value === "object" ? JSON.stringify(value) : value
+        typeof value === "object" ? JSON.stringify(value) : value,
       ).length
 
       if (key === "role") {
@@ -145,7 +160,7 @@ async function numTokensFromMessages(
   if (functions) {
     try {
       numTokens += encoding.encode(
-        formatFunctionSpecsAsTypescriptNS(functions)
+        formatFunctionSpecsAsTypescriptNS(functions),
       ).length
     } catch (error) {
       console.error("Warning: function token counting failed. Skipping.")
@@ -158,6 +173,7 @@ async function numTokensFromMessages(
 
 // If model is openai and it's missing some token usage, we can try to compute it
 export const completeRunUsage = async (run) => {
+  console.log(`Counting tokens for run ${run.runId} model ${run.name}`)
   if (
     run.type !== "llm" ||
     run.event !== "end" ||
@@ -185,8 +201,8 @@ export const completeRunUsage = async (run) => {
         ? await numTokensFromMessages(
             runData.input,
             // @ts-ignore
-            runData.params?.functions,
-            modelName
+            runData.params?.functions || runData.params?.tools,
+            modelName,
           )
         : enc.encode(JSON.stringify(runData.input)).length
 
@@ -203,6 +219,8 @@ export const completeRunUsage = async (run) => {
 
       tokensUsage.completion = outputTokens
     }
+
+    console.log(`Computed tokens for run ${run.runId}`, tokensUsage)
 
     return tokensUsage
   } catch (e) {
