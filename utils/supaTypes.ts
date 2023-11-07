@@ -171,9 +171,10 @@ export interface Database {
       }
       org: {
         Row: {
+          api_key: string
           created_at: string | null
           id: string
-          limited: boolean | null
+          limited: boolean
           name: string
           plan: Database["public"]["Enums"]["org_plan"]
           play_allowance: number
@@ -181,9 +182,10 @@ export interface Database {
           stripe_subscription: string | null
         }
         Insert: {
+          api_key?: string
           created_at?: string | null
           id?: string
-          limited?: boolean | null
+          limited?: boolean
           name: string
           plan: Database["public"]["Enums"]["org_plan"]
           play_allowance?: number
@@ -191,9 +193,10 @@ export interface Database {
           stripe_subscription?: string | null
         }
         Update: {
+          api_key?: string
           created_at?: string | null
           id?: string
-          limited?: boolean | null
+          limited?: boolean
           name?: string
           plan?: Database["public"]["Enums"]["org_plan"]
           play_allowance?: number
@@ -220,7 +223,7 @@ export interface Database {
         Insert: {
           created_at?: string | null
           email?: string | null
-          id?: string
+          id: string
           limited?: boolean | null
           name?: string | null
           org_id?: string | null
