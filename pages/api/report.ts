@@ -79,10 +79,11 @@ const ensureIsUUID = async (id: string): Promise<string> => {
 }
 
 const cleanEvent = async (event: any): Promise<Event> => {
-  const { timestamp, runId, parentRunId, tags, ...rest } = event
+  const { timestamp, runId, parentRunId, tags, name, ...rest } = event
 
   return {
     ...rest,
+    name: typeof name === "string" ? name.replace("models/", "") : undefined,
     tags: typeof tags === "string" ? [tags] : tags,
     tokensUsage: await completeRunUsage(event),
     runId: await ensureIsUUID(runId),
