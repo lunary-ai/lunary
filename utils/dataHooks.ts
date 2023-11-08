@@ -205,6 +205,7 @@ export function useGenerations(
       .eq("type", "llm")
   } else {
     query = supabaseClient.rpc("get_runs", {
+      app_id: appId,
       search_pattern: search,
     })
   }
