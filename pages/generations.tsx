@@ -7,17 +7,8 @@ import {
   useProfile,
   useTags,
 } from "@/utils/dataHooks"
-import {
-  Button,
-  Drawer,
-  Group,
-  Menu,
-  MultiSelect,
-  Stack,
-  Text,
-} from "@mantine/core"
+import { Button, Drawer, Group, Menu, MultiSelect, Stack } from "@mantine/core"
 
-import SmartViewer from "@/components/Blocks/SmartViewer"
 import {
   costColumn,
   durationColumn,
@@ -32,24 +23,19 @@ import {
 import {
   IconArrowBarUp,
   IconBraces,
-  IconBrackets,
-  IconBracketsAngle,
   IconBrandOpenai,
-  IconCurlyLoop,
   IconFileExport,
-  IconPlus,
 } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { useContext, useState } from "react"
 
-import TokensBadge from "@/components/Blocks/TokensBadge"
+import RunInputOutput from "@/components/Blocks/RunIO"
+import SearchBar from "@/components/Blocks/SearchBar"
 import { formatDateTime } from "@/utils/format"
 import { useDebouncedState } from "@mantine/hooks"
+import { modals } from "@mantine/modals"
 import Empty from "../components/Layout/Empty"
 import { AppContext } from "../utils/context"
-import { modals } from "@mantine/modals"
-import SearchBar from "@/components/Blocks/SearchBar"
-import RunInputOutput from "@/components/Blocks/RunIO"
 
 const columns = [
   timeColumn("created_at"),
@@ -108,7 +94,7 @@ export default function Generations() {
   const [selectedTags, setSelectedTags] = useState([])
 
   const { appId } = useContext(AppContext)
-  const { app } = useCurrentApp()
+  const { app, loading: appLoading } = useCurrentApp()
 
   const { runs, loading, validating, loadMore } = useGenerations(
     query,
@@ -122,7 +108,7 @@ export default function Generations() {
 
   const exportUrl = buildExportUrl(appId, query, selectedModels, selectedTags)
 
-  if (!loading && !app?.activated) {
+  if (!loading && !appLoading && !app?.activated) {
     return <Empty Icon={IconBrandOpenai} what="requests" />
   }
 
