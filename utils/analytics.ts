@@ -1,4 +1,5 @@
 import posthog from "posthog-js"
+import { H } from "@highlight-run/next/client"
 
 if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
   posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
@@ -72,6 +73,8 @@ const identify = (userId: string, traits: any) => {
         ],
       ],
     ])
+
+    H?.identify(userId, traits)
   } catch (e) {
     console.error(e)
   }

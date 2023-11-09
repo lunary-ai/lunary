@@ -4,7 +4,7 @@ import OpenAI from "openai"
 
 import { completion } from "litellm"
 import { ensureIsLogged } from "@/lib/api/ensureAppIsLogged"
-import { edgeWrapper } from "@/lib/api/helpers"
+import { edgeWrapper } from "@/lib/api/edgeHelpers"
 
 export const runtime = "edge"
 

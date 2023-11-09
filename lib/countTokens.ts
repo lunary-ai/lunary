@@ -7,10 +7,11 @@ import { supabaseAdmin } from "@/lib/supabaseClient"
 
 // @ts-ignore
 import p50k_base from "js-tiktoken/ranks/p50k_base"
-
+// @ts-ignore
 import cl100k_base from "js-tiktoken/ranks/cl100k_base"
 
 import { Tiktoken, getEncodingNameForModel } from "js-tiktoken/lite"
+import { H } from "@highlight-run/next/server"
 
 const cache = {}
 
@@ -27,8 +28,6 @@ async function getRareEncoding(
       default:
         url = `https://tiktoken.pages.dev/js/${encoding}.json`
     }
-
-    console.log(url)
 
     const res = await fetch(url)
 
@@ -53,7 +52,7 @@ async function getEncoding(
     case "cl100k_base":
       return new Tiktoken(cl100k_base, extendSpecialTokens)
     default:
-      throw new Error("Unknown encoding")
+      throw new Error("Unknown encoding " + encoding)
   }
 }
 
@@ -113,6 +112,7 @@ async function countGoogleTokens(model, input) {
     return data.tokenCount
   } catch (e) {
     console.error("Error while counting tokens with Google API", e)
+    H.consumeError(e)
     return
   }
 }
@@ -288,6 +288,7 @@ export const completeRunUsage = async (run) => {
     return tokensUsage
   } catch (e) {
     console.error(`Error while computing tokens usage for run ${run.runId}`, e)
+    H.consumeError(e)
     return run.tokensUsage
   }
 }

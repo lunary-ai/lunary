@@ -14,6 +14,7 @@ import { useLocalStorage } from "@mantine/hooks"
 import { ModalsProvider } from "@mantine/modals"
 import UpgradeModal from "./UpgradeModal"
 import { useProfile } from "../../utils/dataHooks"
+import { ErrorBoundary } from "@highlight-run/next/client"
 
 export default function Layout({ children }: { children: ReactNode }) {
   const router = useRouter()
@@ -56,7 +57,12 @@ export default function Layout({ children }: { children: ReactNode }) {
             navbar={!isAuthPage && appId && <Sidebar />}
             sx={{ backgroundColor: "#fafafa" }}
           >
-            {children}
+            <ErrorBoundary
+              onAfterReportDialogSubmitHandler={() => Router.reload()}
+              onAfterReportDialogCancelHandler={() => Router.reload()}
+            >
+              {children}
+            </ErrorBoundary>
           </AppShell>
         </AppContext.Provider>
       </ModalsProvider>
