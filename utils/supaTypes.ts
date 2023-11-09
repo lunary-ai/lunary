@@ -409,31 +409,58 @@ export interface Database {
           feedback: Json
         }[]
       }
-      get_runs: {
-        Args: {
-          search_pattern: string
-        }
-        Returns: {
-          app: string | null
-          completion_tokens: number | null
-          created_at: string | null
-          ended_at: string | null
-          error: Json | null
-          feedback: Json | null
-          id: string
-          input: Json | null
-          name: string | null
-          output: Json | null
-          params: Json | null
-          parent_run: string | null
-          prompt_tokens: number | null
-          retry_of: string | null
-          status: string | null
-          tags: string[] | null
-          type: string
-          user: number | null
-        }[]
-      }
+      get_runs:
+        | {
+            Args: {
+              search_pattern: string
+            }
+            Returns: {
+              app: string | null
+              completion_tokens: number | null
+              created_at: string | null
+              ended_at: string | null
+              error: Json | null
+              feedback: Json | null
+              id: string
+              input: Json | null
+              name: string | null
+              output: Json | null
+              params: Json | null
+              parent_run: string | null
+              prompt_tokens: number | null
+              retry_of: string | null
+              status: string | null
+              tags: string[] | null
+              type: string
+              user: number | null
+            }[]
+          }
+        | {
+            Args: {
+              app_id: string
+              search_pattern: string
+            }
+            Returns: {
+              app: string | null
+              completion_tokens: number | null
+              created_at: string | null
+              ended_at: string | null
+              error: Json | null
+              feedback: Json | null
+              id: string
+              input: Json | null
+              name: string | null
+              output: Json | null
+              params: Json | null
+              parent_run: string | null
+              prompt_tokens: number | null
+              retry_of: string | null
+              status: string | null
+              tags: string[] | null
+              type: string
+              user: number | null
+            }[]
+          }
       get_runs_usage: {
         Args: {
           app_id: string
