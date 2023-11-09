@@ -45,8 +45,7 @@ const registerRunEvent = async (
   let internalUserId
   // Only do on start event to save on DB calls and have correct lastSeen
   if (typeof userId === "string" && eventName === "start") {
-    userId
-    const { data, error } = await supabaseAdmin
+    const { data } = await supabaseAdmin
       .from("app_user")
       .upsert(
         {
@@ -59,8 +58,7 @@ const registerRunEvent = async (
       )
       .select()
       .single()
-
-    if (error) throw error
+      .throwOnError()
 
     internalUserId = data.id
   }
@@ -150,11 +148,12 @@ const registerRunEvent = async (
     case "feedback":
       // get previous feedback to merge
 
-      const { data, error } = await supabaseAdmin
+      const { data } = await supabaseAdmin
         .from("run")
         .select("feedback")
         .match({ id: runId })
         .maybeSingle()
+        .throwOnError()
 
       query = table
         .update({
@@ -170,9 +169,7 @@ const registerRunEvent = async (
   }
 
   if (query) {
-    const { error, data } = await query
-
-    if (error) throw error
+    await query.throwOnError()
 
     insertedIds.add(runId)
   }
