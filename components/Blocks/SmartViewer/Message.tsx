@@ -62,7 +62,7 @@ export function ChatMessage({
               }}
               color={typesColors[data?.role]}
               value={data?.role}
-              data={["ai", "user", "system", "function"]}
+              data={["ai", "user", "system", "function", "tool"]}
               onChange={(role) => onChange({ ...data, role })}
             />
           ) : (

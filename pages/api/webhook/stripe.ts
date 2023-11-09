@@ -28,7 +28,7 @@ const setupSubscription = async (object) => {
       stripe_subscription: subscription,
       plan: "pro",
       limited: false,
-      play_allowance: 10,
+      play_allowance: 15,
     })
     .eq("id", client_reference_id)
     .select("id,name")
@@ -47,7 +47,7 @@ const setupSubscription = async (object) => {
 
   await Promise.all(emailPromises)
 
-  await sendTelegramMessage(`<b>💸${org} just upgraded their plan</b>`)
+  await sendTelegramMessage(`<b>💸${org.name} just upgraded their plan</b>`)
 }
 
 const cancelSubscription = async (object) => {
