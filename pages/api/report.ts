@@ -235,8 +235,6 @@ export default edgeWrapper(async function handler(req: NextRequest) {
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
   )
 
-  console.log(`Ingesting ${sorted.length} events for app ${sorted[0].app}`)
-
   for (const event of sorted) {
     try {
       const cleanedEvent = await cleanEvent(event)
