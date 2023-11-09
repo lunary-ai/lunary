@@ -19,6 +19,10 @@ const nextConfig = {
         source: "/ingest/:path*",
         destination: "https://app.posthog.com/:path*",
       },
+      {
+        source: "/api/v1/report",
+        destination: "/api/report",
+      },
     ]
   },
 }

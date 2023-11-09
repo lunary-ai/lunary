@@ -4,6 +4,7 @@ import { apiWrapper } from "@/lib/api/helpers"
 import { sendTelegramMessage } from "@/lib/notifications"
 
 import postgres from "postgres"
+import { H } from "@highlight-run/next/server"
 
 const sql = postgres(process.env.DB_URI)
 
@@ -67,11 +68,11 @@ RETURNING *;`
 // - 1000 for 'unlimited' and 'enterprise' users
 
 const resetAIallowance = async () => {
-  await sql`UPDATE "profile"."org" o SET play_allowance = 3 WHERE o.plan = 'free';`
+  await sql`UPDATE "public"."org" o SET play_allowance = 3 WHERE o.plan = 'free';`
 
-  await sql`UPDATE "profile"."org" o SET play_allowance = 15 WHERE o.plan = 'pro';`
+  await sql`UPDATE "public"."org" o SET play_allowance = 15 WHERE o.plan = 'pro';`
 
-  await sql`UPDATE "profile"."org" o SET play_allowance = 1000 WHERE o.plan = 'unlimited' OR o.plan = 'custom';`
+  await sql`UPDATE "public"."org" o SET play_allowance = 1000 WHERE o.plan = 'unlimited' OR o.plan = 'custom';`
 }
 
 export default apiWrapper(async function handler(
@@ -83,10 +84,19 @@ export default apiWrapper(async function handler(
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return res.status(401).json({ error: "unauthorized" })
   }
+  try {
+    await resetAIallowance()
+  } catch (error) {
+    console.error(error)
+    H.consumeError(error)
+  }
 
-  await resetAIallowance()
-
-  await updateLimitedStatus()
+  try {
+    await updateLimitedStatus()
+  } catch (error) {
+    console.error(error)
+    H.consumeError(error)
+  }
 
   return res.status(200).json({ success: true })
 })

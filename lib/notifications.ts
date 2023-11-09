@@ -1,7 +1,7 @@
 export const sendTelegramMessage = async (msg) => {
   if (!process.env.TELEGRAM_BOT_KEY || !process.env.TELEGRAM_CHAT_ID) return
 
-  const res = await fetch(
+  await fetch(
     `https://api.telegram.org/bot${
       process.env.TELEGRAM_BOT_KEY
     }/sendMessage?chat_id=${
