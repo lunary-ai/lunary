@@ -7,6 +7,7 @@ import PlausibleProvider from "next-plausible"
 import posthog from "posthog-js"
 
 import analytics from "@/utils/analytics"
+import { HighlightInit } from "@highlight-run/next/client"
 
 import { Crisp } from "crisp-sdk-web"
 
@@ -36,7 +37,20 @@ export default function AnalyticsWrapper({ children }) {
 
   return (
     <>
-      <CrispChat />
+      {process.env.NEXT_PUBLIC_HIGHLIGHT_PROJECT_ID && (
+        <HighlightInit
+          projectId={process.env.NEXT_PUBLIC_HIGHLIGHT_PROJECT_ID}
+          serviceName="llmonitor-frontend"
+          tracingOrigins
+          disableConsoleRecording
+          networkRecording={{
+            enabled: false,
+            recordHeadersAndBody: true,
+            urlBlocklist: [],
+          }}
+        />
+      )}
+      {process.env.NEXT_PUBLIC_CRISP_ID && <CrispChat />}
       <PlausibleProvider
         domain="app.llmonitor.com,rollup.llmonitor.com"
         scriptProps={{

@@ -1,4 +1,4 @@
-import { edgeWrapper, jsonResponse } from "@/lib/api/helpers"
+import { edgeWrapper, jsonResponse } from "@/lib/api/edgeHelpers"
 import { WELCOME_EMAIL } from "@/lib/emails"
 import { sendTelegramMessage } from "@/lib/notifications"
 import { sendEmail } from "@/lib/sendEmail"

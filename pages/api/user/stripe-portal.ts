@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import stripe from "@/lib/stripe"
 
-import { edgeWrapper, jsonResponse } from "@/lib/api/helpers"
+import { edgeWrapper, jsonResponse } from "@/lib/api/edgeHelpers"
 
 export const runtime = "edge"
 export const dynamic = "force-dynamic"

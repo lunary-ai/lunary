@@ -7,6 +7,8 @@ import { NextRequest } from "next/server"
 import cors from "@/lib/api/cors"
 import { Json } from "../../utils/supaTypes"
 import { Event, cleanEvent } from "@/lib/ingest"
+import { edgeWrapper } from "@/lib/api/edgeHelpers"
+import { H } from "@highlight-run/next/server"
 
 export const config = {
   runtime: "edge",
@@ -214,7 +216,7 @@ const registerEvent = async (
   }
 }
 
-export default async function handler(req: NextRequest) {
+export default edgeWrapper(async function handler(req: NextRequest) {
   if (req.method === "OPTIONS") {
     return cors(req, new Response(null, { status: 200 }))
   }
@@ -233,18 +235,19 @@ export default async function handler(req: NextRequest) {
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
   )
 
+  console.log(`Ingesting ${sorted.length} events for app ${sorted[0].app}`)
+
   for (const event of sorted) {
     try {
       const cleanedEvent = await cleanEvent(event)
 
       await registerEvent(cleanedEvent, insertedIds)
     } catch (e: any) {
-      console.error(`
-      Error ingesting event.
-      - Message: ${e.message}
-      - Input: ${JSON.stringify(events)}`)
+      console.error(`Error ingesting event: ${e.message}`, e)
+
+      H.consumeError(e)
     }
   }
 
   return cors(req, new Response(null, { status: 200 }))
-}
+})
