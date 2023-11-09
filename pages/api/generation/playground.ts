@@ -19,11 +19,12 @@ const OPENROUTER_MODELS = [
 const ANTHROPIC_MODELS = ["claude-2"]
 
 const convertInputToOpenAIMessages = (input: any[]) => {
-  return input.map(({ role, text, functionCall, name }) => {
+  return input.map(({ role, text, functionCall, toolCalls, name }) => {
     return {
       role: role.replace("ai", "assistant"),
       content: text,
       function_call: functionCall || undefined,
+      tool_calls: toolCalls || undefined,
       name: name || undefined,
     }
   })
@@ -97,6 +98,8 @@ export default edgeWrapper(async function handler(req: Request) {
     frequency_penalty: run.params?.frequency_penalty,
     stop: run.params?.stop,
     functions: run.params?.functions,
+    tools: run.params?.tools,
+    seed: run.params?.seed,
     stream: true,
   })
 

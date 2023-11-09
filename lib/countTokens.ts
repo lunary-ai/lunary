@@ -7,7 +7,7 @@ import { supabaseAdmin } from "@/lib/supabaseClient"
 
 // @ts-ignore
 import p50k_base from "js-tiktoken/ranks/p50k_base"
-// @ts-ignore
+
 import cl100k_base from "js-tiktoken/ranks/cl100k_base"
 
 import { Tiktoken, getEncodingNameForModel } from "js-tiktoken/lite"
@@ -58,9 +58,17 @@ async function getEncoding(
 }
 
 async function encodingForModel(model) {
-  const encodingName = model.includes("claude")
-    ? "claude"
-    : getEncodingNameForModel(model)
+  let encodingName
+
+  // TODO: Remove this once this PR merged:
+  // https://github.com/dqbd/tiktoken/pull/79/files
+  if (model.includes("gpt-4-1106")) {
+    encodingName = "cl100k_base"
+  } else if (model.includes("claude")) {
+    encodingName = "claude"
+  } else {
+    encodingName = getEncodingNameForModel(model)
+  }
 
   return await getEncoding(encodingName)
 }
