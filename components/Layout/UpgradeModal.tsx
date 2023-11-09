@@ -173,7 +173,7 @@ export const UpgradeBody = ({ highlight }) => {
           <Button
             size="md"
             component="a"
-            href={`${process.env.NEXT_PUBLIC_STRIPE_PRO_LINK}&client_reference_id=${profile.org?.id}`}
+            href={`${process.env.NEXT_PUBLIC_STRIPE_UNLIMITED_LINK}&client_reference_id=${profile.org?.id}`}
             target="_blank"
             fullWidth
             variant="outline"
