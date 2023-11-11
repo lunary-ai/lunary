@@ -27,7 +27,7 @@ const updateLimitedStatus = async () => {
 
   // get all users with more than 1000 runs 2 out of the last 3 days
   // and set their `limited` to true
-  const usersToLimit = await sql`WITH over_limit_days AS (
+  const orgsToLimit = await sql`WITH over_limit_days AS (
     SELECT 
       p.id,
       DATE(r.created_at) AS run_date,
@@ -52,13 +52,11 @@ SET limited = TRUE
 WHERE id IN (SELECT id FROM over_limit_users)
 RETURNING *;`
 
-  for (const user of usersToLimit) {
+  for (const org of orgsToLimit) {
     // send telegram message to user
-    if (alreadyLimited.find((u) => u.id === user.id)) continue
+    if (alreadyLimited.find((u) => u.id === org.id)) continue
 
-    await sendTelegramMessage(
-      `⛔ limited ${user.email} because too many events`,
-    )
+    await sendTelegramMessage(`⛔ limited ${org.name} because too many events`)
   }
 }
 
