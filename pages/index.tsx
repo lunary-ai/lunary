@@ -62,8 +62,6 @@ export default function Home() {
         </Group>
       </Modal>
 
-      {loading && <Loader />}
-
       {apps && !apps.length ? (
         <Card p="xl" w={600} withBorder>
           <Stack align="start">
@@ -92,6 +90,7 @@ export default function Home() {
               + New app
             </Button>
           </Group>
+          {loading && <Loader />}
 
           <Stack>
             {apps?.map((app) => (
