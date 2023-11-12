@@ -146,10 +146,10 @@ export default function Generations() {
     <Stack h={"calc(100vh - var(--navbar-size))"}>
       <NextSeo title="Requests" />
       <Group position="apart">
-        <Flex>
+        <Group>
           <SearchBar query={query} setQuery={setQuery} />
 
-          {modelNames?.length && (
+          {!!modelNames?.length && (
             <MultiSelect
               placeholder="Model"
               size="xs"
@@ -160,7 +160,7 @@ export default function Generations() {
               onChange={setSelectedModels}
             />
           )}
-          {tags?.length && (
+          {!!tags?.length && (
             <MultiSelect
               placeholder="Tags"
               size="xs"
@@ -171,40 +171,7 @@ export default function Generations() {
               onChange={setSelectedTags}
             />
           )}
-          {tags?.length && (
-            <MultiSelect
-              placeholder="Tags"
-              size="xs"
-              miw={100}
-              w="fit-content"
-              data={tags}
-              clearable
-              onChange={setSelectedTags}
-            />
-          )}
-          {tags?.length && (
-            <MultiSelect
-              placeholder="Tags"
-              size="xs"
-              miw={100}
-              w="fit-content"
-              data={tags}
-              clearable
-              onChange={setSelectedTags}
-            />
-          )}
-          {tags?.length && (
-            <MultiSelect
-              placeholder="Tags"
-              size="xs"
-              miw={100}
-              w="fit-content"
-              data={tags}
-              clearable
-              onChange={setSelectedTags}
-            />
-          )}
-        </Flex>
+        </Group>
         <Box>
           <Menu withArrow shadow="sm" position="bottom-end">
             <Menu.Target>
