@@ -47,7 +47,10 @@ const setupSubscription = async (object) => {
 
   await Promise.all(emailPromises)
 
-  await sendTelegramMessage(`<b>💸${org.name} just upgraded their plan</b>`)
+  await sendTelegramMessage(
+    `<b>💸${org.name} just upgraded their plan</b>`,
+    "revenue",
+  )
 }
 
 const cancelSubscription = async (object) => {
@@ -77,7 +80,10 @@ const cancelSubscription = async (object) => {
 
   await Promise.all(emailPromises)
 
-  await sendTelegramMessage(`<b>😭💔 ${org.name} just canceled their plan</b>`)
+  await sendTelegramMessage(
+    `<b>😭💔 ${org.name} just canceled their plan</b>`,
+    "revenue",
+  )
 }
 
 export default apiWrapper(async function StripeWebhook(req, res) {

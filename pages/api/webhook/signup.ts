@@ -68,6 +68,7 @@ export default edgeWrapper(async function handler(req: NextRequest) {
 ${name} is ${
       signupMethod === "signup" ? `building ${projectName}.` : "joining an org."
     }`,
+    "users",
   )
 
   return jsonResponse(200, { ok: true })

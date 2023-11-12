@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
-    "@highlight-run/next": "^7.2.0",
+    "@highlight-run/next": "^7.2.1",
     "@json2csv/plainjs": "^7.0.3",
     "@mantine/core": "^6.0.20",
     "@mantine/form": "^6.0.20",
