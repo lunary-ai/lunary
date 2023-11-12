@@ -247,7 +247,7 @@ export function useTraces(search) {
       .order("created_at", {
         ascending: false,
       })
-      .eq("type", "agent")
+      .or("type.eq.agent,type.eq.chain")
       .is("parent_run", null)
   } else {
     query = supabaseClient.rpc("get_trace_runs_roots", {
