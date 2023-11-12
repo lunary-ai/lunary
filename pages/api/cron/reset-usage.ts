@@ -58,6 +58,7 @@ RETURNING *;`
 
     await sendTelegramMessage(
       `⛔ limited ${user.email} because too many events`,
+      "users",
     )
   }
 }
