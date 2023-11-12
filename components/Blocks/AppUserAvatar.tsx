@@ -33,7 +33,7 @@ function AppUserAvatar({
   const nameOrEmail = formatAppUser(user)
 
   return (
-    <Group spacing="sm">
+    <Group spacing="xs" noWrap>
       <Avatar lh={0.4} radius="xl" color={color} size={size}>
         {nameOrEmail?.slice(0, 2)?.toUpperCase()}
       </Avatar>
@@ -41,6 +41,7 @@ function AppUserAvatar({
         <Anchor
           sx={{
             maxWidth: "100%",
+            whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
           }}

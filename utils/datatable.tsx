@@ -1,5 +1,5 @@
 import { createColumnHelper } from "@tanstack/react-table"
-import { Badge, Group } from "@mantine/core"
+import { Badge, Flex, Group } from "@mantine/core"
 import SmartViewer from "@/components/Blocks/SmartViewer"
 import { useAppUser, useRelatedRuns } from "./dataHooks"
 import { formatCost, formatDateTime, msToTime } from "./format"
@@ -75,18 +75,22 @@ export const tagsColumn = () => {
       const tags = props.getValue()
       if (!tags) return null
 
-      return tags.map((tag) => (
-        <Badge
-          key={tag}
-          variant="outline"
-          sx={{
-            textTransform: "none",
-            maxWidth: "100%",
-          }}
-        >
-          {tag}
-        </Badge>
-      ))
+      return (
+        <Group spacing={4}>
+          {tags.map((tag) => (
+            <Badge
+              key={tag}
+              variant="outline"
+              sx={{
+                textTransform: "none",
+                maxWidth: "100%",
+              }}
+            >
+              {tag}
+            </Badge>
+          ))}
+        </Group>
+      )
     },
   })
 }
