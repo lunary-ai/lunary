@@ -279,16 +279,20 @@ export default function DataTable({
           }
 
           th {
-            position: relative;
+            // position: relative;
             border-bottom: 1px solid #ddd;
             border-right: 1px solid #ddd;
-            text-overflow: ellipsis;
-            overflow: clip;
           }
 
           tr {
             width: fit-content;
             height: 30px;
+          }
+
+          th,
+          td {
+            overflow: hidden;
+            text-overflow: ellipsis;
           }
 
           .resizer {
