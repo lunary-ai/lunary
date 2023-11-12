@@ -7,7 +7,16 @@ import {
   useProfile,
   useTags,
 } from "@/utils/dataHooks"
-import { Button, Drawer, Group, Menu, MultiSelect, Stack } from "@mantine/core"
+import {
+  Box,
+  Button,
+  Drawer,
+  Flex,
+  Group,
+  Menu,
+  MultiSelect,
+  Stack,
+} from "@mantine/core"
 
 import {
   costColumn,
@@ -137,7 +146,7 @@ export default function Generations() {
     <Stack h={"calc(100vh - var(--navbar-size))"}>
       <NextSeo title="Requests" />
       <Group position="apart">
-        <Group>
+        <Flex>
           <SearchBar query={query} setQuery={setQuery} />
 
           {modelNames?.length && (
@@ -162,35 +171,70 @@ export default function Generations() {
               onChange={setSelectedTags}
             />
           )}
-        </Group>
-        <Menu withArrow shadow="sm" position="bottom-end">
-          <Menu.Target>
-            <Button
-              variant="outline"
+          {tags?.length && (
+            <MultiSelect
+              placeholder="Tags"
               size="xs"
-              leftIcon={<IconArrowBarUp size={16} />}
-            >
-              Actions
-            </Button>
-          </Menu.Target>
-          <Menu.Dropdown>
-            <Menu.Item
-              color="dark"
-              icon={<IconFileExport size={16} />}
-              {...exportButton(exportUrl)}
-            >
-              Export to CSV
-            </Menu.Item>
-            <Menu.Item
-              color="dark"
-              disabled
-              icon={<IconBraces size={16} />}
-              // {...exportButton(exportUrl)}
-            >
-              Export to JSONL
-            </Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
+              miw={100}
+              w="fit-content"
+              data={tags}
+              clearable
+              onChange={setSelectedTags}
+            />
+          )}
+          {tags?.length && (
+            <MultiSelect
+              placeholder="Tags"
+              size="xs"
+              miw={100}
+              w="fit-content"
+              data={tags}
+              clearable
+              onChange={setSelectedTags}
+            />
+          )}
+          {tags?.length && (
+            <MultiSelect
+              placeholder="Tags"
+              size="xs"
+              miw={100}
+              w="fit-content"
+              data={tags}
+              clearable
+              onChange={setSelectedTags}
+            />
+          )}
+        </Flex>
+        <Box>
+          <Menu withArrow shadow="sm" position="bottom-end">
+            <Menu.Target>
+              <Button
+                variant="outline"
+                size="xs"
+                leftIcon={<IconArrowBarUp size={16} />}
+              >
+                Export
+              </Button>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item
+                color="dark"
+                icon={<IconFileExport size={16} />}
+                {...exportButton(exportUrl)}
+              >
+                Export to CSV
+              </Menu.Item>
+              <Menu.Item
+                color="dark"
+                disabled
+                icon={<IconBraces size={16} />}
+                // {...exportButton(exportUrl)}
+              >
+                Export to JSONL
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        </Box>
       </Group>
 
       <Drawer
