@@ -7,7 +7,7 @@ import { NextRequest } from "next/server"
 import cors from "@/lib/api/cors"
 import { Json } from "../../utils/supaTypes"
 import { Event, cleanEvent } from "@/lib/ingest"
-import { edgeWrapper } from "@/lib/api/edgeHelpers"
+import { edgeWrapper, jsonResponse } from "@/lib/api/edgeHelpers"
 import { H } from "@highlight-run/next/server"
 
 export const config = {
@@ -244,5 +244,11 @@ export default edgeWrapper(async function handler(req: NextRequest) {
     }
   }
 
-  return cors(req, new Response(null, { status: 200 }))
+  return cors(
+    req,
+    jsonResponse(200, {
+      success: true,
+      ingested: insertedIds,
+    }),
+  )
 })
