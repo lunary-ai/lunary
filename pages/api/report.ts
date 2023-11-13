@@ -232,7 +232,7 @@ export default edgeWrapper(async function handler(req: NextRequest) {
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
   )
 
-  const result = []
+  const results = []
 
   for (const event of sorted) {
     try {
@@ -240,7 +240,7 @@ export default edgeWrapper(async function handler(req: NextRequest) {
 
       await registerEvent(cleanedEvent, insertedIds)
 
-      result.push({
+      results.push({
         id: event.runId,
         success: true,
       })
@@ -249,7 +249,7 @@ export default edgeWrapper(async function handler(req: NextRequest) {
 
       H.consumeError(e)
 
-      result.push({
+      results.push({
         id: event.runId,
         success: false,
         error: e.message,
@@ -260,7 +260,7 @@ export default edgeWrapper(async function handler(req: NextRequest) {
   return cors(
     req,
     jsonResponse(200, {
-      result,
+      results,
     }),
   )
 })
