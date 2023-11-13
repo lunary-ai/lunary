@@ -203,7 +203,6 @@ const registerEvent = async (
     case "retriever":
     case "chat":
     case "convo":
-    case "thread":
     case "tool":
       await registerRunEvent(event, insertedIds)
       break
@@ -220,6 +219,7 @@ export default edgeWrapper(async function handler(req: NextRequest) {
 
   const { events } = await req.json()
 
+  // Use to check if parentRunId was already inserted
   const insertedIds = new Set<string>()
 
   if (!events) {
@@ -232,23 +232,35 @@ export default edgeWrapper(async function handler(req: NextRequest) {
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
   )
 
+  const result = []
+
   for (const event of sorted) {
     try {
       const cleanedEvent = await cleanEvent(event)
 
       await registerEvent(cleanedEvent, insertedIds)
+
+      result.push({
+        id: event.runId,
+        success: true,
+      })
     } catch (e: any) {
       console.error(`Error ingesting event: ${e.message}`, e)
 
       H.consumeError(e)
+
+      result.push({
+        id: event.runId,
+        success: false,
+        error: e.message,
+      })
     }
   }
 
   return cors(
     req,
     jsonResponse(200, {
-      success: true,
-      ingested: insertedIds,
+      result,
     }),
   )
 })

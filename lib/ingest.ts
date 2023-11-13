@@ -62,7 +62,7 @@ export const uuidFromSeed = async (seed: string): Promise<string> => {
  */
 const ensureIsUUID = async (id: string): Promise<string> => {
   if (typeof id !== "string") return undefined
-  if (!id || id.length === 36) return id // TODO: better check
+  if (!id || id.length === 36) return id // TODO: better UUID check
   else return await uuidFromSeed(id)
 }
 
