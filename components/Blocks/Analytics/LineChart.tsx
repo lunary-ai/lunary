@@ -216,6 +216,7 @@ const LineChartComponent = ({
               <CartesianGrid
                 strokeDasharray="3 3"
                 horizontal={true}
+                opacity={0.7}
                 vertical={false}
               />
             )}

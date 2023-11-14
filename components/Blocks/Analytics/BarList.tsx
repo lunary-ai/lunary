@@ -1,4 +1,5 @@
 import { Group, Progress, Table, Text } from "@mantine/core"
+import { useColorScheme } from "@mantine/hooks"
 
 type BarListProps = {
   data: any[]
@@ -29,6 +30,8 @@ const BarList = ({
   const mainTotal = data.reduce((acc, item) => acc + (item[main.key] || 0), 0)
 
   if (!data) return <>No data.</>
+
+  const scheme = useColorScheme()
 
   return (
     <>
@@ -92,13 +95,15 @@ const BarList = ({
                             value: (count / mainTotal) * 100,
                             color,
                             tooltip,
-                          })
+                          }),
                         )}
                         w={"90%"}
                         radius="md"
                         value={(item[main.key] / mainTotal) * 100}
                       />
-                      <Text>{item.value}</Text>
+                      <Text color={scheme === "dark" ? "gray" : "dark"} mb={-3}>
+                        {item.value}
+                      </Text>
                     </td>
                   ) : (
                     <td key={i}>
@@ -106,7 +111,7 @@ const BarList = ({
                         {render ? render(item[key], item) : item[key]}
                       </Text>
                     </td>
-                  )
+                  ),
                 )}
               </tr>
             ))}
@@ -134,7 +139,7 @@ const BarList = ({
             position: relative;
             top: 0;
 
-            left: 0;
+            left: -10px;
             right: 0;
 
             text-align: center;

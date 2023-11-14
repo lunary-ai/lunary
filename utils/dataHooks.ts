@@ -13,6 +13,7 @@ import { calcRunCost } from "./calcCosts"
 import { AppContext } from "./context"
 import { Database } from "./supaTypes"
 import useSWR from "swr"
+import { useColorScheme } from "@mantine/hooks"
 
 const softOptions = {
   dedupingInterval: 10000,
@@ -27,7 +28,7 @@ const hardOptions = {
 }
 
 // Make a number seed from the ID, then use that to pick a color from the Mantine colors
-const getUserColor = (theme, id: string) => {
+const getUserColor = (scheme, theme, id: string) => {
   const seed = id
     .split("")
     .map((char) => char.charCodeAt(0))
@@ -36,7 +37,7 @@ const getUserColor = (theme, id: string) => {
 
   const userColor = colors[seed % colors.length]
 
-  const finalColor = theme.colors[userColor][4]
+  const finalColor = theme.colors[userColor][scheme === "dark" ? 8 : 4]
   return finalColor
 }
 
@@ -50,6 +51,7 @@ export const useProfile = () => {
   const supabaseClient = useSupabaseClient<Database>()
   const user = useUser()
   const theme = useMantineTheme()
+  const scheme = useColorScheme()
 
   const query = supabaseClient
     .from("profile")
@@ -71,13 +73,13 @@ export const useProfile = () => {
     })
     .map((u) => ({
       ...u,
-      color: getUserColor(theme, u.id),
+      color: getUserColor(scheme, theme, u.id),
     }))
 
   const profileWithOrg = profile
     ? {
         ...profile,
-        color: getUserColor(theme, user.id),
+        color: getUserColor(scheme, theme, user.id),
         org: {
           ...profile.org,
           users,

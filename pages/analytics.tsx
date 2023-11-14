@@ -13,6 +13,7 @@ import {
   useProfile,
 } from "@/utils/dataHooks"
 import {
+  Card,
   Center,
   Container,
   Group,
@@ -77,7 +78,7 @@ export default function Analytics() {
       <NextSeo title="Analytics" />
       <Stack spacing={40}>
         <Group position="apart">
-          <Title>Analytics</Title>
+          <Title order={2}>Analytics</Title>
           <SegmentedControl
             w={300}
             value={range.toString()}

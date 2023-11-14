@@ -1,5 +1,5 @@
 import { useEffect, ReactNode } from "react"
-import { AppShell } from "@mantine/core"
+import { AppShell, useMantineColorScheme } from "@mantine/core"
 import { Notifications } from "@mantine/notifications"
 
 import { useSessionContext } from "@supabase/auth-helpers-react"
@@ -10,7 +10,7 @@ import Navbar from "./Navbar"
 import Sidebar from "./Sidebar"
 import { AppContext } from "@/utils/context"
 
-import { useLocalStorage } from "@mantine/hooks"
+import { useColorScheme, useLocalStorage } from "@mantine/hooks"
 import { ModalsProvider } from "@mantine/modals"
 import UpgradeModal from "./UpgradeModal"
 import { useProfile } from "../../utils/dataHooks"
@@ -36,6 +36,8 @@ export default function Layout({ children }: { children: ReactNode }) {
     defaultValue: null,
   })
 
+  const colorScheme = useColorScheme()
+
   useEffect(() => {
     if (!session && !isLoading && !isAuthPage) {
       Router.push("/login")
@@ -55,7 +57,10 @@ export default function Layout({ children }: { children: ReactNode }) {
             className={profile?.org.limited ? "limited" : ""}
             header={!isAuthPage && <Navbar />}
             navbar={!isAuthPage && appId && <Sidebar />}
-            sx={{ backgroundColor: "#fafafa" }}
+            sx={{
+              backgroundColor: colorScheme === "dark" ? "#181818" : "#fafafa",
+              color: colorScheme === "dark" ? "#eee" : "#333",
+            }}
           >
             <ErrorBoundary
               onAfterReportDialogSubmitHandler={() => Router.reload()}
