@@ -279,7 +279,7 @@ export default function DataTable({
           }
 
           th {
-            // position: relative;
+            position: relative;
             border-bottom: 1px solid #ddd;
             border-right: 1px solid #ddd;
           }

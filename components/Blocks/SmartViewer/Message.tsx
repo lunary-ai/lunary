@@ -4,13 +4,13 @@ import {
   Paper,
   Select,
   Space,
-  Spoiler,
   Text,
   Textarea,
   ThemeIcon,
 } from "@mantine/core"
 import { IconRobot, IconUser } from "@tabler/icons-react"
 import ProtectedText from "../ProtectedText"
+import { RenderJson } from "./RenderJson"
 
 const typesColors = {
   ai: "green",
@@ -81,13 +81,24 @@ export function ChatMessage({
               </Text>
             </Text>
 
-            <ProtectedText>
-              {typeof data?.functionCall?.arguments === "string"
-                ? data?.functionCall?.arguments
-                : JSON.stringify(data?.functionCall?.arguments, null, 2)}
-            </ProtectedText>
+            <RenderJson data={data?.functionCall?.arguments} />
           </Code>
         </Text>
+      ) : data?.toolCalls ? (
+        data?.toolCalls.map((toolCall, index) => (
+          <Text key={index}>
+            <Code color={typesColors[data?.role]} block>
+              <Text w={300} color={typesColors[data?.role]} mb="xs">
+                {`${toolCall.type} call: `}
+                <Text span weight="bolder">
+                  {toolCall?.function?.name}
+                </Text>
+              </Text>
+
+              <RenderJson data={toolCall?.function?.arguments} />
+            </Code>
+          </Text>
+        ))
       ) : (
         typeof data?.text === "string" && (
           <Code color={typesColors[data?.role]} block>

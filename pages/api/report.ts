@@ -245,7 +245,7 @@ export default edgeWrapper(async function handler(req: NextRequest) {
         success: true,
       })
     } catch (e: any) {
-      console.error(`Error ingesting event: ${e.message}`, e)
+      console.error(`Error ingesting event: ${e.message}`, { error: e, event })
 
       H.consumeError(e)
 

@@ -18,7 +18,9 @@ export default function UserDetails({}) {
 
   const { user } = useAppUser(id as string)
 
-  const { usage } = useRunsUsage(90, id && parseInt(id as string))
+  const { usage } = id ? useRunsUsage(90, id) : {}
+
+  const { name, email, ...extraProps } = user?.props || {}
 
   return (
     <Stack>
@@ -35,6 +37,12 @@ export default function UserDetails({}) {
               <Text>ID:</Text>
               <CopyText value={user?.external_id} />
             </Group>
+            {email && (
+              <Group spacing={3} align="center">
+                <Text>Email:</Text>
+                <CopyText value={email} />
+              </Group>
+            )}
             <Group>
               <Text>{`Last seen:  ${new Date(user?.last_seen).toLocaleString(
                 undefined,
@@ -43,11 +51,13 @@ export default function UserDetails({}) {
                   day: "numeric",
                   hour: "numeric",
                   minute: "numeric",
-                }
+                },
               )}`}</Text>
             </Group>
 
-            {user?.props && <SmartViewer data={user.props} />}
+            {Object.keys(extraProps).length > 0 && (
+              <SmartViewer data={extraProps} />
+            )}
           </Stack>
         </Group>
       </Card>
