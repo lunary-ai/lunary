@@ -84,9 +84,6 @@ export default edgeWrapper(async function handler(req: Request) {
     method = openai.chat.completions.create.bind(openai.chat.completions)
   }
 
-  // TODO: server side protection for free plan users
-  // Allow only 1 playground run per month
-
   const response = await method({
     model,
     messages,

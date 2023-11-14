@@ -21,7 +21,7 @@ const columns = [
       const user = props.row.original
       return (
         <Group spacing={8}>
-          <AppUserAvatar size={40} user={user} />
+          <AppUserAvatar size={30} user={user} />
           <Text weight={500}>{formatAppUser(user)}</Text>
         </Group>
       )
@@ -40,7 +40,7 @@ export default function Users() {
   }
 
   return (
-    <Stack>
+    <Stack h={"calc(100vh - var(--navbar-size))"}>
       <NextSeo title="Users" />
 
       <DataTable

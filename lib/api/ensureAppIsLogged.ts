@@ -4,7 +4,7 @@ import {
   createPagesServerClient,
 } from "@supabase/auth-helpers-nextjs"
 import { NextResponse } from "next/server"
-import { jsonResponse } from "./helpers"
+import { jsonResponse } from "./edgeHelpers"
 import { Database } from "@/utils/supaTypes"
 
 // Ensure the user is logged in and has access to the app

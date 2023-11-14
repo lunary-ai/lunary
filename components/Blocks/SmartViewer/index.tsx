@@ -7,15 +7,19 @@
  * - Text
  */
 
-import { Code, Highlight, Spoiler } from "@mantine/core"
+import { Code, Spoiler } from "@mantine/core"
 import { useMemo } from "react"
 import MessageViewer from "./MessageViewer"
-import { JsonView, defaultStyles } from "react-json-view-lite"
 import { ChatMessage } from "./Message"
 import ProtectedText from "../ProtectedText"
+import { RenderJson } from "./RenderJson"
 
 const checkIsMessage = (obj) => {
-  return typeof obj?.text === "string" || typeof obj?.functionCall === "object"
+  return (
+    typeof obj?.text === "string" ||
+    typeof obj?.functionCall === "object" ||
+    typeof obj?.toolCalls === "object"
+  )
 }
 
 export default function SmartViewer({
@@ -41,13 +45,6 @@ export default function SmartViewer({
   }, [data])
 
   const isObject = typeof parsed === "object"
-
-  const isFatObject = useMemo(() => {
-    if (!isObject || !parsed) return false
-    if (Object.keys(parsed).length > 3) return true
-    if (JSON.stringify(parsed).length > 300) return true
-    return false
-  }, [parsed])
 
   const isMessages = useMemo(() => {
     if (!parsed) return false
@@ -83,15 +80,7 @@ export default function SmartViewer({
                 <MessageViewer data={parsed} compact={compact} />
               ) : (
                 <Code color="blue">
-                  {isFatObject ? (
-                    <JsonView
-                      data={parsed}
-                      shouldInitiallyExpand={(level) => level < 1}
-                      style={defaultStyles}
-                    />
-                  ) : (
-                    JSON.stringify(parsed, null, 2)
-                  )}
+                  <RenderJson data={parsed} />
                 </Code>
               )
             ) : (
