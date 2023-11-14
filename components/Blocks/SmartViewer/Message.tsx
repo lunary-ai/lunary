@@ -11,6 +11,7 @@ import {
 import { IconRobot, IconUser } from "@tabler/icons-react"
 import ProtectedText from "../ProtectedText"
 import { RenderJson } from "./RenderJson"
+import { useColorScheme } from "@mantine/hooks"
 
 const typesColors = {
   ai: "green",
@@ -18,13 +19,25 @@ const typesColors = {
   user: "blue",
   error: "red",
   function: "violet",
+  tool: "violet",
   system: "gray",
 }
 
-const tc = (theme, role) => {
-  const color = typesColors[role]
-  if (!color) return theme.colors.gray[2]
-  return theme.colors[color][2]
+const RenderFunction = ({ color, codeBg, data }) => {
+  const scheme = useColorScheme()
+
+  return (
+    <Code block bg={codeBg}>
+      <Text w={300} color={color} mb="xs">
+        {`function call: `}
+        <Text span weight="bolder">
+          {data?.name}
+        </Text>
+      </Text>
+
+      <RenderJson data={data?.arguments} />
+    </Code>
+  )
 }
 
 // Use for logging AI chat queries
@@ -40,16 +53,30 @@ export function ChatMessage({
   onChange?: any
   compact?: boolean
 }) {
+  const scheme = useColorScheme()
+
+  const color = typesColors[data?.role] || "gray"
+
+  const codeBg = `rgba(${scheme === "dark" ? "0,0,0" : "255,255,255"},0.6)`
+
   return (
     <Paper
       p={compact ? 0 : 12}
       pt={compact ? 0 : 8}
       sx={(theme) => ({
-        backgroundColor: tc(theme, data?.role),
+        overflow: "hidden",
+        backgroundColor:
+          theme.colors[color][
+            scheme === "dark" ? (color === "gray" ? 7 : 9) : 2
+          ],
       })}
     >
       {!compact && (
-        <Text mb={5} size="xs" color={typesColors[data?.role] + ".9"}>
+        <Text
+          mb={5}
+          size="xs"
+          color={color + "." + (scheme === "dark" ? 2 : 8)}
+        >
           {editable ? (
             <Select
               variant="unstyled"
@@ -60,7 +87,6 @@ export function ChatMessage({
                   color: "inherit",
                 },
               }}
-              color={typesColors[data?.role]}
               value={data?.role}
               data={["ai", "user", "system", "function", "tool"]}
               onChange={(role) => onChange({ ...data, role })}
@@ -72,36 +98,23 @@ export function ChatMessage({
       )}
 
       {data?.functionCall ? (
-        <Text>
-          <Code color={typesColors[data?.role]} block>
-            <Text w={300} color={typesColors[data?.role]} mb="xs">
-              {`function call: `}
-              <Text span weight="bolder">
-                {data?.functionCall?.name}
-              </Text>
-            </Text>
-
-            <RenderJson data={data?.functionCall?.arguments} />
-          </Code>
-        </Text>
+        <RenderFunction
+          color={color}
+          data={data?.functionCall}
+          codeBg={codeBg}
+        />
       ) : data?.toolCalls ? (
         data?.toolCalls.map((toolCall, index) => (
-          <Text key={index}>
-            <Code color={typesColors[data?.role]} block>
-              <Text w={300} color={typesColors[data?.role]} mb="xs">
-                {`${toolCall.type} call: `}
-                <Text span weight="bolder">
-                  {toolCall?.function?.name}
-                </Text>
-              </Text>
-
-              <RenderJson data={toolCall?.function?.arguments} />
-            </Code>
-          </Text>
+          <RenderFunction
+            key={index}
+            color={color}
+            data={toolCall.function}
+            codeBg={codeBg}
+          />
         ))
       ) : (
         typeof data?.text === "string" && (
-          <Code color={typesColors[data?.role]} block>
+          <Code block bg={codeBg}>
             <ProtectedText>
               {editable ? (
                 <Textarea

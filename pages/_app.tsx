@@ -14,6 +14,7 @@ import AnalyticsWrapper from "@/components/Layout/Analytics"
 import { DefaultSeo } from "next-seo"
 
 import localFont from "next/font/local"
+import { useColorScheme } from "@mantine/hooks"
 
 const circularPro = localFont({
   display: "swap",
@@ -53,6 +54,7 @@ const circularPro = localFont({
 export default function App(props: AppProps) {
   const { Component, pageProps } = props
 
+  const scheme = useColorScheme()
   const [supabase] = useState(() => createPagesBrowserClient<Database>())
 
   return (
@@ -81,10 +83,13 @@ export default function App(props: AppProps) {
         <MantineProvider
           withNormalizeCSS
           theme={{
-            colorScheme: "light",
+            colorScheme: scheme || "light",
             defaultRadius: "md",
             // primaryColor: "pink",
             fontFamily: circularPro.style.fontFamily,
+            // globalStyles: {
+            //   c: scheme === "dark" ? "#eee" : "#222",
+            // },
             headings: {
               fontWeight: 700,
             },
@@ -94,6 +99,7 @@ export default function App(props: AppProps) {
                   component: Link,
                 },
               },
+
               Button: {
                 defaultProps: {
                   fw: "500",

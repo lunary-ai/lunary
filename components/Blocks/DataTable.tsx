@@ -24,6 +24,7 @@ import {
 } from "@tabler/icons-react"
 
 import { useVirtual } from "@tanstack/react-virtual"
+import { useColorScheme } from "@mantine/hooks"
 
 // outside for reference
 const emptyArray = []
@@ -48,6 +49,8 @@ export default function DataTable({
 
   //we need a reference to the scrolling element for logic down below
   const tableContainerRef = useRef<HTMLDivElement>(null)
+
+  const scheme = useColorScheme()
 
   const table = useReactTable({
     data: data ?? emptyArray, // So it doesn't break when data is undefined because of reference
@@ -275,7 +278,9 @@ export default function DataTable({
             position: sticky;
             top: 0;
             z-index: 1;
-            background: white;
+            background-color: rgb(
+              ${scheme === "dark" ? "30,30,30" : "255,255,255"}
+            );
           }
 
           th {

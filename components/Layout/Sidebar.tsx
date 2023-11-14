@@ -49,7 +49,7 @@ function NavbarLink({ icon: Icon, label, link, active }) {
       <Link href={link}>
         <ThemeIcon
           variant={active ? "filled" : "light"}
-          color={"blue.4"}
+          color={active ? "blue" : "blue.4"}
           size="lg"
         >
           <Icon size="17px" />
@@ -136,7 +136,7 @@ export default function Sidebar() {
                             innerProps: {},
                           })
                         }
-                        color="purple"
+                        color="violet"
                         icon={<IconBolt size={16} />}
                       >
                         Upgrade

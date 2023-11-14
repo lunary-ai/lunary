@@ -74,15 +74,16 @@ export default function Navbar() {
         <Flex align="center" justify="space-between" h="100%">
           <Group>
             <Anchor component={Link} href="/">
-              <Group spacing="sm">
-                <IconAnalyze />
-                <Text weight="bold">llmonitor</Text>
+              <Group mx="sm">
+                <IconAnalyze size={26} />
+                {/* <Text weight="bold">llmonitor</Text> */}
               </Group>
             </Anchor>
 
             {!loading && user && apps?.length && (
               <Select
                 size="xs"
+                ml="lg"
                 placeholder="Select an app"
                 value={app?.id}
                 onChange={(id) => setAppId(id)}

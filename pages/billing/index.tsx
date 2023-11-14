@@ -145,7 +145,7 @@ export default function Billing() {
                 position="insideTop"
                 fontSize={14}
                 fill="#d00"
-                style={{ backgroundColor: "rgba(0,0,0,0.5)", padding: "2px" }}
+                style={{ padding: "2px" }}
               >
                 {`plan limit (${eventsAllowance[plan]} / day)`}
               </Label>
