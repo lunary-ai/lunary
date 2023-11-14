@@ -10,29 +10,33 @@ export default apiWrapper(async function handler(
   res: NextApiResponse,
 ) {
   const { supabase, session } = await ensureIsLogged(req, res)
-
-  const {
-    data: { org_id },
-  } = await supabase
-    .from("profile")
-    .select("org_id")
-    .eq("id", session.user.id)
-    .single()
-    .throwOnError()
-
   const { appId } = req.body
 
-  // Get number of runs each day in the last 30 days, even if 0
+  let orgId = null
+
+  if (!appId) {
+    const {
+      data: { org_id },
+    } = await supabase
+      .from("profile")
+      .select("org_id")
+      .eq("id", session?.user?.id)
+      .single()
+      .throwOnError()
+
+    orgId = org_id
+  }
+
+  // If appId is not provided, we check for all apps in the org
   const rows = await sql`
     select
       date_trunc('day', r.created_at) as date,
       count(*) as count
     from
       run r 
-    join
-      app a on r.app = a.id
+    ${!appId ? sql`join app a on r.app = a.id` : sql``}
     where
-      a.org_id = ${org_id} and
+      ${!appId ? sql`a.org_id = ${orgId} and` : sql``}
       ${appId ? sql`r.app = ${appId} and` : sql``}
       r.created_at > now() - interval '30 days'
     group by
