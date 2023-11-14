@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next"
-import { ensureHasAccessToApp } from "@/lib/api/ensureAppIsLogged"
+import { ensureIsLogged } from "@/lib/api/ensureAppIsLogged"
 import { apiWrapper } from "@/lib/api/helpers"
 import postgres from "postgres"
 
@@ -9,7 +9,16 @@ export default apiWrapper(async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  await ensureHasAccessToApp(req, res)
+  const { supabase, session } = await ensureIsLogged(req, res)
+
+  const {
+    data: { org_id },
+  } = await supabase
+    .from("profile")
+    .select("org_id")
+    .eq("id", session.user.id)
+    .single()
+    .throwOnError()
 
   const { appId } = req.body
 
@@ -20,9 +29,12 @@ export default apiWrapper(async function handler(
       count(*) as count
     from
       run r 
+    join
+      app a on r.app = a.id
     where
-      r.app = ${appId}
-      and r.created_at > now() - interval '30 days'
+      a.org_id = ${org_id} and
+      ${appId ? sql`r.app = ${appId} and` : sql``}
+      r.created_at > now() - interval '30 days'
     group by
       date
     order by

@@ -86,6 +86,11 @@ export const UpgradeBody = ({ highlight }) => {
               Pro
             </Text>
             {isFree && <Badge variant="outline">-50%</Badge>}
+            {isPro && (
+              <Text size="lg" color="dimmed" ta="center">
+                (current plan)
+              </Text>
+            )}
           </Group>
 
           <Group my={20} align="center" spacing={10}>
@@ -106,6 +111,7 @@ export const UpgradeBody = ({ highlight }) => {
             features={[
               { id: "events", title: "4k events per day" },
               { id: "team", title: "4 team members" },
+              { id: "team", title: "3 apps" },
               { id: "analytics", title: "Advanced Analytics" },
               { id: "play", title: "AI Playground" },
               { id: "export", title: "Export data" },
@@ -126,12 +132,6 @@ export const UpgradeBody = ({ highlight }) => {
             >
               Claim -50% forever
             </Button>
-          )}
-
-          {isPro && (
-            <Text size="lg" mt="xs" mb="xl" weight={500}>
-              (Your current plan.)
-            </Text>
           )}
         </Card>
         <Card p="xl" withBorder>
@@ -163,6 +163,7 @@ export const UpgradeBody = ({ highlight }) => {
             features={[
               { id: "events", title: "20k events per day" },
               { id: "team", title: "10 team members" },
+              { id: "team", title: "Unlimited apps" },
               { id: "play", title: "Unlimited AI Playground" },
               { id: "evaluation", title: "Tests & Evaluations" },
               { id: "api", title: "API access" },

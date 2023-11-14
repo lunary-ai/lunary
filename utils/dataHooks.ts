@@ -515,12 +515,11 @@ export function useAppUser(id: string) {
   return { user, loading: isLoading }
 }
 
-// Universal SWR hook for the current app
-export function useAppSWR(url: string, props: any = {}) {
-  const { app } = useCurrentApp()
+export function useFetchSWR(url: string, props: any = {}) {
+  const key = url ? JSON.stringify({ url, props }) : null
 
   const { data, isValidating } = useSWR(
-    app ? app.id + url : null,
+    key,
     () =>
       fetch(`/api/${url}`, {
         method: "POST",
@@ -528,10 +527,22 @@ export function useAppSWR(url: string, props: any = {}) {
           "Content-Type": "application/json",
         },
         // automatically append the app id to the request
-        body: JSON.stringify({ ...props, appId: app.id }),
+        body: JSON.stringify({ ...props }),
       }).then((res) => res.json()),
     softOptions,
   )
 
   return { data, loading: isValidating }
+}
+
+// Universal SWR hook for the current app
+export function useAppSWR(url: string, props: any = {}) {
+  const { app } = useCurrentApp()
+
+  const { data, loading } = useFetchSWR(app && url, {
+    ...props,
+    appId: app?.id,
+  })
+
+  return { data, loading }
 }
