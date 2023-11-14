@@ -4,12 +4,17 @@ import {
   createPagesServerClient,
 } from "@supabase/auth-helpers-nextjs"
 import { NextResponse } from "next/server"
-import { jsonResponse } from "./edgeHelpers"
+
 import { Database } from "@/utils/supaTypes"
+import { jsonResponse } from "./jsonResponse"
+import { AuthSession } from "@supabase/supabase-js"
 
 // Ensure the user is logged in and has access to the app
 // Works for both Edge functions and normal API routes
-export const ensureIsLogged = async (req, res = null) => {
+export const ensureIsLogged = async (
+  req,
+  res = null,
+): Promise<{ session: AuthSession; supabase: SupabaseClient<Database> }> => {
   // if no res, that means we're on an Edge function
   let supabase: SupabaseClient<Database>
   let isEdge = false

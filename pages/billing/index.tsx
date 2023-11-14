@@ -1,5 +1,5 @@
 import { formatLargeNumber } from "@/utils/format"
-import { useProfile } from "@/utils/dataHooks"
+import { useAppSWR, useFetchSWR, useProfile } from "@/utils/dataHooks"
 import {
   Badge,
   Stack,
@@ -11,44 +11,40 @@ import {
   Container,
   Button,
   Alert,
+  Group,
 } from "@mantine/core"
 import { modals } from "@mantine/modals"
 import { useSupabaseClient } from "@supabase/auth-helpers-react"
-import { IconInfoTriangle } from "@tabler/icons-react"
+import { IconBolt, IconInfoTriangle } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { useEffect, useState } from "react"
+import LineChart from "@/components/Blocks/Analytics/LineChart"
+import { Label, ReferenceLine } from "recharts"
 
 const seatAllowance = {
   free: 1,
-  pro: 5,
+  pro: 4,
+  unlimited: 10,
   custom: 100,
+}
+
+const eventsAllowance = {
+  free: 1000,
+  pro: 4000,
+  unlimited: 20000,
+  custom: 1000000,
 }
 
 export default function Billing() {
   const { profile, loading } = useProfile()
-  const supabaseClient = useSupabaseClient()
 
-  const [usage, setUsage] = useState(0)
+  const { data: usage } = useFetchSWR("/analytics/usage")
 
-  useEffect(() => {
-    if (profile) {
-      // last 30 days of runs
-      supabaseClient
-        .from("run")
-        .select("*", { count: "estimated", head: true })
-        .gte(
-          "created_at",
-          new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-        )
-        .then(({ count }) => {
-          setUsage(count)
-        })
-    }
-  }, [profile])
+  const plan = profile?.org.plan
 
   if (loading) return <Loader />
 
-  const percent = profile?.org.plan === "pro" ? (usage / 30000) * 100 : 1
+  // const percent = plan === "pro" ? (usage / eventsAllowance[plan]) * 100 : 1
 
   const redirectToCustomerPortal = async () => {
     const body = await fetch("/api/user/stripe-portal", {
@@ -69,55 +65,58 @@ export default function Billing() {
     window.location.href = url
   }
 
+  const canUpgrade = ["free", "pro"].includes(plan)
+
+  console.log(usage)
+
   return (
-    <Container>
+    <Container className="unblockable">
       <NextSeo title="Billing" />
       <Stack>
-        <Title>Billing</Title>
+        <Group position="apart">
+          <Title>Billing</Title>
 
-        <Text size="lg">
-          You are currently on the <Badge>{profile?.org?.plan}</Badge> plan.
-        </Text>
-
-        {profile?.org?.plan === "free" && (
-          <>
-            {percent > 99 && (
-              <Alert
-                color="red"
-                variant="outline"
-                icon={<IconInfoTriangle />}
-                title="Allowance Reached"
-              >
-                You have reached your monthly request allowance. Please upgrade
-                to keep your data from being deleted.
-              </Alert>
-            )}
+          {canUpgrade && (
             <Button
+              variant="gradient"
+              size="xs"
+              gradient={{ from: "#0788ff", to: "#9900ff", deg: 30 }}
+              leftIcon={<IconBolt size={16} />}
               onClick={() =>
                 modals.openContextModal({
                   modal: "upgrade",
                   size: 900,
-                  innerProps: {
-                    highlight: "events",
-                  },
+                  innerProps: {},
                 })
               }
-              w={300}
             >
               Upgrade
             </Button>
-          </>
+          )}
+        </Group>
+        <Text size="lg">
+          You are currently on the <Badge>{plan}</Badge> plan.
+        </Text>
+        {profile?.org?.limited && (
+          <Alert
+            color="red"
+            variant="outline"
+            icon={<IconInfoTriangle />}
+            title="Allowance Reached"
+          >
+            You have reached your request allowance. Please upgrade to restore
+            access.
+          </Alert>
         )}
 
-        <Card withBorder radius="md" padding="xl">
+        {/* <Card withBorder radius="md" padding="xl">
           <Stack spacing="sm">
             <Text fz="md" fw={700} c="dimmed">
               Monthly Usage
             </Text>
             <Text fz="lg" fw={500}>
               {formatLargeNumber(usage)} /{" "}
-              {profile?.org.plan === "free" ? formatLargeNumber(30000) : "∞"}{" "}
-              requests
+              {plan === "free" ? formatLargeNumber(30000) : "∞"} requests
             </Text>
             <Progress
               value={percent}
@@ -126,38 +125,63 @@ export default function Billing() {
               color={percent > 99 ? "red" : "blue"}
             />
           </Stack>
-        </Card>
+        </Card> */}
 
+        <LineChart
+          title={<Title order={3}>Events Usage</Title>}
+          range={30}
+          data={usage}
+          formatter={(val) => `${val} runs`}
+          props={["count"]}
+          chartExtra={
+            <ReferenceLine
+              y={eventsAllowance[plan]}
+              fontWeight={600}
+              ifOverflow="extendDomain"
+              stroke="red"
+              strokeDasharray="3 3"
+            >
+              <Label
+                position="insideTop"
+                fontSize={14}
+                fill="#d00"
+                style={{ backgroundColor: "rgba(0,0,0,0.5)", padding: "2px" }}
+              >
+                {`plan limit (${eventsAllowance[plan]} / day)`}
+              </Label>
+            </ReferenceLine>
+          }
+        />
         <Card withBorder radius="md" padding="xl">
           <Stack spacing="sm">
             <Text fz="md" fw={700} c="dimmed">
               Seat Allowance
             </Text>
             <Text fz="lg" fw={500}>
-              {profile?.org.users?.length} / {seatAllowance[profile?.org.plan]}{" "}
-              users
+              {profile?.org.users?.length} / {seatAllowance[plan]} users
             </Text>
             <Progress
-              value={
-                (profile?.org.users.length / seatAllowance[profile?.org.plan]) *
-                100
-              }
+              value={(profile?.org.users.length / seatAllowance[plan]) * 100}
               size="lg"
               color="orange"
               radius="xl"
             />
           </Stack>
         </Card>
-
         {profile.org.stripe_customer && (
           <Card withBorder radius="md" padding="xl">
-            <Title order={3} mb="lg">
-              Customer Portal
-            </Title>
+            <Stack align="start">
+              <Title order={3}>Customer Portal</Title>
 
-            <Button size="sm" onClick={redirectToCustomerPortal}>
-              Manage Billing
-            </Button>
+              <Text>
+                Use the Customer Portal to update your payment method, download
+                invoices and view your billing history.
+              </Text>
+
+              <Button size="sm" onClick={redirectToCustomerPortal}>
+                Manage Billing
+              </Button>
+            </Stack>
           </Card>
         )}
       </Stack>

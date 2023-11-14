@@ -127,7 +127,7 @@ export default function Sidebar() {
                 <Menu.Label>Account</Menu.Label>
                 {process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY && (
                   <>
-                    {profile?.org.plan === "free" && (
+                    {["free", "pro"].includes(profile?.org.plan) && (
                       <Menu.Item
                         onClick={() =>
                           modals.openContextModal({

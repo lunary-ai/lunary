@@ -108,8 +108,6 @@ export default function AppAnalytics() {
 
   const { data: appUsage } = useAppSWR("/analytics/usage")
 
-  const allowedLimit = profile?.org.plan === "pro" ? 5000 : 1000
-
   return (
     <Container className="unblockable">
       <Stack>
@@ -170,72 +168,67 @@ export default function AppAnalytics() {
           </Card>
 
           <Card withBorder p="lg">
-            <Group position="apart" align="center">
-              <Title order={3}>Api Key</Title>
-              {/* <Button onClick={() => alert("TODO")}>
+            <Stack>
+              <Group position="apart" align="center">
+                <Title order={3}>Api Key</Title>
+                {/* <Button onClick={() => alert("TODO")}>
                 Refresh Api Key
               </Button> */}
-            </Group>
+              </Group>
 
-            <Stack mt="md">
-              <CopyText value={profile?.org.apiKey} />
+              <Text>
+                Use this key to authenticate with the Data API and fetch data
+                from your apps.
+              </Text>
+
+              <Text>
+                API Key: <CopyText value={profile?.org.apiKey} />
+              </Text>
             </Stack>
           </Card>
 
-          {/* <Card withBorder p="lg"> */}
           <LineChart
-            title={<Title order={3}>Usage</Title>}
+            title={<Title order={3}>App Usage</Title>}
             range={30}
             data={appUsage}
             formatter={(val) => `${val} runs`}
             props={["count"]}
-            chartExtra={
-              <ReferenceLine
-                y={allowedLimit}
-                fontWeight={600}
-                ifOverflow="extendDomain"
-                stroke="red"
-                strokeDasharray="3 3"
-              >
-                <Label
-                  position="insideTop"
-                  fontSize={14}
-                  fill="#d00"
-                  style={{ backgroundColor: "rgba(0,0,0,0.5)", padding: "2px" }}
-                >
-                  plan limit
-                </Label>
-              </ReferenceLine>
-            }
           />
 
           {profile?.role === "admin" && (
             <Card withBorder p="lg" sx={{ overflow: "visible" }}>
-              <Title mb="md" order={4}>
-                Danger Zone
-              </Title>
+              <Stack align="start">
+                <Title order={4}>Danger Zone</Title>
 
-              <Popover width={200} position="bottom" withArrow shadow="md">
-                <Popover.Target>
-                  <Button color="red">Delete App</Button>
-                </Popover.Target>
-                <Popover.Dropdown>
-                  <Text mb="md">
-                    Are you sure you want to delete this app? This action is
-                    irreversible and it will delete all associated data.
-                  </Text>
-                  <Button
-                    color="red"
-                    onClick={() => {
-                      drop({ id: app.id })
-                      setAppId(null)
-                      Router.push("/")
-                    }}
-                  >
-                    Delete
-                  </Button>
-                </Popover.Dropdown>
-              </Popover>
+                <Text>
+                  Deleting your app is irreversible and it will delete all
+                  associated data.
+                  <br />
+                  We <b>cannot</b> recover your data once it's deleted.
+                </Text>
+
+                <Popover width={200} position="bottom" withArrow shadow="md">
+                  <Popover.Target>
+                    <Button color="red">Delete App</Button>
+                  </Popover.Target>
+                  <Popover.Dropdown>
+                    <Text mb="md">
+                      Are you sure you want to delete this app? This action is
+                      irreversible and it will delete all associated data.
+                    </Text>
+                    <Button
+                      color="red"
+                      onClick={() => {
+                        drop({ id: app.id })
+                        setAppId(null)
+                        Router.push("/")
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  </Popover.Dropdown>
+                </Popover>
+              </Stack>
             </Card>
           )}
         </Stack>

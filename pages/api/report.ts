@@ -7,8 +7,9 @@ import { NextRequest } from "next/server"
 import cors from "@/lib/api/cors"
 import { Json } from "../../utils/supaTypes"
 import { Event, cleanEvent } from "@/lib/ingest"
-import { edgeWrapper, jsonResponse } from "@/lib/api/edgeHelpers"
+import { edgeWrapper } from "@/lib/api/edgeHelpers"
 import { H } from "@highlight-run/next/server"
+import { jsonResponse } from "@/lib/api/jsonResponse"
 
 export const config = {
   runtime: "edge",
