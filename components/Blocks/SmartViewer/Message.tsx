@@ -49,7 +49,7 @@ export function ChatMessage({
       })}
     >
       {!compact && (
-        <Text size="xs" color={typesColors[data?.role] + ".9"}>
+        <Text mb={5} size="xs" color={typesColors[data?.role] + ".9"}>
           {editable ? (
             <Select
               variant="unstyled"
@@ -70,59 +70,57 @@ export function ChatMessage({
           )}
         </Text>
       )}
-      <Spoiler mt={5} maxHeight={300} showLabel="Show all ↓" hideLabel="Hide ↑">
-        {data?.functionCall ? (
-          <Text>
-            <Code color={typesColors[data?.role]} block>
-              <Text w={300} color={typesColors[data?.role]} mb="xs">
-                {`function call: `}
-                <Text span weight="bolder">
-                  {data?.functionCall?.name}
-                </Text>
-              </Text>
 
-              <ProtectedText>
-                {typeof data?.functionCall?.arguments === "string"
-                  ? data?.functionCall?.arguments
-                  : JSON.stringify(data?.functionCall?.arguments, null, 2)}
-              </ProtectedText>
-            </Code>
-          </Text>
-        ) : (
-          typeof data?.text === "string" && (
-            <Code color={typesColors[data?.role]} block>
-              <ProtectedText>
-                {editable ? (
-                  <Textarea
-                    value={data?.text}
-                    variant="unstyled"
-                    p={0}
-                    styles={{
-                      root: {
-                        fontFamily: "inherit",
-                        fontSize: "inherit",
-                      },
-                      input: {
-                        padding: "0 !important",
-                        fontFamily: "inherit",
-                        fontSize: "inherit",
-                      },
-                    }}
-                    autosize
-                    minRows={1}
-                    onChange={(e) =>
-                      onChange({ ...data, text: e.target.value })
-                    }
-                    style={{ width: "100%" }}
-                  />
-                ) : (
-                  data?.text
-                )}
-              </ProtectedText>
-            </Code>
-          )
-        )}
-      </Spoiler>
+      {data?.functionCall ? (
+        <Text>
+          <Code color={typesColors[data?.role]} block>
+            <Text w={300} color={typesColors[data?.role]} mb="xs">
+              {`function call: `}
+              <Text span weight="bolder">
+                {data?.functionCall?.name}
+              </Text>
+            </Text>
+
+            <ProtectedText>
+              {typeof data?.functionCall?.arguments === "string"
+                ? data?.functionCall?.arguments
+                : JSON.stringify(data?.functionCall?.arguments, null, 2)}
+            </ProtectedText>
+          </Code>
+        </Text>
+      ) : (
+        typeof data?.text === "string" && (
+          <Code color={typesColors[data?.role]} block>
+            <ProtectedText>
+              {editable ? (
+                <Textarea
+                  value={data?.text}
+                  variant="unstyled"
+                  p={0}
+                  styles={{
+                    root: {
+                      fontFamily: "inherit",
+                      fontSize: "inherit",
+                    },
+                    input: {
+                      padding: "0 !important",
+                      fontFamily: "inherit",
+                      fontSize: "inherit",
+                    },
+                  }}
+                  autosize
+                  minRows={1}
+                  onChange={(e) => onChange({ ...data, text: e.target.value })}
+                  style={{ width: "100%" }}
+                />
+              ) : (
+                data?.text
+              )}
+            </ProtectedText>
+          </Code>
+        )
+      )}
+
       <style jsx>{`
         :global(pre) {
           white-space: pre-wrap;
