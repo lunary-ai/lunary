@@ -14,12 +14,12 @@ const updateLimitedStatus = async () => {
   const alreadyLimited = await sql`UPDATE "public"."org" p
     SET limited = false 
     WHERE limited = true AND p.id NOT IN (
-      SELECT p.id
-      FROM "public"."profile" p
-      JOIN "public"."app" a ON a.org_id = p.id
+      SELECT o.id
+      FROM "public"."org" o
+      JOIN "public"."app" a ON a.org_id = o.id
       JOIN "public"."run" r ON r.app = a.id
       WHERE r.created_at >= CURRENT_DATE - INTERVAL '3 days'
-      GROUP BY p.id
+      GROUP BY o.id
       HAVING COUNT(r.id) > 1000
     )
     RETURNING *;
