@@ -2,9 +2,6 @@
 
 # 📈 llmonitor
 
-> _As the shepherd tends to his flock, so the developer must monitor his LLM apps, for in vigilance lies the safeguarding of efficiency and the preservation of order._  
-> _\- GPT_
-
 **Open-source monitoring & observability for AI apps and agents**
 
 [website](https://llmonitor.com) - [docs](https://llmonitor.com/docs) - [self host](https://llmonitor.com/docs/self-host)
@@ -18,9 +15,9 @@
 LLMonitor helps AI devs monitor their apps in production, with features such as:
 
 - 💵 Cost, token & latency analytics
+- 🔍 Log & edit prompts
+- 🐛 Trace agents/chains to debug easily
 - 👪 Track users
-- 🐛 Traces to debug easily
-- 🔍 Inspect & edit prompts
 - 🏷️ Label and export fine-tuning datasets
 - 🖲️ Collect feedback from users
 - 🧪 Unit tests & prompt evaluations (soon)
