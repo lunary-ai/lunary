@@ -23,19 +23,17 @@ const typesColors = {
   system: "gray",
 }
 
-const RenderFunction = ({ color, codeBg, data }) => {
-  const scheme = useColorScheme()
-
+const RenderFunction = ({ color, compact, codeBg, data }) => {
   return (
     <Code block bg={codeBg}>
-      <Text w={300} color={color} mb="xs">
+      <Text w={300} color={color} mb={compact ? 2 : "xs"} mt={compact ? -6 : 0}>
         {`function call: `}
         <Text span weight="bolder">
           {data?.name}
         </Text>
       </Text>
 
-      <RenderJson data={data?.arguments} />
+      <RenderJson compact={compact} data={data?.arguments} />
     </Code>
   )
 }
@@ -63,6 +61,7 @@ export function ChatMessage({
     <Paper
       p={compact ? 0 : 12}
       pt={compact ? 0 : 8}
+      mah={compact ? 60 : undefined}
       sx={(theme) => ({
         overflow: "hidden",
         backgroundColor:
@@ -101,6 +100,7 @@ export function ChatMessage({
         <RenderFunction
           color={color}
           data={data?.functionCall}
+          compact={compact}
           codeBg={codeBg}
         />
       ) : data?.toolCalls ? (
@@ -108,6 +108,7 @@ export function ChatMessage({
           <RenderFunction
             key={index}
             color={color}
+            compact={compact}
             data={toolCall.function}
             codeBg={codeBg}
           />
