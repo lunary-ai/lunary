@@ -72,6 +72,11 @@ const MODEL_COSTS: ModelCost[] = [
     inputCost: 0.015,
     outputCost: 0.015,
   },
+  {
+    models: ["whisper"],
+    inputCost: 0.1, // $ per 1000 seconds
+    outputCost: 0,
+  },
 ]
 
 export const calcRunCost = (run) => {
