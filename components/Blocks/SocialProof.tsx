@@ -16,14 +16,10 @@ export default function SocialProof() {
           <Avatar size={42} radius="xl" src={src} />
         ))}
       </Avatar.Group>
-      <Stack spacing={0}>
+      <Stack gap={0}>
         <Rating value={5} readOnly />
         <Text color="dimmed">
-          <Text
-            color={scheme === "light" ? "black" : "white"}
-            span
-            weight="bolder"
-          >
+          <Text color={scheme === "light" ? "black" : "white"} span fw="bolder">
             450+
           </Text>{" "}
           AI devs build better apps

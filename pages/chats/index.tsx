@@ -89,8 +89,8 @@ const ChatReplay = ({ run }) => {
   return (
     <Stack>
       <Card withBorder>
-        <Stack spacing="xs">
-          <Group position="apart">
+        <Stack gap="xs">
+          <Group justify="space-between">
             <Text>User</Text>
             <Text>
               {user ? (
@@ -100,15 +100,15 @@ const ChatReplay = ({ run }) => {
               )}
             </Text>
           </Group>
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>First message</Text>
             <Text>{formatDateTime(run.created_at)}</Text>
           </Group>
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Last message</Text>
             <Text>{formatDateTime(run.ended_at)}</Text>
           </Group>
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Messages</Text>
             <Text>{messages?.length}</Text>
           </Group>
@@ -119,7 +119,7 @@ const ChatReplay = ({ run }) => {
         onClick={() => {
           Router.push(`/traces/${run.id}`)
         }}
-        rightIcon={<IconNeedleThread size={16} />}
+        rightSection={<IconNeedleThread size="16" />}
       >
         View trace
       </Button>
@@ -127,7 +127,7 @@ const ChatReplay = ({ run }) => {
       <Title order={3}>Replay</Title>
 
       {messages && (
-        <Stack spacing={0}>
+        <Stack gap={0}>
           {messages?.map(({ role, content, took, feedback }) => (
             <>
               <BubbleMessage

@@ -60,8 +60,8 @@ function Invite() {
           },
         })
       }
-      sx={{ float: "right" }}
-      leftIcon={<IconUserPlus size={16} />}
+      style={{ float: "right" }}
+      leftSection={<IconUserPlus size="16" />}
     >
       Invite
     </Button>
@@ -95,7 +95,7 @@ function RenamableField({ defaultValue, onRename }) {
       onClick={() => setFocused(true)}
       style={{ cursor: "pointer" }}
     >
-      {defaultValue} <IconPencil size={16} />
+      {defaultValue} <IconPencil size="16" />
     </Title>
   )
 }
@@ -126,7 +126,7 @@ export default function AppAnalytics() {
           </Card>
 
           <Card withBorder p={0}>
-            <Group position="apart" align="center" p="lg">
+            <Group justify="space-between" align="center" p="lg">
               <RenamableField
                 defaultValue={profile?.org.name}
                 onRename={(name) => {
@@ -139,17 +139,17 @@ export default function AppAnalytics() {
             </Group>
 
             <Table striped verticalSpacing="lg" horizontalSpacing="lg">
-              <thead>
-                <tr>
-                  <th>User</th>
-                  <th>Email</th>
-                  <th>Role</th>
-                </tr>
-              </thead>
-              <tbody>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>User</Table.Th>
+                  <Table.Th>Email</Table.Th>
+                  <Table.Th>Role</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
                 {profile?.org.users?.map((user, i) => (
-                  <tr key={i}>
-                    <td>
+                  <Table.Tr key={i}>
+                    <Table.Td>
                       <Group>
                         <UserAvatar profile={user} />
                         <Text>{user?.name}</Text>
@@ -158,18 +158,18 @@ export default function AppAnalytics() {
                           <Badge color="blue">You</Badge>
                         ) : null}
                       </Group>
-                    </td>
-                    <td>{user?.email}</td>
-                    <td>{user?.role}</td>
-                  </tr>
+                    </Table.Td>
+                    <Table.Td>{user?.email}</Table.Td>
+                    <Table.Td>{user?.role}</Table.Td>
+                  </Table.Tr>
                 ))}
-              </tbody>
+              </Table.Tbody>
             </Table>
           </Card>
 
           <Card withBorder p="lg">
             <Stack>
-              <Group position="apart" align="center">
+              <Group justify="space-between" align="center">
                 <Title order={3}>Api Key</Title>
                 {/* <Button onClick={() => alert("TODO")}>
                 Refresh Api Key
@@ -196,7 +196,7 @@ export default function AppAnalytics() {
           />
 
           {profile?.role === "admin" && (
-            <Card withBorder p="lg" sx={{ overflow: "visible" }}>
+            <Card withBorder p="lg" style={{ overflow: "visible" }}>
               <Stack align="start">
                 <Title order={4}>Danger Zone</Title>
 

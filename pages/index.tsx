@@ -28,6 +28,7 @@ import { NextSeo } from "next-seo"
 export default function Home() {
   const [modalOpened, setModalOpened] = useState(false)
   const [newAppName, setNewAppName] = useState("")
+  console.log(newAppName)
   const { setAppId } = useCurrentApp()
 
   const { apps, insert, loading } = useApps()
@@ -37,6 +38,8 @@ export default function Home() {
     await insert([{ name: newAppName, org_id: profile.org_id }])
 
     setModalOpened(false)
+
+    console.log("OK")
 
     analytics.track("Create App", {
       name: newAppName,
@@ -107,7 +110,10 @@ export default function Home() {
                 </Anchor>
                 <Group>
                   <Text>
-                    Tracking ID: <Code color="pink">{app.id}</Code>
+                    Tracking ID:{" "}
+                    <Code color="var(--mantine-color-pink-light)">
+                      {app.id}
+                    </Code>
                   </Text>
                   <CopyButton value={app.id} timeout={2000}>
                     {({ copied, copy }) => (
@@ -117,6 +123,7 @@ export default function Home() {
                         position="right"
                       >
                         <ActionIcon
+                          variant="transparent"
                           color={copied ? "pink" : "gray"}
                           onClick={copy}
                         >

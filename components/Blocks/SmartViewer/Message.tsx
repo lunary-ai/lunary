@@ -7,21 +7,13 @@ import {
   Text,
   Textarea,
   ThemeIcon,
+  useMantineTheme,
 } from "@mantine/core"
 import { IconRobot, IconUser } from "@tabler/icons-react"
 import ProtectedText from "../ProtectedText"
 import { RenderJson } from "./RenderJson"
 import { useColorScheme } from "@mantine/hooks"
-
-const typesColors = {
-  ai: "green",
-  human: "blue",
-  user: "blue",
-  error: "red",
-  function: "violet",
-  tool: "violet",
-  system: "gray",
-}
+import { getColorForRole } from "../../../utils/colors"
 
 const RenderFunction = ({ color, codeBg, data }) => {
   const scheme = useColorScheme()
@@ -30,7 +22,7 @@ const RenderFunction = ({ color, codeBg, data }) => {
     <Code block bg={codeBg}>
       <Text w={300} color={color} mb="xs">
         {`function call: `}
-        <Text span weight="bolder">
+        <Text span fw="bolder">
           {data?.name}
         </Text>
       </Text>
@@ -54,8 +46,19 @@ export function ChatMessage({
   compact?: boolean
 }) {
   const scheme = useColorScheme()
+  const theme = useMantineTheme()
 
-  const color = typesColors[data?.role] || "gray"
+  // console.log(data?.role)
+
+  const color = getColorForRole(data?.role)
+
+  // console.log(`var(--mantine-color-${color}-light)`)
+  // console.log()
+  // const color = data?.role
+  //   ? `var(--mantine-color-${typesColors[data?.role]}-light)`
+  //   : "gray"
+  // const color =
+  //   `var(--mantine-color-${typesColors[data?.role]}-light)` || "gray"
 
   const codeBg = `rgba(${scheme === "dark" ? "0,0,0" : "255,255,255"},0.6)`
 
@@ -63,13 +66,13 @@ export function ChatMessage({
     <Paper
       p={compact ? 0 : 12}
       pt={compact ? 0 : 8}
-      sx={(theme) => ({
+      style={{
         overflow: "hidden",
-        backgroundColor:
-          theme.colors[color][
-            scheme === "dark" ? (color === "gray" ? 7 : 9) : 2
-          ],
-      })}
+        backgroundColor: color,
+        // theme.colors[color][
+        //   scheme === "dark" ? (color === "gray" ? 7 : 9) : 2
+        // ],
+      }}
     >
       {!compact && (
         <Text
@@ -82,6 +85,7 @@ export function ChatMessage({
               variant="unstyled"
               size="xs"
               w={75}
+              withCheckIcon={false}
               styles={{
                 input: {
                   color: "inherit",

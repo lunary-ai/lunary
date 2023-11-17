@@ -8,12 +8,13 @@ import {
 
 import { useMantineTheme } from "@mantine/core"
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
-import { useContext } from "react"
+import { useContext, useEffect, useState } from "react"
 import { calcRunCost } from "./calcCosts"
 import { AppContext } from "./context"
 import { Database } from "./supaTypes"
 import useSWR from "swr"
 import { useColorScheme } from "@mantine/hooks"
+import { useRouter } from "next/router"
 
 const softOptions = {
   dedupingInterval: 10000,
@@ -160,8 +161,9 @@ export function useModelNames() {
     app_id: appId,
   })
 
-  const { data: modelNames } = useQuery<string[]>(query)
-  return { modelNames }
+  const { data } = useQuery<string[]>(query)
+
+  return { modelNames: data || [] }
 }
 
 export function useTags() {

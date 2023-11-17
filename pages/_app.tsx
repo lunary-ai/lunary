@@ -1,20 +1,21 @@
-import { AppProps } from "next/app"
-import Head from "next/head"
-import { MantineProvider } from "@mantine/core"
+import "@mantine/core/styles.css"
 import "../styles/globals.css"
+
+import { MantineProvider, createTheme } from "@mantine/core"
+import type { AppProps } from "next/app"
+import Head from "next/head"
 
 import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs"
 import { SessionContextProvider } from "@supabase/auth-helpers-react"
 
 import Layout from "@/components/Layout"
-import { Database } from "@/utils/supaTypes"
-import { useState } from "react"
-import Link from "next/link"
 import AnalyticsWrapper from "@/components/Layout/Analytics"
+import { Database } from "@/utils/supaTypes"
 import { DefaultSeo } from "next-seo"
+import Link from "next/link"
+import { useState } from "react"
 
 import localFont from "next/font/local"
-import { useColorScheme } from "@mantine/hooks"
 
 const circularPro = localFont({
   display: "swap",
@@ -51,10 +52,28 @@ const circularPro = localFont({
   ],
 })
 
-export default function App(props: AppProps) {
-  const { Component, pageProps } = props
+const theme = createTheme({
+  defaultRadius: "md",
+  fontFamily: circularPro.style.fontFamily,
+  headings: {
+    fontWeight: "700",
+  },
+  components: {
+    Anchor: {
+      defaultProps: {
+        component: Link,
+      },
+    },
 
-  const scheme = useColorScheme()
+    Button: {
+      defaultProps: {
+        fw: "500",
+      },
+    },
+  },
+})
+
+export default function App({ Component, pageProps }: AppProps) {
   const [supabase] = useState(() => createPagesBrowserClient<Database>())
 
   return (
@@ -80,34 +99,7 @@ export default function App(props: AppProps) {
           titleTemplate="%s | LLMonitor"
           defaultTitle="Dashboard | LLMonitor"
         />
-        <MantineProvider
-          withNormalizeCSS
-          theme={{
-            colorScheme: scheme || "light",
-            defaultRadius: "md",
-            // primaryColor: "pink",
-            fontFamily: circularPro.style.fontFamily,
-            // globalStyles: {
-            //   c: scheme === "dark" ? "#eee" : "#222",
-            // },
-            headings: {
-              fontWeight: 700,
-            },
-            components: {
-              Anchor: {
-                defaultProps: {
-                  component: Link,
-                },
-              },
-
-              Button: {
-                defaultProps: {
-                  fw: "500",
-                },
-              },
-            },
-          }}
-        >
+        <MantineProvider theme={theme} defaultColorScheme="auto">
           <AnalyticsWrapper>
             <Layout>
               <Component {...pageProps} />

@@ -126,23 +126,23 @@ export default function DataTable({
         >
           <Table
             striped
-            // withColumnBorders
-            w={table.getCenterTotalSize()}
+            stickyHeader
+            // w={table.getCenterTotalSize()}
             highlightOnHover={!!onRowClicked}
           >
-            <thead>
+            <Table.Thead>
               {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id}>
+                <Table.Tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
                     return (
-                      <th
+                      <Table.Th
                         key={header.id}
                         colSpan={header.colSpan}
                         style={{ width: header.getSize() }}
                       >
                         {header.isPlaceholder ? null : (
                           <Group
-                            spacing={4}
+                            gap={4}
                             onClick={header.column.getToggleSortingHandler()}
                             style={
                               header.column.getCanSort()
@@ -170,49 +170,55 @@ export default function DataTable({
                             }`,
                           }}
                         />
-                      </th>
+                      </Table.Th>
                     )
                   })}
-                </tr>
-              ))}
-              <Menu withArrow shadow="sm" closeOnItemClick={false}>
-                <Menu.Target>
-                  <ActionIcon pos="absolute" right={10} top={5}>
-                    <IconColumns3 size={16} />
-                  </ActionIcon>
-                </Menu.Target>
-                <Menu.Dropdown>
-                  {table
-                    .getAllColumns()
-                    .filter((column) => column.getCanHide())
-                    .map((column) => (
-                      <Menu.Item
-                        key={column.id}
-                        onClick={() => column.toggleVisibility()}
+                  {/* <Menu withArrow shadow="sm" closeOnItemClick={false}>
+                    <Menu.Target>
+                      <ActionIcon
+                        pos="absolute"
+                        right={10}
+                        top={5}
+                        variant="transparent"
+                        color="gray"
                       >
-                        <Group>
-                          <Checkbox
-                            size="xs"
-                            radius="sm"
-                            checked={column.getIsVisible()}
-                          />
-                          {column.columnDef.header as ReactNode}
-                        </Group>
-                      </Menu.Item>
-                    ))}
-                </Menu.Dropdown>
-              </Menu>
-            </thead>
-            <tbody>
+                        <IconColumns3 size={16} />
+                      </ActionIcon>
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      {table
+                        .getAllColumns()
+                        .filter((column) => column.getCanHide())
+                        .map((column) => (
+                          <Menu.Item
+                            key={column.id}
+                            onClick={() => column.toggleVisibility()}
+                          >
+                            <Group>
+                              <Checkbox
+                                size="xs"
+                                radius="sm"
+                                checked={column.getIsVisible()}
+                              />
+                              {column.columnDef.header as ReactNode}
+                            </Group>
+                          </Menu.Item>
+                        ))}
+                    </Menu.Dropdown>
+                  </Menu> */}
+                </Table.Tr>
+              ))}
+            </Table.Thead>
+            <Table.Tbody>
               {paddingTop > 0 && (
-                <tr>
-                  <td style={{ height: `${paddingTop}px` }} />
-                </tr>
+                <Table.Tr>
+                  <Table.Td style={{ height: `${paddingTop}px` }} />
+                </Table.Tr>
               )}
               {items.map((virtualRow) => {
                 const row = rows[virtualRow.index]
                 return (
-                  <tr
+                  <Table.Tr
                     key={row.id}
                     ref={virtualRow.measureRef}
                     onClick={
@@ -229,27 +235,29 @@ export default function DataTable({
                     }
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <td
+                      <Table.Td
                         key={cell.id}
-                        style={{
-                          width: cell.column.getSize(),
-                        }}
+                        style={
+                          {
+                            // width: cell.column.getSize(),
+                          }
+                        }
                       >
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),
                         )}
-                      </td>
+                      </Table.Td>
                     ))}
-                  </tr>
+                  </Table.Tr>
                 )
               })}
               {paddingBottom > 0 && (
-                <tr>
+                <Table.Tr>
                   <td style={{ height: `${paddingBottom}px` }} />
-                </tr>
+                </Table.Tr>
               )}
-            </tbody>
+            </Table.Tbody>
           </Table>
           {loading && (
             <Text m="auto" p="md" color="dimmed" size="xs" ta="center">
@@ -291,13 +299,17 @@ export default function DataTable({
 
           tr {
             width: fit-content;
-            height: 30px;
+            height: 20px;
           }
 
           th,
           td {
             overflow: hidden;
             text-overflow: ellipsis;
+          }
+
+          td {
+            padding: 7px 10px;
           }
 
           .resizer {

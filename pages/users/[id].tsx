@@ -4,12 +4,12 @@ import { Card, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core"
 
 import SmartViewer from "@/components/Blocks/SmartViewer"
 
-import { useAppUser, useRunsUsage } from "@/utils/dataHooks"
 import AgentSummary from "@/components/Blocks/Analytics/AgentSummary"
 import UsageSummary from "@/components/Blocks/Analytics/UsageSummary"
 import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
-import { formatAppUser } from "@/utils/format"
 import CopyText from "@/components/Blocks/CopyText"
+import { useAppUser, useRunsUsage } from "@/utils/dataHooks"
+import { formatAppUser } from "@/utils/format"
 import { NextSeo } from "next-seo"
 
 export default function UserDetails({}) {
@@ -33,12 +33,12 @@ export default function UserDetails({}) {
               <AppUserAvatar user={user} />
               <Title order={3}>{formatAppUser(user)}</Title>
             </Group>
-            <Group spacing={3}>
+            <Group gap={3}>
               <Text>ID:</Text>
               <CopyText value={user?.external_id} />
             </Group>
             {email && (
-              <Group spacing={3} align="center">
+              <Group gap={3} align="center">
                 <Text>Email:</Text>
                 <CopyText value={email} />
               </Group>
@@ -63,7 +63,7 @@ export default function UserDetails({}) {
       </Card>
       <Title order={2}>Last 3 months usage</Title>
       {usage && (
-        <SimpleGrid cols={3} spacing="md">
+        <SimpleGrid cols={3} gap="md">
           <UsageSummary usage={usage} />
           <AgentSummary usage={usage} />
         </SimpleGrid>

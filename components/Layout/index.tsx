@@ -1,5 +1,5 @@
 import { useEffect, ReactNode } from "react"
-import { AppShell, useMantineColorScheme } from "@mantine/core"
+import { AppShell, Box, useMantineColorScheme } from "@mantine/core"
 import { Notifications } from "@mantine/notifications"
 
 import { useSessionContext } from "@supabase/auth-helpers-react"
@@ -42,7 +42,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     if (!session && !isLoading && !isAuthPage) {
       Router.push("/login")
     }
-  }, [session, isLoading, router.pathname])
+  }, [session, isLoading, router.pathname, isAuthPage])
 
   if (!session && !isAuthPage) return null
 
@@ -53,11 +53,14 @@ export default function Layout({ children }: { children: ReactNode }) {
         <AppContext.Provider value={{ appId, setAppId }}>
           <AppShell
             mih={"100vh"}
-            padding={"xl"}
+            header={{ height: 60 }}
+            navbar={{
+              width: 80,
+              breakpoint: "0",
+              collapsed: { mobile: isAuthPage, desktop: isAuthPage },
+            }}
             className={profile?.org.limited ? "limited" : ""}
-            header={!isAuthPage && <Navbar />}
-            navbar={!isAuthPage && appId && <Sidebar />}
-            sx={{
+            style={{
               backgroundColor: colorScheme === "dark" ? "#181818" : "#fafafa",
               color: colorScheme === "dark" ? "#eee" : "#333",
             }}
@@ -66,7 +69,11 @@ export default function Layout({ children }: { children: ReactNode }) {
               onAfterReportDialogSubmitHandler={() => Router.reload()}
               onAfterReportDialogCancelHandler={() => Router.reload()}
             >
-              {children}
+              {!isAuthPage && <Navbar />}
+              {!isAuthPage && <Sidebar />}
+              <AppShell.Main>
+                <Box p="24">{children}</Box>
+              </AppShell.Main>
             </ErrorBoundary>
           </AppShell>
         </AppContext.Provider>

@@ -159,7 +159,7 @@ const registerRunEvent = async (
       query = table
         .update({
           feedback: {
-            ...(data?.feedback || {}),
+            ...((data?.feedback || {}) as any),
             ...extra,
           },
         })
@@ -185,7 +185,7 @@ const registerLogEvent = async (event: Event): Promise<void> => {
     level: eventName,
     message,
     extra: extra || {},
-  })
+  } as any)
 
   if (error) throw error
 }

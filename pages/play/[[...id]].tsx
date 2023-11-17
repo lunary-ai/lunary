@@ -1,7 +1,7 @@
 import SmartViewer from "@/components/Blocks/SmartViewer"
 import { ChatMessage } from "@/components/Blocks/SmartViewer/Message"
 import Paywall from "@/components/Layout/Paywall"
-import { useCurrentApp, useOrg, useProfile } from "@/utils/dataHooks"
+import { useCurrentApp, useProfile } from "@/utils/dataHooks"
 import { Database } from "@/utils/supaTypes"
 import {
   ActionIcon,
@@ -61,7 +61,7 @@ function convertOpenAImessage(msg) {
 }
 
 const ParamItem = ({ name, value }) => (
-  <Group position="apart">
+  <Group justify="space-between">
     <Text size="sm">{name}</Text>
     {typeof value === "string" || typeof value === "number" ? (
       <Text size="sm">{value}</Text>
@@ -236,7 +236,7 @@ function Playground() {
                 <Loader />
               ) : (
                 <Stack>
-                  <Text weight="bold" size="sm">
+                  <Text fw="bold" size="sm">
                     Input
                   </Text>
                   {Array.isArray(run?.input) &&
@@ -260,6 +260,7 @@ function Playground() {
                           right={4}
                           size="sm"
                           color="red"
+                          variant="transparent"
                           onClick={() => {
                             const newInput = run.input
                             newInput.splice(i, 1)
@@ -268,7 +269,7 @@ function Playground() {
                             })
                           }}
                         >
-                          <IconCircleMinus size={12} />
+                          <IconCircleMinus size="12" />
                         </ActionIcon>
                       </Box>
                     ))}
@@ -276,19 +277,21 @@ function Playground() {
                   <ActionIcon
                     mx="auto"
                     mt="xs"
+                    variant="transparent"
+                    color="gray"
                     onClick={() =>
                       mutate({
                         input: [...run.input, { text: " ", role: "user" }],
                       })
                     }
                   >
-                    <IconCirclePlus size={16} />
+                    <IconCirclePlus size="16" />
                   </ActionIcon>
 
                   {(run.input || run.error) && (
                     <>
-                      <Group position="apart">
-                        <Text weight="bold" size="sm">
+                      <Group justify="space-between">
+                        <Text fw="bold" size="sm">
                           {run.error ? "Error" : "Output"}
                         </Text>
                       </Group>
@@ -325,7 +328,7 @@ function Playground() {
                       min={0}
                       max={2}
                       step={0.1}
-                      precision={2}
+                      decimalScale={2}
                       size="xs"
                       value={run.params?.temperature}
                       w={90}
@@ -422,7 +425,7 @@ function Playground() {
                 />
 
                 <Button
-                  leftIcon={<IconBolt size={16} />}
+                  leftSection={<IconBolt size="16" />}
                   size="xs"
                   disabled={loading}
                   onClick={runPlayground}

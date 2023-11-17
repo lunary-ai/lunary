@@ -31,7 +31,11 @@ const ParamItem = ({ name, value }) => (
         </Badge>
       ) : Array.isArray(value) ? (
         value.map((v) => (
-          <Badge variant="outline" style={{ textTransform: "none" }}>
+          <Badge
+            key={JSON.stringify(v)}
+            variant="outline"
+            style={{ textTransform: "none" }}
+          >
             {v}
           </Badge>
         ))
@@ -69,12 +73,13 @@ export default function RunInputOutput({ run }) {
             {({ copied, copy }) => (
               <Button
                 ml="auto"
-                variant="link"
+                // variant="link"
                 size="xs"
                 mb={-12}
+                variant="transparent"
                 color={copied ? "teal" : "gray"}
                 onClick={copy}
-                leftIcon={
+                leftSection={
                   copied ? <IconCheck size="16px" /> : <IconCopy size="16px" />
                 }
               >
@@ -83,14 +88,18 @@ export default function RunInputOutput({ run }) {
             )}
           </CopyButton>
           <Card withBorder>
-            <Group position="apart" align="start">
-              <Stack spacing="xs">
+            <Group justify="space-between" align="start">
+              <Stack gap="xs">
                 <ParamItem name="Model" value={run.name} />
 
                 {Object.entries(PARAMS).map(
                   ([key, name]) =>
                     typeof run.params?.[key] !== "undefined" && (
-                      <ParamItem name={name} value={run.params?.[key]} />
+                      <ParamItem
+                        key={name}
+                        name={name}
+                        value={run.params?.[key]}
+                      />
                     ),
                 )}
               </Stack>
@@ -102,7 +111,7 @@ export default function RunInputOutput({ run }) {
                     size="xs"
                     w="fit-content"
                     display="inline"
-                    rightIcon={<IconPencilShare size={14} />}
+                    rightSection={<IconPencilShare size="14" />}
                     component={Link}
                     href={`/play/${run.id}`}
                   >
@@ -115,8 +124,8 @@ export default function RunInputOutput({ run }) {
         </>
       )}
 
-      <Group position="apart">
-        <Text weight="bold" size="sm">
+      <Group justify="space-between">
+        <Text fw="bold" size="sm">
           Input
         </Text>
         {run.prompt_tokens && <TokensBadge tokens={run.prompt_tokens} />}
@@ -126,8 +135,8 @@ export default function RunInputOutput({ run }) {
 
       {(run.input || run.error) && (
         <>
-          <Group position="apart">
-            <Text weight="bold" size="sm">
+          <Group justify="space-between">
+            <Text fw="bold" size="sm">
               {run.error ? "Error" : "Output"}
             </Text>
             {run.completion_tokens && (

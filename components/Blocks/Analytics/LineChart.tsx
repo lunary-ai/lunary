@@ -10,19 +10,18 @@ import {
   useMantineTheme,
 } from "@mantine/core"
 import {
-  AreaChart,
   Area,
-  XAxis,
-  YAxis,
+  AreaChart,
   CartesianGrid,
-  Tooltip,
   ResponsiveContainer,
+  Tooltip,
+  XAxis,
 } from "recharts"
 
-import { eachDayOfInterval, format, parseISO } from "date-fns"
 import { formatLargeNumber } from "@/utils/format"
-import { IconBolt } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
+import { IconBolt } from "@tabler/icons-react"
+import { eachDayOfInterval, format, parseISO } from "date-fns"
 import ErrorBoundary from "../ErrorBoundary"
 
 const slugify = (str) => {
@@ -183,7 +182,7 @@ const LineChartComponent = ({
                   size="xs"
                   variant="gradient"
                   gradient={{ from: "#0788ff", to: "#9900ff", deg: 30 }}
-                  leftIcon={<IconBolt size={16} />}
+                  leftSection={<IconBolt size="16" />}
                 >
                   Upgrade
                 </Button>

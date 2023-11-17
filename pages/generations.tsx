@@ -1,23 +1,12 @@
-import DataTable from "@/components/Blocks/DataTable"
+// import DataTable from "@/components/Blocks/DataTable.1"
 
-import {
-  useCurrentApp,
-  useGenerations,
-  useModelNames,
-  useProfile,
-  useTags,
-} from "@/utils/dataHooks"
-import {
-  Box,
-  Button,
-  Drawer,
-  Flex,
-  Group,
-  Menu,
-  MultiSelect,
-  Stack,
-} from "@mantine/core"
-
+import { Button, Group, Stack, Table } from "@mantine/core"
+import FacetedFilter from "../components/Blocks/FacetedFilter"
+import ExportButton from "../components/Blocks/ExportButton"
+import { useGenerations, useModelNames } from "../utils/dataHooks"
+import MultiSelectButton from "../components/Blocks/MultiSelectButton"
+import { useEffect, useState } from "react"
+import DataTable from "../components/Blocks/DataTable"
 import {
   costColumn,
   durationColumn,
@@ -28,23 +17,10 @@ import {
   tagsColumn,
   timeColumn,
   userColumn,
-} from "@/utils/datatable"
-import {
-  IconArrowBarUp,
-  IconBraces,
-  IconBrandOpenai,
-  IconFileExport,
-} from "@tabler/icons-react"
-import { NextSeo } from "next-seo"
-import { useContext, useState } from "react"
-
-import RunInputOutput from "@/components/Blocks/RunIO"
-import SearchBar from "@/components/Blocks/SearchBar"
-import { formatDateTime } from "@/utils/format"
+} from "../utils/datatable"
 import { useDebouncedState } from "@mantine/hooks"
-import { modals } from "@mantine/modals"
-import Empty from "../components/Layout/Empty"
-import { AppContext } from "../utils/context"
+import SearchBar from "../components/Blocks/SearchBar"
+import { useSearchParams } from "next/navigation"
 
 const columns = [
   timeColumn("created_at"),
@@ -69,161 +45,46 @@ const columns = [
   outputColumn("Result"),
 ]
 
-function buildExportUrl(
-  appId: string,
-  query: string | null,
-  models: string[],
-  tags: string[],
-) {
-  const url = new URL("/api/generation/export", window.location.origin)
-
-  url.searchParams.append("appId", appId)
-
-  if (query) {
-    url.searchParams.append("search", query)
-  }
-
-  if (models.length > 0) {
-    url.searchParams.append("models", models.join(","))
-  }
-
-  if (tags.length > 0) {
-    url.searchParams.append("tags", tags.join(","))
-  }
-
-  return url.toString()
-}
-
 export default function Generations() {
-  let { modelNames } = useModelNames()
-  const [query, setQuery] = useDebouncedState(null, 500)
+  const { modelNames } = useModelNames()
+  const [filters, setFilters] = useState(["Model", "Tags"])
+  const [search, setSearch] = useDebouncedState<string>("", 500)
+  // const { runs, loading, validating, loadMore } = useGenerations(search)
 
-  const [filters, setFilters] = useState([])
-  const [selectedModels, setSelectedModels] = useState([])
-  const [selectedTags, setSelectedTags] = useState([])
+  const searchParams = useSearchParams()
+  // const models = searchParams.get("model")
+  // console.log(models)
 
-  const { appId } = useContext(AppContext)
-  const { app, loading: appLoading } = useCurrentApp()
-
-  const { runs, loading, validating, loadMore } = useGenerations(
-    query,
-    selectedModels,
-    selectedTags,
-  )
-  const { tags } = useTags()
-  const { profile } = useProfile()
-
-  const [selected, setSelected] = useState(null)
-
-  const exportUrl = buildExportUrl(appId, query, selectedModels, selectedTags)
-
-  if (!loading && !appLoading && !app?.activated) {
-    return <Empty Icon={IconBrandOpenai} what="requests" />
-  }
-
-  function exportButton(url: string) {
-    if (profile?.org.plan === "pro") {
-      return {
-        component: "a",
-        href: url,
-      }
-    } else {
-      return {
-        onClick: () => {
-          modals.openContextModal({
-            modal: "upgrade",
-            size: 900,
-            innerProps: {
-              highlight: "export",
-            },
-          })
-        },
-      }
-    }
-  }
+  // useEffect(() => {
+  //   console.log(models)
+  // }, [models])
 
   return (
-    <Stack h={"calc(100vh - var(--navbar-size))"}>
-      <NextSeo title="Requests" />
-      <Group position="apart">
+    <Stack>
+      <Group justify="space-between" wrap="nowrap" align="flex-end">
         <Group>
-          <SearchBar query={query} setQuery={setQuery} />
-
-          {!!modelNames?.length && (
-            <MultiSelect
-              placeholder="Model"
-              size="xs"
-              miw={80}
-              w="fit-content"
-              data={modelNames}
-              clearable
-              onChange={setSelectedModels}
-            />
-          )}
-          {!!tags?.length && (
-            <MultiSelect
-              placeholder="Tags"
-              size="xs"
-              miw={100}
-              w="fit-content"
-              data={tags}
-              clearable
-              onChange={setSelectedTags}
-            />
-          )}
+          <SearchBar />
+          {filters.map((filter) => (
+            <FacetedFilter key={filter} name={filter} items={modelNames} />
+          ))}
+          <MultiSelectButton
+            label="Add filter"
+            items={columns.map((c) => c.header)}
+            selectedItems={filters}
+            setSelectedItems={setFilters}
+          />
         </Group>
-        <Box>
-          <Menu withArrow shadow="sm" position="bottom-end">
-            <Menu.Target>
-              <Button
-                variant="outline"
-                size="xs"
-                leftIcon={<IconArrowBarUp size={16} />}
-              >
-                Export
-              </Button>
-            </Menu.Target>
-            <Menu.Dropdown>
-              <Menu.Item
-                color="dark"
-                icon={<IconFileExport size={16} />}
-                {...exportButton(exportUrl)}
-              >
-                Export to CSV
-              </Menu.Item>
-              <Menu.Item
-                color="dark"
-                disabled
-                icon={<IconBraces size={16} />}
-                // {...exportButton(exportUrl)}
-              >
-                Export to JSONL
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
-        </Box>
+        <ExportButton exportUrl="" />
       </Group>
-
-      <Drawer
-        opened={!!selected}
-        size="lg"
-        keepMounted
-        position="right"
-        title={selected ? formatDateTime(selected.created_at) : ""}
-        onClose={() => setSelected(null)}
-      >
-        {selected && <RunInputOutput run={selected} />}
-      </Drawer>
-
-      <DataTable
-        onRowClicked={(row) => {
-          setSelected(row)
-        }}
+      {/* <DataTable
+        // onRowClicked={(row) => {
+        //   setSelected(row)
+        // }}
         loading={loading || validating}
-        loadMore={loadMore}
+        // loadMore={loadMore}
         columns={columns}
         data={runs}
-      />
+      /> */}
     </Stack>
   )
 }

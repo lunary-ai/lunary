@@ -77,7 +77,7 @@ export default function Tests() {
               <tr>
                 <td>Translator</td>
                 <td>
-                  <Group spacing="sm">
+                  <Group gap="sm">
                     <Badge variant="outline" color="indigo">
                       AI
                     </Badge>
@@ -93,7 +93,7 @@ export default function Tests() {
               <tr>
                 <td>Translator</td>
                 <td>
-                  <Group spacing="sm">
+                  <Group gap="sm">
                     <Badge variant="outline" color="indigo">
                       AI
                     </Badge>
@@ -107,7 +107,7 @@ export default function Tests() {
               <tr>
                 <td>PromptToSQL</td>
                 <td>
-                  <Group spacing="sm">
+                  <Group gap="sm">
                     <Badge variant="outline" color="cyan">
                       JS
                     </Badge>
@@ -122,7 +122,7 @@ export default function Tests() {
               <tr>
                 <td>PromptToSQL</td>
                 <td>
-                  <Group spacing="sm">
+                  <Group gap="sm">
                     <Badge variant="outline" color="cyan">
                       JS
                     </Badge>

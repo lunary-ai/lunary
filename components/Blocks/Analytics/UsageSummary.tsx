@@ -3,6 +3,7 @@ import AnalyticsCard from "./AnalyticsCard"
 import BarList from "./BarList"
 
 export default function UsageSummary({ usage }) {
+  console.log(usage)
   return (
     <AnalyticsCard title="LLM Usage">
       <BarList
@@ -12,18 +13,19 @@ export default function UsageSummary({ usage }) {
             value: model.name,
             tokens: model.completion_tokens + model.prompt_tokens,
             cost: model.cost,
+            a: console.log(model),
             barSections: [
               {
                 value: "Completion",
                 tooltip: "Completion Tokens",
                 count: model.completion_tokens,
-                color: "purple.4",
+                color: "var(--mantine-color-blue-4)",
               },
               {
                 value: "Prompt",
                 tooltip: "Prompt Tokens",
                 count: model.prompt_tokens,
-                color: "cyan.3",
+                color: "var(--mantine-color-cyan-3)",
               },
             ],
           }))}

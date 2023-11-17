@@ -71,17 +71,18 @@ export const tagsColumn = () => {
   return columnHelper.accessor("tags", {
     header: "Tags",
     size: 60,
+    id: "tags",
     cell: (props) => {
       const tags = props.getValue()
       if (!tags) return null
 
       return (
-        <Group spacing={4}>
+        <Group gap={4}>
           {tags.map((tag) => (
             <Badge
               key={tag}
               variant="outline"
-              sx={{
+              style={{
                 textTransform: "none",
                 maxWidth: "100%",
               }}
@@ -98,6 +99,7 @@ export const tagsColumn = () => {
 export const inputColumn = (label = "input") => {
   return columnHelper.accessor("input", {
     header: label,
+    id: "input",
     size: 200,
     enableSorting: false,
     cell: (props) => <SmartViewer data={props.getValue()} compact />,
@@ -108,6 +110,7 @@ export const outputColumn = (label = "Response") => {
   return columnHelper.accessor("output", {
     header: label,
     enableSorting: false,
+    id: "output",
     cell: (props) => (
       <SmartViewer
         data={props.getValue()}
@@ -122,6 +125,7 @@ export const userColumn = () => {
   return columnHelper.accessor("user", {
     header: "User",
     size: 60,
+    id: "user",
     cell: (props) => {
       const userId = props.getValue()
       const { user } = useAppUser(userId)
@@ -137,6 +141,7 @@ export const nameColumn = (label = "Name") => {
   return columnHelper.accessor("name", {
     header: label,
     size: 80,
+    id: label.toLowerCase(),
     cell: (props) => {
       const status = props.row.original.status
       const name = props.getValue()
@@ -144,7 +149,7 @@ export const nameColumn = (label = "Name") => {
       return (
         <Badge
           variant="outline"
-          sx={{
+          style={{
             textTransform: "none",
           }}
           color={
@@ -161,6 +166,7 @@ export const nameColumn = (label = "Name") => {
 export const costColumn = () => {
   return columnHelper.accessor("cost", {
     header: "Cost",
+    id: "cost",
     size: 40,
     cell: (props) => {
       const cost = props.getValue()
@@ -181,7 +187,7 @@ export const feedbackColumn = (withRelatedRuns = false) => {
           .map((run) => run.feedback)
 
         return (
-          <Group spacing="xs">
+          <Group gap="xs">
             {allFeedbacks?.map((feedback, i) => (
               <Feedback data={feedback} key={i} />
             ))}
@@ -196,6 +202,7 @@ export const feedbackColumn = (withRelatedRuns = false) => {
 
   return columnHelper.accessor("feedback", {
     header: "Feedback",
+    id: "feedback",
     size: 100,
     cell,
   })

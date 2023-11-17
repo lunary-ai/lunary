@@ -19,6 +19,7 @@ import StatusBadge from "@/components/Blocks/StatusBadge"
 import { useRelatedRuns, useRun } from "@/utils/dataHooks"
 import { capitalize, formatCost } from "@/utils/format"
 import RunInputOutput from "@/components/Blocks/RunIO"
+import { getColorForRunType } from "../../utils/colors"
 
 const typeColor = {
   llm: "yellow",
@@ -35,6 +36,7 @@ const TraceTree = ({ parentId, runs, onSelect, firstDate }) => {
   const timeAfterFirst =
     new Date(run.created_at).getTime() - new Date(firstDate).getTime()
 
+  const color = getColorForRunType(run.type)
   return (
     <Group>
       <Text>&emsp;</Text>
@@ -46,7 +48,7 @@ const TraceTree = ({ parentId, runs, onSelect, firstDate }) => {
         >
           <StatusBadge minimal status={run.status} />
 
-          {run.name && <Code color={typeColor[run.type]}>{run.name}</Code>}
+          {run.name && <Code color={color}>{run.name}</Code>}
           <Badge variant="outline" color={typeColor[run.type]}>
             {run.type}
           </Badge>
@@ -69,10 +71,11 @@ const TraceTree = ({ parentId, runs, onSelect, firstDate }) => {
           .sort(
             (a, b) =>
               new Date(a.created_at).getTime() -
-              new Date(b.created_at).getTime()
+              new Date(b.created_at).getTime(),
           )
           .map((run) => (
             <TraceTree
+              key={run.id}
               parentId={run.id}
               runs={runs}
               onSelect={onSelect}

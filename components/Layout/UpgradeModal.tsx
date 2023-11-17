@@ -32,7 +32,7 @@ const PlanFeatures = ({ features, highlight }) => {
       center
       icon={
         <ThemeIcon color="teal" size={24} radius="xl">
-          <IconCircleCheck size={16} />
+          <IconCircleCheck size="16" />
         </ThemeIcon>
       }
     >
@@ -57,29 +57,26 @@ export const UpgradeBody = ({ highlight }) => {
     <>
       <Stack align="center" ta="center" className="unblockable">
         <IconAnalyze color={"#206dce"} size={50} />
-        <Title order={2} weight={700} size={40} ta="center">
+        <Title order={2} fw={700} size={40} ta="center">
           Upgrade your plan
         </Title>
 
-        {/* <Text size="xl" mt="xs" weight={500}>
+        {/* <Text size="xl" mt="xs" fw={500}>
           Upgrade now and secure{" "}
           <Mark>{` the lowest price we'll ever offer. `}</Mark>
         </Text> */}
-        <Text size="lg" mt="xs" mb="xl" weight={500}>
-          Unlock higher usage & powerful features to improve your AI's quality.
+        <Text size="lg" mt="xs" mb="xl" fw={500}>
+          Unlock higher usage & powerful features to improve your AI`&apos;s
+          quality.
         </Text>
       </Stack>
 
-      <SimpleGrid
-        cols={2}
-        breakpoints={[{ maxWidth: "sm", cols: 1, spacing: "sm" }]}
-        spacing="md"
-      >
+      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
         <Card p="xl" withBorder shadow="md">
-          <Group spacing={6}>
+          <Group gap={6}>
             <Text
-              transform="uppercase"
-              weight="bold"
+              tt="uppercase"
+              fw="bold"
               variant="gradient"
               gradient={{ from: "indigo", to: "cyan", deg: 45 }}
             >
@@ -93,15 +90,15 @@ export const UpgradeBody = ({ highlight }) => {
             )}
           </Group>
 
-          <Group my={20} align="center" spacing={10}>
+          <Group my={20} align="center" gap={10}>
             <Title order={3} size={30}>
               {isFree && (
-                <Text span td="line-through" size={20}>
+                <Text span td="line-through" size="20">
                   $50
                 </Text>
               )}
               {` $25`}
-              <Text span size={20}>
+              <Text span size="20">
                 {` / mo`}
               </Text>
             </Title>
@@ -135,10 +132,10 @@ export const UpgradeBody = ({ highlight }) => {
           )}
         </Card>
         <Card p="xl" withBorder>
-          <Group spacing={6}>
+          <Group gap={6}>
             <Text
-              transform="uppercase"
-              weight="bold"
+              tt="uppercase"
+              fw="bold"
               variant="gradient"
               gradient={{ from: "teal", to: "lime", deg: 45 }}
             >
@@ -146,10 +143,10 @@ export const UpgradeBody = ({ highlight }) => {
             </Text>
           </Group>
 
-          <Group my={20} align="center" spacing={10}>
+          <Group my={20} align="center" gap={10}>
             <Title order={3} size={30}>
               {` $95`}
-              <Text span size={20}>
+              <Text span size="20">
                 {` / mo`}
               </Text>
             </Title>
@@ -201,11 +198,12 @@ const UpgradeModal = ({
   id,
   innerProps,
 }: ContextModalProps<{ highlight: string }>) => {
-  if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) return null
-
   useEffect(() => {
-    analytics.track("Upgrade Modal")
+    if (process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+      analytics.track("Upgrade Modal")
   }, [])
+
+  if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) return null
 
   return (
     <Stack p={60} pt={0}>

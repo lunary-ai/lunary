@@ -30,7 +30,7 @@ const ListFeatures = ({ features }) => {
     >
       {features.map((title, i) => (
         <List.Item key={i}>
-          <Text weight={500}>{title}</Text>
+          <Text fw={500}>{title}</Text>
         </List.Item>
       ))}
     </List>
@@ -78,10 +78,10 @@ export default function Paywall({
         }}
       >
         <Card p={50} w={650} shadow="md" className="unblockable">
-          <Stack align="start" spacing="xl">
-            <Group noWrap>
+          <Stack align="start" gap="xl">
+            <Group wrap="nowrap">
               <ThemeIcon size={42} radius={12}>
-                {Icon && <Icon size={20} />}
+                {Icon && <Icon size="20" />}
               </ThemeIcon>
               <Title order={3}>
                 {feature} is available in LLMonitor {capitalize(plan)}

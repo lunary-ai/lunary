@@ -67,13 +67,11 @@ export default function Billing() {
 
   const canUpgrade = ["free", "pro"].includes(plan)
 
-  console.log(usage)
-
   return (
     <Container className="unblockable">
       <NextSeo title="Billing" />
       <Stack>
-        <Group position="apart">
+        <Group justify="space-between">
           <Title>Billing</Title>
 
           {canUpgrade && (
@@ -81,7 +79,7 @@ export default function Billing() {
               variant="gradient"
               size="xs"
               gradient={{ from: "#0788ff", to: "#9900ff", deg: 30 }}
-              leftIcon={<IconBolt size={16} />}
+              leftSection={<IconBolt size="16" />}
               onClick={() =>
                 modals.openContextModal({
                   modal: "upgrade",
@@ -110,7 +108,7 @@ export default function Billing() {
         )}
 
         {/* <Card withBorder radius="md" padding="xl">
-          <Stack spacing="sm">
+          <Stack gap="sm">
             <Text fz="md" fw={700} c="dimmed">
               Monthly Usage
             </Text>
@@ -143,7 +141,7 @@ export default function Billing() {
             >
               <Label
                 position="insideTop"
-                fontSize={14}
+                fontSize="14"
                 fill="#d00"
                 style={{ padding: "2px" }}
               >
@@ -153,7 +151,7 @@ export default function Billing() {
           }
         />
         <Card withBorder radius="md" padding="xl">
-          <Stack spacing="sm">
+          <Stack gap="sm">
             <Text fz="md" fw={700} c="dimmed">
               Seat Allowance
             </Text>

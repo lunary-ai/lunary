@@ -131,30 +131,30 @@ function SignupPage() {
   }
 
   return (
-    <Container py={100} size={800}>
+    <Container size={800}>
       <NextSeo title="Sign Up" />
 
-      <Stack align="center" spacing={50}>
+      <Stack align="center" gap={50}>
         {step < 3 && (
           <>
             <Stack align="center">
               <IconAnalyze color={"#206dce"} size={60} />
-              <Title order={2} weight={700} size={40} ta="center">
+              <Title order={2} fw={700} size={40} ta="center">
                 llmonitor cloud
               </Title>
             </Stack>
             <Grid gutter={50} align="center" mb="sm">
-              <Grid.Col span={12} md={6}>
+              <Grid.Col span={{ base: 12, md: 6 }}>
                 <Paper radius="md" p="xl" withBorder>
                   <form onSubmit={form.onSubmit(handleSignup)}>
-                    <Stack spacing="xl">
+                    <Stack gap="xl">
                       {step === 1 && (
                         <>
-                          <Title order={2} weight={700} ta="center">
+                          <Title order={2} fw={700} ta="center">
                             Get Started
                           </Title>
                           <TextInput
-                            icon={<IconAt size={16} />}
+                            leftSection={<IconAt size="16" />}
                             label="Email"
                             type="email"
                             autoComplete="email"
@@ -195,7 +195,7 @@ function SignupPage() {
 
                       {step === 2 && (
                         <>
-                          <Title order={2} weight={700} ta="center">
+                          <Title order={2} fw={700} ta="center">
                             Almost there...
                           </Title>
 
@@ -203,7 +203,7 @@ function SignupPage() {
                             label="Full Name"
                             autoComplete="name"
                             description="Only used to address you properly."
-                            icon={<IconUser size={16} />}
+                            leftSection={<IconUser size="16" />}
                             placeholder="Your full name"
                             error={form.errors.name && "This field is required"}
                             {...form.getInputProps("name")}
@@ -219,7 +219,7 @@ function SignupPage() {
                           <TextInput
                             label="Project Name"
                             description="Can be changed later."
-                            icon={<IconFolderBolt size={16} />}
+                            leftSection={<IconFolderBolt size="16" />}
                             placeholder="Your project name"
                             error={
                               form.errors.projectName &&
@@ -256,7 +256,7 @@ function SignupPage() {
                 </Paper>
               </Grid.Col>
 
-              <Grid.Col span={12} md={6}>
+              <Grid.Col span={{ base: 12, md: 6 }}>
                 <Box>
                   <List
                     spacing="xl"
@@ -268,12 +268,12 @@ function SignupPage() {
                         size={24}
                         radius="xl"
                       >
-                        <IconCircleCheck size={16} />
+                        <IconCircleCheck size="16" />
                       </ThemeIcon>
                     }
                   >
                     <List.Item>
-                      <Text weight="bold">Free usage every month</Text>
+                      <Text fw="bold">Free usage every month</Text>
                       <Text>
                         1K free events per day. Forever.
                         <br />
@@ -281,14 +281,14 @@ function SignupPage() {
                       </Text>
                     </List.Item>
                     <List.Item>
-                      <Text weight="bold">Collect data immediately</Text>
+                      <Text fw="bold">Collect data immediately</Text>
                       <Text>
                         Integrate with dev-friendly SDKs, with native support
                         for LangChain and OpenAI.
                       </Text>
                     </List.Item>
                     <List.Item>
-                      <Text weight="bold">No config required</Text>
+                      <Text fw="bold">No config required</Text>
                       <Text>Get insights without complicated setup.</Text>
                     </List.Item>
                   </List>
@@ -305,15 +305,15 @@ function SignupPage() {
 
             <Stack align="center">
               <IconAnalyze color={"#206dce"} size={60} />
-              <Title order={2} weight={700} size={40} ta="center">
-                You're all set 🎉
+              <Title order={2} fw={700} size={40} ta="center">
+                You&apos;re all set 🎉
               </Title>
 
-              <Text size="lg" mt="xs" mb="xl" weight={500}>
+              <Text size="lg" mt="xs" mb="xl" fw={500}>
                 Check your emails for the confirmation to open the dashboard.
               </Text>
 
-              <Text>Want to say hi? We'd love to talk to you:</Text>
+              <Text>Want to say hi? We&apos;d love to talk to you:</Text>
 
               <Group>
                 <Button
@@ -321,7 +321,7 @@ function SignupPage() {
                   onClick={() => {
                     $crisp.push(["do", "chat:open"])
                   }}
-                  rightIcon={<IconMessageBolt size={18} />}
+                  rightSection={<IconMessageBolt size={18} />}
                 >
                   Chat
                 </Button>
@@ -331,7 +331,7 @@ function SignupPage() {
                   color="teal.8"
                   component="a"
                   href="mailto:vince@llmonitor.com"
-                  rightIcon={<IconMail size={18} />}
+                  rightSection={<IconMail size={18} />}
                 >
                   Email
                 </Button>
@@ -342,7 +342,7 @@ function SignupPage() {
                   target="_blank"
                   component="a"
                   href="https://discord.gg/8PafSG58kK"
-                  rightIcon={<IconBrandDiscord size={18} />}
+                  rightSection={<IconBrandDiscord size={18} />}
                 >
                   Discord
                 </Button>
@@ -353,7 +353,7 @@ function SignupPage() {
                   target="_blank"
                   component="a"
                   href="https://savvycal.com/vince/chat"
-                  rightIcon={<IconCalendar size={18} />}
+                  rightSection={<IconCalendar size={18} />}
                 >
                   Call with founder
                 </Button>

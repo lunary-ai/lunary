@@ -79,12 +79,12 @@ export default function SmartViewer({
               isMessages ? (
                 <MessageViewer data={parsed} compact={compact} />
               ) : (
-                <Code color="blue">
+                <Code color="var(--mantine-color-blue-light)">
                   <RenderJson data={parsed} />
                 </Code>
               )
             ) : (
-              <Code color="blue">{parsed}</Code>
+              <Code color="var(--mantine-color-blue-light)">{parsed}</Code>
             )}
           </ProtectedText>
         )}

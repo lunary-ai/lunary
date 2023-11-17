@@ -27,8 +27,8 @@ const columns = [
   userColumn(),
   feedbackColumn(true),
   tagsColumn(),
-  inputColumn("Input"),
-  outputColumn(),
+  // inputColumn("Input"),
+  // outputColumn(),
 ]
 
 export default function Traces() {
@@ -41,7 +41,7 @@ export default function Traces() {
 
   return (
     <Stack h={"calc(100vh - var(--navbar-size))"}>
-      <SearchBar query={query} setQuery={setQuery} />
+      <SearchBar />
 
       <DataTable
         columns={columns}

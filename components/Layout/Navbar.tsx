@@ -1,14 +1,6 @@
 import analytics from "@/utils/analytics"
 import { useApps, useCurrentApp, useProfile } from "@/utils/dataHooks"
-import {
-  Anchor,
-  Button,
-  Flex,
-  Group,
-  Header,
-  Select,
-  Text,
-} from "@mantine/core"
+import { Anchor, AppShell, Button, Flex, Group, Select } from "@mantine/core"
 import { modals } from "@mantine/modals"
 import { useUser } from "@supabase/auth-helpers-react"
 
@@ -65,7 +57,7 @@ export default function Navbar() {
 
   return (
     <>
-      <Header height={60} p="md">
+      <AppShell.Header p="md" h="60">
         <Script
           src="https://do.featurebase.app/js/sdk.js"
           id="featurebase-sdk"
@@ -76,7 +68,7 @@ export default function Navbar() {
             <Anchor component={Link} href="/">
               <Group mx="sm">
                 <IconAnalyze size={26} />
-                {/* <Text weight="bold">llmonitor</Text> */}
+                {/* <Text fw="bold">llmonitor</Text> */}
               </Group>
             </Anchor>
 
@@ -106,7 +98,7 @@ export default function Navbar() {
                     },
                   })
                 }
-                leftIcon={<IconAlertTriangle size={16} />}
+                leftSection={<IconAlertTriangle size="16" />}
               >
                 Events limit reached. Click here to upgrade & restore access.
               </Button>
@@ -114,7 +106,7 @@ export default function Navbar() {
               <>
                 <Button
                   size="xs"
-                  leftIcon={<IconMessage size={18} />}
+                  leftSection={<IconMessage size={18} />}
                   data-featurebase-feedback
                 >
                   Feedback
@@ -126,7 +118,7 @@ export default function Navbar() {
                   size="xs"
                   target="_blank"
                   variant="outline"
-                  leftIcon={<IconHelp size={18} />}
+                  leftSection={<IconHelp size={18} />}
                 >
                   Docs
                 </Button>
@@ -145,14 +137,14 @@ export default function Navbar() {
                 size="xs"
                 variant="gradient"
                 gradient={{ from: "#0788ff", to: "#9900ff", deg: 30 }}
-                leftIcon={<IconBolt size={16} />}
+                leftSection={<IconBolt size="16" />}
               >
                 Upgrade
               </Button>
             )}
           </Group>
         </Flex>
-      </Header>
+      </AppShell.Header>
     </>
   )
 }
