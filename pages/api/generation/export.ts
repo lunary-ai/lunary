@@ -1,9 +1,10 @@
-import { NextApiRequest, NextApiResponse } from "next"
-import { Parser } from "@json2csv/plainjs"
+import { put } from "@vercel/blob"
 import { ensureHasAccessToApp } from "@/lib/api/ensureAppIsLogged"
+
 import { apiWrapper } from "@/lib/api/helpers"
+import { Parser } from "@json2csv/plainjs"
+import { NextApiRequest, NextApiResponse } from "next"
 import postgres from "postgres"
-import { Readable } from "stream"
 
 export const config = {
   api: {
@@ -78,13 +79,19 @@ export default apiWrapper(async function handler(
   const data = rows.length > 0 ? rows : [{}]
   const parser = new Parser()
   const csv = parser.parse(data)
+  const buffer = Buffer.from(csv, "utf-8")
 
-  const stream = new Readable()
-  stream.push(csv)
-  stream.push(null)
+  const FIVE_MB = 5 * 1024 * 1024
 
-  res.setHeader("Content-Type", "text/csv")
-  res.setHeader("Content-Disposition", "attachment; filename=out.csv")
-
-  stream.pipe(res)
+  if (buffer.length > FIVE_MB) {
+    console.log("slice")
+    const slicedBuffer = buffer.slice(0, FIVE_MB)
+    res.setHeader("Content-Type", "text/csv")
+    res.setHeader("Content-Disposition", "attachment; filename=out.csv")
+    res.status(200).send(slicedBuffer)
+  } else {
+    res.setHeader("Content-Type", "text/csv")
+    res.setHeader("Content-Disposition", "attachment; filename=out.csv")
+    res.status(200).send(buffer)
+  }
 })
