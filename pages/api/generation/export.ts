@@ -4,6 +4,12 @@ import { ensureHasAccessToApp } from "@/lib/api/ensureAppIsLogged"
 import { apiWrapper } from "@/lib/api/helpers"
 import postgres from "postgres"
 
+export const config = {
+  api: {
+    responseLimit: "100mb",
+  },
+}
+
 const sql = postgres(process.env.DB_URI)
 
 export default apiWrapper(async function handler(
