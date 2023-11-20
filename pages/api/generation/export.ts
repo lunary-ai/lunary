@@ -3,6 +3,7 @@ import { Parser } from "@json2csv/plainjs"
 import { ensureHasAccessToApp } from "@/lib/api/ensureAppIsLogged"
 import { apiWrapper } from "@/lib/api/helpers"
 import postgres from "postgres"
+import { Readable } from "stream"
 
 export const config = {
   api: {
@@ -78,7 +79,12 @@ export default apiWrapper(async function handler(
   const parser = new Parser()
   const csv = parser.parse(data)
 
+  const stream = new Readable()
+  stream.push(csv)
+  stream.push(null)
+
   res.setHeader("Content-Type", "text/csv")
   res.setHeader("Content-Disposition", "attachment; filename=out.csv")
-  res.status(200).send(csv)
+
+  stream.pipe(res)
 })
