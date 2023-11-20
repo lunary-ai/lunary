@@ -81,8 +81,9 @@ export default apiWrapper(async function handler(
   const csv = parser.parse(data)
   const buffer = Buffer.from(csv, "utf-8")
 
-  const FIVE_MB = 5 * 1024 * 1024
+  const FIVE_MB = 3.5 * 1024 * 1024
 
+  // TODO: file a way to send all the rows
   if (buffer.length > FIVE_MB) {
     console.log("slice")
     const slicedBuffer = buffer.slice(0, FIVE_MB)
