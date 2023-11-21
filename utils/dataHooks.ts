@@ -253,7 +253,7 @@ export function useTraces(search) {
       .is("parent_run", null)
   } else {
     query = supabaseClient.rpc("get_trace_runs_roots", {
-      appId,
+      app_id: appId,
       search_pattern: search,
     })
   }
