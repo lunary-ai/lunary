@@ -46,12 +46,13 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   if (!session && !isAuthPage) return null
 
-  if (loading || isLoading)
+  if ((!profile && loading) || (!session && isLoading)) {
     return (
       <Center h="100vh" w="100vw">
         <Loader />
       </Center>
     )
+  }
 
   return (
     <>
