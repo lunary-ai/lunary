@@ -91,7 +91,7 @@ function SignupPage() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          // emailRedirectTo: `${window.location.origin}/`,
           data: {
             signupMethod: "signup",
             name,
@@ -310,8 +310,16 @@ function SignupPage() {
               </Title>
 
               <Text size="lg" mt="xs" mb="xl" weight={500}>
-                Check your emails for the confirmation to open the dashboard.
+                Check your emails for the confirmation link.
               </Text>
+
+              <Button
+                onClick={() => Router.push("/")}
+                variant="outline"
+                size="lg"
+              >
+                Open Dashboard
+              </Button>
 
               <Text>Want to say hi? We'd love to talk to you:</Text>
 

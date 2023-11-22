@@ -9,8 +9,11 @@ const withEdgeHighlight = EdgeHighlight({
 
 export function edgeWrapper(handler: (req: NextRequest) => Promise<Response>) {
   return withEdgeHighlight(async (req: NextRequest) => {
-    const body = (await req.clone().json()) || {}
-    H.setAttributes({ body })
+    try {
+      // will fail if no body
+      const body = (await req.clone().json()) || {}
+      H.setAttributes({ body })
+    } catch (e) {}
 
     try {
       return await handler(req)

@@ -127,7 +127,6 @@ export default function Join({ orgUserCount, orgName }) {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
           data: {
             signupMethod: "join",
             orgId,
@@ -139,13 +138,6 @@ export default function Join({ orgUserCount, orgName }) {
     analytics.track("Signup", { email, name })
 
     if (ok) {
-      notifications.show({
-        icon: <IconCheck size={18} />,
-        color: "teal",
-        title: "Email sent 💌",
-        message: "Check your emails to verify your email.",
-      })
-
       setStep(3)
     }
 
@@ -278,55 +270,16 @@ export default function Join({ orgUserCount, orgName }) {
                     </Title>
 
                     <Text size="lg" mt="xs" mb="xl" weight={500}>
-                      Check your emails for the confirmation to open the
-                      dashboard.
+                      Check your emails for the confirmation link.
                     </Text>
 
-                    <Text>Want to say hi? We'd love to talk to you:</Text>
-
-                    <Group>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          $crisp.push(["do", "chat:open"])
-                        }}
-                        rightIcon={<IconMessageBolt size={18} />}
-                      >
-                        Chat
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        color="teal.8"
-                        component="a"
-                        href="mailto:vince@llmonitor.com"
-                        rightIcon={<IconMail size={18} />}
-                      >
-                        Email
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        color="violet"
-                        target="_blank"
-                        component="a"
-                        href="https://discord.gg/8PafSG58kK"
-                        rightIcon={<IconBrandDiscord size={18} />}
-                      >
-                        Discord
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        color="red.8"
-                        target="_blank"
-                        component="a"
-                        href="https://savvycal.com/vince/chat"
-                        rightIcon={<IconCalendar size={18} />}
-                      >
-                        Call with founder
-                      </Button>
-                    </Group>
+                    <Button
+                      onClick={() => Router.push("/")}
+                      variant="outline"
+                      size="lg"
+                    >
+                      Open Dashboard
+                    </Button>
                   </Stack>
                 </>
               )}
