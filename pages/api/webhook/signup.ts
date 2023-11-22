@@ -1,8 +1,6 @@
 import { edgeWrapper } from "@/lib/api/edgeHelpers"
 import { jsonResponse } from "@/lib/api/jsonResponse"
-import { WELCOME_EMAIL } from "@/lib/emails"
 import { sendTelegramMessage } from "@/lib/notifications"
-import { sendEmail } from "@/lib/sendEmail"
 import { supabaseAdmin } from "@/lib/supabaseClient"
 import { NextRequest, NextResponse } from "next/server"
 
@@ -39,27 +37,50 @@ export default edgeWrapper(async function handler(req: NextRequest) {
     // Add user to Org as admin
     await supabaseAdmin
       .from("profile")
-      .insert({ id: userId, name, email, org_id: org.id, role: "admin" })
+      .insert({
+        id: userId,
+        name,
+        email,
+        org_id: org.id,
+        role: "admin",
+        verified: process.env.SKIP_EMAIL_VERIFY ? true : false,
+      })
       .throwOnError()
 
     // Create first app
-    const {
-      data: { id: appId },
-    } = await supabaseAdmin
+    await supabaseAdmin
       .from("app")
       .insert({ name: projectName, org_id: org.id })
       .select()
       .single()
       .throwOnError()
 
-    await sendEmail(WELCOME_EMAIL(email, name, appId))
+    await fetch(
+      `${process.env.NEXT_PUBLIC_APP_URL}/api/user/send-verification`,
+      {
+        method: "POST",
+        body: JSON.stringify({ email, name }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    )
+
+    // await sendEmail(WELCOME_EMAIL(email, name, appId))
   } else if (signupMethod === "join") {
     // New user in existing Org (/join)
 
     // Add user to Org as member
     await supabaseAdmin
       .from("profile")
-      .insert({ id: userId, name, email, org_id: orgId, role: "member" })
+      .insert({
+        id: userId,
+        name,
+        email,
+        org_id: orgId,
+        role: "member",
+        verified: true, // Auto verify email
+      })
       .throwOnError()
   }
 

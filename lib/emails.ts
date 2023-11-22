@@ -3,9 +3,34 @@ const extractFirstName = (name: string) => {
   return name.split(" ")[0]
 }
 
+export const CONFIRM_EMAIL = (
+  email: string,
+  name: string,
+  confirmLink: string,
+) => {
+  return {
+    subject: `confirm your email`,
+    to: [email],
+    from: process.env.GENERIC_SENDER,
+
+    text: `Hi ${extractFirstName(name)},
+
+Thanks for signing up for LLMonitor.
+
+Please confirm your email address by clicking on the link below:
+
+${confirmLink}
+
+You can reply to this email if you have any question.
+
+Thanks
+- The LLMonitor team`,
+  }
+}
+
 export const WELCOME_EMAIL = (email: string, name: string, appId: string) => {
   return {
-    subject: `welcome`,
+    subject: `welcome to llmonitor`,
     to: [email],
     from: process.env.PERSONAL_SENDER || process.env.GENERIC_SENDER,
 
