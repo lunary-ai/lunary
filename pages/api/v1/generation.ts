@@ -16,7 +16,7 @@ export default async function handler(
 ) {
   try {
     const apiKey = (req.query.api_key ||
-      req.headers["x-api_key"] ||
+      req.headers["x-api-key"] ||
       req.cookies.api_key) as string
 
     const { success } = await ratelimit.limit(apiKey)
