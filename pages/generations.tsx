@@ -11,7 +11,6 @@ import {
   Box,
   Button,
   Drawer,
-  Flex,
   Group,
   Menu,
   MultiSelect,
@@ -222,7 +221,6 @@ export default function Generations() {
         key="gen"
         onRowClicked={(row) => {
           analytics.track("OpenRun")
-
           setSelected(row)
         }}
         loading={loading || validating}
