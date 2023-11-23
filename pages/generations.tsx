@@ -122,16 +122,18 @@ export default function Generations() {
   }
 
   function exportButton(url: string) {
-    analytics.track("ClickExport")
-
     if (profile?.org.plan === "pro") {
       return {
         component: "a",
         href: url,
+        onClick: () => {
+          analytics.track("ClickExport")
+        },
       }
     } else {
       return {
         onClick: () => {
+          analytics.track("ClickExport")
           modals.openContextModal({
             modal: "upgrade",
             size: 900,
