@@ -7,7 +7,7 @@ const sql = postgres(process.env.DB_URI, { transform: postgres.camel })
 
 const ratelimit = new Ratelimit({
   redis: kv,
-  limiter: Ratelimit.slidingWindow(5, "1s"),
+  limiter: Ratelimit.slidingWindow(30, "1s"),
 })
 
 export default async function handler(
@@ -39,11 +39,10 @@ export default async function handler(
       return res.status(422).send("Missing appId")
     }
 
-    // TODO: use ensureHasAccessToApp instead of custom check +  check plan
     const [org] = await sql`select * from org where api_key = ${apiKey}`
     const [app] = await sql`select * from app where id = ${appId}`
 
-    if (org.id !== app.orgId) {
+    if (org.id !== app.orgId || org.plan === "free") {
       console.error("Forbidden")
       return res.status(403).send("Forbidden")
     }
