@@ -44,6 +44,7 @@ export default function Users() {
       <NextSeo title="Users" />
 
       <DataTable
+        key="users"
         columns={columns}
         data={users}
         onRowClicked={(row) => Router.push(`/users/${row.id}`)}

@@ -178,6 +178,7 @@ export default function Chats() {
       </Drawer>
 
       <DataTable
+        key="chats"
         onRowClicked={(row) => {
           setSelected(row)
         }}

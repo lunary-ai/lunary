@@ -44,6 +44,7 @@ export default function Traces() {
       <SearchBar query={query} setQuery={setQuery} />
 
       <DataTable
+        key="traces"
         columns={columns}
         data={runs}
         loadMore={loadMore}
