@@ -16,8 +16,6 @@ export default async function handler(
   res: NextApiResponse,
 ) {
   try {
-    await ensureHasAccessToApp(req, res)
-
     const apiKey = (req.query.api_key ||
       req.headers["x-api-key"] ||
       req.cookies.api_key) as string
