@@ -6,6 +6,8 @@ import { formatCost, formatDateTime, msToTime } from "./format"
 import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 import Feedback from "@/components/Blocks/Feedback"
 import ProtectedText from "@/components/Blocks/ProtectedText"
+import { useEffect } from "react"
+import analytics from "./analytics"
 const columnHelper = createColumnHelper<any>()
 
 export const timeColumn = (timeColumn, label = "Time") => {
@@ -73,6 +75,12 @@ export const tagsColumn = () => {
     size: 60,
     cell: (props) => {
       const tags = props.getValue()
+
+      useEffect(() => {
+        // Feature tracking
+        if (tags) analytics.trackOnce("HasTags")
+      }, [tags])
+
       if (!tags) return null
 
       return (
