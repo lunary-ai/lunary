@@ -4,13 +4,12 @@ import { supabaseAdmin } from "@/lib/supabaseClient"
 // import gpt2 from "./ranks/gpt2"; useless
 // import p50k_edit from "./ranks/p50k_edit"; useless
 // import r50k_base from "js-tiktoken/ranks/r50k_base";
+// import p50k_base from "js-tiktoken/ranks/p50k_base"
 
-// @ts-ignore
-import p50k_base from "js-tiktoken/ranks/p50k_base"
-// @ts-ignore
-import cl100k_base from "js-tiktoken/ranks/cl100k_base"
+import cl100k_base from "tiktoken/encoders/cl100k_base.json"
 
-import { Tiktoken, getEncodingNameForModel } from "js-tiktoken/lite"
+import { Tiktoken, getEncodingNameForModel } from "js-tiktoken"
+
 import { H } from "@highlight-run/next/server"
 
 const cache = {}
@@ -47,8 +46,6 @@ async function getEncoding(
     case "r50k_base":
     case "p50k_base":
       return await getRareEncoding(encoding, extendSpecialTokens)
-    case "p50k_base":
-      return new Tiktoken(p50k_base, extendSpecialTokens)
     case "cl100k_base":
       return new Tiktoken(cl100k_base, extendSpecialTokens)
     default:
@@ -59,14 +56,15 @@ async function getEncoding(
 async function encodingForModel(model) {
   let encodingName
 
-  // TODO: Remove this once this PR merged:
-  // https://github.com/dqbd/tiktoken/pull/79/files
-  if (model.includes("gpt-4-1106")) {
-    encodingName = "cl100k_base"
-  } else if (model.includes("claude")) {
+  if (model.includes("claude")) {
     encodingName = "claude"
   } else {
-    encodingName = getEncodingNameForModel(model)
+    try {
+      encodingName = getEncodingNameForModel(model)
+    } catch (e) {
+      console.warn("Warning: model not found. Using cl100k_base encoding.")
+      encodingName = "cl100k_base"
+    }
   }
 
   return await getEncoding(encodingName)
@@ -181,14 +179,7 @@ async function numTokensFromMessages(
   model = "gpt-3.5-turbo-0613",
 ) {
   let tokensPerMessage, tokensPerName
-  let encoding
-
-  try {
-    encoding = await encodingForModel(model)
-  } catch (error) {
-    console.warn("Warning: model not found. Using cl100k_base encoding.")
-    encoding = await getEncoding("cl100k_base")
-  }
+  const encoding = await encodingForModel(model)
 
   tokensPerMessage = 3
   tokensPerName = 1
@@ -199,9 +190,10 @@ async function numTokensFromMessages(
   for (let message of messages) {
     numTokens += tokensPerMessage
     for (let [key, value] of Object.entries(message)) {
-      numTokens += encoding.encode(
-        typeof value === "object" ? JSON.stringify(value) : value,
-      ).length
+      const str =
+        typeof value === "object" ? JSON.stringify(value) : (value as string)
+
+      numTokens += encoding.encode(str).length
 
       if (key === "role") {
         numTokens += tokensPerName
@@ -237,11 +229,12 @@ export const completeRunUsage = async (run) => {
   try {
     // get run input
 
-    const { data: runData, error } = await supabaseAdmin
+    const { data: runData } = await supabaseAdmin
       .from("run")
       .select("input,params,name")
       .match({ id: run.runId })
       .single()
+      .throwOnError()
 
     // Get model name (in older sdk it wasn't sent in "end" event)
     const modelName = runData.name?.replaceAll("gpt-35", "gpt-3.5") // Azure fix
