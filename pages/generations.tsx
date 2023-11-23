@@ -11,7 +11,6 @@ import {
   Box,
   Button,
   Drawer,
-  Flex,
   Group,
   Menu,
   MultiSelect,
@@ -123,16 +122,18 @@ export default function Generations() {
   }
 
   function exportButton(url: string) {
-    analytics.track("ClickExport")
-
     if (profile?.org.plan === "pro") {
       return {
         component: "a",
         href: url,
+        onClick: () => {
+          analytics.track("ClickExport")
+        },
       }
     } else {
       return {
         onClick: () => {
+          analytics.track("ClickExport")
           modals.openContextModal({
             modal: "upgrade",
             size: 900,
@@ -209,7 +210,7 @@ export default function Generations() {
 
       <Drawer
         opened={!!selected}
-        size="lg"
+        size={700}
         keepMounted
         position="right"
         title={selected ? formatDateTime(selected.created_at) : ""}
@@ -222,7 +223,6 @@ export default function Generations() {
         key="gen"
         onRowClicked={(row) => {
           analytics.track("OpenRun")
-
           setSelected(row)
         }}
         loading={loading || validating}
