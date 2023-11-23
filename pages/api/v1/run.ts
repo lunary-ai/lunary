@@ -17,14 +17,16 @@ const querySchema = z
     api_key: z.string().optional(),
     app_id: z.string(),
     search: z.string().optional(),
-    models: z.array(z.string()).optional(),
-    tags: z.array(z.string()).optional(),
-    type: z.array(z.enum(["llm", "tool", "chain", "agent"])).optional(),
-    limit: z.number().optional().default(100),
-    page: z.number().optional().default(0),
+    models: z.union([z.string(), z.array(z.string())]).optional(),
+    tags: z.union([z.string(), z.array(z.string())]).optional(),
+    type: z
+      .union([z.string(), z.array(z.enum(["llm", "tool", "chain", "agent"]))])
+      .optional(),
+    limit: z.string().optional().default("100"),
+    page: z.string().optional().default("0"),
     order: z.enum(["asc", "desc"]).optional(),
-    min_duration: z.number().optional(),
-    max_duration: z.number().optional(),
+    min_duration: z.string().optional(),
+    max_duration: z.string().optional(),
     start_time: z.string(),
     end_time: z.string(),
   })
@@ -32,16 +34,18 @@ const querySchema = z
     apiKey: obj.api_key,
     appId: obj.app_id,
     search: obj.search,
-    models: obj.models,
-    tags: obj.tags,
-    type: obj.type,
-    limit: obj.limit,
-    page: obj.page,
+    models: Array.isArray(obj.models)
+      ? obj.models
+      : [obj.models].filter(Boolean),
+    tags: Array.isArray(obj.tags) ? obj.tags : [obj.tags].filter(Boolean),
+    type: Array.isArray(obj.type) ? obj.type : [obj.type].filter(Boolean),
+    limit: Number(obj.limit),
+    page: Number(obj.page),
     order: obj.order,
-    minDuration: obj.min_duration,
-    maxDuration: obj.max_duration,
-    startTime: obj.start_time,
-    endTime: obj.end_time,
+    minDuration: Number(obj.min_duration),
+    maxDuration: Number(obj.max_duration),
+    startTime: new Date(obj.start_time),
+    endTime: new Date(obj.end_time),
   }))
 
 export default async function handler(
@@ -80,13 +84,11 @@ export default async function handler(
       return res.status(422).send("Missing startTime or endTime")
     }
 
-    const startDate = new Date(startTime)
-    const endDate = new Date(endTime)
-    if (startDate >= endDate) {
+    if (startTime >= endTime) {
       console.error("Invalid time window")
       return res.status(422).send("Invalid time window")
     }
-    const timeWindowFilter = sql`and r.created_at between ${startDate} and ${endDate}`
+    const timeWindowFilter = sql`and r.created_at between ${startTime} and ${endTime}`
 
     if (!appId) {
       console.error("Missing appId")
