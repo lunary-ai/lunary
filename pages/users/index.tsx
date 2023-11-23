@@ -11,6 +11,7 @@ import { formatAppUser } from "@/utils/format"
 import { IconUsers } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import Router from "next/router"
+import analytics from "@/utils/analytics"
 
 const columns = [
   {
@@ -47,7 +48,11 @@ export default function Users() {
         key="users"
         columns={columns}
         data={users}
-        onRowClicked={(row) => Router.push(`/users/${row.id}`)}
+        onRowClicked={(row) => {
+          analytics.track("OpenUser")
+
+          Router.push(`/users/${row.id}`)
+        }}
         loading={loading || validating}
         loadMore={loadMore}
       />

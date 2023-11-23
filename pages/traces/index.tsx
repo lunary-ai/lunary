@@ -19,6 +19,7 @@ import { useTraces } from "@/utils/dataHooks"
 import { useDebouncedState } from "@mantine/hooks"
 import { IconRobot, IconSearch } from "@tabler/icons-react"
 import SearchBar from "@/components/Blocks/SearchBar"
+import analytics from "@/utils/analytics"
 
 const columns = [
   timeColumn("created_at", "Time"),
@@ -49,7 +50,11 @@ export default function Traces() {
         data={runs}
         loadMore={loadMore}
         loading={loading || validating}
-        onRowClicked={(row) => Router.push(`/traces/${row.id}`)}
+        onRowClicked={(row) => {
+          analytics.track("OpenTrace")
+
+          Router.push(`/traces/${row.id}`)
+        }}
       />
     </Stack>
   )

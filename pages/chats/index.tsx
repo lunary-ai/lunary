@@ -34,6 +34,7 @@ import {
 
 import { IconMessages, IconNeedleThread } from "@tabler/icons-react"
 import { createColumnHelper } from "@tanstack/react-table"
+import analytics from "@/utils/analytics"
 
 const columnHelper = createColumnHelper<any>()
 
@@ -180,6 +181,8 @@ export default function Chats() {
       <DataTable
         key="chats"
         onRowClicked={(row) => {
+          analytics.track("OpenChat")
+
           setSelected(row)
         }}
         loading={loading || validating}
