@@ -195,7 +195,7 @@ export function useUsers() {
   return { users }
 }
 
-export function useGenerations(
+export function useLLMCalls(
   search,
   modelNames: string[] = [],
   tags: string[] = [],
