@@ -21,7 +21,7 @@ export const timeColumn = (timeColumn, label = "Time") => {
       const isToday =
         new Date(info.getValue()).toDateString() === new Date().toDateString()
       if (isToday) {
-        return new Date(info.getValue()).toLocaleTimeString("en-US")
+        return new Date(info.getValue()).toLocaleTimeString(navigator.language)
       } else {
         return formatDateTime(info.getValue())
       }
