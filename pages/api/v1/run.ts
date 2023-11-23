@@ -1,8 +1,9 @@
 import { Ratelimit } from "@upstash/ratelimit"
-import { NextApiRequest, NextApiResponse } from "next"
 import { kv } from "@vercel/kv"
+import { NextApiRequest, NextApiResponse } from "next"
 import postgres from "postgres"
-import { ensureHasAccessToApp } from "../../../lib/api/ensureAppIsLogged"
+import { z } from "zod"
+import { calcRunCost } from "../../../utils/calcCosts"
 
 const sql = postgres(process.env.DB_URI, { transform: postgres.camel })
 
@@ -10,6 +11,38 @@ const ratelimit = new Ratelimit({
   redis: kv,
   limiter: Ratelimit.slidingWindow(30, "1s"),
 })
+
+const querySchema = z
+  .object({
+    api_key: z.string().optional(),
+    app_id: z.string(),
+    search: z.string().optional(),
+    models: z.array(z.string()).optional(),
+    tags: z.array(z.string()).optional(),
+    type: z.array(z.enum(["llm", "tool", "chain", "agent"])).optional(),
+    limit: z.number().optional().default(100),
+    page: z.number().optional().default(0),
+    order: z.enum(["asc", "desc"]).optional(),
+    min_duration: z.number().optional(),
+    max_duration: z.number().optional(),
+    start_time: z.string(),
+    end_time: z.string(),
+  })
+  .transform((obj) => ({
+    apiKey: obj.api_key,
+    appId: obj.app_id,
+    search: obj.search,
+    models: obj.models,
+    tags: obj.tags,
+    type: obj.type,
+    limit: obj.limit,
+    page: obj.page,
+    order: obj.order,
+    minDuration: obj.min_duration,
+    maxDuration: obj.max_duration,
+    startTime: obj.start_time,
+    endTime: obj.end_time,
+  }))
 
 export default async function handler(
   req: NextApiRequest,
@@ -27,16 +60,20 @@ export default async function handler(
       return res.status(429).send("Rate limit exceeded")
     }
 
-    const appId = req.query.app_id
-    const { search, models, tags, type } = req.query
-    const limit = parseInt(req.query.limit as string) || 1000
-    const page = parseInt(req.query.page as string) || 0
-    const order = req.query.order === "asc" ? sql`asc` : sql`desc`
-    const minDuration = parseFloat(req.query.min_duration as string)
-    const maxDuration = parseFloat(req.query.max_duration as string)
-
-    const startTime = req.query.start_time as string
-    const endTime = req.query.end_time as string
+    const {
+      appId,
+      search,
+      models,
+      tags,
+      type,
+      limit,
+      page,
+      order,
+      minDuration,
+      maxDuration,
+      startTime,
+      endTime,
+    } = querySchema.parse(req.query)
 
     if (!startTime || !endTime) {
       console.error("Missing startTime or endTime")
@@ -69,8 +106,8 @@ export default async function handler(
     }
 
     let typeFilter = sql``
-    if (type) {
-      typeFilter = sql`and r.type = ${type}`
+    if (type?.length > 0) {
+      typeFilter = sql`and r.type = any(${type})`
     }
 
     let searchFilter = sql``
@@ -103,18 +140,28 @@ export default async function handler(
 
     const rows = await sql`
       select
-        r.created_at as time,
-        r.name as model,
+        r.created_at,
+        r.ended_at,
         case 
           when r.ended_at is not null then extract(epoch from (r.ended_at - r.created_at)) 
           else null 
         end as duration,
-        coalesce(completion_tokens, 0) + coalesce(prompt_tokens, 0) as tokens,
-        tags as tags,
-        input as prompt,
-        coalesce(output, error) as result
+        r.type,
+        r.name,
+        coalesce(completion_tokens, 0) as completion_tokens, 
+        coalesce(prompt_tokens, 0) as prompt_tokens,
+        tags,
+        input,
+        output,
+        error,
+        au.external_id as user_id,
+        au.created_at as user_created_at,
+        au.last_seen as user_last_seen,
+        au.props as user_props,
+        coalesce(output, error) as output 
       from
         run r 
+        left join app_user au on au.id = r.user 
       where
         r.app = ${appId}
         ${typeFilter}
@@ -124,7 +171,7 @@ export default async function handler(
         ${durationFilter}
         ${timeWindowFilter}
       order by
-        r.created_at ${order} 
+        r.created_at ${order === "asc" ? sql`asc` : sql`desc`} 
       limit ${limit} 
       offset ${page * limit};`
 
@@ -132,7 +179,7 @@ export default async function handler(
       select count(*) from run r
       where
         r.app = ${appId}
-        and r.type = 'llm'
+        ${typeFilter}
         ${modelsFilter}
         ${tagsFilter}
         ${searchFilter}
@@ -140,9 +187,40 @@ export default async function handler(
         ${timeWindowFilter}
     `
 
-    return res.status(200).json({ data: rows, total: count, page, limit })
+    const runs = rows.map((run) => ({
+      type: run.type,
+      name: run.name,
+      createdAt: run.createdAt,
+      endedAt: run.endedAt,
+      duration: run.duration,
+      tokens: {
+        completion: run.completionTokens,
+        prompt: run.promptTokens,
+        total: run.completionTokens + run.promptTokens,
+      },
+      tags: run.tag,
+      input: run.input,
+      output: run.output,
+      error: run.error,
+      user: {
+        id: run.userId,
+        createdAt: run.userCreatedAt,
+        lastSeen: run.userLastSeen,
+        props: run.userProps,
+      },
+      cost: calcRunCost(run),
+    }))
+
+    return res
+      .status(200)
+      .json({ data: runs, total: Number(count), page, limit })
   } catch (error) {
     console.error(error)
+    if (error instanceof z.ZodError) {
+      return res
+        .status(422)
+        .json({ error: "Invalid request parameters", details: error.issues })
+    }
     return res.status(500).send("Error")
   }
 }
