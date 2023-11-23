@@ -2,6 +2,7 @@ import { Ratelimit } from "@upstash/ratelimit"
 import { NextApiRequest, NextApiResponse } from "next"
 import { kv } from "@vercel/kv"
 import postgres from "postgres"
+import { ensureHasAccessToApp } from "../../../lib/api/ensureAppIsLogged"
 
 const sql = postgres(process.env.DB_URI, { transform: postgres.camel })
 
@@ -15,6 +16,8 @@ export default async function handler(
   res: NextApiResponse,
 ) {
   try {
+    await ensureHasAccessToApp(req, res)
+
     const apiKey = (req.query.api_key ||
       req.headers["x-api-key"] ||
       req.cookies.api_key) as string
