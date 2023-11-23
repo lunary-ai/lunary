@@ -1,6 +1,7 @@
 import SmartViewer from "@/components/Blocks/SmartViewer"
 import { ChatMessage } from "@/components/Blocks/SmartViewer/Message"
 import Paywall from "@/components/Layout/Paywall"
+import analytics from "@/utils/analytics"
 import { useCurrentApp, useOrg, useProfile } from "@/utils/dataHooks"
 import { Database } from "@/utils/supaTypes"
 import {
@@ -149,6 +150,11 @@ function Playground() {
   }
 
   const runPlayground = async () => {
+    analytics.track("RunPlayground", {
+      model,
+      appId: app.id,
+    })
+
     if (profile.org?.play_allowance <= 0) {
       modals.openContextModal({
         modal: "upgrade",

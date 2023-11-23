@@ -20,7 +20,6 @@ import {
 } from "@mantine/core"
 
 import { IconCopy, IconCheck } from "@tabler/icons-react"
-import { useUser } from "@supabase/auth-helpers-react"
 
 import analytics from "@/utils/analytics"
 import { NextSeo } from "next-seo"

@@ -45,6 +45,7 @@ import { useDebouncedState } from "@mantine/hooks"
 import { modals } from "@mantine/modals"
 import Empty from "../components/Layout/Empty"
 import { AppContext } from "../utils/context"
+import analytics from "@/utils/analytics"
 
 const columns = [
   timeColumn("created_at"),
@@ -122,6 +123,8 @@ export default function Generations() {
   }
 
   function exportButton(url: string) {
+    analytics.track("ClickExport")
+
     if (profile?.org.plan === "pro") {
       return {
         component: "a",
@@ -218,6 +221,8 @@ export default function Generations() {
       <DataTable
         key="gen"
         onRowClicked={(row) => {
+          analytics.track("OpenRun")
+
           setSelected(row)
         }}
         loading={loading || validating}
