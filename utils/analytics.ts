@@ -51,6 +51,18 @@ const track = (event: string, data?: any) => {
   }
 }
 
+const alreadyTracked = new Set<string>()
+const trackOnce = (event: string, data?: any) => {
+  // Prevent sending too many events
+  if (alreadyTracked.has(event)) return
+
+  try {
+    posthog?.capture(event, data)
+  } catch (e) {
+    console.error(e)
+  }
+}
+
 const identify = (userId: string, traits: any) => {
   try {
     posthog?.identify(userId, traits)
@@ -82,6 +94,7 @@ const identify = (userId: string, traits: any) => {
 
 const analytics = {
   track,
+  trackOnce,
   identify,
   handleRouteChange,
 }

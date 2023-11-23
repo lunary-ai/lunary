@@ -167,15 +167,14 @@ export function BubbleMessage({ role, content, extra }) {
   return (
     <>
       <Flex direction={isBot ? "row" : "row-reverse"} align="center" gap="md">
-        {isBot ? (
-          <ThemeIcon size={36} variant="light" radius="xl" color={"blue"}>
-            <IconRobot size={24} />
-          </ThemeIcon>
-        ) : (
-          <ThemeIcon size={36} variant="light" radius="xl" color={"pink"}>
-            <IconUser size={24} />
-          </ThemeIcon>
-        )}
+        <ThemeIcon
+          size={36}
+          variant="light"
+          radius="xl"
+          color={isBot ? "blue" : "pink"}
+        >
+          {isBot ? <IconRobot size={24} /> : <IconUser size={24} />}
+        </ThemeIcon>
         <div>
           <Paper
             mb="xs"
@@ -184,7 +183,7 @@ export function BubbleMessage({ role, content, extra }) {
             radius="lg"
             shadow="sm"
             withBorder
-            maw={270}
+            maw={430}
           >
             <span style={{ whiteSpace: "pre-line" }}>{content}</span>
           </Paper>

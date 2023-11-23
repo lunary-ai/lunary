@@ -25,6 +25,7 @@ import {
 
 import { useVirtual } from "@tanstack/react-virtual"
 import { useColorScheme, useLocalStorage } from "@mantine/hooks"
+import analytics from "@/utils/analytics"
 
 // outside for reference
 const emptyArray = []

@@ -54,7 +54,7 @@ export default function SmartViewer({
   }, [parsed])
 
   return (
-    <Spoiler maxHeight={500} showLabel="Show more ↓" hideLabel="Show less ↑">
+    <Spoiler maxHeight={700} showLabel="Show more ↓" hideLabel="Show less ↑">
       <pre className={compact ? "compact" : ""}>
         {error && (
           <ChatMessage
@@ -80,7 +80,7 @@ export default function SmartViewer({
                 <MessageViewer data={parsed} compact={compact} />
               ) : (
                 <Code color="blue">
-                  <RenderJson data={parsed} />
+                  <RenderJson data={parsed} compact={compact} />
                 </Code>
               )
             ) : (
