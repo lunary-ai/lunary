@@ -2,7 +2,7 @@ import DataTable from "@/components/Blocks/DataTable"
 
 import {
   useCurrentApp,
-  useGenerations,
+  useLLMCalls,
   useModelNames,
   useProfile,
   useTags,
@@ -94,7 +94,7 @@ function buildExportUrl(
   return url.toString()
 }
 
-export default function Generations() {
+export default function LLMCalls() {
   let { modelNames } = useModelNames()
   const [query, setQuery] = useDebouncedState(null, 500)
 
@@ -105,7 +105,7 @@ export default function Generations() {
   const { appId } = useContext(AppContext)
   const { app, loading: appLoading } = useCurrentApp()
 
-  const { runs, loading, validating, loadMore } = useGenerations(
+  const { runs, loading, validating, loadMore } = useLLMCalls(
     query,
     selectedModels,
     selectedTags,
