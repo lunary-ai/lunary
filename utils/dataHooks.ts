@@ -62,6 +62,7 @@ export const useProfile = () => {
   const {
     data: profile,
     mutate,
+    error,
     isLoading,
   } = useQuery(user ? query : null, hardOptions)
 
@@ -93,7 +94,13 @@ export const useProfile = () => {
     "name,id",
   )
 
-  return { profile: profileWithOrg, loading: isLoading, mutate, updateOrg }
+  return {
+    profile: profileWithOrg,
+    error,
+    loading: isLoading,
+    mutate,
+    updateOrg,
+  }
 }
 
 export function useApps() {

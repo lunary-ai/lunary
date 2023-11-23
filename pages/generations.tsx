@@ -216,6 +216,7 @@ export default function Generations() {
       </Drawer>
 
       <DataTable
+        key="gen"
         onRowClicked={(row) => {
           setSelected(row)
         }}

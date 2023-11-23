@@ -24,7 +24,7 @@ import {
 } from "@tabler/icons-react"
 
 import { useVirtual } from "@tanstack/react-virtual"
-import { useColorScheme } from "@mantine/hooks"
+import { useColorScheme, useLocalStorage } from "@mantine/hooks"
 
 // outside for reference
 const emptyArray = []
@@ -32,6 +32,7 @@ const emptyArray = []
 const AUTO_HIDABLE_COLUMNS = ["feedback", "tags", "user"]
 
 export default function DataTable({
+  key,
   data,
   columns = [],
   loading = false,
@@ -45,7 +46,16 @@ export default function DataTable({
     },
   ])
 
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [columnVisibility, setColumnVisibility] =
+    useLocalStorage<VisibilityState>({
+      key: "columnVisibility-" + key,
+      defaultValue: {},
+    })
+
+  const [columnsTouched, setColumnsTouched] = useLocalStorage({
+    key: "columnsTouched-" + key,
+    defaultValue: false,
+  })
 
   //we need a reference to the scrolling element for logic down below
   const tableContainerRef = useRef<HTMLDivElement>(null)
@@ -104,7 +114,8 @@ export default function DataTable({
   }, [fetchMoreOnBottomReached])
 
   useEffect(() => {
-    if (!table || !rows?.length) return
+    if (!table || !rows?.length || columnsTouched) return
+
     table.getAllColumns().forEach((column) => {
       if (!AUTO_HIDABLE_COLUMNS.includes(column.id)) return
 
@@ -112,7 +123,7 @@ export default function DataTable({
 
       column.toggleVisibility(isUsed)
     })
-  }, [table, rows])
+  }, [table, rows, columnsTouched])
 
   return (
     <>
@@ -188,7 +199,10 @@ export default function DataTable({
                     .map((column) => (
                       <Menu.Item
                         key={column.id}
-                        onClick={() => column.toggleVisibility()}
+                        onClick={() => {
+                          column.toggleVisibility()
+                          setColumnsTouched(true)
+                        }}
                       >
                         <Group>
                           <Checkbox

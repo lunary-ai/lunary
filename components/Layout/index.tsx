@@ -27,9 +27,9 @@ export default function Layout({ children }: { children: ReactNode }) {
     "/update-password",
   ].includes(router.pathname)
 
-  const { profile, loading } = useProfile()
+  const { profile, loading, error } = useProfile()
 
-  const { session, isLoading } = useSessionContext()
+  const { session, isLoading, supabaseClient } = useSessionContext()
 
   const [appId, setAppId] = useLocalStorage({
     key: "appId",
@@ -41,8 +41,13 @@ export default function Layout({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!session && !isLoading && !isAuthPage) {
       Router.push("/login")
+    } else if (session && !profile && !loading && error && !isAuthPage) {
+      // If the profile failed to load, force sign out and redirect to login
+      supabaseClient.auth.signOut().then(() => {
+        Router.push("/login")
+      })
     }
-  }, [session, isLoading, router.pathname])
+  }, [session, isLoading, router.pathname, profile, loading, error])
 
   if (!session && !isAuthPage) return null
 
