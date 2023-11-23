@@ -184,7 +184,7 @@ export function BubbleMessage({ role, content, extra }) {
             radius="lg"
             shadow="sm"
             withBorder
-            maw={270}
+            maw={430}
           >
             <span style={{ whiteSpace: "pre-line" }}>{content}</span>
           </Paper>

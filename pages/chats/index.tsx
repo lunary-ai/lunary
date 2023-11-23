@@ -171,6 +171,7 @@ export default function Chats() {
       <Drawer
         opened={!!selected}
         keepMounted
+        size="lg"
         position="right"
         title={<Title order={3}>Chat details</Title>}
         onClose={() => setSelected(null)}
