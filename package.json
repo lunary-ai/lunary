@@ -38,7 +38,7 @@
     "eslint": "8.40.0",
     "eslint-config-next": "13.4.2",
     "jose": "^5.1.1",
-    "js-tiktoken": "^1.0.8",
+    "js-tiktoken": "^1.0.7",
     "litellm": "^0.5.0",
     "micro": "^10.0.1",
     "next": "^13.4.1",
