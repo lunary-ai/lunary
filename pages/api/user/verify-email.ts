@@ -9,6 +9,13 @@ import { jwtVerify } from "jose"
 export const runtime = "edge"
 export const dynamic = "force-dynamic"
 
+const response = new Response(`Email verified`, {
+  status: 302,
+  headers: {
+    Location: process.env.NEXT_PUBLIC_APP_URL,
+  },
+})
+
 export default edgeWrapper(async function handler(req) {
   const params = new URL(req.url).searchParams
 
@@ -20,6 +27,19 @@ export default edgeWrapper(async function handler(req) {
   }: {
     payload: { email: string }
   } = await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET))
+
+  // check if email is already verified
+
+  const { data: { verified } = {} } = await supabaseAdmin
+    .from("profile")
+    .select("verified")
+    .eq("email", email)
+    .single()
+    .throwOnError()
+
+  if (verified) {
+    return response
+  }
 
   const {
     data: { org_id, name },
@@ -44,10 +64,5 @@ export default edgeWrapper(async function handler(req) {
   await sendEmail(WELCOME_EMAIL(email, name, id))
 
   // redirect to app
-  return new Response(`Email verified`, {
-    status: 302,
-    headers: {
-      Location: process.env.NEXT_PUBLIC_APP_URL,
-    },
-  })
+  return response
 })

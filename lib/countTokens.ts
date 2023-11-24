@@ -56,7 +56,7 @@ async function getEncoding(
 async function encodingForModel(model) {
   let encodingName
 
-  if (model.includes("claude")) {
+  if (model?.includes("claude")) {
     encodingName = "claude"
   } else {
     try {
@@ -239,9 +239,10 @@ export const completeRunUsage = async (run) => {
     // Get model name (in older sdk it wasn't sent in "end" event)
     const modelName = runData.name?.replaceAll("gpt-35", "gpt-3.5") // Azure fix
 
-    const isGoogleModel = GOOGLE_MODELS.find((model) =>
-      modelName.includes(model),
+    const isGoogleModel = GOOGLE_MODELS.find(
+      (model) => modelName?.includes(model),
     )
+
     if (isGoogleModel) {
       // For Google models we need to use their API to count tokens
 
