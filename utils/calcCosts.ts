@@ -92,8 +92,8 @@ export const calcRunCost = (run) => {
 
   if (!modelCost) return 0
 
-  const promptTokens = run.prompt_tokens || run.promptTokens
-  const completionTokens = run.completion_tokens || run.completionTokens
+  const promptTokens = run.prompt_tokens || run.promptTokens || 0
+  const completionTokens = run.completion_tokens || run.completionTokens || 0
 
   const inputCost = (modelCost.inputCost * promptTokens) / 1000
   const outputCost = (modelCost.outputCost * completionTokens) / 1000
