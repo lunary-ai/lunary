@@ -66,8 +66,8 @@ export default function SmartViewer({
                     ? error.message || error.stack
                     : error.stack
                   : typeof error === "object"
-                  ? JSON.stringify(error, null, 2)
-                  : error,
+                    ? JSON.stringify(error, null, 2)
+                    : error,
             }}
             compact={compact}
           />

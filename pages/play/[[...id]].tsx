@@ -327,6 +327,7 @@ function Playground() {
                     <NumberInput
                       min={0}
                       max={2}
+                      defaultValue={1.0}
                       step={0.1}
                       decimalScale={2}
                       size="xs"

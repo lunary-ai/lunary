@@ -1,30 +1,22 @@
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react"
 
-import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  getSortedRowModel,
-  SortingState,
-  VisibilityState,
-} from "@tanstack/react-table"
-import {
-  ActionIcon,
-  Card,
-  Checkbox,
-  Group,
-  Menu,
-  Table,
-  Text,
-} from "@mantine/core"
+import { ActionIcon, Card, Checkbox, Group, Menu, Text } from "@mantine/core"
 import {
   IconChevronDown,
   IconChevronUp,
   IconColumns3,
 } from "@tabler/icons-react"
+import {
+  SortingState,
+  VisibilityState,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table"
 
+import { useColorScheme, useLocalStorage } from "@mantine/hooks"
 import { useVirtual } from "@tanstack/react-virtual"
-import { useColorScheme } from "@mantine/hooks"
 
 // outside for reference
 const emptyArray = []
@@ -32,6 +24,7 @@ const emptyArray = []
 const AUTO_HIDABLE_COLUMNS = ["feedback", "tags", "user"]
 
 export default function DataTable({
+  key,
   data,
   columns = [],
   loading = false,
@@ -45,7 +38,16 @@ export default function DataTable({
     },
   ])
 
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [columnVisibility, setColumnVisibility] =
+    useLocalStorage<VisibilityState>({
+      key: "columnVisibility-" + key,
+      defaultValue: {},
+    })
+
+  const [columnsTouched, setColumnsTouched] = useLocalStorage({
+    key: "columnsTouched-" + key,
+    defaultValue: false,
+  })
 
   //we need a reference to the scrolling element for logic down below
   const tableContainerRef = useRef<HTMLDivElement>(null)
@@ -104,7 +106,8 @@ export default function DataTable({
   }, [fetchMoreOnBottomReached])
 
   useEffect(() => {
-    if (!table || !rows?.length) return
+    if (!table || !rows?.length || columnsTouched) return
+
     table.getAllColumns().forEach((column) => {
       if (!AUTO_HIDABLE_COLUMNS.includes(column.id)) return
 
@@ -112,11 +115,11 @@ export default function DataTable({
 
       column.toggleVisibility(isUsed)
     })
-  }, [table, rows])
+  }, [table, rows, columnsTouched])
 
   return (
     <>
-      <Card withBorder p={0}>
+      <Card withBorder p={0} className={scheme}>
         <div
           ref={tableContainerRef}
           className="tableContainer"
@@ -124,18 +127,18 @@ export default function DataTable({
             fetchMoreOnBottomReached(e.currentTarget)
           }}
         >
-          <Table
-            striped
-            stickyHeader
-            // w={table.getCenterTotalSize()}
-            highlightOnHover={!!onRowClicked}
+          <table
+            // striped
+            // withColumnBorders
+            width={table.getCenterTotalSize()}
+            cellSpacing={0}
           >
-            <Table.Thead>
+            <thead>
               {table.getHeaderGroups().map((headerGroup) => (
-                <Table.Tr key={headerGroup.id}>
+                <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
                     return (
-                      <Table.Th
+                      <th
                         key={header.id}
                         colSpan={header.colSpan}
                         style={{ width: header.getSize() }}
@@ -170,55 +173,57 @@ export default function DataTable({
                             }`,
                           }}
                         />
-                      </Table.Th>
+                      </th>
                     )
                   })}
-                  {/* <Menu withArrow shadow="sm" closeOnItemClick={false}>
-                    <Menu.Target>
-                      <ActionIcon
-                        pos="absolute"
-                        right={10}
-                        top={5}
-                        variant="transparent"
-                        color="gray"
-                      >
-                        <IconColumns3 size={16} />
-                      </ActionIcon>
-                    </Menu.Target>
-                    <Menu.Dropdown>
-                      {table
-                        .getAllColumns()
-                        .filter((column) => column.getCanHide())
-                        .map((column) => (
-                          <Menu.Item
-                            key={column.id}
-                            onClick={() => column.toggleVisibility()}
-                          >
-                            <Group>
-                              <Checkbox
-                                size="xs"
-                                radius="sm"
-                                checked={column.getIsVisible()}
-                              />
-                              {column.columnDef.header as ReactNode}
-                            </Group>
-                          </Menu.Item>
-                        ))}
-                    </Menu.Dropdown>
-                  </Menu> */}
-                </Table.Tr>
+                </tr>
               ))}
-            </Table.Thead>
-            <Table.Tbody>
+              <Menu withArrow shadow="sm" closeOnItemClick={false}>
+                <Menu.Target>
+                  <ActionIcon
+                    pos="absolute"
+                    right={10}
+                    top={5}
+                    color={scheme === "light" ? "blue" : "black.5"}
+                  >
+                    <IconColumns3 size={16} />
+                  </ActionIcon>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  {table
+                    .getAllColumns()
+                    .filter((column) => column.getCanHide())
+                    .map((column) => (
+                      <Menu.Item
+                        key={column.id}
+                        onClick={() => {
+                          column.toggleVisibility()
+                          setColumnsTouched(true)
+                        }}
+                      >
+                        <Group>
+                          <Checkbox
+                            size="xs"
+                            radius="sm"
+                            checked={column.getIsVisible()}
+                          />
+                          {column.columnDef.header as ReactNode}
+                        </Group>
+                      </Menu.Item>
+                    ))}
+                </Menu.Dropdown>
+              </Menu>
+            </thead>
+            <tbody>
               {paddingTop > 0 && (
-                <Table.Tr>
-                  <Table.Td style={{ height: `${paddingTop}px` }} />
-                </Table.Tr>
+                <tr>
+                  <td style={{ height: `${paddingTop}px` }} />
+                </tr>
               )}
               {items.map((virtualRow) => {
                 const row = rows[virtualRow.index]
                 return (
-                  <Table.Tr
+                  <tr
                     key={row.id}
                     ref={virtualRow.measureRef}
                     onClick={
@@ -235,37 +240,35 @@ export default function DataTable({
                     }
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <Table.Td
+                      <td
                         key={cell.id}
-                        style={
-                          {
-                            // width: cell.column.getSize(),
-                          }
-                        }
+                        style={{
+                          width: cell.column.getSize(),
+                        }}
                       >
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),
                         )}
-                      </Table.Td>
+                      </td>
                     ))}
-                  </Table.Tr>
+                  </tr>
                 )
               })}
               {paddingBottom > 0 && (
-                <Table.Tr>
+                <tr>
                   <td style={{ height: `${paddingBottom}px` }} />
-                </Table.Tr>
+                </tr>
               )}
-            </Table.Tbody>
-          </Table>
+            </tbody>
+          </table>
           {loading && (
-            <Text m="auto" p="md" color="dimmed" size="xs" ta="center">
+            <Text m="auto" p="md" c="dimmed" size="xs" ta="center">
               Fetching...
             </Text>
           )}
           {!items.length && !loading && (
-            <Text m="auto" p="md" color="dimmed" size="xs" ta="center">
+            <Text m="auto" p="md" c="dimmed" size="xs" ta="center">
               No data
             </Text>
           )}
@@ -280,6 +283,19 @@ export default function DataTable({
           table {
             width: 100% !important;
             table-layout: fixed;
+            font-size: 14px;
+          }
+
+          .light table tr:nth-child(odd) {
+            background-color: rgb(248, 249, 250);
+          }
+
+          .light table tr:hover {
+            background-color: rgb(248, 249, 250);
+          }
+
+          .dark table tr:hover {
+            background-color: #2c2e33;
           }
 
           thead {
@@ -293,22 +309,31 @@ export default function DataTable({
 
           th {
             position: relative;
+          }
+
+          td code {
+            max-height: 60px;
+          }
+
+          .light th {
             border-bottom: 1px solid #ddd;
             border-right: 1px solid #ddd;
           }
 
+          .dark th,
+          .dark td {
+            border-bottom: 2px solid #2b2c2f;
+          }
+
           tr {
             width: fit-content;
-            height: 20px;
+            height: 30px;
           }
 
           th,
           td {
             overflow: hidden;
             text-overflow: ellipsis;
-          }
-
-          td {
             padding: 7px 10px;
           }
 

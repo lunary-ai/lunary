@@ -63,8 +63,6 @@ export default function Paywall({
     <Box pos="relative" p={50}>
       <Overlay
         zIndex={1}
-        opacity={0.3}
-        blur={2}
         top={0}
         left={0}
         right={0}
@@ -75,6 +73,8 @@ export default function Paywall({
         style={{
           alignItems: "center",
           justifyContent: "center",
+          WebkitBackdropFilter: "blur(0.125rem)",
+          backdropFilter: "blur(0.125rem)",
         }}
       >
         <Card p={50} w={650} shadow="md" className="unblockable">

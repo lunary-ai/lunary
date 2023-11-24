@@ -1,15 +1,14 @@
 export function getColorForRole(role) {
-  // TODO: dark theme
   const defaultColor = "var(--mantine-color-gray-light)"
 
   const colorMap = {
-    ai: "var(--mantine-color-green-light)",
-    human: "var(--mantine-color-blue-light)",
-    user: "var(--mantine-color-blue-light)",
+    ai: "var(--mantine-color-green-2)",
+    human: "var(--mantine-color-blue-2)",
+    user: "var(--mantine-color-blue-2)",
     error: "var(--mantine-color-red-light)",
-    function: "var(--mantine-color-violet-light)",
-    tool: "var(--mantine-color-violet-light)",
-    system: "var(--mantine-color-gray-light)",
+    function: "var(--mantine-color-violet-2)",
+    tool: "var(--mantine-color-violet-2)",
+    system: "var(--mantine-color-gray-2)",
   }
 
   return colorMap[role] || defaultColor

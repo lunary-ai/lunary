@@ -6,14 +6,15 @@ import { formatCost, formatDateTime, msToTime } from "./format"
 import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 import Feedback from "@/components/Blocks/Feedback"
 import ProtectedText from "@/components/Blocks/ProtectedText"
+import { useEffect } from "react"
+import analytics from "./analytics"
 const columnHelper = createColumnHelper<any>()
 
 export const timeColumn = (timeColumn, label = "Time") => {
   return columnHelper.accessor(timeColumn, {
     header: label,
     id: timeColumn,
-    size: 60,
-    enableResizing: false,
+    size: 80,
     sortingFn: (a, b) =>
       new Date(a.getValue(timeColumn)).getTime() -
       new Date(b.getValue(timeColumn)).getTime(),
@@ -21,7 +22,7 @@ export const timeColumn = (timeColumn, label = "Time") => {
       const isToday =
         new Date(info.getValue()).toDateString() === new Date().toDateString()
       if (isToday) {
-        return new Date(info.getValue()).toLocaleTimeString("en-US")
+        return new Date(info.getValue()).toLocaleTimeString(navigator.language)
       } else {
         return formatDateTime(info.getValue())
       }
@@ -33,7 +34,7 @@ export const durationColumn = (unit = "s") => {
   return {
     id: "duration",
     header: "Duration",
-    size: 25,
+    size: 35,
     cell: (props) => {
       if (!props.getValue()) return null
       if (unit === "s") {
@@ -71,9 +72,14 @@ export const tagsColumn = () => {
   return columnHelper.accessor("tags", {
     header: "Tags",
     size: 60,
-    id: "tags",
     cell: (props) => {
       const tags = props.getValue()
+
+      useEffect(() => {
+        // Feature tracking
+        if (tags) analytics.trackOnce("HasTags")
+      }, [tags])
+
       if (!tags) return null
 
       return (
@@ -99,7 +105,6 @@ export const tagsColumn = () => {
 export const inputColumn = (label = "input") => {
   return columnHelper.accessor("input", {
     header: label,
-    id: "input",
     size: 200,
     enableSorting: false,
     cell: (props) => <SmartViewer data={props.getValue()} compact />,
@@ -110,7 +115,6 @@ export const outputColumn = (label = "Response") => {
   return columnHelper.accessor("output", {
     header: label,
     enableSorting: false,
-    id: "output",
     cell: (props) => (
       <SmartViewer
         data={props.getValue()}
@@ -125,7 +129,6 @@ export const userColumn = () => {
   return columnHelper.accessor("user", {
     header: "User",
     size: 60,
-    id: "user",
     cell: (props) => {
       const userId = props.getValue()
       const { user } = useAppUser(userId)
@@ -141,7 +144,7 @@ export const nameColumn = (label = "Name") => {
   return columnHelper.accessor("name", {
     header: label,
     size: 80,
-    id: label.toLowerCase(),
+    minSize: 30,
     cell: (props) => {
       const status = props.row.original.status
       const name = props.getValue()
@@ -166,7 +169,6 @@ export const nameColumn = (label = "Name") => {
 export const costColumn = () => {
   return columnHelper.accessor("cost", {
     header: "Cost",
-    id: "cost",
     size: 40,
     cell: (props) => {
       const cost = props.getValue()
@@ -202,7 +204,6 @@ export const feedbackColumn = (withRelatedRuns = false) => {
 
   return columnHelper.accessor("feedback", {
     header: "Feedback",
-    id: "feedback",
     size: 100,
     cell,
   })

@@ -49,7 +49,7 @@ export default function Generations() {
   const { modelNames } = useModelNames()
   const [filters, setFilters] = useState(["Model", "Tags"])
   const [search, setSearch] = useDebouncedState<string>("", 500)
-  // const { runs, loading, validating, loadMore } = useGenerations(search)
+  const { runs, loading, validating, loadMore } = useGenerations(search)
 
   const searchParams = useSearchParams()
   // const models = searchParams.get("model")
@@ -76,7 +76,7 @@ export default function Generations() {
         </Group>
         <ExportButton exportUrl="" />
       </Group>
-      {/* <DataTable
+      <DataTable
         // onRowClicked={(row) => {
         //   setSelected(row)
         // }}
@@ -84,7 +84,7 @@ export default function Generations() {
         // loadMore={loadMore}
         columns={columns}
         data={runs}
-      /> */}
+      />
     </Stack>
   )
 }

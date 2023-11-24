@@ -27,8 +27,8 @@ const columns = [
   userColumn(),
   feedbackColumn(true),
   tagsColumn(),
-  // inputColumn("Input"),
-  // outputColumn(),
+  inputColumn("Input"),
+  outputColumn(),
 ]
 
 export default function Traces() {
