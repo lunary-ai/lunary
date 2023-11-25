@@ -1,5 +1,11 @@
 import { useEffect, ReactNode } from "react"
-import { AppShell, Box, useMantineColorScheme } from "@mantine/core"
+import {
+  AppShell,
+  Box,
+  Center,
+  Loader,
+  useMantineColorScheme,
+} from "@mantine/core"
 import { Notifications } from "@mantine/notifications"
 
 import { useSessionContext } from "@supabase/auth-helpers-react"
@@ -27,7 +33,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     "/update-password",
   ].includes(router.pathname)
 
-  const { profile } = useProfile()
+  const { profile, loading } = useProfile()
 
   const { session, isLoading } = useSessionContext()
 
@@ -45,6 +51,14 @@ export default function Layout({ children }: { children: ReactNode }) {
   }, [session, isLoading, router.pathname, isAuthPage])
 
   if (!session && !isAuthPage) return null
+
+  if ((!profile && loading) || (!session && isLoading)) {
+    return (
+      <Center h="100vh" w="100vw">
+        <Loader />
+      </Center>
+    )
+  }
 
   return (
     <>

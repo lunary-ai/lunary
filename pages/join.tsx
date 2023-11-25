@@ -274,59 +274,20 @@ export default function Join({ orgUserCount, orgName }) {
                   <Stack align="center">
                     <IconAnalyze color={"#206dce"} size={60} />
                     <Title order={2} fw={700} size={40} ta="center">
-                      You're all set 🎉
+                      You&nbsp;re all set 🎉
                     </Title>
 
                     <Text size="lg" mt="xs" mb="xl" fw={500}>
-                      Check your emails for the confirmation to open the
-                      dashboard.
+                      Check your emails for the confirmation link.
                     </Text>
 
-                    <Text>Want to say hi? We'd love to talk to you:</Text>
-
-                    <Group>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          $crisp.push(["do", "chat:open"])
-                        }}
-                        rightSection={<IconMessageBolt size={18} />}
-                      >
-                        Chat
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        color="teal.8"
-                        component="a"
-                        href="mailto:vince@llmonitor.com"
-                        rightSection={<IconMail size={18} />}
-                      >
-                        Email
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        color="violet"
-                        target="_blank"
-                        component="a"
-                        href="https://discord.gg/8PafSG58kK"
-                        rightSection={<IconBrandDiscord size={18} />}
-                      >
-                        Discord
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        color="red.8"
-                        target="_blank"
-                        component="a"
-                        href="https://savvycal.com/vince/chat"
-                        rightSection={<IconCalendar size={18} />}
-                      >
-                        Call with founder
-                      </Button>
-                    </Group>
+                    <Button
+                      onClick={() => Router.push("/")}
+                      variant="outline"
+                      size="lg"
+                    >
+                      Open Dashboard
+                    </Button>
                   </Stack>
                 </>
               )}

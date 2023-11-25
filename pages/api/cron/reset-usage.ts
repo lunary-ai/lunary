@@ -12,17 +12,17 @@ const updateLimitedStatus = async () => {
   // set limited = false for all users that have been under the limit
   // for the last 3 days
   const alreadyLimited = await sql`UPDATE "public"."org" p
-    SET limited = false 
-    WHERE limited = true AND p.id NOT IN (
-      SELECT o.id
-      FROM "public"."org" o
-      JOIN "public"."app" a ON a.org_id = o.id
-      JOIN "public"."run" r ON r.app = a.id
-      WHERE r.created_at >= CURRENT_DATE - INTERVAL '3 days'
-      GROUP BY o.id
-      HAVING COUNT(r.id) > 1000
-    )
-    RETURNING *;
+  SET limited = false 
+  WHERE limited = true AND p.id NOT IN (
+    SELECT o.id
+    FROM "public"."org" o
+    JOIN "public"."app" a ON a.org_id = o.id
+    JOIN "public"."run" r ON r.app = a.id
+    WHERE r.created_at >= CURRENT_DATE - INTERVAL '3 days'
+    GROUP BY o.id
+    HAVING COUNT(r.id) > 1000
+  )
+  RETURNING *;
   `
 
   // get all users with more than 1000 runs 2 out of the last 3 days

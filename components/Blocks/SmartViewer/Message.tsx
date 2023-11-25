@@ -15,19 +15,19 @@ import { RenderJson } from "./RenderJson"
 import { useColorScheme } from "@mantine/hooks"
 import { getColorForRole } from "../../../utils/colors"
 
-const RenderFunction = ({ color, codeBg, data }) => {
+const RenderFunction = ({ color, compact, codeBg, data }) => {
   const scheme = useColorScheme()
 
   return (
     <Code block bg={codeBg}>
-      <Text w={300} color={color} mb="xs">
+      <Text w={300} c={color} mb={compact ? 2 : "xs"} mt={compact ? -6 : 0}>
         {`function call: `}
         <Text span fw="bolder">
           {data?.name}
         </Text>
       </Text>
 
-      <RenderJson data={data?.arguments} />
+      <RenderJson compact={compact} data={data?.arguments} />
     </Code>
   )
 }
@@ -46,19 +46,7 @@ export function ChatMessage({
   compact?: boolean
 }) {
   const scheme = useColorScheme()
-  const theme = useMantineTheme()
-
-  // console.log(data?.role)
-
   const color = getColorForRole(data?.role)
-
-  // console.log(`var(--mantine-color-${color}-light)`)
-  // console.log()
-  // const color = data?.role
-  //   ? `var(--mantine-color-${typesColors[data?.role]}-light)`
-  //   : "gray"
-  // const color =
-  //   `var(--mantine-color-${typesColors[data?.role]}-light)` || "gray"
 
   const codeBg = `rgba(${scheme === "dark" ? "0,0,0" : "255,255,255"},0.6)`
 
@@ -66,12 +54,10 @@ export function ChatMessage({
     <Paper
       p={compact ? 0 : 12}
       pt={compact ? 0 : 8}
+      mah={compact ? 60 : undefined}
       style={{
         overflow: "hidden",
         backgroundColor: color,
-        // theme.colors[color][
-        //   scheme === "dark" ? (color === "gray" ? 7 : 9) : 2
-        // ],
       }}
     >
       {!compact && (
@@ -105,6 +91,7 @@ export function ChatMessage({
         <RenderFunction
           color={color}
           data={data?.functionCall}
+          compact={compact}
           codeBg={codeBg}
         />
       ) : data?.toolCalls ? (
@@ -112,6 +99,7 @@ export function ChatMessage({
           <RenderFunction
             key={index}
             color={color}
+            compact={compact}
             data={toolCall.function}
             codeBg={codeBg}
           />
@@ -170,15 +158,14 @@ export function BubbleMessage({ role, content, extra }) {
   return (
     <>
       <Flex direction={isBot ? "row" : "row-reverse"} align="center" gap="md">
-        {isBot ? (
-          <ThemeIcon size={36} variant="light" radius="xl" color={"blue"}>
-            <IconRobot size={24} />
-          </ThemeIcon>
-        ) : (
-          <ThemeIcon size={36} variant="light" radius="xl" color={"pink"}>
-            <IconUser size={24} />
-          </ThemeIcon>
-        )}
+        <ThemeIcon
+          size={36}
+          variant="light"
+          radius="xl"
+          color={isBot ? "blue" : "pink"}
+        >
+          {isBot ? <IconRobot size={24} /> : <IconUser size={24} />}
+        </ThemeIcon>
         <div>
           <Paper
             mb="xs"
@@ -187,7 +174,7 @@ export function BubbleMessage({ role, content, extra }) {
             radius="lg"
             shadow="sm"
             withBorder
-            maw={270}
+            maw={430}
           >
             <span style={{ whiteSpace: "pre-line" }}>{content}</span>
           </Paper>

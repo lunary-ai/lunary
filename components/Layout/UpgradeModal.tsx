@@ -107,11 +107,12 @@ export const UpgradeBody = ({ highlight }) => {
           <PlanFeatures
             features={[
               { id: "events", title: "4k events per day" },
-              { id: "team", title: "4 team members" },
+              { id: "team", title: "Unlimited apps" },
               { id: "team", title: "3 apps" },
               { id: "analytics", title: "Advanced Analytics" },
               { id: "play", title: "AI Playground" },
               { id: "export", title: "Export data" },
+              { id: "api", title: "API access" },
             ]}
             highlight={highlight}
           />
@@ -160,10 +161,10 @@ export const UpgradeBody = ({ highlight }) => {
             features={[
               { id: "events", title: "20k events per day" },
               { id: "team", title: "10 team members" },
-              { id: "team", title: "Unlimited apps" },
+              { id: "apps", title: "Unlimited apps" },
               { id: "play", title: "Unlimited AI Playground" },
-              { id: "evaluation", title: "Tests & Evaluations" },
-              { id: "api", title: "API access" },
+              { id: "evaluation", title: "Evaluations & Tests" },
+              { id: "alerts", title: "Custom Alerts" },
             ]}
             highlight={highlight}
           />

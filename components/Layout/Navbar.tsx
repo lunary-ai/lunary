@@ -1,6 +1,14 @@
 import analytics from "@/utils/analytics"
 import { useApps, useCurrentApp, useProfile } from "@/utils/dataHooks"
-import { Anchor, AppShell, Button, Flex, Group, Select } from "@mantine/core"
+import {
+  Alert,
+  Anchor,
+  AppShell,
+  Button,
+  Flex,
+  Group,
+  Select,
+} from "@mantine/core"
 import { modals } from "@mantine/modals"
 import { useUser } from "@supabase/auth-helpers-react"
 
@@ -8,21 +16,57 @@ import {
   IconAlertTriangle,
   IconAnalyze,
   IconBolt,
+  IconCheck,
   IconHelp,
   IconMessage,
 } from "@tabler/icons-react"
 
 import Link from "next/link"
 import Script from "next/script"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
+import errorHandler from "../../utils/errorHandler"
+import { notifications } from "@mantine/notifications"
 
 export default function Navbar() {
   const { app, setAppId } = useCurrentApp()
 
   const { profile } = useProfile()
   const { apps, loading } = useApps()
+  const [emailSent, setEmailSent] = useState(false)
+  const [sendingEmail, setSendingEmail] = useState(false)
 
   const user = useUser()
+
+  const sendVerification = async () => {
+    if (sendingEmail) return
+    setSendingEmail(true)
+
+    const ok = await errorHandler(
+      fetch("/api/user/send-verification", {
+        method: "POST",
+        body: JSON.stringify({
+          email: profile?.email,
+          name: profile?.name,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    )
+
+    if (ok) {
+      notifications.show({
+        icon: <IconCheck size={18} />,
+        color: "teal",
+        title: "Email sent 💌",
+        message: "Check your emails to verify your email.",
+      })
+
+      setEmailSent(true)
+    }
+
+    setSendingEmail(false)
+  }
 
   useEffect(() => {
     if (user) {
@@ -83,6 +127,22 @@ export default function Navbar() {
               />
             )}
           </Group>
+
+          {profile?.verified === false && (
+            <Alert color="orange" variant="filled" py={3}>
+              {`Verify your email within 24h to keep your account - `}
+              {!emailSent && (
+                <Anchor
+                  href="#"
+                  onClick={sendVerification}
+                  ml="sm"
+                  color="white"
+                >
+                  {sendingEmail ? "Sending..." : "Resend email"}
+                </Anchor>
+              )}
+            </Alert>
+          )}
 
           <Group>
             {profile?.org.limited ? (

@@ -8,9 +8,9 @@ export const formatCost = (cost = 0) => {
 }
 
 export const formatLargeNumber = (number) => {
-  return new Intl.NumberFormat("en-US", { notation: "compact" }).format(
-    number || 0,
-  )
+  return new Intl.NumberFormat(navigator.language, {
+    notation: "compact",
+  }).format(number || 0)
 }
 
 export const formatAppUser = (user) => {
@@ -19,7 +19,7 @@ export const formatAppUser = (user) => {
 }
 
 export const formatDateTime = (date) => {
-  return new Date(date).toLocaleString("en-US", {
+  return new Date(date).toLocaleString(navigator.language, {
     month: "short",
     day: "numeric",
     hour: "numeric",

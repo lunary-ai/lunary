@@ -1,8 +1,15 @@
-import { NextApiRequest, NextApiResponse } from "next"
-import { Parser } from "@json2csv/plainjs"
 import { ensureHasAccessToApp } from "@/lib/api/ensureAppIsLogged"
+
 import { apiWrapper } from "@/lib/api/helpers"
+import { Parser } from "@json2csv/plainjs"
+import { NextApiRequest, NextApiResponse } from "next"
 import postgres from "postgres"
+
+export const config = {
+  api: {
+    responseLimit: "100mb",
+  },
+}
 
 const sql = postgres(process.env.DB_URI)
 
@@ -71,8 +78,20 @@ export default apiWrapper(async function handler(
   const data = rows.length > 0 ? rows : [{}]
   const parser = new Parser()
   const csv = parser.parse(data)
+  const buffer = Buffer.from(csv, "utf-8")
 
-  res.setHeader("Content-Type", "text/csv")
-  res.setHeader("Content-Disposition", "attachment; filename=out.csv")
-  res.status(200).send(csv)
+  const FIVE_MB = 3.5 * 1024 * 1024
+
+  // TODO: file a way to send all the rows
+  if (buffer.length > FIVE_MB) {
+    console.log("slice")
+    const slicedBuffer = buffer.slice(0, FIVE_MB)
+    res.setHeader("Content-Type", "text/csv")
+    res.setHeader("Content-Disposition", "attachment; filename=out.csv")
+    res.status(200).send(slicedBuffer)
+  } else {
+    res.setHeader("Content-Type", "text/csv")
+    res.setHeader("Content-Disposition", "attachment; filename=out.csv")
+    res.status(200).send(buffer)
+  }
 })

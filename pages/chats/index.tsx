@@ -34,6 +34,7 @@ import {
 
 import { IconMessages, IconNeedleThread } from "@tabler/icons-react"
 import { createColumnHelper } from "@tanstack/react-table"
+import analytics from "../../utils/analytics"
 
 const columnHelper = createColumnHelper<any>()
 
@@ -170,6 +171,7 @@ export default function Chats() {
       <Drawer
         opened={!!selected}
         keepMounted
+        size="lg"
         position="right"
         title={<Title order={3}>Chat details</Title>}
         onClose={() => setSelected(null)}
@@ -178,7 +180,9 @@ export default function Chats() {
       </Drawer>
 
       <DataTable
+        key="chat"
         onRowClicked={(row) => {
+          analytics.track("OpenChat")
           setSelected(row)
         }}
         loading={loading || validating}

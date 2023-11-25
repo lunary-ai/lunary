@@ -2,7 +2,6 @@ import SmartViewer from "@/components/Blocks/SmartViewer"
 import { ChatMessage } from "@/components/Blocks/SmartViewer/Message"
 import Paywall from "@/components/Layout/Paywall"
 import { useCurrentApp, useProfile } from "@/utils/dataHooks"
-import { Database } from "@/utils/supaTypes"
 import {
   ActionIcon,
   Box,
@@ -14,7 +13,6 @@ import {
   Loader,
   NumberInput,
   Select,
-  SimpleGrid,
   Stack,
   Text,
 } from "@mantine/core"
@@ -25,11 +23,11 @@ import {
   IconBolt,
   IconCircleMinus,
   IconCirclePlus,
-  IconPlayerPlay,
   IconPlayerPlayFilled,
 } from "@tabler/icons-react"
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
+import analytics from "../../utils/analytics"
 
 const availableModels = [
   "gpt-4",
@@ -149,6 +147,10 @@ function Playground() {
   }
 
   const runPlayground = async () => {
+    analytics.track("RunPlayground", {
+      model,
+      appId: app.id,
+    })
     if (profile.org?.play_allowance <= 0) {
       modals.openContextModal({
         modal: "upgrade",
@@ -369,7 +371,7 @@ function Playground() {
                       min={-2}
                       max={2}
                       defaultValue={0}
-                      precision={2}
+                      decimalScale={2}
                       step={0.1}
                       size="xs"
                       value={run.params?.frequency_penalty}
@@ -389,7 +391,7 @@ function Playground() {
                     <NumberInput
                       min={-2}
                       max={2}
-                      precision={2}
+                      decimalScale={2}
                       step={0.1}
                       defaultValue={0}
                       size="xs"
@@ -411,7 +413,7 @@ function Playground() {
                       min={0.1}
                       max={1}
                       defaultValue={1}
-                      precision={2}
+                      decimalScale={2}
                       step={0.1}
                       size="xs"
                       value={run.params?.top_p}

@@ -34,7 +34,7 @@ export interface Database {
             columns: ["org_id"]
             referencedRelation: "profile"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       app: {
@@ -77,7 +77,7 @@ export interface Database {
             columns: ["owner"]
             referencedRelation: "users"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       app_user: {
@@ -111,7 +111,7 @@ export interface Database {
             columns: ["app"]
             referencedRelation: "app"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       log: {
@@ -166,7 +166,7 @@ export interface Database {
             columns: ["run"]
             referencedRelation: "run"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       org: {
@@ -210,43 +210,31 @@ export interface Database {
           created_at: string | null
           email: string | null
           id: string
-          limited: boolean | null
           name: string | null
           org_id: string | null
-          plan: string
-          play_allowance: number
           role: Database["public"]["Enums"]["user_role"] | null
-          stripe_customer: string | null
-          stripe_subscription: string | null
           team_owner: string | null
+          verified: boolean
         }
         Insert: {
           created_at?: string | null
           email?: string | null
           id: string
-          limited?: boolean | null
           name?: string | null
           org_id?: string | null
-          plan?: string
-          play_allowance?: number
           role?: Database["public"]["Enums"]["user_role"] | null
-          stripe_customer?: string | null
-          stripe_subscription?: string | null
           team_owner?: string | null
+          verified?: boolean
         }
         Update: {
           created_at?: string | null
           email?: string | null
           id?: string
-          limited?: boolean | null
           name?: string | null
           org_id?: string | null
-          plan?: string
-          play_allowance?: number
           role?: Database["public"]["Enums"]["user_role"] | null
-          stripe_customer?: string | null
-          stripe_subscription?: string | null
           team_owner?: string | null
+          verified?: boolean
         }
         Relationships: [
           {
@@ -272,7 +260,7 @@ export interface Database {
             columns: ["team_owner"]
             referencedRelation: "profile"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       run: {
@@ -372,7 +360,7 @@ export interface Database {
             columns: ["user"]
             referencedRelation: "app_user"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
     }
@@ -513,31 +501,58 @@ export interface Database {
         }
         Returns: string[]
       }
-      get_trace_runs_roots: {
-        Args: {
-          search_pattern: string
-        }
-        Returns: {
-          app: string | null
-          completion_tokens: number | null
-          created_at: string | null
-          ended_at: string | null
-          error: Json | null
-          feedback: Json | null
-          id: string
-          input: Json | null
-          name: string | null
-          output: Json | null
-          params: Json | null
-          parent_run: string | null
-          prompt_tokens: number | null
-          retry_of: string | null
-          status: string | null
-          tags: string[] | null
-          type: string
-          user: number | null
-        }[]
-      }
+      get_trace_runs_roots:
+        | {
+            Args: {
+              search_pattern: string
+            }
+            Returns: {
+              app: string | null
+              completion_tokens: number | null
+              created_at: string | null
+              ended_at: string | null
+              error: Json | null
+              feedback: Json | null
+              id: string
+              input: Json | null
+              name: string | null
+              output: Json | null
+              params: Json | null
+              parent_run: string | null
+              prompt_tokens: number | null
+              retry_of: string | null
+              status: string | null
+              tags: string[] | null
+              type: string
+              user: number | null
+            }[]
+          }
+        | {
+            Args: {
+              app_id: string
+              search_pattern: string
+            }
+            Returns: {
+              app: string | null
+              completion_tokens: number | null
+              created_at: string | null
+              ended_at: string | null
+              error: Json | null
+              feedback: Json | null
+              id: string
+              input: Json | null
+              name: string | null
+              output: Json | null
+              params: Json | null
+              parent_run: string | null
+              prompt_tokens: number | null
+              retry_of: string | null
+              status: string | null
+              tags: string[] | null
+              type: string
+              user: number | null
+            }[]
+          }
       get_users: {
         Args: {
           app_id: string
@@ -592,7 +607,7 @@ export interface Database {
       }
     }
     Enums: {
-      org_plan: "free" | "pro" | "unlimited"
+      org_plan: "free" | "pro" | "unlimited" | "custom"
       user_role: "member" | "admin"
     }
     CompositeTypes: {
@@ -600,3 +615,4 @@ export interface Database {
     }
   }
 }
+

@@ -6,8 +6,15 @@ import {
   IconThumbDown,
   IconThumbUp,
 } from "@tabler/icons-react"
+import { useEffect } from "react"
+import analytics from "../../utils/analytics"
 
 export default function Feedback({ data = {} }: { data: Record<string, any> }) {
+  useEffect(() => {
+    // Feature tracking
+    if (data) analytics.trackOnce("HasFeedback")
+  }, [data])
+
   if (!data) return null
 
   return (

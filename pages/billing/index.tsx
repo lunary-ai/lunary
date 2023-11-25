@@ -102,8 +102,7 @@ export default function Billing() {
             icon={<IconInfoTriangle />}
             title="Allowance Reached"
           >
-            You have reached your request allowance. Please upgrade to restore
-            access.
+            Request allowance limit reached. Please upgrade to restore access.
           </Alert>
         )}
 

@@ -1,5 +1,5 @@
 import { Badge, ThemeIcon } from "@mantine/core"
-import { IconCashBanknote, IconClock } from "@tabler/icons-react"
+import { IconCashBanknote } from "@tabler/icons-react"
 
 export default function TokensBadge({ tokens }) {
   if (!tokens) return null

@@ -63,6 +63,7 @@ export const useProfile = () => {
   const {
     data: profile,
     mutate,
+    error,
     isLoading,
   } = useQuery(user ? query : null, hardOptions)
 
@@ -94,7 +95,13 @@ export const useProfile = () => {
     "name,id",
   )
 
-  return { profile: profileWithOrg, loading: isLoading, mutate, updateOrg }
+  return {
+    profile: profileWithOrg,
+    error,
+    loading: isLoading,
+    mutate,
+    updateOrg,
+  }
 }
 
 export function useApps() {
@@ -190,7 +197,7 @@ export function useUsers() {
   return { users }
 }
 
-export function useGenerations(
+export function useLLMCalls(
   search,
   modelNames: string[] = [],
   tags: string[] = [],
@@ -255,6 +262,7 @@ export function useTraces(search) {
       .is("parent_run", null)
   } else {
     query = supabaseClient.rpc("get_trace_runs_roots", {
+      app_id: appId,
       search_pattern: search,
     })
   }

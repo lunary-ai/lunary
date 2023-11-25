@@ -37,7 +37,7 @@ import { modals } from "@mantine/modals"
 
 const menu = [
   { label: "Analytics", icon: IconGraph, link: "/analytics" },
-  { label: "Generations", icon: IconBrandOpenai, link: "/generations" },
+  { label: "LLM Calls", icon: IconBrandOpenai, link: "/llm-calls" },
   { label: "Traces", icon: IconListTree, link: "/traces" },
   { label: "Users", icon: IconUsers, link: "/users" },
   { label: "Chats", icon: IconMessages, link: "/chats" },

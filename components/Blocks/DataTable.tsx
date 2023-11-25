@@ -286,7 +286,7 @@ export default function DataTable({
             font-size: 14px;
           }
 
-          .light table tr:nth-child(odd) {
+          .light table tbody tr:nth-child(odd) {
             background-color: rgb(248, 249, 250);
           }
 
@@ -317,7 +317,6 @@ export default function DataTable({
 
           .light th {
             border-bottom: 1px solid #ddd;
-            border-right: 1px solid #ddd;
           }
 
           .dark th,

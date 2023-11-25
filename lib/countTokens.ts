@@ -61,12 +61,17 @@ async function encodingForModel(model) {
 
   // TODO: Remove this once this PR merged:
   // https://github.com/dqbd/tiktoken/pull/79/files
-  if (model.includes("gpt-4-1106")) {
+  if (model?.includes("gpt-4") || model?.includes("gpt-3.5")) {
     encodingName = "cl100k_base"
-  } else if (model.includes("claude")) {
+  } else if (model?.includes("claude")) {
     encodingName = "claude"
   } else {
-    encodingName = getEncodingNameForModel(model)
+    try {
+      encodingName = getEncodingNameForModel(model)
+    } catch (e) {
+      console.warn("Warning: model not found. Using cl100k_base encoding.")
+      encodingName = "cl100k_base"
+    }
   }
 
   return await getEncoding(encodingName)
@@ -181,14 +186,7 @@ async function numTokensFromMessages(
   model = "gpt-3.5-turbo-0613",
 ) {
   let tokensPerMessage, tokensPerName
-  let encoding
-
-  try {
-    encoding = await encodingForModel(model)
-  } catch (error) {
-    console.warn("Warning: model not found. Using cl100k_base encoding.")
-    encoding = await getEncoding("cl100k_base")
-  }
+  const encoding = await encodingForModel(model)
 
   tokensPerMessage = 3
   tokensPerName = 1
@@ -211,10 +209,12 @@ async function numTokensFromMessages(
 
   if (functions) {
     try {
+      // console.log("functions", functions)
       numTokens += encoding.encode(
         formatFunctionSpecsAsTypescriptNS(functions),
       ).length
     } catch (error) {
+      // console.error(error)
       console.error("Warning: function token counting failed. Skipping.")
     }
   }
@@ -237,18 +237,18 @@ export const completeRunUsage = async (run) => {
   try {
     // get run input
 
-    const { data: runData, error } = await supabaseAdmin
+    const { data: runData } = await supabaseAdmin
       .from("run")
       .select("input,params,name")
       .match({ id: run.runId })
       .single()
+      .throwOnError()
 
     // Get model name (in older sdk it wasn't sent in "end" event)
     const modelName = runData.name?.replaceAll("gpt-35", "gpt-3.5") // Azure fix
 
-    const isGoogleModel = GOOGLE_MODELS.find((model) =>
-      modelName.includes(model),
-    )
+    const isGoogleModel =
+      modelName && GOOGLE_MODELS.find((model) => modelName.includes(model))
     if (isGoogleModel) {
       // For Google models we need to use their API to count tokens
 

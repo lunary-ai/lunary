@@ -72,6 +72,11 @@ const MODEL_COSTS: ModelCost[] = [
     inputCost: 0.015,
     outputCost: 0.015,
   },
+  {
+    models: ["whisper"],
+    inputCost: 0.1, // $ per 1000 seconds
+    outputCost: 0,
+  },
 ]
 
 export const calcRunCost = (run) => {
@@ -87,7 +92,10 @@ export const calcRunCost = (run) => {
 
   if (!modelCost) return 0
 
-  const inputCost = (modelCost.inputCost * run.prompt_tokens) / 1000
-  const outputCost = (modelCost.outputCost * run.completion_tokens) / 1000
+  const promptTokens = run.prompt_tokens || run.promptTokens || 0
+  const completionTokens = run.completion_tokens || run.completionTokens || 0
+
+  const inputCost = (modelCost.inputCost * promptTokens) / 1000
+  const outputCost = (modelCost.outputCost * completionTokens) / 1000
   return inputCost + outputCost
 }
