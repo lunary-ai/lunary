@@ -37,7 +37,7 @@ export default function Traces() {
   const { runs, loading, validating, loadMore } = useTraces(query)
 
   if (!loading && runs?.length === 0 && query === null) {
-    return <Empty Icon={IconRobot} what="agents traces" />
+    return <Empty Icon={IconRobot} what="traces" />
   }
 
   return (
