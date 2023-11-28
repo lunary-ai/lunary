@@ -321,7 +321,10 @@ function SignupPage() {
               </Text>
 
               <Button
-                onClick={() => Router.push("/")}
+                onClick={() => {
+                  // use this to refresh properly
+                  window.location.href = "/"
+                }}
                 size="lg"
                 mb="xl"
                 rightIcon={<IconArrowRight size={18} />}
