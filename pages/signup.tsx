@@ -22,9 +22,10 @@ import Confetti from "react-confetti"
 
 import { useForm } from "@mantine/form"
 import { notifications } from "@mantine/notifications"
-import { useSessionContext, useUser } from "@supabase/auth-helpers-react"
+import { useSessionContext } from "@supabase/auth-helpers-react"
 import {
   IconAnalyze,
+  IconArrowRight,
   IconAt,
   IconBrandDiscord,
   IconCalendar,
@@ -45,7 +46,7 @@ function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
 
-  const { supabaseClient } = useSessionContext()
+  const { session, isLoading, supabaseClient } = useSessionContext()
 
   const form = useForm({
     initialValues: {
@@ -67,11 +68,9 @@ function SignupPage() {
     },
   })
 
-  const user = useUser()
-
   useEffect(() => {
-    if (user) Router.push("/")
-  }, [user])
+    if (session && !isLoading && step === 1) Router.push("/")
+  }, [isLoading, session, step])
 
   const handleSignup = async ({
     email,
@@ -131,7 +130,7 @@ function SignupPage() {
   }
 
   return (
-    <Container py={100} size={800}>
+    <Container py={100} size={800} mih="60%">
       <NextSeo title="Sign Up" />
 
       <Stack align="center" spacing={50}>
@@ -301,7 +300,15 @@ function SignupPage() {
 
         {step === 3 && (
           <>
-            <Confetti recycle={false} numberOfPieces={500} gravity={0.3} />
+            {typeof window !== "undefined" && (
+              <Confetti
+                recycle={false}
+                numberOfPieces={500}
+                gravity={0.3}
+                width={window.innerWidth}
+                height={window.innerHeight}
+              />
+            )}
 
             <Stack align="center">
               <IconAnalyze color={"#206dce"} size={60} />
@@ -309,19 +316,20 @@ function SignupPage() {
                 You're all set 🎉
               </Title>
 
-              <Text size="lg" mt="xs" mb="xl" weight={500}>
+              <Text size="xl" mt="xs" mb="xl" weight={500}>
                 Check your emails for the confirmation link.
               </Text>
 
               <Button
                 onClick={() => Router.push("/")}
-                variant="outline"
                 size="lg"
+                mb="xl"
+                rightIcon={<IconArrowRight size={18} />}
               >
                 Open Dashboard
               </Button>
 
-              <Text>Want to say hi? We'd love to talk to you:</Text>
+              <Text size="lg">Want to say hi? We'd love to talk to you:</Text>
 
               <Group>
                 <Button
@@ -338,7 +346,7 @@ function SignupPage() {
                   variant="outline"
                   color="teal.8"
                   component="a"
-                  href="mailto:vince@llmonitor.com"
+                  href="mailto:hello@llmonitor.com"
                   rightIcon={<IconMail size={18} />}
                 >
                   Email

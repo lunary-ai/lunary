@@ -25,7 +25,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     "/magic-login",
     "/request-password-reset",
     "/update-password",
-  ].includes(router.pathname)
+  ].find((path) => router.pathname.startsWith(path))
 
   const { profile, loading, error } = useProfile()
 
@@ -39,25 +39,27 @@ export default function Layout({ children }: { children: ReactNode }) {
   const colorScheme = useColorScheme()
 
   useEffect(() => {
-    if (!session && !isLoading && !isAuthPage) {
-      Router.push("/login")
-    } else if (session && !profile && !loading && error && !isAuthPage) {
+    if (isAuthPage || session || isLoading) return
+
+    if (!profile && !loading && error) {
       // If the profile failed to load, force sign out and redirect to login
       supabaseClient.auth.signOut().then(() => {
         Router.push("/login")
       })
+    } else {
+      Router.push("/login")
     }
   }, [session, isLoading, router.pathname, profile, loading, error])
 
-  if (!session && !isAuthPage) return null
-
-  if ((!profile && loading) || (!session && isLoading)) {
+  if (!isAuthPage && ((!profile && loading) || (!session && isLoading))) {
     return (
       <Center h="100vh" w="100vw">
         <Loader />
       </Center>
     )
   }
+
+  if (!session && !isAuthPage) return null
 
   return (
     <>

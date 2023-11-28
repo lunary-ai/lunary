@@ -13,7 +13,7 @@ export default function SocialProof() {
           "https://llmonitor.com/users/3.jpeg",
           "https://llmonitor.com/users/4.jpeg",
         ].map((src) => (
-          <Avatar size={42} radius="xl" src={src} />
+          <Avatar size={42} radius="xl" src={src} key={src} />
         ))}
       </Avatar.Group>
       <Stack spacing={0}>
