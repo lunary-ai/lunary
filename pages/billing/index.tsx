@@ -1,24 +1,21 @@
-import { formatLargeNumber } from "@/utils/format"
-import { useAppSWR, useFetchSWR, useProfile } from "@/utils/dataHooks"
+import LineChart from "@/components/Blocks/Analytics/LineChart"
+import { useFetchSWR, useProfile } from "@/utils/dataHooks"
 import {
+  Alert,
   Badge,
+  Button,
+  Card,
+  Container,
+  Group,
+  Loader,
+  Progress,
   Stack,
   Text,
-  Progress,
-  Card,
   Title,
-  Loader,
-  Container,
-  Button,
-  Alert,
-  Group,
 } from "@mantine/core"
 import { modals } from "@mantine/modals"
-import { useSupabaseClient } from "@supabase/auth-helpers-react"
 import { IconBolt, IconInfoTriangle } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
-import { useEffect, useState } from "react"
-import LineChart from "@/components/Blocks/Analytics/LineChart"
 import { Label, ReferenceLine } from "recharts"
 
 const seatAllowance = {
@@ -106,24 +103,6 @@ export default function Billing() {
           </Alert>
         )}
 
-        {/* <Card withBorder radius="md" padding="xl">
-          <Stack gap="sm">
-            <Text fz="md" fw={700} c="dimmed">
-              Monthly Usage
-            </Text>
-            <Text fz="lg" fw={500}>
-              {formatLargeNumber(usage)} /{" "}
-              {plan === "free" ? formatLargeNumber(30000) : "∞"} requests
-            </Text>
-            <Progress
-              value={percent}
-              size="lg"
-              radius="xl"
-              color={percent > 99 ? "red" : "blue"}
-            />
-          </Stack>
-        </Card> */}
-
         <LineChart
           title={<Title order={3}>Events Usage</Title>}
           range={30}
@@ -151,7 +130,7 @@ export default function Billing() {
         />
         <Card withBorder radius="md" padding="xl">
           <Stack gap="sm">
-            <Text fz="md" fw={700} c="dimmed">
+            <Text fz="md" fw={700} size="lg">
               Seat Allowance
             </Text>
             <Text fz="lg" fw={500}>

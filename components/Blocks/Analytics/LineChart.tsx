@@ -151,7 +151,7 @@ const LineChartComponent = ({
       (splitBy ? Object.keys(cleanedData[0]).length > 1 : data?.length)
 
   return (
-    <Card withBorder p={0} className="lineChart">
+    <Card withBorder p={0} className="lineChart" radius="md">
       {typeof title === "string" ? (
         <Text c="dimmed" tt="uppercase" fw={700} fz="xs" m="md">
           {title}
@@ -192,11 +192,19 @@ const LineChartComponent = ({
         )}
 
         {!hasData && (
-          <Overlay blur={5} opacity={0.1} p="lg" zIndex={1}>
-            <Center h="100%" ta="center">
-              <Alert ta="center">No data available for this period</Alert>
+          <>
+            <Overlay blur={5} opacity={0.1} p="lg" zIndex={1} />
+            <Center
+              ta="center"
+              style={{ position: "absolute" }}
+              h="100%"
+              w="100%"
+            >
+              <Box color="blue" opacity="1" className="alert" ta="center">
+                No data available for this period
+              </Box>
             </Center>
-          </Overlay>
+          </>
         )}
 
         <ResponsiveContainer width="100%" height={height}>

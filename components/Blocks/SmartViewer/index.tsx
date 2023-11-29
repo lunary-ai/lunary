@@ -9,9 +9,9 @@
 
 import { Code, Spoiler } from "@mantine/core"
 import { useMemo } from "react"
-import MessageViewer from "./MessageViewer"
-import { ChatMessage } from "./Message"
 import ProtectedText from "../ProtectedText"
+import { ChatMessage } from "./Message"
+import MessageViewer from "./MessageViewer"
 import { RenderJson } from "./RenderJson"
 
 const checkIsMessage = (obj) => {
@@ -79,12 +79,20 @@ export default function SmartViewer({
               isMessages ? (
                 <MessageViewer data={parsed} compact={compact} />
               ) : (
-                <Code color="var(--mantine-color-blue-light)">
+                <Code
+                  color="var(--mantine-color-blue-light)"
+                  style={{ overflow: "hidden" }}
+                >
                   <RenderJson data={parsed} compact={compact} />
                 </Code>
               )
             ) : (
-              <Code color="var(--mantine-color-blue-light)">{parsed}</Code>
+              <Code
+                color="var(--mantine-color-blue-light)"
+                style={{ overflow: "hidden" }}
+              >
+                {parsed}
+              </Code>
             )}
           </ProtectedText>
         )}

@@ -18,7 +18,7 @@ import { useState } from "react"
 
 import localFont from "next/font/local"
 
-const circularPro = localFont({
+export const circularPro = localFont({
   display: "swap",
   fallback: [
     "-apple-system",

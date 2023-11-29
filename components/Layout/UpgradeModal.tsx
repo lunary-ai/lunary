@@ -4,15 +4,12 @@ import { ContextModalProps } from "@mantine/modals"
 import { IconAnalyze, IconCircleCheck } from "@tabler/icons-react"
 
 import {
-  Avatar,
-  Badge,
   Button,
   Card,
   Group,
   Highlight,
   List,
   Mark,
-  Rating,
   SimpleGrid,
   Stack,
   Text,
@@ -61,10 +58,6 @@ export const UpgradeBody = ({ highlight }) => {
           Upgrade your plan
         </Title>
 
-        {/* <Text size="xl" mt="xs" fw={500}>
-          Upgrade now and secure{" "}
-          <Mark>{` the lowest price we'll ever offer. `}</Mark>
-        </Text> */}
         <Text size="lg" mt="xs" mb="xl" fw={500}>
           Unlock higher usage & powerful features to improve your AI&apos;s
           quality.
@@ -83,7 +76,11 @@ export const UpgradeBody = ({ highlight }) => {
               >
                 Pro
               </Text>
-              {isFree && <Badge variant="outline">-50%</Badge>}
+              {isPro && (
+                <Text size="lg" c="dimmed" ta="center">
+                  (current plan)
+                </Text>
+              )}
             </Group>
 
             <Group my={10} align="center" gap={10}>

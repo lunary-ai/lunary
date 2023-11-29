@@ -7,28 +7,32 @@ import {
   Text,
   Textarea,
   ThemeIcon,
-  useMantineTheme,
 } from "@mantine/core"
+import { useColorScheme } from "@mantine/hooks"
 import { IconRobot, IconUser } from "@tabler/icons-react"
+import { getColorForRole } from "../../../utils/colors"
 import ProtectedText from "../ProtectedText"
 import { RenderJson } from "./RenderJson"
-import { useColorScheme } from "@mantine/hooks"
-import { getColorForRole } from "../../../utils/colors"
+import { useTheme } from "@emotion/react"
+import { circularPro } from "../../../pages/_app"
 
-const RenderFunction = ({ color, compact, codeBg, data }) => {
-  const scheme = useColorScheme()
+const RenderFunction = ({ color, compact, codeBg, data, type }) => {
+  const theme = useTheme()
+
+  const fontColor = type === 'functionCall' ? '#40c057' : 'inherit'
 
   return (
     <Code block bg={codeBg}>
       <Text
         w={300}
-        size="xs"
+        size="12px"
         c={color}
-        mb={compact ? 2 : "xs"}
+        style={{ fontFamily: circularPro.style.fontFamily }}
+        mb={compact ? 4 : "xs"}
         mt={compact ? -6 : 0}
       >
-        {`function call: `}
-        <Text span fw="bolder">
+        <Text span c={fontColor}>`function call: `}</Text>
+        <Text c={fontColor} span fw="bolder">
           {data?.name}
         </Text>
       </Text>
@@ -64,6 +68,7 @@ export function ChatMessage({
       style={{
         overflow: "hidden",
         backgroundColor: color,
+        borderRadius: 8,
       }}
     >
       {!compact && (
@@ -99,6 +104,7 @@ export function ChatMessage({
           data={data?.functionCall}
           compact={compact}
           codeBg={codeBg}
+          type="functionCall"
         />
       ) : data?.toolCalls ? (
         data?.toolCalls.map((toolCall, index) => (

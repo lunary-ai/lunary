@@ -87,7 +87,7 @@ export default function RunInputOutput({ run }) {
               </Button>
             )}
           </CopyButton>
-          <Card withBorder>
+          <Card withBorder radius="md">
             <Group justify="space-between" align="start">
               <Stack gap="xs">
                 <ParamItem name="Model" value={run.name} />
