@@ -77,6 +77,16 @@ const MODEL_COSTS: ModelCost[] = [
     inputCost: 0.1, // $ per 1000 seconds
     outputCost: 0,
   },
+  {
+    models: ["tts-1-hd"],
+    inputCost: 0.03,
+    outputCost: 0,
+  },
+  {
+    models: ["tts-1"],
+    inputCost: 0.015,
+    outputCost: 0,
+  },
 ]
 
 export const calcRunCost = (run) => {
