@@ -14,6 +14,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
+import { usePathname } from "next/navigation"
 
 import { useColorScheme, useLocalStorage } from "@mantine/hooks"
 import { useVirtual } from "@tanstack/react-virtual"
@@ -21,7 +22,8 @@ import { useVirtual } from "@tanstack/react-virtual"
 // outside for reference
 const emptyArray = []
 
-const AUTO_HIDABLE_COLUMNS = ["feedback", "tags", "user"]
+const DEFAULT_AUTO_HIDABLE_COLUMNS = ["feedback", "tags", "user"]
+const CHAT_AUTOHIDABLE_COLUMNS = ["tags", "user"]
 
 export default function DataTable({
   key,
@@ -31,6 +33,12 @@ export default function DataTable({
   onRowClicked = undefined,
   loadMore = undefined,
 }) {
+  const pathname = usePathname()
+  const autoHidableColumns =
+    pathname === "/chats"
+      ? CHAT_AUTOHIDABLE_COLUMNS
+      : DEFAULT_AUTO_HIDABLE_COLUMNS
+  console.log(autoHidableColumns)
   const [sorting, setSorting] = useState<SortingState>([
     {
       id: "created_at",
@@ -109,7 +117,7 @@ export default function DataTable({
     if (!table || !rows?.length || columnsTouched) return
 
     table.getAllColumns().forEach((column) => {
-      if (!AUTO_HIDABLE_COLUMNS.includes(column.id)) return
+      if (!autoHidableColumns.includes(column.id)) return
 
       const isUsed = rows.some((row) => row.original[column.id])
 
