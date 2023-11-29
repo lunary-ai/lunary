@@ -128,22 +128,6 @@ export default function Navbar() {
             )}
           </Group>
 
-          {profile?.verified === false && (
-            <Alert color="orange" variant="filled" py={3}>
-              {`Verify your email within 24h to keep your account - `}
-              {!emailSent && (
-                <Anchor
-                  href="#"
-                  onClick={sendVerification}
-                  ml="sm"
-                  color="white"
-                >
-                  {sendingEmail ? "Sending..." : "Resend email"}
-                </Anchor>
-              )}
-            </Alert>
-          )}
-
           <Group>
             {profile?.org.limited ? (
               <Button
@@ -164,6 +148,29 @@ export default function Navbar() {
               </Button>
             ) : (
               <>
+                {profile?.verified === false && (
+                  <Group
+                    bg="orange"
+                    h="30"
+                    px="16"
+                    display="flex"
+                    style={{ borderRadius: 8, fontSize: 14, color: "white" }}
+                  >
+                    {`Verify your email within 24h to keep your account`}
+
+                    {!emailSent && <span style={{ marginRight: 5 }}>-</span>}
+                    {!emailSent && (
+                      <Anchor
+                        href="#"
+                        onClick={sendVerification}
+                        c="white"
+                        style={{ fontSize: 14 }}
+                      >
+                        {sendingEmail ? "Sending..." : "Resend email"}
+                      </Anchor>
+                    )}
+                  </Group>
+                )}
                 <Button
                   size="xs"
                   leftSection={<IconMessage size={18} />}

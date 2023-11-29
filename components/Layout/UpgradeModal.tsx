@@ -66,72 +66,73 @@ export const UpgradeBody = ({ highlight }) => {
           <Mark>{` the lowest price we'll ever offer. `}</Mark>
         </Text> */}
         <Text size="lg" mt="xs" mb="xl" fw={500}>
-          Unlock higher usage & powerful features to improve your AI`&apos;s
+          Unlock higher usage & powerful features to improve your AI&apos;s
           quality.
         </Text>
       </Stack>
 
       <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-        <Card p="xl" withBorder shadow="md" display="flex">
-          <Group gap={6}>
-            <Text
-              tt="uppercase"
-              fw="bold"
-              variant="gradient"
-              gradient={{ from: "indigo", to: "cyan", deg: 45 }}
-            >
-              Pro
-            </Text>
-            {isFree && <Badge variant="outline">-50%</Badge>}
-            {isPro && (
-              <Text size="lg" color="dimmed" ta="center">
-                (current plan)
+        <Card p="xl" withBorder shadow="md">
+          <Stack>
+            <Group>
+              <Text
+                tt="uppercase"
+                fw="bold"
+                variant="gradient"
+                gradient={{ from: "indigo", to: "cyan", deg: 45 }}
+              >
+                Pro
               </Text>
+              {isFree && <Badge variant="outline">-50%</Badge>}
+            </Group>
+
+            <Group my={10} align="center" gap={10}>
+              <Title order={3} size="30">
+                {isFree && (
+                  <Text
+                    span
+                    td="line-through"
+                    style={{ fontSize: 20 }}
+                    fw={700}
+                  >
+                    $50
+                  </Text>
+                )}
+                {` $25`}
+                <Text span style={{ fontSize: 20 }} fw={700}>{` / mo`}</Text>
+              </Title>
+            </Group>
+
+            <PlanFeatures
+              features={[
+                { id: "events", title: "4k events per day" },
+                { id: "team", title: "Unlimited apps" },
+                { id: "team", title: "3 apps" },
+                { id: "analytics", title: "Advanced Analytics" },
+                { id: "play", title: "AI Playground" },
+                { id: "export", title: "Export data" },
+                { id: "api", title: "API access" },
+              ]}
+              highlight={highlight}
+            />
+
+            {isFree && (
+              <Button
+                size="md"
+                href={`${process.env.NEXT_PUBLIC_STRIPE_PRO_LINK}&client_reference_id=${profile?.org.id}`}
+                fullWidth
+                component="a"
+                variant="gradient"
+                gradient={{ from: "violet", to: "blue", deg: 45 }}
+                color="violet"
+                mt={40}
+              >
+                Claim -50% forever
+              </Button>
             )}
-          </Group>
-
-          <Group my={20} align="center" gap={10}>
-            <Title order={3} size={30}>
-              {isFree && (
-                <Text span td="line-through" size="20">
-                  $50
-                </Text>
-              )}
-              {` $25`}
-              <Text span size="20">
-                {` / mo`}
-              </Text>
-            </Title>
-          </Group>
-
-          <PlanFeatures
-            features={[
-              { id: "events", title: "4k events per day" },
-              { id: "team", title: "Unlimited apps" },
-              { id: "team", title: "3 apps" },
-              { id: "analytics", title: "Advanced Analytics" },
-              { id: "play", title: "AI Playground" },
-              { id: "export", title: "Export data" },
-              { id: "api", title: "API access" },
-            ]}
-            highlight={highlight}
-          />
-
-          {isFree && (
-            <Button
-              size="md"
-              href={`${process.env.NEXT_PUBLIC_STRIPE_PRO_LINK}&client_reference_id=${profile?.org.id}`}
-              fullWidth
-              component="a"
-              variant="gradient"
-              gradient={{ from: "violet", to: "blue", deg: 45 }}
-              color="violet"
-              mt={40}
-            >
-              Claim -50% forever
-            </Button>
-          )}
+          </Stack>
         </Card>
+
         <Card p="xl" withBorder>
           <Group gap={6}>
             <Text
@@ -145,11 +146,9 @@ export const UpgradeBody = ({ highlight }) => {
           </Group>
 
           <Group my={20} align="center" gap={10}>
-            <Title order={3} size={30}>
+            <Title order={3}>
               {` $95`}
-              <Text span size="20">
-                {` / mo`}
-              </Text>
+              <Text span>{` / mo`}</Text>
             </Title>
           </Group>
 

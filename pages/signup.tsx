@@ -25,6 +25,7 @@ import { notifications } from "@mantine/notifications"
 import { useSessionContext, useUser } from "@supabase/auth-helpers-react"
 import {
   IconAnalyze,
+  IconArrowRight,
   IconAt,
   IconBrandDiscord,
   IconCalendar,
@@ -45,7 +46,7 @@ function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
 
-  const { supabaseClient } = useSessionContext()
+  const { session, isLoading, supabaseClient } = useSessionContext()
 
   const form = useForm({
     initialValues: {
@@ -70,8 +71,8 @@ function SignupPage() {
   const user = useUser()
 
   useEffect(() => {
-    if (user) Router.push("/")
-  }, [user])
+    if (session && !isLoading && step === 1) Router.push("/")
+  }, [isLoading, session, step])
 
   const handleSignup = async ({
     email,
@@ -130,7 +131,7 @@ function SignupPage() {
   }
 
   return (
-    <Container size={800}>
+    <Container size={800} mih="60%">
       <NextSeo title="Sign Up" />
 
       <Stack align="center" gap={50}>
@@ -242,8 +243,8 @@ function SignupPage() {
                               size="sm"
                               onClick={() => setStep(1)}
                               fullWidth
-                              variant="link"
-                              color="gray.4"
+                              variant="transparent"
+                              color="black"
                             >
                               {`← Go back`}
                             </Button>
@@ -300,7 +301,15 @@ function SignupPage() {
 
         {step === 3 && (
           <>
-            <Confetti recycle={false} numberOfPieces={500} gravity={0.3} />
+            {typeof window !== "undefined" && (
+              <Confetti
+                recycle={false}
+                numberOfPieces={500}
+                gravity={0.3}
+                width={window.innerWidth}
+                height={window.innerHeight}
+              />
+            )}
 
             <Stack align="center">
               <IconAnalyze color={"#206dce"} size={60} />
@@ -308,7 +317,7 @@ function SignupPage() {
                 You&apos;re all set 🎉
               </Title>
 
-              <Text size="lg" mt="xs" mb="xl" fw={500}>
+              <Text size="xl" mt="xs" mb="xl" fw={500}>
                 Check your emails for the confirmation link.
               </Text>
 
@@ -317,13 +326,16 @@ function SignupPage() {
                   // use this to refresh properly
                   window.location.href = "/"
                 }}
-                variant="outline"
+                mb="xl"
+                rightSection={<IconArrowRight size={18} />}
                 size="lg"
               >
                 Open Dashboard
               </Button>
 
-              <Text>Want to say hi? We&apos;d love to talk to you:</Text>
+              <Text size="lg">
+                Want to say hi? We&apos;d love to talk to you:
+              </Text>
 
               <Group>
                 <Button
@@ -340,7 +352,7 @@ function SignupPage() {
                   variant="outline"
                   color="teal.8"
                   component="a"
-                  href="mailto:vince@llmonitor.com"
+                  href="mailto:hello@llmonitor.com"
                   rightSection={<IconMail size={18} />}
                 >
                   Email
