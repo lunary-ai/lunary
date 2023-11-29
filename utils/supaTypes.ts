@@ -368,6 +368,18 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
+      get_all_feedbacks: {
+        Args: {
+          app_id: string
+        }
+        Returns: Json[]
+      }
+      get_feedbacks: {
+        Args: {
+          app_id: string
+        }
+        Returns: string[]
+      }
       get_model_names: {
         Args: {
           app_id: string

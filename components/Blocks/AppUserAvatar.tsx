@@ -44,6 +44,7 @@ function AppUserAvatar({
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
+            fontSize: 14,
           }}
           href={`/users/${user.id}`}
         >

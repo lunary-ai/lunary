@@ -72,7 +72,7 @@ export const UpgradeBody = ({ highlight }) => {
       </Stack>
 
       <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-        <Card p="xl" withBorder shadow="md">
+        <Card p="xl" withBorder shadow="md" display="flex">
           <Group gap={6}>
             <Text
               tt="uppercase"

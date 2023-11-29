@@ -185,6 +185,33 @@ export function useTags() {
   return { tags }
 }
 
+export function useAllFeedbacks() {
+  const supabaseClient = useSupabaseClient<Database>()
+  const { appId } = useContext(AppContext)
+
+  const query = supabaseClient.rpc("get_all_feedbacks", {
+    app_id: appId,
+  })
+
+  const { data, isLoading } = useQuery<string[]>(query)
+
+  return { allFeedbacks: data, isLoading }
+}
+
+export function useConvosByFeedback(feedbackFilters) {
+  const supabaseClient = useSupabaseClient<Database>()
+  const { appId } = useContext(AppContext)
+
+  const query = supabaseClient.rpc("get_convos_by_feedback", {
+    app_id: appId,
+    feedback_filters: feedbackFilters,
+  })
+
+  const { data, isLoading, error } = useQuery<string[]>(query)
+
+  return { runIds: data, isLoading, error }
+}
+
 export function useUsers() {
   const supabaseClient = useSupabaseClient<Database>()
   const { appId } = useContext(AppContext)

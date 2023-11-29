@@ -313,7 +313,10 @@ function SignupPage() {
               </Text>
 
               <Button
-                onClick={() => Router.push("/")}
+                onClick={() => {
+                  // use this to refresh properly
+                  window.location.href = "/"
+                }}
                 variant="outline"
                 size="lg"
               >

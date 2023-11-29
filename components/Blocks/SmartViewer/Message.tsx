@@ -20,7 +20,13 @@ const RenderFunction = ({ color, compact, codeBg, data }) => {
 
   return (
     <Code block bg={codeBg}>
-      <Text w={300} c={color} mb={compact ? 2 : "xs"} mt={compact ? -6 : 0}>
+      <Text
+        w={300}
+        size="xs"
+        c={color}
+        mb={compact ? 2 : "xs"}
+        mt={compact ? -6 : 0}
+      >
         {`function call: `}
         <Text span fw="bolder">
           {data?.name}

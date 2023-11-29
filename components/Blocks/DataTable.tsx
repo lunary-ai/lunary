@@ -184,6 +184,7 @@ export default function DataTable({
                     pos="absolute"
                     right={10}
                     top={5}
+                    variant="transparent"
                     color={scheme === "light" ? "blue" : "black.5"}
                   >
                     <IconColumns3 size={16} />

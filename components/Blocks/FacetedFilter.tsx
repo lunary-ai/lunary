@@ -12,18 +12,24 @@ import {
   useCombobox,
 } from "@mantine/core"
 import { IconCirclePlus } from "@tabler/icons-react"
-import { useState } from "react"
+import { ReactNode, useState } from "react"
 import { useModelNames } from "../../utils/dataHooks"
 
+// TODO: proper typing for props
 export default function FacetedFilter({
   name,
-  items,
+  items = [],
+  render,
+  selectedItems,
+  setSelectedItems,
 }: {
   name: string
-  items: string[]
+  items: string[] | any
+  render: any
+  selectedItems: any
+  setSelectedItems: any
 }) {
   const [search, setSearch] = useState("")
-  const [selectedItems, setSelectedItems] = useState("model")
 
   const combobox = useCombobox({
     onDropdownClose: () => {
@@ -38,7 +44,7 @@ export default function FacetedFilter({
   })
 
   const options = items
-    .filter((item) => item.toLowerCase().includes(search.toLowerCase().trim()))
+    // .filter((item) => item?.toLowerCase()?.includes(search.toLowerCase().trim()))
     .map((item) => (
       <Combobox.Option value={item} key={item}>
         <Group gap="sm">
@@ -49,7 +55,7 @@ export default function FacetedFilter({
             tabIndex={-1}
             style={{ pointerEvents: "none" }}
           />
-          <span>{item}</span>
+          {render ? render(item) : <span>{item}</span>}
         </Group>
       </Combobox.Option>
     ))

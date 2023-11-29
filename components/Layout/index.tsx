@@ -31,11 +31,11 @@ export default function Layout({ children }: { children: ReactNode }) {
     "/magic-login",
     "/request-password-reset",
     "/update-password",
-  ].includes(router.pathname)
+  ].find((path) => router.pathname.startsWith(path))
 
-  const { profile, loading } = useProfile()
+  const { profile, loading, error } = useProfile()
 
-  const { session, isLoading } = useSessionContext()
+  const { session, isLoading, supabaseClient } = useSessionContext()
 
   const [appId, setAppId] = useLocalStorage({
     key: "appId",
@@ -45,14 +45,28 @@ export default function Layout({ children }: { children: ReactNode }) {
   const colorScheme = useColorScheme()
 
   useEffect(() => {
-    if (!session && !isLoading && !isAuthPage) {
+    if (isAuthPage || session || isLoading) return
+
+    if (!profile && !loading && error) {
+      // If the profile failed to load, force sign out and redirect to login
+      supabaseClient.auth.signOut().then(() => {
+        Router.push("/login")
+      })
+    } else {
       Router.push("/login")
     }
-  }, [session, isLoading, router.pathname, isAuthPage])
+  }, [
+    session,
+    isLoading,
+    router.pathname,
+    profile,
+    loading,
+    error,
+    isAuthPage,
+    supabaseClient,
+  ])
 
-  if (!session && !isAuthPage) return null
-
-  if ((!profile && loading) || (!session && isLoading)) {
+  if (!isAuthPage && ((!profile && loading) || (!session && isLoading))) {
     return (
       <Center h="100vh" w="100vw">
         <Loader />
@@ -60,6 +74,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     )
   }
 
+  if (!session && !isAuthPage) return null
   return (
     <>
       <Notifications position="top-right" />

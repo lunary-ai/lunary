@@ -54,7 +54,7 @@ const columns = [
   userColumn(),
   {
     header: "Tokens",
-    size: 25,
+    size: 30,
     id: "tokens",
     sortingFn: (a, b) =>
       a.original.completion_tokens +
