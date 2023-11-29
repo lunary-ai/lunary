@@ -20,7 +20,7 @@ export default function StatusBadge({ status, minimal = false }) {
     return (
       <ThemeIcon color={color} size="sm" radius="lg" variant="outline">
         {status === "success" ? (
-          <IconCheck strokeWidth={4} size={12} />
+          <IconCheck strokeWidth={4} size="12" />
         ) : (
           <IconX strokeWidth={4} size={11} />
         )}
@@ -28,7 +28,7 @@ export default function StatusBadge({ status, minimal = false }) {
     )
 
   return (
-    <Badge color={color}>
+    <Badge color={color} variant="light">
       <ProtectedText>{status}</ProtectedText>
     </Badge>
   )

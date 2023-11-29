@@ -20,7 +20,6 @@ export function edgeWrapper(handler: (req: NextRequest) => Promise<Response>) {
     } catch (error) {
       console.error(error)
       H.consumeError(error)
-
       return jsonResponse(500, { error: error.message })
     }
   })

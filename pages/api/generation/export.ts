@@ -1,4 +1,3 @@
-import { put } from "@vercel/blob"
 import { ensureHasAccessToApp } from "@/lib/api/ensureAppIsLogged"
 
 import { apiWrapper } from "@/lib/api/helpers"

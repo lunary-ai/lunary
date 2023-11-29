@@ -1,18 +1,15 @@
 import analytics from "@/utils/analytics"
 import { useApps, useCurrentApp, useProfile } from "@/utils/dataHooks"
-import errorHandler from "@/utils/errorHandler"
 import {
   Alert,
   Anchor,
+  AppShell,
   Button,
   Flex,
   Group,
-  Header,
   Select,
-  Text,
 } from "@mantine/core"
 import { modals } from "@mantine/modals"
-import { notifications } from "@mantine/notifications"
 import { useUser } from "@supabase/auth-helpers-react"
 
 import {
@@ -27,6 +24,8 @@ import {
 import Link from "next/link"
 import Script from "next/script"
 import { useEffect, useState } from "react"
+import errorHandler from "../../utils/errorHandler"
+import { notifications } from "@mantine/notifications"
 
 export default function Navbar() {
   const { app, setAppId } = useCurrentApp()
@@ -37,30 +36,6 @@ export default function Navbar() {
   const [sendingEmail, setSendingEmail] = useState(false)
 
   const user = useUser()
-
-  useEffect(() => {
-    if (user) {
-      analytics.identify(user.id, {
-        email: user.email,
-        name: user.user_metadata?.name,
-      })
-
-      const win = window as any
-
-      if (typeof win.Featurebase !== "function") {
-        win.Featurebase = function () {
-          // eslint-disable-next-line prefer-rest-params
-          ;(win.Featurebase.q = win.Featurebase.q || []).push(arguments)
-        }
-      }
-      win.Featurebase("initialize_feedback_widget", {
-        organization: "llmonitor",
-        theme: "light",
-        // placement: "right",
-        email: user?.email,
-      })
-    }
-  }, [user])
 
   const sendVerification = async () => {
     if (sendingEmail) return
@@ -93,6 +68,30 @@ export default function Navbar() {
     setSendingEmail(false)
   }
 
+  useEffect(() => {
+    if (user) {
+      analytics.identify(user.id, {
+        email: user.email,
+        name: user.user_metadata?.name,
+      })
+
+      const win = window as any
+
+      if (typeof win.Featurebase !== "function") {
+        win.Featurebase = function () {
+          // eslint-disable-next-line prefer-rest-params
+          ;(win.Featurebase.q = win.Featurebase.q || []).push(arguments)
+        }
+      }
+      win.Featurebase("initialize_feedback_widget", {
+        organization: "llmonitor",
+        theme: "light",
+        // placement: "right",
+        email: user?.email,
+      })
+    }
+  }, [user])
+
   // Select first app if none selected
   useEffect(() => {
     if (!app && apps?.length && !loading) {
@@ -102,7 +101,7 @@ export default function Navbar() {
 
   return (
     <>
-      <Header height={60} p="md">
+      <AppShell.Header p="md" h="60">
         <Script
           src="https://do.featurebase.app/js/sdk.js"
           id="featurebase-sdk"
@@ -113,7 +112,7 @@ export default function Navbar() {
             <Anchor component={Link} href="/">
               <Group mx="sm">
                 <IconAnalyze size={26} />
-                {/* <Text weight="bold">llmonitor</Text> */}
+                {/* <Text fw="bold">llmonitor</Text> */}
               </Group>
             </Anchor>
 
@@ -130,22 +129,6 @@ export default function Navbar() {
           </Group>
 
           <Group>
-            {profile?.verified === false && (
-              <Alert color="orange" variant="filled" py={3}>
-                {`Verify your email within 24h to keep your account - `}
-                {!emailSent && (
-                  <Anchor
-                    href="#"
-                    onClick={sendVerification}
-                    ml="sm"
-                    color="white"
-                  >
-                    {sendingEmail ? "Sending..." : "Resend email"}
-                  </Anchor>
-                )}
-              </Alert>
-            )}
-
             {profile?.org.limited ? (
               <Button
                 color="orange"
@@ -159,15 +142,38 @@ export default function Navbar() {
                     },
                   })
                 }
-                leftIcon={<IconAlertTriangle size={16} />}
+                leftSection={<IconAlertTriangle size="16" />}
               >
                 Events limit reached. Click here to upgrade & restore access.
               </Button>
             ) : (
               <>
+                {profile?.verified === false && (
+                  <Group
+                    bg="orange"
+                    h="30"
+                    px="16"
+                    display="flex"
+                    style={{ borderRadius: 8, fontSize: 14, color: "white" }}
+                  >
+                    {`Verify your email within 24h to keep your account`}
+
+                    {!emailSent && <span style={{ marginRight: 5 }}>-</span>}
+                    {!emailSent && (
+                      <Anchor
+                        href="#"
+                        onClick={sendVerification}
+                        c="white"
+                        style={{ fontSize: 14 }}
+                      >
+                        {sendingEmail ? "Sending..." : "Resend email"}
+                      </Anchor>
+                    )}
+                  </Group>
+                )}
                 <Button
                   size="xs"
-                  leftIcon={<IconMessage size={18} />}
+                  leftSection={<IconMessage size={18} />}
                   data-featurebase-feedback
                 >
                   Feedback
@@ -179,7 +185,7 @@ export default function Navbar() {
                   size="xs"
                   target="_blank"
                   variant="outline"
-                  leftIcon={<IconHelp size={18} />}
+                  leftSection={<IconHelp size={18} />}
                 >
                   Docs
                 </Button>
@@ -198,14 +204,14 @@ export default function Navbar() {
                 size="xs"
                 variant="gradient"
                 gradient={{ from: "#0788ff", to: "#9900ff", deg: 30 }}
-                leftIcon={<IconBolt size={16} />}
+                leftSection={<IconBolt size="16" />}
               >
                 Upgrade
               </Button>
             )}
           </Group>
         </Flex>
-      </Header>
+      </AppShell.Header>
     </>
   )
 }

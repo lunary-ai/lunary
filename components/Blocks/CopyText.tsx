@@ -12,7 +12,11 @@ export const SuperCopyButton = ({ value }) => (
   <CopyButton value={value} timeout={2000}>
     {({ copied, copy }) => (
       <Tooltip label={copied ? "Copied" : "Copy"} withArrow position="right">
-        <ActionIcon color={copied ? "teal" : "gray"} onClick={copy}>
+        <ActionIcon
+          color={copied ? "teal" : "gray"}
+          variant="transparent"
+          onClick={copy}
+        >
           {copied ? <IconCheck size="16px" /> : <IconCopy size="16px" />}
         </ActionIcon>
       </Tooltip>
@@ -20,9 +24,12 @@ export const SuperCopyButton = ({ value }) => (
   </CopyButton>
 )
 
-export default function CopyText({ color = "violet", value }) {
+export default function CopyText({
+  color = "var(--mantine-color-violet-light)",
+  value,
+}) {
   return (
-    <Group spacing={0} display="inline-flex">
+    <Group gap={0} display="inline-flex">
       <Code ml={5} color={color}>
         {value}
       </Code>

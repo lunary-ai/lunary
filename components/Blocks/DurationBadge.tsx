@@ -14,10 +14,10 @@ export default function DurationBadge({ createdAt, endedAt, minimal = false }) {
       pr={5}
       leftSection={
         <ThemeIcon variant="subtle" size="sm">
-          <IconClock size={12} />
+          <IconClock size="12" />
         </ThemeIcon>
       }
-      sx={{ textTransform: "none" }}
+      style={{ textTransform: "none" }}
     >
       {(duration / 1000).toFixed(2)}s
     </Badge>

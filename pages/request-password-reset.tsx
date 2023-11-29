@@ -54,23 +54,23 @@ export default function PasswordReset() {
   return (
     <Container py={100} size={600}>
       <NextSeo title="Login" />
-      <Stack align="center" spacing={50}>
+      <Stack align="center" gap={50}>
         <Stack align="center">
           <IconAnalyze color={"#206dce"} size={60} />
-          <Title order={2} weight={700} size={40} ta="center">
+          <Title order={2} fw={700} size={40} ta="center">
             Forgot password
           </Title>
         </Stack>
 
         <Paper radius="md" p="xl" withBorder miw={350}>
-          <Text size="lg" mb="xl" weight={500}>
+          <Text size="lg" mb="xl" fw={500}>
             Request reset link
           </Text>
 
           <form onSubmit={form.onSubmit(handlePasswordReset)}>
             <Stack>
               <TextInput
-                icon={<IconAt size={16} />}
+                leftSection={<IconAt size="16" />}
                 label="Email"
                 type="email"
                 value={form.values.email}

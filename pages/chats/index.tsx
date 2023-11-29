@@ -18,15 +18,23 @@ import {
 } from "@/utils/datatable"
 
 import { formatDateTime } from "@/utils/format"
-import { useAppUser, useRuns } from "@/utils/dataHooks"
+import {
+  useAllFeedbacks,
+  useAppUser,
+  useConvosByFeedback,
+  useRuns,
+} from "@/utils/dataHooks"
 
 import {
   Alert,
+  Box,
   Button,
   Card,
   Drawer,
+  Flex,
   Group,
   Loader,
+  MultiSelect,
   Stack,
   Text,
   Title,
@@ -34,7 +42,9 @@ import {
 
 import { IconMessages, IconNeedleThread } from "@tabler/icons-react"
 import { createColumnHelper } from "@tanstack/react-table"
-import analytics from "@/utils/analytics"
+import analytics from "../../utils/analytics"
+import SearchBar from "../../components/Blocks/SearchBar"
+import FacetedFilter from "../../components/Blocks/FacetedFilter"
 
 const columnHelper = createColumnHelper<any>()
 
@@ -90,8 +100,8 @@ const ChatReplay = ({ run }) => {
   return (
     <Stack>
       <Card withBorder>
-        <Stack spacing="xs">
-          <Group position="apart">
+        <Stack gap="xs">
+          <Group justify="space-between">
             <Text>User</Text>
             <Text>
               {user ? (
@@ -101,15 +111,15 @@ const ChatReplay = ({ run }) => {
               )}
             </Text>
           </Group>
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>First message</Text>
             <Text>{formatDateTime(run.created_at)}</Text>
           </Group>
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Last message</Text>
             <Text>{formatDateTime(run.ended_at)}</Text>
           </Group>
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Messages</Text>
             <Text>{messages?.length}</Text>
           </Group>
@@ -120,7 +130,7 @@ const ChatReplay = ({ run }) => {
         onClick={() => {
           Router.push(`/traces/${run.id}`)
         }}
-        rightIcon={<IconNeedleThread size={16} />}
+        rightSection={<IconNeedleThread size="16" />}
       >
         View trace
       </Button>
@@ -128,7 +138,7 @@ const ChatReplay = ({ run }) => {
       <Title order={3}>Replay</Title>
 
       {messages && (
-        <Stack spacing={0}>
+        <Stack gap={0}>
           {messages?.map(({ role, content, took, feedback }) => (
             <>
               <BubbleMessage
@@ -155,17 +165,55 @@ const ChatReplay = ({ run }) => {
 }
 
 export default function Chats() {
-  const { runs, loading, validating, loadMore } = useRuns("convo")
-
   const [selected, setSelected] = useState(null)
+  const [selectedItems, setSelectedItems] = useState([])
+
+  let { runs, loading, validating, loadMore } = useRuns("convo")
+
+  const { allFeedbacks } = useAllFeedbacks()
+  const { runIds } = useConvosByFeedback(selectedItems)
+
+  // TODO: filter in query directly
+  runs = runs?.filter((run) => {
+    if (runIds?.length) {
+      if (runIds.includes(run.id)) {
+        return true
+      }
+      return false
+    }
+    return true
+  })
 
   if (!loading && runs?.length === 0) {
     return <Empty Icon={IconMessages} what="conversations" />
   }
 
+  // TODO: change the format of feedback. It should be of the form: {type: 'thumb' | 'rating' ..., value: 'UP' | 'DOWN' ...}
+  // + explain why to Vince
   return (
     <Stack h={"calc(100vh - var(--navbar-size))"}>
       <NextSeo title="Chats" />
+      <Flex justify="space-between">
+        <Group>
+          {/* <SearchBar query={query} setQuery={setQuery} /> */}
+
+          {allFeedbacks?.length && (
+            <FacetedFilter
+              // placeholder="Tags"
+              // size="xs"
+              // miw={100}
+              // w="fit-content"
+              name="Feedbacks"
+              items={allFeedbacks}
+              render={(item) => <Feedback data={item} />}
+              selectedItems={selectedItems}
+              setSelectedItems={setSelectedItems}
+              // clearable
+              // onChange={}
+            />
+          )}
+        </Group>
+      </Flex>
       {loading && <Loader />}
 
       <Drawer
@@ -180,10 +228,9 @@ export default function Chats() {
       </Drawer>
 
       <DataTable
-        key="chats"
+        key="chat"
         onRowClicked={(row) => {
           analytics.track("OpenChat")
-
           setSelected(row)
         }}
         loading={loading || validating}

@@ -1,5 +1,5 @@
 import { formatAppUser } from "@/utils/format"
-import { Anchor, Avatar, Group, MantineNumberSize } from "@mantine/core"
+import { Anchor, Avatar, Group } from "@mantine/core"
 import { memo } from "react"
 import ProtectedText from "./ProtectedText"
 
@@ -22,7 +22,7 @@ function AppUserAvatar({
   withName = false,
 }: {
   user: any
-  size?: MantineNumberSize
+  size?: any
   withName?: boolean
 }) {
   // use user.id (int) as seed for random color
@@ -33,17 +33,18 @@ function AppUserAvatar({
   const nameOrEmail = formatAppUser(user)
 
   return (
-    <Group spacing="xs" noWrap>
+    <Group gap="xs" wrap="nowrap">
       <Avatar lh={0.4} radius="xl" color={color} size={size}>
         {nameOrEmail?.slice(0, 2)?.toUpperCase()}
       </Avatar>
       {withName && (
         <Anchor
-          sx={{
+          style={{
             maxWidth: "100%",
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
+            fontSize: 14,
           }}
           href={`/users/${user.id}`}
         >

@@ -39,3 +39,8 @@ body {
 .mantine-Badge-root {
   max-width: 100%;
 }
+
+td,
+th {
+  /* padding: 1.25rem; */
+}

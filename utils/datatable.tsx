@@ -1,21 +1,20 @@
-import { createColumnHelper } from "@tanstack/react-table"
-import { Badge, Flex, Group } from "@mantine/core"
-import SmartViewer from "@/components/Blocks/SmartViewer"
-import { useAppUser, useRelatedRuns } from "./dataHooks"
-import { formatCost, formatDateTime, msToTime } from "./format"
 import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 import Feedback from "@/components/Blocks/Feedback"
 import ProtectedText from "@/components/Blocks/ProtectedText"
+import SmartViewer from "@/components/Blocks/SmartViewer"
+import { Badge, Group } from "@mantine/core"
+import { createColumnHelper } from "@tanstack/react-table"
 import { useEffect } from "react"
 import analytics from "./analytics"
+import { useAppUser, useRelatedRuns } from "./dataHooks"
+import { formatCost, formatDateTime, msToTime } from "./format"
 const columnHelper = createColumnHelper<any>()
 
 export const timeColumn = (timeColumn, label = "Time") => {
   return columnHelper.accessor(timeColumn, {
     header: label,
     id: timeColumn,
-    size: 60,
-    enableResizing: false,
+    size: 80,
     sortingFn: (a, b) =>
       new Date(a.getValue(timeColumn)).getTime() -
       new Date(b.getValue(timeColumn)).getTime(),
@@ -35,7 +34,7 @@ export const durationColumn = (unit = "s") => {
   return {
     id: "duration",
     header: "Duration",
-    size: 25,
+    size: 45,
     cell: (props) => {
       if (!props.getValue()) return null
       if (unit === "s") {
@@ -72,7 +71,7 @@ export const statusColumn = () => {
 export const tagsColumn = () => {
   return columnHelper.accessor("tags", {
     header: "Tags",
-    size: 60,
+    size: 70,
     cell: (props) => {
       const tags = props.getValue()
 
@@ -84,12 +83,12 @@ export const tagsColumn = () => {
       if (!tags) return null
 
       return (
-        <Group spacing={4}>
+        <Group gap={4}>
           {tags.map((tag) => (
             <Badge
               key={tag}
               variant="outline"
-              sx={{
+              style={{
                 textTransform: "none",
                 maxWidth: "100%",
               }}
@@ -129,7 +128,7 @@ export const outputColumn = (label = "Response") => {
 export const userColumn = () => {
   return columnHelper.accessor("user", {
     header: "User",
-    size: 60,
+    size: 70,
     cell: (props) => {
       const userId = props.getValue()
       const { user } = useAppUser(userId)
@@ -145,6 +144,7 @@ export const nameColumn = (label = "Name") => {
   return columnHelper.accessor("name", {
     header: label,
     size: 80,
+    minSize: 30,
     cell: (props) => {
       const status = props.row.original.status
       const name = props.getValue()
@@ -152,7 +152,7 @@ export const nameColumn = (label = "Name") => {
       return (
         <Badge
           variant="outline"
-          sx={{
+          style={{
             textTransform: "none",
           }}
           color={
@@ -169,7 +169,7 @@ export const nameColumn = (label = "Name") => {
 export const costColumn = () => {
   return columnHelper.accessor("cost", {
     header: "Cost",
-    size: 40,
+    size: 50,
     cell: (props) => {
       const cost = props.getValue()
       return formatCost(cost)
@@ -189,7 +189,7 @@ export const feedbackColumn = (withRelatedRuns = false) => {
           .map((run) => run.feedback)
 
         return (
-          <Group spacing="xs">
+          <Group gap="xs">
             {allFeedbacks?.map((feedback, i) => (
               <Feedback data={feedback} key={i} />
             ))}

@@ -10,19 +10,18 @@ import {
   useMantineTheme,
 } from "@mantine/core"
 import {
-  AreaChart,
   Area,
-  XAxis,
-  YAxis,
+  AreaChart,
   CartesianGrid,
-  Tooltip,
   ResponsiveContainer,
+  Tooltip,
+  XAxis,
 } from "recharts"
 
-import { eachDayOfInterval, format, parseISO } from "date-fns"
 import { formatLargeNumber } from "@/utils/format"
-import { IconBolt } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
+import { IconBolt } from "@tabler/icons-react"
+import { eachDayOfInterval, format, parseISO } from "date-fns"
 import ErrorBoundary from "../ErrorBoundary"
 
 const slugify = (str) => {
@@ -152,7 +151,7 @@ const LineChartComponent = ({
       (splitBy ? Object.keys(cleanedData[0]).length > 1 : data?.length)
 
   return (
-    <Card withBorder p={0} className="lineChart">
+    <Card withBorder p={0} className="lineChart" radius="md">
       {typeof title === "string" ? (
         <Text c="dimmed" tt="uppercase" fw={700} fz="xs" m="md">
           {title}
@@ -183,7 +182,7 @@ const LineChartComponent = ({
                   size="xs"
                   variant="gradient"
                   gradient={{ from: "#0788ff", to: "#9900ff", deg: 30 }}
-                  leftIcon={<IconBolt size={16} />}
+                  leftSection={<IconBolt size="16" />}
                 >
                   Upgrade
                 </Button>
@@ -193,11 +192,19 @@ const LineChartComponent = ({
         )}
 
         {!hasData && (
-          <Overlay blur={5} opacity={0.1} p="lg" zIndex={1}>
-            <Center h="100%" ta="center">
-              <Alert ta="center">No data available for this period</Alert>
+          <>
+            <Overlay blur={5} opacity={0.1} p="lg" zIndex={1} />
+            <Center
+              ta="center"
+              style={{ position: "absolute" }}
+              h="100%"
+              w="100%"
+            >
+              <Box color="blue" opacity="1" className="alert" ta="center">
+                No data available for this period
+              </Box>
             </Center>
-          </Overlay>
+          </>
         )}
 
         <ResponsiveContainer width="100%" height={height}>

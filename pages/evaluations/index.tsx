@@ -63,7 +63,7 @@ export default function Tests() {
         <Button w="fit-content">New Evaluation</Button>
 
         <Card>
-          {/* <Overlay blur={1.5} opacity={0.2} zIndex={0} /> */}
+          <Overlay blur={10} opacity={0.2} zIndex={0} />
 
           <Table horizontalSpacing="sm" verticalSpacing="lg">
             <thead>
@@ -77,7 +77,7 @@ export default function Tests() {
               <tr>
                 <td>Translator</td>
                 <td>
-                  <Group spacing="sm">
+                  <Group gap="sm">
                     <Badge variant="outline" color="indigo">
                       AI
                     </Badge>
@@ -87,13 +87,15 @@ export default function Tests() {
                   </Group>
                 </td>
                 <td>
-                  <Badge color="red">Critical</Badge>
+                  <Badge variant="light" color="red">
+                    Critical
+                  </Badge>
                 </td>
               </tr>
               <tr>
                 <td>Translator</td>
                 <td>
-                  <Group spacing="sm">
+                  <Group gap="sm">
                     <Badge variant="outline" color="indigo">
                       AI
                     </Badge>
@@ -101,13 +103,15 @@ export default function Tests() {
                   </Group>
                 </td>
                 <td>
-                  <Badge color="red">Critical</Badge>
+                  <Badge variant="light" color="red">
+                    Critical
+                  </Badge>
                 </td>
               </tr>
               <tr>
                 <td>PromptToSQL</td>
                 <td>
-                  <Group spacing="sm">
+                  <Group gap="sm">
                     <Badge variant="outline" color="cyan">
                       JS
                     </Badge>
@@ -116,13 +120,15 @@ export default function Tests() {
                   </Group>
                 </td>
                 <td>
-                  <Badge color="red">Critical</Badge>
+                  <Badge variant="light" color="red">
+                    Critical
+                  </Badge>
                 </td>
               </tr>
               <tr>
                 <td>PromptToSQL</td>
                 <td>
-                  <Group spacing="sm">
+                  <Group gap="sm">
                     <Badge variant="outline" color="cyan">
                       JS
                     </Badge>
@@ -130,7 +136,9 @@ export default function Tests() {
                   </Group>
                 </td>
                 <td>
-                  <Badge color="yellow">Warning</Badge>
+                  <Badge variant="light" color="yellow">
+                    Warning
+                  </Badge>
                 </td>
               </tr>
             </tbody>
