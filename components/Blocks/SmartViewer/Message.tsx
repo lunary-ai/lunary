@@ -8,27 +8,31 @@ import {
   Textarea,
   ThemeIcon,
 } from "@mantine/core"
+import { useColorScheme } from "@mantine/hooks"
 import { IconRobot, IconUser } from "@tabler/icons-react"
+import { getColorForRole } from "../../../utils/colors"
 import ProtectedText from "../ProtectedText"
 import { RenderJson } from "./RenderJson"
-import { useColorScheme } from "@mantine/hooks"
+import { useTheme } from "@emotion/react"
+import { circularPro } from "../../../pages/_app"
 
-const typesColors = {
-  ai: "green",
-  human: "blue",
-  user: "blue",
-  error: "red",
-  function: "violet",
-  tool: "violet",
-  system: "gray",
-}
+const RenderFunction = ({ color, compact, codeBg, data, type }) => {
+  const theme = useTheme()
 
-const RenderFunction = ({ color, compact, codeBg, data }) => {
+  const fontColor = type === 'functionCall' ? '#40c057' : 'inherit'
+
   return (
     <Code block bg={codeBg}>
-      <Text w={300} color={color} mb={compact ? 2 : "xs"} mt={compact ? -6 : 0}>
-        {`function call: `}
-        <Text span weight="bolder">
+      <Text
+        w={300}
+        size="12px"
+        c={color}
+        style={{ fontFamily: circularPro.style.fontFamily }}
+        mb={compact ? 4 : "xs"}
+        mt={compact ? -6 : 0}
+      >
+        <Text span c={fontColor}>`function call: `}</Text>
+        <Text c={fontColor} span fw="bolder">
           {data?.name}
         </Text>
       </Text>
@@ -52,8 +56,7 @@ export function ChatMessage({
   compact?: boolean
 }) {
   const scheme = useColorScheme()
-
-  const color = typesColors[data?.role] || "gray"
+  const color = getColorForRole(data?.role)
 
   const codeBg = `rgba(${scheme === "dark" ? "0,0,0" : "255,255,255"},0.6)`
 
@@ -62,13 +65,11 @@ export function ChatMessage({
       p={compact ? 0 : 12}
       pt={compact ? 0 : 8}
       mah={compact ? 60 : undefined}
-      sx={(theme) => ({
+      style={{
         overflow: "hidden",
-        backgroundColor:
-          theme.colors[color][
-            scheme === "dark" ? (color === "gray" ? 7 : 9) : 2
-          ],
-      })}
+        backgroundColor: color,
+        borderRadius: 8,
+      }}
     >
       {!compact && (
         <Text
@@ -81,6 +82,7 @@ export function ChatMessage({
               variant="unstyled"
               size="xs"
               w={75}
+              withCheckIcon={false}
               styles={{
                 input: {
                   color: "inherit",
@@ -102,6 +104,7 @@ export function ChatMessage({
           data={data?.functionCall}
           compact={compact}
           codeBg={codeBg}
+          type="functionCall"
         />
       ) : data?.toolCalls ? (
         data?.toolCalls.map((toolCall, index) => (

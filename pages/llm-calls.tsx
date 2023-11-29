@@ -11,6 +11,7 @@ import {
   Box,
   Button,
   Drawer,
+  Flex,
   Group,
   Menu,
   MultiSelect,
@@ -53,7 +54,7 @@ const columns = [
   userColumn(),
   {
     header: "Tokens",
-    size: 25,
+    size: 30,
     id: "tokens",
     sortingFn: (a, b) =>
       a.original.completion_tokens +
@@ -122,6 +123,8 @@ export default function LLMCalls() {
   }
 
   function exportButton(url: string) {
+    analytics.track("ClickExport")
+
     if (profile?.org.plan === "pro") {
       return {
         component: "a",
@@ -149,7 +152,7 @@ export default function LLMCalls() {
   return (
     <Stack h={"calc(100vh - var(--navbar-size))"}>
       <NextSeo title="Requests" />
-      <Group position="apart">
+      <Flex justify="space-between">
         <Group>
           <SearchBar query={query} setQuery={setQuery} />
 
@@ -182,7 +185,7 @@ export default function LLMCalls() {
               <Button
                 variant="outline"
                 size="xs"
-                leftIcon={<IconArrowBarUp size={16} />}
+                leftSection={<IconArrowBarUp size={16} />}
               >
                 Export
               </Button>
@@ -190,7 +193,7 @@ export default function LLMCalls() {
             <Menu.Dropdown>
               <Menu.Item
                 color="dark"
-                icon={<IconFileExport size={16} />}
+                leftSection={<IconFileExport size={16} />}
                 {...exportButton(exportUrl)}
               >
                 Export to CSV
@@ -198,7 +201,7 @@ export default function LLMCalls() {
               <Menu.Item
                 color="dark"
                 disabled
-                icon={<IconBraces size={16} />}
+                leftSection={<IconBraces size={16} />}
                 // {...exportButton(exportUrl)}
               >
                 Export to JSONL
@@ -206,11 +209,11 @@ export default function LLMCalls() {
             </Menu.Dropdown>
           </Menu>
         </Box>
-      </Group>
+      </Flex>
 
       <Drawer
         opened={!!selected}
-        size={700}
+        size="lg"
         keepMounted
         position="right"
         title={selected ? formatDateTime(selected.created_at) : ""}
@@ -223,6 +226,7 @@ export default function LLMCalls() {
         key="gen"
         onRowClicked={(row) => {
           analytics.track("OpenRun")
+
           setSelected(row)
         }}
         loading={loading || validating}

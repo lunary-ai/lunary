@@ -57,9 +57,9 @@ function TeamFull({ orgName }) {
   return (
     <Container py={100} size={600}>
       <NextSeo title="Signup" />
-      <Stack align="center" spacing={30}>
+      <Stack align="center" gap={30}>
         <IconAnalyze color={"#206dce"} size={60} />
-        <Title order={2} weight={700} size={40} ta="center">
+        <Title order={2} fw={700} size={40} ta="center">
           Sorry, ${orgName} is full
         </Title>
 
@@ -127,6 +127,7 @@ export default function Join({ orgUserCount, orgName }) {
         email,
         password,
         options: {
+          emailRedirectTo: `${window.location.origin}/`,
           data: {
             signupMethod: "join",
             orgId,
@@ -138,6 +139,13 @@ export default function Join({ orgUserCount, orgName }) {
     analytics.track("Signup", { email, name })
 
     if (ok) {
+      notifications.show({
+        icon: <IconCheck size={18} />,
+        color: "teal",
+        title: "Email sent 💌",
+        message: "Check your emails to verify your email.",
+      })
+
       setStep(3)
     }
 
@@ -165,23 +173,23 @@ export default function Join({ orgUserCount, orgName }) {
     <Container py={100} size={600}>
       <NextSeo title="Join" />
 
-      <Stack align="center" spacing={50}>
+      <Stack align="center" gap={50}>
         <Stack align="center">
           <IconAnalyze color={"#206dce"} size={60} />
-          <Title order={2} weight={700} size={40} ta="center">
+          <Title order={2} fw={700} size={40} ta="center">
             Join {orgName}
           </Title>
         </Stack>
         <Paper radius="md" p="xl" withBorder miw={350}>
           <form onSubmit={form.onSubmit(handleSignup)}>
-            <Stack spacing="xl">
+            <Stack gap="xl">
               {step === 1 && (
                 <>
-                  <Title order={2} weight={700} ta="center">
+                  <Title order={2} fw={700} ta="center">
                     Get Started
                   </Title>
                   <TextInput
-                    icon={<IconAt size={16} />}
+                    leftSection={<IconAt size="16" />}
                     label="Email"
                     type="email"
                     autoComplete="email"
@@ -217,7 +225,7 @@ export default function Join({ orgUserCount, orgName }) {
 
               {step === 2 && (
                 <>
-                  <Title order={2} weight={700} ta="center">
+                  <Title order={2} fw={700} ta="center">
                     Almost there...
                   </Title>
 
@@ -225,7 +233,7 @@ export default function Join({ orgUserCount, orgName }) {
                     label="Full Name"
                     autoComplete="name"
                     description="Only used to address you properly."
-                    icon={<IconUser size={16} />}
+                    leftSection={<IconUser size="16" />}
                     placeholder="Your full name"
                     error={form.errors.name && "This field is required"}
                     {...form.getInputProps("name")}
@@ -265,11 +273,11 @@ export default function Join({ orgUserCount, orgName }) {
 
                   <Stack align="center">
                     <IconAnalyze color={"#206dce"} size={60} />
-                    <Title order={2} weight={700} size={40} ta="center">
-                      You're all set 🎉
+                    <Title order={2} fw={700} size={40} ta="center">
+                      You&nbsp;re all set 🎉
                     </Title>
 
-                    <Text size="lg" mt="xs" mb="xl" weight={500}>
+                    <Text size="lg" mt="xs" mb="xl" fw={500}>
                       Check your emails for the confirmation link.
                     </Text>
 

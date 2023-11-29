@@ -1,4 +1,4 @@
-import { Group, Progress, Table, Text } from "@mantine/core"
+import { Box, Flex, Group, Progress, Table, Text, Tooltip } from "@mantine/core"
 import { useColorScheme } from "@mantine/hooks"
 
 type BarListProps = {
@@ -28,15 +28,16 @@ const BarList = ({
   const dataColumns = columns.filter((col) => !col.bar && col.key)
   const main = dataColumns.find((col) => col.main) || dataColumns[0]
   const mainTotal = data.reduce((acc, item) => acc + (item[main.key] || 0), 0)
+  const scheme = useColorScheme()
 
   if (!data) return <>No data.</>
 
-  const scheme = useColorScheme()
+  console.log(data)
 
   return (
     <>
       {customMetric ? (
-        <Group align="end" my="lg" spacing={8}>
+        <Group align="end" my="lg" gap={8}>
           <Text fw={700} fz={30} lh={1}>
             {customMetric.value}
           </Text>
@@ -45,12 +46,12 @@ const BarList = ({
           </Text>
         </Group>
       ) : (
-        <Group spacing="lg">
+        <Group gap="lg">
           {dataColumns.map(({ key, name, render }, i) => {
             const total = data.reduce((acc, item) => acc + (item[key] || 0), 0)
 
             return (
-              <Group align="end" my="lg" spacing={8} key={i}>
+              <Group align="end" my="lg" gap={8} key={i}>
                 <Text fw={700} fz={30} lh={1}>
                   {render ? render(total) : total}
                 </Text>
@@ -66,61 +67,87 @@ const BarList = ({
       <Table
         cellPadding={0}
         horizontalSpacing={0}
-        withBorder={false}
+        withRowBorders={false}
         verticalSpacing={10}
         variant="unstyled"
       >
-        <thead>
-          <tr>
+        <Table.Thead style={{ textAlign: "left" }}>
+          <Table.Tr>
             {columns.map(({ name }, i) => (
-              <th key={i}>{name || ""}</th>
+              <th style={{ width: i === 0 ? "50%" : "25%" }} key={i}>
+                {name || ""}
+              </th>
             ))}
-          </tr>
-        </thead>
-        <tbody>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
           {data
             .sort((a, b) => b[main.key] - a[main.key])
             .filter((item) => !filterZero || item[main.key] > 0)
             .splice(0, 5)
             .map((item, index) => (
-              <tr key={index}>
+              <Table.Tr key={index}>
                 {columns.map(({ key, render, bar }, i) =>
                   bar ? (
-                    <td className="progressTd" key={i}>
-                      <Progress
+                    <Table.Td
+                      className="progressTd"
+                      key={i}
+                      pos="relative"
+                      display="flex"
+                      height="25px"
+                    >
+                      <Progress.Root
                         size="lg"
-                        h={25}
-                        sections={item.barSections?.map(
-                          ({ count, color, tooltip }) => ({
-                            value: (count / mainTotal) * 100,
-                            color,
-                            tooltip,
-                          }),
-                        )}
-                        w={"90%"}
+                        h="25px"
                         radius="md"
-                        value={(item[main.key] / mainTotal) * 100}
-                      />
-                      <Text color={scheme === "dark" ? "gray" : "dark"} mb={-3}>
-                        {item.value}
-                      </Text>
-                    </td>
+                        w="90%"
+                        pos="absolute"
+                      >
+                        {item.barSections?.map(({ count, color, tooltip }) => (
+                          <Tooltip key={color} label={tooltip}>
+                            <Progress.Section
+                              value={(count / mainTotal) * 100}
+                              color={color}
+                            ></Progress.Section>
+                          </Tooltip>
+                        ))}
+                      </Progress.Root>
+                      <Flex
+                        w="90%"
+                        h="25px"
+                        pos="absolute"
+                        align="center"
+                        justify="center"
+                      >
+                        <Text
+                          c={scheme === "dark" ? "gray" : "dark"}
+                          mb={-3}
+                          size="12px"
+                          style={{
+                            textAlign: "center",
+                          }}
+                        >
+                          {item.value}
+                        </Text>
+                      </Flex>
+                    </Table.Td>
                   ) : (
-                    <td key={i}>
+                    <Table.Td key={i}>
                       <Text>
                         {render ? render(item[key], item) : item[key]}
                       </Text>
-                    </td>
+                    </Table.Td>
                   ),
                 )}
-              </tr>
+              </Table.Tr>
             ))}
-        </tbody>
+        </Table.Tbody>
         <style jsx>{`
           td,
           th {
             border-top: none !important;
             border-bottom: none !important;
+            padding: 10px 0;
           }
 
           .progressTd {

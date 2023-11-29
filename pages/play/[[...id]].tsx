@@ -1,9 +1,7 @@
 import SmartViewer from "@/components/Blocks/SmartViewer"
 import { ChatMessage } from "@/components/Blocks/SmartViewer/Message"
 import Paywall from "@/components/Layout/Paywall"
-import analytics from "@/utils/analytics"
-import { useCurrentApp, useOrg, useProfile } from "@/utils/dataHooks"
-import { Database } from "@/utils/supaTypes"
+import { useCurrentApp, useProfile } from "@/utils/dataHooks"
 import {
   ActionIcon,
   Box,
@@ -15,7 +13,6 @@ import {
   Loader,
   NumberInput,
   Select,
-  SimpleGrid,
   Stack,
   Text,
 } from "@mantine/core"
@@ -26,11 +23,11 @@ import {
   IconBolt,
   IconCircleMinus,
   IconCirclePlus,
-  IconPlayerPlay,
   IconPlayerPlayFilled,
 } from "@tabler/icons-react"
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
+import analytics from "../../utils/analytics"
 
 const availableModels = [
   "gpt-4",
@@ -62,7 +59,7 @@ function convertOpenAImessage(msg) {
 }
 
 const ParamItem = ({ name, value }) => (
-  <Group position="apart">
+  <Group justify="space-between">
     <Text size="sm">{name}</Text>
     {typeof value === "string" || typeof value === "number" ? (
       <Text size="sm">{value}</Text>
@@ -154,7 +151,6 @@ function Playground() {
       model,
       appId: app.id,
     })
-
     if (profile.org?.play_allowance <= 0) {
       modals.openContextModal({
         modal: "upgrade",
@@ -242,7 +238,7 @@ function Playground() {
                 <Loader />
               ) : (
                 <Stack>
-                  <Text weight="bold" size="sm">
+                  <Text fw="bold" size="sm">
                     Input
                   </Text>
                   {Array.isArray(run?.input) &&
@@ -266,6 +262,7 @@ function Playground() {
                           right={4}
                           size="sm"
                           color="red"
+                          variant="transparent"
                           onClick={() => {
                             const newInput = run.input
                             newInput.splice(i, 1)
@@ -274,7 +271,7 @@ function Playground() {
                             })
                           }}
                         >
-                          <IconCircleMinus size={12} />
+                          <IconCircleMinus size="12" />
                         </ActionIcon>
                       </Box>
                     ))}
@@ -282,19 +279,21 @@ function Playground() {
                   <ActionIcon
                     mx="auto"
                     mt="xs"
+                    variant="transparent"
+                    color="gray"
                     onClick={() =>
                       mutate({
                         input: [...run.input, { text: " ", role: "user" }],
                       })
                     }
                   >
-                    <IconCirclePlus size={16} />
+                    <IconCirclePlus size="16" />
                   </ActionIcon>
 
                   {(run.input || run.error) && (
                     <>
-                      <Group position="apart">
-                        <Text weight="bold" size="sm">
+                      <Group justify="space-between">
+                        <Text fw="bold" size="sm">
                           {run.error ? "Error" : "Output"}
                         </Text>
                       </Group>
@@ -330,8 +329,9 @@ function Playground() {
                     <NumberInput
                       min={0}
                       max={2}
+                      defaultValue={1.0}
                       step={0.1}
-                      precision={2}
+                      decimalScale={2}
                       size="xs"
                       value={run.params?.temperature}
                       w={90}
@@ -371,7 +371,7 @@ function Playground() {
                       min={-2}
                       max={2}
                       defaultValue={0}
-                      precision={2}
+                      decimalScale={2}
                       step={0.1}
                       size="xs"
                       value={run.params?.frequency_penalty}
@@ -391,7 +391,7 @@ function Playground() {
                     <NumberInput
                       min={-2}
                       max={2}
-                      precision={2}
+                      decimalScale={2}
                       step={0.1}
                       defaultValue={0}
                       size="xs"
@@ -413,7 +413,7 @@ function Playground() {
                       min={0.1}
                       max={1}
                       defaultValue={1}
-                      precision={2}
+                      decimalScale={2}
                       step={0.1}
                       size="xs"
                       value={run.params?.top_p}
@@ -428,7 +428,7 @@ function Playground() {
                 />
 
                 <Button
-                  leftIcon={<IconBolt size={16} />}
+                  leftSection={<IconBolt size="16" />}
                   size="xs"
                   disabled={loading}
                   onClick={runPlayground}

@@ -4,15 +4,12 @@ import { ContextModalProps } from "@mantine/modals"
 import { IconAnalyze, IconCircleCheck } from "@tabler/icons-react"
 
 import {
-  Avatar,
-  Badge,
   Button,
   Card,
   Group,
   Highlight,
   List,
   Mark,
-  Rating,
   SimpleGrid,
   Stack,
   Text,
@@ -32,7 +29,7 @@ const PlanFeatures = ({ features, highlight }) => {
       center
       icon={
         <ThemeIcon color="teal" size={24} radius="xl">
-          <IconCircleCheck size={16} />
+          <IconCircleCheck size="16" />
         </ThemeIcon>
       }
     >
@@ -57,89 +54,87 @@ export const UpgradeBody = ({ highlight }) => {
     <>
       <Stack align="center" ta="center" className="unblockable">
         <IconAnalyze color={"#206dce"} size={50} />
-        <Title order={2} weight={700} size={40} ta="center">
+        <Title order={2} fw={700} size={40} ta="center">
           Upgrade your plan
         </Title>
 
-        {/* <Text size="xl" mt="xs" weight={500}>
-          Upgrade now and secure{" "}
-          <Mark>{` the lowest price we'll ever offer. `}</Mark>
-        </Text> */}
-        <Text size="lg" mt="xs" mb="xl" weight={500}>
-          Unlock higher usage & powerful features to improve your AI's quality.
+        <Text size="lg" mt="xs" mb="xl" fw={500}>
+          Unlock higher usage & powerful features to improve your AI&apos;s
+          quality.
         </Text>
       </Stack>
 
-      <SimpleGrid
-        cols={2}
-        breakpoints={[{ maxWidth: "sm", cols: 1, spacing: "sm" }]}
-        spacing="md"
-      >
+      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
         <Card p="xl" withBorder shadow="md">
-          <Group spacing={6}>
-            <Text
-              transform="uppercase"
-              weight="bold"
-              variant="gradient"
-              gradient={{ from: "indigo", to: "cyan", deg: 45 }}
-            >
-              Pro
-            </Text>
-            {isFree && <Badge variant="outline">-50%</Badge>}
-            {isPro && (
-              <Text size="lg" color="dimmed" ta="center">
-                (current plan)
+          <Stack>
+            <Group>
+              <Text
+                tt="uppercase"
+                fw="bold"
+                variant="gradient"
+                gradient={{ from: "indigo", to: "cyan", deg: 45 }}
+              >
+                Pro
               </Text>
-            )}
-          </Group>
-
-          <Group my={20} align="center" spacing={10}>
-            <Title order={3} size={30}>
-              {isFree && (
-                <Text span td="line-through" size={20}>
-                  $50
+              {isPro && (
+                <Text size="lg" c="dimmed" ta="center">
+                  (current plan)
                 </Text>
               )}
-              {` $25`}
-              <Text span size={20}>
-                {` / mo`}
-              </Text>
-            </Title>
-          </Group>
+            </Group>
 
-          <PlanFeatures
-            features={[
-              { id: "events", title: "4k events per day" },
-              { id: "team", title: "4 team members" },
-              { id: "apps", title: "Unlimited apps" },
-              { id: "analytics", title: "Advanced Analytics" },
-              { id: "play", title: "AI Playground" },
-              { id: "export", title: "Export data" },
-              { id: "api", title: "API access" },
-            ]}
-            highlight={highlight}
-          />
+            <Group my={10} align="center" gap={10}>
+              <Title order={3} size="30">
+                {isFree && (
+                  <Text
+                    span
+                    td="line-through"
+                    style={{ fontSize: 20 }}
+                    fw={700}
+                  >
+                    $50
+                  </Text>
+                )}
+                {` $25`}
+                <Text span style={{ fontSize: 20 }} fw={700}>{` / mo`}</Text>
+              </Title>
+            </Group>
 
-          {isFree && (
-            <Button
-              size="md"
-              href={`${process.env.NEXT_PUBLIC_STRIPE_PRO_LINK}&client_reference_id=${profile?.org.id}`}
-              fullWidth
-              component="a"
-              variant="gradient"
-              gradient={{ from: "violet", to: "blue", deg: 45 }}
-              color="violet"
-              mt={40}
-            >
-              Claim -50% forever
-            </Button>
-          )}
+            <PlanFeatures
+              features={[
+                { id: "events", title: "4k events per day" },
+                { id: "team", title: "Unlimited apps" },
+                { id: "team", title: "3 apps" },
+                { id: "analytics", title: "Advanced Analytics" },
+                { id: "play", title: "AI Playground" },
+                { id: "export", title: "Export data" },
+                { id: "api", title: "API access" },
+              ]}
+              highlight={highlight}
+            />
+
+            {isFree && (
+              <Button
+                size="md"
+                href={`${process.env.NEXT_PUBLIC_STRIPE_PRO_LINK}&client_reference_id=${profile?.org.id}`}
+                fullWidth
+                component="a"
+                variant="gradient"
+                gradient={{ from: "violet", to: "blue", deg: 45 }}
+                color="violet"
+                mt={40}
+              >
+                Claim -50% forever
+              </Button>
+            )}
+          </Stack>
         </Card>
+
         <Card p="xl" withBorder>
-          <Group spacing={6}>
+          <Group gap={6}>
             <Text
-              transform="uppercase"
-              weight="bold"
+              tt="uppercase"
+              fw="bold"
               variant="gradient"
               gradient={{ from: "teal", to: "lime", deg: 45 }}
             >
@@ -147,12 +142,10 @@ export const UpgradeBody = ({ highlight }) => {
             </Text>
           </Group>
 
-          <Group my={20} align="center" spacing={10}>
-            <Title order={3} size={30}>
+          <Group my={20} align="center" gap={10}>
+            <Title order={3}>
               {` $95`}
-              <Text span size={20}>
-                {` / mo`}
-              </Text>
+              <Text span>{` / mo`}</Text>
             </Title>
           </Group>
 
@@ -164,6 +157,7 @@ export const UpgradeBody = ({ highlight }) => {
             features={[
               { id: "events", title: "20k events per day" },
               { id: "team", title: "10 team members" },
+              { id: "apps", title: "Unlimited apps" },
               { id: "play", title: "Unlimited AI Playground" },
               { id: "evaluation", title: "Evaluations & Tests" },
               { id: "alerts", title: "Custom Alerts" },
@@ -201,11 +195,12 @@ const UpgradeModal = ({
   id,
   innerProps,
 }: ContextModalProps<{ highlight: string }>) => {
-  if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) return null
-
   useEffect(() => {
-    analytics.track("Upgrade Modal")
+    if (process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+      analytics.track("Upgrade Modal")
   }, [])
+
+  if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) return null
 
   return (
     <Stack p={60} pt={0}>

@@ -4,7 +4,7 @@ import { JsonView, defaultStyles } from "react-json-view-lite"
 import errorHandler from "@/utils/errorHandler"
 import ErrorBoundary from "../ErrorBoundary"
 
-const Json = ({ data, compact }) => {
+export const Json = ({ data, compact }) => {
   if (!data) return null
 
   const parsed = useMemo(() => {

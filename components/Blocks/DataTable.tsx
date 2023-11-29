@@ -1,31 +1,22 @@
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react"
 
-import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  getSortedRowModel,
-  SortingState,
-  VisibilityState,
-} from "@tanstack/react-table"
-import {
-  ActionIcon,
-  Card,
-  Checkbox,
-  Group,
-  Menu,
-  Table,
-  Text,
-} from "@mantine/core"
+import { ActionIcon, Card, Checkbox, Group, Menu, Text } from "@mantine/core"
 import {
   IconChevronDown,
   IconChevronUp,
   IconColumns3,
 } from "@tabler/icons-react"
+import {
+  SortingState,
+  VisibilityState,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table"
 
-import { useVirtual } from "@tanstack/react-virtual"
 import { useColorScheme, useLocalStorage } from "@mantine/hooks"
-import analytics from "@/utils/analytics"
+import { useVirtual } from "@tanstack/react-virtual"
 
 // outside for reference
 const emptyArray = []
@@ -128,7 +119,7 @@ export default function DataTable({
 
   return (
     <>
-      <Card withBorder p={0}>
+      <Card withBorder p={0} className={scheme}>
         <div
           ref={tableContainerRef}
           className="tableContainer"
@@ -136,11 +127,11 @@ export default function DataTable({
             fetchMoreOnBottomReached(e.currentTarget)
           }}
         >
-          <Table
-            striped
+          <table
+            // striped
             // withColumnBorders
-            w={table.getCenterTotalSize()}
-            highlightOnHover={!!onRowClicked}
+            width={table.getCenterTotalSize()}
+            cellSpacing={0}
           >
             <thead>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -154,7 +145,7 @@ export default function DataTable({
                       >
                         {header.isPlaceholder ? null : (
                           <Group
-                            spacing={4}
+                            gap={4}
                             onClick={header.column.getToggleSortingHandler()}
                             style={
                               header.column.getCanSort()
@@ -189,7 +180,13 @@ export default function DataTable({
               ))}
               <Menu withArrow shadow="sm" closeOnItemClick={false}>
                 <Menu.Target>
-                  <ActionIcon pos="absolute" right={10} top={5}>
+                  <ActionIcon
+                    pos="absolute"
+                    right={10}
+                    top={5}
+                    variant="transparent"
+                    color={scheme === "light" ? "blue" : "black.5"}
+                  >
                     <IconColumns3 size={16} />
                   </ActionIcon>
                 </Menu.Target>
@@ -265,14 +262,14 @@ export default function DataTable({
                 </tr>
               )}
             </tbody>
-          </Table>
+          </table>
           {loading && (
-            <Text m="auto" p="md" color="dimmed" size="xs" ta="center">
+            <Text m="auto" p="md" c="dimmed" size="xs" ta="center">
               Fetching...
             </Text>
           )}
           {!items.length && !loading && (
-            <Text m="auto" p="md" color="dimmed" size="xs" ta="center">
+            <Text m="auto" p="md" c="dimmed" size="xs" ta="center">
               No data
             </Text>
           )}
@@ -287,6 +284,19 @@ export default function DataTable({
           table {
             width: 100% !important;
             table-layout: fixed;
+            font-size: 14px;
+          }
+
+          .light table tbody tr:nth-child(odd) {
+            background-color: rgb(248, 249, 250);
+          }
+
+          .light table tr:hover {
+            background-color: rgb(248, 249, 250);
+          }
+
+          .dark table tr:hover {
+            background-color: #2c2e33;
           }
 
           thead {
@@ -300,8 +310,19 @@ export default function DataTable({
 
           th {
             position: relative;
+          }
+
+          td code {
+            max-height: 60px;
+          }
+
+          .light th {
             border-bottom: 1px solid #ddd;
-            border-right: 1px solid #ddd;
+          }
+
+          .dark th,
+          .dark td {
+            border-bottom: 2px solid #2b2c2f;
           }
 
           tr {
@@ -313,6 +334,7 @@ export default function DataTable({
           td {
             overflow: hidden;
             text-overflow: ellipsis;
+            padding: 7px 10px;
           }
 
           .resizer {

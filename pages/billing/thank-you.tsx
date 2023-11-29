@@ -7,8 +7,8 @@ export default function ThankYou() {
       <NextSeo title="Thank You" />
       <Center h="50vh">
         <Stack>
-          <Text size={60}>🎉</Text>
-          <Title>You're all set.</Title>
+          <Text size="60">🎉</Text>
+          <Title>You&apos;re all set.</Title>
           <Text size="xl">
             Thank you for your upgrade. You will receive an email shortly with
             your receipt.

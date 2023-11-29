@@ -11,11 +11,11 @@ export default function TokensBadge({ tokens }) {
       pl={0}
       pr={5}
       leftSection={
-        <ThemeIcon variant="subtle" size="sm">
-          <IconCashBanknote size={12} />
+        <ThemeIcon variant="subtle" size="sm" color="pink">
+          <IconCashBanknote size="12" />
         </ThemeIcon>
       }
-      sx={{ textTransform: "none" }}
+      style={{ textTransform: "none" }}
     >
       {tokens} tokens
     </Badge>

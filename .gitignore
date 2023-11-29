@@ -42,3 +42,5 @@ jspm_packages
 .swc
 .vercel
 .vscode/settings.json
+
+*.DS_STORE

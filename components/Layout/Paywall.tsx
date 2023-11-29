@@ -30,7 +30,7 @@ const ListFeatures = ({ features }) => {
     >
       {features.map((title, i) => (
         <List.Item key={i}>
-          <Text weight={500}>{title}</Text>
+          <Text fw={500}>{title}</Text>
         </List.Item>
       ))}
     </List>
@@ -63,8 +63,6 @@ export default function Paywall({
     <Box pos="relative" p={50}>
       <Overlay
         zIndex={1}
-        opacity={0.3}
-        blur={2}
         top={0}
         left={0}
         right={0}
@@ -75,13 +73,15 @@ export default function Paywall({
         style={{
           alignItems: "center",
           justifyContent: "center",
+          WebkitBackdropFilter: "blur(0.125rem)",
+          backdropFilter: "blur(0.125rem)",
         }}
       >
         <Card p={50} w={650} shadow="md" className="unblockable">
-          <Stack align="start" spacing="xl">
-            <Group noWrap>
+          <Stack align="start" gap="xl">
+            <Group wrap="nowrap">
               <ThemeIcon size={42} radius={12}>
-                {Icon && <Icon size={20} />}
+                {Icon && <Icon size="20" />}
               </ThemeIcon>
               <Title order={3}>
                 {feature} is available in LLMonitor {capitalize(plan)}

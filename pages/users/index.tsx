@@ -11,7 +11,7 @@ import { formatAppUser } from "@/utils/format"
 import { IconUsers } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import Router from "next/router"
-import analytics from "@/utils/analytics"
+import analytics from "../../utils/analytics"
 
 const columns = [
   {
@@ -21,9 +21,9 @@ const columns = [
     cell: (props) => {
       const user = props.row.original
       return (
-        <Group spacing={8}>
+        <Group gap={8}>
           <AppUserAvatar size={30} user={user} />
-          <Text weight={500}>{formatAppUser(user)}</Text>
+          <Text fw={500}>{formatAppUser(user)}</Text>
         </Group>
       )
     },

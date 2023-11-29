@@ -1,10 +1,13 @@
 import {
-  Navbar,
   ActionIcon,
   Stack,
   Tooltip,
   ThemeIcon,
   Menu,
+  AppShell,
+  Box,
+  Flex,
+  Group,
 } from "@mantine/core"
 
 import {
@@ -73,20 +76,24 @@ export default function Sidebar() {
   ))
 
   return (
-    <Navbar height="calc(100vh - 45px)" width={{ base: 80 }} px="md" py="xl">
-      <Navbar.Section grow>
-        <Stack spacing="xl" align="center">
+    <AppShell.Navbar
+      px="md"
+      py="xl"
+      style={{ width: 80, justifyContent: "space-between" }}
+    >
+      <Group grow>
+        <Stack gap="xl" align="center">
           {links}
         </Stack>
-      </Navbar.Section>
+      </Group>
 
       {profile && (
-        <Navbar.Section py="sm">
-          <Stack spacing="sm" align="center">
+        <Group py="sm" justify="center">
+          <Stack gap="sm" align="center">
             <Menu
               trigger="hover"
               shadow="md"
-              width={200}
+              width="200"
               position="top"
               withArrow
             >
@@ -98,7 +105,7 @@ export default function Sidebar() {
               <Menu.Dropdown ml="lg">
                 <Menu.Label>LLMonitor</Menu.Label>
                 <Menu.Item
-                  icon={<IconActivity size={16} />}
+                  leftSection={<IconActivity size="16" />}
                   component={Link}
                   target="_blank"
                   href="https://feedback.llmonitor.com/roadmap"
@@ -107,7 +114,7 @@ export default function Sidebar() {
                 </Menu.Item>
 
                 <Menu.Item
-                  icon={<IconRefresh size={16} />}
+                  leftSection={<IconRefresh size="16" />}
                   component={Link}
                   target="_blank"
                   href="https://feedback.llmonitor.com/changelog"
@@ -116,7 +123,7 @@ export default function Sidebar() {
                 </Menu.Item>
 
                 <Menu.Item
-                  icon={<IconFile size={16} />}
+                  leftSection={<IconFile size="16" />}
                   component="a"
                   target="_blank"
                   href="https://llmonitor.com/docs"
@@ -137,14 +144,14 @@ export default function Sidebar() {
                           })
                         }
                         color="violet"
-                        icon={<IconBolt size={16} />}
+                        leftSection={<IconBolt size="16" />}
                       >
                         Upgrade
                       </Menu.Item>
                     )}
 
                     <Menu.Item
-                      icon={<IconCreditCard size={16} />}
+                      leftSection={<IconCreditCard size="16" />}
                       onClick={() => {
                         Router.push("/billing")
                       }}
@@ -156,7 +163,7 @@ export default function Sidebar() {
 
                 <Menu.Item
                   color="red"
-                  icon={<IconLogout size={16} />}
+                  leftSection={<IconLogout size="16" />}
                   onClick={() => {
                     supabaseClient.auth.signOut().then(() => {
                       Router.push("/login")
@@ -168,8 +175,8 @@ export default function Sidebar() {
               </Menu.Dropdown>
             </Menu>
           </Stack>
-        </Navbar.Section>
+        </Group>
       )}
-    </Navbar>
+    </AppShell.Navbar>
   )
 }

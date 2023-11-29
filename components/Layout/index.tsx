@@ -1,5 +1,11 @@
 import { useEffect, ReactNode } from "react"
-import { AppShell, Center, Loader, useMantineColorScheme } from "@mantine/core"
+import {
+  AppShell,
+  Box,
+  Center,
+  Loader,
+  useMantineColorScheme,
+} from "@mantine/core"
 import { Notifications } from "@mantine/notifications"
 
 import { useSessionContext } from "@supabase/auth-helpers-react"
@@ -49,7 +55,16 @@ export default function Layout({ children }: { children: ReactNode }) {
     } else {
       Router.push("/login")
     }
-  }, [session, isLoading, router.pathname, profile, loading, error])
+  }, [
+    session,
+    isLoading,
+    router.pathname,
+    profile,
+    loading,
+    error,
+    isAuthPage,
+    supabaseClient,
+  ])
 
   if (!isAuthPage && ((!profile && loading) || (!session && isLoading))) {
     return (
@@ -60,7 +75,6 @@ export default function Layout({ children }: { children: ReactNode }) {
   }
 
   if (!session && !isAuthPage) return null
-
   return (
     <>
       <Notifications position="top-right" />
@@ -68,11 +82,14 @@ export default function Layout({ children }: { children: ReactNode }) {
         <AppContext.Provider value={{ appId, setAppId }}>
           <AppShell
             mih={"100vh"}
-            padding={"xl"}
+            header={{ height: 60 }}
+            navbar={{
+              width: 80,
+              breakpoint: "0",
+              collapsed: { mobile: isAuthPage, desktop: isAuthPage },
+            }}
             className={profile?.org.limited ? "limited" : ""}
-            header={!isAuthPage && <Navbar />}
-            navbar={!isAuthPage && appId && <Sidebar />}
-            sx={{
+            style={{
               backgroundColor: colorScheme === "dark" ? "#181818" : "#fafafa",
               color: colorScheme === "dark" ? "#eee" : "#333",
             }}
@@ -81,7 +98,11 @@ export default function Layout({ children }: { children: ReactNode }) {
               onAfterReportDialogSubmitHandler={() => Router.reload()}
               onAfterReportDialogCancelHandler={() => Router.reload()}
             >
-              {children}
+              {!isAuthPage && <Navbar />}
+              {!isAuthPage && <Sidebar />}
+              <AppShell.Main>
+                <Box p="24">{children}</Box>
+              </AppShell.Main>
             </ErrorBoundary>
           </AppShell>
         </AppContext.Provider>
