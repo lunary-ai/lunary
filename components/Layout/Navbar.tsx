@@ -126,15 +126,7 @@ export default function Navbar() {
               <Button
                 color="orange"
                 size="xs"
-                onClick={() =>
-                  modals.openContextModal({
-                    modal: "upgrade",
-                    size: 900,
-                    innerProps: {
-                      highlight: "events",
-                    },
-                  })
-                }
+                onClick={() => openUpgrade("events")}
                 leftSection={<IconAlertTriangle size="16" />}
               >
                 Events limit reached. Click here to upgrade & restore access.

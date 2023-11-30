@@ -19,9 +19,9 @@ import {
 } from "recharts"
 
 import { formatLargeNumber } from "@/utils/format"
-import { modals } from "@mantine/modals"
 import { IconBolt } from "@tabler/icons-react"
 import { eachDayOfInterval, format, parseISO } from "date-fns"
+import { openUpgrade } from "../../Layout/UpgradeModal"
 import ErrorBoundary from "../ErrorBoundary"
 
 const slugify = (str) => {
@@ -162,23 +162,35 @@ const LineChartComponent = ({
         </Box>
       )}
       <Box mt="sm" pos="relative">
+        <Overlay
+          h="100%"
+          blur={15}
+          backgroundOpacity={0.1}
+          p="lg"
+          zIndex={1}
+          style={{ WebkitBackdropFilter: "blur(15px)" }}
+        />
         {blocked && (
-          <Overlay blur={5} opacity={0.1} p="lg" zIndex={1}>
-            <Center h="100%">
-              <Alert title="Advanced Analytics" ta="center">
+          <>
+            <Center
+              ta="center"
+              style={{
+                position: "absolute",
+                zIndex: 2,
+              }}
+              h="100%"
+              w="100%"
+            >
+              <Alert
+                title="Advanced Analytics"
+                bg="var(--mantine-primary-color-light)"
+                p="12"
+              >
                 Upgrade to <b>Pro</b> to unlock this chart
                 <br />
                 <Button
                   mt="md"
-                  onClick={() =>
-                    modals.openContextModal({
-                      modal: "upgrade",
-                      size: 900,
-                      innerProps: {
-                        highlight: "analytics",
-                      },
-                    })
-                  }
+                  onClick={() => openUpgrade("analytics")}
                   size="xs"
                   variant="gradient"
                   gradient={{ from: "#0788ff", to: "#9900ff", deg: 30 }}
@@ -188,7 +200,7 @@ const LineChartComponent = ({
                 </Button>
               </Alert>
             </Center>
-          </Overlay>
+          </>
         )}
 
         {!hasData && (
@@ -196,13 +208,11 @@ const LineChartComponent = ({
             <Overlay blur={5} opacity={0.1} p="lg" zIndex={1} />
             <Center
               ta="center"
-              style={{ position: "absolute" }}
+              style={{ position: "absolute", zIndex: 2 }}
               h="100%"
               w="100%"
             >
-              <Box color="blue" opacity="1" className="alert" ta="center">
-                No data available for this period
-              </Box>
+              No data available for this period
             </Center>
           </>
         )}
