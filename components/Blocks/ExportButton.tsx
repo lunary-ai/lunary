@@ -1,7 +1,7 @@
 import { Box, Button, Menu } from "@mantine/core"
 import { IconArrowBarUp, IconBraces, IconFileExport } from "@tabler/icons-react"
 import { useProfile } from "../../utils/dataHooks"
-import { modals } from "@mantine/modals"
+import { openUpgrade } from "../Layout/UpgradeModal"
 
 export default function ExportButton({ exportUrl } = { exportUrl: "" }) {
   const { profile } = useProfile()
@@ -9,13 +9,7 @@ export default function ExportButton({ exportUrl } = { exportUrl: "" }) {
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (profile?.org.plan === "free") {
       e.preventDefault()
-      modals.openContextModal({
-        modal: "upgrade",
-        size: 900,
-        innerProps: {
-          highlight: "export",
-        },
-      })
+      openUpgrade("export")
     }
   }
 

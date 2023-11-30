@@ -5,8 +5,6 @@ import {
   ThemeIcon,
   Menu,
   AppShell,
-  Box,
-  Flex,
   Group,
 } from "@mantine/core"
 
@@ -33,7 +31,7 @@ import Router, { useRouter } from "next/router"
 import { useProfile } from "@/utils/dataHooks"
 import UserAvatar from "@/components/Blocks/UserAvatar"
 import Link from "next/link"
-import { modals } from "@mantine/modals"
+import { openUpgrade } from "./UpgradeModal"
 
 const menu = [
   { label: "Analytics", icon: IconGraph, link: "/analytics" },
@@ -136,13 +134,7 @@ export default function Sidebar() {
                   <>
                     {["free", "pro"].includes(profile?.org.plan) && (
                       <Menu.Item
-                        onClick={() =>
-                          modals.openContextModal({
-                            modal: "upgrade",
-                            size: 900,
-                            innerProps: {},
-                          })
-                        }
+                        onClick={() => openUpgrade()}
                         color="violet"
                         leftSection={<IconBolt size="16" />}
                       >

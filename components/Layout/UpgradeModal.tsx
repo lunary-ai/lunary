@@ -1,11 +1,12 @@
 import analytics from "@/utils/analytics"
 
-import { ContextModalProps } from "@mantine/modals"
+import { ContextModalProps, modals } from "@mantine/modals"
 import { IconAnalyze, IconCircleCheck } from "@tabler/icons-react"
 
 import {
   Button,
   Card,
+  Container,
   Group,
   Highlight,
   List,
@@ -51,15 +52,16 @@ export const UpgradeBody = ({ highlight }) => {
   const isPro = profile?.org.plan === "pro"
 
   return (
-    <>
+    <Container px={80} py="md">
       <Stack align="center" ta="center" className="unblockable">
         <IconAnalyze color={"#206dce"} size={50} />
-        <Title order={2} fw={700} size={40} ta="center">
+
+        <Title order={2} fw={700} size={34} ta="center">
           Upgrade your plan
         </Title>
 
         <Text size="lg" mt="xs" mb="xl" fw={500}>
-          Unlock higher usage & powerful features to improve your AI&apos;s
+          Remove limits & unlock powerful features to improve your AI&apos;s
           quality.
         </Text>
       </Stack>
@@ -83,28 +85,21 @@ export const UpgradeBody = ({ highlight }) => {
               )}
             </Group>
 
-            <Group my={10} align="center" gap={10}>
-              <Title order={3} size="30">
-                {isFree && (
-                  <Text
-                    span
-                    td="line-through"
-                    style={{ fontSize: 20 }}
-                    fw={700}
-                  >
-                    $50
-                  </Text>
-                )}
-                {` $25`}
-                <Text span style={{ fontSize: 20 }} fw={700}>{` / mo`}</Text>
-              </Title>
-            </Group>
+            <Title order={2}>
+              {isFree && (
+                <Text span td="line-through" style={{ fontSize: 20 }} fw={700}>
+                  $50
+                </Text>
+              )}
+              {` $25`}
+              <Text span>{` / mo`}</Text>
+            </Title>
 
             <PlanFeatures
               features={[
                 { id: "events", title: "4k events per day" },
-                { id: "team", title: "Unlimited apps" },
-                { id: "team", title: "3 apps" },
+                { id: "team", title: "4 team members" },
+                { id: "apps", title: "Unlimited Apps" },
                 { id: "analytics", title: "Advanced Analytics" },
                 { id: "play", title: "AI Playground" },
                 { id: "export", title: "Export data" },
@@ -143,7 +138,7 @@ export const UpgradeBody = ({ highlight }) => {
           </Group>
 
           <Group my={20} align="center" gap={10}>
-            <Title order={3}>
+            <Title order={2}>
               {` $95`}
               <Text span>{` / mo`}</Text>
             </Title>
@@ -157,7 +152,6 @@ export const UpgradeBody = ({ highlight }) => {
             features={[
               { id: "events", title: "20k events per day" },
               { id: "team", title: "10 team members" },
-              { id: "apps", title: "Unlimited apps" },
               { id: "play", title: "Unlimited AI Playground" },
               { id: "evaluation", title: "Evaluations & Tests" },
               { id: "alerts", title: "Custom Alerts" },
@@ -171,11 +165,12 @@ export const UpgradeBody = ({ highlight }) => {
             href={`${process.env.NEXT_PUBLIC_STRIPE_UNLIMITED_LINK}&client_reference_id=${profile.org?.id}`}
             target="_blank"
             fullWidth
-            variant="outline"
+            variant="gradient"
+            gradient={{ from: "teal", to: "lime", deg: 45 }}
             color="teal"
             mt={40}
           >
-            Upgrade now
+            Upgrade Now
           </Button>
         </Card>
       </SimpleGrid>
@@ -186,7 +181,7 @@ export const UpgradeBody = ({ highlight }) => {
       <Card w="fit-content" mx="auto" mt="md">
         <SocialProof />
       </Card>
-    </>
+    </Container>
   )
 }
 
@@ -202,11 +197,18 @@ const UpgradeModal = ({
 
   if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) return null
 
-  return (
-    <Stack p={60} pt={0}>
-      <UpgradeBody highlight={innerProps?.highlight} />
-    </Stack>
-  )
+  return <UpgradeBody highlight={innerProps?.highlight} />
+}
+
+export const openUpgrade = (highlight?: string) => {
+  modals.openContextModal({
+    modal: "upgrade",
+    withCloseButton: false,
+    size: 900,
+    innerProps: {
+      highlight,
+    },
+  })
 }
 
 export default UpgradeModal

@@ -1,14 +1,6 @@
 import analytics from "@/utils/analytics"
 import { useApps, useCurrentApp, useProfile } from "@/utils/dataHooks"
-import {
-  Alert,
-  Anchor,
-  AppShell,
-  Button,
-  Flex,
-  Group,
-  Select,
-} from "@mantine/core"
+import { Anchor, AppShell, Button, Flex, Group, Select } from "@mantine/core"
 import { modals } from "@mantine/modals"
 import { useUser } from "@supabase/auth-helpers-react"
 
@@ -26,6 +18,7 @@ import Script from "next/script"
 import { useEffect, useState } from "react"
 import errorHandler from "../../utils/errorHandler"
 import { notifications } from "@mantine/notifications"
+import { openUpgrade } from "./UpgradeModal"
 
 export default function Navbar() {
   const { app, setAppId } = useCurrentApp()
@@ -194,13 +187,7 @@ export default function Navbar() {
 
             {profile?.org.plan === "free" && (
               <Button
-                onClick={() =>
-                  modals.openContextModal({
-                    modal: "upgrade",
-                    size: 900,
-                    innerProps: {},
-                  })
-                }
+                onClick={() => openUpgrade()}
                 size="xs"
                 variant="gradient"
                 gradient={{ from: "#0788ff", to: "#9900ff", deg: 30 }}

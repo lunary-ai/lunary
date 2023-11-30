@@ -11,8 +11,8 @@ import {
   Title,
 } from "@mantine/core"
 import { useProfile } from "@/utils/dataHooks"
-import { modals } from "@mantine/modals"
 import { IconCheck } from "@tabler/icons-react"
+import { openUpgrade } from "./UpgradeModal"
 
 const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1)
 
@@ -89,17 +89,7 @@ export default function Paywall({
             </Group>
             <Text size="lg">{description}</Text>
             <ListFeatures features={list} />
-            <Button
-              fullWidth
-              size="md"
-              onClick={() =>
-                modals.openContextModal({
-                  modal: "upgrade",
-                  size: 900,
-                  innerProps: {},
-                })
-              }
-            >
+            <Button fullWidth size="md" onClick={() => openUpgrade()}>
               Upgrade to {capitalize(plan)} &rarr;
             </Button>
           </Stack>

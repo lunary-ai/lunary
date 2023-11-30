@@ -52,31 +52,24 @@ export default function Tests() {
     >
       <Stack>
         <NextSeo title="Evaluations" />
-        {/* <Group>
-        <Title>Evaluation Suite</Title>
-      </Group>
 
-      <Alert title="Contact Us to request access">
-        The evaluation and testing suite is currently invite-only. Contact us
-        with details on what you're building to request access.
-      </Alert> */}
         <Button w="fit-content">New Evaluation</Button>
 
         <Card>
           <Overlay blur={10} opacity={0.2} zIndex={0} />
 
           <Table horizontalSpacing="sm" verticalSpacing="lg">
-            <thead>
-              <tr>
-                <th>Agent</th>
-                <th>Assertion</th>
-                <th>Level</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Translator</td>
-                <td>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Agent</Table.Th>
+                <Table.Th>Assertion</Table.Th>
+                <Table.Th>Level</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              <Table.Tr>
+                <Table.Td>Translator</Table.Td>
+                <Table.Td>
                   <Group gap="sm">
                     <Badge variant="outline" color="indigo">
                       AI
@@ -85,32 +78,32 @@ export default function Tests() {
                       {`The response doesn't convey negative emotions.`}
                     </Code>
                   </Group>
-                </td>
-                <td>
+                </Table.Td>
+                <Table.Td>
                   <Badge variant="light" color="red">
                     Critical
                   </Badge>
-                </td>
-              </tr>
-              <tr>
-                <td>Translator</td>
-                <td>
+                </Table.Td>
+              </Table.Tr>
+              <Table.Tr>
+                <Table.Td>Translator</Table.Td>
+                <Table.Td>
                   <Group gap="sm">
                     <Badge variant="outline" color="indigo">
                       AI
                     </Badge>
                     <Code color="indigo">{`The response is correct {{input.language}} language.`}</Code>
                   </Group>
-                </td>
-                <td>
+                </Table.Td>
+                <Table.Td>
                   <Badge variant="light" color="red">
                     Critical
                   </Badge>
-                </td>
-              </tr>
-              <tr>
-                <td>PromptToSQL</td>
-                <td>
+                </Table.Td>
+              </Table.Tr>
+              <Table.Tr>
+                <Table.Td>PromptToSQL</Table.Td>
+                <Table.Td>
                   <Group gap="sm">
                     <Badge variant="outline" color="cyan">
                       JS
@@ -118,30 +111,30 @@ export default function Tests() {
 
                     <Code color="cyan">{`return isValidSQL(response)`}</Code>
                   </Group>
-                </td>
-                <td>
+                </Table.Td>
+                <Table.Td>
                   <Badge variant="light" color="red">
                     Critical
                   </Badge>
-                </td>
-              </tr>
-              <tr>
-                <td>PromptToSQL</td>
-                <td>
+                </Table.Td>
+              </Table.Tr>
+              <Table.Tr>
+                <Table.Td>PromptToSQL</Table.Td>
+                <Table.Td>
                   <Group gap="sm">
                     <Badge variant="outline" color="cyan">
                       JS
                     </Badge>
                     <Code color="cyan">{`return response.length > 100 && response.length < 1000`}</Code>
                   </Group>
-                </td>
-                <td>
+                </Table.Td>
+                <Table.Td>
                   <Badge variant="light" color="yellow">
                     Warning
                   </Badge>
-                </td>
-              </tr>
-            </tbody>
+                </Table.Td>
+              </Table.Tr>
+            </Table.Tbody>
           </Table>
         </Card>
       </Stack>

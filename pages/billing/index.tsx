@@ -1,4 +1,5 @@
 import LineChart from "@/components/Blocks/Analytics/LineChart"
+import { openUpgrade } from "@/components/Layout/UpgradeModal"
 import { useFetchSWR, useProfile } from "@/utils/dataHooks"
 import {
   Alert,
@@ -13,7 +14,6 @@ import {
   Text,
   Title,
 } from "@mantine/core"
-import { modals } from "@mantine/modals"
 import { IconBolt, IconInfoTriangle } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { Label, ReferenceLine } from "recharts"
@@ -77,13 +77,7 @@ export default function Billing() {
               size="xs"
               gradient={{ from: "#0788ff", to: "#9900ff", deg: 30 }}
               leftSection={<IconBolt size="16" />}
-              onClick={() =>
-                modals.openContextModal({
-                  modal: "upgrade",
-                  size: 900,
-                  innerProps: {},
-                })
-              }
+              onClick={() => openUpgrade()}
             >
               Upgrade
             </Button>
