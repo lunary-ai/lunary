@@ -30,6 +30,7 @@ import { NextSeo } from "next-seo"
 import Router from "next/router"
 
 import { Label, ReferenceLine } from "recharts"
+import { openUpgrade } from "../components/Layout/UpgradeModal"
 
 function Invite() {
   const { profile } = useProfile()
@@ -51,15 +52,7 @@ function Invite() {
   return (
     <Button
       variant="light"
-      onClick={() =>
-        modals.openContextModal({
-          modal: "upgrade",
-          size: 900,
-          innerProps: {
-            highlight: "team",
-          },
-        })
-      }
+      onClick={() => openUpgrade("team")}
       style={{ float: "right" }}
       leftSection={<IconUserPlus size="16" />}
     >
