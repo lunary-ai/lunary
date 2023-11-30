@@ -28,6 +28,7 @@ import {
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
 import analytics from "../../utils/analytics"
+import { openUpgrade } from "@/components/Layout/UpgradeModal"
 
 const availableModels = [
   "gpt-4",
@@ -72,7 +73,7 @@ const ParamItem = ({ name, value }) => (
 const defaultRun = {
   input: [
     { text: "You are an helpful assistant.", role: "system" },
-    { text: " ", role: "user" },
+    { text: "Hi!", role: "user" },
   ],
 
   error: null,
@@ -151,14 +152,9 @@ function Playground() {
       model,
       appId: app.id,
     })
+
     if (profile.org?.play_allowance <= 0) {
-      modals.openContextModal({
-        modal: "upgrade",
-        size: 900,
-        innerProps: {
-          highlight: "play",
-        },
-      })
+      openUpgrade("play")
     }
 
     setStreaming(true)

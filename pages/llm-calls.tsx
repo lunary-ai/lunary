@@ -46,6 +46,7 @@ import { modals } from "@mantine/modals"
 import Empty from "../components/Layout/Empty"
 import { AppContext } from "../utils/context"
 import analytics from "@/utils/analytics"
+import { openUpgrade } from "@/components/Layout/UpgradeModal"
 
 const columns = [
   timeColumn("created_at"),
@@ -137,13 +138,7 @@ export default function LLMCalls() {
       return {
         onClick: () => {
           analytics.track("ClickExport")
-          modals.openContextModal({
-            modal: "upgrade",
-            size: 900,
-            innerProps: {
-              highlight: "export",
-            },
-          })
+          openUpgrade("export")
         },
       }
     }
