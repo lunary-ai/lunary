@@ -162,16 +162,16 @@ const LineChartComponent = ({
         </Box>
       )}
       <Box mt="sm" pos="relative">
-        <Overlay
-          h="100%"
-          blur={15}
-          backgroundOpacity={0.1}
-          p="lg"
-          zIndex={1}
-          style={{ WebkitBackdropFilter: "blur(15px)" }}
-        />
         {blocked && (
           <>
+            <Overlay
+              h="100%"
+              blur={15}
+              backgroundOpacity={0.1}
+              p="lg"
+              zIndex={1}
+              style={{ WebkitBackdropFilter: "blur(15px)" }}
+            />
             <Center
               ta="center"
               style={{
