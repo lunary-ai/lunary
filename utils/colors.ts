@@ -3,6 +3,7 @@ export function getColorForRole(role) {
 
   const colorMap = {
     ai: "var(--mantine-color-green-2)",
+    assistant: "var(--mantine-color-green-2)",
     human: "var(--mantine-color-blue-2)",
     user: "var(--mantine-color-blue-2)",
     error: "var(--mantine-color-red-light)",

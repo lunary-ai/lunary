@@ -334,8 +334,11 @@ export function useRuns(
     .order("created_at", {
       ascending: false,
     })
-    .eq("type", type)
     .eq("app", appId)
+
+  if (type) {
+    query = query.eq("type", type)
+  }
 
   if (match) {
     query = query.match(match)

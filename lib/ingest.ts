@@ -3,14 +3,16 @@ import { completeRunUsage } from "@/lib/countTokens"
 export interface Event {
   type:
     | "llm"
-    | "embed"
     | "chain"
     | "agent"
     | "tool"
     | "log"
-    | "retriever"
-    | "chat"
-    | "convo"
+    | "embed" // todo: actual support
+    | "retriever" // todo: actual support
+    | "chat" // deprecated
+    | "convo" // deprecated
+    | "message"
+    | "thread"
   app: string
   event?: string
   level?: string
