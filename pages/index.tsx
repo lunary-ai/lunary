@@ -1,26 +1,26 @@
-import { useState } from "react"
 import Link from "next/link"
+import { useState } from "react"
 
 import { useApps, useCurrentApp, useProfile } from "@/utils/dataHooks"
 import {
+  ActionIcon,
   Anchor,
   Button,
   Card,
   Code,
+  CopyButton,
   Group,
   Loader,
   Modal,
+  SimpleGrid,
   Stack,
-  CopyButton,
-  ActionIcon,
-  Tooltip,
   Text,
   TextInput,
   Title,
+  Tooltip,
 } from "@mantine/core"
 
-import { IconCopy, IconCheck } from "@tabler/icons-react"
-import { useUser } from "@supabase/auth-helpers-react"
+import { IconCheck, IconCopy } from "@tabler/icons-react"
 
 import analytics from "@/utils/analytics"
 import { NextSeo } from "next-seo"
@@ -95,7 +95,7 @@ export default function Home() {
           </Group>
           {loading && <Loader />}
 
-          <Stack>
+          <SimpleGrid cols={3} spacing="lg" verticalSpacing="lg">
             {apps?.map((app) => (
               <Card key={app.id}>
                 <Anchor
@@ -139,7 +139,7 @@ export default function Home() {
                 </Group>
               </Card>
             ))}
-          </Stack>
+          </SimpleGrid>
         </>
       )}
     </Stack>
