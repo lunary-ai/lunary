@@ -58,12 +58,13 @@ const ChatReplay = ({ run }) => {
 
   const { user } = useAppUser(run.user)
 
+  console.log("runs", runs)
+
   // Each chat run has input = user message, output = bot message
   const messages = useMemo(
     () =>
-      runs &&
       runs
-        .filter((run) => run.type === "chat")
+        ?.filter((run) => run.type === "chat")
         .sort(
           (a, b) =>
             new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
@@ -89,7 +90,7 @@ const ChatReplay = ({ run }) => {
                   feedback: run.feedback,
                 }
               : run.output,
-          ]
+          ].filter(Boolean)
         })
         .flat(),
     [runs],
@@ -97,7 +98,7 @@ const ChatReplay = ({ run }) => {
 
   return (
     <Stack>
-      <Card withBorder>
+      <Card withBorder radius="md">
         <Stack gap="xs">
           <Group justify="space-between">
             <Text>User</Text>

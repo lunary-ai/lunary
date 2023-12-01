@@ -38,7 +38,7 @@ export default function DataTable({
     pathname === "/chats"
       ? CHAT_AUTOHIDABLE_COLUMNS
       : DEFAULT_AUTO_HIDABLE_COLUMNS
-  console.log(autoHidableColumns)
+
   const [sorting, setSorting] = useState<SortingState>([
     {
       id: "created_at",
