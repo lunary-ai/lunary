@@ -124,20 +124,18 @@ export default function LLMCalls() {
   }
 
   function exportButton(url: string) {
-    analytics.track("ClickExport")
-
     if (profile?.org.plan === "pro") {
       return {
         component: "a",
         href: url,
         onClick: () => {
-          analytics.track("ClickExport")
+          analytics.trackOnce("ClickExport")
         },
       }
     } else {
       return {
         onClick: () => {
-          analytics.track("ClickExport")
+          analytics.trackOnce("ClickExport")
           openUpgrade("export")
         },
       }
@@ -220,7 +218,7 @@ export default function LLMCalls() {
       <DataTable
         key="gen"
         onRowClicked={(row) => {
-          analytics.track("OpenRun")
+          analytics.trackOnce("OpenRun")
 
           setSelected(row)
         }}

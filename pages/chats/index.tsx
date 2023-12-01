@@ -26,27 +26,20 @@ import {
 } from "@/utils/dataHooks"
 
 import {
-  Alert,
-  Box,
   Button,
   Card,
   Drawer,
   Flex,
   Group,
   Loader,
-  MultiSelect,
   Stack,
   Text,
   Title,
 } from "@mantine/core"
 
 import { IconMessages, IconNeedleThread } from "@tabler/icons-react"
-import { createColumnHelper } from "@tanstack/react-table"
 import analytics from "../../utils/analytics"
-import SearchBar from "../../components/Blocks/SearchBar"
 import FacetedFilter from "../../components/Blocks/FacetedFilter"
-
-const columnHelper = createColumnHelper<any>()
 
 const columns = [
   timeColumn("created_at"),
@@ -77,20 +70,25 @@ const ChatReplay = ({ run }) => {
         )
         .map((run) => {
           return [
-            {
-              role: "user",
-              content: run.input,
-              timestamp: run.created_at,
-            },
-            {
-              role: "ai",
-              content: run.output,
-              took:
-                new Date(run.ended_at).getTime() -
-                new Date(run.created_at).getTime(),
-              timestamp: run.ended_at,
-              feedback: run.feedback,
-            },
+            typeof run.input === "string"
+              ? {
+                  role: "user",
+                  content: run.input,
+                  timestamp: run.created_at,
+                  feedback: run.feedback,
+                }
+              : run.input,
+            typeof run.output === "string"
+              ? {
+                  role: "assistant",
+                  content: run.output,
+                  took:
+                    new Date(run?.ended_at).getTime() -
+                    new Date(run?.created_at).getTime(),
+                  timestamp: run.ended_at,
+                  feedback: run.feedback,
+                }
+              : run.output,
           ]
         })
         .flat(),
@@ -147,7 +145,7 @@ const ChatReplay = ({ run }) => {
                 extra={
                   <>
                     {took && (
-                      <Text color="dimmed" size="xs">
+                      <Text c="dimmed" size="xs">
                         {took}ms
                       </Text>
                     )}
@@ -168,7 +166,9 @@ export default function Chats() {
   const [selected, setSelected] = useState(null)
   const [selectedItems, setSelectedItems] = useState([])
 
-  let { runs, loading, validating, loadMore } = useRuns("convo")
+  let { runs, loading, validating, loadMore } = useRuns(null, {
+    filter: ["type", "in", '("convo","thread")'],
+  })
 
   const { allFeedbacks } = useAllFeedbacks()
   const { runIds } = useConvosByFeedback(selectedItems)
@@ -230,7 +230,7 @@ export default function Chats() {
       <DataTable
         key="chat"
         onRowClicked={(row) => {
-          analytics.track("OpenChat")
+          analytics.trackOnce("OpenChat")
           setSelected(row)
         }}
         loading={loading || validating}

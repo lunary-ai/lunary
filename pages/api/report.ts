@@ -198,12 +198,14 @@ const registerEvent = async (
 
   switch (type) {
     case "llm":
-    case "embed":
     case "chain":
     case "agent":
-    case "retriever":
-    case "chat":
-    case "convo":
+    case "retriever": // todo: actual support
+    case "embed": // todo: actual support
+    case "chat": // deprecated
+    case "convo": // deprecated
+    case "thread":
+    case "message":
     case "tool":
       await registerRunEvent(event, insertedIds)
       break

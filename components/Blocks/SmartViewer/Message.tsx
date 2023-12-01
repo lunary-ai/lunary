@@ -13,11 +13,11 @@ import { IconRobot, IconUser } from "@tabler/icons-react"
 import { getColorForRole } from "../../../utils/colors"
 import ProtectedText from "../ProtectedText"
 import { RenderJson } from "./RenderJson"
-import { useTheme } from "@emotion/react"
+
 import { circularPro } from "../../../pages/_app"
 
 const RenderFunction = ({ color, compact, codeBg, data, type }) => {
-  const theme = useTheme()
+
 
   const fontColor = type === 'functionCall' ? '#40c057' : 'inherit'
 
@@ -89,7 +89,7 @@ export function ChatMessage({
                 },
               }}
               value={data?.role}
-              data={["ai", "user", "system", "function", "tool"]}
+              data={["ai", "assistant", "user", "system", "function", "tool"]}
               onChange={(role) => onChange({ ...data, role })}
             />
           ) : (
@@ -165,7 +165,7 @@ export function ChatMessage({
 
 // Used for chat replays
 export function BubbleMessage({ role, content, extra }) {
-  const isBot = role === "ai"
+  const isBot = ["ai", "assistant"].includes(role)
 
   return (
     <>

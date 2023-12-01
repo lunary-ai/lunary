@@ -49,7 +49,7 @@ export default function Users() {
         columns={columns}
         data={users}
         onRowClicked={(row) => {
-          analytics.track("OpenUser")
+          analytics.trackOnce("OpenUser")
 
           Router.push(`/users/${row.id}`)
         }}
