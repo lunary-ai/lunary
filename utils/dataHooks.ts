@@ -283,13 +283,13 @@ export function useFilteredLLMCalls(
   const supabaseClient = useSupabaseClient()
   const { appId } = useContext(AppContext)
 
-  const query = supabaseClient.rpc("get_runs_debug", {
+  const query = supabaseClient.rpc("get_runs", {
     app_id: appId,
     search_pattern: search,
     model_names: modelNames,
     tags_param: tags,
     feedback_param: feedbacks,
-    users_param: users,
+    users_param: users.map((u) => Number.parseInt(u)),
   })
 
   const {
