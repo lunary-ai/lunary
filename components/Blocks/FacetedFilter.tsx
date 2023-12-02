@@ -1,5 +1,4 @@
 import {
-  Box,
   Button,
   Checkbox,
   Combobox,
@@ -7,13 +6,10 @@ import {
   Flex,
   Group,
   Pill,
-  PillsInput,
-  Text,
   useCombobox,
 } from "@mantine/core"
-import { IconCirclePlus, IconFilter } from "@tabler/icons-react"
-import { ReactNode, useState } from "react"
-import { useModelNames } from "../../utils/dataHooks"
+import { IconCirclePlus } from "@tabler/icons-react"
+import { useState } from "react"
 
 // TODO: proper typing for props
 export default function FacetedFilter({
@@ -72,7 +68,7 @@ export default function FacetedFilter({
       store={combobox}
       position="bottom-start"
       withArrow
-      withinPortal={true}
+      withinPortal={false}
       width={250}
       onOptionSubmit={(val) => {
         setSelectedItems((current) =>
@@ -89,7 +85,11 @@ export default function FacetedFilter({
           onClick={() => combobox.toggleDropdown()}
         >
           <Flex align="center">
-            <IconFilter stroke={1.8} size="16px" style={{ marginRight: 8 }} />
+            <IconCirclePlus
+              stroke={1.8}
+              size="16px"
+              style={{ marginRight: 8 }}
+            />
             {name}
 
             {selectedItems.length > 0 && (
@@ -114,7 +114,7 @@ export default function FacetedFilter({
           placeholder={name}
           disabled={!withSearch}
         />
-        <Combobox.Options>
+        <Combobox.Options mah={500} style={{ overflowY: "auto" }}>
           {options.length > 0 ? (
             options
           ) : (
