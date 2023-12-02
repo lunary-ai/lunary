@@ -273,6 +273,39 @@ export function useLLMCalls(
   }
 }
 
+export function useFilteredLLMCalls(
+  search,
+  modelNames = [],
+  tags = [],
+  feedbacks = [],
+) {
+  const supabaseClient = useSupabaseClient()
+  const { appId } = useContext(AppContext)
+
+  const query = supabaseClient.rpc("get_runs_debug", {
+    app_id: appId,
+    search_pattern: search,
+    model_names: modelNames,
+    tags_param: tags,
+    feedback_param: feedbacks,
+  })
+
+  const {
+    data,
+    isLoading,
+    isValidating,
+    // @ts-ignore
+    loadMore,
+  } = useOffsetInfiniteScrollQuery(query, { ...softOptions, pageSize: 100 })
+
+  return {
+    runs: data ? extendWithCosts(data) : [],
+    loading: isLoading,
+    validating: isValidating,
+    loadMore,
+  }
+}
+
 export function useTraces(search) {
   const supabaseClient = useSupabaseClient<Database>()
   const { appId } = useContext(AppContext)
@@ -328,9 +361,7 @@ export function useRuns(
 
   let query = supabaseClient
     .from("run")
-    .select(
-      select || "*", // "id,user,type,name,created_at,ended_at,app,input,output,parent_run,prompt_tokens,completion_tokens,status,tags,error,params,feedback,retry_of"
-    )
+    .select(select || "*")
     .order("created_at", {
       ascending: false,
     })
