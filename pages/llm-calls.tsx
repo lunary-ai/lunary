@@ -168,14 +168,14 @@ export default function LLMCalls() {
               setSelectedItems={setSelectedTags}
             />
           )}
-          {/* {users?.length && (
+          {users?.length && (
             <FacetedFilter
               name="Users"
               items={users}
               selectedItems={selectedUsers}
               setSelectedItems={setSelectedUsers}
             />
-          )} */}
+          )}
           {allFeedbacks?.length && (
             <FacetedFilter
               name="Feedbacks"

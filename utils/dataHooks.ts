@@ -289,7 +289,7 @@ export function useFilteredLLMCalls(
     model_names: modelNames,
     tags_param: tags,
     feedback_param: feedbacks,
-    users_param: users.map((u) => Number.parseInt(u)),
+    users_param: users,
   })
 
   const {
