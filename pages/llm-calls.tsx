@@ -7,6 +7,7 @@ import {
   useModelNames,
   useProfile,
   useTags,
+  useUsers,
 } from "@/utils/dataHooks"
 import { Box, Button, Drawer, Flex, Group, Menu, Stack } from "@mantine/core"
 
@@ -102,11 +103,15 @@ export default function LLMCalls() {
 
   const [selectedFeedbacks, setSelectedFeedbacks] = useState([])
 
+  const { users } = useUsers()
+  const [selectedUsers, setSelectedUsers] = useState([])
+
   const { runs, loading, validating, loadMore } = useFilteredLLMCalls(
     query,
     selectedModels,
     selectedTags,
     selectedFeedbacks,
+    selectedUsers,
   )
   const { tags } = useTags()
   const { profile } = useProfile()
@@ -147,7 +152,7 @@ export default function LLMCalls() {
         <Group>
           <SearchBar query={query} setQuery={setQuery} />
 
-          {!!modelNames?.length && (
+          {modelNames?.length && (
             <FacetedFilter
               name="Models"
               items={modelNames}
@@ -155,12 +160,20 @@ export default function LLMCalls() {
               setSelectedItems={setSelectedModels}
             />
           )}
-          {!!tags?.length && (
+          {tags?.length && (
             <FacetedFilter
               name="Tags"
               items={tags}
               selectedItems={selectedTags}
               setSelectedItems={setSelectedTags}
+            />
+          )}
+          {users?.length && (
+            <FacetedFilter
+              name="Users"
+              items={users}
+              selectedItems={selectedUsers}
+              setSelectedItems={setSelectedUsers}
             />
           )}
           {allFeedbacks?.length && (
