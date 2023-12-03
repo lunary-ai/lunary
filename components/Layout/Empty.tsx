@@ -58,25 +58,7 @@ export default function Empty({
                 $crisp.push(["do", "chat:open"])
               }}
             >
-              Send Chat
-            </Button>
-            <Button
-              size="lg"
-              leftSection={<IconMail size={22} />}
-              color="teal"
-              component="a"
-              href="mailto:vince@llmonitor.com"
-            >
-              Email
-            </Button>
-            <Button
-              size="lg"
-              leftSection={<IconBrandDiscord size={22} />}
-              color="indigo"
-              component="a"
-              href="https://discord.gg/8PafSG58kK"
-            >
-              Discord
+              Chat with us
             </Button>
           </Group>
         </Stack>
