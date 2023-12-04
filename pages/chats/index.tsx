@@ -200,17 +200,12 @@ export default function Chats() {
 
           {allFeedbacks?.length && (
             <FacetedFilter
-              // placeholder="Tags"
-              // size="xs"
-              // miw={100}
-              // w="fit-content"
               name="Feedbacks"
               items={allFeedbacks}
               render={(item) => <Feedback data={item} />}
               selectedItems={selectedItems}
               setSelectedItems={setSelectedItems}
-              // clearable
-              // onChange={}
+              withSearch={false}
             />
           )}
         </Group>

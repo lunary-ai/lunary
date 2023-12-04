@@ -1,22 +1,15 @@
 import DataTable from "@/components/Blocks/DataTable"
 
 import {
+  useAllFeedbacks,
   useCurrentApp,
-  useLLMCalls,
+  useFilteredLLMCalls,
   useModelNames,
   useProfile,
   useTags,
+  useUsers,
 } from "@/utils/dataHooks"
-import {
-  Box,
-  Button,
-  Drawer,
-  Flex,
-  Group,
-  Menu,
-  MultiSelect,
-  Stack,
-} from "@mantine/core"
+import { Box, Button, Drawer, Flex, Group, Menu, Stack } from "@mantine/core"
 
 import {
   costColumn,
@@ -40,13 +33,14 @@ import { useContext, useState } from "react"
 
 import RunInputOutput from "@/components/Blocks/RunIO"
 import SearchBar from "@/components/Blocks/SearchBar"
+import { openUpgrade } from "@/components/Layout/UpgradeModal"
+import analytics from "@/utils/analytics"
 import { formatDateTime } from "@/utils/format"
 import { useDebouncedState } from "@mantine/hooks"
-import { modals } from "@mantine/modals"
+import FacetedFilter from "../components/Blocks/FacetedFilter"
+import Feedback from "../components/Blocks/Feedback"
 import Empty from "../components/Layout/Empty"
 import { AppContext } from "../utils/context"
-import analytics from "@/utils/analytics"
-import { openUpgrade } from "@/components/Layout/UpgradeModal"
 
 const columns = [
   timeColumn("created_at"),
@@ -107,10 +101,17 @@ export default function LLMCalls() {
   const { appId } = useContext(AppContext)
   const { app, loading: appLoading } = useCurrentApp()
 
-  const { runs, loading, validating, loadMore } = useLLMCalls(
+  const [selectedFeedbacks, setSelectedFeedbacks] = useState([])
+
+  const { users } = useUsers()
+  const [selectedUsers, setSelectedUsers] = useState([])
+
+  const { runs, loading, validating, loadMore } = useFilteredLLMCalls(
     query,
     selectedModels,
     selectedTags,
+    selectedFeedbacks,
+    selectedUsers,
   )
   const { tags } = useTags()
   const { profile } = useProfile()
@@ -118,6 +119,8 @@ export default function LLMCalls() {
   const [selected, setSelected] = useState(null)
 
   const exportUrl = buildExportUrl(appId, query, selectedModels, selectedTags)
+
+  const { allFeedbacks } = useAllFeedbacks()
 
   if (!loading && !appLoading && !app?.activated) {
     return <Empty Icon={IconBrandOpenai} what="requests" />
@@ -149,26 +152,38 @@ export default function LLMCalls() {
         <Group>
           <SearchBar query={query} setQuery={setQuery} />
 
-          {!!modelNames?.length && (
-            <MultiSelect
-              placeholder="Model"
-              size="xs"
-              miw={80}
-              w="fit-content"
-              data={modelNames}
-              clearable
-              onChange={setSelectedModels}
+          {modelNames?.length && (
+            <FacetedFilter
+              name="Models"
+              items={modelNames}
+              selectedItems={selectedModels}
+              setSelectedItems={setSelectedModels}
             />
           )}
-          {!!tags?.length && (
-            <MultiSelect
-              placeholder="Tags"
-              size="xs"
-              miw={100}
-              w="fit-content"
-              data={tags}
-              clearable
-              onChange={setSelectedTags}
+          {tags?.length && (
+            <FacetedFilter
+              name="Tags"
+              items={tags}
+              selectedItems={selectedTags}
+              setSelectedItems={setSelectedTags}
+            />
+          )}
+          {users?.length && (
+            <FacetedFilter
+              name="Users"
+              items={users}
+              selectedItems={selectedUsers}
+              setSelectedItems={setSelectedUsers}
+            />
+          )}
+          {allFeedbacks?.length && (
+            <FacetedFilter
+              name="Feedbacks"
+              items={allFeedbacks}
+              render={(item) => <Feedback data={item} />}
+              selectedItems={selectedFeedbacks}
+              setSelectedItems={setSelectedFeedbacks}
+              withSearch={false}
             />
           )}
         </Group>
