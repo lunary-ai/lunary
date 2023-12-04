@@ -6,7 +6,7 @@ import { supabaseAdmin } from "@/lib/supabaseClient"
 // import r50k_base from "js-tiktoken/ranks/r50k_base";
 
 // @ts-ignore
-import p50k_base from "js-tiktoken/ranks/p50k_base"
+// import p50k_base from "js-tiktoken/ranks/p50k_base"
 // @ts-ignore
 import cl100k_base from "js-tiktoken/ranks/cl100k_base"
 
@@ -47,8 +47,7 @@ async function getEncoding(
     case "r50k_base":
     case "p50k_base":
       return await getRareEncoding(encoding, extendSpecialTokens)
-    case "p50k_base":
-      return new Tiktoken(p50k_base, extendSpecialTokens)
+
     case "cl100k_base":
       return new Tiktoken(cl100k_base, extendSpecialTokens)
     default:
@@ -155,24 +154,56 @@ async function countGoogleTokens(model, input) {
 
 function formatFunctionSpecsAsTypescriptNS(functions) {
   function paramSignature(pSpec) {
-    // TODO: enum type support
-    return `${pSpec.name}: ${pSpec.type}, // ${pSpec.description}`
+    try {
+      if (pSpec?.type === "object") {
+        return [
+          `${pSpec.description ? "// " + pSpec.description : ""}`,
+          `${pSpec.name}: {`,
+          ...Object.entries(pSpec.properties).map(
+            ([name, prop]) => `  ${paramSignature({ ...prop, name })}`,
+          ),
+          "},",
+        ].join("\n")
+      } else if (pSpec?.type === "array") {
+        return [
+          `${pSpec.description ? "// " + pSpec.description : ""}`,
+          `${pSpec.name}: ${pSpec.type}<${paramSignature(pSpec.items)}>,`,
+        ].join("\n")
+      }
+
+      // TODO: enum type support
+      return `${pSpec.name}: ${pSpec.type}, ${
+        pSpec.description ? "// " + pSpec.description : ""
+      }`
+    } catch (error) {
+      console.error("Error while formatting function spec as typescript", {
+        error,
+        pSpec,
+      })
+      return ""
+    }
   }
 
   function functionSignature(fSpec) {
+    const func = !fSpec.type ? fSpec : fSpec.function
+
     return [
-      `// ${fSpec.description}`,
-      `type ${fSpec.name} = (_: {`,
-      ...Object.values(fSpec.parameters).map((p) => `  ${paramSignature(p)}`),
+      `${func.description ? "// " + func.description : ""}`,
+      `type ${func.name} = (_: {`,
+      ...Object.entries(func.parameters.properties).map(
+        ([name, param]) => `  ${paramSignature({ ...param, name })}`,
+      ),
       "}) => any;",
     ].join("\n")
   }
 
-  return (
-    "namespace functions {\n\n" +
-    functions.map((f) => functionSignature(f)).join("\n\n") +
-    "\n\n}" // `// namespace functions` doesn't count towards token length
-  )
+  const final = [
+    "namespace functions {",
+    functions.map((f) => functionSignature(f)).join("\n"),
+    "}", // `// namespace functions` doesn't count towards token length
+  ].join("\n")
+
+  return final
 }
 
 /*
