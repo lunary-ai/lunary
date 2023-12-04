@@ -16,13 +16,17 @@ export function getColorForRole(role) {
 }
 
 export function getColorForRunType(type) {
-  const defaultColor = "var(--mantine-color-gray-light)"
+  const defaultColor = "gray"
 
   const colorMap = {
-    llm: "var(--mantine-color-yellow-light)",
-    chain: "var(--mantine-color-blue-light)",
-    agent: "var(--mantine-color-violet-light)",
-    tool: "var(--mantine-color-grape-light)",
+    llm: "yellow",
+    embed: "yellow",
+    chain: "blue",
+    agent: "violet",
+    tool: "grape",
+    thread: "grape",
+    convo: "grape",
+    chat: "blue",
   }
 
   return colorMap[type] || defaultColor
