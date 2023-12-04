@@ -196,23 +196,12 @@ const registerEvent = async (
 ): Promise<void> => {
   const { type } = event
 
-  switch (type) {
-    case "llm":
-    case "chain":
-    case "agent":
-    case "retriever": // todo: actual support
-    case "embed": // todo: actual support
-    case "chat": // deprecated
-    case "convo": // deprecated
-    case "thread":
-    case "message":
-    case "tool":
-      await registerRunEvent(event, insertedIds)
-      break
-    case "log":
-      await registerLogEvent(event)
-      break
+  if (type === "log") {
+    await registerLogEvent(event)
+    return
   }
+
+  await registerRunEvent(event, insertedIds)
 }
 
 export default edgeWrapper(async function handler(req: NextRequest) {
