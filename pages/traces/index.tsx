@@ -1,6 +1,6 @@
 import Router from "next/router"
 
-import { Group, Input, Stack, Title } from "@mantine/core"
+import { Stack } from "@mantine/core"
 
 import DataTable from "@/components/Blocks/DataTable"
 
@@ -17,7 +17,7 @@ import {
 } from "@/utils/datatable"
 import { useTraces } from "@/utils/dataHooks"
 import { useDebouncedState } from "@mantine/hooks"
-import { IconRobot, IconSearch } from "@tabler/icons-react"
+import { IconListTree } from "@tabler/icons-react"
 import SearchBar from "@/components/Blocks/SearchBar"
 import analytics from "@/utils/analytics"
 
@@ -37,7 +37,7 @@ export default function Traces() {
   const { runs, loading, validating, loadMore } = useTraces(query)
 
   if (!loading && runs?.length === 0 && query === null) {
-    return <Empty Icon={IconRobot} what="traces" />
+    return <Empty Icon={IconListTree} what="traces" />
   }
 
   return (
