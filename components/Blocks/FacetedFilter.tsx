@@ -1,5 +1,4 @@
 import {
-  Box,
   Button,
   Checkbox,
   Combobox,
@@ -7,13 +6,10 @@ import {
   Flex,
   Group,
   Pill,
-  PillsInput,
-  Text,
   useCombobox,
 } from "@mantine/core"
 import { IconCirclePlus } from "@tabler/icons-react"
-import { ReactNode, useState } from "react"
-import { useModelNames } from "../../utils/dataHooks"
+import { useState } from "react"
 
 // TODO: proper typing for props
 export default function FacetedFilter({
@@ -22,12 +18,14 @@ export default function FacetedFilter({
   render,
   selectedItems,
   setSelectedItems,
+  withSearch = true,
 }: {
   name: string
   items: string[] | any
-  render: any
+  render?: any
   selectedItems: any
   setSelectedItems: any
+  withSearch?: boolean
 }) {
   const [search, setSearch] = useState("")
 
@@ -43,29 +41,34 @@ export default function FacetedFilter({
     },
   })
 
-  const options = items
-    // .filter((item) => item?.toLowerCase()?.includes(search.toLowerCase().trim()))
-    .map((item) => (
-      <Combobox.Option value={item} key={item}>
-        <Group gap="sm">
-          <Checkbox
-            checked={selectedItems.includes(item)}
-            onChange={() => {}}
-            aria-hidden
-            tabIndex={-1}
-            style={{ pointerEvents: "none" }}
-          />
-          {render ? render(item) : <span>{item}</span>}
-        </Group>
-      </Combobox.Option>
-    ))
+  function searchFilter(item) {
+    if (typeof item === "string") {
+      return item?.toLowerCase()?.includes(search.toLowerCase().trim())
+    }
+    return true
+  }
+
+  const options = items.filter(searchFilter).map((item) => (
+    <Combobox.Option value={item} key={item}>
+      <Group gap="sm">
+        <Checkbox
+          checked={selectedItems.includes(item)}
+          onChange={() => {}}
+          aria-hidden
+          tabIndex={-1}
+          style={{ pointerEvents: "none" }}
+        />
+        {render ? render(item) : <span>{item}</span>}
+      </Group>
+    </Combobox.Option>
+  ))
 
   return (
     <Combobox
       store={combobox}
       position="bottom-start"
       withArrow
-      withinPortal={true}
+      withinPortal={false}
       width={250}
       onOptionSubmit={(val) => {
         setSelectedItems((current) =>
@@ -79,7 +82,6 @@ export default function FacetedFilter({
         <Button
           variant="outline"
           size="xs"
-          // style={{ borderStyle: "dashed" }}
           onClick={() => combobox.toggleDropdown()}
         >
           <Flex align="center">
@@ -110,8 +112,9 @@ export default function FacetedFilter({
           value={search}
           onChange={(event) => setSearch(event.currentTarget.value)}
           placeholder={name}
+          disabled={!withSearch}
         />
-        <Combobox.Options>
+        <Combobox.Options mah={500} style={{ overflowY: "auto" }}>
           {options.length > 0 ? (
             options
           ) : (
