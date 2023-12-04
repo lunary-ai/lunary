@@ -231,7 +231,7 @@ export default function LLMCalls() {
       </Drawer>
 
       <DataTable
-        key="gen"
+        type="llm"
         onRowClicked={(row) => {
           analytics.trackOnce("OpenRun")
 
