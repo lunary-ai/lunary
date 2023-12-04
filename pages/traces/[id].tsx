@@ -9,6 +9,7 @@ import {
   Group,
   Stack,
   Text,
+  ThemeIcon,
   Title,
 } from "@mantine/core"
 
@@ -20,15 +21,24 @@ import { useRelatedRuns, useRun } from "@/utils/dataHooks"
 import { capitalize, formatCost } from "@/utils/format"
 import RunInputOutput from "@/components/Blocks/RunIO"
 import { getColorForRunType } from "../../utils/colors"
+import {
+  IconCode,
+  IconMessage,
+  IconMessages,
+  IconRobot,
+  IconTool,
+} from "@tabler/icons-react"
 
-const typeColor = {
-  llm: "yellow",
-  chain: "blue",
-  agent: "violet",
-  tool: "grape",
+const typeIcon = {
+  convo: IconMessages,
+  thread: IconMessages,
+  chat: IconMessage,
+  agent: IconRobot,
+  llm: IconCode,
+  tool: IconTool,
 }
 
-const TraceTree = ({ parentId, runs, onSelect, firstDate }) => {
+const TraceTree = ({ isFirst, parentId, runs, onSelect, firstDate }) => {
   // each run contains a child_runs array containing the ids of the runs it spawned
 
   const run = runs.find((run) => run.id === parentId)
@@ -37,26 +47,50 @@ const TraceTree = ({ parentId, runs, onSelect, firstDate }) => {
     new Date(run.created_at).getTime() - new Date(firstDate).getTime()
 
   const color = getColorForRunType(run.type)
+
+  const showStatus = !["convo", "thread", "chat"].includes(run.type)
+
+  const Icon = typeIcon[run.type]
+
   return (
     <Group>
-      <Text>&emsp;</Text>
+      {!isFirst && <Text>&emsp;</Text>}
       <div>
         <Group
           mb="sm"
           onClick={() => onSelect(run.id)}
           style={{ cursor: "pointer" }}
         >
-          <StatusBadge minimal status={run.status} />
+          {showStatus && <StatusBadge minimal status={run.status} />}
 
-          {run.name && <Code color={color}>{run.name}</Code>}
-          <Badge variant="outline" color={typeColor[run.type]}>
+          {run.name && (
+            <Code color={`var(--mantine-color-${color}-light)`}>
+              {run.name}
+            </Code>
+          )}
+
+          <Badge
+            variant="outline"
+            color={color}
+            pl={0}
+            pr={5}
+            leftSection={
+              Icon && (
+                <ThemeIcon variant="subtle" color={color} size="sm" radius="lg">
+                  <Icon strokeWidth={2} size={13} />
+                </ThemeIcon>
+              )
+            }
+          >
             {run.type}
           </Badge>
+
           {run.ended_at && (
             <DurationBadge createdAt={run.created_at} endedAt={run.ended_at} />
           )}
+
           {run.type === "llm" && run.cost && (
-            <Badge variant="outline" color="dark">
+            <Badge variant="outline" color="gray">
               {formatCost(run.cost)}
             </Badge>
           )}
@@ -131,7 +165,7 @@ export default function AgentRun({}) {
         <Text>{`Started at ${new Date(run.created_at).toLocaleString()}`}</Text>
         <TokensBadge tokens={totalTokens} />
         {totalCost && (
-          <Badge variant="outline" color="dark">
+          <Badge variant="outline" color="gray">
             {formatCost(totalCost)}
           </Badge>
         )}
@@ -140,7 +174,7 @@ export default function AgentRun({}) {
         )}
       </Group>
 
-      <Grid>
+      <Grid align="start">
         <Grid.Col span={6}>
           <Card withBorder>
             <Title order={2} mb="md">
@@ -149,6 +183,7 @@ export default function AgentRun({}) {
 
             {relatedRuns && (
               <TraceTree
+                isFirst
                 onSelect={setFocused}
                 parentId={id}
                 runs={relatedRuns}
