@@ -151,7 +151,9 @@ const ChatReplay = ({ run }) => {
                       </Text>
                     )}
 
-                    {feedback && <Feedback data={feedback} />}
+                    {role !== "user" && feedback && (
+                      <Feedback data={feedback} />
+                    )}
                   </>
                 }
               />
