@@ -45,7 +45,7 @@ export default function Users() {
       <NextSeo title="Users" />
 
       <DataTable
-        key="users"
+        type="users"
         columns={columns}
         data={users}
         onRowClicked={(row) => {

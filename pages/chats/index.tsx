@@ -226,7 +226,7 @@ export default function Chats() {
       </Drawer>
 
       <DataTable
-        key="chat"
+        type="chats"
         onRowClicked={(row) => {
           analytics.trackOnce("OpenChat")
           setSelected(row)
