@@ -10,16 +10,14 @@ import {
 } from "@mantine/core"
 import { useColorScheme } from "@mantine/hooks"
 import { IconRobot, IconUser } from "@tabler/icons-react"
-import { getColorForRole } from "../../../utils/colors"
+import { getColorForRole } from "@/utils/colors"
 import ProtectedText from "../ProtectedText"
 import { RenderJson } from "./RenderJson"
 
 import { circularPro } from "../../../pages/_app"
 
 const RenderFunction = ({ color, compact, codeBg, data, type }) => {
-
-
-  const fontColor = type === 'functionCall' ? '#40c057' : 'inherit'
+  const fontColor = type === "functionCall" ? "#40c057" : "inherit"
 
   return (
     <Code block bg={codeBg}>
@@ -31,7 +29,7 @@ const RenderFunction = ({ color, compact, codeBg, data, type }) => {
         mb={compact ? 4 : "xs"}
         mt={compact ? -6 : 0}
       >
-        <Text span c={fontColor}>`function call: `}</Text>
+        <Text span c={fontColor}>{`function call: `}</Text>
         <Text c={fontColor} span fw="bolder">
           {data?.name}
         </Text>
@@ -67,7 +65,9 @@ export function ChatMessage({
       mah={compact ? 60 : undefined}
       style={{
         overflow: "hidden",
-        backgroundColor: color,
+        backgroundColor: `var(--mantine-color-${color}-${
+          scheme === "light" ? 2 : color === "gray" ? 7 : 9
+        })`,
         borderRadius: 8,
       }}
     >
@@ -114,6 +114,7 @@ export function ChatMessage({
             compact={compact}
             data={toolCall.function}
             codeBg={codeBg}
+            type="functionCall"
           />
         ))
       ) : (

@@ -1,15 +1,15 @@
 export function getColorForRole(role) {
-  const defaultColor = "var(--mantine-color-gray-light)"
+  const defaultColor = "gray"
 
   const colorMap = {
-    ai: "var(--mantine-color-green-2)",
-    assistant: "var(--mantine-color-green-2)",
-    human: "var(--mantine-color-blue-2)",
-    user: "var(--mantine-color-blue-2)",
-    error: "var(--mantine-color-red-light)",
-    function: "var(--mantine-color-violet-2)",
-    tool: "var(--mantine-color-violet-2)",
-    system: "var(--mantine-color-gray-2)",
+    ai: "green",
+    assistant: "green",
+    human: "blue",
+    user: "blue",
+    error: "red",
+    function: "violet",
+    tool: "violet",
+    system: "gray",
   }
 
   return colorMap[role] || defaultColor
