@@ -31,16 +31,16 @@ import {
 import { NextSeo } from "next-seo"
 import { useContext, useState } from "react"
 
-import RunInputOutput from "@/components/Blocks/RunIO"
+import RunInputOutput from "@/components/Blocks/RunInputOutput"
 import SearchBar from "@/components/Blocks/SearchBar"
 import { openUpgrade } from "@/components/Layout/UpgradeModal"
 import analytics from "@/utils/analytics"
 import { formatDateTime } from "@/utils/format"
 import { useDebouncedState } from "@mantine/hooks"
-import FacetedFilter from "../components/Blocks/FacetedFilter"
-import Feedback from "../components/Blocks/Feedback"
-import Empty from "../components/Layout/Empty"
-import { AppContext } from "../utils/context"
+import FacetedFilter from "../../components/Blocks/FacetedFilter"
+import Feedback from "../../components/Blocks/Feedback"
+import Empty from "../../components/Layout/Empty"
+import { AppContext } from "../../utils/context"
 
 const columns = [
   timeColumn("created_at"),
@@ -94,7 +94,6 @@ export default function LLMCalls() {
   let { modelNames } = useModelNames()
   const [query, setQuery] = useDebouncedState(null, 500)
 
-  const [filters, setFilters] = useState([])
   const [selectedModels, setSelectedModels] = useState([])
   const [selectedTags, setSelectedTags] = useState([])
 
@@ -227,7 +226,13 @@ export default function LLMCalls() {
         title={selected ? formatDateTime(selected.created_at) : ""}
         onClose={() => setSelected(null)}
       >
-        {selected && <RunInputOutput run={selected} />}
+        {selected && (
+          <RunInputOutput
+            defaultRun={selected}
+            withPlayground={false}
+            withShare={true}
+          />
+        )}
       </Drawer>
 
       <DataTable

@@ -1,16 +1,15 @@
+import { Badge, Button, Card, Flex, Group, Stack, Text } from "@mantine/core"
+import { useSupabaseClient } from "@supabase/auth-helpers-react"
 import {
-  Badge,
-  Button,
-  Card,
-  CopyButton,
-  Group,
-  Stack,
-  Text,
-} from "@mantine/core"
+  IconPencilShare,
+  IconWorldShare,
+  IconWorldX,
+} from "@tabler/icons-react"
+import Link from "next/link"
+import { useRouter } from "next/router"
+import { useState } from "react"
 import SmartViewer from "./SmartViewer"
 import TokensBadge from "./TokensBadge"
-import { IconCheck, IconCopy, IconPencilShare } from "@tabler/icons-react"
-import Link from "next/link"
 
 const isChatMessages = (obj) => {
   return Array.isArray(obj)
@@ -58,35 +57,82 @@ const PARAMS = {
   seed: "Seed",
 }
 
-export default function RunInputOutput({ run }) {
+export default function RunInputOutput({
+  defaultRun,
+  withPlayground = true,
+  withShare = false,
+}) {
+  const [run, setRun] = useState(defaultRun)
+  const [loading, setLoading] = useState(false)
+  const supabaseClient = useSupabaseClient()
+  const router = useRouter()
+
   const canEnablePlayground =
-    run.type === "llm" && run.input && isChatMessages(run.input)
+    withPlayground &&
+    run.type === "llm" &&
+    run.input &&
+    isChatMessages(run.input)
+
+  async function makePublic() {
+    setLoading(true)
+    const { data } = await supabaseClient
+      .from("run")
+      .update({ is_public: true })
+      .eq("id", run.id)
+      .select()
+    setLoading(false)
+
+    router.push(`/llm-calls/${data[0].id}`)
+  }
+
+  async function makePrivate() {
+    setLoading(true)
+    const { data } = await supabaseClient
+      .from("run")
+      .update({ is_public: false })
+      .eq("id", run.id)
+      .select()
+    setRun(data[0])
+    setLoading(false)
+  }
+
+  function ShareButton() {
+    if (!run.is_public) {
+      return (
+        <Button
+          onClick={makePublic}
+          w="130"
+          leftSection={<IconWorldShare />}
+          loading={loading}
+        >
+          Share
+        </Button>
+      )
+    }
+
+    return (
+      <Button
+        onClick={makePrivate}
+        w="130"
+        leftSection={<IconWorldX />}
+        loading={loading}
+        color="red"
+      >
+        Unshare
+      </Button>
+    )
+  }
 
   return (
     <Stack>
       {run.type === "llm" && (
         <>
-          <CopyButton
-            value={`https://app.llmonitor.com/play/${run.id}`}
-            timeout={2000}
-          >
-            {({ copied, copy }) => (
-              <Button
-                ml="auto"
-                // variant="link"
-                size="xs"
-                mb={-12}
-                variant="transparent"
-                color={copied ? "teal" : "gray"}
-                onClick={copy}
-                leftSection={
-                  copied ? <IconCheck size="16px" /> : <IconCopy size="16px" />
-                }
-              >
-                Copy link
-              </Button>
-            )}
-          </CopyButton>
+          {withShare && (
+            <Flex justify="right">
+              <ShareButton />
+            </Flex>
+          )}
+
           <Card withBorder radius="md">
             <Group justify="space-between" align="start">
               <Stack gap="xs">
