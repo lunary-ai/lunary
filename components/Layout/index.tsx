@@ -37,6 +37,9 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   const { session, isLoading, supabaseClient } = useSessionContext()
 
+  const isLLMCallPage = router.pathname.startsWith("/llm-calls/[id]")
+  const isPublicPage = isLLMCallPage && !session
+
   const [appId, setAppId] = useLocalStorage({
     key: "appId",
     defaultValue: null,
@@ -45,7 +48,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const colorScheme = useColorScheme()
 
   useEffect(() => {
-    if (isAuthPage || session || isLoading) return
+    if (isAuthPage || isPublicPage || session || isLoading) return
 
     if (!profile && !loading && error) {
       // If the profile failed to load, force sign out and redirect to login
@@ -64,6 +67,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     error,
     isAuthPage,
     supabaseClient,
+    isPublicPage,
   ])
 
   if (!isAuthPage && ((!profile && loading) || (!session && isLoading))) {
@@ -74,7 +78,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     )
   }
 
-  if (!session && !isAuthPage) return null
+  if (!session && !isAuthPage && !isPublicPage) return null
   return (
     <>
       <Notifications position="top-right" />
@@ -98,8 +102,8 @@ export default function Layout({ children }: { children: ReactNode }) {
               onAfterReportDialogSubmitHandler={() => Router.reload()}
               onAfterReportDialogCancelHandler={() => Router.reload()}
             >
-              {!isAuthPage && <Navbar />}
-              {!isAuthPage && <Sidebar />}
+              {!isAuthPage && !isPublicPage && <Navbar />}
+              {!isAuthPage && !isPublicPage && <Sidebar />}
               <AppShell.Main>
                 <Box p="24">{children}</Box>
               </AppShell.Main>

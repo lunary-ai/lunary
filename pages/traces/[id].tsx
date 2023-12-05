@@ -19,7 +19,7 @@ import StatusBadge from "@/components/Blocks/StatusBadge"
 
 import { useRelatedRuns, useRun } from "@/utils/dataHooks"
 import { capitalize, formatCost } from "@/utils/format"
-import RunInputOutput from "@/components/Blocks/RunIO"
+import RunInputOutput from "@/components/Blocks/RunInputOutput"
 import { getColorForRunType } from "../../utils/colors"
 import {
   IconCode,
@@ -202,7 +202,7 @@ export default function AgentRun({}) {
               overflow: "auto",
             }}
           >
-            {focusedRun && <RunInputOutput run={focusedRun} />}
+            {focusedRun && <RunInputOutput defaultRun={focusedRun} />}
           </Card>
         </Grid.Col>
       </Grid>
