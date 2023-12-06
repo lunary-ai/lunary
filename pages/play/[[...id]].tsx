@@ -17,7 +17,6 @@ import {
   Text,
 } from "@mantine/core"
 import { useLocalStorage } from "@mantine/hooks"
-import { modals } from "@mantine/modals"
 import { useSupabaseClient } from "@supabase/auth-helpers-react"
 import {
   IconBolt,
@@ -31,12 +30,22 @@ import analytics from "../../utils/analytics"
 import { openUpgrade } from "@/components/Layout/UpgradeModal"
 
 const availableModels = [
+  "gpt-4-1106-preview",
+  "gpt-4-vision-preview",
   "gpt-4",
   "gpt-3.5-turbo",
+  "gpt-3.5-turbo-1106",
   "gpt-3.5-turbo-16k",
   "openai/gpt-4-32k",
   "claude-2",
+  "claude-2.0",
+  "claude-instant-v1",
+  "open-orca/mistral-7b-openorca",
   "mistralai/mistral-7b-instruct",
+  "teknium/openhermes-2.5-mistral-7b",
+  "perplexity/pplx-70b-chat",
+  "perplexity/pplx-7b-chat",
+  "openchat/openchat-7b",
   "google/palm-2-chat-bison",
   "meta-llama/llama-2-13b-chat",
   "meta-llama/llama-2-70b-chat",
