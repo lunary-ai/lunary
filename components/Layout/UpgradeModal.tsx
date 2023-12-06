@@ -27,6 +27,7 @@ const PlanFeatures = ({ features, highlight }) => {
     <List
       spacing="sm"
       size="sm"
+      mb={20}
       center
       icon={
         <ThemeIcon color="teal" size={24} radius="xl">
@@ -101,9 +102,8 @@ export const UpgradeBody = ({ highlight }) => {
                 { id: "team", title: "4 team members" },
                 { id: "apps", title: "Unlimited Apps" },
                 { id: "analytics", title: "Advanced Analytics" },
-                { id: "play", title: "AI Playground" },
-                { id: "export", title: "Export data" },
-                { id: "api", title: "API access" },
+                { id: "playground", title: "Prompt Playground" },
+                { id: "export", title: "Exports & API" },
               ]}
               highlight={highlight}
             />
@@ -117,7 +117,7 @@ export const UpgradeBody = ({ highlight }) => {
                 variant="gradient"
                 gradient={{ from: "violet", to: "blue", deg: 45 }}
                 color="violet"
-                mt={40}
+                mt="auto"
               >
                 Claim -50% forever
               </Button>
@@ -152,9 +152,9 @@ export const UpgradeBody = ({ highlight }) => {
             features={[
               { id: "events", title: "20k events per day" },
               { id: "team", title: "10 team members" },
-              { id: "play", title: "Unlimited AI Playground" },
-              { id: "evaluation", title: "Evaluations & Tests" },
-              { id: "alerts", title: "Custom Alerts" },
+              { id: "template", title: "Prompt Templates" },
+              { id: "playground", title: "Unlimited Playground" },
+              { id: "evaluate", title: "Evaluations & Alerts" },
             ]}
             highlight={highlight}
           />
@@ -168,7 +168,7 @@ export const UpgradeBody = ({ highlight }) => {
             variant="gradient"
             gradient={{ from: "teal", to: "lime", deg: 45 }}
             color="teal"
-            mt={40}
+            mt="auto"
           >
             Upgrade Now
           </Button>

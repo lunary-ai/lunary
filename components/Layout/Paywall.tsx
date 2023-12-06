@@ -89,7 +89,11 @@ export default function Paywall({
             </Group>
             <Text size="lg">{description}</Text>
             <ListFeatures features={list} />
-            <Button fullWidth size="md" onClick={() => openUpgrade()}>
+            <Button
+              fullWidth
+              size="md"
+              onClick={() => openUpgrade(feature.toLowerCase())}
+            >
               Upgrade to {capitalize(plan)} &rarr;
             </Button>
           </Stack>
