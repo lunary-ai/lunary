@@ -228,7 +228,7 @@ export default function LLMCalls() {
       >
         {selected && (
           <RunInputOutput
-            defaultRun={selected}
+            initialRun={selected}
             withPlayground={false}
             withShare={true}
           />
