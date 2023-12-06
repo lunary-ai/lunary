@@ -202,7 +202,7 @@ export default function AgentRun({}) {
               overflow: "auto",
             }}
           >
-            {focusedRun && <RunInputOutput defaultRun={focusedRun} />}
+            {focusedRun && <RunInputOutput initialRun={focusedRun} />}
           </Card>
         </Grid.Col>
       </Grid>
