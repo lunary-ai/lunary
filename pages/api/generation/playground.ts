@@ -11,12 +11,17 @@ export const runtime = "edge"
 const OPENROUTER_MODELS = [
   "mistralai/mistral-7b-instruct",
   "openai/gpt-4-32k",
+  "openchat/openchat-7b",
+  "teknium/openhermes-2.5-mistral-7b",
+  "open-orca/mistral-7b-openorca",
+  "perplexity/pplx-70b-chat",
+  "perplexity/pplx-7b-chat",
   "google/palm-2-chat-bison",
   "meta-llama/llama-2-13b-chat",
   "meta-llama/llama-2-70b-chat",
 ]
 
-const ANTHROPIC_MODELS = ["claude-2"]
+const ANTHROPIC_MODELS = ["claude-2", "claude-2.0", "claude-instant-v1"]
 
 const convertInputToOpenAIMessages = (input: any[]) => {
   return input.map(({ role, text, functionCall, toolCalls, name }) => {
