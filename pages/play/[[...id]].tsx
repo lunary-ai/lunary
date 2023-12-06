@@ -163,7 +163,7 @@ function Playground() {
     })
 
     if (profile.org?.play_allowance <= 0) {
-      openUpgrade("play")
+      openUpgrade("playground")
     }
 
     setStreaming(true)
@@ -231,7 +231,7 @@ function Playground() {
     <Paywall
       Icon={IconPlayerPlayFilled}
       plan="pro"
-      feature="AI Playground"
+      feature="Playground"
       description="Tweak your prompts and test new models."
       list={FEATURE_LIST}
     >

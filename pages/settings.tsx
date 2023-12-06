@@ -123,8 +123,7 @@ export default function AppAnalytics() {
               <RenamableField
                 defaultValue={profile?.org.name}
                 onRename={(name) => {
-                  updateOrg({ id: profile.org.id, name })
-                  mutate()
+                  updateOrg({ id: profile.org.id, name }).then(mutate)
                 }}
               />
 
