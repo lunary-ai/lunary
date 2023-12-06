@@ -32,7 +32,7 @@ export default function LLMCall(props) {
   return (
     <Container size="sm">
       <RunInputOutput
-        defaultRun={run}
+        initialRun={run}
         withPlayground={false}
         withShare={false}
       />

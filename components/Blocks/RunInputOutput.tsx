@@ -7,7 +7,7 @@ import {
 } from "@tabler/icons-react"
 import Link from "next/link"
 import { useRouter } from "next/router"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import SmartViewer from "./SmartViewer"
 import TokensBadge from "./TokensBadge"
 
@@ -58,14 +58,18 @@ const PARAMS = {
 }
 
 export default function RunInputOutput({
-  defaultRun,
+  initialRun,
   withPlayground = true,
   withShare = false,
 }) {
-  const [run, setRun] = useState(defaultRun)
+  const [run, setRun] = useState(initialRun)
   const [loading, setLoading] = useState(false)
   const supabaseClient = useSupabaseClient()
   const router = useRouter()
+
+  useEffect(() => {
+    setRun(initialRun)
+  }, [initialRun])
 
   const canEnablePlayground =
     withPlayground &&
