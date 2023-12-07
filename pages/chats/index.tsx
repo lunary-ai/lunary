@@ -2,9 +2,9 @@ import { NextSeo } from "next-seo"
 import Router from "next/router"
 import { useMemo, useState } from "react"
 
+import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 import DataTable from "@/components/Blocks/DataTable"
 import Feedback from "@/components/Blocks/Feedback"
-import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 import { BubbleMessage } from "@/components/Blocks/SmartViewer/Message"
 import Empty from "@/components/Layout/Empty"
 
@@ -17,13 +17,13 @@ import {
   userColumn,
 } from "@/utils/datatable"
 
-import { formatDateTime } from "@/utils/format"
 import {
   useAllFeedbacks,
   useAppUser,
   useConvosByFeedback,
   useRuns,
 } from "@/utils/dataHooks"
+import { formatDateTime } from "@/utils/format"
 
 import {
   Button,
@@ -38,8 +38,8 @@ import {
 } from "@mantine/core"
 
 import { IconMessages, IconNeedleThread } from "@tabler/icons-react"
-import analytics from "../../utils/analytics"
 import FacetedFilter from "../../components/Blocks/FacetedFilter"
+import analytics from "../../utils/analytics"
 
 const columns = [
   timeColumn("created_at"),
@@ -169,37 +169,26 @@ export default function Chats() {
   const [selected, setSelected] = useState(null)
   const [selectedItems, setSelectedItems] = useState([])
 
-  let { runs, loading, validating, loadMore } = useRuns(null, {
-    filter: ["type", "in", '("convo","thread")'],
-  })
-
   const { allFeedbacks } = useAllFeedbacks()
   const { runIds } = useConvosByFeedback(selectedItems)
 
-  // TODO: filter in query directly
-  runs = runs?.filter((run) => {
-    if (runIds?.length) {
-      if (runIds.includes(run.id)) {
-        return true
-      }
-      return false
-    }
-    return true
-  })
+  let { runs, loading, validating, loadMore } = useRuns(
+    null,
+    {
+      filter: ["type", "in", '("convo","thread")'],
+    },
+    runIds,
+  )
 
   if (!loading && runs?.length === 0) {
     return <Empty Icon={IconMessages} what="conversations" />
   }
 
-  // TODO: change the format of feedback. It should be of the form: {type: 'thumb' | 'rating' ..., value: 'UP' | 'DOWN' ...}
-  // + explain why to Vince
   return (
     <Stack h={"calc(100vh - var(--navbar-size))"}>
       <NextSeo title="Chats" />
       <Flex justify="space-between">
         <Group>
-          {/* <SearchBar query={query} setQuery={setQuery} /> */}
-
           {allFeedbacks?.length && (
             <FacetedFilter
               name="Feedbacks"

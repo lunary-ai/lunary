@@ -357,6 +357,7 @@ export function useRuns(
     not?: Array<any>
     select?: string
   } = {},
+  runIds: Array<string> | null = null,
 ) {
   const supabaseClient = useSupabaseClient<Database>()
   const { appId } = useContext(AppContext)
@@ -387,6 +388,10 @@ export function useRuns(
   if (not) {
     // @ts-ignore
     query = query.not(...not)
+  }
+
+  if (runIds && runIds.length) {
+    query = query.in("id", runIds)
   }
 
   const {
