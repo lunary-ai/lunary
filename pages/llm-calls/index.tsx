@@ -170,7 +170,7 @@ export default function LLMCalls() {
           {users?.length && (
             <FacetedFilter
               name="Users"
-              items={users.map((u) => u.id)}
+              items={users.map((u) => u.external_id)}
               selectedItems={selectedUsers}
               setSelectedItems={setSelectedUsers}
             />
