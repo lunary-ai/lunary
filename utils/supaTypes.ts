@@ -273,6 +273,7 @@ export interface Database {
           feedback: Json | null
           id: string
           input: Json | null
+          is_public: boolean | null
           name: string | null
           output: Json | null
           params: Json | null
@@ -293,6 +294,7 @@ export interface Database {
           feedback?: Json | null
           id?: string
           input?: Json | null
+          is_public?: boolean | null
           name?: string | null
           output?: Json | null
           params?: Json | null
@@ -313,6 +315,7 @@ export interface Database {
           feedback?: Json | null
           id?: string
           input?: Json | null
+          is_public?: boolean | null
           name?: string | null
           output?: Json | null
           params?: Json | null
@@ -374,11 +377,48 @@ export interface Database {
         }
         Returns: Json[]
       }
+      get_convos_by_feedback: {
+        Args: {
+          app_id: string
+          feedback_filters: Json[]
+        }
+        Returns: string[]
+      }
       get_feedbacks: {
         Args: {
           app_id: string
         }
         Returns: string[]
+      }
+      get_filtered_runs: {
+        Args: {
+          app_id: string
+          search_pattern: string
+          model_names: string[]
+          tag_filters: string[]
+          feedback_filters: Json
+        }
+        Returns: {
+          app: string | null
+          completion_tokens: number | null
+          created_at: string | null
+          ended_at: string | null
+          error: Json | null
+          feedback: Json | null
+          id: string
+          input: Json | null
+          is_public: boolean | null
+          name: string | null
+          output: Json | null
+          params: Json | null
+          parent_run: string | null
+          prompt_tokens: number | null
+          retry_of: string | null
+          status: string | null
+          tags: string[] | null
+          type: string
+          user: number | null
+        }[]
       }
       get_model_names: {
         Args: {
@@ -423,6 +463,7 @@ export interface Database {
               feedback: Json | null
               id: string
               input: Json | null
+              is_public: boolean | null
               name: string | null
               output: Json | null
               params: Json | null
@@ -439,6 +480,10 @@ export interface Database {
             Args: {
               app_id: string
               search_pattern: string
+              model_names: string[]
+              tags_param: string[]
+              feedback_param: Json[]
+              users_param: string[]
             }
             Returns: {
               app: string | null
@@ -449,6 +494,7 @@ export interface Database {
               feedback: Json | null
               id: string
               input: Json | null
+              is_public: boolean | null
               name: string | null
               output: Json | null
               params: Json | null
@@ -461,6 +507,37 @@ export interface Database {
               user: number | null
             }[]
           }
+      get_runs_debug: {
+        Args: {
+          app_id: string
+          search_pattern: string
+          model_names: string[]
+          tags_param: string[]
+          feedback_param: Json[]
+          users_param: string[]
+        }
+        Returns: {
+          app: string | null
+          completion_tokens: number | null
+          created_at: string | null
+          ended_at: string | null
+          error: Json | null
+          feedback: Json | null
+          id: string
+          input: Json | null
+          is_public: boolean | null
+          name: string | null
+          output: Json | null
+          params: Json | null
+          parent_run: string | null
+          prompt_tokens: number | null
+          retry_of: string | null
+          status: string | null
+          tags: string[] | null
+          type: string
+          user: number | null
+        }[]
+      }
       get_runs_usage: {
         Args: {
           app_id: string
@@ -527,6 +604,7 @@ export interface Database {
               feedback: Json | null
               id: string
               input: Json | null
+              is_public: boolean | null
               name: string | null
               output: Json | null
               params: Json | null
@@ -553,6 +631,7 @@ export interface Database {
               feedback: Json | null
               id: string
               input: Json | null
+              is_public: boolean | null
               name: string | null
               output: Json | null
               params: Json | null
@@ -569,7 +648,7 @@ export interface Database {
         Args: {
           app_id: string
         }
-        Returns: string[]
+        Returns: Record<string, unknown>[]
       }
       gtrgm_compress: {
         Args: {
@@ -616,6 +695,32 @@ export interface Database {
           "": string
         }
         Returns: unknown
+      }
+      test: {
+        Args: {
+          app_id: string
+        }
+        Returns: {
+          app: string | null
+          completion_tokens: number | null
+          created_at: string | null
+          ended_at: string | null
+          error: Json | null
+          feedback: Json | null
+          id: string
+          input: Json | null
+          is_public: boolean | null
+          name: string | null
+          output: Json | null
+          params: Json | null
+          parent_run: string | null
+          prompt_tokens: number | null
+          retry_of: string | null
+          status: string | null
+          tags: string[] | null
+          type: string
+          user: number | null
+        }[]
       }
     }
     Enums: {
