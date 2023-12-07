@@ -222,7 +222,7 @@ export function useUsers() {
     app_id: appId,
   })
 
-  const { data: users } = useQuery<string[]>(query)
+  const { data: users } = useQuery(query)
   return { users }
 }
 
