@@ -19,6 +19,7 @@ export default function FacetedFilter({
   selectedItems,
   setSelectedItems,
   withSearch = true,
+  withUserSearch = false,
 }: {
   name: string
   items: string[] | any
@@ -26,6 +27,7 @@ export default function FacetedFilter({
   selectedItems: any
   setSelectedItems: any
   withSearch?: boolean
+  withUserSearch?: boolean
 }) {
   const [search, setSearch] = useState("")
 
@@ -41,12 +43,30 @@ export default function FacetedFilter({
     },
   })
 
-  function searchFilter(item) {
+  function defaultSearchFilter(item) {
     if (typeof item === "string") {
       return item?.toLowerCase()?.includes(search.toLowerCase().trim())
     }
     return true
   }
+
+  function userSearchFilter(item) {
+    const searchTerm = search.toLowerCase().trim()
+
+    return (
+      item.external_id.toLowerCase().includes(searchTerm) ||
+      (item.props?.email &&
+        item.props.email.toLowerCase().includes(searchTerm)) ||
+      (item.props?.name &&
+        item.props.name.toLowerCase().includes(searchTerm)) ||
+      (item.props?.firstName &&
+        item.props.firstName.toLowerCase().includes(searchTerm)) ||
+      (item.props?.lastName &&
+        item.props.lastName.toLowerCase().includes(searchTerm))
+    )
+  }
+
+  const searchFilter = withUserSearch ? userSearchFilter : defaultSearchFilter
 
   const options = items.filter(searchFilter).map((item) => (
     <Combobox.Option value={item} key={item}>

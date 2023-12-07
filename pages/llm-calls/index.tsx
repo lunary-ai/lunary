@@ -35,7 +35,7 @@ import RunInputOutput from "@/components/Blocks/RunInputOutput"
 import SearchBar from "@/components/Blocks/SearchBar"
 import { openUpgrade } from "@/components/Layout/UpgradeModal"
 import analytics from "@/utils/analytics"
-import { formatDateTime } from "@/utils/format"
+import { formatAppUser, formatDateTime } from "@/utils/format"
 import { useDebouncedState } from "@mantine/hooks"
 import FacetedFilter from "../../components/Blocks/FacetedFilter"
 import Feedback from "../../components/Blocks/Feedback"
@@ -110,7 +110,7 @@ export default function LLMCalls() {
     selectedModels,
     selectedTags,
     selectedFeedbacks,
-    selectedUsers,
+    selectedUsers.map((u) => u.external_id),
   )
   const { tags } = useTags()
   const { profile } = useProfile()
@@ -170,9 +170,11 @@ export default function LLMCalls() {
           {users?.length && (
             <FacetedFilter
               name="Users"
-              items={users.map((u) => u.external_id)}
+              items={users}
+              render={formatAppUser}
               selectedItems={selectedUsers}
               setSelectedItems={setSelectedUsers}
+              withUserSearch={true}
             />
           )}
           {allFeedbacks?.length && (
