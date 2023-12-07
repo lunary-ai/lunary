@@ -48,7 +48,7 @@ function AppUserAvatar({
           }}
           href={`/users/${user.id}`}
         >
-          <ProtectedText>{formatAppUser(user)}</ProtectedText>
+          <ProtectedText>{nameOrEmail}</ProtectedText>
         </Anchor>
       )}
     </Group>
