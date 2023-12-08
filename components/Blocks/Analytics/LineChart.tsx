@@ -170,7 +170,6 @@ const LineChartComponent = ({
               backgroundOpacity={0.1}
               p="lg"
               zIndex={1}
-              style={{ WebkitBackdropFilter: "blur(15px)" }}
             />
             <Center
               ta="center"
