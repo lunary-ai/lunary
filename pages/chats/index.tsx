@@ -1,6 +1,6 @@
 import { NextSeo } from "next-seo"
-import Router from "next/router"
-import { useMemo, useState } from "react"
+import Router, { useRouter } from "next/router"
+import { useEffect, useMemo, useState } from "react"
 
 import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 import DataTable from "@/components/Blocks/DataTable"
@@ -57,8 +57,6 @@ const ChatReplay = ({ run }) => {
   })
 
   const { user } = useAppUser(run.user)
-
-  console.log("runs", runs)
 
   // Each chat run has input = user message, output = bot message
   const messages = useMemo(
@@ -166,12 +164,11 @@ const ChatReplay = ({ run }) => {
 }
 
 export default function Chats() {
-  const [selected, setSelected] = useState(null)
+  const router = useRouter()
   const [selectedItems, setSelectedItems] = useState([])
+  const [selected, setSelected] = useState()
 
-  const { allFeedbacks } = useAllFeedbacks()
   const { runIds } = useConvosByFeedback(selectedItems)
-
   let { runs, loading, validating, loadMore } = useRuns(
     null,
     {
@@ -179,6 +176,15 @@ export default function Chats() {
     },
     runIds,
   )
+
+  useEffect(() => {
+    if (loading === false) {
+      const defaultSelectedRun = runs.find(({ id }) => id === router.query.chat)
+      setSelected(defaultSelectedRun)
+    }
+  }, [loading])
+
+  const { allFeedbacks } = useAllFeedbacks()
 
   if (!loading && runs?.length === 0) {
     return <Empty Icon={IconMessages} what="conversations" />
@@ -209,7 +215,10 @@ export default function Chats() {
         size="lg"
         position="right"
         title={<Title order={3}>Chat details</Title>}
-        onClose={() => setSelected(null)}
+        onClose={() => {
+          router.replace(`/chats`)
+          setSelected(null)
+        }}
       >
         {selected && <ChatReplay run={selected} />}
       </Drawer>
@@ -218,6 +227,7 @@ export default function Chats() {
         type="chats"
         onRowClicked={(row) => {
           analytics.trackOnce("OpenChat")
+          router.push(`/chats?chat=${row.id}`)
           setSelected(row)
         }}
         loading={loading || validating}
