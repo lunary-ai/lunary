@@ -58,8 +58,6 @@ const ChatReplay = ({ run }) => {
 
   const { user } = useAppUser(run.user)
 
-  console.log("runs", runs)
-
   // Each chat run has input = user message, output = bot message
   const messages = useMemo(
     () =>
