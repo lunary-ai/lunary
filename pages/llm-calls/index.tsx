@@ -222,7 +222,7 @@ export default function LLMCalls() {
 
       <Drawer
         opened={!!selected}
-        size="lg"
+        size="xl"
         keepMounted
         position="right"
         title={selected ? formatDateTime(selected.created_at) : ""}

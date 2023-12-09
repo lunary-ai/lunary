@@ -146,7 +146,7 @@ export const nameColumn = (label = "Name") => {
     size: 80,
     minSize: 30,
     cell: (props) => {
-      const status = props.row.original.status
+      const { status, type } = props.row.original
       const name = props.getValue()
 
       return (
@@ -159,7 +159,7 @@ export const nameColumn = (label = "Name") => {
             status === "success" ? "green" : status === "error" ? "red" : "gray"
           }
         >
-          {name}
+          {name || type}
         </Badge>
       )
     },

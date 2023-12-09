@@ -1,5 +1,5 @@
 import { ChatMessage } from "@/components/Blocks/SmartViewer/Message"
-import { Stack } from "@mantine/core"
+import { ScrollArea, Stack } from "@mantine/core"
 
 const getLastMessage = (messages) => {
   if (Array.isArray(messages)) {
@@ -17,11 +17,13 @@ export default function MessageViewer({ data, compact }) {
       {compact ? (
         <ChatMessage data={getLastMessage(obj)} compact />
       ) : (
-        <Stack>
-          {obj.map((message) => (
-            <ChatMessage key={message.id} data={message} />
-          ))}
-        </Stack>
+        <ScrollArea.Autosize mah={700}>
+          <Stack>
+            {obj.map((message) => (
+              <ChatMessage key={message.id} data={message} />
+            ))}
+          </Stack>
+        </ScrollArea.Autosize>
       )}
 
       <style jsx>{`
