@@ -7,7 +7,7 @@
  * - Text
  */
 
-import { Code, Spoiler } from "@mantine/core"
+import { Code, ScrollArea, Spoiler } from "@mantine/core"
 import { useMemo } from "react"
 import ProtectedText from "../ProtectedText"
 import { ChatMessage } from "./Message"
@@ -54,50 +54,47 @@ export default function SmartViewer({
   }, [parsed])
 
   return (
-    <Spoiler maxHeight={700} showLabel="Show more ↓" hideLabel="Show less ↑">
-      <pre className={compact ? "compact" : ""}>
-        {error && (
-          <ChatMessage
-            data={{
-              role: "error",
-              text:
-                typeof error.stack === "string"
-                  ? compact
-                    ? error.message || error.stack
-                    : error.stack
-                  : typeof error === "object"
-                    ? JSON.stringify(error, null, 2)
-                    : error,
-            }}
-            compact={compact}
-          />
-        )}
+    <pre className={compact ? "compact" : ""}>
+      {error && (
+        <ChatMessage
+          data={{
+            role: "error",
+            text:
+              typeof error.stack === "string"
+                ? compact
+                  ? error.message || error.stack
+                  : error.stack
+                : typeof error === "object"
+                  ? JSON.stringify(error, null, 2)
+                  : error,
+          }}
+          compact={compact}
+        />
+      )}
 
-        {data && (
-          <ProtectedText>
-            {isObject ? (
-              isMessages ? (
-                <MessageViewer data={parsed} compact={compact} />
-              ) : (
-                <Code
-                  color="var(--mantine-color-blue-light)"
-                  style={{ overflow: "hidden" }}
-                >
-                  <RenderJson data={parsed} compact={compact} />
-                </Code>
-              )
+      {data && (
+        <ProtectedText>
+          {isObject ? (
+            isMessages ? (
+              <MessageViewer data={parsed} compact={compact} />
             ) : (
               <Code
                 color="var(--mantine-color-blue-light)"
                 style={{ overflow: "hidden" }}
               >
-                {parsed}
+                <RenderJson data={parsed} compact={compact} />
               </Code>
-            )}
-          </ProtectedText>
-        )}
-      </pre>
-
+            )
+          ) : (
+            <Code
+              color="var(--mantine-color-blue-light)"
+              style={{ overflow: "hidden" }}
+            >
+              {parsed}
+            </Code>
+          )}
+        </ProtectedText>
+      )}
       <style jsx>{`
         pre {
           white-space: pre-wrap;
@@ -129,6 +126,6 @@ export default function SmartViewer({
           cursor: pointer;
         }
       `}</style>
-    </Spoiler>
+    </pre>
   )
 }
