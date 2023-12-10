@@ -240,7 +240,7 @@ export default function Chats() {
   }
 
   return (
-    <Stack h={"calc(100vh - var(--navbar-size))"}>
+    <Stack h={"calc(100vh - var(--navbar-with-filters-size))"}>
       <NextSeo title="Chats" />
       <Flex justify="space-between">
         <Group>

@@ -144,7 +144,7 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
     extra,
   })
 
-  const { data: ingested } = await supabaseAdmin
+  await supabaseAdmin
     .from("run")
     .upsert(
       clearUndefined({

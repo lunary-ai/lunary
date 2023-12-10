@@ -214,6 +214,37 @@ export function useConvosByFeedback(feedbackFilters) {
   return { runIds: data, isLoading, error }
 }
 
+export function useTemplates() {
+  const supabaseClient = useSupabaseClient<Database>()
+  const { appId } = useContext(AppContext)
+
+  const query = supabaseClient
+    .from("template")
+    .select("id,name,slug,app_id,created_at,org_id,content,extra,version,group")
+    .eq("app_id", appId)
+    .order("created_at", {
+      ascending: false,
+    })
+
+  // insert mutation
+  const { trigger: insert } = useInsertMutation(
+    supabaseClient.from("template"),
+    ["id"],
+    "id,name,slug,app_id,org_id,content,extra,version,group",
+  )
+
+  // update mutation
+  const { trigger: update } = useUpdateMutation(
+    supabaseClient.from("template"),
+    ["id"],
+    "name,slug,group",
+  )
+
+  const { data: templates, isLoading, mutate } = useQuery(query)
+
+  return { templates, insert, update, mutate, loading: isLoading }
+}
+
 export function useUsers() {
   const supabaseClient = useSupabaseClient<Database>()
   const { appId } = useContext(AppContext)
