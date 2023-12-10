@@ -117,7 +117,8 @@ export function ChatMessage({
             type="functionCall"
           />
         ))
-      ) : data?.text || data?.content ? (
+      ) : typeof data?.text === "string" ||
+        typeof data?.content === "string" ? (
         <Code block bg={codeBg}>
           <ProtectedText>
             {editable ? (

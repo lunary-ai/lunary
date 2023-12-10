@@ -1,6 +1,5 @@
 import SmartViewer from "@/components/Blocks/SmartViewer"
 import { ChatMessage } from "@/components/Blocks/SmartViewer/Message"
-import Paywall from "@/components/Layout/Paywall"
 import { useCurrentApp, useProfile, useTemplates } from "@/utils/dataHooks"
 import {
   ActionIcon,
@@ -8,18 +7,17 @@ import {
   Box,
   Button,
   Card,
-  Container,
+  Code,
   Grid,
   Group,
-  Kbd,
   Loader,
   NavLink,
   NumberInput,
-  Pill,
   ScrollArea,
   Select,
   Stack,
   Text,
+  Tooltip,
 } from "@mantine/core"
 import { useHotkeys, useLocalStorage } from "@mantine/hooks"
 import { useSupabaseClient } from "@supabase/auth-helpers-react"
@@ -29,16 +27,15 @@ import {
   IconCirclePlus,
   IconDeviceFloppy,
   IconHelp,
-  IconPlayerPlayFilled,
+  IconInfoCircle,
   IconPlus,
-  IconTemplate,
 } from "@tabler/icons-react"
 import { useRouter } from "next/router"
 import { useEffect, useMemo, useState } from "react"
 import analytics from "../../utils/analytics"
 import { openUpgrade } from "@/components/Layout/UpgradeModal"
 import { generateSlug } from "random-word-slugs"
-import { formatDistance, formatDistanceToNow } from "date-fns"
+import { formatDistanceToNow } from "date-fns"
 import HotkeysInfo from "@/components/Blocks/HotkeysInfo"
 
 const availableModels = [
@@ -162,7 +159,6 @@ const defaultTemplate = {
     presence_penalty: 0,
     top_p: 1,
   },
-  error: null,
 }
 
 const FEATURE_LIST = [
@@ -453,6 +449,21 @@ function Playground() {
     },
   })
 
+  // Parse variables from the content template (handlebars parsing)
+  const variables = useMemo(() => {
+    const variables = {}
+    const variableRegex = /{{([^}]+)}}/g
+
+    template?.content?.forEach((message) => {
+      let match
+      while ((match = variableRegex.exec(message?.text)) !== null) {
+        variables[match[1].trim()] = ""
+      }
+    })
+
+    return variables
+  }, [template])
+
   return (
     <Grid
       w="100%"
@@ -563,13 +574,13 @@ function Playground() {
             >
               {template ? "Deploy changes" : "Save as template"}
             </Button>
-            <Button
+            {/* <Button
               leftSection={<IconHelp size={18} />}
               size="xs"
               variant="outline"
             >
               How to use
-            </Button>
+            </Button> */}
           </Group>
           <ParamItem
             name="Model"
@@ -665,6 +676,33 @@ function Playground() {
               />
             }
           />
+
+          <Card shadow="sm" p="sm" my="md">
+            <Group mb="md" align="center" justify="space-between">
+              <Text size="sm" fw="bold">
+                Variables
+              </Text>
+              <Tooltip label="Add variables to your template in the handlebars format {{variable}}">
+                <IconInfoCircle size={16} />
+              </Tooltip>
+            </Group>
+            {!Object.keys(variables).length && (
+              <Text c="dimmed" size="sm">
+                {`Add variables to your template: {{variable}}`}
+              </Text>
+            )}
+            <Group gap="xs">
+              {Object.keys(variables).map((variable) => (
+                <Badge
+                  key={variable}
+                  variant="outline"
+                  style={{ textTransform: "none" }}
+                >
+                  {variable}
+                </Badge>
+              ))}
+            </Group>
+          </Card>
 
           <Button
             leftSection={<IconBolt size="16" />}
