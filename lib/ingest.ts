@@ -1,10 +1,7 @@
 import { completeRunUsage } from "@/lib/countTokens"
-import { z } from "zod"
+import { supabaseAdmin } from "@/lib/supabaseClient"
 
-import postgres from "postgres"
 import { Json } from "@/utils/supaTypes"
-
-const sql = postgres(process.env.DB_URI, { transform: postgres.camel })
 
 export interface Event {
   type:
@@ -129,7 +126,15 @@ const clearUndefined = (obj: any) =>
 export const ingestChatEvent = async (run: Event): Promise<void> => {
   // create parent thread run if it doesn't exist
 
-  const { runId: id, feedback, threadTags, timestamp } = run
+  const {
+    runId: id,
+    app,
+    userId,
+    parentRunId,
+    feedback,
+    threadTags,
+    timestamp,
+  } = run
 
   const { role, isRetry, content, extra } = run.message as any
 
@@ -139,19 +144,20 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
     extra,
   })
 
-  await sql`
-    insert into run ${sql(
+  const { data: ingested } = await supabaseAdmin
+    .from("run")
+    .upsert(
       clearUndefined({
         type: "thread",
-        id: run.parentRunId,
-        app: run.app,
-        user: run.user,
-        tags: run.threadTags,
+        id: parentRunId,
+        app,
+        user: userId,
+        tags: threadTags,
         input: coreMessage,
       }),
-    )}
-    on conflict (id) do nothing
-  `
+      { onConflict: "id" },
+    )
+    .throwOnError()
 
   // Reconciliate messages with runs
   //
@@ -171,9 +177,14 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
   // note; in any case, update the ID to the latest received
 
   // check if previous run exists. for that, look at the last run of the thread
-  const [previousRun] = await sql`
-      select * from run where parent_run = ${run.parentRunId} order by created_at desc limit 1
-    `
+  const { data: previousRun } = await supabaseAdmin
+    .from("run")
+    .select("*")
+    .eq("parent_run", parentRunId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+    .throwOnError()
 
   const OUTPUT_TYPES = ["assistant", "tool", "bot"]
 
@@ -182,7 +193,7 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
     app: run.app,
     ...(run.tags ? { tags: run.tags } : {}),
     ...(run.extra ? { input: run.extra } : {}),
-    ...(run.user ? { user: run.user } : {}),
+    ...(userId ? { user: userId } : {}),
     ...(feedback ? { feedback } : {}),
   }
 
@@ -196,7 +207,7 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
       // if user message: also replace input with [message]
       update = {
         ...previousRun,
-        siblingOf: previousRun.id,
+        sibling_of: previousRun.id,
         feedback: run.feedback || null, // reset feedback if retry
         output: OUTPUT_TYPES.includes(role) ? [coreMessage] : null,
         input: role === "user" ? [coreMessage] : previousRun.input,
@@ -235,22 +246,21 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
 
   if (operation === "insert") {
     update.type = "chat"
-    update.createdAt = timestamp
-    update.endedAt = timestamp
-    update.parentRun = run.parentRunId
+    update.created_at = timestamp
+    update.ended_at = timestamp
+    update.parent_run = run.parentRunId
 
-    console.log(clearUndefined({ ...update, ...shared }))
-
-    await sql`
-        insert into run ${sql(clearUndefined({ ...update, ...shared }))}
-      `
+    await supabaseAdmin
+      .from("run")
+      .insert(clearUndefined({ ...update, ...shared }))
+      .throwOnError()
   } else if (operation === "update") {
-    update.endedAt = timestamp
+    update.ended_at = timestamp
 
-    await sql`
-        update run set ${sql(
-          clearUndefined({ ...shared, ...update }),
-        )} where id = ${previousRun.id}
-      `
+    await supabaseAdmin
+      .from("run")
+      .update(clearUndefined({ ...shared, ...update }))
+      .eq("id", previousRun.id)
+      .throwOnError()
   }
 }
