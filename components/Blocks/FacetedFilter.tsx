@@ -9,7 +9,8 @@ import {
   useCombobox,
 } from "@mantine/core"
 import { IconCirclePlus } from "@tabler/icons-react"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import { useCurrentApp } from "../../utils/dataHooks"
 
 // TODO: proper typing for props
 export default function FacetedFilter({
@@ -30,6 +31,16 @@ export default function FacetedFilter({
   withUserSearch?: boolean
 }) {
   const [search, setSearch] = useState("")
+
+  const { app } = useCurrentApp()
+  const prevAppIdRef = useRef<string>(null)
+
+  useEffect(() => {
+    if (prevAppIdRef.current !== app.id) {
+      setSelectedItems([])
+    }
+    prevAppIdRef.current = app.id
+  }, [app, prevAppIdRef, setSelectedItems])
 
   const combobox = useCombobox({
     onDropdownClose: () => {
