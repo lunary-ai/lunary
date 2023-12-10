@@ -140,7 +140,7 @@ function SignupPage() {
             <Stack align="center">
               <IconAnalyze color={"#206dce"} size={60} />
               <Title order={2} fw={700} size={40} ta="center">
-                llmonitor cloud
+                lunary cloud
               </Title>
             </Stack>
             <Grid gutter={50} align="center" mb="sm">
@@ -352,7 +352,7 @@ function SignupPage() {
                   variant="outline"
                   color="teal.8"
                   component="a"
-                  href="mailto:hello@llmonitor.com"
+                  href="mailto:hello@lk.com"
                   rightSection={<IconMail size={18} />}
                 >
                   Email

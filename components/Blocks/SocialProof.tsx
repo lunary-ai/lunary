@@ -8,10 +8,10 @@ export default function SocialProof() {
     <Group>
       <Avatar.Group>
         {[
-          "https://llmonitor.com/users/1.png",
-          "https://llmonitor.com/users/2.jpeg",
-          "https://llmonitor.com/users/3.jpeg",
-          "https://llmonitor.com/users/4.jpeg",
+          "https://lunary.ai/users/1.png",
+          "https://lunary.ai/users/2.jpeg",
+          "https://lunary.ai/users/3.jpeg",
+          "https://lunary.ai/users/4.jpeg",
         ].map((src) => (
           <Avatar size={42} radius="xl" src={src} key={src} />
         ))}

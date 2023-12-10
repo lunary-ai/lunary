@@ -25,6 +25,15 @@ const nextConfig = {
       },
     ]
   },
+  webpack: (config, { webpack }) => {
+    config.plugins.push(
+      new webpack.IgnorePlugin({
+        resourceRegExp: /^pg-native$|^cloudflare:sockets$|^node:stream$/,
+      }),
+    )
+
+    return config
+  },
 }
 
 module.exports = nextConfig

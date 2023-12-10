@@ -4,7 +4,7 @@ import { jsonResponse } from "./jsonResponse"
 
 const withEdgeHighlight = EdgeHighlight({
   projectID: process.env.NEXT_PUBLIC_HIGHLIGHT_PROJECT_ID,
-  serviceName: "llmonitor-api-edge",
+  serviceName: "lunary-api-edge",
 })
 
 export function edgeWrapper(handler: (req: NextRequest) => Promise<Response>) {

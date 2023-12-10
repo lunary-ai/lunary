@@ -85,11 +85,7 @@ export default function App({ Component, pageProps }: AppProps) {
         }
       `}</style>
       <Head>
-        <link
-          href="https://llmonitor.com/logo.png"
-          rel="icon"
-          type="image/png"
-        />
+        <link href="https://lunary.ai/logo.png" rel="icon" type="image/png" />
       </Head>
       <SessionContextProvider
         supabaseClient={supabase}
@@ -97,8 +93,8 @@ export default function App({ Component, pageProps }: AppProps) {
       >
         <DefaultSeo
           title="Dashboard"
-          titleTemplate="%s | LLMonitor"
-          defaultTitle="Dashboard | LLMonitor"
+          titleTemplate="%s | Lunary"
+          defaultTitle="Dashboard | Lunary"
         />
         <MantineProvider theme={theme} defaultColorScheme="auto">
           <AnalyticsWrapper>

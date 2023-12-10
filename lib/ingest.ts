@@ -1,4 +1,10 @@
 import { completeRunUsage } from "@/lib/countTokens"
+import { z } from "zod"
+
+import postgres from "postgres"
+import { Json } from "@/utils/supaTypes"
+
+const sql = postgres(process.env.DB_URI, { transform: postgres.camel })
 
 export interface Event {
   type:
@@ -24,7 +30,7 @@ export interface Event {
   tags?: string[]
   name?: string
   output?: any
-  message?: string
+  message?: string | Json // deprecated (for logs)
   extra?: any
   feedback?: any
   tokensUsage?: {
@@ -62,7 +68,7 @@ export const uuidFromSeed = async (seed: string): Promise<string> => {
  * Useful for example for interop with Vercel'AI SDK as they use their own run ids format.
  * This function will convert any string to a valid UUID.
  */
-const ensureIsUUID = async (id: string): Promise<string> => {
+export const ensureIsUUID = async (id: string): Promise<string> => {
   if (typeof id !== "string") return undefined
   if (!id || id.length === 36) return id // TODO: better UUID check
   else return await uuidFromSeed(id)
@@ -100,5 +106,151 @@ export const cleanEvent = async (event: any): Promise<Event> => {
     runId: await ensureIsUUID(runId),
     parentRunId: await ensureIsUUID(parentRunId),
     timestamp: new Date(timestamp).toISOString(),
+  }
+}
+
+// const message = z.object({
+//   id: z
+//     .optional(z.string())
+//     .transform(async (id) =>
+//       id ? await ensureIsUUID(id) : crypto.randomUUID(),
+//     ),
+//   role: z.string(),
+//   isRetry: z.boolean().optional(),
+//   text: z.optional(z.string()),
+//   timestamp: z.optional(z.date()),
+//   extra: z.optional(z.any()),
+//   feedback: z.optional(z.any()),
+// })
+
+const clearUndefined = (obj: any) =>
+  Object.fromEntries(Object.entries(obj).filter(([_, v]) => v !== undefined))
+
+export const ingestChatEvent = async (run: Event): Promise<void> => {
+  // create parent thread run if it doesn't exist
+
+  const { runId: id, feedback, threadTags, timestamp } = run
+
+  const { role, isRetry, content, extra } = run.message as any
+
+  const coreMessage = clearUndefined({
+    role,
+    content,
+    extra,
+  })
+
+  await sql`
+    insert into run ${sql(
+      clearUndefined({
+        type: "thread",
+        id: run.parentRunId,
+        app: run.app,
+        user: run.user,
+        tags: run.threadTags,
+        input: coreMessage,
+      }),
+    )}
+    on conflict (id) do nothing
+  `
+
+  // Reconciliate messages with runs
+  //
+  // 1 run can store 1 exchange ([user] -> [bot, tool])
+  //
+  // if previousRun and not retry_of
+  //     if this is bot message, then append to previous output's array
+  //     if this is user message:
+  //         if previous run output has bot then create new run and add to input array
+  //         if previous run is user, then append to previous input array
+  // else if retry_of
+  //     copy previousRun data into new run with new id, set `sibling_of` to previousRun, clear output, then:
+  //        if bot message: set output with [message]
+  //        if user message: also replace input with [message]
+  // else
+  //     create new run with either input or output depending on role
+  // note; in any case, update the ID to the latest received
+
+  // check if previous run exists. for that, look at the last run of the thread
+  const [previousRun] = await sql`
+      select * from run where parent_run = ${run.parentRunId} order by created_at desc limit 1
+    `
+
+  const OUTPUT_TYPES = ["assistant", "tool", "bot"]
+
+  const shared = {
+    id,
+    app: run.app,
+    ...(run.tags ? { tags: run.tags } : {}),
+    ...(run.extra ? { input: run.extra } : {}),
+    ...(run.user ? { user: run.user } : {}),
+    ...(feedback ? { feedback } : {}),
+  }
+
+  let update: any = {} // todo: type
+  let operation = "insert"
+
+  if (previousRun) {
+    if (isRetry) {
+      // copy previousRun data into new run with new id, set `sibling_of` to previousRun, clear output, then:
+      // if bot message: set output with [message]
+      // if user message: also replace input with [message]
+      update = {
+        ...previousRun,
+        siblingOf: previousRun.id,
+        feedback: run.feedback || null, // reset feedback if retry
+        output: OUTPUT_TYPES.includes(role) ? [coreMessage] : null,
+        input: role === "user" ? [coreMessage] : previousRun.input,
+      }
+
+      operation = "insert"
+    } else if (OUTPUT_TYPES.includes(role)) {
+      // append coreMessage to output (if if was an array, otherwise create an array)
+
+      update.output = [...(previousRun.output || []), coreMessage]
+
+      operation = "update"
+    } else if (role === "user") {
+      if (previousRun.output) {
+        // if last is bot message, create new run with input array
+
+        update.input = [coreMessage]
+        operation = "insert"
+      } else {
+        // append coreMessage to input (if if was an array, otherwise create an array)
+
+        update.input = [...(previousRun.input || []), coreMessage]
+
+        operation = "update"
+      }
+    }
+  } else {
+    // create new run with either input or output depending on role
+    if (OUTPUT_TYPES.includes(role)) {
+      update.output = [coreMessage]
+    } else if (role === "user") {
+      update.input = [coreMessage]
+    }
+    operation = "insert"
+  }
+
+  if (operation === "insert") {
+    update.type = "chat"
+    update.createdAt = timestamp
+    update.endedAt = timestamp
+    update.parentRun = run.parentRunId
+
+    console.log(clearUndefined({ ...update, ...shared }))
+
+    await sql`
+        insert into run ${sql(clearUndefined({ ...update, ...shared }))}
+      `
+  } else if (operation === "update") {
+    update.endedAt = timestamp
+
+    await sql`
+        update run set ${sql(
+          clearUndefined({ ...shared, ...update }),
+        )} where id = ${previousRun.id}
+      `
   }
 }

@@ -17,6 +17,7 @@ import { RenderJson } from "./RenderJson"
 const checkIsMessage = (obj) => {
   return (
     typeof obj?.text === "string" ||
+    typeof obj?.content === "string" ||
     typeof obj?.functionCall === "object" ||
     typeof obj?.toolCalls === "object"
   )

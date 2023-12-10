@@ -150,7 +150,7 @@ export const UpgradeBody = ({ highlight }) => {
 
           <PlanFeatures
             features={[
-              { id: "events", title: "20k events per day" },
+              { id: "events", title: "Unlimited events" },
               { id: "team", title: "10 team members" },
               { id: "template", title: "Prompt Templates" },
               { id: "playground", title: "Unlimited Playground" },

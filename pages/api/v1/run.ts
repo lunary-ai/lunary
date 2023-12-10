@@ -205,7 +205,7 @@ export default apiWrapper(async function handler(
       prompt: run.promptTokens,
       total: run.completionTokens + run.promptTokens,
     },
-    tags: run.tag,
+    tags: run.tags,
     input: run.input,
     output: run.output,
     error: run.error,

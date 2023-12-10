@@ -6,14 +6,13 @@ import { supabaseAdmin } from "@/lib/supabaseClient"
 import { NextRequest } from "next/server"
 import cors from "@/lib/api/cors"
 import { Json } from "../../utils/supaTypes"
-import { Event, cleanEvent } from "@/lib/ingest"
+import { Event, cleanEvent, ingestChatEvent } from "@/lib/ingest"
 import { edgeWrapper } from "@/lib/api/edgeHelpers"
 import { H } from "@highlight-run/next/server"
 import { jsonResponse } from "@/lib/api/jsonResponse"
 
-export const config = {
-  runtime: "edge",
-}
+// export const runtime = "nodejs"
+export const runtime = "edge"
 
 const registerRunEvent = async (
   event: Event,
@@ -165,7 +164,9 @@ const registerRunEvent = async (
         })
         .match({ id: runId })
 
-    case "stream":
+    case "chat":
+      await ingestChatEvent(event)
+
       break
   }
 
@@ -205,11 +206,13 @@ const registerEvent = async (
 }
 
 export default edgeWrapper(async function handler(req: NextRequest) {
+  // export default async function handler(req: NextRequest) {
   if (req.method === "OPTIONS") {
     return cors(req, new Response(null, { status: 200 }))
   }
 
   const { events } = await req.json()
+  // const { events } = req.body
 
   // Use to check if parentRunId was already inserted
   const insertedIds = new Set<string>()
@@ -255,4 +258,5 @@ export default edgeWrapper(async function handler(req: NextRequest) {
       results,
     }),
   )
+  // }
 })
