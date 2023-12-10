@@ -76,8 +76,8 @@ export default edgeWrapper(async function handler(req: Request) {
           apiKey: process.env.OPENROUTER_API_KEY,
           baseURL: "https://openrouter.ai/api/v1",
           defaultHeaders: {
-            "HTTP-Referer": "https://llmonitor.com",
-            "X-Title": `LLMonitor.com`,
+            "HTTP-Referer": "https://lunary.ai",
+            "X-Title": `Lunary.ai`,
           },
         }
       : {

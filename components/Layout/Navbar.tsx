@@ -77,7 +77,7 @@ export default function Navbar() {
         }
       }
       win.Featurebase("initialize_feedback_widget", {
-        organization: "llmonitor",
+        organization: "lunary",
         theme: "light",
         // placement: "right",
         email: user?.email,
@@ -105,7 +105,6 @@ export default function Navbar() {
             <Anchor component={Link} href="/">
               <Group mx="sm">
                 <IconAnalyze size={26} />
-                {/* <Text fw="bold">llmonitor</Text> */}
               </Group>
             </Anchor>
 
@@ -166,7 +165,7 @@ export default function Navbar() {
 
                 <Button
                   component="a"
-                  href="https://llmonitor.com/docs"
+                  href="https://lunary.ai/docs"
                   size="xs"
                   target="_blank"
                   variant="outline"

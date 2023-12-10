@@ -15,7 +15,7 @@ export const CONFIRM_EMAIL = (
 
     text: `Hi ${extractFirstName(name)},
 
-Thanks for signing up for LLMonitor.
+Thanks for signing up for Lunary.
 
 Please confirm your email address by clicking on the link below:
 
@@ -24,19 +24,19 @@ ${confirmLink}
 You can reply to this email if you have any question.
 
 Thanks
-- The LLMonitor team`,
+- The Lunary team`,
   }
 }
 
 export const WELCOME_EMAIL = (email: string, name: string, appId: string) => {
   return {
-    subject: `welcome to llmonitor`,
+    subject: `welcome to Lunary`,
     to: [email],
     from: process.env.PERSONAL_SENDER || process.env.GENERIC_SENDER,
 
     text: `Hi ${extractFirstName(name)},
 
-I'm Vince, co-founder of llmonitor. 
+I'm Vince, co-founder of lunary. 
 
 Wanted to say welcome.
 
@@ -46,7 +46,7 @@ Here's your app tracking ID: \`${appId}\`
 
 You can use this to integrate your app with one of our SDKs.
 
-In your opinion, what can we do to make llmonitor better?
+In your opinion, what can we do to make lunary better?
 
 Thanks
 Vince`,
@@ -55,7 +55,7 @@ Vince`,
 
 export const UPGRADE_EMAIL = (email: string, name: string) => {
   return {
-    subject: `welcome to llmonitor pro`,
+    subject: `welcome to lunary pro`,
     to: [email],
     from: process.env.GENERIC_SENDER,
     text: `Hi ${extractFirstName(name)},
@@ -66,7 +66,7 @@ The extra features and higher limits are now available to you.
 
 Reply to this email if you have any question.
 
-The LLMonitor team`,
+The Lunary team`,
   }
 }
 
@@ -83,6 +83,6 @@ We're sorry to see you go.
 
 Would you mind telling us why you canceled? We're always looking to improve.
 
-Thank you for trying LLMonitor.`,
+Thank you for trying Lunary.`,
   }
 }

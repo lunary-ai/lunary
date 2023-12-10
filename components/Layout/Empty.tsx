@@ -37,7 +37,7 @@ export default function Empty({
             variant="outline"
             component="a"
             target="_blank"
-            href={`https://llmonitor.com/docs?app=${app?.id}`}
+            href={`https://lunary.ai/docs?app=${app?.id}`}
           >
             Documentation &rarr;
           </Button>

@@ -1,18 +1,18 @@
 <div align="center">
 
-# 📈 llmonitor
+# 📈 lunary
 
 **Open-source monitoring & observability for AI apps and agents**
 
-[website](https://llmonitor.com) - [docs](https://llmonitor.com/docs) - [self host](https://llmonitor.com/docs/self-host)
+[website](https://lunary.ai) - [docs](https://lunary.ai/docs) - [self host](https://lunary.ai/docs/self-host)
 
-[![npm version](https://badge.fury.io/js/llmonitor.svg)](https://badge.fury.io/js/llmonitor) ![Discord](https://img.shields.io/badge/Discord-Join%20Chat-violet?labelColor=purple&style=flat&logo=discord&logoColor=white) ![GitHub last commit (by committer)](https://img.shields.io/github/last-commit/llmonitor/llmonitor) ![GitHub commit activity (branch)](https://img.shields.io/github/commit-activity/w/llmonitor/llmonitor)
+[![npm version](https://badge.fury.io/js/lunary.svg)](https://badge.fury.io/js/lunary) ![Discord](https://img.shields.io/badge/Discord-Join%20Chat-violet?labelColor=purple&style=flat&logo=discord&logoColor=white) ![GitHub last commit (by committer)](https://img.shields.io/github/last-commit/lunary-ai/lunary) ![GitHub commit activity (branch)](https://img.shields.io/github/commit-activity/w/lunary-ai/lunary)
 
 </div>
 
 ## Features
 
-LLMonitor helps AI devs monitor their apps in production, with features such as:
+Lunary helps AI devs monitor their apps in production, with features such as:
 
 - 💵 Cost, token & latency analytics
 - 🔍 Log & edit prompts
@@ -30,30 +30,30 @@ It also designed to be:
 
 ## Demo
 
-https://github.com/LLMonitor/llmonitor/assets/5092466/a2b4ba9b-4afb-46e3-9b6b-faf7ddb4a931
+https://github.com/lunary-ai/lunary/assets/5092466/a2b4ba9b-4afb-46e3-9b6b-faf7ddb4a931
 
 ## ⚙️ Integration
 
 Modules available for:
 
-- [JavaScript](https://github.com/llmonitor/llmonitor-js)
-- [Python](https://github.com/llmonitor/llmonitor-py)
+- [JavaScript](https://github.com/lunary-ai/lunary-js)
+- [Python](https://github.com/lunary-ai/lunary-py)
 
-LLMonitor natively supports:
+Lunary natively supports:
 
-- [LangChain](https://llmonitor.com/docs/langchain) (JS & Python)
-- [OpenAI module](https://llmonitor.com/docs/js/openai)
-- [LiteLLM](https://docs.litellm.ai/docs/observability/llmonitor_integration)
+- [LangChain](https://lunary.ai/docs/langchain) (JS & Python)
+- [OpenAI module](https://lunary.ai/docs/js/openai)
+- [LiteLLM](https://docs.litellm.ai/docs/observability/lunary_integration)
 
 Additionally you can use it with any framework by wrapping the relevant methods.
 
 ## 📚 Documentation
 
-Full documentation is available [on the website](https://llmonitor.com/docs/intro).
+Full documentation is available [on the website](https://lunary.ai/docs/intro).
 
 ## ☁️ Hosted version
 
-We offer [a hosted version](https://llmonitor.com) with a free plan of up to 1k requests / days.
+We offer [a hosted version](https://lunary.ai) with a free plan of up to 1k requests / days.
 
 With the hosted version:
 
@@ -63,7 +63,7 @@ With the hosted version:
 
 ## 🙋 Support
 
-Need help or have questions? Chat with us on [Discord](https://discord.gg/8PafSG58kK) or email one of the founders: [vince [at] llmonitor.com](mailto:vince@llmonitor.com). We're here to support you every step of the way.
+Need help or have questions? Chat with us on [Discord](https://discord.gg/8PafSG58kK) or email one of the founders: [vince [at] lunary.ai](mailto:vince@lunary.ai). We're here to support you every step of the way.
 
 ## 👨‍👩‍👧 Team
 

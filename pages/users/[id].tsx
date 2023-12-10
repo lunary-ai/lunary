@@ -27,7 +27,6 @@ const columns = [
   timeColumn("created_at"),
   nameColumn("Name"),
   durationColumn(),
-
   costColumn(),
   feedbackColumn(),
   tagsColumn(),

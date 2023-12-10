@@ -113,12 +113,12 @@ export default function Sidebar() {
                 </ActionIcon>
               </Menu.Target>
               <Menu.Dropdown ml="lg">
-                <Menu.Label>LLMonitor</Menu.Label>
+                <Menu.Label>Lunary</Menu.Label>
                 <Menu.Item
                   leftSection={<IconActivity size="16" />}
                   component={Link}
                   target="_blank"
-                  href="https://feedback.llmonitor.com/roadmap"
+                  href="https://feedback.lunary.ai/roadmap"
                 >
                   Roadmap
                 </Menu.Item>
@@ -127,7 +127,7 @@ export default function Sidebar() {
                   leftSection={<IconRefresh size="16" />}
                   component={Link}
                   target="_blank"
-                  href="https://feedback.llmonitor.com/changelog"
+                  href="https://feedback.lunary.ai/changelog"
                 >
                   Changelog
                 </Menu.Item>
@@ -136,7 +136,7 @@ export default function Sidebar() {
                   leftSection={<IconFile size="16" />}
                   component="a"
                   target="_blank"
-                  href="https://llmonitor.com/docs"
+                  href="https://lunary.ai/docs"
                 >
                   Documentation
                 </Menu.Item>

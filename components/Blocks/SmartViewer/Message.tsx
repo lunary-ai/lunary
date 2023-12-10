@@ -117,37 +117,37 @@ export function ChatMessage({
             type="functionCall"
           />
         ))
+      ) : data?.text || data?.content ? (
+        <Code block bg={codeBg}>
+          <ProtectedText>
+            {editable ? (
+              <Textarea
+                value={data?.text || data?.content}
+                variant="unstyled"
+                p={0}
+                styles={{
+                  root: {
+                    fontFamily: "inherit",
+                    fontSize: "inherit",
+                  },
+                  input: {
+                    padding: "0 !important",
+                    fontFamily: "inherit",
+                    fontSize: "inherit",
+                  },
+                }}
+                autosize
+                minRows={1}
+                onChange={(e) => onChange({ ...data, text: e.target.value })}
+                style={{ width: "100%" }}
+              />
+            ) : (
+              data?.text || data?.content
+            )}
+          </ProtectedText>
+        </Code>
       ) : (
-        typeof data?.text === "string" && (
-          <Code block bg={codeBg}>
-            <ProtectedText>
-              {editable ? (
-                <Textarea
-                  value={data?.text}
-                  variant="unstyled"
-                  p={0}
-                  styles={{
-                    root: {
-                      fontFamily: "inherit",
-                      fontSize: "inherit",
-                    },
-                    input: {
-                      padding: "0 !important",
-                      fontFamily: "inherit",
-                      fontSize: "inherit",
-                    },
-                  }}
-                  autosize
-                  minRows={1}
-                  onChange={(e) => onChange({ ...data, text: e.target.value })}
-                  style={{ width: "100%" }}
-                />
-              ) : (
-                data?.text
-              )}
-            </ProtectedText>
-          </Code>
-        )
+        <></>
       )}
 
       <style jsx>{`
@@ -170,9 +170,10 @@ export function BubbleMessage({ role, content, extra }) {
 
   return (
     <>
-      <Flex direction={isBot ? "row" : "row-reverse"} align="center" gap="md">
+      <Flex direction={isBot ? "row" : "row-reverse"} align="start" gap="md">
         <ThemeIcon
           size={36}
+          mt={6}
           variant="light"
           radius="xl"
           color={isBot ? "blue" : "pink"}

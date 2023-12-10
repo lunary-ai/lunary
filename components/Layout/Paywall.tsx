@@ -83,7 +83,7 @@ export default function Paywall({
                 {Icon && <Icon size="20" />}
               </ThemeIcon>
               <Title order={3}>
-                {feature} is available in LLMonitor {capitalize(plan)}
+                {feature} is available in Lunary {capitalize(plan)}
               </Title>
             </Group>
             <Text size="lg">{description}</Text>

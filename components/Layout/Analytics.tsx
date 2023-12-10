@@ -40,7 +40,7 @@ export default function AnalyticsWrapper({ children }) {
       {process.env.NEXT_PUBLIC_HIGHLIGHT_PROJECT_ID && (
         <HighlightInit
           projectId={process.env.NEXT_PUBLIC_HIGHLIGHT_PROJECT_ID}
-          serviceName="llmonitor-frontend"
+          serviceName="lunary-frontend"
           tracingOrigins
           disableConsoleRecording
           networkRecording={{
@@ -52,13 +52,13 @@ export default function AnalyticsWrapper({ children }) {
       )}
       {process.env.NEXT_PUBLIC_CRISP_ID && <CrispChat />}
       <PlausibleProvider
-        domain="app.llmonitor.com,rollup.llmonitor.com"
+        domain="app.lunary.ai,rollup.lunary.ai"
         scriptProps={{
-          src: "https://www.llmonitor.com/p/js/script.js",
+          src: "https://www.lunary.ai/p/js/script.js",
           // @ts-ignore
-          "data-api": "https://www.llmonitor.com/p/event",
+          "data-api": "https://www.lunary.ai/p/event",
         }}
-        customDomain="www.llmonitor.com"
+        customDomain="www.lunary.ai"
       >
         {process.env.NEXT_PUBLIC_CUSTOM_SCRIPT && (
           <Script
