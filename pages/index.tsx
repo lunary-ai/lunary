@@ -35,7 +35,7 @@ export default function Home() {
   const { profile } = useProfile()
 
   const createApp = async () => {
-    await insert([{ name: newAppName, org_id: profile.org_id }])
+    await insert([{ name: newAppName, org_id: profile.org.id }])
 
     setModalOpened(false)
 
