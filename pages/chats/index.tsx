@@ -54,7 +54,10 @@ const columns = [
 const parseMessageFromRun = (run) => {
   const createMessage = (msg, role, siblingOf) => {
     if (Array.isArray(msg)) {
-      return msg.map((item) => createMessage(item, role, siblingOf))
+      return msg
+        .map((item) => createMessage(item, role, siblingOf))
+        .flat()
+        .filter((messages) => messages.content !== undefined)
     }
 
     return {
@@ -72,11 +75,9 @@ const parseMessageFromRun = (run) => {
   }
 
   return [
-    ...createMessage(run.input, "user", run.sibling_of),
-    ...createMessage(run.output, "assistant", run.sibling_of),
+    createMessage(run.input, "user", run.sibling_of),
+    createMessage(run.output, "assistant", run.sibling_of),
   ]
-    .flat()
-    .filter((message) => message.content !== undefined)
 }
 
 const ChatReplay = ({ run }) => {
