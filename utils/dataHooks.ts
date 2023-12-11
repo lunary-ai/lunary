@@ -220,7 +220,9 @@ export function useTemplates() {
 
   const query = supabaseClient
     .from("template")
-    .select("id,name,slug,app_id,created_at,org_id,content,extra,version,group")
+    .select(
+      "id,name,slug,app_id,created_at,org_id,content,extra,version,group,test_values,mode",
+    )
     .eq("app_id", appId)
     .order("created_at", {
       ascending: false,
@@ -230,7 +232,7 @@ export function useTemplates() {
   const { trigger: insert } = useInsertMutation(
     supabaseClient.from("template"),
     ["id"],
-    "id,name,slug,app_id,org_id,content,extra,version,group",
+    "id,name,slug,app_id,org_id,content,extra,version,group,test_values,mode",
   )
 
   // update mutation

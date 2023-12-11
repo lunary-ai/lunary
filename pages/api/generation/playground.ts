@@ -5,6 +5,7 @@ import OpenAI from "openai"
 import { completion } from "litellm"
 import { ensureIsLogged } from "@/lib/api/ensureAppIsLogged"
 import { edgeWrapper } from "@/lib/api/edgeHelpers"
+import Handlebars from "handlebars"
 
 export const runtime = "edge"
 
@@ -24,10 +25,10 @@ const OPENROUTER_MODELS = [
 const ANTHROPIC_MODELS = ["claude-2", "claude-2.0", "claude-instant-v1"]
 
 const convertInputToOpenAIMessages = (input: any[]) => {
-  return input.map(({ role, text, functionCall, toolCalls, name }) => {
+  return input.map(({ role, content, text, functionCall, toolCalls, name }) => {
     return {
       role: role.replace("ai", "assistant"),
-      content: text,
+      content: content || text,
       function_call: functionCall || undefined,
       tool_calls: toolCalls || undefined,
       name: name || undefined,
@@ -62,11 +63,23 @@ export default edgeWrapper(async function handler(req: Request) {
 
   await substractPlayAllowance(session, supabase)
 
-  const { content, extra } = await req.json()
+  const { content, extra, testValues } = await req.json()
+
+  let copy = [...content]
+
+  // The template build happens here
+  if (testValues) {
+    for (const item of copy) {
+      let template = Handlebars.compile(item.content)
+      // execute the compiled template and print the output to the console
+      item.content = template(testValues)
+      console.log("compiled", item.content)
+    }
+  }
 
   const model = extra?.model || "gpt-3.5-turbo"
 
-  const messages = convertInputToOpenAIMessages(content)
+  const messages = convertInputToOpenAIMessages(copy)
 
   let method
 
