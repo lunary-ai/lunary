@@ -90,6 +90,8 @@ const MODEL_COSTS: ModelCost[] = [
 ]
 
 export const calcRunCost = (run) => {
+  const duration = new Date(run.ended_at) - new Date(run.created_at)
+  if (duration < 0.01 * 1000) return 0
   if (run.type !== "llm" || !run.name) return 0
 
   const modelCost = MODEL_COSTS.find((c) =>

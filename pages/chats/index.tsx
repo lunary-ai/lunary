@@ -51,8 +51,8 @@ const columns = [
   feedbackColumn(true),
 ]
 
-const parseMessageFromRun = (run) => {
-  const createMessage = (msg, role, siblingOf) => {
+function parseMessageFromRun(run) {
+  function createMessage(msg, role, siblingOf) {
     if (Array.isArray(msg)) {
       return msg
         .map((item) => createMessage(item, role, siblingOf))
@@ -80,7 +80,7 @@ const parseMessageFromRun = (run) => {
   ]
 }
 
-const ChatReplay = ({ run }) => {
+function ChatReplay({ run }) {
   const { runs, loading } = useRuns("chat", {
     match: { parent_run: run.id },
     notInfinite: true,
