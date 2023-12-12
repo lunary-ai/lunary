@@ -183,7 +183,7 @@ export default function RunInputOutput({
 
       <SmartViewer data={run.input} />
 
-      {(run.input || run.error) && (
+      {(run.output || run.error) && (
         <>
           <Group justify="space-between">
             <Text fw="bold" size="sm">

@@ -9,7 +9,12 @@ import {
   ThemeIcon,
 } from "@mantine/core"
 import { useColorScheme } from "@mantine/hooks"
-import { IconRobot, IconUser } from "@tabler/icons-react"
+import {
+  IconInfoCircle,
+  IconRobot,
+  IconTool,
+  IconUser,
+} from "@tabler/icons-react"
 import { getColorForRole } from "@/utils/colors"
 import ProtectedText from "../ProtectedText"
 import { RenderJson } from "./RenderJson"
@@ -164,21 +169,32 @@ export function ChatMessage({
   )
 }
 
+const ROLE_ICONS = {
+  ai: IconRobot,
+  assistant: IconRobot,
+  user: IconUser,
+  system: IconInfoCircle,
+  function: IconTool,
+  tool: IconTool,
+}
+
 // Used for chat replays
 export function BubbleMessage({ role, content, extra }) {
-  const isBot = ["ai", "assistant"].includes(role)
+  const alignLeft = ["ai", "assistant", "system"].includes(role)
+
+  const Icon = ROLE_ICONS[role || "assistant"]
+
+  const color = getColorForRole(role)
 
   return (
     <>
-      <Flex direction={isBot ? "row" : "row-reverse"} align="start" gap="md">
-        <ThemeIcon
-          size={36}
-          mt={6}
-          variant="light"
-          radius="xl"
-          color={isBot ? "blue" : "pink"}
-        >
-          {isBot ? <IconRobot size={24} /> : <IconUser size={24} />}
+      <Flex
+        direction={alignLeft ? "row" : "row-reverse"}
+        align="start"
+        gap="md"
+      >
+        <ThemeIcon size={36} mt={6} variant="light" radius="xl" color={color}>
+          {Icon && <Icon size={24} />}
         </ThemeIcon>
         <div>
           <Paper
