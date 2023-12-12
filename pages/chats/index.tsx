@@ -192,7 +192,7 @@ function ChatReplay({ run }) {
                     }
                   />
 
-                  {msg.role === "user" && !!siblings.length && (
+                  {msg.role === "user" && siblings?.length > 1 && (
                     <Pagination
                       gap={1}
                       mx="auto"
