@@ -28,6 +28,7 @@ import {
   IconRobot,
   IconTool,
 } from "@tabler/icons-react"
+import RunsChat from "@/components/Blocks/RunChat"
 
 const typeIcon = {
   convo: IconMessages,
@@ -38,7 +39,14 @@ const typeIcon = {
   tool: IconTool,
 }
 
-const TraceTree = ({ isFirst, parentId, runs, onSelect, firstDate }) => {
+const TraceTree = ({
+  isFirst,
+  focused,
+  parentId,
+  runs,
+  onSelect,
+  firstDate,
+}) => {
   // each run contains a child_runs array containing the ids of the runs it spawned
 
   const run = runs.find((run) => run.id === parentId)
@@ -52,6 +60,8 @@ const TraceTree = ({ isFirst, parentId, runs, onSelect, firstDate }) => {
 
   const Icon = typeIcon[run.type]
 
+  const isActive = run.id === focused
+
   return (
     <Group>
       {!isFirst && <Text>&emsp;</Text>}
@@ -63,14 +73,8 @@ const TraceTree = ({ isFirst, parentId, runs, onSelect, firstDate }) => {
         >
           {showStatus && <StatusBadge minimal status={run.status} />}
 
-          {run.name && (
-            <Code color={`var(--mantine-color-${color}-light)`}>
-              {run.name}
-            </Code>
-          )}
-
           <Badge
-            variant="outline"
+            variant={isActive ? "filled" : "outline"}
             color={color}
             pl={0}
             pr={5}
@@ -84,6 +88,12 @@ const TraceTree = ({ isFirst, parentId, runs, onSelect, firstDate }) => {
           >
             {run.type}
           </Badge>
+
+          {run.name && (
+            <Code color={`var(--mantine-color-${color}-light)`}>
+              {run.name}
+            </Code>
+          )}
 
           {run.ended_at && (
             <DurationBadge createdAt={run.created_at} endedAt={run.ended_at} />
@@ -111,6 +121,7 @@ const TraceTree = ({ isFirst, parentId, runs, onSelect, firstDate }) => {
             <TraceTree
               key={run.id}
               parentId={run.id}
+              focused={focused}
               runs={runs}
               onSelect={onSelect}
               firstDate={firstDate}
@@ -119,6 +130,19 @@ const TraceTree = ({ isFirst, parentId, runs, onSelect, firstDate }) => {
       </div>
     </Group>
   )
+}
+
+const RenderRun = ({ run, relatedRuns }) => {
+  const directChilds = relatedRuns
+    ?.filter((r) => r.parent_run === run.id)
+    .sort(
+      (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+    )
+
+  if (run.type === "chat") return <RunsChat runs={[run]} />
+  if (run.type === "thread") return <RunsChat runs={directChilds} />
+  return <RunInputOutput initialRun={run} />
 }
 
 export default function AgentRun({}) {
@@ -130,9 +154,7 @@ export default function AgentRun({}) {
   const { run } = useRun(id as string)
 
   useEffect(() => {
-    if (run) {
-      setFocused(run.id)
-    }
+    if (run) setFocused(run.id)
   }, [run])
 
   const { relatedRuns } = useRelatedRuns(id as string)
@@ -161,7 +183,7 @@ export default function AgentRun({}) {
         {capitalize(run.type)} Trace {run.name ? `(${run.name})` : ""}
       </Title>
       <Group>
-        <StatusBadge status={run.status} />
+        {run.status && <StatusBadge status={run.status} />}
         <Text>{`Started at ${new Date(run.created_at).toLocaleString()}`}</Text>
         <TokensBadge tokens={totalTokens} />
         {totalCost && (
@@ -184,6 +206,7 @@ export default function AgentRun({}) {
             {relatedRuns && (
               <TraceTree
                 isFirst
+                focused={focused}
                 onSelect={setFocused}
                 parentId={id}
                 runs={relatedRuns}
@@ -202,7 +225,7 @@ export default function AgentRun({}) {
               overflow: "auto",
             }}
           >
-            {focusedRun && <RunInputOutput initialRun={focusedRun} />}
+            <RenderRun run={focusedRun} relatedRuns={relatedRuns} />
           </Card>
         </Grid.Col>
       </Grid>

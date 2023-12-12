@@ -493,7 +493,7 @@ export function useRun(runId: string) {
   const supabaseClient = useSupabaseClient<Database>()
 
   const { data: run, isLoading } = useQuery(
-    supabaseClient.from("run").select("*").eq("id", runId).single(),
+    runId && supabaseClient.from("run").select("*").eq("id", runId).single(),
     softOptions,
   )
 

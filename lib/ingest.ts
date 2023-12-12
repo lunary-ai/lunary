@@ -144,7 +144,7 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
     extra,
   })
 
-  const { data: ingested } = await supabaseAdmin
+  await supabaseAdmin
     .from("run")
     .upsert(
       clearUndefined({
@@ -161,7 +161,7 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
 
   // Reconciliate messages with runs
   //
-  // 1 run can store 1 exchange ([user] -> [bot, tool])
+  // 1 run can store 1 exchange ([system, user] -> [bot, tool])
   //
   // if previousRun and not retry_of
   //     if this is bot message, then append to previous output's array
@@ -244,6 +244,8 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
     }
     operation = "insert"
   }
+
+  console.log({ update, operation })
 
   if (operation === "insert") {
     update.type = "chat"
