@@ -187,6 +187,7 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
     .throwOnError()
 
   const OUTPUT_TYPES = ["assistant", "tool", "bot"]
+  const INPUT_TYPES = ["user", "system"]
 
   const shared = {
     id,
@@ -210,7 +211,7 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
         sibling_of: previousRun.id,
         feedback: run.feedback || null, // reset feedback if retry
         output: OUTPUT_TYPES.includes(role) ? [coreMessage] : null,
-        input: role === "user" ? [coreMessage] : previousRun.input,
+        input: INPUT_TYPES.includes(role) ? [coreMessage] : previousRun.input,
       }
 
       operation = "insert"
@@ -220,7 +221,7 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
       update.output = [...(previousRun.output || []), coreMessage]
 
       operation = "update"
-    } else if (role === "user") {
+    } else if (INPUT_TYPES.includes(role)) {
       if (previousRun.output) {
         // if last is bot message, create new run with input array
 
@@ -238,7 +239,7 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
     // create new run with either input or output depending on role
     if (OUTPUT_TYPES.includes(role)) {
       update.output = [coreMessage]
-    } else if (role === "user") {
+    } else if (INPUT_TYPES.includes(role)) {
       update.input = [coreMessage]
     }
     operation = "insert"
