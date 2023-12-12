@@ -35,6 +35,7 @@ const registerRunEvent = async (
     tokensUsage,
     extra,
     error,
+    feedback,
   } = event
 
   let parentRunIdToUse = parentRunId
@@ -159,10 +160,12 @@ const registerRunEvent = async (
         .update({
           feedback: {
             ...((data?.feedback || {}) as any),
+            ...feedback,
             ...extra,
           },
         })
         .match({ id: runId })
+      break
 
     case "chat":
       await ingestChatEvent(event)
