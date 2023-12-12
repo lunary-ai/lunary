@@ -6,7 +6,7 @@ import { BubbleMessage } from "@/components/Blocks/SmartViewer/Message"
 import { Pagination, Stack, Text } from "@mantine/core"
 
 const OUTPUT_ROLES = ["assistant", "ai", "tool"]
-const INPUT_ROLES = ["user", "ai", "tool"]
+const INPUT_ROLES = ["user"]
 
 function parseMessageFromRun(run) {
   function extractMessages(msg, role, siblingOf) {
@@ -22,7 +22,9 @@ function parseMessageFromRun(run) {
     return {
       role: msg.role || role,
       content: typeof msg === "string" ? msg : msg.content,
-      timestamp: INPUT_ROLES.includes(role) ? run.created_at : run.ended_at,
+      timestamp: new Date(
+        INPUT_ROLES.includes(role) ? run.created_at : run.ended_at,
+      ),
       id: run.id,
       feedback: run.feedback,
       ...(siblingOf && { siblingOf }),
@@ -46,18 +48,20 @@ function RunsChat({ runs }) {
   const [selectedRetries, setSelectedRetries] = useState({})
 
   // Each chat run has input = [user message], output = [bot message]
-  const messages = useMemo(() => runs?.map(parseMessageFromRun).flat(2), [runs])
+  const messages = useMemo(
+    () =>
+      runs
+        ?.map(parseMessageFromRun)
+        .flat(2)
+        .sort((a, b) => a.timestamp - b.timestamp),
+    [runs],
+  )
 
   const getSiblingsOf = useCallback(
-    (message) => {
-      return messages
-        ?.filter(
-          (m) =>
-            [m.siblingOf, m.id].includes(message.id) && message.role === m.role,
-        )
-        .sort((a, b) => a.timestamp - b.timestamp)
+    (run) => {
+      return runs?.filter((m) => [m.sibling_of, m.id].includes(run.id))
     },
-    [messages],
+    [runs],
   )
 
   const handleRetrySelect = (messageId, retryIndex) => {
@@ -67,49 +71,57 @@ function RunsChat({ runs }) {
     }))
   }
 
+  console.log(runs)
+
   return (
     <Stack gap={0}>
-      {messages
-        ?.filter((m) => !m.siblingOf) // Show the main tree
-        .map((m, i) => {
-          const siblings = getSiblingsOf(m)
-          const selectedIndex = selectedRetries[m.id] || 0
-          const msg = siblings[selectedIndex]
-          return (
-            <>
-              <BubbleMessage
-                key={i}
-                role={msg.role}
-                content={msg.content}
-                extra={
-                  <>
-                    {!!msg.took && (
-                      <Text c="dimmed" size="xs">
-                        {msg.took}ms
-                      </Text>
-                    )}
+      {runs
+        ?.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+        .filter((run) => !run.sibling_of) // Use the main tree as reference
+        .map((run, i) => {
+          const siblings = getSiblingsOf(run)
+          const selectedIndex = selectedRetries[run.id] || 0
+          const picked = siblings[selectedIndex]
 
-                    {msg.role !== "user" && msg.feedback && (
-                      <Feedback data={msg.feedback} />
-                    )}
-                  </>
-                }
-              />
+          return messages
+            .filter((m) => m.id === picked.id)
+            .map((msg, i) => {
+              return (
+                <>
+                  <BubbleMessage
+                    key={i}
+                    role={msg.role}
+                    content={msg.content}
+                    extra={
+                      <>
+                        {!!msg.took && (
+                          <Text c="dimmed" size="xs">
+                            {msg.took}ms
+                          </Text>
+                        )}
 
-              {msg.role === "user" && siblings?.length > 1 && (
-                <Pagination
-                  gap={1}
-                  mx="auto"
-                  mb="lg"
-                  mt={-6}
-                  size="xs"
-                  value={selectedIndex + 1}
-                  total={siblings.length}
-                  onChange={(page) => handleRetrySelect(m.id, page - 1)}
-                />
-              )}
-            </>
-          )
+                        {msg.role !== "user" && msg.feedback && (
+                          <Feedback data={msg.feedback} />
+                        )}
+                      </>
+                    }
+                  />
+
+                  {msg.role === "user" && siblings?.length > 1 && (
+                    <Pagination
+                      gap={1}
+                      mx="auto"
+                      mb="lg"
+                      mt={-6}
+                      size="xs"
+                      value={selectedIndex + 1}
+                      total={siblings.length}
+                      onChange={(page) => handleRetrySelect(run.id, page - 1)}
+                    />
+                  )}
+                </>
+              )
+            })
         })}
     </Stack>
   )

@@ -187,7 +187,7 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
     .throwOnError()
 
   const OUTPUT_TYPES = ["assistant", "tool", "bot"]
-  const INPUT_TYPES = ["user", "system"]
+  const INPUT_TYPES = ["user", "system"] // system is mostly used for giving context about the user
 
   const shared = {
     id,
@@ -244,8 +244,6 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
     }
     operation = "insert"
   }
-
-  console.log({ update, operation })
 
   if (operation === "insert") {
     update.type = "chat"

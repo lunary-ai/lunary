@@ -58,6 +58,10 @@ function ChatReplay({ run }) {
 
   const { user } = useAppUser(run.user)
 
+  const sorted = runs?.sort((a, b) => {
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  })
+
   return (
     <Stack>
       <Card withBorder radius="md">
@@ -94,7 +98,7 @@ function ChatReplay({ run }) {
 
       <Title order={3}>Replay</Title>
 
-      <RunsChat runs={runs} />
+      <RunsChat runs={sorted} />
     </Stack>
   )
 }
