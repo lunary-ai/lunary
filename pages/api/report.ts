@@ -44,7 +44,7 @@ const registerRunEvent = async (
 
   let internalUserId
   // Only do on start event to save on DB calls and have correct lastSeen
-  if (typeof userId === "string" && eventName === "start") {
+  if (typeof userId === "string") {
     const { data } = await supabaseAdmin
       .from("app_user")
       .upsert(
