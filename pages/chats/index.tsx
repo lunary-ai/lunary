@@ -129,9 +129,10 @@ export default function Chats() {
         .from("run")
         .select("*")
         .eq("app", appId)
-        .then((run) => {
-          if (run) {
-            setSelected(run)
+        .eq("id", router.query.chat)
+        .then((res) => {
+          if (res?.data[0]) {
+            setSelected(res.data[0])
           }
         })
     }
