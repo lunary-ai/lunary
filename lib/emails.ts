@@ -1,13 +1,13 @@
-const extractFirstName = (name: string) => {
+function extractFirstName(name: string) {
   if (!name) return "there"
   return name.split(" ")[0]
 }
 
-export const CONFIRM_EMAIL = (
+export function CONFIRM_EMAIL(
   email: string,
   name: string,
   confirmLink: string,
-) => {
+) {
   return {
     subject: `confirm your email`,
     to: [email],
@@ -28,7 +28,23 @@ Thanks
   }
 }
 
-export const WELCOME_EMAIL = (email: string, name: string, appId: string) => {
+export function RESET_PASSWORD(email: string, confirmLink: string) {
+  return {
+    subject: `Reset your password`,
+    to: [email],
+    from: process.env.GENERIC_SENDER,
+    text: `Hi, 
+
+Please click on the link below to reset your password:
+${confirmLink}
+
+You can reply to this email if you have any question.
+
+- The Lunary team`,
+  }
+}
+
+export function WELCOME_EMAIL(email: string, name: string, appId: string) {
   return {
     subject: `welcome to Lunary`,
     to: [email],
@@ -53,7 +69,7 @@ Vince`,
   }
 }
 
-export const UPGRADE_EMAIL = (email: string, name: string) => {
+export function UPGRADE_EMAIL(email: string, name: string) {
   return {
     subject: `welcome to lunary pro`,
     to: [email],
@@ -70,7 +86,7 @@ The Lunary team`,
   }
 }
 
-export const CANCELED_EMAIL = (email: string, name: string) => {
+export function CANCELED_EMAIL(email: string, name: string) {
   return {
     subject: `sorry to see you go`,
     to: [email],
