@@ -1,6 +1,6 @@
 import { NextSeo } from "next-seo"
 import Router, { useRouter } from "next/router"
-import { useEffect, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 
 import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 import DataTable from "@/components/Blocks/DataTable"
@@ -40,6 +40,9 @@ import { IconMessages, IconNeedleThread } from "@tabler/icons-react"
 import FacetedFilter from "../../components/Blocks/FacetedFilter"
 import analytics from "../../utils/analytics"
 import RunsChat from "@/components/Blocks/RunChat"
+import { useSupabaseClient } from "@supabase/auth-helpers-react"
+import { Database } from "../../utils/supaTypes"
+import { AppContext } from "../../utils/context"
 
 const columns = [
   timeColumn("created_at", "Started at"),
@@ -104,6 +107,9 @@ function ChatReplay({ run }) {
 }
 
 export default function Chats() {
+  const supabaseClient = useSupabaseClient<Database>()
+  const { appId } = useContext(AppContext)
+
   const router = useRouter()
   const [selectedItems, setSelectedItems] = useState([])
   const [selected, setSelected] = useState()
@@ -118,11 +124,18 @@ export default function Chats() {
   )
 
   useEffect(() => {
-    if (loading === false) {
-      const defaultSelectedRun = runs.find(({ id }) => id === router.query.chat)
-      setSelected(defaultSelectedRun)
+    if (router.query.chat) {
+      supabaseClient
+        .from("run")
+        .select("*")
+        .eq("app", appId)
+        .then((run) => {
+          if (run) {
+            setSelected(run)
+          }
+        })
     }
-  }, [loading])
+  }, [router.query.chat, supabaseClient, appId])
 
   const { allFeedbacks } = useAllFeedbacks()
 
