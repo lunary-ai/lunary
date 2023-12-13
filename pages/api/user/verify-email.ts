@@ -1,8 +1,8 @@
 import { edgeWrapper } from "@/lib/api/edgeHelpers"
 
-import { supabaseAdmin } from "@/lib/supabaseClient"
-import { sendEmail } from "@/lib/sendEmail"
 import { WELCOME_EMAIL } from "@/lib/emails"
+import { sendEmail } from "@/lib/sendEmail"
+import { supabaseAdmin } from "@/lib/supabaseClient"
 
 import { jwtVerify } from "jose"
 
@@ -21,7 +21,6 @@ export default edgeWrapper(async function handler(req) {
 
   const token = params.get("token")
 
-  // Verify token
   const {
     payload: { email },
   }: {
@@ -29,7 +28,6 @@ export default edgeWrapper(async function handler(req) {
   } = await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET))
 
   // check if email is already verified
-
   const { data: { verified } = {} } = await supabaseAdmin
     .from("profile")
     .select("verified")
@@ -44,14 +42,13 @@ export default edgeWrapper(async function handler(req) {
   const {
     data: { org_id, name },
   } = await supabaseAdmin
-    .from("profile") // Assuming 'profiles' is your user table
+    .from("profile")
     .update({ verified: true })
     .eq("email", email)
     .select()
     .single()
     .throwOnError()
 
-  // get the user's first app
   const {
     data: { id },
   } = await supabaseAdmin
@@ -63,6 +60,5 @@ export default edgeWrapper(async function handler(req) {
 
   await sendEmail(WELCOME_EMAIL(email, name, id))
 
-  // redirect to app
   return response
 })

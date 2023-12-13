@@ -31,6 +31,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     "/magic-login",
     "/request-password-reset",
     "/update-password",
+    "/reset-password",
   ].find((path) => router.pathname.startsWith(path))
 
   const { profile, loading, error } = useProfile()
