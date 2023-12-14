@@ -1,25 +1,12 @@
 import { edgeWrapper } from "@/lib/api/edgeHelpers"
 
-import { sendEmail } from "@/lib/sendEmail"
-import { CONFIRM_EMAIL } from "@/lib/emails"
 import { jsonResponse } from "@/lib/api/jsonResponse"
-
-import { SignJWT } from "jose"
+import { CONFIRM_EMAIL } from "@/lib/emails"
+import { sendEmail } from "@/lib/sendEmail"
+import { sign } from "@/utils/auth"
 
 export const runtime = "edge"
 export const dynamic = "force-dynamic"
-
-function sign(payload, secret: string): Promise<string> {
-  const iat = Math.floor(Date.now() / 1000)
-  const exp = iat + 60 * 60 // one hour
-
-  return new SignJWT({ ...payload })
-    .setProtectedHeader({ alg: "HS256", typ: "JWT" })
-    .setExpirationTime(exp)
-    .setIssuedAt(iat)
-    .setNotBefore(iat)
-    .sign(new TextEncoder().encode(secret))
-}
 
 export default edgeWrapper(async function handler(req) {
   // get email from body
