@@ -1,11 +1,10 @@
 import { NextSeo } from "next-seo"
 import Router, { useRouter } from "next/router"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 
 import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 import DataTable from "@/components/Blocks/DataTable"
 import Feedback from "@/components/Blocks/Feedback"
-import { BubbleMessage } from "@/components/Blocks/SmartViewer/Message"
 import Empty from "@/components/Layout/Empty"
 
 import {
@@ -32,7 +31,6 @@ import {
   Flex,
   Group,
   Loader,
-  Pagination,
   Stack,
   Text,
   Title,
@@ -41,86 +39,31 @@ import {
 import { IconMessages, IconNeedleThread } from "@tabler/icons-react"
 import FacetedFilter from "../../components/Blocks/FacetedFilter"
 import analytics from "../../utils/analytics"
+import RunsChat from "@/components/Blocks/RunChat"
+import { useSupabaseClient } from "@supabase/auth-helpers-react"
+import { Database } from "../../utils/supaTypes"
+import { AppContext } from "../../utils/context"
 
 const columns = [
   timeColumn("created_at", "Started at"),
   durationColumn("full"),
   userColumn(),
-  inputColumn("Opening Message"),
+  inputColumn("Last Message"),
   tagsColumn(),
   feedbackColumn(true),
 ]
 
-const parseMessageFromRun = (run) => {
-  const createMessage = (msg, role, siblingOf) => {
-    if (Array.isArray(msg)) {
-      return msg.map((item) => createMessage(item, role, siblingOf))
-    }
-
-    return {
-      role,
-      content: typeof msg === "string" ? msg : msg.content,
-      timestamp: role === "user" ? run.created_at : run.ended_at,
-      id: run.id,
-      feedback: run.feedback,
-      ...(siblingOf && { siblingOf }),
-      ...(role === "assistant" && {
-        took:
-          new Date(run.ended_at).getTime() - new Date(run.created_at).getTime(),
-      }),
-    }
-  }
-
-  return [
-    ...createMessage(run.input, "user", run.sibling_of),
-    ...createMessage(run.output, "assistant", run.sibling_of),
-  ]
-    .flat()
-    .filter((message) => message.content !== undefined)
-}
-
-const ChatReplay = ({ run }) => {
+function ChatReplay({ run }) {
   const { runs, loading } = useRuns("chat", {
     match: { parent_run: run.id },
     notInfinite: true,
   })
 
-  const [selectedRetries, setSelectedRetries] = useState({})
-
   const { user } = useAppUser(run.user)
 
-  // Each chat run has input = user message, output = bot message
-  const messages = useMemo(
-    () =>
-      runs
-        ?.filter((run) => run.type === "chat")
-        .sort(
-          (a, b) =>
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-        )
-        .map(parseMessageFromRun)
-        .flat(2),
-    [runs],
-  )
-
-  const getSiblingsOf = useCallback(
-    (message) => {
-      return messages
-        ?.filter(
-          (m) =>
-            [m.siblingOf, m.id].includes(message.id) && message.role === m.role,
-        )
-        .sort((a, b) => a.timestamp - b.timestamp)
-    },
-    [messages],
-  )
-
-  const handleRetrySelect = (messageId, retryIndex) => {
-    setSelectedRetries((prevRetries) => ({
-      ...prevRetries,
-      [messageId]: retryIndex,
-    }))
-  }
+  const sorted = runs?.sort((a, b) => {
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  })
 
   return (
     <Stack>
@@ -144,10 +87,6 @@ const ChatReplay = ({ run }) => {
             <Text>Last message</Text>
             <Text>{formatDateTime(run.ended_at)}</Text>
           </Group>
-          <Group justify="space-between">
-            <Text>Messages</Text>
-            <Text>{messages?.length}</Text>
-          </Group>
         </Stack>
       </Card>
       <Button
@@ -162,57 +101,15 @@ const ChatReplay = ({ run }) => {
 
       <Title order={3}>Replay</Title>
 
-      {messages && (
-        <Stack gap={0}>
-          {messages
-            ?.filter((m) => !m.siblingOf) // Show the main tree
-            .map((m, i) => {
-              const siblings = getSiblingsOf(m)
-              const selectedIndex = selectedRetries[m.id] || 0
-              const msg = siblings[selectedIndex]
-              return (
-                <>
-                  <BubbleMessage
-                    key={i}
-                    role={msg.role}
-                    content={msg.content}
-                    extra={
-                      <>
-                        {!!msg.took && (
-                          <Text c="dimmed" size="xs">
-                            {msg.took}ms
-                          </Text>
-                        )}
-
-                        {msg.role !== "user" && msg.feedback && (
-                          <Feedback data={msg.feedback} />
-                        )}
-                      </>
-                    }
-                  />
-
-                  {msg.role === "user" && !!siblings.length && (
-                    <Pagination
-                      gap={1}
-                      mx="auto"
-                      mb="lg"
-                      mt={-6}
-                      size="xs"
-                      value={selectedIndex + 1}
-                      total={siblings.length}
-                      onChange={(page) => handleRetrySelect(m.id, page - 1)}
-                    />
-                  )}
-                </>
-              )
-            })}
-        </Stack>
-      )}
+      <RunsChat runs={sorted} />
     </Stack>
   )
 }
 
 export default function Chats() {
+  const supabaseClient = useSupabaseClient<Database>()
+  const { appId } = useContext(AppContext)
+
   const router = useRouter()
   const [selectedItems, setSelectedItems] = useState([])
   const [selected, setSelected] = useState()
@@ -227,11 +124,19 @@ export default function Chats() {
   )
 
   useEffect(() => {
-    if (loading === false) {
-      const defaultSelectedRun = runs.find(({ id }) => id === router.query.chat)
-      setSelected(defaultSelectedRun)
+    if (router.query.chat) {
+      supabaseClient
+        .from("run")
+        .select("*")
+        .eq("app", appId)
+        .eq("id", router.query.chat)
+        .then((res) => {
+          if (res?.data[0]) {
+            setSelected(res.data[0])
+          }
+        })
     }
-  }, [loading])
+  }, [router.query.chat, supabaseClient, appId])
 
   const { allFeedbacks } = useAllFeedbacks()
 
@@ -263,7 +168,7 @@ export default function Chats() {
         keepMounted
         size="lg"
         position="right"
-        title={<Title order={3}>Chat details</Title>}
+        title={<Title order={3}>Thread details</Title>}
         onClose={() => {
           router.replace(`/chats`)
           setSelected(null)

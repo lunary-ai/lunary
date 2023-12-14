@@ -35,6 +35,7 @@ const registerRunEvent = async (
     tokensUsage,
     extra,
     error,
+    feedback,
   } = event
 
   let parentRunIdToUse = parentRunId
@@ -44,7 +45,7 @@ const registerRunEvent = async (
 
   let internalUserId
   // Only do on start event to save on DB calls and have correct lastSeen
-  if (typeof userId === "string" && eventName === "start") {
+  if (typeof userId === "string") {
     const { data } = await supabaseAdmin
       .from("app_user")
       .upsert(
@@ -159,10 +160,12 @@ const registerRunEvent = async (
         .update({
           feedback: {
             ...((data?.feedback || {}) as any),
+            ...feedback,
             ...extra,
           },
         })
         .match({ id: runId })
+      break
 
     case "chat":
       await ingestChatEvent(event)
