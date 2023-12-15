@@ -12,6 +12,7 @@ import {
   Select,
   Stack,
   Text,
+  TextInput,
   Textarea,
   Tooltip,
 } from "@mantine/core"
@@ -21,6 +22,7 @@ import {
   IconBolt,
   IconCheck,
   IconDeviceFloppy,
+  IconDevicesShare,
   IconInfoCircle,
 } from "@tabler/icons-react"
 import { useRouter } from "next/router"
@@ -70,6 +72,7 @@ function convertOpenAImessage(msg) {
     role: msg.role.replace("assistant", "ai"),
     content: msg.content,
     functionCall: msg.function_call,
+    toolsCall: msg.tools_call,
   }
 }
 const ParamItem = ({ name, value }) => (
@@ -94,13 +97,18 @@ function Playground() {
   const router = useRouter()
   const supabaseClient = useSupabaseClient()
   const [template, setTemplate] = useLocalStorage({
-    key: "p-template",
+    key: "template",
     defaultValue: defaultTemplate,
+  })
+
+  const [templateVersion, setTemplateVersion] = useState({
+    key: "tp-version",
+    // defaultValue:
   })
 
   const [hasChanges, setHasChanges] = useState(false)
 
-  const { insert, mutate } = useTemplates()
+  const { insertVersion, mutate, updateVersion } = useTemplates()
 
   const [streaming, setStreaming] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -134,13 +142,16 @@ function Playground() {
       const fetchTemplate = async () => {
         setLoading(true)
         const { data } = await supabaseClient
-          .from("template")
-          .select("*")
+          .from("template_version")
+          .select("*,template:template_id(id,slug,mode,name)")
           .eq("id", id)
           .single()
           .throwOnError()
 
-        if (data) setTemplate(data)
+        if (data) {
+          setTemplateVersion(data)
+          setTemplate(data.template)
+        }
 
         setLoading(false)
       }
@@ -158,7 +169,9 @@ function Playground() {
 
         if (!Array.isArray(data.input)) data.input = [data.input]
 
-        if (data) setTemplate({ ...template, content: data.input })
+        if (data) {
+          setTemplateVersion({ ...templateVersion, content: data.input })
+        }
 
         setLoading(false)
         // remove the id from t
@@ -170,22 +183,54 @@ function Playground() {
     }
   }, [])
 
+  // Save as draft without deploying
   const saveTemplate = async () => {
-    const [newVersion] = await insert({
-      name: template?.name || "New template",
-      mode: template?.mode || "openai",
-      version: template?.lastVersion + 1 || 1,
-      slug: template?.slug || "new-template",
-      app_id: app.id,
-      org_id: profile.org.id,
-      test_values: template?.test_values,
-      content: template.content,
-      extra: template.extra,
-    })
+    if (templateVersion.is_draft) {
+      console.log(`updating version`)
+      await updateVersion(templateVersion)
+    } else {
+      console.log(`inserting version`)
+      const newVersion = await insertVersion([
+        {
+          template_id: template?.id,
+          test_values: templateVersion.test_values,
+          content: templateVersion.content,
+          extra: templateVersion.extra,
+          is_draft: true,
+        },
+      ])
 
-    newVersion.lastVersion = newVersion.version
+      console.log(`newVersion`, newVersion)
 
-    switchTemplate(newVersion)
+      if (newVersion) {
+        setTemplateVersion(newVersion[0])
+      }
+    }
+
+    mutate()
+  }
+
+  // Deploy the template
+  const commitTemplate = async () => {
+    if (templateVersion.is_draft) {
+      await updateVersion({
+        id: templateVersion.id,
+        is_draft: false,
+      })
+    } else {
+      const newVersion = await insertVersion([
+        {
+          template_id: template?.id,
+          test_values: templateVersion.test_values,
+          content: templateVersion.content,
+          extra: templateVersion.extra,
+        },
+      ])
+
+      if (newVersion) {
+        setTemplateVersion(newVersion[0])
+      }
+    }
 
     notifications.show({
       title: "Template deployed",
@@ -202,7 +247,7 @@ function Playground() {
 
     analytics.track("RunPlayground", {
       model,
-      appId: app.id,
+      appId: app?.id,
     })
 
     if (profile.org?.play_allowance <= 0) {
@@ -215,10 +260,10 @@ function Playground() {
       const fetchResponse = await fetch("/api/generation/playground", {
         method: "POST",
         body: JSON.stringify({
-          content: template.content,
-          extra: template.extra,
-          testValues: template.test_values,
-          appId: app.id,
+          content: templateVersion.content,
+          extra: templateVersion.extra,
+          testValues: templateVersion.test_values,
+          appId: app?.id,
         }),
       })
 
@@ -272,17 +317,17 @@ function Playground() {
     setStreaming(false)
   }
 
-  const switchTemplate = (t) => {
-    setTemplate(t)
-    router.push(`/prompts/${t.id}`)
+  const switchTemplateVersion = (v) => {
+    setTemplateVersion(v)
+    router.push(`/prompts/${v.id}`)
   }
 
   const extraHandler = (key) => ({
-    value: template?.extra?.[key],
+    value: templateVersion?.extra?.[key],
     onChange: (value) => {
       setHasChanges(true)
-      setTemplate({
-        ...template,
+      setTemplateVersion({
+        ...templateVersion,
         extra: { ...template.extra, [key]: value },
       })
     },
@@ -292,9 +337,9 @@ function Playground() {
   const variables = useMemo(() => {
     const variables = {}
     const variableRegex = /{{([^}]+)}}/g
-    let contentArray = Array.isArray(template?.content)
-      ? template?.content
-      : [template?.content]
+    let contentArray = Array.isArray(templateVersion?.content)
+      ? templateVersion?.content
+      : [templateVersion?.content]
 
     contentArray.forEach((message) => {
       let match
@@ -305,7 +350,7 @@ function Playground() {
     })
 
     return variables
-  }, [template])
+  }, [templateVersion])
 
   return (
     <Grid
@@ -323,7 +368,9 @@ function Playground() {
       >
         <TemplateList
           activeTemplate={template}
-          switchTemplate={switchTemplate}
+          switchTemplate={setTemplate}
+          activeVersion={templateVersion}
+          switchTemplateVersion={switchTemplateVersion}
         />
       </Grid.Col>
       <Grid.Col
@@ -333,8 +380,8 @@ function Playground() {
       >
         <TemplateInputArea
           loading={loading}
-          template={template}
-          setTemplate={setTemplate}
+          template={templateVersion}
+          setTemplate={setTemplateVersion}
           saveTemplate={saveTemplate}
           setHasChanges={setHasChanges}
           output={output}
@@ -345,17 +392,28 @@ function Playground() {
         <Stack style={{ zIndex: 0 }}>
           <Group>
             <Button
-              leftSection={<IconDeviceFloppy size={18} />}
+              leftSection={<IconDevicesShare size={18} />}
               size="sm"
               loading={loading}
-              disabled={loading || (template && !hasChanges)}
+              disabled={loading || (template?.id && !hasChanges)}
               variant="outline"
               rightSection={
                 <HotkeysInfo hot="S" size="sm" style={{ marginTop: -4 }} />
               }
               onClick={saveTemplate}
             >
-              {template ? "Deploy changes" : "Save as template"}
+              Save changes
+            </Button>
+
+            <Button
+              leftSection={<IconDeviceFloppy size={18} />}
+              size="sm"
+              loading={loading}
+              disabled={loading || (template?.id && !hasChanges)}
+              variant="filled"
+              onClick={commitTemplate}
+            >
+              Deploy
             </Button>
             {/* <Button
               leftSection={<IconHelp size={18} />}
@@ -365,6 +423,27 @@ function Playground() {
               How to use
             </Button> */}
           </Group>
+
+          <ParamItem
+            name="Slug"
+            value={
+              <TextInput
+                size="xs"
+                w={220}
+                radius="sm"
+                pattern="^[a-z0-9]+(?:-[a-z0-9]+)*$ "
+                placeholder="Template name"
+                value={template?.slug}
+                onChange={(e) => {
+                  setHasChanges(true)
+                  setTemplate({
+                    ...template,
+                    slug: e.currentTarget.value,
+                  })
+                }}
+              />
+            }
+          />
 
           <ParamItem
             name="Template Mode"
@@ -386,23 +465,23 @@ function Playground() {
                   },
                 ]}
                 value={template?.mode}
-                onChange={(value) => {
-                  const newTemplate = { ...template, mode: value }
-                  if (template?.mode === "text" && value !== "text") {
-                    // Switching from text to custom/openai
-                    newTemplate.content = [
-                      { role: "user", content: template.content },
-                    ]
-                  } else if (template?.mode !== "text" && value === "text") {
-                    // Switching from custom/openai to text
-                    const firstUserMessage = template.content[0]
+                // onChange={(value) => {
+                //   const newTemplate = { ...template, mode: value }
+                //   if (template?.mode === "text" && value !== "text") {
+                //     // Switching from text to custom/openai
+                //     newTemplate.content = [
+                //       { role: "user", content: template.content },
+                //     ]
+                //   } else if (template?.mode !== "text" && value === "text") {
+                //     // Switching from custom/openai to text
+                //     const firstUserMessage = template.content[0]
 
-                    console.log(`firstUserMessage`, firstUserMessage)
+                //     console.log(`firstUserMessage`, firstUserMessage)
 
-                    newTemplate.content = firstUserMessage?.content || ""
-                  }
-                  setTemplate(newTemplate)
-                }}
+                //     newTemplate.content = firstUserMessage?.content || ""
+                //   }
+                //   setTemplate(newTemplate)
+                // }}
               />
             }
           />
@@ -547,12 +626,12 @@ function Playground() {
                       radius="sm"
                       rows={1}
                       placeholder="Test Value"
-                      value={template?.test_values?.[variable]}
+                      value={templateVersion?.test_values?.[variable]}
                       onChange={(e) => {
-                        setTemplate({
-                          ...template,
+                        setTemplateVersion({
+                          ...templateVersion,
                           test_values: {
-                            ...template.test_values,
+                            ...templateVersion.test_values,
                             [variable]: e.currentTarget.value,
                           },
                         })

@@ -221,7 +221,7 @@ export function useTemplates() {
   const query = supabaseClient
     .from("template")
     .select(
-      "id,name,slug,app_id,created_at,org_id,content,extra,version,group,test_values,mode",
+      "id,name,slug,app_id,created_at,org_id,group,mode,versions:template_version(id,content,extra,created_at,version,is_draft)",
     )
     .eq("app_id", appId)
     .order("created_at", {
@@ -232,19 +232,41 @@ export function useTemplates() {
   const { trigger: insert } = useInsertMutation(
     supabaseClient.from("template"),
     ["id"],
-    "id,name,slug,app_id,org_id,content,extra,version,group,test_values,mode",
+    "id,name,slug,app_id,org_id,group,mode",
+  )
+
+  // insertVersion mutation
+  const { trigger: insertVersion } = useInsertMutation(
+    supabaseClient.from("template_version"),
+    ["id"],
+    "id,template_id,content,extra,version,is_draft",
   )
 
   // update mutation
   const { trigger: update } = useUpdateMutation(
     supabaseClient.from("template"),
     ["id"],
-    "name,slug,group",
+    "name,slug,group,mode",
+  )
+
+  // update version
+  const { trigger: updateVersion } = useUpdateMutation(
+    supabaseClient.from("template_version"),
+    ["id"],
+    "content,extra,is_draft",
   )
 
   const { data: templates, isLoading, mutate } = useQuery(query)
 
-  return { templates, insert, update, mutate, loading: isLoading }
+  return {
+    templates,
+    insert,
+    insertVersion,
+    update,
+    updateVersion,
+    mutate,
+    loading: isLoading,
+  }
 }
 
 export function useUsers() {

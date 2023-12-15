@@ -21,17 +21,25 @@ export default edgeWrapper(async function handler(req: Request) {
 
   const { data } = await supabaseAdmin
     .from("template")
-    .select("id,content,extra,slug,version,mode")
+    .select(
+      "id,slug,mode,versions:template_version(id,content,extra,created_at,version,is_draft)",
+    )
     .eq("app_id", app_id)
     .eq("slug", slug)
-    .order("version", { ascending: false })
+    .neq("versions.is_draft", true)
     .limit(1)
     .maybeSingle()
     .throwOnError()
+
+  console.log({ data })
+
+  const latestVersion = data?.versions?.[0]
+
+  console.log({ latestVersion })
 
   if (!data) {
     return jsonResponse(404, { error: "Not found" })
   }
 
-  return jsonResponse(200, data)
+  return jsonResponse(200, latestVersion)
 })
