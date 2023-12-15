@@ -2,25 +2,24 @@
 
 # 📈 lunary
 
-**Open-source monitoring & observability for AI apps and agents**
+**Open-source observability & prompt platform for AI developers**
 
 [website](https://lunary.ai) - [docs](https://lunary.ai/docs) - [self host](https://lunary.ai/docs/self-host)
 
-[![npm version](https://badge.fury.io/js/lunary.svg)](https://badge.fury.io/js/lunary) ![Discord](https://img.shields.io/badge/Discord-Join%20Chat-violet?labelColor=purple&style=flat&logo=discord&logoColor=white) ![GitHub last commit (by committer)](https://img.shields.io/github/last-commit/lunary-ai/lunary) ![GitHub commit activity (branch)](https://img.shields.io/github/commit-activity/w/lunary-ai/lunary)
+[![npm version](https://badge.fury.io/js/lunary.svg)](https://badge.fury.io/js/lunary) ![PyPI - Version](https://img.shields.io/pypi/v/llmonitor) ![GitHub last commit (by committer)](https://img.shields.io/github/last-commit/lunary-ai/lunary) ![GitHub commit activity (branch)](https://img.shields.io/github/commit-activity/w/lunary-ai/lunary)
 
 </div>
 
 ## Features
 
-Lunary helps AI devs monitor their apps in production, with features such as:
+Lunary helps AI devs take their apps in production, with features such as:
 
-- 💵 Cost, token & latency analytics
-- 🔍 Log & edit prompts
-- 🐛 Trace agents/chains to debug easily
-- 👪 Track users
-- 🏷️ Label and export fine-tuning datasets
-- 🖲️ Collect feedback from users
-- 🧪 Unit tests & prompt evaluations (soon)
+- 💵 Analytics (cost, token, latency, ..)
+- 🔍 Monitoring (logs, traces, user tracking, ..)
+- ⛩️ Prompt Templates (versioning, team collaboration, ..)
+- 🏷️ Creat fine-tuning datasets
+- 🖲️ Chat & feedback tracking
+- 🧪 Evaluations
 
 It also designed to be:
 
@@ -63,7 +62,7 @@ With the hosted version:
 
 ## 🙋 Support
 
-Need help or have questions? Chat with us on [Discord](https://discord.gg/8PafSG58kK) or email one of the founders: [vince [at] lunary.ai](mailto:vince@lunary.ai). We're here to support you every step of the way.
+Need help or have questions? Chat with us on [the website](https://lunary.ai) or email one of the founders: [vince [at] lunary.ai](mailto:vince@lunary.ai). We're here to support you every step of the way.
 
 ## 👨‍👩‍👧 Team
 
