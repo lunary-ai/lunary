@@ -360,17 +360,6 @@ function SignupPage() {
 
                 <Button
                   variant="outline"
-                  color="violet"
-                  target="_blank"
-                  component="a"
-                  href="https://discord.gg/8PafSG58kK"
-                  rightSection={<IconBrandDiscord size={18} />}
-                >
-                  Discord
-                </Button>
-
-                <Button
-                  variant="outline"
                   color="red.8"
                   target="_blank"
                   component="a"
