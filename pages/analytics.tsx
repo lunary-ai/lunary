@@ -28,6 +28,7 @@ import Empty from "@/components/Layout/Empty"
 import { IconChartAreaLine } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import ErrorBoundary from "@/components/Blocks/ErrorBoundary"
+import { useLocalStorage } from "@mantine/hooks"
 
 const calculateDailyCost = (usage) => {
   // calculate using calcRunCost, reduce by model, and filter by type llm
@@ -51,7 +52,11 @@ const calculateDailyCost = (usage) => {
 }
 
 export default function Analytics() {
-  const [range, setRange] = useState(7)
+  const [range, setRange] = useLocalStorage({
+    key: "dateRange-analytics",
+    defaultValue: 7,
+  })
+
   const { app } = useCurrentApp()
 
   const { profile } = useProfile()
