@@ -29,7 +29,9 @@ import analytics from "../../utils/analytics"
 import { openUpgrade } from "@/components/Layout/UpgradeModal"
 import HotkeysInfo from "@/components/Blocks/HotkeysInfo"
 import TemplateInputArea from "@/components/Blocks/Prompts/TemplateInputArea"
-import TemplateList from "@/components/Blocks/Prompts/TemplateMenu"
+import TemplateList, {
+  defaultTemplate,
+} from "@/components/Blocks/Prompts/TemplateMenu"
 import { notifications } from "@mantine/notifications"
 
 const availableModels = [
@@ -80,23 +82,6 @@ const ParamItem = ({ name, value }) => (
     )}
   </Group>
 )
-
-const defaultTemplate = {
-  content: [
-    { content: "You are an helpful assistant.", role: "system" },
-    { content: "Hi!", role: "user" },
-  ],
-  mode: "openai",
-  extra: {
-    model: "gpt-4-1106-preview",
-    temperature: 1.0,
-    max_tokens: 1000,
-    frequency_penalty: 0,
-    presence_penalty: 0,
-    top_p: 1,
-  },
-  test_values: {},
-}
 
 // const FEATURE_LIST = [
 //   "Edit captured requests live",
