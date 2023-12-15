@@ -14,6 +14,23 @@ import { generateSlug } from "random-word-slugs"
 import { formatDistanceToNow } from "date-fns"
 import Router from "next/router"
 
+export const defaultTemplate = {
+  content: [
+    { content: "You are an helpful assistant.", role: "system" },
+    { content: "Hi!", role: "user" },
+  ],
+  mode: "openai",
+  extra: {
+    model: "gpt-4-1106-preview",
+    temperature: 1.0,
+    max_tokens: 1000,
+    frequency_penalty: 0,
+    presence_penalty: 0,
+    top_p: 1,
+  },
+  test_values: {},
+}
+
 const TemplateList = ({ activeTemplate, switchTemplate }) => {
   const { app } = useCurrentApp()
   const { profile } = useProfile()
