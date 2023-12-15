@@ -36,10 +36,12 @@ export default function FacetedFilter({
   const prevAppIdRef = useRef<string>(null)
 
   useEffect(() => {
-    if (prevAppIdRef.current !== app.id) {
-      setSelectedItems([])
+    if (app?.id) {
+      if (prevAppIdRef.current !== app.id) {
+        setSelectedItems([])
+      }
+      prevAppIdRef.current = app.id
     }
-    prevAppIdRef.current = app.id
   }, [app, prevAppIdRef, setSelectedItems])
 
   const combobox = useCombobox({
