@@ -58,7 +58,8 @@ const TemplateInputArea: React.FC<TemplateInputAreaProps> = ({
           <Text fw="bold" size="sm">
             Input
           </Text>
-          {Array.isArray(template?.content) &&
+          {typeof template?.content !== "undefined" &&
+            Array.isArray(template?.content) &&
             template?.content?.map((message, i) => (
               <Box pos="relative" key={i}>
                 <ChatMessage
@@ -66,7 +67,9 @@ const TemplateInputArea: React.FC<TemplateInputAreaProps> = ({
                   key={i}
                   editable={true}
                   onChange={(newMessage) => {
-                    const newContent = [...template.content]
+                    const newContent = template?.content
+                      ? [...template?.content]
+                      : []
                     newContent[i] = newMessage
                     setTemplate({ ...template, content: newContent })
                     setHasChanges(true)
@@ -80,7 +83,7 @@ const TemplateInputArea: React.FC<TemplateInputAreaProps> = ({
                   color="red"
                   variant="transparent"
                   onClick={() => {
-                    const newContent = [...template.content]
+                    const newContent = [...template?.content]
                     newContent.splice(i, 1)
                     setTemplate({ ...template, content: newContent })
                     setHasChanges(true)
@@ -99,7 +102,7 @@ const TemplateInputArea: React.FC<TemplateInputAreaProps> = ({
             onClick={() => {
               const newContent = [
                 ...template.content,
-                { text: " ", role: "user" },
+                { content: " ", role: "user" },
               ]
               setTemplate({ ...template, content: newContent })
             }}

@@ -24,6 +24,7 @@ const registerRunEvent = async (
     type,
     app,
     userId,
+    templateId,
     userProps,
     event: eventName,
     runId,
@@ -117,6 +118,7 @@ const registerRunEvent = async (
         name,
         status: "started",
         params: extra,
+        template_version_id: templateId,
         parent_run: parentRunIdToUse,
         input,
       })
