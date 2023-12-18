@@ -11,14 +11,14 @@ import {
 
 import { useForm } from "@mantine/form"
 import { useSessionContext, useUser } from "@supabase/auth-helpers-react"
-import { IconAnalyze, IconAt, IconCheck } from "@tabler/icons-react"
+import { IconAnalyze, IconAt } from "@tabler/icons-react"
 
+import errorHandler from "@/utils/errorHandler"
 import Router from "next/router"
 import { useEffect, useState } from "react"
-import errorHandler from "@/utils/errorHandler"
+
 import analytics from "@/utils/analytics"
 import { NextSeo } from "next-seo"
-import { notifications } from "@mantine/notifications"
 
 function LoginPage() {
   const [loading, setLoading] = useState(false)
