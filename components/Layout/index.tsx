@@ -32,6 +32,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     "/request-password-reset",
     "/update-password",
     "/reset-password",
+    "/maintenance",
   ].find((path) => router.pathname.startsWith(path))
 
   const { profile, loading, error } = useProfile()
@@ -49,6 +50,13 @@ export default function Layout({ children }: { children: ReactNode }) {
   const colorScheme = useColorScheme()
 
   useEffect(() => {
+    if (
+      process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "on" &&
+      router.pathname !== "/maintenance"
+    ) {
+      Router.push("/maintenance")
+    }
+
     if (isAuthPage || isPublicPage || session || isLoading) return
 
     if (!profile && !loading && error) {
@@ -80,6 +88,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   }
 
   if (!session && !isAuthPage && !isPublicPage) return null
+
   return (
     <>
       <Notifications position="top-right" />
