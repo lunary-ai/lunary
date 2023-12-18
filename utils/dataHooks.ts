@@ -303,6 +303,7 @@ export function useFilteredLLMCalls(
       .select("*")
       .eq("app", appId)
       .eq("type", "llm")
+      .order("created_at", { ascending: false })
   } else {
     query = supabaseClient.rpc("get_runs", {
       app_id: appId,
