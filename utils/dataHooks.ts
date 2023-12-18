@@ -143,19 +143,16 @@ export function useCurrentApp() {
   const { appId, setAppId } = useContext(AppContext)
   const supabaseClient = useSupabaseClient<Database>()
 
-  const { count } = useQuery(
-    supabaseClient
-      .from("run")
-      .select("id", { count: "exact", head: true })
-      .eq("app", appId)
-      .limit(1),
+  // TODO: should be optimized
+  const { data } = useQuery(
+    supabaseClient.from("run").select("id").eq("app", appId).limit(1),
   )
 
   const { apps, loading } = useApps()
 
   const app = apps?.find((a) => a.id === appId)
 
-  const activated = !!count
+  const activated = data?.length > 0
 
   const appWithActivated = app ? { ...app, activated } : null
 
@@ -285,14 +282,33 @@ export function useFilteredLLMCalls(
   const supabaseClient = useSupabaseClient()
   const { appId } = useContext(AppContext)
 
-  const query = supabaseClient.rpc("get_runs", {
-    app_id: appId,
-    search_pattern: search,
-    model_names: modelNames,
-    tags_param: tags,
-    feedback_param: feedbacks,
-    users_param: users,
-  })
+  let query
+  if (
+    modelNames.length > 0 ||
+    tags.length > 0 ||
+    feedbacks.length > 0 ||
+    users.length > 0
+  ) {
+    query = supabaseClient.rpc("get_runs", {
+      app_id: appId,
+      search_pattern: search,
+      model_names: modelNames,
+      tags_param: tags,
+      feedback_param: feedbacks,
+      users_param: users,
+    })
+  } else if (search === null) {
+    query = supabaseClient
+      .from("run")
+      .select("*")
+      .eq("app", appId)
+      .eq("type", "llm")
+  } else {
+    query = supabaseClient.rpc("get_runs", {
+      app_id: appId,
+      search_pattern: search,
+    })
+  }
 
   const {
     data,
