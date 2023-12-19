@@ -73,9 +73,9 @@ export default function RunInputOutput({
 
   const canEnablePlayground =
     withPlayground &&
-    run.type === "llm" &&
-    run.input &&
-    isChatMessages(run.input)
+    run?.type === "llm" &&
+    run?.input &&
+    isChatMessages(run?.input)
 
   async function makePublic() {
     setLoading(true)
@@ -129,7 +129,7 @@ export default function RunInputOutput({
 
   return (
     <Stack>
-      {run.type === "llm" && (
+      {run?.type === "llm" && (
         <>
           {withShare && (
             <Flex justify="right">
@@ -178,12 +178,12 @@ export default function RunInputOutput({
         <Text fw="bold" size="sm">
           Input
         </Text>
-        {run.prompt_tokens && <TokensBadge tokens={run.prompt_tokens} />}
+        {run?.prompt_tokens && <TokensBadge tokens={run.prompt_tokens} />}
       </Group>
 
-      <SmartViewer data={run.input} />
+      <SmartViewer data={run?.input} />
 
-      {(run.output || run.error) && (
+      {(run?.output || run?.error) && (
         <>
           <Group justify="space-between">
             <Text fw="bold" size="sm">
