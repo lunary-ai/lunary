@@ -3,16 +3,13 @@ import {
   Badge,
   Button,
   Card,
-  CheckIcon,
   Grid,
   Group,
-  List,
   NumberInput,
   SegmentedControl,
   Select,
   Stack,
   Text,
-  TextInput,
   Textarea,
   Tooltip,
 } from "@mantine/core"
@@ -32,10 +29,9 @@ import { openUpgrade } from "@/components/Layout/UpgradeModal"
 import HotkeysInfo from "@/components/Blocks/HotkeysInfo"
 import TemplateInputArea from "@/components/Blocks/Prompts/TemplateInputArea"
 import TemplateList, {
-  defaultTemplate,
+  defaultTemplateVersion,
 } from "@/components/Blocks/Prompts/TemplateMenu"
 import { notifications } from "@mantine/notifications"
-import { modals } from "@mantine/modals"
 
 const availableModels = [
   "gpt-4-1106-preview",
@@ -99,18 +95,16 @@ function Playground() {
   const supabaseClient = useSupabaseClient()
   const [template, setTemplate] = useLocalStorage({
     key: "template",
-    defaultValue: defaultTemplate,
   })
 
-  const [templateVersion, setTemplateVersion] = useState({
+  const [templateVersion, setTemplateVersion] = useState<any>({
     key: "tp-version",
-    // defaultValue:
+    default: defaultTemplateVersion,
   })
 
   const [hasChanges, setHasChanges] = useState(false)
 
-  const { insertVersion, mutate, update, remove, updateVersion } =
-    useTemplates()
+  const { insertVersion, mutate, updateVersion } = useTemplates()
 
   const [streaming, setStreaming] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -187,23 +181,35 @@ function Playground() {
 
   // Save as draft without deploying
   const saveTemplate = async () => {
+    console.log("saving template", templateVersion)
     if (templateVersion.is_draft) {
-      await updateVersion(templateVersion)
+      console.log("updating", templateVersion)
+      await updateVersion({
+        id: templateVersion.id,
+        extra: templateVersion.extra,
+        content: templateVersion.content,
+      })
     } else {
-      const newVersion = await insertVersion([
-        {
-          template_id: template?.id,
-          test_values: templateVersion.test_values,
-          content: templateVersion.content,
-          extra: templateVersion.extra,
-          is_draft: true,
-        },
-      ])
+      console.log("inserting")
+      const newVersion = await insertVersion(
+        [
+          {
+            template_id: template?.id,
+            test_values: templateVersion.test_values,
+            content: templateVersion.content,
+            extra: templateVersion.extra,
+            is_draft: true,
+          },
+        ],
+        {},
+      )
 
       if (newVersion) {
         setTemplateVersion(newVersion[0])
       }
     }
+
+    setHasChanges(false)
 
     mutate()
   }
@@ -215,6 +221,8 @@ function Playground() {
         id: templateVersion.id,
         is_draft: false,
       })
+
+      setTemplateVersion({ ...templateVersion, is_draft: false })
     } else {
       const newVersion = await insertVersion([
         {
@@ -222,6 +230,7 @@ function Playground() {
           test_values: templateVersion.test_values,
           content: templateVersion.content,
           extra: templateVersion.extra,
+          is_draft: false,
         },
       ])
 
@@ -236,6 +245,8 @@ function Playground() {
       message: "A new version of your template is now being served.",
       color: "teal",
     })
+
+    setHasChanges(false)
 
     mutate()
   }
@@ -407,7 +418,7 @@ function Playground() {
               leftSection={<IconDeviceFloppy size={18} />}
               size="sm"
               loading={loading}
-              disabled={loading || (template?.id && !hasChanges)}
+              disabled={loading || (!templateVersion?.is_draft && !hasChanges)}
               variant="filled"
               onClick={commitTemplate}
             >

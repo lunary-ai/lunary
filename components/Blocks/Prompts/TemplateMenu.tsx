@@ -31,7 +31,7 @@ const slugify = (text: string): string =>
     .replace(/[^\w-]+/g, "")
     .replace(/--+/g, "-")
 
-export const defaultTemplate = {
+export const defaultTemplateVersion = {
   content: [
     { content: "You are an helpful assistant.", role: "system" },
     { content: "Hi!", role: "user" },
@@ -209,7 +209,7 @@ const TemplateList = ({
         {
           template_id: newTemplate[0].id,
           version: 1,
-          ...defaultTemplate,
+          ...defaultTemplateVersion,
         },
       ])
 
