@@ -8,13 +8,12 @@ import {
 
 import { useMantineTheme } from "@mantine/core"
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
-import { useContext, useEffect, useState } from "react"
+import { useContext } from "react"
 import { calcRunCost } from "./calcCosts"
 import { AppContext } from "./context"
 import { Database } from "./supaTypes"
 import useSWR from "swr"
 import { useColorScheme } from "@mantine/hooks"
-import { useRouter } from "next/router"
 
 const softOptions = {
   dedupingInterval: 10000,
@@ -249,6 +248,11 @@ export function useTemplates() {
     "name,slug,group,mode",
   )
 
+  const { trigger: remove } = useDeleteMutation(
+    supabaseClient.from("template"),
+    ["id"],
+  )
+
   // update version
   const { trigger: updateVersion } = useUpdateMutation(
     supabaseClient.from("template_version"),
@@ -263,6 +267,7 @@ export function useTemplates() {
     insert,
     insertVersion,
     update,
+    remove,
     updateVersion,
     mutate,
     loading: isLoading,
