@@ -231,13 +231,6 @@ export function useTemplates() {
     "id,name,slug,app_id,org_id,group,mode",
   )
 
-  // insertVersion mutation
-  const { trigger: insertVersion } = useInsertMutation(
-    supabaseClient.from("template_version"),
-    ["id"],
-    "id,template_id,content,extra,version,is_draft",
-  )
-
   // update mutation
   const { trigger: update } = useUpdateMutation(
     supabaseClient.from("template"),
@@ -250,11 +243,21 @@ export function useTemplates() {
     ["id"],
   )
 
+  // insertVersion mutation
+  const { trigger: insertVersion } = useInsertMutation(
+    supabaseClient.from("template_version"),
+    ["id"],
+    "id,template_id,content,extra,version,is_draft",
+  )
+
   // update version
   const { trigger: updateVersion } = useUpdateMutation(
     supabaseClient.from("template_version"),
     ["id"],
     "content,extra,is_draft",
+    {
+      disableAutoQuery: true,
+    },
   )
 
   const { data: templates, isLoading, mutate } = useQuery(query)
