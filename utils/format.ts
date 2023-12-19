@@ -3,22 +3,21 @@ export const formatCost = (cost = 0) => {
     style: "currency",
     currency: "USD",
     maximumSignificantDigits: 3,
-    // maximumFractionDigits: 2,
   }).format(cost)
 }
 
-export const formatLargeNumber = (number) => {
+export function formatLargeNumber(number) {
   return new Intl.NumberFormat(navigator.language, {
     notation: "compact",
   }).format(number || 0)
 }
 
-export const formatAppUser = (user) => {
+export function formatAppUser(user) {
   if (!user) return ""
   return user.props?.name ?? user.props?.email ?? user.external_id
 }
 
-export const formatDateTime = (date) => {
+export function formatDateTime(date) {
   return new Date(date).toLocaleString(navigator.language, {
     month: "short",
     day: "numeric",
@@ -27,7 +26,7 @@ export const formatDateTime = (date) => {
   })
 }
 
-export const msToTime = (duration) => {
+export function msToTime(duration) {
   let seconds = Math.floor((duration / 1000) % 60),
     minutes = Math.floor((duration / (1000 * 60)) % 60),
     hours = Math.floor((duration / (1000 * 60 * 60)) % 24),
@@ -43,7 +42,7 @@ export const msToTime = (duration) => {
   }${s}s`
 }
 
-export const capitalize = (s) => {
+export function capitalize(s) {
   if (typeof s !== "string") return ""
   return s.charAt(0).toUpperCase() + s.slice(1)
 }

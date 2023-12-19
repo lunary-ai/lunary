@@ -10,7 +10,7 @@ import { useAppUser, useRelatedRuns } from "./dataHooks"
 import { formatCost, formatDateTime, msToTime } from "./format"
 const columnHelper = createColumnHelper<any>()
 
-export const timeColumn = (timeColumn, label = "Time") => {
+export function timeColumn(timeColumn, label = "Time") {
   return columnHelper.accessor(timeColumn, {
     header: label,
     id: timeColumn,
@@ -30,7 +30,7 @@ export const timeColumn = (timeColumn, label = "Time") => {
   })
 }
 
-export const durationColumn = (unit = "s") => {
+export function durationColumn(unit = "s") {
   return {
     id: "duration",
     header: "Duration",
@@ -55,7 +55,7 @@ export const durationColumn = (unit = "s") => {
   }
 }
 
-export const statusColumn = () => {
+export function statusColumn() {
   return columnHelper.accessor("status", {
     id: "status",
     header: "Status",
@@ -68,7 +68,7 @@ export const statusColumn = () => {
   })
 }
 
-export const tagsColumn = () => {
+export function tagsColumn() {
   return columnHelper.accessor("tags", {
     header: "Tags",
     size: 70,
@@ -102,7 +102,7 @@ export const tagsColumn = () => {
   })
 }
 
-export const inputColumn = (label = "input") => {
+export function inputColumn(label = "input") {
   return columnHelper.accessor("input", {
     header: label,
     size: 200,
@@ -111,7 +111,7 @@ export const inputColumn = (label = "input") => {
   })
 }
 
-export const outputColumn = (label = "Response") => {
+export function outputColumn(label = "Response") {
   return columnHelper.accessor("output", {
     header: label,
     enableSorting: false,
@@ -125,10 +125,10 @@ export const outputColumn = (label = "Response") => {
   })
 }
 
-export const userColumn = () => {
+export function userColumn() {
   return columnHelper.accessor("user", {
     header: "User",
-    size: 70,
+    size: 120,
     cell: (props) => {
       const userId = props.getValue()
       const { user } = useAppUser(userId)
@@ -140,7 +140,7 @@ export const userColumn = () => {
   })
 }
 
-export const nameColumn = (label = "Name") => {
+export function nameColumn(label = "Name") {
   return columnHelper.accessor("name", {
     header: label,
     size: 80,
@@ -166,10 +166,10 @@ export const nameColumn = (label = "Name") => {
   })
 }
 
-export const costColumn = () => {
+export function costColumn() {
   return columnHelper.accessor("cost", {
     header: "Cost",
-    size: 50,
+    size: 60,
     cell: (props) => {
       const cost = props.getValue()
       return formatCost(cost)
@@ -177,7 +177,7 @@ export const costColumn = () => {
   })
 }
 
-export const feedbackColumn = (withRelatedRuns = false) => {
+export function feedbackColumn(withRelatedRuns = false) {
   const cell = withRelatedRuns
     ? (props) => {
         const run = props.row.original
