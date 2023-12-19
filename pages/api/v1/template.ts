@@ -31,11 +31,7 @@ export default edgeWrapper(async function handler(req: Request) {
     .maybeSingle()
     .throwOnError()
 
-  console.log({ data })
-
   const latestVersion = data?.versions?.[0]
-
-  console.log({ latestVersion })
 
   if (!data) {
     return jsonResponse(404, { error: "Not found" })

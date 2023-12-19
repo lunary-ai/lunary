@@ -35,6 +35,7 @@ import TemplateList, {
   defaultTemplate,
 } from "@/components/Blocks/Prompts/TemplateMenu"
 import { notifications } from "@mantine/notifications"
+import { modals } from "@mantine/modals"
 
 const availableModels = [
   "gpt-4-1106-preview",
@@ -108,7 +109,8 @@ function Playground() {
 
   const [hasChanges, setHasChanges] = useState(false)
 
-  const { insertVersion, mutate, updateVersion } = useTemplates()
+  const { insertVersion, mutate, update, remove, updateVersion } =
+    useTemplates()
 
   const [streaming, setStreaming] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -186,10 +188,8 @@ function Playground() {
   // Save as draft without deploying
   const saveTemplate = async () => {
     if (templateVersion.is_draft) {
-      console.log(`updating version`)
       await updateVersion(templateVersion)
     } else {
-      console.log(`inserting version`)
       const newVersion = await insertVersion([
         {
           template_id: template?.id,
@@ -199,8 +199,6 @@ function Playground() {
           is_draft: true,
         },
       ])
-
-      console.log(`newVersion`, newVersion)
 
       if (newVersion) {
         setTemplateVersion(newVersion[0])
@@ -415,35 +413,7 @@ function Playground() {
             >
               Deploy
             </Button>
-            {/* <Button
-              leftSection={<IconHelp size={18} />}
-              size="xs"
-              variant="outline"
-            >
-              How to use
-            </Button> */}
           </Group>
-
-          <ParamItem
-            name="Slug"
-            value={
-              <TextInput
-                size="xs"
-                w={220}
-                radius="sm"
-                pattern="^[a-z0-9]+(?:-[a-z0-9]+)*$ "
-                placeholder="Template name"
-                value={template?.slug}
-                onChange={(e) => {
-                  setHasChanges(true)
-                  setTemplate({
-                    ...template,
-                    slug: e.currentTarget.value,
-                  })
-                }}
-              />
-            }
-          />
 
           <ParamItem
             name="Template Mode"
@@ -465,23 +435,24 @@ function Playground() {
                   },
                 ]}
                 value={template?.mode}
-                // onChange={(value) => {
-                //   const newTemplate = { ...template, mode: value }
-                //   if (template?.mode === "text" && value !== "text") {
-                //     // Switching from text to custom/openai
-                //     newTemplate.content = [
-                //       { role: "user", content: template.content },
-                //     ]
-                //   } else if (template?.mode !== "text" && value === "text") {
-                //     // Switching from custom/openai to text
-                //     const firstUserMessage = template.content[0]
+                onChange={(value) => {
+                  const newTemplateVersion = { ...templateVersion }
+                  if (template?.mode === "text" && value !== "text") {
+                    // Switching from text to custom/openai
+                    newTemplateVersion.content = [
+                      { role: "user", content: templateVersion.content },
+                    ]
+                  } else if (template?.mode !== "text" && value === "text") {
+                    // Switching from custom/openai to text
+                    const firstUserMessage = templateVersion.content[0]
 
-                //     console.log(`firstUserMessage`, firstUserMessage)
+                    newTemplateVersion.content = firstUserMessage?.content || ""
+                  }
+                  setTemplateVersion(newTemplateVersion)
 
-                //     newTemplate.content = firstUserMessage?.content || ""
-                //   }
-                //   setTemplate(newTemplate)
-                // }}
+                  const newTemplate = { ...template, mode: value }
+                  setTemplate(newTemplate)
+                }}
               />
             }
           />
@@ -595,7 +566,7 @@ function Playground() {
                 <Text size="sm" fw="bold">
                   Variables
                 </Text>
-                <Tooltip label="Add variables to your template in the handlebars format {{variable}}">
+                <Tooltip label="Add variables to your template in the {{ mustache }} format">
                   <IconInfoCircle size={16} />
                 </Tooltip>
               </Group>
