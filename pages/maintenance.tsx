@@ -1,7 +1,15 @@
 // pages/maintenance.tsx
-import React from "react"
+import { useRouter } from "next/router"
+import React, { useEffect } from "react"
 
 export default function Maintenance() {
+  const router = useRouter()
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_MAINTENANCE_MODE !== "on") {
+      router.push("/")
+    }
+  }, [router])
+
   return (
     <div>
       <h1>We&apos;re currently undergoing maintenance</h1>
