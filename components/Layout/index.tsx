@@ -24,7 +24,7 @@ import { ErrorBoundary } from "@highlight-run/next/client"
 
 export default function Layout({ children }: { children: ReactNode }) {
   const router = useRouter()
-  const isAuthPage = [
+  const isAuthPage = !![
     "/login",
     "/signup",
     "/join",
@@ -38,6 +38,8 @@ export default function Layout({ children }: { children: ReactNode }) {
   const { profile, loading, error } = useProfile()
 
   const { session, isLoading, supabaseClient } = useSessionContext()
+
+  const isPromptPage = router.pathname.startsWith("/prompt")
 
   const isLLMCallPage = router.pathname.startsWith("/llm-calls/[id]")
   const isPublicPage = isLLMCallPage && !session
@@ -102,7 +104,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               breakpoint: "0",
               collapsed: { mobile: isAuthPage, desktop: isAuthPage },
             }}
-            className={profile?.org.limited ? "limited" : ""}
+            className={profile?.org?.limited ? "limited" : ""}
             style={{
               backgroundColor: colorScheme === "dark" ? "#181818" : "#fafafa",
               color: colorScheme === "dark" ? "#eee" : "#333",
@@ -115,7 +117,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               {!isAuthPage && !isPublicPage && <Navbar />}
               {!isAuthPage && !isPublicPage && <Sidebar />}
               <AppShell.Main>
-                <Box p="24">{children}</Box>
+                <Box p={isPromptPage ? 0 : 24}>{children}</Box>
               </AppShell.Main>
             </ErrorBoundary>
           </AppShell>

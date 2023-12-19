@@ -145,7 +145,7 @@ export default function LLMCalls() {
   }
 
   return (
-    <Stack h={"calc(100vh - var(--navbar-size))"}>
+    <Stack h={"calc(100vh - var(--navbar-with-filters-size))"}>
       <NextSeo title="Requests" />
       <Flex justify="space-between">
         <Group>

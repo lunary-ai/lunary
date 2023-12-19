@@ -13,8 +13,9 @@ import TokensBadge from "./TokensBadge"
 
 const isChatMessages = (obj) => {
   return Array.isArray(obj)
-    ? obj.every((m) => typeof m.text === "string" && typeof m.role === "string")
-    : typeof obj.text === "string" && typeof obj.role === "string"
+    ? obj.every(isChatMessages)
+    : (typeof obj.text === "string" && typeof obj.role === "string") ||
+        typeof obj.content === "string"
 }
 
 // This is the component that renders the input and output of a run
@@ -163,7 +164,7 @@ export default function RunInputOutput({
                     display="inline"
                     rightSection={<IconPencilShare size="14" />}
                     component={Link}
-                    href={`/play/${run.id}`}
+                    href={`/prompts?clone=${run.id}`}
                   >
                     Open in playground
                   </Button>

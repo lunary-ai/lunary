@@ -41,7 +41,7 @@ export default function Traces() {
   }
 
   return (
-    <Stack h={"calc(100vh - var(--navbar-size))"}>
+    <Stack h={"calc(100vh - var(--navbar-with-filters-size))"}>
       <SearchBar query={query} setQuery={setQuery} />
 
       <DataTable

@@ -30,6 +30,7 @@ export interface Event {
   message?: string | Json // deprecated (for logs)
   extra?: any
   feedback?: any
+  templateId?: string
   tokensUsage?: {
     prompt: number
     completion: number
