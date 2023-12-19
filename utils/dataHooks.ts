@@ -360,7 +360,7 @@ export function useFilteredLLMCalls(
       feedback_param: feedbacks,
       users_param: users,
     })
-  } else if (search === null) {
+  } else if (!search) {
     query = supabaseClient
       .from("run")
       .select("*")
