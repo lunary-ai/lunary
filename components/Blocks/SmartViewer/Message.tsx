@@ -122,12 +122,13 @@ export function ChatMessage({
             type="functionCall"
           />
         ))
-      ) : data?.text || data?.content ? (
+      ) : typeof data?.text === "string" ||
+        typeof data?.content === "string" ? (
         <Code block bg={codeBg}>
           <ProtectedText>
             {editable ? (
               <Textarea
-                value={data?.text || data?.content}
+                value={data?.content || data?.text}
                 variant="unstyled"
                 p={0}
                 styles={{
@@ -143,11 +144,11 @@ export function ChatMessage({
                 }}
                 autosize
                 minRows={1}
-                onChange={(e) => onChange({ ...data, text: e.target.value })}
+                onChange={(e) => onChange({ ...data, content: e.target.value })}
                 style={{ width: "100%" }}
               />
             ) : (
-              data?.text || data?.content
+              data?.content || data?.text
             )}
           </ProtectedText>
         </Code>

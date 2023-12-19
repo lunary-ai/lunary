@@ -1,6 +1,7 @@
 import { ActionIcon, Input, Kbd, Text } from "@mantine/core"
 import { useFocusWithin, useHotkeys } from "@mantine/hooks"
 import { IconSearch, IconX } from "@tabler/icons-react"
+import HotkeysInfo from "./HotkeysInfo"
 
 export default function SearchBar({ query, setQuery }) {
   const { ref, focused } = useFocusWithin()
@@ -29,17 +30,11 @@ export default function SearchBar({ query, setQuery }) {
             <IconX size={13} />
           </ActionIcon>
         ) : !focused ? (
-          <span style={{ marginTop: -4, marginRight: -13 }}>
-            <Kbd size="sm" py={0} fz={14}>
-              ⌘
-            </Kbd>
-            <Text color="dimmed" size="xs" component="span">
-              {` + `}
-            </Text>
-            <Kbd size="sm" py={1}>
-              K
-            </Kbd>
-          </span>
+          <HotkeysInfo
+            hot="K"
+            size="sm"
+            style={{ marginTop: -4, marginRight: -13 }}
+          />
         ) : null
       }
       placeholder="Type to filter"

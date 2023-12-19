@@ -8,13 +8,12 @@ import {
 
 import { useMantineTheme } from "@mantine/core"
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
-import { useContext, useEffect, useState } from "react"
+import { useContext } from "react"
 import { calcRunCost } from "./calcCosts"
 import { AppContext } from "./context"
 import { Database } from "./supaTypes"
 import useSWR from "swr"
 import { useColorScheme } from "@mantine/hooks"
-import { useRouter } from "next/router"
 
 const softOptions = {
   dedupingInterval: 10000,
@@ -209,6 +208,67 @@ export function useConvosByFeedback(feedbackFilters) {
   const { data, isLoading, error } = useQuery<string[]>(query)
 
   return { runIds: data, isLoading, error }
+}
+
+export function useTemplates() {
+  const supabaseClient = useSupabaseClient<Database>()
+  const { appId } = useContext(AppContext)
+
+  const query = supabaseClient
+    .from("template")
+    .select(
+      "id,name,slug,app_id,created_at,org_id,group,mode,versions:template_version(id,content,extra,created_at,version,is_draft)",
+    )
+    .eq("app_id", appId)
+    .order("created_at", {
+      ascending: false,
+    })
+
+  // insert mutation
+  const { trigger: insert } = useInsertMutation(
+    supabaseClient.from("template"),
+    ["id"],
+    "id,name,slug,app_id,org_id,group,mode",
+  )
+
+  // insertVersion mutation
+  const { trigger: insertVersion } = useInsertMutation(
+    supabaseClient.from("template_version"),
+    ["id"],
+    "id,template_id,content,extra,version,is_draft",
+  )
+
+  // update mutation
+  const { trigger: update } = useUpdateMutation(
+    supabaseClient.from("template"),
+    ["id"],
+    "name,slug,group,mode",
+  )
+
+  const { trigger: remove } = useDeleteMutation(
+    supabaseClient.from("template"),
+    ["id"],
+  )
+
+  // update version
+  const { trigger: updateVersion } = useUpdateMutation(
+    supabaseClient.from("template_version"),
+    ["id"],
+    "content,extra,is_draft",
+  )
+
+  const { data: templates, isLoading, mutate } = useQuery(query)
+
+  return {
+    templates,
+    insert,
+    insertVersion,
+    update,
+    remove,
+    updateVersion,
+    mutate,
+    loading: isLoading,
+  }
 }
 
 export function useUsers() {

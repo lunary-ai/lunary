@@ -40,7 +40,7 @@ const menu = [
   { label: "Traces", icon: IconListTree, link: "/traces" },
   { label: "Users", icon: IconUsers, link: "/users" },
   { label: "Chats", icon: IconMessages, link: "/chats" },
-  { label: "Playground", icon: IconPlayerPlay, link: "/play" },
+  { label: "Prompts", icon: IconPlayerPlay, link: "/prompts" },
   { label: "Evaluations", icon: IconStethoscope, link: "/evaluations" },
   { label: "Settings", icon: IconSettings, link: "/settings" },
 ]

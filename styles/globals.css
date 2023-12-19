@@ -1,5 +1,6 @@
 :root {
-  --navbar-size: 110px;
+  --navbar-size: 47px;
+  --navbar-with-filters-size: 110px;
 }
 
 body {

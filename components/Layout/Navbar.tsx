@@ -68,20 +68,22 @@ export default function Navbar() {
         name: user.user_metadata?.name,
       })
 
-      const win = window as any
+      try {
+        const win = window as any
 
-      if (typeof win.Featurebase !== "function") {
-        win.Featurebase = function () {
-          // eslint-disable-next-line prefer-rest-params
-          ;(win.Featurebase.q = win.Featurebase.q || []).push(arguments)
+        if (typeof win.Featurebase !== "function") {
+          win.Featurebase = function () {
+            // eslint-disable-next-line prefer-rest-params
+            ;(win.Featurebase.q = win.Featurebase.q || []).push(arguments)
+          }
         }
-      }
-      win.Featurebase("initialize_feedback_widget", {
-        organization: "lunary",
-        theme: "light",
-        // placement: "right",
-        email: user?.email,
-      })
+        win.Featurebase("initialize_feedback_widget", {
+          organization: "lunary",
+          theme: "light",
+          // placement: "right",
+          email: user?.email,
+        })
+      } catch (e) {}
     }
   }, [user])
 
