@@ -5,6 +5,7 @@ import OpenAI from "openai"
 import { completion } from "litellm"
 import { ensureIsLogged } from "@/lib/api/ensureAppIsLogged"
 import { edgeWrapper } from "@/lib/api/edgeHelpers"
+import Handlebars from "handlebars"
 
 export const runtime = "edge"
 
@@ -24,10 +25,10 @@ const OPENROUTER_MODELS = [
 const ANTHROPIC_MODELS = ["claude-2", "claude-2.0", "claude-instant-v1"]
 
 const convertInputToOpenAIMessages = (input: any[]) => {
-  return input.map(({ role, text, functionCall, toolCalls, name }) => {
+  return input.map(({ role, content, text, functionCall, toolCalls, name }) => {
     return {
       role: role.replace("ai", "assistant"),
-      content: text,
+      content: content || text,
       function_call: functionCall || undefined,
       tool_calls: toolCalls || undefined,
       name: name || undefined,
@@ -62,9 +63,23 @@ export default edgeWrapper(async function handler(req: Request) {
 
   await substractPlayAllowance(session, supabase)
 
-  const { model, run } = await req.json()
+  const { content, extra, testValues } = await req.json()
 
-  const messages = convertInputToOpenAIMessages(run.input)
+  let copy = [...content]
+
+  // The template build happens here
+  if (testValues) {
+    for (const item of copy) {
+      let template = Handlebars.compile(item.content)
+      // execute the compiled template and print the output to the console
+      item.content = template(testValues)
+      console.log("compiled", item.content)
+    }
+  }
+
+  const model = extra?.model || "gpt-3.5-turbo"
+
+  const messages = convertInputToOpenAIMessages(copy)
 
   let method
 
@@ -92,16 +107,16 @@ export default edgeWrapper(async function handler(req: Request) {
   const response = await method({
     model,
     messages,
-    temperature: run.params?.temperature,
-    max_tokens: run.params?.max_tokens,
-    top_p: run.params?.top_p,
-    top_k: run.params?.top_k,
-    presence_penalty: run.params?.presence_penalty,
-    frequency_penalty: run.params?.frequency_penalty,
-    stop: run.params?.stop,
-    functions: run.params?.functions,
-    tools: run.params?.tools,
-    seed: run.params?.seed,
+    temperature: extra?.temperature,
+    max_tokens: extra?.max_tokens,
+    top_p: extra?.top_p,
+    top_k: extra?.top_k,
+    presence_penalty: extra?.presence_penalty,
+    frequency_penalty: extra?.frequency_penalty,
+    stop: extra?.stop,
+    functions: extra?.functions,
+    tools: extra?.tools,
+    seed: extra?.seed,
     stream: true,
   })
 
