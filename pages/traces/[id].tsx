@@ -54,11 +54,11 @@ const TraceTree = ({
   const timeAfterFirst =
     new Date(run.created_at).getTime() - new Date(firstDate).getTime()
 
-  const color = getColorForRunType(run.type)
+  const color = getColorForRunType(run?.type)
 
-  const showStatus = !["convo", "thread", "chat"].includes(run.type)
+  const showStatus = !["convo", "thread", "chat"].includes(run?.type)
 
-  const Icon = typeIcon[run.type]
+  const Icon = typeIcon[run?.type]
 
   const isActive = run.id === focused
 
@@ -86,7 +86,7 @@ const TraceTree = ({
               )
             }
           >
-            {run.type}
+            {run?.type}
           </Badge>
 
           {run.name && (
@@ -99,7 +99,7 @@ const TraceTree = ({
             <DurationBadge createdAt={run.created_at} endedAt={run.ended_at} />
           )}
 
-          {run.type === "llm" && run.cost && (
+          {run?.type === "llm" && run.cost && (
             <Badge variant="outline" color="gray">
               {formatCost(run.cost)}
             </Badge>
@@ -140,8 +140,8 @@ const RenderRun = ({ run, relatedRuns }) => {
         new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
     )
 
-  if (run.type === "chat") return <RunsChat runs={[run]} />
-  if (run.type === "thread") return <RunsChat runs={directChilds} />
+  if (run?.type === "chat") return <RunsChat runs={[run]} />
+  if (run?.type === "thread") return <RunsChat runs={directChilds} />
   return <RunInputOutput initialRun={run} />
 }
 
@@ -152,6 +152,7 @@ export default function AgentRun({}) {
   const [focused, setFocused] = useState(id)
 
   const { run } = useRun(id as string)
+  console.log(run)
 
   useEffect(() => {
     if (run) setFocused(run.id)
@@ -162,14 +163,14 @@ export default function AgentRun({}) {
   if (!run) return <>Loading...</>
 
   const totalTokens = relatedRuns?.reduce((acc, run) => {
-    if (run.type === "llm") {
+    if (run?.type === "llm") {
       return acc + run.completion_tokens + run.prompt_tokens
     }
     return acc
   }, 0)
 
   const totalCost = relatedRuns?.reduce((acc, run) => {
-    if (run.type === "llm") {
+    if (run?.type === "llm") {
       return acc + run.cost
     }
     return acc
@@ -180,7 +181,7 @@ export default function AgentRun({}) {
   return (
     <Stack>
       <Title order={1}>
-        {capitalize(run.type)} Trace {run.name ? `(${run.name})` : ""}
+        {capitalize(run?.type)} Trace {run.name ? `(${run.name})` : ""}
       </Title>
       <Group>
         {run.status && <StatusBadge status={run.status} />}
