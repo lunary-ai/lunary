@@ -19,7 +19,7 @@ const registerRunEvent = async (
   insertedIds: Set<string>,
   allowRetry = true,
 ): Promise<void> => {
-  const {
+  let {
     timestamp,
     type,
     app,
@@ -37,7 +37,13 @@ const registerRunEvent = async (
     extra,
     error,
     feedback,
+    metadata,
   } = event
+
+  console.log(event)
+  if (!tags) {
+    tags = metadata?.tags
+  }
 
   let parentRunIdToUse = parentRunId
 
