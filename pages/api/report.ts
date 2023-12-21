@@ -40,7 +40,6 @@ const registerRunEvent = async (
     metadata,
   } = event
 
-  console.log(event)
   if (!tags) {
     tags = metadata?.tags
   }

@@ -18,6 +18,7 @@ const checkIsMessage = (obj) => {
   return (
     typeof obj?.text === "string" ||
     typeof obj?.content === "string" ||
+    Array.isArray(obj?.content) ||
     typeof obj?.functionCall === "object" ||
     typeof obj?.toolCalls === "object"
   )
