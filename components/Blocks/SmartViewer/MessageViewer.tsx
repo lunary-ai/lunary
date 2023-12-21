@@ -1,7 +1,7 @@
 import { ChatMessage } from "@/components/Blocks/SmartViewer/Message"
 import { Box, Stack } from "@mantine/core"
 
-const getLastMessage = (messages) => {
+function getLastMessage(messages) {
   if (Array.isArray(messages)) {
     return messages[messages.length - 1]
   }
