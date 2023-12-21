@@ -84,7 +84,6 @@ export default apiWrapper(async function handler(
 
   // TODO: file a way to send all the rows
   if (buffer.length > FIVE_MB) {
-    console.log("slice")
     const slicedBuffer = buffer.slice(0, FIVE_MB)
     res.setHeader("Content-Type", "text/csv")
     res.setHeader("Content-Disposition", "attachment; filename=out.csv")

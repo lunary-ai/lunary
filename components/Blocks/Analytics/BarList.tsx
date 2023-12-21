@@ -32,8 +32,6 @@ const BarList = ({
 
   if (!data) return <>No data.</>
 
-  console.log(data)
-
   return (
     <>
       {customMetric ? (

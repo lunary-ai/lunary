@@ -71,8 +71,6 @@ function RunsChat({ runs }) {
     }))
   }
 
-  console.log(runs)
-
   return (
     <Stack gap={0}>
       {runs

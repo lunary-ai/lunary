@@ -396,8 +396,6 @@ function Playground() {
     return variables
   }, [templateVersion])
 
-  console.log(templateVersion)
-
   return (
     <Grid
       w="100%"

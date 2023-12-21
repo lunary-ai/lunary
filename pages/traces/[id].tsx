@@ -152,7 +152,6 @@ export default function AgentRun({}) {
   const [focused, setFocused] = useState(id)
 
   const { run } = useRun(id as string)
-  console.log(run)
 
   useEffect(() => {
     if (run) setFocused(run.id)
