@@ -5,6 +5,7 @@ import {
   Paper,
   Select,
   Space,
+  Stack,
   Text,
   Textarea,
   ThemeIcon,
@@ -16,6 +17,7 @@ import {
   IconTool,
   IconUser,
 } from "@tabler/icons-react"
+import Image from "next/image"
 import ProtectedText from "../ProtectedText"
 import { RenderJson } from "./RenderJson"
 
@@ -45,8 +47,150 @@ function RenderFunction({ color, compact, codeBg, data, type }) {
   )
 }
 
-// Use for logging AI chat queries
-// Editable is used for the playground
+function FunctionCallMessage({ data, color, compact, codeBg }) {
+  return (
+    <RenderFunction
+      color={color}
+      data={data}
+      compact={compact}
+      codeBg={codeBg}
+      type="functionCall"
+    />
+  )
+}
+
+function ToolCallsMessage({ toolCalls, color, compact, codeBg }) {
+  return (
+    <>
+      {toolCalls.map((toolCall, index) => (
+        <RenderFunction
+          key={index}
+          color={color}
+          compact={compact}
+          data={toolCall.function}
+          codeBg={codeBg}
+          type="toolCall"
+        />
+      ))}
+    </>
+  )
+}
+
+function TextMessage({ data, onChange = () => {}, editable = false, codeBg }) {
+  return (
+    <Code block bg={codeBg}>
+      <ProtectedText>
+        {editable ? (
+          <Textarea
+            value={data.content || data.text}
+            variant="unstyled"
+            p={0}
+            styles={{
+              root: {
+                fontFamily: "inherit",
+                fontSize: "inherit",
+              },
+              input: {
+                padding: "0 !important",
+                fontFamily: "inherit",
+                fontSize: "inherit",
+              },
+            }}
+            autosize
+            minRows={1}
+            onChange={(e) => onChange({ ...data, content: e.target.value })}
+            style={{ width: "100%" }}
+          />
+        ) : (
+          data.content || data.text
+        )}
+      </ProtectedText>
+    </Code>
+  )
+}
+
+function ResponsiveImage({ src }) {
+  return (
+    <div style={{ position: "relative", width: "100%", height: "500px" }}>
+      <Image src={src} alt="Image" fill />
+    </div>
+  )
+}
+
+function MiniatureImage({ src }) {
+  return (
+    <div style={{ position: "relative", width: "40px", height: "40px" }}>
+      <Image src={src} alt="Image" fill />
+    </div>
+  )
+}
+
+function ImageMessage({ data, codeBg, compact }) {
+  return (
+    <Code block bg={codeBg}>
+      <Stack gap={compact ? "5" : "md"}>
+        {data.content.map((item, index) => {
+          if (item.type === "text") {
+            return <ProtectedText key={index}>{item.text}</ProtectedText>
+          } else if (item.type === "image_url") {
+            return compact ? (
+              <MiniatureImage src={item.imageUrl.url} />
+            ) : (
+              <ResponsiveImage src={item.imageUrl.url} />
+            )
+          }
+          return null
+        })}
+      </Stack>
+    </Code>
+  )
+}
+
+function ChatMessageContent({
+  data,
+  color,
+  compact,
+  codeBg,
+  onChange,
+  editable,
+}) {
+  if (data?.functionCall) {
+    return (
+      <FunctionCallMessage
+        data={data.functionCall}
+        color={color}
+        compact={compact}
+        codeBg={codeBg}
+      />
+    )
+  } else if (data?.toolCalls) {
+    return (
+      <ToolCallsMessage
+        toolCalls={data.toolCalls}
+        color={color}
+        compact={compact}
+        codeBg={codeBg}
+      />
+    )
+  } else if (
+    typeof data?.text === "string" ||
+    typeof data?.content === "string"
+  ) {
+    return (
+      <TextMessage
+        data={data}
+        onChange={onChange}
+        editable={editable}
+        codeBg={codeBg}
+      />
+    )
+  } else if (Array.isArray(data?.content)) {
+    return <ImageMessage data={data} codeBg={codeBg} compact={compact} />
+  }
+
+  return null
+}
+
 export function ChatMessage({
   data,
   editable = false,
@@ -67,7 +211,7 @@ export function ChatMessage({
     <Paper
       p={compact ? 0 : 12}
       pt={compact ? 0 : 8}
-      mah={compact ? 60 : undefined}
+      mah={compact ? 80 : undefined}
       style={{
         overflow: "hidden",
         backgroundColor: `var(--mantine-color-${color}-${
@@ -103,58 +247,14 @@ export function ChatMessage({
         </Text>
       )}
 
-      {data?.functionCall ? (
-        <RenderFunction
-          color={color}
-          data={data?.functionCall}
-          compact={compact}
-          codeBg={codeBg}
-          type="functionCall"
-        />
-      ) : data?.toolCalls ? (
-        data?.toolCalls.map((toolCall, index) => (
-          <RenderFunction
-            key={index}
-            color={color}
-            compact={compact}
-            data={toolCall.function}
-            codeBg={codeBg}
-            type="functionCall"
-          />
-        ))
-      ) : typeof data?.text === "string" ||
-        typeof data?.content === "string" ? (
-        <Code block bg={codeBg}>
-          <ProtectedText>
-            {editable ? (
-              <Textarea
-                value={data?.content || data?.text}
-                variant="unstyled"
-                p={0}
-                styles={{
-                  root: {
-                    fontFamily: "inherit",
-                    fontSize: "inherit",
-                  },
-                  input: {
-                    padding: "0 !important",
-                    fontFamily: "inherit",
-                    fontSize: "inherit",
-                  },
-                }}
-                autosize
-                minRows={1}
-                onChange={(e) => onChange({ ...data, content: e.target.value })}
-                style={{ width: "100%" }}
-              />
-            ) : (
-              data?.content || data?.text
-            )}
-          </ProtectedText>
-        </Code>
-      ) : (
-        <></>
-      )}
+      <ChatMessageContent
+        data={data}
+        color={color}
+        compact={compact}
+        codeBg={codeBg}
+        onChange={onChange}
+        editable={editable}
+      />
 
       <style jsx>{`
         :global(pre) {
