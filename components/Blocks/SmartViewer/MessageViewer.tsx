@@ -15,7 +15,7 @@ export default function MessageViewer({ data, compact }) {
   return compact ? (
     <ChatMessage data={getLastMessage(obj)} compact />
   ) : (
-    <Box mah={700} style={{ overflowY: "scroll" }}>
+    <Box mah={700} style={{ overflowY: "auto" }}>
       <Stack>
         {obj.map((message, i) => (
           <ChatMessage key={i} data={message} />
