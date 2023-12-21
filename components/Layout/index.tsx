@@ -1,26 +1,20 @@
-import { useEffect, ReactNode } from "react"
-import {
-  AppShell,
-  Box,
-  Center,
-  Loader,
-  useMantineColorScheme,
-} from "@mantine/core"
+import { AppShell, Box, Center, Loader } from "@mantine/core"
 import { Notifications } from "@mantine/notifications"
+import { ReactNode, useEffect } from "react"
 
 import { useSessionContext } from "@supabase/auth-helpers-react"
 
 import Router, { useRouter } from "next/router"
 
+import { AppContext } from "@/utils/context"
 import Navbar from "./Navbar"
 import Sidebar from "./Sidebar"
-import { AppContext } from "@/utils/context"
 
+import { ErrorBoundary } from "@highlight-run/next/client"
 import { useColorScheme, useLocalStorage } from "@mantine/hooks"
 import { ModalsProvider } from "@mantine/modals"
-import UpgradeModal from "./UpgradeModal"
 import { useProfile } from "../../utils/dataHooks"
-import { ErrorBoundary } from "@highlight-run/next/client"
+import UpgradeModal from "./UpgradeModal"
 
 export default function Layout({ children }: { children: ReactNode }) {
   const router = useRouter()
@@ -91,6 +85,8 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   if (!session && !isAuthPage && !isPublicPage) return null
 
+  console.log(Boolean(process.env.NEXT_PUBLIC_HIDE_ERROR_DIALOG))
+
   return (
     <>
       <Notifications position="top-right" />
@@ -112,7 +108,8 @@ export default function Layout({ children }: { children: ReactNode }) {
           >
             <ErrorBoundary
               onAfterReportDialogSubmitHandler={() => Router.reload()}
-              onAfterReportDialogCancelHandler={() => Router.reload()}
+              onAfterReportDialogCancelHandler={() => Router.push("/")}
+              showDialog={!Boolean(process.env.NEXT_PUBLIC_HIDE_ERROR_DIALOG)}
             >
               {!isAuthPage && !isPublicPage && <Navbar />}
               {!isAuthPage && !isPublicPage && <Sidebar />}
