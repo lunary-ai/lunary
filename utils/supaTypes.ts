@@ -270,18 +270,24 @@ export interface Database {
           created_at: string | null
           ended_at: string | null
           error: Json | null
+          error_text: string | null
           feedback: Json | null
           id: string
           input: Json | null
+          input_text: string | null
           is_public: boolean | null
           name: string | null
           output: Json | null
+          output_text: string | null
           params: Json | null
           parent_run: string | null
           prompt_tokens: number | null
           retry_of: string | null
+          runtime: string | null
+          sibling_of: string | null
           status: string | null
           tags: string[] | null
+          template_version_id: number | null
           type: string
           user: number | null
         }
@@ -291,18 +297,24 @@ export interface Database {
           created_at?: string | null
           ended_at?: string | null
           error?: Json | null
+          error_text?: string | null
           feedback?: Json | null
           id?: string
           input?: Json | null
+          input_text?: string | null
           is_public?: boolean | null
           name?: string | null
           output?: Json | null
+          output_text?: string | null
           params?: Json | null
           parent_run?: string | null
           prompt_tokens?: number | null
           retry_of?: string | null
+          runtime?: string | null
+          sibling_of?: string | null
           status?: string | null
           tags?: string[] | null
+          template_version_id?: number | null
           type: string
           user?: number | null
         }
@@ -312,18 +324,24 @@ export interface Database {
           created_at?: string | null
           ended_at?: string | null
           error?: Json | null
+          error_text?: string | null
           feedback?: Json | null
           id?: string
           input?: Json | null
+          input_text?: string | null
           is_public?: boolean | null
           name?: string | null
           output?: Json | null
+          output_text?: string | null
           params?: Json | null
           parent_run?: string | null
           prompt_tokens?: number | null
           retry_of?: string | null
+          runtime?: string | null
+          sibling_of?: string | null
           status?: string | null
           tags?: string[] | null
+          template_version_id?: number | null
           type?: string
           user?: number | null
         }
@@ -359,6 +377,18 @@ export interface Database {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "run_sibling_of_fkey"
+            columns: ["sibling_of"]
+            referencedRelation: "run"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "run_template_version_id_fkey"
+            columns: ["template_version_id"]
+            referencedRelation: "template_version"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "run_user_fkey"
             columns: ["user"]
             referencedRelation: "app_user"
@@ -366,9 +396,136 @@ export interface Database {
           }
         ]
       }
+      template: {
+        Row: {
+          app_id: string
+          created_at: string | null
+          group: string | null
+          id: number
+          mode: string | null
+          name: string | null
+          org_id: string
+          slug: string | null
+        }
+        Insert: {
+          app_id: string
+          created_at?: string | null
+          group?: string | null
+          id?: number
+          mode?: string | null
+          name?: string | null
+          org_id: string
+          slug?: string | null
+        }
+        Update: {
+          app_id?: string
+          created_at?: string | null
+          group?: string | null
+          id?: number
+          mode?: string | null
+          name?: string | null
+          org_id?: string
+          slug?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_app_id_fkey"
+            columns: ["app_id"]
+            referencedRelation: "app"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "template_org_id_fkey"
+            columns: ["org_id"]
+            referencedRelation: "org"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      template_version: {
+        Row: {
+          content: Json | null
+          created_at: string
+          extra: Json | null
+          id: number
+          is_draft: boolean | null
+          template_id: number
+          test_values: Json | null
+          version: number | null
+        }
+        Insert: {
+          content?: Json | null
+          created_at?: string
+          extra?: Json | null
+          id?: number
+          is_draft?: boolean | null
+          template_id: number
+          test_values?: Json | null
+          version?: number | null
+        }
+        Update: {
+          content?: Json | null
+          created_at?: string
+          extra?: Json | null
+          id?: number
+          is_draft?: boolean | null
+          template_id?: number
+          test_values?: Json | null
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_version_template_id_fkey"
+            columns: ["template_id"]
+            referencedRelation: "template"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
-      [_ in never]: never
+      app_model_name: {
+        Row: {
+          app: string | null
+          name: string | null
+          refreshed_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "run_app_fkey"
+            columns: ["app"]
+            referencedRelation: "app"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "run_app_fkey1"
+            columns: ["app"]
+            referencedRelation: "app"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      app_tag: {
+        Row: {
+          app: string | null
+          refreshed_at: string | null
+          tag: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "run_app_fkey"
+            columns: ["app"]
+            referencedRelation: "app"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "run_app_fkey1"
+            columns: ["app"]
+            referencedRelation: "app"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Functions: {
       get_all_feedbacks: {
@@ -404,18 +561,24 @@ export interface Database {
           created_at: string | null
           ended_at: string | null
           error: Json | null
+          error_text: string | null
           feedback: Json | null
           id: string
           input: Json | null
+          input_text: string | null
           is_public: boolean | null
           name: string | null
           output: Json | null
+          output_text: string | null
           params: Json | null
           parent_run: string | null
           prompt_tokens: number | null
           retry_of: string | null
+          runtime: string | null
+          sibling_of: string | null
           status: string | null
           tags: string[] | null
+          template_version_id: number | null
           type: string
           user: number | null
         }[]
@@ -452,6 +615,7 @@ export interface Database {
       get_runs:
         | {
             Args: {
+              app_id: string
               search_pattern: string
             }
             Returns: {
@@ -460,18 +624,24 @@ export interface Database {
               created_at: string | null
               ended_at: string | null
               error: Json | null
+              error_text: string | null
               feedback: Json | null
               id: string
               input: Json | null
+              input_text: string | null
               is_public: boolean | null
               name: string | null
               output: Json | null
+              output_text: string | null
               params: Json | null
               parent_run: string | null
               prompt_tokens: number | null
               retry_of: string | null
+              runtime: string | null
+              sibling_of: string | null
               status: string | null
               tags: string[] | null
+              template_version_id: number | null
               type: string
               user: number | null
             }[]
@@ -491,22 +661,93 @@ export interface Database {
               created_at: string | null
               ended_at: string | null
               error: Json | null
+              error_text: string | null
               feedback: Json | null
               id: string
               input: Json | null
+              input_text: string | null
               is_public: boolean | null
               name: string | null
               output: Json | null
+              output_text: string | null
               params: Json | null
               parent_run: string | null
               prompt_tokens: number | null
               retry_of: string | null
+              runtime: string | null
+              sibling_of: string | null
               status: string | null
               tags: string[] | null
+              template_version_id: number | null
               type: string
               user: number | null
             }[]
           }
+        | {
+            Args: {
+              app_id: string
+            }
+            Returns: {
+              app: string | null
+              completion_tokens: number | null
+              created_at: string | null
+              ended_at: string | null
+              error: Json | null
+              error_text: string | null
+              feedback: Json | null
+              id: string
+              input: Json | null
+              input_text: string | null
+              is_public: boolean | null
+              name: string | null
+              output: Json | null
+              output_text: string | null
+              params: Json | null
+              parent_run: string | null
+              prompt_tokens: number | null
+              retry_of: string | null
+              runtime: string | null
+              sibling_of: string | null
+              status: string | null
+              tags: string[] | null
+              template_version_id: number | null
+              type: string
+              user: number | null
+            }[]
+          }
+      get_runs_2: {
+        Args: {
+          app_id: string
+          search_pattern: string
+        }
+        Returns: {
+          app: string | null
+          completion_tokens: number | null
+          created_at: string | null
+          ended_at: string | null
+          error: Json | null
+          error_text: string | null
+          feedback: Json | null
+          id: string
+          input: Json | null
+          input_text: string | null
+          is_public: boolean | null
+          name: string | null
+          output: Json | null
+          output_text: string | null
+          params: Json | null
+          parent_run: string | null
+          prompt_tokens: number | null
+          retry_of: string | null
+          runtime: string | null
+          sibling_of: string | null
+          status: string | null
+          tags: string[] | null
+          template_version_id: number | null
+          type: string
+          user: number | null
+        }[]
+      }
       get_runs_debug: {
         Args: {
           app_id: string
@@ -522,22 +763,126 @@ export interface Database {
           created_at: string | null
           ended_at: string | null
           error: Json | null
+          error_text: string | null
           feedback: Json | null
           id: string
           input: Json | null
+          input_text: string | null
           is_public: boolean | null
           name: string | null
           output: Json | null
+          output_text: string | null
           params: Json | null
           parent_run: string | null
           prompt_tokens: number | null
           retry_of: string | null
+          runtime: string | null
+          sibling_of: string | null
           status: string | null
           tags: string[] | null
+          template_version_id: number | null
           type: string
           user: number | null
         }[]
       }
+      get_runs_raw: {
+        Args: {
+          app_id: string
+        }
+        Returns: {
+          app: string | null
+          completion_tokens: number | null
+          created_at: string | null
+          ended_at: string | null
+          error: Json | null
+          error_text: string | null
+          feedback: Json | null
+          id: string
+          input: Json | null
+          input_text: string | null
+          is_public: boolean | null
+          name: string | null
+          output: Json | null
+          output_text: string | null
+          params: Json | null
+          parent_run: string | null
+          prompt_tokens: number | null
+          retry_of: string | null
+          runtime: string | null
+          sibling_of: string | null
+          status: string | null
+          tags: string[] | null
+          template_version_id: number | null
+          type: string
+          user: number | null
+        }[]
+      }
+      get_runs_search:
+        | {
+            Args: {
+              app_id: string
+              search_pattern: string
+            }
+            Returns: {
+              app: string | null
+              completion_tokens: number | null
+              created_at: string | null
+              ended_at: string | null
+              error: Json | null
+              error_text: string | null
+              feedback: Json | null
+              id: string
+              input: Json | null
+              input_text: string | null
+              is_public: boolean | null
+              name: string | null
+              output: Json | null
+              output_text: string | null
+              params: Json | null
+              parent_run: string | null
+              prompt_tokens: number | null
+              retry_of: string | null
+              runtime: string | null
+              sibling_of: string | null
+              status: string | null
+              tags: string[] | null
+              template_version_id: number | null
+              type: string
+              user: number | null
+            }[]
+          }
+        | {
+            Args: {
+              app_id: string
+            }
+            Returns: {
+              app: string | null
+              completion_tokens: number | null
+              created_at: string | null
+              ended_at: string | null
+              error: Json | null
+              error_text: string | null
+              feedback: Json | null
+              id: string
+              input: Json | null
+              input_text: string | null
+              is_public: boolean | null
+              name: string | null
+              output: Json | null
+              output_text: string | null
+              params: Json | null
+              parent_run: string | null
+              prompt_tokens: number | null
+              retry_of: string | null
+              runtime: string | null
+              sibling_of: string | null
+              status: string | null
+              tags: string[] | null
+              template_version_id: number | null
+              type: string
+              user: number | null
+            }[]
+          }
       get_runs_usage: {
         Args: {
           app_id: string
@@ -601,18 +946,24 @@ export interface Database {
               created_at: string | null
               ended_at: string | null
               error: Json | null
+              error_text: string | null
               feedback: Json | null
               id: string
               input: Json | null
+              input_text: string | null
               is_public: boolean | null
               name: string | null
               output: Json | null
+              output_text: string | null
               params: Json | null
               parent_run: string | null
               prompt_tokens: number | null
               retry_of: string | null
+              runtime: string | null
+              sibling_of: string | null
               status: string | null
               tags: string[] | null
+              template_version_id: number | null
               type: string
               user: number | null
             }[]
@@ -628,18 +979,24 @@ export interface Database {
               created_at: string | null
               ended_at: string | null
               error: Json | null
+              error_text: string | null
               feedback: Json | null
               id: string
               input: Json | null
+              input_text: string | null
               is_public: boolean | null
               name: string | null
               output: Json | null
+              output_text: string | null
               params: Json | null
               parent_run: string | null
               prompt_tokens: number | null
               retry_of: string | null
+              runtime: string | null
+              sibling_of: string | null
               status: string | null
               tags: string[] | null
+              template_version_id: number | null
               type: string
               user: number | null
             }[]
@@ -706,18 +1063,24 @@ export interface Database {
           created_at: string | null
           ended_at: string | null
           error: Json | null
+          error_text: string | null
           feedback: Json | null
           id: string
           input: Json | null
+          input_text: string | null
           is_public: boolean | null
           name: string | null
           output: Json | null
+          output_text: string | null
           params: Json | null
           parent_run: string | null
           prompt_tokens: number | null
           retry_of: string | null
+          runtime: string | null
+          sibling_of: string | null
           status: string | null
           tags: string[] | null
+          template_version_id: number | null
           type: string
           user: number | null
         }[]
