@@ -240,7 +240,6 @@ async function numTokensFromMessages(
 
   if (functions) {
     try {
-      // console.log("functions", functions)
       numTokens += encoding.encode(
         formatFunctionSpecsAsTypescriptNS(functions),
       ).length

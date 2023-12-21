@@ -85,8 +85,6 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   if (!session && !isAuthPage && !isPublicPage) return null
 
-  console.log(Boolean(process.env.NEXT_PUBLIC_HIDE_ERROR_DIALOG))
-
   return (
     <>
       <Notifications position="top-right" />

@@ -6,13 +6,11 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  console.log("START")
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method Not Allowed" })
   }
 
   const { token, newPassword } = JSON.parse(req.body)
-  console.log(token, newPassword)
 
   if (
     !token ||

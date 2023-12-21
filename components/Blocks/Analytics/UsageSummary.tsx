@@ -3,7 +3,6 @@ import AnalyticsCard from "./AnalyticsCard"
 import BarList from "./BarList"
 
 export default function UsageSummary({ usage }) {
-  console.log(usage)
   return (
     <AnalyticsCard title="LLM Usage">
       <BarList
@@ -13,7 +12,6 @@ export default function UsageSummary({ usage }) {
             value: model.name,
             tokens: model.completion_tokens + model.prompt_tokens,
             cost: model.cost,
-            a: console.log(model),
             barSections: [
               {
                 value: "Completion",
