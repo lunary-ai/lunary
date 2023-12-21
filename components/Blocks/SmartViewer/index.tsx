@@ -7,7 +7,7 @@
  * - Text
  */
 
-import { Code, ScrollArea, Spoiler } from "@mantine/core"
+import { Code } from "@mantine/core"
 import { useMemo } from "react"
 import ProtectedText from "../ProtectedText"
 import { ChatMessage } from "./Message"
@@ -55,7 +55,7 @@ export default function SmartViewer({
   }, [parsed])
 
   return (
-    <pre className={compact ? "compact" : ""}>
+    <pre className={compact ? "compact" : ""} id="HERE">
       {error && (
         <ChatMessage
           data={{

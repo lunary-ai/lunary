@@ -12,7 +12,6 @@ import { ChatMessage } from "@/components/Blocks/SmartViewer/Message"
 import SmartViewer from "@/components/Blocks/SmartViewer"
 
 interface TemplateInputAreaProps {
-  loading: boolean
   template: any
   setTemplate: (template: any) => void
   setHasChanges: (hasChanges: boolean) => void
@@ -22,7 +21,6 @@ interface TemplateInputAreaProps {
 }
 
 const TemplateInputArea: React.FC<TemplateInputAreaProps> = ({
-  loading,
   template,
   setTemplate,
   saveTemplate,
@@ -34,9 +32,7 @@ const TemplateInputArea: React.FC<TemplateInputAreaProps> = ({
 
   return (
     <ScrollArea h="100%">
-      {loading ? (
-        <Loader />
-      ) : isText ? (
+      {isText ? (
         <Textarea
           value={typeof template?.content === "string" ? template?.content : ""}
           onChange={(e) => {
@@ -101,7 +97,7 @@ const TemplateInputArea: React.FC<TemplateInputAreaProps> = ({
             color="gray"
             onClick={() => {
               const newContent = [
-                ...template.content,
+                ...(template?.content || []),
                 { content: " ", role: "user" },
               ]
               setTemplate({ ...template, content: newContent })

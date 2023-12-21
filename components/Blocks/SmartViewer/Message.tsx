@@ -143,6 +143,7 @@ export function ChatMessage({
                   },
                 }}
                 autosize
+                mih={20}
                 minRows={1}
                 onChange={(e) => onChange({ ...data, content: e.target.value })}
                 style={{ width: "100%" }}

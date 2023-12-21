@@ -3,6 +3,7 @@ import {
   Badge,
   Button,
   Card,
+  Checkbox,
   Grid,
   Group,
   NumberInput,
@@ -20,6 +21,7 @@ import {
   IconCheck,
   IconDeviceFloppy,
   IconDevicesShare,
+  IconGitCommit,
   IconInfoCircle,
 } from "@tabler/icons-react"
 import { useRouter } from "next/router"
@@ -32,6 +34,7 @@ import TemplateList, {
   defaultTemplateVersion,
 } from "@/components/Blocks/Prompts/TemplateMenu"
 import { notifications } from "@mantine/notifications"
+import { generateSlug } from "random-word-slugs"
 
 const availableModels = [
   "gpt-4-1106-preview",
@@ -104,7 +107,7 @@ function Playground() {
 
   const [hasChanges, setHasChanges] = useState(false)
 
-  const { insertVersion, mutate, updateVersion } = useTemplates()
+  const { insertVersion, mutate, updateVersion, insert } = useTemplates()
 
   const [streaming, setStreaming] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -129,6 +132,27 @@ function Playground() {
   const { profile, mutate: revalidateProfile } = useProfile()
 
   const { app } = useCurrentApp()
+
+  const createTemplateIfNotExists = async () => {
+    if (template?.id) {
+      return template
+    }
+
+    const slug = generateSlug(2)
+
+    const newTemplate = await insert([
+      {
+        slug,
+        mode: "openai",
+        app_id: app?.id,
+        org_id: profile?.org.id,
+      },
+    ])
+
+    setTemplate(newTemplate?.[0])
+
+    return newTemplate?.[0]
+  }
 
   useEffect(() => {
     const { clone, id } = router.query
@@ -176,33 +200,32 @@ function Playground() {
       }
 
       fetchRun()
+    } else {
+      setTemplate({ mode: "openai" })
+      setTemplateVersion(defaultTemplateVersion)
     }
   }, [])
 
   // Save as draft without deploying
   const saveTemplate = async () => {
-    console.log("saving template", templateVersion)
     if (templateVersion.is_draft) {
-      console.log("updating", templateVersion)
       await updateVersion({
         id: templateVersion.id,
         extra: templateVersion.extra,
         content: templateVersion.content,
       })
     } else {
-      console.log("inserting")
-      const newVersion = await insertVersion(
-        [
-          {
-            template_id: template?.id,
-            test_values: templateVersion.test_values,
-            content: templateVersion.content,
-            extra: templateVersion.extra,
-            is_draft: true,
-          },
-        ],
-        {},
-      )
+      const templ = await createTemplateIfNotExists()
+
+      const newVersion = await insertVersion([
+        {
+          template_id: templ?.id,
+          test_values: templateVersion.test_values,
+          content: templateVersion.content,
+          extra: templateVersion.extra,
+          is_draft: true,
+        },
+      ])
 
       if (newVersion) {
         setTemplateVersion(newVersion[0])
@@ -224,9 +247,11 @@ function Playground() {
 
       setTemplateVersion({ ...templateVersion, is_draft: false })
     } else {
+      const templ = await createTemplateIfNotExists()
+
       const newVersion = await insertVersion([
         {
-          template_id: template?.id,
+          template_id: templ?.id,
           test_values: templateVersion.test_values,
           content: templateVersion.content,
           extra: templateVersion.extra,
@@ -331,13 +356,20 @@ function Playground() {
     router.push(`/prompts/${v.id}`)
   }
 
-  const extraHandler = (key) => ({
-    value: templateVersion?.extra?.[key],
+  const extraHandler = (key: string, isCheckbox?: boolean) => ({
+    [isCheckbox ? "checked" : "value"]:
+      templateVersion?.extra?.[key] || (isCheckbox ? false : ""), // empty string is important to reset the value
     onChange: (value) => {
+      // Handle checkboxes
+      if (isCheckbox) value = value.currentTarget.checked
+
       setHasChanges(true)
+
+      if (!value) value = undefined // handle empty strings and booleans
+
       setTemplateVersion({
         ...templateVersion,
-        extra: { ...template.extra, [key]: value },
+        extra: { ...templateVersion.extra, [key]: value },
       })
     },
   })
@@ -360,6 +392,8 @@ function Playground() {
 
     return variables
   }, [templateVersion])
+
+  console.log(templateVersion)
 
   return (
     <Grid
@@ -388,7 +422,6 @@ function Playground() {
         style={{ borderRight: "1px solid rgba(120, 120, 120, 0.1)" }}
       >
         <TemplateInputArea
-          loading={loading}
           template={templateVersion}
           setTemplate={setTemplateVersion}
           saveTemplate={saveTemplate}
@@ -401,22 +434,22 @@ function Playground() {
         <Stack style={{ zIndex: 0 }}>
           <Group>
             <Button
-              leftSection={<IconDevicesShare size={18} />}
-              size="sm"
+              leftSection={<IconDeviceFloppy size={18} />}
+              size="xs"
               loading={loading}
               disabled={loading || (template?.id && !hasChanges)}
               variant="outline"
-              rightSection={
-                <HotkeysInfo hot="S" size="sm" style={{ marginTop: -4 }} />
-              }
+              // rightSection={
+              // <HotkeysInfo hot="S" size="sm" style={{ marginTop: -4 }} />
+              // }
               onClick={saveTemplate}
             >
               Save changes
             </Button>
 
             <Button
-              leftSection={<IconDeviceFloppy size={18} />}
-              size="sm"
+              leftSection={<IconGitCommit size={18} />}
+              size="xs"
               loading={loading}
               disabled={loading || (!templateVersion?.is_draft && !hasChanges)}
               variant="filled"
@@ -461,8 +494,7 @@ function Playground() {
                   }
                   setTemplateVersion(newTemplateVersion)
 
-                  const newTemplate = { ...template, mode: value }
-                  setTemplate(newTemplate)
+                  setTemplate({ ...template, mode: value })
                 }}
               />
             }
@@ -495,7 +527,6 @@ function Playground() {
                   <NumberInput
                     min={0}
                     max={2}
-                    defaultValue={1.0}
                     step={0.1}
                     decimalScale={2}
                     size="xs"
@@ -511,7 +542,6 @@ function Playground() {
                 value={
                   <NumberInput
                     min={1}
-                    defaultValue={1000}
                     max={32000}
                     step={100}
                     size="xs"
@@ -527,7 +557,6 @@ function Playground() {
                   <NumberInput
                     min={-2}
                     max={2}
-                    defaultValue={0}
                     decimalScale={2}
                     step={0.1}
                     size="xs"
@@ -545,7 +574,6 @@ function Playground() {
                     max={2}
                     decimalScale={2}
                     step={0.1}
-                    defaultValue={0}
                     size="xs"
                     w={90}
                     {...extraHandler("presence_penalty")}
@@ -559,7 +587,6 @@ function Playground() {
                   <NumberInput
                     min={0.1}
                     max={1}
-                    defaultValue={1}
                     decimalScale={2}
                     step={0.1}
                     size="xs"
@@ -567,6 +594,11 @@ function Playground() {
                     {...extraHandler("top_p")}
                   />
                 }
+              />
+
+              <ParamItem
+                name="Stream"
+                value={<Checkbox {...extraHandler("stream", true)} />}
               />
             </>
           )}

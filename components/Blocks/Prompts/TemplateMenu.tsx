@@ -41,9 +41,9 @@ export const defaultTemplateVersion = {
     model: "gpt-4-1106-preview",
     temperature: 1.0,
     max_tokens: 1000,
-    frequency_penalty: 0,
-    presence_penalty: 0,
-    top_p: 1,
+    // frequency_penalty: 0,
+    // presence_penalty: 0,
+    // top_p: 1,
   },
   test_values: {},
 }
@@ -66,6 +66,8 @@ const TemplateListItem = ({
   const { hovered, ref } = useHover()
 
   const active = activeTemplate?.id === template.id
+
+  const sortedVersions = template.versions.sort((a, b) => b.id - a.id)
 
   return (
     <NavLink
@@ -131,44 +133,46 @@ const TemplateListItem = ({
       }
       onClick={() => {
         switchTemplate(template)
+        if (sortedVersions[0]) switchTemplateVersion(sortedVersions[0])
       }}
     >
       <ScrollArea.Autosize mah="200px">
-        {template.versions
-          .sort((a, b) => b.id - a.id)
-          .map((version, i) => (
-            <NavLink
-              key={i}
-              pl={20}
-              active={activeVersion?.id === version.id}
-              label={
-                <Group gap={8}>
-                  <Text>{`v${template.versions.length - i}`}</Text>
+        {sortedVersions.map((version, i) => (
+          <NavLink
+            key={i}
+            pl={20}
+            py={4}
+            active={activeVersion?.id === version.id}
+            label={
+              <Group gap={8}>
+                <Text>{`v${template.versions.length - i}`}</Text>
 
-                  {version.is_draft && (
-                    <Badge size="xs" color="yellow" variant="outline">
-                      Draft
-                    </Badge>
-                  )}
+                {version.is_draft && (
+                  <Badge size="xs" color="yellow" variant="outline">
+                    Draft
+                  </Badge>
+                )}
 
-                  {version.id === lastDeployed?.id && (
-                    <Badge size="xs" color="blue" variant="outline">
-                      Live
-                    </Badge>
-                  )}
+                {version.id === lastDeployed?.id && (
+                  <Badge size="xs" color="blue" variant="outline">
+                    Live
+                  </Badge>
+                )}
 
-                  <Text c="dimmed" span size="sm" ml="auto">
-                    {formatDistanceToNow(new Date(version.created_at), {
-                      addSuffix: true,
-                    })
-                      .replace("minute", "min")
-                      .replace(" hour", "h")}
-                  </Text>
-                </Group>
-              }
-              onClick={() => switchTemplateVersion(version)}
-            />
-          ))}
+                <Text c="dimmed" span size="xs" ml="auto">
+                  {formatDistanceToNow(new Date(version.created_at), {
+                    addSuffix: true,
+                  })
+                    .replace("about", "~")
+                    .replace("minute", "min")
+                    .replace(" hours", "h")
+                    .replace(" hour", "h")}
+                </Text>
+              </Group>
+            }
+            onClick={() => switchTemplateVersion(version)}
+          />
+        ))}
       </ScrollArea.Autosize>
     </NavLink>
   )
@@ -193,7 +197,6 @@ const TemplateList = ({
     const newTemplate = await insert([
       {
         mode: "openai",
-        name: slug,
         app_id: app?.id,
         org_id: profile?.org.id,
         slug,
@@ -215,6 +218,8 @@ const TemplateList = ({
 
       switchTemplateVersion(newVersion?.[0])
     }
+
+    mutate()
   }
 
   const applyRename = async (e, id) => {

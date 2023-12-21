@@ -85,9 +85,10 @@ export default function RunInputOutput({
       .update({ is_public: true })
       .eq("id", run.id)
       .select()
-    setLoading(false)
+      .single()
 
-    router.push(`/llm-calls/${data[0].id}`)
+    router.push(`/llm-calls/${data.id}`)
+    setLoading(false)
   }
 
   async function makePrivate() {
@@ -97,7 +98,8 @@ export default function RunInputOutput({
       .update({ is_public: false })
       .eq("id", run.id)
       .select()
-    setRun(data[0])
+      .single()
+    setRun(data)
     setLoading(false)
   }
 
@@ -106,8 +108,9 @@ export default function RunInputOutput({
       return (
         <Button
           onClick={makePublic}
-          w="130"
-          leftSection={<IconWorldShare />}
+          size="sm"
+          variant="light"
+          leftSection={<IconWorldShare size={16} />}
           loading={loading}
         >
           Share
@@ -119,7 +122,9 @@ export default function RunInputOutput({
       <Button
         onClick={makePrivate}
         w="130"
-        leftSection={<IconWorldX />}
+        size="sm"
+        variant="light"
+        leftSection={<IconWorldX size={16} />}
         loading={loading}
         color="red"
       >
