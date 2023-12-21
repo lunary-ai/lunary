@@ -1,3 +1,4 @@
+import { getColorForRole } from "@/utils/colors"
 import {
   Code,
   Flex,
@@ -15,13 +16,12 @@ import {
   IconTool,
   IconUser,
 } from "@tabler/icons-react"
-import { getColorForRole } from "@/utils/colors"
 import ProtectedText from "../ProtectedText"
 import { RenderJson } from "./RenderJson"
 
 import { circularPro } from "../../../pages/_app"
 
-const RenderFunction = ({ color, compact, codeBg, data, type }) => {
+function RenderFunction({ color, compact, codeBg, data, type }) {
   const fontColor = type === "functionCall" ? "#40c057" : "inherit"
 
   return (
