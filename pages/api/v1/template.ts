@@ -27,6 +27,10 @@ export default edgeWrapper(async function handler(req: Request) {
     .eq("app_id", app_id)
     .eq("slug", slug)
     .neq("versions.is_draft", true)
+    .order("created_at", {
+      referencedTable: "template_version",
+      ascending: false,
+    })
     .limit(1)
     .maybeSingle()
     .throwOnError()
