@@ -38,6 +38,7 @@ const registerRunEvent = async (
     error,
     feedback,
     metadata,
+    runtime,
   } = event
 
   if (!tags) {
@@ -126,6 +127,7 @@ const registerRunEvent = async (
         template_version_id: templateId,
         parent_run: parentRunIdToUse,
         input,
+        runtime,
       })
 
       break
@@ -222,7 +224,6 @@ export default edgeWrapper(async function handler(req: NextRequest) {
   }
 
   const { events } = await req.json()
-  // const { events } = req.body
 
   // Use to check if parentRunId was already inserted
   const insertedIds = new Set<string>()
