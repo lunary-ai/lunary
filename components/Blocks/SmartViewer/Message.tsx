@@ -154,41 +154,41 @@ function ChatMessageContent({
   onChange,
   editable,
 }) {
-  if (data?.functionCall) {
-    return (
-      <FunctionCallMessage
-        data={data.functionCall}
-        color={color}
-        compact={compact}
-        codeBg={codeBg}
-      />
-    )
-  } else if (data?.toolCalls) {
-    return (
-      <ToolCallsMessage
-        toolCalls={data.toolCalls}
-        color={color}
-        compact={compact}
-        codeBg={codeBg}
-      />
-    )
-  } else if (
-    typeof data?.text === "string" ||
-    typeof data?.content === "string"
-  ) {
-    return (
-      <TextMessage
-        data={data}
-        onChange={onChange}
-        editable={editable}
-        codeBg={codeBg}
-      />
-    )
-  } else if (Array.isArray(data?.content)) {
-    return <ImageMessage data={data} codeBg={codeBg} compact={compact} />
-  }
+  return (
+    <>
+      {(typeof data?.text === "string" ||
+        typeof data?.content === "string") && (
+        <TextMessage
+          data={data}
+          onChange={onChange}
+          editable={editable}
+          codeBg={codeBg}
+        />
+      )}
 
-  return null
+      {Array.isArray(data?.content) && (
+        <ImageMessage data={data} codeBg={codeBg} compact={compact} />
+      )}
+
+      {data?.functionCall && (
+        <FunctionCallMessage
+          data={data.functionCall}
+          color={color}
+          compact={compact}
+          codeBg={codeBg}
+        />
+      )}
+
+      {data?.toolCalls && (
+        <ToolCallsMessage
+          toolCalls={data.toolCalls}
+          color={color}
+          compact={compact}
+          codeBg={codeBg}
+        />
+      )}
+    </>
+  )
 }
 
 export function ChatMessage({
