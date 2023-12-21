@@ -92,7 +92,7 @@ const BarList = ({
                       key={i}
                       pos="relative"
                       display="flex"
-                      height="25px"
+                      height="35px"
                     >
                       <Progress.Root
                         size="lg"
@@ -118,7 +118,7 @@ const BarList = ({
                         justify="center"
                       >
                         <Text
-                          c={scheme === "dark" ? "gray" : "dark"}
+                          c={scheme === "dark" ? "white" : "dark"}
                           mb={-3}
                           size="12px"
                           style={{
