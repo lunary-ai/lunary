@@ -1,12 +1,14 @@
 import { useCurrentApp, useProfile, useTemplates } from "@/utils/dataHooks"
 import {
   Badge,
+  Box,
   Button,
   Card,
   Checkbox,
   Grid,
   Group,
   NumberInput,
+  ScrollArea,
   SegmentedControl,
   Select,
   Stack,
@@ -357,6 +359,7 @@ function Playground() {
   }
 
   const extraHandler = (key: string, isCheckbox?: boolean) => ({
+    size: "xs",
     [isCheckbox ? "checked" : "value"]:
       templateVersion?.extra?.[key] || (isCheckbox ? false : ""), // empty string is important to reset the value
     onChange: (value) => {
@@ -401,6 +404,7 @@ function Playground() {
       overflow="hidden"
       styles={{
         inner: {
+          flexWrap: "nowrap",
           height: "calc(100vh - var(--navbar-size))",
         },
       }}
@@ -421,14 +425,16 @@ function Playground() {
         p="xl"
         style={{ borderRight: "1px solid rgba(120, 120, 120, 0.1)" }}
       >
-        <TemplateInputArea
-          template={templateVersion}
-          setTemplate={setTemplateVersion}
-          saveTemplate={saveTemplate}
-          setHasChanges={setHasChanges}
-          output={output}
-          error={error}
-        />
+        <Box mah="100%" style={{ overflowY: "auto" }}>
+          <TemplateInputArea
+            template={templateVersion}
+            setTemplate={setTemplateVersion}
+            saveTemplate={saveTemplate}
+            setHasChanges={setHasChanges}
+            output={output}
+            error={error}
+          />
+        </Box>
       </Grid.Col>
       <Grid.Col span={3} p="xl">
         <Stack style={{ zIndex: 0 }}>
@@ -506,7 +512,6 @@ function Playground() {
                 name="Model"
                 value={
                   <Select
-                    size="xs"
                     data={availableModels.filter((model) =>
                       template?.mode === "openai"
                         ? model.includes("gpt-")
@@ -529,7 +534,6 @@ function Playground() {
                     max={2}
                     step={0.1}
                     decimalScale={2}
-                    size="xs"
                     style={{ zIndex: 0 }}
                     w={90}
                     {...extraHandler("temperature")}
@@ -544,7 +548,6 @@ function Playground() {
                     min={1}
                     max={32000}
                     step={100}
-                    size="xs"
                     w={90}
                     {...extraHandler("max_tokens")}
                   />
@@ -559,7 +562,6 @@ function Playground() {
                     max={2}
                     decimalScale={2}
                     step={0.1}
-                    size="xs"
                     w={90}
                     {...extraHandler("frequency_penalty")}
                   />
@@ -574,7 +576,6 @@ function Playground() {
                     max={2}
                     decimalScale={2}
                     step={0.1}
-                    size="xs"
                     w={90}
                     {...extraHandler("presence_penalty")}
                   />
@@ -589,7 +590,6 @@ function Playground() {
                     max={1}
                     decimalScale={2}
                     step={0.1}
-                    size="xs"
                     w={90}
                     {...extraHandler("top_p")}
                   />
