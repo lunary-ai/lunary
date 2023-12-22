@@ -55,7 +55,7 @@ export default function Paywall({
   const { profile } = useProfile()
 
   // Automatically disable paywall in these cases
-  if (["unlimited", "custom", plan].includes(profile?.org.plan)) {
+  if (["custom", plan].includes(profile?.org.plan)) {
     return children
   }
 
