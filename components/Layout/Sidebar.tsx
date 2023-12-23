@@ -41,7 +41,7 @@ const menu = [
   { label: "Users", icon: IconUsers, link: "/users" },
   { label: "Chats", icon: IconMessages, link: "/chats" },
   { label: "Prompts", icon: IconPlayerPlay, link: "/prompts" },
-  { label: "Evaluations", icon: IconStethoscope, link: "/evaluations" },
+  // { label: "Evaluations", icon: IconStethoscope, link: "/evaluations" },
   { label: "Settings", icon: IconSettings, link: "/settings" },
 ]
 
