@@ -134,26 +134,30 @@ export default function Navbar() {
               </Button>
             ) : (
               <>
-                {profile?.verified === false && (
+                {!profile?.verified && (
                   <Group
-                    bg="orange"
+                    bg="orange.9"
                     h="30"
+                    c="white"
+                    gap={8}
                     px="16"
                     display="flex"
                     style={{ borderRadius: 8, fontSize: 14, color: "white" }}
                   >
                     {`Verify your email within 24h to keep your account`}
 
-                    {!emailSent && <span style={{ marginRight: 5 }}>-</span>}
                     {!emailSent && (
-                      <Anchor
-                        href="#"
-                        onClick={sendVerification}
-                        c="white"
-                        style={{ fontSize: 14 }}
-                      >
-                        {sendingEmail ? "Sending..." : "Resend email"}
-                      </Anchor>
+                      <>
+                        <span style={{ marginRight: 0 }}>-</span>
+                        <Anchor
+                          href="#"
+                          onClick={sendVerification}
+                          c="white"
+                          style={{ fontSize: 14 }}
+                        >
+                          {sendingEmail ? "Sending..." : "Resend email"}
+                        </Anchor>
+                      </>
                     )}
                   </Group>
                 )}
