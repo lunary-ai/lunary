@@ -43,7 +43,7 @@ const setupSubscription = async (object) => {
 
   const emailPromises = users.map((user) => {
     return sendEmail(UPGRADE_EMAIL(user.email, user.name))
-  })
+  })``
 
   await Promise.all(emailPromises)
 

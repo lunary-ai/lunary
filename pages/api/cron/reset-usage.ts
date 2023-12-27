@@ -6,7 +6,7 @@ import { sendTelegramMessage } from "@/lib/notifications"
 import postgres from "postgres"
 import { H } from "@highlight-run/next/server"
 
-const sql = postgres(process.env.DB_URI)
+const sql = postgres(process.env.DB_URI!)
 
 const updateLimitedStatus = async () => {
   // set limited = false for all users that have been under the limit

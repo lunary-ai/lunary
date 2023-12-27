@@ -15,7 +15,7 @@ export default edgeWrapper(async function handler(req) {
   if (process.env.SKIP_EMAIL_VERIFY) jsonResponse(200, { message: "skipped" })
 
   // Generate token
-  const token = await sign({ email }, process.env.JWT_SECRET)
+  const token = await sign({ email }, process.env.JWT_SECRET!)
 
   // Generate confirmation link
   const confirmLink = `${process.env.NEXT_PUBLIC_APP_URL}/api/user/verify-email?token=${token}`

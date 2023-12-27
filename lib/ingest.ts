@@ -66,7 +66,7 @@ export const uuidFromSeed = async (seed: string): Promise<string> => {
  * Useful for example for interop with Vercel'AI SDK as they use their own run ids format.
  * This function will convert any string to a valid UUID.
  */
-export const ensureIsUUID = async (id: string): Promise<string> => {
+export const ensureIsUUID = async (id: string): Promise<string | undefined> => {
   if (typeof id !== "string") return undefined
   if (!id || id.length === 36) return id // TODO: better UUID check
   else return await uuidFromSeed(id)
@@ -121,7 +121,7 @@ export const cleanEvent = async (event: any): Promise<Event> => {
 //   feedback: z.optional(z.any()),
 // })
 
-const clearUndefined = (obj: any) =>
+const clearUndefined = (obj: any): any =>
   Object.fromEntries(Object.entries(obj).filter(([_, v]) => v !== undefined))
 
 export const ingestChatEvent = async (run: Event): Promise<void> => {
@@ -181,7 +181,7 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
   const { data: previousRun } = await supabaseAdmin
     .from("run")
     .select("*")
-    .eq("parent_run", parentRunId)
+    .eq("parent_run", parentRunId!)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle()
@@ -262,7 +262,7 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
     await supabaseAdmin
       .from("run")
       .update(clearUndefined({ ...shared, ...update }))
-      .eq("id", previousRun.id)
+      .eq("id", previousRun!.id)
       .throwOnError()
   }
 }
