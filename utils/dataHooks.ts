@@ -56,7 +56,7 @@ export const useProfile = () => {
   const query = supabaseClient
     .from("profile")
     .select(
-      "id,name,email,verified,org(id,name,plan,play_allowance,stripe_customer,apiKey:api_key,users:profile(id,name,email,role))",
+      "id,name,email,verified,org(id,limited,name,plan,play_allowance,stripe_customer,apiKey:api_key,users:profile(id,name,email,role))",
     )
     .match({ id: user?.id })
     .single()

@@ -13,7 +13,7 @@ body {
 
 /* .limited table td, */
 .limited .mantine-Badge-inner,
-.limited .protected,
+span.limited,
 .limited code,
 .limited table .mantine-Text-root {
   filter: blur(4px);
@@ -39,9 +39,4 @@ body {
 
 .mantine-Badge-root {
   max-width: 100%;
-}
-
-td,
-th {
-  /* padding: 1.25rem; */
 }

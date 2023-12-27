@@ -29,5 +29,5 @@ export default function ProtectedText({ children }) {
   // create a string of fake characters same length and keep new lines
   const fakeChars = children.replace(/\S/g, "XX")
 
-  return limited ? <span className="protected">{fakeChars}</span> : children
+  return limited ? <span className="limited">{fakeChars}</span> : children
 }
