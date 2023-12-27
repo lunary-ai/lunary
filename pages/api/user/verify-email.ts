@@ -9,17 +9,17 @@ import { jwtVerify } from "jose"
 export const runtime = "edge"
 export const dynamic = "force-dynamic"
 
-const response = new Response(`Email verified`, {
+const response = {
   status: 302,
   headers: {
     Location: process.env.NEXT_PUBLIC_APP_URL + "?verified=true",
   },
-})
+}
 
 export default edgeWrapper(async function handler(req) {
   const params = new URL(req.url).searchParams
 
-  const token = params.get("token")
+  const token = params.get("token") as string
 
   const {
     payload: { email },
@@ -36,7 +36,7 @@ export default edgeWrapper(async function handler(req) {
     .throwOnError()
 
   if (verified) {
-    return response
+    return new Response("Email already verified", response)
   }
 
   const {
@@ -60,5 +60,5 @@ export default edgeWrapper(async function handler(req) {
 
   await sendEmail(WELCOME_EMAIL(email, name, id))
 
-  return response
+  return new Response("Email verified", response)
 })
