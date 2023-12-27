@@ -28,7 +28,9 @@ export default edgeWrapper(async function handler(req) {
   } = await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET))
 
   // check if email is already verified
-  const { data: { verified } = {} } = await supabaseAdmin
+  const {
+    data: { verified },
+  } = await supabaseAdmin
     .from("profile")
     .select("verified")
     .eq("email", email)

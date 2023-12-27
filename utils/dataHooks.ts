@@ -82,7 +82,7 @@ export const useProfile = () => {
   const profileWithOrg = profile
     ? {
         ...profile,
-        color: getUserColor(scheme, theme, user?.id),
+        color: getUserColor(scheme, theme, profile?.id),
         org: {
           ...profile.org,
           users,
@@ -109,13 +109,13 @@ export function useApps() {
   const supabaseClient = useSupabaseClient<Database>()
   const { profile } = useProfile()
 
-  const query = supabaseClient
-    .from("app")
-    .select("id,name")
-    .eq("org_id", profile?.org?.id)
-
   const { data: apps, isLoading } = useQuery(
-    profile?.org ? query : null,
+    profile?.org?.id
+      ? supabaseClient
+          .from("app")
+          .select("id,name")
+          .eq("org_id", profile?.org?.id)
+      : null,
     softOptions,
   )
 
@@ -144,14 +144,16 @@ export function useCurrentApp() {
 
   // TODO: should be optimized
   const { data } = useQuery(
-    supabaseClient.from("run").select("id").eq("app", appId).limit(1),
+    !appId
+      ? null
+      : supabaseClient.from("run").select("id").eq("app", appId).limit(1),
   )
 
   const { apps, loading } = useApps()
 
   const app = apps?.find((a) => a.id === appId)
 
-  const activated = data?.length > 0
+  const activated = data && data?.length > 0
 
   const appWithActivated = app ? { ...app, activated } : null
 
@@ -214,15 +216,19 @@ export function useTemplates() {
   const supabaseClient = useSupabaseClient<Database>()
   const { appId } = useContext(AppContext)
 
-  const query = supabaseClient
-    .from("template")
-    .select(
-      "id,name,slug,app_id,created_at,org_id,group,mode,versions:template_version(id,content,extra,created_at,version,is_draft)",
-    )
-    .eq("app_id", appId)
-    .order("created_at", {
-      ascending: false,
-    })
+  const query = !appId
+    ? null
+    : supabaseClient
+        .from("template")
+        .select(
+          "id,name,slug,app_id,created_at,org_id,group,mode,versions:template_version(id,content,extra,created_at,version,is_draft)",
+        )
+        .eq("app_id", appId)
+        .order("created_at", {
+          ascending: false,
+        })
+
+  const { data: templates, isLoading, mutate } = useQuery(query)
 
   // insert mutation
   const { trigger: insert } = useInsertMutation(
@@ -260,8 +266,6 @@ export function useTemplates() {
     },
   )
 
-  const { data: templates, isLoading, mutate } = useQuery(query)
-
   return {
     templates,
     insert,
@@ -278,9 +282,11 @@ export function useUsers() {
   const supabaseClient = useSupabaseClient<Database>()
   const { appId } = useContext(AppContext)
 
-  const query = supabaseClient.rpc("get_users", {
-    app_id: appId,
-  })
+  const query = !appId
+    ? null
+    : supabaseClient.rpc("get_users", {
+        app_id: appId,
+      })
 
   const { data: users } = useQuery(query)
   return { users }
@@ -573,7 +579,9 @@ export function useRun(runId: string) {
   const supabaseClient = useSupabaseClient<Database>()
 
   const { data: run, isLoading } = useQuery(
-    runId && supabaseClient.from("run").select("*").eq("id", runId).single(),
+    !runId
+      ? null
+      : supabaseClient.from("run").select("*").eq("id", runId).single(),
     softOptions,
   )
 
@@ -677,7 +685,7 @@ export function useAppUser(id: string) {
   return { user, loading: isLoading }
 }
 
-export function useFetchSWR(url: string, props: any = {}) {
+export function useFetchSWR(url: string | null, props: any = {}) {
   const key = url ? JSON.stringify({ url, props }) : null
 
   const { data, isValidating } = useSWR(
@@ -701,7 +709,7 @@ export function useFetchSWR(url: string, props: any = {}) {
 export function useAppSWR(url: string, props: any = {}) {
   const { app } = useCurrentApp()
 
-  const { data, loading } = useFetchSWR(app && url, {
+  const { data, loading } = useFetchSWR(app ? url : null, {
     ...props,
     appId: app?.id,
   })
