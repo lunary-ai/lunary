@@ -56,7 +56,7 @@ export const useProfile = () => {
   const query = supabaseClient
     .from("profile")
     .select(
-      "id,name,email,verified,org(id,name,plan,play_allowance,stripe_customer,apiKey:api_key,users:profile(id,name,email))",
+      "id,name,email,verified,org(id,name,plan,play_allowance,stripe_customer,apiKey:api_key,users:profile(id,name,email,role))",
     )
     .match({ id: user?.id })
     .single()
@@ -68,7 +68,7 @@ export const useProfile = () => {
     isLoading,
   } = useQuery(user ? query : null, hardOptions)
 
-  const users = profile?.org.users
+  const users = profile?.org?.users
     ?.sort((a, b) => {
       if (a.role === "admin" && b.role === "member") return -1
       if (a.role === "member" && b.role === "admin") return 1
@@ -82,7 +82,7 @@ export const useProfile = () => {
   const profileWithOrg = profile
     ? {
         ...profile,
-        color: getUserColor(scheme, theme, user.id),
+        color: getUserColor(scheme, theme, user?.id),
         org: {
           ...profile.org,
           users,
