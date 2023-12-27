@@ -34,7 +34,7 @@ export default function Home() {
   const { profile } = useProfile()
 
   const createApp = async () => {
-    await insert([{ name: newAppName, org_id: profile.org.id }])
+    await insert([{ name: newAppName, org_id: profile?.org.id }])
 
     setModalOpened(false)
 
@@ -46,27 +46,25 @@ export default function Home() {
   return (
     <Stack>
       <NextSeo title="Dashboard" />
-
       <Modal
         opened={modalOpened}
         onClose={() => setModalOpened(false)}
-        title="New app"
+        title="New project"
       >
         <Group>
           <TextInput
-            placeholder="App name"
+            placeholder="Project name"
             value={newAppName}
             onChange={(e) => setNewAppName(e.currentTarget.value)}
           />
           <Button onClick={createApp}>Create</Button>
         </Group>
       </Modal>
-
       {apps && !apps.length ? (
         <Card p="xl" w={600} withBorder>
           <Stack align="start">
             <Title order={3}>
-              Start by adding an app to get an app tracking ID.
+              Create your first project to get a tracking ID.
             </Title>
             <Button
               size="md"
@@ -74,20 +72,20 @@ export default function Home() {
                 setModalOpened(true)
               }}
             >
-              + Create one
+              + Create project
             </Button>
           </Stack>
         </Card>
       ) : (
         <>
           <Group>
-            <Title order={3}>Your Apps</Title>
+            <Title order={3}>Projects</Title>
             <Button
               onClick={() => {
                 setModalOpened(true)
               }}
             >
-              + New app
+              + New project
             </Button>
           </Group>
           {loading && <Loader />}

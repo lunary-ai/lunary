@@ -94,7 +94,7 @@ export const UpgradeBody = ({ highlight }) => {
               features={[
                 { id: "events", title: "4k events per day" },
                 { id: "team", title: "4 team members" },
-                { id: "apps", title: "Unlimited Apps" },
+                { id: "apps", title: "Unlimited Projects" },
                 { id: "analytics", title: "Advanced Analytics" },
                 { id: "playground", title: "Prompt Playground" },
                 { id: "export", title: "Exports & API" },

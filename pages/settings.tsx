@@ -101,6 +101,9 @@ export default function AppAnalytics() {
 
   const { data: appUsage } = useAppSWR("/analytics/usage")
 
+  const isAdmin =
+    profile?.id === profile?.org?.users?.find((u) => u.role === "admin")?.id
+
   return (
     <Container className="unblockable">
       <Stack>
@@ -113,7 +116,7 @@ export default function AppAnalytics() {
                 onRename={(name) => update({ id: app.id, name })}
               />
               <Text>
-                App ID for tracking: <CopyText value={app?.id} />
+                Project ID for tracking: <CopyText value={app?.id} />
               </Text>
             </Stack>
           </Card>
@@ -170,7 +173,7 @@ export default function AppAnalytics() {
 
               <Text>
                 Use this key to authenticate with the Data API and fetch data
-                from your apps.
+                from your projects.
               </Text>
 
               <Text>
@@ -180,20 +183,20 @@ export default function AppAnalytics() {
           </Card>
 
           <LineChart
-            title={<Title order={3}>App Usage</Title>}
+            title={<Title order={3}>Project Usage</Title>}
             range={30}
             data={appUsage}
             formatter={(val) => `${val} runs`}
             props={["count"]}
           />
 
-          {profile?.role === "admin" && (
+          {isAdmin && (
             <Card withBorder p="lg" style={{ overflow: "visible" }}>
               <Stack align="start">
                 <Title order={4}>Danger Zone</Title>
 
                 <Text>
-                  Deleting your app is irreversible and it will delete all
+                  Deleting your project is irreversible and it will delete all
                   associated data.
                   <br />
                   We <b>cannot</b> recover your data once it's deleted.
@@ -205,8 +208,8 @@ export default function AppAnalytics() {
                   </Popover.Target>
                   <Popover.Dropdown>
                     <Text mb="md">
-                      Are you sure you want to delete this app? This action is
-                      irreversible and it will delete all associated data.
+                      Are you sure you want to delete this project? This action
+                      is irreversible and it will delete all associated data.
                     </Text>
                     <Button
                       color="red"
