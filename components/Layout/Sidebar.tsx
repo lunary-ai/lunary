@@ -70,18 +70,7 @@ export default function Sidebar() {
 
   const isActive = (link: string) => router.pathname.startsWith(link)
 
-  // TODO: remove this when feature built
-  let menuCopy = [...menu]
-  if (profile?.org.plan !== "pro") {
-    // insert at index before last
-    menuCopy.splice(menuCopy.length - 1, 0, {
-      label: "Templates",
-      icon: IconBracketsAngle,
-      link: "/templates",
-    })
-  }
-
-  const links = menuCopy.map((item) => (
+  const links = menu.map((item) => (
     <NavbarLink {...item} active={isActive(item.link)} key={item.label} />
   ))
 

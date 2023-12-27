@@ -1,7 +1,6 @@
 import analytics from "@/utils/analytics"
 import { useApps, useCurrentApp, useProfile } from "@/utils/dataHooks"
 import { Anchor, AppShell, Button, Flex, Group, Select } from "@mantine/core"
-import { modals } from "@mantine/modals"
 import { useUser } from "@supabase/auth-helpers-react"
 
 import {
@@ -19,16 +18,37 @@ import { useEffect, useState } from "react"
 import errorHandler from "../../utils/errorHandler"
 import { notifications } from "@mantine/notifications"
 import { openUpgrade } from "./UpgradeModal"
+import { useRouter } from "next/router"
 
 export default function Navbar() {
   const { app, setAppId } = useCurrentApp()
+  const router = useRouter()
 
-  const { profile } = useProfile()
+  const { profile, mutate } = useProfile()
   const { apps, loading } = useApps()
   const [emailSent, setEmailSent] = useState(false)
   const [sendingEmail, setSendingEmail] = useState(false)
 
   const user = useUser()
+
+  // check if has ?verified=true in url
+  useEffect(() => {
+    const verified = router.query.verified === "true"
+
+    if (verified) {
+      mutate() // force update profile
+      notifications.show({
+        id: "verified",
+        icon: <IconCheck size={18} />,
+        color: "teal",
+        title: "Email verified",
+        message: "You now have access to all features.",
+      })
+
+      // remove query param
+      router.replace(router.pathname, undefined, { shallow: true })
+    }
+  }, [router.query])
 
   const sendVerification = async () => {
     if (sendingEmail) return
@@ -144,7 +164,7 @@ export default function Navbar() {
                     display="flex"
                     style={{ borderRadius: 8, fontSize: 14, color: "white" }}
                   >
-                    {`Verify your email within 24h to keep your account`}
+                    {`Verify your email to keep your account`}
 
                     {!emailSent && (
                       <>
