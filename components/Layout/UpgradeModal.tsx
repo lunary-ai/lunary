@@ -49,8 +49,7 @@ const PlanFeatures = ({ features, highlight }) => {
 export const UpgradeBody = ({ highlight }) => {
   const { profile } = useProfile()
 
-  const isFree = profile?.org.plan === "free"
-  const isPro = profile?.org.plan === "pro"
+  const { plan } = profile?.org || {}
 
   return (
     <Container px={80} py="md">
@@ -79,7 +78,7 @@ export const UpgradeBody = ({ highlight }) => {
               >
                 Pro
               </Text>
-              {isPro && (
+              {plan === "pro" && (
                 <Text size="lg" c="dimmed" ta="center">
                   (current plan)
                 </Text>
@@ -87,11 +86,6 @@ export const UpgradeBody = ({ highlight }) => {
             </Group>
 
             <Title order={2}>
-              {isFree && (
-                <Text span td="line-through" style={{ fontSize: 20 }} fw={700}>
-                  $50
-                </Text>
-              )}
               {` $25`}
               <Text span>{` / mo`}</Text>
             </Title>
@@ -108,7 +102,7 @@ export const UpgradeBody = ({ highlight }) => {
               highlight={highlight}
             />
 
-            {isFree && (
+            {plan === "free" && (
               <Button
                 size="md"
                 href={`${process.env.NEXT_PUBLIC_STRIPE_PRO_LINK}&client_reference_id=${profile?.org.id}`}
@@ -119,7 +113,7 @@ export const UpgradeBody = ({ highlight }) => {
                 color="violet"
                 mt="auto"
               >
-                Claim -50% forever
+                Upgrade
               </Button>
             )}
           </Stack>
@@ -135,6 +129,11 @@ export const UpgradeBody = ({ highlight }) => {
             >
               Unlimited
             </Text>
+            {plan === "unlimited" && (
+              <Text size="lg" c="dimmed" ta="center">
+                (current plan)
+              </Text>
+            )}
           </Group>
 
           <Group my={20} align="center" gap={10}>
@@ -152,7 +151,7 @@ export const UpgradeBody = ({ highlight }) => {
             features={[
               { id: "events", title: "Unlimited events" },
               { id: "team", title: "10 team members" },
-              { id: "template", title: "Prompt Templates" },
+              { id: "template", title: "Unlimited Templates" },
               { id: "playground", title: "Unlimited Playground" },
               { id: "evaluate", title: "Evaluations & Alerts" },
             ]}

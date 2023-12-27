@@ -170,6 +170,9 @@ export default function Sidebar() {
                   leftSection={<IconLogout size="16" />}
                   onClick={() => {
                     supabaseClient.auth.signOut().then(() => {
+                      // empty localstorage
+                      window.localStorage.clear()
+
                       Router.push("/login")
                     })
                   }}

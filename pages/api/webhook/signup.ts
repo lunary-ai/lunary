@@ -15,7 +15,14 @@ export default edgeWrapper(async function handler(req: NextRequest) {
     record: {
       email,
       id: userId,
-      raw_user_meta_data: { projectName, name, orgId, signupMethod },
+      raw_user_meta_data: {
+        projectName,
+        orgName,
+        employeeCount,
+        name,
+        orgId,
+        signupMethod,
+      },
     },
   } = await req.json()
 
@@ -29,7 +36,7 @@ export default edgeWrapper(async function handler(req: NextRequest) {
     // Create new Org
     const { data: org } = await supabaseAdmin
       .from("org")
-      .insert({ name: `${name}'s Org`, plan: "free" })
+      .insert({ name: orgName || `${name}'s Org`, plan: "free" })
       .select()
       .single()
       .throwOnError()
@@ -88,7 +95,9 @@ export default edgeWrapper(async function handler(req: NextRequest) {
     `<b>🔔 New signup from ${email}</b>
     
 ${name} is ${
-      signupMethod === "signup" ? `building ${projectName}.` : "joining an org."
+      signupMethod === "signup"
+        ? `building ${projectName} @ ${orgName} (${employeeCount}).`
+        : "joining an org."
     }`,
     "users",
   )
