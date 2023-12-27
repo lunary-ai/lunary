@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic"
 const response = new Response(`Email verified`, {
   status: 302,
   headers: {
-    Location: process.env.NEXT_PUBLIC_APP_URL,
+    Location: process.env.NEXT_PUBLIC_APP_URL + "?verified=true",
   },
 })
 
