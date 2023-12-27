@@ -6,7 +6,7 @@ import { z } from "zod"
 import { calcRunCost } from "@/utils/calcCosts"
 import { apiWrapper } from "@/lib/api/helpers"
 
-const sql = postgres(process.env.DB_URI, { transform: postgres.camel })
+const sql = postgres(process.env.DB_URI!, { transform: postgres.camel })
 
 const ratelimit = new Ratelimit({
   redis: kv,

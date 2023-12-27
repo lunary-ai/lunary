@@ -343,10 +343,10 @@ export function useLLMCalls(
 
 export function useFilteredLLMCalls(
   search,
-  modelNames = [],
-  tags = [],
-  feedbacks = [],
-  users = [],
+  modelNames: string[] = [],
+  tags: string[] = [],
+  feedbacks: any[] = [],
+  users: string[] = [],
 ) {
   const supabaseClient = useSupabaseClient()
   const { appId } = useContext(AppContext)
@@ -435,7 +435,7 @@ export function useTraces(search) {
 }
 
 export function useRuns(
-  type: string,
+  type?: string,
   config: {
     notInfinite?: boolean
     match?: any
@@ -498,7 +498,7 @@ export function useRuns(
   }
 }
 
-export function useRunsUsage(range, user_id = undefined) {
+export function useRunsUsage(range, user_id?: string) {
   const supabaseClient = useSupabaseClient()
   const { appId } = useContext(AppContext)
 

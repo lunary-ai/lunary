@@ -103,7 +103,7 @@ export default function LLMCalls() {
   const [selectedFeedbacks, setSelectedFeedbacks] = useState([])
 
   const { users } = useUsers()
-  const [selectedUsers, setSelectedUsers] = useState([])
+  const [selectedUsers, setSelectedUsers] = useState<any[]>([])
 
   const { runs, loading, validating, loadMore } = useFilteredLLMCalls(
     query,
@@ -117,7 +117,9 @@ export default function LLMCalls() {
 
   const [selected, setSelected] = useState(null)
 
-  const exportUrl = buildExportUrl(appId, query, selectedModels, selectedTags)
+  const exportUrl = appId
+    ? buildExportUrl(appId, query, selectedModels, selectedTags)
+    : ""
 
   const { allFeedbacks } = useAllFeedbacks()
 
@@ -126,10 +128,10 @@ export default function LLMCalls() {
   }
 
   function exportButton(url: string) {
-    if (profile?.org.plan === "pro") {
+    if (profile?.org.plan !== "free") {
       return {
-        component: "a",
         href: url,
+        component: "a",
         onClick: () => {
           analytics.trackOnce("ClickExport")
         },

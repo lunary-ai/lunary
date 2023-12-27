@@ -1,4 +1,3 @@
-import { useState } from "react"
 import AgentSummary from "@/components/Blocks/Analytics/AgentSummary"
 import AnalyticsCard from "@/components/Blocks/Analytics/AnalyticsCard"
 import BarList from "@/components/Blocks/Analytics/BarList"
@@ -13,7 +12,6 @@ import {
   useProfile,
 } from "@/utils/dataHooks"
 import {
-  Card,
   Center,
   Container,
   Group,
@@ -27,7 +25,6 @@ import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 import Empty from "@/components/Layout/Empty"
 import { IconChartAreaLine } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
-import ErrorBoundary from "@/components/Blocks/ErrorBoundary"
 import { useLocalStorage } from "@mantine/hooks"
 
 const calculateDailyCost = (usage) => {

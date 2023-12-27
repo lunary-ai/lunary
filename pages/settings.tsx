@@ -24,19 +24,17 @@ import {
   TextInput,
   Title,
 } from "@mantine/core"
-import { modals } from "@mantine/modals"
 import { IconPencil, IconUserPlus } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import Router from "next/router"
 
-import { Label, ReferenceLine } from "recharts"
 import { openUpgrade } from "../components/Layout/UpgradeModal"
 
 function Invite() {
   const { profile } = useProfile()
 
-  if (profile?.org?.plan === "pro") {
-    if (profile?.org.users.length === 5) {
+  if (profile?.org.plan === "pro") {
+    if (profile?.org.users?.length === 4) {
       return <Badge color="orange">Seat allowance exceeded</Badge>
     }
     return (
@@ -113,7 +111,7 @@ export default function AppAnalytics() {
             <Stack>
               <RenamableField
                 defaultValue={app?.name}
-                onRename={(name) => update({ id: app.id, name })}
+                onRename={(name) => update({ id: app?.id, name })}
               />
               <Text>
                 Project ID for tracking: <CopyText value={app?.id} />
@@ -126,7 +124,9 @@ export default function AppAnalytics() {
               <RenamableField
                 defaultValue={profile?.org.name}
                 onRename={(name) => {
-                  updateOrg({ id: profile.org.id, name }).then(mutate)
+                  updateOrg({ id: profile?.org.id, name }).then(() => {
+                    mutate()
+                  })
                 }}
               />
 
@@ -214,7 +214,7 @@ export default function AppAnalytics() {
                     <Button
                       color="red"
                       onClick={() => {
-                        drop({ id: app.id })
+                        drop({ id: app?.id })
                         setAppId(null)
                         Router.push("/")
                       }}

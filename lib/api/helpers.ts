@@ -3,7 +3,7 @@ import { z } from "zod"
 import { PageRouterHighlight, H } from "@highlight-run/next/server"
 
 const withPageRouterHighlight = PageRouterHighlight({
-  projectID: process.env.NEXT_PUBLIC_HIGHLIGHT_PROJECT_ID,
+  projectID: process.env.NEXT_PUBLIC_HIGHLIGHT_PROJECT_ID!,
   serviceName: "lunary-api",
 })
 

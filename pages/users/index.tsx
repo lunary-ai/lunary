@@ -36,7 +36,7 @@ const columns = [
 export default function Users() {
   const { users, loading, loadMore, validating } = useAppUsersList()
 
-  if (!loading && users.length === 0) {
+  if (!loading && users?.length === 0) {
     return <Empty Icon={IconUsers} what="users" />
   }
 

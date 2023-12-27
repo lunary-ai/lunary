@@ -36,7 +36,7 @@ const columns = [
 
 export default function UserDetails({}) {
   const router = useRouter()
-  const { id } = router.query
+  const { id } = router.query as { id: string }
 
   const { user } = useAppUser(id as string)
 
@@ -45,9 +45,9 @@ export default function UserDetails({}) {
     filter: ["parent_run", "is", "null"],
   })
 
-  const { usage } = id ? useRunsUsage(90, id) : {}
+  const { usage } = id ? useRunsUsage(90, id) : { usage: undefined }
 
-  const { name, email, ...extraProps } = user?.props || {}
+  const { name, email, ...extraProps } = user?.props || ({} as any)
 
   return (
     <Stack>
@@ -70,14 +70,16 @@ export default function UserDetails({}) {
             </Group>
           )}
           <Group>
-            <Text c="dimmed">{`last seen:  ${new Date(
-              user?.last_seen,
-            ).toLocaleString(undefined, {
-              month: "short",
-              day: "numeric",
-              hour: "numeric",
-              minute: "numeric",
-            })}`}</Text>
+            {user?.last_seen && (
+              <Text c="dimmed">{`last seen:  ${new Date(
+                user.last_seen,
+              ).toLocaleString(undefined, {
+                month: "short",
+                day: "numeric",
+                hour: "numeric",
+                minute: "numeric",
+              })}`}</Text>
+            )}
           </Group>
 
           {Object.keys(extraProps).length > 0 && (

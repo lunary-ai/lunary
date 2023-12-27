@@ -6,7 +6,6 @@ import {
   Button,
   Container,
   Flex,
-  Group,
   Paper,
   PasswordInput,
   Stack,
@@ -17,16 +16,7 @@ import {
 
 import { useForm } from "@mantine/form"
 import { useSessionContext, useUser } from "@supabase/auth-helpers-react"
-import {
-  IconAnalyze,
-  IconAt,
-  IconBrandDiscord,
-  IconCalendar,
-  IconCheck,
-  IconMail,
-  IconMessageBolt,
-  IconUser,
-} from "@tabler/icons-react"
+import { IconAnalyze, IconAt, IconCheck, IconUser } from "@tabler/icons-react"
 
 import Router from "next/router"
 import errorHandler from "@/utils/errorHandler"
@@ -41,16 +31,17 @@ export async function getServerSideProps(context) {
 
   const { data: org } = await supabaseAdmin
     .from("org")
-    .select("*")
+    .select("name")
     .eq("id", orgId)
     .single()
+    .throwOnError()
 
   const { count: orgUserCount } = await supabaseAdmin
     .from("profile")
     .select("*", { count: "exact", head: true })
     .eq("org_id", orgId)
 
-  return { props: { orgUserCount, orgName: org.name, orgId } }
+  return { props: { orgUserCount, orgName: org?.name, orgId } }
 }
 
 function TeamFull({ orgName }) {

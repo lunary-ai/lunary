@@ -3,7 +3,7 @@ import { EdgeHighlight, H } from "@highlight-run/next/server"
 import { jsonResponse } from "./jsonResponse"
 
 const withEdgeHighlight = EdgeHighlight({
-  projectID: process.env.NEXT_PUBLIC_HIGHLIGHT_PROJECT_ID,
+  projectID: process.env.NEXT_PUBLIC_HIGHLIGHT_PROJECT_ID!,
   serviceName: "lunary-api-edge",
 })
 

@@ -8,12 +8,13 @@ import { NextResponse } from "next/server"
 import { Database } from "@/utils/supaTypes"
 import { jsonResponse } from "./jsonResponse"
 import { AuthSession } from "@supabase/supabase-js"
+import { NextApiResponse } from "next"
 
 // Ensure the user is logged in and has access to the app
 // Works for both Edge functions and normal API routes
 export const ensureIsLogged = async (
   req,
-  res = null,
+  res: NextApiResponse | null = null,
 ): Promise<{ session: AuthSession; supabase: SupabaseClient<Database> }> => {
   // if no res, that means we're on an Edge function
   let supabase: SupabaseClient<Database>
@@ -41,13 +42,17 @@ export const ensureIsLogged = async (
         "The user does not have an active session or is not authenticated",
     }
 
+    // @ts-ignore
     return isEdge ? jsonResponse(401, error) : res.status(401).json(error)
   }
 
   return { session, supabase }
 }
 
-export const ensureHasAccessToApp = async (req, res = null) => {
+export const ensureHasAccessToApp = async (
+  req,
+  res: NextApiResponse | null = null,
+) => {
   const { session, supabase } = await ensureIsLogged(req, res)
 
   let appId

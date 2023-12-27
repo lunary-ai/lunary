@@ -31,6 +31,13 @@ export default function DataTable({
   loading = false,
   onRowClicked = undefined,
   loadMore = undefined,
+}: {
+  type: string
+  data?: any[]
+  columns?: any[]
+  loading?: boolean
+  onRowClicked?: (row: any) => void
+  loadMore?: (() => void) | null
 }) {
   const autoHidableColumns =
     type === "chats" ? CHAT_AUTO_HIDABLE_COLUMNS : DEFAULT_AUTO_HIDABLE_COLUMNS

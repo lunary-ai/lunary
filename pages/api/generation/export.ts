@@ -11,7 +11,7 @@ export const config = {
   },
 }
 
-const sql = postgres(process.env.DB_URI)
+const sql = postgres(process.env.DB_URI!)
 
 export default apiWrapper(async function handler(
   req: NextApiRequest,
