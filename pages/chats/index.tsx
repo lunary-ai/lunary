@@ -112,11 +112,11 @@ export default function Chats() {
 
   const router = useRouter()
   const [selectedItems, setSelectedItems] = useState([])
-  const [selected, setSelected] = useState()
+  const [selected, setSelected] = useState(null)
 
   const { runIds } = useConvosByFeedback(selectedItems)
   let { runs, loading, validating, loadMore } = useRuns(
-    null,
+    undefined,
     {
       filter: ["type", "in", '("convo","thread")'],
     },
@@ -128,11 +128,11 @@ export default function Chats() {
       supabaseClient
         .from("run")
         .select("*")
-        .eq("app", appId)
         .eq("id", router.query.chat)
+        .single()
         .then((res) => {
-          if (res?.data[0]) {
-            setSelected(res.data[0])
+          if (res?.data) {
+            setSelected(res.data)
           }
         })
     }

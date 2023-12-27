@@ -41,9 +41,9 @@ const setupSubscription = async (object) => {
     .eq("org_id", org.id)
     .throwOnError()
 
-  const emailPromises = users.map((user) => {
-    return sendEmail(UPGRADE_EMAIL(user.email, user.name))
-  })``
+  const emailPromises = users.map((user) =>
+    sendEmail(UPGRADE_EMAIL(user.email, user.name)),
+  )
 
   await Promise.all(emailPromises)
 

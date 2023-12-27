@@ -40,7 +40,7 @@ const typeIcon = {
 }
 
 const TraceTree = ({
-  isFirst,
+  isFirst = false,
   focused,
   parentId,
   runs,
@@ -184,7 +184,11 @@ export default function AgentRun({}) {
       </Title>
       <Group>
         {run.status && <StatusBadge status={run.status} />}
-        <Text>{`Started at ${new Date(run.created_at).toLocaleString()}`}</Text>
+        {run.created_at && (
+          <Text>{`Started at ${new Date(
+            run.created_at,
+          ).toLocaleString()}`}</Text>
+        )}
         <TokensBadge tokens={totalTokens} />
         {totalCost && (
           <Badge variant="outline" color="gray">

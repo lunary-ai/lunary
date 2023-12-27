@@ -15,13 +15,17 @@ import { notifications } from "@mantine/notifications"
 import { NextSeo } from "next-seo"
 import Router, { useRouter } from "next/router"
 import { useState } from "react"
+import errorHandler from "@/utils/errorHandler"
 
 export default function UpdatePassword() {
   const supabaseClient = useSupabaseClient()
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-  const { token, email } = router.query
+  const { token, email } = router.query as {
+    token: string
+    email: string
+  }
 
   const form = useForm({
     initialValues: {
@@ -37,12 +41,14 @@ export default function UpdatePassword() {
   const handlePasswordReset = async ({ password }: { password: string }) => {
     setLoading(true)
 
-    const res = await fetch("/api/auth/reset-password", {
-      method: "POST",
-      body: JSON.stringify({ token, newPassword: password }),
-    })
+    const res = await errorHandler(
+      fetch("/api/auth/reset-password", {
+        method: "POST",
+        body: JSON.stringify({ token, newPassword: password }),
+      }),
+    )
 
-    if (res.ok) {
+    if (res) {
       notifications.show({
         icon: <IconCheck size={18} />,
         color: "teal",
@@ -50,14 +56,12 @@ export default function UpdatePassword() {
         message: "Password updated successfully",
       })
 
-      const { data, error } = await supabaseClient.auth.signInWithPassword({
+      await supabaseClient.auth.signInWithPassword({
         email,
         password,
       })
 
       Router.push("/")
-    } else {
-      alert("Error")
     }
 
     setLoading(false)
@@ -84,8 +88,8 @@ export default function UpdatePassword() {
                 onChange={(event) =>
                   form.setFieldValue("password", event.currentTarget.value)
                 }
-                error={form.errors.email && "Invalid password"}
-                placeholder="Your email"
+                error={form.errors.password && "Invalid password"}
+                placeholder="Your new password"
               />
 
               <Button mt="md" type="submit" fullWidth loading={loading}>

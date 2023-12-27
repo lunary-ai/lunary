@@ -28,7 +28,7 @@ const seatAllowance = {
 const eventsAllowance = {
   free: 1000,
   pro: 4000,
-  unlimited: 20000,
+  unlimited: 100000,
   custom: 1000000,
 }
 
@@ -40,8 +40,6 @@ export default function Billing() {
   const plan = profile?.org.plan
 
   if (loading) return <Loader />
-
-  // const percent = plan === "pro" ? (usage / eventsAllowance[plan]) * 100 : 1
 
   const redirectToCustomerPortal = async () => {
     const body = await fetch("/api/user/stripe-portal", {
@@ -62,7 +60,7 @@ export default function Billing() {
     window.location.href = url
   }
 
-  const canUpgrade = ["free", "pro"].includes(plan)
+  const canUpgrade = plan && ["free", "pro"].includes(plan)
 
   return (
     <Container className="unblockable">
@@ -86,7 +84,7 @@ export default function Billing() {
         <Text size="lg">
           You are currently on the <Badge>{plan}</Badge> plan.
         </Text>
-        {profile?.org?.limited && (
+        {profile?.org.limited && (
           <Alert
             color="red"
             variant="outline"
@@ -104,41 +102,48 @@ export default function Billing() {
           formatter={(val) => `${val} runs`}
           props={["count"]}
           chartExtra={
-            <ReferenceLine
-              y={eventsAllowance[plan]}
-              fontWeight={600}
-              ifOverflow="extendDomain"
-              stroke="red"
-              strokeDasharray="3 3"
-            >
-              <Label
-                position="insideTop"
-                fontSize="14"
-                fill="#d00"
-                style={{ padding: "2px" }}
+            plan && (
+              <ReferenceLine
+                y={eventsAllowance[plan]}
+                fontWeight={600}
+                ifOverflow="extendDomain"
+                stroke="red"
+                strokeDasharray="3 3"
               >
-                {`plan limit (${eventsAllowance[plan]} / day)`}
-              </Label>
-            </ReferenceLine>
+                <Label
+                  position="insideTop"
+                  fontSize="14"
+                  fill="#d00"
+                  style={{ padding: "2px" }}
+                >
+                  {`plan limit (${eventsAllowance[plan]} / day)`}
+                </Label>
+              </ReferenceLine>
+            )
           }
         />
-        <Card withBorder radius="md" padding="xl">
-          <Stack gap="sm">
-            <Text fz="md" fw={700} size="lg">
-              Seat Allowance
-            </Text>
-            <Text fz="lg" fw={500}>
-              {profile?.org.users?.length} / {seatAllowance[plan]} users
-            </Text>
-            <Progress
-              value={(profile?.org.users.length / seatAllowance[plan]) * 100}
-              size="lg"
-              color="orange"
-              radius="xl"
-            />
-          </Stack>
-        </Card>
-        {profile.org.stripe_customer && (
+        {plan && (
+          <Card withBorder radius="md" padding="xl">
+            <Stack gap="sm">
+              <Text fz="md" fw={700} size="lg">
+                Seat Allowance
+              </Text>
+              <Text fz="lg" fw={500}>
+                {profile?.org.users?.length} / {seatAllowance[plan]} users
+              </Text>
+              <Progress
+                value={
+                  ((profile?.org.users?.length || 0) / seatAllowance[plan]) *
+                  100
+                }
+                size="lg"
+                color="orange"
+                radius="xl"
+              />
+            </Stack>
+          </Card>
+        )}
+        {profile?.org.stripe_customer && (
           <Card withBorder radius="md" padding="xl">
             <Stack align="start">
               <Title order={3}>Customer Portal</Title>

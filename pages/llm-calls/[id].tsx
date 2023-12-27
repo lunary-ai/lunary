@@ -2,7 +2,7 @@ import postgres from "postgres"
 import RunInputOutput from "../../components/Blocks/RunInputOutput"
 import { Container } from "@mantine/core"
 
-const sql = postgres(process.env.DB_URI)
+const sql = postgres(process.env.DB_URI!)
 
 export async function getServerSideProps(context) {
   try {
