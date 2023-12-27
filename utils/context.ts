@@ -2,7 +2,7 @@ import { createContext } from "react"
 
 type AppContextType = {
   appId?: string
-  setAppId: (app: string) => void
+  setAppId: (appId: string | null) => void
 }
 
 export const AppContext = createContext<AppContextType>({
