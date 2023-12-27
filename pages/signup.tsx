@@ -2,6 +2,7 @@ import Router from "next/router"
 import { useEffect, useState } from "react"
 
 import {
+  Alert,
   Anchor,
   Box,
   Button,
@@ -11,6 +12,7 @@ import {
   List,
   Paper,
   PasswordInput,
+  Radio,
   Stack,
   Text,
   TextInput,
@@ -20,15 +22,16 @@ import {
 
 import Confetti from "react-confetti"
 
+import Cal, { getCalApi } from "@calcom/embed-react"
+
 import { useForm } from "@mantine/form"
 import { notifications } from "@mantine/notifications"
-import { useSessionContext, useUser } from "@supabase/auth-helpers-react"
+import { useSessionContext } from "@supabase/auth-helpers-react"
 import {
   IconAnalyze,
   IconArrowRight,
   IconAt,
-  IconBrandDiscord,
-  IconCalendar,
+  IconBuildingStore,
   IconCheck,
   IconCircleCheck,
   IconFolderBolt,
@@ -52,8 +55,9 @@ function SignupPage() {
     initialValues: {
       email: "",
       name: "",
-
       projectName: "Project #1",
+      orgName: "",
+      employeeCount: "",
       password: "",
     },
 
@@ -62,13 +66,14 @@ function SignupPage() {
       name: (val) => (val.length <= 2 ? "Your name that short :) ?" : null),
       projectName: (val) =>
         val.length <= 1 ? "Can you pick something longer?" : null,
-
+      orgName: (val) =>
+        val.length <= 1 ? "Can you pick something longer?" : null,
+      employeeCount: (val) =>
+        val.length <= 1 ? "Please select a value" : null,
       password: (val) =>
         val.length < 6 ? "Password must be at least 6 characters" : null,
     },
   })
-
-  const user = useUser()
 
   useEffect(() => {
     if (session && !isLoading && step === 1) Router.push("/")
@@ -79,11 +84,15 @@ function SignupPage() {
     password,
     name,
     projectName,
+    orgName,
+    employeeCount,
   }: {
     email: string
     password: string
     name: string
     projectName: string
+    orgName: string
+    employeeCount: string
   }) => {
     setLoading(true)
 
@@ -96,19 +105,29 @@ function SignupPage() {
             signupMethod: "signup",
             name,
             projectName,
+            orgName,
+            employeeCount,
           },
         },
       }),
     )
 
-    analytics.track("Signup", { email, name })
+    analytics.track("Signup", {
+      email,
+      name,
+      projectName,
+      orgName,
+      employeeCount,
+    })
 
     if (ok) {
       notifications.show({
         icon: <IconCheck size={18} />,
         color: "teal",
-        title: "Email sent 💌",
-        message: "Check your emails to verify your email.",
+        title: "Email sent",
+        autoClose: false,
+        withCloseButton: false,
+        message: "Check your emails for the confirmation link",
       })
 
       setStep(3)
@@ -120,18 +139,38 @@ function SignupPage() {
   const nextStep = () => {
     if (step === 1) {
       if (
-        form.validateField("email").hasError ||
-        form.validateField("password").hasError
+        ["email", "name", "password"].some(
+          (field) => form.validateField(field).hasError,
+        )
       ) {
         return
       }
     }
 
+    if (step === 2 && !form.values.orgName) {
+      form.setFieldValue("orgName", form.values.name + "'s Org")
+    }
+
     setStep(step + 1)
   }
 
+  useEffect(() => {
+    if (step === 3) {
+      ;(async function () {
+        const Cal = await getCalApi()
+        Cal("ui", {
+          styles: { branding: { brandColor: "#000000" } },
+          hideEventTypeDetails: true,
+          layout: "month_view",
+        })
+      })()
+    }
+  }, [step])
+
+  const isBigCompany = form.values.employeeCount !== "1-5"
+
   return (
-    <Container size={800} mih="60%">
+    <Container size={step === 3 ? 1200 : 800} mih="60%">
       <NextSeo title="Sign Up" />
 
       <Stack align="center" gap={50}>
@@ -147,7 +186,7 @@ function SignupPage() {
               <Grid.Col span={{ base: 12, md: 6 }}>
                 <Paper radius="md" p="xl" withBorder>
                   <form onSubmit={form.onSubmit(handleSignup)}>
-                    <Stack gap="xl">
+                    <Stack gap="lg">
                       {step === 1 && (
                         <>
                           <Title order={2} fw={700} ta="center">
@@ -161,6 +200,23 @@ function SignupPage() {
                             error={form.errors.email && "Invalid email"}
                             placeholder="Your email"
                             {...form.getInputProps("email")}
+                          />
+
+                          <TextInput
+                            label="Full Name"
+                            autoComplete="name"
+                            description="Only used to address you properly."
+                            leftSection={<IconUser size="16" />}
+                            placeholder="Your full name"
+                            error={form.errors.name && "This field is required"}
+                            {...form.getInputProps("name")}
+                            onChange={(e) => {
+                              form.setFieldValue("name", e.target.value)
+                              form.setFieldValue(
+                                "orgName",
+                                e.target.value + "'s Org",
+                              )
+                            }}
                           />
 
                           <PasswordInput
@@ -196,24 +252,19 @@ function SignupPage() {
                       {step === 2 && (
                         <>
                           <Title order={2} fw={700} ta="center">
-                            Almost there...
+                            Create an organization
                           </Title>
 
                           <TextInput
-                            label="Full Name"
-                            autoComplete="name"
-                            description="Only used to address you properly."
-                            leftSection={<IconUser size="16" />}
-                            placeholder="Your full name"
-                            error={form.errors.name && "This field is required"}
-                            {...form.getInputProps("name")}
-                            onChange={(e) => {
-                              form.setFieldValue("name", e.target.value)
-                              form.setFieldValue(
-                                "orgName",
-                                e.target.value + "'s Org",
-                              )
-                            }}
+                            label="Organization Name"
+                            description="Eg. your company name"
+                            leftSection={<IconBuildingStore size="16" />}
+                            placeholder="Organization name"
+                            error={
+                              form.errors.projectName &&
+                              "This field is required"
+                            }
+                            {...form.getInputProps("orgName")}
                           />
 
                           <TextInput
@@ -228,7 +279,23 @@ function SignupPage() {
                             {...form.getInputProps("projectName")}
                           />
 
-                          <Stack>
+                          <Radio.Group
+                            label="Employee count"
+                            error={
+                              form.errors.employeeCount &&
+                              "This field is required"
+                            }
+                            {...form.getInputProps("employeeCount")}
+                          >
+                            <Group mt="xs">
+                              <Radio value="1-5" label="1-5" />
+                              <Radio value="11-50" label="6-49" />
+                              <Radio value="51-100" label="50-99" />
+                              <Radio value="101-500" label="100+" />
+                            </Group>
+                          </Radio.Group>
+
+                          <Stack gap="xs">
                             <Button
                               size="md"
                               mt="md"
@@ -244,7 +311,7 @@ function SignupPage() {
                               onClick={() => setStep(1)}
                               fullWidth
                               variant="transparent"
-                              color="black"
+                              color="dimmed"
                             >
                               {`← Go back`}
                             </Button>
@@ -301,7 +368,7 @@ function SignupPage() {
 
         {step === 3 && (
           <>
-            {typeof window !== "undefined" && (
+            {typeof window !== "undefined" && !isBigCompany && (
               <Confetti
                 recycle={false}
                 numberOfPieces={500}
@@ -311,68 +378,106 @@ function SignupPage() {
               />
             )}
 
-            <Stack align="center">
-              <IconAnalyze color={"#206dce"} size={60} />
+            <Stack align="center" w={800}>
+              {/* <IconAnalyze color={"#206dce"} size={60} /> */}
+
               <Title order={2} fw={700} size={40} ta="center">
-                You&apos;re all set 🎉
+                {`You're all set 🎉`}
               </Title>
 
-              <Text size="xl" mt="xs" mb="xl" fw={500}>
-                Check your emails for the confirmation link.
-              </Text>
+              {isBigCompany ? (
+                <>
+                  <Text size="xl" ta="center" my="xl">
+                    Are you free in the next days for a quick call?
+                    <br />
+                    We'd love to understand your use-case and help you directly
+                    with the integration.
+                  </Text>
+                  <Cal
+                    // namespace="lunary"
+                    calLink="vincelwt/lunary"
+                    className="calcom-embed"
+                    config={{
+                      hideEventTypeDetails: "true",
+                      layout: "month_view",
+                      name: "vince loewe", //form.values.name,
+                      email: "vince@lunary.ai", //form.values.email,
+                    }}
+                  />
+                  <Button
+                    onClick={() => {
+                      // use this to refresh properly
+                      window.location.href = "/"
+                    }}
+                    variant="subtle"
+                    rightSection={<IconArrowRight size={16} />}
+                    size="md"
+                  >
+                    Skip to Dashboard
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Alert fw={500} icon={<IconMail />} my="lg">
+                    <Text size="md" fw={500}>
+                      Check your emails for the confirmation link.
+                    </Text>
+                  </Alert>
 
-              <Button
-                onClick={() => {
-                  // use this to refresh properly
-                  window.location.href = "/"
-                }}
-                mb="xl"
-                rightSection={<IconArrowRight size={18} />}
-                size="lg"
-              >
-                Open Dashboard
-              </Button>
+                  <Button
+                    onClick={() => {
+                      window.location.href = "/"
+                    }}
+                    variant={isBigCompany ? "outline" : "filled"}
+                    mb="xl"
+                    rightSection={<IconArrowRight size={18} />}
+                    size="lg"
+                  >
+                    Open Dashboard
+                  </Button>
 
-              <Text size="lg">
-                Want to say hi? We&apos;d love to talk to you:
-              </Text>
+                  <Text size="lg">
+                    {`Want to say hi? We'd love to talk to you:`}
+                  </Text>
 
-              <Group>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    $crisp.push(["do", "chat:open"])
-                  }}
-                  rightSection={<IconMessageBolt size={18} />}
-                >
-                  Chat
-                </Button>
+                  <Group>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        $crisp.push(["do", "chat:open"])
+                      }}
+                      rightSection={<IconMessageBolt size={18} />}
+                    >
+                      Chat
+                    </Button>
 
-                <Button
-                  variant="outline"
-                  color="teal.8"
-                  component="a"
-                  href="mailto:hello@lk.com"
-                  rightSection={<IconMail size={18} />}
-                >
-                  Email
-                </Button>
-
-                <Button
-                  variant="outline"
-                  color="red.8"
-                  target="_blank"
-                  component="a"
-                  href="https://savvycal.com/vince/chat"
-                  rightSection={<IconCalendar size={18} />}
-                >
-                  Call with founder
-                </Button>
-              </Group>
+                    <Button
+                      variant="outline"
+                      color="teal.8"
+                      component="a"
+                      href="mailto:hello@lk.com"
+                      rightSection={<IconMail size={18} />}
+                    >
+                      Email
+                    </Button>
+                  </Group>
+                </>
+              )}
             </Stack>
           </>
         )}
       </Stack>
+      <style jsx global>{`
+        .calcom-embed {
+          height: 470px;
+          width: 100%;
+          overflow: auto;
+        }
+
+        iframe main > div > span {
+          display: none !important;
+        }
+      `}</style>
     </Container>
   )
 }

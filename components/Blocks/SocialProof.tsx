@@ -20,7 +20,7 @@ export default function SocialProof() {
         <Rating value={5} readOnly />
         <Text color="dimmed">
           <Text color={scheme === "light" ? "black" : "white"} span fw="bolder">
-            650+
+            750+
           </Text>{" "}
           AI devs build better apps
         </Text>
