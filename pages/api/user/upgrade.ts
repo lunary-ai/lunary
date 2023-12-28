@@ -41,6 +41,10 @@ export default edgeWrapper(async function handler(req: NextRequest) {
       payment_method_types: ["card"],
       client_reference_id: orgId,
       customer: org.stripe_customer || undefined,
+      metadata: {
+        plan,
+        period,
+      },
       line_items: [
         {
           price: priceId,
@@ -62,6 +66,10 @@ export default edgeWrapper(async function handler(req: NextRequest) {
     // Update user subscription with new price
     await stripe.subscriptions.update(org.stripe_subscription, {
       cancel_at_period_end: false,
+      metadata: {
+        plan,
+        period,
+      },
       items: [
         {
           id: subItem,

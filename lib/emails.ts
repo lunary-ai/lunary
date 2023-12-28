@@ -69,36 +69,69 @@ Vince`,
   }
 }
 
-export function UPGRADE_EMAIL(email: string, name: string) {
+export function UPGRADE_EMAIL(email: string, name: string, plan: string) {
   return {
-    subject: `welcome to lunary pro`,
+    subject: `Your account has been upgraded`,
     to: [email],
     from: process.env.GENERIC_SENDER,
     text: `Hi ${extractFirstName(name)},
 
-Your account has been upgraded to the pro plan.
+Your account has been upgraded to the ${plan} plan.
 
 The extra features and higher limits are now available to you.
 
 Reply to this email if you have any question.
 
-The Lunary team`,
+- The Lunary Team`,
   }
 }
 
 export function CANCELED_EMAIL(email: string, name: string) {
   return {
-    subject: `sorry to see you go`,
+    subject: `Important: subscription canceled`,
     to: [email],
     from: process.env.GENERIC_SENDER,
     text: `Hi ${extractFirstName(name)},
 
-Your account has been downgraded to the free plan.
+You have canceled your subscription. We're sad to see you go :(
 
-We're sorry to see you go.
+At the end of your billing period, your account will be downgraded to the free plan.
 
-Would you mind telling us why you canceled? We're always looking to improve.
+*Important: any data older than 30 days (free plan limits) will be permanently deleted.*
 
-Thank you for trying Lunary.`,
+If this was a mistake, you can upgrade again at any time here: https://app.lunary.ai/billing
+
+Would you mind telling us why you canceled? We're always looking to improve. 
+
+Thank you for trying Lunary.
+
+Vince & Hugh - co-founders of Lunary`,
+  }
+}
+
+export function FULLY_CANCELED_EMAIL(email: string, name: string) {
+  return {
+    subject: `Sorry to see you go..`,
+    to: [email],
+    from: process.env.GENERIC_SENDER,
+    text: `Hi ${extractFirstName(name)},
+
+Your account has been downgraded to the free plan
+
+Would you mind telling us why you canceled? We're always looking to improve. 
+
+If you can take 30 seconds to reply to this email with one of the following reasons, it would help us a lot:
+
+1. I don't need it anymore
+2. I found a better alternative
+3. I'm missing a feature
+4. It's too expensive
+5. Other: ____________
+
+If this was a mistake, you can upgrade again at any time here: https://app.lunary.ai/billing
+
+Thank you for trying Lunary.
+
+Vince & Hugh - co-founders of Lunary`,
   }
 }
