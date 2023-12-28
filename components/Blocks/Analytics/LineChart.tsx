@@ -77,7 +77,7 @@ function prepareDataForRecharts(
       if (splitBy) {
         for (let splitByValue of uniqueSplitByValues) {
           dayData[`${splitByValue} ${prop}`] =
-            data.find(
+            data?.find(
               (item) =>
                 item[splitBy]?.toString() === splitByValue &&
                 format(parseISO(item.date), "yyyy-MM-dd") === date,

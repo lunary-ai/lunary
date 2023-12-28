@@ -1,6 +1,7 @@
 import LineChart from "@/components/Blocks/Analytics/LineChart"
 import { openUpgrade } from "@/components/Layout/UpgradeModal"
 import { useFetchSWR, useProfile } from "@/utils/dataHooks"
+import errorHandler from "@/utils/errorHandler"
 import {
   Alert,
   Badge,
@@ -42,22 +43,26 @@ export default function Billing() {
   if (loading) return <Loader />
 
   const redirectToCustomerPortal = async () => {
-    const body = await fetch("/api/user/stripe-portal", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        customer: profile?.org.stripe_customer,
-        origin: window.location.origin,
-      }),
-    })
+    const data = await errorHandler(
+      (
+        await fetch("/api/user/stripe-portal", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            customer: profile?.org.stripe_customer,
+            origin: window.location.origin,
+          }),
+        })
+      ).json(),
+    )
 
-    const { url } = await body.json()
+    if (!data) return
 
     // redirect to stripe portal
 
-    window.location.href = url
+    window.location.href = data.url
   }
 
   const canUpgrade = plan && ["free", "pro"].includes(plan)
@@ -72,9 +77,10 @@ export default function Billing() {
           {canUpgrade && (
             <Button
               variant="gradient"
-              size="xs"
+              size="md"
+              pr="lg"
               gradient={{ from: "#0788ff", to: "#9900ff", deg: 30 }}
-              leftSection={<IconBolt size="16" />}
+              leftSection={<IconBolt fill="#fff" size={18} />}
               onClick={() => openUpgrade()}
             >
               Upgrade
