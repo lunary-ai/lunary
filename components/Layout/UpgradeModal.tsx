@@ -20,11 +20,12 @@ import {
   Title,
 } from "@mantine/core"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useProfile } from "../../utils/dataHooks"
 import SocialProof from "../Blocks/SocialProof"
 import errorHandler from "@/utils/errorHandler"
 import { notifications } from "@mantine/notifications"
+import { capitalize } from "@/utils/format"
 
 const PlanFeatures = ({ features, highlight }) => {
   return (
@@ -76,7 +77,7 @@ const RenderPrice = ({ price, period }) => {
   )
 }
 
-export const UpgradeBody = ({ highlight }) => {
+export const UpgradePlans = ({ highlight }: { highlight?: string }) => {
   const { profile } = useProfile()
   const [period, setPeriod] = useState("monthly")
   const [loading, setLoading] = useState(null)
@@ -118,21 +119,32 @@ export const UpgradeBody = ({ highlight }) => {
     setLoading(null)
   }
 
+  const buttonText = useCallback(
+    (newPlan) => {
+      if (profile?.org.canceled && newPlan === plan)
+        return { children: "Reactivate", variant: "gradient" }
+
+      if (profile?.org.canceled)
+        return {
+          children: `Reactivate on ${capitalize(newPlan)}`,
+          variant: "gradient",
+        }
+
+      if (newPlan === plan && period !== profile?.org?.plan_period)
+        return { children: "Switch to " + period, variant: "outline" }
+
+      if (newPlan === plan) return { children: "Current plan", disabled: true }
+
+      if (newPlan === "pro" && plan === "unlimited")
+        return { children: "Downgrade", variant: "subtle" }
+
+      return { children: "Upgrade", variant: "gradient" }
+    },
+    [period, profile?.org, period],
+  )
+
   return (
-    <Container px={80} py="md">
-      <Stack align="center" ta="center" className="unblockable">
-        <IconAnalyze color={"#206dce"} size={50} />
-
-        <Title order={2} fw={700} size={34} ta="center">
-          Upgrade your plan
-        </Title>
-
-        <Text size="lg" mt="xs" mb="lg" fw={500}>
-          Remove limits & unlock powerful features to improve your AI&apos;s
-          quality.
-        </Text>
-      </Stack>
-
+    <>
       <SegmentedControl
         w={"fit-content"}
         mx="auto"
@@ -147,7 +159,7 @@ export const UpgradeBody = ({ highlight }) => {
               <Group ml={6} align="center" gap={5} wrap="nowrap">
                 Annually
                 <Badge color="green" variant="light">
-                  -16%
+                  2 months free
                 </Badge>
               </Group>
             ),
@@ -189,20 +201,16 @@ export const UpgradeBody = ({ highlight }) => {
               highlight={highlight}
             />
 
-            {plan === "free" && (
-              <Button
-                size="md"
-                onClick={() => upgradePlan("pro")}
-                fullWidth
-                loading={loading === "pro"}
-                variant="gradient"
-                gradient={{ from: "violet", to: "blue", deg: 45 }}
-                color="violet"
-                mt="auto"
-              >
-                Upgrade
-              </Button>
-            )}
+            <Button
+              size="md"
+              onClick={() => upgradePlan("pro")}
+              fullWidth
+              loading={loading === "pro"}
+              gradient={{ from: "violet", to: "blue", deg: 45 }}
+              color="violet"
+              mt="auto"
+              {...buttonText("pro")}
+            />
           </Stack>
         </Card>
 
@@ -247,23 +255,14 @@ export const UpgradeBody = ({ highlight }) => {
             onClick={() => upgradePlan("unlimited")}
             fullWidth
             loading={loading === "unlimited"}
-            variant="gradient"
             gradient={{ from: "teal", to: "lime", deg: 45 }}
             color="teal"
             mt="auto"
-          >
-            Upgrade Now
-          </Button>
+            {...buttonText("unlimited")}
+          />
         </Card>
       </SimpleGrid>
-      <Text ta="center" size="sm" mt="lg">
-        Cancel your subscription at any time with just 1 click.{" "}
-        <Mark>30 days</Mark> money-back guarantee.
-      </Text>
-      <Card w="fit-content" mx="auto" mt="md">
-        <SocialProof />
-      </Card>
-    </Container>
+    </>
   )
 }
 
@@ -279,7 +278,30 @@ const UpgradeModal = ({
 
   if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) return null
 
-  return <UpgradeBody highlight={innerProps?.highlight} />
+  return (
+    <Container px={80} py="md">
+      <Stack align="center" ta="center" className="unblockable">
+        <IconAnalyze color={"#206dce"} size={50} />
+
+        <Title order={2} fw={700} size={34} ta="center">
+          Upgrade your plan
+        </Title>
+
+        <Text size="lg" mt="xs" mb="lg" fw={500}>
+          {`Remove limits & unlock powerful features to improve your AI's
+        quality.`}
+        </Text>
+      </Stack>
+      <UpgradePlans highlight={innerProps?.highlight} />
+      <Text ta="center" size="sm" mt="lg">
+        Cancel your subscription at any time with just 1 click.{" "}
+        <Mark>30 days</Mark> money-back guarantee.
+      </Text>
+      <Card w="fit-content" mx="auto" mt="md">
+        <SocialProof />
+      </Card>
+    </Container>
+  )
 }
 
 export const openUpgrade = (highlight?: string) => {

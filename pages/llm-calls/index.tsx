@@ -203,14 +203,13 @@ export default function LLMCalls() {
             </Menu.Target>
             <Menu.Dropdown>
               <Menu.Item
-                color="dark"
+                // color="dark"
                 leftSection={<IconFileExport size={16} />}
                 {...exportButton(exportUrl)}
               >
                 Export to CSV
               </Menu.Item>
               <Menu.Item
-                color="dark"
                 disabled
                 leftSection={<IconBraces size={16} />}
                 // {...exportButton(exportUrl)}

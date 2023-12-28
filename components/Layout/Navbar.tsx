@@ -5,6 +5,7 @@ import { useUser } from "@supabase/auth-helpers-react"
 
 import {
   IconAlertTriangle,
+  IconAlertTriangleFilled,
   IconAnalyze,
   IconBolt,
   IconCheck,
@@ -143,7 +144,17 @@ export default function Navbar() {
           </Group>
 
           <Group>
-            {profile?.org.limited ? (
+            {profile?.org.canceled ? (
+              <Button
+                size="xs"
+                color="red"
+                onClick={() => openUpgrade()}
+                leftSection={<IconAlertTriangleFilled size="16" />}
+              >
+                Subscription will cancel soon. Click here to restore and prevent
+                data deletion.
+              </Button>
+            ) : profile?.org.limited ? (
               <Button
                 color="orange"
                 size="xs"

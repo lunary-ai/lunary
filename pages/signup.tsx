@@ -63,11 +63,11 @@ function SignupPage() {
 
     validate: {
       email: (val) => (/^\S+@\S+$/.test(val) ? null : "Invalid email"),
-      name: (val) => (val.length <= 2 ? "Your name that short :) ?" : null),
+      name: (val) => (val.length <= 2 ? "Is your name that short :) ?" : null),
       projectName: (val) =>
-        val.length <= 1 ? "Can you pick something longer?" : null,
+        val.length <= 3 ? "Can you pick something longer?" : null,
       orgName: (val) =>
-        val.length <= 1 ? "Can you pick something longer?" : null,
+        val.length <= 3 ? "Can you pick something longer?" : null,
       employeeCount: (val) =>
         val.length <= 1 ? "Please select a value" : null,
       password: (val) =>
@@ -437,7 +437,7 @@ function SignupPage() {
                   </Button>
 
                   <Text size="lg">
-                    {`Want to say hi? We'd love to talk to you:`}
+                    {`Want to say hi? We'd love to talk to you.`}
                   </Text>
 
                   <Group>
