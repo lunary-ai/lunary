@@ -1,9 +1,10 @@
 import analytics from "@/utils/analytics"
 
 import { ContextModalProps, modals } from "@mantine/modals"
-import { IconAnalyze, IconCircleCheck } from "@tabler/icons-react"
+import { IconAnalyze, IconCheck, IconCircleCheck } from "@tabler/icons-react"
 
 import {
+  Badge,
   Button,
   Card,
   Container,
@@ -11,6 +12,7 @@ import {
   Highlight,
   List,
   Mark,
+  SegmentedControl,
   SimpleGrid,
   Stack,
   Text,
@@ -18,9 +20,11 @@ import {
   Title,
 } from "@mantine/core"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useProfile } from "../../utils/dataHooks"
 import SocialProof from "../Blocks/SocialProof"
+import errorHandler from "@/utils/errorHandler"
+import { notifications } from "@mantine/notifications"
 
 const PlanFeatures = ({ features, highlight }) => {
   return (
@@ -46,10 +50,73 @@ const PlanFeatures = ({ features, highlight }) => {
   )
 }
 
+const RenderPrice = ({ price, period }) => {
+  // year = 2 months free
+  const discount = period === "yearly" ? 2 / 12 : 0
+  const monthlyPrice = Math.floor(price * (1 - discount))
+
+  return (
+    <Group align="center" gap={10}>
+      <Title order={3} size={30}>
+        {discount > 0 && (
+          <Text
+            td="line-through"
+            mr={5}
+            c="dimmed"
+            span
+            fz={20}
+          >{`$${price}`}</Text>
+        )}
+        ${monthlyPrice}
+        <Text span fz={20}>
+          {` / mo`}
+        </Text>
+      </Title>
+    </Group>
+  )
+}
+
 export const UpgradeBody = ({ highlight }) => {
   const { profile } = useProfile()
+  const [period, setPeriod] = useState("monthly")
+  const [loading, setLoading] = useState(null)
 
-  const { plan } = profile?.org || {}
+  const plan = profile?.org?.plan || "free"
+
+  const upgradePlan = async (plan) => {
+    setLoading(plan)
+
+    const res = await errorHandler(
+      fetch("/api/user/upgrade", {
+        method: "POST",
+        body: JSON.stringify({
+          plan,
+          period,
+          orgId: profile?.org?.id,
+          origin: window.location.origin,
+        }),
+      }),
+    )
+
+    if (res?.ok) {
+      //   // Redirect to Stripe Checkout session
+      if (res.url) return (window.location.href = res.url)
+
+      notifications.show({
+        title: "Plan updated",
+        message: `Your plan has been updated to ${plan}!`,
+        icon: <IconCheck />,
+        color: "green",
+      })
+
+      // Give time for the Stripe webhook to update the plan
+      setTimeout(() => {
+        window.location.href = "/billing/thank-you"
+      }, 1000)
+    }
+
+    setLoading(null)
+  }
 
   return (
     <Container px={80} py="md">
@@ -60,11 +127,34 @@ export const UpgradeBody = ({ highlight }) => {
           Upgrade your plan
         </Title>
 
-        <Text size="lg" mt="xs" mb="xl" fw={500}>
+        <Text size="lg" mt="xs" mb="lg" fw={500}>
           Remove limits & unlock powerful features to improve your AI&apos;s
           quality.
         </Text>
       </Stack>
+
+      <SegmentedControl
+        w={"fit-content"}
+        mx="auto"
+        display="flex"
+        mb="lg"
+        value={period}
+        onChange={setPeriod}
+        data={[
+          { label: "Monthly", value: "monthly" },
+          {
+            label: (
+              <Group ml={6} align="center" gap={5} wrap="nowrap">
+                Annually
+                <Badge color="green" variant="light">
+                  -16%
+                </Badge>
+              </Group>
+            ),
+            value: "yearly",
+          },
+        ]}
+      />
 
       <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
         <Card p="xl" withBorder shadow="md">
@@ -85,10 +175,7 @@ export const UpgradeBody = ({ highlight }) => {
               )}
             </Group>
 
-            <Title order={2}>
-              {` $25`}
-              <Text span>{` / mo`}</Text>
-            </Title>
+            <RenderPrice price={29} period={period} />
 
             <PlanFeatures
               features={[
@@ -105,9 +192,9 @@ export const UpgradeBody = ({ highlight }) => {
             {plan === "free" && (
               <Button
                 size="md"
-                href={`${process.env.NEXT_PUBLIC_STRIPE_PRO_LINK}&client_reference_id=${profile?.org.id}`}
+                onClick={() => upgradePlan("pro")}
                 fullWidth
-                component="a"
+                loading={loading === "pro"}
                 variant="gradient"
                 gradient={{ from: "violet", to: "blue", deg: 45 }}
                 color="violet"
@@ -137,10 +224,7 @@ export const UpgradeBody = ({ highlight }) => {
           </Group>
 
           <Group my={20} align="center" gap={10}>
-            <Title order={2}>
-              {` $95`}
-              <Text span>{` / mo`}</Text>
-            </Title>
+            <RenderPrice price={120} period={period} />
           </Group>
 
           <Text mb="xs" size="sm" mt={-10}>
@@ -160,10 +244,9 @@ export const UpgradeBody = ({ highlight }) => {
 
           <Button
             size="md"
-            component="a"
-            href={`${process.env.NEXT_PUBLIC_STRIPE_UNLIMITED_LINK}&client_reference_id=${profile.org?.id}`}
-            target="_blank"
+            onClick={() => upgradePlan("unlimited")}
             fullWidth
+            loading={loading === "unlimited"}
             variant="gradient"
             gradient={{ from: "teal", to: "lime", deg: 45 }}
             color="teal"

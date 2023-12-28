@@ -62,6 +62,7 @@ const cancelSubscription = async (object) => {
     .from("org")
     .update({
       plan: "free",
+      stripe_subscription: null,
     })
     .eq("stripe_customer", customer)
     .select("id,name")

@@ -4,7 +4,11 @@ import { IconX } from "@tabler/icons-react"
 // Error handler for supabase methods and fetch requests
 const errorHandler = async (promise: Promise<any>) => {
   try {
-    const res = await promise
+    let res = await promise
+
+    // automatically JSON parse fetch
+    if (res.json) res = await res.json()
+
     const { data, error } = res
     if (error) throw error
     return data || res
