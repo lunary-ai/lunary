@@ -32,30 +32,28 @@ import { openUpgrade } from "../components/Layout/UpgradeModal"
 
 function Invite() {
   const { profile } = useProfile()
+  const plan = profile?.org.plan
 
-  if (profile?.org.plan === "pro") {
-    if (profile?.org.users?.length === 4) {
-      return <Badge color="orange">Seat allowance exceeded</Badge>
-    }
+  if (plan === "free" || (plan === "pro" && profile?.org.users?.length === 4)) {
     return (
-      <Text>
-        Invite link:{" "}
-        <CopyText
-          value={`${window.location.origin}/join?orgId=${profile?.org.id}`}
-        />
-      </Text>
+      <Button
+        variant="light"
+        onClick={() => openUpgrade("team")}
+        style={{ float: "right" }}
+        leftSection={<IconUserPlus size="16" />}
+      >
+        Invite
+      </Button>
     )
   }
 
   return (
-    <Button
-      variant="light"
-      onClick={() => openUpgrade("team")}
-      style={{ float: "right" }}
-      leftSection={<IconUserPlus size="16" />}
-    >
-      Invite
-    </Button>
+    <Text>
+      Invite link:{" "}
+      <CopyText
+        value={`${window.location.origin}/join?orgId=${profile?.org.id}`}
+      />
+    </Text>
   )
 }
 
