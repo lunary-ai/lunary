@@ -12,7 +12,7 @@ import { IconCirclePlus } from "@tabler/icons-react"
 import { useEffect, useRef, useState } from "react"
 import { useCurrentApp } from "../../utils/dataHooks"
 
-// TODO: proper typing for props
+// TODO: proper props type
 export default function FacetedFilter({
   name,
   items = [],

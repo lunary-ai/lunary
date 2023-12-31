@@ -24,6 +24,8 @@ import {
   IconBolt,
   IconPlayerPlay,
   IconBracketsAngle,
+  IconFlask,
+  IconFileDescription,
 } from "@tabler/icons-react"
 
 import { useSessionContext } from "@supabase/auth-helpers-react"
@@ -35,13 +37,11 @@ import Link from "next/link"
 import { openUpgrade } from "./UpgradeModal"
 
 const menu = [
-  { label: "Analytics", icon: IconGraph, link: "/analytics" },
-  { label: "LLM Calls", icon: IconBrandOpenai, link: "/llm-calls" },
-  { label: "Traces", icon: IconListTree, link: "/traces" },
+  { label: "Logs", icon: IconFileDescription, link: "/logs" },
+  { label: "Evaluations", icon: IconFlask, link: "/evaluations" },
   { label: "Users", icon: IconUsers, link: "/users" },
-  { label: "Chats", icon: IconMessages, link: "/chats" },
   { label: "Prompts", icon: IconPlayerPlay, link: "/prompts" },
-  // { label: "Evaluations", icon: IconStethoscope, link: "/evaluations" },
+  { label: "Analytics", icon: IconGraph, link: "/analytics" },
   { label: "Settings", icon: IconSettings, link: "/settings" },
 ]
 

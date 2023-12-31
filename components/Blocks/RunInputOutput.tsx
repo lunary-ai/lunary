@@ -87,7 +87,7 @@ export default function RunInputOutput({
       .select()
       .single()
 
-    router.push(`/llm-calls/${data.id}`)
+    router.push(`/logs/${data.id}`)
     setLoading(false)
   }
 

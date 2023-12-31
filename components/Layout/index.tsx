@@ -35,7 +35,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   const isPromptPage = router.pathname.startsWith("/prompt")
 
-  const isLLMCallPage = router.pathname.startsWith("/llm-calls/[id]")
+  const isLLMCallPage = router.pathname.startsWith("/logs/[id]")
   const isPublicPage = isLLMCallPage && !session
 
   const [appId, setAppId] = useLocalStorage({

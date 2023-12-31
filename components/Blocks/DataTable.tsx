@@ -189,7 +189,7 @@ export default function DataTable({
                   })}
                 </tr>
               ))}
-              <Menu withArrow shadow="sm" closeOnItemClick={false}>
+              {/* <Menu withArrow shadow="sm" closeOnItemClick={false}>
                 <Menu.Target>
                   <ActionIcon
                     pos="absolute"
@@ -224,7 +224,7 @@ export default function DataTable({
                       </Menu.Item>
                     ))}
                 </Menu.Dropdown>
-              </Menu>
+              </Menu> */}
             </thead>
             <tbody>
               {paddingTop > 0 && (

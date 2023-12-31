@@ -5,8 +5,8 @@ import postgres from "postgres"
 import { z } from "zod"
 import { calcRunCost } from "@/utils/calcCosts"
 import { apiWrapper } from "@/lib/api/helpers"
+import { ensureHasAccessToApp } from "@/lib/api/ensureAppIsLogged"
 
-//TODO: delete this file
 const sql = postgres(process.env.DB_URI!, { transform: postgres.camel })
 
 const ratelimit = new Ratelimit({
@@ -16,29 +16,23 @@ const ratelimit = new Ratelimit({
 
 const querySchema = z
   .object({
-    api_key: z.string().optional(),
     app_id: z.string(),
+    type: z.union([z.string(), z.array(z.enum(["llm", "trace", "chat"]))]),
     search: z.string().optional(),
     models: z.union([z.string(), z.array(z.string())]).optional(),
     tags: z.union([z.string(), z.array(z.string())]).optional(),
-    type: z
-      .union([
-        z.string(),
-        z.array(
-          z.enum(["llm", "tool", "chain", "agent", "thread", "chat", "embed"]),
-        ),
-      ])
-      .optional(),
-    limit: z.string().optional().default("100"),
-    page: z.string().optional().default("0"),
-    order: z.enum(["asc", "desc"]).optional(),
+    users: z.union([z.string(), z.array(z.string())]).optional(),
+    tokens: z.string().optional(),
     min_duration: z.string().optional(),
     max_duration: z.string().optional(),
     start_time: z.string(),
     end_time: z.string(),
+
+    limit: z.string().optional().default("100"),
+    page: z.string().optional().default("0"),
+    order: z.enum(["asc", "desc"]).optional(),
   })
   .transform((obj) => ({
-    apiKey: obj.api_key,
     appId: obj.app_id,
     search: obj.search,
     models: Array.isArray(obj.models)
@@ -46,30 +40,21 @@ const querySchema = z
       : [obj.models].filter(Boolean),
     tags: Array.isArray(obj.tags) ? obj.tags : [obj.tags].filter(Boolean),
     type: Array.isArray(obj.type) ? obj.type : [obj.type].filter(Boolean),
-    limit: Number(obj.limit),
-    page: Number(obj.page),
-    order: obj.order,
+    tokens: Number(obj.tokens),
     minDuration: Number(obj.min_duration),
     maxDuration: Number(obj.max_duration),
     startTime: new Date(obj.start_time),
     endTime: new Date(obj.end_time),
+
+    limit: Number(obj.limit),
+    page: Number(obj.page),
+    order: obj.order,
   }))
 
 export default apiWrapper(async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const apiKey = (req.query.api_key ||
-    req.headers["x-api-key"] ||
-    req.cookies.api_key) as string
-
-  const { success } = await ratelimit.limit(apiKey)
-
-  if (!success) {
-    console.error("Rate limit exceeded")
-    return res.status(429).send("Rate limit exceeded")
-  }
-
   const {
     appId,
     search,
@@ -79,6 +64,7 @@ export default apiWrapper(async function handler(
     limit,
     page,
     order,
+    tokens,
     minDuration,
     maxDuration,
     startTime,
@@ -100,18 +86,9 @@ export default apiWrapper(async function handler(
     console.error("Missing appId")
     return res.status(422).send("Missing appId")
   }
+  await ensureHasAccessToApp(req, res)
 
-  const [org] = await sql`select * from org where api_key = ${apiKey}`
   const [app] = await sql`select * from app where id = ${appId}`
-
-  if (org.id !== app.orgId || org.plan === "free") {
-    console.error("Forbidden")
-    return res
-      .status(403)
-      .send(
-        "Forbidden. Please make sure you are using the correct API key and app ID, and that you are on a paid plan.",
-      )
-  }
 
   let typeFilter = sql``
   if (type?.length > 0) {
@@ -135,6 +112,16 @@ export default apiWrapper(async function handler(
   let tagsFilter = sql``
   if (tags?.length > 0) {
     tagsFilter = sql`and r.tags && ${tags}`
+  }
+
+  let usersFilter = sql``
+  if (users?.length > 0) {
+    usersFilter = sql`and r.user = any(${tags})`
+  }
+
+  let tokensFilter = sql``
+  if (tokens) {
+    tokensFilter = sql`and (completion_tokens + prompt_tokens) >= ${tokens}`
   }
 
   let durationFilter = sql``
@@ -175,8 +162,10 @@ export default apiWrapper(async function handler(
         ${typeFilter}
         ${modelsFilter}
         ${tagsFilter}
+        ${usersFilter}
         ${searchFilter}
         ${durationFilter}
+        ${tokensFilter}
         ${timeWindowFilter}
       order by
         r.created_at ${order === "asc" ? sql`asc` : sql`desc`} 
@@ -194,6 +183,7 @@ export default apiWrapper(async function handler(
         ${durationFilter}
         ${timeWindowFilter}
     `
+  //  TODO
 
   const runs = rows.map((run) => ({
     type: run.type,
