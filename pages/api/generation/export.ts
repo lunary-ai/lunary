@@ -72,8 +72,8 @@ export default apiWrapper(async function handler(
       ${tagsFilter}
       ${searchFilter}
     order by
-      r.created_at desc;
-    limit 10000
+      r.created_at desc
+    limit 10000;
   `
 
   const data = rows.length > 0 ? rows : [{}]
