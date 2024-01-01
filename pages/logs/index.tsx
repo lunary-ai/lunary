@@ -10,6 +10,7 @@ import {
   useUsers,
 } from "@/utils/dataHooks"
 import {
+  ActionIcon,
   Box,
   Button,
   Center,
@@ -18,6 +19,7 @@ import {
   Group,
   Menu,
   Modal,
+  Paper,
   SegmentedControl,
   Select,
   SimpleGrid,
@@ -40,10 +42,12 @@ import {
   IconArrowBarUp,
   IconBraces,
   IconBrandOpenai,
+  IconDotsVertical,
   IconEye,
   IconFileExport,
   IconFilter,
   IconListTree,
+  IconMenu,
   IconMessages,
 } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
@@ -209,120 +213,133 @@ export default function LLMCalls() {
         <NextSeo title="Requests" />
 
         <Stack>
-          <Group justify="space-between">
-            <Title>Logs</Title>
-            <Group gap="sm">
-              <Select
-                placeholder="Load a view..."
-                value={currentView?.name}
-                onChange={(viewName) =>
-                  setCurrentView(views.find(({ name }) => name === viewName))
-                }
-                data={views.map((view) => view.name)}
+          <Paper p={4} px="sm">
+            <Flex justify="space-between">
+              <SearchBar
+                query={query}
+                ml={-8}
+                setQuery={setQuery}
+                variant="unstyled"
+                size="sm"
               />
 
-              {Object.values(selectedFilters).length > 0 && (
-                <Button onClick={createView} size="xs">
-                  Save View
+              <Group>
+                <Button
+                  variant="subtle"
+                  onClick={() => setIsModalOpened(true)}
+                  leftSection={<IconFilter size={12} />}
+                  size="xs"
+                >
+                  Add filters
                 </Button>
-              )}
+                <SegmentedControl
+                  value={selectedTab}
+                  size="xs"
+                  w="fit-content"
+                  onChange={setSelectedTab}
+                  data={[
+                    {
+                      label: (
+                        <Group gap="xs" wrap="nowrap" mx="sm">
+                          <IconBrandOpenai size="16px" />
+                          <span>LLM</span>
+                        </Group>
+                      ),
+                      value: "llm-call",
+                    },
 
-              <Menu withArrow shadow="sm" position="bottom-end">
-                <Menu.Target>
-                  <Button
-                    variant="outline"
+                    {
+                      label: (
+                        <Group gap="xs" wrap="nowrap" mx="sm">
+                          <IconListTree size="16px" />
+                          <span>Traces</span>
+                        </Group>
+                      ),
+                      value: "trace",
+                    },
+
+                    {
+                      label: (
+                        <Group gap="xs" wrap="nowrap" mx="sm">
+                          <IconMessages size="16px" />
+                          <span>Chats</span>
+                        </Group>
+                      ),
+                      value: "chat",
+                    },
+                  ]}
+                />
+
+                <Menu withArrow shadow="sm" position="bottom-end">
+                  <Menu.Target>
+                    <ActionIcon variant="light">
+                      <IconDotsVertical size={12} />
+                    </ActionIcon>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    <Menu.Item
+                      leftSection={<IconFileExport size={16} />}
+                      {...exportButton(exportUrl)}
+                    >
+                      Export to CSV
+                    </Menu.Item>
+                    <Menu.Item
+                      color="dark"
+                      disabled
+                      leftSection={<IconBraces size={16} />}
+                      // {...exportButton(exportUrl)}
+                    >
+                      Export to JSONL
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
+              </Group>
+            </Flex>
+          </Paper>
+          {Object.entries(selectedFilters).length > 0 && (
+            <Paper px="xs" p={4}>
+              <Flex justify="space-between">
+                <Group>
+                  {Object.entries(selectedFilters).map(
+                    ([filterName, selected]) =>
+                      selected && (
+                        <FacetedFilter
+                          key={filterName}
+                          name={
+                            filterName.charAt(0).toUpperCase() +
+                            filterName.slice(1)
+                          }
+                          items={modelNames}
+                          selectedItems={selectedModels}
+                          setSelectedItems={setSelectedModels}
+                        />
+                      ),
+                  )}
+                </Group>
+                <Group>
+                  <Select
+                    placeholder="Load a view..."
                     size="xs"
-                    leftSection={<IconArrowBarUp size={16} />}
-                  >
-                    Export
-                  </Button>
-                </Menu.Target>
-                <Menu.Dropdown>
-                  <Menu.Item
-                    color="dark"
-                    leftSection={<IconFileExport size={16} />}
-                    {...exportButton(exportUrl)}
-                  >
-                    Export to CSV
-                  </Menu.Item>
-                  <Menu.Item
-                    color="dark"
-                    disabled
-                    leftSection={<IconBraces size={16} />}
-                    // {...exportButton(exportUrl)}
-                  >
-                    Export to JSONL
-                  </Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
-            </Group>
-          </Group>
-          <Box w="800px" mt="lg">
-            <SegmentedControl
-              value={selectedTab}
-              onChange={setSelectedTab}
-              data={[
-                {
-                  label: (
-                    <Center style={{ gap: 10 }} mx="md">
-                      <IconBrandOpenai size="16px" />
-                      <span>LLM Calls</span>
-                    </Center>
-                  ),
-                  value: "llm-call",
-                },
+                    w={100}
+                    variant="unstyled"
+                    value={currentView?.name}
+                    onChange={(viewName) =>
+                      setCurrentView(
+                        views.find(({ name }) => name === viewName),
+                      )
+                    }
+                    data={views.map((view) => view.name)}
+                  />
 
-                {
-                  label: (
-                    <Center style={{ gap: 10 }} mx="md">
-                      <IconListTree size="16px" />
-                      <span>Traces</span>
-                    </Center>
-                  ),
-                  value: "trace",
-                },
-
-                {
-                  label: (
-                    <Center style={{ gap: 10 }} mx="md">
-                      <IconMessages size="16px" />
-                      <span>Chats</span>
-                    </Center>
-                  ),
-                  value: "chat",
-                },
-              ]}
-            />
-          </Box>
-          <Flex justify="space-between">
-            <Group>
-              <SearchBar query={query} setQuery={setQuery} />
-
-              <Button
-                variant="outline"
-                onClick={() => setIsModalOpened(true)}
-                leftSection={<IconFilter size="18" />}
-                size="xs"
-              >
-                Add filters
-              </Button>
-
-              {Object.entries(selectedFilters).map(
-                ([filterName, selected]) =>
-                  selected && (
-                    <FacetedFilter
-                      key={filterName}
-                      name={
-                        filterName.charAt(0).toUpperCase() + filterName.slice(1)
-                      }
-                      items={modelNames}
-                      selectedItems={selectedModels}
-                      setSelectedItems={setSelectedModels}
-                    />
-                  ),
-              )}
-            </Group>
-          </Flex>
+                  {Object.values(selectedFilters).length > 0 && (
+                    <Button onClick={createView} size="compact-xs">
+                      Save View
+                    </Button>
+                  )}
+                </Group>
+              </Flex>
+            </Paper>
+          )}
         </Stack>
 
         <Drawer

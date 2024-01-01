@@ -113,16 +113,12 @@ export default function FacetedFilter({
     >
       <Combobox.Target withAriaAttributes={false}>
         <Button
-          variant="outline"
-          size="xs"
+          variant="light"
+          size="compact-xs"
           onClick={() => combobox.toggleDropdown()}
         >
           <Flex align="center">
-            <IconCirclePlus
-              stroke={1.8}
-              size="16px"
-              style={{ marginRight: 8 }}
-            />
+            <IconCirclePlus stroke={1.8} size={12} style={{ marginRight: 8 }} />
             {name}
 
             {selectedItems.length > 0 && (

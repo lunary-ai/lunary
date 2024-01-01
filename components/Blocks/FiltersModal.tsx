@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  Card,
   Flex,
   Modal,
   SimpleGrid,
@@ -23,15 +24,23 @@ import {
   IconCreditCard,
   IconFileTypeJs,
   IconFileTypeXml,
+  IconHelpCircle,
   IconHtml,
   IconJson,
   IconMarkdown,
   IconMoodAngry,
   IconMoodSmile,
+  IconNorthStar,
   IconPhone,
+  IconRegex,
+  IconRuler2,
+  IconScale,
   IconTag,
+  IconThumbUp,
+  IconThumbUpFilled,
   IconTimeDuration15,
   IconUser,
+  IconWorldWww,
 } from "@tabler/icons-react"
 import classes from "./FiltersModal.module.css"
 import { useEffect, useState } from "react"
@@ -63,6 +72,12 @@ const basicFilters = [
     color: "green",
   },
   {
+    id: "length",
+    name: "Response Length",
+    icon: IconRuler2,
+    color: "blue",
+  },
+  {
     id: "duration",
     name: "Duration",
     icon: IconClock,
@@ -80,48 +95,67 @@ const basicFilters = [
     icon: IconCoin,
     color: "pink",
   },
+  {
+    id: "feedback",
+    name: "Feedback",
+    icon: IconThumbUp,
+    color: "green",
+  },
 ]
 
 const smartFilters = [
   {
     id: "json",
-    name: "Is valid JSON",
+    name: "Valid JSON",
     icon: IconJson,
     color: "violet",
   },
   {
     id: "md",
-    name: "Is valid Markdown",
+    name: "Valid Markdown",
     icon: IconMarkdown,
     color: "violet",
   },
   {
     id: "html",
-    name: "Is valid HTML",
+    name: "Valid HTML",
     icon: IconHtml,
     color: "violet",
   },
   {
+    id: "regex",
+    name: "Regex",
+    icon: IconRegex,
+    color: "violet",
+  },
+  {
     id: "credit-card",
-    name: "Contains credit card number",
+    name: "Credit card number",
     icon: IconCreditCard,
     color: "blue",
   },
   {
+    id: "url",
+    name: "URL",
+    icon: IconWorldWww,
+    color: "blue",
+  },
+  {
     id: "phone",
-    name: "Contains phone number",
+    name: "Phone number",
     icon: IconPhone,
     color: "blue",
   },
   {
     id: "email",
-    name: "Contains email address",
+    name: "Email address",
     icon: IconAt,
     color: "blue",
   },
+
   {
     id: "profanity",
-    name: "Contains profanities",
+    name: "Profanities",
     icon: IconMoodAngry,
     color: "red",
   },
@@ -129,10 +163,28 @@ const smartFilters = [
 
 const AIFilters = [
   {
-    id: "sentimentAnalysis",
-    name: "Sentiment Analysis",
+    id: "sentiment",
+    name: "Sentiment",
     icon: IconMoodSmile,
     color: "violet",
+  },
+  {
+    id: "conciseness",
+    name: "Conciseness",
+    icon: IconNorthStar,
+    color: "green",
+  },
+  {
+    id: "helpfulness",
+    name: "Helpfulness",
+    icon: IconHelpCircle,
+    color: "blue",
+  },
+  {
+    id: "hatred",
+    name: "Hatred",
+    icon: IconMoodAngry,
+    color: "red",
   },
 ]
 
@@ -140,47 +192,35 @@ function FilterCard({ onItemClick, item, isSelected }) {
   const theme = useMantineTheme()
 
   return (
-    <UnstyledButton
-      className={classes.item}
-      key={item.id}
-      onClick={() => onItemClick(item.id)}
-      pos="relative"
-    >
-      <Flex justify="right" pos="absolute" top="6px" right="6px" h="30" w="30">
-        {isSelected ? (
-          <IconCircleCheck size="20" color="#4589df" />
-        ) : (
-          <IconCirclePlus size="20" color="#bfc4cd" />
-        )}
-      </Flex>
+    <Card key={item.id} onClick={() => onItemClick(item.id)}>
+      <UnstyledButton>
+        <Flex
+          justify="right"
+          pos="absolute"
+          top="6px"
+          right="6px"
+          h="30"
+          w="30"
+        >
+          {isSelected ? (
+            <IconCircleCheck size="20" color="#4589df" />
+          ) : (
+            <IconCirclePlus size="20" color="#bfc4cd" />
+          )}
+        </Flex>
 
-      <Stack align="center" gap="0" pt="10" maw="80%">
-        <item.icon color={theme.colors[item.color][7]} size="22px" />
-        <Text size="xs" mt={7} fw="500" c="#383c44">
-          {item.name}
-        </Text>
-      </Stack>
-    </UnstyledButton>
+        <Stack align="center" gap="0" pt="10" maw="100%">
+          <item.icon color={theme.colors[item.color][7]} size="22px" />
+          <Text size="xs" mt={7} fw="500">
+            {item.name}
+          </Text>
+        </Stack>
+      </UnstyledButton>
+    </Card>
   )
 }
 
-// TODO: search bar
-// TODO: separate each filter type (basic, smart, ai) in tab
-// TODO: coming soon badge
-export default function FiltersModal({
-  opened,
-  setOpened,
-  defaultSelected,
-  save,
-}) {
-  const [selected, setSelected] = useSetState(defaultSelected)
-
-  useEffect(() => {
-    if (defaultSelected) {
-      setSelected(defaultSelected)
-    }
-  }, [defaultSelected, setSelected])
-
+export function FiltersGrid({ selected, setSelected }) {
   function onItemClick(id: string) {
     setSelected((current) => ({ [id]: !current[id] }))
   }
@@ -213,6 +253,47 @@ export default function FiltersModal({
   ))
 
   return (
+    <>
+      <Title order={2} mb="8" size="20">
+        Basic
+      </Title>
+      <SimpleGrid cols={4} mb="30">
+        {basicFilterCards}
+      </SimpleGrid>
+
+      <Title order={2} mb="8" size="20">
+        Smart
+      </Title>
+      <SimpleGrid cols={4} mb="30">
+        {smartFilterCards}
+      </SimpleGrid>
+
+      <Title order={2} mb="8" size="20">
+        AI
+      </Title>
+      <SimpleGrid cols={4}>{AIFilterCards}</SimpleGrid>
+    </>
+  )
+}
+
+// TODO: search bar
+// TODO: separate each filter type (basic, smart, ai) in tab
+// TODO: coming soon badge
+export default function FiltersModal({
+  opened,
+  setOpened,
+  defaultSelected,
+  save,
+}) {
+  const [selected, setSelected] = useSetState(defaultSelected)
+
+  useEffect(() => {
+    if (defaultSelected) {
+      setSelected(defaultSelected)
+    }
+  }, [defaultSelected, setSelected])
+
+  return (
     <Modal.Root
       opened={opened}
       onClose={setOpened}
@@ -223,30 +304,12 @@ export default function FiltersModal({
       {/* TODO: css module, or everything in props? */}
       <Modal.Content
         p="0"
-        bg="gray.0"
         h="650"
         // display="flex"
         // style={{ flexDirection: "column" }}
       >
         <Modal.Body p="24">
-          <Title order={2} mb="8" size="20" c="#383c44">
-            Basic Filters
-          </Title>
-          <SimpleGrid cols={4} mb="50">
-            {basicFilterCards}
-          </SimpleGrid>
-
-          <Title order={2} mb="8" size="20" c="#383c44">
-            Smart Filters
-          </Title>
-          <SimpleGrid cols={4} mb="50">
-            {smartFilterCards}
-          </SimpleGrid>
-
-          <Title order={2} mb="8" size="20" c="#383c44">
-            AI Filters
-          </Title>
-          <SimpleGrid cols={4}>{AIFilterCards}</SimpleGrid>
+          <FiltersGrid selected={selected} setSelected={setSelected} />
         </Modal.Body>
 
         <Flex

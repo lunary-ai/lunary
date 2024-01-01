@@ -3,7 +3,7 @@ import { useFocusWithin, useHotkeys } from "@mantine/hooks"
 import { IconSearch, IconX } from "@tabler/icons-react"
 import HotkeysInfo from "./HotkeysInfo"
 
-export default function SearchBar({ query, setQuery }) {
+export default function SearchBar({ query, setQuery, ...props }) {
   const { ref, focused } = useFocusWithin()
 
   useHotkeys([["mod+K", () => ref.current.focus()]])
@@ -17,10 +17,10 @@ export default function SearchBar({ query, setQuery }) {
 
   return (
     <Input
-      leftSection={<IconSearch size={13} />}
+      leftSection={<IconSearch size={14} />}
       w={400}
       type="search"
-      size="xs"
+      size="sm"
       ref={ref}
       id="search"
       rightSectionWidth={showCross ? 40 : 80}
@@ -40,6 +40,7 @@ export default function SearchBar({ query, setQuery }) {
       placeholder="Type to filter"
       defaultValue={query}
       onChange={(e) => setQuery(e.currentTarget.value)}
+      {...props}
     />
   )
 }
