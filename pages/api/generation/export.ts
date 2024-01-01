@@ -73,6 +73,7 @@ export default apiWrapper(async function handler(
       ${searchFilter}
     order by
       r.created_at desc;
+    limit 10000
   `
 
   const data = rows.length > 0 ? rows : [{}]
