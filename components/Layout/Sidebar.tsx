@@ -10,22 +10,17 @@ import {
 
 import {
   IconActivity,
-  IconBrandOpenai,
   IconCreditCard,
   IconFile,
-  IconGraph,
   IconLogout,
-  IconMessages,
   IconRefresh,
-  IconListTree,
   IconSettings,
-  IconStethoscope,
   IconUsers,
   IconBolt,
   IconPlayerPlay,
-  IconBracketsAngle,
   IconFlask,
-  IconFileDescription,
+  IconActivityHeartbeat,
+  IconTimeline,
 } from "@tabler/icons-react"
 
 import { useSessionContext } from "@supabase/auth-helpers-react"
@@ -37,11 +32,11 @@ import Link from "next/link"
 import { openUpgrade } from "./UpgradeModal"
 
 const menu = [
-  { label: "Logs", icon: IconFileDescription, link: "/logs" },
+  { label: "Analytics", icon: IconTimeline, link: "/analytics" },
+  { label: "Logs", icon: IconActivityHeartbeat, link: "/logs" },
   { label: "Evaluations", icon: IconFlask, link: "/evaluations" },
   { label: "Users", icon: IconUsers, link: "/users" },
   { label: "Prompts", icon: IconPlayerPlay, link: "/prompts" },
-  { label: "Analytics", icon: IconGraph, link: "/analytics" },
   { label: "Settings", icon: IconSettings, link: "/settings" },
 ]
 

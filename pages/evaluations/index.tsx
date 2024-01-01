@@ -1,3 +1,4 @@
+import FiltersModal from "@/components/Blocks/FiltersModal"
 import { Group, Paper, Stack, Title } from "@mantine/core"
 import { useLocalStorage } from "@mantine/hooks"
 
@@ -10,6 +11,7 @@ export default function Evaluations() {
   return (
     <Stack h={"calc(100vh - var(--navbar-with-filters-size))"}>
       <Title>Views</Title>
+
       <Stack w="50%">
         {views.map((view) => (
           <Paper p="md">
