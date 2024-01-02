@@ -271,7 +271,7 @@ export default function LLMCalls() {
                   data={[
                     {
                       label: (
-                        <Group gap="xs" wrap="nowrap" mx="sm">
+                        <Group gap="xs" wrap="nowrap" mx="xs">
                           <IconBrandOpenai
                             size="16px"
                             color="var(--mantine-color-blue-5)"
@@ -284,7 +284,7 @@ export default function LLMCalls() {
 
                     {
                       label: (
-                        <Group gap="xs" wrap="nowrap" mx="sm">
+                        <Group gap="xs" wrap="nowrap" mx="xs">
                           <IconListTree
                             size="16px"
                             color="var(--mantine-color-blue-5)"
@@ -297,12 +297,12 @@ export default function LLMCalls() {
 
                     {
                       label: (
-                        <Group gap="xs" wrap="nowrap" mx="sm">
+                        <Group gap="xs" wrap="nowrap" mx="xs">
                           <IconMessages
                             size="16px"
                             color="var(--mantine-color-blue-5)"
                           />
-                          <Text size="xs">Chats</Text>
+                          <Text size="xs">Threads</Text>
                         </Group>
                       ),
                       value: "chat",
