@@ -28,13 +28,13 @@ const TemplateInputArea: React.FC<TemplateInputAreaProps> = ({
   output,
   error,
 }) => {
-  const isText = template?.mode === "text"
+  const isText = typeof template?.content === "string"
 
   return (
     <ScrollArea h="100%">
       {isText ? (
         <Textarea
-          value={typeof template?.content === "string" ? template?.content : ""}
+          value={template?.content ?? ""}
           onChange={(e) => {
             setTemplate({ ...template, content: e.currentTarget.value })
             setHasChanges(true)

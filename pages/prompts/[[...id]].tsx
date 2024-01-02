@@ -292,13 +292,6 @@ function Playground() {
       return openUpgrade("playground")
     }
 
-    console.log({
-      content: templateVersion.content,
-      extra: templateVersion.extra,
-      testValues: templateVersion.test_values,
-      appId: app?.id,
-    })
-
     setStreaming(true)
 
     try {
