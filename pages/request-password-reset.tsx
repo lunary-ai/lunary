@@ -8,16 +8,14 @@ import {
   Button,
 } from "@mantine/core"
 import { useForm } from "@mantine/form"
-import { IconAnalyze, IconAt, IconCheck, IconX } from "@tabler/icons-react"
+import { IconAnalyze, IconAt, IconCheck } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { useState } from "react"
 import errorHandler from "../utils/errorHandler"
-import { useSessionContext } from "@supabase/auth-helpers-react"
 import { notifications } from "@mantine/notifications"
 
 export default function PasswordReset() {
   const [loading, setLoading] = useState(false)
-  const { supabaseClient } = useSessionContext()
 
   const form = useForm({
     initialValues: {
@@ -32,36 +30,21 @@ export default function PasswordReset() {
   async function handlePasswordReset({ email }) {
     setLoading(true)
 
-    const showErrorNotification = () => {
-      notifications.show({
-        icon: <IconX size={18} />,
-        color: "red",
-        title: "Error",
-        autoClose: 10000,
-        message: "Something went wrong.",
-      })
-    }
-
-    try {
-      const res = await fetch("/api/auth/request-password-reset", {
+    const res = await errorHandler(
+      fetch("/api/auth/request-password-reset", {
         method: "POST",
         body: JSON.stringify({ email }),
-      })
+      }),
+    )
 
-      if (res.ok) {
-        notifications.show({
-          icon: <IconCheck size={18} />,
-          color: "teal",
-          title: "Email sent 💌",
-          message:
-            "Check your emails to verify your email. Please check your spam folder as we currently have deliverability issues.",
-        })
-      } else {
-        showErrorNotification()
-      }
-    } catch (error) {
-      console.error(error)
-      showErrorNotification()
+    if (res.ok) {
+      notifications.show({
+        icon: <IconCheck size={18} />,
+        color: "teal",
+        title: "Email sent 💌",
+        message:
+          "Check your emails to verify your email. Please check your spam folder as we currently have deliverability issues.",
+      })
     }
 
     setLoading(false)

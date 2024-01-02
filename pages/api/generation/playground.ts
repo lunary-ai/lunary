@@ -5,7 +5,6 @@ import OpenAI from "openai"
 import { completion } from "litellm"
 import { ensureIsLogged } from "@/lib/api/ensureAppIsLogged"
 import { edgeWrapper } from "@/lib/api/edgeHelpers"
-import Handlebars from "handlebars"
 
 export const runtime = "edge"
 
@@ -14,9 +13,11 @@ const OPENROUTER_MODELS = [
   "openai/gpt-4-32k",
   "openchat/openchat-7b",
   "teknium/openhermes-2.5-mistral-7b",
+  "mistralai/mixtral-8x7b-instruct",
   "open-orca/mistral-7b-openorca",
   "perplexity/pplx-70b-chat",
   "perplexity/pplx-7b-chat",
+  "google/gemini-pro",
   "google/palm-2-chat-bison",
   "meta-llama/llama-2-13b-chat",
   "meta-llama/llama-2-70b-chat",
@@ -34,6 +35,12 @@ const convertInputToOpenAIMessages = (input: any[]) => {
       name: name || undefined,
     }
   })
+}
+
+// Replace {{variable}} with the value of the variable using regex
+const compileTemplate = (content: string, variables) => {
+  const regex = /{{(.*?)}}/g
+  return content.replace(regex, (_, g1) => variables[g1] || "")
 }
 
 const substractPlayAllowance = async (session, supabase) => {
@@ -70,10 +77,7 @@ export default edgeWrapper(async function handler(req: Request) {
   // The template build happens here
   if (testValues) {
     for (const item of copy) {
-      let template = Handlebars.compile(item.content)
-      // execute the compiled template and print the output to the console
-      item.content = template(testValues)
-      console.log("compiled", item.content)
+      item.content = compileTemplate(item.content, testValues)
     }
   }
 

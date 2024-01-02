@@ -1,7 +1,11 @@
 import { buffer } from "micro"
 import { supabaseAdmin } from "@/lib/supabaseClient"
 import { sendEmail } from "@/lib/sendEmail"
-import { CANCELED_EMAIL, UPGRADE_EMAIL } from "@/lib/emails"
+import {
+  CANCELED_EMAIL,
+  UPGRADE_EMAIL,
+  FULLY_CANCELED_EMAIL,
+} from "@/lib/emails"
 import { sendTelegramMessage } from "@/lib/notifications"
 import Stripe from "stripe"
 import stripe from "@/lib/stripe"
@@ -17,18 +21,27 @@ export const config = {
 // Webhook for subscription end, update profile plan to 'free'
 
 const setupSubscription = async (object) => {
-  const { customer, client_reference_id, mode, subscription } = object
+  const { customer, client_reference_id, mode, subscription, metadata } = object
 
   if (mode !== "subscription") return
+
+  if (!client_reference_id) {
+    throw new Error("client_reference_id is missing")
+  }
+
+  const plan = metadata.plan || "pro"
+  const period = metadata.period || "monthly"
 
   const { data: org } = await supabaseAdmin
     .from("org")
     .update({
       stripe_customer: customer,
       stripe_subscription: subscription,
-      plan: "pro",
+      canceled: false,
+      plan,
+      plan_period: period,
       limited: false,
-      play_allowance: 15,
+      play_allowance: plan === "pro" ? 15 : 1000,
     })
     .eq("id", client_reference_id)
     .select("id,name")
@@ -42,26 +55,87 @@ const setupSubscription = async (object) => {
     .throwOnError()
 
   const emailPromises = users.map((user) =>
-    sendEmail(UPGRADE_EMAIL(user.email, user.name)),
+    sendEmail(UPGRADE_EMAIL(user.email, user.name, plan)),
   )
 
   await Promise.all(emailPromises)
 
   await sendTelegramMessage(
-    `<b>💸${org.name} just upgraded their plan</b>`,
+    `<b>💸${org.name} just upgraded to ${plan} (${period})</b>`,
     "revenue",
   )
 }
 
-const cancelSubscription = async (object) => {
-  console.log(`🔥 cancelSubscription: ${JSON.stringify(object)}`)
+const updateSubscription = async (object) => {
+  const { customer, cancel_at_period_end, metadata, cancellation_details } =
+    object
 
+  const plan = metadata.plan || "pro"
+  const period = metadata.period || "monthly"
+  const canceled = cancel_at_period_end
+
+  const { data: currentOrg } = await supabaseAdmin
+    .from("org")
+    .select("plan,plan_period,canceled")
+    .eq("stripe_customer", customer)
+    .single()
+    .throwOnError()
+
+  if (
+    currentOrg.plan === plan &&
+    currentOrg.plan_period === period &&
+    canceled === currentOrg.canceled
+  ) {
+    console.log(`🔥 updateSubscription: nothing to update`)
+    return
+  }
+
+  const { data: org } = await supabaseAdmin
+    .from("org")
+    .update({
+      plan,
+      plan_period: period,
+      canceled,
+    })
+    .eq("stripe_customer", customer)
+    .select("id,name")
+    .single()
+    .throwOnError()
+
+  if (canceled) {
+    const { data: users } = await supabaseAdmin
+      .from("profile")
+      .select("email,name")
+      .eq("org_id", org.id)
+      .throwOnError()
+
+    const emailPromises = users.map((user) => {
+      return sendEmail(CANCELED_EMAIL(user.email, user.name))
+    })
+
+    await Promise.all(emailPromises)
+
+    await sendTelegramMessage(
+      `<b>😭💔 ${org.name} subscription canceled their plans</b>`,
+      "revenue",
+    )
+  } else {
+    await sendTelegramMessage(
+      `<b>🔔 ${org.name} subscription updated to: ${plan} (${period})</b>`,
+      "revenue",
+    )
+  }
+}
+
+const cancelSubscription = async (object) => {
   const { customer } = object
 
   const { data: org } = await supabaseAdmin
     .from("org")
     .update({
       plan: "free",
+      canceled: false,
+      stripe_subscription: null,
     })
     .eq("stripe_customer", customer)
     .select("id,name")
@@ -75,13 +149,13 @@ const cancelSubscription = async (object) => {
     .throwOnError()
 
   const emailPromises = users.map((user) => {
-    return sendEmail(CANCELED_EMAIL(user.email, user.name))
+    return sendEmail(FULLY_CANCELED_EMAIL(user.email, user.name))
   })
 
   await Promise.all(emailPromises)
 
   await sendTelegramMessage(
-    `<b>😭💔 ${org.name} just canceled their plan</b>`,
+    `<b>😭💔 ${org.name} subscription is now deleted</b>`,
     "revenue",
   )
 }
@@ -112,6 +186,10 @@ export default apiWrapper(async function StripeWebhook(req, res) {
       case "checkout.session.completed":
         // reconcile user with customer using client_reference_id
         await setupSubscription(event.data.object)
+        break
+
+      case "customer.subscription.updated":
+        await updateSubscription(event.data.object)
         break
 
       case "customer.subscription.deleted":

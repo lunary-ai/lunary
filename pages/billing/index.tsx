@@ -1,6 +1,7 @@
 import LineChart from "@/components/Blocks/Analytics/LineChart"
-import { openUpgrade } from "@/components/Layout/UpgradeModal"
+import { UpgradePlans, openUpgrade } from "@/components/Layout/UpgradeModal"
 import { useFetchSWR, useProfile } from "@/utils/dataHooks"
+import errorHandler from "@/utils/errorHandler"
 import {
   Alert,
   Badge,
@@ -42,22 +43,26 @@ export default function Billing() {
   if (loading) return <Loader />
 
   const redirectToCustomerPortal = async () => {
-    const body = await fetch("/api/user/stripe-portal", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        customer: profile?.org.stripe_customer,
-        origin: window.location.origin,
-      }),
-    })
+    const data = await errorHandler(
+      (
+        await fetch("/api/user/stripe-portal", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            customer: profile?.org.stripe_customer,
+            origin: window.location.origin,
+          }),
+        })
+      ).json(),
+    )
 
-    const { url } = await body.json()
+    if (!data) return
 
     // redirect to stripe portal
 
-    window.location.href = url
+    window.location.href = data.url
   }
 
   const canUpgrade = plan && ["free", "pro"].includes(plan)
@@ -65,25 +70,24 @@ export default function Billing() {
   return (
     <Container className="unblockable">
       <NextSeo title="Billing" />
-      <Stack>
+      <Stack gap="lg">
         <Group justify="space-between">
           <Title>Billing</Title>
 
           {canUpgrade && (
             <Button
               variant="gradient"
-              size="xs"
+              size="md"
+              pr="lg"
               gradient={{ from: "#0788ff", to: "#9900ff", deg: 30 }}
-              leftSection={<IconBolt size="16" />}
+              leftSection={<IconBolt fill="#fff" size={18} />}
               onClick={() => openUpgrade()}
             >
               Upgrade
             </Button>
           )}
         </Group>
-        <Text size="lg">
-          You are currently on the <Badge>{plan}</Badge> plan.
-        </Text>
+
         {profile?.org.limited && (
           <Alert
             color="red"
@@ -94,6 +98,30 @@ export default function Billing() {
             Request allowance limit reached. Please upgrade to restore access.
           </Alert>
         )}
+
+        {profile?.org.canceled ? (
+          <Alert
+            color="red"
+            fz="xl"
+            variant="filled"
+            icon={<IconInfoTriangle />}
+          >
+            <Text fz="lg">
+              Your plan will cancel soon. Upon cancellation, any data older than
+              30 days will be permanently deleted as per the free plan limits.
+              Reactivate your plan to ensure uninterrupted access.
+            </Text>
+          </Alert>
+        ) : (
+          <Text size="lg">
+            You are currently on the <Badge>{plan}</Badge> plan{" "}
+            {plan ? `(billed ${profile?.org?.plan_period})` : ""}.
+          </Text>
+        )}
+
+        <Card withBorder radius="md" padding="xl">
+          <UpgradePlans />
+        </Card>
 
         <LineChart
           title={<Title order={3}>Events Usage</Title>}

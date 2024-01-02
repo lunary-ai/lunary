@@ -45,11 +45,13 @@ const availableModels = [
   "gpt-3.5-turbo",
   "gpt-3.5-turbo-1106",
   "gpt-3.5-turbo-16k",
+  "google/gemini-pro",
   "openai/gpt-4-32k",
   "claude-2",
   "claude-2.0",
   "claude-instant-v1",
   "open-orca/mistral-7b-openorca",
+  "mistralai/mixtral-8x7b-instruct",
   "mistralai/mistral-7b-instruct",
   "teknium/openhermes-2.5-mistral-7b",
   "perplexity/pplx-70b-chat",
@@ -98,7 +100,7 @@ const ParamItem = ({ name, value }) => (
 function Playground() {
   const router = useRouter()
   const supabaseClient = useSupabaseClient()
-  const [template, setTemplate] = useLocalStorage({
+  const [template, setTemplate] = useLocalStorage<any>({
     key: "template",
   })
 
@@ -286,8 +288,8 @@ function Playground() {
       appId: app?.id,
     })
 
-    if (profile.org?.play_allowance <= 0) {
-      openUpgrade("playground")
+    if (!profile?.org?.play_allowance) {
+      return openUpgrade("playground")
     }
 
     setStreaming(true)

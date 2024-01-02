@@ -169,9 +169,13 @@ export default function RunInputOutput({
                     display="inline"
                     rightSection={<IconPencilShare size="14" />}
                     component={Link}
-                    href={`/prompts?clone=${run.id}`}
+                    href={`/prompts/${
+                      run.template_version_id || `?clone=` + run.id
+                    }`}
                   >
-                    Open in playground
+                    {run.template_version_id
+                      ? "Open template"
+                      : "Open in playground"}
                   </Button>
                 </Stack>
               )}

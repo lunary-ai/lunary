@@ -75,6 +75,9 @@ const TemplateListItem = ({
       key={template.id}
       px="md"
       active={active}
+      onDoubleClick={() => {
+        setRename(template.id)
+      }}
       label={
         rename === template.id ? (
           <FocusTrap key={template.id}>

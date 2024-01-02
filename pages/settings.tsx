@@ -32,30 +32,28 @@ import { openUpgrade } from "../components/Layout/UpgradeModal"
 
 function Invite() {
   const { profile } = useProfile()
+  const plan = profile?.org.plan
 
-  if (profile?.org.plan === "pro") {
-    if (profile?.org.users?.length === 4) {
-      return <Badge color="orange">Seat allowance exceeded</Badge>
-    }
+  if (plan === "free" || (plan === "pro" && profile?.org.users?.length === 4)) {
     return (
-      <Text>
-        Invite link:{" "}
-        <CopyText
-          value={`${window.location.origin}/join?orgId=${profile?.org.id}`}
-        />
-      </Text>
+      <Button
+        variant="light"
+        onClick={() => openUpgrade("team")}
+        style={{ float: "right" }}
+        leftSection={<IconUserPlus size="16" />}
+      >
+        Invite
+      </Button>
     )
   }
 
   return (
-    <Button
-      variant="light"
-      onClick={() => openUpgrade("team")}
-      style={{ float: "right" }}
-      leftSection={<IconUserPlus size="16" />}
-    >
-      Invite
-    </Button>
+    <Text>
+      Invite link:{" "}
+      <CopyText
+        value={`${window.location.origin}/join?orgId=${profile?.org.id}`}
+      />
+    </Text>
   )
 }
 
@@ -104,129 +102,127 @@ export default function AppAnalytics() {
 
   return (
     <Container className="unblockable">
-      <Stack>
-        <NextSeo title="Settings" />
-        <Stack>
-          <Card withBorder p="lg">
-            <Stack>
-              <RenamableField
-                defaultValue={app?.name}
-                onRename={(name) => update({ id: app?.id, name })}
-              />
-              <Text>
-                Project ID for tracking: <CopyText value={app?.id} />
-              </Text>
-            </Stack>
-          </Card>
+      <NextSeo title="Settings" />
+      <Stack gap="lg">
+        <Card withBorder p="lg">
+          <Stack>
+            <RenamableField
+              defaultValue={app?.name}
+              onRename={(name) => update({ id: app?.id, name })}
+            />
+            <Text>
+              Project ID for tracking: <CopyText value={app?.id} />
+            </Text>
+          </Stack>
+        </Card>
 
-          <Card withBorder p={0}>
-            <Group justify="space-between" align="center" p="lg">
-              <RenamableField
-                defaultValue={profile?.org.name}
-                onRename={(name) => {
-                  updateOrg({ id: profile?.org.id, name }).then(() => {
-                    mutate()
-                  })
-                }}
-              />
+        <Card withBorder p={0}>
+          <Group justify="space-between" align="center" p="lg">
+            <RenamableField
+              defaultValue={profile?.org.name}
+              onRename={(name) => {
+                updateOrg({ id: profile?.org.id, name }).then(() => {
+                  mutate()
+                })
+              }}
+            />
 
-              <Invite />
-            </Group>
+            <Invite />
+          </Group>
 
-            <Table striped verticalSpacing="lg" horizontalSpacing="lg">
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>User</Table.Th>
-                  <Table.Th>Email</Table.Th>
-                  <Table.Th>Role</Table.Th>
+          <Table striped verticalSpacing="lg" horizontalSpacing="lg">
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>User</Table.Th>
+                <Table.Th>Email</Table.Th>
+                <Table.Th>Role</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {profile?.org.users?.map((user, i) => (
+                <Table.Tr key={i}>
+                  <Table.Td>
+                    <Group>
+                      <UserAvatar profile={user} />
+                      <Text>{user?.name}</Text>
+
+                      {user.id === profile.id ? (
+                        <Badge color="blue">You</Badge>
+                      ) : null}
+                    </Group>
+                  </Table.Td>
+                  <Table.Td>{user?.email}</Table.Td>
+                  <Table.Td>{user?.role}</Table.Td>
                 </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {profile?.org.users?.map((user, i) => (
-                  <Table.Tr key={i}>
-                    <Table.Td>
-                      <Group>
-                        <UserAvatar profile={user} />
-                        <Text>{user?.name}</Text>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </Card>
 
-                        {user.id === profile.id ? (
-                          <Badge color="blue">You</Badge>
-                        ) : null}
-                      </Group>
-                    </Table.Td>
-                    <Table.Td>{user?.email}</Table.Td>
-                    <Table.Td>{user?.role}</Table.Td>
-                  </Table.Tr>
-                ))}
-              </Table.Tbody>
-            </Table>
-          </Card>
-
-          <Card withBorder p="lg">
-            <Stack>
-              <Group justify="space-between" align="center">
-                <Title order={3}>Api Key</Title>
-                {/* <Button onClick={() => alert("TODO")}>
+        <Card withBorder p="lg">
+          <Stack>
+            <Group justify="space-between" align="center">
+              <Title order={3}>Api Key</Title>
+              {/* <Button onClick={() => alert("TODO")}>
                 Refresh Api Key
               </Button> */}
-              </Group>
+            </Group>
+
+            <Text>
+              Use this key to authenticate with the Data API and fetch data from
+              your projects.
+            </Text>
+
+            <Text>
+              API Key: <CopyText value={profile?.org.apiKey} />
+            </Text>
+          </Stack>
+        </Card>
+
+        <LineChart
+          title={<Title order={3}>Project Usage</Title>}
+          range={30}
+          data={appUsage}
+          formatter={(val) => `${val} runs`}
+          props={["count"]}
+        />
+
+        {isAdmin && (
+          <Card withBorder p="lg" style={{ overflow: "visible" }}>
+            <Stack align="start">
+              <Title order={4}>Danger Zone</Title>
 
               <Text>
-                Use this key to authenticate with the Data API and fetch data
-                from your projects.
+                Deleting your project is irreversible and it will delete all
+                associated data.
+                <br />
+                We <b>cannot</b> recover your data once it's deleted.
               </Text>
 
-              <Text>
-                API Key: <CopyText value={profile?.org.apiKey} />
-              </Text>
+              <Popover width={200} position="bottom" withArrow shadow="md">
+                <Popover.Target>
+                  <Button color="red">Delete App</Button>
+                </Popover.Target>
+                <Popover.Dropdown>
+                  <Text mb="md">
+                    Are you sure you want to delete this project? This action is
+                    irreversible and it will delete all associated data.
+                  </Text>
+                  <Button
+                    color="red"
+                    onClick={() => {
+                      drop({ id: app?.id })
+                      setAppId(null)
+                      Router.push("/")
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </Popover.Dropdown>
+              </Popover>
             </Stack>
           </Card>
-
-          <LineChart
-            title={<Title order={3}>Project Usage</Title>}
-            range={30}
-            data={appUsage}
-            formatter={(val) => `${val} runs`}
-            props={["count"]}
-          />
-
-          {isAdmin && (
-            <Card withBorder p="lg" style={{ overflow: "visible" }}>
-              <Stack align="start">
-                <Title order={4}>Danger Zone</Title>
-
-                <Text>
-                  Deleting your project is irreversible and it will delete all
-                  associated data.
-                  <br />
-                  We <b>cannot</b> recover your data once it's deleted.
-                </Text>
-
-                <Popover width={200} position="bottom" withArrow shadow="md">
-                  <Popover.Target>
-                    <Button color="red">Delete App</Button>
-                  </Popover.Target>
-                  <Popover.Dropdown>
-                    <Text mb="md">
-                      Are you sure you want to delete this project? This action
-                      is irreversible and it will delete all associated data.
-                    </Text>
-                    <Button
-                      color="red"
-                      onClick={() => {
-                        drop({ id: app?.id })
-                        setAppId(null)
-                        Router.push("/")
-                      }}
-                    >
-                      Delete
-                    </Button>
-                  </Popover.Dropdown>
-                </Popover>
-              </Stack>
-            </Card>
-          )}
-        </Stack>
+        )}
       </Stack>
     </Container>
   )
