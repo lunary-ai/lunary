@@ -113,7 +113,12 @@ export default function Evaluations() {
     <Container>
       <Stack>
         <Group align="center" justify="space-between">
-          <Title>Evaluations</Title>
+          <Group align="center">
+            <Title>Evaluations</Title>
+            <Badge variant="light" color="violet">
+              Alpha
+            </Badge>
+          </Group>
 
           <Button
             leftSection={<IconPlus size={12} />}

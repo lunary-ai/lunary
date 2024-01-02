@@ -409,7 +409,7 @@ export function useTraces(search) {
         ascending: false,
       })
       .or("type.eq.agent,type.eq.chain")
-      .is("parent_run", null)
+    // .or("parent.eq.null,parent.type.eq.thread")
   } else {
     query = supabaseClient.rpc("get_trace_runs_roots", {
       app_id: appId,
@@ -425,6 +425,8 @@ export function useTraces(search) {
     isValidating,
     loadMore,
   } = useOffsetInfiniteScrollQuery(query, { ...softOptions, pageSize: 100 })
+
+  console.log("runs", runs)
 
   return {
     runs: extendWithCosts(runs),

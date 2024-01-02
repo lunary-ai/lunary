@@ -15,6 +15,7 @@ import {
 import {
   ActionIcon,
   Button,
+  Card,
   Drawer,
   Flex,
   Group,
@@ -60,6 +61,7 @@ import FacetedFilter from "../../components/Blocks/FacetedFilter"
 import Empty from "../../components/Layout/Empty"
 import { AppContext } from "../../utils/context"
 import Router from "next/router"
+import { ChatReplay } from "@/components/Blocks/RunChat"
 
 const columns = [
   timeColumn("created_at"),
@@ -182,14 +184,14 @@ export default function LLMCalls() {
   const { allFeedbacks } = useAllFeedbacks()
 
   const [selectedChatItems, setSelectedChatItems] = useState([])
-  const [selectedChat, setSelectedChat] = useState(null)
+
   const { runIds } = useConvosByFeedback(selectedChatItems)
   let chats = useRuns(
     undefined,
     {
       filter: ["type", "in", '("convo","thread")'],
     },
-    runIds,
+    // runIds,
   )
 
   useEffect(() => {}, [selectedTab])
@@ -244,7 +246,7 @@ export default function LLMCalls() {
         <NextSeo title="Requests" />
 
         <Stack>
-          <Paper p={4} px="sm">
+          <Card withBorder p={4} px="sm">
             <Flex justify="space-between">
               <SearchBar
                 query={query}
@@ -335,7 +337,7 @@ export default function LLMCalls() {
                 </Menu>
               </Group>
             </Flex>
-          </Paper>
+          </Card>
           {Object.entries(selectedFilters).length > 0 && (
             <Paper px="xs" p={4}>
               <Flex justify="space-between">
@@ -399,13 +401,15 @@ export default function LLMCalls() {
           title={selected ? formatDateTime(selected.created_at) : ""}
           onClose={() => setSelected(null)}
         >
-          {selected && (
+          {selected?.type === "llm" && (
             <RunInputOutput
               initialRun={selected}
               withPlayground={true}
               withShare={true}
             />
           )}
+
+          {selected?.type === "thread" && <ChatReplay run={selected} />}
         </Drawer>
 
         {selectedTab === "llm-call" && (
@@ -442,8 +446,9 @@ export default function LLMCalls() {
             type="chats"
             onRowClicked={(row) => {
               analytics.trackOnce("OpenChat")
-              Router.push(`/chats?chat=${row.id}`)
-              setSelectedChat(row)
+              // Router.push(`/chats?chat=${row.id}`)
+              // setSelectedChat(row)
+              setSelected(row)
             }}
             loading={chats.loading || chats.validating}
             loadMore={chats.loadMore}

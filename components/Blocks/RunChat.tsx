@@ -3,7 +3,20 @@ import { useCallback, useMemo, useState } from "react"
 import Feedback from "@/components/Blocks/Feedback"
 import { BubbleMessage } from "@/components/Blocks/SmartViewer/Message"
 
-import { Pagination, Stack, Text } from "@mantine/core"
+import {
+  Button,
+  Card,
+  Group,
+  Pagination,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core"
+import { useAppUser, useRuns } from "@/utils/dataHooks"
+import AppUserAvatar from "./AppUserAvatar"
+import { formatDateTime } from "@/utils/format"
+import Router from "next/router"
+import { IconNeedleThread } from "@tabler/icons-react"
 
 const OUTPUT_ROLES = ["assistant", "ai", "tool"]
 const INPUT_ROLES = ["user"]
@@ -121,6 +134,66 @@ function RunsChat({ runs }) {
               )
             })
         })}
+    </Stack>
+  )
+}
+
+export function ChatReplay({ run }) {
+  const { runs, loading } = useRuns("chat", {
+    match: { parent_run: run.id },
+    notInfinite: true,
+  })
+
+  const { user } = useAppUser(run.user)
+
+  const sorted = runs?.sort((a, b) => {
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  })
+
+  return (
+    <Stack>
+      <Button
+        variant="outline"
+        ml="auto"
+        w="fit-content"
+        onClick={() => {
+          Router.push(`/traces/${run.id}`)
+        }}
+        rightSection={<IconNeedleThread size="16" />}
+      >
+        View trace
+      </Button>
+
+      <Card withBorder radius="md">
+        <Stack gap="xs">
+          <Group justify="space-between">
+            <Text>User</Text>
+            <Text>
+              {user ? (
+                <AppUserAvatar size="sm" user={user} withName />
+              ) : (
+                "Unknown"
+              )}
+            </Text>
+          </Group>
+          <Group justify="space-between">
+            <Text>First message</Text>
+            <Text>{formatDateTime(run.created_at)}</Text>
+          </Group>
+          {sorted?.length && (
+            <Group justify="space-between">
+              <Text>Last message</Text>
+              <Text>
+                {formatDateTime(sorted[sorted.length - 1].created_at)}
+              </Text>
+            </Group>
+          )}
+        </Stack>
+      </Card>
+
+      <Title order={3}>Replay</Title>
+
+      <RunsChat runs={sorted} />
     </Stack>
   )
 }
