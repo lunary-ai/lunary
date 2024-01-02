@@ -254,7 +254,7 @@ export default function LLMCalls() {
                 size="sm"
               />
 
-              <Group>
+              <Group gap="xs">
                 <Button
                   variant="subtle"
                   onClick={() => setIsModalOpened(true)}
@@ -356,7 +356,7 @@ export default function LLMCalls() {
                       ),
                   )}
                 </Group>
-                <Group>
+                <Group gap="xs">
                   <Select
                     placeholder="Load a view..."
                     size="xs"
@@ -372,9 +372,18 @@ export default function LLMCalls() {
                   />
 
                   {Object.values(selectedFilters).length > 0 && (
-                    <Button onClick={createView} size="compact-xs">
-                      Save View
-                    </Button>
+                    <>
+                      <Button onClick={createView} size="compact-xs">
+                        Save View
+                      </Button>
+                      <Button
+                        onClick={() => setSelectedFilters({})}
+                        variant="outline"
+                        size="compact-xs"
+                      >
+                        Clear
+                      </Button>
+                    </>
                   )}
                 </Group>
               </Flex>

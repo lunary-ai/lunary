@@ -12,7 +12,7 @@ import {
   UnstyledButton,
   useMantineTheme,
 } from "@mantine/core"
-import { useSetState } from "@mantine/hooks"
+import { useColorScheme, useSetState } from "@mantine/hooks"
 import {
   IconAt,
   IconBrandOpenai,
@@ -188,7 +188,7 @@ function FilterCard({ onItemClick, item, isSelected }) {
   const theme = useMantineTheme()
 
   return (
-    <Card key={item.id} onClick={() => onItemClick(item.id)}>
+    <Card key={item.id} onClick={() => onItemClick(item.id)} withBorder>
       <UnstyledButton>
         <Flex
           justify="right"
@@ -287,6 +287,7 @@ export default function FiltersModal({
   save,
 }) {
   const [selected, setSelected] = useSetState(defaultSelected)
+  const scheme = useColorScheme()
 
   useEffect(() => {
     if (defaultSelected) {
@@ -306,8 +307,7 @@ export default function FiltersModal({
       <Modal.Content
         p="0"
         h="650"
-        // display="flex"
-        // style={{ flexDirection: "column" }}
+        bg={scheme === "dark" ? "#181818" : "#fafafa"}
       >
         <Modal.Body p="24">
           <FiltersGrid selected={selected} setSelected={setSelected} />
