@@ -31,6 +31,7 @@ export interface Event {
   extra?: any
   feedback?: any
   templateId?: string
+  metadata?: any
   tokensUsage?: {
     prompt: number
     completion: number
@@ -130,7 +131,7 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
   const {
     runId: id,
     app,
-    userId,
+    user,
     parentRunId,
     feedback,
     threadTags,
@@ -152,7 +153,7 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
         type: "thread",
         id: parentRunId,
         app,
-        user: userId,
+        user,
         tags: threadTags,
         input: coreMessage,
       }),
@@ -195,7 +196,7 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
     app: run.app,
     ...(run.tags ? { tags: run.tags } : {}),
     ...(run.extra ? { input: run.extra } : {}),
-    ...(userId ? { user: userId } : {}),
+    ...(user ? { user } : {}),
     ...(feedback ? { feedback } : {}),
   }
 
@@ -254,7 +255,7 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
 
     await supabaseAdmin
       .from("run")
-      .insert(clearUndefined({ ...update, ...shared }))
+      .insert(clearUndefined({ ...shared, ...update }))
       .throwOnError()
   } else if (operation === "update") {
     update.ended_at = timestamp
