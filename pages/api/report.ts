@@ -45,6 +45,10 @@ const registerRunEvent = async (
     tags = metadata?.tags
   }
 
+  if (!templateId) {
+    templateId = metadata?.templateId
+  }
+
   let parentRunIdToUse = parentRunId
 
   const table = supabaseAdmin.from("run")
@@ -52,7 +56,7 @@ const registerRunEvent = async (
 
   let internalUserId
   // Only do on start event to save on DB calls and have correct lastSeen
-  if (typeof userId === "string") {
+  if (typeof userId === "string" && !["end", "error"].includes(eventName!)) {
     const { data } = await supabaseAdmin
       .from("app_user")
       .upsert(
@@ -68,7 +72,7 @@ const registerRunEvent = async (
       .single()
       .throwOnError()
 
-    internalUserId = data.id
+    internalUserId = data?.id
   }
 
   if (
@@ -102,7 +106,7 @@ const registerRunEvent = async (
         return await registerRunEvent(event, insertedIds, false)
       } else {
         // Prevent foreign key constraint error
-        parentRunIdToUse = null
+        parentRunIdToUse = undefined
       }
     }
 
@@ -177,7 +181,10 @@ const registerRunEvent = async (
       break
 
     case "chat":
-      await ingestChatEvent(event)
+      await ingestChatEvent({
+        user: internalUserId,
+        ...event,
+      })
 
       break
   }
@@ -238,7 +245,11 @@ export default edgeWrapper(async function handler(req: NextRequest) {
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
   )
 
-  const results = []
+  const results: {
+    id: string
+    success: boolean
+    error?: string
+  }[] = []
 
   for (const event of sorted) {
     try {

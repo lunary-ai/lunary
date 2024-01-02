@@ -113,7 +113,7 @@ export default function Sidebar() {
                   leftSection={<IconRefresh size="16" />}
                   component={Link}
                   target="_blank"
-                  href="https://feedback.lunary.ai/changelog"
+                  href="https://lunary.ai/changelog"
                 >
                   Changelog
                 </Menu.Item>
