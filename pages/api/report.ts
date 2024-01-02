@@ -74,12 +74,8 @@ const registerRunEvent = async (
     internalUserId = data?.id
   }
 
-  if (
-    ["start", "chat"].includes(eventName!) &&
-    parentRunIdToUse &&
-    !insertedIds.has(parentRunIdToUse)
-  ) {
-    // Check if parent run exists (only necessary if we haven't just inserted it)
+  if ("start" === eventName && parentRunIdToUse) {
+    // Check if parent run exists
 
     const { data, error } = await supabaseAdmin
       .from("run")
@@ -176,7 +172,7 @@ const registerRunEvent = async (
             ...extra,
           },
         })
-        .match({ id: runId })
+        .eq("id", runId)
       break
 
     case "chat":
@@ -279,5 +275,4 @@ export default edgeWrapper(async function handler(req: NextRequest) {
       results,
     }),
   )
-  // }
 })
