@@ -11,7 +11,6 @@ import { edgeWrapper } from "@/lib/api/edgeHelpers"
 import { H } from "@highlight-run/next/server"
 import { jsonResponse } from "@/lib/api/jsonResponse"
 
-// export const runtime = "nodejs"
 export const runtime = "edge"
 
 const registerRunEvent = async (
@@ -76,7 +75,7 @@ const registerRunEvent = async (
   }
 
   if (
-    eventName === "start" &&
+    ["start", "chat"].includes(eventName!) &&
     parentRunIdToUse &&
     !insertedIds.has(parentRunIdToUse)
   ) {
