@@ -11,7 +11,6 @@ import { edgeWrapper } from "@/lib/api/edgeHelpers"
 import { H } from "@highlight-run/next/server"
 import { jsonResponse } from "@/lib/api/jsonResponse"
 
-// export const runtime = "nodejs"
 export const runtime = "edge"
 
 const registerRunEvent = async (
@@ -75,12 +74,8 @@ const registerRunEvent = async (
     internalUserId = data?.id
   }
 
-  if (
-    eventName === "start" &&
-    parentRunIdToUse &&
-    !insertedIds.has(parentRunIdToUse)
-  ) {
-    // Check if parent run exists (only necessary if we haven't just inserted it)
+  if ("start" === eventName && parentRunIdToUse) {
+    // Check if parent run exists
 
     const { data, error } = await supabaseAdmin
       .from("run")
@@ -177,7 +172,7 @@ const registerRunEvent = async (
             ...extra,
           },
         })
-        .match({ id: runId })
+        .eq("id", runId)
       break
 
     case "chat":
@@ -280,5 +275,4 @@ export default edgeWrapper(async function handler(req: NextRequest) {
       results,
     }),
   )
-  // }
 })
