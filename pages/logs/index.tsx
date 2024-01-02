@@ -2,29 +2,28 @@ import DataTable from "@/components/Blocks/DataTable"
 
 import {
   useAllFeedbacks,
+  useConvosByFeedback,
   useCurrentApp,
   useFilteredLLMCalls,
   useModelNames,
   useProfile,
+  useRuns,
   useTags,
+  useTraces,
   useUsers,
 } from "@/utils/dataHooks"
 import {
   ActionIcon,
-  Box,
   Button,
-  Center,
   Drawer,
   Flex,
   Group,
   Menu,
-  Modal,
   Paper,
   SegmentedControl,
   Select,
-  SimpleGrid,
   Stack,
-  Title,
+  Text,
 } from "@mantine/core"
 
 import {
@@ -39,31 +38,28 @@ import {
   userColumn,
 } from "@/utils/datatable"
 import {
-  IconArrowBarUp,
   IconBraces,
   IconBrandOpenai,
   IconDotsVertical,
-  IconEye,
   IconFileExport,
   IconFilter,
   IconListTree,
-  IconMenu,
   IconMessages,
 } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { useContext, useEffect, useState } from "react"
 
+import FiltersModal from "@/components/Blocks/FiltersModal"
 import RunInputOutput from "@/components/Blocks/RunInputOutput"
 import SearchBar from "@/components/Blocks/SearchBar"
 import { openUpgrade } from "@/components/Layout/UpgradeModal"
 import analytics from "@/utils/analytics"
-import { formatAppUser, formatDateTime } from "@/utils/format"
+import { formatDateTime } from "@/utils/format"
 import { useDebouncedState, useLocalStorage, useSetState } from "@mantine/hooks"
 import FacetedFilter from "../../components/Blocks/FacetedFilter"
-import Feedback from "../../components/Blocks/Feedback"
 import Empty from "../../components/Layout/Empty"
 import { AppContext } from "../../utils/context"
-import FiltersModal from "@/components/Blocks/FiltersModal"
+import Router from "next/router"
 
 const columns = [
   timeColumn("created_at"),
@@ -86,6 +82,26 @@ const columns = [
   tagsColumn(),
   inputColumn("Prompt"),
   outputColumn("Result"),
+]
+
+const tracesColumns = [
+  timeColumn("created_at", "Time"),
+  nameColumn("Agent"),
+  durationColumn(),
+  userColumn(),
+  feedbackColumn(true),
+  tagsColumn(),
+  inputColumn("Input"),
+  outputColumn(),
+]
+
+const chatsColumns = [
+  timeColumn("created_at", "Started at"),
+  durationColumn("full"),
+  userColumn(),
+  inputColumn("Last Message"),
+  tagsColumn(),
+  feedbackColumn(true),
 ]
 
 function buildExportUrl(
@@ -125,7 +141,6 @@ export default function LLMCalls() {
   const [selectedTab, setSelectedTab] = useState("llm-call")
 
   useEffect(() => {
-    console.log(currentView)
     if (currentView) {
       setSelectedFilters(currentView.filters)
     }
@@ -152,6 +167,9 @@ export default function LLMCalls() {
     selectedFeedbacks,
     selectedUsers.map((u) => u.external_id),
   )
+
+  const traces = useTraces(query)
+
   const { tags } = useTags()
   const { profile } = useProfile()
 
@@ -162,6 +180,19 @@ export default function LLMCalls() {
     : ""
 
   const { allFeedbacks } = useAllFeedbacks()
+
+  const [selectedChatItems, setSelectedChatItems] = useState([])
+  const [selectedChat, setSelectedChat] = useState(null)
+  const { runIds } = useConvosByFeedback(selectedChatItems)
+  let chats = useRuns(
+    undefined,
+    {
+      filter: ["type", "in", '("convo","thread")'],
+    },
+    runIds,
+  )
+
+  useEffect(() => {}, [selectedTab])
 
   if (!loading && !appLoading && !app?.activated) {
     return <Empty Icon={IconBrandOpenai} what="requests" />
@@ -241,8 +272,11 @@ export default function LLMCalls() {
                     {
                       label: (
                         <Group gap="xs" wrap="nowrap" mx="sm">
-                          <IconBrandOpenai size="16px" />
-                          <span>LLM</span>
+                          <IconBrandOpenai
+                            size="16px"
+                            color="var(--mantine-color-blue-5)"
+                          />
+                          <Text size="xs">LLM</Text>
                         </Group>
                       ),
                       value: "llm-call",
@@ -251,8 +285,11 @@ export default function LLMCalls() {
                     {
                       label: (
                         <Group gap="xs" wrap="nowrap" mx="sm">
-                          <IconListTree size="16px" />
-                          <span>Traces</span>
+                          <IconListTree
+                            size="16px"
+                            color="var(--mantine-color-blue-5)"
+                          />
+                          <Text size="xs">Traces</Text>
                         </Group>
                       ),
                       value: "trace",
@@ -261,8 +298,11 @@ export default function LLMCalls() {
                     {
                       label: (
                         <Group gap="xs" wrap="nowrap" mx="sm">
-                          <IconMessages size="16px" />
-                          <span>Chats</span>
+                          <IconMessages
+                            size="16px"
+                            color="var(--mantine-color-blue-5)"
+                          />
+                          <Text size="xs">Chats</Text>
                         </Group>
                       ),
                       value: "chat",
@@ -359,18 +399,49 @@ export default function LLMCalls() {
           )}
         </Drawer>
 
-        <DataTable
-          type="llm"
-          onRowClicked={(row) => {
-            analytics.trackOnce("OpenRun")
+        {selectedTab === "llm-call" && (
+          <DataTable
+            type="llm"
+            onRowClicked={(row) => {
+              analytics.trackOnce("OpenRun")
+              setSelected(row)
+            }}
+            loading={loading || validating}
+            loadMore={loadMore}
+            columns={columns}
+            data={runs}
+          />
+        )}
 
-            setSelected(row)
-          }}
-          loading={loading || validating}
-          loadMore={loadMore}
-          columns={columns}
-          data={runs}
-        />
+        {selectedTab === "trace" && (
+          <DataTable
+            type="traces"
+            columns={tracesColumns}
+            data={traces.runs}
+            loadMore={traces.loadMore}
+            loading={traces.loading || traces.validating}
+            onRowClicked={(row) => {
+              analytics.track("OpenTrace")
+
+              Router.push(`/traces/${row.id}`)
+            }}
+          />
+        )}
+
+        {selectedTab === "chat" && (
+          <DataTable
+            type="chats"
+            onRowClicked={(row) => {
+              analytics.trackOnce("OpenChat")
+              Router.push(`/chats?chat=${row.id}`)
+              setSelectedChat(row)
+            }}
+            loading={chats.loading || chats.validating}
+            loadMore={chats.loadMore}
+            columns={chatsColumns}
+            data={chats.runs}
+          />
+        )}
       </Stack>
     </>
   )
