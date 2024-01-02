@@ -22,6 +22,7 @@ import {
   IconActivityHeartbeat,
   IconTimeline,
   IconShieldBolt,
+  IconListSearch,
 } from "@tabler/icons-react"
 
 import { useSessionContext } from "@supabase/auth-helpers-react"
@@ -34,7 +35,7 @@ import { openUpgrade } from "./UpgradeModal"
 
 const menu = [
   { label: "Analytics", icon: IconTimeline, link: "/analytics" },
-  { label: "Logs", icon: IconActivityHeartbeat, link: "/logs" },
+  { label: "Logs", icon: IconListSearch, link: "/logs" },
   { label: "Evaluations", icon: IconShieldBolt, link: "/evaluations" },
   { label: "Users", icon: IconUsers, link: "/users" },
   { label: "Prompts", icon: IconPlayerPlay, link: "/prompts" },

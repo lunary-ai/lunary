@@ -1,8 +1,9 @@
 import {
-  Box,
+  Badge,
   Button,
   Card,
   Flex,
+  Group,
   Modal,
   SimpleGrid,
   Stack,
@@ -22,8 +23,6 @@ import {
   IconClock,
   IconCoin,
   IconCreditCard,
-  IconFileTypeJs,
-  IconFileTypeXml,
   IconHelpCircle,
   IconHtml,
   IconJson,
@@ -34,16 +33,13 @@ import {
   IconPhone,
   IconRegex,
   IconRuler2,
-  IconScale,
   IconTag,
   IconThumbUp,
-  IconThumbUpFilled,
-  IconTimeDuration15,
   IconUser,
   IconWorldWww,
 } from "@tabler/icons-react"
 import classes from "./FiltersModal.module.css"
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 
 const basicFilters = [
   {
@@ -268,9 +264,14 @@ export function FiltersGrid({ selected, setSelected }) {
         {smartFilterCards}
       </SimpleGrid>
 
-      <Title order={2} mb="8" size="20">
-        AI
-      </Title>
+      <Group mb="8" gap="xs">
+        <Title order={2} size="20">
+          AI
+        </Title>
+        <Badge variant="filled" color="violet">
+          coming soon
+        </Badge>
+      </Group>
       <SimpleGrid cols={4}>{AIFilterCards}</SimpleGrid>
     </>
   )

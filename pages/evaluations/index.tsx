@@ -1,33 +1,102 @@
-import { FiltersGrid } from "@/components/Blocks/FiltersModal"
+import TinyPercentChart from "@/components/Blocks/Analytics/TinyPercentChart"
+import FiltersModal from "@/components/Blocks/FiltersModal"
 import {
+  ActionIcon,
   Badge,
+  Button,
+  Card,
   Container,
+  Flex,
   Group,
-  Paper,
+  NumberInput,
+  Popover,
+  Progress,
+  Select,
   Stack,
-  Tabs,
   Text,
   Title,
 } from "@mantine/core"
 import { useLocalStorage, useSetState } from "@mantine/hooks"
-import { IconPlus } from "@tabler/icons-react"
+import { IconBellBolt, IconListSearch, IconPlus } from "@tabler/icons-react"
+import Router from "next/router"
+import { useState } from "react"
 
-function View({ name, filters }) {
+function View({ name, filters, percentMatch }) {
   return (
-    <Paper p="md">
-      <Group>
-        <Title order={3} size="h4">
-          {name}
-        </Title>
-        <Group>
-          {filters.map((filter) => (
-            <Badge key={filter} variant="light" color="blue">
-              {filter}
-            </Badge>
-          ))}
-        </Group>
-      </Group>
-    </Paper>
+    <Card p="md" withBorder>
+      <Stack>
+        <Flex justify="space-between">
+          <Title order={3} size="h4">
+            {name}
+          </Title>
+
+          <Group justify="end">
+            <TinyPercentChart height={40} width={210} />
+
+            <Popover withArrow shadow="sm">
+              <Popover.Target>
+                <ActionIcon variant="light">
+                  <IconBellBolt size={16} />
+                </ActionIcon>
+              </Popover.Target>
+              <Popover.Dropdown>
+                <Stack gap="md">
+                  <Text size="sm">
+                    Setup an alert to get notified when new responses match
+                    this.
+                  </Text>
+
+                  <Select
+                    label="Alert type"
+                    placeholder="Select alert type"
+                    data={[
+                      { value: "threshold", label: "% Match threshold" },
+                      { value: "count", label: "Count" },
+                    ]}
+                  />
+
+                  <NumberInput
+                    defaultValue={50}
+                    min={0}
+                    max={100}
+                    label="Match threshold"
+                    placeholder="50"
+                    rightSection="%"
+                  />
+                  <Button size="xs">Save</Button>
+                </Stack>
+              </Popover.Dropdown>
+            </Popover>
+            <ActionIcon
+              variant="light"
+              onClick={() => {
+                Router.push("/logs")
+              }}
+            >
+              <IconListSearch size={16} />
+            </ActionIcon>
+          </Group>
+        </Flex>
+        <Flex justify="space-between">
+          <Group>
+            {filters.map((filter) => (
+              <Badge key={filter} variant="light" color="blue">
+                {filter}
+              </Badge>
+            ))}
+          </Group>
+
+          <Progress.Root size={20} w={300}>
+            <Progress.Section value={percentMatch} color="red">
+              <Progress.Label>{`${percentMatch}%`}</Progress.Label>
+            </Progress.Section>
+            <Progress.Section value={100 - percentMatch} color="green">
+              <Progress.Label>{`${100 - percentMatch}%`}</Progress.Label>
+            </Progress.Section>
+          </Progress.Root>
+        </Flex>
+      </Stack>
+    </Card>
   )
 }
 
@@ -38,50 +107,65 @@ export default function Evaluations() {
   })
 
   const [selected, setSelected] = useSetState({})
+  const [modalOpened, setModalOpened] = useState(false)
 
   return (
     <Container>
       <Stack>
-        <Title>Evaluations</Title>
+        <Group align="center" justify="space-between">
+          <Title>Evaluations</Title>
 
-        <Tabs defaultValue="new" variant="pills">
-          <Tabs.List mb="lg">
-            <Tabs.Tab value="new" leftSection={<IconPlus size={12} />}>
-              New view
-            </Tabs.Tab>
-            <Tabs.Tab value="existing">Existing views</Tabs.Tab>
-          </Tabs.List>
+          <Button
+            leftSection={<IconPlus size={12} />}
+            variant="light"
+            color="blue"
+            onClick={() => {
+              setModalOpened(true)
+            }}
+          >
+            New
+          </Button>
+        </Group>
 
-          <Tabs.Panel value="new">
-            <Text size="xl">
-              Create evaluating views by combining filters. See responses that
-              match your criteria.
-            </Text>
+        <Text size="xl" mb="md">
+          Create evaluating views by combining filters. See responses matching
+          your criterias.
+        </Text>
 
-            <FiltersGrid selected={selected} setSelected={setSelected} />
-          </Tabs.Panel>
+        <FiltersModal
+          opened={modalOpened}
+          defaultSelected={selected}
+          setOpened={setModalOpened}
+          save={setSelected}
+        />
 
-          <Tabs.Panel value="existing">
-            <Stack>
-              <View
-                name="Slow or failed responses"
-                filters={["duration", "status"]}
-              />
-              <View
-                name="Contains hatred or profanity"
-                filters={["profanity", "hatred", "feedback"]}
-              />
-              <View
-                name="Contains Personal Identifiable Information (PII)"
-                filters={["email", "phone", "address"]}
-              />
-              <View
-                name="Unhelpful responses"
-                filters={["feedback", "helpfulness"]}
-              />
-            </Stack>
-          </Tabs.Panel>
-        </Tabs>
+        {/* <FiltersGrid selected={selected} setSelected={setSelected} /> */}
+
+        <Stack gap="xl">
+          <View
+            name="Unhelpful responses"
+            filters={["feedback", "helpfulness"]}
+            percentMatch={28}
+          />
+          <View
+            name="Slow or failed responses"
+            filters={["duration", "status"]}
+            percentMatch={14}
+          />
+          <View name="Costly LLM calls" filters={["cost"]} percentMatch={11} />
+
+          <View
+            name="Contains Personal Identifiable Information (PII)"
+            filters={["email", "phone", "address"]}
+            percentMatch={9}
+          />
+
+          <View
+            name="Contains hatred or profanity"
+            filters={["profanity", "hatred", "feedback"]}
+            percentMatch={1}
+          />
+        </Stack>
       </Stack>
     </Container>
   )
