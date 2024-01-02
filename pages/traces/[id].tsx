@@ -51,8 +51,9 @@ const TraceTree = ({
 
   const run = runs.find((run) => run.id === parentId)
 
-  const timeAfterFirst =
-    new Date(run.created_at).getTime() - new Date(firstDate).getTime()
+  const timeAfterFirst = Math.abs(
+    new Date(run.created_at).getTime() - new Date(firstDate).getTime(),
+  )
 
   const color = getColorForRunType(run?.type)
 
@@ -80,7 +81,12 @@ const TraceTree = ({
             pr={5}
             leftSection={
               Icon && (
-                <ThemeIcon variant="subtle" color={color} size="sm" radius="lg">
+                <ThemeIcon
+                  variant="subtle"
+                  color={isActive ? "white" : color}
+                  size="sm"
+                  radius="lg"
+                >
                   <Icon strokeWidth={2} size={13} />
                 </ThemeIcon>
               )
@@ -105,9 +111,11 @@ const TraceTree = ({
             </Badge>
           )}
 
-          <Text c="dimmed" fz="xs">
-            T + {(timeAfterFirst / 1000).toFixed(2)}s
-          </Text>
+          {timeAfterFirst > 0 && (
+            <Text c="dimmed" fz="xs">
+              T + {(timeAfterFirst / 1000).toFixed(2)}s
+            </Text>
+          )}
         </Group>
 
         {runs
