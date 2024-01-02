@@ -67,13 +67,15 @@ const columns = [
 
 function buildExportUrl(
   appId: string,
+  exportType: string,
   query: string | null,
   models: string[],
   tags: string[],
 ) {
-  const url = new URL("/api/generation/export", window.location.origin)
+  const url = new URL("/export", process.env.NEXT_PUBLIC_API_URL!)
 
   url.searchParams.append("appId", appId)
+  url.searchParams.append("exportType", exportType)
 
   if (query) {
     url.searchParams.append("search", query)
@@ -117,9 +119,7 @@ export default function LLMCalls() {
 
   const [selected, setSelected] = useState(null)
 
-  const exportUrl = appId
-    ? buildExportUrl(appId, query, selectedModels, selectedTags)
-    : ""
+  function getExportUrl(exportType: string) {}
 
   const { allFeedbacks } = useAllFeedbacks()
 
@@ -127,7 +127,11 @@ export default function LLMCalls() {
     return <Empty Icon={IconBrandOpenai} what="requests" />
   }
 
-  function exportButton(url: string) {
+  function exportButton(exportType: string) {
+    const url = appId
+      ? buildExportUrl(appId, exportType, query, selectedModels, selectedTags)
+      : ""
+
     if (profile?.org.plan !== "free") {
       return {
         href: url,
@@ -205,14 +209,13 @@ export default function LLMCalls() {
               <Menu.Item
                 // color="dark"
                 leftSection={<IconFileExport size={16} />}
-                {...exportButton(exportUrl)}
+                {...exportButton("csv")}
               >
                 Export to CSV
               </Menu.Item>
               <Menu.Item
-                disabled
                 leftSection={<IconBraces size={16} />}
-                // {...exportButton(exportUrl)}
+                {...exportButton("jsonl")}
               >
                 Export to JSONL
               </Menu.Item>
