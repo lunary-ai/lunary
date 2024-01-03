@@ -78,7 +78,7 @@ export default function Analytics() {
   return (
     <Container size="lg" my="lg">
       <NextSeo title="Analytics" />
-      <Stack gap={40}>
+      <Stack gap="lg">
         <Group justify="space-between">
           <Title order={2}>Analytics</Title>
           <SegmentedControl
