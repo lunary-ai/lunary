@@ -31,7 +31,7 @@ export async function getServerSideProps(context) {
 
   const { data: org } = await supabaseAdmin
     .from("org")
-    .select("name")
+    .select("name,plan")
     .eq("id", orgId)
     .single()
     .throwOnError()
@@ -41,7 +41,7 @@ export async function getServerSideProps(context) {
     .select("*", { count: "exact", head: true })
     .eq("org_id", orgId)
 
-  return { props: { orgUserCount, orgName: org?.name, orgId } }
+  return { props: { orgUserCount, orgName: org?.name, orgId, plan: org?.plan } }
 }
 
 function TeamFull({ orgName }) {
@@ -72,7 +72,15 @@ function TeamFull({ orgName }) {
     </Container>
   )
 }
-export default function Join({ orgUserCount, orgName }) {
+
+const PLAN_LIMITS = {
+  free: 1,
+  pro: 4,
+  unlimited: 10,
+  custom: Infinity,
+}
+
+export default function Join({ orgUserCount, orgName, plan }) {
   const { supabaseClient } = useSessionContext()
 
   const searchParams = useSearchParams()
@@ -156,7 +164,7 @@ export default function Join({ orgUserCount, orgName }) {
     setStep(step + 1)
   }
 
-  if (orgUserCount > 4) {
+  if (orgUserCount >= PLAN_LIMITS[plan]) {
     return <TeamFull orgName={orgName} />
   }
 
