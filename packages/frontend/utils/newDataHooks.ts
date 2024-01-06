@@ -17,27 +17,60 @@ function extendWithCosts(data: any[]) {
   }))
 }
 
+export function useProjectSWR(key: string, ...args: any[]) {
+  const { projectId } = useContext(ProjectContext)
+
+  return useSWR(
+    projectId && key ? `/v1/project/${projectId}${key}` : null,
+    ...(args as [any]),
+  )
+}
+
+export function useProjectInfiniteSWR(key: string, ...args: any[]) {
+  const { projectId } = useContext(ProjectContext)
+
+  function getKey(pageIndex, previousPageData) {
+    if (previousPageData && !previousPageData.length) return null
+    return projectId && key
+      ? `/v1/project/${projectId}${key}?page=${pageIndex}&limit=100`
+      : null
+  }
+
+  const { data, isLoading, isValidating, size, setSize } = useSWRInfinite(
+    getKey,
+    ...(args as [any]),
+  )
+
+  function loadMore() {
+    setSize(size + 1)
+  }
+
+  return {
+    data,
+    isLoading,
+    isValidating,
+    loadMore,
+  }
+}
+
 // TODO: not sure all queries should have soft options
 // TODO: optimistic insert and updates
 
 // TODO: find better names for hooks
 export function useModelNames() {
-  const { projectId } = useContext(ProjectContext)
-  const { data, isLoading } = useSWR(`/filters/models/${projectId}`)
+  const { data, isLoading } = useProjectSWR(`/filters/models`)
 
   return { modelNames: data || [], isLoading }
 }
 
 export function useTags() {
-  const { projectId } = useContext(ProjectContext)
-  const { data, isLoading } = useSWR(`/filters/tags/${projectId}`)
+  const { data, isLoading } = useProjectSWR(`/filters/tags`)
 
   return { tags: data || [], isLoading }
 }
 
 export function useAllFeedbacks() {
-  const { projectId } = useContext(ProjectContext)
-  const { data, isLoading } = useSWR(`/filters/feedbacks/${projectId}`)
+  const { data, isLoading } = useProjectSWR(`/filters/feedbacks`)
 
   return { allFeedbacks: data || [], isLoading }
 }
@@ -45,10 +78,9 @@ export function useAllFeedbacks() {
 export function useLogs(type: "llm" | "trace" | "thread") {
   function getKey(pageIndex, previousPageData) {
     if (previousPageData && !previousPageData.length) return null
-    return `/logs/${projectId}?type=${type}&page=${pageIndex}&limit=100`
+    return `/logs?type=${type}&page=${pageIndex}&limit=100`
   }
 
-  const { projectId } = useContext(ProjectContext)
   const { data, isLoading, isValidating, size, setSize } =
     useSWRInfinite(getKey)
 
@@ -65,7 +97,7 @@ export function useUser() {
   const theme = useMantineTheme()
   const scheme = useColorScheme()
 
-  const { data, isLoading, mutate, error } = useSWR(`/users/me`)
+  const { data, isLoading, mutate, error } = useSWR(`/v1/users/me`)
 
   const color = data ? getUserColor(scheme, theme, data.id) : null
   const user = data ? { ...data, color } : null
@@ -74,7 +106,7 @@ export function useUser() {
 }
 
 export function useOrg() {
-  const { data, isLoading, mutate } = useSWR(`/users/me/org`)
+  const { data, isLoading, mutate } = useSWR(`/v1/users/me/org`)
   const theme = useMantineTheme()
   const scheme = useColorScheme()
 
@@ -86,7 +118,7 @@ export function useOrg() {
   const org = data ? { ...data, users } : null
 
   const { trigger: updateOrg } = useSWRMutation(
-    `/org/${org?.id}`,
+    `/v1/org/${org?.id}`,
     fetcher.patch,
   )
 
@@ -95,7 +127,7 @@ export function useOrg() {
 
 export function useProjects() {
   const { org } = useOrg()
-  const { data, isLoading } = useSWR(() => org && `/org/${org.id}/projects`)
+  const { data, isLoading } = useSWR(() => org && `/v1/org/${org.id}/projects`)
 
   // TODO: mutations
 
@@ -115,9 +147,4 @@ export function useCurrentProject() {
   const project = projects?.find((p) => p.id === projectId)
 
   return { project, setProjectId, loading }
-}
-
-export function useProjectSWR(...args) {
-  const { projectId } = useContext(ProjectContext)
-  return useSWR(`/projects/${projectId}`, ...args)
 }

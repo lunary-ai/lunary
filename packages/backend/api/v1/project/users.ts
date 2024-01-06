@@ -8,6 +8,7 @@ const users = new Router({
 
 users.get("/", async (ctx: Context) => {
   const { projectId } = ctx.params
+  const { limit, page } = ctx.query
 
   const users = await sql`
       with app_users as (

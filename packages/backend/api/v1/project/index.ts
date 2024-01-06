@@ -4,11 +4,11 @@ import logs from "./logs"
 import users from "./users"
 
 const project = new Router({
-  prefix: "/:projectId",
+  prefix: "/project/:projectId",
 })
 
+project.use(users.routes())
 project.use(dataset.routes())
 project.use(logs.routes())
-project.use(users.routes())
 
 export default project

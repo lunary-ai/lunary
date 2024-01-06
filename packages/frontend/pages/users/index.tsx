@@ -12,12 +12,13 @@ import { IconUsers } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import Router from "next/router"
 import analytics from "../../utils/analytics"
+import { useProjectInfiniteSWR } from "@/utils/newDataHooks"
 
 const columns = [
   {
     header: "User",
     size: 80,
-    id: "users",
+    id: "user",
     cell: (props) => {
       const user = props.row.original
       return (
@@ -29,14 +30,19 @@ const columns = [
     },
   },
   timeColumn("createdAt", "First Seen"),
-  timeColumn("last_seen", "Last Seen"),
+  timeColumn("lastSeen", "Last Seen"),
   costColumn(),
 ]
 
 export default function Users() {
-  const { users, loading, loadMore, validating } = useAppUsersList()
+  const {
+    data: users,
+    isLoading,
+    loadMore,
+    isValidating,
+  } = useProjectInfiniteSWR("/users")
 
-  if (!loading && users?.length === 0) {
+  if (!isLoading && users?.length === 0) {
     return <Empty Icon={IconUsers} what="users" />
   }
 
@@ -53,7 +59,7 @@ export default function Users() {
 
           Router.push(`/users/${row.id}`)
         }}
-        loading={loading || validating}
+        loading={isLoading || isValidating}
         loadMore={loadMore}
       />
     </Stack>
