@@ -31,6 +31,36 @@ users.get("/", async (ctx: Context) => {
   ctx.body = users
 })
 
+users.get("/runs/usage", async (ctx) => {
+  const projectId = ctx.params.projectId as string
+  const days = ctx.query.days as string
+
+  const daysNum = days ? parseInt(days) : 1
+
+  const runsUsage = await sql`
+      select
+          run.user as user_id,
+          run.name,
+          run.type,
+          coalesce(sum(run.completion_tokens), 0)::int as completion_tokens,
+          coalesce(sum(run.prompt_tokens), 0)::int as prompt_tokens,
+          sum(case when run.status = 'error' then 1 else 0 end)::int as errors,
+          sum(case when run.status = 'success' then 1 else 0 end)::int as success
+      from
+          run
+      where
+          run.app = ${projectId as string}
+          and run.created_at >= now() - interval '1 day' * ${daysNum}
+          and (run.type != 'agent' or run.parent_run is null)
+      group by
+          run.user,
+          run.name, 
+          run.type
+          `
+
+  ctx.body = runsUsage
+})
+
 users.get("/:id", async (ctx: Context) => {
   const { id } = ctx.params
   const [row] = await sql`

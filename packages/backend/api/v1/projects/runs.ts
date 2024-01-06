@@ -153,6 +153,7 @@ runs.get("/usage", async (ctx) => {
     ctx.throw(400, "Invalid query parameters")
   }
 
+  // TODO: probably cleaner to split this into two routes
   const runsUsage = await sql`
       select
           ${daily ? sql`date(run.created_at) as date,` : sql``}
@@ -181,8 +182,6 @@ runs.get("/usage", async (ctx) => {
 
   ctx.body = runsUsage
 })
-
-//
 
 runs.get("/:id", async (ctx) => {
   const projectId = ctx.params.projectId as string
