@@ -1,28 +1,28 @@
-import sql from "@/utils/db"
-import Router from "@koa/router"
+import sql from "@/utils/db";
+import Router from "koa-router";
 
 const logs = new Router({
   prefix: "/logs",
-})
+});
 
 interface Query {
-  type?: "llm" | "trace" | "thread"
-  search?: string
-  models?: string[]
-  tags?: string[]
-  tokens?: string
-  minDuration?: string
-  maxDuration?: string
-  startTime?: string
-  endTime?: string
+  type?: "llm" | "trace" | "thread";
+  search?: string;
+  models?: string[];
+  tags?: string[];
+  tokens?: string;
+  minDuration?: string;
+  maxDuration?: string;
+  startTime?: string;
+  endTime?: string;
 
-  limit?: string
-  page?: string
-  order?: string
+  limit?: string;
+  page?: string;
+  order?: string;
 }
 
 logs.get("/", async (ctx) => {
-  const projectId = ctx.params.projectId as string
+  const projectId = ctx.params.projectId as string;
   const {
     type,
     search,
@@ -35,19 +35,19 @@ logs.get("/", async (ctx) => {
     maxDuration,
     startTime,
     endTime,
-  } = ctx.query as Query
+  } = ctx.query as Query;
 
   if (!type) {
-    return ctx.throw(422, "The `type` query parameter is required")
+    return ctx.throw(422, "The `type` query parameter is required");
   }
 
-  let typeFilter = sql``
+  let typeFilter = sql``;
   if (type === "llm") {
-    typeFilter = sql`and type = 'llm'`
+    typeFilter = sql`and type = 'llm'`;
   } else if (type === "trace") {
-    typeFilter = sql`and type in ('agent','chain')`
+    typeFilter = sql`and type in ('agent','chain')`;
   } else if (type === "thread") {
-    typeFilter = sql`and type in ('thread','convo')`
+    typeFilter = sql`and type in ('thread','convo')`;
   }
 
   // if (
@@ -110,7 +110,7 @@ logs.get("/", async (ctx) => {
       order by
           r.created_at desc
       limit ${Number(limit)}
-      offset ${Number(page) * Number(limit)}`
+      offset ${Number(page) * Number(limit)}`;
 
   const runs = rows.map((run) => ({
     type: run.type,
@@ -137,9 +137,9 @@ logs.get("/", async (ctx) => {
     },
     // TODO
     // cost: calcRunCost(run),
-  }))
+  }));
 
-  ctx.body = runs
-})
+  ctx.body = runs;
+});
 
-export default logs
+export default logs;
