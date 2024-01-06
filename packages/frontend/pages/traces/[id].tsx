@@ -17,7 +17,7 @@ import DurationBadge from "@/components/Blocks/DurationBadge"
 import TokensBadge from "@/components/Blocks/TokensBadge"
 import StatusBadge from "@/components/Blocks/StatusBadge"
 
-import { useRelatedRuns, useRun } from "@/utils/dataHooks"
+import { useProjectSWR, useRun } from "@/utils/newDataHooks"
 import { capitalize, formatCost } from "@/utils/format"
 import RunInputOutput from "@/components/Blocks/RunInputOutput"
 import { getColorForRunType } from "../../utils/colors"
@@ -164,7 +164,7 @@ export default function AgentRun({}) {
     if (run) setFocused(run.id)
   }, [run])
 
-  const { relatedRuns } = useRelatedRuns(id as string)
+  const { data: relatedRuns } = useProjectSWR(`/runs/${id}/related`)
 
   if (!run) return <>Loading...</>
 

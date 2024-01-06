@@ -192,4 +192,25 @@ runs.get("/:id", async (ctx) => {
   ctx.body = run
 })
 
+runs.get("/:id/related", async (ctx) => {
+  const related = await sql`
+    WITH RECURSIVE related_runs AS (
+      SELECT r1.*
+      FROM run r1
+      WHERE r1.id = ${ctx.params.id}
+
+      UNION ALL
+
+      SELECT r2.*
+      FROM run r2
+      INNER JOIN related_runs rr ON rr.id = r2.parent_run
+  )
+  SELECT rr.created_at, rr.tags, rr.app, rr.id, rr.status, rr.name, rr.ended_at, rr.error, rr.input, rr.output, 
+        rr.params, rr.type, rr.parent_run, rr.completion_tokens, rr.prompt_tokens, rr.feedback
+  FROM related_runs rr;
+  `
+
+  ctx.body = related
+})
+
 export default runs

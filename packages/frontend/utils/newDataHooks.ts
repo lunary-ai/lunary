@@ -43,7 +43,9 @@ export function useProjectInfiniteSWR(key: string, ...args: any[]) {
   function getKey(pageIndex, previousPageData) {
     if (previousPageData && !previousPageData.length) return null
     return projectId && key
-      ? `/v1/projects/${projectId}${key}?page=${pageIndex}&limit=100`
+      ? encodeURIComponent(`/v1/projects/${projectId}${key}
+      ${key.includes("?") ? "&" : "?"}
+      page=${pageIndex}&limit=100`)
       : null
   }
 
@@ -58,8 +60,8 @@ export function useProjectInfiniteSWR(key: string, ...args: any[]) {
 
   return {
     data,
-    isLoading,
-    isValidating,
+    loading: isLoading,
+    validating: isValidating,
     loadMore,
   }
 }
@@ -84,24 +86,6 @@ export function useAllFeedbacks() {
   const { data, isLoading } = useProjectSWR(`/filters/feedbacks`)
 
   return { allFeedbacks: data || [], isLoading }
-}
-
-export function useLogs(type: "llm" | "trace" | "thread") {
-  function getKey(pageIndex, previousPageData) {
-    if (previousPageData && !previousPageData.length) return null
-    return `/runs?type=${type}&page=${pageIndex}&limit=100`
-  }
-
-  const { data, isLoading, isValidating, size, setSize } =
-    useSWRInfinite(getKey)
-
-  function loadMore() {
-    setSize(size + 1)
-  }
-
-  const logs = data ? [].concat(...data) : []
-
-  return { logs, loading: isLoading, validating: isValidating, loadMore }
 }
 
 export function useUser() {
@@ -207,7 +191,7 @@ export function useTemplate(id: string) {
   }
 }
 
-export const useTemplateVersion = (id: string) => {
+export function useTemplateVersion(id: string) {
   const {
     data: templateVersion,
     isLoading,
@@ -221,6 +205,19 @@ export const useTemplateVersion = (id: string) => {
 
   return {
     templateVersion,
+    update,
+    mutate,
+    loading: isLoading,
+  }
+}
+
+export function useRun(id: string) {
+  const { data: run, isLoading, mutate } = useProjectSWR(`/runs/${id}`)
+
+  const { trigger: update } = useProjectMutation(`/runs/${id}`, fetcher.patch)
+
+  return {
+    run,
     update,
     mutate,
     loading: isLoading,

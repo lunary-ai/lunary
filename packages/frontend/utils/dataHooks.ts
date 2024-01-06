@@ -33,72 +33,6 @@ const extendWithCosts = (data: any[]) =>
     cost: calcRunCost(r),
   }))
 
-export function useTemplates() {
-  const supabaseClient = useSupabaseClient<Database>()
-  const { projectId: appId } = useContext(ProjectContext)
-
-  const query = !appId
-    ? null
-    : supabaseClient
-        .from("template")
-        .select(
-          "id,name,slug,app_id,created_at,org_id,group,mode,versions:template_version(id,content,extra,created_at,version,is_draft)",
-        )
-        .eq("app_id", appId)
-        .order("created_at", {
-          ascending: false,
-        })
-
-  const { data: templates, isLoading, mutate } = useQuery(query)
-
-  // insert mutation
-  const { trigger: insert } = useInsertMutation(
-    supabaseClient.from("template"),
-    ["id"],
-    "id,name,slug,app_id,org_id,group,mode",
-  )
-
-  // update mutation
-  const { trigger: update } = useUpdateMutation(
-    supabaseClient.from("template"),
-    ["id"],
-    "name,slug,group,mode",
-  )
-
-  const { trigger: remove } = useDeleteMutation(
-    supabaseClient.from("template"),
-    ["id"],
-  )
-
-  // insertVersion mutation
-  const { trigger: insertVersion } = useInsertMutation(
-    supabaseClient.from("template_version"),
-    ["id"],
-    "id,template_id,content,extra,version,is_draft",
-  )
-
-  // update version
-  const { trigger: updateVersion } = useUpdateMutation(
-    supabaseClient.from("template_version"),
-    ["id"],
-    "content,extra,is_draft",
-    {
-      disableAutoQuery: true,
-    },
-  )
-
-  return {
-    templates,
-    insert,
-    insertVersion,
-    update,
-    remove,
-    updateVersion,
-    mutate,
-    loading: isLoading,
-  }
-}
-
 export function useRunsUsage(range, user_id?: string) {
   const supabaseClient = useSupabaseClient()
   const { projectId: appId } = useContext(ProjectContext)
@@ -174,31 +108,6 @@ export function useRunsUsageByUser(range = null) {
     usageByUser: reduceUsersUsage(extendWithCosts(usageByUser || [])),
     loading: isLoading,
   }
-}
-
-export function useRun(runId: string) {
-  const supabaseClient = useSupabaseClient<Database>()
-
-  const { data: run, isLoading } = useQuery(
-    !runId
-      ? null
-      : supabaseClient.from("run").select("*").eq("id", runId).single(),
-    softOptions,
-  )
-
-  return { run, loading: isLoading }
-}
-
-export function useRelatedRuns(runId: string) {
-  const supabaseClient = useSupabaseClient<Database>()
-
-  const { data: relatedRuns, isLoading } = useQuery(
-    supabaseClient.rpc("get_related_runs", {
-      run_id: runId,
-    }),
-  )
-
-  return { relatedRuns: extendWithCosts(relatedRuns), loading: isLoading }
 }
 
 export function useAppUsersList() {

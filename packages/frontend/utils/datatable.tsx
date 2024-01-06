@@ -8,6 +8,7 @@ import { useEffect } from "react"
 import analytics from "./analytics"
 import { useAppUser, useRelatedRuns } from "./dataHooks"
 import { formatCost, formatDateTime, msToTime } from "./format"
+import { useProjectSWR } from "./newDataHooks"
 const columnHelper = createColumnHelper<any>()
 
 export function timeColumn(timeColumn, label = "Time") {
@@ -181,7 +182,7 @@ export function feedbackColumn(withRelatedRuns = false) {
     ? (props) => {
         const run = props.row.original
 
-        const { relatedRuns } = useRelatedRuns(run.id)
+        const { data: relatedRuns } = useProjectSWR(`/runs/${run.id}/related`)
 
         const allFeedbacks = [run, ...(relatedRuns || [])]
           .filter((run) => run.feedback)

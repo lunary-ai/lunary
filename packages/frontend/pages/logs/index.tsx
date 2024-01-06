@@ -47,9 +47,9 @@ import analytics from "@/utils/analytics"
 import { formatDateTime } from "@/utils/format"
 import {
   useCurrentProject,
-  useLogs,
   useModelNames,
   useOrg,
+  useProjectInfiniteSWR,
   useUser,
 } from "@/utils/newDataHooks"
 import { useDebouncedState, useLocalStorage, useSetState } from "@mantine/hooks"
@@ -131,9 +131,14 @@ export default function Logs() {
     defaultValue: [],
   })
   const [currentView, setCurrentView] = useState()
-  const { logs, loading, validating, loadMore } = useLogs("llm")
-  const threads = useLogs("thread")
-  const traces = useLogs("trace")
+  const {
+    data: logs,
+    loading,
+    validating,
+    loadMore,
+  } = useProjectInfiniteSWR("/runs?type=llm")
+  const threads = useProjectInfiniteSWR("/runs?type=thread")
+  const traces = useProjectInfiniteSWR("/runs?type=trace")
 
   const [selectedTab, setSelectedTab] = useState("llm-call")
 
