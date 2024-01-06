@@ -1,6 +1,6 @@
 import Router from "@koa/router"
-import project from "./project"
-import org from "./org"
+import projects from "./projects"
+import orgs from "./orgs"
 
 import users from "./users"
 
@@ -12,8 +12,8 @@ v1.get("/", async (ctx) => {
   ctx.body = "Lunary API v1"
 })
 
-v1.use(org.routes())
+v1.use(orgs.routes())
 v1.use(users.routes())
-v1.use(project.routes())
+v1.use(projects.routes())
 
 export default v1

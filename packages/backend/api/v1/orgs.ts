@@ -2,11 +2,11 @@ import sql from "@/utils/db"
 import Router from "@koa/router"
 import { Context } from "koa"
 
-const org = new Router({
-  prefix: "/org/:orgId",
+const orgs = new Router({
+  prefix: "/orgs/:orgId",
 })
 
-org.get("/", async (ctx: Context) => {
+orgs.get("/", async (ctx: Context) => {
   const orgId = ctx.params.orgId as string
 
   const [row] = await sql`
@@ -23,7 +23,7 @@ org.get("/", async (ctx: Context) => {
   ctx.body = row
 })
 
-org.patch("/", async (ctx: Context) => {
+orgs.patch("/", async (ctx: Context) => {
   const orgId = ctx.params.orgId as string
 
   const name = (ctx.request.body as { name: string }).name
@@ -38,7 +38,7 @@ org.patch("/", async (ctx: Context) => {
   ctx.body = {}
 })
 
-org.get("/projects", async (ctx: Context) => {
+orgs.get("/projects", async (ctx: Context) => {
   const orgId = ctx.params.orgId as string
 
   const rows = await sql`
@@ -57,4 +57,4 @@ org.get("/projects", async (ctx: Context) => {
   ctx.body = rows
 })
 
-export default org
+export default orgs

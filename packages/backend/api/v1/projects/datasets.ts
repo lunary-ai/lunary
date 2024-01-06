@@ -2,11 +2,11 @@ import sql from "@/utils/db"
 import Router from "@koa/router"
 import { Context } from "koa"
 
-const dataset = new Router({
-  prefix: "/dataset",
+const datasets = new Router({
+  prefix: "/datasets",
 })
 
-dataset.get("/:id", async (ctx: Context) => {
+datasets.get("/:id", async (ctx: Context) => {
   const { projectId, id } = ctx.params
 
   const [row] = await sql`
@@ -21,7 +21,7 @@ dataset.get("/:id", async (ctx: Context) => {
   ctx.body = row
 })
 
-dataset.post("/", async (ctx: Context) => {
+datasets.post("/", async (ctx: Context) => {
   const { projectId } = ctx.params
   const { slug } = ctx.request.body as { slug: string }
 
@@ -36,7 +36,7 @@ dataset.post("/", async (ctx: Context) => {
   ctx.body = row
 })
 
-dataset.post("/:id/run", async (ctx: Context) => {
+datasets.post("/:id/run", async (ctx: Context) => {
   const { projectId, id } = ctx.params
   const { run } = ctx.request.body as { run: any }
 
@@ -52,4 +52,4 @@ dataset.post("/:id/run", async (ctx: Context) => {
   ctx.body = row
 })
 
-export default dataset
+export default datasets

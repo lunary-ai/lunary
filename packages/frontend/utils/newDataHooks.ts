@@ -21,7 +21,7 @@ export function useProjectSWR(key: string, ...args: any[]) {
   const { projectId } = useContext(ProjectContext)
 
   return useSWR(
-    projectId && key ? `/v1/project/${projectId}${key}` : null,
+    projectId && key ? `/v1/projects/${projectId}${key}` : null,
     ...(args as [any]),
   )
 }
@@ -32,7 +32,7 @@ export function useProjectInfiniteSWR(key: string, ...args: any[]) {
   function getKey(pageIndex, previousPageData) {
     if (previousPageData && !previousPageData.length) return null
     return projectId && key
-      ? `/v1/project/${projectId}${key}?page=${pageIndex}&limit=100`
+      ? `/v1/projects/${projectId}${key}?page=${pageIndex}&limit=100`
       : null
   }
 
@@ -118,7 +118,7 @@ export function useOrg() {
   const org = data ? { ...data, users } : null
 
   const { trigger: updateOrg } = useSWRMutation(
-    `/v1/org/${org?.id}`,
+    `/v1/orgs/${org?.id}`,
     fetcher.patch,
   )
 
@@ -127,7 +127,7 @@ export function useOrg() {
 
 export function useProjects() {
   const { org } = useOrg()
-  const { data, isLoading } = useSWR(() => org && `/v1/org/${org.id}/projects`)
+  const { data, isLoading } = useSWR(() => org && `/v1/orgs/${org.id}/projects`)
 
   // TODO: mutations
 
