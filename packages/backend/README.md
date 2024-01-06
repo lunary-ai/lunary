@@ -1,4 +1,4 @@
-# lunary
+# backend
 
 To install dependencies:
 
