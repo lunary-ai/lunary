@@ -37,7 +37,14 @@ import TemplateList, {
 } from "@/components/Blocks/Prompts/TemplateMenu"
 import { notifications } from "@mantine/notifications"
 import { generateSlug } from "random-word-slugs"
-import { useCurrentProject, useOrg, useUser } from "@/utils/newDataHooks"
+import {
+  useCurrentProject,
+  useOrg,
+  useTemplate,
+  useTemplateVersion,
+  useUser,
+} from "@/utils/newDataHooks"
+import { fetcher } from "@/utils/swr"
 
 const availableModels = [
   "gpt-4-1106-preview",
@@ -100,19 +107,28 @@ const ParamItem = ({ name, value }) => (
 
 function Playground() {
   const router = useRouter()
-  const supabaseClient = useSupabaseClient()
-  const [template, setTemplate] = useLocalStorage<any>({
-    key: "template",
-  })
 
-  const [templateVersion, setTemplateVersion] = useState<any>({
-    key: "tp-version",
-    default: defaultTemplateVersion,
-  })
+  // const [template, setTemplate] = useLocalStorage<any>({
+  //   key: "template",
+  // })
+
+  // const [templateVersion, setTemplateVersion] = useLocalStorage<any>({
+  //   key: "tp-version",
+  //   default: defaultTemplateVersion,
+  // })
+
+  const [template, setTemplate] = useState<any>()
+  const [templateVersion, setTemplateVersion] = useState<any>(
+    defaultTemplateVersion,
+  )
 
   const [hasChanges, setHasChanges] = useState(false)
 
-  const { insertVersion, mutate, updateVersion, insert } = useTemplates()
+  const { mutate } = useTemplate(template?.id)
+
+  const { update: updateVersion } = useTemplateVersion(templateVersion?.id)
+
+  const { insert } = useTemplates()
 
   const [streaming, setStreaming] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -167,12 +183,7 @@ function Playground() {
     if (id) {
       const fetchTemplate = async () => {
         setLoading(true)
-        const { data } = await supabaseClient
-          .from("template_version")
-          .select("*,template:template_id(id,slug,mode,name)")
-          .eq("id", id)
-          .single()
-          .throwOnError()
+        const data = await fetcher.get(`/v1/template_versions/${id}/`)
 
         if (data) {
           setTemplateVersion(data)
@@ -183,29 +194,29 @@ function Playground() {
       }
 
       fetchTemplate()
-    } else if (clone) {
-      const fetchRun = async () => {
-        setLoading(true)
-        const { data } = await supabaseClient
-          .from("run")
-          .select("*")
-          .eq("id", clone)
-          .single()
-          .throwOnError()
+      // } else if (clone) {
+      //   const fetchRun = async () => {
+      //     setLoading(true)
+      //     const { data } = await supabaseClient
+      //       .from("run")
+      //       .select("*")
+      //       .eq("id", clone)
+      //       .single()
+      //       .throwOnError()
 
-        if (!Array.isArray(data.input)) data.input = [data.input]
+      //     if (!Array.isArray(data.input)) data.input = [data.input]
 
-        if (data) {
-          setTemplateVersion({ ...templateVersion, content: data.input })
-        }
+      //     if (data) {
+      //       setTemplateVersion({ ...templateVersion, content: data.input })
+      //     }
 
-        setLoading(false)
-        // remove the id from t
+      //     setLoading(false)
+      //     // remove the id from t
 
-        router.push("/prompts")
-      }
+      //     router.push("/prompts")
+      //   }
 
-      fetchRun()
+      //   fetchRun()
     } else {
       setTemplate({ mode: "openai" })
       setTemplateVersion(defaultTemplateVersion)
@@ -214,7 +225,7 @@ function Playground() {
 
   // Save as draft without deploying
   const saveTemplate = async () => {
-    if (templateVersion.is_draft) {
+    if (templateVersion.isDraft) {
       await updateVersion({
         id: templateVersion.id,
         extra: templateVersion.extra,
@@ -226,10 +237,10 @@ function Playground() {
       const newVersion = await insertVersion([
         {
           template_id: templ?.id,
-          test_values: templateVersion.test_values,
+          testValues: templateVersion.testValues,
           content: templateVersion.content,
           extra: templateVersion.extra,
-          is_draft: true,
+          isDraft: true,
         },
       ])
 
@@ -245,29 +256,24 @@ function Playground() {
 
   // Deploy the template
   const commitTemplate = async () => {
-    if (templateVersion.is_draft) {
+    if (templateVersion.isDraft) {
       await updateVersion({
-        id: templateVersion.id,
-        is_draft: false,
+        ...templateVersion,
+        isDraft: false,
       })
 
-      setTemplateVersion({ ...templateVersion, is_draft: false })
+      setTemplateVersion({ ...templateVersion, isDraft: false })
     } else {
       const templ = await createTemplateIfNotExists()
 
-      const newVersion = await insertVersion([
-        {
-          template_id: templ?.id,
-          test_values: templateVersion.test_values,
-          content: templateVersion.content,
-          extra: templateVersion.extra,
-          is_draft: false,
-        },
-      ])
+      const newVersion = await insertVersion({
+        testValues: templateVersion.testValues,
+        content: templateVersion.content,
+        extra: templateVersion.extra,
+        isDraft: false,
+      })
 
-      if (newVersion) {
-        setTemplateVersion(newVersion[0])
-      }
+      setTemplateVersion(newVersion)
     }
 
     notifications.show({
@@ -302,7 +308,7 @@ function Playground() {
         body: JSON.stringify({
           content: templateVersion.content,
           extra: templateVersion.extra,
-          testValues: templateVersion.test_values,
+          testValues: templateVersion.testValues,
           appId: project?.id,
         }),
       })
@@ -459,7 +465,7 @@ function Playground() {
               leftSection={<IconGitCommit size={18} />}
               size="xs"
               loading={loading}
-              disabled={loading || (!templateVersion?.is_draft && !hasChanges)}
+              disabled={loading || (!templateVersion?.isDraft && !hasChanges)}
               variant="filled"
               onClick={commitTemplate}
             >
@@ -642,12 +648,12 @@ function Playground() {
                       radius="sm"
                       rows={1}
                       placeholder="Test Value"
-                      value={templateVersion?.test_values?.[variable]}
+                      value={templateVersion?.testValues?.[variable]}
                       onChange={(e) => {
                         setTemplateVersion({
                           ...templateVersion,
-                          test_values: {
-                            ...templateVersion.test_values,
+                          testValues: {
+                            ...templateVersion.testValues,
                             [variable]: e.currentTarget.value,
                           },
                         })

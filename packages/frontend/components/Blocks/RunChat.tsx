@@ -17,6 +17,7 @@ import AppUserAvatar from "./AppUserAvatar"
 import { formatDateTime } from "@/utils/format"
 import Router from "next/router"
 import { IconNeedleThread } from "@tabler/icons-react"
+import { useProjectSWR } from "@/utils/newDataHooks"
 
 const OUTPUT_ROLES = ["assistant", "ai", "tool"]
 const INPUT_ROLES = ["user"]
@@ -144,7 +145,7 @@ export function ChatReplay({ run }) {
     notInfinite: true,
   })
 
-  const { user } = useAppUser(run.user)
+  const { data: user } = useProjectSWR(run.user && `/users/${run.user}`)
 
   const sorted = runs?.sort((a, b) => {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()

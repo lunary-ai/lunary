@@ -22,6 +22,7 @@ import {
   tagsColumn,
   timeColumn,
 } from "@/utils/datatable"
+import { useProjectSWR } from "@/utils/newDataHooks"
 
 const columns = [
   timeColumn("createdAt"),
@@ -38,7 +39,7 @@ export default function UserDetails({}) {
   const router = useRouter()
   const { id } = router.query as { id: string }
 
-  const { user } = useAppUser(id as string)
+  const { data: user } = useProjectSWR(`/users/${id}`)
 
   const { runs, loading, validating, loadMore } = useRuns(undefined, {
     match: { user: id }, //, parentRun: undefined },
