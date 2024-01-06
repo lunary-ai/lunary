@@ -89,7 +89,7 @@ export function useAllFeedbacks() {
 export function useLogs(type: "llm" | "trace" | "thread") {
   function getKey(pageIndex, previousPageData) {
     if (previousPageData && !previousPageData.length) return null
-    return `/logs?type=${type}&page=${pageIndex}&limit=100`
+    return `/runs?type=${type}&page=${pageIndex}&limit=100`
   }
 
   const { data, isLoading, isValidating, size, setSize } =
