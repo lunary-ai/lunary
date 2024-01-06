@@ -6,14 +6,12 @@ import {
   useUpdateMutation,
 } from "@supabase-cache-helpers/postgrest-swr"
 
-import { useMantineTheme } from "@mantine/core"
-import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
+import { useSupabaseClient } from "@supabase/auth-helpers-react"
 import { useContext } from "react"
 import { calcRunCost } from "./calcCosts"
 import { ProjectContext } from "./context"
 import { Database } from "./supaTypes"
 import useSWR from "swr"
-import { useColorScheme } from "@mantine/hooks"
 import { useCurrentProject } from "./newDataHooks"
 
 const softOptions = {
@@ -34,47 +32,6 @@ const extendWithCosts = (data: any[]) =>
     ...r,
     cost: calcRunCost(r),
   }))
-
-export function useApps() {
-  const supabaseClient = useSupabaseClient<Database>()
-  const apps = null
-  const isLoading = false
-  const insert = () => {}
-  const drop = () => {}
-  const update = () => {}
-
-  // const { trigger: insert } = useInsertMutation(
-  //   supabaseClient.from("app"),
-  //   ["id"],
-  //   "name,org_id,id",
-  // )
-
-  // const { trigger: update } = useUpdateMutation(
-  //   supabaseClient.from("app"),
-  //   ["id"],
-  //   "name,id",
-  // )
-
-  // const { trigger: drop } = useDeleteMutation(supabaseClient.from("app"), [
-  //   "id",
-  // ])
-
-  return { apps, loading: isLoading, insert, drop, update }
-}
-
-export function useConvosByFeedback(feedbackFilters) {
-  const supabaseClient = useSupabaseClient<Database>()
-  const { projectId: appId } = useContext(ProjectContext)
-
-  const query = supabaseClient.rpc("get_convos_by_feedback", {
-    app_id: appId,
-    feedback_filters: feedbackFilters,
-  })
-
-  const { data, isLoading, error } = useQuery<string[]>(query)
-
-  return { runIds: data, isLoading, error }
-}
 
 export function useTemplates() {
   const supabaseClient = useSupabaseClient<Database>()
@@ -312,21 +269,6 @@ export function useAppUsers(usageRange = 30) {
   })
 
   return { usersWithUsage, loading: isLoading }
-}
-
-export function useAppUser(id: string) {
-  const supabaseClient = useSupabaseClient<Database>()
-
-  if (!id) {
-    return { user: null, loading: false }
-  }
-
-  const { data: user, isLoading } = useQuery(
-    supabaseClient.from("app_user").select("*").eq("id", id).single(),
-    hardOptions,
-  )
-
-  return { user, loading: isLoading }
 }
 
 export function useFetchSWR(url: string | null, props: any = {}) {

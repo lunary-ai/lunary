@@ -1,4 +1,3 @@
-import { useTemplates } from "@/utils/dataHooks"
 import {
   ActionIcon,
   Badge,
@@ -13,7 +12,12 @@ import {
 } from "@mantine/core"
 import { IconDotsVertical, IconPlus, IconTrash } from "@tabler/icons-react"
 
-import { useCurrentProject, useOrg } from "@/utils/newDataHooks"
+import {
+  useCurrentProject,
+  useOrg,
+  useTemplate,
+  useTemplates,
+} from "@/utils/newDataHooks"
 import { useHover } from "@mantine/hooks"
 import { modals } from "@mantine/modals"
 import { notifications } from "@mantine/notifications"
@@ -37,16 +41,12 @@ export const defaultTemplateVersion = {
     { content: "You are an helpful assistant.", role: "system" },
     { content: "Hi!", role: "user" },
   ],
-  // mode: "openai",
   extra: {
     model: "gpt-4-1106-preview",
     temperature: 1.0,
     max_tokens: 1000,
-    // frequency_penalty: 0,
-    // presence_penalty: 0,
-    // top_p: 1,
   },
-  test_values: {},
+  testValues: {},
 }
 
 const TemplateListItem = ({
@@ -54,14 +54,17 @@ const TemplateListItem = ({
   activeTemplate,
   activeVersion,
   rename,
-  applyRename,
+
   setRename,
-  confirmDelete,
+
   switchTemplate,
   switchTemplateVersion,
 }) => {
+  const { templates, mutate } = useTemplates()
+  const { remove, update } = useTemplate(template?.id)
+
   const lastDeployed = template.versions
-    .filter((v) => !v.is_draft)
+    .filter((v) => v && !v.isDraft)
     .sort((a, b) => b.id - a.id)[0]
 
   const { hovered, ref } = useHover()
@@ -69,6 +72,51 @@ const TemplateListItem = ({
   const active = activeTemplate?.id === template.id
 
   const sortedVersions = template.versions.sort((a, b) => b.id - a.id)
+
+  const confirmDelete = () => {
+    modals.openConfirmModal({
+      title: "Please confirm your action",
+      confirmProps: { color: "red" },
+      children: (
+        <Text size="sm">
+          Are you sure you want to delete this prompt? This action cannot be
+          undone and the prompt data will be lost forever.
+        </Text>
+      ),
+      labels: { confirm: "Confirm", cancel: "Cancel" },
+
+      onConfirm: async () => {
+        await remove()
+
+        mutate()
+
+        switchTemplate(null)
+        // Router.push(`/prompts`)
+      },
+    })
+  }
+
+  const applyRename = async (name) => {
+    setRename(null)
+    // make sure it's a valid slug
+    const slugified = slugify(name)
+
+    if (slugified === "" || slugified === template.slug) return
+
+    // if there is already a template with this slug, Show notif
+    if (templates?.find((t) => t.slug === slugified && t.id !== template.id)) {
+      notifications.show({
+        title: "Error",
+        message: "This template name is already taken",
+        color: "red",
+      })
+      return
+    }
+
+    await update({ ...template, slug: slugified })
+
+    mutate()
+  }
 
   return (
     <NavLink
@@ -88,9 +136,9 @@ const TemplateListItem = ({
               h={35}
               px={10}
               onKeyPress={(e) => {
-                if (e.key === "Enter") applyRename(e, template.id)
+                if (e.key === "Enter") applyRename(e.target.value)
               }}
-              onBlur={(e) => applyRename(e, template.id)}
+              onBlur={(e) => applyRename(e.target.value)}
             />
           </FocusTrap>
         ) : (
@@ -127,7 +175,7 @@ const TemplateListItem = ({
               color="red"
               leftSection={<IconTrash size={13} />}
               onClick={() => {
-                confirmDelete(template.id)
+                confirmDelete()
               }}
             >
               Delete
@@ -146,25 +194,25 @@ const TemplateListItem = ({
             key={i}
             pl={20}
             py={4}
-            active={activeVersion?.id === version.id}
+            active={activeVersion?.id === version?.id}
             label={
               <Group gap={8}>
                 <Text>{`v${template.versions.length - i}`}</Text>
 
-                {version.is_draft && (
+                {version?.isDraft && (
                   <Badge size="xs" color="yellow" variant="outline">
                     Draft
                   </Badge>
                 )}
 
-                {version.id === lastDeployed?.id && (
+                {version?.id === lastDeployed?.id && (
                   <Badge size="xs" color="blue" variant="outline">
                     Live
                   </Badge>
                 )}
 
                 <Text c="dimmed" span size="xs" ml="auto">
-                  {formatDistanceToNow(new Date(version.createdAt), {
+                  {formatDistanceToNow(new Date(version?.createdAt), {
                     addSuffix: true,
                   })
                     .replace("about", "~")
@@ -188,85 +236,25 @@ const TemplateList = ({
   switchTemplate,
   switchTemplateVersion,
 }) => {
-  const { project } = useCurrentProject()
   const { org } = useOrg()
 
-  const { templates, loading, insert, insertVersion, update, remove, mutate } =
-    useTemplates()
+  const { templates, loading, insert, mutate } = useTemplates()
 
   const [rename, setRename] = useState(null)
 
   const createTemplate = async () => {
     const slug = generateSlug(2)
-    const newTemplate = await insert([
-      {
-        mode: "openai",
-        app_id: project?.id,
-        org_id: org?.id,
-        slug,
-      },
-    ])
-
-    switchTemplate(newTemplate?.[0])
-
-    if (newTemplate) {
-      setRename(newTemplate[0].id)
-
-      const newVersion = await insertVersion([
-        {
-          template_id: newTemplate[0].id,
-          version: 1,
-          ...defaultTemplateVersion,
-        },
-      ])
-
-      switchTemplateVersion(newVersion?.[0])
-    }
-
-    mutate()
-  }
-
-  const applyRename = async (e, id) => {
-    setRename(null)
-    // make sure it's a valid slug
-    const slugified = slugify(e.target.value)
-
-    if (slugified === "") return
-
-    // if there is already a template with this slug, Show notif
-    if (templates?.find((t) => t.slug === slugified && t.id !== id)) {
-      notifications.show({
-        title: "Error",
-        message: "This template name is already taken",
-        color: "red",
-      })
-      return
-    }
-
-    await update({ id, slug: slugified })
-
-    mutate()
-  }
-
-  const confirmDelete = (id) => {
-    modals.openConfirmModal({
-      title: "Please confirm your action",
-      confirmProps: { color: "red" },
-      children: (
-        <Text size="sm">
-          Are you sure you want to delete this prompt? This action cannot be
-          undone and the prompt data will be lost forever.
-        </Text>
-      ),
-      labels: { confirm: "Confirm", cancel: "Cancel" },
-
-      onConfirm: async () => {
-        await remove({ id })
-        mutate()
-        switchTemplate(null)
-        // Router.push(`/prompts`)
-      },
+    const newTemplate = await insert({
+      mode: "openai",
+      orgId: org?.id,
+      slug,
     })
+
+    switchTemplate(newTemplate)
+    setRename(newTemplate.id)
+    switchTemplateVersion(newTemplate.versions[0])
+
+    mutate()
   }
 
   if (loading) return <Loader />
@@ -297,8 +285,6 @@ const TemplateList = ({
           activeVersion={activeVersion}
           rename={rename}
           setRename={setRename}
-          applyRename={applyRename}
-          confirmDelete={confirmDelete}
           switchTemplate={switchTemplate}
           switchTemplateVersion={switchTemplateVersion}
         />

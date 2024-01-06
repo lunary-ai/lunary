@@ -131,7 +131,6 @@ export function userColumn() {
     size: 120,
     cell: (props) => {
       const user = props.getValue()
-      // const { user } = useAppUser(userId)
 
       if (!user?.id) return null
 

@@ -26,6 +26,17 @@ export function useProjectSWR(key: string, ...args: any[]) {
   )
 }
 
+export function useProjectMutation(key: string, ...args: any[]) {
+  const { projectId } = useContext(ProjectContext)
+
+  // const key
+
+  return useSWRMutation(
+    projectId && key ? `/v1/projects/${projectId}${key}` : null,
+    ...(args as [any]),
+  )
+}
+
 export function useProjectInfiniteSWR(key: string, ...args: any[]) {
   const { projectId } = useContext(ProjectContext)
 
@@ -147,4 +158,71 @@ export function useCurrentProject() {
   const project = projects?.find((p) => p.id === projectId)
 
   return { project, setProjectId, loading }
+}
+
+export function useTemplates() {
+  const { data: templates, isLoading, mutate } = useProjectSWR(`/templates`)
+
+  // insert mutation
+  const { trigger: insert } = useProjectMutation(`/templates`, fetcher.post)
+
+  return {
+    templates,
+    insert,
+    mutate,
+    loading: isLoading,
+  }
+}
+
+export function useTemplate(id: string) {
+  const {
+    data: template,
+    isLoading,
+    mutate,
+  } = useProjectSWR(`/templates/${id}`)
+
+  const { trigger: update } = useProjectMutation(
+    `/templates/${id}`,
+    fetcher.patch,
+  )
+
+  const { trigger: remove } = useProjectMutation(
+    `/templates/${id}`,
+    fetcher.delete,
+  )
+
+  // insert mutation
+  const { trigger: insertVersion } = useProjectMutation(
+    `/templates/${id}/versions`,
+    fetcher.post,
+  )
+
+  return {
+    template,
+    insertVersion,
+    update,
+    remove,
+    mutate,
+    loading: isLoading,
+  }
+}
+
+export const useTemplateVersion = (id: string) => {
+  const {
+    data: templateVersion,
+    isLoading,
+    mutate,
+  } = useProjectSWR(`/template_versions/${id}`)
+
+  const { trigger: update } = useProjectMutation(
+    `/template_versions/${id}`,
+    fetcher.patch,
+  )
+
+  return {
+    templateVersion,
+    update,
+    mutate,
+    loading: isLoading,
+  }
 }

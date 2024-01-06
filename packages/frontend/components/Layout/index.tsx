@@ -111,17 +111,11 @@ export default function Layout({ children }: { children: ReactNode }) {
               color: colorScheme === "dark" ? "#eee" : "#333",
             }}
           >
-            <ErrorBoundary
-              onAfterReportDialogSubmitHandler={() => Router.reload()}
-              onAfterReportDialogCancelHandler={() => Router.push("/")}
-              showDialog={!Boolean(process.env.NEXT_PUBLIC_HIDE_ERROR_DIALOG)}
-            >
-              {!isAuthPage && !isPublicPage && <Navbar />}
-              {!isAuthPage && !isPublicPage && <Sidebar />}
-              <AppShell.Main>
-                <Box p={isPromptPage ? 0 : 24}>{children}</Box>
-              </AppShell.Main>
-            </ErrorBoundary>
+            {!isAuthPage && !isPublicPage && <Navbar />}
+            {!isAuthPage && !isPublicPage && <Sidebar />}
+            <AppShell.Main>
+              <Box p={isPromptPage ? 0 : 24}>{children}</Box>
+            </AppShell.Main>
           </AppShell>
         </ProjectContext.Provider>
       </ModalsProvider>
