@@ -47,6 +47,7 @@ export const defaultTemplateVersion = {
     max_tokens: 1000,
   },
   testValues: {},
+  isDraft: true,
 }
 
 const TemplateListItem = ({
@@ -248,6 +249,7 @@ const TemplateList = ({
       mode: "openai",
       orgId: org?.id,
       slug,
+      ...defaultTemplateVersion,
     })
 
     switchTemplate(newTemplate)

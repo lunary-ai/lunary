@@ -1,4 +1,5 @@
-import { useTemplates } from "@/utils/dataHooks"
+import { useEffect, useMemo, useState } from "react"
+
 import {
   Badge,
   Box,
@@ -8,7 +9,6 @@ import {
   Grid,
   Group,
   NumberInput,
-  ScrollArea,
   SegmentedControl,
   Select,
   Stack,
@@ -16,18 +16,15 @@ import {
   Textarea,
   Tooltip,
 } from "@mantine/core"
-import { useHotkeys, useLocalStorage } from "@mantine/hooks"
-import { useSupabaseClient } from "@supabase/auth-helpers-react"
+import { useHotkeys } from "@mantine/hooks"
 import {
   IconBolt,
   IconCheck,
   IconDeviceFloppy,
-  IconDevicesShare,
   IconGitCommit,
   IconInfoCircle,
 } from "@tabler/icons-react"
 import { useRouter } from "next/router"
-import { useEffect, useMemo, useState } from "react"
 import analytics from "../../utils/analytics"
 import { openUpgrade } from "@/components/Layout/UpgradeModal"
 import HotkeysInfo from "@/components/Blocks/HotkeysInfo"
@@ -40,6 +37,7 @@ import { generateSlug } from "random-word-slugs"
 import {
   useCurrentProject,
   useOrg,
+  useTemplates,
   useTemplate,
   useTemplateVersion,
   useUser,
@@ -117,6 +115,8 @@ function Playground() {
   //   default: defaultTemplateVersion,
   // })
 
+  const { project } = useCurrentProject()
+
   const [template, setTemplate] = useState<any>()
   const [templateVersion, setTemplateVersion] = useState<any>(
     defaultTemplateVersion,
@@ -124,11 +124,9 @@ function Playground() {
 
   const [hasChanges, setHasChanges] = useState(false)
 
-  const { mutate } = useTemplate(template?.id)
-
+  const { insert, mutate } = useTemplates()
+  const { insertVersion } = useTemplate(template?.id)
   const { update: updateVersion } = useTemplateVersion(templateVersion?.id)
-
-  const { insert } = useTemplates()
 
   const [streaming, setStreaming] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -153,37 +151,19 @@ function Playground() {
   const { mutate: revalidateUser } = useUser()
   const { org } = useOrg()
 
-  const { project } = useCurrentProject()
-
-  const createTemplateIfNotExists = async () => {
-    if (template?.id) {
-      return template
-    }
-
-    const slug = generateSlug(2)
-
-    const newTemplate = await insert([
-      {
-        slug,
-        mode: "openai",
-        app_id: project?.id,
-        org_id: org?.id,
-      },
-    ])
-
-    setTemplate(newTemplate?.[0])
-
-    return newTemplate?.[0]
-  }
-
   useEffect(() => {
+    if (!project) return
+
     const { clone, id } = router.query
 
     // check if we want to clone an existing run
     if (id) {
       const fetchTemplate = async () => {
         setLoading(true)
-        const data = await fetcher.get(`/v1/template_versions/${id}/`)
+
+        const data = await fetcher.get(
+          `/v1/projects/${project?.id}/template_versions/${id}`,
+        )
 
         if (data) {
           setTemplateVersion(data)
@@ -194,58 +174,60 @@ function Playground() {
       }
 
       fetchTemplate()
-      // } else if (clone) {
-      //   const fetchRun = async () => {
-      //     setLoading(true)
-      //     const { data } = await supabaseClient
-      //       .from("run")
-      //       .select("*")
-      //       .eq("id", clone)
-      //       .single()
-      //       .throwOnError()
+    } else if (clone) {
+      const fetchRun = async () => {
+        setLoading(true)
+        const run = await fetcher.get(
+          `/v1/projects/${project?.id}/runs/${clone}/`,
+        )
 
-      //     if (!Array.isArray(data.input)) data.input = [data.input]
+        if (run?.input) {
+          setTemplateVersion({ ...templateVersion, content: run.input })
+        }
 
-      //     if (data) {
-      //       setTemplateVersion({ ...templateVersion, content: data.input })
-      //     }
+        setLoading(false)
 
-      //     setLoading(false)
-      //     // remove the id from t
+        // remove the query params
+        router.push("/prompts")
+      }
 
-      //     router.push("/prompts")
-      //   }
-
-      //   fetchRun()
+      fetchRun()
     } else {
       setTemplate({ mode: "openai" })
       setTemplateVersion(defaultTemplateVersion)
     }
-  }, [])
+  }, [project])
 
   // Save as draft without deploying
   const saveTemplate = async () => {
     if (templateVersion.isDraft) {
       await updateVersion({
-        id: templateVersion.id,
+        ...templateVersion,
         extra: templateVersion.extra,
         content: templateVersion.content,
       })
     } else {
-      const templ = await createTemplateIfNotExists()
+      const data = {
+        testValues: templateVersion.testValues,
+        content: templateVersion.content,
+        extra: templateVersion.extra,
+        isDraft: true,
+      }
 
-      const newVersion = await insertVersion([
-        {
-          template_id: templ?.id,
-          testValues: templateVersion.testValues,
-          content: templateVersion.content,
-          extra: templateVersion.extra,
-          isDraft: true,
-        },
-      ])
+      if (template?.id) {
+        const newVersion = await insertVersion(data)
 
-      if (newVersion) {
-        setTemplateVersion(newVersion[0])
+        setTemplateVersion(newVersion)
+      } else {
+        const newTemplate = await insert({
+          slug: generateSlug(2),
+          mode: "openai",
+          orgId: org?.id,
+          ...data,
+        })
+
+        setTemplate(newTemplate)
+        setTemplateVersion(newTemplate?.versions[0])
       }
     }
 
@@ -264,16 +246,29 @@ function Playground() {
 
       setTemplateVersion({ ...templateVersion, isDraft: false })
     } else {
-      const templ = await createTemplateIfNotExists()
-
-      const newVersion = await insertVersion({
+      const data = {
         testValues: templateVersion.testValues,
         content: templateVersion.content,
         extra: templateVersion.extra,
         isDraft: false,
-      })
+      }
 
-      setTemplateVersion(newVersion)
+      if (!template?.id) {
+        const newTemplate = await insert({
+          slug: generateSlug(2),
+          mode: "openai",
+          orgId: org?.id,
+          ...data,
+        })
+
+        setTemplate(newTemplate)
+        setTemplateVersion(newTemplate?.versions[0])
+      } else {
+        const newVersion = await insertVersion(data)
+
+        console.log(newVersion)
+        setTemplateVersion(newVersion)
+      }
     }
 
     notifications.show({
