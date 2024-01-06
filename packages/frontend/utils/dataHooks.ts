@@ -33,38 +33,6 @@ const extendWithCosts = (data: any[]) =>
     cost: calcRunCost(r),
   }))
 
-export function useRunsUsage(range, user_id?: string) {
-  const supabaseClient = useSupabaseClient()
-  const { projectId: appId } = useContext(ProjectContext)
-
-  const { data: usage, isLoading } = useQuery(
-    supabaseClient.rpc("get_runs_usage", {
-      app_id: appId,
-      user_id,
-      days: range,
-    }),
-    softOptions,
-  )
-
-  return { usage: extendWithCosts(usage), loading: isLoading }
-}
-
-export function useRunsUsageByDay(range, user_id = undefined) {
-  const supabaseClient = useSupabaseClient()
-  const { projectId: appId } = useContext(ProjectContext)
-
-  const { data: dailyUsage, isLoading } = useQuery(
-    supabaseClient.rpc("get_runs_usage_daily", {
-      app_id: appId,
-      user_id,
-      days: range,
-    }),
-    hardOptions,
-  )
-
-  return { dailyUsage: extendWithCosts(dailyUsage), loading: isLoading }
-}
-
 export function useRunsUsageByUser(range = null) {
   const supabaseClient = useSupabaseClient()
   const { projectId: appId } = useContext(ProjectContext)

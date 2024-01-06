@@ -13,7 +13,6 @@ export function formatLargeNumber(number) {
 }
 
 export function formatAppUser(user) {
-  console.log(user)
   if (!user) return ""
   return user.props?.name ?? user.props?.email ?? user.externalId
 }

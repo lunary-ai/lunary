@@ -142,6 +142,48 @@ runs.get("/", async (ctx) => {
   ctx.body = runs
 })
 
+runs.get("/usage", async (ctx) => {
+  const projectId = ctx.params.projectId as string
+  const { days, userId, daily } = ctx.query
+
+  const daysNum = parseInt(days, 10)
+  const userIdNum = userId ? parseInt(userId, 10) : null
+
+  if (isNaN(daysNum) || (userId && isNaN(userIdNum))) {
+    ctx.throw(400, "Invalid query parameters")
+  }
+
+  const runsUsage = await sql`
+      select
+          ${daily ? sql`date(run.created_at) as date,` : sql``}
+          run.name,
+          run.type,
+          coalesce(sum(run.completion_tokens), 0)::int as completion_tokens,
+          coalesce(sum(run.prompt_tokens), 0)::int as prompt_tokens,
+          sum(case when run.status = 'error' then 1 else 0 end)::int as errors,
+          sum(case when run.status = 'success' then 1 else 0 end)::int as success
+      from
+          run
+      where
+          run.app = ${projectId as string}
+          and run.created_at >= now() - interval '1 day' * ${daysNum}
+          ${userIdNum ? sql`and run.user = ${userIdNum}` : sql``}
+          ${
+            daily
+              ? sql`and extract(epoch FROM (ended_at - created_at)) * 1000 >= 1000`
+              : sql``
+          }
+      group by
+          ${daily ? sql`date,` : sql``}
+          run.name, 
+          run.type
+          `
+
+  ctx.body = runsUsage
+})
+
+//
+
 runs.get("/:id", async (ctx) => {
   const projectId = ctx.params.projectId as string
   const { id } = ctx.params

@@ -8,7 +8,7 @@ import AgentSummary from "@/components/Blocks/Analytics/AgentSummary"
 import UsageSummary from "@/components/Blocks/Analytics/UsageSummary"
 import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 import CopyText from "@/components/Blocks/CopyText"
-import { useAppUser, useRuns, useRunsUsage } from "@/utils/dataHooks"
+import { useAppUser, useRuns } from "@/utils/dataHooks"
 import { formatAppUser } from "@/utils/format"
 import { NextSeo } from "next-seo"
 import DataTable from "@/components/Blocks/DataTable"
@@ -22,7 +22,7 @@ import {
   tagsColumn,
   timeColumn,
 } from "@/utils/datatable"
-import { useProjectSWR } from "@/utils/newDataHooks"
+import { useProjectSWR, useRunsUsage } from "@/utils/newDataHooks"
 
 const columns = [
   timeColumn("createdAt"),
