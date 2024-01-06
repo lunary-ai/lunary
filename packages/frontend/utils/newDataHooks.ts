@@ -86,7 +86,7 @@ export function useOrg() {
   const org = data ? { ...data, users } : null
 
   const { trigger: updateOrg } = useSWRMutation(
-    `/orgs/${org?.id}`,
+    `/org/${org?.id}`,
     fetcher.patch,
   )
 
@@ -95,7 +95,7 @@ export function useOrg() {
 
 export function useProjects() {
   const { org } = useOrg()
-  const { data, isLoading } = useSWR(() => org && `/projects/${org.id}`)
+  const { data, isLoading } = useSWR(() => org && `/org/${org.id}/projects`)
 
   // TODO: mutations
 
@@ -115,4 +115,9 @@ export function useCurrentProject() {
   const project = projects?.find((p) => p.id === projectId)
 
   return { project, setProjectId, loading }
+}
+
+export function useProjectSWR(...args) {
+  const { projectId } = useContext(ProjectContext)
+  return useSWR(`/projects/${projectId}`, ...args)
 }
