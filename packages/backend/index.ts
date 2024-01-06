@@ -1,15 +1,15 @@
-import postgres from "postgres";
-import logger from "koa-logger";
-import bodyParser from "koa-bodyparser";
+import postgres from "postgres"
+import logger from "koa-logger"
+import bodyParser from "koa-bodyparser"
 
 //TODO: remove profile table to "user"
 
-const sql = postgres(process.env.DB_URI!, { transform: postgres.camel });
+const sql = postgres(process.env.DB_URI!, { transform: postgres.camel })
 
 // const res = db.query.cities.findFirst();
-import supertokens from "supertokens-node";
-import EmailPassword from "supertokens-node/recipe/emailpassword";
-import Session from "supertokens-node/recipe/session";
+import supertokens from "supertokens-node"
+import EmailPassword from "supertokens-node/recipe/emailpassword"
+import Session from "supertokens-node/recipe/session"
 
 supertokens.init({
   framework: "koa",
@@ -35,7 +35,7 @@ supertokens.init({
             ...originalImplementation,
             signUp: async function (input) {
               // First we call the original implementation of signUpPOST.
-              let response = await originalImplementation.signUp(input);
+              let response = await originalImplementation.signUp(input)
 
               // Post sign up response, we check if it was successful
               if (
@@ -56,42 +56,39 @@ supertokens.init({
                  *
                  */
 
-                console.log(response.user);
+                console.log(response.user)
               }
-              return response;
+              return response
             },
-          };
+          }
         },
       },
     }), // initializes signin / sign up features
     Session.init(), // initializes session features
   ],
-});
+})
 
-import cors from "@koa/cors";
-import Koa, { Context } from "koa";
-import Router from "koa-router";
-import { SessionContext, middleware } from "supertokens-node/framework/koa";
+import cors from "@koa/cors"
+import Koa, { Context } from "koa"
+import Router from "koa-router"
+import { SessionContext, middleware } from "supertokens-node/framework/koa"
 
-let app = new Koa();
-let router = new Router();
+let app = new Koa()
+let router = new Router()
 
 app.use(async (ctx, next) => {
   if (ctx.method === "options") {
-    ctx.set("Access-Control-Allow-Origin", "*");
-    ctx.set(
-      "Access-Control-Allow-Methods",
-      "GET, POST, PATCH, OPTIONS, DELETE"
-    );
+    ctx.set("Access-Control-Allow-Origin", "*")
+    ctx.set("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS, DELETE")
     ctx.set(
       "Access-Control-Allow-Headers",
       "Origin, X-Requested-With, Content-Type, Accept"
-    );
-    ctx.status = 204;
-    return;
+    )
+    ctx.status = 204
+    return
   }
-  await next();
-});
+  await next()
+})
 
 app.use(
   cors({
@@ -99,16 +96,16 @@ app.use(
     allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization", "Accept"],
   })
-);
+)
 
-app.use(bodyParser());
-app.use(logger());
+app.use(bodyParser())
+app.use(logger())
 // app.use(middleware());
 
-import { verifySession } from "supertokens-node/recipe/session/framework/koa";
+import { verifySession } from "supertokens-node/recipe/session/framework/koa"
 
 router.get("/filters/models/:projectId", async (ctx: Context) => {
-  const projectId = ctx.params.projectId as string;
+  const projectId = ctx.params.projectId as string
 
   const rows = await sql`
     select
@@ -119,13 +116,13 @@ router.get("/filters/models/:projectId", async (ctx: Context) => {
       app = ${projectId}
     order by
       app
-  `;
+  `
 
-  ctx.body = rows;
-});
+  ctx.body = rows
+})
 
 router.get("/filters/tags/:projectId", async (ctx: Context) => {
-  const projectId = ctx.params.projectId as string;
+  const projectId = ctx.params.projectId as string
 
   const rows = await sql`
 	  select
@@ -134,13 +131,13 @@ router.get("/filters/tags/:projectId", async (ctx: Context) => {
       app_tag
     where
       app = ${projectId}
-  `;
+  `
 
-  ctx.body = rows;
-});
+  ctx.body = rows
+})
 
 router.get("/filters/feedbacks/:projectId", async (ctx: Context) => {
-  const projectId = ctx.params.projectId as string;
+  const projectId = ctx.params.projectId as string
 
   const rows = await sql`
     select
@@ -178,27 +175,27 @@ router.get("/filters/feedbacks/:projectId", async (ctx: Context) => {
     where
       feedback::json ->> 'retried' is not null
       and app = ${projectId}
-  `;
+  `
 
-  const feedbacks = rows.map((row) => row.jsonbBuildObject);
+  const feedbacks = rows.map((row) => row.jsonbBuildObject)
 
-  ctx.body = feedbacks;
-});
+  ctx.body = feedbacks
+})
 
 // TODO
 router.get("/filters/app-users/:projectId", async (ctx) => {
-  const projectId = ctx.params.projectId as string;
-  const usageRange = Number(ctx.query.usageRange) || 30;
+  const projectId = ctx.params.projectId as string
+  const usageRange = Number(ctx.query.usageRange) || 30
 
   // TODO: do a new query to get the user list. Look at what is currently used in production
-  ctx.body = usersWithUsage;
-});
+  ctx.body = usersWithUsage
+})
 
 // router.get("/profile", verifySession(), async (ctx: SessionContext) => {
 router.get("/users/me", async (ctx: Context) => {
   // TODO: get user id from supertokens
   // const userId = ctx.session!.getUserId()
-  const userId = "aa0c13b0-4e44-4f06-abc9-f364974972e4";
+  const userId = "aa0c13b0-4e44-4f06-abc9-f364974972e4"
 
   // TODO: (low priority) merge queries
   const [user] = await sql`
@@ -210,14 +207,14 @@ router.get("/users/me", async (ctx: Context) => {
       profile
     where
       id = ${userId}
-  `;
+  `
 
-  ctx.body = user;
-});
+  ctx.body = user
+})
 
 router.get("/users/me/org", async (ctx: Context) => {
   // TODO: supertoken session
-  const userId = "aa0c13b0-4e44-4f06-abc9-f364974972e4";
+  const userId = "aa0c13b0-4e44-4f06-abc9-f364974972e4"
 
   const [org] = await sql`
     select
@@ -234,7 +231,7 @@ router.get("/users/me/org", async (ctx: Context) => {
       org
     where
       id = (select org_id from profile where id = ${userId})
-  `;
+  `
 
   const users = await sql`
     select
@@ -253,18 +250,18 @@ router.get("/users/me/org", async (ctx: Context) => {
         else 3
       end,
       name
-  `;
+  `
 
-  org.users = users;
+  org.users = users
 
-  ctx.body = org;
-});
+  ctx.body = org
+})
 
 router.patch("/orgs/:orgId", async (ctx: Context) => {
-  const orgId = ctx.params.orgId as string;
+  const orgId = ctx.params.orgId as string
 
-  const name = (ctx.request.body as { name: string }).name;
-  console.log(name, orgId);
+  const name = (ctx.request.body as { name: string }).name
+  console.log(name, orgId)
 
   await sql`
     update org
@@ -272,12 +269,12 @@ router.patch("/orgs/:orgId", async (ctx: Context) => {
       name = ${name}
     where
       id = ${orgId}
-  `;
-  ctx.body = {};
-});
+  `
+  ctx.body = {}
+})
 
 router.get("/projects/:orgId", async (ctx: Context) => {
-  const orgId = ctx.params.orgId as string;
+  const orgId = ctx.params.orgId as string
 
   const rows = await sql`
     select
@@ -290,36 +287,36 @@ router.get("/projects/:orgId", async (ctx: Context) => {
       app
     where
       org_id = ${orgId}
-  `;
+  `
 
-  ctx.body = rows;
-});
+  ctx.body = rows
+})
 
 router.get("/app-users/:id", async (ctx) => {
-  const { id } = ctx.params;
+  const { id } = ctx.params
   ctx.body = sql`
       select * from app_user where id = ${id} limit 1
-  `;
-});
+  `
+})
 
 router.get("/logs/:projectId", async (ctx) => {
   interface Query {
-    type?: "llm" | "trace" | "thread";
-    search?: string;
-    models?: string[];
-    tags?: string[];
-    tokens?: string;
-    minDuration?: string;
-    maxDuration?: string;
-    startTime?: string;
-    endTime?: string;
+    type?: "llm" | "trace" | "thread"
+    search?: string
+    models?: string[]
+    tags?: string[]
+    tokens?: string
+    minDuration?: string
+    maxDuration?: string
+    startTime?: string
+    endTime?: string
 
-    limit?: string;
-    page?: string;
-    order?: string;
+    limit?: string
+    page?: string
+    order?: string
   }
 
-  const projectId = ctx.params.projectId as string;
+  const projectId = ctx.params.projectId as string
   const {
     type,
     search,
@@ -332,19 +329,19 @@ router.get("/logs/:projectId", async (ctx) => {
     maxDuration,
     startTime,
     endTime,
-  } = ctx.query as Query;
+  } = ctx.query as Query
 
   if (!type) {
-    return ctx.throw(422, "The `type` query parameter is required");
+    return ctx.throw(422, "The `type` query parameter is required")
   }
 
-  let typeFilter = sql``;
+  let typeFilter = sql``
   if (type === "llm") {
-    typeFilter = sql`and type = 'llm'`;
+    typeFilter = sql`and type = 'llm'`
   } else if (type === "trace") {
-    typeFilter = sql`and type in ('agent','chain')`;
+    typeFilter = sql`and type in ('agent','chain')`
   } else if (type === "thread") {
-    typeFilter = sql`and type in ('thread','convo')`;
+    typeFilter = sql`and type in ('thread','convo')`
   }
 
   // if (
@@ -407,7 +404,7 @@ router.get("/logs/:projectId", async (ctx) => {
       order by
           r.created_at desc
       limit ${Number(limit)}
-      offset ${Number(page) * Number(limit)}`;
+      offset ${Number(page) * Number(limit)}`
 
   const runs = rows.map((run) => ({
     type: run.type,
@@ -434,22 +431,22 @@ router.get("/logs/:projectId", async (ctx) => {
     },
     // TODO
     // cost: calcRunCost(run),
-  }));
+  }))
 
-  ctx.body = runs;
-});
+  ctx.body = runs
+})
 
 router.get("/traces/:projectId", async (ctx) => {
-  const projectId = ctx.params.projectId;
-  const { search } = ctx.query;
+  const projectId = ctx.params.projectId
+  const { search } = ctx.query
 
-  let searchFilter = sql``;
+  let searchFilter = sql``
   if (search) {
     searchFilter = sql`
           and (r.input::text ilike ${"%" + search + "%"}
               or r.output::text ilike ${"%" + search + "%"}
               or r.name::text ilike ${"%" + search + "%"}
-              or r.error::text ilike ${"%" + search + "%"})`;
+              or r.error::text ilike ${"%" + search + "%"})`
   }
 
   const runs = await sql`
@@ -458,16 +455,16 @@ router.get("/traces/:projectId", async (ctx) => {
       and (type = 'agent' or type = 'chain')
       ${search ? sql`and parent_run is null ${searchFilter}` : sql``}
       order by created_at desc
-      limit 100`;
+      limit 100`
 
   // const extendedRuns = runs.map(run => extendWithCosts(run));
 
   // ctx.body = extendedRuns;
-  ctx.body = runs;
-});
+  ctx.body = runs
+})
 
 router.get("/users/:projectId", async (ctx) => {
-  const { projectId } = ctx.params;
+  const { projectId } = ctx.params
 
   const users = await sql`
       with app_users as (
@@ -485,19 +482,19 @@ router.get("/users/:projectId", async (ctx) => {
             from run
             where run.user = u.id
             and run.type = 'llm'
-        )`;
+        )`
 
-  ctx.body = users;
-});
+  ctx.body = users
+})
 
 router.get("/runs/usage", async (ctx) => {
-  const { projectId, days, userId } = ctx.query;
+  const { projectId, days, userId } = ctx.query
 
-  const daysNum = parseInt(days, 10);
-  const userIdNum = userId ? parseInt(userId, 10) : null;
+  const daysNum = parseInt(days, 10)
+  const userIdNum = userId ? parseInt(userId, 10) : null
 
   if (isNaN(daysNum) || (userId && isNaN(userIdNum))) {
-    ctx.throw(400, "Invalid query parameters");
+    ctx.throw(400, "Invalid query parameters")
   }
 
   const runsUsage = await sql`
@@ -515,11 +512,11 @@ router.get("/runs/usage", async (ctx) => {
           and run.created_at >= now() - interval '1 day' * ${daysNum}
           ${userIdNum ? sql`and run.user = ${userIdNum}` : sql``}
       group by
-          run.name, run.type`;
+          run.name, run.type`
 
-  ctx.body = runsUsage;
-});
+  ctx.body = runsUsage
+})
 
-app.use(router.routes());
+app.use(router.routes())
 
-app.listen(3000);
+app.listen(3333)

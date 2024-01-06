@@ -2,11 +2,15 @@
   "name": "lunary",
   "version": "1.0.0-alpha.1",
   "private": "true",
+  "scripts": {
+    "dev": "concurrently \"cd packages/frontend && bun dev\" \"cd packages/backend && bun dev\""
+  },
   "workspaces": [
     "packages/*"
   ],
   "devDependencies": {
-    "bun-types": "latest"
+    "bun-types": "latest",
+    "concurrently": "^8.2.2"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
