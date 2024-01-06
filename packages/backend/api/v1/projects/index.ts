@@ -1,6 +1,6 @@
 import Router from "@koa/router"
 import datasets from "./datasets"
-import logs from "./logs"
+import runs from "./runs"
 import users from "./users"
 import templates from "./templates"
 import templateVersions from "./templateVersions"
@@ -11,7 +11,7 @@ const project = new Router({
   prefix: "/projects/:projectId",
 })
 
-project.use(logs.routes())
+project.use(runs.routes())
 project.use(users.routes())
 project.use(datasets.routes())
 project.use(templates.routes())

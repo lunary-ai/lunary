@@ -142,4 +142,54 @@ logs.get("/", async (ctx) => {
   ctx.body = runs
 })
 
+logs.get("/:id", async (ctx) => {
+  const projectId = ctx.params.projectId as string
+  const { id } = ctx.params
+
+  const [row] = await sql`
+      select
+        r.*,
+        au.id as user_id,
+        au.external_id as user_external_id,
+        au.created_at as user_created_at,
+        au.last_seen as user_last_seen,
+        au.props as user_props
+      from
+          run r
+          left join app_user au on r.user = au.id
+      where
+          r.app = ${projectId as string}
+          and r.id = ${id}
+      order by
+          r.created_at desc
+      limit 1`
+
+  const run = {
+    type: row.type,
+    name: row.name,
+    createdAt: row.createdAt,
+    endedAt: row.endedAt,
+    duration: row.duration,
+    tokens: {
+      completion: row.completionTokens,
+      prompt: row.promptTokens,
+      total: row.completionTokens + row.promptTokens,
+    },
+    tags: row.tags,
+    input: row.input,
+    output: row.output,
+    error: row.error,
+    status: row.status,
+    user: {
+      id: row.userId,
+      externalId: row.userExternalId,
+      createdAt: row.userCreatedAt,
+      lastSeen: row.userLastSeen,
+      props: row.userProps,
+    },
+  }
+
+  ctx.body = run
+})
+
 export default logs
