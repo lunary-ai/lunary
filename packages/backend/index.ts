@@ -3,7 +3,7 @@ import bodyParser from "koa-bodyparser"
 import { verifySession } from "supertokens-node/recipe/session/framework/koa"
 import cors from "@koa/cors"
 import Koa, { Context } from "koa"
-import Router from "@koa/router"
+import Router from "koa-router"
 import { SessionContext, middleware } from "supertokens-node/framework/koa"
 
 //TODO: remove profile table to "user"
@@ -80,7 +80,7 @@ app.use(async (ctx, next) => {
     ctx.set("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS, DELETE")
     ctx.set(
       "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, Accept"
+      "Origin, X-Requested-With, Content-Type, Accept",
     )
     ctx.status = 204
     return
@@ -93,7 +93,7 @@ app.use(
     origin: "*",
     allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization", "Accept"],
-  })
+  }),
 )
 
 app.use(bodyParser())
