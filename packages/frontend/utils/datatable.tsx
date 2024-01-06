@@ -6,7 +6,7 @@ import { Badge, Group } from "@mantine/core"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useEffect } from "react"
 import analytics from "./analytics"
-import { useAppUser, useRelatedRuns } from "./dataHooks"
+
 import { formatCost, formatDateTime, msToTime } from "./format"
 import { useProjectSWR } from "./newDataHooks"
 const columnHelper = createColumnHelper<any>()

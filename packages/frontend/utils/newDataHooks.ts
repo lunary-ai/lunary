@@ -42,10 +42,13 @@ export function useProjectInfiniteSWR(key: string, ...args: any[]) {
 
   function getKey(pageIndex, previousPageData) {
     if (previousPageData && !previousPageData.length) return null
+
     return projectId && key
-      ? encodeURIComponent(`/v1/projects/${projectId}${key}
-      ${key.includes("?") ? "&" : "?"}
-      page=${pageIndex}&limit=100`)
+      ? encodeURIComponent(
+          `/v1/projects/${projectId}${key}` + key.includes("?")
+            ? "&"
+            : "?" + `page=${pageIndex}&limit=100`,
+        )
       : null
   }
 
@@ -54,15 +57,11 @@ export function useProjectInfiniteSWR(key: string, ...args: any[]) {
     ...(args as [any]),
   )
 
-  function loadMore() {
-    setSize(size + 1)
-  }
-
   return {
     data,
     loading: isLoading,
     validating: isValidating,
-    loadMore,
+    loadMore: () => setSize(size + 1),
   }
 }
 
