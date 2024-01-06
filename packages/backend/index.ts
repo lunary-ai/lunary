@@ -131,36 +131,6 @@ router.get("/traces/:projectId", async (ctx) => {
   ctx.body = runs
 })
 
-router.get("/runs/usage", async (ctx) => {
-  const { projectId, days, userId } = ctx.query
-
-  const daysNum = parseInt(days, 10)
-  const userIdNum = userId ? parseInt(userId, 10) : null
-
-  if (isNaN(daysNum) || (userId && isNaN(userIdNum))) {
-    ctx.throw(400, "Invalid query parameters")
-  }
-
-  const runsUsage = await sql`
-      select
-          run.name,
-          run.type,
-          coalesce(sum(run.completion_tokens), 0) as completion_tokens,
-          coalesce(sum(run.prompt_tokens), 0) as prompt_tokens,
-          sum(case when run.status = 'error' then 1 else 0 end) as errors,
-          sum(case when run.status = 'success' then 1 else 0 end) as success
-      from
-          run
-      where
-          run.app = ${projectId as string}
-          and run.created_at >= now() - interval '1 day' * ${daysNum}
-          ${userIdNum ? sql`and run.user = ${userIdNum}` : sql``}
-      group by
-          run.name, run.type`
-
-  ctx.body = runsUsage
-})
-
 app.use(router.routes())
 
 app.listen(3333)

@@ -4,7 +4,8 @@ import BarList from "@/components/Blocks/Analytics/BarList"
 import LineChart from "@/components/Blocks/Analytics/LineChart"
 import UsageSummary from "@/components/Blocks/Analytics/UsageSummary"
 import { formatAppUser, formatCost } from "@/utils/format"
-import { useRunsUsageByDay, useRunsUsage, useAppUsers } from "@/utils/dataHooks"
+import { useAppUsers } from "@/utils/dataHooks"
+
 import {
   Center,
   Container,
@@ -20,7 +21,12 @@ import Empty from "@/components/Layout/Empty"
 import { IconChartAreaLine } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { useLocalStorage } from "@mantine/hooks"
-import { useCurrentProject, useOrg } from "@/utils/newDataHooks"
+import {
+  useCurrentProject,
+  useOrg,
+  useRunsUsage,
+  useRunsUsageByDay,
+} from "@/utils/newDataHooks"
 
 const calculateDailyCost = (usage) => {
   // calculate using calcRunCost, reduce by model, and filter by type llm
@@ -54,6 +60,7 @@ export default function Analytics() {
   const { org } = useOrg()
 
   const { usage, loading: usageLoading } = useRunsUsage(range)
+  console.log(usage)
   const { dailyUsage, loading: dailyUsageLoading } = useRunsUsageByDay(range)
   const { usersWithUsage, loading: usersLoading } = useAppUsers(range)
 

@@ -223,3 +223,19 @@ export function useRun(id: string) {
     loading: isLoading,
   }
 }
+
+export function useRunsUsage(range, user_id?: string) {
+  const { data: usage, isLoading } = useProjectSWR(
+    `/runs/usage?days=${range}&user_id=${user_id}`,
+  )
+
+  return { usage: extendWithCosts(usage), loading: isLoading }
+}
+
+export function useRunsUsageByDay(range, user_id?: string) {
+  const { data: usage, isLoading } = useProjectSWR(
+    `/runs/usage?days=${range}&user_id=${user_id}&daily=true`,
+  )
+
+  return { dailyUsage: extendWithCosts(usage), loading: isLoading }
+}
