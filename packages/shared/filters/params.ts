@@ -1,4 +1,6 @@
-export const FORMAT_PARAM = {
+import { FilterParam } from "./types"
+
+export const FORMAT_PARAM: FilterParam = {
   type: "select",
   id: "type",
   options: [
@@ -17,7 +19,7 @@ export const FORMAT_PARAM = {
   ],
 }
 
-export const NUMBER_PARAM = {
+export const NUMBER_PARAM: FilterParam = {
   type: "select",
   id: "operator",
   options: [
@@ -48,7 +50,7 @@ export const NUMBER_PARAM = {
   ],
 }
 
-export const FIELD_PARAM = {
+export const FIELD_PARAM: FilterParam = {
   type: "select",
   id: "field",
   options: [
@@ -63,7 +65,7 @@ export const FIELD_PARAM = {
   ],
 }
 
-export const MATCH_PARAM = {
+export const MATCH_PARAM: FilterParam = {
   type: "select",
   id: "type",
   options: [

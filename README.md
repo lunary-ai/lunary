@@ -2,7 +2,7 @@
 
 # 📈 lunary
 
-**Open-source observability & prompt platform for AI developers**
+**Open-source observability & prompt platform for LLMs**
 
 [website](https://lunary.ai) - [docs](https://lunary.ai/docs) - [self host](https://lunary.ai/docs/self-host)
 

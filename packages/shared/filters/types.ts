@@ -1,9 +1,11 @@
 export type FilterParam = {
-  type: string
+  type: "select" | "text" | "multiselect" | "number" | "date"
   id: string
   label?: string
   unit?: string
-  options?: Array<{ label: string; value: string }>
+  options?:
+    | Array<{ label: string; value: string }>
+    | ((projectId: string, type: string) => string)
 }
 
 export type Filter = {

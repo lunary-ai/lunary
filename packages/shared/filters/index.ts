@@ -1,3 +1,4 @@
+import { Badge } from "@mantine/core"
 import { FIELD_PARAM, FORMAT_PARAM, MATCH_PARAM, NUMBER_PARAM } from "./params"
 
 import { Filter } from "./types"
@@ -8,12 +9,52 @@ export const FILTERS: Filter[] = [
     name: "Model name",
     params: [
       {
-        type: "text",
+        type: "multiselect",
         id: "name",
         label: "Model name",
+        options: (projectId, type) =>
+          `/filters/models/${projectId}?type=${type}`,
       },
     ],
     sql: ({ name }) => `name = '${name}'`,
+  },
+  {
+    id: "tags",
+    name: "Tags",
+    params: [
+      {
+        type: "multiselect",
+        id: "tags",
+        label: "Tags",
+        options: (projectId, type) => `/filters/tags/${projectId}?type=${type}`,
+      },
+    ],
+    sql: ({ tags }) => `tags && '{${tags}}'`,
+  },
+  {
+    id: "feedback",
+    name: "Feedback",
+    params: [
+      {
+        type: "multiselect",
+        id: "feedbacks",
+        options: (projectId, type) => `/filters/feedback/${projectId}`,
+      },
+    ],
+    // feedback is a jsonb column
+    sql: ({ feedbacks }) => `feedback @> '${feedbacks}'`,
+  },
+  {
+    id: "users",
+    name: "Users",
+    params: [
+      {
+        type: "multiselect",
+        id: "users",
+        options: (projectId, type) => `/filters/users/${projectId}`,
+      },
+    ],
+    sql: ({ users }) => `user_id = ANY ('{${users}}')`,
   },
   {
     id: "regex",
