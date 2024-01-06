@@ -17,7 +17,12 @@ import {
   Title,
 } from "@mantine/core"
 import { useLocalStorage, useSetState } from "@mantine/hooks"
-import { IconBellBolt, IconListSearch, IconPlus } from "@tabler/icons-react"
+import {
+  IconBellBolt,
+  IconDatabase,
+  IconListSearch,
+  IconPlus,
+} from "@tabler/icons-react"
 import Router from "next/router"
 import { useState } from "react"
 
@@ -120,16 +125,28 @@ export default function Evaluations() {
             </Badge>
           </Group>
 
-          <Button
-            leftSection={<IconPlus size={12} />}
-            variant="light"
-            color="blue"
-            onClick={() => {
-              setModalOpened(true)
-            }}
-          >
-            New
-          </Button>
+          <Group>
+            <Button
+              leftSection={<IconPlus size={12} />}
+              variant="light"
+              color="blue"
+              onClick={() => {
+                setModalOpened(true)
+              }}
+            >
+              New
+            </Button>
+            <Button
+              leftSection={<IconDatabase size={12} />}
+              variant="light"
+              color="violet"
+              onClick={() => {
+                Router.push("/datasets")
+              }}
+            >
+              Datasets
+            </Button>
+          </Group>
         </Group>
 
         <Text size="xl" mb="md">
@@ -143,8 +160,6 @@ export default function Evaluations() {
           setOpened={setModalOpened}
           save={setSelected}
         />
-
-        {/* <FiltersGrid selected={selected} setSelected={setSelected} /> */}
 
         <Stack gap="xl">
           <View

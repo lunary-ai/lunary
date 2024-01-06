@@ -1,4 +1,4 @@
-import { FilterParam } from "./types"
+import type { FilterParam } from "./types"
 
 export const FORMAT_PARAM: FilterParam = {
   type: "select",

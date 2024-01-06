@@ -1,7 +1,6 @@
-import { Badge } from "@mantine/core"
 import { FIELD_PARAM, FORMAT_PARAM, MATCH_PARAM, NUMBER_PARAM } from "./params"
 
-import { Filter } from "./types"
+import type { Filter } from "./types"
 
 export const FILTERS: Filter[] = [
   {
