@@ -1,18 +1,14 @@
 import {
-  useDeleteMutation,
-  useInsertMutation,
   useOffsetInfiniteScrollQuery,
   useQuery,
-  useUpdateMutation,
 } from "@supabase-cache-helpers/postgrest-swr"
 
 import { useSupabaseClient } from "@supabase/auth-helpers-react"
 import { useContext } from "react"
+import useSWR from "swr"
 import { calcRunCost } from "./calcCosts"
 import { ProjectContext } from "./context"
-import { Database } from "./supaTypes"
-import useSWR from "swr"
-import { useCurrentProject } from "./newDataHooks"
+import { useCurrentProject, useRunsUsageByUser } from "./newDataHooks"
 
 const softOptions = {
   dedupingInterval: 10000,
@@ -32,51 +28,6 @@ const extendWithCosts = (data: any[]) =>
     ...r,
     cost: calcRunCost(r),
   }))
-
-export function useRunsUsageByUser(range = null) {
-  const supabaseClient = useSupabaseClient()
-  const { projectId: appId } = useContext(ProjectContext)
-
-  const { data: usageByUser, isLoading } = useQuery(
-    supabaseClient.rpc("get_runs_usage_by_user", {
-      app_id: appId,
-      days: range,
-    }),
-    hardOptions,
-  )
-
-  const reduceUsersUsage = (usage) => {
-    const userData = []
-
-    const uniqueUserIds = Array.from(new Set(usage.map((u) => u.user_id)))
-
-    for (let id of uniqueUserIds) {
-      const userUsage = usage.filter((u) => u.user_id === id)
-      const totalCost = userUsage.reduce((acc, curr) => {
-        acc += curr.cost
-        return acc
-      }, 0)
-
-      const totalAgentRuns = userUsage.reduce((acc, curr) => {
-        acc += curr.success + curr.errors
-        return acc
-      }, 0)
-
-      userData.push({
-        user_id: id,
-        agentRuns: totalAgentRuns,
-        cost: totalCost,
-      })
-    }
-
-    return userData
-  }
-
-  return {
-    usageByUser: reduceUsersUsage(extendWithCosts(usageByUser || [])),
-    loading: isLoading,
-  }
-}
 
 export function useAppUsersList() {
   const supabaseClient = useSupabaseClient()

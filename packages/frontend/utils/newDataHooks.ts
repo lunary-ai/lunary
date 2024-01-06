@@ -238,3 +238,39 @@ export function useRunsUsageByDay(range, user_id?: string) {
 
   return { dailyUsage: extendWithCosts(usage), loading: isLoading }
 }
+
+export function useRunsUsageByUser(range = null) {
+  const { data: usageByUser, isLoading } = useProjectSWR(`/users/runs/usage`)
+
+  const reduceUsersUsage = (usage) => {
+    const userData = []
+
+    const uniqueUserIds = Array.from(new Set(usage.map((u) => u.user_id)))
+
+    for (let id of uniqueUserIds) {
+      const userUsage = usage.filter((u) => u.user_id === id)
+      const totalCost = userUsage.reduce((acc, curr) => {
+        acc += curr.cost
+        return acc
+      }, 0)
+
+      const totalAgentRuns = userUsage.reduce((acc, curr) => {
+        acc += curr.success + curr.errors
+        return acc
+      }, 0)
+
+      userData.push({
+        user_id: id,
+        agentRuns: totalAgentRuns,
+        cost: totalCost,
+      })
+    }
+
+    return userData
+  }
+
+  return {
+    usageByUser: reduceUsersUsage(extendWithCosts(usageByUser || [])),
+    loading: isLoading,
+  }
+}
