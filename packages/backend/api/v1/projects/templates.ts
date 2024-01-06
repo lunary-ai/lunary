@@ -13,31 +13,24 @@ templates.get("/", async (ctx: Context) => {
     left join template_version tv on tv.template_id = t.id
     where t.app_id = ${ctx.params.projectId}
     group by t.id
+    order by max(tv.created_at) desc
   `
 
   ctx.body = templates
 })
 
-const defaultVersion = {
-  content: [
-    { content: "You are an helpful assistant.", role: "system" },
-    { content: "Hi!", role: "user" },
-  ],
-  extra: {
-    model: "gpt-4-1106-preview",
-    temperature: 1.0,
-    max_tokens: 1000,
-  },
-  test_values: {},
-}
-
 // insert template + a first version, and return the template with versions
 templates.post("/", async (ctx: Context) => {
   const { projectId } = ctx.params
-  const { slug, orgId, mode } = ctx.request.body as {
+  const { slug, orgId, mode, content, extra, testValues, isDraft } = ctx.request
+    .body as {
     slug: string
     orgId: string
     mode: string
+    content: any[]
+    extra: any
+    testValues: any
+    isDraft: boolean
   }
 
   const [template] = await sql`
@@ -50,11 +43,11 @@ templates.post("/", async (ctx: Context) => {
 
   const [templateVersion] = await sql`
     insert into template_version (
-      template_id, content, extra, test_values
+      template_id, content, extra, test_values, is_draft
     ) values (
-      ${template.id}, ${sql.json(defaultVersion.content)}, ${sql.json(
-        defaultVersion.extra
-      )}, ${sql.json(defaultVersion.test_values)}
+      ${template.id}, ${sql.json(content)}, ${sql.json(extra)}, ${sql.json(
+        testValues,
+      )}, ${isDraft}
     ) returning *
   `
 
@@ -105,45 +98,24 @@ templates.patch("/:id", async (ctx: Context) => {
 })
 
 templates.post("/:id/versions", async (ctx: Context) => {
-  const { content, extra, test_values } = ctx.request.body as {
+  const { content, extra, testValues, isDraft } = ctx.request.body as {
     content: any[]
     extra: any
-    test_values: any
+    testValues: any
+    isDraft: boolean
   }
 
   const [templateVersion] = await sql`
     insert into template_version (
-      template_id, content, extra, test_values
+      template_id, content, extra, test_values, is_draft
     ) values (
       ${ctx.params.id}, ${sql.json(content)}, ${sql.json(extra)}, ${sql.json(
-        test_values
-      )}
+        testValues,
+      )}, ${isDraft}
     ) returning *
   `
 
   ctx.body = templateVersion
 })
-
-// templates.patch("/:id/versions", async (ctx: Context) => {
-//   const { content, extra, testValues, id, isDraft } = ctx.request.body as {
-//     id: string
-//     content: any[]
-//     extra: any
-//     testValues: any
-//     isDraft: boolean
-//   }
-
-//   const [templateVersion] = await sql`
-//     update template_version set
-//       content = ${sql.json(content)},
-//       extra = ${sql.json(extra)},
-//       test_values = ${sql.json(testValues)}
-//       is_draft = ${isDraft}
-//     where template_id = ${ctx.params.id} and id = ${id}
-//     returning *
-//   `
-
-//   ctx.body = templateVersion
-// })
 
 export default templates
