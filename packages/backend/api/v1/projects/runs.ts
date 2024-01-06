@@ -1,8 +1,8 @@
 import sql from "@/utils/db"
-import Router from "@koa/router"
+import Router from "koa-router"
 
-const logs = new Router({
-  prefix: "/logs",
+const runs = new Router({
+  prefix: "/runs",
 })
 
 interface Query {
@@ -21,7 +21,7 @@ interface Query {
   order?: string
 }
 
-logs.get("/", async (ctx) => {
+runs.get("/", async (ctx) => {
   const projectId = ctx.params.projectId as string
   const {
     type,
@@ -142,7 +142,7 @@ logs.get("/", async (ctx) => {
   ctx.body = runs
 })
 
-logs.get("/:id", async (ctx) => {
+runs.get("/:id", async (ctx) => {
   const projectId = ctx.params.projectId as string
   const { id } = ctx.params
 
@@ -192,4 +192,4 @@ logs.get("/:id", async (ctx) => {
   ctx.body = run
 })
 
-export default logs
+export default runs

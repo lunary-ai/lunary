@@ -1,4 +1,4 @@
-import Router from "@koa/router"
+import Router from "koa-router"
 import projects from "./projects"
 import orgs from "./orgs"
 

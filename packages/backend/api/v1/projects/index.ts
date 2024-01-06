@@ -1,4 +1,4 @@
-import Router from "@koa/router"
+import Router from "koa-router"
 import datasets from "./datasets"
 import runs from "./runs"
 import users from "./users"

@@ -1,5 +1,5 @@
 import sql from "@/utils/db"
-import Router from "@koa/router"
+import Router from "koa-router"
 import { Context } from "koa"
 
 const filters = new Router({
