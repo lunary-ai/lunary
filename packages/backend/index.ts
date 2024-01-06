@@ -1,6 +1,11 @@
 import postgres from "postgres"
 import logger from "koa-logger"
 import bodyParser from "koa-bodyparser"
+import { verifySession } from "supertokens-node/recipe/session/framework/koa"
+import cors from "@koa/cors"
+import Koa, { Context } from "koa"
+import Router from "@koa/router"
+import { SessionContext, middleware } from "supertokens-node/framework/koa"
 
 //TODO: remove profile table to "user"
 
@@ -10,6 +15,7 @@ const sql = postgres(process.env.DB_URI!, { transform: postgres.camel })
 import supertokens from "supertokens-node"
 import EmailPassword from "supertokens-node/recipe/emailpassword"
 import Session from "supertokens-node/recipe/session"
+import v1 from "./api/v1"
 
 supertokens.init({
   framework: "koa",
@@ -68,13 +74,7 @@ supertokens.init({
   ],
 })
 
-import cors from "@koa/cors"
-import Koa, { Context } from "koa"
-import Router from "koa-router"
-import { SessionContext, middleware } from "supertokens-node/framework/koa"
-
-let app = new Koa()
-let router = new Router()
+const app = new Koa()
 
 app.use(async (ctx, next) => {
   if (ctx.method === "options") {
@@ -102,7 +102,9 @@ app.use(bodyParser())
 app.use(logger())
 // app.use(middleware());
 
-import { verifySession } from "supertokens-node/recipe/session/framework/koa"
+app.use(v1.routes())
+
+let router = new Router()
 
 router.get("/filters/models/:projectId", async (ctx: Context) => {
   const projectId = ctx.params.projectId as string

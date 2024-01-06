@@ -6,6 +6,7 @@
     "@types/koa-bodyparser": "^4.3.12",
     "@types/koa-logger": "^3.1.5",
     "@types/koa__cors": "^5.0.0",
+    "@types/koa__router": "^12.0.4",
     "bun-types": "latest"
   },
   "scripts": {
@@ -17,6 +18,7 @@
   },
   "dependencies": {
     "@koa/cors": "^5.0.0",
+    "@koa/router": "^12.0.1",
     "@types/koa": "^2.13.12",
     "@types/koa-router": "^7.4.8",
     "drizzle-orm": "^0.29.3",
