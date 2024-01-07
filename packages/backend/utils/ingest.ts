@@ -1,7 +1,6 @@
 import { completeRunUsage } from "@/lib/countTokens"
 
 import sql from "./db"
-import { Json } from "@/utils/supaTypes"
 
 export interface Event {
   type:
@@ -27,7 +26,7 @@ export interface Event {
   tags?: string[]
   name?: string
   output?: any
-  message?: string | Json // deprecated (for logs)
+  message?: string | any // deprecated (for logs)
   extra?: any
   feedback?: any
   templateId?: string

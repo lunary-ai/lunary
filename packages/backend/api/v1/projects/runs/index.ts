@@ -2,6 +2,8 @@ import sql from "@/utils/db"
 import { Context } from "koa"
 import Router from "koa-router"
 
+import ingest from "./ingest"
+
 const runs = new Router({
   prefix: "/runs",
 })
@@ -51,6 +53,8 @@ const formatRun = (run: any) => ({
     props: run.userProps,
   },
 })
+
+runs.use(ingest)
 
 runs.get("/", async (ctx) => {
   const projectId = ctx.params.projectId as string

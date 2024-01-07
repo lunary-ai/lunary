@@ -1,17 +1,9 @@
-/*
- * Ingests events from the client SDKs and stores them in the DB.
- */
+import sql from "@/utils/db"
+import { Context } from "koa"
+import Router from "koa-router"
+import { Event, cleanEvent, ingestChatEvent } from "@/utils/ingest"
 
-import { NextRequest } from "next/server"
-import cors from "@/lib/api/cors"
-
-import { Event, cleanEvent, ingestChatEvent } from "@/lib/ingest"
-import { edgeWrapper } from "@/lib/api/edgeHelpers"
-import { H } from "@highlight-run/next/server"
-import { jsonResponse } from "@/lib/api/jsonResponse"
-import sql from "@/lib/db"
-
-export const runtime = "edge"
+const router = new Router({})
 
 const registerRunEvent = async (
   event: Event,
@@ -212,13 +204,12 @@ const registerEvent = async (
   await registerRunEvent(event, insertedIds)
 }
 
-export default edgeWrapper(async function handler(req: NextRequest) {
+router.post("/", async (ctx: Context) => {
   // export default async function handler(req: NextRequest) {
-  if (req.method === "OPTIONS") {
-    return cors(req, new Response(null, { status: 200 }))
-  }
 
-  const { events } = await req.json()
+  const { events } = ctx.request.body as {
+    events: Event | Event[]
+  }
 
   // Use to check if parentRunId was already inserted
   const insertedIds = new Set<string>()
@@ -252,8 +243,6 @@ export default edgeWrapper(async function handler(req: NextRequest) {
     } catch (e: any) {
       console.error(`Error ingesting event: ${e.message}`, { error: e, event })
 
-      H.consumeError(e)
-
       results.push({
         id: event.runId,
         success: false,
@@ -269,3 +258,5 @@ export default edgeWrapper(async function handler(req: NextRequest) {
     }),
   )
 })
+
+export default router

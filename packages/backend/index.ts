@@ -14,6 +14,7 @@ import EmailPassword from "supertokens-node/recipe/emailpassword"
 import Session from "supertokens-node/recipe/session"
 import v1 from "./api/v1"
 import sql from "./utils/db"
+import webhooks from "./api/webhooks"
 
 supertokens.init({
   framework: "koa",
@@ -101,6 +102,7 @@ app.use(logger())
 // app.use(middleware());
 
 app.use(v1.routes())
+app.use(webhooks.routes())
 
 let router = new Router()
 

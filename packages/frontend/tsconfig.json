@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2015",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": false,
@@ -20,15 +16,9 @@
     "baseUrl": ".",
     "incremental": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ],
-      "@/lib/*": [
-        "lib/*"
-      ],
-      "@/components/*": [
-        "components/*"
-      ]
+      "@/*": ["./*"],
+      "@/lib/*": ["lib/*"],
+      "@/components/*": ["components/*"]
     },
     "plugins": [
       {
@@ -41,9 +31,9 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "../backend/api/stripe.ts",
+    "../backend/api/signup.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

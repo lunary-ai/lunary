@@ -1,14 +1,20 @@
-import { edgeWrapper } from "@/lib/api/edgeHelpers"
-import { jsonResponse } from "@/lib/api/jsonResponse"
-import { sendTelegramMessage } from "@/lib/notifications"
-import { NextRequest, NextResponse } from "next/server"
-import sql from "@/lib/db"
+import { sendTelegramMessage } from "@/utils/notifications"
+
+import sql from "@/utils/db"
 
 export const runtime = "edge"
 export const dynamic = "force-dynamic"
 
+import Router from "koa-router"
+import { Context } from "koa"
+
+const router = new Router({
+  prefix: "/signup",
+})
+
 // This sets up the user profile after signing up
-export default edgeWrapper(async function handler(req: NextRequest) {
+router.post("/", async (ctx: Context) => {
+  const req = ctx.request.body
   const {
     type,
     table,
@@ -24,10 +30,12 @@ export default edgeWrapper(async function handler(req: NextRequest) {
         signupMethod,
       },
     },
-  } = await req.json()
+  } = req
 
   if (type !== "INSERT" || table !== "users") {
-    return new NextResponse()
+    ctx.status = 200
+    ctx.body = { ok: false }
+    return
   }
 
   let org
@@ -89,5 +97,8 @@ ${name} is ${
     "users",
   )
 
-  return jsonResponse(200, { ok: true })
+  ctx.status = 200
+  ctx.body = { ok: true }
 })
+
+export default router

@@ -1,21 +1,21 @@
 import { buffer } from "micro"
-import { sendEmail } from "@/lib/sendEmail"
+import { sendEmail } from "@/utils/sendEmail"
 import {
   CANCELED_EMAIL,
   UPGRADE_EMAIL,
   FULLY_CANCELED_EMAIL,
-} from "@/lib/emails"
-import { sendTelegramMessage } from "@/lib/notifications"
+} from "@/utils/emails"
+import { sendTelegramMessage } from "@/utils/notifications"
 import Stripe from "stripe"
-import stripe from "@/lib/stripe"
-import { apiWrapper } from "@/lib/api/helpers"
-import sql from "@/lib/db"
+import stripe from "@/utils/stripe"
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-}
+import sql from "@/utils/db"
+import Router from "koa-router"
+import { Context } from "koa"
+
+const router = new Router({
+  prefix: "/stripe",
+})
 
 // Webhook for subscription start, update profile plan to 'pro' & send email
 // Webhook for subscription end, update profile plan to 'free'
@@ -150,25 +150,21 @@ const cancelSubscription = async (object) => {
   )
 }
 
-export default apiWrapper(async function StripeWebhook(req, res) {
-  const buf = await buffer(req)
-  const sig = req.headers["stripe-signature"]
+router.post("/", async (ctx: Context) => {
+  const buf = await buffer(ctx.req)
+  const sig = ctx.req.headers["stripe-signature"]
 
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
   let event: Stripe.Event
-
-  if (req.method !== "POST") {
-    res.setHeader("Allow", "POST")
-    res.status(405).end("Method Not Allowed")
-    return
-  }
 
   try {
     if (!sig || !webhookSecret) return
     event = stripe.webhooks.constructEvent(buf, sig, webhookSecret)
   } catch (err: any) {
     console.log(`❌ Error message: ${err.message}`)
-    return res.status(400).send(`Webhook Error: ${err.message}`)
+    ctx.status = 400
+    ctx.body = `Webhook Error: ${err.message}`
+    return
   }
 
   try {
@@ -189,10 +185,13 @@ export default apiWrapper(async function StripeWebhook(req, res) {
       default:
         console.warn(`Unhandled event type ${event.type}`)
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error(error)
-    return res.status(400).send(`Webhook Error: ${error.message}`)
+    ctx.status = 400
+    ctx.body = `Webhook Error: ${error.message}`
   }
 
-  res.json({ received: true })
+  ctx.body = { received: true }
 })
+
+export default router
