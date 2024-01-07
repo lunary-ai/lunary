@@ -1,5 +1,4 @@
 import { buffer } from "micro"
-import { supabaseAdmin } from "@/lib/supabaseClient"
 import { sendEmail } from "@/lib/sendEmail"
 import {
   CANCELED_EMAIL,
@@ -10,6 +9,7 @@ import { sendTelegramMessage } from "@/lib/notifications"
 import Stripe from "stripe"
 import stripe from "@/lib/stripe"
 import { apiWrapper } from "@/lib/api/helpers"
+import sql from "@/lib/db"
 
 export const config = {
   api: {
@@ -32,27 +32,24 @@ const setupSubscription = async (object) => {
   const plan = metadata.plan || "pro"
   const period = metadata.period || "monthly"
 
-  const { data: org } = await supabaseAdmin
-    .from("org")
-    .update({
-      stripe_customer: customer,
-      stripe_subscription: subscription,
-      canceled: false,
-      plan,
-      plan_period: period,
-      limited: false,
-      play_allowance: plan === "pro" ? 15 : 1000,
-    })
-    .eq("id", client_reference_id)
-    .select("id,name")
-    .single()
-    .throwOnError()
+  const [org] = await sql`
+    UPDATE org
+    SET stripe_customer = ${customer},
+        stripe_subscription = ${subscription},
+        canceled = false,
+        plan = ${plan},
+        plan_period = ${period},
+        limited = false,
+        play_allowance = ${plan === "pro" ? 15 : 1000}
+    WHERE id = ${client_reference_id}
+    RETURNING id, name
+  `
 
-  const { data: users } = await supabaseAdmin
-    .from("profile")
-    .select("email,name")
-    .eq("org_id", org.id)
-    .throwOnError()
+  const [users] = await sql`
+    SELECT email, name
+    FROM profile
+    WHERE org_id = ${org.id}
+  `
 
   const emailPromises = users.map((user) =>
     sendEmail(UPGRADE_EMAIL(user.email, user.name, plan)),
@@ -74,12 +71,11 @@ const updateSubscription = async (object) => {
   const period = metadata.period || "monthly"
   const canceled = cancel_at_period_end
 
-  const { data: currentOrg } = await supabaseAdmin
-    .from("org")
-    .select("plan,plan_period,canceled")
-    .eq("stripe_customer", customer)
-    .single()
-    .throwOnError()
+  const [currentOrg] = await sql`
+    SELECT plan, plan_period, canceled
+    FROM org
+    WHERE stripe_customer = ${customer}
+  `
 
   if (
     currentOrg.plan === plan &&
@@ -90,24 +86,21 @@ const updateSubscription = async (object) => {
     return
   }
 
-  const { data: org } = await supabaseAdmin
-    .from("org")
-    .update({
-      plan,
-      plan_period: period,
-      canceled,
-    })
-    .eq("stripe_customer", customer)
-    .select("id,name")
-    .single()
-    .throwOnError()
+  const [org] = await sql`
+    UPDATE org
+    SET plan = ${plan},
+        plan_period = ${period},
+        canceled = ${canceled}
+    WHERE stripe_customer = ${customer}
+    RETURNING id, name
+  `
 
   if (canceled) {
-    const { data: users } = await supabaseAdmin
-      .from("profile")
-      .select("email,name")
-      .eq("org_id", org.id)
-      .throwOnError()
+    const [users] = await sql`
+      SELECT email, name
+      FROM profile
+      WHERE org_id = ${org.id}
+    `
 
     const emailPromises = users.map((user) => {
       return sendEmail(CANCELED_EMAIL(user.email, user.name))
@@ -130,23 +123,20 @@ const updateSubscription = async (object) => {
 const cancelSubscription = async (object) => {
   const { customer } = object
 
-  const { data: org } = await supabaseAdmin
-    .from("org")
-    .update({
-      plan: "free",
-      canceled: false,
-      stripe_subscription: null,
-    })
-    .eq("stripe_customer", customer)
-    .select("id,name")
-    .single()
-    .throwOnError()
+  const [org] = await sql`
+    UPDATE org
+    SET plan = 'free',
+        canceled = false,
+        stripe_subscription = NULL
+    WHERE stripe_customer = ${customer}
+    RETURNING id, name
+  `
 
-  const { data: users } = await supabaseAdmin
-    .from("profile")
-    .select("email,name")
-    .eq("org_id", org.id)
-    .throwOnError()
+  const [users] = await sql`
+    SELECT email, name
+    FROM profile
+    WHERE org_id = ${org.id}
+  `
 
   const emailPromises = users.map((user) => {
     return sendEmail(FULLY_CANCELED_EMAIL(user.email, user.name))

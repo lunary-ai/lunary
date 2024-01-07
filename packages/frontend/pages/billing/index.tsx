@@ -52,7 +52,7 @@ export default function Billing() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            customer: org?.stripe_customer,
+            customer: org?.stripeCustomer,
             origin: window.location.origin,
           }),
         })
@@ -116,7 +116,7 @@ export default function Billing() {
         ) : (
           <Text size="lg">
             You are currently on the <Badge>{plan}</Badge> plan{" "}
-            {plan ? `(billed ${org?.plan_period})` : ""}.
+            {plan ? `(billed ${org?.planPeriod})` : ""}.
           </Text>
         )}
 
@@ -169,7 +169,7 @@ export default function Billing() {
             </Stack>
           </Card>
         )}
-        {org?.stripe_customer && (
+        {org?.stripeCustomer && (
           <Card withBorder radius="md" padding="xl">
             <Stack align="start">
               <Title order={3}>Customer Portal</Title>

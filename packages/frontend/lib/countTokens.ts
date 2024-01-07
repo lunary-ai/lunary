@@ -1,5 +1,3 @@
-import { supabaseAdmin } from "@/lib/supabaseClient"
-
 // Don't import all otherwise function over 1mb, too big for Vercel
 // import gpt2 from "./ranks/gpt2"; useless
 // import p50k_edit from "./ranks/p50k_edit"; useless
@@ -12,6 +10,7 @@ import cl100k_base from "js-tiktoken/ranks/cl100k_base"
 
 import { Tiktoken, getEncodingNameForModel } from "js-tiktoken/lite"
 import { H } from "@highlight-run/next/server"
+import sql from "./db"
 
 const cache = {}
 
@@ -267,12 +266,11 @@ export const completeRunUsage = async (run) => {
   try {
     // get run input
 
-    const { data: runData } = await supabaseAdmin
-      .from("run")
-      .select("input,params,name")
-      .match({ id: run.runId })
-      .single()
-      .throwOnError()
+    const [runData] = await sql`
+      SELECT input, params, name
+      FROM run
+      WHERE id = ${run.runId}
+    `
 
     // Get model name (in older sdk it wasn't sent in "end" event)
     const modelName = runData.name?.replaceAll("gpt-35", "gpt-3.5") // Azure fix

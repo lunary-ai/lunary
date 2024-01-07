@@ -1,6 +1,6 @@
 import { completeRunUsage } from "@/lib/countTokens"
-import { supabaseAdmin } from "@/lib/supabaseClient"
 
+import sql from "./db"
 import { Json } from "@/utils/supaTypes"
 
 export interface Event {
@@ -146,20 +146,23 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
     extra,
   })
 
-  await supabaseAdmin
-    .from("run")
-    .upsert(
-      clearUndefined({
-        type: "thread",
-        id: parentRunId,
-        app,
-        user,
-        tags: threadTags,
-        input: coreMessage,
-      }),
-      { onConflict: "id" },
-    )
-    .throwOnError()
+  const [result] = await sql`
+    INSERT INTO run (type, id, app, user, tags, input)
+    VALUES ('thread', ${parentRunId}, ${app}, ${user}, ${threadTags}, ${JSON.stringify(
+      coreMessage,
+    )})
+    ON CONFLICT (id)
+    DO UPDATE SET
+      app = EXCLUDED.app,
+      user = EXCLUDED.user,
+      tags = EXCLUDED.tags,
+      input = EXCLUDED.input
+    RETURNING *
+  `
+
+  if (!result) {
+    throw new Error("Error upserting run")
+  }
 
   // Reconciliate messages with runs
   //
@@ -179,14 +182,11 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
   // note; in any case, update the ID to the latest received
 
   // check if previous run exists. for that, look at the last run of the thread
-  const { data: previousRun } = await supabaseAdmin
-    .from("run")
-    .select("*")
-    .eq("parent_run", parentRunId!)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle()
-    .throwOnError()
+  const [previousRun] = await sql`
+    SELECT * FROM run
+    WHERE parent_run = ${parentRunId!}
+    ORDER BY created_at DESC
+    LIMIT 1`
 
   const OUTPUT_TYPES = ["assistant", "tool", "bot"]
   const INPUT_TYPES = ["user", "system"] // system is mostly used for giving context about the user
@@ -253,17 +253,22 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
     update.ended_at = timestamp
     update.parent_run = run.parentRunId
 
-    await supabaseAdmin
-      .from("run")
-      .insert(clearUndefined({ ...shared, ...update }))
-      .throwOnError()
+    await sql`
+      INSERT INTO run ${sql(
+        update,
+        "type",
+        "created_at",
+        "ended_at",
+        "parent_run",
+      )}
+    `
   } else if (operation === "update") {
     update.ended_at = timestamp
 
-    await supabaseAdmin
-      .from("run")
-      .update(clearUndefined({ ...shared, ...update }))
-      .eq("id", previousRun!.id)
-      .throwOnError()
+    await sql`
+      UPDATE run
+      SET ${sql(update, "ended_at")}
+      WHERE id = ${previousRun.id}
+    `
   }
 }

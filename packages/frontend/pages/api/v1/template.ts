@@ -1,6 +1,7 @@
 import { edgeWrapper } from "@/lib/api/edgeHelpers"
 import { jsonResponse } from "@/lib/api/jsonResponse"
-import { supabaseAdmin } from "@/lib/supabaseClient"
+
+import sql from "@/lib/db"
 import { z } from "zod"
 
 const querySchema = z.object({
@@ -19,25 +20,18 @@ export default edgeWrapper(async function handler(req: Request) {
     slug: searchParams.get("slug"),
   })
 
-  const { data } = await supabaseAdmin
-    .from("template")
-    .select(
-      "id,slug,mode,versions:template_version(id,content,extra,created_at,version,is_draft)",
-    )
-    .eq("app_id", app_id)
-    .eq("slug", slug)
-    .neq("versions.is_draft", true)
-    .order("created_at", {
-      referencedTable: "template_version",
-      ascending: false,
-    })
-    .limit(1)
-    .maybeSingle()
-    .throwOnError()
+  const [latestVersion] = await sql`
+    SELECT t.id, t.slug, t.mode, tv.id, tv.content, tv.extra, tv.created_at, tv.version
+    FROM template t
+    INNER JOIN template_version tv ON t.id = tv.template_id
+    WHERE t.app_id = ${app_id}
+      AND t.slug = ${slug}
+      AND tv.is_draft = false
+    ORDER BY tv.created_at DESC
+    LIMIT 1
+  `
 
-  const latestVersion = data?.versions?.[0]
-
-  if (!data) {
+  if (!latestVersion) {
     return jsonResponse(404, { error: "Not found" })
   }
 

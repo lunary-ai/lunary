@@ -24,22 +24,19 @@ import analytics from "@/utils/analytics"
 import { NextSeo } from "next-seo"
 import { notifications } from "@mantine/notifications"
 import Confetti from "react-confetti"
-import { supabaseAdmin } from "../lib/supabaseClient"
+import sql from "@/lib/db"
 
 export async function getServerSideProps(context) {
   const { orgId } = context.query
 
-  const { data: org } = await supabaseAdmin
-    .from("org")
-    .select("name")
-    .eq("id", orgId)
-    .single()
-    .throwOnError()
+  const [org] = await sql`
+    SELECT name FROM org WHERE id = ${orgId}
+  `
 
-  const { count: orgUserCount } = await supabaseAdmin
-    .from("profile")
-    .select("*", { count: "exact", head: true })
-    .eq("org_id", orgId)
+  const [orgUserCountResult] = await sql`
+    SELECT COUNT(*) FROM profile WHERE org_id = ${orgId}
+  `
+  const orgUserCount = orgUserCountResult.count
 
   return { props: { orgUserCount, orgName: org?.name, orgId } }
 }

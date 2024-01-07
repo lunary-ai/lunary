@@ -1,8 +1,8 @@
 import { edgeWrapper } from "@/lib/api/edgeHelpers"
 import { jsonResponse } from "@/lib/api/jsonResponse"
 import { sendTelegramMessage } from "@/lib/notifications"
-import { supabaseAdmin } from "@/lib/supabaseClient"
 import { NextRequest, NextResponse } from "next/server"
+import sql from "@/lib/db"
 
 export const runtime = "edge"
 export const dynamic = "force-dynamic"
@@ -30,37 +30,31 @@ export default edgeWrapper(async function handler(req: NextRequest) {
     return new NextResponse()
   }
 
+  let org
   if (signupMethod === "signup") {
     // First user in Org (/signup)
 
     // Create new Org
-    const { data: org } = await supabaseAdmin
-      .from("org")
-      .insert({ name: orgName || `${name}'s Org`, plan: "free" })
-      .select()
-      .single()
-      .throwOnError()
+    const [orgResult] = await sql`
+      INSERT INTO org (name, plan)
+      VALUES (${orgName || `${name}'s Org`}, 'free')
+      RETURNING *
+    `
+    org = orgResult
 
     // Add user to Org as admin
-    await supabaseAdmin
-      .from("profile")
-      .insert({
-        id: userId,
-        name,
-        email,
-        org_id: org.id,
-        role: "admin",
-        verified: process.env.SKIP_EMAIL_VERIFY ? true : false,
+    await sql`
+      INSERT INTO profile (id, name, email, org_id, role, verified)
+      VALUES (${userId}, ${name}, ${email}, ${org.id}, 'admin', ${
+        process.env.SKIP_EMAIL_VERIFY ? true : false
       })
-      .throwOnError()
+    `
 
     // Create first app
-    await supabaseAdmin
-      .from("app")
-      .insert({ name: projectName, org_id: org.id })
-      .select()
-      .single()
-      .throwOnError()
+    await sql`
+      INSERT INTO app (name, org_id)
+      VALUES (${projectName}, ${org.id})
+    `
 
     await fetch(
       `${process.env.NEXT_PUBLIC_APP_URL}/api/user/send-verification`,
@@ -78,17 +72,10 @@ export default edgeWrapper(async function handler(req: NextRequest) {
     // New user in existing Org (/join)
 
     // Add user to Org as member
-    await supabaseAdmin
-      .from("profile")
-      .insert({
-        id: userId,
-        name,
-        email,
-        org_id: orgId,
-        role: "member",
-        verified: true, // Auto verify email
-      })
-      .throwOnError()
+    await sql`
+      INSERT INTO profile (id, name, email, org_id, role, verified)
+      VALUES (${userId}, ${name}, ${email}, ${orgId}, 'member', true)
+    `
   }
 
   await sendTelegramMessage(

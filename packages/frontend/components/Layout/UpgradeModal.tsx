@@ -26,6 +26,7 @@ import errorHandler from "@/utils/errorHandler"
 import { notifications } from "@mantine/notifications"
 import { capitalize } from "@/utils/format"
 import { useOrg } from "@/utils/dataHooks"
+import { fetcher } from "@/utils/swr"
 
 const PlanFeatures = ({ features, highlight }) => {
   return (
@@ -88,14 +89,12 @@ export const UpgradePlans = ({ highlight }: { highlight?: string }) => {
     setLoading(plan)
 
     const res = await errorHandler(
-      fetch("/api/user/upgrade", {
-        method: "POST",
-        body: JSON.stringify({
+      fetcher.post(`/orgs/${org.id}/upgrade`, {
+        arg: {
           plan,
           period,
-          orgId: org?.id,
           origin: window.location.origin,
-        }),
+        },
       }),
     )
 
@@ -130,7 +129,7 @@ export const UpgradePlans = ({ highlight }: { highlight?: string }) => {
           variant: "gradient",
         }
 
-      if (newPlan === plan && period !== org?.plan_period)
+      if (newPlan === plan && period !== org?.planPeriod)
         return { children: "Switch to " + period, variant: "outline" }
 
       if (newPlan === plan) return { children: "Current plan", disabled: true }

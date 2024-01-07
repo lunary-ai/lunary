@@ -2,7 +2,8 @@ import { edgeWrapper } from "@/lib/api/edgeHelpers"
 
 import { WELCOME_EMAIL } from "@/lib/emails"
 import { sendEmail } from "@/lib/sendEmail"
-import { supabaseAdmin } from "@/lib/supabaseClient"
+
+import sql from "@/lib/db"
 
 import { jwtVerify } from "jose"
 
@@ -28,37 +29,41 @@ export default edgeWrapper(async function handler(req) {
   } = await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET))
 
   // check if email is already verified
-  const {
-    data: { verified },
-  } = await supabaseAdmin
-    .from("profile")
-    .select("verified")
-    .eq("email", email)
-    .single()
-    .throwOnError()
+  let verified
+  {
+    const result = await sql`
+      SELECT verified
+      FROM profile
+      WHERE email = ${email}
+    `
+    verified = result[0]?.verified
+  }
 
   if (verified) {
     return new Response("Email already verified", response)
   }
 
-  const {
-    data: { org_id, name },
-  } = await supabaseAdmin
-    .from("profile")
-    .update({ verified: true })
-    .eq("email", email)
-    .select()
-    .single()
-    .throwOnError()
+  let org_id, name
+  {
+    const result = await sql`
+      UPDATE profile
+      SET verified = true
+      WHERE email = ${email}
+      RETURNING org_id, name
+    `
+    org_id = result[0]?.org_id
+    name = result[0]?.name
+  }
 
-  const {
-    data: { id },
-  } = await supabaseAdmin
-    .from("app")
-    .select("id")
-    .eq("org_id", org_id)
-    .single()
-    .throwOnError()
+  let id
+  {
+    const result = await sql`
+      SELECT id
+      FROM app
+      WHERE org_id = ${org_id}
+    `
+    id = result[0]?.id
+  }
 
   await sendEmail(WELCOME_EMAIL(email, name, id))
 
