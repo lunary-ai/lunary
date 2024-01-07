@@ -234,10 +234,23 @@ export function useLogs(
   return { logs, loading: isLoading, validating: isValidating, loadMore }
 }
 
-export function useRun(id: string) {
-  const { data: run, isLoading, mutate } = useProjectSWR(`/runs/${id}`)
+export function useRun(id: string, initialData?: any) {
+  const {
+    data: run,
+    isLoading,
+    mutate,
+  } = useProjectSWR(`/runs/${id}`, {
+    fallbackData: initialData,
+  })
 
-  const { trigger: update } = useProjectMutation(`/runs/${id}`, fetcher.patch)
+  const { trigger: update } = useProjectMutation(`/runs/${id}`, fetcher.patch, {
+    populateCache: (updatedRun, run) => {
+      return { ...run, ...updatedRun }
+    },
+    // Since the API already gives us the updated information,
+    // we don't need to revalidate here.
+    revalidate: false,
+  })
 
   return {
     run,

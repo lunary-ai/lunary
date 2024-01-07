@@ -1,4 +1,5 @@
 import sql from "@/utils/db"
+import { Context } from "koa"
 import Router from "koa-router"
 
 const runs = new Router({
@@ -21,6 +22,35 @@ interface Query {
   page?: string
   order?: string
 }
+
+const formatRun = (run: any) => ({
+  id: run.id,
+  isPublic: run.isPublic,
+  feedback: run.feedback,
+  type: run.type,
+  name: run.name,
+  createdAt: run.createdAt,
+  endedAt: run.endedAt,
+  duration: run.duration,
+  templateVersionId: run.templateVersionId,
+  tokens: {
+    completion: run.completionTokens,
+    prompt: run.promptTokens,
+    total: run.completionTokens + run.promptTokens,
+  },
+  tags: run.tags,
+  input: run.input,
+  output: run.output,
+  error: run.error,
+  status: run.status,
+  user: {
+    id: run.userId,
+    externalId: run.userExternalId,
+    createdAt: run.userCreatedAt,
+    lastSeen: run.userLastSeen,
+    props: run.userProps,
+  },
+})
 
 runs.get("/", async (ctx) => {
   const projectId = ctx.params.projectId as string
@@ -120,32 +150,7 @@ runs.get("/", async (ctx) => {
       limit ${Number(limit)}
       offset ${Number(page) * Number(limit)}`
 
-  const runs = rows.map((run) => ({
-    type: run.type,
-    name: run.name,
-    createdAt: run.createdAt,
-    endedAt: run.endedAt,
-    duration: run.duration,
-    tokens: {
-      completion: run.completionTokens,
-      prompt: run.promptTokens,
-      total: run.completionTokens + run.promptTokens,
-    },
-    tags: run.tags,
-    input: run.input,
-    output: run.output,
-    error: run.error,
-    status: run.status,
-    user: {
-      id: run.userId,
-      externalId: run.userExternalId,
-      createdAt: run.userCreatedAt,
-      lastSeen: run.userLastSeen,
-      props: run.userProps,
-    },
-    // TODO
-    // cost: calcRunCost(run),
-  }))
+  const runs = rows.map(formatRun)
 
   ctx.body = runs
 })
@@ -213,32 +218,30 @@ runs.get("/:id", async (ctx) => {
           r.created_at desc
       limit 1`
 
-  const run = {
-    type: row.type,
-    name: row.name,
-    createdAt: row.createdAt,
-    endedAt: row.endedAt,
-    duration: row.duration,
-    tokens: {
-      completion: row.completionTokens,
-      prompt: row.promptTokens,
-      total: row.completionTokens + row.promptTokens,
-    },
-    tags: row.tags,
-    input: row.input,
-    output: row.output,
-    error: row.error,
-    status: row.status,
-    user: {
-      id: row.userId,
-      externalId: row.userExternalId,
-      createdAt: row.userCreatedAt,
-      lastSeen: row.userLastSeen,
-      props: row.userProps,
-    },
+  ctx.body = formatRun(row)
+})
+
+runs.patch("/:id", async (ctx: Context) => {
+  const projectId = ctx.params.projectId as string
+  const { id } = ctx.params
+  const { isPublic, feedback, tags } = ctx.request.body as {
+    isPublic: boolean
+    feedback: string
+    tags: string[]
   }
 
-  ctx.body = run
+  await sql`
+      update
+          run
+      set
+          is_public = ${isPublic},
+          feedback = ${feedback},
+          tags = ${tags}
+      where
+          app = ${projectId as string}
+          and id = ${id}`
+
+  ctx.body = {}
 })
 
 runs.get("/:id/related", async (ctx) => {

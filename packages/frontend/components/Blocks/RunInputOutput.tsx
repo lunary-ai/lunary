@@ -1,4 +1,13 @@
-import { Badge, Button, Card, Flex, Group, Stack, Text } from "@mantine/core"
+import {
+  Badge,
+  Button,
+  Card,
+  Flex,
+  Group,
+  Stack,
+  Switch,
+  Text,
+} from "@mantine/core"
 import { useSupabaseClient } from "@supabase/auth-helpers-react"
 import {
   IconPencilShare,
@@ -10,6 +19,8 @@ import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
 import SmartViewer from "./SmartViewer"
 import TokensBadge from "./TokensBadge"
+import { useRun } from "@/utils/dataHooks"
+import { notifications } from "@mantine/notifications"
 
 const isChatMessages = (obj) => {
   return Array.isArray(obj)
@@ -63,14 +74,7 @@ export default function RunInputOutput({
   withPlayground = true,
   withShare = false,
 }) {
-  const [run, setRun] = useState(initialRun)
-  const [loading, setLoading] = useState(false)
-  const supabaseClient = useSupabaseClient()
-  const router = useRouter()
-
-  useEffect(() => {
-    setRun(initialRun)
-  }, [initialRun])
+  const { run, update } = useRun(initialRun.id, initialRun)
 
   const canEnablePlayground =
     withPlayground &&
@@ -78,68 +82,30 @@ export default function RunInputOutput({
     run?.input &&
     isChatMessages(run?.input)
 
-  async function makePublic() {
-    setLoading(true)
-    const { data } = await supabaseClient
-      .from("run")
-      .update({ isPublic: true })
-      .eq("id", run.id)
-      .select()
-      .single()
-
-    router.push(`/logs/${data.id}`)
-    setLoading(false)
-  }
-
-  async function makePrivate() {
-    setLoading(true)
-    const { data } = await supabaseClient
-      .from("run")
-      .update({ isPublic: false })
-      .eq("id", run.id)
-      .select()
-      .single()
-    setRun(data)
-    setLoading(false)
-  }
-
-  function ShareButton() {
-    if (!run.isPublic) {
-      return (
-        <Button
-          onClick={makePublic}
-          size="sm"
-          variant="light"
-          leftSection={<IconWorldShare size={16} />}
-          loading={loading}
-        >
-          Share
-        </Button>
-      )
-    }
-
-    return (
-      <Button
-        onClick={makePrivate}
-        w="130"
-        size="sm"
-        variant="light"
-        leftSection={<IconWorldX size={16} />}
-        loading={loading}
-        color="red"
-      >
-        Unshare
-      </Button>
-    )
-  }
-
   return (
     <Stack>
       {run?.type === "llm" && (
         <>
           {withShare && (
             <Flex justify="right">
-              <ShareButton />
+              <Switch
+                label="Make public"
+                checked={run.isPublic}
+                color={run.isPublic ? "red" : "blue"}
+                onChange={async (e) => {
+                  const checked = e.currentTarget.checked as boolean
+                  update({ ...run, isPublic: checked })
+                  if (checked) {
+                    const url = `${window.location.origin}/logs/${run.id}`
+                    await navigator.clipboard.writeText(url)
+
+                    notifications.show({
+                      title: "Run is now public",
+                      message: "Link copied to clipboard",
+                    })
+                  }
+                }}
+              />
             </Flex>
           )}
 
