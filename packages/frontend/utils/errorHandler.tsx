@@ -1,7 +1,7 @@
 import { notifications } from "@mantine/notifications"
 import { IconX } from "@tabler/icons-react"
 
-// Error handler for supabase methods and fetch requests
+// Error handler for fetch requests
 const errorHandler = async (promise: Promise<any>) => {
   try {
     let res = await promise

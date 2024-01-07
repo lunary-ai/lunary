@@ -24,12 +24,12 @@ import Router from "next/router"
 
 import { openUpgrade } from "../components/Layout/UpgradeModal"
 import {
-  useAppSWR,
   useCurrentProject,
   useOrg,
   useProjects,
   useUser,
 } from "@/utils/dataHooks"
+import useSWR from "swr"
 
 function Invite() {
   const { org } = useOrg()
@@ -95,7 +95,9 @@ export default function AppAnalytics() {
   const { org, updateOrg, mutate } = useOrg()
   const { drop, update } = useProjects()
 
-  const { data: projectUsage } = useAppSWR("/analytics/usage")
+  const { data: projectUsage } = useSWR(
+    `/orgs/${org?.id}/usage?project=${project?.id}`,
+  )
 
   const isAdmin =
     currentUser?.id === org?.users?.find((u) => u.role === "admin")?.id

@@ -162,7 +162,7 @@ function Playground() {
         setLoading(true)
 
         const data = await fetcher.get(
-          `/v1/projects/${project?.id}/template_versions/${id}`,
+          `/projects/${project?.id}/template_versions/${id}`,
         )
 
         if (data) {
@@ -177,9 +177,7 @@ function Playground() {
     } else if (clone) {
       const fetchRun = async () => {
         setLoading(true)
-        const run = await fetcher.get(
-          `/v1/projects/${project?.id}/runs/${clone}/`,
-        )
+        const run = await fetcher.get(`/projects/${project?.id}/runs/${clone}/`)
 
         if (run?.input) {
           setTemplateVersion({ ...templateVersion, content: run.input })

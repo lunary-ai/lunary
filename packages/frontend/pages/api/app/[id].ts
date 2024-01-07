@@ -1,6 +1,7 @@
 import { apiWrapper } from "@/lib/api/helpers"
-import { supabaseAdmin } from "@/lib/supabaseClient"
+
 import { NextApiRequest, NextApiResponse } from "next"
+import sql from "@/lib/db"
 
 export default apiWrapper(async function handler(
   req: NextApiRequest,
@@ -8,7 +9,11 @@ export default apiWrapper(async function handler(
 ) {
   if (!req.query.id) return res.status(400).send("no id")
 
-  await supabaseAdmin.from("app").select("*").eq("id", req.query.id).single()
+  const [row] = await sql`
+    SELECT * FROM app WHERE id = ${req.query.id} LIMIT 1
+  `
 
-  return res.status(200).send("ok")
+  if (!row) throw new Error("not found")
+
+  return res.status(200).json("ok")
 })

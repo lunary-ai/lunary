@@ -57,4 +57,28 @@ orgs.get("/projects", async (ctx: Context) => {
   ctx.body = rows
 })
 
+orgs.get("/usage", async (ctx: Context) => {
+  const orgId = ctx.params.orgId as string
+  const { projectId } = ctx.request.query
+
+  const rows = await sql`
+    select
+      date_trunc('day', r.created_at) as date,
+      count(*) as count
+    from
+      run r 
+    ${!projectId ? sql`join app a on r.app = a.id` : sql``}
+    where
+      ${!projectId ? sql`a.org_id = ${orgId} and` : sql``}
+      ${projectId ? sql`r.app = ${projectId} and` : sql``}
+      r.created_at > now() - interval '30 days'
+    group by
+      date
+    order by
+    date desc;
+  `
+
+  ctx.body = rows
+})
+
 export default orgs

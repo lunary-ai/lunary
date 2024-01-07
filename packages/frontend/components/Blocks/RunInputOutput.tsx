@@ -8,15 +8,8 @@ import {
   Switch,
   Text,
 } from "@mantine/core"
-import { useSupabaseClient } from "@supabase/auth-helpers-react"
-import {
-  IconPencilShare,
-  IconWorldShare,
-  IconWorldX,
-} from "@tabler/icons-react"
+import { IconPencilShare } from "@tabler/icons-react"
 import Link from "next/link"
-import { useRouter } from "next/router"
-import { useEffect, useState } from "react"
 import SmartViewer from "./SmartViewer"
 import TokensBadge from "./TokensBadge"
 import { useRun } from "@/utils/dataHooks"
@@ -74,7 +67,7 @@ export default function RunInputOutput({
   withPlayground = true,
   withShare = false,
 }) {
-  const { run, update } = useRun(initialRun.id, initialRun)
+  const { run, update } = useRun(initialRun?.id, initialRun)
 
   const canEnablePlayground =
     withPlayground &&

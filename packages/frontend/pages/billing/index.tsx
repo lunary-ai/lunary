@@ -1,7 +1,7 @@
 import LineChart from "@/components/Blocks/Analytics/LineChart"
 import { UpgradePlans, openUpgrade } from "@/components/Layout/UpgradeModal"
 import errorHandler from "@/utils/errorHandler"
-import { useFetchSWR, useOrg } from "@/utils/dataHooks"
+import { useOrg } from "@/utils/dataHooks"
 import {
   Alert,
   Badge,
@@ -18,6 +18,7 @@ import {
 import { IconBolt, IconInfoTriangle } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { Label, ReferenceLine } from "recharts"
+import useSWR from "swr"
 
 const seatAllowance = {
   free: 1,
@@ -36,7 +37,7 @@ const eventsAllowance = {
 export default function Billing() {
   const { org, loading } = useOrg()
 
-  const { data: usage } = useFetchSWR("/analytics/usage")
+  const { data: usage } = useSWR(`/orgs/${org?.id}/usage`)
 
   const plan = org?.plan
 

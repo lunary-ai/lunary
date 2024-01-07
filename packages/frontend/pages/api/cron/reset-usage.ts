@@ -3,10 +3,8 @@ import { NextApiRequest, NextApiResponse } from "next"
 import { apiWrapper } from "@/lib/api/helpers"
 import { sendTelegramMessage } from "@/lib/notifications"
 
-import postgres from "postgres"
 import { H } from "@highlight-run/next/server"
-
-const sql = postgres(process.env.DB_URI!)
+import sql from "@/lib/db"
 
 const updateLimitedStatus = async () => {
   // set limited = false for all users that have been under the limit

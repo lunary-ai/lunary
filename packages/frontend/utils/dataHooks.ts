@@ -21,7 +21,7 @@ export function useProjectSWR(key: string, ...args: any[]) {
   const { projectId } = useContext(ProjectContext)
 
   return useSWR(
-    projectId && key ? `/v1/projects/${projectId}${key}` : null,
+    projectId && key ? `/projects/${projectId}${key}` : null,
     ...(args as [any]),
   )
 }
@@ -32,7 +32,7 @@ export function useProjectMutation(key: string, ...args: any[]) {
   // const key
 
   return useSWRMutation(
-    projectId && key ? `/v1/projects/${projectId}${key}` : null,
+    projectId && key ? `/projects/${projectId}${key}` : null,
     ...(args as [any]),
   )
 }
@@ -45,7 +45,7 @@ export function useProjectInfiniteSWR(key: string, ...args: any[]) {
 
     return projectId && key
       ? encodeURIComponent(
-          `/v1/projects/${projectId}${key}` + key.includes("?")
+          `/projects/${projectId}${key}` + key.includes("?")
             ? "&"
             : "?" + `page=${pageIndex}&limit=100`,
         )
@@ -91,16 +91,16 @@ export function useUser() {
   const theme = useMantineTheme()
   const scheme = useColorScheme()
 
-  const { data, isLoading, mutate, error } = useSWR(`/v1/users/me`)
+  const { data, isLoading, mutate, error } = useSWR(`/users/me`)
 
   const color = data ? getUserColor(scheme, theme, data.id) : null
   const user = data ? { ...data, color } : null
 
-  return { user, isLoading, mutate, error }
+  return { user, loading: isLoading, mutate, error }
 }
 
 export function useOrg() {
-  const { data, isLoading, mutate } = useSWR(`/v1/users/me/org`)
+  const { data, isLoading, mutate } = useSWR(`/users/me/org`)
   const theme = useMantineTheme()
   const scheme = useColorScheme()
 
@@ -112,16 +112,16 @@ export function useOrg() {
   const org = data ? { ...data, users } : null
 
   const { trigger: updateOrg } = useSWRMutation(
-    `/v1/orgs/${org?.id}`,
+    `/orgs/${org?.id}`,
     fetcher.patch,
   )
 
-  return { org, isLoading, updateOrg, mutate }
+  return { org, loading: isLoading, updateOrg, mutate }
 }
 
 export function useProjects() {
   const { org } = useOrg()
-  const { data, isLoading } = useSWR(() => org && `/v1/orgs/${org.id}/projects`)
+  const { data, isLoading } = useSWR(() => org && `/orgs/${org.id}/projects`)
 
   // TODO: mutations
 
@@ -219,7 +219,7 @@ export function useLogs(
   const { projectId } = useContext(ProjectContext)
   function getKey(pageIndex, previousPageData) {
     if (previousPageData && !previousPageData.length) return null
-    return `/v1/projects/${projectId}/runs?type=${type}&page=${pageIndex}&limit=100${parentRunIdStr}`
+    return `/projects/${projectId}/runs?type=${type}&page=${pageIndex}&limit=100${parentRunIdStr}`
   }
 
   const { data, isLoading, isValidating, size, setSize } =
@@ -245,6 +245,7 @@ export function useRun(id: string, initialData?: any) {
 
   const { trigger: update } = useProjectMutation(`/runs/${id}`, fetcher.patch, {
     populateCache: (updatedRun, run) => {
+      console.log({ updatedRun, run })
       return { ...run, ...updatedRun }
     },
     // Since the API already gives us the updated information,
@@ -343,37 +344,4 @@ export function useAppUsers(usageRange = 30) {
   const appUsers = users?.filter((u) => u.lastSeen > maxLastSeen)
 
   return { users: appUsers || [], loading: isLoading }
-}
-
-// TODO: remove
-export function useFetchSWR(url: string | null, props: any = {}) {
-  const key = url ? JSON.stringify({ url, props }) : null
-
-  const { data, isValidating } = useSWR(
-    key,
-    () =>
-      fetch(`/api/${url}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        // automatically append the app id to the request
-        body: JSON.stringify({ ...props }),
-      }).then((res) => res.json()),
-    { dedupingInterval: 10000 },
-  )
-
-  return { data, loading: isValidating }
-}
-
-//TODO: remove
-export function useAppSWR(url: string, props: any = {}) {
-  const { project } = useCurrentProject()
-
-  const { data, loading } = useFetchSWR(project ? url : null, {
-    ...props,
-    appId: project?.id,
-  })
-
-  return { data, loading }
 }

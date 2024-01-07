@@ -1,7 +1,7 @@
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
 function get(url) {
-  return fetch(`${BASE_URL}${url}`, {}).then((res) => res.json())
+  return fetch(`${BASE_URL}/v1${url}`, {}).then((res) => res.json())
 }
 
 function post(url, options) {
