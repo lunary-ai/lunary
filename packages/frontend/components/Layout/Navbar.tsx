@@ -23,7 +23,7 @@ import {
   useOrg,
   useProjects,
   useUser,
-} from "@/utils/newDataHooks"
+} from "@/utils/dataHooks"
 
 export default function Navbar() {
   const { project, setProjectId } = useCurrentProject()

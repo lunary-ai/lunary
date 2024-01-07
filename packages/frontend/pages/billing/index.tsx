@@ -1,8 +1,7 @@
 import LineChart from "@/components/Blocks/Analytics/LineChart"
 import { UpgradePlans, openUpgrade } from "@/components/Layout/UpgradeModal"
-import { useFetchSWR } from "@/utils/dataHooks"
 import errorHandler from "@/utils/errorHandler"
-import { useOrg } from "@/utils/newDataHooks"
+import { useFetchSWR, useOrg } from "@/utils/dataHooks"
 import {
   Alert,
   Badge,

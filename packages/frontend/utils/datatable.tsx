@@ -8,7 +8,7 @@ import { useEffect } from "react"
 import analytics from "./analytics"
 
 import { formatCost, formatDateTime, msToTime } from "./format"
-import { useProjectSWR } from "./newDataHooks"
+import { useProjectSWR } from "./dataHooks"
 const columnHelper = createColumnHelper<any>()
 
 export function timeColumn(timeColumn, label = "Time") {

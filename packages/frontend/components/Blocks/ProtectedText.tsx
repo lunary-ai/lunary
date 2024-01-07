@@ -1,4 +1,4 @@
-import { useOrg } from "@/utils/newDataHooks"
+import { useOrg } from "@/utils/dataHooks"
 import { Children, cloneElement } from "react"
 
 export default function ProtectedText({ children }) {

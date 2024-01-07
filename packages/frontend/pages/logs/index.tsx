@@ -47,11 +47,11 @@ import analytics from "@/utils/analytics"
 import { formatDateTime } from "@/utils/format"
 import {
   useCurrentProject,
+  useLogs,
   useModelNames,
   useOrg,
-  useProjectInfiniteSWR,
   useUser,
-} from "@/utils/newDataHooks"
+} from "@/utils/dataHooks"
 import { useDebouncedState, useLocalStorage, useSetState } from "@mantine/hooks"
 import Router from "next/router"
 import FacetedFilter from "../../components/Blocks/FacetedFilter"
@@ -131,72 +131,63 @@ export default function Logs() {
     defaultValue: [],
   })
   const [currentView, setCurrentView] = useState()
-
-  const {
-    data: logs,
-    loading,
-    validating,
-    loadMore,
-  } = useProjectInfiniteSWR("/runs?type=llm")
-
-  console.log(`rendering logs`)
-
-  // const threads = useProjectInfiniteSWR("/runs?type=thread")
-
-  // const traces = useProjectInfiniteSWR("/runs?type=trace")
+  const { logs, loading, validating, loadMore } = useLogs("llm")
+  const threads = useLogs("thread")
+  const traces = useLogs("trace")
 
   const [selectedTab, setSelectedTab] = useState("llm-call")
 
-  // const { user } = useUser()
+  useOrg()
+  const { user } = useUser()
 
-  // useEffect(() => {
-  //   if (currentView) {
-  //     setSelectedFilters(currentView.filters)
-  //   }
-  // }, [currentView, setSelectedFilters])
+  useEffect(() => {
+    if (currentView) {
+      setSelectedFilters(currentView.filters)
+    }
+  }, [currentView, setSelectedFilters])
 
-  // let { modelNames } = useModelNames()
+  let { modelNames } = useModelNames()
   const [query, setQuery] = useDebouncedState(null, 500)
 
-  // const [selectedModels, setSelectedModels] = useState([])
-  // const [selectedTags, setSelectedTags] = useState([])
+  const [selectedModels, setSelectedModels] = useState([])
+  const [selectedTags, setSelectedTags] = useState([])
 
-  // const { projectId } = useContext(ProjectContext)
+  const { projectId } = useContext(ProjectContext)
   const { project, loading: projectLoading } = useCurrentProject()
 
   const { org } = useOrg()
   const [selected, setSelected] = useState(null)
 
-  // const exportUrl = projectId
-  //   ? buildExportUrl(projectId, query, selectedModels, selectedTags)
-  //   : ""
+  const exportUrl = projectId
+    ? buildExportUrl(projectId, query, selectedModels, selectedTags)
+    : ""
 
-  // const [selectedChatItems, setSelectedChatItems] = useState([])
+  const [selectedChatItems, setSelectedChatItems] = useState([])
 
-  // useEffect(() => {}, [selectedTab])
+  useEffect(() => {}, [selectedTab])
 
   if (!loading && !projectLoading && !project?.activated) {
     return <Empty Icon={IconBrandOpenai} what="requests" />
   }
 
-  // function exportButton(url: string) {
-  //   if (org?.plan !== "free") {
-  //     return {
-  //       href: url,
-  //       component: "a",
-  //       onClick: () => {
-  //         analytics.trackOnce("ClickExport")
-  //       },
-  //     }
-  //   } else {
-  //     return {
-  //       onClick: () => {
-  //         analytics.trackOnce("ClickExport")
-  //         openUpgrade("export")
-  //       },
-  //     }
-  //   }
-  // }
+  function exportButton(url: string) {
+    if (org?.plan !== "free") {
+      return {
+        href: url,
+        component: "a",
+        onClick: () => {
+          analytics.trackOnce("ClickExport")
+        },
+      }
+    } else {
+      return {
+        onClick: () => {
+          analytics.trackOnce("ClickExport")
+          openUpgrade("export")
+        },
+      }
+    }
+  }
 
   function apply(items) {
     setSelectedFilters(items)
@@ -297,7 +288,7 @@ export default function Logs() {
                       <IconDotsVertical size={12} />
                     </ActionIcon>
                   </Menu.Target>
-                  {/* <Menu.Dropdown>
+                  <Menu.Dropdown>
                     <Menu.Item
                       leftSection={<IconFileExport size={16} />}
                       {...exportButton(exportUrl)}
@@ -312,7 +303,7 @@ export default function Logs() {
                     >
                       Export to JSONL
                     </Menu.Item>
-                  </Menu.Dropdown> */}
+                  </Menu.Dropdown>
                 </Menu>
               </Group>
             </Flex>
@@ -320,7 +311,7 @@ export default function Logs() {
           {Object.entries(selectedFilters).length > 0 && (
             <Paper px="xs" p={4}>
               <Flex justify="space-between">
-                {/* <Group>
+                <Group>
                   {Object.entries(selectedFilters).map(
                     ([filterName, selected]) =>
                       selected && (
@@ -336,7 +327,7 @@ export default function Logs() {
                         />
                       ),
                   )}
-                </Group> */}
+                </Group>
                 <Group gap="xs">
                   <Select
                     placeholder="Load a view..."
@@ -391,25 +382,25 @@ export default function Logs() {
           {selected?.type === "thread" && <ChatReplay run={selected} />}
         </Drawer>
 
-        {/* {selectedTab === "llm-call" && ( */}
-        <DataTable
-          type="llm"
-          onRowClicked={(row) => {
-            analytics.trackOnce("OpenRun")
-            setSelected(row)
-          }}
-          loading={loading || validating}
-          loadMore={loadMore}
-          columns={columns}
-          data={logs}
-        />
-        {/* )} */}
+        {selectedTab === "llm-call" && (
+          <DataTable
+            type="llm"
+            onRowClicked={(row) => {
+              analytics.trackOnce("OpenRun")
+              setSelected(row)
+            }}
+            loading={loading || validating}
+            loadMore={loadMore}
+            columns={columns}
+            data={logs}
+          />
+        )}
 
-        {/* {selectedTab === "trace" && (
+        {selectedTab === "trace" && (
           <DataTable
             type="traces"
             columns={tracesColumns}
-            data={traces.data}
+            data={traces.logs}
             loadMore={traces.loadMore}
             loading={traces.loading || traces.validating}
             onRowClicked={(row) => {
@@ -432,9 +423,9 @@ export default function Logs() {
             loading={threads.loading || threads.validating}
             loadMore={threads.loadMore}
             columns={chatsColumns}
-            data={threads.data}
+            data={threads.logs}
           />
-        )} */}
+        )}
       </Stack>
     </>
   )

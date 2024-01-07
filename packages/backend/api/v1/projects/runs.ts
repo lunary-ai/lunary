@@ -15,6 +15,7 @@ interface Query {
   maxDuration?: string
   startTime?: string
   endTime?: string
+  parentRunId?: string
 
   limit?: string
   page?: string
@@ -30,6 +31,7 @@ runs.get("/", async (ctx) => {
     tags = [],
     limit = "100",
     page = "0",
+    parentRunId,
     tokens,
     minDuration,
     maxDuration,
@@ -48,6 +50,11 @@ runs.get("/", async (ctx) => {
     typeFilter = sql`and type in ('agent','chain')`
   } else if (type === "thread") {
     typeFilter = sql`and type in ('thread','convo')`
+  }
+
+  let parentRunFilter = sql``
+  if (parentRunId) {
+    parentRunFilter = sql`and parent_run = ${parentRunId}`
   }
 
   // if (
@@ -107,6 +114,7 @@ runs.get("/", async (ctx) => {
       where
           r.app = ${projectId as string}
           ${typeFilter}
+          ${parentRunFilter}
       order by
           r.created_at desc
       limit ${Number(limit)}

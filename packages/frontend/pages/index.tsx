@@ -23,7 +23,7 @@ import { IconCheck, IconCopy } from "@tabler/icons-react"
 
 import analytics from "@/utils/analytics"
 import { NextSeo } from "next-seo"
-import { useCurrentProject, useOrg, useProjects } from "@/utils/newDataHooks"
+import { useCurrentProject, useOrg, useProjects } from "@/utils/dataHooks"
 
 export default function Home() {
   const [modalOpened, setModalOpened] = useState(false)

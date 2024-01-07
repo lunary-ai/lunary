@@ -3,7 +3,6 @@ import { useState } from "react"
 import LineChart from "@/components/Blocks/Analytics/LineChart"
 import CopyText from "@/components/Blocks/CopyText"
 import UserAvatar from "@/components/Blocks/UserAvatar"
-import { useAppSWR } from "@/utils/dataHooks"
 
 import {
   Badge,
@@ -25,11 +24,12 @@ import Router from "next/router"
 
 import { openUpgrade } from "../components/Layout/UpgradeModal"
 import {
+  useAppSWR,
   useCurrentProject,
   useOrg,
   useProjects,
   useUser,
-} from "@/utils/newDataHooks"
+} from "@/utils/dataHooks"
 
 function Invite() {
   const { org } = useOrg()

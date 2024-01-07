@@ -1,4 +1,4 @@
-import { useCurrentProject } from "@/utils/newDataHooks"
+import { useCurrentProject } from "@/utils/dataHooks"
 import {
   Button,
   Checkbox,

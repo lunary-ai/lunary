@@ -8,7 +8,6 @@ import AgentSummary from "@/components/Blocks/Analytics/AgentSummary"
 import UsageSummary from "@/components/Blocks/Analytics/UsageSummary"
 import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 import CopyText from "@/components/Blocks/CopyText"
-import { useAppUser, useRuns } from "@/utils/dataHooks"
 import { formatAppUser } from "@/utils/format"
 import { NextSeo } from "next-seo"
 import DataTable from "@/components/Blocks/DataTable"
@@ -22,7 +21,7 @@ import {
   tagsColumn,
   timeColumn,
 } from "@/utils/datatable"
-import { useProjectSWR, useRunsUsage } from "@/utils/newDataHooks"
+import { useProjectSWR, useRunsUsage } from "@/utils/dataHooks"
 
 const columns = [
   timeColumn("createdAt"),
@@ -41,10 +40,11 @@ export default function UserDetails({}) {
 
   const { data: user } = useProjectSWR(`/users/${id}`)
 
-  const { runs, loading, validating, loadMore } = useRuns(undefined, {
-    match: { user: id }, //, parentRun: undefined },
-    filter: ["parentRun", "is", "null"],
-  })
+  // TODO
+  // const { runs, loading, validating, loadMore } = useRuns(undefined, {
+  //   match: { user: id }, //, parentRun: undefined },
+  //   filter: ["parentRun", "is", "null"],
+  // })
 
   const { usage } = id ? useRunsUsage(90, id) : { usage: undefined }
 
@@ -96,8 +96,8 @@ export default function UserDetails({}) {
         </SimpleGrid>
       )}
 
-      <Title order={2}>Latest Activity</Title>
-
+      {/* <Title order={2}>Latest Activity</Title> */}
+      {/* 
       <DataTable
         type="user-details"
         data={runs}
@@ -107,7 +107,7 @@ export default function UserDetails({}) {
         onRowClicked={(row) => {
           router.push(`/traces/${row.id}`)
         }}
-      />
+      /> */}
     </Stack>
   )
 }

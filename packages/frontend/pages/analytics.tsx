@@ -4,7 +4,6 @@ import BarList from "@/components/Blocks/Analytics/BarList"
 import LineChart from "@/components/Blocks/Analytics/LineChart"
 import UsageSummary from "@/components/Blocks/Analytics/UsageSummary"
 import { formatAppUser, formatCost } from "@/utils/format"
-import { useAppUsers } from "@/utils/dataHooks"
 
 import {
   Center,
@@ -22,11 +21,12 @@ import { IconChartAreaLine } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { useLocalStorage } from "@mantine/hooks"
 import {
+  useAppUsers,
   useCurrentProject,
   useOrg,
   useRunsUsage,
   useRunsUsageByDay,
-} from "@/utils/newDataHooks"
+} from "@/utils/dataHooks"
 
 const calculateDailyCost = (usage) => {
   // calculate using calcRunCost, reduce by model, and filter by type llm
@@ -62,7 +62,7 @@ export default function Analytics() {
   const { usage, loading: usageLoading } = useRunsUsage(range)
   console.log(usage)
   const { dailyUsage, loading: dailyUsageLoading } = useRunsUsageByDay(range)
-  const { usersWithUsage, loading: usersLoading } = useAppUsers(range)
+  const { users, loading: usersLoading } = useAppUsers(range)
 
   const loading = usageLoading || dailyUsageLoading || usersLoading
 
@@ -104,15 +104,15 @@ export default function Analytics() {
             </>
           )}
 
-          {usersWithUsage && (
+          {users && (
             <AnalyticsCard title="Users">
               <BarList
                 customMetric={{
                   label: "users",
-                  value: usersWithUsage.length,
+                  value: users.length,
                 }}
                 filterZero={false}
-                data={usersWithUsage
+                data={users
                   .sort((a, b) => a.cost - b.cost)
                   .map((u) => ({
                     agentRuns: u.agentRuns,

@@ -1,9 +1,8 @@
 import DataTable from "@/components/Blocks/DataTable"
 
-import { useAppUsersList } from "@/utils/dataHooks"
 import { Group, Stack, Text } from "@mantine/core"
 
-import { costColumn, timeColumn } from "@/utils/datatable"
+import { costColumn, timeColumn, userColumn } from "@/utils/datatable"
 
 import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 import Empty from "@/components/Layout/Empty"
@@ -12,15 +11,16 @@ import { IconUsers } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import Router from "next/router"
 import analytics from "../../utils/analytics"
-import { useProjectInfiniteSWR } from "@/utils/newDataHooks"
+import { useAppUserList } from "@/utils/dataHooks"
 
 const columns = [
   {
     header: "User",
     size: 80,
-    id: "user",
+    id: "props",
     cell: (props) => {
       const user = props.row.original
+
       return (
         <Group gap={8}>
           <AppUserAvatar size={30} user={user} />
@@ -35,12 +35,7 @@ const columns = [
 ]
 
 export default function Users() {
-  const {
-    data: users,
-    isLoading,
-    loadMore,
-    isValidating,
-  } = useProjectInfiniteSWR("/users")
+  const { users, isLoading, isValidating } = useAppUserList()
 
   if (!isLoading && users?.length === 0) {
     return <Empty Icon={IconUsers} what="users" />
@@ -60,7 +55,6 @@ export default function Users() {
           Router.push(`/users/${row.id}`)
         }}
         loading={isLoading || isValidating}
-        loadMore={loadMore}
       />
     </Stack>
   )

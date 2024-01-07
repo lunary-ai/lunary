@@ -12,12 +12,11 @@ import {
   Text,
   Title,
 } from "@mantine/core"
-import { useAppUser, useRuns } from "@/utils/dataHooks"
 import AppUserAvatar from "./AppUserAvatar"
 import { formatDateTime } from "@/utils/format"
 import Router from "next/router"
 import { IconNeedleThread } from "@tabler/icons-react"
-import { useProjectSWR } from "@/utils/newDataHooks"
+import { useLogs, useProjectSWR } from "@/utils/dataHooks"
 
 const OUTPUT_ROLES = ["assistant", "ai", "tool"]
 const INPUT_ROLES = ["user"]
@@ -140,10 +139,8 @@ function RunsChat({ runs }) {
 }
 
 export function ChatReplay({ run }) {
-  const { runs, loading } = useRuns("chat", {
-    match: { parentRun: run.id },
-    notInfinite: true,
-  })
+  const { logs: runs, loading } = useLogs("thread", run.id)
+  console.log(runs)
 
   const { data: user } = useProjectSWR(run.user && `/users/${run.user}`)
 

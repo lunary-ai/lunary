@@ -8,25 +8,29 @@ const users = new Router({
 
 users.get("/", async (ctx: Context) => {
   const { projectId } = ctx.params
-  const { limit, page } = ctx.query
 
+  // const { limit, page } = ctx.query
+
+  // if(!limit || !page) {
+  //   return ctx.throw(400, "limit and page are required")
+  // }
+
+  // TODO: pagination
   const users = await sql`
-      with app_users as (
-          select distinct on (external_id) id
-          from app_user
-          where app = ${projectId}
-            and external_id is not null
-      )
-      select distinct on (u.external_id) u.*
-      from app_user u
-      where u.app = ${projectId}
-        and u.external_id is not null
-        and exists (
-            select 1
-            from run
-            where run.user = u.id
-            and run.type = 'llm'
-        )`
+    select 
+      id::int,
+      app,
+      external_id, 
+      created_at,
+      last_seen,
+      props
+    from 
+      app_user
+    where
+      app = ${projectId}
+    order by 
+      last_seen desc
+  `
 
   ctx.body = users
 })

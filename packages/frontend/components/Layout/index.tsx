@@ -10,7 +10,7 @@ import { ProjectContext } from "@/utils/context"
 import Navbar from "./Navbar"
 import Sidebar from "./Sidebar"
 
-import { useOrg, useUser } from "@/utils/newDataHooks"
+import { useOrg, useUser } from "@/utils/dataHooks"
 import { ErrorBoundary } from "@highlight-run/next/client"
 import { useColorScheme, useLocalStorage } from "@mantine/hooks"
 import { ModalsProvider } from "@mantine/modals"

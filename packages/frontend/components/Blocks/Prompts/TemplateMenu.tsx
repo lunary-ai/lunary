@@ -17,7 +17,7 @@ import {
   useOrg,
   useTemplate,
   useTemplates,
-} from "@/utils/newDataHooks"
+} from "@/utils/dataHooks"
 import { useHover } from "@mantine/hooks"
 import { modals } from "@mantine/modals"
 import { notifications } from "@mantine/notifications"

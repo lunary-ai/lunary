@@ -26,7 +26,7 @@ import {
 import { useSessionContext } from "@supabase/auth-helpers-react"
 
 import UserAvatar from "@/components/Blocks/UserAvatar"
-import { useOrg, useUser } from "@/utils/newDataHooks"
+import { useOrg, useUser } from "@/utils/dataHooks"
 import Link from "next/link"
 import Router, { useRouter } from "next/router"
 import { openUpgrade } from "./UpgradeModal"

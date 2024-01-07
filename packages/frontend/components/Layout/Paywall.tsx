@@ -1,4 +1,4 @@
-import { useOrg } from "@/utils/newDataHooks"
+import { useOrg } from "@/utils/dataHooks"
 import {
   Box,
   Button,

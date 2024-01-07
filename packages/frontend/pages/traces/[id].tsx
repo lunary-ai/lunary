@@ -17,7 +17,7 @@ import DurationBadge from "@/components/Blocks/DurationBadge"
 import TokensBadge from "@/components/Blocks/TokensBadge"
 import StatusBadge from "@/components/Blocks/StatusBadge"
 
-import { useProjectSWR, useRun } from "@/utils/newDataHooks"
+import { useProjectSWR, useRun } from "@/utils/dataHooks"
 import { capitalize, formatCost } from "@/utils/format"
 import RunInputOutput from "@/components/Blocks/RunInputOutput"
 import { getColorForRunType } from "../../utils/colors"

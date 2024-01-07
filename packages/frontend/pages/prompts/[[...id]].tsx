@@ -41,7 +41,7 @@ import {
   useTemplate,
   useTemplateVersion,
   useUser,
-} from "@/utils/newDataHooks"
+} from "@/utils/dataHooks"
 import { fetcher } from "@/utils/swr"
 
 const availableModels = [

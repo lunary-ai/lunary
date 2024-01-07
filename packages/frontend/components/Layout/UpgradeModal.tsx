@@ -25,7 +25,7 @@ import SocialProof from "../Blocks/SocialProof"
 import errorHandler from "@/utils/errorHandler"
 import { notifications } from "@mantine/notifications"
 import { capitalize } from "@/utils/format"
-import { useOrg } from "@/utils/newDataHooks"
+import { useOrg } from "@/utils/dataHooks"
 
 const PlanFeatures = ({ features, highlight }) => {
   return (
