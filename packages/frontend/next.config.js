@@ -29,16 +29,16 @@ const nextConfig = {
       },
       {
         source: "/api/v1/report",
-        destination: process.ENV.NEXT_PUBLIC_API_URL + "/api/v1/runs/ingest",
+        destination: process.env.NEXT_PUBLIC_API_URL + "/api/v1/runs/ingest",
       },
       {
         source: "/api/report",
-        destination: process.ENV.NEXT_PUBLIC_API_URL + "/api/v1/runs/ingest",
+        destination: process.env.NEXT_PUBLIC_API_URL + "/api/v1/runs/ingest",
       },
       {
         source: "/api/v1/template",
         destination:
-          process.ENV.NEXT_PUBLIC_API_URL + "/api/v1/template_versions/latest",
+          process.env.NEXT_PUBLIC_API_URL + "/api/v1/template_versions/latest",
       },
     ]
   },

@@ -15,61 +15,58 @@ import Session from "supertokens-node/recipe/session"
 import v1 from "./api/v1"
 import sql from "./utils/db"
 import webhooks from "./api/webhooks"
+import Dashboard from "supertokens-node/recipe/dashboard"
 
 supertokens.init({
   framework: "koa",
   supertokens: {
-    // These are the connection details of the app you created on supertokens.com
-    connectionURI:
-      "https://st-dev-e40b0da0-a9d2-11ee-9231-0b636d7a2a46.aws.supertokens.io",
-    apiKey: "5N=hKGPsW6e3RAN1lmy9-vwf2Y",
+    connectionURI: "http://localhost:3567",
   },
   appInfo: {
-    // learn more about this on https://supertokens.com/docs/session/appinfo
     appName: "Lunary",
-    apiDomain: "http://localhost:3000",
+    apiDomain: "http://localhost:3333",
     websiteDomain: "http://localhost:8080",
     apiBasePath: "/auth",
-    websiteBasePath: "/auth",
   },
+  debug: true,
   recipeList: [
     EmailPassword.init({
+      signUpFeature: {
+        formFields: [
+          { id: "email" },
+          { id: "password" },
+          { id: "name" },
+          { id: "orgName" },
+          { id: "projectName" },
+          { id: "employeeCount" },
+          { id: "signupMethod" },
+        ],
+      },
       override: {
-        functions: (originalImplementation) => {
+        apis: (originalImplementation) => {
           return {
             ...originalImplementation,
-            signUp: async function (input) {
-              // First we call the original implementation of signUpPOST.
-              let response = await originalImplementation.signUp(input)
+            signUpPOST: async function (input) {
+              if (originalImplementation.signUpPOST === undefined) {
+                throw Error("Should never come here")
+              }
 
-              // Post sign up response, we check if it was successful
+              let response = await originalImplementation.signUpPOST(input)
+
               if (
                 response.status === "OK" &&
                 response.user.loginMethods.length === 1
               ) {
-                /**
-                 *
-                 * response.user contains the following info:
-                 * - emails
-                 * - id
-                 * - timeJoined
-                 * - tenantIds
-                 * - phone numbers
-                 * - third party login info
-                 * - all the login methods associated with this user.
-                 * - information about if the user's email is verified or not.
-                 *
-                 */
-
-                console.log(response.user)
+                const id = response.user.id as string
+                const email = response.user.emails[2] as string
               }
               return response
             },
           }
         },
       },
-    }), // initializes signin / sign up features
-    Session.init(), // initializes session features
+    }),
+    Session.init(),
   ],
 })
 
@@ -77,11 +74,13 @@ const app = new Koa()
 
 app.use(async (ctx, next) => {
   if (ctx.method === "options") {
-    ctx.set("Access-Control-Allow-Origin", "*")
+    // TODO
+    ctx.set("Access-Control-Allow-Origin", "http://localhost:8080")
     ctx.set("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS, DELETE")
+    ctx.set("Access-Control-Allow-Credentials", "true")
     ctx.set(
       "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, Accept",
+      "Origin, X-Requested-With, Content-Type, Accept, fdi-version, rid, st-auth-mode",
     )
     ctx.status = 204
     return
@@ -91,15 +90,16 @@ app.use(async (ctx, next) => {
 
 app.use(
   cors({
-    origin: "*",
+    origin: "http://localhost:8080", // TODO
+    credentials: true,
     allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization", "Accept"],
   }),
 )
+app.use(middleware())
 
 app.use(bodyParser())
 app.use(logger())
-// app.use(middleware());
 
 app.use(v1.routes())
 app.use(webhooks.routes())

@@ -19,6 +19,7 @@ import { useEffect, useState } from "react"
 
 import analytics from "@/utils/analytics"
 import { NextSeo } from "next-seo"
+import { signIn } from "supertokens-auth-react/recipe/emailpassword"
 
 function LoginPage() {
   const [loading, setLoading] = useState(false)
@@ -53,13 +54,26 @@ function LoginPage() {
   }) => {
     setLoading(true)
 
-    const ok = await errorHandler(
-      supabaseClient.auth.signInWithPassword({ email, password }),
-    )
+    let response = await signIn({
+      formFields: [
+        {
+          id: "email",
+          value: email,
+        },
+        {
+          id: "password",
+          value: password,
+        },
+      ],
+    })
+    // const ok = await errorHandler(
+    //   supabaseClient.auth.signInWithPassword({ email, password }),
+    // )
 
     analytics.track("Login", { method: "password" })
 
-    if (ok) {
+    console.log(response)
+    if (response) {
       Router.push("/")
     }
 

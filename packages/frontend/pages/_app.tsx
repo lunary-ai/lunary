@@ -7,7 +7,6 @@ import type { AppProps } from "next/app"
 import Head from "next/head"
 
 import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs"
-import { SessionContextProvider } from "@supabase/auth-helpers-react"
 
 import Layout from "@/components/Layout"
 import AnalyticsWrapper from "@/components/Layout/Analytics"
@@ -16,9 +15,43 @@ import { DefaultSeo } from "next-seo"
 import Link from "next/link"
 import { useState } from "react"
 
+import { fetcher } from "@/utils/swr"
 import localFont from "next/font/local"
 import { SWRConfig } from "swr"
-import { fetcher } from "@/utils/swr"
+
+import Router from "next/router"
+import SuperTokensReact, { SuperTokensWrapper } from "supertokens-auth-react"
+import EmailPasswordReact from "supertokens-auth-react/recipe/emailpassword"
+import SessionReact from "supertokens-auth-react/recipe/session"
+
+const appInfo = {
+  apiDomain: "http://localhost:3333",
+  apiBasePath: "/auth",
+  appName: "...",
+  websiteDomain: "http://localhost:8080",
+}
+
+const frontendConfig = () => {
+  return {
+    appInfo,
+    recipeList: [EmailPasswordReact.init(), SessionReact.init()],
+    windowHandler: (oI: any) => {
+      return {
+        ...oI,
+        location: {
+          ...oI.location,
+          setHref: (href: string) => {
+            Router.push(href)
+          },
+        },
+      }
+    },
+  }
+}
+
+if (typeof window !== "undefined") {
+  SuperTokensReact.init(frontendConfig())
+}
 
 export const circularPro = localFont({
   display: "swap",
@@ -89,10 +122,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <Head>
         <link href="https://lunary.ai/logo.png" rel="icon" type="image/png" />
       </Head>
-      <SessionContextProvider
-        supabaseClient={supabase}
-        initialSession={pageProps.initialSession}
-      >
+      <SuperTokensWrapper>
         <SWRConfig
           value={{
             fetcher: fetcher.get,
@@ -112,7 +142,7 @@ export default function App({ Component, pageProps }: AppProps) {
             </AnalyticsWrapper>
           </MantineProvider>
         </SWRConfig>
-      </SessionContextProvider>
+      </SuperTokensWrapper>
     </>
   )
 }

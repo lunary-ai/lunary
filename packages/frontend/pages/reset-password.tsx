@@ -18,7 +18,6 @@ import { useState } from "react"
 import errorHandler from "@/utils/errorHandler"
 
 export default function UpdatePassword() {
-  const supabaseClient = useSupabaseClient()
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
@@ -56,10 +55,10 @@ export default function UpdatePassword() {
         message: "Password updated successfully",
       })
 
-      await supabaseClient.auth.signInWithPassword({
-        email,
-        password,
-      })
+      // await supabaseClient.auth.signInWithPassword({
+      //   email,
+      //   password,
+      // })
 
       Router.push("/")
     }

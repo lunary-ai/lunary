@@ -11,7 +11,7 @@
   },
   "scripts": {
     "start": "bun run index.ts",
-    "dev": "bun run --watch index.ts"
+    "dev": "tsx watch index.ts"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"

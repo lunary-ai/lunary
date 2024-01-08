@@ -44,6 +44,8 @@ import analytics from "@/utils/analytics"
 import errorHandler from "@/utils/errorHandler"
 import { NextSeo } from "next-seo"
 import SocialProof from "@/components/Blocks/SocialProof"
+import { fetcher } from "@/utils/swr"
+import { signUp } from "supertokens-auth-react/recipe/emailpassword"
 
 function SignupPage() {
   const [loading, setLoading] = useState(false)
@@ -79,6 +81,15 @@ function SignupPage() {
     if (session && !isLoading && step === 1) Router.push("/")
   }, [isLoading, session, step])
 
+  function signup(email, password, other) {
+    const formFields = [
+      { id: "email", value: email },
+      { id: "password", value: password },
+      { id: "other", value: other },
+    ]
+    // fetcher.post("/auth/signup", { arg: { formFields } })
+  }
+
   const handleSignup = async ({
     email,
     password,
@@ -97,18 +108,16 @@ function SignupPage() {
     setLoading(true)
 
     const ok = await errorHandler(
-      supabaseClient.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            signupMethod: "signup",
-            name,
-            projectName,
-            orgName,
-            employeeCount,
-          },
-        },
+      signUp({
+        formFields: [
+          { id: "email", value: "test@sldfkjsdf.com" },
+          { id: "password", value: "password123" },
+          { id: "name", value: name },
+          { id: "projectName", value: projectName },
+          { id: "orgName", value: orgName },
+          { id: "employeeCount", value: employeeCount },
+          { id: "signupMethod", value: "signup" },
+        ],
       }),
     )
 
@@ -131,6 +140,7 @@ function SignupPage() {
       })
 
       setStep(3)
+    } else {
     }
 
     setLoading(false)
@@ -235,7 +245,7 @@ function SignupPage() {
                           <Button
                             size="md"
                             mt="md"
-                            onClick={nextStep}
+                            onClick={handleSignup}
                             fullWidth
                             loading={loading}
                           >

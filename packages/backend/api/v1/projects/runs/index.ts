@@ -54,7 +54,7 @@ const formatRun = (run: any) => ({
   },
 })
 
-runs.use(ingest)
+// runs.use(ingest)
 
 runs.get("/", async (ctx) => {
   const projectId = ctx.params.projectId as string

@@ -30,6 +30,7 @@ import { useOrg, useUser } from "@/utils/dataHooks"
 import Link from "next/link"
 import Router, { useRouter } from "next/router"
 import { openUpgrade } from "./UpgradeModal"
+import { signOut } from "@/utils/auth"
 
 const menu = [
   { label: "Analytics", icon: IconTimeline, link: "/analytics" },
@@ -153,14 +154,7 @@ export default function Sidebar() {
                 <Menu.Item
                   color="red"
                   leftSection={<IconLogout size="16" />}
-                  onClick={() => {
-                    supabaseClient.auth.signOut().then(() => {
-                      // empty localstorage
-                      window.localStorage.clear()
-
-                      Router.push("/login")
-                    })
-                  }}
+                  onClick={() => signOut()}
                 >
                   Logout
                 </Menu.Item>

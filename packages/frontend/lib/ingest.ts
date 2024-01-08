@@ -1,6 +1,7 @@
-// import { completeRunUsage } from "@/lib/countTokens"
+import { completeRunUsage } from "@/lib/countTokens"
+import { supabaseAdmin } from "@/lib/supabaseClient"
 
-import sql from "./db"
+import { Json } from "@/utils/supaTypes"
 
 export interface Event {
   type:
@@ -26,7 +27,7 @@ export interface Event {
   tags?: string[]
   name?: string
   output?: any
-  message?: string | any // deprecated (for logs)
+  message?: string | Json // deprecated (for logs)
   extra?: any
   feedback?: any
   templateId?: string
@@ -100,7 +101,7 @@ export const cleanEvent = async (event: any): Promise<Event> => {
     ...rest,
     name: typeof name === "string" ? name.replace("models/", "") : undefined,
     tags: typeof tags === "string" ? [tags] : tags,
-    // tokensUsage: await completeRunUsage(event),
+    tokensUsage: await completeRunUsage(event),
     runId: await ensureIsUUID(runId),
     parentRunId: await ensureIsUUID(parentRunId),
     timestamp: new Date(timestamp).toISOString(),
@@ -145,23 +146,20 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
     extra,
   })
 
-  const [result] = await sql`
-    INSERT INTO run (type, id, app, user, tags, input)
-    VALUES ('thread', ${parentRunId}, ${app}, ${user}, ${threadTags}, ${JSON.stringify(
-      coreMessage,
-    )})
-    ON CONFLICT (id)
-    DO UPDATE SET
-      app = EXCLUDED.app,
-      user = EXCLUDED.user,
-      tags = EXCLUDED.tags,
-      input = EXCLUDED.input
-    RETURNING *
-  `
-
-  if (!result) {
-    throw new Error("Error upserting run")
-  }
+  await supabaseAdmin
+    .from("run")
+    .upsert(
+      clearUndefined({
+        type: "thread",
+        id: parentRunId,
+        app,
+        user,
+        tags: threadTags,
+        input: coreMessage,
+      }),
+      { onConflict: "id" },
+    )
+    .throwOnError()
 
   // Reconciliate messages with runs
   //
@@ -181,11 +179,14 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
   // note; in any case, update the ID to the latest received
 
   // check if previous run exists. for that, look at the last run of the thread
-  const [previousRun] = await sql`
-    SELECT * FROM run
-    WHERE parent_run = ${parentRunId!}
-    ORDER BY created_at DESC
-    LIMIT 1`
+  const { data: previousRun } = await supabaseAdmin
+    .from("run")
+    .select("*")
+    .eq("parent_run", parentRunId!)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+    .throwOnError()
 
   const OUTPUT_TYPES = ["assistant", "tool", "bot"]
   const INPUT_TYPES = ["user", "system"] // system is mostly used for giving context about the user
@@ -252,22 +253,17 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
     update.ended_at = timestamp
     update.parent_run = run.parentRunId
 
-    await sql`
-      INSERT INTO run ${sql(
-        update,
-        "type",
-        "created_at",
-        "ended_at",
-        "parent_run",
-      )}
-    `
+    await supabaseAdmin
+      .from("run")
+      .insert(clearUndefined({ ...shared, ...update }))
+      .throwOnError()
   } else if (operation === "update") {
     update.ended_at = timestamp
 
-    await sql`
-      UPDATE run
-      SET ${sql(update, "ended_at")}
-      WHERE id = ${previousRun.id}
-    `
+    await supabaseAdmin
+      .from("run")
+      .update(clearUndefined({ ...shared, ...update }))
+      .eq("id", previousRun!.id)
+      .throwOnError()
   }
 }

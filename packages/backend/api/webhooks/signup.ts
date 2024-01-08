@@ -12,7 +12,6 @@ const router = new Router({
   prefix: "/signup",
 })
 
-// This sets up the user profile after signing up
 router.post("/", async (ctx: Context) => {
   const req = ctx.request.body
   const {
