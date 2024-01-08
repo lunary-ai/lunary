@@ -1,1 +1,0 @@
-alter table run add column is_public boolean default false;
