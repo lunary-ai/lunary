@@ -1,21 +1,19 @@
-import logger from "koa-logger"
-import bodyParser from "koa-bodyparser"
-import { verifySession } from "supertokens-node/recipe/session/framework/koa"
 import cors from "@koa/cors"
-import Koa, { Context } from "koa"
+import Koa from "koa"
+import bodyParser from "koa-bodyparser"
+import logger from "koa-logger"
 import Router from "koa-router"
-import { SessionContext, middleware } from "supertokens-node/framework/koa"
+import { middleware } from "supertokens-node/framework/koa"
 
-//TODO: remove profile table to "user"
-
-// const res = db.query.cities.findFirst();
 import supertokens from "supertokens-node"
 import EmailPassword from "supertokens-node/recipe/emailpassword"
 import Session from "supertokens-node/recipe/session"
 import v1 from "./api/v1"
-import sql from "./utils/db"
 import webhooks from "./api/webhooks"
-import Dashboard from "supertokens-node/recipe/dashboard"
+import { setupCronJobs } from "./utils/cron"
+import sql from "./utils/db"
+
+setupCronJobs()
 
 supertokens.init({
   framework: "koa",
