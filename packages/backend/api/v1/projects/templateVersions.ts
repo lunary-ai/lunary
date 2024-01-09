@@ -1,9 +1,42 @@
 import sql from "@/utils/db"
 import Router from "koa-router"
 import { Context } from "koa"
+import postgres from "postgres"
 
 const versions = new Router({
   prefix: "/template_versions",
+})
+
+// Use unCameledSql to avoid camel casing the results so they're compatible with openai's SDK
+// Otherwise it returns stuff like maxTokens instead of max_tokens and OpenAI breaks
+const unCameledSql = postgres(process.env.DB_URI!)
+
+versions.get("/latest", async (ctx: Context) => {
+  // Route used by SDK to fetch the latest version of a template
+
+  const projectId = ctx.params.projectId as string
+
+  const { slug } = ctx.request.query as {
+    slug: string
+  }
+
+  const [latestVersion] = await unCameledSql`
+    SELECT t.id, t.slug, t.mode, tv.id, tv.content, tv.extra, tv.created_at, tv.version
+    FROM template t
+    INNER JOIN template_version tv ON t.id = tv.template_id
+    WHERE 
+      t.app_id = ${projectId}
+      AND t.slug = ${slug}
+      AND tv.is_draft = false
+    ORDER BY tv.created_at DESC
+    LIMIT 1
+  `
+
+  if (!latestVersion) {
+    ctx.throw(404)
+  }
+
+  ctx.body = latestVersion
 })
 
 versions.get("/:id", async (ctx: Context) => {
@@ -38,32 +71,6 @@ versions.patch("/:id", async (ctx: Context) => {
   `
 
   ctx.body = templateVersion
-})
-
-versions.get("/latest", async (ctx: Context) => {
-  // Route used by SDK to fetch the latest version of a template
-
-  const { app_id, slug } = ctx.request.query as {
-    app_id: string
-    slug: string
-  }
-
-  const [latestVersion] = await sql`
-    SELECT t.id, t.slug, t.mode, tv.id, tv.content, tv.extra, tv.created_at, tv.version
-    FROM template t
-    INNER JOIN template_version tv ON t.id = tv.template_id
-    WHERE t.app_id = ${app_id}
-      AND t.slug = ${slug}
-      AND tv.is_draft = false
-    ORDER BY tv.created_at DESC
-    LIMIT 1
-  `
-
-  if (!latestVersion) {
-    ctx.throw(404)
-  }
-
-  ctx.body = latestVersion
 })
 
 export default versions

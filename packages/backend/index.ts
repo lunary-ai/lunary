@@ -28,7 +28,7 @@ supertokens.init({
     websiteDomain: "http://localhost:8080",
     apiBasePath: "/auth",
   },
-  debug: true,
+  debug: false,
   recipeList: [
     EmailPassword.init({
       signUpFeature: {
