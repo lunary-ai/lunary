@@ -7,6 +7,7 @@ import {
   Button,
   Card,
   Group,
+  Loader,
   Pagination,
   Stack,
   Text,
@@ -139,10 +140,9 @@ function RunsChat({ runs }) {
 }
 
 export function ChatReplay({ run }) {
-  const { logs: runs, loading } = useLogs("thread", run.id)
-  console.log(runs)
+  const { logs: runs, loading } = useLogs("chat", run.id)
 
-  const { data: user } = useProjectSWR(run.user && `/users/${run.user}`)
+  const { data: user } = useProjectSWR(run.user?.id && `/users/${run.user?.id}`)
 
   const sorted = runs?.sort((a, b) => {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -178,7 +178,7 @@ export function ChatReplay({ run }) {
             <Text>First message</Text>
             <Text>{formatDateTime(run.createdAt)}</Text>
           </Group>
-          {sorted?.length && (
+          {!!sorted?.length && (
             <Group justify="space-between">
               <Text>Last message</Text>
               <Text>{formatDateTime(sorted[sorted.length - 1].createdAt)}</Text>
@@ -188,6 +188,8 @@ export function ChatReplay({ run }) {
       </Card>
 
       <Title order={3}>Replay</Title>
+
+      {loading && <Loader />}
 
       <RunsChat runs={sorted} />
     </Stack>

@@ -81,7 +81,6 @@ function convertOpenAImessage(msg) {
   return {
     role: msg.role.replace("assistant", "ai"),
     content: msg.content,
-    functionCall: msg.function_call,
     toolsCall: msg.tools_call,
   }
 }
@@ -289,24 +288,31 @@ function Playground() {
       appId: project?.id,
     })
 
-    if (!org?.play_allowance) {
+    if (!org?.playAllowance) {
       return openUpgrade("playground")
     }
 
     setStreaming(true)
 
     try {
-      const fetchResponse = await fetch("/api/generation/playground", {
-        method: "POST",
-        body: JSON.stringify({
-          content: templateVersion.content,
-          extra: templateVersion.extra,
-          testValues: templateVersion.testValues,
-          appId: project?.id,
-        }),
-      })
+      const fetchResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/v1/orgs/${org?.id}/playground`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            content: templateVersion.content,
+            extra: templateVersion.extra,
+            testValues: templateVersion.testValues,
+            appId: project?.id,
+          }),
+        },
+      )
 
-      const reader = fetchResponse.body.getReader()
+      const reader = fetchResponse?.body?.getReader()
+
+      if (!reader) {
+        throw new Error("No reader")
+      }
 
       let streamedResponse = ""
       let responseMessage = {
