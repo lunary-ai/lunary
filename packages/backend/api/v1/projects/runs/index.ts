@@ -44,6 +44,7 @@ const formatRun = (run: any) => ({
   output: run.output,
   error: run.error,
   status: run.status,
+  siblingOf: run.siblingOf,
   user: {
     id: run.userId,
     externalId: run.userExternalId,

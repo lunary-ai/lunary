@@ -162,7 +162,7 @@ export function useTemplate(id: string) {
     data: template,
     isLoading,
     mutate,
-  } = useProjectSWR(`/templates/${id}`)
+  } = useProjectSWR(id && `/templates/${id}`)
 
   const { trigger: update } = useProjectMutation(
     `/templates/${id}`,
@@ -195,7 +195,7 @@ export function useTemplateVersion(id: string) {
     data: templateVersion,
     isLoading,
     mutate,
-  } = useProjectSWR(`/template_versions/${id}`)
+  } = useProjectSWR(id && `/template_versions/${id}`)
 
   const { trigger: update } = useProjectMutation(
     `/template_versions/${id}`,
@@ -211,7 +211,7 @@ export function useTemplateVersion(id: string) {
 }
 
 export function useLogs(
-  type: "llm" | "trace" | "thread",
+  type: "llm" | "trace" | "thread" | "chat",
   parentRunId?: string,
 ) {
   const parentRunIdStr = parentRunId ? `&parentRunId=${parentRunId}` : ""
