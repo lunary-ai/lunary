@@ -15,7 +15,6 @@ export interface Event {
     | "convo" // deprecated
     | "message"
     | "thread"
-  app: string
   event?: string
   level?: string
   runId?: string
@@ -40,6 +39,11 @@ export interface Event {
     stack?: string
   }
   [key: string]: unknown
+}
+
+export interface CleanRun extends Event {
+  runId: string
+  event: string
 }
 
 export const uuidFromSeed = async (seed: string): Promise<string> => {
@@ -107,37 +111,18 @@ export const cleanEvent = async (event: any): Promise<Event> => {
   }
 }
 
-// const message = z.object({
-//   id: z
-//     .optional(z.string())
-//     .transform(async (id) =>
-//       id ? await ensureIsUUID(id) : crypto.randomUUID(),
-//     ),
-//   role: z.string(),
-//   isRetry: z.boolean().optional(),
-//   text: z.optional(z.string()),
-//   timestamp: z.optional(z.date()),
-//   extra: z.optional(z.any()),
-//   feedback: z.optional(z.any()),
-// })
-
-const clearUndefined = (obj: any): any =>
+export const clearUndefined = (obj: any): any =>
   Object.fromEntries(Object.entries(obj).filter(([_, v]) => v !== undefined))
 
-export const ingestChatEvent = async (run: Event): Promise<void> => {
+export const ingestChatEvent = async (
+  projectId: string,
+  run: Event,
+): Promise<void> => {
   // create parent thread run if it doesn't exist
 
-  const {
-    runId: id,
-    app,
-    user,
-    parentRunId,
-    feedback,
-    threadTags,
-    timestamp,
-  } = run
+  const { runId: id, user, parentRunId, feedback, threadTags, timestamp } = run
 
-  const { role, isRetry, content, extra } = run.message as any
+  const { role, isRetry, tags, content, extra } = run.message as any
 
   const coreMessage = clearUndefined({
     role,
@@ -145,15 +130,27 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
     extra,
   })
 
+  if (typeof parentRunId === "undefined") {
+    throw new Error("parentRunId is undefined")
+  }
+
+  // Now you can safely use parentRunId in your
+
   const [result] = await sql`
-    INSERT INTO run (type, id, app, user, tags, input)
-    VALUES ('thread', ${parentRunId}, ${app}, ${user}, ${threadTags}, ${JSON.stringify(
-      coreMessage,
-    )})
+    INSERT INTO run ${sql(
+      clearUndefined({
+        id: parentRunId,
+        type: "thread",
+        app: projectId,
+        user,
+        tags: threadTags,
+        input: coreMessage,
+      }),
+    )}
     ON CONFLICT (id)
     DO UPDATE SET
       app = EXCLUDED.app,
-      user = EXCLUDED.user,
+      "user" = EXCLUDED.user,
       tags = EXCLUDED.tags,
       input = EXCLUDED.input
     RETURNING *
@@ -190,30 +187,37 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
   const OUTPUT_TYPES = ["assistant", "tool", "bot"]
   const INPUT_TYPES = ["user", "system"] // system is mostly used for giving context about the user
 
-  const shared = {
+  const shared = clearUndefined({
     id,
-    app: run.app,
-    ...(run.tags ? { tags: run.tags } : {}),
-    ...(run.extra ? { input: run.extra } : {}),
-    ...(user ? { user } : {}),
-    ...(feedback ? { feedback } : {}),
-  }
+    app: projectId,
+    tags,
+    extra,
+    user,
+    feedback,
+  })
 
   let update: any = {} // todo: type
   let operation = "insert"
 
   if (previousRun) {
+    // Those are computed columns, so we need to remove them
+    delete previousRun.inputText
+    delete previousRun.outputText
+    delete previousRun.errorText
+
     if (isRetry) {
       // copy previousRun data into new run with new id, set `sibling_of` to previousRun, clear output, then:
       // if bot message: set output with [message]
       // if user message: also replace input with [message]
       update = {
         ...previousRun,
-        sibling_of: previousRun.id,
+        siblingOf: previousRun.id,
         feedback: run.feedback || null, // reset feedback if retry
         output: OUTPUT_TYPES.includes(role) ? [coreMessage] : null,
         input: INPUT_TYPES.includes(role) ? [coreMessage] : previousRun.input,
       }
+
+      delete update.id // remove id to force using new one
 
       operation = "insert"
     } else if (OUTPUT_TYPES.includes(role)) {
@@ -248,26 +252,20 @@ export const ingestChatEvent = async (run: Event): Promise<void> => {
 
   if (operation === "insert") {
     update.type = "chat"
-    update.created_at = timestamp
-    update.ended_at = timestamp
-    update.parent_run = run.parentRunId
+    update.createdAt = timestamp
+    update.endedAt = timestamp
+    update.parentRun = run.parentRunId
 
     await sql`
-      INSERT INTO run ${sql(
-        update,
-        "type",
-        "created_at",
-        "ended_at",
-        "parent_run",
-      )}
+      INSERT INTO run ${sql({ ...shared, ...update })}
     `
   } else if (operation === "update") {
-    update.ended_at = timestamp
+    update.endedAt = timestamp
 
     await sql`
-      UPDATE run
-      SET ${sql(update, "ended_at")}
-      WHERE id = ${previousRun.id}
+      UPDATE run SET ${sql({ ...shared, ...update })} WHERE id = ${
+        previousRun.id
+      }
     `
   }
 }

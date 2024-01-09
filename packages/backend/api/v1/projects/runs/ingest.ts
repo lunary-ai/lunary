@@ -1,11 +1,18 @@
 import sql from "@/utils/db"
 import { Context } from "koa"
 import Router from "koa-router"
-import { Event, cleanEvent, ingestChatEvent } from "@/utils/ingest"
+import {
+  CleanRun,
+  Event,
+  cleanEvent,
+  clearUndefined,
+  ingestChatEvent,
+} from "@/utils/ingest"
 
-const router = new Router({})
+const router = new Router()
 
 const registerRunEvent = async (
+  projectId: string,
   event: Event,
   insertedIds: Set<string>,
   allowRetry = true,
@@ -13,7 +20,6 @@ const registerRunEvent = async (
   let {
     timestamp,
     type,
-    app,
     userId,
     templateId,
     userProps,
@@ -30,7 +36,7 @@ const registerRunEvent = async (
     feedback,
     metadata,
     runtime,
-  } = event
+  } = event as CleanRun
 
   if (!tags) {
     tags = metadata?.tags
@@ -46,8 +52,14 @@ const registerRunEvent = async (
   // Only do on start event to save on DB calls and have correct lastSeen
   if (typeof userId === "string" && !["end", "error"].includes(eventName)) {
     const [result] = await sql`
-      INSERT INTO app_user (external_id, last_seen, app, props)
-      VALUES (${userId}, ${timestamp}, ${app}, ${sql.json(userProps)})
+      INSERT INTO app_user ${sql(
+        clearUndefined({
+          externalId: userId,
+          lastSeen: timestamp,
+          app: projectId,
+          props: userProps,
+        }),
+      )}
       ON CONFLICT (external_id, app)
       DO UPDATE SET
         last_seen = EXCLUDED.last_seen,
@@ -62,7 +74,7 @@ const registerRunEvent = async (
     // Check if parent run exists
 
     const [data] = await sql`
-      SELECT user
+      SELECT "user"
       FROM run
       WHERE id = ${parentRunIdToUse}
     `
@@ -73,7 +85,7 @@ const registerRunEvent = async (
       // So we retry once after 5s
       // A cleaner solution would be to use a queue, but this is simpler for now
 
-      console.warn(`Error getting parent run user: ${error.message}`)
+      console.warn(`Error getting parent run user.`)
 
       if (allowRetry) {
         console.log(
@@ -82,7 +94,7 @@ const registerRunEvent = async (
 
         await new Promise((resolve) => setTimeout(resolve, 2000))
 
-        return await registerRunEvent(event, insertedIds, false)
+        return await registerRunEvent(projectId, event, insertedIds, false)
       } else {
         // Prevent foreign key constraint error
         parentRunIdToUse = undefined
@@ -98,56 +110,47 @@ const registerRunEvent = async (
   switch (eventName) {
     case "start":
       await sql`
-        INSERT INTO run (
-          type,
-          id,
-          user,
-          created_at,
-          app,
-          tags,
-          name,
-          status,
-          params,
-          template_version_id,
-          parent_run,
-          input,
-          runtime
-        ) VALUES (
-          ${type},
-          ${runId},
-          ${internalUserId},
-          ${timestamp},
-          ${app},
-          ${tags},
-          ${name},
-          'started',
-          ${sql.json(extra)},
-          ${templateId},
-          ${parentRunIdToUse},
-          ${input},
-          ${runtime}
-        )
+        INSERT INTO run ${sql(
+          clearUndefined({
+            type,
+            app: projectId,
+            id: runId,
+            user: internalUserId,
+            createdAt: timestamp,
+            tags,
+            name,
+            status: "started",
+            params: extra,
+            templateVersionId: templateId,
+            parentRun: parentRunIdToUse,
+            input,
+            runtime,
+          }),
+        )}
       `
+
       break
     case "end":
       await sql`
         UPDATE run
-        SET
-          ended_at = ${timestamp},
-          output = ${output},
-          status = 'success',
-          prompt_tokens = ${tokensUsage?.prompt},
-          completion_tokens = ${tokensUsage?.completion}
+        SET ${sql({
+          endedAt: timestamp,
+          output: output,
+          status: "success",
+          promptTokens: tokensUsage?.prompt,
+          completionTokens: tokensUsage?.completion,
+        })}
         WHERE id = ${runId}
       `
       break
     case "error":
       await sql`
         UPDATE run
-        SET
-          ended_at = ${timestamp},
-          status = 'error',
-          error = ${error}
+        SET ${sql({
+          endedAt: timestamp,
+          status: "error",
+          error: error,
+        })}
         WHERE id = ${runId}
       `
       break
@@ -169,7 +172,7 @@ const registerRunEvent = async (
       `
       break
     case "chat":
-      await ingestChatEvent({
+      await ingestChatEvent(projectId, {
         user: internalUserId,
         ...event,
       })
@@ -179,33 +182,43 @@ const registerRunEvent = async (
   insertedIds.add(runId)
 }
 
-const registerLogEvent = async (event: Event): Promise<void> => {
-  const { event: eventName, app, parentRunId, message, extra } = event
+const registerLogEvent = async (
+  projectId: string,
+  event: Event,
+): Promise<void> => {
+  const { event: eventName, parentRunId, message, extra } = event
+
+  if (parentRunId === undefined || eventName === undefined) {
+    throw new Error("parentRunId and eventName must be defined")
+  }
 
   await sql`
     INSERT INTO log (run, app, level, message, extra)
-    VALUES (${parentRunId}, ${app}, ${eventName}, ${message}, ${sql.json(
+    VALUES (${parentRunId}, ${projectId}, ${eventName}, ${message}, ${sql.json(
       extra || {},
     )})
   `
 }
 
 const registerEvent = async (
+  projectId: string,
   event: Event,
   insertedIds: Set<string>,
 ): Promise<void> => {
   const { type } = event
 
   if (type === "log") {
-    await registerLogEvent(event)
+    await registerLogEvent(projectId, event)
     return
   }
 
-  await registerRunEvent(event, insertedIds)
+  await registerRunEvent(projectId, event, insertedIds)
 }
 
 router.post("/", async (ctx: Context) => {
   // export default async function handler(req: NextRequest) {
+
+  const projectId = ctx.params.projectId as string
 
   const { events } = ctx.request.body as {
     events: Event | Event[]
@@ -215,8 +228,7 @@ router.post("/", async (ctx: Context) => {
   const insertedIds = new Set<string>()
 
   if (!events) {
-    console.error("Missing events payload.")
-    return cors(req, new Response("Missing events payload.", { status: 400 }))
+    throw new Error("Missing events payload.")
   }
 
   // Event processing order is important for foreign key constraints
@@ -225,7 +237,7 @@ router.post("/", async (ctx: Context) => {
   )
 
   const results: {
-    id: string
+    id?: string
     success: boolean
     error?: string
   }[] = []
@@ -234,7 +246,7 @@ router.post("/", async (ctx: Context) => {
     try {
       const cleanedEvent = await cleanEvent(event)
 
-      await registerEvent(cleanedEvent, insertedIds)
+      await registerEvent(projectId, cleanedEvent, insertedIds)
 
       results.push({
         id: event.runId,
@@ -251,12 +263,7 @@ router.post("/", async (ctx: Context) => {
     }
   }
 
-  return cors(
-    req,
-    jsonResponse(200, {
-      results,
-    }),
-  )
+  ctx.body = { results }
 })
 
 export default router

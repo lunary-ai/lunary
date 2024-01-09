@@ -19,7 +19,6 @@ interface Query {
   startTime?: string
   endTime?: string
   parentRunId?: string
-
   limit?: string
   page?: string
   order?: string
@@ -54,7 +53,7 @@ const formatRun = (run: any) => ({
   },
 })
 
-// runs.use(ingest)
+runs.use("/ingest", ingest.routes())
 
 runs.get("/", async (ctx) => {
   const projectId = ctx.params.projectId as string
@@ -161,7 +160,11 @@ runs.get("/", async (ctx) => {
 
 runs.get("/usage", async (ctx) => {
   const projectId = ctx.params.projectId as string
-  const { days, userId, daily } = ctx.query
+  const { days, userId, daily } = ctx.query as {
+    days: string
+    userId: string
+    daily: string
+  }
 
   const daysNum = parseInt(days, 10)
   const userIdNum = userId ? parseInt(userId, 10) : null
