@@ -216,7 +216,7 @@ export default function AppAnalytics() {
                   <Button
                     color="red"
                     onClick={() => {
-                      drop({ id: project?.id })
+                      drop(project.id)
                       setProjectId(null)
                       Router.push("/")
                     }}

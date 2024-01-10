@@ -33,6 +33,7 @@ export function getColorForRunType(type) {
 }
 
 export function getUserColor(scheme, theme, id: string) {
+  if (!id) return theme.colors.gray[4]
   const seed = id
     .split("")
     .map((char) => char.charCodeAt(0))

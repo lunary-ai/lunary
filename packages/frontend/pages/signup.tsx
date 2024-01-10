@@ -26,7 +26,6 @@ import Cal, { getCalApi } from "@calcom/embed-react"
 
 import { useForm } from "@mantine/form"
 import { notifications } from "@mantine/notifications"
-import { useSessionContext } from "@supabase/auth-helpers-react"
 import {
   IconAnalyze,
   IconArrowRight,
@@ -44,14 +43,15 @@ import analytics from "@/utils/analytics"
 import errorHandler from "@/utils/errorHandler"
 import { NextSeo } from "next-seo"
 import SocialProof from "@/components/Blocks/SocialProof"
-import { fetcher } from "@/utils/swr"
+import { fetcher } from "@/utils/fetcher"
 import { signUp } from "supertokens-auth-react/recipe/emailpassword"
+import { useSessionContext } from "supertokens-auth-react/recipe/session"
 
 function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
 
-  const { session, isLoading, supabaseClient } = useSessionContext()
+  const session = useSessionContext()
 
   const form = useForm({
     initialValues: {
@@ -72,23 +72,23 @@ function SignupPage() {
         val.length <= 3 ? "Can you pick something longer?" : null,
       employeeCount: (val) =>
         val.length <= 1 ? "Please select a value" : null,
-      password: (val) =>
-        val.length < 6 ? "Password must be at least 6 characters" : null,
+      password: (val) => {
+        if (val.length < 6) {
+          return "Password must be at least 6 characters"
+        }
+
+        if (!/\d/.test(val)) {
+          return "Password must contain at least one number"
+        }
+        return null
+      },
     },
   })
 
   useEffect(() => {
-    if (session && !isLoading && step === 1) Router.push("/")
-  }, [isLoading, session, step])
-
-  function signup(email, password, other) {
-    const formFields = [
-      { id: "email", value: email },
-      { id: "password", value: password },
-      { id: "other", value: other },
-    ]
-    // fetcher.post("/auth/signup", { arg: { formFields } })
-  }
+    if (!session.loading && session.doesSessionExist && step === 1)
+      Router.push("/")
+  }, [session, step])
 
   const handleSignup = async ({
     email,
@@ -110,8 +110,8 @@ function SignupPage() {
     const ok = await errorHandler(
       signUp({
         formFields: [
-          { id: "email", value: "test@sldfkjsdf.com" },
-          { id: "password", value: "password123" },
+          { id: "email", value: email },
+          { id: "password", value: password },
           { id: "name", value: name },
           { id: "projectName", value: projectName },
           { id: "orgName", value: orgName },

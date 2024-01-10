@@ -6,7 +6,7 @@ import useSWRInfinite from "swr/infinite"
 import { ProjectContext } from "./context"
 import { getUserColor } from "./colors"
 import useSWRMutation from "swr/mutation"
-import { fetcher } from "./swr"
+import { fetcher } from "./fetcher"
 import { calcRunCost } from "./calcCosts"
 
 // TODO: put in other file
@@ -28,8 +28,6 @@ export function useProjectSWR(key: string, ...args: any[]) {
 
 export function useProjectMutation(key: string, ...args: any[]) {
   const { projectId } = useContext(ProjectContext)
-
-  // const key
 
   return useSWRMutation(
     projectId && key ? `/projects/${projectId}${key}` : null,
@@ -121,15 +119,27 @@ export function useOrg() {
 
 export function useProjects() {
   const { org } = useOrg()
-  const { data, isLoading } = useSWR(() => org && `/orgs/${org.id}/projects`)
+  const { data, isLoading, mutate } = useSWR(
+    () => org && `/orgs/${org.id}/projects`,
+  )
 
-  // TODO: mutations
+  async function insert(projectName: string) {
+    const project = await fetcher.post(`/orgs/${org.id}/projects`, {
+      name: projectName,
+    })
+    mutate([...data, project])
+  }
+
+  async function drop(projectId: string) {
+    await fetcher.delete(`/orgs/${org.id}/projects/${projectId}`)
+    mutate(data.filter((p) => p.id !== projectId))
+  }
 
   return {
     projects: data || [],
     loading: isLoading,
-    insert: () => {},
-    drop: () => {},
+    insert,
+    drop,
     update: () => {},
   }
 }
@@ -214,24 +224,32 @@ export function useLogs(
   type: "llm" | "trace" | "thread" | "chat",
   parentRunId?: string,
 ) {
-  const parentRunIdStr = parentRunId ? `&parentRunId=${parentRunId}` : ""
-  // TODO: use a query param builder
+  const PAGE_SIZE = 1
+  const parentRunIdStr = parentRunId ? `&parentRunId=${parentRunId}` : "" // TODO: use a query param builder
   const { projectId } = useContext(ProjectContext)
   function getKey(pageIndex, previousPageData) {
-    if (previousPageData && !previousPageData.length) return null
-    return `/projects/${projectId}/runs?type=${type}&page=${pageIndex}&limit=100${parentRunIdStr}`
+    return `/projects/${projectId}/runs?type=${type}&page=${pageIndex}&limit=${PAGE_SIZE}${parentRunIdStr}`
   }
 
   const { data, isLoading, isValidating, size, setSize } =
     useSWRInfinite(getKey)
 
   function loadMore() {
-    setSize(size + 1)
+    const hasMore = data && data[data.length - 1]?.length >= PAGE_SIZE
+
+    if (hasMore) {
+      setSize((size) => size + 1)
+    }
   }
 
   const logs = data ? [].concat(...data) : []
 
-  return { logs, loading: isLoading, validating: isValidating, loadMore }
+  return {
+    logs,
+    loading: isLoading,
+    validating: isValidating,
+    loadMore,
+  }
 }
 
 export function useRun(id: string, initialData?: any) {

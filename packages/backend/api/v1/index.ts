@@ -1,8 +1,9 @@
 import Router from "koa-router"
-import projects from "./projects"
 import orgs from "./orgs"
+import projects from "./projects"
 
 import users from "./users"
+import auth from "../auth"
 
 const v1 = new Router({
   prefix: "/v1",

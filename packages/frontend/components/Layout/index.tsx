@@ -35,6 +35,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const { org } = useOrg()
 
   const session = useSessionContext()
+  console.log(session)
 
   const isPromptPage = router.pathname.startsWith("/prompt")
 
@@ -56,8 +57,15 @@ export default function Layout({ children }: { children: ReactNode }) {
       Router.push("/maintenance")
     }
 
-    if (isAuthPage || isPublicPage || session.loading || session) return
+    if (
+      isAuthPage ||
+      isPublicPage ||
+      session.loading ||
+      session.doesSessionExist
+    )
+      return
 
+    Router.push("/login")
     if (!user && !userLoading && error) {
       signOut()
     } else {

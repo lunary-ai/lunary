@@ -8,11 +8,8 @@ const users = new Router({
 
 // router.get("/profile", verifySession(), async (ctx: SessionContext) => {
 users.get("/me", async (ctx: Context) => {
-  // TODO: get user id from supertokens
-  // const userId = ctx.session!.getUserId()
-  const userId = "aa0c13b0-4e44-4f06-abc9-f364974972e4"
+  const userId = ctx.session!.getUserId()
 
-  // TODO: (low priority) merge queries
   const [user] = await sql`
       select
         id,
@@ -28,9 +25,9 @@ users.get("/me", async (ctx: Context) => {
 })
 
 users.get("/me/org", async (ctx: Context) => {
-  // TODO: supertoken session
-  const userId = "aa0c13b0-4e44-4f06-abc9-f364974972e4"
+  const userId = ctx.session!.getUserId()
 
+  // TODO: (low priority) merge queries
   const [org] = await sql`
       select
         id,

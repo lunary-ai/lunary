@@ -3,6 +3,7 @@ import { Context } from "koa"
 import Router from "koa-router"
 
 import ingest from "./ingest"
+import { fileExport } from "./export"
 
 const runs = new Router({
   prefix: "/runs",
@@ -14,6 +15,7 @@ interface Query {
   models?: string[]
   tags?: string[]
   tokens?: string
+  exportType?: "csv" | "jsonl"
   minDuration?: string
   maxDuration?: string
   startTime?: string
@@ -71,6 +73,7 @@ runs.get("/", async (ctx) => {
     maxDuration,
     startTime,
     endTime,
+    exportType,
   } = ctx.query as Query
 
   if (!type) {
@@ -155,6 +158,10 @@ runs.get("/", async (ctx) => {
       offset ${Number(page) * Number(limit)}`
 
   const runs = rows.map(formatRun)
+
+  if (exportType) {
+    return fileExport(runs, exportType, ctx)
+  }
 
   ctx.body = runs
 })

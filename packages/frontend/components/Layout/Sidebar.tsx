@@ -23,14 +23,12 @@ import {
   IconUsers,
 } from "@tabler/icons-react"
 
-import { useSessionContext } from "@supabase/auth-helpers-react"
-
 import UserAvatar from "@/components/Blocks/UserAvatar"
+import { signOut } from "@/utils/auth"
 import { useOrg, useUser } from "@/utils/dataHooks"
 import Link from "next/link"
 import Router, { useRouter } from "next/router"
 import { openUpgrade } from "./UpgradeModal"
-import { signOut } from "@/utils/auth"
 
 const menu = [
   { label: "Analytics", icon: IconTimeline, link: "/analytics" },
@@ -59,8 +57,6 @@ function NavbarLink({ icon: Icon, label, link, active }) {
 
 export default function Sidebar() {
   const router = useRouter()
-
-  const { supabaseClient } = useSessionContext()
 
   const { user } = useUser()
   const { org } = useOrg()

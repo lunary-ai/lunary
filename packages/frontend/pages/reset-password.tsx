@@ -8,14 +8,14 @@ import {
 } from "@mantine/core"
 
 import { useForm } from "@mantine/form"
-import { useSupabaseClient } from "@supabase/auth-helpers-react"
 import { IconAnalyze, IconCheck } from "@tabler/icons-react"
 
+import errorHandler from "@/utils/errorHandler"
 import { notifications } from "@mantine/notifications"
 import { NextSeo } from "next-seo"
 import Router, { useRouter } from "next/router"
 import { useState } from "react"
-import errorHandler from "@/utils/errorHandler"
+import { submitNewPassword } from "supertokens-web-js/recipe/emailpassword"
 
 export default function UpdatePassword() {
   const [loading, setLoading] = useState(false)
@@ -32,8 +32,17 @@ export default function UpdatePassword() {
     },
 
     validate: {
-      password: (val) =>
-        val.length < 5 ? "Password must be at least 5 characters" : null,
+      password: (val) => {
+        // TODO: refactor with other forms
+        if (val.length < 6) {
+          return "Password must be at least 6 characters"
+        }
+
+        if (!/\d/.test(val)) {
+          return "Password must contain at least one number"
+        }
+        return null
+      },
     },
   })
 
@@ -41,24 +50,23 @@ export default function UpdatePassword() {
     setLoading(true)
 
     const res = await errorHandler(
-      fetch("/api/auth/reset-password", {
-        method: "POST",
-        body: JSON.stringify({ token, newPassword: password }),
+      submitNewPassword({
+        formFields: [
+          {
+            id: "password",
+            value: password,
+          },
+        ],
       }),
     )
 
-    if (res) {
+    if (res.status === "OK") {
       notifications.show({
         icon: <IconCheck size={18} />,
         color: "teal",
         title: "Success",
         message: "Password updated successfully",
       })
-
-      // await supabaseClient.auth.signInWithPassword({
-      //   email,
-      //   password,
-      // })
 
       Router.push("/")
     }
