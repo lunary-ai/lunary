@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
+import { jsonrepair } from "jsonrepair"
 
 import {
   Badge,
@@ -8,6 +9,8 @@ import {
   Checkbox,
   Grid,
   Group,
+  JsonInput,
+  Modal,
   NumberInput,
   SegmentedControl,
   Select,
@@ -68,22 +71,6 @@ const availableModels = [
   "meta-llama/llama-2-70b-chat",
 ]
 
-function createChunkDecoder() {
-  const decoder = new TextDecoder()
-
-  return function (chunk: Uint8Array | undefined): string {
-    if (!chunk) return ""
-    return decoder.decode(chunk, { stream: true })
-  }
-}
-
-function convertOpenAImessage(msg) {
-  return {
-    role: msg.role.replace("assistant", "ai"),
-    content: msg.content,
-    toolsCall: msg.tools_call,
-  }
-}
 const ParamItem = ({ name, value }) => (
   <Group justify="space-between">
     <Text size="sm">{name}</Text>
@@ -129,8 +116,11 @@ function Playground() {
 
   const [streaming, setStreaming] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [output, setOutput] = useState(null)
+  const [output, setOutput] = useState<any>(null)
+  const [outputTokens, setOutputTokens] = useState<any>(null)
   const [error, setError] = useState(null)
+  const [tempJSON, setTempJSON] = useState<any>("")
+  const [jsonModalOpened, setJsonModalOpened] = useState(false)
 
   useHotkeys([
     [
@@ -285,13 +275,15 @@ function Playground() {
 
     analytics.track("RunPlayground", {
       model,
-      appId: project?.id,
     })
 
     if (!org?.playAllowance) {
       return openUpgrade("playground")
     }
 
+    setError(null)
+    setOutput(null)
+    setOutputTokens(0)
     setStreaming(true)
 
     try {
@@ -316,11 +308,12 @@ function Playground() {
         throw new Error("Error creating a stream from the response.")
       }
 
-      let streamedResponse = ""
       let responseMessage = {
         content: "",
         role: "assistant",
       }
+
+      const decoder = new TextDecoder()
 
       while (true) {
         const { done, value } = await reader.read()
@@ -328,12 +321,16 @@ function Playground() {
           break
         }
 
-        console.log(value)
-
         // // Update the chat state with the new message tokens.
-        streamedResponse += createChunkDecoder()(value)
+        const chunk = decoder.decode(value, { stream: true }).trim().split("\n")
 
-        console.log(streamedResponse)
+        for (const item of chunk) {
+          console.log({ item })
+          const parsedLine = JSON.parse(item)
+
+          setOutput(parsedLine.choices[0]?.message)
+          setOutputTokens(parsedLine.tokens)
+        }
 
         // if (streamedResponse.startsWith('{"function_call":')) {
         //   // While the function call is streaming, it will be a string.
@@ -342,22 +339,17 @@ function Playground() {
         //   responseMessage["content"] = streamedResponse
         // }
 
-        // setOutput(convertOpenAImessage(responseMessage))
+        // setOutput({
+        //   role: "assistant",
+        //   content: responseMessage.content,
+        //   toolCalls: responseMessage.toolCalls,
+        // })
 
         // The request has been aborted, stop reading the stream.
         // if (abortControllerRef.current === null) {
         // reader.cancel()
         // break
         // }
-      }
-
-      if (streamedResponse.startsWith('{"function_call":')) {
-        // Once the stream is complete, the function call is parsed into an object.
-        const parsedFunctionCall = JSON.parse(streamedResponse).function_call
-
-        responseMessage["function_call"] = parsedFunctionCall
-
-        setOutput(convertOpenAImessage(responseMessage))
       }
     } catch (e) {
       console.error(e)
@@ -446,6 +438,7 @@ function Playground() {
             saveTemplate={saveTemplate}
             setHasChanges={setHasChanges}
             output={output}
+            outputTokens={outputTokens}
             error={error}
           />
         </Box>
@@ -614,6 +607,105 @@ function Playground() {
                 name="Stream"
                 value={<Checkbox {...extraHandler("stream", true)} />}
               />
+
+              {template?.mode === "openai" && (
+                <ParamItem
+                  name="Tool Calls"
+                  value={
+                    <>
+                      <Modal
+                        size="lg"
+                        opened={jsonModalOpened}
+                        onClose={() => setJsonModalOpened(false)}
+                        title="Tool Calls Definition"
+                      >
+                        <JsonInput
+                          autosize
+                          mr="sm"
+                          placeholder={`[{
+  type: "function",
+  function: {
+    name: "get_current_weather",
+    description: "Get the current weather in a given location",
+    parameters: {
+      type: "object",
+      properties: {
+        location: {
+          type: "string",
+          description: "The city and state, e.g. San Francisco, CA",
+        },
+        unit: { type: "string", enum: ["celsius", "fahrenheit"] },
+      },
+    },
+  },
+}]`}
+                          // defaultValue={tempJSON}
+                          value={tempJSON}
+                          onChange={(val) => {
+                            setTempJSON(val)
+                          }}
+                        />
+                        <Button
+                          mt="sm"
+                          ml="auto"
+                          onClick={() => {
+                            try {
+                              const empty = !tempJSON?.trim().length
+
+                              if (!empty && tempJSON?.trim()[0] !== "[") {
+                                throw "Not an array"
+                              }
+
+                              setHasChanges(true)
+                              setTemplateVersion({
+                                ...templateVersion,
+                                extra: {
+                                  ...templateVersion.extra,
+                                  tools: tempJSON?.trim().length
+                                    ? JSON.parse(jsonrepair(tempJSON.trim()))
+                                    : undefined,
+                                },
+                              })
+                              setJsonModalOpened(false)
+                            } catch (e) {
+                              console.error(e)
+                              notifications.show({
+                                title:
+                                  "Error parsing JSON. Please enter a valid OpenAI tools array.",
+                                message: "Click here to open the docs.",
+                                color: "red",
+                                onClick: () =>
+                                  window.open(
+                                    "https://platform.openai.com/docs/guides/function-calling",
+                                    "_blank",
+                                  ),
+                              })
+                            }
+                          }}
+                        >
+                          Save
+                        </Button>
+                      </Modal>
+                      <Button
+                        size="compact-xs"
+                        variant="outline"
+                        onClick={() => {
+                          setTempJSON(
+                            JSON.stringify(
+                              templateVersion?.extra?.tools,
+                              null,
+                              2,
+                            ),
+                          )
+                          setJsonModalOpened(true)
+                        }}
+                      >
+                        Edit
+                      </Button>
+                    </>
+                  }
+                />
+              )}
             </>
           )}
 
@@ -682,7 +774,7 @@ function Playground() {
                 <HotkeysInfo hot="Enter" size="sm" style={{ marginTop: -4 }} />
               }
             >
-              Run
+              {template?.id ? "Test template" : "Run"}
             </Button>
           )}
         </Stack>
