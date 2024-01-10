@@ -39,7 +39,7 @@ orgs.get("/", async (ctx: Context) => {
 orgs.patch("/", async (ctx: Context) => {
   const orgId = ctx.params.orgId as string
 
-  const name = (ctx.request.body as { name: string }).name
+  const { name } = ctx.request.body as { name: string }
 
   await sql`
       update org
@@ -226,6 +226,22 @@ const compileTemplate = (
 orgs.post("/playground", async (ctx: Context) => {
   const orgId = ctx.params.orgId as string
 
+  const { content, extra, testValues } = ctx.request.body as {
+    content: any[]
+    extra: any
+    testValues: Record<string, string>
+  }
+
+  // ctx.request.socket.setTimeout(0)
+  // ctx.request.socket.setNoDelay(true)
+  // ctx.request.socket.setKeepAlive(true)
+
+  ctx.set({
+    // "Content-Type": "text/plain",
+    "Cache-Control": "no-cache",
+    Connection: "keep-alive",
+  })
+
   const [org] = await sql`
     select play_allowance
     from org
@@ -244,12 +260,6 @@ orgs.post("/playground", async (ctx: Context) => {
     set play_allowance = play_allowance - 1
     where id = ${orgId}
   `
-
-  const { content, extra, testValues } = ctx.request.body as {
-    content: any[]
-    extra: any
-    testValues: Record<string, string>
-  }
 
   let copy = [...content]
 
@@ -287,13 +297,15 @@ orgs.post("/playground", async (ctx: Context) => {
     method = openai.chat.completions.create.bind(openai.chat.completions)
   }
 
-  const response = await method({
+  const openai = new OpenAI()
+
+  const response = await openai.chat.completions.create({
     model,
     messages,
     temperature: extra?.temperature,
     max_tokens: extra?.max_tokens,
     top_p: extra?.top_p,
-    top_k: extra?.top_k,
+    // top_k: extra?.top_k,
     presence_penalty: extra?.presence_penalty,
     frequency_penalty: extra?.frequency_penalty,
     stop: extra?.stop,
@@ -303,9 +315,15 @@ orgs.post("/playground", async (ctx: Context) => {
     stream: true,
   })
 
-  const stream = OpenAIStream(response)
+  // const stream = OpenAIStream(response)
 
-  ctx.response.body = new StreamingTextResponse(stream)
+  // console.log("stream", stream)
+  // console.log(new StreamingTextResponse(stream))
+
+  ctx.status = 200
+  ctx.body = response
+
+  // console.log
 })
 
 export default orgs

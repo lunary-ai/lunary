@@ -299,11 +299,13 @@ function Playground() {
         `${process.env.NEXT_PUBLIC_API_URL}/v1/orgs/${org?.id}/playground`,
         {
           method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({
             content: templateVersion.content,
             extra: templateVersion.extra,
             testValues: templateVersion.testValues,
-            appId: project?.id,
           }),
         },
       )
@@ -311,7 +313,7 @@ function Playground() {
       const reader = fetchResponse?.body?.getReader()
 
       if (!reader) {
-        throw new Error("No reader")
+        throw new Error("Error creating a stream from the response.")
       }
 
       let streamedResponse = ""
@@ -325,17 +327,22 @@ function Playground() {
         if (done) {
           break
         }
-        // Update the chat state with the new message tokens.
+
+        console.log(value)
+
+        // // Update the chat state with the new message tokens.
         streamedResponse += createChunkDecoder()(value)
 
-        if (streamedResponse.startsWith('{"function_call":')) {
-          // While the function call is streaming, it will be a string.
-          responseMessage["function_call"] = streamedResponse
-        } else {
-          responseMessage["content"] = streamedResponse
-        }
+        console.log(streamedResponse)
 
-        setOutput(convertOpenAImessage(responseMessage))
+        // if (streamedResponse.startsWith('{"function_call":')) {
+        //   // While the function call is streaming, it will be a string.
+        //   responseMessage["function_call"] = streamedResponse
+        // } else {
+        //   responseMessage["content"] = streamedResponse
+        // }
+
+        // setOutput(convertOpenAImessage(responseMessage))
 
         // The request has been aborted, stop reading the stream.
         // if (abortControllerRef.current === null) {
