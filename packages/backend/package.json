@@ -7,6 +7,7 @@
     "@types/koa-logger": "^3.1.5",
     "@types/koa__cors": "^5.0.0",
     "@types/koa__router": "^12.0.4",
+    "@types/node-cron": "^3.0.11",
     "bun-types": "latest"
   },
   "scripts": {
@@ -22,13 +23,13 @@
     "@types/koa": "^2.13.12",
     "@types/koa-router": "^7.4.8",
     "ai": "^2.2.31",
-    "drizzle-orm": "^0.29.3",
     "jose": "^5.2.0",
     "koa": "^2.15.0",
     "koa-bodyparser": "^4.4.1",
     "koa-logger": "^3.2.1",
     "koa-router": "^12.0.1",
     "litellm": "^0.12.0",
+    "node-cron": "^3.0.3",
     "postgres": "^3.4.3",
     "stripe": "^14.11.0",
     "supertokens-node": "^16.6.8"
