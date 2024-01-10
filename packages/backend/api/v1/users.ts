@@ -13,6 +13,7 @@ users.get("/me", async (ctx: Context) => {
   const [user] = await sql`
       select
         id,
+        name,
         email,
         verified
       from

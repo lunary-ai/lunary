@@ -148,7 +148,7 @@ export function useCurrentProject() {
   const { projectId, setProjectId } = useContext(ProjectContext)
   const { projects, loading } = useProjects()
 
-  const project = projects?.find((p) => p.id === projectId)
+  const project = projects?.find((p) => p?.id === projectId)
 
   return { project, setProjectId, loading }
 }
