@@ -22,8 +22,8 @@ import {
 import { IconCheck, IconCopy } from "@tabler/icons-react"
 
 import analytics from "@/utils/analytics"
+import { useCurrentProject, useProjects } from "@/utils/dataHooks"
 import { NextSeo } from "next-seo"
-import { useCurrentProject, useOrg, useProjects } from "@/utils/dataHooks"
 
 export default function Home() {
   const [modalOpened, setModalOpened] = useState(false)
@@ -31,10 +31,9 @@ export default function Home() {
   const { setProjectId } = useCurrentProject()
 
   const { projects, insert, loading } = useProjects()
-  const { org } = useOrg()
 
   const createApp = async () => {
-    await insert([{ name: newAppName, org_id: org?.id }])
+    await insert(newAppName)
 
     setModalOpened(false)
 

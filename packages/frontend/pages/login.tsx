@@ -10,21 +10,18 @@ import {
 } from "@mantine/core"
 
 import { useForm } from "@mantine/form"
-import { useSessionContext, useUser } from "@supabase/auth-helpers-react"
 import { IconAnalyze, IconAt } from "@tabler/icons-react"
 
-import errorHandler from "@/utils/errorHandler"
 import Router from "next/router"
 import { useEffect, useState } from "react"
 
 import analytics from "@/utils/analytics"
 import { NextSeo } from "next-seo"
 import { signIn } from "supertokens-auth-react/recipe/emailpassword"
+import { useSessionContext } from "supertokens-auth-react/recipe/session"
 
 function LoginPage() {
   const [loading, setLoading] = useState(false)
-
-  const { supabaseClient } = useSessionContext()
 
   const form = useForm({
     initialValues: {
@@ -39,11 +36,11 @@ function LoginPage() {
     },
   })
 
-  const user = useUser()
+  const session = useSessionContext()
 
   useEffect(() => {
-    if (user) Router.push("/")
-  }, [user])
+    if (!session.loading && session.doesSessionExist) Router.push("/")
+  }, [session])
 
   const handleLoginWithPassword = async ({
     email,
@@ -66,9 +63,6 @@ function LoginPage() {
         },
       ],
     })
-    // const ok = await errorHandler(
-    //   supabaseClient.auth.signInWithPassword({ email, password }),
-    // )
 
     analytics.track("Login", { method: "password" })
 

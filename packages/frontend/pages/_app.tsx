@@ -6,8 +6,6 @@ import { MantineProvider, createTheme } from "@mantine/core"
 import type { AppProps } from "next/app"
 import Head from "next/head"
 
-import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs"
-
 import Layout from "@/components/Layout"
 import AnalyticsWrapper from "@/components/Layout/Analytics"
 import { Database } from "@/utils/supaTypes"
@@ -15,7 +13,7 @@ import { DefaultSeo } from "next-seo"
 import Link from "next/link"
 import { useState } from "react"
 
-import { fetcher } from "@/utils/swr"
+import { fetcher } from "@/utils/fetcher"
 import localFont from "next/font/local"
 import { SWRConfig } from "swr"
 
@@ -110,8 +108,6 @@ const theme = createTheme({
 })
 
 export default function App({ Component, pageProps }: AppProps) {
-  const [supabase] = useState(() => createPagesBrowserClient<Database>())
-
   return (
     <>
       <style jsx global>{`

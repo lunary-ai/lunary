@@ -7,4 +7,14 @@ const sql = postgres(process.env.DB_URI!, {
   },
 })
 
+export async function checkDbConnection() {
+  try {
+    await sql`select 1`
+    console.log("✅ Connected to database")
+  } catch (error) {
+    console.error("❌ Could not connect to database")
+    process.exit(1)
+  }
+}
+
 export default sql

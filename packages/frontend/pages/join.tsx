@@ -15,7 +15,6 @@ import {
 } from "@mantine/core"
 
 import { useForm } from "@mantine/form"
-import { useSessionContext, useUser } from "@supabase/auth-helpers-react"
 import { IconAnalyze, IconAt, IconCheck, IconUser } from "@tabler/icons-react"
 
 import Router from "next/router"
@@ -25,6 +24,8 @@ import { NextSeo } from "next-seo"
 import { notifications } from "@mantine/notifications"
 import Confetti from "react-confetti"
 import sql from "@/lib/db"
+import { useSessionContext } from "supertokens-auth-react/recipe/session"
+import { signUp } from "supertokens-auth-react/recipe/emailpassword"
 
 export async function getServerSideProps(context) {
   const { orgId } = context.query
@@ -70,8 +71,6 @@ function TeamFull({ orgName }) {
   )
 }
 export default function Join({ orgUserCount, orgName }) {
-  const { supabaseClient } = useSessionContext()
-
   const searchParams = useSearchParams()
   const orgId = searchParams.get("orgId")
 
@@ -93,11 +92,11 @@ export default function Join({ orgUserCount, orgName }) {
     },
   })
 
-  const user = useUser()
+  const session = useSessionContext()
 
   useEffect(() => {
-    if (user) Router.push("/")
-  }, [user])
+    if (session) Router.push("/")
+  }, [session])
 
   const handleSignup = async ({
     email,
@@ -111,16 +110,14 @@ export default function Join({ orgUserCount, orgName }) {
     setLoading(true)
 
     const ok = await errorHandler(
-      supabaseClient.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            signupMethod: "join",
-            orgId,
-          },
-        },
+      signUp({
+        formFields: [
+          { id: "email", value: email },
+          { id: "password", value: password },
+          { id: "name", value: name },
+          { id: "orgName", value: orgName },
+          { id: "signupMethod", value: "signup" },
+        ],
       }),
     )
 

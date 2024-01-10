@@ -9,7 +9,6 @@ import {
 } from "@mantine/core"
 
 import { useForm } from "@mantine/form"
-import { useSessionContext, useUser } from "@supabase/auth-helpers-react"
 import { IconAnalyze, IconCheck } from "@tabler/icons-react"
 
 import errorHandler from "@/utils/errorHandler"
@@ -20,7 +19,6 @@ import { notifications } from "@mantine/notifications"
 
 export default function UpdatePassword() {
   const [loading, setLoading] = useState(false)
-  const { supabaseClient } = useSessionContext()
 
   const form = useForm({
     initialValues: {
@@ -33,12 +31,11 @@ export default function UpdatePassword() {
     },
   })
 
-  const user = useUser()
-
   const handlePasswordReset = async ({ password }: { password: string }) => {
     setLoading(true)
 
-    const ok = await errorHandler(supabaseClient.auth.updateUser({ password }))
+    // TODO: reset password with supertoken
+    const ok = true
 
     notifications.show({
       icon: <IconCheck size={18} />,

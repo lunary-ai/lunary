@@ -26,7 +26,7 @@ import errorHandler from "@/utils/errorHandler"
 import { notifications } from "@mantine/notifications"
 import { capitalize } from "@/utils/format"
 import { useOrg } from "@/utils/dataHooks"
-import { fetcher } from "@/utils/swr"
+import { fetcher } from "@/utils/fetcher"
 
 const PlanFeatures = ({ features, highlight }) => {
   return (

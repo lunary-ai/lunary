@@ -1,12 +1,12 @@
 import sql from "@/utils/db"
 import Router from "koa-router"
-import { Context } from "koa"
 import stripe from "@/utils/stripe"
 import { OpenAIStream, StreamingTextResponse } from "ai"
 import OpenAI from "openai"
 import { completion } from "litellm"
+import { z } from "zod"
+import Context from "@/utils/koa"
 import { clearUndefined } from "@/utils/ingest"
-import { PassThrough } from "stream"
 
 const orgs = new Router({
   prefix: "/orgs/:orgId",
@@ -40,8 +40,11 @@ orgs.get("/", async (ctx: Context) => {
 
 orgs.patch("/", async (ctx: Context) => {
   const orgId = ctx.params.orgId as string
+  const bodySchema = z.object({
+    name: z.string(),
+  })
 
-  const { name } = ctx.request.body as { name: string }
+  const { name } = bodySchema.parse(ctx.request.body)
 
   await sql`
       update org
@@ -70,6 +73,36 @@ orgs.get("/projects", async (ctx: Context) => {
   `
 
   ctx.body = rows
+})
+
+orgs.post("/projects", async (ctx: Context) => {
+  const orgId = ctx.state.orgId
+
+  const bodySchema = z.object({
+    name: z.string(),
+  })
+  const { name } = bodySchema.parse(ctx.request.body)
+
+  const newProject = {
+    name,
+    orgId,
+  }
+
+  const [project] = await sql`insert into app ${sql(newProject)} returning *`
+
+  ctx.body = project
+})
+
+orgs.delete("/projects/:projectId", async (ctx: Context) => {
+  const projectId = ctx.params.projectId as string
+
+  await sql`
+    delete from app
+    where
+      id = ${projectId}
+  `
+
+  ctx.body = {}
 })
 
 orgs.get("/usage", async (ctx: Context) => {
@@ -322,12 +355,14 @@ async function handleStream(
 
 orgs.post("/playground", async (ctx: Context) => {
   const orgId = ctx.params.orgId as string
-
-  const { content, extra, testValues } = ctx.request.body as {
-    content: any[]
-    extra: any
-    testValues: Record<string, string>
-  }
+  const requestBodySchema = z.object({
+    content: z.array(z.any()),
+    extra: z.any(),
+    testValues: z.record(z.string()),
+  })
+  const { content, extra, testValues } = requestBodySchema.parse(
+    ctx.request.body,
+  )
 
   ctx.request.socket.setTimeout(0)
   ctx.request.socket.setNoDelay(true)
@@ -412,14 +447,8 @@ orgs.post("/playground", async (ctx: Context) => {
 
   const stream = new PassThrough()
   stream.pipe(ctx.res)
-
   ctx.status = 200
   ctx.body = stream
-
-  // for await (const chunk of res) {
-  //   const delta = chunk.choices[0].delta
-  //   stream.write(JSON.stringify(delta) + "\n")
-  // }
 
   handleStream(
     res,

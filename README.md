@@ -25,7 +25,7 @@ It also designed to be:
 
 - 🤖 Usable with any model, not just OpenAI
 - 📦 Easy to integrate (2 minutes)
-- 🧑‍💻 Simple to self-host (deploy to Vercel & Supabase)
+- 🧑‍💻 Simple to self-host 
 
 ## Demo
 

@@ -1,18 +1,19 @@
 import {
-  Text,
+  Button,
   Container,
   Paper,
   Stack,
-  Title,
+  Text,
   TextInput,
-  Button,
+  Title,
 } from "@mantine/core"
 import { useForm } from "@mantine/form"
+import { notifications } from "@mantine/notifications"
 import { IconAnalyze, IconAt, IconCheck } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { useState } from "react"
 import errorHandler from "../utils/errorHandler"
-import { notifications } from "@mantine/notifications"
+import { fetcher } from "@/utils/fetcher"
 
 export default function PasswordReset() {
   const [loading, setLoading] = useState(false)
@@ -31,9 +32,9 @@ export default function PasswordReset() {
     setLoading(true)
 
     const res = await errorHandler(
-      fetch("/api/auth/request-password-reset", {
+      fetcher.post("/auth/request-password-reset", {
         method: "POST",
-        body: JSON.stringify({ email }),
+        body: { email },
       }),
     )
 
@@ -46,7 +47,6 @@ export default function PasswordReset() {
           "Check your emails to verify your email. Please check your spam folder as we currently have deliverability issues.",
       })
     }
-
     setLoading(false)
   }
 

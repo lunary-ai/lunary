@@ -1,11 +1,11 @@
 import Router from "koa-router"
 import datasets from "./datasets"
-import runs from "./runs"
-import users from "./users"
-import templates from "./templates"
-import templateVersions from "./templateVersions"
-import filters from "./filters"
 import evals from "./evals"
+import filters from "./filters"
+import runs from "./runs"
+import templateVersions from "./templateVersions"
+import templates from "./templates"
+import users from "./users"
 
 const project = new Router({
   prefix: "/projects/:projectId",
