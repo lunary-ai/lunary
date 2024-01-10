@@ -345,3 +345,50 @@ export function useAppUsers(usageRange = 30) {
 
   return { users: appUsers || [], loading: isLoading }
 }
+
+export function useDatasets() {
+  const { data: datasets, isLoading, mutate } = useProjectSWR(`/datasets`)
+
+  // insert mutation
+  const { trigger: insert } = useProjectMutation(`/datasets`, fetcher.post)
+
+  return {
+    datasets,
+    insert,
+    mutate,
+    loading: isLoading,
+  }
+}
+
+export function useDataset(id: string) {
+  const {
+    data: dataset,
+    isLoading,
+    mutate,
+  } = useProjectSWR(id && `/datasets/${id}`)
+
+  const { trigger: update } = useProjectMutation(
+    `/datasets/${id}`,
+    fetcher.patch,
+  )
+
+  const { trigger: remove } = useProjectMutation(
+    `/datasets/${id}`,
+    fetcher.delete,
+  )
+
+  // insert mutation
+  const { trigger: insertRun } = useProjectMutation(
+    `/datasets/${id}/runs`,
+    fetcher.post,
+  )
+
+  return {
+    dataset,
+    insertRun,
+    update,
+    remove,
+    mutate,
+    loading: isLoading,
+  }
+}
