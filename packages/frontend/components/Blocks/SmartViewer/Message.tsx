@@ -179,9 +179,9 @@ function ChatMessageContent({
         />
       )}
 
-      {data?.toolCalls && (
+      {(data?.toolCalls || data?.tool_calls) && (
         <ToolCallsMessage
-          toolCalls={data.toolCalls}
+          toolCalls={data.toolCalls || data.tool_calls}
           color={color}
           compact={compact}
           codeBg={codeBg}

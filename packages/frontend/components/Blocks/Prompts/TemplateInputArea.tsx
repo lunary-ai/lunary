@@ -6,16 +6,19 @@ import {
   Text,
   ActionIcon,
   ScrollArea,
+  Group,
 } from "@mantine/core"
 import { IconCircleMinus, IconCirclePlus } from "@tabler/icons-react"
 import { ChatMessage } from "@/components/Blocks/SmartViewer/Message"
 import SmartViewer from "@/components/Blocks/SmartViewer"
+import TokensBadge from "../TokensBadge"
 
 interface TemplateInputAreaProps {
   template: any
   setTemplate: (template: any) => void
   setHasChanges: (hasChanges: boolean) => void
   saveTemplate: () => void
+  outputTokens: number
   output: any
   error: any
 }
@@ -26,6 +29,7 @@ const TemplateInputArea: React.FC<TemplateInputAreaProps> = ({
   saveTemplate,
   setHasChanges,
   output,
+  outputTokens,
   error,
 }) => {
   const isText = typeof template?.content === "string"
@@ -108,9 +112,12 @@ const TemplateInputArea: React.FC<TemplateInputAreaProps> = ({
 
           {(output || error) && (
             <>
-              <Text fw="bold" size="sm">
-                {error ? "Error" : "Output"}
-              </Text>
+              <Group justify="space-between">
+                <Text fw="bold" size="sm">
+                  {error ? "Error" : "Output"}
+                </Text>
+                {outputTokens && <TokensBadge tokens={outputTokens} />}
+              </Group>
 
               <SmartViewer data={output} error={error} />
             </>

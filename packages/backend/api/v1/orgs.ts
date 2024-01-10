@@ -5,6 +5,8 @@ import stripe from "@/utils/stripe"
 import { OpenAIStream, StreamingTextResponse } from "ai"
 import OpenAI from "openai"
 import { completion } from "litellm"
+import { clearUndefined } from "@/utils/ingest"
+import { PassThrough } from "stream"
 
 const orgs = new Router({
   prefix: "/orgs/:orgId",
@@ -204,13 +206,13 @@ const ANTHROPIC_MODELS = ["claude-2", "claude-2.0", "claude-instant-v1"]
 
 const convertInputToOpenAIMessages = (input: any[]) => {
   return input.map(({ role, content, text, functionCall, toolCalls, name }) => {
-    return {
+    return clearUndefined({
       role: role.replace("ai", "assistant"),
       content: content || text,
       function_call: functionCall || undefined,
       tool_calls: toolCalls || undefined,
       name: name || undefined,
-    }
+    })
   })
 }
 
@@ -223,6 +225,101 @@ const compileTemplate = (
   return content.replace(regex, (_, g1) => variables[g1] || "")
 }
 
+type ChunkResult = {
+  choices: { message: any }[]
+  tokens: number
+}
+
+async function handleStream(
+  stream: ReadableStream,
+  onNewToken: (data: ChunkResult) => void,
+  onComplete: () => void,
+  onError: (e: Error) => void,
+) {
+  try {
+    let tokens = 0
+    let choices: any[] = []
+    let res: ChunkResult
+    for await (const part of stream) {
+      // 1 chunk = 1 token
+      tokens += 1
+
+      const chunk = part.choices[0]
+
+      const { index, delta } = chunk
+
+      const { content, function_call, role, tool_calls } = delta
+
+      if (!choices[index]) {
+        choices.splice(index, 0, {
+          message: { role, content, function_call, tool_calls: [] },
+        })
+      }
+
+      if (content) choices[index].message.content += content || ""
+
+      if (role) choices[index].message.role = role
+
+      if (function_call?.name)
+        choices[index].message.function_call.name = function_call.name
+
+      if (function_call?.arguments)
+        choices[index].message.function_call.arguments +=
+          function_call.arguments
+
+      if (tool_calls) {
+        for (const tool_call of tool_calls) {
+          const existingCallIndex = choices[index].message.tool_calls.findIndex(
+            (tc) => tc.index === tool_call.index,
+          )
+
+          if (existingCallIndex === -1) {
+            choices[index].message.tool_calls.push(tool_call)
+          } else {
+            const existingCall =
+              choices[index].message.tool_calls[existingCallIndex]
+
+            if (tool_call.function?.arguments) {
+              existingCall.function.arguments += tool_call.function.arguments
+            }
+          }
+        }
+      }
+
+      res = {
+        choices,
+        tokens,
+      }
+
+      onNewToken(res)
+    }
+
+    // remove the `index` property from the tool_calls if any
+    // as it's only used to help us merge the tool_calls
+    choices = choices.map((c) => {
+      if (c.message.tool_calls) {
+        c.message.tool_calls = c.message.tool_calls.map((tc) => {
+          const { index, ...rest } = tc
+          return rest
+        })
+      }
+      return c
+    })
+
+    res = {
+      choices,
+      tokens,
+    }
+
+    onNewToken(res)
+
+    onComplete()
+  } catch (error) {
+    console.error(error)
+    onError(error)
+  }
+}
+
 orgs.post("/playground", async (ctx: Context) => {
   const orgId = ctx.params.orgId as string
 
@@ -232,12 +329,12 @@ orgs.post("/playground", async (ctx: Context) => {
     testValues: Record<string, string>
   }
 
-  // ctx.request.socket.setTimeout(0)
-  // ctx.request.socket.setNoDelay(true)
-  // ctx.request.socket.setKeepAlive(true)
+  ctx.request.socket.setTimeout(0)
+  ctx.request.socket.setNoDelay(true)
+  ctx.request.socket.setKeepAlive(true)
 
   ctx.set({
-    // "Content-Type": "text/plain",
+    "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache",
     Connection: "keep-alive",
   })
@@ -297,15 +394,13 @@ orgs.post("/playground", async (ctx: Context) => {
     method = openai.chat.completions.create.bind(openai.chat.completions)
   }
 
-  const openai = new OpenAI()
-
-  const response = await openai.chat.completions.create({
+  const res = await method({
     model,
     messages,
     temperature: extra?.temperature,
     max_tokens: extra?.max_tokens,
     top_p: extra?.top_p,
-    // top_k: extra?.top_k,
+    top_k: extra?.top_k,
     presence_penalty: extra?.presence_penalty,
     frequency_penalty: extra?.frequency_penalty,
     stop: extra?.stop,
@@ -315,15 +410,29 @@ orgs.post("/playground", async (ctx: Context) => {
     stream: true,
   })
 
-  // const stream = OpenAIStream(response)
-
-  // console.log("stream", stream)
-  // console.log(new StreamingTextResponse(stream))
+  const stream = new PassThrough()
+  stream.pipe(ctx.res)
 
   ctx.status = 200
-  ctx.body = response
+  ctx.body = stream
 
-  // console.log
+  // for await (const chunk of res) {
+  //   const delta = chunk.choices[0].delta
+  //   stream.write(JSON.stringify(delta) + "\n")
+  // }
+
+  handleStream(
+    res,
+    (data) => {
+      stream.write(JSON.stringify(data) + "\n")
+    },
+    () => {
+      stream.end()
+    },
+    () => {
+      stream.end()
+    },
+  )
 })
 
 export default orgs
