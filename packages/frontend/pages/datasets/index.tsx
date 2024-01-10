@@ -13,17 +13,18 @@ import { IconPlus } from "@tabler/icons-react"
 import { formatDateTime } from "@/utils/format"
 import { useState } from "react"
 import Router from "next/router"
+import { useDatasets } from "@/utils/dataHooks"
 
-function Dataset({ id, slug, updated_at, runs }) {
+function Dataset({ id, slug, updatedAt, runs }) {
   return (
     <Card withBorder>
-      <UnstyledButton onClick={() => Router.push(`/datasets/${slug}`)}>
+      <UnstyledButton onClick={() => Router.push(`/datasets/${id}`)}>
         <Stack gap="xs">
           <Text size="lg" w={700}>
             {slug}
           </Text>
           <Text size="sm" c="dimmed">
-            Updated {formatDateTime(updated_at)}
+            Updated {formatDateTime(updatedAt)}
           </Text>
         </Stack>
       </UnstyledButton>
@@ -31,24 +32,9 @@ function Dataset({ id, slug, updated_at, runs }) {
   )
 }
 
-const datasets = [
-  {
-    id: "1",
-    slug: "testing_dataset",
-    updated_at: "2023-06-01T00:00:00Z",
-    runs: [
-      {
-        name: "gpt-4",
-        created_at: "2021-06-01T00:00:00Z",
-        input: [{ role: "user", content: "Hello, how are you?" }],
-        output: [{ role: "assistant", content: "Hello, how are you?" }],
-      },
-    ],
-  },
-]
-
-export default function Evaluations() {
-  const [modalOpened, setModalOpened] = useState(false)
+export default function Datasets() {
+  const [setModalOpened] = useState(false)
+  const { datasets, loading, insert, mutate } = useDatasets()
 
   return (
     <Container>
@@ -65,8 +51,12 @@ export default function Evaluations() {
             leftSection={<IconPlus size={12} />}
             variant="light"
             color="blue"
-            onClick={() => {
-              setModalOpened(true)
+            onClick={async () => {
+              await insert({
+                slug: `dataset-${(datasets?.length || 0) + 1}`,
+              })
+
+              mutate()
             }}
           >
             New
@@ -78,11 +68,7 @@ export default function Evaluations() {
           fine-tuning your models.
         </Text>
 
-        <Stack>
-          {datasets.map((dataset) => (
-            <Dataset {...dataset} />
-          ))}
-        </Stack>
+        <Stack>{datasets?.map((dataset) => <Dataset {...dataset} />)}</Stack>
       </Stack>
     </Container>
   )

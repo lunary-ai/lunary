@@ -35,7 +35,7 @@ import { signOut } from "@/utils/auth"
 const menu = [
   { label: "Analytics", icon: IconTimeline, link: "/analytics" },
   { label: "Logs", icon: IconListSearch, link: "/logs" },
-  { label: "Evaluations", icon: IconShieldBolt, link: "/evaluations" },
+  { label: "Tests & Evaluations", icon: IconShieldBolt, link: "/evaluations" },
   { label: "Users", icon: IconUsers, link: "/users" },
   { label: "Prompts", icon: IconPlayerPlay, link: "/prompts" },
   { label: "Settings", icon: IconSettings, link: "/settings" },
