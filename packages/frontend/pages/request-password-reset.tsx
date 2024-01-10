@@ -32,9 +32,12 @@ export default function PasswordReset() {
     setLoading(true)
 
     const res = await errorHandler(
-      fetcher.post("/auth/request-password-reset", {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/request-password-reset`, {
         method: "POST",
-        body: { email },
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
       }),
     )
 

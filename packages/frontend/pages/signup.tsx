@@ -73,8 +73,8 @@ function SignupPage() {
       employeeCount: (val) =>
         val.length <= 1 ? "Please select a value" : null,
       password: (val) => {
-        if (val.length < 6) {
-          return "Password must be at least 6 characters"
+        if (val.length < 8) {
+          return "Password must be at least 8 characters"
         }
 
         if (!/\d/.test(val)) {
@@ -117,6 +117,7 @@ function SignupPage() {
           { id: "orgName", value: orgName },
           { id: "employeeCount", value: employeeCount },
           { id: "signupMethod", value: "signup" },
+          { id: "token", value: "123" }, // To keep because of weird supertoken behaviour
         ],
       }),
     )
