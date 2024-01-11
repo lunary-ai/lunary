@@ -1,7 +1,6 @@
 import { SignJWT } from "jose"
-import SessionReact from "supertokens-auth-react/recipe/session"
-import SuperTokensReact from "supertokens-auth-react"
 import Router from "next/router"
+import SessionReact from "supertokens-auth-react/recipe/session"
 
 export function sign(payload, secret: string): Promise<string> {
   const iat = Math.floor(Date.now() / 1000)
@@ -14,10 +13,6 @@ export function sign(payload, secret: string): Promise<string> {
     .setNotBefore(iat)
     .sign(new TextEncoder().encode(secret))
 }
-
-export function logIn() {}
-
-export function signup() {}
 
 export async function signOut() {
   window.localStorage.clear()
