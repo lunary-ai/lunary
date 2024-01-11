@@ -4,6 +4,8 @@ import EmailPassword from "supertokens-node/recipe/emailpassword"
 import Session from "supertokens-node/recipe/session"
 import { verifySession } from "supertokens-node/recipe/session/framework/koa"
 import sql from "./db"
+import { sendTelegramMessage } from "./notifications"
+import { SignJWT } from "jose"
 
 export function setupAuth() {
   supertokens.init({
@@ -50,6 +52,7 @@ export function setupAuth() {
                   const userId = response.user.id as string
                   const email = response.user.emails[0] as string
 
+                  // TODO: formFields helper
                   const orgName = input.formFields.find(
                     ({ id }) => id === "orgName",
                   )?.value
@@ -63,6 +66,10 @@ export function setupAuth() {
                   )?.value
                   const signupMethod = input.formFields.find(
                     ({ id }) => id === "signupMethod",
+                  )?.value
+
+                  const orgId = input.formFields.find(
+                    ({ id }) => id === "token",
                   )?.value
 
                   // TODO: use porsager helper for inserts
@@ -87,7 +94,29 @@ export function setupAuth() {
                       insert into app (name, org_id)
                       values (${projectName!}, ${org.id})
                     `
+                  } else if (signupMethod === "join") {
+                    await sql`
+                      insert into profile (id, name, email, org_id, role, verified)
+                      values (
+                        ${userId as string}, 
+                        ${name as string}, 
+                        ${email}, 
+                        ${orgId as string}, 
+                        'member', 
+                        true
+                      )
+            `
                   }
+                  await sendTelegramMessage(
+                    `<b>🔔 New signup from ${email}</b>
+                    ${name} is ${
+                      signupMethod === "signup"
+                        ? `building ${projectName} @ ${orgName} (${employeeCount}).`
+                        : "joining an org."
+                    }`,
+                    "users",
+                  )
+                  //TODO: telegram mesage
                 }
                 return response
               },
@@ -145,4 +174,16 @@ export async function addSessionInfos(ctx: Context, next: Next) {
   }
 
   await next()
+}
+
+export function sign(payload: any, secret: string): Promise<string> {
+  const iat = Math.floor(Date.now() / 1000)
+  const exp = iat + 60 * 60 // one hour
+
+  return new SignJWT({ ...payload })
+    .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+    .setExpirationTime(exp)
+    .setIssuedAt(iat)
+    .setNotBefore(iat)
+    .sign(new TextEncoder().encode(secret))
 }

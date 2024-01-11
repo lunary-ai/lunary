@@ -1,6 +1,22 @@
+import { sign } from "./auth"
+import { sendEmail } from "./sendEmail"
+
 function extractFirstName(name: string) {
   if (!name) return "there"
   return name.split(" ")[0]
+}
+
+export async function sendVerifyEmail(email: string, name: string) {
+  if (process.env.SKIP_EMAIL_VERIFY) {
+    return
+  }
+
+  const token = await sign({ email }, process.env.JWT_SECRET!)
+
+  // TODO: hostname
+  const confirmLink = `http://localhost:3000/user/verify-email?token=${token}`
+
+  await sendEmail(CONFIRM_EMAIL(email, name, confirmLink))
 }
 
 export function CONFIRM_EMAIL(
