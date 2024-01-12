@@ -95,13 +95,41 @@ orgs.post("/projects", async (ctx: Context) => {
 
 orgs.delete("/projects/:projectId", async (ctx: Context) => {
   const projectId = ctx.params.projectId as string
+  const orgId = ctx.state.orgId
+
+  const [{ count }] =
+    await sql`select count(*)::int from  app where org_id = ${orgId}`
+
+  if (count > 1) {
+    await sql`delete from app where id = ${projectId}`
+    ctx.status = 200
+    return
+  } else {
+    ctx.status = 422
+
+    ctx.body = {
+      error: "Deletion Failed",
+      message: "An organization must have at least one project.",
+    }
+    return
+  }
+})
+
+orgs.patch("/projects/:projectId", async (ctx: Context) => {
+  const projectId = ctx.params.projectId as string
+  const bodySchema = z.object({
+    name: z.string(),
+  })
+  const { name } = bodySchema.parse(ctx.request.body)
 
   await sql`
-    delete from app
-    where
-      id = ${projectId}
-  `
-
+      update app
+      set
+        name = ${name}
+      where
+        id = ${projectId}
+    `
+  ctx.status = 200
   ctx.body = {}
 })
 

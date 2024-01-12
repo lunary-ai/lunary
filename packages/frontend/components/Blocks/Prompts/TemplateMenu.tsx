@@ -12,12 +12,7 @@ import {
 } from "@mantine/core"
 import { IconDotsVertical, IconPlus, IconTrash } from "@tabler/icons-react"
 
-import {
-  useCurrentProject,
-  useOrg,
-  useTemplate,
-  useTemplates,
-} from "@/utils/dataHooks"
+import { useOrg, useTemplate, useTemplates } from "@/utils/dataHooks"
 import { useHover } from "@mantine/hooks"
 import { modals } from "@mantine/modals"
 import { notifications } from "@mantine/notifications"

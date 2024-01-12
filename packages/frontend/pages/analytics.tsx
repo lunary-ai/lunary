@@ -24,6 +24,7 @@ import {
   useAppUsers,
   useCurrentProject,
   useOrg,
+  useProjects,
   useRunsUsage,
   useRunsUsageByDay,
 } from "@/utils/dataHooks"
@@ -55,7 +56,7 @@ export default function Analytics() {
     defaultValue: 7,
   })
 
-  const { project } = useCurrentProject()
+  const { currentProject } = useCurrentProject()
 
   const { org } = useOrg()
 
@@ -73,7 +74,7 @@ export default function Analytics() {
       </Center>
     )
 
-  if (!loading && !project?.activated) {
+  if (!loading && !currentProject?.activated) {
     return <Empty Icon={IconChartAreaLine} what="data" />
   }
 

@@ -10,7 +10,7 @@ import {
 } from "@mantine/core"
 import { IconBrandDiscord, IconMail, IconMessage } from "@tabler/icons-react"
 import CopyText from "../Blocks/CopyText"
-import { useCurrentProject } from "@/utils/dataHooks"
+import { useCurrentProject, useProjects } from "@/utils/dataHooks"
 
 export default function Empty({
   what,
@@ -19,7 +19,7 @@ export default function Empty({
   what: string
   Icon?: React.ComponentType<any>
 }) {
-  const { project } = useCurrentProject()
+  const { currentProject } = useCurrentProject()
 
   return (
     <Center mih="70vh" className="unblockable">
@@ -37,14 +37,14 @@ export default function Empty({
             variant="outline"
             component="a"
             target="_blank"
-            href={`https://lunary.ai/docs?app=${project?.id}`}
+            href={`https://lunary.ai/docs?app=${currentProject?.id}`}
           >
             Documentation &rarr;
           </Button>
           <Text>
             Project ID:{" "}
             <CopyText
-              value={project?.id}
+              value={currentProject?.id}
               color={"var(--mantine-color-violet-light)"}
             />
           </Text>

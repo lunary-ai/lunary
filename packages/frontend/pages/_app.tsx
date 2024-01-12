@@ -8,10 +8,8 @@ import Head from "next/head"
 
 import Layout from "@/components/Layout"
 import AnalyticsWrapper from "@/components/Layout/Analytics"
-import { Database } from "@/utils/supaTypes"
 import { DefaultSeo } from "next-seo"
 import Link from "next/link"
-import { useState } from "react"
 
 import { fetcher } from "@/utils/fetcher"
 import localFont from "next/font/local"
@@ -21,6 +19,7 @@ import Router from "next/router"
 import SuperTokensReact, { SuperTokensWrapper } from "supertokens-auth-react"
 import EmailPasswordReact from "supertokens-auth-react/recipe/emailpassword"
 import SessionReact from "supertokens-auth-react/recipe/session"
+import ErrorBoundary from "@/components/Blocks/ErrorBoundary"
 
 const appInfo = {
   apiDomain: "http://localhost:3333",
@@ -118,11 +117,15 @@ export default function App({ Component, pageProps }: AppProps) {
       <Head>
         <link href="https://lunary.ai/logo.png" rel="icon" type="image/png" />
       </Head>
+
       <SuperTokensWrapper>
         <SWRConfig
           value={{
             fetcher: fetcher.get,
             dedupingInterval: 10000,
+            onError: (err) => {
+              console.log("SWR Error", err)
+            },
           }}
         >
           <DefaultSeo
@@ -132,9 +135,11 @@ export default function App({ Component, pageProps }: AppProps) {
           />
           <MantineProvider theme={theme} defaultColorScheme="auto">
             <AnalyticsWrapper>
-              <Layout>
-                <Component {...pageProps} />
-              </Layout>
+              <ErrorBoundary>
+                <Layout>
+                  <Component {...pageProps} />
+                </Layout>
+              </ErrorBoundary>
             </AnalyticsWrapper>
           </MantineProvider>
         </SWRConfig>

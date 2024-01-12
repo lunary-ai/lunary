@@ -50,6 +50,7 @@ import {
   useLogs,
   useModelNames,
   useOrg,
+  useProjects,
   useUser,
 } from "@/utils/dataHooks"
 import { useDebouncedState, useLocalStorage, useSetState } from "@mantine/hooks"
@@ -153,7 +154,8 @@ export default function Logs() {
   const [selectedTags, setSelectedTags] = useState([])
 
   const { projectId } = useContext(ProjectContext)
-  const { project, loading: projectLoading } = useCurrentProject()
+  const { currentProject: project, isLoading: projectLoading } =
+    useCurrentProject()
 
   const { org } = useOrg()
   const [selected, setSelected] = useState(null)
