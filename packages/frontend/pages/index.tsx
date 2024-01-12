@@ -105,7 +105,7 @@ export default function Home() {
                 </Anchor>
                 <Group>
                   <Text>
-                    Tracking ID:{" "}
+                    ID:{" "}
                     <Code color="var(--mantine-color-pink-light)">
                       {app.id}
                     </Code>
