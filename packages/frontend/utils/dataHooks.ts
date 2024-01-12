@@ -208,14 +208,20 @@ export function useTemplate(id: string) {
     mutate,
   } = useProjectSWR(id && `/templates/${id}`)
 
-  const { trigger: update } = useProjectMutation(`/templates/${id}`, "patch")
+  const { trigger: update } = useProjectMutation(
+    `/templates/${id}`,
+    fetcher.patch,
+  )
 
-  const { trigger: remove } = useProjectMutation(`/templates/${id}`, "delete")
+  const { trigger: remove } = useProjectMutation(
+    `/templates/${id}`,
+    fetcher.delete,
+  )
 
   // insert mutation
   const { trigger: insertVersion } = useProjectMutation(
     `/templates/${id}/versions`,
-    "post",
+    fetcher.post,
   )
 
   return {
@@ -237,7 +243,7 @@ export function useTemplateVersion(id: string) {
 
   const { trigger: update } = useProjectMutation(
     `/template_versions/${id}`,
-    "patch",
+    fetcher.patch,
   )
 
   return {
@@ -252,15 +258,16 @@ export function useLogs(
   type: "llm" | "trace" | "thread" | "chat",
   parentRunId?: string,
 ) {
+  const { org } = useOrg()
   const PAGE_SIZE = 1
   const parentRunIdStr = parentRunId ? `&parentRunId=${parentRunId}` : "" // TODO: use a query param builder
   const { projectId } = useContext(ProjectContext)
   function getKey(pageIndex, previousPageData) {
-    return `/projects/${projectId}/runs?type=${type}&page=${pageIndex}&limit=${PAGE_SIZE}${parentRunIdStr}`
+    return `/orgs/${org.id}/projects/${projectId}/runs?type=${type}&page=${pageIndex}&limit=${PAGE_SIZE}${parentRunIdStr}`
   }
 
   const { data, isLoading, isValidating, size, setSize } =
-    useSWRInfinite(getKey)
+    useSWRInfinite(getKey) // TODO useProejctInfiniteSWR
 
   function loadMore() {
     const hasMore = data && data[data.length - 1]?.length >= PAGE_SIZE
@@ -289,7 +296,7 @@ export function useRun(id: string, initialData?: any) {
     fallbackData: initialData,
   })
 
-  const { trigger: update } = useProjectMutation(`/runs/${id}`, "patch", {
+  const { trigger: update } = useProjectMutation(`/runs/${id}`, fetcher.patch, {
     populateCache: (updatedRun, run) => {
       console.log({ updatedRun, run })
       return { ...run, ...updatedRun }
@@ -307,9 +314,10 @@ export function useRun(id: string, initialData?: any) {
   }
 }
 
-export function useRunsUsage(range, user_id?: string) {
+export function useRunsUsage(range, userId?: string) {
+  const userIdStr = userId ? `&user_id=${userId}` : ""
   const { data: usage, isLoading } = useProjectSWR(
-    `/runs/usage?days=${range}&user_id=${user_id}`,
+    `/runs/usage?days=${range}${userIdStr}`,
   )
 
   return { usage: extendWithCosts(usage), loading: isLoading }
@@ -326,6 +334,7 @@ export function useRunsUsageByDay(range, user_id?: string) {
 export function useRunsUsageByUser(range = null) {
   const { data: usageByUser, isLoading } = useProjectSWR(`/users/runs/usage`)
 
+  console.log(usageByUser)
   const reduceUsersUsage = (usage) => {
     const userData = []
 

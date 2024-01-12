@@ -15,6 +15,5 @@ v1.get("/", async (ctx) => {
 
 v1.use(orgs.routes())
 v1.use(users.routes())
-v1.use(projects.routes())
 
 export default v1

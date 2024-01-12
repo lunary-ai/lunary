@@ -7,10 +7,13 @@ import { completion } from "litellm"
 import { z } from "zod"
 import Context from "@/utils/koa"
 import { clearUndefined } from "@/utils/ingest"
+import project from "./projects"
 
 const orgs = new Router({
   prefix: "/orgs/:orgId",
 })
+
+orgs.use("", project.routes())
 
 orgs.get("/", async (ctx: Context) => {
   const orgId = ctx.params.orgId as string

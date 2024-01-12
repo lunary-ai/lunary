@@ -135,11 +135,9 @@ export default function App({ Component, pageProps }: AppProps) {
           />
           <MantineProvider theme={theme} defaultColorScheme="auto">
             <AnalyticsWrapper>
-              <ErrorBoundary>
-                <Layout>
-                  <Component {...pageProps} />
-                </Layout>
-              </ErrorBoundary>
+              <Layout>
+                <Component {...pageProps} />
+              </Layout>
             </AnalyticsWrapper>
           </MantineProvider>
         </SWRConfig>
