@@ -201,7 +201,7 @@ export default function AppAnalytics() {
                 Deleting your project is irreversible and it will delete all
                 associated data.
                 <br />
-                We <b>cannot</b> recover your data once it's deleted.
+                We <b>cannot</b> recover your data once it&apos;s deleted.
               </Text>
 
               <Popover width={200} position="bottom" withArrow shadow="md">
