@@ -38,14 +38,15 @@ import TemplateList, {
 import { notifications } from "@mantine/notifications"
 import { generateSlug } from "random-word-slugs"
 import {
-  useCurrentProject,
   useOrg,
   useTemplates,
   useTemplate,
   useTemplateVersion,
   useUser,
+  useProjects,
+  useCurrentProject,
 } from "@/utils/dataHooks"
-import { fetcher } from "@/utils/swr"
+import { fetcher } from "@/utils/fetcher"
 
 const availableModels = [
   "gpt-4-1106-preview",
@@ -101,7 +102,7 @@ function Playground() {
   //   default: defaultTemplateVersion,
   // })
 
-  const { project } = useCurrentProject()
+  const { currentProject } = useCurrentProject()
 
   const [template, setTemplate] = useState<any>()
   const [templateVersion, setTemplateVersion] = useState<any>(
@@ -141,7 +142,7 @@ function Playground() {
   const { org } = useOrg()
 
   useEffect(() => {
-    if (!project) return
+    if (!currentProject) return
 
     const { clone, id } = router.query
 
@@ -151,7 +152,7 @@ function Playground() {
         setLoading(true)
 
         const data = await fetcher.get(
-          `/projects/${project?.id}/template_versions/${id}`,
+          `/projects/${currentProject?.id}/template_versions/${id}`,
         )
 
         if (data) {
@@ -166,7 +167,9 @@ function Playground() {
     } else if (clone) {
       const fetchRun = async () => {
         setLoading(true)
-        const run = await fetcher.get(`/projects/${project?.id}/runs/${clone}/`)
+        const run = await fetcher.get(
+          `/projects/${currentProject?.id}/runs/${clone}/`,
+        )
 
         if (run?.input) {
           setTemplateVersion({ ...templateVersion, content: run.input })
@@ -183,7 +186,7 @@ function Playground() {
       setTemplate({ mode: "openai" })
       setTemplateVersion(defaultTemplateVersion)
     }
-  }, [project])
+  }, [currentProject])
 
   // Save as draft without deploying
   const saveTemplate = async () => {

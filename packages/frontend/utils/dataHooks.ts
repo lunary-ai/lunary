@@ -1,13 +1,14 @@
 import { useMantineTheme } from "@mantine/core"
 import { useColorScheme } from "@mantine/hooks"
 import { use, useContext } from "react"
-import useSWR from "swr"
+import useSWR, { Fetcher, SWRConfiguration } from "swr"
 import useSWRInfinite from "swr/infinite"
 import { ProjectContext } from "./context"
 import { getUserColor } from "./colors"
 import useSWRMutation from "swr/mutation"
-import { fetcher } from "./fetcher"
 import { calcRunCost } from "./calcCosts"
+import { useRouter } from "next/router"
+import { fetcher } from "./fetcher"
 
 // TODO: put in other file
 function extendWithCosts(data: any[]) {
@@ -17,21 +18,35 @@ function extendWithCosts(data: any[]) {
   }))
 }
 
-export function useProjectSWR(key: string, ...args: any[]) {
+type KeyType = string | ((...args: any[]) => string)
+
+export function useProjectSWR(key: KeyType, options?: SWRConfiguration) {
   const { projectId } = useContext(ProjectContext)
+  const { org } = useOrg()
+  const resolvedKey = typeof key === "function" ? key() : key
 
   return useSWR(
-    projectId && key ? `/projects/${projectId}${key}` : null,
-    ...(args as [any]),
+    () => `/orgs/${org.id}/projects/${projectId}${resolvedKey}`,
+    options,
   )
 }
 
-export function useProjectMutation(key: string, ...args: any[]) {
+export function useProjectMutation(
+  key: KeyType,
+  customFetcher:
+    | typeof fetcher.post
+    | typeof fetcher.patch
+    | typeof fetcher.delete,
+  options?: SWRConfiguration,
+) {
   const { projectId } = useContext(ProjectContext)
+  const { org } = useOrg()
+  const resolvedKey = typeof key === "function" ? key() : key
 
   return useSWRMutation(
-    projectId && key ? `/projects/${projectId}${key}` : null,
-    ...(args as [any]),
+    () => `/orgs/${org.id}/projects/${projectId}${resolvedKey}`,
+    customFetcher,
+    options,
   )
 }
 
@@ -119,38 +134,57 @@ export function useOrg() {
 
 export function useProjects() {
   const { org } = useOrg()
-  const { data, isLoading, mutate } = useSWR(
-    () => org && `/orgs/${org.id}/projects`,
+  const { data, isLoading, mutate } = useSWR(() => `/orgs/${org.id}/projects`)
+
+  const { trigger: insertMutation } = useSWRMutation(
+    () => `/orgs/${org.id}/projects`,
+    fetcher.post,
   )
 
-  async function insert(projectName: string) {
-    const project = await fetcher.post(`/orgs/${org.id}/projects`, {
-      name: projectName,
-    })
-    mutate([...data, project])
-  }
-
-  async function drop(projectId: string) {
-    await fetcher.delete(`/orgs/${org.id}/projects/${projectId}`)
-    mutate(data.filter((p) => p.id !== projectId))
+  function insert(name: string) {
+    return insertMutation({ name })
   }
 
   return {
     projects: data || [],
-    loading: isLoading,
+    mutate,
     insert,
-    drop,
-    update: () => {},
+    isLoading: isLoading,
   }
 }
 
 export function useCurrentProject() {
   const { projectId, setProjectId } = useContext(ProjectContext)
-  const { projects, loading } = useProjects()
 
-  const project = projects?.find((p) => p?.id === projectId)
+  const { projects, isLoading, mutate } = useProjects()
 
-  return { project, setProjectId, loading }
+  const currentProject = projects?.find((p) => p.id === projectId)
+
+  const { trigger: updateMutation } = useProjectMutation(`/`, fetcher.patch)
+  const { trigger: dropMutation } = useProjectMutation(`/`, fetcher.delete)
+
+  async function update(name: string) {
+    await updateMutation({ name })
+    const newProjects = projects.map((p) =>
+      p.id === projectId ? { ...p, name } : p,
+    )
+    mutate(newProjects)
+  }
+
+  async function drop() {
+    await dropMutation()
+    const newProjects = projects.filter((p) => p.id !== projectId)
+    setProjectId(newProjects[0]?.id)
+    mutate(newProjects)
+  }
+
+  return {
+    currentProject,
+    update,
+    drop,
+    setCurrentProjectId: setProjectId,
+    isLoading,
+  }
 }
 
 export function useTemplates() {
@@ -174,20 +208,14 @@ export function useTemplate(id: string) {
     mutate,
   } = useProjectSWR(id && `/templates/${id}`)
 
-  const { trigger: update } = useProjectMutation(
-    `/templates/${id}`,
-    fetcher.patch,
-  )
+  const { trigger: update } = useProjectMutation(`/templates/${id}`, "patch")
 
-  const { trigger: remove } = useProjectMutation(
-    `/templates/${id}`,
-    fetcher.delete,
-  )
+  const { trigger: remove } = useProjectMutation(`/templates/${id}`, "delete")
 
   // insert mutation
   const { trigger: insertVersion } = useProjectMutation(
     `/templates/${id}/versions`,
-    fetcher.post,
+    "post",
   )
 
   return {
@@ -209,7 +237,7 @@ export function useTemplateVersion(id: string) {
 
   const { trigger: update } = useProjectMutation(
     `/template_versions/${id}`,
-    fetcher.patch,
+    "patch",
   )
 
   return {
@@ -261,7 +289,7 @@ export function useRun(id: string, initialData?: any) {
     fallbackData: initialData,
   })
 
-  const { trigger: update } = useProjectMutation(`/runs/${id}`, fetcher.patch, {
+  const { trigger: update } = useProjectMutation(`/runs/${id}`, "patch", {
     populateCache: (updatedRun, run) => {
       console.log({ updatedRun, run })
       return { ...run, ...updatedRun }

@@ -1,4 +1,4 @@
-import { useCurrentProject } from "@/utils/dataHooks"
+import { useCurrentProject, useProjects } from "@/utils/dataHooks"
 import {
   Button,
   Checkbox,
@@ -32,7 +32,8 @@ export default function FacetedFilter({
 }) {
   const [search, setSearch] = useState("")
 
-  const { project } = useCurrentProject()
+  const { currentProject } = useCurrentProject()
+
   const prevAppIdRef = useRef<string>(null)
 
   useEffect(() => {

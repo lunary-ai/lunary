@@ -35,7 +35,6 @@ export default function Layout({ children }: { children: ReactNode }) {
   const { org } = useOrg()
 
   const session = useSessionContext()
-  console.log(session)
 
   const isPromptPage = router.pathname.startsWith("/prompt")
 

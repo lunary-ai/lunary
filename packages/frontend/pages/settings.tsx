@@ -22,14 +22,14 @@ import { IconPencil, IconUserPlus } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import Router from "next/router"
 
-import { openUpgrade } from "../components/Layout/UpgradeModal"
 import {
-  useCurrentProject,
-  useOrg,
   useProjects,
+  useOrg,
   useUser,
+  useCurrentProject,
 } from "@/utils/dataHooks"
 import useSWR from "swr"
+import { openUpgrade } from "../components/Layout/UpgradeModal"
 
 function Invite() {
   const { org } = useOrg()
@@ -89,14 +89,17 @@ function RenamableField({ defaultValue, onRename }) {
 }
 
 export default function AppAnalytics() {
-  const { project, setProjectId } = useCurrentProject()
-
   const { user: currentUser } = useUser()
   const { org, updateOrg, mutate } = useOrg()
-  const { drop, update } = useProjects()
+  const {
+    update: updateCurrentProject,
+    currentProject,
+    setCurrentProjectId,
+    drop: dropCurrentProject,
+  } = useCurrentProject()
 
   const { data: projectUsage } = useSWR(
-    `/orgs/${org?.id}/usage?project=${project?.id}`,
+    `/orgs/${org?.id}/usage?project=${currentProject?.id}`,
   )
 
   const isAdmin =
@@ -109,11 +112,11 @@ export default function AppAnalytics() {
         <Card withBorder p="lg">
           <Stack>
             <RenamableField
-              defaultValue={project?.name}
-              onRename={(name) => update({ id: project?.id, name })}
+              defaultValue={currentProject?.name}
+              onRename={(name) => updateCurrentProject(name)}
             />
             <Text>
-              Project ID for tracking: <CopyText value={project?.id} />
+              Project ID for tracking: <CopyText value={currentProject?.id} />
             </Text>
           </Stack>
         </Card>
@@ -216,8 +219,8 @@ export default function AppAnalytics() {
                   <Button
                     color="red"
                     onClick={() => {
-                      drop(project.id)
-                      setProjectId(null)
+                      dropCurrentProject()
+                      setCurrentProjectId(null)
                       Router.push("/")
                     }}
                   >

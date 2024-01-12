@@ -116,7 +116,6 @@ export function setupAuth() {
                     }`,
                     "users",
                   )
-                  //TODO: telegram mesage
                 }
                 return response
               },

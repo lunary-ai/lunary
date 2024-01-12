@@ -22,15 +22,16 @@ import {
 import { IconCheck, IconCopy } from "@tabler/icons-react"
 
 import analytics from "@/utils/analytics"
-import { useCurrentProject, useProjects } from "@/utils/dataHooks"
 import { NextSeo } from "next-seo"
+import { useCurrentProject, useProjects } from "@/utils/dataHooks"
 
 export default function Home() {
   const [modalOpened, setModalOpened] = useState(false)
   const [newAppName, setNewAppName] = useState("")
-  const { setProjectId } = useCurrentProject()
 
-  const { projects, insert, loading } = useProjects()
+  const { projects, isLoading: projectsLoading, insert } = useProjects()
+
+  const { setCurrentProjectId } = useCurrentProject()
 
   const createApp = async () => {
     await insert(newAppName)
@@ -87,7 +88,7 @@ export default function Home() {
               + New project
             </Button>
           </Group>
-          {loading && <Loader />}
+          {projectsLoading && <Loader />}
 
           <SimpleGrid cols={3} spacing="lg" verticalSpacing="lg">
             {projects?.map((app) => (
@@ -97,7 +98,7 @@ export default function Home() {
                   key={app.id}
                   component={Link}
                   onClick={() => {
-                    setProjectId(app.id)
+                    setCurrentProjectId(app.id)
                   }}
                 >
                   <Title order={4}>{app.name}</Title>

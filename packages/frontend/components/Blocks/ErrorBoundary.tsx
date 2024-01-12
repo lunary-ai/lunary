@@ -22,11 +22,13 @@ class ErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.log("SALUTLUTLUT")
     console.error(error, errorInfo)
   }
 
   render() {
     if (this.state.hasError) {
+      console.log("SLKDJSLKDJSLKDJ")
       return <p>Error rendering this component</p>
     }
 

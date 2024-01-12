@@ -11,6 +11,12 @@ import {
   IconMessage,
 } from "@tabler/icons-react"
 
+import {
+  useCurrentProject,
+  useOrg,
+  useProjects,
+  useUser,
+} from "@/utils/dataHooks"
 import { notifications } from "@mantine/notifications"
 import Link from "next/link"
 import { useRouter } from "next/router"
@@ -18,15 +24,9 @@ import Script from "next/script"
 import { useEffect, useState } from "react"
 import errorHandler from "../../utils/errorHandler"
 import { openUpgrade } from "./UpgradeModal"
-import {
-  useCurrentProject,
-  useOrg,
-  useProjects,
-  useUser,
-} from "@/utils/dataHooks"
 
 export default function Navbar() {
-  const { project, setProjectId } = useCurrentProject()
+  const { currentProject, setCurrentProjectId } = useCurrentProject()
   const router = useRouter()
 
   const { user, mutate } = useUser()
@@ -115,10 +115,10 @@ export default function Navbar() {
 
   // Select first project if none selected
   useEffect(() => {
-    if (!project && projects?.length && !loading) {
-      setProjectId(projects[0].id)
+    if (!currentProject && projects?.length && !loading) {
+      setCurrentProjectId(projects[0].id)
     }
-  }, [project, projects, loading, setProjectId])
+  }, [currentProject, projects, loading, setCurrentProjectId])
 
   return (
     <>
@@ -141,8 +141,8 @@ export default function Navbar() {
                 size="xs"
                 ml="lg"
                 placeholder="Select an project"
-                value={project?.id}
-                onChange={(id) => setProjectId(id)}
+                value={currentProject?.id}
+                onChange={(id) => setCurrentProjectId(id)}
                 data={projects.map((project) => ({
                   value: project.id,
                   label: project.name,
