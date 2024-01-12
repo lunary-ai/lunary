@@ -206,7 +206,7 @@ export default function AppAnalytics() {
 
               <Popover width={200} position="bottom" withArrow shadow="md">
                 <Popover.Target>
-                  <Button color="red">Delete App</Button>
+                  <Button color="red">Delete Project</Button>
                 </Popover.Target>
                 <Popover.Dropdown>
                   <Text mb="md">
