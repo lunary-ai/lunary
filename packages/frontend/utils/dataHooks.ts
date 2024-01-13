@@ -155,16 +155,17 @@ export function useProjects() {
   const { trigger: insertMutation } = useSWRMutation(
     () => `/orgs/${org.id}/projects`,
     fetcher.post,
+    {
+      populateCache(result, currentData) {
+        return [...currentData, result]
+      },
+    },
   )
-
-  function insert(name: string) {
-    return insertMutation({ name })
-  }
 
   return {
     projects: data || [],
     mutate,
-    insert,
+    insert: insertMutation,
     isLoading: isLoading,
   }
 }
@@ -314,7 +315,6 @@ export function useRun(id: string, initialData?: any) {
 
   const { trigger: update } = useProjectMutation(`/runs/${id}`, fetcher.patch, {
     populateCache: (updatedRun, run) => {
-      console.log({ updatedRun, run })
       return { ...run, ...updatedRun }
     },
     // Since the API already gives us the updated information,
@@ -350,7 +350,6 @@ export function useRunsUsageByDay(range, user_id?: string) {
 export function useRunsUsageByUser(range = null) {
   const { data: usageByUser, isLoading } = useProjectSWR(`/users/runs/usage`)
 
-  console.log(usageByUser)
   const reduceUsersUsage = (usage) => {
     const userData = []
 

@@ -79,6 +79,7 @@ export default function Analytics() {
       Icon={IconChartAreaLine}
       title="Waiting for data..."
       description="Analytics will appear here once you have some data."
+      showProjectId
       enable={!loading && !currentProject?.activated}
     >
       <Container size="lg" my="lg">
