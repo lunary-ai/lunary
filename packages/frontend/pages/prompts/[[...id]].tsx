@@ -22,6 +22,7 @@ import {
 import { useHotkeys } from "@mantine/hooks"
 import {
   IconBolt,
+  IconBracketsAngle,
   IconCheck,
   IconDeviceFloppy,
   IconGitCommit,
@@ -47,6 +48,7 @@ import {
   useCurrentProject,
 } from "@/utils/dataHooks"
 import { fetcher } from "@/utils/fetcher"
+import Empty from "@/components/Layout/Empty"
 
 const availableModels = [
   "gpt-4-1106-preview",
@@ -101,6 +103,8 @@ function Playground() {
   //   key: "tp-version",
   //   default: defaultTemplateVersion,
   // })
+
+  const { templates } = useTemplates()
 
   const { currentProject } = useCurrentProject()
 
@@ -408,224 +412,237 @@ function Playground() {
   }, [templateVersion])
 
   return (
-    <Grid
-      w="100%"
-      overflow="hidden"
-      styles={{
-        inner: {
-          flexWrap: "nowrap",
-          height: "calc(100vh - var(--navbar-size))",
-        },
-      }}
+    <Empty
+      enable={!templates?.length && !router.query.clone}
+      title="Create prompt templates"
+      features={[
+        "Collaborate with non-technical people",
+        "Clean up your source-code",
+        "Easily roll-back to previous versions",
+      ]}
+      Icon={IconBracketsAngle}
+      buttonLabel="Create first template"
+      onClick={() => {}}
     >
-      <Grid.Col
-        span={2}
-        style={{ borderRight: "1px solid rgba(120, 120, 120, 0.1)" }}
+      <Grid
+        w="100%"
+        overflow="hidden"
+        styles={{
+          inner: {
+            flexWrap: "nowrap",
+            height: "calc(100vh - var(--navbar-size))",
+          },
+        }}
       >
-        <TemplateList
-          activeTemplate={template}
-          switchTemplate={setTemplate}
-          activeVersion={templateVersion}
-          switchTemplateVersion={switchTemplateVersion}
-        />
-      </Grid.Col>
-      <Grid.Col
-        span={7}
-        p="xl"
-        style={{ borderRight: "1px solid rgba(120, 120, 120, 0.1)" }}
-      >
-        <Box mah="100%" style={{ overflowY: "auto" }}>
-          <TemplateInputArea
-            template={templateVersion}
-            setTemplate={setTemplateVersion}
-            saveTemplate={saveTemplate}
-            setHasChanges={setHasChanges}
-            output={output}
-            outputTokens={outputTokens}
-            error={error}
+        <Grid.Col
+          span={2}
+          style={{ borderRight: "1px solid rgba(120, 120, 120, 0.1)" }}
+        >
+          <TemplateList
+            activeTemplate={template}
+            switchTemplate={setTemplate}
+            activeVersion={templateVersion}
+            switchTemplateVersion={switchTemplateVersion}
           />
-        </Box>
-      </Grid.Col>
-      <Grid.Col span={3} p="xl">
-        <Stack style={{ zIndex: 0 }}>
-          <Group>
-            <Button
-              leftSection={<IconDeviceFloppy size={18} />}
-              size="xs"
-              loading={loading}
-              disabled={loading || (template?.id && !hasChanges)}
-              variant="outline"
-              // rightSection={
-              // <HotkeysInfo hot="S" size="sm" style={{ marginTop: -4 }} />
-              // }
-              onClick={saveTemplate}
-            >
-              Save changes
-            </Button>
-
-            <Button
-              leftSection={<IconGitCommit size={18} />}
-              size="xs"
-              loading={loading}
-              disabled={loading || (!templateVersion?.isDraft && !hasChanges)}
-              variant="filled"
-              onClick={commitTemplate}
-            >
-              Deploy
-            </Button>
-          </Group>
-
-          <ParamItem
-            name="Template Mode"
-            value={
-              <SegmentedControl
+        </Grid.Col>
+        <Grid.Col
+          span={7}
+          p="xl"
+          style={{ borderRight: "1px solid rgba(120, 120, 120, 0.1)" }}
+        >
+          <Box mah="100%" style={{ overflowY: "auto" }}>
+            <TemplateInputArea
+              template={templateVersion}
+              setTemplate={setTemplateVersion}
+              saveTemplate={saveTemplate}
+              setHasChanges={setHasChanges}
+              output={output}
+              outputTokens={outputTokens}
+              error={error}
+            />
+          </Box>
+        </Grid.Col>
+        <Grid.Col span={3} p="xl">
+          <Stack style={{ zIndex: 0 }}>
+            <Group>
+              <Button
+                leftSection={<IconDeviceFloppy size={18} />}
                 size="xs"
-                data={[
-                  {
-                    value: "openai",
-                    label: "OpenAI",
-                  },
-                  {
-                    value: "custom",
-                    label: "Custom Chat",
-                  },
-                  {
-                    value: "text",
-                    label: "Text",
-                  },
-                ]}
-                value={template?.mode}
-                onChange={(value) => {
-                  const newTemplateVersion = { ...templateVersion }
-                  if (template?.mode === "text" && value !== "text") {
-                    // Switching from text to custom/openai
-                    newTemplateVersion.content = [
-                      { role: "user", content: templateVersion.content },
-                    ]
-                  } else if (template?.mode !== "text" && value === "text") {
-                    // Switching from custom/openai to text
-                    const firstUserMessage = templateVersion.content[0]
+                loading={loading}
+                disabled={loading || (template?.id && !hasChanges)}
+                variant="outline"
+                // rightSection={
+                // <HotkeysInfo hot="S" size="sm" style={{ marginTop: -4 }} />
+                // }
+                onClick={saveTemplate}
+              >
+                Save changes
+              </Button>
 
-                    newTemplateVersion.content = firstUserMessage?.content || ""
-                  }
-                  setTemplateVersion(newTemplateVersion)
+              <Button
+                leftSection={<IconGitCommit size={18} />}
+                size="xs"
+                loading={loading}
+                disabled={loading || (!templateVersion?.isDraft && !hasChanges)}
+                variant="filled"
+                onClick={commitTemplate}
+              >
+                Deploy
+              </Button>
+            </Group>
 
-                  setTemplate({ ...template, mode: value })
-                }}
-              />
-            }
-          />
+            <ParamItem
+              name="Template Mode"
+              value={
+                <SegmentedControl
+                  size="xs"
+                  data={[
+                    {
+                      value: "openai",
+                      label: "OpenAI",
+                    },
+                    {
+                      value: "custom",
+                      label: "Custom Chat",
+                    },
+                    {
+                      value: "text",
+                      label: "Text",
+                    },
+                  ]}
+                  value={template?.mode}
+                  onChange={(value) => {
+                    const newTemplateVersion = { ...templateVersion }
+                    if (template?.mode === "text" && value !== "text") {
+                      // Switching from text to custom/openai
+                      newTemplateVersion.content = [
+                        { role: "user", content: templateVersion.content },
+                      ]
+                    } else if (template?.mode !== "text" && value === "text") {
+                      // Switching from custom/openai to text
+                      const firstUserMessage = templateVersion.content[0]
 
-          {template?.mode !== "text" && (
-            <>
-              <ParamItem
-                name="Model"
-                value={
-                  <Select
-                    data={availableModels.filter((model) =>
-                      template?.mode === "openai"
-                        ? model.includes("gpt-")
-                        : true,
-                    )}
-                    w={250}
-                    searchable
-                    autoCorrect="off"
-                    inputMode="search"
-                    {...extraHandler("model")}
-                  />
-                }
-              />
+                      newTemplateVersion.content =
+                        firstUserMessage?.content || ""
+                    }
+                    setTemplateVersion(newTemplateVersion)
 
-              <ParamItem
-                name="Temperature"
-                value={
-                  <NumberInput
-                    min={0}
-                    max={2}
-                    step={0.1}
-                    decimalScale={2}
-                    style={{ zIndex: 0 }}
-                    w={90}
-                    {...extraHandler("temperature")}
-                  />
-                }
-              />
+                    setTemplate({ ...template, mode: value })
+                  }}
+                />
+              }
+            />
 
-              <ParamItem
-                name="Max tokens"
-                value={
-                  <NumberInput
-                    min={1}
-                    max={32000}
-                    step={100}
-                    w={90}
-                    {...extraHandler("max_tokens")}
-                  />
-                }
-              />
-
-              <ParamItem
-                name="Freq. Penalty"
-                value={
-                  <NumberInput
-                    min={-2}
-                    max={2}
-                    decimalScale={2}
-                    step={0.1}
-                    w={90}
-                    {...extraHandler("frequency_penalty")}
-                  />
-                }
-              />
-
-              <ParamItem
-                name="Pres. Penalty"
-                value={
-                  <NumberInput
-                    min={-2}
-                    max={2}
-                    decimalScale={2}
-                    step={0.1}
-                    w={90}
-                    {...extraHandler("presence_penalty")}
-                  />
-                }
-              />
-
-              <ParamItem
-                name="Top P"
-                value={
-                  <NumberInput
-                    min={0.1}
-                    max={1}
-                    decimalScale={2}
-                    step={0.1}
-                    w={90}
-                    {...extraHandler("top_p")}
-                  />
-                }
-              />
-
-              <ParamItem
-                name="Stream"
-                value={<Checkbox {...extraHandler("stream", true)} />}
-              />
-
-              {template?.mode === "openai" && (
+            {template?.mode !== "text" && (
+              <>
                 <ParamItem
-                  name="Tool Calls"
+                  name="Model"
                   value={
-                    <>
-                      <Modal
-                        size="lg"
-                        opened={jsonModalOpened}
-                        onClose={() => setJsonModalOpened(false)}
-                        title="Tool Calls Definition"
-                      >
-                        <JsonInput
-                          autosize
-                          mr="sm"
-                          placeholder={`[{
+                    <Select
+                      data={availableModels.filter((model) =>
+                        template?.mode === "openai"
+                          ? model.includes("gpt-")
+                          : true,
+                      )}
+                      w={250}
+                      searchable
+                      autoCorrect="off"
+                      inputMode="search"
+                      {...extraHandler("model")}
+                    />
+                  }
+                />
+
+                <ParamItem
+                  name="Temperature"
+                  value={
+                    <NumberInput
+                      min={0}
+                      max={2}
+                      step={0.1}
+                      decimalScale={2}
+                      style={{ zIndex: 0 }}
+                      w={90}
+                      {...extraHandler("temperature")}
+                    />
+                  }
+                />
+
+                <ParamItem
+                  name="Max tokens"
+                  value={
+                    <NumberInput
+                      min={1}
+                      max={32000}
+                      step={100}
+                      w={90}
+                      {...extraHandler("max_tokens")}
+                    />
+                  }
+                />
+
+                <ParamItem
+                  name="Freq. Penalty"
+                  value={
+                    <NumberInput
+                      min={-2}
+                      max={2}
+                      decimalScale={2}
+                      step={0.1}
+                      w={90}
+                      {...extraHandler("frequency_penalty")}
+                    />
+                  }
+                />
+
+                <ParamItem
+                  name="Pres. Penalty"
+                  value={
+                    <NumberInput
+                      min={-2}
+                      max={2}
+                      decimalScale={2}
+                      step={0.1}
+                      w={90}
+                      {...extraHandler("presence_penalty")}
+                    />
+                  }
+                />
+
+                <ParamItem
+                  name="Top P"
+                  value={
+                    <NumberInput
+                      min={0.1}
+                      max={1}
+                      decimalScale={2}
+                      step={0.1}
+                      w={90}
+                      {...extraHandler("top_p")}
+                    />
+                  }
+                />
+
+                <ParamItem
+                  name="Stream"
+                  value={<Checkbox {...extraHandler("stream", true)} />}
+                />
+
+                {template?.mode === "openai" && (
+                  <ParamItem
+                    name="Tool Calls"
+                    value={
+                      <>
+                        <Modal
+                          size="lg"
+                          opened={jsonModalOpened}
+                          onClose={() => setJsonModalOpened(false)}
+                          title="Tool Calls Definition"
+                        >
+                          <JsonInput
+                            autosize
+                            mr="sm"
+                            placeholder={`[{
   type: "function",
   function: {
     name: "get_current_weather",
@@ -642,147 +659,152 @@ function Playground() {
     },
   },
 }]`}
-                          // defaultValue={tempJSON}
-                          value={tempJSON}
-                          onChange={(val) => {
-                            setTempJSON(val)
-                          }}
-                        />
-                        <Button
-                          mt="sm"
-                          ml="auto"
-                          onClick={() => {
-                            try {
-                              const empty = !tempJSON?.trim().length
+                            // defaultValue={tempJSON}
+                            value={tempJSON}
+                            onChange={(val) => {
+                              setTempJSON(val)
+                            }}
+                          />
+                          <Button
+                            mt="sm"
+                            ml="auto"
+                            onClick={() => {
+                              try {
+                                const empty = !tempJSON?.trim().length
 
-                              if (!empty && tempJSON?.trim()[0] !== "[") {
-                                throw "Not an array"
+                                if (!empty && tempJSON?.trim()[0] !== "[") {
+                                  throw "Not an array"
+                                }
+
+                                setHasChanges(true)
+                                setTemplateVersion({
+                                  ...templateVersion,
+                                  extra: {
+                                    ...templateVersion.extra,
+                                    tools: tempJSON?.trim().length
+                                      ? JSON.parse(jsonrepair(tempJSON.trim()))
+                                      : undefined,
+                                  },
+                                })
+                                setJsonModalOpened(false)
+                              } catch (e) {
+                                console.error(e)
+                                notifications.show({
+                                  title:
+                                    "Error parsing JSON. Please enter a valid OpenAI tools array.",
+                                  message: "Click here to open the docs.",
+                                  color: "red",
+                                  onClick: () =>
+                                    window.open(
+                                      "https://platform.openai.com/docs/guides/function-calling",
+                                      "_blank",
+                                    ),
+                                })
                               }
-
-                              setHasChanges(true)
-                              setTemplateVersion({
-                                ...templateVersion,
-                                extra: {
-                                  ...templateVersion.extra,
-                                  tools: tempJSON?.trim().length
-                                    ? JSON.parse(jsonrepair(tempJSON.trim()))
-                                    : undefined,
-                                },
-                              })
-                              setJsonModalOpened(false)
-                            } catch (e) {
-                              console.error(e)
-                              notifications.show({
-                                title:
-                                  "Error parsing JSON. Please enter a valid OpenAI tools array.",
-                                message: "Click here to open the docs.",
-                                color: "red",
-                                onClick: () =>
-                                  window.open(
-                                    "https://platform.openai.com/docs/guides/function-calling",
-                                    "_blank",
-                                  ),
-                              })
-                            }
+                            }}
+                          >
+                            Save
+                          </Button>
+                        </Modal>
+                        <Button
+                          size="compact-xs"
+                          variant="outline"
+                          onClick={() => {
+                            setTempJSON(
+                              JSON.stringify(
+                                templateVersion?.extra?.tools,
+                                null,
+                                2,
+                              ),
+                            )
+                            setJsonModalOpened(true)
                           }}
                         >
-                          Save
+                          Edit
                         </Button>
-                      </Modal>
-                      <Button
-                        size="compact-xs"
-                        variant="outline"
-                        onClick={() => {
-                          setTempJSON(
-                            JSON.stringify(
-                              templateVersion?.extra?.tools,
-                              null,
-                              2,
-                            ),
-                          )
-                          setJsonModalOpened(true)
-                        }}
-                      >
-                        Edit
-                      </Button>
-                    </>
-                  }
-                />
-              )}
-            </>
-          )}
+                      </>
+                    }
+                  />
+                )}
+              </>
+            )}
 
-          {template && (
-            <Card shadow="sm" p="sm" my="md">
-              <Group mb="md" align="center" justify="space-between">
-                <Text size="sm" fw="bold">
-                  Variables
-                </Text>
-                <Tooltip label="Add variables to your template in the {{ mustache }} format">
-                  <IconInfoCircle size={16} />
-                </Tooltip>
-              </Group>
-              {!Object.keys(variables).length && (
-                <Text c="dimmed" size="sm">
-                  {`Add variables to your template: {{variable}}`}
-                </Text>
-              )}
-              <Stack>
-                {Object.keys(variables).map((variable) => (
-                  <Group
-                    key={variable}
-                    align="center"
-                    justify="space-between"
-                    gap={0}
-                  >
-                    <Badge
+            {template && (
+              <Card shadow="sm" p="sm" my="md">
+                <Group mb="md" align="center" justify="space-between">
+                  <Text size="sm" fw="bold">
+                    Variables
+                  </Text>
+                  <Tooltip label="Add variables to your template in the {{ mustache }} format">
+                    <IconInfoCircle size={16} />
+                  </Tooltip>
+                </Group>
+                {!Object.keys(variables).length && (
+                  <Text c="dimmed" size="sm">
+                    {`Add variables to your template: {{variable}}`}
+                  </Text>
+                )}
+                <Stack>
+                  {Object.keys(variables).map((variable) => (
+                    <Group
                       key={variable}
-                      maw={90}
-                      variant="outline"
-                      style={{ textTransform: "none" }}
+                      align="center"
+                      justify="space-between"
+                      gap={0}
                     >
-                      {variable}
-                    </Badge>
-                    <Textarea
-                      size="xs"
-                      w={220}
-                      radius="sm"
-                      rows={1}
-                      placeholder="Test Value"
-                      value={templateVersion?.testValues?.[variable]}
-                      onChange={(e) => {
-                        setTemplateVersion({
-                          ...templateVersion,
-                          testValues: {
-                            ...templateVersion.testValues,
-                            [variable]: e.currentTarget.value,
-                          },
-                        })
-                      }}
-                    />
-                  </Group>
-                ))}
-              </Stack>
-            </Card>
-          )}
+                      <Badge
+                        key={variable}
+                        maw={90}
+                        variant="outline"
+                        style={{ textTransform: "none" }}
+                      >
+                        {variable}
+                      </Badge>
+                      <Textarea
+                        size="xs"
+                        w={220}
+                        radius="sm"
+                        rows={1}
+                        placeholder="Test Value"
+                        value={templateVersion?.testValues?.[variable]}
+                        onChange={(e) => {
+                          setTemplateVersion({
+                            ...templateVersion,
+                            testValues: {
+                              ...templateVersion.testValues,
+                              [variable]: e.currentTarget.value,
+                            },
+                          })
+                        }}
+                      />
+                    </Group>
+                  ))}
+                </Stack>
+              </Card>
+            )}
 
-          {template?.mode !== "text" && (
-            <Button
-              leftSection={<IconBolt size="16" />}
-              size="sm"
-              disabled={loading}
-              onClick={runPlayground}
-              loading={streaming}
-              rightSection={
-                <HotkeysInfo hot="Enter" size="sm" style={{ marginTop: -4 }} />
-              }
-            >
-              {template?.id ? "Test template" : "Run"}
-            </Button>
-          )}
-        </Stack>
-      </Grid.Col>
-    </Grid>
+            {template?.mode !== "text" && (
+              <Button
+                leftSection={<IconBolt size="16" />}
+                size="sm"
+                disabled={loading}
+                onClick={runPlayground}
+                loading={streaming}
+                rightSection={
+                  <HotkeysInfo
+                    hot="Enter"
+                    size="sm"
+                    style={{ marginTop: -4 }}
+                  />
+                }
+              >
+                {template?.id ? "Test template" : "Run"}
+              </Button>
+            )}
+          </Stack>
+        </Grid.Col>
+      </Grid>
+    </Empty>
   )
 }
 

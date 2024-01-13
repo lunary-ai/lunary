@@ -1,5 +1,6 @@
 import TinyPercentChart from "@/components/Blocks/Analytics/TinyPercentChart"
 import FiltersModal from "@/components/Blocks/FiltersModal"
+import Paywall from "@/components/Layout/Paywall"
 import {
   ActionIcon,
   Badge,
@@ -22,6 +23,8 @@ import {
   IconDatabase,
   IconListSearch,
   IconPlus,
+  IconRadar2,
+  IconShieldBolt,
 } from "@tabler/icons-react"
 import Router from "next/router"
 import { useState } from "react"
@@ -105,88 +108,102 @@ function View({ name, filters, percentMatch }) {
   )
 }
 
-export default function Evaluations() {
-  const [views, setViews] = useLocalStorage({
-    key: "views",
-    defaultValue: [],
-  })
+const FEATURE_LIST = [
+  "Combine filters to create magic views",
+  "See logs matching your criterias",
+  "AI filters to analyzise emotions, sentiments, PII, etc.",
+  "Setup alerts",
+]
 
+export default function Radar() {
   const [selected, setSelected] = useSetState({})
   const [modalOpened, setModalOpened] = useState(false)
 
   return (
-    <Container>
-      <Stack>
-        <Group align="center" justify="space-between">
-          <Group align="center">
-            <Title>Evaluations</Title>
-            <Badge variant="light" color="violet">
-              Alpha
-            </Badge>
+    <Paywall
+      plan="unlimited"
+      feature="Radar"
+      Icon={IconShieldBolt}
+      description="Identify outlier results that match specific conditions."
+      list={FEATURE_LIST}
+    >
+      <Container>
+        <Stack>
+          <Group align="center" justify="space-between">
+            <Group align="center">
+              <Title>Radar</Title>
+              <Badge variant="light" color="violet">
+                Alpha
+              </Badge>
+            </Group>
+
+            <Group>
+              <Button
+                leftSection={<IconPlus size={12} />}
+                variant="light"
+                color="blue"
+                onClick={() => {
+                  setModalOpened(true)
+                }}
+              >
+                New
+              </Button>
+              <Button
+                leftSection={<IconDatabase size={12} />}
+                variant="light"
+                color="violet"
+                onClick={() => {
+                  Router.push("/datasets")
+                }}
+              >
+                Datasets
+              </Button>
+            </Group>
           </Group>
 
-          <Group>
-            <Button
-              leftSection={<IconPlus size={12} />}
-              variant="light"
-              color="blue"
-              onClick={() => {
-                setModalOpened(true)
-              }}
-            >
-              New
-            </Button>
-            <Button
-              leftSection={<IconDatabase size={12} />}
-              variant="light"
-              color="violet"
-              onClick={() => {
-                Router.push("/datasets")
-              }}
-            >
-              Datasets
-            </Button>
-          </Group>
-        </Group>
+          <Text size="xl" mb="md">
+            Create evaluating views by combining filters. See responses matching
+            your criterias.
+          </Text>
 
-        <Text size="xl" mb="md">
-          Create evaluating views by combining filters. See responses matching
-          your criterias.
-        </Text>
-
-        <FiltersModal
-          opened={modalOpened}
-          defaultSelected={selected}
-          setOpened={setModalOpened}
-          save={setSelected}
-        />
-
-        <Stack gap="xl">
-          <View
-            name="Unhelpful responses"
-            filters={["feedback", "helpfulness"]}
-            percentMatch={28}
-          />
-          <View
-            name="Slow or failed responses"
-            filters={["duration", "status"]}
-            percentMatch={14}
-          />
-          <View name="Costly LLM calls" filters={["cost"]} percentMatch={11} />
-
-          <View
-            name="Contains Personal Identifiable Information (PII)"
-            filters={["email", "phone", "address"]}
-            percentMatch={9}
+          <FiltersModal
+            opened={modalOpened}
+            defaultSelected={selected}
+            setOpened={setModalOpened}
+            save={setSelected}
           />
 
-          <View
-            name="Contains hatred or profanity"
-            filters={["profanity", "hatred", "feedback"]}
-            percentMatch={1}
-          />
+          <Stack gap="xl">
+            <View
+              name="Unhelpful responses"
+              filters={["feedback", "helpfulness"]}
+              percentMatch={28}
+            />
+            <View
+              name="Slow or failed responses"
+              filters={["duration", "status"]}
+              percentMatch={14}
+            />
+            <View
+              name="Costly LLM calls"
+              filters={["cost"]}
+              percentMatch={11}
+            />
+
+            <View
+              name="Contains Personal Identifiable Information (PII)"
+              filters={["email", "phone", "address"]}
+              percentMatch={9}
+            />
+
+            <View
+              name="Contains hatred or profanity"
+              filters={["profanity", "hatred", "feedback"]}
+              percentMatch={1}
+            />
+          </Stack>
         </Stack>
-      </Stack>
-    </Container>
+      </Container>
+    </Paywall>
   )
 }

@@ -33,22 +33,30 @@ templates.post("/", async (ctx: Context) => {
     isDraft: boolean
   }
 
+  console.log("template", {
+    app_id: projectId,
+    org_id: orgId,
+    slug: slug,
+    mode: mode,
+  })
+
   const [template] = await sql`
-    insert into template (
-      app_id, org_id, slug, mode
-    ) values (
-      ${projectId}, ${orgId}, ${slug}, ${mode}
-    ) returning *
+    insert into template ${sql({
+      appId: projectId,
+      orgId: orgId,
+      slug: slug,
+      mode: mode,
+    })} returning *
   `
 
   const [templateVersion] = await sql`
-    insert into template_version (
-      template_id, content, extra, test_values, is_draft
-    ) values (
-      ${template.id}, ${sql.json(content)}, ${sql.json(extra)}, ${sql.json(
-        testValues,
-      )}, ${isDraft}
-    ) returning *
+    insert into template_version ${sql({
+      templateId: template.id,
+      content: sql.json(content),
+      extra: sql.json(extra),
+      testValues: sql.json(testValues),
+      isDraft: isDraft,
+    })} returning *
   `
 
   ctx.body = {

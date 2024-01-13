@@ -256,8 +256,6 @@ const TemplateList = ({
 
   if (loading) return <Loader />
 
-  console.log(templates)
-
   return (
     <ScrollArea h="100%">
       <NavLink

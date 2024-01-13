@@ -33,7 +33,7 @@ import { openUpgrade } from "./UpgradeModal"
 const menu = [
   { label: "Analytics", icon: IconTimeline, link: "/analytics" },
   { label: "Logs", icon: IconListSearch, link: "/logs" },
-  { label: "Tests & Evaluations", icon: IconShieldBolt, link: "/evaluations" },
+  { label: "Radar", icon: IconShieldBolt, link: "/radar" },
   { label: "Users", icon: IconUsers, link: "/users" },
   { label: "Prompts", icon: IconPlayerPlay, link: "/prompts" },
   { label: "Settings", icon: IconSettings, link: "/settings" },

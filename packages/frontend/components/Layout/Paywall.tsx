@@ -11,12 +11,12 @@ import {
   ThemeIcon,
   Title,
 } from "@mantine/core"
-import { IconCheck } from "@tabler/icons-react"
+import { IconBolt, IconCheck } from "@tabler/icons-react"
 import { openUpgrade } from "./UpgradeModal"
 
 const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1)
 
-const ListFeatures = ({ features }) => {
+export const ListFeatures = ({ features }) => {
   return (
     <List
       spacing="md"
@@ -60,7 +60,17 @@ export default function Paywall({
   }
 
   return (
-    <Box pos="relative" p={50}>
+    <Box
+      pos="absolute"
+      top={0}
+      left={0}
+      right={0}
+      bottom={0}
+      h={`100%`}
+      style={{
+        overflow: "hidden",
+      }}
+    >
       <Overlay
         zIndex={1}
         blur={2}
@@ -68,8 +78,6 @@ export default function Paywall({
         left={0}
         right={0}
         display="flex"
-        mih="90vh"
-        radius="md"
         bottom={0}
         style={{
           alignItems: "center",
@@ -91,6 +99,9 @@ export default function Paywall({
             <Button
               fullWidth
               size="md"
+              leftSection={<IconBolt size={20} />}
+              variant="gradient"
+              gradient={{ from: "blue", to: "cyan" }}
               onClick={() => openUpgrade(feature.toLowerCase())}
             >
               Upgrade to {capitalize(plan)} &rarr;
@@ -98,7 +109,7 @@ export default function Paywall({
           </Stack>
         </Card>
       </Overlay>
-      {children}
+      <Box pt={100}>{children}</Box>
     </Box>
   )
 }
