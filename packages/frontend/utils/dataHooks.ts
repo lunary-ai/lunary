@@ -9,6 +9,7 @@ import useSWRMutation from "swr/mutation"
 import { calcRunCost } from "./calcCosts"
 import { useRouter } from "next/router"
 import { fetcher } from "./fetcher"
+import { useSessionContext } from "supertokens-auth-react/recipe/session"
 
 // TODO: put in other file
 function extendWithCosts(data: any[]) {
@@ -101,10 +102,15 @@ export function useAllFeedbacks() {
 }
 
 export function useUser() {
+  const session = useSessionContext()
+  const isAuthed = !session.loading && session.doesSessionExist
+
   const theme = useMantineTheme()
   const scheme = useColorScheme()
 
-  const { data, isLoading, mutate, error } = useSWR(`/users/me`)
+  const { data, isLoading, mutate, error } = useSWR(
+    () => isAuthed && `/users/me`,
+  )
 
   const color = data ? getUserColor(scheme, theme, data.id) : null
   const user = data ? { ...data, color } : null
@@ -113,7 +119,11 @@ export function useUser() {
 }
 
 export function useOrg() {
-  const { data, isLoading, mutate } = useSWR(`/users/me/org`)
+  const session = useSessionContext()
+  const isAuthed = !session.loading && session.doesSessionExist
+
+  const { data, isLoading, mutate } = useSWR(() => isAuthed && `/users/me/org`)
+
   const theme = useMantineTheme()
   const scheme = useColorScheme()
 
