@@ -12,7 +12,7 @@ templates.get("/", async (ctx: Context) => {
     from template t
     left join template_version tv on tv.template_id = t.id
     where t.app_id = ${ctx.params.projectId}
-    group by t.id
+    group by t.id, t.org_id, t.name, t.slug, t.mode, t.created_at, t.group, t.app_id
     order by max(tv.created_at) desc
   `
 

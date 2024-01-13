@@ -1,13 +1,14 @@
 import sql from "@/utils/db"
 import Router from "koa-router"
 import stripe from "@/utils/stripe"
-import { OpenAIStream, StreamingTextResponse } from "ai"
+
 import OpenAI from "openai"
 import { completion } from "litellm"
 import { z } from "zod"
 import Context from "@/utils/koa"
 import { clearUndefined } from "@/utils/ingest"
 import project from "./projects"
+import { PassThrough } from "stream"
 
 const orgs = new Router({
   prefix: "/orgs/:orgId",
