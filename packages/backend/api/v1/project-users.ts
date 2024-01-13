@@ -3,11 +3,11 @@ import Router from "koa-router"
 import { Context } from "koa"
 
 const users = new Router({
-  prefix: "/users",
+  prefix: "/project-users",
 })
 
 users.get("/", async (ctx: Context) => {
-  const { projectId } = ctx.params
+  const { projectId } = ctx.state
 
   // const { limit, page } = ctx.query
 
@@ -36,7 +36,7 @@ users.get("/", async (ctx: Context) => {
 })
 
 users.get("/runs/usage", async (ctx) => {
-  const projectId = ctx.params.projectId as string
+  const { projectId } = ctx.state
   const days = ctx.query.days as string
 
   const daysNum = days ? parseInt(days) : 1

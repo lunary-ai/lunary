@@ -1,4 +1,4 @@
-export const sendEmail = async (body) => {
+export const sendEmail = async (body: any) => {
   if (!process.env.RESEND_KEY) {
     return console.warn("RESEND_KEY is not set, skipping email sending")
   }

@@ -59,7 +59,7 @@ const formatRun = (run: any) => ({
 runs.use("/ingest", ingest.routes())
 
 runs.get("/", async (ctx) => {
-  const projectId = ctx.params.projectId as string
+  const { projectId } = ctx.state
   const {
     type,
     search,
@@ -167,7 +167,7 @@ runs.get("/", async (ctx) => {
 })
 
 runs.get("/usage", async (ctx) => {
-  const projectId = ctx.params.projectId as string
+  const { projectId } = ctx.state
   const { days, userId, daily } = ctx.query as {
     days: string
     userId: string
@@ -212,7 +212,7 @@ runs.get("/usage", async (ctx) => {
 })
 
 runs.get("/:id", async (ctx) => {
-  const projectId = ctx.params.projectId as string
+  const { projectId } = ctx.state
   const { id } = ctx.params
 
   const [row] = await sql`
@@ -237,7 +237,7 @@ runs.get("/:id", async (ctx) => {
 })
 
 runs.patch("/:id", async (ctx: Context) => {
-  const projectId = ctx.params.projectId as string
+  const { projectId } = ctx.state
   const { id } = ctx.params
   const { isPublic, feedback, tags } = ctx.request.body as {
     isPublic: boolean

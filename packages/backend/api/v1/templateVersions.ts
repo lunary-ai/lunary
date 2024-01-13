@@ -18,7 +18,7 @@ versions.get(
   async (ctx: Context) => {
     // Route used by SDK to fetch the latest version of a template
 
-    const projectId = ctx.params.projectId as string
+    const { projectId } = ctx.state
 
     const { slug } = ctx.request.query as {
       slug: string
@@ -50,7 +50,7 @@ versions.get("/:id", async (ctx: Context) => {
   `
 
   const [template] = await sql`
-    select * from template where app_id = ${ctx.params.projectId} and id = ${version.templateId}
+    select * from template where app_id = ${ctx.state.projectId} and id = ${version.templateId}
   `
 
   ctx.body = { ...version, template }

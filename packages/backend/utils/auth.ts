@@ -163,6 +163,7 @@ export async function authMiddleware(ctx: Context, next: Next) {
 
 export async function addSessionInfos(ctx: Context, next: Next) {
   const userId = ctx.session?.getUserId()
+  const projectId = ctx.params?.projectId
 
   // TODO: should be stored in the token, so we don't have to make a db query for each request
   const [user] = await sql`select * from profile where id = ${userId}`
@@ -170,6 +171,7 @@ export async function addSessionInfos(ctx: Context, next: Next) {
   ctx.state = {
     userId,
     orgId: user.orgId,
+    projectId,
   }
 
   await next()

@@ -1,20 +1,19 @@
-import sql from "@/utils/db"
 import Router from "koa-router"
+
+import sql from "@/utils/db"
+import Context from "@/utils/koa"
 import stripe from "@/utils/stripe"
+import { clearUndefined } from "@/utils/ingest"
 
 import OpenAI from "openai"
 import { completion } from "litellm"
 import { z } from "zod"
-import Context from "@/utils/koa"
-import { clearUndefined } from "@/utils/ingest"
-import project from "./projects"
+
 import { PassThrough } from "stream"
 
 const orgs = new Router({
   prefix: "/orgs/:orgId",
 })
-
-orgs.use("", project.routes())
 
 orgs.get("/", async (ctx: Context) => {
   const orgId = ctx.params.orgId as string
@@ -57,83 +56,6 @@ orgs.patch("/", async (ctx: Context) => {
       where
         id = ${orgId}
     `
-  ctx.body = {}
-})
-
-orgs.get("/projects", async (ctx: Context) => {
-  const orgId = ctx.params.orgId as string
-
-  const rows = await sql`
-    select
-      id,
-      created_at,
-      name,
-      org_id,
-      exists(select * from run where app = app.id) as activated
-    from
-      app
-    where
-      org_id = ${orgId}
-  `
-
-  ctx.body = rows
-})
-
-orgs.post("/projects", async (ctx: Context) => {
-  const orgId = ctx.state.orgId
-
-  const bodySchema = z.object({
-    name: z.string(),
-  })
-  const { name } = bodySchema.parse(ctx.request.body)
-
-  const newProject = {
-    name,
-    orgId,
-  }
-
-  const [project] = await sql`insert into app ${sql(newProject)} returning *`
-
-  ctx.body = project
-})
-
-orgs.delete("/projects/:projectId", async (ctx: Context) => {
-  const projectId = ctx.params.projectId as string
-  const orgId = ctx.state.orgId
-
-  const [{ count }] =
-    await sql`select count(*)::int from  app where org_id = ${orgId}`
-
-  if (count > 1) {
-    await sql`delete from app where id = ${projectId}`
-    ctx.status = 200
-    return
-  } else {
-    ctx.status = 422
-
-    ctx.body = {
-      error: "Deletion Failed",
-      message: "An organization must have at least one project.",
-    }
-    return
-  }
-})
-
-orgs.patch("/projects/:projectId", async (ctx: Context) => {
-  const projectId = ctx.params.projectId as string
-  const bodySchema = z.object({
-    name: z.string(),
-  })
-  const { name } = bodySchema.parse(ctx.request.body)
-
-  await sql`
-      update app
-      set
-        name = ${name}
-      where
-        id = ${projectId}
-    `
-  ctx.status = 200
   ctx.body = {}
 })
 

@@ -14,7 +14,7 @@ export async function sendVerifyEmail(email: string, name: string) {
   const token = await sign({ email }, process.env.JWT_SECRET!)
 
   // TODO: hostname
-  const confirmLink = `http://localhost:3000/user/verify-email?token=${token}`
+  const confirmLink = `${process.env.NEXT_PUBLIC_APP_URL}/user/verify-email?token=${token}`
 
   await sendEmail(CONFIRM_EMAIL(email, name, confirmLink))
 }

@@ -13,7 +13,7 @@ redirections.post(
     const projectId = ctx.request.body.events[0].app as string
 
     ctx.status = 308
-    ctx.redirect(`/v1/projects/${projectId}/runs/ingest`)
+    ctx.redirect(`/v1/runs/ingest?projectId=${projectId}`)
   },
 )
 

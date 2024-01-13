@@ -1,6 +1,6 @@
 import sql from "@/utils/db"
+import Context from "@/utils/koa"
 import Router from "koa-router"
-import { Context } from "koa"
 
 const templates = new Router({
   prefix: "/templates",
@@ -11,7 +11,7 @@ templates.get("/", async (ctx: Context) => {
     select t.*, coalesce(json_agg(tv.*) filter (where tv.id is not null), '[]') as versions
     from template t
     left join template_version tv on tv.template_id = t.id
-    where t.app_id = ${ctx.params.projectId}
+    where t.app_id = ${ctx.state.projectId}
     group by t.id, t.org_id, t.name, t.slug, t.mode, t.created_at, t.group, t.app_id
     order by max(tv.created_at) desc
   `
@@ -21,11 +21,12 @@ templates.get("/", async (ctx: Context) => {
 
 // insert template + a first version, and return the template with versions
 templates.post("/", async (ctx: Context) => {
-  const { projectId } = ctx.params
-  const { slug, orgId, mode, content, extra, testValues, isDraft } = ctx.request
+  const { projectId } = ctx.state
+  const { orgId } = ctx.state
+  const { slug, mode, content, extra, testValues, isDraft } = ctx.request
     .body as {
     slug: string
-    orgId: string
+
     mode: string
     content: any[]
     extra: any
@@ -33,19 +34,12 @@ templates.post("/", async (ctx: Context) => {
     isDraft: boolean
   }
 
-  console.log("template", {
-    app_id: projectId,
-    org_id: orgId,
-    slug: slug,
-    mode: mode,
-  })
-
   const [template] = await sql`
     insert into template ${sql({
       appId: projectId,
-      orgId: orgId,
-      slug: slug,
-      mode: mode,
+      orgId,
+      slug,
+      mode,
     })} returning *
   `
 
@@ -67,7 +61,7 @@ templates.post("/", async (ctx: Context) => {
 
 templates.get("/:id", async (ctx: Context) => {
   const [row] = await sql`
-    select * from template where app_id = ${ctx.params.projectId} and id = ${ctx.params.id}
+    select * from template where app_id = ${ctx.state.projectId} and id = ${ctx.params.id}
   `
 
   ctx.body = row
@@ -75,7 +69,7 @@ templates.get("/:id", async (ctx: Context) => {
 
 templates.delete("/:id", async (ctx: Context) => {
   await sql`
-    delete from template where app_id = ${ctx.params.projectId} and id = ${ctx.params.id}
+    delete from template where app_id = ${ctx.state.projectId} and id = ${ctx.params.id}
   `
 
   ctx.body = {}
@@ -91,7 +85,7 @@ templates.patch("/:id", async (ctx: Context) => {
     update template set
       slug = ${slug},
       mode = ${mode}
-    where app_id = ${ctx.params.projectId} and id = ${ctx.params.id}
+    where app_id = ${ctx.state.projectId} and id = ${ctx.params.id}
     returning *
   `
 

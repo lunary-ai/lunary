@@ -7,7 +7,7 @@ const datasets = new Router({
 })
 
 datasets.get("/", async (ctx: Context) => {
-  const { projectId } = ctx.params
+  const { projectId } = ctx.state
 
   const rows = await sql`
     select
@@ -39,7 +39,7 @@ datasets.get("/:id", async (ctx: Context) => {
 })
 
 datasets.post("/", async (ctx: Context) => {
-  const { projectId } = ctx.params
+  const { projectId } = ctx.state
 
   const { slug } = ctx.request.body as { slug: string }
 
