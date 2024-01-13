@@ -17,6 +17,7 @@ import {
   IconFlask2Filled,
   IconListSearch,
   IconLogout,
+  IconMessage2,
   IconPlayerPlay,
   IconRefresh,
   IconSettings,
@@ -56,7 +57,6 @@ function NavbarLink({ icon: Icon, label, link, active }) {
       component={Link}
       href={link}
       w="100%"
-      py={8}
       label={label}
       active={active}
       leftSection={
@@ -187,23 +187,30 @@ export default function Sidebar() {
 
       {user && (
         <Box w="100%">
-          <NavLink
+          {/* <NavLink
             component={Link}
             href="https://feedback.lunary.ai/roadmap"
             label="Roadmap"
             leftSection={<IconActivity size="16" />}
-          />
+          /> */}
           <NavLink
             component={Link}
             href="https://lunary.ai/changelog"
             label="Changelog"
-            leftSection={<IconRefresh size="16" />}
+            leftSection={<IconActivity size={14} />}
+          />
+          <NavLink
+            onClick={() => {
+              $crisp.push(["do", "chat:open"])
+            }}
+            label="Help & Feedback"
+            leftSection={<IconMessage2 size={14} />}
           />
           <NavLink
             component="a"
             href="https://lunary.ai/docs"
             label="Documentation"
-            leftSection={<IconFile size="16" />}
+            leftSection={<IconFile size={14} />}
           />
           {process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY && (
             <>
@@ -212,7 +219,7 @@ export default function Sidebar() {
                   label="Upgrade"
                   onClick={() => openUpgrade()}
                   c="purple"
-                  leftSection={<IconBolt size="16" />}
+                  leftSection={<IconBolt size={14} />}
                 />
               )}
               <NavLink
@@ -221,13 +228,14 @@ export default function Sidebar() {
                 onClick={() => {
                   Router.push("/billing")
                 }}
-                leftSection={<IconCreditCard size="16" />}
+                leftSection={<IconCreditCard size={14} />}
               />
             </>
           )}
 
           <NavLink
             style={{ borderTop: "1px solid rgba(0,0,0,0.1)" }}
+            h={50}
             leftSection={<UserAvatar size={32} profile={user} />}
             label={
               <Stack gap={0}>
@@ -242,7 +250,7 @@ export default function Sidebar() {
               label="Logout"
               c="red"
               onClick={() => signOut()}
-              leftSection={<IconLogout size="16" />}
+              leftSection={<IconLogout size={14} />}
             />
           </NavLink>
         </Box>

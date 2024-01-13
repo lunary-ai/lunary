@@ -3,18 +3,24 @@ import type { FilterParam } from "./types"
 export const FORMAT_PARAM: FilterParam = {
   type: "select",
   id: "type",
+  width: 120,
+  defaultValue: "valid",
   options: [
     {
       label: "Is valid",
-      value: "parsable",
+      value: "valid",
     },
     {
       label: "Is partial",
       value: "partial",
     },
     {
+      label: "Contains valid",
+      value: "contains",
+    },
+    {
       label: "Is not valid",
-      value: "not_parsable",
+      value: "invalid",
     },
   ],
 }
@@ -22,6 +28,8 @@ export const FORMAT_PARAM: FilterParam = {
 export const NUMBER_PARAM: FilterParam = {
   type: "select",
   id: "operator",
+  width: 50,
+  defaultValue: "eq",
   options: [
     {
       label: ">=",
@@ -53,6 +61,8 @@ export const NUMBER_PARAM: FilterParam = {
 export const FIELD_PARAM: FilterParam = {
   type: "select",
   id: "field",
+  width: 80,
+  defaultValue: "input",
   options: [
     {
       label: "Input",
@@ -68,14 +78,16 @@ export const FIELD_PARAM: FilterParam = {
 export const MATCH_PARAM: FilterParam = {
   type: "select",
   id: "type",
+  width: 120,
+  defaultValue: "contains",
   options: [
     {
-      label: "Matches",
-      value: "match",
+      label: "Contains",
+      value: "contains",
     },
     {
-      label: "Does not match",
-      value: "not_match",
+      label: "Not contains",
+      value: "not_contains",
     },
   ],
 }
