@@ -12,13 +12,11 @@ import {
 } from "@mantine/core"
 import { IconDotsVertical, IconPlus, IconTrash } from "@tabler/icons-react"
 
-import { useOrg, useTemplate, useTemplates } from "@/utils/dataHooks"
+import { useTemplate, useTemplates } from "@/utils/dataHooks"
 import { useHover } from "@mantine/hooks"
 import { modals } from "@mantine/modals"
 import { notifications } from "@mantine/notifications"
 import { formatDistanceToNow } from "date-fns"
-import { generateSlug } from "random-word-slugs"
-import { useState } from "react"
 
 const slugify = (text: string): string =>
   text
@@ -229,30 +227,13 @@ const TemplateListItem = ({
 const TemplateList = ({
   activeTemplate,
   activeVersion,
+  rename,
+  setRename,
+  createTemplate,
   switchTemplate,
   switchTemplateVersion,
 }) => {
-  const { org } = useOrg()
-
-  const { templates, loading, insert, mutate } = useTemplates()
-
-  const [rename, setRename] = useState(null)
-
-  const createTemplate = async () => {
-    const slug = generateSlug(2)
-    const newTemplate = await insert({
-      mode: "openai",
-      orgId: org?.id,
-      slug,
-      ...defaultTemplateVersion,
-    })
-
-    switchTemplate(newTemplate)
-    setRename(newTemplate.id)
-    switchTemplateVersion(newTemplate.versions[0])
-
-    mutate()
-  }
+  const { templates, loading } = useTemplates()
 
   if (loading) return <Loader />
 

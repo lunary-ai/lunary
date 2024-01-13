@@ -20,16 +20,27 @@ function extendWithCosts(data: any[]) {
 
 type KeyType = string | ((...args: any[]) => string)
 
+function generateKey(
+  baseKey: KeyType,
+  projectId: string | undefined,
+  extraParams?: string,
+) {
+  const resolvedKey = typeof baseKey === "function" ? baseKey() : baseKey
+  if (!projectId || !resolvedKey) return null
+
+  let url = `${resolvedKey}${
+    resolvedKey.includes("?") ? "&" : "?"
+  }projectId=${projectId}`
+  if (extraParams) {
+    url += `&${extraParams}`
+  }
+  return url
+}
+
 export function useProjectSWR(key: KeyType, options?: SWRConfiguration) {
   const { projectId } = useContext(ProjectContext)
 
-  const resolvedKey = typeof key === "function" ? key() : key
-
-  return useSWR(
-    () =>
-      projectId && resolvedKey ? `${resolvedKey}?projectId=${projectId}` : null,
-    options,
-  )
+  return useSWR(() => generateKey(key, projectId), options)
 }
 
 export function useProjectMutation(
@@ -42,14 +53,8 @@ export function useProjectMutation(
 ) {
   const { projectId } = useContext(ProjectContext)
 
-  const resolvedKey = typeof key === "function" ? key() : key
-
   return useSWRMutation(
-    () =>
-      projectId && resolvedKey
-        ? `${resolvedKey}
-      ${resolvedKey.includes("?") ? "&" : "?"}projectId=${projectId}`
-        : null,
+    () => generateKey(key, projectId),
     customFetcher,
     options,
   )
@@ -60,14 +65,7 @@ export function useProjectInfiniteSWR(key: string, ...args: any[]) {
 
   function getKey(pageIndex, previousPageData) {
     if (previousPageData && !previousPageData.length) return null
-
-    return projectId && key
-      ? encodeURIComponent(
-          `/projects/${projectId}${key}` + key.includes("?")
-            ? "&"
-            : "?" + `page=${pageIndex}&limit=100`,
-        )
-      : null
+    return generateKey(key, projectId, `page=${pageIndex}&limit=100`)
   }
 
   const { data, isLoading, isValidating, size, setSize } = useSWRInfinite(
