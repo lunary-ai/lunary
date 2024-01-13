@@ -162,8 +162,8 @@ export default function Radar() {
           </Group>
 
           <Text size="xl" mb="md">
-            Create evaluating views by combining filters. See responses matching
-            your criterias.
+            Create radar views by combining filters. See responses matching your
+            criterias.
           </Text>
 
           <FiltersModal

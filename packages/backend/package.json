@@ -34,6 +34,7 @@
     "postgres": "^3.4.3",
     "stripe": "^14.11.0",
     "supertokens-node": "^16.6.8",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "shared": "workspace:*"
   }
 }

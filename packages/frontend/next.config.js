@@ -51,6 +51,7 @@ const nextConfig = {
 
     return config
   },
+  transpilePackages: ["shared"],
 }
 
 module.exports = nextConfig

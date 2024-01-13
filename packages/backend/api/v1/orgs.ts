@@ -11,6 +11,8 @@ import { z } from "zod"
 
 import { PassThrough } from "stream"
 
+import { MODELS } from "shared"
+
 const orgs = new Router({
   prefix: "/orgs/:orgId",
 })
@@ -173,23 +175,6 @@ orgs.post("/upgrade", async (ctx: Context) => {
 
   ctx.body = { ok: true }
 })
-
-const OPENROUTER_MODELS = [
-  "mistralai/mistral-7b-instruct",
-  "openai/gpt-4-32k",
-  "openchat/openchat-7b",
-  "teknium/openhermes-2.5-mistral-7b",
-  "mistralai/mixtral-8x7b-instruct",
-  "open-orca/mistral-7b-openorca",
-  "perplexity/pplx-70b-chat",
-  "perplexity/pplx-7b-chat",
-  "google/gemini-pro",
-  "google/palm-2-chat-bison",
-  "meta-llama/llama-2-13b-chat",
-  "meta-llama/llama-2-70b-chat",
-]
-
-const ANTHROPIC_MODELS = ["claude-2", "claude-2.0", "claude-instant-v1"]
 
 const convertInputToOpenAIMessages = (input: any[]) => {
   return input.map(({ role, content, text, functionCall, toolCalls, name }) => {
@@ -362,21 +347,24 @@ orgs.post("/playground", async (ctx: Context) => {
 
   let method
 
-  if (ANTHROPIC_MODELS.includes(model)) {
+  const modelObj = MODELS.find((m) => m.id === model)
+
+  if (modelObj?.provider === "anthropic") {
     method = completion
   } else {
-    const openAIparams = OPENROUTER_MODELS.includes(model)
-      ? {
-          apiKey: process.env.OPENROUTER_API_KEY,
-          baseURL: "https://openrouter.ai/api/v1",
-          defaultHeaders: {
-            "HTTP-Referer": "https://lunary.ai",
-            "X-Title": `Lunary.ai`,
-          },
-        }
-      : {
-          apiKey: process.env.OPENAI_API_KEY,
-        }
+    const openAIparams =
+      modelObj?.provider === "openrouter"
+        ? {
+            apiKey: process.env.OPENROUTER_API_KEY,
+            baseURL: "https://openrouter.ai/api/v1",
+            defaultHeaders: {
+              "HTTP-Referer": "https://lunary.ai",
+              "X-Title": `Lunary.ai`,
+            },
+          }
+        : {
+            apiKey: process.env.OPENAI_API_KEY,
+          }
 
     const openai = new OpenAI(openAIparams)
 
