@@ -40,10 +40,8 @@ import {
 } from "@tabler/icons-react"
 
 import analytics from "@/utils/analytics"
-import errorHandler from "@/utils/errorHandler"
 import { NextSeo } from "next-seo"
 import SocialProof from "@/components/Blocks/SocialProof"
-import { fetcher } from "@/utils/fetcher"
 import { signUp } from "supertokens-auth-react/recipe/emailpassword"
 import { useSessionContext } from "supertokens-auth-react/recipe/session"
 
@@ -107,20 +105,18 @@ function SignupPage() {
   }) => {
     setLoading(true)
 
-    const ok = await errorHandler(
-      signUp({
-        formFields: [
-          { id: "email", value: email },
-          { id: "password", value: password },
-          { id: "name", value: name },
-          { id: "projectName", value: projectName },
-          { id: "orgName", value: orgName },
-          { id: "employeeCount", value: employeeCount },
-          { id: "signupMethod", value: "signup" },
-          { id: "token", value: "123" }, // To keep because of weird supertoken behaviour
-        ],
-      }),
-    )
+    const response = await signUp({
+      formFields: [
+        { id: "email", value: email },
+        { id: "password", value: password },
+        { id: "name", value: name },
+        { id: "projectName", value: projectName },
+        { id: "orgName", value: orgName },
+        { id: "employeeCount", value: employeeCount },
+        { id: "signupMethod", value: "signup" },
+        { id: "token", value: "123" }, // To keep because of weird supertoken behaviour
+      ],
+    })
 
     analytics.track("Signup", {
       email,
@@ -130,18 +126,29 @@ function SignupPage() {
       employeeCount,
     })
 
-    if (ok) {
-      notifications.show({
-        icon: <IconCheck size={18} />,
-        color: "teal",
-        title: "Email sent",
-        autoClose: false,
-        withCloseButton: false,
-        message: "Check your emails for the confirmation link",
-      })
+    switch (response.status) {
+      case "OK":
+        notifications.show({
+          icon: <IconCheck size={18} />,
+          color: "teal",
+          title: "Email sent",
+          autoClose: false,
+          withCloseButton: false,
+          message: "Check your emails for the confirmation link",
+        })
 
-      setStep(3)
-    } else {
+        setStep(3)
+        break
+      case "SIGN_UP_NOT_ALLOWED":
+        form.setFieldError("email", "Sign up not allowed")
+        break
+      case "FIELD_ERROR":
+        notifications.show({
+          title: "Error",
+          message: "One or more fields are invalid",
+          color: "red",
+        })
+        break
     }
 
     setLoading(false)
@@ -208,7 +215,7 @@ function SignupPage() {
                             label="Email"
                             type="email"
                             autoComplete="email"
-                            error={form.errors.email && "Invalid email"}
+                            error={form.errors.email}
                             placeholder="Your email"
                             {...form.getInputProps("email")}
                           />
@@ -219,7 +226,7 @@ function SignupPage() {
                             description="Only used to address you properly."
                             leftSection={<IconUser size="16" />}
                             placeholder="Your full name"
-                            error={form.errors.name && "This field is required"}
+                            error={form.errors.name}
                             {...form.getInputProps("name")}
                             onChange={(e) => {
                               form.setFieldValue("name", e.target.value)
@@ -238,7 +245,7 @@ function SignupPage() {
                                 nextStep()
                               }
                             }}
-                            error={form.errors.password && "Invalid password"}
+                            error={form.errors.password}
                             placeholder="Your password"
                             {...form.getInputProps("password")}
                           />
