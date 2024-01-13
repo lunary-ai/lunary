@@ -85,24 +85,8 @@ const ParamItem = ({ name, value }) => (
   </Group>
 )
 
-// const FEATURE_LIST = [
-//   "Edit captured requests live",
-//   "Optimize prompts",
-//   "Share results with your team",
-//   "Test brand-new models such as Mistral, Claude v2, Bison & more.",
-// ]
-
 function Playground() {
   const router = useRouter()
-
-  // const [template, setTemplate] = useLocalStorage<any>({
-  //   key: "template",
-  // })
-
-  // const [templateVersion, setTemplateVersion] = useLocalStorage<any>({
-  //   key: "tp-version",
-  //   default: defaultTemplateVersion,
-  // })
 
   const { templates } = useTemplates()
 
@@ -126,6 +110,8 @@ function Playground() {
   const [error, setError] = useState(null)
   const [tempJSON, setTempJSON] = useState<any>("")
   const [jsonModalOpened, setJsonModalOpened] = useState(false)
+
+  const [rename, setRename] = useState(null)
 
   useHotkeys([
     [
@@ -226,6 +212,22 @@ function Playground() {
     }
 
     setHasChanges(false)
+
+    mutate()
+  }
+
+  const createTemplate = async () => {
+    const slug = generateSlug(2)
+    const newTemplate = await insert({
+      mode: "openai",
+      orgId: org?.id,
+      slug,
+      ...defaultTemplateVersion,
+    })
+
+    setTemplate(newTemplate)
+    setRename(newTemplate.id)
+    switchTemplateVersion(newTemplate.versions[0])
 
     mutate()
   }
@@ -419,10 +421,11 @@ function Playground() {
         "Collaborate with non-technical people",
         "Clean up your source-code",
         "Easily roll-back to previous versions",
+        "Test models such as Mistral, Claude v2, Bison & more.",
       ]}
       Icon={IconBracketsAngle}
       buttonLabel="Create first template"
-      onClick={() => {}}
+      onClick={createTemplate}
     >
       <Grid
         w="100%"
@@ -439,6 +442,9 @@ function Playground() {
           style={{ borderRight: "1px solid rgba(120, 120, 120, 0.1)" }}
         >
           <TemplateList
+            rename={rename}
+            createTemplate={createTemplate}
+            setRename={setRename}
             activeTemplate={template}
             switchTemplate={setTemplate}
             activeVersion={templateVersion}
