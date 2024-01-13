@@ -7,7 +7,7 @@ const filters = new Router({
 })
 
 filters.get("/models", async (ctx: Context) => {
-  const projectId = ctx.params.projectId as string
+  const { projectId } = ctx.state
 
   const rows = await sql`
     select
@@ -24,7 +24,7 @@ filters.get("/models", async (ctx: Context) => {
 })
 
 filters.get("/tags", async (ctx: Context) => {
-  const projectId = ctx.params.projectId as string
+  const { projectId } = ctx.state
 
   const rows = await sql`
 	  select
@@ -39,7 +39,7 @@ filters.get("/tags", async (ctx: Context) => {
 })
 
 filters.get("/feedbacks", async (ctx: Context) => {
-  const projectId = ctx.params.projectId as string
+  const { projectId } = ctx.state
 
   const rows = await sql`
     select
@@ -86,7 +86,7 @@ filters.get("/feedbacks", async (ctx: Context) => {
 
 // TODO
 // filters.get("/users", async (ctx) => {
-//   const projectId = ctx.params.projectId as string
+//   const { projectId } = ctx.state
 //   const usageRange = Number(ctx.query.usageRange) || 30
 
 //   // TODO: do a new query to get the user list. Look at what is currently used in production

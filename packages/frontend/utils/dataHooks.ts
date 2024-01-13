@@ -1,13 +1,12 @@
 import { useMantineTheme } from "@mantine/core"
 import { useColorScheme } from "@mantine/hooks"
-import { use, useContext } from "react"
-import useSWR, { Fetcher, SWRConfiguration } from "swr"
+import { useContext } from "react"
+import useSWR, { SWRConfiguration } from "swr"
 import useSWRInfinite from "swr/infinite"
 import { ProjectContext } from "./context"
 import { getUserColor } from "./colors"
 import useSWRMutation from "swr/mutation"
 import { calcRunCost } from "./calcCosts"
-import { useRouter } from "next/router"
 import { fetcher } from "./fetcher"
 import { useSessionContext } from "supertokens-auth-react/recipe/session"
 
@@ -23,14 +22,12 @@ type KeyType = string | ((...args: any[]) => string)
 
 export function useProjectSWR(key: KeyType, options?: SWRConfiguration) {
   const { projectId } = useContext(ProjectContext)
-  const { org } = useOrg()
+
   const resolvedKey = typeof key === "function" ? key() : key
 
   return useSWR(
     () =>
-      projectId && resolvedKey
-        ? `/orgs/${org.id}/projects/${projectId}${resolvedKey}`
-        : null,
+      projectId && resolvedKey ? `${resolvedKey}?projectId=${projectId}` : null,
     options,
   )
 }
@@ -44,13 +41,14 @@ export function useProjectMutation(
   options?: SWRConfiguration,
 ) {
   const { projectId } = useContext(ProjectContext)
-  const { org } = useOrg()
+
   const resolvedKey = typeof key === "function" ? key() : key
 
   return useSWRMutation(
     () =>
       projectId && resolvedKey
-        ? `/orgs/${org.id}/projects/${projectId}${resolvedKey}`
+        ? `${resolvedKey}
+      ${resolvedKey.includes("?") ? "&" : "?"}projectId=${projectId}`
         : null,
     customFetcher,
     options,
@@ -149,11 +147,10 @@ export function useOrg() {
 }
 
 export function useProjects() {
-  const { org } = useOrg()
-  const { data, isLoading, mutate } = useSWR(() => `/orgs/${org.id}/projects`)
+  const { data, isLoading, mutate } = useSWR(() => `/projects`)
 
   const { trigger: insertMutation } = useSWRMutation(
-    () => `/orgs/${org.id}/projects`,
+    () => `/projects`,
     fetcher.post,
     {
       populateCache(result, currentData) {
@@ -275,12 +272,11 @@ export function useLogs(
   type: "llm" | "trace" | "thread" | "chat",
   parentRunId?: string,
 ) {
-  const { org } = useOrg()
   const PAGE_SIZE = 1
   const parentRunIdStr = parentRunId ? `&parentRunId=${parentRunId}` : "" // TODO: use a query param builder
-  const { projectId } = useContext(ProjectContext)
+
   function getKey(pageIndex, previousPageData) {
-    return `/orgs/${org.id}/projects/${projectId}/runs?type=${type}&page=${pageIndex}&limit=${PAGE_SIZE}${parentRunIdStr}`
+    return `/runs?type=${type}&page=${pageIndex}&limit=${PAGE_SIZE}${parentRunIdStr}`
   }
 
   const { data, isLoading, isValidating, size, setSize } =
@@ -348,7 +344,9 @@ export function useRunsUsageByDay(range, user_id?: string) {
 }
 
 export function useRunsUsageByUser(range = null) {
-  const { data: usageByUser, isLoading } = useProjectSWR(`/users/runs/usage`)
+  const { data: usageByUser, isLoading } = useProjectSWR(
+    `/project-users/runs/usage`,
+  )
 
   const reduceUsersUsage = (usage) => {
     const userData = []
@@ -385,7 +383,7 @@ export function useRunsUsageByUser(range = null) {
 
 // TODO: pagination
 export function useAppUserList() {
-  const { data, isLoading, isValidating } = useProjectSWR(`/users`)
+  const { data, isLoading, isValidating } = useProjectSWR(`/project-users`)
 
   const { usageByUser } = useRunsUsageByUser()
 

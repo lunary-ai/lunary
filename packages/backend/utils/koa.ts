@@ -5,7 +5,7 @@ type CustomContext<StateT = Koa.DefaultState> = Koa.ParameterizedContext<
   { a: 1 }
 >
 type AuthenticatedContext = Koa.Context & {
-  state: { userId: string; orgId: string }
+  state: { userId: string; orgId: string; projectId: string }
 }
 type Context = AuthenticatedContext
 

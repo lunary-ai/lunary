@@ -220,7 +220,7 @@ router.post(
   "/",
   verifySession({ sessionRequired: false }),
   async (ctx: Context) => {
-    const projectId = ctx.params.projectId as string
+    const { projectId } = ctx.state
     console.log("ID", projectId)
 
     const { events } = ctx.request.body as {

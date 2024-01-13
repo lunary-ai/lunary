@@ -10,7 +10,7 @@ const auth = new Router({
 })
 
 auth.post("/request-password-reset", async (ctx: Context) => {
-  const email = ctx.request.body.email as string
+  const { email } = ctx.request.body as { email: string }
   const [user] = await sql`select id from profile where email = ${email}`
 
   const linkResponse = await EmailPassword.createResetPasswordLink(
@@ -18,6 +18,10 @@ auth.post("/request-password-reset", async (ctx: Context) => {
     user.id,
     email,
   )
+
+  if (linkResponse.status !== "OK") {
+    throw new Error("Error creating reset password link")
+  }
 
   const link = linkResponse.link.replace("/auth", "")
 
