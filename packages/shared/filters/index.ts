@@ -114,10 +114,14 @@ export const FILTERS: Filter[] = [
     id: "json",
     name: "Valid JSON",
     params: [
+      {
+        label: "Response",
+        type: "label",
+      },
       FORMAT_PARAM,
       {
         type: "label",
-        label: "Valid JSON",
+        label: "JSON",
       },
     ],
     evaluator: async (run) => {
@@ -142,10 +146,14 @@ export const FILTERS: Filter[] = [
     id: "xml",
     name: "Valid XML / HTML",
     params: [
+      {
+        label: "Response",
+        type: "label",
+      },
       FORMAT_PARAM,
       {
         type: "label",
-        label: "Valid XML / HTML",
+        label: "XML / HTML",
       },
     ],
     evaluator: async (run) => {
