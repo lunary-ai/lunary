@@ -120,11 +120,7 @@ export default function Empty({
           </Stack>
         </Card>
       </Overlay>
-      {children && (
-        <Box pr={50} pl={120} py={70}>
-          {children}
-        </Box>
-      )}
+      {children && <Box p="xl">{children}</Box>}
     </Box>
   )
 }

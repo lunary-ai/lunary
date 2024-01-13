@@ -249,6 +249,7 @@ router.post(
     for (const event of sorted) {
       try {
         const cleanedEvent = await cleanEvent(event)
+        console.log("Cleaned event", cleanedEvent)
 
         await registerEvent(projectId, cleanedEvent, insertedIds)
 
@@ -269,6 +270,8 @@ router.post(
         })
       }
     }
+
+    console.log("Inserted", insertedIds.size, "runs")
 
     ctx.body = { results }
   },

@@ -55,7 +55,7 @@ export default function Paywall({
   const { org } = useOrg()
 
   // Automatically disable paywall in these cases
-  if (["custom", plan].includes(org?.plan)) {
+  if (["custom", plan].includes(org?.plan) || process.env.NEXT_PUBLIC_DEMO) {
     return children
   }
 
@@ -109,7 +109,7 @@ export default function Paywall({
           </Stack>
         </Card>
       </Overlay>
-      <Box pt={100}>{children}</Box>
+      <Box>{children}</Box>
     </Box>
   )
 }
