@@ -32,6 +32,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   ].find((path) => router.pathname.startsWith(path))
 
   const { user, loading: userLoading, error } = useUser()
+
   const { org } = useOrg()
 
   const session = useSessionContext()
