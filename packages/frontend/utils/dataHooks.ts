@@ -27,7 +27,10 @@ export function useProjectSWR(key: KeyType, options?: SWRConfiguration) {
   const resolvedKey = typeof key === "function" ? key() : key
 
   return useSWR(
-    () => `/orgs/${org.id}/projects/${projectId}${resolvedKey}`,
+    () =>
+      projectId && resolvedKey
+        ? `/orgs/${org.id}/projects/${projectId}${resolvedKey}`
+        : null,
     options,
   )
 }
@@ -45,7 +48,10 @@ export function useProjectMutation(
   const resolvedKey = typeof key === "function" ? key() : key
 
   return useSWRMutation(
-    () => `/orgs/${org.id}/projects/${projectId}${resolvedKey}`,
+    () =>
+      projectId && resolvedKey
+        ? `/orgs/${org.id}/projects/${projectId}${resolvedKey}`
+        : null,
     customFetcher,
     options,
   )

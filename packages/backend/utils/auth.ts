@@ -11,12 +11,12 @@ export function setupAuth() {
   supertokens.init({
     framework: "koa",
     supertokens: {
-      connectionURI: "http://localhost:3567",
+      connectionURI: "http://127.0.0.1:3567",
     },
     appInfo: {
       appName: "Lunary",
-      apiDomain: "http://localhost:3333",
-      websiteDomain: "http://localhost:8080",
+      apiDomain: "http://127.0.0.1:3333",
+      websiteDomain: "http://127.0.0.1:8080",
       apiBasePath: "/auth",
     },
     debug: false,
