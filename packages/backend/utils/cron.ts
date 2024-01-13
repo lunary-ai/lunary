@@ -1,5 +1,6 @@
 import cron from "node-cron"
 import sql from "./db"
+import resetUsage from "@/jobs/resetUsage"
 
 export function setupCronJobs() {
   cron.schedule(
@@ -10,4 +11,8 @@ export function setupCronJobs() {
     },
     { name: "refresh materialized views" },
   )
+
+  cron.schedule("0 10 * * *", resetUsage, {
+    name: "reset usage",
+  })
 }

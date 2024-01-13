@@ -1,4 +1,4 @@
-import { AppShell, Box, Center, Loader } from "@mantine/core"
+import { AppShell, Box, Center, Flex, Loader } from "@mantine/core"
 import { Notifications } from "@mantine/notifications"
 import { ReactNode, useEffect } from "react"
 
@@ -14,6 +14,7 @@ import { ModalsProvider } from "@mantine/modals"
 import UpgradeModal from "./UpgradeModal"
 import { useSessionContext } from "supertokens-auth-react/recipe/session"
 import { signOut } from "@/utils/auth"
+import analytics from "@/utils/analytics"
 
 export default function Layout({ children }: { children: ReactNode }) {
   const router = useRouter()
@@ -78,6 +79,15 @@ export default function Layout({ children }: { children: ReactNode }) {
     isPublicPage,
   ])
 
+  useEffect(() => {
+    if (user) {
+      analytics.identify(user.id, {
+        email: user.email,
+        name: user.user_metadata?.name,
+      })
+    }
+  }, [user])
+
   if (!isAuthPage && ((!user && userLoading) || session.loading)) {
     return (
       <Center h="100vh" w="100vw">
@@ -93,26 +103,27 @@ export default function Layout({ children }: { children: ReactNode }) {
       <Notifications position="top-right" />
       <ModalsProvider modals={{ upgrade: UpgradeModal }}>
         <ProjectContext.Provider value={{ projectId, setProjectId }}>
-          <AppShell
+          <Flex
             mih={"100vh"}
-            header={{ height: 60 }}
-            navbar={{
-              width: 80,
-              breakpoint: "0",
-              collapsed: { mobile: isAuthPage, desktop: isAuthPage },
-            }}
+            // navbar={{
+            //   width: 200,
+            //   breakpoint: "0",
+            //   collapsed: { mobile: isAuthPage, desktop: isAuthPage },
+            // }}
             className={org?.limited ? "limited" : ""}
             style={{
               backgroundColor: colorScheme === "dark" ? "#181818" : "#fafafa",
               color: colorScheme === "dark" ? "#eee" : "#333",
             }}
           >
-            {!isAuthPage && !isPublicPage && <Navbar />}
             {!isAuthPage && !isPublicPage && <Sidebar />}
-            <AppShell.Main>
-              <Box p={isPromptPage ? 0 : 24}>{children}</Box>
-            </AppShell.Main>
-          </AppShell>
+            {/* <AppShell.Main> */}
+            <Box p={isPromptPage ? 0 : 24} pos="relative" flex={1}>
+              {!isAuthPage && !isPublicPage && <Navbar />}
+              {children}
+            </Box>
+            {/* </AppShell.Main> */}
+          </Flex>
         </ProjectContext.Provider>
       </ModalsProvider>
     </>

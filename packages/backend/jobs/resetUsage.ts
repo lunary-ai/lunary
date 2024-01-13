@@ -1,10 +1,5 @@
-import { NextApiRequest, NextApiResponse } from "next"
-
-import { apiWrapper } from "@/lib/api/helpers"
-import { sendTelegramMessage } from "@/lib/notifications"
-
-import { H } from "@highlight-run/next/server"
-import sql from "@/lib/db"
+import sql from "@/utils/db"
+import { sendTelegramMessage } from "@/utils/notifications"
 
 const updateLimitedStatus = async () => {
   // set limited = false for all users that have been under the limit
@@ -74,28 +69,16 @@ const resetAIallowance = async () => {
   await sql`UPDATE "public"."org" o SET play_allowance = 1000 WHERE o.plan = 'unlimited' OR o.plan = 'custom';`
 }
 
-export default apiWrapper(async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
-  const authHeader = req.headers["authorization"]
-
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return res.status(401).json({ error: "unauthorized" })
-  }
+export default async function resetUsage() {
   try {
     await resetAIallowance()
   } catch (error) {
     console.error(error)
-    H.consumeError(error)
   }
 
   try {
     await updateLimitedStatus()
   } catch (error) {
     console.error(error)
-    H.consumeError(error)
   }
-
-  return res.status(200).json({ success: true })
-})
+}

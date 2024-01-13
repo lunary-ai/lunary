@@ -1,58 +1,26 @@
-import analytics from "@/utils/analytics"
-import {
-  Anchor,
-  AppShell,
-  Button,
-  Combobox,
-  Flex,
-  Group,
-  Input,
-  InputBase,
-  Select,
-  Text,
-  useCombobox,
-} from "@mantine/core"
+import { Anchor, Button, Flex, Group } from "@mantine/core"
 
 import {
   IconAlertTriangle,
   IconAlertTriangleFilled,
-  IconAnalyze,
-  IconBolt,
   IconCheck,
-  IconHelp,
-  IconMessage,
-  IconPlus,
 } from "@tabler/icons-react"
 
-import {
-  useCurrentProject,
-  useOrg,
-  useProjects,
-  useUser,
-} from "@/utils/dataHooks"
+import { useOrg, useUser } from "@/utils/dataHooks"
 import { notifications } from "@mantine/notifications"
-import Link from "next/link"
-import Router, { useRouter } from "next/router"
-import Script from "next/script"
+import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
 import errorHandler from "../../utils/errorHandler"
 import { openUpgrade } from "./UpgradeModal"
 
 export default function Navbar() {
-  const { currentProject, setCurrentProjectId } = useCurrentProject()
   const router = useRouter()
 
   const { user, mutate } = useUser()
   const { org } = useOrg()
-  const { projects, isLoading: loading, insert } = useProjects()
+
   const [emailSent, setEmailSent] = useState(false)
   const [sendingEmail, setSendingEmail] = useState(false)
-
-  const [createProjectLoading, setCreateProjectLoading] = useState(false)
-
-  const combobox = useCombobox({
-    // onDropdownClose: () => combobox.resetSelectedOption(),
-  })
 
   // const user = useUser()
 
@@ -106,210 +74,68 @@ export default function Navbar() {
     setSendingEmail(false)
   }
 
-  useEffect(() => {
-    if (user) {
-      analytics.identify(user.id, {
-        email: user.email,
-        name: user.user_metadata?.name,
-      })
-
-      try {
-        const win = window as any
-
-        if (typeof win.Featurebase !== "function") {
-          win.Featurebase = function () {
-            // eslint-disable-next-line prefer-rest-params
-            ;(win.Featurebase.q = win.Featurebase.q || []).push(arguments)
-          }
-        }
-        win.Featurebase("initialize_feedback_widget", {
-          organization: "lunary",
-          theme: "light",
-          // placement: "right",
-          email: user?.email,
-        })
-      } catch (e) {}
-    }
-  }, [user])
-
-  const createProject = async () => {
-    if (org.plan === "free" && projects.length >= 2) {
-      return openUpgrade("projects")
-    }
-
-    setCreateProjectLoading(true)
-
-    const name = `Project #${projects.length + 1}`
-    const { id } = await insert({ name })
-
-    analytics.track("Create Project", {
-      name,
-    })
-
-    setCreateProjectLoading(false)
-    setCurrentProjectId(id)
-
-    Router.push(`/settings`)
-  }
-
-  // Select first project if none selected
-  useEffect(() => {
-    if (!currentProject && projects?.length && !loading) {
-      setCurrentProjectId(projects[0].id)
-    }
-  }, [currentProject, projects, loading, setCurrentProjectId])
-
   return (
-    <>
-      <AppShell.Header p="md" h="60">
-        <Script
-          src="https://do.featurebase.project/js/sdk.js"
-          id="featurebase-sdk"
-        />
+    <Flex
+      align="center"
+      justify="space-between"
+      pos="absolute"
+      top={8}
+      right={8}
+    >
+      <Group />
 
-        <Flex align="center" justify="space-between" h="100%">
-          <Group>
-            <Anchor component={Link} href="/">
-              <Group mx="sm">
-                <IconAnalyze size={26} />
-              </Group>
-            </Anchor>
-
-            {!loading && user && projects?.length && (
-              <Combobox
-                store={combobox}
-                withinPortal={false}
-                onOptionSubmit={(id) => {
-                  setCurrentProjectId(id)
-                  combobox.closeDropdown()
-                }}
+      <Group>
+        {org?.canceled ? (
+          <Button
+            size="compact-xs"
+            color="red"
+            onClick={() => openUpgrade()}
+            leftSection={<IconAlertTriangleFilled size="16" />}
+          >
+            Subscription will cancel soon. Click here to restore and prevent
+            data deletion.
+          </Button>
+        ) : org?.limited ? (
+          <Button
+            color="orange"
+            size="compact-xs"
+            onClick={() => openUpgrade("events")}
+            leftSection={<IconAlertTriangle size="16" />}
+          >
+            Events limit reached. Click here to upgrade & restore access.
+          </Button>
+        ) : (
+          <>
+            {!user?.verified && (
+              <Group
+                bg="orange.9"
+                h={24}
+                c="white"
+                gap={8}
+                px="8"
+                display="flex"
+                style={{ borderRadius: 8, fontSize: 14, color: "white" }}
               >
-                <Combobox.Target>
-                  <InputBase
-                    component="button"
-                    ml="lg"
-                    size="xs"
-                    miw={200}
-                    type="button"
-                    pointer
-                    rightSection={<Combobox.Chevron />}
-                    onClick={() => combobox.toggleDropdown()}
-                    rightSectionPointerEvents="none"
-                  >
-                    {currentProject?.name || (
-                      <Input.Placeholder>Select Project</Input.Placeholder>
-                    )}
-                  </InputBase>
-                </Combobox.Target>
-                <Combobox.Dropdown>
-                  <Combobox.Options>
-                    {projects?.map((item) => (
-                      <Combobox.Option value={item.id} key={item.id}>
-                        {item.name}
-                      </Combobox.Option>
-                    ))}
-                  </Combobox.Options>
-                  <Combobox.Footer>
-                    <Button
-                      loading={createProjectLoading}
-                      size="xs"
-                      onClick={createProject}
-                      variant="light"
-                      fullWidth
-                      leftSection={<IconPlus size={12} />}
+                {`Verify your email to keep your account`}
+
+                {!emailSent && (
+                  <>
+                    <span style={{ marginRight: 0 }}>-</span>
+                    <Anchor
+                      href="#"
+                      onClick={sendVerification}
+                      c="white"
+                      style={{ fontSize: 14 }}
                     >
-                      Create project
-                    </Button>
-                  </Combobox.Footer>
-                </Combobox.Dropdown>
-              </Combobox>
-            )}
-          </Group>
-
-          <Group>
-            {org?.canceled ? (
-              <Button
-                size="xs"
-                color="red"
-                onClick={() => openUpgrade()}
-                leftSection={<IconAlertTriangleFilled size="16" />}
-              >
-                Subscription will cancel soon. Click here to restore and prevent
-                data deletion.
-              </Button>
-            ) : org?.limited ? (
-              <Button
-                color="orange"
-                size="xs"
-                onClick={() => openUpgrade("events")}
-                leftSection={<IconAlertTriangle size="16" />}
-              >
-                Events limit reached. Click here to upgrade & restore access.
-              </Button>
-            ) : (
-              <>
-                {!user?.verified && (
-                  <Group
-                    bg="orange.9"
-                    h="30"
-                    c="white"
-                    gap={8}
-                    px="16"
-                    display="flex"
-                    style={{ borderRadius: 8, fontSize: 14, color: "white" }}
-                  >
-                    {`Verify your email to keep your account`}
-
-                    {!emailSent && (
-                      <>
-                        <span style={{ marginRight: 0 }}>-</span>
-                        <Anchor
-                          href="#"
-                          onClick={sendVerification}
-                          c="white"
-                          style={{ fontSize: 14 }}
-                        >
-                          {sendingEmail ? "Sending..." : "Resend email"}
-                        </Anchor>
-                      </>
-                    )}
-                  </Group>
+                      {sendingEmail ? "Sending..." : "Resend email"}
+                    </Anchor>
+                  </>
                 )}
-                <Button
-                  size="xs"
-                  leftSection={<IconMessage size={18} />}
-                  data-featurebase-feedback
-                >
-                  Feedback
-                </Button>
-
-                <Button
-                  component="a"
-                  href="https://lunary.ai/docs"
-                  size="xs"
-                  target="_blank"
-                  variant="outline"
-                  leftSection={<IconHelp size={18} />}
-                >
-                  Docs
-                </Button>
-              </>
+              </Group>
             )}
-
-            {org?.plan === "free" && (
-              <Button
-                onClick={() => openUpgrade()}
-                size="xs"
-                variant="gradient"
-                gradient={{ from: "#0788ff", to: "#9900ff", deg: 30 }}
-                leftSection={<IconBolt size="16" />}
-              >
-                Upgrade
-              </Button>
-            )}
-          </Group>
-        </Flex>
-      </AppShell.Header>
-    </>
+          </>
+        )}
+      </Group>
+    </Flex>
   )
 }

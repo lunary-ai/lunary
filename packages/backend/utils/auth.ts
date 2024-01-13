@@ -143,14 +143,20 @@ const publicRoutes = [
   new RegExp(`/auth/.+`),
   "/api/report",
   "/auth/user/password/reset",
-  new RegExp(`/v1/projects/.+/runs/ingest`),
-  new RegExp(`/v1/project/.+/template_versions/latest`), // TODO: verify if it publicly accessible
+  `/v1/runs/ingest`,
+  `/v1/template_versions/latest`, // TODO: verify if it publicly accessible
 ]
 
 export async function authMiddleware(ctx: Context, next: Next) {
   const isPublicRoute = publicRoutes.some((route) =>
     typeof route === "string" ? route === ctx.path : route.test(ctx.path),
   )
+
+  ctx.state = {}
+
+  // Todo: actual public/private key auth and reconciliation with projectId
+  const token = ctx.headers.authorization?.split(" ")[1]
+  if (token) ctx.state.projectId = token
 
   if (isPublicRoute) {
     await next()
@@ -168,11 +174,9 @@ export async function addSessionInfos(ctx: Context, next: Next) {
   // TODO: should be stored in the token, so we don't have to make a db query for each request
   const [user] = await sql`select * from profile where id = ${userId}`
 
-  ctx.state = {
-    userId,
-    orgId: user.orgId,
-    projectId,
-  }
+  ctx.state.userId
+  ctx.state.orgId = user.orgId
+  ctx.state.projectId = projectId
 
   await next()
 }

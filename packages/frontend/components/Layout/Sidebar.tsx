@@ -1,18 +1,20 @@
 import {
-  ActionIcon,
   AppShell,
-  Group,
-  Menu,
+  Box,
+  Flex,
+  NavLink,
   Stack,
+  Text,
   ThemeIcon,
-  Tooltip,
 } from "@mantine/core"
 
 import {
   IconActivity,
+  IconAnalyze,
   IconBolt,
   IconCreditCard,
   IconFile,
+  IconFlask2Filled,
   IconListSearch,
   IconLogout,
   IconPlayerPlay,
@@ -30,10 +32,19 @@ import Link from "next/link"
 import Router, { useRouter } from "next/router"
 import { openUpgrade } from "./UpgradeModal"
 
+import analytics from "@/utils/analytics"
+import { Button, Combobox, Input, InputBase, useCombobox } from "@mantine/core"
+
+import { IconPlus } from "@tabler/icons-react"
+
+import { useCurrentProject, useProjects } from "@/utils/dataHooks"
+import { useEffect, useState } from "react"
+
 const menu = [
   { label: "Analytics", icon: IconTimeline, link: "/analytics" },
   { label: "Logs", icon: IconListSearch, link: "/logs" },
   { label: "Radar", icon: IconShieldBolt, link: "/radar" },
+  { label: "Evaluations", icon: IconFlask2Filled, link: "/evals" },
   { label: "Users", icon: IconUsers, link: "/users" },
   { label: "Prompts", icon: IconPlayerPlay, link: "/prompts" },
   { label: "Settings", icon: IconSettings, link: "/settings" },
@@ -41,25 +52,39 @@ const menu = [
 
 function NavbarLink({ icon: Icon, label, link, active }) {
   return (
-    <Tooltip label={label} withArrow position="right">
-      <Link href={link}>
+    <NavLink
+      component={Link}
+      href={link}
+      w="100%"
+      py={8}
+      label={label}
+      active={active}
+      leftSection={
         <ThemeIcon
-          variant={active ? "filled" : "light"}
+          variant={active ? "light" : "subtle"}
           color={active ? "blue" : "blue.4"}
-          size="lg"
+          size="sm"
         >
-          <Icon size="17px" />
+          <Icon size={14} />
         </ThemeIcon>
-      </Link>
-    </Tooltip>
+      }
+    />
   )
 }
 
 export default function Sidebar() {
   const router = useRouter()
+  const { currentProject, setCurrentProjectId } = useCurrentProject()
 
-  const { user } = useUser()
+  const { user, mutate } = useUser()
   const { org } = useOrg()
+  const { projects, isLoading: loading, insert } = useProjects()
+
+  const [createProjectLoading, setCreateProjectLoading] = useState(false)
+
+  const combobox = useCombobox({
+    // onDropdownClose: () => combobox.resetSelectedOption(),
+  })
 
   const isActive = (link: string) => router.pathname.startsWith(link)
 
@@ -67,98 +92,161 @@ export default function Sidebar() {
     <NavbarLink {...item} active={isActive(item.link)} key={item.label} />
   ))
 
+  const createProject = async () => {
+    if (org.plan === "free" && projects.length >= 2) {
+      return openUpgrade("projects")
+    }
+
+    setCreateProjectLoading(true)
+
+    const name = `Project #${projects.length + 1}`
+    const { id } = await insert({ name })
+
+    analytics.track("Create Project", {
+      name,
+    })
+
+    setCreateProjectLoading(false)
+    setCurrentProjectId(id)
+
+    Router.push(`/settings`)
+  }
+
+  // Select first project if none selected
+  useEffect(() => {
+    if (!currentProject && projects?.length && !loading) {
+      setCurrentProjectId(projects[0].id)
+    }
+  }, [currentProject, projects, loading, setCurrentProjectId])
+
   return (
-    <AppShell.Navbar
-      px="md"
-      py="xl"
-      style={{ width: 80, justifyContent: "space-between" }}
+    <Flex
+      justify="space-between"
+      align="start"
+      w={200}
+      direction="column"
+      style={{
+        borderRight: "1px solid rgba(0,0,0,0.1)",
+      }}
     >
-      <Group grow>
-        <Stack gap="xl" align="center">
-          {links}
-        </Stack>
-      </Group>
+      <Box w="100%">
+        {!loading && user && projects?.length && (
+          <Combobox
+            store={combobox}
+            withinPortal={false}
+            onOptionSubmit={(id) => {
+              setCurrentProjectId(id)
+              combobox.closeDropdown()
+            }}
+          >
+            <Combobox.Target>
+              <InputBase
+                component="button"
+                size="xs"
+                mx="xs"
+                my="xs"
+                w="auto"
+                type="button"
+                pointer
+                leftSection={<IconAnalyze size={16} />}
+                rightSection={<Combobox.Chevron />}
+                onClick={() => combobox.toggleDropdown()}
+                rightSectionPointerEvents="none"
+              >
+                {currentProject?.name || (
+                  <Input.Placeholder>Select Project</Input.Placeholder>
+                )}
+              </InputBase>
+            </Combobox.Target>
+            <Combobox.Dropdown>
+              <Combobox.Options>
+                {projects?.map((item) => (
+                  <Combobox.Option value={item.id} key={item.id}>
+                    {item.name}
+                  </Combobox.Option>
+                ))}
+              </Combobox.Options>
+              <Combobox.Footer>
+                <Button
+                  loading={createProjectLoading}
+                  size="xs"
+                  onClick={createProject}
+                  variant="light"
+                  fullWidth
+                  leftSection={<IconPlus size={12} />}
+                >
+                  Create project
+                </Button>
+              </Combobox.Footer>
+            </Combobox.Dropdown>
+          </Combobox>
+        )}
+
+        {links}
+      </Box>
 
       {user && (
-        <Group py="sm" justify="center">
-          <Stack gap="sm" align="center">
-            <Menu
-              trigger="hover"
-              shadow="md"
-              width="200"
-              position="top"
-              withArrow
-            >
-              <Menu.Target>
-                <ActionIcon>
-                  <UserAvatar profile={user} />
-                </ActionIcon>
-              </Menu.Target>
-              <Menu.Dropdown ml="lg">
-                <Menu.Label>Lunary</Menu.Label>
-                <Menu.Item
-                  leftSection={<IconActivity size="16" />}
-                  component={Link}
-                  target="_blank"
-                  href="https://feedback.lunary.ai/roadmap"
-                >
-                  Roadmap
-                </Menu.Item>
+        <Box w="100%">
+          <NavLink
+            component={Link}
+            href="https://feedback.lunary.ai/roadmap"
+            label="Roadmap"
+            leftSection={<IconActivity size="16" />}
+          />
+          <NavLink
+            component={Link}
+            href="https://lunary.ai/changelog"
+            label="Changelog"
+            leftSection={<IconRefresh size="16" />}
+          />
+          <NavLink
+            component="a"
+            href="https://lunary.ai/docs"
+            label="Documentation"
+            leftSection={<IconFile size="16" />}
+          />
+          {process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY && (
+            <>
+              {["free", "pro"].includes(org?.plan) && (
+                <NavLink
+                  label="Upgrade"
+                  onClick={() => openUpgrade()}
+                  c="purple"
+                  leftSection={<IconBolt size="16" />}
+                />
+              )}
+              <NavLink
+                label="Billing"
+                c="blue"
+                onClick={() => {
+                  Router.push("/billing")
+                }}
+                leftSection={<IconCreditCard size="16" />}
+              />
+            </>
+          )}
 
-                <Menu.Item
-                  leftSection={<IconRefresh size="16" />}
-                  component={Link}
-                  target="_blank"
-                  href="https://lunary.ai/changelog"
-                >
-                  Changelog
-                </Menu.Item>
-
-                <Menu.Item
-                  leftSection={<IconFile size="16" />}
-                  component="a"
-                  target="_blank"
-                  href="https://lunary.ai/docs"
-                >
-                  Documentation
-                </Menu.Item>
-
-                <Menu.Label>Account</Menu.Label>
-                {process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY && (
-                  <>
-                    {["free", "pro"].includes(org?.plan) && (
-                      <Menu.Item
-                        onClick={() => openUpgrade()}
-                        color="violet"
-                        leftSection={<IconBolt size="16" />}
-                      >
-                        Upgrade
-                      </Menu.Item>
-                    )}
-
-                    <Menu.Item
-                      leftSection={<IconCreditCard size="16" />}
-                      onClick={() => {
-                        Router.push("/billing")
-                      }}
-                    >
-                      Billing
-                    </Menu.Item>
-                  </>
-                )}
-
-                <Menu.Item
-                  color="red"
-                  leftSection={<IconLogout size="16" />}
-                  onClick={() => signOut()}
-                >
-                  Logout
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
-          </Stack>
-        </Group>
+          <NavLink
+            style={{ borderTop: "1px solid rgba(0,0,0,0.1)" }}
+            leftSection={<UserAvatar size={32} profile={user} />}
+            label={
+              <Stack gap={0}>
+                <Text my={-5}>{user?.name}</Text>
+                <Text size="xs" c="dimmed">
+                  {user?.email}
+                </Text>
+              </Stack>
+            }
+          >
+            <NavLink
+              label="Logout"
+              c="red"
+              onClick={() => signOut()}
+              leftSection={<IconLogout size="16" />}
+            />
+          </NavLink>
+        </Box>
       )}
-    </AppShell.Navbar>
+    </Flex>
   )
 }
