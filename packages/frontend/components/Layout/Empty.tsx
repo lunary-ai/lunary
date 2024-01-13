@@ -121,7 +121,7 @@ export default function Empty({
         </Card>
       </Overlay>
       {children && (
-        <Box px={100} py={70}>
+        <Box pr={50} pl={120} py={70}>
           {children}
         </Box>
       )}
