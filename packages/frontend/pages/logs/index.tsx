@@ -139,7 +139,6 @@ export default function Logs() {
   const [selectedTab, setSelectedTab] = useState("llm-call")
 
   useOrg()
-  const { user } = useUser()
 
   useEffect(() => {
     if (currentView) {
@@ -164,13 +163,7 @@ export default function Logs() {
     ? buildExportUrl(projectId, query, selectedModels, selectedTags)
     : ""
 
-  const [selectedChatItems, setSelectedChatItems] = useState([])
-
   useEffect(() => {}, [selectedTab])
-
-  if (!loading && !projectLoading && !project?.activated) {
-    return <Empty Icon={IconBrandOpenai} what="requests" />
-  }
 
   function exportButton(url: string) {
     if (org?.plan !== "free") {
@@ -207,7 +200,13 @@ export default function Logs() {
   }
 
   return (
-    <>
+    <Empty
+      enable={!loading && !projectLoading && !project?.activated}
+      Icon={IconBrandOpenai}
+      title="Waiting for recordings..."
+      showProjectId={true}
+      description="Once you've setup the SDK, your LLM calls and traces will appear here."
+    >
       <FiltersModal
         opened={isModalOpened}
         setOpened={setIsModalOpened}
@@ -429,6 +428,6 @@ export default function Logs() {
           />
         )}
       </Stack>
-    </>
+    </Empty>
   )
 }

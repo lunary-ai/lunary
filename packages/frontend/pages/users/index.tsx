@@ -38,7 +38,13 @@ export default function Users() {
   const { users, isLoading, isValidating } = useAppUserList()
 
   if (!isLoading && users?.length === 0) {
-    return <Empty Icon={IconUsers} what="users" />
+    return (
+      <Empty
+        Icon={IconUsers}
+        title="Find out who your users are"
+        description="Users you identify from the SDKs will appear here."
+      />
+    )
   }
 
   return (
