@@ -1,5 +1,17 @@
 import analytics from "@/utils/analytics"
-import { Anchor, AppShell, Button, Flex, Group, Select } from "@mantine/core"
+import {
+  Anchor,
+  AppShell,
+  Button,
+  Combobox,
+  Flex,
+  Group,
+  Input,
+  InputBase,
+  Select,
+  Text,
+  useCombobox,
+} from "@mantine/core"
 
 import {
   IconAlertTriangle,
@@ -9,6 +21,7 @@ import {
   IconCheck,
   IconHelp,
   IconMessage,
+  IconPlus,
 } from "@tabler/icons-react"
 
 import {
@@ -19,7 +32,7 @@ import {
 } from "@/utils/dataHooks"
 import { notifications } from "@mantine/notifications"
 import Link from "next/link"
-import { useRouter } from "next/router"
+import Router, { useRouter } from "next/router"
 import Script from "next/script"
 import { useEffect, useState } from "react"
 import errorHandler from "../../utils/errorHandler"
@@ -31,9 +44,15 @@ export default function Navbar() {
 
   const { user, mutate } = useUser()
   const { org } = useOrg()
-  const { projects, isLoading: loading } = useProjects()
+  const { projects, isLoading: loading, insert } = useProjects()
   const [emailSent, setEmailSent] = useState(false)
   const [sendingEmail, setSendingEmail] = useState(false)
+
+  const [createProjectLoading, setCreateProjectLoading] = useState(false)
+
+  const combobox = useCombobox({
+    // onDropdownClose: () => combobox.resetSelectedOption(),
+  })
 
   // const user = useUser()
 
@@ -113,6 +132,26 @@ export default function Navbar() {
     }
   }, [user])
 
+  const createProject = async () => {
+    if (org.plan === "free" && projects.length >= 2) {
+      return openUpgrade("projects")
+    }
+
+    setCreateProjectLoading(true)
+
+    const name = `Project #${projects.length + 1}`
+    const { id } = await insert({ name })
+
+    analytics.track("Create Project", {
+      name,
+    })
+
+    setCreateProjectLoading(false)
+    setCurrentProjectId(id)
+
+    Router.push(`/settings`)
+  }
+
   // Select first project if none selected
   useEffect(() => {
     if (!currentProject && projects?.length && !loading) {
@@ -137,17 +176,53 @@ export default function Navbar() {
             </Anchor>
 
             {!loading && user && projects?.length && (
-              <Select
-                size="xs"
-                ml="lg"
-                placeholder="Select an project"
-                value={currentProject?.id}
-                onChange={(id) => setCurrentProjectId(id)}
-                data={projects.map((project) => ({
-                  value: project.id,
-                  label: project.name,
-                }))}
-              />
+              <Combobox
+                store={combobox}
+                withinPortal={false}
+                onOptionSubmit={(id) => {
+                  setCurrentProjectId(id)
+                  combobox.closeDropdown()
+                }}
+              >
+                <Combobox.Target>
+                  <InputBase
+                    component="button"
+                    ml="lg"
+                    size="xs"
+                    miw={200}
+                    type="button"
+                    pointer
+                    rightSection={<Combobox.Chevron />}
+                    onClick={() => combobox.toggleDropdown()}
+                    rightSectionPointerEvents="none"
+                  >
+                    {currentProject?.name || (
+                      <Input.Placeholder>Select Project</Input.Placeholder>
+                    )}
+                  </InputBase>
+                </Combobox.Target>
+                <Combobox.Dropdown>
+                  <Combobox.Options>
+                    {projects?.map((item) => (
+                      <Combobox.Option value={item.id} key={item.id}>
+                        {item.name}
+                      </Combobox.Option>
+                    ))}
+                  </Combobox.Options>
+                  <Combobox.Footer>
+                    <Button
+                      loading={createProjectLoading}
+                      size="xs"
+                      onClick={createProject}
+                      variant="light"
+                      fullWidth
+                      leftSection={<IconPlus size={12} />}
+                    >
+                      Create project
+                    </Button>
+                  </Combobox.Footer>
+                </Combobox.Dropdown>
+              </Combobox>
             )}
           </Group>
 

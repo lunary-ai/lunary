@@ -12,10 +12,7 @@ import { useOrg, useUser } from "@/utils/dataHooks"
 import { useColorScheme, useLocalStorage } from "@mantine/hooks"
 import { ModalsProvider } from "@mantine/modals"
 import UpgradeModal from "./UpgradeModal"
-import SessionReact, {
-  useSessionContext,
-} from "supertokens-auth-react/recipe/session"
-import SuperTokensReact from "supertokens-auth-react"
+import { useSessionContext } from "supertokens-auth-react/recipe/session"
 import { signOut } from "@/utils/auth"
 
 export default function Layout({ children }: { children: ReactNode }) {
@@ -42,8 +39,8 @@ export default function Layout({ children }: { children: ReactNode }) {
   const isLLMCallPage = router.pathname.startsWith("/logs/[id]")
   const isPublicPage = isLLMCallPage && !session
 
-  const [appId, setAppId] = useLocalStorage({
-    key: "appId",
+  const [projectId, setProjectId] = useLocalStorage({
+    key: "projectId",
     defaultValue: null,
   })
 
@@ -54,7 +51,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "on" &&
       router.pathname !== "/maintenance"
     ) {
-      Router.push("/maintenance")
+      Router.replace("/maintenance")
     }
 
     if (
@@ -65,11 +62,11 @@ export default function Layout({ children }: { children: ReactNode }) {
     )
       return
 
-    Router.push("/login")
     if (!user && !userLoading && error) {
       signOut()
-    } else {
+    } else if (!user && !userLoading) {
       Router.push("/login")
+      return
     }
   }, [
     session,
@@ -95,9 +92,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     <>
       <Notifications position="top-right" />
       <ModalsProvider modals={{ upgrade: UpgradeModal }}>
-        <ProjectContext.Provider
-          value={{ projectId: appId, setProjectId: setAppId }}
-        >
+        <ProjectContext.Provider value={{ projectId, setProjectId }}>
           <AppShell
             mih={"100vh"}
             header={{ height: 60 }}

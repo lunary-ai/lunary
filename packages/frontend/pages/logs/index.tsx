@@ -204,7 +204,7 @@ export default function Logs() {
       enable={!loading && !projectLoading && !project?.activated}
       Icon={IconBrandOpenai}
       title="Waiting for recordings..."
-      showProjectId={true}
+      showProjectId
       description="Once you've setup the SDK, your LLM calls and traces will appear here."
     >
       <FiltersModal
