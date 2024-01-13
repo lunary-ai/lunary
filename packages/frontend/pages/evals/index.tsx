@@ -1,9 +1,11 @@
 import FiltersModal from "@/components/Blocks/FiltersModal"
+import FilterPicker from "@/components/Filters/Picker"
 import Paywall from "@/components/Layout/Paywall"
 import { useTemplates } from "@/utils/dataHooks"
 import {
   Badge,
   Button,
+  Chip,
   Container,
   Group,
   MultiSelect,
@@ -13,6 +15,7 @@ import {
 } from "@mantine/core"
 import { useSetState } from "@mantine/hooks"
 import { IconDatabase, IconFlask2Filled, IconPlus } from "@tabler/icons-react"
+import Link from "next/link"
 import Router from "next/router"
 import { useState } from "react"
 import { MODELS } from "shared"
@@ -69,19 +72,23 @@ export default function Radar() {
           <Text>Select a prompt template to get started.</Text>
 
           <Group>
-            {templates.map((template) => (
-              <Button
-                key={template.id}
-                variant="light"
-                color="blue"
-                onClick={() => {
-                  setSelected(template)
-                  setModalOpened(true)
-                }}
-              >
-                {template.name}
-              </Button>
-            ))}
+            <Chip.Group>
+              {templates?.map((template) => (
+                <Chip
+                  key={template.id}
+                  color="blue"
+                  onClick={() => {
+                    setSelectedTemplate(template)
+                    setModalOpened(true)
+                  }}
+                >
+                  {template.name}
+                </Chip>
+              ))}
+            </Chip.Group>
+            <Button variant="light" href="/prompts" component={Link}>
+              New template
+            </Button>
           </Group>
 
           <Text>
@@ -98,17 +105,17 @@ export default function Radar() {
             onChange={setSelectedModels}
           />
 
-          <Text>Define the assertions you want to test.</Text>
+          <Text>
+            Define the assertions that will result in a{" "}
+            <Text c="green" span fw="bold">
+              PASS
+            </Text>
+            .
+          </Text>
+
+          <FilterPicker restrictTo={(filter) => !filter.disableInEvals} />
 
           <Button>Start</Button>
-
-          {/* 
-          <FiltersModal
-            opened={modalOpened}
-            defaultSelected={selected}
-            setOpened={setModalOpened}
-            save={setSelected}
-          /> */}
         </Stack>
       </Container>
     </Paywall>

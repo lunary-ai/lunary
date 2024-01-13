@@ -97,6 +97,11 @@ const theme = createTheme({
         component: Link,
       },
     },
+    NavLink: {
+      defaultProps: {
+        h: 36,
+      },
+    },
 
     Button: {
       defaultProps: {

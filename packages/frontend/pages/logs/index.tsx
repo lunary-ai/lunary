@@ -58,6 +58,7 @@ import Router from "next/router"
 import FacetedFilter from "../../components/Blocks/FacetedFilter"
 import Empty from "../../components/Layout/Empty"
 import { ProjectContext } from "../../utils/context"
+import FilterPicker from "@/components/Filters/Picker"
 
 const columns = [
   timeColumn("createdAt"),
@@ -309,7 +310,13 @@ export default function Logs() {
               </Group>
             </Flex>
           </Card>
-          {Object.entries(selectedFilters).length > 0 && (
+          <Paper px="xs" p={4}>
+            <FilterPicker
+              minimal
+              restrictTo={(filter) => typeof filter.evaluator === "undefined"}
+            />
+          </Paper>
+          {/* {Object.entries(selectedFilters).length > 0 && (
             <Paper px="xs" p={4}>
               <Flex justify="space-between">
                 <Group>
@@ -361,7 +368,7 @@ export default function Logs() {
                 </Group>
               </Flex>
             </Paper>
-          )}
+          )} */}
         </Stack>
 
         <Drawer

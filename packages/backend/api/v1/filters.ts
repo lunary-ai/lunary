@@ -26,16 +26,28 @@ filters.get("/models", async (ctx: Context) => {
 filters.get("/tags", async (ctx: Context) => {
   const { projectId } = ctx.state
 
-  const rows = await sql`
-	  select
-      tag as tags
-    from
-      app_tag
-    where
-      app = ${projectId}
-  `
+  // const rows = await sql`
+  //   select
+  //     tag
+  //   from
+  //     app_tag
+  //   where
+  //     app = ${projectId}
+  // `
 
-  ctx.body = rows
+  // ctx.body = rows
+
+  ctx.body = [
+    {
+      tag: "some",
+    },
+    {
+      tag: "tag",
+    },
+    {
+      tag: "here",
+    },
+  ]
 })
 
 filters.get("/feedbacks", async (ctx: Context) => {

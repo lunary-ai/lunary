@@ -148,16 +148,6 @@ export default function Radar() {
               >
                 New
               </Button>
-              <Button
-                leftSection={<IconDatabase size={12} />}
-                variant="light"
-                color="violet"
-                onClick={() => {
-                  Router.push("/datasets")
-                }}
-              >
-                Datasets
-              </Button>
             </Group>
           </Group>
 

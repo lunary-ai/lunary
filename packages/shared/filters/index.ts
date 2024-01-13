@@ -6,13 +6,18 @@ export const FILTERS: Filter[] = [
   {
     id: "modelName",
     name: "Model name",
+    disableInEvals: true,
     params: [
       {
-        type: "multiselect",
+        type: "label",
+        label: "Model name",
+      },
+      {
+        type: "select",
+        multiple: true,
         id: "name",
         label: "Model name",
-        options: (projectId, type) =>
-          `/filters/models/${projectId}?type=${type}`,
+        options: (type) => `/filters/models`,
       },
     ],
     sql: ({ name }) => `name = '${name}'`,
@@ -20,12 +25,18 @@ export const FILTERS: Filter[] = [
   {
     id: "tags",
     name: "Tags",
+    disableInEvals: true,
     params: [
       {
-        type: "multiselect",
+        type: "label",
+        label: "Tags",
+      },
+      {
+        type: "select",
+        multiple: true,
         id: "tags",
         label: "Tags",
-        options: (projectId, type) => `/filters/tags/${projectId}?type=${type}`,
+        options: () => `/filters/tags`,
       },
     ],
     sql: ({ tags }) => `tags && '{${tags}}'`,
@@ -33,11 +44,17 @@ export const FILTERS: Filter[] = [
   {
     id: "feedback",
     name: "Feedback",
+    disableInEvals: true,
     params: [
       {
-        type: "multiselect",
+        type: "label",
+        label: "Feedback",
+      },
+      {
+        type: "select",
+        multiple: true,
         id: "feedbacks",
-        options: (projectId, type) => `/filters/feedback/${projectId}`,
+        options: () => `/filters/feedback`,
       },
     ],
     // feedback is a jsonb column
@@ -46,11 +63,17 @@ export const FILTERS: Filter[] = [
   {
     id: "users",
     name: "Users",
+    disableInEvals: true,
     params: [
       {
-        type: "multiselect",
+        type: "label",
+        label: "Users",
+      },
+      {
+        type: "select",
+        multiple: true,
         id: "users",
-        options: (projectId, type) => `/filters/users/${projectId}`,
+        options: () => `/filters/users`,
       },
     ],
     sql: ({ users }) => `user_id = ANY ('{${users}}')`,
@@ -61,6 +84,10 @@ export const FILTERS: Filter[] = [
     params: [
       FIELD_PARAM,
       MATCH_PARAM,
+      {
+        type: "label",
+        label: "Regex",
+      },
       {
         type: "text",
         id: "regex",
@@ -86,7 +113,13 @@ export const FILTERS: Filter[] = [
   {
     id: "json",
     name: "Valid JSON",
-    params: [FORMAT_PARAM],
+    params: [
+      FORMAT_PARAM,
+      {
+        type: "label",
+        label: "Valid JSON",
+      },
+    ],
     evaluator: async (run) => {
       let parsable = false
       let partial = false
@@ -108,7 +141,13 @@ export const FILTERS: Filter[] = [
   {
     id: "xml",
     name: "Valid XML / HTML",
-    params: [FORMAT_PARAM],
+    params: [
+      FORMAT_PARAM,
+      {
+        type: "label",
+        label: "Valid XML / HTML",
+      },
+    ],
     evaluator: async (run) => {
       let parsable = false
       let partial = false
@@ -131,7 +170,14 @@ export const FILTERS: Filter[] = [
   {
     id: "cc",
     name: "Credit Card",
-    params: [FIELD_PARAM, MATCH_PARAM],
+    params: [
+      FIELD_PARAM,
+      MATCH_PARAM,
+      {
+        type: "label",
+        label: "Credit Card",
+      },
+    ],
     evaluator: async (run) => {
       const re = new RegExp(
         "^(?:4[0-9]{12}(?:[0-9]{3})?|[25][1-7][0-9]{14}|6(?:011|5[0-9][0-9])[0-9]{12}|3[47][0-9]{13}|3(?:0[0-5]|[68][0-9])[0-9]{11}|(?:2131|1800|35d{3})d{11})$",
@@ -151,7 +197,14 @@ export const FILTERS: Filter[] = [
   {
     id: "email",
     name: "Email",
-    params: [FIELD_PARAM, MATCH_PARAM],
+    params: [
+      FIELD_PARAM,
+      MATCH_PARAM,
+      {
+        type: "label",
+        label: "Email",
+      },
+    ],
     evaluator: async (run) => {
       const re = new RegExp("^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+.[a-zA-Z0-9-.]+$")
 
@@ -174,9 +227,15 @@ export const FILTERS: Filter[] = [
       FIELD_PARAM,
       NUMBER_PARAM,
       {
+        type: "label",
+        label: "Length",
+      },
+      {
         type: "number",
         id: "length",
+        defaultValue: 100,
         unit: "chars",
+        width: 60,
         label: "Length",
       },
     ],
@@ -186,8 +245,13 @@ export const FILTERS: Filter[] = [
   {
     id: "date",
     name: "Date",
+    disableInEvals: true,
     params: [
       NUMBER_PARAM,
+      {
+        type: "label",
+        label: "Date",
+      },
       {
         type: "date",
         id: "date",
@@ -201,10 +265,17 @@ export const FILTERS: Filter[] = [
     id: "duration",
     name: "Duration",
     params: [
+      {
+        type: "label",
+        label: "Duration",
+      },
       NUMBER_PARAM,
+
       {
         type: "number",
         id: "duration",
+        defaultValue: 5,
+        width: 40,
         unit: "s",
         label: "Duration",
       },
@@ -216,10 +287,17 @@ export const FILTERS: Filter[] = [
     id: "cost",
     name: "Cost",
     params: [
+      {
+        type: "label",
+        label: "Cost",
+      },
       NUMBER_PARAM,
+
       {
         type: "number",
         id: "cost",
+        width: 100,
+        defaultValue: 0.1,
         unit: "$",
         label: "Cost",
       },
@@ -233,6 +311,7 @@ export const FILTERS: Filter[] = [
       {
         type: "select",
         id: "field",
+        defaultValue: "total",
         options: [
           {
             label: "Completion",
@@ -247,6 +326,10 @@ export const FILTERS: Filter[] = [
             value: "total",
           },
         ],
+      },
+      {
+        type: "label",
+        label: "Tokens",
       },
       NUMBER_PARAM,
       {
@@ -270,7 +353,12 @@ export const FILTERS: Filter[] = [
     params: [
       FIELD_PARAM,
       {
+        type: "label",
+        label: "Contains",
+      },
+      {
         type: "text",
+        width: 100,
         id: "text",
         label: "Text",
       },
@@ -280,10 +368,16 @@ export const FILTERS: Filter[] = [
   {
     id: "status",
     name: "Status",
+    disableInEvals: true,
     params: [
+      {
+        type: "label",
+        label: "Status is",
+      },
       {
         type: "select",
         id: "status",
+        width: 140,
         options: [
           {
             label: "Completed",
