@@ -6,6 +6,7 @@ import {
   Button,
   Container,
   Group,
+  MultiSelect,
   Stack,
   Text,
   Title,
@@ -14,6 +15,7 @@ import { useSetState } from "@mantine/hooks"
 import { IconDatabase, IconFlask2Filled, IconPlus } from "@tabler/icons-react"
 import Router from "next/router"
 import { useState } from "react"
+import { MODELS } from "shared"
 
 const FEATURE_LIST = [
   "Define assertions to test variations of prompts",
@@ -23,7 +25,8 @@ const FEATURE_LIST = [
 
 export default function Radar() {
   const { templates } = useTemplates()
-  const [selected, setSelected] = useSetState({})
+  const [selectedTemplate, setSelectedTemplate] = useState(null)
+  const [selectedModels, setSelectedModels] = useState<string[]>([])
   const [modalOpened, setModalOpened] = useState(false)
 
   return (
@@ -46,16 +49,6 @@ export default function Radar() {
 
             <Group>
               <Button
-                leftSection={<IconPlus size={12} />}
-                variant="light"
-                color="blue"
-                onClick={() => {
-                  setModalOpened(true)
-                }}
-              >
-                New
-              </Button>
-              <Button
                 leftSection={<IconDatabase size={12} />}
                 variant="light"
                 color="violet"
@@ -69,15 +62,53 @@ export default function Radar() {
           </Group>
 
           <Text size="xl" mb="md">
-            Create evaluations
+            Create evaluation matrix to compare different prompts, variables and
+            optimize.
           </Text>
 
+          <Text>Select a prompt template to get started.</Text>
+
+          <Group>
+            {templates.map((template) => (
+              <Button
+                key={template.id}
+                variant="light"
+                color="blue"
+                onClick={() => {
+                  setSelected(template)
+                  setModalOpened(true)
+                }}
+              >
+                {template.name}
+              </Button>
+            ))}
+          </Group>
+
+          <Text>
+            Select the models you want to evaluate (currently limited to 3)
+          </Text>
+
+          <MultiSelect
+            data={MODELS.map((model) => ({
+              value: model.id,
+              label: model.name,
+            }))}
+            maxValues={3}
+            value={selectedModels}
+            onChange={setSelectedModels}
+          />
+
+          <Text>Define the assertions you want to test.</Text>
+
+          <Button>Start</Button>
+
+          {/* 
           <FiltersModal
             opened={modalOpened}
             defaultSelected={selected}
             setOpened={setModalOpened}
             save={setSelected}
-          />
+          /> */}
         </Stack>
       </Container>
     </Paywall>

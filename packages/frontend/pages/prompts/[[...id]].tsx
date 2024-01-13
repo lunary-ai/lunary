@@ -50,29 +50,7 @@ import {
 import { fetcher } from "@/utils/fetcher"
 import Empty from "@/components/Layout/Empty"
 
-const availableModels = [
-  "gpt-4-1106-preview",
-  "gpt-4-vision-preview",
-  "gpt-4",
-  "gpt-3.5-turbo",
-  "gpt-3.5-turbo-1106",
-  "gpt-3.5-turbo-16k",
-  "google/gemini-pro",
-  "openai/gpt-4-32k",
-  "claude-2",
-  "claude-2.0",
-  "claude-instant-v1",
-  "open-orca/mistral-7b-openorca",
-  "mistralai/mixtral-8x7b-instruct",
-  "mistralai/mistral-7b-instruct",
-  "teknium/openhermes-2.5-mistral-7b",
-  "perplexity/pplx-70b-chat",
-  "perplexity/pplx-7b-chat",
-  "openchat/openchat-7b",
-  "google/palm-2-chat-bison",
-  "meta-llama/llama-2-13b-chat",
-  "meta-llama/llama-2-70b-chat",
-]
+import { MODELS } from "shared"
 
 const ParamItem = ({ name, value }) => (
   <Group justify="space-between">
@@ -545,11 +523,14 @@ function Playground() {
                   name="Model"
                   value={
                     <Select
-                      data={availableModels.filter((model) =>
+                      data={MODELS.filter((model) =>
                         template?.mode === "openai"
-                          ? model.includes("gpt-")
+                          ? model.id.includes("gpt-")
                           : true,
-                      )}
+                      ).map((model) => ({
+                        value: model.id,
+                        label: model.name,
+                      }))}
                       w={250}
                       searchable
                       autoCorrect="off"
