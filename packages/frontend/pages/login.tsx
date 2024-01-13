@@ -51,7 +51,7 @@ function LoginPage() {
   }) => {
     setLoading(true)
 
-    let response = await signIn({
+    const response = await signIn({
       formFields: [
         {
           id: "email",
@@ -66,9 +66,24 @@ function LoginPage() {
 
     analytics.track("Login", { method: "password" })
 
-    console.log(response)
-    if (response) {
-      Router.push("/")
+    switch (response.status) {
+      case "OK":
+        Router.push("/")
+        break
+      case "WRONG_CREDENTIALS_ERROR":
+        form.setFieldError("password", "Invalid email or password.")
+        break
+      case "FIELD_ERROR":
+        form.setFieldError("email", "Please enter a valid email.")
+        // response.formFields.forEach((field) => {
+        //   form.setFieldError(field.id, field.error)
+        // })
+        break
+      case "SIGN_IN_NOT_ALLOWED":
+        form.setFieldError("email", "Sign in not allowed.")
+        break
+
+      // Handle other cases if necessary
     }
 
     setLoading(false)
@@ -100,7 +115,7 @@ function LoginPage() {
                 onChange={(event) =>
                   form.setFieldValue("email", event.currentTarget.value)
                 }
-                error={form.errors.email && "Invalid email"}
+                error={form.errors.email}
                 placeholder="Your email"
               />
 
@@ -113,10 +128,7 @@ function LoginPage() {
                   onChange={(event) =>
                     form.setFieldValue("password", event.currentTarget.value)
                   }
-                  error={
-                    form.errors.password &&
-                    "Password must be at least 6 characters"
-                  }
+                  error={form.errors.password}
                   placeholder="Your password"
                 />
                 <Anchor
