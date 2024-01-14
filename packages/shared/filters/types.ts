@@ -2,9 +2,9 @@ export type FilterParam =
   | {
       type: "select" | "text" | "number" | "date"
       id: string
-      label?: string
       unit?: string
       width?: number
+      placeholder?: string
       defaultValue?: string | number | boolean
       multiple?: boolean
       options?:
@@ -18,9 +18,12 @@ export type FilterParam =
 
 export type Filter = {
   id: string
+  uiType: "basic" | "smart" | "ai"
   name: string
+  description?: string
   params: FilterParam[]
   disableInEvals?: boolean
+  onlyInEvals?: boolean
   evaluator?: (run: any, params: any) => Promise<any>
-  sql: (params: any) => string // postgres sql
+  sql?: (params: any) => string // postgres sql
 }
