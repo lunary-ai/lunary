@@ -1,6 +1,8 @@
-import TinyPercentChart from "@/components/Blocks/Analytics/TinyPercentChart"
-import FiltersModal from "@/components/Filters/FiltersModal"
+import TinyPercentChart from "@/components/Analytics/TinyPercentChart"
+import Steps from "@/components/Blocks/Steps"
+import FilterPicker from "@/components/Filters/Picker"
 import Paywall from "@/components/Layout/Paywall"
+import { useRadars } from "@/utils/dataHooks"
 import {
   ActionIcon,
   Badge,
@@ -9,25 +11,122 @@ import {
   Container,
   Flex,
   Group,
+  Modal,
   NumberInput,
   Popover,
   Progress,
   Select,
   Stack,
   Text,
+  TextInput,
   Title,
 } from "@mantine/core"
-import { useLocalStorage, useSetState } from "@mantine/hooks"
+import { useSetState } from "@mantine/hooks"
 import {
   IconBellBolt,
-  IconDatabase,
   IconListSearch,
   IconPlus,
-  IconRadar2,
   IconShieldBolt,
 } from "@tabler/icons-react"
 import Router from "next/router"
 import { useState } from "react"
+
+function NewRadarModal({ opened, onClose }) {
+  const { insert } = useRadars()
+
+  const [newRadar, setNewRadar] = useSetState({
+    description: "",
+    view: [
+      {
+        id: "type",
+        paramsData: [
+          {
+            id: "type",
+            value: "llm",
+          },
+        ],
+      },
+    ],
+    assertions: [],
+    alerts: [],
+  })
+
+  const [saving, setSaving] = useState(false)
+
+  const save = async () => {
+    // setSaving(true)
+    await insert(newRadar)
+  }
+
+  return (
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      size="xl"
+      title="New radar"
+      style={{
+        overflow: "visible",
+      }}
+    >
+      <Stack>
+        <Steps>
+          <Steps.Step label="Name" n={1}>
+            <Text size="lg" mb="md">
+              Describe the radar. This will be used to identify your radar in
+              the list.
+            </Text>
+
+            <TextInput
+              size="sm"
+              placeholder="LLM calls with latency > 1s"
+              value={newRadar.description}
+              onChange={(event) =>
+                setNewRadar({
+                  description: event.currentTarget.value,
+                })
+              }
+            />
+          </Steps.Step>
+          <Steps.Step label="View" n={2}>
+            <Text size="lg" mb="md">
+              Narrow down the logs you want to analyze.
+            </Text>
+            <FilterPicker
+              defaultValue={newRadar.view}
+              minimal
+              restrictTo={(filter) =>
+                // Only show these for now to not confuse the user with too many options
+                ["type", "tags", "model", "users"].includes(filter.id)
+              }
+              onChange={(filters) => setNewRadar({ view: filters })}
+            />
+          </Steps.Step>
+          <Steps.Step label="Conditions" n={3}>
+            <Text size="lg" mb="md">
+              Define the conditions that will be a match for the radar.
+            </Text>
+            <FilterPicker
+              defaultValue={newRadar.assertions}
+              restrictTo={(filter) => !filter.onlyInEvals}
+              onChange={(filters) => setNewRadar({ assertions: filters })}
+            />
+          </Steps.Step>
+        </Steps>
+        <Button
+          variant="gradient"
+          loading={saving}
+          ml="auto"
+          display="inline-block"
+          onClick={() => {
+            save()
+          }}
+        >
+          Create radar
+        </Button>
+      </Stack>
+    </Modal>
+  )
+}
 
 function View({ name, filters, percentMatch }) {
   return (
@@ -156,11 +255,9 @@ export default function Radar() {
             criterias.
           </Text>
 
-          <FiltersModal
+          <NewRadarModal
             opened={modalOpened}
-            defaultSelected={selected}
-            setOpened={setModalOpened}
-            save={setSelected}
+            onClose={() => setModalOpened(false)}
           />
 
           <Stack gap="xl">

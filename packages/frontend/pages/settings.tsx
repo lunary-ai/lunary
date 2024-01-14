@@ -1,6 +1,6 @@
 import { useState } from "react"
 
-import LineChart from "@/components/Blocks/Analytics/LineChart"
+import LineChart from "@/components/Analytics/LineChart"
 import CopyText from "@/components/Blocks/CopyText"
 import UserAvatar from "@/components/Blocks/UserAvatar"
 

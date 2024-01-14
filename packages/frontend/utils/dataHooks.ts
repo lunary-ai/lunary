@@ -458,3 +458,17 @@ export function useDataset(id: string) {
     loading: isLoading,
   }
 }
+
+export function useRadars() {
+  const { data: datasets, isLoading, mutate } = useProjectSWR(`/radars`)
+
+  // insert mutation
+  const { trigger: insert } = useProjectMutation(`/radars`, fetcher.post)
+
+  return {
+    datasets,
+    insert,
+    mutate,
+    loading: isLoading,
+  }
+}

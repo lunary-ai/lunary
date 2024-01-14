@@ -9,7 +9,7 @@
 
 import { Code } from "@mantine/core"
 import { useMemo } from "react"
-import ProtectedText from "../ProtectedText"
+import ProtectedText from "../Blocks/ProtectedText"
 import { ChatMessage } from "./Message"
 import MessageViewer from "./MessageViewer"
 import { RenderJson } from "./RenderJson"

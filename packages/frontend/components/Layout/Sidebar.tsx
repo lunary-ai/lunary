@@ -1,12 +1,4 @@
-import {
-  AppShell,
-  Box,
-  Flex,
-  NavLink,
-  Stack,
-  Text,
-  ThemeIcon,
-} from "@mantine/core"
+import { Box, Flex, NavLink, Stack, Text, ThemeIcon } from "@mantine/core"
 
 import {
   IconActivity,
@@ -19,7 +11,6 @@ import {
   IconLogout,
   IconMessage2,
   IconPlayerPlay,
-  IconRefresh,
   IconSettings,
   IconShieldBolt,
   IconTimeline,
@@ -82,9 +73,7 @@ export default function Sidebar() {
 
   const [createProjectLoading, setCreateProjectLoading] = useState(false)
 
-  const combobox = useCombobox({
-    // onDropdownClose: () => combobox.resetSelectedOption(),
-  })
+  const combobox = useCombobox()
 
   const isActive = (link: string) => router.pathname.startsWith(link)
 
@@ -126,7 +115,7 @@ export default function Sidebar() {
       w={200}
       direction="column"
       style={{
-        borderRight: "1px solid rgba(0,0,0,0.1)",
+        borderRight: "1px solid var(--mantine-color-default-border)",
       }}
     >
       <Box w="100%">
@@ -234,7 +223,9 @@ export default function Sidebar() {
           )}
 
           <NavLink
-            style={{ borderTop: "1px solid rgba(0,0,0,0.1)" }}
+            style={{
+              borderTop: "1px solid var(--mantine-color-default-border)",
+            }}
             h={50}
             leftSection={<UserAvatar size={32} profile={user} />}
             label={

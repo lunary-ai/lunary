@@ -1,3 +1,6 @@
+// DEPRECATED: Use FilterPicker
+// Kept to copy search method for users and render prop
+
 import { useCurrentProject, useProjects } from "@/utils/dataHooks"
 import {
   Button,

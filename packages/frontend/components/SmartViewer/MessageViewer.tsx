@@ -1,4 +1,4 @@
-import { ChatMessage } from "@/components/Blocks/SmartViewer/Message"
+import { ChatMessage } from "@/components/SmartViewer/Message"
 import { Box, Stack } from "@mantine/core"
 
 function getLastMessage(messages) {

@@ -1,8 +1,8 @@
-import AgentSummary from "@/components/Blocks/Analytics/AgentSummary"
-import AnalyticsCard from "@/components/Blocks/Analytics/AnalyticsCard"
-import BarList from "@/components/Blocks/Analytics/BarList"
-import LineChart from "@/components/Blocks/Analytics/LineChart"
-import UsageSummary from "@/components/Blocks/Analytics/UsageSummary"
+import AgentSummary from "@/components/Analytics/AgentSummary"
+import AnalyticsCard from "@/components/Analytics/AnalyticsCard"
+import BarList from "@/components/Analytics/BarList"
+import LineChart from "@/components/Analytics/LineChart"
+import UsageSummary from "@/components/Analytics/UsageSummary"
 import { formatAppUser, formatCost } from "@/utils/format"
 
 import {

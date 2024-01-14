@@ -114,7 +114,12 @@ export default function Navbar() {
                 gap={8}
                 px="8"
                 display="flex"
-                style={{ borderRadius: 8, fontSize: 14, color: "white" }}
+                style={{
+                  borderRadius: 8,
+                  fontSize: 14,
+                  color: "white",
+                  zIndex: 3,
+                }}
               >
                 {`Verify your email to keep your account`}
 

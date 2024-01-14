@@ -8,7 +8,7 @@
   border-radius: var(--mantine-radius-default);
 
   > *:not(:last-of-type) {
-    border-right: 1px solid rgba(0, 0, 0, 0.1);
+    border-right: 1px solid var(--mantine-color-default-border);
     height: 100%;
   }
 }

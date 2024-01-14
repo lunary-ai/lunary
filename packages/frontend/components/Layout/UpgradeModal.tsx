@@ -194,7 +194,6 @@ export const UpgradePlans = ({ highlight }: { highlight?: string }) => {
                 { id: "team", title: "4 team members" },
                 { id: "apps", title: "Unlimited Projects" },
                 { id: "analytics", title: "Advanced Analytics" },
-                { id: "playground", title: "Prompt Playground" },
                 { id: "export", title: "Exports & API" },
               ]}
               highlight={highlight}
@@ -242,9 +241,10 @@ export const UpgradePlans = ({ highlight }: { highlight?: string }) => {
             features={[
               { id: "events", title: "Unlimited events" },
               { id: "team", title: "10 team members" },
-              { id: "template", title: "Unlimited Templates" },
               { id: "playground", title: "Unlimited Playground" },
-              { id: "evaluate", title: "Evaluations & Alerts" },
+              { id: "evaluate", title: "Evaluations" },
+              { id: "radar", title: "Radar & Alerts" },
+              { id: "support", title: "Shared Slack channel" },
             ]}
             highlight={highlight}
           />

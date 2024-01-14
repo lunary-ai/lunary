@@ -18,10 +18,10 @@ import {
   IconUser,
 } from "@tabler/icons-react"
 import Image from "next/image"
-import ProtectedText from "../ProtectedText"
+import ProtectedText from "../Blocks/ProtectedText"
 import { RenderJson } from "./RenderJson"
 
-import { circularPro } from "../../../pages/_app"
+import { circularPro } from "../../pages/_app"
 
 function RenderFunction({ color, compact, codeBg, data, type }) {
   const fontColor = type === "functionCall" ? "#40c057" : "inherit"
