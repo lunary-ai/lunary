@@ -47,7 +47,7 @@ function NewRadarModal({ opened, onClose }) {
         ],
       },
     ],
-    assertions: [],
+    checks: [],
     alerts: [],
   })
 
@@ -101,14 +101,14 @@ function NewRadarModal({ opened, onClose }) {
               onChange={(filters) => setNewRadar({ view: filters })}
             />
           </Steps.Step>
-          <Steps.Step label="Conditions" n={3}>
+          <Steps.Step label="Checks" n={3}>
             <Text size="lg" mb="md">
               Define the conditions that will be a match for the radar.
             </Text>
             <FilterPicker
-              defaultValue={newRadar.assertions}
+              defaultValue={newRadar.checks}
               restrictTo={(filter) => !filter.onlyInEvals}
-              onChange={(filters) => setNewRadar({ assertions: filters })}
+              onChange={(filters) => setNewRadar({ checks: filters })}
             />
           </Steps.Step>
         </Steps>
@@ -215,7 +215,6 @@ const FEATURE_LIST = [
 ]
 
 export default function Radar() {
-  const [selected, setSelected] = useSetState({})
   const [modalOpened, setModalOpened] = useState(false)
 
   return (

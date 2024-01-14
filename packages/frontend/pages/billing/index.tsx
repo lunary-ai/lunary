@@ -10,7 +10,6 @@ import {
   Container,
   Group,
   Loader,
-  Progress,
   Stack,
   Text,
   Title,
@@ -19,13 +18,6 @@ import { IconBolt, IconInfoTriangle } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { Label, ReferenceLine } from "recharts"
 import useSWR from "swr"
-
-const seatAllowance = {
-  free: 1,
-  pro: 4,
-  unlimited: 10,
-  custom: 100,
-}
 
 const eventsAllowance = {
   free: 1000,
@@ -151,24 +143,7 @@ export default function Billing() {
             )
           }
         />
-        {plan && (
-          <Card withBorder radius="md" padding="xl">
-            <Stack gap="sm">
-              <Text fz="md" fw={700} size="lg">
-                Seat Allowance
-              </Text>
-              <Text fz="lg" fw={500}>
-                {org?.users?.length} / {seatAllowance[plan]} users
-              </Text>
-              <Progress
-                value={((org?.users?.length || 0) / seatAllowance[plan]) * 100}
-                size="lg"
-                color="orange"
-                radius="xl"
-              />
-            </Stack>
-          </Card>
-        )}
+
         {org?.stripeCustomer && (
           <Card withBorder radius="md" padding="xl">
             <Stack align="start">

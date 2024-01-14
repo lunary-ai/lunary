@@ -101,7 +101,7 @@ export default function AppAnalytics() {
   return (
     <Container className="unblockable">
       <NextSeo title="Settings" />
-      <Stack gap="xl">
+      <Stack gap="lg">
         <LineChart
           title={
             <RenamableField

@@ -1,12 +1,9 @@
 import { useState } from "react"
 import {
   ActionIcon,
-  Box,
-  Button,
   Combobox,
   Group,
   ScrollArea,
-  Text,
   useCombobox,
 } from "@mantine/core"
 import FILTERS_UI_DATA from "./UIData"
@@ -35,12 +32,7 @@ export function AddFilterButton({ filters, onSelect }) {
     .map((item) => {
       const UIItem = FILTERS_UI_DATA[item.id] || FILTERS_UI_DATA["other"]
       return (
-        <Combobox.Option
-          value={item.id}
-          key={item.id}
-          c={UIItem.color}
-          variant=""
-        >
+        <Combobox.Option value={item.id} key={item.id} variant="">
           <Group gap={6}>
             <UIItem.icon size={14} />
             {item.name}

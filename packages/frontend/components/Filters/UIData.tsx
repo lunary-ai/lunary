@@ -2,6 +2,7 @@ import {
   IconAt,
   IconBrandOpenai,
   IconCalendar,
+  IconCheck,
   IconCircleLetterT,
   IconClock,
   IconCoin,
@@ -17,9 +18,12 @@ import {
   IconPhone,
   IconRegex,
   IconRuler2,
+  IconRulerMeasure,
   IconTag,
   IconThumbUp,
+  IconTools,
   IconUser,
+  IconUserCheck,
   IconWorldWww,
 } from "@tabler/icons-react"
 
@@ -112,6 +116,26 @@ const FILTERS_UI_DATA = {
   hatred: {
     icon: IconMoodAngry,
     color: "red",
+  },
+  ai: {
+    icon: IconBrandOpenai,
+    color: "violet",
+  },
+  tone: {
+    icon: IconUserCheck,
+    color: "orange",
+  },
+  factualness: {
+    icon: IconCheck,
+    color: "green",
+  },
+  system: {
+    icon: IconTools,
+    color: "gray",
+  },
+  similarity: {
+    icon: IconRulerMeasure,
+    color: "blue",
   },
   other: {
     icon: IconFilter,

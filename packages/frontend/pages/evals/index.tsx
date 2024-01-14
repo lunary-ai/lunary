@@ -21,7 +21,6 @@ import {
 } from "@tabler/icons-react"
 import Link from "next/link"
 import Router from "next/router"
-import { useState } from "react"
 import { MODELS } from "shared"
 
 const FEATURE_LIST = [
@@ -37,12 +36,12 @@ export default function Evals() {
     prompts: any[]
     variables: any[]
     models: string[]
-    assertions: SavedFilterData[]
+    checks: SavedFilterData[]
   }>({
     prompts: [],
     variables: [],
-    models: ["gpt-4", "gpt-3.5-turbo"],
-    assertions: [],
+    models: ["gpt-4-1106-preview", "gpt-3.5-turbo"],
+    checks: [],
   })
 
   function startEval() {
@@ -75,7 +74,7 @@ export default function Evals() {
               >
                 History
               </Button>
-              <Button
+              {/* <Button
                 leftSection={<IconDatabase size={12} />}
                 variant="light"
                 disabled
@@ -85,7 +84,7 @@ export default function Evals() {
                 }}
               >
                 Datasets
-              </Button>
+              </Button> */}
             </Group>
           </Group>
 
@@ -125,22 +124,22 @@ export default function Evals() {
             </Steps.Step>
             <Steps.Step n={2} label="Models">
               <Text size="lg" mb="md">
-                Select the models you want to compare. You can select up to 3
-                models.
+                Select the models you want to compare. Limited to 2 while in
+                alpha.
               </Text>
               <MultiSelect
                 data={MODELS.map((model) => ({
                   value: model.id,
                   label: model.name,
                 }))}
-                maxValues={3}
+                maxValues={2}
                 value={evaluation.models}
                 onChange={(value) => setEvaluation({ models: value })}
               />
             </Steps.Step>
-            <Steps.Step n={3} label="Assertions">
+            <Steps.Step n={3} label="Checks">
               <Text size="lg" mb="md">
-                Define the assertions that will result in a{" "}
+                Define the checks that will result in a{" "}
                 <Text c="green" span fw="bold">
                   PASS
                 </Text>
@@ -148,8 +147,8 @@ export default function Evals() {
               </Text>
               <FilterPicker
                 restrictTo={(filter) => !filter.disableInEvals}
-                defaultValue={evaluation.assertions}
-                onChange={(value) => setEvaluation({ assertions: value })}
+                defaultValue={evaluation.checks}
+                onChange={(value) => setEvaluation({ checks: value })}
               />
             </Steps.Step>
           </Steps>
@@ -158,10 +157,11 @@ export default function Evals() {
             size="md"
             display="inline-block"
             ml="auto"
+            variant="gradient"
             leftSection={<IconFlask2Filled size={14} />}
             onClick={() => startEval()}
           >
-            Start
+            Start Evaluation
           </Button>
         </Stack>
       </Container>

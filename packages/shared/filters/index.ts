@@ -1,4 +1,10 @@
-import { FIELD_PARAM, FORMAT_PARAM, MATCH_PARAM, NUMBER_PARAM } from "./params"
+import {
+  FIELD_PARAM,
+  FORMAT_PARAM,
+  MATCH_PARAM,
+  NUMBER_PARAM,
+  PERCENT_PARAM,
+} from "./params"
 
 import type { Filter } from "./types"
 
@@ -489,8 +495,9 @@ export const FILTERS: Filter[] = [
     id: "ai-assertion",
     name: "AI Assertion",
     uiType: "ai",
+    // soon: true,
     description:
-      "Checks if the output matches given requirements, using a language model to grade the output based on the rubric.",
+      "Checks if the output matches the given requirement, using a gpt-3.5-turbo to grade the output.",
     onlyInEvals: true,
     params: [
       {
@@ -522,6 +529,7 @@ export const FILTERS: Filter[] = [
     id: "sentiment",
     name: "Sentiment",
     uiType: "ai",
+    // soon: true,
     description: "Checks if the output is positive, neutral, or negative.",
     async evaluator(run, params) {
       return {}
@@ -550,6 +558,123 @@ export const FILTERS: Filter[] = [
             value: "negative",
           },
         ],
+      },
+    ],
+  },
+  {
+    id: "tone",
+    name: "Tone",
+    // soon: true,
+    uiType: "ai",
+    onlyInEvals: true,
+    description:
+      "Assesses if the tone of LLM responses matches with the desired persona.",
+    async evaluator(run, params) {
+      return {}
+    },
+    params: [
+      {
+        type: "label",
+        label: "Tone of output is more than",
+      },
+      PERCENT_PARAM,
+      {
+        type: "select",
+        id: "persona",
+        defaultValue: "helpful",
+        width: 140,
+        options: [
+          {
+            label: "Helpful assistant",
+            value: "helpful",
+          },
+          {
+            label: "Formal",
+            value: "formal",
+          },
+
+          {
+            label: "Casual",
+            value: "casual",
+          },
+          {
+            label: "Teacher",
+            value: "teacher",
+          },
+          {
+            label: "Friendly",
+            value: "friendly",
+          },
+          {
+            label: "Pirate",
+            value: "pirate",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "factualness",
+    name: "Factualness",
+    uiType: "ai",
+    // soon: true,
+    onlyInEvals: true,
+    description:
+      "Checks if the output is factually correct compared to a given context",
+    async evaluator(run, params) {
+      return {}
+    },
+    params: [
+      {
+        type: "label",
+        label: "Output is >=",
+      },
+      PERCENT_PARAM,
+      {
+        type: "label",
+        label: "correct compared to context",
+      },
+    ],
+  },
+  {
+    id: "system",
+    name: "System Guidelines",
+    uiType: "ai",
+    onlyInEvals: true,
+    description: `Checks if the output matches guidelines set in the 'system' message.`,
+    async evaluator(run, params) {
+      return {}
+    },
+    params: [
+      {
+        type: "label",
+        label: "Output follows >=",
+      },
+      PERCENT_PARAM,
+      {
+        type: "label",
+        label: "system guidelines",
+      },
+    ],
+  },
+  {
+    id: "similarity",
+    name: "Output Similarity",
+    uiType: "ai",
+    onlyInEvals: true,
+    description: `Ensure the output is similar to a given expected output (gold output).`,
+    async evaluator(run, params) {
+      return {}
+    },
+    params: [
+      {
+        type: "label",
+        label: "Output is >=",
+      },
+      PERCENT_PARAM,
+      {
+        type: "label",
+        label: "similar to expected output",
       },
     ],
   },

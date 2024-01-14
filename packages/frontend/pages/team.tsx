@@ -10,6 +10,8 @@ import {
   Container,
   FocusTrap,
   Group,
+  Progress,
+  Stack,
   Table,
   Text,
   TextInput,
@@ -21,11 +23,20 @@ import { NextSeo } from "next-seo"
 import { useOrg, useUser } from "@/utils/dataHooks"
 import { openUpgrade } from "../components/Layout/UpgradeModal"
 
+const seatAllowance = {
+  free: 1,
+  pro: 4,
+  unlimited: 10,
+  custom: 100,
+}
+
 function Invite() {
   const { org } = useOrg()
   const plan = org?.plan
 
-  if (plan === "free" || (plan === "pro" && org?.users?.length === 4)) {
+  const allowedSeats = seatAllowance[plan]
+
+  if (org?.users?.length >= allowedSeats) {
     return (
       <Button
         variant="light"
@@ -85,52 +96,73 @@ export default function Team() {
   return (
     <Container className="unblockable">
       <NextSeo title="Team" />
+      <Stack gap="lg">
+        <Card withBorder p={0}>
+          <Group justify="space-between" align="center" p="lg">
+            <RenamableField
+              defaultValue={org?.name}
+              onRename={(name) => {
+                const newOrg = { ...org, name }
+                updateOrg({ id: org?.id, name }, { optimisticData: org }).then(
+                  () => {
+                    mutate()
+                  },
+                )
+              }}
+            />
 
-      <Card withBorder p={0}>
-        <Group justify="space-between" align="center" p="lg">
-          <RenamableField
-            defaultValue={org?.name}
-            onRename={(name) => {
-              const newOrg = { ...org, name }
-              updateOrg({ id: org?.id, name }, { optimisticData: org }).then(
-                () => {
-                  mutate()
-                },
-              )
-            }}
-          />
+            <Invite />
+          </Group>
 
-          <Invite />
-        </Group>
-
-        <Table striped verticalSpacing="lg" horizontalSpacing="lg">
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>User</Table.Th>
-              <Table.Th>Email</Table.Th>
-              <Table.Th>Role</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {org?.users?.map((user, i) => (
-              <Table.Tr key={i}>
-                <Table.Td>
-                  <Group>
-                    <UserAvatar profile={user} />
-                    <Text>{user?.name}</Text>
-
-                    {user?.id === currentUser?.id ? (
-                      <Badge color="blue">You</Badge>
-                    ) : null}
-                  </Group>
-                </Table.Td>
-                <Table.Td>{user?.email}</Table.Td>
-                <Table.Td>{user?.role}</Table.Td>
+          <Table striped verticalSpacing="lg" horizontalSpacing="lg">
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>User</Table.Th>
+                <Table.Th>Email</Table.Th>
+                <Table.Th>Role</Table.Th>
               </Table.Tr>
-            ))}
-          </Table.Tbody>
-        </Table>
-      </Card>
+            </Table.Thead>
+            <Table.Tbody>
+              {org?.users?.map((user, i) => (
+                <Table.Tr key={i}>
+                  <Table.Td>
+                    <Group>
+                      <UserAvatar profile={user} />
+                      <Text>{user?.name}</Text>
+
+                      {user?.id === currentUser?.id ? (
+                        <Badge color="blue">You</Badge>
+                      ) : null}
+                    </Group>
+                  </Table.Td>
+                  <Table.Td>{user?.email}</Table.Td>
+                  <Table.Td>{user?.role}</Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </Card>
+        {org?.plan && (
+          <Card withBorder radius="md" padding="xl">
+            <Stack gap="sm">
+              <Text fz="md" fw={700} size="lg">
+                Seat Allowance
+              </Text>
+              <Text fz="lg" fw={500}>
+                {org?.users?.length} / {seatAllowance[org?.plan]} users
+              </Text>
+              <Progress
+                value={
+                  ((org?.users?.length || 0) / seatAllowance[org?.plan]) * 100
+                }
+                size="lg"
+                color="orange"
+                radius="xl"
+              />
+            </Stack>
+          </Card>
+        )}
+      </Stack>
     </Container>
   )
 }
