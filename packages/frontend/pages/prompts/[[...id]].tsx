@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { jsonrepair } from "jsonrepair"
 
 import {
@@ -44,13 +44,13 @@ import {
   useTemplate,
   useTemplateVersion,
   useUser,
-  useProjects,
   useCurrentProject,
 } from "@/utils/dataHooks"
 import { fetcher } from "@/utils/fetcher"
 import Empty from "@/components/Layout/Empty"
 
 import { MODELS } from "shared"
+import { usePromptVariables } from "@/utils/promptsHooks"
 
 const ParamItem = ({ name, value }) => (
   <Group justify="space-between">
@@ -372,24 +372,7 @@ function Playground() {
     },
   })
 
-  // Parse variables from the content template (handlebars parsing)
-  const variables = useMemo(() => {
-    const variables = {}
-    const variableRegex = /{{([^}]+)}}/g
-    let contentArray = Array.isArray(templateVersion?.content)
-      ? templateVersion?.content
-      : [templateVersion?.content]
-
-    contentArray.forEach((message) => {
-      let match
-      let messageText = typeof message === "string" ? message : message?.content
-      while ((match = variableRegex.exec(messageText)) !== null) {
-        variables[match[1].trim()] = ""
-      }
-    })
-
-    return variables
-  }, [templateVersion])
+  const variables = usePromptVariables(templateVersion?.content)
 
   return (
     <Empty
