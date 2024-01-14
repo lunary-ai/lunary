@@ -24,13 +24,10 @@ export const SuperCopyButton = ({ value }) => (
   </CopyButton>
 )
 
-export default function CopyText({
-  color = "var(--mantine-color-violet-light)",
-  value,
-}) {
+export default function CopyText({ c = "violet.8", value }) {
   return (
     <Group gap={0} display="inline-flex">
-      <Code ml={5} color={color}>
+      <Code ml={5} c={c}>
         {value}
       </Code>
       <SuperCopyButton value={value} />
