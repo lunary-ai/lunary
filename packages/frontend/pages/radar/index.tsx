@@ -1,5 +1,5 @@
 import TinyPercentChart from "@/components/Blocks/Analytics/TinyPercentChart"
-import FiltersModal from "@/components/Blocks/FiltersModal"
+import FiltersModal from "@/components/Filters/FiltersModal"
 import Paywall from "@/components/Layout/Paywall"
 import {
   ActionIcon,

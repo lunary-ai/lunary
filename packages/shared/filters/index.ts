@@ -2,21 +2,23 @@ import { FIELD_PARAM, FORMAT_PARAM, MATCH_PARAM, NUMBER_PARAM } from "./params"
 
 import type { Filter } from "./types"
 
+export * from "./types"
+
 export const FILTERS: Filter[] = [
   {
-    id: "modelName",
+    id: "model",
     name: "Model name",
+    uiType: "basic",
     disableInEvals: true,
     params: [
       {
         type: "label",
-        label: "Model name",
+        label: "Model is",
       },
       {
         type: "select",
         multiple: true,
         id: "name",
-        label: "Model name",
         options: (type) => `/filters/models`,
       },
     ],
@@ -25,17 +27,17 @@ export const FILTERS: Filter[] = [
   {
     id: "tags",
     name: "Tags",
+    uiType: "basic",
     disableInEvals: true,
     params: [
       {
         type: "label",
-        label: "Tags",
+        label: "Has tags",
       },
       {
         type: "select",
         multiple: true,
         id: "tags",
-        label: "Tags",
         options: () => `/filters/tags`,
       },
     ],
@@ -44,6 +46,7 @@ export const FILTERS: Filter[] = [
   {
     id: "feedback",
     name: "Feedback",
+    uiType: "basic",
     disableInEvals: true,
     params: [
       {
@@ -63,6 +66,7 @@ export const FILTERS: Filter[] = [
   {
     id: "users",
     name: "Users",
+    uiType: "basic",
     disableInEvals: true,
     params: [
       {
@@ -81,6 +85,7 @@ export const FILTERS: Filter[] = [
   {
     id: "regex",
     name: "Regex",
+    uiType: "smart",
     params: [
       FIELD_PARAM,
       MATCH_PARAM,
@@ -91,7 +96,7 @@ export const FILTERS: Filter[] = [
       {
         type: "text",
         id: "regex",
-        label: "Regex",
+        placeholder: "^[0-9]+$",
       },
     ],
     evaluator: async (run, params) => {
@@ -112,7 +117,8 @@ export const FILTERS: Filter[] = [
   },
   {
     id: "json",
-    name: "Valid JSON",
+    name: "JSON",
+    uiType: "smart",
     params: [
       {
         label: "Response",
@@ -144,7 +150,8 @@ export const FILTERS: Filter[] = [
   },
   {
     id: "xml",
-    name: "Valid XML / HTML",
+    name: "XML / HTML",
+    uiType: "smart",
     params: [
       {
         label: "Response",
@@ -178,6 +185,7 @@ export const FILTERS: Filter[] = [
   {
     id: "cc",
     name: "Credit Card",
+    uiType: "smart",
     params: [
       FIELD_PARAM,
       MATCH_PARAM,
@@ -205,6 +213,7 @@ export const FILTERS: Filter[] = [
   {
     id: "email",
     name: "Email",
+    uiType: "smart",
     params: [
       FIELD_PARAM,
       MATCH_PARAM,
@@ -231,6 +240,7 @@ export const FILTERS: Filter[] = [
   {
     id: "length",
     name: "Length",
+    uiType: "basic",
     params: [
       FIELD_PARAM,
       NUMBER_PARAM,
@@ -244,7 +254,6 @@ export const FILTERS: Filter[] = [
         defaultValue: 100,
         unit: "chars",
         width: 60,
-        label: "Length",
       },
     ],
     sql: ({ field, operator, length }) =>
@@ -253,6 +262,7 @@ export const FILTERS: Filter[] = [
   {
     id: "date",
     name: "Date",
+    uiType: "basic",
     disableInEvals: true,
     params: [
       NUMBER_PARAM,
@@ -263,7 +273,6 @@ export const FILTERS: Filter[] = [
       {
         type: "date",
         id: "date",
-        label: "Date",
       },
     ],
 
@@ -272,6 +281,7 @@ export const FILTERS: Filter[] = [
   {
     id: "duration",
     name: "Duration",
+    uiType: "basic",
     params: [
       {
         type: "label",
@@ -285,7 +295,6 @@ export const FILTERS: Filter[] = [
         defaultValue: 5,
         width: 40,
         unit: "s",
-        label: "Duration",
       },
     ],
     sql: ({ operator, duration }) =>
@@ -294,20 +303,19 @@ export const FILTERS: Filter[] = [
   {
     id: "cost",
     name: "Cost",
+    uiType: "basic",
     params: [
       {
         type: "label",
         label: "Cost",
       },
       NUMBER_PARAM,
-
       {
         type: "number",
         id: "cost",
-        width: 100,
+        width: 70,
         defaultValue: 0.1,
         unit: "$",
-        label: "Cost",
       },
     ],
     sql: ({ operator, cost }) => `cost ${operator} ${cost}`,
@@ -315,6 +323,7 @@ export const FILTERS: Filter[] = [
   {
     id: "tokens",
     name: "Tokens",
+    uiType: "basic",
     params: [
       {
         type: "select",
@@ -343,7 +352,6 @@ export const FILTERS: Filter[] = [
       {
         type: "number",
         id: "tokens",
-        label: "Tokens",
       },
     ],
     // sum completion_tokens and prompt_tokens if field is total
@@ -356,19 +364,55 @@ export const FILTERS: Filter[] = [
     },
   },
   {
-    id: "contains",
-    name: "Contains",
+    id: "string",
+    name: "String match",
+    uiType: "smart",
     params: [
       FIELD_PARAM,
       {
-        type: "label",
-        label: "Contains",
+        type: "select",
+        id: "type",
+        width: 150,
+        defaultValue: "icontains",
+        options: [
+          {
+            label: "Contains",
+            value: "contains",
+          },
+          {
+            label: "Contains (insensitive)",
+            value: "icontains",
+          },
+          {
+            label: "Equals",
+            value: "equals",
+          },
+          {
+            label: "Equals (insensitive)",
+            value: "iequals",
+          },
+          {
+            label: "Starts with",
+            value: "startswith",
+          },
+          {
+            label: "Starts with (insensitive)",
+            value: "istartswith",
+          },
+          {
+            label: "Ends with",
+            value: "endswith",
+          },
+          {
+            label: "Ends with (insensitive)",
+            value: "iendswith",
+          },
+        ],
       },
       {
         type: "text",
         width: 100,
         id: "text",
-        label: "Text",
       },
     ],
     sql: ({ field, text }) => `${field}_text LIKE '%${text}%'`,
@@ -376,6 +420,7 @@ export const FILTERS: Filter[] = [
   {
     id: "status",
     name: "Status",
+    uiType: "basic",
     disableInEvals: true,
     params: [
       {
@@ -399,5 +444,68 @@ export const FILTERS: Filter[] = [
       },
     ],
     sql: ({ status }) => `status = '${status}'`,
+  },
+  {
+    id: "ai-assertion",
+    name: "AI Assertion",
+    uiType: "ai",
+    description:
+      "Checks if the output matches given requirements, using a language model to grade the output based on the rubric.",
+    onlyInEvals: true,
+    params: [
+      {
+        type: "label",
+        label: "Output",
+      },
+      {
+        type: "select",
+        id: "aiAssertion",
+        placeholder: "Is spoken like a pirate",
+        width: 140,
+        options: [
+          {
+            label: "Correct",
+            value: "correct",
+          },
+          {
+            label: "Incorrect",
+            value: "incorrect",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "sentiment",
+    name: "Sentiment",
+    uiType: "ai",
+    description: "Checks if the output is positive, neutral, or negative.",
+    onlyInEvals: true,
+    params: [
+      {
+        type: "label",
+        label: "Output is",
+      },
+      {
+        type: "select",
+        id: "sentiment",
+        defaultValue: "positive",
+        width: 140,
+        options: [
+          {
+            label: "positive",
+            value: "positive",
+          },
+          {
+            label: "neutral",
+            value: "neutral",
+          },
+          {
+            label: "negative",
+            value: "negative",
+          },
+        ],
+      },
+    ],
   },
 ]

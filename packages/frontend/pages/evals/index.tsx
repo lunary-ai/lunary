@@ -1,4 +1,4 @@
-import FiltersModal from "@/components/Blocks/FiltersModal"
+import FiltersModal from "@/components/Filters/FiltersModal"
 import FilterPicker from "@/components/Filters/Picker"
 import Paywall from "@/components/Layout/Paywall"
 import { useTemplates } from "@/utils/dataHooks"
@@ -88,6 +88,9 @@ export default function Radar() {
             </Chip.Group>
             <Button variant="light" href="/prompts" component={Link}>
               New template
+            </Button>
+            <Button variant="purple" disabled href="/logs" component={Link}>
+              Import from logs
             </Button>
           </Group>
 

@@ -18,10 +18,6 @@ export const FORMAT_PARAM: FilterParam = {
       label: "Contains valid",
       value: "contains",
     },
-    {
-      label: "Is not valid",
-      value: "invalid",
-    },
   ],
 }
 
@@ -29,7 +25,7 @@ export const NUMBER_PARAM: FilterParam = {
   type: "select",
   id: "operator",
   width: 50,
-  defaultValue: "eq",
+  defaultValue: "lt",
   options: [
     {
       label: ">=",

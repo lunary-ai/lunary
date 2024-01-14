@@ -38,7 +38,7 @@ import {
 import { NextSeo } from "next-seo"
 import { useContext, useEffect, useState } from "react"
 
-import FiltersModal from "@/components/Blocks/FiltersModal"
+import FiltersModal from "@/components/Filters/FiltersModal"
 import { ChatReplay } from "@/components/Blocks/RunChat"
 import RunInputOutput from "@/components/Blocks/RunInputOutput"
 import SearchBar from "@/components/Blocks/SearchBar"
