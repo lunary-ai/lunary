@@ -1,7 +1,7 @@
 import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 import Feedback from "@/components/Blocks/Feedback"
 import ProtectedText from "@/components/Blocks/ProtectedText"
-import SmartViewer from "@/components/Blocks/SmartViewer"
+import SmartViewer from "@/components/SmartViewer"
 import { Badge, Group } from "@mantine/core"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useEffect } from "react"

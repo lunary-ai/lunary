@@ -53,7 +53,12 @@ import {
   useProjects,
   useUser,
 } from "@/utils/dataHooks"
-import { useDebouncedState, useLocalStorage, useSetState } from "@mantine/hooks"
+import {
+  useDebouncedState,
+  useListState,
+  useLocalStorage,
+  useSetState,
+} from "@mantine/hooks"
 import Router from "next/router"
 import FacetedFilter from "../../components/Blocks/FacetedFilter"
 import Empty from "../../components/Layout/Empty"
@@ -126,8 +131,8 @@ function buildExportUrl(
 }
 
 export default function Logs() {
-  const [selectedFilters, setSelectedFilters] = useSetState({})
-  const [isModalOpened, setIsModalOpened] = useState(false)
+  const [selectedFilters, handlers] = useListState([])
+
   const [views, setViews] = useLocalStorage({
     key: "views",
     defaultValue: [],
@@ -139,19 +144,13 @@ export default function Logs() {
 
   const [selectedTab, setSelectedTab] = useState("llm-call")
 
-  useOrg()
-
   useEffect(() => {
     if (currentView) {
-      setSelectedFilters(currentView.filters)
+      handlers.setState(currentView.filters)
     }
-  }, [currentView, setSelectedFilters])
+  }, [currentView, handlers])
 
-  let { modelNames } = useModelNames()
   const [query, setQuery] = useDebouncedState(null, 500)
-
-  const [selectedModels, setSelectedModels] = useState([])
-  const [selectedTags, setSelectedTags] = useState([])
 
   const { projectId } = useContext(ProjectContext)
   const { currentProject: project, isLoading: projectLoading } =
@@ -160,9 +159,7 @@ export default function Logs() {
   const { org } = useOrg()
   const [selected, setSelected] = useState(null)
 
-  const exportUrl = projectId
-    ? buildExportUrl(projectId, query, selectedModels, selectedTags)
-    : ""
+  const exportUrl = projectId ? buildExportUrl(projectId, query, [], []) : ""
 
   useEffect(() => {}, [selectedTab])
 
@@ -185,21 +182,6 @@ export default function Logs() {
     }
   }
 
-  function apply(items) {
-    setSelectedFilters(items)
-    setIsModalOpened(false)
-  }
-
-  function createView() {
-    const name = prompt("Name")
-
-    if (name) {
-      const newViews = [...views, { name, filters: selectedFilters }]
-
-      setViews(newViews)
-    }
-  }
-
   return (
     <Empty
       enable={!loading && !projectLoading && !project?.activated}
@@ -208,12 +190,6 @@ export default function Logs() {
       showProjectId
       description="Once you've setup the SDK, your LLM calls and traces will appear here."
     >
-      <FiltersModal
-        opened={isModalOpened}
-        setOpened={setIsModalOpened}
-        defaultSelected={selectedFilters}
-        save={apply}
-      />
       <Stack h={"calc(100vh - var(--navbar-with-filters-size))"}>
         <NextSeo title="Requests" />
 
@@ -231,7 +207,7 @@ export default function Logs() {
               <Group gap="xs">
                 <Button
                   variant="subtle"
-                  onClick={() => setIsModalOpened(true)}
+                  onClick={() => {}}
                   leftSection={<IconFilter size={12} />}
                   size="xs"
                 >

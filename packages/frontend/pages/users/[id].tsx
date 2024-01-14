@@ -2,10 +2,10 @@ import { Router, useRouter } from "next/router"
 
 import { Card, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core"
 
-import SmartViewer from "@/components/Blocks/SmartViewer"
+import SmartViewer from "@/components/SmartViewer"
 
-import AgentSummary from "@/components/Blocks/Analytics/AgentSummary"
-import UsageSummary from "@/components/Blocks/Analytics/UsageSummary"
+import AgentSummary from "@/components/Analytics/AgentSummary"
+import UsageSummary from "@/components/Analytics/UsageSummary"
 import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 import CopyText from "@/components/Blocks/CopyText"
 import { formatAppUser } from "@/utils/format"

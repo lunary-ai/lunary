@@ -58,7 +58,7 @@ export const FIELD_PARAM: FilterParam = {
   type: "select",
   id: "field",
   width: 80,
-  defaultValue: "input",
+  defaultValue: "output",
   options: [
     {
       label: "Input",

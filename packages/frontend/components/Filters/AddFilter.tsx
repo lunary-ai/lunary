@@ -1,5 +1,16 @@
 import { useState } from "react"
-import { Box, Button, Combobox, Text, useCombobox } from "@mantine/core"
+import {
+  ActionIcon,
+  Box,
+  Button,
+  Combobox,
+  Group,
+  ScrollArea,
+  Text,
+  useCombobox,
+} from "@mantine/core"
+import FILTERS_UI_DATA from "./UIData"
+import { IconPlus } from "@tabler/icons-react"
 
 export function AddFilterButton({ filters, onSelect }) {
   const [search, setSearch] = useState("")
@@ -21,11 +32,22 @@ export function AddFilterButton({ filters, onSelect }) {
     .filter((item) =>
       item.name.toLowerCase().includes(search.toLowerCase().trim()),
     )
-    .map((item) => (
-      <Combobox.Option value={item.id} key={item.id}>
-        {item.name}
-      </Combobox.Option>
-    ))
+    .map((item) => {
+      const UIItem = FILTERS_UI_DATA[item.id] || FILTERS_UI_DATA["other"]
+      return (
+        <Combobox.Option
+          value={item.id}
+          key={item.id}
+          c={UIItem.color}
+          variant=""
+        >
+          <Group gap={6}>
+            <UIItem.icon size={14} />
+            {item.name}
+          </Group>
+        </Combobox.Option>
+      )
+    })
 
   return (
     <>
@@ -41,27 +63,29 @@ export function AddFilterButton({ filters, onSelect }) {
         }}
       >
         <Combobox.Target withAriaAttributes={false}>
-          <Button
+          <ActionIcon
             variant="light"
-            size="xs"
+            size="md"
             onClick={() => combobox.toggleDropdown()}
           >
-            Add filter
-          </Button>
+            <IconPlus size={14} />
+          </ActionIcon>
         </Combobox.Target>
 
         <Combobox.Dropdown>
           <Combobox.Search
             value={search}
             onChange={(event) => setSearch(event.currentTarget.value)}
-            placeholder="Search groceries"
+            placeholder="Type to filter"
           />
           <Combobox.Options>
-            {options.length > 0 ? (
-              options
-            ) : (
-              <Combobox.Empty>Nothing found</Combobox.Empty>
-            )}
+            <ScrollArea.Autosize type="scroll" mah={200}>
+              {options.length > 0 ? (
+                options
+              ) : (
+                <Combobox.Empty>Nothing found</Combobox.Empty>
+              )}
+            </ScrollArea.Autosize>
           </Combobox.Options>
         </Combobox.Dropdown>
       </Combobox>

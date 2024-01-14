@@ -37,31 +37,33 @@ const columns = [
 export default function Users() {
   const { users, isLoading, isValidating } = useAppUserList()
 
-  if (!isLoading && users?.length === 0) {
-    return (
-      <Empty
-        Icon={IconUsers}
-        title="Find out who your users are"
-        description="Users you identify from the SDKs will appear here."
-      />
-    )
-  }
-
   return (
-    <Stack h={"calc(100vh - var(--navbar-with-filters-size))"}>
-      <NextSeo title="Users" />
+    <Empty
+      enable={!isLoading && users?.length === 0}
+      Icon={IconUsers}
+      title="Find out who your users are"
+      description="Users you identify from the SDKs will appear here."
+      features={[
+        "Discover most expensive users",
+        "View actions taken by users",
+        "Filter by user properties",
+      ]}
+    >
+      <Stack h={"calc(100vh - var(--navbar-with-filters-size))"}>
+        <NextSeo title="Users" />
 
-      <DataTable
-        type="users"
-        columns={columns}
-        data={users}
-        onRowClicked={(row) => {
-          analytics.trackOnce("OpenUser")
+        <DataTable
+          type="users"
+          columns={columns}
+          data={users}
+          onRowClicked={(row) => {
+            analytics.trackOnce("OpenUser")
 
-          Router.push(`/users/${row.id}`)
-        }}
-        loading={isLoading || isValidating}
-      />
-    </Stack>
+            Router.push(`/users/${row.id}`)
+          }}
+          loading={isLoading || isValidating}
+        />
+      </Stack>
+    </Empty>
   )
 }

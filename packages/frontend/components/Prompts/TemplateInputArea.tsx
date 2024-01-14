@@ -9,9 +9,9 @@ import {
   Group,
 } from "@mantine/core"
 import { IconCircleMinus, IconCirclePlus } from "@tabler/icons-react"
-import { ChatMessage } from "@/components/Blocks/SmartViewer/Message"
-import SmartViewer from "@/components/Blocks/SmartViewer"
-import TokensBadge from "../TokensBadge"
+import { ChatMessage } from "@/components/SmartViewer/Message"
+import SmartViewer from "@/components/SmartViewer"
+import TokensBadge from "../Blocks/TokensBadge"
 
 interface TemplateInputAreaProps {
   template: any

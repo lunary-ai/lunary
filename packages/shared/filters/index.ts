@@ -6,6 +6,46 @@ export * from "./types"
 
 export const FILTERS: Filter[] = [
   {
+    id: "type",
+    name: "Type",
+    uiType: "basic",
+    disableInEvals: true,
+    params: [
+      {
+        type: "label",
+        label: "Type is",
+      },
+      {
+        type: "select",
+        id: "type",
+        width: 110,
+        defaultValue: "llm",
+        options: [
+          {
+            label: "LLM Call",
+            value: "llm",
+          },
+          {
+            label: "Agent",
+            value: "agent",
+          },
+          {
+            label: "Tool",
+            value: "tool",
+          },
+          {
+            label: "Thread",
+            value: "thread",
+          },
+          {
+            label: "Chat Message",
+            value: "chat",
+          },
+        ],
+      },
+    ],
+  },
+  {
     id: "model",
     name: "Model name",
     uiType: "basic",
@@ -474,13 +514,18 @@ export const FILTERS: Filter[] = [
         ],
       },
     ],
+    async evaluator(run, params) {
+      return {}
+    },
   },
   {
     id: "sentiment",
     name: "Sentiment",
     uiType: "ai",
     description: "Checks if the output is positive, neutral, or negative.",
-    onlyInEvals: true,
+    async evaluator(run, params) {
+      return {}
+    },
     params: [
       {
         type: "label",

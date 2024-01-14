@@ -1,4 +1,4 @@
-import TemplateInputArea from "@/components/Blocks/Prompts/TemplateInputArea"
+import TemplateInputArea from "@/components/Prompts/TemplateInputArea"
 import { useDataset } from "@/utils/dataHooks"
 import { Box, Container, Flex, SimpleGrid, Stack, Title } from "@mantine/core"
 import { useRouter } from "next/router"

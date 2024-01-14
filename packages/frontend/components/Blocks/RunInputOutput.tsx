@@ -10,7 +10,7 @@ import {
 } from "@mantine/core"
 import { IconPencilShare } from "@tabler/icons-react"
 import Link from "next/link"
-import SmartViewer from "./SmartViewer"
+import SmartViewer from "../SmartViewer"
 import TokensBadge from "./TokensBadge"
 import { useRun } from "@/utils/dataHooks"
 import { notifications } from "@mantine/notifications"

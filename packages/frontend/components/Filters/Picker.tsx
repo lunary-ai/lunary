@@ -4,8 +4,6 @@ import {
   Button,
   Flex,
   Group,
-  Input,
-  InputWrapper,
   MultiSelect,
   NumberInput,
   Select,
@@ -91,19 +89,27 @@ const FilterInputs = {
   },
 }
 
+export type SavedFilterData = {
+  id: string
+  paramsData: { id: string; value: any }[]
+}
+
 export default function FilterPicker({
+  defaultValue = [],
   onChange = (data) => {},
   minimal = false,
   restrictTo = (filter) => true,
+}: {
+  defaultValue?: SavedFilterData[]
+  onChange?: (data: SavedFilterData[]) => void
+  minimal?: boolean
+  restrictTo?: (filter: Filter) => boolean
 }) {
   const [modalOpened, setModalOpened] = useState(false)
 
   const options = FILTERS.filter(restrictTo)
 
-  const [selected, handlers] = useListState<{
-    id: string
-    paramsData: { id: string; value: any }[]
-  }>([])
+  const [selected, handlers] = useListState<SavedFilterData>(defaultValue)
 
   useEffect(() => {
     onChange(selected)

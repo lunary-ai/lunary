@@ -32,10 +32,10 @@ import { useRouter } from "next/router"
 import analytics from "../../utils/analytics"
 import { openUpgrade } from "@/components/Layout/UpgradeModal"
 import HotkeysInfo from "@/components/Blocks/HotkeysInfo"
-import TemplateInputArea from "@/components/Blocks/Prompts/TemplateInputArea"
+import TemplateInputArea from "@/components/Prompts/TemplateInputArea"
 import TemplateList, {
   defaultTemplateVersion,
-} from "@/components/Blocks/Prompts/TemplateMenu"
+} from "@/components/Prompts/TemplateMenu"
 import { notifications } from "@mantine/notifications"
 import { generateSlug } from "random-word-slugs"
 import {

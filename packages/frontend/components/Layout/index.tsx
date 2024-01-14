@@ -112,7 +112,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             // }}
             className={org?.limited ? "limited" : ""}
             style={{
-              backgroundColor: colorScheme === "dark" ? "#181818" : "#fafafa",
+              backgroundColor: "var(--mantine-color-body)",
               color: colorScheme === "dark" ? "#eee" : "#333",
             }}
           >
