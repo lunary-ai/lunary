@@ -1,5 +1,5 @@
 import Steps from "@/components/Blocks/Steps"
-import FilterPicker from "@/components/Filters/Picker"
+import FilterPicker, { SavedFilterData } from "@/components/Filters/Picker"
 import Paywall from "@/components/Layout/Paywall"
 import { useTemplates } from "@/utils/dataHooks"
 import {
@@ -13,6 +13,7 @@ import {
   Text,
   Title,
 } from "@mantine/core"
+import { useSetState } from "@mantine/hooks"
 import {
   IconDatabase,
   IconFlask2Filled,
@@ -29,13 +30,20 @@ const FEATURE_LIST = [
   "Compare results with OpenAI, Anthropic, Mistral and more",
 ]
 
-export default function Radar() {
+export default function Evals() {
   const { templates } = useTemplates()
-  const [selectedTemplate, setSelectedTemplate] = useState(null)
-  const [selectedModels, setSelectedModels] = useState<string[]>([
-    "gpt-4",
-    "gpt-3.5-turbo",
-  ])
+
+  const [evaluation, setEvaluation] = useSetState<{
+    prompts: any[]
+    variables: any[]
+    models: string[]
+    assertions: SavedFilterData[]
+  }>({
+    prompts: [],
+    variables: [],
+    models: ["gpt-4", "gpt-3.5-turbo"],
+    assertions: [],
+  })
 
   function startEval() {
     Router.push("/evals/results")
@@ -98,7 +106,9 @@ export default function Radar() {
                       key={template.id}
                       color="blue"
                       onClick={() => {
-                        setSelectedTemplate(template)
+                        setEvaluation({
+                          prompts: [template.prompts],
+                        })
                       }}
                     >
                       {template.name}
@@ -124,8 +134,8 @@ export default function Radar() {
                   label: model.name,
                 }))}
                 maxValues={3}
-                value={selectedModels}
-                onChange={setSelectedModels}
+                value={evaluation.models}
+                onChange={(value) => setEvaluation({ models: value })}
               />
             </Steps.Step>
             <Steps.Step n={3} label="Assertions">
@@ -136,7 +146,11 @@ export default function Radar() {
                 </Text>
                 .
               </Text>
-              <FilterPicker restrictTo={(filter) => !filter.disableInEvals} />
+              <FilterPicker
+                restrictTo={(filter) => !filter.disableInEvals}
+                defaultValue={evaluation.assertions}
+                onChange={(value) => setEvaluation({ assertions: value })}
+              />
             </Steps.Step>
           </Steps>
 

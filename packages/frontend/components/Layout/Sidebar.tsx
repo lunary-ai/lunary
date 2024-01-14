@@ -39,7 +39,7 @@ const menu = [
   { label: "Evaluations", icon: IconFlask2Filled, link: "/evals" },
   { label: "Users", icon: IconUsers, link: "/users" },
   { label: "Prompts", icon: IconPlayerPlay, link: "/prompts" },
-  { label: "Settings", icon: IconSettings, link: "/settings" },
+  { label: "Settings & Keys", icon: IconSettings, link: "/settings" },
 ]
 
 function NavbarLink({ icon: Icon, label, link, active }) {
@@ -214,13 +214,19 @@ export default function Sidebar() {
               <NavLink
                 label="Billing"
                 c="blue"
-                onClick={() => {
-                  Router.push("/billing")
-                }}
+                component={Link}
+                href="/billing"
                 leftSection={<IconCreditCard size={14} />}
               />
             </>
           )}
+
+          <NavLink
+            href="/team"
+            label="Team"
+            component={Link}
+            leftSection={<IconUsers size={14} />}
+          />
 
           <NavLink
             style={{

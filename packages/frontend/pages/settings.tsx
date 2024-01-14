@@ -2,10 +2,9 @@ import { useState } from "react"
 
 import LineChart from "@/components/Analytics/LineChart"
 import CopyText from "@/components/Blocks/CopyText"
-import UserAvatar from "@/components/Blocks/UserAvatar"
 
 import {
-  Badge,
+  Alert,
   Button,
   Card,
   Container,
@@ -13,7 +12,6 @@ import {
   Group,
   Popover,
   Stack,
-  Table,
   Text,
   TextInput,
   Title,
@@ -22,12 +20,7 @@ import { IconPencil, IconUserPlus } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import Router from "next/router"
 
-import {
-  useProjects,
-  useOrg,
-  useUser,
-  useCurrentProject,
-} from "@/utils/dataHooks"
+import { useOrg, useUser, useCurrentProject } from "@/utils/dataHooks"
 import useSWR from "swr"
 import { openUpgrade } from "../components/Layout/UpgradeModal"
 
@@ -90,7 +83,7 @@ function RenamableField({ defaultValue, onRename }) {
 
 export default function AppAnalytics() {
   const { user: currentUser } = useUser()
-  const { org, updateOrg, mutate } = useOrg()
+  const { org } = useOrg()
   const {
     update: updateCurrentProject,
     currentProject,
@@ -108,92 +101,61 @@ export default function AppAnalytics() {
   return (
     <Container className="unblockable">
       <NextSeo title="Settings" />
-      <Stack gap="lg">
-        <Card withBorder p="lg">
-          <Stack>
+      <Stack gap="xl">
+        <LineChart
+          title={
             <RenamableField
               defaultValue={currentProject?.name}
               onRename={(name) => updateCurrentProject(name)}
             />
-            <Text>
-              Project ID for tracking: <CopyText value={currentProject?.id} />
-            </Text>
-          </Stack>
-        </Card>
-
-        <Card withBorder p={0}>
-          <Group justify="space-between" align="center" p="lg">
-            <RenamableField
-              defaultValue={org?.name}
-              onRename={(name) => {
-                const newOrg = { ...org, name }
-                updateOrg({ id: org?.id, name }, { optimisticData: org }).then(
-                  () => {
-                    mutate()
-                  },
-                )
-              }}
-            />
-
-            <Invite />
-          </Group>
-
-          <Table striped verticalSpacing="lg" horizontalSpacing="lg">
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>User</Table.Th>
-                <Table.Th>Email</Table.Th>
-                <Table.Th>Role</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {org?.users?.map((user, i) => (
-                <Table.Tr key={i}>
-                  <Table.Td>
-                    <Group>
-                      <UserAvatar profile={user} />
-                      <Text>{user?.name}</Text>
-
-                      {user?.id === currentUser?.id ? (
-                        <Badge color="blue">You</Badge>
-                      ) : null}
-                    </Group>
-                  </Table.Td>
-                  <Table.Td>{user?.email}</Table.Td>
-                  <Table.Td>{user?.role}</Table.Td>
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
-        </Card>
-
-        <Card withBorder p="lg">
-          <Stack>
-            <Group justify="space-between" align="center">
-              <Title order={3}>Api Key</Title>
-              {/* <Button onClick={() => alert("TODO")}>
-                Refresh Api Key
-              </Button> */}
-            </Group>
-
-            <Text>
-              Use this key to authenticate with the Data API and fetch data from
-              your projects.
-            </Text>
-
-            <Text>
-              API Key: <CopyText value={org?.apiKey} />
-            </Text>
-          </Stack>
-        </Card>
-
-        <LineChart
-          title={<Title order={3}>Project Usage</Title>}
+          }
           range={30}
           data={projectUsage}
           formatter={(val) => `${val} runs`}
           props={["count"]}
         />
+
+        <Card withBorder p="lg">
+          <Stack gap="lg">
+            <Group justify="space-between" align="center">
+              <Title order={3}>Keys</Title>
+              {/* <Button onClick={() => alert("TODO")}>
+                Refresh Api Key
+              </Button> */}
+            </Group>
+
+            <Alert
+              variant="light"
+              title={
+                <Text fw={500}>
+                  Public Tracking Key:{" "}
+                  <CopyText c="green.8" value={currentProject?.id} />
+                </Text>
+              }
+              color="green"
+            >
+              <Text>
+                Public API keys can be used from your server or frontend code to
+                track events and send requests to the API.
+              </Text>
+            </Alert>
+
+            <Alert
+              variant="light"
+              title={
+                <Text fw={500}>
+                  Private Key: <CopyText c="red.8" value={org?.apiKey} />
+                </Text>
+              }
+              color="red"
+            >
+              <Text>
+                Private API keys should be used only on your server – they give
+                read/write/delete API access to your project's resources.
+              </Text>
+            </Alert>
+          </Stack>
+        </Card>
 
         {isAdmin && (
           <Card withBorder p="lg" style={{ overflow: "visible" }}>

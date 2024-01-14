@@ -283,7 +283,7 @@ const UpgradeModal = ({
         <IconAnalyze color={"#206dce"} size={50} />
 
         <Title order={2} fw={700} size={34} ta="center">
-          Upgrade your plan
+          10x your AI's performance
         </Title>
 
         <Text size="lg" mt="xs" mb="lg" fw={500}>
