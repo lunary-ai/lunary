@@ -87,3 +87,14 @@ export const MATCH_PARAM: FilterParam = {
     },
   ],
 }
+
+export const PERCENT_PARAM: FilterParam = {
+  type: "number",
+  unit: "%",
+  id: "percent",
+  width: 50,
+  min: 0,
+  step: 5,
+  max: 100,
+  defaultValue: 50,
+}

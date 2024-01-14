@@ -1,14 +1,5 @@
-import {
-  Badge,
-  Container,
-  Group,
-  Progress,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core"
+import { Badge, Group, Progress, Stack, Text } from "@mantine/core"
 import classes from "./index.module.css"
-import DurationBadge from "../Blocks/DurationBadge"
 // We create a matrix of results for each prompt, variable and model.
 // The matrix is a 3D array, where each dimension represents a different
 
@@ -146,8 +137,6 @@ export default function ResultsMatrix() {
   const pmVariations = getPromptModelVariations(evalResults)
 
   const variables = Object.keys(variableVariations[0])
-
-  console.log(variableVariations, pmVariations)
 
   return (
     <table className={classes["matrix-table"]}>

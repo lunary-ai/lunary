@@ -43,11 +43,7 @@ export default function Users() {
       Icon={IconUsers}
       title="Find out who your users are"
       description="Users you identify from the SDKs will appear here."
-      features={[
-        "Discover most expensive users",
-        "View actions taken by users",
-        "Filter by user properties",
-      ]}
+      features={["See who costs you the most", "View actions taken by users"]}
     >
       <Stack h={"calc(100vh - var(--navbar-with-filters-size))"}>
         <NextSeo title="Users" />

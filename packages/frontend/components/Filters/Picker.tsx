@@ -54,12 +54,15 @@ const FilterInputs = {
       "loading..."
     )
   },
-  number: ({ label, width, value, onChange, unit }) => {
+  number: ({ label, width, min, max, step, value, onChange, unit }) => {
     return (
       <Flex align="center">
         <NumberInput
           size="xs"
           w={width}
+          min={min}
+          max={max}
+          step={step}
           mr="xs"
           variant="unstyled"
           value={value}
@@ -196,17 +199,11 @@ export default function FilterPicker({
                 Add
               </Button>
               <FiltersModal
-                selected={selected}
                 opened={modalOpened}
                 setOpened={setModalOpened}
                 filters={options}
-                onItemClick={(id) => {
-                  console.log(id)
-                  const index = selected.findIndex((s) => s.id === id)
-                  console.log(index)
-                  if (index > -1) {
-                    handlers.remove(index)
-                  } else {
+                onFinish={(ids) => {
+                  for (const id of ids) {
                     const filter = options.find((option) => option.id === id)
                     if (!filter) return
 
