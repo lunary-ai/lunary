@@ -104,12 +104,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       <ModalsProvider modals={{ upgrade: UpgradeModal }}>
         <ProjectContext.Provider value={{ projectId, setProjectId }}>
           <Flex
-            mih={"100vh"}
-            // navbar={{
-            //   width: 200,
-            //   breakpoint: "0",
-            //   collapsed: { mobile: isAuthPage, desktop: isAuthPage },
-            // }}
+            h={"100vh"}
             className={org?.limited ? "limited" : ""}
             style={{
               backgroundColor: "var(--mantine-color-body)",
@@ -117,12 +112,18 @@ export default function Layout({ children }: { children: ReactNode }) {
             }}
           >
             {!isAuthPage && !isPublicPage && <Sidebar />}
-            {/* <AppShell.Main> */}
-            <Box p={isPromptPage ? 0 : 24} pos="relative" flex={1}>
+
+            <Box
+              p={isPromptPage ? 0 : 24}
+              pos="relative"
+              flex={1}
+              style={{
+                overflowY: "auto",
+              }}
+            >
               {!isAuthPage && !isPublicPage && <Navbar />}
               {children}
             </Box>
-            {/* </AppShell.Main> */}
           </Flex>
         </ProjectContext.Provider>
       </ModalsProvider>
