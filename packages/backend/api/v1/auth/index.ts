@@ -142,7 +142,6 @@ auth.post("/request-password-reset", async (ctx: Context) => {
 })
 
 auth.post("/reset-password", async (ctx: Context) => {
-  console.log("Reset password")
   const bodySchema = z.object({
     token: z.string(),
     password: z.string(),
@@ -155,9 +154,17 @@ auth.post("/reset-password", async (ctx: Context) => {
 
   const passwordHash = await hashPassword(password)
 
-  await sql`
-    update account set password_hash = ${passwordHash} where email = ${email}
+  const [user] = await sql`
+    update account set password_hash = ${passwordHash} where email = ${email} returning *
   `
+
+  const authToken = await signJwt({
+    userId: user.id,
+    email: user.email,
+    orgId: user.orgId,
+  })
+
+  ctx.body = { token: authToken }
 })
 
 export default auth
