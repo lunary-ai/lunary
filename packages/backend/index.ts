@@ -21,11 +21,12 @@ const app = new Koa()
 app.use(async (ctx, next) => {
   try {
     await next()
-  } catch (err: any) {
+  } catch (error: any) {
+    console.error(error)
     // will only respond with JSON
-    ctx.status = err.statusCode || err.status || 500
+    ctx.status = error.statusCode || error.status || 500
     ctx.body = {
-      message: err.message,
+      message: error.message,
     }
   }
 })
