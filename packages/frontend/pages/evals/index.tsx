@@ -7,7 +7,6 @@ import { usePromptVariables } from "@/utils/promptsHooks"
 import {
   Badge,
   Button,
-  Chip,
   Container,
   Fieldset,
   Group,
@@ -20,12 +19,7 @@ import {
   Title,
 } from "@mantine/core"
 import { useListState, useSetState } from "@mantine/hooks"
-import {
-  IconDatabase,
-  IconFlask2Filled,
-  IconHistory,
-} from "@tabler/icons-react"
-import Link from "next/link"
+import { IconFlask2Filled, IconHistory } from "@tabler/icons-react"
 import Router from "next/router"
 import { useEffect, useState } from "react"
 import { MODELS } from "shared"
