@@ -24,7 +24,8 @@ datasets.get("/", async (ctx: Context) => {
 })
 
 datasets.get("/:id", async (ctx: Context) => {
-  const { projectId, id } = ctx.params
+  const { projectId } = ctx.state
+  const { id } = ctx.params
 
   const [row] = await sql`
     select
