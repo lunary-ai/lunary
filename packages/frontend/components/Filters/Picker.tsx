@@ -13,7 +13,7 @@ import {
 } from "@mantine/core"
 import { useListState } from "@mantine/hooks"
 import { useEffect, useState } from "react"
-import { FILTERS, Filter } from "shared"
+import { FILTERS, Filter, FilterParam } from "shared"
 import { AddFilterButton } from "./AddFilter"
 import ErrorBoundary from "../Blocks/ErrorBoundary"
 import classes from "./index.module.css"
@@ -54,11 +54,12 @@ const FilterInputs = {
       "loading..."
     )
   },
-  number: ({ label, width, min, max, step, value, onChange, unit }) => {
+  number: ({ placeholder, width, min, max, step, value, onChange, unit }) => {
     return (
       <Flex align="center">
         <NumberInput
           size="xs"
+          placeholder={placeholder}
           w={width}
           min={min}
           max={max}
@@ -72,12 +73,13 @@ const FilterInputs = {
       </Flex>
     )
   },
-  text: ({ label, width, value, onChange }) => {
+  text: ({ placeholder, width, value, onChange }) => {
     return (
       <TextInput
         size="xs"
         w={width}
         variant="unstyled"
+        placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.currentTarget.value)}
       />
@@ -121,10 +123,12 @@ export default function FilterPicker({
   const insertFilter = (filter: Filter) => {
     handlers.append({
       id: filter.id,
-      paramsData: filter.params.map((param) => ({
-        id: param.id,
-        value: param.defaultValue,
-      })),
+      paramsData: filter.params
+        .filter((param) => param.type !== "label")
+        .map((param: FilterParam) => ({
+          id: param.id,
+          value: param.defaultValue,
+        })),
     })
   }
 
