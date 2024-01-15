@@ -44,7 +44,7 @@ import {
   useTemplate,
   useTemplateVersion,
   useUser,
-  useCurrentProject,
+  useProject,
 } from "@/utils/dataHooks"
 import { fetcher } from "@/utils/fetcher"
 import Empty from "@/components/Layout/Empty"
@@ -68,7 +68,7 @@ function Playground() {
 
   const { templates } = useTemplates()
 
-  const { currentProject } = useCurrentProject()
+  const { project } = useProject()
 
   const [template, setTemplate] = useState<any>()
   const [templateVersion, setTemplateVersion] = useState<any>(
@@ -110,7 +110,7 @@ function Playground() {
   const { org } = useOrg()
 
   useEffect(() => {
-    if (!currentProject) return
+    if (!project) return
 
     const { clone, id } = router.query
 
@@ -120,7 +120,7 @@ function Playground() {
         setLoading(true)
 
         const data = await fetcher.get(
-          `/projects/${currentProject?.id}/template_versions/${id}`,
+          `/projects/${project?.id}/template_versions/${id}`,
         )
 
         if (data) {
@@ -135,9 +135,7 @@ function Playground() {
     } else if (clone) {
       const fetchRun = async () => {
         setLoading(true)
-        const run = await fetcher.get(
-          `/projects/${currentProject?.id}/runs/${clone}/`,
-        )
+        const run = await fetcher.get(`/projects/${project?.id}/runs/${clone}/`)
 
         if (run?.input) {
           setTemplateVersion({ ...templateVersion, content: run.input })
@@ -154,7 +152,7 @@ function Playground() {
       setTemplate({ mode: "openai" })
       setTemplateVersion(defaultTemplateVersion)
     }
-  }, [currentProject])
+  }, [project])
 
   // Save as draft without deploying
   const saveTemplate = async () => {

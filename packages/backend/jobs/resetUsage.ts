@@ -9,8 +9,8 @@ const updateLimitedStatus = async () => {
   WHERE limited = true AND p.id NOT IN (
     SELECT o.id
     FROM "public"."org" o
-    JOIN "public"."app" a ON a.org_id = o.id
-    JOIN "public"."run" r ON r.app = a.id
+    JOIN "public"."project" p ON p.org_id = o.id
+    JOIN "public"."run" r ON r.project_id = p.id
     WHERE r.created_at >= CURRENT_DATE - INTERVAL '3 days'
     GROUP BY o.id
     HAVING COUNT(r.id) > 1000
@@ -25,12 +25,12 @@ const updateLimitedStatus = async () => {
       p.id,
       DATE(r.created_at) AS run_date,
       COUNT(r.id) AS daily_runs
-    FROM "public"."org" p
-    JOIN "public"."app" a ON a.org_id = p.id
-    JOIN "public"."run" r ON r.app = a.id
+    FROM "public"."org" o
+    JOIN "public"."app" p ON a.org_id = o.id
+    JOIN "public"."run" r ON r.project_id = a.id
     WHERE r.created_at >= CURRENT_DATE - INTERVAL '3 days'
-    GROUP BY p.id, run_date
-    HAVING COUNT(r.id) > 1000 AND p.plan = 'free'
+    GROUP BY o.id, run_date
+    HAVING COUNT(r.id) > 1000 AND o.plan = 'free'
 ),
 over_limit_users AS (
     SELECT 

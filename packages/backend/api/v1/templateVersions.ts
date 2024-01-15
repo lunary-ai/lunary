@@ -2,7 +2,6 @@ import sql from "@/utils/db"
 import Router from "koa-router"
 import { Context } from "koa"
 import postgres from "postgres"
-import { verifySession } from "supertokens-node/recipe/session/framework/koa"
 
 const versions = new Router({
   prefix: "/template_versions",
@@ -12,37 +11,33 @@ const versions = new Router({
 // Otherwise it returns stuff like maxTokens instead of max_tokens and OpenAI breaks
 const unCameledSql = postgres(process.env.DB_URI!)
 
-versions.get(
-  "/latest",
-  verifySession({ sessionRequired: false }),
-  async (ctx: Context) => {
-    // Route used by SDK to fetch the latest version of a template
+versions.get("/latest", async (ctx: Context) => {
+  // Route used by SDK to fetch the latest version of a template
 
-    const { projectId } = ctx.state
+  const { projectId } = ctx.state
 
-    const { slug } = ctx.request.query as {
-      slug: string
-    }
+  const { slug } = ctx.request.query as {
+    slug: string
+  }
 
-    const [latestVersion] = await unCameledSql`
+  const [latestVersion] = await unCameledSql`
     SELECT t.id, t.slug, t.mode, tv.id, tv.content, tv.extra, tv.created_at, tv.version
     FROM template t
     INNER JOIN template_version tv ON t.id = tv.template_id
     WHERE 
-      t.app_id = ${projectId}
+      t.project_id = ${projectId}
       AND t.slug = ${slug}
       AND tv.is_draft = false
     ORDER BY tv.created_at DESC
     LIMIT 1
   `
 
-    if (!latestVersion) {
-      ctx.throw(404)
-    }
+  if (!latestVersion) {
+    ctx.throw(404)
+  }
 
-    ctx.body = latestVersion
-  },
-)
+  ctx.body = latestVersion
+})
 
 versions.get("/:id", async (ctx: Context) => {
   const [version] = await sql`
@@ -50,7 +45,7 @@ versions.get("/:id", async (ctx: Context) => {
   `
 
   const [template] = await sql`
-    select * from template where app_id = ${ctx.state.projectId} and id = ${version.templateId}
+    select * from template where project_id = ${ctx.state.projectId} and id = ${version.templateId}
   `
 
   ctx.body = { ...version, template }

@@ -12,7 +12,7 @@ import {
 } from "@mantine/core"
 import { IconMessage } from "@tabler/icons-react"
 import CopyText from "../Blocks/CopyText"
-import { useCurrentProject } from "@/utils/dataHooks"
+import { useProject } from "@/utils/dataHooks"
 import { ListFeatures } from "./Paywall"
 
 export default function Empty({
@@ -36,7 +36,7 @@ export default function Empty({
   onClick?: () => void
   children?: React.ReactNode
 }) {
-  const { currentProject } = useCurrentProject()
+  const { project } = useProject()
 
   if (!enable && children) {
     return children
@@ -50,7 +50,7 @@ export default function Empty({
       : {
           component: "a",
           target: "_blank",
-          href: `https://lunary.ai/docs?app=${currentProject?.id}`,
+          href: `https://lunary.ai/docs?app=${project?.id}`,
         }
 
   return (
@@ -96,7 +96,7 @@ export default function Empty({
               <Text>
                 Project ID:{" "}
                 <CopyText
-                  value={currentProject?.id}
+                  value={project?.id}
                   color={"var(--mantine-color-violet-light)"}
                 />
               </Text>

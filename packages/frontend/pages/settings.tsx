@@ -20,7 +20,7 @@ import { IconPencil, IconUserPlus } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import Router from "next/router"
 
-import { useOrg, useUser, useCurrentProject } from "@/utils/dataHooks"
+import { useOrg, useUser, useProject, useProjectSWR } from "@/utils/dataHooks"
 import useSWR from "swr"
 import { openUpgrade } from "../components/Layout/UpgradeModal"
 
@@ -85,15 +85,13 @@ export default function AppAnalytics() {
   const { user: currentUser } = useUser()
   const { org } = useOrg()
   const {
-    update: updateCurrentProject,
-    currentProject,
-    setCurrentProjectId,
-    drop: dropCurrentProject,
-  } = useCurrentProject()
+    update: updateproject,
+    project,
+    setProjectId,
+    drop: dropproject,
+  } = useProject()
 
-  const { data: projectUsage } = useSWR(
-    `/orgs/${org?.id}/usage?project=${currentProject?.id}`,
-  )
+  const { data: projectUsage } = useProjectSWR(() => `/usage`)
 
   const isAdmin =
     currentUser?.id === org?.users?.find((u) => u.role === "admin")?.id
@@ -105,8 +103,8 @@ export default function AppAnalytics() {
         <LineChart
           title={
             <RenamableField
-              defaultValue={currentProject?.name}
-              onRename={(name) => updateCurrentProject(name)}
+              defaultValue={project?.name}
+              onRename={(name) => updateproject(name)}
             />
           }
           range={30}
@@ -129,7 +127,7 @@ export default function AppAnalytics() {
               title={
                 <Text fw={500}>
                   Public Tracking Key:{" "}
-                  <CopyText c="green.8" value={currentProject?.id} />
+                  <CopyText c="green.8" value={project?.id} />
                 </Text>
               }
               color="green"
@@ -181,8 +179,8 @@ export default function AppAnalytics() {
                   <Button
                     color="red"
                     onClick={() => {
-                      dropCurrentProject()
-                      setCurrentProjectId(null)
+                      dropproject()
+                      setProjectId(null)
                       Router.push("/")
                     }}
                   >

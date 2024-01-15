@@ -1,0 +1,7 @@
+import * as jose from "jose"
+
+const payload = await jose.decodeJwt(
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijk1YzMxNTVmLTVhYzQtNDczMC05N2Y5LTMyYmUxNzJjNDUzYSIsImVtYWlsIjoiY2hvY2FydC5odWd1ZXNAaWNsb3VkLmNvbSIsIm9yZ0lkIjoiZGYyOWY4MWItM2M3Yi00MDEyLTg5Y2QtMzRkZjIyZDFlZjNiIiwiZXhwIjoxNzA1MzQ2NjI4LCJpYXQiOjE3MDUzNDMwMjgsIm5iZiI6MTcwNTM0MzAyOH0.Bbvo_0hXYK90nYLjGfCiI-TrNOKNHAbVqqvgphkXJbE",
+)
+
+console.log(payload)

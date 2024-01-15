@@ -39,17 +39,17 @@ import {
   IconUser,
 } from "@tabler/icons-react"
 
-import analytics from "@/utils/analytics"
-import { NextSeo } from "next-seo"
 import SocialProof from "@/components/Blocks/SocialProof"
-import { signUp } from "supertokens-auth-react/recipe/emailpassword"
-import { useSessionContext } from "supertokens-auth-react/recipe/session"
+import analytics from "@/utils/analytics"
+import useSession from "@/utils/auth"
+import { fetcher } from "@/utils/fetcher"
+import { NextSeo } from "next-seo"
 
 function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
 
-  const session = useSessionContext()
+  const { session, setSession } = useSession()
 
   const form = useForm({
     initialValues: {
@@ -84,8 +84,7 @@ function SignupPage() {
   })
 
   useEffect(() => {
-    if (!session.loading && session.doesSessionExist && step === 1)
-      Router.push("/")
+    if (session && step === 1) Router.push("/")
   }, [session, step])
 
   const handleSignup = async ({
@@ -105,18 +104,31 @@ function SignupPage() {
   }) => {
     setLoading(true)
 
-    const response = await signUp({
-      formFields: [
-        { id: "email", value: email },
-        { id: "password", value: password },
-        { id: "name", value: name },
-        { id: "projectName", value: projectName },
-        { id: "orgName", value: orgName },
-        { id: "employeeCount", value: employeeCount },
-        { id: "signupMethod", value: "signup" },
-        { id: "token", value: "123" }, // To keep because of weird supertoken behaviour
-      ],
+    const body = await fetcher.post("/auth/signup", {
+      arg: {
+        email,
+        password,
+        name,
+        projectName,
+        orgName,
+        employeeCount,
+        signupMethod: "signup",
+      },
     })
+
+    const token = body.token
+    if (token) {
+      setSession(token)
+
+      notifications.show({
+        icon: <IconCheck size={18} />,
+        color: "teal",
+        title: "Email sent",
+        autoClose: false,
+        withCloseButton: false,
+        message: "Check your emails for the confirmation link",
+      })
+    }
 
     analytics.track("Signup", {
       email,
@@ -126,30 +138,7 @@ function SignupPage() {
       employeeCount,
     })
 
-    switch (response.status) {
-      case "OK":
-        notifications.show({
-          icon: <IconCheck size={18} />,
-          color: "teal",
-          title: "Email sent",
-          autoClose: false,
-          withCloseButton: false,
-          message: "Check your emails for the confirmation link",
-        })
-
-        setStep(3)
-        break
-      case "SIGN_UP_NOT_ALLOWED":
-        form.setFieldError("email", "Sign up not allowed")
-        break
-      case "FIELD_ERROR":
-        notifications.show({
-          title: "Error",
-          message: "One or more fields are invalid",
-          color: "red",
-        })
-        break
-    }
+    nextStep()
 
     setLoading(false)
   }
@@ -239,8 +228,7 @@ function SignupPage() {
 
                           <PasswordInput
                             label="Password"
-                            autoComplete="new-password"
-                            onKeyPress={(e) => {
+                            onKeyDown={(e) => {
                               if (e.key === "Enter") {
                                 nextStep()
                               }
@@ -253,7 +241,7 @@ function SignupPage() {
                           <Button
                             size="md"
                             mt="md"
-                            onClick={handleSignup}
+                            onClick={nextStep}
                             fullWidth
                             loading={loading}
                           >

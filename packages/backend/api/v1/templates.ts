@@ -11,8 +11,8 @@ templates.get("/", async (ctx: Context) => {
     select t.*, coalesce(json_agg(tv.*) filter (where tv.id is not null), '[]') as versions
     from template t
     left join template_version tv on tv.template_id = t.id
-    where t.app_id = ${ctx.state.projectId}
-    group by t.id, t.org_id, t.name, t.slug, t.mode, t.created_at, t.group, t.app_id
+    where t.project_id = ${ctx.state.projectId}
+    group by t.id, t.org_id, t.name, t.slug, t.mode, t.created_at, t.group, t.project_id
     order by max(tv.created_at) desc
   `
 
@@ -36,7 +36,7 @@ templates.post("/", async (ctx: Context) => {
 
   const [template] = await sql`
     insert into template ${sql({
-      appId: projectId,
+      projectId,
       orgId,
       slug,
       mode,
@@ -61,7 +61,7 @@ templates.post("/", async (ctx: Context) => {
 
 templates.get("/:id", async (ctx: Context) => {
   const [row] = await sql`
-    select * from template where app_id = ${ctx.state.projectId} and id = ${ctx.params.id}
+    select * from template where project_id = ${ctx.state.projectId} and id = ${ctx.params.id}
   `
 
   ctx.body = row
@@ -69,7 +69,7 @@ templates.get("/:id", async (ctx: Context) => {
 
 templates.delete("/:id", async (ctx: Context) => {
   await sql`
-    delete from template where app_id = ${ctx.state.projectId} and id = ${ctx.params.id}
+    delete from template where project_id = ${ctx.state.projectId} and id = ${ctx.params.id}
   `
 
   ctx.body = {}
@@ -85,7 +85,7 @@ templates.patch("/:id", async (ctx: Context) => {
     update template set
       slug = ${slug},
       mode = ${mode}
-    where app_id = ${ctx.state.projectId} and id = ${ctx.params.id}
+    where project_id = ${ctx.state.projectId} and id = ${ctx.params.id}
     returning *
   `
 

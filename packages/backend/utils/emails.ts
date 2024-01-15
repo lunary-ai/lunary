@@ -1,4 +1,4 @@
-import { sign } from "./auth"
+import { signJwt } from "@/api/v1/auth/utils"
 import { sendEmail } from "./sendEmail"
 
 function extractFirstName(name: string) {
@@ -11,10 +11,9 @@ export async function sendVerifyEmail(email: string, name: string) {
     return
   }
 
-  const token = await sign({ email }, process.env.JWT_SECRET!)
+  const token = await signJwt({ email })
 
-  // TODO: hostname
-  const confirmLink = `${process.env.NEXT_PUBLIC_APP_URL}/user/verify-email?token=${token}`
+  const confirmLink = `${process.env.BACKEND_URL}/v1/users/verify-email?token=${token}`
 
   await sendEmail(CONFIRM_EMAIL(email, name, confirmLink))
 }
@@ -60,7 +59,7 @@ You can reply to this email if you have any question.
   }
 }
 
-export function WELCOME_EMAIL(email: string, name: string, appId: string) {
+export function WELCOME_EMAIL(email: string, name: string, projectId: string) {
   return {
     subject: `welcome to Lunary`,
     to: [email],
@@ -74,7 +73,7 @@ Wanted to say welcome.
 
 Although this is an automated email, I'm here to help get you started if you have any question.
 
-Here's your app tracking ID: \`${appId}\`
+Here's your project tracking ID: \`${projectId}\`
 
 You can use this to integrate your app with one of our SDKs.
 
