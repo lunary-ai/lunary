@@ -51,7 +51,7 @@ export default function UpdatePassword() {
     setLoading(true)
 
     const body = await errorHandler(
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/request-reset-password`, {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/reset-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
