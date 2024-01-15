@@ -10,7 +10,6 @@ import {
   Menu,
   Paper,
   SegmentedControl,
-  Select,
   Stack,
   Text,
 } from "@mantine/core"
@@ -38,29 +37,19 @@ import {
 import { NextSeo } from "next-seo"
 import { useContext, useEffect, useState } from "react"
 
-import FiltersModal from "@/components/Filters/FiltersModal"
 import { ChatReplay } from "@/components/Blocks/RunChat"
 import RunInputOutput from "@/components/Blocks/RunInputOutput"
 import SearchBar from "@/components/Blocks/SearchBar"
 import { openUpgrade } from "@/components/Layout/UpgradeModal"
 import analytics from "@/utils/analytics"
 import { formatDateTime } from "@/utils/format"
-import {
-  useCurrentProject,
-  useLogs,
-  useModelNames,
-  useOrg,
-  useProjects,
-  useUser,
-} from "@/utils/dataHooks"
+import { useCurrentProject, useLogs, useOrg } from "@/utils/dataHooks"
 import {
   useDebouncedState,
   useListState,
   useLocalStorage,
-  useSetState,
 } from "@mantine/hooks"
 import Router from "next/router"
-import FacetedFilter from "../../components/Blocks/FacetedFilter"
 import Empty from "../../components/Layout/Empty"
 import { ProjectContext } from "../../utils/context"
 import FilterPicker from "@/components/Filters/Picker"

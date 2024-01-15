@@ -84,25 +84,6 @@ export function useProjectInfiniteSWR(key: string, ...args: any[]) {
 // TODO: not sure all queries should have soft options
 // TODO: optimistic insert and updates
 
-// TODO: find better names for hooks
-export function useModelNames() {
-  const { data, isLoading } = useProjectSWR(`/filters/models`)
-
-  return { modelNames: data || [], isLoading }
-}
-
-export function useTags() {
-  const { data, isLoading } = useProjectSWR(`/filters/tags`)
-
-  return { tags: data || [], isLoading }
-}
-
-export function useAllFeedbacks() {
-  const { data, isLoading } = useProjectSWR(`/filters/feedbacks`)
-
-  return { allFeedbacks: data || [], isLoading }
-}
-
 export function useUser() {
   const session = useSessionContext()
   const isAuthed = !session.loading && session.doesSessionExist
