@@ -120,7 +120,6 @@ auth.post("/login", async (ctx: Context) => {
 })
 
 auth.post("/request-password-reset", async (ctx: Context) => {
-  console.log("REQUEST")
   try {
     const { email } = ctx.request.body as { email: string }
     const [user] = await sql`select id from account where email = ${email}`
@@ -132,7 +131,6 @@ auth.post("/request-password-reset", async (ctx: Context) => {
 
     const link = `${process.env.FRONTEND_URL}/reset-password?token=${token}`
 
-    console.log(link)
     sendEmail(RESET_PASSWORD(email, link))
 
     ctx.body = { ok: true }
@@ -143,7 +141,8 @@ auth.post("/request-password-reset", async (ctx: Context) => {
   }
 })
 
-auth.post("/reset-password-2", async (ctx: Context) => {
+auth.post("/reset-password", async (ctx: Context) => {
+  console.log("Reset password")
   const bodySchema = z.object({
     token: z.string(),
     password: z.string(),

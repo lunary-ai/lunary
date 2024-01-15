@@ -60,7 +60,6 @@ export async function authMiddleware(ctx: Context, next: Next) {
     )
 
     if (isPublicRoute) {
-      console.log("PUBLIC")
       await next()
       return
     }

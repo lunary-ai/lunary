@@ -30,7 +30,6 @@ users.get("/me", async (ctx: Context) => {
 
 users.get("/me/org", async (ctx: Context) => {
   const { userId } = ctx.state
-  console.log(ctx.state)
 
   // TODO: (low priority) merge queries
   const [org] = await sql`
