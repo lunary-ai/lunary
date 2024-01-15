@@ -19,8 +19,6 @@ export function sign(payload, secret: string): Promise<string> {
 }
 
 export async function signOut() {
-  console.log("S OUT")
-  console.trace()
   window.localStorage.clear()
   Router.push("/login")
 }
@@ -34,6 +32,7 @@ interface SessionData {
 function useSession() {
   const [sessionData, setSessionData] = useState<SessionData | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
+  console.log(isLoading, sessionData)
 
   async function setSession(token: string) {
     try {

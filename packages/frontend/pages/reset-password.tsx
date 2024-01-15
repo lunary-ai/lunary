@@ -14,13 +14,15 @@ import errorHandler from "@/utils/errorHandler"
 import { notifications } from "@mantine/notifications"
 import { NextSeo } from "next-seo"
 import Router, { useRouter } from "next/router"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { submitNewPassword } from "supertokens-web-js/recipe/emailpassword"
 import { fetcher } from "@/utils/fetcher"
+import useSession from "@/utils/auth"
 
 export default function UpdatePassword() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const { session, setSession } = useSession()
 
   const { token, email } = router.query as {
     token: string
@@ -60,14 +62,16 @@ export default function UpdatePassword() {
       }),
     )
 
-    notifications.show({
-      icon: <IconCheck size={18} />,
-      color: "teal",
-      title: "Success",
-      message: "Password updated successfully",
-    })
-
-    Router.push("/")
+    if (body.token) {
+      setSession(body.token)
+      notifications.show({
+        icon: <IconCheck size={18} />,
+        color: "teal",
+        title: "Success",
+        message: "Password updated successfully",
+      })
+      Router.push("/")
+    }
 
     setLoading(false)
   }

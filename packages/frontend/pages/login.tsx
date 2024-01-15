@@ -39,7 +39,6 @@ function LoginPage() {
   const { session, isLoading, setSession } = useSession()
 
   useEffect(() => {
-    console.log(session, isLoading)
     if (session) Router.push("/")
   }, [session])
 
@@ -61,7 +60,6 @@ function LoginPage() {
 
     const token = body.token
     if (token) {
-      console.log("SET SESSION")
       setSession(token)
     }
 
