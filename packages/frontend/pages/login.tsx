@@ -12,13 +12,13 @@ import {
 import { useForm } from "@mantine/form"
 import { IconAnalyze, IconAt } from "@tabler/icons-react"
 
-import Router from "next/router"
 import { useEffect, useState } from "react"
 
 import analytics from "@/utils/analytics"
+import useSession from "@/utils/auth"
+import { fetcher } from "@/utils/fetcher"
 import { NextSeo } from "next-seo"
-import { signIn } from "supertokens-auth-react/recipe/emailpassword"
-import { useSessionContext } from "supertokens-auth-react/recipe/session"
+import Router from "next/router"
 
 function LoginPage() {
   const [loading, setLoading] = useState(false)
@@ -36,10 +36,11 @@ function LoginPage() {
     },
   })
 
-  const session = useSessionContext()
+  const { session, isLoading, setSession } = useSession()
 
   useEffect(() => {
-    if (!session.loading && session.doesSessionExist) Router.push("/")
+    console.log(session, isLoading)
+    if (session) Router.push("/")
   }, [session])
 
   const handleLoginWithPassword = async ({
@@ -51,40 +52,20 @@ function LoginPage() {
   }) => {
     setLoading(true)
 
-    const response = await signIn({
-      formFields: [
-        {
-          id: "email",
-          value: email,
-        },
-        {
-          id: "password",
-          value: password,
-        },
-      ],
+    const body = await fetcher.post("/auth/login", {
+      arg: {
+        email,
+        password,
+      },
     })
 
-    analytics.track("Login", { method: "password" })
-
-    switch (response.status) {
-      case "OK":
-        Router.push("/")
-        break
-      case "WRONG_CREDENTIALS_ERROR":
-        form.setFieldError("password", "Invalid email or password.")
-        break
-      case "FIELD_ERROR":
-        form.setFieldError("email", "Please enter a valid email.")
-        // response.formFields.forEach((field) => {
-        //   form.setFieldError(field.id, field.error)
-        // })
-        break
-      case "SIGN_IN_NOT_ALLOWED":
-        form.setFieldError("email", "Sign in not allowed.")
-        break
-
-      // Handle other cases if necessary
+    const token = body.token
+    if (token) {
+      console.log("SET SESSION")
+      setSession(token)
     }
+
+    analytics.track("Login", { method: "password" })
 
     setLoading(false)
   }

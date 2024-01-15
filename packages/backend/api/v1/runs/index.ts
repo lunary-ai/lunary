@@ -48,7 +48,7 @@ const formatRun = (run: any) => ({
   status: run.status,
   siblingOf: run.siblingOf,
   user: {
-    id: run.userId,
+    id: run.externalUserId,
     externalId: run.userExternalId,
     createdAt: run.userCreatedAt,
     lastSeen: run.userLastSeen,
@@ -91,7 +91,7 @@ runs.get("/", async (ctx) => {
 
   let parentRunFilter = sql``
   if (parentRunId) {
-    parentRunFilter = sql`and parent_run = ${parentRunId}`
+    parentRunFilter = sql`and parent_run_id = ${parentRunId}`
   }
 
   // if (
@@ -140,16 +140,16 @@ runs.get("/", async (ctx) => {
   const rows = await sql`
       select
         r.*,
-        au.id as user_id,
-        au.external_id as user_external_id,
-        au.created_at as user_created_at,
-        au.last_seen as user_last_seen,
-        au.props as user_props
+        eu.id as user_id,
+        eu.external_id as user_external_id,
+        eu.created_at as user_created_at,
+        eu.last_seen as user_last_seen,
+        eu.props as user_props
       from
           run r
-          left join app_user au on r.user = au.id
+          left join external_user eu on r.external_user_id = eu.id
       where
-          r.app = ${projectId as string}
+          r.project_id = ${projectId as string}
           ${typeFilter}
           ${parentRunFilter}
       order by
@@ -194,9 +194,9 @@ runs.get("/usage", async (ctx) => {
       from
           run
       where
-          run.app = ${projectId as string}
+          run.project_id = ${projectId as string}
           and run.created_at >= now() - interval '1 day' * ${daysNum}
-          ${userIdNum ? sql`and run.user = ${userIdNum}` : sql``}
+          ${userIdNum ? sql`and run.external_user_id = ${userIdNum}` : sql``}
           ${
             daily
               ? sql`and extract(epoch FROM (ended_at - created_at)) * 1000 >= 1000`
@@ -218,16 +218,16 @@ runs.get("/:id", async (ctx) => {
   const [row] = await sql`
       select
         r.*,
-        au.id as user_id,
-        au.external_id as user_external_id,
-        au.created_at as user_created_at,
-        au.last_seen as user_last_seen,
-        au.props as user_props
+        eu.id as user_id,
+        eu.external_id as user_external_id,
+        eu.created_at as user_created_at,
+        eu.last_seen as user_last_seen,
+        eu.props as user_props
       from
           run r
-          left join app_user au on r.user = au.id
+          left join external_user eu on r.external_user_id = eu.id
       where
-          r.app = ${projectId as string}
+          r.project_id = ${projectId as string}
           and r.id = ${id}
       order by
           r.created_at desc
@@ -253,7 +253,7 @@ runs.patch("/:id", async (ctx: Context) => {
           feedback = ${feedback},
           tags = ${tags}
       where
-          app = ${projectId as string}
+          project = ${projectId as string}
           and id = ${id}`
 
   ctx.body = {}
@@ -270,10 +270,10 @@ runs.get("/:id/related", async (ctx) => {
 
       SELECT r2.*
       FROM run r2
-      INNER JOIN related_runs rr ON rr.id = r2.parent_run
+      INNER JOIN related_runs rr ON rr.id = r2.parent_run_id
   )
   SELECT rr.created_at, rr.tags, rr.app, rr.id, rr.status, rr.name, rr.ended_at, rr.error, rr.input, rr.output, 
-        rr.params, rr.type, rr.parent_run, rr.completion_tokens, rr.prompt_tokens, rr.feedback
+        rr.params, rr.type, rr.parent_run_id, rr.completion_tokens, rr.prompt_tokens, rr.feedback
   FROM related_runs rr;
   `
 

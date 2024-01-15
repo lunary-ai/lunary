@@ -9,7 +9,7 @@ async function patchedCors(ctx: Context, next: Next) {
     ctx.set("Access-Control-Allow-Credentials", "true")
     ctx.set(
       "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, Accept, fdi-version, rid, st-auth-mode",
+      "Origin, X-Requested-With, Content-Type, Accept, fdi-version, rid, st-auth-mode, Authorization",
     )
     ctx.status = 204
     return

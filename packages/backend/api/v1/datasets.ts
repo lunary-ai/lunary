@@ -15,7 +15,7 @@ datasets.get("/", async (ctx: Context) => {
     from
       dataset
     where
-      app_id = ${projectId}
+      project_id = ${projectId}
     order by
       updated_at desc
   `
@@ -33,7 +33,7 @@ datasets.get("/:id", async (ctx: Context) => {
     from
       dataset
     where
-      app_id = ${projectId} and id = ${id}
+      project_id = ${projectId} and id = ${id}
   `
 
   ctx.body = row
@@ -68,7 +68,7 @@ datasets.post("/:id/runs", async (ctx: Context) => {
   await sql`
     update dataset
     set runs = runs || ${sql.json(run)}, updated_at = now()
-    where app_id = ${projectId} and id = ${id}
+    where project_id = ${projectId} and id = ${id}
   `
 
   ctx.body = {}
@@ -81,7 +81,7 @@ datasets.del("/:id/runs/:index", async (ctx: Context) => {
   await sql` 
     update dataset
     set runs = runs - ${index}, updated_at = now()
-    where app_id = ${projectId} and id = ${id}
+    where project_id = ${projectId} and id = ${id}
   `
 
   ctx.body = {}

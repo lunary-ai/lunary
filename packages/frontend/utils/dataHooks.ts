@@ -8,7 +8,7 @@ import { getUserColor } from "./colors"
 import useSWRMutation from "swr/mutation"
 import { calcRunCost } from "./calcCosts"
 import { fetcher } from "./fetcher"
-import { useSessionContext } from "supertokens-auth-react/recipe/session"
+import useSession from "./auth"
 
 // TODO: put in other file
 function extendWithCosts(data: any[]) {
@@ -85,8 +85,8 @@ export function useProjectInfiniteSWR(key: string, ...args: any[]) {
 // TODO: optimistic insert and updates
 
 export function useUser() {
-  const session = useSessionContext()
-  const isAuthed = !session.loading && session.doesSessionExist
+  const { session, isLoading: isSessionLoading } = useSession()
+  const isAuthed = !isSessionLoading && session
 
   const theme = useMantineTheme()
   const scheme = useColorScheme()
@@ -102,9 +102,10 @@ export function useUser() {
 }
 
 export function useOrg() {
-  const session = useSessionContext()
-  const isAuthed = !session.loading && session.doesSessionExist
+  const { session, isLoading: isSessionLoading } = useSession()
+  const isAuthed = !isSessionLoading && session
 
+  // TODO: org id is already in jwt payload
   const { data, isLoading, mutate } = useSWR(() => isAuthed && `/users/me/org`)
 
   const theme = useMantineTheme()
@@ -146,12 +147,12 @@ export function useProjects() {
   }
 }
 
-export function useCurrentProject() {
+export function useProject() {
   const { projectId, setProjectId } = useContext(ProjectContext)
 
   const { projects, isLoading, mutate } = useProjects()
 
-  const currentProject = projects?.find((p) => p.id === projectId)
+  const project = projects?.find((p) => p.id === projectId)
 
   const { trigger: updateMutation } = useProjectMutation(`/`, fetcher.patch)
   const { trigger: dropMutation } = useProjectMutation(`/`, fetcher.delete)
@@ -172,10 +173,10 @@ export function useCurrentProject() {
   }
 
   return {
-    currentProject,
+    project,
     update,
     drop,
-    setCurrentProjectId: setProjectId,
+    setProjectId: setProjectId,
     isLoading,
   }
 }

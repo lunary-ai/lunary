@@ -17,9 +17,6 @@ const router = new Router({
   prefix: "/stripe",
 })
 
-// Webhook for subscription start, update profile plan to 'pro' & send email
-// Webhook for subscription end, update profile plan to 'free'
-
 const setupSubscription = async (object) => {
   const { customer, client_reference_id, mode, subscription, metadata } = object
 
@@ -46,9 +43,9 @@ const setupSubscription = async (object) => {
   `
 
   const [users] = await sql`
-    SELECT email, name
-    FROM profile
-    WHERE org_id = ${org.id}
+    select email, name
+    from account
+    where org_id = ${org.id}
   `
 
   const emailPromises = users.map((user) =>
@@ -97,9 +94,9 @@ const updateSubscription = async (object) => {
 
   if (canceled) {
     const [users] = await sql`
-      SELECT email, name
-      FROM profile
-      WHERE org_id = ${org.id}
+      select email, name
+      from account
+      where org_id = ${org.id}
     `
 
     const emailPromises = users.map((user) => {
@@ -133,9 +130,9 @@ const cancelSubscription = async (object) => {
   `
 
   const [users] = await sql`
-    SELECT email, name
-    FROM profile
-    WHERE org_id = ${org.id}
+    select email, name
+    from account
+    where org_id = ${org.id}
   `
 
   const emailPromises = users.map((user) => {

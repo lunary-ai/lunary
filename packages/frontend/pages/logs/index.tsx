@@ -43,7 +43,7 @@ import SearchBar from "@/components/Blocks/SearchBar"
 import { openUpgrade } from "@/components/Layout/UpgradeModal"
 import analytics from "@/utils/analytics"
 import { formatDateTime } from "@/utils/format"
-import { useCurrentProject, useLogs, useOrg } from "@/utils/dataHooks"
+import { useProject, useLogs, useOrg } from "@/utils/dataHooks"
 import {
   useDebouncedState,
   useListState,
@@ -142,8 +142,7 @@ export default function Logs() {
   const [query, setQuery] = useDebouncedState(null, 500)
 
   const { projectId } = useContext(ProjectContext)
-  const { currentProject: project, isLoading: projectLoading } =
-    useCurrentProject()
+  const { project: project, isLoading: projectLoading } = useProject()
 
   const { org } = useOrg()
   const [selected, setSelected] = useState(null)

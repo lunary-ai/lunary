@@ -8,7 +8,6 @@ import {
   clearUndefined,
   ingestChatEvent,
 } from "@/utils/ingest"
-import { verifySession } from "supertokens-node/recipe/session/framework/koa"
 
 const router = new Router()
 
@@ -194,7 +193,7 @@ const registerLogEvent = async (
   }
 
   await sql`
-    INSERT INTO log (run, app, level, message, extra)
+    INSERT INTO log (run, project_id, level, message, extra)
     VALUES (${parentRunId}, ${projectId}, ${eventName}, ${message}, ${sql.json(
       extra || {},
     )})
@@ -218,7 +217,7 @@ const registerEvent = async (
 
 router.post(
   "/",
-  verifySession({ sessionRequired: false }),
+  // verifySession({ sessionRequired: false }),
   async (ctx: Context) => {
     const { projectId } = ctx.state
     console.log("ID", projectId)

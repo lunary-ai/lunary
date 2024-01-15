@@ -24,8 +24,8 @@ import { NextSeo } from "next-seo"
 import { notifications } from "@mantine/notifications"
 import Confetti from "react-confetti"
 import sql from "@/lib/db"
-import { useSessionContext } from "supertokens-auth-react/recipe/session"
 import { signUp } from "supertokens-auth-react/recipe/emailpassword"
+import useSession from "@/utils/auth"
 
 export async function getServerSideProps(context) {
   const { orgId } = context.query
@@ -71,9 +71,6 @@ function TeamFull({ orgName }) {
   )
 }
 export default function Join({ orgUserCount, orgName }) {
-  const searchParams = useSearchParams()
-  const orgId = searchParams.get("orgId")
-
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
 
@@ -92,10 +89,10 @@ export default function Join({ orgUserCount, orgName }) {
     },
   })
 
-  const session = useSessionContext()
+  const { session, isLoading } = useSession()
 
   useEffect(() => {
-    if (session) Router.push("/")
+    if (!isLoading && session) Router.push("/")
   }, [session])
 
   const handleSignup = async ({
@@ -116,7 +113,10 @@ export default function Join({ orgUserCount, orgName }) {
           { id: "password", value: password },
           { id: "name", value: name },
           { id: "orgName", value: orgName },
-          { id: "signupMethod", value: "signup" },
+          { id: "signupMethod", value: "join" },
+          { id: "projectName", value: "" }, // To keep because of weird supertoken behaviour
+          { id: "employeeCount", value: "" }, // To keep because of weird supertoken behaviour
+          { id: "token", value: "123" }, // To keep because of weird supertoken behaviour
         ],
       }),
     )

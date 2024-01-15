@@ -128,9 +128,6 @@ export default function App({ Component, pageProps }: AppProps) {
           value={{
             fetcher: fetcher.get,
             dedupingInterval: 10000,
-            onError: (err) => {
-              console.log("SWR Error", err)
-            },
           }}
         >
           <DefaultSeo

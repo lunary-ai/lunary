@@ -1,18 +1,28 @@
 {
   "name": "lunary",
   "version": "1.0.0-alpha.1",
+  "module": "index.ts",
+  "devDependencies": {
+    "@ts-safeql/eslint-plugin": "^2.0.3",
+    "@typescript-eslint/eslint-plugin": "^6.18.1",
+    "@typescript-eslint/parser": "^6.18.1",
+    "bun-types": "latest",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.56.0",
+    "libpg-query": "^15.0.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5.3.3"
+  },
   "private": "true",
   "scripts": {
     "dev": "concurrently \"cd packages/frontend && bun dev\" \"cd packages/backend && bun dev\""
   },
+  "type": "module",
   "workspaces": [
     "packages/*"
   ],
-  "devDependencies": {
-    "bun-types": "latest",
-    "concurrently": "^8.2.2"
-  },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
+  "dependencies": {
+    "jose": "^5.2.0"
   }
 }

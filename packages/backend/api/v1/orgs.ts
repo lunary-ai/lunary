@@ -71,10 +71,10 @@ orgs.get("/usage", async (ctx: Context) => {
       count(*) as count
     from
       run r 
-    ${!projectId ? sql`join app a on r.app = a.id` : sql``}
+    ${!projectId ? sql`join project p on r.project_id = p.id` : sql``}
     where
-      ${!projectId ? sql`a.org_id = ${orgId} and` : sql``}
-      ${projectId ? sql`r.app = ${projectId} and` : sql``}
+      ${!projectId ? sql`p.org_id = ${orgId} and` : sql``}
+      ${projectId ? sql`r.project_id = ${projectId} and` : sql``}
       r.created_at > now() - interval '30 days'
     group by
       date

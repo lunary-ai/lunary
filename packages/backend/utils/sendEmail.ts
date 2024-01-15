@@ -11,6 +11,7 @@ export const sendEmail = async (body: any) => {
     },
     body: JSON.stringify(body),
   })
+  console.log("Email sent")
 
-  return await res.json()
+  return res.json()
 }

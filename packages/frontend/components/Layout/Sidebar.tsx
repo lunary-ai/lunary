@@ -29,7 +29,7 @@ import { Button, Combobox, Input, InputBase, useCombobox } from "@mantine/core"
 
 import { IconPlus } from "@tabler/icons-react"
 
-import { useCurrentProject, useProjects } from "@/utils/dataHooks"
+import { useProject, useProjects } from "@/utils/dataHooks"
 import { useEffect, useState } from "react"
 
 const menu = [
@@ -65,7 +65,7 @@ function NavbarLink({ icon: Icon, label, link, active }) {
 
 export default function Sidebar() {
   const router = useRouter()
-  const { currentProject, setCurrentProjectId } = useCurrentProject()
+  const { project, setProjectId } = useProject()
 
   const { user, mutate } = useUser()
   const { org } = useOrg()
@@ -96,17 +96,17 @@ export default function Sidebar() {
     })
 
     setCreateProjectLoading(false)
-    setCurrentProjectId(id)
+    setProjectId(id)
 
     Router.push(`/settings`)
   }
 
   // Select first project if none selected
   useEffect(() => {
-    if (!currentProject && projects?.length && !loading) {
-      setCurrentProjectId(projects[0].id)
+    if (!project && projects?.length && !loading) {
+      setProjectId(projects[0].id)
     }
-  }, [currentProject, projects, loading, setCurrentProjectId])
+  }, [project, projects, loading, setProjectId])
 
   return (
     <Flex
@@ -124,7 +124,7 @@ export default function Sidebar() {
             store={combobox}
             withinPortal={false}
             onOptionSubmit={(id) => {
-              setCurrentProjectId(id)
+              setProjectId(id)
               combobox.closeDropdown()
             }}
           >
@@ -142,7 +142,7 @@ export default function Sidebar() {
                 onClick={() => combobox.toggleDropdown()}
                 rightSectionPointerEvents="none"
               >
-                {currentProject?.name || (
+                {project?.name || (
                   <Input.Placeholder>Select Project</Input.Placeholder>
                 )}
               </InputBase>

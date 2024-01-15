@@ -19,15 +19,15 @@ users.get("/", async (ctx: Context) => {
   const users = await sql`
     select 
       id::int,
-      app,
+      project_id,
       external_id, 
       created_at,
       last_seen,
       props
     from 
-      app_user
+      external_user
     where
-      app = ${projectId}
+      project_id = ${projectId}
     order by 
       last_seen desc
   `
@@ -43,7 +43,7 @@ users.get("/runs/usage", async (ctx) => {
 
   const runsUsage = await sql`
       select
-          run.user as user_id,
+          run.external_user_id as user_id,
           run.name,
           run.type,
           coalesce(sum(run.completion_tokens), 0)::int as completion_tokens,
@@ -53,11 +53,11 @@ users.get("/runs/usage", async (ctx) => {
       from
           run
       where
-          run.app = ${projectId as string}
+          run.project_id = ${projectId as string}
           and run.created_at >= now() - interval '1 day' * ${daysNum}
-          and (run.type != 'agent' or run.parent_run is null)
+          and (run.type != 'agent' or run.parent_run_id is null)
       group by
-          run.user,
+          run.external_user_id,
           run.name, 
           run.type
           `
@@ -68,7 +68,7 @@ users.get("/runs/usage", async (ctx) => {
 users.get("/:id", async (ctx: Context) => {
   const { id } = ctx.params
   const [row] = await sql`
-    select * from app_user where id = ${id} limit 1
+    select * from external_user where id = ${id} limit 1
   `
 
   ctx.body = row

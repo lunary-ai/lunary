@@ -15,9 +15,9 @@ filters.get("/models", async (ctx: Context) => {
     from
       app_model_name
     where
-      app = ${projectId}
+      project = ${projectId}
     order by
-      app
+      project_id
   `
 
   ctx.body = rows
@@ -25,17 +25,6 @@ filters.get("/models", async (ctx: Context) => {
 
 filters.get("/tags", async (ctx: Context) => {
   const { projectId } = ctx.state
-
-  // const rows = await sql`
-  //   select
-  //     tag
-  //   from
-  //     app_tag
-  //   where
-  //     app = ${projectId}
-  // `
-
-  // ctx.body = rows
 
   ctx.body = [
     {
@@ -61,7 +50,7 @@ filters.get("/feedbacks", async (ctx: Context) => {
       run
     where
       feedback::json ->> 'thumbs' is not null
-      and app = ${projectId}
+      and project = ${projectId}
     union
     select
       jsonb_build_object ('emoji',
@@ -70,7 +59,7 @@ filters.get("/feedbacks", async (ctx: Context) => {
       run
     where
       feedback::json ->> 'emoji' is not null
-      and app = ${projectId}
+      and project = ${projectId}
     union
     select
       jsonb_build_object ('rating',
@@ -79,7 +68,7 @@ filters.get("/feedbacks", async (ctx: Context) => {
       run
     where
       feedback::json ->> 'rating' is not null
-      and app = ${projectId}
+      and project = ${projectId}
     union
     select
       jsonb_build_object ('retried',
@@ -88,7 +77,7 @@ filters.get("/feedbacks", async (ctx: Context) => {
       run
     where
       feedback::json ->> 'retried' is not null
-      and app = ${projectId}
+      and project = ${projectId}
   `
 
   const feedbacks = rows.map((row) => row.jsonbBuildObject)

@@ -16,6 +16,7 @@ import { NextSeo } from "next-seo"
 import Router, { useRouter } from "next/router"
 import { useState } from "react"
 import { submitNewPassword } from "supertokens-web-js/recipe/emailpassword"
+import { fetcher } from "@/utils/fetcher"
 
 export default function UpdatePassword() {
   const [loading, setLoading] = useState(false)
@@ -49,27 +50,24 @@ export default function UpdatePassword() {
   const handlePasswordReset = async ({ password }: { password: string }) => {
     setLoading(true)
 
-    const res = await errorHandler(
-      submitNewPassword({
-        formFields: [
-          {
-            id: "password",
-            value: password,
-          },
-        ],
+    const body = await errorHandler(
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/request-reset-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ password, token }),
       }),
     )
 
-    if (res.status === "OK") {
-      notifications.show({
-        icon: <IconCheck size={18} />,
-        color: "teal",
-        title: "Success",
-        message: "Password updated successfully",
-      })
+    notifications.show({
+      icon: <IconCheck size={18} />,
+      color: "teal",
+      title: "Success",
+      message: "Password updated successfully",
+    })
 
-      Router.push("/")
-    }
+    Router.push("/")
 
     setLoading(false)
   }

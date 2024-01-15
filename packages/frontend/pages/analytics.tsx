@@ -22,7 +22,7 @@ import { NextSeo } from "next-seo"
 import { useLocalStorage } from "@mantine/hooks"
 import {
   useAppUsers,
-  useCurrentProject,
+  useProject,
   useOrg,
   useProjects,
   useRunsUsage,
@@ -56,7 +56,7 @@ export default function Analytics() {
     defaultValue: 7,
   })
 
-  const { currentProject } = useCurrentProject()
+  const { project } = useProject()
 
   const { org } = useOrg()
 
@@ -80,7 +80,7 @@ export default function Analytics() {
       title="Waiting for data..."
       description="Analytics will appear here once you have some data."
       showProjectId
-      enable={!loading && !currentProject?.activated}
+      enable={!loading && !project?.activated}
     >
       <Container size="lg" my="lg">
         <NextSeo title="Analytics" />

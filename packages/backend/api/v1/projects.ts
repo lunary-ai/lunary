@@ -16,9 +16,9 @@ projects.get("/", async (ctx: Context) => {
       created_at,
       name,
       org_id,
-      exists(select * from run where app = app.id) as activated
+      exists(select * from run where project_id = project.id) as activated
     from
-      app
+      project
     where
       org_id = ${orgId}
   `
@@ -39,7 +39,8 @@ projects.post("/", async (ctx: Context) => {
     orgId,
   }
 
-  const [project] = await sql`insert into app ${sql(newProject)} returning *`
+  const [project] =
+    await sql`insert into project ${sql(newProject)} returning *`
 
   ctx.body = project
 })
@@ -49,10 +50,10 @@ projects.delete("/:projectId", async (ctx: Context) => {
   const { orgId } = ctx.state
 
   const [{ count }] =
-    await sql`select count(*)::int from  app where org_id = ${orgId}`
+    await sql`select count(*)::int from  project where org_id = ${orgId}`
 
   if (count > 1) {
-    await sql`delete from app where id = ${projectId}`
+    await sql`delete from project where id = ${projectId}`
     ctx.status = 200
     return
   } else {
@@ -74,7 +75,7 @@ projects.patch("/:projectId", async (ctx: Context) => {
   const { name } = bodySchema.parse(ctx.request.body)
 
   await sql`
-      update app
+      update project
       set
         name = ${name}
       where

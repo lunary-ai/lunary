@@ -72,7 +72,8 @@ export const uuidFromSeed = async (seed: string): Promise<string> => {
  */
 export const ensureIsUUID = async (id: string): Promise<string | undefined> => {
   if (typeof id !== "string") return undefined
-  if (!id || id.length === 36) return id // TODO: better UUID check
+  if (!id || id.length === 36)
+    return id // TODO: better UUID check
   else return await uuidFromSeed(id)
 }
 
@@ -141,7 +142,7 @@ export const ingestChatEvent = async (
       clearUndefined({
         id: parentRunId,
         type: "thread",
-        app: projectId,
+        projectId,
         user,
         tags: threadTags,
         input: coreMessage,
@@ -149,7 +150,7 @@ export const ingestChatEvent = async (
     )}
     ON CONFLICT (id)
     DO UPDATE SET
-      app = EXCLUDED.app,
+      project = EXCLUDED.project,
       "user" = EXCLUDED.user,
       tags = EXCLUDED.tags,
       input = EXCLUDED.input
@@ -180,7 +181,7 @@ export const ingestChatEvent = async (
   // check if previous run exists. for that, look at the last run of the thread
   const [previousRun] = await sql`
     SELECT * FROM run
-    WHERE parent_run = ${parentRunId!}
+    WHERE parent_run_id = ${parentRunId!}
     ORDER BY created_at DESC
     LIMIT 1`
 

@@ -1,4 +1,4 @@
-import { AppShell, Box, Center, Flex, Loader } from "@mantine/core"
+import { Box, Center, Flex, Loader } from "@mantine/core"
 import { Notifications } from "@mantine/notifications"
 import { ReactNode, useEffect } from "react"
 
@@ -8,13 +8,13 @@ import { ProjectContext } from "@/utils/context"
 import Navbar from "./Navbar"
 import Sidebar from "./Sidebar"
 
+import analytics from "@/utils/analytics"
+import useSession, { signOut } from "@/utils/auth"
 import { useOrg, useUser } from "@/utils/dataHooks"
 import { useColorScheme, useLocalStorage } from "@mantine/hooks"
 import { ModalsProvider } from "@mantine/modals"
 import UpgradeModal from "./UpgradeModal"
-import { useSessionContext } from "supertokens-auth-react/recipe/session"
-import { signOut } from "@/utils/auth"
-import analytics from "@/utils/analytics"
+import { fetcher } from "@/utils/fetcher"
 
 export default function Layout({ children }: { children: ReactNode }) {
   const router = useRouter()
@@ -29,11 +29,15 @@ export default function Layout({ children }: { children: ReactNode }) {
     "/maintenance",
   ].find((path) => router.pathname.startsWith(path))
 
+  const isMaintenance =
+    process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "on" &&
+    router.pathname !== "/maintenance"
+
   const { user, loading: userLoading, error } = useUser()
 
   const { org } = useOrg()
 
-  const session = useSessionContext()
+  const { session, isLoading: isSessionLoading } = useSession()
 
   const isPromptPage = router.pathname.startsWith("/prompt")
 
@@ -48,36 +52,14 @@ export default function Layout({ children }: { children: ReactNode }) {
   const colorScheme = useColorScheme()
 
   useEffect(() => {
-    if (
-      process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "on" &&
-      router.pathname !== "/maintenance"
-    ) {
-      Router.replace("/maintenance")
+    if (isSessionLoading || isAuthPage || isMaintenance) {
+      return
     }
 
-    if (
-      isAuthPage ||
-      isPublicPage ||
-      session.loading ||
-      session.doesSessionExist
-    )
-      return
-
-    if (!user && !userLoading && error) {
+    if (!session) {
       signOut()
-    } else if (!user && !userLoading) {
-      Router.push("/login")
-      return
     }
-  }, [
-    session,
-    router.pathname,
-    user,
-    userLoading,
-    error,
-    isAuthPage,
-    isPublicPage,
-  ])
+  }, [session, isSessionLoading])
 
   useEffect(() => {
     if (user) {
@@ -88,7 +70,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     }
   }, [user])
 
-  if (!isAuthPage && ((!user && userLoading) || session.loading)) {
+  if (!isAuthPage && ((!user && userLoading) || isSessionLoading)) {
     return (
       <Center h="100vh" w="100vw">
         <Loader />

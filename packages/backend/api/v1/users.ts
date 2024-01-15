@@ -1,17 +1,17 @@
 import Router from "koa-router"
 import { Context } from "koa"
 import sql from "@/utils/db"
-import { sendEmail } from "supertokens-node/recipe/emailpassword"
-import { WELCOME_EMAIL } from "@/utils/emails"
+import { WELCOME_EMAIL, sendVerifyEmail } from "@/utils/emails"
 import { jwtVerify } from "jose"
+import { z } from "zod"
+import { sendEmail } from "@/utils/sendEmail"
 
 const users = new Router({
   prefix: "/users",
 })
 
-// router.get("/profile", verifySession(), async (ctx: SessionContext) => {
 users.get("/me", async (ctx: Context) => {
-  const userId = ctx.session!.getUserId()
+  const { userId } = ctx.state
 
   const [user] = await sql`
       select
@@ -20,7 +20,7 @@ users.get("/me", async (ctx: Context) => {
         email,
         verified
       from
-        profile
+        account
       where
         id = ${userId}
     `
@@ -29,7 +29,8 @@ users.get("/me", async (ctx: Context) => {
 })
 
 users.get("/me/org", async (ctx: Context) => {
-  const userId = ctx.session!.getUserId()
+  const { userId } = ctx.state
+  console.log(ctx.state)
 
   // TODO: (low priority) merge queries
   const [org] = await sql`
@@ -41,12 +42,11 @@ users.get("/me/org", async (ctx: Context) => {
         plan_period,
         canceled,
         play_allowance,
-        stripe_customer,
-        api_key
+        stripe_customer
       from
         org
       where
-        id = (select org_id from profile where id = ${userId})
+        id = (select org_id from account where id = ${userId})
     `
 
   const users = await sql`
@@ -56,7 +56,7 @@ users.get("/me/org", async (ctx: Context) => {
         email,
         role
       from
-        profile
+        account
       where
         org_id = ${org.id}
       order by
@@ -86,9 +86,9 @@ users.get("/verify-email", async (ctx: Context) => {
   let verified
   {
     const result = await sql`
-      SELECT verified
-      FROM profile
-      WHERE email = ${email}
+      select verified
+      from account
+      where email = ${email}
     `
     verified = result[0]?.verified
   }
@@ -101,10 +101,10 @@ users.get("/verify-email", async (ctx: Context) => {
   let org_id, name
   {
     const result = await sql`
-      UPDATE profile
-      SET verified = true
-      WHERE email = ${email}
-      RETURNING org_id, name
+      update account
+      set verified = true
+      where email = ${email}
+      returning org_id, name
     `
     org_id = result[0]?.org_id
     name = result[0]?.name
@@ -114,13 +114,27 @@ users.get("/verify-email", async (ctx: Context) => {
   {
     const result = await sql`
       SELECT id
-      FROM app
+      FROM project
       WHERE org_id = ${org_id}
     `
     id = result[0]?.id
   }
 
   await sendEmail(WELCOME_EMAIL(email, name, id))
+  // redirect to home page
+  ctx.redirect(process.env.FRONTEND_URL!)
+})
+
+users.post("/send-verification", async (ctx: Context) => {
+  const bodySchema = z.object({
+    email: z.string().email(),
+    name: z.string(),
+  })
+  const { email, name } = bodySchema.parse(ctx.request.body)
+
+  await sendVerifyEmail(email, name)
+
+  ctx.body = { ok: true }
 })
 
 export default users
