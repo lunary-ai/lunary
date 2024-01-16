@@ -20,6 +20,7 @@ import SuperTokensReact, { SuperTokensWrapper } from "supertokens-auth-react"
 import EmailPasswordReact from "supertokens-auth-react/recipe/emailpassword"
 import SessionReact from "supertokens-auth-react/recipe/session"
 import ErrorBoundary from "@/components/Blocks/ErrorBoundary"
+import { SessionProvider } from "@/utils/auth"
 
 const appInfo = {
   apiDomain: "http://localhost:3333",
@@ -122,8 +123,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <Head>
         <link href="https://lunary.ai/logo.png" rel="icon" type="image/png" />
       </Head>
-
-      <SuperTokensWrapper>
+      <SessionProvider>
         <SWRConfig
           value={{
             fetcher: fetcher.get,
@@ -143,7 +143,7 @@ export default function App({ Component, pageProps }: AppProps) {
             </AnalyticsWrapper>
           </MantineProvider>
         </SWRConfig>
-      </SuperTokensWrapper>
+      </SessionProvider>
     </>
   )
 }
