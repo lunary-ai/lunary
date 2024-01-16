@@ -1,6 +1,12 @@
 import { SignJWT } from "jose"
 import Router from "next/router"
-import { useState, useEffect, useCallback } from "react"
+import {
+  useState,
+  useEffect,
+  useCallback,
+  createContext,
+  useContext,
+} from "react"
 import * as jose from "jose"
 import local from "next/font/local"
 import { set } from "date-fns"
@@ -18,8 +24,11 @@ export function sign(payload, secret: string): Promise<string> {
     .sign(new TextEncoder().encode(secret))
 }
 
+const SIGN_OUT_EVENT = "signout"
+
 export async function signOut() {
   window.localStorage.clear()
+  window.dispatchEvent(new Event(SIGN_OUT_EVENT))
   Router.push("/login")
 }
 
@@ -29,10 +38,18 @@ interface SessionData {
   orgId: string
 }
 
-function useSession() {
+interface SessionContextProps {
+  session: SessionData | null
+  isLoading: boolean
+  setSession: (token: string) => void
+  clearSession: () => void
+}
+
+const SessionContext = createContext<SessionContextProps | null>(null)
+
+export function SessionProvider({ children }) {
   const [sessionData, setSessionData] = useState<SessionData | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
-  console.log(isLoading, sessionData)
 
   async function setSession(token: string) {
     try {
@@ -53,6 +70,22 @@ function useSession() {
     }
   }
 
+  function handleSignOut() {
+    clearSession()
+  }
+
+  useEffect(() => {
+    const listener = () => {
+      console.log("SIGN OUT")
+      handleSignOut()
+    }
+    window.addEventListener(SIGN_OUT_EVENT, listener)
+
+    return () => {
+      window.removeEventListener(SIGN_OUT_EVENT, listener)
+    }
+  }, [])
+
   function clearSession() {
     localStorage.removeItem("auth-token")
     setSessionData(null)
@@ -61,17 +94,25 @@ function useSession() {
   useEffect(() => {
     const token = localStorage.getItem("auth-token")
     if (token) {
-      setSession(token)
+      setSession(token).then(() => setIsLoading(false))
+    } else {
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }, [])
 
-  return {
-    session: sessionData,
-    isLoading,
-    setSession,
-    clearSession,
-  }
+  return (
+    <SessionContext.Provider
+      value={{ session: sessionData, isLoading, setSession, clearSession }}
+    >
+      {children}
+    </SessionContext.Provider>
+  )
 }
 
-export default useSession
+export default function useSession() {
+  const context = useContext(SessionContext)
+  if (context === null) {
+    throw new Error("useSession must be used within a SessionProvider")
+  }
+  return context
+}
