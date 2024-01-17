@@ -88,13 +88,26 @@ filters.get("/feedbacks", async (ctx: Context) => {
   ctx.body = feedbacks
 })
 
-// TODO
-// filters.get("/users", async (ctx) => {
-//   const { projectId } = ctx.state
-//   const usageRange = Number(ctx.query.usageRange) || 30
+// get external users
+filters.get("/users", async (ctx) => {
+  const { projectId } = ctx.state
 
-//   // TODO: do a new query to get the user list. Look at what is currently used in production
-//   ctx.body = usersWithUsage
-// })
+  const rows = await sql`
+    select
+      external_id as label,
+      id as value
+    from
+      external_user
+    where
+      project_id = ${projectId}
+    order by
+      project_id
+  `
+
+  ctx.body = rows.map((row) => ({
+    label: row.label,
+    value: `${row.value}`, // stringify
+  }))
+})
 
 export default filters
