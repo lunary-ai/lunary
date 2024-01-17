@@ -1,12 +1,17 @@
-import { useEffect } from "react"
+import { Center, Loader } from "@mantine/core"
 import Router from "next/router"
+import { useEffect } from "react"
 
-const IndexPage = () => {
+function IndexPage() {
   useEffect(() => {
     Router.replace("/analytics")
   }, [])
 
-  return null
+  return (
+    <Center h="100vh" w="100vw">
+      <Loader />
+    </Center>
+  )
 }
 
 export default IndexPage

@@ -18,7 +18,6 @@ import {
 } from "@tabler/icons-react"
 
 import UserAvatar from "@/components/Blocks/UserAvatar"
-import { signOut } from "@/utils/auth"
 import { useOrg, useUser } from "@/utils/dataHooks"
 import Link from "next/link"
 import Router, { useRouter } from "next/router"
@@ -31,6 +30,7 @@ import { IconPlus } from "@tabler/icons-react"
 
 import { useProject, useProjects } from "@/utils/dataHooks"
 import { useEffect, useState } from "react"
+import { useAuth } from "@/utils/auth"
 
 const menu = [
   { label: "Analytics", icon: IconTimeline, link: "/analytics" },
@@ -65,6 +65,7 @@ function NavbarLink({ icon: Icon, label, link, active }) {
 
 export default function Sidebar() {
   const router = useRouter()
+  const auth = useAuth()
   const { project, setProjectId } = useProject()
 
   const { user, mutate } = useUser()
@@ -246,7 +247,7 @@ export default function Sidebar() {
             <NavLink
               label="Logout"
               c="red"
-              onClick={() => signOut()}
+              onClick={() => auth.removeJwt()}
               leftSection={<IconLogout size={14} />}
             />
           </NavLink>

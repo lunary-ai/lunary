@@ -17,12 +17,13 @@ import Router, { useRouter } from "next/router"
 import { useEffect, useState } from "react"
 import { submitNewPassword } from "supertokens-web-js/recipe/emailpassword"
 import { fetcher } from "@/utils/fetcher"
-import useSession from "@/utils/auth"
+import { useAuth } from "@/utils/auth"
+import analytics from "@/utils/analytics"
 
 export default function UpdatePassword() {
+  const {setJwt} = useAuth()
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const { session, setSession } = useSession()
 
   const { token, email } = router.query as {
     token: string
@@ -52,29 +53,21 @@ export default function UpdatePassword() {
   const handlePasswordReset = async ({ password }: { password: string }) => {
     setLoading(true)
 
-    const body = await errorHandler(
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/reset-password`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+    try {
+      const { token } = await fetcher.post("/auth/login", {
+        arg: {
+          email,
+          password,
         },
-        body: JSON.stringify({ password, token }),
-      }),
-    )
-
-    if (body.token) {
-      setSession(body.token)
-      notifications.show({
-        icon: <IconCheck size={18} />,
-        color: "teal",
-        title: "Success",
-        message: "Password updated successfully",
       })
-      Router.push("/")
-    }
 
-    setLoading(false)
-  }
+      setJwt(token)
+
+      analytics.track("Join")
+    } catch (error) {
+      console.error(error)
+      setLoading(false)
+    }
 
   return (
     <Container py={100} size={600}>

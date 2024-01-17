@@ -212,63 +212,58 @@ const registerEvent = async (
   await registerRunEvent(projectId, event, insertedIds)
 }
 
-router.post(
-  "/",
-  // verifySession({ sessionRequired: false }),
-  async (ctx: Context) => {
-    const { projectId } = ctx.state
+router.post("/", async (ctx: Context) => {
+  const projectId = ctx.request.query?.projectId as string
 
-    const { events } = ctx.request.body as {
-      events: Event | Event[]
+  const { events } = ctx.request.body as {
+    events: Event | Event[]
+  }
+
+  // Used to check if parentRunId was already inserted
+  const insertedIds = new Set<string>()
+
+  if (!events) {
+    throw new Error("Missing events payload.")
+  }
+
+  // Event processing order is important for foreign key constraints
+  const sorted = (Array.isArray(events) ? events : [events]).sort(
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+  )
+
+  const results: {
+    id?: string
+    success: boolean
+    error?: string
+  }[] = []
+
+  for (const event of sorted) {
+    try {
+      const cleanedEvent = await cleanEvent(event)
+
+      await registerEvent(projectId, cleanedEvent, insertedIds)
+
+      results.push({
+        id: event.runId,
+        success: true,
+      })
+    } catch (e: any) {
+      console.error(`Error ingesting event`, {
+        error: e,
+        event,
+      })
+
+      results.push({
+        id: event.runId,
+        success: false,
+        error: e.message,
+      })
     }
+  }
 
-    // Used to check if parentRunId was already inserted
-    const insertedIds = new Set<string>()
+  console.log("Inserted", insertedIds.size, "runs")
 
-    if (!events) {
-      throw new Error("Missing events payload.")
-    }
-
-    // Event processing order is important for foreign key constraints
-    const sorted = (Array.isArray(events) ? events : [events]).sort(
-      (a, b) =>
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
-    )
-
-    const results: {
-      id?: string
-      success: boolean
-      error?: string
-    }[] = []
-
-    for (const event of sorted) {
-      try {
-        const cleanedEvent = await cleanEvent(event)
-
-        await registerEvent(projectId, cleanedEvent, insertedIds)
-
-        results.push({
-          id: event.runId,
-          success: true,
-        })
-      } catch (e: any) {
-        console.error(`Error ingesting event`, {
-          error: e,
-          event,
-        })
-
-        results.push({
-          id: event.runId,
-          success: false,
-          error: e.message,
-        })
-      }
-    }
-
-    console.log("Inserted", insertedIds.size, "runs")
-
-    ctx.body = { results }
-  },
-)
+  ctx.body = { results }
+})
 
 export default router

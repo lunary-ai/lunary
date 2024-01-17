@@ -5,6 +5,15 @@ import LineChart from "@/components/Analytics/LineChart"
 import UsageSummary from "@/components/Analytics/UsageSummary"
 import { formatAppUser, formatCost } from "@/utils/format"
 
+import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
+import Empty from "@/components/Layout/Empty"
+import {
+  useAppUsers,
+  useOrg,
+  useProject,
+  useRunsUsage,
+  useRunsUsageByDay,
+} from "@/utils/dataHooks"
 import {
   Center,
   Container,
@@ -15,19 +24,9 @@ import {
   Stack,
   Title,
 } from "@mantine/core"
-import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
-import Empty from "@/components/Layout/Empty"
+import { useLocalStorage } from "@mantine/hooks"
 import { IconChartAreaLine } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
-import { useLocalStorage } from "@mantine/hooks"
-import {
-  useAppUsers,
-  useProject,
-  useOrg,
-  useProjects,
-  useRunsUsage,
-  useRunsUsageByDay,
-} from "@/utils/dataHooks"
 
 const calculateDailyCost = (usage) => {
   // calculate using calcRunCost, reduce by model, and filter by type llm

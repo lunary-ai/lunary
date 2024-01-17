@@ -50,10 +50,10 @@ function Invite() {
   }
 
   return (
-    <Text>
-      Invite link:{" "}
+    <Group>
+      <Text>Invite link: </Text>
       <CopyText value={`${window.location.origin}/join?orgId=${org?.id}`} />
-    </Text>
+    </Group>
   )
 }
 
