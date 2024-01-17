@@ -96,27 +96,6 @@ runs.get("/", async (ctx) => {
   //     "%" + search + "%"
   //   } or r.output ilike ${"%" + search + "%"})`;
   // }
-  // if (tokens) {
-  //   queryFilters = sql`${queryFilters} and (r.completion_tokens + r.prompt_tokens) >= ${Number(
-  //     tokens
-  //   )}`;
-  // }
-  // if (minDuration && maxDuration) {
-  //   queryFilters = sql`${queryFilters} and extract(epoch from (r.ended_at - r.created_at)) between ${Number(
-  //     minDuration
-  //   )} and ${Number(maxDuration)}`;
-  // } else if (minDuration) {
-  //   queryFilters = sql`${queryFilters} and extract(epoch from (r.ended_at - r.created_at)) >= ${Number(
-  //     minDuration
-  //   )}`;
-  // } else if (maxDuration) {
-  //   queryFilters = sql`${queryFilters} and extract(epoch from (r.ended_at - r.created_at)) <= ${Number(
-  //     maxDuration
-  //   )}`;
-  // }
-  // queryFilters = sql`${queryFilters} and r.created_at between ${new Date(
-  //   startTime as string
-  // )} and ${new Date(endTime as string)}`;
 
   const rows = await sql`
       select
@@ -131,6 +110,7 @@ runs.get("/", async (ctx) => {
           left join external_user eu on r.external_user_id = eu.id
       where
           r.project_id = ${projectId}
+          and ${filtersQuery}
       order by
           r.created_at desc
       limit ${Number(limit)}

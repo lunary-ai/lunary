@@ -1,4 +1,3 @@
-import postgres from "postgres"
 import {
   FIELD_PARAM,
   FORMAT_PARAM,
@@ -12,22 +11,38 @@ import type { Filter } from "./types"
 export * from "./types"
 export * from "./serialize"
 
-const postgresOperators = {
-  gt: ">",
-  gte: ">=",
-  lt: "<",
-  lte: "<=",
-  eq: "=",
-  neq: "!=",
-  iequals: "ILIKE",
-  icontains: "ILIKE",
-  contains: "LIKE",
-  startswith: "LIKE",
-  istartswith: "ILIKE",
-  endswith: "LIKE",
-  iendswith: "ILIKE",
+function postgresOperators(sql: any, operator: string) {
+  switch (operator) {
+    case "gt":
+      return sql`>`
+    case "gte":
+      return sql`>=`
+    case "lt":
+      return sql`<`
+    case "lte":
+      return sql`<=`
+    case "eq":
+      return sql`=`
+    case "neq":
+      return sql`!=`
+    case "iequals":
+      return sql`ILIKE`
+    case "icontains":
+      return sql`ILIKE`
+    case "contains":
+      return sql`LIKE`
+    case "startswith":
+      return sql`LIKE`
+    case "istartswith":
+      return sql`ILIKE`
+    case "endswith":
+      return sql`LIKE`
+    case "iendswith":
+      return sql`ILIKE`
+    default:
+      throw new Error(`Unsupported operator: ${operator}`)
+  }
 }
-
 export const FILTERS: Filter[] = [
   {
     id: "type",
@@ -362,9 +377,10 @@ export const FILTERS: Filter[] = [
       },
     ],
     sql: (sql, { field, operator, length }) =>
-      sql`length(${field}_text) ${
-        postgresOperators[operator] as string
-      } ${Number(length)}`,
+      sql`length(${field}_text) ${postgresOperators(
+        sql,
+        operator,
+      )} ${Number(length)}`,
   },
   {
     id: "date",
@@ -383,7 +399,8 @@ export const FILTERS: Filter[] = [
       },
     ],
 
-    sql: (sql, { operator, date }) => sql`created_at ${operator} '${date}'`,
+    sql: (sql, { operator, date }) =>
+      sql`created_at ${postgresOperators(sql, operator)} '${date}'`,
   },
   {
     id: "duration",
@@ -395,7 +412,6 @@ export const FILTERS: Filter[] = [
         label: "Duration",
       },
       NUMBER_PARAM,
-
       {
         type: "number",
         id: "duration",
@@ -404,8 +420,9 @@ export const FILTERS: Filter[] = [
         unit: "s",
       },
     ],
-    sql: (sql, { operator, duration }) =>
-      sql`ended_at - created_at ${operator} ${duration} * interval '1 second'`,
+    sql: (sql, { operator, duration }) => {
+      return sql`duration ${postgresOperators(sql, operator)} ${duration} * interval '1 second'`
+    },
   },
   {
     id: "cost",
@@ -425,7 +442,8 @@ export const FILTERS: Filter[] = [
         unit: "$",
       },
     ],
-    sql: (sql, { operator, cost }) => sql`cost ${operator} ${cost}`,
+    sql: (sql, { operator, cost }) =>
+      sql`cost ${postgresOperators(sql, operator)} ${cost}`,
   },
   {
     id: "tokens",
@@ -464,9 +482,14 @@ export const FILTERS: Filter[] = [
     // sum completion_tokens and prompt_tokens if field is total
     sql: (sql, { field, operator, tokens }) => {
       if (field === "total") {
-        return sql`completion_tokens + prompt_tokens ${operator} ${tokens}`
+        return sql`completion_tokens + prompt_tokens ${postgresOperators(
+          sql,
+          operator,
+        )} ${tokens}`
       } else {
-        return sql`${field}_tokens ${operator} ${tokens}`
+        return sql`${field}_tokens ${
+          postgresOperators(sql, operator) || "="
+        } ${tokens}`
       }
     },
   },
