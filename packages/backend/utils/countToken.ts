@@ -247,22 +247,20 @@ async function numTokensFromMessages(
 
 // If model is openai and it's missing some token usage, we can try to compute it
 export async function completeRunUsage(run) {
-  const runId = await ensureIsUUID(run.id || run.runId)
   if (
     run.type !== "llm" ||
+    run.event !== "end" ||
     (run.tokensUsage?.prompt && run.tokensUsage?.completion)
-  ) {
+  )
     return run.tokensUsage
-  }
 
   const tokensUsage = run.tokensUsage || {}
 
   try {
     // get run input
+
     const [runData] = await sql`
-      SELECT input, params, name
-      FROM run
-      WHERE id = ${runId}
+      SELECT input, params, name FROM run WHERE id = ${run.runId}
     `
 
     // Get model name (in older sdk it wasn't sent in "end" event)

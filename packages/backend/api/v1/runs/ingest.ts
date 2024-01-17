@@ -40,8 +40,6 @@ const registerRunEvent = async (
     runtime,
   } = event as CleanRun
 
-  console.log(tokensUsage)
-
   if (!tags) {
     tags = metadata?.tags
   }
@@ -132,6 +130,21 @@ const registerRunEvent = async (
 
       break
     case "end":
+      let cost = undefined
+
+      if (type === "llm") {
+        const [runData] = await sql`
+          SELECT created_at, input, params, name FROM run WHERE id = ${runId}
+        `
+        cost = calcRunCost({
+          type,
+          promptTokens: tokensUsage?.prompt,
+          completionTokens: tokensUsage?.completion,
+          name: runData?.name,
+          duration: +timestamp - +runData?.createdAt,
+        })
+      }
+
       await sql`
         UPDATE run
         SET ${sql({
@@ -140,6 +153,7 @@ const registerRunEvent = async (
           status: "success",
           promptTokens: tokensUsage?.prompt,
           completionTokens: tokensUsage?.completion,
+          cost,
         })}
         WHERE id = ${runId}
       `
@@ -180,36 +194,6 @@ const registerRunEvent = async (
       break
   }
 
-  // TODO: c'est dégueulasse
-  try {
-    let [run] = await sql`select * from run where id = ${runId}`
-
-    //handle case where streaming output is not consumed
-    const tokenUsage = await completeRunUsage(run)
-
-    if (!run.promptTokens) {
-      run.promptTokens = tokenUsage.prompt
-    }
-
-    const cost = calcRunCost(run)
-
-    const updatedRun = {
-      ...run,
-      cost,
-      promptTokens: tokenUsage.prompt,
-    }
-    console.log(cost)
-    await sql`
-      update run
-      set 
-        cost = ${updatedRun.cost}::float8, 
-        prompt_tokens = ${updatedRun.promptTokens}
-      where id = ${run.id}
-    `
-  } catch (error) {
-    console.error(error)
-  }
-
   insertedIds.add(runId)
 }
 
@@ -247,7 +231,7 @@ const registerEvent = async (
 }
 
 router.post("/", async (ctx: Context) => {
-  const projectId = ctx.request.query?.projectId as string
+  const { projectId } = ctx.state
 
   const { events } = ctx.request.body as {
     events: Event | Event[]
