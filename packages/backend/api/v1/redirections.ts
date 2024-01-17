@@ -1,17 +1,15 @@
 import { Context } from "koa"
 import Router from "koa-router"
 
-const redirections = new Router({
-  prefix: "/",
-})
+const redirections = new Router()
 
-redirections.post("api/report", async (ctx: Context) => {
+redirections.post("/api/report", async (ctx: Context) => {
   const { body } = ctx.request
   const event = body?.events[0]
-  const projectId = event?.projectId || event.app
+  ctx.state.projectId = event?.projectId || event.app
 
   ctx.status = 308
-  ctx.redirect(`/v1/runs/ingest?projectId=${projectId}`)
+  ctx.redirect(`/v1/runs/ingest`)
 })
 
 export default redirections

@@ -89,22 +89,8 @@ const MODEL_COSTS: ModelCost[] = [
   },
 ]
 
-interface Run {
-  createdAt: string
-  endedAt?: string
-  type: string
-  name?: string
-  promptTokens?: number
-  completionsToken?: number
-}
-
-function getDuration(run: Run) {
-  if (!run.endedAt) return 0
-  return +new Date(run.endedAt) - +new Date(run.createdAt)
-}
-export function calcRunCost(run: Run) {
-  const duration = getDuration(run)
-  if (run.endedAt && duration < 0.01 * 1000) return 0 // cached llm calls
+export function calcRunCost(run: any) {
+  if (run.endedAt && run.duration < 0.01 * 1000) return 0 // cached llm calls
   if (run.type !== "llm" || !run.name) return 0
 
   const modelCost = MODEL_COSTS.find((c) =>
@@ -117,7 +103,7 @@ export function calcRunCost(run: Run) {
   if (!modelCost) return 0
 
   const promptTokens = run.promptTokens || 0
-  const completionTokens = run.completionsToken || 0
+  const completionTokens = run.completionToken || 0
 
   const inputCost = (modelCost.inputCost * promptTokens) / 1000
   const outputCost = (modelCost.outputCost * completionTokens) / 1000
