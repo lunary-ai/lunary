@@ -8,6 +8,8 @@ import {
   clearUndefined,
   ingestChatEvent,
 } from "@/utils/ingest"
+import { calcRunCost } from "@/utils/calcCost"
+import { completeRunUsage } from "@/utils/countToken"
 
 const router = new Router()
 
@@ -37,6 +39,8 @@ const registerRunEvent = async (
     metadata,
     runtime,
   } = event as CleanRun
+
+  console.log(tokensUsage)
 
   if (!tags) {
     tags = metadata?.tags
@@ -174,6 +178,36 @@ const registerRunEvent = async (
         ...event,
       })
       break
+  }
+
+  // TODO: c'est dégueulasse
+  try {
+    let [run] = await sql`select * from run where id = ${runId}`
+
+    //handle case where streaming output is not consumed
+    const tokenUsage = await completeRunUsage(run)
+
+    if (!run.promptTokens) {
+      run.promptTokens = tokenUsage.prompt
+    }
+
+    const cost = calcRunCost(run)
+
+    const updatedRun = {
+      ...run,
+      cost,
+      promptTokens: tokenUsage.prompt,
+    }
+    console.log(cost)
+    await sql`
+      update run
+      set 
+        cost = ${updatedRun.cost}::float8, 
+        prompt_tokens = ${updatedRun.promptTokens}
+      where id = ${run.id}
+    `
+  } catch (error) {
+    console.error(error)
   }
 
   insertedIds.add(runId)

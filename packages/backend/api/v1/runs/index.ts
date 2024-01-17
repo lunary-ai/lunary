@@ -69,8 +69,6 @@ runs.get("/", async (ctx) => {
     ? convertFiltersToSQL(deserializedFilters)
     : sql``
 
-  console.log(deserializedFilters)
-
   const {
     search,
     limit = "100",
@@ -133,7 +131,6 @@ runs.get("/", async (ctx) => {
           left join external_user eu on r.external_user_id = eu.id
       where
           r.project_id = ${projectId}
-          and ${filtersQuery}
       order by
           r.created_at desc
       limit ${Number(limit)}
@@ -257,8 +254,6 @@ runs.get("/:id/related", async (ctx) => {
         rr.params, rr.type, rr.parent_run_id, rr.completion_tokens, rr.prompt_tokens, rr.feedback
   FROM related_runs rr;
   `
-
-  console.log(related)
 
   ctx.body = related
 })

@@ -1,5 +1,6 @@
 // import { completeRunUsage } from "@/lib/countTokens"
 
+import { completeRunUsage } from "./countToken"
 import sql from "./db"
 
 export interface Event {
@@ -72,7 +73,8 @@ export const uuidFromSeed = async (seed: string): Promise<string> => {
  */
 export const ensureIsUUID = async (id: string): Promise<string | undefined> => {
   if (typeof id !== "string") return undefined
-  if (!id || id.length === 36) return id // TODO: better UUID check
+  if (!id || id.length === 36)
+    return id // TODO: better UUID check
   else return await uuidFromSeed(id)
 }
 
@@ -104,7 +106,7 @@ export const cleanEvent = async (event: any): Promise<Event> => {
     ...rest,
     name: typeof name === "string" ? name.replace("models/", "") : undefined,
     tags: typeof tags === "string" ? [tags] : tags,
-    // tokensUsage: await completeRunUsage(event),
+    tokensUsage: await completeRunUsage(event),
     runId: await ensureIsUUID(runId),
     parentRunId: await ensureIsUUID(parentRunId),
     timestamp: new Date(timestamp).toISOString(),
