@@ -18,24 +18,17 @@ import { AddFilterButton } from "./AddFilter"
 import ErrorBoundary from "../Blocks/ErrorBoundary"
 import classes from "./index.module.css"
 import FiltersModal from "./FiltersModal"
+import { useProjectSWR } from "@/utils/dataHooks"
 
 const FilterInputs = {
-  select: ({ options, width, multiple, value, onChange }) => {
-    const [data, setData] = useState<string[] | null>(null)
+  select: ({ options, placeholder, width, multiple, value, onChange }) => {
+    const useSWRforData = typeof options === "function"
 
-    useEffect(() => {
-      if (typeof options === "function") {
-        const fetchUrl = options()
+    const { data: swrFilterData } = useProjectSWR(
+      useSWRforData ? options() : null,
+    )
 
-        if (fetchUrl) {
-          fetcher.get(fetchUrl).then((data) => {
-            if (data) setData(data?.map((d) => d.tag))
-          })
-        }
-      } else if (Array.isArray(options)) {
-        setData(options)
-      }
-    }, [])
+    const data = useSWRforData ? swrFilterData : options
 
     const Component = multiple ? MultiSelect : Select
 
@@ -45,7 +38,7 @@ const FilterInputs = {
         allowDeselect={false}
         w={width}
         variant="unstyled"
-        // placeholder={label}
+        placeholder={placeholder}
         onChange={onChange}
         value={value}
         data={data}
