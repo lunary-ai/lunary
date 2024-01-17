@@ -60,7 +60,7 @@ const registerRunEvent = async (
           props: userProps,
         }),
       )}
-      ON CONFLICT (external_id, app)
+      ON CONFLICT (external_id, project_id)
       DO UPDATE SET
         last_seen = EXCLUDED.last_seen,
         props = EXCLUDED.props
@@ -244,7 +244,6 @@ router.post(
     for (const event of sorted) {
       try {
         const cleanedEvent = await cleanEvent(event)
-        console.log("Cleaned event", cleanedEvent)
 
         await registerEvent(projectId, cleanedEvent, insertedIds)
 
@@ -253,7 +252,7 @@ router.post(
           success: true,
         })
       } catch (e: any) {
-        console.error(`Error ingesting event: ${e.message}`, {
+        console.error(`Error ingesting event`, {
           error: e,
           event,
         })
