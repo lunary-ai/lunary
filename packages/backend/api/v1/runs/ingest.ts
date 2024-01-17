@@ -102,7 +102,7 @@ const registerRunEvent = async (
 
     // This allow user id to correctly cascade to childs runs if for example it's set on the frontend and not passed to the backend
     if (data?.externalUserId) {
-      externalUserId = data?.user
+      externalUserId = data?.externalUserId
     }
   }
 
