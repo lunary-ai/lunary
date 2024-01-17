@@ -1,65 +1,63 @@
-import { Box, Center, Flex, Loader } from "@mantine/core"
+import { Box, Center, Flex } from "@mantine/core"
 import { Notifications } from "@mantine/notifications"
 import { ReactNode, useEffect } from "react"
 
-import Router, { useRouter } from "next/router"
+import { useRouter } from "next/router"
 
 import { ProjectContext } from "@/utils/context"
 import Navbar from "./Navbar"
 import Sidebar from "./Sidebar"
 
-import analytics from "@/utils/analytics"
-import useSession, { signOut } from "@/utils/auth"
+import { useAuth } from "@/utils/auth"
 import { useOrg, useUser } from "@/utils/dataHooks"
-import { useColorScheme, useLocalStorage } from "@mantine/hooks"
 import { ModalsProvider } from "@mantine/modals"
 import UpgradeModal from "./UpgradeModal"
-import { fetcher } from "@/utils/fetcher"
+import { useColorScheme, useLocalStorage } from "@mantine/hooks"
+import analytics from "@/utils/analytics"
 
 export default function Layout({ children }: { children: ReactNode }) {
   const router = useRouter()
+
   const isAuthPage = !![
     "/login",
     "/signup",
     "/join",
-    "/magic-login",
     "/request-password-reset",
-    "/update-password",
     "/reset-password",
-    "/maintenance",
   ].find((path) => router.pathname.startsWith(path))
 
-  const isMaintenance =
+  const isMaintenanceMode =
     process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "on" &&
     router.pathname !== "/maintenance"
 
+  const { isSignedIn } = useAuth()
+
+  useEffect(() => {
+    if (isMaintenanceMode) return
+    if (isAuthPage && isSignedIn) {
+      router.push("/")
+      return
+    }
+
+    if (!isAuthPage && !isSignedIn) {
+      router.push("/login")
+      return
+    }
+  }, [isSignedIn])
   const { user, loading: userLoading, error } = useUser()
 
   const { org } = useOrg()
 
-  const { session, isLoading: isSessionLoading } = useSession()
-
   const isPromptPage = router.pathname.startsWith("/prompt")
-
   const isLLMCallPage = router.pathname.startsWith("/logs/[id]")
-  const isPublicPage = isLLMCallPage && !session
+  const isPublicPage = isLLMCallPage
 
+  // TODO: use the custom hook
   const [projectId, setProjectId] = useLocalStorage({
     key: "projectId",
     defaultValue: null,
   })
-
   const colorScheme = useColorScheme()
-
-  useEffect(() => {
-    if (isSessionLoading || isAuthPage || isMaintenance) {
-      return
-    }
-
-    if (!session) {
-      signOut()
-    }
-  }, [session, isSessionLoading])
 
   useEffect(() => {
     if (user) {
@@ -69,16 +67,6 @@ export default function Layout({ children }: { children: ReactNode }) {
       })
     }
   }, [user])
-
-  if (!isAuthPage && ((!user && userLoading) || isSessionLoading)) {
-    return (
-      <Center h="100vh" w="100vw">
-        <Loader />
-      </Center>
-    )
-  }
-
-  if (!session && !isAuthPage && !isPublicPage) return null
 
   return (
     <>
