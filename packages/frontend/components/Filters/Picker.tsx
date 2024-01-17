@@ -1,11 +1,11 @@
 import { Box, Button, Group, Stack, Text } from "@mantine/core"
-import { useEffect, useState } from "react"
+import { Fragment, useEffect, useState } from "react"
 import { FILTERS, Filter, FilterLogic, FilterParam, LogicData } from "shared"
-import { AddFilterButton } from "./AddFilter"
 import ErrorBoundary from "../Blocks/ErrorBoundary"
-import classes from "./index.module.css"
-import FiltersModal from "./FiltersModal"
+import { AddFilterButton } from "./AddFilter"
 import FilterInputs from "./FiltersInputs"
+import FiltersModal from "./FiltersModal"
+import classes from "./index.module.css"
 
 function RenderFilterNode({
   minimal,
@@ -92,14 +92,16 @@ function RenderFilterNode({
           }
 
           return (
-            <ErrorBoundary>
-              <CustomInput
-                {...param}
-                width={width}
-                value={paramData}
-                onChange={onChangeParam}
-              />
-            </ErrorBoundary>
+            <Fragment key={param.id}>
+              <ErrorBoundary>
+                <CustomInput
+                  {...param}
+                  width={width}
+                  value={paramData}
+                  onChange={onChangeParam}
+                />
+              </ErrorBoundary>
+            </Fragment>
           )
         })}
       </div>
