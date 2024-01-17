@@ -19,6 +19,7 @@ auth.post("/signup", async (ctx: Context) => {
     orgName: z.string(),
     projectName: z.string(),
     employeeCount: z.string(),
+    orgId: z.string().optional(),
     signupMethod: z.enum(["signup", "join"]),
   })
 
@@ -29,6 +30,7 @@ auth.post("/signup", async (ctx: Context) => {
     orgName,
     projectName,
     employeeCount,
+    orgId,
     signupMethod,
   } = bodySchema.parse(ctx.request.body)
 
@@ -83,9 +85,26 @@ auth.post("/signup", async (ctx: Context) => {
 
     ctx.body = { token }
     return
-  }
+  } else if (signupMethod === "join") {
+    const newUser = {
+      name,
+      passwordHash: await hashPassword(password),
+      email,
+      orgId,
+      role: "member",
+      verified: true,
+    }
+    const [user] = await sql`insert into profile ${sql(newUser)} returning *`
 
-  // TODO: join
+    const token = await signJwt({
+      userId: user.id,
+      email: user.email,
+      orgId,
+    })
+
+    ctx.body = { token }
+    return
+  }
 })
 
 auth.post("/login", async (ctx: Context) => {
