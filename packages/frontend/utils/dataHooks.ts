@@ -21,7 +21,7 @@ function extendWithCosts(data: any[]) {
 type KeyType = string | ((...args: any[]) => string)
 
 function generateKey(
-  baseKey: KeyType,
+  baseKey: KeyType | undefined,
   projectId: string | undefined,
   extraParams?: string,
 ) {
@@ -37,7 +37,7 @@ function generateKey(
   return url
 }
 
-export function useProjectSWR(key: KeyType, options?: SWRConfiguration) {
+export function useProjectSWR(key?: KeyType, options?: SWRConfiguration) {
   const { projectId } = useContext(ProjectContext)
 
   return useSWR(() => generateKey(key, projectId), options)
@@ -301,7 +301,7 @@ export function useRun(id: string, initialData?: any) {
 export function useRunsUsage(range, userId?: string) {
   const userIdStr = userId ? `&user_id=${userId}` : ""
   const { data: usage, isLoading } = useProjectSWR(
-    `/runs/usage?days=${range}${userIdStr}`,
+    userId && `/runs/usage?days=${range}${userIdStr}`,
   )
 
   return { usage: extendWithCosts(usage), loading: isLoading }

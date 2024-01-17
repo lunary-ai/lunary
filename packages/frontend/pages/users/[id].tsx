@@ -1,6 +1,6 @@
 import { useRouter } from "next/router"
 
-import { Card, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core"
+import { Box, Card, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core"
 
 import SmartViewer from "@/components/SmartViewer"
 
@@ -8,7 +8,11 @@ import AgentSummary from "@/components/Analytics/AgentSummary"
 import UsageSummary from "@/components/Analytics/UsageSummary"
 import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 import CopyText from "@/components/Blocks/CopyText"
-import { useProjectSWR, useRunsUsage } from "@/utils/dataHooks"
+import {
+  useProjectInfiniteSWR,
+  useProjectSWR,
+  useRunsUsage,
+} from "@/utils/dataHooks"
 import {
   costColumn,
   durationColumn,
@@ -21,6 +25,7 @@ import {
 } from "@/utils/datatable"
 import { formatAppUser } from "@/utils/format"
 import { NextSeo } from "next-seo"
+import DataTable from "@/components/Blocks/DataTable"
 
 const columns = [
   timeColumn("createdAt"),
@@ -39,15 +44,16 @@ export default function UserDetails({}) {
 
   const { data: user } = useProjectSWR(`/external-users/${id}`)
 
-  // TODO
-  // const { runs, loading, validating, loadMore } = useRuns(undefined, {
-  //   match: { user: id }, //, parentRun: undefined },
-  //   filter: ["parentRun", "is", "null"],
-  // })
-
-  const { usage } = id ? useRunsUsage(90, id) : { usage: undefined }
+  const { usage } = useRunsUsage(90, id)
 
   const { name, email, ...extraProps } = user?.props || ({} as any)
+
+  const {
+    data: logs,
+    loading,
+    validating,
+    loadMore,
+  } = useProjectInfiniteSWR(`/runs?users=${id}`)
 
   return (
     <Stack>
@@ -95,18 +101,20 @@ export default function UserDetails({}) {
         </SimpleGrid>
       )}
 
-      {/* <Title order={2}>Latest Activity</Title> */}
-      {/* 
-      <DataTable
-        type="user-details"
-        data={runs}
-        columns={columns}
-        loading={loading || validating}
-        loadMore={loadMore}
-        onRowClicked={(row) => {
-          router.push(`/traces/${row.id}`)
-        }}
-      /> */}
+      <Title order={2}>Latest Activity</Title>
+
+      <Box h={1000}>
+        <DataTable
+          type="user-details"
+          data={logs}
+          columns={columns}
+          loading={loading || validating}
+          loadMore={loadMore}
+          onRowClicked={(row) => {
+            router.push(`/traces/${row.id}`)
+          }}
+        />
+      </Box>
     </Stack>
   )
 }
