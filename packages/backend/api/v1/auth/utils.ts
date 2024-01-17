@@ -1,7 +1,7 @@
 import Context from "@/utils/koa"
+import * as jose from "jose"
 import { SignJWT } from "jose"
 import { Next } from "koa"
-import * as jose from "jose"
 
 export async function verifyPassword(
   password: string,
@@ -77,12 +77,9 @@ export async function authMiddleware(ctx: Context, next: Next) {
     if (!token) {
       throw new Error("No bearer token provided")
     }
-
-    console.log(token)
-
     const { payload } = await verifyJwt<SessionData>(token)
-    ctx.state.projectId = ctx.request?.query?.projectId as string // TODO
 
+    ctx.state.projectId = ctx.request?.query?.projectId as string // TODO
     ctx.state.userId = payload.userId
     ctx.state.orgId = payload.orgId
   } catch (error) {
