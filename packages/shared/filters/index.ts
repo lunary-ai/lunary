@@ -12,6 +12,22 @@ import type { Filter } from "./types"
 export * from "./types"
 export * from "./serialize"
 
+const postgresOperators = {
+  gt: ">",
+  gte: ">=",
+  lt: "<",
+  lte: "<=",
+  eq: "=",
+  neq: "!=",
+  iequals: "ILIKE",
+  icontains: "ILIKE",
+  contains: "LIKE",
+  startswith: "LIKE",
+  istartswith: "ILIKE",
+  endswith: "LIKE",
+  iendswith: "ILIKE",
+}
+
 export const FILTERS: Filter[] = [
   {
     id: "type",
@@ -128,7 +144,7 @@ export const FILTERS: Filter[] = [
         ],
       },
     ],
-    sql: (sql, { status }) => sql`status = '${status}'`,
+    sql: (sql, { status }) => sql`status = ${status}`,
   },
   {
     id: "feedback",
@@ -346,7 +362,9 @@ export const FILTERS: Filter[] = [
       },
     ],
     sql: (sql, { field, operator, length }) =>
-      sql`LENGTH(${field}) ${operator} ${length}`,
+      sql`length(${field}_text) ${
+        postgresOperators[operator] as string
+      } ${Number(length)}`,
   },
   {
     id: "date",

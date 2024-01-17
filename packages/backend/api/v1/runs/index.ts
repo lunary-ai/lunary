@@ -72,22 +72,12 @@ runs.get("/", async (ctx) => {
   console.log(deserializedFilters)
 
   const {
-    // type,
     search,
     limit = "100",
     page = "0",
     parentRunId,
-    tokens,
-    minDuration,
-    maxDuration,
-    startTime,
-    endTime,
     exportType,
   } = ctx.query as Query
-
-  // if (!type) {
-  //   return ctx.throw(422, "The `type` query parameter is required")
-  // }
 
   // let typeFilter = sql``
   // if (type === "llm") {
@@ -103,22 +93,6 @@ runs.get("/", async (ctx) => {
     parentRunFilter = sql`and parent_run_id = ${parentRunId}`
   }
 
-  // if (
-  //   !startTime ||
-  //   !endTime ||
-  //   new Date(startTime as string) >= new Date(endTime as string)
-  // ) {
-  //   ctx.throw(422, "Invalid time window");
-  // }
-
-  // await ensureHasAccessToApp(ctx);
-
-  // if (models.length > 0) {
-  //   queryFilters = sql`${queryFilters} and r.name = any(${models})`;
-  // }
-  // if (tags.length > 0) {
-  //   queryFilters = sql`${queryFilters} and r.tags && ${tags}`;
-  // }
   // if (search) {
   //   queryFilters = sql`${queryFilters} and (r.input ilike ${
   //     "%" + search + "%"
