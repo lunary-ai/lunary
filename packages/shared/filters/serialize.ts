@@ -5,12 +5,13 @@ import { FILTERS } from "."
 const encode = (str: string) => encodeURIComponent(str).replace(/\./g, "%2E")
 
 const paramSerializer = (param: FilterParam, value: any) => {
-  if (value === undefined) {
+  if (value == undefined) {
     return undefined
   }
   switch (param.type) {
     case "select":
       if (param.multiple) {
+        if (!value.length) return undefined
         return value.map(encode).join(",")
       } else {
         return encode(value)
@@ -58,27 +59,33 @@ export function serializeLogic(logic: FilterLogic): string {
   const serializeParamValue = (param: any): string => {
     if (Array.isArray(param)) {
       const all = param.map(serializeParamValue)
+      console.log({ all })
       if (all.some((f) => typeof f !== "undefined")) return ""
       return all.join(".")
-    } else if (param && typeof param === "object" && param.params) {
-      return (
-        param.id +
-        "=" +
-        Object.entries(param.params)
-          .map(([key, value]) => {
-            const filterParam = FILTERS.find(
-              (filter) => filter.id === param.id,
-            )?.params.find((param) => (param as FilterParam).id === key)
+    } else if (
+      param &&
+      typeof param === "object" &&
+      param.params &&
+      !Object.values(param.params).some((f) => typeof f === "undefined")
+    ) {
+      const data = Object.entries(param.params)
+        .map(([key, value]) => {
+          const filterParam = FILTERS.find(
+            (filter) => filter.id === param.id,
+          )?.params.find((param) => (param as FilterParam).id === key)
 
-            if (!filterParam || filterParam.type === "label") {
-              return ""
-            }
+          if (!filterParam || filterParam.type === "label") {
+            return ""
+          }
 
-            return paramSerializer(filterParam, value)
-          })
-          .filter((serializedValue) => serializedValue !== "")
-          .join(".")
-      )
+          return paramSerializer(filterParam, value)
+        })
+        .filter((serializedValue) => serializedValue !== "")
+        .join(".")
+
+      if (!data) return ""
+
+      return param.id + "=" + data
     }
     return ""
   }
@@ -116,8 +123,6 @@ export function deserializeLogic(logicString: string): FilterLogic | undefined {
 
       paramsData[filterParam.id] = deserializeParamValue(filterParam, v)
     }
-
-    console.log({ id, paramsData })
 
     return {
       id,

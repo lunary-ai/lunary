@@ -69,7 +69,7 @@ runs.get("/", async (ctx) => {
     ? convertFiltersToSQL(deserializedFilters)
     : sql``
 
-  console.log({ filtersQuery })
+  console.log(deserializedFilters)
 
   const {
     // type,

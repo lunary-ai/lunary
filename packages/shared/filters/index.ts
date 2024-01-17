@@ -100,7 +100,7 @@ export const FILTERS: Filter[] = [
         options: () => `/filters/tags`,
       },
     ],
-    sql: (sql, { tags }) => sql`tags && '{${tags}}'`,
+    sql: (sql, { tags }) => sql`tags && '{${sql(tags)}}'`,
   },
   {
     id: "status",
