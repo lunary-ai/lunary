@@ -71,7 +71,7 @@ export function AddFilterButton({ filters, onSelect }) {
             placeholder="Type to filter"
           />
           <Combobox.Options>
-            <ScrollArea.Autosize type="scroll" mah={200}>
+            <ScrollArea.Autosize mah={200} type="always">
               {options.length > 0 ? (
                 options
               ) : (
