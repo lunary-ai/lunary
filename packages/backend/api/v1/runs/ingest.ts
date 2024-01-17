@@ -48,15 +48,15 @@ const registerRunEvent = async (
 
   let parentRunIdToUse = parentRunId
 
-  let internalUserId
+  let externalUserId
   // Only do on start event to save on DB calls and have correct lastSeen
   if (typeof userId === "string" && !["end", "error"].includes(eventName)) {
     const [result] = await sql`
-      INSERT INTO app_user ${sql(
+      INSERT INTO external_user ${sql(
         clearUndefined({
           externalId: userId,
           lastSeen: timestamp,
-          app: projectId,
+          projectId,
           props: userProps,
         }),
       )}
@@ -67,17 +67,14 @@ const registerRunEvent = async (
       RETURNING id
     `
 
-    internalUserId = result?.id
+    externalUserId = result?.id
   }
 
   if ("start" === eventName && parentRunIdToUse) {
     // Check if parent run exists
 
-    const [data] = await sql`
-      SELECT "user"
-      FROM run
-      WHERE id = ${parentRunIdToUse}
-    `
+    const [data] =
+      await sql`SELECT external_user_id FROM run WHERE id = ${parentRunIdToUse}`
 
     if (!data) {
       // Could be that the parent run is not yet created
@@ -102,8 +99,8 @@ const registerRunEvent = async (
     }
 
     // This allow user id to correctly cascade to childs runs if for example it's set on the frontend and not passed to the backend
-    if (data?.user) {
-      internalUserId = data?.user
+    if (data?.externalUserId) {
+      externalUserId = data?.user
     }
   }
 
@@ -113,16 +110,16 @@ const registerRunEvent = async (
         INSERT INTO run ${sql(
           clearUndefined({
             type,
-            app: projectId,
+            projectId,
             id: runId,
-            user: internalUserId,
+            externalUserId,
             createdAt: timestamp,
             tags,
             name,
             status: "started",
             params: extra,
             templateVersionId: templateId,
-            parentRun: parentRunIdToUse,
+            parentRunId: parentRunIdToUse,
             input,
             runtime,
           }),
@@ -173,7 +170,7 @@ const registerRunEvent = async (
       break
     case "chat":
       await ingestChatEvent(projectId, {
-        user: internalUserId,
+        externalUserId,
         ...event,
       })
       break
@@ -220,7 +217,6 @@ router.post(
   // verifySession({ sessionRequired: false }),
   async (ctx: Context) => {
     const { projectId } = ctx.state
-    console.log("ID", projectId)
 
     const { events } = ctx.request.body as {
       events: Event | Event[]

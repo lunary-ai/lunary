@@ -1,15 +1,7 @@
 import { SignJWT } from "jose"
 import Router from "next/router"
-import {
-  useState,
-  useEffect,
-  useCallback,
-  createContext,
-  useContext,
-} from "react"
+import { useState, useEffect, createContext, useContext } from "react"
 import * as jose from "jose"
-import local from "next/font/local"
-import { set } from "date-fns"
 
 // TODO: to remove
 export function sign(payload, secret: string): Promise<string> {
