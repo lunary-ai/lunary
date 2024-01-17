@@ -6,17 +6,20 @@ import { AddFilterButton } from "./AddFilter"
 import FilterInputs from "./FiltersInputs"
 import FiltersModal from "./FiltersModal"
 import classes from "./index.module.css"
+import { IconX } from "@tabler/icons-react"
 
 function RenderFilterNode({
   minimal,
   node,
   filters,
   setNode,
+  removeNode,
 }: {
   minimal: boolean
   node: FilterLogic
   filters: Filter[]
   setNode: (node: FilterLogic | LogicData) => void
+  removeNode?: () => void
 }) {
   if (typeof node === "string" && ["AND", "OR"].includes(node)) return null
 
@@ -26,8 +29,14 @@ function RenderFilterNode({
     const showFilterNode = (n, i) => (
       <RenderFilterNode
         minimal={minimal}
+        key={i}
         filters={filters}
         node={n as FilterLogic}
+        removeNode={() => {
+          const newNode = [...node]
+          newNode.splice(i, 1)
+          setNode(newNode as FilterLogic)
+        }}
         setNode={(newNode) => {
           const newNodeArray = [...node]
           newNodeArray[i] = newNode
@@ -106,6 +115,14 @@ function RenderFilterNode({
             </Fragment>
           )
         })}
+        <IconX
+          opacity={0.5}
+          cursor="pointer"
+          size={14}
+          onClick={() => {
+            removeNode()
+          }}
+        />
       </div>
     </Group>
   )
@@ -157,6 +174,9 @@ export default function FilterPicker({
             node={value}
             setNode={(newNode) => {
               onChange(newNode as FilterLogic)
+            }}
+            removeNode={() => {
+              onChange(["AND"])
             }}
             filters={options}
           />

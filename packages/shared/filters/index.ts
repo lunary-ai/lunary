@@ -125,7 +125,6 @@ export const FILTERS: Filter[] = [
       {
         type: "select",
         multiple: true,
-
         width: 100,
         id: "tags",
         options: () => `/filters/tags`,
@@ -146,6 +145,7 @@ export const FILTERS: Filter[] = [
       {
         type: "select",
         id: "status",
+        defaultValue: "success",
         width: 140,
         options: [
           {
@@ -416,6 +416,8 @@ export const FILTERS: Filter[] = [
         type: "number",
         id: "duration",
         defaultValue: 5,
+        min: 0,
+        step: 0.1,
         width: 40,
         unit: "s",
       },
@@ -438,6 +440,7 @@ export const FILTERS: Filter[] = [
         type: "number",
         id: "cost",
         width: 70,
+        min: 0,
         defaultValue: 0.1,
         unit: "$",
       },
@@ -476,6 +479,7 @@ export const FILTERS: Filter[] = [
       NUMBER_PARAM,
       {
         type: "number",
+        min: 0,
         id: "tokens",
       },
     ],
@@ -487,9 +491,10 @@ export const FILTERS: Filter[] = [
           operator,
         )} ${tokens}`
       } else {
-        return sql`${field}_tokens ${
-          postgresOperators(sql, operator) || "="
-        } ${tokens}`
+        return sql`${sql(field + "_tokens")} ${postgresOperators(
+          sql,
+          operator,
+        )} ${tokens}`
       }
     },
   },
