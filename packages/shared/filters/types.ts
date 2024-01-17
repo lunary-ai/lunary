@@ -1,3 +1,5 @@
+import type postgres from "postgres"
+
 export type FilterLabel = {
   type: "label"
   label: string
@@ -30,7 +32,7 @@ export type Filter = {
   disableInEvals?: boolean
   onlyInEvals?: boolean
   evaluator?: (run: any, params: any) => Promise<any>
-  sql?: (params: any) => string // postgres sql
+  sql?: (sqlClient: any, params: any) => any // todo: postgres sql type
 }
 
 // export type SavedFilterData = {

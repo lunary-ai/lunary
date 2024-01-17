@@ -43,17 +43,18 @@ import SearchBar from "@/components/Blocks/SearchBar"
 import { openUpgrade } from "@/components/Layout/UpgradeModal"
 import analytics from "@/utils/analytics"
 import { formatDateTime } from "@/utils/format"
-import { useProject, useLogs, useOrg } from "@/utils/dataHooks"
 import {
-  useDebouncedState,
-  useListState,
-  useLocalStorage,
-} from "@mantine/hooks"
+  useProject,
+  useLogs,
+  useOrg,
+  useProjectInfiniteSWR,
+} from "@/utils/dataHooks"
+import { useDebouncedState } from "@mantine/hooks"
 import Router from "next/router"
 import Empty from "../../components/Layout/Empty"
 import { ProjectContext } from "../../utils/context"
 import FilterPicker from "@/components/Filters/Picker"
-import { FilterLogic } from "shared"
+import { FilterLogic, deserializeLogic, serializeLogic } from "shared"
 
 const columns = {
   llm: [
@@ -123,9 +124,44 @@ function buildExportUrl(
 export default function Logs() {
   const [filters, setFilters] = useState<FilterLogic>(["AND"])
 
+  const [serializedFilters, setSerializedFilters] = useState<string>("")
+
   const [type, setType] = useState<"llm" | "trace" | "thread">("llm")
 
-  const { data: logs, loading, validating, loadMore } = useLogs({ type })
+  const {
+    data: logs,
+    loading,
+    validating,
+    loadMore,
+  } = useProjectInfiniteSWR(`/runs?${serializedFilters}`)
+
+  useEffect(() => {
+    const serialized = serializeLogic(filters)
+    if (serialized) {
+      setSerializedFilters(serialized)
+      Router.push(`/logs?${serialized}`)
+    }
+  }, [filters])
+
+  useEffect(() => {
+    // restore filters from query params
+    try {
+      const params = window.location.search.replace("?", "")
+      if (params) {
+        console.log("params", params)
+        const filtersData = deserializeLogic(params)
+        console.log({ filtersData })
+        if (filtersData) setFilters(filtersData)
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }, [])
+
+  useEffect(() => {
+    // reset filters when type changes as they are not compatible
+    setFilters(["AND", { id: "type", params: { type } }])
+  }, [type])
 
   const [query, setQuery] = useDebouncedState(null, 500)
 
@@ -263,7 +299,7 @@ export default function Logs() {
           <Paper p={8} withBorder>
             <FilterPicker
               minimal
-              defaultValue={filters}
+              value={filters}
               onChange={setFilters}
               restrictTo={(f) => f.id !== "type" && !f.evaluator && !!f.sql}
             />

@@ -1,3 +1,4 @@
+import postgres from "postgres"
 import {
   FIELD_PARAM,
   FORMAT_PARAM,
@@ -9,6 +10,7 @@ import {
 import type { Filter } from "./types"
 
 export * from "./types"
+export * from "./serialize"
 
 export const FILTERS: Filter[] = [
   {
@@ -47,13 +49,20 @@ export const FILTERS: Filter[] = [
             label: "Chat Message",
             value: "chat",
           },
+          {
+            label: "Trace",
+            value: "trace",
+          },
         ],
       },
     ],
-    sql: ({ type }) => `type = '${type}'`,
+    sql: (sql, { type }) =>
+      type === "trace"
+        ? sql`(type in ('agent','chain') and parent_run_id is null)`
+        : sql`type = ${type}`,
   },
   {
-    id: "model",
+    id: "models",
     name: "Model name",
     uiType: "basic",
     disableInEvals: true,
@@ -65,12 +74,12 @@ export const FILTERS: Filter[] = [
       {
         type: "select",
         multiple: true,
-        id: "name",
+        id: "names",
         width: 100,
         options: (type) => `/filters/models`,
       },
     ],
-    sql: ({ name }) => `name = '${name}'`,
+    sql: (sql, { names }) => sql`name = any(${names})`,
   },
   {
     id: "tags",
@@ -91,7 +100,35 @@ export const FILTERS: Filter[] = [
         options: () => `/filters/tags`,
       },
     ],
-    sql: ({ tags }) => `tags && '{${tags}}'`,
+    sql: (sql, { tags }) => sql`tags && '{${tags}}'`,
+  },
+  {
+    id: "status",
+    name: "Status",
+    uiType: "basic",
+    disableInEvals: true,
+    params: [
+      {
+        type: "label",
+        label: "Status is",
+      },
+      {
+        type: "select",
+        id: "status",
+        width: 140,
+        options: [
+          {
+            label: "Completed",
+            value: "success",
+          },
+          {
+            label: "Failed",
+            value: "error",
+          },
+        ],
+      },
+    ],
+    sql: (sql, { status }) => sql`status = '${status}'`,
   },
   {
     id: "feedback",
@@ -111,7 +148,7 @@ export const FILTERS: Filter[] = [
       },
     ],
     // feedback is a jsonb column
-    sql: ({ feedbacks }) => `feedback @> '${feedbacks}'`,
+    sql: (sql, { feedbacks }) => sql`feedback @> '${feedbacks}'`,
   },
   {
     id: "users",
@@ -130,7 +167,7 @@ export const FILTERS: Filter[] = [
         options: () => `/filters/users`,
       },
     ],
-    sql: ({ users }) => `user_id = ANY ('{${users}}')`,
+    sql: (sql, { users }) => sql`external_user_id = ANY ('{${users}}')`,
   },
   {
     id: "regex",
@@ -162,8 +199,8 @@ export const FILTERS: Filter[] = [
       }
     },
 
-    sql: ({ field, type }) =>
-      `result.${field}Match = ${type === "match" ? 1 : 0}`,
+    sql: (sql, { field, type }) =>
+      sql`result.${field}Match = ${type === "match" ? 1 : 0}`,
   },
   {
     id: "json",
@@ -196,7 +233,8 @@ export const FILTERS: Filter[] = [
         partial,
       }
     },
-    sql: ({ type }) => `result.parsable = ${type === "parsable" ? 1 : 0}`,
+    sql: (sql, { type }) =>
+      sql`result.parsable = ${type === "parsable" ? 1 : 0}`,
   },
   {
     id: "xml",
@@ -230,7 +268,8 @@ export const FILTERS: Filter[] = [
         partial,
       }
     },
-    sql: ({ type }) => `result.parsable = ${type === "parsable" ? 1 : 0}`,
+    sql: (sql, { type }) =>
+      sql`result.parsable = ${type === "parsable" ? 1 : 0}`,
   },
   {
     id: "cc",
@@ -257,8 +296,8 @@ export const FILTERS: Filter[] = [
         outputMatch,
       }
     },
-    sql: ({ field, type }) =>
-      `result.${field}Match = ${type === "match" ? 1 : 0}`,
+    sql: (sql, { field, type }) =>
+      sql`result.${field}Match = ${type === "match" ? 1 : 0}`,
   },
   {
     id: "email",
@@ -283,8 +322,8 @@ export const FILTERS: Filter[] = [
         outputMatch,
       }
     },
-    sql: ({ field, type }) =>
-      `result.${field}Match = ${type === "match" ? 1 : 0}`,
+    sql: (sql, { field, type }) =>
+      sql`result.${field}Match = ${type === "match" ? 1 : 0}`,
   },
 
   {
@@ -306,8 +345,8 @@ export const FILTERS: Filter[] = [
         width: 60,
       },
     ],
-    sql: ({ field, operator, length }) =>
-      `LENGTH(${field}) ${operator} ${length}`,
+    sql: (sql, { field, operator, length }) =>
+      sql`LENGTH(${field}) ${operator} ${length}`,
   },
   {
     id: "date",
@@ -326,7 +365,7 @@ export const FILTERS: Filter[] = [
       },
     ],
 
-    sql: ({ operator, date }) => `created_at ${operator} '${date}'`,
+    sql: (sql, { operator, date }) => sql`created_at ${operator} '${date}'`,
   },
   {
     id: "duration",
@@ -347,8 +386,8 @@ export const FILTERS: Filter[] = [
         unit: "s",
       },
     ],
-    sql: ({ operator, duration }) =>
-      `ended_at - created_at ${operator} ${duration} * interval '1 second'`,
+    sql: (sql, { operator, duration }) =>
+      sql`ended_at - created_at ${operator} ${duration} * interval '1 second'`,
   },
   {
     id: "cost",
@@ -368,7 +407,7 @@ export const FILTERS: Filter[] = [
         unit: "$",
       },
     ],
-    sql: ({ operator, cost }) => `cost ${operator} ${cost}`,
+    sql: (sql, { operator, cost }) => sql`cost ${operator} ${cost}`,
   },
   {
     id: "tokens",
@@ -405,11 +444,11 @@ export const FILTERS: Filter[] = [
       },
     ],
     // sum completion_tokens and prompt_tokens if field is total
-    sql: ({ field, operator, tokens }) => {
+    sql: (sql, { field, operator, tokens }) => {
       if (field === "total") {
-        return `completion_tokens + prompt_tokens ${operator} ${tokens}`
+        return sql`completion_tokens + prompt_tokens ${operator} ${tokens}`
       } else {
-        return `${field}_tokens ${operator} ${tokens}`
+        return sql`${field}_tokens ${operator} ${tokens}`
       }
     },
   },
@@ -465,36 +504,9 @@ export const FILTERS: Filter[] = [
         id: "text",
       },
     ],
-    sql: ({ field, text }) => `${field}_text LIKE '%${text}%'`,
+    sql: (sql, { field, text }) => sql`${field}_text LIKE '%${text}%'`,
   },
-  {
-    id: "status",
-    name: "Status",
-    uiType: "basic",
-    disableInEvals: true,
-    params: [
-      {
-        type: "label",
-        label: "Status is",
-      },
-      {
-        type: "select",
-        id: "status",
-        width: 140,
-        options: [
-          {
-            label: "Completed",
-            value: "success",
-          },
-          {
-            label: "Failed",
-            value: "error",
-          },
-        ],
-      },
-    ],
-    sql: ({ status }) => `status = '${status}'`,
-  },
+
   {
     id: "ai-assertion",
     name: "AI Assertion",

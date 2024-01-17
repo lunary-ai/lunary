@@ -156,8 +156,8 @@ export const ingestChatEvent = async (
     )}
     ON CONFLICT (id)
     DO UPDATE SET
-      project = EXCLUDED.project,
-      "user" = EXCLUDED.user,
+      project_id = EXCLUDED.project_id,
+      external_user_id = EXCLUDED.external_user_id,
       tags = EXCLUDED.tags,
       input = EXCLUDED.input
     RETURNING *
@@ -218,7 +218,7 @@ export const ingestChatEvent = async (
       // if user message: also replace input with [message]
       update = {
         ...previousRun,
-        siblingOfRunId: previousRun.id,
+        siblingRunId: previousRun.id,
         feedback: run.feedback || null, // reset feedback if retry
         output: OUTPUT_TYPES.includes(role) ? [coreMessage] : null,
         input: INPUT_TYPES.includes(role) ? [coreMessage] : previousRun.input,

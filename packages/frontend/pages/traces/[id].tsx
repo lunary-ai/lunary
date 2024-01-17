@@ -119,7 +119,7 @@ const TraceTree = ({
         </Group>
 
         {runs
-          .filter((run) => run.parentRun === parentId)
+          .filter((run) => run.parentRunId === parentId)
           .sort(
             (a, b) =>
               new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
@@ -141,7 +141,7 @@ const TraceTree = ({
 
 const RenderRun = ({ run, relatedRuns }) => {
   const directChilds = relatedRuns
-    ?.filter((r) => r.parentRun === run.id)
+    ?.filter((r) => r.parentRunId === run.id)
     .sort(
       (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
