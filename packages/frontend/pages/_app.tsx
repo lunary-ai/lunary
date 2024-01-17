@@ -15,41 +15,7 @@ import { fetcher } from "@/utils/fetcher"
 import localFont from "next/font/local"
 import { SWRConfig } from "swr"
 
-import Router from "next/router"
-import SuperTokensReact, { SuperTokensWrapper } from "supertokens-auth-react"
-import EmailPasswordReact from "supertokens-auth-react/recipe/emailpassword"
-import SessionReact from "supertokens-auth-react/recipe/session"
-import ErrorBoundary from "@/components/Blocks/ErrorBoundary"
 import { SessionProvider } from "@/utils/auth"
-
-const appInfo = {
-  apiDomain: "http://localhost:3333",
-  apiBasePath: "/auth",
-  appName: "...",
-  websiteDomain: "http://localhost:8080",
-}
-
-const frontendConfig = () => {
-  return {
-    appInfo,
-    recipeList: [EmailPasswordReact.init(), SessionReact.init()],
-    windowHandler: (oI: any) => {
-      return {
-        ...oI,
-        location: {
-          ...oI.location,
-          setHref: (href: string) => {
-            Router.push(href)
-          },
-        },
-      }
-    },
-  }
-}
-
-if (typeof window !== "undefined") {
-  SuperTokensReact.init(frontendConfig())
-}
 
 export const circularPro = localFont({
   display: "swap",

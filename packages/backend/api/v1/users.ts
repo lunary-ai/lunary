@@ -10,24 +10,6 @@ const users = new Router({
   prefix: "/users",
 })
 
-users.get("/me", async (ctx: Context) => {
-  const { userId } = ctx.state
-
-  const [user] = await sql`
-      select
-        id,
-        name,
-        email,
-        verified
-      from
-        account
-      where
-        id = ${userId}
-    `
-
-  ctx.body = user
-})
-
 users.get("/me/org", async (ctx: Context) => {
   const { userId } = ctx.state
 
@@ -47,6 +29,12 @@ users.get("/me/org", async (ctx: Context) => {
       where
         id = (select org_id from account where id = ${userId})
     `
+
+  if (!org) {
+    ctx.status = 401
+    ctx.body = { message: "Unauthorized" }
+    return
+  }
 
   const users = await sql`
       select
@@ -70,6 +58,24 @@ users.get("/me/org", async (ctx: Context) => {
   org.users = users
 
   ctx.body = org
+})
+
+users.get("/me", async (ctx: Context) => {
+  const { userId } = ctx.state
+
+  const [user] = await sql`
+      select
+        id,
+        name,
+        email,
+        verified
+      from
+        account
+      where
+        id = ${userId}
+    `
+
+  ctx.body = user
 })
 
 users.get("/verify-email", async (ctx: Context) => {

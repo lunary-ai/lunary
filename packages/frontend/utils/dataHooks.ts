@@ -325,7 +325,7 @@ export function useRunsUsageByDay(range, user_id?: string) {
 
 export function useRunsUsageByUser(range = null) {
   const { data: usageByUser, isLoading } = useProjectSWR(
-    `/project-users/runs/usage`,
+    `/external-users/runs/usage`,
   )
 
   const reduceUsersUsage = (usage) => {
@@ -363,7 +363,7 @@ export function useRunsUsageByUser(range = null) {
 
 // TODO: pagination
 export function useAppUserList() {
-  const { data, isLoading, isValidating } = useProjectSWR(`/project-users`)
+  const { data, isLoading, isValidating } = useProjectSWR(`/external-users`)
 
   const { usageByUser } = useRunsUsageByUser()
 

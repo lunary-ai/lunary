@@ -1,6 +1,4 @@
 import { notifications } from "@mantine/notifications"
-import { sign } from "crypto"
-import Router from "next/router"
 import { signOut } from "./auth"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL
@@ -57,13 +55,13 @@ async function handleResponse(res: Response) {
 
   if (!res.ok) {
     if (res.status === 401) {
-      // signOut()
+      signOut()
     }
     if (isJson) {
       const { error, message } = await res.json()
 
       notifications.show({
-        title: error || "Unknown error",
+        title: error || "Server error",
         message: message || "Something went wrong",
         color: "red",
         autoClose: 10000,

@@ -12,7 +12,7 @@ templates.get("/", async (ctx: Context) => {
     from template t
     left join template_version tv on tv.template_id = t.id
     where t.project_id = ${ctx.state.projectId}
-    group by t.id, t.org_id, t.name, t.slug, t.mode, t.created_at, t.group, t.project_id
+    group by t.id, t.name, t.slug, t.mode, t.created_at, t.group, t.project_id
     order by max(tv.created_at) desc
   `
 
@@ -21,7 +21,7 @@ templates.get("/", async (ctx: Context) => {
 
 // insert template + a first version, and return the template with versions
 templates.post("/", async (ctx: Context) => {
-  const { projectId } = ctx.state
+  const { projectId, userId } = ctx.state
   const { orgId } = ctx.state
   const { slug, mode, content, extra, testValues, isDraft } = ctx.request
     .body as {
@@ -37,6 +37,7 @@ templates.post("/", async (ctx: Context) => {
   const [template] = await sql`
     insert into template ${sql({
       projectId,
+      ownerId: userId,
       orgId,
       slug,
       mode,

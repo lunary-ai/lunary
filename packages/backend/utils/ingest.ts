@@ -72,8 +72,7 @@ export const uuidFromSeed = async (seed: string): Promise<string> => {
  */
 export const ensureIsUUID = async (id: string): Promise<string | undefined> => {
   if (typeof id !== "string") return undefined
-  if (!id || id.length === 36)
-    return id // TODO: better UUID check
+  if (!id || id.length === 36) return id // TODO: better UUID check
   else return await uuidFromSeed(id)
 }
 
@@ -121,7 +120,14 @@ export const ingestChatEvent = async (
 ): Promise<void> => {
   // create parent thread run if it doesn't exist
 
-  const { runId: id, user, parentRunId, feedback, threadTags, timestamp } = run
+  const {
+    runId: id,
+    externalUserId,
+    parentRunId,
+    feedback,
+    threadTags,
+    timestamp,
+  } = run
 
   const { role, isRetry, tags, content, extra } = run.message as any
 
@@ -143,7 +149,7 @@ export const ingestChatEvent = async (
         id: parentRunId,
         type: "thread",
         projectId,
-        user,
+        externalUserId,
         tags: threadTags,
         input: coreMessage,
       }),
@@ -190,10 +196,10 @@ export const ingestChatEvent = async (
 
   const shared = clearUndefined({
     id,
-    app: projectId,
+    projectId,
     tags,
     extra,
-    user,
+    externalUserId,
     feedback,
   })
 
@@ -212,7 +218,7 @@ export const ingestChatEvent = async (
       // if user message: also replace input with [message]
       update = {
         ...previousRun,
-        siblingOf: previousRun.id,
+        siblingOfRunId: previousRun.id,
         feedback: run.feedback || null, // reset feedback if retry
         output: OUTPUT_TYPES.includes(role) ? [coreMessage] : null,
         input: INPUT_TYPES.includes(role) ? [coreMessage] : previousRun.input,
@@ -255,7 +261,7 @@ export const ingestChatEvent = async (
     update.type = "chat"
     update.createdAt = timestamp
     update.endedAt = timestamp
-    update.parentRun = run.parentRunId
+    update.parentRunId = run.parentRunId
 
     await sql`
       INSERT INTO run ${sql({ ...shared, ...update })}

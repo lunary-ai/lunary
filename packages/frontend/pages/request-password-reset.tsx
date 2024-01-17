@@ -13,7 +13,6 @@ import { IconAnalyze, IconAt, IconCheck } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { useState } from "react"
 import errorHandler from "../utils/errorHandler"
-import { fetcher } from "@/utils/fetcher"
 
 export default function PasswordReset() {
   const [loading, setLoading] = useState(false)

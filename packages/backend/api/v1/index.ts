@@ -8,7 +8,7 @@ import runs from "./runs/index"
 import templateVersions from "./templateVersions"
 import templates from "./templates"
 import users from "./users"
-import projectUsers from "./project-users"
+import projectUsers from "./external-users"
 
 const v1 = new Router({
   prefix: "/v1",

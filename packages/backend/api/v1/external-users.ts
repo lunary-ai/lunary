@@ -3,7 +3,7 @@ import Router from "koa-router"
 import { Context } from "koa"
 
 const users = new Router({
-  prefix: "/project-users",
+  prefix: "/external-users",
 })
 
 users.get("/", async (ctx: Context) => {

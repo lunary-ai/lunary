@@ -253,7 +253,7 @@ runs.patch("/:id", async (ctx: Context) => {
           feedback = ${feedback},
           tags = ${tags}
       where
-          project = ${projectId as string}
+          project_id= ${projectId as string}
           and id = ${id}`
 
   ctx.body = {}
@@ -272,7 +272,7 @@ runs.get("/:id/related", async (ctx) => {
       FROM run r2
       INNER JOIN related_runs rr ON rr.id = r2.parent_run_id
   )
-  SELECT rr.created_at, rr.tags, rr.app, rr.id, rr.status, rr.name, rr.ended_at, rr.error, rr.input, rr.output, 
+  SELECT rr.created_at, rr.tags, rr.projectId, rr.id, rr.status, rr.name, rr.ended_at, rr.error, rr.input, rr.output, 
         rr.params, rr.type, rr.parent_run_id, rr.completion_tokens, rr.prompt_tokens, rr.feedback
   FROM related_runs rr;
   `
