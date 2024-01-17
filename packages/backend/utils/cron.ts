@@ -6,8 +6,8 @@ export function setupCronJobs() {
   cron.schedule(
     "*/20 * * * * *",
     () => {
-      sql`refresh materialized view concurrently app_model_names;`
-      sql`refresh materialized view concurrently app_tag;`
+      sql`refresh materialized view concurrently model_name_cache;`
+      sql`refresh materialized view concurrently tag_cache;`
     },
     { name: "refresh materialized views" },
   )
