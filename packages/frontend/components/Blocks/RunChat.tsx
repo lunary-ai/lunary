@@ -23,12 +23,12 @@ const OUTPUT_ROLES = ["assistant", "ai", "tool"]
 const INPUT_ROLES = ["user"]
 
 function parseMessageFromRun(run) {
-  function extractMessages(msg, role, siblingOf) {
+  function extractMessages(msg, role, siblingRunId) {
     if (!msg) return []
 
     if (Array.isArray(msg)) {
       return msg
-        .map((item) => extractMessages(item, role, siblingOf))
+        .map((item) => extractMessages(item, role, siblingRunId))
         .flat()
         .filter((msg) => msg.content !== undefined)
     }
@@ -41,7 +41,7 @@ function parseMessageFromRun(run) {
       ),
       id: run.id,
       feedback: run.feedback,
-      ...(siblingOf && { siblingOf }),
+      ...(siblingRunId && { siblingRunId }),
       ...(OUTPUT_ROLES.includes(role) && {
         took:
           new Date(run.endedAt).getTime() - new Date(run.createdAt).getTime(),
@@ -50,8 +50,8 @@ function parseMessageFromRun(run) {
   }
 
   return [
-    extractMessages(run.input, "user", run.siblingOf),
-    extractMessages(run.output, "assistant", run.siblingOf),
+    extractMessages(run.input, "user", run.siblingRunId),
+    extractMessages(run.output, "assistant", run.siblingRunId),
   ]
 }
 
@@ -73,7 +73,7 @@ function RunsChat({ runs }) {
 
   const getSiblingsOf = useCallback(
     (run) => {
-      return runs?.filter((m) => [m.siblingOf, m.id].includes(run.id))
+      return runs?.filter((m) => [m.siblingRunId, m.id].includes(run.id))
     },
     [runs],
   )
@@ -89,7 +89,7 @@ function RunsChat({ runs }) {
     <Stack gap={0}>
       {runs
         ?.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
-        .filter((run) => !run.siblingOf) // Use the main tree as reference
+        .filter((run) => !run.siblingRunId) // Use the main tree as reference
         .map((run, i) => {
           const siblings = getSiblingsOf(run)
           const selectedIndex = selectedRetries[run.id] || 0
@@ -140,7 +140,7 @@ function RunsChat({ runs }) {
 }
 
 export function ChatReplay({ run }) {
-  const { logs: runs, loading } = useLogs({ type: "chat", parentRunId: run.id })
+  const { data: runs, loading } = useLogs({ type: "chat", parentRunId: run.id })
 
   const { data: user } = useProjectSWR(run.user?.id && `/users/${run.user?.id}`)
 

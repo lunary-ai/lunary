@@ -4,6 +4,8 @@ import Router from "koa-router"
 
 import ingest from "./ingest"
 import { fileExport } from "./export"
+import { deserializeLogic } from "shared"
+import { convertFiltersToSQL } from "@/utils/filters"
 
 const runs = new Router({
   prefix: "/runs",
@@ -46,7 +48,7 @@ const formatRun = (run: any) => ({
   output: run.output,
   error: run.error,
   status: run.status,
-  siblingOf: run.siblingOf,
+  siblingRunId: run.siblingRunId,
   user: {
     id: run.externalUserId,
     externalId: run.userExternalId,
@@ -60,11 +62,18 @@ runs.use("/ingest", ingest.routes())
 
 runs.get("/", async (ctx) => {
   const { projectId } = ctx.state
+
+  const queryString = ctx.querystring
+  const deserializedFilters = deserializeLogic(queryString)
+  const filtersQuery = deserializedFilters
+    ? convertFiltersToSQL(deserializedFilters)
+    : sql``
+
+  console.log({ filtersQuery })
+
   const {
-    type,
+    // type,
     search,
-    models = [],
-    tags = [],
     limit = "100",
     page = "0",
     parentRunId,
@@ -76,18 +85,18 @@ runs.get("/", async (ctx) => {
     exportType,
   } = ctx.query as Query
 
-  if (!type) {
-    return ctx.throw(422, "The `type` query parameter is required")
-  }
+  // if (!type) {
+  //   return ctx.throw(422, "The `type` query parameter is required")
+  // }
 
-  let typeFilter = sql``
-  if (type === "llm") {
-    typeFilter = sql`and type = 'llm'`
-  } else if (type === "trace") {
-    typeFilter = sql`and type in ('agent','chain')`
-  } else if (type === "thread") {
-    typeFilter = sql`and type in ('thread','convo')`
-  }
+  // let typeFilter = sql``
+  // if (type === "llm") {
+  //   typeFilter = sql`and type = 'llm'`
+  // } else if (type === "trace") {
+  //   typeFilter = sql`and type in ('agent','chain')`
+  // } else if (type === "thread") {
+  //   typeFilter = sql`and type in ('thread','convo')`
+  // }
 
   let parentRunFilter = sql``
   if (parentRunId) {
@@ -149,9 +158,8 @@ runs.get("/", async (ctx) => {
           run r
           left join external_user eu on r.external_user_id = eu.id
       where
-          r.project_id = ${projectId as string}
-          ${typeFilter}
-          ${parentRunFilter}
+          r.project_id = ${projectId}
+          and ${filtersQuery}
       order by
           r.created_at desc
       limit ${Number(limit)}
@@ -267,7 +275,6 @@ runs.get("/:id/related", async (ctx) => {
       WHERE r1.id = ${ctx.params.id}
 
       UNION ALL
-
       SELECT r2.*
       FROM run r2
       INNER JOIN related_runs rr ON rr.id = r2.parent_run_id
@@ -276,6 +283,8 @@ runs.get("/:id/related", async (ctx) => {
         rr.params, rr.type, rr.parent_run_id, rr.completion_tokens, rr.prompt_tokens, rr.feedback
   FROM related_runs rr;
   `
+
+  console.log(related)
 
   ctx.body = related
 })

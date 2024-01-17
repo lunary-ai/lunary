@@ -39,7 +39,7 @@ function RenderFilterNode({
     return (
       <Group>
         {node.map((n, i) => {
-          const showOperator = i !== 0 && i !== node.length - 1
+          const showOperator = i !== 0 && i !== node.length - 1 && !minimal
           return showOperator ? (
             <Group key={i} gap={showOperator ? "xs" : 0}>
               {showFilterNode(n, i)}
@@ -61,6 +61,8 @@ function RenderFilterNode({
   const s = node as LogicData
 
   const filter = filters.find((f) => f.id === s.id)
+
+  if (!filter) return null
 
   return (
     <Group>
@@ -108,12 +110,12 @@ function RenderFilterNode({
 }
 
 export default function FilterPicker({
-  defaultValue = ["AND"],
+  value = ["AND"],
   onChange = (data) => {},
   minimal = false,
   restrictTo = (filter) => true,
 }: {
-  defaultValue?: FilterLogic
+  value?: FilterLogic
   onChange?: (data: FilterLogic) => void
   minimal?: boolean
   restrictTo?: (filter: Filter) => boolean
@@ -122,16 +124,10 @@ export default function FilterPicker({
 
   const options = FILTERS.filter(restrictTo)
 
-  const [selected, setSelected] = useState<FilterLogic>(defaultValue)
-
-  useEffect(() => {
-    onChange(selected)
-  }, [selected])
-
   // insert {id: filterId, params: { [param1]: defaultValue, [param2]: defaultValue }}
   const insertFilter = (filter: Filter) => {
     const arr: FilterLogic =
-      Array.isArray(selected) && !!selected.length ? [...selected] : ["AND"]
+      Array.isArray(value) && !!value.length ? [...value] : ["AND"]
 
     const filterLogic = {
       id: filter.id,
@@ -145,7 +141,7 @@ export default function FilterPicker({
 
     arr.push(filterLogic)
 
-    setSelected(arr)
+    onChange(arr)
   }
 
   const Container = minimal ? Group : Stack
@@ -156,9 +152,9 @@ export default function FilterPicker({
         <>
           <RenderFilterNode
             minimal={minimal}
-            node={selected}
+            node={value}
             setNode={(newNode) => {
-              setSelected(newNode as FilterLogic)
+              onChange(newNode as FilterLogic)
             }}
             filters={options}
           />

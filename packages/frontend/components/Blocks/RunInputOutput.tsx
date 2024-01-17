@@ -117,6 +117,10 @@ export default function RunInputOutput({
                       />
                     ),
                 )}
+
+                {run.tags?.length > 0 && (
+                  <ParamItem name="Tags" value={run.tags} />
+                )}
               </Stack>
 
               {canEnablePlayground && (
@@ -147,7 +151,7 @@ export default function RunInputOutput({
         <Text fw="bold" size="sm">
           Input
         </Text>
-        {run?.promptTokens && <TokensBadge tokens={run.promptTokens} />}
+        {run?.tokens?.prompt && <TokensBadge tokens={run.tokens?.prompt} />}
       </Group>
 
       <SmartViewer data={run?.input} />
@@ -158,8 +162,8 @@ export default function RunInputOutput({
             <Text fw="bold" size="sm">
               {run.error ? "Error" : "Output"}
             </Text>
-            {run.completionTokens && (
-              <TokensBadge tokens={run.completionTokens} />
+            {run.tokens?.completion && (
+              <TokensBadge tokens={run.tokens?.completion} />
             )}
           </Group>
           <SmartViewer data={run.output} error={run.error} />
