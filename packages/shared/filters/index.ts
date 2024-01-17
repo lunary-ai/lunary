@@ -194,11 +194,13 @@ export const FILTERS: Filter[] = [
       {
         type: "select",
         multiple: true,
+        width: 100,
         id: "users",
         options: () => `/filters/users`,
+        // render: (item) => <AppUser/> // todo
       },
     ],
-    sql: (sql, { users }) => sql`external_user_id = ANY ('{${users}}')`,
+    sql: (sql, { users }) => sql`external_user_id = ANY (${users})`,
   },
   {
     id: "regex",
@@ -377,10 +379,7 @@ export const FILTERS: Filter[] = [
       },
     ],
     sql: (sql, { field, operator, length }) =>
-      sql`length(${field}_text) ${postgresOperators(
-        sql,
-        operator,
-      )} ${Number(length)}`,
+      sql`length(${sql(field + "_text")} ${postgresOperators(sql, operator)} ${length}`,
   },
   {
     id: "date",
@@ -456,6 +455,7 @@ export const FILTERS: Filter[] = [
       {
         type: "select",
         id: "field",
+        width: 100,
         defaultValue: "total",
         options: [
           {
@@ -481,6 +481,7 @@ export const FILTERS: Filter[] = [
         type: "number",
         min: 0,
         id: "tokens",
+        width: 70,
       },
     ],
     // sum completion_tokens and prompt_tokens if field is total

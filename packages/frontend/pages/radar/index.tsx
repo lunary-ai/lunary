@@ -30,11 +30,17 @@ import {
 } from "@tabler/icons-react"
 import Router from "next/router"
 import { useState } from "react"
+import { Filter, FilterLogic } from "shared"
 
 function NewRadarModal({ opened, onClose }) {
   const { insert } = useRadars()
 
-  const [newRadar, setNewRadar] = useSetState({
+  const [newRadar, setNewRadar] = useSetState<{
+    description: string
+    view: FilterLogic
+    checks: FilterLogic
+    alerts: any
+  }>({
     description: "",
     view: [
       "AND",
@@ -45,7 +51,7 @@ function NewRadarModal({ opened, onClose }) {
         },
       },
     ],
-    checks: [],
+    checks: ["AND"],
     alerts: [],
   })
 
@@ -90,13 +96,13 @@ function NewRadarModal({ opened, onClose }) {
               Narrow down the logs you want to analyze.
             </Text>
             <FilterPicker
-              defaultValue={newRadar.view}
+              value={newRadar.view}
               minimal
               restrictTo={(filter) =>
                 // Only show these for now to not confuse the user with too many options
                 ["type", "tags", "model", "users"].includes(filter.id)
               }
-              onChange={(filters) => setNewRadar({ view: filters })}
+              onChange={(logic) => setNewRadar({ view: logic })}
             />
           </Steps.Step>
           <Steps.Step label="Checks" n={3}>
@@ -104,9 +110,9 @@ function NewRadarModal({ opened, onClose }) {
               Define the conditions that will be a match for the radar.
             </Text>
             <FilterPicker
-              defaultValue={newRadar.checks}
+              value={newRadar.checks}
               restrictTo={(filter) => !filter.onlyInEvals}
-              onChange={(filters) => setNewRadar({ checks: filters })}
+              onChange={(logic) => setNewRadar({ checks: logic })}
             />
           </Steps.Step>
         </Steps>

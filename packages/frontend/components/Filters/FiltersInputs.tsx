@@ -10,12 +10,22 @@ import classes from "./index.module.css"
 import { useProjectSWR } from "@/utils/dataHooks"
 
 const FilterInputs = {
-  select: ({ options, placeholder, width, multiple, value, onChange }) => {
+  select: ({
+    options,
+    placeholder,
+    width,
+    render,
+    multiple,
+    value,
+    onChange,
+  }) => {
     const useSWRforData = typeof options === "function"
 
     const { data: swrFilterData } = useProjectSWR(
       useSWRforData ? options() : null,
     )
+
+    console.log("swrFilterData", swrFilterData)
 
     const data = useSWRforData ? swrFilterData : options
 

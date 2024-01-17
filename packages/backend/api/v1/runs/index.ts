@@ -38,6 +38,7 @@ const formatRun = (run: any) => ({
   endedAt: run.endedAt,
   duration: run.duration,
   templateVersionId: run.templateVersionId,
+  cost: run.cost,
   tokens: {
     completion: run.completionTokens,
     prompt: run.promptTokens,
