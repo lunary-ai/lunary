@@ -140,7 +140,7 @@ function RunsChat({ runs }) {
 }
 
 export function ChatReplay({ run }) {
-  const { logs: runs, loading } = useLogs("chat", run.id)
+  const { logs: runs, loading } = useLogs({ type: "chat", parentRunId: run.id })
 
   const { data: user } = useProjectSWR(run.user?.id && `/users/${run.user?.id}`)
 

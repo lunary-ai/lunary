@@ -37,14 +37,12 @@ function NewRadarModal({ opened, onClose }) {
   const [newRadar, setNewRadar] = useSetState({
     description: "",
     view: [
+      "AND",
       {
         id: "type",
-        paramsData: [
-          {
-            id: "type",
-            value: "llm",
-          },
-        ],
+        params: {
+          type: "llm",
+        },
       },
     ],
     checks: [],

@@ -40,7 +40,7 @@ export default function DataTable({
   loadMore?: (() => void) | null
 }) {
   const autoHidableColumns =
-    type === "chats" ? CHAT_AUTO_HIDABLE_COLUMNS : DEFAULT_AUTO_HIDABLE_COLUMNS
+    type === "thread" ? CHAT_AUTO_HIDABLE_COLUMNS : DEFAULT_AUTO_HIDABLE_COLUMNS
 
   const [sorting, setSorting] = useState<SortingState>([
     {

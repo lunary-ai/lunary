@@ -53,46 +53,47 @@ import Router from "next/router"
 import Empty from "../../components/Layout/Empty"
 import { ProjectContext } from "../../utils/context"
 import FilterPicker from "@/components/Filters/Picker"
+import { FilterLogic } from "shared"
 
-const columns = [
-  timeColumn("createdAt"),
-  nameColumn("Model"),
-  durationColumn(),
-  userColumn(),
-  {
-    header: "Tokens",
-    size: 40,
-    id: "tokens",
-    sortingFn: (a, b) => a.tokens.total - b.tokens.total,
-    cell: (props) => props.getValue(),
-    accessorFn: (row) => row.tokens.total,
-  },
-  costColumn(),
-  feedbackColumn(),
-  tagsColumn(),
-  inputColumn("Prompt"),
-  outputColumn("Result"),
-]
-
-const tracesColumns = [
-  timeColumn("createdAt", "Time"),
-  nameColumn("Agent"),
-  durationColumn(),
-  userColumn(),
-  feedbackColumn(true),
-  tagsColumn(),
-  inputColumn("Input"),
-  outputColumn(),
-]
-
-const chatsColumns = [
-  timeColumn("createdAt", "Started at"),
-  durationColumn("full"),
-  userColumn(),
-  inputColumn("Last Message"),
-  tagsColumn(),
-  feedbackColumn(true),
-]
+const columns = {
+  llm: [
+    timeColumn("createdAt"),
+    nameColumn("Model"),
+    durationColumn(),
+    userColumn(),
+    {
+      header: "Tokens",
+      size: 40,
+      id: "tokens",
+      sortingFn: (a, b) => a.tokens.total - b.tokens.total,
+      cell: (props) => props.getValue(),
+      accessorFn: (row) => row.tokens.total,
+    },
+    costColumn(),
+    feedbackColumn(),
+    tagsColumn(),
+    inputColumn("Prompt"),
+    outputColumn("Result"),
+  ],
+  trace: [
+    timeColumn("createdAt", "Time"),
+    nameColumn("Agent"),
+    durationColumn(),
+    userColumn(),
+    feedbackColumn(true),
+    tagsColumn(),
+    inputColumn("Input"),
+    outputColumn(),
+  ],
+  thread: [
+    timeColumn("createdAt", "Started at"),
+    durationColumn("full"),
+    userColumn(),
+    inputColumn("Last Message"),
+    tagsColumn(),
+    feedbackColumn(true),
+  ],
+}
 
 function buildExportUrl(
   projectId: string,
@@ -120,36 +121,21 @@ function buildExportUrl(
 }
 
 export default function Logs() {
-  const [selectedFilters, handlers] = useListState([])
+  const [filters, setFilters] = useState<FilterLogic>(["AND"])
 
-  const [views, setViews] = useLocalStorage({
-    key: "views",
-    defaultValue: [],
-  })
-  const [currentView, setCurrentView] = useState()
-  const { logs, loading, validating, loadMore } = useLogs("llm")
-  const threads = useLogs("thread")
-  const traces = useLogs("trace")
+  const [type, setType] = useState<"llm" | "trace" | "thread">("llm")
 
-  const [selectedTab, setSelectedTab] = useState("llm-call")
-
-  useEffect(() => {
-    if (currentView) {
-      handlers.setState(currentView.filters)
-    }
-  }, [currentView, handlers])
+  const { data: logs, loading, validating, loadMore } = useLogs({ type })
 
   const [query, setQuery] = useDebouncedState(null, 500)
 
   const { projectId } = useContext(ProjectContext)
-  const { project: project, isLoading: projectLoading } = useProject()
+  const { project, isLoading: projectLoading } = useProject()
 
   const { org } = useOrg()
   const [selected, setSelected] = useState(null)
 
   const exportUrl = projectId ? buildExportUrl(projectId, query, [], []) : ""
-
-  useEffect(() => {}, [selectedTab])
 
   function exportButton(url: string) {
     if (org?.plan !== "free") {
@@ -202,10 +188,10 @@ export default function Logs() {
                   Add filters
                 </Button>
                 <SegmentedControl
-                  value={selectedTab}
+                  value={type}
                   size="xs"
                   w="fit-content"
-                  onChange={setSelectedTab}
+                  onChange={setType}
                   data={[
                     {
                       label: (
@@ -217,7 +203,7 @@ export default function Logs() {
                           <Text size="xs">LLM</Text>
                         </Group>
                       ),
-                      value: "llm-call",
+                      value: "llm",
                     },
 
                     {
@@ -243,7 +229,7 @@ export default function Logs() {
                           <Text size="xs">Threads</Text>
                         </Group>
                       ),
-                      value: "chat",
+                      value: "thread",
                     },
                   ]}
                 />
@@ -274,10 +260,12 @@ export default function Logs() {
               </Group>
             </Flex>
           </Card>
-          <Paper px="xs" p={4}>
+          <Paper p={8} withBorder>
             <FilterPicker
               minimal
-              restrictTo={(filter) => typeof filter.evaluator === "undefined"}
+              defaultValue={filters}
+              onChange={setFilters}
+              restrictTo={(f) => f.id !== "type" && !f.evaluator && !!f.sql}
             />
           </Paper>
           {/* {Object.entries(selectedFilters).length > 0 && (
@@ -354,50 +342,22 @@ export default function Logs() {
           {selected?.type === "thread" && <ChatReplay run={selected} />}
         </Drawer>
 
-        {selectedTab === "llm-call" && (
-          <DataTable
-            type="llm"
-            onRowClicked={(row) => {
+        <DataTable
+          type={type}
+          onRowClicked={(row) => {
+            if (["agent", "chain"].includes(row.type)) {
+              analytics.trackOnce("OpenTrace")
+              Router.push(`/traces/${row.id}`)
+            } else {
               analytics.trackOnce("OpenRun")
               setSelected(row)
-            }}
-            loading={loading || validating}
-            loadMore={loadMore}
-            columns={columns}
-            data={logs}
-          />
-        )}
-
-        {selectedTab === "trace" && (
-          <DataTable
-            type="traces"
-            columns={tracesColumns}
-            data={traces.logs}
-            loadMore={traces.loadMore}
-            loading={traces.loading || traces.validating}
-            onRowClicked={(row) => {
-              analytics.track("OpenTrace")
-
-              Router.push(`/traces/${row.id}`)
-            }}
-          />
-        )}
-
-        {selectedTab === "chat" && (
-          <DataTable
-            type="chats"
-            onRowClicked={(row) => {
-              analytics.trackOnce("OpenChat")
-              // Router.push(`/chats?chat=${row.id}`)
-              // setSelectedChat(row)
-              setSelected(row)
-            }}
-            loading={threads.loading || threads.validating}
-            loadMore={threads.loadMore}
-            columns={chatsColumns}
-            data={threads.logs}
-          />
-        )}
+            }
+          }}
+          loading={loading || validating}
+          loadMore={loadMore}
+          columns={columns[type]}
+          data={logs}
+        />
       </Stack>
     </Empty>
   )
