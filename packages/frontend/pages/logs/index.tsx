@@ -124,7 +124,7 @@ function buildExportUrl(
 export default function Logs() {
   const [filters, setFilters] = useState<FilterLogic>(["AND"])
 
-  const [serializedFilters, setSerializedFilters] = useState<string>("")
+  const [serializedFilters, setSerializedFilters] = useState<string>("type=llm")
 
   const [type, setType] = useState<"llm" | "trace" | "thread">("llm")
 
