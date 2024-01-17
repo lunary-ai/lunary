@@ -54,6 +54,8 @@ const publicRoutes = [
   "/v1/users/send-verification",
 ]
 export async function authMiddleware(ctx: Context, next: Next) {
+  ctx.state.projectId = ctx.request?.query?.projectId as string // TODO
+
   try {
     const isPublicRoute = publicRoutes.some((route) =>
       typeof route === "string" ? route === ctx.path : route.test(ctx.path),
@@ -77,7 +79,6 @@ export async function authMiddleware(ctx: Context, next: Next) {
     const { payload } = await verifyJwt<SessionData>(token)
     ctx.state.userId = payload.userId
     ctx.state.orgId = payload.orgId
-    ctx.state.projectId = ctx.params?.projectId // TODO
   } catch (error) {
     console.error(error)
     ctx.status = 401

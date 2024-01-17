@@ -22,11 +22,10 @@ templates.get("/", async (ctx: Context) => {
 // insert template + a first version, and return the template with versions
 templates.post("/", async (ctx: Context) => {
   const { projectId, userId } = ctx.state
-  const { orgId } = ctx.state
+
   const { slug, mode, content, extra, testValues, isDraft } = ctx.request
     .body as {
     slug: string
-
     mode: string
     content: any[]
     extra: any
@@ -38,7 +37,6 @@ templates.post("/", async (ctx: Context) => {
     insert into template ${sql({
       projectId,
       ownerId: userId,
-      orgId,
       slug,
       mode,
     })} returning *

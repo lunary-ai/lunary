@@ -178,7 +178,6 @@ function Playground() {
         const newTemplate = await insert({
           slug: generateSlug(2),
           mode: "openai",
-          orgId: org?.id,
           ...data,
         })
 
@@ -196,7 +195,6 @@ function Playground() {
     const slug = generateSlug(2)
     const newTemplate = await insert({
       mode: "openai",
-      orgId: org?.id,
       slug,
       ...defaultTemplateVersion,
     })
@@ -229,7 +227,6 @@ function Playground() {
         const newTemplate = await insert({
           slug: generateSlug(2),
           mode: "openai",
-          orgId: org?.id,
           ...data,
         })
 
@@ -238,7 +235,6 @@ function Playground() {
       } else {
         const newVersion = await insertVersion(data)
 
-        console.log(newVersion)
         setTemplateVersion(newVersion)
       }
     }
@@ -293,11 +289,6 @@ function Playground() {
         throw new Error("Error creating a stream from the response.")
       }
 
-      let responseMessage = {
-        content: "",
-        role: "assistant",
-      }
-
       const decoder = new TextDecoder()
 
       while (true) {
@@ -310,25 +301,11 @@ function Playground() {
         const chunk = decoder.decode(value, { stream: true }).trim().split("\n")
 
         for (const item of chunk) {
-          console.log({ item })
           const parsedLine = JSON.parse(item)
 
           setOutput(parsedLine.choices[0]?.message)
           setOutputTokens(parsedLine.tokens)
         }
-
-        // if (streamedResponse.startsWith('{"function_call":')) {
-        //   // While the function call is streaming, it will be a string.
-        //   responseMessage["function_call"] = streamedResponse
-        // } else {
-        //   responseMessage["content"] = streamedResponse
-        // }
-
-        // setOutput({
-        //   role: "assistant",
-        //   content: responseMessage.content,
-        //   toolCalls: responseMessage.toolCalls,
-        // })
 
         // The request has been aborted, stop reading the stream.
         // if (abortControllerRef.current === null) {
