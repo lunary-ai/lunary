@@ -14,11 +14,11 @@ radars.get("/", async (ctx) => {
 })
 
 radars.post("/", async (ctx) => {
-  const { projectId, orgId, userId } = ctx.state
-  const { description, view, assertions, alerts } = ctx.request.body as {
+  const { projectId, userId } = ctx.state
+  const { description, view, checks, alerts } = ctx.request.body as {
     description: string
     view: any[]
-    assertions: any[]
+    checks: any[]
     alerts: any[]
   }
 
@@ -26,9 +26,8 @@ radars.post("/", async (ctx) => {
     INSERT INTO radars ${sql({
       description,
       view: sql.json(view),
-      assertions: sql.json(assertions),
+      checks: sql.json(checks),
       projectId,
-      orgId,
       createdBy: userId,
     })}
     RETURNING *

@@ -50,6 +50,7 @@ export const FILTERS: Filter[] = [
         ],
       },
     ],
+    sql: ({ type }) => `type = '${type}'`,
   },
   {
     id: "model",

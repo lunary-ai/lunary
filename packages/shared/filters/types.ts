@@ -31,3 +31,8 @@ export type Filter = {
   evaluator?: (run: any, params: any) => Promise<any>
   sql?: (params: any) => string // postgres sql
 }
+
+export type SavedFilterData = {
+  id: string
+  paramsData: { id: string; value: any }[]
+}
