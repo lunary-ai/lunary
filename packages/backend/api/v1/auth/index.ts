@@ -129,7 +129,7 @@ auth.post("/request-password-reset", async (ctx: Context) => {
 
     await sql`update account set recovery_token = ${token} where id = ${user.id}`
 
-    const link = `${process.env.FRONTEND_URL}/reset-password?token=${token}`
+    const link = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${token}`
 
     sendEmail(RESET_PASSWORD(email, link))
 

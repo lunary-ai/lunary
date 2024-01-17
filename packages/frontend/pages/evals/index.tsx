@@ -1,5 +1,5 @@
 import Steps from "@/components/Blocks/Steps"
-import FilterPicker, { SavedFilterData } from "@/components/Filters/Picker"
+import FilterPicker from "@/components/Filters/Picker"
 import Paywall from "@/components/Layout/Paywall"
 import { PromptEditor } from "@/components/Prompts/PromptEditor"
 import { useTemplates } from "@/utils/dataHooks"
@@ -22,7 +22,7 @@ import { useListState, useSetState } from "@mantine/hooks"
 import { IconFlask2Filled, IconHistory } from "@tabler/icons-react"
 import Router from "next/router"
 import { useEffect, useState } from "react"
-import { MODELS } from "shared"
+import { MODELS, SavedFilterData } from "shared"
 
 const FEATURE_LIST = [
   "Define assertions to test variations of prompts",

@@ -97,31 +97,24 @@ users.get("/verify-email", async (ctx: Context) => {
     return
   }
 
-  let org_id, name
-  {
-    const result = await sql`
+  const [acc] = await sql`
       update account
       set verified = true
       where email = ${email}
       returning org_id, name
     `
-    org_id = result[0]?.org_id
-    name = result[0]?.name
-  }
+  const { orgId, name } = acc
 
-  let id
-  {
-    const result = await sql`
+  const [project] = await sql`
       SELECT id
       FROM project
-      WHERE org_id = ${org_id}
+      WHERE org_id = ${orgId}
     `
-    id = result[0]?.id
-  }
+  const id = project?.id
 
   await sendEmail(WELCOME_EMAIL(email, name, id))
   // redirect to home page
-  ctx.redirect(process.env.FRONTEND_URL!)
+  ctx.redirect(process.env.NEXT_PUBLIC_APP_URL!)
 })
 
 users.post("/send-verification", async (ctx: Context) => {

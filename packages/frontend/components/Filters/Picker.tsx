@@ -13,7 +13,7 @@ import {
 } from "@mantine/core"
 import { useListState } from "@mantine/hooks"
 import { useEffect, useState } from "react"
-import { FILTERS, Filter, FilterParam } from "shared"
+import { FILTERS, Filter, FilterParam, SavedFilterData } from "shared"
 import { AddFilterButton } from "./AddFilter"
 import ErrorBoundary from "../Blocks/ErrorBoundary"
 import classes from "./index.module.css"
@@ -92,11 +92,6 @@ const FilterInputs = {
       </Text>
     )
   },
-}
-
-export type SavedFilterData = {
-  id: string
-  paramsData: { id: string; value: any }[]
 }
 
 export default function FilterPicker({
