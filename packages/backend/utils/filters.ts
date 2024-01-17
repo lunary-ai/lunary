@@ -1,10 +1,8 @@
 import { FILTERS, FilterLogic, LogicElement } from "shared"
 import sql from "./db"
 
-const and = (arr: any) =>
-  arr.reduce((acc: any, x: any) => sql`${acc} AND ${x}`, [])
-const or = (arr: any) =>
-  arr.reduce((acc: any, x: any) => sql`(${acc} OR ${x})`, [])
+const and = (arr: any) => arr.reduce((acc: any, x: any) => sql`${acc} AND ${x}`)
+const or = (arr: any) => arr.reduce((acc: any, x: any) => sql`(${acc} OR ${x})`)
 
 export function convertFiltersToSQL(filtersData: FilterLogic): any {
   const logicToSql = (logicElement: LogicElement): any => {
