@@ -93,13 +93,10 @@ export default function Empty({
               {buttonLabel}
             </Button>
             {showProjectId && (
-              <Text>
-                Project ID:{" "}
-                <CopyText
-                  value={project?.id}
-                  color={"var(--mantine-color-violet-light)"}
-                />
-              </Text>
+              <Group>
+                <Text>Project ID: </Text>
+                <CopyText value={project?.id} />
+              </Group>
             )}
             <Stack>
               <Text size="sm">Any issue? Get help from a founder.</Text>

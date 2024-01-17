@@ -1,110 +1,66 @@
-import { SignJWT } from "jose"
-import Router from "next/router"
-import { useState, useEffect, createContext, useContext } from "react"
-import * as jose from "jose"
+import { useLocalStorage } from "@mantine/hooks"
+import { decodeJwt } from "jose"
+import { createContext, useContext, useEffect, useMemo } from "react"
 
-// TODO: to remove
-export function sign(payload, secret: string): Promise<string> {
-  const iat = Math.floor(Date.now() / 1000)
-  const exp = iat + 60 * 60 // one hour
-
-  return new SignJWT({ ...payload })
-    .setProtectedHeader({ alg: "HS256", typ: "JWT" })
-    .setExpirationTime(exp)
-    .setIssuedAt(iat)
-    .setNotBefore(iat)
-    .sign(new TextEncoder().encode(secret))
-}
-
-const SIGN_OUT_EVENT = "signout"
-
+const SIGN_OUT_EVENT = "sign-out"
 export async function signOut() {
   window.localStorage.clear()
   window.dispatchEvent(new Event(SIGN_OUT_EVENT))
-  Router.push("/login")
 }
 
-interface SessionData {
-  userId: string
-  email: string
-  orgId: string
+interface AuthContext {
+  isSignedIn: boolean
+  setJwt: (
+    val: string | ((prevState: string | null) => string | null) | null,
+  ) => void
+  removeJwt: () => void
 }
 
-interface SessionContextProps {
-  session: SessionData | null
-  isLoading: boolean
-  setSession: (token: string) => void
-  clearSession: () => void
-}
+const AuthContext = createContext<AuthContext | null>(null)
 
-const SessionContext = createContext<SessionContextProps | null>(null)
+function checkJwt(jwt) {
+  try {
+    const payload = decodeJwt(jwt)
+    const exp = payload.exp
 
-export function SessionProvider({ children }) {
-  const [sessionData, setSessionData] = useState<SessionData | null>(null)
-  const [isLoading, setIsLoading] = useState<boolean>(true)
-
-  async function setSession(token: string) {
-    try {
-      setIsLoading(true)
-      localStorage.setItem("auth-token", token)
-      const payload = await jose.decodeJwt<SessionData>(token)
-      const session = {
-        userId: payload.userId,
-        email: payload.email,
-        orgId: payload.orgId,
-      }
-
-      setSessionData(session)
-    } catch (error) {
-      console.error("Failed to decode or set session:", error)
-    } finally {
-      setIsLoading(false)
+    if (!exp || exp < Date.now() / 1000) {
+      throw new Error("Token expired")
     }
+    return true
+  } catch (error) {
+    return false
   }
+}
 
-  function handleSignOut() {
-    clearSession()
-  }
+export function AuthProvider({ children }) {
+  const [jwt, setJwt, removeJwt] = useLocalStorage<string | null>({
+    key: "auth-token",
+    getInitialValueInEffect: false,
+    serialize: (value) => value || "",
+    deserialize: (localStorageValue) => localStorageValue || null,
+    defaultValue: null,
+  })
+
+  const isSignedIn = useMemo(() => checkJwt(jwt), [jwt])
 
   useEffect(() => {
-    const listener = () => {
-      console.log("SIGN OUT")
-      handleSignOut()
-    }
-    window.addEventListener(SIGN_OUT_EVENT, listener)
-
+    window.addEventListener(SIGN_OUT_EVENT, removeJwt)
     return () => {
-      window.removeEventListener(SIGN_OUT_EVENT, listener)
-    }
-  }, [])
-
-  function clearSession() {
-    localStorage.removeItem("auth-token")
-    setSessionData(null)
-  }
-
-  useEffect(() => {
-    const token = localStorage.getItem("auth-token")
-    if (token) {
-      setSession(token).then(() => setIsLoading(false))
-    } else {
-      setIsLoading(false)
+      window.removeEventListener(SIGN_OUT_EVENT, removeJwt)
     }
   }, [])
 
   return (
-    <SessionContext.Provider
-      value={{ session: sessionData, isLoading, setSession, clearSession }}
-    >
+    <AuthContext.Provider value={{ isSignedIn, setJwt, removeJwt }}>
       {children}
-    </SessionContext.Provider>
+    </AuthContext.Provider>
   )
 }
 
-export default function useSession() {
-  const context = useContext(SessionContext)
+export function useAuth() {
+  const context = useContext(AuthContext)
   if (context === null) {
-    throw new Error("useSession must be used within a SessionProvider")
+    throw new Error("useAuth must be used within a AuthProvider")
   }
   return context
 }

@@ -8,7 +8,7 @@ import { getUserColor } from "./colors"
 import useSWRMutation from "swr/mutation"
 import { calcRunCost } from "./calcCosts"
 import { fetcher } from "./fetcher"
-import useSession from "./auth"
+import { useAuth } from "./auth"
 
 // TODO: put in other file
 function extendWithCosts(data: any[]) {
@@ -90,19 +90,14 @@ export function useProjectInfiniteSWR(key: string, ...args: any[]) {
     loadMore,
   }
 }
-
-// TODO: not sure all queries should have soft options
-// TODO: optimistic insert and updates
-
 export function useUser() {
-  const { session, isLoading: isSessionLoading } = useSession()
-  const isAuthed = !isSessionLoading && session
+  const { isSignedIn } = useAuth()
 
   const theme = useMantineTheme()
   const scheme = useColorScheme()
 
   const { data, isLoading, mutate, error } = useSWR(
-    () => isAuthed && `/users/me`,
+    () => isSignedIn && `/users/me`,
   )
 
   const color = data ? getUserColor(scheme, theme, data.id) : null
@@ -112,11 +107,11 @@ export function useUser() {
 }
 
 export function useOrg() {
-  const { session, isLoading: isSessionLoading } = useSession()
-  const isAuthed = !isSessionLoading && session
+  const { isSignedIn } = useAuth()
 
-  // TODO: org id is already in jwt payload
-  const { data, isLoading, mutate } = useSWR(() => isAuthed && `/users/me/org`)
+  const { data, isLoading, mutate } = useSWR(
+    () => isSignedIn && `/users/me/org`,
+  )
 
   const theme = useMantineTheme()
   const scheme = useColorScheme()

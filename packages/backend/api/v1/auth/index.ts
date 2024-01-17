@@ -119,14 +119,16 @@ auth.post("/login", async (ctx: Context) => {
   `
   if (!user) {
     ctx.status = 401
-    ctx.body = { message: "Invalid email or password" }
+    ctx.body = { error: "Unauthorized", message: "Invalid email or password" }
+    return
   }
 
   const passwordCorrect = await verifyPassword(password, user.passwordHash)
 
   if (!passwordCorrect) {
     ctx.status = 401
-    ctx.body = { message: "Invalid email or password" }
+    ctx.body = { error: "Unauthorized", message: "Invalid email or password" }
+    return
   }
 
   const token = await signJwt({
@@ -150,7 +152,7 @@ auth.post("/request-password-reset", async (ctx: Context) => {
 
     const link = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${token}`
 
-    sendEmail(RESET_PASSWORD(email, link))
+    await sendEmail(RESET_PASSWORD(email, link))
 
     ctx.body = { ok: true }
   } catch (error) {

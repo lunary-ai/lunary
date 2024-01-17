@@ -1,4 +1,5 @@
 import { notifications } from "@mantine/notifications"
+import Router from "next/router"
 import { signOut } from "./auth"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL
@@ -52,9 +53,10 @@ async function del(path) {
 async function handleResponse(res: Response) {
   const contentType = res.headers.get("Content-Type")
   const isJson = contentType?.includes("application/json")
+  const isLoginPage = Router.pathname === "/login"
 
   if (!res.ok) {
-    if (res.status === 401) {
+    if (res.status === 401 && !isLoginPage) {
       signOut()
     }
     if (isJson) {

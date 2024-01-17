@@ -41,15 +41,15 @@ import {
 
 import SocialProof from "@/components/Blocks/SocialProof"
 import analytics from "@/utils/analytics"
-import useSession from "@/utils/auth"
 import { fetcher } from "@/utils/fetcher"
 import { NextSeo } from "next-seo"
+import { useAuth } from "@/utils/auth"
 
 function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
 
-  const { session, setSession } = useSession()
+  const auth = useAuth()
 
   const form = useForm({
     initialValues: {
@@ -83,10 +83,6 @@ function SignupPage() {
     },
   })
 
-  useEffect(() => {
-    if (session && step === 1) Router.push("/")
-  }, [session, step])
-
   const handleSignup = async ({
     email,
     password,
@@ -118,7 +114,8 @@ function SignupPage() {
 
     const token = body.token
     if (token) {
-      setSession(token)
+      console.log(token)
+      auth.setJwt(token)
 
       notifications.show({
         icon: <IconCheck size={18} />,

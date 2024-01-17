@@ -42,10 +42,10 @@ function Invite() {
   }
 
   return (
-    <Text>
-      Invite link:{" "}
+    <Group>
+      <Text>Invite link: </Text>
       <CopyText value={`${window.location.origin}/join?orgId=${org?.id}`} />
-    </Text>
+    </Group>
   )
 }
 
@@ -128,10 +128,10 @@ export default function AppAnalytics() {
             <Alert
               variant="light"
               title={
-                <Text fw={500}>
-                  Public Tracking Key:{" "}
+                <Group>
+                  <Text fw={500}>Public Tracking Key: </Text>
                   <CopyText c="green.8" value={project?.id} />
-                </Text>
+                </Group>
               }
               color="green"
             >
@@ -144,9 +144,10 @@ export default function AppAnalytics() {
             <Alert
               variant="light"
               title={
-                <Text fw={500}>
-                  Private Key: <CopyText c="red.8" value={org?.apiKey} />
-                </Text>
+                <Group>
+                  <Text fw={500}>Private Key:</Text>
+                  <CopyText c="red.8" value={org?.apiKey} />
+                </Group>
               }
               color="red"
             >
