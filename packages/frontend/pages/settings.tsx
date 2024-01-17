@@ -91,7 +91,10 @@ export default function AppAnalytics() {
     drop: dropproject,
   } = useProject()
 
-  const { data: projectUsage } = useProjectSWR(() => `/usage`)
+  // TODO: better route for project usage
+  const { data: projectUsage } = useSWR(
+    () => `/orgs/${org.id}/usage?projectId=${project?.id}`,
+  )
 
   const isAdmin =
     currentUser?.id === org?.users?.find((u) => u.role === "admin")?.id

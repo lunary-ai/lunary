@@ -38,7 +38,7 @@ export default function UserDetails({}) {
   const router = useRouter()
   const { id } = router.query as { id: string }
 
-  const { data: user } = useProjectSWR(`/users/${id}`)
+  const { data: user } = useProjectSWR(`/external-users/${id}`)
 
   // TODO
   // const { runs, loading, validating, loadMore } = useRuns(undefined, {
@@ -62,7 +62,7 @@ export default function UserDetails({}) {
           </Group>
           <Group gap={3}>
             <Text>ID:</Text>
-            <CopyText value={user?.external_id} />
+            <CopyText value={user?.externalId} />
           </Group>
           {email && (
             <Group gap={3}>
