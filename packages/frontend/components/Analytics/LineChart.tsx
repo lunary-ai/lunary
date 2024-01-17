@@ -21,8 +21,9 @@ import {
 import { formatLargeNumber } from "@/utils/format"
 import { IconBolt } from "@tabler/icons-react"
 import { eachDayOfInterval, format, parseISO } from "date-fns"
-import { openUpgrade } from "../Layout/UpgradeModal"
+import { Fragment } from "react"
 import ErrorBoundary from "../Blocks/ErrorBoundary"
+import { openUpgrade } from "../Layout/UpgradeModal"
 
 const slugify = (str) => {
   return str
@@ -283,7 +284,7 @@ const LineChartComponent = ({
               Object.keys(cleanedData[0])
                 .filter((prop) => prop !== "date")
                 .map((prop, i) => (
-                  <>
+                  <Fragment key={props}>
                     <defs key={prop}>
                       <linearGradient
                         color={theme.colors[colors[i % colors.length]][6]}
@@ -317,7 +318,7 @@ const LineChartComponent = ({
                       strokeLinejoin="round"
                       strokeLinecap="round"
                     />
-                  </>
+                  </Fragment>
                 ))}
 
             {chartExtra}

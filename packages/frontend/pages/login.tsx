@@ -15,13 +15,14 @@ import { IconAnalyze, IconAt } from "@tabler/icons-react"
 import { useEffect, useState } from "react"
 
 import analytics from "@/utils/analytics"
-import useSession from "@/utils/auth"
 import { fetcher } from "@/utils/fetcher"
 import { NextSeo } from "next-seo"
 import Router from "next/router"
+import { useAuth } from "@/utils/auth"
 
 function LoginPage() {
   const [loading, setLoading] = useState(false)
+  const auth = useAuth()
 
   const form = useForm({
     initialValues: {
@@ -36,36 +37,30 @@ function LoginPage() {
     },
   })
 
-  const { session, isLoading, setSession } = useSession()
-
-  useEffect(() => {
-    if (session) Router.push("/")
-  }, [session])
-
-  const handleLoginWithPassword = async ({
+  async function handleLoginWithPassword({
     email,
     password,
   }: {
     email: string
     password: string
-  }) => {
+  }) {
     setLoading(true)
 
-    const body = await fetcher.post("/auth/login", {
-      arg: {
-        email,
-        password,
-      },
-    })
+    try {
+      const { token } = await fetcher.post("/auth/login", {
+        arg: {
+          email,
+          password,
+        },
+      })
 
-    const token = body.token
-    if (token) {
-      setSession(token)
+      auth.setJwt(token)
+
+      analytics.track("Login", { method: "password" })
+    } catch (error) {
+      console.error(error)
+      setLoading(false)
     }
-
-    analytics.track("Login", { method: "password" })
-
-    setLoading(false)
   }
 
   return (

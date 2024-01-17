@@ -1,4 +1,4 @@
-import { Router, useRouter } from "next/router"
+import { useRouter } from "next/router"
 
 import { Card, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core"
 
@@ -8,9 +8,7 @@ import AgentSummary from "@/components/Analytics/AgentSummary"
 import UsageSummary from "@/components/Analytics/UsageSummary"
 import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 import CopyText from "@/components/Blocks/CopyText"
-import { formatAppUser } from "@/utils/format"
-import { NextSeo } from "next-seo"
-import DataTable from "@/components/Blocks/DataTable"
+import { useProjectSWR, useRunsUsage } from "@/utils/dataHooks"
 import {
   costColumn,
   durationColumn,
@@ -21,7 +19,8 @@ import {
   tagsColumn,
   timeColumn,
 } from "@/utils/datatable"
-import { useProjectSWR, useRunsUsage } from "@/utils/dataHooks"
+import { formatAppUser } from "@/utils/format"
+import { NextSeo } from "next-seo"
 
 const columns = [
   timeColumn("createdAt"),
