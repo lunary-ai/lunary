@@ -61,6 +61,8 @@ export function useProjectMutation(
 }
 
 export function useProjectInfiniteSWR(key: string, ...args: any[]) {
+  const PAGE_SIZE = 1
+
   const { projectId } = useContext(ProjectContext)
 
   function getKey(pageIndex, previousPageData) {
@@ -73,11 +75,19 @@ export function useProjectInfiniteSWR(key: string, ...args: any[]) {
     ...(args as [any]),
   )
 
+  function loadMore() {
+    const hasMore = data && data[data.length - 1]?.length >= PAGE_SIZE
+
+    if (hasMore) {
+      setSize((size) => size + 1)
+    }
+  }
+
   return {
-    data,
+    data: data?.flat(),
     loading: isLoading,
     validating: isValidating,
-    loadMore: () => setSize(size + 1),
+    loadMore,
   }
 }
 
@@ -248,36 +258,22 @@ export function useTemplateVersion(id: string) {
   }
 }
 
-export function useLogs(
-  type: "llm" | "trace" | "thread" | "chat",
-  parentRunId?: string,
-) {
-  const PAGE_SIZE = 1
-  const parentRunIdStr = parentRunId ? `&parentRunId=${parentRunId}` : "" // TODO: use a query param builder
+export function useLogs(params: any) {
+  // const PAGE_SIZE = 1
 
-  function getKey(pageIndex, previousPageData) {
-    return `/runs?type=${type}&page=${pageIndex}&limit=${PAGE_SIZE}${parentRunIdStr}`
+  function buildLogsAPIUrl(data = {}) {
+    let url = `/runs?`
+
+    const params = Object.entries(data)
+      .map(([key, value]) => {
+        return `${key}=${value}`
+      })
+      .join("&")
+
+    return url + params
   }
 
-  const { data, isLoading, isValidating, size, setSize } =
-    useSWRInfinite(getKey) // TODO useProejctInfiniteSWR
-
-  function loadMore() {
-    const hasMore = data && data[data.length - 1]?.length >= PAGE_SIZE
-
-    if (hasMore) {
-      setSize((size) => size + 1)
-    }
-  }
-
-  const logs = data ? [].concat(...data) : []
-
-  return {
-    logs,
-    loading: isLoading,
-    validating: isValidating,
-    loadMore,
-  }
+  return useProjectInfiniteSWR(buildLogsAPIUrl(params))
 }
 
 export function useRun(id: string, initialData?: any) {
@@ -285,22 +281,23 @@ export function useRun(id: string, initialData?: any) {
     data: run,
     isLoading,
     mutate,
-  } = useProjectSWR(`/runs/${id}`, {
+  } = useProjectSWR(id && `/runs/${id}`, {
     fallbackData: initialData,
   })
 
-  const { trigger: update } = useProjectMutation(`/runs/${id}`, fetcher.patch, {
-    populateCache: (updatedRun, run) => {
-      return { ...run, ...updatedRun }
-    },
-    // Since the API already gives us the updated information,
-    // we don't need to revalidate here.
-    revalidate: false,
-  })
+  const { trigger: update } = useProjectMutation(
+    id && `/runs/${id}`,
+    fetcher.patch,
+  )
+
+  async function updateRun(data) {
+    await update(data)
+    mutate({ ...run, ...data })
+  }
 
   return {
     run,
-    update,
+    update: updateRun,
     mutate,
     loading: isLoading,
   }

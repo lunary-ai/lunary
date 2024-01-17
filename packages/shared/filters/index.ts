@@ -66,6 +66,7 @@ export const FILTERS: Filter[] = [
         type: "select",
         multiple: true,
         id: "name",
+        width: 100,
         options: (type) => `/filters/models`,
       },
     ],
@@ -84,6 +85,8 @@ export const FILTERS: Filter[] = [
       {
         type: "select",
         multiple: true,
+
+        width: 100,
         id: "tags",
         options: () => `/filters/tags`,
       },

@@ -12,6 +12,7 @@ export type FilterParam = {
   step?: number
   width?: number
   placeholder?: string
+  render?: (value: any) => React.ReactNode
   defaultValue?: string | number | boolean
   multiple?: boolean
   options?:
@@ -32,7 +33,32 @@ export type Filter = {
   sql?: (params: any) => string // postgres sql
 }
 
-export type SavedFilterData = {
+// export type SavedFilterData = {
+//   id: string
+//   paramsData: { id: string; value: any }[]
+// }
+
+// [ 'AND, {id, params}, {id, params}, {id, params}, ['OR', {id, params}, {id, params}], ['OR', {id, params}, ['AND', {id, params}, {id, params}]] ]
+
+export type LogicData = {
   id: string
-  paramsData: { id: string; value: any }[]
+  params: any
 }
+
+type LogicNode = ["AND" | "OR", ...LogicElement[]]
+
+export type LogicElement = LogicData | LogicNode
+
+export type FilterLogic = LogicNode
+
+// const testLogic: FilterLogic = [
+//   "AND",
+//   { id: "type", params: { type: "llm" } },
+//   [
+//     "OR",
+//     { id: "type", params: { type: "llm" } },
+//     { id: "type", params: { type: "llm" } },
+//   ],
+// ]
+
+// console.log(testLogic)
