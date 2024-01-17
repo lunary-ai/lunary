@@ -10,7 +10,13 @@ import {
   Text,
   TextInput,
 } from "@mantine/core"
-import { IconDotsVertical, IconPlus, IconTrash } from "@tabler/icons-react"
+import {
+  IconDotsVertical,
+  IconLayersSubtract,
+  IconPencil,
+  IconPlus,
+  IconTrash,
+} from "@tabler/icons-react"
 
 import { useTemplate, useTemplates } from "@/utils/dataHooks"
 import { useHover } from "@mantine/hooks"
@@ -48,13 +54,11 @@ const TemplateListItem = ({
   activeTemplate,
   activeVersion,
   rename,
-
   setRename,
-
   switchTemplate,
   switchTemplateVersion,
 }) => {
-  const { templates, mutate } = useTemplates()
+  const { templates, mutate, insert } = useTemplates()
   const { remove, update } = useTemplate(template?.id)
 
   const lastDeployed = template.versions
@@ -112,6 +116,26 @@ const TemplateListItem = ({
     mutate()
   }
 
+  const duplicateTemplate = async () => {
+    const newTemplate = await insert({
+      slug: `${template.slug}-copy`,
+      mode: template.mode,
+      content: lastDeployed.content,
+      extra: lastDeployed.extra,
+      testValues: lastDeployed.testValues,
+    })
+
+    notifications.show({
+      title: "Template duplicated",
+      message: `Template ${template.slug} has been duplicated`,
+    })
+
+    await mutate()
+
+    switchTemplate(newTemplate)
+    switchTemplateVersion(newTemplate?.versions[0])
+  }
+
   return (
     <NavLink
       ref={ref}
@@ -158,11 +182,21 @@ const TemplateListItem = ({
           </Menu.Target>
           <Menu.Dropdown>
             <Menu.Item
+              leftSection={<IconPencil size={13} />}
               onClick={() => {
                 setRename(template.id)
               }}
             >
               Rename
+            </Menu.Item>
+
+            <Menu.Item
+              leftSection={<IconLayersSubtract size={13} />}
+              onClick={() => {
+                duplicateTemplate()
+              }}
+            >
+              Duplicate
             </Menu.Item>
 
             <Menu.Item
