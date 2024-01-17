@@ -120,9 +120,9 @@ const TemplateListItem = ({
     const newTemplate = await insert({
       slug: `${template.slug}-copy`,
       mode: template.mode,
-      content: lastDeployed.content,
-      extra: lastDeployed.extra,
-      testValues: lastDeployed.testValues,
+      content: sortedVersions[0].content,
+      extra: sortedVersions[0].extra,
+      testValues: sortedVersions[0].testValues,
     })
 
     notifications.show({
@@ -243,6 +243,7 @@ const TemplateListItem = ({
                   {formatDistanceToNow(new Date(version?.createdAt), {
                     addSuffix: true,
                   })
+                    .replace("less than", "<")
                     .replace("about", "~")
                     .replace("minute", "min")
                     .replace(" hours", "h")

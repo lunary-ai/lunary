@@ -4,10 +4,11 @@ import resetUsage from "@/jobs/resetUsage"
 
 export function setupCronJobs() {
   cron.schedule(
-    "*/20 * * * * *",
-    () => {
-      sql`refresh materialized view concurrently model_name_cache;`
-      sql`refresh materialized view concurrently tag_cache;`
+    "*/5 * * * * *",
+    async () => {
+      console.log("JOB: refreshing materialized views")
+      await sql`refresh materialized view concurrently model_name_cache;`
+      await sql`refresh materialized view concurrently tag_cache;`
     },
     { name: "refresh materialized views" },
   )
