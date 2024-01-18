@@ -49,7 +49,7 @@ import {
   useOrg,
   useProjectInfiniteSWR,
 } from "@/utils/dataHooks"
-import { useDebouncedState } from "@mantine/hooks"
+import { useDebouncedState, useDidUpdate } from "@mantine/hooks"
 import Router from "next/router"
 import Empty from "../../components/Layout/Empty"
 import { ProjectContext } from "../../utils/context"
@@ -121,12 +121,52 @@ function buildExportUrl(
   return url.toString()
 }
 
+const FILTERS_BY_TYPE = {
+  llm: [
+    "models",
+    "tags",
+    "users",
+    "status",
+    "feedback",
+    "cost",
+    "duration",
+    "tokens",
+  ],
+  trace: ["tags", "users", "status", "duration"],
+  thread: ["tags", "users", "status", "date"],
+}
+
+const editFilter = (filters, id, params) => {
+  if (!params) {
+    // Remove filter
+    return filters.filter((f) => f.id !== id)
+  }
+
+  const newFilters = [...filters]
+  const index = newFilters.findIndex((f) => f.id === id)
+  if (index === -1) {
+    newFilters.push({ id, params })
+  } else {
+    newFilters[index] = { id, params }
+  }
+  return newFilters
+}
+
 export default function Logs() {
-  const [filters, setFilters] = useState<FilterLogic>(["AND"])
+  const { projectId } = useContext(ProjectContext)
+  const { project, isLoading: projectLoading } = useProject()
+  const { org } = useOrg()
 
-  const [serializedFilters, setSerializedFilters] = useState<string>("type=llm")
-
+  const [filters, setFilters] = useState<FilterLogic>([
+    "AND",
+    { id: "type", params: { type: "llm" } },
+  ])
+  const [showFilterBar, setShowFilterBar] = useState(false)
+  const [selected, setSelected] = useState(null)
+  const [serializedFilters, setSerializedFilters] = useState<string>("")
   const [type, setType] = useState<"llm" | "trace" | "thread">("llm")
+
+  const [query, setQuery] = useDebouncedState("", 300)
 
   const {
     data: logs,
@@ -135,11 +175,12 @@ export default function Logs() {
     loadMore,
   } = useProjectInfiniteSWR(`/runs?${serializedFilters}`)
 
-  useEffect(() => {
+  useDidUpdate(() => {
     const serialized = serializeLogic(filters)
+
     if (serialized) {
       setSerializedFilters(serialized)
-      Router.push(`/logs?${serialized}`)
+      Router.replace(`/logs?${serialized}`)
     }
   }, [filters])
 
@@ -148,9 +189,13 @@ export default function Logs() {
     try {
       const params = window.location.search.replace("?", "")
       if (params) {
-        console.log("params", params)
+        const type = new URLSearchParams(params).get("type") || "llm"
+        if (type) setType(type as any)
+
+        const search = new URLSearchParams(params).get("search")
+        if (search) setQuery(search as any)
+
         const filtersData = deserializeLogic(params)
-        console.log({ filtersData })
         if (filtersData) setFilters(filtersData)
       }
     } catch (e) {
@@ -158,20 +203,35 @@ export default function Logs() {
     }
   }, [])
 
-  useEffect(() => {
-    // reset filters when type changes as they are not compatible
-    setFilters(["AND", { id: "type", params: { type } }])
+  useDidUpdate(() => {
+    console.log("type", type)
+    // Change type filter and remove filters imcompatible with type
+    const newFilters = editFilter(filters, "type", { type }).filter(
+      (f) =>
+        f === "AND" ||
+        FILTERS_BY_TYPE[type].includes(f.id) ||
+        ["type", "search"].includes(f.id),
+    )
+    setFilters(newFilters)
   }, [type])
 
-  const [query, setQuery] = useDebouncedState(null, 500)
-
-  const { projectId } = useContext(ProjectContext)
-  const { project, isLoading: projectLoading } = useProject()
-
-  const { org } = useOrg()
-  const [selected, setSelected] = useState(null)
+  // Convert search query to filter
+  useDidUpdate(() => {
+    console.log("query", query)
+    const newFilters = editFilter(
+      filters,
+      "search",
+      query?.length ? { query } : null,
+    )
+    setFilters(newFilters)
+  }, [query])
 
   const exportUrl = projectId ? buildExportUrl(projectId, query, [], []) : ""
+
+  const showBar =
+    showFilterBar ||
+    filters.filter((f) => f !== "AND" && !["search", "type"].includes(f.id))
+      .length > 0
 
   function exportButton(url: string) {
     if (org?.plan !== "free") {
@@ -215,14 +275,16 @@ export default function Logs() {
               />
 
               <Group gap="xs">
-                <Button
-                  variant="subtle"
-                  onClick={() => {}}
-                  leftSection={<IconFilter size={12} />}
-                  size="xs"
-                >
-                  Add filters
-                </Button>
+                {!showBar && (
+                  <Button
+                    variant="subtle"
+                    onClick={() => setShowFilterBar(true)}
+                    leftSection={<IconFilter size={12} />}
+                    size="xs"
+                  >
+                    Add filters
+                  </Button>
+                )}
                 <SegmentedControl
                   value={type}
                   size="xs"
@@ -296,14 +358,15 @@ export default function Logs() {
               </Group>
             </Flex>
           </Card>
-          <Paper p={8} withBorder>
+          {showBar && (
             <FilterPicker
               minimal
+              defaultOpened={showFilterBar}
               value={filters}
               onChange={setFilters}
-              restrictTo={(f) => f.id !== "type" && !f.evaluator && !!f.sql}
+              restrictTo={(f) => FILTERS_BY_TYPE[type].includes(f.id)}
             />
-          </Paper>
+          )}
           {/* {Object.entries(selectedFilters).length > 0 && (
             <Paper px="xs" p={4}>
               <Flex justify="space-between">

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   ActionIcon,
   Combobox,
@@ -9,7 +9,7 @@ import {
 import FILTERS_UI_DATA from "./UIData"
 import { IconPlus } from "@tabler/icons-react"
 
-export function AddFilterButton({ filters, onSelect }) {
+export function AddFilterButton({ filters, onSelect, defaultOpened }) {
   const [search, setSearch] = useState("")
 
   const combobox = useCombobox({
@@ -24,6 +24,14 @@ export function AddFilterButton({ filters, onSelect }) {
       combobox.focusSearchInput()
     },
   })
+
+  useEffect(() => {
+    if (defaultOpened) {
+      combobox.openDropdown()
+      combobox.focusTarget()
+      combobox.focusSearchInput()
+    }
+  }, [defaultOpened])
 
   const options = filters
     .filter((item) =>

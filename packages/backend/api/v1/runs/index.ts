@@ -66,12 +66,13 @@ runs.get("/", async (ctx) => {
 
   const queryString = ctx.querystring
   const deserializedFilters = deserializeLogic(queryString)
-  const filtersQuery = deserializedFilters
-    ? convertFiltersToSQL(deserializedFilters)
-    : sql``
+
+  const filtersQuery =
+    deserializedFilters?.length && deserializedFilters.length > 1 // first is always ["AND"]
+      ? convertFiltersToSQL(deserializedFilters)
+      : sql`type = 'llm'` // default to type llm
 
   const {
-    search,
     limit = "100",
     page = "0",
     parentRunId,

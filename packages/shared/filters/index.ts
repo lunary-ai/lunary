@@ -362,7 +362,7 @@ export const FILTERS: Filter[] = [
   {
     id: "length",
     name: "Length",
-    uiType: "basic",
+    uiType: "smart",
     params: [
       FIELD_PARAM,
       NUMBER_PARAM,
@@ -500,48 +500,90 @@ export const FILTERS: Filter[] = [
     },
   },
   {
+    id: "search",
+    name: "Search",
+    uiType: "smart",
+    params: [
+      {
+        type: "label",
+        label: "Search",
+      },
+      {
+        type: "text",
+        id: "query",
+        placeholder: "Search",
+      },
+    ],
+    sql: (sql, { query }) => {
+      return sql`r.input_text &@ ${query} or r.output_text &@ ${query} or r.error_text &@ ${query}`
+    },
+  },
+  {
     id: "string",
     name: "String match",
     uiType: "smart",
     params: [
-      FIELD_PARAM,
+      {
+        type: "select",
+        id: "fields",
+        width: 70,
+        defaultValue: "any",
+        options: [
+          {
+            label: "Input",
+            value: "input",
+          },
+          {
+            label: "Output",
+            value: "output",
+          },
+          {
+            label: "Any",
+            value: "any",
+          },
+        ],
+      },
       {
         type: "select",
         id: "type",
-        width: 150,
-        defaultValue: "icontains",
+        width: 100,
+        defaultValue: "contains",
         options: [
           {
             label: "Contains",
             value: "contains",
           },
           {
-            label: "Contains (insensitive)",
-            value: "icontains",
+            label: "Not contains",
+            value: "notcontains",
           },
-          {
-            label: "Equals",
-            value: "equals",
-          },
-          {
-            label: "Equals (insensitive)",
-            value: "iequals",
-          },
+          // {
+          //   label: "Equals",
+          //   value: "equals",
+          // },
           {
             label: "Starts with",
-            value: "startswith",
-          },
-          {
-            label: "Starts with (insensitive)",
-            value: "istartswith",
+            value: "starts",
           },
           {
             label: "Ends with",
-            value: "endswith",
+            value: "ends",
+          },
+        ],
+      },
+      {
+        type: "select",
+        id: "sensitive",
+        width: 120,
+        defaultValue: "false",
+        options: [
+          {
+            label: "Case sensitive",
+            value: "true",
           },
           {
-            label: "Ends with (insensitive)",
-            value: "iendswith",
+            label: "Case insensitive",
+            value: "false",
           },
         ],
       },
@@ -551,7 +593,50 @@ export const FILTERS: Filter[] = [
         id: "text",
       },
     ],
-    sql: (sql, { field, text }) => sql`${field}_text LIKE '%${text}%'`,
+    sql: (sql, { fields, type, text, sensitive }) => {
+      // inspiration (r.input ilike ${ "%" + search + "%" } or r.output ilike ${"%" + search + "%"})`;
+
+      let operator = sql`LIKE`
+      let caseSensitive = sensitive === "true"
+
+      let textParam = text
+
+      if (type === "starts") {
+        // JSON fragment: ..., {"content": "text...
+        textParam = `, "content": "${text}`
+      } else if (type === "ends") {
+        textParam = `${text}"}`
+      }
+
+      if (type === "contains" || type === "starts" || type === "ends") {
+        operator = caseSensitive ? sql`LIKE` : sql`ILIKE`
+        textParam = "%" + textParam + "%"
+      } else if (type === "notcontains") {
+        operator = caseSensitive ? sql`NOT LIKE` : sql`NOT ILIKE`
+        textParam = "%" + textParam + "%"
+      }
+
+      // problem for the following: output_text is stringified JSON, so contains starts with JSON
+      // else if (type === "starts") {
+      //   operator = caseSensitive ? sql`LIKE` : sql`ILIKE`
+      //   textParam = text + "%"
+      // } else if (type === "ends") {
+      //   operator = caseSensitive ? sql`LIKE` : sql`ILIKE`
+      //   textParam = "%" + text
+      // } else if (type === "equals") {
+      //   operator = sql`=`
+      // }
+
+      let field = sql`input_text || output_text`
+
+      if (fields === "input") {
+        field = sql`input_text`
+      } else if (fields === "output") {
+        field = sql`output_text`
+      }
+
+      return sql`${field} ${operator} ${textParam}`
+    },
   },
 
   {

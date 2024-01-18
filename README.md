@@ -25,7 +25,7 @@ It also designed to be:
 
 - 🤖 Usable with any model, not just OpenAI
 - 📦 Easy to integrate (2 minutes)
-- 🧑‍💻 Simple to self-host 
+- 🧑‍💻 Simple to self-host
 
 ## Demo
 
@@ -60,13 +60,24 @@ With the hosted version:
 - 🙋 get priority 1:1 support with our team
 - 🇪🇺 your data is stored safely in Europe
 
+## Running locally
+
+Lunary is powered by Bun. To run it locally:
+
+```bash
+# Install bun
+curl -fsSL https://bun.sh/install | bash
+
+# Install dependencies
+bun install
+
+# Run the development server
+bun dev
+```
+
 ## 🙋 Support
 
-Need help or have questions? Chat with us on [the website](https://lunary.ai) or email one of the founders: [vince [at] lunary.ai](mailto:vince@lunary.ai). We're here to support you every step of the way.
-
-## 👨‍👩‍👧 Team
-
-Made by [@vincelwt](https://twitter.com/vincelwt) and [Hugh](https://github.com/hughcrt).
+Need help or have questions? Chat with us on [the website](https://lunary.ai) or email us: [hello [at] lunary.ai](mailto:hello@lunary.ai). We're here to support you every step of the way.
 
 ## License
 

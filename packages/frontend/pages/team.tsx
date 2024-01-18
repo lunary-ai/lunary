@@ -52,7 +52,9 @@ function Invite() {
   return (
     <Group>
       <Text>Invite link: </Text>
-      <CopyText value={`${window.location.origin}/join?orgId=${org?.id}`} />
+      {typeof window !== "undefined" && (
+        <CopyText value={`${window.location.origin}/join?orgId=${org?.id}`} />
+      )}
     </Group>
   )
 }
@@ -101,13 +103,10 @@ export default function Team() {
           <Group justify="space-between" align="center" p="lg">
             <RenamableField
               defaultValue={org?.name}
-              onRename={(name) => {
-                const newOrg = { ...org, name }
-                updateOrg({ id: org?.id, name }, { optimisticData: org }).then(
-                  () => {
-                    mutate()
-                  },
-                )
+              onRename={async (name) => {
+                await updateOrg({ id: org?.id, name }, { optimisticData: org })
+
+                mutate()
               }}
             />
 

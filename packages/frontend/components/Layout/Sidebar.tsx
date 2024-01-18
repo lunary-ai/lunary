@@ -35,20 +35,31 @@ import { useAuth } from "@/utils/auth"
 const menu = [
   { label: "Analytics", icon: IconTimeline, link: "/analytics" },
   { label: "Logs", icon: IconListSearch, link: "/logs" },
-  { label: "Radar", icon: IconShieldBolt, link: "/radar" },
-  { label: "Evaluations", icon: IconFlask2Filled, link: "/evals" },
   { label: "Users", icon: IconUsers, link: "/users" },
   { label: "Prompts", icon: IconPlayerPlay, link: "/prompts" },
+  {
+    label: "Radar",
+    icon: IconShieldBolt,
+    link: "/radar",
+    soon: !process.env.NEXT_PUBLIC_DEMO,
+  },
+  {
+    label: "Evaluations",
+    icon: IconFlask2Filled,
+    link: "/evals",
+    soon: !process.env.NEXT_PUBLIC_DEMO,
+  },
   { label: "Settings & Keys", icon: IconSettings, link: "/settings" },
 ]
 
-function NavbarLink({ icon: Icon, label, link, active }) {
+function NavbarLink({ icon: Icon, label, link, active, soon }) {
   return (
     <NavLink
       component={Link}
       href={link}
       w="100%"
-      label={label}
+      label={`${label}${soon ? " (soon)" : ""}`}
+      disabled={soon}
       active={active}
       leftSection={
         <ThemeIcon
@@ -177,25 +188,22 @@ export default function Sidebar() {
 
       {user && (
         <Box w="100%">
-          {/* <NavLink
-            component={Link}
-            href="https://feedback.lunary.ai/roadmap"
-            label="Roadmap"
-            leftSection={<IconActivity size="16" />}
-          /> */}
           <NavLink
             component={Link}
             href="https://lunary.ai/changelog"
             label="Changelog"
             leftSection={<IconActivity size={14} />}
           />
-          <NavLink
-            onClick={() => {
-              $crisp.push(["do", "chat:open"])
-            }}
-            label="Help & Feedback"
-            leftSection={<IconMessage2 size={14} />}
-          />
+
+          {process.env.NEXT_PUBLIC_CRISP_ID && (
+            <NavLink
+              onClick={() => {
+                $crisp.push(["do", "chat:open"])
+              }}
+              label="Help & Feedback"
+              leftSection={<IconMessage2 size={14} />}
+            />
+          )}
           <NavLink
             component="a"
             href="https://lunary.ai/docs"

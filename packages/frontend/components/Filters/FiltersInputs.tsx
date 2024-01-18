@@ -25,8 +25,6 @@ const FilterInputs = {
       useSWRforData ? options() : null,
     )
 
-    console.log("swrFilterData", swrFilterData)
-
     const data = useSWRforData ? swrFilterData : options
 
     const Component = multiple ? MultiSelect : Select

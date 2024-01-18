@@ -28,12 +28,18 @@ function generateKey(
   const resolvedKey = typeof baseKey === "function" ? baseKey() : baseKey
   if (!projectId || !resolvedKey) return null
 
+  console.log("resolvedKey", resolvedKey)
+
+  const operator = resolvedKey.includes("?") ? "&" : "?"
+
   let url = `${resolvedKey}${
-    resolvedKey.includes("?") ? "&" : "?"
+    !resolvedKey.endsWith("?") ? operator : ""
   }projectId=${projectId}`
   if (extraParams) {
     url += `&${extraParams}`
   }
+
+  console.log("url", url)
   return url
 }
 
@@ -159,8 +165,14 @@ export function useProject() {
 
   const project = projects?.find((p) => p.id === projectId)
 
-  const { trigger: updateMutation } = useProjectMutation(`/`, fetcher.patch)
-  const { trigger: dropMutation } = useProjectMutation(`/`, fetcher.delete)
+  const { trigger: updateMutation } = useSWRMutation(
+    `/projects/${projectId}`,
+    fetcher.patch,
+  )
+  const { trigger: dropMutation } = useSWRMutation(
+    `/projects/${projectId}`,
+    fetcher.delete,
+  )
 
   async function update(name: string) {
     await updateMutation({ name })

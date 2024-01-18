@@ -44,7 +44,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       return
     }
   }, [isSignedIn])
-  const { user, loading: userLoading, error } = useUser()
+  const { user } = useUser()
 
   const { org } = useOrg()
 
