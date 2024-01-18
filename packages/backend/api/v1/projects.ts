@@ -16,7 +16,9 @@ projects.get("/", async (ctx: Context) => {
       created_at,
       name,
       org_id,
-      exists(select * from run where project_id = project.id) as activated
+      exists(select * from run where project_id = project.id) as activated,
+      (select api_key from api_key where project_id = project.id and type = 'public') as public_api_key,
+      (select api_key from api_key where project_id = project.id and type = 'private') as private_api_key 
     from
       project
     where

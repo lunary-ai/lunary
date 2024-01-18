@@ -59,8 +59,23 @@ auth.post("/signup", async (ctx: Context) => {
         name: projectName,
         orgId: org.id,
       }
+      const [project] = await sql`
+        insert into project ${sql(newProject)} returning *
+      `
+
+      const apiKeys = [
+        {
+          type: "public",
+          projectId: project.id,
+        },
+        {
+          type: "private",
+          projectId: project.id,
+        },
+      ]
+
       await sql`
-        insert into project ${sql(newProject)} 
+        insert into api_key ${sql(apiKeys)}
       `
 
       return { user, org }
