@@ -1,11 +1,4 @@
-import {
-  ActionIcon,
-  Code,
-  CopyButton,
-  Group,
-  Text,
-  Tooltip,
-} from "@mantine/core"
+import { ActionIcon, Code, CopyButton, Group, Tooltip } from "@mantine/core"
 import { IconCheck, IconCopy } from "@tabler/icons-react"
 
 export const SuperCopyButton = ({ value }) => (

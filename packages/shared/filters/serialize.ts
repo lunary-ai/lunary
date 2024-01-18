@@ -1,4 +1,4 @@
-import type { Filter, FilterLogic, FilterParam } from "."
+import type { FilterLogic, FilterParam } from "."
 import { FILTERS } from "."
 
 // because dots are used to separate filter parameters, we need to encode them
@@ -59,7 +59,7 @@ export function serializeLogic(logic: FilterLogic): string {
   const serializeParamValue = (param: any): string => {
     if (Array.isArray(param)) {
       const all = param.map(serializeParamValue)
-      console.log({ all })
+
       if (all.some((f) => typeof f !== "undefined")) return ""
       return all.join(".")
     } else if (
@@ -114,7 +114,6 @@ export function deserializeLogic(logicString: string): FilterLogic | undefined {
     const value = params.split(".")
 
     for (const [i, v] of value.entries()) {
-      // console.log({ i, v })
       const filterParam = filterParams[i]
 
       if (!filterParam) {

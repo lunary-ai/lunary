@@ -19,7 +19,7 @@ function RenderFilterNode({
   node: FilterLogic
   filters: Filter[]
   setNode: (node: FilterLogic | LogicData) => void
-  removeNode?: () => void
+  removeNode: () => void
 }) {
   if (typeof node === "string" && ["AND", "OR"].includes(node)) return null
 
@@ -45,25 +45,21 @@ function RenderFilterNode({
       />
     )
 
-    return (
-      <Group>
-        {node.map((n, i) => {
-          const showOperator = i !== 0 && i !== node.length - 1 && !minimal
-          return showOperator ? (
-            <Group key={i} gap={showOperator ? "xs" : 0}>
-              {showFilterNode(n, i)}
-              {showOperator && (
-                <Text c="dimmed" size="xs" fw="bold">
-                  {currentOperator}
-                </Text>
-              )}
-            </Group>
-          ) : (
-            showFilterNode(n, i)
-          )
-        })}
-      </Group>
-    )
+    return node.map((n, i) => {
+      const showOperator = i !== 0 && i !== node.length - 1 && !minimal
+      return showOperator ? (
+        <Group key={i} gap={showOperator ? "xs" : 0}>
+          {showFilterNode(n, i)}
+          {showOperator && (
+            <Text c="dimmed" size="xs" fw="bold">
+              {currentOperator}
+            </Text>
+          )}
+        </Group>
+      ) : (
+        showFilterNode(n, i)
+      )
+    })
   }
 
   // ts assert node is LogicElement
@@ -133,11 +129,13 @@ export default function FilterPicker({
   onChange = (data) => {},
   minimal = false,
   restrictTo = (filter) => true,
+  defaultOpened = false,
 }: {
   value?: FilterLogic
   onChange?: (data: FilterLogic) => void
   minimal?: boolean
   restrictTo?: (filter: Filter) => boolean
+  defaultOpened?: boolean
 }) {
   const [modalOpened, setModalOpened] = useState(false)
 
@@ -182,7 +180,11 @@ export default function FilterPicker({
           />
 
           {minimal ? (
-            <AddFilterButton filters={options} onSelect={insertFilter} />
+            <AddFilterButton
+              filters={options}
+              onSelect={insertFilter}
+              defaultOpened={defaultOpened}
+            />
           ) : (
             <>
               <Button

@@ -46,7 +46,7 @@ projects.post("/", async (ctx: Context) => {
 })
 
 projects.delete("/:projectId", async (ctx: Context) => {
-  const { projectId } = ctx.state
+  const { projectId } = ctx.params
   const { orgId } = ctx.state
 
   const [{ count }] =
@@ -68,7 +68,7 @@ projects.delete("/:projectId", async (ctx: Context) => {
 })
 
 projects.patch("/:projectId", async (ctx: Context) => {
-  const { projectId } = ctx.state
+  const { projectId } = ctx.params
   const bodySchema = z.object({
     name: z.string(),
   })

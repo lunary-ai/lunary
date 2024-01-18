@@ -84,16 +84,11 @@ function RenamableField({ defaultValue, onRename }) {
 export default function AppAnalytics() {
   const { user: currentUser } = useUser()
   const { org } = useOrg()
-  const {
-    update: updateproject,
-    project,
-    setProjectId,
-    drop: dropproject,
-  } = useProject()
+  const { update, project, setProjectId, drop } = useProject()
 
   // TODO: better route for project usage
   const { data: projectUsage } = useSWR(
-    () => `/orgs/${org.id}/usage?projectId=${project?.id}`,
+    project?.id && `/orgs/${org.id}/usage?projectId=${project?.id}`,
   )
 
   const isAdmin =
@@ -107,7 +102,7 @@ export default function AppAnalytics() {
           title={
             <RenamableField
               defaultValue={project?.name}
-              onRename={(name) => updateproject(name)}
+              onRename={(name) => update(name)}
             />
           }
           range={30}
@@ -183,7 +178,7 @@ export default function AppAnalytics() {
                   <Button
                     color="red"
                     onClick={() => {
-                      dropproject()
+                      drop()
                       setProjectId(null)
                       Router.push("/")
                     }}

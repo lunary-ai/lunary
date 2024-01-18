@@ -36,11 +36,10 @@ auth.post("/signup", async (ctx: Context) => {
 
   if (signupMethod === "signup") {
     const { user, org } = await sql.begin(async (sql) => {
-      const [org] = await sql`
-        insert into org (name, plan)
-        values (${orgName || `${name}'s Org`}, 'free')
-        returning *
-      `
+      const plan = process.env.DEFAULT_PLAN || "free"
+
+      const [org] =
+        await sql`insert into org ${sql({ name: orgName || `${name}'s Org`, plan })} returning *`
 
       const newUser = {
         name,

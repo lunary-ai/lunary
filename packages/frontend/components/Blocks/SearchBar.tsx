@@ -24,11 +24,10 @@ export default function SearchBar({ query, setQuery, ...props }) {
       ref={ref}
       id="search"
       rightSectionWidth={showCross ? 40 : 80}
+      rightSectionPointerEvents="auto"
       rightSection={
         showCross ? (
-          <ActionIcon onClick={clearInput} size="sm" variant="subtle">
-            <IconX size={13} />
-          </ActionIcon>
+          <IconX onClick={clearInput} size={13} cursor="pointer" />
         ) : !focused ? (
           <HotkeysInfo
             hot="K"
