@@ -310,7 +310,7 @@ export function useRun(id: string, initialData?: any) {
 export function useRunsUsage(range, userId?: string) {
   const userIdStr = userId ? `&user_id=${userId}` : ""
   const { data: usage, isLoading } = useProjectSWR(
-    userId && `/runs/usage?days=${range}${userIdStr}`,
+    `/runs/usage?days=${range}${userIdStr}`,
   )
 
   return { usage: extendWithCosts(usage), loading: isLoading }
