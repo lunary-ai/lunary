@@ -55,6 +55,8 @@ const publicRoutes = [
 ]
 export async function authMiddleware(ctx: Context, next: Next) {
   try {
+    ctx.state.projectId = ctx.request?.query?.projectId as string
+
     const isPublicRoute = publicRoutes.some((route) =>
       typeof route === "string" ? route === ctx.path : route.test(ctx.path),
     )
@@ -79,7 +81,6 @@ export async function authMiddleware(ctx: Context, next: Next) {
     }
     const { payload } = await verifyJwt<SessionData>(token)
 
-    ctx.state.projectId = ctx.request?.query?.projectId as string // TODO
     ctx.state.userId = payload.userId
     ctx.state.orgId = payload.orgId
   } catch (error) {
