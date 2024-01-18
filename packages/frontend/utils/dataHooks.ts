@@ -28,8 +28,6 @@ function generateKey(
   const resolvedKey = typeof baseKey === "function" ? baseKey() : baseKey
   if (!projectId || !resolvedKey) return null
 
-  console.log("resolvedKey", resolvedKey)
-
   const operator = resolvedKey.includes("?") ? "&" : "?"
 
   let url = `${resolvedKey}${
@@ -39,7 +37,6 @@ function generateKey(
     url += `&${extraParams}`
   }
 
-  console.log("url", url)
   return url
 }
 
