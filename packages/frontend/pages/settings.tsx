@@ -125,7 +125,7 @@ export default function AppAnalytics() {
               title={
                 <Group>
                   <Text fw={500}>Public Tracking Key: </Text>
-                  <CopyText c="green.8" value={project?.id} />
+                  <CopyText c="green.8" value={project?.publicApiKey} />
                 </Group>
               }
               color="green"
@@ -141,7 +141,7 @@ export default function AppAnalytics() {
               title={
                 <Group>
                   <Text fw={500}>Private Key:</Text>
-                  <CopyText c="red.8" value={org?.apiKey} />
+                  <CopyText c="red.8" value={project?.privateApiKey} />
                 </Group>
               }
               color="red"
