@@ -255,7 +255,7 @@ export default function Sidebar() {
             <NavLink
               label="Logout"
               c="red"
-              onClick={() => auth.removeJwt()}
+              onClick={() => auth.signOut()}
               leftSection={<IconLogout size={14} />}
             />
           </NavLink>
