@@ -79,25 +79,10 @@ runs.get("/", async (ctx) => {
     exportType,
   } = ctx.query as Query
 
-  // let typeFilter = sql``
-  // if (type === "llm") {
-  //   typeFilter = sql`and type = 'llm'`
-  // } else if (type === "trace") {
-  //   typeFilter = sql`and type in ('agent','chain')`
-  // } else if (type === "thread") {
-  //   typeFilter = sql`and type in ('thread','convo')`
-  // }
-
   let parentRunFilter = sql``
   if (parentRunId) {
     parentRunFilter = sql`and parent_run_id = ${parentRunId}`
   }
-
-  // if (search) {
-  //   queryFilters = sql`${queryFilters} and (r.input ilike ${
-  //     "%" + search + "%"
-  //   } or r.output ilike ${"%" + search + "%"})`;
-  // }
 
   const rows = await sql`
       select
@@ -127,6 +112,31 @@ runs.get("/", async (ctx) => {
   }
 
   ctx.body = runs
+})
+
+runs.get("/:id", async (ctx) => {
+  const { projectId } = ctx.state
+  const { id } = ctx.params
+
+  const [row] = await sql`
+      select
+        r.*,
+        eu.id as user_id,
+        eu.external_id as user_external_id,
+        eu.created_at as user_created_at,
+        eu.last_seen as user_last_seen,
+        eu.props as user_props
+      from
+          run r
+          left join external_user eu on r.external_user_id = eu.id
+      where
+          r.project_id = ${projectId as string}
+          and r.id = ${id}
+      order by
+          r.created_at desc
+      limit 1`
+
+  ctx.body = formatRun(row)
 })
 
 runs.get("/usage", async (ctx) => {
@@ -172,31 +182,6 @@ runs.get("/usage", async (ctx) => {
           `
 
   ctx.body = runsUsage
-})
-
-runs.get("/:id", async (ctx) => {
-  const { projectId } = ctx.state
-  const { id } = ctx.params
-
-  const [row] = await sql`
-      select
-        r.*,
-        eu.id as user_id,
-        eu.external_id as user_external_id,
-        eu.created_at as user_created_at,
-        eu.last_seen as user_last_seen,
-        eu.props as user_props
-      from
-          run r
-          left join external_user eu on r.external_user_id = eu.id
-      where
-          r.project_id = ${projectId as string}
-          and r.id = ${id}
-      order by
-          r.created_at desc
-      limit 1`
-
-  ctx.body = formatRun(row)
 })
 
 runs.patch("/:id", async (ctx: Context) => {

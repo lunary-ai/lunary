@@ -135,7 +135,9 @@ function Playground() {
     } else if (clone) {
       const fetchRun = async () => {
         setLoading(true)
-        const run = await fetcher.get(`/projects/${project?.id}/runs/${clone}/`)
+        const run = await fetcher.get(`/runs/${clone}/`)
+
+        console.log(run)
 
         if (run?.input) {
           setTemplateVersion({ ...templateVersion, content: run.input })
