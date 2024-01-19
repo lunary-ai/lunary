@@ -24,6 +24,9 @@
     "packages/*"
   ],
   "dependencies": {
+    "@sentry/node": "^7.94.1",
+    "@sentry/profiling-node": "^1.3.5",
+    "@sentry/utils": "^7.94.1",
     "jose": "^5.2.0"
   }
 }
