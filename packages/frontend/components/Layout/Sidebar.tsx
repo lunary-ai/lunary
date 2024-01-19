@@ -245,7 +245,9 @@ export default function Sidebar() {
             leftSection={<UserAvatar size={32} profile={user} />}
             label={
               <Stack gap={0}>
-                <Text my={-5}>{user?.name}</Text>
+                <Text my={-5} size={12}>
+                  {user?.name}
+                </Text>
                 <Text size="xs" c="dimmed">
                   {user?.email}
                 </Text>
