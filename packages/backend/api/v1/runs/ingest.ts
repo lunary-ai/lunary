@@ -259,9 +259,9 @@ export async function processEventsIngestion(
         success: true,
       })
     } catch (e: any) {
-      Sentry.setExtra("event", event)
+      // Sentry.setExtra("event", event)
 
-      Sentry.captureException(e)
+      // Sentry.captureException(e)
 
       console.error(`Error ingesting event`, {
         error: e,
