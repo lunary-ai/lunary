@@ -88,7 +88,6 @@ const columns = {
   ],
   thread: [
     timeColumn("createdAt", "Started at"),
-    durationColumn("full"),
     userColumn(),
     inputColumn("Last Message"),
     tagsColumn(),
