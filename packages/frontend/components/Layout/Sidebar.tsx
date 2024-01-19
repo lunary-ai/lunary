@@ -245,10 +245,26 @@ export default function Sidebar() {
             leftSection={<UserAvatar size={32} profile={user} />}
             label={
               <Stack gap={0}>
-                <Text my={-5} size={12}>
+                <Text
+                  mb={-3}
+                  size="xs"
+                  style={{
+                    textOverflow: "ellipsis",
+                    overflow: "hidden",
+                    whiteSpace: "nowrap",
+                  }}
+                >
                   {user?.name}
                 </Text>
-                <Text size="xs" c="dimmed">
+                <Text
+                  size="xs"
+                  c="dimmed"
+                  style={{
+                    textOverflow: "ellipsis",
+                    overflow: "hidden",
+                    whiteSpace: "nowrap",
+                  }}
+                >
                   {user?.email}
                 </Text>
               </Stack>
