@@ -19,7 +19,7 @@ module.exports = {
       "error",
       {
         connections: {
-          databaseUrl: process.env.DB_URI,
+          databaseUrl: process.env.DATABASE_URL,
           targets: [{ tag: "sql" }],
         },
       },
