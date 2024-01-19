@@ -9,6 +9,7 @@ import {
   ingestChatEvent,
 } from "@/utils/ingest"
 import { calcRunCost } from "@/utils/calcCost"
+import Sentry from "@/utils/sentry"
 
 const router = new Router()
 
@@ -258,6 +259,10 @@ export async function processEventsIngestion(
         success: true,
       })
     } catch (e: any) {
+      Sentry.setExtra("event", event)
+
+      Sentry.captureException(e)
+
       console.error(`Error ingesting event`, {
         error: e,
         event,
