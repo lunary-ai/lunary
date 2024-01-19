@@ -59,8 +59,9 @@ function LoginPage() {
       analytics.track("Login", { method: "password" })
     } catch (error) {
       console.error(error)
-      setLoading(false)
     }
+
+    setLoading(false)
   }
 
   return (

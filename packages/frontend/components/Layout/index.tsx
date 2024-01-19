@@ -33,7 +33,8 @@ export default function Layout({ children }: { children: ReactNode }) {
   const { isSignedIn } = useAuth()
 
   useEffect(() => {
-    if (isMaintenanceMode) return
+    if (isMaintenanceMode) return router.push("/maintenance")
+
     if (isAuthPage && isSignedIn) {
       router.push("/")
       return
