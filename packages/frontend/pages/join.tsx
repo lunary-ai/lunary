@@ -24,7 +24,8 @@ import { NextSeo } from "next-seo"
 import { notifications } from "@mantine/notifications"
 import Confetti from "react-confetti"
 import sql from "@/lib/db"
-import { signUp } from "supertokens-auth-react/recipe/emailpassword"
+import { useAuth } from "@/utils/auth"
+import { fetcher } from "@/utils/fetcher"
 
 export async function getServerSideProps(context) {
   const { orgId } = context.query
@@ -34,7 +35,7 @@ export async function getServerSideProps(context) {
   `
 
   const [orgUserCountResult] = await sql`
-    SELECT COUNT(*) FROM profile WHERE org_id = ${orgId}
+    SELECT COUNT(*) FROM account WHERE org_id = ${orgId}
   `
   const orgUserCount = orgUserCountResult.count
 
@@ -69,7 +70,8 @@ function TeamFull({ orgName }) {
     </Container>
   )
 }
-export default function Join({ orgUserCount, orgName }) {
+export default function Join({ orgUserCount, orgName, orgId }) {
+  const auth = useAuth()
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
 
@@ -84,7 +86,7 @@ export default function Join({ orgUserCount, orgName }) {
       email: (val) => (/^\S+@\S+$/.test(val) ? null : "Invalid email"),
       name: (val) => (val.length <= 2 ? "Your name that short :) ?" : null),
       password: (val) =>
-        val.length < 6 ? "Password must be at least 6 characters" : null,
+        val.length < 8 ? "Password must be at least 8 characters" : null,
     },
   })
 
@@ -99,33 +101,22 @@ export default function Join({ orgUserCount, orgName }) {
   }) => {
     setLoading(true)
 
-    const ok = await errorHandler(
-      signUp({
-        formFields: [
-          { id: "email", value: email },
-          { id: "password", value: password },
-          { id: "name", value: name },
-          { id: "orgName", value: orgName },
-          { id: "signupMethod", value: "join" },
-          { id: "projectName", value: "" }, // To keep because of weird supertoken behaviour
-          { id: "employeeCount", value: "" }, // To keep because of weird supertoken behaviour
-          { id: "token", value: "123" }, // To keep because of weird supertoken behaviour
-        ],
-      }),
-    )
+    const body = await fetcher.post("/auth/signup", {
+      arg: {
+        email,
+        password,
+        name,
+        orgId,
+        signupMethod: "join",
+      },
+    })
 
-    analytics.track("Signup", { email, name })
-
-    if (ok) {
-      notifications.show({
-        icon: <IconCheck size={18} />,
-        color: "teal",
-        title: "Email sent 💌",
-        message: "Check your emails to verify your email.",
-      })
-
-      setStep(3)
+    const token = body.token
+    if (token) {
+      auth.setJwt(token)
     }
+
+    analytics.track("Join", { email, name })
 
     setLoading(false)
   }
