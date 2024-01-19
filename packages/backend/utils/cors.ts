@@ -4,7 +4,7 @@ import { createMiddleware } from "./middleware"
 
 async function patchedCors(ctx: Context, next: Next) {
   if (ctx.method === "options") {
-    ctx.set("Access-Control-Allow-Origin", "Origin")
+    ctx.set("Access-Control-Allow-Origin", ctx.get("Origin") || "*")
     ctx.set("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS, DELETE")
     ctx.set("Access-Control-Allow-Credentials", "true")
     ctx.set(
