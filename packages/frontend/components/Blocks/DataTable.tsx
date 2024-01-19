@@ -157,12 +157,12 @@ export default function DataTable({
                         {header.isPlaceholder ? null : (
                           <Group
                             gap={4}
-                            onClick={header.column.getToggleSortingHandler()}
-                            style={
-                              header.column.getCanSort()
-                                ? { cursor: "pointer" }
-                                : {}
-                            }
+                            // onClick={header.column.getToggleSortingHandler()}
+                            // style={
+                            //   header.column.getCanSort()
+                            //     ? { cursor: "pointer" }
+                            //     : {}
+                            // }
                           >
                             {flexRender(
                               header.column.columnDef.header,
