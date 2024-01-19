@@ -230,19 +230,12 @@ const registerEvent = async (
   await registerRunEvent(projectId, event, insertedIds)
 }
 
-router.post("/", async (ctx: Context) => {
-  const { projectId } = ctx.state
-
-  const { events } = ctx.request.body as {
-    events: Event | Event[]
-  }
-
+export async function processEventsIngestion(
+  projectId: string,
+  events: Event | Event[],
+): Promise<{ id?: string; success: boolean; error?: string }[]> {
   // Used to check if parentRunId was already inserted
   const insertedIds = new Set<string>()
-
-  if (!events) {
-    throw new Error("Missing events payload.")
-  }
 
   // Event processing order is important for foreign key constraints
   const sorted = (Array.isArray(events) ? events : [events]).sort(
@@ -280,6 +273,21 @@ router.post("/", async (ctx: Context) => {
   }
 
   console.log("Inserted", insertedIds.size, "runs")
+  return results
+}
+
+router.post("/", async (ctx: Context) => {
+  const { projectId } = ctx.state
+
+  const { events } = ctx.request.body as {
+    events: Event | Event[]
+  }
+
+  if (!events) {
+    throw new Error("Missing events payload.")
+  }
+
+  const results = await processEventsIngestion(projectId, events)
 
   ctx.body = { results }
 })

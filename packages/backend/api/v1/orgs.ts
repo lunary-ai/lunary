@@ -51,13 +51,7 @@ orgs.patch("/", async (ctx: Context) => {
 
   const { name } = bodySchema.parse(ctx.request.body)
 
-  await sql`
-      update org
-      set
-        name = ${name}
-      where
-        id = ${orgId}
-    `
+  await sql`update org set name = ${name} where id = ${orgId}`
   ctx.body = {}
 })
 
