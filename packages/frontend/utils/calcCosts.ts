@@ -90,15 +90,16 @@ const MODEL_COSTS: ModelCost[] = [
 ]
 
 export const calcRunCost = (run) => {
-  const duration = +new Date(run.ended_at) - +new Date(run.created_at)
+  const duration =
+    +new Date(run.ended_at || run.endedAt) -
+    +new Date(run.created_at || run.createdAt)
   if (duration < 0.01 * 1000) return 0
   if (run.type !== "llm" || !run.name) return 0
 
   const modelCost = MODEL_COSTS.find((c) =>
-    c.models.find(
-      (m) =>
-        // Azure models have a different naming scheme
-        run.name?.replaceAll("gpt-35", "gpt-3.5").includes(m),
+    c.models.find((m) =>
+      // Azure models have a different naming scheme
+      run.name?.replaceAll("gpt-35", "gpt-3.5").includes(m),
     ),
   )
 
