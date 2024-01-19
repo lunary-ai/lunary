@@ -161,26 +161,26 @@ export const FILTERS: Filter[] = [
     ],
     sql: (sql, { status }) => sql`status = ${status}`,
   },
-  {
-    id: "feedback",
-    name: "Feedback",
-    uiType: "basic",
-    disableInEvals: true,
-    params: [
-      {
-        type: "label",
-        label: "Feedback",
-      },
-      {
-        type: "select",
-        multiple: true,
-        id: "feedbacks",
-        options: () => `/filters/feedback`,
-      },
-    ],
-    // feedback is a jsonb column
-    sql: (sql, { feedbacks }) => sql`feedback @> '${feedbacks}'`,
-  },
+  // {
+  //   id: "feedback",
+  //   name: "Feedback",
+  //   uiType: "basic",
+  //   disableInEvals: true,
+  //   params: [
+  //     {
+  //       type: "label",
+  //       label: "Feedback",
+  //     },
+  //     {
+  //       type: "select",
+  //       multiple: true,
+  //       id: "feedbacks",
+  //       options: () => `/filters/feedback`,
+  //     },
+  //   ],
+  //   // feedback is a jsonb column
+  //   sql: (sql, { feedbacks }) => sql`feedback @> '${feedbacks}'`,
+  // },
   {
     id: "users",
     name: "Users",

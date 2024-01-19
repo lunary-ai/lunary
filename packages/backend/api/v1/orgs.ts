@@ -18,7 +18,7 @@ const orgs = new Router({
 })
 
 orgs.get("/", async (ctx: Context) => {
-  const orgId = ctx.params.orgId as string
+  const orgId = ctx.state.orgId as string
 
   const [row] = await sql`
     select
@@ -44,7 +44,7 @@ orgs.get("/", async (ctx: Context) => {
 })
 
 orgs.patch("/", async (ctx: Context) => {
-  const orgId = ctx.params.orgId as string
+  const orgId = ctx.state.orgId as string
   const bodySchema = z.object({
     name: z.string(),
   })
@@ -62,7 +62,7 @@ orgs.patch("/", async (ctx: Context) => {
 })
 
 orgs.get("/usage", async (ctx: Context) => {
-  const orgId = ctx.params.orgId as string
+  const orgId = ctx.state.orgId as string
   const { projectId } = ctx.request.query
 
   const rows = await sql`
@@ -86,7 +86,7 @@ orgs.get("/usage", async (ctx: Context) => {
 })
 
 orgs.post("/upgrade", async (ctx: Context) => {
-  const orgId = ctx.params.orgId as string
+  const orgId = ctx.state.orgId as string
 
   const { plan, period, origin } = ctx.request.body as {
     plan: string
@@ -164,13 +164,7 @@ orgs.post("/upgrade", async (ctx: Context) => {
     })
 
     // Update org plan
-    await sql`
-      update org
-      set
-        plan = ${plan}
-      where
-        id = ${orgId}
-    `
+    await sql`update org set plan = ${plan} where id = ${orgId}`
   }
 
   ctx.body = { ok: true }
@@ -293,7 +287,7 @@ async function handleStream(
 }
 
 orgs.post("/playground", async (ctx: Context) => {
-  const orgId = ctx.params.orgId as string
+  const orgId = ctx.state.orgId as string
   const requestBodySchema = z.object({
     content: z.array(z.any()),
     extra: z.any(),

@@ -1,3 +1,4 @@
+import sql from "@/utils/db"
 import Context from "@/utils/koa"
 import * as jose from "jose"
 import { SignJWT } from "jose"
@@ -83,6 +84,17 @@ export async function authMiddleware(ctx: Context, next: Next) {
 
     ctx.state.userId = payload.userId
     ctx.state.orgId = payload.orgId
+
+    if (ctx.state.projectId) {
+      // CHeck if user has access to project
+      const [project] = await sql`
+      select id from project where id = ${ctx.state.projectId} and org_id = ${ctx.state.orgId}
+    `
+
+      if (!project) {
+        throw new Error("Project not found")
+      }
+    }
   } catch (error) {
     console.error(error)
     ctx.status = 401
