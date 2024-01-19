@@ -1,6 +1,7 @@
 import { useLocalStorage } from "@mantine/hooks"
 import { decodeJwt } from "jose"
 import { createContext, useContext, useEffect, useMemo } from "react"
+import Router from "next/router"
 
 const SIGN_OUT_EVENT = "sign-out"
 export async function signOut() {
@@ -13,7 +14,7 @@ interface AuthContext {
   setJwt: (
     val: string | ((prevState: string | null) => string | null) | null,
   ) => void
-  removeJwt: () => void
+  signOut: () => void
 }
 
 const AuthContext = createContext<AuthContext | null>(null)
@@ -43,15 +44,20 @@ export function AuthProvider({ children }) {
 
   const isSignedIn = useMemo(() => checkJwt(jwt), [jwt])
 
+  function signOut() {
+    removeJwt()
+    Router.push("/")
+  }
+
   useEffect(() => {
-    window.addEventListener(SIGN_OUT_EVENT, removeJwt)
+    window.addEventListener(SIGN_OUT_EVENT, signOut)
     return () => {
-      window.removeEventListener(SIGN_OUT_EVENT, removeJwt)
+      window.removeEventListener(SIGN_OUT_EVENT, signOut)
     }
   }, [])
 
   return (
-    <AuthContext.Provider value={{ isSignedIn, setJwt, removeJwt }}>
+    <AuthContext.Provider value={{ isSignedIn, setJwt, signOut }}>
       {children}
     </AuthContext.Provider>
   )
