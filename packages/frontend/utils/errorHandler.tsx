@@ -22,8 +22,6 @@ const errorHandler = async (promise: Promise<any>) => {
       message: error.error_description || error.message || error,
     })
 
-    // TODO: Sentry or other error tracking
-
     return null
   }
 }
