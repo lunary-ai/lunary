@@ -27,6 +27,7 @@
     "koa": "^2.15.0",
     "koa-bodyparser": "^4.4.1",
     "koa-logger": "^3.2.1",
+    "micro": "^9.3.4",
     "koa-router": "^12.0.1",
     "litellm": "^0.12.0",
     "node-cron": "^3.0.3",
