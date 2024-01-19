@@ -24,31 +24,6 @@ import { useOrg, useUser, useProject, useProjectSWR } from "@/utils/dataHooks"
 import useSWR from "swr"
 import { openUpgrade } from "../components/Layout/UpgradeModal"
 
-function Invite() {
-  const { org } = useOrg()
-  const plan = org?.plan
-
-  if (plan === "free" || (plan === "pro" && org?.users?.length === 4)) {
-    return (
-      <Button
-        variant="light"
-        onClick={() => openUpgrade("team")}
-        style={{ float: "right" }}
-        leftSection={<IconUserPlus size="16" />}
-      >
-        Invite
-      </Button>
-    )
-  }
-
-  return (
-    <Group>
-      <Text>Invite link: </Text>
-      <CopyText value={`${window.location.origin}/join?orgId=${org?.id}`} />
-    </Group>
-  )
-}
-
 function RenamableField({ defaultValue, onRename }) {
   const [focused, setFocused] = useState(false)
 
@@ -88,7 +63,7 @@ export default function AppAnalytics() {
 
   // TODO: better route for project usage
   const { data: projectUsage } = useSWR(
-    project?.id && `/orgs/${org.id}/usage?projectId=${project?.id}`,
+    project?.id && org && `/orgs/${org.id}/usage?projectId=${project?.id}`,
   )
 
   const isAdmin =
