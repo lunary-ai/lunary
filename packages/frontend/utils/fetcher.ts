@@ -52,31 +52,27 @@ async function del(path) {
 
 async function handleResponse(res: Response) {
   const contentType = res.headers.get("Content-Type")
-  const isJson = contentType?.includes("application/json")
+
   const isLoginPage = Router.pathname === "/login"
 
   if (!res.ok) {
     if (res.status === 401 && !isLoginPage) {
       return signOut()
     }
-    if (isJson) {
-      const { error, message } = await res.json()
 
-      notifications.show({
-        title: error || "Server error",
-        message: message || "Something went wrong",
-        color: "red",
-        autoClose: 10000,
-      })
+    const { error, message } = await res.json()
 
-      throw new Error(message)
-    }
+    notifications.show({
+      title: error || "Server error",
+      message: message || "Something went wrong",
+      color: "red",
+      autoClose: 10000,
+    })
+
+    throw new Error(message)
   }
 
-  if (isJson) {
-    return res.json()
-  }
-  return res.text()
+  return res.json()
 }
 
 export const fetcher = {

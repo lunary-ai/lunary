@@ -11,7 +11,7 @@ import { fetcher } from "./fetcher"
 import { useAuth } from "./auth"
 
 // TODO: put in other file
-function extendWithCosts(data: any[]) {
+function extendWithCosts(data: any[] = []) {
   return data?.map((r) => ({
     ...r,
     cost: calcRunCost(r),
@@ -308,18 +308,24 @@ export function useRun(id: string, initialData?: any) {
 }
 
 export function useRunsUsage(range, userId?: string) {
-  const userIdStr = userId ? `&user_id=${userId}` : ""
+  const userIdStr = userId ? `&userId=${userId}` : ""
   const { data: usage, isLoading } = useProjectSWR(
     `/runs/usage?days=${range}${userIdStr}`,
   )
 
+  console.log("useRunsUsage", usage)
+
   return { usage: extendWithCosts(usage), loading: isLoading }
 }
 
-export function useRunsUsageByDay(range, user_id?: string) {
+export function useRunsUsageByDay(range, userId?: string) {
+  const userIdStr = userId ? `&userId=${userId}` : ""
+
   const { data: usage, isLoading } = useProjectSWR(
-    `/runs/usage?days=${range}&user_id=${user_id}&daily=true`,
+    `/runs/usage?days=${range}${userIdStr}&daily=true`,
   )
+
+  console.log("useRunsUsageByDay", usage)
 
   return { dailyUsage: extendWithCosts(usage), loading: isLoading }
 }
