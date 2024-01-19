@@ -16,10 +16,10 @@ auth.post("/signup", async (ctx: Context) => {
     email: z.string().email(),
     password: z.string().min(8),
     name: z.string(),
-    orgName: z.string(),
-    projectName: z.string(),
-    employeeCount: z.string(),
-    orgId: z.string().optional(),
+    orgName: z.string().optional(),
+    projectName: z.string().optional(),
+    employeeCount: z.string().optional(),
+    orgId: z.string(),
     signupMethod: z.enum(["signup", "join"]),
   })
 
@@ -33,6 +33,13 @@ auth.post("/signup", async (ctx: Context) => {
     orgId,
     signupMethod,
   } = bodySchema.parse(ctx.request.body)
+
+  const [existingUser] = await sql`
+    select * from account where email = ${email}
+  `
+  if (existingUser) {
+    ctx.throw(400, "User already exists")
+  }
 
   if (signupMethod === "signup") {
     const { user, org } = await sql.begin(async (sql) => {
@@ -108,7 +115,7 @@ auth.post("/signup", async (ctx: Context) => {
       role: "member",
       verified: true,
     }
-    const [user] = await sql`insert into profile ${sql(newUser)} returning *`
+    const [user] = await sql`insert into account ${sql(newUser)} returning *`
 
     const token = await signJwt({
       userId: user.id,
