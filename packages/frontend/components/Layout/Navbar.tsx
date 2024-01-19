@@ -106,7 +106,7 @@ export default function Navbar() {
           </Button>
         ) : (
           <>
-            {!user?.verified && (
+            {user && !user?.verified && (
               <Group
                 bg="orange.9"
                 h={24}
