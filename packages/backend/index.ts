@@ -11,7 +11,6 @@ import { setupCronJobs } from "./utils/cron"
 import { checkDbConnection } from "./utils/db"
 import { z } from "zod"
 import { authMiddleware } from "./api/v1/auth/utils"
-// import Sentry from "./utils/sentry"
 
 await checkDbConnection()
 setupCronJobs()
@@ -19,14 +18,6 @@ setupCronJobs()
 const app = new Koa()
 
 app.use(async (ctx, next) => {
-  // Sentry.setContext("request", {
-  //   method: ctx.method,
-  //   url: ctx.url,
-  //   body: ctx.request.body,
-  //   query: ctx.query,
-  //   headers: ctx.headers,
-  // })
-
   try {
     await next()
   } catch (error: any) {
@@ -37,8 +28,6 @@ app.use(async (ctx, next) => {
       ctx.body = error.errors[0]
       return
     }
-
-    // Sentry.captureException(error)
 
     ctx.status = error.statusCode || error.status || 500
     ctx.body = {
