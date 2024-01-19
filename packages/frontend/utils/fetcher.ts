@@ -51,7 +51,7 @@ async function del(path) {
 }
 
 async function handleResponse(res: Response) {
-  const contentType = res.headers.get("Content-Type")
+  // const contentType = res.headers.get("Content-Type")
 
   const isLoginPage = Router.pathname === "/login"
 

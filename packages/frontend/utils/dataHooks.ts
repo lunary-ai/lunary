@@ -313,8 +313,6 @@ export function useRunsUsage(range, userId?: string) {
     `/runs/usage?days=${range}${userIdStr}`,
   )
 
-  console.log("useRunsUsage", usage)
-
   return { usage: extendWithCosts(usage), loading: isLoading }
 }
 
@@ -324,8 +322,6 @@ export function useRunsUsageByDay(range, userId?: string) {
   const { data: usage, isLoading } = useProjectSWR(
     `/runs/usage?days=${range}${userIdStr}&daily=true`,
   )
-
-  console.log("useRunsUsageByDay", usage)
 
   return { dailyUsage: extendWithCosts(usage), loading: isLoading }
 }
