@@ -34,8 +34,8 @@ const MODEL_COSTS: ModelCost[] = [
   },
   {
     models: ["text-davinci-003"],
-    inputCost: 0.002,
-    outputCost: 0.002,
+    inputCost: 0.02,
+    outputCost: 0.02,
   },
   {
     models: ["gpt-4-1106", "gpt-4-vision"],
@@ -54,13 +54,13 @@ const MODEL_COSTS: ModelCost[] = [
   },
   {
     models: ["claude-instant-1", "claude-instant-v1"],
-    inputCost: 0.00163,
-    outputCost: 0.00551,
+    inputCost: 0.0008,
+    outputCost: 0.0024,
   },
   {
     models: ["claude-2", "claude-v2", "claude-1", "claude-v1"],
-    inputCost: 0.01102,
-    outputCost: 0.03268,
+    inputCost: 0.008,
+    outputCost: 0.024,
   },
   {
     models: ["text-bison", "chat-bison", "code-bison", "codechat-bison"],
@@ -103,7 +103,7 @@ export function calcRunCost(run: any) {
   if (!modelCost) return 0
 
   const promptTokens = run.promptTokens || 0
-  const completionTokens = run.completionToken || 0
+  const completionTokens = run.completionTokens || 0
 
   const inputCost = (modelCost.inputCost * promptTokens) / 1000
   const outputCost = (modelCost.outputCost * completionTokens) / 1000
