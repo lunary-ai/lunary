@@ -44,15 +44,15 @@ export function AuthProvider({ children }) {
 
   const isSignedIn = useMemo(() => checkJwt(jwt), [jwt])
 
-  function signOut() {
+  function doSignOut() {
     removeJwt()
-    Router.push("/")
+    Router.push("/login")
   }
 
   useEffect(() => {
-    window.addEventListener(SIGN_OUT_EVENT, signOut)
+    window.addEventListener(SIGN_OUT_EVENT, doSignOut)
     return () => {
-      window.removeEventListener(SIGN_OUT_EVENT, signOut)
+      window.removeEventListener(SIGN_OUT_EVENT, doSignOut)
     }
   }, [])
 

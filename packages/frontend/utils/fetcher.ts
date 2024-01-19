@@ -57,7 +57,7 @@ async function handleResponse(res: Response) {
 
   if (!res.ok) {
     if (res.status === 401 && !isLoginPage) {
-      signOut()
+      return signOut()
     }
     if (isJson) {
       const { error, message } = await res.json()
