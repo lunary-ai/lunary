@@ -90,17 +90,23 @@ const MODEL_COSTS: ModelCost[] = [
 ]
 
 export function calcRunCost(run: any) {
-  if (run.endedAt && run.duration < 0.01 * 1000) return 0 // cached llm calls
-  if (run.type !== "llm" || !run.name) return 0
+  if (run.endedAt && run.duration < 0.01 * 1000) return null // cached llm calls
+  if (run.type !== "llm" || !run.name) return null
 
   const modelCost = MODEL_COSTS.find((c) =>
-    c.models.find((m) =>
+    c.models.find((m) => {
+      const cleanedName = run.name
+        .toLowerCase()
+        .replaceAll("gpt-35", "gpt-3.5")
+        .replaceAll("gpt4", "gpt-4")
+        .replaceAll("gpt3", "gpt-3")
+
       // Azure models have a different naming scheme
-      run.name?.replaceAll("gpt-35", "gpt-3.5").includes(m),
-    ),
+      return cleanedName.includes(m) || m.includes(cleanedName)
+    }),
   )
 
-  if (!modelCost) return 0
+  if (!modelCost) return null
 
   const promptTokens = run.promptTokens || 0
   const completionTokens = run.completionTokens || 0
