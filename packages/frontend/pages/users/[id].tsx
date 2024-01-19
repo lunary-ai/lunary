@@ -103,7 +103,7 @@ export default function UserDetails({}) {
 
       <Title order={2}>Latest Activity</Title>
 
-      <Box h={1000}>
+      <Box mah={1000}>
         <DataTable
           type="user-details"
           data={logs}
