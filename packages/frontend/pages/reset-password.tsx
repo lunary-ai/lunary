@@ -8,20 +8,17 @@ import {
 } from "@mantine/core"
 
 import { useForm } from "@mantine/form"
-import { IconAnalyze, IconCheck } from "@tabler/icons-react"
+import { IconAnalyze } from "@tabler/icons-react"
 
-import errorHandler from "@/utils/errorHandler"
-import { notifications } from "@mantine/notifications"
 import { NextSeo } from "next-seo"
-import Router, { useRouter } from "next/router"
-import { useEffect, useState } from "react"
-import { submitNewPassword } from "supertokens-web-js/recipe/emailpassword"
+import { useRouter } from "next/router"
+import { useState } from "react"
 import { fetcher } from "@/utils/fetcher"
 import { useAuth } from "@/utils/auth"
 import analytics from "@/utils/analytics"
 
 export default function UpdatePassword() {
-  const {setJwt} = useAuth()
+  const { setJwt } = useAuth()
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
@@ -68,6 +65,7 @@ export default function UpdatePassword() {
       console.error(error)
       setLoading(false)
     }
+  }
 
   return (
     <Container py={100} size={600}>
