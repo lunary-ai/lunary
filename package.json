@@ -16,7 +16,8 @@
   },
   "private": "true",
   "scripts": {
-    "dev": "concurrently \"cd packages/frontend && bun dev\" \"cd packages/backend && bun dev\""
+    "dev": "concurrently \"cd packages/frontend && bun dev\" \"cd packages/backend && bun dev\"",
+    "backend:start": "cd packages/backend && bun start"
   },
   "type": "module",
   "workspaces": [
