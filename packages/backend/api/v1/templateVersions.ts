@@ -9,7 +9,7 @@ const versions = new Router({
 
 // Use unCameledSql to avoid camel casing the results so they're compatible with openai's SDK
 // Otherwise it returns stuff like maxTokens instead of max_tokens and OpenAI breaks
-const unCameledSql = postgres(process.env.DB_URI!)
+const unCameledSql = postgres(process.env.DATABASE_URL!)
 
 versions.get("/latest", async (ctx: Context) => {
   // Route used by SDK to fetch the latest version of a template
