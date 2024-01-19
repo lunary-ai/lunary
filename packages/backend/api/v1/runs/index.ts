@@ -163,6 +163,8 @@ runs.get("/:id", async (ctx) => {
   const { projectId } = ctx.state
   const { id } = ctx.params
 
+  console.log({ projectId, id })
+
   const [row] = await sql`
       select
         r.*,
@@ -175,11 +177,13 @@ runs.get("/:id", async (ctx) => {
           run r
           left join external_user eu on r.external_user_id = eu.id
       where
-          r.project_id = ${projectId as string}
+          r.project_id = ${projectId}
           and r.id = ${id}
       order by
           r.created_at desc
       limit 1`
+
+  console.log({ row })
 
   ctx.body = formatRun(row)
 })

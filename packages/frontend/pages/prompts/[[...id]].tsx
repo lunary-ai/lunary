@@ -7,6 +7,7 @@ import {
   Button,
   Card,
   Checkbox,
+  Flex,
   Grid,
   Group,
   JsonInput,
@@ -135,9 +136,7 @@ function Playground() {
     } else if (clone) {
       const fetchRun = async () => {
         setLoading(true)
-        const run = await fetcher.get(`/runs/${clone}/`)
-
-        console.log(run)
+        const run = await fetcher.get(`/runs/${clone}?projectId=${project?.id}`)
 
         if (run?.input) {
           setTemplateVersion({ ...templateVersion, content: run.input })
@@ -365,18 +364,10 @@ function Playground() {
       buttonLabel="Create first template"
       onClick={createTemplate}
     >
-      <Grid
-        w="100%"
-        overflow="hidden"
-        styles={{
-          inner: {
-            flexWrap: "nowrap",
-            height: "calc(100vh - var(--navbar-size))",
-          },
-        }}
-      >
-        <Grid.Col
-          span={2}
+      <Flex w="100%" h="100%">
+        <Box
+          flex={`0 0 200px`}
+          py="sm"
           style={{ borderRight: "1px solid rgba(120, 120, 120, 0.1)" }}
         >
           <TemplateList
@@ -388,10 +379,10 @@ function Playground() {
             activeVersion={templateVersion}
             switchTemplateVersion={switchTemplateVersion}
           />
-        </Grid.Col>
-        <Grid.Col
-          span={7}
+        </Box>
+        <Box
           p="xl"
+          flex="1"
           style={{ borderRight: "1px solid rgba(120, 120, 120, 0.1)" }}
         >
           <Box mah="100%" style={{ overflowY: "auto" }}>
@@ -405,8 +396,8 @@ function Playground() {
               error={error}
             />
           </Box>
-        </Grid.Col>
-        <Grid.Col span={3} p="xl">
+        </Box>
+        <Box p="xl">
           <Stack style={{ zIndex: 0 }}>
             <Group>
               <Button
@@ -749,8 +740,8 @@ function Playground() {
               </Button>
             )}
           </Stack>
-        </Grid.Col>
-      </Grid>
+        </Box>
+      </Flex>
     </Empty>
   )
 }
