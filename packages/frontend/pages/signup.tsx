@@ -114,15 +114,12 @@ function SignupPage() {
 
     const token = body.token
     if (token) {
-      console.log(token)
       auth.setJwt(token)
 
       notifications.show({
         icon: <IconCheck size={18} />,
         color: "teal",
         title: "Email sent",
-        autoClose: false,
-        withCloseButton: false,
         message: "Check your emails for the confirmation link",
       })
     }

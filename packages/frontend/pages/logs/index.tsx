@@ -204,7 +204,6 @@ export default function Logs() {
   }, [])
 
   useDidUpdate(() => {
-    console.log("type", type)
     // Change type filter and remove filters imcompatible with type
     const newFilters = editFilter(filters, "type", { type }).filter(
       (f) =>
@@ -217,7 +216,6 @@ export default function Logs() {
 
   // Convert search query to filter
   useDidUpdate(() => {
-    console.log("query", query)
     const newFilters = editFilter(
       filters,
       "search",

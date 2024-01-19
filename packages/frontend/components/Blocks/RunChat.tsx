@@ -18,6 +18,7 @@ import { formatDateTime } from "@/utils/format"
 import Router from "next/router"
 import { IconNeedleThread } from "@tabler/icons-react"
 import { useLogs, useProjectSWR } from "@/utils/dataHooks"
+import useSWR from "swr"
 
 const OUTPUT_ROLES = ["assistant", "ai", "tool"]
 const INPUT_ROLES = ["user"]
@@ -140,7 +141,9 @@ function RunsChat({ runs }) {
 }
 
 export function ChatReplay({ run }) {
-  const { data: runs, loading } = useLogs({ type: "chat", parentRunId: run.id })
+  const { data: runs, isLoading: loading } = useProjectSWR(
+    run.id && `/runs?type=chat&parentRunId=${run.id}`,
+  )
 
   const { data: user } = useProjectSWR(run.user?.id && `/users/${run.user?.id}`)
 

@@ -9,7 +9,6 @@ import {
   ingestChatEvent,
 } from "@/utils/ingest"
 import { calcRunCost } from "@/utils/calcCost"
-import { completeRunUsage } from "@/utils/countToken"
 
 const router = new Router()
 

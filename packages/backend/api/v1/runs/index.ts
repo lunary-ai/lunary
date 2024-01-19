@@ -112,6 +112,7 @@ runs.get("/", async (ctx) => {
           left join external_user eu on r.external_user_id = eu.id
       where
           r.project_id = ${projectId}
+          ${parentRunFilter}
           and ${filtersQuery}
       order by
           r.created_at desc

@@ -187,6 +187,7 @@ export const ingestChatEvent = async (
   // note; in any case, update the ID to the latest received
 
   // check if previous run exists. for that, look at the last run of the thread
+
   const [previousRun] = await sql`
     SELECT * FROM run
     WHERE parent_run_id = ${parentRunId!}
@@ -213,6 +214,7 @@ export const ingestChatEvent = async (
     delete previousRun.inputText
     delete previousRun.outputText
     delete previousRun.errorText
+    delete previousRun.duration
 
     if (isRetry) {
       // copy previousRun data into new run with new id, set `sibling_of` to previousRun, clear output, then:
