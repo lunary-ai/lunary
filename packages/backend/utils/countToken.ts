@@ -1,7 +1,6 @@
 import cl100k_base from "js-tiktoken/ranks/cl100k_base"
 
 import { Tiktoken, getEncodingNameForModel } from "js-tiktoken/lite"
-import { H } from "@highlight-run/next/server"
 import sql from "./db"
 import { ensureIsUUID } from "./ingest"
 
@@ -108,7 +107,6 @@ async function countGoogleTokens(model, input) {
     return data.tokenCount
   } catch (e) {
     console.error("Error while counting tokens with Google API", e)
-    H.consumeError(e)
     return
   }
 }
@@ -306,7 +304,6 @@ export async function completeRunUsage(run) {
     return tokensUsage
   } catch (e) {
     console.error(`Error while computing tokens usage for run ${run.runId}`, e)
-    H.consumeError(e)
     return run.tokensUsage
   }
 }
