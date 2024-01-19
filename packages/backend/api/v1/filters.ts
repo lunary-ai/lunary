@@ -20,8 +20,6 @@ filters.get("/models", async (ctx: Context) => {
       project_id
   `
 
-  console.log(rows, projectId)
-
   ctx.body = rows.map((row) => row.name)
 })
 

@@ -12,12 +12,11 @@ import {
 import { useForm } from "@mantine/form"
 import { IconAnalyze, IconAt } from "@tabler/icons-react"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 import analytics from "@/utils/analytics"
 import { fetcher } from "@/utils/fetcher"
 import { NextSeo } from "next-seo"
-import Router from "next/router"
 import { useAuth } from "@/utils/auth"
 
 function LoginPage() {
