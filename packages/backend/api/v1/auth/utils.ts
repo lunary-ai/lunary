@@ -56,22 +56,22 @@ const publicRoutes = [
   "/v1/users/send-verification",
 ]
 export async function authMiddleware(ctx: Context, next: Next) {
-  try {
-    ctx.state.projectId = ctx.request?.query?.projectId as string
+  ctx.state.projectId = ctx.request?.query?.projectId as string
 
-    const isPublicRoute = publicRoutes.some((route) =>
-      typeof route === "string" ? route === ctx.path : route.test(ctx.path),
-    )
+  const isPublicRoute = publicRoutes.some((route) =>
+    typeof route === "string" ? route === ctx.path : route.test(ctx.path),
+  )
 
-    if (isPublicRoute) {
-      const bearerToken = ctx.request?.headers?.authorization?.split(" ")[1]
-      if (typeof bearerToken === "string") {
-        ctx.state.projectId = bearerToken
-      }
-      await next()
-      return
+  if (isPublicRoute) {
+    const bearerToken = ctx.request?.headers?.authorization?.split(" ")[1]
+    if (typeof bearerToken === "string") {
+      ctx.state.projectId = bearerToken
     }
+    await next()
+    return
+  }
 
+  try {
     const authHeader = ctx.request.headers.authorization
     if (!authHeader) {
       throw new Error("Authorization header is missing")
@@ -106,9 +106,5 @@ export async function authMiddleware(ctx: Context, next: Next) {
     return
   }
 
-  try {
-    await next()
-  } catch (error) {
-    console.error(error)
-  }
+  await next()
 }

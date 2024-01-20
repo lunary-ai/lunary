@@ -11,36 +11,15 @@ import { setupCronJobs } from "./utils/cron"
 import { checkDbConnection } from "./utils/db"
 import { z } from "zod"
 import { authMiddleware } from "./api/v1/auth/utils"
+import { errorMiddleware } from "./utils/errors"
 
 await checkDbConnection()
 setupCronJobs()
 
 const app = new Koa()
 
-app.use(async (ctx, next) => {
-  try {
-    await next()
-    const status = ctx.status || 404
-    if (status === 404) {
-      ctx.throw("Not Found", 404)
-    }
-  } catch (error: any) {
-    console.error(error)
-
-    if (error instanceof z.ZodError) {
-      ctx.status = 422
-      ctx.body = error.errors[0]
-      return
-    }
-
-    ctx.status = error.statusCode || error.status || 500
-    ctx.body = {
-      message: error.message || "An unexpected error occurred",
-    }
-  }
-})
-
 // MiddleWares
+app.use(errorMiddleware)
 app.use(logger())
 app.use(corsMiddleware)
 app.use(authMiddleware)

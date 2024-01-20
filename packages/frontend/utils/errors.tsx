@@ -26,13 +26,13 @@ const errorHandler = async (promise: Promise<any>) => {
   }
 }
 
-export function showErrorNotification(error: unknown) {
+export function showErrorNotification(title: any, message?: string) {
   notifications.show({
     icon: <IconX size={18} />,
+    title: title || "Server error",
+    message: message || "Something went wrong",
     color: "red",
-    title: "Error",
     autoClose: 10000,
-    message: error.message || error,
   })
 }
 

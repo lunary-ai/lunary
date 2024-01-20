@@ -1,6 +1,7 @@
 import { notifications } from "@mantine/notifications"
 import Router from "next/router"
 import { signOut } from "./auth"
+import { showErrorNotification } from "./errors"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -60,13 +61,7 @@ async function handleResponse(res: Response) {
 
     const { error, message } = await res.json()
 
-    notifications.show({
-      title: error || "Server error",
-      message: message || "Something went wrong",
-      color: "red",
-      autoClose: 10000,
-    })
-
+    showErrorNotification(error, message)
     throw new Error(message)
   }
 
