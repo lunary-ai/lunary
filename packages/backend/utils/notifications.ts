@@ -1,6 +1,7 @@
 const threads = {
   revenue: 3,
   users: 13,
+  bugs: 19,
 }
 
 export const sendTelegramMessage = async (msg, thread) => {
