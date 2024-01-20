@@ -26,6 +26,9 @@ export default function Layout({ children }: { children: ReactNode }) {
     "/reset-password",
   ].find((path) => router.pathname.startsWith(path))
 
+  const isSignupLastStep =
+    router.pathname === "/signup" && router.query.step === "3"
+
   const isMaintenanceMode =
     process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "on" &&
     router.pathname !== "/maintenance"
@@ -38,8 +41,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       return
     }
 
-    // If it contains ?done in the URL, it's the latest step in the signup flow
-    if (isAuthPage && isSignedIn && !router.asPath.includes("?done")) {
+    if (isAuthPage && isSignedIn && !isSignupLastStep) {
       router.push("/")
       return
     }

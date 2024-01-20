@@ -1,4 +1,4 @@
-import Router from "next/router"
+import Router, { useRouter } from "next/router"
 import { useEffect, useState } from "react"
 
 import {
@@ -44,11 +44,11 @@ import analytics from "@/utils/analytics"
 import { fetcher } from "@/utils/fetcher"
 import { NextSeo } from "next-seo"
 import { useAuth } from "@/utils/auth"
-import { showErrorNotification } from "@/utils/errors"
 
 function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
+  const router = useRouter()
 
   const auth = useAuth()
 
@@ -123,9 +123,6 @@ function SignupPage() {
         message: "Check your emails for the confirmation link",
       })
 
-      nextStep()
-    } catch (error) {
-      console.error(error)
       analytics.track("Signup", {
         email,
         name,
@@ -133,9 +130,12 @@ function SignupPage() {
         orgName,
         employeeCount,
       })
-      showErrorNotification(error)
+      nextStep()
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   function nextStep() {
@@ -154,6 +154,8 @@ function SignupPage() {
     }
 
     setStep(step + 1)
+    router.query.step = String(step + 1)
+    router.push(router)
   }
 
   useEffect(() => {
