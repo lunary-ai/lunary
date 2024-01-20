@@ -11,7 +11,7 @@ import {
 import { useForm } from "@mantine/form"
 import { IconAnalyze, IconCheck } from "@tabler/icons-react"
 
-import errorHandler from "@/utils/errorHandler"
+import errorHandler from "@/utils/errors"
 import { NextSeo } from "next-seo"
 import Router from "next/router"
 import { useState } from "react"

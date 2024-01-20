@@ -10,7 +10,7 @@ import { useOrg, useUser } from "@/utils/dataHooks"
 import { notifications } from "@mantine/notifications"
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
-import errorHandler from "../../utils/errorHandler"
+import errorHandler from "../../utils/errors"
 import { openUpgrade } from "./UpgradeModal"
 
 export default function Navbar() {
