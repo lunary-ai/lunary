@@ -7,9 +7,12 @@ export const formatCost = (cost = 0) => {
 }
 
 export function formatLargeNumber(number) {
-  return new Intl.NumberFormat(navigator?.language, {
-    notation: "compact",
-  }).format(number || 0)
+  return new Intl.NumberFormat(
+    typeof window !== "undefined" ? window.navigator.language : "en-US",
+    {
+      notation: "compact",
+    },
+  ).format(number || 0)
 }
 
 export function formatAppUser(user) {
@@ -18,12 +21,15 @@ export function formatAppUser(user) {
 }
 
 export function formatDateTime(date) {
-  return new Date(date).toLocaleString(navigator?.language, {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-  })
+  return new Date(date).toLocaleString(
+    typeof window !== "undefined" ? window.navigator.language : "en-US",
+    {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+    },
+  )
 }
 
 export function msToTime(duration) {
