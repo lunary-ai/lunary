@@ -23,7 +23,9 @@ export function timeColumn(timeColumn, label = "Time") {
       const isToday =
         new Date(info.getValue()).toDateString() === new Date().toDateString()
       if (isToday) {
-        return new Date(info.getValue()).toLocaleTimeString(navigator.language)
+        return new Date(info.getValue()).toLocaleTimeString(
+          typeof window !== "undefined" ? window.navigator.language : "en-US",
+        )
       } else {
         return formatDateTime(info.getValue())
       }
