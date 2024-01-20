@@ -46,7 +46,7 @@ export function AuthProvider({ children }) {
 
   function doSignOut() {
     removeJwt()
-    Router.push("/login")
+    // Router.push("/login")
   }
 
   useEffect(() => {

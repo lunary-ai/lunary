@@ -32,7 +32,7 @@ function LoginPage() {
     validate: {
       email: (val) => (/^\S+@\S+$/.test(val) ? null : "Invalid email"),
       password: (val) =>
-        val.length < 5 ? "Password must be at least 5 characters" : null,
+        val.length < 6 ? "Password must be at least 6 characters" : null,
     },
   })
 

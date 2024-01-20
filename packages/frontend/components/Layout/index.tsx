@@ -33,9 +33,13 @@ export default function Layout({ children }: { children: ReactNode }) {
   const { isSignedIn } = useAuth()
 
   useEffect(() => {
-    if (isMaintenanceMode) return router.push("/maintenance")
+    if (isMaintenanceMode) {
+      router.push("/maintenance")
+      return
+    }
 
-    if (isAuthPage && isSignedIn) {
+    // If it contains ?done in the URL, it's the latest step in the signup flow
+    if (isAuthPage && isSignedIn && !router.asPath.includes("?done")) {
       router.push("/")
       return
     }

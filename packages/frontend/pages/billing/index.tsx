@@ -18,13 +18,7 @@ import { IconBolt, IconInfoTriangle } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { Label, ReferenceLine } from "recharts"
 import useSWR from "swr"
-
-const eventsAllowance = {
-  free: 1000,
-  pro: 4000,
-  unlimited: 100000,
-  custom: 1000000,
-}
+import { EVENTS_ALLOWANCE } from "@/utils/pricing"
 
 export default function Billing() {
   const { org, loading } = useOrg()
@@ -125,7 +119,7 @@ export default function Billing() {
           chartExtra={
             plan && (
               <ReferenceLine
-                y={eventsAllowance[plan]}
+                y={EVENTS_ALLOWANCE[plan]}
                 fontWeight={600}
                 ifOverflow="extendDomain"
                 stroke="red"
@@ -137,7 +131,7 @@ export default function Billing() {
                   fill="#d00"
                   style={{ padding: "2px" }}
                 >
-                  {`plan limit (${eventsAllowance[plan]} / day)`}
+                  {`plan limit (${EVENTS_ALLOWANCE[plan]} / day)`}
                 </Label>
               </ReferenceLine>
             )

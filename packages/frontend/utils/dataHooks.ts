@@ -135,7 +135,9 @@ export function useOrg() {
 }
 
 export function useProjects() {
-  const { data, isLoading, mutate } = useSWR(() => `/projects`)
+  const { isSignedIn } = useAuth()
+
+  const { data, isLoading, mutate } = useSWR(() => isSignedIn && `/projects`)
 
   const { trigger: insertMutation } = useSWRMutation(
     () => `/projects`,

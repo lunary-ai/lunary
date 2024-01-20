@@ -7,7 +7,7 @@ const errorHandler = async (promise: Promise<any>) => {
     let res = await promise
 
     // automatically JSON parse fetch
-    if (res.json) res = await res.json()
+    if (res?.json) res = await res.json()
 
     const { data, error } = res
     if (error) throw error

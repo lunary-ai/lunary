@@ -26,12 +26,13 @@ import Confetti from "react-confetti"
 import sql from "@/lib/db"
 import { useAuth } from "@/utils/auth"
 import { fetcher } from "@/utils/fetcher"
+import { SEAT_ALLOWANCE } from "@/utils/pricing"
 
 export async function getServerSideProps(context) {
   const { orgId } = context.query
 
   const [org] = await sql`
-    SELECT name FROM org WHERE id = ${orgId}
+    SELECT name, plan FROM org WHERE id = ${orgId}
   `
 
   const [orgUserCountResult] = await sql`
@@ -39,7 +40,9 @@ export async function getServerSideProps(context) {
   `
   const orgUserCount = orgUserCountResult.count
 
-  return { props: { orgUserCount, orgName: org?.name, orgId } }
+  return {
+    props: { orgUserCount, orgName: org?.name, orgId, orgPlan: org?.plan },
+  }
 }
 
 function TeamFull({ orgName }) {
@@ -70,7 +73,7 @@ function TeamFull({ orgName }) {
     </Container>
   )
 }
-export default function Join({ orgUserCount, orgName, orgId }) {
+export default function Join({ orgUserCount, orgName, orgId, orgPlan }) {
   const auth = useAuth()
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
@@ -86,7 +89,7 @@ export default function Join({ orgUserCount, orgName, orgId }) {
       email: (val) => (/^\S+@\S+$/.test(val) ? null : "Invalid email"),
       name: (val) => (val.length <= 2 ? "Your name that short :) ?" : null),
       password: (val) =>
-        val.length < 8 ? "Password must be at least 8 characters" : null,
+        val.length < 6 ? "Password must be at least 6 characters" : null,
     },
   })
 
@@ -101,22 +104,25 @@ export default function Join({ orgUserCount, orgName, orgId }) {
   }) => {
     setLoading(true)
 
-    const body = await fetcher.post("/auth/signup", {
-      arg: {
-        email,
-        password,
-        name,
-        orgId,
-        signupMethod: "join",
-      },
-    })
+    const body = await errorHandler(
+      fetcher.post("/auth/signup", {
+        arg: {
+          email,
+          password,
+          name,
+          orgId,
+          signupMethod: "join",
+        },
+      }),
+    )
 
-    const token = body.token
-    if (token) {
-      auth.setJwt(token)
+    if (body?.token) {
+      // add ?done to the url
+      Router.replace("/signup?done")
+      auth.setJwt(body.token)
+
+      analytics.track("Join", { email, name })
     }
-
-    analytics.track("Join", { email, name })
 
     setLoading(false)
   }
@@ -134,7 +140,7 @@ export default function Join({ orgUserCount, orgName, orgId }) {
     setStep(step + 1)
   }
 
-  if (orgUserCount > 4) {
+  if (orgUserCount >= SEAT_ALLOWANCE[orgPlan]) {
     return <TeamFull orgName={orgName} />
   }
 
