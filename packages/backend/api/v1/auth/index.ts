@@ -14,12 +14,12 @@ const auth = new Router({
 auth.post("/signup", async (ctx: Context) => {
   const bodySchema = z.object({
     email: z.string().email(),
-    password: z.string().min(8),
+    password: z.string().min(6),
     name: z.string(),
     orgName: z.string().optional(),
     projectName: z.string().optional(),
     employeeCount: z.string().optional(),
-    orgId: z.string(),
+    orgId: z.string().optional(),
     signupMethod: z.enum(["signup", "join"]),
   })
 
@@ -38,7 +38,7 @@ auth.post("/signup", async (ctx: Context) => {
     select * from account where email = ${email}
   `
   if (existingUser) {
-    ctx.throw(400, "User already exists")
+    ctx.throw(403, "User already exists")
   }
 
   if (signupMethod === "signup") {
@@ -139,7 +139,7 @@ auth.post("/login", async (ctx: Context) => {
     select * from account where email = ${email}
   `
   if (!user) {
-    ctx.status = 401
+    ctx.status = 403
     ctx.body = { error: "Unauthorized", message: "Invalid email or password" }
     return
   }
@@ -147,7 +147,7 @@ auth.post("/login", async (ctx: Context) => {
   const passwordCorrect = await verifyPassword(password, user.passwordHash)
 
   if (!passwordCorrect) {
-    ctx.status = 401
+    ctx.status = 403
     ctx.body = { error: "Unauthorized", message: "Invalid email or password" }
     return
   }

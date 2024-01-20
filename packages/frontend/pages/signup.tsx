@@ -44,6 +44,7 @@ import analytics from "@/utils/analytics"
 import { fetcher } from "@/utils/fetcher"
 import { NextSeo } from "next-seo"
 import { useAuth } from "@/utils/auth"
+import errorHandler from "@/utils/errorHandler"
 
 function SignupPage() {
   const [loading, setLoading] = useState(false)
@@ -71,12 +72,8 @@ function SignupPage() {
       employeeCount: (val) =>
         val.length <= 1 ? "Please select a value" : null,
       password: (val) => {
-        if (val.length < 8) {
-          return "Password must be at least 8 characters"
-        }
-
-        if (!/\d/.test(val)) {
-          return "Password must contain at least one number"
+        if (val.length < 6) {
+          return "Password must be at least 6 characters"
         }
         return null
       },
@@ -112,9 +109,11 @@ function SignupPage() {
       },
     })
 
-    const token = body.token
-    if (token) {
-      auth.setJwt(token)
+    if (body?.token) {
+      // add ?done to the url
+      Router.replace("/signup?done")
+
+      auth.setJwt(body.token)
 
       notifications.show({
         icon: <IconCheck size={18} />,
@@ -122,17 +121,17 @@ function SignupPage() {
         title: "Email sent",
         message: "Check your emails for the confirmation link",
       })
+
+      analytics.track("Signup", {
+        email,
+        name,
+        projectName,
+        orgName,
+        employeeCount,
+      })
+
+      nextStep()
     }
-
-    analytics.track("Signup", {
-      email,
-      name,
-      projectName,
-      orgName,
-      employeeCount,
-    })
-
-    nextStep()
 
     setLoading(false)
   }

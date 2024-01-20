@@ -1,10 +1,12 @@
+import { useAuth } from "@/utils/auth"
 import { Center, Loader } from "@mantine/core"
 import Router from "next/router"
 import { useEffect } from "react"
 
 function IndexPage() {
+  const { isSignedIn } = useAuth()
   useEffect(() => {
-    Router.replace("/analytics")
+    Router.replace(isSignedIn ? "/analytics" : "/login")
   }, [])
 
   return (

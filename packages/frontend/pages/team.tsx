@@ -22,19 +22,13 @@ import { NextSeo } from "next-seo"
 
 import { useOrg, useUser } from "@/utils/dataHooks"
 import { openUpgrade } from "../components/Layout/UpgradeModal"
-
-const seatAllowance = {
-  free: 1,
-  pro: 4,
-  unlimited: 10,
-  custom: 100,
-}
+import { SEAT_ALLOWANCE } from "@/utils/pricing"
 
 function Invite() {
   const { org } = useOrg()
   const plan = org?.plan
 
-  const allowedSeats = seatAllowance[plan]
+  const allowedSeats = SEAT_ALLOWANCE[plan]
 
   if (org?.users?.length >= allowedSeats) {
     return (
@@ -148,11 +142,11 @@ export default function Team() {
                 Seat Allowance
               </Text>
               <Text fz="lg" fw={500}>
-                {org?.users?.length} / {seatAllowance[org?.plan]} users
+                {org?.users?.length} / {SEAT_ALLOWANCE[org?.plan]} users
               </Text>
               <Progress
                 value={
-                  ((org?.users?.length || 0) / seatAllowance[org?.plan]) * 100
+                  ((org?.users?.length || 0) / SEAT_ALLOWANCE[org?.plan]) * 100
                 }
                 size="lg"
                 color="orange"
