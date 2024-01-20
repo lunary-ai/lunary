@@ -53,6 +53,10 @@ function LoginPage() {
         },
       })
 
+      if (!token) {
+        throw new Error("No token received")
+      }
+
       auth.setJwt(token)
 
       analytics.track("Login", { method: "password" })

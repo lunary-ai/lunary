@@ -44,7 +44,7 @@ import analytics from "@/utils/analytics"
 import { fetcher } from "@/utils/fetcher"
 import { NextSeo } from "next-seo"
 import { useAuth } from "@/utils/auth"
-import errorHandler from "@/utils/errorHandler"
+import { showErrorNotification } from "@/utils/errors"
 
 function SignupPage() {
   const [loading, setLoading] = useState(false)
@@ -80,7 +80,7 @@ function SignupPage() {
     },
   })
 
-  const handleSignup = async ({
+  async function handleSignup({
     email,
     password,
     name,
@@ -94,26 +94,27 @@ function SignupPage() {
     projectName: string
     orgName: string
     employeeCount: string
-  }) => {
+  }) {
     setLoading(true)
 
-    const body = await fetcher.post("/auth/signup", {
-      arg: {
-        email,
-        password,
-        name,
-        projectName,
-        orgName,
-        employeeCount,
-        signupMethod: "signup",
-      },
-    })
+    try {
+      const { token } = await fetcher.post("/auth/signup", {
+        arg: {
+          email,
+          password,
+          name,
+          projectName,
+          orgName,
+          employeeCount,
+          signupMethod: "signup",
+        },
+      })
 
-    if (body?.token) {
-      // add ?done to the url
-      Router.replace("/signup?done")
+      if (!token) {
+        throw new Error("No token received")
+      }
 
-      auth.setJwt(body.token)
+      auth.setJwt(token)
 
       notifications.show({
         icon: <IconCheck size={18} />,
@@ -122,6 +123,9 @@ function SignupPage() {
         message: "Check your emails for the confirmation link",
       })
 
+      nextStep()
+    } catch (error) {
+      console.error(error)
       analytics.track("Signup", {
         email,
         name,
@@ -129,14 +133,12 @@ function SignupPage() {
         orgName,
         employeeCount,
       })
-
-      nextStep()
+      showErrorNotification(error)
     }
-
     setLoading(false)
   }
 
-  const nextStep = () => {
+  function nextStep() {
     if (step === 1) {
       if (
         ["email", "name", "password"].some(

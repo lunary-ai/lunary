@@ -1,6 +1,6 @@
 import LineChart from "@/components/Analytics/LineChart"
 import { UpgradePlans, openUpgrade } from "@/components/Layout/UpgradeModal"
-import errorHandler from "@/utils/errorHandler"
+import errorHandler from "@/utils/errors"
 import { useOrg } from "@/utils/dataHooks"
 import {
   Alert,

@@ -22,7 +22,7 @@ import {
 
 import { useCallback, useEffect, useState } from "react"
 import SocialProof from "../Blocks/SocialProof"
-import errorHandler from "@/utils/errorHandler"
+import errorHandler from "@/utils/errors"
 import { notifications } from "@mantine/notifications"
 import { capitalize } from "@/utils/format"
 import { useOrg } from "@/utils/dataHooks"
