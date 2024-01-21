@@ -39,9 +39,6 @@ export default function UpdatePassword() {
           return "Password must be at least 6 characters"
         }
 
-        if (!/\d/.test(val)) {
-          return "Password must contain at least one number"
-        }
         return null
       },
     },
@@ -51,10 +48,10 @@ export default function UpdatePassword() {
     setLoading(true)
 
     try {
-      const { token } = await fetcher.post("/auth/login", {
+      const { token } = await fetcher.post("/auth/reset-password", {
         arg: {
-          email,
           password,
+          token: router.query.token,
         },
       })
 
