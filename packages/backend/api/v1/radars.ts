@@ -8,7 +8,7 @@ const radars = new Router({
 radars.get("/", async (ctx) => {
   const { projectId } = ctx.state
   const rows = await sql`
-    SELECT * FROM radars WHERE projectId = ${projectId}
+    SELECT * FROM radar WHERE projectId = ${projectId}
   `
   ctx.body = rows
 })
@@ -23,7 +23,7 @@ radars.post("/", async (ctx) => {
   }
 
   const [row] = await sql`
-    INSERT INTO radars ${sql({
+    INSERT INTO radar ${sql({
       description,
       view: sql.json(view),
       checks: sql.json(checks),
@@ -40,7 +40,7 @@ radars.delete("/:radarId", async (ctx) => {
   const { radarId } = ctx.params
 
   const [row] = await sql`
-    DELETE FROM radars
+    DELETE FROM radar
     WHERE id = ${radarId}
     AND projectId = ${projectId}
     RETURNING *

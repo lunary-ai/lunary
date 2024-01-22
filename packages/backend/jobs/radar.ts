@@ -78,7 +78,7 @@ export default async function radarJob() {
 
   // Get all runs from orgs in plan 'unlimited' or 'custom'
 
-  const radars = await sql`SELECT * FROM radars`
+  const radars = await sql`SELECT * FROM radar`
 
   // For each radar, get all checks
 
