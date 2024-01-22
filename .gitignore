@@ -178,3 +178,7 @@ dist
 
 
 bun.lockb
+
+
+*.Dockerfile
+docker-compose*
