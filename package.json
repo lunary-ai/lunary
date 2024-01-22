@@ -16,7 +16,7 @@
   },
   "private": "true",
   "scripts": {
-    "dev": "concurrently bun run frontend:dev && bun run backend:dev",
+    "dev": "concurrently \"bun run frontend:dev\" \"bun run backend:dev\"",
     "frontend:start": "cd packages/frontend && bun run start",
     "frontend:dev": "cd packages/frontend && bun run start",
     "backend:start": "cd packages/backend && bun start",
