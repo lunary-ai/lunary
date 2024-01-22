@@ -1,7 +1,12 @@
 import analytics from "@/utils/analytics"
 
 import { ContextModalProps, modals } from "@mantine/modals"
-import { IconAnalyze, IconCheck, IconCircleCheck } from "@tabler/icons-react"
+import {
+  IconAnalyze,
+  IconBrandDocker,
+  IconCheck,
+  IconCircleCheck,
+} from "@tabler/icons-react"
 
 import {
   Badge,
@@ -147,6 +152,7 @@ export const UpgradePlans = ({ highlight }: { highlight?: string }) => {
       <SegmentedControl
         w={"fit-content"}
         mx="auto"
+        size="sm"
         display="flex"
         mb="lg"
         value={period}
@@ -168,36 +174,38 @@ export const UpgradePlans = ({ highlight }: { highlight?: string }) => {
       />
 
       <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-        <Card p="xl" withBorder shadow="md">
-          <Stack>
-            <Group>
-              <Text
-                tt="uppercase"
-                fw="bold"
-                variant="gradient"
-                gradient={{ from: "indigo", to: "cyan", deg: 45 }}
-              >
-                Pro
-              </Text>
-              {plan === "pro" && (
-                <Text size="lg" c="dimmed" ta="center">
-                  (current plan)
+        <Card p="lg" withBorder>
+          <Stack justify="space-between" h="100%">
+            <Stack>
+              <Group>
+                <Text
+                  tt="uppercase"
+                  fw="bold"
+                  variant="gradient"
+                  gradient={{ from: "indigo", to: "cyan", deg: 45 }}
+                >
+                  Pro
                 </Text>
-              )}
-            </Group>
+                {plan === "pro" && (
+                  <Text size="lg" c="dimmed" ta="center">
+                    (current plan)
+                  </Text>
+                )}
+              </Group>
 
-            <RenderPrice price={29} period={period} />
+              <RenderPrice price={29} period={period} />
 
-            <PlanFeatures
-              features={[
-                { id: "events", title: "4k events per day" },
-                { id: "team", title: "4 team members" },
-                { id: "apps", title: "Unlimited Projects" },
-                { id: "analytics", title: "Advanced Analytics" },
-                { id: "export", title: "Exports & API" },
-              ]}
-              highlight={highlight}
-            />
+              <PlanFeatures
+                features={[
+                  { id: "events", title: "4k events per day" },
+                  { id: "team", title: "4 team members" },
+                  { id: "apps", title: "Unlimited Projects" },
+                  { id: "analytics", title: "Advanced Analytics" },
+                  { id: "export", title: "Exports & API" },
+                ]}
+                highlight={highlight}
+              />
+            </Stack>
 
             <Button
               size="md"
@@ -212,7 +220,7 @@ export const UpgradePlans = ({ highlight }: { highlight?: string }) => {
           </Stack>
         </Card>
 
-        <Card p="xl" withBorder>
+        <Card p="lg" withBorder>
           <Group gap={6}>
             <Text
               tt="uppercase"
@@ -229,7 +237,7 @@ export const UpgradePlans = ({ highlight }: { highlight?: string }) => {
             )}
           </Group>
 
-          <Group my={20} align="center" gap={10}>
+          <Group mb={20} mt={10} align="center" gap={10}>
             <RenderPrice price={120} period={period} />
           </Group>
 
@@ -256,11 +264,36 @@ export const UpgradePlans = ({ highlight }: { highlight?: string }) => {
             loading={loading === "unlimited"}
             gradient={{ from: "teal", to: "lime", deg: 45 }}
             color="teal"
-            mt="auto"
+            mt="sm"
             {...buttonText("unlimited")}
           />
         </Card>
       </SimpleGrid>
+      <Card withBorder mt="md" py="sm">
+        <Group align="center" justify="space-between">
+          <Group align="center" gap={10}>
+            <IconBrandDocker size={20} />
+            <Text>
+              <Text fw="bold" span>
+                New
+              </Text>
+              : 1-click Docker images for self-hosting. Starting from $120 /
+              month.
+            </Text>
+          </Group>
+          <Button
+            component="a"
+            href="https://lunary.ai/pricing/self-hosted"
+            target="_blank"
+            variant="gradient"
+            color="teal"
+            px={20}
+            size="xs"
+          >
+            Pricing
+          </Button>
+        </Group>
+      </Card>
     </>
   )
 }
@@ -286,15 +319,15 @@ const UpgradeModal = ({
           10x your AI's performance
         </Title>
 
-        <Text size="lg" mt="xs" mb="lg" fw={500}>
+        <Text size="lg" mt={0} mb="lg" fw={500}>
           {`Remove limits & unlock powerful features to improve your AI's
         quality.`}
         </Text>
       </Stack>
       <UpgradePlans highlight={innerProps?.highlight} />
       <Text ta="center" size="sm" mt="lg">
-        Cancel your subscription at any time with just 1 click.{" "}
-        <Mark>30 days</Mark> money-back guarantee.
+        Cancel any time with just 1 click. <Mark>30 days</Mark> money-back
+        guarantee.
       </Text>
       <Card w="fit-content" mx="auto" mt="md">
         <SocialProof />

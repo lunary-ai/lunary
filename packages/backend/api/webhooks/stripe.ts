@@ -1,4 +1,3 @@
-import { buffer } from "micro"
 import { sendEmail } from "@/utils/sendEmail"
 import {
   CANCELED_EMAIL,
@@ -18,6 +17,7 @@ const router = new Router({
 })
 
 const setupSubscription = async (object) => {
+  console.log("🔔 setupSubscription", object)
   const { customer, client_reference_id, mode, subscription, metadata } = object
 
   if (mode !== "subscription") return
@@ -29,20 +29,24 @@ const setupSubscription = async (object) => {
   const plan = metadata.plan || "pro"
   const period = metadata.period || "monthly"
 
+  const orgData = {
+    stripeCustomer: customer,
+    stripeSubscription: subscription,
+    canceled: false,
+    plan,
+    planPeriod: period,
+    limited: false,
+    playAllowance: plan === "pro" ? 15 : 1000,
+  }
+
   const [org] = await sql`
     UPDATE org
-    SET stripe_customer = ${customer},
-        stripe_subscription = ${subscription},
-        canceled = false,
-        plan = ${plan},
-        plan_period = ${period},
-        limited = false,
-        play_allowance = ${plan === "pro" ? 15 : 1000}
+    SET ${sql(orgData)}
     WHERE id = ${client_reference_id}
     RETURNING id, name
   `
 
-  const [users] = await sql`
+  const users = await sql`
     select email, name
     from account
     where org_id = ${org.id}
@@ -74,6 +78,10 @@ const updateSubscription = async (object) => {
     WHERE stripe_customer = ${customer}
   `
 
+  if (!currentOrg) {
+    throw new Error("Org not found")
+  }
+
   if (
     currentOrg.plan === plan &&
     currentOrg.plan_period === period &&
@@ -85,9 +93,7 @@ const updateSubscription = async (object) => {
 
   const [org] = await sql`
     UPDATE org
-    SET plan = ${plan},
-        plan_period = ${period},
-        canceled = ${canceled}
+    SET ${sql({ plan, planPeriod: period, canceled })}
     WHERE stripe_customer = ${customer}
     RETURNING id, name
   `
@@ -122,9 +128,7 @@ const cancelSubscription = async (object) => {
 
   const [org] = await sql`
     UPDATE org
-    SET plan = 'free',
-        canceled = false,
-        stripe_subscription = NULL
+    SET ${sql({ plan: "free", canceled: false, stripeSubscription: null })} 
     WHERE stripe_customer = ${customer}
     RETURNING id, name
   `
@@ -148,23 +152,19 @@ const cancelSubscription = async (object) => {
 }
 
 router.post("/", async (ctx: Context) => {
-  const buf = await buffer(ctx.req)
-  const sig = ctx.req.headers["stripe-signature"]
+  const sig = ctx.request.headers["stripe-signature"]
 
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
   let event: Stripe.Event
 
   try {
-    if (!sig || !webhookSecret) return
-    event = stripe.webhooks.constructEvent(buf, sig, webhookSecret)
-  } catch (err: any) {
-    console.log(`❌ Error message: ${err.message}`)
-    ctx.status = 400
-    ctx.body = `Webhook Error: ${err.message}`
-    return
-  }
+    if (!sig || !webhookSecret) throw new Error("Missing Stripe signature")
+    event = await stripe.webhooks.constructEventAsync(
+      ctx.request.rawBody,
+      sig,
+      webhookSecret,
+    )
 
-  try {
     switch (event.type) {
       case "checkout.session.completed":
         // reconcile user with customer using client_reference_id
