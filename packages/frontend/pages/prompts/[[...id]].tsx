@@ -365,7 +365,7 @@ function Playground() {
     >
       <Flex w="100%" h="100%">
         <Box
-          flex={`0 0 200px`}
+          flex={`0 0 230px`}
           py="sm"
           style={{ borderRight: "1px solid rgba(120, 120, 120, 0.1)" }}
         >

@@ -47,10 +47,11 @@ interface SessionData {
 
 const publicRoutes = [
   new RegExp(`/auth/.+`),
+  "/api/report", // required legacy route
+  "/api/v1/template", // legacy template route
   "/v1/health",
   "/v1/health-check",
   "/webhooks/stripe",
-  "/api/report", // required legacy route
   "/auth/user/password/reset",
   `/v1/runs/ingest`,
   `/v1/template_versions/latest`,

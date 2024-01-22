@@ -37,8 +37,7 @@ const nextConfig = {
       },
       {
         source: "/api/v1/template",
-        destination:
-          process.env.NEXT_PUBLIC_API_URL + "/api/v1/template_versions/latest",
+        destination: process.env.NEXT_PUBLIC_API_URL + "/api/v1/template",
       },
     ]
   },

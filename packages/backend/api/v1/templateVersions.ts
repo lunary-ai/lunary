@@ -20,6 +20,8 @@ versions.get("/latest", async (ctx: Context) => {
     slug: string
   }
 
+  console.log("params", projectId, slug)
+
   const [latestVersion] = await unCameledSql`
     SELECT t.id, t.slug, t.mode, tv.id, tv.content, tv.extra, tv.created_at, tv.version
     FROM template t
@@ -33,7 +35,7 @@ versions.get("/latest", async (ctx: Context) => {
   `
 
   if (!latestVersion) {
-    ctx.throw(404)
+    ctx.throw("Template not found, is the project ID correct?", 404)
   }
 
   ctx.body = latestVersion

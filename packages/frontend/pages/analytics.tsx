@@ -197,7 +197,7 @@ export default function Analytics() {
                     blocked={true}
                     props={["users"]}
                     range={range}
-                    title="Cost per user"
+                    title="Avg User Cost"
                     height={230}
                   />
 

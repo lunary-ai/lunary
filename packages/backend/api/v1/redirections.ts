@@ -18,4 +18,26 @@ redirections.post("/api/report", async (ctx: Context) => {
   ctx.body = result
 })
 
+// LEGACY TEMPLATE ROUTE
+redirections.get("/api/v1/template", async (ctx: Context) => {
+  const { slug, app_id } = ctx.request.query as {
+    slug: string
+    app_id: string
+  }
+
+  // For some reasons redirects don't work with the JS SDK
+  // So we need to fetch the latest template version here
+
+  const latestTemplateVersion = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/v1/template_versions/latest?slug=${slug}`,
+    {
+      headers: {
+        Authorization: `Bearer ${app_id}`,
+      },
+    },
+  ).then((res) => res.json())
+
+  ctx.body = latestTemplateVersion
+})
+
 export default redirections
