@@ -9,7 +9,7 @@ export function setupCronJobs() {
     async () => {
       console.log("JOB: refreshing materialized views")
       await sql`refresh materialized view concurrently model_name_cache;`
-      await sql`refresh materialized view concurrently tag_cache;`
+      // await sql`refresh materialized view concurrently tag_cache;`
     },
     { name: "refresh materialized views" },
   )
