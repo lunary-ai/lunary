@@ -49,6 +49,7 @@ const publicRoutes = [
   new RegExp(`/auth/.+`),
   "/v1/health",
   "/v1/health-check",
+  "/webhooks/stripe",
   "/api/report", // required legacy route
   "/auth/user/password/reset",
   `/v1/runs/ingest`,

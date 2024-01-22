@@ -5,6 +5,7 @@ import { useOrg } from "@/utils/dataHooks"
 import {
   Alert,
   Badge,
+  Box,
   Button,
   Card,
   Container,
@@ -107,7 +108,9 @@ export default function Billing() {
         )}
 
         <Card withBorder radius="md" padding="xl">
-          <UpgradePlans />
+          <Container size="lg">
+            <UpgradePlans />
+          </Container>
         </Card>
 
         <LineChart
