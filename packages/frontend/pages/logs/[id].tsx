@@ -1,6 +1,7 @@
 import postgres from "postgres"
 import RunInputOutput from "../../components/Blocks/RunInputOutput"
-import { Container } from "@mantine/core"
+import { Container, Stack } from "@mantine/core"
+import Logo from "@/components/Blocks/Logo"
 
 const sql = postgres(process.env.DATABASE_URL!)
 
@@ -15,7 +16,6 @@ export async function getServerSideProps(context) {
     }
     return { props: { run: null } }
   } catch (error) {
-    console.error(error)
     // TODO: would probably be better to redirect to an error page, or show an alert
     return {
       redirect: {
@@ -31,11 +31,14 @@ export default function LLMCall(props) {
   const run = JSON.parse(props.run)
   return (
     <Container size="sm">
-      <RunInputOutput
-        initialRun={run}
-        withPlayground={false}
-        withShare={false}
-      />
+      <Stack gap="xl">
+        <Logo />
+        <RunInputOutput
+          initialRun={run}
+          withPlayground={false}
+          withShare={false}
+        />
+      </Stack>
     </Container>
   )
 }
