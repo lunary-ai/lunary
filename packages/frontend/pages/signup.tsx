@@ -458,7 +458,7 @@ function SignupPage() {
                       variant="outline"
                       color="teal.8"
                       component="a"
-                      href="mailto:hello@lk.com"
+                      href="mailto:hello@lunary.ai"
                       rightSection={<IconMail size={18} />}
                     >
                       Email
