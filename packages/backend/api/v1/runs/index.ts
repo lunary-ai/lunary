@@ -163,8 +163,6 @@ runs.get("/:id", async (ctx) => {
   const { projectId } = ctx.state
   const { id } = ctx.params
 
-  console.log({ projectId, id })
-
   const [row] = await sql`
       select
         r.*,
@@ -182,8 +180,6 @@ runs.get("/:id", async (ctx) => {
       order by
           r.created_at desc
       limit 1`
-
-  console.log({ row })
 
   ctx.body = formatRun(row)
 })
