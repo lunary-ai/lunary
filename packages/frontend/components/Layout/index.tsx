@@ -33,6 +33,12 @@ export default function Layout({ children }: { children: ReactNode }) {
     process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "on" &&
     router.pathname !== "/maintenance"
 
+  const isLLMCallPage = router.pathname.startsWith("/logs/[id]")
+
+  console.log(router.pathname, isLLMCallPage)
+
+  const isPublicPage = isLLMCallPage
+
   const { isSignedIn } = useAuth()
 
   useEffect(() => {
@@ -46,7 +52,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       return
     }
 
-    if (!isAuthPage && !isSignedIn) {
+    if (!isAuthPage && !isSignedIn && !isPublicPage) {
       router.push("/login")
       return
     }
@@ -56,8 +62,6 @@ export default function Layout({ children }: { children: ReactNode }) {
   const { org } = useOrg()
 
   const isPromptPage = router.pathname.startsWith("/prompt")
-  const isLLMCallPage = router.pathname.startsWith("/logs/[id]")
-  const isPublicPage = isLLMCallPage
 
   // TODO: use the custom hook
   const [projectId, setProjectId] = useLocalStorage({
