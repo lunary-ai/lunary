@@ -60,8 +60,6 @@ projects.delete("/:projectId", async (ctx: Context) => {
   if (count > 1) {
     await sql`delete from project where id = ${projectId}`
     ctx.status = 200
-    ctx.body = {}
-    return
   } else {
     ctx.status = 422
 
@@ -88,7 +86,6 @@ projects.patch("/:projectId", async (ctx: Context) => {
         id = ${projectId}
     `
   ctx.status = 200
-  ctx.body = {}
 })
 
 export default projects

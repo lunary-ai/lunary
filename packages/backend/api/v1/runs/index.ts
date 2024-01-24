@@ -203,7 +203,7 @@ runs.patch("/:id", async (ctx: Context) => {
           project_id= ${projectId as string}
           and id = ${id}`
 
-  ctx.body = {}
+  ctx.status = 200
 })
 
 runs.get("/:id/related", async (ctx) => {

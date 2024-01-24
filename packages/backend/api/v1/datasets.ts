@@ -71,20 +71,20 @@ datasets.post("/:id/runs", async (ctx: Context) => {
     where project_id = ${projectId} and id = ${id}
   `
 
-  ctx.body = {}
+  ctx.status = 201
 })
 
 datasets.del("/:id/runs/:index", async (ctx: Context) => {
   const { projectId, id, index } = ctx.params
 
-  // remove from jsonb[] the run at index
+  // remove from jsonb[] from the run at index
   await sql` 
     update dataset
     set runs = runs - ${index}, updated_at = now()
     where project_id = ${projectId} and id = ${id}
   `
 
-  ctx.body = {}
+  ctx.status = 200
 })
 
 export default datasets
