@@ -6,7 +6,10 @@ const radars = new Router({
 })
 
 radars.get("/", async (ctx) => {
+  console.log("radars")
   const { projectId } = ctx.state
+
+  console.log("projectId", projectId)
   const rows = await sql`
     SELECT * FROM radar WHERE projectId = ${projectId}
   `

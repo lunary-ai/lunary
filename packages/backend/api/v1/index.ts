@@ -10,6 +10,7 @@ import templates from "./templates"
 import users from "./users"
 import projectUsers from "./external-users"
 import sql from "@/utils/db"
+import radars from "./radars"
 
 const v1 = new Router({
   prefix: "/v1",
@@ -39,5 +40,6 @@ v1.use(templateVersions.routes())
 v1.use(filters.routes())
 v1.use(evals.routes())
 v1.use(projectUsers.routes())
+v1.use(radars.routes())
 
 export default v1
