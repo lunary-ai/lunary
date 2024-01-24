@@ -99,7 +99,6 @@ runs.get("/", async (ctx) => {
           r.project_id = ${projectId}
           ${parentRunFilter}
           and (${filtersQuery})
-  
       order by
           r.created_at desc
       limit ${Number(limit)}
