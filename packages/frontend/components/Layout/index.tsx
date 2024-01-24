@@ -35,8 +35,6 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   const isLLMCallPage = router.pathname.startsWith("/logs/[id]")
 
-  console.log(router.pathname, isLLMCallPage)
-
   const isPublicPage = isLLMCallPage
 
   const { isSignedIn } = useAuth()
