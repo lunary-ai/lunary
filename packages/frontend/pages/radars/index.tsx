@@ -22,6 +22,7 @@ import {
   Title,
 } from "@mantine/core"
 import { useSetState } from "@mantine/hooks"
+import { notifications } from "@mantine/notifications"
 import {
   IconBellBolt,
   IconListSearch,
@@ -31,9 +32,10 @@ import {
 import Router from "next/router"
 import { useState } from "react"
 import { Filter, FilterLogic } from "shared"
+import { mutate } from "swr"
 
 function NewRadarModal({ opened, onClose }) {
-  const { insert } = useRadars()
+  const { insert, mutate } = useRadars()
 
   const [newRadar, setNewRadar] = useSetState<{
     description: string
@@ -58,8 +60,36 @@ function NewRadarModal({ opened, onClose }) {
   const [saving, setSaving] = useState(false)
 
   const save = async () => {
-    // setSaving(true)
-    await insert(newRadar)
+    setSaving(true)
+
+    try {
+      if (!newRadar.description) {
+        throw new Error("Please enter a name for the radar.")
+      }
+
+      if (newRadar.view.length <= 1 || newRadar.checks.length <= 1) {
+        throw new Error("Please add checks")
+      }
+
+      await insert(newRadar)
+
+      notifications.show({
+        title: "Radar created",
+        message: "Please allow a few minutes for the radar to start showing.",
+        color: "teal",
+      })
+
+      await mutate()
+
+      onClose()
+    } catch (e) {
+      notifications.show({
+        title: "Error",
+        message: e.message,
+        color: "red",
+      })
+    }
+    setSaving(false)
   }
 
   return (
@@ -132,7 +162,9 @@ function NewRadarModal({ opened, onClose }) {
   )
 }
 
-function View({ name, filters, percentMatch }) {
+function RadarCard({ name, checks, passed, failed }) {
+  const percentMatch = Math.round((failed / (passed + failed)) * 100)
+
   return (
     <Card p="md" withBorder>
       <Stack>
@@ -190,11 +222,13 @@ function View({ name, filters, percentMatch }) {
         </Flex>
         <Flex justify="space-between">
           <Group>
-            {filters.map((filter) => (
-              <Badge key={filter} variant="light" color="blue">
-                {filter}
-              </Badge>
-            ))}
+            {checks
+              ?.filter((f) => typeof f !== "string" && !Array.isArray(f))
+              .map((filter) => (
+                <Badge key={filter.id} variant="light" color="blue">
+                  {filter.id}
+                </Badge>
+              ))}
           </Group>
 
           <Progress.Root size={20} w={300}>
@@ -220,6 +254,7 @@ const FEATURE_LIST = [
 
 export default function Radar() {
   const [modalOpened, setModalOpened] = useState(false)
+  const { radars } = useRadars()
 
   return (
     <Paywall
@@ -264,33 +299,43 @@ export default function Radar() {
           />
 
           <Stack gap="xl">
-            <View
+            {radars?.map((radar) => (
+              <RadarCard
+                key={radar.id}
+                name={radar.description}
+                checks={radar.checks}
+                passed={radar.passed}
+                failed={radar.failed}
+              />
+            ))
+            /* <RadarCard
               name="Unhelpful responses"
               filters={["feedback", "helpfulness"]}
               percentMatch={28}
             />
-            <View
+            <RadarCard
               name="Slow or failed responses"
               filters={["duration", "status"]}
               percentMatch={14}
             />
-            <View
+            <RadarCard
               name="Costly LLM calls"
               filters={["cost"]}
               percentMatch={11}
             />
 
-            <View
+            <RadarCard
               name="Contains Personal Identifiable Information (PII)"
               filters={["email", "phone", "address"]}
               percentMatch={9}
             />
 
-            <View
+            <RadarCard
               name="Contains hatred or profanity"
               filters={["profanity", "hatred", "feedback"]}
               percentMatch={1}
-            />
+            /> */
+            }
           </Stack>
         </Stack>
       </Container>

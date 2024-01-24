@@ -8,44 +8,69 @@ type RadarResults = {
 }
 
 // TODO: follow AND/OR nested logic
-const runChecksOnRun = async (radar, run) => {
+const runChecksOnRun = async (radar: any, run: any) => {
   const checks: FilterLogic[] = radar.checks
-  const results = []
 
-  for (const check of checks) {
-    if (typeof check === "string") {
-      // Handle AND or OR
-      continue
-    }
-    try {
-      const { id, params } = check
+  // const results = []
+  let passed = true
 
-      const filter = FILTERS.find((f) => f.id === id)
+  const filterSql = convertFiltersToSQL(checks)
 
-      if (!filter) {
-        console.error(`Filter ${id} not found`)
-        continue
-      }
+  // for (const check of checks) {
+  //   if (typeof check === "string") {
+  //     // Handle AND or OR
+  //     continue
+  //   }
+  //   if (Array.isArray(check)) {
+  //     // Handle nested AND/OR
+  //     continue
+  //   }
+  //   try {
+  //     const { id, params } = check
 
-      const result = await filter.evaluator(run, paramsData)
+  //     const filter = FILTERS.find((f) => f.id === id)
 
-      results.push({
-        filterId: id,
-        ...result,
-      })
-    } catch (e) {
-      console.error(e)
-    }
+  //     if (!filter) {
+  //       console.error(`Filter ${id} not found`)
+  //       continue
+  //     }
+
+  //     if (!filter.sql) {
+  //       console.error(`Filter ${id} has no sql function`)
+  //       continue
+  //     }
+
+  // const result = await filter.evaluator(run, paramsData)
+
+  // const filterSql = filter.sql(sql, params)
+
+  // make virtual row to check if filter passes
+  const [result] =
+    await sql`select * from run where id = ${run.id} and (${filterSql})`
+
+  if (!result) {
+    passed = false
   }
 
-  const [row] = await sql`
-    INSERT INTO radar_results ${sql({
+  console.log(`Run ${run.id} passed: ${passed}`)
+
+  //     results.push({
+  //       filterId: id,
+  //       passed: !!result,
+  //     })
+  //   } catch (e) {
+  //     console.error(e)
+  //   }
+  // }
+
+  await sql`
+    insert into radar_result ${sql({
       radarId: radar.id,
       runId: run.id,
-      results,
-      passed: results.every((r) => r.passed),
+      // results,
+      passed,
     })}
-    RETURNING *
+    returning *
   `
 }
 
@@ -56,7 +81,7 @@ const BATCH_SIZE = 500
 async function getRadarRuns(radar: any) {
   const filtersQuery = convertFiltersToSQL(radar.view)
 
-  const excludedRunsSubquery = sql`select run_id from radar_results where radar_id = ${radar.id}`
+  const excludedRunsSubquery = sql`select run_id from radar_result where radar_id = ${radar.id}`
   return await sql`
     select * from run
     where 
@@ -87,9 +112,11 @@ export default async function radarJob() {
     console.log(`Analyzing ${runs.length} runs for radar ${radar.id}`)
 
     for (const run of runs) {
-      //   await runChecksOnRun(radar, run)
+      await runChecksOnRun(radar, run)
     }
   }
 
   jobRunning = false
 }
+
+await radarJob()

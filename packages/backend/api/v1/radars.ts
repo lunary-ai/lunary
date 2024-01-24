@@ -6,12 +6,16 @@ const radars = new Router({
 })
 
 radars.get("/", async (ctx) => {
-  console.log("radars")
   const { projectId } = ctx.state
 
-  console.log("projectId", projectId)
   const rows = await sql`
-    SELECT * FROM radar WHERE projectId = ${projectId}
+    SELECT r.*, 
+      COUNT(rr.id) FILTER (WHERE rr.passed = true) AS passed,
+      COUNT(rr.id) FILTER (WHERE rr.passed = false) AS failed
+    FROM radar r
+    LEFT JOIN radar_result rr ON rr.radar_id = r.id
+    WHERE r.project_id = ${projectId}
+    GROUP BY r.id
   `
   ctx.body = rows
 })
@@ -30,8 +34,9 @@ radars.post("/", async (ctx) => {
       description,
       view: sql.json(view),
       checks: sql.json(checks),
+      // alerts: sql.json(alerts),
       projectId,
-      createdBy: userId,
+      ownerId: userId,
     })}
     RETURNING *
   `
@@ -45,7 +50,7 @@ radars.delete("/:radarId", async (ctx) => {
   const [row] = await sql`
     DELETE FROM radar
     WHERE id = ${radarId}
-    AND projectId = ${projectId}
+    AND project_id = ${projectId}
     RETURNING *
   `
   ctx.body = row

@@ -148,11 +148,22 @@ export default function FiltersModal({
                         filter={filter}
                         isSelected={selected.some((s) => s.id === filter.id)}
                         onItemClick={(id) => {
-                          const filter = filters.find((f) => f.id === id)
-
-                          if (filter) {
-                            setSelected((selected) => [...selected, filter])
-                          }
+                          setSelected((currentSelected) => {
+                            const isSelected = currentSelected.some(
+                              (item) => item.id === id,
+                            )
+                            if (isSelected) {
+                              return currentSelected.filter(
+                                (item) => item.id !== id,
+                              )
+                            }
+                            const itemToAdd = filters.find(
+                              (item) => item.id === id,
+                            )
+                            return itemToAdd
+                              ? [...currentSelected, itemToAdd]
+                              : currentSelected
+                          })
                         }}
                       />
                     ))}
