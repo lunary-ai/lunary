@@ -12,6 +12,7 @@ import { checkDbConnection } from "./utils/db"
 import { z } from "zod"
 import { authMiddleware } from "./api/v1/auth/utils"
 import { errorMiddleware } from "./utils/errors"
+import { setDefaultBody } from "./utils/misc"
 
 await checkDbConnection()
 setupCronJobs()
@@ -23,8 +24,8 @@ app.use(errorMiddleware)
 app.use(logger())
 app.use(corsMiddleware)
 app.use(authMiddleware)
-
 app.use(bodyParser())
+app.use(setDefaultBody)
 
 // Routes
 app.use(redirections.routes())
