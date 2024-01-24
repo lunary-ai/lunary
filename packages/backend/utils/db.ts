@@ -7,6 +7,9 @@ const sql = postgres(process.env.DATABASE_URL!, {
     ...postgres.camel,
     undefined: null,
   },
+  connection: {
+    application_name: `postgres.js-${process.env.NODE_ENV === "production" ? "production" : "development"}`,
+  },
 })
 
 export async function checkDbConnection() {
