@@ -7,6 +7,7 @@ import {
   Code,
   Grid,
   Group,
+  Loader,
   Stack,
   Text,
   ThemeIcon,
@@ -166,7 +167,7 @@ export default function AgentRun({}) {
 
   const { data: relatedRuns } = useProjectSWR(`/runs/${id}/related`)
 
-  if (!run) return <>Loading...</>
+  if (!run) return <Loader />
 
   const totalTokens = relatedRuns?.reduce((acc, run) => {
     if (run?.type === "llm") {
