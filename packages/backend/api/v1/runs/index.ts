@@ -73,7 +73,7 @@ runs.get("/", async (ctx) => {
       : sql`type = 'llm'` // default to type llm
 
   const {
-    limit = "100",
+    limit = "50",
     page = "0",
     parentRunId,
     exportType,

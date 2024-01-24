@@ -55,6 +55,7 @@ import Empty from "../../components/Layout/Empty"
 import { ProjectContext } from "../../utils/context"
 import FilterPicker from "@/components/Filters/Picker"
 import { FilterLogic, deserializeLogic, serializeLogic } from "shared"
+import { fetcher } from "@/utils/fetcher"
 
 const columns = {
   llm: [
@@ -93,31 +94,6 @@ const columns = {
     tagsColumn(),
     feedbackColumn(true),
   ],
-}
-
-function buildExportUrl(
-  projectId: string,
-  query: string | null,
-  models: string[],
-  tags: string[],
-) {
-  const url = new URL("/api/generation/export", window.location.origin)
-
-  url.searchParams.append("projectId", projectId)
-
-  if (query) {
-    url.searchParams.append("search", query)
-  }
-
-  if (models.length > 0) {
-    url.searchParams.append("models", models.join(","))
-  }
-
-  if (tags.length > 0) {
-    url.searchParams.append("tags", tags.join(","))
-  }
-
-  return url.toString()
 }
 
 const FILTERS_BY_TYPE = {
@@ -223,7 +199,7 @@ export default function Logs() {
     setFilters(newFilters)
   }, [query])
 
-  const exportUrl = projectId ? buildExportUrl(projectId, query, [], []) : ""
+  const exportUrl = `/runs?${serializedFilters}&projectId=${projectId}`
 
   const showBar =
     showFilterBar ||
@@ -231,21 +207,18 @@ export default function Logs() {
       .length > 0
 
   function exportButton(url: string) {
-    if (org?.plan !== "free") {
-      return {
-        href: url,
-        component: "a",
-        onClick: () => {
-          analytics.trackOnce("ClickExport")
-        },
-      }
-    } else {
-      return {
-        onClick: () => {
-          analytics.trackOnce("ClickExport")
+    return {
+      component: "a",
+      onClick: () => {
+        analytics.trackOnce("ClickExport")
+
+        if (org?.plan === "free") {
           openUpgrade("export")
-        },
-      }
+          return
+        }
+
+        fetcher.getFile(url)
+      },
     }
   }
 
@@ -338,15 +311,14 @@ export default function Logs() {
                   <Menu.Dropdown>
                     <Menu.Item
                       leftSection={<IconFileExport size={16} />}
-                      {...exportButton(exportUrl)}
+                      {...exportButton(exportUrl + "&exportType=csv")}
                     >
                       Export to CSV
                     </Menu.Item>
                     <Menu.Item
                       color="dark"
-                      disabled
                       leftSection={<IconBraces size={16} />}
-                      // {...exportButton(exportUrl)}
+                      {...exportButton(exportUrl + "&exportType=jsonl")}
                     >
                       Export to JSONL
                     </Menu.Item>
