@@ -20,6 +20,37 @@ function get(path) {
   }).then(handleResponse)
 }
 
+async function getFile(path) {
+  const res = await fetch(buildUrl(path), {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("auth-token")}`,
+    },
+  })
+
+  if (!res.ok) {
+    const { error, message } = await res.json()
+
+    showErrorNotification(error, message)
+    throw new Error(message)
+  }
+
+  const contentType = res.headers.get("Content-Type") as string
+  const fileExtension = contentType.split("/")[1]
+
+  const blob = await res.blob()
+  const url = window.URL.createObjectURL(blob)
+
+  const a = document.createElement("a")
+  a.href = url
+  a.download = `export.${fileExtension}`
+
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+
+  window.URL.revokeObjectURL(url)
+}
+
 function post(path, { arg }) {
   return fetch(buildUrl(path), {
     method: "POST",
@@ -70,6 +101,7 @@ async function handleResponse(res: Response) {
 
 export const fetcher = {
   get,
+  getFile,
   post,
   patch,
   delete: del,

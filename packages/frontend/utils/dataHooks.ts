@@ -264,21 +264,19 @@ export function useTemplateVersion(id: string) {
   }
 }
 
+export function buildLogsAPIUrl(data = {}) {
+  let url = `/runs?`
+
+  const params = Object.entries(data)
+    .map(([key, value]) => {
+      return `${key}=${value}`
+    })
+    .join("&")
+
+  return url + params
+}
+
 export function useLogs(params: any) {
-  // const PAGE_SIZE = 1
-
-  function buildLogsAPIUrl(data = {}) {
-    let url = `/runs?`
-
-    const params = Object.entries(data)
-      .map(([key, value]) => {
-        return `${key}=${value}`
-      })
-      .join("&")
-
-    return url + params
-  }
-
   return useProjectInfiniteSWR(buildLogsAPIUrl(params))
 }
 
