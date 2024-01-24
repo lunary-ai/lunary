@@ -20,6 +20,7 @@ import { NextSeo } from "next-seo"
 import { Label, ReferenceLine } from "recharts"
 import useSWR from "swr"
 import { EVENTS_ALLOWANCE } from "@/utils/pricing"
+import { fetcher } from "@/utils/fetcher"
 
 export default function Billing() {
   const { org, loading } = useOrg()
@@ -32,23 +33,10 @@ export default function Billing() {
 
   const redirectToCustomerPortal = async () => {
     const data = await errorHandler(
-      (
-        await fetch("/api/user/stripe-portal", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            customer: org?.stripeCustomer,
-            origin: window.location.origin,
-          }),
-        })
-      ).json(),
+      await fetcher.get(`/orgs/${org.id}/billing-portal`),
     )
 
     if (!data) return
-
-    // redirect to stripe portal
 
     window.location.href = data.url
   }

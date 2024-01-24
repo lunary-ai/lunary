@@ -73,7 +73,7 @@ runs.get("/", async (ctx) => {
       : sql`type = 'llm'` // default to type llm
 
   const {
-    limit = "100",
+    limit = "50",
     page = "0",
     parentRunId,
     exportType,
@@ -99,7 +99,6 @@ runs.get("/", async (ctx) => {
           r.project_id = ${projectId}
           ${parentRunFilter}
           and (${filtersQuery})
-  
       order by
           r.created_at desc
       limit ${Number(limit)}

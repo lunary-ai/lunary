@@ -33,7 +33,7 @@ import { capitalize } from "@/utils/format"
 import { useOrg } from "@/utils/dataHooks"
 import { fetcher } from "@/utils/fetcher"
 
-const PlanFeatures = ({ features, highlight }) => {
+function PlanFeatures({ features, highlight }) {
   return (
     <List
       spacing="sm"
@@ -57,7 +57,7 @@ const PlanFeatures = ({ features, highlight }) => {
   )
 }
 
-const RenderPrice = ({ price, period }) => {
+function RenderPrice({ price, period }) {
   // year = 2 months free
   const discount = period === "yearly" ? 2 / 12 : 0
   const monthlyPrice = Math.floor(price * (1 - discount))
@@ -83,7 +83,7 @@ const RenderPrice = ({ price, period }) => {
   )
 }
 
-export const UpgradePlans = ({ highlight }: { highlight?: string }) => {
+export function UpgradePlans({ highlight }: { highlight?: string }) {
   const { org } = useOrg()
   const [period, setPeriod] = useState("monthly")
   const [loading, setLoading] = useState(null)
@@ -298,11 +298,11 @@ export const UpgradePlans = ({ highlight }: { highlight?: string }) => {
   )
 }
 
-const UpgradeModal = ({
+function UpgradeModal({
   context,
   id,
   innerProps,
-}: ContextModalProps<{ highlight: string }>) => {
+}: ContextModalProps<{ highlight: string }>) {
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
       analytics.track("Upgrade Modal")
@@ -336,7 +336,7 @@ const UpgradeModal = ({
   )
 }
 
-export const openUpgrade = (highlight?: string) => {
+export function openUpgrade(highlight?: string) {
   modals.openContextModal({
     modal: "upgrade",
     withCloseButton: false,

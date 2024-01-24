@@ -6,6 +6,7 @@ export async function fileExport(
   exportType: "csv" | "jsonl",
   ctx: Context,
 ) {
+  console.log(exportType)
   if (exportType === "csv") {
     const data = rows.length > 0 ? rows : [{}]
     const parser = new Parser()
@@ -20,7 +21,7 @@ export async function fileExport(
     const jsonl = rows.map((row) => JSON.stringify(row)).join("\n")
     const buffer = Buffer.from(jsonl, "utf-8")
 
-    ctx.set("Content-Type", "application/jsonlines")
+    ctx.set("Content-Type", "application/jsonl")
     ctx.set("Content-Disposition", 'attachment; filename="export.jsonl"')
 
     ctx.body = buffer
