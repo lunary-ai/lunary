@@ -79,6 +79,29 @@ orgs.get("/usage", async (ctx: Context) => {
   ctx.body = rows
 })
 
+orgs.get("/billing-portal", async (ctx: Context) => {
+  const orgId = ctx.state.orgId as string
+
+  const [org] = await sql`
+    select
+      id,
+      stripe_customer
+    from
+      org
+    where
+      id = ${orgId}
+  `
+
+  if (!org) throw new Error("Org not found")
+
+  const session = await stripe.billingPortal.sessions.create({
+    customer: org.stripeCustomer,
+    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing`,
+  })
+
+  ctx.body = { url: session.url }
+})
+
 orgs.post("/upgrade", async (ctx: Context) => {
   const orgId = ctx.state.orgId as string
 
