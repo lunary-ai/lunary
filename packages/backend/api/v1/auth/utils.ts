@@ -104,7 +104,7 @@ export async function authMiddleware(ctx: Context, next: Next) {
     ctx.status = 401
     ctx.body = {
       error: "Unauthorized",
-      message: "Invalid or expired token",
+      message: "You must be logged in to access this page",
     }
     return
   }
