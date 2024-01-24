@@ -6,6 +6,7 @@ import Router from "koa-router"
 import { z } from "zod"
 import { hashPassword, signJwt, verifyJwt, verifyPassword } from "./utils"
 import { sendEmail } from "@/utils/sendEmail"
+import { insertDefaultApiKeys } from "../projects/utils"
 
 const auth = new Router({
   prefix: "/auth",
@@ -68,21 +69,7 @@ auth.post("/signup", async (ctx: Context) => {
       const [project] = await sql`
         insert into project ${sql(newProject)} returning *
       `
-
-      const apiKeys = [
-        {
-          type: "public",
-          projectId: project.id,
-        },
-        {
-          type: "private",
-          projectId: project.id,
-        },
-      ]
-
-      await sql`
-        insert into api_key ${sql(apiKeys)}
-      `
+      await insertDefaultApiKeys(project.id)
 
       return { user, org }
     })

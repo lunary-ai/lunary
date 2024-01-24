@@ -2,6 +2,7 @@ import sql from "@/utils/db"
 import Context from "@/utils/koa"
 import Router from "koa-router"
 import { z } from "zod"
+import { insertDefaultApiKeys } from "./utils"
 
 const projects = new Router({
   prefix: "/projects",
@@ -44,6 +45,8 @@ projects.post("/", async (ctx: Context) => {
   const [project] =
     await sql`insert into project ${sql(newProject)} returning *`
 
+  await insertDefaultApiKeys(project.id)
+
   ctx.body = project
 })
 
@@ -57,6 +60,7 @@ projects.delete("/:projectId", async (ctx: Context) => {
   if (count > 1) {
     await sql`delete from project where id = ${projectId}`
     ctx.status = 200
+    ctx.body = {}
     return
   } else {
     ctx.status = 422

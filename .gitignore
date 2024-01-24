@@ -179,6 +179,7 @@ dist
 
 bun.lockb
 
-
 *.Dockerfile
 docker-compose*
+
+package-lock.json

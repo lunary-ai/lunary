@@ -1,6 +1,5 @@
 import Router from "koa-router"
 import orgs from "./orgs"
-import projects from "./projects"
 import datasets from "./datasets"
 import evals from "./evals"
 import filters from "./filters"
@@ -10,6 +9,7 @@ import templates from "./templates"
 import users from "./users"
 import projectUsers from "./external-users"
 import sql from "@/utils/db"
+import projects from "./projects"
 
 const v1 = new Router({
   prefix: "/v1",
