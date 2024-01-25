@@ -31,7 +31,13 @@ export type Filter = {
   params: (FilterParam | FilterLabel)[]
   disableInEvals?: boolean
   onlyInEvals?: boolean
-  evaluator?: (run: any, params: any) => Promise<any>
+  evaluator?: (
+    run: any,
+    params: any,
+  ) => Promise<{
+    passed: boolean
+    details?: any
+  }>
   sql?: (sqlClient: any, params: any) => any // todo: postgres sql type
 }
 
@@ -52,15 +58,3 @@ type LogicNode = ["AND" | "OR", ...LogicElement[]]
 export type LogicElement = LogicData | LogicNode
 
 export type FilterLogic = LogicNode
-
-// const testLogic: FilterLogic = [
-//   "AND",
-//   { id: "type", params: { type: "llm" } },
-//   [
-//     "OR",
-//     { id: "type", params: { type: "llm" } },
-//     { id: "type", params: { type: "llm" } },
-//   ],
-// ]
-
-// console.log(testLogic)

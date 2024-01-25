@@ -4,70 +4,91 @@ import { FILTERS, FilterLogic } from "shared"
 
 type RadarResults = {
   passed: boolean
-  details: any
+  filterId?: string
+  details?: any
+}
+
+const hasNonSQLFilter = (checks: any) =>
+  checks.some((check: any) => {
+    if (typeof check === "string") return false
+
+    if (Array.isArray(check)) return hasNonSQLFilter(check)
+
+    const { id } = check
+
+    const filter = FILTERS.find((f) => f.id === id)
+
+    if (!filter?.sql) {
+      return false
+    }
+
+    return true
+  })
+
+const checkRun = async (run: any, check: any) => {
+  if (typeof check === "string") {
+    // Handle AND or OR
+    return { passed: true }
+  }
+
+  if (Array.isArray(check)) {
+    // Handle nested AND/OR
+    const checkRun = await Promise.all(check.map((c) => checkRun(run, c)))
+    return { passed: checkRun.every((c) => c?.passed), details: checkRun }
+  }
+
+  const { id, params } = check
+  const filter = FILTERS.find((f) => f.id === id)
+
+  if (!filter || !filter.sql || !filter.evaluator) {
+    return { passed: true }
+  }
+
+  if (filter.sql) {
+    const snippet = filter.sql(sql, params)
+    const [result] =
+      await sql`select * from run where id = ${run.id} and (${snippet})`
+    return { passed: !!result, filterId: id }
+  }
+
+  return { filterId: filter.id, ...(await filter.evaluator(run, params)) }
 }
 
 // TODO: follow AND/OR nested logic
 const runChecksOnRun = async (radar: any, run: any) => {
   const checks: FilterLogic[] = radar.checks
 
-  // const results = []
   let passed = true
+  const results: RadarResults[] = []
 
-  const filterSql = convertFiltersToSQL(checks)
+  const onlySQL = !hasNonSQLFilter(checks)
 
-  // for (const check of checks) {
-  //   if (typeof check === "string") {
-  //     // Handle AND or OR
-  //     continue
-  //   }
-  //   if (Array.isArray(check)) {
-  //     // Handle nested AND/OR
-  //     continue
-  //   }
-  //   try {
-  //     const { id, params } = check
+  if (onlySQL) {
+    // More efficient to do it all in SQL if only SQL filters are used
+    const filterSql = convertFiltersToSQL(checks)
 
-  //     const filter = FILTERS.find((f) => f.id === id)
+    const [result] =
+      await sql`select * from run where id = ${run.id} and (${filterSql})`
 
-  //     if (!filter) {
-  //       console.error(`Filter ${id} not found`)
-  //       continue
-  //     }
+    passed = !!result
+  } else {
+    for (const check of checks) {
+      const res = await checkRun(run, check)
+      results.push(res)
 
-  //     if (!filter.sql) {
-  //       console.error(`Filter ${id} has no sql function`)
-  //       continue
-  //     }
+      passed = res?.passed
 
-  // const result = await filter.evaluator(run, paramsData)
-
-  // const filterSql = filter.sql(sql, params)
-
-  // make virtual row to check if filter passes
-  const [result] =
-    await sql`select * from run where id = ${run.id} and (${filterSql})`
-
-  if (!result) {
-    passed = false
+      if (!res?.passed) break
+    }
   }
 
   console.log(`Run ${run.id} passed: ${passed}`)
-
-  //     results.push({
-  //       filterId: id,
-  //       passed: !!result,
-  //     })
-  //   } catch (e) {
-  //     console.error(e)
-  //   }
-  // }
 
   await sql`
     insert into radar_result ${sql({
       radarId: radar.id,
       runId: run.id,
-      // results,
+      results,
       passed,
     })}
     returning *
@@ -101,12 +122,9 @@ export default async function radarJob() {
     return
   }
 
-  // Get all runs from orgs in plan 'unlimited' or 'custom'
-
   const radars = await sql`SELECT * FROM radar`
 
   // For each radar, get all checks
-
   for (const radar of radars) {
     const runs = await getRadarRuns(radar)
     console.log(`Analyzing ${runs.length} runs for radar ${radar.id}`)

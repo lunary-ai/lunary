@@ -2,7 +2,7 @@ import TinyPercentChart from "@/components/Analytics/TinyPercentChart"
 import Steps from "@/components/Blocks/Steps"
 import FilterPicker from "@/components/Filters/Picker"
 import Paywall from "@/components/Layout/Paywall"
-import { useRadars } from "@/utils/dataHooks"
+import { useProjectSWR, useRadars } from "@/utils/dataHooks"
 import {
   ActionIcon,
   Badge,
@@ -162,19 +162,22 @@ function NewRadarModal({ opened, onClose }) {
   )
 }
 
-function RadarCard({ name, checks, passed, failed }) {
+function RadarCard({ id, description, checks, passed, failed }) {
+  const hasStats = passed > 0 && failed > 0
   const percentMatch = Math.round((failed / (passed + failed)) * 100)
+
+  const { data: chartData } = useProjectSWR(`/radars/${id}/chart`)
 
   return (
     <Card p="md" withBorder>
       <Stack>
         <Flex justify="space-between">
           <Title order={3} size="h4">
-            {name}
+            {description}
           </Title>
 
           <Group justify="end">
-            <TinyPercentChart height={40} width={210} />
+            <TinyPercentChart height={40} width={210} data={chartData} />
 
             <Popover withArrow shadow="sm">
               <Popover.Target>
@@ -231,14 +234,16 @@ function RadarCard({ name, checks, passed, failed }) {
               ))}
           </Group>
 
-          <Progress.Root size={20} w={300}>
-            <Progress.Section value={percentMatch} color="red">
-              <Progress.Label>{`${percentMatch}%`}</Progress.Label>
-            </Progress.Section>
-            <Progress.Section value={100 - percentMatch} color="green">
-              <Progress.Label>{`${100 - percentMatch}%`}</Progress.Label>
-            </Progress.Section>
-          </Progress.Root>
+          {hasStats && (
+            <Progress.Root size={20} w={300}>
+              <Progress.Section value={percentMatch} color="red">
+                <Progress.Label>{`${percentMatch}%`}</Progress.Label>
+              </Progress.Section>
+              <Progress.Section value={100 - percentMatch} color="green">
+                <Progress.Label>{`${100 - percentMatch}%`}</Progress.Label>
+              </Progress.Section>
+            </Progress.Root>
+          )}
         </Flex>
       </Stack>
     </Card>
@@ -302,7 +307,8 @@ export default function Radar() {
             {radars?.map((radar) => (
               <RadarCard
                 key={radar.id}
-                name={radar.description}
+                id={radar.id}
+                description={radar.description}
                 checks={radar.checks}
                 passed={radar.passed}
                 failed={radar.failed}

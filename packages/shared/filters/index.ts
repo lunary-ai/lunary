@@ -220,20 +220,21 @@ export const FILTERS: Filter[] = [
       },
     ],
     evaluator: async (run, params) => {
-      const { regex } = params
+      const { regex, type, field } = params
+
       const re = new RegExp(regex)
 
-      const inputMatch = re.test(run.output)
-      const outputMatch = re.test(run.output)
+      const has = re.test(run[field])
+
+      const passed = type === "contains" ? has : !has
+
+      const match = has ? run[field].match(re)[0] : ""
 
       return {
-        inputMatch,
-        outputMatch,
+        passed,
+        details: { match },
       }
     },
-
-    sql: (sql, { field, type }) =>
-      sql`result.${field}Match = ${type === "match" ? 1 : 0}`,
   },
   {
     id: "json",
@@ -250,60 +251,57 @@ export const FILTERS: Filter[] = [
         label: "JSON",
       },
     ],
-    evaluator: async (run) => {
-      let parsable = false
-      let partial = false
+    evaluator: async (run, params) => {
+      const { type } = params
+      let passed = false
+
+      // todo: contains, partial, equals,..
 
       try {
         if (!run.output.startsWith("{")) throw "Not an object"
         JSON.parse(run.output)
-        parsable = true
-        partial = true
+        passed = true
       } catch (e) {}
 
       return {
-        parsable,
-        partial,
+        passed,
       }
     },
-    sql: (sql, { type }) =>
-      sql`result.parsable = ${type === "parsable" ? 1 : 0}`,
   },
-  {
-    id: "xml",
-    name: "XML / HTML",
-    uiType: "smart",
-    params: [
-      {
-        label: "Response",
-        type: "label",
-      },
-      FORMAT_PARAM,
-      {
-        type: "label",
-        label: "XML / HTML",
-      },
-    ],
-    evaluator: async (run) => {
-      let parsable = false
-      let partial = false
+  // {
+  //   id: "xml",
+  //   name: "XML / HTML",
+  //   uiType: "smart",
+  //   params: [
+  //     {
+  //       label: "Response",
+  //       type: "label",
+  //     },
+  //     FORMAT_PARAM,
+  //     {
+  //       type: "label",
+  //       label: "XML / HTML",
+  //     },
+  //   ],
+  //   evaluator: async (run) => {
+  //     let parsable = false
+  //     let passed = false
 
-      try {
-        if (!run.output.startsWith("<")) throw "Not an object"
-        // TODO: use a real XML parser
-        // new DOMParser().parseFromString(run.output, "text/xml")
-        parsable = true
-        partial = true
-      } catch (e) {}
+  //     try {
+  //       if (!run.output.startsWith("<")) throw "Not an object"
+  //       // TODO: use a real XML parser
+  //       // new DOMParser().parseFromString(run.output, "text/xml")
+  //       parsable = true
+  //       partial = true
+  //     } catch (e) {}
 
-      return {
-        parsable,
-        partial,
-      }
-    },
-    sql: (sql, { type }) =>
-      sql`result.parsable = ${type === "parsable" ? 1 : 0}`,
-  },
+  //     return {
+  //       parsable,
+  //       partial,
+  //     }
+  //   },
+
+  // },
   {
     id: "cc",
     name: "Credit Card",
@@ -316,21 +314,22 @@ export const FILTERS: Filter[] = [
         label: "Credit Card",
       },
     ],
-    evaluator: async (run) => {
+    evaluator: async (run, params) => {
+      const { field, type } = params
+
       const re = new RegExp(
         "^(?:4[0-9]{12}(?:[0-9]{3})?|[25][1-7][0-9]{14}|6(?:011|5[0-9][0-9])[0-9]{12}|3[47][0-9]{13}|3(?:0[0-5]|[68][0-9])[0-9]{11}|(?:2131|1800|35d{3})d{11})$",
       )
 
-      const inputMatch = re.test(run.input)
-      const outputMatch = re.test(run.output)
+      const hasCC = re.test(run[field])
+      const passed = type === "contains" ? hasCC : !hasCC
+      const cc = hasCC ? run[field].match(re)[0] : ""
 
       return {
-        inputMatch,
-        outputMatch,
+        passed,
+        details: { cc },
       }
     },
-    sql: (sql, { field, type }) =>
-      sql`result.${field}Match = ${type === "match" ? 1 : 0}`,
   },
   {
     id: "email",
@@ -344,19 +343,19 @@ export const FILTERS: Filter[] = [
         label: "Email",
       },
     ],
-    evaluator: async (run) => {
+    evaluator: async (run, params) => {
+      const { field, type } = params
       const re = new RegExp("^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+.[a-zA-Z0-9-.]+$")
 
-      const inputMatch = re.test(run.input)
-      const outputMatch = re.test(run.output)
+      const hasEmail = re.test(run[field])
+      const passed = type === "contains" ? hasEmail : !hasEmail
+      const email = hasEmail ? run[field].match(re)[0] : ""
 
       return {
-        inputMatch,
-        outputMatch,
+        passed,
+        details: { email },
       }
     },
-    sql: (sql, { field, type }) =>
-      sql`result.${field}Match = ${type === "match" ? 1 : 0}`,
   },
 
   {
@@ -421,9 +420,8 @@ export const FILTERS: Filter[] = [
         unit: "s",
       },
     ],
-    sql: (sql, { operator, duration }) => {
-      return sql`duration ${postgresOperators(sql, operator)} ${duration} * interval '1 second'`
-    },
+    sql: (sql, { operator, duration }) =>
+      sql`duration ${postgresOperators(sql, operator)} ${duration} * interval '1 second'`,
   },
   {
     id: "cost",
@@ -501,7 +499,7 @@ export const FILTERS: Filter[] = [
   },
   {
     id: "search",
-    name: "Search",
+    name: "Search Match",
     uiType: "smart",
     params: [
       {
@@ -514,9 +512,8 @@ export const FILTERS: Filter[] = [
         placeholder: "Search",
       },
     ],
-    sql: (sql, { query }) => {
-      return sql`r.input_text &@ ${query} or r.output_text &@ ${query} or r.error_text &@ ${query}`
-    },
+    sql: (sql, { query }) =>
+      `r.input_text &@ ${query} or r.output_text &@ ${query} or r.error_text &@ ${query}`,
   },
   {
     id: "string",
@@ -669,9 +666,9 @@ export const FILTERS: Filter[] = [
         ],
       },
     ],
-    async evaluator(run, params) {
-      return {}
-    },
+    // async evaluator(run, params) {
+    //   return {}
+    // },
   },
   {
     id: "sentiment",
@@ -679,9 +676,9 @@ export const FILTERS: Filter[] = [
     uiType: "ai",
     // soon: true,
     description: "Checks if the output is positive, neutral, or negative.",
-    async evaluator(run, params) {
-      return {}
-    },
+    // async evaluator(run, params) {
+    //   return {}
+    // },
     params: [
       {
         type: "label",
@@ -717,9 +714,9 @@ export const FILTERS: Filter[] = [
     onlyInEvals: true,
     description:
       "Assesses if the tone of LLM responses matches with the desired persona.",
-    async evaluator(run, params) {
-      return {}
-    },
+    // async evaluator(run, params) {
+    //   return {}
+    // },
     params: [
       {
         type: "label",
@@ -769,9 +766,9 @@ export const FILTERS: Filter[] = [
     onlyInEvals: true,
     description:
       "Checks if the output is factually correct compared to a given context",
-    async evaluator(run, params) {
-      return {}
-    },
+    // async evaluator(run, params) {
+    //   return {}
+    // },
     params: [
       {
         type: "label",
@@ -790,9 +787,9 @@ export const FILTERS: Filter[] = [
     uiType: "ai",
     onlyInEvals: true,
     description: `Checks if the output matches guidelines set in the 'system' message.`,
-    async evaluator(run, params) {
-      return {}
-    },
+    // async evaluator(run, params) {
+    //   return {}
+    // },
     params: [
       {
         type: "label",
@@ -811,9 +808,9 @@ export const FILTERS: Filter[] = [
     uiType: "ai",
     onlyInEvals: true,
     description: `Ensure the output is similar to a given expected output (gold output).`,
-    async evaluator(run, params) {
-      return {}
-    },
+    // async evaluator(run, params) {
+    //   return {}
+    // },
     params: [
       {
         type: "label",
