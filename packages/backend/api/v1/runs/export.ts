@@ -6,7 +6,6 @@ export async function fileExport(
   exportType: "csv" | "jsonl",
   ctx: Context,
 ) {
-  console.log(exportType)
   if (exportType === "csv") {
     const data = rows.length > 0 ? rows : [{}]
     const parser = new Parser()

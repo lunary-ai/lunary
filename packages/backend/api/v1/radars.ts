@@ -17,6 +17,7 @@ radars.get("/", async (ctx) => {
     WHERE r.project_id = ${projectId}
     GROUP BY r.id
   `
+
   ctx.body = rows
 })
 

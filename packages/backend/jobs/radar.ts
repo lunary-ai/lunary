@@ -18,11 +18,11 @@ const hasNonSQLFilter = (checks: any) =>
 
     const filter = FILTERS.find((f) => f.id === id)
 
-    if (!filter?.sql) {
-      return false
+    if (filter?.evaluator) {
+      return true
     }
 
-    return true
+    return false
   })
 
 const checkRun = async (run: any, check: any) => {
@@ -40,7 +40,7 @@ const checkRun = async (run: any, check: any) => {
   const { id, params } = check
   const filter = FILTERS.find((f) => f.id === id)
 
-  if (!filter || !filter.sql || !filter.evaluator) {
+  if (!filter || (!filter.sql && !filter.evaluator)) {
     return { passed: true }
   }
 
@@ -74,11 +74,12 @@ const runChecksOnRun = async (radar: any, run: any) => {
   } else {
     for (const check of checks) {
       const res = await checkRun(run, check)
+
       results.push(res)
 
-      passed = res?.passed
+      passed = res.passed
 
-      if (!res?.passed) break
+      if (!res.passed) break
     }
   }
 

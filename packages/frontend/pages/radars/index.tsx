@@ -163,8 +163,8 @@ function NewRadarModal({ opened, onClose }) {
 }
 
 function RadarCard({ id, description, checks, passed, failed }) {
-  const hasStats = passed > 0 && failed > 0
-  const percentMatch = Math.round((failed / (passed + failed)) * 100)
+  const hasStats = +passed > 0 || +failed > 0
+  const percentMatch = Math.round((+passed / (+passed + +failed)) * 100)
 
   const { data: chartData } = useProjectSWR(`/radars/${id}/chart`)
 

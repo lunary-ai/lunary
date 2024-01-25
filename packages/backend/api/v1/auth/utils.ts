@@ -91,10 +91,10 @@ export async function authMiddleware(ctx: Context, next: Next) {
 
     if (ctx.state.projectId) {
       // CHeck if user has access to project
-      console.log(ctx.state.orgId)
+
       const [project] = await sql`
-      select id from project where id = ${ctx.state.projectId} and org_id = ${ctx.state.orgId}
-    `
+        select id from project where id = ${ctx.state.projectId} and org_id = ${ctx.state.orgId}
+      `
 
       if (!project) {
         throw new Error("Project not found")

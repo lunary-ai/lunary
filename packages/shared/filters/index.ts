@@ -43,6 +43,7 @@ function postgresOperators(sql: any, operator: string) {
       throw new Error(`Unsupported operator: ${operator}`)
   }
 }
+
 export const FILTERS: Filter[] = [
   {
     id: "type",
@@ -314,21 +315,11 @@ export const FILTERS: Filter[] = [
         label: "Credit Card",
       },
     ],
-    evaluator: async (run, params) => {
-      const { field, type } = params
+    sql: (sql, { field, type }) => {
+      const regexPattern = sql`(?:4[0-9]{3}(?:[ -]?[0-9]{4}){3}|[25][1-7][0-9]{2}(?:[ -]?[0-9]{4}){3}|6(?:011|5[0-9]{2})(?:[ -]?[0-9]{4}){3}|3[47][0-9]{2}(?:[ -]?[0-9]{4}){3}|3(?:0[0-5]|[68][0-9])(?:[ -]?[0-9]{4}){2}|(?:2131|1800|35d{2})d{2}(?:[ -]?d{4}){3})`
+      const operator = type === "contains" ? sql`~` : sql`!~`
 
-      const re = new RegExp(
-        "^(?:4[0-9]{12}(?:[0-9]{3})?|[25][1-7][0-9]{14}|6(?:011|5[0-9][0-9])[0-9]{12}|3[47][0-9]{13}|3(?:0[0-5]|[68][0-9])[0-9]{11}|(?:2131|1800|35d{3})d{11})$",
-      )
-
-      const hasCC = re.test(run[field])
-      const passed = type === "contains" ? hasCC : !hasCC
-      const cc = hasCC ? run[field].match(re)[0] : ""
-
-      return {
-        passed,
-        details: { cc },
-      }
+      return sql`${sql(field + "_text")} ${operator} '${regexPattern}'`
     },
   },
   {
@@ -343,18 +334,11 @@ export const FILTERS: Filter[] = [
         label: "Email",
       },
     ],
-    evaluator: async (run, params) => {
-      const { field, type } = params
-      const re = new RegExp("^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+.[a-zA-Z0-9-.]+$")
+    sql: (sql, { field, type }) => {
+      const regexPattern = sql`[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+.[a-zA-Z0-9-.]+`
+      const operator = type === "contains" ? sql`~` : sql`!~`
 
-      const hasEmail = re.test(run[field])
-      const passed = type === "contains" ? hasEmail : !hasEmail
-      const email = hasEmail ? run[field].match(re)[0] : ""
-
-      return {
-        passed,
-        details: { email },
-      }
+      return sql`${sql(field + "_text")} ${operator} '${regexPattern}'`
     },
   },
 
@@ -513,7 +497,7 @@ export const FILTERS: Filter[] = [
       },
     ],
     sql: (sql, { query }) =>
-      `r.input_text &@ ${query} or r.output_text &@ ${query} or r.error_text &@ ${query}`,
+      sql`r.input_text &@ ${query} or r.output_text &@ ${query} or r.error_text &@ ${query}`,
   },
   {
     id: "string",
