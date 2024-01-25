@@ -45,7 +45,7 @@ projects.post("/", async (ctx: Context) => {
   const [project] =
     await sql`insert into project ${sql(newProject)} returning *`
 
-  await insertDefaultApiKeys(project.id)
+  await insertDefaultApiKeys(project.id, sql)
 
   ctx.body = project
 })

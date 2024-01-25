@@ -1,12 +1,17 @@
-import sql from "@/utils/db"
+import { Sql } from "postgres"
 
-export async function insertDefaultApiKeys(projectId: string) {
+/**
+ *
+ * @param projectId
+ * @param sql needed as a param because this function is used in a transaction
+ */
+export async function insertDefaultApiKeys(projectId: string, sql: Sql) {
   const publicKey = {
     type: "public",
     projectId: projectId,
     apiKey: projectId,
   }
-  await sql`
+  sql`
     insert into api_key ${sql(publicKey)}
   `
   const privateKey = [
