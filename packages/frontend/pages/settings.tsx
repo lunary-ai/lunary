@@ -127,7 +127,7 @@ export default function AppAnalytics() {
               </Text>
             </Alert> */}
 
-            <Alert
+            {/* <Alert
               variant="light"
               title={
                 <Group>
@@ -141,7 +141,7 @@ export default function AppAnalytics() {
                 Private API keys should be used only on your server – they give
                 read/write/delete API access to your project's resources.
               </Text>
-            </Alert>
+            </Alert> */}
           </Stack>
         </Card>
 
