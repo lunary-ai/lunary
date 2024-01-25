@@ -50,6 +50,11 @@ function SignupPage() {
   const [step, setStep] = useState(1)
   const router = useRouter()
 
+  useEffect(() => {
+    router.query.step = String(step)
+    router.push(router)
+  }, [step])
+
   const auth = useAuth()
 
   const form = useForm({
@@ -154,8 +159,6 @@ function SignupPage() {
     }
 
     setStep(step + 1)
-    router.query.step = String(step + 1)
-    router.push(router)
   }
 
   useEffect(() => {
