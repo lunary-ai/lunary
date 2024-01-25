@@ -100,7 +100,7 @@ export default function AppAnalytics() {
               title={
                 <Group>
                   <Text fw={500}>Project ID:</Text>
-                  <CopyText c="green.8" value={project?.publicApiKey} />
+                  <CopyText c="green.8" value={project?.id} />
                 </Group>
               }
               color="green"
