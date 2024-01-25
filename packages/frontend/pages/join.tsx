@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react"
 
-import { useSearchParams } from "next/navigation"
 import {
   Anchor,
   Button,
@@ -15,18 +14,17 @@ import {
 } from "@mantine/core"
 
 import { useForm } from "@mantine/form"
-import { IconAnalyze, IconAt, IconCheck, IconUser } from "@tabler/icons-react"
+import { IconAnalyze, IconAt, IconUser } from "@tabler/icons-react"
 
-import Router from "next/router"
-import errorHandler from "@/utils/errors"
-import analytics from "@/utils/analytics"
-import { NextSeo } from "next-seo"
-import { notifications } from "@mantine/notifications"
-import Confetti from "react-confetti"
 import sql from "@/lib/db"
+import analytics from "@/utils/analytics"
 import { useAuth } from "@/utils/auth"
+import errorHandler from "@/utils/errors"
 import { fetcher } from "@/utils/fetcher"
 import { SEAT_ALLOWANCE } from "@/utils/pricing"
+import { NextSeo } from "next-seo"
+import Router, { useRouter } from "next/router"
+import Confetti from "react-confetti"
 
 export async function getServerSideProps(context) {
   const { orgId } = context.query
@@ -77,6 +75,12 @@ export default function Join({ orgUserCount, orgName, orgId, orgPlan }) {
   const auth = useAuth()
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
+  const router = useRouter()
+
+  useEffect(() => {
+    router.query.step = String(step)
+    router.push(router)
+  }, [step])
 
   const form = useForm({
     initialValues: {
@@ -257,7 +261,7 @@ export default function Join({ orgUserCount, orgName, orgId, orgPlan }) {
                     </Text>
 
                     <Button
-                      onClick={() => Router.push("/")}
+                      onClick={() => router.push("/")}
                       variant="outline"
                       size="lg"
                     >
