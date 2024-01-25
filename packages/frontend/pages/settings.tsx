@@ -99,6 +99,22 @@ export default function AppAnalytics() {
               variant="light"
               title={
                 <Group>
+                  <Text fw={500}>Project ID:</Text>
+                  <CopyText c="green.8" value={project?.publicApiKey} />
+                </Group>
+              }
+              color="green"
+            >
+              <Text>
+                Your project ID can be used from your server or frontend code to
+                track events and send requests to the API.
+              </Text>
+            </Alert>
+
+            {/* <Alert
+              variant="light"
+              title={
+                <Group>
                   <Text fw={500}>Public Tracking Key: </Text>
                   <CopyText c="green.8" value={project?.publicApiKey} />
                 </Group>
@@ -109,9 +125,9 @@ export default function AppAnalytics() {
                 Public API keys can be used from your server or frontend code to
                 track events and send requests to the API.
               </Text>
-            </Alert>
+            </Alert> */}
 
-            <Alert
+            {/* <Alert
               variant="light"
               title={
                 <Group>
@@ -125,7 +141,7 @@ export default function AppAnalytics() {
                 Private API keys should be used only on your server – they give
                 read/write/delete API access to your project's resources.
               </Text>
-            </Alert>
+            </Alert> */}
           </Stack>
         </Card>
 

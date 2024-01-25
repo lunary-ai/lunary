@@ -71,7 +71,7 @@ templates.delete("/:id", async (ctx: Context) => {
     delete from template where project_id = ${ctx.state.projectId} and id = ${ctx.params.id}
   `
 
-  ctx.body = {}
+  ctx.status = 200
 })
 
 templates.patch("/:id", async (ctx: Context) => {

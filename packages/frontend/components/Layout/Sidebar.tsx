@@ -31,6 +31,7 @@ import { IconPlus } from "@tabler/icons-react"
 import { useProject, useProjects } from "@/utils/dataHooks"
 import { useEffect, useState } from "react"
 import { useAuth } from "@/utils/auth"
+import { useColorScheme } from "@mantine/hooks"
 
 const APP_MENU = [
   { label: "Analytics", icon: IconTimeline, link: "/analytics" },
@@ -78,6 +79,7 @@ export default function Sidebar() {
 
   const { user, mutate } = useUser()
   const { org } = useOrg()
+  const scheme = useColorScheme()
   const { projects, isLoading: loading, insert } = useProjects()
 
   const [createProjectLoading, setCreateProjectLoading] = useState(false)
@@ -247,7 +249,7 @@ export default function Sidebar() {
             <NavLink
               color="red"
               h={50}
-              bg="gray.1"
+              bg="var(--mantine-color-default-border)"
               leftSection={<UserAvatar size={32} profile={user} />}
               label={
                 <Stack gap={0}>

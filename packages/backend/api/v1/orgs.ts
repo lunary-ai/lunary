@@ -52,7 +52,7 @@ orgs.patch("/", async (ctx: Context) => {
   const { name } = bodySchema.parse(ctx.request.body)
 
   await sql`update org set name = ${name} where id = ${orgId}`
-  ctx.body = {}
+  ctx.status = 200
 })
 
 orgs.get("/usage", async (ctx: Context) => {

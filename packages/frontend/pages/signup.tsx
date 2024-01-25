@@ -311,7 +311,11 @@ function SignupPage() {
 
                             <Button
                               size="sm"
-                              onClick={() => setStep(1)}
+                              onClick={() => {
+                                router.query.step = String(1)
+                                router.push(router)
+                                setStep(1)
+                              }}
                               fullWidth
                               variant="transparent"
                               color="dimmed"
