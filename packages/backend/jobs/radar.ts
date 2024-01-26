@@ -96,7 +96,7 @@ const runChecksOnRun = async (radar: any, run: any) => {
   `
 }
 
-const BATCH_SIZE = 500
+const BATCH_SIZE = 1000
 
 // get all runs that don't have radar results
 // oldest first, limit 300 per batch
@@ -131,7 +131,11 @@ export default async function radarJob() {
     console.log(`Analyzing ${runs.length} runs for radar ${radar.id}`)
 
     for (const run of runs) {
-      await runChecksOnRun(radar, run)
+      try {
+        await runChecksOnRun(radar, run)
+      } catch (error) {
+        console.error(error)
+      }
     }
   }
 

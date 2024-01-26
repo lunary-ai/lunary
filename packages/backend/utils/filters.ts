@@ -27,6 +27,6 @@ export function convertFiltersToSQL(filtersData: FilterLogic): any {
       return filter.sql(sql, logicElement.params)
     }
   }
-  const sqlFilters = logicToSql(filtersData)
+  const sqlFilters = sql`(${logicToSql(filtersData)})`
   return sqlFilters
 }
