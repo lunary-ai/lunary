@@ -2,11 +2,10 @@ import sql from "@/utils/db"
 import { RESET_PASSWORD, sendVerifyEmail } from "@/utils/emails"
 import Context from "@/utils/koa"
 import { sendTelegramMessage } from "@/utils/notifications"
+import { sendEmail } from "@/utils/sendEmail"
 import Router from "koa-router"
 import { z } from "zod"
 import { hashPassword, signJwt, verifyJwt, verifyPassword } from "./utils"
-import { sendEmail } from "@/utils/sendEmail"
-import { insertDefaultApiKeys } from "../projects/utils"
 
 const auth = new Router({
   prefix: "/auth",
