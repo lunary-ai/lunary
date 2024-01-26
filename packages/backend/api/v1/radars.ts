@@ -23,24 +23,37 @@ radars.get("/", async (ctx) => {
 
 radars.get("/:radarId/chart", async (ctx) => {
   // get number of passing & failing runs for each day in the last 7 days
+  // including days with no runs (passing and failing counts as 0)
   const { projectId } = ctx.state
   const { radarId } = ctx.params
 
   const rows = await sql`
+    WITH date_series AS (
+      SELECT generate_series(
+        NOW() - INTERVAL '7 days',
+        NOW(),
+        '1 day'::interval
+      )::date AS day
+    )
     SELECT 
-      date_trunc('day', run.created_at) AS day,
-      COUNT(rr.id) FILTER (WHERE rr.passed = true) AS passed,
-      COUNT(rr.id) FILTER (WHERE rr.passed = false) AS failed
-    FROM radar_result rr
-    JOIN radar r ON r.id = rr.radar_id
-    JOIN run ON run.id = rr.run_id
-    WHERE r.project_id = ${projectId}
-    AND r.id = ${radarId}
-    AND run.created_at > NOW() - INTERVAL '7 days'
-    GROUP BY day
-    ORDER BY day ASC
+      ds.day,
+      COALESCE(SUM(CASE WHEN rr.passed = true THEN 1 ELSE 0 END), 0) AS passed,
+      COALESCE(SUM(CASE WHEN rr.passed = false THEN 1 ELSE 0 END), 0) AS failed
+    FROM date_series ds
+    LEFT JOIN (
+      SELECT rr.*, r.created_at AS run_created_at FROM radar_result rr
+      JOIN run r ON rr.run_id = r.id
+      WHERE rr.radar_id = ${radarId} AND r.project_id = ${projectId}
+    ) rr ON date_trunc('day', rr.run_created_at) = ds.day
+    GROUP BY ds.day
+    ORDER BY ds.day ASC
   `
-  ctx.body = rows
+
+  ctx.body = rows.map((row) => ({
+    ...row,
+    passed: Number(row.passed),
+    failed: Number(row.failed),
+  }))
 })
 
 radars.post("/", async (ctx) => {

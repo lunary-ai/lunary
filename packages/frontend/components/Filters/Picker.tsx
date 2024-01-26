@@ -72,7 +72,7 @@ function RenderFilterNode({
   return (
     <Group>
       <div className={classes["custom-input"]}>
-        {filter?.params.map((param) => {
+        {filter?.params.map((param, i) => {
           const CustomInput = FilterInputs[param.type]
           if (!CustomInput) return null
 
@@ -99,7 +99,7 @@ function RenderFilterNode({
           }
 
           return (
-            <Fragment key={param.id}>
+            <Fragment key={i}>
               <ErrorBoundary>
                 <CustomInput
                   {...param}

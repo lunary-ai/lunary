@@ -179,7 +179,7 @@ function RadarCard({ id, description, checks, passed, failed }) {
           <Group justify="end">
             <TinyPercentChart height={40} width={210} data={chartData} />
 
-            <Popover withArrow shadow="sm">
+            {/* <Popover withArrow shadow="sm">
               <Popover.Target>
                 <ActionIcon variant="light">
                   <IconBellBolt size={16} />
@@ -212,11 +212,11 @@ function RadarCard({ id, description, checks, passed, failed }) {
                   <Button size="xs">Save</Button>
                 </Stack>
               </Popover.Dropdown>
-            </Popover>
+            </Popover> */}
             <ActionIcon
               variant="light"
               onClick={() => {
-                Router.push("/logs")
+                Router.push(`/logs?radar=${id}`)
               }}
             >
               <IconListSearch size={16} />

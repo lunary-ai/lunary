@@ -482,6 +482,27 @@ export const FILTERS: Filter[] = [
     },
   },
   {
+    id: "radar",
+    name: "Search Match",
+    uiType: "smart",
+    params: [
+      {
+        type: "label",
+        label: "Matches radar",
+      },
+      {
+        type: "select",
+        id: "ids",
+        width: 150,
+        multiple: true,
+        options: () => `/filters/radars`,
+      },
+    ],
+    sql: (sql, { ids }) =>
+      // match on table radar_result (rr) via col rr.radar_id if rr.passed = true
+      sql`exists (select 1 from radar_result rr where rr.run_id = r.id and rr.passed = true and rr.radar_id = any(${ids}))`,
+  },
+  {
     id: "search",
     name: "Search Match",
     uiType: "smart",
