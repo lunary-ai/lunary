@@ -43,14 +43,14 @@ const MODEL_COSTS: ModelCost[] = [
     outputCost: 0.03,
   },
   {
-    models: ["gpt-4", "gpt-4-0613", "gpt-4-0314"],
-    inputCost: 0.03,
-    outputCost: 0.06,
-  },
-  {
     models: ["gpt-4-32k"],
     inputCost: 0.06,
     outputCost: 0.12,
+  },
+  {
+    models: ["gpt-4", "gpt-4-0613", "gpt-4-0314"],
+    inputCost: 0.03,
+    outputCost: 0.06,
   },
   {
     models: ["claude-instant-1", "claude-instant-v1"],
@@ -104,7 +104,7 @@ export function calcRunCost(run: any) {
         .replaceAll("claude1", "claude-1")
 
       // Azure models have a different naming scheme
-      return cleanedName.includes(m) || m.includes(cleanedName)
+      return cleanedName.includes(m)
     }),
   )
 
