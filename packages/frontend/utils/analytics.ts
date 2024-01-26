@@ -68,6 +68,12 @@ const identify = (userId: string, traits: any) => {
 
     // TODO: w.crisp.push undefined?
     if (!w?.crisp?.push) return
+
+    CRISP_TOKEN_ID = userId
+    CRISP_RUNTIME_CONFIG = {
+      session_merge: true,
+    }
+
     if (traits.email) w?.crisp?.push(["set", "user:email", traits.email])
     if (traits.name) w?.crisp?.push(["set", "user:nickname", traits.name])
 
