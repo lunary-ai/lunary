@@ -1,5 +1,6 @@
 import {
   IconAt,
+  IconBracketsContainStart,
   IconBrandOpenai,
   IconCalendar,
   IconCheck,
@@ -19,7 +20,12 @@ import {
   IconRegex,
   IconRuler2,
   IconRulerMeasure,
+  IconSearch,
+  IconShieldBolt,
   IconTag,
+  IconTextCaption,
+  IconTextDirectionLtr,
+  IconTextDirectionRtl,
   IconThumbUp,
   IconTools,
   IconUser,
@@ -137,6 +143,19 @@ const FILTERS_UI_DATA = {
     icon: IconRulerMeasure,
     color: "blue",
   },
+  radar: {
+    icon: IconShieldBolt,
+    color: "red",
+  },
+  search: {
+    icon: IconSearch,
+    color: "blue",
+  },
+  string: {
+    icon: IconBracketsContainStart,
+    color: "blue",
+  },
+
   other: {
     icon: IconFilter,
     color: "gray",

@@ -316,7 +316,7 @@ export const FILTERS: Filter[] = [
       },
     ],
     sql: (sql, { field, type }) => {
-      const regexPattern = sql`(?:4[0-9]{3}(?:[ -]?[0-9]{4}){3}|[25][1-7][0-9]{2}(?:[ -]?[0-9]{4}){3}|6(?:011|5[0-9]{2})(?:[ -]?[0-9]{4}){3}|3[47][0-9]{2}(?:[ -]?[0-9]{4}){3}|3(?:0[0-5]|[68][0-9])(?:[ -]?[0-9]{4}){2}|(?:2131|1800|35d{2})d{2}(?:[ -]?d{4}){3})`
+      const regexPattern = sql`[a-zA-Z0-9.!#$%&'*+\/=?^_\`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*`
       const operator = type === "contains" ? sql`~` : sql`!~`
 
       return sql`${sql(field + "_text")} ${operator} '${regexPattern}'`
@@ -335,7 +335,7 @@ export const FILTERS: Filter[] = [
       },
     ],
     sql: (sql, { field, type }) => {
-      const regexPattern = sql`[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+.[a-zA-Z0-9-.]+`
+      const regexPattern = sql`[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+`
       const operator = type === "contains" ? sql`~` : sql`!~`
 
       return sql`${sql(field + "_text")} ${operator} '${regexPattern}'`
@@ -483,7 +483,7 @@ export const FILTERS: Filter[] = [
   },
   {
     id: "radar",
-    name: "Search Match",
+    name: "Radar Match",
     uiType: "smart",
     params: [
       {
@@ -494,6 +494,7 @@ export const FILTERS: Filter[] = [
         type: "select",
         id: "ids",
         width: 150,
+        placeholder: "Select radars",
         multiple: true,
         options: () => `/filters/radars`,
       },
@@ -678,6 +679,7 @@ export const FILTERS: Filter[] = [
   {
     id: "sentiment",
     name: "Sentiment",
+    soon: true,
     uiType: "ai",
     // soon: true,
     description: "Checks if the output is positive, neutral, or negative.",
@@ -714,7 +716,7 @@ export const FILTERS: Filter[] = [
   {
     id: "tone",
     name: "Tone",
-    // soon: true,
+    soon: true,
     uiType: "ai",
     onlyInEvals: true,
     description:
@@ -767,7 +769,7 @@ export const FILTERS: Filter[] = [
     id: "factualness",
     name: "Factualness",
     uiType: "ai",
-    // soon: true,
+    soon: true,
     onlyInEvals: true,
     description:
       "Checks if the output is factually correct compared to a given context",
@@ -811,6 +813,7 @@ export const FILTERS: Filter[] = [
     id: "similarity",
     name: "Output Similarity",
     uiType: "ai",
+    soon: true,
     onlyInEvals: true,
     description: `Ensure the output is similar to a given expected output (gold output).`,
     // async evaluator(run, params) {
