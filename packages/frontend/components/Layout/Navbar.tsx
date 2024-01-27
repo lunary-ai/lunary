@@ -13,6 +13,13 @@ import { useEffect, useState } from "react"
 import errorHandler from "../../utils/errors"
 import { openUpgrade } from "./UpgradeModal"
 
+const floatingBtn = {
+  position: "fixed",
+  top: 12,
+  right: 24,
+  zIndex: 100,
+}
+
 export default function Navbar() {
   const router = useRouter()
 
@@ -21,6 +28,8 @@ export default function Navbar() {
 
   const [emailSent, setEmailSent] = useState(false)
   const [sendingEmail, setSendingEmail] = useState(false)
+
+  const currentPath = router.pathname
 
   // const user = useUser()
 
@@ -85,60 +94,65 @@ export default function Navbar() {
       <Group />
 
       <Group>
-        {org?.canceled ? (
-          <Button
-            size="compact-xs"
-            color="red"
-            onClick={() => openUpgrade()}
-            leftSection={<IconAlertTriangleFilled size="16" />}
-          >
-            Subscription will cancel soon. Click here to restore and prevent
-            data deletion.
-          </Button>
-        ) : org?.limited ? (
-          <Button
-            color="orange"
-            size="compact-xs"
-            onClick={() => openUpgrade("events")}
-            leftSection={<IconAlertTriangle size="16" />}
-          >
-            Events limit reached. Click here to upgrade & restore access.
-          </Button>
-        ) : (
+        {!currentPath.includes("/billing") && (
           <>
-            {user && !user?.verified && (
-              <Group
-                bg="orange.9"
-                h={24}
-                c="white"
-                gap={8}
-                px="8"
-                display="flex"
-                style={{
-                  borderRadius: 8,
-                  fontSize: 14,
-                  color: "white",
-                  zIndex: 3,
-                }}
+            {org?.canceled ? (
+              <Button
+                size="xs"
+                color="red"
+                onClick={() => openUpgrade()}
+                style={floatingBtn}
+                leftSection={<IconAlertTriangleFilled size="16" />}
               >
-                {`Verify your email to keep your account`}
-
-                {!emailSent && (
-                  <>
-                    <span style={{ marginRight: 0 }}>-</span>
-                    <Anchor
-                      href="#"
-                      onClick={sendVerification}
-                      c="white"
-                      style={{ fontSize: 14 }}
-                    >
-                      {sendingEmail ? "Sending..." : "Resend email"}
-                    </Anchor>
-                  </>
-                )}
-              </Group>
-            )}
+                Subscription will cancel soon. Click here to restore and prevent
+                data deletion.
+              </Button>
+            ) : org?.limited ? (
+              <Button
+                color="orange"
+                size="xs"
+                component="a"
+                href="/billing"
+                style={floatingBtn}
+                leftSection={<IconAlertTriangle size="16" />}
+              >
+                Plan's event limit has been reached. Click here to open billing.
+              </Button>
+            ) : null}
           </>
+        )}
+
+        {user && !user?.verified && (
+          <Group
+            bg="orange.9"
+            h={24}
+            c="white"
+            gap={8}
+            px="8"
+            display="flex"
+            style={{
+              borderRadius: 8,
+              fontSize: 14,
+              color: "white",
+              zIndex: 10,
+            }}
+          >
+            {`Verify your email to keep your account`}
+
+            {!emailSent && (
+              <>
+                <span style={{ marginRight: 0 }}>-</span>
+                <Anchor
+                  href="#"
+                  onClick={sendVerification}
+                  c="white"
+                  style={{ fontSize: 14 }}
+                >
+                  {sendingEmail ? "Sending..." : "Resend email"}
+                </Anchor>
+              </>
+            )}
+          </Group>
         )}
       </Group>
     </Flex>
