@@ -103,8 +103,8 @@ const MODEL_COSTS: ModelCost[] = [
 ]
 
 export function calcRunCost(run: any) {
-  // if (run.endedAt && run.duration < 0.01 * 1000) return null // cached llm calls
-  // if (run.type !== "llm" || !run.name) return null
+  if (run.duration && run.duration < 0.01 * 1000) return null // cached llm calls
+  if (run.type !== "llm" || !run.name) return null
 
   const modelCost = MODEL_COSTS.find((c) =>
     c.models.find((model) => {
