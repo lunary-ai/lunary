@@ -26,10 +26,10 @@ const updateLimitedStatus = async () => {
       DATE(r.created_at) AS run_date,
       COUNT(r.id) AS daily_runs
     FROM "public"."org" o
-    JOIN "public"."app" p ON a.org_id = o.id
-    JOIN "public"."run" r ON r.project_id = a.id
+    JOIN "public"."project" p ON p.org_id = o.id
+    JOIN "public"."run" r ON r.project_id = p.id
     WHERE r.created_at >= CURRENT_DATE - INTERVAL '3 days'
-    GROUP BY o.id, run_date
+    GROUP BY o.id, p.id, run_date
     HAVING COUNT(r.id) > 1000 AND o.plan = 'free'
 ),
 over_limit_users AS (
@@ -71,12 +71,14 @@ const resetAIallowance = async () => {
 
 export default async function resetUsage() {
   try {
+    console.log("[JOB]: resetting AI allowance")
     await resetAIallowance()
   } catch (error) {
     console.error(error)
   }
 
   try {
+    console.log("[JOB]: updating limited status")
     await updateLimitedStatus()
   } catch (error) {
     console.error(error)
