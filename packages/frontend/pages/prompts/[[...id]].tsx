@@ -274,6 +274,7 @@ function Playground() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("auth-token")}`,
           },
           body: JSON.stringify({
             content: templateVersion.content,

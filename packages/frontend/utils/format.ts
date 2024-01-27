@@ -1,9 +1,14 @@
 export const formatCost = (cost = 0) => {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumSignificantDigits: 3,
-  }).format(cost)
+  if (cost < 1) {
+    const formattedCost = (cost * 100).toFixed(2)
+    return `${parseFloat(formattedCost)}¢`
+  } else {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumSignificantDigits: 3,
+    }).format(cost)
+  }
 }
 
 export function formatLargeNumber(number) {

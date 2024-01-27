@@ -5,24 +5,16 @@ interface ModelCost {
 }
 
 // Costs are in USD per 1000 tokens
+
+// OpenAI Pricing: https://openai.com/pricing
+// Legacy OpenAI pricing: https://platform.openai.com/docs/deprecations/
 const MODEL_COSTS: ModelCost[] = [
-  {
-    models: ["gpt-1-preview"],
-    inputCost: 0.003,
-    outputCost: 0.006,
-  },
-  {
-    models: ["gpt-1"],
-    inputCost: 0.006,
-    outputCost: 0.006,
-  },
   {
     models: ["ft:gpt-3.5-turbo"],
     inputCost: 0.003,
     outputCost: 0.006,
   },
   {
-    // Older deprecated model
     models: ["gpt-3.5-turbo-0613", "gpt-3.5-turbo-0301"],
     inputCost: 0.0015,
     outputCost: 0.002,
@@ -38,9 +30,14 @@ const MODEL_COSTS: ModelCost[] = [
     outputCost: 0.004,
   },
   {
-    models: ["gpt-3.5-turbo", "gpt-3.5-turbo-1106"],
+    models: ["gpt-3.5-turbo-1106"],
     inputCost: 0.001,
     outputCost: 0.002,
+  },
+  {
+    models: ["gpt-3.5-turbo", "gpt-3.5-turbo-0125"],
+    inputCost: 0.0005,
+    outputCost: 0.0015,
   },
   {
     models: ["text-davinci-003"],
@@ -48,7 +45,13 @@ const MODEL_COSTS: ModelCost[] = [
     outputCost: 0.02,
   },
   {
-    models: ["gpt-4-1106", "gpt-4-vision", "gpt-4-0125"],
+    models: [
+      "gpt-4-turbo",
+      "gpt-4-vision",
+      "gpt-4-1106",
+      "gpt-4-1106-vision",
+      "gpt-4-0125",
+    ],
     inputCost: 0.01,
     outputCost: 0.03,
   },
@@ -107,14 +110,14 @@ export function calcRunCost(run: any) {
     c.models.find((model) => {
       const cleanedName = run.name
         .toLowerCase()
-        .replaceAll("gpt-35", "gpt-3.5")
         .replaceAll("gpt4", "gpt-4")
         .replaceAll("gpt3", "gpt-3")
+        .replaceAll("gpt-35", "gpt-3.5")
         .replaceAll("claude2", "claude-2")
         .replaceAll("claude1", "claude-1")
 
       // Azure models have a different naming scheme
-      return cleanedName.includes(model) || model.includes(cleanedName)
+      return cleanedName.includes(model)
     }),
   )
 

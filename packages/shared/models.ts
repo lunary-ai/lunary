@@ -1,5 +1,11 @@
 export const MODELS = [
+  {
+    id: "gpt-4-turbo-preview",
+    name: "gpt-4-turbo-preview",
+    provider: "openai",
+  },
   { id: "gpt-4-1106-preview", name: "gpt-4-1106-preview", provider: "openai" },
+  { id: "gpt-4-0125-preview", name: "gpt-4-0125-preview", provider: "openai" },
   {
     id: "gpt-4-vision-preview",
     name: "gpt-4-vision-preview",
@@ -8,6 +14,7 @@ export const MODELS = [
   { id: "gpt-4", name: "gpt-4", provider: "openai" },
   { id: "gpt-3.5-turbo", name: "gpt-3.5-turbo", provider: "openai" },
   { id: "gpt-3.5-turbo-1106", name: "gpt-3.5-turbo-1106", provider: "openai" },
+  { id: "gpt-3.5-turbo-0125", name: "gpt-3.5-turbo-0125", provider: "openai" },
   { id: "gpt-3.5-turbo-16k", name: "gpt-3.5-turbo-16k", provider: "openai" },
   {
     id: "google/gemini-pro",
