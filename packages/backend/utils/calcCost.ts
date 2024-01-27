@@ -7,6 +7,16 @@ interface ModelCost {
 // Costs are in USD per 1000 tokens
 const MODEL_COSTS: ModelCost[] = [
   {
+    models: ["gpt-1-preview"],
+    inputCost: 0.003,
+    outputCost: 0.006,
+  },
+  {
+    models: ["gpt-1"],
+    inputCost: 0.006,
+    outputCost: 0.006,
+  },
+  {
     models: ["ft:gpt-3.5-turbo"],
     inputCost: 0.003,
     outputCost: 0.006,
@@ -38,7 +48,7 @@ const MODEL_COSTS: ModelCost[] = [
     outputCost: 0.02,
   },
   {
-    models: ["gpt-4-1106", "gpt-4-vision"],
+    models: ["gpt-4-1106", "gpt-4-vision", "gpt-4-0125"],
     inputCost: 0.01,
     outputCost: 0.03,
   },
@@ -90,11 +100,11 @@ const MODEL_COSTS: ModelCost[] = [
 ]
 
 export function calcRunCost(run: any) {
-  if (run.endedAt && run.duration < 0.01 * 1000) return null // cached llm calls
-  if (run.type !== "llm" || !run.name) return null
+  // if (run.endedAt && run.duration < 0.01 * 1000) return null // cached llm calls
+  // if (run.type !== "llm" || !run.name) return null
 
   const modelCost = MODEL_COSTS.find((c) =>
-    c.models.find((m) => {
+    c.models.find((model) => {
       const cleanedName = run.name
         .toLowerCase()
         .replaceAll("gpt-35", "gpt-3.5")
@@ -104,7 +114,7 @@ export function calcRunCost(run: any) {
         .replaceAll("claude1", "claude-1")
 
       // Azure models have a different naming scheme
-      return cleanedName.includes(m)
+      return cleanedName.includes(model) || model.includes(cleanedName)
     }),
   )
 
