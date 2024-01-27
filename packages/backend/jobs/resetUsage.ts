@@ -22,14 +22,15 @@ const updateLimitedStatus = async () => {
   // and set their `limited` to true
   const orgsToLimit = await sql`WITH over_limit_days AS (
     SELECT 
-      p.id,
+      o.id,
+      o.name,
       DATE(r.created_at) AS run_date,
       COUNT(r.id) AS daily_runs
     FROM "public"."org" o
     JOIN "public"."project" p ON p.org_id = o.id
     JOIN "public"."run" r ON r.project_id = p.id
     WHERE r.created_at >= CURRENT_DATE - INTERVAL '3 days'
-    GROUP BY o.id, p.id, run_date
+    GROUP BY o.id, o.name, run_date
     HAVING COUNT(r.id) > 1000 AND o.plan = 'free'
 ),
 over_limit_users AS (
