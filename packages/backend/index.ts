@@ -13,6 +13,7 @@ import { setupCronJobs } from "./utils/cron"
 import sql, { checkDbConnection } from "./utils/db"
 import { errorMiddleware } from "./utils/errors"
 import { setDefaultBody } from "./utils/misc"
+import ratelimit from "./utils/ratelimit"
 
 await checkDbConnection()
 setupCronJobs()
@@ -26,6 +27,7 @@ app.use(corsMiddleware)
 app.use(authMiddleware)
 app.use(bodyParser())
 app.use(setDefaultBody)
+app.use(ratelimit)
 
 // Routes
 app.use(redirections.routes())
