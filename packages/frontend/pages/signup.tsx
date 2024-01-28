@@ -45,6 +45,8 @@ import { fetcher } from "@/utils/fetcher"
 import { NextSeo } from "next-seo"
 import { useAuth } from "@/utils/auth"
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
 function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
@@ -96,6 +98,12 @@ function SignupPage() {
     employeeCount: string
   }) {
     setLoading(true)
+
+    if (orgName.includes("https://")) {
+      // shadow ban spam
+      await sleep(100000000)
+      return
+    }
 
     try {
       const { token } = await fetcher.post("/auth/signup", {
