@@ -227,4 +227,24 @@ runs.get("/:id/related", async (ctx) => {
   ctx.body = related
 })
 
+runs.get("/:id/feedback", async (ctx) => {
+  const { projectId } = ctx.state
+  const { id } = ctx.params
+
+  const [row] = await sql`
+      select
+          feedback
+      from
+          run
+      where
+          project_id = ${projectId} and id = ${id}
+      limit 1`
+
+  if (!row) {
+    ctx.throw(404, "Run not found")
+  }
+
+  ctx.body = row.feedback
+})
+
 export default runs

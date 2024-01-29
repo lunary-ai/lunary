@@ -7,7 +7,7 @@ export default ratelimit({
   db: db,
   duration: 60000,
   errorMessage: "Sometimes You Just Have to Slow Down.",
-  id: (ctx) => ctx.ip,
+  id: (ctx) => ctx.request.ip || ctx.ip || ctx.state.userId,
   headers: {
     remaining: "Rate-Limit-Remaining",
     reset: "Rate-Limit-Reset",

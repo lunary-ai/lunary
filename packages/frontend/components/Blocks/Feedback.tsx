@@ -1,7 +1,7 @@
 import { Group, Tooltip } from "@mantine/core"
 import { useColorScheme } from "@mantine/hooks"
 import {
-  IconMessageCircle,
+  IconMessage,
   IconRefresh,
   IconStar,
   IconThumbDown,
@@ -40,7 +40,7 @@ export default function Feedback({ data = {} }: { data: Record<string, any> }) {
       {data?.emoji && <span>{data.emoji}</span>}
       {data?.comment && (
         <Tooltip label={data.comment}>
-          <IconMessageCircle color="blue" />
+          <IconMessage {...getIconProps("blue")} />
         </Tooltip>
       )}
       {data?.retried && (

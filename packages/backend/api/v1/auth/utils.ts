@@ -54,6 +54,7 @@ const publicRoutes = [
   "/webhooks/stripe",
   "/auth/user/password/reset",
   `/v1/runs/ingest`,
+  new RegExp(`/v1/runs/.+/feedback`), // getFeedback in SDKs
   `/v1/template_versions/latest`,
   "/v1/users/verify-email",
   "/v1/users/send-verification",
@@ -67,6 +68,7 @@ export async function authMiddleware(ctx: Context, next: Next) {
 
   if (isPublicRoute) {
     const bearerToken = ctx.request?.headers?.authorization?.split(" ")[1]
+
     if (typeof bearerToken === "string") {
       ctx.state.projectId = bearerToken
     }
@@ -91,7 +93,7 @@ export async function authMiddleware(ctx: Context, next: Next) {
 
     if (ctx.state.projectId) {
       // CHeck if user has access to project
-      console.log(ctx.state.orgId)
+
       const [project] = await sql`
       select id from project where id = ${ctx.state.projectId} and org_id = ${ctx.state.orgId}
     `
