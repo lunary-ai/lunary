@@ -66,8 +66,14 @@ const identify = (userId: string, traits: any) => {
   try {
     posthog?.identify(userId, traits)
 
-    // TODO: w.crisp.push undefined?
     if (!w?.crisp?.push) return
+
+    if (typeof CRISP_TOKEN_ID !== "undefined") CRISP_TOKEN_ID = userId
+    if (typeof CRISP_RUNTIME_CONFIG !== "undefined")
+      CRISP_RUNTIME_CONFIG = {
+        session_merge: true,
+      }
+
     if (traits.email) w?.crisp?.push(["set", "user:email", traits.email])
     if (traits.name) w?.crisp?.push(["set", "user:nickname", traits.name])
 

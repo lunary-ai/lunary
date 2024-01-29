@@ -48,6 +48,7 @@ users.get("/runs/usage", async (ctx) => {
           run.type,
           coalesce(sum(run.completion_tokens), 0)::int as completion_tokens,
           coalesce(sum(run.prompt_tokens), 0)::int as prompt_tokens,
+          coalesce(sum(run.cost), 0)::float as cost,
           sum(case when run.status = 'error' then 1 else 0 end)::int as errors,
           sum(case when run.status = 'success' then 1 else 0 end)::int as success
       from

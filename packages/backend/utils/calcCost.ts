@@ -5,6 +5,9 @@ interface ModelCost {
 }
 
 // Costs are in USD per 1000 tokens
+
+// OpenAI Pricing: https://openai.com/pricing
+// Legacy OpenAI pricing: https://platform.openai.com/docs/deprecations/
 const MODEL_COSTS: ModelCost[] = [
   {
     models: ["ft:gpt-3.5-turbo"],
@@ -12,7 +15,6 @@ const MODEL_COSTS: ModelCost[] = [
     outputCost: 0.006,
   },
   {
-    // Older deprecated model
     models: ["gpt-3.5-turbo-0613", "gpt-3.5-turbo-0301"],
     inputCost: 0.0015,
     outputCost: 0.002,
@@ -28,9 +30,14 @@ const MODEL_COSTS: ModelCost[] = [
     outputCost: 0.004,
   },
   {
-    models: ["gpt-3.5-turbo", "gpt-3.5-turbo-1106"],
+    models: ["gpt-3.5-turbo-1106"],
     inputCost: 0.001,
     outputCost: 0.002,
+  },
+  {
+    models: ["gpt-3.5-turbo", "gpt-3.5-turbo-0125"],
+    inputCost: 0.0005,
+    outputCost: 0.0015,
   },
   {
     models: ["text-davinci-003"],
@@ -38,19 +45,25 @@ const MODEL_COSTS: ModelCost[] = [
     outputCost: 0.02,
   },
   {
-    models: ["gpt-4-1106", "gpt-4-vision"],
+    models: [
+      "gpt-4-turbo",
+      "gpt-4-vision",
+      "gpt-4-1106",
+      "gpt-4-1106-vision",
+      "gpt-4-0125",
+    ],
     inputCost: 0.01,
     outputCost: 0.03,
-  },
-  {
-    models: ["gpt-4", "gpt-4-0613", "gpt-4-0314"],
-    inputCost: 0.03,
-    outputCost: 0.06,
   },
   {
     models: ["gpt-4-32k"],
     inputCost: 0.06,
     outputCost: 0.12,
+  },
+  {
+    models: ["gpt-4", "gpt-4-0613", "gpt-4-0314"],
+    inputCost: 0.03,
+    outputCost: 0.06,
   },
   {
     models: ["claude-instant-1", "claude-instant-v1"],
@@ -90,21 +103,21 @@ const MODEL_COSTS: ModelCost[] = [
 ]
 
 export function calcRunCost(run: any) {
-  if (run.endedAt && run.duration < 0.01 * 1000) return null // cached llm calls
+  if (run.duration && run.duration < 0.01 * 1000) return null // cached llm calls
   if (run.type !== "llm" || !run.name) return null
 
   const modelCost = MODEL_COSTS.find((c) =>
-    c.models.find((m) => {
+    c.models.find((model) => {
       const cleanedName = run.name
         .toLowerCase()
-        .replaceAll("gpt-35", "gpt-3.5")
         .replaceAll("gpt4", "gpt-4")
         .replaceAll("gpt3", "gpt-3")
+        .replaceAll("gpt-35", "gpt-3.5")
         .replaceAll("claude2", "claude-2")
         .replaceAll("claude1", "claude-1")
 
       // Azure models have a different naming scheme
-      return cleanedName.includes(m) || m.includes(cleanedName)
+      return cleanedName.includes(model)
     }),
   )
 

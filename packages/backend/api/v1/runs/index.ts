@@ -136,6 +136,7 @@ runs.get("/usage", async (ctx) => {
           run.type,
           coalesce(sum(run.completion_tokens), 0)::int as completion_tokens,
           coalesce(sum(run.prompt_tokens), 0)::int as prompt_tokens,
+          coalesce(sum(run.cost), 0)::float as cost,
           sum(case when run.status = 'error' then 1 else 0 end)::int as errors,
           sum(case when run.status = 'success' then 1 else 0 end)::int as success
       from
@@ -224,6 +225,26 @@ runs.get("/:id/related", async (ctx) => {
   `
 
   ctx.body = related
+})
+
+runs.get("/:id/feedback", async (ctx) => {
+  const { projectId } = ctx.state
+  const { id } = ctx.params
+
+  const [row] = await sql`
+      select
+          feedback
+      from
+          run
+      where
+          project_id = ${projectId} and id = ${id}
+      limit 1`
+
+  if (!row) {
+    ctx.throw(404, "Run not found")
+  }
+
+  ctx.body = row.feedback
 })
 
 export default runs

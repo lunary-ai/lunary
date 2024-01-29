@@ -6,17 +6,9 @@ import useSWRInfinite from "swr/infinite"
 import { ProjectContext } from "./context"
 import { getUserColor } from "./colors"
 import useSWRMutation from "swr/mutation"
-import { calcRunCost } from "./calcCosts"
+
 import { fetcher } from "./fetcher"
 import { useAuth } from "./auth"
-
-// TODO: put in other file
-function extendWithCosts(data: any[] = []) {
-  return data?.map((r) => ({
-    ...r,
-    cost: calcRunCost(r),
-  }))
-}
 
 type KeyType = string | ((...args: any[]) => string)
 
@@ -313,17 +305,19 @@ export function useRunsUsage(range, userId?: string) {
     `/runs/usage?days=${range}${userIdStr}`,
   )
 
-  return { usage: extendWithCosts(usage), loading: isLoading }
+  console.log(usage)
+
+  return { usage, loading: isLoading }
 }
 
 export function useRunsUsageByDay(range, userId?: string) {
   const userIdStr = userId ? `&userId=${userId}` : ""
 
-  const { data: usage, isLoading } = useProjectSWR(
+  const { data, isLoading } = useProjectSWR(
     `/runs/usage?days=${range}${userIdStr}&daily=true`,
   )
 
-  return { dailyUsage: extendWithCosts(usage), loading: isLoading }
+  return { dailyUsage: data, loading: isLoading }
 }
 
 export function useRunsUsageByUser(range = null) {
@@ -359,7 +353,7 @@ export function useRunsUsageByUser(range = null) {
   }
 
   return {
-    usageByUser: reduceUsersUsage(extendWithCosts(usageByUser || [])),
+    usageByUser: reduceUsersUsage(usageByUser || []),
     loading: isLoading,
   }
 }
@@ -371,7 +365,7 @@ export function useAppUserList() {
   const { usageByUser } = useRunsUsageByUser()
 
   const users = data?.map((u) => {
-    const usage = usageByUser.find((uu) => uu.userId === u.id)
+    const usage = usageByUser.find((uu: any) => uu.userId === u.id)
 
     return {
       ...u,

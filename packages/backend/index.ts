@@ -13,17 +13,22 @@ import { setupCronJobs } from "./utils/cron"
 import sql, { checkDbConnection } from "./utils/db"
 import { errorMiddleware } from "./utils/errors"
 import { setDefaultBody } from "./utils/misc"
+import ratelimit from "./utils/ratelimit"
 
 await checkDbConnection()
 setupCronJobs()
 
 const app = new Koa()
 
+// Forward proxy headers
+app.proxy = true
+
 // MiddleWares
 app.use(errorMiddleware)
 app.use(logger())
 app.use(corsMiddleware)
 app.use(authMiddleware)
+app.use(ratelimit)
 app.use(bodyParser())
 app.use(setDefaultBody)
 
@@ -35,7 +40,7 @@ app.use(webhooks.routes())
 
 const PORT = Number(Bun.env.PORT || 3333)
 const server = app.listen(PORT, () =>
-  console.log(`✅ Koa server listening on port ${PORT}`),
+  console.log(`✅ Lunary API server listening on port ${PORT}`),
 )
 
 prexit(async () => {

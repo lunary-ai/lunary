@@ -54,6 +54,7 @@ const publicRoutes = [
   "/webhooks/stripe",
   "/auth/user/password/reset",
   `/v1/runs/ingest`,
+  new RegExp(`/v1/runs/.+/feedback`), // getFeedback in SDKs
   `/v1/template_versions/latest`,
   "/v1/users/verify-email",
   "/v1/users/send-verification",
@@ -67,6 +68,7 @@ export async function authMiddleware(ctx: Context, next: Next) {
 
   if (isPublicRoute) {
     const bearerToken = ctx.request?.headers?.authorization?.split(" ")[1]
+
     if (typeof bearerToken === "string") {
       ctx.state.projectId = bearerToken
     }
