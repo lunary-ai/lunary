@@ -5,6 +5,100 @@ const radars = new Router({
   prefix: "/radars",
 })
 
+const DEFAULT_RADARS = [
+  // {
+  //   description: "Unhelpful answers",
+  //   view: [
+  //     "OR",
+  //     {
+  //       id: "type",
+  //       params: {
+  //         type: "chat",
+  //       },
+  //     },
+  //     {
+  //       id: "type",
+  //       params: {
+  //         type: "llm",
+  //       },
+  //     },
+  //   ],
+  //   checks: [
+  //     "AND",
+  //     {
+  //       id: "feedbacks",
+  //       params: {
+  //         feedbacks: [{ thumbs: "up" }],
+  //       },
+  //     },
+  //   ],
+  // },
+  {
+    description: "Failed or slow LLM calls",
+    view: [
+      "AND",
+      {
+        id: "type",
+        params: {
+          type: "llm",
+        },
+      },
+    ],
+    checks: [
+      "OR",
+      {
+        id: "status",
+        params: {
+          status: "error",
+        },
+      },
+      {
+        id: "duration",
+        params: {
+          operator: "gt",
+          duration: 30000,
+        },
+      },
+    ],
+  },
+  {
+    description: "Answer contains PII (Personal Identifiable Information)",
+    view: [
+      "AND",
+      {
+        id: "type",
+        params: {
+          type: "llm",
+        },
+      },
+    ],
+    checks: [
+      "OR",
+      {
+        id: "email",
+        params: {
+          field: "output",
+          type: "contains",
+        },
+      },
+      {
+        id: "cc",
+        params: {
+          field: "output",
+          type: "contains",
+        },
+      },
+      {
+        id: "phone",
+        params: {
+          field: "output",
+          type: "contains",
+        },
+      },
+    ],
+  },
+]
+
 radars.get("/", async (ctx) => {
   const { projectId } = ctx.state
 
@@ -19,6 +113,23 @@ radars.get("/", async (ctx) => {
   `
 
   ctx.body = rows
+})
+
+radars.get("/:radarId", async (ctx) => {
+  const { projectId } = ctx.state
+  const { radarId } = ctx.params
+
+  const [row] = await sql`
+    SELECT r.*, 
+      COUNT(rr.id) FILTER (WHERE rr.passed = true) AS passed,
+      COUNT(rr.id) FILTER (WHERE rr.passed = false) AS failed
+    FROM radar r
+    LEFT JOIN radar_result rr ON rr.radar_id = r.id
+    WHERE r.id = ${radarId} AND r.project_id = ${projectId}
+    GROUP BY r.id
+  `
+
+  ctx.body = row
 })
 
 radars.get("/:radarId/chart", async (ctx) => {
@@ -76,6 +187,31 @@ radars.post("/", async (ctx) => {
     })}
     RETURNING *
   `
+  ctx.body = row
+})
+
+radars.patch("/:radarId", async (ctx) => {
+  const { projectId } = ctx.state
+  const { radarId } = ctx.params
+
+  const { description, view, checks, alerts } = ctx.request.body as {
+    description: string
+    view: any[]
+    checks: any[]
+    alerts: any[]
+  }
+
+  const [row] = await sql`
+    UPDATE radar
+    SET ${sql({
+      description,
+      view: sql.json(view),
+      checks: sql.json(checks),
+      // alerts: sql.json(alerts),
+    })}
+      WHERE id = ${radarId} AND project_id = ${projectId}
+      RETURNING *
+      `
   ctx.body = row
 })
 

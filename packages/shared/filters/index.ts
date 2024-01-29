@@ -163,7 +163,7 @@ export const FILTERS: Filter[] = [
     sql: (sql, { status }) => sql`status = ${status}`,
   },
   // {
-  //   id: "feedback",
+  //   id: "feedbacks",
   //   name: "Feedback",
   //   uiType: "basic",
   //   disableInEvals: true,
@@ -341,7 +341,25 @@ export const FILTERS: Filter[] = [
       return sql`${sql(field + "_text")} ${operator} '${regexPattern}'`
     },
   },
+  {
+    id: "phone",
+    name: "Phone",
+    uiType: "smart",
+    params: [
+      FIELD_PARAM,
+      MATCH_PARAM,
+      {
+        type: "label",
+        label: "Phone",
+      },
+    ],
+    sql: (sql, { field, type }) => {
+      const regexPattern = sql`^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$`
+      const operator = type === "contains" ? sql`~` : sql`!~`
 
+      return sql`${sql(field + "_text")} ${operator} '${regexPattern}'`
+    },
+  },
   {
     id: "length",
     name: "Length",

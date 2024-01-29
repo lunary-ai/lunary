@@ -1,6 +1,6 @@
 import sql from "@/utils/db"
 import { convertFiltersToSQL } from "@/utils/filters"
-import { FILTERS, FilterLogic } from "shared"
+import { FILTERS, FilterLogic, LogicData, LogicElement } from "shared"
 
 type RadarResults = {
   passed: boolean
@@ -8,8 +8,8 @@ type RadarResults = {
   details?: any
 }
 
-const hasNonSQLFilter = (checks: any) =>
-  checks.some((check: any) => {
+const hasNonSQLFilter = (checks: FilterLogic): boolean =>
+  checks.some((check) => {
     if (typeof check === "string") return false
 
     if (Array.isArray(check)) return hasNonSQLFilter(check)
@@ -25,16 +25,39 @@ const hasNonSQLFilter = (checks: any) =>
     return false
   })
 
-const checkRun = async (run: any, check: any) => {
+const checkRun = async (
+  run: any,
+  check: LogicElement,
+): Promise<RadarResults> => {
   if (typeof check === "string") {
     // Handle AND or OR
-    return { passed: true }
+    return { passed: check !== "OR" }
   }
 
   if (Array.isArray(check)) {
-    // Handle nested AND/OR
-    const checkRun = await Promise.all(check.map((c) => checkRun(run, c)))
-    return { passed: checkRun.every((c) => c?.passed), details: checkRun }
+    const logicType = check[0]
+    const subChecks = check.slice(1)
+    if (logicType === "OR") {
+      for (const subCheck of subChecks) {
+        const result = await checkRun(run, subCheck)
+        if (result.passed) {
+          return { passed: true, details: [result] }
+        }
+      }
+      return {
+        passed: false,
+        details: subChecks.map(() => ({ passed: false })),
+      }
+    } else {
+      // Handle nested AND
+      const results: RadarResults[] = await Promise.all(
+        subChecks.map((subCheck) => checkRun(run, subCheck)),
+      )
+      return {
+        passed: results.every((result) => result.passed),
+        details: results,
+      }
+    }
   }
 
   const { id, params } = check
@@ -51,12 +74,11 @@ const checkRun = async (run: any, check: any) => {
     return { passed: !!result, filterId: id }
   }
 
-  return { filterId: filter.id, ...(await filter.evaluator(run, params)) }
+  return { filterId: filter.id, ...(await filter.evaluator!(run, params)) }
 }
 
-// TODO: follow AND/OR nested logic
 const runChecksOnRun = async (radar: any, run: any) => {
-  const checks: FilterLogic[] = radar.checks
+  const checks: FilterLogic = radar.checks
 
   let passed = true
   const results: RadarResults[] = []
@@ -72,14 +94,25 @@ const runChecksOnRun = async (radar: any, run: any) => {
 
     passed = !!result
   } else {
-    for (const check of checks) {
-      const res = await checkRun(run, check)
-
-      results.push(res)
-
-      passed = res.passed
-
-      if (!res.passed) break
+    const logicType = checks[0]
+    const subChecks = checks.slice(1)
+    if (logicType === "OR") {
+      for (const check of subChecks) {
+        const res = await checkRun(run, check)
+        results.push(res)
+        if (res.passed) {
+          passed = true
+          break
+        }
+      }
+    } else {
+      // Handle nested AND
+      for (const check of subChecks) {
+        const res = await checkRun(run, check)
+        results.push(res)
+        passed = res.passed
+        if (!res.passed) break
+      }
     }
   }
 
