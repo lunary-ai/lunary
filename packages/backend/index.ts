@@ -25,9 +25,9 @@ app.use(errorMiddleware)
 app.use(logger())
 app.use(corsMiddleware)
 app.use(authMiddleware)
+app.use(ratelimit)
 app.use(bodyParser())
 app.use(setDefaultBody)
-app.use(ratelimit)
 
 // Routes
 app.use(redirections.routes())
@@ -37,7 +37,7 @@ app.use(webhooks.routes())
 
 const PORT = Number(Bun.env.PORT || 3333)
 const server = app.listen(PORT, () =>
-  console.log(`✅ Koa server listening on port ${PORT}`),
+  console.log(`✅ Lunary API server listening on port ${PORT}`),
 )
 
 prexit(async () => {
