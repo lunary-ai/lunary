@@ -13,7 +13,7 @@ export default ratelimit({
     reset: "Rate-Limit-Reset",
     total: "Rate-Limit-Total",
   },
-  max: 50, // limit unlogged IPs to 50 requests per minute
+  max: 150, // limit unlogged IPs to 50 requests per minute
   disableHeader: false,
   whitelist: (ctx) => {
     // don't limit logged in users
