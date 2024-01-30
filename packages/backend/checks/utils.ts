@@ -1,12 +1,13 @@
-import { FILTERS, FilterLogic, LogicElement } from "shared"
-import sql from "./db"
+import { FilterLogic, LogicElement } from "shared"
+import sql from "../utils/db"
+import CHECK_RUNNERS from "../checks"
 
 const and = (arr: any = []) =>
   arr.reduce((acc: any, x: any) => sql`${acc} AND ${x}`)
 const or = (arr: any = []) =>
   arr.reduce((acc: any, x: any) => sql`(${acc} OR ${x})`)
 
-export function convertFiltersToSQL(filtersData: FilterLogic): any {
+export function convertChecksToSQL(filtersData: FilterLogic): any {
   const logicToSql = (logicElement: LogicElement): any => {
     if (Array.isArray(logicElement)) {
       const [logicOperator, ...elements] = logicElement
@@ -17,14 +18,15 @@ export function convertFiltersToSQL(filtersData: FilterLogic): any {
         return or(elements.map(logicToSql))
       }
     } else {
-      const filter = FILTERS.find((f) => f.id === logicElement.id)
-      if (!filter || !filter.sql) {
+      const runner = CHECK_RUNNERS.find((f) => f.id === logicElement.id)
+
+      if (!runner || !runner.sql) {
         console.warn(
           `No SQL method defined for filter with id ${logicElement.id}`,
         )
         return sql``
       }
-      return filter.sql(sql, logicElement.params)
+      return runner.sql(logicElement.params)
     }
   }
   const sqlFilters = sql`(${logicToSql(filtersData)})`

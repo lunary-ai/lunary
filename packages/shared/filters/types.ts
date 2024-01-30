@@ -31,14 +31,6 @@ export type Filter = {
   params: (FilterParam | FilterLabel)[]
   disableInEvals?: boolean
   onlyInEvals?: boolean
-  evaluator?: (
-    run: any,
-    params: any,
-  ) => Promise<{
-    passed: boolean
-    details?: any
-  }>
-  sql?: (sqlClient: any, params: any) => any // todo: postgres sql type
 }
 
 // export type SavedFilterData = {

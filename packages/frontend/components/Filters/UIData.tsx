@@ -28,6 +28,7 @@ import {
   IconTextDirectionRtl,
   IconThumbUp,
   IconTools,
+  IconTriangleSquareCircle,
   IconUser,
   IconUserCheck,
   IconWorldWww,
@@ -155,7 +156,10 @@ const FILTERS_UI_DATA = {
     icon: IconBracketsContainStart,
     color: "blue",
   },
-
+  toxicity: {
+    icon: IconTriangleSquareCircle,
+    color: "red",
+  },
   other: {
     icon: IconFilter,
     color: "gray",

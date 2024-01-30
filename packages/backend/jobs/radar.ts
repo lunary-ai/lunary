@@ -1,6 +1,7 @@
-import sql from "@/utils/db"
-import { convertFiltersToSQL } from "@/utils/filters"
-import { FILTERS, FilterLogic, LogicData, LogicElement } from "shared"
+import CHECK_RUNNERS from "../checks"
+import sql from "../utils/db"
+import { convertChecksToSQL } from "../checks/utils"
+import { FilterLogic, LogicElement } from "shared"
 
 type RadarResults = {
   passed: boolean
@@ -16,9 +17,9 @@ const hasNonSQLFilter = (checks: FilterLogic): boolean =>
 
     const { id } = check
 
-    const filter = FILTERS.find((f) => f.id === id)
+    const runner = CHECK_RUNNERS.find((f) => f.id === id)
 
-    if (filter?.evaluator) {
+    if (runner?.evaluator) {
       return true
     }
 
@@ -61,20 +62,20 @@ const checkRun = async (
   }
 
   const { id, params } = check
-  const filter = FILTERS.find((f) => f.id === id)
+  const runner = CHECK_RUNNERS.find((f) => f.id === id)
 
-  if (!filter || (!filter.sql && !filter.evaluator)) {
+  if (!runner || (!runner.sql && !runner.evaluator)) {
     return { passed: true }
   }
 
-  if (filter.sql) {
-    const snippet = filter.sql(sql, params)
+  if (runner.sql) {
+    const snippet = runner.sql(params)
     const [result] =
       await sql`select * from run where id = ${run.id} and (${snippet})`
     return { passed: !!result, filterId: id }
   }
 
-  return { filterId: filter.id, ...(await filter.evaluator!(run, params)) }
+  return { filterId: runner.id, ...(await runner.evaluator!(run, params)) }
 }
 
 const runChecksOnRun = async (radar: any, run: any) => {
@@ -87,10 +88,10 @@ const runChecksOnRun = async (radar: any, run: any) => {
 
   if (onlySQL) {
     // More efficient to do it all in SQL if only SQL filters are used
-    const filterSql = convertFiltersToSQL(checks)
+    const filterSql = convertChecksToSQL(checks)
 
     const [result] =
-      await sql`select * from run where id = ${run.id} and (${filterSql})`
+      await sql`select * from run where id = ${run.id} and ${filterSql}`
 
     passed = !!result
   } else {
@@ -134,14 +135,19 @@ const BATCH_SIZE = 1000
 // get all runs that don't have radar results
 // oldest first, limit 300 per batch
 async function getRadarRuns(radar: any) {
-  const filtersQuery = convertFiltersToSQL(radar.view)
+  const filtersQuery = convertChecksToSQL(radar.view)
+
+  console.log(`Getting runs for radar ${radar.id}, ${radar.projectId}`)
 
   const excludedRunsSubquery = sql`select run_id from radar_result where radar_id = ${radar.id}`
+
+  console.log(`Excluding`, await sql`${excludedRunsSubquery}`)
+
   return await sql`
     select * from run
     where 
       project_id = ${radar.projectId}
-      and ${filtersQuery}
+      and (${filtersQuery})
       and id not in (${excludedRunsSubquery})
     order by created_at asc
     limit ${BATCH_SIZE}
