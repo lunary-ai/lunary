@@ -1,32 +1,21 @@
 {
   "name": "lunary",
-  "version": "1.0.0-alpha.1",
-  "module": "index.ts",
-  "devDependencies": {
-    "@ts-safeql/eslint-plugin": "^2.0.3",
-    "@typescript-eslint/eslint-plugin": "^6.18.1",
-    "@typescript-eslint/parser": "^6.18.1",
-    "bun-types": "latest",
-    "concurrently": "^8.2.2",
-    "eslint": "^8.56.0",
-    "libpg-query": "^15.0.2"
-  },
-  "peerDependencies": {
-    "typescript": "^5.3.3"
-  },
+  "version": "1.0.0",
   "private": "true",
   "scripts": {
-    "dev": "concurrently \"bun run frontend:dev\" \"bun run backend:dev\"",
-    "frontend:start": "cd packages/frontend && bun run start",
-    "frontend:dev": "cd packages/frontend && bun run dev",
-    "backend:start": "cd packages/backend && bun start",
-    "backend:dev": "cd packages/backend && bun run dev"
+    "dev": "concurrently \"npm run frontend:dev\" \"npm run backend:dev\"",
+    "frontend:start": "npm -w packages/frontend run start",
+    "frontend:dev": "npm -w packages/frontend run dev",
+    "backend:start": "npm -w packages/backend run start",
+    "backend:dev": "npm -w packages/backend run dev"
   },
-  "type": "module",
   "workspaces": [
     "packages/*"
   ],
-  "dependencies": {
-    "jose": "^5.2.0"
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "prettier": "^3.2.4",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
   }
 }

@@ -7,7 +7,6 @@ import PlausibleProvider from "next-plausible"
 import posthog from "posthog-js"
 
 import analytics from "@/utils/analytics"
-import { HighlightInit } from "@highlight-run/next/client"
 
 import { Crisp } from "crisp-sdk-web"
 
@@ -37,19 +36,6 @@ export default function AnalyticsWrapper({ children }) {
 
   return (
     <>
-      {process.env.NEXT_PUBLIC_HIGHLIGHT_PROJECT_ID && (
-        <HighlightInit
-          projectId={process.env.NEXT_PUBLIC_HIGHLIGHT_PROJECT_ID}
-          serviceName="lunary-frontend"
-          tracingOrigins
-          disableConsoleRecording
-          networkRecording={{
-            enabled: false,
-            recordHeadersAndBody: true,
-            urlBlocklist: [],
-          }}
-        />
-      )}
       {process.env.NEXT_PUBLIC_CRISP_ID && <CrispChat />}
       <PlausibleProvider
         domain="app.lunary.ai,rollup.lunary.ai"
