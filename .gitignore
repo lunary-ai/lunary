@@ -183,3 +183,5 @@ bun.lockb
 docker-compose*
 
 package-lock.json
+
+entrypoint.sh
