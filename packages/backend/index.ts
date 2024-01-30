@@ -14,9 +14,11 @@ import sql, { checkDbConnection } from "./utils/db"
 import { errorMiddleware } from "./utils/errors"
 import { setDefaultBody } from "./utils/misc"
 import ratelimit from "./utils/ratelimit"
+import { initSentry, requestHandler, tracingMiddleWare } from "./utils/sentry"
 
 await checkDbConnection()
 setupCronJobs()
+initSentry()
 
 const app = new Koa()
 
@@ -24,7 +26,12 @@ const app = new Koa()
 app.proxy = true
 
 // MiddleWares
+app.use(requestHandler)
+app.use(tracingMiddleWare)
 app.use(errorMiddleware)
+app.use(async function () {
+  throw new Error("My second Sentry error!")
+})
 app.use(logger())
 app.use(corsMiddleware)
 app.use(authMiddleware)

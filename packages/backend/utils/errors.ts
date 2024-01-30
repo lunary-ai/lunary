@@ -1,5 +1,6 @@
 import { Context, Next } from "koa"
 import { z } from "zod"
+import { sendErrorToSentry } from "./sentry"
 
 export async function errorMiddleware(ctx: Context, next: Next) {
   try {
@@ -10,6 +11,7 @@ export async function errorMiddleware(ctx: Context, next: Next) {
     }
   } catch (error: any) {
     console.error(error)
+    sendErrorToSentry(error, ctx)
 
     if (error instanceof z.ZodError) {
       ctx.status = 422
