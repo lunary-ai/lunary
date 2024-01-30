@@ -276,7 +276,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     async evaluator(run, params) {
       const { field, sentiment } = params
 
-      const score = await aiSentiment(run[field + "_text"])
+      const score = await aiSentiment(run[field + "Text"])
 
       let passed = false
 
@@ -311,7 +311,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     async evaluator(run, params) {
       const { field, type } = params
 
-      const labels = await aiToxicity(run[field + "_text"])
+      const labels = await aiToxicity(run[field + "Text"])
 
       const hasToxicity = labels.length > 0
 
