@@ -3,16 +3,29 @@ import Context from "@/utils/koa"
 import * as jose from "jose"
 import { SignJWT } from "jose"
 import { Next } from "koa"
+import * as argon2 from "argon2"
+
+import bcrypt from "bcrypt"
 
 export async function verifyPassword(
   password: string,
   hash: string,
 ): Promise<boolean> {
-  return Bun.password.verify(password, hash)
+  if (hash.startsWith("$argon2")) {
+    return argon2.verify(hash, password)
+  } else if (
+    hash.startsWith("$2a") ||
+    hash.startsWith("$2b") ||
+    hash.startsWith("$2y")
+  ) {
+    return bcrypt.compare(password, hash)
+  } else {
+    throw new Error("Unknown hash type")
+  }
 }
 
 export async function hashPassword(password: string): Promise<string> {
-  return Bun.password.hash(password)
+  return argon2.hash(password)
 }
 
 const ONE_MONTH = 60 * 60 * 24 * 30
