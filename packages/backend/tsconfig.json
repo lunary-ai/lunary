@@ -16,7 +16,7 @@
     "forceConsistentCasingInFileNames": true,
     "allowJs": true,
     "baseUrl": ".",
-    "rootDir": ".",
+    "rootDir": "src",
     "paths": {
       "@/*": ["./*"],
       "@/utils/*": ["src/utils/*"],
