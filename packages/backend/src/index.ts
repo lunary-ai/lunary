@@ -29,9 +29,6 @@ app.proxy = true
 app.use(requestHandler)
 app.use(tracingMiddleWare)
 app.use(errorMiddleware)
-app.use(async function () {
-  throw new Error("My second Sentry error!")
-})
 app.use(logger())
 app.use(corsMiddleware)
 app.use(authMiddleware)
