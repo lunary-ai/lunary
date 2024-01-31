@@ -1,7 +1,10 @@
 {
   "name": "shared",
-  "main": "index.ts",
+  "main": "dist/index.js",
   "type": "module",
+  "scripts": {
+    "build": "tsup index.ts --format esm"
+  },
   "dependencies": {
     "@types/node": "^20.11.11"
   }

@@ -1,10 +1,10 @@
 {
   "name": "@lunary/backend",
-  "type": "module",
   "main": "index.ts",
   "scripts": {
     "dev": "tsx --env-file=.env --watch src/index.ts",
-    "start": "tsx index.ts"
+    "start": "tsx index.ts",
+    "build": "tsup src/index.ts --format esm"
   },
   "dependencies": {
     "@json2csv/plainjs": "^7.0.5",

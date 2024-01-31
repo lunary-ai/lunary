@@ -16,7 +16,7 @@ import { setDefaultBody } from "./utils/misc"
 import ratelimit from "./utils/ratelimit"
 import { initSentry, requestHandler, tracingMiddleWare } from "./utils/sentry"
 
-await checkDbConnection()
+checkDbConnection()
 setupCronJobs()
 initSentry()
 
