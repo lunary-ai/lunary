@@ -260,7 +260,7 @@ export async function processEventsIngestion(
       })
     } catch (e: any) {
       Sentry.withScope((scope) => {
-        scope.setExtras({ event: event })
+        scope.setExtras({ event: JSON.stringify(event) })
         Sentry.captureException(e)
       })
       console.error(`Error ingesting event`, {
