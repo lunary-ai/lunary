@@ -1,7 +1,7 @@
 import sql from "@/src/utils/db"
 import { sendTelegramMessage } from "@/src/utils/notifications"
 
-const updateLimitedStatus = async () => {
+async function updateLimitedStatus() {
   // set limited = false for all users that have been under the limit
   // for the last 3 days
   const alreadyLimited = await sql`UPDATE "public"."org" p
@@ -62,7 +62,7 @@ RETURNING *;`
 // - 10 for 'pro' users
 // - 1000 for 'unlimited' and 'enterprise' users
 
-const resetAIallowance = async () => {
+async function resetAIallowance() {
   await sql`UPDATE "public"."org" o SET play_allowance = 3 WHERE o.plan = 'free';`
 
   await sql`UPDATE "public"."org" o SET play_allowance = 15 WHERE o.plan = 'pro';`

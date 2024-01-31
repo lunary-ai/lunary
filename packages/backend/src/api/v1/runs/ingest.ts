@@ -1,4 +1,5 @@
 import sql from "@/src/utils/db"
+import * as Sentry from "@sentry/node"
 import { Context } from "koa"
 import Router from "koa-router"
 import {
@@ -258,6 +259,10 @@ export async function processEventsIngestion(
         success: true,
       })
     } catch (e: any) {
+      Sentry.withScope((scope) => {
+        scope.setExtras({ event: event })
+        Sentry.captureException(e)
+      })
       console.error(`Error ingesting event`, {
         error: e,
         event,
