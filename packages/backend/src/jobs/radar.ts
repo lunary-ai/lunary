@@ -1,4 +1,4 @@
-import CHECK_RUNNERS from "@/checks"
+import CHECK_RUNNERS from "@/src/checks"
 import sql from "@/src/utils/db"
 import { convertChecksToSQL } from "@/src/utils/filters"
 import { FILTERS, FilterLogic, LogicElement } from "shared"
