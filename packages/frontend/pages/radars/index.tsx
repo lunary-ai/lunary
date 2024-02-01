@@ -23,6 +23,7 @@ import {
 import { modals } from "@mantine/modals"
 import { notifications } from "@mantine/notifications"
 import {
+  IconBell,
   IconDotsVertical,
   IconListSearch,
   IconPencil,
@@ -183,7 +184,7 @@ function RadarCard({ id, initialData }) {
   const hasStats = +passed > 0 || +failed > 0
   const total = +passed + +failed
 
-  const percentMatch = Math.round(+passed / (total * 100))
+  const percentMatch = Math.round((+passed / total) * 100)
 
   return (
     <Card p="md" withBorder>
@@ -285,6 +286,10 @@ function RadarCard({ id, initialData }) {
                 >
                   Edit
                 </Menu.Item>
+                <Menu.Item disabled leftSection={<IconBell size={13} />}>
+                  Alerts
+                </Menu.Item>
+
                 <Menu.Item
                   color="red"
                   leftSection={<IconTrash size={13} />}

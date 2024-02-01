@@ -85,41 +85,45 @@ const checkRun = async (
 const runChecksOnRun = async (radar: any, run: any) => {
   const checks: FilterLogic = radar.checks
 
-  let passed = true
+  let passed = false
   const results: RadarResults[] = []
 
   const onlySQL = !hasNonSQLFilter(checks)
 
-  // if (onlySQL) {
-  //   // More efficient to do it all in SQL if only SQL filters are used
-  //   const filterSql = convertChecksToSQL(checks)
+  if (onlySQL) {
+    // More efficient to do it all in SQL if only SQL filters are used
+    const filterSql = convertChecksToSQL(checks)
 
-  //   const [result] =
-  //     await sql`select * from run where id = ${run.id} and ${filterSql}`
+    const [result] =
+      await sql`select * from run where id = ${run.id} and ${filterSql}`
 
-  //   passed = !!result
-  // } else {
-  const logicType = checks[0]
-  const subChecks = checks.slice(1)
-  if (logicType === "OR") {
-    for (const check of subChecks) {
-      const res = await checkRun(run, check)
-      results.push(res)
-      if (res.passed) {
-        passed = true
-        break
+    passed = !!result
+  } else {
+    const logicType = checks[0]
+    const subChecks = checks.slice(1)
+    if (logicType === "OR") {
+      for (const check of subChecks) {
+        const res = await checkRun(run, check)
+        results.push(res)
+        if (res.passed) {
+          passed = true
+          break
+        }
+      }
+    } else {
+      // Handle nested AND
+      for (const check of subChecks) {
+        const res = await checkRun(run, check)
+        results.push(res)
+        passed = res.passed
+        if (!res.passed) break
       }
     }
-  } else {
-    // Handle nested AND
-    for (const check of subChecks) {
-      const res = await checkRun(run, check)
-      results.push(res)
-      passed = res.passed
-      if (!res.passed) break
-    }
+
+    console.log(
+      `radar ${radar.id} run ${run.id} type ${logicType} passed: ${passed}`,
+    )
   }
-  // }
 
   await sql`
     insert into radar_result ${sql({
