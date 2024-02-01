@@ -16,7 +16,9 @@ export type CheckRunner = {
 }
 
 const isOpenAIMessage = (field: any) =>
-  typeof field === "object" && field.role && field.content
+  typeof field === "object" &&
+  field.role &&
+  (field.content || field.toolCalls || field.functionCalls)
 
 function lastMsg(field: any) {
   if (typeof field === "string" || !field) {
@@ -289,7 +291,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     async evaluator(run, params) {
       const { field, sentiment } = params
 
-      const score = await aiSentiment(run[field + "Text"])
+      const score = await aiSentiment(lastMsg(run[field]))
 
       let passed = false
 
@@ -300,6 +302,10 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       } else {
         passed = score >= 0.4 && score <= 0.7
       }
+
+      console.log(
+        `checking sentiment ${sentiment} with score ${score}: ${passed}`,
+      )
 
       return {
         passed,

@@ -27,7 +27,17 @@ async function aiToxicity(sentences?: string[]): Promise<string[]> {
 
   const output: Output = await nerPipeline(cleaned, { topk: null })
 
-  return output.filter((l) => l.score > 0.8).map((l) => l.label)
+  // remove duplicates and filter out low scores
+  const result = [
+    ...new Set(
+      output
+        .flat()
+        .filter((l) => l.score > 0.8)
+        .map((l) => l.label),
+    ),
+  ]
+
+  return result
 }
 
 export default aiToxicity

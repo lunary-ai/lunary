@@ -15,6 +15,7 @@ import {
   Modal,
   Progress,
   Stack,
+  Switch,
   Text,
   TextInput,
   Title,
@@ -97,6 +98,14 @@ function RadarEditModal({
     >
       <Stack gap="xl">
         <Stack>
+          <Switch
+            onChange={(event) =>
+              onUpdate({ negative: event.currentTarget.checked })
+            }
+            checked={value.negative}
+            label="Negative radar"
+          />
+
           <Text size="lg">
             Describe the radar. This will be used to identify your radar in the
             list.
@@ -169,10 +178,12 @@ function RadarCard({ id, initialData }) {
 
   if (!radar) return null
 
-  const { description, checks, passed, failed } = radar || {}
+  const { description, checks, passed, failed, negative } = radar || {}
 
   const hasStats = +passed > 0 || +failed > 0
-  const percentMatch = Math.round((+passed / (+passed + +failed)) * 100)
+  const total = +passed + +failed
+
+  const percentMatch = Math.round(+passed / (total * 100))
 
   return (
     <Card p="md" withBorder>
@@ -209,7 +220,12 @@ function RadarCard({ id, initialData }) {
           </Title>
 
           <Group justify="end">
-            <TinyPercentChart height={40} width={210} data={chart} />
+            <TinyPercentChart
+              height={40}
+              width={210}
+              data={chart}
+              negative={negative}
+            />
 
             {/* <Popover withArrow shadow="sm">
               <Popover.Target>
@@ -308,10 +324,16 @@ function RadarCard({ id, initialData }) {
 
           {hasStats && (
             <Progress.Root size={20} w={300}>
-              <Progress.Section value={percentMatch} color="red">
+              <Progress.Section
+                value={percentMatch}
+                color={negative ? "red" : "teal"}
+              >
                 <Progress.Label>{`${percentMatch}%`}</Progress.Label>
               </Progress.Section>
-              <Progress.Section value={100 - percentMatch} color="green">
+              <Progress.Section
+                value={100 - percentMatch}
+                color={negative ? "teal" : "red"}
+              >
                 <Progress.Label>{`${100 - percentMatch}%`}</Progress.Label>
               </Progress.Section>
             </Progress.Root>
@@ -333,8 +355,6 @@ export default function Radar() {
   const [modalOpened, setModalOpened] = useState(false)
   const { radars, insert } = useRadars()
   const [newRadar, setNewRadar] = useState(DEFAULT_RADAR)
-
-  console.log(radars)
 
   return (
     <Paywall

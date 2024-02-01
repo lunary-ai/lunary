@@ -37,7 +37,11 @@ async function aiSentiment(sentence?: string): Promise<number> {
 
   const sentiment = parseInt(output[0].label)
 
-  return Math.round(sentiment / 5)
+  const score = +(sentiment / 5).toFixed(2)
+  console.log(`Sentiment for "${sentence}" is ${sentiment} or ${score}`)
+  console.log({ sorted })
+
+  return score
 }
 
 export default aiSentiment

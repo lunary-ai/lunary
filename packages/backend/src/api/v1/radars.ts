@@ -105,30 +105,30 @@ const DEFAULT_RADARS = [
       },
     ],
   },
-  {
-    description: "Answers with negative sentiment",
-    negative: true,
-    view: [
-      "AND",
-      {
-        id: "type",
-        params: {
-          type: "llm",
-        },
-      },
-    ],
-    checks: [
-      "OR",
-      {
-        id: "sentiment",
-        params: {
-          field: "output",
-          type: "contains",
-          sentiment: "negative",
-        },
-      },
-    ],
-  },
+  // {
+  //   description: "Answers with negative sentiment",
+  //   negative: true,
+  //   view: [
+  //     "AND",
+  //     {
+  //       id: "type",
+  //       params: {
+  //         type: "llm",
+  //       },
+  //     },
+  //   ],
+  //   checks: [
+  //     "OR",
+  //     {
+  //       id: "sentiment",
+  //       params: {
+  //         field: "output",
+  //         type: "contains",
+  //         sentiment: "negative",
+  //       },
+  //     },
+  //   ],
+  // },
 ]
 
 radars.get("/", async (ctx) => {
@@ -217,11 +217,12 @@ radars.get("/:radarId/chart", async (ctx) => {
 
 radars.post("/", async (ctx) => {
   const { projectId, userId } = ctx.state
-  const { description, view, checks, alerts } = ctx.request.body as {
+  const { description, view, checks, alerts, negative } = ctx.request.body as {
     description: string
     view: any[]
     checks: any[]
     alerts: any[]
+    negative: boolean
   }
 
   const [row] = await sql`
@@ -230,6 +231,7 @@ radars.post("/", async (ctx) => {
       view: sql.json(view),
       checks: sql.json(checks),
       // alerts: sql.json(alerts),
+      negative,
       projectId,
       ownerId: userId,
     })}
@@ -242,11 +244,12 @@ radars.patch("/:radarId", async (ctx) => {
   const { projectId } = ctx.state
   const { radarId } = ctx.params
 
-  const { description, view, checks, alerts } = ctx.request.body as {
+  const { description, view, checks, alerts, negative } = ctx.request.body as {
     description: string
     view: any[]
     checks: any[]
     alerts: any[]
+    negative: boolean
   }
 
   const [row] = await sql`
@@ -255,6 +258,7 @@ radars.patch("/:radarId", async (ctx) => {
       description,
       view: sql.json(view),
       checks: sql.json(checks),
+      negative,
       // alerts: sql.json(alerts),
     })}
       WHERE id = ${radarId} AND project_id = ${projectId}
