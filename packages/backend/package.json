@@ -13,8 +13,9 @@
     "eslint": "^8.56.0"
   },
   "scripts": {
-    "start": "bun run index.ts",
-    "dev": "bun --watch index.ts"
+    "dev": "tsx --env-file=../../.env --watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "build": "tsup src/index.ts --format esm"
   },
   "dependencies": {
     "@json2csv/plainjs": "^7.0.4",
