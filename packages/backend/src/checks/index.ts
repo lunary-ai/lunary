@@ -109,7 +109,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   },
   {
     id: "json",
-    soon: true,
+
     evaluator: async (run, params) => {
       const { type } = params
       let passed = false

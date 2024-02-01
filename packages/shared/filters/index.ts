@@ -184,6 +184,7 @@ export const FILTERS: Filter[] = [
   {
     id: "json",
     name: "JSON",
+    soon: true,
     uiType: "smart",
     params: [
       {
