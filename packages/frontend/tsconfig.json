@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2015",
+    "target": "ESNext",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
@@ -9,7 +9,7 @@
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
@@ -18,22 +18,22 @@
     "paths": {
       "@/*": ["./*"],
       "@/lib/*": ["lib/*"],
-      "@/components/*": ["components/*"]
+      "@/components/*": ["components/*"],
     },
     "plugins": [
       {
-        "name": "next"
-      }
+        "name": "next",
+      },
     ],
-    "strictNullChecks": true
+    "strictNullChecks": true,
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "../backend/api/stripe.ts",
-    "../backend/api/signup.ts"
+    "../backend/src/api/stripe.ts",
+    "../backend/src/api/signup.ts",
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
 }

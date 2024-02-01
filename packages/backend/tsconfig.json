@@ -2,7 +2,7 @@
   "compilerOptions": {
     "lib": ["ESNext"],
     "module": "esnext",
-    "target": "esnext",
+    "target": "ESNext",
     "moduleResolution": "bundler",
     "moduleDetection": "force",
     "allowImportingTsExtensions": true,
@@ -15,14 +15,12 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "allowJs": true,
-    "types": [
-      "bun-types", // add Bun global
-    ],
     "baseUrl": ".",
+    "rootDir": "src",
     "paths": {
       "@/*": ["./*"],
-      "@/utils/*": ["utils/*"],
-      "@/checks/*": ["checks/*"],
-    },
-  },
+      "@/utils/*": ["src/utils/*"],
+      "@/checks/*": ["src/checks/*"],,
+    },,
+  },,
 }

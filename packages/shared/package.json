@@ -1,11 +1,11 @@
 {
   "name": "shared",
-  "module": "index.ts",
-  "devDependencies": {
-    "@types/bun": "latest"
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsup index.ts --format esm"
   },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
-  },
-  "type": "module"
+  "dependencies": {
+    "@types/node": "^20.11.11"
+  }
 }
