@@ -1,5 +1,6 @@
 import {
   FIELD_PARAM,
+  FIELD_PARAM_ANY,
   FORMAT_PARAM,
   MATCH_PARAM,
   NUMBER_PARAM,
@@ -11,38 +12,6 @@ import type { Filter } from "./types"
 export * from "./types"
 export * from "./serialize"
 
-function postgresOperators(sql: any, operator: string) {
-  switch (operator) {
-    case "gt":
-      return sql`>`
-    case "gte":
-      return sql`>=`
-    case "lt":
-      return sql`<`
-    case "lte":
-      return sql`<=`
-    case "eq":
-      return sql`=`
-    case "neq":
-      return sql`!=`
-    case "iequals":
-      return sql`ILIKE`
-    case "icontains":
-      return sql`ILIKE`
-    case "contains":
-      return sql`LIKE`
-    case "startswith":
-      return sql`LIKE`
-    case "istartswith":
-      return sql`ILIKE`
-    case "endswith":
-      return sql`LIKE`
-    case "iendswith":
-      return sql`ILIKE`
-    default:
-      throw new Error(`Unsupported operator: ${operator}`)
-  }
-}
 export const FILTERS: Filter[] = [
   {
     id: "type",
@@ -87,10 +56,6 @@ export const FILTERS: Filter[] = [
         ],
       },
     ],
-    sql: (sql, { type }) =>
-      type === "trace"
-        ? sql`(type in ('agent','chain') and parent_run_id is null)`
-        : sql`type = ${type}`,
   },
   {
     id: "models",
@@ -110,7 +75,6 @@ export const FILTERS: Filter[] = [
         options: (type) => `/filters/models`,
       },
     ],
-    sql: (sql, { names }) => sql`name = any(${names})`,
   },
   {
     id: "tags",
@@ -130,7 +94,6 @@ export const FILTERS: Filter[] = [
         options: () => `/filters/tags`,
       },
     ],
-    sql: (sql, { tags }) => sql`tags && '{${sql(tags)}}'`,
   },
   {
     id: "status",
@@ -159,10 +122,9 @@ export const FILTERS: Filter[] = [
         ],
       },
     ],
-    sql: (sql, { status }) => sql`status = ${status}`,
   },
   // {
-  //   id: "feedback",
+  //   id: "feedbacks",
   //   name: "Feedback",
   //   uiType: "basic",
   //   disableInEvals: true,
@@ -200,7 +162,6 @@ export const FILTERS: Filter[] = [
         // render: (item) => <AppUser/> // todo
       },
     ],
-    sql: (sql, { users }) => sql`external_user_id = ANY (${users})`,
   },
   {
     id: "regex",
@@ -219,21 +180,6 @@ export const FILTERS: Filter[] = [
         placeholder: "^[0-9]+$",
       },
     ],
-    evaluator: async (run, params) => {
-      const { regex } = params
-      const re = new RegExp(regex)
-
-      const inputMatch = re.test(run.output)
-      const outputMatch = re.test(run.output)
-
-      return {
-        inputMatch,
-        outputMatch,
-      }
-    },
-
-    sql: (sql, { field, type }) =>
-      sql`result.${field}Match = ${type === "match" ? 1 : 0}`,
   },
   {
     id: "json",
@@ -250,60 +196,41 @@ export const FILTERS: Filter[] = [
         label: "JSON",
       },
     ],
-    evaluator: async (run) => {
-      let parsable = false
-      let partial = false
-
-      try {
-        if (!run.output.startsWith("{")) throw "Not an object"
-        JSON.parse(run.output)
-        parsable = true
-        partial = true
-      } catch (e) {}
-
-      return {
-        parsable,
-        partial,
-      }
-    },
-    sql: (sql, { type }) =>
-      sql`result.parsable = ${type === "parsable" ? 1 : 0}`,
   },
-  {
-    id: "xml",
-    name: "XML / HTML",
-    uiType: "smart",
-    params: [
-      {
-        label: "Response",
-        type: "label",
-      },
-      FORMAT_PARAM,
-      {
-        type: "label",
-        label: "XML / HTML",
-      },
-    ],
-    evaluator: async (run) => {
-      let parsable = false
-      let partial = false
+  // {
+  //   id: "xml",
+  //   name: "XML / HTML",
+  //   uiType: "smart",
+  //   params: [
+  //     {
+  //       label: "Response",
+  //       type: "label",
+  //     },
+  //     FORMAT_PARAM,
+  //     {
+  //       type: "label",
+  //       label: "XML / HTML",
+  //     },
+  //   ],
+  //   evaluator: async (run) => {
+  //     let parsable = false
+  //     let passed = false
 
-      try {
-        if (!run.output.startsWith("<")) throw "Not an object"
-        // TODO: use a real XML parser
-        // new DOMParser().parseFromString(run.output, "text/xml")
-        parsable = true
-        partial = true
-      } catch (e) {}
+  //     try {
+  //       if (!run.output.startsWith("<")) throw "Not an object"
+  //       // TODO: use a real XML parser
+  //       // new DOMParser().parseFromString(run.output, "text/xml")
+  //       parsable = true
+  //       partial = true
+  //     } catch (e) {}
 
-      return {
-        parsable,
-        partial,
-      }
-    },
-    sql: (sql, { type }) =>
-      sql`result.parsable = ${type === "parsable" ? 1 : 0}`,
-  },
+  //     return {
+  //       parsable,
+  //       partial,
+  //     }
+  //   },
+
+  // },
   {
     id: "cc",
     name: "Credit Card",
@@ -316,21 +243,6 @@ export const FILTERS: Filter[] = [
         label: "Credit Card",
       },
     ],
-    evaluator: async (run) => {
-      const re = new RegExp(
-        "^(?:4[0-9]{12}(?:[0-9]{3})?|[25][1-7][0-9]{14}|6(?:011|5[0-9][0-9])[0-9]{12}|3[47][0-9]{13}|3(?:0[0-5]|[68][0-9])[0-9]{11}|(?:2131|1800|35d{3})d{11})$",
-      )
-
-      const inputMatch = re.test(run.input)
-      const outputMatch = re.test(run.output)
-
-      return {
-        inputMatch,
-        outputMatch,
-      }
-    },
-    sql: (sql, { field, type }) =>
-      sql`result.${field}Match = ${type === "match" ? 1 : 0}`,
   },
   {
     id: "email",
@@ -344,21 +256,20 @@ export const FILTERS: Filter[] = [
         label: "Email",
       },
     ],
-    evaluator: async (run) => {
-      const re = new RegExp("^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+.[a-zA-Z0-9-.]+$")
-
-      const inputMatch = re.test(run.input)
-      const outputMatch = re.test(run.output)
-
-      return {
-        inputMatch,
-        outputMatch,
-      }
-    },
-    sql: (sql, { field, type }) =>
-      sql`result.${field}Match = ${type === "match" ? 1 : 0}`,
   },
-
+  {
+    id: "phone",
+    name: "Phone",
+    uiType: "smart",
+    params: [
+      FIELD_PARAM,
+      MATCH_PARAM,
+      {
+        type: "label",
+        label: "Phone",
+      },
+    ],
+  },
   {
     id: "length",
     name: "Length",
@@ -378,8 +289,6 @@ export const FILTERS: Filter[] = [
         width: 60,
       },
     ],
-    sql: (sql, { field, operator, length }) =>
-      sql`length(${sql(field + "_text")} ${postgresOperators(sql, operator)} ${length}`,
   },
   {
     id: "date",
@@ -397,9 +306,6 @@ export const FILTERS: Filter[] = [
         id: "date",
       },
     ],
-
-    sql: (sql, { operator, date }) =>
-      sql`created_at ${postgresOperators(sql, operator)} '${date}'`,
   },
   {
     id: "duration",
@@ -421,9 +327,6 @@ export const FILTERS: Filter[] = [
         unit: "s",
       },
     ],
-    sql: (sql, { operator, duration }) => {
-      return sql`duration ${postgresOperators(sql, operator)} ${duration} * interval '1 second'`
-    },
   },
   {
     id: "cost",
@@ -444,8 +347,6 @@ export const FILTERS: Filter[] = [
         unit: "$",
       },
     ],
-    sql: (sql, { operator, cost }) =>
-      sql`cost ${postgresOperators(sql, operator)} ${cost}`,
   },
   {
     id: "tokens",
@@ -484,25 +385,32 @@ export const FILTERS: Filter[] = [
         width: 70,
       },
     ],
-    // sum completion_tokens and prompt_tokens if field is total
-    sql: (sql, { field, operator, tokens }) => {
-      if (field === "total") {
-        return sql`completion_tokens + prompt_tokens ${postgresOperators(
-          sql,
-          operator,
-        )} ${tokens}`
-      } else {
-        return sql`${sql(field + "_tokens")} ${postgresOperators(
-          sql,
-          operator,
-        )} ${tokens}`
-      }
-    },
+  },
+  {
+    id: "radar",
+    name: "Radar Match",
+    uiType: "smart",
+    disableInEvals: true,
+    params: [
+      {
+        type: "label",
+        label: "Matches radar",
+      },
+      {
+        type: "select",
+        id: "ids",
+        width: 150,
+        placeholder: "Select radars",
+        multiple: true,
+        options: () => `/filters/radars`,
+      },
+    ],
   },
   {
     id: "search",
-    name: "Search",
+    name: "Search Match",
     uiType: "smart",
+    disableInEvals: true,
     params: [
       {
         type: "label",
@@ -514,9 +422,6 @@ export const FILTERS: Filter[] = [
         placeholder: "Search",
       },
     ],
-    sql: (sql, { query }) => {
-      return sql`r.input_text &@ ${query} or r.output_text &@ ${query} or r.error_text &@ ${query}`
-    },
   },
   {
     id: "string",
@@ -593,52 +498,39 @@ export const FILTERS: Filter[] = [
         id: "text",
       },
     ],
-    sql: (sql, { fields, type, text, sensitive }) => {
-      // inspiration (r.input ilike ${ "%" + search + "%" } or r.output ilike ${"%" + search + "%"})`;
-
-      let operator = sql`LIKE`
-      let caseSensitive = sensitive === "true"
-
-      let textParam = text
-
-      if (type === "starts") {
-        // JSON fragment: ..., {"content": "text...
-        textParam = `, "content": "${text}`
-      } else if (type === "ends") {
-        textParam = `${text}"}`
-      }
-
-      if (type === "contains" || type === "starts" || type === "ends") {
-        operator = caseSensitive ? sql`LIKE` : sql`ILIKE`
-        textParam = "%" + textParam + "%"
-      } else if (type === "notcontains") {
-        operator = caseSensitive ? sql`NOT LIKE` : sql`NOT ILIKE`
-        textParam = "%" + textParam + "%"
-      }
-
-      // problem for the following: output_text is stringified JSON, so contains starts with JSON
-      // else if (type === "starts") {
-      //   operator = caseSensitive ? sql`LIKE` : sql`ILIKE`
-      //   textParam = text + "%"
-      // } else if (type === "ends") {
-      //   operator = caseSensitive ? sql`LIKE` : sql`ILIKE`
-      //   textParam = "%" + text
-      // } else if (type === "equals") {
-      //   operator = sql`=`
-      // }
-
-      let field = sql`input_text || output_text`
-
-      if (fields === "input") {
-        field = sql`input_text`
-      } else if (fields === "output") {
-        field = sql`output_text`
-      }
-
-      return sql`${field} ${operator} ${textParam}`
-    },
   },
-
+  {
+    id: "entities",
+    name: "Entities",
+    uiType: "ai",
+    description:
+      "Uses AI to check if the content contains a name, location or organization.",
+    params: [
+      FIELD_PARAM,
+      MATCH_PARAM,
+      {
+        type: "select",
+        id: "entities",
+        width: 100,
+        defaultValue: ["PER"],
+        multiple: true,
+        options: [
+          {
+            label: "Name",
+            value: "PER",
+          },
+          {
+            label: "Location",
+            value: "LOC",
+          },
+          {
+            label: "Organization",
+            value: "ORG",
+          },
+        ],
+      },
+    ],
+  },
   {
     id: "ai-assertion",
     name: "AI Assertion",
@@ -669,23 +561,19 @@ export const FILTERS: Filter[] = [
         ],
       },
     ],
-    async evaluator(run, params) {
-      return {}
-    },
   },
   {
     id: "sentiment",
     name: "Sentiment",
+
     uiType: "ai",
-    // soon: true,
-    description: "Checks if the output is positive, neutral, or negative.",
-    async evaluator(run, params) {
-      return {}
-    },
+    description:
+      "Uses AI to check if content is positive, neutral, or negative.",
     params: [
+      FIELD_PARAM,
       {
         type: "label",
-        label: "Output is",
+        label: "sentiment is",
       },
       {
         type: "select",
@@ -712,14 +600,12 @@ export const FILTERS: Filter[] = [
   {
     id: "tone",
     name: "Tone",
-    // soon: true,
+    soon: true,
     uiType: "ai",
     onlyInEvals: true,
     description:
       "Assesses if the tone of LLM responses matches with the desired persona.",
-    async evaluator(run, params) {
-      return {}
-    },
+
     params: [
       {
         type: "label",
@@ -769,9 +655,7 @@ export const FILTERS: Filter[] = [
     onlyInEvals: true,
     description:
       "Checks if the output is factually correct compared to a given context",
-    async evaluator(run, params) {
-      return {}
-    },
+
     params: [
       {
         type: "label",
@@ -785,14 +669,26 @@ export const FILTERS: Filter[] = [
     ],
   },
   {
+    id: "toxicity",
+    name: "Toxicity",
+    uiType: "ai",
+    description:
+      "Checks if the given field contains toxic, offensive, obscene, or hateful language. English only at the moment.",
+    params: [
+      FIELD_PARAM_ANY,
+      MATCH_PARAM,
+      {
+        type: "label",
+        label: "toxicity",
+      },
+    ],
+  },
+  {
     id: "system",
     name: "System Guidelines",
     uiType: "ai",
     onlyInEvals: true,
     description: `Checks if the output matches guidelines set in the 'system' message.`,
-    async evaluator(run, params) {
-      return {}
-    },
     params: [
       {
         type: "label",
@@ -809,11 +705,9 @@ export const FILTERS: Filter[] = [
     id: "similarity",
     name: "Output Similarity",
     uiType: "ai",
+    // soon: true,
     onlyInEvals: true,
     description: `Ensure the output is similar to a given expected output (gold output).`,
-    async evaluator(run, params) {
-      return {}
-    },
     params: [
       {
         type: "label",

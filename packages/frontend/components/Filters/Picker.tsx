@@ -1,4 +1,4 @@
-import { Box, Button, Group, Stack, Text } from "@mantine/core"
+import { Box, Button, Group, Select, Stack, Text } from "@mantine/core"
 import { Fragment, useEffect, useState } from "react"
 import { FILTERS, Filter, FilterLogic, FilterParam, LogicData } from "shared"
 import ErrorBoundary from "../Blocks/ErrorBoundary"
@@ -51,9 +51,20 @@ function RenderFilterNode({
         <Group key={i} gap={showOperator ? "xs" : 0}>
           {showFilterNode(n, i)}
           {showOperator && (
-            <Text c="dimmed" size="xs" fw="bold">
-              {currentOperator}
-            </Text>
+            <Select
+              variant="unstyled"
+              c="dimmed"
+              w={70}
+              size="xs"
+              fw="bold"
+              data={["AND", "OR"]}
+              value={currentOperator}
+              onChange={(val) => {
+                const newNodeArray = [...node]
+                newNodeArray[0] = val
+                setNode(newNodeArray as FilterLogic)
+              }}
+            />
           )}
         </Group>
       ) : (
@@ -72,7 +83,7 @@ function RenderFilterNode({
   return (
     <Group>
       <div className={classes["custom-input"]}>
-        {filter?.params.map((param) => {
+        {filter?.params.map((param, i) => {
           const CustomInput = FilterInputs[param.type]
           if (!CustomInput) return null
 
@@ -99,7 +110,7 @@ function RenderFilterNode({
           }
 
           return (
-            <Fragment key={param.id}>
+            <Fragment key={i}>
               <ErrorBoundary>
                 <CustomInput
                   {...param}
@@ -188,7 +199,7 @@ export default function FilterPicker({
           ) : (
             <>
               <Button
-                size="xs"
+                size="sm"
                 variant="light"
                 onClick={() => setModalOpened(true)}
               >

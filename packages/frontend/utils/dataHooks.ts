@@ -5,7 +5,7 @@ import useSWR, { SWRConfiguration } from "swr"
 import useSWRInfinite from "swr/infinite"
 import { ProjectContext } from "./context"
 import { getUserColor } from "./colors"
-import useSWRMutation from "swr/mutation"
+import useSWRMutation, { SWRMutationConfiguration } from "swr/mutation"
 
 import { fetcher } from "./fetcher"
 import { useAuth } from "./auth"
@@ -44,7 +44,7 @@ export function useProjectMutation(
     | typeof fetcher.post
     | typeof fetcher.patch
     | typeof fetcher.delete,
-  options?: SWRConfiguration,
+  options?: SWRMutationConfiguration<any, any>,
 ) {
   const { projectId } = useContext(ProjectContext)
 
@@ -430,14 +430,57 @@ export function useDataset(id: string) {
 }
 
 export function useRadars() {
-  const { data: datasets, isLoading, mutate } = useProjectSWR(`/radars`)
+  const { data: radars, isLoading, mutate } = useProjectSWR(`/radars`)
 
   // insert mutation
-  const { trigger: insert } = useProjectMutation(`/radars`, fetcher.post)
+  const { trigger: insert } = useProjectMutation(`/radars`, fetcher.post, {
+    populateCache(result, currentData) {
+      return [...currentData, result]
+    },
+  })
 
   return {
-    datasets,
+    radars,
     insert,
+    mutate,
+    loading: isLoading,
+  }
+}
+
+export function useRadar(id, initialData?: any) {
+  const { mutate: mutateRadars } = useRadars()
+
+  const {
+    data: radar,
+    isLoading,
+    mutate,
+  } = useProjectSWR(id && `/radars/${id}`, {
+    fallbackData: initialData,
+  })
+
+  const { trigger: update } = useProjectMutation(
+    id && `/radars/${id}`,
+    fetcher.patch,
+    {},
+  )
+
+  const { trigger: remove } = useProjectMutation(
+    id && `/radars/${id}`,
+    fetcher.delete,
+    {
+      onSuccess() {
+        mutateRadars((radars) => radars.filter((r) => r.id !== id))
+      },
+    },
+  )
+
+  const { data: chart } = useProjectSWR(id && `/radars/${id}/chart`)
+
+  return {
+    radar,
+    chart,
+    update,
+    remove,
     mutate,
     loading: isLoading,
   }

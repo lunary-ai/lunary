@@ -7,6 +7,7 @@ import { usePromptVariables } from "@/utils/promptsHooks"
 import {
   Badge,
   Button,
+  Chip,
   Container,
   Fieldset,
   Group,
@@ -22,7 +23,7 @@ import { useListState, useSetState } from "@mantine/hooks"
 import { IconFlask2Filled, IconHistory } from "@tabler/icons-react"
 import Router from "next/router"
 import { useEffect, useState } from "react"
-import { MODELS, SavedFilterData } from "shared"
+import { FilterLogic, LogicData, MODELS } from "shared"
 
 const FEATURE_LIST = [
   "Define assertions to test variations of prompts",
@@ -90,7 +91,7 @@ function AddPromptModal({ opened, setOpened, onAdd }) {
         {hasVariables && (
           <>
             <Text size="sm" color="gray">
-              Test different variations of the variables in the prompt:
+              Experiment with various variable configurations in the prompt:
             </Text>
           </>
         )}
@@ -104,7 +105,7 @@ function AddPromptModal({ opened, setOpened, onAdd }) {
               {Object.keys(variables).map((variable) => (
                 <TextInput
                   key={variable}
-                  label={variable}
+                  label={`{{${variable}}}`}
                   value={variation[variable]}
                   onChange={(e) =>
                     handlers.setItemProp(index, variable, e.currentTarget.value)
@@ -113,7 +114,7 @@ function AddPromptModal({ opened, setOpened, onAdd }) {
               ))}
               <Textarea
                 label="Context (optional)"
-                description="Can be used to evaluate if the LLM response is factually correct and on topic."
+                description="Helps in assessing the factual accuracy and relevance of the LLM's response."
                 required={false}
                 value={variation.context}
                 onChange={(e) =>
@@ -122,8 +123,8 @@ function AddPromptModal({ opened, setOpened, onAdd }) {
               />
 
               <Textarea
-                label="Gold / expected output (optional)"
-                description="Can be used to evaluate if the LLM response is close to the expected output."
+                label="Gold output (optional)"
+                description="Useful for assessing the proximity of the LLM response to an anticipated output."
                 required={false}
                 value={variation.expected}
                 onChange={(e) =>
@@ -153,12 +154,14 @@ function AddPromptModal({ opened, setOpened, onAdd }) {
         <Button
           display="inline-block"
           ml="auto"
-          onClick={() =>
+          onClick={() => {
             onAdd({
               prompt,
               variations,
             })
-          }
+
+            setOpened(false)
+          }}
         >
           Add prompt
         </Button>
@@ -169,23 +172,29 @@ function AddPromptModal({ opened, setOpened, onAdd }) {
 
 export default function Evals() {
   const { templates } = useTemplates()
+  const [loading, setLoading] = useState(false)
 
   const [promptModalOpened, setPromptModalOpened] = useState(false)
 
-  const [evaluation, setEvaluation] = useSetState<{
+  const [evaluation, setEvaluation] = useState<{
     prompts: any[]
     variables: any[]
     models: string[]
-    checks: SavedFilterData[]
+    checks: FilterLogic
   }>({
     prompts: [],
     variables: [],
-    models: ["gpt-4-1106-preview", "gpt-3.5-turbo"],
-    checks: [],
+    models: ["gpt-4-turbo-preview", "gpt-3.5-turbo"],
+    checks: ["AND"],
   })
 
   function startEval() {
-    Router.push("/evals/results")
+    setLoading(true)
+    // sleep 2s
+    setTimeout(() => {
+      setLoading(false)
+      Router.push("/evals/results")
+    }, 1000)
   }
 
   return (
@@ -229,20 +238,21 @@ export default function Evals() {
           </Group>
 
           <Text size="xl" mb="md">
-            Create evaluation matrix to benchmark different prompts, variables
-            and optimize.
+            Compare different prompts and models to find the best performing
+            combinations.
           </Text>
 
           <Steps>
             <Steps.Step n={1} label="Dataset">
               <Text size="lg" mb="md">
-                Add prompts and variations of variables to test.
+                Add prompts with variations of variables to test.
               </Text>
               <AddPromptModal
                 opened={promptModalOpened}
                 setOpened={setPromptModalOpened}
                 onAdd={(prompt) => {
                   setEvaluation({
+                    ...evaluation,
                     prompts: [...evaluation.prompts, prompt],
                   })
                 }}
@@ -253,43 +263,34 @@ export default function Evals() {
               >
                 Add prompt
               </Button>
-              {/* <Group>
+              <Group mt="xl">
                 <Chip.Group>
-                  {templates?.map((template) => (
-                    <Chip
-                      key={template.id}
-                      color="blue"
-                      onClick={() => {
-                        setEvaluation({
-                          prompts: [template.prompts],
-                        })
-                      }}
-                    >
-                      {template.name}
-                    </Chip>
+                  {evaluation.prompts?.map((prompt, i) => (
+                    <Chip color="blue">Prompt #{i + 1}</Chip>
                   ))}
                 </Chip.Group>
-                <Button variant="light" href="/prompts" component={Link}>
+                {/* <Button variant="light" href="/prompts" component={Link}>
                   New template
                 </Button>
                 <Button variant="purple" disabled href="/logs" component={Link}>
                   Import from logs
-                </Button> 
-              </Group> */}
+                </Button> */}
+              </Group>
             </Steps.Step>
             <Steps.Step n={2} label="Models">
               <Text size="lg" mb="md">
-                Select the models you want to compare. Limited to 2 while in
-                alpha.
+                Select the models you want to compare.
               </Text>
               <MultiSelect
                 data={MODELS.map((model) => ({
                   value: model.id,
                   label: model.name,
                 }))}
-                maxValues={2}
+                maxValues={3}
                 value={evaluation.models}
-                onChange={(value) => setEvaluation({ models: value })}
+                onChange={(value) =>
+                  setEvaluation({ ...evaluation, models: value })
+                }
               />
             </Steps.Step>
             <Steps.Step n={3} label="Checks">
@@ -302,8 +303,10 @@ export default function Evals() {
               </Text>
               <FilterPicker
                 restrictTo={(filter) => !filter.disableInEvals}
-                defaultValue={evaluation.checks}
-                onChange={(value) => setEvaluation({ checks: value })}
+                value={evaluation.checks}
+                onChange={(value) =>
+                  setEvaluation({ ...evaluation, checks: value })
+                }
               />
             </Steps.Step>
           </Steps>
@@ -311,6 +314,7 @@ export default function Evals() {
           <Button
             size="md"
             display="inline-block"
+            loading={loading}
             ml="auto"
             variant="gradient"
             leftSection={<IconFlask2Filled size={14} />}

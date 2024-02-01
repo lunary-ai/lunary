@@ -62,17 +62,22 @@ With the hosted version:
 
 ## Running locally
 
-Lunary is powered by Bun. To run it locally:
+Lunary is powered by Node.js.
+
+To run it locally, you'll need access to a Postgres database to set as the `DATABASE_URL` in your `.env` file.
 
 ```bash
-# Install bun
-curl -fsSL https://bun.sh/install | bash
+# Clone the repository
+git clone https://github.com/lunary-ai/lunary
+
+# Copy env variables
+cp .env.example .env
 
 # Install dependencies
-bun install
+npm install
 
 # Run the development server
-bun dev
+npm run dev
 ```
 
 ## 🙋 Support

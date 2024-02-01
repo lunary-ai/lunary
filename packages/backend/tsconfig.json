@@ -20,6 +20,7 @@
     "paths": {
       "@/*": ["./*"],
       "@/utils/*": ["src/utils/*"],
+      "@/checks/*": ["src/checks/*"],
     },
   },
 }

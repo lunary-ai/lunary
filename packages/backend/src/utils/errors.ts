@@ -7,7 +7,7 @@ export async function errorMiddleware(ctx: Context, next: Next) {
     await next()
     const status = ctx.status || 404
     if (status === 404) {
-      ctx.throw("Not Found", 404)
+      ctx.throw(404, "Not Found")
     }
   } catch (error: any) {
     console.error(error)
@@ -16,6 +16,7 @@ export async function errorMiddleware(ctx: Context, next: Next) {
     if (error instanceof z.ZodError) {
       ctx.status = 422
       ctx.body = error.errors[0]
+      console.log("ZOD ERROR", error.errors[0])
       return
     }
 
