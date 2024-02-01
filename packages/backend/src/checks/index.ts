@@ -352,9 +352,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
         textsToCheck.push(lastMsg(run[field]))
       }
 
-      const labels = (
-        await Promise.all(textsToCheck.map((text) => aiToxicity(text)))
-      ).flat()
+      const labels = await aiToxicity(textsToCheck)
 
       const hasToxicity = labels.length > 0
 

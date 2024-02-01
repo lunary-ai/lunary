@@ -9,6 +9,9 @@ type RadarResults = {
   details?: any
 }
 
+const RUNS_BATCH_SIZE = 1000
+const PARALLEL_BATCH_SIZE = 100
+
 const hasNonSQLFilter = (checks: FilterLogic): boolean =>
   checks.some((check) => {
     if (typeof check === "string") return false
@@ -61,8 +64,6 @@ const checkRun = async (
     }
   }
 
-  console.debug(`Checking run ${run.id} for filter '${check.id}'`)
-
   const { id, params } = check
   const runner = CHECK_RUNNERS.find((f) => f.id === id)
 
@@ -74,6 +75,7 @@ const checkRun = async (
     const snippet = runner.sql(params)
     const [result] =
       await sql`select * from run where id = ${run.id} and (${snippet})`
+
     return { passed: !!result, filterId: id }
   }
 
@@ -81,8 +83,6 @@ const checkRun = async (
 }
 
 const runChecksOnRun = async (radar: any, run: any) => {
-  console.time(`Checking run ${run.id} for radar '${radar.description}'`)
-
   const checks: FilterLogic = radar.checks
 
   let passed = true
@@ -121,8 +121,6 @@ const runChecksOnRun = async (radar: any, run: any) => {
     }
   }
 
-  console.timeEnd(`Checking run ${run.id} for radar '${radar.description}'`)
-
   await sql`
     insert into radar_result ${sql({
       radarId: radar.id,
@@ -133,8 +131,6 @@ const runChecksOnRun = async (radar: any, run: any) => {
     returning *
   `
 }
-
-const BATCH_SIZE = 1000
 
 // get all runs that don't have radar results
 // oldest first, limit 300 per batch
@@ -150,7 +146,7 @@ async function getRadarRuns(radar: any) {
       and (${filtersQuery})
       and id not in (${excludedRunsSubquery})
     order by created_at asc
-    limit ${BATCH_SIZE}
+    limit ${RUNS_BATCH_SIZE}
   `
 }
 
@@ -158,8 +154,7 @@ let jobRunning = false
 
 export default async function radarJob() {
   if (jobRunning) {
-    console.warn("JOB: radar scan already running. skipping")
-    return
+    return console.warn("JOB: radar scan already running. skipping")
   }
 
   const radars = await sql`SELECT * FROM radar`
@@ -167,15 +162,23 @@ export default async function radarJob() {
   // For each radar, get all checks
   for (const radar of radars) {
     const runs = await getRadarRuns(radar)
-    console.log(`Analyzing ${runs.length} runs for radar ${radar.id}`)
 
-    for (const run of runs) {
-      try {
-        await runChecksOnRun(radar, run)
-      } catch (error) {
-        console.error(error)
-      }
+    if (!runs.length) {
+      continue
     }
+
+    console.time(`Analyzing ${runs.length} runs for radar ${radar.id}`)
+
+    for (let i = 0; i < runs.length; i += PARALLEL_BATCH_SIZE) {
+      const batch = runs.slice(i, i + PARALLEL_BATCH_SIZE)
+      await Promise.all(
+        batch.map((run) =>
+          runChecksOnRun(radar, run).catch((error) => console.error(error)),
+        ),
+      )
+    }
+
+    console.timeEnd(`Analyzing ${runs.length} runs for radar ${radar.id}`)
   }
 
   jobRunning = false

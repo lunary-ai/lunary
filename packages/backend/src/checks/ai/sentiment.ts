@@ -1,6 +1,7 @@
 import { pipeline } from "@xenova/transformers"
 
 let nerPipeline: any = null
+let loading = false
 
 const THRESHOLD = 0.5
 
@@ -12,11 +13,20 @@ type Output = {
 async function aiSentiment(sentence?: string): Promise<number> {
   if (!sentence || sentence.length < 10) return 0.5 // neutral
 
-  if (!nerPipeline)
+  if (!nerPipeline) {
+    // this prevents multiple loading of the pipeline simultaneously which causes extreme lag
+    if (loading) {
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      return aiSentiment(sentence)
+    }
+
+    loading = true
     nerPipeline = await pipeline(
       "sentiment-analysis",
       "Xenova/bert-base-multilingual-uncased-sentiment",
     )
+    loading = false
+  }
 
   const output: Output = await nerPipeline(sentence)
   // [ { label: '1 star', score: 0.6303076148033142 } ]

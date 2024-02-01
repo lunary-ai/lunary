@@ -1,6 +1,7 @@
 import { pipeline } from "@xenova/transformers"
 
 let nerPipeline: any = null
+let loading = false
 
 type Output = {
   entity: string
@@ -22,7 +23,20 @@ export default async function aiNER(sentence?: string): Promise<Entities> {
 
   if (!sentence) return { PER: [], LOC: [], ORG: [] }
 
-  if (!nerPipeline) nerPipeline = await pipeline("ner") // defaults to Xenova/bert-base-multilingual-cased-ner-hrl
+  if (!nerPipeline) {
+    // this prevents multiple loading of the pipeline simultaneously which causes extreme lag
+    if (loading) {
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      return aiNER(sentence)
+    }
+
+    loading = true
+    nerPipeline = await pipeline(
+      "ner",
+      "Xenova/bert-base-multilingual-cased-ner-hrl",
+    )
+    loading = false
+  }
 
   const output: Output = await nerPipeline(sentence)
 
