@@ -31,6 +31,7 @@ export default function DataTable({
   loading = false,
   onRowClicked = undefined,
   loadMore = undefined,
+  defaultSortBy = "createdAt",
 }: {
   type: string
   data?: any[]
@@ -38,13 +39,14 @@ export default function DataTable({
   loading?: boolean
   onRowClicked?: (row: any) => void
   loadMore?: (() => void) | null
+  defaultSortBy?: string
 }) {
   const autoHidableColumns =
     type === "thread" ? CHAT_AUTO_HIDABLE_COLUMNS : DEFAULT_AUTO_HIDABLE_COLUMNS
 
   const [sorting, setSorting] = useState<SortingState>([
     {
-      id: "createdAt",
+      id: defaultSortBy,
       desc: true,
     },
   ])

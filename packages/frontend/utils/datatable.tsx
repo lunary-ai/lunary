@@ -172,6 +172,7 @@ export function costColumn() {
   return columnHelper.accessor("cost", {
     header: "Cost",
     size: 60,
+    sortingFn: (a, b) => a - b,
     cell: (props) => {
       const cost = props.getValue()
       return formatCost(cost)

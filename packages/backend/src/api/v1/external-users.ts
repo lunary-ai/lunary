@@ -23,13 +23,14 @@ users.get("/", async (ctx: Context) => {
       external_id, 
       created_at,
       last_seen,
-      props
+      props,
+      (select coalesce(sum(cost), 0) from run where external_user_id = external_user.id) as cost
     from 
       external_user
     where
       project_id = ${projectId}
     order by 
-      last_seen desc
+      cost desc 
   `
 
   ctx.body = users

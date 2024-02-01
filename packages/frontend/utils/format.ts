@@ -1,6 +1,6 @@
 export const formatCost = (cost = 0) => {
   if (cost < 1) {
-    const formattedCost = (cost * 100).toFixed(2)
+    const formattedCost = (cost * 100).toFixed(4)
     return `${parseFloat(formattedCost)}¢`
   } else {
     return new Intl.NumberFormat("en-US", {
