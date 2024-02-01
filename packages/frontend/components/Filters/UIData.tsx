@@ -1,5 +1,6 @@
 import {
   IconAt,
+  IconBiohazard,
   IconBracketsContainStart,
   IconBrandOpenai,
   IconCalendar,
@@ -8,9 +9,11 @@ import {
   IconClock,
   IconCoin,
   IconCreditCard,
+  IconEyeCheck,
   IconFilter,
   IconHelpCircle,
   IconHtml,
+  IconIdBadge,
   IconJson,
   IconMarkdown,
   IconMoodAngry,
@@ -140,6 +143,10 @@ const FILTERS_UI_DATA = {
     icon: IconTools,
     color: "gray",
   },
+  "ai-assertion": {
+    icon: IconEyeCheck,
+    color: "blue",
+  },
   similarity: {
     icon: IconRulerMeasure,
     color: "blue",
@@ -157,8 +164,12 @@ const FILTERS_UI_DATA = {
     color: "blue",
   },
   toxicity: {
-    icon: IconTriangleSquareCircle,
+    icon: IconBiohazard,
     color: "red",
+  },
+  entities: {
+    icon: IconIdBadge,
+    color: "orange",
   },
   other: {
     icon: IconFilter,

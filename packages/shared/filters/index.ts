@@ -390,6 +390,7 @@ export const FILTERS: Filter[] = [
     id: "radar",
     name: "Radar Match",
     uiType: "smart",
+    disableInEvals: true,
     params: [
       {
         type: "label",
@@ -409,6 +410,7 @@ export const FILTERS: Filter[] = [
     id: "search",
     name: "Search Match",
     uiType: "smart",
+    disableInEvals: true,
     params: [
       {
         type: "label",
@@ -563,7 +565,7 @@ export const FILTERS: Filter[] = [
   {
     id: "sentiment",
     name: "Sentiment",
-    soon: true,
+
     uiType: "ai",
     description:
       "Uses AI to check if content is positive, neutral, or negative.",
@@ -649,7 +651,7 @@ export const FILTERS: Filter[] = [
     id: "factualness",
     name: "Factualness",
     uiType: "ai",
-    soon: true,
+    // soon: true,
     onlyInEvals: true,
     description:
       "Checks if the output is factually correct compared to a given context",
@@ -703,10 +705,9 @@ export const FILTERS: Filter[] = [
     id: "similarity",
     name: "Output Similarity",
     uiType: "ai",
-    soon: true,
+    // soon: true,
     onlyInEvals: true,
     description: `Ensure the output is similar to a given expected output (gold output).`,
-
     params: [
       {
         type: "label",

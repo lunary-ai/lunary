@@ -1,5 +1,3 @@
-import type postgres from "postgres"
-
 export type FilterLabel = {
   type: "label"
   label: string
