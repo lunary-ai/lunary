@@ -26,7 +26,6 @@ const app = new Koa()
 app.proxy = true
 
 // MiddleWares
-app.use(setDefaultBody)
 app.use(requestHandler)
 app.use(tracingMiddleWare)
 app.use(errorMiddleware)
@@ -35,6 +34,7 @@ app.use(corsMiddleware)
 app.use(authMiddleware)
 app.use(ratelimit)
 app.use(bodyParser())
+app.use(setDefaultBody)
 
 // Routes
 app.use(redirections.routes())
