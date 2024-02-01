@@ -104,7 +104,7 @@ function AddPromptModal({ opened, setOpened, onAdd }) {
               {Object.keys(variables).map((variable) => (
                 <TextInput
                   key={variable}
-                  label={variable}
+                  label={`{{${variable}}}`}
                   value={variation[variable]}
                   onChange={(e) =>
                     handlers.setItemProp(index, variable, e.currentTarget.value)
@@ -279,7 +279,7 @@ export default function Evals() {
             </Steps.Step>
             <Steps.Step n={2} label="Models">
               <Text size="lg" mb="md">
-                Select the models you want to compare. Limited to 2 while in
+                Select the models you want to compare. Limited to 3 while in
                 alpha.
               </Text>
               <MultiSelect

@@ -147,7 +147,6 @@ radars.get("/", async (ctx) => {
         })),
       )}
     `
-    console.log(res)
   }
 
   const rows = await sql`
@@ -237,6 +236,7 @@ radars.post("/", async (ctx) => {
     })}
     RETURNING *
   `
+
   ctx.body = row
 })
 
@@ -264,6 +264,14 @@ radars.patch("/:radarId", async (ctx) => {
       WHERE id = ${radarId} AND project_id = ${projectId}
       RETURNING *
       `
+
+  // if checks or view is modified, delete all radar results
+  if (checks || view) {
+    await sql`
+      DELETE FROM radar_result WHERE radar_id = ${row.id}
+    `
+  }
+
   ctx.body = row
 })
 
@@ -272,7 +280,7 @@ radars.delete("/:radarId", async (ctx) => {
   const { radarId } = ctx.params
 
   const [row] = await sql`
-    DELETE FROM radar
+    delete from radar
     WHERE id = ${radarId}
     AND project_id = ${projectId}
     RETURNING *

@@ -161,7 +161,12 @@ export default async function radarJob() {
     return console.warn("JOB: radar scan already running. skipping")
   }
 
-  const radars = await sql`SELECT * FROM radar`
+  const radars = await sql`
+    SELECT r.* FROM radar r
+    JOIN project p ON r.project_id = p.id
+    JOIN org o ON p.org_id = o.id
+    WHERE o.plan != 'free'
+  `
 
   // For each radar, get all checks
   for (const radar of radars) {

@@ -26,6 +26,7 @@ const app = new Koa()
 app.proxy = true
 
 // MiddleWares
+app.use(setDefaultBody)
 app.use(requestHandler)
 app.use(tracingMiddleWare)
 app.use(errorMiddleware)
