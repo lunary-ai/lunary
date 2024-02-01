@@ -305,8 +305,6 @@ export function useRunsUsage(range, userId?: string) {
     `/runs/usage?days=${range}${userIdStr}`,
   )
 
-  console.log(usage)
-
   return { usage, loading: isLoading }
 }
 
@@ -360,18 +358,11 @@ export function useRunsUsageByUser(range = null) {
 
 // TODO: pagination
 export function useAppUserList() {
-  const { data, isLoading, isValidating } = useProjectSWR(`/external-users`)
-
-  const { usageByUser } = useRunsUsageByUser()
-
-  const users = data?.map((u) => {
-    const usage = usageByUser.find((uu: any) => uu.userId === u.id)
-
-    return {
-      ...u,
-      ...usage,
-    }
-  })
+  const {
+    data: users,
+    isLoading,
+    isValidating,
+  } = useProjectSWR(`/external-users`)
 
   return { users, isLoading, isValidating }
 }

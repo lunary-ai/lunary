@@ -58,6 +58,7 @@ export default function Users() {
             Router.push(`/users/${row.id}`)
           }}
           loading={isLoading || isValidating}
+          defaultSortBy="cost"
         />
       </Stack>
     </Empty>
