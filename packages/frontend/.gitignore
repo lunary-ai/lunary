@@ -43,3 +43,5 @@ jspm_packages
 .vscode/settings.json
 
 *.DS_STORE
+# Sentry Config File
+.sentryclirc
