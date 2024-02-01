@@ -11,16 +11,18 @@ type Output = {
   end: null
 }[]
 
-export default async function aiNER(sentence: string): Promise<{
-  [key: string]: string[]
-}> {
+type Entities = {
+  PER: string[]
+  LOC: string[]
+  ORG: string[]
+}
+
+export default async function aiNER(sentence: string): Promise<Entities> {
   if (!nerPipeline) nerPipeline = await pipeline("ner") // defaults to Xenova/bert-base-multilingual-cased-ner-hrl
 
   const output: Output = await nerPipeline(sentence)
 
-  const entities: {
-    [key: string]: string[]
-  } = { PER: [], LOC: [], ORG: [] }
+  const entities: Entities = { PER: [], LOC: [], ORG: [] }
 
   let currentEntity = { name: "", score: 0, type: "" }
 

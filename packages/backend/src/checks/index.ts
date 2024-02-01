@@ -1,4 +1,5 @@
 import sql from "../utils/db"
+import aiNER from "./ai/ner"
 import aiSentiment from "./ai/sentiment"
 import aiToxicity from "./ai/toxic"
 
@@ -305,6 +306,27 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   },
   {
     id: "similarity",
+  },
+  {
+    id: "entities",
+    async evaluator(run, params) {
+      const { field, type, entities } = params
+
+      const result = await aiNER(run[field + "Text"])
+
+      let passed = false
+
+      if (type === "contains") {
+        passed = entities.some((entity) => result[entity].length > 0)
+      } else {
+        passed = entities.every((entity) => result[entity].length === 0)
+      }
+
+      return {
+        passed,
+        details: result,
+      }
+    },
   },
   {
     id: "toxicity",

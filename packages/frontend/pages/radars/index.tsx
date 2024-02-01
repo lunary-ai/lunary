@@ -331,8 +331,10 @@ const FEATURE_LIST = [
 
 export default function Radar() {
   const [modalOpened, setModalOpened] = useState(false)
-  const { radars, insert, mutate } = useRadars()
+  const { radars, insert } = useRadars()
   const [newRadar, setNewRadar] = useState(DEFAULT_RADAR)
+
+  console.log(radars)
 
   return (
     <Paywall
@@ -346,7 +348,7 @@ export default function Radar() {
         <Stack>
           <Group align="center" justify="space-between">
             <Group align="center">
-              <Title>Radar</Title>
+              <Title>Radars</Title>
               <Badge variant="light" color="violet">
                 Alpha
               </Badge>
@@ -395,35 +397,7 @@ export default function Radar() {
           <Stack gap="xl">
             {radars?.map((radar) => (
               <RadarCard key={radar.id} id={radar.id} initialData={radar} />
-            ))
-            /* <RadarCard
-              name="Unhelpful responses"
-              filters={["feedback", "helpfulness"]}
-              percentMatch={28}
-            />
-            <RadarCard
-              name="Slow or failed responses"
-              filters={["duration", "status"]}
-              percentMatch={14}
-            />
-            <RadarCard
-              name="Costly LLM calls"
-              filters={["cost"]}
-              percentMatch={11}
-            />
-
-            <RadarCard
-              name="Contains Personal Identifiable Information (PII)"
-              filters={["email", "phone", "address"]}
-              percentMatch={9}
-            />
-
-            <RadarCard
-              name="Contains hatred or profanity"
-              filters={["profanity", "hatred", "feedback"]}
-              percentMatch={1}
-            /> */
-            }
+            ))}
           </Stack>
         </Stack>
       </Container>

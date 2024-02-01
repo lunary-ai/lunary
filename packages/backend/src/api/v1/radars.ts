@@ -5,36 +5,12 @@ const radars = new Router({
   prefix: "/radars",
 })
 
+// add a logger
+
 const DEFAULT_RADARS = [
-  // {
-  //   description: "Unhelpful answers",
-  //   view: [
-  //     "OR",
-  //     {
-  //       id: "type",
-  //       params: {
-  //         type: "chat",
-  //       },
-  //     },
-  //     {
-  //       id: "type",
-  //       params: {
-  //         type: "llm",
-  //       },
-  //     },
-  //   ],
-  //   checks: [
-  //     "AND",
-  //     {
-  //       id: "feedbacks",
-  //       params: {
-  //         feedbacks: [{ thumbs: "up" }],
-  //       },
-  //     },
-  //   ],
-  // },
   {
     description: "Failed or slow LLM calls",
+    negative: true,
     view: [
       "AND",
       {
@@ -63,6 +39,7 @@ const DEFAULT_RADARS = [
   },
   {
     description: "Answer contains PII (Personal Identifiable Information)",
+    negative: true,
     view: [
       "AND",
       {
@@ -74,6 +51,14 @@ const DEFAULT_RADARS = [
     ],
     checks: [
       "OR",
+      {
+        id: "entities",
+        params: {
+          field: "output",
+          type: "contains",
+          entities: ["name", "location"],
+        },
+      },
       {
         id: "email",
         params: {
@@ -97,10 +82,73 @@ const DEFAULT_RADARS = [
       },
     ],
   },
+  {
+    description: "Contains profanity or toxic language",
+    negative: true,
+    view: [
+      "AND",
+      {
+        id: "type",
+        params: {
+          type: "llm",
+        },
+      },
+    ],
+    checks: [
+      "OR",
+      {
+        id: "toxicity",
+        params: {
+          field: "any",
+          type: "contains",
+        },
+      },
+    ],
+  },
+  {
+    description: "Answers with negative sentiment",
+    negative: true,
+    view: [
+      "AND",
+      {
+        id: "type",
+        params: {
+          type: "llm",
+        },
+      },
+    ],
+    checks: [
+      "OR",
+      {
+        id: "sentiment",
+        params: {
+          field: "output",
+          type: "contains",
+          sentiment: "negative",
+        },
+      },
+    ],
+  },
 ]
 
 radars.get("/", async (ctx) => {
   const { projectId } = ctx.state
+
+  const [hasRadar] = await sql`
+      SELECT 1 FROM radar WHERE project_id = ${projectId}
+  `
+
+  if (!hasRadar) {
+    const res = await sql`
+      INSERT INTO radar ${sql(
+        DEFAULT_RADARS.map((radar) => ({
+          ...radar,
+          projectId,
+        })),
+      )}
+    `
+    console.log(res)
+  }
 
   const rows = await sql`
     SELECT r.*, 

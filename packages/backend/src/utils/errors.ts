@@ -16,6 +16,7 @@ export async function errorMiddleware(ctx: Context, next: Next) {
     if (error instanceof z.ZodError) {
       ctx.status = 422
       ctx.body = error.errors[0]
+      console.log("ZOD ERROR", error.errors[0])
       return
     }
 

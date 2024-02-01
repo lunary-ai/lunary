@@ -2,7 +2,7 @@
   "name": "@lunary/backend",
   "main": "index.ts",
   "scripts": {
-    "dev": "tsx --env-file=../../.env --watch src/index.ts",
+    "dev": "tsx --env-file=.env --watch src/index.ts",
     "start": "tsx src/index.ts",
     "build": "tsup src/index.ts --format esm"
   },

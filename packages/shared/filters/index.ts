@@ -1,5 +1,6 @@
 import {
   FIELD_PARAM,
+  FIELD_PARAM_ANY,
   FORMAT_PARAM,
   MATCH_PARAM,
   NUMBER_PARAM,
@@ -496,7 +497,38 @@ export const FILTERS: Filter[] = [
       },
     ],
   },
-
+  {
+    id: "entities",
+    name: "Entities",
+    uiType: "ai",
+    description:
+      "Uses AI to check if the content contains a name, location or organization.",
+    params: [
+      FIELD_PARAM,
+      MATCH_PARAM,
+      {
+        type: "select",
+        id: "entities",
+        width: 100,
+        defaultValue: ["PER"],
+        multiple: true,
+        options: [
+          {
+            label: "Name",
+            value: "PER",
+          },
+          {
+            label: "Location",
+            value: "LOC",
+          },
+          {
+            label: "Organization",
+            value: "ORG",
+          },
+        ],
+      },
+    ],
+  },
   {
     id: "ai-assertion",
     name: "AI Assertion",
@@ -533,9 +565,14 @@ export const FILTERS: Filter[] = [
     name: "Sentiment",
     soon: true,
     uiType: "ai",
-    description: "Checks if the output is positive, neutral, or negative.",
+    description:
+      "Uses AI to check if content is positive, neutral, or negative.",
     params: [
       FIELD_PARAM,
+      {
+        type: "label",
+        label: "sentiment is",
+      },
       {
         type: "select",
         id: "sentiment",
@@ -634,9 +671,9 @@ export const FILTERS: Filter[] = [
     name: "Toxicity",
     uiType: "ai",
     description:
-      "Checks if the given field is toxic, offensive, obscene, or hateful. English only at the moment.",
+      "Checks if the given field contains toxic, offensive, obscene, or hateful language. English only at the moment.",
     params: [
-      FIELD_PARAM,
+      FIELD_PARAM_ANY,
       MATCH_PARAM,
       {
         type: "label",

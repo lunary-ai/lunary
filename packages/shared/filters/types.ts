@@ -15,7 +15,7 @@ export type FilterParam = {
   width?: number
   placeholder?: string
   render?: (value: any) => React.ReactNode
-  defaultValue?: string | number | boolean
+  defaultValue?: string | number | boolean | string[]
   multiple?: boolean
   options?:
     | Array<{ label: string; value: string }>

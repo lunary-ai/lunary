@@ -5,7 +5,7 @@ import useSWR, { SWRConfiguration } from "swr"
 import useSWRInfinite from "swr/infinite"
 import { ProjectContext } from "./context"
 import { getUserColor } from "./colors"
-import useSWRMutation from "swr/mutation"
+import useSWRMutation, { SWRMutationConfiguration } from "swr/mutation"
 
 import { fetcher } from "./fetcher"
 import { useAuth } from "./auth"
