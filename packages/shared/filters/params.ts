@@ -71,6 +71,27 @@ export const FIELD_PARAM: FilterParam = {
   ],
 }
 
+export const FIELD_PARAM_ANY: FilterParam = {
+  type: "select",
+  id: "field",
+  width: 80,
+  defaultValue: "output",
+  options: [
+    {
+      label: "Input",
+      value: "input",
+    },
+    {
+      label: "Output",
+      value: "output",
+    },
+    {
+      label: "Any",
+      value: "any",
+    },
+  ],
+}
+
 export const MATCH_PARAM: FilterParam = {
   type: "select",
   id: "type",

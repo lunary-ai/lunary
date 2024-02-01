@@ -5,7 +5,7 @@ import Router from "koa-router"
 import ingest from "./ingest"
 import { fileExport } from "./export"
 import { deserializeLogic } from "shared"
-import { convertFiltersToSQL } from "@/src/utils/filters"
+import { convertChecksToSQL } from "@/src/utils/filters"
 
 const runs = new Router({
   prefix: "/runs",
@@ -69,7 +69,7 @@ runs.get("/", async (ctx) => {
 
   const filtersQuery =
     deserializedFilters?.length && deserializedFilters.length > 1 // first is always ["AND"]
-      ? convertFiltersToSQL(deserializedFilters)
+      ? convertChecksToSQL(deserializedFilters)
       : sql`type = 'llm'` // default to type llm
 
   const {

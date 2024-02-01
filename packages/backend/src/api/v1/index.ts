@@ -1,4 +1,6 @@
 import Router from "koa-router"
+import sql from "@/src/utils/db"
+
 import orgs from "./orgs"
 import datasets from "./datasets"
 import evals from "./evals"
@@ -8,8 +10,8 @@ import templateVersions from "./templateVersions"
 import templates from "./templates"
 import users from "./users"
 import projectUsers from "./external-users"
-import sql from "@/src/utils/db"
 import projects from "./projects"
+import radars from "./radars"
 
 const v1 = new Router({
   prefix: "/v1",
@@ -34,6 +36,7 @@ v1.use(users.routes())
 v1.use(projects.routes())
 v1.use(runs.routes())
 v1.use(datasets.routes())
+v1.use(radars.routes())
 v1.use(templates.routes())
 v1.use(templateVersions.routes())
 v1.use(filters.routes())

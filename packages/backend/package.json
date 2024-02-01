@@ -15,6 +15,7 @@
     "argon2": "^0.31.2",
     "bcrypt": "^5.1.1",
     "jose": "^5.2.0",
+    "@xenova/transformers": "^2.14.2",
     "js-tiktoken": "1.0.7",
     "koa": "^2.15.0",
     "koa-bodyparser": "^4.4.1",

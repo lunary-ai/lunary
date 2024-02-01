@@ -106,9 +106,10 @@ const FILTERS_BY_TYPE = {
     "cost",
     "duration",
     "tokens",
+    "radar",
   ],
-  trace: ["tags", "users", "status", "duration"],
-  thread: ["tags", "users", "status", "date"],
+  trace: ["tags", "users", "status", "duration", "radar"],
+  thread: ["tags", "users", "status", "radar"],
 }
 
 const editFilter = (filters, id, params) => {
@@ -153,7 +154,7 @@ export default function Logs() {
   useDidUpdate(() => {
     const serialized = serializeLogic(filters)
 
-    if (serialized) {
+    if (typeof serialized === "string") {
       setSerializedFilters(serialized)
       Router.replace(`/logs?${serialized}`)
     }

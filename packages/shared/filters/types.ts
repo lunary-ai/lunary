@@ -1,5 +1,3 @@
-import type postgres from "postgres"
-
 export type FilterLabel = {
   type: "label"
   label: string
@@ -15,7 +13,7 @@ export type FilterParam = {
   width?: number
   placeholder?: string
   render?: (value: any) => React.ReactNode
-  defaultValue?: string | number | boolean
+  defaultValue?: string | number | boolean | string[]
   multiple?: boolean
   options?:
     | Array<{ label: string; value: string }>
@@ -31,8 +29,6 @@ export type Filter = {
   params: (FilterParam | FilterLabel)[]
   disableInEvals?: boolean
   onlyInEvals?: boolean
-  evaluator?: (run: any, params: any) => Promise<any>
-  sql?: (sqlClient: any, params: any) => any // todo: postgres sql type
 }
 
 // export type SavedFilterData = {
@@ -52,15 +48,3 @@ type LogicNode = ["AND" | "OR", ...LogicElement[]]
 export type LogicElement = LogicData | LogicNode
 
 export type FilterLogic = LogicNode
-
-// const testLogic: FilterLogic = [
-//   "AND",
-//   { id: "type", params: { type: "llm" } },
-//   [
-//     "OR",
-//     { id: "type", params: { type: "llm" } },
-//     { id: "type", params: { type: "llm" } },
-//   ],
-// ]
-
-// console.log(testLogic)

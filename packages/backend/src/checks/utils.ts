@@ -1,6 +1,6 @@
 import { FilterLogic, LogicElement } from "shared"
 import sql from "../utils/db"
-import CHECK_RUNNERS from "../checks"
+import CHECK_RUNNERS from "."
 
 const and = (arr: any = []) =>
   arr.reduce((acc: any, x: any) => sql`${acc} AND ${x}`)

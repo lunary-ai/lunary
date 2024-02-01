@@ -102,10 +102,25 @@ filters.get("/users", async (ctx) => {
       project_id
   `
 
-  ctx.body = rows.map((row) => ({
-    label: row.label,
-    value: `${row.value}`, // stringify
-  }))
+  ctx.body = rows
+})
+
+filters.get("/radars", async (ctx) => {
+  const { projectId } = ctx.state
+
+  const rows = await sql`
+    select
+      id as value,
+      description as label
+    from
+      radar
+    where
+      project_id = ${projectId}
+    order by
+      project_id
+  `
+
+  ctx.body = rows
 })
 
 export default filters

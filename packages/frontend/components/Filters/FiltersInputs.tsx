@@ -29,6 +29,8 @@ const FilterInputs = {
 
     const Component = multiple ? MultiSelect : Select
 
+    const isDataObject = data && typeof data[0] === "object"
+
     return data ? (
       <Component
         size="xs"
@@ -38,7 +40,14 @@ const FilterInputs = {
         placeholder={placeholder}
         onChange={onChange}
         value={value}
-        data={data}
+        data={
+          isDataObject
+            ? data?.map((d) => ({
+                value: `${d.value}`, // stringify to avoid issues with numbers
+                label: render ? render(d) : d.label,
+              }))
+            : data
+        }
       />
     ) : (
       "loading..."
