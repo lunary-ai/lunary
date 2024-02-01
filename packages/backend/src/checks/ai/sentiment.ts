@@ -9,7 +9,9 @@ type Output = {
   score: number
 }[]
 
-async function aiSentiment(sentence: string): Promise<number> {
+async function aiSentiment(sentence?: string): Promise<number> {
+  if (!sentence || sentence.length < 10) return 0.5 // neutral
+
   if (!nerPipeline)
     nerPipeline = await pipeline(
       "sentiment-analysis",

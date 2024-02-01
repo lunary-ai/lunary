@@ -15,6 +15,19 @@ export type CheckRunner = {
   sql?: (params: any) => any // todo: postgres sql type
 }
 
+const isOpenAIMessage = (field: any) =>
+  typeof field === "object" && field.role && field.content
+
+function lastMsg(field: any) {
+  if (typeof field === "string" || !field) {
+    return field
+  } else if (Array.isArray(field) && isOpenAIMessage(field[0])) {
+    return field[field.length - 1].content
+  } else if (isOpenAIMessage(field)) {
+    return field.content
+  } else return JSON.stringify(field)
+}
+
 function postgresOperators(operator: string) {
   switch (operator) {
     case "gt":
@@ -80,7 +93,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
 
       const re = new RegExp(regex)
 
-      const has = re.test(run[field])
+      const has = re.test(lastMsg(run[field]))
 
       const passed = type === "contains" ? has : !has
 
@@ -148,16 +161,15 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   {
     id: "cc",
     sql: ({ field, type }) => {
-      const regexPattern = sql`[a-zA-Z0-9.!#$%&'*+\/=?^_\`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*`
       const operator = type === "contains" ? sql`~` : sql`!~`
 
-      return sql`${sql(field + "_text")} ${operator} '${regexPattern}'`
+      return sql`${sql(field + "_text")} ${operator} '(?:4[0-9]{3}(?:[ -]?[0-9]{4}){3}|[25][1-7][0-9]{2}(?:[ -]?[0-9]{4}){3}|6(?:011|5[0-9]{2})(?:[ -]?[0-9]{4}){3}|3[47][0-9]{2}(?:[ -]?[0-9]{4}){3}|3(?:0[0-5]|[68][0-9])(?:[ -]?[0-9]{4}){2}|(?:2131|1800|35\d{2})\d{2}(?:[ -]?\d{4}){3})'`
     },
   },
   {
     id: "email",
     sql: ({ field, type }) => {
-      const regexPattern = sql`[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+`
+      const regexPattern = sql`[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+`
       const operator = type === "contains" ? sql`~` : sql`!~`
 
       return sql`${sql(field + "_text")} ${operator} '${regexPattern}'`
@@ -312,14 +324,14 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     async evaluator(run, params) {
       const { field, type, entities } = params
 
-      const result = await aiNER(run[field + "Text"])
+      const result = await aiNER(lastMsg(run[field]))
 
       let passed = false
 
       if (type === "contains") {
-        passed = entities.some((entity) => result[entity].length > 0)
+        passed = entities.some((entity) => result[entity]?.length > 0)
       } else {
-        passed = entities.every((entity) => result[entity].length === 0)
+        passed = entities.every((entity) => result[entity]?.length === 0)
       }
 
       return {
@@ -333,7 +345,16 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     async evaluator(run, params) {
       const { field, type } = params
 
-      const labels = await aiToxicity(run[field + "Text"])
+      let textsToCheck = []
+      if (field === "any") {
+        textsToCheck.push(lastMsg(run["input"]), lastMsg(run["output"]))
+      } else {
+        textsToCheck.push(lastMsg(run[field]))
+      }
+
+      const labels = (
+        await Promise.all(textsToCheck.map((text) => aiToxicity(text)))
+      ).flat()
 
       const hasToxicity = labels.length > 0
 

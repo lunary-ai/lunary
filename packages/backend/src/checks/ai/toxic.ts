@@ -7,7 +7,9 @@ type Output = {
   score: number
 }[]
 
-async function aiToxicity(sentence: string): Promise<string[]> {
+async function aiToxicity(sentence?: string): Promise<string[]> {
+  if (!sentence || sentence.length < 3) return []
+
   nerPipeline = await pipeline("text-classification", "Xenova/toxic-bert")
 
   const output: Output = await nerPipeline(sentence, { topk: null })

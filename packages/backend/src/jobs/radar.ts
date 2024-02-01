@@ -61,6 +61,8 @@ const checkRun = async (
     }
   }
 
+  console.debug(`Checking run ${run.id} for filter '${check.id}'`)
+
   const { id, params } = check
   const runner = CHECK_RUNNERS.find((f) => f.id === id)
 
@@ -79,6 +81,8 @@ const checkRun = async (
 }
 
 const runChecksOnRun = async (radar: any, run: any) => {
+  console.time(`Checking run ${run.id} for radar '${radar.description}'`)
+
   const checks: FilterLogic = radar.checks
 
   let passed = true
@@ -117,7 +121,7 @@ const runChecksOnRun = async (radar: any, run: any) => {
     }
   }
 
-  console.log(`Run ${run.id} passed: ${passed}`)
+  console.timeEnd(`Checking run ${run.id} for radar '${radar.description}'`)
 
   await sql`
     insert into radar_result ${sql({
@@ -137,11 +141,7 @@ const BATCH_SIZE = 1000
 async function getRadarRuns(radar: any) {
   const filtersQuery = convertChecksToSQL(radar.view)
 
-  console.log(`Getting runs for radar ${radar.id}, ${radar.projectId}`)
-
   const excludedRunsSubquery = sql`select run_id from radar_result where radar_id = ${radar.id}`
-
-  console.log(`Excluding`, await sql`${excludedRunsSubquery}`)
 
   return await sql`
     select * from run
@@ -181,4 +181,4 @@ export default async function radarJob() {
   jobRunning = false
 }
 
-await radarJob()
+// await radarJob()

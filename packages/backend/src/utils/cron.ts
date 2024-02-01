@@ -36,7 +36,7 @@ export function setupCronJobs() {
     name: "reset usage",
   })
 
-  // cron.schedule("*/30 * * * * *", radarJob, {
-  //   name: "radar",
-  // })
+  cron.schedule("*/30 * * * * *", radarJob, {
+    name: "radar",
+  })
 }
