@@ -9,8 +9,8 @@ type RadarResults = {
   details?: any
 }
 
-const RUNS_BATCH_SIZE = 1000
-const PARALLEL_BATCH_SIZE = 10
+const RUNS_BATCH_SIZE = 20
+const PARALLEL_BATCH_SIZE = 3
 
 const hasNonSQLFilter = (checks: FilterLogic): boolean =>
   checks.some((check) => {
