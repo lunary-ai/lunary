@@ -10,8 +10,9 @@ type Output = {
 
 async function aiToxicity(sentences?: string[]): Promise<string[]> {
   if (!sentences) return []
+
   const cleaned = sentences.filter((s) => s && s.length > 3)
-  if (!cleaned) return []
+  if (!cleaned?.length) return []
 
   if (!nerPipeline) {
     // this prevents multiple loading of the pipeline simultaneously which causes extreme lag
