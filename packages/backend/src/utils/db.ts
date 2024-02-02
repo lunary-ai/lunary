@@ -3,7 +3,6 @@ import postgres from "postgres"
 const isProduction = process.env.NODE_ENV === "production"
 
 const sql = postgres(process.env.DATABASE_URL!, {
-  max: 1,
   idle_timeout: 20,
   max_lifetime: 60 * 5,
   transform: {
@@ -13,7 +12,7 @@ const sql = postgres(process.env.DATABASE_URL!, {
   },
   max: isProduction ? 50 : 1,
   connection: {
-    application_name: `backend-${isProduction ? "production" : "development"}`,
+    application_name: `backend-${isProduction ? "production" : "development"}-${new Date().getTime()}`,
   },
 })
 
