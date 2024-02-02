@@ -9,8 +9,8 @@ type RadarResults = {
   details?: any
 }
 
-const RUNS_BATCH_SIZE = 1000
-// const PARALLEL_BATCH_SIZE = 3
+const RUNS_BATCH_SIZE = 300 // small batch size to cycle through radars faster making it more equitable
+const PARALLEL_BATCH_SIZE = 5
 
 const hasNonSQLFilter = (checks: FilterLogic): boolean =>
   checks.some((check) => {
@@ -139,13 +139,14 @@ async function getRadarRuns(radar: any) {
 
   const excludedRunsSubquery = sql`select run_id from radar_result where radar_id = ${radar.id}`
 
+  // get more recent runs first
   return await sql`
     select * from run
     where 
       project_id = ${radar.projectId}
       and (${filtersQuery})
       and id not in (${excludedRunsSubquery})
-    order by created_at asc
+    order by created_at desc
     limit ${RUNS_BATCH_SIZE}
   `
 }
@@ -172,26 +173,26 @@ async function radarJob() {
       continue
     }
 
-    console.time(`Analyzing ${runs.length} runs for radar ${radar.id}`)
+    console.time(`Batch of ${runs.length} - radar ${radar.id}`)
 
-    for (const run of runs) {
-      try {
-        await runChecksOnRun(radar, run)
-      } catch (error) {
-        console.error(error)
-      }
-    }
-
-    // for (let i = 0; i < runs.length; i += PARALLEL_BATCH_SIZE) {
-    //   const batch = runs.slice(i, i + PARALLEL_BATCH_SIZE)
-    //   await Promise.all(
-    //     batch.map((run) =>
-    //       runChecksOnRun(radar, run).catch((error) => console.error(error)),
-    //     ),
-    //   )
+    // for (const run of runs) {
+    //   try {
+    //     await runChecksOnRun(radar, run)
+    //   } catch (error) {
+    //     console.error(error)
+    //   }
     // }
 
-    console.timeEnd(`Analyzing ${runs.length} runs for radar ${radar.id}`)
+    for (let i = 0; i < runs.length; i += PARALLEL_BATCH_SIZE) {
+      const batch = runs.slice(i, i + PARALLEL_BATCH_SIZE)
+      await Promise.all(
+        batch.map((run) =>
+          runChecksOnRun(radar, run).catch((error) => console.error(error)),
+        ),
+      )
+    }
+
+    console.timeEnd(`Batch of ${runs.length} - radar ${radar.id}`)
   }
 
   jobRunning = false
@@ -204,7 +205,6 @@ export default async function runRadarJob() {
       console.time("JOB: radar scan")
       await radarJob()
       console.timeEnd("JOB: radar scan")
-      await new Promise((resolve) => setTimeout(resolve, 5000))
     } catch (error) {
       console.error(error)
     }

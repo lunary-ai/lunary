@@ -135,11 +135,11 @@ radars.get("/", async (ctx) => {
   const { projectId } = ctx.state
 
   const [hasRadar] = await sql`
-      SELECT 1 FROM radar WHERE project_id = ${projectId}
+    SELECT 1 FROM radar WHERE project_id = ${projectId}
   `
 
   if (!hasRadar) {
-    const res = await sql`
+    await sql`
       INSERT INTO radar ${sql(
         DEFAULT_RADARS.map((radar) => ({
           ...radar,
