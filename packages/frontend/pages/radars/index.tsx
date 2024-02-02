@@ -327,7 +327,7 @@ function RadarCard({ id, initialData }) {
               ))}
           </Group>
 
-          {hasStats && (
+          {hasStats ? (
             <Progress.Root size={20} w={300}>
               <Progress.Section
                 value={percentMatch}
@@ -340,6 +340,12 @@ function RadarCard({ id, initialData }) {
                 color={negative ? "teal" : "red"}
               >
                 <Progress.Label>{`${100 - percentMatch}%`}</Progress.Label>
+              </Progress.Section>
+            </Progress.Root>
+          ) : (
+            <Progress.Root size={20} w={300}>
+              <Progress.Section animated value={100} color="blue">
+                <Progress.Label>Scanning in progress...</Progress.Label>
               </Progress.Section>
             </Progress.Root>
           )}
