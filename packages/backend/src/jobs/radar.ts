@@ -175,7 +175,11 @@ async function radarJob() {
     console.time(`Analyzing ${runs.length} runs for radar ${radar.id}`)
 
     for (const run of runs) {
-      await runChecksOnRun(radar, run)
+      try {
+        await runChecksOnRun(radar, run)
+      } catch (error) {
+        console.error(error)
+      }
     }
 
     // for (let i = 0; i < runs.length; i += PARALLEL_BATCH_SIZE) {
