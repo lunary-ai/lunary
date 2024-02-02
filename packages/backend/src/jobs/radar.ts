@@ -200,10 +200,14 @@ async function radarJob() {
 export default async function runRadarJob() {
   // run in a while loop
   while (true) {
-    console.time("JOB: radar scan")
-    await radarJob()
-    console.timeEnd("JOB: radar scan")
-    await new Promise((resolve) => setTimeout(resolve, 5000))
+    try {
+      console.time("JOB: radar scan")
+      await radarJob()
+      console.timeEnd("JOB: radar scan")
+      await new Promise((resolve) => setTimeout(resolve, 5000))
+    } catch (error) {
+      console.error(error)
+    }
   }
 }
 
