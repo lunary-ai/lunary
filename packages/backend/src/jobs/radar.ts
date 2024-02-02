@@ -1,7 +1,7 @@
 import CHECK_RUNNERS from "@/src/checks"
 import sql from "@/src/utils/db"
 import { convertChecksToSQL } from "@/src/utils/filters"
-import { FILTERS, FilterLogic, LogicElement } from "shared"
+import { FilterLogic, LogicElement } from "shared"
 
 type RadarResults = {
   passed: boolean
@@ -10,7 +10,7 @@ type RadarResults = {
 }
 
 const RUNS_BATCH_SIZE = 20
-const PARALLEL_BATCH_SIZE = 3
+// const PARALLEL_BATCH_SIZE = 3
 
 const hasNonSQLFilter = (checks: FilterLogic): boolean =>
   checks.some((check) => {
@@ -119,10 +119,6 @@ const runChecksOnRun = async (radar: any, run: any) => {
         if (!res.passed) break
       }
     }
-
-    console.log(
-      `radar ${radar.id} run ${run.id} type ${logicType} passed: ${passed}`,
-    )
   }
 
   await sql`
@@ -156,7 +152,7 @@ async function getRadarRuns(radar: any) {
 
 let jobRunning = false
 
-export default async function radarJob() {
+async function radarJob() {
   if (jobRunning) {
     return console.warn("JOB: radar scan already running. skipping")
   }
@@ -178,19 +174,33 @@ export default async function radarJob() {
 
     console.time(`Analyzing ${runs.length} runs for radar ${radar.id}`)
 
-    for (let i = 0; i < runs.length; i += PARALLEL_BATCH_SIZE) {
-      const batch = runs.slice(i, i + PARALLEL_BATCH_SIZE)
-      await Promise.all(
-        batch.map((run) =>
-          runChecksOnRun(radar, run).catch((error) => console.error(error)),
-        ),
-      )
+    for (const run of runs) {
+      await runChecksOnRun(radar, run)
     }
+
+    // for (let i = 0; i < runs.length; i += PARALLEL_BATCH_SIZE) {
+    //   const batch = runs.slice(i, i + PARALLEL_BATCH_SIZE)
+    //   await Promise.all(
+    //     batch.map((run) =>
+    //       runChecksOnRun(radar, run).catch((error) => console.error(error)),
+    //     ),
+    //   )
+    // }
 
     console.timeEnd(`Analyzing ${runs.length} runs for radar ${radar.id}`)
   }
 
   jobRunning = false
+}
+
+export default async function runRadarJob() {
+  // run in a while loop
+  while (true) {
+    console.time("JOB: radar scan")
+    await radarJob()
+    console.timeEnd("JOB: radar scan")
+    await new Promise((resolve) => setTimeout(resolve, 5000))
+  }
 }
 
 // await radarJob()
