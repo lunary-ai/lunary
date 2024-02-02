@@ -210,5 +210,3 @@ export default async function runRadarJob() {
     }
   }
 }
-
-// await radarJob()

@@ -15,13 +15,10 @@ import { errorMiddleware } from "./utils/errors"
 import { setDefaultBody } from "./utils/misc"
 import ratelimit from "./utils/ratelimit"
 import { initSentry, requestHandler, tracingMiddleWare } from "./utils/sentry"
-import runRadarJob from "./jobs/radar"
 
 checkDbConnection()
 setupCronJobs()
 initSentry()
-
-runRadarJob()
 
 const app = new Koa()
 
