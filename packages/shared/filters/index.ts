@@ -618,7 +618,7 @@ export const FILTERS: Filter[] = [
         width: 140,
         options: [
           {
-            label: "Helpful assistant",
+            label: "Helpful Assistant",
             value: "helpful",
           },
           {
@@ -638,6 +638,54 @@ export const FILTERS: Filter[] = [
             value: "friendly",
           },
           {
+            label: "Professional",
+            value: "professional",
+          },
+          {
+            label: "Instructive",
+            value: "instructive",
+          },
+          {
+            label: "Authoritative",
+            value: "authoritative",
+          },
+          {
+            label: "Informative",
+            value: "informative",
+          },
+          {
+            label: "Sarcastic",
+            value: "sarcastic",
+          },
+          {
+            label: "Humorous",
+            value: "humorous",
+          },
+          {
+            label: "Empathetic",
+            value: "empathetic",
+          },
+          {
+            label: "Enthusiastic",
+            value: "enthusiastic",
+          },
+          {
+            label: "Motivational",
+            value: "motivational",
+          },
+          {
+            label: "Curious",
+            value: "curious",
+          },
+          {
+            label: "Sincere",
+            value: "sincere",
+          },
+          {
+            label: "Witty",
+            value: "witty",
+          },
+          {
             label: "Pirate",
             value: "pirate",
           },
@@ -653,9 +701,10 @@ export const FILTERS: Filter[] = [
     id: "factualness",
     name: "Factualness",
     uiType: "ai",
+    soon: true,
     onlyInEvals: true,
     description:
-      "Checks if the output is factually correct using the given context.",
+      "Checks if the LLM's response is factually correct using the given context.",
     params: [
       {
         type: "label",
@@ -665,6 +714,26 @@ export const FILTERS: Filter[] = [
       {
         type: "label",
         label: "correct compared to context",
+      },
+    ],
+  },
+  {
+    id: "relevancy",
+    name: "Relevancy",
+    uiType: "ai",
+    soon: true,
+    onlyInEvals: true,
+    description:
+      "Checks if the LLM's response is relevant given the context and the prompt.",
+    params: [
+      {
+        type: "label",
+        label: "Output is >=",
+      },
+      PERCENT_PARAM,
+      {
+        type: "label",
+        label: "relevant",
       },
     ],
   },
@@ -707,7 +776,7 @@ export const FILTERS: Filter[] = [
     name: "Similarity",
     uiType: "ai",
     onlyInEvals: true,
-    description: `Ensure the output is similar to a given ideal output.`,
+    description: `Check if the output is similar to a given ideal output with various algorithms.`,
     params: [
       {
         type: "label",
@@ -741,6 +810,25 @@ export const FILTERS: Filter[] = [
       {
         type: "label",
         label: "similarity",
+      },
+    ],
+  },
+  {
+    id: "rouge",
+    name: "ROUGE",
+    uiType: "ai",
+    onlyInEvals: true,
+    description: `Rouge (Recall-Oriented Understudy for Gisting Evaluation) is a metric used for evaluating the quality of generated text, especially in tasks like text summarization.`,
+    soon: true,
+    params: [
+      {
+        type: "label",
+        label: "Output is >=",
+      },
+      PERCENT_PARAM,
+      {
+        type: "label",
+        label: "ROUGE score",
       },
     ],
   },
