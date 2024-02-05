@@ -114,6 +114,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     evaluator: async (run, params) => {
       const { field, type } = params
       let passed = false
+      let details = null
 
       const fieldText = lastMsg(run[field])
 
@@ -121,7 +122,9 @@ export const CHECK_RUNNERS: CheckRunner[] = [
         try {
           JSON.parse(fieldText)
           passed = true
-        } catch (e) {}
+        } catch (e: any) {
+          details = e.message
+        }
       } else if (type === "invalid") {
         try {
           JSON.parse(fieldText)
@@ -142,6 +145,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
 
       return {
         passed,
+        details,
       }
     },
   },

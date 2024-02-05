@@ -202,10 +202,7 @@ export const FILTERS: Filter[] = [
     soon: true,
     uiType: "smart",
     params: [
-      {
-        label: "Response",
-        type: "label",
-      },
+      FIELD_PARAM,
       FORMAT_PARAM,
       {
         type: "label",

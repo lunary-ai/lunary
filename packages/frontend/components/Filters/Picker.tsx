@@ -95,7 +95,7 @@ function RenderFilterNode({
             isParamNotLabel && param.width
               ? minimal
                 ? param.width
-                : param.width * 1.5
+                : param.width * 1.1
               : undefined
 
           const onChangeParam = (value) => {

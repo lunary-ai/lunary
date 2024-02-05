@@ -137,10 +137,10 @@ const testEval = {
   checks: [
     "OR",
     {
-      id: "duration",
+      id: "json",
       params: {
-        operator: "gt",
-        duration: 300,
+        field: "output",
+        type: "contains",
       },
     },
   ],
@@ -151,10 +151,19 @@ const testEval = {
       variations: [
         {
           variables: {
-            question: "What is your name?",
+            question:
+              "Here is a challenge: generate a valid JSON object with 3 random keys and values. Explain.",
           },
-          gold: "My name is SuperChatbot.",
-          context: "You are a chatbot called SuperChatbot.",
+          // gold: "My name is SuperChatbot.",
+          // context: "You are a chatbot called SuperChatbot.",
+        },
+        {
+          variables: {
+            question:
+              "Generate an invalid JSON object with 3 random keys and values. It should contains a syntax error.",
+          },
+          // gold: "My name is SuperChatbot.",
+          // context: "You are a chatbot called SuperChatbot.",
         },
       ],
     },
@@ -170,12 +179,15 @@ async function runEval(
 ) {
   try {
     console.log(`=============================`)
-    console.log(`Running eval for ${model} with prompt ${prompt}`)
+    console.log(
+      `Running eval for ${model} with variation ${JSON.stringify(variation.variables)}`,
+    )
     const { variables, idealOutput, context } = variation
 
     // run AI query
     const createdAt = new Date()
     const input = compileChatMessages(prompt, variables)
+
     const res = await runAImodel(input, extra, undefined, model)
     const endedAt = new Date()
 
@@ -210,10 +222,10 @@ async function runEval(
 
     console.log(` virtualRun: `, JSON.stringify(virtualRun, null, 2))
 
-    // run checks with context and gold
+    // run checks
     const { passed, results } = await runChecksOnRun(virtualRun, checks)
 
-    console.log(passed, results)
+    console.log({ passed, results })
 
     // insert into eval_result
     // await sql`
@@ -235,8 +247,8 @@ evaluations.post("/run", async (ctx) => {
   const { prompts, models, checks } = testEval
 
   // for each variation of each prompt and each model, run the eval
-  for (const prompt of prompts) {
-    for (const model of models) {
+  for (const model of models) {
+    for (const prompt of prompts) {
       for (const variation of prompt.variations) {
         await runEval(model, prompt.content, prompt.extra, variation, checks)
       }

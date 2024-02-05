@@ -25,7 +25,8 @@ export function compileTemplate(
 }
 
 export function compileChatMessages(content: any, variables: any) {
-  let copy = [...content]
+  // Create a deep copy of the content to prevent mutation of the original array
+  let copy = JSON.parse(JSON.stringify(content))
 
   if (variables) {
     for (const item of copy) {
