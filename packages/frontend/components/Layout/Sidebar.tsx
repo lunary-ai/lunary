@@ -39,12 +39,7 @@ const APP_MENU = [
   { label: "Users", icon: IconUsers, link: "/users" },
   { label: "Prompts", icon: IconPlayerPlay, link: "/prompts" },
   { label: "Radars", icon: IconShieldBolt, link: "/radars" },
-  {
-    label: "Evaluations",
-    icon: IconFlask2Filled,
-    link: "/evals",
-    soon: !process.env.NEXT_PUBLIC_DEMO,
-  },
+  { label: "Evaluations", icon: IconFlask2Filled, link: "/evals" },
   { label: "Settings & Keys", icon: IconSettings, link: "/settings" },
 ]
 
