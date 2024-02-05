@@ -62,7 +62,6 @@ const publicRoutes = [
   new RegExp(`/auth/.+`),
   "/api/report", // required legacy route
   "/api/v1/template", // legacy template route
-  "/v1/evaluations",
   "/v1/health",
   "/v1/health-check",
   "/webhooks/stripe",
@@ -101,6 +100,7 @@ export async function authMiddleware(ctx: Context, next: Next) {
       throw new Error("No bearer token provided")
     }
     const { payload } = await verifyJwt<SessionData>(token)
+    console.log(payload)
 
     ctx.state.userId = payload.userId
     ctx.state.orgId = payload.orgId
