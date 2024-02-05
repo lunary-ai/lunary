@@ -73,6 +73,65 @@ evaluations.post("/", async (ctx: Context) => {
   ctx.status = 201
 })
 
+evaluations.get("/:id", async (ctx: Context) => {
+  const { id } = ctx.params
+
+  const evaluationId = z.string().uuid().parse(id)
+
+  const rows = await sql`
+    select
+      e.*,
+      p.id as prompt_id,
+      p.content,
+      p.extra,
+      pv.id as variation_id,
+      pv.variables,
+      pv.context,
+      pv.ideal_output
+    from
+      evaluation e
+      inner join prompt p on e.id = p.evaluation_id
+      left join prompt_variation pv on pv.prompt_id = p.id
+      where e.id = ${evaluationId}
+    `
+
+  if (!rows) {
+    ctx.throw(404, "Evaluation not found")
+    return
+  }
+
+  const evaluationData = {
+    ...rows[0],
+    prompts: [],
+    promptVariations: [],
+  }
+
+  // TODO: use .groupBy instead
+  for (const row of rows) {
+    if (!evaluationData.prompts.find((p) => p.id === row.promptId)) {
+      evaluationData.prompts.push({
+        id: row.promptId,
+        content: row.content,
+        extra: row.extra,
+        variations: [],
+      })
+    }
+
+    if (row.variationId) {
+      evaluationData.prompts
+        .find((p) => p.id === row.variationId)
+        .variations.push({
+          id: row.variation_id,
+          variables: row.variables,
+          context: row.context,
+          ideal_output: row.ideal_output,
+        })
+    }
+  }
+
+  ctx.body = evaluationData
+})
+
 const testEval = {
   models: ["gpt-3.5-turbo", "gpt-4-turbo-preview"],
   checks: [
