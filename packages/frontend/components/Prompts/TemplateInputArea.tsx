@@ -35,7 +35,7 @@ function TemplateInputArea({
       />
       {(output || error) && (
         <>
-          <Group justify="space-between">
+          <Group justify="space-between" mb="lg">
             <Text fw="bold" size="sm">
               {error ? "Error" : "Output"}
             </Text>

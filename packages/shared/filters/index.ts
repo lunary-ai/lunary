@@ -185,6 +185,7 @@ export const FILTERS: Filter[] = [
     id: "json",
     name: "JSON",
     soon: true,
+    description: "Checks if the given field is valid JSON.",
     uiType: "smart",
     params: [
       {
@@ -195,6 +196,24 @@ export const FILTERS: Filter[] = [
       {
         type: "label",
         label: "JSON",
+      },
+    ],
+  },
+  {
+    id: "python",
+    name: "Python",
+    description: "Checks if the given field is valid python code.",
+    soon: true,
+    uiType: "smart",
+    params: [
+      {
+        label: "Response",
+        type: "label",
+      },
+      FORMAT_PARAM,
+      {
+        type: "label",
+        label: "Python",
       },
     ],
   },
@@ -533,12 +552,11 @@ export const FILTERS: Filter[] = [
     ],
   },
   {
-    id: "ai-assertion",
-    name: "AI Assertion",
+    id: "assertion",
+    name: "Assertion",
     uiType: "ai",
-    // soon: true,
     description:
-      "Checks if the output matches the given requirement, using a gpt-3.5-turbo to grade the output.",
+      "Checks if the output matches the given requirement, using GPT-4 to grade the output.",
     onlyInEvals: true,
     params: [
       {
@@ -546,20 +564,10 @@ export const FILTERS: Filter[] = [
         label: "Output",
       },
       {
-        type: "select",
-        id: "aiAssertion",
+        type: "text",
+        id: "assertion",
         placeholder: "Is spoken like a pirate",
         width: 140,
-        options: [
-          {
-            label: "Correct",
-            value: "correct",
-          },
-          {
-            label: "Incorrect",
-            value: "incorrect",
-          },
-        ],
       },
     ],
   },
@@ -601,12 +609,11 @@ export const FILTERS: Filter[] = [
   {
     id: "tone",
     name: "Tone",
-    soon: true,
+
     uiType: "ai",
     onlyInEvals: true,
     description:
-      "Assesses if the tone of LLM responses matches with the desired persona.",
-
+      "Assesses if the tone of the LLM response matches with the desired persona.",
     params: [
       {
         type: "label",
@@ -627,7 +634,6 @@ export const FILTERS: Filter[] = [
             label: "Formal",
             value: "formal",
           },
-
           {
             label: "Casual",
             value: "casual",
@@ -655,8 +661,7 @@ export const FILTERS: Filter[] = [
     // soon: true,
     onlyInEvals: true,
     description:
-      "Checks if the output is factually correct compared to a given context",
-
+      "Checks if the output is factually correct compared to the given context.",
     params: [
       {
         type: "label",
@@ -704,11 +709,10 @@ export const FILTERS: Filter[] = [
   },
   {
     id: "similarity",
-    name: "Output Similarity",
+    name: "Similarity",
     uiType: "ai",
-    // soon: true,
     onlyInEvals: true,
-    description: `Ensure the output is similar to a given expected output (gold output).`,
+    description: `Ensure the output is similar to a given ideal output.`,
     params: [
       {
         type: "label",
@@ -717,7 +721,27 @@ export const FILTERS: Filter[] = [
       PERCENT_PARAM,
       {
         type: "label",
-        label: "similar to expected output",
+        label: "similar to expected output using",
+      },
+      {
+        type: "select",
+        id: "algorithm",
+        width: 100,
+        defaultValue: "ai",
+        options: [
+          {
+            value: "ai",
+            label: "Smart AI",
+          },
+          {
+            label: "Cosine (vector)",
+            value: "cosine",
+          },
+          {
+            label: "Jaccard",
+            value: "jaccard",
+          },
+        ],
       },
     ],
   },

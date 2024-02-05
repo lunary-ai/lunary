@@ -324,6 +324,12 @@ function Playground() {
     setStreaming(false)
   }
 
+  // reset output when the template or template version changes
+  useEffect(() => {
+    setOutput(null)
+    setOutputTokens(0)
+  }, [template?.id, templateVersion?.id])
+
   const switchTemplateVersion = (v) => {
     setTemplateVersion(v)
     router.push(`/prompts/${v.id}`)
@@ -688,7 +694,7 @@ function Playground() {
                       key={variable}
                       align="center"
                       justify="space-between"
-                      gap={0}
+                      gap={6}
                     >
                       <Badge
                         key={variable}

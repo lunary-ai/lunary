@@ -1,4 +1,5 @@
 import sql from "../utils/db"
+import aiAssert from "./ai/assert"
 import aiNER from "./ai/ner"
 import aiSentiment from "./ai/sentiment"
 import aiToxicity from "./ai/toxic"
@@ -281,11 +282,20 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     },
   },
   {
-    id: "ai-assertion",
+    id: "assertion",
+    async evaluator(run, params) {
+      const { assertion } = params
 
-    // async evaluator(run, params) {
-    //   return {}
-    // },
+      const { passed, explanation } = await aiAssert(
+        lastMsg(run["output"]),
+        assertion,
+      )
+
+      return {
+        passed,
+        details: explanation,
+      }
+    },
   },
   {
     id: "sentiment",
