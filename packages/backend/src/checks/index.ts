@@ -111,18 +111,34 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   },
   {
     id: "json",
-
     evaluator: async (run, params) => {
-      const { type } = params
+      const { field, type } = params
       let passed = false
 
-      // todo: contains, partial, equals,..
+      const fieldText = lastMsg(run[field])
 
-      try {
-        if (!run.output.startsWith("{")) throw "Not an object"
-        JSON.parse(run.output)
-        passed = true
-      } catch (e) {}
+      if (type === "valid") {
+        try {
+          JSON.parse(fieldText)
+          passed = true
+        } catch (e) {}
+      } else if (type === "invalid") {
+        try {
+          JSON.parse(fieldText)
+          passed = false
+        } catch (e) {}
+      } else if (type === "contains") {
+        const regex = /{.*?}/gs // Non-greedy match on anything between {}
+        const matches = fieldText.match(regex)
+        if (matches) {
+          passed = matches.some((match) => {
+            try {
+              JSON.parse(match)
+              return true // Found valid JSON
+            } catch (e) {}
+          })
+        }
+      }
 
       return {
         passed,
@@ -327,6 +343,19 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   },
   {
     id: "tone",
+    async evaluator(run, params) {
+      const { persona } = params
+      // using aiAsertion
+      const { passed, explanation } = await aiAssert(
+        lastMsg(run["output"]),
+        `The tone of the response is spoken in a '${persona}' way.`,
+      )
+
+      return {
+        passed,
+        details: explanation,
+      }
+    },
   },
   {
     id: "factualness",
@@ -340,9 +369,9 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       const { algorithm, percent } = params
       const output = lastMsg(run["output"])
 
-      if (!run.ideal) throw new Error("No ideal response to compare to")
+      if (!run.idealOutput) throw new Error("No ideal response to compare to")
 
-      const similarity = await aiSimilarity(output, run.ideal, algorithm)
+      const similarity = await aiSimilarity(output, run.idealOutput, algorithm)
 
       const passed = similarity >= percent
 

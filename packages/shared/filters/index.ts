@@ -188,10 +188,7 @@ export const FILTERS: Filter[] = [
     description: "Checks if the given field is valid JSON.",
     uiType: "smart",
     params: [
-      {
-        label: "Response",
-        type: "label",
-      },
+      FIELD_PARAM,
       FORMAT_PARAM,
       {
         type: "label",
@@ -616,9 +613,8 @@ export const FILTERS: Filter[] = [
     params: [
       {
         type: "label",
-        label: "Tone of output is more than",
+        label: "Tone of output matches",
       },
-      PERCENT_PARAM,
       {
         type: "select",
         id: "persona",
@@ -651,16 +647,19 @@ export const FILTERS: Filter[] = [
           },
         ],
       },
+      {
+        type: "label",
+        label: "persona",
+      },
     ],
   },
   {
     id: "factualness",
     name: "Factualness",
     uiType: "ai",
-
     onlyInEvals: true,
     description:
-      "Checks if the output is factually correct compared to the given context.",
+      "Checks if the output is factually correct using the given context.",
     params: [
       {
         type: "label",
@@ -691,6 +690,7 @@ export const FILTERS: Filter[] = [
   {
     id: "system",
     name: "System Guidelines",
+    soon: true,
     uiType: "ai",
     onlyInEvals: true,
     description: `Checks if the output matches guidelines set in the 'system' message.`,
