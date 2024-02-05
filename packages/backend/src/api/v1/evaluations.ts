@@ -132,6 +132,28 @@ evaluations.get("/:id", async (ctx: Context) => {
   ctx.body = evaluationData
 })
 
+evaluations.get("/", async (ctx: Context) => {
+  const { projectId } = ctx.state
+
+  const evaluations = await sql`
+    select
+      e.id,
+      e.created_at,
+      e.name,
+      a.name as owner_name,
+      e.project_id
+    from
+      evaluation e
+      left join account a on a.id = e.owner_id
+    where
+      e.project_id = ${projectId} 
+    order by 
+      created_at desc
+  `
+
+  ctx.body = evaluations
+})
+
 const testEval = {
   models: ["gpt-3.5-turbo"], //, "gpt-4-turbo-preview"],
   checks: [

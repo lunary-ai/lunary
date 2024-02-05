@@ -485,3 +485,12 @@ export function useRadar(id, initialData?: any) {
     loading: isLoading,
   }
 }
+
+export function useEvaluations() {
+  const { data, isLoading } = useProjectSWR(`/evaluations`)
+
+  return {
+    evaluations: data || [],
+    isLoading,
+  }
+}

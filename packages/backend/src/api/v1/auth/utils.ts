@@ -100,7 +100,6 @@ export async function authMiddleware(ctx: Context, next: Next) {
       throw new Error("No bearer token provided")
     }
     const { payload } = await verifyJwt<SessionData>(token)
-    console.log(payload)
 
     ctx.state.userId = payload.userId
     ctx.state.orgId = payload.orgId
