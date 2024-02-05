@@ -20,11 +20,10 @@ import {
   Textarea,
   Title,
 } from "@mantine/core"
-import { useListState, useSetState } from "@mantine/hooks"
+import { useListState } from "@mantine/hooks"
 import { IconFlask2Filled, IconHistory } from "@tabler/icons-react"
-import Router from "next/router"
 import { useEffect, useState } from "react"
-import { FilterLogic, LogicData, MODELS } from "shared"
+import { FilterLogic, MODELS } from "shared"
 
 const FEATURE_LIST = [
   "Define assertions to test variations of prompts",
@@ -78,7 +77,7 @@ function AddPromptModal({ opened, setOpened, onAdd }) {
     <Modal
       opened={opened}
       onClose={() => setOpened(false)}
-      size="lg"
+      size="xl"
       title="Add a new prompt"
     >
       <Stack>
@@ -91,8 +90,8 @@ function AddPromptModal({ opened, setOpened, onAdd }) {
         {/* Show this if variables in prompt, add the possibility to add variations of the variables */}
         {hasVariables && (
           <>
-            <Text size="sm" color="gray">
-              Experiment with various variable configurations in the prompt:
+            <Text size="sm" c="dimmed">
+              Experiment with various configurations in the prompt:
             </Text>
           </>
         )}
@@ -104,10 +103,13 @@ function AddPromptModal({ opened, setOpened, onAdd }) {
           >
             <Stack>
               {Object.keys(variables).map((variable) => (
-                <TextInput
+                <Textarea
                   key={variable}
                   label={`{{${variable}}}`}
                   value={variation[variable]}
+                  autosize
+                  maxRows={6}
+                  minRows={1}
                   onChange={(e) =>
                     handlers.setItemProp(index, variable, e.currentTarget.value)
                   }
@@ -117,6 +119,9 @@ function AddPromptModal({ opened, setOpened, onAdd }) {
                 label="Context (optional)"
                 description="Helps in assessing the factual accuracy and relevance of the LLM's response."
                 required={false}
+                autosize
+                maxRows={6}
+                minRows={3}
                 value={variation.context}
                 onChange={(e) =>
                   handlers.setItemProp(index, "context", e.currentTarget.value)
@@ -124,9 +129,12 @@ function AddPromptModal({ opened, setOpened, onAdd }) {
               />
 
               <Textarea
-                label="Gold output (optional)"
+                label="Ideal output (optional)"
                 description="Useful for assessing the proximity of the LLM response to an anticipated output."
                 required={false}
+                autosize
+                maxRows={6}
+                minRows={3}
                 value={variation.expected}
                 onChange={(e) =>
                   handlers.setItemProp(index, "expected", e.currentTarget.value)
@@ -148,7 +156,7 @@ function AddPromptModal({ opened, setOpened, onAdd }) {
               })
             }
           >
-            Add variation of variables
+            Add variation
           </Button>
         )}
 
