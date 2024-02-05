@@ -2,6 +2,7 @@ import sql from "../utils/db"
 import aiAssert from "./ai/assert"
 import aiNER from "./ai/ner"
 import aiSentiment from "./ai/sentiment"
+import aiSimilarity from "./ai/similarity"
 import aiToxicity from "./ai/toxic"
 
 export type CheckRunner = {
@@ -335,6 +336,21 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   },
   {
     id: "similarity",
+    async evaluator(run, params) {
+      const { algorithm, percent } = params
+      const output = lastMsg(run["output"])
+
+      if (!run.ideal) throw new Error("No ideal response to compare to")
+
+      const similarity = await aiSimilarity(output, run.ideal, algorithm)
+
+      const passed = similarity >= percent
+
+      return {
+        passed,
+        details: { similarity },
+      }
+    },
   },
   {
     id: "entities",

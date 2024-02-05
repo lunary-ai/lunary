@@ -609,7 +609,6 @@ export const FILTERS: Filter[] = [
   {
     id: "tone",
     name: "Tone",
-
     uiType: "ai",
     onlyInEvals: true,
     description:
@@ -658,7 +657,7 @@ export const FILTERS: Filter[] = [
     id: "factualness",
     name: "Factualness",
     uiType: "ai",
-    // soon: true,
+
     onlyInEvals: true,
     description:
       "Checks if the output is factually correct compared to the given context.",
@@ -721,7 +720,7 @@ export const FILTERS: Filter[] = [
       PERCENT_PARAM,
       {
         type: "label",
-        label: "similar to expected output using",
+        label: "similar to ideal output using",
       },
       {
         type: "select",
@@ -742,6 +741,10 @@ export const FILTERS: Filter[] = [
             value: "jaccard",
           },
         ],
+      },
+      {
+        type: "label",
+        label: "similarity",
       },
     ],
   },
