@@ -279,7 +279,7 @@ function Playground() {
           body: JSON.stringify({
             content: templateVersion.content,
             extra: templateVersion.extra,
-            testValues: templateVersion.testValues,
+            variables: templateVersion.testValues,
           }),
         },
       )

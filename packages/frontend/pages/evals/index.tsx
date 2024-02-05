@@ -3,6 +3,7 @@ import FilterPicker from "@/components/Filters/Picker"
 import Paywall from "@/components/Layout/Paywall"
 import { PromptEditor } from "@/components/Prompts/PromptEditor"
 import { useTemplates } from "@/utils/dataHooks"
+import { fetcher } from "@/utils/fetcher"
 import { usePromptVariables } from "@/utils/promptsHooks"
 import {
   Badge,
@@ -188,8 +189,11 @@ export default function Evals() {
     checks: ["AND"],
   })
 
-  function startEval() {
+  async function startEval() {
     setLoading(true)
+
+    await fetcher.post("/evals/run", { arg: {} })
+
     // sleep 2s
     setTimeout(() => {
       setLoading(false)
