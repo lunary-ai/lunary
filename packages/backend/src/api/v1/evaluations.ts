@@ -160,10 +160,9 @@ const testEval = {
   checks: [
     "OR",
     {
-      id: "json",
+      id: "tone",
       params: {
-        field: "output",
-        type: "contains",
+        persona: "pirate",
       },
     },
   ],
@@ -174,16 +173,14 @@ const testEval = {
       variations: [
         {
           variables: {
-            question:
-              "Here is a challenge: generate a valid JSON object with 3 random keys and values. Explain.",
+            question: "Tell a joke like a pirate.",
           },
           // gold: "My name is SuperChatbot.",
           // context: "You are a chatbot called SuperChatbot.",
         },
         {
           variables: {
-            question:
-              "Generate an invalid JSON object with 3 random keys and values. It should contains a syntax error.",
+            question: "Tell a joke like a drunken chatbot.",
           },
           // gold: "My name is SuperChatbot.",
           // context: "You are a chatbot called SuperChatbot.",
