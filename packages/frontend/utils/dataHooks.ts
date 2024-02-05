@@ -494,3 +494,16 @@ export function useEvaluations() {
     isLoading,
   }
 }
+
+export function useEvaluationResults(evaluationId: string) {
+  const { data, isLoading, isValidating } = useProjectSWR(
+    `/evaluations/result/${evaluationId}`,
+  )
+
+  const results = data || []
+  // TODO: isLoading broken
+  return {
+    results,
+    isLoading: results.length < 1 || isLoading,
+  }
+}

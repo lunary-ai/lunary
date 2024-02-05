@@ -30,14 +30,17 @@ const hasNonSQLFilter = (checks: FilterLogic): boolean =>
 async function sqlEval(sqlFragment: any, run: any): Promise<boolean> {
   let passed = false
 
+  console.log("Passed", false)
   // those are eval-specific and differ from the run object
   delete run.idealOutput
   delete run.context //
 
   await sql.begin(async (tx) => {
     // create a virtual table with the run columns, without the id, project_id and is_public columns
+    console.log(1)
     await tx`create temp table temp_run (like run) on commit drop`
 
+    console.log(2)
     await tx`insert into temp_run ${tx(run)}`
 
     // run the sql fragment and see if it returns any rows

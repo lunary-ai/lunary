@@ -124,7 +124,7 @@ function AddPromptModal({ opened, setOpened, onAdd }) {
     },
     {
       role: "user",
-      content: "{{question}}",
+      content: "What is the capital city of {{country}}",
     },
   ])
 
@@ -272,22 +272,20 @@ export default function Evals() {
     checks: ["AND"],
   })
 
-  console.log(JSON.stringify(evaluation))
-
+  const router = useRouter()
   const { project } = useProject()
 
   async function startEval() {
     setLoading(true)
 
-    await fetcher.post(`/evaluations?projectId=${project.id}`, {
-      arg: evaluation,
-    })
+    const { evaluationId } = await fetcher.post(
+      `/evaluations?projectId=${project.id}`,
+      {
+        arg: evaluation,
+      },
+    )
 
-    // sleep 2s
-    setTimeout(() => {
-      setLoading(false)
-      // Router.push("/evals/results")
-    }, 1000)
+    router.push(`/evaluations/${evaluationId}`)
   }
 
   return (

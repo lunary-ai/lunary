@@ -15,59 +15,59 @@ evaluations.post("/", async (ctx: Context) => {
 
   const { name, models, checks, prompts } = ctx.request.body as any
   const { userId, projectId } = ctx.state
-  console.log(ctx.state)
 
-  await sql.begin(async (sql) => {
-    const evaluationToInsert = {
-      name: name ? name : `Evaluation of ${getReadableDateTime()}`,
-      ownerId: userId,
-      projectId,
-      models,
-      checks,
+  // await sql.begin(async (sql) => {
+  const evaluationToInsert = {
+    name: name ? name : `Evaluation of ${getReadableDateTime()}`,
+    ownerId: userId,
+    projectId,
+    models,
+    checks,
+  }
+
+  const [insertedEvaluation] =
+    await sql`insert into evaluation ${sql(evaluationToInsert)} returning *`
+
+  for (const prompt of prompts) {
+    const promptToInsert = {
+      evaluationId: insertedEvaluation.id,
+      content: prompt.content,
+      extra: prompt.extra,
     }
 
-    const [insertedEvaluation] =
-      await sql`insert into evaluation ${sql(evaluationToInsert)} returning *`
+    const [insertedPrompt] =
+      await sql`insert into prompt ${sql(promptToInsert)} returning *`
 
-    console.log(prompts)
-    for (const prompt of prompts) {
-      const promptToInsert = {
-        evaluationId: insertedEvaluation.id,
-        content: prompt.content,
-        extra: prompt.extra,
-      }
+    if (prompt.variations) {
+      for (const variation of prompt.variations) {
+        const variationToInsert = {
+          promptId: insertedPrompt.id,
+          variables: variation.variables,
+          context: variation.context,
+          idealOutput: variation.idealOutput,
+        }
 
-      const [insertedPrompt] =
-        await sql`insert into prompt ${sql(promptToInsert)} returning *`
+        const [insertedVariation] =
+          await sql`insert into prompt_variation ${sql(variationToInsert)} returning *`
 
-      if (prompt.variations) {
-        for (const variation of prompt.variations) {
-          const variationToInsert = {
-            promptId: insertedPrompt.id,
-            variables: variation.variables,
-            context: variation.context,
-            idealOutput: variation.idealOutput,
-          }
-
-          await sql`insert into prompt_variation ${sql(variationToInsert)}`
-
-          for (const model of insertedEvaluation.models) {
-            console.log(model)
-            await runEval(
-              model,
-              prompt.content,
-              prompt.extra,
-              variation,
-              checks,
-            )
-          }
+        for (const model of models) {
+          await runEval(
+            insertedEvaluation.id,
+            insertedPrompt.id,
+            insertedVariation.id,
+            model,
+            prompt.content,
+            prompt.extra,
+            variation,
+            checks,
+          )
         }
       }
     }
-  })
+  }
 
   ctx.status = 201
-  ctx.body = {}
+  ctx.body = { evaluationId: insertedEvaluation.id }
 })
 
 evaluations.get("/:id", async (ctx: Context) => {
@@ -124,8 +124,32 @@ evaluations.get("/:id", async (ctx: Context) => {
   ctx.body = evaluation
 })
 
+evaluations.get("/result/:evaluationId", async (ctx: Context) => {
+  const { evaluationId } = ctx.params
+
+  const results = await sql`
+  select 
+    *,
+    p.id as prompt_id,
+    p.content as prompt_content,
+    p.extra as prompt_extra
+  from 
+    evaluation_result er 
+    left join prompt p on p.id = er.prompt_id
+    left join prompt_variation pv on pv.id = er.variation_id
+  where 
+    er.evaluation_id = ${evaluationId}`
+
+  const evalResults = results.map((result) => ({
+    ...result,
+    output: JSON.parse(result.output),
+  }))
+
+  ctx.body = evalResults
+})
+
 evaluations.get("/", async (ctx: Context) => {
-  const { projectId } = ctx.state
+  const { projectId } = ctx.state.projectId
 
   const evaluations = await sql`
     select
@@ -182,6 +206,9 @@ const testEval = {
 }
 
 async function runEval(
+  evaluationId: string,
+  promptId: string,
+  variationId: string,
   model: string,
   prompt: any,
   extra: any,
@@ -204,8 +231,8 @@ async function runEval(
 
     // Create virtual run to be able to run checks
     const output = res.choices[0].message
-    const promptTokens = res.usage.prompt_tokens
-    const completionTokens = res.usage.completion_tokens
+    const promptTokens = res.usage.promptTokens
+    const completionTokens = res.usage.completionTokens
     const duration = endedAt.getTime() - createdAt.getTime()
 
     const virtualRun = {
@@ -229,26 +256,29 @@ async function runEval(
       isPublic: false,
     }
 
-    virtualRun.cost = calcRunCost(virtualRun)
+    const cost = calcRunCost(virtualRun)
+    virtualRun.cost = cost
 
     console.log(` virtualRun: `, JSON.stringify(virtualRun, null, 2))
 
     // run checks
     const { passed, results } = await runChecksOnRun(virtualRun, checks)
 
-    console.log({ passed, results })
-
     // insert into eval_result
-    // await sql`
-    //   insert into eval_result ${sql({
-    //     model,
-    //     prompt,
-    //     extra,
-    //     variables,
-    //     gold,
-    //     context,
-    //     output
-    //   })}
+    await sql`
+      insert into evaluation_result ${sql({
+        evaluationId,
+        promptId,
+        variationId,
+        model,
+        output: JSON.stringify(output),
+        results: JSON.stringify(results),
+        passed,
+        completionTokens,
+        cost,
+        duration,
+      })}
+      `
   } catch (error) {
     console.error(error)
   }

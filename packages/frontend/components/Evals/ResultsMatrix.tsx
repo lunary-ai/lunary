@@ -1,5 +1,8 @@
-import { Badge, Group, Progress, Stack, Text } from "@mantine/core"
+import { Badge, Group, Loader, Progress, Stack, Text } from "@mantine/core"
 import classes from "./index.module.css"
+import { useEvaluationResults } from "@/utils/dataHooks"
+import { useRouter } from "next/router"
+import { useParams } from "next/navigation"
 // We create a matrix of results for each prompt, variable and model.
 // The matrix is a 3D array, where each dimension represents a different
 
@@ -13,7 +16,6 @@ type EvalResult = {
   output: string
   passed: boolean
 }
-
 const evalResults: EvalResult[] = [
   {
     model: "gpt-3.5-turbo",
@@ -65,11 +67,12 @@ const evalResults: EvalResult[] = [
   },
 ]
 
-const getResultForVariation = (
+function getResultForVariation(
   prompt: string,
   variables: { [key: string]: string },
   model: string,
-): EvalResult | undefined => {
+  evalResults,
+): any | undefined {
   return evalResults.find(
     (result) =>
       result.prompt === prompt &&
@@ -83,10 +86,11 @@ const getResultForVariation = (
 const getAggegateForVariation = (
   prompt: string,
   model: string,
+  evalResults,
 ): {
   passed: number // percentage passed
   failed: number // percentage failed
-  latency: number // average latency
+  duration: number // average duration
 } => {
   const results = evalResults.filter(
     (result) => result.prompt === prompt && result.model === model,
@@ -95,13 +99,14 @@ const getAggegateForVariation = (
   return {
     passed: results.filter((result) => result.passed).length,
     failed: results.filter((result) => !result.passed).length,
-    latency: Math.floor(
-      results.reduce((acc, result) => acc + result.latency, 0) / results.length,
+    duration: Math.floor(
+      results.reduce((acc, result) => acc + result.duration, 0) /
+        results.length,
     ),
   }
 }
 
-const getVariableVariations = (results: EvalResult[]) => {
+const getVariableVariations = (results) => {
   const variations = results.map((result) => result.variables)
   const uniqueVariations = Array.from(
     new Set(variations.map((variation) => JSON.stringify(variation))),
@@ -109,7 +114,7 @@ const getVariableVariations = (results: EvalResult[]) => {
   return uniqueVariations as { [key: string]: string }[]
 }
 
-const getPromptModelVariations = (results: EvalResult[]) => {
+const getPromptModelVariations = (results) => {
   const variations = results.map((result) => ({
     prompt: result.prompt,
     model: result.model,
@@ -120,7 +125,7 @@ const getPromptModelVariations = (results: EvalResult[]) => {
     .map((variation) => JSON.parse(variation))
     .map((variation) => ({
       ...variation,
-      ...getAggegateForVariation(variation.prompt, variation.model),
+      ...getAggegateForVariation(variation.prompt, variation.model, results),
     }))
 
   return uniqueVariations as {
@@ -128,12 +133,25 @@ const getPromptModelVariations = (results: EvalResult[]) => {
     model: string
     passed: number
     failed: number
-    latency: number
+    duration: number
   }[]
 }
 
 export default function ResultsMatrix() {
+  const router = useRouter()
+
+  const { results: evalResults, isLoading } = useEvaluationResults(
+    router.query.id,
+  )
+
+  console.log(evalResults)
+
+  if (isLoading) {
+    return <Loader />
+  }
+
   const variableVariations = getVariableVariations(evalResults)
+
   const pmVariations = getPromptModelVariations(evalResults)
 
   const variables = Object.keys(variableVariations[0])
@@ -150,7 +168,7 @@ export default function ResultsMatrix() {
             <th>{variable}</th>
           ))}
           {pmVariations.map(
-            ({ model, prompt, passed, failed, latency }, index) => {
+            ({ model, prompt, passed, failed, duration }, index) => {
               return (
                 <th>
                   <Stack align="center" gap="xs">
@@ -170,7 +188,7 @@ export default function ResultsMatrix() {
                         </Progress.Section>
                       </Progress.Root>
                       <Text size="xs" c="dimmed">
-                        avg. {latency}ms
+                        avg. {duration}ms
                       </Text>
                     </Group>
                     <Badge variant="outline">{model}</Badge>
@@ -193,18 +211,19 @@ export default function ResultsMatrix() {
                 pmVariation.prompt,
                 variableVariation,
                 pmVariation.model,
+                evalResults,
               )
               return (
                 <td>
                   {result ? (
                     <Stack align="center">
-                      <Text>{result.output}</Text>
+                      <Text>{result.output.content}</Text>
                       <Group gap="xs">
                         <Badge color={result.passed ? "green" : "red"}>
                           {result.passed ? "Passed" : "Failed"}
                         </Badge>
                         <Text c="dimmed" size="xs">
-                          {result.latency}ms
+                          {result.duration}ms
                         </Text>
                       </Group>
                     </Stack>
