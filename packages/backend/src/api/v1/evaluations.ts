@@ -133,14 +133,14 @@ evaluations.get("/:id", async (ctx: Context) => {
 })
 
 const testEval = {
-  models: ["gpt-3.5-turbo", "gpt-4-turbo-preview"],
+  models: ["gpt-3.5-turbo"], //, "gpt-4-turbo-preview"],
   checks: [
     "OR",
     {
       id: "duration",
       params: {
         operator: "gt",
-        duration: 30000,
+        duration: 300,
       },
     },
   ],
@@ -190,14 +190,20 @@ async function runEval(
       input,
       output,
       status: "success",
-      extra,
+      params: extra,
       name: model,
       duration,
       promptTokens,
       completionTokens,
+      createdAt,
+      endedAt,
       // Eval-only fields:
       idealOutput,
       context,
+      // So the SQL queries don't fail:
+      id: "00000000-0000-4000-8000-000000000000",
+      projectId: "00000000-0000-4000-8000-000000000000",
+      isPublic: false,
     }
 
     virtualRun.cost = calcRunCost(virtualRun)

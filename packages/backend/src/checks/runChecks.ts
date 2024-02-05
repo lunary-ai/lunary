@@ -26,6 +26,27 @@ const hasNonSQLFilter = (checks: FilterLogic): boolean =>
     return false
   })
 
+// create  a virtual table with the run data and then run the sql fragment see if it returns any rows
+async function sqlEval(sqlFragment: any, run: any): Promise<boolean> {
+  let passed = false
+
+  // those are eval-specific and differ from the run object
+  delete run.idealOutput
+  delete run.context //
+
+  await sql.begin(async (tx) => {
+    // create a virtual table with the run columns, without the id, project_id and is_public columns
+    await tx`create temp table temp_run (like run) on commit drop`
+
+    await tx`insert into temp_run ${tx(run)}`
+
+    // run the sql fragment and see if it returns any rows
+    const [result] = await tx`select * from temp_run where ${sqlFragment}`
+    passed = !!result
+  })
+  return passed
+}
+
 async function checkRun(run: any, check: LogicElement): Promise<CheckResults> {
   if (typeof check === "string") {
     // Handle AND or OR
@@ -68,12 +89,9 @@ async function checkRun(run: any, check: LogicElement): Promise<CheckResults> {
   if (runner.sql) {
     const snippet = runner.sql(params)
 
-    // TODO FIX: this doesn't work using a virtual table/row,
+    const passed = await sqlEval(snippet, run)
 
-    const [result] =
-      await sql`select * from (${sql(run)}) as run where ${snippet}`
-
-    return { passed: !!result, filterId: id }
+    return { passed, filterId: id }
   }
 
   return { filterId: runner.id, ...(await runner.evaluator!(run, params)) }
@@ -90,11 +108,7 @@ export async function runChecksOnRun(run: any, checks: FilterLogic) {
     // More efficient to do it all in SQL if only SQL filters are used
     const filterSql = convertChecksToSQL(checks)
 
-    // TODO FIX: this doesn't work using a virtual table/row,
-    const [result] =
-      await sql`select * from (${sql(run)}) as run where ${filterSql}`
-
-    passed = !!result
+    passed = await sqlEval(filterSql, run)
   } else {
     const logicType = checks[0]
     const subChecks = checks.slice(1)

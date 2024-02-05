@@ -184,7 +184,6 @@ export const FILTERS: Filter[] = [
   {
     id: "json",
     name: "JSON",
-    soon: true,
     description: "Checks if the given field is valid JSON.",
     uiType: "smart",
     params: [

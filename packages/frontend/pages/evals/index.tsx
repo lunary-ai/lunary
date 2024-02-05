@@ -200,7 +200,7 @@ export default function Evals() {
   async function startEval() {
     setLoading(true)
 
-    await fetcher.post("/evals/run", { arg: {} })
+    await fetcher.post("/evaluations/run", { arg: {} })
 
     // sleep 2s
     setTimeout(() => {
