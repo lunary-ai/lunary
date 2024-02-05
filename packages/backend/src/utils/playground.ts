@@ -47,7 +47,7 @@ export async function runAImodel(
 
   const messages = convertInputToOpenAIMessages(copy)
 
-  let method
+  let method: any
 
   const modelObj = MODELS.find((m) => m.id === model)
 

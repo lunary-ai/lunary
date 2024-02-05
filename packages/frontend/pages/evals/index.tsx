@@ -197,7 +197,7 @@ export default function Evals() {
     // sleep 2s
     setTimeout(() => {
       setLoading(false)
-      Router.push("/evals/results")
+      // Router.push("/evals/results")
     }, 1000)
   }
 

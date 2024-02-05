@@ -82,7 +82,7 @@ const runEval = async (
 
     virtualRun.cost = calcRunCost(virtualRun)
 
-    console.log(` virtualRun `, virtualRun)
+    console.log(` virtualRun: `, JSON.stringify(virtualRun, null, 2))
 
     // run checks with context and gold
 

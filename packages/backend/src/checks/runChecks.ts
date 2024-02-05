@@ -68,9 +68,10 @@ async function checkRun(run: any, check: LogicElement): Promise<CheckResults> {
   if (runner.sql) {
     const snippet = runner.sql(params)
 
-    // TODO: change to virtual row
+    // TODO FIX: this doesn't work using a virtual table/row,
+
     const [result] =
-      await sql`select * from run where id = ${run.id} and (${snippet})`
+      await sql`select * from (${sql(run)}) as run where ${snippet}`
 
     return { passed: !!result, filterId: id }
   }
@@ -85,12 +86,13 @@ export async function runChecksOnRun(run: any, checks: FilterLogic) {
   const onlySQL = !hasNonSQLFilter(checks)
 
   if (onlySQL) {
+    console.log(`ONLY SQL`)
     // More efficient to do it all in SQL if only SQL filters are used
     const filterSql = convertChecksToSQL(checks)
 
-    // TODO: change to virtual row
+    // TODO FIX: this doesn't work using a virtual table/row,
     const [result] =
-      await sql`select * from run where id = ${run.id} and ${filterSql}`
+      await sql`select * from (${sql(run)}) as run where ${filterSql}`
 
     passed = !!result
   } else {
