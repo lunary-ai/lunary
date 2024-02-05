@@ -81,8 +81,7 @@ function HistoryModal({ opened, setOpened }) {
                   </Badge>
                 </Group>
                 <Text size="14px" mt="6" c="dimmed">
-                  Created by {evaluation.ownerName} on{" "}
-                  {new Date(evaluation.createdAt).toDateString()}
+                  Created by {evaluation.ownerName}
                 </Text>
               </Stack>
 

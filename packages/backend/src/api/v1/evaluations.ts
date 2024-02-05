@@ -6,12 +6,13 @@ import { compileChatMessages, runAImodel } from "@/src/utils/playground"
 import { calcRunCost } from "@/src/utils/calcCost"
 import { runChecksOnRun } from "@/src/checks/runChecks"
 import { FilterLogic } from "shared"
+import { getReadableDateTime } from "@/src/utils/date"
 
 const evaluations = new Router({ prefix: "/evaluations" })
 
 evaluations.post("/", async (ctx: Context) => {
   const bodySchema = z.object({
-    name: z.string().min(1),
+    name: z.string().optional(),
     models: z.array(z.string()),
     checks: z.array(z.object({})),
     prompts: z.array(
@@ -36,7 +37,7 @@ evaluations.post("/", async (ctx: Context) => {
 
   await sql.begin(async (sql) => {
     const evaluationToInsert = {
-      name,
+      name: name ? name : `Evaluation of ${getReadableDateTime()}`,
       ownerId: userId,
       projectId,
       models,
