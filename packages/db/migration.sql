@@ -54,3 +54,41 @@ create table "public"."radar_result" (
 	constraint "radar_result_run_id_fkey" foreign key ("run_id") references "public"."run" ("id") on delete cascade on update cascade,
 	primary key ("id")
 );
+
+
+create table evaluation (
+  id uuid default uuid_generate_v4() primary key,
+  created_at timestamp with time zone default now() not null,
+  name text not null,
+  owner_id uuid not null,
+  project_id uuid not null,
+  models text[],
+  checks jsonb,
+  constraint fk_evaluation_owner_id foreign key (owner_id) references account(id) on delete cascade,
+  constraint fk_evaluation_project_id foreign key (project_id) references project(id) on delete cascade
+);
+create index on evaluation (project_id);
+
+
+create table prompt (
+  id uuid default uuid_generate_v4() primary key,
+  created_at timestamp with time zone default now() not null,
+  evaluation_id uuid not null,
+  content jsonb not null,
+  extra jsonb,
+  constraint fk_prompt_evaluation_id foreign key (evaluation_id) references evaluation(id) on delete cascade
+);
+create index on prompt (evaluation_id);
+
+
+create table prompt_variation (
+  id uuid default uuid_generate_v4() primary key,
+  created_at timestamp with time zone default now() not null,
+  variables jsonb not null,
+  context text not null,
+  ideal_output text not null,
+  prompt_id uuid not null,
+  constraint fk_prompt_variation_prompt_id foreign key (prompt_id) references prompt(id) on delete cascade
+);
+create index on prompt_variation (prompt_id);
+

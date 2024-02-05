@@ -1,16 +1,73 @@
-import { runChecksOnRun } from "@/src/checks/runChecks"
-import { calcRunCost } from "@/src/utils/calcCost"
-
-import { compileChatMessages, runAImodel } from "@/src/utils/playground"
 import Router from "koa-router"
-import { FilterLogic } from "shared"
+import sql from "@/src/utils/db"
+import { z } from "zod"
+import Context from "@/src/utils/koa"
 
-const evals = new Router({
-  prefix: "/evals",
-})
+const evaluations = new Router({prefix: "/evaluations"})
 
-evals.get("/", async (ctx) => {
-  ctx.body = {}
+evaluations.post("/", async (ctx: Context) => {
+  const bodySchema = z.object({
+    name: z.string().min(1),
+    models: z.array(z.string()),
+    checks: z.array(z.object({})),
+    prompts: z.array(
+      z.object({
+        content: z.object({}),
+        extra: z.object({}),
+        variations: z.optional(
+          z.array(
+            z.object({
+              variables: z.object({}),
+              context: z.string().optional(),
+              idealOutput: z.string().optional(),
+            }),
+          ),
+        ),
+      }),
+    ),
+  })
+
+    const { name, models, checks, prompts } = bodySchema.parse(ctx.request.body)
+    const { userId, projectId } = ctx.state
+
+
+    await sql.begin(async sql => {
+      const evaluationToInsert = {
+        name,
+        ownerId: userId,
+        projectId,
+        models,
+        checks
+      }
+  
+      const [insertedEvaluation] = await sql`insert into evaluation ${sql(evaluationToInsert)} returning *`
+  
+  
+      for (const prompt of prompts) {
+        const  promptToInsert = {
+          evaluationId: insertedEvaluation.id,
+          content: prompt.content, 
+          extra: prompt.extra
+        }
+        const [insertedPrompt] = await sql`insert into prompt ${sql(promptToInsert)} returning *`
+  
+        if (prompt.variations) {
+          for (const variation of prompt.variations) {
+            const variationToInsert = {
+              promptId: insertedPrompt.id,
+              variables: variation.variables, 
+              context: variation.context,
+              idealOutput: variation.idealOutput
+            }
+  
+            await sql`insert into prompt_variation ${sql(variationToInsert)}`
+          }
+        }
+      }
+    })
+
+
+    ctx.status = 201
 })
 
 const testEval = {
@@ -42,27 +99,23 @@ const testEval = {
   ],
 }
 
-const runEval = async (
-  model: string,
+async function runEval(model: string,
   prompt: any,
   extra: any,
   variation: any,
-  checks: FilterLogic,
-) => {
+  checks: FilterLogic) {
   try {
     console.log(`=============================`)
     console.log(`Running eval for ${model} with prompt ${prompt}`)
     const { variables, gold, context } = variation
 
     // run AI query
-
     const createdAt = new Date()
     const input = compileChatMessages(prompt, variables)
     const res = await runAImodel(input, extra, undefined, model)
     const endedAt = new Date()
 
     // Create virtual run to be able to run checks
-
     const output = res.choices[0].message
     const promptTokens = res.usage.prompt_tokens
     const completionTokens = res.usage.completion_tokens
@@ -85,13 +138,11 @@ const runEval = async (
     console.log(` virtualRun: `, JSON.stringify(virtualRun, null, 2))
 
     // run checks with context and gold
-
     const { passed, results } = await runChecksOnRun(virtualRun, checks)
 
     console.log(passed, results)
 
     // insert into eval_result
-
     // await sql`
     //   insert into eval_result ${sql({
     //     model,
@@ -107,7 +158,7 @@ const runEval = async (
   }
 }
 
-evals.post("/run", async (ctx) => {
+evaluations.post("/run", async (ctx) => {
   const { prompts, models, checks } = testEval
 
   // for each variation of each prompt and each model, run the eval
@@ -122,4 +173,4 @@ evals.post("/run", async (ctx) => {
   ctx.body = {}
 })
 
-export default evals
+export default evaluations
