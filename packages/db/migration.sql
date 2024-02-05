@@ -92,3 +92,23 @@ create table prompt_variation (
 );
 create index on prompt_variation (prompt_id);
 
+
+
+create table evaluation_result (
+  id uuid default uuid_generate_v4() primary key,
+  evaluation_id uuid not null,
+  prompt_id uuid,
+  variation_id uuid,
+  model text not null,
+  output text not null,
+  results jsonb not null,
+  passed boolean default false,
+  completion_token integer,
+  cost integer,
+  duration text,
+  created_at timestamp with time zone default now() not null,
+  constraint fk_evaluation_result_evaluation_id foreign key (evaluation_id) references evaluation(id) on delete cascade,
+  constraint fk_evaluation_result_prompt_id foreign key (prompt_id) references prompt(id) on delete cascade,
+  constraint fk_evaluation_result_variation_id foreign key (variation_id) references prompt_variation(id) on delete cascade
+);
+create index on evaluation_result(evaluation_id, prompt_id, variation_id, model);
