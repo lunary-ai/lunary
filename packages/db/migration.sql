@@ -85,8 +85,8 @@ create table prompt_variation (
   id uuid default uuid_generate_v4() primary key,
   created_at timestamp with time zone default now() not null,
   variables jsonb not null,
-  context text not null,
-  ideal_output text not null,
+  context text,
+  ideal_output text,
   prompt_id uuid not null,
   constraint fk_prompt_variation_prompt_id foreign key (prompt_id) references prompt(id) on delete cascade
 );

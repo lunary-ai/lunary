@@ -2,7 +2,7 @@ import Steps from "@/components/Blocks/Steps"
 import FilterPicker from "@/components/Filters/Picker"
 import Paywall from "@/components/Layout/Paywall"
 import { PromptEditor } from "@/components/Prompts/PromptEditor"
-import { useEvaluations, useTemplates } from "@/utils/dataHooks"
+import { useEvaluations, useProject, useTemplates } from "@/utils/dataHooks"
 import { fetcher } from "@/utils/fetcher"
 import { usePromptVariables } from "@/utils/promptsHooks"
 import {
@@ -47,7 +47,7 @@ const FEATURE_LIST = [
 type Variation = {
   variables: any
   context?: string
-  expected?: string
+  idealOutput?: string
 }
 
 function HistoryModal({ opened, setOpened }) {
@@ -138,19 +138,6 @@ function AddPromptModal({ opened, setOpened, onAdd }) {
 
   const hasVariables = Object.keys(variables).length > 0
 
-  useEffect(() => {
-    if (hasVariables && !variations[0].variables) {
-      handlers.setItemProp(
-        0,
-        "variables",
-        Object.keys(variables).reduce(
-          (acc, key) => ({ ...acc, [key]: "" }),
-          {},
-        ),
-      )
-    }
-  }, [variables])
-
   return (
     <Modal
       opened={opened}
@@ -188,9 +175,14 @@ function AddPromptModal({ opened, setOpened, onAdd }) {
                   autosize
                   maxRows={6}
                   minRows={1}
-                  onChange={(e) =>
-                    handlers.setItemProp(index, variable, e.currentTarget.value)
-                  }
+                  onChange={(e) => {
+                    const oldVariables = variations[index].variables
+                    const newVariables = {
+                      ...oldVariables,
+                      [variable]: e.currentTarget.value,
+                    }
+                    handlers.setItemProp(index, "variables", newVariables)
+                  }}
                 />
               ))}
               <Textarea
@@ -213,9 +205,13 @@ function AddPromptModal({ opened, setOpened, onAdd }) {
                 autosize
                 maxRows={6}
                 minRows={3}
-                value={variation.expected}
+                value={variation.idealOutput}
                 onChange={(e) =>
-                  handlers.setItemProp(index, "expected", e.currentTarget.value)
+                  handlers.setItemProp(
+                    index,
+                    "idealOutput",
+                    e.currentTarget.value,
+                  )
                 }
               />
             </Stack>
@@ -243,7 +239,7 @@ function AddPromptModal({ opened, setOpened, onAdd }) {
           ml="auto"
           onClick={() => {
             onAdd({
-              prompt,
+              content: prompt,
               variations,
             })
 
@@ -276,10 +272,16 @@ export default function Evals() {
     checks: ["AND"],
   })
 
+  console.log(JSON.stringify(evaluation))
+
+  const { project } = useProject()
+
   async function startEval() {
     setLoading(true)
 
-    await fetcher.post("/evals/run", { arg: {} })
+    await fetcher.post(`/evaluations?projectId=${project.id}`, {
+      arg: evaluation,
+    })
 
     // sleep 2s
     setTimeout(() => {
@@ -348,7 +350,7 @@ export default function Evals() {
                 onAdd={(prompt) => {
                   setEvaluation({
                     ...evaluation,
-                    prompts: [...evaluation.prompts, prompt],
+                    prompts: [...evaluation.prompts, { ...prompt }],
                   })
                 }}
               />

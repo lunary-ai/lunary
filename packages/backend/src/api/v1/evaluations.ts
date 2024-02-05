@@ -11,29 +11,11 @@ import { getReadableDateTime } from "@/src/utils/date"
 const evaluations = new Router({ prefix: "/evaluations" })
 
 evaluations.post("/", async (ctx: Context) => {
-  const bodySchema = z.object({
-    name: z.string().optional(),
-    models: z.array(z.string()),
-    checks: z.array(z.object({})),
-    prompts: z.array(
-      z.object({
-        content: z.object({}),
-        extra: z.object({}),
-        variations: z.optional(
-          z.array(
-            z.object({
-              variables: z.object({}),
-              context: z.string().optional(),
-              idealOutput: z.string().optional(),
-            }),
-          ),
-        ),
-      }),
-    ),
-  })
+  // TODO: zod
 
-  const { name, models, checks, prompts } = bodySchema.parse(ctx.request.body)
+  const { name, models, checks, prompts } = ctx.request.body as any
   const { userId, projectId } = ctx.state
+  console.log(ctx.state)
 
   await sql.begin(async (sql) => {
     const evaluationToInsert = {
@@ -47,12 +29,14 @@ evaluations.post("/", async (ctx: Context) => {
     const [insertedEvaluation] =
       await sql`insert into evaluation ${sql(evaluationToInsert)} returning *`
 
+    console.log(prompts)
     for (const prompt of prompts) {
       const promptToInsert = {
         evaluationId: insertedEvaluation.id,
         content: prompt.content,
         extra: prompt.extra,
       }
+
       const [insertedPrompt] =
         await sql`insert into prompt ${sql(promptToInsert)} returning *`
 
@@ -66,34 +50,45 @@ evaluations.post("/", async (ctx: Context) => {
           }
 
           await sql`insert into prompt_variation ${sql(variationToInsert)}`
+
+          for (const model of insertedEvaluation.models) {
+            console.log(model)
+            await runEval(
+              model,
+              prompt.content,
+              prompt.extra,
+              variation,
+              checks,
+            )
+          }
         }
       }
     }
   })
 
   ctx.status = 201
+  ctx.body = {}
 })
 
 evaluations.get("/:id", async (ctx: Context) => {
-  const { id } = ctx.params
-
-  const evaluationId = z.string().uuid().parse(id)
+  const evaluationId = z.string().uuid().parse(ctx.params.id)
 
   const rows = await sql`
     select
       e.*,
       p.id as prompt_id,
-      p.content,
-      p.extra,
+      p.content as prompt_content,
+      p.extra as prompt_extra,
       pv.id as variation_id,
       pv.variables,
       pv.context,
       pv.ideal_output
     from
       evaluation e
-      inner join prompt p on e.id = p.evaluation_id
+      left join prompt p on e.id = p.evaluation_id
       left join prompt_variation pv on pv.prompt_id = p.id
-      where e.id = ${evaluationId}
+    where 
+      e.id = ${evaluationId}
     `
 
   if (!rows) {
@@ -101,36 +96,32 @@ evaluations.get("/:id", async (ctx: Context) => {
     return
   }
 
-  const evaluationData = {
-    ...rows[0],
-    prompts: [],
-    promptVariations: [],
+  const { id, createdAt, name, ownerId, projectId, models, checks } = rows[0]
+
+  const evaluation = {
+    id,
+    createdAt,
+    name,
+    ownerId,
+    projectId,
+    models,
+    checks,
+    prompts: rows.map(({ promptId, promptContent, promptExtra }) => ({
+      id: promptId,
+      content: promptContent,
+      extra: promptExtra,
+      variations: rows
+        .filter((row) => row.promptId === promptId)
+        .map(({ variationId, variables, context, idealOutput }) => ({
+          id: variationId,
+          variables,
+          context,
+          idealOutput,
+        })),
+    })),
   }
 
-  // TODO: use .groupBy instead
-  for (const row of rows) {
-    if (!evaluationData.prompts.find((p) => p.id === row.promptId)) {
-      evaluationData.prompts.push({
-        id: row.promptId,
-        content: row.content,
-        extra: row.extra,
-        variations: [],
-      })
-    }
-
-    if (row.variationId) {
-      evaluationData.prompts
-        .find((p) => p.id === row.variationId)
-        .variations.push({
-          id: row.variation_id,
-          variables: row.variables,
-          context: row.context,
-          ideal_output: row.ideal_output,
-        })
-    }
-  }
-
-  ctx.body = evaluationData
+  ctx.body = evaluation
 })
 
 evaluations.get("/", async (ctx: Context) => {
