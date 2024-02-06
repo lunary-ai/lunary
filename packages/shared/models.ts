@@ -23,7 +23,7 @@ export const MODELS = [
   },
   { id: "openai/gpt-4-32k", name: "gpt-4-32k", provider: "openrouter" },
   { id: "claude-2", name: "claude-2", provider: "anthropic" },
-  { id: "claude-2.0", name: "claude-2.0", provider: "anthropic" },
+  // { id: "claude-2.0", name: "claude-2.0", provider: "anthropic" },
   {
     id: "claude-instant-v1",
     name: "claude-instant-v1",

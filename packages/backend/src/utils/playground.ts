@@ -15,6 +15,13 @@ function convertInputToOpenAIMessages(input: any[]) {
   })
 }
 
+const OPENROUTE_HEADERS = {
+  Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+  "HTTP-Referer": `https://lunary.ai`, // Optional, for including your app on openrouter.ai rankings.
+  "X-Title": `Lunary.ai`,
+  "Content-Type": "application/json",
+}
+
 // Replace {{variable}} with the value of the variable using regex
 export function compileTemplate(
   content: string,
@@ -52,22 +59,21 @@ export async function runAImodel(
 
   const modelObj = MODELS.find((m) => m.id === model)
 
-  if (modelObj?.provider === "anthropic") {
+  const useAnthropic = modelObj?.provider === "anthropic"
+  const useOpenRouter = modelObj?.provider === "openrouter"
+
+  if (useAnthropic) {
     method = completion
   } else {
-    const openAIparams =
-      modelObj?.provider === "openrouter"
-        ? {
-            apiKey: process.env.OPENROUTER_API_KEY,
-            baseURL: "https://openrouter.ai/api/v1",
-            defaultHeaders: {
-              "HTTP-Referer": "https://lunary.ai",
-              "X-Title": `Lunary.ai`,
-            },
-          }
-        : {
-            apiKey: process.env.OPENAI_API_KEY,
-          }
+    const openAIparams = useOpenRouter
+      ? {
+          apiKey: process.env.OPENROUTER_API_KEY,
+          baseURL: "https://openrouter.ai/api/v1",
+          defaultHeaders: OPENROUTE_HEADERS,
+        }
+      : {
+          apiKey: process.env.OPENAI_API_KEY,
+        }
 
     const openai = new OpenAI(openAIparams)
 
@@ -89,6 +95,19 @@ export async function runAImodel(
     tools: extra?.tools,
     seed: extra?.seed,
   })
+
+  if (!stream && useOpenRouter && res.id) {
+    // OpenRouter API to Querying Cost and Stats
+    const generationData: any = await fetch(
+      `https://openrouter.ai/api/v1/generation?id=${res.id}`,
+      { headers: OPENROUTE_HEADERS },
+    ).then((res) => res.json())
+
+    res.usage = {
+      prompt_tokens: generationData?.data?.tokens_prompt,
+      completion_tokens: generationData?.data?.tokens_completion,
+    }
+  }
 
   return res
 }

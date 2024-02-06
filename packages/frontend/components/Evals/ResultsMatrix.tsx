@@ -1,71 +1,18 @@
-import { Badge, Group, Loader, Progress, Stack, Text } from "@mantine/core"
+import { Badge, Group, Progress, Stack, Text } from "@mantine/core"
 import classes from "./index.module.css"
-import { useEvaluationResults } from "@/utils/dataHooks"
-import { useRouter } from "next/router"
-import { useParams } from "next/navigation"
 // We create a matrix of results for each prompt, variable and model.
 // The matrix is a 3D array, where each dimension represents a different
 
-type EvalResult = {
-  model: string
-  prompt: string
-  variables: {
-    [key: string]: string
-  }
-  latency: number
-  output: string
-  passed: boolean
-}
-const evalResults: EvalResult[] = [
-  {
-    model: "gpt-3.5-turbo",
-    prompt: "prompt1",
-    variables: {
-      name: "John",
-      question: "What is the best way to clean my shoes?",
-    },
-    latency: 320,
-    output:
-      "The best way to clean your shoes is to use a soft cloth and a mild soap. You can also use a toothbrush to scrub the dirt off of your shoes. If you have any questions, please feel free to contact us at any time.",
-    passed: true,
-  },
-  {
-    model: "gpt-3.5-turbo",
-    prompt: "prompt1",
-    variables: {
-      name: "Mary",
-      question: "How to clean my car",
-    },
-    latency: 530,
-    output:
-      "The best way to clean your car is to use a soft cloth and a mild soap. You can also use a toothbrush to scrub the dirt off of your car. If you have any questions, please feel free to contact us at any time.",
-    passed: true,
-  },
-  {
-    model: "gpt-4",
-    prompt: "prompt1",
-    variables: {
-      name: "John",
-      question: "What is the best way to clean my shoes?",
-    },
-    latency: 2304,
-    output:
-      "The best way to clean your shoes is to use a soft cloth and a mild soap. You can also use a toothbrush to scrub the dirt off of your shoes. If you have any questions, please feel free to contact us at any time.",
-    passed: true,
-  },
-  {
-    model: "gpt-4",
-    prompt: "prompt1",
-    variables: {
-      name: "Mary",
-      question: "How to clean my car",
-    },
-    latency: 3543,
-    output:
-      "The best way to clean your car is to use a soft cloth and a mild soap. You can also use a toothbrush to scrub the dirt off of your car. If you have any questions, please feel free to contact us at any time.",
-    passed: false,
-  },
-]
+// type EvalResult = {
+//   model: string
+//   prompt: string
+//   variables: {
+//     [key: string]: string
+//   }
+//   latency: number
+//   output: string
+//   passed: boolean
+// }
 
 function getResultForVariation(
   prompt: string,
@@ -137,22 +84,10 @@ const getPromptModelVariations = (results) => {
   }[]
 }
 
-export default function ResultsMatrix() {
-  const router = useRouter()
+export default function ResultsMatrix({ data }) {
+  const variableVariations = getVariableVariations(data)
 
-  const { results: evalResults, isLoading } = useEvaluationResults(
-    router.query.id,
-  )
-
-  console.log(evalResults)
-
-  if (isLoading) {
-    return <Loader />
-  }
-
-  const variableVariations = getVariableVariations(evalResults)
-
-  const pmVariations = getPromptModelVariations(evalResults)
+  const pmVariations = getPromptModelVariations(data)
 
   const variables = Object.keys(variableVariations[0])
 
@@ -161,7 +96,7 @@ export default function ResultsMatrix() {
       <thead>
         <tr>
           <th colSpan={variables.length}>Variables</th>
-          <th colSpan={evalResults.length}>Outputs</th>
+          <th colSpan={data.length}>Outputs</th>
         </tr>
         <tr>
           {variables.map((variable) => (
@@ -211,7 +146,7 @@ export default function ResultsMatrix() {
                 pmVariation.prompt,
                 variableVariation,
                 pmVariation.model,
-                evalResults,
+                data,
               )
               return (
                 <td>

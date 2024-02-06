@@ -3,6 +3,7 @@ import FilterPicker from "@/components/Filters/Picker"
 import Paywall from "@/components/Layout/Paywall"
 import { PromptEditor } from "@/components/Prompts/PromptEditor"
 import { useEvaluations, useProject, useTemplates } from "@/utils/dataHooks"
+import errorHandler from "@/utils/errors"
 import { fetcher } from "@/utils/fetcher"
 import { usePromptVariables } from "@/utils/promptsHooks"
 import {
@@ -34,7 +35,7 @@ import {
   IconHistory,
   IconSettings,
 } from "@tabler/icons-react"
-import { useRouter } from "next/router"
+import Router, { useRouter } from "next/router"
 import { useEffect, useState } from "react"
 import { FilterLogic, MODELS } from "shared"
 
@@ -52,7 +53,6 @@ type Variation = {
 
 function HistoryModal({ opened, setOpened }) {
   const { evaluations, isLoading } = useEvaluations()
-  const router = useRouter()
 
   // TODO: scroll
   return (
@@ -87,7 +87,7 @@ function HistoryModal({ opened, setOpened }) {
 
               <Group>
                 <Button
-                  onClick={() => router.push(`/evaluations/${evaluation.id}`)}
+                  onClick={() => Router.push(`/evaluations/${evaluation.id}`)}
                   variant="light"
                 >
                   View results
@@ -272,20 +272,22 @@ export default function Evals() {
     checks: ["AND"],
   })
 
-  const router = useRouter()
   const { project } = useProject()
 
   async function startEval() {
     setLoading(true)
 
-    const { evaluationId } = await fetcher.post(
-      `/evaluations?projectId=${project.id}`,
-      {
+    const res = await errorHandler(
+      fetcher.post(`/evaluations?projectId=${project.id}`, {
         arg: evaluation,
-      },
+      }),
     )
 
-    router.push(`/evaluations/${evaluationId}`)
+    setLoading(false)
+
+    if (!res.evaluationId) return
+
+    Router.push(`/evaluations/${res.evaluationId}`)
   }
 
   return (

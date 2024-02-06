@@ -149,7 +149,7 @@ evaluations.get("/result/:evaluationId", async (ctx: Context) => {
 })
 
 evaluations.get("/", async (ctx: Context) => {
-  const { projectId } = ctx.state.projectId
+  const { projectId } = ctx.state
 
   const evaluations = await sql`
     select
@@ -169,41 +169,6 @@ evaluations.get("/", async (ctx: Context) => {
 
   ctx.body = evaluations
 })
-
-const testEval = {
-  models: ["gpt-3.5-turbo"], //, "gpt-4-turbo-preview"],
-  checks: [
-    "OR",
-    {
-      id: "tone",
-      params: {
-        persona: "pirate",
-      },
-    },
-  ],
-  prompts: [
-    {
-      content: [{ role: "user", content: "{{question}}" }],
-      extra: { temperature: 1 },
-      variations: [
-        {
-          variables: {
-            question: "Tell a joke like a pirate.",
-          },
-          // gold: "My name is SuperChatbot.",
-          // context: "You are a chatbot called SuperChatbot.",
-        },
-        {
-          variables: {
-            question: "Tell a joke like a drunken chatbot.",
-          },
-          // gold: "My name is SuperChatbot.",
-          // context: "You are a chatbot called SuperChatbot.",
-        },
-      ],
-    },
-  ],
-}
 
 async function runEval(
   evaluationId: string,
@@ -231,8 +196,9 @@ async function runEval(
 
     // Create virtual run to be able to run checks
     const output = res.choices[0].message
-    const promptTokens = res.usage.promptTokens
-    const completionTokens = res.usage.completionTokens
+
+    const promptTokens = res.usage?.prompt_tokens
+    const completionTokens = res.usage?.completion_tokens
     const duration = endedAt.getTime() - createdAt.getTime()
 
     const virtualRun = {
@@ -259,8 +225,6 @@ async function runEval(
     const cost = calcRunCost(virtualRun)
     virtualRun.cost = cost
 
-    console.log(` virtualRun: `, JSON.stringify(virtualRun, null, 2))
-
     // run checks
     const { passed, results } = await runChecksOnRun(virtualRun, checks)
 
@@ -283,20 +247,5 @@ async function runEval(
     console.error(error)
   }
 }
-
-evaluations.post("/run", async (ctx) => {
-  const { prompts, models, checks } = testEval
-
-  // for each variation of each prompt and each model, run the eval
-  for (const model of models) {
-    for (const prompt of prompts) {
-      for (const variation of prompt.variations) {
-        await runEval(model, prompt.content, prompt.extra, variation, checks)
-      }
-    }
-  }
-
-  ctx.body = {}
-})
 
 export default evaluations

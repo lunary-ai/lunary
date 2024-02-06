@@ -104,6 +104,8 @@ export async function runChecksOnRun(run: any, checks: FilterLogic) {
   let passed = false
   const results: CheckResults[] = []
 
+  console.log("RUNNING CHECKS", checks)
+
   const onlySQL = !hasNonSQLFilter(checks)
 
   if (onlySQL) {
