@@ -29,6 +29,10 @@ export const Json = ({ data, compact }) => {
     return false
   }, [parsed])
 
+  console.log("isFatObject", isFatObject)
+  console.log("parsed", parsed)
+  console.log("compact", compact)
+
   return (
     <ProtectedText>
       {isFatObject ? (
