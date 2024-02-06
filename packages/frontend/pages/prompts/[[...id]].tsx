@@ -484,7 +484,6 @@ function Playground() {
                       }))}
                       w={250}
                       searchable
-                      autoCorrect="off"
                       inputMode="search"
                       {...extraHandler("model")}
                     />
