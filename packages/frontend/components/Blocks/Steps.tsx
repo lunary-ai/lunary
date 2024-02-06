@@ -1,11 +1,12 @@
 import { Box, Group, Text, Title } from "@mantine/core"
 
-function Steps({ children }) {
+function Steps({ children, ...props }) {
   return (
     <Box
       my="xl"
       ml={32}
       style={{ borderLeft: "2px solid var(--mantine-color-default-border)" }}
+      {...props}
     >
       {children}
     </Box>

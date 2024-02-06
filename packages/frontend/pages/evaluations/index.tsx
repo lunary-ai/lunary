@@ -339,7 +339,7 @@ export default function Evals() {
             combinations.
           </Text>
 
-          <Steps>
+          <Steps ml={-59}>
             <Steps.Step n={1} label="Dataset">
               <Text size="lg" mb="md">
                 Add prompts with variations of variables to test.
