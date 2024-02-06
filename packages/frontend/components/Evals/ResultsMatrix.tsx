@@ -1,5 +1,6 @@
-import { Badge, Group, Progress, Stack, Text } from "@mantine/core"
+import { Badge, Group, HoverCard, Progress, Stack, Text } from "@mantine/core"
 import classes from "./index.module.css"
+import { formatCost } from "@/utils/format"
 // We create a matrix of results for each prompt, variable and model.
 // The matrix is a 3D array, where each dimension represents a different
 
@@ -38,6 +39,7 @@ const getAggegateForVariation = (
   passed: number // percentage passed
   failed: number // percentage failed
   duration: number // average duration
+  cost: number // average cost
 } => {
   const results = evalResults.filter(
     (result) => result.prompt === prompt && result.model === model,
@@ -46,10 +48,13 @@ const getAggegateForVariation = (
   return {
     passed: results.filter((result) => result.passed).length,
     failed: results.filter((result) => !result.passed).length,
-    duration: Math.floor(
-      results.reduce((acc, result) => acc + result.duration, 0) /
-        results.length,
-    ),
+    duration: +(
+      results.reduce((acc, result) => acc + parseInt(result.duration), 0) /
+      results.length /
+      1000
+    ).toFixed(2),
+    cost:
+      results.reduce((acc, result) => acc + result.cost, 0) / results.length,
   }
 }
 
@@ -75,16 +80,20 @@ const getPromptModelVariations = (results) => {
       ...getAggegateForVariation(variation.prompt, variation.model, results),
     }))
 
+  console.log(uniqueVariations)
+
   return uniqueVariations as {
     prompt: string
     model: string
     passed: number
     failed: number
     duration: number
+    cost: number
   }[]
 }
 
 export default function ResultsMatrix({ data }) {
+  console.log(data)
   const variableVariations = getVariableVariations(data)
 
   const pmVariations = getPromptModelVariations(data)
@@ -103,30 +112,34 @@ export default function ResultsMatrix({ data }) {
             <th>{variable}</th>
           ))}
           {pmVariations.map(
-            ({ model, prompt, passed, failed, duration }, index) => {
+            ({ model, prompt, passed, failed, duration, cost }, index) => {
               return (
                 <th>
                   <Stack align="center" gap="xs">
+                    <Badge variant="outline">{model}</Badge>
+                    <Progress.Root size={20} w={100}>
+                      <Progress.Section
+                        value={(passed / (passed + failed)) * 100}
+                        color="green"
+                      >
+                        <Progress.Label>{`${passed}`}</Progress.Label>
+                      </Progress.Section>
+                      <Progress.Section
+                        value={(failed / (passed + failed)) * 100}
+                        color="red"
+                      >
+                        <Progress.Label>{failed}</Progress.Label>
+                      </Progress.Section>
+                    </Progress.Root>
                     <Group>
-                      <Progress.Root size={20} w={100}>
-                        <Progress.Section
-                          value={(passed / (passed + failed)) * 100}
-                          color="green"
-                        >
-                          <Progress.Label>{`${passed}`}</Progress.Label>
-                        </Progress.Section>
-                        <Progress.Section
-                          value={(failed / (passed + failed)) * 100}
-                          color="red"
-                        >
-                          <Progress.Label>{failed}</Progress.Label>
-                        </Progress.Section>
-                      </Progress.Root>
                       <Text size="xs" c="dimmed">
-                        avg. {duration}ms
+                        avg. {duration}s
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        avg. {formatCost(cost)}
                       </Text>
                     </Group>
-                    <Badge variant="outline">{model}</Badge>
+
                     <Text>{prompt}</Text>
                   </Stack>
                 </th>
@@ -153,12 +166,21 @@ export default function ResultsMatrix({ data }) {
                   {result ? (
                     <Stack align="center">
                       <Text>{result.output.content}</Text>
+
+                      <HoverCard withArrow>
+                        <HoverCard.Target>
+                          <Badge color={result.passed ? "green" : "red"}>
+                            {result.passed ? "Passed" : "Failed"}
+                          </Badge>
+                        </HoverCard.Target>
+                        <HoverCard.Dropdown>
+                          <Text>{JSON.stringify(result.results)}</Text>
+                        </HoverCard.Dropdown>
+                      </HoverCard>
                       <Group gap="xs">
-                        <Badge color={result.passed ? "green" : "red"}>
-                          {result.passed ? "Passed" : "Failed"}
-                        </Badge>
                         <Text c="dimmed" size="xs">
-                          {result.duration}ms
+                          {(+result.duration / 1000).toFixed(2)}s -{" "}
+                          {formatCost(result.cost)}
                         </Text>
                       </Group>
                     </Stack>
