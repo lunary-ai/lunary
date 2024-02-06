@@ -41,8 +41,9 @@ function RenderFunction({ color, compact, codeBg, data, type }) {
           {data?.name}
         </Text>
       </Text>
-
-      <RenderJson compact={compact} data={data?.arguments} />
+      <pre>
+        <RenderJson compact={compact} data={data?.arguments} />
+      </pre>
     </Code>
   )
 }
