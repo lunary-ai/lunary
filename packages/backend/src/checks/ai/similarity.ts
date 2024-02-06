@@ -71,10 +71,12 @@ export default async function aiSimilarity(
 
     case "ai":
     default:
-      const template = await lunary.renderTemplate("similarity", {
+      const template = await lunary.renderTemplate("distance", {
         text1,
         text2,
       })
+
+      console.log(template)
 
       const res = await openai.chat.completions.create(template)
 
