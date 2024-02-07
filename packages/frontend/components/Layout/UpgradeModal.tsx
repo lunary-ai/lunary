@@ -238,7 +238,7 @@ export function UpgradePlans({ highlight }: { highlight?: string }) {
           </Group>
 
           <Group mb={20} mt={10} align="center" gap={10}>
-            <RenderPrice price={120} period={period} />
+            <RenderPrice price={199} period={period} />
           </Group>
 
           <Text mb="xs" size="sm" mt={-10}>
