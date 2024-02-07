@@ -2,6 +2,7 @@ import sql from "@/src/utils/db"
 import Router from "koa-router"
 import { Context } from "koa"
 import postgres from "postgres"
+import { unCamelObject } from "@/src/utils/misc"
 
 const versions = new Router({
   prefix: "/template_versions",
@@ -44,6 +45,8 @@ versions.get("/:id", async (ctx: Context) => {
     select * from template_version where id = ${ctx.params.id}
   `
 
+  version.extra = unCamelObject(version.extra)
+
   const [template] = await sql`
     select * from template where project_id = ${ctx.state.projectId} and id = ${version.templateId}
   `
@@ -63,7 +66,7 @@ versions.patch("/:id", async (ctx: Context) => {
   const [templateVersion] = await sql`
     update template_version set
       content = ${sql.json(content)},
-      extra = ${sql.json(extra)},
+      extra = ${sql.json(unCamelObject(extra))},
       test_values = ${sql.json(testValues)},
       is_draft = ${isDraft}
     where id = ${ctx.params.id}
