@@ -277,8 +277,7 @@ export function UpgradePlans({ highlight }: { highlight?: string }) {
               <Text fw="bold" span>
                 New
               </Text>
-              : 1-click Docker images for self-hosting. Starting from $120 /
-              month.
+              : 1-click Docker images for self-hosting. $199 / month.
             </Text>
           </Group>
           <Button

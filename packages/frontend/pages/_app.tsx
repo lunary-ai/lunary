@@ -68,7 +68,12 @@ const theme = createTheme({
         h: 36,
       },
     },
-
+    Select: {
+      defaultProps: {
+        spellCheck: "false",
+        autoCorrect: "off",
+      },
+    },
     Button: {
       defaultProps: {
         fw: "500",

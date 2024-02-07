@@ -50,6 +50,7 @@ const formatRun = (run: any) => ({
   error: run.error,
   status: run.status,
   siblingRunId: run.siblingRunId,
+  params: run.params,
   user: {
     id: run.externalUserId,
     externalId: run.userExternalId,

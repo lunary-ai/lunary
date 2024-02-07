@@ -1,6 +1,8 @@
 import sql from "@/src/utils/db"
 import Context from "@/src/utils/koa"
+import { unCamelObject } from "@/src/utils/misc"
 import Router from "koa-router"
+import postgres from "postgres"
 
 const templates = new Router({
   prefix: "/templates",
@@ -15,6 +17,13 @@ templates.get("/", async (ctx: Context) => {
     group by t.id, t.name, t.slug, t.mode, t.created_at, t.group, t.project_id
     order by max(tv.created_at) desc
   `
+
+  // uncamel each template's versions' extras' keys
+  for (const template of templates) {
+    for (const version of template.versions) {
+      version.extra = unCamelObject(version.extra)
+    }
+  }
 
   ctx.body = templates
 })
@@ -46,7 +55,7 @@ templates.post("/", async (ctx: Context) => {
     insert into template_version ${sql({
       templateId: template.id,
       content: sql.json(content),
-      extra: sql.json(extra),
+      extra: sql.json(unCamelObject(extra)),
       testValues: sql.json(testValues),
       isDraft: isDraft,
     })} returning *
@@ -92,6 +101,10 @@ templates.patch("/:id", async (ctx: Context) => {
     select * from template_version where template_id = ${ctx.params.id}
   `
 
+  for (const version of versions) {
+    version.extra = unCamelObject(version.extra)
+  }
+
   ctx.body = {
     ...template,
     versions,
@@ -110,7 +123,7 @@ templates.post("/:id/versions", async (ctx: Context) => {
     insert into template_version (
       template_id, content, extra, test_values, is_draft
     ) values (
-      ${ctx.params.id}, ${sql.json(content)}, ${sql.json(extra)}, ${sql.json(
+      ${ctx.params.id}, ${sql.json(content)}, ${sql.json(unCamelObject(extra))}, ${sql.json(
         testValues,
       )}, ${isDraft}
     ) returning *
