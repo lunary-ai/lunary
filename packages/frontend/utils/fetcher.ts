@@ -1,11 +1,10 @@
-import { notifications } from "@mantine/notifications"
 import Router from "next/router"
 import { signOut } from "./auth"
 import { showErrorNotification } from "./errors"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
-function buildUrl(path: string) {
+export function buildUrl(path: string) {
   if (path.includes("/auth")) {
     return `${BASE_URL}${path}`
   }
@@ -13,10 +12,15 @@ function buildUrl(path: string) {
 }
 
 function get(path) {
+  const authToken = localStorage.getItem("auth-token")
+  const headers = authToken
+    ? {
+        Authorization: `Bearer ${authToken}`,
+      }
+    : undefined
+
   return fetch(buildUrl(path), {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("auth-token")}`,
-    },
+    headers,
   }).then(handleResponse)
 }
 

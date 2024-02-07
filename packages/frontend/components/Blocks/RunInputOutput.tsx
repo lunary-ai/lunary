@@ -15,6 +15,7 @@ import SmartViewer from "../SmartViewer"
 import TokensBadge from "./TokensBadge"
 import { useRun } from "@/utils/dataHooks"
 import { notifications } from "@mantine/notifications"
+import { SuperCopyButton } from "./CopyText"
 
 const isChatMessages = (obj) => {
   return Array.isArray(obj)
@@ -150,9 +151,25 @@ export default function RunInputOutput({
       {run?.type === "llm" && (
         <>
           {withShare && (
-            <Flex justify="right">
+            <Group justify="space-between">
+              <Group gap="xs">
+                <Text size="sm">
+                  Copy{" "}
+                  <Text span fw="bold">
+                    {run?.isPublic ? "public" : "private"}
+                  </Text>{" "}
+                  URL to share
+                </Text>
+                <SuperCopyButton
+                  value={`${window.location.origin}/logs/${run.id}`}
+                />
+              </Group>
               <Switch
-                label="Make public"
+                label={
+                  <Text size="sm" mr="sm">
+                    Make public
+                  </Text>
+                }
                 checked={run.isPublic}
                 color={run.isPublic ? "red" : "blue"}
                 onChange={async (e) => {
@@ -163,13 +180,14 @@ export default function RunInputOutput({
                     await navigator.clipboard.writeText(url)
 
                     notifications.show({
+                      top: 100,
                       title: "Run is now public",
                       message: "Link copied to clipboard",
                     })
                   }
                 }}
               />
-            </Flex>
+            </Group>
           )}
 
           <Card withBorder radius="md">
