@@ -31,15 +31,21 @@ function generateKey(
 
   return url
 }
-
 export function useProjectSWR(key?: KeyType, options?: SWRConfiguration) {
   const { projectId } = useContext(ProjectContext)
 
-  if (projectId === null) {
-    return { isLoading: true }
-  }
+  const { data, error, isLoading, isValidating, mutate } = useSWR(
+    () => generateKey(key, projectId),
+    options,
+  )
 
-  return useSWR(() => generateKey(key, projectId), options)
+  return {
+    data,
+    error,
+    isLoading: projectId === null ? true : isLoading,
+    isValidating,
+    mutate,
+  }
 }
 
 export function useProjectMutation(
