@@ -238,7 +238,7 @@ export function UpgradePlans({ highlight }: { highlight?: string }) {
           </Group>
 
           <Group mb={20} mt={10} align="center" gap={10}>
-            <RenderPrice price={120} period={period} />
+            <RenderPrice price={199} period={period} />
           </Group>
 
           <Text mb="xs" size="sm" mt={-10}>
@@ -277,7 +277,7 @@ export function UpgradePlans({ highlight }: { highlight?: string }) {
               <Text fw="bold" span>
                 New
               </Text>
-              : 1-click Docker images for self-hosting. Starting from $120 /
+              : 1-click Docker images for self-hosting. Starting from $199 /
               month.
             </Text>
           </Group>
