@@ -35,6 +35,10 @@ function generateKey(
 export function useProjectSWR(key?: KeyType, options?: SWRConfiguration) {
   const { projectId } = useContext(ProjectContext)
 
+  if (projectId === null) {
+    return { isLoading: true }
+  }
+
   return useSWR(() => generateKey(key, projectId), options)
 }
 
@@ -483,5 +487,14 @@ export function useRadar(id, initialData?: any) {
     remove,
     mutate,
     loading: isLoading,
+  }
+}
+
+export function useEvaluations() {
+  const { data, isLoading } = useProjectSWR(`/evaluations`)
+
+  return {
+    evaluations: data || [],
+    isLoading,
   }
 }
