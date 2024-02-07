@@ -1,8 +1,15 @@
 import { Anchor, Group, Text } from "@mantine/core"
+import { useColorScheme } from "@mantine/hooks"
 
-export default function Logo({ white = false }) {
+export default function Logo() {
+  const scheme = useColorScheme()
+
   return (
-    <Anchor c={white ? "#fff" : "#000"} fw={700} href="https://lunary.ai">
+    <Anchor
+      c={scheme === "dark" ? "#fff" : "#000"}
+      fw={700}
+      href="https://lunary.ai"
+    >
       <Group>
         <img
           width={24}
