@@ -5,18 +5,17 @@ import Context from "@/src/utils/koa"
 import { compileChatMessages, runAImodel } from "@/src/utils/playground"
 import { calcRunCost } from "@/src/utils/calcCost"
 import { runChecksOnRun } from "@/src/checks/runChecks"
-import { FilterLogic } from "shared"
+import { FilterLogic, Evaluation } from "shared"
 import { getReadableDateTime } from "@/src/utils/date"
 
 const evaluations = new Router({ prefix: "/evaluations" })
 
 evaluations.post("/", async (ctx: Context) => {
-  // TODO: zod
-
-  const { name, models, checks, prompts } = ctx.request.body as any
+  const { name, models, checks, prompts } = ctx.request.body as Evaluation
   const { userId, projectId } = ctx.state
 
-  // await sql.begin(async (sql) => {
+  // TODO: transactions, but not working with because of nesting
+
   const evaluationToInsert = {
     name: name ? name : `Evaluation of ${getReadableDateTime()}`,
     ownerId: userId,
@@ -36,7 +35,7 @@ evaluations.post("/", async (ctx: Context) => {
     }
 
     const [insertedPrompt] =
-      await sql`insert into prompt ${sql(promptToInsert)} returning *`
+      await sql`insert into evaluation_prompt ${sql(promptToInsert)} returning *`
 
     if (prompt.variations) {
       for (const variation of prompt.variations) {
@@ -48,7 +47,7 @@ evaluations.post("/", async (ctx: Context) => {
         }
 
         const [insertedVariation] =
-          await sql`insert into prompt_variation ${sql(variationToInsert)} returning *`
+          await sql`insert into evaluation_prompt_variation ${sql(variationToInsert)} returning *`
 
         for (const model of models) {
           await runEval(
@@ -85,8 +84,8 @@ evaluations.get("/:id", async (ctx: Context) => {
       pv.ideal_output
     from
       evaluation e
-      left join prompt p on e.id = p.evaluation_id
-      left join prompt_variation pv on pv.prompt_id = p.id
+      left join evaluation_prompt p on e.id = p.evaluation_id
+      left join evaluation_prompt_variation pv on pv.prompt_id = p.id
     where 
       e.id = ${evaluationId}
     `
@@ -135,8 +134,8 @@ evaluations.get("/result/:evaluationId", async (ctx: Context) => {
     p.extra as prompt_extra
   from 
     evaluation_result er 
-    left join prompt p on p.id = er.prompt_id
-    left join prompt_variation pv on pv.id = er.variation_id
+    left join evaluation_prompt p on p.id = er.prompt_id
+    left join evaluation_prompt_variation pv on pv.id = er.variation_id
   where 
     er.evaluation_id = ${evaluationId}`
 

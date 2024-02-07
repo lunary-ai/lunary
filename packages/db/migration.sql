@@ -112,3 +112,8 @@ create table evaluation_result (
   constraint fk_evaluation_result_variation_id foreign key (variation_id) references prompt_variation(id) on delete cascade
 );
 create index on evaluation_result(evaluation_id, prompt_id, variation_id, model);
+
+
+alter table prompt rename to evaluation_prompt;
+alter table prompt_variation rename to evaluation_prompt_variation;
+alter table prompt rename column content to messages

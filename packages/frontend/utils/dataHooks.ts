@@ -35,7 +35,18 @@ function generateKey(
 export function useProjectSWR(key?: KeyType, options?: SWRConfiguration) {
   const { projectId } = useContext(ProjectContext)
 
-  return useSWR(() => generateKey(key, projectId), options)
+  const { data, error, isLoading, isValidating, mutate } = useSWR(
+    () => generateKey(key, projectId),
+    options,
+  )
+
+  return {
+    data,
+    error,
+    isLoading: projectId === null ? true : isLoading,
+    isValidating,
+    mutate,
+  }
 }
 
 export function useProjectMutation(

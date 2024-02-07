@@ -385,18 +385,16 @@ export default function Radar() {
               </Badge>
             </Group>
 
-            <Group>
-              <Button
-                leftSection={<IconPlus size={12} />}
-                variant="light"
-                color="blue"
-                onClick={() => {
-                  setModalOpened(true)
-                }}
-              >
-                New
-              </Button>
-            </Group>
+            <Button
+              leftSection={<IconPlus size={12} />}
+              variant="light"
+              color="blue"
+              onClick={() => {
+                setModalOpened(true)
+              }}
+            >
+              New
+            </Button>
           </Group>
 
           <Text size="lg" mb="md">
