@@ -17,7 +17,7 @@ export const SuperCopyButton = ({ value }) => (
   </CopyButton>
 )
 
-export default function CopyText({ c = "violet.8", value }) {
+export default function CopyText({ c = "violet", value }) {
   return (
     <Group gap={0} display="inline-flex">
       <Code ml={5} c={c}>

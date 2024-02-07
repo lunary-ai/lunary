@@ -122,8 +122,8 @@ runs.get("/usage", async (ctx) => {
     daily: string
   }
 
-  const daysNum = parseInt(days, 10)
-  const userIdNum = userId ? parseInt(userId, 10) : null
+  const daysNum = parseInt(days)
+  const userIdNum = userId ? parseInt(userId) : null
 
   if (isNaN(daysNum) || (userId && isNaN(userIdNum))) {
     ctx.throw(400, "Invalid query parameters")
