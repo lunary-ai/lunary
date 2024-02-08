@@ -30,11 +30,21 @@ function generateKey(
 
   return url
 }
-
 export function useProjectSWR(key?: KeyType, options?: SWRConfiguration) {
   const { projectId } = useContext(ProjectContext)
 
-  return useSWR(() => generateKey(key, projectId), options)
+  const { data, error, isLoading, isValidating, mutate } = useSWR(
+    () => generateKey(key, projectId),
+    options,
+  )
+
+  return {
+    data,
+    error,
+    isLoading: projectId === null ? true : isLoading,
+    isValidating,
+    mutate,
+  }
 }
 
 export function useProjectMutation(
@@ -484,5 +494,14 @@ export function useRadar(id, initialData?: any) {
     remove,
     mutate,
     loading: isLoading,
+  }
+}
+
+export function useEvaluations() {
+  const { data, isLoading } = useProjectSWR(`/evaluations`)
+
+  return {
+    evaluations: data || [],
+    isLoading,
   }
 }
