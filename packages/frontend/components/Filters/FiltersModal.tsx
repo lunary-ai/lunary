@@ -44,11 +44,7 @@ function FilterCard({
       withBorder
       opacity={filter.soon ? 0.5 : 1}
     >
-      <Tooltip
-        label={filter.description}
-        withArrow
-        hidden={!filter.description}
-      >
+      <Tooltip label={filter.description} hidden={!filter.description}>
         <UnstyledButton disabled={filter.soon}>
           <Flex
             justify="right"

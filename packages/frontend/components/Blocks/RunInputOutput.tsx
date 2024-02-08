@@ -5,6 +5,7 @@ import {
   Flex,
   Group,
   HoverCard,
+  ScrollArea,
   Stack,
   Switch,
   Text,
@@ -94,7 +95,7 @@ const ParamItem = ({
 function RenderTools(tools) {
   return tools.map((tool, i) => {
     return (
-      <HoverCard key={i} withArrow>
+      <HoverCard key={i}>
         <HoverCard.Target>
           <Badge
             color="pink"
@@ -105,14 +106,16 @@ function RenderTools(tools) {
           </Badge>
         </HoverCard.Target>
         <HoverCard.Dropdown miw={400}>
-          <Stack>
-            {tool.function?.description && (
-              <Text size="sm">{tool.function?.description}</Text>
-            )}
-            <Text size="sm">
-              <pre>{JSON.stringify(tool.function?.parameters, null, 2)}</pre>
-            </Text>
-          </Stack>
+          <ScrollArea.Autosize mah={300}>
+            <Stack>
+              {tool.function?.description && (
+                <Text size="sm">{tool.function?.description}</Text>
+              )}
+              <Text size="sm">
+                <pre>{JSON.stringify(tool.function?.parameters, null, 2)}</pre>
+              </Text>
+            </Stack>
+          </ScrollArea.Autosize>
         </HoverCard.Dropdown>
       </HoverCard>
     )

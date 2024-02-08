@@ -170,7 +170,7 @@ const TemplateListItem = ({
         whiteSpace: "nowrap",
       }}
       leftSection={
-        <Menu withArrow>
+        <Menu>
           <Menu.Target>
             {active || hovered ? (
               <ActionIcon size="sm" radius="sm" variant="light">

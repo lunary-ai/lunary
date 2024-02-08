@@ -157,7 +157,7 @@ export default function AppAnalytics() {
                 We <b>cannot</b> recover your data once it&apos;s deleted.
               </Text>
 
-              <Popover width={200} position="bottom" withArrow shadow="md">
+              <Popover width={200} position="bottom" shadow="md">
                 <Popover.Target>
                   <Button color="red">Delete Project</Button>
                 </Popover.Target>

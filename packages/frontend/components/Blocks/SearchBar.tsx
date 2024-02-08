@@ -18,7 +18,8 @@ export default function SearchBar({ query, setQuery, ...props }) {
   return (
     <Input
       leftSection={<IconSearch size={14} />}
-      w={400}
+      maw={400}
+      w="30%"
       type="search"
       size="sm"
       ref={ref}

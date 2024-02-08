@@ -303,7 +303,7 @@ export default function Logs() {
                   ]}
                 />
 
-                <Menu withArrow shadow="sm" position="bottom-end">
+                <Menu position="bottom-end">
                   <Menu.Target>
                     <ActionIcon variant="light">
                       <IconDotsVertical size={12} />

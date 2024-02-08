@@ -43,11 +43,11 @@ export const circularPro = localFont({
       weight: "700",
       style: "normal",
     },
-    {
-      path: "../public/fonts/circular-pro-black.woff2",
-      weight: "900",
-      style: "normal",
-    },
+    // {
+    //   path: "../public/fonts/circular-pro-black.woff2",
+    //   weight: "900",
+    //   style: "normal",
+    // },
   ],
 })
 
@@ -77,6 +77,30 @@ const theme = createTheme({
     Button: {
       defaultProps: {
         fw: "500",
+      },
+    },
+    Popover: {
+      defaultProps: {
+        withArrow: true,
+        shadow: "sm",
+      },
+    },
+    Combobox: {
+      defaultProps: {
+        withArrow: true,
+        shadow: "sm",
+      },
+    },
+    HoverCard: {
+      defaultProps: {
+        withArrow: true,
+        shadow: "sm",
+      },
+    },
+    Tooltip: {
+      defaultProps: {
+        withArrow: true,
+        shadow: "sm",
       },
     },
   },

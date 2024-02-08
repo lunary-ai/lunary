@@ -1,4 +1,4 @@
-import { getColorForRole } from "@/utils/colors"
+import { getColorForRole, useFixedColorScheme } from "@/utils/colors"
 import {
   Code,
   Flex,
@@ -10,7 +10,6 @@ import {
   Textarea,
   ThemeIcon,
 } from "@mantine/core"
-import { useColorScheme } from "@mantine/hooks"
 import {
   IconInfoCircle,
   IconRobot,
@@ -20,8 +19,7 @@ import {
 import Image from "next/image"
 import ProtectedText from "../Blocks/ProtectedText"
 import { RenderJson } from "./RenderJson"
-
-import { circularPro } from "../../pages/_app"
+import { circularPro } from "@/pages/_app"
 
 function RenderFunction({ color, compact, codeBg, data, type }) {
   const fontColor = type === "functionCall" ? "#40c057" : "inherit"
@@ -203,10 +201,15 @@ export function ChatMessage({
   onChange?: any
   compact?: boolean
 }) {
-  const scheme = useColorScheme()
+  // TODO FIX
+  // Flickering dark mode bug: this is due to scheme being 'light' for a few ms
+  const scheme = useFixedColorScheme()
+
   const color = getColorForRole(data?.role)
 
-  const codeBg = `rgba(${scheme === "dark" ? "0,0,0" : "255,255,255"},0.6)`
+  const codeBg = scheme
+    ? `rgba(${scheme === "dark" ? "0,0,0" : "255,255,255"},0.6)`
+    : "transparent"
 
   return (
     <Paper

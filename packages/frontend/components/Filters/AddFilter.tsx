@@ -55,7 +55,6 @@ export function AddFilterButton({ filters, onSelect, defaultOpened }) {
         store={combobox}
         width={250}
         position="bottom-start"
-        withArrow
         withinPortal={false}
         onOptionSubmit={(val) => {
           onSelect(filters.find((item) => item.id === val))
