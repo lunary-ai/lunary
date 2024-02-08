@@ -1,9 +1,10 @@
-import { Box, Flex, NavLink, Stack, Text, ThemeIcon } from "@mantine/core"
+import { Box, Flex, Menu, NavLink, Stack, Text, ThemeIcon } from "@mantine/core"
 
 import {
   IconActivity,
   IconAnalyze,
   IconBolt,
+  IconChevronRight,
   IconCreditCard,
   IconFlask2Filled,
   IconHelpOctagon,
@@ -251,44 +252,51 @@ export default function Sidebar() {
               leftSection={<IconHelpOctagon size={14} />}
             />
 
-            <NavLink
-              color="red"
-              h={50}
-              leftSection={<UserAvatar size={24} profile={user} />}
-              label={
-                <Stack gap={0}>
-                  <Text
-                    mb={-3}
-                    size="xs"
-                    style={{
-                      textOverflow: "ellipsis",
-                      overflow: "hidden",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {user?.name}
-                  </Text>
-                  <Text
-                    size="xs"
-                    c="dimmed"
-                    style={{
-                      textOverflow: "ellipsis",
-                      overflow: "hidden",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {user?.email}
-                  </Text>
-                </Stack>
-              }
-            >
-              <NavLink
-                label="Logout"
-                c="red"
-                onClick={() => auth.signOut()}
-                leftSection={<IconLogout size={14} />}
-              />
-            </NavLink>
+            <Menu width={200}>
+              <Menu.Target>
+                <NavLink
+                  color="red"
+                  h={50}
+                  leftSection={<UserAvatar size={24} profile={user} />}
+                  rightSection={<IconChevronRight size={16} opacity={0.5} />}
+                  label={
+                    <Stack gap={0}>
+                      <Text
+                        mb={-3}
+                        size="xs"
+                        style={{
+                          textOverflow: "ellipsis",
+                          overflow: "hidden",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {user?.name}
+                      </Text>
+                      <Text
+                        size="xs"
+                        c="dimmed"
+                        style={{
+                          textOverflow: "ellipsis",
+                          overflow: "hidden",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {user?.email}
+                      </Text>
+                    </Stack>
+                  }
+                />
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item
+                  c="red"
+                  onClick={() => auth.signOut()}
+                  leftSection={<IconLogout size={14} />}
+                >
+                  Logout
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
           </Box>
         </>
       )}

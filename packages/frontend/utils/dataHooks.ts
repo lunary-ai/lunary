@@ -1,5 +1,4 @@
 import { useMantineTheme } from "@mantine/core"
-import { useColorScheme } from "@mantine/hooks"
 import { useContext } from "react"
 import useSWR, { SWRConfiguration } from "swr"
 import useSWRInfinite from "swr/infinite"
@@ -129,7 +128,9 @@ export function useOrg() {
 export function useProjects() {
   const { isSignedIn } = useAuth()
 
-  const { data, isLoading, mutate } = useSWR(() => isSignedIn && `/projects`)
+  const { data, isLoading, isValidating, mutate } = useSWR(
+    () => isSignedIn && `/projects`,
+  )
 
   const { trigger: insertMutation } = useSWRMutation(
     () => `/projects`,

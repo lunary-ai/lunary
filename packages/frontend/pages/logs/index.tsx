@@ -225,7 +225,7 @@ export default function Logs() {
 
   return (
     <Empty
-      enable={!loading && !projectLoading && !project?.activated}
+      enable={!loading && !projectLoading && project && !project.activated}
       Icon={IconBrandOpenai}
       title="Waiting for recordings..."
       showProjectId

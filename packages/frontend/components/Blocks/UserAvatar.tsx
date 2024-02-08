@@ -17,7 +17,7 @@ function UserAvatar({
         placeholder: { border: "none", background: user?.color },
       }}
     >
-      <Text color="white">
+      <Text c="white" size="130%" mt={"-10%"}>
         {user?.name
           ?.split(" ")
           .map((n) => n[0])
