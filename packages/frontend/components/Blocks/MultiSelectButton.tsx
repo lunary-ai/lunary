@@ -36,7 +36,6 @@ export default function MultiSelectButton({
         store={combobox}
         width={250}
         position="bottom-start"
-        withArrow
         withinPortal={false}
         positionDependencies={[selectedItems]}
         onOptionSubmit={(val) => {

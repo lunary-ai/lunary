@@ -4,7 +4,7 @@ import { useContext } from "react"
 import useSWR, { SWRConfiguration } from "swr"
 import useSWRInfinite from "swr/infinite"
 import { ProjectContext } from "./context"
-import { getUserColor } from "./colors"
+import { getUserColor, useFixedColorScheme } from "./colors"
 import useSWRMutation, { SWRMutationConfiguration } from "swr/mutation"
 
 import { fetcher } from "./fetcher"
@@ -89,7 +89,7 @@ export function useUser() {
   const { isSignedIn } = useAuth()
 
   const theme = useMantineTheme()
-  const scheme = useColorScheme()
+  const scheme = useFixedColorScheme()
 
   const { data, isLoading, mutate, error } = useSWR(
     () => isSignedIn && `/users/me`,
@@ -109,7 +109,7 @@ export function useOrg() {
   )
 
   const theme = useMantineTheme()
-  const scheme = useColorScheme()
+  const scheme = useFixedColorScheme()
 
   const users = data?.users?.map((user) => ({
     ...user,

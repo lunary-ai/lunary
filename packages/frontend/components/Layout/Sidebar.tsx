@@ -79,7 +79,7 @@ export default function Sidebar() {
   const auth = useAuth()
   const { project, setProjectId } = useProject()
 
-  const { user, mutate } = useUser()
+  const { user } = useUser()
   const { org } = useOrg()
 
   const { projects, isLoading: loading, insert } = useProjects()
@@ -254,8 +254,7 @@ export default function Sidebar() {
             <NavLink
               color="red"
               h={50}
-              bg="var(--mantine-color-default-border)"
-              leftSection={<UserAvatar size={32} profile={user} />}
+              leftSection={<UserAvatar size={24} profile={user} />}
               label={
                 <Stack gap={0}>
                   <Text

@@ -104,7 +104,6 @@ export default function FacetedFilter({
     <Combobox
       store={combobox}
       position="bottom-start"
-      withArrow
       withinPortal={false}
       width={250}
       onOptionSubmit={(val) => {

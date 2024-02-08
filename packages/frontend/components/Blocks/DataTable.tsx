@@ -15,8 +15,9 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 
-import { useColorScheme, useLocalStorage } from "@mantine/hooks"
+import { useLocalStorage } from "@mantine/hooks"
 import { useVirtual } from "@tanstack/react-virtual"
+import { useFixedColorScheme } from "@/utils/colors"
 
 // outside for reference
 const emptyArray = []
@@ -65,7 +66,7 @@ export default function DataTable({
   //we need a reference to the scrolling element for logic down below
   const tableContainerRef = useRef<HTMLDivElement>(null)
 
-  const scheme = useColorScheme()
+  const scheme = useFixedColorScheme()
 
   const table = useReactTable({
     data: data ?? emptyArray, // So it doesn't break when data is undefined because of reference
@@ -140,6 +141,46 @@ export default function DataTable({
             fetchMoreOnBottomReached(e.currentTarget)
           }}
         >
+          <Menu closeOnItemClick={false}>
+            <Menu.Target>
+              <ActionIcon
+                component="span"
+                pos="absolute"
+                right={15}
+                top={5}
+                style={{ zIndex: 2 }}
+                variant="transparent"
+                color={`var(--mantine-color-default-color)`}
+                opacity={0.5}
+              >
+                <IconColumns3 size={16} />
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown>
+              {table
+                .getAllColumns()
+                .filter((column) => column.getCanHide())
+                .map((column) => (
+                  <Menu.Item
+                    key={column.id}
+                    onClick={() => {
+                      column.toggleVisibility()
+                      setColumnsTouched(true)
+                    }}
+                  >
+                    <Group>
+                      <Checkbox
+                        size="xs"
+                        radius="sm"
+                        readOnly
+                        checked={column.getIsVisible()}
+                      />
+                      {column.columnDef.header as ReactNode}
+                    </Group>
+                  </Menu.Item>
+                ))}
+            </Menu.Dropdown>
+          </Menu>
           <table
             // striped
             // withColumnBorders
@@ -191,42 +232,6 @@ export default function DataTable({
                   })}
                 </tr>
               ))}
-              <Menu withArrow shadow="sm" closeOnItemClick={false}>
-                <Menu.Target>
-                  <ActionIcon
-                    pos="absolute"
-                    right={10}
-                    top={5}
-                    variant="transparent"
-                    color={scheme === "light" ? "blue" : "black.5"}
-                  >
-                    <IconColumns3 size={16} />
-                  </ActionIcon>
-                </Menu.Target>
-                <Menu.Dropdown>
-                  {table
-                    .getAllColumns()
-                    .filter((column) => column.getCanHide())
-                    .map((column) => (
-                      <Menu.Item
-                        key={column.id}
-                        onClick={() => {
-                          column.toggleVisibility()
-                          setColumnsTouched(true)
-                        }}
-                      >
-                        <Group>
-                          <Checkbox
-                            size="xs"
-                            radius="sm"
-                            checked={column.getIsVisible()}
-                          />
-                          {column.columnDef.header as ReactNode}
-                        </Group>
-                      </Menu.Item>
-                    ))}
-                </Menu.Dropdown>
-              </Menu>
             </thead>
             <tbody>
               {paddingTop > 0 && (
@@ -304,21 +309,17 @@ export default function DataTable({
             background-color: rgb(248, 249, 250);
           }
 
-          .light table tr:hover {
-            background-color: rgb(248, 249, 250);
-          }
-
-          .dark table tr:hover {
-            background-color: #2c2e33;
+          table tbody tr:hover {
+            background-color: var(
+              --mantine-primary-color-light-hover
+            ) !important;
           }
 
           thead {
             position: sticky;
             top: 0;
             z-index: 1;
-            background-color: rgb(
-              ${scheme === "dark" ? "30,30,30" : "255,255,255"}
-            );
+            background-color: var(--mantine-color-body);
           }
 
           th {

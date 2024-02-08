@@ -1,3 +1,6 @@
+import { useColorScheme, useDidUpdate } from "@mantine/hooks"
+import { useEffect, useState } from "react"
+
 export function getColorForRole(role) {
   const defaultColor = "gray"
 
@@ -44,4 +47,22 @@ export function getUserColor(scheme, theme, id: string) {
 
   const finalColor = theme.colors[userColor][scheme === "dark" ? 8 : 4]
   return finalColor
+}
+
+// fixes the stutter effect in dark mode
+// needs to be outside the hook as window.computedColorScheme doesn't reflect the update
+// but we need to update the ddefault value
+let defaultColorScheme =
+  typeof window !== "undefined" ? window?.computedColorScheme : "light"
+export function useFixedColorScheme() {
+  const [scheme, setScheme] = useState(defaultColorScheme)
+
+  const mantineScheme = useColorScheme()
+
+  useDidUpdate(() => {
+    defaultColorScheme = mantineScheme
+    setScheme(mantineScheme)
+  }, [mantineScheme])
+
+  return scheme
 }
