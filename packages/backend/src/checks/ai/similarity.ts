@@ -76,8 +76,6 @@ export default async function aiSimilarity(
         text2,
       })
 
-      console.log(template)
-
       const res = await openai.chat.completions.create(template)
 
       const output = res.choices[0]?.message?.content

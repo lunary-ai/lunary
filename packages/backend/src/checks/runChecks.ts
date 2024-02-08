@@ -37,11 +37,9 @@ async function sqlEval(sqlFragment: any, run: any): Promise<boolean> {
 
   await sql.begin(async (tx) => {
     // create a virtual table with the run columns, without the id, project_id and is_public columns
-    console.log(1)
     await tx`create temp table temp_run (like run) on commit drop`
 
-    console.log(2)
-    await tx`insert into temp_run ${tx(run)}`
+    const res = await tx`insert into temp_run ${tx(run)} returning * `
 
     // run the sql fragment and see if it returns any rows
     const [result] = await tx`select * from temp_run where ${sqlFragment}`

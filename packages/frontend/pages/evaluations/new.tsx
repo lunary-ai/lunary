@@ -2,7 +2,7 @@ import Steps from "@/components/Blocks/Steps"
 import FilterPicker from "@/components/Filters/Picker"
 import Paywall from "@/components/Layout/Paywall"
 import { PromptEditor } from "@/components/Prompts/PromptEditor"
-import { useProject } from "@/utils/dataHooks"
+import { useDataset, useDatasets, useProject } from "@/utils/dataHooks"
 import errorHandler from "@/utils/errors"
 import { fetcher } from "@/utils/fetcher"
 import { usePromptVariables } from "@/utils/promptsHooks"
@@ -42,7 +42,7 @@ function AddPromptModal({ opened, setOpened, onAdd }) {
     },
     {
       role: "user",
-      content: "What is the capital city of {{country}}",
+      content: "Which country is bigger between {{country1}} and {{country2}}",
     },
   ])
 
@@ -173,7 +173,7 @@ function AddPromptModal({ opened, setOpened, onAdd }) {
 
 export default function NewEvaluation() {
   const [prompts, setPrompts] = useState<Prompt[]>([])
-  const [checks, setChecks] = useState<FilterLogic | []>([])
+  const [checks, setChecks] = useState<FilterLogic>(["AND"])
   const [models, setModels] = useState(["gpt-4-turbo-preview", "gpt-3.5-turbo"])
 
   const [loading, setLoading] = useState(false)
@@ -206,7 +206,7 @@ export default function NewEvaluation() {
   }
 
   const canStartEvaluation =
-    models.length > 0 && models.length > 0 && checks.length > 0
+    prompts.length > 0 && models.length > 0 && checks.length > 1
 
   return (
     <Paywall
@@ -228,11 +228,10 @@ export default function NewEvaluation() {
           </Group>
 
           <Text size="xl" mb="md">
-            Compare different prompts and models to find the best performing
-            combinations.
+            Compare prompts with different models to craft the perfect prompt.
           </Text>
 
-          <Steps ml={-59}>
+          <Steps>
             <Steps.Step n={1} label="Dataset">
               <Text size="lg" mb="md">
                 Add prompts with variations of variables to test.
@@ -253,7 +252,9 @@ export default function NewEvaluation() {
               <Group mt="xl">
                 <Chip.Group>
                   {evaluation.prompts?.map((prompt, i) => (
-                    <Chip color="blue">Prompt #{i + 1}</Chip>
+                    <Chip color="blue" key={i}>
+                      Prompt #{i + 1}
+                    </Chip>
                   ))}
                 </Chip.Group>
               </Group>

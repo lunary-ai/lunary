@@ -22,21 +22,23 @@ import {
 import { useRouter } from "next/router"
 import { useEffect } from "react"
 
+const FEATURE_LIST = [
+  "Define assertions to test variations of prompts",
+  "Powerful AI powered assertion engine",
+  "Compare results with OpenAI, Anthropic, Mistral and more",
+]
+
 export default function Evaluations() {
   const router = useRouter()
   const { evaluations, isLoading } = useEvaluations()
 
+  if (!isLoading && evaluations.length === 0) {
+    router.push("/evaluations/new")
+  }
+
   if (isLoading) {
     return <Loader />
   }
-
-  if (!isLoading && evaluations.length === 0) {
-    return router.push("/evaluations/new")
-  }
-
-  const FEATURE_LIST = []
-
-  return 1
 
   return (
     <Paywall

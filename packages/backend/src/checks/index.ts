@@ -197,7 +197,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       const regexPattern = sql`[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+`
       const operator = type === "contains" ? sql`~` : sql`!~`
 
-      return sql`${sql(field + "_text")} ${operator} '${regexPattern}'`
+      return sql`${sql(field + "_text")}::text ${operator} '${regexPattern}'`
     },
   },
   {

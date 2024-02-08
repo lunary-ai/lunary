@@ -2,11 +2,9 @@ import Router from "koa-router"
 import sql from "@/src/utils/db"
 import { z } from "zod"
 import Context from "@/src/utils/koa"
-import { compileChatMessages, runAImodel } from "@/src/utils/playground"
-import { calcRunCost } from "@/src/utils/calcCost"
-import { runChecksOnRun } from "@/src/checks/runChecks"
-import { FilterLogic, Evaluation } from "shared"
+import { Evaluation } from "shared"
 import { getReadableDateTime } from "@/src/utils/date"
+import { runEval } from "./utils"
 
 const evaluations = new Router({ prefix: "/evaluations" })
 
@@ -49,18 +47,22 @@ evaluations.post("/", async (ctx: Context) => {
         const [insertedVariation] =
           await sql`insert into evaluation_prompt_variation ${sql(variationToInsert)} returning *`
 
+        const evalsToRun = []
         for (const model of models) {
-          await runEval(
-            insertedEvaluation.id,
-            insertedPrompt.id,
-            insertedVariation.id,
-            model,
-            prompt.content,
-            prompt.extra,
-            variation,
-            checks,
+          evalsToRun.push(
+            runEval(
+              insertedEvaluation.id,
+              insertedPrompt.id,
+              insertedVariation.id,
+              model,
+              prompt.content,
+              prompt.extra,
+              variation,
+              checks,
+            ),
           )
         }
+        await Promise.all(evalsToRun)
       }
     }
   }
@@ -92,7 +94,6 @@ evaluations.get("/:id", async (ctx: Context) => {
 
   if (!rows) {
     ctx.throw(404, "Evaluation not found")
-    return
   }
 
   const { id, createdAt, name, ownerId, projectId, models, checks } = rows[0]
@@ -168,83 +169,5 @@ evaluations.get("/", async (ctx: Context) => {
 
   ctx.body = evaluations
 })
-
-async function runEval(
-  evaluationId: string,
-  promptId: string,
-  variationId: string,
-  model: string,
-  prompt: any,
-  extra: any,
-  variation: any,
-  checks: FilterLogic,
-) {
-  try {
-    console.log(`=============================`)
-    console.log(
-      `Running eval for ${model} with variation ${JSON.stringify(variation.variables)}`,
-    )
-    const { variables, idealOutput, context } = variation
-
-    // run AI query
-    const createdAt = new Date()
-    const input = compileChatMessages(prompt, variables)
-
-    const res = await runAImodel(input, extra, undefined, model)
-    const endedAt = new Date()
-
-    // Create virtual run to be able to run checks
-    const output = res.choices[0].message
-
-    const promptTokens = res.usage?.prompt_tokens
-    const completionTokens = res.usage?.completion_tokens
-    const duration = endedAt.getTime() - createdAt.getTime()
-
-    const virtualRun = {
-      type: "llm",
-      input,
-      output,
-      status: "success",
-      params: extra,
-      name: model,
-      duration,
-      promptTokens,
-      completionTokens,
-      createdAt,
-      endedAt,
-      // Eval-only fields:
-      idealOutput,
-      context,
-      // So the SQL queries don't fail:
-      id: "00000000-0000-4000-8000-000000000000",
-      projectId: "00000000-0000-4000-8000-000000000000",
-      isPublic: false,
-    }
-
-    const cost = calcRunCost(virtualRun)
-    virtualRun.cost = cost
-
-    // run checks
-    const { passed, results } = await runChecksOnRun(virtualRun, checks)
-
-    // insert into eval_result
-    await sql`
-      insert into evaluation_result ${sql({
-        evaluationId,
-        promptId,
-        variationId,
-        model,
-        output: JSON.stringify(output),
-        results: JSON.stringify(results),
-        passed,
-        completionTokens,
-        cost,
-        duration,
-      })}
-      `
-  } catch (error) {
-    console.error(error)
-  }
-}
 
 export default evaluations
