@@ -53,7 +53,8 @@ export function getUserColor(scheme, theme, id: string) {
 // needs to be outside the hook as window.computedColorScheme doesn't reflect the update
 // but we need to update the ddefault value
 let defaultColorScheme =
-  typeof window !== "undefined" ? window?.computedColorScheme : "light"
+  typeof window !== "undefined" ? window?.computedColorScheme : null
+
 export function useFixedColorScheme() {
   const [scheme, setScheme] = useState(defaultColorScheme)
 

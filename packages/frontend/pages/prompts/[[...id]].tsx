@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { jsonrepair } from "jsonrepair"
 
 import {
@@ -51,6 +51,7 @@ import Empty from "@/components/Layout/Empty"
 
 import { MODELS } from "shared"
 import { usePromptVariables } from "@/utils/promptsHooks"
+import { openConfirmModal } from "@mantine/modals"
 
 const ParamItem = ({ name, value }) => (
   <Group justify="space-between">
@@ -62,6 +63,22 @@ const ParamItem = ({ name, value }) => (
     )}
   </Group>
 )
+
+function confirmDiscard(onDiscard) {
+  return openConfirmModal({
+    title: "Discard changes?",
+    confirmProps: { color: "red" },
+    children: (
+      <Text size="sm">
+        You have unsaved changes. Are you sure you want to discard them?
+      </Text>
+    ),
+    labels: { confirm: "Confirm", cancel: "Cancel" },
+    onConfirm() {
+      onDiscard()
+    },
+  })
+}
 
 function Playground() {
   const router = useRouter()
@@ -109,18 +126,23 @@ function Playground() {
   const { mutate: revalidateUser } = useUser()
   const { org } = useOrg()
 
+  // make sure to only fetch once
+  const ref = useRef({ done: false })
+
   useEffect(() => {
-    if (!project) return
+    if (!project || ref.current?.done) return
 
     const { clone, id } = router.query
 
     // check if we want to clone an existing run
     if (id) {
+      ref.current.done = true
+
       const fetchTemplate = async () => {
         setLoading(true)
 
         const data = await fetcher.get(
-          `/projects/${project?.id}/template_versions/${id}`,
+          `/template_versions/${id}?projectId=${project?.id}`,
         )
 
         if (data) {
@@ -133,6 +155,7 @@ function Playground() {
 
       fetchTemplate()
     } else if (clone) {
+      ref.current.done = true
       const fetchRun = async () => {
         setLoading(true)
         const run = await fetcher.get(`/runs/${clone}?projectId=${project?.id}`)
@@ -152,7 +175,11 @@ function Playground() {
       setTemplate({ mode: "openai" })
       setTemplateVersion(defaultTemplateVersion)
     }
-  }, [project])
+  }, [project, router.query])
+
+  useEffect(() => {
+    setHasChanges(false)
+  }, [template?.id])
 
   // Save as draft without deploying
   const saveTemplate = async () => {
@@ -191,19 +218,49 @@ function Playground() {
     mutate()
   }
 
+  const confirmDiscard = useCallback(
+    (onProceed) => {
+      if (hasChanges) {
+        return openConfirmModal({
+          title: "Discard changes?",
+          confirmProps: { color: "red" },
+
+          children: (
+            <Text size="sm">
+              You have unsaved changes. Are you sure you want to discard them?
+            </Text>
+          ),
+          labels: { confirm: "Confirm", cancel: "Cancel" },
+          onConfirm() {
+            onProceed()
+            setHasChanges(false)
+          },
+        })
+      }
+
+      onProceed()
+    },
+    [hasChanges],
+  )
+
+  const switchTemplateVersion = (v) => {
+    setTemplateVersion(v)
+    router.push(`/prompts/${v.id}`)
+  }
+
   const createTemplate = async () => {
-    const slug = generateSlug(2)
-    const newTemplate = await insert({
-      mode: "openai",
-      slug,
-      ...defaultTemplateVersion,
+    confirmDiscard(async () => {
+      const slug = generateSlug(2)
+      const newTemplate = await insert({
+        mode: "openai",
+        slug,
+        ...defaultTemplateVersion,
+      })
+      setTemplate(newTemplate)
+      setRename(newTemplate.id)
+      switchTemplateVersion(newTemplate.versions[0])
+      mutate()
     })
-
-    setTemplate(newTemplate)
-    setRename(newTemplate.id)
-    switchTemplateVersion(newTemplate.versions[0])
-
-    mutate()
   }
 
   // Deploy the template
@@ -324,11 +381,6 @@ function Playground() {
     setStreaming(false)
   }
 
-  const switchTemplateVersion = (v) => {
-    setTemplateVersion(v)
-    router.push(`/prompts/${v.id}`)
-  }
-
   const extraHandler = (key: string, isCheckbox?: boolean) => ({
     size: "xs",
     [isCheckbox ? "checked" : "value"]:
@@ -352,7 +404,7 @@ function Playground() {
 
   return (
     <Empty
-      enable={!templates?.length && !router.query.clone}
+      enable={templates && !templates.length && !router.query.clone}
       title="Create prompt templates"
       features={[
         "Collaborate with non-technical people",
@@ -375,9 +427,20 @@ function Playground() {
             createTemplate={createTemplate}
             setRename={setRename}
             activeTemplate={template}
-            switchTemplate={setTemplate}
             activeVersion={templateVersion}
-            switchTemplateVersion={switchTemplateVersion}
+            switchTemplateVersion={(t, v) => {
+              const proceed = () => {
+                setTemplate(t)
+                switchTemplateVersion(v)
+              }
+
+              // means we are deleting the template and already went through confirm
+              if (!t) return proceed()
+
+              confirmDiscard(() => {
+                proceed()
+              })
+            }}
           />
         </Box>
         <Box
@@ -418,7 +481,7 @@ function Playground() {
                 leftSection={<IconGitCommit size={18} />}
                 size="xs"
                 loading={loading}
-                disabled={loading || (!templateVersion?.isDraft && !hasChanges)}
+                disabled={loading || !(templateVersion?.isDraft || hasChanges)}
                 variant="filled"
                 onClick={commitTemplate}
               >
