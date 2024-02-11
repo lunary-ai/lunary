@@ -68,7 +68,9 @@ const FilterInputs = {
           value={value}
           onChange={(n) => onChange(n)}
         />
-        <Text size="xs">{unit}</Text>
+        <Text ta="center" pr="xs" size="xs">
+          {unit}
+        </Text>
       </Flex>
     )
   },
