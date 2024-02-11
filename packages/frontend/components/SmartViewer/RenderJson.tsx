@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 import ProtectedText from "../Blocks/ProtectedText"
-import { JsonView, defaultStyles } from "react-json-view-lite"
-import errorHandler from "@/utils/errors"
+// import { JsonView, defaultStyles } from "react-json-view-lite"
+// import errorHandler from "@/utils/errors"
 import ErrorBoundary from "../Blocks/ErrorBoundary"
 
 export const Json = ({ data, compact }) => {
@@ -31,17 +31,7 @@ export const Json = ({ data, compact }) => {
 
   return (
     <ProtectedText>
-      {isFatObject ? (
-        <JsonView
-          data={parsed}
-          shouldInitiallyExpand={(level) => level < 1}
-          style={defaultStyles}
-        />
-      ) : compact ? (
-        JSON.stringify(parsed)
-      ) : (
-        JSON.stringify(parsed, null, 2)
-      )}
+      {compact ? JSON.stringify(parsed) : JSON.stringify(parsed, null, 2)}
     </ProtectedText>
   )
 }
