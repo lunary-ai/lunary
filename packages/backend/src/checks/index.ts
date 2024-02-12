@@ -77,7 +77,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   },
   {
     id: "tags",
-    sql: ({ tags }) => sql`tags && '{${sql(tags)}}'`,
+    sql: ({ tags }) => sql`tags && ${sql.array(tags)}`,
   },
   {
     id: "status",

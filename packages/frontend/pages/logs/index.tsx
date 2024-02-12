@@ -337,59 +337,6 @@ export default function Logs() {
               restrictTo={(f) => FILTERS_BY_TYPE[type].includes(f.id)}
             />
           )}
-          {/* {Object.entries(selectedFilters).length > 0 && (
-            <Paper px="xs" p={4}>
-              <Flex justify="space-between">
-                <Group>
-                  {Object.entries(selectedFilters).map(
-                    ([filterName, selected]) =>
-                      selected && (
-                        <FacetedFilter
-                          key={filterName}
-                          name={
-                            filterName.charAt(0).toUpperCase() +
-                            filterName.slice(1)
-                          }
-                          items={modelNames}
-                          selectedItems={selectedModels}
-                          setSelectedItems={setSelectedModels}
-                        />
-                      ),
-                  )}
-                </Group>
-                <Group gap="xs">
-                  <Select
-                    placeholder="Load a view..."
-                    size="xs"
-                    w={100}
-                    variant="unstyled"
-                    value={currentView?.name}
-                    onChange={(viewName) =>
-                      setCurrentView(
-                        views.find(({ name }) => name === viewName),
-                      )
-                    }
-                    data={views.map((view) => view.name)}
-                  />
-
-                  {Object.values(selectedFilters).length > 0 && (
-                    <>
-                      <Button onClick={createView} size="compact-xs">
-                        Save View
-                      </Button>
-                      <Button
-                        onClick={() => setSelectedFilters({})}
-                        variant="outline"
-                        size="compact-xs"
-                      >
-                        Clear
-                      </Button>
-                    </>
-                  )}
-                </Group>
-              </Flex>
-            </Paper>
-          )} */}
         </Stack>
 
         <Drawer
