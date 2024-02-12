@@ -62,7 +62,7 @@ const formatRun = (run: any) => ({
 
 runs.use("/ingest", ingest.routes())
 
-runs.get("/", async (ctx) => {
+runs.get("/", async (ctx: Context) => {
   const { projectId } = ctx.state
 
   const queryString = ctx.querystring
