@@ -67,6 +67,7 @@ const publicRoutes = [
   "/webhooks/stripe",
   "/auth/user/password/reset",
   `/v1/runs/ingest`,
+  new RegExp(`/v1/runs/.+/public`), // public run data
   new RegExp(`/v1/runs/.+/feedback`), // getFeedback in SDKs
   `/v1/template_versions/latest`,
   "/v1/users/verify-email",

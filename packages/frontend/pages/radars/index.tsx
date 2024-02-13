@@ -19,6 +19,7 @@ import {
   Text,
   TextInput,
   Title,
+  Tooltip,
 } from "@mantine/core"
 import { modals } from "@mantine/modals"
 import { notifications } from "@mantine/notifications"
@@ -264,14 +265,16 @@ function RadarCard({ id, initialData }) {
               </Popover.Dropdown>
             </Popover> */}
 
-            <ActionIcon
-              variant="light"
-              onClick={() => {
-                Router.push(`/logs?radar=${id}`)
-              }}
-            >
-              <IconListSearch size={16} />
-            </ActionIcon>
+            <Tooltip label="View logs matched by radar.">
+              <ActionIcon
+                variant="light"
+                onClick={() => {
+                  Router.push(`/logs?radar=${id}`)
+                }}
+              >
+                <IconListSearch size={16} />
+              </ActionIcon>
+            </Tooltip>
 
             <Menu>
               <Menu.Target>

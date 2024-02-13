@@ -1,9 +1,10 @@
-import { Box, Flex, NavLink, Stack, Text, ThemeIcon } from "@mantine/core"
+import { Box, Flex, Menu, NavLink, Stack, Text, ThemeIcon } from "@mantine/core"
 
 import {
   IconActivity,
   IconAnalyze,
   IconBolt,
+  IconChevronRight,
   IconCreditCard,
   IconFlask2Filled,
   IconHelpOctagon,
@@ -31,7 +32,6 @@ import { IconPlus } from "@tabler/icons-react"
 import { useProject, useProjects } from "@/utils/dataHooks"
 import { useEffect, useState } from "react"
 import { useAuth } from "@/utils/auth"
-import { useColorScheme } from "@mantine/hooks"
 
 const APP_MENU = [
   { label: "Analytics", icon: IconTimeline, link: "/analytics" },
@@ -43,7 +43,11 @@ const APP_MENU = [
   { label: "Settings & Keys", icon: IconSettings, link: "/settings" },
 ]
 
-function NavbarLink({ icon: Icon, label, link, active, soon, onClick, c }) {
+function NavbarLink({ icon: Icon, label, link, soon, onClick, c }) {
+  const router = useRouter()
+
+  const active = router.pathname.startsWith(link)
+
   return (
     <NavLink
       component={!onClick ? Link : "button"}
@@ -68,24 +72,40 @@ function NavbarLink({ icon: Icon, label, link, active, soon, onClick, c }) {
 }
 
 export default function Sidebar() {
-  const router = useRouter()
   const auth = useAuth()
   const { project, setProjectId } = useProject()
 
-  const { user, mutate } = useUser()
+  const { user } = useUser()
   const { org } = useOrg()
-  const scheme = useColorScheme()
+
   const { projects, isLoading: loading, insert } = useProjects()
 
   const [createProjectLoading, setCreateProjectLoading] = useState(false)
 
   const combobox = useCombobox()
 
-  const isActive = (link: string) => router.pathname.startsWith(link)
+  const billingEnabled = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 
-  const links = APP_MENU.map((item) => (
-    <NavbarLink {...item} active={isActive(item.link)} key={item.label} />
-  ))
+  const orgMenu = [
+    {
+      label: "Upgrade",
+      onClick: openUpgrade,
+      c: "violet",
+      icon: IconBolt,
+      disabled: !billingEnabled || !["free", "pro"].includes(org?.plan),
+    },
+    {
+      label: "Usage & Billing",
+      link: "/billing",
+      icon: IconCreditCard,
+      disabled: !billingEnabled,
+    },
+    {
+      link: "/team",
+      label: "Team",
+      icon: IconUsers,
+    },
+  ]
 
   const createProject = async () => {
     if (org.plan === "free" && projects.length >= 2) {
@@ -178,7 +198,9 @@ export default function Sidebar() {
             </Combobox>
           )}
 
-          {links}
+          {APP_MENU.map((item) => (
+            <NavbarLink {...item} key={item.label} />
+          ))}
         </Box>
         <Box w="100%" mt="xl">
           <Text
@@ -193,25 +215,9 @@ export default function Sidebar() {
             {org?.name}
           </Text>
 
-          {process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY && (
-            <>
-              {["free", "pro"].includes(org?.plan) && (
-                <NavbarLink
-                  label="Upgrade"
-                  onClick={() => openUpgrade()}
-                  c="purple"
-                  icon={IconBolt}
-                />
-              )}
-              <NavbarLink
-                label="Usage & Billing"
-                link="/billing"
-                icon={IconCreditCard}
-              />
-            </>
-          )}
-
-          <NavbarLink link="/team" label="Team" icon={IconUsers} />
+          {orgMenu.map((item) => (
+            <NavbarLink {...item} key={item.label} />
+          ))}
         </Box>
       </Stack>
 
@@ -241,45 +247,51 @@ export default function Sidebar() {
               leftSection={<IconHelpOctagon size={14} />}
             />
 
-            <NavLink
-              color="red"
-              h={50}
-              bg="var(--mantine-color-default-border)"
-              leftSection={<UserAvatar size={32} profile={user} />}
-              label={
-                <Stack gap={0}>
-                  <Text
-                    mb={-3}
-                    size="xs"
-                    style={{
-                      textOverflow: "ellipsis",
-                      overflow: "hidden",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {user?.name}
-                  </Text>
-                  <Text
-                    size="xs"
-                    c="dimmed"
-                    style={{
-                      textOverflow: "ellipsis",
-                      overflow: "hidden",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {user?.email}
-                  </Text>
-                </Stack>
-              }
-            >
-              <NavLink
-                label="Logout"
-                c="red"
-                onClick={() => auth.signOut()}
-                leftSection={<IconLogout size={14} />}
-              />
-            </NavLink>
+            <Menu width={200}>
+              <Menu.Target>
+                <NavLink
+                  color="red"
+                  h={50}
+                  leftSection={<UserAvatar size={24} profile={user} />}
+                  rightSection={<IconChevronRight size={16} opacity={0.5} />}
+                  label={
+                    <Stack gap={0}>
+                      <Text
+                        mb={-3}
+                        size="xs"
+                        style={{
+                          textOverflow: "ellipsis",
+                          overflow: "hidden",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {user?.name}
+                      </Text>
+                      <Text
+                        size="xs"
+                        c="dimmed"
+                        style={{
+                          textOverflow: "ellipsis",
+                          overflow: "hidden",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {user?.email}
+                      </Text>
+                    </Stack>
+                  }
+                />
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item
+                  c="red"
+                  onClick={() => auth.signOut()}
+                  leftSection={<IconLogout size={14} />}
+                >
+                  Logout
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
           </Box>
         </>
       )}

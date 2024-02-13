@@ -50,6 +50,7 @@ const formatRun = (run: any) => ({
   error: run.error,
   status: run.status,
   siblingRunId: run.siblingRunId,
+  params: run.params,
   user: {
     id: run.externalUserId,
     externalId: run.userExternalId,
@@ -61,7 +62,7 @@ const formatRun = (run: any) => ({
 
 runs.use("/ingest", ingest.routes())
 
-runs.get("/", async (ctx) => {
+runs.get("/", async (ctx: Context) => {
   const { projectId } = ctx.state
 
   const queryString = ctx.querystring
@@ -121,8 +122,8 @@ runs.get("/usage", async (ctx) => {
     daily: string
   }
 
-  const daysNum = parseInt(days, 10)
-  const userIdNum = userId ? parseInt(userId, 10) : null
+  const daysNum = parseInt(days)
+  const userIdNum = userId ? parseInt(userId) : null
 
   if (isNaN(daysNum) || (userId && isNaN(userIdNum))) {
     ctx.throw(400, "Invalid query parameters")
@@ -159,8 +160,7 @@ runs.get("/usage", async (ctx) => {
   ctx.body = runsUsage
 })
 
-runs.get("/:id", async (ctx) => {
-  const { projectId } = ctx.state
+runs.get("/:id/public", async (ctx) => {
   const { id } = ctx.params
 
   const [row] = await sql`
@@ -175,7 +175,36 @@ runs.get("/:id", async (ctx) => {
           run r
           left join external_user eu on r.external_user_id = eu.id
       where
-          r.project_id = ${projectId}
+          r.id = ${id}
+          and r.is_public = true
+      order by
+          r.created_at desc
+      limit 1`
+
+  if (!row) throw new Error("Run not found. It might not be public.")
+
+  ctx.body = formatRun(row)
+})
+
+runs.get("/:id", async (ctx) => {
+  const { id } = ctx.params
+
+  // Use orgId in case teammates shares URL to run and teammates is on another project.
+  const { orgId } = ctx.state
+
+  const [row] = await sql`
+      select
+        r.*,
+        eu.id as user_id,
+        eu.external_id as user_external_id,
+        eu.created_at as user_created_at,
+        eu.last_seen as user_last_seen,
+        eu.props as user_props
+      from
+          run r
+          left join external_user eu on r.external_user_id = eu.id
+      where
+          r.project_id in (select id from project where org_id = ${orgId})
           and r.id = ${id}
       order by
           r.created_at desc
@@ -208,11 +237,13 @@ runs.patch("/:id", async (ctx: Context) => {
 })
 
 runs.get("/:id/related", async (ctx) => {
+  const id = ctx.params.id
+
   const related = await sql`
     WITH RECURSIVE related_runs AS (
       SELECT r1.*
       FROM run r1
-      WHERE r1.id = ${ctx.params.id}
+      WHERE r1.id = ${id}
 
       UNION ALL
       SELECT r2.*

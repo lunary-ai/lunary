@@ -1,9 +1,6 @@
-import { Card, Group, Avatar, Stack, Rating, Text } from "@mantine/core"
-import { useColorScheme } from "@mantine/hooks"
+import { Group, Avatar, Stack, Rating, Text } from "@mantine/core"
 
 export default function SocialProof() {
-  const scheme = useColorScheme()
-
   return (
     <Group>
       <Avatar.Group>
@@ -18,8 +15,13 @@ export default function SocialProof() {
       </Avatar.Group>
       <Stack gap={0}>
         <Rating value={5} readOnly />
-        <Text color="dimmed">
-          <Text color={scheme === "light" ? "black" : "white"} span fw="bolder">
+        <Text c="dimmed">
+          <Text
+            c={"var(--mantine-color-default-color)"}
+            opacity={0.7}
+            span
+            fw="bolder"
+          >
             1000+
           </Text>{" "}
           AI devs build better apps

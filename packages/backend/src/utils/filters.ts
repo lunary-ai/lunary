@@ -7,6 +7,7 @@ const and = (arr: any = []) =>
 const or = (arr: any = []) =>
   arr.reduce((acc: any, x: any) => sql`(${acc} OR ${x})`)
 
+// TODO: unit tests
 export function convertChecksToSQL(filtersData: FilterLogic): any {
   const logicToSql = (logicElement: LogicElement): any => {
     if (Array.isArray(logicElement)) {

@@ -7,3 +7,11 @@ export async function setDefaultBody(ctx: Context, next: Next) {
     ctx.body = {}
   }
 }
+
+export function unCamelObject(obj: any): any {
+  const newObj: any = {}
+  for (const key in obj) {
+    newObj[key.replace(/([A-Z])/g, "_$1").toLowerCase()] = obj[key]
+  }
+  return newObj
+}

@@ -2,7 +2,7 @@ import DataTable from "@/components/Blocks/DataTable"
 
 import { Group, Stack, Text } from "@mantine/core"
 
-import { costColumn, timeColumn, userColumn } from "@/utils/datatable"
+import { costColumn, timeColumn } from "@/utils/datatable"
 
 import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
 import Empty from "@/components/Layout/Empty"
@@ -39,7 +39,7 @@ export default function Users() {
 
   return (
     <Empty
-      enable={!isLoading && users?.length === 0}
+      enable={!isLoading && users && users.length === 0}
       Icon={IconUsers}
       title="Find out who your users are"
       description="Users you identify from the SDKs will appear here."

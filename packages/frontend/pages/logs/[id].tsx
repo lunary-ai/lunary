@@ -1,43 +1,45 @@
-import postgres from "postgres"
-import RunInputOutput from "../../components/Blocks/RunInputOutput"
-import { Container, Stack } from "@mantine/core"
+import { Button, Container, Group, Loader, Stack, Text } from "@mantine/core"
+
+import RunInputOutput from "@/components/Blocks/RunInputOutput"
 import Logo from "@/components/Blocks/Logo"
 
-const sql = postgres(process.env.DATABASE_URL!)
+import useSWR from "swr"
+import { useRouter } from "next/router"
+import { useAuth } from "@/utils/auth"
+import Link from "next/link"
 
-export async function getServerSideProps(context) {
-  try {
-    const runId = context.query.id
+export default function PublicRun() {
+  const router = useRouter()
+  const id = router.query?.id as string
 
-    const [run] = await sql`select * from run where id = ${runId}`
+  const { isSignedIn } = useAuth()
 
-    if (run.is_public) {
-      return { props: { run: JSON.stringify(run) } }
-    }
-    return { props: { run: null } }
-  } catch (error) {
-    // TODO: would probably be better to redirect to an error page, or show an alert
-    return {
-      redirect: {
-        permanent: false,
-        destination: "/",
-      },
-      props: {},
-    }
-  }
-}
+  const { data, isLoading, error } = useSWR(
+    id && `/runs/${id}${isSignedIn ? "" : `/public`}`,
+  )
 
-export default function LLMCall(props) {
-  const run = JSON.parse(props.run)
   return (
     <Container size="sm">
       <Stack gap="xl">
-        <Logo />
-        <RunInputOutput
-          initialRun={run}
-          withPlayground={false}
-          withShare={false}
-        />
+        <Group justify="space-between">
+          <Logo />
+          {isSignedIn ? (
+            <Button component={Link} href="/">
+              Dashboard
+            </Button>
+          ) : (
+            <Text>The developer toolkit for LLM apps.</Text>
+          )}
+        </Group>
+        {isLoading && <Loader />}
+        {error && <Text>Could not get this log, it might not be public.</Text>}
+        {data && (
+          <RunInputOutput
+            initialRun={data}
+            withPlayground={false}
+            withShare={false}
+          />
+        )}
       </Stack>
     </Container>
   )

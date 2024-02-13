@@ -4,6 +4,8 @@ import {
   Card,
   Flex,
   Group,
+  HoverCard,
+  ScrollArea,
   Stack,
   Switch,
   Text,
@@ -14,6 +16,7 @@ import SmartViewer from "../SmartViewer"
 import TokensBadge from "./TokensBadge"
 import { useRun } from "@/utils/dataHooks"
 import { notifications } from "@mantine/notifications"
+import { SuperCopyButton } from "./CopyText"
 
 const isChatMessages = (obj) => {
   return Array.isArray(obj)
@@ -25,42 +28,113 @@ const isChatMessages = (obj) => {
 // This is the component that renders the input and output of a run
 // It also allow redirecting to the playground or sharing the run
 
-const ParamItem = ({ name, value }) => (
+const ParamItem = ({
+  name,
+  value,
+  render,
+  color = "blue",
+}: {
+  name: string
+  value: any
+  render?: (value: any) => React.ReactNode
+  color?: string
+}) => (
   <Group>
     <Text size="sm">{name}: </Text>
-    <Text size="sm">
-      {typeof value === "string" || typeof value === "number" ? (
-        <Badge variant="outline" style={{ textTransform: "none" }}>
-          {value}
-        </Badge>
-      ) : Array.isArray(value) ? (
-        value.map((v) => (
+    {render ? (
+      render(value)
+    ) : (
+      <Text size="sm">
+        {typeof value === "string" || typeof value === "number" ? (
           <Badge
-            key={JSON.stringify(v)}
             variant="outline"
             style={{ textTransform: "none" }}
+            color={color}
           >
-            {v}
+            {value}
           </Badge>
-        ))
-      ) : (
-        JSON.stringify(value)
-      )}
-    </Text>
+        ) : Array.isArray(value) ? (
+          value.map((v, i) => (
+            <Badge key={i} variant="outline" style={{ textTransform: "none" }}>
+              {v}
+            </Badge>
+          ))
+        ) : (
+          JSON.stringify(value)
+        )}
+      </Text>
+    )}
   </Group>
 )
 
-const PARAMS = {
-  temperature: "Temperature",
-  max_tokens: "Max tokens",
-  top_p: "Top P",
-  top_k: "Top K",
-  logit_bias: "Logit bias",
-  presence_penalty: "Presence penalty",
-  frequency_penalty: "Frequency penalty",
-  stop: "Stop",
-  seed: "Seed",
+// tools format: [
+//   {
+//     "type": "function",
+//     "function": {
+//       "name": "translate",
+//       "description": "Translate a text from one language to another",
+//       "parameters": {
+//         "type": "object",
+//         "properties": {
+//           "to": {
+//             "type": "string"
+//           },
+//           "from": {
+//             "type": "string"
+//           },
+//           "text": {
+//             "type": "string"
+//           }
+//         },
+//        "required": ["to", "from", "text"]
+//       }
+//     }
+//   }
+// ]
+
+function RenderTools(tools) {
+  return tools.map((tool, i) => {
+    return (
+      <HoverCard key={i}>
+        <HoverCard.Target>
+          <Badge
+            color="pink"
+            variant="outline"
+            style={{ textTransform: "none" }}
+          >
+            {tool.function?.name}
+          </Badge>
+        </HoverCard.Target>
+        <HoverCard.Dropdown miw={400}>
+          <ScrollArea.Autosize mah={300}>
+            <Stack>
+              {tool.function?.description && (
+                <Text size="sm">{tool.function?.description}</Text>
+              )}
+              <Text size="sm">
+                <pre>{JSON.stringify(tool.function?.parameters, null, 2)}</pre>
+              </Text>
+            </Stack>
+          </ScrollArea.Autosize>
+        </HoverCard.Dropdown>
+      </HoverCard>
+    )
+  })
 }
+
+const PARAMS = [
+  { key: "temperature", name: "Temperature" },
+  { key: "max_tokens", name: "Max tokens" },
+  { key: "top_p", name: "Top P" },
+  { key: "top_k", name: "Top K" },
+  { key: "logit_bias", name: "Logit bias" },
+  { key: "presence_penalty", name: "Presence penalty" },
+  { key: "frequency_penalty", name: "Frequency penalty" },
+  { key: "stop", name: "Stop" },
+  { key: "seed", name: "Seed" },
+  { key: "tools", name: "Tools", render: RenderTools },
+  { key: "tool_choice", name: "Tool Choice" },
+]
 
 export default function RunInputOutput({
   initialRun,
@@ -80,9 +154,25 @@ export default function RunInputOutput({
       {run?.type === "llm" && (
         <>
           {withShare && (
-            <Flex justify="right">
+            <Group justify="space-between">
+              <Group gap="xs">
+                <Text size="sm">
+                  Copy{" "}
+                  <Text span fw="bold">
+                    {run?.isPublic ? "public" : "private"}
+                  </Text>{" "}
+                  URL to share
+                </Text>
+                <SuperCopyButton
+                  value={`${window.location.origin}/logs/${run.id}`}
+                />
+              </Group>
               <Switch
-                label="Make public"
+                label={
+                  <Text size="sm" mr="sm">
+                    Make public
+                  </Text>
+                }
                 checked={run.isPublic}
                 color={run.isPublic ? "red" : "blue"}
                 onChange={async (e) => {
@@ -93,27 +183,42 @@ export default function RunInputOutput({
                     await navigator.clipboard.writeText(url)
 
                     notifications.show({
+                      top: 100,
                       title: "Run is now public",
                       message: "Link copied to clipboard",
                     })
                   }
                 }}
               />
-            </Flex>
+            </Group>
           )}
 
           <Card withBorder radius="md">
             <Group justify="space-between" align="start">
               <Stack gap="xs">
-                <ParamItem name="Model" value={run.name} />
+                <ParamItem
+                  name="Model"
+                  value={run.name}
+                  render={(value) => (
+                    <Badge
+                      variant="light"
+                      style={{ textTransform: "none" }}
+                      color="blue"
+                    >
+                      {value}
+                    </Badge>
+                  )}
+                />
 
-                {Object.entries(PARAMS).map(
-                  ([key, name]) =>
+                {PARAMS.map(
+                  ({ key, name, render }) =>
                     typeof run.params?.[key] !== "undefined" && (
                       <ParamItem
-                        key={name}
+                        key={key}
                         name={name}
+                        color="grey"
                         value={run.params?.[key]}
+                        render={render}
                       />
                     ),
                 )}

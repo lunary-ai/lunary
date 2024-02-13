@@ -1,10 +1,9 @@
 import { useMantineTheme } from "@mantine/core"
-import { useColorScheme } from "@mantine/hooks"
 import { useContext } from "react"
 import useSWR, { SWRConfiguration } from "swr"
 import useSWRInfinite from "swr/infinite"
 import { ProjectContext } from "./context"
-import { getUserColor } from "./colors"
+import { getUserColor, useFixedColorScheme } from "./colors"
 import useSWRMutation, { SWRMutationConfiguration } from "swr/mutation"
 
 import { fetcher } from "./fetcher"
@@ -31,7 +30,6 @@ function generateKey(
 
   return url
 }
-
 export function useProjectSWR(key?: KeyType, options?: SWRConfiguration) {
   const { projectId } = useContext(ProjectContext)
 
@@ -41,7 +39,7 @@ export function useProjectSWR(key?: KeyType, options?: SWRConfiguration) {
   )
 
   return {
-    data: data || [],
+    data,
     error,
     isLoading: projectId === null ? true : isLoading,
     isValidating,
@@ -100,7 +98,7 @@ export function useUser() {
   const { isSignedIn } = useAuth()
 
   const theme = useMantineTheme()
-  const scheme = useColorScheme()
+  const scheme = useFixedColorScheme()
 
   const { data, isLoading, mutate, error } = useSWR(
     () => isSignedIn && `/users/me`,
@@ -120,7 +118,7 @@ export function useOrg() {
   )
 
   const theme = useMantineTheme()
-  const scheme = useColorScheme()
+  const scheme = useFixedColorScheme()
 
   const users = data?.users?.map((user) => ({
     ...user,
@@ -140,7 +138,9 @@ export function useOrg() {
 export function useProjects() {
   const { isSignedIn } = useAuth()
 
-  const { data, isLoading, mutate } = useSWR(() => isSignedIn && `/projects`)
+  const { data, isLoading, isValidating, mutate } = useSWR(
+    () => isSignedIn && `/projects`,
+  )
 
   const { trigger: insertMutation } = useSWRMutation(
     () => `/projects`,

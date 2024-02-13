@@ -55,7 +55,7 @@ const TemplateListItem = ({
   activeVersion,
   rename,
   setRename,
-  switchTemplate,
+
   switchTemplateVersion,
 }) => {
   const { templates, mutate, insert } = useTemplates()
@@ -88,7 +88,7 @@ const TemplateListItem = ({
 
         mutate()
 
-        switchTemplate(null)
+        switchTemplateVersion(null, defaultTemplateVersion)
         // Router.push(`/prompts`)
       },
     })
@@ -132,8 +132,7 @@ const TemplateListItem = ({
 
     await mutate()
 
-    switchTemplate(newTemplate)
-    switchTemplateVersion(newTemplate?.versions[0])
+    switchTemplateVersion(newTemplate, newTemplate?.versions[0])
   }
 
   return (
@@ -170,7 +169,7 @@ const TemplateListItem = ({
         whiteSpace: "nowrap",
       }}
       leftSection={
-        <Menu withArrow>
+        <Menu>
           <Menu.Target>
             {active || hovered ? (
               <ActionIcon size="sm" radius="sm" variant="light">
@@ -212,8 +211,8 @@ const TemplateListItem = ({
         </Menu>
       }
       onClick={() => {
-        switchTemplate(template)
-        if (sortedVersions[0]) switchTemplateVersion(sortedVersions[0])
+        if (sortedVersions[0])
+          switchTemplateVersion(template, sortedVersions[0])
       }}
     >
       <ScrollArea.Autosize mah="200px">
@@ -251,7 +250,7 @@ const TemplateListItem = ({
                 </Text>
               </Group>
             }
-            onClick={() => switchTemplateVersion(version)}
+            onClick={() => switchTemplateVersion(template, version)}
           />
         ))}
       </ScrollArea.Autosize>
@@ -265,7 +264,6 @@ const TemplateList = ({
   rename,
   setRename,
   createTemplate,
-  switchTemplate,
   switchTemplateVersion,
 }) => {
   const { templates, loading } = useTemplates()
@@ -298,7 +296,6 @@ const TemplateList = ({
           activeVersion={activeVersion}
           rename={rename}
           setRename={setRename}
-          switchTemplate={switchTemplate}
           switchTemplateVersion={switchTemplateVersion}
         />
       ))}

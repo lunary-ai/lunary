@@ -42,11 +42,14 @@ const FilterInputs = {
         value={value}
         data={
           isDataObject
-            ? data?.map((d) => ({
-                value: `${d.value}`, // stringify to avoid issues with numbers
-                label: render ? render(d) : d.label,
-              }))
-            : data
+            ? data?.map((d) => {
+                console.log(d)
+                return {
+                  value: `${d.value}`, // stringify to avoid issues with numbers
+                  label: render ? render(d) : d.label,
+                }
+              })
+            : data?.filter((d) => Boolean(d) === true)
         }
       />
     ) : (

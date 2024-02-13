@@ -16,7 +16,6 @@ import {
 import { useForm } from "@mantine/form"
 import { IconAnalyze, IconAt, IconUser } from "@tabler/icons-react"
 
-import sql from "@/lib/db"
 import analytics from "@/utils/analytics"
 import { useAuth } from "@/utils/auth"
 import errorHandler from "@/utils/errors"
@@ -25,6 +24,9 @@ import { SEAT_ALLOWANCE } from "@/utils/pricing"
 import { NextSeo } from "next-seo"
 import Router, { useRouter } from "next/router"
 import Confetti from "react-confetti"
+import postgres from "postgres"
+
+const sql = postgres(process.env.DATABASE_URL!)
 
 export async function getServerSideProps(context) {
   const { orgId } = context.query
