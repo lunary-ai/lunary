@@ -100,7 +100,7 @@ create table evaluation_result (
   prompt_id uuid,
   variation_id uuid,
   model text not null,
-  output text not null,
+  output jsonb not null,
   results jsonb not null,
   passed boolean default false,
   completion_tokens integer,

@@ -32,6 +32,7 @@
     "rouge": "^1.0.3",
     "shared": "*",
     "stripe": "^14.14.0",
+    "washyourmouthoutwithsoap": "^1.0.2",
     "zod": "^3.22.4"
   },
   "devDependencies": {

@@ -425,9 +425,25 @@ export const CHECK_RUNNERS: CheckRunner[] = [
         passed = entities.every((entity) => result[entity]?.length === 0)
       }
 
+      let labels = {
+        PER: "Persons",
+        ORG: "Organizations",
+        LOC: "Locations",
+      }
+
+      let reason = "No entities detected"
+      if (passed) {
+        reason =
+          "Entities detected: " +
+          Object.keys(result)
+            .filter((key) => result[key].length > 0)
+            .map((key) => labels[key] + ": " + result[key].join(", "))
+            .join(", ")
+      }
+
       return {
         passed,
-        reason: `Entities detected: ${JSON.stringify(result)}`,
+        reason,
         details: result,
       }
     },
@@ -450,9 +466,14 @@ export const CHECK_RUNNERS: CheckRunner[] = [
 
       const passed = type === "contains" ? hasToxicity : !hasToxicity
 
+      let reason = "No toxicity detected"
+      if (hasToxicity) {
+        reason = `Toxicity detected: ${labels.join(", ")}`
+      }
+
       return {
         passed,
-        reason: `Toxicity detected: ${labels.join(", ")}`,
+        reason,
         details: { labels },
       }
     },

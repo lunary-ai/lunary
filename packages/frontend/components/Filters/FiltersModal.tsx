@@ -138,6 +138,7 @@ export default function FiltersModal({
                 <SimpleGrid cols={5} spacing="md">
                   {filteredFilters
                     .filter((filter) => filter.uiType === type.toLowerCase())
+                    .sort((a, b) => (a.soon ? 1 : -1))
                     .map((filter) => (
                       <FilterCard
                         key={filter.id}

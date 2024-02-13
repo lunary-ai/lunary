@@ -67,6 +67,10 @@ export async function runEval(
     // run checks
     const { passed, results } = await runChecksOnRun(virtualRun, checks)
 
+    console.log(`---------------------`)
+    console.log(output)
+    console.log(`---------------------`)
+
     // insert into eval_result
     await sql`
       insert into evaluation_result ${sql({
@@ -74,8 +78,8 @@ export async function runEval(
         promptId,
         variationId,
         model,
-        output: JSON.stringify(output),
-        results: JSON.stringify(results),
+        output,
+        results,
         passed,
         completionTokens,
         cost,

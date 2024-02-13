@@ -247,6 +247,7 @@ export const FILTERS: Filter[] = [
   {
     id: "cc",
     name: "Credit Card",
+    disableInEvals: true,
     uiType: "smart",
     params: [
       FIELD_PARAM,
@@ -260,6 +261,7 @@ export const FILTERS: Filter[] = [
   {
     id: "email",
     name: "Email",
+    disableInEvals: true,
     uiType: "smart",
     params: [
       FIELD_PARAM,
@@ -273,6 +275,7 @@ export const FILTERS: Filter[] = [
   {
     id: "phone",
     name: "Phone",
+    disableInEvals: true,
     uiType: "smart",
     params: [
       FIELD_PARAM,
@@ -445,7 +448,7 @@ export const FILTERS: Filter[] = [
         type: "select",
         id: "fields",
         width: 70,
-        defaultValue: "any",
+        defaultValue: "output",
         options: [
           {
             label: "Input",

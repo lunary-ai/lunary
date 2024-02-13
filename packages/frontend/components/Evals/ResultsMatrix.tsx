@@ -1,4 +1,12 @@
-import { Badge, Group, HoverCard, Progress, Stack, Text } from "@mantine/core"
+import {
+  Badge,
+  Group,
+  HoverCard,
+  Progress,
+  ScrollArea,
+  Stack,
+  Text,
+} from "@mantine/core"
 import classes from "./index.module.css"
 import { formatCost } from "@/utils/format"
 // We create a matrix of results for each prompt, variable and model.
@@ -80,8 +88,6 @@ const getPromptModelVariations = (results) => {
       ...getAggegateForVariation(variation.prompt, variation.model, results),
     }))
 
-  console.log(uniqueVariations)
-
   return uniqueVariations as {
     prompt: string
     model: string
@@ -92,13 +98,36 @@ const getPromptModelVariations = (results) => {
   }[]
 }
 
+function ResultDetails({ details }) {
+  if (typeof details !== "object") {
+    return <Text>Details not available</Text>
+  }
+
+  return (
+    <Stack>
+      {details.map(({ passed, reason, filterId }) => {
+        return (
+          <Group>
+            <Text>{filterId}</Text>
+            <Badge color={passed ? "green" : "red"}>
+              {passed ? "Passed" : "Failed"}
+            </Badge>
+            <Text>{reason}</Text>
+          </Group>
+        )
+      })}
+    </Stack>
+  )
+}
+
 export default function ResultsMatrix({ data }) {
-  console.log(data)
   const variableVariations = getVariableVariations(data)
 
   const pmVariations = getPromptModelVariations(data)
 
   const variables = Object.keys(variableVariations[0])
+
+  console.log(data)
 
   return (
     <table className={classes["matrix-table"]}>
@@ -165,16 +194,18 @@ export default function ResultsMatrix({ data }) {
                 <td>
                   {result ? (
                     <Stack align="center">
-                      <Text>{result.output.content}</Text>
+                      <ScrollArea.Autosize mah={300}>
+                        <Text>{result.output.content}</Text>
+                      </ScrollArea.Autosize>
 
-                      <HoverCard withArrow>
+                      <HoverCard withArrow width={500}>
                         <HoverCard.Target>
                           <Badge color={result.passed ? "green" : "red"}>
                             {result.passed ? "Passed" : "Failed"}
                           </Badge>
                         </HoverCard.Target>
                         <HoverCard.Dropdown>
-                          <Text>{JSON.stringify(result.results)}</Text>
+                          <ResultDetails details={result.results} />
                         </HoverCard.Dropdown>
                       </HoverCard>
                       <Group gap="xs">

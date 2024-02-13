@@ -98,7 +98,11 @@ async function checkRun(run: any, check: LogicElement): Promise<CheckResults> {
   return { filterId: runner.id, ...(await runner.evaluator!(run, params)) }
 }
 
-export async function runChecksOnRun(run: any, checks: FilterLogic) {
+export async function runChecksOnRun(
+  run: any,
+  checks: FilterLogic,
+  optimize = false,
+) {
   let passed = false
   const results: CheckResults[] = []
 
@@ -106,8 +110,7 @@ export async function runChecksOnRun(run: any, checks: FilterLogic) {
 
   const onlySQL = !hasNonSQLFilter(checks)
 
-  if (onlySQL) {
-    console.log(`ONLY SQL`)
+  if (onlySQL && optimize) {
     // More efficient to do it all in SQL if only SQL filters are used
     const filterSql = convertChecksToSQL(checks)
 

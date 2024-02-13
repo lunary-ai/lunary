@@ -140,12 +140,7 @@ evaluations.get("/result/:evaluationId", async (ctx: Context) => {
   where 
     er.evaluation_id = ${evaluationId}`
 
-  const evalResults = results.map((result) => ({
-    ...result,
-    output: JSON.parse(result.output),
-  }))
-
-  ctx.body = evalResults
+  ctx.body = results
 })
 
 evaluations.get("/", async (ctx: Context) => {
