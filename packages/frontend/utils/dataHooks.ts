@@ -40,7 +40,6 @@ export function useProjectSWR(key?: KeyType, options?: SWRConfiguration) {
     options,
   )
 
-  console.log(projectId, isLoading, projectId === null ? true : isLoading)
   return {
     data: data || [],
     error,

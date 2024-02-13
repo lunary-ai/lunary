@@ -16,7 +16,7 @@ function cosinesim(A: number[], B: number[]): number {
   mB = Math.sqrt(mB)
   var similarity = dotproduct / (mA * mB)
 
-  return similarity
+  return similarity * 100
 }
 
 function jaccardIndexSimilarity(str1: string, str2: string) {

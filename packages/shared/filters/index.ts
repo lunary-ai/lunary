@@ -819,7 +819,7 @@ export const FILTERS: Filter[] = [
     uiType: "ai",
     onlyInEvals: true,
     description: `Rouge (Recall-Oriented Understudy for Gisting Evaluation) is a metric used for evaluating the quality of generated text, especially in tasks like text summarization.`,
-    soon: true,
+
     params: [
       {
         type: "label",
@@ -827,8 +827,24 @@ export const FILTERS: Filter[] = [
       },
       PERCENT_PARAM,
       {
-        type: "label",
-        label: "ROUGE score",
+        type: "select",
+        id: "rouge",
+        width: 100,
+        defaultValue: "n",
+        options: [
+          {
+            value: "n",
+            label: "ROUGE-n",
+          },
+          {
+            value: "l",
+            label: "ROUGE-l",
+          },
+          {
+            value: "rouge-s",
+            label: "ROUGE-s",
+          },
+        ],
       },
     ],
   },

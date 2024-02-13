@@ -1,5 +1,5 @@
 import { Box, Button, Group, Select, Stack, Text } from "@mantine/core"
-import { Fragment, useEffect, useState } from "react"
+import { Fragment, useCallback, useEffect, useState } from "react"
 import { FILTERS, Filter, FilterLogic, FilterParam, LogicData } from "shared"
 import ErrorBoundary from "../Blocks/ErrorBoundary"
 import { AddFilterButton } from "./AddFilter"
@@ -153,21 +153,25 @@ export default function FilterPicker({
   const options = FILTERS.filter(restrictTo)
 
   // insert {id: filterId, params: { [param1]: defaultValue, [param2]: defaultValue }}
-  const insertFilter = (filter: Filter) => {
+  const insertFilters = (filters: Filter[]) => {
     const arr: FilterLogic =
       Array.isArray(value) && !!value.length ? [...value] : ["AND"]
 
-    const filterLogic = {
-      id: filter.id,
-      params: filter.params
-        .filter((param) => param.type !== "label")
-        .reduce((acc, { id, defaultValue }: FilterParam) => {
-          acc[id] = defaultValue
-          return acc
-        }, {}),
-    }
+    filters.forEach((filter) => {
+      const filterLogic = {
+        id: filter.id,
+        params: filter.params
+          .filter((param) => param.type !== "label")
+          .reduce((acc, { id, defaultValue }: FilterParam) => {
+            acc[id] = defaultValue
+            return acc
+          }, {}),
+      }
 
-    arr.push(filterLogic)
+      arr.push(filterLogic)
+    })
+
+    console.log(arr)
 
     onChange(arr)
   }
@@ -193,7 +197,7 @@ export default function FilterPicker({
           {minimal ? (
             <AddFilterButton
               filters={options}
-              onSelect={insertFilter}
+              onSelect={(filter) => insertFilters([filter])}
               defaultOpened={defaultOpened}
             />
           ) : (
@@ -210,12 +214,10 @@ export default function FilterPicker({
                 setOpened={setModalOpened}
                 filters={options}
                 onFinish={(ids) => {
-                  for (const id of ids) {
-                    const filter = options.find((option) => option.id === id)
-                    if (!filter) return
-
-                    insertFilter(filter)
-                  }
+                  const filters = ids
+                    .map((id) => options.find((option) => option.id === id))
+                    .filter(Boolean)
+                  insertFilters(filters)
                 }}
               />
             </>

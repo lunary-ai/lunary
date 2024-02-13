@@ -4,6 +4,7 @@ import aiNER from "./ai/ner"
 import aiSentiment from "./ai/sentiment"
 import aiSimilarity from "./ai/similarity"
 import aiToxicity from "./ai/toxic"
+import rouge from "rouge"
 
 export type CheckRunner = {
   id: string
@@ -366,6 +367,27 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   },
   {
     id: "system",
+  },
+  {
+    id: "rouge",
+    async evaluator(run, params) {
+      const { percent, rouge: rougeType } = params
+
+      const output = lastMsg(run["output"])
+
+      if (!run.context) throw new Error("No context to compare to")
+
+      const scorer = rouge[rougeType]
+
+      const rougeScore = scorer(output, run.context)
+
+      const passed = rougeScore >= parseInt(percent) / 100
+
+      return {
+        passed,
+        details: { rouge: rougeScore },
+      }
+    },
   },
   {
     id: "similarity",
