@@ -115,7 +115,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     evaluator: async (run, params) => {
       const { field, type } = params
       let passed = false
-      let details = null
+      let reason = ""
 
       const fieldText = lastMsg(run[field])
 
@@ -124,7 +124,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
           JSON.parse(fieldText)
           passed = true
         } catch (e: any) {
-          details = e.message
+          reason = e.message
         }
       } else if (type === "invalid") {
         try {
@@ -146,7 +146,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
 
       return {
         passed,
-        details,
+        reason,
       }
     },
   },
@@ -308,14 +308,18 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     async evaluator(run, params) {
       const { assertion } = params
 
-      const { passed, explanation } = await aiAssert(
+      console.log("assertion", assertion)
+      console.log("lastMsg(run['output'])", lastMsg(run["output"]))
+
+      const { passed, reason } = await aiAssert(
         lastMsg(run["output"]),
         assertion,
       )
 
       return {
         passed,
-        details: explanation,
+        reason,
+        details: { reason },
       }
     },
   },
@@ -336,12 +340,9 @@ export const CHECK_RUNNERS: CheckRunner[] = [
         passed = score >= 0.4 && score <= 0.7
       }
 
-      console.log(
-        `checking sentiment ${sentiment} with score ${score}: ${passed}`,
-      )
-
       return {
         passed,
+        reason: `Sentiment score: ${score}`,
         details: { sentiment: score },
       }
     },
@@ -351,14 +352,15 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     async evaluator(run, params) {
       const { persona } = params
       // using aiAsertion
-      const { passed, explanation } = await aiAssert(
+      const { passed, reason } = await aiAssert(
         lastMsg(run["output"]),
         `The tone of the response is spoken in a '${persona}' way.`,
       )
 
       return {
         passed,
-        details: explanation,
+        reason,
+        details: { reason },
       }
     },
   },
@@ -379,12 +381,13 @@ export const CHECK_RUNNERS: CheckRunner[] = [
 
       const scorer = rouge[rougeType]
 
-      const rougeScore = scorer(output, run.context)
+      const rougeScore = scorer(output, run.context) * 100
 
-      const passed = rougeScore >= parseInt(percent) / 100
+      const passed = rougeScore >= parseInt(percent)
 
       return {
         passed,
+        reason: `Rouge score: ${rougeScore} >= ${percent}%`,
         details: { rouge: rougeScore },
       }
     },
@@ -424,6 +427,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
 
       return {
         passed,
+        reason: `Entities detected: ${JSON.stringify(result)}`,
         details: result,
       }
     },
@@ -448,6 +452,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
 
       return {
         passed,
+        reason: `Toxicity detected: ${labels.join(", ")}`,
         details: { labels },
       }
     },
