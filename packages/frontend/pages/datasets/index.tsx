@@ -1,6 +1,5 @@
 import OrgUserBadge from "@/components/Blocks/OrgUserBadge"
-import Paywall from "@/components/Layout/Paywall"
-import { useDatasets, useEvaluations } from "@/utils/dataHooks"
+import { useDatasets } from "@/utils/dataHooks"
 import {
   ActionIcon,
   Badge,
@@ -14,22 +13,14 @@ import {
   Text,
   Title,
 } from "@mantine/core"
-import {
-  IconCopy,
-  IconDotsVertical,
-  IconEdit,
-  IconFlask2Filled,
-  IconPencil,
-  IconPlus,
-} from "@tabler/icons-react"
-import { useRouter } from "next/router"
+import { IconDotsVertical, IconPencil, IconPlus } from "@tabler/icons-react"
+import Router from "next/router"
 
 export default function Datasets() {
-  const router = useRouter()
   const { datasets, isLoading } = useDatasets()
 
   if (!isLoading && datasets.length === 0) {
-    router.push("/datasets/new")
+    Router.push("/datasets/new")
   }
 
   if (isLoading) {
@@ -52,7 +43,7 @@ export default function Datasets() {
             variant="light"
             color="blue"
             onClick={() => {
-              router.push("/datasets/new")
+              Router.push("/datasets/new")
             }}
           >
             New Dataset
@@ -65,7 +56,15 @@ export default function Datasets() {
 
         <Stack gap="xl">
           {datasets.map((dataset) => (
-            <Card key={dataset.id} p="lg" withBorder>
+            <Card
+              key={dataset.id}
+              p="lg"
+              style={{ cursor: "pointer" }}
+              withBorder
+              onClick={() => {
+                Router.push(`/datasets/${dataset.id}`)
+              }}
+            >
               <Group justify="space-between">
                 <Stack>
                   <Group>
@@ -87,7 +86,7 @@ export default function Datasets() {
                     <Menu.Dropdown>
                       <Menu.Item
                         leftSection={<IconPencil size={16} />}
-                        onClick={() => router.push(`/datasets/${dataset.id}`)}
+                        onClick={() => Router.push(`/datasets/${dataset.id}`)}
                       >
                         Edit
                       </Menu.Item>

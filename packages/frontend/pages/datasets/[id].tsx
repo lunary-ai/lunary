@@ -173,13 +173,21 @@ export default function NewDataset() {
 
   const [prompts, handlers] = useListState([defaultPrompt])
 
-  const isEdit = pathname?.split("/")?.at(-1) === "new"
+  const isEdit = pathname?.split("/")?.at(-1) !== "new"
   const title = isEdit ? "Edit Dataset" : "Create Dataset"
 
   return (
     <Container>
       <Stack gap="lg">
-        <Anchor href="/evaluations">← Back to evaluations</Anchor>
+        <Anchor
+          href="#"
+          onClick={(e) => {
+            e.preventDefault()
+            router.back()
+          }}
+        >
+          ← Back
+        </Anchor>
         <Stack>
           <Group align="center">
             <Title>{title}</Title>
