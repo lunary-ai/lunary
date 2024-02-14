@@ -162,7 +162,7 @@ datasets.patch("/", async (ctx: Context) => {
   }
 
   ctx.status = 200
-  ctx.body = {}
+  ctx.body = { datasetId }
 })
 // datasets.post("/:id/runs", async (ctx: Context) => {
 //   const { projectId, id } = ctx.params

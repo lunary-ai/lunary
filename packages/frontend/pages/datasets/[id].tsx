@@ -172,6 +172,7 @@ export default function NewDataset() {
   const {
     insert: insertDataset,
     isInserting,
+    isUpdating,
     update: updateDataset,
   } = useDatasets()
 
@@ -280,33 +281,29 @@ export default function NewDataset() {
         <Button
           display="inline-block"
           ml="auto"
-          loading={isInserting}
+          loading={isInserting || isUpdating}
           onClick={async () => {
-            console.log(prompts)
             if (!isEdit) {
               const { datasetId } = await insertDataset({
                 slug: generateSlug(2),
                 prompts,
               })
-              notifications.show({
-                icon: <IconCheck size={18} />,
-                color: "teal",
-                title: "Dataset save",
-              })
-              router.push("/evaluations")
+              router.push(`/datasets/${datasetId}`)
             } else {
-              await updateDataset({
+              const { datasetId } = await updateDataset({
                 datasetId: router.query.id,
                 prompts,
               })
 
-              notifications.show({
-                icon: <IconCheck size={18} />,
-                color: "teal",
-                title: "Dataset save",
-              })
-              // router.push(`/evaluations`)
+              router.push(`/datasets/${datasetId}`)
             }
+
+            notifications.show({
+              icon: <IconCheck size={18} />,
+              color: "teal",
+              title: "Dataset saved",
+              message: "",
+            })
           }}
         >
           Save Dataset
