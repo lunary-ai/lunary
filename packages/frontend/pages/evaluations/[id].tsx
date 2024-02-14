@@ -35,6 +35,8 @@ export default function EvalResults() {
       <Stack>
         <Anchor href="/evaluations">← Back to evaluations</Anchor>
         <Title>Results</Title>
+        {/* 
+        TODO: FIX GROUPING (currently it hides half of the results)
         <Group>
           <Text>Group by:</Text>
           <SegmentedControl
@@ -57,7 +59,7 @@ export default function EvalResults() {
             value={groupBy}
             onChange={setGroupBy}
           />
-        </Group>
+        </Group> */}
         {data?.length > 0 ? (
           <ResultsMatrix data={data} groupBy={groupBy} />
         ) : (

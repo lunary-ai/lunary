@@ -156,7 +156,7 @@ export default function ResultsMatrix({ data, groupBy = "none" }) {
                       <Stack align="center" gap="xs">
                         {model && <Badge variant="outline">{model}</Badge>}
                         {promptId && (
-                          <HoverCard width={500} h={100}>
+                          <HoverCard width={500} position="top">
                             <HoverCard.Target>
                               <div>
                                 <MessageViewer data={promptContent} compact />
