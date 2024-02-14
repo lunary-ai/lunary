@@ -1,19 +1,17 @@
 import OrgUserBadge from "@/components/Blocks/OrgUserBadge"
 import { useDatasets } from "@/utils/dataHooks"
 import {
-  ActionIcon,
   Badge,
   Button,
   Card,
   Container,
   Group,
   Loader,
-  Menu,
   Stack,
   Text,
   Title,
 } from "@mantine/core"
-import { IconDotsVertical, IconPencil, IconPlus } from "@tabler/icons-react"
+import { IconPencil, IconPlus } from "@tabler/icons-react"
 import Router from "next/router"
 
 export default function Datasets() {
@@ -70,30 +68,27 @@ export default function Datasets() {
                     >
                       {dataset.slug}
                     </Title>
-                    <Badge variant="light" radius="sm" color="blue" size="sm">
+                    <Badge
+                      variant="light"
+                      radius="sm"
+                      color="blue"
+                      size="md"
+                      tt="none"
+                    >
                       {`${dataset.promptCount} prompt${dataset.promptCount > 1 ? "s" : ""}`}
                     </Badge>
                   </Group>
                   <OrgUserBadge userId={dataset.ownerId} />
                 </Stack>
 
-                <Group>
-                  <Menu withArrow shadow="sm" position="bottom-end">
-                    <Menu.Target>
-                      <ActionIcon variant="transparent">
-                        <IconDotsVertical size={16} />
-                      </ActionIcon>
-                    </Menu.Target>
-                    <Menu.Dropdown>
-                      <Menu.Item
-                        leftSection={<IconPencil size={16} />}
-                        onClick={() => Router.push(`/datasets/${dataset.id}`)}
-                      >
-                        Edit
-                      </Menu.Item>
-                    </Menu.Dropdown>
-                  </Menu>
-                </Group>
+                <Button
+                  onClick={() => Router.push(`/datasets/${dataset.id}`)}
+                  size="sm"
+                  leftSection={<IconPencil size={16} />}
+                  variant="light"
+                >
+                  Edit Prompts
+                </Button>
               </Group>
             </Card>
           ))}
