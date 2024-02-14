@@ -90,7 +90,14 @@ export default function Evaluations() {
                 <Group justify="space-between">
                   <Stack>
                     <Group>
-                      <Title order={3} size={16}>
+                      <Title
+                        order={3}
+                        size={16}
+                        onClick={() =>
+                          router.push(`/evaluations/${evaluation.id}`)
+                        }
+                        style={{ cursor: "pointer" }}
+                      >
                         {evaluation.name}
                       </Title>
                       <Badge variant="light" radius="sm" color="teal" size="sm">
