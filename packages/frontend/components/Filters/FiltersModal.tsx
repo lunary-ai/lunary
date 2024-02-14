@@ -1,4 +1,5 @@
 import {
+  Anchor,
   Button,
   Card,
   Fieldset,
@@ -43,6 +44,7 @@ function FilterCard({
       onClick={() => !filter.soon && onItemClick(filter.id)}
       withBorder
       opacity={filter.soon ? 0.5 : 1}
+      style={{ justifyContent: "center" }}
     >
       <Tooltip label={filter.description} hidden={!filter.description}>
         <UnstyledButton disabled={filter.soon}>
@@ -61,13 +63,13 @@ function FilterCard({
             )}
           </Flex>
 
-          <Stack align="center" gap="0" pt="10" maw="100%">
+          <Stack align="center" gap="0" pt={5} maw="100%" justify="center">
             <uiData.icon color={theme.colors[uiData.color][7]} size="22px" />
             <Text size="xs" mt={7} fw="500" ta="center">
               {filter.name}
             </Text>
             {filter.soon && (
-              <Text size="xs" mt={7} fw="500" c="dimmed">
+              <Text size="xs" mb={-4} mt={7} fw="500" c="dimmed">
                 coming soon
               </Text>
             )}
@@ -134,10 +136,12 @@ export default function FiltersModal({
                     {type}
                   </Title>
                 }
+                pb="md"
               >
                 <SimpleGrid cols={5} spacing="md">
                   {filteredFilters
                     .filter((filter) => filter.uiType === type.toLowerCase())
+                    .sort((a, b) => (a.soon ? 1 : -1))
                     .map((filter) => (
                       <FilterCard
                         key={filter.id}
@@ -169,13 +173,26 @@ export default function FiltersModal({
           ))}
       </Stack>
 
-      <Flex
-        className={classes["footer-container"]}
+      <Group
         align="center"
-        justify="end"
+        justify="space-between"
+        mt="lg"
+        className={classes["footer-container "]}
       >
+        <Text c="dimmed" size="sm">
+          Need a check that's not here?{" "}
+          <Anchor
+            href="#"
+            onClick={() => {
+              $crisp.push(["do", "chat:open"])
+            }}
+            variant="transparent"
+          >
+            Ask us to add it →
+          </Anchor>
+        </Text>
         <Button
-          size="xs"
+          size="sm"
           onClick={() => {
             setOpened(false)
             onFinish(selected.map((s) => s.id))
@@ -184,7 +201,7 @@ export default function FiltersModal({
         >
           Add
         </Button>
-      </Flex>
+      </Group>
     </Modal>
   )
 }

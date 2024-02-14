@@ -16,7 +16,7 @@ const router = new Router({
   prefix: "/stripe",
 })
 
-const setupSubscription = async (object) => {
+const setupSubscription = async (object: Stripe.Checkout.Session) => {
   console.log("🔔 setupSubscription", object)
   const { customer, client_reference_id, mode, subscription, metadata } = object
 
@@ -26,12 +26,12 @@ const setupSubscription = async (object) => {
     throw new Error("client_reference_id is missing")
   }
 
-  const plan = metadata.plan || "pro"
-  const period = metadata.period || "monthly"
+  const plan = metadata?.plan || "pro"
+  const period = metadata?.period || "monthly"
 
   const orgData = {
-    stripeCustomer: customer,
-    stripeSubscription: subscription,
+    stripeCustomer: customer as string,
+    stripeSubscription: subscription as string,
     canceled: false,
     plan,
     planPeriod: period,
@@ -64,18 +64,18 @@ const setupSubscription = async (object) => {
   )
 }
 
-const updateSubscription = async (object) => {
+const updateSubscription = async (object: Stripe.Subscription) => {
   const { customer, cancel_at_period_end, metadata, cancellation_details } =
     object
 
-  const plan = metadata.plan || "pro"
-  const period = metadata.period || "monthly"
+  const plan = metadata.plan
+  const period = metadata.period
   const canceled = cancel_at_period_end
 
   const [currentOrg] = await sql`
     SELECT plan, plan_period, canceled
     FROM org
-    WHERE stripe_customer = ${customer}
+    WHERE stripe_customer = ${customer as string}
   `
 
   if (!currentOrg) {
@@ -83,9 +83,9 @@ const updateSubscription = async (object) => {
   }
 
   if (
-    currentOrg.plan === plan &&
-    currentOrg.plan_period === period &&
-    canceled === currentOrg.canceled
+    canceled === currentOrg.canceled &&
+    ((!plan && !period) ||
+      (currentOrg.plan === plan && currentOrg.plan_period === period))
   ) {
     console.log(`🔥 updateSubscription: nothing to update`)
     return
@@ -94,7 +94,7 @@ const updateSubscription = async (object) => {
   const [org] = await sql`
     UPDATE org
     SET ${sql({ plan, planPeriod: period, canceled })}
-    WHERE stripe_customer = ${customer}
+    WHERE stripe_customer = ${customer as string}
     RETURNING id, name
   `
 
@@ -115,7 +115,7 @@ const updateSubscription = async (object) => {
       `<b>😭💔 ${org.name} subscription canceled their plans</b>`,
       "revenue",
     )
-  } else {
+  } else if (plan || period) {
     await sendTelegramMessage(
       `<b>🔔 ${org.name} subscription updated to: ${plan} (${period})</b>`,
       "revenue",
@@ -123,13 +123,13 @@ const updateSubscription = async (object) => {
   }
 }
 
-const cancelSubscription = async (object) => {
+const cancelSubscription = async (object: Stripe.Subscription) => {
   const { customer } = object
 
   const [org] = await sql`
     UPDATE org
     SET ${sql({ plan: "free", canceled: false, stripeSubscription: null })} 
-    WHERE stripe_customer = ${customer}
+    WHERE stripe_customer = ${customer as string}
     RETURNING id, name
   `
 

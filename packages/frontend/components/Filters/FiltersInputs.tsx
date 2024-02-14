@@ -43,7 +43,6 @@ const FilterInputs = {
         data={
           isDataObject
             ? data?.map((d) => {
-                console.log(d)
                 return {
                   value: `${d.value}`, // stringify to avoid issues with numbers
                   label: render ? render(d) : d.label,
@@ -71,7 +70,9 @@ const FilterInputs = {
           value={value}
           onChange={(n) => onChange(n)}
         />
-        <Text size="xs">{unit}</Text>
+        <Text ta="center" pr="xs" size="xs">
+          {unit}
+        </Text>
       </Flex>
     )
   },

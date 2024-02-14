@@ -135,4 +135,22 @@ users.post("/send-verification", async (ctx: Context) => {
   ctx.body = { ok: true }
 })
 
+users.get("/:userId", async (ctx: Context) => {
+  const { userId } = ctx.params
+  const { orgId } = ctx.state
+
+  const [user] = await sql`
+      select
+        id,
+        name,
+        email,
+        verified
+      from
+        account
+      where
+        id = ${userId} and org_id = ${orgId}`
+
+  ctx.body = user
+})
+
 export default users

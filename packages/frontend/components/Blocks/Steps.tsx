@@ -1,8 +1,13 @@
 import { Box, Group, Text, Title } from "@mantine/core"
 
-function Steps({ children }) {
+function Steps({ children, ...props }) {
   return (
-    <Box my="xl" ml={32} style={{ borderLeft: "2px solid #eee" }}>
+    <Box
+      my="xl"
+      ml={32}
+      style={{ borderLeft: "2px solid var(--mantine-color-default-border)" }}
+      {...props}
+    >
       {children}
     </Box>
   )
@@ -17,8 +22,8 @@ Steps.Step = ({ label, n, children }) => (
           width: 48,
           height: 48,
           borderRadius: 24,
-          border: "2px solid #eee",
-          backgroundColor: "#fff",
+          border: "2px solid var(--mantine-color-default-border)",
+          backgroundColor: "var(--mantine-color-body)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",

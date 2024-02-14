@@ -1,40 +1,31 @@
+import OrgUserBadge from "@/components/Blocks/OrgUserBadge"
+import { useDatasets } from "@/utils/dataHooks"
 import {
+  ActionIcon,
   Badge,
   Button,
   Card,
   Container,
   Group,
+  Loader,
+  Menu,
   Stack,
   Text,
   Title,
-  UnstyledButton,
 } from "@mantine/core"
-import { IconPlus } from "@tabler/icons-react"
-import { formatDateTime } from "@/utils/format"
-import { useState } from "react"
+import { IconDotsVertical, IconPencil, IconPlus } from "@tabler/icons-react"
 import Router from "next/router"
-import { useDatasets } from "@/utils/dataHooks"
-
-function Dataset({ id, slug, updatedAt, runs }) {
-  return (
-    <Card withBorder>
-      <UnstyledButton onClick={() => Router.push(`/datasets/${id}`)}>
-        <Stack gap="xs">
-          <Text size="lg" w={700}>
-            {slug}
-          </Text>
-          <Text size="sm" c="dimmed">
-            Updated {formatDateTime(updatedAt)}
-          </Text>
-        </Stack>
-      </UnstyledButton>
-    </Card>
-  )
-}
 
 export default function Datasets() {
-  const [setModalOpened] = useState(false)
-  const { datasets, loading, insert, mutate } = useDatasets()
+  const { datasets, isLoading } = useDatasets()
+
+  if (!isLoading && datasets.length === 0) {
+    Router.push("/datasets/new")
+  }
+
+  if (isLoading) {
+    return <Loader />
+  }
 
   return (
     <Container>
@@ -51,24 +42,62 @@ export default function Datasets() {
             leftSection={<IconPlus size={12} />}
             variant="light"
             color="blue"
-            onClick={async () => {
-              await insert({
-                slug: `dataset-${(datasets?.length || 0) + 1}`,
-              })
-
-              mutate()
+            onClick={() => {
+              Router.push("/datasets/new")
             }}
           >
-            New
+            New Dataset
           </Button>
+          <Text size="lg" mb="md">
+            Datasets are collections of prompts that you can use as a basis for
+            evaluations.
+          </Text>
         </Group>
 
-        <Text size="xl" mb="md">
-          Create testing datasets to use for your agents or as a basis for
-          fine-tuning your models.
-        </Text>
+        <Stack gap="xl">
+          {datasets.map((dataset) => (
+            <Card key={dataset.id} p="lg" withBorder>
+              <Group justify="space-between">
+                <Stack>
+                  <Group>
+                    <Title
+                      style={{ cursor: "pointer" }}
+                      order={3}
+                      size={16}
+                      onClick={() => {
+                        Router.push(`/datasets/${dataset.id}`)
+                      }}
+                    >
+                      {dataset.slug}
+                    </Title>
+                    <Badge variant="light" radius="sm" color="blue" size="sm">
+                      {`${dataset.promptCount} prompt${dataset.promptCount > 1 ? "s" : ""}`}
+                    </Badge>
+                  </Group>
+                  <OrgUserBadge userId={dataset.ownerId} />
+                </Stack>
 
-        <Stack>{datasets?.map((dataset) => <Dataset {...dataset} />)}</Stack>
+                <Group>
+                  <Menu withArrow shadow="sm" position="bottom-end">
+                    <Menu.Target>
+                      <ActionIcon variant="transparent">
+                        <IconDotsVertical size={16} />
+                      </ActionIcon>
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      <Menu.Item
+                        leftSection={<IconPencil size={16} />}
+                        onClick={() => Router.push(`/datasets/${dataset.id}`)}
+                      >
+                        Edit
+                      </Menu.Item>
+                    </Menu.Dropdown>
+                  </Menu>
+                </Group>
+              </Group>
+            </Card>
+          ))}
+        </Stack>
       </Stack>
     </Container>
   )

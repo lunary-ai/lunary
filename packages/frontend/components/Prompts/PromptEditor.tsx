@@ -59,10 +59,7 @@ export function PromptEditor({
           variant="transparent"
           color="gray"
           onClick={() => {
-            const newContent = [
-              ...(value || []),
-              { content: " ", role: "user" },
-            ]
+            const newContent = [...(value || []), { content: "", role: "user" }]
             onChange(newContent)
           }}
         >

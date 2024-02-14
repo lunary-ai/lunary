@@ -243,11 +243,6 @@ function Playground() {
     [hasChanges],
   )
 
-  const switchTemplateVersion = (v) => {
-    setTemplateVersion(v)
-    router.push(`/prompts/${v.id}`)
-  }
-
   const createTemplate = async () => {
     confirmDiscard(async () => {
       const slug = generateSlug(2)
@@ -336,7 +331,7 @@ function Playground() {
           body: JSON.stringify({
             content: templateVersion.content,
             extra: templateVersion.extra,
-            testValues: templateVersion.testValues,
+            variables: templateVersion.testValues,
           }),
         },
       )
@@ -379,6 +374,17 @@ function Playground() {
     revalidateUser()
 
     setStreaming(false)
+  }
+
+  // reset output when the template or template version changes
+  useEffect(() => {
+    setOutput(null)
+    setOutputTokens(0)
+  }, [template?.id, templateVersion?.id])
+
+  const switchTemplateVersion = (v) => {
+    setTemplateVersion(v)
+    router.push(`/prompts/${v.id}`)
   }
 
   const extraHandler = (key: string, isCheckbox?: boolean) => ({
@@ -750,11 +756,11 @@ function Playground() {
                       key={variable}
                       align="center"
                       justify="space-between"
-                      gap={0}
+                      gap={6}
                     >
                       <Badge
                         key={variable}
-                        maw={90}
+                        maw={200}
                         variant="outline"
                         style={{ textTransform: "none" }}
                       >

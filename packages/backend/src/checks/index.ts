@@ -1,7 +1,11 @@
 import sql from "../utils/db"
+import aiAssert from "./ai/assert"
+import aiFact from "./ai/fact"
 import aiNER from "./ai/ner"
 import aiSentiment from "./ai/sentiment"
+import aiSimilarity from "./ai/similarity"
 import aiToxicity from "./ai/toxic"
+import rouge from "rouge"
 
 export type CheckRunner = {
   id: string
@@ -109,21 +113,41 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   },
   {
     id: "json",
-
     evaluator: async (run, params) => {
-      const { type } = params
+      const { field, type } = params
       let passed = false
+      let reason = ""
 
-      // todo: contains, partial, equals,..
+      const fieldText = lastMsg(run[field])
 
-      try {
-        if (!run.output.startsWith("{")) throw "Not an object"
-        JSON.parse(run.output)
-        passed = true
-      } catch (e) {}
+      if (type === "valid") {
+        try {
+          JSON.parse(fieldText)
+          passed = true
+        } catch (e: any) {
+          reason = e.message
+        }
+      } else if (type === "invalid") {
+        try {
+          JSON.parse(fieldText)
+          passed = false
+        } catch (e) {}
+      } else if (type === "contains") {
+        const regex = /{.*?}/gs // Non-greedy match on anything between {}
+        const matches = fieldText.match(regex)
+        if (matches) {
+          passed = matches.some((match) => {
+            try {
+              JSON.parse(match)
+              return true // Found valid JSON
+            } catch (e) {}
+          })
+        }
+      }
 
       return {
         passed,
+        reason,
       }
     },
   },
@@ -175,7 +199,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       const regexPattern = sql`[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+`
       const operator = type === "contains" ? sql`~` : sql`!~`
 
-      return sql`${sql(field + "_text")} ${operator} '${regexPattern}'`
+      return sql`${sql(field + "_text")}::text ${operator} '${regexPattern}'`
     },
   },
   {
@@ -281,11 +305,24 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     },
   },
   {
-    id: "ai-assertion",
+    id: "assertion",
+    async evaluator(run, params) {
+      const { assertion } = params
 
-    // async evaluator(run, params) {
-    //   return {}
-    // },
+      console.log("assertion", assertion)
+      console.log("lastMsg(run['output'])", lastMsg(run["output"]))
+
+      const { passed, reason } = await aiAssert(
+        lastMsg(run["output"]),
+        assertion,
+      )
+
+      return {
+        passed,
+        reason,
+        details: { reason },
+      }
+    },
   },
   {
     id: "sentiment",
@@ -304,27 +341,92 @@ export const CHECK_RUNNERS: CheckRunner[] = [
         passed = score >= 0.4 && score <= 0.7
       }
 
-      console.log(
-        `checking sentiment ${sentiment} with score ${score}: ${passed}`,
-      )
-
       return {
         passed,
+        reason: `Sentiment score: ${score}`,
         details: { sentiment: score },
       }
     },
   },
   {
     id: "tone",
+    async evaluator(run, params) {
+      const { persona } = params
+      // using aiAsertion
+      const { passed, reason } = await aiAssert(
+        lastMsg(run["output"]),
+        `The tone of the response is spoken in a '${persona}' way.`,
+      )
+
+      return {
+        passed,
+        reason,
+        details: { reason },
+      }
+    },
   },
   {
     id: "factualness",
+    async evaluator(run, params) {
+      const { choices } = params
+
+      const input = lastMsg(run["input"])
+      const output = lastMsg(run["output"])
+
+      if (!run.idealOutput) throw new Error("No ideal response to compare to")
+
+      const { result, reason } = await aiFact(input, output, run.idealOutput)
+
+      const passed = choices.includes(result)
+
+      return {
+        passed,
+        reason,
+      }
+    },
   },
   {
     id: "system",
   },
   {
+    id: "rouge",
+    async evaluator(run, params) {
+      const { percent, rouge: rougeType } = params
+
+      const output = lastMsg(run["output"])
+
+      if (!run.context) throw new Error("No context to compare to")
+
+      const scorer = rouge[rougeType]
+
+      const rougeScore = scorer(output, run.context) * 100
+
+      const passed = rougeScore >= parseInt(percent)
+
+      return {
+        passed,
+        reason: `Rouge score: ${rougeScore} >= ${percent}%`,
+        details: { rouge: rougeScore },
+      }
+    },
+  },
+  {
     id: "similarity",
+    async evaluator(run, params) {
+      const { algorithm, percent } = params
+      const output = lastMsg(run["output"])
+
+      if (!run.idealOutput) throw new Error("No ideal response to compare to")
+
+      const similarity = await aiSimilarity(output, run.idealOutput, algorithm)
+
+      const passed = similarity >= percent
+
+      return {
+        passed,
+        details: { similarity },
+      }
+    },
   },
   {
     id: "entities",
@@ -341,8 +443,25 @@ export const CHECK_RUNNERS: CheckRunner[] = [
         passed = entities.every((entity) => result[entity]?.length === 0)
       }
 
+      let labels = {
+        PER: "Persons",
+        ORG: "Organizations",
+        LOC: "Locations",
+      }
+
+      let reason = "No entities detected"
+      if (passed) {
+        reason =
+          "Entities detected: " +
+          Object.keys(result)
+            .filter((key) => result[key].length > 0)
+            .map((key) => labels[key] + ": " + result[key].join(", "))
+            .join(", ")
+      }
+
       return {
         passed,
+        reason,
         details: result,
       }
     },
@@ -365,8 +484,14 @@ export const CHECK_RUNNERS: CheckRunner[] = [
 
       const passed = type === "contains" ? hasToxicity : !hasToxicity
 
+      let reason = "No toxicity detected"
+      if (hasToxicity) {
+        reason = `Toxicity detected: ${labels.join(", ")}`
+      }
+
       return {
         passed,
+        reason,
         details: { labels },
       }
     },

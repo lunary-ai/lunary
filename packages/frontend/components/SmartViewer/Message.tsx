@@ -1,5 +1,6 @@
 import { getColorForRole, useFixedColorScheme } from "@/utils/colors"
 import {
+  Box,
   Code,
   Flex,
   Paper,
@@ -190,16 +191,42 @@ function ChatMessageContent({
   )
 }
 
+function RoleSelector({ data, color, scheme, onChange }) {
+  return (
+    <Select
+      variant="unstyled"
+      size="xs"
+      mb={5}
+      mt={-2}
+      w={80}
+      allowDeselect={false}
+      withCheckIcon={false}
+      color={color}
+      styles={{
+        input: {
+          opacity: 0.7,
+          color: color + "." + (scheme === "dark" ? 2 : 8),
+        },
+      }}
+      value={data?.role}
+      data={["ai", "assistant", "user", "system", "function", "tool"]}
+      onChange={(role) => onChange({ ...data, role })}
+    />
+  )
+}
+
 export function ChatMessage({
   data,
   editable = false,
   onChange,
   compact = false,
+  mah,
 }: {
   data: any
   editable?: boolean
   onChange?: any
   compact?: boolean
+  mah?: number
 }) {
   // TODO FIX
   // Flickering dark mode bug: this is due to scheme being 'light' for a few ms
@@ -215,9 +242,9 @@ export function ChatMessage({
     <Paper
       p={compact ? 0 : 12}
       pt={compact ? 0 : 8}
-      mah={compact ? 80 : undefined}
+      mah={mah || (compact ? 80 : undefined)}
       style={{
-        overflow: "hidden",
+        overflow: mah ? "scroll" : "hidden",
         backgroundColor: `var(--mantine-color-${color}-${
           scheme === "light" ? 2 : color === "gray" ? 7 : 9
         })`,
@@ -225,30 +252,24 @@ export function ChatMessage({
       }}
     >
       {!compact && (
-        <Text
-          mb={5}
-          size="xs"
-          color={color + "." + (scheme === "dark" ? 2 : 8)}
-        >
+        <>
           {editable ? (
-            <Select
-              variant="unstyled"
-              size="xs"
-              w={75}
-              withCheckIcon={false}
-              styles={{
-                input: {
-                  color: "inherit",
-                },
-              }}
-              value={data?.role}
-              data={["ai", "assistant", "user", "system", "function", "tool"]}
-              onChange={(role) => onChange({ ...data, role })}
+            <RoleSelector
+              data={data}
+              onChange={onChange}
+              color={color}
+              scheme={scheme}
             />
           ) : (
-            data?.role
+            <Text
+              c={color + "." + (scheme === "dark" ? 2 : 8)}
+              mb={5}
+              size="xs"
+            >
+              {data.role}
+            </Text>
           )}
-        </Text>
+        </>
       )}
 
       <ChatMessageContent
