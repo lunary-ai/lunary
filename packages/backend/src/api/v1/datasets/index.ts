@@ -106,8 +106,6 @@ datasets.patch("/", async (ctx: Context) => {
         returning *
       `
 
-      console.log("HERE")
-      console.log(updatedPrompt)
       for (const variation of variations) {
         const variationToInsert = {
           promptId: updatedPrompt.id,
@@ -119,7 +117,6 @@ datasets.patch("/", async (ctx: Context) => {
         await sql`insert into dataset_prompt_variation ${sql(variationToInsert)} returning *`
       }
     } else {
-      console.log("SALKSJDLASKDJ")
       const [insertedPrompt] = await sql`insert into dataset_prompt 
       ${sql({
         datasetId,
