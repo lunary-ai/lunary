@@ -83,9 +83,10 @@ export async function getDatasetBySlug(slug: string, projectId: string) {
 
   for (const { promptMessages, variables, idealOutput } of rows) {
     const prompt = {
-      messages: promptMessages.map((message) =>
-        replaceVariables(message.content, variables),
-      ),
+      messages: promptMessages.map((message) => ({
+        content: replaceVariables(message.content, variables),
+        role: message.role,
+      })),
       idealOutput,
     }
     dataset.prompts.push(prompt)
