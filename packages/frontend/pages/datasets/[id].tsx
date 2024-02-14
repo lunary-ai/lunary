@@ -16,6 +16,7 @@ import {
   Title,
 } from "@mantine/core"
 import { useListState } from "@mantine/hooks"
+import { IconPlus } from "@tabler/icons-react"
 import { usePathname } from "next/navigation"
 import { useRouter } from "next/router"
 import { generateSlug } from "random-word-slugs"
@@ -40,7 +41,6 @@ const defaultPrompt = {
 }
 
 function PromptTab({ prompt, setPrompt }) {
-  console.log(prompt)
   const { messages, variations } = prompt
 
   const promptVariables = usePromptVariables(messages)
@@ -90,7 +90,7 @@ function PromptTab({ prompt, setPrompt }) {
   const hasVariables = Object.keys(promptVariables).length > 0
 
   return (
-    <>
+    <Stack>
       <PromptEditor
         onChange={(value) => setMessages(value)}
         value={messages}
@@ -129,7 +129,7 @@ function PromptTab({ prompt, setPrompt }) {
           </Stack>
         </Fieldset>
       ))}
-    </>
+    </Stack>
   )
   {
     /* 
@@ -193,18 +193,25 @@ export default function NewDataset() {
           </Text>
         </Stack>
 
-        <Button w="100" onClick={() => handlers.append(defaultPrompt)}>
-          Add Prompt
-        </Button>
+        <Tabs value={activeTab} onChange={setActiveTab} variant="pills">
+          <Group justify="space-between" mb="lg">
+            <Tabs.List>
+              {prompts.map((_, i) => (
+                <Tabs.Tab key={i} value={`prompt-${i + 1}`}>
+                  {`Prompt ${i + 1} `}
+                </Tabs.Tab>
+              ))}
+            </Tabs.List>
 
-        <Tabs value={activeTab} onChange={setActiveTab}>
-          <Tabs.List>
-            {prompts.map((prompt, i) => (
-              <Tabs.Tab key={i} value={`prompt-${i + 1}`}>
-                {`Prompt ${i + 1} `}
-              </Tabs.Tab>
-            ))}
-          </Tabs.List>
+            <Button
+              leftSection={<IconPlus size={12} />}
+              variant="outline"
+              onClick={() => handlers.append(defaultPrompt)}
+              size="sm"
+            >
+              Add Prompt
+            </Button>
+          </Group>
 
           {prompts.map((prompt, i) => (
             <Tabs.Panel value={`prompt-${i + 1}`}>

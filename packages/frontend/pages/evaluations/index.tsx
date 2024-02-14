@@ -16,10 +16,12 @@ import {
 } from "@mantine/core"
 import {
   IconCopy,
+  IconDatabase,
   IconDotsVertical,
   IconFlask2Filled,
   IconPlus,
 } from "@tabler/icons-react"
+import Link from "next/link"
 import { useRouter } from "next/router"
 
 const FEATURE_LIST = [
@@ -58,16 +60,24 @@ export default function Evaluations() {
               </Badge>
             </Group>
 
-            <Button
-              leftSection={<IconPlus size={12} />}
-              variant="light"
-              color="blue"
-              onClick={() => {
-                router.push("/evaluations/new")
-              }}
-            >
-              New evaluation
-            </Button>
+            <Group>
+              <Button
+                leftSection={<IconDatabase size={12} />}
+                variant="light"
+                component={Link}
+                href="/datasets"
+              >
+                Datasets
+              </Button>
+              <Button
+                leftSection={<IconPlus size={12} />}
+                color="blue"
+                component={Link}
+                href="/evaluations/new"
+              >
+                New evaluation
+              </Button>
+            </Group>
           </Group>
 
           <Text size="lg" mb="md">
