@@ -1,4 +1,5 @@
 import { Context, Next } from "koa"
+import { z } from "zod"
 
 export async function setDefaultBody(ctx: Context, next: Next) {
   await next()
@@ -14,4 +15,9 @@ export function unCamelObject(obj: any): any {
     newObj[key.replace(/([A-Z])/g, "_$1").toLowerCase()] = obj[key]
   }
   return newObj
+}
+
+export function validateUUID(string: string) {
+  const uuidSchema = z.string().uuid()
+  return uuidSchema.safeParse(string).success
 }
