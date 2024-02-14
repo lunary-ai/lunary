@@ -184,17 +184,29 @@ export const FILTERS: Filter[] = [
   {
     id: "json",
     name: "JSON",
-    soon: true,
+    description: "Checks if the given field is valid JSON.",
     uiType: "smart",
     params: [
-      {
-        label: "Response",
-        type: "label",
-      },
+      FIELD_PARAM,
       FORMAT_PARAM,
       {
         type: "label",
         label: "JSON",
+      },
+    ],
+  },
+  {
+    id: "python",
+    name: "Python",
+    description: "Checks if the given field is valid python code.",
+    soon: true,
+    uiType: "smart",
+    params: [
+      FIELD_PARAM,
+      FORMAT_PARAM,
+      {
+        type: "label",
+        label: "Python",
       },
     ],
   },
@@ -235,6 +247,7 @@ export const FILTERS: Filter[] = [
   {
     id: "cc",
     name: "Credit Card",
+    disableInEvals: true,
     uiType: "smart",
     params: [
       FIELD_PARAM,
@@ -248,6 +261,7 @@ export const FILTERS: Filter[] = [
   {
     id: "email",
     name: "Email",
+    disableInEvals: true,
     uiType: "smart",
     params: [
       FIELD_PARAM,
@@ -261,6 +275,7 @@ export const FILTERS: Filter[] = [
   {
     id: "phone",
     name: "Phone",
+    disableInEvals: true,
     uiType: "smart",
     params: [
       FIELD_PARAM,
@@ -433,7 +448,7 @@ export const FILTERS: Filter[] = [
         type: "select",
         id: "fields",
         width: 70,
-        defaultValue: "any",
+        defaultValue: "output",
         options: [
           {
             label: "Input",
@@ -533,12 +548,11 @@ export const FILTERS: Filter[] = [
     ],
   },
   {
-    id: "ai-assertion",
-    name: "AI Assertion",
+    id: "assertion",
+    name: "Assertion",
     uiType: "ai",
-    // soon: true,
     description:
-      "Checks if the output matches the given requirement, using a gpt-3.5-turbo to grade the output.",
+      "Checks if the output matches the given requirement, using GPT-4 to grade the output.",
     onlyInEvals: true,
     params: [
       {
@@ -546,20 +560,10 @@ export const FILTERS: Filter[] = [
         label: "Output",
       },
       {
-        type: "select",
-        id: "aiAssertion",
+        type: "text",
+        id: "assertion",
         placeholder: "Is spoken like a pirate",
         width: 140,
-        options: [
-          {
-            label: "Correct",
-            value: "correct",
-          },
-          {
-            label: "Incorrect",
-            value: "incorrect",
-          },
-        ],
       },
     ],
   },
@@ -601,18 +605,15 @@ export const FILTERS: Filter[] = [
   {
     id: "tone",
     name: "Tone",
-    soon: true,
     uiType: "ai",
     onlyInEvals: true,
     description:
-      "Assesses if the tone of LLM responses matches with the desired persona.",
-
+      "Assesses if the tone of the LLM response matches with the desired persona.",
     params: [
       {
         type: "label",
-        label: "Tone of output is more than",
+        label: "Tone of output matches",
       },
-      PERCENT_PARAM,
       {
         type: "select",
         id: "persona",
@@ -620,14 +621,13 @@ export const FILTERS: Filter[] = [
         width: 140,
         options: [
           {
-            label: "Helpful assistant",
+            label: "Helpful Assistant",
             value: "helpful",
           },
           {
             label: "Formal",
             value: "formal",
           },
-
           {
             label: "Casual",
             value: "casual",
@@ -641,10 +641,62 @@ export const FILTERS: Filter[] = [
             value: "friendly",
           },
           {
+            label: "Professional",
+            value: "professional",
+          },
+          {
+            label: "Instructive",
+            value: "instructive",
+          },
+          {
+            label: "Authoritative",
+            value: "authoritative",
+          },
+          {
+            label: "Informative",
+            value: "informative",
+          },
+          {
+            label: "Sarcastic",
+            value: "sarcastic",
+          },
+          {
+            label: "Humorous",
+            value: "humorous",
+          },
+          {
+            label: "Empathetic",
+            value: "empathetic",
+          },
+          {
+            label: "Enthusiastic",
+            value: "enthusiastic",
+          },
+          {
+            label: "Motivational",
+            value: "motivational",
+          },
+          {
+            label: "Curious",
+            value: "curious",
+          },
+          {
+            label: "Sincere",
+            value: "sincere",
+          },
+          {
+            label: "Witty",
+            value: "witty",
+          },
+          {
             label: "Pirate",
             value: "pirate",
           },
         ],
+      },
+      {
+        type: "label",
+        label: "persona",
       },
     ],
   },
@@ -652,11 +704,58 @@ export const FILTERS: Filter[] = [
     id: "factualness",
     name: "Factualness",
     uiType: "ai",
-    // soon: true,
+
     onlyInEvals: true,
     description:
-      "Checks if the output is factually correct compared to a given context",
-
+      "Checks how correct the LLM's response is compared to the ideal output (ues OpenAI's eval prompt).",
+    params: [
+      {
+        type: "label",
+        label: "The answer",
+      },
+      {
+        type: "select",
+        id: "choices",
+        defaultValue: ["b", "c"],
+        multiple: true,
+        width: 200,
+        options: [
+          {
+            label: "is a subset of",
+            value: "a",
+          },
+          {
+            label: "is a superset of",
+            value: "b",
+          },
+          {
+            label: "contains all the same details as",
+            value: "c",
+          },
+          {
+            label: "disagrees with",
+            value: "d",
+          },
+          {
+            label: "differs (but doesn't matter from a factual standpoint)",
+            value: "e",
+          },
+        ],
+      },
+      {
+        type: "label",
+        label: "the ideal output",
+      },
+    ],
+  },
+  {
+    id: "relevancy",
+    name: "Relevancy",
+    uiType: "ai",
+    soon: true,
+    onlyInEvals: true,
+    description:
+      "Checks if the LLM's response is relevant given the context and the prompt.",
     params: [
       {
         type: "label",
@@ -665,7 +764,7 @@ export const FILTERS: Filter[] = [
       PERCENT_PARAM,
       {
         type: "label",
-        label: "correct compared to context",
+        label: "relevant",
       },
     ],
   },
@@ -687,6 +786,7 @@ export const FILTERS: Filter[] = [
   {
     id: "system",
     name: "System Guidelines",
+    soon: true,
     uiType: "ai",
     onlyInEvals: true,
     description: `Checks if the output matches guidelines set in the 'system' message.`,
@@ -704,11 +804,10 @@ export const FILTERS: Filter[] = [
   },
   {
     id: "similarity",
-    name: "Output Similarity",
+    name: "Similarity",
     uiType: "ai",
-    // soon: true,
     onlyInEvals: true,
-    description: `Ensure the output is similar to a given expected output (gold output).`,
+    description: `Check if the output is similar to a given ideal output with various algorithms.`,
     params: [
       {
         type: "label",
@@ -717,7 +816,66 @@ export const FILTERS: Filter[] = [
       PERCENT_PARAM,
       {
         type: "label",
-        label: "similar to expected output",
+        label: "similar to ideal output using",
+      },
+      {
+        type: "select",
+        id: "algorithm",
+        width: 100,
+        defaultValue: "ai",
+        options: [
+          {
+            value: "ai",
+            label: "Smart AI",
+          },
+          {
+            label: "Cosine (vector)",
+            value: "cosine",
+          },
+          {
+            label: "Jaccard",
+            value: "jaccard",
+          },
+        ],
+      },
+      {
+        type: "label",
+        label: "similarity",
+      },
+    ],
+  },
+  {
+    id: "rouge",
+    name: "ROUGE",
+    uiType: "ai",
+    onlyInEvals: true,
+    description: `Rouge (Recall-Oriented Understudy for Gisting Evaluation) is a metric used for evaluating the quality of generated text, especially in tasks like text summarization.`,
+
+    params: [
+      {
+        type: "label",
+        label: "Output is >=",
+      },
+      PERCENT_PARAM,
+      {
+        type: "select",
+        id: "rouge",
+        width: 100,
+        defaultValue: "n",
+        options: [
+          {
+            value: "n",
+            label: "ROUGE-n",
+          },
+          {
+            value: "l",
+            label: "ROUGE-l",
+          },
+          {
+            value: "rouge-s",
+            label: "ROUGE-s",
+          },
+        ],
       },
     ],
   },

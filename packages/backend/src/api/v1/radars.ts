@@ -135,12 +135,12 @@ radars.get("/", async (ctx) => {
   const { projectId } = ctx.state
 
   const [hasRadar] = await sql`
-    SELECT 1 FROM radar WHERE project_id = ${projectId}
+    select 1 from radar where project_id = ${projectId}
   `
 
   if (!hasRadar) {
     await sql`
-      INSERT INTO radar ${sql(
+      insert into radar ${sql(
         DEFAULT_RADARS.map((radar) => ({
           ...radar,
           projectId,
@@ -225,7 +225,7 @@ radars.post("/", async (ctx) => {
   }
 
   const [row] = await sql`
-    INSERT INTO radar ${sql({
+    insert into radar ${sql({
       description,
       view: sql.json(view),
       checks: sql.json(checks),
@@ -234,7 +234,7 @@ radars.post("/", async (ctx) => {
       projectId,
       ownerId: userId,
     })}
-    RETURNING *
+    returning *
   `
 
   ctx.body = row
@@ -253,22 +253,22 @@ radars.patch("/:radarId", async (ctx) => {
   }
 
   const [row] = await sql`
-    UPDATE radar
-    SET ${sql({
+    update radar
+    set ${sql({
       description,
       view: sql.json(view),
       checks: sql.json(checks),
       negative,
       // alerts: sql.json(alerts),
     })}
-      WHERE id = ${radarId} AND project_id = ${projectId}
-      RETURNING *
+      where id = ${radarId} and project_id = ${projectId}
+      returning *
       `
 
   // if checks or view is modified, delete all radar results
   if (checks || view) {
     await sql`
-      DELETE FROM radar_result WHERE radar_id = ${row.id}
+      delete from radar_result where radar_id = ${row.id}
     `
   }
 
@@ -281,9 +281,9 @@ radars.delete("/:radarId", async (ctx) => {
 
   const [row] = await sql`
     delete from radar
-    WHERE id = ${radarId}
-    AND project_id = ${projectId}
-    RETURNING *
+    where id = ${radarId}
+    and project_id = ${projectId}
+    returning *
   `
   ctx.body = row
 })

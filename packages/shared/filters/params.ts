@@ -11,9 +11,13 @@ export const FORMAT_PARAM: FilterParam = {
       value: "valid",
     },
     {
-      label: "Is partial",
-      value: "partial",
+      label: "Is invalid",
+      value: "invalid",
     },
+    // {
+    //   label: "Is partial",
+    //   value: "partial",
+    // },
     {
       label: "Contains valid",
       value: "contains",

@@ -143,7 +143,7 @@ const FILTERS_UI_DATA = {
     icon: IconTools,
     color: "gray",
   },
-  "ai-assertion": {
+  assertion: {
     icon: IconEyeCheck,
     color: "blue",
   },

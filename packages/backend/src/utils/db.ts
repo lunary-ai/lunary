@@ -10,7 +10,7 @@ const sql = postgres(process.env.DATABASE_URL!, {
 
     undefined: null,
   },
-  max: isProduction ? 50 : 1,
+  max: isProduction ? 50 : 5,
   connection: {
     application_name: `backend-${isProduction ? "production" : "development"}-${new Date().getTime()}`,
   },
