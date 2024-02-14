@@ -182,17 +182,14 @@ export default function NewDataset() {
   const [prompts, handlers] = useListState(DEFAULT_PROMPT)
 
   useEffect(() => {
-    if (dataset) {
+    if (dataset?.prompt?.lengths) {
       const defaultPrompts = dataset?.prompts?.map((prompt) => ({
         messages: prompt.content,
         variations: prompt.variations,
       }))
-      console.log(defaultPrompts)
       handlers.setState(defaultPrompts)
     }
   }, [dataset])
-
-  console.log(prompts)
 
   const isEdit = pathname?.split("/")?.at(-1) !== "new"
   const title = isEdit ? "Edit Dataset" : "Create Dataset"
@@ -239,7 +236,7 @@ export default function NewDataset() {
             <Button
               leftSection={<IconPlus size={12} />}
               variant="outline"
-              onClick={() => handlers.append(defaultPrompt)}
+              onClick={() => handlers.append(DEFAULT_PROMPT)}
               size="sm"
             >
               Add Prompt
@@ -269,10 +266,9 @@ export default function NewDataset() {
               notifications.show({
                 icon: <IconCheck size={18} />,
                 color: "teal",
-                title: "Email sent 💌",
-                message:
-                  "Check your emails to verify your email. Please check your spam folder as we currently have deliverability issues.",
+                title: "Dataset save",
               })
+              router.push(evaluations)
             } else {
               await updateDataset({
                 id: router.query.id,
