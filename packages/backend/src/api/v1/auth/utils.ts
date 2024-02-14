@@ -72,6 +72,7 @@ const publicRoutes = [
   `/v1/template_versions/latest`,
   "/v1/users/verify-email",
   "/v1/users/send-verification",
+  new RegExp(`/v1/datasets/.+`), // getDataSets in SDKs
 ]
 export async function authMiddleware(ctx: Context, next: Next) {
   ctx.state.projectId = ctx.request?.query?.projectId as string
