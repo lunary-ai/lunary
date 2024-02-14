@@ -4,6 +4,7 @@ import {
   HoverCard,
   Progress,
   ScrollArea,
+  SegmentedControl,
   Stack,
   Text,
 } from "@mantine/core"
@@ -25,15 +26,15 @@ import { ChatMessage } from "../SmartViewer/Message"
 // }
 
 function getResultForVariation(
-  prompt: string,
+  promptId: string,
   variables: { [key: string]: string },
   model: string,
   evalResults,
 ): any | undefined {
   return evalResults.find(
     (result) =>
-      result.prompt === prompt &&
-      result.model === model &&
+      (promptId ? result.promptId === promptId : true) &&
+      (model ? result.model === model : true) &&
       Object.keys(variables).every(
         (variable) => result.variables[variable] === variables[variable],
       ),
@@ -41,7 +42,7 @@ function getResultForVariation(
 }
 
 const getAggegateForVariation = (
-  prompt: string,
+  promptId: string,
   model: string,
   evalResults,
 ): {
@@ -51,7 +52,9 @@ const getAggegateForVariation = (
   cost: number // average cost
 } => {
   const results = evalResults.filter(
-    (result) => result.prompt === prompt && result.model === model,
+    (result) =>
+      (promptId ? result.promptId === promptId : true) &&
+      (model ? result.model === model : true),
   )
 
   return {
@@ -72,33 +75,40 @@ const getVariableVariations = (results) => {
   const uniqueVariations = Array.from(
     new Set(variations.map((variation) => JSON.stringify(variation))),
   ).map((variation) => JSON.parse(variation))
+
   return uniqueVariations as { [key: string]: string }[]
 }
 
-const getPromptModelVariations = (results) => {
-  const variations = results.map((result) => ({
-    prompt: result.prompt,
-    model: result.model,
+const getPromptModelVariations = (results, groupBy = "none") => {
+  let variations = results.map((result) => ({
+    promptId: groupBy !== "model" ? result.promptId : null,
+    model: groupBy !== "prompt" ? result.model : "",
   }))
+
   const uniqueVariations = Array.from(
     new Set(variations.map((variation) => JSON.stringify(variation))),
   )
     .map((variation) => JSON.parse(variation))
-    .map((variation) => ({
-      ...variation,
-      ...getAggegateForVariation(variation.prompt, variation.model, results),
-    }))
+    .map((variation) => {
+      return {
+        ...variation,
+        ...getAggegateForVariation(
+          variation.promptId,
+          variation.model,
+          results,
+        ),
+      }
+    })
 
   return uniqueVariations as {
-    prompt: string
-    model: string
+    promptId?: string
+    model?: string
     passed: number
     failed: number
     duration: number
     cost: number
   }[]
 }
-
 function ResultDetails({ details }) {
   if (typeof details !== "object") {
     return <Text>Details not available</Text>
@@ -121,111 +131,115 @@ function ResultDetails({ details }) {
   )
 }
 
-export default function ResultsMatrix({ data }) {
+export default function ResultsMatrix({ data, groupBy = "none" }) {
   console.log(data)
   const variableVariations = getVariableVariations(data)
 
-  const pmVariations = getPromptModelVariations(data)
+  const pmVariations = getPromptModelVariations(data, groupBy)
 
-  const variables = Object.keys(variableVariations[0])
+  const variables = Array.from(new Set(variableVariations.flatMap(Object.keys)))
 
   return (
-    <div className={classes["matrix-container"]}>
-      <table className={classes["matrix-table"]}>
-        <thead>
-          <tr>
-            <th colSpan={variables.length}>Variables</th>
-            <th colSpan={data.length}>Results</th>
-          </tr>
-          <tr>
-            {variables.map((variable, i) => (
-              <th key={variable}>{variable}</th>
-            ))}
-            {pmVariations.map(
-              ({ model, prompt, passed, failed, duration, cost }, index) => {
-                return (
-                  <th key={index}>
-                    <Stack align="center" gap="xs">
-                      <Badge variant="outline">{model}</Badge>
-                      {passed + failed > 1 && (
-                        <Progress.Root size={20} w={100}>
-                          <Progress.Section
-                            value={(passed / (passed + failed)) * 100}
-                            color="green"
-                          >
-                            <Progress.Label>{`${passed}`}</Progress.Label>
-                          </Progress.Section>
-                          <Progress.Section
-                            value={(failed / (passed + failed)) * 100}
-                            color="red"
-                          >
-                            <Progress.Label>{failed}</Progress.Label>
-                          </Progress.Section>
-                        </Progress.Root>
-                      )}
-                      <Group>
-                        <Text size="xs" c="dimmed">
-                          avg. {duration}s
-                        </Text>
-                        <Text size="xs" c="dimmed">
-                          avg. {formatCost(cost)}
-                        </Text>
-                      </Group>
-
-                      <Text>{prompt}</Text>
-                    </Stack>
-                  </th>
-                )
-              },
-            )}
-          </tr>
-        </thead>
-        <tbody>
-          {variableVariations.map((variableVariation, i) => (
-            <tr key={i}>
-              {variables.map((variable) => (
-                <td>{variableVariation[variable]}</td>
+    <Stack>
+      <div className={classes["matrix-container"]}>
+        <table className={classes["matrix-table"]}>
+          <thead>
+            <tr>
+              <th colSpan={variables.length}>Variables</th>
+              <th colSpan={data.length}>Results</th>
+            </tr>
+            <tr>
+              {variables.map((variable, i) => (
+                <th key={variable}>{variable}</th>
               ))}
-              {pmVariations.map((pmVariation, k) => {
-                const result = getResultForVariation(
-                  pmVariation.prompt,
-                  variableVariation,
-                  pmVariation.model,
-                  data,
-                )
-                return (
-                  <td className={classes["output-cell"]} key={k}>
-                    {result ? (
-                      <Stack align="center" justify="between" h="100%">
-                        <ChatMessage data={result.output} mah={200} compact />
-
-                        <HoverCard withArrow width={500}>
-                          <HoverCard.Target>
-                            <Badge color={result.passed ? "green" : "red"}>
-                              {result.passed ? "Passed" : "Failed"}
-                            </Badge>
-                          </HoverCard.Target>
-                          <HoverCard.Dropdown>
-                            <ResultDetails details={result.results} />
-                          </HoverCard.Dropdown>
-                        </HoverCard>
-                        <Group gap="xs">
-                          <Text c="dimmed" size="xs">
-                            {(+result.duration / 1000).toFixed(2)}s -{" "}
-                            {formatCost(result.cost)}
+              {pmVariations.map(
+                (
+                  { model, promptId, passed, failed, duration, cost },
+                  index,
+                ) => {
+                  return (
+                    <th key={index}>
+                      <Stack align="center" gap="xs">
+                        {model && <Badge variant="outline">{model}</Badge>}
+                        {promptId && <Text>{promptId}</Text>}
+                        {passed + failed > 1 && (
+                          <Progress.Root size={20} w={100}>
+                            <Progress.Section
+                              value={(passed / (passed + failed)) * 100}
+                              color="green"
+                            >
+                              <Progress.Label>{`${passed}`}</Progress.Label>
+                            </Progress.Section>
+                            <Progress.Section
+                              value={(failed / (passed + failed)) * 100}
+                              color="red"
+                            >
+                              <Progress.Label>{failed}</Progress.Label>
+                            </Progress.Section>
+                          </Progress.Root>
+                        )}
+                        <Group>
+                          <Text size="xs" c="dimmed">
+                            avg. {duration}s
+                          </Text>
+                          <Text size="xs" c="dimmed">
+                            avg. {formatCost(cost)}
                           </Text>
                         </Group>
                       </Stack>
-                    ) : (
-                      <Badge color="gray">N/A</Badge>
-                    )}
-                  </td>
-                )
-              })}
+                    </th>
+                  )
+                },
+              )}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {variableVariations.map((variableVariation, i) => (
+              <tr key={i}>
+                {variables.map((variable) => (
+                  <td>{variableVariation[variable]}</td>
+                ))}
+                {pmVariations.map((pmVariation, k) => {
+                  const result = getResultForVariation(
+                    pmVariation.promptId,
+                    variableVariation,
+                    pmVariation.model,
+                    data,
+                  )
+                  return (
+                    <td className={classes["output-cell"]} key={k}>
+                      {result ? (
+                        <Stack align="center" justify="between" h="100%">
+                          <ChatMessage data={result.output} mah={200} compact />
+
+                          <HoverCard withArrow width={500}>
+                            <HoverCard.Target>
+                              <Badge color={result.passed ? "green" : "red"}>
+                                {result.passed ? "Passed" : "Failed"}
+                              </Badge>
+                            </HoverCard.Target>
+                            <HoverCard.Dropdown>
+                              <ResultDetails details={result.results} />
+                            </HoverCard.Dropdown>
+                          </HoverCard>
+                          <Group gap="xs">
+                            <Text c="dimmed" size="xs">
+                              {(+result.duration / 1000).toFixed(2)}s -{" "}
+                              {formatCost(result.cost)}
+                            </Text>
+                          </Group>
+                        </Stack>
+                      ) : (
+                        <Badge color="gray">N/A</Badge>
+                      )}
+                    </td>
+                  )
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Stack>
   )
 }

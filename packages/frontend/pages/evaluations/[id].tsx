@@ -1,13 +1,25 @@
 import ResultsMatrix from "@/components/Evals/ResultsMatrix"
 import { useProjectSWR } from "@/utils/dataHooks"
-import { Anchor, Box, Container, Loader, Title } from "@mantine/core"
+import {
+  Anchor,
+  Box,
+  Container,
+  Group,
+  Loader,
+  SegmentedControl,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core"
 import { useRouter } from "next/router"
+import { useState } from "react"
 
 // We create a matrix of results for each prompt, variable and model.
 // The matrix is a 3D array, where each dimension represents a different
 
 export default function EvalResults() {
   const router = useRouter()
+  const [groupBy, setGroupBy] = useState("none")
 
   const { data, isLoading } = useProjectSWR(
     router.query.id && `/evaluations/result/${router.query.id}`,
@@ -17,15 +29,45 @@ export default function EvalResults() {
     return <Loader />
   }
 
+  const handleGroupByChange = (value) => {
+    setGroupBy(value)
+  }
+
   return (
     <Container size="100%">
       <Box mb="md">
         <Anchor href="/evaluations">← Back to evaluations</Anchor>
       </Box>
-      <Box>
+      <Stack>
         <Title>Results</Title>
-        {data.length > 0 ? <ResultsMatrix data={data} /> : <p>No data</p>}
-      </Box>
+        <Group>
+          <Text>Group by:</Text>
+          <SegmentedControl
+            w="fit-content"
+            data={[
+              {
+                value: "none",
+                label: "None",
+              },
+              {
+                value: "model",
+                label: "Model",
+              },
+              {
+                value: "prompt",
+                label: "Prompt",
+              },
+            ]}
+            value={groupBy}
+            onChange={setGroupBy}
+          />
+        </Group>
+        {data.length > 0 ? (
+          <ResultsMatrix data={data} groupBy={groupBy} />
+        ) : (
+          <p>No data</p>
+        )}
+      </Stack>
     </Container>
   )
 }
