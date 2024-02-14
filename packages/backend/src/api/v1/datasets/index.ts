@@ -2,7 +2,8 @@ import sql from "@/src/utils/db"
 import Context from "@/src/utils/koa"
 import Router from "koa-router"
 import { z } from "zod"
-import { getDataset } from "./utils"
+import { getDatasetById, getDatasetBySlug } from "./utils"
+import { validateUUID } from "@/src/utils/misc"
 
 const datasets = new Router({
   prefix: "/datasets",
@@ -32,16 +33,31 @@ datasets.get("/", async (ctx: Context) => {
   ctx.body = rows
 })
 
-datasets.get("/:id", async (ctx: Context) => {
+datasets.get("/:identifier", async (ctx: Context) => {
   const { projectId } = ctx.state
-  const { id } = ctx.params
+  const { identifier } = ctx.params
 
-  const dataset = await getDataset(id)
-  if (dataset.projectId !== projectId) {
-    ctx.throw(401, "Not Authorized")
+  const isUUID = validateUUID(identifier)
+
+  if (isUUID) {
+    // For frontend
+    const datasetId = identifier
+    const dataset = await getDatasetById(datasetId)
+
+    // TODO: projectId protection
+    // if (dataset.projectId !== projectId) {
+    //   ctx.throw(401, "Not Authorized")
+    // }
+    ctx.body = dataset
+    return
+  } else {
+    // For SDK
+    const slug = identifier
+    const dataset = await getDatasetBySlug(slug, projectId)
+
+    ctx.body = dataset
+    return
   }
-
-  ctx.body = dataset
 })
 
 datasets.post("/", async (ctx: Context) => {
