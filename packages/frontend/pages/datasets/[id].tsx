@@ -3,6 +3,7 @@ import { PromptEditor } from "@/components/Prompts/PromptEditor"
 import { useDatasets, useDataset } from "@/utils/dataHooks"
 import { usePromptVariables } from "@/utils/promptsHooks"
 import {
+  ActionIcon,
   Anchor,
   Badge,
   Button,
@@ -18,7 +19,7 @@ import {
 } from "@mantine/core"
 import { useListState } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
-import { IconPlus, IconCheck } from "@tabler/icons-react"
+import { IconPlus, IconCheck, IconTrash } from "@tabler/icons-react"
 import { usePathname } from "next/navigation"
 import { useRouter } from "next/router"
 import { generateSlug } from "random-word-slugs"
@@ -232,12 +233,25 @@ export default function NewDataset() {
         </Stack>
 
         <Tabs value={activeTab} onChange={setActiveTab} variant="pills">
-          <Group justify="space-between" mb="lg">
+          <Group justify="space-between" mb="lg" wrap={false}>
             <Tabs.List>
               {prompts.map((_, i) => (
-                <Tabs.Tab key={i} value={`prompt-${i + 1}`}>
-                  {`Prompt ${i + 1} `}
-                </Tabs.Tab>
+                <Group key={i} pos="relative">
+                  <Tabs.Tab value={`prompt-${i + 1}`}>
+                    {`Prompt ${i + 1}`}
+                  </Tabs.Tab>
+                  <ActionIcon
+                    style={{ zIndex: 3 }}
+                    pos="absolute"
+                    right={-10}
+                    top={-10}
+                    color="red"
+                    variant="subtle"
+                    onClick={() => handlers.remove(i)}
+                  >
+                    <IconTrash size={16} />
+                  </ActionIcon>
+                </Group>
               ))}
             </Tabs.List>
 
@@ -252,10 +266,12 @@ export default function NewDataset() {
           </Group>
 
           {prompts.map((prompt, i) => (
-            <Tabs.Panel value={`prompt-${i + 1}`}>
+            <Tabs.Panel key={i} value={`prompt-${i + 1}`}>
               <PromptTab
                 prompt={prompt}
-                setPrompt={(prompt) => handlers.setItem(i, prompt)}
+                setPrompt={(updatedPrompt) =>
+                  handlers.setItem(i, updatedPrompt)
+                }
               />
             </Tabs.Panel>
           ))}
