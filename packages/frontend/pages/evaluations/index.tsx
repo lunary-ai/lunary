@@ -71,7 +71,7 @@ export default function Evaluations() {
           </Group>
 
           <Text size="lg" mb="md">
-            Evaluate and compare LLM outputs from various models and prompt
+            Evaluate and compare LLM responses with various models and prompt
             variations.
           </Text>
 

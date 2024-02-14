@@ -1,29 +1,10 @@
-import {
-  Badge,
-  Group,
-  HoverCard,
-  Progress,
-  ScrollArea,
-  SegmentedControl,
-  Stack,
-  Text,
-} from "@mantine/core"
+import { Badge, Group, HoverCard, Progress, Stack, Text } from "@mantine/core"
 import classes from "./index.module.css"
 import { formatCost } from "@/utils/format"
 import { ChatMessage } from "../SmartViewer/Message"
-// We create a matrix of results for each prompt, variable and model.
-// The matrix is a 3D array, where each dimension represents a different
 
-// type EvalResult = {
-//   model: string
-//   prompt: string
-//   variables: {
-//     [key: string]: string
-//   }
-//   latency: number
-//   output: string
-//   passed: boolean
-// }
+// We create a matrix of results for each prompt, variable and model.
+// The matrix is a 3D array, where each dimension represents a different variable, prompt and model.
 
 function getResultForVariation(
   promptId: string,
@@ -132,7 +113,6 @@ function ResultDetails({ details }) {
 }
 
 export default function ResultsMatrix({ data, groupBy = "none" }) {
-  console.log(data)
   const variableVariations = getVariableVariations(data)
 
   const pmVariations = getPromptModelVariations(data, groupBy)

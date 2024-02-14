@@ -35,15 +35,14 @@ export default function EvalResults() {
 
   return (
     <Container size="100%">
-      <Box mb="md">
-        <Anchor href="/evaluations">← Back to evaluations</Anchor>
-      </Box>
       <Stack>
+        <Anchor href="/evaluations">← Back to evaluations</Anchor>
         <Title>Results</Title>
         <Group>
           <Text>Group by:</Text>
           <SegmentedControl
-            w="fit-content"
+            w={200}
+            size="xs"
             data={[
               {
                 value: "none",

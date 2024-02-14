@@ -3,7 +3,6 @@
 }
 
 .matrix-table {
-  margin: 32px auto;
   border-collapse: collapse;
   border-spacing: 0;
   border: 1px solid var(--mantine-color-default-border);

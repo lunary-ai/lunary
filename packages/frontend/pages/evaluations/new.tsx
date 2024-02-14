@@ -15,6 +15,7 @@ import {
   Group,
   Modal,
   MultiSelect,
+  Progress,
   Stack,
   Text,
   Textarea,
@@ -177,6 +178,9 @@ export default function NewEvaluation() {
   const [models, setModels] = useState(["gpt-4-turbo-preview", "gpt-3.5-turbo"])
 
   const [loading, setLoading] = useState(false)
+
+  const [progress, setProgress] = useState(0)
+
   const router = useRouter()
 
   const [promptModalOpened, setPromptModalOpened] = useState(false)
@@ -186,11 +190,22 @@ export default function NewEvaluation() {
   async function startEval() {
     setLoading(true)
 
+    const timeEstimate = models.length * prompts.length * 5
+    setProgress(0)
+
+    let interval = setInterval(() => {
+      setProgress((progress) =>
+        Math.min(100, progress + 100 / timeEstimate, 100),
+      )
+    }, 1000)
+
     const res = await errorHandler(
       fetcher.post(`/evaluations?projectId=${project.id}`, {
         arg: evaluation,
       }),
     )
+
+    clearInterval(interval)
 
     setLoading(false)
 
@@ -288,6 +303,10 @@ export default function NewEvaluation() {
               />
             </Steps.Step>
           </Steps>
+
+          {loading && progress > 0 && (
+            <Progress radius="md" size="lg" value={progress} animated />
+          )}
 
           <Tooltip
             label="You need to add at least one prompt, one model, and one check to start an Evaluation"
