@@ -72,7 +72,7 @@ export default function Datasets() {
                       {dataset.slug}
                     </Title>
                     <Badge variant="light" radius="sm" color="blue" size="sm">
-                      {dataset.promptCount} prompts
+                      {`${dataset.promptCount} prompt${dataset.promptCount > 1 ? "s" : ""}`}
                     </Badge>
                   </Group>
                   <Text size="14px" mt="6" c="dimmed">

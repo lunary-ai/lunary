@@ -4,6 +4,7 @@ export async function getDataset(datasetId: string) {
   const rows = await sql`
     select
       d.id as id,
+      d.project_id as project_id,
       d.slug as slug,
       p.id as prompt_id,
       d.owner_id as owner_id,
@@ -21,7 +22,6 @@ export async function getDataset(datasetId: string) {
     `
 
   const { id, slug, projectId, ownerId } = rows[0]
-  console.log(rows)
 
   const dataset = {
     id,

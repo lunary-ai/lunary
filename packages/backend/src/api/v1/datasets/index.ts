@@ -38,6 +38,9 @@ datasets.get("/:id", async (ctx: Context) => {
   const { id } = ctx.params
 
   const dataset = await getDataset(id)
+  if (dataset.projectId !== projectId) {
+    ctx.throw(401, "Not Authorized")
+  }
 
   ctx.body = dataset
 })
@@ -50,7 +53,8 @@ datasets.post("/", async (ctx: Context) => {
   })
 
   const { slug } = body.parse(ctx.request.body)
-  const { prompt, variations } = ctx.request.body
+  console.log(ctx.request.body)
+  const { prompts } = ctx.request.body
 
   const [insertedDataset] = await sql`
     insert into dataset ${sql({
@@ -59,24 +63,24 @@ datasets.post("/", async (ctx: Context) => {
       projectId,
     })} returning *
   `
-  console.log(prompt)
 
-  const [insertedPrompt] = await sql`insert into dataset_prompt 
+  for (const { messages, variations } of prompts) {
+    const [insertedPrompt] = await sql`insert into dataset_prompt 
     ${sql({
       datasetId: insertedDataset.id,
-      messages: prompt,
+      messages,
     })} 
     returning *`
+    for (const variation of variations) {
+      const variationToInsert = {
+        promptId: insertedPrompt.id,
+        variables: variation.variables,
+        context: variation.context,
+        idealOutput: variation.idealOutput,
+      }
 
-  for (const variation of variations) {
-    const variationToInsert = {
-      promptId: insertedPrompt.id,
-      variables: variation.variables,
-      context: variation.context,
-      idealOutput: variation.idealOutput,
+      await sql`insert into dataset_prompt_variation ${sql(variationToInsert)} returning *`
     }
-
-    await sql`insert into dataset_prompt_variation ${sql(variationToInsert)} returning *`
   }
 
   ctx.status = 201
