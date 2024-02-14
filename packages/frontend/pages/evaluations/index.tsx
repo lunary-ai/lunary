@@ -1,3 +1,4 @@
+import OrgUserBadge from "@/components/Blocks/OrgUserBadge"
 import Paywall from "@/components/Layout/Paywall"
 import { useEvaluations } from "@/utils/dataHooks"
 import {
@@ -65,7 +66,7 @@ export default function Evaluations() {
                 router.push("/evaluations/new")
               }}
             >
-              New Evaluation
+              New evaluation
             </Button>
           </Group>
 
@@ -77,7 +78,7 @@ export default function Evaluations() {
             {evaluations.map((evaluation) => (
               <Card key={evaluation.id} p="lg" withBorder>
                 <Group justify="space-between">
-                  <Stack gap="0">
+                  <Stack>
                     <Group>
                       <Title order={3} size="16px">
                         {evaluation.name}
@@ -91,9 +92,7 @@ export default function Evaluations() {
                         Complete
                       </Badge>
                     </Group>
-                    <Text size="14px" mt="6" c="dimmed">
-                      Created by {evaluation.ownerName}
-                    </Text>
+                    <OrgUserBadge userId={evaluation.ownerId} />
                   </Stack>
 
                   <Group>
@@ -103,12 +102,12 @@ export default function Evaluations() {
                       }
                       variant="light"
                     >
-                      View results
+                      Results
                     </Button>
                     <Menu withArrow shadow="sm" position="bottom-end">
                       <Menu.Target>
                         <ActionIcon variant="transparent">
-                          <IconDotsVertical size={24} />
+                          <IconDotsVertical size={16} />
                         </ActionIcon>
                       </Menu.Target>
                       <Menu.Dropdown>
