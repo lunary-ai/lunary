@@ -209,4 +209,10 @@ evaluations.get("/", async (ctx: Context) => {
   ctx.body = evaluations
 })
 
+evaluations.post("/run", async (ctx: Context) => {
+  console.log("running eval")
+  console.log(ctx.request.body)
+  ctx.body = { passed: true, results: [] }
+})
+
 export default evaluations
