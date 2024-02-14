@@ -108,7 +108,7 @@ export default function NewEvaluation() {
 
           <Steps>
             <Steps.Step n={1} label="Dataset">
-              <Text size="lg" mb="md">
+              <Text size="lg" mb="md" mt={-6}>
                 Add prompts with variations of variables to test.
               </Text>
 
@@ -135,7 +135,7 @@ export default function NewEvaluation() {
               </Group>
             </Steps.Step>
             <Steps.Step n={2} label="Models">
-              <Text size="lg" mb="md">
+              <Text size="lg" mb="md" mt={-6}>
                 Select the models you want to compare.
               </Text>
               <MultiSelect
@@ -149,7 +149,7 @@ export default function NewEvaluation() {
               />
             </Steps.Step>
             <Steps.Step n={3} label="Checks">
-              <Text size="lg" mb="md">
+              <Text size="lg" mb="md" mt={-6}>
                 Define the checks that will result in a{" "}
                 <Text c="green" span fw="bold">
                   PASS
