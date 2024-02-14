@@ -138,13 +138,13 @@ export default function ResultsMatrix({ data }) {
             <th colSpan={data.length}>Results</th>
           </tr>
           <tr>
-            {variables.map((variable) => (
-              <th>{variable}</th>
+            {variables.map((variable, i) => (
+              <th key={variable}>{variable}</th>
             ))}
             {pmVariations.map(
               ({ model, prompt, passed, failed, duration, cost }, index) => {
                 return (
-                  <th>
+                  <th key={index}>
                     <Stack align="center" gap="xs">
                       <Badge variant="outline">{model}</Badge>
                       {passed + failed > 1 && (
@@ -181,12 +181,12 @@ export default function ResultsMatrix({ data }) {
           </tr>
         </thead>
         <tbody>
-          {variableVariations.map((variableVariation) => (
-            <tr>
+          {variableVariations.map((variableVariation, i) => (
+            <tr key={i}>
               {variables.map((variable) => (
                 <td>{variableVariation[variable]}</td>
               ))}
-              {pmVariations.map((pmVariation) => {
+              {pmVariations.map((pmVariation, k) => {
                 const result = getResultForVariation(
                   pmVariation.prompt,
                   variableVariation,
@@ -194,7 +194,7 @@ export default function ResultsMatrix({ data }) {
                   data,
                 )
                 return (
-                  <td className={classes["output-cell"]}>
+                  <td className={classes["output-cell"]} key={k}>
                     {result ? (
                       <Stack align="center" justify="between" h="100%">
                         <ChatMessage data={result.output} mah={200} compact />
