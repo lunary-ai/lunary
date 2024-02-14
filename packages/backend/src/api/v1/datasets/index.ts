@@ -52,7 +52,6 @@ datasets.post("/", async (ctx: Context) => {
   })
 
   const { slug } = body.parse(ctx.request.body)
-  console.log(ctx.request.body)
   const { prompts } = ctx.request.body
 
   const [insertedDataset] = await sql`
@@ -85,7 +84,48 @@ datasets.post("/", async (ctx: Context) => {
   ctx.status = 201
   ctx.body = { datasetId: insertedDataset.id }
 })
+datasets.put("/:datasetId", async (ctx: Context) => {
+  //TODO: full zod
+  const { projectId, userId } = ctx.state
+  const body = z.object({
+    slug: z.string(),
+  })
 
+  const { slug } = body.parse(ctx.request.body)
+  const { prompts } = ctx.request.body
+  const { datasetId } = ctx.params
+
+  for (const { messages, variations } of prompts) {
+    const [existingPrompt] = await sql`
+      select * from dataset_prompt where datasetId = ${datasetId} 
+    `
+
+    if (existingPrompt) {
+      await sql`
+        update dataset_prompt set messages = ${messages}
+        where id = ${existingPrompt.id}
+      `
+
+      for (const variation of variations) {
+        if (variation.id) {
+          await sql`update dataset_prompt_variation
+            set variables = ${variation.variables}, 
+                context = ${variation.context},
+                idealOutput = ${variation.idealOutput}
+            where id = ${variation.id}  
+          `
+        } else {
+          await sql`insert into dataset_prompt_variation 
+            (promptId, variables, context, idealOutput)
+            values (${existingPrompt.id}, ${variation.variables}, ${variation.context}, ${variation.idealOutput})
+          `
+        }
+      }
+    }
+  }
+
+  ctx.status = 200
+})
 // datasets.post("/:id/runs", async (ctx: Context) => {
 //   const { projectId, id } = ctx.params
 //   const { run } = ctx.request.body as {
