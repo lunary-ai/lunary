@@ -418,10 +418,17 @@ export function useDatasets() {
     fetcher.post,
   )
 
+  const { trigger: update, isMutating: isUpdating } = useProjectMutation(
+    `/datasets`,
+    fetcher.patch,
+  )
+
   return {
     datasets: data || [],
     insert,
     isInserting,
+    update,
+    isUpdating,
     mutate,
     isLoading,
   }
@@ -432,7 +439,7 @@ export function useDataset(id: string) {
     data: dataset,
     isLoading,
     mutate,
-  } = useProjectSWR(id && `/datasets/${id}`)
+  } = useProjectSWR(id && id !== "new" && `/datasets/${id}`)
 
   const { trigger: update } = useProjectMutation(
     `/datasets/${id}`,

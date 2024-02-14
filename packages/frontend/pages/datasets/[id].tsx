@@ -1,6 +1,6 @@
 import PromptVariableEditor from "@/components/Blocks/PromptVariableEditor"
 import { PromptEditor } from "@/components/Prompts/PromptEditor"
-import { useDatasets } from "@/utils/dataHooks"
+import { useDatasets, useDataset } from "@/utils/dataHooks"
 import { usePromptVariables } from "@/utils/promptsHooks"
 import {
   Anchor,
@@ -9,6 +9,7 @@ import {
   Container,
   Fieldset,
   Group,
+  Loader,
   Stack,
   Tabs,
   Text,
@@ -16,29 +17,32 @@ import {
   Title,
 } from "@mantine/core"
 import { useListState } from "@mantine/hooks"
-import { IconPlus } from "@tabler/icons-react"
+import { notifications } from "@mantine/notifications"
+import { IconPlus, IconCheck } from "@tabler/icons-react"
 import { usePathname } from "next/navigation"
 import { useRouter } from "next/router"
 import { generateSlug } from "random-word-slugs"
 import { useEffect, useState } from "react"
 
-const defaultPrompt = {
-  messages: [
-    {
-      role: "system",
-      content: "You are a helpful assistant.",
-    },
-    {
-      role: "user",
-      content: "",
-    },
-  ],
-  variations: [
-    {
-      variables: {},
-    },
-  ],
-}
+const DEFAULT_PROMPT = [
+  {
+    messages: [
+      {
+        role: "system",
+        content: "You are a helpful assistant.",
+      },
+      {
+        role: "user",
+        content: "",
+      },
+    ],
+    variations: [
+      {
+        variables: {},
+      },
+    ],
+  },
+]
 
 function PromptTab({ prompt, setPrompt }) {
   const { messages, variations } = prompt
@@ -56,7 +60,11 @@ function PromptTab({ prompt, setPrompt }) {
     index: number,
   ) {
     const newVariations = [...variations]
-    newVariations[index] = { ...newVariations[index], [variableName]: value }
+    const newVariable = { [variableName]: value }
+    newVariations[index] = {
+      ...newVariations[index],
+      variables: { ...newVariations[index].variables, ...newVariable },
+    }
     setPrompt({ ...prompt, variations: newVariations })
   }
 
@@ -129,11 +137,6 @@ function PromptTab({ prompt, setPrompt }) {
           </Stack>
         </Fieldset>
       ))}
-    </Stack>
-  )
-  {
-    /* 
-
       {hasVariables && (
         <>
           <Text size="sm" c="dimmed">
@@ -141,40 +144,62 @@ function PromptTab({ prompt, setPrompt }) {
           </Text>
         </>
       )}
-
       {hasVariables && (
         <Button
           variant="outline"
-          onClick={() =>
-            handlers.append({
-              variables: Object.keys(promptVariables).reduce(
-                (acc, key) => ({ ...acc, [key]: "" }),
-                {},
-              ),
-            })
-          }
+          onClick={() => {
+            const newVariation = { variables: promptVariables }
+            setPrompt({ ...prompt, variations: [...variations, newVariation] })
+
+            // const newVariables = promptVariables
+            // const newVariations = [{ ...variations, variables: newVariables }]
+            // variations.push(newVariations)
+
+            // setPrompt({ ...prompt, variations: newVariations })
+          }}
         >
           Add variation
         </Button>
       )}
-
-
-      
-      */
-  }
+    </Stack>
+  )
 }
 
 export default function NewDataset() {
   const router = useRouter()
   const pathname = usePathname()
-  const { insert: insertDataset, isInserting } = useDatasets()
+  const {
+    insert: insertDataset,
+    isInserting,
+    update: updateDataset,
+  } = useDatasets()
 
   const [activeTab, setActiveTab] = useState<string | null>("prompt-1")
 
-  const [prompts, handlers] = useListState([defaultPrompt])
+  const datasetId = router.query.id as string
+  const { dataset, isLoading } = useDataset(datasetId)
+
+  const [prompts, handlers] = useListState(DEFAULT_PROMPT)
+
+  useEffect(() => {
+    if (dataset) {
+      const defaultPrompts = dataset?.prompts?.map((prompt) => ({
+        messages: prompt.content,
+        variations: prompt.variations,
+      }))
+      console.log(defaultPrompts)
+      handlers.setState(defaultPrompts)
+    }
+  }, [dataset])
+
+  console.log(prompts)
 
   const isEdit = pathname?.split("/")?.at(-1) !== "new"
   const title = isEdit ? "Edit Dataset" : "Create Dataset"
+
+  if (isLoading) {
+    return <Loader />
+  }
 
   return (
     <Container>
@@ -236,11 +261,31 @@ export default function NewDataset() {
           ml="auto"
           loading={isInserting}
           onClick={async () => {
-            const { datasetId } = await insertDataset({
-              slug: generateSlug(2),
-              prompts,
-            })
-            router.push(`/datasets/${datasetId}`)
+            if (!isEdit) {
+              const { datasetId } = await insertDataset({
+                slug: generateSlug(2),
+                prompts,
+              })
+              notifications.show({
+                icon: <IconCheck size={18} />,
+                color: "teal",
+                title: "Email sent 💌",
+                message:
+                  "Check your emails to verify your email. Please check your spam folder as we currently have deliverability issues.",
+              })
+            } else {
+              await updateDataset({
+                id: router.query.id,
+                prompts,
+              })
+
+              notifications.show({
+                icon: <IconCheck size={18} />,
+                color: "teal",
+                title: "Dataset save",
+              })
+              router.push(`/evaluations`)
+            }
           }}
         >
           Save Dataset

@@ -84,20 +84,21 @@ datasets.post("/", async (ctx: Context) => {
   ctx.status = 201
   ctx.body = { datasetId: insertedDataset.id }
 })
-datasets.put("/:datasetId", async (ctx: Context) => {
+
+// TODO: use params
+datasets.patch("/", async (ctx: Context) => {
+  console.log("HERE")
   //TODO: full zod
   const { projectId, userId } = ctx.state
   const body = z.object({
     slug: z.string(),
   })
 
-  const { slug } = body.parse(ctx.request.body)
-  const { prompts } = ctx.request.body
-  const { datasetId } = ctx.params
+  const { prompts, datasetId } = ctx.request.body
 
   for (const { messages, variations } of prompts) {
     const [existingPrompt] = await sql`
-      select * from dataset_prompt where datasetId = ${datasetId} 
+      select * from dataset_prompt where dataset_id = ${datasetId} 
     `
 
     if (existingPrompt) {
@@ -105,6 +106,8 @@ datasets.put("/:datasetId", async (ctx: Context) => {
         update dataset_prompt set messages = ${messages}
         where id = ${existingPrompt.id}
       `
+
+      console.log(variations)
 
       for (const variation of variations) {
         if (variation.id) {
@@ -125,6 +128,7 @@ datasets.put("/:datasetId", async (ctx: Context) => {
   }
 
   ctx.status = 200
+  ctx.body = {}
 })
 // datasets.post("/:id/runs", async (ctx: Context) => {
 //   const { projectId, id } = ctx.params
