@@ -117,3 +117,16 @@ create index on evaluation_result(evaluation_id, prompt_id, variation_id, model)
 alter table prompt rename to evaluation_prompt;
 alter table prompt_variation rename to evaluation_prompt_variation;
 alter table prompt rename column content to messages
+
+-- 14/02/2024
+
+create table checklist (
+    id uuid primary key default gen_random_uuid(),
+    slug text,
+    data jsonb,
+    type text not null,
+    created_at timestamp with time zone default now(),
+    updated_at timestamp with time zone default now(),
+    owner_id uuid references account(id) on delete set null,
+    project_id uuid not null references project(id) on delete cascade
+);

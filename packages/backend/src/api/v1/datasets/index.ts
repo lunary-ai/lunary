@@ -164,37 +164,5 @@ datasets.patch("/", async (ctx: Context) => {
   ctx.status = 200
   ctx.body = { datasetId }
 })
-// datasets.post("/:id/runs", async (ctx: Context) => {
-//   const { projectId, id } = ctx.params
-//   const { run } = ctx.request.body as {
-//     run: {
-//       input: any
-//       output: any
-//     }
-//   }
-
-//   // insert into jsonb[] runs
-
-//   await sql`
-//     update dataset
-//     set runs = runs || ${sql.json(run)}, updated_at = now()
-//     where project_id = ${projectId} and id = ${id}
-//   `
-
-//   ctx.status = 201
-// })
-
-// datasets.del("/:id/runs/:index", async (ctx: Context) => {
-//   const { projectId, id, index } = ctx.params
-
-//   // remove from jsonb[] from the run at index
-//   await sql`
-//     update dataset
-//     set runs = runs - ${index}, updated_at = now()
-//     where project_id = ${projectId} and id = ${id}
-//   `
-
-//   ctx.status = 200
-// })
 
 export default datasets
