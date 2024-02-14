@@ -87,7 +87,6 @@ datasets.post("/", async (ctx: Context) => {
 
 // TODO: use params
 datasets.patch("/", async (ctx: Context) => {
-  console.log("HERE")
   //TODO: full zod
   const { projectId, userId } = ctx.state
   const body = z.object({
@@ -96,35 +95,73 @@ datasets.patch("/", async (ctx: Context) => {
 
   const { prompts, datasetId } = ctx.request.body
 
-  for (const { messages, variations } of prompts) {
-    const [existingPrompt] = await sql`
-      select * from dataset_prompt where dataset_id = ${datasetId} 
-    `
+  for (const { messages, variations, id } of prompts) {
+    const [existingPrompt] =
+      await sql`select * from dataset_prompt where id = ${id}`
 
     if (existingPrompt) {
-      await sql`
-        update dataset_prompt set messages = ${messages}
-        where id = ${existingPrompt.id}
+      const [updatedPrompt] = await sql`
+        update dataset_prompt set messages =  ${messages}
+        where id = ${id}
+        returning *
       `
 
-      console.log(variations)
+      console.log("HERE")
+      console.log(updatedPrompt)
+      for (const variation of variations) {
+        const variationToInsert = {
+          promptId: updatedPrompt.id,
+          variables: variation.variables,
+          context: variation.context,
+          idealOutput: variation.idealOutput,
+        }
+
+        await sql`insert into dataset_prompt_variation ${sql(variationToInsert)} returning *`
+      }
+    } else {
+      console.log("SALKSJDLASKDJ")
+      const [insertedPrompt] = await sql`insert into dataset_prompt 
+      ${sql({
+        datasetId,
+        messages,
+      })} 
+      returning *
+      `
 
       for (const variation of variations) {
-        if (variation.id) {
-          await sql`update dataset_prompt_variation
-            set variables = ${variation.variables}, 
-                context = ${variation.context},
-                idealOutput = ${variation.idealOutput}
-            where id = ${variation.id}  
-          `
-        } else {
-          await sql`insert into dataset_prompt_variation 
-            (promptId, variables, context, idealOutput)
-            values (${existingPrompt.id}, ${variation.variables}, ${variation.context}, ${variation.idealOutput})
-          `
+        const variationToInsert = {
+          promptId: insertedPrompt.id,
+          variables: variation.variables,
+          context: variation.context,
+          idealOutput: variation.idealOutput,
         }
+
+        await sql`insert into dataset_prompt_variation ${sql(variationToInsert)} returning *`
       }
     }
+
+    // if (existingPrompt) {
+    //   await sql`
+    //     update dataset_prompt set messages = ${messages}
+    //     where id = ${id}
+    //   `
+
+    //   for (const variation of variations) {
+    //     if (variation.id) {
+    //       await sql`update dataset_prompt_variation
+    //         set variables = ${variation.variables},
+    //             context = ${variation.context},
+    //             ideal_output = ${variation.idealOutput}
+    //         where id = ${variation.id}
+    //       `
+    //     } else {
+    //       await sql`insert into dataset_prompt_variation
+    //         (prompt_id, variables, context, ideal_output)
+    //         values (${existingPrompt.id}, ${variation.variables}, ${variation.context}, ${variation.idealOutput})
+    //       `
+    //     }
+    //   }
+    // }
   }
 
   ctx.status = 200

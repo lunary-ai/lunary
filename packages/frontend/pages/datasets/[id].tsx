@@ -179,17 +179,25 @@ export default function NewDataset() {
   const datasetId = router.query.id as string
   const { dataset, isLoading } = useDataset(datasetId)
 
-  const [prompts, handlers] = useListState(DEFAULT_PROMPT)
+  const [prompts, handlers] = useListState()
 
   useEffect(() => {
-    if (dataset?.prompt?.lengths) {
-      const defaultPrompts = dataset?.prompts?.map((prompt) => ({
+    if (!isEdit) {
+      handlers.setState(DEFAULT_PROMPT)
+      return
+    }
+    if (dataset?.prompts) {
+      const newPrompts = dataset?.prompts?.map((prompt) => ({
+        id: prompt.id,
         messages: prompt.content,
         variations: prompt.variations,
       }))
-      handlers.setState(defaultPrompts)
+
+      handlers.setState(newPrompts)
     }
   }, [dataset])
+
+  console.log(prompts)
 
   const isEdit = pathname?.split("/")?.at(-1) !== "new"
   const title = isEdit ? "Edit Dataset" : "Create Dataset"
@@ -236,7 +244,7 @@ export default function NewDataset() {
             <Button
               leftSection={<IconPlus size={12} />}
               variant="outline"
-              onClick={() => handlers.append(DEFAULT_PROMPT)}
+              onClick={() => handlers.append(...DEFAULT_PROMPT)}
               size="sm"
             >
               Add Prompt
@@ -258,6 +266,7 @@ export default function NewDataset() {
           ml="auto"
           loading={isInserting}
           onClick={async () => {
+            console.log(prompts)
             if (!isEdit) {
               const { datasetId } = await insertDataset({
                 slug: generateSlug(2),
@@ -268,10 +277,10 @@ export default function NewDataset() {
                 color: "teal",
                 title: "Dataset save",
               })
-              router.push(evaluations)
+              router.push("/evaluations")
             } else {
               await updateDataset({
-                id: router.query.id,
+                datasetId: router.query.id,
                 prompts,
               })
 
@@ -280,7 +289,7 @@ export default function NewDataset() {
                 color: "teal",
                 title: "Dataset save",
               })
-              router.push(`/evaluations`)
+              // router.push(`/evaluations`)
             }
           }}
         >
