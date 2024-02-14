@@ -2,6 +2,8 @@ import { Badge, Group, HoverCard, Progress, Stack, Text } from "@mantine/core"
 import classes from "./index.module.css"
 import { formatCost } from "@/utils/format"
 import { ChatMessage } from "../SmartViewer/Message"
+import MessageViewer from "../SmartViewer/MessageViewer"
+import SmartViewer from "../SmartViewer"
 
 // We create a matrix of results for each prompt, variable and model.
 // The matrix is a 3D array, where each dimension represents a different variable, prompt and model.
@@ -62,6 +64,7 @@ const getVariableVariations = (results) => {
 
 const getPromptModelVariations = (results, groupBy = "none") => {
   let variations = results.map((result) => ({
+    promptContent: result.promptContent,
     promptId: groupBy !== "model" ? result.promptId : null,
     model: groupBy !== "prompt" ? result.model : "",
   }))
@@ -83,6 +86,7 @@ const getPromptModelVariations = (results, groupBy = "none") => {
 
   return uniqueVariations as {
     promptId?: string
+    promptContent?: any
     model?: string
     passed: number
     failed: number
@@ -119,6 +123,8 @@ export default function ResultsMatrix({ data, groupBy = "none" }) {
 
   const variables = Array.from(new Set(variableVariations.flatMap(Object.keys)))
 
+  console.log(data)
+
   return (
     <Stack>
       <div className={classes["matrix-container"]}>
@@ -134,14 +140,36 @@ export default function ResultsMatrix({ data, groupBy = "none" }) {
               ))}
               {pmVariations.map(
                 (
-                  { model, promptId, passed, failed, duration, cost },
+                  {
+                    model,
+                    promptId,
+                    promptContent,
+                    passed,
+                    failed,
+                    duration,
+                    cost,
+                  },
                   index,
                 ) => {
                   return (
                     <th key={index}>
                       <Stack align="center" gap="xs">
                         {model && <Badge variant="outline">{model}</Badge>}
-                        {promptId && <Text>{promptId}</Text>}
+                        {promptId && (
+                          <HoverCard width={500} h={100}>
+                            <HoverCard.Target>
+                              <div>
+                                <MessageViewer data={promptContent} compact />
+                              </div>
+                            </HoverCard.Target>
+                            <HoverCard.Dropdown>
+                              <SmartViewer
+                                data={promptContent}
+                                compact={false}
+                              />
+                            </HoverCard.Dropdown>
+                          </HoverCard>
+                        )}
                         {passed + failed > 1 && (
                           <Progress.Root size={20} w={100}>
                             <Progress.Section
@@ -192,7 +220,7 @@ export default function ResultsMatrix({ data, groupBy = "none" }) {
                         <Stack align="center" justify="between" h="100%">
                           <ChatMessage data={result.output} mah={200} compact />
 
-                          <HoverCard withArrow width={500}>
+                          <HoverCard width={500}>
                             <HoverCard.Target>
                               <Badge color={result.passed ? "green" : "red"}>
                                 {result.passed ? "Passed" : "Failed"}

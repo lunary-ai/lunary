@@ -171,8 +171,6 @@ export default function FilterPicker({
       arr.push(filterLogic)
     })
 
-    console.log(arr)
-
     onChange(arr)
   }
 

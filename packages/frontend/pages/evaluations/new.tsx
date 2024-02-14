@@ -50,6 +50,7 @@ export default function NewEvaluation() {
     setLoading(true)
 
     const timeEstimate = models.length * prompts.length * 5
+    console.log("timeEstimate", timeEstimate)
     setProgress(0)
 
     let interval = setInterval(() => {

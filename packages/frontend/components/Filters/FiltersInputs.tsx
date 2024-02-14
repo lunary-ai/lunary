@@ -43,7 +43,6 @@ const FilterInputs = {
         data={
           isDataObject
             ? data?.map((d) => {
-                console.log(d)
                 return {
                   value: `${d.value}`, // stringify to avoid issues with numbers
                   label: render ? render(d) : d.label,

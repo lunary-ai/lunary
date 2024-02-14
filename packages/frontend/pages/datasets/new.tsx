@@ -3,6 +3,7 @@ import { PromptEditor } from "@/components/Prompts/PromptEditor"
 import { useDataset, useDatasets } from "@/utils/dataHooks"
 import { usePromptVariables } from "@/utils/promptsHooks"
 import {
+  Anchor,
   Badge,
   Button,
   Container,
@@ -43,7 +44,6 @@ export default function NewDataset() {
   useEffect(() => {
     let i = 0
     for (const variation of variations) {
-      console.log(variation)
       const filteredVariables = {}
 
       for (const key of Object.keys(promptVariables)) {
@@ -62,6 +62,7 @@ export default function NewDataset() {
   return (
     <Container>
       <Stack gap="lg">
+        <Anchor href="/evaluations">← Back to evaluations</Anchor>
         <Group align="center" justify="space-between">
           <Group align="center">
             <Title>Create Dataset</Title>
@@ -86,7 +87,7 @@ export default function NewDataset() {
             key={i}
             legend={hasVariables && `Variation ${i + 1}`}
           >
-            <Stack>
+            <Stack pt="sm">
               <PromptVariableEditor
                 variables={variation.variables}
                 updateVariable={(variable, value) => {

@@ -196,10 +196,15 @@ function RoleSelector({ data, color, scheme, onChange }) {
     <Select
       variant="unstyled"
       size="xs"
-      w={75}
+      mb={5}
+      mt={-2}
+      w={80}
+      allowDeselect={false}
       withCheckIcon={false}
+      color={color}
       styles={{
         input: {
+          opacity: 0.7,
           color: color + "." + (scheme === "dark" ? 2 : 8),
         },
       }}
@@ -246,18 +251,26 @@ export function ChatMessage({
         borderRadius: 8,
       }}
     >
-      <Box>
-        {editable ? (
-          <RoleSelector
-            data={data}
-            onChange={onChange}
-            color={color}
-            scheme={scheme}
-          />
-        ) : (
-          <Text c={color + "." + (scheme === "dark" ? 2 : 8)}>{data.role}</Text>
-        )}
-      </Box>
+      {!compact && (
+        <>
+          {editable ? (
+            <RoleSelector
+              data={data}
+              onChange={onChange}
+              color={color}
+              scheme={scheme}
+            />
+          ) : (
+            <Text
+              c={color + "." + (scheme === "dark" ? 2 : 8)}
+              mb={5}
+              size="xs"
+            >
+              {data.role}
+            </Text>
+          )}
+        </>
+      )}
 
       <ChatMessageContent
         data={data}

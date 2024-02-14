@@ -11,6 +11,7 @@ import {
   Text,
   Title,
 } from "@mantine/core"
+
 import { useRouter } from "next/router"
 import { useState } from "react"
 
@@ -27,10 +28,6 @@ export default function EvalResults() {
 
   if (isLoading) {
     return <Loader />
-  }
-
-  const handleGroupByChange = (value) => {
-    setGroupBy(value)
   }
 
   return (
@@ -61,7 +58,7 @@ export default function EvalResults() {
             onChange={setGroupBy}
           />
         </Group>
-        {data.length > 0 ? (
+        {data?.length > 0 ? (
           <ResultsMatrix data={data} groupBy={groupBy} />
         ) : (
           <p>No data</p>
