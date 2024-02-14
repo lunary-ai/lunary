@@ -90,15 +90,10 @@ export default function Evaluations() {
                 <Group justify="space-between">
                   <Stack>
                     <Group>
-                      <Title order={3} size="16px">
+                      <Title order={3} size={16}>
                         {evaluation.name}
                       </Title>
-                      <Badge
-                        variant="light"
-                        radius="sm"
-                        color="green"
-                        size="xs"
-                      >
+                      <Badge variant="light" radius="sm" color="teal" size="sm">
                         Complete
                       </Badge>
                     </Group>
@@ -122,7 +117,7 @@ export default function Evaluations() {
                       </Menu.Target>
                       <Menu.Dropdown>
                         <Menu.Item leftSection={<IconCopy size={16} />}>
-                          Duplicate
+                          Edit & Re-Run
                         </Menu.Item>
                       </Menu.Dropdown>
                     </Menu>

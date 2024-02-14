@@ -56,19 +56,20 @@ export default function Datasets() {
 
         <Stack gap="xl">
           {datasets.map((dataset) => (
-            <Card
-              key={dataset.id}
-              p="lg"
-              style={{ cursor: "pointer" }}
-              withBorder
-              onClick={() => {
-                Router.push(`/datasets/${dataset.id}`)
-              }}
-            >
+            <Card key={dataset.id} p="lg" withBorder>
               <Group justify="space-between">
                 <Stack>
                   <Group>
-                    <Title order={3}>{dataset.slug}</Title>
+                    <Title
+                      style={{ cursor: "pointer" }}
+                      order={3}
+                      size={16}
+                      onClick={() => {
+                        Router.push(`/datasets/${dataset.id}`)
+                      }}
+                    >
+                      {dataset.slug}
+                    </Title>
                     <Badge variant="light" radius="sm" color="blue" size="sm">
                       {`${dataset.promptCount} prompt${dataset.promptCount > 1 ? "s" : ""}`}
                     </Badge>

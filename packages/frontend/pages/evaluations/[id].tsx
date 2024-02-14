@@ -1,16 +1,6 @@
 import ResultsMatrix from "@/components/Evals/ResultsMatrix"
 import { useProjectSWR } from "@/utils/dataHooks"
-import {
-  Anchor,
-  Box,
-  Container,
-  Group,
-  Loader,
-  SegmentedControl,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core"
+import { Anchor, Container, Loader, Stack, Title } from "@mantine/core"
 
 import { useRouter } from "next/router"
 import { useState } from "react"
