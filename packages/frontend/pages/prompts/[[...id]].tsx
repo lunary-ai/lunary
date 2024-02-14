@@ -760,7 +760,7 @@ function Playground() {
                     >
                       <Badge
                         key={variable}
-                        maw={90}
+                        maw={200}
                         variant="outline"
                         style={{ textTransform: "none" }}
                       >

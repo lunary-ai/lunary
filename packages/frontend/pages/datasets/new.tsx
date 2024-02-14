@@ -8,7 +8,6 @@ import {
   Container,
   Fieldset,
   Group,
-  Loader,
   Stack,
   Text,
   Textarea,
@@ -31,12 +30,8 @@ const defaultPrompt = [
   },
 ]
 
-export default function Dataset() {
+export default function NewDataset() {
   const router = useRouter()
-  const datasetId = router.query.id as string
-
-  const { dataset, isLoading } = useDataset(datasetId)
-
   const { insert: insertDataset, isInserting } = useDatasets()
   const [prompt, setPrompt] = useState(defaultPrompt)
   const promptVariables = usePromptVariables(prompt)
@@ -63,10 +58,6 @@ export default function Dataset() {
   }, [promptVariables])
 
   const hasVariables = Object.keys(promptVariables).length > 0
-
-  if (isLoading) {
-    return <Loader />
-  }
 
   return (
     <Container>

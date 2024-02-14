@@ -1,5 +1,6 @@
 import { getColorForRole, useFixedColorScheme } from "@/utils/colors"
 import {
+  Box,
   Code,
   Flex,
   Paper,
@@ -190,6 +191,25 @@ function ChatMessageContent({
   )
 }
 
+function RoleSelector({ data, color, scheme, onChange }) {
+  return (
+    <Select
+      variant="unstyled"
+      size="xs"
+      w={75}
+      withCheckIcon={false}
+      styles={{
+        input: {
+          color: color + "." + (scheme === "dark" ? 2 : 8),
+        },
+      }}
+      value={data?.role}
+      data={["ai", "assistant", "user", "system", "function", "tool"]}
+      onChange={(role) => onChange({ ...data, role })}
+    />
+  )
+}
+
 export function ChatMessage({
   data,
   editable = false,
@@ -226,32 +246,18 @@ export function ChatMessage({
         borderRadius: 8,
       }}
     >
-      {!compact && (
-        <Text
-          mb={5}
-          size="xs"
-          color={color + "." + (scheme === "dark" ? 2 : 8)}
-        >
-          {editable ? (
-            <Select
-              variant="unstyled"
-              size="xs"
-              w={75}
-              withCheckIcon={false}
-              styles={{
-                input: {
-                  color: "inherit",
-                },
-              }}
-              value={data?.role}
-              data={["ai", "assistant", "user", "system", "function", "tool"]}
-              onChange={(role) => onChange({ ...data, role })}
-            />
-          ) : (
-            data?.role
-          )}
-        </Text>
-      )}
+      <Box>
+        {editable ? (
+          <RoleSelector
+            data={data}
+            onChange={onChange}
+            color={color}
+            scheme={scheme}
+          />
+        ) : (
+          <Text c={color + "." + (scheme === "dark" ? 2 : 8)}>{data.role}</Text>
+        )}
+      </Box>
 
       <ChatMessageContent
         data={data}

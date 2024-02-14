@@ -5,8 +5,53 @@ import Context from "@/src/utils/koa"
 import { Evaluation } from "shared"
 import { getReadableDateTime } from "@/src/utils/date"
 import { runEval } from "./utils"
+import { getEvaluation } from "./utils"
 
 const evaluations = new Router({ prefix: "/evaluations" })
+
+evaluations.post("/", async (ctx: Context) => {
+  const { name, datasetId, checks, models } = ctx.request.body as any
+  const { userId, projectId } = ctx.state
+
+  // TODO: transactions, but not working with because of nesting
+  const evaluationToInsert = {
+    name: name ? name : `Evaluation of ${getReadableDateTime()}`,
+    ownerId: userId,
+    projectId,
+    datasetId,
+    models,
+    checks,
+  }
+
+  const [insertedEvaluation] =
+    await sql`insert into evaluation ${sql(evaluationToInsert)} returning *`
+
+  const evaluation = await getEvaluation(insertedEvaluation.id)
+
+  const evalsToRun = []
+  for (const prompt of evaluation.dataset.prompts) {
+    for (const variation of prompt.variations) {
+      for (const model of evaluation.models) {
+        evalsToRun.push(
+          runEval({
+            evaluationId: evaluation.id,
+            promptId: prompt.id,
+            variation,
+            model,
+            prompt: prompt.content,
+            checks,
+            extra: {},
+          }),
+        )
+      }
+    }
+  }
+
+  await Promise.all(evalsToRun)
+
+  ctx.status = 201
+  ctx.body = { evaluationId: insertedEvaluation.id }
+})
 
 evaluations.post("/", async (ctx: Context) => {
   const { name, models, checks, prompts } = ctx.request.body as Evaluation
@@ -131,12 +176,12 @@ evaluations.get("/result/:evaluationId", async (ctx: Context) => {
   select 
     *,
     p.id as prompt_id,
-    p.content as prompt_content,
-    p.extra as prompt_extra
+    p.messages as prompt_content
+    --p.extra as prompt_extra
   from 
     evaluation_result er 
-    left join evaluation_prompt p on p.id = er.prompt_id
-    left join evaluation_prompt_variation pv on pv.id = er.variation_id
+    left join dataset_prompt p on p.id = er.prompt_id
+    left join dataset_prompt_variation pv on pv.id = er.variation_id
   where 
     er.evaluation_id = ${evaluationId}`
 

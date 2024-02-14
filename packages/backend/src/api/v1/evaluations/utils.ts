@@ -4,16 +4,25 @@ import sql from "@/src/utils/db"
 import { compileChatMessages, runAImodel } from "@/src/utils/playground"
 import { FilterLogic } from "shared"
 
-export async function runEval(
-  evaluationId: string,
-  promptId: string,
-  variationId: string,
-  model: string,
-  prompt: any,
-  extra: any,
-  variation: any,
-  checks: FilterLogic,
-) {
+interface RunEvalParams {
+  evaluationId: string
+  promptId: string
+  model: string
+  prompt: any
+  extra: any
+  variation: any
+  checks: FilterLogic
+}
+
+export async function runEval({
+  evaluationId,
+  promptId,
+  model,
+  prompt,
+  extra,
+  variation,
+  checks,
+}: RunEvalParams) {
   try {
     console.log(`=============================`)
     console.log(
@@ -24,7 +33,6 @@ export async function runEval(
     // run AI query
     const createdAt = new Date()
     const input = compileChatMessages(prompt, variables)
-    console.log(input)
 
     const res = await runAImodel(input, extra, undefined, model)
     const endedAt = new Date()
@@ -76,7 +84,7 @@ export async function runEval(
       insert into evaluation_result ${sql({
         evaluationId,
         promptId,
-        variationId,
+        variationId: variation.id,
         model,
         output,
         results,
@@ -89,4 +97,71 @@ export async function runEval(
   } catch (error) {
     console.error(error)
   }
+}
+export async function getEvaluation(evaluationId: string) {
+  const rows = await sql`
+    select
+      e.id as id,
+      e.created_at as created_at,
+      e.name as name,
+      e.project_id as project_id,
+      e.owner_id as owner_id,
+      e.models as models,
+      e.checks as checks,
+      d.id as dataset_id,
+      d.slug as dataset_slug,
+      p.id as prompt_id,
+      p.messages as prompt_messages,
+      pv.id as variation_id,
+      pv.variables,
+      pv.context,
+      pv.ideal_output
+    from
+      evaluation e
+      left join dataset d on e.dataset_id = d.id 
+      left join dataset_prompt p on d.id = p.dataset_id
+      left join dataset_prompt_variation pv on pv.prompt_id = p.id
+    where 
+      e.id = ${evaluationId}
+    `
+
+  const {
+    id,
+    createdAt,
+    name,
+    ownerId,
+    projectId,
+    models,
+    checks,
+    datasetId,
+    datasetSlug,
+  } = rows[0]
+
+  const evaluation = {
+    id,
+    createdAt,
+    name,
+    projectId,
+    ownerId,
+    models,
+    checks,
+    dataset: {
+      id: datasetId,
+      slug: datasetSlug,
+      prompts: rows.map(({ promptId, promptMessages }) => ({
+        id: promptId,
+        content: promptMessages,
+        variations: rows
+          .filter((row) => row.promptId === promptId)
+          .map(({ variationId, variables, context, idealOutput }) => ({
+            id: variationId,
+            variables,
+            context,
+            idealOutput,
+          })),
+      })),
+    },
+  }
+
+  return evaluation
 }

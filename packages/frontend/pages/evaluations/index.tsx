@@ -20,7 +20,6 @@ import {
   IconPlus,
 } from "@tabler/icons-react"
 import { useRouter } from "next/router"
-import { useEffect } from "react"
 
 const FEATURE_LIST = [
   "Define assertions to test variations of prompts",
@@ -71,13 +70,12 @@ export default function Evaluations() {
           </Group>
 
           <Text size="lg" mb="md">
-            Evaluate and compare LLM responses with various models and prompt
-            variations.
+            Compare prompts with different models to craft the perfect prompt.
           </Text>
 
           <Stack gap="xl">
-            {evaluations.map((evaluation, i) => (
-              <Card p="lg" withBorder>
+            {evaluations.map((evaluation) => (
+              <Card key={evaluation.id} p="lg" withBorder>
                 <Group justify="space-between">
                   <Stack gap="0">
                     <Group>

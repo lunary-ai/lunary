@@ -5,15 +5,12 @@ const isProduction = process.env.NODE_ENV === "production"
 const sql = postgres(process.env.DATABASE_URL!, {
   idle_timeout: 20,
   max_lifetime: 60 * 5,
-  debug: (connection, query) => {
-    console.log(query)
-  },
   transform: {
     ...postgres.camel,
 
     undefined: null,
   },
-  max: isProduction ? 50 : 1,
+  max: isProduction ? 50 : 5,
   connection: {
     application_name: `backend-${isProduction ? "production" : "development"}-${new Date().getTime()}`,
   },

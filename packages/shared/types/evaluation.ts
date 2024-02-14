@@ -14,7 +14,7 @@ export interface Prompt {
 }
 
 export interface Variation {
-  variables?: { [key: string]: string }[]
+  variables: Record<string, string>
   context?: string
   idealOutput?: string
 }

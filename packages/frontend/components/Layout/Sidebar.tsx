@@ -6,6 +6,7 @@ import {
   IconBolt,
   IconChevronRight,
   IconCreditCard,
+  IconDatabase,
   IconFlask2Filled,
   IconHelpOctagon,
   IconListSearch,
@@ -29,15 +30,16 @@ import { Button, Combobox, Input, InputBase, useCombobox } from "@mantine/core"
 
 import { IconPlus } from "@tabler/icons-react"
 
+import { useAuth } from "@/utils/auth"
 import { useProject, useProjects } from "@/utils/dataHooks"
 import { useEffect, useState } from "react"
-import { useAuth } from "@/utils/auth"
 
 const APP_MENU = [
   { label: "Analytics", icon: IconTimeline, link: "/analytics" },
   { label: "Logs", icon: IconListSearch, link: "/logs" },
   { label: "Users", icon: IconUsers, link: "/users" },
   { label: "Prompts", icon: IconPlayerPlay, link: "/prompts" },
+  { label: "Datasets", icon: IconDatabase, link: "/datasets" },
   { label: "Radars", icon: IconShieldBolt, link: "/radars" },
   { label: "Evaluations", icon: IconFlask2Filled, link: "/evaluations" },
   { label: "Settings & Keys", icon: IconSettings, link: "/settings" },
@@ -77,7 +79,6 @@ export default function Sidebar() {
 
   const { user } = useUser()
   const { org } = useOrg()
-
   const { projects, isLoading: loading, insert } = useProjects()
 
   const [createProjectLoading, setCreateProjectLoading] = useState(false)
