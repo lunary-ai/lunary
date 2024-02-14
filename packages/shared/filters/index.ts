@@ -704,19 +704,47 @@ export const FILTERS: Filter[] = [
     id: "factualness",
     name: "Factualness",
     uiType: "ai",
-    soon: true,
+
     onlyInEvals: true,
     description:
-      "Checks if the LLM's response is factually correct using the given context.",
+      "Checks how correct the LLM's response is compared to the ideal output (ues OpenAI's eval prompt).",
     params: [
       {
         type: "label",
-        label: "Output is >=",
+        label: "The answer",
       },
-      PERCENT_PARAM,
+      {
+        type: "select",
+        id: "choices",
+        defaultValue: ["b", "c"],
+        multiple: true,
+        width: 200,
+        options: [
+          {
+            label: "is a subset of",
+            value: "a",
+          },
+          {
+            label: "is a superset of",
+            value: "b",
+          },
+          {
+            label: "contains all the same details as",
+            value: "c",
+          },
+          {
+            label: "disagrees with",
+            value: "d",
+          },
+          {
+            label: "differs (but doesn't matter from a factual standpoint)",
+            value: "e",
+          },
+        ],
+      },
       {
         type: "label",
-        label: "correct compared to context",
+        label: "the ideal output",
       },
     ],
   },

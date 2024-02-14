@@ -1,5 +1,6 @@
 import sql from "../utils/db"
 import aiAssert from "./ai/assert"
+import aiFact from "./ai/fact"
 import aiNER from "./ai/ner"
 import aiSentiment from "./ai/sentiment"
 import aiSimilarity from "./ai/similarity"
@@ -366,6 +367,23 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   },
   {
     id: "factualness",
+    async evaluator(run, params) {
+      const { choices } = params
+
+      const input = lastMsg(run["input"])
+      const output = lastMsg(run["output"])
+
+      if (!run.idealOutput) throw new Error("No ideal response to compare to")
+
+      const { result, reason } = await aiFact(input, output, run.idealOutput)
+
+      const passed = choices.includes(result)
+
+      return {
+        passed,
+        reason,
+      }
+    },
   },
   {
     id: "system",

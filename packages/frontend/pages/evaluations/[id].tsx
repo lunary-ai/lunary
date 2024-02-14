@@ -18,7 +18,7 @@ export default function EvalResults() {
   }
 
   return (
-    <Container>
+    <Container size="100%">
       <Box mb="md">
         <Anchor href="/evaluations">← Back to evaluations</Anchor>
       </Box>

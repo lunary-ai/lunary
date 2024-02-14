@@ -195,11 +195,13 @@ export function ChatMessage({
   editable = false,
   onChange,
   compact = false,
+  mah,
 }: {
   data: any
   editable?: boolean
   onChange?: any
   compact?: boolean
+  mah?: number
 }) {
   // TODO FIX
   // Flickering dark mode bug: this is due to scheme being 'light' for a few ms
@@ -215,9 +217,9 @@ export function ChatMessage({
     <Paper
       p={compact ? 0 : 12}
       pt={compact ? 0 : 8}
-      mah={compact ? 80 : undefined}
+      mah={mah || (compact ? 80 : undefined)}
       style={{
-        overflow: "hidden",
+        overflow: mah ? "scroll" : "hidden",
         backgroundColor: `var(--mantine-color-${color}-${
           scheme === "light" ? 2 : color === "gray" ? 7 : 9
         })`,
