@@ -393,6 +393,22 @@ export function useAppUsers(usageRange = 30) {
   return { users: appUsers || [], loading: isLoading }
 }
 
+export function useOrgUser(userId: string) {
+  const { data, isLoading, mutate } = useProjectSWR(
+    userId && `/users/${userId}`,
+  )
+
+  const theme = useMantineTheme()
+  const scheme = useFixedColorScheme()
+
+  const user = {
+    ...data,
+    color: getUserColor(scheme, theme, data?.id),
+  }
+
+  return { user, loading: isLoading, mutate }
+}
+
 export function useDatasets() {
   const { data, isLoading, mutate } = useProjectSWR(`/datasets`)
 

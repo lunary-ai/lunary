@@ -11,6 +11,7 @@ import {
   Text,
   Title,
 } from "@mantine/core"
+
 import { useRouter } from "next/router"
 import { useState } from "react"
 
@@ -29,15 +30,13 @@ export default function EvalResults() {
     return <Loader />
   }
 
-  const handleGroupByChange = (value) => {
-    setGroupBy(value)
-  }
-
   return (
     <Container size="100%">
       <Stack>
         <Anchor href="/evaluations">← Back to evaluations</Anchor>
         <Title>Results</Title>
+        {/* 
+        TODO: FIX GROUPING (currently it hides half of the results)
         <Group>
           <Text>Group by:</Text>
           <SegmentedControl
@@ -60,8 +59,8 @@ export default function EvalResults() {
             value={groupBy}
             onChange={setGroupBy}
           />
-        </Group>
-        {data.length > 0 ? (
+        </Group> */}
+        {data?.length > 0 ? (
           <ResultsMatrix data={data} groupBy={groupBy} />
         ) : (
           <p>No data</p>

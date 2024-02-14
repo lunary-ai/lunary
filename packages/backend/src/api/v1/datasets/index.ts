@@ -16,13 +16,12 @@ datasets.get("/", async (ctx: Context) => {
       d.id, 
       d.created_at, 
       d.updated_at, 
-      a.name as owner_name,
+      d.owner_id,
       d.slug,
       d.project_id,
       (select count(*) from dataset_prompt where dataset_id = d.id) as prompt_count 
     from
       dataset d
-      left join account a on a.id = d.owner_id
       left join dataset_prompt as dp on dp.dataset_id = dp.id
     where
       project_id = ${projectId}

@@ -3,6 +3,7 @@ import { PromptEditor } from "@/components/Prompts/PromptEditor"
 import { useDatasets } from "@/utils/dataHooks"
 import { usePromptVariables } from "@/utils/promptsHooks"
 import {
+  Anchor,
   Badge,
   Button,
   Container,
@@ -173,6 +174,7 @@ export default function NewDataset() {
   return (
     <Container>
       <Stack gap="lg">
+        <Anchor href="/evaluations">← Back to evaluations</Anchor>
         <Group align="center" justify="space-between">
           <Group align="center">
             <Title>Create Dataset</Title>

@@ -6,6 +6,7 @@ import errorHandler from "@/utils/errors"
 import { fetcher } from "@/utils/fetcher"
 
 import {
+  Anchor,
   Badge,
   Button,
   Chip,
@@ -50,6 +51,7 @@ export default function NewEvaluation() {
     setLoading(true)
 
     const timeEstimate = models.length * prompts.length * 5
+    console.log("timeEstimate", timeEstimate)
     setProgress(0)
 
     let interval = setInterval(() => {
@@ -118,7 +120,9 @@ export default function NewEvaluation() {
                   value: dataset.id,
                 }))}
               />
-              <Link href="/datasets/new">Or create a new Dataset</Link>
+              <Anchor href="/datasets/new" mt="xs">
+                + new dataset
+              </Anchor>
 
               <Group mt="xl">
                 <Chip.Group>
