@@ -87,7 +87,7 @@ export default function Datasets() {
                   leftSection={<IconPencil size={16} />}
                   variant="light"
                 >
-                  Edit Prompts
+                  Edit
                 </Button>
               </Group>
             </Card>

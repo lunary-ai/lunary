@@ -2,7 +2,6 @@ import sql from "@/src/utils/db"
 import Context from "@/src/utils/koa"
 import { unCamelObject } from "@/src/utils/misc"
 import Router from "koa-router"
-import postgres from "postgres"
 
 const templates = new Router({
   prefix: "/templates",

@@ -6,6 +6,7 @@ import { Next } from "koa"
 import * as argon2 from "argon2"
 
 import bcrypt from "bcrypt"
+import { validateUUID } from "@/src/utils/misc"
 
 export async function verifyPassword(
   password: string,
@@ -73,6 +74,7 @@ const publicRoutes = [
   "/v1/users/verify-email",
   "/v1/users/send-verification",
   new RegExp(`/v1/datasets/.+`), // getDataSets in SDKs
+  `/v1/evaluations/run`,
 ]
 export async function authMiddleware(ctx: Context, next: Next) {
   ctx.state.projectId = ctx.request?.query?.projectId as string
@@ -81,27 +83,21 @@ export async function authMiddleware(ctx: Context, next: Next) {
     typeof route === "string" ? route === ctx.path : route.test(ctx.path),
   )
 
-  if (isPublicRoute) {
-    const bearerToken = ctx.request?.headers?.authorization?.split(" ")[1]
+  const bearerToken = ctx.request?.headers?.authorization?.split(" ")[1]
 
-    if (typeof bearerToken === "string") {
-      ctx.state.projectId = bearerToken
+  if (isPublicRoute && (!bearerToken || validateUUID(bearerToken))) {
+    if (validateUUID(bearerToken)) {
+      ctx.state.projectId = bearerToken as string
     }
     await next()
     return
   }
 
   try {
-    const authHeader = ctx.request.headers.authorization
-    if (!authHeader) {
-      throw new Error("Authorization header is missing")
+    if (!bearerToken) {
+      throw new Error("No bearer token provided.")
     }
-
-    const token = authHeader.split(" ")[1]
-    if (!token) {
-      throw new Error("No bearer token provided")
-    }
-    const { payload } = await verifyJwt<SessionData>(token)
+    const { payload } = await verifyJwt<SessionData>(bearerToken)
 
     ctx.state.userId = payload.userId
     ctx.state.orgId = payload.orgId

@@ -4,6 +4,7 @@ import Router from "koa-router"
 import { z } from "zod"
 import { getDatasetById, getDatasetBySlug } from "./utils"
 import { validateUUID } from "@/src/utils/misc"
+import { clearUndefined } from "@/src/utils/ingest"
 
 const datasets = new Router({
   prefix: "/datasets",
@@ -37,17 +38,15 @@ datasets.get("/:identifier", async (ctx: Context) => {
   const { projectId } = ctx.state
   const { identifier } = ctx.params
 
+  console.log("identifier", identifier)
+
   const isUUID = validateUUID(identifier)
 
   if (isUUID) {
     // For frontend
     const datasetId = identifier
-    const dataset = await getDatasetById(datasetId)
+    const dataset = await getDatasetById(datasetId, projectId)
 
-    // TODO: projectId protection
-    // if (dataset.projectId !== projectId) {
-    //   ctx.throw(401, "Not Authorized")
-    // }
     ctx.body = dataset
     return
   } else {
@@ -60,6 +59,17 @@ datasets.get("/:identifier", async (ctx: Context) => {
   }
 })
 
+const DEFAULT_PROMPT = [
+  {
+    role: "system",
+    content: "You are a helpful assistant.",
+  },
+  {
+    role: "user",
+    content: "Hello! I need help with something.",
+  },
+]
+
 datasets.post("/", async (ctx: Context) => {
   //TODO: full zod
   const { projectId, userId } = ctx.state
@@ -68,9 +78,8 @@ datasets.post("/", async (ctx: Context) => {
   })
 
   const { slug } = body.parse(ctx.request.body)
-  const { prompts } = ctx.request.body
 
-  const [insertedDataset] = await sql`
+  const [dataset] = await sql`
     insert into dataset ${sql({
       slug,
       ownerId: userId,
@@ -78,107 +87,195 @@ datasets.post("/", async (ctx: Context) => {
     })} returning *
   `
 
-  for (const { messages, variations } of prompts) {
-    const [insertedPrompt] = await sql`insert into dataset_prompt 
+  // insert 1 prompt and 1 variation
+  await sql`insert into dataset_prompt
     ${sql({
-      datasetId: insertedDataset.id,
-      messages,
-    })} 
-    returning *`
-    for (const variation of variations) {
-      const variationToInsert = {
-        promptId: insertedPrompt.id,
-        variables: variation.variables,
-        context: variation.context,
-        idealOutput: variation.idealOutput,
-      }
+      datasetId: dataset.id,
+      messages: DEFAULT_PROMPT,
+    })}
+    returning *
+  `
+  await sql`insert into dataset_prompt_variation
+    ${sql({
+      promptId: dataset.id,
+      variables: {},
+      context: "",
+      idealOutput: "",
+    })}
+    returning *
+  `
 
-      await sql`insert into dataset_prompt_variation ${sql(variationToInsert)} returning *`
-    }
-  }
-
-  ctx.status = 201
-  ctx.body = { datasetId: insertedDataset.id }
+  ctx.body = dataset
 })
 
-// TODO: use params
-datasets.patch("/", async (ctx: Context) => {
-  //TODO: full zod
-  const { projectId, userId } = ctx.state
-  const body = z.object({
-    slug: z.string(),
-  })
+datasets.patch("/:id", async (ctx: Context) => {
+  const { projectId } = ctx.state
+  const { id } = ctx.params
 
-  const { prompts, datasetId } = ctx.request.body
-
-  for (const { messages, variations, id } of prompts) {
-    const [existingPrompt] =
-      await sql`select * from dataset_prompt where id = ${id}`
-
-    if (existingPrompt) {
-      const [updatedPrompt] = await sql`
-        update dataset_prompt set messages =  ${messages}
-        where id = ${id}
-        returning *
-      `
-
-      for (const variation of variations) {
-        const variationToInsert = {
-          promptId: updatedPrompt.id,
-          variables: variation.variables,
-          context: variation.context,
-          idealOutput: variation.idealOutput,
-        }
-
-        await sql`insert into dataset_prompt_variation ${sql(variationToInsert)} returning *`
-      }
-    } else {
-      const [insertedPrompt] = await sql`insert into dataset_prompt 
-      ${sql({
-        datasetId,
-        messages,
-      })} 
-      returning *
-      `
-
-      for (const variation of variations) {
-        const variationToInsert = {
-          promptId: insertedPrompt.id,
-          variables: variation.variables,
-          context: variation.context,
-          idealOutput: variation.idealOutput,
-        }
-
-        await sql`insert into dataset_prompt_variation ${sql(variationToInsert)} returning *`
-      }
-    }
-
-    // if (existingPrompt) {
-    //   await sql`
-    //     update dataset_prompt set messages = ${messages}
-    //     where id = ${id}
-    //   `
-
-    //   for (const variation of variations) {
-    //     if (variation.id) {
-    //       await sql`update dataset_prompt_variation
-    //         set variables = ${variation.variables},
-    //             context = ${variation.context},
-    //             ideal_output = ${variation.idealOutput}
-    //         where id = ${variation.id}
-    //       `
-    //     } else {
-    //       await sql`insert into dataset_prompt_variation
-    //         (prompt_id, variables, context, ideal_output)
-    //         values (${existingPrompt.id}, ${variation.variables}, ${variation.context}, ${variation.idealOutput})
-    //       `
-    //     }
-    //   }
-    // }
+  const { slug } = ctx.request.body as {
+    slug: string
   }
 
+  const [dataset] = await sql`
+    update dataset set slug = ${slug} where id = ${id} and project_id = ${projectId} returning *
+  `
+
+  ctx.body = dataset
+})
+
+datasets.delete("/:id", async (ctx: Context) => {
+  const { id } = ctx.params
+
+  await sql`delete from dataset where id = ${id}`
+
   ctx.status = 200
-  ctx.body = { datasetId }
+})
+
+// Create prompt
+datasets.post("/prompts", async (ctx: Context) => {
+  const { datasetId, messages } = ctx.request.body as {
+    datasetId: string
+    messages: any
+  }
+
+  const [prompt] = await sql`insert into dataset_prompt
+    ${sql({
+      datasetId,
+      messages: messages || DEFAULT_PROMPT,
+    })}
+    returning *
+  `
+
+  // insert 1 variation
+  await sql`insert into dataset_prompt_variation
+    ${sql({
+      promptId: prompt.id,
+      variables: {},
+      context: "",
+      idealOutput: "",
+    })}
+    returning *
+  `
+
+  ctx.body = prompt
+})
+
+// return array of prompts and variations
+datasets.get("/prompts/:id", async (ctx: Context) => {
+  const { id } = ctx.params as { id: string }
+
+  const [prompt] = await sql`
+    select * from dataset_prompt where id = ${id}
+    `
+
+  const variations = await sql`
+    select * from dataset_prompt_variation where prompt_id = ${id}
+    `
+
+  prompt.variations = variations
+
+  ctx.body = prompt
+})
+
+// add route ot to delete dataset_prompt and dataset_prompt_variation
+datasets.delete("/prompts/:id", async (ctx: Context) => {
+  const { id } = ctx.params
+
+  await sql`delete from dataset_prompt where id = ${id}`
+  await sql`delete from dataset_prompt_variation where prompt_id = ${id}`
+
+  ctx.status = 200
+})
+
+// Update prompt
+datasets.patch("/prompts/:id", async (ctx: Context) => {
+  const { id } = ctx.params
+  const { messages } = ctx.request.body as {
+    messages: string
+  }
+
+  const [prompt] =
+    await sql`update dataset_prompt set messages = ${messages} where id = ${id} returning *`
+
+  ctx.body = prompt
+})
+
+datasets.get("/variations/:id", async (ctx: Context) => {
+  const { id } = ctx.params
+
+  const [variation] = await sql`
+    select * from dataset_prompt_variation where id = ${id}
+  `
+
+  if (!variation) {
+    ctx.throw(404, "Variation not found")
+  }
+
+  ctx.body = variation
+})
+
+datasets.delete("/variations/:id", async (ctx: Context) => {
+  const { id } = ctx.params
+
+  await sql`delete from dataset_prompt_variation where id = ${id}`
+
+  ctx.status = 200
+})
+
+// Update variation
+datasets.patch("/variations/:variationId", async (ctx: Context) => {
+  const { variationId } = ctx.params
+  const { variables, context, idealOutput } = ctx.request.body as {
+    variables: any
+    context: string
+    idealOutput: string
+  }
+
+  console.log(
+    clearUndefined({
+      variables,
+      context,
+      idealOutput,
+    }),
+  )
+
+  const [variation] = await sql`update dataset_prompt_variation set
+    ${sql(
+      clearUndefined({
+        variables,
+        context,
+        idealOutput,
+      }),
+    )}
+    where id = ${variationId}
+    returning *
+  `
+
+  ctx.body = variation
+})
+
+// Create variation
+datasets.post("/variations", async (ctx: Context) => {
+  const { promptId, variables, context, idealOutput } = ctx.request.body as {
+    promptId: string
+    variables: any
+    context: string
+    idealOutput: string
+  }
+
+  const [variation] = await sql`insert into dataset_prompt_variation
+  ${sql(
+    clearUndefined({
+      promptId,
+      variables,
+      context,
+      idealOutput,
+    }),
+  )}
+  returning *
+  `
+
+  ctx.body = variation
 })
 
 export default datasets

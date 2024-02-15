@@ -13,6 +13,7 @@ import projectUsers from "./external-users"
 import projects from "./projects"
 import radars from "./radars"
 import evaluations from "./evaluations"
+import checklists from "./checklists"
 
 const v1 = new Router({
   prefix: "/v1",
@@ -43,5 +44,6 @@ v1.use(templateVersions.routes())
 v1.use(filters.routes())
 v1.use(evaluations.routes())
 v1.use(projectUsers.routes())
+v1.use(checklists.routes())
 
 export default v1

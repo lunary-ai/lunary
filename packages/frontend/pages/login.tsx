@@ -62,6 +62,9 @@ function LoginPage() {
       analytics.track("Login", { method: "password" })
     } catch (error) {
       console.error(error)
+
+      // empty local storage
+      auth.setJwt(null)
     }
 
     setLoading(false)

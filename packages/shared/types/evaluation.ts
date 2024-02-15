@@ -5,7 +5,8 @@ export interface Evaluation {
   name?: string
   prompts: Prompt[]
   models: string[]
-  checks: FilterLogic | []
+  checklistId: string
+  datasetId: string
 }
 
 export interface Prompt {

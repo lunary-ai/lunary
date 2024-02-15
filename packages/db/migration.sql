@@ -121,12 +121,30 @@ alter table prompt rename column content to messages
 -- 14/02/2024
 
 create table checklist (
-    id uuid primary key default gen_random_uuid(),
-    slug text,
-    data jsonb,
+    id uuid default uuid_generate_v4() primary key,
+    slug text not null,
+    data jsonb not null,
     type text not null,
     created_at timestamp with time zone default now(),
     updated_at timestamp with time zone default now(),
-    owner_id uuid references account(id) on delete set null,
-    project_id uuid not null references project(id) on delete cascade
+    owner_id uuid not null,
+    project_id uuid not null,
+    constraint fk_checklist_owner_id foreign key (owner_id) references account(id) on delete set null,
+    constraint fk_checklist_project_id foreign key (project_id) references project(id) on delete cascade
 );
+
+create table provider (
+    id uuid default uuid_generate_v4() primary key,
+    model text not null,
+    params jsonb,
+    created_at timestamp with time zone default now(),
+    updated_at timestamp with time zone default now(),
+    owner_id uuid not null,
+    project_id uuid not null,
+    constraint fk_checklist_owner_id foreign key (owner_id) references account(id) on delete set null,
+    constraint fk_checklist_project_id foreign key (project_id) references project(id) on delete cascade
+);
+
+alter table evaluation add column checklist_id uuid references checklist(id) on delete set null;
+
+

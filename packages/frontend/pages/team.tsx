@@ -23,6 +23,7 @@ import { NextSeo } from "next-seo"
 import { useOrg, useUser } from "@/utils/dataHooks"
 import { openUpgrade } from "../components/Layout/UpgradeModal"
 import { SEAT_ALLOWANCE } from "@/utils/pricing"
+import RenamableField from "@/components/Blocks/RenamableField"
 
 function Invite() {
   const { org } = useOrg()
@@ -50,38 +51,6 @@ function Invite() {
         <CopyText value={`${window.location.origin}/join?orgId=${org?.id}`} />
       )}
     </Group>
-  )
-}
-
-function RenamableField({ defaultValue, onRename }) {
-  const [focused, setFocused] = useState(false)
-
-  const projectlyRename = (e) => {
-    setFocused(false)
-    onRename(e.target.value)
-  }
-
-  return focused ? (
-    <FocusTrap>
-      <TextInput
-        defaultValue={defaultValue}
-        variant="unstyled"
-        h={40}
-        px={10}
-        onKeyPress={(e) => {
-          if (e.key === "Enter") projectlyRename(e)
-        }}
-        onBlur={(e) => projectlyRename(e)}
-      />
-    </FocusTrap>
-  ) : (
-    <Title
-      order={3}
-      onClick={() => setFocused(true)}
-      style={{ cursor: "pointer" }}
-    >
-      {defaultValue} <IconPencil size="16" />
-    </Title>
   )
 }
 
