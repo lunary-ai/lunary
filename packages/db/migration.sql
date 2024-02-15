@@ -148,3 +148,62 @@ create table provider (
 alter table evaluation add column checklist_id uuid references checklist(id) on delete set null;
 
 
+
+
+create table dataset (
+	id uuid not null default uuid_generate_v4() primary key,
+	created_at timestamptz not null default now(),
+	updated_at timestamptz not null default now(),
+	project_id uuid not null,
+	owner_id uuid not null,
+	slug text not null,
+	
+	foreign key (project_id) references project(id) on delete cascade,
+	foreign key (owner_id) references account(id)
+
+);
+create index on dataset (project_id, slug);
+
+
+create table dataset_prompt (
+	id uuid not null default uuid_generate_v4() primary key,
+	created_at timestamptz not null default now(),
+	dataset_id uuid not null,
+	messages jsonb not null,
+	foreign key (dataset_id) references dataset(id) on delete cascade
+);
+create index on  dataset_prompt(dataset_id);
+
+
+create table dataset_prompt_variation (
+	id uuid not null default uuid_generate_v4() primary key,
+	created_at timestamptz not null default now(),
+	variables jsonb not null,
+	context text,
+	ideal_output text,
+	prompt_id uuid not null,
+	foreign key (prompt_id) references dataset_prompt (id) on delete cascade
+);
+create index on dataset_prompt_variation(prompt_id);
+
+
+create table evaluation (
+	id uuid not null default uuid_generate_v4(),
+	created_at timestamptz not null default now() primary key,
+	name text not null,
+	project_id uuid not null,
+	owner_id uuid not null,
+	dataset_id uuid not null,
+	models _text not null,
+	checks jsonb not null,
+	foreign key (project_id) references project(id) on delete cascade,
+	foreign key (owner_id) references account(id),
+	foreign key (dataset_id) references dataset(id)
+);
+create index on evaluation(project_id);
+
+
+
+alter table evaluation_result 
+drop constraint "fk_evaluation_result_variation_id",
+add constraint "fk_evaluation_result_variation_id" foreign key (prompt_id) references dataset_prompt(id) on delete cascade;
