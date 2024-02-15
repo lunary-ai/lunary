@@ -5,17 +5,21 @@ import { compileChatMessages, runAImodel } from "@/src/utils/playground"
 import { FilterLogic } from "shared"
 
 interface RunEvalParams {
+  evaluationId: string
+  promptId: string
   checklistId: string
   model: string
-  input: any
+  prompt: any
   extra: any
   variation: any
 }
 
 export async function runEval({
+  evaluationId,
+  promptId,
   checklistId,
   model,
-  input,
+  prompt,
   extra,
   variation,
 }: RunEvalParams) {
@@ -24,7 +28,7 @@ export async function runEval({
     console.log(
       `Running eval for ${model} with variation ${JSON.stringify(variation.variables)}`,
     )
-    const { idealOutput, context } = variation
+    const { variables, idealOutput, context } = variation
 
     const [checklist] =
       await sql`select * from checklist where id = ${checklistId}`
@@ -33,6 +37,7 @@ export async function runEval({
 
     // run AI query
     const createdAt = new Date()
+    const input = compileChatMessages(prompt, variables)
 
     const res = await runAImodel(input, extra, undefined, model)
     const endedAt = new Date()
@@ -78,49 +83,6 @@ export async function runEval({
     console.log(`---------------------`)
     console.log(output)
     console.log(`---------------------`)
-
-    // insert into eval_result
-    await sql`
-      insert into evaluation_result ${sql({
-        evaluationId,
-        promptId,
-        variationId: variation.id,
-        model,
-        output,
-        results,
-        passed,
-        completionTokens,
-        cost,
-        duration,
-      })}
-      `
-  } catch (error) {
-    console.error(error)
-  }
-}
-
-export async function runEvalAndSave({
-  evaluationId,
-  promptId,
-  checklistId,
-  model,
-  prompt,
-  extra,
-  variation,
-}: RunEvalParams) {
-  try {
-    const { variables, idealOutput, context } = variation
-
-    const input = compileChatMessages(prompt, variables)
-
-    // run checks
-    const { passed, results } = await runEval(
-      checklistId,
-      model,
-      input,
-      extra,
-      variation,
-    )
 
     // insert into eval_result
     await sql`

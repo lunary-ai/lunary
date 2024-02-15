@@ -2,6 +2,8 @@ import OrgUserBadge from "@/components/Blocks/OrgUserBadge"
 import Paywall from "@/components/Layout/Paywall"
 import { useEvaluations } from "@/utils/dataHooks"
 import {
+  Alert,
+  Anchor,
   Badge,
   Button,
   Card,
@@ -17,6 +19,7 @@ import {
   IconChecklist,
   IconDatabase,
   IconFlask2Filled,
+  IconInfoCircle,
   IconPlus,
 } from "@tabler/icons-react"
 import Link from "next/link"
@@ -56,12 +59,14 @@ export default function Evaluations() {
 
             <Group>
               <Button
-                leftSection={<IconPlus size={12} />}
+                leftSection={<IconFlask2Filled size={12} />}
                 color="blue"
+                variant="gradient"
+                gradient={{ from: "violet", to: "cyan" }}
                 component={Link}
                 href="/evaluations/new"
               >
-                Run evaluation
+                Run Evaluation
               </Button>
             </Group>
           </Group>
@@ -72,21 +77,31 @@ export default function Evaluations() {
 
           <Title order={3}>Manage</Title>
 
+          <Alert icon={<IconInfoCircle />}>
+            Datasets and checklists are the building blocks of evaluations.
+            <br />
+            Combine them in the dashboard{" "}
+            <Anchor size="sm" href="https://lunary.ai/docs/features/evals/sdk">
+              or the SDK
+            </Anchor>
+            .
+          </Alert>
+
           <Group>
-            <Tooltip label="Datasets are collections of prompts that you can use in evaluations.">
+            <Tooltip label="Datasets are collections of prompts that you can use as test-cases">
               <Button
                 leftSection={<IconDatabase size={12} />}
-                variant="light"
                 component={Link}
+                color="blue"
                 href="/datasets"
               >
                 Datasets
               </Button>
             </Tooltip>
-            <Tooltip label="Checklists are collections of assertions that you can use in evaluations.">
+            <Tooltip label="Checklists are collections of assertions that you can use to define what a success is.">
               <Button
                 leftSection={<IconChecklist size={12} />}
-                variant="light"
+                color="blue"
                 component={Link}
                 href="/evaluations/checklists"
               >

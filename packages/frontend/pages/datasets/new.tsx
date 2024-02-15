@@ -1,7 +1,7 @@
 // page that creates a new dataset and redirect to the new dataset page
 
-import { useDatasets } from "@/utils/dataHooks"
 import Router from "next/router"
+import { useDatasets } from "@/utils/dataHooks"
 import { generateSlug } from "random-word-slugs"
 import { useEffect } from "react"
 
@@ -12,7 +12,7 @@ export default function NewDataset() {
       const { id } = await insert({
         slug: generateSlug(),
       })
-      Router.push(`/datasets/${id}`)
+      Router.replace(`/datasets/${id}`)
     }
     insertDataset()
   }, [])

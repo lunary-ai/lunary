@@ -5,6 +5,10 @@ import UserAvatar from "./UserAvatar"
 export default function OrgUserBadge({ userId }) {
   const { user } = useOrgUser(userId)
 
+  if (!userId) {
+    return null
+  }
+
   return (
     <Badge
       color={user?.color}

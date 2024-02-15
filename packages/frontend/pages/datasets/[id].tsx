@@ -23,7 +23,12 @@ import {
 } from "@mantine/core"
 import { useDebouncedState } from "@mantine/hooks"
 import { modals } from "@mantine/modals"
-import { IconPlus, IconTrash } from "@tabler/icons-react"
+import {
+  IconCircleMinus,
+  IconPlus,
+  IconTrash,
+  IconX,
+} from "@tabler/icons-react"
 import { usePathname } from "next/navigation"
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
@@ -45,19 +50,38 @@ function PromptVariation({ i, variationId, variables, onDelete }) {
 
   useEffect(() => {
     if (debouncedVariation) {
-      console.log("saving variation")
-      update(debouncedVariation)
+      update(debouncedVariation, {
+        revalidate: false,
+        optimisticData: (data) => ({ ...data, ...debouncedVariation }),
+      })
     }
   }, [debouncedVariation])
 
   useEffect(() => {
+    if (!variation || !variables) return
+
     Object.keys(variables).forEach((key) => {
-      if (!debouncedVariation?.variables[key]) setVariableValue(key, "")
+      if (typeof variation.variables[key] === "undefined") {
+        setVariableValue(key, "")
+      }
     })
-  }, [variables, debouncedVariation?.variables])
+
+    Object.keys(variation.variables).forEach((key) => {
+      if (typeof variables[key] === "undefined") {
+        setVariableValue(key, undefined)
+      }
+    })
+  }, [variables])
 
   const setVariableValue = (variable, value) => {
-    const updatedVariables = { ...variation?.variables, [variable]: value }
+    let updatedVariables = { ...variation?.variables }
+
+    if (typeof value === "undefined") {
+      delete updatedVariables[variable]
+    } else {
+      updatedVariables[variable] = value
+    }
+
     const updatedVariation = { ...variation, variables: updatedVariables }
     mutate(updatedVariation)
     setDebouncedVariation(updatedVariation)
@@ -101,12 +125,12 @@ function PromptVariation({ i, variationId, variables, onDelete }) {
             await remove()
           }}
           pos="absolute"
-          top={-10}
-          right={-10}
+          top={-25}
+          right={-15}
           color="red"
           variant="subtle"
         >
-          <IconTrash size={16} />
+          <IconCircleMinus size="12" />
         </ActionIcon>
       )}
     </Fieldset>
@@ -186,7 +210,7 @@ function PromptTab({ promptId, onDelete }) {
             })
           }}
         >
-          Add variation
+          Add variable variation
         </Button>
       )}
 

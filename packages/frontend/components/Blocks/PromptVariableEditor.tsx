@@ -21,27 +21,36 @@ export default function PromptVariableEditor({
         </Text>
       )}
       <Stack mt="sm">
-        {Object.keys(variables).map((variable) => (
-          <Group key={variable} align="center" justify="space-between" gap="lg">
-            <Badge
+        {Object.keys(variables)
+          .sort()
+          .map((variable) => (
+            <Group
               key={variable}
-              maw="14%"
-              variant="outline"
-              style={{ textTransform: "none" }}
+              align="center"
+              justify="space-between"
+              gap="lg"
             >
-              {variable}
-            </Badge>
-            <Textarea
-              size="xs"
-              w="85%"
-              required={true}
-              radius="sm"
-              rows={1}
-              value={variables[variable]}
-              onChange={(e) => updateVariable(variable, e.target.value)}
-            />
-          </Group>
-        ))}
+              <Badge
+                key={variable}
+                maw="14%"
+                variant="outline"
+                style={{ textTransform: "none" }}
+              >
+                {variable}
+              </Badge>
+              <Textarea
+                size="xs"
+                w="85%"
+                required={true}
+                radius="sm"
+                rows={1}
+                autosize
+                maxRows={4}
+                value={variables[variable]}
+                onChange={(e) => updateVariable(variable, e.target.value)}
+              />
+            </Group>
+          ))}
       </Stack>
     </Box>
   )
