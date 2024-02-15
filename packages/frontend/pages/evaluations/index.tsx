@@ -13,8 +13,10 @@ import {
   Stack,
   Text,
   Title,
+  Tooltip,
 } from "@mantine/core"
 import {
+  IconChecklist,
   IconCopy,
   IconDatabase,
   IconDotsVertical,
@@ -62,20 +64,12 @@ export default function Evaluations() {
 
             <Group>
               <Button
-                leftSection={<IconDatabase size={12} />}
-                variant="light"
-                component={Link}
-                href="/datasets"
-              >
-                Datasets
-              </Button>
-              <Button
                 leftSection={<IconPlus size={12} />}
                 color="blue"
                 component={Link}
                 href="/evaluations/new"
               >
-                New evaluation
+                Run evaluation
               </Button>
             </Group>
           </Group>
@@ -83,6 +77,33 @@ export default function Evaluations() {
           <Text size="lg" mb="md">
             Compare prompts with different models to craft the perfect prompt.
           </Text>
+
+          <Title order={3}>Manage</Title>
+
+          <Group>
+            <Tooltip label="Datasets are collections of prompts that you can use in evaluations.">
+              <Button
+                leftSection={<IconDatabase size={12} />}
+                variant="light"
+                component={Link}
+                href="/datasets"
+              >
+                Datasets
+              </Button>
+            </Tooltip>
+            <Tooltip label="Checklists are collections of assertions that you can use in evaluations.">
+              <Button
+                leftSection={<IconChecklist size={12} />}
+                variant="light"
+                component={Link}
+                href="/evaluations/checklists"
+              >
+                Checklists
+              </Button>
+            </Tooltip>
+          </Group>
+
+          <Title order={3}>Evaluation History</Title>
 
           <Stack gap="xl">
             {evaluations.map((evaluation) => (

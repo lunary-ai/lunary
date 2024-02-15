@@ -1,6 +1,6 @@
 import { useMantineTheme } from "@mantine/core"
 import { useContext } from "react"
-import useSWR, { SWRConfiguration } from "swr"
+import useSWR, { useSWRConfig, SWRConfiguration } from "swr"
 import useSWRInfinite from "swr/infinite"
 import { ProjectContext } from "./context"
 import { getUserColor, useFixedColorScheme } from "./colors"
@@ -94,6 +94,17 @@ export function useProjectInfiniteSWR(key: string, ...args: any[]) {
     loadMore,
   }
 }
+
+export function useProjectMutate(key: KeyType, options?: SWRConfiguration) {
+  const { projectId } = useContext(ProjectContext)
+
+  const { mutate } = useSWRConfig()
+
+  return (data) => {
+    mutate(generateKey(key, projectId), data, false)
+  }
+}
+
 export function useUser() {
   const { isSignedIn } = useAuth()
 
@@ -409,6 +420,61 @@ export function useOrgUser(userId: string) {
   return { user, loading: isLoading, mutate }
 }
 
+export function useChecklists(type: string) {
+  const { data, isLoading, mutate } = useProjectSWR(
+    type && `/checklists?type=${type}`,
+  )
+
+  // insert mutation
+  const { trigger: insert, isMutating: isInserting } = useProjectMutation(
+    `/checklists`,
+    fetcher.post,
+  )
+
+  const { trigger: update, isMutating: isUpdating } = useProjectMutation(
+    `/checklists`,
+    fetcher.patch,
+  )
+
+  return {
+    checklists: data,
+    insert,
+    isInserting,
+    update,
+    isUpdating,
+    mutate,
+    loading: isLoading,
+  }
+}
+
+export function useChecklist(id: string, initialData?: any) {
+  const {
+    data: checklist,
+    isLoading,
+    mutate,
+  } = useProjectSWR(id && `/checklists/${id}`, {
+    fallbackData: initialData,
+  })
+
+  const { trigger: update } = useProjectMutation(
+    id && `/checklists/${id}`,
+    fetcher.patch,
+  )
+
+  const { trigger: remove } = useProjectMutation(
+    id && `/checklists/${id}`,
+    fetcher.delete,
+  )
+
+  return {
+    checklist,
+    update,
+    remove,
+    mutate,
+    loading: isLoading,
+  }
+}
+
 export function useDatasets() {
   const { data, isLoading, mutate } = useProjectSWR(`/datasets`)
 
@@ -435,9 +501,12 @@ export function useDatasets() {
 }
 
 export function useDataset(id: string) {
+  const { mutate: mutateDatasets } = useDatasets()
+
   const {
     data: dataset,
     isLoading,
+    isValidating,
     mutate,
   } = useProjectSWR(id && id !== "new" && `/datasets/${id}`)
 
@@ -449,21 +518,91 @@ export function useDataset(id: string) {
   const { trigger: remove } = useProjectMutation(
     `/datasets/${id}`,
     fetcher.delete,
+    {
+      onSuccess() {
+        mutateDatasets((datasets) => datasets.filter((d) => d.id !== id))
+      },
+    },
   )
 
-  // insert mutation
-  const { trigger: insertRun } = useProjectMutation(
-    `/datasets/${id}/runs`,
-    fetcher.post,
-  )
+  const { trigger: insertPrompt, isMutating: isInsertingPrompt } =
+    useProjectMutation(`/datasets/prompts`, fetcher.post)
 
   return {
     dataset,
-    insertRun,
+    insertPrompt,
     update,
     remove,
     mutate,
+    loading: isLoading,
+    isValidating,
+    isInsertingPrompt,
+  }
+}
+
+export function useDatasetPrompt(id: string) {
+  const {
+    data: prompt,
     isLoading,
+    mutate,
+  } = useProjectSWR(id && `/datasets/prompts/${id}`)
+
+  const { trigger: update } = useProjectMutation(
+    id && `/datasets/prompts/${id}`,
+    fetcher.patch,
+  )
+
+  const { trigger: remove } = useProjectMutation(
+    id && `/datasets/prompts/${id}`,
+    fetcher.delete,
+    {
+      revalidate: false,
+    },
+  )
+
+  const { trigger: insertVariation, isMutating: isInsertingVariation } =
+    useProjectMutation(id && `/datasets/variations`, fetcher.post)
+
+  return {
+    prompt,
+    update,
+    remove,
+    mutate,
+    loading: isLoading,
+    insertVariation,
+    isInsertingVariation,
+  }
+}
+
+export function useDatasetPromptVariation(id: string) {
+  const {
+    data: variation,
+    isLoading,
+    mutate,
+  } = useProjectSWR(id && `/datasets/variations/${id}`)
+
+  const { trigger: update } = useProjectMutation(
+    id && `/datasets/variations/${id}`,
+    fetcher.patch,
+    {
+      revalidate: false,
+    },
+  )
+
+  const { trigger: remove } = useProjectMutation(
+    id && `/datasets/variations/${id}`,
+    fetcher.delete,
+    {
+      revalidate: false,
+    },
+  )
+
+  return {
+    variation,
+    update,
+    remove,
+    mutate,
+    loading: isLoading,
   }
 }
 

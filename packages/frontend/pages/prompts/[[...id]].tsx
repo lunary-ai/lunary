@@ -203,7 +203,7 @@ function Playground() {
         setTemplateVersion(newVersion)
       } else {
         const newTemplate = await insert({
-          slug: generateSlug(2),
+          slug: generateSlug(),
           mode: "openai",
           ...data,
         })

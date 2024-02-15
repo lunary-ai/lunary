@@ -1,45 +1,20 @@
 import sql from "@/src/utils/db"
+import { compileChatMessages } from "@/src/utils/playground"
 
-export async function getDatasetById(datasetId: string) {
-  const rows = await sql`
-    select
-      d.id as id,
-      d.project_id as project_id,
-      d.slug as slug,
-      p.id as prompt_id,
-      d.owner_id as owner_id,
-      p.messages as prompt_messages,
-      pv.id as variation_id,
-      pv.variables,
-      pv.context,
-      pv.ideal_output
-    from
-      dataset d 
-      left join dataset_prompt p on d.id = p.dataset_id
-      left join dataset_prompt_variation pv on pv.prompt_id = p.id
-    where 
-      d.id = ${datasetId}
-    `
+export async function getDatasetById(datasetId: string, projectId: string) {
+  const [dataset] =
+    await sql`select * from dataset where  id = ${datasetId} and project_id = ${projectId}`
 
-  const { id, slug, projectId, ownerId } = rows[0]
+  if (!dataset) {
+    throw new Error("Dataset not found")
+  }
 
-  const dataset = {
-    id,
-    slug,
-    ownerId,
-    projectId,
-    prompts: rows.map(({ promptId, promptMessages }) => ({
-      id: promptId,
-      content: promptMessages,
-      variations: rows
-        .filter((row) => row.promptId === promptId)
-        .map(({ variationId, variables, context, idealOutput }) => ({
-          id: variationId,
-          variables,
-          context,
-          idealOutput,
-        })),
-    })),
+  dataset.prompts =
+    await sql`select * from dataset_prompt where dataset_id = ${datasetId} order by created_at asc`
+
+  for (const prompt of dataset.prompts) {
+    prompt.variations =
+      await sql`select * from dataset_prompt_variation where prompt_id = ${prompt.id} order by created_at asc`
   }
 
   return dataset
@@ -77,16 +52,9 @@ export async function getDatasetBySlug(slug: string, projectId: string) {
     prompts: [],
   }
 
-  function replaceVariables(message, variables) {
-    return message.replace(/\{\{(\w+)\}\}/g, (_, key) => variables[key] || "")
-  }
-
   for (const { promptMessages, variables, idealOutput } of rows) {
     const prompt = {
-      messages: promptMessages.map((message) => ({
-        content: replaceVariables(message.content, variables),
-        role: message.role,
-      })),
+      messages: compileChatMessages(promptMessages, variables),
       idealOutput,
     }
     dataset.prompts.push(prompt)

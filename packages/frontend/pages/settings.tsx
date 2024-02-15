@@ -23,38 +23,7 @@ import Router from "next/router"
 import { useOrg, useUser, useProject, useProjectSWR } from "@/utils/dataHooks"
 import useSWR from "swr"
 import { openUpgrade } from "../components/Layout/UpgradeModal"
-
-function RenamableField({ defaultValue, onRename }) {
-  const [focused, setFocused] = useState(false)
-
-  const projectlyRename = (e) => {
-    setFocused(false)
-    onRename(e.target.value)
-  }
-
-  return focused ? (
-    <FocusTrap>
-      <TextInput
-        defaultValue={defaultValue}
-        variant="unstyled"
-        h={40}
-        px={10}
-        onKeyPress={(e) => {
-          if (e.key === "Enter") projectlyRename(e)
-        }}
-        onBlur={(e) => projectlyRename(e)}
-      />
-    </FocusTrap>
-  ) : (
-    <Title
-      order={3}
-      onClick={() => setFocused(true)}
-      style={{ cursor: "pointer" }}
-    >
-      {defaultValue} <IconPencil size="16" />
-    </Title>
-  )
-}
+import RenamableField from "@/components/Blocks/RenamableField"
 
 export default function AppAnalytics() {
   const { user: currentUser } = useUser()

@@ -54,7 +54,7 @@ evaluations.post("/", async (ctx: Context) => {
 })
 
 evaluations.post("/", async (ctx: Context) => {
-  const { name, models, checks, prompts } = ctx.request.body as Evaluation
+  const { name, models, checklistId, prompts } = ctx.request.body as Evaluation
   const { userId, projectId } = ctx.state
 
   // TODO: transactions, but not working with because of nesting
@@ -64,8 +64,13 @@ evaluations.post("/", async (ctx: Context) => {
     ownerId: userId,
     projectId,
     models,
-    checks,
+    checklistId,
   }
+
+  const [checklist] =
+    await sql`select * from checklist where id = ${checklistId}`
+
+  const checks = checklist.data
 
   const [insertedEvaluation] =
     await sql`insert into evaluation ${sql(evaluationToInsert)} returning *`

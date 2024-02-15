@@ -17,7 +17,8 @@ export function unCamelObject(obj: any): any {
   return newObj
 }
 
-export function validateUUID(string: string) {
+export function validateUUID(string?: string) {
+  if (!string) return false
   const uuidSchema = z.string().uuid()
   return uuidSchema.safeParse(string).success
 }

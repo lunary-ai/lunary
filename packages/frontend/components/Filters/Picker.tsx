@@ -11,6 +11,7 @@ import { IconX } from "@tabler/icons-react"
 function RenderFilterNode({
   minimal,
   node,
+  disabled,
   filters,
   setNode,
   removeNode,
@@ -18,6 +19,7 @@ function RenderFilterNode({
   minimal: boolean
   node: FilterLogic
   filters: Filter[]
+  disabled: boolean
   setNode: (node: FilterLogic | LogicData) => void
   removeNode: () => void
 }) {
@@ -141,12 +143,14 @@ export default function FilterPicker({
   minimal = false,
   restrictTo = (filter) => true,
   defaultOpened = false,
+  disabled = false,
 }: {
   value?: FilterLogic
   onChange?: (data: FilterLogic) => void
   minimal?: boolean
   restrictTo?: (filter: Filter) => boolean
   defaultOpened?: boolean
+  disabled?: boolean
 }) {
   const [modalOpened, setModalOpened] = useState(false)
 
@@ -177,12 +181,13 @@ export default function FilterPicker({
   const Container = minimal ? Group : Stack
 
   return (
-    <Box>
+    <Box style={disabled ? { pointerEvents: "none", opacity: 0.8 } : {}}>
       <Container>
         <>
           <RenderFilterNode
             minimal={minimal}
             node={value}
+            disabled={disabled}
             setNode={(newNode) => {
               onChange(newNode as FilterLogic)
             }}
@@ -192,32 +197,36 @@ export default function FilterPicker({
             filters={options}
           />
 
-          {minimal ? (
-            <AddFilterButton
-              filters={options}
-              onSelect={(filter) => insertFilters([filter])}
-              defaultOpened={defaultOpened}
-            />
-          ) : (
+          {!disabled && (
             <>
-              <Button
-                size="sm"
-                variant="light"
-                onClick={() => setModalOpened(true)}
-              >
-                Add
-              </Button>
-              <FiltersModal
-                opened={modalOpened}
-                setOpened={setModalOpened}
-                filters={options}
-                onFinish={(ids) => {
-                  const filters = ids
-                    .map((id) => options.find((option) => option.id === id))
-                    .filter(Boolean)
-                  insertFilters(filters)
-                }}
-              />
+              {minimal ? (
+                <AddFilterButton
+                  filters={options}
+                  onSelect={(filter) => insertFilters([filter])}
+                  defaultOpened={defaultOpened}
+                />
+              ) : (
+                <>
+                  <Button
+                    size="sm"
+                    variant="light"
+                    onClick={() => setModalOpened(true)}
+                  >
+                    Add
+                  </Button>
+                  <FiltersModal
+                    opened={modalOpened}
+                    setOpened={setModalOpened}
+                    filters={options}
+                    onFinish={(ids) => {
+                      const filters = ids
+                        .map((id) => options.find((option) => option.id === id))
+                        .filter(Boolean)
+                      insertFilters(filters)
+                    }}
+                  />
+                </>
+              )}
             </>
           )}
         </>
