@@ -2,7 +2,15 @@ import { FocusTrap, TextInput, Title } from "@mantine/core"
 import { IconPencil } from "@tabler/icons-react"
 import { useState } from "react"
 
-function RenamableField({ defaultValue, onRename }) {
+function RenamableField({
+  defaultValue,
+  onRename,
+  ...props
+}: {
+  defaultValue: string
+  onRename: (newName: string) => void
+  [key: string]: any
+}) {
   const [focused, setFocused] = useState(false)
 
   const doRename = (e) => {
@@ -28,6 +36,7 @@ function RenamableField({ defaultValue, onRename }) {
       order={3}
       onClick={() => setFocused(true)}
       style={{ cursor: "pointer" }}
+      {...props}
     >
       {defaultValue} <IconPencil size="16" />
     </Title>

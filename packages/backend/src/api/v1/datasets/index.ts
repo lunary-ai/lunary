@@ -13,23 +13,8 @@ const datasets = new Router({
 datasets.get("/", async (ctx: Context) => {
   const { projectId } = ctx.state
 
-  const rows = await sql`
-    select
-      d.id, 
-      d.created_at, 
-      d.updated_at, 
-      d.owner_id,
-      d.slug,
-      d.project_id,
-      (select count(*) from dataset_prompt where dataset_id = d.id) as prompt_count 
-    from
-      dataset d
-      left join dataset_prompt as dp on dp.dataset_id = dp.id
-    where
-      project_id = ${projectId}
-    order by
-      updated_at desc
-  `
+  const rows =
+    await sql`select * from dataset d where project_id = ${projectId} order by created_at desc`
 
   ctx.body = rows
 })
@@ -165,11 +150,11 @@ datasets.get("/prompts/:id", async (ctx: Context) => {
   const { id } = ctx.params as { id: string }
 
   const [prompt] = await sql`
-    select * from dataset_prompt where id = ${id}
+    select * from dataset_prompt where id = ${id} order by created_at asc
     `
 
   const variations = await sql`
-    select * from dataset_prompt_variation where prompt_id = ${id}
+    select * from dataset_prompt_variation where prompt_id = ${id} order by created_at asc
     `
 
   prompt.variations = variations

@@ -5,7 +5,6 @@ import {
   useDatasetPrompt,
   useDatasetPromptVariation,
 } from "@/utils/dataHooks"
-import { cleanSlug } from "@/utils/format"
 import { usePromptVariables } from "@/utils/promptsHooks"
 import {
   ActionIcon,
@@ -19,7 +18,6 @@ import {
   Stack,
   Tabs,
   Text,
-  TextInput,
   Textarea,
   Title,
 } from "@mantine/core"
@@ -229,18 +227,11 @@ export default function NewDataset() {
   const [activePrompt, setActivePrompt] = useState<string | null>(null)
 
   const datasetId = router.query.id as string
-  const {
-    dataset,
-    update,
-    loading,
-    isValidating,
-    insertPrompt,
-    mutate,
-    isInsertingPrompt,
-  } = useDataset(datasetId)
+  const { dataset, loading, insertPrompt, mutate, isInsertingPrompt } =
+    useDataset(datasetId)
 
   const isEdit = pathname?.split("/")?.at(-1) !== "new"
-  const title = isEdit ? "Edit Dataset" : "Create Dataset"
+  const title = isEdit ? "Dataset: " + dataset?.slug : "Create Dataset"
 
   useEffect(() => {
     if (
@@ -275,24 +266,10 @@ export default function NewDataset() {
             </Badge>
           </Group>
           <Text size="lg" mb="md">
-            Datasets are collections of prompts that you can use as a basis for
+            A dataset is a collection of prompts that you can use as a basis for
             evaluations.
           </Text>
         </Stack>
-
-        <TextInput
-          defaultValue={dataset?.slug}
-          pattern="/^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$/"
-          onChange={(e) => {
-            mutate({
-              ...dataset,
-              slug: cleanSlug(e.currentTarget.value),
-            })
-          }}
-          onBlur={(e) => {
-            update({ slug: cleanSlug(e.currentTarget.value) })
-          }}
-        />
 
         <Tabs value={activePrompt} onChange={setActivePrompt} variant="pills">
           <Group justify="space-between" mb="lg" wrap="nowrap">
