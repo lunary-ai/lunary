@@ -14,7 +14,21 @@ const sql = postgres(process.env.DATABASE_URL!, {
   connection: {
     application_name: `backend-${isProduction ? "production" : "development"}-${new Date().getTime()}`,
   },
+  debug: process.env.DEBUG ? debugFn : false,
 })
+
+function debugFn(
+  connection: number,
+  query: string,
+  parameters: any[],
+  paramTypes: any[],
+) {
+  console.log("connection:", connection)
+  console.log("query:", query)
+  console.log("parameters:", parameters)
+  console.log("paramTypes:", paramTypes)
+  console.log("-----\n")
+}
 
 export async function checkDbConnection() {
   try {
