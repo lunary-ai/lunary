@@ -153,4 +153,29 @@ users.get("/:userId", async (ctx: Context) => {
   ctx.body = user
 })
 
+users.patch("/:userId", async (ctx: Context) => {
+  const { userId: userToDeleteId } = ctx.params
+  const { userId: currentUserId } = ctx.state
+
+  const [currentUser] =
+    await sql`select * from account where id = ${currentUserId}`
+
+  const [userToDelete] =
+    await sql`select * from account where id = ${userToDeleteId}`
+
+  if (currentUser.role !== "admin") {
+    ctx.throw(401, "You must be an admin to remove a user from your team")
+  }
+
+  if (currentUser.orgId !== userToDelete.orgId) {
+    ctx.throw(401, "Forbidden")
+  }
+
+  // we remove the user from the org but don't delete it because later users will be able to be in several orgs
+  await sql`update account set org_id = NULL where id = ${userToDeleteId}`
+
+  ctx.status = 200
+  ctx.body = {}
+})
+
 export default users
