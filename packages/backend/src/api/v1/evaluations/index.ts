@@ -6,6 +6,8 @@ import { Evaluation } from "shared"
 import { getReadableDateTime } from "@/src/utils/date"
 import { runEval } from "./utils"
 import { getEvaluation } from "./utils"
+import { calcRunCost } from "@/src/utils/calcCost"
+import { runChecksOnRun } from "@/src/checks/runChecks"
 
 const evaluations = new Router({ prefix: "/evaluations" })
 
@@ -67,11 +69,6 @@ evaluations.post("/", async (ctx: Context) => {
     checklistId,
   }
 
-  const [checklist] =
-    await sql`select * from checklist where id = ${checklistId}`
-
-  const checks = checklist.data
-
   const [insertedEvaluation] =
     await sql`insert into evaluation ${sql(evaluationToInsert)} returning *`
 
@@ -103,12 +100,11 @@ evaluations.post("/", async (ctx: Context) => {
             runEval(
               insertedEvaluation.id,
               insertedPrompt.id,
-              insertedVariation.id,
+              checklistId,
               model,
               prompt.content,
               prompt.extra,
               variation,
-              checks,
             ),
           )
         }
@@ -214,10 +210,64 @@ evaluations.get("/", async (ctx: Context) => {
   ctx.body = evaluations
 })
 
+// special route used by the SDK to run evaluations
 evaluations.post("/run", async (ctx: Context) => {
-  console.log("running eval")
-  console.log(ctx.request.body)
-  ctx.body = { passed: true, results: [] }
+  const { projectId } = ctx.state
+  const { checklist, input, output, idealOutput, context, duration, model } =
+    ctx.request.body as {
+      checklist: string
+      input: any
+      output: any
+      duration?: number
+      idealOutput?: string
+      context?: string
+      model?: string
+    }
+
+  const [checklistData] =
+    await sql` select * from checklist where slug = ${checklist} and project_id = ${projectId}`
+
+  if (!checklistData) {
+    ctx.throw(400, "Invalid checklist, is the slug correct?")
+  }
+
+  const checks = checklistData.data
+
+  const virtualRun = {
+    type: "llm",
+    input,
+    output,
+    inputText: JSON.stringify(input),
+    outputText: JSON.stringify(output),
+    status: "success",
+    // params: extra,
+    name: model || "custom",
+    duration: duration || 0,
+    promptTokens: 0,
+    completionTokens: 0,
+    createdAt: new Date(),
+    endedAt: new Date(),
+    // Eval-only fields:
+    idealOutput,
+    context,
+    // So the SQL queries don't fail:
+    id: "00000000-0000-4000-8000-000000000000",
+    projectId: "00000000-0000-4000-8000-000000000000",
+    isPublic: false,
+    cost: 0,
+  }
+
+  const cost = calcRunCost(virtualRun)
+  virtualRun.cost = cost
+  virtualRun.duration = virtualRun.duration / 1000 // needs to be in ms in calcRunCost, but needs to be in seconds in the checks
+
+  // run checks
+  const { passed, results } = await runChecksOnRun(virtualRun, checks)
+
+  console.log(`---------------------`)
+  console.log(passed, results)
+
+  ctx.body = { passed, results }
 })
 
 export default evaluations

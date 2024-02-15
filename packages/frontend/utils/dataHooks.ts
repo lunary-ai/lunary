@@ -500,7 +500,7 @@ export function useDatasets() {
   }
 }
 
-export function useDataset(id: string) {
+export function useDataset(id: string, initialData?: any) {
   const { mutate: mutateDatasets } = useDatasets()
 
   const {
@@ -508,7 +508,9 @@ export function useDataset(id: string) {
     isLoading,
     isValidating,
     mutate,
-  } = useProjectSWR(id && id !== "new" && `/datasets/${id}`)
+  } = useProjectSWR(id && id !== "new" && `/datasets/${id}`, {
+    fallbackData: initialData,
+  })
 
   const { trigger: update } = useProjectMutation(
     `/datasets/${id}`,

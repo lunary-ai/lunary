@@ -2,14 +2,12 @@ import OrgUserBadge from "@/components/Blocks/OrgUserBadge"
 import Paywall from "@/components/Layout/Paywall"
 import { useEvaluations } from "@/utils/dataHooks"
 import {
-  ActionIcon,
   Badge,
   Button,
   Card,
   Container,
   Group,
   Loader,
-  Menu,
   Stack,
   Text,
   Title,
@@ -17,9 +15,7 @@ import {
 } from "@mantine/core"
 import {
   IconChecklist,
-  IconCopy,
   IconDatabase,
-  IconDotsVertical,
   IconFlask2Filled,
   IconPlus,
 } from "@tabler/icons-react"
@@ -38,10 +34,6 @@ export default function Evaluations() {
 
   if (!isLoading && evaluations.length === 0) {
     router.push("/evaluations/new")
-  }
-
-  if (isLoading) {
-    return <Loader />
   }
 
   return (
@@ -103,57 +95,68 @@ export default function Evaluations() {
             </Tooltip>
           </Group>
 
-          <Title order={3}>Evaluation History</Title>
+          <Title order={3} mt="lg">
+            History
+          </Title>
 
-          <Stack gap="xl">
-            {evaluations.map((evaluation) => (
-              <Card key={evaluation.id} p="lg" withBorder>
-                <Group justify="space-between">
-                  <Stack>
-                    <Group>
-                      <Title
-                        order={3}
-                        size={16}
+          {isLoading ? (
+            <Loader />
+          ) : (
+            <Stack gap="xl">
+              {evaluations.map((evaluation) => (
+                <Card key={evaluation.id} p="lg" withBorder>
+                  <Group justify="space-between">
+                    <Stack>
+                      <Group>
+                        <Title
+                          order={3}
+                          size={16}
+                          onClick={() =>
+                            router.push(`/evaluations/${evaluation.id}`)
+                          }
+                          style={{ cursor: "pointer" }}
+                        >
+                          {evaluation.name}
+                        </Title>
+                        <Badge
+                          variant="light"
+                          radius="sm"
+                          color="teal"
+                          size="sm"
+                        >
+                          Complete
+                        </Badge>
+                      </Group>
+                      <OrgUserBadge userId={evaluation.ownerId} />
+                    </Stack>
+
+                    {/* <Group>
+                      <Button
                         onClick={() =>
                           router.push(`/evaluations/${evaluation.id}`)
                         }
-                        style={{ cursor: "pointer" }}
+                        variant="light"
                       >
-                        {evaluation.name}
-                      </Title>
-                      <Badge variant="light" radius="sm" color="teal" size="sm">
-                        Complete
-                      </Badge>
-                    </Group>
-                    <OrgUserBadge userId={evaluation.ownerId} />
-                  </Stack>
-
-                  <Group>
-                    <Button
-                      onClick={() =>
-                        router.push(`/evaluations/${evaluation.id}`)
-                      }
-                      variant="light"
-                    >
-                      Results
-                    </Button>
-                    <Menu withArrow shadow="sm" position="bottom-end">
-                      <Menu.Target>
-                        <ActionIcon variant="transparent">
-                          <IconDotsVertical size={16} />
-                        </ActionIcon>
-                      </Menu.Target>
-                      <Menu.Dropdown>
-                        <Menu.Item leftSection={<IconCopy size={16} />}>
-                          Edit & Re-Run
-                        </Menu.Item>
-                      </Menu.Dropdown>
-                    </Menu>
+                        Results
+                      </Button>
+                      <Menu withArrow shadow="sm" position="bottom-end">
+                        <Menu.Target>
+                          <ActionIcon variant="transparent">
+                            <IconDotsVertical size={16} />
+                          </ActionIcon>
+                        </Menu.Target>
+                        <Menu.Dropdown>
+                          <Menu.Item leftSection={<IconCopy size={16} />}>
+                            Edit & Re-Run
+                          </Menu.Item>
+                        </Menu.Dropdown>
+                      </Menu>
+                    </Group> */}
                   </Group>
-                </Group>
-              </Card>
-            ))}
-          </Stack>
+                </Card>
+              ))}
+            </Stack>
+          )}
         </Stack>
       </Container>
     </Paywall>

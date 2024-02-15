@@ -5,34 +5,34 @@ import { compileChatMessages, runAImodel } from "@/src/utils/playground"
 import { FilterLogic } from "shared"
 
 interface RunEvalParams {
-  evaluationId: string
-  promptId: string
+  checklistId: string
   model: string
-  prompt: any
+  input: any
   extra: any
   variation: any
-  checks: FilterLogic
 }
 
 export async function runEval({
-  evaluationId,
-  promptId,
+  checklistId,
   model,
-  prompt,
+  input,
   extra,
   variation,
-  checks,
 }: RunEvalParams) {
   try {
     console.log(`=============================`)
     console.log(
       `Running eval for ${model} with variation ${JSON.stringify(variation.variables)}`,
     )
-    const { variables, idealOutput, context } = variation
+    const { idealOutput, context } = variation
+
+    const [checklist] =
+      await sql`select * from checklist where id = ${checklistId}`
+
+    const checks = checklist.data
 
     // run AI query
     const createdAt = new Date()
-    const input = compileChatMessages(prompt, variables)
 
     const res = await runAImodel(input, extra, undefined, model)
     const endedAt = new Date()
@@ -98,6 +98,50 @@ export async function runEval({
     console.error(error)
   }
 }
+
+export async function runEvalAndSave({
+  evaluationId,
+  promptId,
+  checklistId,
+  model,
+  prompt,
+  extra,
+  variation,
+}: RunEvalParams) {
+  try {
+    const { variables, idealOutput, context } = variation
+
+    const input = compileChatMessages(prompt, variables)
+
+    // run checks
+    const { passed, results } = await runEval(
+      checklistId,
+      model,
+      input,
+      extra,
+      variation,
+    )
+
+    // insert into eval_result
+    await sql`
+      insert into evaluation_result ${sql({
+        evaluationId,
+        promptId,
+        variationId: variation.id,
+        model,
+        output,
+        results,
+        passed,
+        completionTokens,
+        cost,
+        duration,
+      })}
+      `
+  } catch (error) {
+    console.error(error)
+  }
+}
+
 export async function getEvaluation(evaluationId: string) {
   const rows = await sql`
     select

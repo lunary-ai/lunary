@@ -1,5 +1,7 @@
 import OrgUserBadge from "@/components/Blocks/OrgUserBadge"
-import { useDatasets } from "@/utils/dataHooks"
+import RenamableField from "@/components/Blocks/RenamableField"
+import { useDataset, useDatasets } from "@/utils/dataHooks"
+import { cleanSlug } from "@/utils/format"
 import {
   Badge,
   Button,
@@ -14,15 +16,64 @@ import {
 import { IconPencil, IconPlus } from "@tabler/icons-react"
 import Router from "next/router"
 
+function DatasetCard({ defaultValue }) {
+  const { update, dataset } = useDataset(defaultValue?.id, defaultValue)
+
+  return (
+    <Card p="lg" withBorder>
+      <Group justify="space-between">
+        <Stack>
+          <Group>
+            <RenamableField
+              style={{ cursor: "pointer" }}
+              order={3}
+              size={16}
+              defaultValue={dataset.slug}
+              onRename={(newName) => {
+                update(
+                  { slug: cleanSlug(newName) },
+                  {
+                    optimisticData: (data) => ({
+                      ...data,
+                      slug: cleanSlug(newName),
+                    }),
+                  },
+                )
+              }}
+            />
+            {dataset?.prompts && (
+              <Badge
+                variant="light"
+                radius="sm"
+                color="blue"
+                size="md"
+                tt="none"
+              >
+                {`${dataset.prompts?.length} prompt${dataset.prompts?.length > 1 ? "s" : ""}`}
+              </Badge>
+            )}
+          </Group>
+          <OrgUserBadge userId={dataset.ownerId} />
+        </Stack>
+
+        <Button
+          onClick={() => Router.push(`/datasets/${dataset.id}`)}
+          size="sm"
+          leftSection={<IconPencil size={16} />}
+          variant="light"
+        >
+          Edit
+        </Button>
+      </Group>
+    </Card>
+  )
+}
+
 export default function Datasets() {
   const { datasets, isLoading } = useDatasets()
 
   if (!isLoading && datasets.length === 0) {
     Router.push("/datasets/new")
-  }
-
-  if (isLoading) {
-    return <Loader />
   }
 
   return (
@@ -52,47 +103,15 @@ export default function Datasets() {
           </Text>
         </Group>
 
-        <Stack gap="xl">
-          {datasets.map((dataset) => (
-            <Card key={dataset.id} p="lg" withBorder>
-              <Group justify="space-between">
-                <Stack>
-                  <Group>
-                    <Title
-                      style={{ cursor: "pointer" }}
-                      order={3}
-                      size={16}
-                      onClick={() => {
-                        Router.push(`/datasets/${dataset.id}`)
-                      }}
-                    >
-                      {dataset.slug}
-                    </Title>
-                    <Badge
-                      variant="light"
-                      radius="sm"
-                      color="blue"
-                      size="md"
-                      tt="none"
-                    >
-                      {`${dataset.promptCount} prompt${dataset.promptCount > 1 ? "s" : ""}`}
-                    </Badge>
-                  </Group>
-                  <OrgUserBadge userId={dataset.ownerId} />
-                </Stack>
-
-                <Button
-                  onClick={() => Router.push(`/datasets/${dataset.id}`)}
-                  size="sm"
-                  leftSection={<IconPencil size={16} />}
-                  variant="light"
-                >
-                  Edit
-                </Button>
-              </Group>
-            </Card>
-          ))}
-        </Stack>
+        {isLoading ? (
+          <Loader />
+        ) : (
+          <Stack gap="xl">
+            {datasets?.map((dataset) => (
+              <DatasetCard key={dataset.id} defaultValue={dataset} />
+            ))}
+          </Stack>
+        )}
       </Stack>
     </Container>
   )

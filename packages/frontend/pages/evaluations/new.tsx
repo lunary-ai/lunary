@@ -29,79 +29,13 @@ import { useRouter } from "next/router"
 import { generateSlug } from "random-word-slugs"
 import { useState } from "react"
 import { FilterLogic, MODELS, Prompt } from "shared"
+import { ChecklistModal } from "./checklists"
 
 const FEATURE_LIST = [
   "Define assertions to test variations of prompts",
   "Powerful AI powered assertion engine",
   "Compare results with OpenAI, Anthropic, Mistral and more",
 ]
-
-function ChecklistModal({ open, onClose }) {
-  const [slug, setSlug] = useState(generateSlug())
-  const [data, setData] = useState<FilterLogic>(["AND"])
-
-  const { insert, isInserting, mutate } = useChecklists("evaluation")
-
-  async function createChecklist() {
-    if (!slug.length || data.length < 2) return
-
-    const res = await insert({
-      slug: cleanSlug(slug),
-      data,
-      type: "evaluation",
-    })
-    await mutate()
-    onClose(res?.id)
-  }
-
-  const canCreate = slug.length > 0 && data.length > 1
-
-  return (
-    <Modal
-      title="Create a new checklist"
-      size="lg"
-      opened={open}
-      onClose={onClose}
-    >
-      <Stack>
-        <TextInput
-          label="Slug"
-          description="A unique identifier for this set of checks. Can be used in the SDK."
-          placeholder="Checklist name"
-          value={slug}
-          onChange={(e) => setSlug(e.currentTarget.value)}
-        />
-        <Stack gap={0}>
-          <InputLabel mb={-5}>Checks</InputLabel>
-          <InputDescription mb={16}>
-            Define the checks that will result in a{" "}
-            <Text c="green" span fw="bold">
-              PASS
-            </Text>
-            .
-          </InputDescription>
-          <FilterPicker
-            restrictTo={(filter) => !filter.disableInEvals}
-            value={data}
-            onChange={setData}
-          />
-        </Stack>
-        <Group mt="lg" align="right" justify="space-between">
-          <Button onClick={onClose} variant="subtle">
-            Cancel
-          </Button>
-          <Button
-            onClick={createChecklist}
-            loading={isInserting}
-            disabled={!canCreate}
-          >
-            Create
-          </Button>
-        </Group>
-      </Stack>
-    </Modal>
-  )
-}
 
 export default function NewEvaluation() {
   const [checklistModal, setChecklistModal] = useState(false)

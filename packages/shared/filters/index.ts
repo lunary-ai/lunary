@@ -326,6 +326,7 @@ export const FILTERS: Filter[] = [
   {
     id: "duration",
     name: "Duration",
+    disableInEvals: true,
     uiType: "basic",
     params: [
       {
@@ -348,6 +349,7 @@ export const FILTERS: Filter[] = [
     id: "cost",
     name: "Cost",
     uiType: "basic",
+    disableInEvals: true,
     params: [
       {
         type: "label",
@@ -367,6 +369,7 @@ export const FILTERS: Filter[] = [
   {
     id: "tokens",
     name: "Tokens",
+    disableInEvals: true,
     uiType: "basic",
     params: [
       {
