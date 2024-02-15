@@ -118,7 +118,7 @@ export default function EvalResults() {
         ) : (
           <>
             {data?.length > 0 ? (
-              <Stack>
+              <Stack gap="xl">
                 {groupBy === "none" && (
                   <ResultsMatrix data={data} groupBy={groupBy} />
                 )}
