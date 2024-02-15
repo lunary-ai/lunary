@@ -1,10 +1,8 @@
 import Steps from "@/components/Blocks/Steps"
-import FilterPicker from "@/components/Filters/Picker"
 import Paywall from "@/components/Layout/Paywall"
 import { useChecklists, useDatasets, useProject } from "@/utils/dataHooks"
 import errorHandler from "@/utils/errors"
 import { fetcher } from "@/utils/fetcher"
-import { cleanSlug } from "@/utils/format"
 
 import {
   Anchor,
@@ -12,23 +10,18 @@ import {
   Button,
   Container,
   Group,
-  InputDescription,
-  InputLabel,
-  Modal,
   MultiSelect,
   Progress,
   Select,
   Stack,
   Text,
-  TextInput,
   Title,
   Tooltip,
 } from "@mantine/core"
 import { IconFlask2Filled } from "@tabler/icons-react"
 import { useRouter } from "next/router"
-import { generateSlug } from "random-word-slugs"
 import { useEffect, useRef, useState } from "react"
-import { FilterLogic, MODELS, Prompt } from "shared"
+import { MODELS } from "shared"
 import { ChecklistModal } from "./checklists"
 
 const FEATURE_LIST = [
