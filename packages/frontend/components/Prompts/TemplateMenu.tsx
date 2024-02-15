@@ -22,8 +22,8 @@ import { useTemplate, useTemplates } from "@/utils/dataHooks"
 import { useHover } from "@mantine/hooks"
 import { modals } from "@mantine/modals"
 import { notifications } from "@mantine/notifications"
-import { formatDistanceToNow } from "date-fns"
-import { cleanSlug } from "@/utils/format"
+
+import { cleanSlug, formatCompactFromNow } from "@/utils/format"
 
 export const defaultTemplateVersion = {
   content: [
@@ -229,14 +229,7 @@ const TemplateListItem = ({
                 )}
 
                 <Text c="dimmed" span size="xs" ml="auto">
-                  {formatDistanceToNow(new Date(version?.createdAt), {
-                    addSuffix: true,
-                  })
-                    .replace("less than", "<")
-                    .replace("about", "~")
-                    .replace("minute", "min")
-                    .replace(" hours", "h")
-                    .replace(" hour", "h")}
+                  {formatCompactFromNow(version?.createdAt)}
                 </Text>
               </Group>
             }

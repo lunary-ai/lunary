@@ -464,6 +464,9 @@ export function useChecklist(id: string, initialData?: any) {
   const { trigger: remove } = useProjectMutation(
     id && `/checklists/${id}`,
     fetcher.delete,
+    {
+      revalidate: false,
+    },
   )
 
   return {
@@ -671,5 +674,19 @@ export function useEvaluations() {
   return {
     evaluations: data || [],
     isLoading,
+  }
+}
+
+export function useEvaluation(id: string) {
+  const {
+    data: evaluation,
+    isLoading,
+    mutate,
+  } = useProjectSWR(id && `/evaluations/${id}`)
+
+  return {
+    evaluation,
+    mutate,
+    loading: isLoading,
   }
 }
