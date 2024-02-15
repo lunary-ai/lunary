@@ -103,7 +103,7 @@ export default function NewEvaluation() {
         <Stack align="right" gap="lg">
           <Anchor href="/evaluations">← Back to Evaluations</Anchor>
           <Group align="center">
-            <Title>Run an evaluation</Title>
+            <Title>Magic Evaluation</Title>
             <Badge variant="light" color="violet">
               Alpha
             </Badge>
@@ -119,7 +119,7 @@ export default function NewEvaluation() {
           <Steps>
             <Steps.Step n={1} label="Dataset">
               <Text size="lg" mb="md" mt={-6}>
-                Add prompts with variations of variables to test.
+                Prompts with variations of variables to test.
               </Text>
 
               <Select
@@ -136,7 +136,7 @@ export default function NewEvaluation() {
             </Steps.Step>
             <Steps.Step n={2} label="Models">
               <Text size="lg" mb="md" mt={-6}>
-                Select the models you want to compare.
+                LLMs you want to compare.
               </Text>
               <MultiSelect
                 data={MODELS.map((model) => ({
@@ -150,8 +150,8 @@ export default function NewEvaluation() {
             </Steps.Step>
             <Steps.Step n={3} label="Checklists">
               <Text size="lg" mb="md" mt={-6}>
-                Select a checklist against which to run the dataset that will
-                result in a{" "}
+                Assertions against which to run the dataset that will result in
+                a{" "}
                 <Text c="green" span fw="bold">
                   PASS
                 </Text>

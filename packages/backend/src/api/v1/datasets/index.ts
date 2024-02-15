@@ -73,7 +73,7 @@ datasets.post("/", async (ctx: Context) => {
   `
 
   // insert 1 prompt and 1 variation
-  await sql`insert into dataset_prompt
+  const [prompt] = await sql`insert into dataset_prompt
     ${sql({
       datasetId: dataset.id,
       messages: DEFAULT_PROMPT,
@@ -82,7 +82,7 @@ datasets.post("/", async (ctx: Context) => {
   `
   await sql`insert into dataset_prompt_variation
     ${sql({
-      promptId: dataset.id,
+      promptId: prompt.id,
       variables: {},
       context: "",
       idealOutput: "",

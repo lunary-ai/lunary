@@ -12,7 +12,7 @@ import { runChecksOnRun } from "@/src/checks/runChecks"
 const evaluations = new Router({ prefix: "/evaluations" })
 
 evaluations.post("/", async (ctx: Context) => {
-  const { name, datasetId, checks, models } = ctx.request.body as any
+  const { name, datasetId, checklistId, models } = ctx.request.body as any
   const { userId, projectId } = ctx.state
 
   // TODO: transactions, but not working with because of nesting
@@ -22,7 +22,8 @@ evaluations.post("/", async (ctx: Context) => {
     projectId,
     datasetId,
     models,
-    checks,
+    checklistId,
+    checks: [], // TODO: remove this legacy row from DB,
   }
 
   const [insertedEvaluation] =
@@ -41,7 +42,7 @@ evaluations.post("/", async (ctx: Context) => {
             variation,
             model,
             prompt: prompt.content,
-            checks,
+            checklistId,
             extra: {},
           }),
         )
@@ -67,6 +68,7 @@ evaluations.post("/", async (ctx: Context) => {
     projectId,
     models,
     checklistId,
+    checks: [], // TODO: remove this legacy row from DB
   }
 
   const [insertedEvaluation] =
