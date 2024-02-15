@@ -18,8 +18,13 @@ function getResultForVariation(
     (result) =>
       (promptId ? result.promptId === promptId : true) &&
       (model ? result.model === model : true) &&
+      (Object.keys(variables).length === 0
+        ? Object.keys(result.variables).length === 0
+        : true) &&
       Object.keys(variables).every(
-        (variable) => result.variables[variable] === variables[variable],
+        (variable) =>
+          result.variables.hasOwnProperty(variable) &&
+          result.variables[variable] === variables[variable],
       ),
   )
 
@@ -31,7 +36,6 @@ function getResultForVariation(
 
   return result
 }
-
 const getAggegateForVariation = (
   promptId: string,
   model: string,
