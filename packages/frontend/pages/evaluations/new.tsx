@@ -27,7 +27,7 @@ import {
 import { IconFlask2Filled } from "@tabler/icons-react"
 import { useRouter } from "next/router"
 import { generateSlug } from "random-word-slugs"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { FilterLogic, MODELS, Prompt } from "shared"
 import { ChecklistModal } from "./checklists"
 
@@ -51,8 +51,36 @@ export default function NewEvaluation() {
   const router = useRouter()
 
   const { project } = useProject()
-  const { datasets } = useDatasets()
-  const { checklists } = useChecklists("evaluation")
+
+  const { datasets, isLoading: datasetsLoading } = useDatasets()
+  const { checklists, loading: checklistsLoading } = useChecklists("evaluation")
+
+  // make sure to only fetch once
+  const ref = useRef({ done: false })
+
+  useEffect(() => {
+    if (!project || ref.current?.done || datasetsLoading || checklistsLoading)
+      return
+
+    const { clone } = router.query
+
+    if (clone) {
+      ref.current.done = true
+      const fetchEval = async () => {
+        const cloneEval = await fetcher.get(
+          `/evaluations/${clone}?projectId=${project?.id}`,
+        )
+
+        if (!cloneEval) return
+
+        setDatasetId(cloneEval.datasetId)
+        setModels(cloneEval.models)
+        setChecklistId(cloneEval.checklistId)
+      }
+
+      fetchEval()
+    }
+  }, [project, router.query])
 
   async function startEval() {
     setLoading(true)
