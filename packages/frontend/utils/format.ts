@@ -1,3 +1,5 @@
+import { formatDistanceToNow } from "date-fns"
+
 export const formatCost = (cost = 0) => {
   if (cost < 1) {
     const formattedCost = (cost * 100).toFixed(4)
@@ -68,3 +70,13 @@ export const cleanSlug = (text: string): string =>
     .replace(/\s+/g, "-")
     .replace(/[^\w-]+/g, "")
     .replace(/--+/g, "-")
+
+export const formatCompactFromNow = (date) =>
+  formatDistanceToNow(new Date(), {
+    addSuffix: true,
+  })
+    .replace("less than", "<")
+    .replace("about", "~")
+    .replace("minute", "min")
+    .replace(" hours", "h")
+    .replace(" hour", "h")

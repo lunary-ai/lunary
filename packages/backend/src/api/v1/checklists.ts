@@ -69,4 +69,18 @@ checklists.patch("/:id", async (ctx: Context) => {
   ctx.body = updatedCheck
 })
 
+checklists.delete("/:id", async (ctx: Context) => {
+  const { projectId } = ctx.state
+  const { id } = ctx.params
+
+  await sql`
+    delete from checklist
+    where project_id = ${projectId}
+    and id = ${id}
+    returning *
+  `
+
+  ctx.status = 200
+})
+
 export default checklists

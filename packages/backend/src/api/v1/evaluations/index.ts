@@ -120,53 +120,15 @@ evaluations.post("/", async (ctx: Context) => {
 })
 
 evaluations.get("/:id", async (ctx: Context) => {
-  const evaluationId = z.string().uuid().parse(ctx.params.id)
+  const { projectId } = ctx.state
+  const { id } = ctx.params
 
-  const rows = await sql`
-    select
-      e.*,
-      p.id as prompt_id,
-      p.content as prompt_content,
-      p.extra as prompt_extra,
-      pv.id as variation_id,
-      pv.variables,
-      pv.context,
-      pv.ideal_output
-    from
-      evaluation e
-      left join evaluation_prompt p on e.id = p.evaluation_id
-      left join evaluation_prompt_variation pv on pv.prompt_id = p.id
-    where 
-      e.id = ${evaluationId}
-    `
+  const [evaluation] = await sql`
+    select * from evaluation where id = ${id} and project_id = ${projectId}
+  `
 
-  if (!rows) {
+  if (!evaluation) {
     ctx.throw(404, "Evaluation not found")
-  }
-
-  const { id, createdAt, name, ownerId, projectId, models, checks } = rows[0]
-
-  const evaluation = {
-    id,
-    createdAt,
-    name,
-    ownerId,
-    projectId,
-    models,
-    checks,
-    prompts: rows.map(({ promptId, promptContent, promptExtra }) => ({
-      id: promptId,
-      content: promptContent,
-      extra: promptExtra,
-      variations: rows
-        .filter((row) => row.promptId === promptId)
-        .map(({ variationId, variables, context, idealOutput }) => ({
-          id: variationId,
-          variables,
-          context,
-          idealOutput,
-        })),
-    })),
   }
 
   ctx.body = evaluation

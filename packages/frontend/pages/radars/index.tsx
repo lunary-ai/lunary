@@ -11,6 +11,7 @@ import {
   Container,
   Flex,
   Group,
+  Loader,
   Menu,
   Modal,
   Progress,
@@ -367,7 +368,7 @@ const FEATURE_LIST = [
 
 export default function Radar() {
   const [modalOpened, setModalOpened] = useState(false)
-  const { radars, insert } = useRadars()
+  const { radars, insert, loading } = useRadars()
   const [newRadar, setNewRadar] = useState(DEFAULT_RADAR)
 
   return (
@@ -426,11 +427,15 @@ export default function Radar() {
             }}
           />
 
-          <Stack gap="xl">
-            {radars?.map((radar) => (
-              <RadarCard key={radar.id} id={radar.id} initialData={radar} />
-            ))}
-          </Stack>
+          {loading ? (
+            <Loader />
+          ) : (
+            <Stack gap="xl">
+              {radars?.map((radar) => (
+                <RadarCard key={radar.id} id={radar.id} initialData={radar} />
+              ))}
+            </Stack>
+          )}
         </Stack>
       </Container>
     </Paywall>

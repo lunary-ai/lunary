@@ -4,6 +4,7 @@ import { useChecklist, useChecklists } from "@/utils/dataHooks"
 import { cleanSlug } from "@/utils/format"
 
 import {
+  ActionIcon,
   Badge,
   Button,
   Card,
@@ -18,19 +19,48 @@ import {
   TextInput,
   Title,
 } from "@mantine/core"
-import { IconPlus } from "@tabler/icons-react"
+import { modals } from "@mantine/modals"
+import { IconPlus, IconTrash } from "@tabler/icons-react"
 import { generateSlug } from "random-word-slugs"
 import { useState } from "react"
 import { FilterLogic } from "shared"
 
-function ChecklistCard({ defaultValue }) {
-  const { checklist, update, mutate } = useChecklist(
+function ChecklistCard({ defaultValue, onDelete }) {
+  const { checklist, update, remove } = useChecklist(
     defaultValue?.id,
     defaultValue,
   )
 
   return (
-    <Card p="lg" withBorder>
+    <Card p="lg" withBorder pos="relative" style={{ overflow: "visible" }}>
+      <ActionIcon
+        pos="absolute"
+        top={-15}
+        right={-15}
+        style={{ zIndex: 10 }}
+        onClick={async () => {
+          modals.openConfirmModal({
+            title: "Please confirm your action",
+            confirmProps: { color: "red" },
+            children: (
+              <Text size="sm">
+                Are you sure you want to delete this prompt? This action cannot
+                be undone and the prompt data will be lost forever.
+              </Text>
+            ),
+            labels: { confirm: "Confirm", cancel: "Cancel" },
+
+            onConfirm: async () => {
+              onDelete()
+              remove()
+            },
+          })
+        }}
+        color="red"
+        variant="subtle"
+      >
+        <IconTrash size={16} />
+      </ActionIcon>
       <Stack>
         <Group>
           <RenamableField
@@ -164,7 +194,18 @@ export default function Checklists() {
         ) : (
           <Stack gap="xl">
             {checklists?.map((checklist) => (
-              <ChecklistCard key={checklist.id} defaultValue={checklist} />
+              <ChecklistCard
+                key={checklist.id}
+                defaultValue={checklist}
+                onDelete={() => {
+                  mutate(
+                    checklists.filter((c) => c.id !== checklist.id),
+                    {
+                      revalidate: false,
+                    },
+                  )
+                }}
+              />
             ))}
           </Stack>
         )}

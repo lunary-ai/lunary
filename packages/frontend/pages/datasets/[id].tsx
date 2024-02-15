@@ -5,6 +5,7 @@ import {
   useDatasetPrompt,
   useDatasetPromptVariation,
 } from "@/utils/dataHooks"
+import { formatCompactFromNow } from "@/utils/format"
 import { usePromptVariables } from "@/utils/promptsHooks"
 import {
   ActionIcon,
@@ -23,17 +24,12 @@ import {
 } from "@mantine/core"
 import { useDebouncedState } from "@mantine/hooks"
 import { modals } from "@mantine/modals"
-import {
-  IconCircleMinus,
-  IconPlus,
-  IconTrash,
-  IconX,
-} from "@tabler/icons-react"
+import { IconCircleMinus, IconPlus } from "@tabler/icons-react"
 import { usePathname } from "next/navigation"
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
 
-function PromptVariation({ i, variationId, variables, onDelete }) {
+function PromptVariation({ i, variationId, variables, onDelete, markSaved }) {
   const { variation, update, remove, mutate } =
     useDatasetPromptVariation(variationId)
 
@@ -53,6 +49,9 @@ function PromptVariation({ i, variationId, variables, onDelete }) {
       update(debouncedVariation, {
         revalidate: false,
         optimisticData: (data) => ({ ...data, ...debouncedVariation }),
+        onSuccess: () => {
+          markSaved()
+        },
       })
     }
   }, [debouncedVariation])
@@ -137,7 +136,7 @@ function PromptVariation({ i, variationId, variables, onDelete }) {
   )
 }
 
-function PromptTab({ promptId, onDelete }) {
+function PromptTab({ promptId, onDelete, markSaved }) {
   const {
     prompt,
     update,
@@ -154,8 +153,14 @@ function PromptTab({ promptId, onDelete }) {
 
   useEffect(() => {
     if (debouncedMessages) {
-      console.log("saving")
-      update({ messages: debouncedMessages })
+      update(
+        { messages: debouncedMessages },
+        {
+          onSuccess: () => {
+            markSaved()
+          },
+        },
+      )
     }
   }, [debouncedMessages])
 
@@ -180,6 +185,7 @@ function PromptTab({ promptId, onDelete }) {
           key={i}
           i={i}
           variables={promptVariables}
+          markSaved={markSaved}
           variationId={variation.id}
           onDelete={() => {
             mutate({
@@ -254,6 +260,8 @@ export default function NewDataset() {
   const { dataset, loading, insertPrompt, mutate, isInsertingPrompt } =
     useDataset(datasetId)
 
+  const [lastSaved, setLastSaved] = useState<number>(dataset?.updatedAt)
+
   const isEdit = pathname?.split("/")?.at(-1) !== "new"
   const title = isEdit ? "Dataset: " + dataset?.slug : "Create Dataset"
 
@@ -265,6 +273,10 @@ export default function NewDataset() {
       setActivePrompt(dataset.prompts[0].id)
     }
   }, [dataset, activePrompt])
+
+  function markSaved() {
+    setLastSaved(Date.now())
+  }
 
   if (loading) {
     return <Loader />
@@ -283,11 +295,18 @@ export default function NewDataset() {
           ← Back
         </Anchor>
         <Stack>
-          <Group align="center">
-            <Title>{title}</Title>
-            <Badge variant="light" color="violet">
-              Alpha
-            </Badge>
+          <Group>
+            <Group align="center">
+              <Title>{title}</Title>
+              <Badge variant="light" color="violet">
+                Alpha
+              </Badge>
+            </Group>
+            {lastSaved && (
+              <Text size="sm" c="dimmed">
+                Last saved {formatCompactFromNow(lastSaved)}
+              </Text>
+            )}
           </Group>
           <Text size="lg" mb="md">
             A dataset is a collection of prompts that you can use as a basis for
@@ -310,7 +329,14 @@ export default function NewDataset() {
               variant="outline"
               loading={isInsertingPrompt}
               onClick={async () => {
-                const prompt = await insertPrompt({ datasetId })
+                const prompt = await insertPrompt(
+                  { datasetId },
+                  {
+                    onSuccess: () => {
+                      markSaved()
+                    },
+                  },
+                )
                 mutate({
                   ...dataset,
                   prompts: [...dataset.prompts, prompt],
@@ -327,6 +353,7 @@ export default function NewDataset() {
             <Tabs.Panel key={i} value={prompt.id}>
               <PromptTab
                 promptId={prompt.id}
+                markSaved={markSaved}
                 onDelete={() => {
                   mutate({
                     ...dataset,

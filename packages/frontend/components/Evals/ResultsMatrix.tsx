@@ -14,7 +14,7 @@ function getResultForVariation(
   model: string,
   evalResults,
 ): any | undefined {
-  return evalResults.find(
+  const result = evalResults.find(
     (result) =>
       (promptId ? result.promptId === promptId : true) &&
       (model ? result.model === model : true) &&
@@ -22,6 +22,14 @@ function getResultForVariation(
         (variable) => result.variables[variable] === variables[variable],
       ),
   )
+
+  if (!result) {
+    console.log(`No result found for`, promptId, variables, model)
+  } else {
+    console.log(`Found result for`, promptId, variables, model)
+  }
+
+  return result
 }
 
 const getAggegateForVariation = (
@@ -122,8 +130,6 @@ export default function ResultsMatrix({ data, groupBy = "none" }) {
   const pmVariations = getPromptModelVariations(data, groupBy)
 
   const variables = Array.from(new Set(variableVariations.flatMap(Object.keys)))
-
-  console.log(data)
 
   return (
     <Stack>
