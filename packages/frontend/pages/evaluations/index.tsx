@@ -20,11 +20,8 @@ import {
   IconDatabase,
   IconFlask2Filled,
   IconInfoCircle,
-  IconListDetails,
-  IconPlus,
   IconRefresh,
   IconTable,
-  IconTableColumn,
 } from "@tabler/icons-react"
 import Link from "next/link"
 import { useRouter } from "next/router"

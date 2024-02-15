@@ -1,8 +1,6 @@
 import Router from "koa-router"
 import sql from "@/src/utils/db"
-import { z } from "zod"
 import Context from "@/src/utils/koa"
-import { Evaluation } from "shared"
 import { getReadableDateTime } from "@/src/utils/date"
 import { runEval } from "./utils"
 import { getEvaluation } from "./utils"
