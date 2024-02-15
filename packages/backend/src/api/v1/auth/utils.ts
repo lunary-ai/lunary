@@ -76,6 +76,8 @@ const publicRoutes = [
   new RegExp(`/v1/datasets/.+`), // getDataSets in SDKs
   `/v1/evaluations/run`,
 ]
+
+// TODO: we need to refactor this / find a more elegant way to use this middleware because it doesn't make any sense what's hapenning here
 export async function authMiddleware(ctx: Context, next: Next) {
   ctx.state.projectId = ctx.request?.query?.projectId as string
 
@@ -88,6 +90,16 @@ export async function authMiddleware(ctx: Context, next: Next) {
   if (isPublicRoute && (!bearerToken || validateUUID(bearerToken))) {
     if (validateUUID(bearerToken)) {
       ctx.state.projectId = bearerToken as string
+    }
+    await next()
+    return
+  }
+
+  if (isPublicRoute) {
+    const bearerToken = ctx.request?.headers?.authorization?.split(" ")[1]
+
+    if (typeof bearerToken === "string") {
+      ctx.state.projectId = bearerToken
     }
     await next()
     return
