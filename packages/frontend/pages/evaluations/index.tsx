@@ -20,7 +20,11 @@ import {
   IconDatabase,
   IconFlask2Filled,
   IconInfoCircle,
+  IconListDetails,
   IconPlus,
+  IconRefresh,
+  IconTable,
+  IconTableColumn,
 } from "@tabler/icons-react"
 import Link from "next/link"
 import { useRouter } from "next/router"
@@ -142,31 +146,38 @@ export default function Evaluations() {
                           Complete
                         </Badge>
                       </Group>
+
+                      <Group>
+                        {evaluation.models?.map((model, index) => (
+                          <Badge key={index} variant="light" color="blue">
+                            {model}
+                          </Badge>
+                        ))}
+                      </Group>
                       <OrgUserBadge userId={evaluation.ownerId} />
                     </Stack>
 
-                    {/* <Group>
+                    <Group>
                       <Button
-                        onClick={() =>
-                          router.push(`/evaluations/${evaluation.id}`)
-                        }
+                        component={Link}
+                        size="xs"
+                        href={`/evaluations/${evaluation.id}`}
+                        leftSection={<IconTable size={12} />}
                         variant="light"
                       >
                         Results
                       </Button>
-                      <Menu withArrow shadow="sm" position="bottom-end">
-                        <Menu.Target>
-                          <ActionIcon variant="transparent">
-                            <IconDotsVertical size={16} />
-                          </ActionIcon>
-                        </Menu.Target>
-                        <Menu.Dropdown>
-                          <Menu.Item leftSection={<IconCopy size={16} />}>
-                            Edit & Re-Run
-                          </Menu.Item>
-                        </Menu.Dropdown>
-                      </Menu>
-                    </Group> */}
+                      <Button
+                        variant="light"
+                        color="teal"
+                        size="xs"
+                        leftSection={<IconRefresh size={12} />}
+                        component={Link}
+                        href={`/evaluations/new?clone=${evaluation.id}`}
+                      >
+                        Again
+                      </Button>
+                    </Group>
                   </Group>
                 </Card>
               ))}

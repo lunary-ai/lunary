@@ -70,11 +70,11 @@ const getVariableVariations = (results) => {
   return uniqueVariations as { [key: string]: string }[]
 }
 
-const getPromptModelVariations = (results, groupBy = "none") => {
+const getPromptModelVariations = (results) => {
   let variations = results.map((result) => ({
     promptContent: result.promptContent,
-    promptId: groupBy !== "model" ? result.promptId : null,
-    model: groupBy !== "prompt" ? result.model : "",
+    promptId: result.promptId,
+    model: result.model,
   }))
 
   const uniqueVariations = Array.from(
@@ -124,10 +124,10 @@ function ResultDetails({ details }) {
   )
 }
 
-export default function ResultsMatrix({ data, groupBy = "none" }) {
+export default function ResultsMatrix({ data }) {
   const variableVariations = getVariableVariations(data)
 
-  const pmVariations = getPromptModelVariations(data, groupBy)
+  const pmVariations = getPromptModelVariations(data)
 
   const variables = Array.from(new Set(variableVariations.flatMap(Object.keys)))
 
@@ -137,7 +137,9 @@ export default function ResultsMatrix({ data, groupBy = "none" }) {
         <table className={classes["matrix-table"]}>
           <thead>
             <tr>
-              <th colSpan={variables.length}>Variables</th>
+              {!!variables.length && (
+                <th colSpan={variables.length}>Variables</th>
+              )}
               <th colSpan={data.length}>Results</th>
             </tr>
             <tr>

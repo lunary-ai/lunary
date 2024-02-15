@@ -56,69 +56,6 @@ evaluations.post("/", async (ctx: Context) => {
   ctx.body = { evaluationId: insertedEvaluation.id }
 })
 
-evaluations.post("/", async (ctx: Context) => {
-  const { name, models, checklistId, prompts } = ctx.request.body as Evaluation
-  const { userId, projectId } = ctx.state
-
-  // TODO: transactions, but not working with because of nesting
-
-  const evaluationToInsert = {
-    name: name ? name : `Evaluation of ${getReadableDateTime()}`,
-    ownerId: userId,
-    projectId,
-    models,
-    checklistId,
-    checks: [], // TODO: remove this legacy row from DB
-  }
-
-  const [insertedEvaluation] =
-    await sql`insert into evaluation ${sql(evaluationToInsert)} returning *`
-
-  for (const prompt of prompts) {
-    const promptToInsert = {
-      evaluationId: insertedEvaluation.id,
-      content: prompt.content,
-      extra: prompt.extra,
-    }
-
-    const [insertedPrompt] =
-      await sql`insert into evaluation_prompt ${sql(promptToInsert)} returning *`
-
-    if (prompt.variations) {
-      for (const variation of prompt.variations) {
-        const variationToInsert = {
-          promptId: insertedPrompt.id,
-          variables: variation.variables,
-          context: variation.context,
-          idealOutput: variation.idealOutput,
-        }
-
-        const [insertedVariation] =
-          await sql`insert into evaluation_prompt_variation ${sql(variationToInsert)} returning *`
-
-        const evalsToRun = []
-        for (const model of models) {
-          evalsToRun.push(
-            runEval(
-              insertedEvaluation.id,
-              insertedPrompt.id,
-              checklistId,
-              model,
-              prompt.content,
-              prompt.extra,
-              variation,
-            ),
-          )
-        }
-        await Promise.all(evalsToRun)
-      }
-    }
-  }
-
-  ctx.status = 201
-  ctx.body = { evaluationId: insertedEvaluation.id }
-})
-
 evaluations.get("/:id", async (ctx: Context) => {
   const { projectId } = ctx.state
   const { id } = ctx.params
@@ -157,18 +94,7 @@ evaluations.get("/", async (ctx: Context) => {
   const { projectId } = ctx.state
 
   const evaluations = await sql`
-    select
-      e.id,
-      e.created_at,
-      e.name,
-      e.owner_id,
-      e.project_id
-    from
-      evaluation e
-    where
-      e.project_id = ${projectId} 
-    order by 
-      created_at desc
+    select * from evaluation where project_id = ${projectId} order by created_at desc
   `
 
   ctx.body = evaluations
