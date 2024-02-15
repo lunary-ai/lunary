@@ -4,26 +4,28 @@ import CopyText from "@/components/Blocks/CopyText"
 import UserAvatar from "@/components/Blocks/UserAvatar"
 
 import {
+  ActionIcon,
   Badge,
   Button,
   Card,
   Container,
-  FocusTrap,
   Group,
+  Menu,
+  Modal,
   Progress,
   Stack,
   Table,
   Text,
-  TextInput,
   Title,
 } from "@mantine/core"
-import { IconPencil, IconUserPlus } from "@tabler/icons-react"
+import { IconDotsVertical, IconTrash, IconUserPlus } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 
-import { useOrg, useUser } from "@/utils/dataHooks"
-import { openUpgrade } from "../components/Layout/UpgradeModal"
-import { SEAT_ALLOWANCE } from "@/utils/pricing"
 import RenamableField from "@/components/Blocks/RenamableField"
+import { useOrg, useOrgUser, useUser } from "@/utils/dataHooks"
+import { SEAT_ALLOWANCE } from "@/utils/pricing"
+import { useDisclosure } from "@mantine/hooks"
+import { openUpgrade } from "../components/Layout/UpgradeModal"
 
 function Invite() {
   const { org } = useOrg()
@@ -51,6 +53,61 @@ function Invite() {
         <CopyText value={`${window.location.origin}/join?orgId=${org?.id}`} />
       )}
     </Group>
+  )
+}
+
+function UserMenu({ user }) {
+  const [opened, { open, close }] = useDisclosure(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const { user: currentUser } = useUser()
+  const { removeUserFromOrg } = useOrgUser(user.id)
+
+  if (user.role === "admin" || currentUser.id === user.id) {
+    return
+  }
+
+  async function confirm() {
+    setIsLoading(true)
+    await removeUserFromOrg()
+    setIsLoading(false)
+    close()
+  }
+
+  return (
+    <>
+      <Modal
+        opened={opened}
+        onClose={close}
+        title={<Title size="h3">Remove user from Team?</Title>}
+      >
+        <Group mt="md" justify="right">
+          <Button variant="outline" onClick={close}>
+            Cancel
+          </Button>
+          <Button loading={isLoading} color="red" onClick={confirm}>
+            Continue
+          </Button>
+        </Group>
+      </Modal>
+
+      <Menu>
+        <Menu.Target>
+          <ActionIcon variant="transparent">
+            <IconDotsVertical size={16} />
+          </ActionIcon>
+        </Menu.Target>
+
+        <Menu.Dropdown>
+          <Menu.Item
+            onClick={open}
+            leftSection={<IconTrash size={16} />}
+            color="red"
+          >
+            Remove from Team
+          </Menu.Item>
+        </Menu.Dropdown>
+      </Menu>
+    </>
   )
 }
 
@@ -82,6 +139,7 @@ export default function Team() {
                 <Table.Th>User</Table.Th>
                 <Table.Th>Email</Table.Th>
                 <Table.Th>Role</Table.Th>
+                <Table.Th></Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -99,6 +157,9 @@ export default function Team() {
                   </Table.Td>
                   <Table.Td>{user?.email}</Table.Td>
                   <Table.Td>{user?.role}</Table.Td>
+                  <Table.Td>
+                    <UserMenu user={user} />
+                  </Table.Td>
                 </Table.Tr>
               ))}
             </Table.Tbody>

@@ -1,13 +1,13 @@
 import { useMantineTheme } from "@mantine/core"
 import { useContext } from "react"
-import useSWR, { useSWRConfig, SWRConfiguration } from "swr"
+import useSWR, { SWRConfiguration, useSWRConfig } from "swr"
 import useSWRInfinite from "swr/infinite"
-import { ProjectContext } from "./context"
-import { getUserColor, useFixedColorScheme } from "./colors"
 import useSWRMutation, { SWRMutationConfiguration } from "swr/mutation"
+import { getUserColor, useFixedColorScheme } from "./colors"
+import { ProjectContext } from "./context"
 
-import { fetcher } from "./fetcher"
 import { useAuth } from "./auth"
+import { fetcher } from "./fetcher"
 
 type KeyType = string | ((...args: any[]) => string)
 
@@ -405,9 +405,17 @@ export function useAppUsers(usageRange = 30) {
 }
 
 export function useOrgUser(userId: string) {
+  const { mutate: mutateOrg } = useOrg()
+
   const { data, isLoading, mutate } = useProjectSWR(
     userId && `/users/${userId}`,
   )
+
+  async function removeUserFromOrg() {
+    await trigger()
+    await mutateOrg()
+  }
+  const { trigger } = useProjectMutation(`/users/${userId}`, fetcher.patch)
 
   const theme = useMantineTheme()
   const scheme = useFixedColorScheme()
@@ -417,7 +425,7 @@ export function useOrgUser(userId: string) {
     color: getUserColor(scheme, theme, data?.id),
   }
 
-  return { user, loading: isLoading, mutate }
+  return { user, loading: isLoading, mutate, removeUserFromOrg }
 }
 
 export function useChecklists(type: string) {
