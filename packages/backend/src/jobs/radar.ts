@@ -55,9 +55,14 @@ async function radarJob() {
     WHERE o.plan != 'free'
   `
 
-  // For each radar, get all checks
+  let hasRadarRuns = false // used for limiting logging in the while loop
+
   for (const radar of radars) {
     const runs = await getRadarRuns(radar)
+
+    if (runs.length) {
+      hasRadarRuns = true
+    }
 
     if (!runs.length) {
       continue
@@ -80,6 +85,7 @@ async function radarJob() {
   }
 
   jobRunning = false
+  return hasRadarRuns
 }
 
 export default async function runRadarJob() {
@@ -87,8 +93,11 @@ export default async function runRadarJob() {
   while (true) {
     try {
       console.time("JOB: radar scan")
-      await radarJob()
-      console.timeEnd("JOB: radar scan")
+      const didSomeWork = await radarJob()
+
+      if (didSomeWork) {
+        console.timeEnd("JOB: radar scan")
+      }
     } catch (error) {
       console.error(error)
     }
