@@ -95,9 +95,9 @@ export default async function runRadarJob() {
       console.time("JOB: radar scan")
       const didSomeWork = await radarJob()
 
-      if (didSomeWork) {
-        console.timeEnd("JOB: radar scan")
-      }
+      // if (didSomeWork) {
+      console.timeEnd("JOB: radar scan")
+      // }
     } catch (error) {
       console.error(error)
     }
