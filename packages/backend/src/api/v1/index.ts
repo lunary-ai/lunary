@@ -24,11 +24,10 @@ v1.get("/", async (ctx) => {
 })
 
 v1.get("/health", async (ctx) => {
-  const [testUser] =
-    await sql`select * from account where email = 'test@test.com'`
+  const [res] = await sql`select 1`
 
-  if (!testUser) {
-    ctx.throw(500, "No test user found")
+  if (!res) {
+    ctx.throw(500, "Cound't reach the db")
   }
   ctx.body = "Ok"
 })
