@@ -12,3 +12,4 @@ docker-compose*
 *.next
 *.swp
 /scripts
+.env
