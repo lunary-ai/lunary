@@ -36,6 +36,12 @@ projects.post("/", async (ctx: Context) => {
   })
   const { name } = bodySchema.parse(ctx.request.body)
 
+  const [org] = await sql`select * from org where id = ${orgId}`
+
+  if (org.plan === "free") {
+    ctx.throw(403, "You can't create more than two project under the free plan")
+  }
+
   const newProject = {
     name,
     orgId,
@@ -49,18 +55,15 @@ projects.post("/", async (ctx: Context) => {
     projectId: project.id,
     apiKey: project.id,
   }
-  sql`
-      insert into api_key ${sql(publicKey)}
-    `
+  sql`insert into api_key ${sql(publicKey)}`
+
   const privateKey = [
     {
       type: "private",
       projectId: project.id,
     },
   ]
-  await sql`
-      insert into api_key ${sql(privateKey)}
-    `
+  await sql`insert into api_key ${sql(privateKey)}`
   ctx.body = project
 })
 
