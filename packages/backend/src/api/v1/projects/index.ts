@@ -91,6 +91,7 @@ projects.delete("/:projectId", async (ctx: Context) => {
     await sql`delete from project where id = ${projectId}`
     ctx.status = 200
     ctx.body = {}
+    return
   } else {
     ctx.status = 422
 
