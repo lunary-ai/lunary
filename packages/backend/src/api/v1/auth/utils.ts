@@ -87,19 +87,9 @@ export async function authMiddleware(ctx: Context, next: Next) {
 
   const bearerToken = ctx.request?.headers?.authorization?.split(" ")[1]
 
-  if (isPublicRoute && (!bearerToken || validateUUID(bearerToken))) {
+  if (isPublicRoute) {
     if (validateUUID(bearerToken)) {
       ctx.state.projectId = bearerToken as string
-    }
-    await next()
-    return
-  }
-
-  if (isPublicRoute) {
-    const bearerToken = ctx.request?.headers?.authorization?.split(" ")[1]
-
-    if (typeof bearerToken === "string") {
-      ctx.state.projectId = bearerToken
     }
     await next()
     return
