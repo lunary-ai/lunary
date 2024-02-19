@@ -1,6 +1,6 @@
 import sql from "./db"
 
-export async function verifyProjectAccess(projectId: string, userId: string) {
+export async function checkProjectAccess(projectId: string, userId: string) {
   const [{ exists: hasAccess }] = await sql`
       select exists (
         select 1 
