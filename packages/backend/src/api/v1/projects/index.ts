@@ -1,3 +1,4 @@
+import { verifyProjectAccess } from "@/src/utils/authorization"
 import sql from "@/src/utils/db"
 import Context from "@/src/utils/koa"
 import Router from "koa-router"
@@ -69,7 +70,19 @@ projects.post("/", async (ctx: Context) => {
 
 projects.delete("/:projectId", async (ctx: Context) => {
   const { projectId } = ctx.params
-  const { orgId } = ctx.state
+  const { orgId, userId } = ctx.state
+  console.log(ctx.state)
+
+  const hasProjectAccess = await verifyProjectAccess(projectId, userId)
+  const [user] = await sql`select * from account where id = ${userId}`
+
+  if (!hasProjectAccess) {
+    ctx.throw(401, "Not allowed")
+  }
+
+  if (user.role !== "admin") {
+    ctx.throw(403, "You must be an admin to delete a project")
+  }
 
   const [{ count }] =
     await sql`select count(*)::int from  project where org_id = ${orgId}`
@@ -77,6 +90,7 @@ projects.delete("/:projectId", async (ctx: Context) => {
   if (count > 1) {
     await sql`delete from project where id = ${projectId}`
     ctx.status = 200
+    ctx.body = {}
   } else {
     ctx.status = 422
 
