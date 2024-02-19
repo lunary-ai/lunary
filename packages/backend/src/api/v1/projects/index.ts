@@ -1,4 +1,4 @@
-import { verifyProjectAccess } from "@/src/utils/authorization"
+import { checkProjectAccess } from "@/src/utils/authorization"
 import sql from "@/src/utils/db"
 import Context from "@/src/utils/koa"
 import Router from "koa-router"
@@ -71,9 +71,8 @@ projects.post("/", async (ctx: Context) => {
 projects.delete("/:projectId", async (ctx: Context) => {
   const { projectId } = ctx.params
   const { orgId, userId } = ctx.state
-  console.log(ctx.state)
 
-  const hasProjectAccess = await verifyProjectAccess(projectId, userId)
+  const hasProjectAccess = await checkProjectAccess(projectId, userId)
   const [user] = await sql`select * from account where id = ${userId}`
 
   if (!hasProjectAccess) {
@@ -105,6 +104,13 @@ projects.delete("/:projectId", async (ctx: Context) => {
 
 projects.patch("/:projectId", async (ctx: Context) => {
   const { projectId } = ctx.params
+  const { userId } = ctx.params
+
+  const hasProjectAccess = await checkProjectAccess(projectId, userId)
+  if (!hasProjectAccess) {
+    ctx.throw(401, "Unauthorized")
+  }
+
   const bodySchema = z.object({
     name: z.string(),
   })
