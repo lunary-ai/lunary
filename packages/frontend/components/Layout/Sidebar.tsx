@@ -22,7 +22,7 @@ import {
 import UserAvatar from "@/components/Blocks/UserAvatar"
 import { useOrg, useUser } from "@/utils/dataHooks"
 import Link from "next/link"
-import Router, { useRouter } from "next/router"
+import { useRouter } from "next/router"
 import { openUpgrade } from "./UpgradeModal"
 
 import analytics from "@/utils/analytics"
@@ -75,6 +75,7 @@ function NavbarLink({ icon: Icon, label, link, soon, onClick, c }) {
 
 export default function Sidebar() {
   const auth = useAuth()
+  const router = useRouter()
   const { project, setProjectId } = useProject()
 
   const { user } = useUser()
@@ -108,7 +109,7 @@ export default function Sidebar() {
     },
   ]
 
-  const createProject = async () => {
+  async function createProject() {
     if (org.plan === "free" && projects.length >= 2) {
       return openUpgrade("projects")
     }
@@ -116,16 +117,20 @@ export default function Sidebar() {
     setCreateProjectLoading(true)
 
     const name = `Project #${projects.length + 1}`
-    const { id } = await insert({ name })
+    try {
+      const { id } = await insert({ name })
+      analytics.track("Create Project", {
+        name,
+      })
 
-    analytics.track("Create Project", {
-      name,
-    })
-
-    setCreateProjectLoading(false)
-    setProjectId(id)
-
-    Router.push(`/settings`)
+      setCreateProjectLoading(false)
+      setProjectId(id)
+      router.push(`/settings`)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setCreateProjectLoading(false)
+    }
   }
 
   // Select first project if none selected
