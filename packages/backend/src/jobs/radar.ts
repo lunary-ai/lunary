@@ -2,6 +2,7 @@ import sql from "@/src/utils/db"
 import { convertChecksToSQL } from "@/src/utils/filters"
 import { FilterLogic } from "shared"
 import { runChecksOnRun } from "../checks/runChecks"
+import { sleep } from "../utils/misc"
 
 const RUNS_BATCH_SIZE = 300 // small batch size to cycle through radars faster making it more equitable
 const PARALLEL_BATCH_SIZE = 5
@@ -44,6 +45,13 @@ async function getRadarRuns(radar: any) {
 let jobRunning = false
 
 async function radarJob() {
+  const [{ count: runsCount }] = await sql`select count(*)::int from run`
+
+  if (runsCount === 0) {
+    console.log("[Radars] No runs, waiting 20 seconds")
+    await sleep(20000)
+  }
+
   if (jobRunning) {
     return console.warn("JOB: radar scan already running. skipping")
   }
@@ -89,15 +97,9 @@ async function radarJob() {
 }
 
 export default async function runRadarJob() {
-  // run in a while loop
   while (true) {
     try {
-      console.time("JOB: radar scan")
-      const didSomeWork = await radarJob()
-
-      // if (didSomeWork) {
-      console.timeEnd("JOB: radar scan")
-      // }
+      await radarJob()
     } catch (error) {
       console.error(error)
     }
