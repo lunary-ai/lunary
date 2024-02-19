@@ -22,3 +22,7 @@ export function validateUUID(string?: string) {
   const uuidSchema = z.string().uuid()
   return uuidSchema.safeParse(string).success
 }
+
+export function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
