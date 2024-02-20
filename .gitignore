@@ -189,4 +189,3 @@ package-lock.json
 
 entrypoint.sh
 packages/frontend/Frontend.code-workspace
-docker
