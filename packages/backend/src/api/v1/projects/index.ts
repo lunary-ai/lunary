@@ -104,7 +104,7 @@ projects.delete("/:projectId", async (ctx: Context) => {
 
 projects.patch("/:projectId", async (ctx: Context) => {
   const { projectId } = ctx.params
-  const { userId } = ctx.params
+  const { userId } = ctx.state
 
   const hasProjectAccess = await checkProjectAccess(projectId, userId)
   if (!hasProjectAccess) {
@@ -124,6 +124,7 @@ projects.patch("/:projectId", async (ctx: Context) => {
         id = ${projectId}
     `
   ctx.status = 200
+  ctx.body = {}
 })
 
 export default projects
