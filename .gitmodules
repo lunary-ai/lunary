@@ -1,0 +1,3 @@
+[submodule "docker/private"]
+	path = docker/private
+	url = git@github.com:lunary-ai/test.git
