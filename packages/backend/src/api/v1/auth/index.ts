@@ -40,7 +40,7 @@ auth.post("/signup", async (ctx: Context) => {
   }
 
   const [existingUser] = await sql`
-    select * from account where email = ${email}
+    select * from account where lower(email) = lower(${email})
   `
   if (existingUser) {
     ctx.throw(403, "User already exists")
