@@ -76,6 +76,7 @@ function ChecklistCard({ defaultValue, onDelete }) {
         </Group>
         <FilterPicker
           value={checklist?.data}
+          restrictTo={(filter) => !filter.disableInEvals}
           onChange={(newData) => {
             update(
               { data: newData },
