@@ -3,6 +3,7 @@ import { useRouter } from "next/router"
 
 import {
   Badge,
+  Box,
   Card,
   Code,
   Grid,
@@ -24,8 +25,11 @@ import RunInputOutput from "@/components/Blocks/RunInputOutput"
 import { getColorForRunType } from "../../utils/colors"
 import {
   IconCode,
+  IconLine,
+  IconLink,
   IconMessage,
   IconMessages,
+  IconRadiusBottomLeft,
   IconRobot,
   IconTool,
 } from "@tabler/icons-react"
@@ -33,6 +37,7 @@ import RunsChat from "@/components/Blocks/RunChat"
 
 const typeIcon = {
   convo: IconMessages,
+  chain: IconLink,
   thread: IconMessages,
   chat: IconMessage,
   agent: IconRobot,
@@ -42,12 +47,16 @@ const typeIcon = {
 
 const TraceTree = ({
   isFirst = false,
+
+  isLastOfParent = false,
   focused,
   parentId,
+
   runs,
   onSelect,
   firstDate,
 }) => {
+  console.log(isLastOfParent)
   // each run contains a child_runs array containing the ids of the runs it spawned
 
   const run = runs.find((run) => run.id === parentId)
@@ -64,9 +73,57 @@ const TraceTree = ({
 
   const isActive = run.id === focused
 
+  const shownRuns = runs
+    .filter((run) => run.parentRunId === parentId)
+    .sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    )
+
   return (
-    <Group>
-      {!isFirst && <Text>&emsp;</Text>}
+    <Group pos="relative">
+      {!isFirst && (
+        <Box>
+          {!isLastOfParent && (
+            <svg
+              height="calc(100% + 3px)"
+              width={20}
+              strokeWidth={1}
+              stroke="var(--mantine-color-gray-5)"
+              fill="none"
+              style={{
+                position: "absolute",
+                left: 1,
+                top: -3,
+              }}
+            >
+              <line x1={10} y1="0" x2={10} y2="100%" />
+            </svg>
+          )}
+          <svg
+            width="38"
+            height="38"
+            style={{
+              position: "absolute",
+              left: 3,
+              top: -20,
+            }}
+            viewBox="0 0 24 24"
+            strokeWidth={1}
+            strokeLinecap="square"
+            stroke="var(--mantine-color-gray-5)"
+            fill="none"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M19 19h-6a8 8 0 0 1 -8 -8v-6"
+              vector-effect="non-scaling-stroke"
+            />
+          </svg>
+
+          <Text>&emsp;</Text>
+        </Box>
+      )}
       <div>
         <Group
           mb="sm"
@@ -80,6 +137,7 @@ const TraceTree = ({
             color={color}
             pl={0}
             pr={5}
+            tt="none"
             leftSection={
               Icon && (
                 <ThemeIcon
@@ -93,18 +151,14 @@ const TraceTree = ({
               )
             }
           >
-            {run?.type}
+            {run?.name || run?.type}
           </Badge>
 
-          {run.name && (
+          {/* {run.name && (
             <Code color={`var(--mantine-color-${color}-light)`}>
               {run.name}
             </Code>
-          )}
-
-          {run.endedAt && (
-            <DurationBadge createdAt={run.createdAt} endedAt={run.endedAt} />
-          )}
+          )} */}
 
           {run?.type === "llm" && run.cost && (
             <Badge variant="outline" color="gray">
@@ -112,29 +166,28 @@ const TraceTree = ({
             </Badge>
           )}
 
-          {timeAfterFirst > 0 && (
+          {run.endedAt && (
+            <DurationBadge createdAt={run.createdAt} endedAt={run.endedAt} />
+          )}
+
+          {/* {timeAfterFirst > 0 && (
             <Text c="dimmed" fz="xs">
               T + {(timeAfterFirst / 1000).toFixed(2)}s
             </Text>
-          )}
+          )} */}
         </Group>
 
-        {runs
-          .filter((run) => run.parentRunId === parentId)
-          .sort(
-            (a, b) =>
-              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-          )
-          .map((run) => (
-            <TraceTree
-              key={run.id}
-              parentId={run.id}
-              focused={focused}
-              runs={runs}
-              onSelect={onSelect}
-              firstDate={firstDate}
-            />
-          ))}
+        {shownRuns.map((run, k) => (
+          <TraceTree
+            key={run.id}
+            isLastOfParent={k === shownRuns.length - 1}
+            parentId={run.id}
+            focused={focused}
+            runs={runs}
+            onSelect={onSelect}
+            firstDate={firstDate}
+          />
+        ))}
       </div>
     </Group>
   )
@@ -186,7 +239,7 @@ export default function AgentRun({}) {
   const focusedRun = relatedRuns?.find((run) => run.id === focused)
 
   return (
-    <Stack>
+    <Stack gap="xl">
       <Title order={1}>
         {capitalize(run?.type)} Trace {run.name ? `(${run.name})` : ""}
       </Title>
@@ -209,31 +262,25 @@ export default function AgentRun({}) {
       </Group>
 
       <Grid align="start">
-        <Grid.Col span={6}>
-          <Card withBorder>
-            <Title order={2} mb="md">
-              Trace
-            </Title>
-
-            {relatedRuns && (
-              <TraceTree
-                isFirst
-                focused={focused}
-                onSelect={setFocused}
-                parentId={id}
-                runs={relatedRuns}
-                firstDate={run.createdAt}
-              />
-            )}
-          </Card>
+        <Grid.Col span={5}>
+          {relatedRuns && (
+            <TraceTree
+              isFirst
+              focused={focused}
+              onSelect={setFocused}
+              parentId={id}
+              runs={relatedRuns}
+              firstDate={run.createdAt}
+            />
+          )}
         </Grid.Col>
-        <Grid.Col span={6}>
+        <Grid.Col span={7}>
           <Card
             withBorder
             style={{
               position: "sticky",
               top: 85,
-              maxHeight: "calc(100vh - 90px)",
+              maxHeight: "calc(100vh - 120px)",
               overflow: "auto",
             }}
           >
