@@ -30,12 +30,7 @@ export default function PromptVariableEditor({
               justify="space-between"
               gap="lg"
             >
-              <Badge
-                key={variable}
-                maw="14%"
-                variant="outline"
-                style={{ textTransform: "none" }}
-              >
+              <Badge key={variable} maw="14%" variant="outline" tt="none">
                 {variable}
               </Badge>
               <Textarea
