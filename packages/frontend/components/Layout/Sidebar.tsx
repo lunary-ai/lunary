@@ -6,7 +6,6 @@ import {
   IconBolt,
   IconChevronRight,
   IconCreditCard,
-  IconDatabase,
   IconFlask2Filled,
   IconHelpOctagon,
   IconListSearch,
@@ -152,57 +151,55 @@ export default function Sidebar() {
     >
       <Stack w="100%" gap={0}>
         <Box w="100%">
-          {!loading && user && projects?.length && (
-            <Combobox
-              store={combobox}
-              withinPortal={false}
-              onOptionSubmit={(id) => {
-                setProjectId(id)
-                combobox.closeDropdown()
-              }}
-            >
-              <Combobox.Target>
-                <InputBase
-                  component="button"
+          <Combobox
+            store={combobox}
+            withinPortal={false}
+            onOptionSubmit={(id) => {
+              setProjectId(id)
+              combobox.closeDropdown()
+            }}
+          >
+            <Combobox.Target>
+              <InputBase
+                component="button"
+                size="xs"
+                mx="xs"
+                my="xs"
+                w="auto"
+                type="button"
+                pointer
+                leftSection={<IconAnalyze size={16} />}
+                rightSection={<Combobox.Chevron />}
+                onClick={() => combobox.toggleDropdown()}
+                rightSectionPointerEvents="none"
+              >
+                {project?.name || (
+                  <Input.Placeholder>Select project</Input.Placeholder>
+                )}
+              </InputBase>
+            </Combobox.Target>
+            <Combobox.Dropdown>
+              <Combobox.Options>
+                {projects?.map((item) => (
+                  <Combobox.Option value={item.id} key={item.id}>
+                    {item.name}
+                  </Combobox.Option>
+                ))}
+              </Combobox.Options>
+              <Combobox.Footer>
+                <Button
+                  loading={createProjectLoading}
                   size="xs"
-                  mx="xs"
-                  my="xs"
-                  w="auto"
-                  type="button"
-                  pointer
-                  leftSection={<IconAnalyze size={16} />}
-                  rightSection={<Combobox.Chevron />}
-                  onClick={() => combobox.toggleDropdown()}
-                  rightSectionPointerEvents="none"
+                  onClick={createProject}
+                  variant="light"
+                  fullWidth
+                  leftSection={<IconPlus size={12} />}
                 >
-                  {project?.name || (
-                    <Input.Placeholder>Select Project</Input.Placeholder>
-                  )}
-                </InputBase>
-              </Combobox.Target>
-              <Combobox.Dropdown>
-                <Combobox.Options>
-                  {projects?.map((item) => (
-                    <Combobox.Option value={item.id} key={item.id}>
-                      {item.name}
-                    </Combobox.Option>
-                  ))}
-                </Combobox.Options>
-                <Combobox.Footer>
-                  <Button
-                    loading={createProjectLoading}
-                    size="xs"
-                    onClick={createProject}
-                    variant="light"
-                    fullWidth
-                    leftSection={<IconPlus size={12} />}
-                  >
-                    Create project
-                  </Button>
-                </Combobox.Footer>
-              </Combobox.Dropdown>
-            </Combobox>
-          )}
+                  Create project
+                </Button>
+              </Combobox.Footer>
+            </Combobox.Dropdown>
+          </Combobox>
 
           {APP_MENU.map((item) => (
             <NavbarLink {...item} key={item.label} />
