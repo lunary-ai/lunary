@@ -44,8 +44,8 @@ function ChecklistCard({ defaultValue, onDelete }) {
             confirmProps: { color: "red" },
             children: (
               <Text size="sm">
-                Are you sure you want to delete this prompt? This action cannot
-                be undone and the prompt data will be lost forever.
+                Are you sure you want to delete this checklist? This action
+                cannot be undone.
               </Text>
             ),
             labels: { confirm: "Confirm", cancel: "Cancel" },
