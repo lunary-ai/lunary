@@ -28,7 +28,6 @@ import {
   IconLink,
   IconMessage,
   IconMessages,
-  IconRadiusBottomLeft,
   IconRobot,
   IconTool,
 } from "@tabler/icons-react"
@@ -55,7 +54,6 @@ const TraceTree = ({
   onSelect,
   firstDate,
 }) => {
-  console.log(isLastOfParent)
   // each run contains a child_runs array containing the ids of the runs it spawned
 
   const run = runs.find((run) => run.id === parentId)

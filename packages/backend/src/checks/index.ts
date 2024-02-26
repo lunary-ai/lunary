@@ -72,7 +72,8 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     id: "type",
     sql: ({ type }) =>
       type === "trace"
-        ? sql`(type in ('agent','chain') and parent_run_id is null)`
+        ? // matches agent and chain runs with no parent or parent is a chat run
+          sql`(type in ('agent','chain') and (parent_run_id is null OR EXISTS (SELECT 1 FROM run AS parent_run WHERE parent_run.id = r.parent_run_id AND parent_run.type = 'chat')))`
         : sql`type = ${type}`,
   },
   {

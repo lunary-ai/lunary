@@ -124,7 +124,7 @@ export default function NewEvaluation() {
         <Stack align="right" gap="lg">
           <Anchor href="/evaluations">← Back to Evaluations</Anchor>
           <Group align="center">
-            <Title>Magic Evaluation</Title>
+            <Title>Launch Evaluation</Title>
             <Badge variant="light" color="violet">
               Alpha
             </Badge>
