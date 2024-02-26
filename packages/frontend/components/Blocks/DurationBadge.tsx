@@ -8,16 +8,16 @@ export default function DurationBadge({ createdAt, endedAt, minimal = false }) {
 
   return (
     <Badge
-      variant="outline"
-      color="blue"
+      variant="light"
+      color="gray"
       pl={0}
       pr={5}
       leftSection={
-        <ThemeIcon variant="subtle" size="sm">
+        <ThemeIcon variant="subtle" size="sm" color="light">
           <IconClock size="12" />
         </ThemeIcon>
       }
-      style={{ textTransform: "none" }}
+      tt="none"
     >
       {(duration / 1000).toFixed(2)}s
     </Badge>
