@@ -311,13 +311,15 @@ export default function Logs() {
                   </Menu.Target>
                   <Menu.Dropdown>
                     <Menu.Item
+                      disabled={type === "thread"}
                       leftSection={<IconFileExport size={16} />}
                       {...exportButton(exportUrl + "&exportType=csv")}
                     >
                       Export to CSV
                     </Menu.Item>
                     <Menu.Item
-                      color="dark"
+                      color="dimmed"
+                      disabled={type === "thread"}
                       leftSection={<IconBraces size={16} />}
                       {...exportButton(exportUrl + "&exportType=jsonl")}
                     >
