@@ -36,10 +36,6 @@ export default function Evaluations() {
   const router = useRouter()
   const { evaluations, isLoading } = useEvaluations()
 
-  if (!isLoading && evaluations.length === 0) {
-    router.push("/evaluations/new")
-  }
-
   return (
     <Paywall
       plan="unlimited"
@@ -118,67 +114,73 @@ export default function Evaluations() {
           {isLoading ? (
             <Loader />
           ) : (
-            <Stack gap="xl">
-              {evaluations.map((evaluation) => (
-                <Card key={evaluation.id} p="lg" withBorder>
-                  <Group justify="space-between">
-                    <Stack>
-                      <Group>
-                        <Title
-                          order={3}
-                          size={16}
-                          onClick={() =>
-                            router.push(`/evaluations/${evaluation.id}`)
-                          }
-                          style={{ cursor: "pointer" }}
-                        >
-                          {evaluation.name}
-                        </Title>
-                        <Badge
-                          variant="light"
-                          radius="sm"
-                          color="teal"
-                          size="sm"
-                        >
-                          Complete
-                        </Badge>
-                      </Group>
+            <>
+              {!evaluations?.length ? (
+                <Alert color="gray" title="No evaluations yet" />
+              ) : (
+                <Stack gap="xl">
+                  {evaluations.map((evaluation) => (
+                    <Card key={evaluation.id} p="lg" withBorder>
+                      <Group justify="space-between">
+                        <Stack>
+                          <Group>
+                            <Title
+                              order={3}
+                              size={16}
+                              onClick={() =>
+                                router.push(`/evaluations/${evaluation.id}`)
+                              }
+                              style={{ cursor: "pointer" }}
+                            >
+                              {evaluation.name}
+                            </Title>
+                            <Badge
+                              variant="light"
+                              radius="sm"
+                              color="teal"
+                              size="sm"
+                            >
+                              Complete
+                            </Badge>
+                          </Group>
 
-                      <Group>
-                        {evaluation.models?.map((model, index) => (
-                          <Badge key={index} variant="light" color="blue">
-                            {model}
-                          </Badge>
-                        ))}
-                      </Group>
-                      <OrgUserBadge userId={evaluation.ownerId} />
-                    </Stack>
+                          <Group>
+                            {evaluation.models?.map((model, index) => (
+                              <Badge key={index} variant="light" color="blue">
+                                {model}
+                              </Badge>
+                            ))}
+                          </Group>
+                          <OrgUserBadge userId={evaluation.ownerId} />
+                        </Stack>
 
-                    <Group>
-                      <Button
-                        component={Link}
-                        size="xs"
-                        href={`/evaluations/${evaluation.id}`}
-                        leftSection={<IconTable size={12} />}
-                        variant="light"
-                      >
-                        Results
-                      </Button>
-                      <Button
-                        variant="light"
-                        color="teal"
-                        size="xs"
-                        leftSection={<IconRefresh size={12} />}
-                        component={Link}
-                        href={`/evaluations/new?clone=${evaluation.id}`}
-                      >
-                        Again
-                      </Button>
-                    </Group>
-                  </Group>
-                </Card>
-              ))}
-            </Stack>
+                        <Group>
+                          <Button
+                            component={Link}
+                            size="xs"
+                            href={`/evaluations/${evaluation.id}`}
+                            leftSection={<IconTable size={12} />}
+                            variant="light"
+                          >
+                            Results
+                          </Button>
+                          <Button
+                            variant="light"
+                            color="teal"
+                            size="xs"
+                            leftSection={<IconRefresh size={12} />}
+                            component={Link}
+                            href={`/evaluations/new?clone=${evaluation.id}`}
+                          >
+                            Again
+                          </Button>
+                        </Group>
+                      </Group>
+                    </Card>
+                  ))}
+                </Stack>
+              )}
+            </>
           )}
         </Stack>
       </Container>
