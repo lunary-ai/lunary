@@ -15,7 +15,7 @@ export default function TokensBadge({ tokens }) {
           <IconCashBanknote size="12" />
         </ThemeIcon>
       }
-      style={{ textTransform: "none" }}
+      tt="none"
     >
       {tokens} tokens
     </Badge>
