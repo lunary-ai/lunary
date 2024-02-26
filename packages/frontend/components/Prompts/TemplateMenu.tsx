@@ -24,6 +24,7 @@ import { modals } from "@mantine/modals"
 import { notifications } from "@mantine/notifications"
 
 import { cleanSlug, formatCompactFromNow } from "@/utils/format"
+import Router from "next/router"
 
 export const defaultTemplateVersion = {
   content: [
@@ -74,12 +75,15 @@ const TemplateListItem = ({
       labels: { confirm: "Confirm", cancel: "Cancel" },
 
       onConfirm: async () => {
-        await remove()
-
-        mutate()
-
         switchTemplateVersion(null, defaultTemplateVersion)
-        // Router.push(`/prompts`)
+
+        Router.replace(`/prompts`)
+
+        mutate((templates) => templates.filter((t) => t.id !== template?.id), {
+          revalidate: false,
+        })
+
+        remove()
       },
     })
   }

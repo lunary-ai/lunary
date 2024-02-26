@@ -21,6 +21,7 @@ import Image from "next/image"
 import ProtectedText from "../Blocks/ProtectedText"
 import { RenderJson } from "./RenderJson"
 import { circularPro } from "@/pages/_app"
+import { useColorScheme } from "@mantine/hooks"
 
 function RenderFunction({ color, compact, codeBg, data, type }) {
   const fontColor = type === "functionCall" ? "#40c057" : "inherit"
@@ -230,7 +231,7 @@ export function ChatMessage({
 }) {
   // TODO FIX
   // Flickering dark mode bug: this is due to scheme being 'light' for a few ms
-  const scheme = useFixedColorScheme()
+  const scheme = useColorScheme()
 
   const color = getColorForRole(data?.role)
 
