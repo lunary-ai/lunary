@@ -5,7 +5,6 @@ import {
   Badge,
   Box,
   Card,
-  Code,
   Grid,
   Group,
   Loader,
@@ -24,15 +23,15 @@ import { capitalize, formatCost } from "@/utils/format"
 import RunInputOutput from "@/components/Blocks/RunInputOutput"
 import { getColorForRunType } from "../../utils/colors"
 import {
+  IconCloudDownload,
   IconCode,
-  IconLine,
   IconLink,
   IconMessage,
   IconMessages,
-  IconRadiusBottomLeft,
   IconRobot,
   IconTool,
 } from "@tabler/icons-react"
+
 import RunsChat from "@/components/Blocks/RunChat"
 
 const typeIcon = {
@@ -43,15 +42,14 @@ const typeIcon = {
   agent: IconRobot,
   llm: IconCode,
   tool: IconTool,
+  retriever: IconCloudDownload,
 }
 
 const TraceTree = ({
   isFirst = false,
-
   isLastOfParent = false,
   focused,
   parentId,
-
   runs,
   onSelect,
   firstDate,
