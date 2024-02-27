@@ -5,7 +5,6 @@ import { useOrg } from "@/utils/dataHooks"
 import {
   Alert,
   Badge,
-  Box,
   Button,
   Card,
   Container,
@@ -83,9 +82,9 @@ export default function Billing() {
             icon={<IconInfoTriangle />}
           >
             <Text fz="lg">
-              Your plan will cancel soon. Upon cancellation, any data older than
-              30 days will be permanently deleted as per the free plan limits.
-              Reactivate your plan to ensure uninterrupted access.
+              Your plan will cancel soon. Upon return to the free plan, any data
+              older than 30 days will be permanently deleted as per the free
+              plan limits. Reactivate your plan to ensure uninterrupted access.
             </Text>
           </Alert>
         ) : (
@@ -95,11 +94,13 @@ export default function Billing() {
           </Text>
         )}
 
-        <Card withBorder radius="md" padding="xl">
-          <Container size="lg">
-            <UpgradePlans />
-          </Container>
-        </Card>
+        {!["enterprise", "custom"].includes(plan) && (
+          <Card withBorder radius="md" padding="xl">
+            <Container size="lg">
+              <UpgradePlans />
+            </Container>
+          </Card>
+        )}
 
         <LineChart
           title={<Title order={3}>Events Usage</Title>}
