@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": "true",
   "scripts": {
-    "dev": "concurrently \"npm run frontend:dev\" \"npm run backend:dev\" \"npm run backend:radar-dev\"",
+    "dev": "concurrently \"npm run frontend:dev\" \"npm run backend:dev\"",
+    "dev:withradar": "concurrently \"npm run frontend:dev\" \"npm run backend:dev\" \"npm run backend:radar-dev\"",
     "frontend:start": "npm -w packages/frontend run start",
     "frontend:dev": "npm -w packages/frontend run dev",
     "backend:start": "npm -w packages/backend run start",
