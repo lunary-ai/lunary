@@ -37,6 +37,7 @@ import Router from "next/router"
 import { useState } from "react"
 
 const DEFAULT_RADAR = {
+  negative: true,
   description: "",
   view: [
     "AND",
@@ -78,7 +79,7 @@ function RadarEditModal({
         throw new Error("Please add checks")
       }
 
-      onSave()
+      await onSave()
     } catch (e) {
       notifications.show({
         title: "Error",
@@ -105,6 +106,7 @@ function RadarEditModal({
             onChange={(event) =>
               onUpdate({ negative: event.currentTarget.checked })
             }
+            description="Matches will be considered as negative (default)."
             checked={value.negative}
             label="Negative radar"
           />
@@ -148,7 +150,9 @@ function RadarEditModal({
           <Box>
             <FilterPicker
               value={value.checks}
-              restrictTo={(filter) => !filter.onlyInEvals}
+              restrictTo={(filter) =>
+                !filter.onlyInEvals && filter.id !== "radar"
+              }
               onChange={(logic) =>
                 onUpdate({
                   checks: logic,
@@ -159,7 +163,7 @@ function RadarEditModal({
         </Stack>
 
         <Button
-          variant="gradient"
+          variant="default"
           loading={saving}
           ml="auto"
           display="inline-block"
@@ -167,7 +171,7 @@ function RadarEditModal({
             save()
           }}
         >
-          Create radar
+          Save Radar
         </Button>
       </Stack>
     </Modal>
@@ -391,8 +395,7 @@ export default function Radar() {
 
             <Button
               leftSection={<IconPlus size={12} />}
-              variant="light"
-              color="blue"
+              variant="default"
               onClick={() => {
                 setModalOpened(true)
               }}

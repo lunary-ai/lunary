@@ -1,11 +1,12 @@
 import PromptVariableEditor from "@/components/Blocks/PromptVariableEditor"
+import RenamableField from "@/components/Blocks/RenamableField"
 import { PromptEditor } from "@/components/Prompts/PromptEditor"
 import {
   useDataset,
   useDatasetPrompt,
   useDatasetPromptVariation,
 } from "@/utils/dataHooks"
-import { formatCompactFromNow } from "@/utils/format"
+import { cleanSlug, formatCompactFromNow } from "@/utils/format"
 import { usePromptVariables } from "@/utils/promptsHooks"
 import {
   ActionIcon,
@@ -82,13 +83,13 @@ function PromptVariation({ i, variationId, variables, onDelete, markSaved }) {
     }
 
     const updatedVariation = { ...variation, variables: updatedVariables }
-    mutate(updatedVariation)
+    mutate(updatedVariation, { revalidate: false })
     setDebouncedVariation(updatedVariation)
   }
 
   const setIdealOutput = (idealOutput) => {
     const updatedVariation = { ...variation, idealOutput }
-    mutate(updatedVariation)
+    mutate(updatedVariation, { revalidate: false })
     setDebouncedVariation(updatedVariation)
   }
 
@@ -136,7 +137,7 @@ function PromptVariation({ i, variationId, variables, onDelete, markSaved }) {
   )
 }
 
-function PromptTab({ promptId, onDelete, markSaved }) {
+function PromptTab({ isText, promptId, onDelete, markSaved }) {
   const {
     prompt,
     update,
@@ -174,11 +175,11 @@ function PromptTab({ promptId, onDelete, markSaved }) {
     <Stack>
       <PromptEditor
         onChange={(value) => {
-          mutate({ ...prompt, messages: value })
+          mutate({ ...prompt, messages: value }, { revalidate: false })
           setDebouncedMessages(value)
         }}
         value={prompt?.messages}
-        isText={false}
+        isText={isText}
       />
       {prompt?.variations?.map((variation, i) => (
         <PromptVariation
@@ -252,18 +253,14 @@ function PromptTab({ promptId, onDelete, markSaved }) {
 
 export default function NewDataset() {
   const router = useRouter()
-  const pathname = usePathname()
 
   const [activePrompt, setActivePrompt] = useState<string | null>(null)
 
   const datasetId = router.query.id as string
-  const { dataset, loading, insertPrompt, mutate, isInsertingPrompt } =
+  const { dataset, loading, update, insertPrompt, mutate, isInsertingPrompt } =
     useDataset(datasetId)
 
   const [lastSaved, setLastSaved] = useState<number>(dataset?.updatedAt)
-
-  const isEdit = pathname?.split("/")?.at(-1) !== "new"
-  const title = isEdit ? "Dataset: " + dataset?.slug : "Create Dataset"
 
   useEffect(() => {
     if (
@@ -297,9 +294,36 @@ export default function NewDataset() {
         <Stack>
           <Group>
             <Group align="center">
-              <Title>{title}</Title>
+              {dataset && (
+                <RenamableField
+                  style={{ cursor: "pointer" }}
+                  order={2}
+                  size={24}
+                  defaultValue={dataset.slug}
+                  onRename={(newName) => {
+                    update(
+                      { slug: cleanSlug(newName) },
+                      {
+                        optimisticData: (data) => ({
+                          ...data,
+                          slug: cleanSlug(newName),
+                        }),
+                      },
+                    )
+                  }}
+                />
+              )}
               <Badge variant="light" color="violet">
                 Alpha
+              </Badge>
+              <Badge
+                variant="light"
+                radius="sm"
+                color="blue"
+                size="md"
+                tt="none"
+              >
+                {`${dataset.format} dataset`}
               </Badge>
             </Group>
             {lastSaved && (
@@ -353,6 +377,7 @@ export default function NewDataset() {
             <Tabs.Panel key={i} value={prompt.id}>
               <PromptTab
                 promptId={prompt.id}
+                isText={dataset?.format === "text"}
                 markSaved={markSaved}
                 onDelete={() => {
                   mutate({

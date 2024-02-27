@@ -1,5 +1,5 @@
 import sql from "@/src/utils/db"
-import { compileChatMessages } from "@/src/utils/playground"
+import { compileChatMessages, compileTemplate } from "@/src/utils/playground"
 
 export async function getDatasetById(datasetId: string, projectId: string) {
   const [dataset] =
@@ -25,6 +25,7 @@ export async function getDatasetBySlug(slug: string, projectId: string) {
   const rows = await sql`
     select
       d.id as id,
+      d.format as format,
       d.project_id as project_id,
       d.slug as slug,
       p.id as prompt_id,
@@ -42,6 +43,9 @@ export async function getDatasetBySlug(slug: string, projectId: string) {
     where 
       d.slug = ${slug}
       and d.project_id = ${projectId}
+    order by
+      p.created_at asc,
+      pv.created_at asc
     `
 
   const { id, ownerId } = rows[0]
@@ -55,7 +59,10 @@ export async function getDatasetBySlug(slug: string, projectId: string) {
 
   for (const { promptMessages, variables, idealOutput, context } of rows) {
     const item = {
-      input: compileChatMessages(promptMessages, variables),
+      input:
+        typeof promptMessages === "string"
+          ? compileTemplate(promptMessages, variables)
+          : compileChatMessages(promptMessages, variables),
       idealOutput,
       context,
     }

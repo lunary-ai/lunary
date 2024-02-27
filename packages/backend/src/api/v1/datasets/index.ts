@@ -23,8 +23,6 @@ datasets.get("/:identifier", async (ctx: Context) => {
   const { projectId } = ctx.state
   const { identifier } = ctx.params
 
-  console.log("identifier", identifier)
-
   const isUUID = validateUUID(identifier)
 
   if (isUUID) {
@@ -44,29 +42,34 @@ datasets.get("/:identifier", async (ctx: Context) => {
   }
 })
 
-const DEFAULT_PROMPT = [
-  {
-    role: "system",
-    content: "You are a helpful assistant.",
-  },
-  {
-    role: "user",
-    content: "Hello! I need help with something.",
-  },
-]
+const DEFAULT_PROMPT = {
+  chat: [
+    {
+      role: "system",
+      content: "You are a helpful assistant.",
+    },
+    {
+      role: "user",
+      content: "Hello! I need help with something.",
+    },
+  ],
+  text: "What is the result of 1 + 1?",
+}
 
 datasets.post("/", async (ctx: Context) => {
   //TODO: full zod
   const { projectId, userId } = ctx.state
   const body = z.object({
     slug: z.string(),
+    format: z.string().optional().default("text"),
   })
 
-  const { slug } = body.parse(ctx.request.body)
+  const { slug, format } = body.parse(ctx.request.body)
 
   const [dataset] = await sql`
     insert into dataset ${sql({
       slug,
+      format,
       ownerId: userId,
       projectId,
     })} returning *
@@ -76,7 +79,7 @@ datasets.post("/", async (ctx: Context) => {
   const [prompt] = await sql`insert into dataset_prompt
     ${sql({
       datasetId: dataset.id,
-      messages: DEFAULT_PROMPT,
+      messages: DEFAULT_PROMPT[format],
     })}
     returning *
   `
@@ -118,15 +121,20 @@ datasets.delete("/:id", async (ctx: Context) => {
 
 // Create prompt
 datasets.post("/prompts", async (ctx: Context) => {
+  const { projectId } = ctx.state
+
   const { datasetId, messages } = ctx.request.body as {
     datasetId: string
     messages: any
   }
 
+  const [{ format }] =
+    await sql`select format from dataset where id = ${datasetId} and project_id = ${projectId}`
+
   const [prompt] = await sql`insert into dataset_prompt
     ${sql({
       datasetId,
-      messages: messages || DEFAULT_PROMPT,
+      messages: messages || DEFAULT_PROMPT[format],
     })}
     returning *
   `
