@@ -13,15 +13,15 @@ type Output = {
 }[]
 
 type Entities = {
-  PER: string[]
-  LOC: string[]
-  ORG: string[]
+  per: string[]
+  loc: string[]
+  org: string[]
 }
 
 export default async function aiNER(sentence?: string): Promise<Entities> {
-  const entities: Entities = { PER: [], LOC: [], ORG: [] }
+  const entities: Entities = { per: [], loc: [], org: [] }
 
-  if (!sentence) return { PER: [], LOC: [], ORG: [] }
+  if (!sentence) return { per: [], loc: [], org: [] }
 
   if (!nerPipeline) {
     // this prevents multiple loading of the pipeline simultaneously which causes extreme lag
@@ -46,7 +46,9 @@ export default async function aiNER(sentence?: string): Promise<Entities> {
     const entityType = word.entity.split("-")[1]
     if (word.entity.startsWith("B-")) {
       if (currentEntity.score > 0.5) {
-        entities[currentEntity.type].push(currentEntity.name.trim())
+        entities[currentEntity.type.toLowerCase()].push(
+          currentEntity.name.trim(),
+        )
       }
       currentEntity = { name: word.word, score: word.score, type: entityType }
     } else if (currentEntity.type === entityType) {
@@ -58,7 +60,7 @@ export default async function aiNER(sentence?: string): Promise<Entities> {
   })
 
   if (currentEntity.score > 0.5) {
-    entities[currentEntity.type].push(currentEntity.name.trim())
+    entities[currentEntity.type.toLowerCase()].push(currentEntity.name.trim())
   }
 
   return entities

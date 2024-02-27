@@ -63,7 +63,7 @@ export default function Evaluations() {
                 component={Link}
                 href="/evaluations/new"
               >
-                Run Evaluation
+                Run Manual Evaluation
               </Button>
             </Group>
           </Group>
@@ -89,7 +89,7 @@ export default function Evaluations() {
               <Button
                 leftSection={<IconDatabase size={12} />}
                 component={Link}
-                color="blue"
+                variant="default"
                 href="/datasets"
               >
                 Datasets
@@ -97,8 +97,8 @@ export default function Evaluations() {
             </Tooltip>
             <Tooltip label="Checklists are collections of assertions that you can use to define what a success is.">
               <Button
-                leftSection={<IconChecklist size={12} />}
-                color="blue"
+                leftSection={<IconChecklist size={14} />}
+                variant="default"
                 component={Link}
                 href="/evaluations/checklists"
               >

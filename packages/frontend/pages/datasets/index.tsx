@@ -4,19 +4,28 @@ import { useDataset, useDatasets } from "@/utils/dataHooks"
 import { cleanSlug } from "@/utils/format"
 import {
   ActionIcon,
+  Alert,
   Badge,
   Button,
   Card,
   Container,
   Group,
   Loader,
+  Menu,
   Stack,
   Text,
   Title,
 } from "@mantine/core"
 import { modals } from "@mantine/modals"
-import { IconPencil, IconPlus, IconTrash } from "@tabler/icons-react"
+import {
+  IconMessages,
+  IconPencil,
+  IconPlus,
+  IconTextCaption,
+  IconTrash,
+} from "@tabler/icons-react"
 import Router from "next/router"
+import { generateSlug } from "random-word-slugs"
 
 function DatasetCard({ defaultValue, onDelete }) {
   const { update, dataset, remove } = useDataset(defaultValue?.id, defaultValue)
@@ -82,6 +91,16 @@ function DatasetCard({ defaultValue, onDelete }) {
                 {`${dataset.prompts?.length} prompt${dataset.prompts?.length > 1 ? "s" : ""}`}
               </Badge>
             )}
+
+            <Badge
+              variant="light"
+              radius="sm"
+              color={dataset.format === "chat" ? "violet" : "gray"}
+              size="md"
+              tt="none"
+            >
+              {dataset.format}
+            </Badge>
           </Group>
           <OrgUserBadge userId={dataset.ownerId} />
         </Stack>
@@ -100,10 +119,20 @@ function DatasetCard({ defaultValue, onDelete }) {
 }
 
 export default function Datasets() {
-  const { datasets, isLoading, mutate } = useDatasets()
+  const { datasets, isLoading, mutate, insert, isInserting } = useDatasets()
 
-  if (!isLoading && datasets.length === 0) {
-    return Router.push("/datasets/new")
+  function createDataset(format) {
+    insert(
+      {
+        slug: generateSlug(),
+        format,
+      },
+      {
+        onSuccess: (dataset) => {
+          Router.push(`/datasets/${dataset.id}`)
+        },
+      },
+    )
   }
 
   return (
@@ -117,16 +146,35 @@ export default function Datasets() {
             </Badge>
           </Group>
 
-          <Button
-            leftSection={<IconPlus size={12} />}
-            variant="light"
-            color="blue"
-            onClick={() => {
-              Router.push("/datasets/new")
-            }}
-          >
-            New Dataset
-          </Button>
+          <Menu>
+            <Menu.Target>
+              <Button
+                leftSection={<IconPlus size={12} />}
+                variant="default"
+                loading={isInserting}
+              >
+                New Dataset
+              </Button>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item
+                leftSection={<IconMessages size={12} />}
+                onClick={() => {
+                  createDataset("chat")
+                }}
+              >
+                New Chat Dataset (OpenAI compatible)
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconTextCaption size={12} />}
+                onClick={() => {
+                  createDataset("text")
+                }}
+              >
+                New Text Dataset
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
           <Text size="lg" mb="md">
             Datasets are collections of prompts that you can use as a basis for
             evaluations.
@@ -137,20 +185,26 @@ export default function Datasets() {
           <Loader />
         ) : (
           <Stack gap="xl">
-            {datasets?.map((dataset) => (
-              <DatasetCard
-                key={dataset.id}
-                defaultValue={dataset}
-                onDelete={() => {
-                  mutate(
-                    datasets.filter((d) => d.id !== dataset.id),
-                    {
-                      revalidate: false,
-                    },
-                  )
-                }}
-              />
-            ))}
+            <>
+              {datasets?.length === 0 ? (
+                <Alert color="gray" title="No datasets yet" />
+              ) : (
+                datasets?.map((dataset) => (
+                  <DatasetCard
+                    key={dataset.id}
+                    defaultValue={dataset}
+                    onDelete={() => {
+                      mutate(
+                        datasets.filter((d) => d.id !== dataset.id),
+                        {
+                          revalidate: false,
+                        },
+                      )
+                    }}
+                  />
+                ))
+              )}
+            </>
           </Stack>
         )}
       </Stack>

@@ -5,7 +5,8 @@
     "dev": "tsx --env-file=.env --watch src/index.ts",
     "start": "tsx src/index.ts",
     "build": "tsup src/index.ts --format esm",
-    "radar": "tsx --env-file=.env src/radar.ts"
+    "radar": "tsx --env-file=.env src/radar.ts",
+    "radar:dev": "tsx --env-file=.env --watch src/radar.ts"
   },
   "dependencies": {
     "@json2csv/plainjs": "^7.0.5",

@@ -30,10 +30,9 @@ const hasNonSQLFilter = (checks: FilterLogic): boolean =>
 async function sqlEval(sqlFragment: any, run: any): Promise<boolean> {
   let passed = false
 
-  console.log("Passed", false)
   // those are eval-specific and differ from the run object
   delete run.idealOutput
-  delete run.context //
+  delete run.context
 
   await sql.begin(async (tx) => {
     // create a virtual table with the run columns, without the id, project_id and is_public columns
@@ -105,8 +104,6 @@ export async function runChecksOnRun(
 ) {
   let passed = false
   const results: CheckResults[] = []
-
-  console.log("RUNNING CHECKS", checks)
 
   const onlySQL = !hasNonSQLFilter(checks)
 

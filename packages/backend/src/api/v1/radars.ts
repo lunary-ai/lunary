@@ -38,7 +38,7 @@ const DEFAULT_RADARS = [
     ],
   },
   {
-    description: "Answer contains PII (Personal Identifiable Information)",
+    description: "LLM answer contains PII (Personal Identifiable Information)",
     negative: true,
     view: [
       "AND",
@@ -56,7 +56,7 @@ const DEFAULT_RADARS = [
         params: {
           field: "output",
           type: "contains",
-          entities: ["name", "location"],
+          entities: ["per", "loc"],
         },
       },
       {
@@ -77,6 +77,51 @@ const DEFAULT_RADARS = [
         id: "phone",
         params: {
           field: "output",
+          type: "contains",
+        },
+      },
+    ],
+  },
+  {
+    description: "Prompt contains PII (Personal Identifiable Information)",
+    negative: true,
+    view: [
+      "AND",
+      {
+        id: "type",
+        params: {
+          type: "llm",
+        },
+      },
+    ],
+    checks: [
+      "OR",
+      {
+        id: "entities",
+        params: {
+          field: "input",
+          type: "contains",
+          entities: ["per", "loc"],
+        },
+      },
+      {
+        id: "email",
+        params: {
+          field: "input",
+          type: "contains",
+        },
+      },
+      {
+        id: "cc",
+        params: {
+          field: "input",
+          type: "contains",
+        },
+      },
+      {
+        id: "phone",
+        params: {
+          field: "input",
           type: "contains",
         },
       },

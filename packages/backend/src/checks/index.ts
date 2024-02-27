@@ -445,9 +445,9 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       }
 
       let labels = {
-        PER: "Persons",
-        ORG: "Organizations",
-        LOC: "Locations",
+        per: "Persons",
+        org: "Organizations",
+        loc: "Locations",
       }
 
       let reason = "No entities detected"

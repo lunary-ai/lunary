@@ -5,6 +5,7 @@ import { cleanSlug } from "@/utils/format"
 
 import {
   ActionIcon,
+  Alert,
   Badge,
   Button,
   Card,
@@ -177,8 +178,7 @@ export default function Checklists() {
 
           <Button
             leftSection={<IconPlus size={12} />}
-            variant="primary"
-            color="blue"
+            variant="default"
             onClick={() => setChecklistModal(true)}
           >
             New Checklist
@@ -194,20 +194,28 @@ export default function Checklists() {
           <Loader />
         ) : (
           <Stack gap="xl">
-            {checklists?.map((checklist) => (
-              <ChecklistCard
-                key={checklist.id}
-                defaultValue={checklist}
-                onDelete={() => {
-                  mutate(
-                    checklists.filter((c) => c.id !== checklist.id),
-                    {
-                      revalidate: false,
-                    },
-                  )
-                }}
-              />
-            ))}
+            <>
+              {!checklists?.length ? (
+                <Alert color="gray" title="No checklist yet" />
+              ) : (
+                <>
+                  {checklists?.map((checklist) => (
+                    <ChecklistCard
+                      key={checklist.id}
+                      defaultValue={checklist}
+                      onDelete={() => {
+                        mutate(
+                          checklists.filter((c) => c.id !== checklist.id),
+                          {
+                            revalidate: false,
+                          },
+                        )
+                      }}
+                    />
+                  ))}
+                </>
+              )}
+            </>
           </Stack>
         )}
       </Stack>

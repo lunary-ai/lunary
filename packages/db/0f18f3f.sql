@@ -1,0 +1,1 @@
+ALTER TABLE dataset ADD COLUMN format VARCHAR DEFAULT 'chat' NOT NULL;

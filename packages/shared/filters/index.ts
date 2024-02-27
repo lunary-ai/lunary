@@ -531,20 +531,20 @@ export const FILTERS: Filter[] = [
         type: "select",
         id: "entities",
         width: 100,
-        defaultValue: ["PER"],
+        defaultValue: ["per"],
         multiple: true,
         options: [
           {
             label: "Name",
-            value: "PER",
+            value: "per",
           },
           {
             label: "Location",
-            value: "LOC",
+            value: "loc",
           },
           {
             label: "Organization",
-            value: "ORG",
+            value: "org",
           },
         ],
       },
