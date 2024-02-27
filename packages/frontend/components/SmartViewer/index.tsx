@@ -7,7 +7,7 @@
  * - Text
  */
 
-import { Code } from "@mantine/core"
+import { Card, Code, Flex, Group, SimpleGrid, Stack, Text } from "@mantine/core"
 import { useMemo } from "react"
 import ProtectedText from "../Blocks/ProtectedText"
 import { ChatMessage } from "./Message"
@@ -23,6 +23,30 @@ const checkIsMessage = (obj) => {
     typeof obj?.function_call === "object" ||
     typeof obj?.toolCalls === "object" ||
     typeof obj?.tool_calls === "object"
+  )
+}
+
+const checkIsRetrieverObjects = (obj) => {
+  return Array.isArray(obj)
+    ? obj.every(checkIsRetrieverObjects)
+    : typeof obj.title === "string" &&
+        (typeof obj.source === "string" || obj.summary === "string")
+}
+
+function RetrieverObject({ data, compact }) {
+  return (
+    <Card withBorder p="sm">
+      <Flex direction="column" gap="sm">
+        {data.title && (
+          <Text size="sm" w={700} mb="md">
+            {data.title}
+          </Text>
+        )}
+        {data.summary && <Text size="xs">{data.summary}</Text>}
+
+        {data.source && <Text size="sm">{data.source}</Text>}
+      </Flex>
+    </Card>
   )
 }
 
@@ -57,6 +81,11 @@ export default function SmartViewer({
       : checkIsMessage(parsed)
   }, [parsed])
 
+  const isRetrieverObjects = useMemo(() => {
+    if (!parsed) return false
+    return checkIsRetrieverObjects(parsed)
+  }, [parsed])
+
   return (
     <pre className={compact ? "compact" : ""} id="HERE">
       {error && (
@@ -81,6 +110,12 @@ export default function SmartViewer({
           {isObject ? (
             isMessages ? (
               <MessageViewer data={parsed} compact={compact} />
+            ) : isRetrieverObjects ? (
+              <Stack>
+                {parsed.map((obj, i) => (
+                  <RetrieverObject key={i} data={obj} compact={compact} />
+                ))}
+              </Stack>
             ) : (
               <Code
                 color="var(--mantine-color-blue-light)"

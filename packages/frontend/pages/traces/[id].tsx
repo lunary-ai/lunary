@@ -5,6 +5,7 @@ import {
   Badge,
   Box,
   Card,
+  Flex,
   Grid,
   Group,
   Loader,
@@ -258,8 +259,8 @@ export default function AgentRun({}) {
         )}
       </Group>
 
-      <Grid align="start">
-        <Grid.Col span={5}>
+      <Flex align="start" w="100%" style={{ gap: 20, wordBreak: "break-all" }}>
+        <Box flex={`0 0 550px`}>
           {relatedRuns && (
             <TraceTree
               isFirst
@@ -270,21 +271,21 @@ export default function AgentRun({}) {
               firstDate={run.createdAt}
             />
           )}
-        </Grid.Col>
-        <Grid.Col span={7}>
+        </Box>
+        <Box flex={`1 1 400px`}>
           <Card
             withBorder
             style={{
               position: "sticky",
               top: 85,
-              maxHeight: "calc(100vh - 120px)",
+              maxHeight: "calc(100vh - 220px)",
               overflow: "auto",
             }}
           >
             <RenderRun run={focusedRun} relatedRuns={relatedRuns} />
           </Card>
-        </Grid.Col>
-      </Grid>
+        </Box>
+      </Flex>
     </Stack>
   )
 }

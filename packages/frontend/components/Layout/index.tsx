@@ -1,4 +1,4 @@
-import { Box, Center, Flex } from "@mantine/core"
+import { Box, Flex } from "@mantine/core"
 import { Notifications } from "@mantine/notifications"
 import { ReactNode, useEffect } from "react"
 
