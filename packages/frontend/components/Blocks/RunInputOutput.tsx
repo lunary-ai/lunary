@@ -253,7 +253,11 @@ export default function RunInputOutput({
         <>
           <Group justify="space-between">
             <Text fw="bold" size="sm">
-              {run.error ? "Error" : "Output"}
+              {run.error
+                ? "Error"
+                : run.type === "retriever"
+                  ? "Documents"
+                  : "Output"}
             </Text>
             {run.tokens?.completion && (
               <TokensBadge tokens={run.tokens?.completion} />
