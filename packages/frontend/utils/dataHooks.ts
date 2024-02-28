@@ -307,11 +307,14 @@ export function useRun(id: string, initialData?: any) {
   const { trigger: update } = useProjectMutation(
     id && `/runs/${id}`,
     fetcher.patch,
+    {
+      revalidate: false,
+    },
   )
 
   async function updateRun(data) {
+    mutate({ ...run, ...data }, { revalidate: false })
     await update(data)
-    mutate({ ...run, ...data })
   }
 
   return {
