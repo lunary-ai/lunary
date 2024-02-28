@@ -34,6 +34,7 @@ import { useOrg } from "@/utils/dataHooks"
 import { fetcher } from "@/utils/fetcher"
 
 function PlanFeatures({ features, highlight }) {
+  console.log(features)
   return (
     <List
       spacing="sm"
@@ -199,7 +200,7 @@ export function UpgradePlans({ highlight }: { highlight?: string }) {
                 features={[
                   { id: "events", title: "4k events per day" },
                   { id: "team", title: "4 team members" },
-                  { id: "apps", title: "Unlimited Projects" },
+                  { id: "projects", title: "Unlimited Projects" },
                   { id: "analytics", title: "Advanced Analytics" },
                   { id: "export", title: "Exports & API" },
                 ]}
