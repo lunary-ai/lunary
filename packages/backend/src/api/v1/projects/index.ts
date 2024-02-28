@@ -40,7 +40,7 @@ projects.post("/", async (ctx: Context) => {
   const [org] = await sql`select * from org where id = ${orgId}`
 
   if (org.plan === "free") {
-    ctx.throw(403, "You can't create more than two project under the free plan")
+    ctx.throw(403, "You can't create more than 1 project under the free plan.")
   }
 
   const newProject = {
