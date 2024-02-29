@@ -12,9 +12,8 @@ const versions = new Router({
 // Otherwise it returns stuff like maxTokens instead of max_tokens and OpenAI breaks
 const unCameledSql = postgres(process.env.DATABASE_URL!)
 
+//Warning: Route used by SDK to fetch the latest version of a template
 versions.get("/latest", async (ctx: Context) => {
-  // Route used by SDK to fetch the latest version of a template
-
   const { projectId } = ctx.state
 
   const { slug } = ctx.request.query as {
@@ -22,7 +21,7 @@ versions.get("/latest", async (ctx: Context) => {
   }
 
   const [latestVersion] = await unCameledSql`
-    SELECT t.id, t.slug, t.mode, tv.id, tv.content, tv.extra, tv.created_at, tv.version
+    SELECT t.id::text, t.slug, t.mode, tv.id::text, tv.content, tv.extra, tv.created_at, tv.version
     FROM template t
     INNER JOIN template_version tv ON t.id = tv.template_id
     WHERE 
