@@ -35,5 +35,7 @@ jobs:
           context: .
           file: ./ops/backend/Dockerfile
           push: true
-          tags: registry.lunary.ai/backend:${{ steps.timestamp.outputs.timestamp }}-${{ github.sha }}
+          tags:
+            registry.lunary.ai/backend:${{ steps.timestamp.outputs.timestamp }}-${{ github.sha }},
+            registry.lunary.ai/backend:latest
           platforms: linux/amd64,linux/arm64
