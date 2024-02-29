@@ -47,7 +47,7 @@ const server = app.listen(PORT, () =>
   console.log(`✅ Lunary API server listening on port ${PORT}`),
 )
 
-console.log("Github action OK")
+console.log("Github action OK 2")
 
 prexit(async () => {
   console.log("Shutting down server...")
