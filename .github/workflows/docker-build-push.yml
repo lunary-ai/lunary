@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the private Ops repo
@@ -39,3 +39,20 @@ jobs:
             registry.lunary.ai/backend:${{ steps.timestamp.outputs.timestamp }}-${{ github.sha }},
             registry.lunary.ai/backend:latest
           platforms: linux/amd64,linux/arm64
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Production
+        uses: appleboy/ssh-action@master
+        with:
+          host: 88.198.48.232
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 3855
+          script: |
+            cd /opt/lunary
+            docker compose pull
+            docker compose down
+            docker compose up -d
