@@ -306,13 +306,13 @@ function Playground() {
   const runPlayground = async () => {
     const model = template.extra?.model
 
+    if (org?.plan === "free" || !org?.playAllowance) {
+      return openUpgrade("playground")
+    }
+
     analytics.track("RunPlayground", {
       model,
     })
-
-    if (!org?.playAllowance) {
-      return openUpgrade("playground")
-    }
 
     setError(null)
     setOutput(null)
@@ -380,7 +380,12 @@ function Playground() {
   useEffect(() => {
     setOutput(null)
     setOutputTokens(0)
-  }, [template?.id, templateVersion?.id])
+  }, [
+    template?.id,
+    templateVersion?.id,
+    template?.mode,
+    templateVersion?.extra?.model,
+  ])
 
   const switchTemplateVersion = (v) => {
     setTemplateVersion(v)
@@ -500,6 +505,7 @@ function Playground() {
               value={
                 <SegmentedControl
                   size="xs"
+                  disabled={loading || !templateVersion?.isDraft}
                   data={[
                     {
                       value: "openai",
