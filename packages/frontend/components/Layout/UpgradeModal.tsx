@@ -202,6 +202,7 @@ export function UpgradePlans({ highlight }: { highlight?: string }) {
                   { id: "team", title: "4 team members" },
                   { id: "projects", title: "Unlimited Projects" },
                   { id: "analytics", title: "Advanced Analytics" },
+                  { id: "playground", title: "Template Playground" },
                   { id: "export", title: "Exports & API" },
                 ]}
                 highlight={highlight}
@@ -250,9 +251,8 @@ export function UpgradePlans({ highlight }: { highlight?: string }) {
             features={[
               { id: "events", title: "Unlimited events" },
               { id: "team", title: "10 team members" },
-              { id: "playground", title: "Unlimited Playground" },
               { id: "evaluate", title: "Evaluations" },
-              { id: "radar", title: "Radar & Alerts" },
+              { id: "radar", title: "Radars & Alerts" },
               { id: "support", title: "Shared Slack channel" },
             ]}
             highlight={highlight}
@@ -284,7 +284,7 @@ export function UpgradePlans({ highlight }: { highlight?: string }) {
           </Group>
           <Button
             component="a"
-            href="https://lunary.ai/pricing/self-hosted"
+            href="https://lunary.ai/pricing"
             target="_blank"
             variant="gradient"
             color="teal"

@@ -17,6 +17,7 @@ export function PromptEditor({
         value={value ?? ""}
         onChange={(e) => onChange(e.currentTarget.value)}
         minRows={5}
+        mb="lg"
         autosize
       />
     )
