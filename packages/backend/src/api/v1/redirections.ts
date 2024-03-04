@@ -23,7 +23,6 @@ redirections.post("/api/report", async (ctx: Context) => {
   }
 
   const validatedProjectId = parsedProjectId.data
-  console.log(validatedProjectId)
   const [project] =
     await sql`select * from project where id = ${validatedProjectId} limit 1`
   console.log(project)
