@@ -37,7 +37,7 @@ function RetrieverObject({ data, compact }) {
   return (
     <Card withBorder p="sm">
       <Flex direction="column" gap="sm">
-        {data.title && (
+        {data?.title && (
           <Text size="sm" w={700} mb="md">
             {data.title}
           </Text>
