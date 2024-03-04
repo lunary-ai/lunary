@@ -290,7 +290,7 @@ router.post("/", async (ctx: Context) => {
   }
 
   const projectId = result.data
-  const [{ project }] =
+  const [project] =
     await sql`select * from project where id = ${projectId} limit 1`
 
   if (!project) {
