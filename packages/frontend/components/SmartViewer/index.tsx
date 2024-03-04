@@ -29,7 +29,7 @@ const checkIsMessage = (obj) => {
 const checkIsRetrieverObjects = (obj) => {
   return Array.isArray(obj)
     ? obj.every(checkIsRetrieverObjects)
-    : typeof obj.title === "string" &&
+    : typeof obj?.title === "string" &&
         (typeof obj.source === "string" || obj.summary === "string")
 }
 
