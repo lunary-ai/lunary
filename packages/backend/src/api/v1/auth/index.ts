@@ -144,8 +144,11 @@ auth.post("/login", async (ctx: Context) => {
 
   const body = bodySchema.safeParse(ctx.request.body)
   if (!body.success) {
-    ctx.status = 403
-    ctx.body = { error: "Unauthorized", message: "Invalid email or password" }
+    ctx.status = 402
+    ctx.body = {
+      error: "Unauthorized",
+      message: "Email must be of valid format, and password must be a string",
+    }
     return
   }
 
