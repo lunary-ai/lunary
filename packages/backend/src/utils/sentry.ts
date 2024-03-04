@@ -1,7 +1,8 @@
 import * as Sentry from "@sentry/node"
 import { ProfilingIntegration } from "@sentry/profiling-node"
 import { stripUrlQueryAndFragment } from "@sentry/utils"
-import { Next, Context } from "koa"
+import { Next } from "koa"
+import Context from "./koa"
 
 export function initSentry() {
   Sentry.init({
@@ -44,6 +45,7 @@ export function sendErrorToSentry(err: unknown, ctx: Context) {
     scope.addEventProcessor((event) => {
       return Sentry.addRequestDataToEvent(event, ctx.request)
     })
+    scope.setUser({ id: ctx.state.userId })
     Sentry.captureException(err)
   })
 }
