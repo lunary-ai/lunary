@@ -28,6 +28,32 @@ interface Query {
   order?: string
 }
 
+function processInput(input: unknown) {
+  if (
+    input &&
+    typeof input === "object" &&
+    Object.keys(input).length === 1 &&
+    input.hasOwnProperty("input")
+  ) {
+    return input.input
+  }
+
+  return input
+}
+
+function processOutput(output: unknown) {
+  if (
+    output &&
+    typeof output === "object" &&
+    Object.keys(output).length === 1 &&
+    output.hasOwnProperty("output")
+  ) {
+    return output.output
+  }
+
+  return output
+}
+
 const formatRun = (run: any) => ({
   id: run.id,
   isPublic: run.isPublic,
@@ -45,8 +71,8 @@ const formatRun = (run: any) => ({
     total: run.completionTokens + run.promptTokens,
   },
   tags: run.tags,
-  input: run.input,
-  output: run.output,
+  input: processInput(run.input),
+  output: processOutput(run.output),
   error: run.error,
   status: run.status,
   siblingRunId: run.siblingRunId,
