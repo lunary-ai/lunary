@@ -141,7 +141,15 @@ auth.post("/login", async (ctx: Context) => {
     email: z.string().email(),
     password: z.string(),
   })
-  const { email, password } = bodySchema.parse(ctx.request.body)
+
+  const body = bodySchema.safeParse(ctx.request.body)
+  if (!body.success) {
+    ctx.status = 403
+    ctx.body = { error: "Unauthorized", message: "Invalid email or password" }
+    return
+  }
+
+  const { email, password } = body.data
 
   const [user] = await sql`
     select * from account where email = ${email}
