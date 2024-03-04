@@ -282,6 +282,14 @@ export async function processEventsIngestion(
 
 router.post("/", async (ctx: Context) => {
   const { projectId } = ctx.state
+  const [{ project }] =
+    await sql`select * from project where id = ${projectId} limit 1`
+
+  if (!project) {
+    ctx.status = 401
+    ctx.body = { message: "Incorrect project id" }
+    return
+  }
 
   const { events } = ctx.request.body as {
     events: Event | Event[]
