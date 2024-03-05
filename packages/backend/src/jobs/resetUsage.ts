@@ -57,15 +57,11 @@ RETURNING *;`
   }
 }
 
-// reset org.ai_allowance:
-// - 3 for free users
-// - 10 for 'pro' users
-// - 1000 for 'unlimited' and 'enterprise' users
-
-async function resetAIallowance() {
+// reset playground allowance
+async function resetPlaygroundAllowance() {
   await sql`UPDATE "public"."org" o SET play_allowance = 3 WHERE o.plan = 'free';`
 
-  await sql`UPDATE "public"."org" o SET play_allowance = 15 WHERE o.plan = 'pro';`
+  await sql`UPDATE "public"."org" o SET play_allowance = 1000 WHERE o.plan = 'pro';`
 
   await sql`UPDATE "public"."org" o SET play_allowance = 1000 WHERE o.plan = 'unlimited' OR o.plan = 'custom';`
 }
@@ -73,7 +69,7 @@ async function resetAIallowance() {
 export default async function resetUsage() {
   try {
     console.log("[JOB]: resetting AI allowance")
-    await resetAIallowance()
+    await resetPlaygroundAllowance()
   } catch (error) {
     console.error(error)
   }
