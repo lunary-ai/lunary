@@ -27,7 +27,7 @@
     "litellm": "^0.12.0",
     "lunary": "^0.7.2",
     "node-cron": "^3.0.3",
-    "openai": "^4.26.0",
+    "openai": "^4.28.4",
     "postgres": "^3.4.3",
     "prexit": "^2.2.0",
     "rouge": "^1.0.3",

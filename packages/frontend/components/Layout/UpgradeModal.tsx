@@ -34,7 +34,6 @@ import { useOrg } from "@/utils/dataHooks"
 import { fetcher } from "@/utils/fetcher"
 
 function PlanFeatures({ features, highlight }) {
-  console.log(features)
   return (
     <List
       spacing="sm"

@@ -211,7 +211,7 @@ async function handleStream(
 
       if (!choices[index]) {
         choices.splice(index, 0, {
-          message: { role, content, function_call, tool_calls: [] },
+          message: { role, content: "", function_call, tool_calls: [] },
         })
       }
 
