@@ -102,6 +102,14 @@ export const cleanEvent = async (event: any): Promise<Event> => {
   const { timestamp, runId, parentRunId, tags, name, ...rest } =
     recursiveToCamel(event)
 
+  let isoTimestamp
+  try {
+    isoTimestamp = new Date(timestamp.toISOString())
+  } catch (error) {
+    console.error("Couldn't parse timestamp")
+    console.error(event)
+  }
+
   return {
     ...rest,
     name: typeof name === "string" ? name.replace("models/", "") : undefined,
@@ -109,7 +117,7 @@ export const cleanEvent = async (event: any): Promise<Event> => {
     tokensUsage: await completeRunUsage(event),
     runId: await ensureIsUUID(runId),
     parentRunId: await ensureIsUUID(parentRunId),
-    timestamp: new Date(timestamp).toISOString(),
+    timestamp: isoTimestamp,
   }
 }
 
