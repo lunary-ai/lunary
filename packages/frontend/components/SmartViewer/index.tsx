@@ -29,8 +29,8 @@ const checkIsMessage = (obj) => {
 const checkIsRetrieverObjects = (obj) => {
   return Array.isArray(obj)
     ? obj.every(checkIsRetrieverObjects)
-    : typeof obj.title === "string" &&
-        (typeof obj.source === "string" || obj.summary === "string")
+    : (typeof obj.title === "string" || typeof obj.id !== "undefined") &&
+        (typeof obj.source === "string" || typeof obj.summary === "string")
 }
 
 function RetrieverObject({ data, compact }) {
