@@ -1,6 +1,5 @@
 import sql from "@/src/utils/db"
 import * as Sentry from "@sentry/node"
-import { Context } from "koa"
 import Router from "koa-router"
 import {
   CleanRun,
@@ -10,6 +9,8 @@ import {
   ingestChatEvent,
 } from "@/src/utils/ingest"
 import { calcRunCost } from "@/src/utils/calcCost"
+import { z } from "zod"
+import Context from "@/src/utils/koa"
 
 const router = new Router()
 
@@ -281,7 +282,22 @@ export async function processEventsIngestion(
 }
 
 router.post("/", async (ctx: Context) => {
-  const { projectId } = ctx.state
+  const result = z.string().uuid().safeParse(ctx.state.projectId)
+  if (!result.success) {
+    ctx.status = 402
+    ctx.body = { message: "Incorrect project id format" }
+    return
+  }
+
+  const projectId = result.data
+  const [project] =
+    await sql`select * from project where id = ${projectId} limit 1`
+
+  if (!project) {
+    ctx.status = 401
+    ctx.body = { message: "This project does not exist" }
+    return
+  }
 
   const { events } = ctx.request.body as {
     events: Event | Event[]

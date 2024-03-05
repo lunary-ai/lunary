@@ -2,6 +2,8 @@ import { Context } from "koa"
 import Router from "koa-router"
 import { processEventsIngestion } from "./runs/ingest"
 import { Event } from "@/src/utils/ingest"
+import { z } from "zod"
+import sql from "@/src/utils/db"
 
 const redirections = new Router()
 
@@ -12,6 +14,24 @@ redirections.post("/api/report", async (ctx: Context) => {
   }
 
   const projectId = events[0]?.projectId || events[0].app
+
+  const parsedProjectId = z.string().uuid().safeParse(projectId)
+  if (!parsedProjectId.success) {
+    ctx.status = 402
+    ctx.body = { message: "Incorrect project id format" }
+    return
+  }
+
+  const validatedProjectId = parsedProjectId.data
+  const [project] =
+    await sql`select * from project where id = ${validatedProjectId} limit 1`
+  console.log(project)
+
+  if (!project) {
+    ctx.status = 401
+    ctx.body = { message: "This project does not exist" }
+    return
+  }
 
   const result = await processEventsIngestion(projectId, events)
 
