@@ -21,7 +21,7 @@ versions.get("/latest", async (ctx: Context) => {
   }
 
   const [latestVersion] = await unCameledSql`
-    SELECT t.id::text, t.slug, t.mode, tv.id::text, tv.content, tv.extra, tv.created_at, tv.version
+    SELECT t.id::text, t.slug, tv.id::text, tv.content, tv.extra, tv.created_at, tv.version
     FROM template t
     INNER JOIN template_version tv ON t.id = tv.template_id
     WHERE 

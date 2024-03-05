@@ -51,7 +51,11 @@ export async function runAImodel(
   model: string,
   stream: boolean = false,
 ) {
-  const copy = compileChatMessages(content, variables)
+  // support string messages
+  const originalMessages =
+    typeof content === "string" ? [{ role: "user", content }] : content
+
+  const copy = compileChatMessages(originalMessages, variables)
 
   const messages = convertInputToOpenAIMessages(copy)
 
