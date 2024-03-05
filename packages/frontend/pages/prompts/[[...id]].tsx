@@ -352,7 +352,6 @@ function Playground() {
 
         // // Update the chat state with the new message tokens.
         const chunk = decoder.decode(value, { stream: true }).trim().split("\n")
-        console.log(chunk)
 
         for (const item of chunk) {
           const parsedLine = JSON.parse(item)
