@@ -99,7 +99,6 @@ const recursiveToCamel = (item: any): any => {
 }
 
 export const cleanEvent = async (event: any): Promise<Event> => {
-  console.log(event)
   const { timestamp, runId, parentRunId, tags, name, ...rest } =
     recursiveToCamel(event)
 
