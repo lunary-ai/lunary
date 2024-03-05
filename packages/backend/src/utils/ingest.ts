@@ -99,12 +99,13 @@ const recursiveToCamel = (item: any): any => {
 }
 
 export const cleanEvent = async (event: any): Promise<Event> => {
+  console.log(event)
   const { timestamp, runId, parentRunId, tags, name, ...rest } =
     recursiveToCamel(event)
 
   let isoTimestamp
   try {
-    isoTimestamp = new Date(timestamp.toISOString())
+    isoTimestamp = new Date(timestamp).toISOString()
   } catch (error) {
     console.error("Couldn't parse timestamp")
     console.error(event)
