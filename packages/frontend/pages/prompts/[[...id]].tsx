@@ -352,6 +352,7 @@ function Playground() {
 
         // // Update the chat state with the new message tokens.
         const chunk = decoder.decode(value, { stream: true }).trim().split("\n")
+        console.log(chunk)
 
         for (const item of chunk) {
           const parsedLine = JSON.parse(item)
@@ -383,8 +384,8 @@ function Playground() {
   }, [
     template?.id,
     templateVersion?.id,
-    template?.mode,
     templateVersion?.extra?.model,
+    typeof templateVersion?.content, // when switching from chat to text mode
   ])
 
   const switchTemplateVersion = (v) => {
@@ -508,27 +509,29 @@ function Playground() {
                   disabled={loading || !templateVersion?.isDraft}
                   data={[
                     {
-                      value: "openai",
-                      label: "OpenAI",
-                    },
-                    {
-                      value: "custom",
-                      label: "Custom Chat",
+                      value: "chat",
+                      label: "Chat",
                     },
                     {
                       value: "text",
                       label: "Text",
                     },
                   ]}
-                  value={template?.mode}
+                  value={
+                    typeof templateVersion.content === "string"
+                      ? "text"
+                      : "chat"
+                  }
                   onChange={(value) => {
                     const newTemplateVersion = { ...templateVersion }
-                    if (template?.mode === "text" && value !== "text") {
+                    const isTextAlready =
+                      typeof templateVersion.content === "string"
+                    if (isTextAlready && value !== "text") {
                       // Switching from text to custom/openai
                       newTemplateVersion.content = [
                         { role: "user", content: templateVersion.content },
                       ]
-                    } else if (template?.mode !== "text" && value === "text") {
+                    } else if (!isTextAlready && value === "text") {
                       // Switching from custom/openai to text
                       const firstUserMessage = templateVersion.content[0]
 
@@ -536,125 +539,118 @@ function Playground() {
                         firstUserMessage?.content || ""
                     }
                     setTemplateVersion(newTemplateVersion)
-
-                    setTemplate({ ...template, mode: value })
                   }}
                 />
               }
             />
 
-            {template?.mode !== "text" && (
-              <>
+            <>
+              <ParamItem
+                name="Model"
+                value={
+                  <Select
+                    data={MODELS.map((model) => ({
+                      value: model.id,
+                      label: model.name,
+                    }))}
+                    w={250}
+                    searchable
+                    inputMode="search"
+                    {...extraHandler("model")}
+                  />
+                }
+              />
+
+              <ParamItem
+                name="Temperature"
+                value={
+                  <NumberInput
+                    min={0}
+                    max={2}
+                    step={0.1}
+                    decimalScale={2}
+                    style={{ zIndex: 0 }}
+                    w={90}
+                    {...extraHandler("temperature")}
+                  />
+                }
+              />
+
+              <ParamItem
+                name="Max tokens"
+                value={
+                  <NumberInput
+                    min={1}
+                    max={32000}
+                    step={100}
+                    w={90}
+                    {...extraHandler("max_tokens")}
+                  />
+                }
+              />
+
+              <ParamItem
+                name="Freq. Penalty"
+                value={
+                  <NumberInput
+                    min={-2}
+                    max={2}
+                    decimalScale={2}
+                    step={0.1}
+                    w={90}
+                    {...extraHandler("frequency_penalty")}
+                  />
+                }
+              />
+
+              <ParamItem
+                name="Pres. Penalty"
+                value={
+                  <NumberInput
+                    min={-2}
+                    max={2}
+                    decimalScale={2}
+                    step={0.1}
+                    w={90}
+                    {...extraHandler("presence_penalty")}
+                  />
+                }
+              />
+
+              <ParamItem
+                name="Top P"
+                value={
+                  <NumberInput
+                    min={0.1}
+                    max={1}
+                    decimalScale={2}
+                    step={0.1}
+                    w={90}
+                    {...extraHandler("top_p")}
+                  />
+                }
+              />
+
+              <ParamItem
+                name="Stream"
+                value={<Checkbox {...extraHandler("stream", true)} />}
+              />
+
+              {typeof templateVersion.content !== "string" && (
                 <ParamItem
-                  name="Model"
+                  name="Tool Calls"
                   value={
-                    <Select
-                      data={MODELS.filter((model) =>
-                        template?.mode === "openai"
-                          ? model.id.includes("gpt-")
-                          : true,
-                      ).map((model) => ({
-                        value: model.id,
-                        label: model.name,
-                      }))}
-                      w={250}
-                      searchable
-                      inputMode="search"
-                      {...extraHandler("model")}
-                    />
-                  }
-                />
-
-                <ParamItem
-                  name="Temperature"
-                  value={
-                    <NumberInput
-                      min={0}
-                      max={2}
-                      step={0.1}
-                      decimalScale={2}
-                      style={{ zIndex: 0 }}
-                      w={90}
-                      {...extraHandler("temperature")}
-                    />
-                  }
-                />
-
-                <ParamItem
-                  name="Max tokens"
-                  value={
-                    <NumberInput
-                      min={1}
-                      max={32000}
-                      step={100}
-                      w={90}
-                      {...extraHandler("max_tokens")}
-                    />
-                  }
-                />
-
-                <ParamItem
-                  name="Freq. Penalty"
-                  value={
-                    <NumberInput
-                      min={-2}
-                      max={2}
-                      decimalScale={2}
-                      step={0.1}
-                      w={90}
-                      {...extraHandler("frequency_penalty")}
-                    />
-                  }
-                />
-
-                <ParamItem
-                  name="Pres. Penalty"
-                  value={
-                    <NumberInput
-                      min={-2}
-                      max={2}
-                      decimalScale={2}
-                      step={0.1}
-                      w={90}
-                      {...extraHandler("presence_penalty")}
-                    />
-                  }
-                />
-
-                <ParamItem
-                  name="Top P"
-                  value={
-                    <NumberInput
-                      min={0.1}
-                      max={1}
-                      decimalScale={2}
-                      step={0.1}
-                      w={90}
-                      {...extraHandler("top_p")}
-                    />
-                  }
-                />
-
-                <ParamItem
-                  name="Stream"
-                  value={<Checkbox {...extraHandler("stream", true)} />}
-                />
-
-                {template?.mode === "openai" && (
-                  <ParamItem
-                    name="Tool Calls"
-                    value={
-                      <>
-                        <Modal
-                          size="lg"
-                          opened={jsonModalOpened}
-                          onClose={() => setJsonModalOpened(false)}
-                          title="Tool Calls Definition"
-                        >
-                          <JsonInput
-                            autosize
-                            mr="sm"
-                            placeholder={`[{
+                    <>
+                      <Modal
+                        size="lg"
+                        opened={jsonModalOpened}
+                        onClose={() => setJsonModalOpened(false)}
+                        title="Tool Calls Definition"
+                      >
+                        <JsonInput
+                          autosize
+                          mr="sm"
+                          placeholder={`[{
   type: "function",
   function: {
     name: "get_current_weather",
@@ -671,75 +667,74 @@ function Playground() {
     },
   },
 }]`}
-                            // defaultValue={tempJSON}
-                            value={tempJSON}
-                            onChange={(val) => {
-                              setTempJSON(val)
-                            }}
-                          />
-                          <Button
-                            mt="sm"
-                            ml="auto"
-                            onClick={() => {
-                              try {
-                                const empty = !tempJSON?.trim().length
-
-                                if (!empty && tempJSON?.trim()[0] !== "[") {
-                                  throw "Not an array"
-                                }
-
-                                setHasChanges(true)
-                                setTemplateVersion({
-                                  ...templateVersion,
-                                  extra: {
-                                    ...templateVersion.extra,
-                                    tools: tempJSON?.trim().length
-                                      ? JSON.parse(jsonrepair(tempJSON.trim()))
-                                      : undefined,
-                                  },
-                                })
-                                setJsonModalOpened(false)
-                              } catch (e) {
-                                console.error(e)
-                                notifications.show({
-                                  title:
-                                    "Error parsing JSON. Please enter a valid OpenAI tools array.",
-                                  message: "Click here to open the docs.",
-                                  color: "red",
-                                  onClick: () =>
-                                    window.open(
-                                      "https://platform.openai.com/docs/guides/function-calling",
-                                      "_blank",
-                                    ),
-                                })
-                              }
-                            }}
-                          >
-                            Save
-                          </Button>
-                        </Modal>
+                          // defaultValue={tempJSON}
+                          value={tempJSON}
+                          onChange={(val) => {
+                            setTempJSON(val)
+                          }}
+                        />
                         <Button
-                          size="compact-xs"
-                          variant="outline"
+                          mt="sm"
+                          ml="auto"
                           onClick={() => {
-                            setTempJSON(
-                              JSON.stringify(
-                                templateVersion?.extra?.tools,
-                                null,
-                                2,
-                              ),
-                            )
-                            setJsonModalOpened(true)
+                            try {
+                              const empty = !tempJSON?.trim().length
+
+                              if (!empty && tempJSON?.trim()[0] !== "[") {
+                                throw "Not an array"
+                              }
+
+                              setHasChanges(true)
+                              setTemplateVersion({
+                                ...templateVersion,
+                                extra: {
+                                  ...templateVersion.extra,
+                                  tools: tempJSON?.trim().length
+                                    ? JSON.parse(jsonrepair(tempJSON.trim()))
+                                    : undefined,
+                                },
+                              })
+                              setJsonModalOpened(false)
+                            } catch (e) {
+                              console.error(e)
+                              notifications.show({
+                                title:
+                                  "Error parsing JSON. Please enter a valid OpenAI tools array.",
+                                message: "Click here to open the docs.",
+                                color: "red",
+                                onClick: () =>
+                                  window.open(
+                                    "https://platform.openai.com/docs/guides/function-calling",
+                                    "_blank",
+                                  ),
+                              })
+                            }
                           }}
                         >
-                          Edit
+                          Save
                         </Button>
-                      </>
-                    }
-                  />
-                )}
-              </>
-            )}
+                      </Modal>
+                      <Button
+                        size="compact-xs"
+                        variant="outline"
+                        onClick={() => {
+                          setTempJSON(
+                            JSON.stringify(
+                              templateVersion?.extra?.tools,
+                              null,
+                              2,
+                            ),
+                          )
+                          setJsonModalOpened(true)
+                        }}
+                      >
+                        Edit
+                      </Button>
+                    </>
+                  }
+                />
+              )}
+            </>
 
             {template && (
               <Card shadow="sm" p="sm" my="md">
@@ -795,24 +790,18 @@ function Playground() {
               </Card>
             )}
 
-            {template?.mode !== "text" && (
-              <Button
-                leftSection={<IconBolt size="16" />}
-                size="sm"
-                disabled={loading}
-                onClick={runPlayground}
-                loading={streaming}
-                rightSection={
-                  <HotkeysInfo
-                    hot="Enter"
-                    size="sm"
-                    style={{ marginTop: -4 }}
-                  />
-                }
-              >
-                {template?.id ? "Test template" : "Run"}
-              </Button>
-            )}
+            <Button
+              leftSection={<IconBolt size="16" />}
+              size="sm"
+              disabled={loading}
+              onClick={runPlayground}
+              loading={streaming}
+              rightSection={
+                <HotkeysInfo hot="Enter" size="sm" style={{ marginTop: -4 }} />
+              }
+            >
+              {template?.id ? "Test template" : "Run"}
+            </Button>
           </Stack>
         </Box>
       </Flex>
