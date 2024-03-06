@@ -29,7 +29,7 @@ jobs:
           username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
           password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
 
-      - name: Build and push
+      - name: Build and push backend
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -38,6 +38,28 @@ jobs:
           tags:
             registry.lunary.ai/backend:${{ steps.timestamp.outputs.timestamp }}-${{ github.sha }},
             registry.lunary.ai/backend:latest
+          platforms: linux/amd64,linux/arm64
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ops/frontend/Dockerfile
+          push: true
+          tags:
+            registry.lunary.ai/frontend:${{ steps.timestamp.outputs.timestamp }}-${{ github.sha }},
+            registry.lunary.ai/frontend:latest
+          platforms: linux/amd64,linux/arm64
+
+      - name: Build and push db
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ops/frontend/Dockerfile
+          push: true
+          tags:
+            registry.lunary.ai/db:${{ steps.timestamp.outputs.timestamp }}-${{ github.sha }},
+            registry.lunary.ai/db:latest
           platforms: linux/amd64,linux/arm64
 
   deploy:
