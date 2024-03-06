@@ -7,6 +7,7 @@
     "dev:withradar": "concurrently \"npm run frontend:dev\" \"npm run backend:dev\" \"npm run backend:radar-dev\"",
     "frontend:start": "npm -w packages/frontend run start",
     "frontend:dev": "npm -w packages/frontend run dev",
+    "frontend:build": "npm -w packages/frontend run build",
     "backend:start": "npm -w packages/backend run start",
     "backend:dev": "npm -w packages/backend run dev",
     "backend:radar": "npm -w packages/backend run radar",
