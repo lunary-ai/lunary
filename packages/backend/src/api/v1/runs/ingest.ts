@@ -249,7 +249,10 @@ export async function processEventsIngestion(
     error?: string
   }[] = []
 
-  for (const event of sorted) {
+  for (let event of sorted) {
+    if (Array.isArray(event) && event.length === 1) {
+      event = event[0]
+    }
     try {
       const cleanedEvent = await cleanEvent(event)
 
