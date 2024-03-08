@@ -66,14 +66,29 @@ const MODEL_COSTS: ModelCost[] = [
     outputCost: 0.06,
   },
   {
-    models: ["claude-instant-1", "claude-instant-v1"],
+    models: ["claude-instant-1", "claude-instant-v1", "claude-instant-1.2"],
     inputCost: 0.0008,
     outputCost: 0.0024,
   },
   {
-    models: ["claude-2", "claude-v2", "claude-1", "claude-v1"],
+    models: ["claude-2", "claude-v2", "claude-1", "claude-v1", "claude-2.1"],
     inputCost: 0.008,
     outputCost: 0.024,
+  },
+  {
+    models: ["claude-3-opus"],
+    inputCost: 0.000015,
+    outputCost: 0.000075,
+  },
+  {
+    models: ["claude-3-sonet"],
+    inputCost: 0.000003,
+    outputCost: 0.000075,
+  },
+  {
+    models: ["claude-3-haiku"],
+    inputCost: 0.00000025,
+    outputCost: 0.00000125,
   },
   {
     models: ["text-bison", "chat-bison", "code-bison", "codechat-bison"],
