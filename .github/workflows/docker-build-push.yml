@@ -38,7 +38,7 @@ jobs:
           tags:
             registry.lunary.ai/backend:${{ steps.timestamp.outputs.timestamp }}-${{ github.sha }},
             registry.lunary.ai/backend:latest
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
 
       - name: Build and push frontend
         uses: docker/build-push-action@v5
@@ -49,7 +49,7 @@ jobs:
           tags:
             registry.lunary.ai/frontend:${{ steps.timestamp.outputs.timestamp }}-${{ github.sha }},
             registry.lunary.ai/frontend:latest
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
 
       - name: Build and push db
         uses: docker/build-push-action@v5
@@ -60,7 +60,7 @@ jobs:
           tags:
             registry.lunary.ai/db:${{ steps.timestamp.outputs.timestamp }}-${{ github.sha }},
             registry.lunary.ai/db:latest
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
 
   deploy:
     needs: build-and-push
