@@ -20,8 +20,6 @@ checkDbConnection()
 setupCronJobs()
 initSentry()
 
-console.log(123)
-
 const app = new Koa()
 
 // Forward proxy headers
