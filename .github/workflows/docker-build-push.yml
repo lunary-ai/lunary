@@ -69,7 +69,7 @@ jobs:
       - name: Deploy to Production
         uses: appleboy/ssh-action@master
         with:
-          host: 88.198.48.232
+          host: ${{ secrets.PRODUCTION_IP_ADDRESS }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 3855
