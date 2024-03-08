@@ -1,5 +1,4 @@
 create extension if not exists pg_trgm;
-create extension if not exists pgroonga;
 create extension if not exists "uuid-ossp";
 
 
@@ -126,17 +125,12 @@ create index on run (duration);
 create index on run using gin (lower(name) gin_trgm_ops);
 create index on run using gin (lower(output_text) gin_trgm_ops);
 create index on run using gin (lower(input_text) gin_trgm_ops);
-create index on run using pgroonga (input_text, created_at desc);
-create index on run using pgroonga (input);
 create index on run (ended_at, created_at);
 create index on run (created_at desc);
 create index on run (created_at);
 create index on run (created_at, project_id);
 create index on run (project_id, external_user_id);
-create index on run using pgroonga (project_id, type, output_text);
-create index on run using pgroonga (project_id, type, input_text);
 create index on run (project_id, type);
-create index on run using pgroonga (project_id, type, error_text);
 create index on run (project_id, type, created_at desc);
 create index on run (project_id);
 create index on run (external_user_id);
