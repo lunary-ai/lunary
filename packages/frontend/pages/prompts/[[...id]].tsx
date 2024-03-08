@@ -680,7 +680,24 @@ function Playground() {
                               const empty = !tempJSON?.trim().length
 
                               if (!empty && tempJSON?.trim()[0] !== "[") {
-                                throw "Not an array"
+                                throw new Error("Not an array")
+                              }
+
+                              const repaired = empty
+                                ? undefined
+                                : JSON.parse(jsonrepair(tempJSON.trim()))
+
+                              if (
+                                !empty &&
+                                repaired.find(
+                                  (item) =>
+                                    item.type !== "function" ||
+                                    !item.function.name,
+                                )
+                              ) {
+                                throw new Error(
+                                  "All items must have a function type",
+                                )
                               }
 
                               setHasChanges(true)
@@ -688,9 +705,7 @@ function Playground() {
                                 ...templateVersion,
                                 extra: {
                                   ...templateVersion.extra,
-                                  tools: tempJSON?.trim().length
-                                    ? JSON.parse(jsonrepair(tempJSON.trim()))
-                                    : undefined,
+                                  tools: empty ? undefined : repaired,
                                 },
                               })
                               setJsonModalOpened(false)
@@ -698,7 +713,8 @@ function Playground() {
                               console.error(e)
                               notifications.show({
                                 title:
-                                  "Error parsing JSON. Please enter a valid OpenAI tools array.",
+                                  "Please enter a valid OpenAI tools array. " +
+                                  e.message,
                                 message: "Click here to open the docs.",
                                 color: "red",
                                 onClick: () =>
