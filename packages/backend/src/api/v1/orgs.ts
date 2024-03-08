@@ -211,11 +211,14 @@ async function handleStream(
 
       if (!choices[index]) {
         choices.splice(index, 0, {
-          message: { role, content: "", function_call, tool_calls: [] },
+          message: { role, function_call },
         })
       }
 
-      if (content) choices[index].message.content += content || ""
+      if (content) {
+        if (!choices[index].message.content) choices[index].message.content = ""
+        choices[index].message.content += content
+      }
 
       if (role) choices[index].message.role = role
 
@@ -227,6 +230,9 @@ async function handleStream(
           function_call.arguments
 
       if (tool_calls) {
+        if (!choices[index].message.tool_calls)
+          choices[index].message.tool_calls = []
+
         for (const tool_call of tool_calls) {
           const existingCallIndex = choices[index].message.tool_calls.findIndex(
             (tc) => tc.index === tool_call.index,

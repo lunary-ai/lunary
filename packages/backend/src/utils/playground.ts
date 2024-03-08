@@ -44,6 +44,19 @@ export function compileChatMessages(content: any, variables: any) {
   return copy
 }
 
+// set undefined if it's invalid toolCalls
+function validateToolCalls(model: string, toolCalls: any) {
+  if (
+    !toolCalls ||
+    (!model.includes("gpt") && !model.includes("claude")) ||
+    !Array.isArray(toolCalls) ||
+    toolCalls.find((t: any) => t.type !== "function" || !t.function?.name)
+  )
+    return undefined
+
+  return toolCalls
+}
+
 export async function runAImodel(
   content: any,
   extra: any,
@@ -96,7 +109,7 @@ export async function runAImodel(
     frequency_penalty: extra?.frequency_penalty,
     stop: extra?.stop,
     functions: extra?.functions,
-    tools: extra?.tools,
+    tools: validateToolCalls(model, extra?.tools),
     seed: extra?.seed,
   })
 
