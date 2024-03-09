@@ -72,7 +72,7 @@ export const cleanSlug = (text: string): string =>
     .replace(/--+/g, "-")
 
 export const formatCompactFromNow = (date) =>
-  formatDistanceToNow(new Date(), {
+  formatDistanceToNow(date, {
     addSuffix: true,
   })
     .replace("less than", "<")
