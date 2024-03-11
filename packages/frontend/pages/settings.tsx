@@ -127,7 +127,9 @@ export default function AppAnalytics() {
 
               <Popover width={200} position="bottom" shadow="md">
                 <Popover.Target>
-                  <Button color="red">Delete Project</Button>
+                  <Button color="red" data-testid="delete-project-button">
+                    Delete Project
+                  </Button>
                 </Popover.Target>
                 <Popover.Dropdown>
                   <Text mb="md">
@@ -136,11 +138,13 @@ export default function AppAnalytics() {
                   </Text>
                   <Button
                     color="red"
-                    data-testid="delete-project"
-                    onClick={() => {
-                      drop()
-                      setProjectId(null)
-                      Router.push("/")
+                    data-testid="delete-project-popover-button"
+                    onClick={async () => {
+                      const dropped = await drop()
+                      if (dropped) {
+                        setProjectId(null)
+                        Router.push("/")
+                      }
                     }}
                   >
                     Delete
