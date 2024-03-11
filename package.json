@@ -11,13 +11,18 @@
     "backend:start": "npm -w packages/backend run start",
     "backend:dev": "npm -w packages/backend run dev",
     "backend:radar": "npm -w packages/backend run radar",
-    "backend:radar-dev": "npm -w packages/backend run radar:dev"
+    "backend:radar-dev": "npm -w packages/backend run radar:dev",
+    "test": "npx playwright test",
+    "test:ui": "npx playwright test --ui"
   },
   "workspaces": [
     "packages/*"
   ],
   "devDependencies": {
+    "@playwright/test": "^1.42.1",
+    "@types/node": "^20.11.25",
     "concurrently": "^8.2.2",
+    "dotenv": "^16.4.5",
     "prettier": "^3.2.4",
     "tsup": "^8.0.1",
     "tsx": "^4.7.0",

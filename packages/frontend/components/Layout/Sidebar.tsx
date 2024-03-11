@@ -191,6 +191,7 @@ export default function Sidebar() {
                   loading={createProjectLoading}
                   size="xs"
                   onClick={createProject}
+                  data-testid="new-project"
                   variant="light"
                   fullWidth
                   leftSection={<IconPlus size={12} />}
@@ -255,6 +256,7 @@ export default function Sidebar() {
                 <NavLink
                   color="red"
                   h={50}
+                  data-testid="account-sidebar-item"
                   leftSection={<UserAvatar size={24} profile={user} />}
                   rightSection={<IconChevronRight size={16} opacity={0.5} />}
                   label={
@@ -288,6 +290,7 @@ export default function Sidebar() {
               <Menu.Dropdown>
                 <Menu.Item
                   c="red"
+                  data-testid="logout-button"
                   onClick={() => auth.signOut()}
                   leftSection={<IconLogout size={14} />}
                 >

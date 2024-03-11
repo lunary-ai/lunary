@@ -188,4 +188,10 @@ docker-compose*
 package-lock.json
 
 entrypoint.sh
-packages/frontend/Frontend.code-workspace
+
+/test-results/
+/playwright-report/
+/playwright/
+/blob-report/
+/playwright/.cache/
+/e2e/.auth/
