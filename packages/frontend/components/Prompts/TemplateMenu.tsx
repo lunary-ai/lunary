@@ -65,7 +65,7 @@ const TemplateListItem = ({
   const confirmDelete = () => {
     modals.openConfirmModal({
       title: "Please confirm your action",
-      confirmProps: { color: "red" },
+      confirmProps: { color: "red", "data-testid": "confirm" },
       children: (
         <Text size="sm">
           Are you sure you want to delete this prompt? This action cannot be
@@ -144,6 +144,7 @@ const TemplateListItem = ({
             <TextInput
               defaultValue={template.slug}
               variant="unstyled"
+              data-testid="rename-template-input"
               h={35}
               px={10}
               onKeyPress={(e) => {
@@ -253,7 +254,7 @@ const TemplateList = ({
   createTemplate,
   switchTemplateVersion,
 }) => {
-  const { templates, loading } = useTemplates()
+  const { templates, loading, isInserting } = useTemplates()
 
   if (loading) return <Loader />
 
@@ -269,6 +270,8 @@ const TemplateList = ({
             size="xs"
             radius="sm"
             variant="outline"
+            loading={isInserting}
+            data-testid="create-template"
             onClick={createTemplate}
           >
             <IconPlus size={12} />

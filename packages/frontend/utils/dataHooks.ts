@@ -213,13 +213,17 @@ export function useTemplates() {
   const { data: templates, isLoading, mutate } = useProjectSWR(`/templates`)
 
   // insert mutation
-  const { trigger: insert } = useProjectMutation(`/templates`, fetcher.post)
+  const { trigger: insert, isMutating: isInserting } = useProjectMutation(
+    `/templates`,
+    fetcher.post,
+  )
 
   return {
     templates,
     insert,
     mutate,
     loading: isLoading,
+    isInserting,
   }
 }
 

@@ -7,6 +7,8 @@ const threads = {
 export const sendTelegramMessage = async (msg, thread) => {
   if (!process.env.TELEGRAM_BOT_KEY || !process.env.TELEGRAM_CHAT_ID) return
 
+  if (msg.includes("test@lunary.ai")) return // ignore test runner emails
+
   try {
     const threadId = threads[thread] || null
 

@@ -1,6 +1,10 @@
-export const sendEmail = async (body: any) => {
+export async function sendEmail(body: any) {
   if (!process.env.RESEND_KEY) {
     return console.warn("RESEND_KEY is not set, skipping email sending")
+  }
+
+  if (body.to[0] === "test@lunary.ai") {
+    return console.warn("Not sending email to test account")
   }
 
   const res = await fetch("https://api.resend.com/emails", {
