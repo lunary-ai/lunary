@@ -77,18 +77,18 @@ const MODEL_COSTS: ModelCost[] = [
   },
   {
     models: ["claude-3-opus"],
-    inputCost: 0.000015,
-    outputCost: 0.000075,
+    inputCost: 0.015,
+    outputCost: 0.075,
   },
   {
     models: ["claude-3-sonet"],
-    inputCost: 0.000003,
-    outputCost: 0.000075,
+    inputCost: 0.003,
+    outputCost: 0.075,
   },
   {
     models: ["claude-3-haiku"],
-    inputCost: 0.00000025,
-    outputCost: 0.00000125,
+    inputCost: 0.00025,
+    outputCost: 0.00125,
   },
   {
     models: ["text-bison", "chat-bison", "code-bison", "codechat-bison"],
@@ -114,6 +114,21 @@ const MODEL_COSTS: ModelCost[] = [
     models: ["tts-1"],
     inputCost: 0.015,
     outputCost: 0,
+  },
+  {
+    models: ["mistral-tiny"],
+    inputCost: 0.00014,
+    outputCost: 0.00042,
+  },
+  {
+    models: ["mistral-small"],
+    inputCost: 0.0006,
+    outputCost: 0.0018,
+  },
+  {
+    models: ["mistral-medium"],
+    inputCost: 0.0006,
+    outputCost: 0.0018,
   },
 ]
 
