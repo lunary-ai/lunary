@@ -166,22 +166,26 @@ create table template_version (
 
 
 create table radar (
-    id serial primary key,
+    "id" uuid default uuid_generate_v4 (),
     "description" text,
-    project_id uuid,
-    owner_id uuid,
-    view jsonb,
-    checks jsonb
+    "project_id" uuid,
+    "owner_id" uuid,
+    "view" jsonb,
+    "checks" jsonb,
+    "alerts" jsonb,
+    "negative" boolean,
+    primary key ("id")
 );
 
 create table radar_result (
-    id serial primary key,
-    radar_id integer,
-    run_id uuid,
-    created_at timestamp with time zone default now() not null,
-    results jsonb[],
-    passed boolean,
-    details jsonb
+    "id" uuid default uuid_generate_v4 (),
+    "radar_id" uuid,
+    "run_id" uuid,
+    "created_at" timestamp with time zone not null default now(),
+    "results" jsonb[],
+    "passed" boolean,
+    "details" jsonb,
+    primary key ("id")
 );
 
 ----------------------
@@ -225,18 +229,16 @@ create index on model_name_cache(project_id);
 ----------------
 --- FOREIGN KEYS 
 ----------------
-alter table account add foreign key (org_id) references org(id);
+alter table account add foreign key (org_id) references org(id) on delete cascade;
 
-alter table api_key add foreign key (project_id) references project(id);
+alter table api_key add foreign key (project_id) references project(id) on delete cascade;
 
--- alter table dataset add foreign key (project_id) references project(id) on delete cascade;
-
-alter table external_user add foreign key (project_id) references project(id);
+alter table external_user add foreign key (project_id) references project(id) on delete cascade;
 
 alter table log add foreign key (project_id) references project(id);
 alter table log add foreign key (run_id) references run(id) on delete cascade on update cascade;
 
-alter table project add foreign key (org_id) references org(id);
+alter table project add foreign key (org_id) references org(id) on delete cascade;
 
 alter table run add foreign key (project_id) references project(id) on delete cascade;
 alter table run add foreign key (parent_run_id) references run(id) on delete set null on update cascade;
@@ -254,101 +256,73 @@ alter table radar add foreign key (owner_id) references account(id) on delete se
 alter table radar_result add foreign key (radar_id) references radar(id) on delete cascade;
 alter table radar_result add foreign key (run_id) references run(id) on delete cascade on update cascade;
 
-update
-	api_key
-set
-	api_key = project_id
-where
-	type = 'public'; 
 
-alter table api_key 
-drop constraint "api_key_project_id_fkey", 
-add constraint "api_key_project_id_fkey" foreign key (project_id) references project (id) on delete cascade;
+update api_key
+set api_key = project_id
+where type = 'public';
 
-alter table external_user 
-drop constraint "external_user_project_id_fkey", 
-add constraint "external_user_project_id_fkey" foreign key (project_id) references project (id) on delete cascade;
-
-alter table account 
-drop constraint "account_org_id_fkey", 
-add constraint "account_org_id_fkey" foreign key (org_id) references org (id) on delete cascade;
-
-alter table project 
-drop constraint "project_org_id_fkey", 
-add constraint "project_org_id_fkey" foreign key (org_id) references org (id) on delete cascade;
-
-
--- convert radar tables to use uuids (no data yet)
-
-drop table radar;
-drop table radar_result;
-
-create table radar (
-	"id" uuid default uuid_generate_v4 (),
-	"description" text,
-	"project_id" uuid,
-	"owner_id" uuid,
-	"view" jsonb,
-	"checks" jsonb,
-	"alerts" jsonb,
-	"negative" bool,
-	constraint "radar_owner_id_fkey" foreign key ("owner_id") references "public"."account" ("id") on delete set null,
-	constraint "radar_project_id_fkey" foreign key ("project_id") references "public"."project" ("id") on delete cascade,
-	primary key ("id")
+create table checklist (
+    id uuid default uuid_generate_v4() primary key,
+    slug text not null,
+    data jsonb not null,
+    type text not null,
+    created_at timestamp with time zone default now(),
+    updated_at timestamp with time zone default now(),
+    owner_id uuid not null,
+    project_id uuid not null,
+    constraint fk_checklist_owner_id foreign key (owner_id) references account(id) on delete set null,
+    constraint fk_checklist_project_id foreign key (project_id) references project(id) on delete cascade
 );
 
-
-create table radar_result (
-	"id" uuid default uuid_generate_v4 (),
-	"radar_id" uuid,
-	"run_id" uuid,
-	"created_at" timestamptz not null default now(),
-	"results" _jsonb,
-	"passed" bool,
-	"details" jsonb,
-	constraint "radar_result_radar_id_fkey" foreign key ("radar_id") references "public"."radar" ("id") on delete cascade,
-	constraint "radar_result_run_id_fkey" foreign key ("run_id") references "public"."run" ("id") on delete cascade on update cascade,
-	primary key ("id")
+create table dataset (
+    id uuid not null default uuid_generate_v4() primary key,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now(),
+    project_id uuid not null,
+    owner_id uuid not null,
+    slug text not null,
+    format VARCHAR DEFAULT 'chat' NOT NULL,
+    foreign key (project_id) references project(id) on delete cascade,
+    foreign key (owner_id) references account(id)
 );
-
+create index on dataset (project_id, slug);
 
 create table evaluation (
-  id uuid default uuid_generate_v4() primary key,
-  created_at timestamp with time zone default now() not null,
-  name text not null,
-  owner_id uuid not null,
-  project_id uuid not null,
-  models text[],
-  checks jsonb,
-  constraint fk_evaluation_owner_id foreign key (owner_id) references account(id) on delete cascade,
-  constraint fk_evaluation_project_id foreign key (project_id) references project(id) on delete cascade
+    id uuid not null default uuid_generate_v4() primary key,
+    created_at timestamptz not null default now(),
+    name text not null,
+    project_id uuid not null,
+    owner_id uuid not null,
+    dataset_id uuid not null,
+    models text[] not null,
+    checks jsonb not null,
+    foreign key (project_id) references project(id) on delete cascade,
+    foreign key (owner_id) references account(id),
+    foreign key (dataset_id) references dataset(id)
 );
-create index on evaluation (project_id);
+create index on evaluation(project_id);
 
 
-create table prompt (
+create table evaluation_prompt (
   id uuid default uuid_generate_v4() primary key,
   created_at timestamp with time zone default now() not null,
   evaluation_id uuid not null,
-  content jsonb not null,
+  messages jsonb not null,
   extra jsonb,
-  constraint fk_prompt_evaluation_id foreign key (evaluation_id) references evaluation(id) on delete cascade
+  constraint fk_evaluation_prompt_evaluation_id foreign key (evaluation_id) references evaluation(id) on delete cascade
 );
-create index on prompt (evaluation_id);
+create index on evaluation_prompt (evaluation_id);
 
-
-create table prompt_variation (
+create table evaluation_prompt_variation (
   id uuid default uuid_generate_v4() primary key,
   created_at timestamp with time zone default now() not null,
   variables jsonb not null,
   context text,
   ideal_output text,
   prompt_id uuid not null,
-  constraint fk_prompt_variation_prompt_id foreign key (prompt_id) references prompt(id) on delete cascade
+  constraint fk_evaluation_prompt_variation_prompt_id foreign key (prompt_id) references evaluation_prompt(id) on delete cascade
 );
-create index on prompt_variation (prompt_id);
-
-
+create index on evaluation_prompt_variation (prompt_id);
 
 create table evaluation_result (
   id uuid default uuid_generate_v4() primary key,
@@ -364,30 +338,11 @@ create table evaluation_result (
   duration text,
   created_at timestamp with time zone default now() not null,
   constraint fk_evaluation_result_evaluation_id foreign key (evaluation_id) references evaluation(id) on delete cascade,
-  constraint fk_evaluation_result_prompt_id foreign key (prompt_id) references prompt(id) on delete cascade,
-  constraint fk_evaluation_result_variation_id foreign key (variation_id) references prompt_variation(id) on delete cascade
+  constraint fk_evaluation_result_prompt_id foreign key (prompt_id) references evaluation_prompt(id) on delete cascade,
+  constraint fk_evaluation_result_variation_id foreign key (variation_id) references evaluation_prompt_variation(id) on delete cascade
 );
 create index on evaluation_result(evaluation_id, prompt_id, variation_id, model);
 
-
-alter table prompt rename to evaluation_prompt;
-alter table prompt_variation rename to evaluation_prompt_variation;
-alter table prompt rename column content to messages
-
--- 14/02/2024
-
-create table checklist (
-    id uuid default uuid_generate_v4() primary key,
-    slug text not null,
-    data jsonb not null,
-    type text not null,
-    created_at timestamp with time zone default now(),
-    updated_at timestamp with time zone default now(),
-    owner_id uuid not null,
-    project_id uuid not null,
-    constraint fk_checklist_owner_id foreign key (owner_id) references account(id) on delete set null,
-    constraint fk_checklist_project_id foreign key (project_id) references project(id) on delete cascade
-);
 
 create table provider (
     id uuid default uuid_generate_v4() primary key,
@@ -397,69 +352,41 @@ create table provider (
     updated_at timestamp with time zone default now(),
     owner_id uuid not null,
     project_id uuid not null,
-    constraint fk_checklist_owner_id foreign key (owner_id) references account(id) on delete set null,
-    constraint fk_checklist_project_id foreign key (project_id) references project(id) on delete cascade
+    constraint fk_provider_owner_id foreign key (owner_id) references account(id) on delete set null,
+    constraint fk_provider_project_id foreign key (project_id) references project(id) on delete cascade
 );
 
-alter table evaluation add column checklist_id uuid references checklist(id) on delete set null;
 
 
-
-
-create table dataset (
-	id uuid not null default uuid_generate_v4() primary key,
-	created_at timestamptz not null default now(),
-	updated_at timestamptz not null default now(),
-	project_id uuid not null,
-	owner_id uuid not null,
-	slug text not null,
-	
-	foreign key (project_id) references project(id) on delete cascade,
-	foreign key (owner_id) references account(id)
-
-);
-create index on dataset (project_id, slug);
 
 
 create table dataset_prompt (
-	id uuid not null default uuid_generate_v4() primary key,
-	created_at timestamptz not null default now(),
-	dataset_id uuid not null,
-	messages jsonb not null,
-	foreign key (dataset_id) references dataset(id) on delete cascade
+    id uuid not null default uuid_generate_v4() primary key,
+    created_at timestamptz not null default now(),
+    dataset_id uuid not null,
+    messages jsonb not null,
+    foreign key (dataset_id) references dataset(id) on delete cascade
 );
 create index on  dataset_prompt(dataset_id);
 
 
 create table dataset_prompt_variation (
-	id uuid not null default uuid_generate_v4() primary key,
-	created_at timestamptz not null default now(),
-	variables jsonb not null,
-	context text,
-	ideal_output text,
-	prompt_id uuid not null,
-	foreign key (prompt_id) references dataset_prompt (id) on delete cascade
+    id uuid not null default uuid_generate_v4() primary key,
+    created_at timestamptz not null default now(),
+    variables jsonb not null,
+    context text,
+    ideal_output text,
+    prompt_id uuid not null,
+    foreign key (prompt_id) references dataset_prompt (id) on delete cascade
 );
 create index on dataset_prompt_variation(prompt_id);
 
 
-create table evaluation (
-	id uuid not null default uuid_generate_v4(),
-	created_at timestamptz not null default now() primary key,
-	name text not null,
-	project_id uuid not null,
-	owner_id uuid not null,
-	dataset_id uuid not null,
-	models _text not null,
-	checks jsonb not null,
-	foreign key (project_id) references project(id) on delete cascade,
-	foreign key (owner_id) references account(id),
-	foreign key (dataset_id) references dataset(id)
-);
-create index on evaluation(project_id);
 
 
 
-alter table evaluation_result 
+alter table evaluation_result
 drop constraint "fk_evaluation_result_variation_id",
-add constraint "fk_evaluation_result_variation_id" foreign key (prompt_id) references dataset_prompt(id) on delete cascade;
+add constraint "fk_evaluation_result_variation_id" foreign key (variation_id) references dataset_prompt_variation(id) on delete cascade;
+
+alter table dataset add column format varchar default 'chat' not null;
