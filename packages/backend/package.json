@@ -3,6 +3,7 @@
   "main": "index.ts",
   "scripts": {
     "dev": "tsx --env-file=.env --watch src/index.ts",
+    "dev:test": "tsx src/index.ts",
     "start": "tsx src/index.ts",
     "build": "tsup src/index.ts --format esm",
     "radar": "tsx src/radar.ts",
