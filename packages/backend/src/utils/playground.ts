@@ -23,7 +23,7 @@ const OPENROUTE_HEADERS = {
 }
 
 // Replace {{variable}} with the value of the variable using regex
-export function compileTemplate(
+export function compileTextTemplate(
   content: string,
   variables: Record<string, string>,
 ) {
@@ -31,16 +31,25 @@ export function compileTemplate(
   return content.replace(regex, (_, g1) => variables[g1] || "")
 }
 
-export function compileChatMessages(content: any, variables: any) {
-  let copy = []
+export function compilePrompt(content: any, variables: any) {
+  // support string messages
+  const originalMessages =
+    typeof content === "string" ? [{ role: "user", content }] : [...content]
+
+  let compiledMessages = []
 
   if (variables) {
-    for (const item of content) {
-      copy.push({ ...item, content: compileTemplate(item.content, variables) })
+    for (const item of originalMessages) {
+      compiledMessages.push({
+        ...item,
+        content: compileTextTemplate(item.content, variables),
+      })
     }
+  } else {
+    compiledMessages = [...originalMessages]
   }
 
-  return copy
+  return compiledMessages
 }
 
 // set undefined if it's invalid toolCalls
@@ -63,11 +72,7 @@ export async function runAImodel(
   model: string,
   stream: boolean = false,
 ) {
-  // support string messages
-  const originalMessages =
-    typeof content === "string" ? [{ role: "user", content }] : content
-
-  const copy = compileChatMessages(originalMessages, variables)
+  const copy = compilePrompt(content, variables)
 
   const messages = convertInputToOpenAIMessages(copy)
 
