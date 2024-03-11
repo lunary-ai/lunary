@@ -6,6 +6,30 @@ on:
       - main
 
 jobs:
+  run-e2es:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: npm ci && npx playwright install --with-deps
+      - name: Start the development server
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          NEXT_PUBLIC_APP_URL: http://localhost:8080
+          NEXT_PUBLIC_API_URL: http://localhost:3333
+          LUNARY_PUBLIC_KEY: 259d2d94-9446-478a-ae04-484de705b522
+
+        run: |
+          npm run dev &
+          npx wait-on http://localhost:3333
+
+      - name: Run tests
+        run: npx playwright test
+        env:
+          BASE_URL: http://localhost:8080
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
   build-and-push:
     runs-on: ubuntu-latest
     steps:
