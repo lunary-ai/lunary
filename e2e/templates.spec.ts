@@ -9,8 +9,11 @@ test.afterAll(async () => {
   await setOrgFree()
 })
 
+// run tests one after another
+test.describe.configure({ mode: "serial" })
+
 test("create new template and test basic playground", async ({ page }) => {
-  await page.goto("http://localhost:8080/prompts")
+  await page.goto("/prompts")
 
   await page.waitForLoadState("networkidle")
 

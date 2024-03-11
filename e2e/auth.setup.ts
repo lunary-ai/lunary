@@ -12,8 +12,6 @@ test.beforeAll(async () => {
 test("signup flow", async ({ page }) => {
   await page.goto("/")
 
-  // data-testid="account-sidebar-item"
-
   await page.getByRole("link", { name: "Sign Up" }).click()
 
   await page.waitForURL("**/signup")
