@@ -1,5 +1,5 @@
 import sql from "@/src/utils/db"
-import { compilePrompt } from "@/src/utils/playground"
+import { compilePrompt, compileTextTemplate } from "@/src/utils/playground"
 
 export async function getDatasetById(datasetId: string, projectId: string) {
   const [dataset] =
@@ -59,7 +59,10 @@ export async function getDatasetBySlug(slug: string, projectId: string) {
 
   for (const { promptMessages, variables, idealOutput, context } of rows) {
     const item = {
-      input: compilePrompt(promptMessages, variables),
+      input:
+        typeof promptMessages === "string"
+          ? compileTextTemplate(promptMessages, variables)
+          : compilePrompt(promptMessages, variables),
       idealOutput,
       context,
     }
