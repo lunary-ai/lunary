@@ -1,6 +1,9 @@
 # Based on https://raw.githubusercontent.com/github/gitignore/main/Node.gitignore
 Dockerfile
 
+# VScode
+packages/frontend/Frontend.code-workspace
+
 # Logs
 
 _.log
