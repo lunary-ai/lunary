@@ -35,8 +35,7 @@ export default function AppAnalytics() {
     project?.id && org && `/orgs/${org.id}/usage?projectId=${project?.id}`,
   )
 
-  const isAdmin =
-    currentUser?.id === org?.users?.find((u) => u.role === "admin")?.id
+  const isAdmin = org?.users?.find((u) => u.role === "admin")?.role === "admin"
 
   return (
     <Container className="unblockable">
@@ -137,6 +136,7 @@ export default function AppAnalytics() {
                   </Text>
                   <Button
                     color="red"
+                    data-testid="delete-project"
                     onClick={() => {
                       drop()
                       setProjectId(null)
