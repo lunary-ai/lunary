@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  run-e2es:
+  run-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -21,7 +21,7 @@ jobs:
           LUNARY_PUBLIC_KEY: 259d2d94-9446-478a-ae04-484de705b522
 
         run: |
-          npm run dev &
+          npm run dev:test &
           npx wait-on http://localhost:3333
 
       - name: Run tests
@@ -31,6 +31,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
   build-and-push:
+    needs: run-tests
     runs-on: ubuntu-latest
     steps:
       - name: Check out the private Ops repo
