@@ -19,10 +19,7 @@ jobs:
           NEXT_PUBLIC_APP_URL: http://localhost:8080
           NEXT_PUBLIC_API_URL: http://localhost:3333
           LUNARY_PUBLIC_KEY: 259d2d94-9446-478a-ae04-484de705b522
-
-        run: |
-          npm run dev:test &
-          npx wait-on http://localhost:3333
+        run: npm run dev:test
 
       - name: Run tests
         run: npx playwright test
