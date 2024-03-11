@@ -7,3 +7,5 @@
 5. Copy the content of `packages/frontend/.env.example` to `packages/backend/.env`
 6. Run `npm install`
 7. Run `npm run dev`
+
+You can now open the dashboard at `http://localhost:8080`. When using our JS or Python SDK, you need to set the ennvironment variable `LUNARY_API_URL` to `http://localhost:3333`.
