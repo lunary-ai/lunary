@@ -10,7 +10,7 @@ test.afterAll(async () => {
   await setOrgFree()
 })
 
-test("create new project and rename it", async ({ page }) => {
+test("create new project, rename it and delete it", async ({ page }) => {
   await page.goto("/")
 
   //wait for requests to finish
@@ -27,4 +27,13 @@ test("create new project and rename it", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "TESTPROJECT2" }),
   ).toBeVisible()
+
+  await page.getByRole("button", { name: "TESTPROJECT2" }).click()
+  await page.goto("/settings")
+
+  await page.getByTestId("delete-project-button").click()
+  await page.getByTestId("delete-project-popover-button").click()
+
+  // If the project was deleted successfully, it redirects to the analytics page
+  await page.waitForURL("**/analytics")
 })
