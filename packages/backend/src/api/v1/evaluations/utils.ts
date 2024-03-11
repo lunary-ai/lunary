@@ -1,8 +1,7 @@
 import { runChecksOnRun } from "@/src/checks/runChecks"
 import { calcRunCost } from "@/src/utils/calcCost"
 import sql from "@/src/utils/db"
-import { compileChatMessages, runAImodel } from "@/src/utils/playground"
-import { FilterLogic } from "shared"
+import { compilePrompt, runAImodel } from "@/src/utils/playground"
 
 interface RunEvalParams {
   evaluationId: string
@@ -37,7 +36,8 @@ export async function runEval({
 
     // run AI query
     const createdAt = new Date()
-    const input = compileChatMessages(prompt, variables)
+
+    const input = compilePrompt(prompt, variables)
 
     const res = await runAImodel(input, extra, undefined, model)
     const endedAt = new Date()
