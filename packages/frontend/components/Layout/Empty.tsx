@@ -89,7 +89,7 @@ export default function Empty({
             </Group>
             {description && <Text size="lg">{description}</Text>}
             {features && <ListFeatures features={features} />}
-            <Button size="md" {...btnProps}>
+            <Button size="md" {...btnProps} data-testid="empty-action">
               {buttonLabel}
             </Button>
             {showProjectId && (

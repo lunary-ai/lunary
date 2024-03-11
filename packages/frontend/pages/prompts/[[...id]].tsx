@@ -83,8 +83,6 @@ function confirmDiscard(onDiscard) {
 function Playground() {
   const router = useRouter()
 
-  const { templates } = useTemplates()
-
   const { project } = useProject()
 
   const [template, setTemplate] = useState<any>()
@@ -94,7 +92,7 @@ function Playground() {
 
   const [hasChanges, setHasChanges] = useState(false)
 
-  const { insert, mutate } = useTemplates()
+  const { templates, insert, mutate } = useTemplates()
   const { insertVersion } = useTemplate(template?.id)
   const { update: updateVersion } = useTemplateVersion(templateVersion?.id)
 
@@ -473,32 +471,38 @@ function Playground() {
         </Box>
         <Box p="xl">
           <Stack style={{ zIndex: 0 }}>
-            <Group>
-              <Button
-                leftSection={<IconDeviceFloppy size={18} />}
-                size="xs"
-                loading={loading}
-                disabled={loading || (template?.id && !hasChanges)}
-                variant="outline"
-                // rightSection={
-                // <HotkeysInfo hot="S" size="sm" style={{ marginTop: -4 }} />
-                // }
-                onClick={saveTemplate}
-              >
-                Save changes
-              </Button>
+            {template && templateVersion && (
+              <Group>
+                <Button
+                  leftSection={<IconDeviceFloppy size={18} />}
+                  size="xs"
+                  loading={loading}
+                  data-testid="save-template"
+                  disabled={loading || (template?.id && !hasChanges)}
+                  variant="outline"
+                  // rightSection={
+                  // <HotkeysInfo hot="S" size="sm" style={{ marginTop: -4 }} />
+                  // }
+                  onClick={saveTemplate}
+                >
+                  Save changes
+                </Button>
 
-              <Button
-                leftSection={<IconGitCommit size={18} />}
-                size="xs"
-                loading={loading}
-                disabled={loading || !(templateVersion?.isDraft || hasChanges)}
-                variant="filled"
-                onClick={commitTemplate}
-              >
-                Deploy
-              </Button>
-            </Group>
+                <Button
+                  leftSection={<IconGitCommit size={18} />}
+                  size="xs"
+                  loading={loading}
+                  data-testid="deploy-template"
+                  disabled={
+                    loading || !(templateVersion?.isDraft || hasChanges)
+                  }
+                  variant="filled"
+                  onClick={commitTemplate}
+                >
+                  Deploy
+                </Button>
+              </Group>
+            )}
 
             <ParamItem
               name="Template Mode"
@@ -810,6 +814,7 @@ function Playground() {
               size="sm"
               disabled={loading}
               onClick={runPlayground}
+              data-testid="run-playground"
               loading={streaming}
               rightSection={
                 <HotkeysInfo hot="Enter" size="sm" style={{ marginTop: -4 }} />

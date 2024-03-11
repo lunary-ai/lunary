@@ -23,6 +23,7 @@ function RenamableField({
       <TextInput
         defaultValue={defaultValue}
         variant="unstyled"
+        data-testid="rename-input"
         h={40}
         px={10}
         onKeyPress={(e) => {

@@ -99,6 +99,7 @@ function TextMessage({ data, onChange = () => {}, editable = false, codeBg }) {
             }}
             autosize
             minRows={1}
+            data-testid="prompt-chat-editor"
             onChange={(e) => onChange({ ...data, content: e.target.value })}
             style={{ width: "100%" }}
           />
