@@ -37,10 +37,12 @@ projects.post("/", async (ctx: Context) => {
   })
   const { name } = bodySchema.parse(ctx.request.body)
 
-  const [org] = await sql`select * from org where id = ${orgId}`
+  const [{ plan }] = await sql`select plan from org where id = ${orgId}`
+  const [{ count }] =
+    await sql`select count(*)::int from project where org_id = ${orgId}`
 
-  if (org.plan === "free") {
-    ctx.throw(403, "You can't create more than 1 project under the free plan.")
+  if (plan === "free" && count >= 3) {
+    ctx.throw(403, "You can't create more than 3 project under the free plan.")
   }
 
   const newProject = {
