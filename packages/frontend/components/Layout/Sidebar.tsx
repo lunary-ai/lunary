@@ -109,7 +109,7 @@ export default function Sidebar() {
   ]
 
   async function createProject() {
-    if (org.plan === "free" && projects.length >= 1) {
+    if (org.plan === "free" && projects.length >= 3) {
       return openUpgrade("projects")
     }
 

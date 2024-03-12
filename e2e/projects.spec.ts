@@ -1,15 +1,6 @@
 import { test, expect } from "@playwright/test"
 import { setOrgFree, setOrgPro } from "./db-utils"
 
-test.beforeAll(async () => {
-  // need to be pro for multiple projects
-  await setOrgPro()
-})
-
-test.afterAll(async () => {
-  await setOrgFree()
-})
-
 test("create new project, rename it and delete it", async ({ page }) => {
   await page.goto("/")
 
