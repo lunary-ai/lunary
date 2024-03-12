@@ -62,6 +62,15 @@ jobs:
           tags: registry.lunary.ai/backend:latest
           platforms: linux/amd64
 
+      - name: Build and push radar
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ops/radar/Dockerfile
+          push: true
+          tags: registry.lunary.ai/radar:latest
+          platforms: linux/amd64
+
       - name: Build and push frontend
         uses: docker/build-push-action@v5
         with:
@@ -75,7 +84,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./ops/frontend/Dockerfile
+          file: ./ops/db/Dockerfile
           push: true
           tags: registry.lunary.ai/db:latest
           platforms: linux/amd64
