@@ -4,6 +4,17 @@ export const MODELS = [
     name: "gpt-4-turbo-preview",
     provider: "openai",
   },
+  { id: "gpt-4", name: "gpt-4", provider: "openai" },
+  {
+    id: "claude-3-opus-20240229",
+    name: "claude-3-opus",
+    provider: "anthropic",
+  },
+  {
+    id: "claude-3-sonnet-20240229",
+    name: "claude-3-sonnet",
+    provider: "anthropic",
+  },
   { id: "gpt-4-1106-preview", name: "gpt-4-1106-preview", provider: "openai" },
   { id: "gpt-4-0125-preview", name: "gpt-4-0125-preview", provider: "openai" },
   {
@@ -11,7 +22,6 @@ export const MODELS = [
     name: "gpt-4-vision-preview",
     provider: "openai",
   },
-  { id: "gpt-4", name: "gpt-4", provider: "openai" },
   { id: "gpt-3.5-turbo", name: "gpt-3.5-turbo", provider: "openai" },
   { id: "gpt-3.5-turbo-1106", name: "gpt-3.5-turbo-1106", provider: "openai" },
   { id: "gpt-3.5-turbo-0125", name: "gpt-3.5-turbo-0125", provider: "openai" },
@@ -21,9 +31,7 @@ export const MODELS = [
     name: "gemini-pro",
     provider: "openrouter",
   },
-  { id: "openai/gpt-4-32k", name: "gpt-4-32k", provider: "openrouter" },
   { id: "claude-2", name: "claude-2", provider: "anthropic" },
-  // { id: "claude-2.0", name: "claude-2.0", provider: "anthropic" },
   {
     id: "claude-instant-v1",
     name: "claude-instant-v1",
