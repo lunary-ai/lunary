@@ -17,7 +17,13 @@ function convertInputToOpenAIMessages(input: any[]) {
 
 type ChunkResult = {
   choices: { message: any }[]
-  tokens: number
+  usage: {
+    completion_tokens: number
+  }
+}
+
+const checkIsAsyncIterable = (obj: any) => {
+  return obj && typeof obj[Symbol.asyncIterator] === "function"
 }
 
 export async function handleStream(
@@ -27,12 +33,16 @@ export async function handleStream(
   onError: (e: Error) => void,
 ) {
   try {
+    if (!checkIsAsyncIterable(stream)) {
+      onNewToken(stream)
+      return onComplete()
+    }
+
     let tokens = 0
     let choices: any[] = []
     let res: ChunkResult
-    console.log("stream", stream)
+
     for await (const part of stream) {
-      console.log("part", part)
       // 1 chunk = 1 token
       tokens += 1
 
@@ -86,7 +96,9 @@ export async function handleStream(
 
       res = {
         choices,
-        tokens,
+        usage: {
+          completion_tokens: tokens,
+        },
       }
 
       onNewToken(res)
@@ -188,6 +200,7 @@ export async function runAImodel(
 
   const useAnthropic = modelObj?.provider === "anthropic"
 
+  // disable streaming with anthropic, as their API is too different.
   const doStream = stream && !useAnthropic
 
   switch (modelObj?.provider) {
@@ -233,19 +246,9 @@ export async function runAImodel(
       break
   }
 
-  let method
-
-  // if (useAnthropic) {
-  //   const anthropic = new Anthropic()
-
-  //   method = anthropic.messages.create.bind(anthropic.messages)
-  // } else {
   const openai = new OpenAI(clientParams)
 
-  method = openai.chat.completions.create.bind(openai.chat.completions)
-  // }
-
-  let res = await method({
+  let res = await openai.chat.completions.create({
     model,
     messages,
     stream: doStream,
@@ -303,8 +306,6 @@ export async function runAImodel(
       },
     }
   }
-
-  console.log(res)
 
   return res
 }
