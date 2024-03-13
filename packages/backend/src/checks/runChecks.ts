@@ -102,6 +102,8 @@ export async function runChecksOnRun(
   checks: FilterLogic,
   optimize = false,
 ) {
+  if (!checks.length) return { passed: true, results: [] }
+
   let passed = false
   const results: CheckResults[] = []
 
