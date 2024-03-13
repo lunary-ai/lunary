@@ -25,7 +25,6 @@
     "koa-logger": "^3.2.1",
     "koa-ratelimit": "^5.1.0",
     "koa-router": "^12.0.1",
-    "litellm": "^0.12.0",
     "lunary": "^0.7.2",
     "node-cron": "^3.0.3",
     "openai": "^4.28.4",

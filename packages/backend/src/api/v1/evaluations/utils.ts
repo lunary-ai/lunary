@@ -29,10 +29,14 @@ export async function runEval({
     )
     const { variables, idealOutput, context } = variation
 
-    const [checklist] =
-      await sql`select * from checklist where id = ${checklistId}`
+    let checks = []
 
-    const checks = checklist.data
+    if (checklistId) {
+      const [checklist] =
+        await sql`select * from checklist where id = ${checklistId}`
+
+      checks = checklist.data
+    }
 
     // run AI query
     const createdAt = new Date()
