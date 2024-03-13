@@ -12,7 +12,7 @@
     "backend:start": "npm -w packages/backend run start",
     "backend:dev": "npm -w packages/backend run dev",
     "backend:dev:test": "npm -w packages/backend run dev:test",
-    "backend:radar": "npm -w packages/backend run radar",
+    "backend:radar:start": "npm -w packages/backend run radar",
     "backend:radar-dev": "npm -w packages/backend run radar:dev",
     "test": "npx playwright test",
     "test:ui": "npx playwright test --ui"

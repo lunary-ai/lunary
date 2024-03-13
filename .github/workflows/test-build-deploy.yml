@@ -9,7 +9,7 @@ jobs:
   run-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install dependencies
         run: npm ci && npx playwright install --with-deps
       - name: Start the development server
@@ -59,9 +59,16 @@ jobs:
           context: .
           file: ./ops/backend/Dockerfile
           push: true
-          tags:
-            registry.lunary.ai/backend:${{ steps.timestamp.outputs.timestamp }}-${{ github.sha }},
-            registry.lunary.ai/backend:latest
+          tags: registry.lunary.ai/backend:latest
+          platforms: linux/amd64
+
+      - name: Build and push radar
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ops/radar/Dockerfile
+          push: true
+          tags: registry.lunary.ai/radar:latest
           platforms: linux/amd64
 
       - name: Build and push frontend
@@ -70,21 +77,17 @@ jobs:
           context: .
           file: ./ops/frontend/Dockerfile
           push: true
-          tags:
-            registry.lunary.ai/frontend:${{ steps.timestamp.outputs.timestamp }}-${{ github.sha }},
-            registry.lunary.ai/frontend:latest
+          tags: registry.lunary.ai/frontend:latest
           platforms: linux/amd64
 
-      # - name: Build and push db
-      #   uses: docker/build-push-action@v5
-      #   with:
-      #     context: .
-      #     file: ./ops/frontend/Dockerfile
-      #     push: true
-      #     tags:
-      #       registry.lunary.ai/db:${{ steps.timestamp.outputs.timestamp }}-${{ github.sha }},
-      #       registry.lunary.ai/db:latest
-      #     platforms: linux/amd64
+      - name: Build and push db
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ops/db/Dockerfile
+          push: true
+          tags: registry.lunary.ai/db:latest
+          platforms: linux/amd64
 
   deploy:
     needs: build-and-push
