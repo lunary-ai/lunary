@@ -4,14 +4,49 @@ export const MODELS = [
     name: "gpt-4-turbo-preview",
     provider: "openai",
   },
+  {
+    id: "claude-3-opus-20240229",
+    name: "claude-3-opus",
+    provider: "anthropic",
+  },
+  {
+    id: "claude-3-sonnet-20240229",
+    name: "claude-3-sonnet",
+    provider: "anthropic",
+  },
   { id: "gpt-4-1106-preview", name: "gpt-4-1106-preview", provider: "openai" },
   { id: "gpt-4-0125-preview", name: "gpt-4-0125-preview", provider: "openai" },
+  { id: "gpt-4", name: "gpt-4", provider: "openai" },
   {
     id: "gpt-4-vision-preview",
     name: "gpt-4-vision-preview",
     provider: "openai",
   },
-  { id: "gpt-4", name: "gpt-4", provider: "openai" },
+  {
+    id: "mistral-large-latest",
+    name: "mistral-large",
+    provider: "mistral",
+  },
+  {
+    id: "mistral-medium-latest",
+    name: "mistral-medium",
+    provider: "mistral",
+  },
+  {
+    id: "mistral-small-latest",
+    name: "mistral-small",
+    provider: "mistral",
+  },
+  {
+    id: "open-mixtral-8x7b",
+    name: "mixtral-8x7b",
+    provider: "mistral",
+  },
+  {
+    id: "open-mistral-7b",
+    name: "mistral-7b",
+    provider: "mistral",
+  },
   { id: "gpt-3.5-turbo", name: "gpt-3.5-turbo", provider: "openai" },
   { id: "gpt-3.5-turbo-1106", name: "gpt-3.5-turbo-1106", provider: "openai" },
   { id: "gpt-3.5-turbo-0125", name: "gpt-3.5-turbo-0125", provider: "openai" },
@@ -21,9 +56,7 @@ export const MODELS = [
     name: "gemini-pro",
     provider: "openrouter",
   },
-  { id: "openai/gpt-4-32k", name: "gpt-4-32k", provider: "openrouter" },
   { id: "claude-2", name: "claude-2", provider: "anthropic" },
-  // { id: "claude-2.0", name: "claude-2.0", provider: "anthropic" },
   {
     id: "claude-instant-v1",
     name: "claude-instant-v1",
@@ -34,11 +67,7 @@ export const MODELS = [
     name: "mistral-7b-openorca",
     provider: "openrouter",
   },
-  {
-    id: "mistralai/mixtral-8x7b-instruct",
-    name: "mixtral-8x7b-instruct",
-    provider: "openrouter",
-  },
+
   {
     id: "mistralai/mistral-7b-instruct",
     name: "mistral-7b-instruct",
