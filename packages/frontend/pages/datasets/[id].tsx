@@ -314,7 +314,7 @@ export default function NewDataset() {
                 />
               )}
               <Badge variant="light" color="violet">
-                Alpha
+                Beta
               </Badge>
               <Badge
                 variant="light"
@@ -323,7 +323,7 @@ export default function NewDataset() {
                 size="md"
                 tt="none"
               >
-                {`${dataset.format} dataset`}
+                {`${dataset?.format} dataset`}
               </Badge>
             </Group>
             {lastSaved && (

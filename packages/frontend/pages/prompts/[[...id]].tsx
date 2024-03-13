@@ -355,7 +355,7 @@ function Playground() {
           const parsedLine = JSON.parse(item)
 
           setOutput(parsedLine.choices[0]?.message)
-          setOutputTokens(parsedLine.tokens)
+          setOutputTokens(parsedLine.usage?.completion_tokens || 0)
         }
 
         // The request has been aborted, stop reading the stream.

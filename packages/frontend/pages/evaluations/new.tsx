@@ -103,7 +103,7 @@ export default function NewEvaluation() {
     router.push(`/evaluations/${res.evaluationId}`)
   }
 
-  const canStartEvaluation = datasetId && models.length > 0 && checklistId
+  const canStartEvaluation = datasetId && models.length > 0
 
   return (
     <Paywall
@@ -164,12 +164,12 @@ export default function NewEvaluation() {
                   value: model.id,
                   label: model.name,
                 }))}
-                maxValues={3}
+                maxValues={6}
                 value={models}
                 onChange={(newModels) => setModels(newModels)}
               />
             </Steps.Step>
-            <Steps.Step n={3} label="Checklists">
+            <Steps.Step n={3} label="Checklist (optional)">
               <Text size="lg" mb="md" mt={-6}>
                 Assertions against which to run the dataset that will result in
                 a{" "}
@@ -203,7 +203,7 @@ export default function NewEvaluation() {
           )}
 
           <Tooltip
-            label="You need to add at least one prompt, one model, and one check to start an Evaluation"
+            label="You need to add at least one prompt and one modelto start an Evaluation"
             w="300"
             multiline
             events={{ hover: !canStartEvaluation, focus: true, touch: false }}
