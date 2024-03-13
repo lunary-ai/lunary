@@ -143,6 +143,7 @@ export function calcRunCost(run: any) {
         .replaceAll("gpt4", "gpt-4")
         .replaceAll("gpt3", "gpt-3")
         .replaceAll("gpt-35", "gpt-3.5")
+        .replaceAll("claude3", "claude-3")
         .replaceAll("claude2", "claude-2")
         .replaceAll("claude1", "claude-1")
 
