@@ -223,6 +223,7 @@ export async function runAImodel(
           ["user", "assistant"].includes(m.role),
         ),
         system: messages.filter((m) => m.role === "system")[0]?.content,
+        max_tokens: extra?.max_tokens || 4096, // required by anthropic
       }
       break
 

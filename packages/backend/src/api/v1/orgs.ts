@@ -227,8 +227,6 @@ orgs.post("/playground", async (ctx: Context) => {
 
   const res = await runAImodel(content, extra, variables, model, true)
 
-  console.log("res", res)
-
   const stream = new PassThrough()
   stream.pipe(ctx.res)
   ctx.status = 200
