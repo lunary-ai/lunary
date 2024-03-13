@@ -95,11 +95,11 @@ function DatasetCard({ defaultValue, onDelete }) {
             <Badge
               variant="light"
               radius="sm"
-              color={dataset.format === "chat" ? "violet" : "gray"}
+              color={dataset?.format === "chat" ? "violet" : "gray"}
               size="md"
               tt="none"
             >
-              {dataset.format}
+              {dataset?.format}
             </Badge>
           </Group>
           <OrgUserBadge userId={dataset.ownerId} />
@@ -142,7 +142,7 @@ export default function Datasets() {
           <Group align="center">
             <Title>Datasets</Title>
             <Badge variant="light" color="violet">
-              Alpha
+              Beta
             </Badge>
           </Group>
 

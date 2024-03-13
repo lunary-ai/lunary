@@ -8,7 +8,7 @@ import { z } from "zod"
 
 import { PassThrough } from "stream"
 
-import { runAImodel } from "@/src/utils/playground"
+import { handleStream, runAImodel } from "@/src/utils/playground"
 
 const orgs = new Router({
   prefix: "/orgs/:orgId",
@@ -183,107 +183,6 @@ orgs.post("/upgrade", async (ctx: Context) => {
 
   ctx.body = { ok: true }
 })
-
-type ChunkResult = {
-  choices: { message: any }[]
-  tokens: number
-}
-
-async function handleStream(
-  stream: ReadableStream,
-  onNewToken: (data: ChunkResult) => void,
-  onComplete: () => void,
-  onError: (e: Error) => void,
-) {
-  try {
-    let tokens = 0
-    let choices: any[] = []
-    let res: ChunkResult
-    for await (const part of stream) {
-      // 1 chunk = 1 token
-      tokens += 1
-
-      const chunk = part.choices[0]
-
-      const { index, delta } = chunk
-
-      const { content, function_call, role, tool_calls } = delta
-
-      if (!choices[index]) {
-        choices.splice(index, 0, {
-          message: { role, function_call },
-        })
-      }
-
-      if (content) {
-        if (!choices[index].message.content) choices[index].message.content = ""
-        choices[index].message.content += content
-      }
-
-      if (role) choices[index].message.role = role
-
-      if (function_call?.name)
-        choices[index].message.function_call.name = function_call.name
-
-      if (function_call?.arguments)
-        choices[index].message.function_call.arguments +=
-          function_call.arguments
-
-      if (tool_calls) {
-        if (!choices[index].message.tool_calls)
-          choices[index].message.tool_calls = []
-
-        for (const tool_call of tool_calls) {
-          const existingCallIndex = choices[index].message.tool_calls.findIndex(
-            (tc) => tc.index === tool_call.index,
-          )
-
-          if (existingCallIndex === -1) {
-            choices[index].message.tool_calls.push(tool_call)
-          } else {
-            const existingCall =
-              choices[index].message.tool_calls[existingCallIndex]
-
-            if (tool_call.function?.arguments) {
-              existingCall.function.arguments += tool_call.function.arguments
-            }
-          }
-        }
-      }
-
-      res = {
-        choices,
-        tokens,
-      }
-
-      onNewToken(res)
-    }
-
-    // remove the `index` property from the tool_calls if any
-    // as it's only used to help us merge the tool_calls
-    choices = choices.map((c) => {
-      if (c.message.tool_calls) {
-        c.message.tool_calls = c.message.tool_calls.map((tc) => {
-          const { index, ...rest } = tc
-          return rest
-        })
-      }
-      return c
-    })
-
-    res = {
-      choices,
-      tokens,
-    }
-
-    onNewToken(res)
-
-    onComplete()
-  } catch (error) {
-    console.error(error)
-    onError(error)
-  }
-}
 
 orgs.post("/playground", async (ctx: Context) => {
   const orgId = ctx.state.orgId as string
