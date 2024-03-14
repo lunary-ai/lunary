@@ -1,4 +1,4 @@
-import { getColorForRole, useFixedColorScheme } from "@/utils/colors"
+import { getColorForRole } from "@/utils/colors"
 import {
   Box,
   Code,

@@ -3,11 +3,12 @@ import { useContext } from "react"
 import useSWR, { SWRConfiguration, useSWRConfig } from "swr"
 import useSWRInfinite from "swr/infinite"
 import useSWRMutation, { SWRMutationConfiguration } from "swr/mutation"
-import { getUserColor, useFixedColorScheme } from "./colors"
+import { getUserColor } from "./colors"
 import { ProjectContext } from "./context"
 
 import { useAuth } from "./auth"
 import { fetcher } from "./fetcher"
+import { useFixedColorScheme } from "./hooks"
 
 type KeyType = string | ((...args: any[]) => string)
 

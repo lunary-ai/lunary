@@ -25,6 +25,8 @@ import { notifications } from "@mantine/notifications"
 
 import { cleanSlug, formatCompactFromNow } from "@/utils/format"
 import Router from "next/router"
+import { useEffect, useState } from "react"
+import SearchBar from "../Blocks/SearchBar"
 
 export const defaultTemplateVersion = {
   content: [
@@ -256,6 +258,17 @@ const TemplateList = ({
 }) => {
   const { templates, loading, isInserting } = useTemplates()
 
+  const [filter, setFilter] = useState("")
+  const [filteredTemplates, setFilteredTemplates] = useState(templates)
+
+  useEffect(() => {
+    if (templates) {
+      setFilteredTemplates(
+        templates.filter((t) => t.slug.includes(filter.toLowerCase())),
+      )
+    }
+  }, [filter, templates])
+
   if (loading) return <Loader />
 
   return (
@@ -278,7 +291,18 @@ const TemplateList = ({
           </ActionIcon>
         }
       />
-      {templates?.map((template, index) => (
+
+      <SearchBar
+        placeholder="Filter..."
+        query={filter}
+        size="xs"
+        w="fit-content"
+        mx="md"
+        my="xs"
+        setQuery={setFilter}
+      />
+
+      {filteredTemplates?.map((template, index) => (
         <TemplateListItem
           key={index}
           template={template}

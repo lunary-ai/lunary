@@ -14,7 +14,7 @@ templates.get("/", async (ctx: Context) => {
     left join template_version tv on tv.template_id = t.id
     where t.project_id = ${ctx.state.projectId}
     group by t.id, t.name, t.slug, t.mode, t.created_at, t.group, t.project_id
-    order by max(tv.created_at) desc
+    order by t.created_at desc
   `
 
   // uncamel each template's versions' extras' keys
