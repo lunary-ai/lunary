@@ -389,4 +389,4 @@ alter table evaluation_result
 drop constraint "fk_evaluation_result_variation_id",
 add constraint "fk_evaluation_result_variation_id" foreign key (variation_id) references dataset_prompt_variation(id) on delete cascade;
 
-alter table dataset add column format varchar default 'chat' not null;
+alter table dataset add column if not exists format varchar default 'chat' not null;
