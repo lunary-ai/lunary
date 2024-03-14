@@ -17,7 +17,7 @@ import {
 
 import { useLocalStorage } from "@mantine/hooks"
 import { useVirtual } from "@tanstack/react-virtual"
-import { useFixedColorScheme } from "@/utils/colors"
+import { useFixedColorScheme } from "@/utils/hooks"
 
 // outside for reference
 const emptyArray = []
