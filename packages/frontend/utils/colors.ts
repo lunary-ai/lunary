@@ -48,23 +48,3 @@ export function getUserColor(scheme, theme, id: string) {
   const finalColor = theme.colors[userColor][scheme === "dark" ? 8 : 4]
   return finalColor
 }
-
-// fixes the stutter effect in dark mode
-// needs to be outside the hook as window.computedColorScheme doesn't reflect the update
-// but we need to update the ddefault value
-// TODO FIX: THIS ACTUALLY DOESNT WORK WELL WITH MANTINE CSS VARS
-let defaultColorScheme =
-  typeof window !== "undefined" ? window?.computedColorScheme : null
-
-export function useFixedColorScheme() {
-  const [scheme, setScheme] = useState(defaultColorScheme)
-
-  const mantineScheme = useColorScheme()
-
-  useDidUpdate(() => {
-    defaultColorScheme = mantineScheme
-    setScheme(mantineScheme)
-  }, [mantineScheme])
-
-  return scheme
-}

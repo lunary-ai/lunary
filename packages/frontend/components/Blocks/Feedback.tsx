@@ -9,7 +9,7 @@ import {
 } from "@tabler/icons-react"
 import { useEffect } from "react"
 import analytics from "../../utils/analytics"
-import { useFixedColorScheme } from "@/utils/colors"
+import { useFixedColorScheme } from "@/utils/hooks"
 
 export default function Feedback({ data = {} }: { data: Record<string, any> }) {
   const scheme = useFixedColorScheme()
