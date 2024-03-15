@@ -14,6 +14,11 @@ export const MODELS = [
     name: "claude-3-sonnet",
     provider: "anthropic",
   },
+  {
+    id: "claude-3-haiku-20240307",
+    name: "claude-3-haiku",
+    provider: "anthropic",
+  },
   { id: "gpt-4-1106-preview", name: "gpt-4-1106-preview", provider: "openai" },
   { id: "gpt-4-0125-preview", name: "gpt-4-0125-preview", provider: "openai" },
   { id: "gpt-4", name: "gpt-4", provider: "openai" },

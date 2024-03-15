@@ -6,11 +6,16 @@ import { runEval } from "./utils"
 import { getEvaluation } from "./utils"
 import { calcRunCost } from "@/src/utils/calcCost"
 import { runChecksOnRun } from "@/src/checks/runChecks"
+import pLimit from "p-limit"
 
 const evaluations = new Router({ prefix: "/evaluations" })
 
+const MAX_PARALLEL_EVALS = 4
+
+const limit = pLimit(MAX_PARALLEL_EVALS)
+
 evaluations.post("/", async (ctx: Context) => {
-  const { name, datasetId, checklistId, models } = ctx.request.body as any
+  const { name, datasetId, checklistId, providers } = ctx.request.body as any
   const { userId, projectId } = ctx.state
 
   // TODO: transactions, but not working with because of nesting
@@ -19,8 +24,9 @@ evaluations.post("/", async (ctx: Context) => {
     ownerId: userId,
     projectId,
     datasetId,
-    models,
+    providers,
     checklistId,
+    models: [], // TODO: remove this legacy row from DB,
     checks: [], // TODO: remove this legacy row from DB,
   }
 
@@ -29,29 +35,30 @@ evaluations.post("/", async (ctx: Context) => {
 
   const evaluation = await getEvaluation(insertedEvaluation.id)
 
-  const evalsToRun = []
+  const queue = []
+
+  ctx.status = 201
+  ctx.body = { evaluationId: insertedEvaluation.id }
+
   for (const prompt of evaluation.dataset.prompts) {
     for (const variation of prompt.variations) {
-      for (const model of evaluation.models) {
-        evalsToRun.push(
-          runEval({
-            evaluationId: evaluation.id,
-            promptId: prompt.id,
-            variation,
-            model,
-            prompt: prompt.content,
-            checklistId,
-            extra: {},
-          }),
-        )
+      for (const provider of evaluation.providers) {
+        const evalPromise = runEval({
+          evaluationId: evaluation.id,
+          promptId: prompt.id,
+          variation,
+          provider,
+          prompt: prompt.content,
+          checklistId,
+        })
+
+        queue.push(limit(() => evalPromise))
       }
     }
   }
 
-  await Promise.all(evalsToRun)
-
-  ctx.status = 201
-  ctx.body = { evaluationId: insertedEvaluation.id }
+  // Wait for any remaining evals to finish
+  await Promise.all(queue)
 })
 
 evaluations.get("/:id", async (ctx: Context) => {

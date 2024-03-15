@@ -10,7 +10,9 @@ import {
   Button,
   Container,
   Group,
-  MultiSelect,
+  InputBase,
+  Modal,
+  Pill,
   Progress,
   Select,
   Stack,
@@ -21,8 +23,10 @@ import {
 import { IconFlask2Filled } from "@tabler/icons-react"
 import { useRouter } from "next/router"
 import { useEffect, useRef, useState } from "react"
-import { MODELS } from "shared"
 import { ChecklistModal } from "./checklists"
+import ProviderEditor from "@/components/Prompts/Provider"
+import { MODELS, Provider } from "shared"
+import { useLocalStorage } from "@mantine/hooks"
 
 const FEATURE_LIST = [
   "Define assertions to test variations of prompts",
@@ -30,12 +34,60 @@ const FEATURE_LIST = [
   "Compare results with OpenAI, Anthropic, Mistral and more",
 ]
 
+const BASE_PROVIDER: Provider = {
+  model: "gpt-4-turbo-preview",
+  config: {},
+}
+
+function ProviderModal({ open, onClose, initialProvider }) {
+  const [provider, setProvider] = useState<Provider>(
+    initialProvider || BASE_PROVIDER,
+  )
+
+  useEffect(() => {
+    if (initialProvider) {
+      setProvider(initialProvider)
+    }
+  }, [initialProvider])
+
+  return (
+    <Modal
+      title="Model settings"
+      size="lg"
+      opened={open}
+      onClose={() => onClose(null)}
+    >
+      <Stack>
+        <ProviderEditor value={provider} onChange={setProvider} />
+        <Group mt="lg" align="right" justify="space-between">
+          <Button onClick={() => onClose(null)} variant="subtle">
+            Cancel
+          </Button>
+          <Button
+            onClick={() => {
+              onClose(provider)
+            }}
+          >
+            Save
+          </Button>
+        </Group>
+      </Stack>
+    </Modal>
+  )
+}
+
 export default function NewEvaluation() {
   const [checklistModal, setChecklistModal] = useState(false)
+  const [providerModal, setProviderModal] = useState(false)
 
-  const [models, setModels] = useState(["gpt-4-turbo-preview", "gpt-3.5-turbo"])
   const [datasetId, setDatasetId] = useState<string | null>()
   const [checklistId, setChecklistId] = useState<string | null>()
+  const [editingProvider, setEditingProvider] = useState<Provider | null>(null)
+
+  const [providers, setProviders] = useLocalStorage<any[]>({
+    key: "providers",
+    defaultValue: [BASE_PROVIDER],
+  })
 
   const [loading, setLoading] = useState(false)
 
@@ -67,7 +119,7 @@ export default function NewEvaluation() {
         if (!cloneEval) return
 
         setDatasetId(cloneEval.datasetId)
-        setModels(cloneEval.models)
+        setProviders(cloneEval.providers)
         setChecklistId(cloneEval.checklistId)
       }
 
@@ -78,7 +130,7 @@ export default function NewEvaluation() {
   async function startEval() {
     setLoading(true)
 
-    const timeEstimate = models.length * 3 * 5
+    const timeEstimate = providers.length * 3 * 5
 
     setProgress(0)
 
@@ -90,7 +142,7 @@ export default function NewEvaluation() {
 
     const res = await errorHandler(
       fetcher.post(`/evaluations?projectId=${project.id}`, {
-        arg: { datasetId, models, checklistId },
+        arg: { datasetId, providers, checklistId },
       }),
     )
 
@@ -103,7 +155,7 @@ export default function NewEvaluation() {
     router.push(`/evaluations/${res.evaluationId}`)
   }
 
-  const canStartEvaluation = datasetId && models.length > 0
+  const canStartEvaluation = datasetId && providers.length > 0
 
   return (
     <Paywall
@@ -119,6 +171,21 @@ export default function NewEvaluation() {
           setChecklistModal(false)
           if (id) setChecklistId(id)
         }}
+      />
+      <ProviderModal
+        open={providerModal}
+        onClose={(provider) => {
+          console.log(provider)
+          setProviderModal(false)
+          if (provider) {
+            const updatedProviders = editingProvider
+              ? providers.map((p) => (p === editingProvider ? provider : p))
+              : [...providers, provider]
+            setProviders(updatedProviders)
+          }
+          setEditingProvider(null) // Reset after closing
+        }}
+        initialProvider={editingProvider}
       />
       <Container>
         <Stack align="right" gap="lg">
@@ -159,15 +226,47 @@ export default function NewEvaluation() {
               <Text size="lg" mb="md" mt={-6}>
                 LLMs you want to compare.
               </Text>
-              <MultiSelect
-                data={MODELS.map((model) => ({
-                  value: model.id,
-                  label: model.name,
-                }))}
-                maxValues={6}
-                value={models}
-                onChange={(newModels) => setModels(newModels)}
-              />
+              <InputBase
+                component="div"
+                multiline
+                onClick={() => {
+                  if (!providers.length) setProviderModal(true)
+                }}
+              >
+                <Pill.Group>
+                  {providers?.map((provider, i) => (
+                    <Pill
+                      key={i}
+                      variant="filled"
+                      withRemoveButton
+                      onRemove={() =>
+                        setProviders(
+                          providers.filter((_, index) => index !== i),
+                        )
+                      }
+                      onClick={() => {
+                        setEditingProvider(provider)
+                        setProviderModal(true)
+                      }}
+                      style={{
+                        cursor: "pointer",
+                      }}
+                    >
+                      {MODELS.find((model) => model.id === provider.model)
+                        ?.name || provider.model}
+                    </Pill>
+                  ))}
+                </Pill.Group>
+              </InputBase>
+
+              <Button
+                onClick={() => setProviderModal(true)}
+                size="xs"
+                variant="default"
+                mt="sm"
+              >
+                Add Provider
+              </Button>
             </Steps.Step>
             <Steps.Step n={3} label="Checklist (optional)">
               <Text size="lg" mb="md" mt={-6}>
@@ -203,7 +302,7 @@ export default function NewEvaluation() {
           )}
 
           <Tooltip
-            label="You need to add at least one prompt and one modelto start an Evaluation"
+            label="You need to add at least one prompt and one model to start an Evaluation"
             w="300"
             multiline
             events={{ hover: !canStartEvaluation, focus: true, touch: false }}
