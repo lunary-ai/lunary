@@ -388,5 +388,3 @@ create index on dataset_prompt_variation(prompt_id);
 alter table evaluation_result
 drop constraint "fk_evaluation_result_variation_id",
 add constraint "fk_evaluation_result_variation_id" foreign key (variation_id) references dataset_prompt_variation(id) on delete cascade;
-
-alter table dataset add column format varchar default 'chat' not null;
