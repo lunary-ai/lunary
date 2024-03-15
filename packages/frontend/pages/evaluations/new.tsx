@@ -305,7 +305,7 @@ export default function NewEvaluation() {
               size="lg"
               value={progress}
               animated
-              transitionDuration={500}
+              transitionDuration={800}
             />
           )}
 
