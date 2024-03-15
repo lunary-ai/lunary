@@ -21,6 +21,8 @@ import { useAuth } from "@/utils/auth"
 
 function LoginPage() {
   const [loading, setLoading] = useState(false)
+  const [step, setStep] = useState<"email" | "password" | "sso">("email")
+  const [ssoURI, setSsoURI] = useState<string | null>(null)
   const auth = useAuth()
 
   const form = useForm({
@@ -35,6 +37,28 @@ function LoginPage() {
         val.length < 6 ? "Password must be at least 6 characters" : null,
     },
   })
+
+  async function determineAuthMethod(email: string) {
+    setLoading(true)
+    try {
+      const { method, redirectURI } = await fetcher.post("/auth/method", {
+        arg: {
+          email,
+        },
+      })
+
+      if (method === "password") {
+        setStep("password")
+      } else if (method === "sso") {
+        setSsoURI(redirectURI)
+        setStep("sso")
+        window.location.href = redirectURI
+      }
+    } catch (error) {
+      console.error(error)
+    }
+    setLoading(false)
+  }
 
   async function handleLoginWithPassword({
     email,
@@ -58,12 +82,9 @@ function LoginPage() {
       }
 
       auth.setJwt(token)
-
       analytics.track("Login", { method: "password" })
     } catch (error) {
       console.error(error)
-
-      // empty local storage
       auth.setJwt(null)
     }
 
@@ -81,26 +102,53 @@ function LoginPage() {
           </Title>
         </Stack>
         <Paper radius="md" p="xl" withBorder miw="350">
-          <Text size="lg" mb="xl" fw="500">
+          <Text size="lg" mb="xl" fw="700">
             Sign In
           </Text>
 
-          <form onSubmit={form.onSubmit(handleLoginWithPassword)}>
-            <Stack>
-              <TextInput
-                leftSection={<IconAt size="16" />}
-                label="Email"
-                type="email"
-                autoComplete="email"
-                value={form.values.email}
-                onChange={(event) =>
-                  form.setFieldValue("email", event.currentTarget.value)
-                }
-                error={form.errors.email}
-                placeholder="Your email"
-              />
+          {step === "email" && (
+            <form onSubmit={() => determineAuthMethod(form.values.email)}>
+              <Stack>
+                <TextInput
+                  leftSection={<IconAt size="16" />}
+                  label="Email"
+                  type="email"
+                  autoComplete="email"
+                  value={form.values.email}
+                  onChange={(event) =>
+                    form.setFieldValue("email", event.currentTarget.value)
+                  }
+                  error={form.errors.email}
+                  placeholder="Your email"
+                />
+                <Button
+                  mt="md"
+                  type="submit"
+                  fullWidth
+                  loading={loading}
+                  data-testid="continue-button"
+                >
+                  Continue
+                </Button>
+              </Stack>
+            </form>
+          )}
 
-              <div>
+          {step === "password" && (
+            <form onSubmit={form.onSubmit(handleLoginWithPassword)}>
+              <Stack>
+                <TextInput
+                  leftSection={<IconAt size="16" />}
+                  label="Email"
+                  type="email"
+                  autoComplete="email"
+                  value={form.values.email}
+                  onChange={(event) =>
+                    form.setFieldValue("email", event.currentTarget.value)
+                  }
+                  error={form.errors.email}
+                  placeholder="Your email"
+                />
                 <TextInput
                   type="password"
                   autoComplete="current-password"
@@ -112,30 +160,20 @@ function LoginPage() {
                   error={form.errors.password}
                   placeholder="Your password"
                 />
-                <Anchor
-                  display="block"
-                  pt="xs"
-                  size="sm"
-                  href="/request-password-reset"
-                >
-                  Forgot password?
-                </Anchor>
-              </div>
+                <Button mt="md" type="submit" fullWidth loading={loading}>
+                  Login
+                </Button>
+              </Stack>
+            </form>
+          )}
 
-              <Button mt="md" type="submit" fullWidth loading={loading}>
-                Login
-              </Button>
-
-              <Text size="sm" style={{ textAlign: "center" }}>
-                {`Don't have an account? `}
-                <Anchor href="/signup">Sign Up</Anchor>
-              </Text>
-            </Stack>
-          </form>
+          <Text size="sm" mt="sm" style={{ textAlign: "center" }}>
+            {`Don't have an account? `}
+            <Anchor href="/signup">Sign Up</Anchor>
+          </Text>
         </Paper>
       </Stack>
     </Container>
   )
 }
-
 export default LoginPage

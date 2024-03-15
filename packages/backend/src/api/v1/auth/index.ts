@@ -11,6 +11,21 @@ const auth = new Router({
   prefix: "/auth",
 })
 
+auth.post("/method", async (ctx: Context) => {
+  const { email } = ctx.request.body as { email: string }
+  const emailDomain = email.toLowerCase().split("@")[1]
+
+  const [org] = await sql`
+    select * from org where domain = ${emailDomain}
+  `
+
+  if (!org || !org.sso_method) {
+    ctx.body = { method: "password" }
+  } else {
+    ctx.body = { method: "sso" }
+  }
+})
+
 auth.post("/signup", async (ctx: Context) => {
   const bodySchema = z.object({
     email: z.string().email(),

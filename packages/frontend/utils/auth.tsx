@@ -1,7 +1,6 @@
 import { useLocalStorage } from "@mantine/hooks"
 import { decodeJwt } from "jose"
 import { createContext, useContext, useEffect, useMemo } from "react"
-import Router from "next/router"
 
 const SIGN_OUT_EVENT = "sign-out"
 export async function signOut() {
