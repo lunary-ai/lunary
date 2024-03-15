@@ -1,4 +1,4 @@
-import PromptVariableEditor from "@/components/Blocks/PromptVariableEditor"
+import PromptVariableEditor from "@/components/Prompts/PromptVariableEditor"
 import RenamableField from "@/components/Blocks/RenamableField"
 import { PromptEditor } from "@/components/Prompts/PromptEditor"
 import {
@@ -7,7 +7,10 @@ import {
   useDatasetPromptVariation,
 } from "@/utils/dataHooks"
 import { cleanSlug, formatCompactFromNow } from "@/utils/format"
-import { usePromptVariables } from "@/utils/promptsHooks"
+import {
+  useFilteredPromptVariables,
+  usePromptVariables,
+} from "@/utils/promptsHooks"
 import {
   ActionIcon,
   Anchor,
@@ -21,29 +24,30 @@ import {
   Tabs,
   Text,
   Textarea,
-  Title,
 } from "@mantine/core"
 import { useDebouncedState } from "@mantine/hooks"
 import { modals } from "@mantine/modals"
 import { IconCircleMinus, IconPlus } from "@tabler/icons-react"
-import { usePathname } from "next/navigation"
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
 
-function PromptVariation({ i, variationId, variables, onDelete, markSaved }) {
+function PromptVariation({ i, variationId, content, onDelete, markSaved }) {
   const { variation, update, remove, mutate } =
     useDatasetPromptVariation(variationId)
 
   const { prompt } = useDatasetPrompt(variation?.promptId)
-
-  const hasVariables = Object.keys(variables).length > 0
 
   const [debouncedVariation, setDebouncedVariation] = useDebouncedState(
     null,
     500,
   )
 
-  // console.log("variables", variation?.variables)
+  const variables = useFilteredPromptVariables(
+    content,
+    variation?.variables || {},
+  )
+
+  const hasVariables = Object.keys(variables).length > 0
 
   useEffect(() => {
     if (debouncedVariation) {
@@ -57,32 +61,8 @@ function PromptVariation({ i, variationId, variables, onDelete, markSaved }) {
     }
   }, [debouncedVariation])
 
-  useEffect(() => {
-    if (!variation || !variables) return
-
-    Object.keys(variables).forEach((key) => {
-      if (typeof variation.variables[key] === "undefined") {
-        setVariableValue(key, "")
-      }
-    })
-
-    Object.keys(variation.variables).forEach((key) => {
-      if (typeof variables[key] === "undefined") {
-        setVariableValue(key, undefined)
-      }
-    })
-  }, [variables])
-
-  const setVariableValue = (variable, value) => {
-    let updatedVariables = { ...variation?.variables }
-
-    if (typeof value === "undefined") {
-      delete updatedVariables[variable]
-    } else {
-      updatedVariables[variable] = value
-    }
-
-    const updatedVariation = { ...variation, variables: updatedVariables }
+  const setVariables = (newVars) => {
+    const updatedVariation = { ...variation, variables: newVars }
     mutate(updatedVariation, { revalidate: false })
     setDebouncedVariation(updatedVariation)
   }
@@ -101,9 +81,9 @@ function PromptVariation({ i, variationId, variables, onDelete, markSaved }) {
     >
       <Stack>
         <PromptVariableEditor
-          variables={variation?.variables}
-          updateVariable={(variable, value) => {
-            setVariableValue(variable, value)
+          value={variables}
+          onChange={(update) => {
+            setVariables(update)
           }}
         />
 
@@ -149,6 +129,7 @@ function PromptTab({ isText, promptId, onDelete, markSaved }) {
   } = useDatasetPrompt(promptId)
 
   const promptVariables = usePromptVariables(prompt?.messages)
+  const hasVariables = Object.keys(promptVariables).length > 0
 
   const [debouncedMessages, setDebouncedMessages] = useDebouncedState(null, 500)
 
@@ -164,8 +145,6 @@ function PromptTab({ isText, promptId, onDelete, markSaved }) {
       )
     }
   }, [debouncedMessages])
-
-  const hasVariables = Object.keys(promptVariables).length > 0
 
   if (loading) {
     return <Loader />
@@ -185,7 +164,7 @@ function PromptTab({ isText, promptId, onDelete, markSaved }) {
         <PromptVariation
           key={i}
           i={i}
-          variables={promptVariables}
+          content={prompt.messages}
           markSaved={markSaved}
           variationId={variation.id}
           onDelete={() => {

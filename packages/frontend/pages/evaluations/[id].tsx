@@ -30,7 +30,7 @@ import { useState } from "react"
 
 export default function EvalResults() {
   const router = useRouter()
-  const [groupBy, setGroupBy] = useState<"none" | "model" | "prompt">("none")
+  const [groupBy, setGroupBy] = useState<"none" | "provider" | "prompt">("none")
   const id = router.query.id as string
 
   const { data, isLoading: loading } = useProjectSWR(
@@ -42,16 +42,13 @@ export default function EvalResults() {
   const { checklist } = useChecklist(evaluation?.checklistId)
   const { dataset } = useDataset(evaluation?.datasetId)
 
-  const uniqueModels = Array.from(new Set(data?.map((result) => result.model)))
+  const uniqueProviders = Array.from(
+    new Set(data?.map((result) => JSON.stringify(result.provider))),
+  )
 
   const uniquePrompts = Array.from(
     new Set(data?.map((result) => result.promptId)),
   )
-
-  console.log(data)
-
-  console.log("uniquePrompts", uniquePrompts)
-  console.log("uniqueModels", uniqueModels)
 
   return (
     <Container size="100%">
@@ -67,23 +64,27 @@ export default function EvalResults() {
 
         <Card withBorder>
           <Stack>
-            <Group>
-              <Text>Checklist:</Text>
-              <FilterPicker value={checklist?.data} disabled />
-            </Group>
-            <Group>
-              <Text>Dataset:</Text>
-              <Button
-                size="xs"
-                variant="light"
-                color="blue"
-                leftSection={<IconDatabase size={12} />}
-                component={Link}
-                href={`/datasets/${evaluation?.datasetId}`}
-              >
-                {dataset?.slug}
-              </Button>
-            </Group>
+            {checklist && (
+              <Group>
+                <Text>Checklist:</Text>
+                <FilterPicker value={checklist.data} disabled />
+              </Group>
+            )}
+            {dataset && (
+              <Group>
+                <Text>Dataset:</Text>
+                <Button
+                  size="xs"
+                  variant="light"
+                  color="blue"
+                  leftSection={<IconDatabase size={12} />}
+                  component={Link}
+                  href={`/datasets/${evaluation?.datasetId}`}
+                >
+                  {dataset.slug}
+                </Button>
+              </Group>
+            )}
           </Stack>
         </Card>
 
@@ -98,7 +99,7 @@ export default function EvalResults() {
                 label: "None",
               },
               {
-                value: "model",
+                value: "provider",
                 label: "Model",
               },
               {
@@ -108,7 +109,7 @@ export default function EvalResults() {
             ]}
             value={groupBy}
             onChange={(value) =>
-              setGroupBy(value as "none" | "model" | "prompt")
+              setGroupBy(value as "none" | "provider" | "prompt")
             }
           />
         </Group>
@@ -119,15 +120,14 @@ export default function EvalResults() {
           <>
             {data?.length > 0 ? (
               <Stack gap="xl">
-                {groupBy === "none" && (
-                  <ResultsMatrix data={data} groupBy={groupBy} />
-                )}
-                {groupBy === "model" &&
-                  uniqueModels.map((model) => (
+                {groupBy === "none" && <ResultsMatrix data={data} />}
+                {groupBy === "provider" &&
+                  uniqueProviders.map((model) => (
                     <ResultsMatrix
                       key={model}
-                      data={data.filter((result) => result.model === model)}
-                      groupBy={groupBy}
+                      data={data.filter(
+                        (result) => JSON.stringify(result.provider) === model,
+                      )}
                     />
                   ))}
                 {groupBy === "prompt" &&
@@ -137,7 +137,6 @@ export default function EvalResults() {
                       data={data.filter(
                         (result) => result.promptId === promptId,
                       )}
-                      groupBy={groupBy}
                     />
                   ))}
               </Stack>

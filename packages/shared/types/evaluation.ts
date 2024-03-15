@@ -1,10 +1,9 @@
-import { FilterLogic } from ".."
 import { Message } from "./openai"
 
 export interface Evaluation {
   name?: string
   prompts: Prompt[]
-  models: string[]
+  providers: any[]
   checklistId: string
   datasetId: string
 }
@@ -18,4 +17,9 @@ export interface Variation {
   variables: Record<string, string>
   context?: string
   idealOutput?: string
+}
+
+export interface Provider {
+  model: string
+  config: Record<string, any>
 }

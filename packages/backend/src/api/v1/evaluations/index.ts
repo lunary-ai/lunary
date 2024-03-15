@@ -6,12 +6,28 @@ import { runEval } from "./utils"
 import { getEvaluation } from "./utils"
 import { calcRunCost } from "@/src/utils/calcCost"
 import { runChecksOnRun } from "@/src/checks/runChecks"
+import PQueue from "p-queue"
+import { PassThrough } from "stream"
 
 const evaluations = new Router({ prefix: "/evaluations" })
 
+const MAX_PARALLEL_EVALS = 4
+
 evaluations.post("/", async (ctx: Context) => {
-  const { name, datasetId, checklistId, models } = ctx.request.body as any
+  const { name, datasetId, checklistId, providers } = ctx.request.body as any
   const { userId, projectId } = ctx.state
+
+  ctx.request.socket.setTimeout(0)
+  ctx.request.socket.setNoDelay(true)
+  ctx.request.socket.setKeepAlive(true)
+
+  ctx.set({
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    Connection: "keep-alive",
+  })
+
+  const queue = new PQueue({ concurrency: MAX_PARALLEL_EVALS, timeout: 10000 })
 
   // TODO: transactions, but not working with because of nesting
   const evaluationToInsert = {
@@ -19,9 +35,10 @@ evaluations.post("/", async (ctx: Context) => {
     ownerId: userId,
     projectId,
     datasetId,
-    models,
+    providers,
     checklistId,
-    checks: [], // TODO: remove this legacy row from DB,
+    models: [], // TODO: remove this legacy col from DB,
+    checks: [], // TODO: remove this legacy col from DB,
   }
 
   const [insertedEvaluation] =
@@ -29,29 +46,43 @@ evaluations.post("/", async (ctx: Context) => {
 
   const evaluation = await getEvaluation(insertedEvaluation.id)
 
-  const evalsToRun = []
+  let count = 0
+
   for (const prompt of evaluation.dataset.prompts) {
     for (const variation of prompt.variations) {
-      for (const model of evaluation.models) {
-        evalsToRun.push(
+      for (const provider of evaluation.providers) {
+        count++
+        queue.add(() =>
           runEval({
             evaluationId: evaluation.id,
             promptId: prompt.id,
             variation,
-            model,
+            provider,
             prompt: prompt.content,
             checklistId,
-            extra: {},
           }),
         )
       }
     }
   }
 
-  await Promise.all(evalsToRun)
+  const stream = new PassThrough()
+  stream.pipe(ctx.res)
+  ctx.status = 200
+  ctx.body = stream
 
-  ctx.status = 201
-  ctx.body = { evaluationId: insertedEvaluation.id }
+  queue.on("active", () => {
+    const percentDone = ((count - queue.size) / count) * 100
+    console.log(`Active: ${queue.size} of ${count} (${percentDone}%)`)
+    console.log()
+    stream.write(JSON.stringify({ percentDone }) + "\n")
+  })
+
+  await queue.onIdle()
+
+  stream.write(JSON.stringify({ id: evaluation?.id }) + "\n")
+
+  stream.end()
 })
 
 evaluations.get("/:id", async (ctx: Context) => {

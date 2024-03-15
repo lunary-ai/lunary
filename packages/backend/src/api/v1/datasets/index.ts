@@ -224,14 +224,6 @@ datasets.patch("/variations/:variationId", async (ctx: Context) => {
     idealOutput: string
   }
 
-  console.log(
-    clearUndefined({
-      variables,
-      context,
-      idealOutput,
-    }),
-  )
-
   const [variation] = await sql`update dataset_prompt_variation set
     ${sql(
       clearUndefined({

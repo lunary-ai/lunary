@@ -151,6 +151,13 @@ export default function Evaluations() {
                               </Badge>
                             ))}
                           </Group>
+                          <Group>
+                            {evaluation.providers?.map((provider, index) => (
+                              <Badge key={index} variant="light" color="blue">
+                                {provider.model}
+                              </Badge>
+                            ))}
+                          </Group>
                           <OrgUserBadge userId={evaluation.ownerId} />
                         </Stack>
 
