@@ -218,12 +218,16 @@ export default function ResultsMatrix({ data }) {
                           </Progress.Root>
                         )}
                         <Group>
-                          <Text size="xs" c="dimmed">
-                            avg. {duration}s
-                          </Text>
-                          <Text size="xs" c="dimmed">
-                            avg. {formatCost(cost)}
-                          </Text>
+                          {duration && (
+                            <Text size="xs" c="dimmed">
+                              avg. {duration}s
+                            </Text>
+                          )}
+                          {cost && (
+                            <Text size="xs" c="dimmed">
+                              avg. {formatCost(cost)}
+                            </Text>
+                          )}
                         </Group>
                       </Stack>
                     </th>
@@ -277,7 +281,7 @@ export default function ResultsMatrix({ data }) {
                               </Group>
                             </Stack>
                           ) : (
-                            <Badge color="red">{result.error || "Error"}</Badge>
+                            <Text color="red">{result.error || "Error"}</Text>
                           )}
                         </>
                       ) : (
