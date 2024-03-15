@@ -40,7 +40,7 @@ import {
   useUser,
   useProject,
 } from "@/utils/dataHooks"
-import { fetcher } from "@/utils/fetcher"
+import { buildUrl, fetcher, getHeaders, getStream } from "@/utils/fetcher"
 import Empty from "@/components/Layout/Empty"
 
 import {
@@ -289,52 +289,20 @@ function Playground() {
     setStreaming(true)
 
     try {
-      const fetchResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/v1/orgs/${org?.id}/playground`,
+      await getStream(
+        `/orgs/${org?.id}/playground`,
         {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("auth-token")}`,
-          },
-          body: JSON.stringify({
-            content: templateVersion.content,
-            extra: templateVersion.extra,
-            variables: templateVersion.testValues,
-          }),
+          content: templateVersion.content,
+          extra: templateVersion.extra,
+          variables: templateVersion.testValues,
         },
-      )
-
-      const reader = fetchResponse?.body?.getReader()
-
-      if (!reader) {
-        throw new Error("Error creating a stream from the response.")
-      }
-
-      const decoder = new TextDecoder()
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) {
-          break
-        }
-
-        // // Update the chat state with the new message tokens.
-        const chunk = decoder.decode(value, { stream: true }).trim().split("\n")
-
-        for (const item of chunk) {
-          const parsedLine = JSON.parse(item)
+        (chunk) => {
+          const parsedLine = JSON.parse(chunk)
 
           setOutput(parsedLine.choices[0]?.message)
           setOutputTokens(parsedLine.usage?.completion_tokens || 0)
-        }
-
-        // The request has been aborted, stop reading the stream.
-        // if (abortControllerRef.current === null) {
-        // reader.cancel()
-        // break
-        // }
-      }
+        },
+      )
     } catch (e) {
       console.error(e)
       setError(e)

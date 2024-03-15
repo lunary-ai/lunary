@@ -11,24 +11,24 @@ export function buildUrl(path: string) {
   return `${BASE_URL}/v1${path}`
 }
 
-function get(path) {
+export function getHeaders() {
   const authToken = localStorage.getItem("auth-token")
-  const headers = authToken
+  return authToken
     ? {
         Authorization: `Bearer ${authToken}`,
       }
     : undefined
+}
 
+function get(path) {
   return fetch(buildUrl(path), {
-    headers,
+    headers: getHeaders(),
   }).then(handleResponse)
 }
 
 async function getFile(path) {
   const res = await fetch(buildUrl(path), {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("auth-token")}`,
-    },
+    headers: getHeaders(),
   })
 
   if (!res.ok) {
@@ -55,12 +55,53 @@ async function getFile(path) {
   window.URL.revokeObjectURL(url)
 }
 
+export async function getStream(url, args, onChunk) {
+  const res = await fetch(buildUrl(url), {
+    method: "POST",
+
+    headers: {
+      "Content-Type": "application/json",
+      ...getHeaders(),
+    },
+    body: JSON.stringify(args),
+  })
+
+  if (!res.ok) {
+    const { error, message } = await res.json()
+
+    showErrorNotification(error, message)
+    throw new Error(message)
+  }
+
+  const reader = res.body?.getReader()
+
+  if (!reader) {
+    throw new Error("Error creating a stream from the response.")
+  }
+
+  let decoder = new TextDecoder()
+
+  while (true) {
+    const { done, value } = await reader.read()
+
+    if (done) {
+      break
+    }
+
+    const chunk = decoder.decode(value, { stream: true }).trim().split("\n")
+
+    for (const item of chunk) {
+      onChunk(item)
+    }
+  }
+}
+
 function post(path, { arg }) {
   return fetch(buildUrl(path), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${localStorage.getItem("auth-token")}`,
+      ...getHeaders(),
     },
     body: JSON.stringify(arg),
   }).then(handleResponse)
@@ -71,7 +112,7 @@ function patch(path, { arg }) {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${localStorage.getItem("auth-token")}`,
+      ...getHeaders(),
     },
     body: JSON.stringify(arg),
   }).then(handleResponse)
@@ -80,9 +121,7 @@ function patch(path, { arg }) {
 async function del(path) {
   return fetch(buildUrl(path), {
     method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("auth-token")}`,
-    },
+    headers: getHeaders(),
   }).then(handleResponse)
 }
 

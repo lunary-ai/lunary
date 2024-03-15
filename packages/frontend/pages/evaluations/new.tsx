@@ -2,7 +2,7 @@ import Steps from "@/components/Blocks/Steps"
 import Paywall from "@/components/Layout/Paywall"
 import { useChecklists, useDatasets, useProject } from "@/utils/dataHooks"
 import errorHandler from "@/utils/errors"
-import { fetcher } from "@/utils/fetcher"
+import { fetcher, getHeaders, buildUrl, getStream } from "@/utils/fetcher"
 
 import {
   Anchor,
@@ -27,6 +27,7 @@ import { ChecklistModal } from "./checklists"
 import ProviderEditor from "@/components/Prompts/Provider"
 import { MODELS, Provider } from "shared"
 import { useLocalStorage } from "@mantine/hooks"
+import { notifications } from "@mantine/notifications"
 
 const FEATURE_LIST = [
   "Define assertions to test variations of prompts",
@@ -130,29 +131,31 @@ export default function NewEvaluation() {
   async function startEval() {
     setLoading(true)
 
-    const timeEstimate = providers.length * 3 * 5
+    try {
+      setProgress(0)
 
-    setProgress(0)
+      await getStream(
+        `/evaluations?projectId=${project.id}`,
+        {
+          datasetId,
+          providers,
+          checklistId,
+        },
+        (chunk) => {
+          const parsedLine = JSON.parse(chunk)
 
-    let interval = setInterval(() => {
-      setProgress((progress) =>
-        Math.min(100, progress + 100 / timeEstimate, 100),
+          setProgress(parsedLine.percentDone)
+
+          if (parsedLine.id) {
+            router.push(`/evaluations/${parsedLine.id}`)
+          }
+        },
       )
-    }, 1000)
-
-    const res = await errorHandler(
-      fetcher.post(`/evaluations?projectId=${project.id}`, {
-        arg: { datasetId, providers, checklistId },
-      }),
-    )
-
-    clearInterval(interval)
+    } catch (error) {
+      console.error(error)
+    }
 
     setLoading(false)
-
-    if (!res.evaluationId) return
-
-    router.push(`/evaluations/${res.evaluationId}`)
   }
 
   const canStartEvaluation = datasetId && providers.length > 0
@@ -175,7 +178,6 @@ export default function NewEvaluation() {
       <ProviderModal
         open={providerModal}
         onClose={(provider) => {
-          console.log(provider)
           setProviderModal(false)
           if (provider) {
             const updatedProviders = editingProvider
@@ -298,7 +300,13 @@ export default function NewEvaluation() {
           </Steps>
 
           {loading && progress > 0 && (
-            <Progress radius="md" size="lg" value={progress} animated />
+            <Progress
+              radius="md"
+              size="lg"
+              value={progress}
+              animated
+              transitionDuration={500}
+            />
           )}
 
           <Tooltip

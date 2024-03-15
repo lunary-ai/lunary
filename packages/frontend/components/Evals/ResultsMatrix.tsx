@@ -134,8 +134,6 @@ export default function ResultsMatrix({ data }) {
 
   const variables = Array.from(new Set(variableVariations.flatMap(Object.keys)))
 
-  console.log(pmVariations)
-
   return (
     <Stack>
       <div className={classes["matrix-container"]}>
