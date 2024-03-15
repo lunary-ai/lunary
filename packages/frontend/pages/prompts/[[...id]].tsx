@@ -1,19 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import { jsonrepair } from "jsonrepair"
 
 import {
   Badge,
   Box,
   Button,
   Card,
-  Checkbox,
   Flex,
   Group,
-  JsonInput,
-  Modal,
-  NumberInput,
   SegmentedControl,
-  Select,
   Stack,
   Text,
   Textarea,
@@ -46,40 +40,18 @@ import {
   useUser,
   useProject,
 } from "@/utils/dataHooks"
-import { fetcher } from "@/utils/fetcher"
+import { buildUrl, fetcher, getHeaders, getStream } from "@/utils/fetcher"
 import Empty from "@/components/Layout/Empty"
 
-import { MODELS } from "shared"
-import { usePromptVariables } from "@/utils/promptsHooks"
+import {
+  useFilteredPromptVariables,
+  usePromptVariables,
+} from "@/utils/promptsHooks"
 import { openConfirmModal } from "@mantine/modals"
 import { useGlobalShortcut } from "@/utils/hooks"
-
-const ParamItem = ({ name, value }) => (
-  <Group justify="space-between">
-    <Text size="sm">{name}</Text>
-    {typeof value === "string" || typeof value === "number" ? (
-      <Text size="sm">{value}</Text>
-    ) : (
-      value
-    )}
-  </Group>
-)
-
-function confirmDiscard(onDiscard) {
-  return openConfirmModal({
-    title: "Discard changes?",
-    confirmProps: { color: "red" },
-    children: (
-      <Text size="sm">
-        You have unsaved changes. Are you sure you want to discard them?
-      </Text>
-    ),
-    labels: { confirm: "Confirm", cancel: "Cancel" },
-    onConfirm() {
-      onDiscard()
-    },
-  })
-}
+import { ParamItem } from "@/components/Prompts/Provider"
+import ProviderEditor from "@/components/Prompts/Provider"
+import PromptVariableEditor from "@/components/Prompts/PromptVariableEditor"
 
 function Playground() {
   const router = useRouter()
@@ -102,8 +74,6 @@ function Playground() {
   const [output, setOutput] = useState<any>(null)
   const [outputTokens, setOutputTokens] = useState<any>(null)
   const [error, setError] = useState(null)
-  const [tempJSON, setTempJSON] = useState<any>("")
-  const [jsonModalOpened, setJsonModalOpened] = useState(false)
 
   const [rename, setRename] = useState(null)
 
@@ -319,52 +289,20 @@ function Playground() {
     setStreaming(true)
 
     try {
-      const fetchResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/v1/orgs/${org?.id}/playground`,
+      await getStream(
+        `/orgs/${org?.id}/playground`,
         {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("auth-token")}`,
-          },
-          body: JSON.stringify({
-            content: templateVersion.content,
-            extra: templateVersion.extra,
-            variables: templateVersion.testValues,
-          }),
+          content: templateVersion.content,
+          extra: templateVersion.extra,
+          variables: templateVersion.testValues,
         },
-      )
-
-      const reader = fetchResponse?.body?.getReader()
-
-      if (!reader) {
-        throw new Error("Error creating a stream from the response.")
-      }
-
-      const decoder = new TextDecoder()
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) {
-          break
-        }
-
-        // // Update the chat state with the new message tokens.
-        const chunk = decoder.decode(value, { stream: true }).trim().split("\n")
-
-        for (const item of chunk) {
-          const parsedLine = JSON.parse(item)
+        (chunk) => {
+          const parsedLine = JSON.parse(chunk)
 
           setOutput(parsedLine.choices[0]?.message)
           setOutputTokens(parsedLine.usage?.completion_tokens || 0)
-        }
-
-        // The request has been aborted, stop reading the stream.
-        // if (abortControllerRef.current === null) {
-        // reader.cancel()
-        // break
-        // }
-      }
+        },
+      )
     } catch (e) {
       console.error(e)
       setError(e)
@@ -391,26 +329,10 @@ function Playground() {
     router.push(`/prompts/${v.id}`)
   }
 
-  const extraHandler = (key: string, isCheckbox?: boolean) => ({
-    size: "xs",
-    [isCheckbox ? "checked" : "value"]:
-      templateVersion?.extra?.[key] || (isCheckbox ? false : ""), // empty string is important to reset the value
-    onChange: (value) => {
-      // Handle checkboxes
-      if (isCheckbox) value = value.currentTarget.checked
-
-      setHasChanges(true)
-
-      if (!value) value = undefined // handle empty strings and booleans
-
-      setTemplateVersion({
-        ...templateVersion,
-        extra: { ...templateVersion.extra, [key]: value },
-      })
-    },
-  })
-
-  const variables = usePromptVariables(templateVersion?.content)
+  const variables = useFilteredPromptVariables(
+    templateVersion?.content,
+    templateVersion?.testValues,
+  )
 
   return (
     <Empty
@@ -548,265 +470,31 @@ function Playground() {
               }
             />
 
-            <>
-              <ParamItem
-                name="Model"
-                value={
-                  <Select
-                    data={MODELS.map((model) => ({
-                      value: model.id,
-                      label: model.name,
-                    }))}
-                    w={250}
-                    searchable
-                    inputMode="search"
-                    {...extraHandler("model")}
-                  />
-                }
-              />
-
-              <ParamItem
-                name="Temperature"
-                value={
-                  <NumberInput
-                    min={0}
-                    max={2}
-                    step={0.1}
-                    decimalScale={2}
-                    style={{ zIndex: 0 }}
-                    w={90}
-                    {...extraHandler("temperature")}
-                  />
-                }
-              />
-
-              <ParamItem
-                name="Max tokens"
-                value={
-                  <NumberInput
-                    min={1}
-                    max={32000}
-                    step={100}
-                    w={90}
-                    {...extraHandler("max_tokens")}
-                  />
-                }
-              />
-
-              <ParamItem
-                name="Freq. Penalty"
-                value={
-                  <NumberInput
-                    min={-2}
-                    max={2}
-                    decimalScale={2}
-                    step={0.1}
-                    w={90}
-                    {...extraHandler("frequency_penalty")}
-                  />
-                }
-              />
-
-              <ParamItem
-                name="Pres. Penalty"
-                value={
-                  <NumberInput
-                    min={-2}
-                    max={2}
-                    decimalScale={2}
-                    step={0.1}
-                    w={90}
-                    {...extraHandler("presence_penalty")}
-                  />
-                }
-              />
-
-              <ParamItem
-                name="Top P"
-                value={
-                  <NumberInput
-                    min={0.1}
-                    max={1}
-                    decimalScale={2}
-                    step={0.1}
-                    w={90}
-                    {...extraHandler("top_p")}
-                  />
-                }
-              />
-
-              <ParamItem
-                name="Stream"
-                value={<Checkbox {...extraHandler("stream", true)} />}
-              />
-
-              {typeof templateVersion.content !== "string" && (
-                <ParamItem
-                  name="Tool Calls"
-                  value={
-                    <>
-                      <Modal
-                        size="lg"
-                        opened={jsonModalOpened}
-                        onClose={() => setJsonModalOpened(false)}
-                        title="Tool Calls Definition"
-                      >
-                        <JsonInput
-                          autosize
-                          mr="sm"
-                          placeholder={`[{
-  type: "function",
-  function: {
-    name: "get_current_weather",
-    description: "Get the current weather in a given location",
-    parameters: {
-      type: "object",
-      properties: {
-        location: {
-          type: "string",
-          description: "The city and state, e.g. San Francisco, CA",
-        },
-        unit: { type: "string", enum: ["celsius", "fahrenheit"] },
-      },
-    },
-  },
-}]`}
-                          // defaultValue={tempJSON}
-                          value={tempJSON}
-                          onChange={(val) => {
-                            setTempJSON(val)
-                          }}
-                        />
-                        <Button
-                          mt="sm"
-                          ml="auto"
-                          onClick={() => {
-                            try {
-                              const empty = !tempJSON?.trim().length
-
-                              if (!empty && tempJSON?.trim()[0] !== "[") {
-                                throw new Error("Not an array")
-                              }
-
-                              const repaired = empty
-                                ? undefined
-                                : JSON.parse(jsonrepair(tempJSON.trim()))
-
-                              if (
-                                !empty &&
-                                repaired.find(
-                                  (item) =>
-                                    item.type !== "function" ||
-                                    !item.function.name,
-                                )
-                              ) {
-                                throw new Error(
-                                  "All items must have a function type",
-                                )
-                              }
-
-                              setHasChanges(true)
-                              setTemplateVersion({
-                                ...templateVersion,
-                                extra: {
-                                  ...templateVersion.extra,
-                                  tools: empty ? undefined : repaired,
-                                },
-                              })
-                              setJsonModalOpened(false)
-                            } catch (e) {
-                              console.error(e)
-                              notifications.show({
-                                title:
-                                  "Please enter a valid OpenAI tools array. " +
-                                  e.message,
-                                message: "Click here to open the docs.",
-                                color: "red",
-                                onClick: () =>
-                                  window.open(
-                                    "https://platform.openai.com/docs/guides/function-calling",
-                                    "_blank",
-                                  ),
-                              })
-                            }
-                          }}
-                        >
-                          Save
-                        </Button>
-                      </Modal>
-                      <Button
-                        size="compact-xs"
-                        variant="outline"
-                        onClick={() => {
-                          setTempJSON(
-                            JSON.stringify(
-                              templateVersion?.extra?.tools,
-                              null,
-                              2,
-                            ),
-                          )
-                          setJsonModalOpened(true)
-                        }}
-                      >
-                        Edit
-                      </Button>
-                    </>
-                  }
-                />
-              )}
-            </>
+            <ProviderEditor
+              value={{
+                model: templateVersion?.extra?.model,
+                config: templateVersion?.extra,
+              }}
+              onChange={(val) => {
+                setHasChanges(true)
+                setTemplateVersion({
+                  ...templateVersion,
+                  extra: { ...val.config, model: val.model },
+                })
+              }}
+            />
 
             {template && (
               <Card shadow="sm" p="sm" my="md">
-                <Group mb="md" align="center" justify="space-between">
-                  <Text size="sm" fw="bold">
-                    Variables
-                  </Text>
-                  <Tooltip label="Add variables to your template in the {{ mustache }} format">
-                    <IconInfoCircle size={16} />
-                  </Tooltip>
-                </Group>
-                {!Object.keys(variables).length && (
-                  <Text c="dimmed" size="sm">
-                    {`Add variables to your template: {{variable}}`}
-                  </Text>
-                )}
-                <Stack>
-                  {Object.keys(variables).map((variable) => (
-                    <Group
-                      key={variable}
-                      align="center"
-                      justify="space-between"
-                      gap={6}
-                    >
-                      <Badge
-                        key={variable}
-                        maw={200}
-                        variant="outline"
-                        tt="none"
-                      >
-                        {variable}
-                      </Badge>
-                      <Textarea
-                        size="xs"
-                        w={220}
-                        radius="sm"
-                        rows={1}
-                        placeholder="Test Value"
-                        value={templateVersion?.testValues?.[variable]}
-                        onChange={(e) => {
-                          setTemplateVersion({
-                            ...templateVersion,
-                            testValues: {
-                              ...templateVersion.testValues,
-                              [variable]: e.currentTarget.value,
-                            },
-                          })
-                        }}
-                      />
-                    </Group>
-                  ))}
-                </Stack>
+                <PromptVariableEditor
+                  value={variables}
+                  onChange={(update) => {
+                    setTemplateVersion({
+                      ...templateVersion,
+                      testValues: update,
+                    })
+                  }}
+                />
               </Card>
             )}
 

@@ -308,5 +308,5 @@ export async function runAImodel(
     }
   }
 
-  return res
+  return res as OpenAI.ChatCompletion
 }

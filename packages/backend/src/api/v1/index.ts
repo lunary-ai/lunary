@@ -3,7 +3,7 @@ import sql from "@/src/utils/db"
 
 import orgs from "./orgs"
 import datasets from "./datasets"
-evaluations
+
 import filters from "./filters"
 import runs from "./runs/index"
 import templateVersions from "./templateVersions"

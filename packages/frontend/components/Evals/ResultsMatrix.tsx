@@ -4,20 +4,25 @@ import { formatCost } from "@/utils/format"
 import { ChatMessage } from "../SmartViewer/Message"
 import MessageViewer from "../SmartViewer/MessageViewer"
 import SmartViewer from "../SmartViewer"
+import { MODELS, Provider } from "shared"
 
 // We create a matrix of results for each prompt, variable and model.
 // The matrix is a 3D array, where each dimension represents a different variable, prompt and model.
 
+const compareObjects = (a, b) => {
+  return JSON.stringify(a) === JSON.stringify(b)
+}
+
 function getResultForVariation(
   promptId: string,
   variables: { [key: string]: string },
-  model: string,
+  provider: Provider,
   evalResults,
 ): any | undefined {
   const result = evalResults.find(
     (result) =>
       (promptId ? result.promptId === promptId : true) &&
-      (model ? result.model === model : true) &&
+      (provider ? compareObjects(result.provider, provider) : true) &&
       (Object.keys(variables).length === 0
         ? Object.keys(result.variables).length === 0
         : true) &&
@@ -28,17 +33,11 @@ function getResultForVariation(
       ),
   )
 
-  if (!result) {
-    console.log(`No result found for`, promptId, variables, model)
-  } else {
-    console.log(`Found result for`, promptId, variables, model)
-  }
-
   return result
 }
 const getAggegateForVariation = (
   promptId: string,
-  model: string,
+  provider: Provider,
   evalResults,
 ): {
   passed: number // percentage passed
@@ -49,7 +48,7 @@ const getAggegateForVariation = (
   const results = evalResults.filter(
     (result) =>
       (promptId ? result.promptId === promptId : true) &&
-      (model ? result.model === model : true),
+      (provider ? compareObjects(result.provider, provider) : true),
   )
 
   return {
@@ -78,7 +77,7 @@ const getPromptModelVariations = (results) => {
   let variations = results.map((result) => ({
     promptContent: result.promptContent,
     promptId: result.promptId,
-    model: result.model,
+    provider: result.provider,
   }))
 
   const uniqueVariations = Array.from(
@@ -90,7 +89,7 @@ const getPromptModelVariations = (results) => {
         ...variation,
         ...getAggegateForVariation(
           variation.promptId,
-          variation.model,
+          variation.provider,
           results,
         ),
       }
@@ -99,7 +98,7 @@ const getPromptModelVariations = (results) => {
   return uniqueVariations as {
     promptId?: string
     promptContent?: any
-    model?: string
+    provider?: Provider
     passed: number
     failed: number
     duration: number
@@ -153,7 +152,7 @@ export default function ResultsMatrix({ data }) {
               {pmVariations.map(
                 (
                   {
-                    model,
+                    provider,
                     promptId,
                     promptContent,
                     passed,
@@ -166,12 +165,30 @@ export default function ResultsMatrix({ data }) {
                   return (
                     <th key={index}>
                       <Stack align="center" gap="xs">
-                        {model && <Badge variant="outline">{model}</Badge>}
+                        {provider && (
+                          <HoverCard width={500} position="bottom">
+                            <HoverCard.Target>
+                              <Badge variant="outline">
+                                {MODELS.find(
+                                  (model) => model.id === provider.model,
+                                )?.name || provider.model}
+                              </Badge>
+                            </HoverCard.Target>
+                            <HoverCard.Dropdown>
+                              <Stack gap="xs">
+                                <SmartViewer
+                                  data={provider.config}
+                                  compact={false}
+                                />
+                              </Stack>
+                            </HoverCard.Dropdown>
+                          </HoverCard>
+                        )}
                         {promptId && (
                           <HoverCard width={500} position="top">
                             <HoverCard.Target>
                               <div>
-                                <MessageViewer data={promptContent} compact />
+                                <SmartViewer data={promptContent} compact />
                               </div>
                             </HoverCard.Target>
                             <HoverCard.Dropdown>
@@ -199,12 +216,16 @@ export default function ResultsMatrix({ data }) {
                           </Progress.Root>
                         )}
                         <Group>
-                          <Text size="xs" c="dimmed">
-                            avg. {duration}s
-                          </Text>
-                          <Text size="xs" c="dimmed">
-                            avg. {formatCost(cost)}
-                          </Text>
+                          {duration && (
+                            <Text size="xs" c="dimmed">
+                              avg. {duration}s
+                            </Text>
+                          )}
+                          {cost && (
+                            <Text size="xs" c="dimmed">
+                              avg. {formatCost(cost)}
+                            </Text>
+                          )}
                         </Group>
                       </Stack>
                     </th>
@@ -223,32 +244,44 @@ export default function ResultsMatrix({ data }) {
                   const result = getResultForVariation(
                     pmVariation.promptId,
                     variableVariation,
-                    pmVariation.model,
+                    pmVariation.provider,
                     data,
                   )
                   return (
                     <td className={classes["output-cell"]} key={k}>
                       {result ? (
-                        <Stack align="center" justify="between" h="100%">
-                          <ChatMessage data={result.output} mah={200} compact />
+                        <>
+                          {result.status === "success" ? (
+                            <Stack align="center" justify="between" h="100%">
+                              <ChatMessage
+                                data={result.output}
+                                mah={200}
+                                compact
+                              />
 
-                          <HoverCard width={500}>
-                            <HoverCard.Target>
-                              <Badge color={result.passed ? "green" : "red"}>
-                                {result.passed ? "Passed" : "Failed"}
-                              </Badge>
-                            </HoverCard.Target>
-                            <HoverCard.Dropdown>
-                              <ResultDetails details={result.results} />
-                            </HoverCard.Dropdown>
-                          </HoverCard>
-                          <Group gap="xs">
-                            <Text c="dimmed" size="xs">
-                              {(+result.duration / 1000).toFixed(2)}s -{" "}
-                              {formatCost(result.cost)}
-                            </Text>
-                          </Group>
-                        </Stack>
+                              <HoverCard width={500}>
+                                <HoverCard.Target>
+                                  <Badge
+                                    color={result.passed ? "green" : "red"}
+                                  >
+                                    {result.passed ? "Passed" : "Failed"}
+                                  </Badge>
+                                </HoverCard.Target>
+                                <HoverCard.Dropdown>
+                                  <ResultDetails details={result.results} />
+                                </HoverCard.Dropdown>
+                              </HoverCard>
+                              <Group gap="xs">
+                                <Text c="dimmed" size="xs">
+                                  {(+result.duration / 1000).toFixed(2)}s -{" "}
+                                  {formatCost(result.cost)}
+                                </Text>
+                              </Group>
+                            </Stack>
+                          ) : (
+                            <Text color="red">{result.error || "Error"}</Text>
+                          )}
+                        </>
                       ) : (
                         <Badge color="gray">N/A</Badge>
                       )}
