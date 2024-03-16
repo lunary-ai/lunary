@@ -13,7 +13,3 @@ alter table evaluation_result add column error text;
 alter table evaluation_result alter column results DROP NOT NULL;
 alter table evaluation_result alter column output DROP NOT NULL;
 alter table evaluation_result alter column model DROP NOT NULL;
-
-alter table org add column sso_config jsonb;
-alter table org add column domain text;
-alter table org add column sso_method text;

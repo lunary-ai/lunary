@@ -12,16 +12,18 @@ import {
 import { useForm } from "@mantine/form"
 import { IconAnalyze, IconAt } from "@tabler/icons-react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import analytics from "@/utils/analytics"
 import { fetcher } from "@/utils/fetcher"
 import { NextSeo } from "next-seo"
 import { useAuth } from "@/utils/auth"
+import { useRouter } from "next/router"
 
 function LoginPage() {
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [step, setStep] = useState<"email" | "password" | "sso">("email")
+  const [step, setStep] = useState<"email" | "password" | "saml">("email")
   const [ssoURI, setSsoURI] = useState<string | null>(null)
   const auth = useAuth()
 
@@ -41,7 +43,7 @@ function LoginPage() {
   async function determineAuthMethod(email: string) {
     setLoading(true)
     try {
-      const { method, redirectURI } = await fetcher.post("/auth/method", {
+      const { method, redirect } = await fetcher.post("/auth/method", {
         arg: {
           email,
         },
@@ -49,10 +51,10 @@ function LoginPage() {
 
       if (method === "password") {
         setStep("password")
-      } else if (method === "sso") {
-        setSsoURI(redirectURI)
-        setStep("sso")
-        window.location.href = redirectURI
+      } else if (method === "saml") {
+        setSsoURI(redirect)
+        setStep("saml")
+        window.location.href = redirect
       }
     } catch (error) {
       console.error(error)
@@ -91,6 +93,31 @@ function LoginPage() {
     setLoading(false)
   }
 
+  useEffect(() => {
+    const exchangeToken = async (ott) => {
+      setLoading(true)
+      try {
+        const { token } = await fetcher.post("/auth/exchange-token", {
+          arg: {
+            onetimeToken: ott,
+          },
+        })
+        if (token) {
+          auth.setJwt(token)
+          analytics.track("Login", { method: "saml" })
+        }
+      } catch (error) {
+        console.error(error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    const ott = router.query.ott
+
+    if (ott) exchangeToken(ott)
+  }, [router.query.ott])
+
   return (
     <Container pt="60" size="600">
       <NextSeo title="Login" />
@@ -107,7 +134,12 @@ function LoginPage() {
           </Text>
 
           {step === "email" && (
-            <form onSubmit={() => determineAuthMethod(form.values.email)}>
+            <form
+              onSubmit={(e) => {
+                determineAuthMethod(form.values.email)
+                e.preventDefault()
+              }}
+            >
               <Stack>
                 <TextInput
                   leftSection={<IconAt size="16" />}
@@ -165,6 +197,15 @@ function LoginPage() {
                 </Button>
               </Stack>
             </form>
+          )}
+
+          {step === "saml" && (
+            <p>
+              Redirecting to your SSO login.
+              <br />
+              If you are not redirected in 5s,{" "}
+              <Anchor href={ssoURI || ""}>click here</Anchor>.
+            </p>
           )}
 
           <Text size="sm" mt="sm" style={{ textAlign: "center" }}>

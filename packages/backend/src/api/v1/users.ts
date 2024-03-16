@@ -15,19 +15,7 @@ users.get("/me/org", async (ctx: Context) => {
 
   // TODO: (low priority) merge queries
   const [org] = await sql`
-      select
-        id,
-        limited,
-        name,
-        plan,
-        plan_period,
-        canceled,
-        play_allowance,
-        stripe_customer
-      from
-        org
-      where
-        id = (select org_id from account where id = ${userId})
+      select * from org where id = (select org_id from account where id = ${userId})
     `
 
   if (!org) {

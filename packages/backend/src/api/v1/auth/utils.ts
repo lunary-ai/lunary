@@ -4,10 +4,13 @@ import * as jose from "jose"
 import { SignJWT } from "jose"
 import { Next } from "koa"
 import * as argon2 from "argon2"
-import msal from "@azure/msal-node"
 
 import bcrypt from "bcrypt"
 import { validateUUID } from "@/src/utils/misc"
+
+export function sanitizeEmail(email: string) {
+  return email.toLowerCase().trim()
+}
 
 export async function verifyPassword(
   password: string,
@@ -31,6 +34,7 @@ export async function hashPassword(password: string): Promise<string> {
 }
 
 const ONE_MONTH = 60 * 60 * 24 * 30
+
 export function signJwt(
   payload: any,
   expiresIn: number = ONE_MONTH,

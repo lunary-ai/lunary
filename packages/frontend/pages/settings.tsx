@@ -1,5 +1,3 @@
-import { useState } from "react"
-
 import LineChart from "@/components/Analytics/LineChart"
 import CopyText from "@/components/Blocks/CopyText"
 
@@ -8,25 +6,20 @@ import {
   Button,
   Card,
   Container,
-  FocusTrap,
   Group,
   Popover,
   Stack,
   Text,
-  TextInput,
   Title,
 } from "@mantine/core"
-import { IconPencil, IconUserPlus } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import Router from "next/router"
 
-import { useOrg, useUser, useProject, useProjectSWR } from "@/utils/dataHooks"
+import { useOrg, useUser, useProject } from "@/utils/dataHooks"
 import useSWR from "swr"
-import { openUpgrade } from "../components/Layout/UpgradeModal"
 import RenamableField from "@/components/Blocks/RenamableField"
 
 export default function AppAnalytics() {
-  const { user: currentUser } = useUser()
   const { org } = useOrg()
   const { update, project, setProjectId, drop } = useProject()
 
@@ -40,7 +33,7 @@ export default function AppAnalytics() {
   return (
     <Container className="unblockable">
       <NextSeo title="Settings" />
-      <Stack gap="lg">
+      <Stack gap="xl">
         <LineChart
           title={
             <RenamableField
