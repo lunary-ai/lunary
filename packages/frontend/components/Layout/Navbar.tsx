@@ -57,7 +57,7 @@ export default function Navbar() {
     setSendingEmail(true)
 
     const ok = await errorHandler(
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/users/send-verification`, {
+      fetch(`${window.API_URL}/v1/users/send-verification`, {
         method: "POST",
         body: JSON.stringify({
           email: user?.email,

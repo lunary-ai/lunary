@@ -1,8 +1,8 @@
 import Router from "next/router"
-import { signOut } from "./auth"
-import { showErrorNotification } from "./errors"
+import { signOut } from "../auth"
+import { showErrorNotification } from "../errors"
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL
+const BASE_URL = window.API_URL as string
 
 export function buildUrl(path: string) {
   if (path.includes("/auth")) {
@@ -143,7 +143,7 @@ async function handleResponse(res: Response) {
   return res.json()
 }
 
-export const fetcher = {
+export const clientFetcher = {
   get,
   getFile,
   getText,
