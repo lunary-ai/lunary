@@ -85,7 +85,7 @@ function RenderPrice({ price, period }) {
 
 export function UpgradePlans({ highlight }: { highlight?: string }) {
   const { org } = useOrg()
-  const [period, setPeriod] = useState("monthly")
+  const [period, setPeriod] = useState("yearly")
   const [loading, setLoading] = useState(null)
 
   const plan = org?.plan || "free"
@@ -158,7 +158,6 @@ export function UpgradePlans({ highlight }: { highlight?: string }) {
         value={period}
         onChange={setPeriod}
         data={[
-          { label: "Monthly", value: "monthly" },
           {
             label: (
               <Group ml={6} align="center" gap={5} wrap="nowrap">
@@ -170,6 +169,7 @@ export function UpgradePlans({ highlight }: { highlight?: string }) {
             ),
             value: "yearly",
           },
+          { label: "Monthly", value: "monthly" },
         ]}
       />
 

@@ -1,8 +1,7 @@
 import Steps from "@/components/Blocks/Steps"
 import Paywall from "@/components/Layout/Paywall"
 import { useChecklists, useDatasets, useProject } from "@/utils/dataHooks"
-import errorHandler from "@/utils/errors"
-import { fetcher, getHeaders, buildUrl, getStream } from "@/utils/fetcher"
+import { fetcher } from "@/utils/fetcher"
 
 import {
   Anchor,
@@ -27,7 +26,6 @@ import { ChecklistModal } from "./checklists"
 import ProviderEditor from "@/components/Prompts/Provider"
 import { MODELS, Provider } from "shared"
 import { useLocalStorage } from "@mantine/hooks"
-import { notifications } from "@mantine/notifications"
 
 const FEATURE_LIST = [
   "Define assertions to test variations of prompts",
@@ -134,7 +132,7 @@ export default function NewEvaluation() {
     try {
       setProgress(0)
 
-      await getStream(
+      await fetcher.getStream(
         `/evaluations?projectId=${project.id}`,
         {
           datasetId,
@@ -291,11 +289,6 @@ export default function NewEvaluation() {
               <Anchor href="#" mt="sm" onClick={() => setChecklistModal(true)}>
                 + new
               </Anchor>
-              {/* <FilterPicker
-                restrictTo={(filter) => !filter.disableInEvals}
-                value={checks}
-                onChange={(checks) => setChecks(checks)}
-              /> */}
             </Steps.Step>
           </Steps>
 

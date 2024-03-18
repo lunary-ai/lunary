@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import CopyText from "@/components/Blocks/CopyText"
 import UserAvatar from "@/components/Blocks/UserAvatar"
@@ -9,6 +9,7 @@ import {
   Button,
   Card,
   Container,
+  Flex,
   Group,
   Menu,
   Modal,
@@ -16,9 +17,16 @@ import {
   Stack,
   Table,
   Text,
+  TextInput,
+  Textarea,
   Title,
 } from "@mantine/core"
-import { IconDotsVertical, IconTrash, IconUserPlus } from "@tabler/icons-react"
+import {
+  IconDotsVertical,
+  IconDownload,
+  IconTrash,
+  IconUserPlus,
+} from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 
 import RenamableField from "@/components/Blocks/RenamableField"
@@ -26,6 +34,7 @@ import { useOrg, useOrgUser, useUser } from "@/utils/dataHooks"
 import { SEAT_ALLOWANCE } from "@/utils/pricing"
 import { useDisclosure } from "@mantine/hooks"
 import { openUpgrade } from "../components/Layout/UpgradeModal"
+import { fetcher } from "@/utils/fetcher"
 
 function Invite() {
   const { org } = useOrg()
@@ -111,14 +120,126 @@ function UserMenu({ user }) {
   )
 }
 
+function SAMLConfig() {
+  const { org, updateOrg, mutate } = useOrg()
+
+  const [idpXml, setIdpXml] = useState(org?.saml_idp_xml)
+  const [idpLoading, setIdpLoading] = useState(false)
+  const [spLoading, setSpLoading] = useState(false)
+
+  // Check if URL is supplied, if so download the xml
+  async function addIdpXml() {
+    let content = idpXml
+
+    setIdpLoading(true)
+
+    if (idpXml.startsWith("http")) {
+      const res = await fetcher.post(`/auth/saml/${org?.id}/download-idp-xml`, {
+        arg: {
+          url: idpXml,
+        },
+      })
+
+      console.log(res)
+    } else {
+      await updateOrg({ id: org?.id, saml_idp_xml: content })
+    }
+
+    mutate()
+
+    setIdpLoading(false)
+  }
+
+  async function downloadSpXml() {
+    setSpLoading(true)
+    const response = await fetcher.getText(`/auth/saml/${org?.id}/metadata/`)
+    const blob = new Blob([response], { type: "text/xml" })
+    const downloadUrl = window.URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = downloadUrl
+    link.setAttribute("download", "SP_Metadata.xml")
+    document.body.appendChild(link)
+    link.click()
+    link.parentNode.removeChild(link)
+    setSpLoading(false)
+  }
+
+  return (
+    <Card withBorder p="lg">
+      <Stack gap="lg">
+        <Title order={3}>SAML configuration</Title>
+        {/* <TextInput value={org?.email_domain} label="Users email domain" /> */}
+
+        <Text>
+          1. To enable SAML, you need to provide your Identity Provider (IDP)
+          XML.
+        </Text>
+        <Flex gap="md">
+          <TextInput
+            style={{ flex: 1 }}
+            value={idpXml}
+            placeholder="Paste the URL or content of your IDP XML here"
+            w="max-content"
+            onChange={(e) => setIdpXml(e.currentTarget.value)}
+          />
+
+          <Button
+            variant="light"
+            loading={idpLoading}
+            onClick={() => {
+              addIdpXml()
+            }}
+          >
+            Add IDP XML
+          </Button>
+        </Flex>
+
+        <Text>2. Setup the configuration in your Identity Provider (IDP)</Text>
+
+        <Group>
+          <Text>Identifier (Entity ID)</Text>
+          <CopyText c="blue" value={"urn:lunary.ai:saml:sp"} />
+        </Group>
+
+        <Group wrap="nowrap">
+          <Text>Assertion Consumer Service (ACS) URL</Text>
+          <CopyText
+            c="blue"
+            value={`${process.env.NEXT_PUBLIC_API_URL}/auth/saml/${org?.id}/acs`}
+          />
+        </Group>
+
+        <Group wrap="nowrap">
+          <Text>Single Logout Service (SLO) URL</Text>
+          <CopyText
+            c="blue"
+            value={`${process.env.NEXT_PUBLIC_API_URL}/auth/saml/${org?.id}/slo`}
+          />
+        </Group>
+
+        <Button
+          onClick={() => downloadSpXml()}
+          loading={spLoading}
+          variant="default"
+          rightSection={<IconDownload size="14" />}
+        >
+          Download Service Provider Metadata XML
+        </Button>
+      </Stack>
+    </Card>
+  )
+}
+
 export default function Team() {
   const { user: currentUser } = useUser()
   const { org, updateOrg, mutate } = useOrg()
 
+  const samlEnabled = org?.samlEnabled
+
   return (
     <Container className="unblockable">
       <NextSeo title="Team" />
-      <Stack gap="lg">
+      <Stack gap="xl">
         <Card withBorder p={0}>
           <Group justify="space-between" align="center" p="lg">
             <RenamableField
@@ -166,11 +287,9 @@ export default function Team() {
           </Table>
         </Card>
         {org?.plan && (
-          <Card withBorder radius="md" padding="xl">
-            <Stack gap="sm">
-              <Text fz="md" fw={700} size="lg">
-                Seat Allowance
-              </Text>
+          <Card withBorder p="lg">
+            <Stack gap="lg">
+              <Title order={3}>Seat Allowance</Title>
               <Text fz="lg" fw={500}>
                 {org?.users?.length} / {SEAT_ALLOWANCE[org?.plan]} users
               </Text>
@@ -185,6 +304,7 @@ export default function Team() {
             </Stack>
           </Card>
         )}
+        {samlEnabled && <SAMLConfig />}
       </Stack>
     </Container>
   )

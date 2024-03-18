@@ -10,6 +10,8 @@
     "radar:dev": "tsx --env-file=.env --watch src/radar.ts"
   },
   "dependencies": {
+    "@authenio/samlify-node-xmllint": "^2.0.0",
+    "@azure/msal-node": "^2.6.4",
     "@json2csv/plainjs": "^7.0.5",
     "@koa/cors": "^5.0.0",
     "@sentry/node": "^7.99.0",
@@ -32,6 +34,7 @@
     "postgres": "^3.4.3",
     "prexit": "^2.2.0",
     "rouge": "^1.0.3",
+    "samlify": "^2.8.11",
     "shared": "*",
     "stripe": "^14.14.0",
     "washyourmouthoutwithsoap": "^1.0.2",
