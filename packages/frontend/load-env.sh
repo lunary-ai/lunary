@@ -5,9 +5,11 @@
 # TODO: maybe replace by node code for windows compatibility?
 
 # Loads .env
-set -o allexport
-source .env 
-set +o allexport
+if [ -f .env ]; then
+  set -o allexport
+  source .env 
+  set +o allexport
+fi
 
 
 if [ -z "$API_URL" ]; then
