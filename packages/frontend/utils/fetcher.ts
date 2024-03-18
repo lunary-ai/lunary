@@ -26,6 +26,12 @@ function get(path) {
   }).then(handleResponse)
 }
 
+function getText(path) {
+  return fetch(buildUrl(path), {
+    headers: getHeaders(),
+  }).then((res) => res.text())
+}
+
 async function getFile(path) {
   const res = await fetch(buildUrl(path), {
     headers: getHeaders(),
@@ -55,7 +61,7 @@ async function getFile(path) {
   window.URL.revokeObjectURL(url)
 }
 
-export async function getStream(url, args, onChunk) {
+async function getStream(url, args, onChunk) {
   const res = await fetch(buildUrl(url), {
     method: "POST",
 
@@ -68,7 +74,6 @@ export async function getStream(url, args, onChunk) {
 
   if (!res.ok) {
     const { error, message } = await res.json()
-
     showErrorNotification(error, message)
     throw new Error(message)
   }
@@ -84,15 +89,11 @@ export async function getStream(url, args, onChunk) {
   while (true) {
     const { done, value } = await reader.read()
 
-    if (done) {
-      break
-    }
+    if (done) break
 
     const chunk = decoder.decode(value, { stream: true }).trim().split("\n")
 
-    for (const item of chunk) {
-      onChunk(item)
-    }
+    for (const item of chunk) onChunk(item)
   }
 }
 
@@ -145,6 +146,8 @@ async function handleResponse(res: Response) {
 export const fetcher = {
   get,
   getFile,
+  getText,
+  getStream,
   post,
   patch,
   delete: del,

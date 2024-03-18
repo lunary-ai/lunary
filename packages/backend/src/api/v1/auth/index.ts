@@ -5,15 +5,42 @@ import { sendTelegramMessage } from "@/src/utils/notifications"
 import { sendEmail } from "@/src/utils/sendEmail"
 import Router from "koa-router"
 import { z } from "zod"
-import { hashPassword, signJwt, verifyJwt, verifyPassword } from "./utils"
+import {
+  hashPassword,
+  sanitizeEmail,
+  signJwt,
+  verifyJwt,
+  verifyPassword,
+} from "./utils"
+import saml, { getLoginUrl } from "./saml"
 
 const auth = new Router({
   prefix: "/auth",
 })
 
+auth.post("/method", async (ctx: Context) => {
+  const { email } = ctx.request.body as { email: string }
+
+  const [samlOrg] = await sql`
+    select org.* from org
+    join account on account.org_id = org.id
+    where account.email = ${sanitizeEmail(email)}
+    and org.saml_enabled = true
+    and org.saml_idp_xml is not null
+  `
+
+  if (!samlOrg || !samlOrg.samlIdpXml) {
+    ctx.body = { method: "password" }
+  } else {
+    const url = await getLoginUrl(samlOrg.id)
+
+    ctx.body = { method: "saml", redirect: url }
+  }
+})
+
 auth.post("/signup", async (ctx: Context) => {
   const bodySchema = z.object({
-    email: z.string().email(),
+    email: z.string().email().transform(sanitizeEmail),
     password: z.string().min(6),
     name: z.string(),
     orgName: z.string().optional(),
@@ -60,7 +87,9 @@ auth.post("/signup", async (ctx: Context) => {
         orgId: org.id,
         role: "admin",
         verified: process.env.SKIP_EMAIL_VERIFY ? true : false,
+        lastLoginAt: new Date(),
       }
+
       const [user] = await sql`
         insert into account ${sql(newUser)} 
         returning *
@@ -138,7 +167,7 @@ auth.post("/signup", async (ctx: Context) => {
 
 auth.post("/login", async (ctx: Context) => {
   const bodySchema = z.object({
-    email: z.string().email(),
+    email: z.string().email().transform(sanitizeEmail),
     password: z.string(),
   })
 
@@ -171,6 +200,9 @@ auth.post("/login", async (ctx: Context) => {
     return
   }
 
+  // update last login
+  await sql`update account set last_login_at = now() where id = ${user.id}`
+
   const token = await signJwt({
     userId: user.id,
     email: user.email,
@@ -181,8 +213,19 @@ auth.post("/login", async (ctx: Context) => {
 })
 
 auth.post("/request-password-reset", async (ctx: Context) => {
+  const bodySchema = z.object({
+    email: z.string().email().transform(sanitizeEmail),
+  })
+
   try {
-    const { email } = ctx.request.body as { email: string }
+    const body = bodySchema.safeParse(ctx.request.body)
+    if (!body.success) {
+      ctx.status = 400
+      ctx.body = { error: "Invalid email format" }
+      return
+    }
+
+    const { email } = body.data
     const [user] = await sql`select id from account where email = ${email}`
 
     const ONE_HOUR = 60 * 60
@@ -216,7 +259,7 @@ auth.post("/reset-password", async (ctx: Context) => {
   const passwordHash = await hashPassword(password)
 
   const [user] = await sql`
-    update account set password_hash = ${passwordHash} where email = ${email} returning *
+    update account set password_hash = ${passwordHash}, last_login_at = NOW() where email = ${email} returning *
   `
 
   const authToken = await signJwt({
@@ -227,5 +270,36 @@ auth.post("/reset-password", async (ctx: Context) => {
 
   ctx.body = { token: authToken }
 })
+
+// Used after the SAML flow to exchange the onetime token for an auth token
+auth.post("/exchange-token", async (ctx: Context) => {
+  const { onetimeToken } = ctx.request.body as { onetimeToken: string }
+
+  await verifyJwt(onetimeToken)
+
+  // get account with onetime_token = token
+  const [account] = await sql`
+    update account set onetime_token = null where onetime_token = ${onetimeToken} returning *
+  `
+
+  if (!account) {
+    ctx.throw(401, "Invalid onetime token")
+  }
+
+  const oneDay = 60 * 60 * 24
+
+  const authToken = await signJwt(
+    {
+      userId: account.id,
+      email: account.email,
+      orgId: account.orgId,
+    },
+    oneDay,
+  )
+
+  ctx.body = { token: authToken }
+})
+
+auth.use(saml.routes())
 
 export default auth

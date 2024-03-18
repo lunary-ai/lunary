@@ -45,54 +45,57 @@ export default function Billing() {
   return (
     <Container className="unblockable">
       <NextSeo title="Billing" />
-      <Stack gap="lg">
-        <Group justify="space-between">
-          <Title>Billing</Title>
+      <Stack gap="xl">
+        <Stack gap="md">
+          <Group justify="space-between">
+            <Title>Billing</Title>
 
-          {canUpgrade && (
-            <Button
-              variant="gradient"
-              size="md"
-              pr="lg"
-              gradient={{ from: "#0788ff", to: "#9900ff", deg: 30 }}
-              leftSection={<IconBolt fill="#fff" size={18} />}
-              onClick={() => openUpgrade()}
+            {canUpgrade && (
+              <Button
+                variant="gradient"
+                size="md"
+                pr="lg"
+                gradient={{ from: "#0788ff", to: "#9900ff", deg: 30 }}
+                leftSection={<IconBolt fill="#fff" size={18} />}
+                onClick={() => openUpgrade()}
+              >
+                Upgrade
+              </Button>
+            )}
+          </Group>
+
+          {org?.limited && (
+            <Alert
+              color="red"
+              variant="outline"
+              icon={<IconInfoTriangle />}
+              title="Allowance Reached"
             >
-              Upgrade
-            </Button>
+              Request allowance limit reached. Please upgrade to restore access.
+            </Alert>
           )}
-        </Group>
 
-        {org?.limited && (
-          <Alert
-            color="red"
-            variant="outline"
-            icon={<IconInfoTriangle />}
-            title="Allowance Reached"
-          >
-            Request allowance limit reached. Please upgrade to restore access.
-          </Alert>
-        )}
-
-        {org?.canceled ? (
-          <Alert
-            color="red"
-            fz="xl"
-            variant="filled"
-            icon={<IconInfoTriangle />}
-          >
-            <Text fz="lg">
-              Your plan will cancel soon. Upon return to the free plan, any data
-              older than 30 days will be permanently deleted as per the free
-              plan limits. Reactivate your plan to ensure uninterrupted access.
+          {org?.canceled ? (
+            <Alert
+              color="red"
+              fz="xl"
+              variant="filled"
+              icon={<IconInfoTriangle />}
+            >
+              <Text fz="lg">
+                Your plan will cancel soon. Upon return to the free plan, any
+                data older than 30 days will be permanently deleted as per the
+                free plan limits. Reactivate your plan to ensure uninterrupted
+                access.
+              </Text>
+            </Alert>
+          ) : (
+            <Text size="lg">
+              You are currently on the <Badge>{plan}</Badge> plan{" "}
+              {plan ? `(billed ${org?.planPeriod})` : ""}.
             </Text>
-          </Alert>
-        ) : (
-          <Text size="lg">
-            You are currently on the <Badge>{plan}</Badge> plan{" "}
-            {plan ? `(billed ${org?.planPeriod})` : ""}.
-          </Text>
-        )}
+          )}
+        </Stack>
 
         {!["enterprise", "custom"].includes(plan) && (
           <Card withBorder radius="md" padding="xl">

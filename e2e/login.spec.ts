@@ -13,6 +13,8 @@ test("logout and login flow", async ({ page }) => {
   await page.getByPlaceholder("Your email").click()
   await page.getByPlaceholder("Your email").fill("test@lunary.ai")
 
+  await page.getByTestId("continue-button").click()
+
   await page.getByPlaceholder("Your password").click()
   await page.getByPlaceholder("Your password").fill("testtest")
 

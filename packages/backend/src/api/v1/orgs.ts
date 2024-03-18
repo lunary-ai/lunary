@@ -28,6 +28,7 @@ orgs.get("/", async (ctx: Context) => {
       verified,
       plan_period,
       canceled,
+      saml_enabled,
       stripe_customer,
       stripe_subscription,  
       name

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import {
-  Badge,
   Box,
   Button,
   Card,
@@ -10,8 +9,6 @@ import {
   SegmentedControl,
   Stack,
   Text,
-  Textarea,
-  Tooltip,
 } from "@mantine/core"
 
 import {
@@ -20,7 +17,6 @@ import {
   IconCheck,
   IconDeviceFloppy,
   IconGitCommit,
-  IconInfoCircle,
 } from "@tabler/icons-react"
 import { useRouter } from "next/router"
 import analytics from "../../utils/analytics"
@@ -40,13 +36,10 @@ import {
   useUser,
   useProject,
 } from "@/utils/dataHooks"
-import { buildUrl, fetcher, getHeaders, getStream } from "@/utils/fetcher"
+import { fetcher } from "@/utils/fetcher"
 import Empty from "@/components/Layout/Empty"
 
-import {
-  useFilteredPromptVariables,
-  usePromptVariables,
-} from "@/utils/promptsHooks"
+import { useFilteredPromptVariables } from "@/utils/promptsHooks"
 import { openConfirmModal } from "@mantine/modals"
 import { useGlobalShortcut } from "@/utils/hooks"
 import { ParamItem } from "@/components/Prompts/Provider"
@@ -289,7 +282,7 @@ function Playground() {
     setStreaming(true)
 
     try {
-      await getStream(
+      await fetcher.getStream(
         `/orgs/${org?.id}/playground`,
         {
           content: templateVersion.content,
