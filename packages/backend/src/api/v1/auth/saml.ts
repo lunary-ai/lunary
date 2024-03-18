@@ -15,7 +15,7 @@ const route = new Router({
   prefix: "/saml/:orgId",
 })
 
-const BASE_URL = process.env.SAML_BASE_URL || process.env.NEXT_PUBLIC_API_URL
+const BASE_URL = process.env.SAML_BASE_URL || process.env.API_URL
 
 // This function generates a secure, one-time-use token
 export async function generateOneTimeToken(): Promise<string> {

@@ -11,6 +11,7 @@ import {
   Container,
   Flex,
   Group,
+  Loader,
   Menu,
   Modal,
   Progress,
@@ -121,6 +122,10 @@ function UserMenu({ user }) {
 }
 
 function SAMLConfig() {
+  if (typeof window !== "undefined") {
+    return <Loader />
+  }
+
   const { org, updateOrg, mutate } = useOrg()
 
   const [idpXml, setIdpXml] = useState(org?.saml_idp_xml)
@@ -210,7 +215,7 @@ function SAMLConfig() {
               <Table.Td>
                 <CopyText
                   c="blue"
-                  value={`${process.env.NEXT_PUBLIC_API_URL}/auth/saml/${org?.id}/acs`}
+                  value={`${window.API_URL}/auth/saml/${org?.id}/acs`}
                 />
               </Table.Td>
             </Table.Tr>
@@ -219,17 +224,14 @@ function SAMLConfig() {
               <Table.Td>
                 <CopyText
                   c="blue"
-                  value={`${process.env.NEXT_PUBLIC_API_URL}/auth/saml/${org?.id}/slo`}
+                  value={`${window.API_URL}/auth/saml/${org?.id}/slo`}
                 />
               </Table.Td>
             </Table.Tr>
             <Table.Tr>
               <Table.Td>Sign on URL:</Table.Td>
               <Table.Td>
-                <CopyText
-                  c="blue"
-                  value={`${process.env.NEXT_PUBLIC_API_URL}/login`}
-                />
+                <CopyText c="blue" value={`${window.API_URL}/login`} />
               </Table.Td>
             </Table.Tr>
           </Table.Tbody>
