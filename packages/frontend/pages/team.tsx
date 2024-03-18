@@ -170,9 +170,8 @@ function SAMLConfig() {
         <Title order={3}>SAML configuration</Title>
         {/* <TextInput value={org?.email_domain} label="Users email domain" /> */}
 
-        <Text>
-          1. To enable SAML, you need to provide your Identity Provider (IDP)
-          XML.
+        <Text fw="bold">
+          1. Provider your Identity Provider (IDP) Metadata XML.
         </Text>
         <Flex gap="md">
           <TextInput
@@ -194,28 +193,47 @@ function SAMLConfig() {
           </Button>
         </Flex>
 
-        <Text>2. Setup the configuration in your Identity Provider (IDP)</Text>
+        <Text fw="bold">
+          2. Setup the configuration in your Identity Provider (IDP)
+        </Text>
 
-        <Group>
-          <Text>Identifier (Entity ID)</Text>
-          <CopyText c="blue" value={"urn:lunary.ai:saml:sp"} />
-        </Group>
-
-        <Group wrap="nowrap">
-          <Text>Assertion Consumer Service (ACS) URL</Text>
-          <CopyText
-            c="blue"
-            value={`${process.env.NEXT_PUBLIC_API_URL}/auth/saml/${org?.id}/acs`}
-          />
-        </Group>
-
-        <Group wrap="nowrap">
-          <Text>Single Logout Service (SLO) URL</Text>
-          <CopyText
-            c="blue"
-            value={`${process.env.NEXT_PUBLIC_API_URL}/auth/saml/${org?.id}/slo`}
-          />
-        </Group>
+        <Table>
+          <Table.Tbody>
+            <Table.Tr>
+              <Table.Td>Identifier (Entity ID):</Table.Td>
+              <Table.Td>
+                <CopyText c="blue" value={"urn:lunary.ai:saml:sp"} />
+              </Table.Td>
+            </Table.Tr>
+            <Table.Tr>
+              <Table.Td>Assertion Consumer Service (ACS) URL:</Table.Td>
+              <Table.Td>
+                <CopyText
+                  c="blue"
+                  value={`${process.env.NEXT_PUBLIC_API_URL}/auth/saml/${org?.id}/acs`}
+                />
+              </Table.Td>
+            </Table.Tr>
+            <Table.Tr>
+              <Table.Td>Single Logout Service (SLO) URL:</Table.Td>
+              <Table.Td>
+                <CopyText
+                  c="blue"
+                  value={`${process.env.NEXT_PUBLIC_API_URL}/auth/saml/${org?.id}/slo`}
+                />
+              </Table.Td>
+            </Table.Tr>
+            <Table.Tr>
+              <Table.Td>Sign on URL:</Table.Td>
+              <Table.Td>
+                <CopyText
+                  c="blue"
+                  value={`${process.env.NEXT_PUBLIC_API_URL}/login`}
+                />
+              </Table.Td>
+            </Table.Tr>
+          </Table.Tbody>
+        </Table>
 
         <Button
           onClick={() => downloadSpXml()}
