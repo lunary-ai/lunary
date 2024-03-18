@@ -2,12 +2,13 @@
   "name": "@lunary/backend",
   "main": "index.ts",
   "scripts": {
-    "dev": "tsx --env-file=.env --watch src/index.ts",
-    "dev:test": "tsx src/index.ts",
     "start": "tsx src/index.ts",
+    "start:radar": "tsx src/radar.ts",
     "build": "tsup src/index.ts --format esm",
-    "radar": "tsx src/radar.ts",
-    "radar:dev": "tsx --env-file=.env --watch src/radar.ts"
+    "dev": "tsx --env-file=.env --watch src/index.ts",
+    "dev:radar": "npm -w packages/backend run dev",
+    "dev:all": "concurrently -n backend,radar \"npm run start\" \"npm run start:radar\"",
+    "test": "tsx src/index.ts"
   },
   "dependencies": {
     "@authenio/samlify-node-xmllint": "^2.0.0",
