@@ -48,7 +48,7 @@ redirections.get("/api/v1/template", async (ctx: Context) => {
   // So we need to fetch the latest template version here
 
   const latestTemplateVersion = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/v1/template_versions/latest?slug=${slug}`,
+    `${process.env.API_URL}/v1/template_versions/latest?slug=${slug}`,
     {
       headers: {
         Authorization: `Bearer ${app_id}`,
