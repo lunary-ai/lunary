@@ -2,10 +2,10 @@
   "name": "@lunary/frontend",
   "main": "pages/index.ts",
   "scripts": {
-    "dev": "npm run prepare && next dev -p 8080",
+    "dev": "npm run load-env && next dev -p 8080",
     "build": "next build",
-    "prepare": "sh ./prepare.sh",
-    "start": "npm run prepare && next start -p 8080"
+    "load-env": "sh ./load-env.sh",
+    "start": "npm run load-env && next start -p 8080"
   },
   "dependencies": {
     "@calcom/embed-react": "^1.3.0",
