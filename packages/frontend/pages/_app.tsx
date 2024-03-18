@@ -15,6 +15,7 @@ import { fetcher } from "@/utils/fetcher"
 import localFont from "next/font/local"
 import { SWRConfig } from "swr"
 import { AuthProvider } from "@/utils/auth"
+import Script from "next/script"
 
 export const circularPro = localFont({
   display: "swap",
@@ -117,6 +118,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <Head>
         <link href="https://lunary.ai/logo.png" rel="icon" type="image/png" />
       </Head>
+      <Script src="/config.js" strategy="beforeInteractive" />
       <AuthProvider>
         <SWRConfig
           value={{

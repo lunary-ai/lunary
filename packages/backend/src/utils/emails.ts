@@ -13,7 +13,7 @@ export async function sendVerifyEmail(email: string, name: string) {
 
   const token = await signJwt({ email })
 
-  const confirmLink = `${process.env.NEXT_PUBLIC_API_URL}/v1/users/verify-email?token=${token}`
+  const confirmLink = `${process.env.API_URL}/v1/users/verify-email?token=${token}`
 
   await sendEmail(CONFIRM_EMAIL(email, name, confirmLink))
 }
