@@ -75,4 +75,5 @@ jobs:
           script: |
             cd /opt/lunary
             docker compose pull
-            docker compose restart
+            docker compose down
+            docker compose up -d
