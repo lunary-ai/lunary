@@ -3,11 +3,12 @@
   "version": "1.0.0",
   "private": "true",
   "scripts": {
-    "start": "concurrently -n frontend,backend,radar \"npm run start:frontend\" \"npm run start:backend\" \"npm run start:radar\"",
+    "start": "npm run migrate:db && npm run concurrently -n frontend,backend,radar \"npm run start:frontend\" \"npm run start:backend\" \"npm run start:radar\"",
     "start:frontend": "npm -w packages/frontend run start",
     "start:backend": "npm -w packages/backend run start",
     "start:radar": "npm -w packages/backend run start:radar",
     "build:frontend": "npm -w packages/frontend run build",
+    "migrate:db": "npm -w packages/backend migrate:db",
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
     "dev:frontend": "npm -w packages/frontend run dev",
     "dev:backend": "npm -w packages/backend run dev",
@@ -30,7 +31,7 @@
     "@types/node": "^20.11.25",
     "concurrently": "^8.2.2",
     "dotenv": "^16.4.5",
-    "prettier": "^3.2.4",
+    "prettier": "^3.2.5",
     "tsup": "^8.0.1",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
