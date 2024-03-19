@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # This script is necessary because we need to be able to inject API_URL after build time, and Next does not provide and easy way to do that.
 # This should work find both with npm run dev, locally and with docker
 
