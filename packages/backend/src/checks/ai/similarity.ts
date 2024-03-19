@@ -56,13 +56,10 @@ export default async function aiSimilarity(
 ) {
   switch (type) {
     case "cosine":
-      console.log(`Get 1 embed`)
       const embedding1 = await embedText(text1)
 
-      console.log(`Get 2 embed`)
       const embedding2 = await embedText(text2)
 
-      console.log(`Get similarity`)
       const similarity = cosinesim(embedding1, embedding2)
 
       return similarity
