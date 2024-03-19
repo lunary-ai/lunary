@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "npm run load-env && next dev -p 8080",
     "build": "next build",
-    "load-env": "sh ./load-env.sh",
+    "load-env": "bash ./load-env.sh",
     "start": "npm run load-env && next start -p 8080"
   },
   "dependencies": {
