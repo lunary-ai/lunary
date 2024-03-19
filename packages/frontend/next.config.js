@@ -22,6 +22,10 @@ const nextConfig = {
     ],
   },
   async rewrites() {
+    if(!process.env.API_URL) {
+      return []
+    }
+
     return [
       {
         source: "/ingest/:path*",
