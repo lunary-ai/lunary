@@ -26,6 +26,7 @@ export function CONFIRM_EMAIL(
   return {
     subject: `confirm your email`,
     to: [email],
+    reply_to: "hello@lunary.ai",
     from: process.env.GENERIC_SENDER,
 
     text: `Hi ${extractFirstName(name)},
@@ -47,6 +48,7 @@ export function RESET_PASSWORD(email: string, confirmLink: string) {
   return {
     subject: `Reset your password`,
     to: [email],
+    reply_to: "hello@lunary.ai",
     from: process.env.GENERIC_SENDER,
     text: `Hi, 
 
@@ -63,8 +65,8 @@ export function WELCOME_EMAIL(email: string, name: string, projectId: string) {
   return {
     subject: `welcome to Lunary`,
     to: [email],
+    reply_to: "vince@lunary.ai",
     from: process.env.PERSONAL_SENDER || process.env.GENERIC_SENDER,
-
     text: `Hi ${extractFirstName(name)},
 
 I'm Vince, co-founder of lunary. 
@@ -88,6 +90,7 @@ export function UPGRADE_EMAIL(email: string, name: string, plan: string) {
   return {
     subject: `Your account has been upgraded`,
     to: [email],
+    reply_to: "hello@lunary.ai",
     from: process.env.GENERIC_SENDER,
     text: `Hi ${extractFirstName(name)},
 
@@ -106,6 +109,7 @@ export function CANCELED_EMAIL(email: string, name: string) {
     subject: `Important: subscription canceled`,
     to: [email],
     from: process.env.GENERIC_SENDER,
+    reply_to: "hello@lunary.ai",
     text: `Hi ${extractFirstName(name)},
 
 You have canceled your subscription. We're sad to see you go :(
@@ -127,6 +131,7 @@ Vince & Hugh - co-founders of Lunary`,
 export function FULLY_CANCELED_EMAIL(email: string, name: string) {
   return {
     subject: `Sorry to see you go..`,
+    reply_to: "hello@lunary.ai",
     to: [email],
     from: process.env.GENERIC_SENDER,
     text: `Hi ${extractFirstName(name)},

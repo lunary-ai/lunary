@@ -16,5 +16,9 @@ export async function sendEmail(body: any) {
     body: JSON.stringify(body),
   })
 
-  return res.json()
+  if (!res.ok) {
+    throw new Error(`Error sending with resend: ${await res.text()}`)
+  }
+
+  return await res.json()
 }
