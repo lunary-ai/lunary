@@ -39,7 +39,6 @@ export function useGlobalShortcut(shortcuts: Shortcut[]) {
           const isModPressed =
             mod === "mod" ? evt.ctrlKey || evt.metaKey : evt[`${mod}Key`]
           if (isModPressed && evt.key.toLowerCase() === key.toLowerCase()) {
-            console.log("useGlobalShortcut", keyCombination)
             action()
             evt.preventDefault()
           }

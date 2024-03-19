@@ -101,10 +101,6 @@ export async function runEval({
       // run checks
       const { passed, results } = await runChecksOnRun(virtualRun, checks)
 
-      console.log(`---------------------`)
-      console.log(output)
-      console.log(`---------------------`)
-
       // insert into eval_result
       await sql`
       insert into evaluation_result ${sql({
@@ -122,7 +118,6 @@ export async function runEval({
       })}
       `
     } catch (error: any) {
-      console.error(error)
       await sql`
         insert into evaluation_result ${sql({
           status: "error",
