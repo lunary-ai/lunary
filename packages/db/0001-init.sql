@@ -281,7 +281,7 @@ create table dataset (
     project_id uuid not null,
     owner_id uuid not null,
     slug text not null,
-    format VARCHAR DEFAULT 'chat' NOT NULL,
+    format VARCHAR default 'chat' NOT NULL,
     foreign key (project_id) references project(id) on delete cascade,
     foreign key (owner_id) references account(id)
 );
