@@ -6,8 +6,8 @@ import { MantineProvider, createTheme } from "@mantine/core"
 import type { AppProps } from "next/app"
 import Head from "next/head"
 
-import Layout from "@/components/Layout"
-import AnalyticsWrapper from "@/components/Layout/Analytics"
+import Layout from "@/components/layout"
+import AnalyticsWrapper from "@/components/layout/Analytics"
 import { DefaultSeo } from "next-seo"
 import Link from "next/link"
 

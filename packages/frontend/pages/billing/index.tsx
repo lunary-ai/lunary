@@ -1,5 +1,5 @@
-import LineChart from "@/components/Analytics/LineChart"
-import { UpgradePlans, openUpgrade } from "@/components/Layout/UpgradeModal"
+import LineChart from "@/components/analytics/LineChart"
+import { UpgradePlans, openUpgrade } from "@/components/layout/UpgradeModal"
 import errorHandler from "@/utils/errors"
 import { useOrg } from "@/utils/dataHooks"
 import {

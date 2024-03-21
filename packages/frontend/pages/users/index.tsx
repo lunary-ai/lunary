@@ -1,11 +1,11 @@
-import DataTable from "@/components/Blocks/DataTable"
+import DataTable from "@/components/blocks/DataTable"
 
 import { Group, Stack, Text } from "@mantine/core"
 
 import { costColumn, timeColumn } from "@/utils/datatable"
 
-import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
-import Empty from "@/components/Layout/Empty"
+import AppUserAvatar from "@/components/blocks/AppUserAvatar"
+import Empty from "@/components/layout/Empty"
 import { formatAppUser } from "@/utils/format"
 import { IconUsers } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"

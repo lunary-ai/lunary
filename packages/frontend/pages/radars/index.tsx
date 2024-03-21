@@ -1,6 +1,6 @@
-import TinyPercentChart from "@/components/Analytics/TinyPercentChart"
-import FilterPicker from "@/components/Filters/Picker"
-import Paywall from "@/components/Layout/Paywall"
+import TinyPercentChart from "@/components/analytics/TinyPercentChart"
+import FilterPicker from "@/components/filters/Picker"
+import Paywall from "@/components/layout/Paywall"
 import { useRadar, useRadars } from "@/utils/dataHooks"
 import {
   ActionIcon,

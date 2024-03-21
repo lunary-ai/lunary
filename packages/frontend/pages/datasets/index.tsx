@@ -1,5 +1,5 @@
-import OrgUserBadge from "@/components/Blocks/OrgUserBadge"
-import RenamableField from "@/components/Blocks/RenamableField"
+import OrgUserBadge from "@/components/blocks/OrgUserBadge"
+import RenamableField from "@/components/blocks/RenamableField"
 import { useDataset, useDatasets } from "@/utils/dataHooks"
 import { cleanSlug } from "@/utils/format"
 import {

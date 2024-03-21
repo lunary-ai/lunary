@@ -1,4 +1,4 @@
-import DataTable from "@/components/Blocks/DataTable"
+import DataTable from "@/components/blocks/DataTable"
 
 import {
   ActionIcon,
@@ -37,10 +37,10 @@ import {
 import { NextSeo } from "next-seo"
 import { useContext, useEffect, useState } from "react"
 
-import { ChatReplay } from "@/components/Blocks/RunChat"
-import RunInputOutput from "@/components/Blocks/RunInputOutput"
-import SearchBar from "@/components/Blocks/SearchBar"
-import { openUpgrade } from "@/components/Layout/UpgradeModal"
+import { ChatReplay } from "@/components/blocks/RunChat"
+import RunInputOutput from "@/components/blocks/RunInputOutput"
+import SearchBar from "@/components/blocks/SearchBar"
+import { openUpgrade } from "@/components/layout/UpgradeModal"
 import analytics from "@/utils/analytics"
 import { formatDateTime } from "@/utils/format"
 import {
@@ -51,9 +51,9 @@ import {
 } from "@/utils/dataHooks"
 import { useDebouncedState, useDidUpdate } from "@mantine/hooks"
 import Router from "next/router"
-import Empty from "../../components/Layout/Empty"
+import Empty from "../../components/layout/Empty"
 import { ProjectContext } from "../../utils/context"
-import FilterPicker from "@/components/Filters/Picker"
+import FilterPicker from "@/components/filters/Picker"
 import { FilterLogic, deserializeLogic, serializeLogic } from "shared"
 import { fetcher } from "@/utils/fetcher"
 

@@ -1,12 +1,12 @@
-import AgentSummary from "@/components/Analytics/AgentSummary"
-import AnalyticsCard from "@/components/Analytics/AnalyticsCard"
-import BarList from "@/components/Analytics/BarList"
-import LineChart from "@/components/Analytics/LineChart"
-import UsageSummary from "@/components/Analytics/UsageSummary"
+import AgentSummary from "@/components/analytics/AgentSummary"
+import AnalyticsCard from "@/components/analytics/AnalyticsCard"
+import BarList from "@/components/analytics/BarList"
+import LineChart from "@/components/analytics/LineChart"
+import UsageSummary from "@/components/analytics/UsageSummary"
 import { formatAppUser, formatCost } from "@/utils/format"
 
-import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
-import Empty from "@/components/Layout/Empty"
+import AppUserAvatar from "@/components/blocks/AppUserAvatar"
+import Empty from "@/components/layout/Empty"
 import {
   useAppUsers,
   useOrg,

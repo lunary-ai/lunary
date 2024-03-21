@@ -1,8 +1,8 @@
 import { useMemo } from "react"
-import ProtectedText from "../Blocks/ProtectedText"
+import ProtectedText from "../blocks/ProtectedText"
 // import { JsonView, defaultStyles } from "react-json-view-lite"
 // import errorHandler from "@/utils/errors"
-import ErrorBoundary from "../Blocks/ErrorBoundary"
+import ErrorBoundary from "../blocks/ErrorBoundary"
 
 export const Json = ({ data, compact }) => {
   if (!data) return null

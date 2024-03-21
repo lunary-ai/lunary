@@ -18,7 +18,7 @@ import {
   IconUser,
 } from "@tabler/icons-react"
 import Image from "next/image"
-import ProtectedText from "../Blocks/ProtectedText"
+import ProtectedText from "../blocks/ProtectedText"
 import { RenderJson } from "./RenderJson"
 import { circularPro } from "@/pages/_app"
 import { useColorScheme } from "@mantine/hooks"

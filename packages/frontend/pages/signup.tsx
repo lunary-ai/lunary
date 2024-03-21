@@ -39,7 +39,7 @@ import {
   IconUser,
 } from "@tabler/icons-react"
 
-import SocialProof from "@/components/Blocks/SocialProof"
+import SocialProof from "@/components/blocks/SocialProof"
 import analytics from "@/utils/analytics"
 import { fetcher } from "@/utils/fetcher"
 import { NextSeo } from "next-seo"

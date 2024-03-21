@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 
-import CopyText from "@/components/Blocks/CopyText"
-import UserAvatar from "@/components/Blocks/UserAvatar"
+import CopyText from "@/components/blocks/CopyText"
+import UserAvatar from "@/components/blocks/UserAvatar"
 
 import {
   ActionIcon,
@@ -30,11 +30,11 @@ import {
 } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 
-import RenamableField from "@/components/Blocks/RenamableField"
+import RenamableField from "@/components/blocks/RenamableField"
 import { useOrg, useOrgUser, useUser } from "@/utils/dataHooks"
 import { SEAT_ALLOWANCE } from "@/utils/pricing"
 import { useDisclosure } from "@mantine/hooks"
-import { openUpgrade } from "../components/Layout/UpgradeModal"
+import { openUpgrade } from "../components/layout/UpgradeModal"
 import { fetcher } from "@/utils/fetcher"
 
 function Invite() {

@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react"
 
-import Feedback from "@/components/Blocks/Feedback"
+import Feedback from "@/components/blocks/Feedback"
 import { BubbleMessage } from "@/components/SmartViewer/Message"
 
 import {

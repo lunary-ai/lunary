@@ -1,5 +1,5 @@
-import OrgUserBadge from "@/components/Blocks/OrgUserBadge"
-import Paywall from "@/components/Layout/Paywall"
+import OrgUserBadge from "@/components/blocks/OrgUserBadge"
+import Paywall from "@/components/layout/Paywall"
 import { useEvaluations } from "@/utils/dataHooks"
 import {
   Alert,

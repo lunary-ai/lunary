@@ -1,6 +1,6 @@
 import { Text, ScrollArea, Group } from "@mantine/core"
 import SmartViewer from "@/components/SmartViewer"
-import TokensBadge from "../Blocks/TokensBadge"
+import TokensBadge from "../blocks/TokensBadge"
 import { PromptEditor } from "./PromptEditor"
 
 function TemplateInputArea({

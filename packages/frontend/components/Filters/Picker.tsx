@@ -1,7 +1,7 @@
 import { Box, Button, Group, Select, Stack, Text } from "@mantine/core"
 import { Fragment, useCallback, useEffect, useState } from "react"
 import { FILTERS, Filter, FilterLogic, FilterParam, LogicData } from "shared"
-import ErrorBoundary from "../Blocks/ErrorBoundary"
+import ErrorBoundary from "../blocks/ErrorBoundary"
 import { AddFilterButton } from "./AddFilter"
 import FilterInputs from "./FiltersInputs"
 import FiltersModal from "./FiltersModal"

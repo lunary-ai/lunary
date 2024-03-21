@@ -4,10 +4,10 @@ import { Box, Card, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core"
 
 import SmartViewer from "@/components/SmartViewer"
 
-import AgentSummary from "@/components/Analytics/AgentSummary"
-import UsageSummary from "@/components/Analytics/UsageSummary"
-import AppUserAvatar from "@/components/Blocks/AppUserAvatar"
-import CopyText from "@/components/Blocks/CopyText"
+import AgentSummary from "@/components/analytics/AgentSummary"
+import UsageSummary from "@/components/analytics/UsageSummary"
+import AppUserAvatar from "@/components/blocks/AppUserAvatar"
+import CopyText from "@/components/blocks/CopyText"
 import {
   useProjectInfiniteSWR,
   useProjectSWR,
@@ -25,7 +25,7 @@ import {
 } from "@/utils/datatable"
 import { formatAppUser } from "@/utils/format"
 import { NextSeo } from "next-seo"
-import DataTable from "@/components/Blocks/DataTable"
+import DataTable from "@/components/blocks/DataTable"
 
 const columns = [
   timeColumn("createdAt"),

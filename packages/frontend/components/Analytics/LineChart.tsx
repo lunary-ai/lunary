@@ -22,8 +22,8 @@ import { formatLargeNumber } from "@/utils/format"
 import { IconBolt } from "@tabler/icons-react"
 import { eachDayOfInterval, format, parseISO } from "date-fns"
 import { Fragment } from "react"
-import ErrorBoundary from "../Blocks/ErrorBoundary"
-import { openUpgrade } from "../Layout/UpgradeModal"
+import ErrorBoundary from "../blocks/ErrorBoundary"
+import { openUpgrade } from "../layout/UpgradeModal"
 
 const slugify = (str) => {
   return str
