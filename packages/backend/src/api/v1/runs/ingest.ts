@@ -280,7 +280,7 @@ export async function processEventsIngestion(
     }
   }
 
-  console.log("Inserted", insertedIds.size, "runs")
+  console.log(`Inserted ${insertedIds.size} run for project ${projectId}`)
   return results
 }
 
