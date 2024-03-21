@@ -85,7 +85,7 @@ auth.post("/signup", async (ctx: Context) => {
         passwordHash: await hashPassword(password),
         email,
         orgId: org.id,
-        role: "admin",
+        role: "owner",
         verified: process.env.SKIP_EMAIL_VERIFY ? true : false,
         lastLoginAt: new Date(),
       }

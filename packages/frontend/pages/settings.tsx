@@ -28,7 +28,7 @@ export default function AppAnalytics() {
     project?.id && org && `/orgs/${org.id}/usage?projectId=${project?.id}`,
   )
 
-  const isAdmin = org?.users?.find((u) => u.role === "admin")?.role === "admin"
+  const isOwner = org?.users?.find((u) => u.role === "owner")?.role === "owner"
 
   return (
     <Container className="unblockable">
@@ -106,7 +106,7 @@ export default function AppAnalytics() {
           </Stack>
         </Card>
 
-        {isAdmin && (
+        {isOwner && (
           <Card withBorder p="lg" style={{ overflow: "visible" }}>
             <Stack align="start">
               <Title order={4}>Danger Zone</Title>

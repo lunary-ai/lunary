@@ -72,7 +72,7 @@ function UserMenu({ user }) {
   const { user: currentUser } = useUser()
   const { removeUserFromOrg } = useOrgUser(user.id)
 
-  if (user.role === "admin" || currentUser.id === user.id) {
+  if (user.role === "owner" || currentUser.id === user.id) {
     return
   }
 
