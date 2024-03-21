@@ -81,8 +81,8 @@ projects.delete("/:projectId", async (ctx: Context) => {
     ctx.throw(401, "Not allowed")
   }
 
-  if (user.role !== "admin") {
-    ctx.throw(403, "You must be an admin to delete a project")
+  if (user.role !== "owner") {
+    ctx.throw(403, "You must be the organization owner to delete a project")
   }
 
   const [{ count }] =

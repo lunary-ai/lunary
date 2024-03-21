@@ -35,11 +35,7 @@ users.get("/me/org", async (ctx: Context) => {
       where
         org_id = ${org.id}
       order by
-        case role
-          when 'admin' then 1
-          when 'member' then 2
-          else 3
-        end,
+        role,
         name
     `
 
@@ -151,8 +147,11 @@ users.patch("/:userId", async (ctx: Context) => {
   const [userToDelete] =
     await sql`select * from account where id = ${userToDeleteId}`
 
-  if (currentUser.role !== "admin") {
-    ctx.throw(401, "You must be an admin to remove a user from your team")
+  if (!["owner", "admin"].includes(currentUser.role)) {
+    ctx.throw(
+      401,
+      "You must be an owner or an admin to remove a user from your team",
+    )
   }
 
   if (currentUser.orgId !== userToDelete.orgId) {
