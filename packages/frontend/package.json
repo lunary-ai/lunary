@@ -17,9 +17,6 @@
     "@tabler/icons-react": "^2.46.0",
     "@tanstack/react-table": "^8.11.2",
     "@tanstack/react-virtual": "3.0.0-alpha.0",
-    "@types/node": "20.10.5",
-    "@types/react": "18.2.45",
-    "@types/react-dom": "18.2.18",
     "bcrypt": "^5.1.1",
     "crisp-sdk-web": "^1.0.21",
     "date-fns": "^3.3.1",
@@ -40,6 +37,7 @@
     "swr": "^2.2.4"
   },
   "devDependencies": {
+    "@types/node": "20.10.5",
     "@types/react": "18.2.45",
     "@types/react-dom": "^18.2.18",
     "postcss": "^8.4.33",
