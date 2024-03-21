@@ -18,7 +18,7 @@ import {
   IconUsers,
 } from "@tabler/icons-react"
 
-import UserAvatar from "@/components/Blocks/UserAvatar"
+import UserAvatar from "@/components/blocks/UserAvatar"
 import { useOrg, useUser } from "@/utils/dataHooks"
 import Link from "next/link"
 import { useRouter } from "next/router"

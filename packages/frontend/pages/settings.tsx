@@ -1,5 +1,5 @@
-import LineChart from "@/components/Analytics/LineChart"
-import CopyText from "@/components/Blocks/CopyText"
+import LineChart from "@/components/analytics/LineChart"
+import CopyText from "@/components/blocks/CopyText"
 
 import {
   Alert,
@@ -17,7 +17,7 @@ import Router from "next/router"
 
 import { useOrg, useUser, useProject } from "@/utils/dataHooks"
 import useSWR from "swr"
-import RenamableField from "@/components/Blocks/RenamableField"
+import RenamableField from "@/components/blocks/RenamableField"
 
 export default function AppAnalytics() {
   const { org } = useOrg()

@@ -1,5 +1,5 @@
-import RenamableField from "@/components/Blocks/RenamableField"
-import FilterPicker from "@/components/Filters/Picker"
+import RenamableField from "@/components/blocks/RenamableField"
+import FilterPicker from "@/components/filters/Picker"
 import { useChecklist, useChecklists } from "@/utils/dataHooks"
 import { cleanSlug } from "@/utils/format"
 

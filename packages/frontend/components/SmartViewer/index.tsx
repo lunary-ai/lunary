@@ -9,7 +9,7 @@
 
 import { Card, Code, Flex, Group, SimpleGrid, Stack, Text } from "@mantine/core"
 import { useMemo } from "react"
-import ProtectedText from "../Blocks/ProtectedText"
+import ProtectedText from "../blocks/ProtectedText"
 import { ChatMessage } from "./Message"
 import MessageViewer from "./MessageViewer"
 import { RenderJson } from "./RenderJson"

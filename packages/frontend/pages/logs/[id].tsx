@@ -1,7 +1,7 @@
 import { Button, Container, Group, Loader, Stack, Text } from "@mantine/core"
 
-import RunInputOutput from "@/components/Blocks/RunInputOutput"
-import Logo from "@/components/Blocks/Logo"
+import RunInputOutput from "@/components/blocks/RunInputOutput"
+import Logo from "@/components/blocks/Logo"
 
 import useSWR from "swr"
 import { useRouter } from "next/router"

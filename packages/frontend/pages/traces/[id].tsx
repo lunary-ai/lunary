@@ -15,13 +15,13 @@ import {
   Title,
 } from "@mantine/core"
 
-import DurationBadge from "@/components/Blocks/DurationBadge"
-import TokensBadge from "@/components/Blocks/TokensBadge"
-import StatusBadge from "@/components/Blocks/StatusBadge"
+import DurationBadge from "@/components/blocks/DurationBadge"
+import TokensBadge from "@/components/blocks/TokensBadge"
+import StatusBadge from "@/components/blocks/StatusBadge"
 
 import { useProjectSWR, useRun } from "@/utils/dataHooks"
 import { capitalize, formatCost } from "@/utils/format"
-import RunInputOutput from "@/components/Blocks/RunInputOutput"
+import RunInputOutput from "@/components/blocks/RunInputOutput"
 import { getColorForRunType } from "../../utils/colors"
 import {
   IconCloudDownload,
@@ -33,7 +33,7 @@ import {
   IconTool,
 } from "@tabler/icons-react"
 
-import RunsChat from "@/components/Blocks/RunChat"
+import RunsChat from "@/components/blocks/RunChat"
 
 const typeIcon = {
   convo: IconMessages,

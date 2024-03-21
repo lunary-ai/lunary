@@ -26,7 +26,7 @@ import { notifications } from "@mantine/notifications"
 import { cleanSlug, formatCompactFromNow } from "@/utils/format"
 import Router from "next/router"
 import { useEffect, useState } from "react"
-import SearchBar from "../Blocks/SearchBar"
+import SearchBar from "../blocks/SearchBar"
 
 export const defaultTemplateVersion = {
   content: [

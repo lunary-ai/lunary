@@ -11,7 +11,7 @@ import {
   Title,
 } from "@mantine/core"
 import { IconMessage } from "@tabler/icons-react"
-import CopyText from "../Blocks/CopyText"
+import CopyText from "../blocks/CopyText"
 import { useProject } from "@/utils/dataHooks"
 import { ListFeatures } from "./Paywall"
 

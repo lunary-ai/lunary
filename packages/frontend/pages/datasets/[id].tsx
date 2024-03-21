@@ -1,6 +1,6 @@
-import PromptVariableEditor from "@/components/Prompts/PromptVariableEditor"
-import RenamableField from "@/components/Blocks/RenamableField"
-import { PromptEditor } from "@/components/Prompts/PromptEditor"
+import PromptVariableEditor from "@/components/prompts/PromptVariableEditor"
+import RenamableField from "@/components/blocks/RenamableField"
+import { PromptEditor } from "@/components/prompts/PromptEditor"
 import {
   useDataset,
   useDatasetPrompt,

@@ -1,5 +1,5 @@
-import Steps from "@/components/Blocks/Steps"
-import Paywall from "@/components/Layout/Paywall"
+import Steps from "@/components/blocks/Steps"
+import Paywall from "@/components/layout/Paywall"
 import { useChecklists, useDatasets, useProject } from "@/utils/dataHooks"
 import { fetcher } from "@/utils/fetcher"
 
@@ -23,7 +23,7 @@ import { IconFlask2Filled } from "@tabler/icons-react"
 import { useRouter } from "next/router"
 import { useEffect, useRef, useState } from "react"
 import { ChecklistModal } from "./checklists"
-import ProviderEditor from "@/components/Prompts/Provider"
+import ProviderEditor from "@/components/prompts/Provider"
 import { MODELS, Provider } from "shared"
 import { useLocalStorage } from "@mantine/hooks"
 

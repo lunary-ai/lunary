@@ -1,4 +1,4 @@
-import ErrorBoundary from "@/components/Blocks/ErrorBoundary"
+import ErrorBoundary from "@/components/blocks/ErrorBoundary"
 import { Card, Text } from "@mantine/core"
 
 const AnalyticsCard = ({ title, children }) => (

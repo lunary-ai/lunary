@@ -20,12 +20,12 @@ import {
 } from "@tabler/icons-react"
 import { useRouter } from "next/router"
 import analytics from "../../utils/analytics"
-import { openUpgrade } from "@/components/Layout/UpgradeModal"
-import HotkeysInfo from "@/components/Blocks/HotkeysInfo"
-import TemplateInputArea from "@/components/Prompts/TemplateInputArea"
+import { openUpgrade } from "@/components/layout/UpgradeModal"
+import HotkeysInfo from "@/components/blocks/HotkeysInfo"
+import TemplateInputArea from "@/components/prompts/TemplateInputArea"
 import TemplateList, {
   defaultTemplateVersion,
-} from "@/components/Prompts/TemplateMenu"
+} from "@/components/prompts/TemplateMenu"
 import { notifications } from "@mantine/notifications"
 import { generateSlug } from "random-word-slugs"
 import {
@@ -37,14 +37,14 @@ import {
   useProject,
 } from "@/utils/dataHooks"
 import { fetcher } from "@/utils/fetcher"
-import Empty from "@/components/Layout/Empty"
+import Empty from "@/components/layout/Empty"
 
 import { useFilteredPromptVariables } from "@/utils/promptsHooks"
 import { openConfirmModal } from "@mantine/modals"
 import { useGlobalShortcut } from "@/utils/hooks"
-import { ParamItem } from "@/components/Prompts/Provider"
-import ProviderEditor from "@/components/Prompts/Provider"
-import PromptVariableEditor from "@/components/Prompts/PromptVariableEditor"
+import { ParamItem } from "@/components/prompts/Provider"
+import ProviderEditor from "@/components/prompts/Provider"
+import PromptVariableEditor from "@/components/prompts/PromptVariableEditor"
 
 function Playground() {
   const router = useRouter()
