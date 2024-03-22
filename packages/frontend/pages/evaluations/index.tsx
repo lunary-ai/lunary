@@ -63,7 +63,7 @@ export default function Evaluations() {
                 component={Link}
                 href="/evaluations/new"
               >
-                Run Manual Evaluation
+                Playground
               </Button>
             </Group>
           </Group>

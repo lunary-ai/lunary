@@ -7,7 +7,7 @@
     "migrate:db": "tsx src/migrate.ts",
     "build": "tsup src/index.ts --format esm",
     "dev": "tsx --env-file=.env --watch src/index.ts",
-    "dev:radar": "npm -w packages/backend run dev",
+    "dev:radar": "tsx --env-file=.env --watch src/radar.ts",
     "dev:all": "concurrently -n backend,radar \"npm run start\" \"npm run start:radar\"",
     "test": "tsx src/index.ts"
   },
