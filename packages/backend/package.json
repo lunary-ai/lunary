@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "@authenio/samlify-node-xmllint": "^2.0.0",
-    "@azure/msal-node": "^2.6.4",
     "@json2csv/plainjs": "^7.0.5",
     "@koa/cors": "^5.0.0",
     "@sentry/node": "^7.99.0",

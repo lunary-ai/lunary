@@ -15,11 +15,8 @@
     "dev:radar": "npm -w packages/backend run dev:radar",
     "dev:test": "concurrently \"npm run dev:frontend\" \"npm run dev:backend:test\"",
     "todo": "TODO: clean scripts below and verify they all work",
-    "dev:withradar": "concurrently \"npm run frontend:dev\" \"npm run backend:dev\" \"npm run backend:radar-dev\"",
-    "frontend:dev": "npm -w packages/frontend run dev",
+    "dev:withradar": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\" \"npm run dev:radar\"",
     "dev:backend:test": "npm -w packages/backend run test",
-    "backend:radar:start": "npm -w packages/backend run radar",
-    "backend:radar-dev": "npm -w packages/backend run radar:dev",
     "test": "npx playwright test",
     "test:ui": "npx playwright test --ui"
   },
