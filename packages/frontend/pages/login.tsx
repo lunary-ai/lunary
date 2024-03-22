@@ -133,41 +133,17 @@ function LoginPage() {
             Sign In
           </Text>
 
-          {step === "email" && (
+          {step !== "saml" && (
             <form
-              onSubmit={(e) => {
-                determineAuthMethod(form.values.email)
-                e.preventDefault()
-              }}
+              onSubmit={
+                step === "email"
+                  ? (e) => {
+                      determineAuthMethod(form.values.email)
+                      e.preventDefault()
+                    }
+                  : form.onSubmit(handleLoginWithPassword)
+              }
             >
-              <Stack>
-                <TextInput
-                  leftSection={<IconAt size="16" />}
-                  label="Email"
-                  type="email"
-                  autoComplete="email"
-                  value={form.values.email}
-                  onChange={(event) =>
-                    form.setFieldValue("email", event.currentTarget.value)
-                  }
-                  error={form.errors.email}
-                  placeholder="Your email"
-                />
-                <Button
-                  mt="md"
-                  type="submit"
-                  fullWidth
-                  loading={loading}
-                  data-testid="continue-button"
-                >
-                  Continue
-                </Button>
-              </Stack>
-            </form>
-          )}
-
-          {step === "password" && (
-            <form onSubmit={form.onSubmit(handleLoginWithPassword)}>
               <Stack>
                 <TextInput
                   leftSection={<IconAt size="16" />}
@@ -183,6 +159,8 @@ function LoginPage() {
                 />
                 <TextInput
                   type="password"
+                  opacity={step === "email" ? 0 : 1}
+                  h={step === "email" ? 0 : "auto"}
                   autoComplete="current-password"
                   label="Password"
                   value={form.values.password}
@@ -192,8 +170,14 @@ function LoginPage() {
                   error={form.errors.password}
                   placeholder="Your password"
                 />
-                <Button mt="md" type="submit" fullWidth loading={loading}>
-                  Login
+                <Button
+                  mt={step === "email" ? 0 : "md"}
+                  type="submit"
+                  fullWidth
+                  loading={loading}
+                  data-testid="continue-button"
+                >
+                  {step === "password" ? "Continue" : "Login"}
                 </Button>
               </Stack>
             </form>
