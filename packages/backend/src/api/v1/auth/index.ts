@@ -19,12 +19,16 @@ const auth = new Router({
 })
 
 auth.post("/method", async (ctx: Context) => {
-  const { email } = ctx.request.body as { email: string }
+  const bodySchema = z.object({
+    email: z.string().email().transform(sanitizeEmail),
+  })
+
+  const { email } = bodySchema.parse(ctx.request.body)
 
   const [samlOrg] = await sql`
     select org.* from org
     join account on account.org_id = org.id
-    where account.email = ${sanitizeEmail(email)}
+    where account.email = ${email}
     and org.saml_enabled = true
     and org.saml_idp_xml is not null
   `
