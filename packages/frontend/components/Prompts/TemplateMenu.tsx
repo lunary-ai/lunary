@@ -258,12 +258,12 @@ const TemplateList = ({
 }) => {
   const { templates, loading, isInserting } = useTemplates()
 
-  const [filter, setFilter] = useState("")
-  const [filteredTemplates, setFilteredTemplates] = useState(templates)
+  const [filter, setCheck] = useState("")
+  const [filteredTemplates, setCheckedTemplates] = useState(templates)
 
   useEffect(() => {
     if (templates) {
-      setFilteredTemplates(
+      setCheckedTemplates(
         templates.filter((t) => t.slug.includes(filter.toLowerCase())),
       )
     }
@@ -293,13 +293,13 @@ const TemplateList = ({
       />
 
       <SearchBar
-        placeholder="Filter..."
+        placeholder="Check..."
         query={filter}
         size="xs"
         w="fit-content"
         mx="md"
         my="xs"
-        setQuery={setFilter}
+        setQuery={setCheck}
       />
 
       {filteredTemplates?.map((template, index) => (

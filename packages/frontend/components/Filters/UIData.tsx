@@ -10,7 +10,7 @@ import {
   IconCoin,
   IconCreditCard,
   IconEyeCheck,
-  IconFilter,
+  IconCheck,
   IconHelpCircle,
   IconHtml,
   IconIdBadge,
@@ -37,7 +37,7 @@ import {
   IconWorldWww,
 } from "@tabler/icons-react"
 
-const FILTERS_UI_DATA = {
+const CHECKS_UI_DATA = {
   model: {
     icon: IconBrandOpenai,
     color: "violet",
@@ -172,9 +172,9 @@ const FILTERS_UI_DATA = {
     color: "orange",
   },
   other: {
-    icon: IconFilter,
+    icon: IconCheck,
     color: "gray",
   },
 }
 
-export default FILTERS_UI_DATA
+export default CHECKS_UI_DATA

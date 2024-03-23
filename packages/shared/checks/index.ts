@@ -7,12 +7,12 @@ import {
   PERCENT_PARAM,
 } from "./params"
 
-import type { Filter } from "./types"
+import type { Check } from "./types"
 
 export * from "./types"
 export * from "./serialize"
 
-export const FILTERS: Filter[] = [
+export const CHECKS: Check[] = [
   {
     id: "type",
     name: "Type",

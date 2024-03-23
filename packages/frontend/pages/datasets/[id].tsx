@@ -8,7 +8,7 @@ import {
 } from "@/utils/dataHooks"
 import { cleanSlug, formatCompactFromNow } from "@/utils/format"
 import {
-  useFilteredPromptVariables,
+  useCheckedPromptVariables,
   usePromptVariables,
 } from "@/utils/promptsHooks"
 import {
@@ -42,7 +42,7 @@ function PromptVariation({ i, variationId, content, onDelete, markSaved }) {
     500,
   )
 
-  const variables = useFilteredPromptVariables(
+  const variables = useCheckedPromptVariables(
     content,
     variation?.variables || {},
   )

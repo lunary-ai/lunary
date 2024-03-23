@@ -17,22 +17,22 @@ import {
 } from "@mantine/core"
 import { IconCircleCheck, IconCirclePlus } from "@tabler/icons-react"
 import classes from "./index.module.css"
-import { FILTERS, Filter } from "shared"
-import FILTERS_UI_DATA from "./UIData"
+import { CHECKS, Check } from "shared"
+import CHECKS_UI_DATA from "./UIData"
 import { useMemo, useState } from "react"
 
-function FilterCard({
+function CheckCard({
   onItemClick,
   filter,
   isSelected,
 }: {
   onItemClick: (id: string) => void
-  filter: Filter
+  filter: Check
   isSelected: boolean
 }) {
   const theme = useMantineTheme()
 
-  const uiData = FILTERS_UI_DATA[filter.id] || FILTERS_UI_DATA["other"]
+  const uiData = CHECKS_UI_DATA[filter.id] || CHECKS_UI_DATA["other"]
 
   if (!uiData) {
     return null
@@ -80,26 +80,26 @@ function FilterCard({
   )
 }
 
-export default function FiltersModal({
-  filters = FILTERS,
+export default function ChecksModal({
+  checks = CHECKS,
   opened,
   setOpened,
   onFinish,
 }: {
-  filters: Filter[]
+  checks: Check[]
   opened: boolean
   setOpened: (opened: boolean) => void
   onFinish: (ids: string[]) => void
 }) {
   const [searchTerm, setSearchTerm] = useState("")
   const types = ["Basic", "Smart", "AI"]
-  const [selected, setSelected] = useState<Filter[]>([])
+  const [selected, setSelected] = useState<Check[]>([])
 
-  const filteredFilters = useMemo(() => {
-    return filters.filter((filter) =>
+  const filteredChecks = useMemo(() => {
+    return checks.filter((filter) =>
       filter.name.toLowerCase().includes(searchTerm.toLowerCase()),
     )
-  }, [filters, searchTerm])
+  }, [checks, searchTerm])
 
   return (
     <Modal
@@ -123,7 +123,7 @@ export default function FiltersModal({
       <Stack gap="xl">
         {types
           .filter((type) =>
-            filteredFilters.some(
+            filteredChecks.some(
               (filter) => filter.uiType === type.toLowerCase(),
             ),
           )
@@ -139,11 +139,11 @@ export default function FiltersModal({
                 pb="md"
               >
                 <SimpleGrid cols={5} spacing="md">
-                  {filteredFilters
+                  {filteredChecks
                     .filter((filter) => filter.uiType === type.toLowerCase())
                     .sort((a, b) => (a.soon ? 1 : -1))
                     .map((filter) => (
-                      <FilterCard
+                      <CheckCard
                         key={filter.id}
                         filter={filter}
                         isSelected={selected.some((s) => s.id === filter.id)}
@@ -157,7 +157,7 @@ export default function FiltersModal({
                                 (item) => item.id !== id,
                               )
                             }
-                            const itemToAdd = filters.find(
+                            const itemToAdd = checks.find(
                               (item) => item.id === id,
                             )
                             return itemToAdd

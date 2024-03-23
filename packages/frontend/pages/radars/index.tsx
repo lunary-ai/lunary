@@ -1,5 +1,5 @@
 import TinyPercentChart from "@/components/analytics/TinyPercentChart"
-import FilterPicker from "@/components/filters/Picker"
+import CheckPicker from "@/components/filters/Picker"
 import Paywall from "@/components/layout/Paywall"
 import { useRadar, useRadars } from "@/utils/dataHooks"
 import {
@@ -129,7 +129,7 @@ function RadarEditModal({
         </Stack>
         <Stack>
           <Text size="lg">Narrow down the logs you want to analyze.</Text>
-          <FilterPicker
+          <CheckPicker
             value={value.view}
             minimal
             restrictTo={(filter) =>
@@ -148,7 +148,7 @@ function RadarEditModal({
             Define the conditions that will be a match for the radar.
           </Text>
           <Box>
-            <FilterPicker
+            <CheckPicker
               value={value.checks}
               restrictTo={(filter) =>
                 !filter.onlyInEvals && filter.id !== "radar"

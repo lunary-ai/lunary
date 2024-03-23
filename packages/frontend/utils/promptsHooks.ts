@@ -28,7 +28,7 @@ export function usePromptVariables(
 }
 
 // this hook filters the initial variables to match the ones found in the content
-export function useFilteredPromptVariables(
+export function useCheckedPromptVariables(
   content: string | { role: string; content: string }[],
   initialVariables: Record<string, string>,
 ) {

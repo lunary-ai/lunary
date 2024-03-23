@@ -1,14 +1,14 @@
 import { Box, Button, Group, Select, Stack, Text } from "@mantine/core"
 import { Fragment, useCallback, useEffect, useState } from "react"
-import { FILTERS, Filter, FilterLogic, FilterParam, LogicData } from "shared"
+import { CHECKS, Check, CheckLogic, CheckParam, LogicData } from "shared"
 import ErrorBoundary from "../blocks/ErrorBoundary"
-import { AddFilterButton } from "./AddFilter"
-import FilterInputs from "./FiltersInputs"
-import FiltersModal from "./FiltersModal"
+import { AddCheckButton } from "./AddCheck"
+import CheckInputs from "./ChecksInputs"
+import ChecksModal from "./ChecksModal"
 import classes from "./index.module.css"
 import { IconX } from "@tabler/icons-react"
 
-function RenderFilterNode({
+function RenderCheckNode({
   minimal,
   node,
   disabled,
@@ -17,10 +17,10 @@ function RenderFilterNode({
   removeNode,
 }: {
   minimal: boolean
-  node: FilterLogic
-  filters: Filter[]
+  node: CheckLogic
+  filters: Check[]
   disabled: boolean
-  setNode: (node: FilterLogic | LogicData) => void
+  setNode: (node: CheckLogic | LogicData) => void
   removeNode: () => void
 }) {
   if (typeof node === "string" && ["AND", "OR"].includes(node)) return null
@@ -28,21 +28,21 @@ function RenderFilterNode({
   if (Array.isArray(node)) {
     const currentOperator = node[0] as "AND" | "OR"
 
-    const showFilterNode = (n, i) => (
-      <RenderFilterNode
+    const showCheckNode = (n, i) => (
+      <RenderCheckNode
         minimal={minimal}
         key={i}
         filters={filters}
-        node={n as FilterLogic}
+        node={n as CheckLogic}
         removeNode={() => {
           const newNode = [...node]
           newNode.splice(i, 1)
-          setNode(newNode as FilterLogic)
+          setNode(newNode as CheckLogic)
         }}
         setNode={(newNode) => {
           const newNodeArray = [...node]
           newNodeArray[i] = newNode
-          setNode(newNodeArray as FilterLogic)
+          setNode(newNodeArray as CheckLogic)
         }}
       />
     )
@@ -51,7 +51,7 @@ function RenderFilterNode({
       const showOperator = i !== 0 && i !== node.length - 1 && !minimal
       return showOperator ? (
         <Group key={i} gap={showOperator ? "xs" : 0}>
-          {showFilterNode(n, i)}
+          {showCheckNode(n, i)}
           {showOperator && (
             <Select
               variant="unstyled"
@@ -64,13 +64,13 @@ function RenderFilterNode({
               onChange={(val) => {
                 const newNodeArray = [...node]
                 newNodeArray[0] = val
-                setNode(newNodeArray as FilterLogic)
+                setNode(newNodeArray as CheckLogic)
               }}
             />
           )}
         </Group>
       ) : (
-        showFilterNode(n, i)
+        showCheckNode(n, i)
       )
     })
   }
@@ -86,7 +86,7 @@ function RenderFilterNode({
     <Group>
       <div className={classes["custom-input"]}>
         {filter?.params.map((param, i) => {
-          const CustomInput = FilterInputs[param.type]
+          const CustomInput = CheckInputs[param.type]
           if (!CustomInput) return null
 
           const isParamNotLabel = param.type !== "label"
@@ -137,7 +137,7 @@ function RenderFilterNode({
   )
 }
 
-export default function FilterPicker({
+export default function CheckPicker({
   value = ["AND"],
   onChange = (data) => {},
   minimal = false,
@@ -145,20 +145,20 @@ export default function FilterPicker({
   defaultOpened = false,
   disabled = false,
 }: {
-  value?: FilterLogic
-  onChange?: (data: FilterLogic) => void
+  value?: CheckLogic
+  onChange?: (data: CheckLogic) => void
   minimal?: boolean
-  restrictTo?: (filter: Filter) => boolean
+  restrictTo?: (filter: Check) => boolean
   defaultOpened?: boolean
   disabled?: boolean
 }) {
   const [modalOpened, setModalOpened] = useState(false)
 
-  const options = FILTERS.filter(restrictTo)
+  const options = CHECKS.filter(restrictTo)
 
   // insert {id: filterId, params: { [param1]: defaultValue, [param2]: defaultValue }}
-  const insertFilters = (filters: Filter[]) => {
-    const arr: FilterLogic =
+  const insertChecks = (filters: Check[]) => {
+    const arr: CheckLogic =
       Array.isArray(value) && !!value.length ? [...value] : ["AND"]
 
     filters.forEach((filter) => {
@@ -166,7 +166,7 @@ export default function FilterPicker({
         id: filter.id,
         params: filter.params
           .filter((param) => param.type !== "label")
-          .reduce((acc, { id, defaultValue }: FilterParam) => {
+          .reduce((acc, { id, defaultValue }: CheckParam) => {
             acc[id] = defaultValue
             return acc
           }, {}),
@@ -184,12 +184,12 @@ export default function FilterPicker({
     <Box style={disabled ? { pointerEvents: "none", opacity: 0.8 } : {}}>
       <Container>
         <>
-          <RenderFilterNode
+          <RenderCheckNode
             minimal={minimal}
             node={value}
             disabled={disabled}
             setNode={(newNode) => {
-              onChange(newNode as FilterLogic)
+              onChange(newNode as CheckLogic)
             }}
             removeNode={() => {
               onChange(["AND"])
@@ -200,9 +200,9 @@ export default function FilterPicker({
           {!disabled && (
             <>
               {minimal ? (
-                <AddFilterButton
+                <AddCheckButton
                   filters={options}
-                  onSelect={(filter) => insertFilters([filter])}
+                  onSelect={(filter) => insertChecks([filter])}
                   defaultOpened={defaultOpened}
                 />
               ) : (
@@ -214,7 +214,7 @@ export default function FilterPicker({
                   >
                     Add
                   </Button>
-                  <FiltersModal
+                  <ChecksModal
                     opened={modalOpened}
                     setOpened={setModalOpened}
                     filters={options}
@@ -222,7 +222,7 @@ export default function FilterPicker({
                       const filters = ids
                         .map((id) => options.find((option) => option.id === id))
                         .filter(Boolean)
-                      insertFilters(filters)
+                      insertChecks(filters)
                     }}
                   />
                 </>

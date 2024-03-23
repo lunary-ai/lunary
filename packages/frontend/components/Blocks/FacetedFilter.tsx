@@ -1,4 +1,4 @@
-// DEPRECATED: Use FilterPicker
+// DEPRECATED: Use CheckPicker
 // Kept to copy search method for users and render prop
 
 import { useProject, useProjects } from "@/utils/dataHooks"
@@ -16,7 +16,7 @@ import { IconCirclePlus } from "@tabler/icons-react"
 import { useEffect, useRef, useState } from "react"
 
 // TODO: proper props type
-export default function FacetedFilter({
+export default function FacetedCheck({
   name,
   items = [],
   render,
@@ -60,14 +60,14 @@ export default function FacetedFilter({
     },
   })
 
-  function defaultSearchFilter(item) {
+  function defaultSearchCheck(item) {
     if (typeof item === "string") {
       return item?.toLowerCase()?.includes(search.toLowerCase().trim())
     }
     return true
   }
 
-  function userSearchFilter(item) {
+  function userSearchCheck(item) {
     const searchTerm = search.toLowerCase().trim()
 
     return (
@@ -83,9 +83,9 @@ export default function FacetedFilter({
     )
   }
 
-  const searchFilter = withUserSearch ? userSearchFilter : defaultSearchFilter
+  const searchCheck = withUserSearch ? userSearchCheck : defaultSearchCheck
 
-  const options = items.filter(searchFilter).map((item) => (
+  const options = items.filter(searchCheck).map((item) => (
     <Combobox.Option value={item} key={item}>
       <Group gap="sm">
         <Checkbox

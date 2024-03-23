@@ -1,4 +1,5 @@
 import sql from "../utils/db"
+import { callML } from "../utils/ml"
 import aiAssert from "./ai/assert"
 import aiFact from "./ai/fact"
 import aiNER from "./ai/ner"
@@ -186,32 +187,32 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   //   },
 
   // },
-  {
-    id: "cc",
-    sql: ({ field, type }) => {
-      const operator = type === "contains" ? sql`~` : sql`!~`
+  // {
+  //   id: "cc",
+  //   sql: ({ field, type }) => {
+  //     const operator = type === "contains" ? sql`~` : sql`!~`
 
-      return sql`${sql(field + "_text")} ${operator} '(?:4[0-9]{3}(?:[ -]?[0-9]{4}){3}|[25][1-7][0-9]{2}(?:[ -]?[0-9]{4}){3}|6(?:011|5[0-9]{2})(?:[ -]?[0-9]{4}){3}|3[47][0-9]{2}(?:[ -]?[0-9]{4}){3}|3(?:0[0-5]|[68][0-9])(?:[ -]?[0-9]{4}){2}|(?:2131|1800|35\d{2})\d{2}(?:[ -]?\d{4}){3})'`
-    },
-  },
-  {
-    id: "email",
-    sql: ({ field, type }) => {
-      const regexPattern = sql`[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+`
-      const operator = type === "contains" ? sql`~` : sql`!~`
+  //     return sql`${sql(field + "_text")} ${operator} '(?:4[0-9]{3}(?:[ -]?[0-9]{4}){3}|[25][1-7][0-9]{2}(?:[ -]?[0-9]{4}){3}|6(?:011|5[0-9]{2})(?:[ -]?[0-9]{4}){3}|3[47][0-9]{2}(?:[ -]?[0-9]{4}){3}|3(?:0[0-5]|[68][0-9])(?:[ -]?[0-9]{4}){2}|(?:2131|1800|35\d{2})\d{2}(?:[ -]?\d{4}){3})'`
+  //   },
+  // },
+  // {
+  //   id: "email",
+  //   sql: ({ field, type }) => {
+  //     const regexPattern = sql`[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+`
+  //     const operator = type === "contains" ? sql`~` : sql`!~`
 
-      return sql`${sql(field + "_text")}::text ${operator} '${regexPattern}'`
-    },
-  },
-  {
-    id: "phone",
-    sql: ({ field, type }) => {
-      const regexPattern = sql`^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$`
-      const operator = type === "contains" ? sql`~` : sql`!~`
+  //     return sql`${sql(field + "_text")}::text ${operator} '${regexPattern}'`
+  //   },
+  // },
+  // {
+  //   id: "phone",
+  //   sql: ({ field, type }) => {
+  //     const regexPattern = sql`^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$`
+  //     const operator = type === "contains" ? sql`~` : sql`!~`
 
-      return sql`${sql(field + "_text")} ${operator} '${regexPattern}'`
-    },
-  },
+  //     return sql`${sql(field + "_text")} ${operator} '${regexPattern}'`
+  //   },
+  // },
   {
     id: "length",
     sql: ({ field, operator, length }) =>
@@ -310,9 +311,6 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     id: "assertion",
     async evaluator(run, params) {
       const { assertion } = params
-
-      console.log("assertion", assertion)
-      console.log("lastMsg(run['output'])", lastMsg(run["output"]))
 
       const { passed, reason } = await aiAssert(
         lastMsg(run["output"]),
@@ -435,7 +433,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     async evaluator(run, params) {
       const { field, type, entities } = params
 
-      const result = await aiNER(lastMsg(run[field]))
+      const result = await callML("ner", { text: [lastMsg(run[field])] })
 
       let passed = false
 
@@ -469,6 +467,54 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     },
   },
   {
+    id: "pii",
+    async evaluator(run, params) {
+      const { field, type, types } = params
+
+      const text = lastMsg(run[field])
+
+      const result: any = {}
+
+      const nerResult = await callML("pii", { text: [text], types })
+      for (const type in nerResult) {
+        result[type] = nerResult[type] || []
+      }
+
+      let passed = false
+
+      if (type === "contains") {
+        passed = result.some((entity: string) => result[entity]?.length > 0)
+      } else {
+        passed = result.every((entity: string) => result[entity]?.length === 0)
+      }
+
+      let labels = {
+        per: "Persons",
+        org: "Organizations",
+        loc: "Locations",
+        email: "Emails",
+        phone: "Phone numbers",
+        cc: "Credit card numbers",
+      }
+
+      let reason = "No entities detected"
+      if (passed) {
+        reason =
+          "Entities detected: " +
+          Object.keys(result)
+            .filter((key) => result[key].length > 0)
+            .map((key: string) => labels[key] + ": " + result[key].join(", "))
+            .join(", ")
+      }
+
+      return {
+        passed,
+        reason,
+        details: result,
+      }
+    },
+  },
+  {
     id: "toxicity",
     async evaluator(run, params) {
       const { field, type } = params
@@ -480,7 +526,8 @@ export const CHECK_RUNNERS: CheckRunner[] = [
         textsToCheck.push(lastMsg(run[field]))
       }
 
-      const labels = await aiToxicity(textsToCheck)
+      // const labels = await aiToxicity(textsToCheck)
+      const labels = await callML("toxicity", { texts: textsToCheck })
 
       const hasToxicity = labels.length > 0
 

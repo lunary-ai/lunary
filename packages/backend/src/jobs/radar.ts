@@ -1,6 +1,6 @@
 import sql from "@/src/utils/db"
-import { convertChecksToSQL } from "@/src/utils/filters"
-import { FilterLogic } from "shared"
+import { convertChecksToSQL } from "@/src/utils/checks"
+import { CheckLogic } from "shared"
 import { runChecksOnRun } from "../checks/runChecks"
 import { sleep } from "../utils/misc"
 
@@ -8,7 +8,7 @@ const RUNS_BATCH_SIZE = 300 // small batch size to cycle through radars faster m
 const PARALLEL_BATCH_SIZE = 5
 
 async function runRadarChecksOnRun(radar: any, run: any) {
-  const checks: FilterLogic = radar.checks
+  const checks: CheckLogic = radar.checks
 
   const { passed, results } = await runChecksOnRun(run, checks, true)
 

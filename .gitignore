@@ -197,3 +197,11 @@ entrypoint.sh
 /blob-report/
 /playwright/.cache/
 /e2e/.auth/
+
+
+# Python
+.venv
+__pycache__/
+*.pyc
+
+test_*.py

@@ -2,7 +2,7 @@ import sql from "@/src/utils/db"
 import { clearUndefined } from "@/src/utils/ingest"
 import Context from "@/src/utils/koa"
 import Router from "koa-router"
-import { FilterLogic } from "shared"
+import { CheckLogic } from "shared"
 
 const checklists = new Router({
   prefix: "/checklists",
@@ -35,7 +35,7 @@ checklists.post("/", async (ctx: Context) => {
   const { slug, type, data } = ctx.request.body as {
     slug: string
     type: string
-    data: FilterLogic
+    data: CheckLogic
   }
 
   const [insertedCheck] = await sql`
@@ -56,7 +56,7 @@ checklists.patch("/:id", async (ctx: Context) => {
   const { id } = ctx.params
   const { slug, data } = ctx.request.body as {
     slug: string
-    data: FilterLogic
+    data: CheckLogic
   }
 
   const [updatedCheck] = await sql`
