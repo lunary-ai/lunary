@@ -124,12 +124,14 @@ function SignupPage() {
 
       auth.setJwt(token)
 
-      notifications.show({
-        icon: <IconCheck size={18} />,
-        color: "teal",
-        title: "Email sent",
-        message: "Check your emails for the confirmation link",
-      })
+      if (!process.env.SKIP_EMAIL_VERIFY) {
+        notifications.show({
+          icon: <IconCheck size={18} />,
+          color: "teal",
+          title: "Email sent",
+          message: "Check your emails for the confirmation link",
+        })
+      }
 
       analytics.track("Signup", {
         email,
