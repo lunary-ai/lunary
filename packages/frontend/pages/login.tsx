@@ -177,7 +177,7 @@ function LoginPage() {
                   loading={loading}
                   data-testid="continue-button"
                 >
-                  {step === "password" ? "Continue" : "Login"}
+                  {step === "email" ? "Continue" : "Login"}
                 </Button>
               </Stack>
             </form>
