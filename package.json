@@ -22,10 +22,12 @@
   "workspaces": [
     "packages/*"
   ],
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  },
   "devDependencies": {
     "@playwright/test": "^1.42.1",
     "@types/node": "^20.11.25",
-    "concurrently": "^8.2.2",
     "dotenv": "^16.4.5",
     "prettier": "^3.2.5",
     "tsup": "^8.0.1",
