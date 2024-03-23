@@ -41,7 +41,7 @@ jobs:
 
       - name: Generate timestamp
         id: timestamp
-        run: echo "::set-output name=timestamp::$(date +%Y%m%d%H%M%S)"
+        run: echo "::set-output name=timestamp::$(date +%Y-%m-%d-%H-%M-%S)"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
