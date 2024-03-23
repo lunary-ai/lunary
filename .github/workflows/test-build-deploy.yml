@@ -41,7 +41,7 @@ jobs:
 
       - name: Generate data
         id: date
-        run: echo "::set-output name=date::$(date +%Y-%m-%d:%H:%M:%S)"
+        run: echo "::set-output name=date::$(date +%Y-%m-%d-%Hh%Mm%Ss)"
 
       - name: Get short commit hash
         id: commit
