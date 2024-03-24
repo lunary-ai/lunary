@@ -1,5 +1,5 @@
 import ResultsMatrix from "@/components/evals/ResultsMatrix"
-import FilterPicker from "@/components/filters/Picker"
+import CheckPicker from "@/components/checks/Picker"
 import {
   useChecklist,
   useDataset,
@@ -67,7 +67,7 @@ export default function EvalResults() {
             {checklist && (
               <Group>
                 <Text>Checklist:</Text>
-                <FilterPicker value={checklist.data} disabled />
+                <CheckPicker value={checklist.data} disabled />
               </Group>
             )}
             {dataset && (

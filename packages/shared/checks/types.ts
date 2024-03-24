@@ -1,9 +1,9 @@
-export type FilterLabel = {
+export type CheckLabel = {
   type: "label"
   label: string
 }
 
-export type FilterParam = {
+export type CheckParam = {
   type: "select" | "text" | "number" | "date"
   id: string
   unit?: string
@@ -20,21 +20,16 @@ export type FilterParam = {
     | ((projectId: string, type: string) => string)
 }
 
-export type Filter = {
+export type Check = {
   id: string
   uiType: "basic" | "smart" | "ai"
   name: string
   description?: string
   soon?: boolean
-  params: (FilterParam | FilterLabel)[]
+  params: (CheckParam | CheckLabel)[]
   disableInEvals?: boolean
   onlyInEvals?: boolean
 }
-
-// export type SavedFilterData = {
-//   id: string
-//   paramsData: { id: string; value: any }[]
-// }
 
 // [ 'AND, {id, params}, {id, params}, {id, params}, ['OR', {id, params}, {id, params}], ['OR', {id, params}, ['AND', {id, params}, {id, params}]] ]
 
@@ -47,4 +42,4 @@ type LogicNode = ["AND" | "OR", ...LogicElement[]]
 
 export type LogicElement = LogicData | LogicNode
 
-export type FilterLogic = LogicNode
+export type CheckLogic = LogicNode

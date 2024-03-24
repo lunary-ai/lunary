@@ -55,7 +55,10 @@ export default function Paywall({
   const { org } = useOrg()
 
   // Automatically disable paywall in these cases
-  if (["custom", plan].includes(org?.plan) || process.env.NEXT_PUBLIC_DEMO) {
+  if (
+    ["custom", "enterprise", "unlimited", plan].includes(org?.plan) ||
+    process.env.NEXT_PUBLIC_DEMO
+  ) {
     return children
   }
 

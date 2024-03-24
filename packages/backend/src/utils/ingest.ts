@@ -98,6 +98,36 @@ const recursiveToCamel = (item: any): any => {
   )
 }
 
+// keep only 1st level string,int,boolean and array of those
+function cleanMetadata(object: any) {
+  if (!object) return undefined
+
+  return Object.fromEntries(
+    Object.entries(object).map(([key, value]) => {
+      if (
+        typeof value === "string" ||
+        typeof value === "number" ||
+        typeof value === "boolean"
+      ) {
+        return [key, value]
+      }
+      if (Array.isArray(value)) {
+        return [
+          key,
+          value.map((v) =>
+            typeof v === "string" ||
+            typeof v === "number" ||
+            typeof v === "boolean"
+              ? v
+              : null,
+          ),
+        ]
+      }
+      return [key, null]
+    }),
+  )
+}
+
 export const cleanEvent = async (event: any): Promise<Event> => {
   const { timestamp, runId, parentRunId, tags, name, ...rest } =
     recursiveToCamel(event)
@@ -112,6 +142,7 @@ export const cleanEvent = async (event: any): Promise<Event> => {
 
   return {
     ...rest,
+    metadata: cleanMetadata(rest.metadata),
     name: typeof name === "string" ? name.replace("models/", "") : undefined,
     tags: typeof tags === "string" ? [tags] : tags,
     tokensUsage: await completeRunUsage(event),
@@ -139,12 +170,12 @@ export const ingestChatEvent = async (
     timestamp,
   } = run
 
-  const { role, isRetry, tags, content, extra } = run.message as any
+  const { role, isRetry, tags, content, extra, metadata } = run.message as any
 
   const coreMessage = clearUndefined({
     role,
     content,
-    extra,
+    metadata: metadata || extra,
   })
 
   if (typeof parentRunId === "undefined") {
@@ -209,7 +240,7 @@ export const ingestChatEvent = async (
     id,
     projectId,
     tags,
-    extra,
+    metadata: metadata || extra,
     externalUserId,
     feedback,
   })

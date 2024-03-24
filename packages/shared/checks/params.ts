@@ -1,6 +1,6 @@
-import type { FilterParam } from "./types"
+import type { CheckParam } from "./types"
 
-export const FORMAT_PARAM: FilterParam = {
+export const FORMAT_PARAM: CheckParam = {
   type: "select",
   id: "type",
   width: 120,
@@ -25,7 +25,7 @@ export const FORMAT_PARAM: FilterParam = {
   ],
 }
 
-export const NUMBER_PARAM: FilterParam = {
+export const NUMBER_PARAM: CheckParam = {
   type: "select",
   id: "operator",
   width: 50,
@@ -58,7 +58,7 @@ export const NUMBER_PARAM: FilterParam = {
   ],
 }
 
-export const FIELD_PARAM: FilterParam = {
+export const FIELD_PARAM: CheckParam = {
   type: "select",
   id: "field",
   width: 80,
@@ -75,7 +75,7 @@ export const FIELD_PARAM: FilterParam = {
   ],
 }
 
-export const FIELD_PARAM_ANY: FilterParam = {
+export const FIELD_PARAM_ANY: CheckParam = {
   type: "select",
   id: "field",
   width: 80,
@@ -96,7 +96,7 @@ export const FIELD_PARAM_ANY: FilterParam = {
   ],
 }
 
-export const MATCH_PARAM: FilterParam = {
+export const MATCH_PARAM: CheckParam = {
   type: "select",
   id: "type",
   width: 120,
@@ -113,7 +113,7 @@ export const MATCH_PARAM: FilterParam = {
   ],
 }
 
-export const PERCENT_PARAM: FilterParam = {
+export const PERCENT_PARAM: CheckParam = {
   type: "number",
   unit: "%",
   id: "percent",

@@ -1,4 +1,4 @@
-import { FilterLogic, LogicElement } from "shared"
+import { CheckLogic, LogicElement } from "shared"
 import sql from "../utils/db"
 import CHECK_RUNNERS from "."
 
@@ -7,7 +7,7 @@ const and = (arr: any = []) =>
 const or = (arr: any = []) =>
   arr.reduce((acc: any, x: any) => sql`(${acc} OR ${x})`)
 
-export function convertChecksToSQL(filtersData: FilterLogic): any {
+export function convertChecksToSQL(filtersData: CheckLogic): any {
   const logicToSql = (logicElement: LogicElement): any => {
     if (Array.isArray(logicElement)) {
       const [logicOperator, ...elements] = logicElement
@@ -29,6 +29,6 @@ export function convertChecksToSQL(filtersData: FilterLogic): any {
       return runner.sql(logicElement.params)
     }
   }
-  const sqlFilters = sql`(${logicToSql(filtersData)})`
-  return sqlFilters
+  const sqlChecks = sql`(${logicToSql(filtersData)})`
+  return sqlChecks
 }

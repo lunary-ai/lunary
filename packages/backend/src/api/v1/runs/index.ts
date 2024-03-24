@@ -5,7 +5,7 @@ import Router from "koa-router"
 import ingest from "./ingest"
 import { fileExport } from "./export"
 import { deserializeLogic } from "shared"
-import { convertChecksToSQL } from "@/src/utils/filters"
+import { convertChecksToSQL } from "@/src/utils/checks"
 
 const runs = new Router({
   prefix: "/runs",
@@ -92,11 +92,11 @@ runs.get("/", async (ctx: Context) => {
   const { projectId } = ctx.state
 
   const queryString = ctx.querystring
-  const deserializedFilters = deserializeLogic(queryString)
+  const deserializedChecks = deserializeLogic(queryString)
 
   const filtersQuery =
-    deserializedFilters?.length && deserializedFilters.length > 1 // first is always ["AND"]
-      ? convertChecksToSQL(deserializedFilters)
+    deserializedChecks?.length && deserializedChecks.length > 1 // first is always ["AND"]
+      ? convertChecksToSQL(deserializedChecks)
       : sql`type = 'llm'` // default to type llm
 
   const {
@@ -106,9 +106,9 @@ runs.get("/", async (ctx: Context) => {
     exportType,
   } = ctx.query as Query
 
-  let parentRunFilter = sql``
+  let parentRunCheck = sql``
   if (parentRunId) {
-    parentRunFilter = sql`and parent_run_id = ${parentRunId}`
+    parentRunCheck = sql`and parent_run_id = ${parentRunId}`
   }
 
   const rows = await sql`
@@ -124,7 +124,7 @@ runs.get("/", async (ctx: Context) => {
           left join external_user eu on r.external_user_id = eu.id
       where
           r.project_id = ${projectId}
-          ${parentRunFilter}
+          ${parentRunCheck}
           and (${filtersQuery})
       order by
           r.created_at desc
