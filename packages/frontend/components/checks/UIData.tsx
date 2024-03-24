@@ -10,6 +10,7 @@ import {
   IconCoin,
   IconCreditCard,
   IconEyeCheck,
+  IconFilter,
   IconHelpCircle,
   IconHtml,
   IconIdBadge,
@@ -171,7 +172,7 @@ const CHECKS_UI_DATA = {
     color: "orange",
   },
   other: {
-    icon: IconCheck,
+    icon: IconFilter,
     color: "gray",
   },
 }

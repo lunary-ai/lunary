@@ -418,7 +418,7 @@ export const CHECKS: Check[] = [
       {
         type: "select",
         id: "ids",
-        width: 150,
+        width: 200,
         placeholder: "Select radars",
         multiple: true,
         options: () => `/filters/radars`,

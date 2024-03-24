@@ -8,7 +8,6 @@ import {
   Flex,
   Group,
   Menu,
-  Paper,
   SegmentedControl,
   Stack,
   Text,
@@ -30,9 +29,9 @@ import {
   IconBrandOpenai,
   IconDotsVertical,
   IconFileExport,
-  IconCheck,
   IconListTree,
   IconMessages,
+  IconFilter,
 } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { useContext, useEffect, useState } from "react"
@@ -43,12 +42,7 @@ import SearchBar from "@/components/blocks/SearchBar"
 import { openUpgrade } from "@/components/layout/UpgradeModal"
 import analytics from "@/utils/analytics"
 import { formatDateTime } from "@/utils/format"
-import {
-  useProject,
-  useLogs,
-  useOrg,
-  useProjectInfiniteSWR,
-} from "@/utils/dataHooks"
+import { useProject, useOrg, useProjectInfiniteSWR } from "@/utils/dataHooks"
 import { useDebouncedState, useDidUpdate } from "@mantine/hooks"
 import Router from "next/router"
 import Empty from "../../components/layout/Empty"
@@ -250,7 +244,7 @@ export default function Logs() {
                   <Button
                     variant="subtle"
                     onClick={() => setShowCheckBar(true)}
-                    leftSection={<IconCheck size={12} />}
+                    leftSection={<IconFilter size={12} />}
                     size="xs"
                   >
                     Add filters
