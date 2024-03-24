@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": "true",
   "scripts": {
-    "start": "npm run migrate:db && npm run concurrently -n frontend,backend,radar \"npm run start:frontend\" \"npm run start:backend\" \"npm run start:radar\"",
+    "start": "npm run migrate:db && npm run concurrently -n frontend,backend,radar \"npm run start:frontend\" \"npm run start:backend\" \"npm run start:ml\" \"npm run start:radar\"",
     "start:frontend": "npm -w packages/frontend run start",
     "start:backend": "npm -w packages/backend run start",
     "start:radar": "npm -w packages/backend run start:radar",
