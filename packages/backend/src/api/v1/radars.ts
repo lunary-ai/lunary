@@ -49,7 +49,7 @@ const DEFAULT_RADARS = [
       },
     ],
     checks: [
-      "OR",
+      "AND",
       {
         id: "pii",
         params: {
