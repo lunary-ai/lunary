@@ -1,5 +1,5 @@
 export type ResourceName =
-  | "project"
+  | "projects"
   | "billing"
   | "teamMembers"
   | "apiKeys"

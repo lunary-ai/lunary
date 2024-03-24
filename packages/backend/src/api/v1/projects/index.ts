@@ -8,7 +8,7 @@ const projects = new Router({
   prefix: "/projects",
 })
 
-projects.get("/", checkAccess("project", "read"), async (ctx: Context) => {
+projects.get("/", checkAccess("projects", "read"), async (ctx: Context) => {
   const { orgId, userId } = ctx.state
 
   const rows = await sql`
@@ -32,7 +32,7 @@ projects.get("/", checkAccess("project", "read"), async (ctx: Context) => {
   ctx.body = rows
 })
 
-projects.post("/", async (ctx: Context) => {
+projects.post("/", checkAccess("projects", "create"), async (ctx: Context) => {
   const { orgId } = ctx.state
 
   const bodySchema = z.object({
@@ -80,39 +80,39 @@ projects.post("/", async (ctx: Context) => {
   ctx.body = project
 })
 
-projects.delete("/:projectId", async (ctx: Context) => {
-  const { projectId } = ctx.params
-  const { orgId, userId } = ctx.state
+projects.delete(
+  "/:projectId",
+  checkAccess("projects", "delete"),
+  async (ctx: Context) => {
+    const { projectId } = ctx.params
+    const { orgId, userId } = ctx.state
 
-  const hasProjectAccess = await checkProjectAccess(projectId, userId)
-  const [user] = await sql`select * from account where id = ${userId}`
+    const hasProjectAccess = await checkProjectAccess(projectId, userId)
+    const [user] = await sql`select * from account where id = ${userId}`
 
-  if (!hasProjectAccess) {
-    ctx.throw(401, "Not allowed")
-  }
-
-  if (user.role !== "owner") {
-    ctx.throw(403, "You must be the organization owner to delete a project")
-  }
-
-  const [{ count }] =
-    await sql`select count(*)::int from  project where org_id = ${orgId}`
-
-  if (count > 1) {
-    await sql`delete from project where id = ${projectId}`
-    ctx.status = 200
-    ctx.body = {}
-    return
-  } else {
-    ctx.status = 422
-
-    ctx.body = {
-      error: "Deletion Failed",
-      message: "An organization must have at least one project.",
+    if (!hasProjectAccess) {
+      ctx.throw(401, "Not allowed")
     }
-    return
-  }
-})
+
+    const [{ count }] =
+      await sql`select count(*)::int from  project where org_id = ${orgId}`
+
+    if (count > 1) {
+      await sql`delete from project where id = ${projectId}`
+      ctx.status = 200
+      ctx.body = {}
+      return
+    } else {
+      ctx.status = 422
+
+      ctx.body = {
+        error: "Deletion Failed",
+        message: "An organization must have at least one project.",
+      }
+      return
+    }
+  },
+)
 
 projects.patch("/:projectId", async (ctx: Context) => {
   const { projectId } = ctx.params
