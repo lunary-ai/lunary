@@ -8,6 +8,17 @@ import aiSimilarity from "./ai/similarity"
 // import aiToxicity from "./ai/toxic"
 import rouge from "rouge"
 
+function getTextsTypes(field: "any" | "input" | "output", run: any) {
+  let textsToCheck = []
+  if (field === "any") {
+    textsToCheck.push(lastMsg(run["input"]), lastMsg(run["output"]))
+  } else {
+    textsToCheck.push(lastMsg(run[field]))
+  }
+
+  return textsToCheck.filter(Boolean)
+}
+
 export type CheckRunner = {
   id: string
   evaluator?: (
@@ -120,7 +131,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       let passed = false
       let reason = ""
 
-      const fieldText = lastMsg(run[field])
+      const fieldText = getTextsTypes(field, run)[0]
 
       if (type === "valid") {
         try {
@@ -469,13 +480,14 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   {
     id: "pii",
     async evaluator(run, params) {
-      const { field, type, types } = params
-
-      const text = lastMsg(run[field])
+      const { field, type, entities } = params
 
       const result: any = {}
 
-      const nerResult = await callML("pii", { texts: [text], types })
+      const nerResult = await callML("pii", {
+        texts: getTextsTypes(field, run),
+        entities,
+      })
 
       for (const type in nerResult) {
         result[type] = nerResult[type] || []
@@ -490,9 +502,9 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       }
 
       let labels = {
-        per: "Persons",
+        person: "Persons",
         org: "Organizations",
-        loc: "Locations",
+        location: "Locations",
         email: "Emails",
         phone: "Phone numbers",
         cc: "Credit card numbers",
@@ -520,15 +532,9 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     async evaluator(run, params) {
       const { field, type } = params
 
-      let textsToCheck = []
-      if (field === "any") {
-        textsToCheck.push(lastMsg(run["input"]), lastMsg(run["output"]))
-      } else {
-        textsToCheck.push(lastMsg(run[field]))
-      }
-
-      // const labels = await aiToxicity(textsToCheck)
-      const labels = await callML("toxicity", { texts: textsToCheck })
+      const labels = await callML("toxicity", {
+        texts: getTextsTypes(field, run),
+      })
 
       const hasToxicity = labels.length > 0
 

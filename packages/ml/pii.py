@@ -60,7 +60,7 @@ def parse_entity_type(entity):
     else:
         return "misc"
 
-def get_ner_labels(model_id, texts, types):
+def get_ner_labels(model_id, texts, entities):
     global tokenizer
     global model
 
@@ -104,23 +104,22 @@ def get_ner_labels(model_id, texts, types):
         if current_entity['word_count'] > 0 and current_entity['score'] / current_entity['word_count'] > 0.5 and current_entity['type']:
             entities[current_entity['type']].append(current_entity['name'].strip())
 
-        for type in types:
+        for type in entities:
             results.setdefault(type, []).extend(entities.get(type, []))
 
     return results
 
-def detect_pii(texts, types, model_id="Davlan/bert-base-multilingual-cased-ner-hrl", custom_patterns=[]):
+def detect_pii(texts, entities, model_id="Davlan/bert-base-multilingual-cased-ner-hrl", custom_patterns=[]):
 
     results = {}
-
     ner_types = ["person", "location", "org", "misc"]
 
     # if ner types in types, use get_ner_labels
-    if any(ner_type in types for ner_type in ner_types):
-        results = get_ner_labels(model_id, texts, types)
+    if any(ner_type in entities for ner_type in ner_types):
+        results = get_ner_labels(model_id, texts, entities)
 
     # for all other types, use regex
-    for type in types:
+    for type in entities:
         if type not in ner_types:
             results.setdefault(type, []).extend(detect_regex(texts, type, custom_patterns))
 
