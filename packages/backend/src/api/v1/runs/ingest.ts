@@ -74,7 +74,7 @@ const registerRunEvent = async (
   }
 
   if ("start" === eventName && parentRunIdToUse) {
-    // Check if parent run exists
+    // Check if parent run exists in database
 
     const [data] =
       await sql`SELECT external_user_id FROM run WHERE id = ${parentRunIdToUse}`
@@ -82,7 +82,7 @@ const registerRunEvent = async (
     if (!data) {
       // Could be that the parent run is not yet created
       // For example if the server-side event reached here before the frontend event, will throw foreign-key constraint error
-      // So we retry once after 5s
+      // So we retry once after 2s
       // A cleaner solution would be to use a queue, but this is simpler for now
 
       console.warn(`Error getting parent run user.`)
@@ -92,6 +92,7 @@ const registerRunEvent = async (
           "Retrying insertion in 2s in case parent not inserted yet...",
         )
 
+        // TODO: better way to wait for parent run to be inserted
         await new Promise((resolve) => setTimeout(resolve, 2000))
 
         return await registerRunEvent(projectId, event, insertedIds, false)
@@ -121,6 +122,7 @@ const registerRunEvent = async (
             name,
             status: "started",
             params: extra,
+            metadata: metadata,
             templateVersionId: templateId,
             parentRunId: parentRunIdToUse,
             input,
@@ -202,7 +204,7 @@ const registerLogEvent = async (
   projectId: string,
   event: Event,
 ): Promise<void> => {
-  const { event: eventName, parentRunId, message, extra } = event
+  const { event: eventName, parentRunId, message, extra, metadata } = event
 
   if (parentRunId === undefined || eventName === undefined) {
     throw new Error("parentRunId and eventName must be defined")
@@ -211,7 +213,7 @@ const registerLogEvent = async (
   await sql`
     INSERT INTO log (run, project_id, level, message, extra)
     VALUES (${parentRunId}, ${projectId}, ${eventName}, ${message}, ${sql.json(
-      extra || {},
+      metadata || extra || {},
     )})
   `
 }
@@ -267,6 +269,7 @@ export async function processEventsIngestion(
         scope.setExtras({ event: JSON.stringify(event) })
         Sentry.captureException(e)
       })
+
       console.error(`Error ingesting event`, {
         error: e,
         event,
