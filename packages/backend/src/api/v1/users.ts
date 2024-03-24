@@ -1,10 +1,16 @@
 import Router from "koa-router"
 import { Context } from "koa"
 import sql from "@/src/utils/db"
-import { WELCOME_EMAIL, sendVerifyEmail } from "@/src/utils/emails"
+import {
+  INVITE_EMAIL,
+  WELCOME_EMAIL,
+  sendVerifyEmail,
+} from "@/src/utils/emails"
 import { jwtVerify } from "jose"
 import { z } from "zod"
 import { sendEmail } from "@/src/utils/sendEmail"
+import { signJwt } from "./auth/utils"
+import { roles } from "shared"
 
 const users = new Router({
   prefix: "/users",
@@ -26,17 +32,18 @@ users.get("/me/org", async (ctx: Context) => {
 
   const users = await sql`
       select
-        id,
-        name,
-        email,
-        role
+        account.*,
+        array_agg(account_project.project_id) as projects
       from
         account
+        left join account_project on account.id = account_project.account_id
       where
-        org_id = ${org.id}
+        account.org_id = ${org.id}
+      group by
+        account.id
       order by
-        role,
-        name
+        account.role,
+        account.name
     `
 
   org.users = users
@@ -49,14 +56,15 @@ users.get("/me", async (ctx: Context) => {
 
   const [user] = await sql`
       select
-        id,
-        name,
-        email,
-        verified
+        account.*,
+        array_agg(account_project.project_id) as projects
       from
         account
+        left join account_project on account.id = account_project.account_id
       where
         id = ${userId}
+      group by 
+        account.id
     `
 
   ctx.body = user
@@ -137,7 +145,70 @@ users.get("/:userId", async (ctx: Context) => {
   ctx.body = user
 })
 
-users.patch("/:userId", async (ctx: Context) => {
+users.post("/", async (ctx: Context) => {
+  const bodySchema = z.object({
+    email: z.string().email(),
+    role: z.enum(Object.keys(roles) as [string, ...string[]]),
+    projects: z.array(z.string()).min(1),
+  })
+  const { email, role, projects } = bodySchema.parse(ctx.request.body)
+  const { orgId } = ctx.state
+
+  const FIFTEEN_DAYS = 60 * 60 * 24 * 15
+
+  const [org] = await sql`
+    select name, plan from org where id = ${orgId}
+  `
+
+  const [orgUserCountResult] = await sql`
+    select count(*) from account where org_id = ${orgId}
+  `
+  const orgUserCount = orgUserCountResult.count
+
+  const token = await signJwt({ email, orgId }, FIFTEEN_DAYS)
+  const userToInsert = {
+    email,
+    orgId,
+    role,
+    verified: false,
+    singleUseToken: token,
+  }
+
+  const [existingUser] = await sql`
+    select id from account where email = ${email}
+  `
+  if (existingUser) {
+    ctx.throw(400, "User with this email already exists")
+  }
+
+  const [user] = await sql`insert into account ${sql(userToInsert)} returning *`
+
+  for (const projectId of projects) {
+    await sql`
+      insert into account_project (account_id, project_id) values (${user.id}, ${projectId}) returning *
+    `
+  }
+
+  const [finalUser] = await sql`
+    select 
+      account.*, 
+      array_agg(account_project.project_id) as project_ids 
+    from account 
+    left join account_project on account.id = account_project.account_id 
+    where account.email = ${email} 
+    group by account.id
+  `
+
+  if (!org.samlEnabled) {
+    const link = `${process.env.NEXT_PUBLIC_APP_URL}/join?token=${token}`
+    await sendEmail(INVITE_EMAIL(email, org.name, link))
+  }
+
+  ctx.status = 201
+  ctx.body = { user: finalUser }
+})
+
+users.delete("/:userId", async (ctx: Context) => {
   const { userId: userToDeleteId } = ctx.params
   const { userId: currentUserId } = ctx.state
 
@@ -158,11 +229,65 @@ users.patch("/:userId", async (ctx: Context) => {
     ctx.throw(401, "Forbidden")
   }
 
-  // we remove the user from the org but don't delete it because later users will be able to be in several orgs
-  await sql`update account set org_id = NULL where id = ${userToDeleteId}`
+  await sql`delete from account where id = ${userToDeleteId}`
 
   ctx.status = 200
   ctx.body = {}
 })
 
+users.patch("/:userId", async (ctx: Context) => {
+  const UpdateUserSchema = z.object({
+    projects: z.array(z.string()).min(1),
+    role: z.enum(Object.keys(roles) as [string, ...string[]]),
+  })
+  const { userId } = ctx.params
+  const { userId: currentUserId } = ctx.state
+
+  const { projects, role } = UpdateUserSchema.parse(ctx.request.body)
+
+  const [currentUser] =
+    await sql`select * from account where id = ${currentUserId}`
+  if (!["owner", "admin"].includes(currentUser.role)) {
+    ctx.throw(403, "You do not have permission to modify this user")
+  }
+
+  const [userToModify] = await sql`select * from account where id = ${userId}`
+  if (!userToModify || userToModify.org_id !== currentUser.org_id) {
+    ctx.throw(404, "User not found in your organization")
+  }
+
+  await sql`update account set role = ${role} where id = ${userId}`
+
+  // Get existing project IDs for the user
+  const existingProjects = await sql`
+ select project_id from account_project where account_id = ${userId}
+`
+
+  const existingProjectIds = existingProjects.map((row) => row.projectId)
+  console.log(existingProjects)
+
+  const projectsToDelete = existingProjectIds.filter(
+    (projectId) => !projects.includes(projectId),
+  )
+
+  console.log(projectsToDelete)
+  for (const projectId of projectsToDelete) {
+    await sql`
+   delete from account_project
+   where account_id = ${userId} and project_id = ${projectId}
+ `
+  }
+
+  for (const projectId of projects) {
+    await sql`
+    insert into account_project (account_id, project_id)
+    values (${userId}, ${projectId})
+    on conflict (account_id, project_id)
+    do nothing
+   `
+  }
+
+  ctx.status = 200
+  ctx.body = { message: "User updated successfully" }
+})
 export default users

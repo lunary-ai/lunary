@@ -1,4 +1,4 @@
-import { checkProjectAccess } from "@/src/utils/authorization"
+import { checkAccess, checkProjectAccess } from "@/src/utils/authorization"
 import sql from "@/src/utils/db"
 import Context from "@/src/utils/koa"
 import Router from "koa-router"
@@ -8,8 +8,8 @@ const projects = new Router({
   prefix: "/projects",
 })
 
-projects.get("/", async (ctx: Context) => {
-  const { orgId } = ctx.state
+projects.get("/", checkAccess("project", "read"), async (ctx: Context) => {
+  const { orgId, userId } = ctx.state
 
   const rows = await sql`
     select
@@ -19,11 +19,14 @@ projects.get("/", async (ctx: Context) => {
       org_id,
       exists(select * from run where project_id = project.id) as activated,
       (select api_key from api_key where project_id = project.id and type = 'public') as public_api_key,
-      (select api_key from api_key where project_id = project.id and type = 'private') as private_api_key 
+      (select api_key from api_key where project_id = project.id and type = 'private') as private_api_key,
+      (select array_agg(project_id) as id from account_project where account_id = ${userId}) as projects
     from
       project
+      left join account_project on account_project.account_id = ${userId}
     where
       org_id = ${orgId}
+      and project.id = account_project.project_id
   `
 
   ctx.body = rows
@@ -52,6 +55,13 @@ projects.post("/", async (ctx: Context) => {
 
   const [project] =
     await sql`insert into project ${sql(newProject)} returning *`
+
+  await sql`
+    insert into account_project (account_id, project_id)
+    select account.id, ${project.id}
+    from account
+    where account.org_id = ${orgId} and (account.role = 'owner' or account.role = 'admin')
+  `
 
   const publicKey = {
     type: "public",

@@ -6,6 +6,7 @@ import ingest from "./ingest"
 import { fileExport } from "./export"
 import { deserializeLogic } from "shared"
 import { convertChecksToSQL } from "@/src/utils/filters"
+import { checkAccess } from "@/src/utils/authorization"
 
 const runs = new Router({
   prefix: "/runs",
@@ -88,7 +89,7 @@ const formatRun = (run: any) => ({
 
 runs.use("/ingest", ingest.routes())
 
-runs.get("/", async (ctx: Context) => {
+runs.get("/", checkAccess("logs", "read"), async (ctx: Context) => {
   const { projectId } = ctx.state
 
   const queryString = ctx.querystring
@@ -140,7 +141,7 @@ runs.get("/", async (ctx: Context) => {
   ctx.body = runs
 })
 
-runs.get("/usage", async (ctx) => {
+runs.get("/usage", checkAccess("logs", "read"), async (ctx) => {
   const { projectId } = ctx.state
   const { days, userId, daily } = ctx.query as {
     days: string
@@ -186,7 +187,7 @@ runs.get("/usage", async (ctx) => {
   ctx.body = runsUsage
 })
 
-runs.get("/:id/public", async (ctx) => {
+runs.get("/:id/public", checkAccess("logs", "read"), async (ctx) => {
   const { id } = ctx.params
 
   const [row] = await sql`
@@ -212,7 +213,7 @@ runs.get("/:id/public", async (ctx) => {
   ctx.body = formatRun(row)
 })
 
-runs.get("/:id", async (ctx) => {
+runs.get("/:id", checkAccess("logs", "read"), async (ctx) => {
   const { id } = ctx.params
 
   // Use orgId in case teammates shares URL to run and teammates is on another project.
@@ -239,7 +240,7 @@ runs.get("/:id", async (ctx) => {
   ctx.body = formatRun(row)
 })
 
-runs.patch("/:id", async (ctx: Context) => {
+runs.patch("/:id", checkAccess("logs", "update"), async (ctx: Context) => {
   const { projectId } = ctx.state
   const { id } = ctx.params
   const { isPublic, feedback, tags } = ctx.request.body as {
@@ -262,7 +263,7 @@ runs.patch("/:id", async (ctx: Context) => {
   ctx.status = 200
 })
 
-runs.get("/:id/related", async (ctx) => {
+runs.get("/:id/related", checkAccess("logs", "read"), async (ctx) => {
   const id = ctx.params.id
 
   const related = await sql`
@@ -284,7 +285,7 @@ runs.get("/:id/related", async (ctx) => {
   ctx.body = related
 })
 
-runs.get("/:id/feedback", async (ctx) => {
+runs.get("/:id/feedback", checkAccess("logs", "read"), async (ctx) => {
   const { projectId } = ctx.state
   const { id } = ctx.params
 

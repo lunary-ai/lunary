@@ -34,7 +34,8 @@
     "react-json-view-lite": "^1.2.1",
     "recharts": "^2.11.0",
     "shared": "*",
-    "swr": "^2.2.4"
+    "swr": "^2.2.4",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/node": "20.10.5",

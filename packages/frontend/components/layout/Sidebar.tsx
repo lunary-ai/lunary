@@ -1,4 +1,13 @@
-import { Box, Flex, Menu, NavLink, Stack, Text, ThemeIcon } from "@mantine/core"
+import {
+  Box,
+  Flex,
+  Loader,
+  Menu,
+  NavLink,
+  Stack,
+  Text,
+  ThemeIcon,
+} from "@mantine/core"
 
 import {
   IconActivity,
@@ -32,16 +41,52 @@ import { IconPlus } from "@tabler/icons-react"
 import { useAuth } from "@/utils/auth"
 import { useProject, useProjects } from "@/utils/dataHooks"
 import { useEffect, useState } from "react"
+import { ResourceName, hasAccess, hasReadAccess } from "shared"
 
-const APP_MENU = [
-  { label: "Analytics", icon: IconTimeline, link: "/analytics" },
-  { label: "Logs", icon: IconListSearch, link: "/logs" },
-  { label: "Users", icon: IconUsers, link: "/users" },
-  { label: "Prompts", icon: IconPlayerPlay, link: "/prompts" },
-  { label: "Radars", icon: IconShieldBolt, link: "/radars" },
-  { label: "Evaluations", icon: IconFlask2Filled, link: "/evaluations" },
-  // { label: "Datasets", icon: IconDatabase, link: "/datasets" },
-  { label: "Settings & Keys", icon: IconSettings, link: "/settings" },
+const APP_MENU: {
+  label: string
+  icon: any
+  link: string
+  resource: ResourceName
+}[] = [
+  {
+    label: "Analytics",
+    icon: IconTimeline,
+    link: "/analytics",
+    resource: "analytics",
+  },
+  {
+    label: "Logs",
+    icon: IconListSearch,
+    link: "/logs",
+    resource: "logs",
+  },
+  { label: "Users", icon: IconUsers, link: "/users", resource: "users" },
+  {
+    label: "Prompts",
+    icon: IconPlayerPlay,
+    link: "/prompts",
+    resource: "prompts",
+  },
+  {
+    label: "Radars",
+    icon: IconShieldBolt,
+    link: "/radars",
+    resource: "radars",
+  },
+  {
+    label: "Evaluations",
+    icon: IconFlask2Filled,
+    link: "/evaluations",
+    resource: "evaluations",
+  },
+  // { label: "Datasets", icon: IconDatabase, link: "/datasets", resource: "datasets" },
+  {
+    label: "Settings & Keys",
+    icon: IconSettings,
+    link: "/settings",
+    resource: "apiKeys",
+  },
 ]
 
 function NavbarLink({ icon: Icon, label, link, soon, onClick, c }) {
@@ -78,8 +123,10 @@ export default function Sidebar() {
   const { project, setProjectId } = useProject()
 
   const { user } = useUser()
+  console.log(user)
   const { org } = useOrg()
   const { projects, isLoading: loading, insert } = useProjects()
+  console.log(projects)
 
   const [createProjectLoading, setCreateProjectLoading] = useState(false)
 
@@ -202,27 +249,30 @@ export default function Sidebar() {
             </Combobox.Dropdown>
           </Combobox>
 
-          {APP_MENU.map((item) => (
-            <NavbarLink {...item} key={item.label} />
-          ))}
+          {user &&
+            APP_MENU.filter((item) =>
+              hasReadAccess(user.role, item.resource),
+            ).map((item) => <NavbarLink {...item} key={item.label} />)}
         </Box>
-        <Box w="100%" mt="xl">
-          <Text
-            ml="xs"
-            h={20}
-            fz={12}
-            fw={700}
-            style={{
-              textTransform: "uppercase",
-            }}
-          >
-            {org?.name}
-          </Text>
+        {user && hasAccess(user.role, "billing", "read") && (
+          <Box w="100%" mt="xl">
+            <Text
+              ml="xs"
+              h={20}
+              fz={12}
+              fw={700}
+              style={{
+                textTransform: "uppercase",
+              }}
+            >
+              {org?.name}
+            </Text>
 
-          {orgMenu.map((item) => (
-            <NavbarLink {...item} key={item.label} />
-          ))}
-        </Box>
+            {orgMenu.map((item) => (
+              <NavbarLink {...item} key={item.label} />
+            ))}
+          </Box>
+        )}
       </Stack>
 
       {user && (

@@ -13,6 +13,7 @@ import {
   verifyPassword,
 } from "./utils"
 import saml, { getLoginUrl } from "./saml"
+import { jwtVerify } from "jose"
 
 const auth = new Router({
   prefix: "/auth",
@@ -51,6 +52,7 @@ auth.post("/signup", async (ctx: Context) => {
     projectName: z.string().optional(),
     employeeCount: z.string().optional(),
     orgId: z.string().optional(),
+    token: z.string().optional(),
     signupMethod: z.enum(["signup", "join"]),
   })
 
@@ -63,6 +65,7 @@ auth.post("/signup", async (ctx: Context) => {
     employeeCount,
     orgId,
     signupMethod,
+    token,
   } = bodySchema.parse(ctx.request.body)
 
   if (orgName?.includes("https://") || name.includes("http://")) {
@@ -73,10 +76,6 @@ auth.post("/signup", async (ctx: Context) => {
   const [existingUser] = await sql`
     select * from account where lower(email) = lower(${email})
   `
-  if (existingUser) {
-    ctx.throw(403, "User already exists")
-  }
-
   if (signupMethod === "signup") {
     const { user, org } = await sql.begin(async (sql) => {
       const plan = process.env.DEFAULT_PLAN || "free"
@@ -105,6 +104,10 @@ auth.post("/signup", async (ctx: Context) => {
       }
       const [project] = await sql`
         insert into project ${sql(newProject)} returning *
+      `
+
+      await sql`
+        insert into account_project ${sql({ accountId: user.id, projectId: project.id })}
       `
 
       const publicKey = {
@@ -148,6 +151,11 @@ auth.post("/signup", async (ctx: Context) => {
     ctx.body = { token }
     return
   } else if (signupMethod === "join") {
+    const { payload } = await verifyJwt(token!)
+    if (payload.email !== email) {
+      ctx.throw(403, "Wrong email")
+    }
+
     const newUser = {
       name,
       passwordHash: await hashPassword(password),
@@ -156,16 +164,44 @@ auth.post("/signup", async (ctx: Context) => {
       role: "member",
       verified: true,
     }
-    const [user] = await sql`insert into account ${sql(newUser)} returning *`
+    const [user] = await sql`
+        update account set 
+          name = ${newUser.name},
+          password_hash = ${newUser.passwordHash}, 
+          verified = true, 
+          single_use_token = null
+        where email = ${newUser.email} 
+        returning *
+     `
 
-    const token = await signJwt({
-      userId: user.id,
-      email: user.email,
-      orgId,
-    })
-
-    ctx.body = { token }
+    ctx.body = {}
     return
+  }
+})
+
+auth.get("/join-data", async (ctx: Context) => {
+  const token = z.string().parse(ctx.query.token)
+
+  const {
+    payload: { orgId },
+  } = await verifyJwt(token)
+
+  const [org] = await sql`
+    select name, plan from org where id = ${orgId}
+  `
+
+  console.log(org)
+
+  const [orgUserCountResult] = await sql`
+    select count(*) from account where org_id = ${orgId}
+  `
+  const orgUserCount = parseInt(orgUserCountResult.count, 10)
+
+  ctx.body = {
+    orgUserCount,
+    orgName: org?.name,
+    orgPlan: org?.plan,
+    orgId: orgId,
   }
 })
 
@@ -283,7 +319,7 @@ auth.post("/exchange-token", async (ctx: Context) => {
 
   // get account with onetime_token = token
   const [account] = await sql`
-    update account set onetime_token = null where onetime_token = ${onetimeToken} returning *
+    update account set single_use_token = null where single_use_token = ${onetimeToken} returning *
   `
 
   if (!account) {

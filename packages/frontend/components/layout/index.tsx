@@ -1,4 +1,4 @@
-import { Box, Flex } from "@mantine/core"
+import { Box, Flex, Loader } from "@mantine/core"
 import { Notifications } from "@mantine/notifications"
 import { ReactNode, useEffect } from "react"
 
@@ -55,7 +55,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       return
     }
   }, [isSignedIn])
-  const { user } = useUser()
+  const { user, loading: userLoading } = useUser()
 
   const { org } = useOrg()
 
@@ -90,7 +90,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               color: colorScheme === "dark" ? "#eee" : "#333",
             }}
           >
-            {!isAuthPage && !isPublicPage && <Sidebar />}
+            {!isAuthPage && !isPublicPage && user && <Sidebar />}
 
             <Box
               p={isPromptPage ? 0 : 24}
@@ -98,6 +98,8 @@ export default function Layout({ children }: { children: ReactNode }) {
               flex={1}
               style={{
                 overflowY: "auto",
+                backgroundColor:
+                  colorScheme === "light" ? "#fcfcfc" : "inherit",
               }}
             >
               {!isAuthPage && !isPublicPage && <Navbar />}

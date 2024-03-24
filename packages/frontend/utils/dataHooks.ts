@@ -129,6 +129,8 @@ export function useOrg() {
     () => isSignedIn && `/users/me/org`,
   )
 
+  const { trigger: addUserToOrg } = useSWRMutation(`/users`, fetcher.post)
+
   const theme = useMantineTheme()
   const scheme = useFixedColorScheme()
 
@@ -144,7 +146,19 @@ export function useOrg() {
     fetcher.patch,
   )
 
-  return { org, loading: isLoading, updateOrg, mutate }
+  return { org, loading: isLoading, updateOrg, addUserToOrg, mutate }
+}
+
+export function useJoinData(token?: string) {
+  const { data, error, isLoading } = useSWR(
+    token ? `/auth/join-data?token=${token}` : null,
+  )
+
+  return {
+    data,
+    isLoading,
+    error,
+  }
 }
 
 export function useProjects() {
@@ -426,10 +440,22 @@ export function useOrgUser(userId: string) {
   )
 
   async function removeUserFromOrg() {
-    await trigger()
+    await triggerDelete()
     await mutateOrg()
   }
-  const { trigger } = useProjectMutation(`/users/${userId}`, fetcher.patch)
+  const { trigger: triggerDelete } = useProjectMutation(
+    `/users/${userId}`,
+    fetcher.delete,
+  )
+
+  async function updateUser(data: any) {
+    await triggerUpdate(data)
+    await mutateOrg()
+  }
+  const { trigger: triggerUpdate } = useProjectMutation(
+    `/users/${userId}`,
+    fetcher.patch,
+  )
 
   const theme = useMantineTheme()
   const scheme = useFixedColorScheme()
@@ -439,7 +465,7 @@ export function useOrgUser(userId: string) {
     color: getUserColor(scheme, theme, data?.id),
   }
 
-  return { user, loading: isLoading, mutate, removeUserFromOrg }
+  return { user, loading: isLoading, mutate, removeUserFromOrg, updateUser }
 }
 
 export function useChecklists(type: string) {
