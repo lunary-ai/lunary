@@ -77,6 +77,14 @@ export default function Layout({ children }: { children: ReactNode }) {
     }
   }, [user])
 
+  if (!user || !org) {
+    return (
+      <Flex align="center" justify="center" h="100vh">
+        <Loader />
+      </Flex>
+    )
+  }
+
   return (
     <>
       <Notifications position="top-right" />
@@ -90,7 +98,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               color: colorScheme === "dark" ? "#eee" : "#333",
             }}
           >
-            {!isAuthPage && !isPublicPage && user && <Sidebar />}
+            {!isAuthPage && !isPublicPage && <Sidebar />}
 
             <Box
               p={isPromptPage ? 0 : 24}

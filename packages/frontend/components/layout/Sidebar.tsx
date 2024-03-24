@@ -1,13 +1,4 @@
-import {
-  Box,
-  Flex,
-  Loader,
-  Menu,
-  NavLink,
-  Stack,
-  Text,
-  ThemeIcon,
-} from "@mantine/core"
+import { Box, Flex, Menu, NavLink, Stack, Text, ThemeIcon } from "@mantine/core"
 
 import {
   IconActivity,
@@ -123,10 +114,8 @@ export default function Sidebar() {
   const { project, setProjectId } = useProject()
 
   const { user } = useUser()
-  console.log(user)
   const { org } = useOrg()
   const { projects, isLoading: loading, insert } = useProjects()
-  console.log(projects)
 
   const [createProjectLoading, setCreateProjectLoading] = useState(false)
 
