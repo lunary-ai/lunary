@@ -19,7 +19,7 @@ def get_predicted_labels(model, text):
 
 multilingual_model_langs = ['IT', 'FR', 'ES', 'PT', 'RU', 'TR']
 
-def detect_profanity(texts):
+def detect_toxicity(texts):
     start_time = time.time()
     results = set()
     for text in texts:

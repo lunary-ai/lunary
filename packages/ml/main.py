@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from lang import detect_lang
-from profanity import detect_profanity
+from toxicity import detect_toxicity
 from pii import detect_pii
 
 app = Flask(__name__)
@@ -11,10 +11,12 @@ def language_route():
     result = detect_lang(text)
     return jsonify(result)
 
-@app.route('/profanity', methods=['POST'])
-def profanity_route():
+@app.route('/toxicity', methods=['POST'])
+def toxicity_route():
     texts = request.json['texts']
-    results = detect_profanity(texts)
+    print("texts: ", texts)
+    results = detect_toxicity(texts)
+    print("results: ", results)
     return jsonify(results)
 
 @app.route('/pii', methods=['POST'])
@@ -27,6 +29,6 @@ def ner_route():
     return jsonify(results)
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=4242)
+    app.run(host='localhost', port=4242)
 
 print("Python Flask Server is running on port 4242")

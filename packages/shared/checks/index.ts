@@ -244,48 +244,48 @@ export const CHECKS: Check[] = [
   //   },
 
   // },
-  {
-    id: "cc",
-    name: "Credit Card",
-    disableInEvals: true,
-    uiType: "smart",
-    params: [
-      FIELD_PARAM,
-      MATCH_PARAM,
-      {
-        type: "label",
-        label: "Credit Card",
-      },
-    ],
-  },
-  {
-    id: "email",
-    name: "Email",
-    disableInEvals: true,
-    uiType: "smart",
-    params: [
-      FIELD_PARAM,
-      MATCH_PARAM,
-      {
-        type: "label",
-        label: "Email",
-      },
-    ],
-  },
-  {
-    id: "phone",
-    name: "Phone",
-    disableInEvals: true,
-    uiType: "smart",
-    params: [
-      FIELD_PARAM,
-      MATCH_PARAM,
-      {
-        type: "label",
-        label: "Phone",
-      },
-    ],
-  },
+  // {
+  //   id: "cc",
+  //   name: "Credit Card",
+  //   disableInEvals: true,
+  //   uiType: "smart",
+  //   params: [
+  //     FIELD_PARAM,
+  //     MATCH_PARAM,
+  //     {
+  //       type: "label",
+  //       label: "Credit Card",
+  //     },
+  //   ],
+  // },
+  // {
+  //   id: "email",
+  //   name: "Email",
+  //   disableInEvals: true,
+  //   uiType: "smart",
+  //   params: [
+  //     FIELD_PARAM,
+  //     MATCH_PARAM,
+  //     {
+  //       type: "label",
+  //       label: "Email",
+  //     },
+  //   ],
+  // },
+  // {
+  //   id: "phone",
+  //   name: "Phone",
+  //   disableInEvals: true,
+  //   uiType: "smart",
+  //   params: [
+  //     FIELD_PARAM,
+  //     MATCH_PARAM,
+  //     {
+  //       type: "label",
+  //       label: "Phone",
+  //     },
+  //   ],
+  // },
   {
     id: "length",
     name: "Length",
@@ -519,11 +519,12 @@ export const CHECKS: Check[] = [
     ],
   },
   {
-    id: "entities",
-    name: "Entities",
+    id: "pii",
+    name: "PII",
     uiType: "ai",
+
     description:
-      "Uses AI to check if the content contains a name, location or organization.",
+      "Uses AI to detect if the given field contains personal identifiable information (PII).",
     params: [
       FIELD_PARAM,
       MATCH_PARAM,
@@ -531,20 +532,36 @@ export const CHECKS: Check[] = [
         type: "select",
         id: "entities",
         width: 100,
-        defaultValue: ["per"],
+        defaultValue: ["person", "location", "email", "cc", "phone", "ssn"],
         multiple: true,
         options: [
           {
             label: "Name",
-            value: "per",
+            value: "person",
           },
           {
             label: "Location",
-            value: "loc",
+            value: "location",
           },
           {
             label: "Organization",
             value: "org",
+          },
+          {
+            label: "Email",
+            value: "email",
+          },
+          {
+            label: "Credit Card",
+            value: "cc",
+          },
+          {
+            label: "Phone",
+            value: "phone",
+          },
+          {
+            label: "SSN",
+            value: "ssn",
           },
         ],
       },
@@ -573,7 +590,6 @@ export const CHECKS: Check[] = [
   {
     id: "sentiment",
     name: "Sentiment",
-
     uiType: "ai",
     description:
       "Uses AI to check if content is positive, neutral, or negative.",
@@ -707,7 +723,6 @@ export const CHECKS: Check[] = [
     id: "factualness",
     name: "Factualness",
     uiType: "ai",
-
     onlyInEvals: true,
     description:
       "Checks how correct the LLM's response is compared to the ideal output (ues OpenAI's eval prompt).",

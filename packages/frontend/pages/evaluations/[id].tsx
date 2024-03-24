@@ -1,5 +1,5 @@
 import ResultsMatrix from "@/components/evals/ResultsMatrix"
-import CheckPicker from "@/components/filters/Picker"
+import CheckPicker from "@/components/checks/Picker"
 import {
   useChecklist,
   useDataset,

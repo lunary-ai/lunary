@@ -2,10 +2,10 @@ import sql from "../utils/db"
 import { callML } from "../utils/ml"
 import aiAssert from "./ai/assert"
 import aiFact from "./ai/fact"
-import aiNER from "./ai/ner"
 import aiSentiment from "./ai/sentiment"
 import aiSimilarity from "./ai/similarity"
-import aiToxicity from "./ai/toxic"
+// import aiNER from "./ai/ner"
+// import aiToxicity from "./ai/toxic"
 import rouge from "rouge"
 
 export type CheckRunner = {
@@ -428,44 +428,44 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       }
     },
   },
-  {
-    id: "entities",
-    async evaluator(run, params) {
-      const { field, type, entities } = params
+  // {
+  //   id: "entities",
+  //   async evaluator(run, params) {
+  //     const { field, type, entities } = params
 
-      const result = await callML("ner", { text: [lastMsg(run[field])] })
+  //     const result = await callML("ner", { text: [lastMsg(run[field])] })
 
-      let passed = false
+  //     let passed = false
 
-      if (type === "contains") {
-        passed = entities.some((entity) => result[entity]?.length > 0)
-      } else {
-        passed = entities.every((entity) => result[entity]?.length === 0)
-      }
+  //     if (type === "contains") {
+  //       passed = entities.some((entity) => result[entity]?.length > 0)
+  //     } else {
+  //       passed = entities.every((entity) => result[entity]?.length === 0)
+  //     }
 
-      let labels = {
-        per: "Persons",
-        org: "Organizations",
-        loc: "Locations",
-      }
+  //     let labels = {
+  //       per: "Persons",
+  //       org: "Organizations",
+  //       loc: "Locations",
+  //     }
 
-      let reason = "No entities detected"
-      if (passed) {
-        reason =
-          "Entities detected: " +
-          Object.keys(result)
-            .filter((key) => result[key].length > 0)
-            .map((key) => labels[key] + ": " + result[key].join(", "))
-            .join(", ")
-      }
+  //     let reason = "No entities detected"
+  //     if (passed) {
+  //       reason =
+  //         "Entities detected: " +
+  //         Object.keys(result)
+  //           .filter((key) => result[key].length > 0)
+  //           .map((key) => labels[key] + ": " + result[key].join(", "))
+  //           .join(", ")
+  //     }
 
-      return {
-        passed,
-        reason,
-        details: result,
-      }
-    },
-  },
+  //     return {
+  //       passed,
+  //       reason,
+  //       details: result,
+  //     }
+  //   },
+  // },
   {
     id: "pii",
     async evaluator(run, params) {
@@ -475,7 +475,8 @@ export const CHECK_RUNNERS: CheckRunner[] = [
 
       const result: any = {}
 
-      const nerResult = await callML("pii", { text: [text], types })
+      const nerResult = await callML("pii", { texts: [text], types })
+
       for (const type in nerResult) {
         result[type] = nerResult[type] || []
       }

@@ -48,7 +48,7 @@ async function radarJob() {
   const [{ count: runsCount }] = await sql`select count(*)::int from run`
 
   if (runsCount === 0) {
-    console.log("[Radars] No runs, waiting 20 seconds")
+    // [Radars] No runs, waiting 20 seconds
     await sleep(20000)
   }
 

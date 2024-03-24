@@ -1,5 +1,5 @@
 import TinyPercentChart from "@/components/analytics/TinyPercentChart"
-import CheckPicker from "@/components/filters/Picker"
+import CheckPicker from "@/components/checks/Picker"
 import Paywall from "@/components/layout/Paywall"
 import { useRadar, useRadars } from "@/utils/dataHooks"
 import {

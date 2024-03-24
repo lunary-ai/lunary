@@ -53,7 +53,7 @@ import { useDebouncedState, useDidUpdate } from "@mantine/hooks"
 import Router from "next/router"
 import Empty from "../../components/layout/Empty"
 import { ProjectContext } from "../../utils/context"
-import CheckPicker from "@/components/filters/Picker"
+import CheckPicker from "@/components/checks/Picker"
 import { CheckLogic, deserializeLogic, serializeLogic } from "shared"
 import { fetcher } from "@/utils/fetcher"
 

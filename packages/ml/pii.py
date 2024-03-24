@@ -9,7 +9,7 @@ default_patterns = [
     {"label": "email", "expression": r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"},
     {"label": "phone", "expression": r"\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})"}, # US
     {"label": "phone", "expression": r"((\+44\s?\d{4}|\(?0\d{4}\)?)\s?\d{3}\s?\d{3})|((\+44\s?\d{3}|\(?0\d{3}\)?)\s?\d{3}\s?\d{4})|((\+44\s?\d{2}|\(?0\d{2}\)?)\s?\d{4}\s?\d{4})"}, # UK
-    {"label": "phone", "expression": r"(?:(?:\+|00)33[\s.-]{0,3}(?:\(0\)[\s.-]{0,3})?|0)[1-9](?:(?:[\s.-]?\d{2}){4}|\d{2}(?:[\s.-]?\d{3}){2})"}, # FR
+    {"label": "phone", "expression": r"^(?:(?:\+|00)33[\s.-]{0,3}(?:\(0\)[\s.-]{0,3})?|0)[1-9](?:(?:[\s.-]?\d{2}){4}|\d{2}(?:[\s.-]?\d{3}){2})$"}, # FR
     {"label": "phone", "expression": r"(\(?([\d \-\)\–\+\/\(]+){6,}\)?([ .\-–\/]?)([\d]+))"}, # Germany
     {"label": "phone", "expression": r"(?:(?:\+|00)86)?1(?:(?:3[\d])|(?:4[5-79])|(?:5[0-35-9])|(?:6[5-7])|(?:7[0-8])|(?:8[\d])|(?:9[189]))\d{8}"}, # China
     {"label": "phone", "expression": r"((\+*)((0[ -]*)*|((91 )*))((\d{12})+|(\d{10})+))|\d{5}([- ]*)\d{6}"}, # India
@@ -35,7 +35,9 @@ def detect_regex(texts, type, custom_patterns=[]):
     return list(set(results))
 
 # Allow loading custom HF NER model
-def load_ner_model(model_id="dslim/bert-base-NER"):
+# Default model supports officialy: ar, de, en, es, fr, it, lv, nl, pt, zh
+# But also works decntly for other languages
+def load_ner_model(model_id="Davlan/bert-base-multilingual-cased-ner-hrl"):
     if model_id not in models:
         print(f"Loading NER model: {model_id}")
         tokenizers[model_id] = AutoTokenizer.from_pretrained(model_id)
@@ -43,7 +45,10 @@ def load_ner_model(model_id="dslim/bert-base-NER"):
 
 def parse_entity_type(entity):
     lower_entity = entity.lower()
-    second_part = lower_entity.split("-")[1]
+
+    parts = lower_entity.split("-")
+    second_part = parts[1] if len(parts) > 1 else lower_entity
+
     if second_part.startswith("per"):
         return "person"
     elif second_part.startswith("loc"):
@@ -53,7 +58,7 @@ def parse_entity_type(entity):
     elif second_part.startswith("misc"):
         return "misc"
     else:
-        return "other"
+        return "misc"
 
 def get_ner_labels(model_id, texts, types):
     global tokenizer
@@ -72,6 +77,7 @@ def get_ner_labels(model_id, texts, types):
         current_entity = {"name": "", "score": 0, "type": "", "word_count": 0}
 
         for word in ner_results:
+
             full_entity_type = word['entity']  # Get full entity type e.g., B-Person
             entity_prefix = full_entity_type.split("-")[0]
             entity_type = parse_entity_type(full_entity_type)
@@ -79,18 +85,20 @@ def get_ner_labels(model_id, texts, types):
             if entity_type not in entities:
                 entities[entity_type] = []
 
-            if "##" in word['word']:
-                current_entity['name'] += word['word'].replace("##", "")
+            cleaned_word = word['word']
+
+            if "##" in cleaned_word:
+                current_entity['name'] += cleaned_word.replace("##", "")
                 current_entity['score'] += word['score']
                 current_entity['word_count'] += 1
             elif entity_prefix == "I":
-                current_entity['name'] += " " + word['word']
+                current_entity['name'] += " " + cleaned_word
                 current_entity['score'] += word['score']
                 current_entity['word_count'] += 1
             else:
                 if current_entity['word_count'] > 0 and current_entity['score'] / current_entity['word_count'] > 0.5 and current_entity['type']:
                     entities[current_entity['type']].append(current_entity['name'].strip())
-                current_entity = {"name": word['word'], "score": word['score'], "type": entity_type, "word_count": 1}
+                current_entity = {"name": cleaned_word, "score": word['score'], "type": entity_type, "word_count": 1}
 
         # Check for the last entity
         if current_entity['word_count'] > 0 and current_entity['score'] / current_entity['word_count'] > 0.5 and current_entity['type']:
@@ -101,12 +109,12 @@ def get_ner_labels(model_id, texts, types):
 
     return results
 
-def detect_pii(texts, types, model_id="dslim/bert-base-NER", custom_patterns=[]):
-    #
+def detect_pii(texts, types, model_id="Davlan/bert-base-multilingual-cased-ner-hrl", custom_patterns=[]):
+
     results = {}
 
     ner_types = ["person", "location", "org", "misc"]
-    
+
     # if ner types in types, use get_ner_labels
     if any(ner_type in types for ner_type in ner_types):
         results = get_ner_labels(model_id, texts, types)
@@ -114,7 +122,6 @@ def detect_pii(texts, types, model_id="dslim/bert-base-NER", custom_patterns=[])
     # for all other types, use regex
     for type in types:
         if type not in ner_types:
-            
             results.setdefault(type, []).extend(detect_regex(texts, type, custom_patterns))
 
     return results
