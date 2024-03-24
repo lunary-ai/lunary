@@ -7,12 +7,12 @@ import {
   PERCENT_PARAM,
 } from "./params"
 
-import type { Filter } from "./types"
+import type { Check } from "./types"
 
 export * from "./types"
 export * from "./serialize"
 
-export const FILTERS: Filter[] = [
+export const CHECKS: Check[] = [
   {
     id: "type",
     name: "Type",
@@ -244,48 +244,48 @@ export const FILTERS: Filter[] = [
   //   },
 
   // },
-  {
-    id: "cc",
-    name: "Credit Card",
-    disableInEvals: true,
-    uiType: "smart",
-    params: [
-      FIELD_PARAM,
-      MATCH_PARAM,
-      {
-        type: "label",
-        label: "Credit Card",
-      },
-    ],
-  },
-  {
-    id: "email",
-    name: "Email",
-    disableInEvals: true,
-    uiType: "smart",
-    params: [
-      FIELD_PARAM,
-      MATCH_PARAM,
-      {
-        type: "label",
-        label: "Email",
-      },
-    ],
-  },
-  {
-    id: "phone",
-    name: "Phone",
-    disableInEvals: true,
-    uiType: "smart",
-    params: [
-      FIELD_PARAM,
-      MATCH_PARAM,
-      {
-        type: "label",
-        label: "Phone",
-      },
-    ],
-  },
+  // {
+  //   id: "cc",
+  //   name: "Credit Card",
+  //   disableInEvals: true,
+  //   uiType: "smart",
+  //   params: [
+  //     FIELD_PARAM,
+  //     MATCH_PARAM,
+  //     {
+  //       type: "label",
+  //       label: "Credit Card",
+  //     },
+  //   ],
+  // },
+  // {
+  //   id: "email",
+  //   name: "Email",
+  //   disableInEvals: true,
+  //   uiType: "smart",
+  //   params: [
+  //     FIELD_PARAM,
+  //     MATCH_PARAM,
+  //     {
+  //       type: "label",
+  //       label: "Email",
+  //     },
+  //   ],
+  // },
+  // {
+  //   id: "phone",
+  //   name: "Phone",
+  //   disableInEvals: true,
+  //   uiType: "smart",
+  //   params: [
+  //     FIELD_PARAM,
+  //     MATCH_PARAM,
+  //     {
+  //       type: "label",
+  //       label: "Phone",
+  //     },
+  //   ],
+  // },
   {
     id: "length",
     name: "Length",
@@ -418,7 +418,7 @@ export const FILTERS: Filter[] = [
       {
         type: "select",
         id: "ids",
-        width: 150,
+        width: 200,
         placeholder: "Select radars",
         multiple: true,
         options: () => `/filters/radars`,
@@ -519,32 +519,49 @@ export const FILTERS: Filter[] = [
     ],
   },
   {
-    id: "entities",
-    name: "Entities",
+    id: "pii",
+    name: "PII",
     uiType: "ai",
+
     description:
-      "Uses AI to check if the content contains a name, location or organization.",
+      "Uses AI to detect if the given field contains personal identifiable information (PII).",
     params: [
       FIELD_PARAM,
       MATCH_PARAM,
       {
         type: "select",
         id: "entities",
-        width: 100,
-        defaultValue: ["per"],
+        width: 230,
+        defaultValue: ["person", "location", "email", "cc", "phone", "ssn"],
         multiple: true,
         options: [
           {
             label: "Name",
-            value: "per",
+            value: "person",
           },
           {
             label: "Location",
-            value: "loc",
+            value: "location",
           },
           {
             label: "Organization",
             value: "org",
+          },
+          {
+            label: "Email",
+            value: "email",
+          },
+          {
+            label: "Credit Card",
+            value: "cc",
+          },
+          {
+            label: "Phone",
+            value: "phone",
+          },
+          {
+            label: "SSN",
+            value: "ssn",
           },
         ],
       },
@@ -573,7 +590,6 @@ export const FILTERS: Filter[] = [
   {
     id: "sentiment",
     name: "Sentiment",
-
     uiType: "ai",
     description:
       "Uses AI to check if content is positive, neutral, or negative.",
@@ -707,7 +723,6 @@ export const FILTERS: Filter[] = [
     id: "factualness",
     name: "Factualness",
     uiType: "ai",
-
     onlyInEvals: true,
     description:
       "Checks how correct the LLM's response is compared to the ideal output (ues OpenAI's eval prompt).",

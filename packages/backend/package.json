@@ -3,7 +3,7 @@
   "main": "index.ts",
   "scripts": {
     "start": "tsx src/index.ts",
-    "start:radar": "(ulimit -t 20 ;tsx src/radar.ts;)",
+    "start:radar": "tsx src/radar.ts",
     "migrate:db": "tsx src/migrate.ts",
     "build": "tsup src/index.ts --format esm",
     "dev": "tsx --env-file=.env --watch src/index.ts",

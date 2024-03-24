@@ -39,7 +39,7 @@ import {
 import { fetcher } from "@/utils/fetcher"
 import Empty from "@/components/layout/Empty"
 
-import { useFilteredPromptVariables } from "@/utils/promptsHooks"
+import { useCheckedPromptVariables } from "@/utils/promptsHooks"
 import { openConfirmModal } from "@mantine/modals"
 import { useGlobalShortcut } from "@/utils/hooks"
 import { ParamItem } from "@/components/prompts/Provider"
@@ -322,7 +322,7 @@ function Playground() {
     router.push(`/prompts/${v.id}`)
   }
 
-  const variables = useFilteredPromptVariables(
+  const variables = useCheckedPromptVariables(
     templateVersion?.content,
     templateVersion?.testValues,
   )

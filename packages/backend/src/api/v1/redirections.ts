@@ -13,13 +13,15 @@ redirections.post("/api/report", async (ctx: Context) => {
     events: Event | Event[]
   }
 
+  if (!events || !Array.isArray(events) || events.length === 0) {
+    ctx.throw(400, "Missing events payload.")
+  }
+
   const projectId = events[0]?.projectId || events[0].app
 
   const parsedProjectId = z.string().uuid().safeParse(projectId)
   if (!parsedProjectId.success) {
-    ctx.status = 402
-    ctx.body = { message: "Incorrect project id format" }
-    return
+    ctx.throw(402, "Incorrect project id format")
   }
 
   const validatedProjectId = parsedProjectId.data
@@ -27,12 +29,11 @@ redirections.post("/api/report", async (ctx: Context) => {
     await sql`select * from project where id = ${validatedProjectId} limit 1`
 
   if (!project) {
-    ctx.status = 401
-    ctx.body = { message: "This project does not exist" }
+    ctx.throw(401, "This project does not exist")
     return
   }
 
-  const result = await processEventsIngestion(projectId, events)
+  const result = await processEventsIngestion(validatedProjectId, events)
 
   ctx.body = result
 })

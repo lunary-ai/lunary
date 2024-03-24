@@ -202,7 +202,7 @@ export default function Sidebar() {
             </Combobox.Dropdown>
           </Combobox>
 
-          {APP_MENU.map((item) => (
+          {APP_MENU.filter((i) => !i.disabled).map((item) => (
             <NavbarLink {...item} key={item.label} />
           ))}
         </Box>
@@ -219,9 +219,11 @@ export default function Sidebar() {
             {org?.name}
           </Text>
 
-          {orgMenu.map((item) => (
-            <NavbarLink {...item} key={item.label} />
-          ))}
+          {orgMenu
+            .filter((i) => !i.disabled)
+            .map((item) => (
+              <NavbarLink {...item} key={item.label} />
+            ))}
         </Box>
       </Stack>
 

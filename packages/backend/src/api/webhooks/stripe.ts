@@ -36,7 +36,9 @@ const setupSubscription = async (object: Stripe.Checkout.Session) => {
     plan,
     planPeriod: period,
     limited: false,
-    playAllowance: plan === "pro" ? 15 : 1000,
+    playAllowance: 1000,
+    radarAllowance: 1000,
+    evalAllowance: 1000,
   }
 
   const [org] = await sql`

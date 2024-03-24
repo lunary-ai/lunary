@@ -67,7 +67,6 @@ auth.post("/signup", async (ctx: Context) => {
 
   if (orgName?.includes("https://") || name.includes("http://")) {
     ctx.throw(403, "Bad request")
-    return
   }
 
   const [existingUser] = await sql`

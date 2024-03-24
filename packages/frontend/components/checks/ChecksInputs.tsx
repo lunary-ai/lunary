@@ -9,7 +9,7 @@ import {
 import classes from "./index.module.css"
 import { useProjectSWR } from "@/utils/dataHooks"
 
-const FilterInputs = {
+const CheckInputs = {
   select: ({
     options,
     placeholder,
@@ -21,11 +21,11 @@ const FilterInputs = {
   }) => {
     const useSWRforData = typeof options === "function"
 
-    const { data: swrFilterData } = useProjectSWR(
+    const { data: swrCheckData } = useProjectSWR(
       useSWRforData ? options() : null,
     )
 
-    const data = useSWRforData ? swrFilterData : options
+    const data = useSWRforData ? swrCheckData : options
 
     const Component = multiple ? MultiSelect : Select
 
@@ -97,4 +97,4 @@ const FilterInputs = {
   },
 }
 
-export default FilterInputs
+export default CheckInputs

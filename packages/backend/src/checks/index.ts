@@ -1,11 +1,23 @@
 import sql from "../utils/db"
+import { callML } from "../utils/ml"
 import aiAssert from "./ai/assert"
 import aiFact from "./ai/fact"
-import aiNER from "./ai/ner"
 import aiSentiment from "./ai/sentiment"
 import aiSimilarity from "./ai/similarity"
-import aiToxicity from "./ai/toxic"
+// import aiNER from "./ai/ner"
+// import aiToxicity from "./ai/toxic"
 import rouge from "rouge"
+
+function getTextsTypes(field: "any" | "input" | "output", run: any) {
+  let textsToCheck = []
+  if (field === "any") {
+    textsToCheck.push(lastMsg(run["input"]), lastMsg(run["output"]))
+  } else {
+    textsToCheck.push(lastMsg(run[field]))
+  }
+
+  return textsToCheck.filter(Boolean)
+}
 
 export type CheckRunner = {
   id: string
@@ -119,7 +131,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       let passed = false
       let reason = ""
 
-      const fieldText = lastMsg(run[field])
+      const fieldText = getTextsTypes(field, run)[0]
 
       if (type === "valid") {
         try {
@@ -186,32 +198,32 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   //   },
 
   // },
-  {
-    id: "cc",
-    sql: ({ field, type }) => {
-      const operator = type === "contains" ? sql`~` : sql`!~`
+  // {
+  //   id: "cc",
+  //   sql: ({ field, type }) => {
+  //     const operator = type === "contains" ? sql`~` : sql`!~`
 
-      return sql`${sql(field + "_text")} ${operator} '(?:4[0-9]{3}(?:[ -]?[0-9]{4}){3}|[25][1-7][0-9]{2}(?:[ -]?[0-9]{4}){3}|6(?:011|5[0-9]{2})(?:[ -]?[0-9]{4}){3}|3[47][0-9]{2}(?:[ -]?[0-9]{4}){3}|3(?:0[0-5]|[68][0-9])(?:[ -]?[0-9]{4}){2}|(?:2131|1800|35\d{2})\d{2}(?:[ -]?\d{4}){3})'`
-    },
-  },
-  {
-    id: "email",
-    sql: ({ field, type }) => {
-      const regexPattern = sql`[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+`
-      const operator = type === "contains" ? sql`~` : sql`!~`
+  //     return sql`${sql(field + "_text")} ${operator} '(?:4[0-9]{3}(?:[ -]?[0-9]{4}){3}|[25][1-7][0-9]{2}(?:[ -]?[0-9]{4}){3}|6(?:011|5[0-9]{2})(?:[ -]?[0-9]{4}){3}|3[47][0-9]{2}(?:[ -]?[0-9]{4}){3}|3(?:0[0-5]|[68][0-9])(?:[ -]?[0-9]{4}){2}|(?:2131|1800|35\d{2})\d{2}(?:[ -]?\d{4}){3})'`
+  //   },
+  // },
+  // {
+  //   id: "email",
+  //   sql: ({ field, type }) => {
+  //     const regexPattern = sql`[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+`
+  //     const operator = type === "contains" ? sql`~` : sql`!~`
 
-      return sql`${sql(field + "_text")}::text ${operator} '${regexPattern}'`
-    },
-  },
-  {
-    id: "phone",
-    sql: ({ field, type }) => {
-      const regexPattern = sql`^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$`
-      const operator = type === "contains" ? sql`~` : sql`!~`
+  //     return sql`${sql(field + "_text")}::text ${operator} '${regexPattern}'`
+  //   },
+  // },
+  // {
+  //   id: "phone",
+  //   sql: ({ field, type }) => {
+  //     const regexPattern = sql`^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$`
+  //     const operator = type === "contains" ? sql`~` : sql`!~`
 
-      return sql`${sql(field + "_text")} ${operator} '${regexPattern}'`
-    },
-  },
+  //     return sql`${sql(field + "_text")} ${operator} '${regexPattern}'`
+  //   },
+  // },
   {
     id: "length",
     sql: ({ field, operator, length }) =>
@@ -310,9 +322,6 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     id: "assertion",
     async evaluator(run, params) {
       const { assertion } = params
-
-      console.log("assertion", assertion)
-      console.log("lastMsg(run['output'])", lastMsg(run["output"]))
 
       const { passed, reason } = await aiAssert(
         lastMsg(run["output"]),
@@ -430,41 +439,93 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       }
     },
   },
+  // {
+  //   id: "entities",
+  //   async evaluator(run, params) {
+  //     const { field, type, entities } = params
+
+  //     const result = await callML("ner", { text: [lastMsg(run[field])] })
+
+  //     let passed = false
+
+  //     if (type === "contains") {
+  //       passed = entities.some((entity) => result[entity]?.length > 0)
+  //     } else {
+  //       passed = entities.every((entity) => result[entity]?.length === 0)
+  //     }
+
+  //     let labels = {
+  //       per: "Persons",
+  //       org: "Organizations",
+  //       loc: "Locations",
+  //     }
+
+  //     let reason = "No entities detected"
+  //     if (passed) {
+  //       reason =
+  //         "Entities detected: " +
+  //         Object.keys(result)
+  //           .filter((key) => result[key].length > 0)
+  //           .map((key) => labels[key] + ": " + result[key].join(", "))
+  //           .join(", ")
+  //     }
+
+  //     return {
+  //       passed,
+  //       reason,
+  //       details: result,
+  //     }
+  //   },
+  // },
   {
-    id: "entities",
+    id: "pii",
     async evaluator(run, params) {
       const { field, type, entities } = params
 
-      const result = await aiNER(lastMsg(run[field]))
+      const results = await callML("pii", {
+        texts: getTextsTypes(field, run),
+        entities,
+      })
 
       let passed = false
 
       if (type === "contains") {
-        passed = entities.some((entity) => result[entity]?.length > 0)
+        passed = Object.keys(results).some(
+          (entity: string) => results[entity]?.length > 0,
+        )
       } else {
-        passed = entities.every((entity) => result[entity]?.length === 0)
+        passed = Object.keys(results).every(
+          (entity: string) => results[entity]?.length === 0,
+        )
       }
 
       let labels = {
-        per: "Persons",
+        person: "Persons",
         org: "Organizations",
-        loc: "Locations",
+        location: "Locations",
+        email: "Emails",
+        phone: "Phone numbers",
+        cc: "Credit card numbers",
+        ssn: "Social security numbers",
       }
 
-      let reason = "No entities detected"
+      let reason = `No entities detected among ${entities.join(", ")}`
       if (passed) {
         reason =
-          "Entities detected: " +
-          Object.keys(result)
-            .filter((key) => result[key].length > 0)
-            .map((key) => labels[key] + ": " + result[key].join(", "))
-            .join(", ")
+          "Entities detected: \n" +
+          Object.keys(results)
+            .filter((key) => results[key].length > 0)
+            .map(
+              (key: string) =>
+                (labels[key] || key) + ": " + results[key].join(", "),
+            )
+            .join("\n")
       }
 
       return {
         passed,
         reason,
-        details: result,
+        details: results,
       }
     },
   },
@@ -473,14 +534,9 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     async evaluator(run, params) {
       const { field, type } = params
 
-      let textsToCheck = []
-      if (field === "any") {
-        textsToCheck.push(lastMsg(run["input"]), lastMsg(run["output"]))
-      } else {
-        textsToCheck.push(lastMsg(run[field]))
-      }
-
-      const labels = await aiToxicity(textsToCheck)
+      const labels = await callML("toxicity", {
+        texts: getTextsTypes(field, run),
+      })
 
       const hasToxicity = labels.length > 0
 

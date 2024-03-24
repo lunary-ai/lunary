@@ -26,18 +26,14 @@ import {
   IconSearch,
   IconShieldBolt,
   IconTag,
-  IconTextCaption,
-  IconTextDirectionLtr,
-  IconTextDirectionRtl,
   IconThumbUp,
   IconTools,
-  IconTriangleSquareCircle,
   IconUser,
   IconUserCheck,
   IconWorldWww,
 } from "@tabler/icons-react"
 
-const FILTERS_UI_DATA = {
+const CHECKS_UI_DATA = {
   model: {
     icon: IconBrandOpenai,
     color: "violet",
@@ -171,10 +167,14 @@ const FILTERS_UI_DATA = {
     icon: IconIdBadge,
     color: "orange",
   },
+  pii: {
+    icon: IconIdBadge,
+    color: "orange",
+  },
   other: {
     icon: IconFilter,
     color: "gray",
   },
 }
 
-export default FILTERS_UI_DATA
+export default CHECKS_UI_DATA

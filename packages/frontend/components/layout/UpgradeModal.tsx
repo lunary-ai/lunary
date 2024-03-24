@@ -201,7 +201,7 @@ export function UpgradePlans({ highlight }: { highlight?: string }) {
                   { id: "team", title: "4 team members" },
                   { id: "projects", title: "Unlimited Projects" },
                   { id: "analytics", title: "Advanced Analytics" },
-                  { id: "playground", title: "Template Playground" },
+                  { id: "playground", title: "Playground" },
                   { id: "export", title: "Exports & API" },
                 ]}
                 highlight={highlight}

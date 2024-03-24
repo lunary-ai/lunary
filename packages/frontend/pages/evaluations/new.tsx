@@ -115,6 +115,8 @@ export default function NewEvaluation() {
           `/evaluations/${clone}?projectId=${project?.id}`,
         )
 
+        console.log("cloneEval", cloneEval)
+
         if (!cloneEval) return
 
         setDatasetId(cloneEval.datasetId)
@@ -124,7 +126,7 @@ export default function NewEvaluation() {
 
       fetchEval()
     }
-  }, [project, router.query])
+  }, [project, router.query, datasetsLoading, checklistsLoading])
 
   async function startEval() {
     setLoading(true)
@@ -213,6 +215,8 @@ export default function NewEvaluation() {
               <Select
                 placeholder="Select a Dataset"
                 onChange={(datasetId) => setDatasetId(datasetId)}
+                value={datasetId}
+                disabled={datasetsLoading}
                 data={datasets.map((dataset) => ({
                   label: dataset.slug,
                   value: dataset.id,
@@ -230,7 +234,7 @@ export default function NewEvaluation() {
                 component="div"
                 multiline
                 onClick={() => {
-                  if (!providers.length) setProviderModal(true)
+                  setProviderModal(true)
                 }}
               >
                 <Pill.Group>
@@ -244,7 +248,8 @@ export default function NewEvaluation() {
                           providers.filter((_, index) => index !== i),
                         )
                       }
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation()
                         setEditingProvider(provider)
                         setProviderModal(true)
                       }}
@@ -281,6 +286,7 @@ export default function NewEvaluation() {
                 placeholder="Select a preset checklist or create a new one."
                 onChange={(datasetId) => setChecklistId(datasetId)}
                 value={checklistId}
+                disabled={checklistsLoading}
                 data={checklists?.map((dataset) => ({
                   label: dataset.slug,
                   value: dataset.id,
