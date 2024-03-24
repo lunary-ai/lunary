@@ -35,7 +35,7 @@ export const roles: Record<
     name: "Owner",
     description: "Owner of the organization",
     permissions: {
-      project: {
+      projects: {
         create: true,
         read: true,
         update: true,
@@ -121,7 +121,7 @@ export const roles: Record<
     name: "Admin",
     description: "Admin-level access to the entire org",
     permissions: {
-      project: {
+      projects: {
         create: true,
         read: true,
         update: true,
@@ -206,7 +206,7 @@ export const roles: Record<
     name: "Member",
     description: "Full access to most resources",
     permissions: {
-      project: {
+      projects: {
         create: true,
         read: true,
         update: true,
@@ -288,7 +288,7 @@ export const roles: Record<
     name: "Viewer",
     description: "View-only access to most resources",
     permissions: {
-      project: {
+      projects: {
         create: false,
         read: true,
         update: false,
