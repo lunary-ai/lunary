@@ -531,7 +531,7 @@ export const CHECKS: Check[] = [
       {
         type: "select",
         id: "entities",
-        width: 100,
+        width: 230,
         defaultValue: ["person", "location", "email", "cc", "phone", "ssn"],
         multiple: true,
         options: [

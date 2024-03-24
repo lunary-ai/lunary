@@ -34,10 +34,7 @@ def detect_regex(texts, type, custom_patterns=[]):
 
     return list(set(results))
 
-# Allow loading custom HF NER model
-# Default model supports officialy: ar, de, en, es, fr, it, lv, nl, pt, zh
-# But also works decntly for other languages
-def load_ner_model(model_id="Davlan/bert-base-multilingual-cased-ner-hrl"):
+def load_ner_model(model_id):
     if model_id not in models:
         print(f"Loading NER model: {model_id}")
         tokenizers[model_id] = AutoTokenizer.from_pretrained(model_id)
@@ -109,7 +106,13 @@ def get_ner_labels(model_id, texts, entities):
 
     return results
 
-def detect_pii(texts, entities, model_id="Davlan/bert-base-multilingual-cased-ner-hrl", custom_patterns=[]):
+# Allow loading custom HF NER model
+# Default model supports officialy: ar, de, en, es, fr, it, lv, nl, pt, zh
+# But also works decntly for other languages
+def detect_pii(texts, entities, model_id, custom_patterns=[]):
+
+    if model_id == None:
+        model_id = "Davlan/bert-base-multilingual-cased-ner-hrl"
 
     results = {}
     ner_types = ["person", "location", "org", "misc"]

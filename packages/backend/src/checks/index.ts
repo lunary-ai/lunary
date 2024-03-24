@@ -482,23 +482,21 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     async evaluator(run, params) {
       const { field, type, entities } = params
 
-      const result: any = {}
-
-      const nerResult = await callML("pii", {
+      const results = await callML("pii", {
         texts: getTextsTypes(field, run),
         entities,
       })
 
-      for (const type in nerResult) {
-        result[type] = nerResult[type] || []
-      }
-
       let passed = false
 
       if (type === "contains") {
-        passed = result.some((entity: string) => result[entity]?.length > 0)
+        passed = Object.keys(results).some(
+          (entity: string) => results[entity]?.length > 0,
+        )
       } else {
-        passed = result.every((entity: string) => result[entity]?.length === 0)
+        passed = Object.keys(results).every(
+          (entity: string) => results[entity]?.length === 0,
+        )
       }
 
       let labels = {
@@ -508,22 +506,26 @@ export const CHECK_RUNNERS: CheckRunner[] = [
         email: "Emails",
         phone: "Phone numbers",
         cc: "Credit card numbers",
+        ssn: "Social security numbers",
       }
 
-      let reason = "No entities detected"
+      let reason = `No entities detected among ${entities.join(", ")}`
       if (passed) {
         reason =
-          "Entities detected: " +
-          Object.keys(result)
-            .filter((key) => result[key].length > 0)
-            .map((key: string) => labels[key] + ": " + result[key].join(", "))
-            .join(", ")
+          "Entities detected: \n" +
+          Object.keys(results)
+            .filter((key) => results[key].length > 0)
+            .map(
+              (key: string) =>
+                (labels[key] || key) + ": " + results[key].join(", "),
+            )
+            .join("\n")
       }
 
       return {
         passed,
         reason,
-        details: result,
+        details: results,
       }
     },
   },

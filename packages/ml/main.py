@@ -18,9 +18,9 @@ def toxicity_route():
     return jsonify(results)
 
 @app.route('/pii', methods=['POST'])
-def ner_route():
-    model_id = request.json['bert_model']
-    custom_patterns = request.json['custom_patterns']
+def pii_route():
+    model_id = request.json.get('bert_model', None)
+    custom_patterns = request.json.get('custom_patterns', [])
     texts = request.json['texts']
     entities = request.json['entities']
     results = detect_pii(texts, entities, model_id, custom_patterns)

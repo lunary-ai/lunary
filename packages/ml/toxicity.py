@@ -24,7 +24,6 @@ def detect_toxicity(texts):
     results = set()
     for text in texts:
         langs = detect_potential_langs(text)
-        print(langs)
         if 'EN' in langs:
             results.update(get_predicted_labels(original_model, text))
         if any(lang in multilingual_model_langs for lang in langs):
