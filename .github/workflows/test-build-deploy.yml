@@ -39,9 +39,13 @@ jobs:
           token: ${{ secrets.ACCESS_TOKEN }}
           submodules: "recursive"
 
-      - name: Generate timestamp
-        id: timestamp
-        run: echo "::set-output name=timestamp::$(date +%Y%m%d%H%M%S)"
+      - name: Generate data
+        id: date
+        run: echo "::set-output name=date::$(date +%Y-%m-%d-%Hh%Mm%Ss)"
+
+      - name: Get short commit hash
+        id: commit
+        run: echo "::set-output name=hash::$(git rev-parse --short HEAD)"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -58,7 +62,9 @@ jobs:
           context: .
           file: ./ops/Dockerfile
           push: true
-          tags: lunary/lunary-ee:latest,lunary/lunary-ee:${{ steps.timestamp.outputs.timestamp }}
+          tags: |
+            lunary/lunary-ee:latest
+            lunary/lunary-ee:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
           platforms: linux/amd64
 
   deploy:
