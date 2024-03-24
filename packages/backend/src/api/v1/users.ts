@@ -11,6 +11,7 @@ import { z } from "zod"
 import { sendEmail } from "@/src/utils/sendEmail"
 import { signJwt } from "./auth/utils"
 import { roles } from "shared"
+import { checkAccess } from "@/src/utils/authorization"
 
 const users = new Router({
   prefix: "/users",
@@ -127,11 +128,14 @@ users.post("/send-verification", async (ctx: Context) => {
   ctx.body = { ok: true }
 })
 
-users.get("/:userId", async (ctx: Context) => {
-  const { userId } = ctx.params
-  const { orgId } = ctx.state
+users.get(
+  "/:userId",
+  checkAccess("teamMembers", "read"),
+  async (ctx: Context) => {
+    const { userId } = ctx.params
+    const { orgId } = ctx.state
 
-  const [user] = await sql`
+    const [user] = await sql`
       select
         id,
         name,
@@ -142,10 +146,11 @@ users.get("/:userId", async (ctx: Context) => {
       where
         id = ${userId} and org_id = ${orgId}`
 
-  ctx.body = user
-})
+    ctx.body = user
+  },
+)
 
-users.post("/", async (ctx: Context) => {
+users.post("/", checkAccess("teamMembers", "create"), async (ctx: Context) => {
   const bodySchema = z.object({
     email: z.string().email(),
     role: z.enum(Object.keys(roles) as [string, ...string[]]),
@@ -208,86 +213,93 @@ users.post("/", async (ctx: Context) => {
   ctx.body = { user: finalUser }
 })
 
-users.delete("/:userId", async (ctx: Context) => {
-  const { userId: userToDeleteId } = ctx.params
-  const { userId: currentUserId } = ctx.state
+users.delete(
+  "/:userId",
+  checkAccess("teamMembers", "delete"),
+  async (ctx: Context) => {
+    const { userId: userToDeleteId } = ctx.params
+    const { userId: currentUserId } = ctx.state
 
-  const [currentUser] =
-    await sql`select * from account where id = ${currentUserId}`
+    const [currentUser] =
+      await sql`select * from account where id = ${currentUserId}`
 
-  const [userToDelete] =
-    await sql`select * from account where id = ${userToDeleteId}`
+    const [userToDelete] =
+      await sql`select * from account where id = ${userToDeleteId}`
 
-  if (!["owner", "admin"].includes(currentUser.role)) {
-    ctx.throw(
-      401,
-      "You must be an owner or an admin to remove a user from your team",
-    )
-  }
+    if (!["owner", "admin"].includes(currentUser.role)) {
+      ctx.throw(
+        401,
+        "You must be an owner or an admin to remove a user from your team",
+      )
+    }
 
-  if (currentUser.orgId !== userToDelete.orgId) {
-    ctx.throw(401, "Forbidden")
-  }
+    if (currentUser.orgId !== userToDelete.orgId) {
+      ctx.throw(401, "Forbidden")
+    }
 
-  await sql`delete from account where id = ${userToDeleteId}`
+    await sql`delete from account where id = ${userToDeleteId}`
 
-  ctx.status = 200
-  ctx.body = {}
-})
+    ctx.status = 200
+    ctx.body = {}
+  },
+)
 
-users.patch("/:userId", async (ctx: Context) => {
-  const UpdateUserSchema = z.object({
-    projects: z.array(z.string()).min(1),
-    role: z.enum(Object.keys(roles) as [string, ...string[]]),
-  })
-  const { userId } = ctx.params
-  const { userId: currentUserId } = ctx.state
+users.patch(
+  "/:userId",
+  checkAccess("teamMembers", "update"),
+  async (ctx: Context) => {
+    const UpdateUserSchema = z.object({
+      projects: z.array(z.string()).min(1),
+      role: z.enum(Object.keys(roles) as [string, ...string[]]),
+    })
+    const { userId } = ctx.params
+    const { userId: currentUserId } = ctx.state
 
-  const { projects, role } = UpdateUserSchema.parse(ctx.request.body)
+    const { projects, role } = UpdateUserSchema.parse(ctx.request.body)
 
-  const [currentUser] =
-    await sql`select * from account where id = ${currentUserId}`
-  if (!["owner", "admin"].includes(currentUser.role)) {
-    ctx.throw(403, "You do not have permission to modify this user")
-  }
+    const [currentUser] =
+      await sql`select * from account where id = ${currentUserId}`
+    if (!["owner", "admin"].includes(currentUser.role)) {
+      ctx.throw(403, "You do not have permission to modify this user")
+    }
 
-  const [userToModify] = await sql`select * from account where id = ${userId}`
-  if (!userToModify || userToModify.org_id !== currentUser.org_id) {
-    ctx.throw(404, "User not found in your organization")
-  }
+    const [userToModify] = await sql`select * from account where id = ${userId}`
+    if (!userToModify || userToModify.org_id !== currentUser.org_id) {
+      ctx.throw(404, "User not found in your organization")
+    }
 
-  await sql`update account set role = ${role} where id = ${userId}`
+    await sql`update account set role = ${role} where id = ${userId}`
 
-  // Get existing project IDs for the user
-  const existingProjects = await sql`
+    // Get existing project IDs for the user
+    const existingProjects = await sql`
  select project_id from account_project where account_id = ${userId}
 `
 
-  const existingProjectIds = existingProjects.map((row) => row.projectId)
-  console.log(existingProjects)
+    const existingProjectIds = existingProjects.map((row) => row.projectId)
 
-  const projectsToDelete = existingProjectIds.filter(
-    (projectId) => !projects.includes(projectId),
-  )
+    const projectsToDelete = existingProjectIds.filter(
+      (projectId) => !projects.includes(projectId),
+    )
 
-  console.log(projectsToDelete)
-  for (const projectId of projectsToDelete) {
-    await sql`
+    console.log(projectsToDelete)
+    for (const projectId of projectsToDelete) {
+      await sql`
    delete from account_project
    where account_id = ${userId} and project_id = ${projectId}
  `
-  }
+    }
 
-  for (const projectId of projects) {
-    await sql`
+    for (const projectId of projects) {
+      await sql`
     insert into account_project (account_id, project_id)
     values (${userId}, ${projectId})
     on conflict (account_id, project_id)
     do nothing
    `
-  }
+    }
 
-  ctx.status = 200
-  ctx.body = { message: "User updated successfully" }
-})
+    ctx.status = 200
+    ctx.body = { message: "User updated successfully" }
+  },
+)
 export default users

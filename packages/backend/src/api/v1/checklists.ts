@@ -1,3 +1,4 @@
+import { checkAccess } from "@/src/utils/authorization"
 import sql from "@/src/utils/db"
 import { clearUndefined } from "@/src/utils/ingest"
 import Context from "@/src/utils/koa"
@@ -8,7 +9,7 @@ const checklists = new Router({
   prefix: "/checklists",
 })
 
-checklists.get("/", async (ctx: Context) => {
+checklists.get("/", checkAccess("checkLists", "list"), async (ctx: Context) => {
   const { projectId } = ctx.state
   // TODO: full zod
   const { type } = ctx.query as { type: string }
@@ -20,25 +21,32 @@ checklists.get("/", async (ctx: Context) => {
   ctx.body = rows
 })
 
-checklists.get("/:id", async (ctx: Context) => {
-  const { projectId } = ctx.state
-  const { id } = ctx.params
+checklists.get(
+  "/:id",
+  checkAccess("checkLists", "read"),
+  async (ctx: Context) => {
+    const { projectId } = ctx.state
+    const { id } = ctx.params
 
-  const [check] = await sql`select * from checklist 
+    const [check] = await sql`select * from checklist 
         where project_id = ${projectId} 
         and id = ${id}`
-  ctx.body = check
-})
+    ctx.body = check
+  },
+)
 
-checklists.post("/", async (ctx: Context) => {
-  const { projectId, userId } = ctx.state
-  const { slug, type, data } = ctx.request.body as {
-    slug: string
-    type: string
-    data: FilterLogic
-  }
+checklists.post(
+  "/",
+  checkAccess("checkLists", "create"),
+  async (ctx: Context) => {
+    const { projectId, userId } = ctx.state
+    const { slug, type, data } = ctx.request.body as {
+      slug: string
+      type: string
+      data: FilterLogic
+    }
 
-  const [insertedCheck] = await sql`
+    const [insertedCheck] = await sql`
     insert into checklist ${sql({
       slug,
       ownerId: userId,
@@ -48,39 +56,48 @@ checklists.post("/", async (ctx: Context) => {
     })}
     returning *
   `
-  ctx.body = insertedCheck
-})
+    ctx.body = insertedCheck
+  },
+)
 
-checklists.patch("/:id", async (ctx: Context) => {
-  const { projectId } = ctx.state
-  const { id } = ctx.params
-  const { slug, data } = ctx.request.body as {
-    slug: string
-    data: FilterLogic
-  }
+checklists.patch(
+  "/:id",
+  checkAccess("checkLists", "read"),
+  async (ctx: Context) => {
+    const { projectId } = ctx.state
+    const { id } = ctx.params
+    const { slug, data } = ctx.request.body as {
+      slug: string
+      data: FilterLogic
+    }
 
-  const [updatedCheck] = await sql`
+    const [updatedCheck] = await sql`
     update checklist
     set ${sql(clearUndefined({ slug, data, updatedAt: new Date() }))}
     where project_id = ${projectId}
     and id = ${id}
     returning *
   `
-  ctx.body = updatedCheck
-})
+    ctx.body = updatedCheck
+  },
+)
 
-checklists.delete("/:id", async (ctx: Context) => {
-  const { projectId } = ctx.state
-  const { id } = ctx.params
+checklists.delete(
+  "/:id",
+  checkAccess("checkLists", "delete"),
+  async (ctx: Context) => {
+    const { projectId } = ctx.state
+    const { id } = ctx.params
 
-  await sql`
+    await sql`
     delete from checklist
     where project_id = ${projectId}
     and id = ${id}
     returning *
   `
 
-  ctx.status = 200
-})
+    ctx.status = 200
+  },
+)
 
 export default checklists

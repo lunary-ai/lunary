@@ -1,3 +1,4 @@
+import { checkAccess } from "@/src/utils/authorization"
 import sql from "@/src/utils/db"
 import Router from "koa-router"
 
@@ -176,7 +177,7 @@ const DEFAULT_RADARS = [
   // },
 ]
 
-radars.get("/", async (ctx) => {
+radars.get("/", checkAccess("radars", "list"), async (ctx) => {
   const { projectId } = ctx.state
 
   const [hasRadar] = await sql`
@@ -207,7 +208,7 @@ radars.get("/", async (ctx) => {
   ctx.body = rows
 })
 
-radars.get("/:radarId", async (ctx) => {
+radars.get("/:radarId", checkAccess("radars", "read"), async (ctx) => {
   const { projectId } = ctx.state
   const { radarId } = ctx.params
 
@@ -224,7 +225,7 @@ radars.get("/:radarId", async (ctx) => {
   ctx.body = row
 })
 
-radars.get("/:radarId/chart", async (ctx) => {
+radars.get("/:radarId/chart", checkAccess("radars", "read"), async (ctx) => {
   // get number of passing & failing runs for each day in the last 7 days
   // including days with no runs (passing and failing counts as 0)
   const { projectId } = ctx.state
@@ -259,7 +260,7 @@ radars.get("/:radarId/chart", async (ctx) => {
   }))
 })
 
-radars.post("/", async (ctx) => {
+radars.post("/", checkAccess("radars", "create"), async (ctx) => {
   const { projectId, userId } = ctx.state
   const { description, view, checks, alerts, negative } = ctx.request.body as {
     description: string
@@ -285,7 +286,7 @@ radars.post("/", async (ctx) => {
   ctx.body = row
 })
 
-radars.patch("/:radarId", async (ctx) => {
+radars.patch("/:radarId", checkAccess("radars", "update"), async (ctx) => {
   const { projectId } = ctx.state
   const { radarId } = ctx.params
 
@@ -320,7 +321,7 @@ radars.patch("/:radarId", async (ctx) => {
   ctx.body = row
 })
 
-radars.delete("/:radarId", async (ctx) => {
+radars.delete("/:radarId", checkAccess("radars", "delete"), async (ctx) => {
   const { projectId } = ctx.state
   const { radarId } = ctx.params
 

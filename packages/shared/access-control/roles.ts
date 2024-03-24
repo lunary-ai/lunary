@@ -9,7 +9,7 @@ export type ResourceName =
   | "prompts"
   | "radars"
   | "datasets"
-  | "checklists"
+  | "checkLists"
   | "evaluations"
 export type Role = "owner" | "admin" | "member" | "viewer" | "billing"
 export type Action =
@@ -27,7 +27,7 @@ export const roles: Record<
     value: Role
     name: string
     description: string
-    permissions: Record<ResourceName, Partial<Record<Action, true>>>
+    permissions: Record<ResourceName, Partial<Record<Action, boolean>>>
   }
 > = {
   owner: {
@@ -61,7 +61,7 @@ export const roles: Record<
         list: true,
       },
       analytics: { read: true },
-      logsThreadsTraces: {
+      logs: {
         create: true,
         read: true,
         update: true,
@@ -99,7 +99,7 @@ export const roles: Record<
         delete: true,
         list: true,
       },
-      checklists: {
+      checkLists: {
         create: true,
         read: true,
         update: true,
@@ -146,7 +146,7 @@ export const roles: Record<
         list: true,
       },
       analytics: { read: true },
-      logsThreadsTraces: {
+      logs: {
         create: true,
         read: true,
         update: true,
@@ -184,7 +184,7 @@ export const roles: Record<
         delete: true,
         list: true,
       },
-      checklists: {
+      checkLists: {
         create: true,
         read: true,
         update: true,
@@ -228,7 +228,7 @@ export const roles: Record<
         list: true,
       },
       analytics: { read: true },
-      logsThreadsTraces: {
+      logs: {
         create: true,
         read: true,
         update: true,
@@ -266,7 +266,7 @@ export const roles: Record<
         delete: true,
         list: true,
       },
-      checklists: {
+      checkLists: {
         create: true,
         read: true,
         update: true,
@@ -310,7 +310,7 @@ export const roles: Record<
         list: true,
       },
       analytics: { read: true },
-      logsThreadsTraces: {
+      logs: {
         create: false,
         read: true,
         update: false,
@@ -341,7 +341,7 @@ export const roles: Record<
         delete: false,
         list: true,
       },
-      checklists: {
+      checkLists: {
         create: false,
         read: true,
         update: false,
@@ -378,7 +378,7 @@ export const roles: Record<
     name: "Billing",
     description: "Manage billing settings and invoices",
     permissions: {
-      teamMembers: {
+      billing: {
         create: false,
         read: true,
         update: false,
