@@ -11,13 +11,7 @@ function IndexPage() {
   const { user } = useUser()
 
   useEffect(() => {
-    console.log(
-      user.role,
-      router.isReady,
-      hasAccess(user.role, "analytics", "read"),
-    )
     if (!router.isReady) {
-      console.log("router not ready")
       return
     }
     if (!isSignedIn) {
