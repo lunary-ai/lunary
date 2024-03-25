@@ -6,10 +6,10 @@ import {
   ScrollArea,
   useCombobox,
 } from "@mantine/core"
-import FILTERS_UI_DATA from "./UIData"
+import CHECKS_UI_DATA from "./UIData"
 import { IconPlus } from "@tabler/icons-react"
 
-export function AddFilterButton({ filters, onSelect, defaultOpened }) {
+export function AddCheckButton({ filters, onSelect, defaultOpened }) {
   const [search, setSearch] = useState("")
 
   const combobox = useCombobox({
@@ -38,7 +38,7 @@ export function AddFilterButton({ filters, onSelect, defaultOpened }) {
       item.name.toLowerCase().includes(search.toLowerCase().trim()),
     )
     .map((item) => {
-      const UIItem = FILTERS_UI_DATA[item.id] || FILTERS_UI_DATA["other"]
+      const UIItem = CHECKS_UI_DATA[item.id] || CHECKS_UI_DATA["other"]
       return (
         <Combobox.Option value={item.id} key={item.id} variant="">
           <Group gap={6}>

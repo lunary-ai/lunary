@@ -1,10 +1,10 @@
-import type { FilterLogic, FilterParam } from "."
-import { FILTERS } from "."
+import type { CheckLogic, CheckParam } from "."
+import { CHECKS } from "."
 
 // because dots are used to separate filter parameters, we need to encode them
 const encode = (str: string) => encodeURIComponent(str).replace(/\./g, "%2E")
 
-const paramSerializer = (param: FilterParam, value: any) => {
+const paramSerializer = (param: CheckParam, value: any) => {
   if (value == undefined) {
     return undefined
   }
@@ -28,7 +28,7 @@ const paramSerializer = (param: FilterParam, value: any) => {
 }
 
 function deserializeParamValue(
-  filterParam: FilterParam,
+  filterParam: CheckParam,
   v: string,
 ): any | undefined {
   switch (filterParam.type) {
@@ -55,7 +55,7 @@ function deserializeParamValue(
 // Will be serialized to:
 // type=llm&tags=some.tags
 
-export function serializeLogic(logic: FilterLogic): string {
+export function serializeLogic(logic: CheckLogic): string {
   const serializeParamValue = (param: any): string => {
     if (Array.isArray(param)) {
       const all = param.map(serializeParamValue)
@@ -70,9 +70,9 @@ export function serializeLogic(logic: FilterLogic): string {
     ) {
       const data = Object.entries(param.params)
         .map(([key, value]) => {
-          const filterParam = FILTERS.find(
+          const filterParam = CHECKS.find(
             (filter) => filter.id === param.id,
-          )?.params.find((param) => (param as FilterParam).id === key)
+          )?.params.find((param) => (param as CheckParam).id === key)
 
           if (!filterParam || filterParam.type === "label") {
             return ""
@@ -96,10 +96,10 @@ export function serializeLogic(logic: FilterLogic): string {
     .join("&")
 }
 
-export function deserializeLogic(logicString: string): FilterLogic | undefined {
+export function deserializeLogic(logicString: string): CheckLogic | undefined {
   const deserializeParam = (param: string): any => {
     const [id, params] = param.split("=")
-    const filter = FILTERS.find((filter) => filter.id === id)
+    const filter = CHECKS.find((filter) => filter.id === id)
 
     if (!filter) {
       return undefined
@@ -107,7 +107,7 @@ export function deserializeLogic(logicString: string): FilterLogic | undefined {
 
     const filterParams = filter.params.filter(
       (param) => param.type !== "label",
-    ) as FilterParam[]
+    ) as CheckParam[]
 
     const paramsData: any = {}
 
@@ -134,5 +134,5 @@ export function deserializeLogic(logicString: string): FilterLogic | undefined {
     .map(deserializeParam)
     .filter((f) => f)
 
-  return ["AND", ...logic] as FilterLogic
+  return ["AND", ...logic] as CheckLogic
 }

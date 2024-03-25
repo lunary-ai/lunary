@@ -1,0 +1,6 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+detoxify==0.5.2
+Flask==3.0.2
+lingua-language-detector==2.0.2
+requests==2.31.0
+transformers==4.39.1

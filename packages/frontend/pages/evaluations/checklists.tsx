@@ -1,12 +1,11 @@
 import RenamableField from "@/components/blocks/RenamableField"
-import FilterPicker from "@/components/filters/Picker"
+import CheckPicker from "@/components/checks/Picker"
 import { useChecklist, useChecklists, useUser } from "@/utils/dataHooks"
 import { cleanSlug } from "@/utils/format"
 
 import {
   ActionIcon,
   Alert,
-  Badge,
   Button,
   Card,
   Container,
@@ -24,7 +23,7 @@ import { modals } from "@mantine/modals"
 import { IconPlus, IconTrash } from "@tabler/icons-react"
 import { generateSlug } from "random-word-slugs"
 import { useState } from "react"
-import { FilterLogic, hasAccess } from "shared"
+import { CheckLogic, hasAccess } from "shared"
 
 function ChecklistCard({ defaultValue, onDelete }) {
   const { checklist, update, remove } = useChecklist(
@@ -75,7 +74,7 @@ function ChecklistCard({ defaultValue, onDelete }) {
             }}
           />
         </Group>
-        <FilterPicker
+        <CheckPicker
           value={checklist?.data}
           restrictTo={(filter) => !filter.disableInEvals}
           onChange={(newData) => {
@@ -92,7 +91,7 @@ function ChecklistCard({ defaultValue, onDelete }) {
 
 export function ChecklistModal({ open, onClose }) {
   const [slug, setSlug] = useState(generateSlug())
-  const [data, setData] = useState<FilterLogic>(["AND"])
+  const [data, setData] = useState<CheckLogic>(["AND"])
 
   const { insert, isInserting, mutate } = useChecklists("evaluation")
 
@@ -134,7 +133,7 @@ export function ChecklistModal({ open, onClose }) {
             </Text>
             .
           </InputDescription>
-          <FilterPicker
+          <CheckPicker
             restrictTo={(filter) => !filter.disableInEvals}
             value={data}
             onChange={setData}

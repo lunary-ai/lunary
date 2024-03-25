@@ -3,7 +3,7 @@ import sql from "@/src/utils/db"
 import { clearUndefined } from "@/src/utils/ingest"
 import Context from "@/src/utils/koa"
 import Router from "koa-router"
-import { FilterLogic } from "shared"
+import { CheckLogic } from "shared"
 
 const checklists = new Router({
   prefix: "/checklists",
@@ -35,18 +35,15 @@ checklists.get(
   },
 )
 
-checklists.post(
-  "/",
-  checkAccess("checkLists", "create"),
-  async (ctx: Context) => {
-    const { projectId, userId } = ctx.state
-    const { slug, type, data } = ctx.request.body as {
-      slug: string
-      type: string
-      data: FilterLogic
-    }
+checklists.post("/", async (ctx: Context) => {
+  const { projectId, userId } = ctx.state
+  const { slug, type, data } = ctx.request.body as {
+    slug: string
+    type: string
+    data: CheckLogic
+  }
 
-    const [insertedCheck] = await sql`
+  const [insertedCheck] = await sql`
     insert into checklist ${sql({
       slug,
       ownerId: userId,
@@ -56,31 +53,26 @@ checklists.post(
     })}
     returning *
   `
-    ctx.body = insertedCheck
-  },
-)
+  ctx.body = insertedCheck
+})
 
-checklists.patch(
-  "/:id",
-  checkAccess("checkLists", "read"),
-  async (ctx: Context) => {
-    const { projectId } = ctx.state
-    const { id } = ctx.params
-    const { slug, data } = ctx.request.body as {
-      slug: string
-      data: FilterLogic
-    }
+checklists.patch("/:id", async (ctx: Context) => {
+  const { projectId } = ctx.state
+  const { id } = ctx.params
+  const { slug, data } = ctx.request.body as {
+    slug: string
+    data: CheckLogic
+  }
 
-    const [updatedCheck] = await sql`
+  const [updatedCheck] = await sql`
     update checklist
     set ${sql(clearUndefined({ slug, data, updatedAt: new Date() }))}
     where project_id = ${projectId}
     and id = ${id}
     returning *
   `
-    ctx.body = updatedCheck
-  },
-)
+  ctx.body = updatedCheck
+})
 
 checklists.delete(
   "/:id",

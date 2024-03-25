@@ -1,4 +1,4 @@
 export * from "./models"
-export * from "./filters"
+export * from "./checks"
 export * from "./types"
 export * from "./access-control"

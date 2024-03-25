@@ -8,7 +8,6 @@ import {
   Flex,
   Group,
   Menu,
-  Paper,
   SegmentedControl,
   Stack,
   Text,
@@ -30,9 +29,9 @@ import {
   IconBrandOpenai,
   IconDotsVertical,
   IconFileExport,
-  IconFilter,
   IconListTree,
   IconMessages,
+  IconFilter,
 } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { useContext, useEffect, useState } from "react"
@@ -43,18 +42,13 @@ import SearchBar from "@/components/blocks/SearchBar"
 import { openUpgrade } from "@/components/layout/UpgradeModal"
 import analytics from "@/utils/analytics"
 import { formatDateTime } from "@/utils/format"
-import {
-  useProject,
-  useLogs,
-  useOrg,
-  useProjectInfiniteSWR,
-} from "@/utils/dataHooks"
+import { useProject, useOrg, useProjectInfiniteSWR } from "@/utils/dataHooks"
 import { useDebouncedState, useDidUpdate } from "@mantine/hooks"
 import Router from "next/router"
 import Empty from "../../components/layout/Empty"
 import { ProjectContext } from "../../utils/context"
-import FilterPicker from "@/components/filters/Picker"
-import { FilterLogic, deserializeLogic, serializeLogic } from "shared"
+import CheckPicker from "@/components/checks/Picker"
+import { CheckLogic, deserializeLogic, serializeLogic } from "shared"
 import { fetcher } from "@/utils/fetcher"
 
 const columns = {
@@ -96,7 +90,7 @@ const columns = {
   ],
 }
 
-const FILTERS_BY_TYPE = {
+const CHECKS_BY_TYPE = {
   llm: [
     "models",
     "tags",
@@ -112,20 +106,20 @@ const FILTERS_BY_TYPE = {
   thread: ["tags", "users", "status", "radar"],
 }
 
-const editFilter = (filters, id, params) => {
+const editCheck = (filters, id, params) => {
   if (!params) {
     // Remove filter
     return filters.filter((f) => f.id !== id)
   }
 
-  const newFilters = [...filters]
-  const index = newFilters.findIndex((f) => f.id === id)
+  const newChecks = [...filters]
+  const index = newChecks.findIndex((f) => f.id === id)
   if (index === -1) {
-    newFilters.push({ id, params })
+    newChecks.push({ id, params })
   } else {
-    newFilters[index] = { id, params }
+    newChecks[index] = { id, params }
   }
-  return newFilters
+  return newChecks
 }
 
 export default function Logs() {
@@ -133,13 +127,13 @@ export default function Logs() {
   const { project, isLoading: projectLoading } = useProject()
   const { org } = useOrg()
 
-  const [filters, setFilters] = useState<FilterLogic>([
+  const [filters, setChecks] = useState<CheckLogic>([
     "AND",
     { id: "type", params: { type: "llm" } },
   ])
-  const [showFilterBar, setShowFilterBar] = useState(false)
+  const [showCheckBar, setShowCheckBar] = useState(false)
   const [selected, setSelected] = useState(null)
-  const [serializedFilters, setSerializedFilters] = useState<string>("")
+  const [serializedChecks, setSerializedChecks] = useState<string>("")
   const [type, setType] = useState<"llm" | "trace" | "thread">("llm")
 
   const [query, setQuery] = useDebouncedState("", 300)
@@ -149,13 +143,13 @@ export default function Logs() {
     loading,
     validating,
     loadMore,
-  } = useProjectInfiniteSWR(`/runs?${serializedFilters}`)
+  } = useProjectInfiniteSWR(`/runs?${serializedChecks}`)
 
   useDidUpdate(() => {
     const serialized = serializeLogic(filters)
 
     if (typeof serialized === "string") {
-      setSerializedFilters(serialized)
+      setSerializedChecks(serialized)
       Router.replace(`/logs?${serialized}`)
     }
   }, [filters])
@@ -172,7 +166,7 @@ export default function Logs() {
         if (search) setQuery(search as any)
 
         const filtersData = deserializeLogic(params)
-        if (filtersData) setFilters(filtersData)
+        if (filtersData) setChecks(filtersData)
       }
     } catch (e) {
       console.error(e)
@@ -181,29 +175,29 @@ export default function Logs() {
 
   useDidUpdate(() => {
     // Change type filter and remove filters imcompatible with type
-    const newFilters = editFilter(filters, "type", { type }).filter(
+    const newChecks = editCheck(filters, "type", { type }).filter(
       (f) =>
         f === "AND" ||
-        FILTERS_BY_TYPE[type].includes(f.id) ||
+        CHECKS_BY_TYPE[type].includes(f.id) ||
         ["type", "search"].includes(f.id),
     )
-    setFilters(newFilters)
+    setChecks(newChecks)
   }, [type])
 
   // Convert search query to filter
   useDidUpdate(() => {
-    const newFilters = editFilter(
+    const newChecks = editCheck(
       filters,
       "search",
       query?.length ? { query } : null,
     )
-    setFilters(newFilters)
+    setChecks(newChecks)
   }, [query])
 
-  const exportUrl = `/runs?${serializedFilters}&projectId=${projectId}`
+  const exportUrl = `/runs?${serializedChecks}&projectId=${projectId}`
 
   const showBar =
-    showFilterBar ||
+    showCheckBar ||
     filters.filter((f) => f !== "AND" && !["search", "type"].includes(f.id))
       .length > 0
 
@@ -249,7 +243,7 @@ export default function Logs() {
                 {!showBar && (
                   <Button
                     variant="subtle"
-                    onClick={() => setShowFilterBar(true)}
+                    onClick={() => setShowCheckBar(true)}
                     leftSection={<IconFilter size={12} />}
                     size="xs"
                   >
@@ -331,12 +325,12 @@ export default function Logs() {
             </Flex>
           </Card>
           {showBar && (
-            <FilterPicker
+            <CheckPicker
               minimal
-              defaultOpened={showFilterBar}
+              defaultOpened={showCheckBar}
               value={filters}
-              onChange={setFilters}
-              restrictTo={(f) => FILTERS_BY_TYPE[type].includes(f.id)}
+              onChange={setChecks}
+              restrictTo={(f) => CHECKS_BY_TYPE[type].includes(f.id)}
             />
           )}
         </Stack>

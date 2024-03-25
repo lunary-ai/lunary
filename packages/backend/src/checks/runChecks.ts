@@ -1,7 +1,7 @@
-import { FilterLogic, LogicElement } from "shared"
+import { CheckLogic, LogicElement } from "shared"
 import CHECK_RUNNERS from "."
 import sql from "@/src/utils/db"
-import { convertChecksToSQL } from "@/src/utils/filters"
+import { convertChecksToSQL } from "@/src/utils/checks"
 
 type CheckResults = {
   passed: boolean
@@ -9,11 +9,11 @@ type CheckResults = {
   details?: any
 }
 
-const hasNonSQLFilter = (checks: FilterLogic): boolean =>
+const hasNonSQLCheck = (checks: CheckLogic): boolean =>
   checks.some((check) => {
     if (typeof check === "string") return false
 
-    if (Array.isArray(check)) return hasNonSQLFilter(check)
+    if (Array.isArray(check)) return hasNonSQLCheck(check)
 
     const { id } = check
 
@@ -99,7 +99,7 @@ async function checkRun(run: any, check: LogicElement): Promise<CheckResults> {
 
 export async function runChecksOnRun(
   run: any,
-  checks: FilterLogic,
+  checks: CheckLogic,
   optimize = false,
 ) {
   if (!checks.length) return { passed: true, results: [] }
@@ -107,7 +107,7 @@ export async function runChecksOnRun(
   let passed = false
   const results: CheckResults[] = []
 
-  const onlySQL = !hasNonSQLFilter(checks)
+  const onlySQL = !hasNonSQLCheck(checks)
 
   if (onlySQL && optimize) {
     // More efficient to do it all in SQL if only SQL filters are used
