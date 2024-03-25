@@ -1,12 +1,13 @@
 import sql from "@/src/utils/db"
 import Router from "koa-router"
 import { Context } from "koa"
+import { checkAccess } from "@/src/utils/authorization"
 
 const users = new Router({
   prefix: "/external-users",
 })
 
-users.get("/", async (ctx: Context) => {
+users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
   const { projectId } = ctx.state
 
   // const { limit, page } = ctx.query
@@ -36,7 +37,7 @@ users.get("/", async (ctx: Context) => {
   ctx.body = users
 })
 
-users.get("/runs/usage", async (ctx) => {
+users.get("/runs/usage", checkAccess("users", "read"), async (ctx) => {
   const { projectId } = ctx.state
   const days = ctx.query.days as string
 
@@ -67,7 +68,7 @@ users.get("/runs/usage", async (ctx) => {
   ctx.body = runsUsage
 })
 
-users.get("/:id", async (ctx: Context) => {
+users.get("/:id", checkAccess("users", "read"), async (ctx: Context) => {
   const { id } = ctx.params
   const [row] = await sql`
     select * from external_user where id = ${id} limit 1

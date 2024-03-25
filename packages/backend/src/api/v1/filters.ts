@@ -1,6 +1,7 @@
 import sql from "@/src/utils/db"
 import Router from "koa-router"
 import { Context } from "koa"
+import { checkAccess } from "@/src/utils/authorization"
 
 const filters = new Router({
   prefix: "/filters",

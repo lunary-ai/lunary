@@ -8,102 +8,117 @@ import { calcRunCost } from "@/src/utils/calcCost"
 import { runChecksOnRun } from "@/src/checks/runChecks"
 import PQueue from "p-queue"
 import { PassThrough } from "stream"
+import { checkAccess } from "@/src/utils/authorization"
 
 const evaluations = new Router({ prefix: "/evaluations" })
 
 const MAX_PARALLEL_EVALS = 4
 
-evaluations.post("/", async (ctx: Context) => {
-  const { name, datasetId, checklistId, providers } = ctx.request.body as any
-  const { userId, projectId } = ctx.state
+evaluations.post(
+  "/",
+  checkAccess("evaluations", "create"),
+  async (ctx: Context) => {
+    const { name, datasetId, checklistId, providers } = ctx.request.body as any
+    const { userId, projectId } = ctx.state
 
-  ctx.request.socket.setTimeout(0)
-  ctx.request.socket.setNoDelay(true)
-  ctx.request.socket.setKeepAlive(true)
+    ctx.request.socket.setTimeout(0)
+    ctx.request.socket.setNoDelay(true)
+    ctx.request.socket.setKeepAlive(true)
 
-  ctx.set({
-    "Content-Type": "text/event-stream",
-    "Cache-Control": "no-cache",
-    Connection: "keep-alive",
-  })
+    ctx.set({
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    })
 
-  const queue = new PQueue({ concurrency: MAX_PARALLEL_EVALS, timeout: 10000 })
+    const queue = new PQueue({
+      concurrency: MAX_PARALLEL_EVALS,
+      timeout: 10000,
+    })
 
-  // TODO: transactions, but not working with because of nesting
-  const evaluationToInsert = {
-    name: name ? name : `Evaluation of ${getReadableDateTime()}`,
-    ownerId: userId,
-    projectId,
-    datasetId,
-    providers,
-    checklistId,
-    models: [], // TODO: remove this legacy col from DB,
-    checks: [], // TODO: remove this legacy col from DB,
-  }
+    // TODO: transactions, but not working with because of nesting
+    const evaluationToInsert = {
+      name: name ? name : `Evaluation of ${getReadableDateTime()}`,
+      ownerId: userId,
+      projectId,
+      datasetId,
+      providers,
+      checklistId,
+      models: [], // TODO: remove this legacy col from DB,
+      checks: [], // TODO: remove this legacy col from DB,
+    }
 
-  const [insertedEvaluation] =
-    await sql`insert into evaluation ${sql(evaluationToInsert)} returning *`
+    const [insertedEvaluation] =
+      await sql`insert into evaluation ${sql(evaluationToInsert)} returning *`
 
-  const evaluation = await getEvaluation(insertedEvaluation.id)
+    const evaluation = await getEvaluation(insertedEvaluation.id)
 
-  let count = 0
+    let count = 0
 
-  for (const prompt of evaluation.dataset.prompts) {
-    for (const variation of prompt.variations) {
-      for (const provider of evaluation.providers) {
-        count++
-        queue.add(() =>
-          runEval({
-            evaluationId: evaluation.id,
-            promptId: prompt.id,
-            variation,
-            provider,
-            prompt: prompt.content,
-            checklistId,
-          }),
-        )
+    for (const prompt of evaluation.dataset.prompts) {
+      for (const variation of prompt.variations) {
+        for (const provider of evaluation.providers) {
+          count++
+          queue.add(() =>
+            runEval({
+              evaluationId: evaluation.id,
+              promptId: prompt.id,
+              variation,
+              provider,
+              prompt: prompt.content,
+              checklistId,
+            }),
+          )
+        }
       }
     }
-  }
 
-  const stream = new PassThrough()
-  stream.pipe(ctx.res)
-  ctx.status = 200
-  ctx.body = stream
+    const stream = new PassThrough()
+    stream.pipe(ctx.res)
+    ctx.status = 200
+    ctx.body = stream
 
-  queue.on("active", () => {
-    const percentDone = ((count - queue.size) / count) * 100
-    console.log(`Active: ${queue.size} of ${count} (${percentDone}%)`)
-    console.log()
-    stream.write(JSON.stringify({ percentDone }) + "\n")
-  })
+    queue.on("active", () => {
+      const percentDone = ((count - queue.size) / count) * 100
+      console.log(`Active: ${queue.size} of ${count} (${percentDone}%)`)
+      console.log()
+      stream.write(JSON.stringify({ percentDone }) + "\n")
+    })
 
-  await queue.onIdle()
+    await queue.onIdle()
 
-  stream.write(JSON.stringify({ id: evaluation?.id }) + "\n")
+    stream.write(JSON.stringify({ id: evaluation?.id }) + "\n")
 
-  stream.end()
-})
+    stream.end()
+  },
+)
 
-evaluations.get("/:id", async (ctx: Context) => {
-  const { projectId } = ctx.state
-  const { id } = ctx.params
+evaluations.get(
+  "/:id",
+  checkAccess("evaluations", "read"),
+  async (ctx: Context) => {
+    const { projectId } = ctx.state
+    const { id } = ctx.params
 
-  const [evaluation] = await sql`
+    const [evaluation] = await sql`
     select * from evaluation where id = ${id} and project_id = ${projectId}
   `
 
-  if (!evaluation) {
-    ctx.throw(404, "Evaluation not found")
-  }
+    if (!evaluation) {
+      ctx.throw(404, "Evaluation not found")
+    }
 
-  ctx.body = evaluation
-})
+    ctx.body = evaluation
+  },
+)
 
-evaluations.get("/result/:evaluationId", async (ctx: Context) => {
-  const { evaluationId } = ctx.params
+evaluations.get(
+  "/result/:evaluationId",
+  checkAccess("evaluations", "read"),
+  async (ctx: Context) => {
+    const { evaluationId } = ctx.params
 
-  const results = await sql`
+    const results = await sql`
   select 
     *,
     p.id as prompt_id,
@@ -116,77 +131,86 @@ evaluations.get("/result/:evaluationId", async (ctx: Context) => {
   where 
     er.evaluation_id = ${evaluationId}`
 
-  ctx.body = results
-})
+    ctx.body = results
+  },
+)
 
-evaluations.get("/", async (ctx: Context) => {
-  const { projectId } = ctx.state
+evaluations.get(
+  "/",
+  checkAccess("evaluations", "list"),
+  async (ctx: Context) => {
+    const { projectId } = ctx.state
 
-  const evaluations = await sql`
+    const evaluations = await sql`
     select * from evaluation where project_id = ${projectId} order by created_at desc
   `
 
-  ctx.body = evaluations
-})
+    ctx.body = evaluations
+  },
+)
 
 // special route used by the SDK to run evaluations
-evaluations.post("/run", async (ctx: Context) => {
-  const { projectId } = ctx.state
-  const { checklist, input, output, idealOutput, context, duration, model } =
-    ctx.request.body as {
-      checklist: string
-      input: any
-      output: any
-      duration?: number
-      idealOutput?: string
-      context?: string
-      model?: string
+evaluations.post(
+  "/run",
+  checkAccess("evaluations", "create"),
+  async (ctx: Context) => {
+    const { projectId } = ctx.state
+    const { checklist, input, output, idealOutput, context, duration, model } =
+      ctx.request.body as {
+        checklist: string
+        input: any
+        output: any
+        duration?: number
+        idealOutput?: string
+        context?: string
+        model?: string
+      }
+
+    const [checklistData] =
+      await sql` select * from checklist where slug = ${checklist} and project_id = ${projectId}`
+
+    if (!checklistData) {
+      ctx.throw(400, "Invalid checklist, is the slug correct?")
     }
 
-  const [checklistData] =
-    await sql` select * from checklist where slug = ${checklist} and project_id = ${projectId}`
+    const checks = checklistData.data
 
-  if (!checklistData) {
-    ctx.throw(400, "Invalid checklist, is the slug correct?")
-  }
+    const virtualRun = {
+      type: "llm",
+      input,
+      output,
+      inputText: JSON.stringify(input),
+      outputText: JSON.stringify(output),
+      status: "success",
+      // params: extra,
+      name: model || "custom",
+      duration: duration || 0,
+      promptTokens: 0,
+      completionTokens: 0,
+      createdAt: new Date(),
+      endedAt: new Date(),
+      // Eval-only fields:
+      idealOutput,
+      context,
+      // So the SQL queries don't fail:
+      id: "00000000-0000-4000-8000-000000000000",
+      projectId: "00000000-0000-4000-8000-000000000000",
+      isPublic: false,
+      cost: 0,
+    }
 
-  const checks = checklistData.data
+    const cost = calcRunCost(virtualRun)
+    virtualRun.cost = cost
+    virtualRun.duration = virtualRun.duration / 1000 // needs to be in ms in calcRunCost, but needs to be in seconds in the checks
 
-  const virtualRun = {
-    type: "llm",
-    input,
-    output,
-    inputText: JSON.stringify(input),
-    outputText: JSON.stringify(output),
-    status: "success",
-    // params: extra,
-    name: model || "custom",
-    duration: duration || 0,
-    promptTokens: 0,
-    completionTokens: 0,
-    createdAt: new Date(),
-    endedAt: new Date(),
-    // Eval-only fields:
-    idealOutput,
-    context,
-    // So the SQL queries don't fail:
-    id: "00000000-0000-4000-8000-000000000000",
-    projectId: "00000000-0000-4000-8000-000000000000",
-    isPublic: false,
-    cost: 0,
-  }
+    // run checks
+    const { passed, results } = await runChecksOnRun(virtualRun, checks)
 
-  const cost = calcRunCost(virtualRun)
-  virtualRun.cost = cost
-  virtualRun.duration = virtualRun.duration / 1000 // needs to be in ms in calcRunCost, but needs to be in seconds in the checks
+    console.log(`---------------------`)
+    console.log(passed, results)
 
-  // run checks
-  const { passed, results } = await runChecksOnRun(virtualRun, checks)
-
-  console.log(`---------------------`)
-  console.log(passed, results)
-
-  ctx.body = { passed, results }
-})
+    ctx.body = { passed, results }
+  },
+)
 
 export default evaluations

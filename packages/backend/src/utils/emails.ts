@@ -18,6 +18,21 @@ export async function sendVerifyEmail(email: string, name: string) {
   await sendEmail(CONFIRM_EMAIL(email, name, confirmLink))
 }
 
+export function INVITE_EMAIL(email: string, orgName: string, link: string) {
+  return {
+    subject: `You've been invited to Lunary`,
+    to: [email],
+    reply_to: "hello@lunary.ai",
+    from: process.env.GENERIC_SENDER,
+    text: `Hi, 
+You've been invited to join ${orgName} on Lunary. Please use the following link to accept the invitation: ${link}
+We're looking forward to having you on board!
+
+Best,
+The Lunary Team`,
+  }
+}
+
 export function CONFIRM_EMAIL(
   email: string,
   name: string,
