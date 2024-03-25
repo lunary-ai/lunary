@@ -6,6 +6,7 @@ import ingest from "./ingest"
 import { fileExport } from "./export"
 import { deserializeLogic } from "shared"
 import { convertChecksToSQL } from "@/src/utils/checks"
+import { checkAccess } from "@/src/utils/authorization"
 
 const runs = new Router({
   prefix: "/runs",
@@ -88,7 +89,7 @@ const formatRun = (run: any) => ({
 
 runs.use("/ingest", ingest.routes())
 
-runs.get("/", checkAccess("logs", "read"), async (ctx: Context) => {
+runs.get("/", async (ctx: Context) => {
   const { projectId } = ctx.state
 
   const queryString = ctx.querystring
@@ -186,7 +187,7 @@ runs.get("/usage", checkAccess("logs", "read"), async (ctx) => {
   ctx.body = runsUsage
 })
 
-runs.get("/:id/public", checkAccess("logs", "read"), async (ctx) => {
+runs.get("/:id/public", async (ctx) => {
   const { id } = ctx.params
 
   const [row] = await sql`
@@ -212,7 +213,7 @@ runs.get("/:id/public", checkAccess("logs", "read"), async (ctx) => {
   ctx.body = formatRun(row)
 })
 
-runs.get("/:id", checkAccess("logs", "read"), async (ctx) => {
+runs.get("/:id", async (ctx) => {
   const { id } = ctx.params
 
   // Use orgId in case teammates shares URL to run and teammates is on another project.
