@@ -62,7 +62,7 @@ import { SettingsCard } from "@/components/blocks/SettingsCard"
 function SAMLConfig() {
   const { org, updateOrg, mutate } = useOrg()
 
-  const [idpXml, setIdpXml] = useState(org?.saml_idp_xml)
+  const [idpXml, setIdpXml] = useState(org?.samlIdpXml)
   const [idpLoading, setIdpLoading] = useState(false)
   const [spLoading, setSpLoading] = useState(false)
 
@@ -73,10 +73,17 @@ function SAMLConfig() {
     setIdpLoading(true)
 
     if (idpXml.startsWith("http")) {
-      const res = await fetcher.post(`/auth/saml/${org?.id}/download-idp-xml`, {
+      await fetcher.post(`/auth/saml/${org?.id}/download-idp-xml`, {
         arg: {
           url: idpXml,
         },
+      })
+
+      notifications.show({
+        title: "IDP XML added",
+        message: "The IDP XML has been added successfully",
+        icon: <IconCheck />,
+        color: "green",
       })
     } else {
       await updateOrg({ id: org?.id, saml_idp_xml: content })
@@ -160,7 +167,7 @@ function SAMLConfig() {
             <Table.Tr>
               <Table.Td>Sign on URL:</Table.Td>
               <Table.Td>
-                <CopyInput value={`${window.API_URL}/login`} />
+                <CopyInput value={`${window.APP_URL}/login`} />
               </Table.Td>
             </Table.Tr>
             <Table.Tr>

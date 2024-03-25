@@ -114,6 +114,7 @@ route.post("/download-idp-xml", async (ctx: Context) => {
 
   await sql`update org set saml_idp_xml = ${xml} where id = ${orgId}`
 
+  ctx.body = { success: true }
   ctx.status = 201
 })
 
