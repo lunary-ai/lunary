@@ -56,7 +56,7 @@ const DEFAULT_RADARS = [
         params: {
           field: "input",
           type: "contains",
-          types: ["person", "location", "email", "cc", "phone", "ssn"],
+          entities: ["person", "location", "email", "cc", "phone", "ssn"],
         },
       },
     ],
@@ -80,7 +80,7 @@ const DEFAULT_RADARS = [
         params: {
           field: "input",
           type: "contains",
-          types: ["person", "location", "email", "cc", "phone", "ssn"],
+          entities: ["person", "location", "email", "cc", "phone", "ssn"],
         },
       },
     ],

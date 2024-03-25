@@ -23,7 +23,7 @@ set checks = '[
         "params": {
             "field": "input",
             "type": "contains",
-            "types": ["person", "location", "email", "cc", "phone", "ssn"]
+            "entities": ["person", "location", "email", "cc", "phone", "ssn"]
         }
     }
 ]'::jsonb
@@ -37,7 +37,7 @@ set checks = '[
         "params": {
             "field": "output",
             "type": "contains",
-            "types": ["person", "location", "email", "cc", "phone", "ssn"]
+            "entities": ["person", "location", "email", "cc", "phone", "ssn"]
         }
     }
 ]'::jsonb

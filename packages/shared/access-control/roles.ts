@@ -9,7 +9,7 @@ export type ResourceName =
   | "prompts"
   | "radars"
   | "datasets"
-  | "checkLists"
+  | "checklists"
   | "evaluations"
 export type Role = "owner" | "admin" | "member" | "viewer" | "billing"
 export type Action =
@@ -99,7 +99,7 @@ export const roles: Record<
         delete: true,
         list: true,
       },
-      checkLists: {
+      checklists: {
         create: true,
         read: true,
         update: true,
@@ -184,7 +184,7 @@ export const roles: Record<
         delete: true,
         list: true,
       },
-      checkLists: {
+      checklists: {
         create: true,
         read: true,
         update: true,
@@ -266,7 +266,7 @@ export const roles: Record<
         delete: true,
         list: true,
       },
-      checkLists: {
+      checklists: {
         create: true,
         read: true,
         update: true,
@@ -341,7 +341,7 @@ export const roles: Record<
         delete: false,
         list: true,
       },
-      checkLists: {
+      checklists: {
         create: false,
         read: true,
         update: false,
