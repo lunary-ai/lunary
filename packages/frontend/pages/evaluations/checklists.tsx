@@ -176,7 +176,7 @@ export default function Checklists() {
             <Title>Checklists</Title>
           </Group>
 
-          {hasAccess(user, "checkLists", "create") && (
+          {hasAccess(user, "checklists", "create") && (
             <Button
               leftSection={<IconPlus size={12} />}
               variant="default"

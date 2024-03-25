@@ -9,7 +9,7 @@ const checklists = new Router({
   prefix: "/checklists",
 })
 
-checklists.get("/", checkAccess("checkLists", "list"), async (ctx: Context) => {
+checklists.get("/", checkAccess("checklists", "list"), async (ctx: Context) => {
   const { projectId } = ctx.state
   // TODO: full zod
   const { type } = ctx.query as { type: string }
@@ -23,7 +23,7 @@ checklists.get("/", checkAccess("checkLists", "list"), async (ctx: Context) => {
 
 checklists.get(
   "/:id",
-  checkAccess("checkLists", "read"),
+  checkAccess("checklists", "read"),
   async (ctx: Context) => {
     const { projectId } = ctx.state
     const { id } = ctx.params
@@ -76,7 +76,7 @@ checklists.patch("/:id", async (ctx: Context) => {
 
 checklists.delete(
   "/:id",
-  checkAccess("checkLists", "delete"),
+  checkAccess("checklists", "delete"),
   async (ctx: Context) => {
     const { projectId } = ctx.state
     const { id } = ctx.params
