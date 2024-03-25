@@ -134,7 +134,7 @@ const DEFAULT_RADARS = [
   // },
 ]
 
-radars.get("/", checkAccess("radars", "list"), async (ctx) => {
+radars.get("/", async (ctx) => {
   const { projectId } = ctx.state
 
   const [hasRadar] = await sql`
@@ -165,7 +165,7 @@ radars.get("/", checkAccess("radars", "list"), async (ctx) => {
   ctx.body = rows
 })
 
-radars.get("/:radarId", checkAccess("radars", "read"), async (ctx) => {
+radars.get("/:radarId", async (ctx) => {
   const { projectId } = ctx.state
   const { radarId } = ctx.params
 
@@ -182,7 +182,7 @@ radars.get("/:radarId", checkAccess("radars", "read"), async (ctx) => {
   ctx.body = row
 })
 
-radars.get("/:radarId/chart", checkAccess("radars", "read"), async (ctx) => {
+radars.get("/:radarId/chart", async (ctx) => {
   // get number of passing & failing runs for each day in the last 7 days
   // including days with no runs (passing and failing counts as 0)
   const { projectId } = ctx.state

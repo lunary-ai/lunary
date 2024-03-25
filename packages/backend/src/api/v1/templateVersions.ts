@@ -14,17 +14,14 @@ const versions = new Router({
 const unCameledSql = postgres(process.env.DATABASE_URL!)
 
 //Warning: Route used by SDK to fetch the latest version of a template
-versions.get(
-  "/latest",
-  checkAccess("prompts", "read"),
-  async (ctx: Context) => {
-    const { projectId } = ctx.state
+versions.get("/latest", async (ctx: Context) => {
+  const { projectId } = ctx.state
 
-    const { slug } = ctx.request.query as {
-      slug: string
-    }
+  const { slug } = ctx.request.query as {
+    slug: string
+  }
 
-    const [latestVersion] = await unCameledSql`
+  const [latestVersion] = await unCameledSql`
     SELECT t.id::text, t.slug, tv.id::text, tv.content, tv.extra, tv.created_at, tv.version
     FROM template t
     INNER JOIN template_version tv ON t.id = tv.template_id
@@ -36,15 +33,14 @@ versions.get(
     LIMIT 1
   `
 
-    if (!latestVersion) {
-      ctx.throw("Template not found, is the project ID correct?", 404)
-    }
+  if (!latestVersion) {
+    ctx.throw("Template not found, is the project ID correct?", 404)
+  }
 
-    ctx.body = latestVersion
-  },
-)
+  ctx.body = latestVersion
+})
 
-versions.get("/:id", checkAccess("prompts", "read"), async (ctx: Context) => {
+versions.get("/:id", async (ctx: Context) => {
   const [version] = await sql`
     select * from template_version where id = ${ctx.params.id}
   `
