@@ -8,7 +8,7 @@ const templates = new Router({
   prefix: "/templates",
 })
 
-templates.get("/", checkAccess("prompts", "list"), async (ctx: Context) => {
+templates.get("/", async (ctx: Context) => {
   const templates = await sql`
     select t.*, coalesce(json_agg(tv.*) filter (where tv.id is not null), '[]') as versions
     from template t
@@ -67,7 +67,7 @@ templates.post("/", checkAccess("prompts", "create"), async (ctx: Context) => {
   }
 })
 
-templates.get("/:id", checkAccess("prompts", "read"), async (ctx: Context) => {
+templates.get("/:id", async (ctx: Context) => {
   const [row] = await sql`
     select * from template where project_id = ${ctx.state.projectId} and id = ${ctx.params.id}
   `
