@@ -65,6 +65,7 @@ export default function Join() {
 
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
+  const [ssoURI, setSsoURI] = useState<string | null>(null)
 
   useEffect(() => {
     if (router.isReady) {
@@ -78,72 +79,116 @@ export default function Join() {
       email: "",
       name: "",
       password: "",
+      confirmPassword: "",
     },
 
     validate: {
       email: (val) => (/^\S+@\S+$/.test(val) ? null : "Invalid email"),
       name: (val) => (val.length <= 2 ? "Your name that short :) ?" : null),
       password: (val) =>
-        val.length < 6 ? "Password must be at least 6 characters" : null,
+        step === 2 && val.length < 6
+          ? "Password must be at least 6 characters"
+          : null,
+      confirmPassword: (val) =>
+        step === 2 && val !== form.values.password
+          ? "Passwords do not match"
+          : null,
     },
   })
 
   const handleSignup = async ({
     email,
-    password,
     name,
+    redirectUrl,
+    password,
   }: {
     email: string
-    password: string
     name: string
+    redirectUrl?: string
+    password?: string
   }) => {
     setLoading(true)
 
+    const signupData = {
+      email,
+      name,
+      orgId,
+      signupMethod: "join",
+      token,
+      password,
+      redirectUrl,
+    }
+
+    console.log(signupData)
+
     const ok = await errorHandler(
       fetcher.post("/auth/signup", {
-        arg: {
-          email,
-          password,
-          name,
-          orgId,
-          signupMethod: "join",
-          token,
-        },
+        arg: signupData,
       }),
     )
 
     if (ok) {
-      Router.replace("/login")
+      analytics.track("Join", { email, name, orgId })
 
       notifications.show({
         icon: <IconCheck size={18} />,
         color: "teal",
         message: `You have joined ${orgName}`,
       })
-      analytics.track("Join", { email, name })
+
+      if (redirectUrl) {
+        window.location.href = redirectUrl
+      } else {
+        Router.replace("/login")
+      }
     }
 
     setLoading(false)
   }
 
-  const nextStep = () => {
-    if (step === 1) {
-      if (
-        form.validateField("email").hasError ||
-        form.validateField("password").hasError
-      ) {
-        return
-      }
-    }
+  const continueStep = async () => {
+    const { email, name, password } = form.values
 
-    setStep(step + 1)
+    setLoading(true)
+    try {
+      if (step === 1) {
+        const { method, redirect } = await fetcher.post("/auth/method", {
+          arg: {
+            email,
+          },
+        })
+
+        console.log(method, redirect)
+
+        if (method === "saml") {
+          setSsoURI(redirect)
+
+          await handleSignup({
+            email,
+            name,
+            redirectUrl: redirect,
+          })
+        }
+      } else if (step === 2) {
+        await handleSignup({
+          email,
+          name,
+          password,
+        })
+
+        setStep(3)
+      }
+    } catch (error) {
+      console.error(error)
+    }
+    setLoading(false)
   }
 
   if (!joinData) {
     return <Loader />
   }
+
   const { orgUserCount, orgName, orgId, orgPlan } = joinData
-  console.log(joinData)
 
   if (orgUserCount >= SEAT_ALLOWANCE[orgPlan]) {
     return <TeamFull orgName={orgName} />
@@ -161,54 +206,10 @@ export default function Join() {
           </Title>
         </Stack>
         <Paper radius="md" p="xl" withBorder miw={350}>
-          <form onSubmit={form.onSubmit(handleSignup)}>
+          <form onSubmit={form.onSubmit(continueStep)}>
             <Stack gap="xl">
-              {step === 1 && (
+              {step < 3 && (
                 <>
-                  <Title order={2} fw={700} ta="center">
-                    Get Started
-                  </Title>
-                  <TextInput
-                    leftSection={<IconAt size="16" />}
-                    label="Email"
-                    type="email"
-                    autoComplete="email"
-                    error={form.errors.email && "Invalid email"}
-                    placeholder="Your email"
-                    {...form.getInputProps("email")}
-                  />
-
-                  <PasswordInput
-                    label="Password"
-                    autoComplete="new-password"
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        nextStep()
-                      }
-                    }}
-                    error={form.errors.password && "Invalid password"}
-                    placeholder="Your password"
-                    {...form.getInputProps("password")}
-                  />
-
-                  <Button
-                    size="md"
-                    mt="md"
-                    onClick={nextStep}
-                    fullWidth
-                    loading={loading}
-                  >
-                    {`Continue →`}
-                  </Button>
-                </>
-              )}
-
-              {step === 2 && (
-                <>
-                  <Title order={2} fw={700} ta="center">
-                    Almost there...
-                  </Title>
-
                   <TextInput
                     label="Full Name"
                     autoComplete="name"
@@ -219,26 +220,44 @@ export default function Join() {
                     {...form.getInputProps("name")}
                   />
 
-                  <Stack>
-                    <Button
-                      size="md"
-                      mt="md"
-                      type="submit"
-                      fullWidth
-                      loading={loading}
-                    >
-                      {`Create account`}
-                    </Button>
+                  <TextInput
+                    leftSection={<IconAt size="16" />}
+                    label="Email"
+                    type="email"
+                    autoComplete="email"
+                    error={form.errors.email && "Invalid email"}
+                    placeholder="Your email"
+                    {...form.getInputProps("email")}
+                  />
 
-                    <Button
-                      size="sm"
-                      onClick={() => setStep(1)}
-                      fullWidth
-                      variant="transparent"
-                    >
-                      {`← Go back`}
-                    </Button>
-                  </Stack>
+                  {step === 2 && (
+                    <>
+                      <PasswordInput
+                        label="Password"
+                        autoComplete="new-password"
+                        error={form.errors.password && "Invalid password"}
+                        placeholder="Your password"
+                        {...form.getInputProps("password")}
+                      />
+                      <PasswordInput
+                        label="Confirm Password"
+                        autoComplete="new-password"
+                        error={form.errors.password && "Invalid password"}
+                        placeholder="Your password"
+                        {...form.getInputProps("confirmPassword")}
+                      />
+                    </>
+                  )}
+
+                  <Button
+                    size="md"
+                    mt="md"
+                    type="submit"
+                    fullWidth
+                    loading={loading}
+                  >
+                    {step === 2 ? `Confirm signup →` : `Continue →`}
+                  </Button>
                 </>
               )}
 
@@ -253,12 +272,16 @@ export default function Join() {
                   <Stack align="center">
                     <IconAnalyze color={"#206dce"} size={60} />
                     <Title order={2} fw={700} size={40} ta="center">
-                      You&nbsp;re all set 🎉
+                      You're all set 🎉
                     </Title>
 
-                    <Text size="lg" mt="xs" mb="xl" fw={500}>
-                      Check your emails for the confirmation link.
-                    </Text>
+                    {!process.env.NEXT_PUBLIC_IS_SELF_HOSTED && (
+                      <>
+                        <Text size="lg" mt="xs" mb="xl" fw={500}>
+                          Check your emails for the confirmation link.
+                        </Text>
+                      </>
+                    )}
 
                     <Button
                       onClick={() => router.push("/")}

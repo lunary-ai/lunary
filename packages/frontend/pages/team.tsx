@@ -31,17 +31,12 @@ import {
   IconCopy,
   IconDotsVertical,
   IconDownload,
-  IconRefresh,
-  IconSearch,
   IconTrash,
 } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { z } from "zod"
 
-import CopyText, {
-  CopyInput,
-  SuperCopyButton,
-} from "@/components/blocks/CopyText"
+import { CopyInput } from "@/components/blocks/CopyText"
 import UserAvatar from "@/components/blocks/UserAvatar"
 import {
   // useInvitations,
@@ -58,6 +53,8 @@ import classes from "./team.module.css"
 import { useForm } from "@mantine/form"
 import SearchBar from "@/components/blocks/SearchBar"
 import { SettingsCard } from "@/components/blocks/SettingsCard"
+import { SEAT_ALLOWANCE } from "@/utils/pricing"
+import { openUpgrade } from "@/components/layout/UpgradeModal"
 
 function SAMLConfig() {
   const { org, updateOrg, mutate } = useOrg()
@@ -323,16 +320,20 @@ export function RoleSelect({
     onDropdownClose: () => combobox.resetSelectedOption(),
   })
 
-  const org = useOrg()
+  const { org } = useOrg()
 
-  const canUsePaidRoles = ["custom", "unlimited"].includes(org?.plan)
+  const canUsePaidRoles = org?.plan === "custom"
 
   const options = Object.values(roles).map(
     ({ value, name, description, free }) =>
       value !== "owner" && (
         <Tooltip
           key={value}
-          label={!free && !canUsePaidRoles ? "Upgrade to use this role" : null}
+          label={
+            !free && !canUsePaidRoles
+              ? "This role is available on Enterprise plans"
+              : null
+          }
           position="left"
           disabled={free || canUsePaidRoles}
         >
@@ -447,6 +448,10 @@ function InviteMemberCard() {
   })
 
   async function invite({ email }) {
+    if (org?.users?.length >= SEAT_ALLOWANCE[org?.plan]) {
+      return openUpgrade("team")
+    }
+
     try {
       setIsLoading(true)
       const { user: newUser } = await addUserToOrg({

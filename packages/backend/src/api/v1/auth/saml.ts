@@ -145,10 +145,10 @@ route.post("/acs", async (ctx: Context) => {
 
   const { email, name } = parseAttributes(attributes)
 
-  const onetimeToken = await generateOneTimeToken()
+  const singleUseToken = await generateOneTimeToken()
 
   const [account] =
-    await sql`update account set ${sql({ name, onetimeToken, lastLoginAt: new Date() })} where email = ${email} and org_id = ${orgId} returning *`
+    await sql`update account set ${sql({ name, singleUseToken, lastLoginAt: new Date() })} where email = ${email} and org_id = ${orgId} returning *`
 
   if (!account) {
     ctx.throw(
@@ -158,7 +158,7 @@ route.post("/acs", async (ctx: Context) => {
   }
 
   // Redirect with an one-time token that can be exchanged for an auth token
-  ctx.redirect(`${process.env.APP_URL!}/login?ott=${onetimeToken}`)
+  ctx.redirect(`${process.env.APP_URL!}/login?ott=${singleUseToken}`)
 })
 
 route.post("/slo", async (ctx: Context) => {
