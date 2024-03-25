@@ -38,7 +38,7 @@ export default function CopyText({ c = "violet", value }) {
 export const CopyInput = ({ value, ...props }) => (
   <Input
     value={value}
-    disabled
+    styles={{ input: { contentEditable: false } }}
     rightSectionPointerEvents="all"
     rightSection={<SuperCopyButton value={value} />}
     {...props}

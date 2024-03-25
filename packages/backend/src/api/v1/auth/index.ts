@@ -68,6 +68,7 @@ auth.post("/signup", async (ctx: Context) => {
     token,
   } = bodySchema.parse(ctx.request.body)
 
+  // Spamming hotfix
   if (orgName?.includes("https://") || name.includes("http://")) {
     ctx.throw(403, "Bad request")
   }
@@ -75,6 +76,11 @@ auth.post("/signup", async (ctx: Context) => {
   const [existingUser] = await sql`
     select * from account where lower(email) = lower(${email})
   `
+
+  if (existingUser) {
+    ctx.throw(403, "User already exists")
+  }
+
   if (signupMethod === "signup") {
     const { user, org } = await sql.begin(async (sql) => {
       const plan = process.env.DEFAULT_PLAN || "free"
@@ -163,7 +169,8 @@ auth.post("/signup", async (ctx: Context) => {
       role: "member",
       verified: true,
     }
-    const [user] = await sql`
+
+    await sql`
         update account set 
           name = ${newUser.name},
           password_hash = ${newUser.passwordHash}, 
@@ -272,7 +279,7 @@ auth.post("/request-password-reset", async (ctx: Context) => {
 
     await sql`update account set recovery_token = ${token} where id = ${user.id}`
 
-    const link = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${token}`
+    const link = `${process.env.APP_URL}/reset-password?token=${token}`
 
     await sendEmail(RESET_PASSWORD(email, link))
 

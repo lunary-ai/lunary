@@ -138,46 +138,41 @@ function SAMLConfig() {
             <Table.Tr>
               <Table.Td>Identifier (Entity ID):</Table.Td>
               <Table.Td>
-                <CopyText c="blue" value={"urn:lunary.ai:saml:sp"} />
+                <CopyInput value={"urn:lunary.ai:saml:sp"} />
               </Table.Td>
             </Table.Tr>
             <Table.Tr>
               <Table.Td>Assertion Consumer Service (ACS) URL:</Table.Td>
               <Table.Td>
-                <CopyText
-                  c="blue"
-                  value={`${process.env.NEXT_PUBLIC_API_URL}/auth/saml/${org?.id}/acs`}
+                <CopyInput
+                  value={`${window.API_URL}/auth/saml/${org?.id}/acs`}
                 />
               </Table.Td>
             </Table.Tr>
             <Table.Tr>
               <Table.Td>Single Logout Service (SLO) URL:</Table.Td>
               <Table.Td>
-                <CopyText
-                  c="blue"
-                  value={`${process.env.NEXT_PUBLIC_API_URL}/auth/saml/${org?.id}/slo`}
+                <CopyInput
+                  value={`${window.API_URL}/auth/saml/${org?.id}/slo`}
                 />
               </Table.Td>
             </Table.Tr>
             <Table.Tr>
               <Table.Td>Sign on URL:</Table.Td>
               <Table.Td>
-                <CopyText
-                  c="blue"
-                  value={`${process.env.NEXT_PUBLIC_API_URL}/login`}
+                <CopyInput value={`${window.API_URL}/login`} />
+              </Table.Td>
+            </Table.Tr>
+            <Table.Tr>
+              <Table.Td>Single Logout URL:</Table.Td>
+              <Table.Td>
+                <CopyInput
+                  value={`${window.API_URL}/auth/saml/${org?.id}/slo`}
                 />
               </Table.Td>
             </Table.Tr>
           </Table.Tbody>
         </Table>
-
-        <Group wrap="nowrap">
-          <Text>Single Logout Service (SLO) URL</Text>
-          <CopyText
-            c="blue"
-            value={`${window.API_URL}/auth/saml/${org?.id}/slo`}
-          />
-        </Group>
 
         <Button
           onClick={() => downloadSpXml()}
@@ -289,7 +284,7 @@ function UserMenu({ user, isInvitation }) {
             <Menu.Item
               onClick={() => {
                 navigator.clipboard.writeText(
-                  `${process.env.NEXT_PUBLIC_APP_URL}/join?token=${user.singleUseToken}`,
+                  `${window.APP_URL}/join?token=${user.singleUseToken}`,
                 )
                 notifications.show({
                   icon: <IconCheck size={18} />,
@@ -462,7 +457,7 @@ function InviteMemberCard() {
         })
         return
       } else {
-        const link = `${process.env.NEXT_PUBLIC_APP_URL}/join?token=${newUser.singleUseToken}`
+        const link = `${window.APP_URL}/join?token=${newUser.singleUseToken}`
         setIsLoading(false)
         setInviteLink(link)
         setOpened(true)
@@ -767,7 +762,7 @@ export default function Team() {
     <Container className="unblockable">
       <NextSeo title="Team" />
 
-      <Stack gap="lg">
+      <Stack gap="xl">
         <Title order={2}>Manage Team</Title>
 
         <InviteMemberCard />

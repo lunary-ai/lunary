@@ -94,7 +94,7 @@ orgs.get("/billing-portal", async (ctx: Context) => {
 
   const session = await stripe.billingPortal.sessions.create({
     customer: org.stripeCustomer,
-    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing`,
+    return_url: `${process.env.APP_URL}/billing`,
   })
 
   ctx.body = { url: session.url }
