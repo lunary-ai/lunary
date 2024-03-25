@@ -1,0 +1,11 @@
+.root {
+  outline: 1px
+}
+
+.pillsList {
+  flex-wrap: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+

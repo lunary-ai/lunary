@@ -1,3 +1,4 @@
+import { checkAccess } from "@/src/utils/authorization"
 import sql from "@/src/utils/db"
 import { clearUndefined } from "@/src/utils/ingest"
 import Context from "@/src/utils/koa"
@@ -8,7 +9,7 @@ const checklists = new Router({
   prefix: "/checklists",
 })
 
-checklists.get("/", async (ctx: Context) => {
+checklists.get("/", checkAccess("checkLists", "list"), async (ctx: Context) => {
   const { projectId } = ctx.state
   // TODO: full zod
   const { type } = ctx.query as { type: string }
@@ -20,15 +21,19 @@ checklists.get("/", async (ctx: Context) => {
   ctx.body = rows
 })
 
-checklists.get("/:id", async (ctx: Context) => {
-  const { projectId } = ctx.state
-  const { id } = ctx.params
+checklists.get(
+  "/:id",
+  checkAccess("checkLists", "read"),
+  async (ctx: Context) => {
+    const { projectId } = ctx.state
+    const { id } = ctx.params
 
-  const [check] = await sql`select * from checklist 
+    const [check] = await sql`select * from checklist 
         where project_id = ${projectId} 
         and id = ${id}`
-  ctx.body = check
-})
+    ctx.body = check
+  },
+)
 
 checklists.post("/", async (ctx: Context) => {
   const { projectId, userId } = ctx.state
@@ -69,18 +74,22 @@ checklists.patch("/:id", async (ctx: Context) => {
   ctx.body = updatedCheck
 })
 
-checklists.delete("/:id", async (ctx: Context) => {
-  const { projectId } = ctx.state
-  const { id } = ctx.params
+checklists.delete(
+  "/:id",
+  checkAccess("checkLists", "delete"),
+  async (ctx: Context) => {
+    const { projectId } = ctx.state
+    const { id } = ctx.params
 
-  await sql`
+    await sql`
     delete from checklist
     where project_id = ${projectId}
     and id = ${id}
     returning *
   `
 
-  ctx.status = 200
-})
+    ctx.status = 200
+  },
+)
 
 export default checklists
