@@ -7,10 +7,6 @@ function extractFirstName(name: string) {
 }
 
 export async function sendVerifyEmail(email: string, name: string) {
-  if (process.env.SKIP_EMAIL_VERIFY) {
-    return
-  }
-
   const token = await signJwt({ email })
 
   const confirmLink = `${process.env.API_URL}/v1/users/verify-email?token=${token}`

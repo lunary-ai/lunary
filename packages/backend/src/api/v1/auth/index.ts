@@ -88,7 +88,7 @@ auth.post("/signup", async (ctx: Context) => {
         email,
         orgId: org.id,
         role: "owner",
-        verified: process.env.SKIP_EMAIL_VERIFY ? true : false,
+        verified: !process.env.RESEND_KEY ? true : false,
         lastLoginAt: new Date(),
       }
 
