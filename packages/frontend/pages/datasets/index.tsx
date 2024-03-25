@@ -1,11 +1,12 @@
 import OrgUserBadge from "@/components/blocks/OrgUserBadge"
 import RenamableField from "@/components/blocks/RenamableField"
-import { useDataset, useDatasets } from "@/utils/dataHooks"
+import { useDataset, useDatasets, useUser } from "@/utils/dataHooks"
 import { cleanSlug } from "@/utils/format"
 import {
   ActionIcon,
   Alert,
   Badge,
+  Box,
   Button,
   Card,
   Container,
@@ -26,6 +27,7 @@ import {
 } from "@tabler/icons-react"
 import Router from "next/router"
 import { generateSlug } from "random-word-slugs"
+import { hasAccess } from "shared"
 
 function DatasetCard({ defaultValue, onDelete }) {
   const { update, dataset, remove } = useDataset(defaultValue?.id, defaultValue)
@@ -120,6 +122,7 @@ function DatasetCard({ defaultValue, onDelete }) {
 
 export default function Datasets() {
   const { datasets, isLoading, mutate, insert, isInserting } = useDatasets()
+  const { user } = useUser()
 
   function createDataset(format) {
     insert(
@@ -146,40 +149,42 @@ export default function Datasets() {
             </Badge>
           </Group>
 
-          <Menu>
-            <Menu.Target>
-              <Button
-                leftSection={<IconPlus size={12} />}
-                variant="default"
-                loading={isInserting}
-              >
-                New Dataset
-              </Button>
-            </Menu.Target>
-            <Menu.Dropdown>
-              <Menu.Item
-                leftSection={<IconMessages size={12} />}
-                onClick={() => {
-                  createDataset("chat")
-                }}
-              >
-                New Chat Dataset (OpenAI compatible)
-              </Menu.Item>
-              <Menu.Item
-                leftSection={<IconTextCaption size={12} />}
-                onClick={() => {
-                  createDataset("text")
-                }}
-              >
-                New Text Dataset
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
-          <Text size="lg" mb="md">
-            Datasets are collections of prompts that you can use as a basis for
-            evaluations.
-          </Text>
+          {hasAccess(user.role, "datasets", "create") && (
+            <Menu>
+              <Menu.Target>
+                <Button
+                  leftSection={<IconPlus size={12} />}
+                  variant="default"
+                  loading={isInserting}
+                >
+                  New Dataset
+                </Button>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item
+                  leftSection={<IconMessages size={12} />}
+                  onClick={() => {
+                    createDataset("chat")
+                  }}
+                >
+                  New Chat Dataset (OpenAI compatible)
+                </Menu.Item>
+                <Menu.Item
+                  leftSection={<IconTextCaption size={12} />}
+                  onClick={() => {
+                    createDataset("text")
+                  }}
+                >
+                  New Text Dataset
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          )}
         </Group>
+        <Text size="lg" mb="md">
+          Datasets are collections of prompts that you can use as a basis for
+          evaluations.
+        </Text>
 
         {isLoading ? (
           <Loader />

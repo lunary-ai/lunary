@@ -14,9 +14,10 @@ import { IconPencilShare } from "@tabler/icons-react"
 import Link from "next/link"
 import SmartViewer from "../SmartViewer"
 import TokensBadge from "./TokensBadge"
-import { useRun } from "@/utils/dataHooks"
+import { useRun, useUser } from "@/utils/dataHooks"
 import { notifications } from "@mantine/notifications"
 import { SuperCopyButton } from "./CopyText"
+import { hasAccess } from "shared"
 
 const isChatMessages = (obj) => {
   return Array.isArray(obj)
@@ -133,13 +134,15 @@ export default function RunInputOutput({
   withPlayground = true,
   withShare = false,
 }) {
+  const { user } = useUser()
   const { run, update } = useRun(initialRun?.id, initialRun)
 
   const canEnablePlayground =
     withPlayground &&
     run?.type === "llm" &&
     run?.input &&
-    isChatMessages(run?.input)
+    isChatMessages(run?.input) &&
+    hasAccess(user.role, "prompts", "read")
 
   return (
     <Stack>
@@ -159,29 +162,31 @@ export default function RunInputOutput({
                   value={`${window.location.origin}/logs/${run.id}`}
                 />
               </Group>
-              <Switch
-                label={
-                  <Text size="sm" mr="sm">
-                    Make public
-                  </Text>
-                }
-                checked={run.isPublic}
-                color={run.isPublic ? "red" : "blue"}
-                onChange={async (e) => {
-                  const checked = e.currentTarget.checked as boolean
-                  update({ ...run, isPublic: checked })
-                  if (checked) {
-                    const url = `${window.location.origin}/logs/${run.id}`
-                    await navigator.clipboard.writeText(url)
-
-                    notifications.show({
-                      top: 100,
-                      title: "Run is now public",
-                      message: "Link copied to clipboard",
-                    })
+              {hasAccess(user.role, "logs", "updaate") && (
+                <Switch
+                  label={
+                    <Text size="sm" mr="sm">
+                      Make public
+                    </Text>
                   }
-                }}
-              />
+                  checked={run.isPublic}
+                  color={run.isPublic ? "red" : "blue"}
+                  onChange={async (e) => {
+                    const checked = e.currentTarget.checked as boolean
+                    update({ ...run, isPublic: checked })
+                    if (checked) {
+                      const url = `${window.location.origin}/logs/${run.id}`
+                      await navigator.clipboard.writeText(url)
+
+                      notifications.show({
+                        top: 100,
+                        title: "Run is now public",
+                        message: "Link copied to clipboard",
+                      })
+                    }
+                  }}
+                />
+              )}
             </Group>
           )}
 

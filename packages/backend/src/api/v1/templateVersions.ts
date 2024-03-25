@@ -3,6 +3,7 @@ import Router from "koa-router"
 import { Context } from "koa"
 import postgres from "postgres"
 import { unCamelObject } from "@/src/utils/misc"
+import { checkAccess } from "@/src/utils/authorization"
 
 const versions = new Router({
   prefix: "/template_versions",
@@ -13,14 +14,17 @@ const versions = new Router({
 const unCameledSql = postgres(process.env.DATABASE_URL!)
 
 //Warning: Route used by SDK to fetch the latest version of a template
-versions.get("/latest", async (ctx: Context) => {
-  const { projectId } = ctx.state
+versions.get(
+  "/latest",
+  checkAccess("prompts", "read"),
+  async (ctx: Context) => {
+    const { projectId } = ctx.state
 
-  const { slug } = ctx.request.query as {
-    slug: string
-  }
+    const { slug } = ctx.request.query as {
+      slug: string
+    }
 
-  const [latestVersion] = await unCameledSql`
+    const [latestVersion] = await unCameledSql`
     SELECT t.id::text, t.slug, tv.id::text, tv.content, tv.extra, tv.created_at, tv.version
     FROM template t
     INNER JOIN template_version tv ON t.id = tv.template_id
@@ -32,14 +36,15 @@ versions.get("/latest", async (ctx: Context) => {
     LIMIT 1
   `
 
-  if (!latestVersion) {
-    ctx.throw("Template not found, is the project ID correct?", 404)
-  }
+    if (!latestVersion) {
+      ctx.throw("Template not found, is the project ID correct?", 404)
+    }
 
-  ctx.body = latestVersion
-})
+    ctx.body = latestVersion
+  },
+)
 
-versions.get("/:id", async (ctx: Context) => {
+versions.get("/:id", checkAccess("prompts", "read"), async (ctx: Context) => {
   const [version] = await sql`
     select * from template_version where id = ${ctx.params.id}
   `
@@ -53,16 +58,19 @@ versions.get("/:id", async (ctx: Context) => {
   ctx.body = { ...version, template }
 })
 
-versions.patch("/:id", async (ctx: Context) => {
-  const { content, extra, testValues, isDraft } = ctx.request.body as {
-    id: string
-    content: any[]
-    extra: any
-    testValues: any
-    isDraft: boolean
-  }
+versions.patch(
+  "/:id",
+  checkAccess("prompts", "update"),
+  async (ctx: Context) => {
+    const { content, extra, testValues, isDraft } = ctx.request.body as {
+      id: string
+      content: any[]
+      extra: any
+      testValues: any
+      isDraft: boolean
+    }
 
-  const [templateVersion] = await sql`
+    const [templateVersion] = await sql`
     update template_version set
       content = ${sql.json(content)},
       extra = ${sql.json(unCamelObject(extra))},
@@ -72,7 +80,8 @@ versions.patch("/:id", async (ctx: Context) => {
     returning *
   `
 
-  ctx.body = templateVersion
-})
+    ctx.body = templateVersion
+  },
+)
 
 export default versions

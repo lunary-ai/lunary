@@ -20,6 +20,7 @@ import { Label, ReferenceLine } from "recharts"
 import useSWR from "swr"
 import { EVENTS_ALLOWANCE } from "@/utils/pricing"
 import { fetcher } from "@/utils/fetcher"
+import SeatAllowanceCard from "@/components/blocks/SeatAllowanceCard"
 
 export default function Billing() {
   const { org, loading } = useOrg()
@@ -132,6 +133,8 @@ export default function Billing() {
             )
           }
         />
+
+        <SeatAllowanceCard />
 
         {org?.stripeCustomer && (
           <Card withBorder radius="md" padding="xl">
