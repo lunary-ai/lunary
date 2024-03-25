@@ -36,10 +36,16 @@ export default function AppAnalytics() {
       <Stack gap="xl">
         <LineChart
           title={
-            <RenamableField
-              defaultValue={project?.name}
-              onRename={(name) => update(name)}
-            />
+            hasAccess(user.role, "projects", "update") ? (
+              <RenamableField
+                defaultValue={project?.name}
+                onRename={(name) => update(name)}
+              />
+            ) : (
+              <Text size="xl" fw="bold">
+                {project?.name}
+              </Text>
+            )
           }
           range={30}
           data={projectUsage}

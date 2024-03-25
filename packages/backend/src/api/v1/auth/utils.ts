@@ -110,10 +110,10 @@ export async function authMiddleware(ctx: Context, next: Next) {
     ctx.state.orgId = payload.orgId
 
     if (ctx.state.projectId) {
-      // CHeck if user has access to project
+      // Check if user has access to project
 
       const [project] = await sql`
-        select id from project where id = ${ctx.state.projectId} and org_id = ${ctx.state.orgId}
+        select * from account_project where account_id = ${ctx.state.userId} and project_id = ${ctx.state.projectId}
       `
 
       if (!project) {

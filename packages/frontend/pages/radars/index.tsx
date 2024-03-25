@@ -1,7 +1,7 @@
 import TinyPercentChart from "@/components/analytics/TinyPercentChart"
 import FilterPicker from "@/components/filters/Picker"
 import Paywall from "@/components/layout/Paywall"
-import { useRadar, useRadars } from "@/utils/dataHooks"
+import { useRadar, useRadars, useUser } from "@/utils/dataHooks"
 import {
   ActionIcon,
   Badge,
@@ -35,6 +35,7 @@ import {
 } from "@tabler/icons-react"
 import Router from "next/router"
 import { useState } from "react"
+import { hasAccess } from "shared"
 
 const DEFAULT_RADAR = {
   negative: true,
@@ -179,6 +180,7 @@ function RadarEditModal({
 }
 
 function RadarCard({ id, initialData }) {
+  const { user } = useUser()
   const [editOpened, setEditOpened] = useState(false)
 
   const { radar, remove, update, chart, mutate } = useRadar(id, initialData)
@@ -281,47 +283,49 @@ function RadarCard({ id, initialData }) {
               </ActionIcon>
             </Tooltip>
 
-            <Menu>
-              <Menu.Target>
-                <ActionIcon variant="transparent">
-                  <IconDotsVertical size={16} />
-                </ActionIcon>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Item
-                  leftSection={<IconPencil size={13} />}
-                  onClick={() => setEditOpened(true)}
-                >
-                  Edit
-                </Menu.Item>
-                <Menu.Item disabled leftSection={<IconBell size={13} />}>
-                  Alerts
-                </Menu.Item>
+            {hasAccess(user.role, "radars", "edit") && (
+              <Menu>
+                <Menu.Target>
+                  <ActionIcon variant="transparent">
+                    <IconDotsVertical size={16} />
+                  </ActionIcon>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Item
+                    leftSection={<IconPencil size={13} />}
+                    onClick={() => setEditOpened(true)}
+                  >
+                    Edit
+                  </Menu.Item>
+                  <Menu.Item disabled leftSection={<IconBell size={13} />}>
+                    Alerts
+                  </Menu.Item>
 
-                <Menu.Item
-                  color="red"
-                  leftSection={<IconTrash size={13} />}
-                  onClick={() => {
-                    modals.openConfirmModal({
-                      title: "Delete radar",
-                      labels: { confirm: "Confirm", cancel: "Cancel" },
-                      children: (
-                        <Text size="sm">
-                          Are you sure you want to delete this radar? This
-                          action cannot be undone.
-                        </Text>
-                      ),
+                  <Menu.Item
+                    color="red"
+                    leftSection={<IconTrash size={13} />}
+                    onClick={() => {
+                      modals.openConfirmModal({
+                        title: "Delete radar",
+                        labels: { confirm: "Confirm", cancel: "Cancel" },
+                        children: (
+                          <Text size="sm">
+                            Are you sure you want to delete this radar? This
+                            action cannot be undone.
+                          </Text>
+                        ),
 
-                      onConfirm: () => {
-                        remove(id)
-                      },
-                    })
-                  }}
-                >
-                  Delete
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
+                        onConfirm: () => {
+                          remove(id)
+                        },
+                      })
+                    }}
+                  >
+                    Delete
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+            )}
           </Group>
         </Flex>
         <Flex justify="space-between">
@@ -375,6 +379,8 @@ export default function Radar() {
   const { radars, insert, loading } = useRadars()
   const [newRadar, setNewRadar] = useState(DEFAULT_RADAR)
 
+  const { user } = useUser()
+
   return (
     <Paywall
       plan="unlimited"
@@ -393,15 +399,17 @@ export default function Radar() {
               </Badge>
             </Group>
 
-            <Button
-              leftSection={<IconPlus size={12} />}
-              variant="default"
-              onClick={() => {
-                setModalOpened(true)
-              }}
-            >
-              New
-            </Button>
+            {hasAccess(user, "radars", "create") && (
+              <Button
+                leftSection={<IconPlus size={12} />}
+                variant="default"
+                onClick={() => {
+                  setModalOpened(true)
+                }}
+              >
+                New
+              </Button>
+            )}
           </Group>
 
           <Text size="lg" mb="md">

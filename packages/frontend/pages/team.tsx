@@ -373,7 +373,7 @@ export function RoleSelect({
   )
 }
 
-function ProjectMultiSelect({ value, setValue }) {
+function ProjectMultiSelect({ value, setValue, disabled }) {
   const { projects } = useProjects()
 
   const data = [
@@ -389,6 +389,8 @@ function ProjectMultiSelect({ value, setValue }) {
       data={data}
       onChange={(projectIds) => setValue(projectIds)}
       classNames={{ pillsList: classes.pillsList }}
+      disabled={disabled}
+      readOnly={disabled}
     />
   )
 }
@@ -399,13 +401,21 @@ function InviteMemberCard() {
   const [selectedProjects, setSelectedProjects] = useState([])
   const [opened, setOpened] = useState(false)
   const [inviteLink, setInviteLink] = useState("")
+  const { org } = useOrg()
 
   const [isLoading, setIsLoading] = useState(false)
   const { addUserToOrg } = useOrg()
+  const { user } = useUser()
 
   useEffect(() => {
     setSelectedProjects(projects.map((p) => p.id))
   }, [projects])
+
+  useEffect(() => {
+    if (["admin", "billing"].includes(role)) {
+      setSelectedProjects(projects.map((p) => p.id))
+    }
+  }, [role])
 
   const form = useForm({
     initialValues: {
@@ -474,6 +484,9 @@ function InviteMemberCard() {
             <ProjectMultiSelect
               value={selectedProjects}
               setValue={setSelectedProjects}
+              disabled={
+                org.plan !== "custom" || ["admin", "billing"].includes(role)
+              }
             />
           </Input.Wrapper>
         </Group>
@@ -490,16 +503,25 @@ function InviteMemberCard() {
 
 function UpdateUserForm({ user, onClose }) {
   const [role, setRole] = useState(user.role)
-  const [projects, setProjects] = useState(user.projects || ["all"])
+  const { projects } = useProjects()
+
+  const [userProjects, setUserProjects] = useState(user.projects)
   const { updateUser } = useOrgUser(user.id)
   const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    console.log(role)
+    if (["admin", "billing"].includes(role)) {
+      setUserProjects(projects.map((p) => p.id))
+    }
+  }, [role])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsLoading(true)
 
     try {
-      await updateUser({ role, projects })
+      await updateUser({ role, projects: userProjects })
 
       onClose()
     } catch (error) {
@@ -515,7 +537,11 @@ function UpdateUserForm({ user, onClose }) {
         <RoleSelect value={role} setValue={setRole} />
       </Input.Wrapper>
       <Input.Wrapper mt="md" label="Projects">
-        <ProjectMultiSelect value={projects} setValue={setProjects} />
+        <ProjectMultiSelect
+          value={userProjects}
+          setValue={setUserProjects}
+          disabled={["admin", "billing"].includes(role)}
+        />
       </Input.Wrapper>
 
       <Group mt="md" justify="end">
@@ -533,6 +559,7 @@ function UpdateUserForm({ user, onClose }) {
 function MemberList({ users, isInvitation }) {
   const { user: currentUser } = useUser()
   const { projects } = useProjects()
+  const { org } = useOrg()
   const [opened, { close, open }] = useDisclosure(false)
 
   const [searchValue, setSearchValue] = useState("")
@@ -583,17 +610,19 @@ function MemberList({ users, isInvitation }) {
             onChange={(e) => setSearchValue(e.target.value)}
             placeholder="Filter..."
           />
-          <RoleSelect
-            value={role}
-            setValue={setRole}
-            minimal={true}
-            additionalOptions={additionalOptions}
-          />
+          {org.plan === "custom" && (
+            <RoleSelect
+              value={role}
+              setValue={setRole}
+              minimal={true}
+              additionalOptions={additionalOptions}
+            />
+          )}
         </Group>
 
         <Card withBorder p="0">
           {users?.map((user, i) => (
-            <React.Fragment key={user.id}>
+            <React.Fragment key={i}>
               <Group justify="space-between" p="lg">
                 <Group>
                   <UserAvatar profile={user} size="30" />
@@ -625,8 +654,9 @@ function MemberList({ users, isInvitation }) {
                       >
                         <Popover.Target>
                           <Badge
-                            onMouseEnter={open}
-                            onMouseLeave={close}
+                            // TODO: bug when hovering its opens for all users
+                            // onMouseEnter={open}
+                            // onMouseLeave={close}
                             variant="light"
                           >
                             {user.projects.length} projects
@@ -645,12 +675,14 @@ function MemberList({ users, isInvitation }) {
                           ))}
                         </Popover.Dropdown>
                       </Popover>
-                      <Button
-                        variant="default"
-                        onClick={() => handleOpenModal(user)}
-                      >
-                        Manage Access
-                      </Button>
+                      {user.role !== "owner" && (
+                        <Button
+                          variant="default"
+                          onClick={() => handleOpenModal(user)}
+                        >
+                          Manage Access
+                        </Button>
+                      )}
                     </>
                   )}
                   <UserMenu user={user} isInvitation={isInvitation} />
@@ -668,7 +700,6 @@ function MemberList({ users, isInvitation }) {
 function MemberListCard() {
   const { org } = useOrg()
 
-  console.log(org)
   const invitedUsers = org?.users.filter(
     (user) => user.verified === false && user.role !== "owner",
   )

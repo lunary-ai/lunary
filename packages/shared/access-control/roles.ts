@@ -318,13 +318,13 @@ export const roles: Record<
         list: true,
         export: false,
       },
-      users: { read: true },
+      users: { read: true, list: true },
       prompts: {
         create: false,
-        read: true,
+        read: false,
         update: false,
         delete: false,
-        list: true,
+        list: false,
         run: false,
       },
       radars: {
@@ -370,6 +370,10 @@ export const roles: Record<
         delete: true,
         list: true,
         run: true,
+      },
+      projects: {
+        read: true,
+        list: true,
       },
     },
   },

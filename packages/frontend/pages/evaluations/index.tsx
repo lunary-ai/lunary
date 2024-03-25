@@ -1,6 +1,6 @@
 import OrgUserBadge from "@/components/blocks/OrgUserBadge"
 import Paywall from "@/components/layout/Paywall"
-import { useEvaluations } from "@/utils/dataHooks"
+import { useEvaluations, useUser } from "@/utils/dataHooks"
 import {
   Alert,
   Anchor,
@@ -25,6 +25,7 @@ import {
 } from "@tabler/icons-react"
 import Link from "next/link"
 import { useRouter } from "next/router"
+import { hasAccess } from "shared"
 
 const FEATURE_LIST = [
   "Define assertions to test variations of prompts",
@@ -35,6 +36,7 @@ const FEATURE_LIST = [
 export default function Evaluations() {
   const router = useRouter()
   const { evaluations, isLoading } = useEvaluations()
+  const { user } = useUser()
 
   return (
     <Paywall
@@ -55,16 +57,18 @@ export default function Evaluations() {
             </Group>
 
             <Group>
-              <Button
-                leftSection={<IconFlask2Filled size={12} />}
-                color="blue"
-                variant="gradient"
-                gradient={{ from: "violet", to: "cyan" }}
-                component={Link}
-                href="/evaluations/new"
-              >
-                Playground
-              </Button>
+              {hasAccess(user.role, "evaluations", "create") && (
+                <Button
+                  leftSection={<IconFlask2Filled size={12} />}
+                  color="blue"
+                  variant="gradient"
+                  gradient={{ from: "violet", to: "cyan" }}
+                  component={Link}
+                  href="/evaluations/new"
+                >
+                  Playground
+                </Button>
+              )}
             </Group>
           </Group>
 

@@ -61,7 +61,7 @@ export default function Join() {
   const router = useRouter()
   const { token } = router.query
 
-  const { data: joinData, isLoading } = useJoinData(token as string)
+  const { data: joinData } = useJoinData(token as string)
 
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)

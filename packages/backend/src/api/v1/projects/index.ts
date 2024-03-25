@@ -114,29 +114,33 @@ projects.delete(
   },
 )
 
-projects.patch("/:projectId", async (ctx: Context) => {
-  const { projectId } = ctx.params
-  const { userId } = ctx.state
+projects.patch(
+  "/:projectId",
+  checkAccess("projects", "update"),
+  async (ctx: Context) => {
+    const { projectId } = ctx.params
+    const { userId } = ctx.state
 
-  const hasProjectAccess = await checkProjectAccess(projectId, userId)
-  if (!hasProjectAccess) {
-    ctx.throw(401, "Unauthorized")
-  }
+    const hasProjectAccess = await checkProjectAccess(projectId, userId)
+    if (!hasProjectAccess) {
+      ctx.throw(401, "Unauthorized")
+    }
 
-  const bodySchema = z.object({
-    name: z.string(),
-  })
-  const { name } = bodySchema.parse(ctx.request.body)
+    const bodySchema = z.object({
+      name: z.string(),
+    })
+    const { name } = bodySchema.parse(ctx.request.body)
 
-  await sql`
+    await sql`
       update project
       set
         name = ${name}
       where
         id = ${projectId}
     `
-  ctx.status = 200
-  ctx.body = {}
-})
+    ctx.status = 200
+    ctx.body = {}
+  },
+)
 
 export default projects

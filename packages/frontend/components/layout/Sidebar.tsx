@@ -130,17 +130,20 @@ export default function Sidebar() {
       c: "violet",
       icon: IconBolt,
       disabled: !billingEnabled || !["free", "pro"].includes(org?.plan),
+      resource: "billing",
     },
     {
       label: "Usage & Billing",
       link: "/billing",
       icon: IconCreditCard,
       disabled: !billingEnabled,
+      resource: "billing",
     },
     {
       link: "/team",
       label: "Team",
       icon: IconUsers,
+      resource: "teamMembers",
     },
   ]
 
@@ -243,25 +246,29 @@ export default function Sidebar() {
               hasReadAccess(user.role, item.resource),
             ).map((item) => <NavbarLink {...item} key={item.label} />)}
         </Box>
-        {user && hasAccess(user.role, "billing", "read") && (
-          <Box w="100%" mt="xl">
-            <Text
-              ml="xs"
-              h={20}
-              fz={12}
-              fw={700}
-              style={{
-                textTransform: "uppercase",
-              }}
-            >
-              {org?.name}
-            </Text>
+        {user &&
+          (hasAccess(user.role, "billing", "read") ||
+            hasAccess(user.role, "teamMembers", "read")) && (
+            <Box w="100%" mt="xl">
+              <Text
+                ml="xs"
+                h={20}
+                fz={12}
+                fw={700}
+                style={{
+                  textTransform: "uppercase",
+                }}
+              >
+                {org?.name}
+              </Text>
 
-            {orgMenu.map((item) => (
-              <NavbarLink {...item} key={item.label} />
-            ))}
-          </Box>
-        )}
+              {orgMenu
+                .filter((item) => hasAccess(user.role, item.resource, "read"))
+                .map((item) => (
+                  <NavbarLink {...item} key={item.label} />
+                ))}
+            </Box>
+          )}
       </Stack>
 
       {user && (
