@@ -264,6 +264,7 @@ export default function Sidebar() {
 
               {orgMenu
                 .filter((item) => hasAccess(user.role, item.resource, "read"))
+                .filter((item) => !item.disabled)
                 .map((item) => (
                   <NavbarLink {...item} key={item.label} />
                 ))}
