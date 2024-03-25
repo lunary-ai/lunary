@@ -1,5 +1,5 @@
 #!/bin/bash
-# This script is necessary because we need to be able to inject API_URL after build time, and Next does not provide and easy way to do that.
+# This script is necessary because we need to be able to inject API_URL and APP_URL after build time, and Next does not provide and easy way to do that.
 # This should work find both with npm run dev, locally and with docker
 
 # Loads .env
@@ -11,7 +11,7 @@ fi
 
 
 if [ -z "$API_URL" ] || [ -z "$APP_URL" ]; then
-  echo "Error: API_URL or APP_URL is not set. Please set the API_URL and APP_URL environment variables."
+  echo "Error: API_URL not set. Please set the API_URL environment variables."
   exit 1
 fi
 

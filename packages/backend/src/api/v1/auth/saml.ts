@@ -15,8 +15,6 @@ const route = new Router({
   prefix: "/saml/:orgId",
 })
 
-const BASE_URL = process.env.SAML_BASE_URL || process.env.API_URL
-
 // This function generates a secure, one-time-use token
 export async function generateOneTimeToken(): Promise<string> {
   // Generate a 32-byte random buffer
@@ -37,9 +35,9 @@ function getSpMetadata(orgId: string) {
   return `<?xml version="1.0"?>
 <EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" entityID="${process.env.SAML_ENTITY_ID || "urn:lunary.ai:saml:sp"}">
     <SPSSODescriptor AuthnRequestsSigned="false" WantAssertionsSigned="true" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
-        <SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="${BASE_URL}/auth/saml/${orgId}/slo" />
+        <SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="${process.env.API_URL}/auth/saml/${orgId}/slo" />
         <NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified</NameIDFormat>
-        <AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="${BASE_URL}/auth/saml/${orgId}/acs" index="1" />
+        <AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="${process.env.API_URL}/auth/saml/${orgId}/acs" index="1" />
     </SPSSODescriptor>
     <Organization>
         <OrganizationName xml:lang="en-US">Lunary LLC</OrganizationName>
@@ -94,7 +92,7 @@ function parseAttributes(attributes: any) {
 route.get("/success", async (ctx: Context) => {
   const { orgId } = ctx.params as { orgId: string }
 
-  ctx.redirect(process.env.NEXT_PUBLIC_APP_URL!)
+  ctx.redirect(process.env.APP_URL!)
 })
 
 // Returns the Service Provider metadata
@@ -116,6 +114,7 @@ route.post("/download-idp-xml", async (ctx: Context) => {
 
   await sql`update org set saml_idp_xml = ${xml} where id = ${orgId}`
 
+  ctx.body = { success: true }
   ctx.status = 201
 })
 
@@ -146,10 +145,10 @@ route.post("/acs", async (ctx: Context) => {
 
   const { email, name } = parseAttributes(attributes)
 
-  const onetimeToken = await generateOneTimeToken()
+  const singleUseToken = await generateOneTimeToken()
 
   const [account] =
-    await sql`update account set ${sql({ name, onetimeToken, lastLoginAt: new Date() })} where email = ${email} and org_id = ${orgId} returning *`
+    await sql`update account set ${sql({ name, singleUseToken, lastLoginAt: new Date() })} where email = ${email} and org_id = ${orgId} returning *`
 
   if (!account) {
     ctx.throw(
@@ -159,7 +158,7 @@ route.post("/acs", async (ctx: Context) => {
   }
 
   // Redirect with an one-time token that can be exchanged for an auth token
-  ctx.redirect(`${process.env.NEXT_PUBLIC_APP_URL!}/login?ott=${onetimeToken}`)
+  ctx.redirect(`${process.env.APP_URL!}/login?ott=${singleUseToken}`)
 })
 
 route.post("/slo", async (ctx: Context) => {

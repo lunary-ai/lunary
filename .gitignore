@@ -200,8 +200,8 @@ entrypoint.sh
 
 
 # Python
-.venv
+venv
 __pycache__/
 *.pyc
-
+venv
 test_*.py

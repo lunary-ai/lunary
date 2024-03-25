@@ -7,7 +7,7 @@ Communication is done using zerorpc between the JS backend and the Python script
 To create a virtual environment, run the following command:
 
 ```bash
-python3 -m venv .venv
+python3 -m venv venv
 ```
 
 ## Active venv
@@ -15,7 +15,7 @@ python3 -m venv .venv
 To activate the virtual environment, run the following command:
 
 ```bash
-source .venv/bin/activate
+source venv/bin/activate
 
 pip install -r requirements.txt
 ```

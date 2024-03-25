@@ -26,6 +26,7 @@ export const roles: Record<
   {
     value: Role
     name: string
+    free?: boolean
     description: string
     permissions: Record<ResourceName, Partial<Record<Action, boolean>>>
   }
@@ -34,6 +35,7 @@ export const roles: Record<
     value: "owner",
     name: "Owner",
     description: "Owner of the organization",
+    free: true,
     permissions: {
       projects: {
         create: true,
@@ -119,6 +121,7 @@ export const roles: Record<
   admin: {
     value: "admin",
     name: "Admin",
+    free: true,
     description: "Admin-level access to the entire org",
     permissions: {
       projects: {
@@ -204,6 +207,7 @@ export const roles: Record<
   member: {
     value: "member",
     name: "Member",
+    free: true,
     description: "Full access to most resources",
     permissions: {
       projects: {

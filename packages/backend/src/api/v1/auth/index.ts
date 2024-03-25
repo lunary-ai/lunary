@@ -46,13 +46,14 @@ auth.post("/method", async (ctx: Context) => {
 auth.post("/signup", async (ctx: Context) => {
   const bodySchema = z.object({
     email: z.string().email().transform(sanitizeEmail),
-    password: z.string().min(6),
+    password: z.string().min(6).optional(), // optional if SAML flow
     name: z.string(),
     orgName: z.string().optional(),
     projectName: z.string().optional(),
     employeeCount: z.string().optional(),
     orgId: z.string().optional(),
     token: z.string().optional(),
+    redirectUrl: z.string().optional(),
     signupMethod: z.enum(["signup", "join"]),
   })
 
@@ -65,30 +66,41 @@ auth.post("/signup", async (ctx: Context) => {
     employeeCount,
     orgId,
     signupMethod,
+    redirectUrl,
     token,
   } = bodySchema.parse(ctx.request.body)
 
+  // Spamming hotfix
   if (orgName?.includes("https://") || name.includes("http://")) {
     ctx.throw(403, "Bad request")
   }
 
-  const [existingUser] = await sql`
-    select * from account where lower(email) = lower(${email})
-  `
   if (signupMethod === "signup") {
     const { user, org } = await sql.begin(async (sql) => {
       const plan = process.env.DEFAULT_PLAN || "free"
+
+      const [existingUser] = await sql`
+        select * from account where lower(email) = lower(${email})
+      `
+
+      if (!password) {
+        ctx.throw(403, "Password is required")
+      }
+
+      if (existingUser) {
+        ctx.throw(403, "User already exists")
+      }
 
       const [org] =
         await sql`insert into org ${sql({ name: orgName || `${name}'s Org`, plan })} returning *`
 
       const newUser = {
         name,
-        passwordHash: await hashPassword(password),
+        passwordHash: await hashPassword(password!),
         email,
         orgId: org.id,
         role: "owner",
-        verified: process.env.SKIP_EMAIL_VERIFY ? true : false,
+        verified: !process.env.RESEND_KEY ? true : false,
         lastLoginAt: new Date(),
       }
 
@@ -114,7 +126,7 @@ auth.post("/signup", async (ctx: Context) => {
         projectId: project.id,
         apiKey: project.id,
       }
-      sql`
+      await sql`
         insert into api_key ${sql(publicKey)}
       `
       const privateKey = [
@@ -151,25 +163,24 @@ auth.post("/signup", async (ctx: Context) => {
     return
   } else if (signupMethod === "join") {
     const { payload } = await verifyJwt(token!)
+
     if (payload.email !== email) {
-      ctx.throw(403, "Wrong email")
+      ctx.throw(403, "Invalid token")
     }
 
-    const newUser = {
+    const update = {
       name,
-      passwordHash: await hashPassword(password),
-      email,
-      orgId,
-      role: "member",
       verified: true,
+      singleUseToken: null,
     }
-    const [user] = await sql`
-        update account set 
-          name = ${newUser.name},
-          password_hash = ${newUser.passwordHash}, 
-          verified = true, 
-          single_use_token = null
-        where email = ${newUser.email} 
+
+    if (password) {
+      update.passwordHash = await hashPassword(password)
+    }
+
+    await sql`
+        update account set ${sql(update)}
+        where email = ${email} and org_id = ${orgId!}
         returning *
      `
 
@@ -188,8 +199,6 @@ auth.get("/join-data", async (ctx: Context) => {
   const [org] = await sql`
     select name, plan from org where id = ${orgId}
   `
-
-  console.log(org)
 
   const [orgUserCountResult] = await sql`
     select count(*) from account where org_id = ${orgId}
@@ -272,7 +281,7 @@ auth.post("/request-password-reset", async (ctx: Context) => {
 
     await sql`update account set recovery_token = ${token} where id = ${user.id}`
 
-    const link = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${token}`
+    const link = `${process.env.APP_URL}/reset-password?token=${token}`
 
     await sendEmail(RESET_PASSWORD(email, link))
 

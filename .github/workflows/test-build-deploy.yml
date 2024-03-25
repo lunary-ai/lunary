@@ -16,7 +16,7 @@ jobs:
   #       env:
   #         DATABASE_URL: ${{ secrets.DATABASE_URL }}
   #         JWT_SECRET: ${{ secrets.JWT_SECRET }}
-  #         NEXT_PUBLIC_APP_URL: http://localhost:8080
+  #         APP_URL: http://localhost:8080
   #         API_URL: http://localhost:3333
   #         LUNARY_PUBLIC_KEY: 259d2d94-9446-478a-ae04-484de705b522
   #         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

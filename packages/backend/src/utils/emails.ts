@@ -7,10 +7,6 @@ function extractFirstName(name: string) {
 }
 
 export async function sendVerifyEmail(email: string, name: string) {
-  if (process.env.SKIP_EMAIL_VERIFY) {
-    return
-  }
-
   const token = await signJwt({ email })
 
   const confirmLink = `${process.env.API_URL}/v1/users/verify-email?token=${token}`
@@ -25,11 +21,19 @@ export function INVITE_EMAIL(email: string, orgName: string, link: string) {
     reply_to: "hello@lunary.ai",
     from: process.env.GENERIC_SENDER,
     text: `Hi, 
-You've been invited to join ${orgName} on Lunary. Please use the following link to accept the invitation: ${link}
+
+You've been invited to join ${orgName} on Lunary. 
+
+Please click on the following link to accept the invitation: 
+
+${link}
+
 We're looking forward to having you on board!
 
-Best,
-The Lunary Team`,
+You can reply to this email if you have any question.
+
+Thanks
+- The Lunary team`,
   }
 }
 
