@@ -23,6 +23,7 @@ import {
   Text,
   TextInput,
   Title,
+  Tooltip,
   useCombobox,
 } from "@mantine/core"
 import {
@@ -30,14 +31,12 @@ import {
   IconCopy,
   IconDotsVertical,
   IconDownload,
-  IconRefresh,
-  IconSearch,
   IconTrash,
 } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { z } from "zod"
 
-import CopyText, { SuperCopyButton } from "@/components/blocks/CopyText"
+import { CopyInput } from "@/components/blocks/CopyText"
 import UserAvatar from "@/components/blocks/UserAvatar"
 import {
   // useInvitations,
@@ -49,14 +48,18 @@ import {
 import { fetcher } from "@/utils/fetcher"
 import { useDisclosure } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
-import { roles } from "shared"
+import { hasAccess, roles } from "shared"
 import classes from "./team.module.css"
 import { useForm } from "@mantine/form"
+import SearchBar from "@/components/blocks/SearchBar"
+import { SettingsCard } from "@/components/blocks/SettingsCard"
+import { SEAT_ALLOWANCE } from "@/utils/pricing"
+import { openUpgrade } from "@/components/layout/UpgradeModal"
 
 function SAMLConfig() {
   const { org, updateOrg, mutate } = useOrg()
 
-  const [idpXml, setIdpXml] = useState(org?.saml_idp_xml)
+  const [idpXml, setIdpXml] = useState(org?.samlIdpXml)
   const [idpLoading, setIdpLoading] = useState(false)
   const [spLoading, setSpLoading] = useState(false)
 
@@ -67,13 +70,18 @@ function SAMLConfig() {
     setIdpLoading(true)
 
     if (idpXml.startsWith("http")) {
-      const res = await fetcher.post(`/auth/saml/${org?.id}/download-idp-xml`, {
+      await fetcher.post(`/auth/saml/${org?.id}/download-idp-xml`, {
         arg: {
           url: idpXml,
         },
       })
 
-      console.log(res)
+      notifications.show({
+        title: "IDP XML added",
+        message: "The IDP XML has been added successfully",
+        icon: <IconCheck />,
+        color: "green",
+      })
     } else {
       await updateOrg({ id: org?.id, saml_idp_xml: content })
     }
@@ -134,46 +142,41 @@ function SAMLConfig() {
             <Table.Tr>
               <Table.Td>Identifier (Entity ID):</Table.Td>
               <Table.Td>
-                <CopyText c="blue" value={"urn:lunary.ai:saml:sp"} />
+                <CopyInput value={"urn:lunary.ai:saml:sp"} />
               </Table.Td>
             </Table.Tr>
             <Table.Tr>
               <Table.Td>Assertion Consumer Service (ACS) URL:</Table.Td>
               <Table.Td>
-                <CopyText
-                  c="blue"
-                  value={`${process.env.NEXT_PUBLIC_API_URL}/auth/saml/${org?.id}/acs`}
+                <CopyInput
+                  value={`${window.API_URL}/auth/saml/${org?.id}/acs`}
                 />
               </Table.Td>
             </Table.Tr>
             <Table.Tr>
               <Table.Td>Single Logout Service (SLO) URL:</Table.Td>
               <Table.Td>
-                <CopyText
-                  c="blue"
-                  value={`${process.env.NEXT_PUBLIC_API_URL}/auth/saml/${org?.id}/slo`}
+                <CopyInput
+                  value={`${window.API_URL}/auth/saml/${org?.id}/slo`}
                 />
               </Table.Td>
             </Table.Tr>
             <Table.Tr>
               <Table.Td>Sign on URL:</Table.Td>
               <Table.Td>
-                <CopyText
-                  c="blue"
-                  value={`${process.env.NEXT_PUBLIC_API_URL}/login`}
+                <CopyInput value={`${window.APP_URL}/login`} />
+              </Table.Td>
+            </Table.Tr>
+            <Table.Tr>
+              <Table.Td>Single Logout URL:</Table.Td>
+              <Table.Td>
+                <CopyInput
+                  value={`${window.API_URL}/auth/saml/${org?.id}/slo`}
                 />
               </Table.Td>
             </Table.Tr>
           </Table.Tbody>
         </Table>
-
-        <Group wrap="nowrap">
-          <Text>Single Logout Service (SLO) URL</Text>
-          <CopyText
-            c="blue"
-            value={`${window.API_URL}/auth/saml/${org?.id}/slo`}
-          />
-        </Group>
 
         <Button
           onClick={() => downloadSpXml()}
@@ -199,12 +202,7 @@ function InviteLinkModal({ opened, setOpened, link }) {
         Send this link to the person you want to invite to your organization.
       </Text>
 
-      <Input
-        my="lg"
-        value={link}
-        rightSectionPointerEvents="all"
-        rightSection={<SuperCopyButton value={link} />}
-      />
+      <CopyInput my="lg" value={link} />
 
       <Button
         leftSection={<IconCopy size={18} />}
@@ -290,7 +288,7 @@ function UserMenu({ user, isInvitation }) {
             <Menu.Item
               onClick={() => {
                 navigator.clipboard.writeText(
-                  `${process.env.NEXT_PUBLIC_APP_URL}/join?token=${user.singleUseToken}`,
+                  `${window.APP_URL}/join?token=${user.singleUseToken}`,
                 )
                 notifications.show({
                   icon: <IconCheck size={18} />,
@@ -314,6 +312,7 @@ function UserMenu({ user, isInvitation }) {
 export function RoleSelect({
   value,
   setValue,
+  disabled = false,
   minimal = false,
   additionalOptions = [],
 }) {
@@ -321,19 +320,39 @@ export function RoleSelect({
     onDropdownClose: () => combobox.resetSelectedOption(),
   })
 
+  const { org } = useOrg()
+
+  const canUsePaidRoles = org?.plan === "custom"
+
   const options = Object.values(roles).map(
-    ({ value, name, description }) =>
+    ({ value, name, description, free }) =>
       value !== "owner" && (
-        <Combobox.Option value={value} key={value}>
-          <Text size="sm">{name}</Text>
-          {minimal !== true && (
-            <Text size="sm" c="dimmed">
-              {description}
-            </Text>
-          )}
-        </Combobox.Option>
+        <Tooltip
+          key={value}
+          label={
+            !free && !canUsePaidRoles
+              ? "This role is available on Enterprise plans"
+              : null
+          }
+          position="left"
+          disabled={free || canUsePaidRoles}
+        >
+          <Combobox.Option
+            value={value}
+            key={value}
+            disabled={!free && !canUsePaidRoles}
+          >
+            <Text size="sm">{name}</Text>
+            {minimal !== true && (
+              <Text size="sm" c="dimmed">
+                {description}
+              </Text>
+            )}
+          </Combobox.Option>
+        </Tooltip>
       ),
   )
+
   options.push(...additionalOptions)
 
   return (
@@ -349,6 +368,7 @@ export function RoleSelect({
           miw="200px"
           component="button"
           type="button"
+          disabled={disabled}
           pointer
           rightSection={<Combobox.Chevron />}
           onClick={() => combobox.toggleDropdown()}
@@ -405,7 +425,6 @@ function InviteMemberCard() {
 
   const [isLoading, setIsLoading] = useState(false)
   const { addUserToOrg } = useOrg()
-  const { user } = useUser()
 
   useEffect(() => {
     setSelectedProjects(projects.map((p) => p.id))
@@ -429,6 +448,10 @@ function InviteMemberCard() {
   })
 
   async function invite({ email }) {
+    if (org?.users?.length >= SEAT_ALLOWANCE[org?.plan]) {
+      return openUpgrade("team")
+    }
+
     try {
       setIsLoading(true)
       const { user: newUser } = await addUserToOrg({
@@ -446,7 +469,7 @@ function InviteMemberCard() {
         })
         return
       } else {
-        const link = `${process.env.NEXT_PUBLIC_APP_URL}/join?token=${newUser.singleUseToken}`
+        const link = `${window.APP_URL}/join?token=${newUser.singleUseToken}`
         setIsLoading(false)
         setInviteLink(link)
         setOpened(true)
@@ -459,14 +482,16 @@ function InviteMemberCard() {
     }
   }
 
+  const upgradeForGranular = org.plan !== "custom"
+
   return (
-    <Card withBorder p="lg">
+    <SettingsCard title="Invite Team Member">
       <InviteLinkModal
         opened={opened}
         setOpened={setOpened}
         link={inviteLink}
       />
-      <Text>Invite new team members</Text>
+
       <form onSubmit={form.onSubmit(invite)}>
         <Group grow={true}>
           <TextInput
@@ -481,13 +506,19 @@ function InviteMemberCard() {
             <RoleSelect value={role} setValue={setRole} />
           </Input.Wrapper>
           <Input.Wrapper mt="md" label="Projects">
-            <ProjectMultiSelect
-              value={selectedProjects}
-              setValue={setSelectedProjects}
-              disabled={
-                org.plan !== "custom" || ["admin", "billing"].includes(role)
-              }
-            />
+            <Tooltip
+              label="Upgrade to manage project access granuarly"
+              position="top"
+              disabled={!upgradeForGranular}
+            >
+              <ProjectMultiSelect
+                value={selectedProjects}
+                setValue={setSelectedProjects}
+                disabled={
+                  upgradeForGranular || ["admin", "billing"].includes(role)
+                }
+              />
+            </Tooltip>
           </Input.Wrapper>
         </Group>
 
@@ -497,7 +528,7 @@ function InviteMemberCard() {
           </Button>
         </Group>
       </form>
-    </Card>
+    </SettingsCard>
   )
 }
 
@@ -510,7 +541,6 @@ function UpdateUserForm({ user, onClose }) {
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    console.log(role)
     if (["admin", "billing"].includes(role)) {
       setUserProjects(projects.map((p) => p.id))
     }
@@ -601,98 +631,107 @@ function MemberList({ users, isInvitation }) {
         )}
       </Modal>
       <Stack gap="0">
-        <Group justify="space-between">
-          <TextInput
-            style={{ flexGrow: 1 }}
-            my="md"
-            leftSection={<IconSearch size="14" />}
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
+        <Group w="100%" wrap="no-wrap">
+          <SearchBar
+            query={searchValue}
+            setQuery={setSearchValue}
             placeholder="Filter..."
+            my="md"
+            w="100%"
           />
-          {org.plan === "custom" && (
-            <RoleSelect
-              value={role}
-              setValue={setRole}
-              minimal={true}
-              additionalOptions={additionalOptions}
-            />
-          )}
+
+          <RoleSelect
+            value={role}
+            disabled={org.plan !== "custom"}
+            setValue={setRole}
+            minimal={true}
+            additionalOptions={additionalOptions}
+          />
         </Group>
 
-        <Card withBorder p="0">
-          {users?.map((user, i) => (
-            <React.Fragment key={i}>
-              <Group justify="space-between" p="lg">
-                <Group>
-                  <UserAvatar profile={user} size="30" />
-                  <Stack gap="0">
-                    <Text size="sm" fw="500">
-                      {isInvitation ? "Pending Invitation" : user.name}
-                    </Text>
-                    <Text c="dimmed" size="sm">
-                      {user.email}
-                    </Text>
-                  </Stack>
-                  {user?.id === currentUser?.id ? (
-                    <Badge color="blue">You</Badge>
-                  ) : null}
-                </Group>
+        {!!users?.length ? (
+          <Card withBorder p="0">
+            {users.map((user, i) => (
+              <React.Fragment key={i}>
+                <Group justify="space-between" p="lg">
+                  <Group>
+                    <UserAvatar profile={user} size="30" />
+                    <Stack gap="0">
+                      <Text size="sm" fw="500">
+                        {isInvitation ? "Pending Invitation" : user.name}
+                      </Text>
+                      <Text c="dimmed" size="sm">
+                        {user.email}
+                      </Text>
+                    </Stack>
+                    {user?.id === currentUser?.id ? (
+                      <Badge color="blue">You</Badge>
+                    ) : null}
+                  </Group>
 
-                <Group>
-                  <Text size="sm" c="dimmed">
-                    {roles[user.role].name}
-                  </Text>
-                  {currentUser?.id !== user.id && !isInvitation && (
-                    <>
-                      <Popover
-                        width={200}
-                        position="bottom"
-                        withArrow
-                        shadow="md"
-                        opened={opened}
-                      >
-                        <Popover.Target>
-                          <Badge
-                            // TODO: bug when hovering its opens for all users
-                            // onMouseEnter={open}
-                            // onMouseLeave={close}
-                            variant="light"
-                          >
-                            {user.projects.length} projects
-                          </Badge>
-                        </Popover.Target>
-                        <Popover.Dropdown style={{ pointerEvents: "none" }}>
-                          {user.projects.map((projectId) => (
-                            <Stack gap="lg" key={projectId}>
-                              <Text size="md">
-                                {
-                                  projects?.find((p) => p.id === projectId)
-                                    ?.name
-                                }
-                              </Text>
-                            </Stack>
-                          ))}
-                        </Popover.Dropdown>
-                      </Popover>
-                      {user.role !== "owner" && (
-                        <Button
-                          variant="default"
-                          onClick={() => handleOpenModal(user)}
+                  <Group>
+                    <Text size="sm" c="dimmed">
+                      {roles[user.role].name}
+                    </Text>
+                    {currentUser?.id !== user.id && !isInvitation && (
+                      <>
+                        <Popover
+                          width={200}
+                          position="bottom"
+                          withArrow
+                          shadow="md"
+                          opened={opened}
                         >
-                          Manage Access
-                        </Button>
-                      )}
-                    </>
-                  )}
-                  <UserMenu user={user} isInvitation={isInvitation} />
+                          <Popover.Target>
+                            <Badge
+                              // TODO: bug when hovering its opens for all users
+                              // onMouseEnter={open}
+                              // onMouseLeave={close}
+                              variant="light"
+                            >
+                              {user.projects.length} projects
+                            </Badge>
+                          </Popover.Target>
+                          <Popover.Dropdown style={{ pointerEvents: "none" }}>
+                            {user.projects.map((projectId) => (
+                              <Stack gap="lg" key={projectId}>
+                                <Text size="md">
+                                  {
+                                    projects?.find((p) => p.id === projectId)
+                                      ?.name
+                                  }
+                                </Text>
+                              </Stack>
+                            ))}
+                          </Popover.Dropdown>
+                        </Popover>
+                        {hasAccess(
+                          currentUser.role,
+                          "teamMembers",
+                          "update",
+                        ) && (
+                          <Button
+                            variant="default"
+                            onClick={() => handleOpenModal(user)}
+                          >
+                            Manage Access
+                          </Button>
+                        )}
+                      </>
+                    )}
+                    <UserMenu user={user} isInvitation={isInvitation} />
+                  </Group>
                 </Group>
-              </Group>
 
-              {i !== users.length && <Divider />}
-            </React.Fragment>
-          ))}
-        </Card>
+                {i !== users.length - 1 && <Divider />}
+              </React.Fragment>
+            ))}
+          </Card>
+        ) : (
+          <Card withBorder p="lg">
+            <Text>Nothing here.</Text>
+          </Card>
+        )}
       </Stack>
     </>
   )
@@ -708,12 +747,11 @@ function MemberListCard() {
   )
 
   return (
-    <Tabs defaultValue="members" classNames={{ root: classes.root }}>
+    <Tabs defaultValue="members">
       <Tabs.List>
         <Tabs.Tab value="members">Team Members</Tabs.Tab>
-        {invitedUsers?.length >= 1 && (
-          <Tabs.Tab value="invitations">Pending Invitations</Tabs.Tab>
-        )}
+
+        <Tabs.Tab value="invitations">Pending Invitations</Tabs.Tab>
       </Tabs.List>
 
       <Tabs.Panel value="members">
@@ -730,6 +768,7 @@ function MemberListCard() {
 // TODO: put back at root level
 export default function Team() {
   const { org } = useOrg()
+  const { user } = useUser()
   const samlEnabled = org?.samlEnabled
 
   if (!org) {
@@ -740,12 +779,14 @@ export default function Team() {
     <Container className="unblockable">
       <NextSeo title="Team" />
 
-      <Stack gap="lg">
-        <Title order={2}>Team Members</Title>
+      <Stack gap="xl">
+        <Title order={2}>Manage Team</Title>
 
-        <InviteMemberCard />
+        {hasAccess(user.role, "teamMembers", "create") && <InviteMemberCard />}
         <MemberListCard />
-        {samlEnabled && <SAMLConfig />}
+        {samlEnabled && ["admin", "owner"].includes(user.role) && (
+          <SAMLConfig />
+        )}
       </Stack>
     </Container>
   )

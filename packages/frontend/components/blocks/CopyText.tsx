@@ -1,4 +1,11 @@
-import { ActionIcon, Code, CopyButton, Group, Tooltip } from "@mantine/core"
+import {
+  ActionIcon,
+  Code,
+  CopyButton,
+  Group,
+  Input,
+  Tooltip,
+} from "@mantine/core"
 import { IconCheck, IconCopy } from "@tabler/icons-react"
 
 export const SuperCopyButton = ({ value }) => (
@@ -27,3 +34,13 @@ export default function CopyText({ c = "violet", value }) {
     </Group>
   )
 }
+
+export const CopyInput = ({ value, ...props }) => (
+  <Input
+    value={value}
+    styles={{ input: { contentEditable: false } }}
+    rightSectionPointerEvents="all"
+    rightSection={<SuperCopyButton value={value} />}
+    {...props}
+  />
+)

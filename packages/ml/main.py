@@ -2,8 +2,13 @@ from flask import Flask, request, jsonify
 from lang import detect_lang
 from toxicity import detect_toxicity
 from pii import detect_pii
+import sys
 
 app = Flask(__name__)
+
+# Disable the Flask red warning server banner
+cli = sys.modules['flask.cli']
+cli.show_server_banner = lambda *x: None
 
 @app.route('/lang', methods=['POST'])
 def language_route():
@@ -29,4 +34,4 @@ def pii_route():
 if __name__ == '__main__':
     app.run(host='localhost', port=4242)
 
-print("Python Flask Server is running on port 4242")
+print("Python ML Server running on port 4242")

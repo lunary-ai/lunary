@@ -113,7 +113,7 @@ users.get("/verify-email", async (ctx: Context) => {
 
   await sendEmail(WELCOME_EMAIL(email, name, id))
   // redirect to home page
-  ctx.redirect(process.env.NEXT_PUBLIC_APP_URL!)
+  ctx.redirect(process.env.APP_URL!)
 })
 
 users.post("/send-verification", async (ctx: Context) => {
@@ -205,7 +205,7 @@ users.post("/", checkAccess("teamMembers", "create"), async (ctx: Context) => {
   `
 
   if (!org.samlEnabled) {
-    const link = `${process.env.NEXT_PUBLIC_APP_URL}/join?token=${token}`
+    const link = `${process.env.APP_URL}/join?token=${token}`
     await sendEmail(INVITE_EMAIL(email, org.name, link))
   }
 

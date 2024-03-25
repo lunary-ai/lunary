@@ -124,13 +124,16 @@ function SignupPage() {
 
       auth.setJwt(token)
 
-      if (!process.env.SKIP_EMAIL_VERIFY) {
+      if (!process.env.NEXT_PUBLIC_IS_SELF_HOSTED) {
         notifications.show({
           icon: <IconCheck size={18} />,
           color: "teal",
           title: "Email sent",
           message: "Check your emails for the confirmation link",
         })
+      } else {
+        // redirect to dashboard
+        window.location.href = "/"
       }
 
       analytics.track("Signup", {

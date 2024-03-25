@@ -22,7 +22,7 @@ export default function SocialProof() {
             span
             fw="bolder"
           >
-            1000+
+            1500+
           </Text>{" "}
           AI devs build better apps
         </Text>

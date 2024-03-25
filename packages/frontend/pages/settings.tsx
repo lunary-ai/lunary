@@ -19,6 +19,7 @@ import { useOrg, useUser, useProject } from "@/utils/dataHooks"
 import useSWR from "swr"
 import RenamableField from "@/components/blocks/RenamableField"
 import { hasAccess } from "shared"
+import { SettingsCard } from "@/components/blocks/SettingsCard"
 
 export default function AppAnalytics() {
   const { org } = useOrg()
@@ -53,15 +54,8 @@ export default function AppAnalytics() {
           props={["count"]}
         />
 
-        <Card withBorder p="lg">
-          <Stack gap="lg">
-            <Group justify="space-between" align="center">
-              <Title order={3}>Keys</Title>
-              {/* <Button onClick={() => alert("TODO")}>
-                Refresh Api Key
-              </Button> */}
-            </Group>
-
+        {user.role !== "viewer" && (
+          <SettingsCard title="Keys">
             <Alert
               variant="light"
               title={
@@ -77,66 +71,33 @@ export default function AppAnalytics() {
                 track events and send requests to the API.
               </Text>
             </Alert>
-
-            {/* <Alert
-              variant="light"
-              title={
-                <Group>
-                  <Text fw={500}>Public Tracking Key: </Text>
-                  <CopyText c="green.8" value={project?.publicApiKey} />
-                </Group>
-              }
-              color="green"
-            >
-              <Text>
-                Public API keys can be used from your server or frontend code to
-                track events and send requests to the API.
-              </Text>
-            </Alert> */}
-
-            {/* <Alert
-              variant="light"
-              title={
-                <Group>
-                  <Text fw={500}>Private Key:</Text>
-                  <CopyText c="red.8" value={project?.privateApiKey} />
-                </Group>
-              }
-              color="red"
-            >
-              <Text>
-                Private API keys should be used only on your server – they give
-                read/write/delete API access to your project's resources.
-              </Text>
-            </Alert> */}
-          </Stack>
-        </Card>
+          </SettingsCard>
+        )}
 
         {user && hasAccess(user.role, "projects", "delete") && (
-          <Card withBorder p="lg" style={{ overflow: "visible" }}>
-            <Stack align="start">
-              <Title order={4}>Danger Zone</Title>
+          <SettingsCard title="Danger Zone" align="start">
+            <Text>
+              Deleting your project is irreversible and it will delete all
+              associated data.
+              <br />
+              We <b>cannot</b> recover your data once it&apos;s deleted.
+            </Text>
 
-              <Text>
-                Deleting your project is irreversible and it will delete all
-                associated data.
-                <br />
-                We <b>cannot</b> recover your data once it&apos;s deleted.
-              </Text>
-
-              <Popover width={200} position="bottom" shadow="md">
-                <Popover.Target>
-                  <Button color="red" data-testid="delete-project-button">
-                    Delete Project
-                  </Button>
-                </Popover.Target>
-                <Popover.Dropdown>
-                  <Text mb="md">
-                    Are you sure you want to delete this project? This action is
-                    irreversible and it will delete all associated data.
-                  </Text>
+            <Popover width={200} position="bottom" shadow="md">
+              <Popover.Target>
+                <Button color="red" data-testid="delete-project-button">
+                  Delete Project
+                </Button>
+              </Popover.Target>
+              <Popover.Dropdown>
+                <Text mb="md">
+                  Are you sure you want to delete this project? This action is
+                  irreversible and it will delete all associated data.
+                </Text>
+                <Group align="start">
                   <Button
                     color="red"
+                    w={80}
                     data-testid="delete-project-popover-button"
                     onClick={async () => {
                       const dropped = await drop()
@@ -148,10 +109,10 @@ export default function AppAnalytics() {
                   >
                     Delete
                   </Button>
-                </Popover.Dropdown>
-              </Popover>
-            </Stack>
-          </Card>
+                </Group>
+              </Popover.Dropdown>
+            </Popover>
+          </SettingsCard>
         )}
       </Stack>
     </Container>
