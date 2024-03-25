@@ -121,7 +121,9 @@ export default function Sidebar() {
 
   const combobox = useCombobox()
 
-  const billingEnabled = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+  const billingEnabled =
+    process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY &&
+    !process.env.NEXT_PUBLIC_IS_SELF_HOSTED
 
   const orgMenu = [
     {

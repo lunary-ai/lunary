@@ -56,7 +56,7 @@ export default function Paywall({
 
   // Automatically disable paywall in these cases
   if (
-    ["custom", "enterprise", "unlimited", plan].includes(org?.plan) ||
+    ["custom", "unlimited", plan].includes(org?.plan) ||
     process.env.NEXT_PUBLIC_DEMO
   ) {
     return children

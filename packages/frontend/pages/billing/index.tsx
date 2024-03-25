@@ -21,6 +21,7 @@ import useSWR from "swr"
 import { EVENTS_ALLOWANCE } from "@/utils/pricing"
 import { fetcher } from "@/utils/fetcher"
 import SeatAllowanceCard from "@/components/blocks/SeatAllowanceCard"
+import { SettingsCard } from "@/components/blocks/SettingsCard"
 
 export default function Billing() {
   const { org, loading } = useOrg()
@@ -98,7 +99,7 @@ export default function Billing() {
           )}
         </Stack>
 
-        {!["enterprise", "custom"].includes(plan) && (
+        {!["custom"].includes(plan) && (
           <Card withBorder radius="md" padding="xl">
             <Container size="lg">
               <UpgradePlans />
@@ -137,20 +138,16 @@ export default function Billing() {
         <SeatAllowanceCard />
 
         {org?.stripeCustomer && (
-          <Card withBorder radius="md" padding="xl">
-            <Stack align="start">
-              <Title order={3}>Customer Portal</Title>
+          <SettingsCard title="Customer Portal">
+            <Text>
+              Use the Customer Portal to update your payment method, download
+              invoices and view your billing history.
+            </Text>
 
-              <Text>
-                Use the Customer Portal to update your payment method, download
-                invoices and view your billing history.
-              </Text>
-
-              <Button size="sm" onClick={redirectToCustomerPortal}>
-                Manage Billing
-              </Button>
-            </Stack>
-          </Card>
+            <Button size="sm" onClick={redirectToCustomerPortal}>
+              Manage Billing
+            </Button>
+          </SettingsCard>
         )}
       </Stack>
     </Container>
