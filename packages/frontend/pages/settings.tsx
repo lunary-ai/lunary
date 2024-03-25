@@ -54,55 +54,25 @@ export default function AppAnalytics() {
           props={["count"]}
         />
 
-        <SettingsCard title="Keys">
-          <Alert
-            variant="light"
-            title={
-              <Group>
-                <Text fw={500}>Project ID:</Text>
-                <CopyText c="green.8" value={project?.id} />
-              </Group>
-            }
-            color="green"
-          >
-            <Text>
-              Your project ID can be used from your server or frontend code to
-              track events and send requests to the API.
-            </Text>
-          </Alert>
-
-          {/* <Alert
+        {user.role !== "viewer" && (
+          <SettingsCard title="Keys">
+            <Alert
               variant="light"
               title={
                 <Group>
-                  <Text fw={500}>Public Tracking Key: </Text>
-                  <CopyText c="green.8" value={project?.publicApiKey} />
+                  <Text fw={500}>Project ID:</Text>
+                  <CopyText c="green.8" value={project?.id} />
                 </Group>
               }
               color="green"
             >
               <Text>
-                Public API keys can be used from your server or frontend code to
+                Your project ID can be used from your server or frontend code to
                 track events and send requests to the API.
               </Text>
-            </Alert> */}
-
-          {/* <Alert
-              variant="light"
-              title={
-                <Group>
-                  <Text fw={500}>Private Key:</Text>
-                  <CopyText c="red.8" value={project?.privateApiKey} />
-                </Group>
-              }
-              color="red"
-            >
-              <Text>
-                Private API keys should be used only on your server – they give
-                read/write/delete API access to your project's resources.
-              </Text>
-            </Alert> */}
-        </SettingsCard>
+            </Alert>
+          </SettingsCard>
+        )}
 
         {user && hasAccess(user.role, "projects", "delete") && (
           <SettingsCard title="Danger Zone" align="start">

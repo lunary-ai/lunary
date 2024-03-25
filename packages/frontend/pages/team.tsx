@@ -48,7 +48,7 @@ import {
 import { fetcher } from "@/utils/fetcher"
 import { useDisclosure } from "@mantine/hooks"
 import { notifications } from "@mantine/notifications"
-import { roles } from "shared"
+import { hasAccess, roles } from "shared"
 import classes from "./team.module.css"
 import { useForm } from "@mantine/form"
 import SearchBar from "@/components/blocks/SearchBar"
@@ -705,7 +705,11 @@ function MemberList({ users, isInvitation }) {
                             ))}
                           </Popover.Dropdown>
                         </Popover>
-                        {user.role !== "owner" && (
+                        {hasAccess(
+                          currentUser.role,
+                          "teamMembers",
+                          "update",
+                        ) && (
                           <Button
                             variant="default"
                             onClick={() => handleOpenModal(user)}
@@ -764,6 +768,7 @@ function MemberListCard() {
 // TODO: put back at root level
 export default function Team() {
   const { org } = useOrg()
+  const { user } = useUser()
   const samlEnabled = org?.samlEnabled
 
   if (!org) {
@@ -777,9 +782,11 @@ export default function Team() {
       <Stack gap="xl">
         <Title order={2}>Manage Team</Title>
 
-        <InviteMemberCard />
+        {hasAccess(user.role, "teamMembers", "create") && <InviteMemberCard />}
         <MemberListCard />
-        {samlEnabled && <SAMLConfig />}
+        {samlEnabled && ["admin", "owner"].includes(user.role) && (
+          <SAMLConfig />
+        )}
       </Stack>
     </Container>
   )
