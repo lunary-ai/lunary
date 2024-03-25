@@ -5,6 +5,7 @@ import {
   Button,
   Container,
   Flex,
+  Loader,
   Paper,
   PasswordInput,
   Stack,
@@ -14,36 +15,19 @@ import {
 } from "@mantine/core"
 
 import { useForm } from "@mantine/form"
-import { IconAnalyze, IconAt, IconUser } from "@tabler/icons-react"
+import { IconAnalyze, IconAt, IconCheck, IconUser } from "@tabler/icons-react"
 
 import analytics from "@/utils/analytics"
 import { useAuth } from "@/utils/auth"
 import errorHandler from "@/utils/errors"
 import { fetcher } from "@/utils/fetcher"
 import { SEAT_ALLOWANCE } from "@/utils/pricing"
+import { decodeJwt } from "jose"
 import { NextSeo } from "next-seo"
 import Router, { useRouter } from "next/router"
 import Confetti from "react-confetti"
-import postgres from "postgres"
-
-const sql = postgres(process.env.DATABASE_URL!)
-
-export async function getServerSideProps(context) {
-  const { orgId } = context.query
-
-  const [org] = await sql`
-    SELECT name, plan FROM org WHERE id = ${orgId}
-  `
-
-  const [orgUserCountResult] = await sql`
-    SELECT COUNT(*) FROM account WHERE org_id = ${orgId}
-  `
-  const orgUserCount = orgUserCountResult.count
-
-  return {
-    props: { orgUserCount, orgName: org?.name, orgId, orgPlan: org?.plan },
-  }
-}
+import { notifications } from "@mantine/notifications"
+import { useJoinData } from "@/utils/dataHooks"
 
 function TeamFull({ orgName }) {
   return (
@@ -73,16 +57,21 @@ function TeamFull({ orgName }) {
     </Container>
   )
 }
-export default function Join({ orgUserCount, orgName, orgId, orgPlan }) {
-  const auth = useAuth()
+export default function Join() {
+  const router = useRouter()
+  const { token } = router.query
+
+  const { data: joinData } = useJoinData(token as string)
+
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
-  const router = useRouter()
 
   useEffect(() => {
-    router.query.step = String(step)
-    router.push(router)
-  }, [step])
+    if (router.isReady) {
+      router.query.step = String(step)
+      router.replace(router)
+    }
+  }, [step, router.isReady])
 
   const form = useForm({
     initialValues: {
@@ -110,7 +99,7 @@ export default function Join({ orgUserCount, orgName, orgId, orgPlan }) {
   }) => {
     setLoading(true)
 
-    const body = await errorHandler(
+    const ok = await errorHandler(
       fetcher.post("/auth/signup", {
         arg: {
           email,
@@ -118,15 +107,19 @@ export default function Join({ orgUserCount, orgName, orgId, orgPlan }) {
           name,
           orgId,
           signupMethod: "join",
+          token,
         },
       }),
     )
 
-    if (body?.token) {
-      // add ?done to the url
-      Router.replace("/signup?done")
-      auth.setJwt(body.token)
+    if (ok) {
+      Router.replace("/login")
 
+      notifications.show({
+        icon: <IconCheck size={18} />,
+        color: "teal",
+        message: `You have joined ${orgName}`,
+      })
       analytics.track("Join", { email, name })
     }
 
@@ -145,6 +138,12 @@ export default function Join({ orgUserCount, orgName, orgId, orgPlan }) {
 
     setStep(step + 1)
   }
+
+  if (!joinData) {
+    return <Loader />
+  }
+  const { orgUserCount, orgName, orgId, orgPlan } = joinData
+  console.log(joinData)
 
   if (orgUserCount >= SEAT_ALLOWANCE[orgPlan]) {
     return <TeamFull orgName={orgName} />
@@ -235,8 +234,7 @@ export default function Join({ orgUserCount, orgName, orgId, orgPlan }) {
                       size="sm"
                       onClick={() => setStep(1)}
                       fullWidth
-                      variant="link"
-                      color="gray.4"
+                      variant="transparent"
                     >
                       {`← Go back`}
                     </Button>

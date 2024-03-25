@@ -1,3 +1,4 @@
+import { checkAccess } from "@/src/utils/authorization"
 import sql from "@/src/utils/db"
 import Context from "@/src/utils/koa"
 import { unCamelObject } from "@/src/utils/misc"
@@ -7,7 +8,7 @@ const templates = new Router({
   prefix: "/templates",
 })
 
-templates.get("/", async (ctx: Context) => {
+templates.get("/", checkAccess("prompts", "list"), async (ctx: Context) => {
   const templates = await sql`
     select t.*, coalesce(json_agg(tv.*) filter (where tv.id is not null), '[]') as versions
     from template t
@@ -28,7 +29,7 @@ templates.get("/", async (ctx: Context) => {
 })
 
 // insert template + a first version, and return the template with versions
-templates.post("/", async (ctx: Context) => {
+templates.post("/", checkAccess("prompts", "create"), async (ctx: Context) => {
   const { projectId, userId } = ctx.state
 
   const { slug, mode, content, extra, testValues, isDraft } = ctx.request
@@ -66,7 +67,7 @@ templates.post("/", async (ctx: Context) => {
   }
 })
 
-templates.get("/:id", async (ctx: Context) => {
+templates.get("/:id", checkAccess("prompts", "read"), async (ctx: Context) => {
   const [row] = await sql`
     select * from template where project_id = ${ctx.state.projectId} and id = ${ctx.params.id}
   `
@@ -74,21 +75,28 @@ templates.get("/:id", async (ctx: Context) => {
   ctx.body = row
 })
 
-templates.delete("/:id", async (ctx: Context) => {
-  await sql`
+templates.delete(
+  "/:id",
+  checkAccess("prompts", "delete"),
+  async (ctx: Context) => {
+    await sql`
     delete from template where project_id = ${ctx.state.projectId} and id = ${ctx.params.id}
   `
 
-  ctx.status = 204
-})
+    ctx.status = 204
+  },
+)
 
-templates.patch("/:id", async (ctx: Context) => {
-  const { slug, mode } = ctx.request.body as {
-    slug: string
-    mode: string
-  }
+templates.patch(
+  "/:id",
+  checkAccess("prompts", "update"),
+  async (ctx: Context) => {
+    const { slug, mode } = ctx.request.body as {
+      slug: string
+      mode: string
+    }
 
-  const [template] = await sql`
+    const [template] = await sql`
     update template set
       slug = ${slug},
       mode = ${mode}
@@ -96,29 +104,33 @@ templates.patch("/:id", async (ctx: Context) => {
     returning *
   `
 
-  const versions = await sql`
+    const versions = await sql`
     select * from template_version where template_id = ${ctx.params.id}
   `
 
-  for (const version of versions) {
-    version.extra = unCamelObject(version.extra)
-  }
+    for (const version of versions) {
+      version.extra = unCamelObject(version.extra)
+    }
 
-  ctx.body = {
-    ...template,
-    versions,
-  }
-})
+    ctx.body = {
+      ...template,
+      versions,
+    }
+  },
+)
 
-templates.post("/:id/versions", async (ctx: Context) => {
-  const { content, extra, testValues, isDraft } = ctx.request.body as {
-    content: any[]
-    extra: any
-    testValues: any
-    isDraft: boolean
-  }
+templates.post(
+  "/:id/versions",
+  checkAccess("prompts", "update"),
+  async (ctx: Context) => {
+    const { content, extra, testValues, isDraft } = ctx.request.body as {
+      content: any[]
+      extra: any
+      testValues: any
+      isDraft: boolean
+    }
 
-  const [templateVersion] = await sql`
+    const [templateVersion] = await sql`
     insert into template_version (
       template_id, content, extra, test_values, is_draft
     ) values (
@@ -128,7 +140,8 @@ templates.post("/:id/versions", async (ctx: Context) => {
     ) returning *
   `
 
-  ctx.body = templateVersion
-})
+    ctx.body = templateVersion
+  },
+)
 
 export default templates

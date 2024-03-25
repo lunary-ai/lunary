@@ -13,6 +13,7 @@ import {
   useProject,
   useRunsUsage,
   useRunsUsageByDay,
+  useUser,
 } from "@/utils/dataHooks"
 import {
   Center,
@@ -27,6 +28,9 @@ import {
 import { useLocalStorage } from "@mantine/hooks"
 import { IconChartAreaLine } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
+import { useEffect } from "react"
+import { useRouter } from "next/router"
+import { hasAccess } from "shared"
 
 const calculateDailyCost = (usage) => {
   // calculate using calcRunCost, reduce by model, and filter by type llm
@@ -50,6 +54,7 @@ const calculateDailyCost = (usage) => {
 }
 
 export default function Analytics() {
+  const router = useRouter()
   const [range, setRange] = useLocalStorage({
     key: "dateRange-analytics",
     defaultValue: 7,
@@ -58,6 +63,7 @@ export default function Analytics() {
   const { project } = useProject()
 
   const { org } = useOrg()
+  const { user } = useUser()
 
   const { usage, loading: usageLoading } = useRunsUsage(range)
 
@@ -65,6 +71,12 @@ export default function Analytics() {
   const { users, loading: usersLoading } = useAppUsers(range)
 
   const loading = usageLoading || dailyUsageLoading || usersLoading
+
+  useEffect(() => {
+    if (!hasAccess(user.role, "analytics", "read")) {
+      router.push("/prompts")
+    }
+  }, [router])
 
   if (loading)
     return (

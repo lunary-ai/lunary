@@ -1,12 +1,11 @@
 import RenamableField from "@/components/blocks/RenamableField"
 import CheckPicker from "@/components/checks/Picker"
-import { useChecklist, useChecklists } from "@/utils/dataHooks"
+import { useChecklist, useChecklists, useUser } from "@/utils/dataHooks"
 import { cleanSlug } from "@/utils/format"
 
 import {
   ActionIcon,
   Alert,
-  Badge,
   Button,
   Card,
   Container,
@@ -24,7 +23,7 @@ import { modals } from "@mantine/modals"
 import { IconPlus, IconTrash } from "@tabler/icons-react"
 import { generateSlug } from "random-word-slugs"
 import { useState } from "react"
-import { CheckLogic } from "shared"
+import { CheckLogic, hasAccess } from "shared"
 
 function ChecklistCard({ defaultValue, onDelete }) {
   const { checklist, update, remove } = useChecklist(
@@ -159,6 +158,7 @@ export function ChecklistModal({ open, onClose }) {
 
 export default function Checklists() {
   const { checklists, loading, mutate } = useChecklists("evaluation")
+  const { user } = useUser()
   const [checklistModal, setChecklistModal] = useState(false)
 
   return (
@@ -176,13 +176,15 @@ export default function Checklists() {
             <Title>Checklists</Title>
           </Group>
 
-          <Button
-            leftSection={<IconPlus size={12} />}
-            variant="default"
-            onClick={() => setChecklistModal(true)}
-          >
-            New Checklist
-          </Button>
+          {hasAccess(user, "checkLists", "create") && (
+            <Button
+              leftSection={<IconPlus size={12} />}
+              variant="default"
+              onClick={() => setChecklistModal(true)}
+            >
+              New Checklist
+            </Button>
+          )}
         </Group>
 
         <Text size="lg" mb="md">
