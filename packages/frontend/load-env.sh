@@ -10,8 +10,8 @@ if [ -f .env ]; then
 fi
 
 
-if [ -z "$API_URL" ] || [ -z "$APP_URL" ]; then
-  echo "Error: API_URL or APP_URL is not set. Please set the API_URL and APP_URL environment variables."
+if [ -z "$API_URL" ]; then
+  echo "Error: API_URL not set. Please set the API_URL environment variables."
   exit 1
 fi
 

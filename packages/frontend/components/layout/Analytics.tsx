@@ -3,7 +3,7 @@ import { useEffect, Component } from "react"
 import Script from "next/script"
 
 import { PostHogProvider } from "posthog-js/react"
-import PlausibleProvider from "next-plausible"
+
 import posthog from "posthog-js"
 
 import analytics from "@/utils/analytics"
@@ -37,32 +37,23 @@ export default function AnalyticsWrapper({ children }) {
   return (
     <>
       {process.env.NEXT_PUBLIC_CRISP_ID && <CrispChat />}
-      <PlausibleProvider
-        domain="app.lunary.ai,rollup.lunary.ai"
-        scriptProps={{
-          src: "https://www.lunary.ai/p/js/script.js",
-          // @ts-ignore
-          "data-api": "https://www.lunary.ai/p/event",
-        }}
-        customDomain="www.lunary.ai"
-      >
-        {process.env.NEXT_PUBLIC_CUSTOM_SCRIPT && (
-          <Script
-            id="custom-script"
-            dangerouslySetInnerHTML={{
-              __html: process.env.NEXT_PUBLIC_CUSTOM_SCRIPT,
-            }}
-            onLoad={() => console.log("Custom script loaded.")}
-            onError={() => console.log("Custom script failed to load.")}
-          />
-        )}
 
-        {process.env.NEXT_PUBLIC_POSTHOG_KEY ? (
-          <PostHogProvider client={posthog}>{children}</PostHogProvider>
-        ) : (
-          children
-        )}
-      </PlausibleProvider>
+      {process.env.NEXT_PUBLIC_CUSTOM_SCRIPT && (
+        <Script
+          id="custom-script"
+          dangerouslySetInnerHTML={{
+            __html: process.env.NEXT_PUBLIC_CUSTOM_SCRIPT,
+          }}
+          onLoad={() => console.log("Custom script loaded.")}
+          onError={() => console.log("Custom script failed to load.")}
+        />
+      )}
+
+      {process.env.NEXT_PUBLIC_POSTHOG_KEY ? (
+        <PostHogProvider client={posthog}>{children}</PostHogProvider>
+      ) : (
+        children
+      )}
     </>
   )
 }
