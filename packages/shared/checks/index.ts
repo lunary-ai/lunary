@@ -175,11 +175,9 @@ export const CHECKS: Check[] = [
       },
       {
         type: "select",
-        multiple: true,
         width: 100,
-        id: "keys",
+        id: "key",
         options: () => `/filters/metadata`,
-        // render: (item) => <AppUser/> // todo
       },
       {
         type: "label",
@@ -188,7 +186,7 @@ export const CHECKS: Check[] = [
       {
         type: "text",
         id: "value",
-        placeholder: "Value",
+        placeholder: "value",
       },
     ],
   },

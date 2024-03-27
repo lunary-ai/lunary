@@ -91,13 +91,14 @@ filters.get("/feedback", async (ctx: Context) => {
 // get all unique keys in metadata table
 filters.get("/metadata", async (ctx: Context) => {
   const { projectId } = ctx.state
+  // show the metadatas relevant to the type
   const { type } = ctx.query
 
   const rows = await sql`
     select
       key
     from
-      metadata
+      metadata_cache
     where
       project_id = ${projectId}
     order by
