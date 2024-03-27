@@ -161,8 +161,6 @@ export default function Checklists() {
   const { user } = useUser()
   const [checklistModal, setChecklistModal] = useState(false)
 
-  console.log(user)
-
   return (
     <Container>
       <ChecklistModal
