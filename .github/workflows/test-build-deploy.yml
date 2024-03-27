@@ -56,14 +56,14 @@ jobs:
           username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
           password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
 
-      - name: Build and push lunary-ee
+      - name: Build and push backend
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./ops/Dockerfile
           push: true
           tags: |
-            lunary/backend-ee:latest
+            lunary/backend:latest
             lunary/backend:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
           platforms: linux/amd64
 
