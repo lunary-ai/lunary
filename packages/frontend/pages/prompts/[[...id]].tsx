@@ -64,6 +64,7 @@ function Playground() {
 
   const [streaming, setStreaming] = useState(false)
   const [loading, setLoading] = useState(false)
+
   const [output, setOutput] = useState<any>(null)
   const [outputTokens, setOutputTokens] = useState<any>(null)
   const [error, setError] = useState(null)
@@ -124,6 +125,8 @@ function Playground() {
 
         if (run?.input) {
           setTemplateVersion({ ...templateVersion, content: run.input })
+
+          setTemplate({ mode: "openai", extra: run.params })
         }
 
         setLoading(false)
@@ -309,6 +312,7 @@ function Playground() {
   // reset output when the template or template version changes
   useEffect(() => {
     setOutput(null)
+    setError(null)
     setOutputTokens(0)
   }, [
     template?.id,

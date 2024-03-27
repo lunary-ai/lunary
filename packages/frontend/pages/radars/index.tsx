@@ -395,7 +395,7 @@ export default function Radar() {
             <Group align="center">
               <Title>Radars</Title>
               <Badge variant="light" color="violet">
-                Alpha
+                Beta
               </Badge>
             </Group>
 
