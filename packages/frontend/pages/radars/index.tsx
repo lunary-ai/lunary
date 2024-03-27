@@ -135,7 +135,7 @@ function RadarEditModal({
             minimal
             restrictTo={(filter) =>
               // Only show these for now to not confuse the user with too many options
-              ["type", "tags", "model", "users"].includes(filter.id)
+              ["type", "tags", "model", "users", "metadata"].includes(filter.id)
             }
             onChange={(logic) =>
               onUpdate({

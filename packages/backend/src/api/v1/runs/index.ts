@@ -78,6 +78,7 @@ const formatRun = (run: any) => ({
   status: run.status,
   siblingRunId: run.siblingRunId,
   params: run.params,
+  metadata: run.metadata,
   user: {
     id: run.externalUserId,
     externalId: run.userExternalId,

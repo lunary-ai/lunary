@@ -16,7 +16,7 @@ import SmartViewer from "../SmartViewer"
 import TokensBadge from "./TokensBadge"
 import { useRun, useUser } from "@/utils/dataHooks"
 import { notifications } from "@mantine/notifications"
-import { SuperCopyButton } from "./CopyText"
+import CopyText, { SuperCopyButton } from "./CopyText"
 import { hasAccess } from "shared"
 
 const isChatMessages = (obj) => {
@@ -156,13 +156,13 @@ export default function RunInputOutput({
                   <Text span fw="bold">
                     {run?.isPublic ? "public" : "private"}
                   </Text>{" "}
-                  URL to share
+                  URL to share {run?.isPublic ? "" : "with your team"}
                 </Text>
                 <SuperCopyButton
                   value={`${window.location.origin}/logs/${run.id}`}
                 />
               </Group>
-              {hasAccess(user.role, "logs", "updaate") && (
+              {hasAccess(user.role, "logs", "update") && (
                 <Switch
                   label={
                     <Text size="sm" mr="sm">
@@ -210,7 +210,7 @@ export default function RunInputOutput({
                         key={key}
                         name={name}
                         color="grey"
-                        value={run.params?.[key]}
+                        value={run.params?.[key].toString()}
                         render={render}
                       />
                     ),
@@ -219,6 +219,22 @@ export default function RunInputOutput({
                 {run.tags?.length > 0 && (
                   <ParamItem name="Tags" value={run.tags} />
                 )}
+
+                {Object.keys(run.metadata || {}).map((key) => (
+                  <ParamItem
+                    key={key}
+                    name={key}
+                    color="blue"
+                    value={run.metadata?.[key]}
+                    render={(value) =>
+                      typeof value === "string" ? (
+                        <CopyText ml={0} value={value.toString()} />
+                      ) : (
+                        value.toString()
+                      )
+                    }
+                  />
+                ))}
               </Stack>
 
               {canEnablePlayground && (
