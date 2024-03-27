@@ -6,8 +6,6 @@ create table if not exists account_project (
     primary key (account_id, project_id)
 );
 
-
--- TODO: test this on actual data
 insert into account_project (account_id, project_id)
 select a.id as account_id, p.id as project_id
 from account a
