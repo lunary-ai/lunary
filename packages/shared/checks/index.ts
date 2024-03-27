@@ -124,7 +124,7 @@ export const CHECKS: Check[] = [
     ],
   },
   {
-    id: "feedbacks",
+    id: "feedback",
     name: "Feedback",
     uiType: "basic",
     disableInEvals: true,
@@ -136,12 +136,10 @@ export const CHECKS: Check[] = [
       {
         type: "select",
         multiple: true,
-        id: "feedbacks",
+        id: "types",
         options: () => `/filters/feedback`,
       },
     ],
-    // feedback is a jsonb column
-    // sql: (sql, { feedbacks }) => sql`feedback @> '${feedbacks}'`,
   },
   {
     id: "users",
