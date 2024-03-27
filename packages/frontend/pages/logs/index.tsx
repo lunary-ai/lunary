@@ -96,7 +96,7 @@ const CHECKS_BY_TYPE = {
     "tags",
     "users",
     "status",
-    "feedback",
+    // "feedback",
     "cost",
     "duration",
     "tokens",
