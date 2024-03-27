@@ -63,8 +63,8 @@ jobs:
           file: ./ops/Dockerfile
           push: true
           tags: |
-            lunary/lunary-ee:latest
-            lunary/lunary-ee:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
+            lunary/backend-ee:latest
+            lunary/backend:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
           platforms: linux/amd64
 
   deploy:
