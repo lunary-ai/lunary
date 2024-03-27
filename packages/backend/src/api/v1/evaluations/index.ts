@@ -16,7 +16,7 @@ const MAX_PARALLEL_EVALS = 4
 
 evaluations.post(
   "/",
-  checkAccess("evaluations", "create"),
+  // checkAccess("evaluations", "create"),
   async (ctx: Context) => {
     const { name, datasetId, checklistId, providers } = ctx.request.body as any
     const { userId, projectId } = ctx.state
@@ -95,7 +95,7 @@ evaluations.post(
 
 evaluations.get(
   "/:id",
-  checkAccess("evaluations", "read"),
+  // checkAccess("evaluations", "read"),
   async (ctx: Context) => {
     const { projectId } = ctx.state
     const { id } = ctx.params
@@ -114,7 +114,7 @@ evaluations.get(
 
 evaluations.get(
   "/result/:evaluationId",
-  checkAccess("evaluations", "read"),
+  // checkAccess("evaluations", "read"),
   async (ctx: Context) => {
     const { evaluationId } = ctx.params
 
@@ -137,7 +137,7 @@ evaluations.get(
 
 evaluations.get(
   "/",
-  checkAccess("evaluations", "list"),
+  // checkAccess("evaluations", "list"),
   async (ctx: Context) => {
     const { projectId } = ctx.state
 
@@ -152,7 +152,7 @@ evaluations.get(
 // special route used by the SDK to run evaluations
 evaluations.post(
   "/run",
-  checkAccess("evaluations", "create"),
+  // checkAccess("evaluations", "create"),
   async (ctx: Context) => {
     const { projectId } = ctx.state
     const { checklist, input, output, idealOutput, context, duration, model } =
