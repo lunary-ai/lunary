@@ -22,7 +22,7 @@ datasets.get("/", checkAccess("datasets", "list"), async (ctx: Context) => {
 
 datasets.get(
   "/:identifier",
-  checkAccess("datasets", "read"),
+  // checkAccess("datasets", "read"),
   async (ctx: Context) => {
     const { projectId } = ctx.state
     const { identifier } = ctx.params
