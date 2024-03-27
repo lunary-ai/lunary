@@ -9,7 +9,7 @@ import {
 import CHECKS_UI_DATA from "./UIData"
 import { IconPlus } from "@tabler/icons-react"
 
-export function AddCheckButton({ filters, onSelect, defaultOpened }) {
+export function AddCheckButton({ checks, onSelect, defaultOpened }) {
   const [search, setSearch] = useState("")
 
   const combobox = useCombobox({
@@ -33,7 +33,7 @@ export function AddCheckButton({ filters, onSelect, defaultOpened }) {
     }
   }, [defaultOpened])
 
-  const options = filters
+  const options = checks
     .filter((item) =>
       item.name.toLowerCase().includes(search.toLowerCase().trim()),
     )
@@ -57,7 +57,7 @@ export function AddCheckButton({ filters, onSelect, defaultOpened }) {
         position="bottom-start"
         withinPortal={false}
         onOptionSubmit={(val) => {
-          onSelect(filters.find((item) => item.id === val))
+          onSelect(checks.find((item) => item.id === val))
           combobox.closeDropdown()
         }}
       >
