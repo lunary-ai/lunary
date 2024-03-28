@@ -123,26 +123,24 @@ export const CHECKS: Check[] = [
       },
     ],
   },
-  // {
-  //   id: "feedbacks",
-  //   name: "Feedback",
-  //   uiType: "basic",
-  //   disableInEvals: true,
-  //   params: [
-  //     {
-  //       type: "label",
-  //       label: "Feedback",
-  //     },
-  //     {
-  //       type: "select",
-  //       multiple: true,
-  //       id: "feedbacks",
-  //       options: () => `/filters/feedback`,
-  //     },
-  //   ],
-  //   // feedback is a jsonb column
-  //   sql: (sql, { feedbacks }) => sql`feedback @> '${feedbacks}'`,
-  // },
+  {
+    id: "feedback",
+    name: "Feedback",
+    uiType: "basic",
+    disableInEvals: true,
+    params: [
+      {
+        type: "label",
+        label: "Feedback",
+      },
+      {
+        type: "select",
+        multiple: true,
+        id: "types",
+        options: () => `/filters/feedback`,
+      },
+    ],
+  },
   {
     id: "users",
     name: "Users",
@@ -160,6 +158,33 @@ export const CHECKS: Check[] = [
         id: "users",
         options: () => `/filters/users`,
         // render: (item) => <AppUser/> // todo
+      },
+    ],
+  },
+  {
+    id: "metadata",
+    name: "Metadata",
+    uiType: "basic",
+    disableInEvals: true,
+    params: [
+      {
+        type: "label",
+        label: "Metadata",
+      },
+      {
+        type: "select",
+        width: 100,
+        id: "key",
+        options: () => `/filters/metadata`,
+      },
+      {
+        type: "label",
+        label: "is",
+      },
+      {
+        type: "text",
+        id: "value",
+        placeholder: "value",
       },
     ],
   },

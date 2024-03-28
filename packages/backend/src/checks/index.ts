@@ -97,10 +97,16 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     sql: ({ tags }) => sql`tags && ${sql.array(tags)}`,
   },
   {
+    id: "metadata",
+    sql: ({ key, value }) => {
+      if (!key || !value) return sql`true`
+      return sql`CAST(metadata->>${key} AS TEXT) = ${value}`
+    },
+  },
+  {
     id: "status",
     sql: ({ status }) => sql`status = ${status}`,
   },
-
   {
     id: "users",
     sql: ({ users }) => sql`external_user_id = ANY (${users})`,
