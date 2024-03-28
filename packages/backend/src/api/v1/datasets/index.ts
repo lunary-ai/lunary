@@ -22,7 +22,7 @@ datasets.get("/", checkAccess("datasets", "list"), async (ctx: Context) => {
 
 datasets.get(
   "/:identifier",
-  checkAccess("datasets", "read"),
+  // checkAccess("datasets", "read"),
   async (ctx: Context) => {
     const { projectId } = ctx.state
     const { identifier } = ctx.params
@@ -61,17 +61,20 @@ const DEFAULT_PROMPT = {
   text: "What is the result of 1 + 1?",
 }
 
-datasets.post("/", checkAccess("datasets", "create"), async (ctx: Context) => {
-  //TODO: full zod
-  const { projectId, userId } = ctx.state
-  const body = z.object({
-    slug: z.string(),
-    format: z.string().optional().default("text"),
-  })
+datasets.post(
+  "/",
+  // checkAccess("datasets", "create"),
+  async (ctx: Context) => {
+    //TODO: full zod
+    const { projectId, userId } = ctx.state
+    const body = z.object({
+      slug: z.string(),
+      format: z.string().optional().default("text"),
+    })
 
-  const { slug, format } = body.parse(ctx.request.body)
+    const { slug, format } = body.parse(ctx.request.body)
 
-  const [dataset] = await sql`
+    const [dataset] = await sql`
     insert into dataset ${sql({
       slug,
       format,
@@ -80,15 +83,15 @@ datasets.post("/", checkAccess("datasets", "create"), async (ctx: Context) => {
     })} returning *
   `
 
-  // insert 1 prompt and 1 variation
-  const [prompt] = await sql`insert into dataset_prompt
+    // insert 1 prompt and 1 variation
+    const [prompt] = await sql`insert into dataset_prompt
     ${sql({
       datasetId: dataset.id,
       messages: DEFAULT_PROMPT[format],
     })}
     returning *
   `
-  await sql`insert into dataset_prompt_variation
+    await sql`insert into dataset_prompt_variation
     ${sql({
       promptId: prompt.id,
       variables: {},
@@ -98,12 +101,13 @@ datasets.post("/", checkAccess("datasets", "create"), async (ctx: Context) => {
     returning *
   `
 
-  ctx.body = dataset
-})
+    ctx.body = dataset
+  },
+)
 
 datasets.patch(
   "/:id",
-  checkAccess("datasets", "update"),
+  // checkAccess("datasets", "update"),
   async (ctx: Context) => {
     const { projectId } = ctx.state
     const { id } = ctx.params
@@ -131,7 +135,7 @@ datasets.delete("/:id", async (ctx: Context) => {
 // Create prompt
 datasets.post(
   "/prompts",
-  checkAccess("datasets", "create"),
+  // checkAccess("datasets", "create"),
   async (ctx: Context) => {
     const { projectId } = ctx.state
 
@@ -169,7 +173,7 @@ datasets.post(
 // return array of prompts and variations
 datasets.get(
   "/prompts/:id",
-  checkAccess("datasets", "read"),
+  // checkAccess("datasets", "read"),
   async (ctx: Context) => {
     const { id } = ctx.params as { id: string }
 
@@ -190,7 +194,7 @@ datasets.get(
 // add route ot to delete dataset_prompt and dataset_prompt_variation
 datasets.delete(
   "/prompts/:id",
-  checkAccess("datasets", "delete"),
+  // checkAccess("datasets", "delete"),
   async (ctx: Context) => {
     const { id } = ctx.params
 
@@ -204,7 +208,7 @@ datasets.delete(
 // Update prompt
 datasets.patch(
   "/prompts/:id",
-  checkAccess("datasets", "update"),
+  // checkAccess("datasets", "update"),
   async (ctx: Context) => {
     const { id } = ctx.params
     const { messages } = ctx.request.body as {
@@ -220,7 +224,7 @@ datasets.patch(
 
 datasets.get(
   "/variations/:id",
-  checkAccess("datasets", "read"),
+  // checkAccess("datasets", "read"),
   async (ctx: Context) => {
     const { id } = ctx.params
 
@@ -238,7 +242,7 @@ datasets.get(
 
 datasets.delete(
   "/variations/:id",
-  checkAccess("datasets", "delete"),
+  // checkAccess("datasets", "delete"),
   async (ctx: Context) => {
     const { id } = ctx.params
 
@@ -251,7 +255,7 @@ datasets.delete(
 // Update variation
 datasets.patch(
   "/variations/:variationId",
-  checkAccess("datasets", "update"),
+  // checkAccess("datasets", "update"),
   async (ctx: Context) => {
     const { variationId } = ctx.params
     const { variables, context, idealOutput } = ctx.request.body as {
@@ -279,7 +283,7 @@ datasets.patch(
 // Create variation
 datasets.post(
   "/variations",
-  checkAccess("datasets", "create"),
+  // checkAccess("datasets", "create"),
   async (ctx: Context) => {
     const { promptId, variables, context, idealOutput } = ctx.request.body as {
       promptId: string

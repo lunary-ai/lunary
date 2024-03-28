@@ -12,13 +12,13 @@ function RenderCheckNode({
   minimal,
   node,
   disabled,
-  filters,
+  checks,
   setNode,
   removeNode,
 }: {
   minimal: boolean
   node: CheckLogic
-  filters: Check[]
+  checks: Check[]
   disabled: boolean
   setNode: (node: CheckLogic | LogicData) => void
   removeNode: () => void
@@ -32,7 +32,7 @@ function RenderCheckNode({
       <RenderCheckNode
         minimal={minimal}
         key={i}
-        filters={filters}
+        checks={checks}
         node={n as CheckLogic}
         removeNode={() => {
           const newNode = [...node]
@@ -78,14 +78,14 @@ function RenderCheckNode({
   // ts assert node is LogicElement
   const s = node as LogicData
 
-  const filter = filters.find((f) => f.id === s.id)
+  const check = checks.find((f) => f.id === s.id)
 
-  if (!filter) return null
+  if (!check) return null
 
   return (
     <Group>
       <div className={classes["custom-input"]}>
-        {filter?.params.map((param, i) => {
+        {check?.params.map((param, i) => {
           const CustomInput = CheckInputs[param.type]
           if (!CustomInput) return null
 
@@ -194,14 +194,14 @@ export default function CheckPicker({
             removeNode={() => {
               onChange(["AND"])
             }}
-            filters={options}
+            checks={options}
           />
 
           {!disabled && (
             <>
               {minimal ? (
                 <AddCheckButton
-                  filters={options}
+                  checks={options}
                   onSelect={(filter) => insertChecks([filter])}
                   defaultOpened={defaultOpened}
                 />
@@ -217,12 +217,12 @@ export default function CheckPicker({
                   <ChecksModal
                     opened={modalOpened}
                     setOpened={setModalOpened}
-                    filters={options}
+                    checks={options}
                     onFinish={(ids) => {
-                      const filters = ids
+                      const checks = ids
                         .map((id) => options.find((option) => option.id === id))
-                        .filter(Boolean)
-                      insertChecks(filters)
+                        .filter(Boolean) as Check[]
+                      insertChecks(checks)
                     }}
                   />
                 </>

@@ -395,11 +395,11 @@ export default function Radar() {
             <Group align="center">
               <Title>Radars</Title>
               <Badge variant="light" color="violet">
-                Alpha
+                Beta
               </Badge>
             </Group>
 
-            {hasAccess(user, "radars", "create") && (
+            {hasAccess(user.role, "radars", "create") && (
               <Button
                 leftSection={<IconPlus size={12} />}
                 variant="default"

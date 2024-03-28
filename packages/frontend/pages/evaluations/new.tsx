@@ -115,8 +115,6 @@ export default function NewEvaluation() {
           `/evaluations/${clone}?projectId=${project?.id}`,
         )
 
-        console.log("cloneEval", cloneEval)
-
         if (!cloneEval) return
 
         setDatasetId(cloneEval.datasetId)
