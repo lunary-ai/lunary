@@ -76,6 +76,9 @@ cp .env.example .env
 # Install dependencies
 npm install
 
+## Run DB migrations
+npm run migrate:db
+
 # Run the development server
 npm run dev
 ```

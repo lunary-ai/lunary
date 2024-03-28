@@ -1,7 +1,7 @@
 import sql from "@/src/utils/db"
 import Router from "koa-router"
 import { Context } from "koa"
-import { checkAccess } from "@/src/utils/authorization"
+// import { checkAccess } from "@/src/utils/authorization"
 
 const filters = new Router({
   prefix: "/filters",
@@ -41,8 +41,9 @@ filters.get("/tags", async (ctx: Context) => {
   ctx.body = rows.map((row) => row.tag)
 })
 
-filters.get("/feedbacks", async (ctx: Context) => {
+filters.get("/feedback", async (ctx: Context) => {
   const { projectId } = ctx.state
+  const { type } = ctx.query
 
   const rows = await sql`
     select
@@ -85,6 +86,26 @@ filters.get("/feedbacks", async (ctx: Context) => {
   const feedbacks = rows.map((row) => row.jsonbBuildObject)
 
   ctx.body = feedbacks
+})
+
+// get all unique keys in metadata table
+filters.get("/metadata", async (ctx: Context) => {
+  const { projectId } = ctx.state
+  // show the metadatas relevant to the type
+  const { type } = ctx.query
+
+  const rows = await sql`
+    select
+      key
+    from
+      metadata_cache
+    where
+      project_id = ${projectId}
+    order by
+      project_id
+  `
+
+  ctx.body = rows.map((row) => row.key)
 })
 
 // get external users
