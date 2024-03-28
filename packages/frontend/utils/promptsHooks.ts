@@ -39,14 +39,14 @@ export function useCheckedPromptVariables(
     const mergedVariables = { ...initialVariables }
 
     // Remove keys from initialVariables that are not found in the content
-    Object.keys(initialVariables).forEach((key) => {
+    Object.keys(initialVariables || {}).forEach((key) => {
       if (!contentVariables.hasOwnProperty(key)) {
         delete mergedVariables[key]
       }
     })
 
     // Add new keys from content
-    Object.keys(contentVariables).forEach((key) => {
+    Object.keys(contentVariables || {}).forEach((key) => {
       if (!mergedVariables.hasOwnProperty(key)) {
         mergedVariables[key] = ""
       }
