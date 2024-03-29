@@ -98,7 +98,3 @@ GROUP BY
 
 create unique index on run_parent_feedback_cache(id);
 
-ALTER TABLE run
-ADD COLUMN parent_feedback jsonb GENERATED ALWAYS AS (
-    (SELECT feedback FROM run_parent_feedback_cache WHERE id = run.id)
-) STORED;
