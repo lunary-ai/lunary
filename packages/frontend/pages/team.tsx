@@ -149,7 +149,7 @@ function SAMLConfig() {
               <Table.Td>Assertion Consumer Service (ACS) URL:</Table.Td>
               <Table.Td>
                 <CopyInput
-                  value={`${process.env.API_URL}/auth/saml/${org?.id}/acs`}
+                  value={`${process.env.NEXT_PUBLIC_API_URL}/auth/saml/${org?.id}/acs`}
                 />
               </Table.Td>
             </Table.Tr>
@@ -157,7 +157,7 @@ function SAMLConfig() {
               <Table.Td>Single Logout Service (SLO) URL:</Table.Td>
               <Table.Td>
                 <CopyInput
-                  value={`${process.env.API_URL}/auth/saml/${org?.id}/slo`}
+                  value={`${process.env.NEXT_PUBLIC_API_URL}/auth/saml/${org?.id}/slo`}
                 />
               </Table.Td>
             </Table.Tr>
@@ -173,7 +173,7 @@ function SAMLConfig() {
               <Table.Td>Single Logout URL:</Table.Td>
               <Table.Td>
                 <CopyInput
-                  value={`${process.env.API_URL}/auth/saml/${org?.id}/slo`}
+                  value={`${process.env.NEXT_PUBLIC_API_URL}/auth/saml/${org?.id}/slo`}
                 />
               </Table.Td>
             </Table.Tr>
