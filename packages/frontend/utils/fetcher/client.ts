@@ -2,7 +2,8 @@ import Router from "next/router"
 import { signOut } from "../auth"
 import { showErrorNotification } from "../errors"
 
-const BASE_URL = (window.API_URL as string) || process.env.NEXT_PUBLIC_API_URL
+const BASE_URL =
+  (process.env.API_URL as string) || process.env.NEXT_PUBLIC_API_URL
 
 export function buildUrl(path: string) {
   if (path.includes("/auth")) {

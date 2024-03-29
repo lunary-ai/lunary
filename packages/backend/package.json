@@ -2,7 +2,7 @@
   "name": "@lunary/backend",
   "main": "index.ts",
   "scripts": {
-    "start": "tsx src/index.ts",
+    "start": "npm run migrate:db && tsx src/index.ts",
     "start:radar": "tsx src/radar.ts",
     "migrate:db": "tsx src/migrate.ts",
     "build": "tsup src/index.ts --format esm",
