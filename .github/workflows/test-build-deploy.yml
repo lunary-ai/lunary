@@ -1,36 +1,41 @@
 name: Build Docker Images
 
-on:
-  push:
-    branches:
-      - main
+on: push
 
 jobs:
-  # run-tests:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: Install dependencies
-  #       run: npm ci && npx playwright install --with-deps
-  #     - name: Start the development server
-  #       env:
-  #         DATABASE_URL: ${{ secrets.DATABASE_URL }}
-  #         JWT_SECRET: ${{ secrets.JWT_SECRET }}
-  #         APP_URL: http://localhost:8080
-  #         API_URL: http://localhost:3333
-  #         LUNARY_PUBLIC_KEY: 259d2d94-9446-478a-ae04-484de705b522
-  #         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: npm ci && npx playwright install --with-deps
+      - name: Start backend
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          APP_URL: http://localhost:8080
+          API_URL: http://localhost:3333
+          LUNARY_PUBLIC_KEY: 259d2d94-9446-478a-ae04-484de705b522
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        timeout-minutes: 1
+        run: npm run start:backend  & npx wait-on http://localhost:3333/v1/health
 
-  #       run: npm run dev:test & npx wait-on http://localhost:3333/v1/health
+      - name: Start frontend
+        env:
+          APP_URL: http://localhost:8080
+          API_URL: http://localhost:3333
+          NEXT_PUBLIC_API_URL: xyzPLACEHOLDERxyz
+        timeout-minutes: 2
+        run: (npm run build:frontend && npm run start:frontend)  & npx wait-on http://localhost:8080/
 
-  #     - name: Run tests
-  #       run: npx playwright test
-  #       env:
-  #         BASE_URL: http://localhost:8080
-  #         DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      - name: Run tests
+        run: npx playwright test
+        env:
+          BASE_URL: http://localhost:8080
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
   build-and-push:
-    # needs: run-tests
+    needs: run-tests
     runs-on: ubuntu-latest
     steps:
       - name: Check out the private Ops repo
@@ -60,11 +65,44 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./ops/Dockerfile
+          file: ./ops/backend.Dockerfile
           push: true
           tags: |
             lunary/backend:latest
             lunary/backend:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
+          platforms: linux/amd64
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ops/frontend.Dockerfile
+          push: true
+          tags: |
+            lunary/frontend:latest
+            lunary/frontend:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
+          platforms: linux/amd64
+
+      - name: Build and push radar
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ops/radar.Dockerfile
+          push: true
+          tags: |
+            lunary/radar:latest
+            lunary/radar:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
+          platforms: linux/amd64
+
+      - name: Build and push ml
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ops/ml.Dockerfile
+          push: true
+          tags: |
+            lunary/ml:latest
+            lunary/ml:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
           platforms: linux/amd64
 
   deploy:
