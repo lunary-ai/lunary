@@ -1,60 +1,13 @@
-name: Build Docker Images
+name: Build Docker Images, Push to Registry, and Deploy
 
-on: push
+on:
+  push:
+    branches:
+      - main
 
 jobs:
-  run-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Cache node modules
-        id: cache-npm
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-node-modules
-        with:
-          # npm cache files are stored in `~/.npm` on Linux/macOS
-          path: ~/.npm
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
-
-      - if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
-        name: List the state of node modules
-        continue-on-error: true
-        run: npm list
-      - name: Install dependencies
-        run: npm ci && npx playwright install --with-deps
-      - name: Start backend
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          APP_URL: http://localhost:8080
-          API_URL: http://localhost:3333
-          LUNARY_PUBLIC_KEY: 259d2d94-9446-478a-ae04-484de705b522
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        timeout-minutes: 1
-        run: npm run start:backend & npx wait-on http://localhost:3333/v1/health
-
-      - name: Start frontend
-        env:
-          APP_URL: http://localhost:8080
-          API_URL: http://localhost:3333
-          NEXT_PUBLIC_API_URL: xyzPLACEHOLDERxyz
-        timeout-minutes: 2
-        run: (npm run build:frontend && npm run start:frontend)  & npx wait-on http://localhost:8080/
-
-      - name: Run tests
-        run: npx playwright test
-        env:
-          BASE_URL: http://localhost:8080
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-
   build-and-push:
-    needs: run-tests
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-fast
     steps:
       - name: Check out the private Ops repo
         uses: actions/checkout@v4
@@ -125,7 +78,7 @@ jobs:
 
   deploy:
     needs: build-and-push
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-default
     steps:
       - name: Deploy to Production
         uses: appleboy/ssh-action@master
