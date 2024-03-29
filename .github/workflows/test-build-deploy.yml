@@ -27,7 +27,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
   build-and-push:
-    # needs: run-tests
+    needs: run-tests
     runs-on: ubuntu-latest
     steps:
       - name: Check out the private Ops repo
@@ -57,11 +57,44 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./ops/backend/Dockerfile
+          file: ./ops/backend.Dockerfile
           push: true
           tags: |
             lunary/backend:latest
             lunary/backend:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
+          platforms: linux/amd64
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ops/frontend.Dockerfile
+          push: true
+          tags: |
+            lunary/frontend:latest
+            lunary/frontend:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
+          platforms: linux/amd64
+
+      - name: Build and push radar
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ops/radar.Dockerfile
+          push: true
+          tags: |
+            lunary/radar:latest
+            lunary/radar:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
+          platforms: linux/amd64
+
+      - name: Build and push ml
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ops/ml.Dockerfile
+          push: true
+          tags: |
+            lunary/ml:latest
+            lunary/ml:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
           platforms: linux/amd64
 
   deploy:
