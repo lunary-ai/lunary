@@ -8,7 +8,7 @@ on:
 
 jobs:
   run-tests:
-    runs-on: namespace-profile-default
+    runs-on: namespace-profile-fast
     steps:
       - uses: actions/checkout@v4
       - name: Cache node modules
