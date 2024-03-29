@@ -1,7 +1,6 @@
 import sql from "@/src/utils/db"
 import Router from "koa-router"
 import { Context } from "koa"
-// import { checkAccess } from "@/src/utils/authorization"
 
 const filters = new Router({
   prefix: "/filters",
@@ -17,8 +16,6 @@ filters.get("/models", async (ctx: Context) => {
       model_name_cache
     where
       project_id = ${projectId}
-    order by
-      project_id
   `
 
   ctx.body = rows.map((row) => row.name)
@@ -34,8 +31,6 @@ filters.get("/tags", async (ctx: Context) => {
       tag_cache
     where
       project_id = ${projectId}
-    order by
-      project_id
   `
 
   ctx.body = rows.map((row) => row.tag)
@@ -43,49 +38,17 @@ filters.get("/tags", async (ctx: Context) => {
 
 filters.get("/feedback", async (ctx: Context) => {
   const { projectId } = ctx.state
-  const { type } = ctx.query
 
   const rows = await sql`
     select
-      jsonb_build_object ('thumbs',
-        feedback::json ->> 'thumbs')
+      feedback
     from
-      run
+      feedback_cache
     where
-      feedback::json ->> 'thumbs' is not null
-      and project_id = ${projectId}
-    union
-    select
-      jsonb_build_object ('emoji',
-        feedback::json ->> 'emoji')
-    from
-      run
-    where
-      feedback::json ->> 'emoji' is not null
-      and project_id = ${projectId}
-    union
-    select
-      jsonb_build_object ('rating',
-        CAST(feedback::json ->> 'rating' as INT))
-    from
-      run
-    where
-      feedback::json ->> 'rating' is not null
-      and project_id = ${projectId}
-    union
-    select
-      jsonb_build_object ('retried',
-        CAST(feedback::json ->> 'retried' as boolean))
-    from
-      run
-    where
-      feedback::json ->> 'retried' is not null
-      and project_id = ${projectId}
+      project_id = ${projectId}
   `
 
-  const feedbacks = rows.map((row) => row.jsonbBuildObject)
-
-  ctx.body = feedbacks
+  ctx.body = rows.map((row) => row.feedback) // stringify so  it works with selected
 })
 
 // get all unique keys in metadata table
@@ -101,8 +64,6 @@ filters.get("/metadata", async (ctx: Context) => {
       metadata_cache
     where
       project_id = ${projectId}
-    order by
-      project_id
   `
 
   ctx.body = rows.map((row) => row.key)
@@ -114,14 +75,11 @@ filters.get("/users", async (ctx) => {
 
   const rows = await sql`
     select
-      external_id as label,
-      id as value
+      *
     from
       external_user
     where
       project_id = ${projectId}
-    order by
-      project_id
   `
 
   ctx.body = rows
@@ -138,8 +96,6 @@ filters.get("/radars", async (ctx) => {
       radar
     where
       project_id = ${projectId}
-    order by
-      project_id
   `
 
   ctx.body = rows

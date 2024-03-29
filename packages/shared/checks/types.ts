@@ -12,8 +12,10 @@ export type CheckParam = {
   step?: number
   width?: number
   placeholder?: string
-  render?: (value: any) => React.ReactNode
   defaultValue?: string | number | boolean | string[]
+  searchable?: boolean
+  getItemValue?: (item: any) => string // custom function to get value from item, for selects
+  customSearch?: (query: string, item: any) => boolean // custom search function for search in selects
   multiple?: boolean
   options?:
     | Array<{ label: string; value: string }>

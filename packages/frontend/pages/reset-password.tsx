@@ -22,11 +22,6 @@ export default function UpdatePassword() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-  const { token, email } = router.query as {
-    token: string
-    email: string
-  }
-
   const form = useForm({
     initialValues: {
       password: "",
@@ -57,7 +52,7 @@ export default function UpdatePassword() {
 
       setJwt(token)
 
-      analytics.track("Join")
+      analytics.track("Password Reset")
     } catch (error) {
       console.error(error)
       setLoading(false)
@@ -66,7 +61,7 @@ export default function UpdatePassword() {
 
   return (
     <Container py={100} size={600}>
-      <NextSeo title="Login" />
+      <NextSeo title="Reset password" />
       <Stack align="center" gap={50}>
         <Stack align="center">
           <IconAnalyze color={"#206dce"} size={60} />

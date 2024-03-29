@@ -59,6 +59,8 @@ const formatRun = (run: any) => ({
   id: run.id,
   isPublic: run.isPublic,
   feedback: run.feedback,
+  parentFeedback: run.parentFeedback,
+
   type: run.type,
   name: run.name,
   createdAt: run.createdAt,
@@ -120,10 +122,12 @@ runs.get("/", async (ctx: Context) => {
         eu.external_id as user_external_id,
         eu.created_at as user_created_at,
         eu.last_seen as user_last_seen,
-        eu.props as user_props
+        eu.props as user_props,
+        rpfc.feedback as parent_feedback
       from
           run r
           left join external_user eu on r.external_user_id = eu.id
+          left join run_parent_feedback_cache rpfc ON r.id = rpfc.id
       where
           r.project_id = ${projectId}
           ${parentRunCheck}
@@ -286,7 +290,8 @@ runs.get("/:id/related", checkAccess("logs", "read"), async (ctx) => {
   ctx.body = related
 })
 
-runs.get("/:id/feedback", checkAccess("logs", "read"), async (ctx) => {
+// public route
+runs.get("/:id/feedback", async (ctx) => {
   const { projectId } = ctx.state
   const { id } = ctx.params
 

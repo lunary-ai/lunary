@@ -125,7 +125,12 @@ export default function DataTable({
     table.getAllColumns().forEach((column) => {
       if (!autoHidableColumns.includes(column.id)) return
 
-      const isUsed = rows.some((row) => row.original[column.id])
+      const isUsed = rows.some(
+        (row) =>
+          row.original[column.id] ||
+          // Special case with feedback column which is sometimes in parentFeedback
+          (column.id === "feedback" && row.original.parentFeedback),
+      )
 
       column.toggleVisibility(isUsed)
     })

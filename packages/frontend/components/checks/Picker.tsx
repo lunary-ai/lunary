@@ -1,5 +1,5 @@
-import { Box, Button, Group, Select, Stack, Text } from "@mantine/core"
-import { Fragment, useCallback, useEffect, useState } from "react"
+import { Box, Button, Group, Select, Stack } from "@mantine/core"
+import { Fragment, useState } from "react"
 import { CHECKS, Check, CheckLogic, CheckParam, LogicData } from "shared"
 import ErrorBoundary from "../blocks/ErrorBoundary"
 import { AddCheckButton } from "./AddCheck"
@@ -7,6 +7,7 @@ import CheckInputs from "./ChecksInputs"
 import ChecksModal from "./ChecksModal"
 import classes from "./index.module.css"
 import { IconX } from "@tabler/icons-react"
+import CHECKS_UI_DATA from "./ChecksUIData"
 
 function RenderCheckNode({
   minimal,
@@ -93,6 +94,8 @@ function RenderCheckNode({
 
           const paramData = isParamNotLabel ? s.params[param.id] : null
 
+          const UIItem = CHECKS_UI_DATA[check.id] || CHECKS_UI_DATA["other"]
+
           const width =
             isParamNotLabel && param.width
               ? minimal
@@ -116,6 +119,9 @@ function RenderCheckNode({
               <ErrorBoundary>
                 <CustomInput
                   {...param}
+                  // Allow setting custom renderers for inputs like Selects
+                  renderListItem={UIItem.renderListItem}
+                  renderLabel={UIItem.renderLabel}
                   width={width}
                   value={paramData}
                   onChange={onChangeParam}

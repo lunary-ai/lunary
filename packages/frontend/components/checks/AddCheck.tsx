@@ -6,7 +6,7 @@ import {
   ScrollArea,
   useCombobox,
 } from "@mantine/core"
-import CHECKS_UI_DATA from "./UIData"
+import CHECKS_UI_DATA from "./ChecksUIData"
 import { IconPlus } from "@tabler/icons-react"
 
 export function AddCheckButton({ checks, onSelect, defaultOpened }) {

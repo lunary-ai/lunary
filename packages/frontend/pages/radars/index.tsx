@@ -283,7 +283,7 @@ function RadarCard({ id, initialData }) {
               </ActionIcon>
             </Tooltip>
 
-            {hasAccess(user.role, "radars", "edit") && (
+            {hasAccess(user.role, "radars", "update") && (
               <Menu>
                 <Menu.Target>
                   <ActionIcon variant="transparent">

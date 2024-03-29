@@ -184,7 +184,7 @@ const registerRunEvent = async (
         SET feedback = ${sql.json({
           ...((feedbackData?.feedback || {}) as any),
           ...feedback,
-          ...extra,
+          ...extra, // legacy
         })}
         WHERE id = ${runId}
       `

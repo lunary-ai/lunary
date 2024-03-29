@@ -24,6 +24,7 @@ import {
   timeColumn,
   userColumn,
 } from "@/utils/datatable"
+
 import {
   IconBraces,
   IconBrandOpenai,
@@ -33,6 +34,7 @@ import {
   IconMessages,
   IconFilter,
 } from "@tabler/icons-react"
+
 import { NextSeo } from "next-seo"
 import { useContext, useEffect, useState } from "react"
 
@@ -40,16 +42,17 @@ import { ChatReplay } from "@/components/blocks/RunChat"
 import RunInputOutput from "@/components/blocks/RunInputOutput"
 import SearchBar from "@/components/blocks/SearchBar"
 import { openUpgrade } from "@/components/layout/UpgradeModal"
+import CheckPicker from "@/components/checks/Picker"
+import Empty from "@/components/layout/Empty"
+
 import analytics from "@/utils/analytics"
 import { formatDateTime } from "@/utils/format"
+import { fetcher } from "@/utils/fetcher"
 import { useProject, useOrg, useProjectInfiniteSWR } from "@/utils/dataHooks"
 import { useDebouncedState, useDidUpdate } from "@mantine/hooks"
 import Router from "next/router"
-import Empty from "../../components/layout/Empty"
-import { ProjectContext } from "../../utils/context"
-import CheckPicker from "@/components/checks/Picker"
+import { ProjectContext } from "@/utils/context"
 import { CheckLogic, deserializeLogic, serializeLogic } from "shared"
-import { fetcher } from "@/utils/fetcher"
 
 const columns = {
   llm: [
@@ -97,13 +100,22 @@ const CHECKS_BY_TYPE = {
     "users",
     "status",
     "metadata",
+    "feedback",
     "cost",
     "duration",
     "tokens",
     "radar",
   ],
-  trace: ["tags", "users", "status", "duration", "metadata", "radar"],
-  thread: ["tags", "users", "metadata", "radar"],
+  trace: [
+    "tags",
+    "users",
+    "status",
+    "feedback",
+    "duration",
+    "metadata",
+    "radar",
+  ],
+  thread: ["tags", "users", "feedback", "metadata", "radar"],
 }
 
 const editCheck = (filters, id, params) => {
