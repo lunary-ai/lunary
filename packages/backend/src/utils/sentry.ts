@@ -46,6 +46,7 @@ export function sendErrorToSentry(err: unknown, ctx: Context) {
       return Sentry.addRequestDataToEvent(event, ctx.request)
     })
     scope.setUser({ id: ctx.state.userId })
+    scope.setTag("IP Address", ctx.get("Cf-Connecting-Ip"))
     Sentry.captureException(err)
   })
 }
