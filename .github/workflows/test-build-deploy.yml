@@ -18,7 +18,7 @@ jobs:
           LUNARY_PUBLIC_KEY: 259d2d94-9446-478a-ae04-484de705b522
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-        run: npm run dev:backend & npx wait-on http://localhost:3333/v1/health & npm run dev:frontend
+        run: npm run start:backend & npx wait-on http://localhost:3333/v1/health && npm run build:frontend && npm run start:frontend
 
       - name: Run tests
         run: npx playwright test
