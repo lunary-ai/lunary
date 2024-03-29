@@ -44,7 +44,7 @@ jobs:
       - name: Start frontend
         env:
           API_URL: http://localhost:3333
-          NEXT_PUBLIC_API_URL: http://localhost:3333
+          NEXT_PUBLIC_API_URL: xyzPLACEHOLDERxyz
         timeout-minutes: 2
         run: (npm run build:frontend && npm run start:frontend)  & npx wait-on http://localhost:8080/
 
