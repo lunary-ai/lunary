@@ -17,7 +17,7 @@ jobs:
           API_URL: http://localhost:3333
           LUNARY_PUBLIC_KEY: 259d2d94-9446-478a-ae04-484de705b522
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        timeout-minutes: 2
+        timeout-minutes: 1
         run: npm run start:backend  & npx wait-on http://localhost:3333/v1/health
 
       - name: Start frontend
@@ -25,7 +25,7 @@ jobs:
           APP_URL: http://localhost:8080
           API_URL: http://localhost:3333
         timeout-minutes: 2
-        run: (pm run build:frontend && npm run start:frontend)  & npx wait-on http://localhost:8080/
+        run: (npm run build:frontend && npm run start:frontend)  & npx wait-on http://localhost:8080/
 
       - name: Run tests
         run: npx playwright test
