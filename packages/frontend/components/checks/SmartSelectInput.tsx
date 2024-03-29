@@ -17,7 +17,7 @@ export default function SmartCheckSelect({
   customSearch,
   width,
   renderListItem,
-  renderLabel = (item) => (typeof item === "object" ? item.label : item),
+  renderLabel = (item) => (typeof item === "object" ? item?.label : item),
   getItemValue = (item) => (typeof item === "object" ? `${item.value}` : item),
   value,
   onChange,
@@ -61,7 +61,7 @@ export default function SmartCheckSelect({
           {renderLabel(data?.find((d) => getItemValue(d) === item))}
         </Pill>
       ))
-    : renderLabel(value)
+    : renderLabel(data?.find((d) => getItemValue(d) === value))
 
   const renderedOptions = data
     ?.filter((item) =>
