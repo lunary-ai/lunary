@@ -1,5 +1,5 @@
 #!/bin/bash
-# This script is necessary because we need to be able to inject API_URL and APP_URL after build time, and Next does not provide and easy way to do that.
+# This script is necessary because we need to be able to inject API_URL after build time, and Next does not provide and easy way to do that.
 # This should work find both with npm run dev, locally and with docker
 
 # Loads .env
@@ -10,10 +10,9 @@ if [ -f .env ]; then
 fi
 
 
-if [ -z "$API_URL" ] || [ -z "$APP_URL" ]; then
+if [ -z "$API_URL" ]; then
   echo "Error: API_URL not set. Please set the API_URL environment variables."
   exit 1
 fi
 
-echo "window.API_URL = '${API_URL}'; window.APP_URL = '${APP_URL}';" > public/config.js
-
+LC_ALL=C  find .next -type f -exec perl -pi -e "s|xyzPLACEHOLDERxyz|${API_URL}|g" {} +

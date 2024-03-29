@@ -3,7 +3,7 @@
   "main": "pages/index.ts",
   "scripts": {
     "dev": "npm run load-env && next dev -p 8080",
-    "build": "next build",
+    "build": "rm -rf .next && NEXT_PUBLIC_API_URL='xyzPLACEHOLDERxyz' next build",
     "load-env": "bash ./load-env.sh",
     "start": "npm run load-env && next start -p 8080"
   },
