@@ -23,6 +23,7 @@ initSentry()
 const app = new Koa()
 
 // Forward proxy headers
+
 app.proxy = true
 
 // MiddleWares
