@@ -10,11 +10,12 @@ const users = new Router({
 users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
   const { projectId } = ctx.state
 
-  // const { limit, page } = ctx.query
+  const { limit = "100", page = "0", search } = ctx.query
 
-  // if(!limit || !page) {
-  //   return ctx.throw(400, "limit and page are required")
-  // }
+  let searchQuery = sql``
+  if (search) {
+    searchQuery = sql`and (lower(external_id) ilike lower(${`%${search}%`}) or lower(props->>'email') ilike lower(${`%${search}%`}) or lower(props->>'name') ilike lower(${`%${search}%`}))`
+  }
 
   // TODO: pagination
   const users = await sql`
@@ -30,9 +31,11 @@ users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
       external_user
     where
       project_id = ${projectId}
+      ${searchQuery}
     order by 
-      cost desc 
-  `
+      cost desc
+    limit ${Number(limit)}
+    offset ${Number(page) * Number(limit)}`
 
   ctx.body = users
 })

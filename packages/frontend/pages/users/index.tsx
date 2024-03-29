@@ -11,7 +11,10 @@ import { IconUsers } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import Router from "next/router"
 import analytics from "../../utils/analytics"
-import { useAppUserList } from "@/utils/dataHooks"
+import { useAppUserList, useProjectInfiniteSWR } from "@/utils/dataHooks"
+import SearchBar from "@/components/blocks/SearchBar"
+import { useState } from "react"
+import { useDebouncedValue } from "@mantine/hooks"
 
 const columns = [
   {
@@ -35,11 +38,21 @@ const columns = [
 ]
 
 export default function Users() {
-  const { users, isLoading, isValidating } = useAppUserList()
+  const [search, setSearch] = useState("")
+  const [debouncedSearch] = useDebouncedValue(search, 200)
+
+  const {
+    data: users,
+    loading,
+    validating,
+    loadMore,
+  } = useProjectInfiniteSWR(
+    `/external-users${debouncedSearch ? `?search=${debouncedSearch}` : ""}`,
+  )
 
   return (
     <Empty
-      enable={!isLoading && users && users.length === 0}
+      enable={!loading && users && users.length === 0 && !debouncedSearch}
       Icon={IconUsers}
       title="Find out who your users are"
       description="Users you identify from the SDKs will appear here."
@@ -47,7 +60,7 @@ export default function Users() {
     >
       <Stack h={"calc(100vh - var(--navbar-with-filters-size))"}>
         <NextSeo title="Users" />
-
+        <SearchBar query={search} setQuery={setSearch} />
         <DataTable
           type="users"
           columns={columns}
@@ -57,7 +70,8 @@ export default function Users() {
 
             Router.push(`/users/${row.id}`)
           }}
-          loading={isLoading || isValidating}
+          loading={loading || validating}
+          loadMore={loadMore}
           defaultSortBy="cost"
         />
       </Stack>
