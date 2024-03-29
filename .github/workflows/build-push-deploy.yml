@@ -78,7 +78,7 @@ jobs:
 
   deploy:
     needs: build-and-push
-    runs-on: namespace-profile-default
+    runs-on: namespace-profile-fast
     steps:
       - name: Deploy to Production
         uses: appleboy/ssh-action@master

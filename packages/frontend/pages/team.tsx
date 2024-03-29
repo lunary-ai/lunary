@@ -290,7 +290,7 @@ function UserMenu({ user, isInvitation }) {
             <Menu.Item
               onClick={() => {
                 navigator.clipboard.writeText(
-                  `${window.APP_URL}/join?token=${user.singleUseToken}`,
+                  `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/join?token=${user.singleUseToken}`,
                 )
                 notifications.show({
                   icon: <IconCheck size={18} />,
@@ -471,7 +471,7 @@ function InviteMemberCard() {
         })
         return
       } else {
-        const link = `${window.APP_URL}/join?token=${newUser.singleUseToken}`
+        const link = `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/join?token=${newUser.singleUseToken}`
         setIsLoading(false)
         setInviteLink(link)
         setOpened(true)
