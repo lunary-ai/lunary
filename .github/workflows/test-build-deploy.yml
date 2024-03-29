@@ -9,7 +9,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: npm ci && npx playwright install --with-deps
-      - name: Start the development server
+      - name: Start backend
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
@@ -18,7 +18,14 @@ jobs:
           LUNARY_PUBLIC_KEY: 259d2d94-9446-478a-ae04-484de705b522
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         timeout-minutes: 2
-        run: (npm run start:backend && npm run build:frontend && npm run start:frontend)  & npx wait-on http://localhost:8080/
+        run: npm run start:backend  & npx wait-on http://localhost:3333/v1/health
+
+      - name: Start frontend
+        env:
+          APP_URL: http://localhost:8080
+          API_URL: http://localhost:3333
+        timeout-minutes: 2
+        run: (pm run build:frontend && npm run start:frontend)  & npx wait-on http://localhost:8080/
 
       - name: Run tests
         run: npx playwright test
