@@ -119,8 +119,6 @@ export default function Join() {
       redirectUrl,
     }
 
-    console.log(signupData)
-
     const ok = await errorHandler(
       fetcher.post("/auth/signup", {
         arg: signupData,
@@ -136,11 +134,7 @@ export default function Join() {
         message: `You have joined ${orgName}`,
       })
 
-      if (redirectUrl) {
-        window.location.href = redirectUrl
-      } else {
-        Router.replace("/login")
-      }
+      window.location.href = redirectUrl || "/login"
     }
 
     setLoading(false)
@@ -158,8 +152,6 @@ export default function Join() {
           },
         })
 
-        console.log(method, redirect)
-
         if (method === "saml") {
           setSsoURI(redirect)
 
@@ -168,6 +160,8 @@ export default function Join() {
             name,
             redirectUrl: redirect,
           })
+        } else {
+          setStep(2)
         }
       } else if (step === 2) {
         await handleSignup({
@@ -207,7 +201,7 @@ export default function Join() {
         </Stack>
         <Paper radius="md" p="xl" withBorder miw={350}>
           <form onSubmit={form.onSubmit(continueStep)}>
-            <Stack gap="xl">
+            <Stack gap="lg">
               {step < 3 && (
                 <>
                   <TextInput

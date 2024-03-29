@@ -1,6 +1,7 @@
 import {
   IconAt,
   IconBiohazard,
+  IconBraces,
   IconBracketsContainStart,
   IconBrandOpenai,
   IconCalendar,
@@ -32,12 +33,27 @@ import {
   IconUserCheck,
   IconWorldWww,
 } from "@tabler/icons-react"
+import Feedback from "../blocks/Feedback"
+import AppUserAvatar from "../blocks/AppUserAvatar"
+import { Group, Text } from "@mantine/core"
+import { capitalize, formatAppUser } from "@/utils/format"
 
-const CHECKS_UI_DATA = {
+type CheckUI = {
+  icon: React.FC<any>
+  color: string
+  renderListItem?: (value: any) => JSX.Element
+  renderLabel?: (value: any) => JSX.Element
+  getItemValue?: (value: any) => string
+}
+
+type ChecksUIData = {
+  [key: string]: CheckUI
+}
+
+const CHECKS_UI_DATA: ChecksUIData = {
   model: {
     icon: IconBrandOpenai,
     color: "violet",
-    description: "Is the run.model in the list of model names",
   },
   tags: {
     icon: IconTag,
@@ -46,6 +62,28 @@ const CHECKS_UI_DATA = {
   users: {
     icon: IconUser,
     color: "blue",
+    renderListItem: (item) => (
+      <>
+        <AppUserAvatar size={30} user={item} />
+        {formatAppUser(item)}
+      </>
+    ),
+    renderLabel: (item) => formatAppUser(item),
+  },
+  feedback: {
+    icon: IconThumbUp,
+    color: "green",
+    renderListItem: (item) => {
+      const key = Object.keys(item)[0]
+      const value = item[key] || ""
+      return (
+        <>
+          <Feedback data={item} />
+          <Text size="xs">{`${capitalize(key)}${value ? ": " + value : ""}`}</Text>
+        </>
+      )
+    },
+    renderLabel: (value) => <Feedback data={value} />,
   },
   date: {
     icon: IconCalendar,
@@ -67,10 +105,7 @@ const CHECKS_UI_DATA = {
     icon: IconCoin,
     color: "pink",
   },
-  feedback: {
-    icon: IconThumbUp,
-    color: "green",
-  },
+
   json: {
     icon: IconJson,
     color: "violet",
@@ -117,6 +152,10 @@ const CHECKS_UI_DATA = {
   },
   helpfulness: {
     icon: IconHelpCircle,
+    color: "blue",
+  },
+  metadata: {
+    icon: IconBraces,
     color: "blue",
   },
   hatred: {

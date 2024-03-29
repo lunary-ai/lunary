@@ -1,4 +1,4 @@
-import { Group, Tooltip } from "@mantine/core"
+import { Group, Indicator, Tooltip } from "@mantine/core"
 
 import {
   IconMessage,
@@ -7,11 +7,17 @@ import {
   IconThumbDown,
   IconThumbUp,
 } from "@tabler/icons-react"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import analytics from "../../utils/analytics"
 import { useFixedColorScheme } from "@/utils/hooks"
 
-export default function Feedback({ data = {} }: { data: Record<string, any> }) {
+export default function Feedback({
+  data = {},
+  isFromParent,
+}: {
+  data: Record<string, any>
+  isFromParent?: boolean
+}) {
   const scheme = useFixedColorScheme()
   useEffect(() => {
     // Feature tracking
@@ -28,25 +34,41 @@ export default function Feedback({ data = {} }: { data: Record<string, any> }) {
   })
 
   return (
-    <Group>
-      {data?.thumbs === "up" && <IconThumbUp {...getIconProps("green")} />}
-      {data?.thumbs === "down" && <IconThumbDown {...getIconProps("red")} />}
-      {typeof data?.rating === "number" && (
-        <Group gap={3}>
-          {Array.from({ length: data.rating }).map((_, i) => (
-            <IconStar key={i} {...getIconProps("yellow")} />
-          ))}
+    <Tooltip label="Feedback from parent run" position="bottom">
+      <Indicator inline disabled={!isFromParent} color="red" size={10}>
+        {/* <Tooltip disabled={!isFromParent} label={"Feedback from parent run"}> */}
+        <Group
+          style={{
+            padding: isFromParent ? "3px 6px" : "",
+            borderRadius: 6,
+            border: isFromParent
+              ? `1px solid var(--mantine-color-default-border)`
+              : "",
+          }}
+        >
+          {data?.thumbs === "up" && <IconThumbUp {...getIconProps("green")} />}
+          {data?.thumbs === "down" && (
+            <IconThumbDown {...getIconProps("red")} />
+          )}
+          {typeof data?.rating === "number" && (
+            <Group gap={3}>
+              {Array.from({ length: data.rating }).map((_, i) => (
+                <IconStar key={i} {...getIconProps("yellow")} />
+              ))}
+            </Group>
+          )}
+          {data?.emoji && <span>{data.emoji}</span>}
+          {typeof data?.comment === "string" && (
+            /* Support for comment == "" in the filters */
+            <Tooltip label={`“${data.comment}”`} disabled={!data.comment}>
+              <IconMessage {...getIconProps("teal")} />
+            </Tooltip>
+          )}
+          {data?.retried && (
+            <IconRefresh {...getIconProps("violet")} fillOpacity={0} />
+          )}
         </Group>
-      )}
-      {data?.emoji && <span>{data.emoji}</span>}
-      {data?.comment && (
-        <Tooltip label={data.comment}>
-          <IconMessage {...getIconProps("blue")} />
-        </Tooltip>
-      )}
-      {data?.retried && (
-        <IconRefresh {...getIconProps("violet")} fillOpacity={0} />
-      )}
-    </Group>
+      </Indicator>
+    </Tooltip>
   )
 }

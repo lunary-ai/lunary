@@ -7,6 +7,8 @@ import * as argon2 from "argon2"
 
 import bcrypt from "bcrypt"
 import { validateUUID } from "@/src/utils/misc"
+import { sendEmail } from "@/src/utils/sendEmail"
+import { RESET_PASSWORD } from "@/src/utils/emails"
 
 export function sanitizeEmail(email: string) {
   return email.toLowerCase().trim()
@@ -131,4 +133,17 @@ export async function authMiddleware(ctx: Context, next: Next) {
   }
 
   await next()
+}
+
+export async function requestPasswordReset(email: string) {
+  const [user] = await sql`select id from account where email = ${email}`
+
+  const ONE_HOUR = 60 * 60
+  const token = await signJwt({ email }, ONE_HOUR)
+
+  await sql`update account set recovery_token = ${token} where id = ${user.id}`
+
+  const link = `${process.env.APP_URL}/reset-password?token=${token}`
+
+  await sendEmail(RESET_PASSWORD(email, link))
 }

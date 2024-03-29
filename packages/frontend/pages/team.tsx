@@ -165,7 +165,7 @@ function SAMLConfig() {
               <Table.Td>Sign on URL:</Table.Td>
               <Table.Td>
                 <CopyInput
-                  value={`${process.env.NEXT_PUBLIC_API_URL || window.location.origin}/login`}
+                  value={`${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/login`}
                 />
               </Table.Td>
             </Table.Tr>

@@ -2,9 +2,9 @@ import { CheckLogic, LogicElement } from "shared"
 import sql from "./db"
 import CHECK_RUNNERS from "../checks"
 
-const and = (arr: any = []) =>
+export const and = (arr: any = []) =>
   arr.reduce((acc: any, x: any) => sql`${acc} AND ${x}`)
-const or = (arr: any = []) =>
+export const or = (arr: any = []) =>
   arr.reduce((acc: any, x: any) => sql`(${acc} OR ${x})`)
 
 // TODO: unit tests

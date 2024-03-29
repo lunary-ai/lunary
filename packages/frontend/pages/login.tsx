@@ -19,6 +19,7 @@ import { fetcher } from "@/utils/fetcher"
 import { NextSeo } from "next-seo"
 import { useAuth } from "@/utils/auth"
 import { useRouter } from "next/router"
+import { notifications } from "@mantine/notifications"
 
 function LoginPage() {
   const router = useRouter()
@@ -72,12 +73,20 @@ function LoginPage() {
     setLoading(true)
 
     try {
-      const { token } = await fetcher.post("/auth/login", {
+      const { token, message } = await fetcher.post("/auth/login", {
         arg: {
           email,
           password,
         },
       })
+
+      if (message && !token) {
+        notifications.show({
+          message,
+        })
+        setLoading(false)
+        return
+      }
 
       if (!token) {
         throw new Error("No token received")
@@ -196,6 +205,12 @@ function LoginPage() {
             {`Don't have an account? `}
             <Anchor href="/signup">Sign Up</Anchor>
           </Text>
+
+          {step === "password" && (
+            <Text size="sm" mt="sm" style={{ textAlign: "center" }}>
+              <Anchor href="/request-password-reset">Forgot password?</Anchor>
+            </Text>
+          )}
         </Paper>
       </Stack>
     </Container>

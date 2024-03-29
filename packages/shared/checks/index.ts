@@ -28,6 +28,7 @@ export const CHECKS: Check[] = [
         id: "type",
         width: 110,
         defaultValue: "llm",
+        searchable: true,
         options: [
           {
             label: "LLM Call",
@@ -138,6 +139,7 @@ export const CHECKS: Check[] = [
         multiple: true,
         id: "types",
         options: () => `/filters/feedback`,
+        getItemValue: (item) => JSON.stringify(item),
       },
     ],
   },
@@ -157,7 +159,23 @@ export const CHECKS: Check[] = [
         width: 100,
         id: "users",
         options: () => `/filters/users`,
-        // render: (item) => <AppUser/> // todo
+        searchable: true,
+        getItemValue: (item) => `${item.id}`,
+        customSearch: (search, item) => {
+          const searchTerm = search.toLowerCase().trim()
+
+          const toCheck = [
+            item.external_id,
+            item.props?.email,
+            item.props?.name,
+            item.props?.firstName,
+            item.props?.lastName,
+          ]
+
+          return toCheck.some((check) =>
+            check?.toLowerCase().includes(searchTerm),
+          )
+        },
       },
     ],
   },
@@ -175,6 +193,7 @@ export const CHECKS: Check[] = [
         type: "select",
         width: 100,
         id: "key",
+        searchable: true,
         options: () => `/filters/metadata`,
       },
       {
@@ -447,6 +466,7 @@ export const CHECKS: Check[] = [
         placeholder: "Select radars",
         multiple: true,
         options: () => `/filters/radars`,
+        searchable: true,
       },
     ],
   },
@@ -559,6 +579,7 @@ export const CHECKS: Check[] = [
         width: 230,
         defaultValue: ["person", "location", "email", "cc", "phone", "ssn"],
         multiple: true,
+        searchable: true,
         options: [
           {
             label: "Name",
@@ -663,6 +684,7 @@ export const CHECKS: Check[] = [
         id: "persona",
         defaultValue: "helpful",
         width: 140,
+        searchable: true,
         options: [
           {
             label: "Helpful Assistant",
@@ -762,6 +784,7 @@ export const CHECKS: Check[] = [
         defaultValue: ["b", "c"],
         multiple: true,
         width: 200,
+        searchable: true,
         options: [
           {
             label: "is a subset of",

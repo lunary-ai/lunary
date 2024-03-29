@@ -7,6 +7,7 @@ import Router from "koa-router"
 import { z } from "zod"
 import {
   hashPassword,
+  requestPasswordReset,
   sanitizeEmail,
   signJwt,
   verifyJwt,
@@ -235,8 +236,13 @@ auth.post("/login", async (ctx: Context) => {
     select * from account where email = ${email}
   `
   if (!user) {
-    ctx.status = 403
-    ctx.body = { error: "Unauthorized", message: "Invalid email or password" }
+    ctx.body = ctx.throw(403, "Invalid email or password")
+  }
+
+  if (!user.passwordHash) {
+    await requestPasswordReset(email)
+
+    ctx.body = { message: "We sent you an email to reset your password" }
     return
   }
 
@@ -274,16 +280,8 @@ auth.post("/request-password-reset", async (ctx: Context) => {
     }
 
     const { email } = body.data
-    const [user] = await sql`select id from account where email = ${email}`
 
-    const ONE_HOUR = 60 * 60
-    const token = await signJwt({ email }, ONE_HOUR)
-
-    await sql`update account set recovery_token = ${token} where id = ${user.id}`
-
-    const link = `${process.env.APP_URL}/reset-password?token=${token}`
-
-    await sendEmail(RESET_PASSWORD(email, link))
+    await requestPasswordReset(email)
 
     ctx.body = { ok: true }
   } catch (error) {
