@@ -60,7 +60,7 @@ const formatRun = (run: any) => ({
   isPublic: run.isPublic,
   feedback: run.feedback,
   parentFeedback: run.parentFeedback,
-  parentFeedbackRunId: run.parentFeedbackRunId,
+
   type: run.type,
   name: run.name,
   createdAt: run.createdAt,
@@ -123,8 +123,7 @@ runs.get("/", async (ctx: Context) => {
         eu.created_at as user_created_at,
         eu.last_seen as user_last_seen,
         eu.props as user_props,
-        rpfc.feedback as parent_feedback,
-        rpfc.feedback_run_id as parent_feedback_run_id
+        rpfc.feedback as parent_feedback
       from
           run r
           left join external_user eu on r.external_user_id = eu.id

@@ -1,5 +1,3 @@
-
-
 DROP MATERIALIZED VIEW IF EXISTS feedback_cache;
 
 create materialized view feedback_cache as  
@@ -65,36 +63,38 @@ group by
 create unique index on feedback_cache (project_id, feedback);
 create index on feedback_cache(project_id);
 
+create index if not exists idx_run_id_parent_run_id on run (id, parent_run_id);
+create index if not exists idx_run_feedback_null ON run (id, parent_run_id) WHERE feedback IS NULL;
+create index if not exists idx_run_parent_run_id_feedback ON run (parent_run_id, feedback);
+CREATE INDEX if not exists idx_run_id_parent_run_id_feedback ON run (id, parent_run_id, feedback);
+
 create materialized view run_parent_feedback_cache as
 WITH RECURSIVE run_feedback AS (
     SELECT
         r.id,
         r.parent_run_id,
         r.feedback,
-        r.id AS feedback_run_id
+        1 AS depth
     FROM
         run r
-    UNION
+    UNION ALL
     SELECT
         rf.id,
         r.parent_run_id,
         COALESCE(r.feedback, rf.feedback),
-        CASE WHEN r.feedback IS NOT NULL THEN r.id ELSE rf.feedback_run_id END
+        rf.depth + 1
     FROM
         run_feedback rf
         JOIN run r ON rf.parent_run_id = r.id
+    WHERE
+        rf.depth < 5 AND rf.feedback IS NULL
 )
 SELECT
     id,
-    feedback,
-    feedback_run_id
+    feedback
 FROM
     run_feedback
-WHERE feedback is not null and feedback_run_id != id
-GROUP BY
-    id,
-    feedback,
-    feedback_run_id;
+WHERE
+    feedback IS NOT NULL;
 
 create unique index on run_parent_feedback_cache(id);
-

@@ -203,7 +203,7 @@ export function feedbackColumn(withRelatedRuns = false) {
         const run = props.row.original
 
         const feedback = run.feedback || run.parentFeedback
-        const isParentFeedback = run.parentFeedbackRunId
+        const isParentFeedback = !run.feedback && run.parentFeedback
 
         return <Feedback data={feedback} isFromParent={isParentFeedback} />
       }
