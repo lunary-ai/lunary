@@ -132,8 +132,7 @@ function SignupPage() {
           message: "Check your emails for the confirmation link",
         })
       } else {
-        // redirect to dashboard
-        window.location.href = "/"
+        nextStep()
       }
 
       analytics.track("Signup", {
