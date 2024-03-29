@@ -13,6 +13,7 @@ export function setupCronJobs() {
         "tag_cache",
         "metadata_cache",
         "feedback_cache",
+        "run_parent_feedback_cache",
       ]
 
       try {

@@ -1,60 +1,10 @@
-import {
-  Flex,
-  MultiSelect,
-  NumberInput,
-  Select,
-  Text,
-  TextInput,
-} from "@mantine/core"
+import { Flex, NumberInput, Text, TextInput } from "@mantine/core"
 import classes from "./index.module.css"
-import { useProjectSWR } from "@/utils/dataHooks"
+import SmartCheckSelect from "./SmartSelectInput"
 
 const CheckInputs = {
-  select: ({
-    options,
-    placeholder,
-    width,
-    render,
-    multiple,
-    value,
-    onChange,
-  }) => {
-    const useSWRforData = typeof options === "function"
+  select: SmartCheckSelect,
 
-    const { data: swrCheckData } = useProjectSWR(
-      useSWRforData ? options() : null,
-    )
-
-    const data = useSWRforData ? swrCheckData : options
-
-    const Component = multiple ? MultiSelect : Select
-
-    const isDataObject = data && typeof data[0] === "object"
-
-    return data ? (
-      <Component
-        size="xs"
-        allowDeselect={false}
-        w={width}
-        variant="unstyled"
-        placeholder={placeholder}
-        onChange={onChange}
-        value={value}
-        data={
-          isDataObject
-            ? data?.map((d) => {
-                return {
-                  value: `${d.value}`, // stringify to avoid issues with numbers
-                  label: render ? render(d) : d.label,
-                }
-              })
-            : data?.filter((d) => Boolean(d) === true)
-        }
-      />
-    ) : (
-      "loading..."
-    )
-  },
   number: ({ placeholder, width, min, max, step, value, onChange, unit }) => {
     return (
       <Flex align="center">

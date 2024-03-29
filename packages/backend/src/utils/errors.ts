@@ -13,9 +13,7 @@ export async function errorMiddleware(ctx: Context, next: Next) {
     console.error(error)
     sendErrorToSentry(error, ctx)
 
-    console.log(error)
     if (error instanceof z.ZodError) {
-      console.log("HERE")
       ctx.status = 422
       ctx.body = {
         error: "Error",

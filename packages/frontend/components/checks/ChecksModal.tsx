@@ -18,7 +18,7 @@ import {
 import { IconCircleCheck, IconCirclePlus } from "@tabler/icons-react"
 import classes from "./index.module.css"
 import { CHECKS, Check } from "shared"
-import CHECKS_UI_DATA from "./UIData"
+import CHECKS_UI_DATA from "./ChecksUIData"
 import { useMemo, useState } from "react"
 
 function CheckCard({

@@ -72,6 +72,7 @@ export function RESET_PASSWORD(email: string, confirmLink: string) {
     text: `Hi, 
 
 Please click on the link below to reset your password:
+
 ${confirmLink}
 
 You can reply to this email if you have any question.

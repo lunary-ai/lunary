@@ -7,6 +7,7 @@ import aiSimilarity from "./ai/similarity"
 // import aiNER from "./ai/ner"
 // import aiToxicity from "./ai/toxic"
 import rouge from "rouge"
+import { or } from "../utils/checks"
 
 function getTextsTypes(field: "any" | "input" | "output", run: any) {
   let textsToCheck = []
@@ -110,6 +111,27 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   {
     id: "users",
     sql: ({ users }) => sql`external_user_id = ANY (${users})`,
+  },
+  {
+    id: "feedback",
+    sql: ({ types }) => {
+      // If one of the type is {"comment": ""}, we just need to check if there is a 'comment' key
+      // otherwise, we need to check for the key:value pair
+
+      return or(
+        types.map((type: string) => {
+          const parsedType = JSON.parse(type)
+          const key = Object.keys(parsedType)[0]
+          const value = parsedType[key]
+          if (key === "comment") {
+            // comment is a special case because there can be infinite values
+            return sql`r.feedback->${key} IS NOT NULL OR rpfc.feedback->${key} IS NOT NULL`
+          } else {
+            return sql`r.feedback->>${key} = ${value} OR rpfc.feedback->>${key} = ${value}`
+          }
+        }),
+      )
+    },
   },
   {
     id: "regex",

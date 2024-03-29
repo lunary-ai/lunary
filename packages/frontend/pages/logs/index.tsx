@@ -97,13 +97,22 @@ const CHECKS_BY_TYPE = {
     "users",
     "status",
     "metadata",
+    "feedback",
     "cost",
     "duration",
     "tokens",
     "radar",
   ],
-  trace: ["tags", "users", "status", "duration", "metadata", "radar"],
-  thread: ["tags", "users", "metadata", "radar"],
+  trace: [
+    "tags",
+    "users",
+    "status",
+    "feedback",
+    "duration",
+    "metadata",
+    "radar",
+  ],
+  thread: ["tags", "users", "feedback", "metadata", "radar"],
 }
 
 const editCheck = (filters, id, params) => {

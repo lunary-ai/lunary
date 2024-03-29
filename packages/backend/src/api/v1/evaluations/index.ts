@@ -81,7 +81,6 @@ evaluations.post(
     queue.on("active", () => {
       const percentDone = ((count - queue.size) / count) * 100
       console.log(`Active: ${queue.size} of ${count} (${percentDone}%)`)
-      console.log()
       stream.write(JSON.stringify({ percentDone }) + "\n")
     })
 
