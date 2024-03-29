@@ -16,13 +16,10 @@ import { setDefaultBody } from "./utils/misc"
 import ratelimit from "./utils/ratelimit"
 import { initSentry, requestHandler, tracingMiddleWare } from "./utils/sentry"
 
-import { hasReadAccess } from "shared"
-
 checkDbConnection()
 setupCronJobs()
 initSentry()
 
-console.log("123")
 const app = new Koa()
 
 // Forward proxy headers
