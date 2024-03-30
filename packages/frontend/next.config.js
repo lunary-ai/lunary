@@ -22,7 +22,7 @@ const nextConfig = {
     ],
   },
   async rewrites() {
-    if(!process.env.NEXT_PUBLIC_API_URL) {
+    if(!process.env.API_URL) {
       return []
     }
 
@@ -33,15 +33,15 @@ const nextConfig = {
       },
       {
         source: "/api/v1/report",
-        destination: process.env.NEXT_PUBLIC_API_URL + "/api/report",
+        destination: process.env.API_URL + "/api/report",
       },
       {
         source: "/api/report",
-        destination: process.env.NEXT_PUBLIC_API_URL + "/api/report",
+        destination: process.env.API_URL + "/api/report",
       },
       {
         source: "/api/v1/template",
-        destination: process.env.NEXT_PUBLIC_API_URL + "/api/v1/template",
+        destination: process.env.API_URL + "/api/v1/template",
       },
     ]
   },
