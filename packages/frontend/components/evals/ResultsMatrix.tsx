@@ -120,9 +120,7 @@ export default function ResultsMatrix({ data }) {
           <thead>
             <tr>
               <th>Prompt</th>
-              {!!highestNumberOfVariables && (
-                <th colSpan={highestNumberOfVariables}>Variables</th>
-              )}
+              {!!highestNumberOfVariables && <th>Variables</th>}
               {providers.map((provider, i) => (
                 <th key={i}>
                   <HoverCard
@@ -168,22 +166,21 @@ export default function ResultsMatrix({ data }) {
                     </HoverCard>
                   </td>
                   {!!highestNumberOfVariables && (
-                    <td
-                      colSpan={highestNumberOfVariables}
-                      className={classes["nested-cell"]}
-                    >
-                      <tr>
-                        {variableKeys.map((variable, j) => (
-                          <th key={j}>{variable}</th>
-                        ))}
-                      </tr>
-                      {variableVariations.map((variableVariation, k) => (
-                        <tr key={k}>
-                          {variableKeys.map((variable, l) => (
-                            <td key={l}>{variableVariation[variable]}</td>
+                    <td className={classes["nested-cell"]}>
+                      <div className={classes["variable-grid"]}>
+                        <div className={classes["variable-row"]}>
+                          {variableKeys.map((variable, j) => (
+                            <div key={j}>{variable}</div>
                           ))}
-                        </tr>
-                      ))}
+                        </div>
+                        {variableVariations.map((variableVariation, k) => (
+                          <div className={classes["variable-row"]} key={k}>
+                            {variableKeys.map((variable, l) => (
+                              <div key={l}>{variableVariation[variable]}</div>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
                     </td>
                   )}
                   {providers.map((provider, k) => (

@@ -31,4 +31,24 @@
     padding: 0;
     border: none;
   }
+
+  .variable-grid {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .variable-row {
+    flex: 1;
+
+    display: flex;
+    justify-content: space-between;
+
+    > div {
+      border: 1px solid var(--mantine-color-default-border);
+      padding: 16px;
+      flex: 1 1 0;
+      text-align: center;
+    }
+  }
 }
