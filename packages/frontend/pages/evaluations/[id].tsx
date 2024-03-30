@@ -14,7 +14,6 @@ import {
   Container,
   Group,
   Loader,
-  SegmentedControl,
   Stack,
   Text,
   Title,
@@ -23,14 +22,13 @@ import { IconDatabase } from "@tabler/icons-react"
 import Link from "next/link"
 
 import { useRouter } from "next/router"
-import { useState } from "react"
 
 // We create a matrix of results for each prompt, variable and model.
 // The matrix is a 3D array, where each dimension represents a different
 
 export default function EvalResults() {
   const router = useRouter()
-  const [groupBy, setGroupBy] = useState<"none" | "provider" | "prompt">("none")
+  // const [groupBy, setGroupBy] = useState<"none" | "provider" | "prompt">("none")
   const id = router.query.id as string
 
   const { data, isLoading: loading } = useProjectSWR(
@@ -88,7 +86,7 @@ export default function EvalResults() {
           </Stack>
         </Card>
 
-        <Group>
+        {/* <Group>
           <Text>Group results by:</Text>
           <SegmentedControl
             w={200}
@@ -112,7 +110,7 @@ export default function EvalResults() {
               setGroupBy(value as "none" | "provider" | "prompt")
             }
           />
-        </Group>
+        </Group> */}
 
         {loading ? (
           <Loader />
@@ -120,8 +118,8 @@ export default function EvalResults() {
           <>
             {data?.length > 0 ? (
               <Stack gap="xl">
-                {groupBy === "none" && <ResultsMatrix data={data} />}
-                {groupBy === "provider" &&
+                <ResultsMatrix data={data} />
+                {/* {groupBy === "provider" &&
                   uniqueProviders.map((model) => (
                     <ResultsMatrix
                       key={model}
@@ -138,7 +136,7 @@ export default function EvalResults() {
                         (result) => result.promptId === promptId,
                       )}
                     />
-                  ))}
+                  ))} */}
               </Stack>
             ) : (
               <p>No data</p>

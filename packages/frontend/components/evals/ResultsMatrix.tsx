@@ -13,28 +13,6 @@ const compareObjects = (a, b) => {
   return JSON.stringify(a) === JSON.stringify(b)
 }
 
-function getResultForVariation(
-  promptId: string,
-  variables: { [key: string]: string },
-  provider: Provider,
-  evalResults,
-): any | undefined {
-  const result = evalResults.find(
-    (result) =>
-      (promptId ? result.promptId === promptId : true) &&
-      (provider ? compareObjects(result.provider, provider) : true) &&
-      (Object.keys(variables).length === 0
-        ? Object.keys(result.variables).length === 0
-        : true) &&
-      Object.keys(variables).every(
-        (variable) =>
-          result.variables.hasOwnProperty(variable) &&
-          result.variables[variable] === variables[variable],
-      ),
-  )
-
-  return result
-}
 const getAggegateForVariation = (
   promptId: string,
   provider: Provider,
@@ -64,47 +42,6 @@ const getAggegateForVariation = (
   }
 }
 
-const getVariableVariations = (results) => {
-  const variations = results.map((result) => result.variables)
-  const uniqueVariations = Array.from(
-    new Set(variations.map((variation) => JSON.stringify(variation))),
-  ).map((variation) => JSON.parse(variation))
-
-  return uniqueVariations as { [key: string]: string }[]
-}
-
-const getPromptModelVariations = (results) => {
-  let variations = results.map((result) => ({
-    promptContent: result.promptContent,
-    promptId: result.promptId,
-    provider: result.provider,
-  }))
-
-  const uniqueVariations = Array.from(
-    new Set(variations.map((variation) => JSON.stringify(variation))),
-  )
-    .map((variation) => JSON.parse(variation))
-    .map((variation) => {
-      return {
-        ...variation,
-        ...getAggegateForVariation(
-          variation.promptId,
-          variation.provider,
-          results,
-        ),
-      }
-    })
-
-  return uniqueVariations as {
-    promptId?: string
-    promptContent?: any
-    provider?: Provider
-    passed: number
-    failed: number
-    duration: number
-    cost: number
-  }[]
-}
 function ResultDetails({ details }) {
   if (typeof details !== "object") {
     return <Text>Details not available</Text>
@@ -128,11 +65,53 @@ function ResultDetails({ details }) {
 }
 
 export default function ResultsMatrix({ data }) {
-  const variableVariations = getVariableVariations(data)
+  console.log(data[0])
 
-  const pmVariations = getPromptModelVariations(data)
+  const prompts = Array.from(new Set(data.map((result) => result.promptId)))
 
-  const variables = Array.from(new Set(variableVariations.flatMap(Object.keys)))
+  const providers: Provider[] = Array.from(
+    new Set(data.map((result) => JSON.stringify(result.provider))),
+  ).map((provider) => JSON.parse(provider))
+
+  function getPromptById(id) {
+    return data.find((result) => result.promptId === id).messages
+  }
+
+  function getVariableKeysForPrompt(promptId) {
+    return Object.keys(
+      data.find((result) => result.promptId === promptId).variables || {},
+    )
+  }
+
+  function getVariableVariationsForPrompt(promptId) {
+    const variations = [
+      ...new Set(
+        data
+          .filter((result) => result.promptId === promptId)
+          .map((result) => result.variationId),
+      ),
+    ]
+
+    return variations.map((variationId) => {
+      return data.find(
+        (result) =>
+          result.promptId === promptId && result.variationId === variationId,
+      ).variables
+    })
+  }
+
+  function getResultForPromptVariationProvider(promptId, variables, provider) {
+    return data.find(
+      (result) =>
+        result.promptId === promptId &&
+        compareObjects(result.variables, variables) &&
+        compareObjects(result.provider, provider),
+    )
+  }
+
+  const highestNumberOfVariables = Math.max(
+    ...prompts.map((promptId) => getVariableKeysForPrompt(promptId).length),
+  )
 
   return (
     <Stack>
@@ -140,156 +119,111 @@ export default function ResultsMatrix({ data }) {
         <table className={classes["matrix-table"]}>
           <thead>
             <tr>
-              {!!variables.length && (
-                <th colSpan={variables.length}>Variables</th>
+              <th>Prompt</th>
+              {!!highestNumberOfVariables && (
+                <th colSpan={highestNumberOfVariables}>Variables</th>
               )}
-              <th colSpan={data.length}>Results</th>
-            </tr>
-            <tr>
-              {variables.map((variable, i) => (
-                <th key={variable}>{variable}</th>
-              ))}
-              {pmVariations.map(
-                (
-                  {
-                    provider,
-                    promptId,
-                    promptContent,
-                    passed,
-                    failed,
-                    duration,
-                    cost,
-                  },
-                  index,
-                ) => {
-                  return (
-                    <th key={index}>
-                      <Stack align="center" gap="xs">
-                        {provider && (
-                          <HoverCard width={500} position="bottom">
-                            <HoverCard.Target>
-                              <Badge variant="outline">
-                                {MODELS.find(
-                                  (model) => model.id === provider.model,
-                                )?.name || provider.model}
-                              </Badge>
-                            </HoverCard.Target>
-                            <HoverCard.Dropdown>
-                              <Stack gap="xs">
-                                <SmartViewer
-                                  data={provider.config}
-                                  compact={false}
-                                />
-                              </Stack>
-                            </HoverCard.Dropdown>
-                          </HoverCard>
-                        )}
-                        {promptId && (
-                          <HoverCard width={500} position="top">
-                            <HoverCard.Target>
-                              <div>
-                                <SmartViewer data={promptContent} compact />
-                              </div>
-                            </HoverCard.Target>
-                            <HoverCard.Dropdown>
-                              <SmartViewer
-                                data={promptContent}
-                                compact={false}
-                              />
-                            </HoverCard.Dropdown>
-                          </HoverCard>
-                        )}
-                        {passed + failed > 1 && (
-                          <Progress.Root size={20} w={100}>
-                            <Progress.Section
-                              value={(passed / (passed + failed)) * 100}
-                              color="green"
-                            >
-                              <Progress.Label>{`${passed}`}</Progress.Label>
-                            </Progress.Section>
-                            <Progress.Section
-                              value={(failed / (passed + failed)) * 100}
-                              color="red"
-                            >
-                              <Progress.Label>{failed}</Progress.Label>
-                            </Progress.Section>
-                          </Progress.Root>
-                        )}
-                        <Group>
-                          {duration && (
-                            <Text size="xs" c="dimmed">
-                              avg. {duration}s
-                            </Text>
-                          )}
-                          {cost && (
-                            <Text size="xs" c="dimmed">
-                              avg. {formatCost(cost)}
-                            </Text>
-                          )}
-                        </Group>
+              {providers.map((provider, i) => (
+                <th key={i}>
+                  <HoverCard
+                    width={500}
+                    position="bottom"
+                    disabled={!Object.keys(provider.config).length}
+                  >
+                    <HoverCard.Target>
+                      <Badge variant="outline">
+                        {MODELS.find((model) => model.id === provider.model)
+                          ?.name || provider.model}
+                      </Badge>
+                    </HoverCard.Target>
+                    <HoverCard.Dropdown>
+                      <Stack gap="xs">
+                        <SmartViewer data={provider.config} />
                       </Stack>
-                    </th>
-                  )
-                },
-              )}
+                    </HoverCard.Dropdown>
+                  </HoverCard>
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {variableVariations.map((variableVariation, i) => (
-              <tr key={i}>
-                {variables.map((variable) => (
-                  <td>{variableVariation[variable]}</td>
-                ))}
-                {pmVariations.map((pmVariation, k) => {
-                  const result = getResultForVariation(
-                    pmVariation.promptId,
-                    variableVariation,
-                    pmVariation.provider,
-                    data,
-                  )
-                  return (
-                    <td className={classes["output-cell"]} key={k}>
-                      {result ? (
-                        <>
-                          {result.status === "success" ? (
-                            <Stack align="center" justify="between" h="100%">
-                              <ChatMessage
-                                data={result.output}
-                                mah={200}
-                                compact
-                              />
+            {prompts.map((promptId, i) => {
+              const promptContent = getPromptById(promptId)
+              const variableKeys = getVariableKeysForPrompt(promptId)
+              const variableVariations =
+                getVariableVariationsForPrompt(promptId)
 
-                              <HoverCard width={500}>
+              return (
+                <tr key={i}>
+                  <td>
+                    <HoverCard width={500} position="top">
+                      <HoverCard.Target>
+                        <div>
+                          <SmartViewer data={promptContent} compact />
+                        </div>
+                      </HoverCard.Target>
+                      <HoverCard.Dropdown>
+                        <SmartViewer data={promptContent} compact={false} />
+                      </HoverCard.Dropdown>
+                    </HoverCard>
+                  </td>
+                  {!!highestNumberOfVariables && (
+                    <td
+                      colSpan={highestNumberOfVariables}
+                      className={classes["nested-cell"]}
+                    >
+                      <tr>
+                        {variableKeys.map((variable, j) => (
+                          <th key={j}>{variable}</th>
+                        ))}
+                      </tr>
+                      {variableVariations.map((variableVariation, k) => (
+                        <tr key={k}>
+                          {variableKeys.map((variable, l) => (
+                            <td key={l}>{variableVariation[variable]}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </td>
+                  )}
+                  {providers.map((provider, k) => (
+                    <td key={k} className={classes["nested-cell"]}>
+                      {!!variableKeys.length && (
+                        <tr>
+                          <td></td>
+                        </tr>
+                      )}
+                      {variableVariations.map((variableVariation, l) => {
+                        const result = getResultForPromptVariationProvider(
+                          promptId,
+                          variableVariation,
+                          provider,
+                        )
+                        return (
+                          <tr key={l}>
+                            <td className={classes["output-cell"]}>
+                              <HoverCard width={500} position="top">
                                 <HoverCard.Target>
-                                  <Badge
-                                    color={result.passed ? "green" : "red"}
-                                  >
-                                    {result.passed ? "Passed" : "Failed"}
-                                  </Badge>
+                                  <div>
+                                    <SmartViewer data={result.output} compact />
+                                  </div>
                                 </HoverCard.Target>
                                 <HoverCard.Dropdown>
-                                  <ResultDetails details={result.results} />
+                                  <SmartViewer
+                                    data={result.output}
+                                    compact={false}
+                                  />
                                 </HoverCard.Dropdown>
                               </HoverCard>
-                              <Group gap="xs">
-                                <Text c="dimmed" size="xs">
-                                  {(+result.duration / 1000).toFixed(2)}s -{" "}
-                                  {formatCost(result.cost)}
-                                </Text>
-                              </Group>
-                            </Stack>
-                          ) : (
-                            <Text color="red">{result.error || "Error"}</Text>
-                          )}
-                        </>
-                      ) : (
-                        <Badge color="gray">N/A</Badge>
-                      )}
+                            </td>
+                          </tr>
+                        )
+                      })}
                     </td>
-                  )
-                })}
-              </tr>
-            ))}
+                  ))}
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>
