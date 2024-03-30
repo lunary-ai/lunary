@@ -4,13 +4,11 @@ import CopyText from "@/components/blocks/CopyText"
 import {
   Alert,
   Button,
-  Card,
   Container,
   Group,
   Popover,
   Stack,
   Text,
-  Title,
 } from "@mantine/core"
 import { NextSeo } from "next-seo"
 import Router from "next/router"
@@ -20,6 +18,120 @@ import useSWR from "swr"
 import RenamableField from "@/components/blocks/RenamableField"
 import { hasAccess } from "shared"
 import { SettingsCard } from "@/components/blocks/SettingsCard"
+import { IconCheck, IconRefreshAlert } from "@tabler/icons-react"
+import { useState } from "react"
+import errorHandler from "@/utils/errors"
+import { fetcher } from "@/utils/fetcher"
+import { notifications } from "@mantine/notifications"
+import { modals } from "@mantine/modals"
+
+function Keys() {
+  const [regenerating, setRegenerating] = useState(false)
+  const { project, mutate } = useProject()
+  const { user } = useUser()
+
+  async function regenerateKey() {
+    setRegenerating(true)
+
+    const res = await errorHandler(
+      fetcher.post(`/projects/${project.id}/regenerate-key`, {
+        arg: { type: "private" },
+      }),
+    )
+
+    if (res) {
+      notifications.show({
+        title: "Key regenerated",
+        message: "Your private key has been successfully regenerated",
+        icon: <IconCheck />,
+        color: "green",
+      })
+      await mutate()
+    }
+
+    setRegenerating(false)
+  }
+
+  return (
+    <SettingsCard title="Keys">
+      <Alert
+        variant="light"
+        title={
+          <Group>
+            <Text fw={500}>Project ID / Public Key:</Text>
+            <CopyText
+              c="green.8"
+              value={project?.id}
+              data-testid="public-key"
+            />
+          </Group>
+        }
+        color="green"
+      >
+        <Text>
+          Your project ID can be used from your server or frontend code to track
+          events and send requests to the API.
+        </Text>
+      </Alert>
+      {hasAccess(user.role, "projects", "update") && (
+        <Alert
+          variant="light"
+          styles={{
+            label: { width: "100%" },
+          }}
+          title={
+            <Group justify="space-between" w="100%">
+              <Group>
+                <Text fw={500}>Private Key:</Text>
+                <CopyText
+                  c="red.8"
+                  value={project?.privateApiKey}
+                  data-testid="private-key"
+                />
+              </Group>
+              <Button
+                ml="auto"
+                size="xs"
+                color="red"
+                loading={regenerating}
+                data-testid="regenerate-private-key-button"
+                onClick={() => {
+                  modals.openConfirmModal({
+                    title: "Please confirm your action",
+                    confirmProps: {
+                      color: "red",
+                      "data-testid": "confirm-button",
+                    },
+                    children: (
+                      <Text size="sm">
+                        Are you sure you want to regenerate your private key?
+                        The current key will be invalidated.
+                      </Text>
+                    ),
+                    labels: { confirm: "Confirm", cancel: "Cancel" },
+
+                    onConfirm: async () => {
+                      regenerateKey()
+                    },
+                  })
+                }}
+                leftSection={<IconRefreshAlert size={16} />}
+              >
+                Regenerate
+              </Button>
+            </Group>
+          }
+          color="red"
+        >
+          <Text>
+            Your private key should be kept secret and never shared. It is can
+            be used to retrieve data from the API.
+          </Text>
+        </Alert>
+      )}
+    </SettingsCard>
+  )
+}
 
 export default function AppAnalytics() {
   const { org } = useOrg()
@@ -54,25 +166,7 @@ export default function AppAnalytics() {
           props={["count"]}
         />
 
-        {user.role !== "viewer" && (
-          <SettingsCard title="Keys">
-            <Alert
-              variant="light"
-              title={
-                <Group>
-                  <Text fw={500}>Project ID:</Text>
-                  <CopyText c="green.8" value={project?.id} />
-                </Group>
-              }
-              color="green"
-            >
-              <Text>
-                Your project ID can be used from your server or frontend code to
-                track events and send requests to the API.
-              </Text>
-            </Alert>
-          </SettingsCard>
-        )}
+        {user.role !== "viewer" && <Keys />}
 
         {user && hasAccess(user.role, "projects", "delete") && (
           <SettingsCard title="Danger Zone" align="start">

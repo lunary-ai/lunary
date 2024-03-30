@@ -3,6 +3,7 @@ import sql from "@/src/utils/db"
 import Context from "@/src/utils/koa"
 import Router from "koa-router"
 import { z } from "zod"
+import { randomUUID } from "crypto"
 
 const projects = new Router({
   prefix: "/projects",
@@ -88,7 +89,6 @@ projects.delete(
     const { orgId, userId } = ctx.state
 
     const hasProjectAccess = await checkProjectAccess(projectId, userId)
-    const [user] = await sql`select * from account where id = ${userId}`
 
     if (!hasProjectAccess) {
       ctx.throw(401, "Not allowed")
@@ -111,6 +111,43 @@ projects.delete(
       }
       return
     }
+  },
+)
+
+projects.post(
+  "/:projectId/regenerate-key",
+  checkAccess("projects", "update"),
+  async (ctx: Context) => {
+    const { projectId } = ctx.params
+    const { userId } = ctx.state
+
+    // Define the schema for request body validation using Zod
+    const requestBodySchema = z.object({
+      type: z.enum(["private", "public"]),
+    })
+    const { type } = requestBodySchema.parse(ctx.request.body)
+
+    const hasProjectAccess = await checkProjectAccess(projectId, userId)
+
+    if (!hasProjectAccess) {
+      ctx.throw(401, "Not allowed")
+    }
+
+    if (type === "private") {
+      const newKey = randomUUID()
+
+      await sql`
+        update api_key
+        set api_key = ${newKey}
+        where project_id = ${projectId}
+          and type = 'private'
+      `
+
+      console.log("Private key regenerated", newKey)
+    }
+
+    ctx.status = 200
+    ctx.body = {}
   },
 )
 

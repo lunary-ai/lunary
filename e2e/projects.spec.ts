@@ -1,5 +1,7 @@
 import { test, expect } from "@playwright/test"
-import { setOrgFree, setOrgPro } from "./db-utils"
+
+// run tests one after another
+test.describe.configure({ mode: "serial" })
 
 test("create new project, rename it and delete it", async ({ page }) => {
   await page.goto("/")

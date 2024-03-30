@@ -1,7 +1,9 @@
 import { test, expect } from "@playwright/test"
 
-test("logout and login flow", async ({ page }) => {
+test("logout and back in login", async ({ page }) => {
   await page.goto("/")
+
+  await page.waitForLoadState("networkidle")
 
   // logout
   await page.getByTestId("account-sidebar-item").click()
@@ -13,7 +15,11 @@ test("logout and login flow", async ({ page }) => {
   await page.getByPlaceholder("Your email").click()
   await page.getByPlaceholder("Your email").fill("test@lunary.ai")
 
+  const promise = page.waitForResponse((resp) => resp.url().includes("/method"))
+
   await page.getByTestId("continue-button").click()
+
+  await promise
 
   await page.getByPlaceholder("Your password").click()
   await page.getByPlaceholder("Your password").fill("testtest")
