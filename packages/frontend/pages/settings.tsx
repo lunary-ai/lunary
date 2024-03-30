@@ -98,7 +98,10 @@ function Keys() {
                 onClick={() => {
                   modals.openConfirmModal({
                     title: "Please confirm your action",
-                    confirmProps: { color: "red" },
+                    confirmProps: {
+                      color: "red",
+                      "data-testid": "confirm-button",
+                    },
                     children: (
                       <Text size="sm">
                         Are you sure you want to regenerate your private key?
