@@ -9,6 +9,7 @@ import { runChecksOnRun } from "@/src/checks/runChecks"
 import PQueue from "p-queue"
 import { PassThrough } from "stream"
 import { checkAccess } from "@/src/utils/authorization"
+import { RunEvent } from "lunary/types"
 
 const evaluations = new Router({ prefix: "/evaluations" })
 
@@ -16,7 +17,7 @@ const MAX_PARALLEL_EVALS = 4
 
 evaluations.post(
   "/",
-  // checkAccess("evaluations", "create"),
+  checkAccess("evaluations", "create"),
   async (ctx: Context) => {
     const { name, datasetId, checklistId, providers } = ctx.request.body as any
     const { userId, projectId } = ctx.state
@@ -94,7 +95,7 @@ evaluations.post(
 
 evaluations.get(
   "/:id",
-  // checkAccess("evaluations", "read"),
+  checkAccess("evaluations", "read"),
   async (ctx: Context) => {
     const { projectId } = ctx.state
     const { id } = ctx.params
@@ -113,7 +114,7 @@ evaluations.get(
 
 evaluations.get(
   "/result/:evaluationId",
-  // checkAccess("evaluations", "read"),
+  checkAccess("evaluations", "read"),
   async (ctx: Context) => {
     const { evaluationId } = ctx.params
 
@@ -136,7 +137,7 @@ evaluations.get(
 
 evaluations.get(
   "/",
-  // checkAccess("evaluations", "list"),
+  checkAccess("evaluations", "list"),
   async (ctx: Context) => {
     const { projectId } = ctx.state
 
@@ -174,7 +175,7 @@ evaluations.post(
 
     const checks = checklistData.data
 
-    const virtualRun = {
+    const virtualRun: RunEvent = {
       type: "llm",
       input,
       output,
@@ -204,9 +205,6 @@ evaluations.post(
 
     // run checks
     const { passed, results } = await runChecksOnRun(virtualRun, checks)
-
-    console.log(`---------------------`)
-    console.log(passed, results)
 
     ctx.body = { passed, results }
   },

@@ -3,9 +3,9 @@ import { Badge } from "@mantine/core"
 import UserAvatar from "./UserAvatar"
 
 export default function OrgUserBadge({ userId }) {
-  const { user } = useOrgUser(userId)
+  const { user, loading } = useOrgUser(userId)
 
-  if (!userId) {
+  if (!userId || loading) {
     return null
   }
 

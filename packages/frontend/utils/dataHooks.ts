@@ -225,6 +225,7 @@ export function useProject() {
     update,
     drop,
     setProjectId: setProjectId,
+    mutate,
     isLoading,
   }
 }

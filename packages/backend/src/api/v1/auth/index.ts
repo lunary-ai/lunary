@@ -1,8 +1,7 @@
 import sql from "@/src/utils/db"
-import { RESET_PASSWORD, sendVerifyEmail } from "@/src/utils/emails"
+import { sendVerifyEmail } from "@/src/utils/emails"
 import Context from "@/src/utils/koa"
 import { sendTelegramMessage } from "@/src/utils/notifications"
-import { sendEmail } from "@/src/utils/sendEmail"
 import Router from "koa-router"
 import { z } from "zod"
 import {
@@ -14,7 +13,6 @@ import {
   verifyPassword,
 } from "./utils"
 import saml, { getLoginUrl } from "./saml"
-import { jwtVerify } from "jose"
 
 const auth = new Router({
   prefix: "/auth",

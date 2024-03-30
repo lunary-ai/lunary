@@ -18,6 +18,12 @@ export async function checkProjectAccess(projectId: string, userId: string) {
 
 export function checkAccess(resourceName: ResourceName, action: Action) {
   return async (ctx: Context, next: Next) => {
+    if (ctx.state.privateKey) {
+      // give all rights to private key
+      await next()
+      return
+    }
+
     const [user] =
       await sql`select * from account where id = ${ctx.state.userId}`
 
