@@ -10,6 +10,10 @@ app = Flask(__name__)
 cli = sys.modules['flask.cli']
 cli.show_server_banner = lambda *x: None
 
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "healthy"}), 200
+
 @app.route('/lang', methods=['POST'])
 def language_route():
     text = request.json['text']
@@ -22,6 +26,7 @@ def toxicity_route():
     results = detect_toxicity(texts)
     return jsonify(results)
 
+# TODO: index errors
 @app.route('/pii', methods=['POST'])
 def pii_route():
     model_id = request.json.get('bert_model', None)
