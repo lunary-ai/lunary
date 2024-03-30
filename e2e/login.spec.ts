@@ -3,6 +3,8 @@ import { test, expect } from "@playwright/test"
 test("logout and back in login", async ({ page }) => {
   await page.goto("/")
 
+  await page.waitForLoadState("networkidle")
+
   // logout
   await page.getByTestId("account-sidebar-item").click()
   await page.getByTestId("logout-button").click()

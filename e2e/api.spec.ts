@@ -31,8 +31,6 @@ test("regenerate api keys", async ({ page }) => {
 
   const secondPrivateKey = await page.getByTestId("private-key").textContent()
 
-  console.log({ firstPrivateKey, secondPrivateKey })
-
   expect(firstPrivateKey).not.toEqual(secondPrivateKey)
 
   privateKey = secondPrivateKey
@@ -44,6 +42,7 @@ test("private api /logs", async ({ page }) => {
   const res = await fetch(process.env.API_URL + "/v1/runs", {
     method: "GET",
     headers: {
+      "Content-Type": "application/json",
       "X-API-Key": privateKey!,
     },
   })
@@ -52,4 +51,41 @@ test("private api /logs", async ({ page }) => {
 
   // expect to be an array
   expect(json).toBeInstanceOf(Array)
+})
+
+test("create dataset", async ({ page }) => {
+  // Test API query
+
+  const res = await fetch(process.env.API_URL + "/v1/dataset", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-API-Key": privateKey!,
+    },
+    body: JSON.stringify({
+      slug: "test-dataset",
+      type: "chat",
+    }),
+  })
+
+  const json = await res.json()
+
+  expect(json.slug).toEqual("test-dataset")
+})
+
+test("get dataset publicly via slug", async ({ page }) => {
+  // Test API query
+
+  const res = await fetch(process.env.API_URL + "/v1/dataset/test-dataset", {
+    method: "GET",
+    headers: {
+      // Use the legacy way to pass the API key (used in old SDKs)
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${publicKey!}`,
+    },
+  })
+
+  const json = await res.json()
+
+  expect(json.runs).toBeInstanceOf(Array)
 })

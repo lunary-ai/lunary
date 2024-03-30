@@ -134,6 +134,7 @@ export async function authMiddleware(ctx: Context, next: Next) {
         await next()
         return
       } else if (type === "private") {
+        ctx.state.privateKey = true
         await next()
         return
       }
