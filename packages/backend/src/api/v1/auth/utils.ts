@@ -84,7 +84,7 @@ const publicRoutes = [
   `/v1/evaluations/run`,
 ]
 
-async function checkApiKey(key: string) {
+async function checkApiKey(ctx: Context, key: string) {
   const [apiKey] = await sql`
     select *,
     (select org_id from project where project.id = api_key.project_id) as org_id
@@ -92,15 +92,17 @@ async function checkApiKey(key: string) {
     where api_key.api_key = ${key}`
 
   if (!apiKey) {
-    throw new Error("Invalid API key")
-  }
+    // Support public key = project id
+    const [project] =
+      await sql`select id, org_id from project where id = ${key}`
 
-  const { type, projectId, orgId } = apiKey
+    if (!project) {
+      ctx.throw(401, "Invalid API key")
+    }
 
-  return {
-    type,
-    projectId,
-    orgId,
+    return { type: "public", projectId: project.id, orgId: project.orgId }
+  } else {
+    return apiKey
   }
 }
 
@@ -124,23 +126,20 @@ export async function authMiddleware(ctx: Context, next: Next) {
   // Check if API key is valid
   // Support passing as bearer because legacy SDKs did that
   else if (validateUUID(key)) {
-    try {
-      const { type, projectId, orgId } = await checkApiKey(key as string)
+    console.log("key", key)
 
-      ctx.state.projectId = projectId
-      ctx.state.orgId = orgId
+    const { type, projectId, orgId } = await checkApiKey(ctx, key as string)
+    console.log({ type, projectId, orgId })
 
-      if (type === "public" && isPublicRoute) {
-        await next()
-        return
-      } else if (type === "private") {
-        ctx.state.privateKey = true
-        await next()
-        return
-      }
-    } catch (error) {
-      console.error(error)
-      ctx.throw(401, "Invalid API key")
+    ctx.state.projectId = projectId
+    ctx.state.orgId = orgId
+
+    if (type === "public" && !isPublicRoute) {
+      ctx.throw(401, "This route requires a private API key")
+    }
+
+    if (type == "private") {
+      ctx.state.privateKey = true
     }
   } else {
     // Check if JWT is valid
