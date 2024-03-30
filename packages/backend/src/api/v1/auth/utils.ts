@@ -111,7 +111,10 @@ export async function authMiddleware(ctx: Context, next: Next) {
     typeof route === "string" ? route === ctx.path : route.test(ctx.path),
   )
 
-  const key = ctx.request?.headers?.authorization?.split(" ")[1]
+  const bearer = ctx.request?.headers?.authorization?.split(" ")[1] as string
+  const apiKey = ctx.request?.headers?.["x-api-key"] as string
+
+  const key = bearer || apiKey
 
   // For routes like signup, login, etc
   if (isPublicRoute && !key) {
@@ -119,6 +122,7 @@ export async function authMiddleware(ctx: Context, next: Next) {
     return
   }
   // Check if API key is valid
+  // Support passing as bearer because legacy SDKs did that
   else if (validateUUID(key)) {
     try {
       const { type, projectId, orgId } = await checkApiKey(key as string)
@@ -140,7 +144,7 @@ export async function authMiddleware(ctx: Context, next: Next) {
   } else {
     // Check if JWT is valid
     try {
-      if (!key) {
+      if (!bearer) {
         throw new Error("No bearer token provided.")
       }
       const { payload } = await verifyJwt<SessionData>(key)

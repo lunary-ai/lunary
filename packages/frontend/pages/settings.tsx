@@ -59,7 +59,11 @@ function Keys() {
         title={
           <Group>
             <Text fw={500}>Project ID / Public Key:</Text>
-            <CopyText c="green.8" value={project?.id} />
+            <CopyText
+              c="green.8"
+              value={project?.id}
+              data-testid="public-key"
+            />
           </Group>
         }
         color="green"
@@ -79,14 +83,18 @@ function Keys() {
             <Group justify="space-between" w="100%">
               <Group>
                 <Text fw={500}>Private Key:</Text>
-                <CopyText c="red.8" value={project?.privateApiKey} />
+                <CopyText
+                  c="red.8"
+                  value={project?.privateApiKey}
+                  data-testid="private-key"
+                />
               </Group>
               <Button
                 ml="auto"
                 size="xs"
                 color="red"
                 loading={regenerating}
-                data-testid="regenerate-key-button"
+                data-testid="regenerate-private-key-button"
                 onClick={() => {
                   modals.openConfirmModal({
                     title: "Please confirm your action",
