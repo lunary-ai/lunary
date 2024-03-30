@@ -26,4 +26,9 @@
 
     text-align: left !important;
   }
+
+  td.nested-cell {
+    padding: 0;
+    border: none;
+  }
 }
