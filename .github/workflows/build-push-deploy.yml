@@ -1,9 +1,10 @@
 name: Build Docker Images, Push to Registry, and Deploy
 
 on:
-  push:
-    branches:
-      - main
+  push
+  # push:
+  #   branches:
+  #     - main
 
 jobs:
   build-and-push:
@@ -41,7 +42,7 @@ jobs:
           tags: |
             lunary/backend:latest
             lunary/backend:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
-          platforms: linux/amd64
+          platforms: linux/amd64, linux/arm64
 
       - name: Build and push frontend
         uses: docker/build-push-action@v5
@@ -63,7 +64,7 @@ jobs:
           tags: |
             lunary/radar:latest
             lunary/radar:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
-          platforms: linux/amd64
+          platforms: linux/amd64, linux/arm64
 
       - name: Build and push ml
         uses: docker/build-push-action@v5
@@ -74,7 +75,7 @@ jobs:
           tags: |
             lunary/ml:latest
             lunary/ml:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
-          platforms: linux/amd64
+          platforms: linux/amd64, linux/arm64
 
   deploy:
     needs: build-and-push
