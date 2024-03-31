@@ -44,6 +44,9 @@ function LoginPage() {
   async function determineAuthMethod(email: string) {
     setLoading(true)
     try {
+      // clear any leftover token
+      window.localStorage.clear()
+
       const { method, redirect } = await fetcher.post("/auth/method", {
         arg: {
           email,
