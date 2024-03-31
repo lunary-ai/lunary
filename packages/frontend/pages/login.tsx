@@ -44,6 +44,9 @@ function LoginPage() {
   async function determineAuthMethod(email: string) {
     setLoading(true)
     try {
+      // clear any leftover token
+      window.localStorage.clear()
+
       const { method, redirect } = await fetcher.post("/auth/method", {
         arg: {
           email,
@@ -52,6 +55,14 @@ function LoginPage() {
 
       if (method === "password") {
         setStep("password")
+
+        // if autofilled, submit the form
+        if (form.values.password) {
+          await handleLoginWithPassword({
+            email,
+            password: form.values.password,
+          })
+        }
       } else if (method === "saml") {
         setSsoURI(redirect)
         setStep("saml")
