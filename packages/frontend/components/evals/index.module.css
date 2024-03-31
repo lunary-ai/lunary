@@ -6,6 +6,7 @@
   border-collapse: collapse;
   border-spacing: 0;
   border: 1px solid var(--mantine-color-default-border);
+  vertical-align: middle;
 
   th {
     background: var(--mantine-color-body);
@@ -16,8 +17,17 @@
     border: 1px solid var(--mantine-color-default-border);
     padding: 16px;
     text-align: center;
-    min-width: 150px;
-    width: 200px;
+    vertical-align: middle;
+    /* min-width: 200px; */
+    /* width: 300px; */
+  }
+
+  tr {
+    height: 1px;
+  }
+
+  td:first-of-type {
+    min-width: 400px;
   }
 
   td.output-cell {
@@ -30,25 +40,14 @@
   td.nested-cell {
     padding: 0;
     border: none;
-  }
-
-  .variable-grid {
-    display: flex;
-    flex-direction: column;
     height: 100%;
   }
 
-  .variable-row {
-    flex: 1;
-
-    display: flex;
-    justify-content: space-between;
-
-    > div {
-      border: 1px solid var(--mantine-color-default-border);
-      padding: 16px;
-      flex: 1 1 0;
-      text-align: center;
-    }
+  td > table {
+    height: 100%;
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    vertical-align: middle;
   }
 }

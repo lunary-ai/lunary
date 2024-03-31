@@ -43,15 +43,17 @@ function TeamFull({ orgName }) {
           <Button size="md" onClick={() => Router.push("/")}>
             Go back home
           </Button>
-          <Anchor
-            component="button"
-            type="button"
-            onClick={() => {
-              $crisp.push(["do", "chat:open"])
-            }}
-          >
-            Contact support →
-          </Anchor>
+          {!process.env.NEXT_PUBLIC_IS_SELF_HOSTED && (
+            <Anchor
+              component="button"
+              type="button"
+              onClick={() => {
+                $crisp.push(["do", "chat:open"])
+              }}
+            >
+              Contact support →
+            </Anchor>
+          )}
         </Flex>
       </Stack>
     </Container>
@@ -65,7 +67,6 @@ export default function Join() {
 
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
-  const [ssoURI, setSsoURI] = useState<string | null>(null)
 
   useEffect(() => {
     if (router.isReady) {
@@ -153,8 +154,6 @@ export default function Join() {
         })
 
         if (method === "saml") {
-          setSsoURI(redirect)
-
           await handleSignup({
             email,
             name,

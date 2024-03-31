@@ -460,15 +460,17 @@ function SignupPage() {
                   </Text>
 
                   <Group>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        $crisp.push(["do", "chat:open"])
-                      }}
-                      rightSection={<IconMessageBolt size={18} />}
-                    >
-                      Chat
-                    </Button>
+                    {!process.env.NEXT_PUBLIC_IS_SELF_HOSTED && (
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          $crisp.push(["do", "chat:open"])
+                        }}
+                        rightSection={<IconMessageBolt size={18} />}
+                      >
+                        Chat
+                      </Button>
+                    )}
 
                     <Button
                       variant="outline"
