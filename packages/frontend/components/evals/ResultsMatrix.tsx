@@ -68,7 +68,7 @@ function ResultCell({ result }) {
     <>
       {result.status === "success" ? (
         <Stack align="center" justify="between">
-          <ChatMessage data={result.output} mah={150} compact />
+          <ChatMessage data={result.output} mah={150} compact w="100%" />
 
           <HoverCard width={500} disabled={!result.results.length}>
             <HoverCard.Target>
@@ -244,14 +244,16 @@ export default function ResultsMatrix({ data }) {
                   {!!highestNumberOfVariables && (
                     <td className={classes["nested-cell"]}>
                       <table>
-                        {variableKeys.map((variable, l) => (
-                          <td key={l}>
-                            <Stack align="center">
-                              <Code>{`{{${variable}}}`}</Code>
-                              <Text>{variableVariation[variable]}</Text>
-                            </Stack>
-                          </td>
-                        ))}
+                        <tr>
+                          {variableKeys.map((variable, l) => (
+                            <td key={l}>
+                              <Stack align="center">
+                                <Code>{`{{${variable}}}`}</Code>
+                                <Text>{variableVariation[variable]}</Text>
+                              </Stack>
+                            </td>
+                          ))}
+                        </tr>
                       </table>
                     </td>
                   )}

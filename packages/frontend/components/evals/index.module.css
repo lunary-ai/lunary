@@ -18,15 +18,14 @@
     padding: 16px;
     text-align: center;
     vertical-align: middle;
-    /* min-width: 200px; */
-    /* width: 300px; */
   }
 
   tr {
     height: 1px;
   }
 
-  td:first-of-type {
+  /* first col excluding nested cells */
+  > tbody > tr > td:first-of-type {
     min-width: 400px;
   }
 
@@ -39,8 +38,8 @@
 
   td.nested-cell {
     padding: 0;
-    border: none;
-    height: 100%;
+
+    height: 1px;
   }
 
   td > table {
@@ -48,6 +47,20 @@
     width: 100%;
     table-layout: fixed;
     border-collapse: collapse;
+    border: none;
     vertical-align: middle;
+
+    td {
+      border-top: none;
+      border-bottom: none;
+    }
+
+    tr td:first-child {
+      border-left: none;
+    }
+
+    tr td:last-child {
+      border-right: none;
+    }
   }
 }
