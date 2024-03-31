@@ -79,7 +79,7 @@ export const ensureIsUUID = async (id: string): Promise<string | undefined> => {
 }
 
 // Converts snake_case to camelCase
-// I found some (probably unintended) camelCase props in the tracer events, so normalize everything
+// I found some (probably unintended) snake_case props in the tracer events, so normalize everything
 const recursiveToCamel = (item: any): any => {
   if (Array.isArray(item)) {
     return item.map((el: unknown) => recursiveToCamel(el))
@@ -102,25 +102,17 @@ const recursiveToCamel = (item: any): any => {
 function cleanMetadata(object: any) {
   if (!object) return undefined
 
+  const validTypes = ["string", "number", "boolean"]
+
   return Object.fromEntries(
     Object.entries(object).map(([key, value]) => {
-      if (
-        typeof value === "string" ||
-        typeof value === "number" ||
-        typeof value === "boolean"
-      ) {
+      if (validTypes.includes(typeof value)) {
         return [key, value]
       }
       if (Array.isArray(value)) {
         return [
           key,
-          value.map((v) =>
-            typeof v === "string" ||
-            typeof v === "number" ||
-            typeof v === "boolean"
-              ? v
-              : null,
-          ),
+          value.map((v) => (validTypes.includes(typeof value) ? v : null)),
         ]
       }
       return [key, null]
