@@ -98,22 +98,24 @@ export default function Empty({
                 <CopyText value={project?.id} />
               </Group>
             )}
-            <Stack>
-              <Text size="sm">Any issue? Get help from a founder.</Text>
-              <Group>
-                <Button
-                  size="sm"
-                  leftSection={<IconMessage size={16} />}
-                  color="blue"
-                  variant="light"
-                  onClick={() => {
-                    $crisp.push(["do", "chat:open"])
-                  }}
-                >
-                  Chat with us
-                </Button>
-              </Group>
-            </Stack>
+            {!process.env.NEXT_PUBLIC_IS_SELF_HOSTED && (
+              <Stack>
+                <Text size="sm">Any issue? Get help from a founder.</Text>
+                <Group>
+                  <Button
+                    size="sm"
+                    leftSection={<IconMessage size={16} />}
+                    color="blue"
+                    variant="light"
+                    onClick={() => {
+                      $crisp.push(["do", "chat:open"])
+                    }}
+                  >
+                    Chat with us
+                  </Button>
+                </Group>
+              </Stack>
+            )}
           </Stack>
         </Card>
       </Overlay>

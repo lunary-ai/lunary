@@ -223,6 +223,7 @@ export function ChatMessage({
   onChange,
   compact = false,
   mah,
+  ...props
 }: {
   data: any
   editable?: boolean
@@ -252,6 +253,7 @@ export function ChatMessage({
         })`,
         borderRadius: 8,
       }}
+      {...props}
     >
       {!compact && (
         <>
