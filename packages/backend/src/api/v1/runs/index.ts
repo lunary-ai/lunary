@@ -7,6 +7,7 @@ import { fileExport } from "./export"
 import { deserializeLogic } from "shared"
 import { convertChecksToSQL } from "@/src/utils/checks"
 import { checkAccess } from "@/src/utils/authorization"
+import { jsonrepair } from "jsonrepair"
 
 const runs = new Router({
   prefix: "/runs",
@@ -55,6 +56,20 @@ function processOutput(output: unknown) {
   return output
 }
 
+function processParams(params: any) {
+  if (!params) return {}
+  try {
+    // handles tools received as string (eg. litellm)
+    if (params.tools && typeof params.tools === "string") {
+      params.tools = JSON.parse(jsonrepair(params.tools))
+    }
+  } catch (e) {
+    console.error(e)
+    console.error("Error parsing tools")
+  }
+  return params
+}
+
 const formatRun = (run: any) => ({
   id: run.id,
   isPublic: run.isPublic,
@@ -79,7 +94,8 @@ const formatRun = (run: any) => ({
   error: run.error,
   status: run.status,
   siblingRunId: run.siblingRunId,
-  params: run.params,
+  params: processParams(run.params),
+
   metadata: run.metadata,
   user: {
     id: run.externalUserId,
