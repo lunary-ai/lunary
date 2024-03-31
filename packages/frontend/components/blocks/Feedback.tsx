@@ -34,9 +34,12 @@ export default function Feedback({
   })
 
   return (
-    <Tooltip label="Feedback from parent run" position="bottom">
+    <Tooltip
+      label="Feedback from parent run"
+      position="bottom"
+      disabled={!isFromParent}
+    >
       <Indicator inline disabled={!isFromParent} color="red" size={10}>
-        {/* <Tooltip disabled={!isFromParent} label={"Feedback from parent run"}> */}
         <Group
           style={{
             padding: isFromParent ? "3px 6px" : "",

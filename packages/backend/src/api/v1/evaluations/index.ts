@@ -49,15 +49,20 @@ evaluations.post(
       checks: [], // TODO: remove this legacy col from DB,
     }
 
-    const [insertedEvaluation] =
+    const [evaluation] =
       await sql`insert into evaluation ${sql(evaluationToInsert)} returning *`
 
-    const evaluation = await getEvaluation(insertedEvaluation.id)
+    const prompts = await sql`
+      select * from dataset_prompt where dataset_id = ${datasetId}
+    `
 
     let count = 0
 
-    for (const prompt of evaluation.dataset.prompts) {
-      for (const variation of prompt.variations) {
+    for (const prompt of prompts) {
+      const variations = await sql`
+        select * from dataset_prompt_variation where prompt_id = ${prompt.id}
+      `
+      for (const variation of variations) {
         for (const provider of evaluation.providers) {
           count++
           queue.add(() =>
@@ -66,7 +71,7 @@ evaluations.post(
               promptId: prompt.id,
               variation,
               provider,
-              prompt: prompt.content,
+              prompt: prompt.messages,
               checklistId,
             }),
           )
@@ -121,9 +126,7 @@ evaluations.get(
     const results = await sql`
   select 
     *,
-    p.id as prompt_id,
-    p.messages as prompt_content
-    --p.extra as prompt_extra
+    p.id as prompt_id
   from 
     evaluation_result er 
     left join dataset_prompt p on p.id = er.prompt_id

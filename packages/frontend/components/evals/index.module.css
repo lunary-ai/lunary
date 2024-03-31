@@ -6,6 +6,7 @@
   border-collapse: collapse;
   border-spacing: 0;
   border: 1px solid var(--mantine-color-default-border);
+  vertical-align: middle;
 
   th {
     background: var(--mantine-color-body);
@@ -16,8 +17,16 @@
     border: 1px solid var(--mantine-color-default-border);
     padding: 16px;
     text-align: center;
-    min-width: 150px;
-    width: 200px;
+    vertical-align: middle;
+  }
+
+  tr {
+    height: 1px;
+  }
+
+  /* first col excluding nested cells */
+  > tbody > tr > td:first-of-type {
+    min-width: 400px;
   }
 
   td.output-cell {
@@ -25,5 +34,33 @@
     min-width: 500px;
 
     text-align: left !important;
+  }
+
+  td.nested-cell {
+    padding: 0;
+
+    height: 1px;
+  }
+
+  td > table {
+    height: 100%;
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    border: none;
+    vertical-align: middle;
+
+    td {
+      border-top: none;
+      border-bottom: none;
+    }
+
+    tr td:first-child {
+      border-left: none;
+    }
+
+    tr td:last-child {
+      border-right: none;
+    }
   }
 }
