@@ -101,6 +101,7 @@ export default async function runRadarJob() {
     try {
       await radarJob()
     } catch (error) {
+      await sleep(3000) // To avoid spamming the ml service when there are connection errors
       console.error(error)
     }
   }
