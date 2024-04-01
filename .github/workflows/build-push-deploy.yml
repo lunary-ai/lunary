@@ -52,6 +52,7 @@ jobs:
           tags: |
             lunary/frontend:latest
             lunary/frontend:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
+            lunary/frontend:1.2.2
           platforms: linux/amd64
 
       - name: Build and push radar
