@@ -707,18 +707,15 @@ function MemberList({ users, isInvitation }) {
                             ))}
                           </Popover.Dropdown>
                         </Popover>
-                        {hasAccess(
-                          currentUser.role,
-                          "teamMembers",
-                          "update",
-                        ) && (
-                          <Button
-                            variant="default"
-                            onClick={() => handleOpenModal(user)}
-                          >
-                            Manage Access
-                          </Button>
-                        )}
+                        {hasAccess(currentUser.role, "teamMembers", "update") &&
+                          user.role !== "owner" && (
+                            <Button
+                              variant="default"
+                              onClick={() => handleOpenModal(user)}
+                            >
+                              Manage Access
+                            </Button>
+                          )}
                       </>
                     )}
                     <UserMenu user={user} isInvitation={isInvitation} />
