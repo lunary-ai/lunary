@@ -16,13 +16,13 @@ def health_check():
 
 @app.route('/lang', methods=['POST'])
 def language_route():
-    text = request.json['text']
+    text = request.json.get('text', '')
     result = detect_lang(text)
     return jsonify(result)
 
 @app.route('/toxicity', methods=['POST'])
 def toxicity_route():
-    texts = request.json['texts']
+    texts = request.json.get('texts', [])
     results = detect_toxicity(texts)
     return jsonify(results)
 
@@ -31,8 +31,8 @@ def toxicity_route():
 def pii_route():
     model_id = request.json.get('bert_model', None)
     custom_patterns = request.json.get('custom_patterns', [])
-    texts = request.json['texts']
-    entities = request.json['entities']
+    texts = request.json.get('texts', [])
+    entities = request.json.get('entities', [])
     results = detect_pii(texts, entities, model_id, custom_patterns)
     return jsonify(results)
 
