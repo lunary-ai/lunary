@@ -1,8 +1,9 @@
 name: Deploy on Release
 
 on:
-  release:
-    types: [published]
+  push:
+  # release:
+  #   types: [published]
 
 jobs:
   deploy:
