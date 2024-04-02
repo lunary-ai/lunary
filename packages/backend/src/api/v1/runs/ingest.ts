@@ -14,12 +14,12 @@ import Context from "@/src/utils/koa"
 
 const router = new Router()
 
-const registerRunEvent = async (
+async function registerRunEvent(
   projectId: string,
-  event: Event,
+  event: CleanRun,
   insertedIds: Set<string>,
   allowRetry = true,
-): Promise<void> => {
+): Promise<void> {
   let {
     timestamp,
     type,
@@ -56,7 +56,7 @@ const registerRunEvent = async (
   // Only do on start event to save on DB calls and have correct lastSeen
   if (typeof userId === "string" && !["end", "error"].includes(eventName)) {
     const [result] = await sql`
-      INSERT INTO external_user ${sql(
+      insert into external_user ${sql(
         clearUndefined({
           externalId: userId,
           lastSeen: timestamp,
@@ -64,11 +64,11 @@ const registerRunEvent = async (
           props: userProps,
         }),
       )}
-      ON CONFLICT (external_id, project_id)
-      DO UPDATE SET
-        last_seen = EXCLUDED.last_seen,
-        props = EXCLUDED.props
-      RETURNING id
+      on conflict (external_id, project_id)
+      do update set
+        last_seen = excluded.last_seen,
+        props = excluded.props
+      returning id
     `
 
     externalUserId = result?.id
@@ -76,16 +76,14 @@ const registerRunEvent = async (
 
   if ("start" === eventName && parentRunIdToUse) {
     // Check if parent run exists in database
-
     const [data] =
-      await sql`SELECT external_user_id FROM run WHERE id = ${parentRunIdToUse}`
+      await sql`select external_user_id from run where id = ${parentRunIdToUse}`
 
     if (!data) {
       // Could be that the parent run is not yet created
       // For example if the server-side event reached here before the frontend event, will throw foreign-key constraint error
       // So we retry once after 2s
       // A cleaner solution would be to use a queue, but this is simpler for now
-
       console.warn(`Error getting parent run user.`)
 
       if (allowRetry) {
@@ -112,7 +110,7 @@ const registerRunEvent = async (
   switch (eventName) {
     case "start":
       await sql`
-        INSERT INTO run ${sql(
+        insert into run ${sql(
           clearUndefined({
             type,
             projectId,
@@ -138,7 +136,7 @@ const registerRunEvent = async (
 
       if (type === "llm") {
         const [runData] = await sql`
-          SELECT created_at, input, params, name FROM run WHERE id = ${runId}
+          select created_at, input, params, name from run where id = ${runId}
         `
         cost = calcRunCost({
           type,
@@ -150,8 +148,8 @@ const registerRunEvent = async (
       }
 
       await sql`
-        UPDATE run
-        SET ${sql({
+        update run
+        set ${sql({
           endedAt: timestamp,
           output: output,
           status: "success",
@@ -159,35 +157,35 @@ const registerRunEvent = async (
           completionTokens: tokensUsage?.completion,
           cost,
         })}
-        WHERE id = ${runId}
+        where id = ${runId}
       `
       break
     case "error":
       await sql`
-        UPDATE run
-        SET ${sql({
+        update run
+        set ${sql({
           endedAt: timestamp,
           status: "error",
           error: error,
         })}
-        WHERE id = ${runId}
+        where id = ${runId}
       `
       break
     case "feedback":
       const [feedbackData] = await sql`
-        SELECT feedback
-        FROM run
-        WHERE id = ${runId}
+        select feedback
+        from run
+        where id = ${runId}
       `
 
       await sql`
-        UPDATE run
-        SET feedback = ${sql.json({
+        update run
+        set feedback = ${sql.json({
           ...((feedbackData?.feedback || {}) as any),
           ...feedback,
           ...extra, // legacy
         })}
-        WHERE id = ${runId}
+        where id = ${runId}
       `
       break
     case "chat":
@@ -201,10 +199,10 @@ const registerRunEvent = async (
   insertedIds.add(runId)
 }
 
-const registerLogEvent = async (
+async function registerLogEvent(
   projectId: string,
   event: Event,
-): Promise<void> => {
+): Promise<void> {
   const { event: eventName, parentRunId, message, extra, metadata } = event
 
   if (parentRunId === undefined || eventName === undefined) {
@@ -212,18 +210,18 @@ const registerLogEvent = async (
   }
 
   await sql`
-    INSERT INTO log (run, project_id, level, message, extra)
-    VALUES (${parentRunId}, ${projectId}, ${eventName}, ${message}, ${sql.json(
+    insert into log (run, project_id, level, message, extra)
+    values (${parentRunId}, ${projectId}, ${eventName}, ${message}, ${sql.json(
       metadata || extra || {},
     )})
   `
 }
 
-const registerEvent = async (
+async function registerEvent(
   projectId: string,
   event: Event,
   insertedIds: Set<string>,
-): Promise<void> => {
+): Promise<void> {
   const { type } = event
 
   if (type === "log") {

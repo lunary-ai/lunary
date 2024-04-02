@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-push:
-    runs-on: namespace-profile-fast
+    runs-on: ubuntu-latest
     steps:
       - name: Check out the private Ops repo
         uses: actions/checkout@v4
@@ -78,7 +78,7 @@ jobs:
 
   deploy:
     needs: build-and-push
-    runs-on: namespace-profile-fast
+    runs-on: ubuntu-latest
     steps:
       - name: Deploy to Production
         uses: appleboy/ssh-action@master
