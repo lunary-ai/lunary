@@ -45,7 +45,7 @@ jobs:
         env:
           API_URL: http://localhost:3333
           NEXT_PUBLIC_API_URL: http://localhost:3333
-        timeout-minutes: 2
+        timeout-minutes: 3
         run: (npm run build:frontend && npm run start:frontend)  & npx wait-on http://localhost:8080/
 
       - name: Run tests
