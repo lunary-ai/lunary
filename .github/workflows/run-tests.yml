@@ -1,6 +1,5 @@
 name: Run tests
 
-
 on:
   push:
     branches-ignore:
@@ -8,7 +7,7 @@ on:
 
 jobs:
   run-tests:
-    runs-on: namespace-profile-fast
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Cache node modules
@@ -46,8 +45,8 @@ jobs:
         env:
           API_URL: http://localhost:3333
           NEXT_PUBLIC_API_URL: http://localhost:3333
-        timeout-minutes: 2
-        run: (npm run build:frontend && npm run start:frontend)  & npx wait-on http://localhost:8080/
+        timeout-minutes: 3
+        run: (npm run build:frontend && npm run start:frontend)  & npx wait-on http://0.0.0.0:8080/
 
       - name: Run tests
         run: npx playwright test
