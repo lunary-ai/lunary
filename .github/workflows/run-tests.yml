@@ -46,7 +46,7 @@ jobs:
           API_URL: http://localhost:3333
           NEXT_PUBLIC_API_URL: http://localhost:3333
         timeout-minutes: 3
-        run: (npm run build:frontend && npm run start:frontend)  & npx wait-on http://localhost:8080/
+        run: (npm run build:frontend && npm run start:frontend)  & npx wait-on http://0.0.0.0:8080/
 
       - name: Run tests
         run: npx playwright test
