@@ -10,7 +10,7 @@
     "start:ml": ". ./packages/ml/venv/bin/activate && python3 packages/ml/main.py",
     "build:frontend": "npm -w packages/frontend run build",
     "migrate:db": "npm -w packages/backend run migrate:db",
-    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\" \"npm run start:ml\"",
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\" \"npm run dev:radar\"",
     "dev:frontend": "npm -w packages/frontend run dev",
     "dev:backend": "npm -w packages/backend run dev",
     "dev:radar": "npm -w packages/backend run dev:radar",
