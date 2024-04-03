@@ -86,7 +86,7 @@ jobs:
           tags: |
             lunary/lunary-ee:latest
             lunary/lunary-ee:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
-            lunary/lunary:1.2.2
+            lunary/lunary-ee:1.2.2
           platforms: linux/amd64
 
   deploy:
