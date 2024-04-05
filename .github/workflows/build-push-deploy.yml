@@ -1,10 +1,9 @@
 name: Build Docker Images, Push to Registry, and Deploy
 
 on:
-  push
-  # push:
-  #   branches:
-  #     - main
+  push:
+    branches:
+      - main
 
 jobs:
   build-and-push:
@@ -86,7 +85,6 @@ jobs:
           tags: |
             lunary/lunary-ee:latest
             lunary/lunary-ee:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
-            lunary/lunary-ee:1.2.2
           platforms: linux/amd64
 
   deploy:
