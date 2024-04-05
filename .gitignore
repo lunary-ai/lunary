@@ -205,3 +205,6 @@ __pycache__/
 *.pyc
 venv
 test_*.py
+
+packages/ml/venv
+packages/ml/env
