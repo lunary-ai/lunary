@@ -20,7 +20,6 @@ const users = new Router({
 users.get("/me/org", async (ctx: Context) => {
   const { userId } = ctx.state
 
-  // TODO: (low priority) merge queries
   const [org] = await sql`
       select * from org where id = (select org_id from account where id = ${userId})
     `
@@ -33,7 +32,16 @@ users.get("/me/org", async (ctx: Context) => {
 
   const users = await sql`
       select
-        account.*,
+        account.id,
+        account.created_at,
+        account.recovery_token,
+        account.email,
+        account.org_id,
+        account.role,
+        account.verified,
+        account.avatar_url,
+        account.last_login_at,
+        account.single_use_token,
         array_agg(account_project.project_id) as projects
       from
         account
@@ -48,7 +56,6 @@ users.get("/me/org", async (ctx: Context) => {
     `
 
   org.users = users
-
   ctx.body = org
 })
 
@@ -57,7 +64,16 @@ users.get("/me", async (ctx: Context) => {
 
   const [user] = await sql`
       select
-        account.*,
+        account.id,
+        account.created_at,
+        account.recovery_token,
+        account.email,
+        account.org_id,
+        account.role,
+        account.verified,
+        account.avatar_url,
+        account.last_login_at,
+        account.single_use_token,
         array_agg(account_project.project_id) as projects
       from
         account
