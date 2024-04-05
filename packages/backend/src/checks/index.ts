@@ -537,7 +537,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
         ssn: "Social security numbers",
       }
 
-      let reason = `No entities detected among ${entities.join(", ")}`
+      let reason = `No entities detected among ${entities?.join(", ")}`
       if (passed) {
         reason =
           "Entities detected: \n" +
