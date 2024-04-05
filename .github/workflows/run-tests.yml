@@ -1,10 +1,9 @@
 name: Run tests
 
 on:
-  push
-  # push:
-  #   branches-ignore:
-  #     - "main"
+  push:
+    branches-ignore:
+      - "main"
 
 jobs:
   run-tests:
@@ -33,17 +32,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-playwright-
 
+      - name: Install dependencies
+        run: npm ci
+
       - name: Install Playwright
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps
-
-      - if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
-        name: List the state of node modules
-        continue-on-error: true
-        run: npm list
-
-      - name: Install dependencies
-        run: npm ci
 
       - name: Start backend
         env:
