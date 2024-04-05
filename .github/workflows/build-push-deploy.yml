@@ -76,6 +76,17 @@ jobs:
             lunary/ml:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
           platforms: linux/amd64
 
+      - name: Build and push Monolith
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ops/Dockerfile
+          push: true
+          tags: |
+            lunary/lunary-ee:latest
+            lunary/lunary-ee:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
+          platforms: linux/amd64
+
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
