@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+  release:
+    types: [published]
 
 jobs:
   build-and-push:
@@ -41,6 +43,7 @@ jobs:
           tags: |
             lunary/backend:latest
             lunary/backend:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
+            lunary/backend:${{ github.event.release.tag_name }}
           platforms: linux/amd64
 
       - name: Build and push frontend
@@ -52,6 +55,7 @@ jobs:
           tags: |
             lunary/frontend:latest
             lunary/frontend:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
+            lunary/frontend:${{ github.event.release.tag_name }}
           platforms: linux/amd64
 
       - name: Build and push radar
@@ -63,6 +67,7 @@ jobs:
           tags: |
             lunary/radar:latest
             lunary/radar:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
+            lunary/radar:${{ github.event.release.tag_name }}
           platforms: linux/amd64
 
       - name: Build and push ml
@@ -74,6 +79,7 @@ jobs:
           tags: |
             lunary/ml:latest
             lunary/ml:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
+            lunary/ml:${{ github.event.release.tag_name }}
           platforms: linux/amd64
 
       - name: Build and push Monolith
@@ -85,6 +91,7 @@ jobs:
           tags: |
             lunary/lunary-ee:latest
             lunary/lunary-ee:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
+            lunary/lunary-ee:${{ github.event.release.tag_name }}
           platforms: linux/amd64
 
   deploy:
