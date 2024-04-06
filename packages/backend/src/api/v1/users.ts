@@ -273,6 +273,9 @@ users.patch(
 
     const { projects, role } = UpdateUserSchema.parse(ctx.request.body)
 
+    if (role === "owner") {
+      ctx.throw(403, "You cannot modify the owner role")
+    }
     const [currentUser] =
       await sql`select * from account where id = ${currentUserId}`
     if (!["owner", "admin"].includes(currentUser.role)) {
