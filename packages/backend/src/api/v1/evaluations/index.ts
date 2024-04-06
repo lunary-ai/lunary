@@ -122,17 +122,21 @@ evaluations.get(
   checkAccess("evaluations", "read"),
   async (ctx: Context) => {
     const { evaluationId } = ctx.params
+    const { projectId } = ctx.state
 
     const results = await sql`
-  select 
-    *,
-    p.id as prompt_id
-  from 
-    evaluation_result er 
-    left join dataset_prompt p on p.id = er.prompt_id
-    left join dataset_prompt_variation pv on pv.id = er.variation_id
-  where 
-    er.evaluation_id = ${evaluationId}`
+      select 
+        *,
+        p.id as prompt_id
+      from 
+        evaluation_result er 
+        left join evaluation e on e.id = er.evaluation_id
+        left join dataset_prompt p on p.id = er.prompt_id
+        left join dataset_prompt_variation pv on pv.id = er.variation_id
+      where 
+        er.evaluation_id = ${evaluationId}
+        and e.project_id = ${projectId}
+      `
 
     ctx.body = results
   },
