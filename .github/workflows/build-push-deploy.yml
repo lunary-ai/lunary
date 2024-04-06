@@ -19,11 +19,11 @@ jobs:
 
       - name: Generate data
         id: date
-        run: echo "::set-output name=date::$(date +%Y-%m-%d-%Hh%Mm%Ss)"
+        run: echo "date=$(date +%Y-%m-%d-%Hh%Mm%Ss)" >> $GITHUB_OUTPUT
 
       - name: Get short commit hash
         id: commit
-        run: echo "::set-output name=hash::$(git rev-parse --short HEAD)"
+        run: echo "hash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -36,7 +36,7 @@ jobs:
 
       - name: Remove 'v' prefix from release tag
         id: release_tag
-        run: echo "::set-output name=tag::$(echo ${{ github.event.release.tag_name }} | sed 's/^v//')"
+        run: echo "tag=$(echo ${{ github.event.release.tag_name }} | sed 's/^v//')" >> $GITHUB_OUTPUT
 
       - name: Build and push backend
         uses: docker/build-push-action@v5
