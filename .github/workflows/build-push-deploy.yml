@@ -34,6 +34,10 @@ jobs:
           username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
           password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
 
+      - name: Remove 'v' prefix from release tag
+        id: release_tag
+        run: echo "::set-output name=tag::$(echo ${{ github.event.release.tag_name }} | sed 's/^v//')"
+
       - name: Build and push backend
         uses: docker/build-push-action@v5
         with:
@@ -43,7 +47,7 @@ jobs:
           tags: |
             lunary/backend:latest
             lunary/backend:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
-            lunary/backend:${{ github.event.release.tag_name }}
+            ${{ github.event.release.tag_name != '' && format('lunary/backend:{0}', steps.release_tag.outputs.tag) || '' }}
           platforms: linux/amd64
 
       - name: Build and push frontend
@@ -55,7 +59,7 @@ jobs:
           tags: |
             lunary/frontend:latest
             lunary/frontend:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
-            lunary/frontend:${{ github.event.release.tag_name }}
+            ${{ github.event.release.tag_name != '' && format('lunary/frontend:{0}', steps.release_tag.outputs.tag) || '' }}
           platforms: linux/amd64
 
       - name: Build and push radar
@@ -67,7 +71,7 @@ jobs:
           tags: |
             lunary/radar:latest
             lunary/radar:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
-            lunary/radar:${{ github.event.release.tag_name }}
+            ${{ github.event.release.tag_name != '' && format('lunary/radar:{0}', steps.release_tag.outputs.tag) || '' }}
           platforms: linux/amd64
 
       - name: Build and push ml
@@ -79,7 +83,7 @@ jobs:
           tags: |
             lunary/ml:latest
             lunary/ml:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
-            lunary/ml:${{ github.event.release.tag_name }}
+            ${{ github.event.release.tag_name != '' && format('lunary/ml:{0}', steps.release_tag.outputs.tag) || '' }}
           platforms: linux/amd64
 
       - name: Build and push Monolith
@@ -91,7 +95,7 @@ jobs:
           tags: |
             lunary/lunary-ee:latest
             lunary/lunary-ee:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
-            lunary/lunary-ee:${{ github.event.release.tag_name }}
+            ${{ github.event.release.tag_name != '' && format('lunary/lunary-ee:{0}', steps.release_tag.outputs.tag) || '' }}
           platforms: linux/amd64
 
   deploy:
