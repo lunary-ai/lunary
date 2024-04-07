@@ -228,21 +228,23 @@ export default function RunInputOutput({
                     <ParamItem name="Tags" value={run.tags} />
                   )}
 
-                  {Object.keys(run.metadata || {}).map((key) => (
-                    <ParamItem
-                      key={key}
-                      name={key}
-                      color="blue"
-                      value={run.metadata?.[key]}
-                      render={(value) =>
-                        typeof value === "string" ? (
+                  {Object.entries(run.metadata || {}).map(([key, value]) => {
+                    if (!value || value.hasOwnProperty("toString")) {
+                      return null
+                    }
+
+                    return (
+                      <ParamItem
+                        key={key}
+                        name={key}
+                        color="blue"
+                        value={value}
+                        render={(value) => (
                           <CopyText ml={0} value={value.toString()} />
-                        ) : (
-                          value.toString()
-                        )
-                      }
-                    />
-                  ))}
+                        )}
+                      />
+                    )
+                  })}
                 </Stack>
 
                 {canEnablePlayground && (
