@@ -1,4 +1,4 @@
-const { withSentryConfig } = require("@sentry/nextjs");
+const { withSentryConfig } = require("@sentry/nextjs")
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -24,7 +24,7 @@ const nextConfig = {
     ],
   },
   async rewrites() {
-    if(!process.env.API_URL) {
+    if (!process.env.API_URL) {
       return []
     }
 
@@ -65,7 +65,9 @@ const sentryWebpackPluginOptions = {
   // An auth token is required for uploading source maps.
   // authToken: process.env.SENTRY_AUTH_TOKEN,
   silent: true, // Suppresses all logs
-};
+}
 
-
-module.exports = process.env.NEXT_PUBLIC_IS_SELF_HOSTED ? nextConfig : withSentryConfig(nextConfig, sentryWebpackPluginOptions)
+module.exports =
+  process.env.NEXT_PUBLIC_IS_SELF_HOSTED || process.env.CI
+    ? nextConfig
+    : withSentryConfig(nextConfig, sentryWebpackPluginOptions)
