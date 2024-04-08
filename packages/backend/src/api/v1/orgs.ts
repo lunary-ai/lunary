@@ -226,28 +226,26 @@ orgs.post("/playground", async (ctx: Context) => {
   `
   const model = extra?.model || "gpt-3.5-turbo"
 
-  const res = await runAImodel(content, extra, variables, model, false)
+  const res = await runAImodel(content, extra, variables, model, true)
 
-  ctx.body = res
-  // const stream = new PassThrough()
-  // stream.pipe(ctx.res)
-  // ctx.status = 200
-  // ctx.body = stream
+  const stream = new PassThrough()
+  stream.pipe(ctx.res)
+  ctx.status = 200
+  ctx.body = stream
 
-  // handleStream(
-  //   res,
-  //   (data) => {
-  //     stream.write(JSON.stringify(data) + "\n")
-  //   },
-  //   () => {
-  //     console.log("Stream finished")
-  //     stream.end()
-  //   },
-  //   (error) => {
-  //     throw new Error(error)
-  //     stream.end()
-  //   },
-  // )
+  handleStream(
+    res,
+    (data) => {
+      stream.write(JSON.stringify(data) + "\n")
+    },
+    () => {
+      stream.end()
+    },
+    (error) => {
+      throw new Error(error)
+      stream.end()
+    },
+  )
 })
 
 export default orgs
