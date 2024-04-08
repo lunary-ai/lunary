@@ -138,7 +138,7 @@ orgs.post("/upgrade", async (ctx: Context) => {
   if (!org.stripe_subscription) {
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "subscription",
-      payment_method_types: ["card"],
+      // payment_method_types: ["card"],
       client_reference_id: orgId,
       customer: org.stripeCustomer || undefined,
       metadata: {
