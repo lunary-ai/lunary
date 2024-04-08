@@ -23,12 +23,10 @@ class ErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Sentry.captureUnderscoreErrorException(contextData)
     console.error(error, errorInfo)
   }
 
   render() {
-    console.log("HERE")
     return (
       <Sentry.ErrorBoundary fallback={<p>Error rendering this component</p>}>
         {this.props.children}

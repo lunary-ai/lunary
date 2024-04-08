@@ -50,7 +50,6 @@ const calculateDailyCost = (usage) => {
 }
 
 export default function Analytics() {
-  throw new Error("Test")
   const [range, setRange] = useLocalStorage({
     key: "dateRange-analytics",
     defaultValue: 7,

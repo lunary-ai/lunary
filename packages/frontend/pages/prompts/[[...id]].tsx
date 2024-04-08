@@ -1,4 +1,4 @@
-import * as Sentry from "@sentry/browser";
+import * as Sentry from "@sentry/nextjs"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import {
@@ -303,6 +303,7 @@ function Playground() {
     } catch (e) {
       console.error(e)
       setError(e)
+      Sentry.captureException(e)
     }
 
     revalidateUser()
