@@ -13,7 +13,6 @@ dotenv.config({ path: "./packages/backend/.env" })
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  outputDir: "playwright-report",
   testDir: "./e2e",
   /* Timeout config */
 
