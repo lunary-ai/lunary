@@ -294,7 +294,6 @@ function Playground() {
           variables: templateVersion.testValues,
         },
         (chunk) => {
-          console.log(chunk)
           const parsedLine = JSON.parse(chunk)
 
           setOutput(parsedLine.choices[0]?.message)

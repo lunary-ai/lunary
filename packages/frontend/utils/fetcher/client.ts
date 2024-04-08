@@ -94,6 +94,10 @@ async function getStream(url, args, onChunk) {
     const chunk = decoder.decode(value, { stream: true }).trim().split("\n")
     console.log(chunk)
 
+    if (!chunk.at(-1)?.endsWith("\n")) {
+      chunk.pop()
+    }
+
     for (const item of chunk) onChunk(item)
   }
 }
