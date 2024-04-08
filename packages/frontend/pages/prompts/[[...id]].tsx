@@ -294,11 +294,15 @@ function Playground() {
           variables: templateVersion.testValues,
         },
         (chunk) => {
-          const parsedLine = JSON.parse(chunk)
+          try {
+            const parsedLine = JSON.parse(chunk)
 
-          setOutput(parsedLine.choices[0]?.message)
-          setOutputTokens(parsedLine.usage?.completion_tokens || 0)
-          setError(null)
+            setOutput(parsedLine.choices[0]?.message)
+            setOutputTokens(parsedLine.usage?.completion_tokens || 0)
+            setError(null)
+          } catch (error) {
+            console.error(error)
+          }
         },
       )
     } catch (e) {
