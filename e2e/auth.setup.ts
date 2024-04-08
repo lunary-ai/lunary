@@ -33,7 +33,7 @@ test("signup flow", async ({ page }) => {
   await page.getByPlaceholder("Organization name").click()
   await page.getByPlaceholder("Organization name").fill("TESTORG")
 
-  await page.getByLabel("-49").check()
+  await page.getByLabel("6-49").check()
 
   await page.getByRole("button", { name: "Create account" }).click()
 
