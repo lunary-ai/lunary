@@ -239,9 +239,11 @@ orgs.post("/playground", async (ctx: Context) => {
       stream.write(JSON.stringify(data) + "\n")
     },
     () => {
+      console.log("Stream finished")
       stream.end()
     },
-    () => {
+    (error) => {
+      throw new Error(error)
       stream.end()
     },
   )
