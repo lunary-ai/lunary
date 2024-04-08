@@ -1,3 +1,5 @@
+const { withSentryConfig } = require("@sentry/nextjs");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -57,4 +59,13 @@ const nextConfig = {
   transpilePackages: ["shared"],
 }
 
-module.exports = nextConfig
+const sentryWebpackPluginOptions = {
+  org: "lunary-9r",
+  project: "node-koa",
+  // An auth token is required for uploading source maps.
+  // authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: true, // Suppresses all logs
+};
+
+
+module.exports = process.env.NEXT_PUBLIC_IS_SELF_HOSTED ? nextConfig : withSentryConfig(nextConfig, sentryWebpackPluginOptions)

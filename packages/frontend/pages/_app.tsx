@@ -16,6 +16,7 @@ import localFont from "next/font/local"
 import { SWRConfig } from "swr"
 import { AuthProvider } from "@/utils/auth"
 import Script from "next/script"
+import ErrorBoundary from "@/components/blocks/ErrorBoundary"
 
 export const circularPro = localFont({
   display: "swap",
@@ -118,27 +119,29 @@ export default function App({ Component, pageProps }: AppProps) {
       <Head>
         <link href="https://lunary.ai/logo.png" rel="icon" type="image/png" />
       </Head>
-      <AuthProvider>
-        <SWRConfig
-          value={{
-            fetcher: fetcher.get,
-            dedupingInterval: 10000,
-          }}
-        >
-          <DefaultSeo
-            title="Dashboard"
-            titleTemplate="%s | Lunary"
-            defaultTitle="Dashboard | Lunary"
-          />
-          <MantineProvider theme={theme} defaultColorScheme="auto">
-            <AnalyticsWrapper>
-              <Layout>
-                <Component {...pageProps} />
-              </Layout>
-            </AnalyticsWrapper>
-          </MantineProvider>
-        </SWRConfig>
-      </AuthProvider>
+      <ErrorBoundary>
+        <AuthProvider>
+          <SWRConfig
+            value={{
+              fetcher: fetcher.get,
+              dedupingInterval: 10000,
+            }}
+          >
+            <DefaultSeo
+              title="Dashboard"
+              titleTemplate="%s | Lunary"
+              defaultTitle="Dashboard | Lunary"
+            />
+            <MantineProvider theme={theme} defaultColorScheme="auto">
+              <AnalyticsWrapper>
+                <Layout>
+                  <Component {...pageProps} />
+                </Layout>
+              </AnalyticsWrapper>
+            </MantineProvider>
+          </SWRConfig>
+        </AuthProvider>
+      </ErrorBoundary>
     </>
   )
 }

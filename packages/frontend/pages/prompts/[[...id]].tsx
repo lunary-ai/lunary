@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/browser";
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import {

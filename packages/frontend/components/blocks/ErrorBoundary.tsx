@@ -1,4 +1,5 @@
 import React, { ReactNode } from "react"
+import * as Sentry from "@sentry/nextjs"
 
 interface ErrorBoundaryState {
   hasError: boolean
@@ -22,15 +23,17 @@ class ErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // Sentry.captureUnderscoreErrorException(contextData)
     console.error(error, errorInfo)
   }
 
   render() {
-    if (this.state.hasError) {
-      return <p>Error rendering this component</p>
-    }
-
-    return this.props.children
+    console.log("HERE")
+    return (
+      <Sentry.ErrorBoundary fallback={<p>Error rendering this component</p>}>
+        {this.props.children}
+      </Sentry.ErrorBoundary>
+    )
   }
 }
 
