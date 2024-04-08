@@ -67,7 +67,7 @@ const setupSubscription = async (object: Stripe.Checkout.Session) => {
 }
 
 const updateSubscription = async (object: Stripe.Subscription) => {
-  const { customer, cancel_at_period_end, metadata, cancellation_details } =
+  const { customer, cancel_at_period_end, metadata, id, cancellation_details } =
     object
 
   const plan = metadata.plan
@@ -77,11 +77,11 @@ const updateSubscription = async (object: Stripe.Subscription) => {
   const [currentOrg] = await sql`
     SELECT plan, plan_period, canceled
     FROM org
-    WHERE stripe_customer = ${customer as string}
+    WHERE stripe_customer = ${customer as string} AND stripe_subscription = ${id}
   `
 
   if (!currentOrg) {
-    throw new Error("Org not found")
+    throw new Error("Org with matching subscription not found")
   }
 
   if (
@@ -126,14 +126,18 @@ const updateSubscription = async (object: Stripe.Subscription) => {
 }
 
 const cancelSubscription = async (object: Stripe.Subscription) => {
-  const { customer } = object
+  const { customer, id } = object
 
   const [org] = await sql`
     UPDATE org
     SET ${sql({ plan: "free", canceled: false, stripeSubscription: null })} 
-    WHERE stripe_customer = ${customer as string}
+    WHERE stripe_customer = ${customer as string} AND stripe_subscription = ${id}
     RETURNING id, name
   `
+
+  if (!org) {
+    throw new Error("Org with subscription not found")
+  }
 
   const [users] = await sql`
     select email, name
@@ -186,8 +190,7 @@ router.post("/", async (ctx: Context) => {
     }
   } catch (error: unknown) {
     console.error(error)
-    ctx.status = 400
-    ctx.body = `Webhook Error: ${error.message}`
+    ctx.throw(400, `Webhook Error: ${error.message}`)
   }
 
   ctx.body = { received: true }
