@@ -298,6 +298,7 @@ function Playground() {
 
           setOutput(parsedLine.choices[0]?.message)
           setOutputTokens(parsedLine.usage?.completion_tokens || 0)
+          setError(null)
         },
       )
     } catch (e) {
