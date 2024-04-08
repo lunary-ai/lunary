@@ -60,5 +60,5 @@ jobs:
       - name: Run tests
         run: npx playwright test
         env:
-          BASE_URL: http://localhost:8080
+          BASE_URL: http://0.0.0.0:8080
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
