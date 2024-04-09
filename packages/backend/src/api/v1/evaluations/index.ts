@@ -38,7 +38,6 @@ evaluations.post(
 
     const [{ plan }] =
       await sql`select plan, eval_allowance from org where id = ${orgId}`
-
     if (plan === "free") {
       ctx.throw(403, "You can't create evaluations on the free plan.")
     }
