@@ -121,7 +121,12 @@ projects.post(
     const { projectId } = ctx.params
     const { userId } = ctx.state
 
-    // Define the schema for request body validation using Zod
+    const [hasAccess] =
+      await sql`select * from account_project where project_id = ${projectId} and account_id = ${userId}`
+    if (!hasAccess) {
+      ctx.throw(401, "Not allowed")
+    }
+
     const requestBodySchema = z.object({
       type: z.enum(["private", "public"]),
     })
