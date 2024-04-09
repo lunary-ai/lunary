@@ -218,13 +218,19 @@ radars.get("/:radarId/chart", async (ctx) => {
 })
 
 radars.post("/", checkAccess("radars", "create"), async (ctx) => {
-  const { projectId, userId } = ctx.state
+  const { projectId, userId, orgId } = ctx.state
   const { description, view, checks, alerts, negative } = ctx.request.body as {
     description: string
     view: any[]
     checks: any[]
     alerts: any[]
     negative: boolean
+  }
+
+  const [{ plan }] =
+    await sql`select plan, eval_allowance from org where id = ${orgId}`
+  if (plan === "free") {
+    ctx.throw(403, "You can't create evaluations on the free plan.")
   }
 
   const [row] = await sql`
