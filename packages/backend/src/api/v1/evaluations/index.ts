@@ -1,15 +1,14 @@
-import Router from "koa-router"
+import { runChecksOnRun } from "@/src/checks/runChecks"
+import { checkAccess } from "@/src/utils/authorization"
+import { calcRunCost } from "@/src/utils/calcCost"
+import { getReadableDateTime } from "@/src/utils/date"
 import sql from "@/src/utils/db"
 import Context from "@/src/utils/koa"
-import { getReadableDateTime } from "@/src/utils/date"
-import { runEval } from "./utils"
-import { getEvaluation } from "./utils"
-import { calcRunCost } from "@/src/utils/calcCost"
-import { runChecksOnRun } from "@/src/checks/runChecks"
+import Router from "koa-router"
+import { RunEvent } from "lunary/types"
 import PQueue from "p-queue"
 import { PassThrough } from "stream"
-import { checkAccess } from "@/src/utils/authorization"
-import { RunEvent } from "lunary/types"
+import { runEval } from "./utils"
 
 const evaluations = new Router({ prefix: "/evaluations" })
 
@@ -20,7 +19,7 @@ evaluations.post(
   checkAccess("evaluations", "create"),
   async (ctx: Context) => {
     const { name, datasetId, checklistId, providers } = ctx.request.body as any
-    const { userId, projectId } = ctx.state
+    const { userId, projectId, orgId } = ctx.state
 
     ctx.request.socket.setTimeout(0)
     ctx.request.socket.setNoDelay(true)
@@ -36,6 +35,12 @@ evaluations.post(
       concurrency: MAX_PARALLEL_EVALS,
       timeout: 10000,
     })
+
+    const [{ plan }] =
+      await sql`select plan, eval_allowance from org where id = ${orgId}`
+    if (plan === "free") {
+      ctx.throw(403, "You can't create evaluations on the free plan.")
+    }
 
     // TODO: transactions, but not working with because of nesting
     const evaluationToInsert = {
