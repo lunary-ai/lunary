@@ -34,14 +34,12 @@ users.get("/me/org", async (ctx: Context) => {
       select
         account.id,
         account.created_at,
-        account.recovery_token,
         account.email,
         account.org_id,
         account.role,
         account.verified,
         account.avatar_url,
         account.last_login_at,
-        account.single_use_token,
         array_agg(account_project.project_id) as projects
       from
         account
@@ -66,14 +64,12 @@ users.get("/me", async (ctx: Context) => {
       select
         account.id,
         account.created_at,
-        account.recovery_token,
         account.email,
         account.org_id,
         account.role,
         account.verified,
         account.avatar_url,
         account.last_login_at,
-        account.single_use_token,
         array_agg(account_project.project_id) as projects
       from
         account

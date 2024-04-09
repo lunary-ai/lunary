@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import {
@@ -293,15 +294,21 @@ function Playground() {
           variables: templateVersion.testValues,
         },
         (chunk) => {
-          const parsedLine = JSON.parse(chunk)
+          try {
+            const parsedLine = JSON.parse(chunk)
 
-          setOutput(parsedLine.choices[0]?.message)
-          setOutputTokens(parsedLine.usage?.completion_tokens || 0)
+            setOutput(parsedLine.choices[0]?.message)
+            setOutputTokens(parsedLine.usage?.completion_tokens || 0)
+            setError(null)
+          } catch (error) {
+            console.error(error)
+          }
         },
       )
     } catch (e) {
       console.error(e)
       setError(e)
+      Sentry.captureException(e)
     }
 
     revalidateUser()
