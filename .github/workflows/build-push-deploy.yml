@@ -125,4 +125,4 @@ jobs:
           port: ${{ secrets.ML_IP_ADDRESS }}
           script: |
             docker pull lunary/ml:latest
-            docker run --rm -d lunary/ml "python main.py"
+            docker run --rm -d -p 4242:4242 lunary/ml sh -c "/usr/local/bin/python /app/main.py"
