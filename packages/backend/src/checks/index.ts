@@ -41,10 +41,12 @@ function lastMsg(field: any) {
   if (typeof field === "string" || !field) {
     return field
   } else if (Array.isArray(field) && isOpenAIMessage(field[0])) {
-    return field[field.length - 1].content
+    return JSON.stringify(field.at(-1).content)
   } else if (isOpenAIMessage(field)) {
     return field.content
-  } else return JSON.stringify(field)
+  } else {
+    return JSON.stringify(field)
+  }
 }
 
 function postgresOperators(operator: string) {

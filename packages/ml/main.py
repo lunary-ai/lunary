@@ -37,6 +37,6 @@ def pii_route():
     return jsonify(results)
 
 if __name__ == '__main__':
-    app.run(host='localhost', port=4242)
+    app.run(host='0.0.0.0', port=4242)
 
 print("Python ML Server running on port 4242")

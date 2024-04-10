@@ -108,9 +108,21 @@ jobs:
           host: ${{ secrets.PRODUCTION_IP_ADDRESS }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 3855
+          port: ${{ secrets.PRODUCTION_PORT }}
           script: |
+            docker image prune -f
             cd /opt/lunary
             docker compose pull
             docker compose down
             docker compose up -d
+
+      - name: Deploy to Production
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.ML_IP_ADDRESS }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.ML_IP_ADDRESS }}
+          script: |
+            docker pull lunary/ml:latest
+            docker run --rm -d lunary/ml "python main.py"
