@@ -88,6 +88,7 @@ jobs:
 
       - name: Build and push Monolith
         uses: docker/build-push-action@v5
+        if: github.event_name == 'release' && github.event.action == 'published'
         with:
           context: .
           file: ./ops/Dockerfile
