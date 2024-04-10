@@ -126,10 +126,7 @@ export async function authMiddleware(ctx: Context, next: Next) {
   // Check if API key is valid
   // Support passing as bearer because legacy SDKs did that
   else if (validateUUID(key)) {
-    console.log("key", key)
-
     const { type, projectId, orgId } = await checkApiKey(ctx, key as string)
-    console.log({ type, projectId, orgId })
 
     ctx.state.projectId = projectId
     ctx.state.orgId = orgId
@@ -152,12 +149,18 @@ export async function authMiddleware(ctx: Context, next: Next) {
       ctx.state.userId = payload.userId
       ctx.state.orgId = payload.orgId
 
+      const [user] =
+        await sql`select * from account where id = ${ctx.state.userId}`
+      if (!user) {
+        ctx.throw(401, "This account no longer exists")
+      }
+
       if (ctx.state.projectId) {
         // Check if user has access to project
 
         const [project] = await sql`
-        select * from account_project where account_id = ${ctx.state.userId} and project_id = ${ctx.state.projectId}
-      `
+          select * from account_project where account_id = ${ctx.state.userId} and project_id = ${ctx.state.projectId}
+        `
 
         if (!project) {
           throw new Error("Project not found")
