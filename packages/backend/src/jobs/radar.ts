@@ -1,4 +1,5 @@
 import sql from "@/src/utils/db"
+import * as Sentry from "@sentry/node"
 import { convertChecksToSQL } from "@/src/utils/checks"
 import { CheckLogic } from "shared"
 import { runChecksOnRun } from "../checks/runChecks"
@@ -57,29 +58,35 @@ async function radarJob() {
   }
 
   const radars = await sql`
-    SELECT r.* FROM radar r
-    JOIN project p ON r.project_id = p.id
-    JOIN org o ON p.org_id = o.id
-    WHERE o.plan != 'free'
+    select 
+      r.* 
+    from 
+      radar r
+      join project p on r.project_id = p.id
+      join org o on p.org_id = o.id
+    where 
+      o.plan != 'free'
+    order by 
+      random()
   `
 
-  let hasRadarRuns = false // used for limiting logging in the while loop
-
+  let i = 0
   for (const radar of radars) {
+    i++
     const runs = await getRadarRuns(radar)
 
-    if (runs.length) {
-      hasRadarRuns = true
-    }
-
     if (!runs.length) {
+      console.log(`Skipping radar ${radar.id} (${i} / ${radars.length})`)
       continue
     }
 
-    console.time(`Batch of ${runs.length} - radar ${radar.id}`)
+    console.log(
+      `Starting radar ${radar.id} - ${runs.length} runs (${i} / ${radars.length})`,
+    )
 
     for (let i = 0; i < runs.length; i += PARALLEL_BATCH_SIZE) {
       const batch = runs.slice(i, i + PARALLEL_BATCH_SIZE)
+      console.time(`Batch of ${batch.length} runs processed`)
       await Promise.all(
         batch.map((run) =>
           runRadarChecksOnRun(radar, run).catch((error) =>
@@ -87,13 +94,11 @@ async function radarJob() {
           ),
         ),
       )
+      console.timeEnd(`Batch of ${batch.length} runs processed`)
     }
-
-    console.timeEnd(`Batch of ${runs.length} - radar ${radar.id}`)
   }
 
   jobRunning = false
-  return hasRadarRuns
 }
 
 export default async function runRadarJob() {
@@ -102,6 +107,9 @@ export default async function runRadarJob() {
       await radarJob()
     } catch (error) {
       await sleep(3000) // Avoid spamming the ml service when there are connection errors
+      if (process.env.NODE_ENV === "production") {
+        Sentry.captureException(error)
+      }
       console.error(error)
     }
   }
