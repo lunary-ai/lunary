@@ -22,7 +22,6 @@ orgs.get("/", async (ctx: Context) => {
       id,
       created_at,
       plan,
-      billing,
       play_allowance,
       limited,
       verified,
