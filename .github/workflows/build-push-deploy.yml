@@ -122,7 +122,7 @@ jobs:
           host: ${{ secrets.ML_IP_ADDRESS }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.ML_IP_ADDRESS }}
+          port: ${{ secrets.ML_PORT }}
           script: |
             docker pull lunary/ml:latest
             docker run --rm -d -p 4242:4242 lunary/ml sh -c "/usr/local/bin/python /app/main.py"
