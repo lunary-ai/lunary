@@ -88,6 +88,7 @@ jobs:
 
       - name: Build and push Monolith
         uses: docker/build-push-action@v5
+        if: github.event_name == 'release' && github.event.action == 'published'
         with:
           context: .
           file: ./ops/Dockerfile
@@ -102,6 +103,17 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
+      - name: Deploy ML to Production
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.ML_IP_ADDRESS }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.ML_PORT }}
+          script: |
+            docker pull lunary/ml:latest
+            docker run --rm -d -p 4242:4242 lunary/ml sh -c "/usr/local/bin/python /app/main.py"
+
       - name: Deploy to Production
         uses: appleboy/ssh-action@master
         with:
@@ -115,14 +127,3 @@ jobs:
             docker compose pull
             docker compose down
             docker compose up -d
-
-      - name: Deploy to Production
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.ML_IP_ADDRESS }}
-          username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.ML_PORT }}
-          script: |
-            docker pull lunary/ml:latest
-            docker run --rm -d -p 4242:4242 lunary/ml sh -c "/usr/local/bin/python /app/main.py"
