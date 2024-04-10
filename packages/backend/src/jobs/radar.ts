@@ -67,7 +67,7 @@ async function radarJob() {
     where 
       o.plan != 'free'
     order by 
-      r.created_at desc
+      random()
   `
 
   let i = 0
@@ -80,13 +80,13 @@ async function radarJob() {
       continue
     }
 
-    console.log(`Starting radar ${radar.id}`)
-    console.time(
-      `Batch of ${runs.length} - radar ${radar.id} (${i} / ${radars.length})`,
+    console.log(
+      `Starting radar ${radar.id} - ${runs.length} runs (${i} / ${radars.length})`,
     )
 
     for (let i = 0; i < runs.length; i += PARALLEL_BATCH_SIZE) {
       const batch = runs.slice(i, i + PARALLEL_BATCH_SIZE)
+      console.time(`Batch of ${batch.length} runs processed`)
       await Promise.all(
         batch.map((run) =>
           runRadarChecksOnRun(radar, run).catch((error) =>
@@ -94,11 +94,8 @@ async function radarJob() {
           ),
         ),
       )
+      console.timeEnd(`Batch of ${batch.length} runs processed`)
     }
-
-    console.timeEnd(
-      `Batch of ${runs.length} - radar ${radar.id} (${i} / ${radars.length})`,
-    )
   }
 
   jobRunning = false
