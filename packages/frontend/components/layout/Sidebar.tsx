@@ -33,6 +33,7 @@ import { useAuth } from "@/utils/auth"
 import { useProject, useProjects } from "@/utils/dataHooks"
 import { useEffect, useState } from "react"
 import { ResourceName, hasAccess, hasReadAccess } from "shared"
+import config from "@/utils/config"
 
 function NavbarLink({
   icon: Icon,
@@ -83,13 +84,10 @@ export default function Sidebar() {
 
   const combobox = useCombobox()
 
-  const isSelfHosted = process.env.NEXT_PUBLIC_IS_SELF_HOSTED
+  const isSelfHosted = config.IS_SELF_HOSTED
 
   const billingEnabled =
-    process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY &&
-    !process.env.NEXT_PUBLIC_IS_SELF_HOSTED
-
-  console.log(isSelfHosted, org.license.radarEnabled)
+    process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY && !config.IS_SELF_HOSTED
 
   const APP_MENU: {
     label: string

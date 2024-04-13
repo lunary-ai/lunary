@@ -55,6 +55,7 @@ import SearchBar from "@/components/blocks/SearchBar"
 import { SettingsCard } from "@/components/blocks/SettingsCard"
 import { SEAT_ALLOWANCE } from "@/utils/pricing"
 import { openUpgrade } from "@/components/layout/UpgradeModal"
+import config from "@/utils/config"
 
 function SAMLConfig() {
   const { org, updateOrg, mutate } = useOrg()
@@ -324,7 +325,7 @@ export function RoleSelect({
 
   const { org } = useOrg()
 
-  const canUsePaidRoles = process.env.NEXT_PUBLIC_IS_SELF_HOSTED
+  const canUsePaidRoles = config.IS_SELF_HOSTED
     ? org.license.accessControlEnabled
     : org?.plan === "custom"
 
@@ -464,7 +465,7 @@ function InviteMemberCard() {
         projects: selectedProjects,
       })
 
-      if (!process.env.NEXT_PUBLIC_IS_SELF_HOSTED) {
+      if (!config.IS_SELF_HOSTED) {
         notifications.show({
           title: "Member invited",
           message: "An email has been sent to them",
@@ -770,7 +771,7 @@ function MemberListCard() {
 export default function Team() {
   const { org } = useOrg()
   const { user } = useUser()
-  const samlEnabled = process.env.NEXT_PUBLIC_IS_SELF_HOSTED
+  const samlEnabled = config.IS_SELF_HOSTED
     ? org.license.samlEnabled
     : org.samlEnabled
 

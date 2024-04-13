@@ -68,6 +68,6 @@ const sentryWebpackPluginOptions = {
 }
 
 module.exports =
-  process.env.NEXT_PUBLIC_IS_SELF_HOSTED || process.env.CI
+  process.env.NEXT_PUBLIC_IS_SELF_HOSTED === 'true' || process.env.CI
     ? nextConfig
     : withSentryConfig(nextConfig, sentryWebpackPluginOptions)

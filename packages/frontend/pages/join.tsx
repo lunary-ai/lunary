@@ -28,6 +28,7 @@ import Router, { useRouter } from "next/router"
 import Confetti from "react-confetti"
 import { notifications } from "@mantine/notifications"
 import { useJoinData } from "@/utils/dataHooks"
+import config from "@/utils/config"
 
 function TeamFull({ orgName }) {
   return (
@@ -43,7 +44,7 @@ function TeamFull({ orgName }) {
           <Button size="md" onClick={() => Router.push("/")}>
             Go back home
           </Button>
-          {!process.env.NEXT_PUBLIC_IS_SELF_HOSTED && (
+          {!config.IS_SELF_HOSTED && (
             <Anchor
               component="button"
               type="button"
@@ -268,7 +269,7 @@ export default function Join() {
                       You're all set 🎉
                     </Title>
 
-                    {!process.env.NEXT_PUBLIC_IS_SELF_HOSTED && (
+                    {!config.IS_SELF_HOSTED && (
                       <>
                         <Text size="lg" mt="xs" mb="xl" fw={500}>
                           Check your emails for the confirmation link.
