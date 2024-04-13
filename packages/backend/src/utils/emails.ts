@@ -1,4 +1,4 @@
-import { signJwt } from "@/src/api/v1/auth/utils"
+import { signJWT } from "@/src/api/v1/auth/utils"
 import { sendEmail } from "./sendEmail"
 
 function extractFirstName(name: string) {
@@ -7,7 +7,7 @@ function extractFirstName(name: string) {
 }
 
 export async function sendVerifyEmail(email: string, name: string) {
-  const token = await signJwt({ email })
+  const token = await signJWT({ email })
 
   const confirmLink = `${process.env.API_URL}/v1/users/verify-email?token=${token}`
 
