@@ -1,0 +1,1 @@
+alter table account alter column role set not null;

@@ -1,18 +1,20 @@
+import { Db } from "@/src/types"
 import sql from "@/src/utils/db"
 import { sendVerifyEmail } from "@/src/utils/emails"
 import Context from "@/src/utils/koa"
 import { sendTelegramMessage } from "@/src/utils/notifications"
 import Router from "koa-router"
 import { z } from "zod"
+import saml, { getLoginUrl } from "./saml"
 import {
   hashPassword,
+  isJWTExpired,
   requestPasswordReset,
   sanitizeEmail,
-  signJwt,
-  verifyJwt,
+  signJWT,
+  verifyJWT,
   verifyPassword,
 } from "./utils"
-import saml, { getLoginUrl } from "./saml"
 
 const auth = new Router({
   prefix: "/auth",
@@ -42,6 +44,7 @@ auth.post("/method", async (ctx: Context) => {
   }
 })
 
+// TODO: split signup and join
 auth.post("/signup", async (ctx: Context) => {
   const bodySchema = z.object({
     email: z.string().email().transform(sanitizeEmail),
@@ -141,7 +144,7 @@ auth.post("/signup", async (ctx: Context) => {
       return { user, org }
     })
 
-    const token = await signJwt({
+    const token = await signJWT({
       userId: user.id,
       email: user.email,
       orgId: org.id,
@@ -161,7 +164,7 @@ auth.post("/signup", async (ctx: Context) => {
     ctx.body = { token }
     return
   } else if (signupMethod === "join") {
-    const { payload } = await verifyJwt(token!)
+    const { payload } = await verifyJWT(token!)
 
     if (payload.email !== email) {
       ctx.throw(403, "Invalid token")
@@ -193,7 +196,7 @@ auth.get("/join-data", async (ctx: Context) => {
 
   const {
     payload: { orgId },
-  } = await verifyJwt(token)
+  } = await verifyJWT(token)
 
   const [org] = await sql`
     select name, plan from org where id = ${orgId}
@@ -238,6 +241,8 @@ auth.post("/login", async (ctx: Context) => {
   }
 
   if (!user.passwordHash) {
+    // If SAML was the only auth method allowed since the account creation,
+    // and that SAML is disabled by admin, accounts don't have a password yet
     await requestPasswordReset(email)
 
     ctx.body = { message: "We sent you an email to reset your password" }
@@ -255,7 +260,7 @@ auth.post("/login", async (ctx: Context) => {
   // update last login
   await sql`update account set last_login_at = now() where id = ${user.id}`
 
-  const token = await signJwt({
+  const token = await signJWT({
     userId: user.id,
     email: user.email,
     orgId: user.orgId,
@@ -276,11 +281,28 @@ auth.post("/request-password-reset", async (ctx: Context) => {
       ctx.body = { error: "Invalid email format" }
       return
     }
-
     const { email } = body.data
 
-    await requestPasswordReset(email)
+    const [{ recoveryToken }] = await sql<
+      Db.Account[]
+    >`select * from account where email = ${email}`
 
+    if (recoveryToken) {
+      if (await isJWTExpired(recoveryToken)) {
+        // Edge case 1: User has made a password reset request more than one hour ago, but has not completed the flow
+        await requestPasswordReset(email)
+        ctx.body = { ok: true }
+        return
+      } else {
+        // Edge case 2: User has already made a password request less than one hour ago
+        throw new Error(
+          "Password reset request already initiated less than one hour ago",
+        )
+      }
+    }
+
+    // Base case: User is making his first password reset request since the last one has been successfully reset
+    await requestPasswordReset(email)
     ctx.body = { ok: true }
   } catch (error) {
     console.error(error)
@@ -298,7 +320,7 @@ auth.post("/reset-password", async (ctx: Context) => {
 
   const {
     payload: { email },
-  } = await verifyJwt<{ email: string }>(token)
+  } = await verifyJWT<{ email: string }>(token)
 
   const passwordHash = await hashPassword(password)
 
@@ -306,7 +328,7 @@ auth.post("/reset-password", async (ctx: Context) => {
     update account set password_hash = ${passwordHash}, last_login_at = NOW() where email = ${email} returning *
   `
 
-  const authToken = await signJwt({
+  const authToken = await signJWT({
     userId: user.id,
     email: user.email,
     orgId: user.orgId,
@@ -319,7 +341,7 @@ auth.post("/reset-password", async (ctx: Context) => {
 auth.post("/exchange-token", async (ctx: Context) => {
   const { onetimeToken } = ctx.request.body as { onetimeToken: string }
 
-  await verifyJwt(onetimeToken)
+  await verifyJWT(onetimeToken)
 
   // get account with onetime_token = token
   const [account] = await sql`
@@ -332,7 +354,7 @@ auth.post("/exchange-token", async (ctx: Context) => {
 
   const oneDay = 60 * 60 * 24
 
-  const authToken = await signJwt(
+  const authToken = await signJWT(
     {
       userId: account.id,
       email: account.email,
