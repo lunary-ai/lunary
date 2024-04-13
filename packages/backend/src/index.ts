@@ -38,7 +38,7 @@ app.use(ratelimit)
 app.use(bodyParser())
 app.use(setDefaultBody)
 
-if (process.env.IS_SELF_HOSTED) {
+if (process.env.IS_SELF_HOSTED === "true") {
   app.use(licenseMiddleware)
 }
 
