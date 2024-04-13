@@ -37,7 +37,7 @@ export async function hashPassword(password: string): Promise<string> {
 
 const ONE_MONTH = 60 * 60 * 24 * 30
 
-export function signJwt(
+export function signJWT(
   payload: any,
   expiresIn: number = ONE_MONTH,
 ): Promise<string> {
@@ -52,11 +52,20 @@ export function signJwt(
     .sign(new TextEncoder().encode(process.env.JWT_SECRET))
 }
 
-export function verifyJwt<Payload>(token: string) {
-  return jose.jwtVerify<Payload>(
+export function verifyJWT<Payload>(token: string) {
+  return jose.jwtVerify<Payload & { iat: number; exp: number; nbf: number }>(
     token,
     new TextEncoder().encode(process.env.JWT_SECRET),
   )
+}
+
+export async function isJWTExpired(token: string) {
+  try {
+    await verifyJWT(token)
+    return false
+  } catch (error) {
+    return true
+  }
 }
 
 // TODO: shared
@@ -144,7 +153,7 @@ export async function authMiddleware(ctx: Context, next: Next) {
       if (!bearer) {
         throw new Error("No bearer token provided.")
       }
-      const { payload } = await verifyJwt<SessionData>(key)
+      const { payload } = await verifyJWT<SessionData>(key)
 
       ctx.state.userId = payload.userId
       ctx.state.orgId = payload.orgId
@@ -179,7 +188,7 @@ export async function requestPasswordReset(email: string) {
   const [user] = await sql`select id from account where email = ${email}`
 
   const ONE_HOUR = 60 * 60
-  const token = await signJwt({ email }, ONE_HOUR)
+  const token = await signJWT({ email }, ONE_HOUR)
 
   await sql`update account set recovery_token = ${token} where id = ${user.id}`
 
