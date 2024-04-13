@@ -16,6 +16,7 @@ import { setDefaultBody } from "./utils/misc"
 import ratelimit from "./utils/ratelimit"
 import { initSentry, requestHandler, tracingMiddleWare } from "./utils/sentry"
 import licenseMiddleware from "./utils/license"
+import config from "./utils/config"
 
 checkDbConnection()
 setupCronJobs()
@@ -38,7 +39,7 @@ app.use(ratelimit)
 app.use(bodyParser())
 app.use(setDefaultBody)
 
-if (process.env.IS_SELF_HOSTED) {
+if (config.IS_SELF_HOSTED) {
   app.use(licenseMiddleware)
 }
 
