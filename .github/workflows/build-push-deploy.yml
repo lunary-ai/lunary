@@ -17,7 +17,7 @@ jobs:
       - name: Check out the private Ops repo
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.ACCESS_TOKEN }}
+          token: ${{ secrets.GH_ACCESS_TOKEN }}
           submodules: "recursive"
 
       - name: Generate data
