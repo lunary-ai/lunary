@@ -120,13 +120,18 @@ datasets.patch(
   },
 )
 
-datasets.delete("/:id", async (ctx: Context) => {
-  const { id } = ctx.params
+datasets.delete(
+  "/:id",
+  checkAccess("datasets", "delete"),
+  async (ctx: Context) => {
+    const { id } = ctx.params
+    const { projectId } = ctx.state
 
-  await sql`delete from dataset where id = ${id}`
+    await sql`delete from dataset where id = ${id} and projectId = ${projectId}`
 
-  ctx.status = 200
-})
+    ctx.status = 200
+  },
+)
 
 // Create prompt
 datasets.post(
