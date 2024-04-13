@@ -1,19 +1,19 @@
-import Router from "koa-router"
 import sql from "@/src/utils/db"
+import Router from "koa-router"
 
-import orgs from "./orgs"
 import datasets from "./datasets"
+import orgs from "./orgs"
 
+import checklists from "./checklists"
+import evaluations from "./evaluations"
+import projectUsers from "./external-users"
 import filters from "./filters"
+import projects from "./projects"
+import radars from "./radars"
 import runs from "./runs/index"
 import templateVersions from "./templateVersions"
 import templates from "./templates"
 import users from "./users"
-import projectUsers from "./external-users"
-import projects from "./projects"
-import radars from "./radars"
-import evaluations from "./evaluations"
-import checklists from "./checklists"
 
 const v1 = new Router({
   prefix: "/v1",

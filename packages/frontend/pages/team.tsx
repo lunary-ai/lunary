@@ -324,7 +324,9 @@ export function RoleSelect({
 
   const { org } = useOrg()
 
-  const canUsePaidRoles = org?.plan === "custom"
+  const canUsePaidRoles = process.env.NEXT_PUBLIC_IS_SELF_HOSTED
+    ? org.license.accessControlEnabled
+    : org?.plan === "custom"
 
   const options = Object.values(roles).map(
     ({ value, name, description, free }) =>
@@ -768,11 +770,9 @@ function MemberListCard() {
 export default function Team() {
   const { org } = useOrg()
   const { user } = useUser()
-  const samlEnabled = org?.samlEnabled
-
-  if (!org) {
-    return <Loader />
-  }
+  const samlEnabled = process.env.NEXT_PUBLIC_IS_SELF_HOSTED
+    ? org.license.samlEnabled
+    : org.samlEnabled
 
   return (
     <Container className="unblockable">
