@@ -66,6 +66,8 @@ jobs:
           port: ${{ secrets.ML_PORT }}
           script: |
             docker pull lunary/ml:latest
+            docker ps -aq --filter ancestor=lunary/ml | xargs -r docker stop
+            docker ps -aq --filter ancestor=lunary/ml | xargs -r docker rm
             docker run --rm -d -p 4242:4242 lunary/ml
 
       - name: Deploy to Production
