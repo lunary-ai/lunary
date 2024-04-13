@@ -33,54 +33,17 @@ import { useAuth } from "@/utils/auth"
 import { useProject, useProjects } from "@/utils/dataHooks"
 import { useEffect, useState } from "react"
 import { ResourceName, hasAccess, hasReadAccess } from "shared"
+import config from "@/utils/config"
 
-const APP_MENU: {
-  label: string
-  icon: any
-  link: string
-  resource: ResourceName
-}[] = [
-  {
-    label: "Analytics",
-    icon: IconTimeline,
-    link: "/analytics",
-    resource: "analytics",
-  },
-  {
-    label: "Logs",
-    icon: IconListSearch,
-    link: "/logs",
-    resource: "logs",
-  },
-  { label: "Users", icon: IconUsers, link: "/users", resource: "users" },
-  {
-    label: "Prompts",
-    icon: IconPlayerPlay,
-    link: "/prompts",
-    resource: "prompts",
-  },
-  {
-    label: "Radars",
-    icon: IconShieldBolt,
-    link: "/radars",
-    resource: "radars",
-  },
-  {
-    label: "Evaluations",
-    icon: IconFlask2Filled,
-    link: "/evaluations",
-    resource: "evaluations",
-  },
-  // { label: "Datasets", icon: IconDatabase, link: "/datasets", resource: "datasets" },
-  {
-    label: "Settings & Keys",
-    icon: IconSettings,
-    link: "/settings",
-    resource: "apiKeys",
-  },
-]
-
-function NavbarLink({ icon: Icon, label, link, soon, onClick, c }) {
+function NavbarLink({
+  icon: Icon,
+  label,
+  link,
+  soon,
+  onClick,
+  c,
+  disabled = false,
+}) {
   const router = useRouter()
 
   const active = router.pathname.startsWith(link)
@@ -93,7 +56,7 @@ function NavbarLink({ icon: Icon, label, link, soon, onClick, c }) {
       onClick={onClick}
       c={c}
       label={`${label}${soon ? " (soon)" : ""}`}
-      disabled={soon}
+      disabled={disabled || soon}
       active={active}
       leftSection={
         <ThemeIcon
@@ -121,9 +84,58 @@ export default function Sidebar() {
 
   const combobox = useCombobox()
 
+  const isSelfHosted = config.IS_SELF_HOSTED
+
   const billingEnabled =
-    process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY &&
-    !process.env.NEXT_PUBLIC_IS_SELF_HOSTED
+    process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY && !config.IS_SELF_HOSTED
+
+  const APP_MENU: {
+    label: string
+    icon: any
+    link: string
+    resource: ResourceName
+    disabled?: boolean
+  }[] = [
+    {
+      label: "Analytics",
+      icon: IconTimeline,
+      link: "/analytics",
+      resource: "analytics",
+    },
+    {
+      label: "Logs",
+      icon: IconListSearch,
+      link: "/logs",
+      resource: "logs",
+    },
+    { label: "Users", icon: IconUsers, link: "/users", resource: "users" },
+    {
+      label: "Prompts",
+      icon: IconPlayerPlay,
+      link: "/prompts",
+      resource: "prompts",
+    },
+    {
+      label: "Radars",
+      icon: IconShieldBolt,
+      link: "/radars",
+      resource: "radars",
+      disabled: isSelfHosted ? !org.license.radarEnabled : false,
+    },
+    {
+      label: "Evaluations",
+      icon: IconFlask2Filled,
+      link: "/evaluations",
+      resource: "evaluations",
+      disabled: isSelfHosted ? !org.license.evalEnabled : false,
+    },
+    {
+      label: "Settings & Keys",
+      icon: IconSettings,
+      link: "/settings",
+      resource: "apiKeys",
+    },
+  ]
 
   const orgMenu = [
     {

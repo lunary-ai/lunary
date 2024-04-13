@@ -14,6 +14,7 @@ import { IconMessage } from "@tabler/icons-react"
 import CopyText from "../blocks/CopyText"
 import { useProject } from "@/utils/dataHooks"
 import { ListFeatures } from "./Paywall"
+import config from "@/utils/config"
 
 export default function Empty({
   Icon,
@@ -98,7 +99,7 @@ export default function Empty({
                 <CopyText value={project?.id} />
               </Group>
             )}
-            {!process.env.NEXT_PUBLIC_IS_SELF_HOSTED && (
+            {!config.IS_SELF_HOSTED && (
               <Stack>
                 <Text size="sm">Any issue? Get help from a founder.</Text>
                 <Group>

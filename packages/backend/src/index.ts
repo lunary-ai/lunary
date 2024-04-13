@@ -15,6 +15,7 @@ import { errorMiddleware } from "./utils/errors"
 import { setDefaultBody } from "./utils/misc"
 import ratelimit from "./utils/ratelimit"
 import { initSentry, requestHandler, tracingMiddleWare } from "./utils/sentry"
+import licenseMiddleware from "./utils/license"
 
 checkDbConnection()
 setupCronJobs()
@@ -36,6 +37,10 @@ app.use(authMiddleware)
 app.use(ratelimit)
 app.use(bodyParser())
 app.use(setDefaultBody)
+
+if (process.env.IS_SELF_HOSTED) {
+  app.use(licenseMiddleware)
+}
 
 // Routes
 app.use(redirections.routes())

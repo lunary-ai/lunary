@@ -44,6 +44,7 @@ import analytics from "@/utils/analytics"
 import { fetcher } from "@/utils/fetcher"
 import { NextSeo } from "next-seo"
 import { useAuth } from "@/utils/auth"
+import config from "@/utils/config"
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -124,7 +125,7 @@ function SignupPage() {
 
       auth.setJwt(token)
 
-      if (!process.env.NEXT_PUBLIC_IS_SELF_HOSTED) {
+      if (!config.IS_SELF_HOSTED) {
         notifications.show({
           icon: <IconCheck size={18} />,
           color: "teal",
@@ -460,7 +461,7 @@ function SignupPage() {
                   </Text>
 
                   <Group>
-                    {!process.env.NEXT_PUBLIC_IS_SELF_HOSTED && (
+                    {!config.IS_SELF_HOSTED && (
                       <Button
                         variant="outline"
                         onClick={() => {
