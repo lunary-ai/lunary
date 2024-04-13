@@ -66,9 +66,10 @@ jobs:
           port: ${{ secrets.ML_PORT }}
           script: |
             docker pull lunary/ml:latest
-            docker ps -aq --filter ancestor=lunary/ml | xargs -r docker stop
-            docker ps -aq --filter ancestor=lunary/ml | xargs -r docker rm
-            docker run --rm -d -p 4242:4242 lunary/ml
+            if [ $(docker ps -aq -f name=lunary/ml) ]; then
+              docker stop lunary/ml 
+            fi
+            docker run --rm -d -p 4242:4242 --name lunary/ml lunary/ml
 
       - name: Deploy to Production
         uses: appleboy/ssh-action@master
