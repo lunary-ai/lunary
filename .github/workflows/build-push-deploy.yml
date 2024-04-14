@@ -1,12 +1,6 @@
 name: Build Docker Images, Push to Registry, and Deploy
 
-on:
-  push
-  # push:
-  #   branches:
-  #     - main
-  # release:
-  #   types: [published]
+on: push
 
 jobs:
   build-and-push:
