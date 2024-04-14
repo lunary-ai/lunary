@@ -220,7 +220,7 @@ export default function NewEvaluation() {
                   value: dataset.id,
                 }))}
               />
-              <Anchor href="/datasets/new" mt="sm">
+              <Anchor href="/datasets" mt="sm">
                 + new
               </Anchor>
             </Steps.Step>
