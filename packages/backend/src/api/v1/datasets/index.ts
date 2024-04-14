@@ -127,7 +127,7 @@ datasets.delete(
     const { id } = ctx.params
     const { projectId } = ctx.state
 
-    await sql`delete from dataset where id = ${id} and projectId = ${projectId}`
+    await sql`delete from dataset where id = ${id} and project_id = ${projectId}`
 
     ctx.status = 200
   },
