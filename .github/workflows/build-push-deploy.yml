@@ -68,6 +68,7 @@ jobs:
             docker pull lunary/ml:latest
             if [ $(docker ps -aq -f name=ml) ]; then
               docker stop ml 
+              docker rm ml
             fi
             docker run --rm -d -p 4242:4242 --name ml lunary/ml
 

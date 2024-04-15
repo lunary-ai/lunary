@@ -1,7 +1,7 @@
 export const MODELS = [
   {
-    id: "gpt-4-turbo-preview",
-    name: "gpt-4-turbo-preview",
+    id: "gpt-4-turbo",
+    name: "gpt-4-turbo",
     provider: "openai",
   },
   {
@@ -18,6 +18,16 @@ export const MODELS = [
     id: "claude-3-haiku-20240307",
     name: "claude-3-haiku",
     provider: "anthropic",
+  },
+  {
+    id: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4-turbo-2024-04-09",
+    provider: "openai",
+  },
+  {
+    id: "gpt-4-turbo-preview",
+    name: "gpt-4-turbo-preview",
+    provider: "openai",
   },
   { id: "gpt-4-1106-preview", name: "gpt-4-1106-preview", provider: "openai" },
   { id: "gpt-4-0125-preview", name: "gpt-4-0125-preview", provider: "openai" },
