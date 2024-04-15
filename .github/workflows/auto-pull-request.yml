@@ -1,17 +1,7 @@
 name: Auto create Pull Request
 
 on:
-  push:
-    branches:
-      - "fix/*"
-      - "feat/*"
-      - "ci/*"
-      - "chore/*"
-      - "refactor/*"
-      - "style/*"
-      - "perf/*"
-      - "test/*"
-      - "docs/*"
+  create:
 
 permissions:
   pull-requests: write
@@ -23,7 +13,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: Create Pull Request
         run: |
-          echo $GITHUB_REF
-          prefix=$(echo $GITHUB_REF | cut -d '/' -f 3)
-          branch_name=$(echo $GITHUB_REF | cut -d '/' -f 4- | tr '-' ' ')
+          echo ${{ github.ref }} 
+          prefix=$(echo ${{ github.ref }}| cut -d '/' -f 3)
+          branch_name=$(echo ${{ github.ref }} | cut -d '/' -f 4- | tr '-' ' ')
           GH_TOKEN=${{ secrets.GH_TOKEN }} gh pr create --title "${branch_type}: ${branch_name}" --body "Description"
