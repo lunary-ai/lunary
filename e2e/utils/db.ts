@@ -1,4 +1,4 @@
-import sql from "../packages/backend/src/utils/db"
+import sql from "../../packages/backend/src/utils/db"
 
 export async function setOrgPro() {
   return sql`update org set plan = 'pro' where name = 'TESTORG'`

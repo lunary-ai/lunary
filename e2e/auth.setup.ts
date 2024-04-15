@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test"
 
-import { deleteOrg } from "./db-utils"
+import { deleteOrg } from "./utils/db"
 
 const authFile = "e2e/.auth/user.json"
 
