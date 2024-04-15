@@ -188,44 +188,47 @@ export default function Logs() {
       const search = urlParams.get("search")
       setQuery(search)
 
-      const filtersData = deserializeLogic(urlParams.toString())
-      if (filtersData) {
-        setChecks(filtersData)
+      const paramString = urlParams.toString()
+      if (paramString) {
+        const filtersData = deserializeLogic(paramString)
+        if (filtersData) {
+          setChecks(filtersData)
+        }
       }
     } catch (e) {
       console.error(e)
     }
   }, [])
 
-  useEffect(() => {
-    if (selectedId) {
-      router.push({
-        pathname: router.pathname,
-        query: { ...router.query, selected: selectedId },
-      })
-    }
-  }, [selectedId])
+  // useEffect(() => {
+  //   if (selectedId) {
+  //     router.push({
+  //       pathname: router.pathname,
+  //       query: { ...router.query, selected: selectedId },
+  //     })
+  //   }
+  // }, [selectedId])
 
-  useDidUpdate(() => {
-    // Change type filter and remove filters imcompatible with type
-    const newChecks = editCheck(filters, "type", { type }).filter(
-      (f) =>
-        f === "AND" ||
-        CHECKS_BY_TYPE[type].includes(f.id) ||
-        ["type", "search"].includes(f.id),
-    )
-    setChecks(newChecks)
-  }, [type])
+  // useDidUpdate(() => {
+  //   // Change type filter and remove filters imcompatible with type
+  //   const newChecks = editCheck(filters, "type", { type }).filter(
+  //     (f) =>
+  //       f === "AND" ||
+  //       CHECKS_BY_TYPE[type].includes(f.id) ||
+  //       ["type", "search"].includes(f.id),
+  //   )
+  //   setChecks(newChecks)
+  // }, [type])
 
-  // Convert search query to filter
-  useDidUpdate(() => {
-    const newChecks = editCheck(
-      filters,
-      "search",
-      query?.length ? { query } : null,
-    )
-    setChecks(newChecks)
-  }, [query])
+  // // Convert search query to filter
+  // useDidUpdate(() => {
+  //   const newChecks = editCheck(
+  //     filters,
+  //     "search",
+  //     query?.length ? { query } : null,
+  //   )
+  //   setChecks(newChecks)
+  // }, [query])
 
   const exportUrl = `/runs?${serializedChecks}&projectId=${projectId}`
 
