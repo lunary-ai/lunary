@@ -8,6 +8,7 @@ permissions:
 
 jobs:
   pull-request:
+    if: github.ref_type != 'tag'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
