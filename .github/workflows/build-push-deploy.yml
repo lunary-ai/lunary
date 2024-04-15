@@ -1,12 +1,12 @@
 name: Build Docker Images, Push to Registry, and Deploy
 
 on:
-  push
-  # push:
-  #   branches:
-  #     - main
-  # release:
-  #   types: [published]
+  # push
+  push:
+    branches:
+      - main
+  release:
+    types: [published]
 
 jobs:
   build-and-push:
@@ -50,6 +50,7 @@ jobs:
           push: true
           tags: |
             lunary/${{ matrix.service }}:latest
+            lunary/${{ matrix.service }}:1.2.9
             lunary/${{ matrix.service }}:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
             ${{ github.event.release.tag_name != '' && format('lunary/{0}:{1}', matrix.service, steps.release_tag.outputs.tag) || '' }}
           platforms: linux/amd64
