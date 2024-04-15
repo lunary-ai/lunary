@@ -206,6 +206,13 @@ export default function Logs() {
         pathname: router.pathname,
         query: { ...router.query, selected: selectedId },
       })
+    } else {
+      const { selected, ...query } = router.query
+
+      router.push({
+        pathname: router.pathname,
+        query,
+      })
     }
   }, [selectedId])
 
