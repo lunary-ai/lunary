@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test"
+import { expect, test } from "@playwright/test"
 import { setOrgFree, setOrgPro } from "./utils/db"
 
 test.beforeAll(async () => {

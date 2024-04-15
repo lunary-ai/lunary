@@ -167,13 +167,18 @@ export default function RunInputOutput({
                     URL to share {run?.isPublic ? "" : "with your team"}
                   </Text>
                   <SuperCopyButton
+                    data-testid="copy-log-url-button"
                     value={`${window.location.origin}/logs/${run.id}`}
                   />
                 </Group>
                 {hasAccess(user.role, "logs", "update") && (
                   <Switch
                     label={
-                      <Text size="sm" mr="sm">
+                      <Text
+                        size="sm"
+                        mr="sm"
+                        data-testid="make-log-public-switch"
+                      >
                         Make public
                       </Text>
                     }

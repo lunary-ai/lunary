@@ -8,7 +8,7 @@ import {
 } from "@mantine/core"
 import { IconCheck, IconCopy } from "@tabler/icons-react"
 
-export const SuperCopyButton = ({ value }) => (
+export const SuperCopyButton = ({ value, ...props }) => (
   <CopyButton value={value} timeout={2000}>
     {({ copied, copy }) => (
       <Tooltip label={copied ? "Copied" : "Copy"} position="right">
@@ -16,6 +16,7 @@ export const SuperCopyButton = ({ value }) => (
           color={copied ? "teal" : "gray"}
           variant="transparent"
           onClick={copy}
+          {...props}
         >
           {copied ? <IconCheck size="16px" /> : <IconCopy size="16px" />}
         </ActionIcon>

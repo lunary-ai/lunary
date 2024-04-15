@@ -34,6 +34,7 @@ export default defineConfig({
 
     // Uses Vercel deployment URL in CI, otherwise uses localhost.
     baseURL: process.env.CI ? process.env.BASE_URL : "http://127.0.0.1:8080",
+    permissions: ["clipboard-read", "clipboard-write"],
 
     video: "retain-on-failure",
 
