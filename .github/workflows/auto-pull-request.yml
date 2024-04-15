@@ -1,0 +1,18 @@
+name: Auto create Pull Request
+
+on:
+  create:
+
+permissions:
+  pull-requests: write
+
+jobs:
+  pull-request:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Create Pull Request
+        run: |
+          prefix=$(echo ${{ github.ref }}| cut -d '/' -f 3)
+          branch_name=$(echo ${{ github.ref }} | cut -d '/' -f 4- | tr '-' ' ')
+          GH_TOKEN=${{ secrets.GH_TOKEN }} gh pr create --title "${prefix}: ${branch_name}" --body "Description"
