@@ -188,9 +188,12 @@ export default function Logs() {
       const search = urlParams.get("search")
       setQuery(search)
 
-      const filtersData = deserializeLogic(urlParams.toString())
-      if (filtersData) {
-        setChecks(filtersData)
+      const paramString = urlParams.toString()
+      if (paramString) {
+        const filtersData = deserializeLogic(paramString)
+        if (filtersData) {
+          setChecks(filtersData)
+        }
       }
     } catch (e) {
       console.error(e)
@@ -202,6 +205,13 @@ export default function Logs() {
       router.push({
         pathname: router.pathname,
         query: { ...router.query, selected: selectedId },
+      })
+    } else {
+      const { selected, ...query } = router.query
+
+      router.push({
+        pathname: router.pathname,
+        query,
       })
     }
   }, [selectedId])
