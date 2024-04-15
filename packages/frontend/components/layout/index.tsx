@@ -77,7 +77,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     }
   }, [user])
 
-  if (!isAuthPage && (!user || !org)) {
+  if (!isAuthPage && !isPublicPage && (!user || !org)) {
     return (
       <Flex align="center" justify="center" h="100vh">
         <Loader />

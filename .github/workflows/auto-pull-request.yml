@@ -1,4 +1,4 @@
-name: Auto create Pull Request
+name: Create PR on Branch Creation
 
 on:
   create:

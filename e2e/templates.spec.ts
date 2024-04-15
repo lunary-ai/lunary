@@ -1,5 +1,5 @@
-import { test, expect } from "@playwright/test"
-import { setOrgFree, setOrgPro } from "./db-utils"
+import { expect, test } from "@playwright/test"
+import { setOrgFree, setOrgPro } from "./utils/db"
 
 test.beforeAll(async () => {
   await setOrgPro()
