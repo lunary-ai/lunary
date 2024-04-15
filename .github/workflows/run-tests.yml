@@ -37,7 +37,7 @@ jobs:
 
       - name: Install Playwright
         # if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install
+        run: npx playwright install --with-deps chromium
 
       - name: Start backend
         env:
