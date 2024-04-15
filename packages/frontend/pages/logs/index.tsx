@@ -7,6 +7,7 @@ import {
   Drawer,
   Flex,
   Group,
+  Loader,
   Menu,
   SegmentedControl,
   Stack,
@@ -386,15 +387,22 @@ export default function Logs() {
           title={selectedLog ? formatDateTime(selectedLog.createdAt) : ""}
           onClose={() => setSelectedId(null)}
         >
-          {selectedLog?.type === "llm" && (
-            <RunInputOutput
-              initialRun={selectedLog}
-              withPlayground={true}
-              withShare={true}
-            />
+          {loading ? (
+            <Loader />
+          ) : (
+            <>
+              {selectedLog?.type === "llm" && (
+                <RunInputOutput
+                  initialRun={selectedLog}
+                  withPlayground={true}
+                  withShare={true}
+                />
+              )}
+              {selectedLog?.type === "thread" && (
+                <ChatReplay run={selectedLog} />
+              )}
+            </>
           )}
-
-          {selectedLog?.type === "thread" && <ChatReplay run={selectedLog} />}
         </Drawer>
 
         <DataTable
