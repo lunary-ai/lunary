@@ -5,6 +5,8 @@ test.describe.configure({ mode: "serial" })
 let publicLogUrl: string
 
 test("make a log public", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"])
+
   await page.goto("/logs")
 
   await page.waitForLoadState("networkidle")
