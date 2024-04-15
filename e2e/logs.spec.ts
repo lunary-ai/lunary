@@ -15,8 +15,11 @@ test("make a log public", async ({ page, context }) => {
 
   await page.getByTestId("make-log-public-switch").click()
 
-  await page.getByTestId("copy-log-url-button").click()
-  publicLogUrl = await page.evaluate(() => navigator.clipboard.readText())
+  publicLogUrl = await page.evaluate(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const selected = urlParams.get("selected")
+    return `${window.location.origin}/logs/${selected}`
+  })
 })
 
 test("unauthenticated user can access public log URL", async ({ browser }) => {

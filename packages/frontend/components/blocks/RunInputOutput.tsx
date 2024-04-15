@@ -167,8 +167,11 @@ export default function RunInputOutput({
                     URL to share {run?.isPublic ? "" : "with your team"}
                   </Text>
                   <SuperCopyButton
-                    data-testid="copy-log-url-button"
-                    value={`${window.location.origin}/logs/${run.id}`}
+                    value={
+                      run?.isPublic
+                        ? `${window.location.origin}/logs/${run.id}`
+                        : `${window.location.origin}/logs?selected=${run.id}`
+                    }
                   />
                 </Group>
                 {hasAccess(user.role, "logs", "update") && (
