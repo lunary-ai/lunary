@@ -50,9 +50,9 @@ import { formatDateTime } from "@/utils/format"
 import { fetcher } from "@/utils/fetcher"
 import { useProject, useOrg, useProjectInfiniteSWR } from "@/utils/dataHooks"
 import { useDebouncedState, useDidUpdate } from "@mantine/hooks"
-import Router from "next/router"
 import { ProjectContext } from "@/utils/context"
 import { CheckLogic, deserializeLogic, serializeLogic } from "shared"
+import { useRouter } from "next/router"
 
 const columns = {
   llm: [
@@ -135,6 +135,7 @@ const editCheck = (filters, id, params) => {
 }
 
 export default function Logs() {
+  const router = useRouter()
   const { projectId } = useContext(ProjectContext)
   const { project, isLoading: projectLoading } = useProject()
   const { org } = useOrg()
@@ -144,11 +145,11 @@ export default function Logs() {
     { id: "type", params: { type: "llm" } },
   ])
   const [showCheckBar, setShowCheckBar] = useState(false)
-  const [selected, setSelected] = useState(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
   const [serializedChecks, setSerializedChecks] = useState<string>("")
   const [type, setType] = useState<"llm" | "trace" | "thread">("llm")
 
-  const [query, setQuery] = useDebouncedState("", 300)
+  const [query, setQuery] = useDebouncedState<string | null>(null, 300)
 
   const {
     data: logs,
@@ -157,33 +158,53 @@ export default function Logs() {
     loadMore,
   } = useProjectInfiniteSWR(`/runs?${serializedChecks}`)
 
+  const selectedLog = logs?.filter(({ id }) => id === selectedId)[0]
+
   useDidUpdate(() => {
-    const serialized = serializeLogic(filters)
+    let serialized = serializeLogic(filters)
 
     if (typeof serialized === "string") {
       setSerializedChecks(serialized)
-      Router.replace(`/logs?${serialized}`)
+      if (selectedId) {
+        serialized += `&selected=${selectedId}`
+      }
+      router.replace(`/logs?${serialized}`)
     }
   }, [filters])
 
   useEffect(() => {
-    // restore filters from query params
+    // restore filters and selected log from query params
     try {
-      const params = window.location.search.replace("?", "")
-      if (params) {
-        const type = new URLSearchParams(params).get("type") || "llm"
-        if (type) setType(type as any)
+      const urlParams = new URLSearchParams(window.location.search)
 
-        const search = new URLSearchParams(params).get("search")
-        if (search) setQuery(search as any)
+      const selectedId = urlParams.get("selected")
+      setSelectedId(selectedId)
 
-        const filtersData = deserializeLogic(params)
-        if (filtersData) setChecks(filtersData)
+      const type = urlParams.get("type")
+      if (type === "llm" || type === "trace" || type === "thread") {
+        setType(type)
+      }
+
+      const search = urlParams.get("search")
+      setQuery(search)
+
+      const filtersData = deserializeLogic(urlParams.toString())
+      if (filtersData) {
+        setChecks(filtersData)
       }
     } catch (e) {
       console.error(e)
     }
   }, [])
+
+  useEffect(() => {
+    if (selectedId) {
+      router.push({
+        pathname: router.pathname,
+        query: { ...router.query, selected: selectedId },
+      })
+    }
+  }, [selectedId])
 
   useDidUpdate(() => {
     // Change type filter and remove filters imcompatible with type
@@ -348,22 +369,22 @@ export default function Logs() {
         </Stack>
 
         <Drawer
-          opened={!!selected}
+          opened={!!selectedId}
           size="xl"
           keepMounted
           position="right"
-          title={selected ? formatDateTime(selected.createdAt) : ""}
-          onClose={() => setSelected(null)}
+          title={selectedLog ? formatDateTime(selectedLog.createdAt) : ""}
+          onClose={() => setSelectedId(null)}
         >
-          {selected?.type === "llm" && (
+          {selectedLog?.type === "llm" && (
             <RunInputOutput
-              initialRun={selected}
+              initialRun={selectedLog}
               withPlayground={true}
               withShare={true}
             />
           )}
 
-          {selected?.type === "thread" && <ChatReplay run={selected} />}
+          {selectedLog?.type === "thread" && <ChatReplay run={selectedLog} />}
         </Drawer>
 
         <DataTable
@@ -371,10 +392,10 @@ export default function Logs() {
           onRowClicked={(row) => {
             if (["agent", "chain"].includes(row.type)) {
               analytics.trackOnce("OpenTrace")
-              Router.push(`/traces/${row.id}`)
+              router.push(`/traces/${row.id}`)
             } else {
               analytics.trackOnce("OpenRun")
-              setSelected(row)
+              setSelectedId(row.id)
             }
           }}
           loading={loading || validating}

@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test"
 
-import { deleteOrg } from "./db-utils"
+import { deleteOrg, populateLogs } from "./utils/db"
 
 const authFile = "e2e/.auth/user.json"
 
@@ -50,4 +50,6 @@ test("signup flow", async ({ page }) => {
   ).toBeVisible()
 
   await page.context().storageState({ path: authFile })
+
+  await populateLogs()
 })

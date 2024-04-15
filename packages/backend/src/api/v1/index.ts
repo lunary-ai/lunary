@@ -29,7 +29,7 @@ v1.get("/health", async (ctx) => {
   if (!res) {
     ctx.throw(500, "Cound't reach the db")
   }
-  ctx.body = "Ok"
+  ctx.body = { status: "OK" }
 })
 
 v1.use(orgs.routes())
