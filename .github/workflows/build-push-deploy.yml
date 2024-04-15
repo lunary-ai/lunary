@@ -1,11 +1,12 @@
 name: Build Docker Images, Push to Registry, and Deploy
 
 on:
-  push:
-    branches:
-      - main
-  release:
-    types: [published]
+  push
+  # push:
+  #   branches:
+  #     - main
+  # release:
+  #   types: [published]
 
 jobs:
   build-and-push:
@@ -68,6 +69,7 @@ jobs:
             docker pull lunary/ml:latest
             if [ $(docker ps -aq -f name=ml) ]; then
               docker stop ml 
+              docker rm ml
             fi
             docker run --rm -d -p 4242:4242 --name ml lunary/ml
 
