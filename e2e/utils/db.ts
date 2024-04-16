@@ -23,6 +23,7 @@ export async function populateLogs() {
       org.name = 'TESTORG'
   `
 
+  await sql`insert into external_user ${sql({ id: 91823, projectId: project.id, externalId: "Salut-123" })}`
   const logs = [
     {
       created_at: "2024-04-11 02:32:30.457+00",
@@ -41,7 +42,7 @@ export async function populateLogs() {
       prompt_tokens: 15,
       completion_tokens: 20,
       cost: 3.75e-5,
-      external_user_id: null,
+      external_user_id: 91823,
       feedback: null,
       sibling_run_id: null,
       template_version_id: null,
@@ -49,6 +50,5 @@ export async function populateLogs() {
       metadata: "{}",
     },
   ]
-
   await sql`insert into run ${sql(logs)}`
 }
