@@ -12,7 +12,7 @@ users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
 
   const { limit = "100", page = "0", search, days } = ctx.query
 
-  const daysNum = parseInt(days as string)
+  const daysNum = parseInt((days as string) || "1000")
 
   let searchQuery = sql``
   if (search) {
