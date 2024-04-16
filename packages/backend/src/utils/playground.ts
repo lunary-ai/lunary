@@ -2,6 +2,7 @@ import { clearUndefined } from "./ingest"
 import OpenAI from "openai"
 import { MODELS } from "shared"
 import { ReadableStream } from "stream/web"
+import { getOpenAIParams } from "./openai"
 
 function convertInputToOpenAIMessages(input: any[]) {
   return input.map(({ role, content, text, functionCall, toolCalls, name }) => {
@@ -228,9 +229,7 @@ export async function runAImodel(
       break
 
     case "openai":
-      clientParams = {
-        apiKey: process.env.OPENAI_API_KEY,
-      }
+      clientParams = getOpenAIParams()
       break
     case "mistral":
       clientParams = {
