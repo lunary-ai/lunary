@@ -1,3 +1,4 @@
+import { fileURLToPath } from "url"
 import type { CheckLogic, CheckParam } from "."
 import { CHECKS } from "."
 
@@ -29,21 +30,22 @@ const paramSerializer = (param: CheckParam, value: any) => {
 
 function deserializeParamValue(
   filterParam: CheckParam,
-  v: string,
+  value: string,
 ): any | undefined {
+  console.log(value, filterParam.type)
   switch (filterParam.type) {
     case "select":
       if (filterParam.multiple) {
-        return v.split(",").map(decodeURIComponent)
+        return value.split(",").map(decodeURIComponent)
       } else {
-        return decodeURIComponent(v)
+        return decodeURIComponent(value)
       }
     case "text":
-      return decodeURIComponent(v)
+      return decodeURIComponent(value)
     case "number":
-      return Number(v)
+      return Number(decodeURIComponent(value))
     case "date":
-      return new Date(Number(v))
+      return new Date(Number(value))
     default:
       return undefined
   }
