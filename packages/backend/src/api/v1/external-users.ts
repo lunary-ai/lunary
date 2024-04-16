@@ -10,7 +10,9 @@ const users = new Router({
 users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
   const { projectId } = ctx.state
 
-  const { limit = "100", page = "0", search } = ctx.query
+  const { limit = "100", page = "0", search, days } = ctx.query
+
+  const daysNum = parseInt(days as string)
 
   let searchQuery = sql``
   if (search) {
@@ -26,7 +28,7 @@ users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
       created_at,
       last_seen,
       props,
-      (select coalesce(sum(cost), 0) from run where external_user_id = external_user.id) as cost
+      (select coalesce(sum(cost), 0) from run where external_user_id = external_user.id and run.created_at >= now() - interval '1 day' * ${daysNum}) as cost
     from 
       external_user
     where
