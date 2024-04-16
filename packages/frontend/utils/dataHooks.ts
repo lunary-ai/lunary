@@ -407,20 +407,18 @@ export function useRunsUsageByUser(range = null) {
   }
 }
 
-// TODO: pagination
-export function useAppUserList() {
+export function useAppUserList(usageRange) {
   const {
     data: users,
     isLoading,
     isValidating,
-  } = useProjectSWR(`/external-users`)
+  } = useProjectSWR(`/external-users?days=${usageRange}`)
 
   return { users, isLoading, isValidating }
 }
 
-// TODO
 export function useAppUsers(usageRange = 30) {
-  const { users, isLoading } = useAppUserList()
+  const { users, isLoading } = useAppUserList(usageRange)
 
   const maxLastSeen = new Date(
     new Date().getTime() - usageRange * 24 * 60 * 60 * 1000,
