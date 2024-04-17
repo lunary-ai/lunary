@@ -320,7 +320,7 @@ export function useLogs(params: any) {
   return useProjectInfiniteSWR(buildLogsAPIUrl(params))
 }
 
-export function useRun(id: string, initialData?: any) {
+export function useRun(id: string | null, initialData?: any) {
   const {
     data: run,
     isLoading,

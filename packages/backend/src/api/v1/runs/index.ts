@@ -72,6 +72,7 @@ function processParams(params: any) {
 
 const formatRun = (run: any) => ({
   id: run.id,
+  projectId: run.projectId,
   isPublic: run.isPublic,
   feedback: run.feedback,
   parentFeedback: run.parentFeedback,
