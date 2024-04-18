@@ -130,7 +130,11 @@ async function handleResponse(res: Response) {
   const isLoginPage = Router.pathname === "/login"
 
   if (!res.ok) {
-    if (res.status === 401 && !isLoginPage) {
+    if (
+      res.status === 401 &&
+      !isLoginPage &&
+      process.env.NODE_ENV !== "development"
+    ) {
       return signOut()
     }
 
