@@ -63,28 +63,31 @@ export default function SmartCheckSelect({
       ))
     : renderLabel(data?.find((d) => getItemValue(d) === value))
 
-  const renderedOptions = data
-    ?.filter((item) =>
-      search.length === 0
-        ? true
-        : customSearch
-          ? customSearch(search, item)
-          : getItemValue(item)
-              .toLowerCase()
-              .includes(search.trim().toLowerCase()),
-    )
-    .map((item) => (
-      <Combobox.Option
-        value={getItemValue(item)}
-        key={getItemValue(item)}
-        active={value?.includes(getItemValue(item))}
-      >
-        <Group gap="sm" wrap="nowrap">
-          {value?.includes(getItemValue(item)) ? <CheckIcon size={12} /> : null}
-          {renderListItem ? renderListItem(item) : renderLabel(item)}
-        </Group>
-      </Combobox.Option>
-    ))
+  function optionsFilter(item) {
+    if (search.length === 0) {
+      return true
+    }
+
+    if (customSearch) {
+      return customSearch(search, item)
+    }
+
+    return getItemValue(item)
+      .toLowerCase()
+      .includes(search.trim().toLowerCase())
+  }
+  const renderedOptions = data?.filter(optionsFilter).map((item) => (
+    <Combobox.Option
+      value={getItemValue(item)}
+      key={getItemValue(item)}
+      active={value?.includes(getItemValue(item))}
+    >
+      <Group gap="sm" wrap="nowrap">
+        {value?.includes(getItemValue(item)) ? <CheckIcon size={12} /> : null}
+        {renderListItem ? renderListItem(item) : renderLabel(item)}
+      </Group>
+    </Combobox.Option>
+  ))
 
   useEffect(() => {
     if (!value) {

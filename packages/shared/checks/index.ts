@@ -165,7 +165,7 @@ export const CHECKS: Check[] = [
           const searchTerm = search.toLowerCase().trim()
 
           const toCheck = [
-            item.external_id,
+            item.externalId,
             item.props?.email,
             item.props?.name,
             item.props?.firstName,
