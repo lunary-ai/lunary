@@ -26,9 +26,6 @@ const isChatMessages = (obj) => {
         typeof obj.content === "string"
 }
 
-// This is the component that renders the input and output of a run
-// It also allow redirecting to the playground or sharing the run
-
 const ParamItem = ({
   name,
   value,
@@ -53,7 +50,7 @@ const ParamItem = ({
             </Badge>
           ) : Array.isArray(value) ? (
             value.map((v, i) => (
-              <Badge key={i} variant="outline" tt="none">
+              <Badge key={i} variant="outline" tt="none" mr="xs">
                 {v}
               </Badge>
             ))
@@ -208,6 +205,7 @@ export default function RunInputOutput({
             <Card withBorder radius="md">
               <Group justify="space-between" align="start">
                 <Stack gap="xs">
+                  a
                   <ParamItem
                     name="Model"
                     value={run.name}
@@ -217,7 +215,6 @@ export default function RunInputOutput({
                       </Badge>
                     )}
                   />
-
                   {PARAMS.map(
                     ({ key, name, render }) =>
                       typeof run.params?.[key] !== "undefined" && (
@@ -230,11 +227,9 @@ export default function RunInputOutput({
                         />
                       ),
                   )}
-
                   {run.tags?.length > 0 && (
                     <ParamItem name="Tags" value={run.tags} />
                   )}
-
                   {Object.entries(run.metadata || {}).map(([key, value]) => {
                     if (!value || value.hasOwnProperty("toString")) {
                       return null
