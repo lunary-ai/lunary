@@ -129,6 +129,7 @@ export default function SmartCheckSelect({
           w="min-content"
         >
           <Combobox.Target>
+
             <Pill.Group style={{ flexWrap: "nowrap", overflow: "hidden" }}>
               {renderedValue}
             </Pill.Group>
