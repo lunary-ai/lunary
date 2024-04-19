@@ -96,12 +96,18 @@ function RenderCheckNode({
 
           const UIItem = CHECKS_UI_DATA[check.id] || CHECKS_UI_DATA["other"]
 
-          const width =
-            isParamNotLabel && param.width
-              ? minimal
-                ? param.width
-                : param.width * 1.1
-              : undefined
+          function getWidth() {
+            if (!isParamNotLabel || !param.width) {
+              return
+            }
+
+            if (minimal) {
+              return param.width
+            }
+
+            return param.width * 1.1
+          }
+          const width = getWidth()
 
           const onChangeParam = (value) => {
             isParamNotLabel &&
