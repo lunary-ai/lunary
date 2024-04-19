@@ -64,7 +64,9 @@ function RenderCheckNode({
               value={currentOperator}
               onChange={(val) => {
                 const newNodeArray = [...node]
-                newNodeArray[0] = val
+                if (val !== null) {
+                  newNodeArray[0] = val
+                }
                 setNode(newNodeArray as CheckLogic)
               }}
             />
@@ -79,7 +81,7 @@ function RenderCheckNode({
   // ts assert node is LogicElement
   const s = node as LogicData
 
-  const check = checks.find((f) => f.id === s.id)
+  const check = checks.find((f) => f.id === s?.id)
 
   if (!check) return null
 
