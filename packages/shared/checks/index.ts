@@ -26,9 +26,9 @@ export const CHECKS: Check[] = [
       {
         type: "select",
         id: "type",
-        width: 110,
+        width: 100,
         defaultValue: "llm",
-        searchable: true,
+        searchable: false,
         options: [
           {
             label: "LLM Call",
