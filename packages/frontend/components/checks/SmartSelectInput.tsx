@@ -68,17 +68,23 @@ export default function SmartCheckSelect({
       : onChange(null)
   }
 
+  function getRenderedValues() {
+    if (fixedValue?.length >= 4) {
+      return <Pill>{fixedValue?.length} selected</Pill>
+    }
+    return fixedValue.map((item) => (
+      <Pill
+        key={item}
+        withRemoveButton
+        maw={130}
+        onRemove={() => handleValueRemove(item)}
+      >
+        {renderLabel(data?.find((d) => getItemValue(d) === item))}
+      </Pill>
+    ))
+  }
   const renderedValue = multiple
-    ? fixedValue.map((item) => (
-        <Pill
-          key={item}
-          withRemoveButton
-          maw={130}
-          onRemove={() => handleValueRemove(item)}
-        >
-          {renderLabel(data?.find((d) => getItemValue(d) === item))}
-        </Pill>
-      ))
+    ? getRenderedValues()
     : renderLabel(data?.find((d) => getItemValue(d) === value))
 
   function optionsFilter(item) {
@@ -123,10 +129,7 @@ export default function SmartCheckSelect({
           w="min-content"
         >
           <Combobox.Target>
-            <Pill.Group
-              style={{ flexWrap: "nowrap", overflow: "hidden" }}
-              maw="300"
-            >
+            <Pill.Group style={{ flexWrap: "nowrap", overflow: "hidden" }}>
               {renderedValue}
             </Pill.Group>
           </Combobox.Target>
