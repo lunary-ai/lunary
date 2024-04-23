@@ -75,10 +75,8 @@ export function useProjectInfiniteSWR(key: string, ...args: any[]) {
     return generateKey(key, projectId, `page=${pageIndex}&limit=100`)
   }
 
-  const { data, isLoading, isValidating, size, setSize } = useSWRInfinite(
-    getKey,
-    ...(args as [any]),
-  )
+  const { data, isLoading, isValidating, size, setSize, mutate } =
+    useSWRInfinite(getKey, ...(args as [any]))
 
   function loadMore() {
     const hasMore = data && data[data.length - 1]?.length >= PAGE_SIZE
@@ -93,6 +91,7 @@ export function useProjectInfiniteSWR(key: string, ...args: any[]) {
     loading: isLoading,
     validating: isValidating,
     loadMore,
+    mutate,
   }
 }
 
@@ -337,14 +336,20 @@ export function useRun(id: string | null, initialData?: any) {
     },
   )
 
+  const { trigger: updateFeedback } = useProjectMutation(
+    id && `/runs/${id}/feedback`,
+    fetcher.patch,
+  )
+
   async function updateRun(data) {
-    mutate({ ...run, ...data }, { revalidate: false })
+    mutate({ ...run, ...data })
     await update(data)
   }
 
   return {
     run,
     update: updateRun,
+    updateFeedback,
     mutate,
     loading: isLoading,
   }

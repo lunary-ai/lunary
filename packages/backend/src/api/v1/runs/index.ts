@@ -4,10 +4,11 @@ import Router from "koa-router"
 
 import ingest from "./ingest"
 import { fileExport } from "./export"
-import { deserializeLogic } from "shared"
+import { Feedback, deserializeLogic } from "shared"
 import { convertChecksToSQL } from "@/src/utils/checks"
 import { checkAccess } from "@/src/utils/authorization"
 import { jsonrepair } from "jsonrepair"
+import { z } from "zod"
 
 const runs = new Router({
   prefix: "/runs",
@@ -263,27 +264,59 @@ runs.get("/:id", async (ctx) => {
 })
 
 runs.patch("/:id", checkAccess("logs", "update"), async (ctx: Context) => {
+  // TODO: each value should probably have their own endpoint
+  // TODO: zod
   const { projectId } = ctx.state
   const { id } = ctx.params
-  const { isPublic, feedback, tags } = ctx.request.body as {
+  const { isPublic, tags } = ctx.request.body as {
     isPublic: boolean
-    feedback: string
     tags: string[]
+  }
+
+  let valuesToUpdate = {}
+  if (isPublic) {
+    valuesToUpdate.isPublic = isPublic
+  }
+  if (tags) {
+    valuesToUpdate.tags = tags
   }
 
   await sql`
       update
           run
-      set
-          is_public = ${isPublic},
-          feedback = ${feedback},
-          tags = ${tags}
+      set ${sql(valuesToUpdate)}
       where
           project_id= ${projectId as string}
           and id = ${id}`
 
   ctx.status = 200
 })
+
+runs.patch(
+  "/:id/feedback",
+  checkAccess("logs", "update"),
+  async (ctx: Context) => {
+    const { projectId } = ctx.state
+    const { id } = ctx.params
+    const feedback = Feedback.parse(ctx.request.body)
+
+    let [{ feedback: existingFeedback }] =
+      (await sql`select feedback from run where id = ${id}`) || {}
+
+    const newFeedback = { ...existingFeedback, ...feedback }
+
+    await sql`
+      update 
+        run 
+      set 
+        feedback = ${sql.json(newFeedback)} 
+      where 
+        id = ${id} 
+        and project_id = ${projectId}`
+
+    ctx.status = 200
+  },
+)
 
 runs.get("/:id/related", checkAccess("logs", "read"), async (ctx) => {
   const id = ctx.params.id
