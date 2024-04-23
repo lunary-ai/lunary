@@ -1,5 +1,5 @@
 import Router, { useRouter } from "next/router"
-import { useEffect, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 
 import {
   Alert,
@@ -13,6 +13,7 @@ import {
   Paper,
   PasswordInput,
   Radio,
+  Select,
   Stack,
   Text,
   TextInput,
@@ -46,11 +47,29 @@ import { NextSeo } from "next-seo"
 import { useAuth } from "@/utils/auth"
 import config from "@/utils/config"
 
+function getRandomizedChoices() {
+  const choices = [
+    { label: "Google", value: "seo" },
+    { label: "X / Twitter", value: "s" },
+    { label: "LangChain", value: "langchain" },
+    { label: "LiteLLM", value: "litellm" },
+    { label: "Hacker News", value: "hackernews" },
+    { label: "Friend", value: "friend" },
+    { label: "LangFlow", value: "langflow" },
+    { label: "Other", value: "other" },
+  ]
+
+  return choices.sort(() => Math.random() - 0.5)
+}
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
+
+  const choices = useMemo(() => getRandomizedChoices(), [])
+
   const router = useRouter()
 
   const auth = useAuth()
@@ -62,6 +81,7 @@ function SignupPage() {
       projectName: "Project #1",
       orgName: "",
       employeeCount: "",
+      whereFindUs: "",
       password: "",
     },
 
@@ -90,6 +110,7 @@ function SignupPage() {
     projectName,
     orgName,
     employeeCount,
+    whereFindUs,
   }: {
     email: string
     password: string
@@ -97,6 +118,7 @@ function SignupPage() {
     projectName: string
     orgName: string
     employeeCount: string
+    whereFindUs: string
   }) {
     setLoading(true)
 
@@ -115,6 +137,7 @@ function SignupPage() {
           projectName,
           orgName,
           employeeCount,
+          whereFindUs,
           signupMethod: "signup",
         },
       })
@@ -125,6 +148,15 @@ function SignupPage() {
 
       auth.setJwt(token)
 
+      analytics.track("Signup", {
+        email,
+        name,
+        projectName,
+        orgName,
+        whereFindUs,
+        employeeCount,
+      })
+
       if (!config.IS_SELF_HOSTED) {
         notifications.show({
           icon: <IconCheck size={18} />,
@@ -132,17 +164,8 @@ function SignupPage() {
           title: "Email sent",
           message: "Check your emails for the confirmation link",
         })
-      } else {
-        nextStep()
       }
 
-      analytics.track("Signup", {
-        email,
-        name,
-        projectName,
-        orgName,
-        employeeCount,
-      })
       nextStep()
     } catch (error) {
       console.error(error)
@@ -296,7 +319,7 @@ function SignupPage() {
                           />
 
                           <Radio.Group
-                            label="Employee count"
+                            label="Company Size"
                             error={
                               form.errors.employeeCount &&
                               "This field is required"
@@ -310,6 +333,14 @@ function SignupPage() {
                               <Radio value="101-500" label="100+" />
                             </Group>
                           </Radio.Group>
+
+                          <Select
+                            label="Where did you find us?"
+                            description="This helps us focus our efforts."
+                            placeholder="Select an option"
+                            data={choices}
+                            {...form.getInputProps("whereFindUs")}
+                          />
 
                           <Stack gap="xs">
                             <Button
@@ -420,8 +451,8 @@ function SignupPage() {
                     config={{
                       hideEventTypeDetails: "true",
                       layout: "month_view",
-                      name: "vince loewe", //form.values.name,
-                      email: "vince@lunary.ai", //form.values.email,
+                      name: form.values.name,
+                      email: form.values.email,
                     }}
                   />
                   <Button
