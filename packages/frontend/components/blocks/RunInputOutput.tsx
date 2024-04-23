@@ -18,6 +18,7 @@ import SmartViewer from "../SmartViewer"
 import CopyText, { SuperCopyButton } from "./CopyText"
 import ErrorBoundary from "./ErrorBoundary"
 import TokensBadge from "./TokensBadge"
+import Feedbacks from "./Feedbacks"
 
 const isChatMessages = (obj) => {
   return Array.isArray(obj)
@@ -134,11 +135,13 @@ const PARAMS = [
 
 export default function RunInputOutput({
   initialRun,
+  withFeedback = false,
   withPlayground = true,
   withShare = false,
+  mutateLogs,
 }) {
   const { user } = useUser()
-  const { run, update } = useRun(initialRun?.id, initialRun)
+  const { run, update, updateFeedback } = useRun(initialRun?.id, initialRun)
 
   const canEnablePlayground =
     withPlayground &&
@@ -283,7 +286,7 @@ export default function RunInputOutput({
 
         {(run?.output || run?.error) && (
           <>
-            <Group justify="space-between">
+            <Group mt="lg" justify="space-between">
               <Text fw="bold" size="sm">
                 {run.error
                   ? "Error"
@@ -291,9 +294,21 @@ export default function RunInputOutput({
                     ? "Documents"
                     : "Output"}
               </Text>
-              {run.tokens?.completion && (
-                <TokensBadge tokens={run.tokens?.completion} />
-              )}
+
+              <Group>
+                {withFeedback && (
+                  <Feedbacks
+                    feedback={run.feedback}
+                    updateFeedback={async (feedback) => {
+                      await updateFeedback(feedback)
+                      await mutateLogs()
+                    }}
+                  />
+                )}
+                {run.tokens?.completion && (
+                  <TokensBadge tokens={run.tokens?.completion} />
+                )}
+              </Group>
             </Group>
             <SmartViewer data={run.output} error={run.error} />
           </>

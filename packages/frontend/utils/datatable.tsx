@@ -1,5 +1,5 @@
 import AppUserAvatar from "@/components/blocks/AppUserAvatar"
-import Feedback from "@/components/blocks/Feedback"
+import Feedback from "@/components/blocks/OldFeedback"
 import ProtectedText from "@/components/blocks/ProtectedText"
 import SmartViewer from "@/components/SmartViewer"
 import { Badge, Group } from "@mantine/core"

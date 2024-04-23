@@ -163,11 +163,11 @@ export default function Logs() {
     loading,
     validating,
     loadMore,
+    mutate,
   } = useProjectInfiniteSWR(`/runs?${serializedChecks}`)
 
   const { run: selectedRun, loading: runLoading } = useRun(selectedRunId)
 
-  console.log(selectedRun?.projectId)
   useEffect(() => {
     if (selectedRun && selectedRun.projectId !== projectId) {
       setProjectId(selectedRun.projectId)
@@ -407,8 +407,10 @@ export default function Logs() {
               {selectedRun?.type === "llm" && (
                 <RunInputOutput
                   initialRun={selectedRun}
+                  withFeedback={true}
                   withPlayground={true}
                   withShare={true}
+                  mutateLogs={mutate}
                 />
               )}
               {selectedRun?.type === "thread" && (
