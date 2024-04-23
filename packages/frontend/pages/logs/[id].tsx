@@ -36,6 +36,7 @@ export default function PublicRun() {
         {data && (
           <RunInputOutput
             initialRun={data}
+            withFeedback={true}
             withPlayground={false}
             withShare={false}
           />

@@ -26,6 +26,14 @@ export default function Feedback({
 
   if (!data) return null
 
+  if (data.type === "thumb") {
+    data = { thumbs: data.value }
+  }
+
+  if (data.type === "comment") {
+    data = { comment: data.value }
+  }
+
   const getIconProps = (color: string) => ({
     size: 20,
     fillOpacity: 0.2,
@@ -49,10 +57,8 @@ export default function Feedback({
               : "",
           }}
         >
-          {data?.thumbs === "up" && <IconThumbUp {...getIconProps("green")} />}
-          {data?.thumbs === "down" && (
-            <IconThumbDown {...getIconProps("red")} />
-          )}
+          {data?.thumb === "up" && <IconThumbUp {...getIconProps("green")} />}
+          {data?.thumb === "down" && <IconThumbDown {...getIconProps("red")} />}
           {typeof data?.rating === "number" && (
             <Group gap={3}>
               {Array.from({ length: data.rating }).map((_, i) => (
@@ -61,7 +67,7 @@ export default function Feedback({
             </Group>
           )}
           {data?.emoji && <span>{data.emoji}</span>}
-          {typeof data?.comment === "string" && (
+          {typeof data?.comment === "string" && data?.comment !== "" && (
             /* Support for comment == "" in the filters */
             <Tooltip label={`“${data.comment}”`} disabled={!data.comment}>
               <IconMessage {...getIconProps("teal")} />

@@ -33,7 +33,7 @@ import {
   IconUserCheck,
   IconWorldWww,
 } from "@tabler/icons-react"
-import Feedback from "../blocks/Feedback"
+import Feedback from "../blocks/OldFeedback"
 import AppUserAvatar from "../blocks/AppUserAvatar"
 import { Group, Text } from "@mantine/core"
 import { capitalize, formatAppUser } from "@/utils/format"
