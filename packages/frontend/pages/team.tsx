@@ -540,10 +540,15 @@ function InviteMemberCard() {
 function UpdateUserForm({ user, onClose }) {
   const [role, setRole] = useState(user.role)
   const { projects } = useProjects()
+  const { org } = useOrg()
 
   const [userProjects, setUserProjects] = useState(user.projects)
   const { updateUser } = useOrgUser(user.id)
   const [isLoading, setIsLoading] = useState(false)
+
+  const canUsePaidRoles = config.IS_SELF_HOSTED
+    ? org.license.accessControlEnabled
+    : org?.plan === "custom"
 
   useEffect(() => {
     if (["admin", "billing"].includes(role)) {
@@ -575,7 +580,7 @@ function UpdateUserForm({ user, onClose }) {
         <ProjectMultiSelect
           value={userProjects}
           setValue={setUserProjects}
-          disabled={["admin", "billing"].includes(role)}
+          disabled={["admin", "billing"].includes(role) || !canUsePaidRoles}
         />
       </Input.Wrapper>
 
