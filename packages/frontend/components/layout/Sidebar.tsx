@@ -127,7 +127,7 @@ export default function Sidebar() {
       icon: IconFlask2Filled,
       link: "/evaluations",
       resource: "evaluations",
-      disabled: isSelfHosted ? org.license && org.license.evalEnabled : false,
+      disabled: isSelfHosted ? org.license && !org.license.evalEnabled : false,
     },
     {
       label: "Settings & Keys",
