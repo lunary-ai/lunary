@@ -1,5 +1,5 @@
 import { useFixedColorScheme } from "@/utils/hooks"
-import { ActionIcon, Box, Button, Popover, TextInput } from "@mantine/core"
+import { ActionIcon, Button, Group, Popover, TextInput } from "@mantine/core"
 import { IconMessage, IconThumbDown, IconThumbUp } from "@tabler/icons-react"
 import { useState } from "react"
 import { Feedback } from "shared"
@@ -29,7 +29,6 @@ export default function Feedbacks({
   }
 
   function ThumbFeedback({ value }: { value?: "up" | "down" | null }) {
-    console.log(value)
     function ThumbUp() {
       const color = getColor(value === "up" ? "green" : "gray")
       return <IconThumbUp color={color} fill={color} fillOpacity={0.2} />
@@ -41,7 +40,7 @@ export default function Feedbacks({
     }
 
     return (
-      <Box>
+      <Group gap={0}>
         <ActionIcon
           variant="transparent"
           onClick={() => {
@@ -68,7 +67,7 @@ export default function Feedbacks({
         >
           <ThumbUp />
         </ActionIcon>
-      </Box>
+      </Group>
     )
   }
 
@@ -86,6 +85,7 @@ export default function Feedbacks({
             value={comment}
             size="xs"
             mt="xs"
+            placeholder="Add a comment"
             onChange={(e) => setComment(e.target.value)}
           />
           <Button
@@ -104,7 +104,6 @@ export default function Feedbacks({
     )
   }
 
-  console.log(feedback)
   return (
     <>
       <CommentFeedback value={feedback?.comment} />
