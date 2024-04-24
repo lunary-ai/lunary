@@ -138,7 +138,7 @@ export const CHECKS: Check[] = [
         type: "select",
         multiple: true,
         id: "types",
-        options: () => `/filters/feedback`,
+        options: [{ thumb: "up" }, { thumb: "down" }],
         getItemValue: (item) => JSON.stringify(item),
       },
     ],
