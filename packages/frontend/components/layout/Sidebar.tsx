@@ -120,14 +120,14 @@ export default function Sidebar() {
       icon: IconShieldBolt,
       link: "/radars",
       resource: "radars",
-      disabled: isSelfHosted ? !org.license.radarEnabled : false,
+      disabled: isSelfHosted ? org.license && !org.license.radarEnabled : false,
     },
     {
       label: "Evaluations",
       icon: IconFlask2Filled,
       link: "/evaluations",
       resource: "evaluations",
-      disabled: isSelfHosted ? !org.license.evalEnabled : false,
+      disabled: isSelfHosted ? org.license && !org.license.evalEnabled : false,
     },
     {
       label: "Settings & Keys",

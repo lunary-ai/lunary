@@ -55,6 +55,7 @@ auth.post("/signup", async (ctx: Context) => {
     employeeCount: z.string().optional(),
     orgId: z.string().optional(),
     token: z.string().optional(),
+    whereFindUs: z.string().optional(),
     redirectUrl: z.string().optional(),
     signupMethod: z.enum(["signup", "join"]),
   })
@@ -68,6 +69,7 @@ auth.post("/signup", async (ctx: Context) => {
     employeeCount,
     orgId,
     signupMethod,
+    whereFindUs,
     redirectUrl,
     token,
   } = bodySchema.parse(ctx.request.body)
@@ -157,7 +159,9 @@ auth.post("/signup", async (ctx: Context) => {
         signupMethod === "signup"
           ? `building ${projectName} @ ${orgName} (${employeeCount}).`
           : "joining an org."
-      }`,
+      }
+      
+Found us: ${whereFindUs}`,
       "users",
     )
 
