@@ -219,7 +219,8 @@ export default function RunInputOutput({
                   />
                   {PARAMS.map(
                     ({ key, name, render }) =>
-                      typeof run.params?.[key] !== "undefined" && (
+                      typeof run.params?.[key] !== "undefined" &&
+                      run.params[key] !== null && (
                         <ParamItem
                           key={key}
                           name={name}
@@ -232,23 +233,25 @@ export default function RunInputOutput({
                   {run.tags?.length > 0 && (
                     <ParamItem name="Tags" value={run.tags} />
                   )}
-                  {Object.entries(run.metadata || {}).map(([key, value]) => {
-                    if (!value || value.hasOwnProperty("toString")) {
-                      return null
-                    }
+                  {Object.entries(run.metadata || {})
+                    .filter(([key]) => key !== "enrichment")
+                    .map(([key, value]) => {
+                      if (!value || value.hasOwnProperty("toString")) {
+                        return null
+                      }
 
-                    return (
-                      <ParamItem
-                        key={key}
-                        name={key}
-                        color="blue"
-                        value={value}
-                        render={(value) => (
-                          <CopyText ml={0} value={value.toString()} />
-                        )}
-                      />
-                    )
-                  })}
+                      return (
+                        <ParamItem
+                          key={key}
+                          name={key}
+                          color="blue"
+                          value={value}
+                          render={(value) => (
+                            <CopyText ml={0} value={value.toString()} />
+                          )}
+                        />
+                      )
+                    })}
                 </Stack>
 
                 {canEnablePlayground && (

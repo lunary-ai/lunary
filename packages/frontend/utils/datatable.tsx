@@ -2,18 +2,19 @@ import AppUserAvatar from "@/components/blocks/AppUserAvatar"
 import Feedback from "@/components/blocks/OldFeedback"
 import ProtectedText from "@/components/blocks/ProtectedText"
 import SmartViewer from "@/components/SmartViewer"
-import { Badge, Group, Tooltip } from "@mantine/core"
+import { Badge, Group, Stack, Tooltip } from "@mantine/core"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useEffect } from "react"
 import analytics from "./analytics"
 
-import { formatCost, formatDateTime, msToTime } from "./format"
+import { capitalize, formatCost, formatDateTime, msToTime } from "./format"
 import { useProjectSWR } from "./dataHooks"
 import {
   IconMoodNeutral,
   IconMoodSad,
   IconMoodSmile,
 } from "@tabler/icons-react"
+import { getColorFromSeed } from "./colors"
 const columnHelper = createColumnHelper<any>()
 
 export function timeColumn(timeColumn, label = "Time") {
@@ -220,16 +221,16 @@ export function feedbackColumn(withRelatedRuns = false) {
   })
 }
 
-const enrichRenderer = (data) => {
-  switch (data.id) {
+const renderEnrichment = (key, value) => {
+  switch (key) {
     case "sentiment":
       let emoji
       let type
 
-      if (data.value > 0.5) {
+      if (value > 0.5) {
         emoji = <IconMoodSmile color="teal" />
         type = "positive"
-      } else if (data.value < -0.5) {
+      } else if (value < -0.5) {
         emoji = <IconMoodSad color="crimson" />
         type = "negative"
       } else {
@@ -240,47 +241,53 @@ const enrichRenderer = (data) => {
       return {
         element: (
           <Group gap="xs">
-            {emoji} {data.value}
+            {emoji} {value}
           </Group>
         ),
         help: "Sentiment: " + type,
       }
     case "pii":
-      return { element: data.value ? "Yes" : "No" }
+      if (value === "soft") return { element: "⚠️" }
+      else if (value === "hard") return { element: "❌" }
+      else return { element: "✅" }
+
+    case "topics":
+      return {
+        element: (
+          <Group gap="xs">
+            {value?.map((topic) => (
+              <Badge
+                key={topic}
+                variant="outline"
+                color={getColorFromSeed(topic)}
+                size="sm"
+                style={{ textTransform: "none" }}
+              >
+                {topic}
+              </Badge>
+            ))}
+          </Group>
+        ),
+        help: "Topics",
+      }
     default:
-      return { element: data.value, help: data.id }
+      return { element: value, help: key }
   }
 }
 
-// return a value between 0 and 1, static for a given seed runID
-function valueBetween0and1forRunID(runID: string) {
-  const seed = parseInt(runID, 16)
-  return (Math.sin(seed) + 1) / 2
-}
-
-export function enrichmentColumn() {
-  return columnHelper.accessor("enrichment", {
-    header: "Enrichment",
+export function enrichmentColumn(key: string) {
+  return columnHelper.accessor("enrichment-" + key, {
+    header: `${capitalize(key)} ✨`,
     size: 100,
     cell: (props) => {
-      // for testing, random value between -1 and 1
-      const runID = props.row.original.id
+      const data = props.row.original.metadata?.enrichment || {}
 
-      const enrichedData = [
-        {
-          id: "sentiment",
-          value: (valueBetween0and1forRunID(runID) * 2 - 1).toFixed(2),
-        },
-      ]
-
-      return enrichedData.map((data) => {
-        const { element, help } = enrichRenderer(data)
-        return (
-          <Tooltip key={data.id} label={help}>
-            <div key={data.id}>{element}</div>
-          </Tooltip>
-        )
-      })
+      const { element, help } = renderEnrichment(key, data[key])
+      return (
+        <Tooltip key={key} label={help} disabled={!help}>
+          <div key={key}>{element}</div>
+        </Tooltip>
+      )
     },
   })
 }

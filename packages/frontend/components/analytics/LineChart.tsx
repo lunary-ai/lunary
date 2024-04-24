@@ -7,7 +7,6 @@ import {
   Overlay,
   Text,
   Title,
-  useMantineTheme,
 } from "@mantine/core"
 import {
   Area,
@@ -24,6 +23,7 @@ import { eachDayOfInterval, format, parseISO } from "date-fns"
 import { Fragment } from "react"
 import ErrorBoundary from "../blocks/ErrorBoundary"
 import { openUpgrade } from "../layout/UpgradeModal"
+import { theme } from "@/utils/theme"
 
 const slugify = (str) => {
   return str
@@ -135,8 +135,6 @@ const LineChartComponent = ({
   range,
   chartExtra,
 }) => {
-  const theme = useMantineTheme()
-
   const colors = ["blue", "pink", "indigo", "green", "violet", "yellow"]
 
   const cleanedData = prepareDataForRecharts(

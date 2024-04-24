@@ -66,7 +66,10 @@ const columns = {
     timeColumn("createdAt"),
     nameColumn("Model"),
     durationColumn(),
-    enrichmentColumn(),
+    enrichmentColumn("topics"),
+    enrichmentColumn("sentiment"),
+    enrichmentColumn("pii"),
+
     userColumn(),
     {
       header: "Tokens",
