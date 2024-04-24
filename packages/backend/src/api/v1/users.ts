@@ -289,9 +289,6 @@ users.patch(
     if (!userToModify || userToModify.org_id !== currentUser.org_id) {
       ctx.throw(404, "User not found in your organization")
     }
-    if (userToModify.role === "owner") {
-      ctx.throw(403, "You cannot modify the owner role")
-    }
 
     await sql`update account set role = ${role} where id = ${userId}`
 
@@ -306,7 +303,6 @@ users.patch(
       (projectId) => !projects.includes(projectId),
     )
 
-    console.log(projectsToDelete)
     for (const projectId of projectsToDelete) {
       await sql`
    delete from account_project

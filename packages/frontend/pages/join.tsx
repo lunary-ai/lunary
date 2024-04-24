@@ -184,7 +184,7 @@ export default function Join() {
 
   const { orgUserCount, orgName, orgId, orgPlan } = joinData
 
-  if (orgUserCount >= SEAT_ALLOWANCE[orgPlan]) {
+  if (orgUserCount > SEAT_ALLOWANCE[orgPlan]) {
     return <TeamFull orgName={orgName} />
   }
 

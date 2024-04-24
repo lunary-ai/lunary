@@ -32,7 +32,6 @@ function deserializeParamValue(
   filterParam: CheckParam,
   value: string,
 ): any | undefined {
-  console.log(value, filterParam.type)
   switch (filterParam.type) {
     case "select":
       if (filterParam.multiple) {
