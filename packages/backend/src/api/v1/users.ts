@@ -1,5 +1,4 @@
 import Router from "koa-router"
-import { Context } from "koa"
 import sql from "@/src/utils/db"
 import {
   INVITE_EMAIL,
@@ -12,6 +11,7 @@ import { sendEmail } from "@/src/utils/sendEmail"
 import { signJWT } from "./auth/utils"
 import { roles } from "shared"
 import { checkAccess } from "@/src/utils/authorization"
+import Context from "@/src/utils/koa"
 
 const users = new Router({
   prefix: "/users",
@@ -19,6 +19,9 @@ const users = new Router({
 
 users.get("/me/org", async (ctx: Context) => {
   const { userId } = ctx.state
+
+  const [user] = await sql`select * from account where id = ${ctx.state.userId}`
+  const isAdmin = user.role === "admin" || user.role === "owner"
 
   const [org] = await sql`
       select * from org where id = (select org_id from account where id = ${userId})
@@ -40,6 +43,7 @@ users.get("/me/org", async (ctx: Context) => {
         account.verified,
         account.avatar_url,
         account.last_login_at,
+        ${isAdmin ? sql`account.single_use_token,` : sql``}
         array_agg(account_project.project_id) as projects
       from
         account
