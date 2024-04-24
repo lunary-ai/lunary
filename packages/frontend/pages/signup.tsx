@@ -189,7 +189,13 @@ function SignupPage() {
       form.setFieldValue("orgName", form.values.name + "'s Org")
     }
 
+    analytics.track("Signup Step " + (step + 1), {
+      email: form.values.email,
+      name: form.values.name,
+    })
+
     setStep(step + 1)
+
     router.query.step = String(step + 1)
     router.push(router)
   }
