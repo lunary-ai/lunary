@@ -2,13 +2,18 @@ import AppUserAvatar from "@/components/blocks/AppUserAvatar"
 import Feedback from "@/components/blocks/OldFeedback"
 import ProtectedText from "@/components/blocks/ProtectedText"
 import SmartViewer from "@/components/SmartViewer"
-import { Badge, Group } from "@mantine/core"
+import { Badge, Group, Tooltip } from "@mantine/core"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useEffect } from "react"
 import analytics from "./analytics"
 
 import { formatCost, formatDateTime, msToTime } from "./format"
 import { useProjectSWR } from "./dataHooks"
+import {
+  IconMoodNeutral,
+  IconMoodSad,
+  IconMoodSmile,
+} from "@tabler/icons-react"
 const columnHelper = createColumnHelper<any>()
 
 export function timeColumn(timeColumn, label = "Time") {
@@ -212,5 +217,70 @@ export function feedbackColumn(withRelatedRuns = false) {
     header: "Feedback",
     size: 100,
     cell,
+  })
+}
+
+const enrichRenderer = (data) => {
+  switch (data.id) {
+    case "sentiment":
+      let emoji
+      let type
+
+      if (data.value > 0.5) {
+        emoji = <IconMoodSmile color="teal" />
+        type = "positive"
+      } else if (data.value < -0.5) {
+        emoji = <IconMoodSad color="crimson" />
+        type = "negative"
+      } else {
+        emoji = <IconMoodNeutral color="gray" />
+        type = "neutral"
+      }
+
+      return {
+        element: (
+          <Group gap="xs">
+            {emoji} {data.value}
+          </Group>
+        ),
+        help: "Sentiment: " + type,
+      }
+    case "pii":
+      return { element: data.value ? "Yes" : "No" }
+    default:
+      return { element: data.value, help: data.id }
+  }
+}
+
+// return a value between 0 and 1, static for a given seed runID
+function valueBetween0and1forRunID(runID: string) {
+  const seed = parseInt(runID, 16)
+  return (Math.sin(seed) + 1) / 2
+}
+
+export function enrichmentColumn() {
+  return columnHelper.accessor("enrichment", {
+    header: "Enrichment",
+    size: 100,
+    cell: (props) => {
+      // for testing, random value between -1 and 1
+      const runID = props.row.original.id
+
+      const enrichedData = [
+        {
+          id: "sentiment",
+          value: (valueBetween0and1forRunID(runID) * 2 - 1).toFixed(2),
+        },
+      ]
+
+      return enrichedData.map((data) => {
+        const { element, help } = enrichRenderer(data)
+        return (
+          <Tooltip key={data.id} label={help}>
+            <div key={data.id}>{element}</div>
+          </Tooltip>
+        )
+      })
+    },
   })
 }

@@ -17,6 +17,7 @@ import {
 import {
   costColumn,
   durationColumn,
+  enrichmentColumn,
   feedbackColumn,
   inputColumn,
   nameColumn,
@@ -59,13 +60,13 @@ import { useDebouncedState, useDidUpdate } from "@mantine/hooks"
 import { ProjectContext } from "@/utils/context"
 import { CheckLogic, deserializeLogic, serializeLogic } from "shared"
 import { useRouter } from "next/router"
-import useSWR from "swr"
 
 const columns = {
   llm: [
     timeColumn("createdAt"),
     nameColumn("Model"),
     durationColumn(),
+    enrichmentColumn(),
     userColumn(),
     {
       header: "Tokens",
@@ -103,6 +104,7 @@ const columns = {
 const CHECKS_BY_TYPE = {
   llm: [
     "models",
+    // "enrichment",
     "tags",
     "users",
     "status",
