@@ -28,6 +28,10 @@ export default function Feedbacks({
     delete feedback.thumbs
   }
 
+  if (!feedback.comment) {
+    feedback.comment = null
+  }
+
   function ThumbFeedback({ value }: { value?: "up" | "down" | null }) {
     function ThumbUp() {
       const color = getColor(value === "up" ? "green" : "gray")
@@ -44,6 +48,7 @@ export default function Feedbacks({
         <ActionIcon
           variant="transparent"
           onClick={() => {
+            console.log("HERE")
             if (feedback.thumb === "down") {
               feedback.thumb = null
             } else {
@@ -105,9 +110,9 @@ export default function Feedbacks({
   }
 
   return (
-    <>
+    <Group>
       <CommentFeedback value={feedback?.comment} />
       <ThumbFeedback value={feedback?.thumb} />
-    </>
+    </Group>
   )
 }
