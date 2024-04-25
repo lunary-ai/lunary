@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useState } from "react"
 
-import Feedback from "@/components/blocks/OldFeedback"
 import { BubbleMessage } from "@/components/SmartViewer/Message"
 
 import {
@@ -17,7 +16,8 @@ import AppUserAvatar from "./AppUserAvatar"
 import { formatDateTime } from "@/utils/format"
 import Router from "next/router"
 import { IconNeedleThread } from "@tabler/icons-react"
-import { useProjectSWR } from "@/utils/dataHooks"
+import { useLogs, useProjectSWR, useRun } from "@/utils/dataHooks"
+import Feedbacks from "./Feedbacks"
 
 const OUTPUT_ROLES = ["assistant", "ai", "tool"]
 const INPUT_ROLES = ["user"]
@@ -58,7 +58,60 @@ function parseMessageFromRun(run) {
 // Renders a list of run (or just one)
 // As a chat
 
-function RunsChat({ runs }) {
+function Message({
+  msg,
+  siblings,
+  selectedIndex,
+  handleRetrySelect,
+  run,
+  mutateLogs,
+}) {
+  const { updateFeedback } = useRun(msg.id)
+  const { data: relatedRuns, mutate } = useProjectSWR(`/runs/${run.id}/related`)
+  return (
+    <>
+      <BubbleMessage
+        role={msg.role}
+        content={msg.content}
+        extra={
+          <>
+            {!!msg.took && (
+              <Text c="dimmed" size="xs">
+                {msg.took}ms
+              </Text>
+            )}
+
+            {msg.role !== "user" && (
+              <Feedbacks
+                feedback={run.feedback}
+                updateFeedback={async (feedback) => {
+                  await updateFeedback(feedback)
+                  await mutateLogs()
+                  await mutate()
+                }}
+              />
+            )}
+          </>
+        }
+      />
+
+      {msg.role === "user" && siblings?.length > 1 && (
+        <Pagination
+          gap={1}
+          mx="auto"
+          mb="lg"
+          mt={-6}
+          size="xs"
+          value={selectedIndex + 1}
+          total={siblings.length}
+          onChange={(page) => handleRetrySelect(run.id, page - 1)}
+        />
+      )}
+    </>
+  )
+}
+
+function RunsChat({ runs, mutateLogs }) {
   const [selectedRetries, setSelectedRetries] = useState({})
 
   // Each chat run has input = [user message], output = [bot message]
@@ -97,49 +150,23 @@ function RunsChat({ runs }) {
 
           return messages
             .filter((m) => m.id === picked.id)
-            .map((msg, i) => {
-              return (
-                <>
-                  <BubbleMessage
-                    key={i}
-                    role={msg.role}
-                    content={msg.content}
-                    extra={
-                      <>
-                        {!!msg.took && (
-                          <Text c="dimmed" size="xs">
-                            {msg.took}ms
-                          </Text>
-                        )}
-
-                        {msg.role !== "user" && msg.feedback && (
-                          <Feedback data={msg.feedback} />
-                        )}
-                      </>
-                    }
-                  />
-
-                  {msg.role === "user" && siblings?.length > 1 && (
-                    <Pagination
-                      gap={1}
-                      mx="auto"
-                      mb="lg"
-                      mt={-6}
-                      size="xs"
-                      value={selectedIndex + 1}
-                      total={siblings.length}
-                      onChange={(page) => handleRetrySelect(run.id, page - 1)}
-                    />
-                  )}
-                </>
-              )
-            })
+            .map((msg, i) => (
+              <Message
+                key={i}
+                msg={msg}
+                siblings={siblings}
+                selectedIndex={selectedIndex}
+                handleRetrySelect={handleRetrySelect}
+                run={run}
+                mutateLogs={mutateLogs}
+              />
+            ))
         })}
     </Stack>
   )
 }
 
-export function ChatReplay({ run }) {
+export function ChatReplay({ run, mutateLogs }) {
   const { data: runs, isLoading: loading } = useProjectSWR(
     run.id && `/runs?type=chat&parentRunId=${run.id}`,
   )
@@ -195,7 +222,7 @@ export function ChatReplay({ run }) {
 
       {loading && <Loader />}
 
-      <RunsChat runs={sorted} />
+      <RunsChat runs={sorted} mutateLogs={mutateLogs} />
     </Stack>
   )
 }

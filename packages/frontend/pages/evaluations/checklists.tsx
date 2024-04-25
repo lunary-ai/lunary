@@ -25,7 +25,7 @@ import { generateSlug } from "random-word-slugs"
 import { useState } from "react"
 import { CheckLogic, hasAccess } from "shared"
 
-function ChecklistCard({ defaultValue, onDelete }) {
+export function ChecklistCard({ defaultValue, onDelete }) {
   const { checklist, update, remove } = useChecklist(
     defaultValue?.id,
     defaultValue,

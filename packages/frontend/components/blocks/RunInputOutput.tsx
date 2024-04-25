@@ -1,4 +1,4 @@
-import { useRun, useUser } from "@/utils/dataHooks"
+import { useDatasets, useOrg, useRun, useUser } from "@/utils/dataHooks"
 import {
   Badge,
   Button,
@@ -6,12 +6,13 @@ import {
   Group,
   HoverCard,
   ScrollArea,
+  Select,
   Stack,
   Switch,
   Text,
 } from "@mantine/core"
-import { notifications } from "@mantine/notifications"
-import { IconPencilShare } from "@tabler/icons-react"
+import { notifications, showNotification } from "@mantine/notifications"
+import { IconCheck, IconPencilShare } from "@tabler/icons-react"
 import Link from "next/link"
 import { hasAccess } from "shared"
 import SmartViewer from "../SmartViewer"
@@ -19,6 +20,8 @@ import CopyText, { SuperCopyButton } from "./CopyText"
 import ErrorBoundary from "./ErrorBoundary"
 import TokensBadge from "./TokensBadge"
 import Feedbacks from "./Feedbacks"
+import config from "@/utils/config"
+import { useState } from "react"
 
 const isChatMessages = (obj) => {
   return Array.isArray(obj)
@@ -136,12 +139,15 @@ const PARAMS = [
 export default function RunInputOutput({
   initialRun,
   withFeedback = false,
+  withImportToDataset = false,
   withPlayground = true,
   withShare = false,
   mutateLogs,
 }) {
   const { user } = useUser()
+  const { org } = useOrg()
   const { run, update, updateFeedback } = useRun(initialRun?.id, initialRun)
+  const [selectedDataset, setSelectedDataset] = useState<string | null>("")
 
   const canEnablePlayground =
     withPlayground &&
@@ -149,6 +155,12 @@ export default function RunInputOutput({
     run?.input &&
     isChatMessages(run?.input) &&
     hasAccess(user.role, "prompts", "read")
+
+  const { datasets, insertPrompt } = useDatasets()
+
+  const canImportToDataset = config.IS_SELF_HOSTED
+    ? true
+    : org.plan === "unlimited" || org.plan === "custom"
 
   return (
     <ErrorBoundary>
@@ -173,35 +185,61 @@ export default function RunInputOutput({
                     }
                   />
                 </Group>
-                {hasAccess(user.role, "logs", "update") && (
-                  <Switch
-                    label={
-                      <Text
-                        size="sm"
-                        mr="sm"
-                        data-testid="make-log-public-switch"
-                      >
-                        Make public
-                      </Text>
-                    }
-                    checked={run.isPublic}
-                    color={run.isPublic ? "red" : "blue"}
-                    onChange={async (e) => {
-                      const checked = e.currentTarget.checked as boolean
-                      update({ ...run, isPublic: checked })
-                      if (checked) {
-                        const url = `${window.location.origin}/logs/${run.id}`
-                        await navigator.clipboard.writeText(url)
-
-                        notifications.show({
-                          top: 100,
-                          title: "Run is now public",
-                          message: "Link copied to clipboard",
-                        })
+                <Group>
+                  {hasAccess(user.role, "logs", "update") && (
+                    <Switch
+                      label={
+                        <Text
+                          size="sm"
+                          mr="sm"
+                          data-testid="make-log-public-switch"
+                        >
+                          Make public
+                        </Text>
                       }
-                    }}
-                  />
-                )}
+                      checked={run.isPublic}
+                      color={run.isPublic ? "red" : "blue"}
+                      onChange={async (e) => {
+                        const checked = e.currentTarget.checked as boolean
+                        update({ ...run, isPublic: checked })
+                        if (checked) {
+                          const url = `${window.location.origin}/logs/${run.id}`
+                          await navigator.clipboard.writeText(url)
+
+                          notifications.show({
+                            top: 100,
+                            title: "Run is now public",
+                            message: "Link copied to clipboard",
+                          })
+                        }
+                      }}
+                    />
+                  )}
+                  {canImportToDataset && withImportToDataset && (
+                    <Select
+                      searchable
+                      placeholder="Add to dataset"
+                      value={selectedDataset}
+                      data={datasets?.map((d) => ({
+                        label: d.slug,
+                        value: d.id,
+                      }))}
+                      onChange={async (value) => {
+                        await insertPrompt({
+                          datasetId: value,
+                          messages: run.input,
+                        })
+                        notifications.show({
+                          title: "The run has been added to the dataset",
+                          message: "",
+                          icon: <IconCheck />,
+                          color: "green",
+                        })
+                        setSelectedDataset(null)
+                      }}
+                    />
+                  )}
+                </Group>
               </Group>
             )}
 

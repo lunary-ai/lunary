@@ -414,12 +414,13 @@ export default function Logs() {
                   initialRun={selectedRun}
                   withFeedback={true}
                   withPlayground={true}
+                  withImportToDataset={true}
                   withShare={true}
                   mutateLogs={mutate}
                 />
               )}
               {selectedRun?.type === "thread" && (
-                <ChatReplay run={selectedRun} />
+                <ChatReplay run={selectedRun} mutateLogs={mutate} />
               )}
             </>
           )}

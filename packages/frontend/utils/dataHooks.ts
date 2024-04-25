@@ -333,7 +333,7 @@ export function useRun(id: string | null, initialData?: any) {
     },
   )
 
-  const { trigger: updateFeedback } = useProjectMutation(
+  const { trigger: updateTrigger } = useProjectMutation(
     id && `/runs/${id}/feedback`,
     fetcher.patch,
   )
@@ -341,6 +341,11 @@ export function useRun(id: string | null, initialData?: any) {
   async function updateRun(data) {
     mutate({ ...run, ...data })
     await update(data)
+  }
+
+  async function updateFeedback(feedback) {
+    await updateTrigger(feedback)
+    await mutate()
   }
 
   return {
@@ -535,6 +540,11 @@ export function useDatasets() {
     fetcher.post,
   )
 
+  const { trigger: insertPrompt } = useProjectMutation(
+    `/datasets/prompts`,
+    fetcher.post,
+  )
+
   const { trigger: update, isMutating: isUpdating } = useProjectMutation(
     `/datasets`,
     fetcher.patch,
@@ -548,6 +558,7 @@ export function useDatasets() {
     isUpdating,
     mutate,
     isLoading,
+    insertPrompt,
   }
 }
 
