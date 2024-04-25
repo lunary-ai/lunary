@@ -14,7 +14,7 @@ import {
 import { NextSeo } from "next-seo"
 import Router from "next/router"
 
-import { useOrg, useUser, useProject, useChecklists } from "@/utils/dataHooks"
+import { useOrg, useUser, useProject } from "@/utils/dataHooks"
 import useSWR from "swr"
 import RenamableField from "@/components/blocks/RenamableField"
 import { CheckLogic, hasAccess } from "shared"
@@ -26,7 +26,6 @@ import { fetcher } from "@/utils/fetcher"
 import { notifications } from "@mantine/notifications"
 import { modals } from "@mantine/modals"
 import CheckPicker from "@/components/checks/Picker"
-import { ChecklistCard } from "./evaluations/checklists"
 
 function Keys() {
   const [regenerating, setRegenerating] = useState(false)

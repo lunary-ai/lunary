@@ -66,9 +66,9 @@ const columns = {
     timeColumn("createdAt"),
     nameColumn("Model"),
     durationColumn(),
-    enrichmentColumn("topics"),
-    enrichmentColumn("sentiment"),
-    enrichmentColumn("pii"),
+    // enrichmentColumn("topics"),
+    // enrichmentColumn("sentiment"),
+    // enrichmentColumn("pii"),
 
     userColumn(),
     {
