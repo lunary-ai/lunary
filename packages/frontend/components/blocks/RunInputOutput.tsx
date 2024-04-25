@@ -218,7 +218,9 @@ export default function RunInputOutput({
                   {canImportToDataset && withImportToDataset && (
                     <Select
                       searchable
+                      size="xs"
                       placeholder="Add to dataset"
+                      w={160}
                       value={selectedDataset}
                       data={datasets?.map((d) => ({
                         label: d.slug,
@@ -228,6 +230,7 @@ export default function RunInputOutput({
                         await insertPrompt({
                           datasetId: value,
                           messages: run.input,
+                          idealOutput: run.output,
                         })
                         notifications.show({
                           title: "The run has been added to the dataset",
@@ -342,7 +345,7 @@ export default function RunInputOutput({
                     feedback={run.feedback}
                     updateFeedback={async (feedback) => {
                       await updateFeedback(feedback)
-                      await mutateLogs()
+                      // await mutateLogs()
                     }}
                   />
                 )}

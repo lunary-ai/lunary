@@ -249,7 +249,7 @@ const renderEnrichment = (key, value) => {
     case "pii":
       if (value === "soft") return { element: "⚠️" }
       else if (value === "hard") return { element: "❌" }
-      else return { element: "✅" }
+      else return { element: "❎" }
 
     case "topics":
       return {
@@ -281,6 +281,8 @@ export function enrichmentColumn(key: string) {
     size: 100,
     cell: (props) => {
       const data = props.row.original.metadata?.enrichment || {}
+
+      if (typeof data[key] === "undefined") return null
 
       const { element, help } = renderEnrichment(key, data[key])
       return (

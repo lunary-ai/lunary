@@ -32,12 +32,12 @@ export type CheckRunner = {
   sql?: (params: any) => any // todo: postgres sql type
 }
 
-const isOpenAIMessage = (field: any) =>
+export const isOpenAIMessage = (field: any) =>
   typeof field === "object" &&
   field.role &&
   (field.content || field.toolCalls || field.functionCalls)
 
-function lastMsg(field: any) {
+export function lastMsg(field: any) {
   if (typeof field === "string" || !field) {
     return field
   } else if (Array.isArray(field) && isOpenAIMessage(field[0])) {
