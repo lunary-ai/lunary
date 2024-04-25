@@ -36,7 +36,7 @@ app.use(corsMiddleware)
 app.use(authMiddleware)
 
 app.use(ratelimit)
-app.use(bodyParser())
+app.use(bodyParser({ jsonLimit: "20mb", textLimit: "20mb" }))
 app.use(setDefaultBody)
 
 if (config.IS_SELF_HOSTED) {
