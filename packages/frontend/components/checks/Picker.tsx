@@ -57,7 +57,7 @@ function RenderCheckNode({
             <Select
               variant="unstyled"
               c="dimmed"
-              w={70}
+              w={80}
               size="xs"
               fw="bold"
               data={["AND", "OR"]}

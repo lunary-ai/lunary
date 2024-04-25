@@ -177,14 +177,19 @@ export default function AppAnalytics() {
         {user.role !== "viewer" && <Keys />}
 
         {org.plan === "custom" && (
-          <SettingsCard title="Smart Data Exclusion" align="start">
+          <SettingsCard title={<>Smart Data Exclusion ✨</>} align="start">
+            <Text>
+              Smart Data Exclusion allows you to filter out sensitive data from
+              your project. Data that matches the filters will not be ingested.
+            </Text>
             <CheckPicker
-              minimal
               defaultOpened={true}
               value={filters}
               onChange={setChecks}
               restrictTo={(f) =>
-                ["tools", "tags", "metadata", "users", "pii"].includes(f.id)
+                ["tools", "tags", "metadata", "users", "pii", "regex"].includes(
+                  f.id,
+                )
               }
             />
 
