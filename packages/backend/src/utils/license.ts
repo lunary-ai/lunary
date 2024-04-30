@@ -22,7 +22,6 @@ async function licenseMiddleware(ctx: Context, next: Next) {
 
   try {
     if (Date.now() - cache.lastFetch > TWO_HOURS) {
-      console.log("Fetching")
       const licenseData = await fetch(
         `https://license.lunary.ai/v1/licenses/${LICENSE_KEY}`,
       ).then((res) => res.json())

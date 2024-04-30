@@ -35,6 +35,7 @@
     "p-queue": "^8.0.1",
     "postgres": "^3.4.3",
     "prexit": "^2.2.0",
+    "queue-promise": "^2.2.1",
     "rouge": "^1.0.3",
     "samlify": "^2.8.11",
     "shared": "*",

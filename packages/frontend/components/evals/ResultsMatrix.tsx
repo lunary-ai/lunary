@@ -68,7 +68,7 @@ function ResultCell({ result }) {
     <>
       {result.status === "success" ? (
         <Stack align="center" justify="between">
-          <ChatMessage data={result.output} mah={150} compact w="100%" />
+          <ChatMessage data={result.output} mah={300} compact w="100%" />
 
           <HoverCard width={500} disabled={!result.results.length}>
             <HoverCard.Target>
