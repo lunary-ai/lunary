@@ -33,7 +33,7 @@ import { useRouter } from "next/router"
 import { useEffect, useRef, useState } from "react"
 import { ChecklistModal } from "./checklists"
 import ProviderEditor from "@/components/prompts/Provider"
-import { MODELS, Provider } from "shared"
+import { MODELS, Provider, hasAccess } from "shared"
 import { useLocalStorage } from "@mantine/hooks"
 import OrgUserBadge from "@/components/blocks/OrgUserBadge"
 import Link from "next/link"
@@ -170,7 +170,10 @@ export default function NewEvaluation() {
     setLoading(false)
   }
 
-  const canStartEvaluation = datasetId && providers.length > 0
+  const canStartEvaluation =
+    datasetId &&
+    providers.length > 0 &&
+    hasAccess(user.role, "evaluations", "create")
 
   return (
     <Paywall

@@ -692,6 +692,7 @@ export const CHECKS: Check[] = [
     id: "summarization",
     name: "Summarization",
     uiType: "ai",
+    soon: true,
     description:
       "The summarization metric uses LLMs to determine whether your agent is generating factually correct summaries while including the neccessary details from the original text.",
     params: [],

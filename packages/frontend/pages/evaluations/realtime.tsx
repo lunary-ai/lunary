@@ -26,6 +26,7 @@ export default function Checklists() {
       plan="enterprise"
       feature="Realtime Evaluations"
       Icon={IconActivityHeartbeat}
+      p="xl"
       enabled={!org.license.realtimeEvalsEnabled}
       description="Run evaluations on your production data in real-time."
       list={FEATURE_LIST}

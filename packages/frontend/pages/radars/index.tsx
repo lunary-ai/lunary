@@ -385,6 +385,7 @@ export default function Radar() {
     <Paywall
       plan="unlimited"
       feature="Radar"
+      p="xl"
       Icon={IconShieldBolt}
       description="Identify outlier results that match specific conditions."
       list={FEATURE_LIST}
