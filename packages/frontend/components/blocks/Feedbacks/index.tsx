@@ -48,7 +48,6 @@ export default function Feedbacks({
         <ActionIcon
           variant="transparent"
           onClick={() => {
-            console.log("HERE")
             if (feedback.thumb === "down") {
               feedback.thumb = null
             } else {

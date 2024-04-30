@@ -344,8 +344,12 @@ export default function RunInputOutput({
                   <Feedbacks
                     feedback={run.feedback}
                     updateFeedback={async (feedback) => {
-                      await updateFeedback(feedback)
-                      // await mutateLogs()
+                      try {
+                        await updateFeedback(feedback)
+                        await mutateLogs()
+                      } catch (error) {
+                        console.error(error)
+                      }
                     }}
                   />
                 )}
