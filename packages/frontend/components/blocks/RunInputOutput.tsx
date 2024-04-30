@@ -160,7 +160,7 @@ export default function RunInputOutput({
 
   const canImportToDataset = config.IS_SELF_HOSTED
     ? true
-    : org.plan === "unlimited" || org.plan === "custom"
+    : org?.plan === "unlimited" || org?.plan === "custom"
 
   return (
     <ErrorBoundary>
