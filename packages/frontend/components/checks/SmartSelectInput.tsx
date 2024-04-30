@@ -100,18 +100,23 @@ export default function SmartCheckSelect({
       .toLowerCase()
       .includes(search.trim().toLowerCase())
   }
-  const renderedOptions = data?.filter(optionsFilter).map((item) => (
-    <Combobox.Option
-      value={getItemValue(item)}
-      key={getItemValue(item)}
-      active={value?.includes(getItemValue(item))}
-    >
-      <Group gap="sm" wrap="nowrap">
-        {value?.includes(getItemValue(item)) ? <CheckIcon size={12} /> : null}
-        {renderListItem ? renderListItem(item) : renderLabel(item)}
-      </Group>
-    </Combobox.Option>
-  ))
+  const renderedOptions = data?.filter(optionsFilter).map((item) => {
+    const active = multiple
+      ? fixedValue.includes(getItemValue(item))
+      : getItemValue(item) === value
+    return (
+      <Combobox.Option
+        value={getItemValue(item)}
+        key={getItemValue(item)}
+        active={active}
+      >
+        <Group gap="sm" wrap="nowrap">
+          {active ? <CheckIcon size={12} /> : null}
+          {renderListItem ? renderListItem(item) : renderLabel(item)}
+        </Group>
+      </Combobox.Option>
+    )
+  })
 
   useEffect(() => {
     if (!value) {
@@ -125,6 +130,7 @@ export default function SmartCheckSelect({
         <PillsInput
           onClick={() => combobox.openDropdown()}
           variant="unstyled"
+          size="xs"
           miw={width}
           w="min-content"
         >

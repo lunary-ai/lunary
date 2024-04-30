@@ -183,8 +183,10 @@ export default function AppAnalytics() {
             feature: "Smart Data Masking",
             p: 12,
             plan: "enterprise",
-            description:
-              "Mask or filter out sensitive data from your project with AI. Data that matches the filters will not be ingested.",
+            list: [
+              "Mask or filter out sensitive data",
+              "LLM-powered detection or custom regex patterns",
+            ],
             enabled: true,
           }}
         >
@@ -202,6 +204,38 @@ export default function AppAnalytics() {
               )
             }
           />
+
+          <Flex justify="flex-end" w="100%">
+            <Button
+              loading={isLoading}
+              style={{ float: "right" }}
+              onClick={() => {
+                setIsLoading(true)
+                setTimeout(() => setIsLoading(false), 1000)
+              }}
+            >
+              Save
+            </Button>
+          </Flex>
+        </SettingsCard>
+
+        <SettingsCard
+          title={<>Custom Models 🧠</>}
+          align="start"
+          paywallConfig={{
+            Icon: IconFilter,
+            feature: "Custom Models",
+            p: 12,
+            plan: "enterprise",
+            list: [
+              "Use custom models for evaluations",
+              "Add and overwrite costs mappings",
+            ],
+
+            enabled: true,
+          }}
+        >
+          <Text>Add custom models and costs mappings to your project.</Text>
 
           <Flex justify="flex-end" w="100%">
             <Button

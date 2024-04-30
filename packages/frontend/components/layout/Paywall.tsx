@@ -101,7 +101,7 @@ export default function Paywall({
               <ThemeIcon size={42} radius={12}>
                 {Icon && <Icon size="20" />}
               </ThemeIcon>
-              <Title order={3}>
+              <Title order={3} lh={1}>
                 {
                   <Text
                     span
@@ -117,7 +117,7 @@ export default function Paywall({
                 <span>{` is available ${isEnterpriseFeature ? "as an addon in" : ""} Lunary ${capitalize(plan)}`}</span>
               </Title>
             </Group>
-            <Text size="lg">{description}</Text>
+            {description && <Text size="lg">{description}</Text>}
             {list && <ListFeatures features={list} />}
             <Button
               fullWidth
