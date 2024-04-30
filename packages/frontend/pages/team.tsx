@@ -31,6 +31,7 @@ import {
   IconCopy,
   IconDotsVertical,
   IconDownload,
+  IconLogin,
   IconTrash,
 } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
@@ -56,6 +57,7 @@ import { SettingsCard } from "@/components/blocks/SettingsCard"
 import { SEAT_ALLOWANCE } from "@/utils/pricing"
 import { openUpgrade } from "@/components/layout/UpgradeModal"
 import config from "@/utils/config"
+import Paywall from "@/components/layout/Paywall"
 
 function SAMLConfig() {
   const { org, updateOrg, mutate } = useOrg()
@@ -106,91 +108,102 @@ function SAMLConfig() {
     setSpLoading(false)
   }
 
+  const samlEnabled = config.IS_SELF_HOSTED
+    ? org.license.samlEnabled
+    : org.samlEnabled
+
   return (
-    <Card withBorder p="lg">
-      <Stack gap="lg">
-        <Title order={3}>SAML configuration</Title>
-
-        <Text fw="bold">
-          1. Provider your Identity Provider (IDP) Metadata XML.
-        </Text>
-        <Flex gap="md">
-          <TextInput
-            style={{ flex: 1 }}
-            value={idpXml}
-            placeholder="Paste the URL or content of your IDP XML here"
-            w="max-content"
-            onChange={(e) => setIdpXml(e.currentTarget.value)}
-          />
-
-          <Button
-            variant="light"
-            loading={idpLoading}
-            onClick={() => {
-              addIdpXml()
-            }}
-          >
-            Add IDP XML
-          </Button>
-        </Flex>
-
-        <Text fw="bold">
-          2. Setup the configuration in your Identity Provider (IDP)
-        </Text>
-
-        <Table>
-          <Table.Tbody>
-            <Table.Tr>
-              <Table.Td>Identifier (Entity ID):</Table.Td>
-              <Table.Td>
-                <CopyInput value={"urn:lunary.ai:saml:sp"} />
-              </Table.Td>
-            </Table.Tr>
-            <Table.Tr>
-              <Table.Td>Assertion Consumer Service (ACS) URL:</Table.Td>
-              <Table.Td>
-                <CopyInput
-                  value={`${process.env.NEXT_PUBLIC_API_URL}/auth/saml/${org?.id}/acs`}
-                />
-              </Table.Td>
-            </Table.Tr>
-            <Table.Tr>
-              <Table.Td>Single Logout Service (SLO) URL:</Table.Td>
-              <Table.Td>
-                <CopyInput
-                  value={`${process.env.NEXT_PUBLIC_API_URL}/auth/saml/${org?.id}/slo`}
-                />
-              </Table.Td>
-            </Table.Tr>
-            <Table.Tr>
-              <Table.Td>Sign on URL:</Table.Td>
-              <Table.Td>
-                <CopyInput
-                  value={`${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/login`}
-                />
-              </Table.Td>
-            </Table.Tr>
-            <Table.Tr>
-              <Table.Td>Single Logout URL:</Table.Td>
-              <Table.Td>
-                <CopyInput
-                  value={`${process.env.NEXT_PUBLIC_API_URL}/auth/saml/${org?.id}/slo`}
-                />
-              </Table.Td>
-            </Table.Tr>
-          </Table.Tbody>
-        </Table>
+    <SettingsCard
+      title={"SAML Configuration"}
+      paywallConfig={{
+        enabled: !samlEnabled,
+        description:
+          "Enable SAML to configure Single Sign-On (SSO) with your Identity Provider (IDP)",
+        Icon: IconLogin,
+        feature: "SAML",
+        plan: "enterprise",
+        p: 16,
+      }}
+    >
+      <Text fw="bold">
+        1. Provider your Identity Provider (IDP) Metadata XML.
+      </Text>
+      <Flex gap="md">
+        <TextInput
+          style={{ flex: 1 }}
+          value={idpXml}
+          placeholder="Paste the URL or content of your IDP XML here"
+          w="max-content"
+          onChange={(e) => setIdpXml(e.currentTarget.value)}
+        />
 
         <Button
-          onClick={() => downloadSpXml()}
-          loading={spLoading}
-          variant="default"
-          rightSection={<IconDownload size="14" />}
+          variant="light"
+          loading={idpLoading}
+          onClick={() => {
+            addIdpXml()
+          }}
         >
-          Download Service Provider Metadata XML
+          Add IDP XML
         </Button>
-      </Stack>
-    </Card>
+      </Flex>
+
+      <Text fw="bold">
+        2. Setup the configuration in your Identity Provider (IDP)
+      </Text>
+
+      <Table>
+        <Table.Tbody>
+          <Table.Tr>
+            <Table.Td>Identifier (Entity ID):</Table.Td>
+            <Table.Td>
+              <CopyInput value={"urn:lunary.ai:saml:sp"} />
+            </Table.Td>
+          </Table.Tr>
+          <Table.Tr>
+            <Table.Td>Assertion Consumer Service (ACS) URL:</Table.Td>
+            <Table.Td>
+              <CopyInput
+                value={`${process.env.NEXT_PUBLIC_API_URL}/auth/saml/${org?.id}/acs`}
+              />
+            </Table.Td>
+          </Table.Tr>
+          <Table.Tr>
+            <Table.Td>Single Logout Service (SLO) URL:</Table.Td>
+            <Table.Td>
+              <CopyInput
+                value={`${process.env.NEXT_PUBLIC_API_URL}/auth/saml/${org?.id}/slo`}
+              />
+            </Table.Td>
+          </Table.Tr>
+          <Table.Tr>
+            <Table.Td>Sign on URL:</Table.Td>
+            <Table.Td>
+              <CopyInput
+                value={`${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/login`}
+              />
+            </Table.Td>
+          </Table.Tr>
+          <Table.Tr>
+            <Table.Td>Single Logout URL:</Table.Td>
+            <Table.Td>
+              <CopyInput
+                value={`${process.env.NEXT_PUBLIC_API_URL}/auth/saml/${org?.id}/slo`}
+              />
+            </Table.Td>
+          </Table.Tr>
+        </Table.Tbody>
+      </Table>
+
+      <Button
+        onClick={() => downloadSpXml()}
+        loading={spLoading}
+        variant="default"
+        rightSection={<IconDownload size="14" />}
+      >
+        Download Service Provider Metadata XML
+      </Button>
+    </SettingsCard>
   )
 }
 
@@ -789,9 +802,7 @@ export default function Team() {
 
         {hasAccess(user.role, "teamMembers", "create") && <InviteMemberCard />}
         <MemberListCard />
-        {samlEnabled && ["admin", "owner"].includes(user.role) && (
-          <SAMLConfig />
-        )}
+        {["admin", "owner"].includes(user.role) && <SAMLConfig />}
       </Stack>
     </Container>
   )

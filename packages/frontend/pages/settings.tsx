@@ -19,7 +19,7 @@ import useSWR from "swr"
 import RenamableField from "@/components/blocks/RenamableField"
 import { CheckLogic, hasAccess } from "shared"
 import { SettingsCard } from "@/components/blocks/SettingsCard"
-import { IconCheck, IconRefreshAlert } from "@tabler/icons-react"
+import { IconCheck, IconFilter, IconRefreshAlert } from "@tabler/icons-react"
 import { useState } from "react"
 import errorHandler from "@/utils/errors"
 import { fetcher } from "@/utils/fetcher"
@@ -175,37 +175,47 @@ export default function AppAnalytics() {
 
         {user.role !== "viewer" && <Keys />}
 
-        {/* {org.plan === "custom" && (
-          <SettingsCard title={<>Smart Data Exclusion ✨</>} align="start">
-            <Text>
-              Smart Data Exclusion allows you to filter out sensitive data from
-              your project. Data that matches the filters will not be ingested.
-            </Text>
-            <CheckPicker
-              defaultOpened={true}
-              value={filters}
-              onChange={setChecks}
-              restrictTo={(f) =>
-                ["tools", "tags", "metadata", "users", "pii", "regex"].includes(
-                  f.id,
-                )
-              }
-            />
+        <SettingsCard
+          title={<>Smart Data Masking ✨</>}
+          align="start"
+          paywallConfig={{
+            Icon: IconFilter,
+            feature: "Smart Data Masking",
+            p: 12,
+            plan: "enterprise",
+            description:
+              "Mask or filter out sensitive data from your project with AI. Data that matches the filters will not be ingested.",
+            enabled: true,
+          }}
+        >
+          <Text>
+            Smart Data Masking allows you to filter out sensitive data from your
+            project.
+          </Text>
+          <CheckPicker
+            defaultOpened={true}
+            value={filters}
+            onChange={setChecks}
+            restrictTo={(f) =>
+              ["tools", "tags", "metadata", "users", "pii", "regex"].includes(
+                f.id,
+              )
+            }
+          />
 
-            <Flex justify="flex-end" w="100%">
-              <Button
-                loading={isLoading}
-                style={{ float: "right" }}
-                onClick={() => {
-                  setIsLoading(true)
-                  setTimeout(() => setIsLoading(false), 1000)
-                }}
-              >
-                Save
-              </Button>
-            </Flex>
-          </SettingsCard>
-        )} */}
+          <Flex justify="flex-end" w="100%">
+            <Button
+              loading={isLoading}
+              style={{ float: "right" }}
+              onClick={() => {
+                setIsLoading(true)
+                setTimeout(() => setIsLoading(false), 1000)
+              }}
+            >
+              Save
+            </Button>
+          </Flex>
+        </SettingsCard>
 
         {user && hasAccess(user.role, "projects", "delete") && (
           <SettingsCard title="Danger Zone" align="start">

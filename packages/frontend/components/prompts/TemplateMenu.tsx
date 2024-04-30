@@ -34,7 +34,7 @@ export const defaultTemplateVersion = {
     { content: "Hi!", role: "user" },
   ],
   extra: {
-    model: "gpt-4-turbo-preview",
+    model: "gpt-4-turbo",
     temperature: 1.0,
     max_tokens: 1000,
   },

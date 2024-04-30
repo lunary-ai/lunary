@@ -348,6 +348,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       return sql`${field} ${operator} ${textParam}`
     },
   },
+
   {
     id: "assertion",
     async evaluator(run, params) {
