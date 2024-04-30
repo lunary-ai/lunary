@@ -175,7 +175,7 @@ export default function AppAnalytics() {
 
         {user.role !== "viewer" && <Keys />}
 
-        {org.plan === "custom" && (
+        {/* {org.plan === "custom" && (
           <SettingsCard title={<>Smart Data Exclusion ✨</>} align="start">
             <Text>
               Smart Data Exclusion allows you to filter out sensitive data from
@@ -205,7 +205,7 @@ export default function AppAnalytics() {
               </Button>
             </Flex>
           </SettingsCard>
-        )}
+        )} */}
 
         {user && hasAccess(user.role, "projects", "delete") && (
           <SettingsCard title="Danger Zone" align="start">
