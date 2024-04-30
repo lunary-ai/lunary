@@ -6,6 +6,7 @@ import { getDatasetById, getDatasetBySlug } from "./utils"
 import { validateUUID } from "@/src/utils/misc"
 import { clearUndefined } from "@/src/utils/ingest"
 import { checkAccess } from "@/src/utils/authorization"
+import { lastMsg } from "@/src/checks"
 
 const datasets = new Router({
   prefix: "/datasets",
@@ -140,9 +141,10 @@ datasets.post(
   async (ctx: Context) => {
     const { projectId } = ctx.state
 
-    const { datasetId, messages } = ctx.request.body as {
+    const { datasetId, messages, idealOutput } = ctx.request.body as {
       datasetId: string
       messages: any
+      idealOutput: string
     }
 
     const [{ format }] =
@@ -162,7 +164,7 @@ datasets.post(
       promptId: prompt.id,
       variables: {},
       context: "",
-      idealOutput: "",
+      idealOutput: idealOutput ? lastMsg(idealOutput) : "",
     })}
     returning *
   `

@@ -20,8 +20,9 @@ import {
 import Image from "next/image"
 import ProtectedText from "../blocks/ProtectedText"
 import { RenderJson } from "./RenderJson"
-import { circularPro } from "@/pages/_app"
+
 import { useColorScheme } from "@mantine/hooks"
+import { circularPro } from "@/utils/theme"
 
 function RenderFunction({ color, compact, codeBg, data, type }) {
   const fontColor = type === "functionCall" ? "#40c057" : "inherit"

@@ -58,7 +58,7 @@ users.get("/me/org", async (ctx: Context) => {
     `
 
   org.users = users
-  org.license = ctx.state.license
+  org.license = ctx.state.license || {}
   ctx.body = org
 })
 

@@ -17,6 +17,7 @@ import {
 import {
   costColumn,
   durationColumn,
+  enrichmentColumn,
   feedbackColumn,
   inputColumn,
   nameColumn,
@@ -59,13 +60,16 @@ import { useDebouncedState, useDidUpdate } from "@mantine/hooks"
 import { ProjectContext } from "@/utils/context"
 import { CheckLogic, deserializeLogic, serializeLogic } from "shared"
 import { useRouter } from "next/router"
-import useSWR from "swr"
 
 const columns = {
   llm: [
     timeColumn("createdAt"),
     nameColumn("Model"),
     durationColumn(),
+    // enrichmentColumn("topics"),
+    // enrichmentColumn("sentiment"),
+    // enrichmentColumn("pii"),
+
     userColumn(),
     {
       header: "Tokens",
@@ -103,6 +107,7 @@ const columns = {
 const CHECKS_BY_TYPE = {
   llm: [
     "models",
+    // "enrichment",
     "tags",
     "users",
     "status",
@@ -117,12 +122,18 @@ const CHECKS_BY_TYPE = {
     "tags",
     "users",
     "status",
-    "feedback",
+    // "feedback",
     "duration",
     "metadata",
     "radar",
   ],
-  thread: ["tags", "users", "feedback", "metadata", "radar"],
+  thread: [
+    "tags",
+    "users",
+    // "feedback",
+    "metadata",
+    "radar",
+  ],
 }
 
 const editCheck = (filters, id, params) => {
@@ -409,12 +420,13 @@ export default function Logs() {
                   initialRun={selectedRun}
                   withFeedback={true}
                   withPlayground={true}
+                  withImportToDataset={true}
                   withShare={true}
                   mutateLogs={mutate}
                 />
               )}
               {selectedRun?.type === "thread" && (
-                <ChatReplay run={selectedRun} />
+                <ChatReplay run={selectedRun} mutateLogs={mutate} />
               )}
             </>
           )}

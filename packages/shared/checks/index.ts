@@ -14,6 +14,23 @@ export * from "./serialize"
 
 export const CHECKS: Check[] = [
   {
+    id: "tools",
+    name: "Tools",
+    uiType: "basic",
+    disableInEvals: true,
+    params: [
+      {
+        type: "label",
+        label: "Tool name is",
+      },
+      {
+        type: "text",
+        id: "value",
+        placeholder: "value",
+      },
+    ],
+  },
+  {
     id: "type",
     name: "Type",
     uiType: "basic",

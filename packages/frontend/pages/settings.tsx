@@ -5,6 +5,7 @@ import {
   Alert,
   Button,
   Container,
+  Flex,
   Group,
   Popover,
   Stack,
@@ -16,7 +17,7 @@ import Router from "next/router"
 import { useOrg, useUser, useProject } from "@/utils/dataHooks"
 import useSWR from "swr"
 import RenamableField from "@/components/blocks/RenamableField"
-import { hasAccess } from "shared"
+import { CheckLogic, hasAccess } from "shared"
 import { SettingsCard } from "@/components/blocks/SettingsCard"
 import { IconCheck, IconRefreshAlert } from "@tabler/icons-react"
 import { useState } from "react"
@@ -24,6 +25,7 @@ import errorHandler from "@/utils/errors"
 import { fetcher } from "@/utils/fetcher"
 import { notifications } from "@mantine/notifications"
 import { modals } from "@mantine/modals"
+import CheckPicker from "@/components/checks/Picker"
 
 function Keys() {
   const [regenerating, setRegenerating] = useState(false)
@@ -136,7 +138,12 @@ function Keys() {
 export default function AppAnalytics() {
   const { org } = useOrg()
   const { update, project, setProjectId, drop } = useProject()
+  const [isLoading, setIsLoading] = useState(false)
   const { user } = useUser()
+  const [filters, setChecks] = useState<CheckLogic>([
+    "AND",
+    { id: "type", params: { type: "llm" } },
+  ])
 
   // TODO: better route for project usage
   const { data: projectUsage } = useSWR(
@@ -167,6 +174,38 @@ export default function AppAnalytics() {
         />
 
         {user.role !== "viewer" && <Keys />}
+
+        {/* {org.plan === "custom" && (
+          <SettingsCard title={<>Smart Data Exclusion ✨</>} align="start">
+            <Text>
+              Smart Data Exclusion allows you to filter out sensitive data from
+              your project. Data that matches the filters will not be ingested.
+            </Text>
+            <CheckPicker
+              defaultOpened={true}
+              value={filters}
+              onChange={setChecks}
+              restrictTo={(f) =>
+                ["tools", "tags", "metadata", "users", "pii", "regex"].includes(
+                  f.id,
+                )
+              }
+            />
+
+            <Flex justify="flex-end" w="100%">
+              <Button
+                loading={isLoading}
+                style={{ float: "right" }}
+                onClick={() => {
+                  setIsLoading(true)
+                  setTimeout(() => setIsLoading(false), 1000)
+                }}
+              >
+                Save
+              </Button>
+            </Flex>
+          </SettingsCard>
+        )} */}
 
         {user && hasAccess(user.role, "projects", "delete") && (
           <SettingsCard title="Danger Zone" align="start">
