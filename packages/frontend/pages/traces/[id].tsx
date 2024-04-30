@@ -201,7 +201,7 @@ const RenderRun = ({ run, relatedRuns }) => {
 
   if (run?.type === "chat") return <RunsChat runs={[run]} />
   if (run?.type === "thread") return <RunsChat runs={directChilds} />
-  return <RunInputOutput initialRun={run} />
+  return <RunInputOutput initialRun={run} withFeedback={true} />
 }
 
 export default function AgentRun({}) {

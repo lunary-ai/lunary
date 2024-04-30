@@ -1,5 +1,4 @@
-import { useColorScheme, useDidUpdate } from "@mantine/hooks"
-import { useEffect, useState } from "react"
+import { theme } from "./theme"
 
 export function getColorForRole(role) {
   const defaultColor = "gray"
@@ -35,16 +34,18 @@ export function getColorForRunType(type) {
   return colorMap[type] || defaultColor
 }
 
-export function getUserColor(scheme, theme, id: string) {
-  if (!id) return theme.colors.gray[4]
-  const seed = id
+export function getColorFromSeed(seed: string) {
+  const seedInt = seed
     .split("")
-    .map((char) => char.charCodeAt(0))
-    .reduce((acc, curr) => acc + curr, 0)
+    .reduce((acc, curr) => acc + curr.charCodeAt(0), 0)
   const colors = Object.keys(theme.colors)
+  return colors[seedInt % colors.length]
+}
 
-  const userColor = colors[seed % colors.length]
+export function getUserColor(scheme, id) {
+  if (!id) return theme.colors.gray[4]
 
+  const userColor = getColorFromSeed(id)
   const finalColor = theme.colors[userColor][scheme === "dark" ? 8 : 4]
   return finalColor
 }

@@ -20,6 +20,7 @@ import classes from "./index.module.css"
 import { CHECKS, Check } from "shared"
 import CHECKS_UI_DATA from "./ChecksUIData"
 import { useMemo, useState } from "react"
+import { theme } from "@/utils/theme"
 
 function CheckCard({
   onItemClick,
@@ -30,8 +31,6 @@ function CheckCard({
   filter: Check
   isSelected: boolean
 }) {
-  const theme = useMantineTheme()
-
   const uiData = CHECKS_UI_DATA[filter.id] || CHECKS_UI_DATA["other"]
 
   if (!uiData) {

@@ -105,17 +105,13 @@ function cleanMetadata(object: any) {
   const validTypes = ["string", "number", "boolean"]
 
   return Object.fromEntries(
-    Object.entries(object).map(([key, value]) => {
-      if (validTypes.includes(typeof value)) {
-        return [key, value]
-      }
+    Object.entries(object).filter(([key, value]) => {
+      if (key === "enrichment") return true
+      if (validTypes.includes(typeof value)) return true
       if (Array.isArray(value)) {
-        return [
-          key,
-          value.map((v) => (validTypes.includes(typeof value) ? v : null)),
-        ]
+        return value.every((v) => validTypes.includes(typeof v))
       }
-      return [key, null]
+      return false
     }),
   )
 }

@@ -2,13 +2,19 @@ import AppUserAvatar from "@/components/blocks/AppUserAvatar"
 import Feedback from "@/components/blocks/OldFeedback"
 import ProtectedText from "@/components/blocks/ProtectedText"
 import SmartViewer from "@/components/SmartViewer"
-import { Badge, Group } from "@mantine/core"
+import { Badge, Group, Stack, Tooltip } from "@mantine/core"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useEffect } from "react"
 import analytics from "./analytics"
 
-import { formatCost, formatDateTime, msToTime } from "./format"
+import { capitalize, formatCost, formatDateTime, msToTime } from "./format"
 import { useProjectSWR } from "./dataHooks"
+import {
+  IconMoodNeutral,
+  IconMoodSad,
+  IconMoodSmile,
+} from "@tabler/icons-react"
+import { getColorFromSeed } from "./colors"
 const columnHelper = createColumnHelper<any>()
 
 export function timeColumn(timeColumn, label = "Time") {
@@ -212,5 +218,78 @@ export function feedbackColumn(withRelatedRuns = false) {
     header: "Feedback",
     size: 100,
     cell,
+  })
+}
+
+const renderEnrichment = (key, value) => {
+  switch (key) {
+    case "sentiment":
+      let emoji
+      let type
+
+      if (value > 0.5) {
+        emoji = <IconMoodSmile color="teal" />
+        type = "positive"
+      } else if (value < -0.5) {
+        emoji = <IconMoodSad color="crimson" />
+        type = "negative"
+      } else {
+        emoji = <IconMoodNeutral color="gray" />
+        type = "neutral"
+      }
+
+      return {
+        element: (
+          <Group gap="xs">
+            {emoji} {value}
+          </Group>
+        ),
+        help: "Sentiment: " + type,
+      }
+    case "pii":
+      if (value === "soft") return { element: "⚠️" }
+      else if (value === "hard") return { element: "❌" }
+      else return { element: "❎" }
+
+    case "topics":
+      return {
+        element: (
+          <Group gap="xs">
+            {value?.map((topic) => (
+              <Badge
+                key={topic}
+                variant="outline"
+                color={getColorFromSeed(topic)}
+                size="sm"
+                style={{ textTransform: "none" }}
+              >
+                {topic}
+              </Badge>
+            ))}
+          </Group>
+        ),
+        help: "Topics",
+      }
+    default:
+      return { element: value, help: key }
+  }
+}
+
+export function enrichmentColumn(key: string) {
+  return columnHelper.accessor("enrichment-" + key, {
+    header: `${capitalize(key)} ✨`,
+    size: 100,
+    cell: (props) => {
+      const data = props.row.original.metadata?.enrichment || {}
+
+      if (typeof data[key] === "undefined") return null
+
+      const { element, help } = renderEnrichment(key, data[key])
+      return (
+        <Tooltip key={key} label={help} disabled={!help}>
+          <div key={key}>{element}</div>
+        </Tooltip>
+      )
+    },
   })
 }

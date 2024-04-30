@@ -7,7 +7,7 @@ import {
   IconThumbDown,
   IconThumbUp,
 } from "@tabler/icons-react"
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import analytics from "../../utils/analytics"
 import { useFixedColorScheme } from "@/utils/hooks"
 
@@ -27,7 +27,7 @@ export default function Feedback({
   if (!data) return null
 
   if (data.type === "thumb") {
-    data = { thumbs: data.value }
+    data = { thumb: data.value }
   }
 
   if (data.type === "comment") {
@@ -57,8 +57,12 @@ export default function Feedback({
               : "",
           }}
         >
-          {data?.thumb === "up" && <IconThumbUp {...getIconProps("green")} />}
-          {data?.thumb === "down" && <IconThumbDown {...getIconProps("red")} />}
+          {(data?.thumb === "up" || data?.thumbs === "up") && (
+            <IconThumbUp {...getIconProps("green")} />
+          )}
+          {(data?.thumb === "down" || data?.thumbs === "down") && (
+            <IconThumbDown {...getIconProps("red")} />
+          )}
           {typeof data?.rating === "number" && (
             <Group gap={3}>
               {Array.from({ length: data.rating }).map((_, i) => (

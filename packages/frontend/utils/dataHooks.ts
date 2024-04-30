@@ -1,4 +1,3 @@
-import { useMantineTheme } from "@mantine/core"
 import { useContext } from "react"
 import useSWR, { SWRConfiguration, useSWRConfig } from "swr"
 import useSWRInfinite from "swr/infinite"
@@ -108,14 +107,13 @@ export function useProjectMutate(key: KeyType, options?: SWRConfiguration) {
 export function useUser() {
   const { isSignedIn } = useAuth()
 
-  const theme = useMantineTheme()
   const scheme = useFixedColorScheme()
 
   const { data, isLoading, mutate, error } = useSWR(
     () => isSignedIn && `/users/me`,
   )
 
-  const color = data ? getUserColor(scheme, theme, data.id) : null
+  const color = data ? getUserColor(scheme, data.id) : null
   const user = data ? { ...data, color } : null
 
   return { user, loading: isLoading, mutate, error }
@@ -130,12 +128,11 @@ export function useOrg() {
 
   const { trigger: addUserToOrg } = useSWRMutation(`/users`, fetcher.post)
 
-  const theme = useMantineTheme()
   const scheme = useFixedColorScheme()
 
   const users = data?.users?.map((user) => ({
     ...user,
-    color: getUserColor(scheme, theme, user.id),
+    color: getUserColor(scheme, user.id),
   }))
 
   const org = data ? { ...data, users } : null
@@ -336,7 +333,7 @@ export function useRun(id: string | null, initialData?: any) {
     },
   )
 
-  const { trigger: updateFeedback } = useProjectMutation(
+  const { trigger: updateTrigger } = useProjectMutation(
     id && `/runs/${id}/feedback`,
     fetcher.patch,
   )
@@ -344,6 +341,11 @@ export function useRun(id: string | null, initialData?: any) {
   async function updateRun(data) {
     mutate({ ...run, ...data })
     await update(data)
+  }
+
+  async function updateFeedback(feedback) {
+    await updateTrigger(feedback)
+    await mutate()
   }
 
   return {
@@ -461,12 +463,11 @@ export function useOrgUser(userId: string) {
     fetcher.patch,
   )
 
-  const theme = useMantineTheme()
   const scheme = useFixedColorScheme()
 
   const user = {
     ...data,
-    color: getUserColor(scheme, theme, data?.id),
+    color: getUserColor(scheme, data?.id),
   }
 
   return { user, loading: isLoading, mutate, removeUserFromOrg, updateUser }
@@ -539,6 +540,11 @@ export function useDatasets() {
     fetcher.post,
   )
 
+  const { trigger: insertPrompt } = useProjectMutation(
+    `/datasets/prompts`,
+    fetcher.post,
+  )
+
   const { trigger: update, isMutating: isUpdating } = useProjectMutation(
     `/datasets`,
     fetcher.patch,
@@ -552,6 +558,7 @@ export function useDatasets() {
     isUpdating,
     mutate,
     isLoading,
+    insertPrompt,
   }
 }
 
