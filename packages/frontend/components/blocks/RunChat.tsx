@@ -2,6 +2,8 @@ import { useCallback, useMemo, useState } from "react"
 
 import { BubbleMessage } from "@/components/SmartViewer/Message"
 
+import { useProjectSWR, useRun } from "@/utils/dataHooks"
+import { formatDateTime } from "@/utils/format"
 import {
   Button,
   Card,
@@ -12,11 +14,10 @@ import {
   Text,
   Title,
 } from "@mantine/core"
-import AppUserAvatar from "./AppUserAvatar"
-import { formatDateTime } from "@/utils/format"
-import Router from "next/router"
 import { IconNeedleThread } from "@tabler/icons-react"
-import { useLogs, useProjectSWR, useRun } from "@/utils/dataHooks"
+import Router, { useRouter } from "next/router"
+import { mutate } from "swr"
+import AppUserAvatar from "./AppUserAvatar"
 import Feedbacks from "./Feedbacks"
 
 const OUTPUT_ROLES = ["assistant", "ai", "tool"]
@@ -66,8 +67,10 @@ function Message({
   run,
   mutateLogs,
 }) {
+  const router = useRouter()
+  const runId = router?.query?.selected
   const { updateFeedback } = useRun(msg.id)
-  const { data: relatedRuns, mutate } = useProjectSWR(`/runs/${run.id}/related`)
+  const { data: relatedRuns } = useProjectSWR(runId && `/runs/${runId}/related`)
   return (
     <>
       <BubbleMessage
@@ -85,9 +88,23 @@ function Message({
               <Feedbacks
                 feedback={run.feedback}
                 updateFeedback={async (feedback) => {
-                  await updateFeedback(feedback)
-                  await mutateLogs()
-                  await mutate()
+                  try {
+                    const newRelatedRuns = [...relatedRuns]
+                    await updateFeedback(feedback)
+
+                    newRelatedRuns.find(({ id }, i) => {
+                      if (id === msg.id) {
+                        newRelatedRuns[i].feedback = feedback
+                      }
+                    })
+
+                    await mutate(`/runs/${runId}/related`, () => relatedRuns, {
+                      revalidate: false,
+                    })
+                    await mutateLogs()
+                  } catch (error) {
+                    console.error(error)
+                  }
                 }}
               />
             )}

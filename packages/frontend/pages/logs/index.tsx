@@ -122,12 +122,18 @@ const CHECKS_BY_TYPE = {
     "tags",
     "users",
     "status",
-    "feedback",
+    // "feedback",
     "duration",
     "metadata",
     "radar",
   ],
-  thread: ["tags", "users", "feedback", "metadata", "radar"],
+  thread: [
+    "tags",
+    "users",
+    // "feedback",
+    "metadata",
+    "radar",
+  ],
 }
 
 const editCheck = (filters, id, params) => {
