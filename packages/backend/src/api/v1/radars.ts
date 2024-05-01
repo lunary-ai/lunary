@@ -36,55 +36,55 @@ const DEFAULT_RADARS = [
       },
     ],
   },
-  {
-    description:
-      "Answer potentially contains PII (Personal Identifiable Information)",
-    negative: true,
-    view: [
-      "AND",
-      {
-        id: "type",
-        params: {
-          type: "llm",
-        },
-      },
-    ],
-    checks: [
-      "AND",
-      {
-        id: "pii",
-        params: {
-          field: "input",
-          type: "contains",
-          entities: ["person", "location", "email", "cc", "phone", "ssn"],
-        },
-      },
-    ],
-  },
-  {
-    description: "Prompt contains PII (Personal Identifiable Information)",
-    negative: true,
-    view: [
-      "AND",
-      {
-        id: "type",
-        params: {
-          type: "llm",
-        },
-      },
-    ],
-    checks: [
-      "AND",
-      {
-        id: "pii",
-        params: {
-          field: "input",
-          type: "contains",
-          entities: ["person", "location", "email", "cc", "phone", "ssn"],
-        },
-      },
-    ],
-  },
+  // {
+  //   description:
+  //     "Answer potentially contains PII (Personal Identifiable Information)",
+  //   negative: true,
+  //   view: [
+  //     "AND",
+  //     {
+  //       id: "type",
+  //       params: {
+  //         type: "llm",
+  //       },
+  //     },
+  //   ],
+  //   checks: [
+  //     "AND",
+  //     {
+  //       id: "pii",
+  //       params: {
+  //         field: "input",
+  //         type: "contains",
+  //         entities: ["person", "location", "email", "cc", "phone", "ssn"],
+  //       },
+  //     },
+  //   ],
+  // },
+  // {
+  //   description: "Prompt contains PII (Personal Identifiable Information)",
+  //   negative: true,
+  //   view: [
+  //     "AND",
+  //     {
+  //       id: "type",
+  //       params: {
+  //         type: "llm",
+  //       },
+  //     },
+  //   ],
+  //   checks: [
+  //     "AND",
+  //     {
+  //       id: "pii",
+  //       params: {
+  //         field: "input",
+  //         type: "contains",
+  //         entities: ["person", "location", "email", "cc", "phone", "ssn"],
+  //       },
+  //     },
+  //   ],
+  // },
   {
     description: "Contains profanity or toxic language",
     negative: true,

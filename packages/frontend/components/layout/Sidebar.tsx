@@ -2,11 +2,15 @@ import { Box, Flex, Menu, NavLink, Stack, Text, ThemeIcon } from "@mantine/core"
 
 import {
   IconActivity,
+  IconActivityHeartbeat,
   IconAnalyze,
   IconBolt,
+  IconCheckbox,
   IconChevronRight,
   IconCreditCard,
+  IconDatabase,
   IconFlask2Filled,
+  IconFlaskFilled,
   IconHelpOctagon,
   IconListSearch,
   IconLogout,
@@ -42,6 +46,7 @@ function NavbarLink({
   soon,
   onClick,
   c,
+  subMenu,
   disabled = false,
 }) {
   const router = useRouter()
@@ -67,8 +72,19 @@ function NavbarLink({
           <Icon size={14} />
         </ThemeIcon>
       }
-    />
+    >
+      {subMenu?.map((item) => <NavbarLink {...item} key={item.label} />)}
+    </NavLink>
   )
+}
+
+type MenuItem = {
+  label: string
+  icon: any
+  link: string
+  resource: ResourceName
+  disabled?: boolean
+  subMenu?: MenuItem[]
 }
 
 export default function Sidebar() {
@@ -89,13 +105,7 @@ export default function Sidebar() {
   const billingEnabled =
     process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY && !config.IS_SELF_HOSTED
 
-  const APP_MENU: {
-    label: string
-    icon: any
-    link: string
-    resource: ResourceName
-    disabled?: boolean
-  }[] = [
+  const APP_MENU: MenuItem[] = [
     {
       label: "Analytics",
       icon: IconTimeline,
@@ -128,6 +138,32 @@ export default function Sidebar() {
       link: "/evaluations",
       resource: "evaluations",
       disabled: isSelfHosted ? org.license && !org.license.evalEnabled : false,
+      subMenu: [
+        {
+          label: "Playground",
+          icon: IconFlaskFilled,
+          link: "/evaluations/new",
+          resource: "evaluations",
+        },
+        {
+          label: "Real-time",
+          icon: IconActivityHeartbeat,
+          link: "/evaluations/realtime",
+          resource: "evaluations",
+        },
+        {
+          label: "Datasets",
+          icon: IconDatabase,
+          link: "/datasets",
+          resource: "datasets",
+        },
+        {
+          label: "Checklists",
+          icon: IconCheckbox,
+          link: "/evaluations/checklists",
+          resource: "checklists",
+        },
+      ],
     },
     {
       label: "Settings & Keys",

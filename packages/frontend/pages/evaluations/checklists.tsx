@@ -189,7 +189,7 @@ export default function Checklists() {
 
         <Text size="lg" mb="md">
           Checklists are collections of assertions that you can use in
-          evaluations (SDK or Dashboard).
+          evaluations (Playground or SDK).
         </Text>
 
         {loading ? (
