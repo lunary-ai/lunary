@@ -1,15 +1,24 @@
 import Steps from "@/components/blocks/Steps"
 import Paywall from "@/components/layout/Paywall"
-import { useChecklists, useDatasets, useProject } from "@/utils/dataHooks"
+import {
+  useChecklists,
+  useDatasets,
+  useEvaluations,
+  useProject,
+  useUser,
+} from "@/utils/dataHooks"
 import { fetcher } from "@/utils/fetcher"
 
 import {
+  Alert,
   Anchor,
   Badge,
   Button,
+  Card,
   Container,
   Group,
   InputBase,
+  Loader,
   Modal,
   Pill,
   Progress,
@@ -19,13 +28,15 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core"
-import { IconFlask2Filled } from "@tabler/icons-react"
+import { IconFlask2Filled, IconRefresh, IconTable } from "@tabler/icons-react"
 import { useRouter } from "next/router"
 import { useEffect, useRef, useState } from "react"
 import { ChecklistModal } from "./checklists"
 import ProviderEditor from "@/components/prompts/Provider"
-import { MODELS, Provider } from "shared"
+import { MODELS, Provider, hasAccess } from "shared"
 import { useLocalStorage } from "@mantine/hooks"
+import OrgUserBadge from "@/components/blocks/OrgUserBadge"
+import Link from "next/link"
 
 const FEATURE_LIST = [
   "Define assertions to test variations of prompts",
@@ -99,6 +110,9 @@ export default function NewEvaluation() {
   const { datasets, isLoading: datasetsLoading } = useDatasets()
   const { checklists, loading: checklistsLoading } = useChecklists("evaluation")
 
+  const { evaluations, isLoading } = useEvaluations()
+  const { user } = useUser()
+
   // make sure to only fetch once
   const ref = useRef({ done: false })
 
@@ -156,7 +170,10 @@ export default function NewEvaluation() {
     setLoading(false)
   }
 
-  const canStartEvaluation = datasetId && providers.length > 0
+  const canStartEvaluation =
+    datasetId &&
+    providers.length > 0 &&
+    hasAccess(user.role, "evaluations", "create")
 
   return (
     <Paywall
@@ -189,11 +206,10 @@ export default function NewEvaluation() {
       />
       <Container>
         <Stack align="right" gap="lg">
-          <Anchor href="/evaluations">← Back to Evaluations</Anchor>
           <Group align="center">
             <Title>Evaluation Playground</Title>
             <Badge variant="light" color="violet">
-              Alpha
+              Beta
             </Badge>
             <Badge variant="light" color="blue">
               no-code
@@ -325,6 +341,89 @@ export default function NewEvaluation() {
               Start Evaluation
             </Button>
           </Tooltip>
+
+          <Title order={3} mt="lg">
+            History
+          </Title>
+
+          {isLoading ? (
+            <Loader />
+          ) : (
+            <>
+              {!evaluations?.length ? (
+                <Alert color="gray" title="No evaluations yet" />
+              ) : (
+                <Stack gap="xl">
+                  {evaluations.map((evaluation) => (
+                    <Card key={evaluation.id} p="lg" withBorder>
+                      <Group justify="space-between">
+                        <Stack>
+                          <Group>
+                            <Title
+                              order={3}
+                              size={16}
+                              onClick={() =>
+                                router.push(`/evaluations/${evaluation.id}`)
+                              }
+                              style={{ cursor: "pointer" }}
+                            >
+                              {evaluation.name}
+                            </Title>
+                            <Badge
+                              variant="light"
+                              radius="sm"
+                              color="teal"
+                              size="sm"
+                            >
+                              Complete
+                            </Badge>
+                          </Group>
+
+                          <Group>
+                            {evaluation.models?.map((model, index) => (
+                              <Badge key={index} variant="light" color="blue">
+                                {model}
+                              </Badge>
+                            ))}
+                          </Group>
+                          <Group>
+                            {evaluation.providers?.map((provider, index) => (
+                              <Badge key={index} variant="light" color="blue">
+                                {provider.model}
+                              </Badge>
+                            ))}
+                          </Group>
+                          <OrgUserBadge userId={evaluation.ownerId} />
+                        </Stack>
+
+                        <Group>
+                          <Button
+                            component={Link}
+                            size="xs"
+                            href={`/evaluations/${evaluation.id}`}
+                            leftSection={<IconTable size={12} />}
+                            variant="light"
+                          >
+                            Results
+                          </Button>
+                          <Button
+                            variant="light"
+                            color="teal"
+                            size="xs"
+                            leftSection={<IconRefresh size={12} />}
+                            component={Link}
+                            href={`/evaluations/new?clone=${evaluation.id}`}
+                          >
+                            Again
+                          </Button>
+                        </Group>
+                      </Group>
+                    </Card>
+                  ))}
+                </Stack>
+              )}
+            </>
+          )}
         </Stack>
       </Container>
     </Paywall>

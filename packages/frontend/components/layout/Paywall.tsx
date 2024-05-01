@@ -41,26 +41,33 @@ export default function Paywall({
   plan,
   feature,
   children,
+  enabled,
   list,
   description,
   Icon,
+  p,
 }: {
   plan: string
   feature: string
   description: string
-  list: string[]
+  enabled?: boolean
+  list?: string[]
   children: React.ReactNode
   Icon?: React.ComponentType<any>
+  p?: number
 }) {
   const { org } = useOrg()
 
   // Automatically disable paywall in these cases
   if (
-    ["custom", "unlimited", plan].includes(org?.plan) ||
-    process.env.NEXT_PUBLIC_DEMO
+    typeof enabled !== "undefined"
+      ? !enabled
+      : ["custom", plan].includes(org?.plan) || process.env.NEXT_PUBLIC_DEMO
   ) {
     return children
   }
+
+  const isEnterpriseFeature = plan === "enterprise"
 
   return (
     <Box
@@ -69,6 +76,7 @@ export default function Paywall({
       left={0}
       right={0}
       bottom={0}
+      p={p}
       h={`100%`}
       style={{
         overflow: "hidden",
@@ -93,21 +101,39 @@ export default function Paywall({
               <ThemeIcon size={42} radius={12}>
                 {Icon && <Icon size="20" />}
               </ThemeIcon>
-              <Title order={3}>
-                {feature} is available in Lunary {capitalize(plan)}
+              <Title order={3} lh={1}>
+                {
+                  <Text
+                    span
+                    fw={"inherit"}
+                    fz={"inherit"}
+                    lts={"inherit"}
+                    variant="gradient"
+                    gradient={{ from: "indigo", to: "cyan", deg: 45 }}
+                  >
+                    {feature}
+                  </Text>
+                }
+                <span>{` is available ${isEnterpriseFeature ? "as an addon in" : ""} Lunary ${capitalize(plan)}`}</span>
               </Title>
             </Group>
-            <Text size="lg">{description}</Text>
-            <ListFeatures features={list} />
+            {description && <Text size="lg">{description}</Text>}
+            {list && <ListFeatures features={list} />}
             <Button
               fullWidth
               size="md"
               leftSection={<IconBolt size={20} />}
               variant="gradient"
               gradient={{ from: "blue", to: "cyan" }}
-              onClick={() => openUpgrade(feature.toLowerCase())}
+              onClick={() =>
+                isEnterpriseFeature
+                  ? window.open("https://lunary.ai/schedule", "_blank")
+                  : openUpgrade(feature.toLowerCase())
+              }
             >
-              Upgrade to {capitalize(plan)} &rarr;
+              {isEnterpriseFeature
+                ? "Contact Sales"
+                : `Upgrade to ${capitalize(plan)} &rarr`}
             </Button>
           </Stack>
         </Card>

@@ -6,7 +6,8 @@ import sql from "@/src/utils/db"
 import Context from "@/src/utils/koa"
 import Router from "koa-router"
 import { RunEvent } from "lunary/types"
-import PQueue from "p-queue"
+
+import Queue from "queue-promise"
 import { PassThrough } from "stream"
 import { runEval } from "./utils"
 
@@ -31,9 +32,9 @@ evaluations.post(
       Connection: "keep-alive",
     })
 
-    const queue = new PQueue({
-      concurrency: MAX_PARALLEL_EVALS,
-      timeout: 10000,
+    const queue = new Queue({
+      concurrent: MAX_PARALLEL_EVALS,
+      start: true,
     })
 
     const [{ plan }] =
@@ -70,16 +71,17 @@ evaluations.post(
       for (const variation of variations) {
         for (const provider of evaluation.providers) {
           count++
-          queue.add(() =>
-            runEval({
+          queue.enqueue(async () => {
+            await runEval({
               evaluationId: evaluation.id,
               promptId: prompt.id,
               variation,
               provider,
               prompt: prompt.messages,
               checklistId,
-            }),
-          )
+            })
+            console.log(`Task ${count} don with model ${provider.model} done`)
+          })
         }
       }
     }
@@ -89,17 +91,24 @@ evaluations.post(
     ctx.status = 200
     ctx.body = stream
 
-    queue.on("active", () => {
-      const percentDone = ((count - queue.size) / count) * 100
-      console.log(`Active: ${queue.size} of ${count} (${percentDone}%)`)
+    let done = 0
+
+    queue.on("dequeue", () => {
+      done++
+      const percentDone = (1 - (count - done) / count) * 100
+      console.log(`Active: ${done} of ${count} (${percentDone}%)`)
       stream.write(JSON.stringify({ percentDone }) + "\n")
     })
 
-    await queue.onIdle()
+    console.log(`Queue started with ${count} tasks`)
 
-    stream.write(JSON.stringify({ id: evaluation?.id }) + "\n")
+    queue.on("end", () => {
+      console.log("Queue is empty now")
 
-    stream.end()
+      stream.write(JSON.stringify({ id: evaluation?.id }) + "\n")
+
+      stream.end()
+    })
   },
 )
 

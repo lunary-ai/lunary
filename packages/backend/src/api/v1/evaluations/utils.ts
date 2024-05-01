@@ -117,6 +117,8 @@ export async function runEval({
         duration,
       })}
       `
+
+      console.log(`Eval for ${provider.model} passed: ${passed}`)
     } catch (error: any) {
       await sql`
         insert into evaluation_result ${sql({

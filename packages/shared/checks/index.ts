@@ -582,6 +582,7 @@ export const CHECKS: Check[] = [
   },
   {
     id: "pii",
+    soon: true,
     name: "PII",
     uiType: "ai",
 
@@ -635,7 +636,7 @@ export const CHECKS: Check[] = [
     name: "Assertion",
     uiType: "ai",
     description:
-      "Checks if the output matches the given requirement, using GPT-4 to grade the output.",
+      "Checks if the output matches the given requirement, using an LLM to grade the output.",
     onlyInEvals: true,
     params: [
       {
@@ -651,11 +652,57 @@ export const CHECKS: Check[] = [
     ],
   },
   {
+    id: "geval",
+    name: "G-Eval",
+    uiType: "ai",
+    description:
+      "G-Eval is a framework that uses LLMs with chain-of-thoughts (CoT) to evaluate LLM outputs based on ANY custom criteria",
+    soon: true,
+    params: [
+      {
+        type: "label",
+        label: "G-Eval",
+      },
+      {
+        type: "text",
+        id: "criteria",
+        placeholder: "Is spoken like a pirate",
+        width: 140,
+      },
+    ],
+  },
+  {
+    id: "context-precision",
+    name: "Contextual Precision",
+    uiType: "ai",
+    description:
+      "The contextual precision metric measures your RAG pipeline's retriever by evaluating whether nodes in your context that are relevant to the given input are ranked higher than irrelevant ones.",
+    soon: true,
+    params: [],
+  },
+  {
+    id: "context-recall",
+    name: "Contextual Recall",
+    uiType: "ai",
+    description:
+      "The contextual recall metric measures the quality of your RAG pipeline's retriever by evaluating the extent of which the context aligns with the expected_output.",
+    soon: true,
+    params: [],
+  },
+  {
+    id: "summarization",
+    name: "Summarization",
+    uiType: "ai",
+    soon: true,
+    description:
+      "The summarization metric uses LLMs to determine whether your agent is generating factually correct summaries while including the neccessary details from the original text.",
+    params: [],
+  },
+  {
     id: "sentiment",
     name: "Sentiment",
     uiType: "ai",
-    description:
-      "Uses AI to check if content is positive, neutral, or negative.",
+    description: "Uses AI to detect the sentiment of the given field.",
     params: [
       FIELD_PARAM,
       {
@@ -690,7 +737,7 @@ export const CHECKS: Check[] = [
     uiType: "ai",
     onlyInEvals: true,
     description:
-      "Assesses if the tone of the LLM response matches with the desired persona.",
+      "Assesses if the tone of the response matches with the desired persona.",
     params: [
       {
         type: "label",
