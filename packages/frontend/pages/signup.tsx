@@ -50,7 +50,7 @@ import config from "@/utils/config"
 function getRandomizedChoices() {
   const choices = [
     { label: "Google", value: "seo" },
-    { label: "X / Twitter", value: "s" },
+    { label: "X / Twitter", value: "twitter" },
     { label: "LangChain", value: "langchain" },
     { label: "LiteLLM", value: "litellm" },
     { label: "Hacker News", value: "hackernews" },
@@ -297,24 +297,23 @@ function SignupPage() {
                       {step === 2 && (
                         <>
                           <Title order={2} fw={700} ta="center">
-                            Create an organization
+                            Create an Organization
                           </Title>
 
                           <TextInput
                             label="Organization Name"
-                            description="Eg. your company name"
+                            description="E.g. your company name"
                             leftSection={<IconBuildingStore size="16" />}
                             placeholder="Organization name"
                             error={
-                              form.errors.projectName &&
-                              "This field is required"
+                              form.errors.orgName && "This field is required"
                             }
                             {...form.getInputProps("orgName")}
                           />
 
                           <TextInput
                             label="Project Name"
-                            description="Can be changed later."
+                            description="Can be changed later"
                             leftSection={<IconFolderBolt size="16" />}
                             placeholder="Your project name"
                             error={
@@ -334,15 +333,15 @@ function SignupPage() {
                           >
                             <Group mt="xs">
                               <Radio value="1-5" label="1-5" />
-                              <Radio value="11-50" label="6-49" />
-                              <Radio value="51-100" label="50-99" />
-                              <Radio value="101-500" label="100+" />
+                              <Radio value="6-49" label="6-49" />
+                              <Radio value="50-99" label="50-99" />
+                              <Radio value="100+" label="100+" />
                             </Group>
                           </Radio.Group>
 
                           <Select
                             label="Where did you find us?"
-                            description="This helps us focus our efforts."
+                            description="This helps us focus our efforts"
                             placeholder="Select an option"
                             data={choices}
                             {...form.getInputProps("whereFindUs")}
@@ -413,7 +412,7 @@ function SignupPage() {
                     </List.Item>
                     <List.Item>
                       <Text fw="bold">No config required</Text>
-                      <Text>Get insights without complicated setup.</Text>
+                      <Text>Get insights without a complicated setup.</Text>
                     </List.Item>
                   </List>
                 </Box>
