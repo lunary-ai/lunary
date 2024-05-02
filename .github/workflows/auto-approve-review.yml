@@ -1,0 +1,28 @@
+on:
+  check_suite:
+    types: [completed]
+
+jobs:
+  auto-approve:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Check PR author and status
+        if: github.event.sender.login == 'hughcrt' && github.event.check_suite.status == 'success'
+        run: |
+          echo "All checks passed for PR created by hughcrt"
+          echo "APPROVE_PR=true" >> $GITHUB_ENV
+
+      - name: Approve Pull Request
+        if: env.APPROVE_PR == 'true'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.LUNARY_BOT_GH_TOKEN }}
+          script: |
+            github.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              event: 'APPROVE'
+            })
