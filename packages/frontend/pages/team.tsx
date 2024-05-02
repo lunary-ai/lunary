@@ -12,7 +12,6 @@ import {
   Group,
   Input,
   InputBase,
-  Loader,
   Menu,
   Modal,
   MultiSelect,
@@ -57,7 +56,6 @@ import { SettingsCard } from "@/components/blocks/SettingsCard"
 import { SEAT_ALLOWANCE } from "@/utils/pricing"
 import { openUpgrade } from "@/components/layout/UpgradeModal"
 import config from "@/utils/config"
-import Paywall from "@/components/layout/Paywall"
 
 function SAMLConfig() {
   const { org, updateOrg, mutate } = useOrg()
@@ -126,7 +124,7 @@ function SAMLConfig() {
       }}
     >
       <Text fw="bold">
-        1. Provider your Identity Provider (IDP) Metadata XML.
+        1. Provide your Identity Provider (IDP) Metadata XML.
       </Text>
       <Flex gap="md">
         <TextInput
@@ -215,7 +213,8 @@ function InviteLinkModal({ opened, setOpened, link }) {
       title={<Title size="h3">Invite Link</Title>}
     >
       <Text size="sm">
-        Send this link to the person you want to invite to your organization.
+        Send this link to the person you want to invite to join your
+        organization.
       </Text>
 
       <CopyInput my="lg" value={link} />
