@@ -1,28 +1,10 @@
-on:
-  check_suite:
-    types: [completed]
+name: Auto approve
+on: pull_request_target
 
 jobs:
-  auto-approve:
+  build:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Check PR author and status
-        if: github.event.sender.login == 'hughcrt' && github.event.check_suite.status == 'success'
-        run: |
-          echo "All checks passed for PR created by hughcrt"
-          echo "APPROVE_PR=true" >> $GITHUB_ENV
-
-      - name: Approve Pull Request
-        if: env.APPROVE_PR == 'true'
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.LUNARY_BOT_GH_TOKEN }}
-          script: |
-            github.pulls.createReview({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.payload.pull_request.number,
-              event: 'APPROVE'
-            })
+      - uses: hmarr/auto-approve-action@v4
