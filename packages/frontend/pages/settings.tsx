@@ -113,7 +113,7 @@ function Keys() {
                     labels: { confirm: "Confirm", cancel: "Cancel" },
 
                     onConfirm: async () => {
-                      regenerateKey()
+                      await regenerateKey()
                     },
                   })
                 }}
@@ -126,8 +126,8 @@ function Keys() {
           color="red"
         >
           <Text>
-            Your private key should be kept secret and never shared. It is can
-            be used to retrieve data from the API.
+            Your private key should be kept secret and never shared. It can be
+            used to retrieve data from the API.
           </Text>
         </Alert>
       )}
@@ -218,7 +218,6 @@ export default function AppAnalytics() {
             </Button>
           </Flex>
         </SettingsCard>
-
         <SettingsCard
           title={<>Custom Models 🧠</>}
           align="start"
@@ -229,13 +228,13 @@ export default function AppAnalytics() {
             plan: "enterprise",
             list: [
               "Use custom models for evaluations",
-              "Add and overwrite costs mappings",
+              "Add and overwrite cost mappings",
             ],
 
             enabled: true,
           }}
         >
-          <Text>Add custom models and costs mappings to your project.</Text>
+          <Text>Add custom models and cost mappings to your project.</Text>
 
           <Flex justify="flex-end" w="100%">
             <Button
