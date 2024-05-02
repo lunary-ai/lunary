@@ -200,9 +200,10 @@ export async function runAImodel(
   let paramsOverwrite = {}
 
   const useAnthropic = modelObj?.provider === "anthropic"
+  const isAzureOpenai = process.env.AZURE_OPENAI_API_KEY
 
   // disable streaming with anthropic, as their API is too different.
-  const doStream = stream && !useAnthropic
+  const doStream = stream && !useAnthropic && !isAzureOpenai
 
   switch (modelObj?.provider) {
     case "anthropic":

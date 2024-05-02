@@ -114,7 +114,7 @@ export default function Paywall({
                     {feature}
                   </Text>
                 }
-                <span>{` is available ${isEnterpriseFeature ? "as an addon in" : ""} Lunary ${capitalize(plan)}`}</span>
+                <span>{` is available on ${isEnterpriseFeature ? "as an addon in" : ""} Lunary ${capitalize(plan)}`}</span>
               </Title>
             </Group>
             {description && <Text size="lg">{description}</Text>}
@@ -133,7 +133,7 @@ export default function Paywall({
             >
               {isEnterpriseFeature
                 ? "Contact Sales"
-                : `Upgrade to ${capitalize(plan)} &rarr`}
+                : `Upgrade to ${capitalize(plan)} &rarr;`}
             </Button>
           </Stack>
         </Card>
