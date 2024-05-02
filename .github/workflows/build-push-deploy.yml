@@ -17,7 +17,7 @@ jobs:
       - name: Check out the private Ops repo
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GH_ACCESS_TOKEN }}
+          token: ${{ secrets.GH_TOKEN }}
           submodules: "recursive"
 
       - name: Generate data
@@ -81,7 +81,7 @@ jobs:
       - name: Check out the private Ops repo
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GH_ACCESS_TOKEN }}
+          token: ${{ secrets.GH_TOKEN }}
           submodules: "recursive"
 
       - name: Generate data
@@ -123,7 +123,7 @@ jobs:
       - name: Check out the private Ops repo
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GH_ACCESS_TOKEN }}
+          token: ${{ secrets.GH_TOKEN }}
           submodules: "recursive"
 
       - name: Set up Docker Buildx
