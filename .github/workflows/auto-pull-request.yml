@@ -16,4 +16,4 @@ jobs:
         run: |
           prefix=$(echo ${{ github.ref }}| cut -d '/' -f 3)
           branch_name=$(echo ${{ github.ref }} | cut -d '/' -f 4- | tr '-' ' ')
-          GH_TOKEN=${{ secrets.GH_TOKEN }} gh pr create --title "${prefix}: ${branch_name}" --body "Description"
+          GH_TOKEN=${{ secrets.GH_TOKEN }} gh pr create --title "${prefix}: ${branch_name}" --body ""
