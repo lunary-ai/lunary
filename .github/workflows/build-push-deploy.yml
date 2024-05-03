@@ -142,6 +142,6 @@ jobs:
           file: ./ops/lunary-ee.Dockerfile
           push: true
           tags: |
-            lunary/lunary-ee:14
-            lunary/lunary-ee:15
+            lunary/lunary-ee:1.2.14
+            lunary/lunary-ee:1.2.15
           platforms: linux/amd64,linux/arm64
