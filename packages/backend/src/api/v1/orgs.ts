@@ -241,7 +241,9 @@ orgs.post("/playground", async (ctx: Context) => {
       stream.end()
     },
     (error) => {
-      throw new Error(error)
+      ctx.status = 500
+      ctx.body = { message: "An unexpected error occurred" }
+      console.error(error)
       stream.end()
     },
   )
