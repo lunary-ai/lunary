@@ -48,6 +48,7 @@ export async function handleStream(
       tokens += 1
 
       const chunk = part.choices[0]
+      if (!chunk) continue // Happens with AzureOpenai for first element
 
       const { index, delta } = chunk
 
@@ -200,10 +201,9 @@ export async function runAImodel(
   let paramsOverwrite = {}
 
   const useAnthropic = modelObj?.provider === "anthropic"
-  const isAzureOpenai = process.env.AZURE_OPENAI_API_KEY
 
   // disable streaming with anthropic, as their API is too different.
-  const doStream = stream && !useAnthropic && !isAzureOpenai
+  const doStream = stream && !useAnthropic
 
   switch (modelObj?.provider) {
     case "anthropic":
