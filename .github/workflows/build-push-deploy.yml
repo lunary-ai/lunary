@@ -135,6 +135,18 @@ jobs:
           username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
           password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
 
+      - name: Generate data
+        id: date
+        run: echo "date=$(date +%Y-%m-%d-%Hh%Mm%Ss)" >> $GITHUB_OUTPUT
+
+      - name: Get short commit hash
+        id: commit
+        run: echo "hash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Remove 'v' prefix from release tag
+        id: release_tag
+        run: echo "tag=$(echo ${{ github.event.release.tag_name }} | sed 's/^v//')" >> $GITHUB_OUTPUT
+
       - name: Build and push lunary-ee
         uses: docker/build-push-action@v5
         with:
