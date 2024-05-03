@@ -127,7 +127,9 @@ export const CHECK_RUNNERS: CheckRunner[] = [
           const value = parsedType[key]
           if (key === "comment") {
             // comment is a special case because there can be infinite values
-            return sql`r.feedback->${key} IS NOT NULL OR rpfc.feedback->${key} IS NOT NULL`
+            return sql`r.feedback->${key} is not null or rpfc.feedback->${key} is not null`
+          } else if (key === "thumb") {
+            return sql`r.feedback->>'thumbs' = ${value} or rpfc.feedback->>'thumbs' = ${value} or r.feedback->>'thumb' = ${value} or rpfc.feedback->>'thumb' = ${value}`
           } else {
             return sql`r.feedback->>${key} = ${value} OR rpfc.feedback->>${key} = ${value}`
           }
