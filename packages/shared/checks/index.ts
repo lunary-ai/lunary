@@ -582,7 +582,6 @@ export const CHECKS: Check[] = [
   },
   {
     id: "pii",
-    soon: true,
     name: "PII",
     uiType: "ai",
 
@@ -595,7 +594,8 @@ export const CHECKS: Check[] = [
         type: "select",
         id: "entities",
         width: 230,
-        defaultValue: ["person", "location", "email", "cc", "phone", "ssn"],
+        // defaultValue: ["person", "location", "email", "cc", "phone", "ssn"],
+        defaultValue: ["person", "location", "org"],
         multiple: true,
         searchable: true,
         options: [
@@ -611,22 +611,22 @@ export const CHECKS: Check[] = [
             label: "Organization",
             value: "org",
           },
-          {
-            label: "Email",
-            value: "email",
-          },
-          {
-            label: "Credit Card",
-            value: "cc",
-          },
-          {
-            label: "Phone",
-            value: "phone",
-          },
-          {
-            label: "SSN",
-            value: "ssn",
-          },
+          // {
+          //   label: "Email",
+          //   value: "email",
+          // },
+          // {
+          //   label: "Credit Card",
+          //   value: "cc",
+          // },
+          // {
+          //   label: "Phone",
+          //   value: "phone",
+          // },
+          // {
+          //   label: "SSN",
+          //   value: "ssn",
+          // },
         ],
       },
     ],
