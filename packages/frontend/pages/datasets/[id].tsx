@@ -30,6 +30,7 @@ import { modals } from "@mantine/modals"
 import { IconCircleMinus, IconPlus } from "@tabler/icons-react"
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
+import { notifications } from "@mantine/notifications"
 
 function PromptVariation({ i, variationId, content, onDelete, markSaved }) {
   const { variation, update, remove, mutate } =
@@ -101,8 +102,8 @@ function PromptVariation({ i, variationId, content, onDelete, markSaved }) {
       {prompt?.variations?.length > 1 && (
         <ActionIcon
           onClick={async () => {
-            onDelete()
             await remove()
+            onDelete()
           }}
           pos="absolute"
           top={-25}
@@ -117,7 +118,7 @@ function PromptVariation({ i, variationId, content, onDelete, markSaved }) {
   )
 }
 
-function PromptTab({ isText, promptId, onDelete, markSaved }) {
+function PromptTab({ isText, promptId, onDelete, markSaved, canBeDeleted }) {
   const {
     prompt,
     update,
@@ -215,8 +216,16 @@ function PromptTab({ isText, promptId, onDelete, markSaved }) {
             labels: { confirm: "Confirm", cancel: "Cancel" },
 
             onConfirm: async () => {
-              onDelete()
-              await remove()
+              if (canBeDeleted) {
+                await remove()
+                onDelete()
+              } else {
+                notifications.show({
+                  title: "You can't delete this Prompt",
+                  message: "You need at least one Prompt in your Dataset",
+                  color: "red",
+                })
+              }
             },
           })
         }}
@@ -358,6 +367,7 @@ export default function NewDataset() {
                 promptId={prompt.id}
                 isText={dataset?.format === "text"}
                 markSaved={markSaved}
+                canBeDeleted={dataset?.prompts?.length > 1}
                 onDelete={() => {
                   mutate({
                     ...dataset,
