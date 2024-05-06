@@ -15,6 +15,7 @@ import {
   verifyJWT,
   verifyPassword,
 } from "./utils"
+import config from "@/src/utils/config"
 
 const auth = new Router({
   prefix: "/auth",
@@ -104,7 +105,7 @@ auth.post("/signup", async (ctx: Context) => {
         email,
         orgId: org.id,
         role: "owner",
-        verified: !process.env.RESEND_KEY ? true : false,
+        verified: config.skipEmailVerify,
         lastLoginAt: new Date(),
       }
 

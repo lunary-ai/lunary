@@ -12,6 +12,7 @@ import { signJWT } from "./auth/utils"
 import { roles } from "shared"
 import { checkAccess } from "@/src/utils/authorization"
 import Context from "@/src/utils/koa"
+import config from "@/src/utils/config"
 
 const users = new Router({
   prefix: "/users",
@@ -192,7 +193,7 @@ users.post("/", checkAccess("teamMembers", "create"), async (ctx: Context) => {
     email,
     orgId,
     role,
-    verified: false,
+    verified: config.skipEmailVerify,
     singleUseToken: token,
   }
 
