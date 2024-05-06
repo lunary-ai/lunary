@@ -28,7 +28,7 @@ const nextConfig = {
       return []
     }
 
-    return [
+    const redirects =  [
       {
         source: "/ingest/:path*",
         destination: "https://app.posthog.com/:path*",
@@ -46,6 +46,15 @@ const nextConfig = {
         destination: process.env.API_URL + "/api/v1/template",
       },
     ]
+
+    if(process.env.IS_SELF_HOSTED_MONOLITHIC) {
+      redirects.push({
+        source: '/api/path:*',
+        destination: 'http://localhost:3333/api/path:*'
+      })
+    }
+
+    return redirects
   },
   webpack: (config, { webpack }) => {
     config.plugins.push(
