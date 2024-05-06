@@ -193,7 +193,7 @@ users.post("/", checkAccess("teamMembers", "create"), async (ctx: Context) => {
     email,
     orgId,
     role,
-    verified: false,
+    verified: config.skipEmailVerify,
     singleUseToken: token,
   }
 
