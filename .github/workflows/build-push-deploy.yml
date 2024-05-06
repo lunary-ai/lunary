@@ -1,11 +1,12 @@
 name: Build Docker Images, Push to Registry, and Deploy
 
 on:
-  push:
-    branches:
-      - main
-  release:
-    types: [published]
+  push
+  # push:
+  #   branches:
+  #     - main
+  # release:
+  #   types: [published]
 
 jobs:
   build-and-push-amd64:
@@ -147,7 +148,7 @@ jobs:
         id: release_tag
         run: echo "tag=$(echo ${{ github.event.release.tag_name }} | sed 's/^v//')" >> $GITHUB_OUTPUT
 
-      - name: Build and push lunary-ee
+      - name: Build and push lunary-ee (amd64)
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -157,4 +158,16 @@ jobs:
             lunary/lunary-ee:latest
             lunary/lunary-ee:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
             ${{ github.event.release.tag_name != '' && format('lunary/{0}:{1}', 'lunary-ee', steps.release_tag.outputs.tag) || '' }}
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
+
+      - name: Build and push lunary-ee (arm64)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ops/lunary-ee.Dockerfile
+          push: true
+          tags: |
+            lunary/lunary-ee:latest
+            lunary/lunary-ee:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
+            ${{ github.event.release.tag_name != '' && format('lunary/{0}:{1}', 'lunary-ee', steps.release_tag.outputs.tag) || '' }}
+          platforms: linux/arm64
