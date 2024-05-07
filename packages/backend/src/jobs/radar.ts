@@ -29,16 +29,20 @@ async function runRadarChecksOnRun(radar: any, run: any) {
 async function getRadarRuns(radar: any) {
   const filtersQuery = convertChecksToSQL(radar.view)
 
-  const excludedRunsSubquery = sql`select run_id from radar_result where radar_id = ${radar.id}`
-
   // get more recent runs first
   return await sql`
-    select * from run
+    select 
+      * 
+    from 
+      run
+      left join radar_result on run.id = radar_result.run_id
+        and radar_result.radar_id = ${radar.id}
     where 
       project_id = ${radar.projectId}
       and (${filtersQuery})
-      and id not in (${excludedRunsSubquery})
-    order by created_at desc
+      and radar_result.run_id is null
+    order by 
+      run.created_at desc
     limit ${RUNS_BATCH_SIZE}
   `
 }
@@ -77,6 +81,7 @@ async function radarJob() {
 
     if (!runs.length) {
       console.log(`Skipping radar ${radar.id} (${i} / ${radars.length})`)
+      await sleep(1000)
       continue
     }
 
