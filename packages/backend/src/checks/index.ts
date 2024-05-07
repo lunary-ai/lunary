@@ -89,30 +89,30 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       type === "trace"
         ? // matches agent and chain runs with no parent or parent is a chat run
           sql`(type in ('agent','chain') and (parent_run_id is null OR EXISTS (SELECT 1 FROM run AS parent_run WHERE parent_run.id = r.parent_run_id AND parent_run.type = 'chat')))`
-        : sql`type = ${type}`,
+        : sql`(type = ${type})`,
   },
   {
     id: "models",
-    sql: ({ names }) => sql`name = any(${names})`,
+    sql: ({ names }) => sql`(name = any(${names}))`,
   },
   {
     id: "tags",
-    sql: ({ tags }) => sql`tags && ${sql.array(tags)}`,
+    sql: ({ tags }) => sql`(tags && ${sql.array(tags)})`,
   },
   {
     id: "metadata",
     sql: ({ key, value }) => {
       if (!key || !value) return sql`true`
-      return sql`CAST(metadata->>${key} AS TEXT) = ${value}`
+      return sql`(CAST(metadata->>${key} AS TEXT) = ${value})`
     },
   },
   {
     id: "status",
-    sql: ({ status }) => sql`status = ${status}`,
+    sql: ({ status }) => sql`(status = ${status})`,
   },
   {
     id: "users",
-    sql: ({ users }) => sql`external_user_id = ANY(${sql.array(users, 20)})`, // 20 is to specify it's a postgres int4
+    sql: ({ users }) => sql`(external_user_id = ANY(${sql.array(users, 20)}))`, // 20 is to specify it's a postgres int4
   },
   {
     id: "feedback",
@@ -127,11 +127,11 @@ export const CHECK_RUNNERS: CheckRunner[] = [
           const value = parsedType[key]
           if (key === "comment") {
             // comment is a special case because there can be infinite values
-            return sql`r.feedback->${key} is not null or rpfc.feedback->${key} is not null`
+            return sql`(r.feedback->${key} is not null or rpfc.feedback->${key} is not null)`
           } else if (key === "thumb") {
-            return sql`r.feedback->>'thumbs' = ${value} or rpfc.feedback->>'thumbs' = ${value} or r.feedback->>'thumb' = ${value} or rpfc.feedback->>'thumb' = ${value}`
+            return sql`(r.feedback->>'thumbs' = ${value} or rpfc.feedback->>'thumbs' = ${value} or r.feedback->>'thumb' = ${value} or rpfc.feedback->>'thumb' = ${value})`
           } else {
-            return sql`r.feedback->>${key} = ${value} OR rpfc.feedback->>${key} = ${value}`
+            return sql`(r.feedback->>${key} = ${value} OR rpfc.feedback->>${key} = ${value})`
           }
         }),
       )
