@@ -11,7 +11,7 @@ const PARALLEL_BATCH_SIZE = 5
 async function runRadarChecksOnRun(radar: any, run: any) {
   const checks: CheckLogic = radar.checks
 
-  const { passed, results } = await runChecksOnRun(run, checks, true)
+  const { passed, results } = await runChecksOnRun(run, checks, false, true)
 
   await sql`
     insert into radar_result ${sql({
