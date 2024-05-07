@@ -44,12 +44,7 @@ jobs:
           push: true
           tags: |
             lunary/${{ matrix.service }}:latest
-            lunary/${{ matrix.service }}:1.2.14
-            lunary/${{ matrix.service }}:1.2.15
-            lunary/${{ matrix.service }}:1.2.16
-            lunary/${{ matrix.service }}:1.2.17
-            lunary/${{ matrix.service }}:1.2.18
-            lunary/${{ matrix.service }}:1.2.19
+            lunary/${{ matrix.service }}:1.2.20
             lunary/${{ matrix.service }}:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
             ${{ github.event.release.tag_name != '' && format('lunary/{0}:{1}', matrix.service, steps.release_tag.outputs.tag) || '' }}
           platforms: linux/amd64
@@ -110,11 +105,7 @@ jobs:
           push: true
           tags: |
             lunary/lunary-ee:latest
-            lunary/lunary-ee:1.2.14
-            lunary/lunary-ee:1.2.16
-            lunary/lunary-ee:1.2.17
-            lunary/lunary-ee:1.2.18
-            lunary/lunary-ee:1.2.19
+            lunary/lunary-ee:1.2.20
             lunary/lunary-ee:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
             ${{ github.event.release.tag_name != '' && format('lunary/{0}:{1}', 'lunary-ee', steps.release_tag.outputs.tag) || '' }}
           platforms: linux/amd64
