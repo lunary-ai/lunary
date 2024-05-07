@@ -41,13 +41,18 @@ async function sqlEval(sqlFragment: any, run: any): Promise<boolean> {
     const res = await tx`insert into temp_run ${tx(run)} returning * `
 
     // run the sql fragment and see if it returns any rows
+    sqlFragment.isTempRun = true
     const [result] = await tx`select * from temp_run where ${sqlFragment}`
     passed = !!result
   })
   return passed
 }
 
-async function checkRun(run: any, check: LogicElement): Promise<CheckResults> {
+async function checkRun(
+  run: any,
+  check: LogicElement,
+  isRadar: Boolean,
+): Promise<CheckResults> {
   if (typeof check === "string") {
     // Handle AND or OR
     return { passed: true }
@@ -58,7 +63,7 @@ async function checkRun(run: any, check: LogicElement): Promise<CheckResults> {
     const subChecks = check.slice(1)
     if (logicType === "OR") {
       for (const subCheck of subChecks) {
-        const result = await checkRun(run, subCheck)
+        const result = await checkRun(run, subCheck, isRadar)
         if (result.passed) {
           return { passed: true, details: [result] }
         }
@@ -70,7 +75,7 @@ async function checkRun(run: any, check: LogicElement): Promise<CheckResults> {
     } else {
       // Handle nested AND
       const results: CheckResults[] = await Promise.all(
-        subChecks.map((subCheck) => checkRun(run, subCheck)),
+        subChecks.map((subCheck) => checkRun(run, subCheck, isRadar)),
       )
       return {
         passed: results.every((result) => result.passed),
@@ -87,6 +92,9 @@ async function checkRun(run: any, check: LogicElement): Promise<CheckResults> {
   }
 
   if (runner.sql) {
+    if (isRadar) {
+      params.isRadar = true
+    }
     const snippet = runner.sql(params)
 
     const passed = await sqlEval(snippet, run)
@@ -101,6 +109,7 @@ export async function runChecksOnRun(
   run: any,
   checks: CheckLogic,
   optimize = false,
+  isRadar = false,
 ) {
   if (!checks.length) return { passed: true, results: [] }
 
@@ -119,7 +128,7 @@ export async function runChecksOnRun(
     const subChecks = checks.slice(1)
     if (logicType === "OR") {
       for (const check of subChecks) {
-        const res = await checkRun(run, check)
+        const res = await checkRun(run, check, isRadar)
         results.push(res)
         if (res.passed) {
           passed = true
@@ -129,7 +138,7 @@ export async function runChecksOnRun(
     } else {
       // Handle nested AND
       for (const check of subChecks) {
-        const res = await checkRun(run, check)
+        const res = await checkRun(run, check, isRadar)
         results.push(res)
         passed = res.passed
         if (!res.passed) break

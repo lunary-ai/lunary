@@ -14,8 +14,8 @@ const sql = postgres(process.env.DATABASE_URL!, {
   connection: {
     application_name: `backend-${isProduction ? "production" : "development"}-${new Date().getTime()}`,
   },
-  debug: process.env.DEBUG ? debugFn : () => {},
-  onnotice: process.env.DEUG ? console.log : () => {}, // TODO: replace `() => {}` by false when porsager/postgres PR is merged
+  // debug: process.env.DEBUG ? debugFn : () => {},
+  // onnotice: process.env.DEUG ? console.log : () => {}, // TODO: replace `() => {}` by false when porsager/postgres PR is merged
 })
 
 function debugFn(
