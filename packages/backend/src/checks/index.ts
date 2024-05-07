@@ -116,7 +116,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   },
   {
     id: "feedback",
-    sql: ({ types }) => {
+    sql: ({ types, isRadar }) => {
       // If one of the type is {"comment": ""}, we just need to check if there is a 'comment' key
       // otherwise, we need to check for the key:value pair
 
@@ -125,6 +125,19 @@ export const CHECK_RUNNERS: CheckRunner[] = [
           const parsedType = JSON.parse(type)
           const key = Object.keys(parsedType)[0]
           const value = parsedType[key]
+
+          if (isRadar) {
+            // the radar query uses `temp_run` and not `run`
+            if (key === "comment") {
+              // comment is a special case because there can be infinite values
+              return sql`(temp_run.feedback->${key} is not null or temp_run.feedback->${key} is not null)`
+            } else if (key === "thumb") {
+              return sql`(temp_run.feedback->>'thumbs' = ${value} or ${value} or temp_run.feedback->>'thumb' = ${value})`
+            } else {
+              return sql`(temp_run.feedback->>${key} = ${value} OR temp_run.feedback->>${key} = ${value})`
+            }
+          }
+
           if (key === "comment") {
             // comment is a special case because there can be infinite values
             return sql`(r.feedback->${key} is not null or rpfc.feedback->${key} is not null)`
