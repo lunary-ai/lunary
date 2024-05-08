@@ -333,7 +333,7 @@ runs.get("/:id/related", checkAccess("logs", "read"), async (ctx) => {
       INNER JOIN related_runs rr ON rr.id = r2.parent_run_id
   )
   SELECT rr.created_at, rr.tags, rr.project_id, rr.id, rr.status, rr.name, rr.ended_at, rr.error, rr.input, rr.output, 
-        rr.params, rr.type, rr.parent_run_id, rr.completion_tokens, rr.prompt_tokens, rr.feedback
+        rr.params, rr.type, rr.parent_run_id, rr.completion_tokens, rr.prompt_tokens, rr.feedback, rr.metadata
   FROM related_runs rr;
   `
 
