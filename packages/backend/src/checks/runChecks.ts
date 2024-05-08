@@ -35,6 +35,11 @@ async function sqlEval(sqlFragment: any, run: any): Promise<boolean> {
   delete run.context
   delete run.radarId
   delete run.runId
+  delete run.results
+  delete run.passed
+  delete run.details
+
+  if (!run.id) return passed
 
   await sql.begin(async (tx) => {
     // create a virtual table with the run columns, without the id, project_id and is_public columns
