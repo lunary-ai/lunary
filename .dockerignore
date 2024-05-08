@@ -1,7 +1,6 @@
 node_modules
 .dockerignore
 **.vscode
-ops
 *npm-debug.log
 **.Dockerfile
 **.env
