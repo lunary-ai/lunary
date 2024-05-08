@@ -165,7 +165,11 @@ const TraceTree = ({
           )}
 
           {run.endedAt && (
-            <DurationBadge createdAt={run.createdAt} endedAt={run.endedAt} />
+            <DurationBadge
+              cached={run.metadata?.cache}
+              createdAt={run.createdAt}
+              endedAt={run.endedAt}
+            />
           )}
 
           {/* {timeAfterFirst > 0 && (
