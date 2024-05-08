@@ -109,7 +109,6 @@ jobs:
           push: true
           tags: |
             lunary/lunary-ee:latest
-            lunary/lunary-ee:1.2.20
             lunary/lunary-ee:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
             ${{ github.event.release.tag_name != '' && format('lunary/{0}:{1}', 'lunary-ee', steps.release_tag.outputs.tag) || '' }}
           platforms: linux/amd64
