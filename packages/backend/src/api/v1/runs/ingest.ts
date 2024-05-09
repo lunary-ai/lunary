@@ -74,7 +74,7 @@ async function registerRunEvent(
     externalUserId = result?.id
   }
 
-  if ("start" === eventName && parentRunIdToUse) {
+  if (eventName === "start" && parentRunIdToUse) {
     // Check if parent run exists in database
     const [data] =
       await sql`select external_user_id from run where id = ${parentRunIdToUse}`
@@ -107,61 +107,64 @@ async function registerRunEvent(
     }
   }
 
-  switch (eventName) {
-    case "start":
-      await sql`
-        insert into run ${sql(
-          clearUndefined({
-            type,
-            projectId,
-            id: runId,
-            externalUserId,
-            createdAt: timestamp,
-            tags,
-            name,
-            status: "started",
-            params: params || extra,
-            metadata,
-            templateVersionId: templateId,
-            parentRunId: parentRunIdToUse,
-            input,
-            runtime,
-          }),
-        )}
-      `
-
-      break
-    case "end":
-      let cost = undefined
-
-      if (type === "llm") {
-        const [runData] = await sql`
-          select created_at, input, params, name from run where id = ${runId}
-        `
-        cost = calcRunCost({
+  if (eventName === "start") {
+    await sql`
+      insert into run ${sql(
+        clearUndefined({
           type,
-          promptTokens: tokensUsage?.prompt,
-          completionTokens: tokensUsage?.completion,
-          name: runData?.name,
-          duration: +timestamp - +runData?.createdAt,
-        })
-      }
+          projectId,
+          id: runId,
+          externalUserId,
+          createdAt: timestamp,
+          tags,
+          name,
+          status: "started",
+          params: params || extra,
+          metadata,
+          templateVersionId: templateId,
+          parentRunId: parentRunIdToUse,
+          input,
+          runtime,
+        }),
+      )}
+    `
+  } else if (eventName === "end") {
+    let cost = undefined
 
-      await sql`
-        update run
-        set ${sql({
-          endedAt: timestamp,
-          output: output,
-          status: "success",
-          promptTokens: tokensUsage?.prompt,
-          completionTokens: tokensUsage?.completion,
-          cost,
-        })}
-        where id = ${runId}
+    if (type === "llm") {
+      const [runData] = await sql`
+        select created_at, input, params, name from run where id = ${runId}
       `
-      break
-    case "error":
-      await sql`
+      cost = calcRunCost({
+        type,
+        promptTokens: tokensUsage?.prompt,
+        completionTokens: tokensUsage?.completion,
+        name: runData?.name,
+        duration: +timestamp - +runData?.createdAt,
+      })
+    }
+
+    const runToInsert = {
+      endedAt: timestamp,
+      output: output,
+      status: "success",
+      promptTokens: tokensUsage?.prompt,
+      completionTokens: tokensUsage?.completion,
+      cost,
+    }
+
+    if (input) {
+      // in the case of agent_context, the input is sent as the end
+      runToInsert.input = input
+    }
+
+    await sql`
+      update run
+      set ${sql(runToInsert)}
+      where id = ${runId}
+    `
+  } else if (eventName === "error") {
+    await sql`
         update run
         set ${sql({
           endedAt: timestamp,
@@ -170,30 +173,39 @@ async function registerRunEvent(
         })}
         where id = ${runId}
       `
-      break
-    case "feedback":
-      const [feedbackData] = await sql`
-        select feedback
-        from run
-        where id = ${runId}
-      `
+  } else if (eventName === "feedback") {
+    const [feedbackData] = await sql`
+      select feedback
+      from run
+      where id = ${runId}
+    `
 
-      await sql`
-        update run
-        set feedback = ${sql.json({
+    await sql`
+      update 
+        run
+      set 
+        feedback = ${sql.json({
           ...((feedbackData?.feedback || {}) as any),
           ...feedback,
           ...extra, // legacy
         })}
-        where id = ${runId}
-      `
-      break
-    case "chat":
-      await ingestChatEvent(projectId, {
-        externalUserId,
-        ...event,
-      })
-      break
+      where 
+        id = ${runId}
+    `
+  } else if (eventName === "chat") {
+    await ingestChatEvent(projectId, {
+      externalUserId,
+      ...event,
+    })
+  } else if (eventName === "update" && type === "llm") {
+    await sql`
+      update 
+        run
+      set
+        metadata = ${sql.json(metadata || {})}
+      where 
+        id = ${runId}
+    `
   }
 
   insertedIds.add(runId)
