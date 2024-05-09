@@ -162,6 +162,7 @@ export default function RunInputOutput({
     ? true
     : org?.plan === "unlimited" || org?.plan === "custom"
 
+  console.log(run)
   return (
     <ErrorBoundary>
       <Stack>
@@ -317,6 +318,14 @@ export default function RunInputOutput({
               </Group>
             </Card>
           </>
+        )}
+
+        {run?.type !== "llm" && (
+          <Group>
+            {run?.tags?.length > 0 && (
+              <ParamItem name="Tags" value={run.tags} />
+            )}
+          </Group>
         )}
 
         <Group justify="space-between">
