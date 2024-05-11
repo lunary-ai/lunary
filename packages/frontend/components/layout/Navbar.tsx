@@ -110,13 +110,14 @@ export default function Navbar() {
             ) : org?.limited ? (
               <Button
                 color="orange"
-                size="xs"
+                size="sm"
                 component="a"
                 href="/billing"
                 style={floatingBtn}
                 leftSection={<IconAlertTriangle size="16" />}
               >
-                Plan's event limit has been reached. Click here to open billing.
+                Plan's ingestion limit has been reached. Click here to open
+                billing.
               </Button>
             ) : null}
           </>

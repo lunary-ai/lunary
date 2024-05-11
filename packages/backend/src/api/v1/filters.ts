@@ -101,4 +101,20 @@ filters.get("/radars", async (ctx) => {
   ctx.body = rows
 })
 
+filters.get("/templates", async (ctx) => {
+  const { projectId } = ctx.state
+
+  const rows = await sql`
+    select
+      id as value,
+      slug as label
+    from
+      template
+    where
+      project_id = ${projectId}
+  `
+
+  ctx.body = rows
+})
+
 export default filters

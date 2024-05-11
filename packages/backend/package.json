@@ -23,8 +23,8 @@
     "bcrypt": "^5.1.1",
     "jose": "^5.2.0",
     "js-tiktoken": "1.0.7",
-    "jsonrepair": "^3.6.0",
-    "koa": "^2.15.0",
+    "jsonrepair": "^3.7.0",
+    "koa": "^2.15.3",
     "koa-bodyparser": "^4.4.1",
     "koa-logger": "^3.2.1",
     "koa-ratelimit": "^5.1.0",
@@ -39,9 +39,9 @@
     "rouge": "^1.0.3",
     "samlify": "^2.8.11",
     "shared": "*",
-    "stripe": "^14.14.0",
+    "stripe": "^15.5.0",
     "washyourmouthoutwithsoap": "^1.0.2",
-    "zod": "^3.22.4"
+    "zod": "^3.23.6"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",

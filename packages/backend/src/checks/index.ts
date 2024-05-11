@@ -100,6 +100,10 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     sql: ({ tags }) => sql`(tags && ${sql.array(tags)})`,
   },
   {
+    id: "templates",
+    sql: ({ templates }) => sql`t.id = ANY(${sql.array(templates, 20)})`, // 20 is to specify it's a postgres int4
+  },
+  {
     id: "metadata",
     sql: ({ key, value }) => {
       if (!key || !value) return sql`true`

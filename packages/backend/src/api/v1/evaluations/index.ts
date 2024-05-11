@@ -79,6 +79,7 @@ evaluations.post(
               provider,
               prompt: prompt.messages,
               checklistId,
+              orgId,
             })
             console.log(`Task ${count} don with model ${provider.model} done`)
           })

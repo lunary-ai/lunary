@@ -2,17 +2,17 @@
 
 # 📈 lunary
 
-**Open-source observability & prompt platform for LLMs**
+**Open-source observability, prompt management & evaluations for LLMs**
 
 [website](https://lunary.ai) - [docs](https://lunary.ai/docs) - [self host](https://lunary.ai/docs/self-host)
 
-[![npm version](https://badge.fury.io/js/lunary.svg)](https://badge.fury.io/js/lunary) ![PyPI - Version](https://img.shields.io/pypi/v/llmonitor) ![GitHub last commit (by committer)](https://img.shields.io/github/last-commit/lunary-ai/lunary) ![GitHub commit activity (branch)](https://img.shields.io/github/commit-activity/w/lunary-ai/lunary)
+[![npm version](https://badge.fury.io/js/lunary.svg)](https://badge.fury.io/js/lunary) ![PyPI - Version](https://img.shields.io/pypi/v/lunary) ![GitHub last commit (by committer)](https://img.shields.io/github/last-commit/lunary-ai/lunary) ![GitHub commit activity (branch)](https://img.shields.io/github/commit-activity/w/lunary-ai/lunary)
 
 </div>
 
 ## Features
 
-Lunary helps AI devs take their apps in production, with features such as:
+Lunary helps LLM developers take their apps to the next level.
 
 - 💵 Analytics (cost, token, latency, ..)
 - 🔍 Monitoring (logs, traces, user tracking, ..)
@@ -25,9 +25,9 @@ It also designed to be:
 
 - 🤖 Usable with any model, not just OpenAI
 - 📦 Easy to integrate (2 minutes)
-- 🧑‍💻 Simple to self-host
+- 🧑‍💻 Self-hostable
 
-## Demo
+## 1-min Demo
 
 https://github.com/lunary-ai/lunary/assets/5092466/a2b4ba9b-4afb-46e3-9b6b-faf7ddb4a931
 
@@ -44,7 +44,7 @@ Lunary natively supports:
 - [OpenAI module](https://lunary.ai/docs/js/openai)
 - [LiteLLM](https://docs.litellm.ai/docs/observability/lunary_integration)
 
-Additionally you can use it with any framework by wrapping the relevant methods.
+Additionally you can use it with any other LLM by manually sending events.
 
 ## 📚 Documentation
 
@@ -52,7 +52,7 @@ Full documentation is available [on the website](https://lunary.ai/docs/intro).
 
 ## ☁️ Hosted version
 
-We offer [a hosted version](https://lunary.ai) with a free plan of up to 1k requests / days.
+We offer [a hosted version](https://lunary.ai) with a free plan of up to 10k requests / month.
 
 With the hosted version:
 
@@ -75,7 +75,7 @@ When using our JS or Python SDK, you need to set the environment variable `LUNAR
 
 ## 🙋 Support
 
-Need help or have questions? Chat with us on [the website](https://lunary.ai) or email us: [hello [at] lunary.ai](mailto:hello@lunary.ai). We're here to support you every step of the way.
+Need help or have questions? Chat with us on [the website](https://lunary.ai) or email us: [hello [at] lunary.ai](mailto:hello@lunary.ai). We're here to help every step of the way.
 
 ## License
 
