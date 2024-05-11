@@ -383,8 +383,8 @@ export default function Radar() {
 
   return (
     <Paywall
-      plan="unlimited"
-      feature="Radar"
+      plan="team"
+      feature="Radars"
       p="xl"
       Icon={IconShieldBolt}
       description="Identify outlier results that match specific conditions."

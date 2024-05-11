@@ -181,7 +181,7 @@ export function costColumn() {
     sortingFn: (a, b) => a - b,
     cell: (props) => {
       const cost = props.getValue()
-      return formatCost(cost)
+      return <ProtectedText>{formatCost(cost)}</ProtectedText>
     },
   })
 }

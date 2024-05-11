@@ -101,7 +101,7 @@ export default function Paywall({
               <ThemeIcon size={42} radius={12}>
                 {Icon && <Icon size="20" />}
               </ThemeIcon>
-              <Title order={3} lh={1}>
+              <Title order={3} lh={1} lts={-0.2}>
                 {
                   <Text
                     span
@@ -114,7 +114,7 @@ export default function Paywall({
                     {feature}
                   </Text>
                 }
-                <span>{` is available on ${isEnterpriseFeature ? "as an addon in" : ""} Lunary ${capitalize(plan)}`}</span>
+                <span>{` is available in the ${capitalize(plan)} plan`}</span>
               </Title>
             </Group>
             {description && <Text size="lg">{description}</Text>}
@@ -133,7 +133,7 @@ export default function Paywall({
             >
               {isEnterpriseFeature
                 ? "Contact Sales"
-                : `Upgrade to ${capitalize(plan)} &rarr;`}
+                : `Upgrade to ${capitalize(plan)}`}
             </Button>
           </Stack>
         </Card>

@@ -3,6 +3,8 @@ import OpenAI from "openai"
 import { MODELS } from "shared"
 import { ReadableStream } from "stream/web"
 import { getOpenAIParams } from "./openai"
+import stripe from "./stripe"
+import sql from "./db"
 
 function convertInputToOpenAIMessages(input: any[]) {
   return input.map(({ role, content, text, functionCall, toolCalls, name }) => {
@@ -190,7 +192,20 @@ export async function runAImodel(
   variables: Record<string, string> | undefined = undefined,
   model: string,
   stream: boolean = false,
+  orgId: string,
 ) {
+  if (orgId) {
+    const [{ stripe_customer }] =
+      await sql`select stripe_customer from org where id = ${orgId}`
+    await stripe.billing.meterEvents.create({
+      event_name: "ai_playground",
+      payload: {
+        value: "1",
+        stripe_customer_id: stripe_customer,
+      },
+    })
+  }
+
   const copy = compilePrompt(content, variables)
 
   const messages = convertInputToOpenAIMessages(copy)
