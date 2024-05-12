@@ -17,7 +17,7 @@ Lunary helps AI devs take their apps in production, with features such as:
 - 💵 Analytics (cost, token, latency, ..)
 - 🔍 Monitoring (logs, traces, user tracking, ..)
 - ⛩️ Prompt Templates (versioning, team collaboration, ..)
-- 🏷️ Creat fine-tuning datasets
+- 🏷️ Create fine-tuning datasets
 - 🖲️ Chat & feedback tracking
 - 🧪 Evaluations
 
