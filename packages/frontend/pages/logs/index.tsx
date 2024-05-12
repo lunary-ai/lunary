@@ -112,7 +112,7 @@ const CHECKS_BY_TYPE = {
     // "enrichment",
     "tags",
     "users",
-    "template",
+    "templates",
     "status",
     "metadata",
     "feedback",
