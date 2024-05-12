@@ -18,6 +18,8 @@ import {
   IconPlayerPlay,
   IconSettings,
   IconShieldBolt,
+  IconSparkles,
+  IconStars,
   IconTimeline,
   IconUsers,
 } from "@tabler/icons-react"
@@ -105,6 +107,8 @@ export default function Sidebar() {
   const billingEnabled =
     process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY && !config.IS_SELF_HOSTED
 
+  const canUpgrade = billingEnabled && ["free", "pro"].includes(org?.plan)
+
   const APP_MENU: MenuItem[] = [
     {
       label: "Analytics",
@@ -179,7 +183,7 @@ export default function Sidebar() {
       onClick: openUpgrade,
       c: "violet",
       icon: IconBolt,
-      disabled: !billingEnabled || !["free", "pro"].includes(org?.plan),
+      disabled: !canUpgrade,
       resource: "billing",
     },
     {
@@ -325,6 +329,28 @@ export default function Sidebar() {
       {user && (
         <>
           <Box w="100%">
+            {canUpgrade && (
+              <NavLink
+                label="Unlock all features"
+                onClick={() => openUpgrade("features")}
+                fw={700}
+                c="pink.9"
+                style={{
+                  backgroundColor: "var(--mantine-color-red-1)",
+                  borderRadius: 6,
+                  padding: 7,
+                  margin: 10,
+                  width: "calc(100% - 20px)",
+                }}
+                leftSection={
+                  <IconSparkles
+                    color={"var(--mantine-color-red-9)"}
+                    size={16}
+                  />
+                }
+              />
+            )}
+
             <NavLink
               component={Link}
               href="https://lunary.ai/changelog"

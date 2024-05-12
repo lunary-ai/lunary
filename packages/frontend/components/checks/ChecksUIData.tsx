@@ -12,6 +12,7 @@ import {
   IconClock,
   IconCoin,
   IconCreditCard,
+  IconEditCircle,
   IconEyeCheck,
   IconFilter,
   IconFocus,
@@ -74,6 +75,10 @@ const CHECKS_UI_DATA: ChecksUIData = {
       </>
     ),
     renderLabel: (item) => formatAppUser(item),
+  },
+  templates: {
+    icon: IconEditCircle,
+    color: "indigo",
   },
   feedback: {
     icon: IconThumbUp,
@@ -199,6 +204,7 @@ const CHECKS_UI_DATA: ChecksUIData = {
     icon: IconSearch,
     color: "blue",
   },
+
   string: {
     icon: IconBracketsContainStart,
     color: "blue",

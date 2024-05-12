@@ -102,23 +102,23 @@ orgs.get("/billing-portal", async (ctx: Context) => {
 orgs.post("/upgrade", async (ctx: Context) => {
   const orgId = ctx.state.orgId as string
 
-  const { plan, period, origin } = ctx.request.body as {
-    plan: string
-    period: string
+  const { origin } = ctx.request.body as {
+    // plan: string
+    // period: string
     origin: string
   }
 
-  const lookupKey = `${plan}_${period}`
+  const plan = "team"
 
-  const prices = await stripe.prices.list({
-    lookup_keys: [lookupKey],
-  })
+  const lookupKeys = [`team_seats`, `team_runs`, `team_ai_playground`]
 
-  if (prices.data.length === 0) {
-    throw new Error("No price found for this plan and period")
+  const prices = await stripe.prices.list({ lookup_keys: lookupKeys })
+
+  if (prices.length < 3) {
+    throw new Error("Prices not all found")
   }
 
-  const priceId = prices.data[0].id as string
+  // const priceId = prices.data[0].id as string
 
   const [org] = await sql`
     select
@@ -134,6 +134,14 @@ orgs.post("/upgrade", async (ctx: Context) => {
 
   if (!org) throw new Error("Org not found")
 
+  const seats =
+    await sql`select count(*) as count from account where org_id = ${orgId}`
+
+  const newItems = prices.data.map((price) => ({
+    price: price.id,
+    quantity: price.lookup_key === "team_seats" ? seats[0].count : undefined,
+  }))
+
   if (!org.stripe_subscription) {
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -142,39 +150,29 @@ orgs.post("/upgrade", async (ctx: Context) => {
       customer: org.stripeCustomer || undefined,
       metadata: {
         plan,
-        period,
+        //   period,
       },
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
+      line_items: newItems,
       success_url: `${origin}/billing/thank-you`,
       cancel_url: `${origin}/billing`,
     })
 
     return (ctx.body = { ok: true, url: checkoutSession.url })
   } else {
-    const subscription = await stripe.subscriptions.retrieve(
-      org.stripeSubscription,
-    )
+    // const subscription = await stripe.subscriptions.retrieve(
+    //   org.stripeSubscription,
+    // )
 
-    const subItem = subscription.items.data[0].id
+    // const subItem = subscription.items.data[0].id
 
     // Update user subscription with new price
     await stripe.subscriptions.update(org.stripeSubscription, {
       cancel_at_period_end: false,
       metadata: {
         plan,
-        period,
+        //   period,
       },
-      items: [
-        {
-          id: subItem,
-          price: priceId,
-        },
-      ],
+      items: newItems,
     })
 
     // Update org plan
@@ -225,7 +223,7 @@ orgs.post("/playground", async (ctx: Context) => {
   `
   const model = extra?.model || "gpt-3.5-turbo"
 
-  const res = await runAImodel(content, extra, variables, model, true)
+  const res = await runAImodel(content, extra, variables, model, true, orgId)
 
   const stream = new PassThrough()
   stream.pipe(ctx.res)

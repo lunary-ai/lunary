@@ -114,6 +114,25 @@ export const CHECKS: Check[] = [
     ],
   },
   {
+    id: "templates",
+    name: "Templates",
+    uiType: "basic",
+    disableInEvals: true,
+    params: [
+      {
+        type: "label",
+        label: "Prompt Template",
+      },
+      {
+        type: "select",
+        multiple: true,
+        width: 100,
+        id: "templates",
+        options: () => `/filters/templates`,
+      },
+    ],
+  },
+  {
     id: "status",
     name: "Status",
     uiType: "basic",

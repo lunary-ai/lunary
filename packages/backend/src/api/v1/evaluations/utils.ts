@@ -11,6 +11,7 @@ interface RunEvalParams {
   provider: Provider
   prompt: any
   variation: any
+  orgId: string
 }
 
 export async function runEval({
@@ -20,6 +21,7 @@ export async function runEval({
   provider,
   prompt,
   variation,
+  orgId,
 }: RunEvalParams) {
   try {
     console.log(`=============================`)
@@ -53,6 +55,8 @@ export async function runEval({
             provider.config,
             undefined,
             provider.model,
+            false,
+            orgId,
           )
           break // Break the loop if the call was successful
         } catch (error) {

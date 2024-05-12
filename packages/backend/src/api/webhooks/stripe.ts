@@ -26,7 +26,7 @@ const setupSubscription = async (object: Stripe.Checkout.Session) => {
     throw new Error("client_reference_id is missing")
   }
 
-  const plan = metadata?.plan || "pro"
+  const plan = metadata?.plan || "team"
   const period = metadata?.period || "monthly"
 
   const orgData = {

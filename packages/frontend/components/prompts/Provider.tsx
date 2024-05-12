@@ -6,6 +6,7 @@ import {
   Group,
   JsonInput,
   Modal,
+  NavLink,
   NumberInput,
   Select,
   Text,
@@ -15,6 +16,8 @@ import { notifications } from "@mantine/notifications"
 
 import { MODELS, Provider } from "shared"
 import { useState } from "react"
+import Link from "next/link"
+import { IconTools } from "@tabler/icons-react"
 
 export const ParamItem = ({ name, value }) => (
   <Group justify="space-between">
@@ -173,7 +176,21 @@ export default function ProviderEditor({
               size="lg"
               opened={jsonModalOpened}
               onClose={() => setJsonModalOpened(false)}
-              title="Tool Calls Definition"
+              title={
+                <Group>
+                  Tool Calls Definition
+                  <Button
+                    size="xs"
+                    variant="light"
+                    leftSection={<IconTools size={14} />}
+                    component={Link}
+                    href="https://lunary.ai/tool-calls-generator"
+                    target="_blank"
+                  >
+                    Tool Calls Generator
+                  </Button>
+                </Group>
+              }
             >
               <JsonInput
                 autosize
@@ -264,7 +281,7 @@ export default function ProviderEditor({
                 setJsonModalOpened(true)
               }}
             >
-              Edit
+              {`Edit ${value?.config?.tools?.length ? `(${value.config.tools.length})` : ""}`}
             </Button>
           </>
         }

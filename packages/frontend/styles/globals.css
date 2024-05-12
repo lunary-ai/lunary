@@ -17,6 +17,7 @@ span.limited,
 .limited code,
 .limited table .mantine-Text-root {
   filter: blur(4px);
+  text-overflow: ellipsis;
 }
 
 .limited .recharts-responsive-container {

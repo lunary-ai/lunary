@@ -1,3 +1,5 @@
+import { openUpgrade } from "@/components/layout/UpgradeModal"
+import { useOrg } from "@/utils/dataHooks"
 import { useFixedColorScheme } from "@/utils/hooks"
 import { ActionIcon, Button, Group, Popover, TextInput } from "@mantine/core"
 import { IconMessage, IconThumbDown, IconThumbUp } from "@tabler/icons-react"
@@ -16,6 +18,8 @@ export default function Feedbacks({
   feedback: Feedback
   updateFeedback: (...props: any) => any
 }) {
+  const { org } = useOrg()
+
   if (!feedback) {
     feedback = { comment: null, thumb: null }
   }
@@ -53,7 +57,7 @@ export default function Feedbacks({
             } else {
               feedback.thumb = "down"
             }
-            updateFeedback(feedback)
+            update(feedback)
           }}
         >
           <ThumbDown />
@@ -66,13 +70,20 @@ export default function Feedbacks({
             } else {
               feedback.thumb = "up"
             }
-            updateFeedback(feedback)
+            update(feedback)
           }}
         >
           <ThumbUp />
         </ActionIcon>
       </Group>
     )
+  }
+
+  const update = (feedback) => {
+    if (org.plan === "free") {
+      return openUpgrade()
+    }
+    updateFeedback(feedback)
   }
 
   function CommentFeedback({ value }) {
@@ -98,7 +109,7 @@ export default function Feedbacks({
             style={{ float: "right" }}
             onClick={() => {
               feedback.comment = comment
-              updateFeedback(feedback)
+              update(feedback)
             }}
           >
             Save
