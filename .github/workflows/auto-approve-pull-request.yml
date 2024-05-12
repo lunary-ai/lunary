@@ -14,4 +14,4 @@ jobs:
       - name: Auto-approve PR
         uses: hmarr/auto-approve-action@v3
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.LUNARY_BOT_GH_TOKEN }}
