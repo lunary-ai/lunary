@@ -12,8 +12,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - name: Create Pull Request
         run: |
           prefix=$(echo ${{ github.ref }}| cut -d '/' -f 3)
           branch_name=$(echo ${{ github.ref }} | cut -d '/' -f 4- | tr '-' ' ')
-          GH_TOKEN=${{ secrets.GH_TOKEN }} gh pr create --title "${prefix}: ${branch_name}" --body ""
+          PR_URL=$(GH_TOKEN=${{ secrets.GH_TOKEN }} gh pr create --title "${prefix}: ${branch_name}" --body "" --json url --jq '.url')
+
+      - name: Extract PR Number
+        id: extract-pr-number
+        run: echo "PR_NUMBER=$(echo $PR_URL | grep -o -E '[0-9]+$')" >> $GITHUB_ENV
+
+      - name: Approve Pull Request
+        run: |
+          curl -s -X POST \
+          -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          -d '{"body":"Auto-approving the pull request","event":"APPROVE"}' \
+          https://api.github.com/repos/${{ github.repository }}/pulls/${{ env.PR_NUMBER }}/reviews
