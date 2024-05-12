@@ -59,6 +59,7 @@ jobs:
         run: (npm run build:frontend && npm run start:frontend)  & npx wait-on http://0.0.0.0:8080/
 
       - name: Run tests
+
         run: npx playwright test
         env:
           BASE_URL: http://0.0.0.0:8080

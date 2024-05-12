@@ -17,7 +17,7 @@ Lunary helps LLM developers take their apps to the next level.
 - 💵 Analytics (cost, token, latency, ..)
 - 🔍 Monitoring (logs, traces, user tracking, ..)
 - ⛩️ Prompt Templates (versioning, team collaboration, ..)
-- 🏷️ Creat fine-tuning datasets
+- 🏷️ Create fine-tuning datasets
 - 🖲️ Chat & feedback tracking
 - 🧪 Evaluations
 
