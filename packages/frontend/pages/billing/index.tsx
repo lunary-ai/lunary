@@ -115,7 +115,7 @@ export default function Billing() {
         )}
 
         <LineChart
-          title={<Title order={3}>Events Usage</Title>}
+          title={<Title order={4}>Events Usage</Title>}
           range={30}
           data={usage}
           formatter={(val) => `${val} runs`}

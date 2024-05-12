@@ -15,6 +15,8 @@ export default async function stripeCounters() {
         FROM org o
             WHERE o.stripe_customer IS NOT NULL`
 
+  console.log(`Counting runs for ${orgs.length} orgs`)
+
   for (const org of orgs) {
     // count the number of events in the past hour (each 'run' where 'run.project.org = org.id')
     const [{ count }] = await sql`
@@ -29,13 +31,11 @@ export default async function stripeCounters() {
                 )
                 AND created_at > NOW() - INTERVAL '1 hour'`
 
-    console.log(`Counted ${count} runs for org ${org.id}`)
-
     await stripe.billing.meterEvents.create({
       event_name: "runs",
       payload: {
         value: count.toString(),
-        stripe_customer_id: org.stripe_customer,
+        stripe_customer_id: org.stripeCustomer,
       },
     })
   }

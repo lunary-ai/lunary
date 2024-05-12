@@ -40,13 +40,14 @@ import { useOrg } from "@/utils/dataHooks"
 import { fetcher } from "@/utils/fetcher"
 import { FEATURES } from "@/utils/features"
 import { theme } from "@/utils/theme"
-import Link from "next/link"
 
 function PlanFeature({ title, id, highlight, Icon, description }) {
   return (
     <Group align="center" gap={8} wrap="no-wrap">
-      <Icon size={20} />
-      <Highlight highlight={highlight === id ? title : ""}>{title}</Highlight>
+      <Icon size={16} opacity={0.8} />
+      <Text size="sm">
+        <Highlight highlight={highlight === id ? title : ""}>{title}</Highlight>
+      </Text>
       {description && (
         <Tooltip label={description}>
           <IconInfoCircle size={16} />
@@ -115,7 +116,7 @@ function RenderPlanCard({
   const { plan } = org
 
   const buttonText = useCallback(() => {
-    if (planId === "enterprise") return { children: "Get a quote", variant }
+    if (planId === "scale") return { children: "Get a Quote", variant }
 
     if (org?.canceled && planId === plan)
       return { children: "Reactivate", variant }
@@ -126,6 +127,7 @@ function RenderPlanCard({
         variant,
       }
 
+    // Switch to yearly
     // if (newPlan === plan && period !== org?.planPeriod)
     //   return { children: "Switch to " + period, variant: "outline" }
 
@@ -223,12 +225,18 @@ function FeaturePlanValue({ data }) {
   )
 }
 
-export function UpgradePlans({ highlight }: { highlight?: string }) {
+export function UpgradePlans({
+  highlight,
+  defaultExpand,
+}: {
+  highlight?: string
+  defaultExpand?: boolean
+}) {
   const { org } = useOrg()
   const [period, setPeriod] = useState("monthly")
   const [loading, setLoading] = useState(null)
 
-  const [showFeatures, setShowFeatures] = useState(false)
+  const [showFeatures, setShowFeatures] = useState(defaultExpand)
 
   const upgradePlan = async (plan) => {
     setLoading(plan)
@@ -273,7 +281,7 @@ export function UpgradePlans({ highlight }: { highlight?: string }) {
               <Card
                 h="100%"
                 withBorder={!showFeatures}
-                shadow={!showFeatures ? "sm" : 0}
+                shadow={!showFeatures ? "sm" : null}
               >
                 <RenderPlanCard
                   planId="free"
@@ -290,7 +298,7 @@ export function UpgradePlans({ highlight }: { highlight?: string }) {
               <Card
                 h="100%"
                 withBorder={!showFeatures}
-                shadow={!showFeatures ? "sm" : 0}
+                shadow={!showFeatures ? "sm" : null}
               >
                 <RenderPlanCard
                   planId="team"
@@ -299,7 +307,7 @@ export function UpgradePlans({ highlight }: { highlight?: string }) {
                   description="Go to production with advanced features."
                   price={20}
                   onClick={() => upgradePlan("team")}
-                  loading={loading === "free"}
+                  loading={loading === "team"}
                 />
               </Card>
             </Table.Th>
@@ -307,16 +315,16 @@ export function UpgradePlans({ highlight }: { highlight?: string }) {
               <Card
                 h="100%"
                 withBorder={!showFeatures}
-                shadow={!showFeatures ? "sm" : 0}
+                shadow={!showFeatures ? "sm" : null}
               >
                 <RenderPlanCard
-                  planId="enterprise"
+                  planId="scale"
                   variant="default"
                   color="dark"
                   description="Custom plans for your team's exact needs."
                   price={"Custom"}
                   onClick={() => window.open("https://lunary.ai/schedule")}
-                  loading={loading === "enterprise"}
+                  loading={loading === "scale"}
                 />
               </Card>
             </Table.Th>
@@ -438,7 +446,7 @@ function UpgradeModal({
         </Text>
       </Stack>
       <Divider my="xl" />
-      <UpgradePlans highlight={innerProps?.highlight} />
+      <UpgradePlans highlight={innerProps?.highlight} defaultExpand />
       <Text ta="center" size="sm" mt="lg">
         Cancel any time with just 1 click. <Mark>30 days</Mark> money-back
         guarantee.

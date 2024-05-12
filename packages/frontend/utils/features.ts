@@ -10,10 +10,12 @@ import {
   IconHeadset,
   IconHistory,
   IconLink,
+  IconLinkPlus,
   IconLockAccess,
   IconMailAi,
   IconMasksTheater,
   IconMoodNerd,
+  IconPaint,
   IconPlayerPlay,
   IconShieldBolt,
   IconStatusChange,
@@ -27,6 +29,7 @@ import {
 type Feature = {
   id: string
   title: string
+
   Icon: any
   description?: string
   plans: {
@@ -92,6 +95,19 @@ export const FEATURES: Feature[] = [
     ],
   },
   {
+    id: "playground",
+    title: "AI Playground",
+    Icon: IconPlayerPlay,
+    plans: [
+      {
+        id: "team",
+        value: "500 included",
+        help: "then $0.01 per query",
+      },
+      { id: "enterprise", value: true },
+    ],
+  },
+  {
     id: "evaluations",
     title: "Evaluations",
     Icon: IconFlask2,
@@ -101,16 +117,7 @@ export const FEATURES: Feature[] = [
       { id: "enterprise", value: true },
     ],
   },
-  {
-    id: "playground",
-    title: "AI Playground",
-    Icon: IconPlayerPlay,
-    description: "500 / month included, then $0.01 per query",
-    plans: [
-      { id: "team", value: true },
-      { id: "enterprise", value: true },
-    ],
-  },
+
   {
     id: "projects",
     title: "Unlimited Projects",
@@ -179,8 +186,8 @@ export const FEATURES: Feature[] = [
     title: "Support",
     Icon: IconHeadset,
     plans: [
-      { id: "team", value: "Priority Support" },
-      { id: "enterprise", value: "1-hour support" },
+      { id: "team", value: "Priority" },
+      { id: "enterprise", value: "Same-Day + Shared Slack" },
     ],
   },
   {
@@ -209,20 +216,14 @@ export const FEATURES: Feature[] = [
     plans: [{ id: "enterprise", value: true }],
   },
   {
-    id: "invoicing",
-    title: "Custom Invoicing",
-    Icon: IconFileInvoice,
-    plans: [{ id: "enterprise", value: true }],
-  },
-  {
     id: "soc2",
-    title: "SOC2 T2 & ISO27001 Reports",
+    title: "SOC2 & ISO27001 Reports",
     Icon: IconCertificate,
     plans: [{ id: "enterprise", value: true }],
   },
   {
     id: "sla",
-    title: "Custom SLA",
+    title: "99.9% SLA",
     Icon: IconStatusChange,
     plans: [{ id: "enterprise", value: true }],
   },
@@ -230,6 +231,18 @@ export const FEATURES: Feature[] = [
     id: "invoicing",
     title: "Custom Invoicing",
     Icon: IconFileInvoice,
+    plans: [{ id: "enterprise", value: true }],
+  },
+  {
+    id: "datalake",
+    title: "Data Lakes connectors",
+    Icon: IconLinkPlus,
+    plans: [{ id: "enterprise", value: true }],
+  },
+  {
+    id: "whitelabel",
+    title: "White Label",
+    Icon: IconPaint,
     plans: [{ id: "enterprise", value: true }],
   },
   {

@@ -195,15 +195,18 @@ export async function runAImodel(
   orgId: string,
 ) {
   if (orgId) {
-    const [{ stripe_customer }] =
+    const [{ stripeCustomer }] =
       await sql`select stripe_customer from org where id = ${orgId}`
-    await stripe.billing.meterEvents.create({
-      event_name: "ai_playground",
-      payload: {
-        value: "1",
-        stripe_customer_id: stripe_customer,
-      },
-    })
+
+    stripe.billing.meterEvents
+      .create({
+        event_name: "ai_playground",
+        payload: {
+          value: "1",
+          stripe_customer_id: stripeCustomer,
+        },
+      })
+      .then(() => console.log("Metered"))
   }
 
   const copy = compilePrompt(content, variables)
