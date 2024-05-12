@@ -1,4 +1,4 @@
-import { Text, ScrollArea, Group } from "@mantine/core"
+import { Text, ScrollArea, Group, Box } from "@mantine/core"
 import SmartViewer from "@/components/SmartViewer"
 import TokensBadge from "../blocks/TokensBadge"
 import { PromptEditor } from "./PromptEditor"
@@ -27,7 +27,7 @@ function TemplateInputArea({
   }
 
   return (
-    <ScrollArea h="100%">
+    <Box h="100%">
       <PromptEditor
         value={template?.content}
         onChange={handleContentChange}
@@ -44,7 +44,7 @@ function TemplateInputArea({
           <SmartViewer data={output} error={error} />
         </>
       )}
-    </ScrollArea>
+    </Box>
   )
 }
 

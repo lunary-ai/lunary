@@ -2,7 +2,7 @@ import AppUserAvatar from "@/components/blocks/AppUserAvatar"
 import Feedback from "@/components/blocks/OldFeedback"
 import ProtectedText from "@/components/blocks/ProtectedText"
 import SmartViewer from "@/components/SmartViewer"
-import { Badge, Group, Stack, Tooltip } from "@mantine/core"
+import { Badge, Button, Group, Stack, Tooltip } from "@mantine/core"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useEffect } from "react"
 import analytics from "./analytics"
@@ -15,6 +15,7 @@ import {
   IconMoodSmile,
 } from "@tabler/icons-react"
 import { getColorFromSeed } from "./colors"
+import Link from "next/link"
 const columnHelper = createColumnHelper<any>()
 
 export function timeColumn(timeColumn, label = "Time") {
@@ -131,6 +132,31 @@ export function outputColumn(label = "Response") {
         compact
       />
     ),
+  })
+}
+
+export function templateColumn() {
+  return columnHelper.accessor("templateVersionId", {
+    header: "Template",
+    enableSorting: false,
+    cell: (props) => {
+      const templateVersionId = props.getValue()
+
+      if (!templateVersionId) return null
+
+      const row = props.row.original
+
+      return (
+        <Button
+          size="compact-xs"
+          variant="light"
+          component={Link}
+          href={`/prompts/${templateVersionId}`}
+        >
+          {row.templateSlug}
+        </Button>
+      )
+    },
   })
 }
 

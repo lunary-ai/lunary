@@ -7,15 +7,18 @@ import stripe from "./stripe"
 import sql from "./db"
 
 function convertInputToOpenAIMessages(input: any[]) {
-  return input.map(({ role, content, text, functionCall, toolCalls, name }) => {
-    return clearUndefined({
-      role: role.replace("ai", "assistant"),
-      content: content || text,
-      function_call: functionCall || undefined,
-      tool_calls: toolCalls || undefined,
-      name: name || undefined,
-    })
-  })
+  return input.map(
+    ({ toolCallId, role, content, text, functionCall, toolCalls, name }) => {
+      return clearUndefined({
+        role: role.replace("ai", "assistant"),
+        content: content || text,
+        function_call: functionCall || undefined,
+        tool_calls: toolCalls || undefined,
+        name: name || undefined,
+        tool_call_id: toolCallId || undefined,
+      })
+    },
+  )
 }
 
 type ChunkResult = {
@@ -54,7 +57,7 @@ export async function handleStream(
 
       const { index, delta } = chunk
 
-      const { content, function_call, role, tool_calls } = delta
+      const { content, function_call, role, tool_calls, tool_call_id } = delta
 
       if (!choices[index]) {
         choices.splice(index, 0, {
@@ -68,6 +71,8 @@ export async function handleStream(
       }
 
       if (role) choices[index].message.role = role
+
+      if (tool_call_id) choices[index].message.tool_call_id = tool_call_id
 
       if (function_call?.name)
         choices[index].message.function_call.name = function_call.name
@@ -211,7 +216,11 @@ export async function runAImodel(
 
   const copy = compilePrompt(content, variables)
 
+  console.log(copy)
+
   const messages = convertInputToOpenAIMessages(copy)
+
+  console.log(messages)
 
   const modelObj = MODELS.find((m) => m.id === model)
 

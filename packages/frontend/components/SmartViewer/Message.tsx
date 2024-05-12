@@ -1,21 +1,30 @@
 import { getColorForRole } from "@/utils/colors"
 import {
+  ActionIcon,
   Box,
+  Button,
   Code,
   Flex,
+  Group,
+  JsonInput,
+  Modal,
   Paper,
   Select,
   Space,
   Stack,
   Text,
+  TextInput,
   Textarea,
   ThemeIcon,
 } from "@mantine/core"
 import {
+  IconCross,
   IconInfoCircle,
   IconRobot,
   IconTool,
+  IconTrash,
   IconUser,
+  IconX,
 } from "@tabler/icons-react"
 import Image from "next/image"
 import ProtectedText from "../blocks/ProtectedText"
@@ -23,28 +32,98 @@ import { RenderJson } from "./RenderJson"
 
 import { useColorScheme } from "@mantine/hooks"
 import { circularPro } from "@/utils/theme"
+import { useEffect, useState } from "react"
 
-function RenderFunction({ color, compact, codeBg, data, type }) {
+import { openConfirmModal } from "@mantine/modals"
+
+const ghostTextAreaStyles = {
+  variant: "unstyled",
+  p: 0,
+  styles: {
+    root: {
+      fontFamily: "inherit",
+      fontSize: "inherit",
+    },
+    input: {
+      padding: "0 !important",
+      fontFamily: "inherit",
+      fontSize: "inherit",
+    },
+  },
+  autosize: true,
+  minRows: 1,
+  width: "100%",
+}
+
+function RenderFunction({
+  color,
+  editable,
+  onChange,
+  compact,
+  codeBg,
+  data,
+  type,
+}) {
   const fontColor = type === "functionCall" ? "#40c057" : "inherit"
 
   return (
     <Code block bg={codeBg}>
       <Text
         w={300}
-        size="12px"
+        component="div"
+        fz={14}
+        h={18}
+        styles={{
+          root: {
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-start",
+          },
+        }}
         c={color}
         style={{ fontFamily: circularPro.style.fontFamily }}
         mb={compact ? 4 : "xs"}
         mt={compact ? -6 : 0}
       >
-        <Text span c={fontColor}>{`function call: `}</Text>
-        <Text c={fontColor} span fw="bolder">
-          {data?.name}
-        </Text>
+        <Text fz="inherit" span c={fontColor}>{`function call: `}</Text>
+
+        {editable ? (
+          <TextInput
+            value={data?.name}
+            size="compact-xs"
+            variant="filled"
+            opacity={0.7}
+            styles={{
+              input: {
+                paddingInlineStart: 6,
+              },
+            }}
+            placeholder="Function name"
+            radius="sm"
+            onChange={(e) => onChange({ ...data, name: e.target.value })}
+          />
+        ) : (
+          <Text c={fontColor} span fw="bold" size="sm">
+            {data?.name}
+          </Text>
+        )}
       </Text>
-      <pre>
-        <RenderJson compact={compact} data={data?.arguments} />
-      </pre>
+
+      {editable ? (
+        <>
+          <Text size="xs">Arguments:</Text>
+          <Textarea
+            value={data?.arguments}
+            placeholder="Arguments"
+            onChange={(e) => onChange({ ...data, arguments: e.target.value })}
+            {...ghostTextAreaStyles}
+          />
+        </>
+      ) : (
+        <pre style={{ marginBottom: 0 }}>
+          <RenderJson compact={compact} data={data?.arguments} />
+        </pre>
+      )}
     </Code>
   )
 }
@@ -61,18 +140,89 @@ function FunctionCallMessage({ data, color, compact, codeBg }) {
   )
 }
 
-function ToolCallsMessage({ toolCalls, color, compact, codeBg }) {
+function ToolCallsMessage({
+  toolCalls,
+  editable,
+  onChange,
+  color,
+  compact,
+  codeBg,
+}) {
   return (
     <>
       {toolCalls.map((toolCall, index) => (
-        <RenderFunction
-          key={index}
-          color={color}
-          compact={compact}
-          data={toolCall.function}
-          codeBg={codeBg}
-          type="toolCall"
-        />
+        <Box pos="relative" key={index}>
+          {!compact && (
+            <Group gap={4} align="center" mb="xs">
+              <Text size="xs">ID:</Text>
+              {editable ? (
+                <TextInput
+                  value={toolCall?.id}
+                  size="compact-xs"
+                  variant="filled"
+                  styles={{
+                    input: {
+                      paddingInlineStart: 6,
+                    },
+                  }}
+                  placeholder="Tool call ID"
+                  opacity={0.5}
+                  radius="sm"
+                  onChange={(e) => {
+                    const newToolCalls = [...toolCalls]
+                    newToolCalls[index].id = e.target.value
+                    onChange(newToolCalls)
+                  }}
+                />
+              ) : (
+                <Text span fw="bold" size="xs">
+                  {toolCall?.id}
+                </Text>
+              )}
+            </Group>
+          )}
+          <RenderFunction
+            key={index}
+            editable={editable}
+            onChange={(newData) => {
+              const newToolCalls = [...toolCalls]
+              newToolCalls[index].function = newData
+              onChange(newToolCalls)
+            }}
+            color={color}
+            compact={compact}
+            data={toolCall.function}
+            codeBg={codeBg}
+            type="toolCall"
+          />
+
+          {editable && (
+            <ActionIcon
+              color="red"
+              pos="absolute"
+              size={22}
+              top={16}
+              right={-8}
+              onClick={() => {
+                openConfirmModal({
+                  title: "Are you sure?",
+                  confirmProps: { color: "red" },
+                  labels: {
+                    cancel: "Cancel",
+                    confirm: "Delete",
+                  },
+                  onConfirm: () => {
+                    const newToolCalls = [...toolCalls]
+                    newToolCalls.splice(index, 1)
+                    onChange(newToolCalls)
+                  },
+                })
+              }}
+            >
+              <IconTrash size={16} />
+            </ActionIcon>
+          )}
+        </Box>
       ))}
     </>
   )
@@ -85,24 +235,10 @@ function TextMessage({ data, onChange = () => {}, editable = false, codeBg }) {
         {editable ? (
           <Textarea
             value={data.content || data.text}
-            variant="unstyled"
-            p={0}
-            styles={{
-              root: {
-                fontFamily: "inherit",
-                fontSize: "inherit",
-              },
-              input: {
-                padding: "0 !important",
-                fontFamily: "inherit",
-                fontSize: "inherit",
-              },
-            }}
-            autosize
-            minRows={1}
+            placeholder="Content"
             data-testid="prompt-chat-editor"
             onChange={(e) => onChange({ ...data, content: e.target.value })}
-            style={{ width: "100%" }}
+            {...ghostTextAreaStyles}
           />
         ) : (
           data.content || data.text
@@ -149,6 +285,23 @@ function ImageMessage({ data, codeBg, compact }) {
   )
 }
 
+function PropEditor({ value, onChange, editable, placeholder }) {
+  return editable ? (
+    <TextInput
+      value={value}
+      size="xs"
+      opacity={0.7}
+      placeholder={placeholder}
+      radius="sm"
+      mb={5}
+      onChange={(e) => onChange(e.target.value)}
+      style={{ width: "100%" }}
+    />
+  ) : (
+    <Text fw="bold">{value}</Text>
+  )
+}
+
 function ChatMessageContent({
   data,
   color,
@@ -158,7 +311,27 @@ function ChatMessageContent({
   editable,
 }) {
   return (
-    <>
+    <Stack gap="xs">
+      {typeof data?.name === "string" && (
+        // used for tools names
+        <PropEditor
+          value={data.name}
+          onChange={(name) => onChange({ ...data, name })}
+          editable={editable}
+          placeholder={"Tool name"}
+        />
+      )}
+
+      {typeof data?.toolCallId === "string" && !compact && (
+        // used for tools names
+        <PropEditor
+          value={data.toolCallId}
+          onChange={(toolCallId) => onChange({ ...data, toolCallId })}
+          editable={editable}
+          placeholder={"Tool call ID"}
+        />
+      )}
+
       {(typeof data?.text === "string" ||
         typeof data?.content === "string") && (
         <TextMessage
@@ -186,11 +359,42 @@ function ChatMessageContent({
         <ToolCallsMessage
           toolCalls={data.toolCalls || data.tool_calls}
           color={color}
+          editable={editable}
+          onChange={(toolCalls) => onChange({ ...data, toolCalls })}
           compact={compact}
           codeBg={codeBg}
         />
       )}
-    </>
+
+      {data?.role === "assistant" && editable && (
+        <>
+          <Button
+            variant="subtle"
+            color="green"
+            size="xs"
+            leftSection={<IconTool size={14} />}
+            onClick={() => {
+              onChange({
+                ...data,
+                toolCalls: [
+                  ...(data.toolCalls || []),
+                  {
+                    id: "call_123",
+                    function: {
+                      arguments: `{"location": "San Francisco, CA"}`,
+                      name: "get_current_weather",
+                    },
+                    type: "function",
+                  },
+                ],
+              })
+            }}
+          >
+            Add Tool Calls payload
+          </Button>
+        </>
+      )}
+    </Stack>
   )
 }
 
@@ -212,7 +416,7 @@ function RoleSelector({ data, color, scheme, onChange }) {
         },
       }}
       value={data?.role}
-      data={["ai", "assistant", "user", "system", "function", "tool"]}
+      data={["system", "user", "assistant", "tool"]}
       onChange={(role) => onChange({ ...data, role })}
     />
   )
@@ -241,6 +445,44 @@ export function ChatMessage({
   const codeBg = scheme
     ? `rgba(${scheme === "dark" ? "0,0,0" : "255,255,255"},0.6)`
     : "transparent"
+
+  // Add/remove the 'id' and 'name' props required on tool calls
+  useEffect(() => {
+    // Add/remove the 'name' props required on tool calls
+    if (data.role === "tool" && editable && typeof data.name !== "string") {
+      onChange({ ...data, name: "some-tool-name" })
+    } else if (
+      data.role !== "tool" &&
+      data.role !== "user" &&
+      typeof data.name === "string"
+    ) {
+      // "user" messages can also have a name
+      delete data.name
+      onChange(data)
+    }
+
+    if (
+      data.role === "tool" &&
+      editable &&
+      typeof data.toolCallId !== "string"
+    ) {
+      onChange({ ...data, toolCallId: "call_123" })
+    } else if (data.role !== "tool" && typeof data.toolCallId === "string") {
+      delete data.toolCallId
+      onChange(data)
+    }
+
+    if (
+      data.role === "assistant" &&
+      editable &&
+      Array.isArray(data.toolCalls) &&
+      data.toolCalls.length === 0
+    ) {
+      // remove the toolCalls array if it's empty, otherwise OpenAI returns an error
+      delete data.toolCalls
+      onChange(data)
+    }
+  }, [data])
 
   return (
     <Paper

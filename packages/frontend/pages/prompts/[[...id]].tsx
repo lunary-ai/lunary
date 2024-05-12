@@ -166,7 +166,7 @@ function Playground() {
       if (template?.id) {
         const newVersion = await insertVersion(data)
 
-        setTemplateVersion(newVersion)
+        switchTemplateVersion(newVersion)
       } else {
         const newTemplate = await insert({
           slug: generateSlug(),
@@ -175,7 +175,7 @@ function Playground() {
         })
 
         setTemplate(newTemplate)
-        setTemplateVersion(newTemplate?.versions[0])
+        switchTemplateVersion(newTemplate?.versions[0])
       }
     }
 
@@ -226,7 +226,7 @@ function Playground() {
 
   // Deploy the template
   const commitTemplate = async () => {
-    if (templateVersion.isDraft) {
+    if (templateVersion.isDraft && templateVersion.id) {
       await updateVersion({
         ...templateVersion,
         isDraft: false,
@@ -249,11 +249,11 @@ function Playground() {
         })
 
         setTemplate(newTemplate)
-        setTemplateVersion(newTemplate?.versions[0])
+        switchTemplateVersion(newTemplate?.versions[0])
       } else {
         const newVersion = await insertVersion(data)
 
-        setTemplateVersion(newVersion)
+        switchTemplateVersion(newVersion)
       }
     }
 
@@ -305,6 +305,10 @@ function Playground() {
           }
         },
       )
+
+      // scroll template-input-area to the end
+      const element = document.getElementById("template-input-area")
+      element.scrollTop = element.scrollHeight
     } catch (e) {
       console.error(e)
       setError(e)
@@ -384,7 +388,11 @@ function Playground() {
           flex="1"
           style={{ borderRight: "1px solid rgba(120, 120, 120, 0.1)" }}
         >
-          <Box mah="100%" style={{ overflowY: "auto" }}>
+          <Box
+            mah="100%"
+            style={{ overflowY: "auto" }}
+            id="template-input-area"
+          >
             <TemplateInputArea
               template={templateVersion}
               setTemplate={setTemplateVersion}
