@@ -23,6 +23,7 @@ import {
   nameColumn,
   outputColumn,
   tagsColumn,
+  templateColumn,
   timeColumn,
   userColumn,
 } from "@/utils/datatable"
@@ -82,6 +83,7 @@ const columns = {
     costColumn(),
     feedbackColumn(),
     tagsColumn(),
+    templateColumn(),
     inputColumn("Prompt"),
     outputColumn("Result"),
   ],
@@ -110,6 +112,7 @@ const CHECKS_BY_TYPE = {
     // "enrichment",
     "tags",
     "users",
+    "templates",
     "status",
     "metadata",
     "feedback",

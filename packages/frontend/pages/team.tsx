@@ -56,6 +56,7 @@ import { SettingsCard } from "@/components/blocks/SettingsCard"
 import { SEAT_ALLOWANCE } from "@/utils/pricing"
 import { openUpgrade } from "@/components/layout/UpgradeModal"
 import config from "@/utils/config"
+import RenamableField from "@/components/blocks/RenamableField"
 
 function SAMLConfig() {
   const { org, updateOrg, mutate } = useOrg()
@@ -438,7 +439,7 @@ function InviteMemberCard() {
   const [selectedProjects, setSelectedProjects] = useState([])
   const [opened, setOpened] = useState(false)
   const [inviteLink, setInviteLink] = useState("")
-  const { org } = useOrg()
+  const { org, mutate } = useOrg()
 
   const [isLoading, setIsLoading] = useState(false)
   const { addUserToOrg } = useOrg()
@@ -484,6 +485,9 @@ function InviteMemberCard() {
           icon: <IconCheck />,
           color: "green",
         })
+
+        mutate()
+
         return
       } else {
         const link = `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/join?token=${newUser.singleUseToken}`
@@ -786,7 +790,7 @@ function MemberListCard() {
 
 // TODO: put back at root level
 export default function Team() {
-  const { org } = useOrg()
+  const { org, updateOrg, mutate } = useOrg()
   const { user } = useUser()
   const samlEnabled = config.IS_SELF_HOSTED
     ? org.license.samlEnabled
@@ -797,7 +801,17 @@ export default function Team() {
       <NextSeo title="Team" />
 
       <Stack gap="xl">
-        <Title order={2}>Manage Team</Title>
+        <Group align="center">
+          <Title order={2}>Manage Team:</Title>
+          <RenamableField
+            defaultValue={org?.name}
+            order={2}
+            onRename={(newName) => {
+              updateOrg({ id: org.id, name: newName })
+              mutate({ ...org, name: newName })
+            }}
+          />
+        </Group>
 
         {hasAccess(user.role, "teamMembers", "create") && <InviteMemberCard />}
         <MemberListCard />

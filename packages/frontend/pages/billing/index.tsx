@@ -14,7 +14,11 @@ import {
   Text,
   Title,
 } from "@mantine/core"
-import { IconBolt, IconInfoTriangle } from "@tabler/icons-react"
+import {
+  IconBolt,
+  IconBrandStripe,
+  IconInfoTriangle,
+} from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { Label, ReferenceLine } from "recharts"
 import useSWR from "swr"
@@ -69,11 +73,16 @@ export default function Billing() {
           {org?.limited && (
             <Alert
               color="red"
-              variant="outline"
-              icon={<IconInfoTriangle />}
-              title="Allowance Reached"
+              // variant="outline"
+              fz="xl"
+              variant="filled"
+              icon={<IconInfoTriangle size={32} />}
+              title={<Title order={4}>Event Limit Reached</Title>}
             >
-              Request allowance limit reached. Please upgrade to restore access.
+              <Text size="lg">
+                Your daily event allowance has been reached. Please upgrade to
+                restore access.
+              </Text>
             </Alert>
           )}
 
@@ -100,15 +109,13 @@ export default function Billing() {
         </Stack>
 
         {!["custom"].includes(plan) && (
-          <Card withBorder radius="md" padding="xl">
-            <Container size="lg">
-              <UpgradePlans />
-            </Container>
+          <Card withBorder radius="md" padding="sm">
+            <UpgradePlans />
           </Card>
         )}
 
         <LineChart
-          title={<Title order={3}>Events Usage</Title>}
+          title={<Title order={4}>Events Usage</Title>}
           range={30}
           data={usage}
           formatter={(val) => `${val} runs`}
@@ -138,13 +145,17 @@ export default function Billing() {
         <SeatAllowanceCard />
 
         {org?.stripeCustomer && (
-          <SettingsCard title="Customer Portal">
+          <SettingsCard title="Customer Portal" align="start">
             <Text>
-              Use the Customer Portal to update your payment method, download
-              invoices and view your billing history.
+              Use the Customer Portal to update payment methods, download
+              invoices, view your billing history or make changes to your plan.
             </Text>
 
-            <Button size="sm" onClick={redirectToCustomerPortal}>
+            <Button
+              size="sm"
+              variant="default"
+              onClick={redirectToCustomerPortal}
+            >
               Manage Billing
             </Button>
           </SettingsCard>

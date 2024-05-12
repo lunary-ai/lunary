@@ -184,7 +184,7 @@ const LineChartComponent = ({
                 bg="var(--mantine-primary-color-light)"
                 p="12"
               >
-                Upgrade to <b>Pro</b> to unlock this chart
+                Upgrade to <b>Team</b> to unlock this chart
                 <br />
                 <Button
                   mt="md"

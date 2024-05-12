@@ -8,7 +8,6 @@ import { Feedback, deserializeLogic } from "shared"
 import { convertChecksToSQL } from "@/src/utils/checks"
 import { checkAccess } from "@/src/utils/authorization"
 import { jsonrepair } from "jsonrepair"
-import { z } from "zod"
 
 const runs = new Router({
   prefix: "/runs",
@@ -84,6 +83,7 @@ const formatRun = (run: any) => ({
   endedAt: run.endedAt,
   duration: run.duration,
   templateVersionId: run.templateVersionId,
+  templateSlug: run.templateSlug,
   cost: run.cost,
   tokens: {
     completion: run.completionTokens,
@@ -141,11 +141,14 @@ runs.get("/", async (ctx: Context) => {
         eu.created_at as user_created_at,
         eu.last_seen as user_last_seen,
         eu.props as user_props,
+        t.slug as template_slug,
         rpfc.feedback as parent_feedback
       from
           run r
           left join external_user eu on r.external_user_id = eu.id
           left join run_parent_feedback_cache rpfc ON r.id = rpfc.id
+          left join template_version tv on r.template_version_id = tv.id
+          left join template t on tv.template_id = t.id
       where
           r.project_id = ${projectId}
           ${parentRunCheck}

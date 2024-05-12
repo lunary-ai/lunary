@@ -8,7 +8,7 @@ export default function ProtectedText({ children }) {
   const replaceText = (child) => {
     if (child && typeof child.props.children === "string") {
       return cloneElement(child, {
-        children: child.props.children.replace(/\S/g, "XX"),
+        children: child.props.children.replace(/\S/g, "X"),
       })
     }
     if (child && Array.isArray(child.props.children)) {
@@ -27,7 +27,7 @@ export default function ProtectedText({ children }) {
   }
 
   // create a string of fake characters same length and keep new lines
-  const fakeChars = children.replace(/\S/g, "XX")
+  const fakeChars = children.replace(/\S/g, "X")
 
   return limited ? <span className="limited">{fakeChars}</span> : children
 }

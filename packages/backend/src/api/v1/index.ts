@@ -11,7 +11,7 @@ import filters from "./filters"
 import projects from "./projects"
 import radars from "./radars"
 import runs from "./runs/index"
-import templateVersions from "./templateVersions"
+import templateVersions from "./template-versions"
 import templates from "./templates"
 import users from "./users"
 

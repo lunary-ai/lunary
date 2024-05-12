@@ -18,7 +18,7 @@ async function updateLimitedStatus() {
   RETURNING *;
   `
 
-  // get all users with more than 1000 runs 2 out of the last 3 days
+  // get all free users with more than 1000 runs 2 out of the last 3 days
   // and set their `limited` to true
   const orgsToLimit = await sql`WITH over_limit_days AS (
     SELECT 

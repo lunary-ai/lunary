@@ -277,15 +277,18 @@ users.patch(
 
     const [{ plan }] =
       await sql`select plan, eval_allowance from org where id = ${orgId}`
-    if (plan === "free" || plan === "pro") {
+
+    if (["free", "pro", "team", "unlimited"].includes(plan)) {
       ctx.throw(403, "You must be an enterprise customer to change a user role")
     }
 
     if (role === "owner") {
       ctx.throw(403, "You cannot modify the owner role")
     }
+
     const [currentUser] =
       await sql`select * from account where id = ${currentUserId}`
+
     if (!["owner", "admin"].includes(currentUser.role)) {
       ctx.throw(403, "You do not have permission to modify this user")
     }

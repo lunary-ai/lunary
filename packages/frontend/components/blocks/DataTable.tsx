@@ -22,7 +22,12 @@ import { useFixedColorScheme } from "@/utils/hooks"
 // outside for reference
 const emptyArray = []
 
-const DEFAULT_AUTO_HIDABLE_COLUMNS = ["feedback", "tags", "user"]
+const DEFAULT_AUTO_HIDABLE_COLUMNS = [
+  "feedback",
+  "tags",
+  "user",
+  "templateVersionId",
+]
 const CHAT_AUTO_HIDABLE_COLUMNS = ["tags", "user"]
 
 export default function DataTable({

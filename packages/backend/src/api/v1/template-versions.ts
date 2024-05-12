@@ -37,6 +37,11 @@ versions.get("/latest", async (ctx: Context) => {
     ctx.throw("Template not found, is the project ID correct?", 404)
   }
 
+  latestVersion.extra = unCamelObject(latestVersion.extra)
+  latestVersion.content = latestVersion.content.map((c: any) =>
+    unCamelObject(c),
+  )
+
   ctx.body = latestVersion
 })
 
