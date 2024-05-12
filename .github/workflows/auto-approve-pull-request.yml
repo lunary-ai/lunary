@@ -10,7 +10,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
       - name: Auto-approve PR
         uses: hmarr/auto-approve-action@v3
         with:
