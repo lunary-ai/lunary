@@ -203,25 +203,23 @@ export async function runAImodel(
     const [{ stripeCustomer }] =
       await sql`select stripe_customer from org where id = ${orgId}`
 
-    stripe.billing.meterEvents
-      .create({
-        event_name: "ai_playground",
-        payload: {
-          value: "1",
-          stripe_customer_id: stripeCustomer,
-        },
-      })
-      .then(() => console.log("Metered"))
+    if (process.env.NODE_ENV === "production") {
+      stripe.billing.meterEvents
+        .create({
+          event_name: "ai_playground",
+          payload: {
+            value: "1",
+            stripe_customer_id: stripeCustomer,
+          },
+        })
+        .then(() => console.log("Metered"))
+        .catch(console.error)
+    }
   }
 
   const copy = compilePrompt(content, variables)
 
-  console.log(copy)
-
   const messages = convertInputToOpenAIMessages(copy)
-
-  console.log(messages)
-
   const modelObj = MODELS.find((m) => m.id === model)
 
   let clientParams = {}
