@@ -71,7 +71,10 @@ jobs:
             docker compose down
             docker compose up -d
 
-  build-lunary-ee:
+  build-lunary-ee-and-frontend:
+    strategy:
+      matrix:
+        service: [frontend, lunary-ee]
     runs-on: ubuntu-latest
     steps:
       - name: Check out the private Ops repo
@@ -105,10 +108,10 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./ops/lunary-ee.Dockerfile
+          file: ./ops/{{ matrix.service }}.Dockerfile
           push: true
           tags: |
-            lunary/lunary-ee:latest
-            lunary/lunary-ee:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
-            ${{ github.event.release.tag_name != '' && format('lunary/{0}:{1}', 'lunary-ee', steps.release_tag.outputs.tag) || '' }}
+            lunary/${{ matrix.service }}:latest
+            lunary/${{ matrix.service }}:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
+            ${{ github.event.release.tag_name != '' && format('lunary/{0}:{1}', matrix.service, steps.release_tag.outputs.tag) || '' }}
           platforms: linux/amd64
