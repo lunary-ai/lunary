@@ -90,6 +90,16 @@ function RenderPrice({ price, period }) {
   )
 }
 
+function AcceptedPayments() {
+  return (
+    <Group align="center" gap={11}>
+      <img height={24} src="/assets/google-pay.webp" alt="google pay" />
+      <img height={24} src="/assets/apple-pay.webp" alt="apple pay" />
+      <img height={24} src="/assets/accepted-cards.webp" alt="Accepted cards" />
+    </Group>
+  )
+}
+
 function RenderPlanCard({
   planId,
   price,
@@ -401,7 +411,7 @@ export function UpgradePlans({
             onClick={() => setShowFeatures(true)}
             leftSection={<IconArrowDown size={12} />}
           >
-            Expand features
+            View Features
           </Button>
         </Group>
       ) : (
@@ -429,31 +439,36 @@ function UpgradeModal({
       analytics.track("Upgrade Modal")
   }, [])
 
+  const { org } = useOrg()
+
   if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) return null
 
   return (
-    <Container px={20} py="md" size="lg">
-      <Stack align="center" ta="center" className="unblockable">
-        {/* <IconAnalyze color={"#206dce"} size={50} /> */}
+    <Container px={0} pb="md" size="xl">
+      {/* <Stack align="center" ta="center" className="unblockable"> */}
+      {/* <IconAnalyze color={"#206dce"} size={50} /> */}
 
-        <Title order={2} fw={700} size={34} ta="center">
+      {/* <Title order={2} fw={700} size={34} ta="center">
           10x your AI's performance
         </Title>
 
         <Text size="lg" mt={0} mb="lg" fw={500}>
           {`Unlock powerful features to improve your AI's
         quality.`}
-        </Text>
-      </Stack>
-      <Divider my="xl" />
+        </Text> */}
+      {/* </Stack> */}
+      {/* <Divider my="xl" /> */}
       <UpgradePlans highlight={innerProps?.highlight} defaultExpand />
-      <Text ta="center" size="sm" mt="lg">
-        Cancel any time with just 1 click. <Mark>30 days</Mark> money-back
-        guarantee.
+      <Text ta="center" size="md" mt="lg">
+        <Mark>30 days</Mark> money-back guarantee. Cancel any time with just 1
+        click.
       </Text>
-      <Card w="fit-content" mx="auto" mt="md">
-        <SocialProof />
-      </Card>
+      <Group justify="space-between" align="center" w="100%" px="sm" mt="md">
+        <Card w="fit-content">
+          <SocialProof />
+        </Card>
+        {org?.plan === "free" && <AcceptedPayments />}
+      </Group>
     </Container>
   )
 }
