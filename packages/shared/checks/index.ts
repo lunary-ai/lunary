@@ -88,7 +88,7 @@ export const CHECKS: Check[] = [
       {
         type: "select",
         multiple: true,
-        id: "names",
+        id: "models",
         width: 100,
         options: (type) => `/filters/models`,
       },

@@ -139,7 +139,7 @@ const CHECKS_BY_TYPE = {
   ],
 }
 
-const editCheck = (filters, id, params) => {
+function editCheck(filters, id, params) {
   if (!params) {
     // Remove filter
     return filters.filter((f) => f.id !== id)

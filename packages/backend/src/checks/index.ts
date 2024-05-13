@@ -93,7 +93,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   },
   {
     id: "models",
-    sql: ({ names }) => sql`(name = any(${names}))`,
+    sql: ({ models }) => sql`(r.name = any(${models}))`,
   },
   {
     id: "tags",
