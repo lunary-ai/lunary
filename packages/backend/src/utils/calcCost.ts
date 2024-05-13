@@ -10,6 +10,11 @@ interface ModelCost {
 // Legacy OpenAI pricing: https://platform.openai.com/docs/deprecations/
 const MODEL_COSTS: ModelCost[] = [
   {
+    models: ["gpt-4o"],
+    inputCost: 0.005,
+    outputCost: 0.015,
+  },
+  {
     models: ["ft:gpt-3.5-turbo"],
     inputCost: 0.003,
     outputCost: 0.006,
