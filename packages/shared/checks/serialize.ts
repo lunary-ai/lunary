@@ -5,7 +5,7 @@ import { CHECKS } from "."
 // because dots are used to separate filter parameters, we need to encode them
 const encode = (str: string) => encodeURIComponent(str).replace(/\./g, "%2E")
 
-const paramSerializer = (param: CheckParam, value: any) => {
+function paramSerializer(param: CheckParam, value: any) {
   if (value == undefined) {
     return undefined
   }
@@ -57,7 +57,7 @@ function deserializeParamValue(
 // type=llm&tags=some.tags
 
 export function serializeLogic(logic: CheckLogic): string {
-  const serializeParamValue = (param: any): string => {
+  function serializeParamValue(param: any): string {
     if (Array.isArray(param)) {
       const all = param.map(serializeParamValue)
 
@@ -112,9 +112,11 @@ export function deserializeLogic(logicString: string): CheckLogic | undefined {
 
     const paramsData: any = {}
 
-    const value = params.split(".")
+    const values: string[] = params
+      .split(".")
+      .map((value) => value.replaceAll("%2C", ","))
 
-    for (const [i, v] of value.entries()) {
+    for (const [i, v] of values.entries()) {
       const filterParam = filterParams[i]
 
       if (!filterParam) {
