@@ -38,9 +38,14 @@ versions.get("/latest", async (ctx: Context) => {
   }
 
   latestVersion.extra = unCamelObject(latestVersion.extra)
-  latestVersion.content = latestVersion.content?.map((c: any) =>
-    unCamelObject(c),
-  )
+
+  // This makes sure OpenAI messages are not camel cased as used in the app
+  // For example: message.toolCallId instead of message.tool_call_id
+  if (typeof latestVersion.content !== "string") {
+    latestVersion.content = latestVersion.content?.map((c: any) =>
+      unCamelObject(c),
+    )
+  }
 
   ctx.body = latestVersion
 })
