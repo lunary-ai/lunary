@@ -38,7 +38,7 @@ versions.get("/latest", async (ctx: Context) => {
   }
 
   latestVersion.extra = unCamelObject(latestVersion.extra)
-  latestVersion.content = latestVersion.content.map((c: any) =>
+  latestVersion.content = latestVersion.content?.map((c: any) =>
     unCamelObject(c),
   )
 
