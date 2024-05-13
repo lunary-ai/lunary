@@ -67,6 +67,11 @@ export default function Paywall({
     return children
   }
 
+  // Legacy Unlimited plan has access to all features
+  if (plan === "team" && org?.plan === "unlimited") {
+    return children
+  }
+
   const isEnterpriseFeature = plan === "enterprise"
 
   return (
