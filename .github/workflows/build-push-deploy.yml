@@ -63,7 +63,7 @@ jobs:
           platforms: linux/amd64
 
   deploy:
-    needs: build-and-push-amd64
+    needs: build-and-push-production-images
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to Production
