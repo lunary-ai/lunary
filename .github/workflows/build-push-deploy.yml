@@ -1,11 +1,12 @@
 name: Build Docker Images, Push to Registry, and Deploy
 
 on:
-  push:
-    branches:
-      - main
-  release:
-    types: [published]
+  push
+  # push:
+  #   branches:
+  #     - main
+  # release:
+  #   types: [published]
 
 jobs:
   build-and-push-amd64:
@@ -108,7 +109,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./ops/{{ matrix.service }}.Dockerfile
+          file: ./ops/${{ matrix.service }}.Dockerfile
           push: true
           tags: |
             lunary/${{ matrix.service }}:latest
