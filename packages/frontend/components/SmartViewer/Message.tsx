@@ -312,7 +312,7 @@ function ChatMessageContent({
 }) {
   return (
     <Stack gap="xs">
-      {typeof data?.name === "string" && (
+      {typeof data?.name === "string" && !compact && (
         // used for tools names
         <PropEditor
           value={data.name}
