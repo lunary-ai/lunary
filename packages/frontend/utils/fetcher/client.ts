@@ -129,6 +129,11 @@ async function del(path) {
 async function handleResponse(res: Response) {
   const isLoginPage = Router.pathname === "/login"
 
+  // There's not body sent back on HTTP 204 (used for DELETE)
+  if (res.status === 204) {
+    return
+  }
+
   if (!res.ok) {
     if (
       res.status === 401 &&
