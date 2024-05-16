@@ -4,6 +4,7 @@ on:
   create:
 
 permissions:
+  contents: write
   pull-requests: write
 
 jobs:
@@ -11,9 +12,11 @@ jobs:
     if: github.ref_type != 'tag'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
       - name: Create Pull Request
-        run: |
-          prefix=$(echo ${{ github.ref }}| cut -d '/' -f 3)
-          branch_name=$(echo ${{ github.ref }} | cut -d '/' -f 4- | tr '-' ' ')
-          GH_TOKEN=${{ secrets.GH_TOKEN }} gh pr create --title "${prefix}: ${branch_name}" --body ""
+        uses: peter-evans/create-pull-request@v6
+        with:
+          author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+          title: "PR for new branch: ${{ github.ref_name }}"
+          body: "Automatically created pull request for the branch ${{ github.ref_name }}."
