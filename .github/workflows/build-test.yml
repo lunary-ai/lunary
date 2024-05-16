@@ -1,4 +1,4 @@
-name: Build Docker Images, Push to Registry, and Deploy
+name: Docker build test
 
 on: push
 
@@ -34,4 +34,4 @@ jobs:
           push: true
           tags: |
             lunary/backend:test
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
