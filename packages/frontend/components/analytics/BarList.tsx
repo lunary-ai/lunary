@@ -19,12 +19,12 @@ type BarListProps = {
 
 // A table of progress bars, with the progress value the proportion relative to the total
 // and the second column the value of the bar
-const BarList = ({
+function BarList({
   data,
   columns,
   customMetric,
   filterZero = true,
-}: BarListProps) => {
+}: BarListProps) {
   const dataColumns = columns.filter((col) => !col.bar && col.key)
   const main = dataColumns.find((col) => col.main) || dataColumns[0]
   const mainTotal = data.reduce((acc, item) => acc + (item[main.key] || 0), 0)
@@ -63,6 +63,8 @@ const BarList = ({
       )}
 
       <Table
+        layout="fixed"
+        w="100%"
         cellPadding={0}
         horizontalSpacing={0}
         withRowBorders={false}
@@ -131,9 +133,7 @@ const BarList = ({
                     </Table.Td>
                   ) : (
                     <Table.Td key={i}>
-                      <Text>
-                        {render ? render(item[key], item) : item[key]}
-                      </Text>
+                      {render ? render(item[key], item) : item[key]}
                     </Table.Td>
                   ),
                 )}
