@@ -32,6 +32,7 @@ jobs:
           version: "lab:latest"
           driver: cloud
           endpoint: "lunary/lunary"
+          buildkitd-flags: --debug
 
       - name: Generate data
         id: date
@@ -56,6 +57,7 @@ jobs:
             lunary/${{ matrix.service }}:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
             ${{ github.event.release.tag_name != '' && format('lunary/{0}:{1}', matrix.service, steps.release_tag.outputs.tag) || '' }}
           platforms: linux/arm64,linux/amd64
+          outputs: type=registry,push=true'
 
   deploy:
     needs: build-and-push
