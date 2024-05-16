@@ -9,7 +9,7 @@ on:
   #   types: [published]
 
 jobs:
-  build-and-push-amd64:
+  build-and-push:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -46,7 +46,7 @@ jobs:
         id: release_tag
         run: echo "tag=$(echo ${{ github.event.release.tag_name }} | sed 's/^v//')" >> $GITHUB_OUTPUT
 
-      - name: Build and push ${{ matrix.service }} (amd64)
+      - name: Build and push ${{ matrix.service }}
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -56,10 +56,10 @@ jobs:
             lunary/${{ matrix.service }}:latest
             lunary/${{ matrix.service }}:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
             ${{ github.event.release.tag_name != '' && format('lunary/{0}:{1}', matrix.service, steps.release_tag.outputs.tag) || '' }}
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
 
   deploy:
-    needs: build-and-push-amd64
+    needs: build-and-push
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to Production
@@ -119,4 +119,4 @@ jobs:
             lunary/${{ matrix.service }}:latest
             lunary/${{ matrix.service }}:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
             ${{ github.event.release.tag_name != '' && format('lunary/{0}:{1}', matrix.service, steps.release_tag.outputs.tag) || '' }}
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
