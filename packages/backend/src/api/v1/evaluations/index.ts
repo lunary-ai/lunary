@@ -177,16 +177,15 @@ evaluations.post(
   // checkAccess("evaluations", "create"),
   async (ctx: Context) => {
     const { projectId } = ctx.state
-    const { checklist, input, output, idealOutput, context, duration, model } =
-      ctx.request.body as {
-        checklist: string
-        input: any
-        output: any
-        duration?: number
-        idealOutput?: string
-        context?: string
-        model?: string
-      }
+    const { checklist, input, output, idealOutput, duration, model } = ctx
+      .request.body as {
+      checklist: string
+      input: any
+      output: any
+      duration?: number
+      idealOutput?: string
+      model?: string
+    }
 
     const [checklistData] =
       await sql` select * from checklist where slug = ${checklist} and project_id = ${projectId}`
@@ -213,7 +212,6 @@ evaluations.post(
       endedAt: new Date(),
       // Eval-only fields:
       idealOutput,
-      context,
       // So the SQL queries don't fail:
       id: "00000000-0000-4000-8000-000000000000",
       projectId: "00000000-0000-4000-8000-000000000000",

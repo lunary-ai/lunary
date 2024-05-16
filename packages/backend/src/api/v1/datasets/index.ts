@@ -93,7 +93,6 @@ datasets.post("/", checkAccess("datasets", "create"), async (ctx: Context) => {
     ${sql({
       promptId: prompt.id,
       variables: {},
-      context: "",
       idealOutput: "",
     })}
     returning *
@@ -163,7 +162,6 @@ datasets.post(
     ${sql({
       promptId: prompt.id,
       variables: {},
-      context: "",
       idealOutput: idealOutput ? lastMsg(idealOutput) : "",
     })}
     returning *
@@ -261,9 +259,8 @@ datasets.patch(
   checkAccess("datasets", "update"),
   async (ctx: Context) => {
     const { variationId } = ctx.params
-    const { variables, context, idealOutput } = ctx.request.body as {
+    const { variables, idealOutput } = ctx.request.body as {
       variables: any
-      context: string
       idealOutput: string
     }
 
@@ -271,7 +268,6 @@ datasets.patch(
     ${sql(
       clearUndefined({
         variables,
-        context,
         idealOutput,
       }),
     )}
@@ -288,10 +284,9 @@ datasets.post(
   "/variations",
   checkAccess("datasets", "update"),
   async (ctx: Context) => {
-    const { promptId, variables, context, idealOutput } = ctx.request.body as {
+    const { promptId, variables, idealOutput } = ctx.request.body as {
       promptId: string
       variables: any
-      context: string
       idealOutput: string
     }
 
@@ -300,7 +295,6 @@ datasets.post(
     clearUndefined({
       promptId,
       variables,
-      context,
       idealOutput,
     }),
   )}
