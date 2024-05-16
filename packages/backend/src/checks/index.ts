@@ -461,7 +461,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
 
       if (!run.idealOutput)
         throw new Error(
-          "You need to set an ideal output for each prompt in the dataset in order to use the Rouge Evaluator",
+          "You need to set an ideal output for each prompt in the dataset in order to use the Rouge Evaluator.",
         )
 
       const scorer = rouge[rougeType]
