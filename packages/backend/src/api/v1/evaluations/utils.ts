@@ -28,7 +28,7 @@ export async function runEval({
     console.log(
       `Running eval for ${provider.model} with variation ${JSON.stringify(variation.variables)} and config ${JSON.stringify(provider.config)}`,
     )
-    const { variables, idealOutput, context } = variation
+    const { variables, idealOutput } = variation
 
     let checks = []
 
@@ -90,7 +90,6 @@ export async function runEval({
         endedAt,
         // Eval-only fields:
         idealOutput,
-        context,
         // So the SQL queries don't fail:
         id: "00000000-0000-4000-8000-000000000000",
         projectId: "00000000-0000-4000-8000-000000000000",

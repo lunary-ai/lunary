@@ -55,14 +55,13 @@ export async function getDatasetBySlug(slug: string, projectId: string) {
     items: [],
   }
 
-  for (const { promptMessages, variables, idealOutput, context } of rows) {
+  for (const { promptMessages, variables, idealOutput } of rows) {
     const item = {
       input:
         typeof promptMessages === "string"
           ? compileTextTemplate(promptMessages, variables)
           : compilePrompt(promptMessages, variables),
       idealOutput,
-      context,
     }
     dataset.items.push(item)
   }
