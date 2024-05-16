@@ -21,10 +21,10 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-        # with:
-        #   version: "lab:latest"
-        #   driver: cloud
-        #   endpoint: "lunary/lunary"
+        with:
+          version: "lab:latest"
+          driver: cloud
+          endpoint: "lunary/lunary"
 
       - name: Build test
         uses: docker/build-push-action@v5
