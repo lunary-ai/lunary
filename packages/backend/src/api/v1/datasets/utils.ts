@@ -33,9 +33,7 @@ export async function getDatasetBySlug(slug: string, projectId: string) {
       p.messages as prompt_messages,
       pv.id as variation_id,
       pv.variables,
-      pv.context,
-      pv.ideal_output,
-      pv.context
+      pv.ideal_output
     from
       dataset d 
       left join dataset_prompt p on d.id = p.dataset_id
