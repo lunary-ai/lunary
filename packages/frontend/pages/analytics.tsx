@@ -15,6 +15,7 @@ import {
   useRunsUsageByDay,
 } from "@/utils/dataHooks"
 import {
+  Anchor,
   Center,
   Container,
   Group,
@@ -22,6 +23,7 @@ import {
   SegmentedControl,
   SimpleGrid,
   Stack,
+  Text,
   Title,
 } from "@mantine/core"
 import { useLocalStorage } from "@mantine/hooks"
@@ -132,10 +134,33 @@ export default function Analytics() {
                   columns={[
                     {
                       name: "User",
-                      render: (u, row) => (
-                        <Group my={-4} gap="sm">
-                          <AppUserAvatar size={30} user={row} />
-                          {formatAppUser(row)}
+                      render: (_, user) => (
+                        <Group
+                          my={-4}
+                          gap="sm"
+                          wrap="nowrap"
+                          style={{
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          <AppUserAvatar size={30} user={user} />
+                          <Text
+                            style={{
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                            size="sm"
+                            px="md"
+                          >
+                            <Anchor
+                              c="inherit"
+                              underline="never"
+                              href={`/users/${user.id}`}
+                            >
+                              {formatAppUser(user)}
+                            </Anchor>
+                          </Text>
                         </Group>
                       ),
                     },

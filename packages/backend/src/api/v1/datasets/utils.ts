@@ -33,9 +33,7 @@ export async function getDatasetBySlug(slug: string, projectId: string) {
       p.messages as prompt_messages,
       pv.id as variation_id,
       pv.variables,
-      pv.context,
-      pv.ideal_output,
-      pv.context
+      pv.ideal_output
     from
       dataset d 
       left join dataset_prompt p on d.id = p.dataset_id
@@ -57,14 +55,13 @@ export async function getDatasetBySlug(slug: string, projectId: string) {
     items: [],
   }
 
-  for (const { promptMessages, variables, idealOutput, context } of rows) {
+  for (const { promptMessages, variables, idealOutput } of rows) {
     const item = {
       input:
         typeof promptMessages === "string"
           ? compileTextTemplate(promptMessages, variables)
           : compilePrompt(promptMessages, variables),
       idealOutput,
-      context,
     }
     dataset.items.push(item)
   }

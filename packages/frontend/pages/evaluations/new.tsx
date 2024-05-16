@@ -45,7 +45,7 @@ const FEATURE_LIST = [
 ]
 
 const BASE_PROVIDER: Provider = {
-  model: "gpt-4-turbo-preview",
+  model: "gpt-4o",
   config: {},
 }
 

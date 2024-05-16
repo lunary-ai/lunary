@@ -34,7 +34,7 @@ export const defaultTemplateVersion = {
     { content: "Hi!", role: "user" },
   ],
   extra: {
-    model: "gpt-4-turbo",
+    model: "gpt-4o",
     temperature: 1.0,
     max_tokens: 1000,
   },
@@ -42,15 +42,14 @@ export const defaultTemplateVersion = {
   isDraft: true,
 }
 
-const TemplateListItem = ({
+function TemplateListItem({
   template,
   activeTemplate,
   activeVersion,
   rename,
   setRename,
-
   switchTemplateVersion,
-}) => {
+}) {
   const { templates, mutate, insert } = useTemplates()
   const { remove, update } = useTemplate(template?.id)
 
@@ -90,7 +89,7 @@ const TemplateListItem = ({
     })
   }
 
-  const applyRename = async (name) => {
+  async function applyRename(name) {
     setRename(null)
     // make sure it's a valid slug
     const slugified = cleanSlug(name)
@@ -112,7 +111,7 @@ const TemplateListItem = ({
     mutate()
   }
 
-  const duplicateTemplate = async () => {
+  async function duplicateTemplate() {
     const newTemplate = await insert({
       slug: `${template.slug}-copy`,
       mode: template.mode,
@@ -248,14 +247,14 @@ const TemplateListItem = ({
   )
 }
 
-const TemplateList = ({
+function TemplateList({
   activeTemplate,
   activeVersion,
   rename,
   setRename,
   createTemplate,
   switchTemplateVersion,
-}) => {
+}) {
   const { templates, loading, isInserting } = useTemplates()
 
   const [filter, setFilter] = useState("")

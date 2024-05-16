@@ -165,7 +165,10 @@ export const CHECK_RUNNERS: CheckRunner[] = [
 
       const passed = type === "contains" ? has : !has
 
-      const match = has ? run[field].match(re)[0] : ""
+      const runField =
+        typeof run[field] === "string" ? run[field] : JSON.stringify(run[field])
+
+      const match = has ? runField.match(re)[0] : ""
 
       return {
         passed,
@@ -276,7 +279,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   {
     id: "length",
     sql: ({ field, operator, length }) =>
-      sql`length(${sql(field + "_text")} ${postgresOperators(operator)} ${length}`,
+      sql`length(${sql(field + "_text")}) ${postgresOperators(operator)} ${length}`,
   },
   {
     id: "date",
@@ -456,11 +459,14 @@ export const CHECK_RUNNERS: CheckRunner[] = [
 
       const output = lastMsg(run["output"])
 
-      if (!run.context) throw new Error("No context to compare to")
+      if (!run.idealOutput)
+        throw new Error(
+          "You need to set an ideal output for each prompt in the dataset in order to use the Rouge Evaluator.",
+        )
 
       const scorer = rouge[rougeType]
 
-      const rougeScore = scorer(output, run.context) * 100
+      const rougeScore = scorer(output, run.idealOutput) * 100
 
       const passed = rougeScore >= parseInt(percent)
 
