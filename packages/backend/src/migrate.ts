@@ -5,9 +5,27 @@ import path from "path"
 
 const migrationsDir = path.join(__dirname, "../../db")
 
+// Kill pg_dump if running, because it locks the tables (AccessShareLock)
+async function killPgDump() {
+  const rows = await sql`
+    select pid
+    from pg_stat_activity
+    where application_name = 'pg_dump' and state = 'active'
+  `
+
+  for (const row of rows) {
+    console.info(`Killing pg_dump process with pid ${row.pid}`)
+    await sql`select pg_terminate_backend(${row.pid})`
+  }
+}
+
 async function main() {
   let exitCode = 0
   try {
+    await sql`set client_min_messages to warning`
+
+    await killPgDump()
+
     await sql`create extension if not exists "uuid-ossp";`
     await sql`
       create table if not exists _db_migration (

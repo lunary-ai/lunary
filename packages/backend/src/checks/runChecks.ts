@@ -32,7 +32,6 @@ async function sqlEval(sqlFragment: any, run: any): Promise<boolean> {
 
   // those are eval-specific and differ from the run object
   delete run.idealOutput
-  delete run.context
   delete run.radarId
   delete run.runId
   delete run.results
