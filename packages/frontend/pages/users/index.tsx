@@ -25,9 +25,18 @@ const columns = [
       const user = props.row.original
 
       return (
-        <Group gap={8}>
+        <Group gap={8} wrap="nowrap">
           <AppUserAvatar size={30} user={user} />
-          <Text fw={500}>{formatAppUser(user)}</Text>
+          <Text
+            style={{
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+            size="sm"
+            fw={500}
+          >
+            {formatAppUser(user)}
+          </Text>
         </Group>
       )
     },
