@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [backend, frontend, radar]
+        service: [backend, frontend, radar, ml]
     steps:
       - name: Check out the private Ops repo
         uses: actions/checkout@v4
@@ -34,6 +34,7 @@ jobs:
           driver: cloud
           endpoint: "lunary/lunary"
           buildkitd-flags: --debug
+          cache-binary: false
 
       - name: Generate data
         id: date
@@ -53,12 +54,10 @@ jobs:
           context: .
           file: ./ops/${{ matrix.service }}.Dockerfile
           push: true
-          tags: |
-            lunary/${{ matrix.service }}:latest
-            lunary/${{ matrix.service }}:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
-            ${{ github.event.release.tag_name != '' && format('lunary/{0}:{1}', matrix.service, steps.release_tag.outputs.tag) || '' }}
-          platforms: linux/arm64,linux/amd64
+          tags: lunary/${{ matrix.service }}:latest
+          platforms: linux/amd64,linux/arm64
           provenance: false
+          outputs: type=registry,push=true
 
   deploy:
     needs: build-and-push
