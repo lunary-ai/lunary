@@ -11,9 +11,6 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        service: [backend, frontend, ml]
     steps:
       - name: Check out the private Ops repo
         uses: actions/checkout@v4
@@ -39,9 +36,9 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./ops/backend.Dockerfile
+          file: ./ops/ml.Dockerfile
           push: true
-          tags: lunary/backend:test
+          tags: lunary/ml:test
           platforms: linux/arm64,linux/amd64
 
       # - name: Generate data
