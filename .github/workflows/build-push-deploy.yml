@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [backend, frontend, radar, ml]
+        service: [backend, frontend, ml]
     steps:
       - name: Check out the private Ops repo
         uses: actions/checkout@v4
