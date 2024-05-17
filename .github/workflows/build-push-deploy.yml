@@ -51,25 +51,25 @@ jobs:
       - name: Build and push ${{ matrix.service }}
         run: |
           docker buildx build \
-            --platform linux/amd64,linux/arm64 \
+            --platform linux/arm64 \ 
             --tag lunary/${{ matrix.service }}:latest \
             --file ./ops/${{ matrix.service }}.Dockerfile \
             --push .
 
-  deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to Production
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.PRODUCTION_IP_ADDRESS }}
-          username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.PRODUCTION_PORT }}
-          script: |
-            docker image prune -f
-            cd /opt/lunary
-            docker compose pull
-            docker compose down
-            docker compose up -d
+  # deploy:
+  #   needs: build-and-push
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Deploy to Production
+  #       uses: appleboy/ssh-action@master
+  #       with:
+  #         host: ${{ secrets.PRODUCTION_IP_ADDRESS }}
+  #         username: root
+  #         key: ${{ secrets.SSH_PRIVATE_KEY }}
+  #         port: ${{ secrets.PRODUCTION_PORT }}
+  #         script: |
+  #           docker image prune -f
+  #           cd /opt/lunary
+  #           docker compose pull
+  #           docker compose down
+  #           docker compose up -d
