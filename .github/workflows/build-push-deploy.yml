@@ -1,12 +1,11 @@
 name: Build Docker Images, Push to Registry, and Deploy to production
 
 on:
-  push
-  # push:
-  #   branches:
-  #     - main
-  # release:
-  #   types: [published]
+  push:
+    branches:
+      - main
+  release:
+    types: [published]
 
 jobs:
   build-and-push:
@@ -32,37 +31,17 @@ jobs:
           endpoint: "lunary/lunary"
           buildkitd-flags: --debug
 
-      - name: Build and push backend
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./ops/ml.Dockerfile
-          push: true
-          tags: lunary/ml:test
-          platforms: linux/arm64,linux/amd64
+      - name: Generate data
+        id: date
+        run: echo "date=$(date +%Y-%m-%d-%Hh%Mm%Ss)" >> $GITHUB_OUTPUT
 
-  build-and-push-2:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out the private Ops repo
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GH_TOKEN }}
-          submodules: "recursive"
+      - name: Get short commit hash
+        id: commit
+        run: echo "hash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          version: "lab:latest"
-          driver: cloud
-          endpoint: "lunary/lunary"
-          buildkitd-flags: --debug
+      - name: Remove 'v' prefix from release tag
+        id: release_tag
+        run: echo "tag=$(echo ${{ github.event.release.tag_name }} | sed 's/^v//')" >> $GITHUB_OUTPUT
 
       - name: Build and push backend
         uses: docker/build-push-action@v5
@@ -70,43 +49,66 @@ jobs:
           context: .
           file: ./ops/backend.Dockerfile
           push: true
-          tags: lunary/backend:test
+          tags: |
+            lunary/backend:latest
+            lunary/backend:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
+            ${{ github.event.release.tag_name != '' && format('lunary/backend:{0}', steps.release_tag.outputs.tag) || '' }}
           platforms: linux/arm64,linux/amd64
+          outputs: type=registry,push=true'
 
-      # - name: Generate data
-      #   id: date
-      #   run: echo "date=$(date +%Y-%m-%d-%Hh%Mm%Ss)" >> $GITHUB_OUTPUT
+      - name: Build and push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ops/frontend.Dockerfile
+          push: true
+          tags: |
+            lunary/frontend:latest
+            lunary/frontend:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
+            ${{ github.event.release.tag_name != '' && format('lunary/frontend:{0}', steps.release_tag.outputs.tag) || '' }}
+          platforms: linux/arm64,linux/amd64
+          outputs: type=registry,push=true'
 
-      # - name: Get short commit hash
-      #   id: commit
-      #   run: echo "hash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+      - name: Build and push radar
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ops/radar.Dockerfile
+          push: true
+          tags: |
+            lunary/radar:latest
+            lunary/radar:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
+            ${{ github.event.release.tag_name != '' && format('lunary/radar:{0}', steps.release_tag.outputs.tag) || '' }}
+          platforms: linux/arm64,linux/amd64
+          outputs: type=registry,push=true'
 
-      # - name: Remove 'v' prefix from release tag
-      #   id: release_tag
-      #   run: echo "tag=$(echo ${{ github.event.release.tag_name }} | sed 's/^v//')" >> $GITHUB_OUTPUT
+      - name: Build and push ml
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ops/ml.Dockerfile
+          push: true
+          tags: |
+            lunary/ml:latest
+            lunary/ml:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
+            ${{ github.event.release.tag_name != '' && format('lunary/ml:{0}', steps.release_tag.outputs.tag) || '' }}
+          platforms: linux/arm64,linux/amd64
+          outputs: type=registry,push=true'
 
-      # - name: Build and push ${{ matrix.service }}
-      #   run: |
-      #     docker buildx build \
-      #       --platform linux/arm64 \
-      #       --tag lunary/${{ matrix.service }}:latest \
-      #       --file ./ops/${{ matrix.service }}.Dockerfile \
-      #       --push .
-
-  # deploy:
-  #   needs: build-and-push
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Deploy to Production
-  #       uses: appleboy/ssh-action@master
-  #       with:
-  #         host: ${{ secrets.PRODUCTION_IP_ADDRESS }}
-  #         username: root
-  #         key: ${{ secrets.SSH_PRIVATE_KEY }}
-  #         port: ${{ secrets.PRODUCTION_PORT }}
-  #         script: |
-  #           docker image prune -f
-  #           cd /opt/lunary
-  #           docker compose pull
-  #           docker compose down
-  #           docker compose up -d
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Production
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.PRODUCTION_IP_ADDRESS }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.PRODUCTION_PORT }}
+          script: |
+            docker image prune -f
+            cd /opt/lunary
+            docker compose pull
+            docker compose down
+            docker compose up -d
