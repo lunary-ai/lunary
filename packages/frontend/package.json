@@ -8,7 +8,6 @@
     "load-env": "bash ./load-env.sh"
   },
   "dependencies": {
-    "@calcom/embed-react": "^1.3.0",
     "@mantine/core": "7.6.2",
     "@mantine/form": "7.6.2",
     "@mantine/hooks": "7.6.2",
