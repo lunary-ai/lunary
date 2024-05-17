@@ -56,6 +56,7 @@ jobs:
           push: true
           tags: lunary/${{ matrix.service }}:latest
           platforms: linux/arm64
+          provenance: false
           outputs: type=registry,push=true
 
   deploy:
