@@ -54,9 +54,7 @@ jobs:
           context: .
           file: ./ops/${{ matrix.service }}.Dockerfile
           push: true
-          tags: |
-            lunary/${{ matrix.service }}:latest
-            lunary/${{ matrix.service }}:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
+          tags: lunary/${{ matrix.service }}:latest
           platforms: linux/arm64,linux/amd64
           outputs: type=registry,push=true
 
