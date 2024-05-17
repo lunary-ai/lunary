@@ -7,6 +7,7 @@ import * as validator from "@authenio/samlify-node-xmllint"
 import { sanitizeEmail } from "./utils"
 import { randomBytes } from "crypto"
 import { SignJWT } from "jose"
+import z from "zod"
 
 // Required for SAMLify to work
 samlify.setSchemaValidator(validator)
@@ -107,10 +108,19 @@ route.get("/metadata", async (ctx: Context) => {
 route.post("/download-idp-xml", async (ctx: Context) => {
   const { orgId } = ctx.params as { orgId: string }
 
-  const { url } = ctx.request.body as { url: string }
+  const bodySchema = z.object({
+    content: z.string().url().or(z.string().min(1)),
+  })
 
-  const response = await fetch(url)
-  const xml = await response.text()
+  const { content } = bodySchema.parse(ctx.request.body)
+
+  let xml = content
+
+  if (content.startsWith("http")) {
+    const response = await fetch(content)
+    const data = await response.text()
+    xml = data
+  }
 
   await sql`update org set saml_idp_xml = ${xml} where id = ${orgId}`
 
