@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest
+    runs-on: github-runner
     strategy:
       matrix:
         service: [backend, radar, ml]
@@ -57,7 +57,7 @@ jobs:
 
   deploy:
     needs: build-and-push
-    runs-on: ubuntu-latest
+    runs-on: github-runner
     steps:
       - name: Deploy to Production
         uses: appleboy/ssh-action@master
@@ -75,7 +75,7 @@ jobs:
 
   build-and-push-frontend:
     needs: deploy
-    runs-on: ubuntu-latest
+    runs-on: github-runner
     steps:
       - name: Check out the private Ops repo
         uses: actions/checkout@v4
