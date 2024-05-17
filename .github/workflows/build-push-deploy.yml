@@ -55,7 +55,7 @@ jobs:
           file: ./ops/${{ matrix.service }}.Dockerfile
           push: true
           tags: lunary/${{ matrix.service }}:latest
-          platforms: linux/arm64,linux/amd64
+          platforms: linux/arm64
           outputs: type=registry,push=true
 
   deploy:
