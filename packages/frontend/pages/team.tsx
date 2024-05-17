@@ -57,6 +57,7 @@ import { SEAT_ALLOWANCE } from "@/utils/pricing"
 import { openUpgrade } from "@/components/layout/UpgradeModal"
 import config from "@/utils/config"
 import RenamableField from "@/components/blocks/RenamableField"
+import errorHandler from "@/utils/errors"
 
 function SAMLConfig() {
   const { org, updateOrg, mutate } = useOrg()
@@ -67,28 +68,26 @@ function SAMLConfig() {
 
   // Check if URL is supplied, if so download the xml
   async function addIdpXml() {
-    let content = idpXml
-
     setIdpLoading(true)
 
-    if (idpXml.startsWith("http")) {
-      await fetcher.post(`/auth/saml/${org?.id}/download-idp-xml`, {
+    const res = await errorHandler(
+      fetcher.post(`/auth/saml/${org?.id}/download-idp-xml`, {
         arg: {
-          url: idpXml,
+          content: idpXml,
         },
-      })
+      }),
+    )
 
+    if (res) {
       notifications.show({
         title: "IDP XML added",
         message: "The IDP XML has been added successfully",
         icon: <IconCheck />,
         color: "green",
       })
-    } else {
-      await updateOrg({ id: org?.id, saml_idp_xml: content })
-    }
 
-    mutate()
+      mutate()
+    }
 
     setIdpLoading(false)
   }

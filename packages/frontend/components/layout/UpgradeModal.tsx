@@ -330,7 +330,7 @@ export function UpgradePlans({
                 <RenderPlanCard
                   planId="scale"
                   variant="default"
-                  color="dark"
+                  color="gray"
                   description="Custom plans for your team's exact needs."
                   price={"Custom"}
                   onClick={() => window.open("https://lunary.ai/schedule")}
