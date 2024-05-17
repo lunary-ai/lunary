@@ -34,6 +34,7 @@ jobs:
           driver: cloud
           endpoint: "lunary/lunary"
           buildkitd-flags: --debug
+          cache-binary: false
 
       - name: Generate data
         id: date
