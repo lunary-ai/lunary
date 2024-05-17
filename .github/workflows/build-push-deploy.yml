@@ -1,4 +1,4 @@
-name: Build Docker Images, Push to Registry, and Deploy to production
+name: Build Docker Images, Push to Registry, and Deploy to Production
 
 on:
   push:
@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [backend, frontend, radar, ml]
+        service: [backend, radar, ml]
     steps:
       - name: Check out the private Ops repo
         uses: actions/checkout@v4
@@ -28,13 +28,8 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-        with:
-          version: "lab:latest"
-          driver: cloud
-          endpoint: "lunary/lunary"
-          buildkitd-flags: --debug
 
-      - name: Generate data
+      - name: Generate date
         id: date
         run: echo "date=$(date +%Y-%m-%d-%Hh%Mm%Ss)" >> $GITHUB_OUTPUT
 
@@ -57,7 +52,8 @@ jobs:
             lunary/${{ matrix.service }}:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
             ${{ github.event.release.tag_name != '' && format('lunary/{0}:{1}', matrix.service, steps.release_tag.outputs.tag) || '' }}
           platforms: linux/arm64,linux/amd64
-          outputs: type=registry,push=true'
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   deploy:
     needs: build-and-push
@@ -76,3 +72,48 @@ jobs:
             docker compose pull
             docker compose down
             docker compose up -d
+
+  build-and-push-frontend:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the private Ops repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          submodules: "recursive"
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Generate date
+        id: date
+        run: echo "date=$(date +%Y-%m-%d-%Hh%Mm%Ss)" >> $GITHUB_OUTPUT
+
+      - name: Get short commit hash
+        id: commit
+        run: echo "hash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Remove 'v' prefix from release tag
+        id: release_tag
+        run: echo "tag=$(echo ${{ github.event.release.tag_name }} | sed 's/^v//')" >> $GITHUB_OUTPUT
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ops/frontend.Dockerfile
+          push: true
+          tags: |
+            lunary/frontend:latest
+            lunary/frontend:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
+            ${{ github.event.release.tag_name != '' && format('lunary/frontend:{0}', steps.release_tag.outputs.tag) || '' }}
+          platforms: linux/arm64,linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
