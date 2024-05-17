@@ -54,7 +54,7 @@ jobs:
             --platform linux/arm64 \ 
             --tag lunary/${{ matrix.service }}:latest \
             --file ./ops/${{ matrix.service }}.Dockerfile \
-            --push .
+            --push
 
   # deploy:
   #   needs: build-and-push
