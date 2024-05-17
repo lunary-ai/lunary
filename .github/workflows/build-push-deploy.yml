@@ -34,27 +34,35 @@ jobs:
           driver: cloud
           endpoint: "lunary/lunary"
           buildkitd-flags: --debug
-          cache-binary: false
 
-      - name: Generate data
-        id: date
-        run: echo "date=$(date +%Y-%m-%d-%Hh%Mm%Ss)" >> $GITHUB_OUTPUT
+      - name: Build and push backend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ops/backend.Dockerfile
+          push: true
+          tags: lunary/backend:test
+          platforms: linux/arm64,linux/amd64
 
-      - name: Get short commit hash
-        id: commit
-        run: echo "hash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+      # - name: Generate data
+      #   id: date
+      #   run: echo "date=$(date +%Y-%m-%d-%Hh%Mm%Ss)" >> $GITHUB_OUTPUT
 
-      - name: Remove 'v' prefix from release tag
-        id: release_tag
-        run: echo "tag=$(echo ${{ github.event.release.tag_name }} | sed 's/^v//')" >> $GITHUB_OUTPUT
+      # - name: Get short commit hash
+      #   id: commit
+      #   run: echo "hash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-      - name: Build and push ${{ matrix.service }}
-        run: |
-          docker buildx build \
-            --platform linux/arm64 \ 
-            --tag lunary/${{ matrix.service }}:latest \
-            --file ./ops/${{ matrix.service }}.Dockerfile \
-            --push .
+      # - name: Remove 'v' prefix from release tag
+      #   id: release_tag
+      #   run: echo "tag=$(echo ${{ github.event.release.tag_name }} | sed 's/^v//')" >> $GITHUB_OUTPUT
+
+      # - name: Build and push ${{ matrix.service }}
+      #   run: |
+      #     docker buildx build \
+      #       --platform linux/arm64 \
+      #       --tag lunary/${{ matrix.service }}:latest \
+      #       --file ./ops/${{ matrix.service }}.Dockerfile \
+      #       --push .
 
   # deploy:
   #   needs: build-and-push
