@@ -10,7 +10,7 @@ permissions:
 jobs:
   pull-request:
     if: github.ref_type != 'tag'
-    runs-on: github-runner
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
 

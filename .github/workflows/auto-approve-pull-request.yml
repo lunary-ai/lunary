@@ -6,7 +6,7 @@ on:
 
 jobs:
   auto-approve:
-    runs-on: github-runner
+    runs-on: self-hosted
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
