@@ -23,8 +23,6 @@ import {
 
 import Confetti from "react-confetti"
 
-import Cal, { getCalApi } from "@calcom/embed-react"
-
 import { useForm } from "@mantine/form"
 import { notifications } from "@mantine/notifications"
 import {
@@ -46,6 +44,7 @@ import { fetcher } from "@/utils/fetcher"
 import { NextSeo } from "next-seo"
 import { useAuth } from "@/utils/auth"
 import config from "@/utils/config"
+import Script from "next/script"
 
 function getRandomizedChoices() {
   const choices = [
@@ -87,7 +86,8 @@ function SignupPage() {
 
     validate: {
       email: (val) => (/^\S+@\S+$/.test(val) ? null : "Invalid email"),
-      name: (val) => (val.length <= 2 ? "Is your name that short :) ?" : null),
+      name: (val) =>
+        val.length <= 2 ? "Is your name really that short? :)" : null,
       projectName: (val) =>
         val.length <= 3 ? "Can you pick something longer?" : null,
       orgName: (val) =>
@@ -203,11 +203,20 @@ function SignupPage() {
   useEffect(() => {
     if (step === 3) {
       ;(async function () {
-        const Cal = await getCalApi()
-        Cal("ui", {
-          styles: { branding: { brandColor: "#000000" } },
-          hideEventTypeDetails: true,
-          layout: "month_view",
+        window.SavvyCal =
+          window.SavvyCal ||
+          function () {
+            ;(SavvyCal.q = SavvyCal.q || []).push(arguments)
+          }
+        SavvyCal("init")
+        SavvyCal("inline", {
+          link: "vince/chat",
+          selector: "#booking-page",
+          email: form.values.email,
+          displayName: form.values.name,
+          hideAvatar: true,
+          hideBanner: true,
+          theme: "os",
         })
       })()
     }
@@ -218,6 +227,8 @@ function SignupPage() {
   return (
     <Container size={step === 3 ? 1200 : 800} mih="60%">
       <NextSeo title="Sign Up" />
+
+      <Script async src="https://embed.savvycal.com/v1/embed.js" />
 
       <Stack align="center" gap={50}>
         {step < 3 && (
@@ -341,7 +352,7 @@ function SignupPage() {
 
                           <Select
                             label="Where did you find us?"
-                            description="This helps us focus our efforts"
+                            description="This helps us focus our efforts :)"
                             placeholder="Select an option"
                             data={choices}
                             {...form.getInputProps("whereFindUs")}
@@ -449,7 +460,7 @@ function SignupPage() {
                     We'd love to understand your use-case and help you directly
                     with the integration.
                   </Text>
-                  <Cal
+                  {/* <Cal
                     // namespace="lunary"
                     calLink="vincelwt/lunary"
                     className="calcom-embed"
@@ -459,13 +470,15 @@ function SignupPage() {
                       name: form.values.name,
                       email: form.values.email,
                     }}
-                  />
+                  /> */}
+                  <div id="booking-page" />
+
                   <Button
                     onClick={() => {
                       // use this to refresh properly
                       window.location.href = "/"
                     }}
-                    variant="subtle"
+                    variant="default"
                     rightSection={<IconArrowRight size={16} />}
                     size="md"
                   >
@@ -526,14 +539,9 @@ function SignupPage() {
         )}
       </Stack>
       <style jsx global>{`
-        .calcom-embed {
-          height: 470px;
-          width: 100%;
-          overflow: auto;
-        }
-
-        iframe main > div > span {
-          display: none !important;
+        #booking-page {
+          width: 1200px;
+          max-width: 90vw;
         }
       `}</style>
     </Container>
