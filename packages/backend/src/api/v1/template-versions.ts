@@ -52,14 +52,27 @@ versions.get("/latest", async (ctx: Context) => {
 })
 
 versions.get("/:id", async (ctx: Context) => {
+  const { id: versionId } = ctx.params
+  const { projectId } = ctx.state
+
   const [version] = await sql`
-    select * from template_version where id = ${ctx.params.id}
+    select
+      tv.*
+    from
+      template_version tv
+      left join template t on tv.template_id = t.id
+      left join project p on t.project_id = p.id and p.id = ${projectId}
+    where
+      tv.id = ${versionId}
   `
+  if (!version) {
+    ctx.throw(401, "You do not have access to this ressource.")
+  }
 
   version.extra = unCamelObject(version.extra)
 
   const [template] = await sql`
-    select * from template where project_id = ${ctx.state.projectId} and id = ${version.templateId}
+    select * from template where project_id = ${projectId} and id = ${version.templateId}
   `
 
   ctx.body = { ...version, template }
