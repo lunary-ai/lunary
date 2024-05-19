@@ -57,15 +57,14 @@ versions.get("/:id", async (ctx: Context) => {
 
   const [version] = await sql`
     select
-      *
+      tv.*
     from
       template_version tv
       left join template t on tv.template_id = t.id
       left join project p on t.project_id = p.id and p.id = ${projectId}
     where
-      id = ${versionId}
+      tv.id = ${versionId}
   `
-
   if (!version) {
     ctx.throw(401, "You do not have access to this ressource.")
   }
