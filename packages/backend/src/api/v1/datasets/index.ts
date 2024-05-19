@@ -21,33 +21,28 @@ datasets.get("/", checkAccess("datasets", "list"), async (ctx: Context) => {
   ctx.body = rows
 })
 
-// Can be public route
-datasets.get(
-  "/:identifier",
-  // checkAccess("datasets", "read"),
-  async (ctx: Context) => {
-    const { projectId } = ctx.state
-    const { identifier } = ctx.params
+datasets.get("/:identifier", async (ctx: Context) => {
+  const { projectId } = ctx.state
+  const { identifier } = ctx.params
 
-    const isUUID = validateUUID(identifier)
+  const isUUID = validateUUID(identifier)
 
-    if (isUUID) {
-      // For frontend
-      const datasetId = identifier
-      const dataset = await getDatasetById(datasetId, projectId)
+  if (isUUID) {
+    // For frontend
+    const datasetId = identifier
+    const dataset = await getDatasetById(datasetId, projectId)
 
-      ctx.body = dataset
-      return
-    } else {
-      // For SDK
-      const slug = identifier
-      const dataset = await getDatasetBySlug(slug, projectId)
+    ctx.body = dataset
+    return
+  } else {
+    // For SDK
+    const slug = identifier
+    const dataset = await getDatasetBySlug(slug, projectId)
 
-      ctx.body = dataset
-      return
-    }
-  },
-)
+    ctx.body = dataset
+    return
+  }
+})
 
 const DEFAULT_PROMPT = {
   chat: [
@@ -81,7 +76,6 @@ datasets.post("/", checkAccess("datasets", "create"), async (ctx: Context) => {
     })} returning *
   `
 
-  // insert 1 prompt and 1 variation
   const [prompt] = await sql`insert into dataset_prompt
     ${sql({
       datasetId: dataset.id,
@@ -124,16 +118,15 @@ datasets.delete(
   "/:id",
   checkAccess("datasets", "delete"),
   async (ctx: Context) => {
-    const { id } = ctx.params
+    const { id: datasetId } = ctx.params
     const { projectId } = ctx.state
 
-    await sql`delete from dataset where id = ${id} and project_id = ${projectId}`
+    await sql`delete from dataset where id = ${datasetId} and project_id = ${projectId}`
 
     ctx.status = 200
   },
 )
 
-// Create prompt
 datasets.post(
   "/prompts",
   checkAccess("datasets", "update"),
@@ -157,21 +150,20 @@ datasets.post(
     returning *
   `
 
-    // insert 1 variation
-    await sql`insert into dataset_prompt_variation
-    ${sql({
-      promptId: prompt.id,
-      variables: {},
-      idealOutput: idealOutput ? lastMsg(idealOutput) : "",
-    })}
-    returning *
-  `
+    await sql`
+      insert into dataset_prompt_variation
+        ${sql({
+          promptId: prompt.id,
+          variables: {},
+          idealOutput: idealOutput ? lastMsg(idealOutput) : "",
+        })}
+      returning *
+    `
 
     ctx.body = prompt
   },
 )
 
-// return array of prompts and variations
 datasets.get(
   "/prompts/:id",
   checkAccess("datasets", "read"),
@@ -179,11 +171,11 @@ datasets.get(
     const { id } = ctx.params as { id: string }
 
     const [prompt] = await sql`
-    select * from dataset_prompt where id = ${id} order by created_at asc
+      select * from dataset_prompt where id = ${id} order by created_at asc
     `
 
     const variations = await sql`
-    select * from dataset_prompt_variation where prompt_id = ${id} order by created_at asc
+      select * from dataset_prompt_variation where prompt_id = ${id} order by created_at asc
     `
 
     prompt.variations = variations
@@ -192,21 +184,35 @@ datasets.get(
   },
 )
 
-// add route ot to delete dataset_prompt and dataset_prompt_variation
 datasets.delete(
   "/prompts/:id",
   checkAccess("datasets", "update"),
   async (ctx: Context) => {
-    const { id } = ctx.params
+    const { id: promptId } = ctx.params
 
-    await sql`delete from dataset_prompt where id = ${id}`
-    await sql`delete from dataset_prompt_variation where prompt_id = ${id}`
+    const [datasetPrompt] = await sql`
+      select
+        *
+      from
+        dataset_prompt dp
+        left join dataset d on dp.dataset_id = d.id
+        left join project p on d.project_id = p.id
+      where
+        p.org_id = ${ctx.state.orgId} 
+        and dp.id = ${promptId}
+    `
+
+    if (!datasetPrompt) {
+      ctx.throw(401, "You do not have access to this ressource.")
+    }
+
+    await sql`delete from dataset_prompt where id = ${promptId}`
+    await sql`delete from dataset_prompt_variation where prompt_id = ${promptId}`
 
     ctx.status = 200
   },
 )
 
-// Update prompt
 datasets.patch(
   "/prompts/:id",
   checkAccess("datasets", "update"),
@@ -245,15 +251,30 @@ datasets.delete(
   "/variations/:id",
   checkAccess("datasets", "update"),
   async (ctx: Context) => {
-    const { id } = ctx.params
+    const { id: variationId } = ctx.params
 
-    await sql`delete from dataset_prompt_variation where id = ${id}`
+    const [promptVariation] = await sql`
+      select
+        *
+      from
+        dataset_prompt_variation dpv
+        left join dataset_prompt dp on dpv.prompt_id = dp.id
+        left join dataset d on dp.dataset_id = d.id
+        left join project p on d.project_id = p.id
+      where
+        p.org_id = ${ctx.state.orgId} 
+        and dpv.id = ${variationId}
+    `
+    if (!promptVariation) {
+      ctx.throw(401, "You do not have access to this ressource.")
+    }
+
+    await sql`delete from dataset_prompt_variation where id = ${variationId}`
 
     ctx.status = 200
   },
 )
 
-// Update variation
 datasets.patch(
   "/variations/:variationId",
   checkAccess("datasets", "update"),
@@ -279,7 +300,6 @@ datasets.patch(
   },
 )
 
-// Create variation
 datasets.post(
   "/variations",
   checkAccess("datasets", "update"),
@@ -291,15 +311,15 @@ datasets.post(
     }
 
     const [variation] = await sql`insert into dataset_prompt_variation
-  ${sql(
-    clearUndefined({
-      promptId,
-      variables,
-      idealOutput,
-    }),
-  )}
-  returning *
-  `
+      ${sql(
+        clearUndefined({
+          promptId,
+          variables,
+          idealOutput,
+        }),
+      )}
+      returning *
+    `
 
     ctx.body = variation
   },
