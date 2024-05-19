@@ -183,9 +183,21 @@ users.post("/", checkAccess("teamMembers", "create"), async (ctx: Context) => {
     select name, plan from org where id = ${orgId}
   `
 
+  if (
+    role !== "member" &&
+    role !== "admin" &&
+    (org.plan === "free" || org.plan === "pro")
+  ) {
+    ctx.throw(
+      401,
+      "Your plan doesn't allow you to access granular access control.",
+    )
+  }
+
   const [orgUserCountResult] = await sql`
     select count(*) from account where org_id = ${orgId}
   `
+
   const orgUserCount = orgUserCountResult.count
 
   const token = await signJWT({ email, orgId }, FIFTEEN_DAYS)
