@@ -32,7 +32,7 @@ async function getRadarRuns(radar: any) {
   // get more recent runs first
   return await sql`
     select 
-      * 
+      run.* 
     from 
       run
       left join radar_result on run.id = radar_result.run_id
