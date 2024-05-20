@@ -16,13 +16,15 @@
     "dev:radar": "npm -w packages/backend run dev:radar",
     "dev:withradar": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\" \"npm run start:ml\" \"npm run dev:radar\"",
     "test": "npx playwright test",
-    "test:ui": "npx playwright test --ui"
+    "test:ui": "npx playwright test --ui",
+    "postinstall": "npx patch-package"
   },
   "workspaces": [
     "packages/*"
   ],
   "dependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "patch-package": "^8.0.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.42.1",

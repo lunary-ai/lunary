@@ -20,3 +20,5 @@ jobs:
           author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
           title: "PR for new branch: ${{ github.ref_name }}"
           body: "Automatically created pull request for the branch ${{ github.ref_name }}."
+          base: main
+          branch: ${{ github.ref_name }}
