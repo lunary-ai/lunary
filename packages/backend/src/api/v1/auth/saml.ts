@@ -76,22 +76,35 @@ export async function getLoginUrl(orgId: string) {
   return context
 }
 
-function parseAttributes(attributes: any) {
-  let email = ""
+// This function parses the attributes from the SAML response
+// and returns the email and name
+function parseAttributes(attributes: any, nameID: string) {
+  let email = nameID
   let name = ""
 
   for (const key in attributes) {
-    if (key.toLowerCase().includes("emailaddress")) {
+    if (
+      key.toLowerCase().includes("emailaddress") ||
+      key.toLowerCase() === "email"
+    ) {
       email = sanitizeEmail(attributes[key])
-    } else if (key.toLowerCase().includes("displayname")) {
+    } else if (
+      key.toLowerCase().includes("displayname") ||
+      key.toLowerCase() === "name"
+    ) {
       name = attributes[key]
     }
   }
 
+  if (!name && attributes.firstname && attributes.lastname) {
+    name = `${attributes.firstname} ${attributes.lastname}`
+  }
+
   return { email, name }
 }
+
 route.get("/success", async (ctx: Context) => {
-  const { orgId } = ctx.params as { orgId: string }
+  // const { orgId } = ctx.params as { orgId: string }
 
   ctx.redirect(process.env.APP_URL!)
 })
@@ -137,7 +150,7 @@ route.post("/acs", async (ctx: Context) => {
 
   const parsedResult = await sp.parseLoginResponse(idp, "post", ctx.request)
 
-  const { attributes, conditions } = parsedResult.extract
+  const { attributes, conditions, nameID } = parsedResult.extract
 
   if (!attributes) {
     ctx.throw(400, "No attributes found")
@@ -153,7 +166,7 @@ route.post("/acs", async (ctx: Context) => {
     }
   }
 
-  const { email, name } = parseAttributes(attributes)
+  const { email, name } = parseAttributes(attributes, nameID)
 
   const singleUseToken = await generateOneTimeToken()
 
@@ -172,8 +185,8 @@ route.post("/acs", async (ctx: Context) => {
 })
 
 route.post("/slo", async (ctx: Context) => {
-  const { orgId } = ctx.params as { orgId: string }
-  ctx.body = "SAML SLO received for orgId: " + orgId
+  // const { orgId } = ctx.params as { orgId: string }
+  ctx.body = "SAML SLO"
 })
 
 export default route
