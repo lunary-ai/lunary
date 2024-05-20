@@ -1,0 +1,29 @@
+diff --git a/node_modules/postgres/cjs/src/types.js b/node_modules/postgres/cjs/src/types.js
+index 0578284..5b54dbf 100644
+--- a/node_modules/postgres/cjs/src/types.js
++++ b/node_modules/postgres/cjs/src/types.js
+@@ -317,15 +317,21 @@ function arrayParserLoop(s, x, parser, typarray) {
+ 
+ const toCamel = module.exports.toCamel = x => {
+   let str = x[0]
+-  for (let i = 1; i < x.length; i++)
+-    str += x[i] === '_' ? x[++i].toUpperCase() : x[i]
++  for (let i = 1; i < x.length; i++) {
++    if (x[i] === "_" && i + 1 === x.length) {
++      str += "_"
++      i++
++    } else {
++      str += x[i] === "_" ? x[++i].toUpperCase() : x[i]
++    }
++  }
+   return str
+ }
+ 
+ const toPascal = module.exports.toPascal = x => {
+   let str = x[0].toUpperCase()
+   for (let i = 1; i < x.length; i++)
+-    str += x[i] === '_' ? x[++i].toUpperCase() : x[i]
++    str += x[i] === '_' ? x[++i]?.toUpperCase() : x[i]
+   return str
+ }
+ 
