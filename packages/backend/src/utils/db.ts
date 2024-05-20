@@ -7,7 +7,6 @@ const sql = postgres(process.env.DATABASE_URL!, {
   max_lifetime: 60 * 5,
   transform: {
     ...postgres.camel,
-
     undefined: null,
   },
   max: isProduction ? 50 : 5,

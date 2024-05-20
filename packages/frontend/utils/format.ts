@@ -55,8 +55,8 @@ export function capitalize(s) {
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
-export const cleanSlug = (text: string): string =>
-  text
+export function cleanSlug(text: string): string {
+  return text
     .toString()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -65,9 +65,10 @@ export const cleanSlug = (text: string): string =>
     .replace(/\s+/g, "-")
     .replace(/[^\w-]+/g, "")
     .replace(/--+/g, "-")
+}
 
-export const formatCompactFromNow = (date) =>
-  formatDistanceToNow(date, {
+export function formatCompactFromNow(date) {
+  return formatDistanceToNow(date, {
     addSuffix: true,
   })
     .replace("less than", "<")
@@ -75,3 +76,4 @@ export const formatCompactFromNow = (date) =>
     .replace("minute", "min")
     .replace(" hours", "h")
     .replace(" hour", "h")
+}
