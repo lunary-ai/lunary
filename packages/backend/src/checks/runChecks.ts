@@ -48,7 +48,7 @@ async function sqlEval(sqlFragment: any, run: any): Promise<boolean> {
 
     // run the sql fragment and see if it returns any rows
     sqlFragment.isTempRun = true
-    const [result] = await tx`select * from temp_run where ${sqlFragment}`
+    const [result] = await tx`select * from temp_run r where ${sqlFragment}`
     passed = !!result
   })
   return passed
