@@ -1,11 +1,12 @@
 name: Build Docker Images, Push to Registry, and Deploy to Production
 
 on:
-  push:
-    branches:
-      - main
-  release:
-    types: [published]
+  push
+  # push:
+  #   branches:
+  #     - main
+  # release:
+  #   types: [published]
 
 jobs:
   build-and-push:
@@ -28,6 +29,10 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          version: "lab:latest"
+          driver: cloud
+          endpoint: "lunary/lunary"
 
       - name: Generate date
         id: date
@@ -91,6 +96,10 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          version: "lab:latest"
+          driver: cloud
+          endpoint: "lunary/lunary"
 
       - name: Generate date
         id: date
