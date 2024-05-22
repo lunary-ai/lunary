@@ -14,6 +14,7 @@ import runs from "./runs/index"
 import templateVersions from "./template-versions"
 import templates from "./templates"
 import users from "./users"
+import evaluators from "./evaluator"
 
 const v1 = new Router({
   prefix: "/v1",
@@ -36,6 +37,7 @@ v1.use(orgs.routes())
 v1.use(users.routes())
 v1.use(projects.routes())
 v1.use(runs.routes())
+v1.use(evaluators.routes())
 v1.use(datasets.routes())
 v1.use(radars.routes())
 v1.use(templates.routes())
