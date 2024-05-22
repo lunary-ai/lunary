@@ -68,7 +68,6 @@ jobs:
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.PRODUCTION_IP_ADDRESS }}
-
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.PRODUCTION_PORT }}
