@@ -1,9 +1,11 @@
-import AgentSummary from "@/components/analytics/AgentSummary"
 import AnalyticsCard from "@/components/analytics/AnalyticsCard"
 import BarList from "@/components/analytics/BarList"
 import LineChart from "@/components/analytics/LineChart"
 import UsageSummary from "@/components/analytics/UsageSummary"
 import { formatAppUser, formatCost } from "@/utils/format"
+import { DatePickerInput } from "@mantine/dates"
+import CheckPicker from "@/components/checks/Picker"
+import "@mantine/dates/styles.css"
 
 import AppUserAvatar from "@/components/blocks/AppUserAvatar"
 import Empty from "@/components/layout/Empty"
@@ -21,14 +23,17 @@ import {
   Group,
   Loader,
   SegmentedControl,
+  Select,
   SimpleGrid,
   Stack,
   Text,
   Title,
 } from "@mantine/core"
 import { useLocalStorage } from "@mantine/hooks"
-import { IconChartAreaLine } from "@tabler/icons-react"
+import { IconCalendar, IconChartAreaLine } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
+import { useState } from "react"
+import { CheckLogic } from "shared"
 
 const calculateDailyCost = (usage) => {
   // calculate using calcRunCost, reduce by model, and filter by type llm
@@ -57,8 +62,13 @@ export default function Analytics() {
     defaultValue: 7,
   })
 
+  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
+    null,
+    null,
+  ])
+  const [filters, setFilters] = useState<CheckLogic>(["AND"])
+
   const { project } = useProject()
-  const { org } = useOrg()
 
   const { usage, loading: usageLoading } = useRunsUsage(range)
 
@@ -85,9 +95,35 @@ export default function Analytics() {
       <Container size="lg" my="lg">
         <NextSeo title="Analytics" />
         <Stack gap="lg">
-          <Group justify="space-between">
-            <Title order={2}>Analytics</Title>
-            <SegmentedControl
+          <Title order={2}>Analytics</Title>
+          <Group>
+            <Group>
+              <DatePickerInput
+                leftSection={<IconCalendar size={18} stroke={1.5} />}
+                leftSectionPointerEvents="none"
+                type="range"
+                w={300}
+                maxDate={new Date()}
+                size="xs"
+                placeholder="Pick dates range"
+                value={dateRange}
+                onChange={setDateRange}
+              />
+            </Group>
+
+            <CheckPicker
+              minimal
+              onChange={setFilters}
+              value={filters}
+              restrictTo={(filter) =>
+                // Only show these for now to not confuse the user with too many options
+                ["type", "tags", "model", "users", "metadata"].includes(
+                  filter.id,
+                )
+              }
+            />
+
+            {/* <SegmentedControl
               w={300}
               value={range.toString()}
               onChange={(val) => setRange(parseInt(val))}
@@ -97,14 +133,14 @@ export default function Analytics() {
                 { label: "30D", value: "30" },
                 { label: "90D", value: "90" },
               ]}
-            />
+            /> */}
           </Group>
 
-          <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
             {usage && (
               <>
                 <UsageSummary usage={usage} />
-                <AgentSummary usage={usage} />
+                {/* <AgentSummary usage={usage} /> */}
               </>
             )}
 
@@ -201,7 +237,7 @@ export default function Analytics() {
                 props={["cost"]}
               />
 
-              <LineChart
+              {/* <LineChart
                 range={range}
                 title="Agents"
                 height={230}
@@ -213,43 +249,39 @@ export default function Analytics() {
                     runs: p.success + p.errors,
                   }))}
                 props={["runs"]}
+              /> */}
+
+              <LineChart
+                blocked={true}
+                props={["users"]}
+                range={range}
+                title="Avg User Cost"
+                height={230}
               />
 
-              {org?.plan === "free" && (
-                <>
-                  <LineChart
-                    blocked={true}
-                    props={["users"]}
-                    range={range}
-                    title="Avg User Cost"
-                    height={230}
-                  />
+              <LineChart
+                blocked={true}
+                range={range}
+                props={["users"]}
+                title="Errors over time"
+                height={230}
+              />
 
-                  <LineChart
-                    blocked={true}
-                    range={range}
-                    props={["users"]}
-                    title="Errors over time"
-                    height={230}
-                  />
+              <LineChart
+                blocked={true}
+                range={range}
+                props={["users"]}
+                title="Avg latency"
+                height={230}
+              />
 
-                  <LineChart
-                    blocked={true}
-                    range={range}
-                    props={["users"]}
-                    title="Avg latency"
-                    height={230}
-                  />
-
-                  <LineChart
-                    blocked={true}
-                    range={range}
-                    props={["users"]}
-                    title="Positive feedback"
-                    height={230}
-                  />
-                </>
-              )}
+              <LineChart
+                blocked={true}
+                range={range}
+                props={["users"]}
+                title="Positive feedback"
+                height={230}
+              />
             </>
           )}
         </Stack>
