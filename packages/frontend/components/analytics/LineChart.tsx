@@ -4,6 +4,8 @@ import {
   Button,
   Card,
   Center,
+  Tooltip as MantineTooltip,
+  Group,
   Overlay,
   Text,
   Title,
@@ -18,7 +20,7 @@ import {
 } from "recharts"
 
 import { formatLargeNumber } from "@/utils/format"
-import { IconBolt } from "@tabler/icons-react"
+import { IconBolt, IconInfoCircle } from "@tabler/icons-react"
 import { eachDayOfInterval, format, parseISO } from "date-fns"
 import { Fragment } from "react"
 import ErrorBoundary from "../blocks/ErrorBoundary"
@@ -124,6 +126,32 @@ const CustomizedAxisTick = ({ x, y, payload, index, data }) => {
   )
 }
 
+type LineChartProps = {
+  data: any[]
+  title: string | JSX.Element
+  props: string[]
+  blocked: boolean
+  formatter?: (value: number) => string
+  height?: number
+  splitBy?: string
+  description?: string
+  range: number
+  agg: string
+  chartExtra?: JSX.Element
+}
+
+function getFigure(agg: string, data: any[], prop: string) {
+  if (agg === "sum") {
+    return data.reduce((acc, item) => acc + item[prop], 0)
+  } else if (agg === "avg") {
+    return data.reduce((acc, item) => acc + item[prop], 0) / data.length
+  } else if (agg === "max") {
+    return data.reduce((acc, item) => Math.max(acc, item[prop]), 0)
+  } else if (agg === "min") {
+    return data.reduce((acc, item) => Math.min(acc, item[prop]), 0)
+  }
+}
+
 const LineChartComponent = ({
   data,
   title,
@@ -131,10 +159,12 @@ const LineChartComponent = ({
   blocked,
   formatter = formatLargeNumber,
   height = 300,
+  description,
   splitBy = undefined,
   range,
+  agg,
   chartExtra,
-}) => {
+}: LineChartProps) => {
   const colors = ["blue", "pink", "indigo", "green", "violet", "yellow"]
 
   const cleanedData = prepareDataForRecharts(
@@ -149,17 +179,34 @@ const LineChartComponent = ({
     : cleanedData?.length &&
       (splitBy ? Object.keys(cleanedData[0]).length > 1 : data?.length)
 
+  const total = getFigure(agg, cleanedData, props[0])
+
   return (
     <Card withBorder p={0} className="lineChart" radius="md">
-      {typeof title === "string" ? (
-        <Text c="dimmed" tt="uppercase" fw={700} fz="xs" m="md">
-          {title}
+      <Group gap="xs">
+        {typeof title === "string" ? (
+          <Text c="dimmed" fw={50} fz="md" m="md" mr={0}>
+            {title}
+          </Text>
+        ) : (
+          <Box m="lg" mb="sm">
+            {title}
+          </Box>
+        )}
+
+        {description && (
+          <MantineTooltip label={description}>
+            <IconInfoCircle size={16} opacity={0.5} />
+          </MantineTooltip>
+        )}
+      </Group>
+
+      {!!total && (
+        <Text fw={500} fz={24} mt={-12} ml="md">
+          {total}
         </Text>
-      ) : (
-        <Box m="lg" mb="sm">
-          {title}
-        </Box>
       )}
+
       <Box mt="sm" pos="relative">
         {blocked && (
           <>
@@ -282,7 +329,7 @@ const LineChartComponent = ({
               Object.keys(cleanedData[0])
                 .filter((prop) => prop !== "date")
                 .map((prop, i) => (
-                  <Fragment key={props}>
+                  <Fragment key={prop}>
                     <defs key={prop}>
                       <linearGradient
                         color={theme.colors[colors[i % colors.length]][6]}
@@ -332,7 +379,7 @@ const LineChartComponent = ({
   )
 }
 
-const LineChart = (props) => (
+const LineChart = (props: LineChartProps) => (
   <ErrorBoundary>
     <LineChartComponent {...props} />
   </ErrorBoundary>

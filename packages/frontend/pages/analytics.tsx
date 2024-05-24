@@ -11,31 +11,33 @@ import AppUserAvatar from "@/components/blocks/AppUserAvatar"
 import Empty from "@/components/layout/Empty"
 import {
   useAppUsers,
-  useOrg,
   useProject,
   useRunsUsage,
   useRunsUsageByDay,
 } from "@/utils/dataHooks"
 import {
   Anchor,
+  Button,
   Center,
   Container,
   Group,
-  Input,
-  InputWrapper,
   Loader,
-  SegmentedControl,
   Select,
   SimpleGrid,
   Stack,
   Text,
   Title,
 } from "@mantine/core"
-import { useLocalStorage } from "@mantine/hooks"
-import { IconCalendar, IconChartAreaLine } from "@tabler/icons-react"
+import { useDidUpdate, useLocalStorage } from "@mantine/hooks"
+import {
+  IconCalendar,
+  IconChartAreaLine,
+  IconFilter,
+} from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { useEffect, useState } from "react"
-import { CheckLogic } from "shared"
+import { CheckLogic, deserializeLogic, serializeLogic } from "shared"
+import { useRouter } from "next/router"
 
 const calculateDailyCost = (usage) => {
   // calculate using calcRunCost, reduce by model, and filter by type llm
@@ -64,14 +66,16 @@ export default function Analytics() {
     defaultValue: 7,
   })
 
+  const router = useRouter()
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
     null,
     null,
   ])
-  const [filters, setFilters] = useState<CheckLogic>(["AND"])
+  const [checks, setChecks] = useState<CheckLogic>(["AND"])
+  const [serializedChecks, setSerializedChecks] = useState<string>("")
   const [granularity, setGranularity] = useState<"hour" | "day" | "week">("day")
   const [predefinedRange, setPredefinedRange] = useState("7d")
-
+  const [showCheckBar, setShowCheckBar] = useState(false)
   const { project } = useProject()
 
   const { usage, loading: usageLoading } = useRunsUsage(range)
@@ -118,6 +122,37 @@ export default function Analytics() {
     editRange("7d")
   }, [])
 
+  useDidUpdate(() => {
+    let serialized = serializeLogic(checks)
+
+    if (typeof serialized === "string") {
+      setSerializedChecks(serialized)
+      router.replace(`/analytics?${serialized}`)
+    }
+  }, [checks])
+
+  useEffect(() => {
+    // restore filters and selected log from query params
+    try {
+      const urlParams = new URLSearchParams(window.location.search)
+
+      const paramString = urlParams.toString()
+      if (paramString) {
+        const filtersData = deserializeLogic(paramString)
+        if (filtersData) {
+          setChecks(filtersData)
+        }
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }, [])
+
+  const showBar =
+    showCheckBar ||
+    checks.filter((f) => f !== "AND" && !["search", "type"].includes(f.id))
+      .length > 0
+
   if (loading)
     return (
       <Center h="60vh">
@@ -133,11 +168,12 @@ export default function Analytics() {
       showProjectId
       enable={!loading && !project?.activated}
     >
-      <Container size="lg" my="lg">
+      <Container size="xl" my="lg">
         <NextSeo title="Analytics" />
         <Stack gap="lg">
           <Title order={2}>Overview</Title>
-          <Group>
+
+          <Group gap="xs">
             <Group gap={0}>
               <Select
                 w={100}
@@ -230,10 +266,24 @@ export default function Analytics() {
               ]}
             />
 
+            {!showBar && (
+              <Button
+                variant="subtle"
+                onClick={() => setShowCheckBar(true)}
+                leftSection={<IconFilter size={12} />}
+                size="xs"
+              >
+                Add filters
+              </Button>
+            )}
+          </Group>
+
+          {showBar && (
             <CheckPicker
               minimal
-              onChange={setFilters}
-              value={filters}
+              onChange={setChecks}
+              defaultOpened={showCheckBar}
+              value={checks}
               restrictTo={(filter) =>
                 // Only show these for now to not confuse the user with too many options
                 ["type", "tags", "model", "users", "metadata"].includes(
@@ -241,35 +291,14 @@ export default function Analytics() {
                 )
               }
             />
-
-            {/* <SegmentedControl
-              w={300}
-              value={range.toString()}
-              onChange={(val) => setRange(parseInt(val))}
-              data={[
-                { label: "24H", value: "1" },
-                { label: "7D", value: "7" },
-                { label: "30D", value: "30" },
-                { label: "90D", value: "90" },
-              ]}
-            /> */}
-          </Group>
+          )}
 
           <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-            {usage && (
-              <>
-                <UsageSummary usage={usage} />
-                {/* <AgentSummary usage={usage} /> */}
-              </>
-            )}
+            {usage && <UsageSummary usage={usage} />}
 
             {users && (
-              <AnalyticsCard title="Users">
+              <AnalyticsCard title="Top Users">
                 <BarList
-                  customMetric={{
-                    label: "users",
-                    value: users.length,
-                  }}
                   filterZero={false}
                   data={users
                     .sort((a, b) => a.cost - b.cost)
@@ -329,80 +358,115 @@ export default function Analytics() {
                 />
               </AnalyticsCard>
             )}
+
+            {dailyUsage && (
+              <>
+                <LineChart
+                  title="LLM Costs"
+                  range={range}
+                  height={230}
+                  splitBy="name"
+                  formatter={formatCost}
+                  data={calculateDailyCost(dailyUsage)}
+                  agg="sum"
+                  props={["cost"]}
+                />
+
+                <LineChart
+                  blocked={true}
+                  range={range}
+                  props={["users"]}
+                  agg="sum"
+                  title="New Users"
+                  height={230}
+                />
+
+                <LineChart
+                  blocked={true}
+                  range={range}
+                  props={["users"]}
+                  agg="sum"
+                  title="Runs Volume"
+                  height={230}
+                />
+
+                <LineChart
+                  range={range}
+                  title="Tokens"
+                  height={230}
+                  splitBy="name" // split by model
+                  data={dailyUsage
+                    .filter((u) => u.type === "llm")
+                    .map((p) => ({
+                      ...p,
+                      tokens: p.completionTokens + p.promptTokens,
+                    }))}
+                  agg="sum"
+                  props={["tokens"]}
+                />
+
+                <LineChart
+                  blocked={true}
+                  props={["cost"]}
+                  range={range}
+                  title="Avg. Cost per User"
+                  description="Average cost per user from their LLM usage"
+                  agg="avg"
+                  height={230}
+                />
+
+                <LineChart
+                  blocked={true}
+                  range={range}
+                  props={["errors"]}
+                  title="Errors Volume"
+                  description="How many errors were captured in your app"
+                  agg="sum"
+                  height={230}
+                />
+
+                <LineChart
+                  blocked={true}
+                  range={range}
+                  props={["seconds"]}
+                  title="Avg. LLM Latency"
+                  description="Average time it takes to generate a response for your LLMs"
+                  agg="avg"
+                  height={230}
+                />
+
+                <LineChart
+                  blocked={true}
+                  range={range}
+                  props={["users"]}
+                  title="Thumbs up/down ratio"
+                  description="Visualize the thumbs up/down ratio for your data"
+                  agg="avg"
+                  height={230}
+                />
+
+                <LineChart
+                  blocked={true}
+                  range={range}
+                  props={["messages"]}
+                  description="How many messages were sent per threads or conversation (need chat-tracking to be enabled)"
+                  title="Avg. Messages per Conversation"
+                  agg="avg"
+                  height={230}
+                />
+
+                <LineChart
+                  blocked={true}
+                  range={range}
+                  props={["template"]}
+                  description="How many times prompt templates were used for LLM calls"
+                  title="Prompt Templates Usage"
+                  agg="sum"
+                  height={230}
+                />
+              </>
+            )}
           </SimpleGrid>
-
-          {dailyUsage && (
-            <>
-              <LineChart
-                range={range}
-                title="Tokens"
-                height={230}
-                splitBy="name"
-                data={dailyUsage
-                  .filter((u) => u.type === "llm")
-                  .map((p) => ({
-                    ...p,
-                    tokens: p.completionTokens + p.promptTokens,
-                  }))}
-                props={["tokens"]}
-              />
-
-              <LineChart
-                title="Cost Usage"
-                range={range}
-                height={230}
-                formatter={formatCost}
-                data={calculateDailyCost(dailyUsage)}
-                props={["cost"]}
-              />
-
-              {/* <LineChart
-                range={range}
-                title="Agents"
-                height={230}
-                splitBy="name"
-                data={dailyUsage
-                  .filter((u) => u.type === "agent")
-                  .map((p) => ({
-                    ...p,
-                    runs: p.success + p.errors,
-                  }))}
-                props={["runs"]}
-              /> */}
-
-              <LineChart
-                blocked={true}
-                props={["users"]}
-                range={range}
-                title="Avg User Cost"
-                height={230}
-              />
-
-              <LineChart
-                blocked={true}
-                range={range}
-                props={["users"]}
-                title="Errors over time"
-                height={230}
-              />
-
-              <LineChart
-                blocked={true}
-                range={range}
-                props={["users"]}
-                title="Avg latency"
-                height={230}
-              />
-
-              <LineChart
-                blocked={true}
-                range={range}
-                props={["users"]}
-                title="Positive feedback"
-                height={230}
-              />
-            </>
-          )}
         </Stack>
       </Container>
     </Empty>
