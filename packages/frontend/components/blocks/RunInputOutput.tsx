@@ -162,7 +162,6 @@ export default function RunInputOutput({
     ? true
     : org?.plan === "team" || org?.plan === "custom"
 
-  console.log(run)
   return (
     <ErrorBoundary>
       <Stack>
