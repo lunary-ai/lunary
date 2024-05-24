@@ -374,14 +374,17 @@ export default function Analytics() {
                   props={["cost"]}
                 />
 
-                <LineChart
-                  blocked={true}
-                  range={range}
-                  props={["users"]}
-                  agg="sum"
-                  title="New Users"
-                  height={230}
-                />
+                {checks.length < 2 && (
+                  // Only show new users if no filters are applied, as it's not a metric that can be filtered
+                  <LineChart
+                    blocked={true}
+                    range={range}
+                    props={["users"]}
+                    agg="sum"
+                    title="New Users"
+                    height={230}
+                  />
+                )}
 
                 <LineChart
                   blocked={true}
