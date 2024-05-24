@@ -34,8 +34,8 @@ const slugify = (str) => {
     .replace(/[^\w-]+/g, "")
 }
 
-const generateFakeData = (range: number) => {
-  const data = []
+const generateFakeData = (range: number): LineChartData => {
+  const data: LineChartData = []
   for (let i = 0; i < range; i++) {
     const date = new Date()
     date.setDate(date.getDate() - i)
@@ -126,8 +126,13 @@ const CustomizedAxisTick = ({ x, y, payload, index, data }) => {
   )
 }
 
+type LineChartData = {
+  date: string
+  [key: string]: any
+}[]
+
 type LineChartProps = {
-  data: any[]
+  data: LineChartData
   title: string | JSX.Element
   props: string[]
   blocked: boolean
