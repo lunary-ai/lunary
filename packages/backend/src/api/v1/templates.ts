@@ -1,5 +1,6 @@
 import { checkAccess } from "@/src/utils/authorization"
 import sql from "@/src/utils/db"
+import { clearUndefined } from "@/src/utils/ingest"
 import Context from "@/src/utils/koa"
 import { unCamelObject } from "@/src/utils/misc"
 import Router from "koa-router"
@@ -32,7 +33,7 @@ templates.get("/", async (ctx: Context) => {
 templates.post("/", checkAccess("prompts", "create"), async (ctx: Context) => {
   const { projectId, userId } = ctx.state
 
-  const { slug, mode, content, extra, testValues, isDraft } = ctx.request
+  const { slug, mode, content, extra, testValues, isDraft, notes } = ctx.request
     .body as {
     slug: string
     mode: string
@@ -40,6 +41,7 @@ templates.post("/", checkAccess("prompts", "create"), async (ctx: Context) => {
     extra: any
     testValues: any
     isDraft: boolean
+    notes: string
   }
 
   const [template] = await sql`
@@ -52,13 +54,16 @@ templates.post("/", checkAccess("prompts", "create"), async (ctx: Context) => {
   `
 
   const [templateVersion] = await sql`
-    insert into template_version ${sql({
-      templateId: template.id,
-      content: sql.json(content),
-      extra: sql.json(unCamelObject(extra)),
-      testValues: sql.json(testValues),
-      isDraft: isDraft,
-    })} returning *
+    insert into template_version ${sql(
+      clearUndefined({
+        templateId: template.id,
+        content: sql.json(content),
+        extra: sql.json(unCamelObject(extra)),
+        testValues: sql.json(testValues),
+        isDraft: isDraft,
+        notes,
+      }),
+    )} returning *
   `
 
   ctx.body = {
@@ -123,21 +128,25 @@ templates.post(
   "/:id/versions",
   checkAccess("prompts", "update"),
   async (ctx: Context) => {
-    const { content, extra, testValues, isDraft } = ctx.request.body as {
+    const { content, extra, testValues, isDraft, notes } = ctx.request.body as {
       content: any[]
       extra: any
       testValues: any
       isDraft: boolean
+      notes: string
     }
 
     const [templateVersion] = await sql`
-    insert into template_version (
-      template_id, content, extra, test_values, is_draft
-    ) values (
-      ${ctx.params.id}, ${sql.json(content)}, ${sql.json(unCamelObject(extra))}, ${sql.json(
-        testValues,
-      )}, ${isDraft}
-    ) returning *
+    insert into template_version ${sql(
+      clearUndefined({
+        templateId: ctx.params.id,
+        content: sql.json(content),
+        extra: sql.json(unCamelObject(extra)),
+        test_values: sql.json(testValues),
+        isDraft,
+        notes,
+      }),
+    )} returning *
   `
 
     ctx.body = templateVersion
