@@ -1,7 +1,15 @@
 import { openUpgrade } from "@/components/layout/UpgradeModal"
 import { useOrg } from "@/utils/dataHooks"
 import { useFixedColorScheme } from "@/utils/hooks"
-import { ActionIcon, Button, Group, Popover, TextInput } from "@mantine/core"
+import {
+  ActionIcon,
+  Button,
+  Group,
+  Popover,
+  Stack,
+  TextInput,
+  Textarea,
+} from "@mantine/core"
 import { IconMessage, IconThumbDown, IconThumbUp } from "@tabler/icons-react"
 import { useState } from "react"
 import { Feedback } from "shared"
@@ -96,24 +104,28 @@ export default function Feedbacks({
           </ActionIcon>
         </Popover.Target>
         <Popover.Dropdown>
-          <TextInput
-            value={comment}
-            size="xs"
-            mt="xs"
-            placeholder="Add a comment"
-            onChange={(e) => setComment(e.target.value)}
-          />
-          <Button
-            mt="md"
-            size="xs"
-            style={{ float: "right" }}
-            onClick={() => {
-              feedback.comment = comment
-              update(feedback)
-            }}
-          >
-            Save
-          </Button>
+          <Stack align="end" mt={2}>
+            <Textarea
+              value={comment}
+              size="xs"
+              autosize
+              minRows={2}
+              w="100%"
+              placeholder="Add a comment"
+              onChange={(e) => setComment(e.target.value)}
+            />
+            <Button
+              size="xs"
+              variant="default"
+              style={{ float: "right" }}
+              onClick={() => {
+                feedback.comment = comment
+                update(feedback)
+              }}
+            >
+              Save
+            </Button>
+          </Stack>
         </Popover.Dropdown>
       </Popover>
     )

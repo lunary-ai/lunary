@@ -311,7 +311,7 @@ export default function RunInputOutput({
                     >
                       {run.templateVersionId
                         ? "Open template"
-                        : "Open in playground"}
+                        : "Open in Playground"}
                     </Button>
                   </Stack>
                 )}
