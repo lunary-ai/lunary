@@ -180,7 +180,7 @@ export default function Analytics() {
                 size="xs"
                 allowDeselect={false}
                 value={predefinedRange}
-                onChange={(val) => {
+                onChange={(val: string) => {
                   setPredefinedRange(val)
                   editRange(val)
                 }}
@@ -247,7 +247,9 @@ export default function Analytics() {
               w={80}
               placeholder="Granularity"
               value={granularity}
-              onChange={setGranularity}
+              onChange={(val: string) =>
+                setGranularity(val as "hour" | "day" | "week")
+              }
               allowDeselect={false}
               size="xs"
               data={[
