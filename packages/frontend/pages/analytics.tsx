@@ -21,6 +21,8 @@ import {
   Center,
   Container,
   Group,
+  Input,
+  InputWrapper,
   Loader,
   SegmentedControl,
   Select,
@@ -32,7 +34,7 @@ import {
 import { useLocalStorage } from "@mantine/hooks"
 import { IconCalendar, IconChartAreaLine } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { CheckLogic } from "shared"
 
 const calculateDailyCost = (usage) => {
@@ -67,6 +69,8 @@ export default function Analytics() {
     null,
   ])
   const [filters, setFilters] = useState<CheckLogic>(["AND"])
+  const [granularity, setGranularity] = useState<"hour" | "day" | "week">("day")
+  const [predefinedRange, setPredefinedRange] = useState("7d")
 
   const { project } = useProject()
 
@@ -76,6 +80,43 @@ export default function Analytics() {
   const { users, loading: usersLoading } = useAppUsers(range)
 
   const loading = usageLoading || dailyUsageLoading || usersLoading
+
+  function editRange(newRange: string) {
+    const today = new Date()
+    switch (newRange) {
+      case "1d":
+        setDateRange([today, today])
+        setGranularity("hour")
+        break
+      case "7d":
+        setDateRange([
+          new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000),
+          today,
+        ])
+        setGranularity("day")
+        break
+      case "30d":
+        setDateRange([
+          new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000),
+          today,
+        ])
+        setGranularity("day")
+        break
+      case "3m":
+        setDateRange([
+          new Date(new Date().getTime() - 90 * 24 * 60 * 60 * 1000),
+          today,
+        ])
+        setGranularity("week")
+        break
+      default:
+        break
+    }
+  }
+
+  useEffect(() => {
+    editRange("7d")
+  }, [])
 
   if (loading)
     return (
@@ -95,21 +136,99 @@ export default function Analytics() {
       <Container size="lg" my="lg">
         <NextSeo title="Analytics" />
         <Stack gap="lg">
-          <Title order={2}>Analytics</Title>
+          <Title order={2}>Overview</Title>
           <Group>
-            <Group>
+            <Group gap={0}>
+              <Select
+                w={100}
+                size="xs"
+                allowDeselect={false}
+                value={predefinedRange}
+                onChange={(val) => {
+                  setPredefinedRange(val)
+                  editRange(val)
+                }}
+                styles={{
+                  input: {
+                    height: 32,
+                    borderTopRightRadius: 0,
+                    borderBottomRightRadius: 0,
+                    borderRight: 0,
+                  },
+                }}
+                data={[
+                  {
+                    value: "1d",
+                    label: "Today",
+                  },
+                  {
+                    value: "7d",
+                    label: "7 Days",
+                  },
+                  {
+                    value: "30d",
+                    label: "30 Days",
+                  },
+                  {
+                    value: "3m",
+                    label: "3 Months",
+                  },
+                  {
+                    value: "custom",
+                    label: "Custom",
+                    disabled: true,
+                  },
+                ]}
+              />
               <DatePickerInput
                 leftSection={<IconCalendar size={18} stroke={1.5} />}
                 leftSectionPointerEvents="none"
                 type="range"
-                w={300}
+                styles={{
+                  input: {
+                    borderTopLeftRadius: 0,
+                    height: 32,
+                    borderBottomLeftRadius: 0,
+                  },
+                }}
+                w={"fit-content"}
                 maxDate={new Date()}
                 size="xs"
                 placeholder="Pick dates range"
                 value={dateRange}
-                onChange={setDateRange}
+                onChange={(val) => {
+                  setDateRange(val as [Date, Date])
+                  setPredefinedRange("custom")
+                }}
               />
             </Group>
+
+            <Text size="xs" c="dimmed">
+              by
+            </Text>
+
+            <Select
+              w={80}
+              placeholder="Granularity"
+              value={granularity}
+              onChange={setGranularity}
+              allowDeselect={false}
+              size="xs"
+              data={[
+                {
+                  value: "hour",
+                  label: "Hour",
+                },
+                {
+                  value: "day",
+                  label: "Day",
+                },
+                {
+                  value: "week",
+                  label: "Week",
+                },
+              ]}
+            />
 
             <CheckPicker
               minimal
