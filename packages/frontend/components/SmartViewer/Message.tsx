@@ -6,8 +6,6 @@ import {
   Code,
   Flex,
   Group,
-  JsonInput,
-  Modal,
   Paper,
   Select,
   Space,
@@ -18,13 +16,11 @@ import {
   ThemeIcon,
 } from "@mantine/core"
 import {
-  IconCross,
   IconInfoCircle,
   IconRobot,
   IconTool,
   IconTrash,
   IconUser,
-  IconX,
 } from "@tabler/icons-react"
 import Image from "next/image"
 import ProtectedText from "../blocks/ProtectedText"
@@ -32,7 +28,7 @@ import { RenderJson } from "./RenderJson"
 
 import { useColorScheme } from "@mantine/hooks"
 import { circularPro } from "@/utils/theme"
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 
 import { openConfirmModal } from "@mantine/modals"
 
@@ -175,7 +171,7 @@ function ToolCallsMessage({
                   }}
                 />
               ) : (
-                <Text span fw="bold" size="xs">
+                <Text span size="xs">
                   {toolCall?.id}
                 </Text>
               )}
@@ -285,20 +281,25 @@ function ImageMessage({ data, codeBg, compact }) {
   )
 }
 
-function PropEditor({ value, onChange, editable, placeholder }) {
-  return editable ? (
-    <TextInput
-      value={value}
-      size="xs"
-      opacity={0.7}
-      placeholder={placeholder}
-      radius="sm"
-      mb={5}
-      onChange={(e) => onChange(e.target.value)}
-      style={{ width: "100%" }}
-    />
-  ) : (
-    <Text fw="bold">{value}</Text>
+function PropEditor({ value, onChange, editable, placeholder, label }) {
+  return (
+    <Group gap={4} wrap="nowrap">
+      {label && <Text size="xs">{label}:</Text>}
+      {editable ? (
+        <TextInput
+          value={value}
+          size="xs"
+          opacity={0.7}
+          placeholder={placeholder}
+          radius="sm"
+          mb={5}
+          onChange={(e) => onChange(e.target.value)}
+          style={{ width: "100%" }}
+        />
+      ) : (
+        <Text size="xs">{value}</Text>
+      )}
+    </Group>
   )
 }
 
@@ -319,6 +320,7 @@ function ChatMessageContent({
           onChange={(name) => onChange({ ...data, name })}
           editable={editable}
           placeholder={"Tool name"}
+          label={"Name"}
         />
       )}
 
@@ -329,6 +331,7 @@ function ChatMessageContent({
           onChange={(toolCallId) => onChange({ ...data, toolCallId })}
           editable={editable}
           placeholder={"Tool call ID"}
+          label={"ID"}
         />
       )}
 

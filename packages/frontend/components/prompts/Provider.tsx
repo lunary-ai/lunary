@@ -1,6 +1,7 @@
 import { jsonrepair } from "jsonrepair"
 
 import {
+  ActionIcon,
   Button,
   Checkbox,
   Group,
@@ -8,8 +9,10 @@ import {
   Modal,
   NavLink,
   NumberInput,
+  Popover,
   Select,
   Text,
+  Tooltip,
 } from "@mantine/core"
 
 import { notifications } from "@mantine/notifications"
@@ -17,11 +20,18 @@ import { notifications } from "@mantine/notifications"
 import { MODELS, Provider } from "shared"
 import { useState } from "react"
 import Link from "next/link"
-import { IconTools } from "@tabler/icons-react"
+import { IconInfoCircle, IconTools } from "@tabler/icons-react"
 
-export const ParamItem = ({ name, value }) => (
+export const ParamItem = ({ name, value, description }) => (
   <Group justify="space-between">
-    <Text size="sm">{name}</Text>
+    <Group gap={5}>
+      <Text size="sm">{name}</Text>
+      {description && (
+        <Tooltip label={description}>
+          <IconInfoCircle size={14} />
+        </Tooltip>
+      )}
+    </Group>
     {typeof value === "string" || typeof value === "number" ? (
       <Text size="sm">{value}</Text>
     ) : (
