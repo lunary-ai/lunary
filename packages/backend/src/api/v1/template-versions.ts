@@ -5,6 +5,7 @@ import postgres from "postgres"
 import { unCamelObject } from "@/src/utils/misc"
 import { checkAccess } from "@/src/utils/authorization"
 import { z } from "zod"
+import { clearUndefined } from "@/src/utils/ingest"
 
 const versions = new Router({
   prefix: "/template_versions",
@@ -82,14 +83,16 @@ versions.patch(
   "/:id",
   checkAccess("prompts", "update"),
   async (ctx: Context) => {
+    console.log("ctx.request.body", ctx.request.body)
     const bodySchema = z.object({
       content: z.array(z.any()),
       extra: z.any(),
       testValues: z.any(),
       isDraft: z.boolean(),
+      notes: z.string().optional().nullable(),
     })
 
-    const { content, extra, testValues, isDraft } = bodySchema.parse(
+    const { content, extra, testValues, isDraft, notes } = bodySchema.parse(
       ctx.request.body,
     )
 
@@ -111,11 +114,15 @@ versions.patch(
 
     const [updatedTemplateVersion] = await sql`
       update template_version 
-      set
-        content = ${sql.json(content)},
-        extra = ${sql.json(unCamelObject(extra))},
-        test_values = ${sql.json(testValues)},
-        is_draft = ${isDraft}
+      set ${sql(
+        clearUndefined({
+          content: sql.json(content),
+          extra: sql.json(unCamelObject(extra)),
+          test_values: sql.json(testValues),
+          is_draft: isDraft,
+          notes,
+        }),
+      )}
       where 
         id = ${ctx.params.id}
       returning *
