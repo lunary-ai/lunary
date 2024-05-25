@@ -55,15 +55,12 @@ export default function Layout({ children }: { children: ReactNode }) {
       return
     }
   }, [isSignedIn])
-  const { org } = useOrg()
   const { user } = useUser()
+  const { org } = useOrg()
+  const { project, isLoading: isProjectLoading } = useProject()
 
   const isPromptPage = router.pathname.startsWith("/prompt")
 
-  const [projectId, setProjectId] = useLocalStorage({
-    key: "projectId",
-    defaultValue: null,
-  })
   const colorScheme = useColorScheme()
 
   useEffect(() => {
@@ -75,61 +72,46 @@ export default function Layout({ children }: { children: ReactNode }) {
     }
   }, [user])
 
-  return (
-    <>
-      <Notifications position="top-right" />
-      <ModalsProvider modals={{ upgrade: UpgradeModal }}>
-        <ProjectContext.Provider value={{ projectId, setProjectId }}>
-          <Flex
-            h={"100vh"}
-            className={org?.limited ? "limited" : ""}
-            style={{
-              backgroundColor: "var(--mantine-color-body)",
-              color: colorScheme === "dark" ? "#eee" : "#333",
-            }}
-          >
-            {!isAuthPage && !isPublicPage && <Sidebar />}
-
-            <Box
-              p={isPromptPage ? 0 : 24}
-              pos="relative"
-              flex={1}
-              style={{
-                overflowY: "auto",
-                backgroundColor:
-                  colorScheme === "light" ? "#fcfcfc" : "inherit",
-              }}
-            >
-              {!isAuthPage && !isPublicPage && <Navbar />}
-              <ChildrenRenderer
-                children={children}
-                isAuthPage={isAuthPage}
-                isPublicPage={isPublicPage}
-              />
-            </Box>
-          </Flex>
-        </ProjectContext.Provider>
-      </ModalsProvider>
-    </>
-  )
-}
-
-/**
- * This component is needed because the `ProjectContext.Provider` is in
- * the rendering of `Layout`, so we can't access `project` inside `Layout`
- *
- */
-function ChildrenRenderer({ children, isAuthPage, isPublicPage }) {
-  const { project } = useProject()
-  const { user } = useUser()
-  const { org } = useOrg()
-
-  if (!isAuthPage && !isPublicPage && (!user || !org || !project)) {
+  if (
+    !isAuthPage &&
+    !isPublicPage &&
+    (!user || !org || project === undefined)
+  ) {
     return (
       <Flex align="center" justify="center" h="100vh">
         <Loader />
       </Flex>
     )
   }
-  return children
+
+  return (
+    <>
+      <Notifications position="top-right" />
+      <ModalsProvider modals={{ upgrade: UpgradeModal }}>
+        <Flex
+          h={"100vh"}
+          className={org?.limited ? "limited" : ""}
+          style={{
+            backgroundColor: "var(--mantine-color-body)",
+            color: colorScheme === "dark" ? "#eee" : "#333",
+          }}
+        >
+          {!isAuthPage && !isPublicPage && <Sidebar />}
+
+          <Box
+            p={isPromptPage ? 0 : 24}
+            pos="relative"
+            flex={1}
+            style={{
+              overflowY: "auto",
+              backgroundColor: colorScheme === "light" ? "#fcfcfc" : "inherit",
+            }}
+          >
+            {!isAuthPage && !isPublicPage && <Navbar />}
+            {children}
+          </Box>
+        </Flex>
+      </ModalsProvider>
+    </>
+  )
 }
