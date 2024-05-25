@@ -3,16 +3,14 @@ import sql from "./db"
 import Context from "./koa"
 import { Action, ResourceName, hasAccess } from "shared"
 
-// TODO: Needs to use account_project instead
 export async function checkProjectAccess(projectId: string, userId: string) {
   const [{ exists: hasAccess }] = await sql`
       select exists (
         select 1 
-        from project 
-        where org_id = (select org_id from account where id = ${userId}) 
-          and id = ${projectId}
+        from account_project ap
+        where ap.project_id = ${projectId} and ap.account_id = ${userId}
       )
-    `
+  `
   return hasAccess
 }
 
