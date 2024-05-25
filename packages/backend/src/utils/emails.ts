@@ -144,7 +144,7 @@ Would you mind telling us why you canceled? We're always looking to improve.
 
 Thank you for trying Lunary.
 
-Vince & Hugh - co-founders of Lunary`,
+Vince & Hugh - founders of Lunary`,
   }
 }
 
@@ -156,7 +156,7 @@ export function FULLY_CANCELED_EMAIL(email: string, name: string) {
     from: process.env.GENERIC_SENDER,
     text: `Hi ${extractFirstName(name)},
 
-Your account has been downgraded to the free plan
+Your account has been downgraded to the free plan.
 
 Would you mind telling us why you canceled? We're always looking to improve. 
 
@@ -172,6 +172,28 @@ If this was a mistake, you can upgrade again at any time here: https://app.lunar
 
 Thank you for trying Lunary.
 
-Vince & Hugh - co-founders of Lunary`,
+Vince & Hugh - founders of Lunary`,
+  }
+}
+
+export function LIMITED_EMAIL(email: string, name: string) {
+  return {
+    subject: `Action Required: Events limit reached`,
+    to: [email],
+    reply_to: "hello@lunary.ai",
+    from: process.env.GENERIC_SENDER,
+    text: `Hi ${extractFirstName(name)},
+  
+Congratulations! You've reached your free ingested event limit for the month, which means you're making great use of Lunary. 
+
+As a result, your account has been temporarily limited (don't worry, your data is safe and sound).
+
+To continue enjoying our services without interruption, please consider upgrading your account here: https://app.lunary.ai/billing
+
+If you have any questions, feel free to reply to this email.
+
+Thank you for being a part of Lunary.
+
+- The Lunary team`,
   }
 }
