@@ -185,7 +185,8 @@ export function useProject() {
 
   const { projects, isLoading, mutate } = useProjects()
 
-  const project = projects?.find((p) => p.id === projectId)
+  // if null, it means the hook is loaded, but there's not project (not signed in)
+  const project = projects?.find((p) => p.id === projectId) || null
 
   const { trigger: updateMutation } = useSWRMutation(
     `/projects/${projectId}`,

@@ -15,8 +15,14 @@ import { AuthProvider } from "@/utils/auth"
 import { fetcher } from "@/utils/fetcher"
 import { circularPro, themeOverride } from "@/utils/theme"
 import { SWRConfig } from "swr"
+import { ProjectContext } from "@/utils/context"
+import { useLocalStorage } from "@mantine/hooks"
 
 export default function App({ Component, pageProps }: AppProps) {
+  const [projectId, setProjectId] = useLocalStorage({
+    key: "projectId",
+    defaultValue: null,
+  })
   return (
     <>
       <style jsx global>{`
@@ -42,9 +48,11 @@ export default function App({ Component, pageProps }: AppProps) {
             />
             <MantineProvider theme={themeOverride} defaultColorScheme="auto">
               <AnalyticsWrapper>
-                <Layout>
-                  <Component {...pageProps} />
-                </Layout>
+                <ProjectContext.Provider value={{ projectId, setProjectId }}>
+                  <Layout>
+                    <Component {...pageProps} />
+                  </Layout>
+                </ProjectContext.Provider>
               </AnalyticsWrapper>
             </MantineProvider>
           </SWRConfig>
