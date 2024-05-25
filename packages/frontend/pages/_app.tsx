@@ -13,7 +13,6 @@ import { DefaultSeo } from "next-seo"
 import ErrorBoundary from "@/components/blocks/ErrorBoundary"
 import { AuthProvider } from "@/utils/auth"
 import { fetcher } from "@/utils/fetcher"
-console.log(fetcher)
 import { circularPro, themeOverride } from "@/utils/theme"
 import { SWRConfig } from "swr"
 
