@@ -70,7 +70,7 @@ const updateSubscription = async (object: Stripe.Subscription) => {
   const { customer, cancel_at_period_end, metadata, id, cancellation_details } =
     object
 
-  const plan = metadata.plan
+  const plan = metadata.plan || "team"
   const period = metadata.period
   const canceled = cancel_at_period_end
 
