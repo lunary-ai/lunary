@@ -301,21 +301,17 @@ const renderEnrichment = (key, value) => {
   }
 }
 
-export function enrichmentColumn(key: string) {
-  return columnHelper.accessor("enrichment-" + key, {
-    header: `${capitalize(key)} ✨`,
+export function enrichmentColumn(name: string, slug: string, type: string) {
+  return columnHelper.accessor(`enrichment-${slug}`, {
+    header: `${capitalize(name)} ✨`,
     size: 100,
     cell: (props) => {
-      const data = props.row.original.metadata?.enrichment || {}
-
-      if (typeof data[key] === "undefined") return null
-
-      const { element, help } = renderEnrichment(key, data[key])
-      return (
-        <Tooltip key={key} label={help} disabled={!help}>
-          <div key={key}>{element}</div>
-        </Tooltip>
-      )
+      const data = props.row.original[`enrichment-${slug}`]
+      if (!data) {
+        return null
+      }
+      // const { element, help } = renderEnrichment(key, data[key])
+      return <div>{JSON.stringify(data.result)}</div>
     },
   })
 }

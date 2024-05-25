@@ -14,7 +14,9 @@
     "dev:frontend": "npm -w packages/frontend run dev",
     "dev:backend": "npm -w packages/backend run dev",
     "dev:radar": "npm -w packages/backend run dev:radar",
+    "dev:realtime-evaluators": "npm -w packages/backend run dev:realtime-evaluators",
     "dev:withradar": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\" \"npm run start:ml\" \"npm run dev:radar\"",
+    "dev:with-realtime-evaluators": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\" \"npm run dev:realtime-evaluators\"",
     "test": "npx playwright test",
     "test:ui": "npx playwright test --ui",
     "postinstall": "npx patch-package"

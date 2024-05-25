@@ -749,3 +749,12 @@ export function useEvaluation(id: string) {
     loading: isLoading,
   }
 }
+
+export function useEvaluators() {
+  const { data, isLoading } = useProjectSWR(`/evaluators`)
+
+  return {
+    evaluators: data,
+    isLoading,
+  }
+}

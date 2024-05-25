@@ -56,13 +56,14 @@ import {
   useOrg,
   useProjectInfiniteSWR,
   useRun,
+  useEvaluators,
 } from "@/utils/dataHooks"
 import { useDebouncedState, useDidUpdate } from "@mantine/hooks"
 import { ProjectContext } from "@/utils/context"
 import { CheckLogic, deserializeLogic, serializeLogic } from "shared"
 import { useRouter } from "next/router"
 
-const columns = {
+const defaultColumns = {
   llm: [
     timeColumn("createdAt"),
     nameColumn("Model"),
@@ -160,6 +161,8 @@ export default function Logs() {
   const { projectId } = useContext(ProjectContext)
   const { project, isLoading: projectLoading, setProjectId } = useProject()
   const { org } = useOrg()
+  const { evaluators } = useEvaluators()
+  const [columns, setColumns] = useState(null)
 
   const [filters, setChecks] = useState<CheckLogic>([
     "AND",
@@ -181,6 +184,20 @@ export default function Logs() {
   } = useProjectInfiniteSWR(`/runs?${serializedChecks}`)
 
   const { run: selectedRun, loading: runLoading } = useRun(selectedRunId)
+
+  useEffect(() => {
+    const newColumns = { ...defaultColumns }
+    if (type === "llm" && evaluators?.length) {
+      for (const evaluator of evaluators) {
+        newColumns.llm.splice(
+          3,
+          0,
+          enrichmentColumn(evaluator.name, evaluator.slug, evaluator.type),
+        )
+      }
+      setColumns(newColumns)
+    }
+  }, [type, evaluators])
 
   useEffect(() => {
     if (selectedRun && selectedRun.projectId !== projectId) {
@@ -286,6 +303,10 @@ export default function Logs() {
         fetcher.getFile(url)
       },
     }
+  }
+
+  if (!columns) {
+    return <Loader />
   }
 
   return (

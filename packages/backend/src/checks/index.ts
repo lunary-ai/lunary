@@ -88,8 +88,8 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     sql: ({ type }) =>
       type === "trace"
         ? // matches agent and chain runs with no parent or parent is a chat run
-          sql`(type in ('agent','chain') and (parent_run_id is null OR EXISTS (SELECT 1 FROM run AS parent_run WHERE parent_run.id = r.parent_run_id AND parent_run.type = 'chat')))`
-        : sql`(type = ${type})`,
+          sql`(r.type in ('agent','chain') and (parent_run_id is null OR EXISTS (SELECT 1 FROM run AS parent_run WHERE parent_run.id = r.parent_run_id AND parent_run.type = 'chat')))`
+        : sql`(r.type = ${type})`,
   },
   {
     id: "models",
@@ -320,8 +320,8 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   {
     id: "search",
     sql: ({ query }) =>
-      sql`(to_tsvector('simple', substring(r.input_text, 1, 948575)) @@ plainto_tsquery('simple', ${query})
-        or to_tsvector('simple', substring(r.output_text, 1, 948575)) @@ plainto_tsquery('simple', ${query}))`,
+      sql`(to_tsvector('simple', substring(r.input_text, 1, 100000)) @@ plainto_tsquery('simple', ${query})
+        or to_tsvector('simple', substring(r.output_text, 1, 100000)) @@ plainto_tsquery('simple', ${query}))`,
   },
   {
     id: "string",

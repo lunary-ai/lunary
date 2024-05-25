@@ -8,6 +8,7 @@
     "build": "tsup src/index.ts --format esm",
     "dev": "tsx --env-file=.env --watch src/index.ts",
     "dev:radar": "tsx --env-file=.env --watch src/radar.ts",
+    "dev:realtime-evaluators": "tsx --env-file=.env --watch src/realtime-evaluators.ts",
     "dev:all": "concurrently -n backend,radar \"npm run start\" \"npm run start:radar\"",
     "test": "tsx src/index.ts"
   },

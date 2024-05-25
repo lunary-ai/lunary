@@ -9,7 +9,7 @@ import classes from "./index.module.css"
 import { IconX } from "@tabler/icons-react"
 import CHECKS_UI_DATA from "./ChecksUIData"
 
-function RenderCheckNode({
+export function RenderCheckNode({
   minimal,
   node,
   disabled,
