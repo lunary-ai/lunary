@@ -9,7 +9,7 @@ import Navbar from "./Navbar"
 import Sidebar from "./Sidebar"
 
 import { useAuth } from "@/utils/auth"
-import { useOrg, useUser } from "@/utils/dataHooks"
+import { useOrg, useProject, useUser } from "@/utils/dataHooks"
 import { ModalsProvider } from "@mantine/modals"
 import UpgradeModal from "./UpgradeModal"
 import { useColorScheme, useLocalStorage } from "@mantine/hooks"
@@ -55,13 +55,11 @@ export default function Layout({ children }: { children: ReactNode }) {
       return
     }
   }, [isSignedIn])
-  const { user, loading: userLoading } = useUser()
-
   const { org } = useOrg()
+  const { user } = useUser()
 
   const isPromptPage = router.pathname.startsWith("/prompt")
 
-  // TODO: use the custom hook
   const [projectId, setProjectId] = useLocalStorage({
     key: "projectId",
     defaultValue: null,
@@ -76,14 +74,6 @@ export default function Layout({ children }: { children: ReactNode }) {
       })
     }
   }, [user])
-
-  if (!isAuthPage && !isPublicPage && (!user || !org)) {
-    return (
-      <Flex align="center" justify="center" h="100vh">
-        <Loader />
-      </Flex>
-    )
-  }
 
   return (
     <>
@@ -111,11 +101,35 @@ export default function Layout({ children }: { children: ReactNode }) {
               }}
             >
               {!isAuthPage && !isPublicPage && <Navbar />}
-              {children}
+              <ChildrenRenderer
+                children={children}
+                isAuthPage={isAuthPage}
+                isPublicPage={isPublicPage}
+              />
             </Box>
           </Flex>
         </ProjectContext.Provider>
       </ModalsProvider>
     </>
   )
+}
+
+/**
+ * This component is needed because the `ProjectContext.Provider` is in
+ * the rendering of `Layout`, so we can't access `project` inside `Layout`
+ *
+ */
+function ChildrenRenderer({ children, isAuthPage, isPublicPage }) {
+  const { project } = useProject()
+  const { user } = useUser()
+  const { org } = useOrg()
+
+  if (!isAuthPage && !isPublicPage && (!user || !org || !project)) {
+    return (
+      <Flex align="center" justify="center" h="100vh">
+        <Loader />
+      </Flex>
+    )
+  }
+  return children
 }
