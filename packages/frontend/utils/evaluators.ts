@@ -39,7 +39,7 @@ const EVALUATOR_TYPES = {
     icon: IconTextWrap,
     color: "blue",
     description:
-      "The summarization metric uses LLMs to determine whether your agent is generating factually correct summaries while including the neccessary details from the original text.",
+      "The summarization metric uses LLMs to determine whether your agent is generating factually correct summaries while including the necessary details from the original text.",
     params: [],
   },
 }
