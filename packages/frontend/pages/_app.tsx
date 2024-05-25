@@ -10,11 +10,12 @@ import Layout from "@/components/layout"
 import AnalyticsWrapper from "@/components/layout/Analytics"
 import { DefaultSeo } from "next-seo"
 
-import { fetcher } from "@/utils/fetcher"
-import { SWRConfig } from "swr"
-import { AuthProvider } from "@/utils/auth"
 import ErrorBoundary from "@/components/blocks/ErrorBoundary"
+import { AuthProvider } from "@/utils/auth"
+import { fetcher } from "@/utils/fetcher"
+console.log(fetcher)
 import { circularPro, themeOverride } from "@/utils/theme"
+import { SWRConfig } from "swr"
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
