@@ -1,6 +1,7 @@
 import openai from "@/src/utils/openai"
 import lunary from "lunary"
 import { Run } from "shared"
+import { lastMsg } from "../checks"
 
 interface AssertParams {
   conditions: string[]
@@ -9,16 +10,13 @@ interface AssertParams {
 export async function evaluate(run: Run, params: AssertParams) {
   const { conditions } = params
 
-  run.inputText = run.inputText || ""
-  run.outputText = run.outputText || ""
-
   const conditionList = conditions
     .map((condition) => `- ${condition}`)
     .join("\n")
 
   const template = await lunary.renderTemplate("assert-v2", {
-    input: run.inputText,
-    output: run.outputText,
+    input: lastMsg(run.input),
+    output: lastMsg(run.output),
     conditions: conditionList,
   })
 
