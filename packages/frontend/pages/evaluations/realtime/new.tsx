@@ -32,7 +32,7 @@ function EvaluatorCard({
     <Card
       key={evaluator.id}
       onClick={() => !evaluator.soon && onItemClick(evaluator.id)}
-      withBorder
+      withBorder={isSelected}
       opacity={evaluator.soon ? 0.5 : 1}
       style={{ justifyContent: "center" }}
     >
@@ -58,11 +58,11 @@ function EvaluatorCard({
               color={theme.colors[evaluator.color][7]}
               size="22px"
             />
-            <Text size="xs" mt={7} fw="500" ta="center">
+            <Text size="sm" mt={9} fw="500" ta="center">
               {evaluator.name}
             </Text>
             {evaluator.soon && (
-              <Text size="xs" mb={-4} mt={7} fw="500" c="dimmed">
+              <Text size="xs" mb={-4} mt={0} fw="500" c="dimmed">
                 coming soon
               </Text>
             )}
@@ -116,21 +116,25 @@ export default function NewRealtimeEvaluator() {
           <Title>Add Evaluator</Title>
         </Group>
 
-        <Text>Select the type of evaluator you want to add:</Text>
+        <Stack>
+          <Text>Select the type of evaluator you want to add:</Text>
 
-        <SimpleGrid cols={5} spacing="md">
-          {evaluatorTypes.map((evaluator) => (
-            <EvaluatorCard
-              key={evaluator.id}
-              evaluator={evaluator}
-              isSelected={evaluatorType === evaluator.id}
-              onItemClick={setEvaluatorType}
-            />
-          ))}
-        </SimpleGrid>
+          <SimpleGrid cols={5} spacing="md">
+            {evaluatorTypes
+              .sort((a, b) => (a.soon ? 1 : -1))
+              .map((evaluator) => (
+                <EvaluatorCard
+                  key={evaluator.id}
+                  evaluator={evaluator}
+                  isSelected={evaluatorType === evaluator.id}
+                  onItemClick={setEvaluatorType}
+                />
+              ))}
+          </SimpleGrid>
+        </Stack>
 
         {!!hasParams && (
-          <>
+          <Stack>
             <Text>Configure the evaluator:</Text>
 
             <RenderCheckNode
@@ -141,7 +145,7 @@ export default function NewRealtimeEvaluator() {
               }}
               checks={[selectedEvaluator]}
             />
-          </>
+          </Stack>
         )}
 
         <Card style={{ overflow: "visible" }} shadow="md" p="lg">

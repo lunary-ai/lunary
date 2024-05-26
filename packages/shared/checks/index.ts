@@ -932,7 +932,7 @@ export const CHECKS: Check[] = [
     ],
   },
   {
-    id: "system",
+    id: "guidelines",
     name: "System Guidelines",
     soon: true,
     uiType: "ai",

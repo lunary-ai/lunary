@@ -3,10 +3,8 @@ import { callML } from "../utils/ml"
 import { lastMsg } from "../checks"
 
 export default async function evaluate(run: Run) {
-  const text = lastMsg(run.input)
-
-  const language = await callML("lang", {
-    text,
+  const language = await callML("toxicity", {
+    texts: [lastMsg(run.input), lastMsg(run.output)],
   })
 
   return language

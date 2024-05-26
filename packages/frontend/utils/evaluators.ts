@@ -1,11 +1,14 @@
 import {
   IconBadge,
   IconBiohazard,
+  IconBrain,
+  IconCheck,
   IconEyeCheck,
   IconIdBadge,
   IconLanguage,
   IconMoodSmile,
   IconTextWrap,
+  IconTools,
   IconUserCheck,
 } from "@tabler/icons-react"
 
@@ -174,6 +177,85 @@ const EVALUATOR_TYPES = {
         width: 230,
       },
     ],
+  },
+  factualness: {
+    id: "factualness",
+    name: "Factualness",
+    description:
+      "Checks how correct the LLM's response is compared to the ideal output (ues OpenAI's eval prompt).",
+    soon: true,
+    icon: IconCheck,
+    color: "green",
+    params: [
+      {
+        type: "label",
+        label: "The answer",
+      },
+      {
+        type: "select",
+        id: "choices",
+        defaultValue: ["b", "c"],
+        multiple: true,
+        width: 200,
+        searchable: true,
+        options: [
+          {
+            label: "is a subset of",
+            value: "a",
+          },
+          {
+            label: "is a superset of",
+            value: "b",
+          },
+          {
+            label: "contains all the same details as",
+            value: "c",
+          },
+          {
+            label: "disagrees with",
+            value: "d",
+          },
+          {
+            label: "differs (but doesn't matter from a factual standpoint)",
+            value: "e",
+          },
+        ],
+      },
+      {
+        type: "label",
+        label: "the ideal output",
+      },
+    ],
+  },
+  geval: {
+    id: "geval",
+    icon: IconBrain,
+    color: "blue",
+    name: "G-Eval",
+    uiType: "ai",
+    description:
+      "G-Eval is a framework that uses LLMs with chain-of-thoughts (CoT) to evaluate LLM outputs based on ANY custom criteria",
+    soon: true,
+    params: [
+      {
+        type: "label",
+        label: "G-Eval",
+      },
+      {
+        type: "text",
+        id: "criteria",
+        placeholder: "Is spoken like a pirate",
+        width: 140,
+      },
+    ],
+  },
+  guidelines: {
+    id: "guidelines",
+    name: "System Guidelines",
+    icon: IconTools,
+    color: "gray",
+    description: `Checks if the assistant answer matches guidelines set in the 'system' message.`,
+    params: [],
   },
 }
 

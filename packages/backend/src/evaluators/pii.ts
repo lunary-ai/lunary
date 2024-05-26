@@ -5,7 +5,7 @@ interface PiiParams {
   entities: ("email" | "ip")[]
 }
 
-export async function evaluate(run: Run, params: PiiParams) {
+export default async function evaluate(run: Run, params: PiiParams) {
   const { entities } = params
   const results: {
     emails?: string[]
