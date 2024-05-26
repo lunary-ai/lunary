@@ -33,35 +33,7 @@ import { Fragment } from "react"
 import ErrorBoundary from "../blocks/ErrorBoundary"
 import { openUpgrade } from "../layout/UpgradeModal"
 import { theme } from "@/utils/theme"
-
-const slugify = (str) => {
-  return str
-    .toLowerCase()
-    .replace(/ /g, "-")
-    .replace(/[^\w-]+/g, "")
-}
-
-const generateFakeData = (
-  startDate: Date,
-  endDate: Date,
-  granularity: "daily" | "hourly" | "weekly",
-): LineChartData => {
-  const data: LineChartData = []
-  const interval =
-    granularity === "daily"
-      ? eachDayOfInterval
-      : granularity === "hourly"
-        ? eachHourOfInterval
-        : eachWeekOfInterval
-  interval({ start: startDate, end: endDate }).forEach((date) => {
-    const users = Math.floor(Math.random() * 6000) + 4000
-    data.push({
-      date: date.toISOString(),
-      users: users,
-    })
-  })
-  return data
-}
+import { slugify } from "@/utils/format"
 
 function prepareDataForRecharts(
   data: any[],
@@ -254,7 +226,29 @@ const LineChartComponent = ({
   const colors = ["blue", "pink", "indigo", "green", "violet", "yellow"]
 
   const cleanedData = prepareDataForRecharts(
-    blocked ? generateFakeData(startDate, endDate, granularity) : data,
+    blocked
+      ? ((
+          startDate: Date,
+          endDate: Date,
+          granularity: "daily" | "hourly" | "weekly",
+        ): LineChartData => {
+          const data: LineChartData = []
+          const interval =
+            granularity === "daily"
+              ? eachDayOfInterval
+              : granularity === "hourly"
+                ? eachHourOfInterval
+                : eachWeekOfInterval
+          interval({ start: startDate, end: endDate }).forEach((date) => {
+            const users = Math.floor(Math.random() * 6000) + 4000
+            data.push({
+              date: date.toISOString(),
+              users: users,
+            })
+          })
+          return data
+        })(startDate, endDate, granularity)
+      : data,
     splitBy,
     props,
     startDate,
@@ -378,7 +372,6 @@ const LineChartComponent = ({
             width={500}
             height={420}
             data={hasData ? cleanedData : []}
-            syncId="anyId"
             margin={{
               top: 10,
               right: 0,

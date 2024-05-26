@@ -1,13 +1,12 @@
-import pii from "./pii"
-import language from "./language"
-import assert from "./assert"
-import tones from "./tones"
-import topics from "./topics"
-
-import toxicity from "./toxicity"
-import sentiment from "./sentiment"
-import guidelines from "./guidelines"
-import replies from "./replies"
+import * as pii from "./pii"
+import * as language from "./language"
+import * as assert from "./assert"
+import * as tones from "./tones"
+import * as topics from "./topics"
+import * as toxicity from "./toxicity"
+import * as sentiment from "./sentiment"
+import * as guidelines from "./guidelines"
+import * as replies from "./replies"
 
 const evaluators = {
   pii,

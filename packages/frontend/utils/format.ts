@@ -1,4 +1,5 @@
 import { formatDistanceToNow } from "date-fns"
+import { languageCodeToCountryCode } from "./countries"
 
 export const formatCost = (cost = 0) => {
   return new Intl.NumberFormat("en-US", {
@@ -76,4 +77,19 @@ export function formatCompactFromNow(date) {
     .replace("minute", "min")
     .replace(" hours", "h")
     .replace(" hour", "h")
+}
+export function slugify(str) {
+  return str
+    .toLowerCase()
+    .replace(/ /g, "-")
+    .replace(/[^\w-]+/g, "")
+}
+
+export function getFlagEmoji(languageCode: string) {
+  const countryCode = languageCodeToCountryCode[languageCode]
+  const codePoints = countryCode
+    .toUpperCase()
+    .split("")
+    .map((char) => 127397 + char.charCodeAt(0))
+  return String.fromCodePoint(...codePoints)
 }

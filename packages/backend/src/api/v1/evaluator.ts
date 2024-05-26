@@ -9,6 +9,8 @@ const evaluators = new Router({
 })
 
 // TODO: access control
+// TODO: route to get the number of runs checks are applied to, for new evaluators
+// TODO: proper schema validation for params and filters
 
 evaluators.get("/", async (ctx: Context) => {
   const { projectId } = ctx.state
@@ -49,7 +51,7 @@ evaluators.post("/", async (ctx: Context) => {
     type: z.string(),
     mode: z.string(),
     params: z.record(z.any()),
-    filters: z.record(z.any()).optional(),
+    filters: z.array(z.any()).optional(),
   })
   const { projectId } = ctx.state
   const evaluator = requestBody.parse(ctx.request.body)

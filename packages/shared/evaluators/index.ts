@@ -1,5 +1,17 @@
-type EvaluatorType = "pii"
-type EvaluatorMode = "normal" | "realtime"
+export type EvaluatorType =
+  | "pii"
+  | "summarization"
+  | "sentiment"
+  | "language"
+  | "toxicity"
+  | "assert"
+  | "topics"
+  | "tone"
+  | "factualness"
+  | "geval"
+  | "guidelines"
+  | "replies"
+export type EvaluatorMode = "normal" | "realtime"
 
 interface BaseEvaluator {
   id: string

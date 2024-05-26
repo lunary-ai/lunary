@@ -2,12 +2,12 @@ import { useContext } from "react"
 import useSWR, { SWRConfiguration, useSWRConfig } from "swr"
 import useSWRInfinite from "swr/infinite"
 import useSWRMutation, { SWRMutationConfiguration } from "swr/mutation"
-import { getUserColor } from "./colors"
-import { ProjectContext } from "./context"
+import { getUserColor } from "../colors"
+import { ProjectContext } from "../context"
 
-import { useAuth } from "./auth"
-import { fetcher } from "./fetcher"
-import { useFixedColorScheme } from "./hooks"
+import { useAuth } from "../auth"
+import { fetcher } from "../fetcher"
+import { useFixedColorScheme } from "../hooks"
 
 type KeyType = string | ((...args: any[]) => string)
 
@@ -748,64 +748,4 @@ export function useEvaluation(id: string) {
     mutate,
     loading: isLoading,
   }
-}
-
-export function useEvaluators() {
-  const { data, isLoading } = useProjectSWR(`/evaluators`)
-
-  return {
-    evaluators: data,
-    isLoading,
-  }
-}
-
-export function useErrorAnalytics(
-  startDate: Date,
-  endDate: Date,
-  granularity: string,
-  checks: string,
-) {
-  const { data, isLoading } = useProjectSWR(
-    `/analytics/errors?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&granularity=${granularity}&checks=${checks}`,
-  )
-
-  return { errorsData: data, isLoading }
-}
-
-export function useRunCountAnalytics(
-  startDate: Date,
-  endDate: Date,
-  granularity: string,
-  checks: string,
-) {
-  const { data, isLoading } = useProjectSWR(
-    `/analytics/runs?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&granularity=${granularity}&checks=${checks}`,
-  )
-
-  return { runCountData: data, isLoading }
-}
-
-export function useNewUsersAnalytics(
-  startDate: Date,
-  endDate: Date,
-  granularity: string,
-) {
-  const { data, isLoading } = useProjectSWR(
-    `/analytics/users/new?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&granularity=${granularity}`,
-  )
-
-  return { newUsersData: data, isLoading }
-}
-
-export function useAverageLatencyAnalytics(
-  startDate: Date,
-  endDate: Date,
-  granularity: string,
-  checks: string,
-) {
-  const { data, isLoading } = useProjectSWR(
-    `/analytics/latency?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&granularity=${granularity}&checks=${checks}`,
-  )
-
-  return { averageLatencyData: data, isLoading }
 }

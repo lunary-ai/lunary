@@ -3,7 +3,7 @@ import { lastMsg } from "../checks"
 import openai from "@/src/utils/openai"
 import lunary from "lunary"
 
-export default async function evaluate(run: Run) {
+export async function evaluate(run: Run) {
   const input = lastMsg(run.input)
 
   const template = await lunary.renderTemplate("sentiment", {

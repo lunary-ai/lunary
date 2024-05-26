@@ -109,7 +109,7 @@ function formatRun(run: any) {
     },
   }
 
-  for (const evaluationResult of run.evaluationResults || []) {
+  for (let evaluationResult of run.evaluationResults || []) {
     formattedRun[`enrichment-${evaluationResult.evaluatorSlug}`] =
       evaluationResult
   }
