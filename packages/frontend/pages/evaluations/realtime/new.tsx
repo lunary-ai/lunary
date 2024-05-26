@@ -1,4 +1,4 @@
-import { RenderCheckNode } from "@/components/checks/Picker"
+import CheckPicker, { RenderCheckNode } from "@/components/checks/Picker"
 import EVALUATOR_TYPES from "@/utils/evaluators"
 import { theme } from "@/utils/theme"
 import {
@@ -76,6 +76,10 @@ function EvaluatorCard({
 export default function NewRealtimeEvaluator() {
   const [evaluatorType, setEvaluatorType] = useState<string>()
   const [evaluatorParams, setEvaluatorParams] = useState<any>(["AND"])
+  const [evaluatorViewFilter, setEvaluatorViewFilter] = useState<CheckLogic>([
+    "AND",
+    { id: "type", params: { type: "llm" } },
+  ])
 
   const evaluatorTypes = Object.values(EVALUATOR_TYPES)
 
@@ -93,22 +97,10 @@ export default function NewRealtimeEvaluator() {
 
   return (
     <Container>
-      <Stack gap="lg">
+      <Stack gap="xl">
         <Group align="center">
           <Title>Add Evaluator</Title>
         </Group>
-
-        <Tooltip label="Only real-time evaluators are available at the moment">
-          <Group w="fit-content">
-            <Switch
-              size="xl"
-              label="Realtime"
-              onLabel="ON"
-              offLabel="OFF"
-              checked={true}
-            />
-          </Group>
-        </Tooltip>
 
         <Text>Select the type of evaluator you want to add:</Text>
 
@@ -138,6 +130,40 @@ export default function NewRealtimeEvaluator() {
             />
           </>
         )}
+
+        <Card style={{ overflow: "visible" }} shadow="md" p="lg">
+          <Stack>
+            <Tooltip label="Only real-time evaluators are available at the moment">
+              <Group w="fit-content">
+                <Switch
+                  size="lg"
+                  label="Enable real-time evaluation ✨"
+                  onLabel="ON"
+                  offLabel="OFF"
+                  checked={true}
+                />
+              </Group>
+            </Tooltip>
+
+            <Text>Select the logs to apply to:</Text>
+
+            <CheckPicker
+              minimal
+              value={evaluatorViewFilter}
+              onChange={setEvaluatorViewFilter}
+              restrictTo={(filter) =>
+                ["tags", "type", "users", "metadata"].includes(filter.id)
+              }
+            />
+
+            <Text>
+              Estimated logs:{" "}
+              <Text span fw="bold">
+                1000
+              </Text>
+            </Text>
+          </Stack>
+        </Card>
 
         <Group justify="end">
           <Button
