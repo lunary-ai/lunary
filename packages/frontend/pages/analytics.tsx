@@ -310,15 +310,19 @@ export default function Analytics() {
       .length > 0
 
   // TODO:
-  // const loading = errorsDataLoading
+  const loading =
+    errorsDataLoading ||
+    newUsersDataLoading ||
+    runCountLoading ||
+    averageLatencyDataLoading
 
-  // if (loading) {
-  //   return (
-  //     <Center h="60vh">
-  //       <Loader />
-  //     </Center>
-  //   )
-  // }
+  if (loading) {
+    return (
+      <Center h="60vh">
+        <Loader />
+      </Center>
+    )
+  }
 
   return (
     <Empty
