@@ -299,12 +299,18 @@ export default function Analytics() {
       serializedChecks,
     )
 
-  const chartRange = calculateChatRange(dateRange, granularity)
+  // const chartRange = calculateChatRange(dateRange, granularity)
 
   const showBar =
     showCheckBar ||
     checks.filter((f) => f !== "AND" && !["search", "type"].includes(f.id))
       .length > 0
+
+  const commonChartData = {
+    startDate: startDate,
+    endDate: endDate,
+    granularity: granularity,
+  }
 
   return (
     <Empty
@@ -355,9 +361,7 @@ export default function Analytics() {
               defaultOpened={showCheckBar}
               value={checks}
               restrictTo={(filter) =>
-                ["type", "tags", "model", "users", "metadata"].includes(
-                  filter.id,
-                )
+                ["tags", "model", "users", "metadata"].includes(filter.id)
               }
             />
           )}
@@ -370,42 +374,38 @@ export default function Analytics() {
               description="How many errors were captured in your app"
               agg="sum"
               props={["errorCount"]}
-              range={chartRange}
-              height={230}
+              {...commonChartData}
             />
 
             {checks.length < 2 && (
               // Only show new users if no filters are applied, as it's not a metric that can be filtered
               <LineChart
-                range={1000}
                 data={newUsersData}
                 loading={newUsersDataLoading}
                 props={["newUsersCount"]}
                 agg="sum"
                 title="New Users"
-                height={230}
+                {...commonChartData}
               />
             )}
 
             <LineChart
-              range={chartRange}
               data={runCountData}
               loading={runCountLoading}
               props={["runCount"]}
               agg="sum"
               title="Runs Volume"
-              height={230}
+              {...commonChartData}
             />
 
             <LineChart
-              range={chartRange}
               data={averageLatencyData}
               loading={averageLatencyDataLoading}
               props={["avgDuration"]}
               agg="avg"
               formatter={(value) => `${value.toFixed(2)}s`}
               title="Avg. LLM Latency"
-              height={230}
+              {...commonChartData}
             />
           </SimpleGrid>
         </Stack>

@@ -22,7 +22,13 @@ import {
 
 import { formatLargeNumber } from "@/utils/format"
 import { IconBolt, IconInfoCircle } from "@tabler/icons-react"
-import { eachDayOfInterval, format, parseISO } from "date-fns"
+import {
+  eachDayOfInterval,
+  eachHourOfInterval,
+  eachWeekOfInterval,
+  format,
+  parseISO,
+} from "date-fns"
 import { Fragment } from "react"
 import ErrorBoundary from "../blocks/ErrorBoundary"
 import { openUpgrade } from "../layout/UpgradeModal"
@@ -35,17 +41,25 @@ const slugify = (str) => {
     .replace(/[^\w-]+/g, "")
 }
 
-const generateFakeData = (range: number): LineChartData => {
+const generateFakeData = (
+  startDate: Date,
+  endDate: Date,
+  granularity: "daily" | "hourly" | "weekly",
+): LineChartData => {
   const data: LineChartData = []
-  for (let i = 0; i < range; i++) {
-    const date = new Date()
-    date.setDate(date.getDate() - i)
+  const interval =
+    granularity === "daily"
+      ? eachDayOfInterval
+      : granularity === "hourly"
+        ? eachHourOfInterval
+        : eachWeekOfInterval
+  interval({ start: startDate, end: endDate }).forEach((date) => {
     const users = Math.floor(Math.random() * 6000) + 4000
     data.push({
-      date: date.toISOString().split("T")[0],
+      date: date.toISOString(),
       users: users,
     })
-  }
+  })
   return data
 }
 
@@ -53,10 +67,10 @@ function prepareDataForRecharts(
   data: any[],
   splitBy: string | undefined,
   props: string[],
-  range: number,
+  startDate: Date,
+  endDate: Date,
+  granularity: "daily" | "hourly" | "weekly",
 ): any[] {
-  // Create a map to hold the processed data
-  // const dataMap = {}
   const output: any[] = []
 
   if (!data) data = []
@@ -67,15 +81,28 @@ function prepareDataForRecharts(
     splitBy &&
     Array.from(new Set(data.map((item) => item[splitBy]?.toString())))
 
-  // Initialize map with dates as keys and empty data as values
-  eachDayOfInterval({
-    // subtract 'range' amount of days for start date
-    start: new Date(new Date().getTime() - range * 24 * 60 * 60 * 1000),
-    end: new Date(),
-  }).forEach((day) => {
-    const date = format(day, "yyyy-MM-dd")
+  const interval =
+    granularity === "daily"
+      ? eachDayOfInterval
+      : granularity === "hourly"
+        ? eachHourOfInterval
+        : eachWeekOfInterval
 
-    const dayData: { [key: string]: any } = { date }
+  // Initialize map with dates as keys and empty data as values
+  interval({
+    start: startDate,
+    end: endDate,
+  }).forEach((date) => {
+    const formattedDate = format(
+      date,
+      granularity === "daily"
+        ? "yyyy-MM-dd"
+        : granularity === "hourly"
+          ? "yyyy-MM-dd'T'HH"
+          : "yyyy-'W'ww",
+    )
+
+    const dayData: { [key: string]: any } = { date: formattedDate }
 
     for (let prop of props) {
       if (splitBy) {
@@ -84,13 +111,28 @@ function prepareDataForRecharts(
             data?.find(
               (item) =>
                 item[splitBy]?.toString() === splitByValue &&
-                format(parseISO(item.date), "yyyy-MM-dd") === date,
+                format(
+                  parseISO(item.date),
+                  granularity === "daily"
+                    ? "yyyy-MM-dd"
+                    : granularity === "hourly"
+                      ? "yyyy-MM-dd'T'HH"
+                      : "yyyy-'W'ww",
+                ) === formattedDate,
             )?.[prop] || 0
         }
       } else {
         dayData[prop] =
           data.find(
-            (item) => format(parseISO(item.date), "yyyy-MM-dd") === date,
+            (item) =>
+              format(
+                parseISO(item.date),
+                granularity === "daily"
+                  ? "yyyy-MM-dd"
+                  : granularity === "hourly"
+                    ? "yyyy-MM-dd'T'HH"
+                    : "yyyy-'W'ww",
+              ) === formattedDate,
           )?.[prop] || 0
       }
     }
@@ -103,25 +145,30 @@ function prepareDataForRecharts(
   )
 }
 
-const formatDate = (date) =>
-  new Date(date).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  })
-
-const CustomizedAxisTick = ({ x, y, payload, index, data }) => {
-  // Hide the first and last tick
-  if (index === 0 || index === data.length - 1) {
-    return null
+const formatDate = (date, granularity) => {
+  switch (granularity) {
+    case "daily":
+      return format(parseISO(date), "MMM d")
+    case "hourly":
+      return format(parseISO(date), "eeee, HH'h'")
+    case "weekly":
+      return format(parseISO(date), "MMM d")
   }
+}
+
+const CustomizedAxisTick = ({ x, y, payload, index, data, granularity }) => {
+  // // Hide the first and last tick
+  // if (index === 0 || index === data.length - 1) {
+  //   return null
+  // }
+
+  // offset the first and last tick to make it look better
+  const offset = index === 0 ? 35 : index === 1 ? -35 : 0
 
   return (
-    <g transform={`translate(${x},${y})`}>
+    <g transform={`translate(${x + offset},${y})`}>
       <text x={0} y={0} dy={16} textAnchor="middle" fill="#666">
-        {new Date(payload.value).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-        })}
+        {formatDate(payload.value, granularity)}
       </text>
     </g>
   )
@@ -143,7 +190,9 @@ type LineChartProps = {
   splitBy?: string
 
   description?: string
-  range: number
+  startDate: Date
+  endDate: Date
+  granularity: "daily" | "hourly" | "weekly"
   agg: string
   chartExtra?: JSX.Element
 }
@@ -166,21 +215,25 @@ const LineChartComponent = ({
   props,
   blocked = false,
   formatter = formatLargeNumber,
-  height = 300,
+  height = 230,
   description,
   loading = false,
   splitBy = undefined,
-  range,
+  startDate,
+  endDate,
+  granularity,
   agg,
   chartExtra,
 }: LineChartProps) => {
   const colors = ["blue", "pink", "indigo", "green", "violet", "yellow"]
 
   const cleanedData = prepareDataForRecharts(
-    blocked ? generateFakeData(range) : data,
+    blocked ? generateFakeData(startDate, endDate, granularity) : data,
     splitBy,
     props,
-    range,
+    startDate,
+    endDate,
+    granularity,
   )
 
   const hasData = blocked
@@ -233,7 +286,7 @@ const LineChartComponent = ({
         </>
       )}
 
-      {!!total && (
+      {typeof total === "number" && (
         <Text fw={500} fz={24} mt={-12} ml="md">
           {formatter(total)}
         </Text>
@@ -299,6 +352,7 @@ const LineChartComponent = ({
             width={500}
             height={420}
             data={hasData ? cleanedData : []}
+            syncId="anyId"
             margin={{
               top: 10,
               right: 0,
@@ -316,23 +370,27 @@ const LineChartComponent = ({
             )}
             <XAxis
               dataKey="date"
-              tick={({ x, y, payload, index }) => (
-                <CustomizedAxisTick
-                  x={x}
-                  y={y}
-                  payload={payload}
-                  index={index}
-                  data={cleanedData}
-                />
-              )}
-              style={{
-                marginLeft: 20,
+              tick={({ x, y, payload, index }) => {
+                return (
+                  <CustomizedAxisTick
+                    x={x}
+                    y={y}
+                    payload={payload}
+                    index={index}
+                    data={cleanedData}
+                    granularity={granularity}
+                  />
+                )
               }}
-              interval="preserveStartEnd"
-              tickLine={false}
+              interval={0}
+              ticks={[
+                // only show the first and last tick
+                cleanedData[0]?.date,
+                cleanedData[cleanedData.length - 1]?.date,
+              ]}
+              padding={{ left: 0, right: 0 }}
               axisLine={false}
-              minTickGap={5}
-              max={7}
+              tickLine={false}
             />
 
             <Tooltip
@@ -342,7 +400,7 @@ const LineChartComponent = ({
                   return (
                     <Card shadow="md" withBorder>
                       <Title order={3} size="sm">
-                        {formatDate(label)}
+                        {formatDate(label, granularity)}
                       </Title>
                       {payload.map((item, i) => (
                         <Text key={i}>{`${item.name}: ${formatter(

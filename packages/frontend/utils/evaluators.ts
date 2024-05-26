@@ -76,6 +76,7 @@ const EVALUATOR_TYPES = {
     params: [],
   },
   assert: {
+    id: "assert",
     name: "Assertion",
     icon: IconEyeCheck,
     color: "blue",
@@ -105,8 +106,9 @@ const EVALUATOR_TYPES = {
       "Uses AI to detect the topics of an interaction. You can add custom topics to the model.",
     params: [
       {
-        type: "text",
-        id: "customTopics",
+        type: "select",
+        multiple: true,
+        id: "topics",
         label: "Pred Topics",
         placeholder: "Enter custom topics",
       },

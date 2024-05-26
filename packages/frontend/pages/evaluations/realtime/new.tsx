@@ -15,11 +15,7 @@ import {
   Tooltip,
   UnstyledButton,
 } from "@mantine/core"
-import {
-  IconCircleCheck,
-  IconCirclePlus,
-  IconCubePlus,
-} from "@tabler/icons-react"
+import { IconCircleCheck, IconCirclePlus } from "@tabler/icons-react"
 import { useState } from "react"
 import { CheckLogic } from "shared"
 
@@ -79,7 +75,7 @@ function EvaluatorCard({
 
 export default function NewRealtimeEvaluator() {
   const [evaluatorType, setEvaluatorType] = useState<string>()
-  const [evaluatorParams, setEvaluatorParams] = useState<CheckLogic>({})
+  const [evaluatorParams, setEvaluatorParams] = useState<CheckLogic>([])
 
   const evaluatorTypes = Object.values(EVALUATOR_TYPES)
 
@@ -89,9 +85,11 @@ export default function NewRealtimeEvaluator() {
 
   const hasParams = selectedEvaluator?.params?.length
 
-  const Icon = selectedEvaluator?.icon
+  const IconComponent = selectedEvaluator?.icon
 
   function onChange() {}
+
+  // console.log(selectedEvaluator?.params)
 
   return (
     <Container>
@@ -132,12 +130,11 @@ export default function NewRealtimeEvaluator() {
             <RenderCheckNode
               minimal={false}
               node={evaluatorParams}
-              disabled={false}
               setNode={(newNode) => {
                 setEvaluatorParams(newNode as CheckLogic)
               }}
               removeNode={() => {}}
-              checks={selectedEvaluator?.params || []}
+              checks={[selectedEvaluator]}
             />
           </>
         )}
@@ -146,7 +143,7 @@ export default function NewRealtimeEvaluator() {
           <Button
             disabled={!selectedEvaluator}
             onClick={() => {}}
-            leftSection={<Icon size={16} />}
+            leftSection={IconComponent && <IconComponent size={16} />}
             size="md"
             variant="default"
           >
