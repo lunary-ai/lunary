@@ -3,17 +3,13 @@ import {
   useAverageLatencyAnalytics,
   useErrorAnalytics,
   useNewUsersAnalytics,
-  useOrg,
   useProject,
   useRunCountAnalytics,
-  useUser,
 } from "@/utils/dataHooks"
 import {
   Button,
-  Center,
   Container,
   Group,
-  Loader,
   Select,
   SimpleGrid,
   Stack,
@@ -238,6 +234,7 @@ function GranularitySelect({
       placeholder="Granularity"
       w="100"
       size="xs"
+      allowDeselect={false}
       ml="md"
       styles={{
         input: {

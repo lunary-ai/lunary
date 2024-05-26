@@ -86,8 +86,8 @@ export default function RealtimeEvaluators() {
         <Group align="center" justify="space-between">
           <Group align="center">
             <Title>Real-time Evaluations</Title>
-            <Badge variant="light" color="violet">
-              Beta
+            <Badge variant="light" color="blue">
+              Alpha
             </Badge>
           </Group>
 

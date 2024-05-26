@@ -180,12 +180,11 @@ runs.get("/", async (ctx: Context) => {
       rpfc.feedback
     order by
       r.created_at desc
-    limit ${Number(limit)}
+    limit ${exportType ? 10000 : Number(limit)}
     offset ${Number(page) * Number(limit)}
       `
 
   const runs = rows.map(formatRun)
-  console.log(runs[0])
 
   if (exportType) {
     return fileExport(runs, exportType, ctx)

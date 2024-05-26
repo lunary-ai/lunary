@@ -2,19 +2,26 @@ import { RenderCheckNode } from "@/components/checks/Picker"
 import EVALUATOR_TYPES from "@/utils/evaluators"
 import { theme } from "@/utils/theme"
 import {
+  Button,
   Card,
   Container,
   Flex,
   Group,
   SimpleGrid,
   Stack,
+  Switch,
   Text,
   Title,
   Tooltip,
   UnstyledButton,
 } from "@mantine/core"
-import { IconCircleCheck, IconCirclePlus } from "@tabler/icons-react"
+import {
+  IconCircleCheck,
+  IconCirclePlus,
+  IconCubePlus,
+} from "@tabler/icons-react"
 import { useState } from "react"
+import { CheckLogic } from "shared"
 
 function EvaluatorCard({
   evaluator,
@@ -72,16 +79,40 @@ function EvaluatorCard({
 
 export default function NewRealtimeEvaluator() {
   const [evaluatorType, setEvaluatorType] = useState<string>()
+  const [evaluatorParams, setEvaluatorParams] = useState<CheckLogic>({})
 
   const evaluatorTypes = Object.values(EVALUATOR_TYPES)
 
+  const selectedEvaluator = evaluatorTypes.find(
+    (evaluator) => evaluator.id === evaluatorType,
+  )
+
+  const hasParams = selectedEvaluator?.params?.length
+
+  const Icon = selectedEvaluator?.icon
+
   function onChange() {}
+
   return (
     <Container>
       <Stack gap="lg">
         <Group align="center">
-          <Title>New Evaluator</Title>
+          <Title>Add Evaluator</Title>
         </Group>
+
+        <Tooltip label="Only real-time evaluators are available at the moment">
+          <Group w="fit-content">
+            <Switch
+              size="xl"
+              label="Realtime"
+              onLabel="ON"
+              offLabel="OFF"
+              checked={true}
+            />
+          </Group>
+        </Tooltip>
+
+        <Text>Select the type of evaluator you want to add:</Text>
 
         <SimpleGrid cols={5} spacing="md">
           {evaluatorTypes.map((evaluator) => (
@@ -94,18 +125,36 @@ export default function NewRealtimeEvaluator() {
           ))}
         </SimpleGrid>
 
-        <RenderCheckNode
-          minimal={false}
-          node={evaluatorTypes[0]}
-          disabled={false}
-          setNode={(newNode) => {
-            // onChange(newNode as CheckLogic)
-          }}
-          removeNode={() => {
-            // onChange(["AND"])
-          }}
-          checks={evaluatorTypes}
-        />
+        {!!hasParams && (
+          <>
+            <Text>Configure the evaluator:</Text>
+
+            <RenderCheckNode
+              minimal={false}
+              node={evaluatorParams}
+              disabled={false}
+              setNode={(newNode) => {
+                setEvaluatorParams(newNode as CheckLogic)
+              }}
+              removeNode={() => {}}
+              checks={selectedEvaluator?.params || []}
+            />
+          </>
+        )}
+
+        <Group justify="end">
+          <Button
+            disabled={!selectedEvaluator}
+            onClick={() => {}}
+            leftSection={<Icon size={16} />}
+            size="md"
+            variant="default"
+          >
+            {selectedEvaluator
+              ? `Create ${selectedEvaluator.name} Evaluator`
+              : "Create"}
+          </Button>
+        </Group>
       </Stack>
     </Container>
   )
