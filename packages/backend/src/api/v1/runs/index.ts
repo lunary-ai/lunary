@@ -134,29 +134,47 @@ runs.get("/", async (ctx: Context) => {
   }
 
   const rows = await sql`
-      select
-        r.*,
-        eu.id as user_id,
-        eu.external_id as user_external_id,
-        eu.created_at as user_created_at,
-        eu.last_seen as user_last_seen,
-        eu.props as user_props,
-        t.slug as template_slug,
-        rpfc.feedback as parent_feedback
-      from
-          run r
-          left join external_user eu on r.external_user_id = eu.id
-          left join run_parent_feedback_cache rpfc on r.id = rpfc.id
-          left join template_version tv on r.template_version_id = tv.id
-          left join template t on tv.template_id = t.id
-      where
-          r.project_id = ${projectId}
-          ${parentRunCheck}
-          and (${filtersQuery})
-      order by
-          r.created_at desc
-      limit ${Number(limit)}
-      offset ${Number(page) * Number(limit)}`
+    select
+      r.*,
+      eu.id as user_id,
+      eu.external_id as user_external_id,
+      eu.created_at as user_created_at,
+      eu.last_seen as user_last_seen,
+      eu.props as user_props,
+      t.slug as template_slug,
+      rpfc.feedback as parent_feedback,
+      coalesce(array_agg(
+          jsonb_build_object(
+              'evaluatorName', e.name,
+              'evaluatorSlug', e.slug,
+              'evaluatorId', e.id,
+              'result', er.result, 
+              'createdAt', er.created_at,
+              'updatedAt', er.updated_at
+          )
+      ) filter (where er.run_id is not null), '{}') as evaluation_results
+    from
+      public.run r
+      left join external_user eu on r.external_user_id = eu.id
+      left join run_parent_feedback_cache rpfc on r.id = rpfc.id
+      left join template_version tv on r.template_version_id = tv.id
+      left join template t on tv.template_id = t.id
+      left join evaluation_result_v2 er on r.id = er.run_id 
+      left join evaluator e on er.evaluator_id = e.id
+    where
+      r.project_id = ${projectId}
+      ${parentRunCheck}
+      and (${filtersQuery})
+    group by
+      r.id,
+      eu.id,
+      t.slug,
+      rpfc.feedback
+    order by
+      r.created_at desc
+    limit ${exportType ? 10000 : Number(limit)}
+    offset ${Number(page) * Number(limit)}
+      `
 
   const runs = rows.map(formatRun)
 

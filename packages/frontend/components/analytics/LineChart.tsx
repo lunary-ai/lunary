@@ -214,10 +214,10 @@ const LineChartComponent = ({
         <>
           <Overlay
             h="100%"
-            blur={15}
-            backgroundOpacity={0.1}
+            blur={5}
+            backgroundOpacity={0.05}
             p="lg"
-            zIndex={2}
+            zIndex={3}
           />
           <Center
             ta="center"
