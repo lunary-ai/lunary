@@ -4,16 +4,15 @@ import { ReactNode, useEffect } from "react"
 
 import { useRouter } from "next/router"
 
-import { ProjectContext } from "@/utils/context"
 import Navbar from "./Navbar"
 import Sidebar from "./Sidebar"
 
+import analytics from "@/utils/analytics"
 import { useAuth } from "@/utils/auth"
 import { useOrg, useProject, useUser } from "@/utils/dataHooks"
+import { useColorScheme } from "@mantine/hooks"
 import { ModalsProvider } from "@mantine/modals"
 import UpgradeModal from "./UpgradeModal"
-import { useColorScheme, useLocalStorage } from "@mantine/hooks"
-import analytics from "@/utils/analytics"
 
 export default function Layout({ children }: { children: ReactNode }) {
   const router = useRouter()
@@ -57,7 +56,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   }, [isSignedIn])
   const { user } = useUser()
   const { org } = useOrg()
-  const { project, isLoading: isProjectLoading } = useProject()
+  const { project } = useProject()
 
   const isPromptPage = router.pathname.startsWith("/prompt")
 
@@ -72,11 +71,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     }
   }, [user])
 
-  if (
-    !isAuthPage &&
-    !isPublicPage &&
-    (!user || !org || project === undefined)
-  ) {
+  if (!isAuthPage && !isPublicPage && (!user || !org)) {
     return (
       <Flex align="center" justify="center" h="100vh">
         <Loader />
