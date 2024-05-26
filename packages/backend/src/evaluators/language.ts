@@ -1,11 +1,9 @@
 import { Run } from "shared"
 import { callML } from "../utils/ml"
+import { lastMsg } from "../checks"
 
 export async function evaluate(run: Run) {
-  run.inputText = run.inputText || ""
-  run.outputText = run.outputText || ""
-
-  const text = run.inputText + `\n` + run.outputText
+  const text = lastMsg(run.input)
 
   const language = await callML("lang", {
     text,

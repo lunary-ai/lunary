@@ -1,4 +1,5 @@
 import { Run } from "shared"
+import { lastMsg } from "../checks"
 
 interface PiiParams {
   entities: ("email" | "ip")[]
@@ -11,10 +12,7 @@ export async function evaluate(run: Run, params: PiiParams) {
     ips?: string[]
   } = {}
 
-  run.inputText = run.inputText || ""
-  run.outputText = run.outputText || ""
-
-  const text = run.inputText + run.outputText
+  const text = lastMsg(run.input) + lastMsg(run.output)
 
   if (entities.includes("email")) {
     const emailRegex = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi
