@@ -262,8 +262,6 @@ const LineChartComponent = ({
     granularity,
   )
 
-  console.log(cleanedData)
-
   const hasData = blocked
     ? true
     : cleanedData?.length &&

@@ -16,7 +16,7 @@ import {
   UnstyledButton,
 } from "@mantine/core"
 import { IconCircleCheck, IconCirclePlus } from "@tabler/icons-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { CheckLogic, LogicElement } from "shared"
 
 function EvaluatorCard({
@@ -75,7 +75,7 @@ function EvaluatorCard({
 
 export default function NewRealtimeEvaluator() {
   const [evaluatorType, setEvaluatorType] = useState<string>()
-  const [evaluatorParams, setEvaluatorParams] = useState<any>(["AND"])
+  const [evaluatorParams, setEvaluatorParams] = useState<any>({})
   const [evaluatorViewFilter, setEvaluatorViewFilter] = useState<CheckLogic>([
     "AND",
     { id: "type", params: { type: "llm" } },
@@ -91,9 +91,23 @@ export default function NewRealtimeEvaluator() {
 
   const IconComponent = selectedEvaluator?.icon
 
-  function onChange() {}
+  useEffect(() => {
+    if (selectedEvaluator) {
+      setEvaluatorParams({
+        id: selectedEvaluator.id,
+        params: selectedEvaluator.params.reduce((acc, param) => {
+          if (param.id) {
+            acc[param.id] = param.defaultValue
+          }
+          return acc
+        }, {}),
+      })
+    }
+  }, [selectedEvaluator])
 
-  console.log([selectedEvaluator])
+  function createEvaluator() {
+    console.log({ evaluatorType, evaluatorParams, evaluatorViewFilter })
+  }
 
   return (
     <Container>
@@ -121,11 +135,10 @@ export default function NewRealtimeEvaluator() {
 
             <RenderCheckNode
               node={evaluatorParams}
+              minimal={false}
               setNode={(newNode) => {
-                console.log({ newNode })
                 setEvaluatorParams(newNode as CheckLogic)
               }}
-              removeNode={() => {}}
               checks={[selectedEvaluator]}
             />
           </>
@@ -168,7 +181,9 @@ export default function NewRealtimeEvaluator() {
         <Group justify="end">
           <Button
             disabled={!selectedEvaluator}
-            onClick={() => {}}
+            onClick={() => {
+              createEvaluator()
+            }}
             leftSection={IconComponent && <IconComponent size={16} />}
             size="md"
             variant="default"

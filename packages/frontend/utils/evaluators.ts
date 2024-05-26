@@ -8,7 +8,6 @@ import {
   IconTextWrap,
   IconUserCheck,
 } from "@tabler/icons-react"
-import { FIELD_PARAM, MATCH_PARAM } from "shared/checks/params"
 
 // TODO: typescript
 const EVALUATOR_TYPES = {
@@ -20,6 +19,10 @@ const EVALUATOR_TYPES = {
     icon: IconIdBadge,
     color: "orange",
     params: [
+      {
+        type: "label",
+        label: "Look for",
+      },
       {
         type: "select",
         id: "entities",
@@ -86,14 +89,17 @@ const EVALUATOR_TYPES = {
     params: [
       {
         type: "label",
-        label: "Output",
+        label: "List of conditions",
       },
       {
         type: "select",
         multiple: true,
+        allowCustom: true,
         id: "conditions",
+        options: ["answer is spoken like a pirate"],
+        defaultValue: ["answer is spoken like a pirate"],
         placeholder: "Is spoken like a pirate",
-        width: 140,
+        width: 300,
       },
     ],
   },
@@ -106,11 +112,18 @@ const EVALUATOR_TYPES = {
       "Uses AI to detect the topics of an interaction. You can add custom topics to the model.",
     params: [
       {
+        type: "label",
+        label: "Enter predefined topics",
+      },
+      {
         type: "select",
         multiple: true,
         id: "topics",
-        label: "Pred Topics",
+        defaultValue: ["Sales", "Support", "Q/A", "Feedback"],
+        allowCustom: true,
+        label: "Topics",
         placeholder: "Enter custom topics",
+        width: 300,
       },
     ],
   },
