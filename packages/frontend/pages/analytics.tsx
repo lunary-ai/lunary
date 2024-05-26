@@ -309,21 +309,6 @@ export default function Analytics() {
     checks.filter((f) => f !== "AND" && !["search", "type"].includes(f.id))
       .length > 0
 
-  // TODO:
-  const loading =
-    errorsDataLoading ||
-    newUsersDataLoading ||
-    runCountLoading ||
-    averageLatencyDataLoading
-
-  if (loading) {
-    return (
-      <Center h="60vh">
-        <Loader />
-      </Center>
-    )
-  }
-
   return (
     <Empty
       Icon={IconChartAreaLine}
@@ -384,6 +369,7 @@ export default function Analytics() {
             <LineChart
               data={errorsData}
               title="Errors Volume"
+              loading={errorsDataLoading}
               description="How many errors were captured in your app"
               agg="sum"
               props={["errorCount"]}
@@ -396,6 +382,7 @@ export default function Analytics() {
               <LineChart
                 range={1000}
                 data={newUsersData}
+                loading={newUsersDataLoading}
                 props={["newUsersCount"]}
                 agg="sum"
                 title="New Users"
@@ -406,6 +393,7 @@ export default function Analytics() {
             <LineChart
               range={chartRange}
               data={runCountData}
+              loading={runCountLoading}
               props={["runCount"]}
               agg="sum"
               title="Runs Volume"
@@ -415,8 +403,10 @@ export default function Analytics() {
             <LineChart
               range={chartRange}
               data={averageLatencyData}
+              loading={averageLatencyDataLoading}
               props={["avgDuration"]}
               agg="avg"
+              formatter={(value) => `${value.toFixed(2)}s`}
               title="Avg. LLM Latency"
               height={230}
             />

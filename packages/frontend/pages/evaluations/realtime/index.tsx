@@ -104,7 +104,7 @@ export default function RealtimeEvaluators() {
           Run evaluations on your production data in real-time.
         </Text>
 
-        {evaluators.map((evaluator) => (
+        {evaluators?.map((evaluator) => (
           <Card key={evaluator.id} p="lg" withBorder>
             <Group justify="space-between">
               <Stack gap="0">

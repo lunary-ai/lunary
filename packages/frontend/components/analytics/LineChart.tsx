@@ -9,6 +9,7 @@ import {
   Overlay,
   Text,
   Title,
+  Loader,
 } from "@mantine/core"
 import {
   Area,
@@ -138,7 +139,9 @@ type LineChartProps = {
   blocked?: boolean
   formatter?: (value: number) => string
   height?: number
+  loading?: boolean
   splitBy?: string
+
   description?: string
   range: number
   agg: string
@@ -165,6 +168,7 @@ const LineChartComponent = ({
   formatter = formatLargeNumber,
   height = 300,
   description,
+  loading = false,
   splitBy = undefined,
   range,
   agg,
@@ -206,9 +210,32 @@ const LineChartComponent = ({
         )}
       </Group>
 
+      {loading && (
+        <>
+          <Overlay
+            h="100%"
+            blur={15}
+            backgroundOpacity={0.1}
+            p="lg"
+            zIndex={2}
+          />
+          <Center
+            ta="center"
+            style={{
+              position: "absolute",
+              zIndex: 3,
+            }}
+            h="100%"
+            w="100%"
+          >
+            <Loader />
+          </Center>
+        </>
+      )}
+
       {!!total && (
         <Text fw={500} fz={24} mt={-12} ml="md">
-          {total}
+          {formatter(total)}
         </Text>
       )}
 
