@@ -7,6 +7,7 @@ import topics from "./topics"
 import toxicity from "./toxicity"
 import sentiment from "./sentiment"
 import guidelines from "./guidelines"
+import replies from "./replies"
 
 const evaluators = {
   pii,
@@ -17,6 +18,7 @@ const evaluators = {
   toxicity,
   sentiment,
   guidelines,
+  replies,
 }
 
 export default evaluators

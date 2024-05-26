@@ -6,6 +6,8 @@ import {
   IconEyeCheck,
   IconIdBadge,
   IconLanguage,
+  IconMessage2,
+  IconMessages,
   IconMoodSmile,
   IconTextWrap,
   IconTools,
@@ -255,6 +257,14 @@ const EVALUATOR_TYPES = {
     icon: IconTools,
     color: "gray",
     description: `Checks if the assistant answer matches guidelines set in the 'system' message.`,
+    params: [],
+  },
+  replies: {
+    id: "replies",
+    name: "Successful Answer",
+    icon: IconMessages,
+    color: "blue",
+    description: `Checks if the assistant successfully answers the question asked by the user.`,
     params: [],
   },
 }
