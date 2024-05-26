@@ -1,11 +1,9 @@
 import Empty from "@/components/layout/Empty"
-import {
-  useAverageLatencyAnalytics,
-  useErrorAnalytics,
-  useNewUsersAnalytics,
-  useProject,
-  useRunCountAnalytics,
-} from "@/utils/dataHooks"
+import { useProject } from "@/utils/dataHooks"
+import { useAverageLatencyAnalytics } from "@/utils/dataHooks/analytics"
+import { useNewUsersAnalytics } from "@/utils/dataHooks/analytics"
+import { useRunCountAnalytics } from "@/utils/dataHooks/analytics"
+import { useErrorAnalytics } from "@/utils/dataHooks/analytics"
 import {
   Button,
   Container,

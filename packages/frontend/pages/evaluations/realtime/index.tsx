@@ -1,5 +1,7 @@
 import Paywall from "@/components/layout/Paywall"
-import { useEvaluators, useOrg } from "@/utils/dataHooks"
+import { useOrg } from "@/utils/dataHooks"
+import { useEvaluators } from "@/utils/dataHooks/evaluators"
+import { slugify } from "@/utils/format"
 
 import {
   ActionIcon,
@@ -80,7 +82,6 @@ export default function RealtimeEvaluators() {
   // }
 
   return (
-    //TODO: add slug
     <Container>
       <Stack gap="lg">
         <Group align="center" justify="space-between">
@@ -111,7 +112,7 @@ export default function RealtimeEvaluators() {
                 <Title order={3} size={16}>
                   {evaluator.name}
                 </Title>
-                <Text>{evaluator.description}</Text>
+                <Text>{slugify(evaluator.name)}</Text>
               </Stack>
 
               <Menu>

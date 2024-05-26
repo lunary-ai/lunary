@@ -98,15 +98,22 @@ const formatRun = (run: any) => ({
   siblingRunId: run.siblingRunId,
   params: processParams(run.params),
 
-  metadata: run.metadata,
-  user: {
-    id: run.externalUserId,
-    externalId: run.userExternalId,
-    createdAt: run.userCreatedAt,
-    lastSeen: run.userLastSeen,
-    props: run.userProps,
-  },
-})
+    metadata: run.metadata,
+    user: {
+      id: run.externalUserId,
+      externalId: run.userExternalId,
+      createdAt: run.userCreatedAt,
+      lastSeen: run.userLastSeen,
+      props: run.userProps,
+    },
+  }
+
+  for (let evaluationResult of run.evaluationResults || []) {
+    formattedRun[`enrichment-${evaluationResult.evaluatorSlug}`] =
+      evaluationResult
+  }
+  return formattedRun
+}
 
 runs.use("/ingest", ingest.routes())
 

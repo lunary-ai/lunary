@@ -15,7 +15,8 @@ async function runEvaluator(evaluator: RealtimeEvaluator, run: Run) {
       evaluator.params,
     )
 
-    await sql`
+    if (result) {
+      await sql`
       insert into evaluation_result_v2
       ${sql({
         evaluatorId: evaluator.id,
@@ -23,11 +24,15 @@ async function runEvaluator(evaluator: RealtimeEvaluator, run: Run) {
         result,
       })}
     `
+    }
   } catch (error) {
     if (process.env.NODE_ENV === "production") {
       Sentry.captureException(error)
     }
-    console.error(error)
+    console.error(
+      `Error while evaluating run ${run.id} with evaluator ${evaluator.id}: `,
+      error,
+    )
   }
 }
 

@@ -3,7 +3,7 @@ import { isOpenAIMessage, lastMsg } from "../checks"
 import openai from "@/src/utils/openai"
 import lunary from "lunary"
 
-export default async function evaluate(run: Run) {
+export async function evaluate(run: Run) {
   let systemGuidelines = null
 
   console.log(`Evaluating guidelines`)

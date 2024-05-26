@@ -5,7 +5,7 @@ interface PiiParams {
   entities: ("email" | "ip")[]
 }
 
-export default async function evaluate(run: Run, params: PiiParams) {
+export async function evaluate(run: Run, params: PiiParams) {
   const { entities } = params
   const results: {
     emails?: string[]
@@ -13,6 +13,9 @@ export default async function evaluate(run: Run, params: PiiParams) {
   } = {}
 
   const text = lastMsg(run.input) + lastMsg(run.output)
+  if (!text.length) {
+    return null
+  }
 
   if (entities.includes("email")) {
     const emailRegex = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi

@@ -3,9 +3,10 @@ import { lastMsg } from "../checks"
 import openai from "@/src/utils/openai"
 import lunary from "lunary"
 
-export default async function evaluate(run: Run) {
-  if (!run.input || !run.output)
-    throw new Error("No input or output for evaluator 'replies'")
+export async function evaluate(run: Run) {
+  if (!run.input || !run.output) {
+    return null
+  }
 
   const template = await lunary.renderTemplate("replied-question", {
     question: lastMsg(run.input),

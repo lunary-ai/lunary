@@ -1,4 +1,6 @@
 import CheckPicker, { RenderCheckNode } from "@/components/checks/Picker"
+import { useUser } from "@/utils/dataHooks"
+import { useEvaluators } from "@/utils/dataHooks/evaluators"
 import EVALUATOR_TYPES from "@/utils/evaluators"
 import { theme } from "@/utils/theme"
 import {
@@ -11,13 +13,14 @@ import {
   Stack,
   Switch,
   Text,
+  TextInput,
   Title,
   Tooltip,
   UnstyledButton,
 } from "@mantine/core"
 import { IconCircleCheck, IconCirclePlus } from "@tabler/icons-react"
 import { useEffect, useState } from "react"
-import { CheckLogic, LogicElement } from "shared"
+import { CheckLogic } from "shared"
 
 function EvaluatorCard({
   evaluator,
@@ -74,17 +77,22 @@ function EvaluatorCard({
 }
 
 export default function NewRealtimeEvaluator() {
-  const [evaluatorType, setEvaluatorType] = useState<string>()
-  const [evaluatorParams, setEvaluatorParams] = useState<any>({})
-  const [evaluatorViewFilter, setEvaluatorViewFilter] = useState<CheckLogic>([
+  const { user } = useUser()
+  const { evaluators, insert: insertEvaluator } = useEvaluators()
+
+  const [name, setName] = useState<string>("")
+  const [type, setType] = useState<string>()
+  const [params, setParams] = useState<any>({})
+  const [filters, setFilters] = useState<CheckLogic>([
     "AND",
     { id: "type", params: { type: "llm" } },
   ])
+  // TODO: name and description
 
   const evaluatorTypes = Object.values(EVALUATOR_TYPES)
 
   const selectedEvaluator = evaluatorTypes.find(
-    (evaluator) => evaluator.id === evaluatorType,
+    (evaluator) => evaluator.id === type,
   )
 
   const hasParams = selectedEvaluator?.params?.length
@@ -93,20 +101,28 @@ export default function NewRealtimeEvaluator() {
 
   useEffect(() => {
     if (selectedEvaluator) {
-      setEvaluatorParams({
-        id: selectedEvaluator.id,
-        params: selectedEvaluator.params.reduce((acc, param) => {
+      setParams(
+        selectedEvaluator.params.reduce((acc, param) => {
           if (param.id) {
             acc[param.id] = param.defaultValue
           }
           return acc
         }, {}),
-      })
+      )
     }
   }, [selectedEvaluator])
 
-  function createEvaluator() {
-    console.log({ evaluatorType, evaluatorParams, evaluatorViewFilter })
+  async function createEvaluator() {
+    // TODO: validation
+    await insertEvaluator({
+      name,
+      slug: name.toLocaleLowerCase(),
+      mode: "realtime",
+      params,
+      type,
+      filters,
+      ownerId: user.id,
+    })
   }
 
   return (
@@ -115,6 +131,14 @@ export default function NewRealtimeEvaluator() {
         <Group align="center">
           <Title>Add Evaluator</Title>
         </Group>
+
+        <TextInput
+          label="Name"
+          placeholder="Your evaluator name"
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
 
         <Stack>
           <Text>Select the type of evaluator you want to add:</Text>
@@ -126,8 +150,8 @@ export default function NewRealtimeEvaluator() {
                 <EvaluatorCard
                   key={evaluator.id}
                   evaluator={evaluator}
-                  isSelected={evaluatorType === evaluator.id}
-                  onItemClick={setEvaluatorType}
+                  isSelected={type === evaluator.id}
+                  onItemClick={setType}
                 />
               ))}
           </SimpleGrid>
@@ -138,10 +162,10 @@ export default function NewRealtimeEvaluator() {
             <Text>Configure the evaluator:</Text>
 
             <RenderCheckNode
-              node={evaluatorParams}
+              node={params}
               minimal={false}
               setNode={(newNode) => {
-                setEvaluatorParams(newNode as CheckLogic)
+                setParams(newNode as CheckLogic)
               }}
               checks={[selectedEvaluator]}
             />
@@ -166,8 +190,8 @@ export default function NewRealtimeEvaluator() {
 
             <CheckPicker
               minimal
-              value={evaluatorViewFilter}
-              onChange={setEvaluatorViewFilter}
+              value={filters}
+              onChange={setFilters}
               restrictTo={(filter) =>
                 ["tags", "type", "users", "metadata"].includes(filter.id)
               }

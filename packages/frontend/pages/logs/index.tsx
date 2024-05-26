@@ -57,6 +57,7 @@ import {
   useProjectInfiniteSWR,
   useRun,
 } from "@/utils/dataHooks"
+import { useEvaluators } from "@/utils/dataHooks/evaluators"
 import { useDebouncedState, useDidUpdate } from "@mantine/hooks"
 import { ProjectContext } from "@/utils/context"
 import { CheckLogic, deserializeLogic, serializeLogic } from "shared"

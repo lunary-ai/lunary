@@ -7,7 +7,7 @@ interface TonesParams {
   tones: string[]
 }
 
-export default async function evaluate(run: Run, params: TonesParams) {
+export async function evaluate(run: Run, params: TonesParams) {
   const { tones } = params
 
   const tonesList = tones.join("\n")
