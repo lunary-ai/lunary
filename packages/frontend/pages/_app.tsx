@@ -22,6 +22,7 @@ export default function App({ Component, pageProps }: AppProps) {
   const [projectId, setProjectId] = useLocalStorage({
     key: "projectId",
     defaultValue: null,
+    getInitialValueInEffect: false,
   })
   return (
     <>

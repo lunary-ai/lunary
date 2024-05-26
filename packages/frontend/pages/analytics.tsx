@@ -1,22 +1,14 @@
-import AnalyticsCard from "@/components/analytics/AnalyticsCard"
-import BarList from "@/components/analytics/BarList"
-import LineChart from "@/components/analytics/LineChart"
-import UsageSummary from "@/components/analytics/UsageSummary"
-import { formatAppUser, formatCost } from "@/utils/format"
-import { DatePickerInput } from "@mantine/dates"
-import CheckPicker from "@/components/checks/Picker"
-import "@mantine/dates/styles.css"
-
-import AppUserAvatar from "@/components/blocks/AppUserAvatar"
 import Empty from "@/components/layout/Empty"
 import {
-  useAppUsers,
+  useAverageLatencyAnalytics,
+  useErrorAnalytics,
+  useNewUsersAnalytics,
+  useOrg,
   useProject,
-  useRunsUsage,
-  useRunsUsageByDay,
+  useRunCountAnalytics,
+  useUser,
 } from "@/utils/dataHooks"
 import {
-  Anchor,
   Button,
   Center,
   Container,
@@ -25,10 +17,10 @@ import {
   Select,
   SimpleGrid,
   Stack,
-  Text,
   Title,
 } from "@mantine/core"
-import { useDidUpdate, useLocalStorage } from "@mantine/hooks"
+import { DatePickerInput } from "@mantine/dates"
+import { useLocalStorage } from "@mantine/hooks"
 import {
   IconCalendar,
   IconChartAreaLine,
@@ -36,129 +28,297 @@ import {
 } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { useEffect, useState } from "react"
-import { CheckLogic, deserializeLogic, serializeLogic } from "shared"
-import { useRouter } from "next/router"
+import "@mantine/dates/styles.css"
+import LineChart from "@/components/analytics/LineChart"
+import { CheckLogic, serializeLogic } from "shared"
+import CheckPicker from "@/components/checks/Picker"
 
-const calculateDailyCost = (usage) => {
-  // calculate using calcRunCost, reduce by model, and filter by type llm
-  // reduce by day
-
-  const cost = usage.reduce((acc, curr) => {
-    const { date, cost } = curr
-
-    if (!acc[date]) acc[date] = 0
-    acc[date] += cost
-
-    return acc
-  }, {})
-
-  const final = Object.keys(cost).map((date) => ({
-    date,
-    cost: cost[date],
-  }))
-
-  return final
+function getDefaultDateRange() {
+  const currentDate = new Date()
+  const oneWeekAgoDate = new Date(currentDate)
+  oneWeekAgoDate.setDate(currentDate.getDate() - 7)
+  const defaultRange: [Date, Date] = [oneWeekAgoDate, currentDate]
+  return defaultRange
 }
 
-export default function Analytics() {
-  const [range, setRange] = useLocalStorage({
-    key: "dateRange-analytics",
-    defaultValue: 7,
-  })
+/**
+ * This deserialize function handles the old localStorage format and
+ * corrupted data (e.g., if the data was manually changed by the user).
+ */
+export function deserializeDateRange(value: any): [Date, Date] {
+  const defaultRange: [Date, Date] = getDefaultDateRange()
 
-  const router = useRouter()
-  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
-    null,
-    null,
-  ])
-  const [checks, setChecks] = useState<CheckLogic>(["AND"])
-  const [serializedChecks, setSerializedChecks] = useState<string>("")
-  const [granularity, setGranularity] = useState<"hour" | "day" | "week">("day")
-  const [predefinedRange, setPredefinedRange] = useState("7d")
-  const [showCheckBar, setShowCheckBar] = useState(false)
-  const { project } = useProject()
+  if (!value) {
+    return defaultRange
+  }
+  try {
+    const range = JSON.parse(value)
 
-  const { usage, loading: usageLoading } = useRunsUsage(range)
-
-  const { dailyUsage, loading: dailyUsageLoading } = useRunsUsageByDay(range)
-  const { users, loading: usersLoading } = useAppUsers(range)
-
-  const loading = usageLoading || dailyUsageLoading || usersLoading
-
-  function editRange(newRange: string) {
-    const today = new Date()
-    switch (newRange) {
-      case "1d":
-        setDateRange([today, today])
-        setGranularity("hour")
-        break
-      case "7d":
-        setDateRange([
-          new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000),
-          today,
-        ])
-        setGranularity("day")
-        break
-      case "30d":
-        setDateRange([
-          new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000),
-          today,
-        ])
-        setGranularity("day")
-        break
-      case "3m":
-        setDateRange([
-          new Date(new Date().getTime() - 90 * 24 * 60 * 60 * 1000),
-          today,
-        ])
-        setGranularity("week")
-        break
-      default:
-        break
+    if (!Array.isArray(range) || range.length !== 2) {
+      return defaultRange
     }
+    if (isNaN(Date.parse(range[0])) || isNaN(Date.parse(range[1]))) {
+      return defaultRange
+    }
+
+    const [startDate, endDate] = [new Date(range[0]), new Date(range[1])]
+
+    return [startDate, endDate]
+  } catch {
+    return defaultRange
+  }
+}
+
+function calculateChatRange(dateRange: [Date, Date], granularity: Granularity) {
+  const [startDate, endDate] = dateRange
+  const diffTime = Math.abs(endDate - startDate)
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+  const granularityCalculations = {
+    hourly: diffDays * 24,
+    daily: diffDays,
+    weekly: Math.ceil(diffDays / 7),
   }
 
+  return granularityCalculations[granularity] || diffDays
+}
+
+export function getDateRange(
+  option: "Today" | "7 Days" | "30 Days" | "3 Months",
+): Date[] {
+  const currentDate = new Date()
+  const startDate = new Date()
+
+  const options = {
+    Today: () => startDate,
+    "7 Days": () => startDate.setDate(currentDate.getDate() - 7),
+    "30 Days": () => startDate.setDate(currentDate.getDate() - 30),
+    "3 Months": () => startDate.setMonth(currentDate.getMonth() - 3),
+  }
+
+  const updateDate = options[option] || options["7 Days"]
+  updateDate()
+
+  return [startDate, currentDate]
+}
+
+export function getSelectedOption(dateRange) {
+  const [startDate, endDate] = dateRange
+  const diffDays = (endDate - startDate) / (1000 * 60 * 60 * 24)
+
+  if (diffDays <= 1) return "Today"
+  if (diffDays === 7) return "7 Days"
+  if (diffDays === 30) return "30 Days"
+  if (diffDays >= 89 && diffDays <= 92) return "3 Months"
+  return "Custom"
+}
+
+function DateRangeSelect({ dateRange, setDateRange }) {
+  const selectedOption = getSelectedOption(dateRange)
+  const data = ["Today", "7 Days", "30 Days", "3 Months"]
+  const displayData = selectedOption === "Custom" ? [...data, "Custom"] : data
+
+  function handleSelectChange(value) {
+    const newDateRange = getDateRange(value)
+    setDateRange(newDateRange)
+  }
+
+  return (
+    <Select
+      placeholder="Select date range"
+      w="100"
+      size="xs"
+      allowDeselect={false}
+      styles={{
+        input: {
+          height: 32,
+          borderTopRightRadius: 0,
+          borderBottomRightRadius: 0,
+          borderRight: 0,
+        },
+      }}
+      data={displayData}
+      value={selectedOption}
+      onChange={handleSelectChange}
+    />
+  )
+}
+
+interface DateRangePickerProps {
+  dateRange: [Date, Date]
+  setDateRange: (dates: [Date, Date]) => void
+}
+
+function DateRangePicker({ dateRange, setDateRange }: DateRangePickerProps) {
+  const [localDateRange, setLocalDateRange] = useState<
+    [Date | null, Date | null]
+  >([dateRange[0], dateRange[1]])
+
   useEffect(() => {
-    editRange("7d")
-  }, [])
+    setLocalDateRange([dateRange[0], dateRange[1]])
+  }, [dateRange])
 
-  useDidUpdate(() => {
-    let serialized = serializeLogic(checks)
-
-    if (typeof serialized === "string") {
-      setSerializedChecks(serialized)
-      router.replace(`/analytics?${serialized}`)
+  function handleDateChange(dates: [Date | null, Date | null]) {
+    setLocalDateRange(dates)
+    if (dates[0] && dates[1]) {
+      setDateRange([dates[0], dates[1]])
     }
-  }, [checks])
+  }
+  return (
+    <DatePickerInput
+      type="range"
+      placeholder="Pick date range"
+      leftSection={<IconCalendar size={18} stroke={1.5} />}
+      size="xs"
+      w="fit-content"
+      styles={{
+        input: {
+          borderTopLeftRadius: 0,
+          height: 32,
+          borderBottomLeftRadius: 0,
+        },
+      }}
+      value={localDateRange}
+      onChange={handleDateChange}
+      maxDate={new Date()}
+    />
+  )
+}
+
+type Granularity = "hourly" | "daily" | "weekly"
+
+interface GranularitySelectProps {
+  dateRange: [Date, Date]
+  granularity: Granularity
+  setGranularity: (granularity: Granularity) => void
+}
+
+const determineGranularity = (
+  dateRange: [Date, Date],
+): "hourly" | "daily" | "weekly" => {
+  const [startDate, endDate] = dateRange
+  const diffDays =
+    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+
+  if (diffDays <= 1) return "hourly"
+  if (diffDays <= 60) return "daily"
+  return "weekly"
+}
+
+function GranularitySelect({
+  dateRange,
+  granularity,
+  setGranularity,
+}: GranularitySelectProps) {
+  const [options, setOptions] = useState<
+    { value: Granularity; label: string }[]
+  >([
+    { value: "daily", label: "Daily" },
+    { value: "weekly", label: "Weekly" },
+  ])
 
   useEffect(() => {
-    // restore filters and selected log from query params
-    try {
-      const urlParams = new URLSearchParams(window.location.search)
+    const newGranularity = determineGranularity(dateRange)
+    setGranularity(newGranularity)
 
-      const paramString = urlParams.toString()
-      if (paramString) {
-        const filtersData = deserializeLogic(paramString)
-        if (filtersData) {
-          setChecks(filtersData)
-        }
-      }
-    } catch (e) {
-      console.error(e)
+    if (newGranularity === "hourly") {
+      setOptions([{ value: "hourly", label: "Hourly" }])
+    } else if (newGranularity === "daily") {
+      setOptions([{ value: "daily", label: "Daily" }])
+    } else {
+      setOptions([
+        { value: "daily", label: "Daily" },
+        { value: "weekly", label: "Weekly" },
+      ])
     }
-  }, [])
+  }, [dateRange, setGranularity])
+
+  return (
+    <Select
+      placeholder="Granularity"
+      w="100"
+      size="xs"
+      ml="md"
+      styles={{
+        input: {
+          height: 32,
+        },
+      }}
+      data={options}
+      value={granularity}
+      onChange={(value) => setGranularity(value as Granularity)}
+    />
+  )
+}
+
+// TODO: refactor (put utils functions and components in other file)
+// TODO: typescript everywhere
+// TODO: checks in url
+export default function Analytics() {
+  const [dateRange, setDateRange] = useLocalStorage({
+    key: "dateRange-analytics",
+    getInitialValueInEffect: false,
+    deserialize: deserializeDateRange,
+    defaultValue: getDefaultDateRange(),
+  })
+  const [startDate, endDate] = dateRange
+
+  const [granularity, setGranularity] = useLocalStorage<Granularity>({
+    key: "granularity-analytics",
+    getInitialValueInEffect: false,
+    defaultValue: determineGranularity(dateRange),
+  })
+
+  // TODO: put checks in their own component
+  const [checks, setChecks] = useState<CheckLogic>(["AND"])
+  const [showCheckBar, setShowCheckBar] = useState(false)
+  const serializedChecks = serializeLogic(checks)
+
+  const { project } = useProject()
+
+  // TODO: refacto this
+  const { errorsData, isLoading: errorsDataLoading } = useErrorAnalytics(
+    startDate,
+    endDate,
+    granularity,
+    serializedChecks,
+  )
+  const { newUsersData, isLoading: newUsersDataLoading } = useNewUsersAnalytics(
+    startDate,
+    endDate,
+    granularity,
+  )
+  const { runCountData, isLoading: runCountLoading } = useRunCountAnalytics(
+    startDate,
+    endDate,
+    granularity,
+    serializedChecks,
+  )
+  const { averageLatencyData, isLoading: averageLatencyDataLoading } =
+    useAverageLatencyAnalytics(
+      startDate,
+      endDate,
+      granularity,
+      serializedChecks,
+    )
+
+  const chartRange = calculateChatRange(dateRange, granularity)
 
   const showBar =
     showCheckBar ||
     checks.filter((f) => f !== "AND" && !["search", "type"].includes(f.id))
       .length > 0
 
-  if (loading)
-    return (
-      <Center h="60vh">
-        <Loader />
-      </Center>
-    )
+  // TODO:
+  // const loading = errorsDataLoading
+
+  // if (loading) {
+  //   return (
+  //     <Center h="60vh">
+  //       <Loader />
+  //     </Center>
+  //   )
+  // }
 
   return (
     <Empty
@@ -166,7 +326,7 @@ export default function Analytics() {
       title="Waiting for data..."
       description="Analytics will appear here once you have some data."
       showProjectId
-      enable={!loading && !project?.activated}
+      enable={!project?.activated}
     >
       <Container size="xl" my="lg">
         <NextSeo title="Analytics" />
@@ -175,98 +335,20 @@ export default function Analytics() {
 
           <Group gap="xs">
             <Group gap={0}>
-              <Select
-                w={100}
-                size="xs"
-                allowDeselect={false}
-                value={predefinedRange}
-                onChange={(val: string) => {
-                  setPredefinedRange(val)
-                  editRange(val)
-                }}
-                styles={{
-                  input: {
-                    height: 32,
-                    borderTopRightRadius: 0,
-                    borderBottomRightRadius: 0,
-                    borderRight: 0,
-                  },
-                }}
-                data={[
-                  {
-                    value: "1d",
-                    label: "Today",
-                  },
-                  {
-                    value: "7d",
-                    label: "7 Days",
-                  },
-                  {
-                    value: "30d",
-                    label: "30 Days",
-                  },
-                  {
-                    value: "3m",
-                    label: "3 Months",
-                  },
-                  {
-                    value: "custom",
-                    label: "Custom",
-                    disabled: true,
-                  },
-                ]}
+              <DateRangeSelect
+                dateRange={dateRange}
+                setDateRange={setDateRange}
               />
-              <DatePickerInput
-                leftSection={<IconCalendar size={18} stroke={1.5} />}
-                leftSectionPointerEvents="none"
-                type="range"
-                styles={{
-                  input: {
-                    borderTopLeftRadius: 0,
-                    height: 32,
-                    borderBottomLeftRadius: 0,
-                  },
-                }}
-                w={"fit-content"}
-                maxDate={new Date()}
-                size="xs"
-                placeholder="Pick dates range"
-                value={dateRange}
-                onChange={(val) => {
-                  setDateRange(val as [Date, Date])
-                  setPredefinedRange("custom")
-                }}
+              <DateRangePicker
+                dateRange={dateRange}
+                setDateRange={setDateRange}
+              />
+              <GranularitySelect
+                dateRange={dateRange}
+                granularity={granularity}
+                setGranularity={setGranularity}
               />
             </Group>
-
-            <Text size="xs" c="dimmed">
-              by
-            </Text>
-
-            <Select
-              w={80}
-              placeholder="Granularity"
-              value={granularity}
-              onChange={(val: string) =>
-                setGranularity(val as "hour" | "day" | "week")
-              }
-              allowDeselect={false}
-              size="xs"
-              data={[
-                {
-                  value: "hour",
-                  label: "Hour",
-                },
-                {
-                  value: "day",
-                  label: "Day",
-                },
-                {
-                  value: "week",
-                  label: "Week",
-                },
-              ]}
-            />
 
             {!showBar && (
               <Button
@@ -287,7 +369,6 @@ export default function Analytics() {
               defaultOpened={showCheckBar}
               value={checks}
               restrictTo={(filter) =>
-                // Only show these for now to not confuse the user with too many options
                 ["type", "tags", "model", "users", "metadata"].includes(
                   filter.id,
                 )
@@ -296,181 +377,45 @@ export default function Analytics() {
           )}
 
           <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-            {usage && <UsageSummary usage={usage} />}
+            <LineChart
+              data={errorsData}
+              title="Errors Volume"
+              description="How many errors were captured in your app"
+              agg="sum"
+              props={["errorCount"]}
+              range={chartRange}
+              height={230}
+            />
 
-            {users && (
-              <AnalyticsCard title="Top Users">
-                <BarList
-                  filterZero={false}
-                  data={users
-                    .sort((a, b) => a.cost - b.cost)
-                    .map((u) => ({
-                      agentRuns: u.agentRuns,
-                      cost: u.cost,
-                      barSections: [
-                        {
-                          value: "cost",
-                          tooltip: "Cost",
-                          count: u.cost,
-                          color: "teal.2",
-                        },
-                      ],
-                      ...u,
-                    }))}
-                  columns={[
-                    {
-                      name: "User",
-                      render: (_, user) => (
-                        <Group
-                          my={-4}
-                          gap="sm"
-                          wrap="nowrap"
-                          style={{
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                        >
-                          <AppUserAvatar size={30} user={user} />
-                          <Text
-                            style={{
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                            }}
-                            size="sm"
-                            px="md"
-                          >
-                            <Anchor
-                              c="inherit"
-                              underline="never"
-                              href={`/users/${user.id}`}
-                            >
-                              {formatAppUser(user)}
-                            </Anchor>
-                          </Text>
-                        </Group>
-                      ),
-                    },
-                    {
-                      name: "Cost",
-                      key: "cost",
-                      render: formatCost,
-                      main: true,
-                    },
-                  ]}
-                />
-              </AnalyticsCard>
+            {checks.length < 2 && (
+              // Only show new users if no filters are applied, as it's not a metric that can be filtered
+              <LineChart
+                range={1000}
+                data={newUsersData}
+                props={["newUsersCount"]}
+                agg="sum"
+                title="New Users"
+                height={230}
+              />
             )}
 
-            {dailyUsage && (
-              <>
-                <LineChart
-                  title="LLM Costs"
-                  range={range}
-                  height={230}
-                  splitBy="name"
-                  formatter={formatCost}
-                  data={calculateDailyCost(dailyUsage)}
-                  agg="sum"
-                  props={["cost"]}
-                />
+            <LineChart
+              range={chartRange}
+              data={runCountData}
+              props={["runCount"]}
+              agg="sum"
+              title="Runs Volume"
+              height={230}
+            />
 
-                {checks.length < 2 && (
-                  // Only show new users if no filters are applied, as it's not a metric that can be filtered
-                  <LineChart
-                    blocked={true}
-                    range={range}
-                    props={["users"]}
-                    agg="sum"
-                    title="New Users"
-                    height={230}
-                  />
-                )}
-
-                <LineChart
-                  blocked={true}
-                  range={range}
-                  props={["users"]}
-                  agg="sum"
-                  title="Runs Volume"
-                  height={230}
-                />
-
-                <LineChart
-                  range={range}
-                  title="Tokens"
-                  height={230}
-                  splitBy="name" // split by model
-                  data={dailyUsage
-                    .filter((u) => u.type === "llm")
-                    .map((p) => ({
-                      ...p,
-                      tokens: p.completionTokens + p.promptTokens,
-                    }))}
-                  agg="sum"
-                  props={["tokens"]}
-                />
-
-                <LineChart
-                  blocked={true}
-                  props={["cost"]}
-                  range={range}
-                  title="Avg. Cost per User"
-                  description="Average cost per user from their LLM usage"
-                  agg="avg"
-                  height={230}
-                />
-
-                <LineChart
-                  blocked={true}
-                  range={range}
-                  props={["errors"]}
-                  title="Errors Volume"
-                  description="How many errors were captured in your app"
-                  agg="sum"
-                  height={230}
-                />
-
-                <LineChart
-                  blocked={true}
-                  range={range}
-                  props={["seconds"]}
-                  title="Avg. LLM Latency"
-                  description="Average time it takes to generate a response for your LLMs"
-                  agg="avg"
-                  height={230}
-                />
-
-                <LineChart
-                  blocked={true}
-                  range={range}
-                  props={["users"]}
-                  title="Thumbs up/down ratio"
-                  description="Visualize the thumbs up/down ratio for your data"
-                  agg="avg"
-                  height={230}
-                />
-
-                <LineChart
-                  blocked={true}
-                  range={range}
-                  props={["messages"]}
-                  description="How many messages were sent per threads or conversation (need chat-tracking to be enabled)"
-                  title="Avg. Messages per Conversation"
-                  agg="avg"
-                  height={230}
-                />
-
-                <LineChart
-                  blocked={true}
-                  range={range}
-                  props={["template"]}
-                  description="How many times prompt templates were used for LLM calls"
-                  title="Prompt Templates Usage"
-                  agg="sum"
-                  height={230}
-                />
-              </>
-            )}
+            <LineChart
+              range={chartRange}
+              data={averageLatencyData}
+              props={["avgDuration"]}
+              agg="avg"
+              title="Avg. LLM Latency"
+              height={230}
+            />
           </SimpleGrid>
         </Stack>
       </Container>

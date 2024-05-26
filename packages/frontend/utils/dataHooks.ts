@@ -185,8 +185,7 @@ export function useProject() {
 
   const { projects, isLoading, mutate } = useProjects()
 
-  // if null, it means the hook is loaded, but there's not project (not signed in)
-  const project = projects?.find((p) => p.id === projectId) || null
+  const project = projects?.find((p) => p.id === projectId)
 
   const { trigger: updateMutation } = useSWRMutation(
     `/projects/${projectId}`,
@@ -749,4 +748,64 @@ export function useEvaluation(id: string) {
     mutate,
     loading: isLoading,
   }
+}
+
+export function useEvaluators() {
+  const { data, isLoading } = useProjectSWR(`/evaluators`)
+
+  return {
+    evaluators: data,
+    isLoading,
+  }
+}
+
+export function useErrorAnalytics(
+  startDate: Date,
+  endDate: Date,
+  granularity: string,
+  checks: string,
+) {
+  const { data, isLoading } = useProjectSWR(
+    `/analytics/errors?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&granularity=${granularity}&checks=${checks}`,
+  )
+
+  return { errorsData: data, isLoading }
+}
+
+export function useRunCountAnalytics(
+  startDate: Date,
+  endDate: Date,
+  granularity: string,
+  checks: string,
+) {
+  const { data, isLoading } = useProjectSWR(
+    `/analytics/runs?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&granularity=${granularity}&checks=${checks}`,
+  )
+
+  return { runCountData: data, isLoading }
+}
+
+export function useNewUsersAnalytics(
+  startDate: Date,
+  endDate: Date,
+  granularity: string,
+) {
+  const { data, isLoading } = useProjectSWR(
+    `/analytics/users/new?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&granularity=${granularity}`,
+  )
+
+  return { newUsersData: data, isLoading }
+}
+
+export function useAverageLatencyAnalytics(
+  startDate: Date,
+  endDate: Date,
+  granularity: string,
+  checks: string,
+) {
+  const { data, isLoading } = useProjectSWR(
+    `/analytics/latency?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&granularity=${granularity}&checks=${checks}`,
+  )
+
+  return { averageLatencyData: data, isLoading }
 }

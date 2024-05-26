@@ -135,7 +135,7 @@ type LineChartProps = {
   data: LineChartData
   title: string | JSX.Element
   props: string[]
-  blocked: boolean
+  blocked?: boolean
   formatter?: (value: number) => string
   height?: number
   splitBy?: string
@@ -161,7 +161,7 @@ const LineChartComponent = ({
   data,
   title,
   props,
-  blocked,
+  blocked = false,
   formatter = formatLargeNumber,
   height = 300,
   description,
