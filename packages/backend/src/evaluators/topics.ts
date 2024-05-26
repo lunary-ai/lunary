@@ -7,7 +7,7 @@ interface TopicsParams {
   topics: string[]
 }
 
-export async function evaluate(run: Run, params: TopicsParams) {
+export default async function evaluate(run: Run, params: TopicsParams) {
   const { topics } = params
 
   const input = lastMsg(run.input) + `\n\n` + lastMsg(run.output)

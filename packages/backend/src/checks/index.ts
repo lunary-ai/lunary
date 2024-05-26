@@ -41,7 +41,10 @@ export function lastMsg(field: any) {
   if (typeof field === "string" || !field) {
     return field
   } else if (Array.isArray(field) && isOpenAIMessage(field[0])) {
-    return JSON.stringify(field.at(-1).content)
+    const lastContent = field.at(-1).content
+    return typeof lastContent === "string"
+      ? lastContent
+      : JSON.stringify(lastContent)
   } else if (isOpenAIMessage(field)) {
     return field.content
   } else {
@@ -449,9 +452,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       }
     },
   },
-  {
-    id: "system",
-  },
+
   {
     id: "rouge",
     async evaluator(run, params) {

@@ -7,7 +7,7 @@ interface AssertParams {
   conditions: string[]
 }
 
-export async function evaluate(run: Run, params: AssertParams) {
+export default async function evaluate(run: Run, params: AssertParams) {
   const { conditions } = params
 
   const conditionList = conditions
