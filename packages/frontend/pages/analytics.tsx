@@ -65,20 +65,6 @@ export function deserializeDateRange(value: any): [Date, Date] {
   }
 }
 
-function calculateChatRange(dateRange: [Date, Date], granularity: Granularity) {
-  const [startDate, endDate] = dateRange
-  const diffTime = Math.abs(endDate - startDate)
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-
-  const granularityCalculations = {
-    hourly: diffDays * 24,
-    daily: diffDays,
-    weekly: Math.ceil(diffDays / 7),
-  }
-
-  return granularityCalculations[granularity] || diffDays
-}
-
 export function getDateRange(
   option: "Today" | "7 Days" | "30 Days" | "3 Months",
 ): Date[] {
@@ -86,7 +72,7 @@ export function getDateRange(
   const startDate = new Date()
 
   const options = {
-    Today: () => startDate,
+    Today: () => startDate.setDate(currentDate.getDate() - 1),
     "7 Days": () => startDate.setDate(currentDate.getDate() - 7),
     "30 Days": () => startDate.setDate(currentDate.getDate() - 30),
     "3 Months": () => startDate.setMonth(currentDate.getMonth() - 3),
@@ -298,8 +284,6 @@ export default function Analytics() {
       granularity,
       serializedChecks,
     )
-
-  // const chartRange = calculateChatRange(dateRange, granularity)
 
   const showBar =
     showCheckBar ||

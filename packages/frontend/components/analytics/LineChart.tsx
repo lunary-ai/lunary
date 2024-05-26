@@ -75,67 +75,36 @@ function prepareDataForRecharts(
 
   if (!data) data = []
 
-  // get all the possible values for the splitBy prop
-  // will be 1 chart per value
-  const uniqueSplitByValues =
-    splitBy &&
-    Array.from(new Set(data.map((item) => item[splitBy]?.toString())))
+  const uniqueSplitByValues = getUniqueSplitByValues(data, splitBy)
+  const interval = getIntervalFunction(granularity)
 
-  const interval =
-    granularity === "daily"
-      ? eachDayOfInterval
-      : granularity === "hourly"
-        ? eachHourOfInterval
-        : eachWeekOfInterval
-
-  // Initialize map with dates as keys and empty data as values
-  interval({
-    start: startDate,
-    end: endDate,
-  }).forEach((date) => {
-    const formattedDate = format(
-      date,
-      granularity === "daily"
-        ? "yyyy-MM-dd"
-        : granularity === "hourly"
-          ? "yyyy-MM-dd'T'HH"
-          : "yyyy-'W'ww",
-    )
-
+  interval({ start: startDate, end: endDate }).forEach((date) => {
+    const formattedDate = formatDateForGranularity(date, granularity)
     const dayData: { [key: string]: any } = { date: formattedDate }
 
-    for (let prop of props) {
+    props.forEach((prop) => {
       if (splitBy) {
-        for (let splitByValue of uniqueSplitByValues) {
-          dayData[`${splitByValue} ${prop}`] =
-            data?.find(
-              (item) =>
-                item[splitBy]?.toString() === splitByValue &&
-                format(
-                  parseISO(item.date),
-                  granularity === "daily"
-                    ? "yyyy-MM-dd"
-                    : granularity === "hourly"
-                      ? "yyyy-MM-dd'T'HH"
-                      : "yyyy-'W'ww",
-                ) === formattedDate,
-            )?.[prop] || 0
-        }
+        uniqueSplitByValues.forEach((splitByValue) => {
+          dayData[`${splitByValue} ${prop}`] = findDataValue(
+            data,
+            splitBy,
+            splitByValue,
+            formattedDate,
+            granularity,
+            prop,
+          )
+        })
       } else {
-        dayData[prop] =
-          data.find(
-            (item) =>
-              format(
-                parseISO(item.date),
-                granularity === "daily"
-                  ? "yyyy-MM-dd"
-                  : granularity === "hourly"
-                    ? "yyyy-MM-dd'T'HH"
-                    : "yyyy-'W'ww",
-              ) === formattedDate,
-          )?.[prop] || 0
+        dayData[prop] = findDataValue(
+          data,
+          undefined,
+          undefined,
+          formattedDate,
+          granularity,
+          prop,
+        )
       }
-    }
+    })
 
     output.push(dayData)
   })
@@ -145,17 +114,74 @@ function prepareDataForRecharts(
   )
 }
 
+function getUniqueSplitByValues(
+  data: any[],
+  splitBy: string | undefined,
+): string[] {
+  return splitBy
+    ? Array.from(new Set(data.map((item) => item[splitBy]?.toString())))
+    : []
+}
+
+function getIntervalFunction(granularity: "daily" | "hourly" | "weekly") {
+  return granularity === "daily"
+    ? eachDayOfInterval
+    : granularity === "hourly"
+      ? eachHourOfInterval
+      : eachWeekOfInterval
+}
+
+function formatDateForGranularity(
+  date: Date,
+  granularity: "daily" | "hourly" | "weekly",
+): string {
+  return format(
+    date,
+    granularity === "daily"
+      ? "yyyy-MM-dd"
+      : granularity === "hourly"
+        ? "yyyy-MM-dd'T'HH"
+        : "yyyy-'W'ww",
+  )
+}
+
+function findDataValue(
+  data: any[],
+  splitBy: string | undefined,
+  splitByValue: string | undefined,
+  formattedDate: string,
+  granularity: "daily" | "hourly" | "weekly",
+  prop: string,
+): any {
+  return (
+    data?.find(
+      (item) =>
+        (!splitBy || item[splitBy]?.toString() === splitByValue) &&
+        format(parseISO(item.date), getDateFormat(granularity)) ===
+          formattedDate,
+    )?.[prop] || 0
+  )
+}
+
+function getDateFormat(granularity: "daily" | "hourly" | "weekly"): string {
+  return granularity === "daily"
+    ? "yyyy-MM-dd"
+    : granularity === "hourly"
+      ? "yyyy-MM-dd'T'HH"
+      : "yyyy-'W'ww"
+}
+
 const formatDate = (date, granularity) => {
+  if (!date) return
   switch (granularity) {
     case "daily":
       return format(parseISO(date), "MMM d")
     case "hourly":
-      return format(parseISO(date), "eeee, HH'h'")
+      return format(parseISO(date), "eee, HH'h'")
     case "weekly":
       return format(parseISO(date), "MMM d")
   }
 }
-
 const CustomizedAxisTick = ({ x, y, payload, index, data, granularity }) => {
   // // Hide the first and last tick
   // if (index === 0 || index === data.length - 1) {
@@ -163,11 +189,11 @@ const CustomizedAxisTick = ({ x, y, payload, index, data, granularity }) => {
   // }
 
   // offset the first and last tick to make it look better
-  const offset = index === 0 ? 35 : index === 1 ? -35 : 0
+  const offset = index === 0 ? 42 : index === 1 ? -42 : 0
 
   return (
     <g transform={`translate(${x + offset},${y})`}>
-      <text x={0} y={0} dy={16} textAnchor="middle" fill="#666">
+      <text x={0} y={0} dy={16} textAnchor={"middle"} fill="#666" opacity={0.8}>
         {formatDate(payload.value, granularity)}
       </text>
     </g>
@@ -235,6 +261,8 @@ const LineChartComponent = ({
     endDate,
     granularity,
   )
+
+  console.log(cleanedData)
 
   const hasData = blocked
     ? true
@@ -364,7 +392,7 @@ const LineChartComponent = ({
               <CartesianGrid
                 strokeDasharray="3 3"
                 horizontal={true}
-                opacity={0.7}
+                opacity={0.5}
                 vertical={false}
               />
             )}

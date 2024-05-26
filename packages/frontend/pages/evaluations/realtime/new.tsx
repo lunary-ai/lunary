@@ -17,7 +17,7 @@ import {
 } from "@mantine/core"
 import { IconCircleCheck, IconCirclePlus } from "@tabler/icons-react"
 import { useState } from "react"
-import { CheckLogic } from "shared"
+import { CheckLogic, LogicElement } from "shared"
 
 function EvaluatorCard({
   evaluator,
@@ -75,7 +75,7 @@ function EvaluatorCard({
 
 export default function NewRealtimeEvaluator() {
   const [evaluatorType, setEvaluatorType] = useState<string>()
-  const [evaluatorParams, setEvaluatorParams] = useState<CheckLogic>([])
+  const [evaluatorParams, setEvaluatorParams] = useState<any>(["AND"])
 
   const evaluatorTypes = Object.values(EVALUATOR_TYPES)
 
@@ -89,7 +89,7 @@ export default function NewRealtimeEvaluator() {
 
   function onChange() {}
 
-  // console.log(selectedEvaluator?.params)
+  console.log([selectedEvaluator])
 
   return (
     <Container>
@@ -128,9 +128,9 @@ export default function NewRealtimeEvaluator() {
             <Text>Configure the evaluator:</Text>
 
             <RenderCheckNode
-              minimal={false}
               node={evaluatorParams}
               setNode={(newNode) => {
+                console.log({ newNode })
                 setEvaluatorParams(newNode as CheckLogic)
               }}
               removeNode={() => {}}
