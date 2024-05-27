@@ -187,8 +187,16 @@ export default function Logs() {
 
   useEffect(() => {
     const newColumns = { ...defaultColumns }
-    if (type === "llm" && evaluators?.length) {
+    if (type === "llm" && Array.isArray(evaluators)) {
       for (const evaluator of evaluators) {
+        if (
+          newColumns.llm
+            .map(({ accessorKey }) => accessorKey)
+            .includes("enrichment-" + evaluator.slug)
+        ) {
+          continue
+        }
+
         newColumns.llm.splice(
           3,
           0,

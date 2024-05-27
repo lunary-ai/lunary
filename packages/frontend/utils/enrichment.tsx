@@ -1,63 +1,93 @@
 import { EvaluatorType } from "shared"
 import { getFlagEmoji } from "./format"
+import { Badge, Box, Button, Popover, Text } from "@mantine/core"
+import { useState } from "react"
+import { useDisclosure } from "@mantine/hooks"
 
 export function renderEnrichment(data: any, type: EvaluatorType) {
-  if (type === "language") {
-    return getFlagEmoji(data)
+  const renderers: Record<EvaluatorType, (data: any) => any> = {
+    language: getFlagEmoji,
+    pii: renderPIIEnrichment,
+    toxicity: renderToxicityEnrichment,
   }
-  return JSON.stringify(data)
+
+  const renderer = renderers[type] || JSON.stringify
+  return renderer(data)
 }
 
-// const renderEnrichment = (key, value) => {
-//   switch (key) {
-//     case "sentiment":
-//       let emoji
-//       let type
+function renderPIIEnrichment(data: any) {
+  const [opened, { close, open }] = useDisclosure(false)
 
-//       if (value > 0.5) {
-//         emoji = <IconMoodSmile color="teal" />
-//         type = "positive"
-//       } else if (value < -0.5) {
-//         emoji = <IconMoodSad color="crimson" />
-//         type = "negative"
-//       } else {
-//         emoji = <IconMoodNeutral color="gray" />
-//         type = "neutral"
-//       }
+  let piiCount = 0
+  for (const key in data) {
+    if (Array.isArray(data[key])) {
+      piiCount += data[key].length
+    }
+  }
 
-//       return {
-//         element: (
-//           <Group gap="xs">
-//             {emoji} {value}
-//           </Group>
-//         ),
-//         help: "Sentiment: " + type,
-//       }
-//     case "pii":
-//       if (value === "soft") return { element: "⚠️" }
-//       else if (value === "hard") return { element: "❌" }
-//       else return { element: "❎" }
+  if (piiCount === 0) {
+    return ""
+  }
 
-//     case "topics":
-//       return {
-//         element: (
-//           <Group gap="xs">
-//             {value?.map((topic) => (
-//               <Badge
-//                 key={topic}
-//                 variant="outline"
-//                 color={getColorFromSeed(topic)}
-//                 size="sm"
-//                 style={{ textTransform: "none" }}
-//               >
-//                 {topic}
-//               </Badge>
-//             ))}
-//           </Group>
-//         ),
-//         help: "Topics",
-//       }
-//     default:
-//       return { element: value, help: key }
-//   }
-// }
+  return (
+    <Popover
+      width={200}
+      position="bottom"
+      withArrow
+      shadow="md"
+      opened={opened}
+    >
+      <Popover.Target>
+        <Badge onMouseEnter={open} onMouseLeave={close} color="blue">
+          {piiCount} PII
+        </Badge>
+      </Popover.Target>
+      <Popover.Dropdown style={{ pointerEvents: "none" }} w="300">
+        <Text size="sm">
+          {Object.entries(data).map(
+            ([key, items]) =>
+              items.length > 0 && (
+                <div key={key}>
+                  <strong style={{ textTransform: "capitalize" }}>
+                    {key}:
+                  </strong>
+                  <div>{items.join(", ")}</div>
+                </div>
+              ),
+          )}
+        </Text>
+      </Popover.Dropdown>
+    </Popover>
+  )
+}
+
+function renderToxicityEnrichment(data: string[]) {
+  const [opened, { close, open }] = useDisclosure(false)
+
+  console.log(data)
+  if (data.length === 0) {
+    return ""
+  }
+
+  return (
+    <Popover
+      width={200}
+      position="bottom"
+      withArrow
+      shadow="md"
+      opened={opened}
+    >
+      <Popover.Target>
+        <Badge onMouseEnter={open} onMouseLeave={close} color="red">
+          {data.length} Toxicity
+        </Badge>
+      </Popover.Target>
+      <Popover.Dropdown style={{ pointerEvents: "none" }} w="300">
+        <Text size="sm">
+          <strong>Toxic Comments:</strong>
+          <div>{data.join(", ")}</div>
+        </Text>
+      </Popover.Dropdown>
+    </Popover>
+  )
+}

@@ -21,7 +21,7 @@ create table evaluator (
 	constraint "evaluator_owner_id_fkey" foreign key (owner_id) references account(id) on delete set null
 );
 
-create table evaluator_result (
+create table evaluation_result_v2 (
 	id uuid default uuid_generate_v4() primary key,
 	created_at timestamptz default now(),
 	updated_at timestamptz default now(),

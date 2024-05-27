@@ -3,9 +3,15 @@ import { callML } from "../utils/ml"
 import { lastMsg } from "../checks"
 
 export default async function evaluate(run: Run) {
-  const language = await callML("toxicity", {
-    texts: [lastMsg(run.input), lastMsg(run.output)],
+  const text = lastMsg(run.input) + lastMsg(run.output)
+  if (!text.length) {
+    return null
+  }
+
+  const toxicityLabels = await callML("toxicity", {
+    text,
   })
 
-  return language
+  // format: ['toxicity', 'severe_toxicity', 'obscene', 'threat', 'insult' ...]
+  return toxicityLabels
 }

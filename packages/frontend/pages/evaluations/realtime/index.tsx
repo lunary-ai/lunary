@@ -112,7 +112,9 @@ export default function RealtimeEvaluators() {
                 <Title order={3} size={16}>
                   {evaluator.name}
                 </Title>
-                <Text>{slugify(evaluator.name)}</Text>
+                <Text c="gray.7" fw="semibold" size="sm">
+                  {slugify(evaluator.name)}
+                </Text>
               </Stack>
 
               <Menu>
@@ -124,11 +126,11 @@ export default function RealtimeEvaluators() {
                 </Menu.Target>
 
                 <Menu.Dropdown>
-                  <Menu.Item
+                  {/* <Menu.Item
                     leftSection={<IconEdit width="15px" height="15px" />}
                   >
                     Edit
-                  </Menu.Item>
+                  </Menu.Item> */}
                   {/* TODO: use mantine red*/}
                   <Menu.Item
                     leftSection={
