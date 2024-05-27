@@ -196,17 +196,34 @@ type LineChartProps = {
 }
 
 function getFigure(agg: string, data: any[], prop: string) {
+  const propKeys = Object.keys(data[0] || {}).filter((key) =>
+    key.includes(prop),
+  )
+
   if (agg === "sum") {
-    return data.reduce((acc, item) => acc + item[prop], 0)
+    return data.reduce((acc, item) => {
+      propKeys.forEach((key) => (acc += item[key] ?? 0))
+      return acc
+    }, 0)
   } else if (agg === "avg") {
-    return data.reduce((acc, item) => acc + item[prop], 0) / data.length
+    return (
+      data.reduce((acc, item) => {
+        propKeys.forEach((key) => (acc += item[key] ?? 0))
+        return acc
+      }, 0) / data.length
+    )
   } else if (agg === "max") {
-    return data.reduce((acc, item) => Math.max(acc, item[prop]), 0)
+    return data.reduce((acc, item) => {
+      propKeys.forEach((key) => (acc = Math.max(acc, item[key] ?? -Infinity)))
+      return acc
+    }, -Infinity)
   } else if (agg === "min") {
-    return data.reduce((acc, item) => Math.min(acc, item[prop]), 0)
+    return data.reduce((acc, item) => {
+      propKeys.forEach((key) => (acc = Math.min(acc, item[key] ?? Infinity)))
+      return acc
+    }, Infinity)
   }
 }
-
 const LineChartComponent = ({
   data,
   title,
