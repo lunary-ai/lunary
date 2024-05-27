@@ -193,7 +193,7 @@ function renderSentimentEnrichment(data: number) {
   let emoji
   let type
 
-  if (!data) {
+  if (typeof data !== "number") {
     return ""
   }
 
@@ -232,41 +232,22 @@ function renderSentimentEnrichment(data: number) {
 }
 
 function renderAssertEnrichment(data: any) {
-  if (!data.result) {
-    return ""
-  }
-
-  if (data.result === "yes" || data.result === "true" || data.result === true) {
-    return (
-      <Tooltip label={data.reason}>
-        <IconCheck color="green" />
-      </Tooltip>
-    )
-  }
-
-  return <IconX color="red" />
+  return (
+    <Tooltip label={data.reason} disabled={!data.reason?.length}>
+      <IconX color={data.result ? "green" : "red"} />
+    </Tooltip>
+  )
 }
 
 function renderGuidelinesEnrichment(data: any) {
-  if (!data.result) {
-    return ""
-  }
-
-  if (data.result === "yes" || data.result === "true" || data.result === true) {
-    return <IconCheck color="green" />
-  }
-
-  return <IconX color="red" />
+  return (
+    <Tooltip label={data.reason} disabled={!data.reason?.length}>
+      <IconX color={data.result ? "green" : "red"} />
+    </Tooltip>
+  )
 }
 
 function renderRepliesEnrichment(data: any) {
-  if (!data) {
-    return ""
-  }
-
-  if (data === "true" || data.result === true) {
-    return <IconCheck color="green" />
-  }
-
-  return <IconX color="red" />
+  console.log(data)
+  return <IconX color={data === "true" ? "green" : "red"} />
 }

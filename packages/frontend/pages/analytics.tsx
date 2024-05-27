@@ -1,6 +1,9 @@
 import Empty from "@/components/layout/Empty"
 import { useProject } from "@/utils/dataHooks"
-import { useAverageLatencyAnalytics } from "@/utils/dataHooks/analytics"
+import {
+  useAnalyticsData,
+  useAverageLatencyAnalytics,
+} from "@/utils/dataHooks/analytics"
 import { useNewUsersAnalytics } from "@/utils/dataHooks/analytics"
 import { useRunCountAnalytics } from "@/utils/dataHooks/analytics"
 import { useErrorAnalytics } from "@/utils/dataHooks/analytics"
@@ -26,6 +29,7 @@ import "@mantine/dates/styles.css"
 import LineChart from "@/components/analytics/LineChart"
 import { CheckLogic, serializeLogic } from "shared"
 import CheckPicker from "@/components/checks/Picker"
+import { formatCost } from "@/utils/format"
 
 function getDefaultDateRange() {
   const currentDate = new Date()
@@ -258,25 +262,60 @@ export default function Analytics() {
   const { project } = useProject()
 
   // TODO: refacto this
-  const { errorsData, isLoading: errorsDataLoading } = useErrorAnalytics(
+  const { data: errorsData, isLoading: errorsDataLoading } = useAnalyticsData(
+    "errors",
     startDate,
     endDate,
     granularity,
     serializedChecks,
   )
-  const { newUsersData, isLoading: newUsersDataLoading } = useNewUsersAnalytics(
-    startDate,
-    endDate,
-    granularity,
-  )
-  const { runCountData, isLoading: runCountLoading } = useRunCountAnalytics(
+  const { data: newUsersData, isLoading: newUsersDataLoading } =
+    useAnalyticsData("users/new", startDate, endDate, granularity)
+
+  const { data: activeUsersData, isLoading: activeUsersDataLoading } =
+    useAnalyticsData("users/active", startDate, endDate, granularity)
+
+  const { data: avgUserCostData, isLoading: avgUserCostDataLoading } =
+    useAnalyticsData("users/average-cost", startDate, endDate, granularity)
+
+  const { data: tokensData, isLoading: tokensDataLoading } = useAnalyticsData(
+    "tokens",
     startDate,
     endDate,
     granularity,
     serializedChecks,
   )
-  const { averageLatencyData, isLoading: averageLatencyDataLoading } =
-    useAverageLatencyAnalytics(
+
+  const { data: costData, isLoading: costDataLoading } = useAnalyticsData(
+    "costs",
+    startDate,
+    endDate,
+    granularity,
+    serializedChecks,
+  )
+
+  const { data: runCountData, isLoading: runCountLoading } = useAnalyticsData(
+    "run-types",
+    startDate,
+    endDate,
+    granularity,
+    serializedChecks,
+  )
+
+  console.log(runCountData)
+
+  const { data: averageLatencyData, isLoading: averageLatencyDataLoading } =
+    useAnalyticsData(
+      "latency",
+      startDate,
+      endDate,
+      granularity,
+      serializedChecks,
+    )
+
+  const { data: feedbackRatioData, isLoading: feedbackRatioLoading } =
+    useAnalyticsData(
+      "feedback-ratio",
       startDate,
       endDate,
       granularity,
@@ -350,31 +389,74 @@ export default function Analytics() {
 
           <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
             <LineChart
+              data={tokensData}
+              loading={tokensDataLoading}
+              splitBy="name"
+              props={["tokens"]}
+              agg="sum"
+              title="Tokens"
+              {...commonChartData}
+            />
+
+            <LineChart
+              data={costData}
+              loading={costDataLoading}
+              formatter={formatCost}
+              splitBy="name"
+              props={["costs"]}
+              agg="sum"
+              title="Costs"
+              {...commonChartData}
+            />
+
+            <LineChart
               data={errorsData}
               title="Errors Volume"
               loading={errorsDataLoading}
               description="How many errors were captured in your app"
               agg="sum"
-              props={["errorCount"]}
+              props={["errors"]}
               {...commonChartData}
             />
 
             {checks.length < 2 && (
               // Only show new users if no filters are applied, as it's not a metric that can be filtered
-              <LineChart
-                data={newUsersData}
-                loading={newUsersDataLoading}
-                props={["newUsersCount"]}
-                agg="sum"
-                title="New Users"
-                {...commonChartData}
-              />
+              <>
+                <LineChart
+                  data={newUsersData}
+                  loading={newUsersDataLoading}
+                  props={["users"]}
+                  agg="sum"
+                  title="New Users"
+                  {...commonChartData}
+                />
+
+                <LineChart
+                  data={activeUsersData}
+                  loading={activeUsersDataLoading}
+                  props={["users"]}
+                  agg="max"
+                  title="Active Users"
+                  {...commonChartData}
+                />
+              </>
             )}
+
+            <LineChart
+              data={avgUserCostData}
+              loading={avgUserCostDataLoading}
+              props={["cost"]}
+              formatter={formatCost}
+              agg="avg"
+              title="Avg. User Cost"
+              {...commonChartData}
+            />
 
             <LineChart
               data={runCountData}
               loading={runCountLoading}
-              props={["runCount"]}
+              props={["runs"]}
+              splitBy="type"
               agg="sum"
               title="Runs Volume"
               {...commonChartData}
@@ -387,6 +469,16 @@ export default function Analytics() {
               agg="avg"
               formatter={(value) => `${value.toFixed(2)}s`}
               title="Avg. LLM Latency"
+              {...commonChartData}
+            />
+
+            <LineChart
+              data={feedbackRatioData}
+              loading={feedbackRatioLoading}
+              props={["ratio"]}
+              agg="avg"
+              title="Thumbs Up/Down Ratio"
+              description="The ratio of thumbs up to thumbs down feedback"
               {...commonChartData}
             />
           </SimpleGrid>
