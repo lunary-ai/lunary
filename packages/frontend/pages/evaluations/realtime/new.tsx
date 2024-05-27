@@ -2,6 +2,7 @@ import CheckPicker, { RenderCheckNode } from "@/components/checks/Picker"
 import { useUser } from "@/utils/dataHooks"
 import { useEvaluators } from "@/utils/dataHooks/evaluators"
 import EVALUATOR_TYPES from "@/utils/evaluators"
+import { slugify } from "@/utils/format"
 import { theme } from "@/utils/theme"
 import {
   Button,
@@ -116,7 +117,7 @@ export default function NewRealtimeEvaluator() {
     // TODO: validation
     await insertEvaluator({
       name,
-      slug: name.toLocaleLowerCase(),
+      slug: slugify(name),
       mode: "realtime",
       params,
       type,
@@ -157,7 +158,7 @@ export default function NewRealtimeEvaluator() {
           </SimpleGrid>
         </Stack>
 
-        {!!hasParams && (
+        {1 && (
           <Stack>
             <Text>Configure the evaluator:</Text>
 

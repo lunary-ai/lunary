@@ -250,7 +250,7 @@ export function enrichmentColumn(
 ) {
   return columnHelper.accessor(`enrichment-${slug}`, {
     header: `${capitalize(name)} ✨`,
-    size: 180,
+    size: 120,
     cell: (props) => {
       const data = props.row.original[`enrichment-${slug}`]
       if (!data) {
