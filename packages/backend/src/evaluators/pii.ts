@@ -30,6 +30,7 @@ export async function evaluate(run: Run, params: PiiParams) {
 
   const mlResults = await callML("pii", {
     text,
+    entities,
   })
 
   return { ...results, ...mlResults }
