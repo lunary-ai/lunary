@@ -32,7 +32,7 @@ const EVALUATOR_TYPES = {
         type: "select",
         id: "entities",
         width: 230,
-        defaultValue: ["ip", "email"],
+        defaultValue: ["ip", "email", "person", "location", "org", "misc"],
         multiple: true,
         searchable: true,
         options: [
@@ -41,8 +41,20 @@ const EVALUATOR_TYPES = {
             value: "email",
           },
           {
-            label: "IP",
-            value: "ip",
+            label: "Person",
+            value: "person",
+          },
+          {
+            label: "Location",
+            value: "location",
+          },
+          {
+            label: "Org",
+            value: "org",
+          },
+          {
+            label: "Misc",
+            value: "misc",
           },
         ],
       },

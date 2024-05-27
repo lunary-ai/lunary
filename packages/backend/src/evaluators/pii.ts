@@ -1,5 +1,6 @@
 import { Run } from "shared"
 import { lastMsg } from "../checks"
+import { callML } from "../utils/ml"
 
 interface PiiParams {
   entities: ("email" | "ip")[]
@@ -27,5 +28,9 @@ export async function evaluate(run: Run, params: PiiParams) {
     results.ips = [...new Set(text.match(ipRegex))]
   }
 
-  return results
+  const mlResults = await callML("pii", {
+    text,
+  })
+
+  return { ...results, ...mlResults }
 }
