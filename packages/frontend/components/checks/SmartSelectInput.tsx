@@ -59,12 +59,19 @@ export default function SmartCheckSelect({
       valueArray.forEach((val) => {
         if (!localData.some((item) => getItemValue(item) === val)) {
           const newOption = { label: val, value: val }
-          setLocalData((prevData) => [...prevData, newOption])
+          setLocalData((prevData) => {
+            const updatedData = [...prevData, newOption]
+            const uniqueData = updatedData.filter(
+              (item, index, self) =>
+                index ===
+                self.findIndex((t) => getItemValue(t) === getItemValue(item)),
+            )
+            return uniqueData
+          })
         }
       })
     }
   }, [localData, value, allowCustom])
-
   const handleValueSelect = (val: string) => {
     setSearch("")
     return multiple
