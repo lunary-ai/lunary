@@ -222,10 +222,7 @@ function renderSentimentEnrichment(data: number) {
         </Box>
       </Popover.Target>
       <Popover.Dropdown style={{ pointerEvents: "none" }} w="300">
-        <Text size="sm">
-          Sentiment analysis score:
-          {data} ({type})
-        </Text>
+        <Text size="sm">{`Sentiment analysis score: ${data} (${type})`}</Text>
       </Popover.Dropdown>
     </Popover>
   )
