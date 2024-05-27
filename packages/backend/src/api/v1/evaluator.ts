@@ -2,6 +2,7 @@ import sql from "@/src/utils/db"
 import { clearUndefined } from "@/src/utils/ingest"
 import Context from "@/src/utils/koa"
 import Router from "koa-router"
+import { deserializeLogic } from "shared"
 import { z } from "zod"
 
 const evaluators = new Router({
@@ -51,8 +52,9 @@ evaluators.post("/", async (ctx: Context) => {
     type: z.string(),
     mode: z.string(),
     params: z.record(z.any()),
-    filters: z.array(z.any()).optional(),
+    filters: z.string(),
   })
+
   const { projectId } = ctx.state
   const evaluator = requestBody.parse(ctx.request.body)
 
@@ -60,6 +62,7 @@ evaluators.post("/", async (ctx: Context) => {
   const [insertedEvaluator] = await sql`
     insert into evaluator ${sql({
       ...evaluator,
+      filters: deserializeLogic(evaluator.filters),
       projectId,
     })} 
     returning *

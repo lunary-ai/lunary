@@ -3,18 +3,18 @@ import openai from "@/src/utils/openai"
 import lunary from "lunary"
 import { lastMsg } from "../checks"
 
-interface TonesParams {
-  tones: string[]
+interface ToneParams {
+  tone: string[]
 }
 
-export async function evaluate(run: Run, params: TonesParams) {
-  const { tones } = params
+export async function evaluate(run: Run, params: ToneParams) {
+  const { tone } = params
 
-  const tonesList = tones.join("\n")
+  const toneList = tone.join("\n")
 
   const template = await lunary.renderTemplate("tones", {
     input: lastMsg(run.output),
-    tones: tonesList,
+    tone: toneList,
   })
 
   const res = await openai.chat.completions.create(template)

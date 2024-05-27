@@ -21,5 +21,5 @@ export async function evaluate(run: Run) {
 
   const result = output.split("\n")[0].toLowerCase().replace(".", "").trim()
 
-  return result.includes("yes")
+  return result.includes("yes") + ""
 }

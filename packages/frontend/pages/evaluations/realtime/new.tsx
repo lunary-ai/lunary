@@ -1,10 +1,11 @@
 import CheckPicker, { RenderCheckNode } from "@/components/checks/Picker"
-import { useUser } from "@/utils/dataHooks"
+import { useLogCount, useUser } from "@/utils/dataHooks"
 import { useEvaluators } from "@/utils/dataHooks/evaluators"
 import EVALUATOR_TYPES from "@/utils/evaluators"
 import { slugify } from "@/utils/format"
 import { theme } from "@/utils/theme"
 import {
+  Box,
   Button,
   Card,
   Container,
@@ -19,9 +20,11 @@ import {
   Tooltip,
   UnstyledButton,
 } from "@mantine/core"
-import { IconCircleCheck, IconCirclePlus } from "@tabler/icons-react"
+import { notifications } from "@mantine/notifications"
+import { IconCircleCheck, IconCirclePlus, IconX } from "@tabler/icons-react"
+import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
-import { CheckLogic } from "shared"
+import { CheckLogic, serializeLogic } from "shared"
 
 function EvaluatorCard({
   evaluator,
@@ -78,6 +81,8 @@ function EvaluatorCard({
 }
 
 export default function NewRealtimeEvaluator() {
+  const router = useRouter()
+
   const { user } = useUser()
   const { evaluators, insert: insertEvaluator } = useEvaluators()
 
@@ -88,7 +93,8 @@ export default function NewRealtimeEvaluator() {
     "AND",
     { id: "type", params: { type: "llm" } },
   ])
-  // TODO: name and description
+  const serializedFilters = serializeLogic(filters)
+  const { count: logCount } = useLogCount(serializedFilters)
 
   const evaluatorTypes = Object.values(EVALUATOR_TYPES)
 
@@ -96,34 +102,47 @@ export default function NewRealtimeEvaluator() {
     (evaluator) => evaluator.id === type,
   )
 
-  const hasParams = selectedEvaluator?.params?.length
+  const hasParams = Boolean(selectedEvaluator?.params?.length)
 
   const IconComponent = selectedEvaluator?.icon
 
   useEffect(() => {
     if (selectedEvaluator) {
-      setParams(
-        selectedEvaluator.params.reduce((acc, param) => {
+      setParams({
+        id: selectedEvaluator.id,
+        params: selectedEvaluator.params.reduce((acc, param) => {
           if (param.id) {
             acc[param.id] = param.defaultValue
           }
           return acc
         }, {}),
-      )
+      })
     }
   }, [selectedEvaluator])
 
   async function createEvaluator() {
     // TODO: validation
+    if (!name) {
+      notifications.show({
+        icon: <IconX size={18} />,
+        id: "error-alert",
+        title: "Missing value",
+        message: "Evaluator name required",
+        color: "red",
+        autoClose: 4000,
+      })
+      return
+    }
     await insertEvaluator({
       name,
       slug: slugify(name),
       mode: "realtime",
-      params,
+      params: params.params,
       type,
-      filters,
+      filters: serializedFilters,
       ownerId: user.id,
     })
+    router.push("/evaluations/realtime")
   }
 
   return (
@@ -158,7 +177,7 @@ export default function NewRealtimeEvaluator() {
           </SimpleGrid>
         </Stack>
 
-        {1 && (
+        {hasParams && (
           <Stack>
             <Text>Configure the evaluator:</Text>
 
@@ -187,21 +206,25 @@ export default function NewRealtimeEvaluator() {
               </Group>
             </Tooltip>
 
-            <Text>Select the logs to apply to:</Text>
+            <Box>
+              <Text mb="5" mt="sm">
+                Select the logs to apply to:
+              </Text>
 
-            <CheckPicker
-              minimal
-              value={filters}
-              onChange={setFilters}
-              restrictTo={(filter) =>
-                ["tags", "type", "users", "metadata"].includes(filter.id)
-              }
-            />
+              <CheckPicker
+                minimal
+                value={filters}
+                onChange={setFilters}
+                restrictTo={(filter) =>
+                  ["tags", "type", "users", "metadata"].includes(filter.id)
+                }
+              />
+            </Box>
 
-            <Text>
+            <Text mt="sm">
               Estimated logs:{" "}
               <Text span fw="bold">
-                1000
+                {logCount}
               </Text>
             </Text>
           </Stack>
