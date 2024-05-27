@@ -1,14 +1,28 @@
+import { Badge, Box, Popover, Text } from "@mantine/core"
+import { useDisclosure } from "@mantine/hooks"
+import {
+  IconCheck,
+  IconLetterX,
+  IconMoodNeutral,
+  IconMoodSad,
+  IconMoodSmile,
+  IconSquareLetterX,
+  IconX,
+} from "@tabler/icons-react"
 import { EvaluatorType } from "shared"
 import { getFlagEmoji } from "./format"
-import { Badge, Box, Button, Popover, Text } from "@mantine/core"
-import { useState } from "react"
-import { useDisclosure } from "@mantine/hooks"
 
 export function renderEnrichment(data: any, type: EvaluatorType) {
   const renderers: Record<EvaluatorType, (data: any) => any> = {
     language: getFlagEmoji,
     pii: renderPIIEnrichment,
     toxicity: renderToxicityEnrichment,
+    topics: renderTopicsEnrichment,
+    sentiment: renderSentimentEnrichment,
+    assert: renderAssertEnrichment,
+    tone: renderToneEnrichment,
+    guidelines: renderGuidelinesEnrichment,
+    replies: renderRepliesEnrichment,
   }
 
   const renderer = renderers[type] || JSON.stringify
@@ -64,7 +78,6 @@ function renderPIIEnrichment(data: any) {
 function renderToxicityEnrichment(data: string[]) {
   const [opened, { close, open }] = useDisclosure(false)
 
-  console.log(data)
   if (data.length === 0) {
     return ""
   }
@@ -79,7 +92,7 @@ function renderToxicityEnrichment(data: string[]) {
     >
       <Popover.Target>
         <Badge onMouseEnter={open} onMouseLeave={close} color="red">
-          {data.length} Toxicity
+          Toxicity
         </Badge>
       </Popover.Target>
       <Popover.Dropdown style={{ pointerEvents: "none" }} w="300">
@@ -90,4 +103,153 @@ function renderToxicityEnrichment(data: string[]) {
       </Popover.Dropdown>
     </Popover>
   )
+}
+
+function renderTopicsEnrichment(data: string[]) {
+  const [opened, { close, open }] = useDisclosure(false)
+
+  if (data.length === 0) {
+    return ""
+  }
+
+  return (
+    <Popover
+      width={200}
+      position="bottom"
+      withArrow
+      shadow="md"
+      opened={opened}
+    >
+      <Popover.Target>
+        <Badge
+          onMouseEnter={open}
+          onMouseLeave={close}
+          color="blue"
+          styles={{ label: { textTransform: "lowercase" } }}
+        >
+          {data.length === 1 ? "1 topic" : data.length + " topics"}
+        </Badge>
+      </Popover.Target>
+      <Popover.Dropdown style={{ pointerEvents: "none" }} w="300">
+        <Text size="sm">
+          <strong>Topics:</strong>
+          <div>{data.join(", ")}</div>
+        </Text>
+      </Popover.Dropdown>
+    </Popover>
+  )
+}
+
+function renderToneEnrichment(data: string[]) {
+  const [opened, { close, open }] = useDisclosure(false)
+
+  if (data.length === 0) {
+    return ""
+  }
+
+  return (
+    <Popover
+      width={200}
+      position="bottom"
+      withArrow
+      shadow="md"
+      opened={opened}
+    >
+      <Popover.Target>
+        <Badge
+          onMouseEnter={open}
+          onMouseLeave={close}
+          color="blue"
+          styles={{ label: { textTransform: "initial" } }}
+        >
+          {data[0].charAt(0).toUpperCase() + data[0].slice(1)}{" "}
+          {data.length > 1 && ` and ${data.length - 2} others`}
+        </Badge>
+      </Popover.Target>
+      <Popover.Dropdown style={{ pointerEvents: "none" }} w="300">
+        <Text size="sm" style={{ textTransform: "capitalize" }}>
+          <div>{data.join(", ")}</div>
+        </Text>
+      </Popover.Dropdown>
+    </Popover>
+  )
+}
+
+function renderSentimentEnrichment(data: number) {
+  const [opened, { close, open }] = useDisclosure(false)
+  let emoji
+  let type
+
+  if (!data) {
+    return ""
+  }
+
+  if (data > 0.5) {
+    emoji = <IconMoodSmile color="teal" />
+    type = "positive"
+  } else if (data < -0.5) {
+    emoji = <IconMoodSad color="crimson" />
+    type = "negative"
+  } else {
+    emoji = <IconMoodNeutral color="gray" />
+    type = "neutral"
+  }
+
+  return (
+    <Popover
+      width={200}
+      position="bottom"
+      withArrow
+      shadow="md"
+      opened={opened}
+    >
+      <Popover.Target>
+        <Box onMouseEnter={open} onMouseLeave={close}>
+          {emoji}
+        </Box>
+      </Popover.Target>
+      <Popover.Dropdown style={{ pointerEvents: "none" }} w="300">
+        <Text size="sm">
+          Sentiment analysis score:
+          {data} ({type})
+        </Text>
+      </Popover.Dropdown>
+    </Popover>
+  )
+}
+
+function renderAssertEnrichment(data: any) {
+  if (!data.result) {
+    return ""
+  }
+
+  if (data.result === "yes" || data.result === "true" || data.result === true) {
+    return <IconCheck color="green" />
+  }
+
+  return <IconX color="red" />
+}
+
+function renderGuidelinesEnrichment(data: any) {
+  if (!data.result) {
+    return ""
+  }
+
+  if (data.result === "yes" || data.result === "true" || data.result === true) {
+    return <IconCheck color="green" />
+  }
+
+  return <IconX color="red" />
+}
+
+function renderRepliesEnrichment(data: any) {
+  if (!data) {
+    return ""
+  }
+
+  if (data === "true" || data.result === true) {
+    return <IconCheck color="green" />
+  }
+
+  return <IconX color="red" />
 }

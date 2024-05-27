@@ -6,14 +6,12 @@ import lunary from "lunary"
 export async function evaluate(run: Run) {
   let systemGuidelines = null
 
-  console.log(`Evaluating guidelines`)
-
   if (!Array.isArray(run.input) || !run.input.every(isOpenAIMessage)) {
-    throw new Error("Input must be a list of valid chat messages")
+    return ""
   }
 
   if (run.input[0].role !== "system") {
-    throw new Error("No system message found to evaluate against")
+    return ""
   }
 
   systemGuidelines = run.input[0].content
@@ -29,7 +27,9 @@ export async function evaluate(run: Run) {
 
   const output = res.choices[0]?.message?.content
 
-  if (!output) throw new Error("No output from AI")
+  if (!output) {
+    return ""
+  }
 
   const result = output.split("\n")[0].toLowerCase().replace(".", "").trim()
   const reason = output.split("\n").slice(1).join("\n")

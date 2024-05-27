@@ -9,7 +9,7 @@ interface CreateEvaluatorData {
   type: string
   mode: string
   params: Record<string, any>
-  filters?: Record<string, any>
+  filters?: string
 }
 
 export function useEvaluators() {

@@ -6,7 +6,7 @@ import { RealtimeEvaluator } from "shared/evaluators"
 import { sleep } from "../utils/misc"
 import evaluators from "../evaluators"
 
-const RUNS_BATCH_SIZE = 100
+const RUNS_BATCH_SIZE = 10
 
 async function runEvaluator(evaluator: RealtimeEvaluator, run: Run) {
   try {
@@ -90,7 +90,7 @@ async function evaluatorJob() {
     }
 
     console.log(
-      `Starting Real-time Evaluator ${evaluator.id} - ${runs.length} runs (${i} / ${evaluators.length})`,
+      `Starting Real-time Evaluator ${evaluator.id} - ${runs.length} runs (${i + 1} / ${evaluators.length})`,
     )
 
     await Promise.all(runs.map((run) => runEvaluator(evaluator, run)))

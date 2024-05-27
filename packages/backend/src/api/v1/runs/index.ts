@@ -193,6 +193,51 @@ runs.get("/", async (ctx: Context) => {
   ctx.body = runs
 })
 
+// TODO: refactor with GET / by putting logic inside a function
+runs.get("/count", async (ctx: Context) => {
+  const { projectId } = ctx.state
+
+  const queryString = ctx.querystring
+  const deserializedChecks = deserializeLogic(queryString)
+
+  const filtersQuery =
+    deserializedChecks?.length && deserializedChecks.length > 1 // first is always ["AND"]
+      ? convertChecksToSQL(deserializedChecks)
+      : sql`r.type = 'llm'` // default to type llm
+
+  const { parentRunId } = ctx.query as Query
+
+  let parentRunCheck = sql``
+  if (parentRunId) {
+    parentRunCheck = sql`and parent_run_id = ${parentRunId}`
+  }
+
+  const [{ count }] = await sql`
+    with runs as (select
+      count(*) 
+    from
+      public.run r
+      left join external_user eu on r.external_user_id = eu.id
+      left join run_parent_feedback_cache rpfc on r.id = rpfc.id
+      left join template_version tv on r.template_version_id = tv.id
+      left join template t on tv.template_id = t.id
+      left join evaluation_result_v2 er on r.id = er.run_id 
+      left join evaluator e on er.evaluator_id = e.id
+    where
+      r.project_id = ${projectId}
+      ${parentRunCheck}
+      and (${filtersQuery})
+    group by
+      r.id,
+      eu.id,
+      t.slug,
+      rpfc.feedback)
+    select count(*) from runs
+  `
+
+  ctx.body = count
+})
+
 runs.get("/usage", checkAccess("logs", "read"), async (ctx) => {
   const { projectId } = ctx.state
   const { days, userId, daily } = ctx.query as {

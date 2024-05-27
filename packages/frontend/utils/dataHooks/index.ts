@@ -357,6 +357,12 @@ export function useRun(id: string | null, initialData?: any) {
   }
 }
 
+export function useLogCount(filters: any) {
+  const { data, isLoading } = useProjectSWR(`/runs/count?${filters}`)
+
+  return { count: data, isLoading }
+}
+
 export function useRunsUsage(range, userId?: string) {
   const userIdStr = userId ? `&userId=${userId}` : ""
   const { data: usage, isLoading } = useProjectSWR(
