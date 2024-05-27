@@ -15,7 +15,7 @@ async function runEvaluator(evaluator: RealtimeEvaluator, run: Run) {
       evaluator.params,
     )
 
-    if (result) {
+    if (typeof result !== "undefined" && result !== null) {
       await sql`
       insert into evaluation_result_v2
       ${sql({

@@ -46,6 +46,8 @@ export default function Billing() {
     window.location.href = data.url
   }
 
+  console.log(usage)
+
   const canUpgrade = plan && ["free", "pro"].includes(plan)
 
   return (
@@ -116,7 +118,12 @@ export default function Billing() {
 
         <LineChart
           title={<Title order={4}>Events Usage</Title>}
-          range={30}
+          startDate={
+            // 30 days ago
+            new Date(new Date().setDate(new Date().getDate() - 30))
+          }
+          endDate={new Date()}
+          granularity="daily"
           data={usage}
           formatter={(val) => `${val} runs`}
           props={["count"]}
