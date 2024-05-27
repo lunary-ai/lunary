@@ -2,6 +2,7 @@ import Paywall from "@/components/layout/Paywall"
 import { useOrg } from "@/utils/dataHooks"
 import { useEvaluator, useEvaluators } from "@/utils/dataHooks/evaluators"
 import { slugify } from "@/utils/format"
+import EVALUATOR_TYPES from "@/utils/evaluators"
 
 import {
   ActionIcon,
@@ -88,7 +89,7 @@ export default function RealtimeEvaluators() {
           <Group align="center">
             <Title>Real-time Evaluations</Title>
             <Badge variant="light" color="blue">
-              Alpha
+              Beta
             </Badge>
           </Group>
 
@@ -120,16 +121,26 @@ export default function RealtimeEvaluators() {
 function EvaluationCard({ id, initialData }) {
   const { evaluator, delete: deleteEvaluator } = useEvaluator(id, initialData)
 
+  const { description, icon: Icon } = EVALUATOR_TYPES[evaluator.type]
+
   return (
     <Card p="lg" withBorder>
       <Group justify="space-between">
-        <Stack gap="0">
-          <Title order={3} size={16}>
-            {evaluator.name}
-          </Title>
-          <Text c="gray.7" fw="semibold" size="sm">
-            {slugify(evaluator.name)}
-          </Text>
+        <Stack>
+          <Group>
+            <Icon size={24} />
+            <Title order={3} size={16}>
+              {evaluator.name}
+            </Title>
+            <Text c="dimmed" fw="semibold" size="sm">
+              {description}
+            </Text>
+          </Group>
+          <Group>
+            <Text c="dimmed" fw="semibold" size="sm">
+              {slugify(evaluator.name)}
+            </Text>
+          </Group>
         </Stack>
 
         <Menu>
