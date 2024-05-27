@@ -249,7 +249,7 @@ const EVALUATOR_TYPES = {
     uiType: "ai",
     description:
       "G-Eval is a framework that uses LLMs with chain-of-thoughts (CoT) to evaluate LLM outputs based on ANY custom criteria",
-    soon: true,
+
     params: [
       {
         type: "label",
@@ -258,8 +258,25 @@ const EVALUATOR_TYPES = {
       {
         type: "text",
         id: "criteria",
-        placeholder: "Is spoken like a pirate",
-        width: 140,
+        value:
+          "Determine if the actual output is factually correct based on the expected output.",
+        placeholder: "Enter the main criteria",
+        width: 400,
+      },
+      {
+        id: "steps",
+        type: "select",
+        multiple: true,
+        allowCustom: true,
+        // options: ["step 1", "step 2", "step 3"],
+        defaultValue: [
+          "Check whether the facts in 'actual output' contradicts any facts in 'expected output'",
+          "You should also heavily penalize omission of detail",
+          "Vague language, or contradicting OPINIONS, are OK",
+        ],
+        label: "Steps",
+        placeholder: "Enter thinking steps",
+        width: 300,
       },
     ],
   },

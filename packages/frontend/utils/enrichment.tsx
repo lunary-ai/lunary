@@ -1,4 +1,4 @@
-import { Badge, Box, Popover, Text, Tooltip } from "@mantine/core"
+import { Badge, Box, Group, Popover, Text, Tooltip } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import {
   IconCheck,
@@ -12,7 +12,7 @@ import { getFlagEmoji } from "./format"
 
 export function renderEnrichment(data: any, type: EvaluatorType) {
   const renderers: Record<EvaluatorType, (data: any) => any> = {
-    language: getFlagEmoji,
+    language: renderLanguageEnrichment,
     pii: renderPIIEnrichment,
     toxicity: renderToxicityEnrichment,
     topics: renderTopicsEnrichment,
@@ -25,6 +25,11 @@ export function renderEnrichment(data: any, type: EvaluatorType) {
 
   const renderer = renderers[type] || JSON.stringify
   return renderer(data)
+}
+
+function renderLanguageEnrichment(data: string) {
+  const emoji = getFlagEmoji(data)
+  return <Text size="lg">{emoji}</Text>
 }
 
 function renderPIIEnrichment(data: any) {
@@ -121,17 +126,19 @@ function renderTopicsEnrichment(data: string[]) {
       <Popover.Target>
         <div>
           {data.length < 3 ? (
-            data.map((topic, index) => (
-              <Badge
-                key={index}
-                onMouseEnter={open}
-                onMouseLeave={close}
-                color="blue"
-                styles={{ label: { textTransform: "lowercase" } }}
-              >
-                {topic}
-              </Badge>
-            ))
+            <Group gap={2}>
+              {data.map((topic, index) => (
+                <Badge
+                  key={index}
+                  onMouseEnter={open}
+                  onMouseLeave={close}
+                  color="blue"
+                  styles={{ label: { textTransform: "lowercase" } }}
+                >
+                  {topic}
+                </Badge>
+              ))}
+            </Group>
           ) : (
             <Badge
               onMouseEnter={open}
