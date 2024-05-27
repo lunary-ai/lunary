@@ -30,7 +30,7 @@ export async function evaluate(run: Run, params: AssertParams) {
   const reason = output.split("\n").slice(1).join("\n")
 
   return {
-    result,
+    result: result === "yes",
     reason,
   }
 }

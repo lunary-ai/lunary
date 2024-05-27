@@ -84,7 +84,7 @@ export default function NewRealtimeEvaluator() {
   const router = useRouter()
 
   const { user } = useUser()
-  const { evaluators, insert: insertEvaluator } = useEvaluators()
+  const { insert: insertEvaluator } = useEvaluators()
 
   const [name, setName] = useState<string>("")
   const [type, setType] = useState<string>()
@@ -171,7 +171,10 @@ export default function NewRealtimeEvaluator() {
                   key={evaluator.id}
                   evaluator={evaluator}
                   isSelected={type === evaluator.id}
-                  onItemClick={setType}
+                  onItemClick={(type) => {
+                    setType(type)
+                    setName(evaluator.name)
+                  }}
                 />
               ))}
           </SimpleGrid>
