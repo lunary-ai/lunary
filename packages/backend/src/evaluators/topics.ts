@@ -23,7 +23,7 @@ export async function evaluate(run: Run, params: TopicsParams) {
 
   const output = res.choices[0]?.message?.content
 
-  if (!output) throw new Error("No output from AI")
+  if (!output) return []
 
   // if the first line is 'None' as instructed in the prompt, return an empty array
   if (output.split("\n")[0].toLowerCase().includes("none")) {

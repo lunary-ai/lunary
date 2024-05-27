@@ -17,7 +17,7 @@ export async function evaluate(run: Run) {
 
   const output = res.choices[0]?.message?.content
 
-  if (!output) throw new Error("No output from AI")
+  if (!output) ""
 
   const result = output.split("\n")[0].toLowerCase().replace(".", "").trim()
 
