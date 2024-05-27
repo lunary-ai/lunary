@@ -13,7 +13,7 @@ interface CreateEvaluatorData {
 }
 
 export function useEvaluators() {
-  const { data, isLoading } = useProjectSWR(`/evaluators`)
+  const { data, isLoading, mutate } = useProjectSWR(`/evaluators`)
 
   const { trigger: insertMutation } = useProjectMutation(
     `/evaluators`,
@@ -26,10 +26,39 @@ export function useEvaluators() {
 
   return {
     evaluators: data,
+    mutate,
     isLoading,
     insert,
   }
 }
 
-// TODO
-export function useEvaluator(id: string) {}
+export function useEvaluator(id: string, initialData?: any) {
+  const { mutate: mutateEvaluators } = useEvaluators()
+
+  const { data, isLoading, mutate } = useProjectSWR(id && `/evaluators/${id}`, {
+    fallbackData: initialData,
+  })
+
+  const { trigger: updateMutation } = useProjectMutation(
+    `/evaluators/${id}`,
+    fetcher.patch,
+  )
+
+  const { trigger: deleteMutation } = useProjectMutation(
+    `/evaluators/${id}`,
+    fetcher.delete,
+    {
+      onSuccess() {
+        mutateEvaluators((evaluators) => evaluators.filter((r) => r.id !== id))
+      },
+    },
+  )
+
+  return {
+    evaluator: data,
+    update: updateMutation,
+    delete: deleteMutation,
+    mutate,
+    isLoading,
+  }
+}

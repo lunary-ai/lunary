@@ -1,12 +1,10 @@
-import { Badge, Box, Popover, Text } from "@mantine/core"
+import { Badge, Box, Popover, Text, Tooltip } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import {
   IconCheck,
-  IconLetterX,
   IconMoodNeutral,
   IconMoodSad,
   IconMoodSmile,
-  IconSquareLetterX,
   IconX,
 } from "@tabler/icons-react"
 import { EvaluatorType } from "shared"
@@ -121,14 +119,30 @@ function renderTopicsEnrichment(data: string[]) {
       opened={opened}
     >
       <Popover.Target>
-        <Badge
-          onMouseEnter={open}
-          onMouseLeave={close}
-          color="blue"
-          styles={{ label: { textTransform: "lowercase" } }}
-        >
-          {data.length === 1 ? "1 topic" : data.length + " topics"}
-        </Badge>
+        <div>
+          {data.length < 3 ? (
+            data.map((topic, index) => (
+              <Badge
+                key={index}
+                onMouseEnter={open}
+                onMouseLeave={close}
+                color="blue"
+                styles={{ label: { textTransform: "lowercase" } }}
+              >
+                {topic}
+              </Badge>
+            ))
+          ) : (
+            <Badge
+              onMouseEnter={open}
+              onMouseLeave={close}
+              color="blue"
+              styles={{ label: { textTransform: "lowercase" } }}
+            >
+              {data.length + " topics"}
+            </Badge>
+          )}
+        </div>
       </Popover.Target>
       <Popover.Dropdown style={{ pointerEvents: "none" }} w="300">
         <Text size="sm">
@@ -139,7 +153,6 @@ function renderTopicsEnrichment(data: string[]) {
     </Popover>
   )
 }
-
 function renderToneEnrichment(data: string[]) {
   const [opened, { close, open }] = useDisclosure(false)
 
@@ -224,7 +237,11 @@ function renderAssertEnrichment(data: any) {
   }
 
   if (data.result === "yes" || data.result === "true" || data.result === true) {
-    return <IconCheck color="green" />
+    return (
+      <Tooltip label={data.reason}>
+        <IconCheck color="green" />
+      </Tooltip>
+    )
   }
 
   return <IconX color="red" />

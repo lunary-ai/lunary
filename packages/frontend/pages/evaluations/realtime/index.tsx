@@ -1,6 +1,6 @@
 import Paywall from "@/components/layout/Paywall"
 import { useOrg } from "@/utils/dataHooks"
-import { useEvaluators } from "@/utils/dataHooks/evaluators"
+import { useEvaluator, useEvaluators } from "@/utils/dataHooks/evaluators"
 import { slugify } from "@/utils/format"
 
 import {
@@ -106,45 +106,49 @@ export default function RealtimeEvaluators() {
         </Text>
 
         {evaluators?.map((evaluator) => (
-          <Card key={evaluator.id} p="lg" withBorder>
-            <Group justify="space-between">
-              <Stack gap="0">
-                <Title order={3} size={16}>
-                  {evaluator.name}
-                </Title>
-                <Text c="gray.7" fw="semibold" size="sm">
-                  {slugify(evaluator.name)}
-                </Text>
-              </Stack>
-
-              <Menu>
-                <Menu.Target>
-                  <ActionIcon variant="transparent">
-                    {/* TODO: use mantine gray*/}
-                    <IconDotsVertical color="gray" />
-                  </ActionIcon>
-                </Menu.Target>
-
-                <Menu.Dropdown>
-                  {/* <Menu.Item
-                    leftSection={<IconEdit width="15px" height="15px" />}
-                  >
-                    Edit
-                  </Menu.Item> */}
-                  {/* TODO: use mantine red*/}
-                  <Menu.Item
-                    leftSection={
-                      <IconTrash color="red" width="15px" height="15px" />
-                    }
-                  >
-                    Delete
-                  </Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
-            </Group>
-          </Card>
+          <EvaluationCard
+            key={evaluator.id}
+            id={evaluator.id}
+            initialData={evaluator}
+          />
         ))}
       </Stack>
     </Container>
+  )
+}
+
+function EvaluationCard({ id, initialData }) {
+  const { evaluator, delete: deleteEvaluator } = useEvaluator(id, initialData)
+
+  return (
+    <Card p="lg" withBorder>
+      <Group justify="space-between">
+        <Stack gap="0">
+          <Title order={3} size={16}>
+            {evaluator.name}
+          </Title>
+          <Text c="gray.7" fw="semibold" size="sm">
+            {slugify(evaluator.name)}
+          </Text>
+        </Stack>
+
+        <Menu>
+          <Menu.Target>
+            <ActionIcon variant="transparent">
+              <IconDotsVertical color="gray" />
+            </ActionIcon>
+          </Menu.Target>
+
+          <Menu.Dropdown>
+            <Menu.Item
+              leftSection={<IconTrash color="red" width="15px" height="15px" />}
+              onClick={() => deleteEvaluator()}
+            >
+              Delete
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
+      </Group>
+    </Card>
   )
 }
