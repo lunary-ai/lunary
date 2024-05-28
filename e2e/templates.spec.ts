@@ -31,14 +31,14 @@ test("create new template and test basic playground", async ({ page }) => {
   await expect(page.locator("#HERE").getByText("assistant")).toBeVisible()
 })
 
-test("create new template and deploy", async ({ page }) => {
+test("create new chat template and deploy", async ({ page }) => {
   await page.goto("/prompts")
 
   await page.waitForLoadState("networkidle")
 
   await page.getByTestId("create-template").click()
 
-  await page.getByTestId("rename-template-input").fill("test-template")
+  await page.getByTestId("rename-template-input").fill("test-chat-template")
   await page.getByTestId("rename-template-input").press("Enter")
 
   await page.getByTestId("deploy-template").click()
@@ -51,4 +51,20 @@ test("create new template and deploy", async ({ page }) => {
   await page.getByTestId("save-template").click()
 
   await expect(page.locator("a").filter({ hasText: "v2" })).toBeVisible()
+})
+
+test("create new text template and deploy", async ({ page }) => {
+  await page.goto("/prompts")
+
+  await page.waitForLoadState("networkidle")
+
+  await page.getByTestId("create-template").click()
+
+  await page.getByTestId("rename-template-input").click()
+
+  await page.getByText("Text").click()
+
+  await page.getByTestId("deploy-template").click()
+
+  await expect(page.getByText("Template deployed")).toBeVisible()
 })
