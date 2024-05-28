@@ -85,7 +85,7 @@ versions.patch(
   async (ctx: Context) => {
     console.log("ctx.request.body", ctx.request.body)
     const bodySchema = z.object({
-      content: z.array(z.any()),
+      content: z.union([z.array(z.any()), z.string()]),
       extra: z.any(),
       testValues: z.any(),
       isDraft: z.boolean(),
