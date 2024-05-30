@@ -7,9 +7,11 @@ import {
   Card,
   Flex,
   Group,
+  Modal,
   SegmentedControl,
   Stack,
   Text,
+  Textarea,
 } from "@mantine/core"
 
 import {
@@ -20,7 +22,6 @@ import {
   IconGitCommit,
 } from "@tabler/icons-react"
 import { useRouter } from "next/router"
-import analytics from "../../utils/analytics"
 import { openUpgrade } from "@/components/layout/UpgradeModal"
 import HotkeysInfo from "@/components/blocks/HotkeysInfo"
 import TemplateInputArea from "@/components/prompts/TemplateInputArea"
@@ -37,15 +38,70 @@ import {
   useUser,
   useProject,
 } from "@/utils/dataHooks"
+
+import analytics from "@/utils/analytics"
+import { useGlobalShortcut } from "@/utils/hooks"
 import { fetcher } from "@/utils/fetcher"
+
 import Empty from "@/components/layout/Empty"
 
 import { useCheckedPromptVariables } from "@/utils/promptsHooks"
 import { openConfirmModal } from "@mantine/modals"
-import { useGlobalShortcut } from "@/utils/hooks"
+
 import { ParamItem } from "@/components/prompts/Provider"
 import ProviderEditor from "@/components/prompts/Provider"
 import PromptVariableEditor from "@/components/prompts/PromptVariableEditor"
+
+function NotepadButton({ value, onChange }) {
+  const [modalOpened, setModalOpened] = useState(false)
+  const [tempValue, setTempValue] = useState(value)
+
+  useEffect(() => {
+    setTempValue(value)
+  }, [value])
+
+  return (
+    <>
+      <Modal
+        size="lg"
+        opened={modalOpened}
+        onClose={() => setModalOpened(false)}
+        title="Notepad"
+      >
+        <Textarea
+          autosize
+          minRows={5}
+          maxRows={30}
+          placeholder="Write down thoughts, ideas, or anything else you want to remember about this template."
+          defaultValue={value}
+          onChange={(e) => setTempValue(e.currentTarget.value)}
+        />
+        <Group mt="sm" align="right">
+          <Button
+            ml="auto"
+            size="xs"
+            variant="default"
+            onClick={() => {
+              onChange(tempValue)
+              setModalOpened(false)
+            }}
+          >
+            Save
+          </Button>
+        </Group>
+      </Modal>
+      <Button
+        size="compact-xs"
+        variant="outline"
+        onClick={() => {
+          setModalOpened(true)
+        }}
+      >
+        {`Open`}
+      </Button>
+    </>
+  )
+}
 
 function Playground() {
   const router = useRouter()
@@ -125,9 +181,17 @@ function Playground() {
         const run = await fetcher.get(`/runs/${clone}?projectId=${project?.id}`)
 
         if (run?.input) {
-          setTemplateVersion({ ...templateVersion, content: run.input })
+          setTemplateVersion({
+            // ...templateVersion,
+            content: run.input,
+            extra: { ...run.params, model: run.name },
+          })
 
-          setTemplate({ mode: "openai", extra: run.params })
+          setTemplate({ mode: "openai" })
+
+          setOutput(run.output)
+
+          setOutputTokens(run.tokens?.completion)
         }
 
         setLoading(false)
@@ -149,17 +213,14 @@ function Playground() {
 
   // Save as draft without deploying
   const saveTemplate = async () => {
-    if (templateVersion.isDraft) {
-      await updateVersion({
-        ...templateVersion,
-        extra: templateVersion.extra,
-        content: templateVersion.content,
-      })
+    if (templateVersion.isDraft && templateVersion.id) {
+      await updateVersion(templateVersion)
     } else {
       const data = {
         testValues: templateVersion.testValues,
         content: templateVersion.content,
         extra: templateVersion.extra,
+        notes: templateVersion.notes,
         isDraft: true,
       }
 
@@ -238,6 +299,7 @@ function Playground() {
         testValues: templateVersion.testValues,
         content: templateVersion.content,
         extra: templateVersion.extra,
+        notes: templateVersion.notes,
         isDraft: false,
       }
 
@@ -320,11 +382,13 @@ function Playground() {
     setStreaming(false)
   }
 
-  // reset output when the template or template version changes
+  // reset output when the template or template version changes, but not if cloned
   useEffect(() => {
-    setOutput(null)
-    setError(null)
-    setOutputTokens(0)
+    if (!router.query.clone) {
+      setOutput(null)
+      setError(null)
+      setOutputTokens(0)
+    }
   }, [
     template?.id,
     templateVersion?.id,
@@ -420,22 +484,26 @@ function Playground() {
                   // }
                   onClick={saveTemplate}
                 >
-                  Save changes
+                  {templateVersion?.id
+                    ? "Save changes"
+                    : "Save as new template"}
                 </Button>
 
-                <Button
-                  leftSection={<IconGitCommit size={18} />}
-                  size="xs"
-                  loading={loading}
-                  data-testid="deploy-template"
-                  disabled={
-                    loading || !(templateVersion?.isDraft || hasChanges)
-                  }
-                  variant="filled"
-                  onClick={commitTemplate}
-                >
-                  Deploy
-                </Button>
+                {templateVersion?.id && (
+                  <Button
+                    leftSection={<IconGitCommit size={18} />}
+                    size="xs"
+                    loading={loading}
+                    data-testid="deploy-template"
+                    disabled={
+                      loading || !(templateVersion?.isDraft || hasChanges)
+                    }
+                    variant="filled"
+                    onClick={commitTemplate}
+                  >
+                    Deploy
+                  </Button>
+                )}
               </Group>
             )}
 
@@ -481,6 +549,31 @@ function Playground() {
                 />
               }
             />
+
+            {template?.id && templateVersion?.id && (
+              <ParamItem
+                name="Notepad"
+                description="Write down thoughts or ideas you want to remember about this template. Notes are versioned."
+                value={
+                  <NotepadButton
+                    value={templateVersion?.notes}
+                    onChange={async (notes) => {
+                      const data = {
+                        ...templateVersion,
+                        notes,
+                      }
+
+                      setTemplateVersion(data)
+
+                      // save directly without bumping version so no changes are lost
+                      await updateVersion(data)
+
+                      mutate()
+                    }}
+                  />
+                }
+              />
+            )}
 
             <ProviderEditor
               value={{
