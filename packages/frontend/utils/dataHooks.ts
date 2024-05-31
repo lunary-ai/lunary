@@ -126,7 +126,12 @@ export function useOrg() {
     () => isSignedIn && `/users/me/org`,
   )
 
-  const { trigger: addUserToOrg } = useSWRMutation(`/users`, fetcher.post)
+  const { trigger: createUserTrigger } = useSWRMutation(`/users`, fetcher.post)
+
+  async function addUserToOrg(user) {
+    await createUserTrigger(user)
+    mutate()
+  }
 
   const scheme = useFixedColorScheme()
 
