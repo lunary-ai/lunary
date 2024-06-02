@@ -8,6 +8,7 @@ import { Feedback, deserializeLogic } from "shared"
 import { convertChecksToSQL } from "@/src/utils/checks"
 import { checkAccess } from "@/src/utils/authorization"
 import { jsonrepair } from "jsonrepair"
+import { z } from "zod"
 
 const runs = new Router({
   prefix: "/runs",
@@ -267,17 +268,17 @@ runs.get("/:id", async (ctx) => {
 })
 
 runs.patch("/:id", checkAccess("logs", "update"), async (ctx: Context) => {
-  // TODO: each value should probably have their own endpoint
-  // TODO: zod
+  // TODO: tags and isPublic should probably have their own endpoint
+  const requestBody = z.object({
+    isPublic: z.boolean().optional(),
+    tags: z.union([z.array(z.string()), z.null()]),
+  })
   const { projectId } = ctx.state
   const { id } = ctx.params
-  const { isPublic, tags } = ctx.request.body as {
-    isPublic: boolean
-    tags: string[]
-  }
+  const { isPublic, tags } = requestBody.parse(ctx.request.body)
 
   let valuesToUpdate = {}
-  if (isPublic) {
+  if (isPublic !== undefined) {
     valuesToUpdate.isPublic = isPublic
   }
   if (tags) {
