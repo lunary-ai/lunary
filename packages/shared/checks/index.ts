@@ -613,8 +613,16 @@ export const CHECKS: Check[] = [
         type: "select",
         id: "entities",
         width: 230,
-        // defaultValue: ["person", "location", "email", "cc", "phone", "ssn"],
-        defaultValue: ["person", "location", "org"],
+        defaultValue: [
+          "person",
+          "location",
+          "org",
+          "email",
+          "cc",
+          "phone",
+          "ip",
+          // "ssn",
+        ],
         multiple: true,
         searchable: true,
         options: [
@@ -630,18 +638,22 @@ export const CHECKS: Check[] = [
             label: "Organization",
             value: "org",
           },
-          // {
-          //   label: "Email",
-          //   value: "email",
-          // },
-          // {
-          //   label: "Credit Card",
-          //   value: "cc",
-          // },
-          // {
-          //   label: "Phone",
-          //   value: "phone",
-          // },
+          {
+            label: "Email",
+            value: "email",
+          },
+          {
+            label: "Credit Card",
+            value: "cc",
+          },
+          {
+            label: "Phone",
+            value: "phone",
+          },
+          {
+            label: "IP Address",
+            value: "ip",
+          },
           // {
           //   label: "SSN",
           //   value: "ssn",

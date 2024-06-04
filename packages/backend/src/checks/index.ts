@@ -537,14 +537,51 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     id: "pii",
     async evaluator(run, params) {
       const { field, type, entities } = params
+      const regexResults = {}
 
-      const results = await callML("pii", {
-        texts: getTextsTypes(field, run),
-        entities,
-      })
+      const texts = getTextsTypes(field, run)
+      const text = texts.join(" ")
+      if (!text.length) {
+        return null
+      }
+
+      if (entities.includes("email")) {
+        const emailRegex = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gim
+        regexResults.email = [...new Set(text.match(emailRegex))]
+      }
+
+      if (entities.includes("ip")) {
+        const ipRegex = /(?:\d{1,3}\.){3}\d{1,3}/gim
+        regexResults.ip = [...new Set(text.match(ipRegex))]
+      }
+
+      if (entities.includes("cc")) {
+        const ccRegex = /\d{13,16}/gim
+        regexResults.cc = [...new Set(text.match(ccRegex))]
+      }
+
+      const mlResults = await callML(
+        "pii",
+        {
+          text,
+          entities: entities.filter((entity: string) =>
+            ["person", "location", "org", "misc"].includes(entity),
+          ),
+        },
+        process.env.NEW_ML_URL,
+      )
+
+      const results = { ...regexResults, ...mlResults }
+      console.log(
+        text,
+        entities.filter((entity: string) =>
+          ["person", "location", "org", "misc"].includes(entity),
+        ),
+        mlResults,
+        "\n\n\n\n",
+      )
 
       let passed = false
-
       if (type === "contains") {
         passed = Object.keys(results).some(
           (entity: string) => results[entity]?.length > 0,
@@ -555,33 +592,9 @@ export const CHECK_RUNNERS: CheckRunner[] = [
         )
       }
 
-      let labels = {
-        person: "Persons",
-        org: "Organizations",
-        location: "Locations",
-        email: "Emails",
-        phone: "Phone numbers",
-        cc: "Credit card numbers",
-        ssn: "Social security numbers",
-      }
-
-      let reason = `No entities detected among ${entities?.join(", ")}`
-      if (passed) {
-        reason =
-          "Entities detected: \n" +
-          Object.keys(results)
-            .filter((key) => results[key].length > 0)
-            .map(
-              (key: string) =>
-                (labels[key] || key) + ": " + results[key].join(", "),
-            )
-            .join("\n")
-      }
-
       return {
         passed,
-        reason,
-        details: results,
+        details: "",
       }
     },
   },
