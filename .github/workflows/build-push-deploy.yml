@@ -80,6 +80,9 @@ jobs:
   build-and-push-frontend:
     needs: deploy
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [frontend, lunary-ee]
     steps:
       - name: Check out the private Ops repo
         uses: actions/checkout@v4
@@ -116,12 +119,12 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./ops/frontend.Dockerfile
+          file: ./ops/${{ matrix.service }}.Dockerfile
           push: true
           tags: |
-            lunary/frontend:latest
-            lunary/frontend:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
-            ${{ github.event.release.tag_name != '' && format('lunary/frontend:{0}', steps.release_tag.outputs.tag) || '' }}
+            lunary/${{ matrix.service }}:latest
+            lunary/${{ matrix.service }}:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
+            ${{ github.event.release.tag_name != '' && format('lunary/{0}:{1}', matrix.service, steps.release_tag.outputs.tag) || '' }}
           platforms: linux/arm64,linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
