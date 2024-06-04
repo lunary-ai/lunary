@@ -24,15 +24,23 @@ versions.get("/latest", async (ctx: Context) => {
   }
 
   const [latestVersion] = await unCameledSql`
-    SELECT t.id::text, t.slug, tv.id::text, tv.content, tv.extra, tv.created_at, tv.version
-    FROM template t
-    INNER JOIN template_version tv ON t.id = tv.template_id
-    WHERE 
+    select 
+      t.id::text, 
+      t.slug, 
+      tv.id::text, 
+      tv.content, 
+      tv.extra, 
+      tv.created_at, 
+      tv.version
+    from 
+      template t
+      inner join template_version tv on t.id = tv.template_id
+    where 
       t.project_id = ${projectId}
-      AND t.slug = ${slug}
-      AND tv.is_draft = false
-    ORDER BY tv.created_at DESC
-    LIMIT 1
+      and t.slug = ${slug}
+      and tv.is_draft = false
+    order by tv.created_at desc
+    limit 1
   `
 
   if (!latestVersion) {
