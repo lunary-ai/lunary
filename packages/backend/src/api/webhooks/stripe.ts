@@ -71,7 +71,7 @@ const updateSubscription = async (object: Stripe.Subscription) => {
     object
 
   const plan = metadata.plan || "team"
-  const period = metadata.period
+  const period = metadata.period || "monthly"
   const canceled = cancel_at_period_end
 
   const [currentOrg] = await sql`
