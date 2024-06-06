@@ -16,7 +16,7 @@ const router = new Router({
   prefix: "/stripe",
 })
 
-const setupSubscription = async (object: Stripe.Checkout.Session) => {
+async function setupSubscription(object: Stripe.Checkout.Session) {
   console.log("🔔 setupSubscription", object)
   const { customer, client_reference_id, mode, subscription, metadata } = object
 
@@ -66,9 +66,10 @@ const setupSubscription = async (object: Stripe.Checkout.Session) => {
   )
 }
 
-const updateSubscription = async (object: Stripe.Subscription) => {
-  const { customer, cancel_at_period_end, metadata, id, cancellation_details } =
-    object
+async function updateSubscription(object: Stripe.Subscription) {
+  const { customer, cancel_at_period_end, metadata, id } = object
+
+  metadata
 
   const plan = metadata.plan || "team"
   const period = metadata.period || "monthly"
@@ -125,7 +126,7 @@ const updateSubscription = async (object: Stripe.Subscription) => {
   }
 }
 
-const cancelSubscription = async (object: Stripe.Subscription) => {
+async function cancelSubscription(object: Stripe.Subscription) {
   const { customer, id } = object
 
   const [org] = await sql`
