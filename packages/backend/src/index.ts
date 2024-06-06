@@ -44,7 +44,7 @@ app.use(ratelimit)
 app.use(bodyParser({ jsonLimit: "5mb", textLimit: "5mb" }))
 app.use(setDefaultBody)
 
-if (config.isSelfHosted) {
+if (config.IS_SELF_HOSTED) {
   app.use(licenseMiddleware)
 }
 

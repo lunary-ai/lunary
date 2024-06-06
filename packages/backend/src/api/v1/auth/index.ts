@@ -105,7 +105,7 @@ auth.post("/signup", async (ctx: Context) => {
         email,
         orgId: org.id,
         role: "owner",
-        verified: config.skipEmailVerify,
+        verified: config.SKIP_EMAIL_VERIFY,
         lastLoginAt: new Date(),
       }
 
