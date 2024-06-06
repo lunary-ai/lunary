@@ -502,7 +502,7 @@ function InviteMemberCard() {
     }
   }
 
-  const upgradeForGranular = org.plan !== "custom"
+  const upgradeForGranular = org?.plan !== "custom"
 
   return (
     <SettingsCard title="Invite Team Member">
