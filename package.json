@@ -4,10 +4,11 @@
   "private": "true",
   "scripts": {
     "start": "concurrently -n frontend,backend \"npm run start:frontend\" \"npm run start:backend\"",
+    "start:with-ml": "concurrently -n frontend,backend \"npm run start:frontend\" \"npm run start:backend\" \"npm run start:ml\"",
     "start:frontend": "npm -w packages/frontend run start",
     "start:backend": "npm -w packages/backend run start",
     "start:radar": "npm -w packages/backend run start:radar",
-    "start:ml": ". ./packages/ml/venv/bin/activate && python3 packages/ml/main.py",
+    "start:ml": ". ./packages/ml/venv/bin/activate && cd packages/ml && waitress-serve --port 4242 main:app",
     "build:frontend": "npm -w packages/frontend run build",
     "migrate:db": "npm -w packages/backend run migrate:db",
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",

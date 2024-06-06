@@ -181,10 +181,17 @@ function Playground() {
         const run = await fetcher.get(`/runs/${clone}?projectId=${project?.id}`)
 
         if (run?.input) {
-          setOutput(run.output)
-          setTemplateVersion({ ...templateVersion, content: run.input })
+          setTemplateVersion({
+            // ...templateVersion,
+            content: run.input,
+            extra: { ...run.params, model: run.name },
+          })
 
-          setTemplate({ mode: "openai", extra: run.params })
+          setTemplate({ mode: "openai" })
+
+          setOutput(run.output)
+
+          setOutputTokens(run.tokens?.completion)
         }
 
         setLoading(false)
@@ -375,11 +382,13 @@ function Playground() {
     setStreaming(false)
   }
 
-  // reset output when the template or template version changes
+  // reset output when the template or template version changes, but not if cloned
   useEffect(() => {
-    setOutput(null)
-    setError(null)
-    setOutputTokens(0)
+    if (!router.query.clone) {
+      setOutput(null)
+      setError(null)
+      setOutputTokens(0)
+    }
   }, [
     template?.id,
     templateVersion?.id,
