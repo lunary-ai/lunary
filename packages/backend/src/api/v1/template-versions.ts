@@ -91,7 +91,6 @@ versions.patch(
   "/:id",
   checkAccess("prompts", "update"),
   async (ctx: Context) => {
-    console.log("ctx.request.body", ctx.request.body)
     const bodySchema = z.object({
       content: z.union([z.array(z.any()), z.string()]),
       extra: z.any(),
