@@ -433,7 +433,7 @@ export function useAppUsers(usageRange = 30) {
   const { users, isLoading } = useAppUserList(usageRange)
 
   const maxLastSeen = new Date(
-    new Date().getTime() - usageRange * 24 * 60 * 60 * 1000,
+    new Date()?.getTime() - usageRange * 24 * 60 * 60 * 1000,
   )
     .toISOString()
     .slice(0, 10)
