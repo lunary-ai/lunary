@@ -204,7 +204,10 @@ export async function runAImodel(
     const [{ stripeCustomer }] =
       await sql`select stripe_customer from org where id = ${orgId}`
 
-    if (process.env.NODE_ENV === "production" && (config.IS_SELF_HOSTED || !process.env.STRIPE_SECRET_KEY)) {
+    if (
+      process.env.NODE_ENV === "production" ||
+      process.env.STRIPE_SECRET_KEY
+    ) {
       stripe.billing.meterEvents
         .create({
           event_name: "ai_playground",

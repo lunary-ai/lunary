@@ -1,3 +1,3 @@
 -- [ ] INDEX run tsvector
-create index concurrently on run((error is not null));
+create index on run((error is not null));
 -- [ ] final tables evaluators 
