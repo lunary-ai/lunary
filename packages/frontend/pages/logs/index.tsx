@@ -382,13 +382,25 @@ export default function Logs() {
                     >
                       Export to CSV
                     </Menu.Item>
+
+                    {type === "llm" && (
+                      <Menu.Item
+                        color="dimmed"
+                        disabled={type === "thread"}
+                        leftSection={<IconBrandOpenai size={16} />}
+                        {...exportButton(exportUrl + "&exportType=ojsonl")}
+                      >
+                        Export to OpenAI JSONL
+                      </Menu.Item>
+                    )}
+
                     <Menu.Item
                       color="dimmed"
                       disabled={type === "thread"}
                       leftSection={<IconBraces size={16} />}
                       {...exportButton(exportUrl + "&exportType=jsonl")}
                     >
-                      Export to JSONL
+                      Export to raw JSONL
                     </Menu.Item>
                   </Menu.Dropdown>
                 </Menu>
