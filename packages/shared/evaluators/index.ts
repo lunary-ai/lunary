@@ -37,5 +37,3 @@ interface RealtimeEvaluator extends BaseEvaluator {
 }
 
 type Evaluator = NormalEvaluator | RealtimeEvaluator
-
-export * as pii from "./pii"

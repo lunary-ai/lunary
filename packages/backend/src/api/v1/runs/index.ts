@@ -71,33 +71,34 @@ function processParams(params: any) {
   return params
 }
 
-const formatRun = (run: any) => ({
-  id: run.id,
-  projectId: run.projectId,
-  isPublic: run.isPublic,
-  feedback: run.feedback,
-  parentFeedback: run.parentFeedback,
+function formatRun(run: any) {
+  const formattedRun = {
+    id: run.id,
+    projectId: run.projectId,
+    isPublic: run.isPublic,
+    feedback: run.feedback,
+    parentFeedback: run.parentFeedback,
 
-  type: run.type,
-  name: run.name,
-  createdAt: run.createdAt,
-  endedAt: run.endedAt,
-  duration: run.duration,
-  templateVersionId: run.templateVersionId,
-  templateSlug: run.templateSlug,
-  cost: run.cost,
-  tokens: {
-    completion: run.completionTokens,
-    prompt: run.promptTokens,
-    total: run.completionTokens + run.promptTokens,
-  },
-  tags: run.tags,
-  input: processInput(run.input),
-  output: processOutput(run.output),
-  error: run.error,
-  status: run.status,
-  siblingRunId: run.siblingRunId,
-  params: processParams(run.params),
+    type: run.type,
+    name: run.name,
+    createdAt: run.createdAt,
+    endedAt: run.endedAt,
+    duration: run.duration,
+    templateVersionId: run.templateVersionId,
+    templateSlug: run.templateSlug,
+    cost: run.cost,
+    tokens: {
+      completion: run.completionTokens,
+      prompt: run.promptTokens,
+      total: run.completionTokens + run.promptTokens,
+    },
+    tags: run.tags,
+    input: processInput(run.input),
+    output: processOutput(run.output),
+    error: run.error,
+    status: run.status,
+    siblingRunId: run.siblingRunId,
+    params: processParams(run.params),
 
     metadata: run.metadata,
     user: {
@@ -108,7 +109,6 @@ const formatRun = (run: any) => ({
       props: run.userProps,
     },
   }
-
   for (let evaluationResult of run.evaluationResults || []) {
     formattedRun[`enrichment-${evaluationResult.evaluatorSlug}`] =
       evaluationResult

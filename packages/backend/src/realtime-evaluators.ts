@@ -1,3 +1,3 @@
-import * as shared from "shared"
+import runEvaluatorsJob from "./jobs/realtime-evaluators"
 
-shared.evaluators.pii.evaluate
+runEvaluatorsJob()
