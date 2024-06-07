@@ -205,7 +205,7 @@ export async function runAImodel(
       await sql`select stripe_customer from org where id = ${orgId}`
 
     if (
-      process.env.NODE_ENV === "production" ||
+      process.env.NODE_ENV === "production" &&
       process.env.STRIPE_SECRET_KEY
     ) {
       stripe.billing.meterEvents
