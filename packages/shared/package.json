@@ -5,6 +5,9 @@
     "build": "tsup index.ts --format esm"
   },
   "dependencies": {
+    "compromise": "^14.13.0",
+    "franc": "^6.2.0",
+    "postgres": "^3.4.4",
     "zod": "^3.22.4"
   }
 }
