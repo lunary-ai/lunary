@@ -206,11 +206,12 @@ function getFigure(agg: string, data: any[], prop: string) {
       return acc
     }, 0)
   } else if (agg === "avg") {
+    const filteredData = data.filter((item) => item[prop] !== 0)
     return (
-      data.reduce((acc, item) => {
+      filteredData.reduce((acc, item) => {
         propKeys.forEach((key) => (acc += item[key] ?? 0))
         return acc
-      }, 0) / data.length
+      }, 0) / filteredData.length || 0
     )
   } else if (agg === "max") {
     return data.reduce((acc, item) => {
@@ -438,11 +439,14 @@ const LineChartComponent = ({
                       <Title order={3} size="sm">
                         {formatDate(label, granularity)}
                       </Title>
-                      {payload.map((item, i) => (
-                        <Text key={i}>{`${item.name}: ${formatter(
-                          item.value,
-                        )}`}</Text>
-                      ))}
+                      {payload.map(
+                        (item, i) =>
+                          item.value !== 0 && (
+                            <Text key={i}>{`${item.name}: ${formatter(
+                              item.value,
+                            )}`}</Text>
+                          ),
+                      )}
                     </Card>
                   )
                 }

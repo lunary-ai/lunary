@@ -7,9 +7,10 @@ export function useAnalyticsData(
   granularity: string,
   checks?: string,
 ) {
+  const timeZone = new window.Intl.DateTimeFormat().resolvedOptions().timeZone
   const checksParam = checks ? `&checks=${checks}` : ""
   const { data, isLoading } = useProjectSWR(
-    `/analytics/${key}?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&granularity=${granularity}${checksParam}`,
+    `/analytics/${key}?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&timeZone=${timeZone}&granularity=${granularity}${checksParam}`,
   )
 
   return { data, isLoading }

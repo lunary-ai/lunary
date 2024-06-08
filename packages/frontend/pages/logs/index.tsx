@@ -17,7 +17,6 @@ import {
 import {
   costColumn,
   durationColumn,
-  enrichmentColumn,
   feedbackColumn,
   inputColumn,
   nameColumn,
@@ -183,27 +182,27 @@ export default function Logs() {
 
   const { run: selectedRun, loading: runLoading } = useRun(selectedRunId)
 
-  useEffect(() => {
-    const newColumns = { ...defaultColumns }
-    if (type === "llm" && Array.isArray(evaluators)) {
-      for (const evaluator of evaluators) {
-        if (
-          newColumns.llm
-            .map(({ accessorKey }) => accessorKey)
-            .includes("enrichment-" + evaluator.slug)
-        ) {
-          continue
-        }
+  // useEffect(() => {
+  //   const newColumns = { ...defaultColumns }
+  //   if (type === "llm" && Array.isArray(evaluators)) {
+  //     for (const evaluator of evaluators) {
+  //       if (
+  //         newColumns.llm
+  //           .map(({ accessorKey }) => accessorKey)
+  //           .includes("enrichment-" + evaluator.slug)
+  //       ) {
+  //         continue
+  //       }
 
-        newColumns.llm.splice(
-          3,
-          0,
-          enrichmentColumn(evaluator.name, evaluator.slug, evaluator.type),
-        )
-      }
-      setColumns(newColumns)
-    }
-  }, [type, evaluators])
+  //       newColumns.llm.splice(
+  //         3,
+  //         0,
+  //         enrichmentColumn(evaluator.name, evaluator.slug, evaluator.type),
+  //       )
+  //     }
+  //     setColumns(newColumns)
+  //   }
+  // }, [type, evaluators])
 
   useEffect(() => {
     if (selectedRun && selectedRun.projectId !== projectId) {

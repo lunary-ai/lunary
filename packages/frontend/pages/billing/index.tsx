@@ -46,8 +46,6 @@ export default function Billing() {
     window.location.href = data.url
   }
 
-  console.log(usage)
-
   const canUpgrade = plan && ["free", "pro"].includes(plan)
 
   return (

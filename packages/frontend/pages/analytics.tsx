@@ -1,12 +1,10 @@
+import LineChart from "@/components/analytics/LineChart"
+import CheckPicker from "@/components/checks/Picker"
 import Empty from "@/components/layout/Empty"
+import { AreaChart } from "@mantine/charts"
 import { useProject } from "@/utils/dataHooks"
-import {
-  useAnalyticsData,
-  useAverageLatencyAnalytics,
-} from "@/utils/dataHooks/analytics"
-import { useNewUsersAnalytics } from "@/utils/dataHooks/analytics"
-import { useRunCountAnalytics } from "@/utils/dataHooks/analytics"
-import { useErrorAnalytics } from "@/utils/dataHooks/analytics"
+import { useAnalyticsData } from "@/utils/dataHooks/analytics"
+import { formatCost } from "@/utils/format"
 import {
   Button,
   Container,
@@ -17,6 +15,7 @@ import {
   Title,
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
+import "@mantine/dates/styles.css"
 import { useLocalStorage } from "@mantine/hooks"
 import {
   IconCalendar,
@@ -25,17 +24,17 @@ import {
 } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { useEffect, useState } from "react"
-import "@mantine/dates/styles.css"
-import LineChart from "@/components/analytics/LineChart"
 import { CheckLogic, serializeLogic } from "shared"
-import CheckPicker from "@/components/checks/Picker"
-import { formatCost } from "@/utils/format"
+import { endOfToday } from "date-fns"
 
 function getDefaultDateRange() {
-  const currentDate = new Date()
-  const oneWeekAgoDate = new Date(currentDate)
-  oneWeekAgoDate.setDate(currentDate.getDate() - 7)
-  const defaultRange: [Date, Date] = [oneWeekAgoDate, currentDate]
+  const endOfToday = new Date()
+  endOfToday.setHours(23, 59, 59, 999)
+
+  const oneWeekAgoDate = new Date(endOfToday)
+  oneWeekAgoDate.setDate(oneWeekAgoDate.getDate() - 7)
+  oneWeekAgoDate.setHours(0, 0, 0, 0)
+  const defaultRange: [Date, Date] = [oneWeekAgoDate, endOfToday]
   return defaultRange
 }
 
@@ -67,43 +66,85 @@ export function deserializeDateRange(value: any): [Date, Date] {
   }
 }
 
-export function getDateRange(
-  option: "Today" | "7 Days" | "30 Days" | "3 Months",
-): Date[] {
-  const currentDate = new Date()
-  const startDate = new Date()
+type PresetDateRange = "Today" | "7 Days" | "30 Days" | "3 Months" | "Custom"
+type DateRange = [Date, Date]
 
-  const options = {
-    Today: () => startDate.setDate(currentDate.getDate() - 1),
-    "7 Days": () => startDate.setDate(currentDate.getDate() - 7),
-    "30 Days": () => startDate.setDate(currentDate.getDate() - 30),
-    "3 Months": () => startDate.setMonth(currentDate.getMonth() - 3),
+// TODO tests
+export function getDateRangeFromPreset(preset: PresetDateRange) {
+  const endOfDay = new Date()
+  endOfDay.setHours(23, 59, 59, 999)
+
+  const startDate = new Date(endOfDay)
+  startDate.setHours(0, 0, 0, 0)
+
+  if (preset === "7 Days") {
+    startDate.setDate(startDate.getDate() - 7)
+  } else if (preset === "30 Days") {
+    startDate.setDate(startDate.getDate() - 30)
+  } else if (preset === "3 Months") {
+    startDate.setMonth(startDate.getMonth() - 3)
   }
 
-  const updateDate = options[option] || options["7 Days"]
-  updateDate()
-
-  return [startDate, currentDate]
+  return [startDate, endOfDay]
 }
 
-export function getSelectedOption(dateRange) {
-  const [startDate, endDate] = dateRange
-  const diffDays = (endDate - startDate) / (1000 * 60 * 60 * 24)
+// TODO: unit tests
+function getPresetFromDateRange(dateRange: DateRange): PresetDateRange {
+  const [startDate, endDate] = [new Date(dateRange[0]), new Date(dateRange[1])]
+  startDate.setHours(0, 0, 0, 0)
+  endDate.setHours(23, 59, 59, 999)
 
-  if (diffDays <= 1) return "Today"
-  if (diffDays === 7) return "7 Days"
-  if (diffDays === 30) return "30 Days"
-  if (diffDays >= 89 && diffDays <= 92) return "3 Months"
+  const startOfToday = new Date()
+  startOfToday.setHours(0, 0, 0, 0)
+  const endOfToday = new Date(startOfToday)
+  endOfToday.setHours(23, 59, 59, 999)
+  if (
+    startDate.getTime() === startOfToday.getTime() &&
+    endDate.getTime() === endOfToday.getTime()
+  ) {
+    return "Today"
+  }
+
+  const sevenDaysAgo = new Date(endOfToday)
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+  sevenDaysAgo.setHours(0, 0, 0, 0)
+  if (
+    startDate.getTime() === sevenDaysAgo.getTime() &&
+    endDate.getTime() === endOfToday.getTime()
+  ) {
+    return "7 Days"
+  }
+
+  const thirtyDaysAgo = new Date(endOfToday)
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+  thirtyDaysAgo.setHours(0, 0, 0, 0)
+  if (
+    startDate.getTime() === thirtyDaysAgo.getTime() &&
+    endDate.getTime() === endOfToday.getTime()
+  ) {
+    return "30 Days"
+  }
+
+  const threeMonthsAgo = new Date(endOfToday)
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3)
+  threeMonthsAgo.setHours(0, 0, 0, 0)
+  if (
+    startDate.getTime() === threeMonthsAgo.getTime() &&
+    endDate.getTime() === endOfToday.getTime()
+  ) {
+    return "3 Months"
+  }
+
   return "Custom"
 }
 
 function DateRangeSelect({ dateRange, setDateRange }) {
-  const selectedOption = getSelectedOption(dateRange)
+  const selectedOption = getPresetFromDateRange(dateRange)
   const data = ["Today", "7 Days", "30 Days", "3 Months"]
   const displayData = selectedOption === "Custom" ? [...data, "Custom"] : data
 
   function handleSelectChange(value) {
-    const newDateRange = getDateRange(value)
+    const newDateRange = getDateRangeFromPreset(value)
     setDateRange(newDateRange)
   }
 
@@ -145,6 +186,10 @@ function DateRangePicker({ dateRange, setDateRange }: DateRangePickerProps) {
   function handleDateChange(dates: [Date | null, Date | null]) {
     setLocalDateRange(dates)
     if (dates[0] && dates[1]) {
+      const [startDate, endDate] = dates
+      startDate.setHours(0, 0, 0, 0)
+      endDate.setHours(23, 59, 59, 99)
+
       setDateRange([dates[0], dates[1]])
     }
   }
@@ -261,22 +306,7 @@ export default function Analytics() {
 
   const { project } = useProject()
 
-  // TODO: refacto this
-  const { data: errorsData, isLoading: errorsDataLoading } = useAnalyticsData(
-    "errors",
-    startDate,
-    endDate,
-    granularity,
-    serializedChecks,
-  )
-  const { data: newUsersData, isLoading: newUsersDataLoading } =
-    useAnalyticsData("users/new", startDate, endDate, granularity)
-
-  const { data: activeUsersData, isLoading: activeUsersDataLoading } =
-    useAnalyticsData("users/active", startDate, endDate, granularity)
-
-  const { data: avgUserCostData, isLoading: avgUserCostDataLoading } =
-    useAnalyticsData("users/average-cost", startDate, endDate, granularity)
+  // TODO: refactor this
 
   const { data: tokensData, isLoading: tokensDataLoading } = useAnalyticsData(
     "tokens",
@@ -294,6 +324,23 @@ export default function Analytics() {
     serializedChecks,
   )
 
+  const { data: errorsData, isLoading: errorsDataLoading } = useAnalyticsData(
+    "errors",
+    startDate,
+    endDate,
+    granularity,
+    serializedChecks,
+  )
+
+  const { data: newUsersData, isLoading: newUsersDataLoading } =
+    useAnalyticsData("users/new", startDate, endDate, granularity)
+
+  const { data: activeUsersData, isLoading: activeUsersDataLoading } =
+    useAnalyticsData("users/active", startDate, endDate, granularity)
+
+  const { data: avgUserCostData, isLoading: avgUserCostDataLoading } =
+    useAnalyticsData("users/average-cost", startDate, endDate, granularity)
+
   const { data: runCountData, isLoading: runCountLoading } = useAnalyticsData(
     "run-types",
     startDate,
@@ -301,8 +348,6 @@ export default function Analytics() {
     granularity,
     serializedChecks,
   )
-
-  console.log(runCountData)
 
   const { data: averageLatencyData, isLoading: averageLatencyDataLoading } =
     useAnalyticsData(

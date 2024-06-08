@@ -127,7 +127,7 @@ runs.get("/", async (ctx: Context) => {
   const filtersQuery =
     deserializedChecks?.length && deserializedChecks.length > 1 // first is always ["AND"]
       ? convertChecksToSQL(deserializedChecks)
-      : sql`type = 'llm'` // default to type llm
+      : sql`r.type = 'llm'` // default to type llm
 
   const {
     limit = "50",

@@ -14,6 +14,7 @@
     "@mantine/hooks": "7.10.0",
     "@mantine/modals": "7.10.0",
     "@mantine/notifications": "7.10.0",
+    "@mantine/charts": "7.10.0",
     "@sentry/nextjs": "^7.109.0",
     "@tabler/icons-react": "^2.46.0",
     "@tanstack/react-table": "^8.11.2",
@@ -32,7 +33,7 @@
     "react-confetti": "^6.1.0",
     "react-dom": "18.2.0",
     "react-json-view-lite": "^1.2.1",
-    "recharts": "^2.11.0",
+    "recharts": "^2.12.7",
     "shared": "*",
     "swr": "^2.2.4",
     "zod": "^3.22.4"

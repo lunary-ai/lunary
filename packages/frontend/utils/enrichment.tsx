@@ -252,6 +252,5 @@ function renderGuidelinesEnrichment(data: any) {
 }
 
 function renderRepliesEnrichment(data: any) {
-  console.log(data)
   return <IconX color={data === "true" ? "green" : "red"} />
 }
