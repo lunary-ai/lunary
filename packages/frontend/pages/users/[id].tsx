@@ -4,7 +4,6 @@ import { Box, Card, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core"
 
 import SmartViewer from "@/components/SmartViewer"
 
-import AgentSummary from "@/components/analytics/AgentSummary"
 import UsageSummary from "@/components/analytics/UsageSummary"
 import AppUserAvatar from "@/components/blocks/AppUserAvatar"
 import CopyText from "@/components/blocks/CopyText"
