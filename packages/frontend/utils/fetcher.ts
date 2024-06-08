@@ -1,6 +1,6 @@
 import Router from "next/router"
-import { signOut } from "../auth"
-import { showErrorNotification } from "../errors"
+import { signOut } from "./auth"
+import { showErrorNotification } from "./errors"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL as string
 
@@ -129,7 +129,7 @@ async function del(path) {
 async function handleResponse(res: Response) {
   const isLoginPage = Router.pathname === "/login"
 
-  // There's not body sent back on HTTP 204 (used for DELETE)
+  // There's no body sent back on HTTP 204 (used for DELETE)
   if (res.status === 204) {
     return
   }
@@ -152,7 +152,7 @@ async function handleResponse(res: Response) {
   return res.json()
 }
 
-export const clientFetcher = {
+export const fetcher = {
   get,
   getFile,
   getText,

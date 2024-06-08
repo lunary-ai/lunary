@@ -59,7 +59,7 @@ orgs.get("/usage", async (ctx: Context) => {
   const rows = await sql`
     select
       date_trunc('day', r.created_at) as date,
-      count(*) as count
+      count(*)::int as count
     from
       run r 
     ${!projectId ? sql`join project p on r.project_id = p.id` : sql``}

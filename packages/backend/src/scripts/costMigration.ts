@@ -9,8 +9,8 @@ const main = async () => {
 
   do {
     batch = await sql`
-      SELECT * FROM run
-      WHERE type = 'llm'
+      SELECT * FROM run r
+      WHERE r.type = 'llm'
       AND cost IS NULL
       AND prompt_tokens IS NOT NULL
       AND completion_tokens IS NOT NULL

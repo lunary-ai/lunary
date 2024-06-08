@@ -1,13 +1,9 @@
-import { Box, Flex, Group, Progress, Table, Text, Tooltip } from "@mantine/core"
+import { Flex, Progress, Table, Text, Tooltip } from "@mantine/core"
 import { useColorScheme } from "@mantine/hooks"
 
 type BarListProps = {
   data: any[]
   filterZero?: boolean
-  customMetric?: {
-    value: number
-    label: string
-  }
   columns: {
     name?: string
     key?: string
@@ -22,7 +18,7 @@ type BarListProps = {
 function BarList({
   data,
   columns,
-  customMetric,
+
   filterZero = true,
 }: BarListProps) {
   const dataColumns = columns.filter((col) => !col.bar && col.key)
@@ -34,34 +30,6 @@ function BarList({
 
   return (
     <>
-      {customMetric ? (
-        <Group align="end" my="lg" gap={8}>
-          <Text fw={700} fz={30} lh={1}>
-            {customMetric.value}
-          </Text>
-          <Text c="dimmed" size={"sm"} lh={1.3}>
-            {customMetric.label}
-          </Text>
-        </Group>
-      ) : (
-        <Group gap="lg">
-          {dataColumns.map(({ key, name, render }, i) => {
-            const total = data.reduce((acc, item) => acc + (item[key] || 0), 0)
-
-            return (
-              <Group align="end" my="lg" gap={8} key={i}>
-                <Text fw={700} fz={30} lh={1}>
-                  {render ? render(total) : total}
-                </Text>
-                <Text c="dimmed" size={"sm"} lh={1.3}>
-                  {name.toLowerCase()}
-                </Text>
-              </Group>
-            )
-          })}
-        </Group>
-      )}
-
       <Table
         layout="fixed"
         w="100%"

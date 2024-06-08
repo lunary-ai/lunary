@@ -8,6 +8,7 @@ import {
   PillsInput,
   useCombobox,
 } from "@mantine/core"
+import local from "next/font/local"
 import { useEffect, useState } from "react"
 
 export default function SmartCheckSelect({
@@ -17,6 +18,7 @@ export default function SmartCheckSelect({
   searchable,
   customSearch,
   width,
+  allowCustom,
   renderListItem,
   renderLabel = (item) => (typeof item === "object" ? item?.label : item),
   getItemValue = (item) => (typeof item === "object" ? `${item.value}` : item),
@@ -25,7 +27,6 @@ export default function SmartCheckSelect({
 }) {
   const combobox = useCombobox({
     onDropdownClose: () => {
-      combobox.resetSelectedOption
       combobox.resetSelectedOption()
     },
     onDropdownOpen: () => {
@@ -34,12 +35,13 @@ export default function SmartCheckSelect({
   })
 
   const [search, setSearch] = useState("")
+  const [localData, setLocalData] = useState(options || [])
 
   const useSWRforData = typeof options === "function"
   const { data: swrCheckData, isLoading } = useProjectSWR(
     useSWRforData ? options() : null,
   )
-  const data = useSWRforData ? swrCheckData : options
+  const data = useSWRforData ? swrCheckData || [] : localData
 
   const fixedValue = value || (multiple ? [] : null)
 
@@ -51,6 +53,25 @@ export default function SmartCheckSelect({
     }
   }, [isLoading])
 
+  useEffect(() => {
+    if (allowCustom && value) {
+      const valueArray = multiple ? value : [value]
+      valueArray.forEach((val) => {
+        if (!localData.some((item) => getItemValue(item) === val)) {
+          const newOption = { label: val, value: val }
+          setLocalData((prevData) => {
+            const updatedData = [...prevData, newOption]
+            const uniqueData = updatedData.filter(
+              (item, index, self) =>
+                index ===
+                self.findIndex((t) => getItemValue(t) === getItemValue(item)),
+            )
+            return uniqueData
+          })
+        }
+      })
+    }
+  }, [localData, value, allowCustom])
   const handleValueSelect = (val: string) => {
     setSearch("")
     return multiple
@@ -124,6 +145,20 @@ export default function SmartCheckSelect({
     }
   }, [])
 
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter" && allowCustom && search.trim().length > 0) {
+      const newItem = search.trim()
+      if (!localData.some((item) => getItemValue(item) === newItem)) {
+        const newOption = { label: newItem, value: newItem }
+        setLocalData((prevData) => [...prevData, newOption])
+        handleValueSelect(newItem)
+      }
+    } else if (event.key === "Backspace" && search.length === 0) {
+      event.preventDefault()
+      handleValueRemove(value[value.length - 1])
+    }
+  }
+
   return (
     <Combobox store={combobox} onOptionSubmit={handleValueSelect}>
       <Combobox.DropdownTarget>
@@ -147,20 +182,21 @@ export default function SmartCheckSelect({
           value={search}
           display={shouldDisplaySearch ? "initial" : "none"}
           onChange={(event) => setSearch(event.currentTarget.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Backspace" && search.length === 0) {
-              event.preventDefault()
-              handleValueRemove(value[value.length - 1])
-            }
-          }}
-          placeholder={"Search..."}
+          onKeyDown={handleKeyDown}
+          placeholder={allowCustom ? `Type to create new` : "Search..."}
         />
         <Combobox.Options>
           {renderedOptions?.length > 0 ? (
             renderedOptions
           ) : (
             <Combobox.Empty>
-              {isLoading ? <Loader size="sm" /> : "Nothing found..."}
+              {isLoading ? (
+                <Loader size="sm" />
+              ) : allowCustom ? (
+                "Press enter to add"
+              ) : (
+                "Nothing found..."
+              )}
             </Combobox.Empty>
           )}
         </Combobox.Options>
