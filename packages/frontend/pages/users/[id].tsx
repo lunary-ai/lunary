@@ -34,11 +34,15 @@ import {
 import { formatAppUser } from "@/utils/format"
 import { NextSeo } from "next-seo"
 import DataTable from "@/components/blocks/DataTable"
+<<<<<<< Updated upstream
 import { IconCheck, IconTrash } from "@tabler/icons-react"
 import { modals } from "@mantine/modals"
 import { fetcher } from "@/utils/fetcher"
 import errorHandler from "@/utils/errors"
 import { notifications } from "@mantine/notifications"
+=======
+import AgentSummary from "@/components/analytics/AgentSummary"
+>>>>>>> Stashed changes
 
 const columns = [
   timeColumn("createdAt"),
