@@ -16,6 +16,7 @@ import SmartViewer from "@/components/SmartViewer"
 import UsageSummary from "@/components/analytics/UsageSummary"
 import AppUserAvatar from "@/components/blocks/AppUserAvatar"
 import CopyText from "@/components/blocks/CopyText"
+import DataTable from "@/components/blocks/DataTable"
 import {
   useProjectInfiniteSWR,
   useProjectSWR,
@@ -31,14 +32,12 @@ import {
   tagsColumn,
   timeColumn,
 } from "@/utils/datatable"
-import { formatAppUser } from "@/utils/format"
-import { NextSeo } from "next-seo"
-import DataTable from "@/components/blocks/DataTable"
-import { IconCheck, IconTrash } from "@tabler/icons-react"
-import { modals } from "@mantine/modals"
 import { fetcher } from "@/utils/fetcher"
-import errorHandler from "@/utils/errors"
+import { formatAppUser } from "@/utils/format"
+import { modals } from "@mantine/modals"
 import { notifications } from "@mantine/notifications"
+import { IconCheck, IconTrash } from "@tabler/icons-react"
+import { NextSeo } from "next-seo"
 
 const columns = [
   timeColumn("createdAt"),
