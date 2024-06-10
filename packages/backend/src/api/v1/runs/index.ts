@@ -71,43 +71,50 @@ function processParams(params: any) {
   return params
 }
 
-const formatRun = (run: any) => ({
-  id: run.id,
-  projectId: run.projectId,
-  isPublic: run.isPublic,
-  feedback: run.feedback,
-  parentFeedback: run.parentFeedback,
+function formatRun(run: any) {
+  const formattedRun = {
+    id: run.id,
+    projectId: run.projectId,
+    isPublic: run.isPublic,
+    feedback: run.feedback,
+    parentFeedback: run.parentFeedback,
 
-  type: run.type,
-  name: run.name,
-  createdAt: run.createdAt,
-  endedAt: run.endedAt,
-  duration: run.duration,
-  templateVersionId: run.templateVersionId,
-  templateSlug: run.templateSlug,
-  cost: run.cost,
-  tokens: {
-    completion: run.completionTokens,
-    prompt: run.promptTokens,
-    total: run.completionTokens + run.promptTokens,
-  },
-  tags: run.tags,
-  input: processInput(run.input),
-  output: processOutput(run.output),
-  error: run.error,
-  status: run.status,
-  siblingRunId: run.siblingRunId,
-  params: processParams(run.params),
+    type: run.type,
+    name: run.name,
+    createdAt: run.createdAt,
+    endedAt: run.endedAt,
+    duration: run.duration,
+    templateVersionId: run.templateVersionId,
+    templateSlug: run.templateSlug,
+    cost: run.cost,
+    tokens: {
+      completion: run.completionTokens,
+      prompt: run.promptTokens,
+      total: run.completionTokens + run.promptTokens,
+    },
+    tags: run.tags,
+    input: processInput(run.input),
+    output: processOutput(run.output),
+    error: run.error,
+    status: run.status,
+    siblingRunId: run.siblingRunId,
+    params: processParams(run.params),
 
-  metadata: run.metadata,
-  user: {
-    id: run.externalUserId,
-    externalId: run.userExternalId,
-    createdAt: run.userCreatedAt,
-    lastSeen: run.userLastSeen,
-    props: run.userProps,
-  },
-})
+    metadata: run.metadata,
+    user: {
+      id: run.externalUserId,
+      externalId: run.userExternalId,
+      createdAt: run.userCreatedAt,
+      lastSeen: run.userLastSeen,
+      props: run.userProps,
+    },
+  }
+  for (let evaluationResult of run.evaluationResults || []) {
+    formattedRun[`enrichment-${evaluationResult.evaluatorSlug}`] =
+      evaluationResult
+  }
+  return formattedRun
+}
 
 runs.use("/ingest", ingest.routes())
 
@@ -120,7 +127,7 @@ runs.get("/", async (ctx: Context) => {
   const filtersQuery =
     deserializedChecks?.length && deserializedChecks.length > 1 // first is always ["AND"]
       ? convertChecksToSQL(deserializedChecks)
-      : sql`type = 'llm'` // default to type llm
+      : sql`r.type = 'llm'` // default to type llm
 
   const {
     limit = "50",
@@ -135,29 +142,47 @@ runs.get("/", async (ctx: Context) => {
   }
 
   const rows = await sql`
-      select
-        r.*,
-        eu.id as user_id,
-        eu.external_id as user_external_id,
-        eu.created_at as user_created_at,
-        eu.last_seen as user_last_seen,
-        eu.props as user_props,
-        t.slug as template_slug,
-        rpfc.feedback as parent_feedback
-      from
-          run r
-          left join external_user eu on r.external_user_id = eu.id
-          left join run_parent_feedback_cache rpfc on r.id = rpfc.id
-          left join template_version tv on r.template_version_id = tv.id
-          left join template t on tv.template_id = t.id
-      where
-          r.project_id = ${projectId}
-          ${parentRunCheck}
-          and (${filtersQuery})
-      order by
-          r.created_at desc
-      limit ${Number(limit)}
-      offset ${Number(page) * Number(limit)}`
+    select
+      r.*,
+      eu.id as user_id,
+      eu.external_id as user_external_id,
+      eu.created_at as user_created_at,
+      eu.last_seen as user_last_seen,
+      eu.props as user_props,
+      t.slug as template_slug,
+      rpfc.feedback as parent_feedback,
+      coalesce(array_agg(
+          jsonb_build_object(
+              'evaluatorName', e.name,
+              'evaluatorSlug', e.slug,
+              'evaluatorId', e.id,
+              'result', er.result, 
+              'createdAt', er.created_at,
+              'updatedAt', er.updated_at
+          )
+      ) filter (where er.run_id is not null), '{}') as evaluation_results
+    from
+      public.run r
+      left join external_user eu on r.external_user_id = eu.id
+      left join run_parent_feedback_cache rpfc on r.id = rpfc.id
+      left join template_version tv on r.template_version_id = tv.id
+      left join template t on tv.template_id = t.id
+      left join evaluation_result_v2 er on r.id = er.run_id 
+      left join evaluator e on er.evaluator_id = e.id
+    where
+      r.project_id = ${projectId}
+      ${parentRunCheck}
+      and (${filtersQuery})
+    group by
+      r.id,
+      eu.id,
+      t.slug,
+      rpfc.feedback
+    order by
+      r.created_at desc
+    limit ${exportType ? 10000 : Number(limit)}
+    offset ${Number(page) * Number(limit)}
+      `
 
   const runs = rows.map(formatRun)
 
@@ -166,6 +191,51 @@ runs.get("/", async (ctx: Context) => {
   }
 
   ctx.body = runs
+})
+
+// TODO: refactor with GET / by putting logic inside a function
+runs.get("/count", async (ctx: Context) => {
+  const { projectId } = ctx.state
+
+  const queryString = ctx.querystring
+  const deserializedChecks = deserializeLogic(queryString)
+
+  const filtersQuery =
+    deserializedChecks?.length && deserializedChecks.length > 1 // first is always ["AND"]
+      ? convertChecksToSQL(deserializedChecks)
+      : sql`r.type = 'llm'` // default to type llm
+
+  const { parentRunId } = ctx.query as Query
+
+  let parentRunCheck = sql``
+  if (parentRunId) {
+    parentRunCheck = sql`and parent_run_id = ${parentRunId}`
+  }
+
+  const [{ count }] = await sql`
+    with runs as (select
+      count(*) 
+    from
+      public.run r
+      left join external_user eu on r.external_user_id = eu.id
+      left join run_parent_feedback_cache rpfc on r.id = rpfc.id
+      left join template_version tv on r.template_version_id = tv.id
+      left join template t on tv.template_id = t.id
+      left join evaluation_result_v2 er on r.id = er.run_id 
+      left join evaluator e on er.evaluator_id = e.id
+    where
+      r.project_id = ${projectId}
+      ${parentRunCheck}
+      and (${filtersQuery})
+    group by
+      r.id,
+      eu.id,
+      t.slug,
+      rpfc.feedback)
+    select count(*) from runs
+  `
+
+  ctx.body = count
 })
 
 runs.get("/usage", checkAccess("logs", "read"), async (ctx) => {

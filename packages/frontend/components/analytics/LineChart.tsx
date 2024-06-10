@@ -4,9 +4,12 @@ import {
   Button,
   Card,
   Center,
+  Tooltip as MantineTooltip,
+  Group,
   Overlay,
   Text,
   Title,
+  Loader,
 } from "@mantine/core"
 import {
   Area,
@@ -18,79 +21,62 @@ import {
 } from "recharts"
 
 import { formatLargeNumber } from "@/utils/format"
-import { IconBolt } from "@tabler/icons-react"
-import { eachDayOfInterval, format, parseISO } from "date-fns"
+import { IconBolt, IconInfoCircle } from "@tabler/icons-react"
+import {
+  eachDayOfInterval,
+  eachHourOfInterval,
+  eachWeekOfInterval,
+  format,
+  parseISO,
+} from "date-fns"
 import { Fragment } from "react"
 import ErrorBoundary from "../blocks/ErrorBoundary"
 import { openUpgrade } from "../layout/UpgradeModal"
 import { theme } from "@/utils/theme"
-
-const slugify = (str) => {
-  return str
-    .toLowerCase()
-    .replace(/ /g, "-")
-    .replace(/[^\w-]+/g, "")
-}
-
-const generateFakeData = (range: number) => {
-  const data = []
-  for (let i = 0; i < range; i++) {
-    const date = new Date()
-    date.setDate(date.getDate() - i)
-    const users = Math.floor(Math.random() * 6000) + 4000
-    data.push({
-      date: date.toISOString().split("T")[0],
-      users: users,
-    })
-  }
-  return data
-}
+import { slugify } from "@/utils/format"
 
 function prepareDataForRecharts(
   data: any[],
   splitBy: string | undefined,
   props: string[],
-  range: number,
+  startDate: Date,
+  endDate: Date,
+  granularity: "daily" | "hourly" | "weekly",
 ): any[] {
-  // Create a map to hold the processed data
-  // const dataMap = {}
   const output: any[] = []
 
   if (!data) data = []
 
-  // get all the possible values for the splitBy prop
-  // will be 1 chart per value
-  const uniqueSplitByValues =
-    splitBy &&
-    Array.from(new Set(data.map((item) => item[splitBy]?.toString())))
+  const uniqueSplitByValues = getUniqueSplitByValues(data, splitBy)
+  const interval = getIntervalFunction(granularity)
 
-  // Initialize map with dates as keys and empty data as values
-  eachDayOfInterval({
-    // subtract 'range' amount of days for start date
-    start: new Date(new Date().getTime() - range * 24 * 60 * 60 * 1000),
-    end: new Date(),
-  }).forEach((day) => {
-    const date = format(day, "yyyy-MM-dd")
+  interval({ start: startDate, end: endDate }).forEach((date) => {
+    const formattedDate = formatDateForGranularity(date, granularity)
+    const dayData: { [key: string]: any } = { date: formattedDate }
 
-    const dayData: { [key: string]: any } = { date }
-
-    for (let prop of props) {
+    props.forEach((prop) => {
       if (splitBy) {
-        for (let splitByValue of uniqueSplitByValues) {
-          dayData[`${splitByValue} ${prop}`] =
-            data?.find(
-              (item) =>
-                item[splitBy]?.toString() === splitByValue &&
-                format(parseISO(item.date), "yyyy-MM-dd") === date,
-            )?.[prop] || 0
-        }
+        uniqueSplitByValues.forEach((splitByValue) => {
+          dayData[`${splitByValue} ${prop}`] = findDataValue(
+            data,
+            splitBy,
+            splitByValue,
+            formattedDate,
+            granularity,
+            prop,
+          )
+        })
       } else {
-        dayData[prop] =
-          data.find(
-            (item) => format(parseISO(item.date), "yyyy-MM-dd") === date,
-          )?.[prop] || 0
+        dayData[prop] = findDataValue(
+          data,
+          undefined,
+          undefined,
+          formattedDate,
+          granularity,
+          prop,
+        )
       }
-    }
+    })
 
     output.push(dayData)
   })
@@ -100,48 +86,192 @@ function prepareDataForRecharts(
   )
 }
 
-const formatDate = (date) =>
-  new Date(date).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  })
+function getUniqueSplitByValues(
+  data: any[],
+  splitBy: string | undefined,
+): string[] {
+  return splitBy
+    ? Array.from(new Set(data.map((item) => item[splitBy]?.toString())))
+    : []
+}
 
-const CustomizedAxisTick = ({ x, y, payload, index, data }) => {
-  // Hide the first and last tick
-  if (index === 0 || index === data.length - 1) {
-    return null
+function getIntervalFunction(granularity: "daily" | "hourly" | "weekly") {
+  return granularity === "daily"
+    ? eachDayOfInterval
+    : granularity === "hourly"
+      ? eachHourOfInterval
+      : eachWeekOfInterval
+}
+
+function formatDateForGranularity(
+  date: Date,
+  granularity: "daily" | "hourly" | "weekly",
+): string {
+  return format(
+    date,
+    granularity === "daily"
+      ? "yyyy-MM-dd"
+      : granularity === "hourly"
+        ? "yyyy-MM-dd'T'HH"
+        : "yyyy-'W'ww",
+  )
+}
+
+function findDataValue(
+  data: any[],
+  splitBy: string | undefined,
+  splitByValue: string | undefined,
+  formattedDate: string,
+  granularity: "daily" | "hourly" | "weekly",
+  prop: string,
+): any {
+  return (
+    data?.find(
+      (item) =>
+        (!splitBy || item[splitBy]?.toString() === splitByValue) &&
+        format(parseISO(item.date), getDateFormat(granularity)) ===
+          formattedDate,
+    )?.[prop] || 0
+  )
+}
+
+function getDateFormat(granularity: "daily" | "hourly" | "weekly"): string {
+  return granularity === "daily"
+    ? "yyyy-MM-dd"
+    : granularity === "hourly"
+      ? "yyyy-MM-dd'T'HH"
+      : "yyyy-'W'ww"
+}
+
+const formatDate = (date, granularity) => {
+  if (!date) return
+  switch (granularity) {
+    case "daily":
+      return format(parseISO(date), "MMM d")
+    case "hourly":
+      return format(parseISO(date), "eee, HH'h'")
+    case "weekly":
+      return format(parseISO(date), "MMM d")
   }
+}
+const CustomizedAxisTick = ({ x, y, payload, index, data, granularity }) => {
+  // // Hide the first and last tick
+  // if (index === 0 || index === data.length - 1) {
+  //   return null
+  // }
+
+  // offset the first and last tick to make it look better
+  const offset = index === 0 ? 42 : index === 1 ? -42 : 0
 
   return (
-    <g transform={`translate(${x},${y})`}>
-      <text x={0} y={0} dy={16} textAnchor="middle" fill="#666">
-        {new Date(payload.value).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-        })}
+    <g transform={`translate(${x + offset},${y})`}>
+      <text x={0} y={0} dy={16} textAnchor={"middle"} fill="#666" opacity={0.8}>
+        {formatDate(payload.value, granularity)}
       </text>
     </g>
   )
 }
 
+type LineChartData = {
+  date: string
+  [key: string]: any
+}[]
+
+type LineChartProps = {
+  data: LineChartData
+  title: string | JSX.Element
+  props: string[]
+  blocked?: boolean
+  formatter?: (value: number) => string
+  height?: number
+  loading?: boolean
+  splitBy?: string
+
+  description?: string
+  startDate: Date
+  endDate: Date
+  granularity: "daily" | "hourly" | "weekly"
+  agg: string
+  chartExtra?: JSX.Element
+}
+
+function getFigure(agg: string, data: any[], prop: string) {
+  const propKeys = Object.keys(data[0] || {}).filter((key) =>
+    key.includes(prop),
+  )
+
+  if (agg === "sum") {
+    return data.reduce((acc, item) => {
+      propKeys.forEach((key) => (acc += item[key] ?? 0))
+      return acc
+    }, 0)
+  } else if (agg === "avg") {
+    const filteredData = data.filter((item) => item[prop] !== 0)
+    return (
+      filteredData.reduce((acc, item) => {
+        propKeys.forEach((key) => (acc += item[key] ?? 0))
+        return acc
+      }, 0) / filteredData.length || 0
+    )
+  } else if (agg === "max") {
+    return data.reduce((acc, item) => {
+      propKeys.forEach((key) => (acc = Math.max(acc, item[key] ?? -Infinity)))
+      return acc
+    }, -Infinity)
+  } else if (agg === "min") {
+    return data.reduce((acc, item) => {
+      propKeys.forEach((key) => (acc = Math.min(acc, item[key] ?? Infinity)))
+      return acc
+    }, Infinity)
+  }
+}
 const LineChartComponent = ({
   data,
   title,
   props,
-  blocked,
+  blocked = false,
   formatter = formatLargeNumber,
-  height = 300,
+  height = 230,
+  description,
+  loading = false,
   splitBy = undefined,
-  range,
+  startDate,
+  endDate,
+  granularity,
+  agg,
   chartExtra,
-}) => {
+}: LineChartProps) => {
   const colors = ["blue", "pink", "indigo", "green", "violet", "yellow"]
 
   const cleanedData = prepareDataForRecharts(
-    blocked ? generateFakeData(range) : data,
+    blocked
+      ? ((
+          startDate: Date,
+          endDate: Date,
+          granularity: "daily" | "hourly" | "weekly",
+        ): LineChartData => {
+          const data: LineChartData = []
+          const interval =
+            granularity === "daily"
+              ? eachDayOfInterval
+              : granularity === "hourly"
+                ? eachHourOfInterval
+                : eachWeekOfInterval
+          interval({ start: startDate, end: endDate }).forEach((date) => {
+            const users = Math.floor(Math.random() * 6000) + 4000
+            data.push({
+              date: date.toISOString(),
+              users: users,
+            })
+          })
+          return data
+        })(startDate, endDate, granularity)
+      : data,
     splitBy,
     props,
-    range,
+    startDate,
+    endDate,
+    granularity,
   )
 
   const hasData = blocked
@@ -149,17 +279,57 @@ const LineChartComponent = ({
     : cleanedData?.length &&
       (splitBy ? Object.keys(cleanedData[0]).length > 1 : data?.length)
 
+  const total = getFigure(agg, cleanedData, props[0])
+
   return (
     <Card withBorder p={0} className="lineChart" radius="md">
-      {typeof title === "string" ? (
-        <Text c="dimmed" tt="uppercase" fw={700} fz="xs" m="md">
-          {title}
-        </Text>
-      ) : (
-        <Box m="lg" mb="sm">
-          {title}
-        </Box>
+      <Group gap="xs">
+        {typeof title === "string" ? (
+          <Text c="dimmed" fw={50} fz="md" m="md" mr={0}>
+            {title}
+          </Text>
+        ) : (
+          <Box m="lg" mb="sm">
+            {title}
+          </Box>
+        )}
+
+        {description && (
+          <MantineTooltip label={description}>
+            <IconInfoCircle size={16} opacity={0.5} />
+          </MantineTooltip>
+        )}
+      </Group>
+
+      {loading && (
+        <>
+          <Overlay
+            h="100%"
+            blur={5}
+            backgroundOpacity={0.05}
+            p="lg"
+            zIndex={3}
+          />
+          <Center
+            ta="center"
+            style={{
+              position: "absolute",
+              zIndex: 3,
+            }}
+            h="100%"
+            w="100%"
+          >
+            <Loader />
+          </Center>
+        </>
       )}
+
+      {typeof total === "number" && (
+        <Text fw={500} fz={24} mt={-12} ml="md">
+          {formatter(total)}
+        </Text>
+      )}
+
       <Box mt="sm" pos="relative">
         {blocked && (
           <>
@@ -231,29 +401,33 @@ const LineChartComponent = ({
               <CartesianGrid
                 strokeDasharray="3 3"
                 horizontal={true}
-                opacity={0.7}
+                opacity={0.5}
                 vertical={false}
               />
             )}
             <XAxis
               dataKey="date"
-              tick={({ x, y, payload, index }) => (
-                <CustomizedAxisTick
-                  x={x}
-                  y={y}
-                  payload={payload}
-                  index={index}
-                  data={cleanedData}
-                />
-              )}
-              style={{
-                marginLeft: 20,
+              tick={({ x, y, payload, index }) => {
+                return (
+                  <CustomizedAxisTick
+                    x={x}
+                    y={y}
+                    payload={payload}
+                    index={index}
+                    data={cleanedData}
+                    granularity={granularity}
+                  />
+                )
               }}
-              interval="preserveStartEnd"
-              tickLine={false}
+              interval={0}
+              ticks={[
+                // only show the first and last tick
+                cleanedData[0]?.date,
+                cleanedData[cleanedData.length - 1]?.date,
+              ]}
+              padding={{ left: 0, right: 0 }}
               axisLine={false}
-              minTickGap={5}
-              max={7}
+              tickLine={false}
             />
 
             <Tooltip
@@ -263,13 +437,16 @@ const LineChartComponent = ({
                   return (
                     <Card shadow="md" withBorder>
                       <Title order={3} size="sm">
-                        {formatDate(label)}
+                        {formatDate(label, granularity)}
                       </Title>
-                      {payload.map((item, i) => (
-                        <Text key={i}>{`${item.name}: ${formatter(
-                          item.value,
-                        )}`}</Text>
-                      ))}
+                      {payload.map(
+                        (item, i) =>
+                          item.value !== 0 && (
+                            <Text key={i}>{`${item.name}: ${formatter(
+                              item.value,
+                            )}`}</Text>
+                          ),
+                      )}
                     </Card>
                   )
                 }
@@ -282,7 +459,7 @@ const LineChartComponent = ({
               Object.keys(cleanedData[0])
                 .filter((prop) => prop !== "date")
                 .map((prop, i) => (
-                  <Fragment key={props}>
+                  <Fragment key={prop}>
                     <defs key={prop}>
                       <linearGradient
                         color={theme.colors[colors[i % colors.length]][6]}
@@ -332,7 +509,7 @@ const LineChartComponent = ({
   )
 }
 
-const LineChart = (props) => (
+const LineChart = (props: LineChartProps) => (
   <ErrorBoundary>
     <LineChartComponent {...props} />
   </ErrorBoundary>

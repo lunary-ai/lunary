@@ -2,12 +2,12 @@ import { useContext } from "react"
 import useSWR, { SWRConfiguration, useSWRConfig } from "swr"
 import useSWRInfinite from "swr/infinite"
 import useSWRMutation, { SWRMutationConfiguration } from "swr/mutation"
-import { getUserColor } from "./colors"
-import { ProjectContext } from "./context"
+import { getUserColor } from "../colors"
+import { ProjectContext } from "../context"
 
-import { useAuth } from "./auth"
-import { fetcher } from "./fetcher"
-import { useFixedColorScheme } from "./hooks"
+import { useAuth } from "../auth"
+import { fetcher } from "../fetcher"
+import { useFixedColorScheme } from "../hooks"
 
 type KeyType = string | ((...args: any[]) => string)
 
@@ -360,6 +360,12 @@ export function useRun(id: string | null, initialData?: any) {
     mutate,
     loading: isLoading,
   }
+}
+
+export function useLogCount(filters: any) {
+  const { data, isLoading } = useProjectSWR(`/runs/count?${filters}`)
+
+  return { count: data, isLoading }
 }
 
 export function useRunsUsage(range, userId?: string) {
