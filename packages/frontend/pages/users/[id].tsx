@@ -67,7 +67,7 @@ export default function UserDetails({}) {
     loadMore,
   } = useProjectInfiniteSWR(`/runs?users=${id}`)
 
-  const confirmDelete = () => {
+  function confirmDelete() {
     modals.openConfirmModal({
       title: "Please confirm your action",
       confirmProps: { color: "red", "data-testid": "confirm" },
