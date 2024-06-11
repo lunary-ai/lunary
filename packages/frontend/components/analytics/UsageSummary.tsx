@@ -4,7 +4,7 @@ import BarList from "./BarList"
 
 export default function UsageSummary({ usage }) {
   return (
-    <AnalyticsCard title="LLM Usage">
+    <AnalyticsCard title="Top Models">
       <BarList
         data={usage
           .filter((u) => u.type === "llm")

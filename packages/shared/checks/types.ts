@@ -14,6 +14,7 @@ export type CheckParam = {
   placeholder?: string
   defaultValue?: string | number | boolean | string[]
   searchable?: boolean
+  allowCustom?: boolean
   getItemValue?: (item: any) => string // custom function to get value from item, for selects
   customSearch?: (query: string, item: any) => boolean // custom search function for search in selects
   multiple?: boolean
@@ -24,7 +25,7 @@ export type CheckParam = {
 
 export type Check = {
   id: string
-  uiType: "basic" | "smart" | "ai"
+  uiType?: "basic" | "smart" | "ai"
   name: string
   description?: string
   soon?: boolean

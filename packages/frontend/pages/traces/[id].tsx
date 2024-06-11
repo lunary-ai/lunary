@@ -46,7 +46,7 @@ const typeIcon = {
   retriever: IconCloudDownload,
 }
 
-const TraceTree = ({
+function TraceTree({
   isFirst = false,
   isLastOfParent = false,
   focused,
@@ -54,9 +54,8 @@ const TraceTree = ({
   runs,
   onSelect,
   firstDate,
-}) => {
+}) {
   // each run contains a child_runs array containing the ids of the runs it spawned
-
   const run = runs.find((run) => run.id === parentId)
 
   const timeAfterFirst = Math.abs(
@@ -136,6 +135,7 @@ const TraceTree = ({
             pl={0}
             pr={5}
             tt="none"
+            maw="250px"
             leftSection={
               Icon && (
                 <ThemeIcon
@@ -153,10 +153,10 @@ const TraceTree = ({
           </Badge>
 
           {/* {run.name && (
-            <Code color={`var(--mantine-color-${color}-light)`}>
-              {run.name}
-            </Code>
-          )} */}
+              <Code color={`var(--mantine-color-${color}-light)`}>
+                {run.name}
+              </Code>
+            )} */}
 
           {run?.type === "llm" && run.cost && (
             <Badge variant="outline" color="gray">
@@ -173,10 +173,10 @@ const TraceTree = ({
           )}
 
           {/* {timeAfterFirst > 0 && (
-            <Text c="dimmed" fz="xs">
-              T + {(timeAfterFirst / 1000).toFixed(2)}s
-            </Text>
-          )} */}
+              <Text c="dimmed" fz="xs">
+                T + {(timeAfterFirst / 1000).toFixed(2)}s
+              </Text>
+            )} */}
         </Group>
 
         {shownRuns.map((run, k) => (
@@ -264,7 +264,7 @@ export default function AgentRun({}) {
       </Group>
 
       <Flex align="start" w="100%" style={{ gap: 20, wordBreak: "break-all" }}>
-        <Box flex={`0 0 550px`}>
+        <Box flex={`0 0 600px`}>
           {relatedRuns && (
             <TraceTree
               isFirst
