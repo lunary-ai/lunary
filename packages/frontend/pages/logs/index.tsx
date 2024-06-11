@@ -61,6 +61,7 @@ import { useDebouncedState, useDidUpdate } from "@mantine/hooks"
 import { ProjectContext } from "@/utils/context"
 import { CheckLogic, deserializeLogic, serializeLogic } from "shared"
 import { useRouter } from "next/router"
+import { modals } from "@mantine/modals"
 
 const columns = {
   llm: [
@@ -305,6 +306,25 @@ export default function Logs() {
           return
         }
 
+        // TODO: Remove once OpenAI supports
+        if (url.includes("exportType=ojsonl")) {
+          modals.open({
+            title: "Tool calls removed",
+            children: (
+              <>
+                <Text size="sm">
+                  Note: OpenAI fine-tunes currently do not support tool calls in
+                  the JSONL fine-tuning format. They will be removed from the
+                  export to ensure it does not break the import.
+                </Text>
+                <Button fullWidth onClick={() => modals.closeAll()} mt="md">
+                  Acknowledge
+                </Button>
+              </>
+            ),
+          })
+        }
+
         fetcher.getFile(url)
       },
     }
@@ -404,13 +424,25 @@ export default function Logs() {
                     >
                       Export to CSV
                     </Menu.Item>
+
+                    {type === "llm" && (
+                      <Menu.Item
+                        color="dimmed"
+                        disabled={type === "thread"}
+                        leftSection={<IconBrandOpenai size={16} />}
+                        {...exportButton(exportUrl + "&exportType=ojsonl")}
+                      >
+                        Export to OpenAI JSONL
+                      </Menu.Item>
+                    )}
+
                     <Menu.Item
                       color="dimmed"
                       disabled={type === "thread"}
                       leftSection={<IconBraces size={16} />}
                       {...exportButton(exportUrl + "&exportType=jsonl")}
                     >
-                      Export to JSONL
+                      Export to raw JSONL
                     </Menu.Item>
                   </Menu.Dropdown>
                 </Menu>

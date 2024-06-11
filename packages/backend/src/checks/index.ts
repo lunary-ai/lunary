@@ -8,6 +8,7 @@ import aiSimilarity from "./ai/similarity"
 // import aiToxicity from "./ai/toxic"
 import rouge from "rouge"
 import { or } from "../utils/checks"
+import { isOpenAIMessage } from "../utils/misc"
 
 function getTextsTypes(field: "any" | "input" | "output", run: any) {
   let textsToCheck = []
@@ -31,11 +32,6 @@ export type CheckRunner = {
   }>
   sql?: (params: any) => any // todo: postgres sql type
 }
-
-export const isOpenAIMessage = (field: any) =>
-  typeof field === "object" &&
-  field.role &&
-  (field.content || field.toolCalls || field.functionCalls)
 
 export function lastMsg(field: any) {
   if (typeof field === "string" || !field) {
