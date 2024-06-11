@@ -3,9 +3,16 @@ import { Parser } from "@json2csv/plainjs"
 import { Context } from "koa"
 
 function cleanOpenAiMessage(message: any) {
-  // remove empty toolCalls if any
-  if (message.toolCalls && !message.toolCalls.length) {
-    delete message.toolCalls
+  // remove empty toolCalls if any empty
+  // if (Array.isArray(message.toolCalls) && !message.toolCalls.length) {
+  // delete message.toolCalls
+  // }
+
+  // TODO: when OpenAI supports it, remove this line
+  delete message.toolCalls
+
+  if (message.content === null) {
+    message.content = ""
   }
 
   // openai format is snake_case
