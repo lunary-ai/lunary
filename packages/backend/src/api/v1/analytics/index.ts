@@ -735,7 +735,6 @@ analytics.get(
         order by
           d.date
         `
-      console.log(res)
       ctx.body = res
       return
     }
