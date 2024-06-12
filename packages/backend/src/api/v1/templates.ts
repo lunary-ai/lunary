@@ -10,21 +10,45 @@ const templates = new Router({
 })
 
 templates.get("/", async (ctx: Context) => {
-  const templates = await sql`
-    select t.*, coalesce(json_agg(tv.*) filter (where tv.id is not null), '[]') as versions
-    from template t
-    left join template_version tv on tv.template_id = t.id
-    where t.project_id = ${ctx.state.projectId}
-    group by t.id, t.name, t.slug, t.mode, t.created_at, t.group, t.project_id
-    order by t.created_at desc
-  `
+  let templates
+  const liveVersionsOnly = ctx.query.live === "true"
+
+  if (liveVersionsOnly) {
+    templates = await sql`
+      select t.*, coalesce(json_agg(tv.* order by tv.id desc) filter (
+        where tv.id is not null
+        and tv.is_draft is not true
+      ), '[]') as versions
+      from template t
+      left join template_version tv on tv.template_id = t.id
+      where t.project_id = ${ctx.state.projectId}
+      group by t.id, t.name, t.slug, t.mode, t.created_at, t.group, t.project_id
+      order by t.created_at desc
+    `
+  } else {
+    templates = await sql`
+      select t.*, coalesce(json_agg(tv.*) filter (where tv.id is not null), '[]') as versions
+      from template t
+      left join template_version tv on tv.template_id = t.id
+      where t.project_id = ${ctx.state.projectId}
+      group by t.id, t.name, t.slug, t.mode, t.created_at, t.group, t.project_id
+      order by t.created_at desc
+    `
+  }
 
   // uncamel each template's versions' extras' keys
   for (const template of templates) {
+    // TODO: Move logic to sql query
+    if (liveVersionsOnly) {
+      template.versions = [template.versions[0]]
+    }
+
     for (const version of template.versions) {
       version.extra = unCamelObject(version.extra)
     }
   }
+
+  console.log(templates);
 
   ctx.body = templates
 })
