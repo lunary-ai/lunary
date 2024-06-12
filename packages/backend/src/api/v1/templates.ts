@@ -4,45 +4,46 @@ import { clearUndefined } from "@/src/utils/ingest"
 import Context from "@/src/utils/koa"
 import { unCamelObject } from "@/src/utils/misc"
 import Router from "koa-router"
+import { z } from "zod"
 
 const templates = new Router({
   prefix: "/templates",
 })
 
 templates.get("/", async (ctx: Context) => {
-  let templates
-  const liveVersionsOnly = ctx.query.live === "true"
+  const getOnlyLiveVersions = ctx.query.onlyLiveVersions === "true"
 
-  if (liveVersionsOnly) {
-    templates = await sql`
-      select t.*, coalesce(json_agg(tv.* order by tv.id desc) filter (
-        where tv.id is not null
-        and tv.is_draft is not true
-      ), '[]') as versions
-      from template t
-      left join template_version tv on tv.template_id = t.id
-      where t.project_id = ${ctx.state.projectId}
-      group by t.id, t.name, t.slug, t.mode, t.created_at, t.group, t.project_id
-      order by t.created_at desc
-    `
-  } else {
-    templates = await sql`
-      select t.*, coalesce(json_agg(tv.*) filter (where tv.id is not null), '[]') as versions
-      from template t
-      left join template_version tv on tv.template_id = t.id
-      where t.project_id = ${ctx.state.projectId}
-      group by t.id, t.name, t.slug, t.mode, t.created_at, t.group, t.project_id
-      order by t.created_at desc
-    `
-  }
+  const tableToJoin = getOnlyLiveVersions
+    ? sql("latest_template_versions")
+    : sql("template_version")
 
-  // uncamel each template's versions' extras' keys
+  const templates = await sql`
+    with latest_template_versions as (
+      select distinct on (tv.template_id)
+        tv.*
+      from
+        template_version tv
+      where
+        tv.is_draft = FALSE
+      order by
+        tv.template_id,
+        tv.created_at desc
+    )
+    select
+      t.*,
+      json_agg(tv.*) as versions
+    from
+      template t
+      left join ${tableToJoin} tv on t.id = tv.template_id
+    where
+      project_id = ${ctx.state.projectId} 
+      and tv.id is not null
+    group by
+      t.id; 
+  `
+
+  // uncamel each template's versions' extras' keys because the postgres client is set up transform everything to camel case
   for (const template of templates) {
-    // TODO: Move logic to sql query
-    if (liveVersionsOnly) {
-      template.versions = [template.versions[0]]
-    }
-
     for (const version of template.versions) {
       version.extra = unCamelObject(version.extra)
     }
@@ -51,7 +52,6 @@ templates.get("/", async (ctx: Context) => {
   ctx.body = templates
 })
 
-// insert template + a first version, and return the template with versions
 templates.post("/", checkAccess("prompts", "create"), async (ctx: Context) => {
   const { projectId, userId } = ctx.state
 
