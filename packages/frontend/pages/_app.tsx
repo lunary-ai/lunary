@@ -1,5 +1,6 @@
 import "@mantine/core/styles.css"
 import "@mantine/notifications/styles.css"
+import "@mantine/charts/styles.css"
 import "../styles/globals.css"
 
 import { MantineProvider } from "@mantine/core"
@@ -10,13 +11,20 @@ import Layout from "@/components/layout"
 import AnalyticsWrapper from "@/components/layout/Analytics"
 import { DefaultSeo } from "next-seo"
 
-import { fetcher } from "@/utils/fetcher"
-import { SWRConfig } from "swr"
-import { AuthProvider } from "@/utils/auth"
 import ErrorBoundary from "@/components/blocks/ErrorBoundary"
+import { AuthProvider } from "@/utils/auth"
+import { fetcher } from "@/utils/fetcher"
 import { circularPro, themeOverride } from "@/utils/theme"
+import { SWRConfig } from "swr"
+import { ProjectContext } from "@/utils/context"
+import { useLocalStorage } from "@mantine/hooks"
 
 export default function App({ Component, pageProps }: AppProps) {
+  const [projectId, setProjectId] = useLocalStorage({
+    key: "projectId",
+    defaultValue: null,
+    getInitialValueInEffect: false,
+  })
   return (
     <>
       <style jsx global>{`
@@ -42,9 +50,11 @@ export default function App({ Component, pageProps }: AppProps) {
             />
             <MantineProvider theme={themeOverride} defaultColorScheme="auto">
               <AnalyticsWrapper>
-                <Layout>
-                  <Component {...pageProps} />
-                </Layout>
+                <ProjectContext.Provider value={{ projectId, setProjectId }}>
+                  <Layout>
+                    <Component {...pageProps} />
+                  </Layout>
+                </ProjectContext.Provider>
               </AnalyticsWrapper>
             </MantineProvider>
           </SWRConfig>

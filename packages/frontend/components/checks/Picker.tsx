@@ -20,7 +20,7 @@ function RenderCheckNode({
   minimal: boolean
   node: CheckLogic
   checks: Check[]
-  disabled: boolean
+  disabled?: boolean
   setNode: (node: CheckLogic | LogicData) => void
   removeNode: () => void
 }) {
@@ -34,6 +34,7 @@ function RenderCheckNode({
         minimal={minimal}
         key={i}
         checks={checks}
+        disabled={disabled}
         node={n as CheckLogic}
         removeNode={() => {
           const newNode = [...node]
@@ -138,14 +139,16 @@ function RenderCheckNode({
             </Fragment>
           )
         })}
-        <IconX
-          opacity={0.5}
-          cursor="pointer"
-          size={14}
-          onClick={() => {
-            removeNode()
-          }}
-        />
+        {typeof removeNode !== "undefined" && (
+          <IconX
+            opacity={0.5}
+            cursor="pointer"
+            size={14}
+            onClick={() => {
+              removeNode()
+            }}
+          />
+        )}
       </div>
     </Group>
   )

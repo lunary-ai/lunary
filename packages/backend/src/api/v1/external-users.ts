@@ -82,4 +82,12 @@ users.get("/:id", checkAccess("users", "read"), async (ctx: Context) => {
   ctx.body = row
 })
 
+users.delete("/:id", checkAccess("users", "delete"), async (ctx: Context) => {
+  const { id } = ctx.params
+
+  await sql`delete from external_user where id = ${id}`
+
+  ctx.status = 204
+})
+
 export default users

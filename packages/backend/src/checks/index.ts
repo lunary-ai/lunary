@@ -8,6 +8,7 @@ import aiSimilarity from "./ai/similarity"
 // import aiToxicity from "./ai/toxic"
 import rouge from "rouge"
 import { or } from "../utils/checks"
+import { isOpenAIMessage } from "../utils/misc"
 
 function getTextsTypes(field: "any" | "input" | "output", run: any) {
   let textsToCheck = []
@@ -32,16 +33,14 @@ export type CheckRunner = {
   sql?: (params: any) => any // todo: postgres sql type
 }
 
-export const isOpenAIMessage = (field: any) =>
-  typeof field === "object" &&
-  field.role &&
-  (field.content || field.toolCalls || field.functionCalls)
-
 export function lastMsg(field: any) {
   if (typeof field === "string" || !field) {
     return field
   } else if (Array.isArray(field) && isOpenAIMessage(field[0])) {
-    return JSON.stringify(field.at(-1).content)
+    const lastContent = field.at(-1).content
+    return typeof lastContent === "string"
+      ? lastContent
+      : JSON.stringify(lastContent)
   } else if (isOpenAIMessage(field)) {
     return field.content
   } else {
@@ -88,8 +87,8 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     sql: ({ type }) =>
       type === "trace"
         ? // matches agent and chain runs with no parent or parent is a chat run
-          sql`(type in ('agent','chain') and (parent_run_id is null OR EXISTS (SELECT 1 FROM run AS parent_run WHERE parent_run.id = r.parent_run_id AND parent_run.type = 'chat')))`
-        : sql`(type = ${type})`,
+          sql`(r.type in ('agent','chain') and (parent_run_id is null OR EXISTS (SELECT 1 FROM run AS parent_run WHERE parent_run.id = r.parent_run_id AND parent_run.type = 'chat')))`
+        : sql`(r.type = ${type})`,
   },
   {
     id: "models",
@@ -449,9 +448,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       }
     },
   },
-  {
-    id: "system",
-  },
+
   {
     id: "rouge",
     async evaluator(run, params) {

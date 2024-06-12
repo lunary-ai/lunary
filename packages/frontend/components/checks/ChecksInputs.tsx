@@ -38,6 +38,7 @@ const CheckInputs = {
       />
     )
   },
+
   label: ({ label }) => {
     return (
       <Text size="xs" className={classes["input-label"]} component="div">

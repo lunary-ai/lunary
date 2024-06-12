@@ -603,7 +603,6 @@ export const CHECKS: Check[] = [
     id: "pii",
     name: "PII",
     uiType: "ai",
-
     description:
       "Uses AI to detect if the given field contains personal identifiable information (PII).",
     params: [
@@ -945,7 +944,7 @@ export const CHECKS: Check[] = [
     ],
   },
   {
-    id: "system",
+    id: "guidelines",
     name: "System Guidelines",
     soon: true,
     uiType: "ai",

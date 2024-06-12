@@ -5,6 +5,7 @@ import { ReadableStream } from "stream/web"
 import { getOpenAIParams } from "./openai"
 import stripe from "./stripe"
 import sql from "./db"
+import config from "./config"
 
 function convertInputToOpenAIMessages(input: any[]) {
   return input.map(
@@ -203,7 +204,10 @@ export async function runAImodel(
     const [{ stripeCustomer }] =
       await sql`select stripe_customer from org where id = ${orgId}`
 
-    if (process.env.NODE_ENV === "production") {
+    if (
+      process.env.NODE_ENV === "production" &&
+      process.env.STRIPE_SECRET_KEY
+    ) {
       stripe.billing.meterEvents
         .create({
           event_name: "ai_playground",

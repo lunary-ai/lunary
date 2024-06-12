@@ -8,7 +8,7 @@ on:
     types: [published]
 
 jobs:
-  build-and-push:
+  build-push:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -60,7 +60,7 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy:
-    needs: build-and-push
+    needs: build-push
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to Production
@@ -77,7 +77,7 @@ jobs:
             docker compose down
             docker compose up -d
 
-  build-and-push-frontend:
+  build-push-others:
     needs: deploy
     runs-on: ubuntu-latest
     strategy:

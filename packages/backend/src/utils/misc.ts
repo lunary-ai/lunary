@@ -26,3 +26,13 @@ export function validateUUID(string?: string) {
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
+
+export const isOpenAIMessage = (field: any) =>
+  field &&
+  typeof field === "object" &&
+  field.role &&
+  (field.content ||
+    field.toolCalls ||
+    field.functionCall ||
+    field.tool_calls ||
+    field.function_call)
