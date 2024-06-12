@@ -357,6 +357,7 @@ export default function Analytics() {
       granularity,
       serializedChecks,
     )
+  console.log(averageLatencyData)
 
   const { data: feedbackRatioData, isLoading: feedbackRatioLoading } =
     useAnalyticsData(
@@ -477,10 +478,10 @@ export default function Analytics() {
                 />
 
                 <LineChart
-                  data={activeUsersData}
+                  data={activeUsersData?.data}
+                  stat={activeUsersData?.stat}
                   loading={activeUsersDataLoading}
                   props={["users"]}
-                  agg="max"
                   title="Active Users"
                   {...commonChartData}
                 />
@@ -488,11 +489,11 @@ export default function Analytics() {
             )}
 
             <LineChart
-              data={avgUserCostData}
+              data={avgUserCostData?.data}
+              stat={avgUserCostData?.stat}
               loading={avgUserCostDataLoading}
               props={["cost"]}
               formatter={formatCost}
-              agg="avg"
               title="Avg. User Cost"
               {...commonChartData}
             />
@@ -508,10 +509,10 @@ export default function Analytics() {
             />
 
             <LineChart
-              data={averageLatencyData}
+              data={averageLatencyData?.data}
+              stat={averageLatencyData?.stat}
               loading={averageLatencyDataLoading}
               props={["avgDuration"]}
-              agg="avg"
               formatter={(value) => `${value.toFixed(2)}s`}
               title="Avg. LLM Latency"
               {...commonChartData}
