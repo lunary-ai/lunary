@@ -48,8 +48,6 @@ templates.get("/", async (ctx: Context) => {
     }
   }
 
-  console.log(templates);
-
   ctx.body = templates
 })
 
