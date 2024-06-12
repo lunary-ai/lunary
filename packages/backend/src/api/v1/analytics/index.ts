@@ -324,6 +324,8 @@ analytics.get(
       granularity,
       timeZone,
       localCreatedAt,
+      startDate,
+      endDate,
     } = parseQuery(projectId, ctx.query)
 
     const distinctMap = {
@@ -333,8 +335,20 @@ analytics.get(
     }
     const distinct = distinctMap[granularity]
 
+    const [{ stat }] = await sql`
+      select
+        count(distinct r.external_user_id)::int as stat 
+      from
+        run r
+      where
+        r.project_id = ${projectId} 
+        and r.external_user_id is not null
+        and created_at >= ${startDate} at time zone ${timeZone} 
+        and created_at <= ${endDate} at time zone ${timeZone} 
+    `
+
     if (granularity === "weekly") {
-      const res = await sql`
+      const data = await sql`
         with dates as (
           ${datesQuery}
         ),
@@ -370,10 +384,10 @@ analytics.get(
         order by
           date;
       `
-      ctx.body = res
+      ctx.body = { data, stat: stat || 0 }
       return
     } else {
-      const res = await sql`
+      const data = await sql`
         with dates as (
           ${datesQuery}
         ),
@@ -399,7 +413,7 @@ analytics.get(
         order by d.date;
     `
 
-      ctx.body = res
+      ctx.body = { data, stat: stat || 0 }
       return
     }
   },
@@ -416,10 +430,34 @@ analytics.get(
       granularity,
       timeZone,
       localCreatedAt,
+      startDate,
+      endDate,
     } = parseQuery(projectId, ctx.query)
 
+    const [{ stat }] = await sql`
+      with total_costs as (
+        select
+          external_user_id,
+          sum(cost) as total_cost
+        from
+          run
+        where
+          project_id = ${projectId} 
+          and created_at >= ${startDate} at time zone ${timeZone} 
+          and created_at <= ${endDate} at time zone ${timeZone} 
+          and cost is not null
+          and external_user_id is not null
+        group by
+          external_user_id
+      )
+      select
+        avg(total_cost) as stat 
+      from
+        total_costs;
+    `
+
     if (granularity === "weekly") {
-      const res = await sql`
+      const data = await sql`
         with dates as (
           ${datesQuery}
         ),
@@ -460,10 +498,10 @@ analytics.get(
         order by
           date;
       `
-      ctx.body = res
+      ctx.body = { data, stat: stat || 0 }
       return
     } else {
-      const res = await sql`
+      const data = await sql`
         with dates as (
           ${datesQuery}
         ),
@@ -495,7 +533,7 @@ analytics.get(
           d.date;
       `
 
-      ctx.body = res
+      ctx.body = { data, stat }
       return
     }
   },
@@ -580,13 +618,29 @@ analytics.get(
   checkAccess("analytics", "read"),
   async (ctx: Context) => {
     const { projectId } = ctx.state
-    const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
-      projectId,
-      ctx.query,
-    )
+    const {
+      datesQuery,
+      filteredRunsQuery,
+      granularity,
+      startDate,
+      endDate,
+      timeZone,
+    } = parseQuery(projectId, ctx.query)
+
+    const [{ stat }] = await sql`
+      select
+        avg(extract(epoch from r.duration))::float as stat
+      from
+        run r
+      where
+        r.project_id = ${projectId} 
+        and type = 'llm'
+        and created_at >= ${startDate} at time zone ${timeZone} 
+        and created_at <= ${endDate} at time zone ${timeZone} 
+    `
 
     if (granularity === "weekly") {
-      const res = await sql`
+      const data = await sql`
         with dates as (
           ${datesQuery}
         ),
@@ -614,10 +668,10 @@ analytics.get(
         order by
           date;
       `
-      ctx.body = res
+      ctx.body = { data, stat: stat || 0 }
       return
     } else {
-      const res = await sql`
+      const data = await sql`
         with dates as (
           ${datesQuery}
         ),
@@ -637,7 +691,7 @@ analytics.get(
         order by d.date;
     `
 
-      ctx.body = res
+      ctx.body = { data, stat: stat || 0 }
       return
     }
   },
@@ -662,24 +716,24 @@ analytics.get(
           ${filteredRunsQuery}
         ),
       feedback_data as (
-          select
-            r.local_created_at,
-            case when r.feedback->>'thumb' = 'up' then 1 else 0 end as thumbs_up,
-            case when r.feedback->>'thumb' = 'down' then 1 else 0 end as thumbs_down
-          from
-            filtered_runs r
-          where 
-            r.feedback is not null
+        select
+          r.local_created_at,
+          case when r.feedback->>'thumb' = 'up' then 1 else 0 end as thumbs_up,
+          case when r.feedback->>'thumb' = 'down' then 1 else 0 end as thumbs_down
+        from
+          filtered_runs r
+        where 
+          r.feedback is not null
       ),
       weekly_avg as (
         select
           d.date,
           case when fd.local_created_at is not null then fd.local_created_at else d.date end as local_created_at,
-          sum(fd.thumbs_up) as total_thumbs_up,
-          sum(fd.thumbs_down) as total_thumbs_down,
+          coalesce(sum(fd.thumbs_up), 0) as total_thumbs_up,
+          coalesce(sum(fd.thumbs_down), 0) as total_thumbs_down,
           case 
-            when sum(fd.thumbs_down) = 0 then null 
-            else (sum(fd.thumbs_up) / sum(fd.thumbs_down))::float 
+            when coalesce(sum(fd.thumbs_up) + sum(fd.thumbs_down), 0) = 0 then null 
+            else ((sum(fd.thumbs_up)::float - sum(fd.thumbs_down)::float) / (sum(fd.thumbs_up)::float + sum(fd.thumbs_down)::float)) 
           end as ratio
         from
           dates d
@@ -688,16 +742,16 @@ analytics.get(
           d.date,
           case when fd.local_created_at is not null then fd.local_created_at else d.date end
         having 
-          coalesce(avg(extract(epoch from fd.local_created_at))::float, 0) != 0
+          coalesce(sum(fd.thumbs_up) + sum(fd.thumbs_down), 0) != 0
         order by d.date
       )
-        select
-          date, 
-          ratio
-        from
-          weekly_avg
-        order by
-          date;
+      select
+        date, 
+        ratio
+      from
+        weekly_avg
+      order by
+        date;
       `
       ctx.body = res
       return
@@ -711,29 +765,28 @@ analytics.get(
         ),
         feedback_data as (
           select
-           r.local_created_at as date,
-           case when r.feedback->>'thumb' = 'up' then 1 else 0 end as thumbs_up,
-           case when r.feedback->>'thumb' = 'down' then 1 else 0 end as thumbs_down
-         from
-           filtered_runs r
-         where 
-          feedback is not null
+            r.local_created_at as date,
+            case when r.feedback->>'thumb' = 'up' then 1 else 0 end as thumbs_up,
+            case when r.feedback->>'thumb' = 'down' then 1 else 0 end as thumbs_down
+          from
+            filtered_runs r
+          where 
+            feedback is not null
         )
         select 
           d.date,
           coalesce(sum(fd.thumbs_up), 0)::int as total_thumbs_up,
           coalesce(sum(fd.thumbs_down), 0)::int as total_thumbs_down,
           case 
-            when coalesce(sum(fd.thumbs_down)::int, 0) = 0 then null 
-            else (coalesce(sum(fd.thumbs_up)::int, 0) / coalesce(sum(fd.thumbs_down), 0))::float end as ratio
+            when coalesce(sum(fd.thumbs_up) + sum(fd.thumbs_down), 0) = 0 then null 
+            else ((sum(fd.thumbs_up)::float - sum(fd.thumbs_down)::float) / (sum(fd.thumbs_up)::float + sum(fd.thumbs_down)::float)) end as ratio
         from 
           dates d
           left join feedback_data fd on d.date = fd.date
         group by 
           d.date
-          
         order by
-          d.date
+          d.date;
         `
       ctx.body = res
       return

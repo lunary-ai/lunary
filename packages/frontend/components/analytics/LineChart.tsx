@@ -193,6 +193,7 @@ type LineChartProps = {
   granularity: "daily" | "hourly" | "weekly"
   agg: string
   chartExtra?: JSX.Element
+  stat?: number
 }
 
 function getFigure(agg: string, data: any[], prop: string) {
@@ -224,6 +225,7 @@ function getFigure(agg: string, data: any[], prop: string) {
       return acc
     }, Infinity)
   }
+  return 0
 }
 const LineChartComponent = ({
   data,
@@ -240,8 +242,10 @@ const LineChartComponent = ({
   granularity,
   agg,
   chartExtra,
+  stat,
 }: LineChartProps) => {
   const colors = ["blue", "pink", "indigo", "green", "violet", "yellow"]
+  console.log(title, stat)
 
   const cleanedData = prepareDataForRecharts(
     blocked
@@ -274,12 +278,13 @@ const LineChartComponent = ({
     granularity,
   )
 
-  const hasData = blocked
-    ? true
-    : cleanedData?.length &&
-      (splitBy ? Object.keys(cleanedData[0]).length > 1 : data?.length)
+  const hasData = blocked ? true : cleanedData?.length
+  // (splitBy ? Object.keys(cleanedData[0]).length > 1 : data?.length)
 
-  const total = getFigure(agg, cleanedData, props[0])
+  const total =
+    stat === undefined || stat === null
+      ? getFigure(agg, cleanedData, props[0])
+      : stat
 
   return (
     <Card withBorder p={0} className="lineChart" radius="md">
