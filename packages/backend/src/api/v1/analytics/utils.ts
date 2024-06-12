@@ -64,6 +64,8 @@ export function parseQuery(projectId: string, query: unknown) {
     `
 
       return {
+        startDate,
+        endDate,
         datesQuery,
         filteredRunsQuery,
         granularity,
