@@ -35,8 +35,8 @@ export default defineConfig({
     timeout: 5000
   }, 
   use: {
-    actionTimeout: 90 * 1000,
-    navigationTimeout: 90 * 1000,
+    actionTimeout: 10 * 1000,
+    navigationTimeout: 30 * 1000,
 
     // Uses Vercel deployment URL in CI, otherwise uses localhost.
     baseURL: process.env.CI ? process.env.BASE_URL : "http://127.0.0.1:8080",
