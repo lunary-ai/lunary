@@ -24,7 +24,7 @@ test.describe('Smoke test', () => {
     const login = new LoginPage(page);
     userName =uniqueStr('test');
     email = uniqueStr('test') + '@example.com';
-    await login.openUrl(config.BASE_URL+'');
+    await login.openUrl("/");
   });
 
   test("Verify search user", async () => {
