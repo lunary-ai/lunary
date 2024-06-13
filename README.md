@@ -66,7 +66,7 @@ With the hosted version:
 2. Setup a PostgreSQL instance (version 15 minimum)
 3. Copy the content of `packages/backend/.env.example` to `packages/backend/.env` and fill the missing values
 4. Copy the content of `packages/frontend/.env.example` to `packages/backend/.env`
-5. Copy the content of `packages/frontend/.env.example` to `packages/backend/.env`
+5. Copy the content of `e2e/.env.example` to `e2e/.env`
 6. Run `npm install`
 7. Run `npm run migrate:db`
 8. Run `npm run dev`
