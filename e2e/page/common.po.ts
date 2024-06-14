@@ -1,4 +1,4 @@
-import { Locator, Page } from '@playwright/test';
+import { Locator, Page, expect } from '@playwright/test';
 import lunary from "lunary"
 import OpenAI from "openai"
 require('dotenv').config();
@@ -20,6 +20,15 @@ export class CommAction{
   async clickMenu(menuName: string): Promise<void> {
     await this.page.waitForLoadState("networkidle")
     await this.page.getByRole('link', { name: menuName}).click();
+  }
+
+  async waitSomeSeconds(second: number): Promise<void> {
+    await this.page.waitForTimeout(second*1000);
+  }
+
+
+  async clickTab(tabName: string): Promise<void> {
+    await this.page.getByText(tabName).click();
   }
 
   async initLunaryOpenAI(projectId: string): Promise<void> {
@@ -44,6 +53,57 @@ export class CommAction{
     ],
   })
   }
+  async verifyThumbUpDownIsDisplayedOnBanner(): Promise<void> {
+    await expect(this.page.locator("//*[contains(@class,'thumb-up')and contains(@fill,'color-gray')]").first()).toBeVisible()
+    await expect(this.page.locator("//*[contains(@class,'thumb-down') and contains(@fill,'color-gray')]").first()).toBeVisible()
+  }
 
+  async clickMessage(message: string): Promise<void> {
+    await this.page.getByText(message).click();
+  }
+
+  async clickThumbUpIcon(): Promise<void> {
+    await this.page.locator("//*[contains(@class,'thumb-up')and contains(@fill,'color-gray')]").last().click()
+  }
+
+  async clickMessageIcon(): Promise<void> {
+    await this.page.locator("//*[contains(@class,'tabler-icon-message') and contains(@stroke,'gray')]").click()
+  }
+
+  async sendComment(content:string): Promise<void> {
+    await this.page.getByPlaceholder('Add a comment').fill(content);
+    await this.page.locator('[role="dialog"] span.mantine-Button-label').filter({hasText: 'Save'}).click();
+  }
+
+  async hoverCommentIcon(message:string): Promise<void> {
+    await this.page.locator("table tr").filter({hasText: message})
+      .locator(`//*[contains(@fill,'color-teal-5')]`).hover();
+  }
+
+  async verifyCommentIsDisplayed(message:string, content:string): Promise<void> {
+    expect(await this.page.locator('div.mantine-Tooltip-tooltip').innerText()).toContain(content);
+  }
+
+  async verifyThumbUpIconTurnGreen(): Promise<void> {
+    await expect(this.page.locator("//*[contains(@class,'thumb-up') and contains(@fill,'color-green')]").last()).toBeVisible()
+  }
+
+  async verifyThumbDownIconTurnRed(): Promise<void> {
+    await expect(this.page.locator("//*[contains(@class,'thumb-down') and contains(@fill,'color-red')]").last()).toBeVisible()
+  }
+
+  async verifyThumbUpIconIsDisplayed(message:string): Promise<void> {
+    await expect(this.page.locator("table tr").filter({hasText: message})
+      .locator(`//*[contains(@class,'thumb-up') and contains(@fill,'color-green')]`)).toBeVisible();
+  }
+
+  async verifyThumbDownIconIsDisplayed(message:string): Promise<void> {
+    await expect(this.page.locator("table tr").filter({hasText: message})
+    .locator(`//*[contains(@class,'thumb-down') and contains(@fill,'color-red')]`)).toBeVisible();
+  }
+
+  async clickThumbDownIcon(): Promise<void> {
+    await this.page.locator("//*[contains(@class,'thumb-down')and contains(@fill,'color-gray')]").last().click()
+  }
   
 }

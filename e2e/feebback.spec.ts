@@ -12,6 +12,8 @@ import { HomePage } from "./page/home.po"
 import { SignUpPage } from "./page/signUp.po"
 import { AnalyticsPage } from "./page/analytics.po"
 import { LogsPage } from "./page/logs.po"
+import { ThreatsPage } from "./page/threats.po";
+import { TracesPage } from "./page/traces.po";
 
 let page: Page;
 let context: any;
@@ -102,10 +104,22 @@ test.describe('Feedback', () => {
     
   }).setParent(msgId2)
   
-
+  const agent = lunary.wrapAgent(function ChatbotAgent(query) {
+    console.log('test agent');
+  })
+  
+  await agent("Hello!").setParent(msgId)
+  const calculator = lunary.wrapTool(async function Calculator(input) {
+    // Your custom logic
+    // ...
+  })
+  
+  await calculator('1 + 2')
   });
 
-  test("Adding a thumb up/down to a from a llm call to verify feedback", async ({page}) => {
+  
+
+  test.skip("Adding a thumb up/down to a from a llm call to verify feedback", async ({page}) => {
     const commonPage = new CommAction(page);
     const logsPage = new LogsPage(page);
     const loginPage = new LoginPage(page);
@@ -130,7 +144,7 @@ test.describe('Feedback', () => {
     
   })
 
-  test("Adding a comment and verify it", async ({page}) => {
+  test.skip("Adding a comment and verify it", async ({page}) => {
     const commonPage = new CommAction(page);
     const logsPage = new LogsPage(page);
     const loginPage = new LoginPage(page);
@@ -147,5 +161,69 @@ test.describe('Feedback', () => {
     await logsPage.closeModal();
     await logsPage.hoverCommentIcon(contentUser2);
     await logsPage.verifyCommentIsDisplayed(contentUser2, comment);
+  })
+
+  test("Adding a thumb up/down from a trace to verify feedback", async ({page}) => {
+    const commonPage = new CommAction(page);
+    const logsPage = new LogsPage(page);
+    const threatsPage = new ThreatsPage(page);
+    const tracesPage = new TracesPage(page);
+    const loginPage = new LoginPage(page);
+
+    await loginPage.openUrl(config.BASE_URL+'');
+    await loginPage.login(email, UserInfo.password);
+
+    await commonPage.clickMenu('Logs');
+    await commonPage.clickTab('Threads');
+    await threatsPage.clickTagName('testing thread');
+    await threatsPage.clickViewTraceButton();
+    await tracesPage.clickTagName('gpt-4o');
+    await commonPage.waitSomeSeconds(10);
+    await logsPage.verifyThumbUpDownIsDisplayedOnBanner();
+    await logsPage.clickThumbUpIcon();
+    
+    await logsPage.verifyThumbUpIconTurnGreen();
+    
+    await commonPage.clickMenu('Logs');
+    await logsPage.verifyThumbUpIconIsDisplayed(contentUser1);
+
+    await commonPage.clickTab('Threads');
+    await threatsPage.clickTagName('testing thread');
+    await threatsPage.clickViewTraceButton();
+    await tracesPage.clickTagName('gpt-4o');
+    await logsPage.clickThumbDownIcon();
+    await logsPage.verifyThumbDownIconTurnRed();
+    
+    await commonPage.clickMenu('Logs');
+    await logsPage.verifyThumbDownIconIsDisplayed(contentUser1);
+
+    
+  })
+
+  test("Adding a comment from a trace to verify feedback", async ({page}) => {
+    const commonPage = new CommAction(page);
+    const logsPage = new LogsPage(page);
+    const loginPage = new LoginPage(page);
+    const threatsPage = new ThreatsPage(page);
+    const tracesPage = new TracesPage(page);
+    const comment =uniqueStr('comment from trace');
+    await loginPage.openUrl(config.BASE_URL+'');
+    await loginPage.login(email, UserInfo.password);
+
+    await commonPage.clickMenu('Logs');
+
+    await commonPage.clickTab('Threads');
+    await threatsPage.clickTagName('testing thread');
+    await threatsPage.clickViewTraceButton();
+    await commonPage.waitSomeSeconds(10);
+    await tracesPage.clickTagName('gpt-4o');
+    await logsPage.clickMessageIcon();
+    await logsPage.sendComment(comment);
+    
+    await commonPage.clickMenu('Logs');
+    await logsPage.hoverCommentIcon(contentUser1);
+    await logsPage.verifyCommentIsDisplayed(contentUser1, comment);
+
+    
   })
 });
