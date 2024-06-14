@@ -227,8 +227,8 @@ function ToolCallsMessage({
 function TextMessage({ data, onChange = () => {}, editable = false, codeBg }) {
   return (
     <Code block bg={codeBg}>
-      <ProtectedText>
-        {editable ? (
+      {editable ? (
+        <ProtectedText>
           <Textarea
             value={data.content || data.text}
             placeholder="Content"
@@ -236,10 +236,10 @@ function TextMessage({ data, onChange = () => {}, editable = false, codeBg }) {
             onChange={(e) => onChange({ ...data, content: e.target.value })}
             {...ghostTextAreaStyles}
           />
+        </ProtectedText>
         ) : (
-          data.content || data.text
+          <div style={{ width: "100%" }} dangerouslySetInnerHTML={{__html: data.content || data.text}}></div>
         )}
-      </ProtectedText>
     </Code>
   )
 }

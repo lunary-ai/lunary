@@ -370,7 +370,7 @@ function Playground() {
 
       // scroll template-input-area to the end
       const element = document.getElementById("template-input-area")
-      element.scrollTop = element.scrollHeight
+      if (element) { element.scrollTop = element.scrollHeight }
     } catch (e) {
       console.error(e)
       setError(e)
@@ -509,6 +509,7 @@ function Playground() {
 
             <ParamItem
               name="Template Mode"
+              description={''}
               value={
                 <SegmentedControl
                   size="xs"
