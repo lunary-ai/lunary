@@ -76,12 +76,19 @@ export class CommAction{
   }
 
   async hoverCommentIcon(message:string): Promise<void> {
-    await this.page.locator("table tr").filter({hasText: message})
-      .locator(`//*[contains(@fill,'color-teal-5')]`).hover();
+    const messageLocator = this.page.locator("table tr").filter({hasText: message})
+    .locator(`//*[contains(@fill,'color-teal-5')]`);
+      if(await messageLocator.isVisible() == false)
+        {
+          await this.waitSomeSeconds(5);
+          await this.page.reload();
+        }
+    await messageLocator.hover();
   }
 
   async verifyCommentIsDisplayed(message:string, content:string): Promise<void> {
-    expect(await this.page.locator('div.mantine-Tooltip-tooltip').innerText()).toContain(content);
+      const messageLocator = await this.page.locator('div.mantine-Tooltip-tooltip').innerText();
+      expect(messageLocator).toContain(content);
   }
 
   async verifyThumbUpIconTurnGreen(): Promise<void> {
@@ -93,13 +100,27 @@ export class CommAction{
   }
 
   async verifyThumbUpIconIsDisplayed(message:string): Promise<void> {
-    await expect(this.page.locator("table tr").filter({hasText: message})
-      .locator(`//*[contains(@class,'thumb-up') and contains(@fill,'color-green')]`)).toBeVisible();
-  }
+      const feedback = this.page.locator("table tr").filter({hasText: message})
+      .locator(`//*[contains(@class,'thumb-up') and contains(@fill,'color-green')]`);
+      console.log("check feedback is visible : "+await feedback.isVisible())
+      if(await feedback.isVisible() == false)
+      {
+        await this.waitSomeSeconds(5);
+        await this.page.reload();
+      }
+      await expect(feedback).toBeVisible();
+     
+    }
 
   async verifyThumbDownIconIsDisplayed(message:string): Promise<void> {
-    await expect(this.page.locator("table tr").filter({hasText: message})
-    .locator(`//*[contains(@class,'thumb-down') and contains(@fill,'color-red')]`)).toBeVisible();
+      const feedbackRed = this.page.locator("table tr").filter({hasText: message})
+      .locator(`//*[contains(@class,'thumb-down') and contains(@fill,'color-red')]`);
+      if(await feedbackRed.isVisible() == false){
+        await this.waitSomeSeconds(5);
+        await this.page.reload();
+      }
+      await expect(feedbackRed).toBeVisible();
+    
   }
 
   async clickThumbDownIcon(): Promise<void> {
