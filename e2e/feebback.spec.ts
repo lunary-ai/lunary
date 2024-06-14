@@ -178,11 +178,10 @@ test.describe('Feedback', () => {
     await threatsPage.clickTagName('testing thread');
     await threatsPage.clickViewTraceButton();
     await tracesPage.clickTagName('gpt-4o');
-    await commonPage.waitSomeSeconds(10);
-    await logsPage.verifyThumbUpDownIsDisplayedOnBanner();
-    await logsPage.clickThumbUpIcon();
+    await tracesPage.verifyThumbUpDownIsDisplayedOnBanner();
+    await tracesPage.clickThumbUpIcon();
     
-    await logsPage.verifyThumbUpIconTurnGreen();
+    await tracesPage.verifyThumbUpIconTurnGreen();
     
     await commonPage.clickMenu('Logs');
     await logsPage.verifyThumbUpIconIsDisplayed(contentUser1);
@@ -191,8 +190,8 @@ test.describe('Feedback', () => {
     await threatsPage.clickTagName('testing thread');
     await threatsPage.clickViewTraceButton();
     await tracesPage.clickTagName('gpt-4o');
-    await logsPage.clickThumbDownIcon();
-    await logsPage.verifyThumbDownIconTurnRed();
+    await tracesPage.clickThumbDownIcon();
+    await tracesPage.verifyThumbDownIconTurnRed();
     
     await commonPage.clickMenu('Logs');
     await logsPage.verifyThumbDownIconIsDisplayed(contentUser1);
@@ -215,10 +214,9 @@ test.describe('Feedback', () => {
     await commonPage.clickTab('Threads');
     await threatsPage.clickTagName('testing thread');
     await threatsPage.clickViewTraceButton();
-    await commonPage.waitSomeSeconds(10);
     await tracesPage.clickTagName('gpt-4o');
-    await logsPage.clickMessageIcon();
-    await logsPage.sendComment(comment);
+    await tracesPage.clickMessageIcon();
+    await tracesPage.sendComment(comment);
     
     await commonPage.clickMenu('Logs');
     await logsPage.hoverCommentIcon(contentUser1);
