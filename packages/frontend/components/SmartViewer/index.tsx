@@ -9,7 +9,7 @@
  */
 
 import { Card, Code, Flex, Group, SimpleGrid, Stack, Text, SegmentedControl, SegmentedControlItem } from "@mantine/core"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { marked } from "marked";
 
 import ProtectedText from "../blocks/ProtectedText"
@@ -103,9 +103,17 @@ export default function SmartViewer({
 
   // Parsed is the original parsed data, displayData changes depending on the value of control i.e raw text or compiled markdown html
   const [displayData, setDisplayData] = useState(parsed);
+ 
+  useEffect(() => {
+    if (!parsed) return parsed
 
-  const updateControl = async (newValue: string) => {
-    if (!cache[newValue]) {
+    updateControl(control, true) 
+  }, [parsed]);
+
+  // TODO: Optimize
+  //  This implementation feels sluggish on the UI since it runs for every chat stream
+  const updateControl = async (newValue: string, ignoreCache?: boolean) => {
+    if (!!ignoreCache || !cache[newValue]) {
       const target = controls.find(item => (item.value === newValue));
       if (target) {
         if (!parsed) return;

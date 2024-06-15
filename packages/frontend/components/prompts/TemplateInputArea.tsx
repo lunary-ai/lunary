@@ -2,7 +2,15 @@ import { Text, ScrollArea, Group, Box } from "@mantine/core"
 import SmartViewer from "@/components/SmartViewer"
 import TokensBadge from "../blocks/TokensBadge"
 import { PromptEditor } from "./PromptEditor"
-import { parse } from "marked"
+
+import DOMPurify from "dompurify"
+import { Marked } from "marked"
+import markedCodePreview from "marked-code-preview"
+
+const marked = new Marked();
+
+marked.use({ gfm: true });
+marked.use(markedCodePreview());
 
 function TemplateInputArea({
   template,
@@ -44,7 +52,13 @@ function TemplateInputArea({
           </Group>
           <SmartViewer data={output} error={error} controls={[
             { label: 'Text', value: 'text', parse: (data) => data },
-            { label: 'Preview', value: 'md', parse: (data) => parse(data) }
+            {
+              value: 'md',
+              label: 'Preview',
+              parse: (data) => DOMPurify.sanitize(
+                marked.parse(data) as string
+              )
+            }
           ]}/>
         </>
       )}

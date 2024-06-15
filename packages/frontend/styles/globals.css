@@ -41,3 +41,22 @@ span.limited,
 .mantine-Badge-root {
   max-width: 100%;
 }
+
+/* Popup textarea for prompt variables */
+.variable-textarea {
+  position: relative;
+}
+
+.variable-textarea > button {
+  bottom: 0;
+  right: 2rem;
+  position: absolute;
+  margin-bottom: 0.3rem;
+  background-color: rgb(0 0 0 / 20%);
+}
+
+.variable-textarea > div.mantine-Textarea-root {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}

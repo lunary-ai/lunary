@@ -612,7 +612,9 @@ function Playground() {
               data-testid="run-playground"
               loading={streaming}
               rightSection={
-                <HotkeysInfo hot="Enter" size="sm" style={{ marginTop: -4 }} />
+                <HotkeysInfo hot="Enter" size="sm" style={{
+                  /* marginTop: -4 : Fixes odd icon alignment */
+                }} />
               }
             >
               {template?.id ? "Test template" : "Run"}
