@@ -119,7 +119,7 @@ test.describe('Feedback', () => {
 
   
 
-  test.skip("Adding a thumb up/down to a from a llm call to verify feedback", async ({page}) => {
+  test("Adding a thumb up/down to a from a llm call to verify feedback", async ({page}) => {
     const commonPage = new CommAction(page);
     const logsPage = new LogsPage(page);
     const loginPage = new LoginPage(page);
@@ -144,7 +144,7 @@ test.describe('Feedback', () => {
     
   })
 
-  test.skip("Adding a comment and verify it", async ({page}) => {
+  test("Adding a comment and verify it", async ({page}) => {
     const commonPage = new CommAction(page);
     const logsPage = new LogsPage(page);
     const loginPage = new LoginPage(page);
