@@ -12,19 +12,18 @@ export const transporter = nodemailer.createTransport({
 })
 
 const requiredEnvVars = [
-  'SMTP_PORT',
-  'SMTP_HOST',
-  'SMTP_USER',
-  'SMTP_PASSWORD',
-  'SMTP_SECURE',
-  'SMTP_FROM'
-];
-
+  "SMTP_PORT",
+  "SMTP_HOST",
+  "SMTP_USER",
+  "SMTP_PASSWORD",
+  "SMTP_SECURE",
+  "SMTP_FROM",
+]
 
 export async function sendEmail(body: any) {
   for (const varName of requiredEnvVars) {
     if (!process.env[varName]) {
-      return console.warn(`${varName} is not set, skipping email sending`);
+      return console.warn(`${varName} is not set, skipping email sending`)
     }
   }
 
@@ -46,7 +45,7 @@ export async function sendEmail(body: any) {
       replyTo: body.reply_to,
       from: body.from,
       text: body.text,
-     })
+    })
   } catch (error) {
     console.info("Error sending email:", error)
   }
