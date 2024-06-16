@@ -28,7 +28,6 @@ export async function sendEmail(body: any) {
     }
   }
 
-  
   const blockList = await sql`select email from _email_block_list`
   const blockedEmails = blockList.map(({ email }) => email)
 
