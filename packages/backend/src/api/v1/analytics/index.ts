@@ -43,8 +43,6 @@ analytics.get(
           group by
             d.date,
             r.name
-          having 
-            coalesce(sum(r.prompt_tokens + r.completion_tokens), 0) != 0
         )
         select
           date, 
@@ -75,8 +73,6 @@ analytics.get(
         group by 
           d.date,
           r.name
-        having 
-          coalesce(sum(r.prompt_tokens + r.completion_tokens), 0) != 0
         order by d.date;
     `
 
@@ -116,8 +112,6 @@ analytics.get(
           group by
             d.date,
             r.name
-          having 
-            coalesce(sum(r.cost)::float, 0) != 0
         )
         select
           date, 
@@ -148,8 +142,6 @@ analytics.get(
         group by 
           d.date,
           r.name
-        having 
-          coalesce(sum(r.cost)::float, 0) != 0
         order by d.date;
     `
 
@@ -569,8 +561,6 @@ analytics.get(
           group by 
             d.date,
             r.type
-          having 
-            coalesce(count(r.type), 0) != 0
           order by d.date
         )
         select
@@ -602,8 +592,6 @@ analytics.get(
         group by 
           d.date,
           r.type
-        having 
-          coalesce(count(r.type), 0) != 0
         order by d.date;
     `
 
@@ -791,6 +779,106 @@ analytics.get(
       ctx.body = res
       return
     }
+  },
+)
+
+analytics.get(
+  "/top/models",
+  checkAccess("analytics", "read"),
+  async (ctx: Context) => {
+    const querySchema = z.object({
+      startDate: z.string().datetime().optional(),
+      endDate: z.string().datetime().optional(),
+      timeZone: z.string().optional(),
+      userId: z.string().optional(),
+    })
+    const { projectId } = ctx.state
+    const { startDate, endDate, timeZone, userId } = querySchema.parse(
+      ctx.request.query,
+    )
+
+    let dateFilter = sql``
+    if (startDate && endDate && timeZone) {
+      dateFilter = sql`
+        and date_trunc('day', created_at at time zone ${timeZone})::timestamp  >= ${startDate}
+        and date_trunc('day', created_at at time zone ${timeZone})::timestamp  <= ${endDate}
+      `
+    }
+
+    let userFilter = sql``
+    if (userId) {
+      userFilter = sql`and external_user_id = ${userId}`
+    }
+
+    const topModels = await sql`
+      select
+        name,
+        coalesce(sum(prompt_tokens), 0)::int as prompt_tokens,
+        coalesce(sum(completion_tokens), 0)::int as completion_tokens,
+        coalesce(sum(prompt_tokens + completion_tokens), 0)::int as total_tokens,
+        coalesce(sum(cost), 0)::float as cost
+      from
+        run
+      where
+        project_id = ${projectId} 
+        and type = 'llm'
+        and name is not null
+        ${dateFilter}
+        ${userFilter}
+      group by
+        name
+      order by
+        total_tokens desc,
+        cost desc
+      limit 5
+    `
+
+    console.log(topModels)
+
+    ctx.body = topModels
+  },
+)
+
+analytics.get(
+  "/top/templates",
+  checkAccess("analytics", "read"),
+  async (ctx: Context) => {
+    const querySchema = z.object({
+      startDate: z.string().datetime(),
+      endDate: z.string().datetime(),
+      timeZone: z.string(),
+    })
+    const { projectId } = ctx.state
+    const { startDate, endDate, timeZone } = querySchema.parse(
+      ctx.request.query,
+    )
+
+    const topTemplates = await sql`
+      select
+        t.slug, 
+        count(*)::int as usage_count, 
+        coalesce(sum(prompt_tokens), 0)::int as prompt_tokens,
+        coalesce(sum(completion_tokens), 0)::int as completion_tokens,
+        coalesce(sum(prompt_tokens + completion_tokens), 0)::int as total_tokens,
+        coalesce(sum(cost), 0)::float as cost
+      from
+        run r
+        left join template_version tv on r.template_version_id = tv.id
+        left join template t on tv.template_id = t.id
+      where
+        r.project_id = ${projectId}
+        and r.template_version_id is not null
+        and date_trunc('day', r.created_at at time zone ${timeZone})::timestamp  >= ${startDate}
+        and date_trunc('day', r.created_at at time zone ${timeZone})::timestamp  <= ${endDate}
+      group by
+        t.id 
+      order by
+        usage_count desc
+      limit 5
+    
+    `
+
+    ctx.body = topTemplates
   },
 )
 
