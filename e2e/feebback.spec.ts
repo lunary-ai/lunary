@@ -53,7 +53,7 @@ test.describe('Feedback', () => {
     contentSystem2 = "Hi friend message 2";
     contentUser1 = "Can you help me on message 1";
     contentUser2 = "Can you help me on message 2";
-    await login.openUrl(config.BASE_URL+'');
+    await login.openUrl(config.BASE_URL);
     await homePage.clickSignUpBtn();
     await signUpPage.signUpAccountStep1(email, UserInfo.password, userName);
     await signUpPage.signUpAccountStep2("TESTPROJECT","TESTORG", UserInfo.companySize, UserInfo.option);

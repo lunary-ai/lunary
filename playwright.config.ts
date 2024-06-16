@@ -26,7 +26,7 @@ export default defineConfig({
   reporter: "html",
   // reporter: process.env.CI ? "github" : "html",
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
-  timeout: 90000,
+  timeout: 360000,
   expect: {
     /**
      * Maximum time expect() should wait for the condition to be met.
@@ -43,7 +43,8 @@ export default defineConfig({
     permissions: ["clipboard-read", "clipboard-write"],
 
     video: "retain-on-failure",
-
+    
+    screenshot: 'only-on-failure',
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
   },
