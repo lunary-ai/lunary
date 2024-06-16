@@ -1,10 +1,34 @@
 import sql from "./db"
+import nodemailer from "nodemailer"
+
+export const transporter = nodemailer.createTransport({
+  port: Number(process.env.SMTP_PORT),
+  secure: Boolean(process.env.SMTP_SECURE),
+  host: process.env.SMTP_HOST,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASSWORD,
+  },
+})
+
+const requiredEnvVars = [
+  'SMTP_PORT',
+  'SMTP_HOST',
+  'SMTP_USER',
+  'SMTP_PASSWORD',
+  'SMTP_SECURE',
+  'SMTP_FROM'
+];
+
 
 export async function sendEmail(body: any) {
-  if (!process.env.RESEND_KEY) {
-    return console.warn("RESEND_KEY is not set, skipping email sending")
+  for (const varName of requiredEnvVars) {
+    if (!process.env[varName]) {
+      return console.warn(`${varName} is not set, skipping email sending`);
+    }
   }
 
+  
   const blockList = await sql`select email from _email_block_list`
   const blockedEmails = blockList.map(({ email }) => email)
 
@@ -16,18 +40,15 @@ export async function sendEmail(body: any) {
     return console.warn("Not sending email to test account")
   }
 
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.RESEND_KEY}`,
-    },
-    body: JSON.stringify(body),
-  })
-
-  if (!res.ok) {
-    throw new Error(`Error sending with resend: ${await res.text()}`)
+  try {
+    await transporter.sendMail({
+      to: body.to,
+      subject: body.subject,
+      replyTo: body.reply_to,
+      from: body.from,
+      text: body.text,
+     })
+  } catch (error) {
+    console.info("Error sending email:", error)
   }
-
-  return await res.json()
 }
