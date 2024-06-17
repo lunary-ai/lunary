@@ -69,6 +69,7 @@ users.get("/me", async (ctx: Context) => {
   const [user] = await sql`
       select
         account.id,
+        account.name,
         account.created_at,
         account.email,
         account.org_id,
@@ -137,7 +138,7 @@ users.get("/verify-email", async (ctx: Context) => {
 users.post("/send-verification", async (ctx: Context) => {
   const bodySchema = z.object({
     email: z.string().email(),
-    name: z.string(),
+    name: z.string().optional(),
   })
   const { email, name } = bodySchema.parse(ctx.request.body)
 

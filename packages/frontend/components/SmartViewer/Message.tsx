@@ -451,6 +451,8 @@ export function ChatMessage({
 
   // Add/remove the 'id' and 'name' props required on tool calls
   useEffect(() => {
+    if (!data) return
+
     // Add/remove the 'name' props required on tool calls
     if (data.role === "tool" && editable && typeof data.name !== "string") {
       onChange({ ...data, name: "some-tool-name" })

@@ -5,16 +5,16 @@ import { Group, Stack, Text } from "@mantine/core"
 import { costColumn, timeColumn } from "@/utils/datatable"
 
 import AppUserAvatar from "@/components/blocks/AppUserAvatar"
+import SearchBar from "@/components/blocks/SearchBar"
 import Empty from "@/components/layout/Empty"
+import { useExternalUsers } from "@/utils/dataHooks/external-users"
 import { formatAppUser } from "@/utils/format"
+import { useDebouncedValue } from "@mantine/hooks"
 import { IconUsers } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import Router from "next/router"
-import analytics from "../../utils/analytics"
-import { useAppUserList, useProjectInfiniteSWR } from "@/utils/dataHooks"
-import SearchBar from "@/components/blocks/SearchBar"
 import { useState } from "react"
-import { useDebouncedValue } from "@mantine/hooks"
+import analytics from "../../utils/analytics"
 
 const columns = [
   {
@@ -50,14 +50,9 @@ export default function Users() {
   const [search, setSearch] = useState("")
   const [debouncedSearch] = useDebouncedValue(search, 200)
 
-  const {
-    data: users,
-    loading,
-    validating,
-    loadMore,
-  } = useProjectInfiniteSWR(
-    `/external-users${debouncedSearch ? `?search=${debouncedSearch}` : ""}`,
-  )
+  const { users, loading, validating, loadMore } = useExternalUsers({
+    search: debouncedSearch,
+  })
 
   return (
     <Empty

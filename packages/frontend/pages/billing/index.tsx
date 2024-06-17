@@ -124,6 +124,7 @@ export default function Billing() {
           granularity="daily"
           data={usage}
           formatter={(val) => `${val} runs`}
+          agg="sum"
           props={["count"]}
           chartExtra={
             plan && (
