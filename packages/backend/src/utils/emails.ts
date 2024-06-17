@@ -6,7 +6,7 @@ function extractFirstName(name: string) {
   return name.split(" ")[0]
 }
 
-export async function sendVerifyEmail(email: string, name: string) {
+export async function sendVerifyEmail(email: string, name: string = "") {
   const token = await signJWT({ email })
 
   const confirmLink = `${process.env.API_URL}/v1/users/verify-email?token=${token}`
