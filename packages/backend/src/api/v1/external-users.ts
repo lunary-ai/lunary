@@ -2,6 +2,7 @@ import sql from "@/src/utils/db"
 import Router from "koa-router"
 import { Context } from "koa"
 import { checkAccess } from "@/src/utils/authorization"
+import { z } from "zod"
 
 const users = new Router({
   prefix: "/external-users",
@@ -9,39 +10,70 @@ const users = new Router({
 
 users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
   const { projectId } = ctx.state
-
-  const { limit = "100", page = "0", search, days } = ctx.query
-
-  const daysNum = parseInt((days as string) || "1000")
+  const querySchema = z.object({
+    limit: z.coerce.number().optional().default(100),
+    page: z.coerce.number().optional().default(0),
+    search: z.string().optional(),
+    startDate: z.string().datetime().optional(),
+    endDate: z.string().datetime().optional(),
+    timeZone: z.string().optional(),
+  })
+  const { limit, page, search, startDate, endDate, timeZone } =
+    querySchema.parse(ctx.request.query)
 
   let searchQuery = sql``
   if (search) {
-    searchQuery = sql`and (lower(external_id) ilike lower(${`%${search}%`}) or lower(props->>'email') ilike lower(${`%${search}%`}) or lower(props->>'name') ilike lower(${`%${search}%`}))`
+    searchQuery = sql`and (
+      lower(external_id) ilike lower(${`%${search}%`}) 
+      or lower(props->>'email') ilike lower(${`%${search}%`}) 
+      or lower(props->>'name') ilike lower(${`%${search}%`})
+    )`
   }
 
-  // TODO: pagination
+  let createAtQuery = sql``
+  if (startDate && endDate && timeZone) {
+    createAtQuery = sql`
+      and r.created_at at time zone ${timeZone} >= ${startDate}
+      and r.created_at at time zone ${timeZone} <= ${endDate}
+    `
+  }
+
   const users = await sql`
-    select 
-      id::int,
-      project_id,
-      external_id, 
-      created_at,
-      last_seen,
-      props,
-      (select coalesce(sum(cost), 0) from run where external_user_id = external_user.id and run.created_at >= now() - interval '1 day' * ${daysNum}) as cost
-    from 
-      external_user
+    with user_costs as (
+      select
+        external_user_id,
+        coalesce(sum(cost), 0) as cost
+      from
+        run r
+      where
+        project_id = ${projectId} 
+        ${createAtQuery}
+      group by
+        external_user_id
+    )
+    select
+      eu.id,
+      eu.created_at,
+      eu.external_id,
+      eu.last_seen,
+      eu.props,
+      uc.cost
+    from
+      public.external_user eu
+      left join user_costs uc on eu.id = uc.external_user_id
     where
-      project_id = ${projectId}
-      ${searchQuery}
-    order by 
-      cost desc
-    limit ${Number(limit)}
-    offset ${Number(page) * Number(limit)}`
+      eu.project_id = ${projectId} 
+      ${searchQuery} 
+    order by
+      cost desc nulls last
+    limit ${limit}
+    offset ${page * limit}
+  `
 
   ctx.body = users
 })
 
+// TODO: deprecated?
 users.get("/runs/usage", checkAccess("users", "read"), async (ctx) => {
   const { projectId } = ctx.state
   const days = ctx.query.days as string

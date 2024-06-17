@@ -23,6 +23,4 @@ export function getOpenAIParams() {
 }
 const clientParams = getOpenAIParams()
 
-export default clientParams
-  ? monitorOpenAI(new OpenAI(clientParams))
-  : new OpenAI()
+export default clientParams ? monitorOpenAI(new OpenAI(clientParams)) : null

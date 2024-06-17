@@ -425,30 +425,6 @@ export function useRunsUsageByUser(range = null) {
   }
 }
 
-export function useAppUserList(usageRange) {
-  const {
-    data: users,
-    isLoading,
-    isValidating,
-  } = useProjectSWR(`/external-users?days=${usageRange}`)
-
-  return { users, isLoading, isValidating }
-}
-
-export function useAppUsers(usageRange = 30) {
-  const { users, isLoading } = useAppUserList(usageRange)
-
-  const maxLastSeen = new Date(
-    new Date().getTime() - usageRange * 24 * 60 * 60 * 1000,
-  )
-    .toISOString()
-    .slice(0, 10)
-
-  const appUsers = users?.filter((u) => u.lastSeen > maxLastSeen)
-
-  return { users: appUsers || [], loading: isLoading }
-}
-
 export function useOrgUser(userId: string) {
   const { mutate: mutateOrg } = useOrg()
 

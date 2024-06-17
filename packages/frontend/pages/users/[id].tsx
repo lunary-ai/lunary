@@ -13,7 +13,7 @@ import {
 
 import SmartViewer from "@/components/SmartViewer"
 
-import UsageSummary from "@/components/analytics/UsageSummary"
+import TopModelsCard from "@/components/analytics/TopModels"
 import AppUserAvatar from "@/components/blocks/AppUserAvatar"
 import CopyText from "@/components/blocks/CopyText"
 import DataTable from "@/components/blocks/DataTable"
@@ -38,6 +38,7 @@ import { modals } from "@mantine/modals"
 import { notifications } from "@mantine/notifications"
 import { IconCheck, IconTrash } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
+import { useTopModels } from "@/utils/dataHooks/analytics"
 
 const columns = [
   timeColumn("createdAt"),
@@ -56,7 +57,9 @@ export default function UserDetails({}) {
 
   const { data: user } = useProjectSWR(`/external-users/${id}`)
 
-  const { usage } = useRunsUsage(90, id)
+  const { data: topModels, isLoading: topModelsLoading } = useTopModels({
+    userId: id,
+  })
 
   const { name, email, ...extraProps } = user?.props || ({} as any)
 
@@ -156,9 +159,9 @@ export default function UserDetails({}) {
         </Group>
       </Card>
 
-      {usage && (
+      {topModels && (
         <SimpleGrid cols={3} spacing="md">
-          <UsageSummary usage={usage} />
+          <TopModelsCard topModels={topModels} isLoading={topModelsLoading} />
         </SimpleGrid>
       )}
 
