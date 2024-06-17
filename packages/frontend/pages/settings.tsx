@@ -30,6 +30,7 @@ import { fetcher } from "@/utils/fetcher"
 import { notifications } from "@mantine/notifications"
 import { modals } from "@mantine/modals"
 import CheckPicker from "@/components/checks/Picker"
+import { AreaChart } from "@mantine/charts"
 
 function Keys() {
   const [regenerating, setRegenerating] = useState(false)
@@ -150,9 +151,10 @@ export default function AppAnalytics() {
   ])
 
   // TODO: better route for project usage
-  const { data: projectUsage } = useSWR(
+  const { data: projectUsage, isLoading: projectUsageLoading } = useSWR(
     project?.id && org && `/orgs/${org.id}/usage?projectId=${project?.id}`,
   )
+  console.log(projectUsage)
 
   return (
     <Container className="unblockable">
@@ -171,8 +173,10 @@ export default function AppAnalytics() {
               </Text>
             )
           }
-          range={30}
           data={projectUsage}
+          cleanData={false}
+          agg="sum"
+          loading={projectUsageLoading}
           formatter={(val) => `${val} runs`}
           props={["count"]}
         />
