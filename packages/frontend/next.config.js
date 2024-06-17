@@ -53,6 +53,8 @@ const nextConfig = {
         destination: 'http://localhost:3333/api/:path*'
       })
     }
+    console.log(process.env)
+    console.log(redirects)
 
     return redirects
   },
