@@ -10,6 +10,8 @@ import {
 import { IconInfoCircle } from "@tabler/icons-react"
 import { TemplateVariables } from "shared"
 
+import VariableTextarea from "./VariableTextarea"
+
 export default function PromptVariableEditor({
   value = {},
   onChange,
@@ -56,7 +58,7 @@ export default function PromptVariableEditor({
               >
                 {variable}
               </Badge>
-              <Textarea
+              <VariableTextarea
                 size="xs"
                 w="100%"
                 required={true}
@@ -64,6 +66,7 @@ export default function PromptVariableEditor({
                 rows={1}
                 autosize
                 maxRows={4}
+                name={variable}
                 defaultValue={value[variable]}
                 onChange={(e) =>
                   onChange({
