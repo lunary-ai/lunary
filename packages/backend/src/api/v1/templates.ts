@@ -10,13 +10,35 @@ const templates = new Router({
 })
 
 templates.get("/", async (ctx: Context) => {
+  const getOnlyLiveVersions = ctx.query.onlyLiveVersions === "true"
+
+  const tableToJoin = getOnlyLiveVersions
+    ? sql("latest_template_versions")
+    : sql("template_version")
+
   const templates = await sql`
-    select t.*, coalesce(json_agg(tv.*) filter (where tv.id is not null), '[]') as versions
-    from template t
-    left join template_version tv on tv.template_id = t.id
-    where t.project_id = ${ctx.state.projectId}
-    group by t.id, t.name, t.slug, t.mode, t.created_at, t.group, t.project_id
-    order by t.created_at desc
+    with latest_template_versions as (
+      select distinct on (tv.template_id)
+        tv.*
+      from
+        template_version tv
+      where
+        tv.is_draft = FALSE
+      order by
+        tv.template_id,
+        tv.created_at desc
+    )
+    select
+      t.*,
+      json_agg(tv.*) as versions
+    from
+      template t
+      left join ${tableToJoin} tv on t.id = tv.template_id
+    where
+      project_id = ${ctx.state.projectId} 
+      and tv.id is not null
+    group by
+      t.id; 
   `
 
   // uncamel each template's versions' extras' keys
