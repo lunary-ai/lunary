@@ -195,6 +195,7 @@ type LineChartProps = {
   chartExtra?: JSX.Element
   stat?: number
   colors?: string[]
+  cleanData?: boolean
 }
 
 function getFigure(agg: string, data: any[], prop: string) {
@@ -244,9 +245,10 @@ function LineChartComponent({
   agg,
   chartExtra,
   stat,
+  cleanData = true,
   colors = ["blue", "pink", "indigo", "green", "violet", "yellow"],
 }: LineChartProps) {
-  const cleanedData = prepareDataForRecharts(
+  let cleanedData = prepareDataForRecharts(
     blocked
       ? ((
           startDate: Date,
@@ -276,6 +278,10 @@ function LineChartComponent({
     endDate,
     granularity,
   )
+
+  if (cleanData === false && data.length) {
+    cleanedData = data
+  }
 
   const hasData = blocked ? true : cleanedData?.length
   // (splitBy ? Object.keys(cleanedData[0]).length > 1 : data?.length)
