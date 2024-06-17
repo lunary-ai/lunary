@@ -279,7 +279,7 @@ function LineChartComponent({
     granularity,
   )
 
-  if (cleanData === false && data.length) {
+  if (cleanData === false && data?.length) {
     cleanedData = data
   }
 
