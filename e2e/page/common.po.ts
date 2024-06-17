@@ -126,5 +126,15 @@ export class CommAction{
   async clickThumbDownIcon(): Promise<void> {
     await this.page.locator("//*[contains(@class,'thumb-down')and contains(@fill,'color-gray')]").last().click()
   }
+
+  async logOut(): Promise<void> {
+    await this.page.getByTestId("account-sidebar-item").click()
+    await this.page.getByTestId("logout-button").click()
+  }
+
+  async verifyCurrentUrl(url: string): Promise<void> {
+    await this.page.waitForURL(url);
+    expect(await this.page.url()).toContain(url);
+  }
   
 }

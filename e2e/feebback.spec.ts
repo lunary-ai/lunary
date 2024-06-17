@@ -124,7 +124,7 @@ test.describe('Feedback', () => {
     const logsPage = new LogsPage(page);
     const loginPage = new LoginPage(page);
 
-    await loginPage.openUrl(config.BASE_URL+'');
+    await loginPage.openUrl(config.BASE_URL);
     await loginPage.login(email, UserInfo.password);
 
     await commonPage.clickMenu('Logs');
@@ -149,7 +149,7 @@ test.describe('Feedback', () => {
     const logsPage = new LogsPage(page);
     const loginPage = new LoginPage(page);
 
-    await loginPage.openUrl(config.BASE_URL+'');
+    await loginPage.openUrl(config.BASE_URL);
     await loginPage.login(email, UserInfo.password);
 
     await commonPage.clickMenu('Logs');
@@ -170,7 +170,7 @@ test.describe('Feedback', () => {
     const tracesPage = new TracesPage(page);
     const loginPage = new LoginPage(page);
 
-    await loginPage.openUrl(config.BASE_URL+'');
+    await loginPage.openUrl(config.BASE_URL);
     await loginPage.login(email, UserInfo.password);
 
     await commonPage.clickMenu('Logs');
