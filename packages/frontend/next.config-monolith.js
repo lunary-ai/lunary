@@ -22,7 +22,6 @@ const nextConfig = {
     ],
   },
   async rewrites() {
-    console.log(process.env)
     const redirects =  [
       {
         source: '/api/:path*',
