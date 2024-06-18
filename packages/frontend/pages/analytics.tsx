@@ -365,7 +365,6 @@ export default function Analytics() {
       serializedChecks,
     )
 
-  console.log(tokensData)
   const { data: costData, isLoading: costDataLoading } = useAnalyticsChartData(
     "costs",
     startDate,
