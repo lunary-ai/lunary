@@ -24,25 +24,8 @@ const nextConfig = {
   async rewrites() {
     const redirects =  [
       {
-        source: "/ingest/:path*",
-        destination: "https://app.posthog.com/:path*",
-      },
-      {
-        source: "/api/v1/report",
-        destination: process.env.API_URL + "/api/report",
-      },
-      {
-        source: "/api/report",
-        destination: process.env.API_URL + "/api/report",
-      },
-      {
-        source: "/api/v1/template",
-        destination: process.env.API_URL + "/api/v1/template",
-      },
-      {
         source: '/api/:path*',
         destination: 'http://localhost:3333/api/:path*'
-
       }
     ]
 
