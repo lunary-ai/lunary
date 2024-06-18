@@ -154,7 +154,6 @@ export default function AppAnalytics() {
   const { data: projectUsage, isLoading: projectUsageLoading } = useSWR(
     project?.id && org && `/orgs/${org.id}/usage?projectId=${project?.id}`,
   )
-  console.log(projectUsage)
 
   return (
     <Container className="unblockable">
