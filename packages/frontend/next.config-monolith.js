@@ -22,14 +22,15 @@ const nextConfig = {
     ],
   },
   async rewrites() {
+    console.log(process.env)
     const redirects =  [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:3333/api/:path*'
+        destination: 'http://localhost:3333/:path*'
       },
       {
-        source: '/auth/:path*',
-        destination: 'http://localhost:3333/:path*'
+        source: '/api/auth/:path*',
+        destination: 'http://localhost:3333/auth/:path*'
       }
     ]
 
