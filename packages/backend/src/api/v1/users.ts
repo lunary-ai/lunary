@@ -158,7 +158,7 @@ users.post("/send-verification", async (ctx: Context) => {
     return
   }
   
-  await sendVerifyEmail(email, name)
+  sendVerifyEmail(email, name)
 })
 
 users.get(
