@@ -237,9 +237,9 @@ function TextMessage({ data, onChange = () => {}, editable = false, codeBg }) {
             {...ghostTextAreaStyles}
           />
         </ProtectedText>
-        ) : (
-          <div style={{ width: "100%" }} dangerouslySetInnerHTML={{__html: data.content || data.text}}></div>
-        )}
+      ) : (
+        data.content || data.text
+      )}
     </Code>
   )
 }
