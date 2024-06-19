@@ -3,7 +3,7 @@ import { sendEmail } from "./sendEmail"
 
 function extractFirstName(name: string) {
   if (!name) return "there"
-  return name.split(" ")[0]
+  return name.split(/[\s\u2800]+/)[0]
 }
 
 export async function sendVerifyEmail(email: string, name: string = "") {
