@@ -34,7 +34,6 @@
     "react-dom": "18.2.0",
     "react-json-view-lite": "^1.2.1",
     "recharts": "^2.12.7",
-    "remove": "^0.1.5",
     "shared": "*",
     "swr": "^2.2.4",
     "zod": "^3.22.4"
