@@ -8,14 +8,25 @@
  * - Markdown
  */
 
-import { Card, Code, Flex, Group, SimpleGrid, Stack, Text, SegmentedControl, SegmentedControlItem } from "@mantine/core"
-import { useEffect, useMemo, useState } from "react"
-import { marked } from "marked";
+import {
+  Card,
+  Code,
+  Flex,
+  Group,
+  SimpleGrid,
+  Stack,
+  Text,
+  SegmentedControl,
+  SegmentedControlItem,
+} from "@mantine/core"
+import { useMemo, useState } from "react"
 
 import ProtectedText from "../blocks/ProtectedText"
 import { ChatMessage } from "./Message"
 import MessageViewer from "./MessageViewer"
 import { RenderJson } from "./RenderJson"
+
+import Markdown from "react-markdown"
 
 const checkIsMessage = (obj) => {
   return (
@@ -36,7 +47,7 @@ const checkIsRetrieverObjects = (obj) => {
         (typeof obj.source === "string" || typeof obj.summary === "string")
 }
 
-function RetrieverObject({ data, compact }) {
+function RetrieverObject({ data, compact, markdown }) {
   return (
     <Card withBorder p="sm">
       <Flex direction="column" gap="sm">
@@ -45,9 +56,17 @@ function RetrieverObject({ data, compact }) {
             {data.title}
           </Text>
         )}
-        {data.summary && <Text size="xs" dangerouslySetInnerHTML={{__html: data.summary}}></Text>}
+        {data.summary && (
+          <Text size="xs">
+            {markdown ? <Markdown>{data.summary}</Markdown> : data.summary}
+          </Text>
+        )}
 
-        {data.source && <Text size="sm" dangerouslySetInnerHTML={{__html: data.source}}></Text>}
+        {data.source && (
+          <Text size="sm">
+            {markdown ? <Markdown>{data.source}</Markdown> : data.source}
+          </Text>
+        )}
       </Flex>
     </Card>
   )
@@ -57,11 +76,11 @@ export default function SmartViewer({
   data,
   error,
   compact = false,
-  controls
+  controls,
 }: {
   data: any
   error?: any
-  compact?: boolean,
+  compact?: boolean
   controls?: (SegmentedControlItem & {
     parse: (data: string) => string | Promise<string>
   })[]
@@ -70,9 +89,9 @@ export default function SmartViewer({
     controls = []
   }
 
-  const cache: {[index: string]: string | Array<object> | object} = {};
+  const cache: { [index: string]: string | Array<object> | object } = {}
 
-  const [control, setControl] = useState("text");
+  const [control, setControl] = useState("text")
   const parsed = useMemo(() => {
     if (!data) return null
     if (typeof data === "string" && data.startsWith("{")) {
@@ -87,7 +106,7 @@ export default function SmartViewer({
   }, [data])
 
   // typeof null equals "object"
-  const isObject = (parsed !== null && typeof parsed === "object")
+  const isObject = parsed !== null && typeof parsed === "object"
 
   const isMessages = useMemo(() => {
     if (!parsed) return false
@@ -101,67 +120,13 @@ export default function SmartViewer({
     return checkIsRetrieverObjects(parsed)
   }, [parsed])
 
-  // Parsed is the original parsed data, displayData changes depending on the value of control i.e raw text or compiled markdown html
-  const [displayData, setDisplayData] = useState(parsed);
- 
-  useEffect(() => {
-    if (!parsed) return parsed
-
-    updateControl(control, true) 
-  }, [parsed]);
-
-  // TODO: Optimize
-  //  This implementation feels sluggish on the UI since it runs for every chat stream
-  const updateControl = async (newValue: string, ignoreCache?: boolean) => {
-    if (!!ignoreCache || !cache[newValue]) {
-      const target = controls.find(item => (item.value === newValue));
-      if (target) {
-        if (!parsed) return;
-
-        if (isObject) {
-          if (isRetrieverObjects) {
-            const apply = async (target) => {
-              const output = { ...target };
-              if (typeof target.source === "string") {
-                output.source = await target.parse(target.source)
-              } else if (typeof target.summary === "string") {
-                output.summary = await target.parse(target.summary)
-              }
-            };
-  
-            if (Array.isArray(parsed)) {
-              cache[newValue] = parsed.map(apply);
-            } else {
-              cache[newValue] = apply(parsed);
-            }
-          } else if (isMessages) {
-            cache[newValue] = {
-              ...parsed,
-              content: parsed.content ? (
-                Array.isArray(parsed.content)
-                  ? await Promise.all(parsed.content.map(target.parse))
-                  : await target.parse(parsed.content)
-              ) : parsed.content
-            };
-          } else {
-            cache[newValue] = parsed;
-          }
-        } else {
-          cache[newValue] = await target.parse(parsed);
-        }
-      }
-    }
-    setControl(newValue);
-    setDisplayData(cache[newValue] || parsed);
-  }
-
   return (
     <pre className={compact ? "compact" : ""} id="HERE">
       {controls.length && (
         <SegmentedControl
           value={control}
-          onChange={updateControl}
           data={controls}
+          onChange={setControl}
         />
       )}
 
@@ -186,11 +151,20 @@ export default function SmartViewer({
         <ProtectedText>
           {isObject ? (
             isMessages ? (
-              <MessageViewer data={displayData} compact={compact} />
+              <MessageViewer
+                data={parsed}
+                compact={compact}
+                markdown={control === "md"}
+              />
             ) : isRetrieverObjects ? (
               <Stack>
-                {displayData.map((obj, i) => (
-                  <RetrieverObject key={i} data={obj} compact={compact} />
+                {parsed.map((obj, i) => (
+                  <RetrieverObject
+                    key={i}
+                    data={obj}
+                    compact={compact}
+                    markdown={control === "md"}
+                  />
                 ))}
               </Stack>
             ) : (
@@ -198,15 +172,15 @@ export default function SmartViewer({
                 color="var(--mantine-color-blue-light)"
                 style={{ overflow: "hidden" }}
               >
-                <RenderJson data={displayData} compact={compact} />
+                <RenderJson data={parsed} compact={compact} />
               </Code>
             )
           ) : (
             <Code
               color="var(--mantine-color-blue-light)"
               style={{ overflow: "hidden" }}
-              dangerouslySetInnerHTML={{__html: displayData}}
             >
+              {control === "md" ? <Markdown>{parsed}</Markdown> : parsed}
             </Code>
           )}
         </ProtectedText>

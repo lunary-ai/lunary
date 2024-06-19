@@ -9,16 +9,16 @@ function getLastMessage(messages) {
   return messages
 }
 
-export default function MessageViewer({ data, compact }) {
+export default function MessageViewer({ data, compact, markdown }) {
   const obj = Array.isArray(data) ? data : [data]
 
   return compact ? (
-    <ChatMessage data={getLastMessage(obj)} compact />
+    <ChatMessage data={getLastMessage(obj)} compact markdown={markdown} />
   ) : (
     <Box mah={700} style={{ overflowY: "auto" }}>
       <Stack>
         {obj.map((message, i) => (
-          <ChatMessage key={i} data={message} />
+          <ChatMessage key={i} data={message} markdown={markdown} />
         ))}
       </Stack>
     </Box>

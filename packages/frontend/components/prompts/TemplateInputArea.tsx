@@ -2,7 +2,6 @@ import { Text, ScrollArea, Group, Box } from "@mantine/core"
 import SmartViewer from "@/components/SmartViewer"
 import TokensBadge from "../blocks/TokensBadge"
 import { PromptEditor } from "./PromptEditor"
-import { parse } from "marked"
 
 function TemplateInputArea({
   template,
@@ -42,10 +41,14 @@ function TemplateInputArea({
             </Text>
             {outputTokens && <TokensBadge tokens={outputTokens} />}
           </Group>
-          <SmartViewer data={output} error={error} controls={[
-            { label: 'Text', value: 'text', parse: (data) => data },
-            { label: 'Preview', value: 'md', parse: (data) => parse(data) }
-          ]}/>
+          <SmartViewer
+            data={output}
+            error={error}
+            controls={[
+              { label: "Text", value: "text" },
+              { label: "Preview", value: "md" },
+            ]}
+          />
         </>
       )}
     </Box>
