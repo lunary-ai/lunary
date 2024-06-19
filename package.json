@@ -17,6 +17,7 @@
     "dev:radar": "npm -w packages/backend run dev:radar",
     "dev:withradar": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\" \"npm run start:ml\" \"npm run dev:radar\"",
     "test": "npx playwright test",
+    "test:debug": "npx playwright test --debug",
     "test:ui": "npx playwright test --ui",
     "postinstall": "npx patch-package"
   },
