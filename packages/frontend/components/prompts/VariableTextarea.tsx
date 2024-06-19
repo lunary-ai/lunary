@@ -1,10 +1,4 @@
-import {
-  Textarea,
-  ActionIcon,
-  TextareaProps,
-  Modal,
-  Button,
-} from "@mantine/core"
+import { Textarea, ActionIcon, TextareaProps, Modal, Box } from "@mantine/core"
 import { IconArrowsMaximize } from "@tabler/icons-react"
 import { useDisclosure } from "@mantine/hooks"
 import { ChangeEvent, useState } from "react"
@@ -22,15 +16,11 @@ export default function VariableTextarea({
 }: VariableTextareaProps) {
   // Local copy of user updated value for popup
   const [value, setValue] = useState<string>(defaultValue)
-  const [popupButton, setPopupButton] = useState(!!(value?.length >= 70))
-
   const [opened, { open, close }] = useDisclosure(false)
 
   const updateValue = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setValue(e.currentTarget.value)
     onChange && onChange(e)
-
-    setPopupButton(!!(e.currentTarget.value.length >= 70))
   }
 
   return (
@@ -57,15 +47,23 @@ export default function VariableTextarea({
         />
       </Modal>
 
-      <div className="variable-textarea">
+      <Box style={{ position: "relative" }}>
         <Textarea {...props} onChange={updateValue} value={value} />
 
-        {popupButton && (
-          <ActionIcon size="sm" onClick={open} aria-label="expand textarea">
-            <IconArrowsMaximize />
-          </ActionIcon>
-        )}
-      </div>
+        <ActionIcon
+          size="sm"
+          onClick={open}
+          aria-label="expand textarea"
+          style={{
+            position: "absolute",
+            right: "5%",
+            bottom: "5%",
+            marginBottom: "0.3rem",
+          }}
+        >
+          <IconArrowsMaximize />
+        </ActionIcon>
+      </Box>
     </>
   )
 }
