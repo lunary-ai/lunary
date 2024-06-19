@@ -151,14 +151,10 @@ users.post("/send-verification", async (ctx: Context) => {
       from account
       where email = ${email} and name = ${name}
     `
-    
-    if (!result[0]) {
-      return;
-    }
     verified = result[0]?.verified
   }
 
-  if (verified) {
+  if (verified != false) {
     return
   }
   
