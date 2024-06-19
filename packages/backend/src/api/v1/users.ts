@@ -141,10 +141,28 @@ users.post("/send-verification", async (ctx: Context) => {
     name: z.string().optional(),
   })
   const { email, name } = bodySchema.parse(ctx.request.body)
-
-  await sendVerifyEmail(email, name)
-
+  
   ctx.body = { ok: true }
+  
+  let verified
+  {
+    const result = await sql`
+      select verified
+      from account
+      where email = ${email} and name = ${name}
+    `
+    
+    if (!result[0]) {
+      return;
+    }
+    verified = result[0]?.verified
+  }
+
+  if (verified) {
+    return
+  }
+  
+  await sendVerifyEmail(email, name)
 })
 
 users.get(
