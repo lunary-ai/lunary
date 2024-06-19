@@ -154,7 +154,7 @@ users.post("/send-verification", async (ctx: Context) => {
     verified = result[0]?.verified
   }
 
-  if (verified != false) {
+  if (verified !== false) {
     return
   }
   
