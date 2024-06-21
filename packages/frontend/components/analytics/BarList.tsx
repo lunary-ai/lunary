@@ -5,8 +5,8 @@ type BarListProps = {
   data: any[]
   filterZero?: boolean
   columns: {
+    key: string
     name?: string
-    key?: string
     main?: boolean // Use this column for the bar chart calculations?
     bar?: boolean // Bar chart column ?
     render?: (value, row?) => React.ReactNode
@@ -88,7 +88,12 @@ function BarList({ data, columns, filterZero = true }: BarListProps) {
                           size="12px"
                           style={{
                             textAlign: "center",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            padding: ".3rem",
                           }}
+                          title={item.value}
                         >
                           {item.value}
                         </Text>
