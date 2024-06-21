@@ -319,8 +319,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   {
     id: "search",
     sql: ({ query }) =>
-      sql`(to_tsvector('simple', substring(r.input_text, 1, 948575)) @@ plainto_tsquery('simple', ${query})
-        or to_tsvector('simple', substring(r.output_text, 1, 948575)) @@ plainto_tsquery('simple', ${query}))`,
+      sql`(r.input_text ilike ${`%${query}%`} or r.output_text ilike ${`%${query}%`})`,
   },
   {
     id: "string",
