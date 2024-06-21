@@ -37,7 +37,7 @@ function BarList({ data, columns, filterZero = true }: BarListProps) {
         <Table.Thead style={{ textAlign: "left" }}>
           <Table.Tr>
             {columns.map(({ name }, i) => (
-              <th style={{ width: i === 0 ? "50%" : "25%" }} key={i}>
+              <th style={{ width: i === 0 ? "60%" : "25%" }} key={i}>
                 {name || ""}
               </th>
             ))}
@@ -77,6 +77,7 @@ function BarList({ data, columns, filterZero = true }: BarListProps) {
                       </Progress.Root>
                       <Flex
                         w="90%"
+                        px="sm"
                         h="25px"
                         pos="absolute"
                         align="center"
