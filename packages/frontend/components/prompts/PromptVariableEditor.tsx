@@ -1,23 +1,17 @@
-import {
-  Badge,
-  Box,
-  Group,
-  Stack,
-  Text,
-  Textarea,
-  Tooltip,
-} from "@mantine/core"
+import { Badge, Box, Group, Stack, Text, Tooltip } from "@mantine/core"
 import { IconInfoCircle } from "@tabler/icons-react"
 import { TemplateVariables } from "shared"
+import VariableTextarea from "./VariableTextarea"
 
 export default function PromptVariableEditor({
-  value = {},
+  value: templateVariables = {},
   onChange,
 }: {
   value: TemplateVariables
   onChange: (value: TemplateVariables) => void
 }) {
-  const hasVariables = Object.keys(value).length > 0
+  const hasVariables = Object.keys(templateVariables).length > 0
+
   return (
     <Box>
       <Group mb="md" align="center" justify="space-between">
@@ -35,40 +29,39 @@ export default function PromptVariableEditor({
         </Text>
       )}
       <Stack mt="sm">
-        {Object.keys(value)
-          .sort()
-          .map((variable) => (
+        {Object.entries(templateVariables)
+          .sort(([nameA], [nameB]) => nameA.localeCompare(nameB))
+          .map(([name, value]) => (
             <Group
-              key={variable}
+              key={name}
               align="center"
               wrap="nowrap"
               justify="space-between"
               gap="lg"
             >
               <Badge
-                key={variable}
-                miw={30}
-                maw="34%"
-                miw={70}
-                px={0}
+                key={name}
+                miw={50}
+                maw={90}
+                px="sm"
                 variant="outline"
                 tt="none"
               >
-                {variable}
+                {name}
               </Badge>
-              <Textarea
+              <VariableTextarea
                 size="xs"
                 w="100%"
                 required={true}
                 radius="sm"
                 rows={1}
-                autosize
-                maxRows={4}
-                defaultValue={value[variable]}
+                maxRows={1}
+                name={name}
+                value={value}
                 onChange={(e) =>
                   onChange({
-                    ...value,
-                    [variable]: e.currentTarget.value,
+                    ...templateVariables,
+                    [name]: e.currentTarget.value,
                   })
                 }
               />
