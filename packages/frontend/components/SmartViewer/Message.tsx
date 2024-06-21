@@ -227,8 +227,8 @@ function ToolCallsMessage({
 function TextMessage({ data, onChange = () => {}, editable = false, codeBg }) {
   return (
     <Code block bg={codeBg}>
-      {editable ? (
-        <ProtectedText>
+      <ProtectedText>
+        {editable ? (
           <Textarea
             value={data.content || data.text}
             placeholder="Content"
@@ -236,10 +236,10 @@ function TextMessage({ data, onChange = () => {}, editable = false, codeBg }) {
             onChange={(e) => onChange({ ...data, content: e.target.value })}
             {...ghostTextAreaStyles}
           />
-        </ProtectedText>
-      ) : (
-        data.content || data.text
-      )}
+        ) : (
+          data.content || data.text
+        )}
+      </ProtectedText>
     </Code>
   )
 }
@@ -451,6 +451,8 @@ export function ChatMessage({
 
   // Add/remove the 'id' and 'name' props required on tool calls
   useEffect(() => {
+    if (!data) return
+
     // Add/remove the 'name' props required on tool calls
     if (data.role === "tool" && editable && typeof data.name !== "string") {
       onChange({ ...data, name: "some-tool-name" })
