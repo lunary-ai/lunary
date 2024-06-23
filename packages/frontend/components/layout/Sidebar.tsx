@@ -5,6 +5,7 @@ import {
   IconActivityHeartbeat,
   IconAnalyze,
   IconBolt,
+  IconBrandOpenai,
   IconCheckbox,
   IconChevronRight,
   IconCreditCard,
@@ -12,14 +13,16 @@ import {
   IconFlask2Filled,
   IconFlaskFilled,
   IconHelpOctagon,
+  IconLayersLinked,
   IconListSearch,
+  IconListTree,
   IconLogout,
   IconMessage2,
+  IconMessages,
   IconPlayerPlay,
   IconSettings,
   IconShieldBolt,
   IconSparkles,
-  IconStars,
   IconTimeline,
   IconUsers,
 } from "@tabler/icons-react"
@@ -38,8 +41,9 @@ import { IconPlus } from "@tabler/icons-react"
 import { useAuth } from "@/utils/auth"
 import { useProject, useProjects } from "@/utils/dataHooks"
 import { useEffect, useState } from "react"
-import { ResourceName, hasAccess, hasReadAccess } from "shared"
+import { ResourceName, hasAccess, hasReadAccess, serializeLogic } from "shared"
 import config from "@/utils/config"
+import { useViews } from "@/utils/dataHooks/views"
 
 function NavbarLink({
   icon: Icon,
@@ -53,7 +57,10 @@ function NavbarLink({
 }) {
   const router = useRouter()
 
-  const active = router.pathname.startsWith(link)
+  // For logs pages, we want to compare the full url because it contains the view ID and filters info
+  const active = router.pathname.startsWith("/logs")
+    ? router.asPath.startsWith(link)
+    : router.pathname.startsWith(link)
 
   return (
     <NavLink
@@ -97,6 +104,7 @@ export default function Sidebar() {
   const { user } = useUser()
   const { org } = useOrg()
   const { projects, isLoading: loading, insert } = useProjects()
+  const { views } = useViews()
 
   const [createProjectLoading, setCreateProjectLoading] = useState(false)
 
@@ -108,6 +116,16 @@ export default function Sidebar() {
     process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY && !config.IS_SELF_HOSTED
 
   const canUpgrade = billingEnabled && ["free", "pro"].includes(org?.plan)
+
+  const projectViews = (views || []).map((v) => {
+    const serialized = serializeLogic(v.data)
+    return {
+      label: v.name,
+      icon: IconLayersLinked,
+      link: `/logs?${serialized}&view=${v.id}`,
+      resource: "logs",
+    }
+  })
 
   const APP_MENU: MenuItem[] = [
     {
@@ -121,6 +139,27 @@ export default function Sidebar() {
       icon: IconListSearch,
       link: "/logs",
       resource: "logs",
+      subMenu: [
+        {
+          label: "LLM",
+          icon: IconBrandOpenai,
+          link: "/logs?type=llm",
+          resource: "logs",
+        },
+        {
+          label: "Threads",
+          icon: IconMessages,
+          link: "/logs?type=thread",
+          resource: "logs",
+        },
+        {
+          label: "Traces",
+          icon: IconListTree,
+          link: "/logs?type=trace",
+          resource: "logs",
+        },
+        ...projectViews,
+      ],
     },
     { label: "Users", icon: IconUsers, link: "/users", resource: "users" },
     {

@@ -35,6 +35,8 @@ import {
   IconListTree,
   IconMessages,
   IconFilter,
+  IconSquaresDiagonal,
+  IconLayersIntersect,
 } from "@tabler/icons-react"
 
 import { NextSeo } from "next-seo"
@@ -56,12 +58,14 @@ import {
   useProjectInfiniteSWR,
   useRun,
 } from "@/utils/dataHooks"
-import { useEvaluators } from "@/utils/dataHooks/evaluators"
+
 import { useDebouncedState, useDidUpdate } from "@mantine/hooks"
 import { ProjectContext } from "@/utils/context"
 import { CheckLogic, deserializeLogic, serializeLogic } from "shared"
 import { useRouter } from "next/router"
 import { modals } from "@mantine/modals"
+import { useView, useViews } from "@/utils/dataHooks/views"
+import RenamableField from "@/components/blocks/RenamableField"
 
 const columns = {
   llm: [
@@ -109,7 +113,9 @@ const columns = {
 
 const CHECKS_BY_TYPE = {
   llm: [
+    "type",
     "models",
+
     // "enrichment",
     "tags",
     "users",
@@ -123,6 +129,7 @@ const CHECKS_BY_TYPE = {
     "radar",
   ],
   trace: [
+    "type",
     "tags",
     "users",
     "status",
@@ -132,6 +139,7 @@ const CHECKS_BY_TYPE = {
     "radar",
   ],
   thread: [
+    "type",
     "tags",
     "users",
     // "feedback",
@@ -166,9 +174,19 @@ export default function Logs() {
     "AND",
     { id: "type", params: { type: "llm" } },
   ])
-  const [showCheckBar, setShowCheckBar] = useState(false)
+
+  const {
+    insert: insertView,
+    isInserting: isInsertingView,
+    mutate: mutateViews,
+  } = useViews()
+
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
   const [serializedChecks, setSerializedChecks] = useState<string>("")
+
+  const [viewId, setViewId] = useState<string | undefined>()
+  const { view, update: updateView } = useView(viewId)
+
   const [type, setType] = useState<"llm" | "trace" | "thread">("llm")
 
   const [query, setQuery] = useDebouncedState<string | null>(null, 300)
@@ -216,9 +234,15 @@ export default function Logs() {
 
     if (typeof serialized === "string") {
       setSerializedChecks(serialized)
+
+      if (viewId) {
+        serialized += `&view=${viewId}`
+      }
+
       if (selectedRunId) {
         serialized += `&selected=${selectedRunId}`
       }
+
       router.replace(`/logs?${serialized}`)
     }
   }, [filters])
@@ -246,10 +270,13 @@ export default function Logs() {
           setChecks(filtersData)
         }
       }
+
+      const viewIdParam = urlParams.get("view")
+      setViewId(viewIdParam || undefined)
     } catch (e) {
       console.error(e)
     }
-  }, [])
+  }, [router.asPath])
 
   useEffect(() => {
     if (selectedRunId) {
@@ -290,11 +317,6 @@ export default function Logs() {
 
   const exportUrl = `/runs?${serializedChecks}&projectId=${projectId}`
 
-  const showBar =
-    showCheckBar ||
-    filters.filter((f) => f !== "AND" && !["search", "type"].includes(f.id))
-      .length > 0
-
   function exportButton(url: string) {
     return {
       component: "a",
@@ -330,6 +352,27 @@ export default function Logs() {
     }
   }
 
+  async function saveView() {
+    if (!viewId) {
+      const newView = await insertView({
+        name: "New View",
+        data: filters,
+      })
+
+      setViewId(newView.id)
+    } else {
+      await updateView({
+        data: filters,
+      })
+    }
+  }
+
+  // Show button if view has changes, or it's not a view
+  const showSaveView = view
+    ? filters.length > 2 &&
+      JSON.stringify(view.data) !== JSON.stringify(filters)
+    : filters.length > 2
+
   return (
     <Empty
       enable={!loading && !projectLoading && project && !project.activated}
@@ -353,63 +396,6 @@ export default function Logs() {
               />
 
               <Group gap="xs">
-                {!showBar && (
-                  <Button
-                    variant="subtle"
-                    onClick={() => setShowCheckBar(true)}
-                    leftSection={<IconFilter size={12} />}
-                    size="xs"
-                  >
-                    Add filters
-                  </Button>
-                )}
-                <SegmentedControl
-                  value={type}
-                  size="xs"
-                  w="fit-content"
-                  onChange={setType}
-                  data={[
-                    {
-                      label: (
-                        <Group gap="xs" wrap="nowrap" mx="xs">
-                          <IconBrandOpenai
-                            size="16px"
-                            color="var(--mantine-color-blue-5)"
-                          />
-                          <Text size="xs">LLM</Text>
-                        </Group>
-                      ),
-                      value: "llm",
-                    },
-
-                    {
-                      label: (
-                        <Group gap="xs" wrap="nowrap" mx="xs">
-                          <IconListTree
-                            size="16px"
-                            color="var(--mantine-color-blue-5)"
-                          />
-                          <Text size="xs">Traces</Text>
-                        </Group>
-                      ),
-                      value: "trace",
-                    },
-
-                    {
-                      label: (
-                        <Group gap="xs" wrap="nowrap" mx="xs">
-                          <IconMessages
-                            size="16px"
-                            color="var(--mantine-color-blue-5)"
-                          />
-                          <Text size="xs">Threads</Text>
-                        </Group>
-                      ),
-                      value: "thread",
-                    },
-                  ]}
-                />
-
                 <Menu position="bottom-end">
                   <Menu.Target>
                     <ActionIcon variant="light">
@@ -449,15 +435,36 @@ export default function Logs() {
               </Group>
             </Flex>
           </Card>
-          {showBar && (
+
+          <Group>
+            {view && (
+              <RenamableField
+                defaultValue={view.name}
+                onRename={(newName) => {
+                  updateView({
+                    name: newName,
+                  })
+                }}
+              />
+            )}
             <CheckPicker
               minimal
-              defaultOpened={showCheckBar}
               value={filters}
               onChange={setChecks}
               restrictTo={(f) => CHECKS_BY_TYPE[type].includes(f.id)}
             />
-          )}
+            {!!showSaveView && (
+              <Button
+                leftSection={<IconLayersIntersect size={16} />}
+                size="xs"
+                onClick={() => saveView()}
+                variant="default"
+                loading={isInsertingView}
+              >
+                Save View
+              </Button>
+            )}
+          </Group>
         </Stack>
 
         <Drawer

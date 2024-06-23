@@ -9,7 +9,7 @@ import { useAuth } from "../auth"
 import { fetcher } from "../fetcher"
 import { useFixedColorScheme } from "../hooks"
 
-type KeyType = string | ((...args: any[]) => string)
+type KeyType = string | undefined | ((...args: any[]) => string)
 
 function generateKey(
   baseKey: KeyType | undefined,
