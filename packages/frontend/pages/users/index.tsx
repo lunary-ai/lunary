@@ -9,7 +9,7 @@ import SearchBar from "@/components/blocks/SearchBar"
 import Empty from "@/components/layout/Empty"
 import { useExternalUsers } from "@/utils/dataHooks/external-users"
 import { formatAppUser } from "@/utils/format"
-import { useDebouncedValue } from "@mantine/hooks"
+import { useDebouncedValue, useLocalStorage } from "@mantine/hooks"
 import { IconUsers } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import Router from "next/router"
@@ -49,6 +49,10 @@ const columns = [
 export default function Users() {
   const [search, setSearch] = useState("")
   const [debouncedSearch] = useDebouncedValue(search, 200)
+  const [columnVisibility, setColumnVisibility] = useLocalStorage({
+    key: "users-columns",
+    defaultValue: {},
+  })
 
   const { users, loading, validating, loadMore } = useExternalUsers({
     search: debouncedSearch,
@@ -67,7 +71,9 @@ export default function Users() {
         <SearchBar query={search} setQuery={setSearch} />
         <DataTable
           type="users"
-          columns={columns}
+          availableColumns={columns}
+          visibleColumns={columnVisibility}
+          setVisibleColumns={setColumnVisibility}
           data={users}
           onRowClicked={(row) => {
             analytics.trackOnce("OpenUser")
