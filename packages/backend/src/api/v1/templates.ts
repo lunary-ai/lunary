@@ -10,7 +10,7 @@ const templates = new Router({
 })
 
 templates.get("/", async (ctx: Context) => {
-  const getOnlyLiveVersions = ctx.query.onlyLiveVersions === "true"
+  const getOnlyLiveVersions = ctx.query.latest === "true"
 
   const tableToJoin = getOnlyLiveVersions
     ? sql("latest_template_versions")
