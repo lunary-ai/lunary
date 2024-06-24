@@ -1,11 +1,2 @@
-create table view (
-    id uuid default uuid_generate_v4() primary key,
-    name text not null,
-    data jsonb not null,
-    created_at timestamp with time zone default now(),
-    updated_at timestamp with time zone default now(),
-    owner_id uuid not null,
-    project_id uuid not null,
-    constraint fk_checklist_owner_id foreign key (owner_id) references account(id) on delete set null,
-    constraint fk_checklist_project_id foreign key (project_id) references project(id) on delete cascade
-);
+create index on run using gin (input_text gin_trgm_ops);
+create index on run using gin (output_text gin_trgm_ops);
