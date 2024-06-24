@@ -1,6 +1,14 @@
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react"
 
-import { ActionIcon, Card, Checkbox, Group, Menu, Text } from "@mantine/core"
+import {
+  ActionIcon,
+  Card,
+  Checkbox,
+  Group,
+  Menu,
+  Text,
+  useComputedColorScheme,
+} from "@mantine/core"
 import {
   IconChevronDown,
   IconChevronUp,
@@ -17,7 +25,6 @@ import {
 
 import { useLocalStorage } from "@mantine/hooks"
 import { useVirtual } from "@tanstack/react-virtual"
-import { useFixedColorScheme } from "@/utils/hooks"
 
 // outside for reference
 const emptyArray = []
@@ -69,7 +76,7 @@ export default function DataTable({
   //we need a reference to the scrolling element for logic down below
   const tableContainerRef = useRef<HTMLDivElement>(null)
 
-  const scheme = useFixedColorScheme()
+  const scheme = useComputedColorScheme()
 
   const table = useReactTable({
     data: data ?? emptyArray, // So it doesn't break when data is undefined because of reference

@@ -504,7 +504,7 @@ export default function Logs() {
           <Group justify="space-between" align="center">
             <Group>
               {view && (
-                <Group>
+                <Group gap="xs">
                   <RenamableField
                     defaultValue={view.name}
                     onRename={(newName) => {
@@ -515,7 +515,7 @@ export default function Logs() {
                   />
                   <Menu position="bottom-end">
                     <Menu.Target>
-                      <ActionIcon variant="light">
+                      <ActionIcon variant="subtle">
                         <IconDotsVertical size={12} />
                       </ActionIcon>
                     </Menu.Target>

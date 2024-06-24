@@ -1,4 +1,15 @@
-import { Box, Flex, Menu, NavLink, Stack, Text, ThemeIcon } from "@mantine/core"
+import {
+  Box,
+  Flex,
+  Group,
+  Menu,
+  NavLink,
+  SegmentedControl,
+  Stack,
+  Text,
+  ThemeIcon,
+  useMantineColorScheme,
+} from "@mantine/core"
 
 import {
   IconActivity,
@@ -19,10 +30,14 @@ import {
   IconLogout,
   IconMessage2,
   IconMessages,
+  IconMoon,
+  IconMoonStars,
+  IconPaint,
   IconPlayerPlay,
   IconSettings,
   IconShieldBolt,
   IconSparkles,
+  IconSun,
   IconTimeline,
   IconUsers,
 } from "@tabler/icons-react"
@@ -44,6 +59,7 @@ import { useEffect, useState } from "react"
 import { ResourceName, hasAccess, hasReadAccess, serializeLogic } from "shared"
 import config from "@/utils/config"
 import { useViews } from "@/utils/dataHooks/views"
+import { useLocalStorage } from "@mantine/hooks"
 
 function NavbarLink({
   icon: Icon,
@@ -109,6 +125,9 @@ export default function Sidebar() {
   const { org } = useOrg()
   const { projects, isLoading: loading, insert } = useProjects()
   const { views } = useViews()
+
+  const { colorScheme, setColorScheme, clearColorScheme } =
+    useMantineColorScheme({})
 
   const [createProjectLoading, setCreateProjectLoading] = useState(false)
 
@@ -419,7 +438,7 @@ export default function Sidebar() {
               leftSection={<IconHelpOctagon size={14} />}
             />
 
-            <Menu width={200}>
+            <Menu closeOnItemClick={false}>
               <Menu.Target>
                 <NavLink
                   color="red"
@@ -456,6 +475,35 @@ export default function Sidebar() {
                 />
               </Menu.Target>
               <Menu.Dropdown>
+                <Menu.Item leftSection={<IconPaint size={14} />}>
+                  <SegmentedControl
+                    value={colorScheme}
+                    size="xs"
+                    onChange={setColorScheme}
+                    data={[
+                      { value: "auto", label: "Auto" },
+                      {
+                        value: "light",
+                        label: (
+                          <IconSun
+                            style={{ position: "relative", top: 2 }}
+                            size={15}
+                          />
+                        ),
+                      },
+                      {
+                        value: "dark",
+                        label: (
+                          <IconMoon
+                            style={{ position: "relative", top: 2 }}
+                            size={15}
+                          />
+                        ),
+                      },
+                    ]}
+                  />
+                </Menu.Item>
+                <Menu.Divider />
                 <Menu.Item
                   c="red"
                   data-testid="logout-button"

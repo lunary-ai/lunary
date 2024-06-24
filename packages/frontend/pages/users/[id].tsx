@@ -17,11 +17,7 @@ import TopModelsCard from "@/components/analytics/TopModels"
 import AppUserAvatar from "@/components/blocks/AppUserAvatar"
 import CopyText from "@/components/blocks/CopyText"
 import DataTable from "@/components/blocks/DataTable"
-import {
-  useProjectInfiniteSWR,
-  useProjectSWR,
-  useRunsUsage,
-} from "@/utils/dataHooks"
+import { useProjectInfiniteSWR, useProjectSWR } from "@/utils/dataHooks"
 import {
   costColumn,
   durationColumn,
@@ -171,7 +167,7 @@ export default function UserDetails({}) {
         <DataTable
           type="user-details"
           data={logs}
-          columns={columns}
+          availableColumns={columns}
           loading={loading || validating}
           loadMore={loadMore}
           onRowClicked={(row) => {
