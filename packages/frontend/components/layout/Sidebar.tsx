@@ -59,7 +59,9 @@ function NavbarLink({
 
   // For logs pages, we want to compare the full url because it contains the view ID and filters info
   const active = router.pathname.startsWith("/logs")
-    ? router.asPath.startsWith(link)
+    ? router.asPath.includes(`&view`)
+      ? router.asPath.includes(`&view=${link.split("view=")[1]}`)
+      : router.asPath.startsWith(link)
     : router.pathname.startsWith(link)
 
   return (

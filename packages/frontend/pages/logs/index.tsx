@@ -37,10 +37,12 @@ import {
   IconFilter,
   IconSquaresDiagonal,
   IconLayersIntersect,
+  IconTrash,
+  IconCopy,
 } from "@tabler/icons-react"
 
 import { NextSeo } from "next-seo"
-import { useContext, useEffect, useState } from "react"
+import { use, useContext, useEffect, useState } from "react"
 
 import { ChatReplay } from "@/components/blocks/RunChat"
 import RunInputOutput from "@/components/blocks/RunInputOutput"
@@ -66,6 +68,8 @@ import { useRouter } from "next/router"
 import { modals } from "@mantine/modals"
 import { useView, useViews } from "@/utils/dataHooks/views"
 import RenamableField from "@/components/blocks/RenamableField"
+import { VisibilityState } from "@tanstack/react-table"
+import { notifications } from "@mantine/notifications"
 
 const columns = {
   llm: [
@@ -175,17 +179,16 @@ export default function Logs() {
     { id: "type", params: { type: "llm" } },
   ])
 
-  const {
-    insert: insertView,
-    isInserting: isInsertingView,
-    mutate: mutateViews,
-  } = useViews()
+  const { insert: insertView, isInserting: isInsertingView } = useViews()
 
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
   const [serializedChecks, setSerializedChecks] = useState<string>("")
 
+  const [visibleColumns, setVisibleColumns] = useState<VisibilityState>()
+  const [columnsTouched, setColumnsTouched] = useState(false)
+
   const [viewId, setViewId] = useState<string | undefined>()
-  const { view, update: updateView } = useView(viewId)
+  const { view, update: updateView, remove: removeView } = useView(viewId)
 
   const [type, setType] = useState<"llm" | "trace" | "thread">("llm")
 
@@ -244,6 +247,19 @@ export default function Logs() {
       }
 
       router.replace(`/logs?${serialized}`)
+    }
+  }, [filters, viewId, selectedRunId])
+
+  // Ensure the 'type' filter is always the first filter and re-add it if it was removed
+  useEffect(() => {
+    const typeFilter = filters.find((filter) => filter.id === "type")
+    if (!typeFilter) {
+      const newFilters = filters[0] === "AND" ? filters : ["AND", ...filters]
+      setChecks([
+        newFilters[0],
+        { id: "type", params: { type } },
+        ...newFilters.slice(1),
+      ])
     }
   }, [filters])
 
@@ -305,6 +321,12 @@ export default function Logs() {
     setChecks(newChecks)
   }, [type])
 
+  useDidUpdate(() => {
+    if (view?.columns) {
+      setVisibleColumns(view.columns)
+    }
+  }, [view])
+
   // Convert search query to filter
   useDidUpdate(() => {
     const newChecks = editCheck(
@@ -357,21 +379,64 @@ export default function Logs() {
       const newView = await insertView({
         name: "New View",
         data: filters,
+        columns: visibleColumns,
       })
 
       setViewId(newView.id)
     } else {
       await updateView({
         data: filters,
+        columns: visibleColumns,
       })
+
+      notifications.show({
+        title: "View saved",
+        message: "Your view has been saved.",
+      })
+    }
+
+    setColumnsTouched(false)
+  }
+
+  async function deleteView() {
+    modals.openConfirmModal({
+      title: "Please confirm your action",
+      confirmProps: { color: "red" },
+      children: (
+        <Text size="sm">
+          Are you sure you want to delete this view? This cannot be undone.
+        </Text>
+      ),
+      labels: { confirm: "Confirm", cancel: "Cancel" },
+      onConfirm: async () => {
+        await removeView(view.id)
+        router.push("/logs")
+      },
+    })
+  }
+
+  async function duplicateView() {
+    if (view) {
+      const newView = await insertView({
+        name: `Copy of ${view.name}`,
+        data: view.data,
+        columns: view.columns,
+      })
+
+      notifications.show({
+        title: "View duplicated",
+        message: `A copy of the view has been created with the name "Copy of ${view.name}".`,
+      })
+
+      setViewId(newView.id)
     }
   }
 
-  // Show button if view has changes, or it's not a view
-  const showSaveView = view
-    ? filters.length > 2 &&
-      JSON.stringify(view.data) !== JSON.stringify(filters)
-    : filters.length > 2
+  // Show button if column changed or view has changes, or it's not a view
+  const showSaveView =
+    columnsTouched ||
+    (filters.length > 2 &&
+      (!view || JSON.stringify(view.data) !== JSON.stringify(filters)))
 
   return (
     <Empty
@@ -436,23 +501,49 @@ export default function Logs() {
             </Flex>
           </Card>
 
-          <Group>
-            {view && (
-              <RenamableField
-                defaultValue={view.name}
-                onRename={(newName) => {
-                  updateView({
-                    name: newName,
-                  })
-                }}
+          <Group justify="space-between" align="center">
+            <Group>
+              {view && (
+                <Group>
+                  <RenamableField
+                    defaultValue={view.name}
+                    onRename={(newName) => {
+                      updateView({
+                        name: newName,
+                      })
+                    }}
+                  />
+                  <Menu position="bottom-end">
+                    <Menu.Target>
+                      <ActionIcon variant="light">
+                        <IconDotsVertical size={12} />
+                      </ActionIcon>
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      <Menu.Item
+                        leftSection={<IconCopy size={16} />}
+                        onClick={() => duplicateView()}
+                      >
+                        Duplicate
+                      </Menu.Item>
+                      <Menu.Item
+                        color="red"
+                        leftSection={<IconTrash size={16} />}
+                        onClick={() => deleteView()}
+                      >
+                        Delete
+                      </Menu.Item>
+                    </Menu.Dropdown>
+                  </Menu>
+                </Group>
+              )}
+              <CheckPicker
+                minimal
+                value={filters}
+                onChange={setChecks}
+                restrictTo={(f) => CHECKS_BY_TYPE[type].includes(f.id)}
               />
-            )}
-            <CheckPicker
-              minimal
-              value={filters}
-              onChange={setChecks}
-              restrictTo={(f) => CHECKS_BY_TYPE[type].includes(f.id)}
-            />
+            </Group>
             {!!showSaveView && (
               <Button
                 leftSection={<IconLayersIntersect size={16} />}
@@ -509,7 +600,12 @@ export default function Logs() {
           }}
           loading={loading || validating}
           loadMore={loadMore}
-          columns={columns[type]}
+          availableColumns={columns[type]}
+          visibleColumns={visibleColumns}
+          setVisibleColumns={(newState) => {
+            setVisibleColumns(newState)
+            setColumnsTouched(true)
+          }}
           data={logs}
         />
       </Stack>

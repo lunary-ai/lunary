@@ -33,7 +33,9 @@ const CHAT_AUTO_HIDABLE_COLUMNS = ["tags", "user"]
 export default function DataTable({
   type,
   data,
-  columns = [],
+  availableColumns = [],
+  visibleColumns,
+  setVisibleColumns,
   loading = false,
   onRowClicked = undefined,
   loadMore = undefined,
@@ -41,7 +43,9 @@ export default function DataTable({
 }: {
   type: string
   data?: any[]
-  columns?: any[]
+  availableColumns?: any[]
+  visibleColumns?: VisibilityState
+  setVisibleColumns?: (columns: VisibilityState) => void
   loading?: boolean
   onRowClicked?: (row: any) => void
   loadMore?: (() => void) | null
@@ -57,12 +61,6 @@ export default function DataTable({
     },
   ])
 
-  const [columnVisibility, setColumnVisibility] =
-    useLocalStorage<VisibilityState>({
-      key: "columnVisibility-" + type,
-      defaultValue: {},
-    })
-
   const [columnsTouched, setColumnsTouched] = useLocalStorage({
     key: "columnsTouched-" + type,
     defaultValue: false,
@@ -75,14 +73,14 @@ export default function DataTable({
 
   const table = useReactTable({
     data: data ?? emptyArray, // So it doesn't break when data is undefined because of reference
-    columns,
+    columns: availableColumns,
     columnResizeMode: "onChange",
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
+    onColumnVisibilityChange: setVisibleColumns,
     state: {
       sorting,
-      columnVisibility,
+      columnVisibility: visibleColumns,
     },
     onSortingChange: setSorting,
   })

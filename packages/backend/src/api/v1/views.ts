@@ -30,9 +30,10 @@ views.get("/:id", checkAccess("logs", "read"), async (ctx: Context) => {
 views.post("/", async (ctx: Context) => {
   const { projectId, userId } = ctx.state
 
-  const { name, data } = ctx.request.body as {
+  const { name, data, columns } = ctx.request.body as {
     name: string
     data: CheckLogic
+    columns: any
   }
 
   const [insertedCheck] = await sql`
@@ -41,6 +42,7 @@ views.post("/", async (ctx: Context) => {
       ownerId: userId,
       projectId,
       data,
+      columns,
     })}
     returning *
   `
@@ -50,14 +52,15 @@ views.post("/", async (ctx: Context) => {
 views.patch("/:id", async (ctx: Context) => {
   const { projectId } = ctx.state
   const { id } = ctx.params
-  const { name, data } = ctx.request.body as {
+  const { name, data, columns } = ctx.request.body as {
     name: string
     data: CheckLogic
+    columns: any
   }
 
   const [updatedView] = await sql`
     update view
-    set ${sql(clearUndefined({ name, data, updatedAt: new Date() }))}
+    set ${sql(clearUndefined({ name, data, updatedAt: new Date(), columns }))}
     where project_id = ${projectId}
     and id = ${id}
     returning *

@@ -51,6 +51,9 @@ export function useView(id?: string, initialData?: any) {
     fetcher.delete,
     {
       revalidate: false,
+      onSuccess() {
+        mutateViews()
+      },
     },
   )
 
