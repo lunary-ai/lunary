@@ -82,7 +82,9 @@ function NavbarLink({
         </ThemeIcon>
       }
     >
-      {subMenu?.map((item) => <NavbarLink {...item} key={item.label} />)}
+      {subMenu?.map((item) => (
+        <NavbarLink {...item} key={item.label + item.link} />
+      ))}
     </NavLink>
   )
 }
@@ -117,15 +119,17 @@ export default function Sidebar() {
 
   const canUpgrade = billingEnabled && ["free", "pro"].includes(org?.plan)
 
-  const projectViews = (views || []).map((v) => {
-    const serialized = serializeLogic(v.data)
-    return {
-      label: v.name,
-      icon: IconLayersLinked,
-      link: `/logs?${serialized}&view=${v.id}`,
-      resource: "logs",
-    }
-  })
+  const projectViews = (views || [])
+    .map((v) => {
+      const serialized = serializeLogic(v.data)
+      return {
+        label: v.name,
+        icon: IconLayersLinked,
+        link: `/logs?${serialized}&view=${v.id}`,
+        resource: "logs",
+      }
+    })
+    .sort((a, b) => a.label.localeCompare(b.label))
 
   const APP_MENU: MenuItem[] = [
     {
