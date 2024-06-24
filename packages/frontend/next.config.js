@@ -47,13 +47,6 @@ const nextConfig = {
       },
     ]
 
-    if(process.env.IS_SELF_HOSTED_MONOLITHIC) {
-      redirects.push({
-        source: '/api/path:*',
-        destination: 'http://localhost:3333/api/path:*'
-      })
-    }
-
     return redirects
   },
   webpack: (config, { webpack }) => {

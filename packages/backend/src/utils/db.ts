@@ -23,6 +23,11 @@ function debugFn(
   parameters: any[],
   paramTypes: any[],
 ) {
+  // for (let i = 0; i <= parameters.length; i++) {
+  //   let regex = new RegExp(`\\$${i + 1}`, "g")
+  //   query = query.replace(regex, `'${parameters[i]}'`)
+  // }
+
   console.log("connection:", connection)
   console.log("query:", query)
   console.log("parameters:", parameters)
