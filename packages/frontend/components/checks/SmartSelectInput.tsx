@@ -180,7 +180,10 @@ export default function SmartCheckSelect({
         </PillsInput>
       </Combobox.DropdownTarget>
 
-      <Combobox.Dropdown miw={180} h="13.3rem" style={{ overflowY: "scroll" }}>
+      <Combobox.Dropdown
+        miw={180}
+        style={{ minHeight: "13.3rem", overflowY: "scroll" }}
+      >
         <Combobox.Search
           value={search}
           display={shouldDisplaySearch ? "flex" : "none"}
