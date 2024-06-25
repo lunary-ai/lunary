@@ -15,11 +15,6 @@ import UpgradeModal from "./UpgradeModal"
 
 export default function Layout({ children }: { children: ReactNode }) {
   const router = useRouter()
-  const { user } = useUser()
-  const { org } = useOrg()
-
-  const colorScheme = useComputedColorScheme()
-  const { isSignedIn } = useAuth()
 
   const isAuthPage = !![
     "/login",
@@ -40,6 +35,8 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   const isPublicPage = isLLMCallPage
 
+  const { isSignedIn } = useAuth()
+
   useEffect(() => {
     if (isMaintenanceMode) {
       router.push("/maintenance")
@@ -56,8 +53,13 @@ export default function Layout({ children }: { children: ReactNode }) {
       return
     }
   }, [isSignedIn])
+  const { user } = useUser()
+  const { org } = useOrg()
+  const { project } = useProject()
 
   const isPromptPage = router.pathname.startsWith("/prompt")
+
+  const colorScheme = useComputedColorScheme()
 
   useEffect(() => {
     if (user) {

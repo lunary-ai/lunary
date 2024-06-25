@@ -59,6 +59,7 @@ import { useEffect, useState } from "react"
 import { ResourceName, hasAccess, hasReadAccess, serializeLogic } from "shared"
 import config from "@/utils/config"
 import { useViews } from "@/utils/dataHooks/views"
+import { useLocalStorage } from "@mantine/hooks"
 
 function NavbarLink({
   icon: Icon,
@@ -125,7 +126,8 @@ export default function Sidebar() {
   const { projects, isLoading: loading, insert } = useProjects()
   const { views } = useViews()
 
-  const { colorScheme, setColorScheme } = useMantineColorScheme({})
+  const { colorScheme, setColorScheme, clearColorScheme } =
+    useMantineColorScheme({})
 
   const [createProjectLoading, setCreateProjectLoading] = useState(false)
 
