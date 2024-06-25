@@ -1,6 +1,14 @@
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react"
 
-import { ActionIcon, Card, Checkbox, Group, Menu, Text } from "@mantine/core"
+import {
+  ActionIcon,
+  Card,
+  Checkbox,
+  Group,
+  Menu,
+  Text,
+  useComputedColorScheme,
+} from "@mantine/core"
 import {
   IconChevronDown,
   IconChevronUp,
@@ -17,7 +25,6 @@ import {
 
 import { useLocalStorage } from "@mantine/hooks"
 import { useVirtual } from "@tanstack/react-virtual"
-import { useFixedColorScheme } from "@/utils/hooks"
 
 // outside for reference
 const emptyArray = []
@@ -33,7 +40,9 @@ const CHAT_AUTO_HIDABLE_COLUMNS = ["tags", "user"]
 export default function DataTable({
   type,
   data,
-  columns = [],
+  availableColumns = [],
+  visibleColumns,
+  setVisibleColumns,
   loading = false,
   onRowClicked = undefined,
   loadMore = undefined,
@@ -41,7 +50,9 @@ export default function DataTable({
 }: {
   type: string
   data?: any[]
-  columns?: any[]
+  availableColumns?: any[]
+  visibleColumns?: VisibilityState
+  setVisibleColumns?: (columns: VisibilityState) => void
   loading?: boolean
   onRowClicked?: (row: any) => void
   loadMore?: (() => void) | null
@@ -57,12 +68,6 @@ export default function DataTable({
     },
   ])
 
-  const [columnVisibility, setColumnVisibility] =
-    useLocalStorage<VisibilityState>({
-      key: "columnVisibility-" + type,
-      defaultValue: {},
-    })
-
   const [columnsTouched, setColumnsTouched] = useLocalStorage({
     key: "columnsTouched-" + type,
     defaultValue: false,
@@ -71,18 +76,18 @@ export default function DataTable({
   //we need a reference to the scrolling element for logic down below
   const tableContainerRef = useRef<HTMLDivElement>(null)
 
-  const scheme = useFixedColorScheme()
+  const scheme = useComputedColorScheme()
 
   const table = useReactTable({
     data: data ?? emptyArray, // So it doesn't break when data is undefined because of reference
-    columns,
+    columns: availableColumns,
     columnResizeMode: "onChange",
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
+    onColumnVisibilityChange: setVisibleColumns,
     state: {
       sorting,
-      columnVisibility,
+      columnVisibility: visibleColumns,
     },
     onSortingChange: setSorting,
   })
@@ -309,7 +314,7 @@ export default function DataTable({
             overflow-x: hidden;
           }
 
-          table {
+          .tableContainer table {
             width: 100% !important;
             table-layout: fixed;
             font-size: 14px;
@@ -319,43 +324,43 @@ export default function DataTable({
             background-color: rgb(248, 249, 250);
           }
 
-          table tbody tr:hover {
+          .tableContainer table tbody tr:hover {
             background-color: var(
               --mantine-primary-color-light-hover
             ) !important;
           }
 
-          thead {
+          .tableContainer thead {
             position: sticky;
             top: 0;
             z-index: 1;
             background-color: var(--mantine-color-body);
           }
 
-          th {
+          .tableContainer th {
             position: relative;
           }
 
-          td code {
+          .tableContainer td code {
             max-height: 60px;
           }
 
-          .light th {
+          .tableContainer .light th {
             border-bottom: 1px solid #ddd;
           }
 
-          .dark th,
-          .dark td {
+          .tableContainer .dark th,
+          .tableContainer .dark td {
             border-bottom: 2px solid #2b2c2f;
           }
 
-          tr {
+          .tableContainer tr {
             width: fit-content;
             height: 30px;
           }
 
-          th,
-          td {
+          .tableContainer th,
+          .tableContainer td {
             overflow: hidden;
             text-overflow: ellipsis;
             padding: 7px 10px;

@@ -115,7 +115,6 @@ const CHECKS_UI_DATA: ChecksUIData = {
     icon: IconCoin,
     color: "pink",
   },
-
   json: {
     icon: IconJson,
     color: "violet",

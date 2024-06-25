@@ -1,5 +1,11 @@
-import { Flex, Progress, Table, Text, Tooltip } from "@mantine/core"
-import { useColorScheme } from "@mantine/hooks"
+import {
+  Flex,
+  Progress,
+  Table,
+  Text,
+  Tooltip,
+  useComputedColorScheme,
+} from "@mantine/core"
 
 type BarListProps = {
   data: any[]
@@ -19,7 +25,8 @@ function BarList({ data, columns, filterZero = true }: BarListProps) {
   const dataColumns = columns.filter((col) => !col.bar && col.key)
   const main = dataColumns.find((col) => col.main) || dataColumns[0]
   const mainTotal = data.reduce((acc, item) => acc + (item[main.key] || 0), 0)
-  const scheme = useColorScheme()
+
+  const colorScheme = useComputedColorScheme()
 
   if (!data) return <>No data.</>
 
@@ -84,7 +91,7 @@ function BarList({ data, columns, filterZero = true }: BarListProps) {
                         justify="center"
                       >
                         <Text
-                          c={scheme === "dark" ? "white" : "dark"}
+                          c={colorScheme === "dark" ? "white" : "dark"}
                           mb={-3}
                           size="12px"
                           style={{

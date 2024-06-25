@@ -77,6 +77,7 @@ export function statusColumn() {
 export function tagsColumn() {
   return columnHelper.accessor("tags", {
     header: "Tags",
+    id: "tags",
     size: 70,
     cell: (props) => {
       const tags = props.getValue()
@@ -110,6 +111,7 @@ export function tagsColumn() {
 
 export function inputColumn(label = "input") {
   return columnHelper.accessor("input", {
+    id: "input",
     header: label,
     size: 200,
     enableSorting: false,
@@ -119,6 +121,7 @@ export function inputColumn(label = "input") {
 
 export function outputColumn(label = "Response") {
   return columnHelper.accessor("output", {
+    id: "output",
     header: label,
     enableSorting: false,
     cell: (props) => (
@@ -133,6 +136,7 @@ export function outputColumn(label = "Response") {
 
 export function templateColumn() {
   return columnHelper.accessor("templateVersionId", {
+    id: "templateVersionId",
     header: "Template",
     enableSorting: false,
     cell: (props) => {
@@ -158,6 +162,7 @@ export function templateColumn() {
 
 export function userColumn() {
   return columnHelper.accessor("user", {
+    id: "user",
     header: "User",
     size: 120,
     cell: (props) => {
@@ -172,6 +177,7 @@ export function userColumn() {
 
 export function nameColumn(label = "Name") {
   return columnHelper.accessor("name", {
+    id: "name",
     header: label,
     size: 80,
     minSize: 30,
@@ -198,6 +204,7 @@ export function nameColumn(label = "Name") {
 
 export function costColumn() {
   return columnHelper.accessor("cost", {
+    id: "cost",
     header: "Cost",
     size: 60,
     sortingFn: (a, b) => a - b,
@@ -237,6 +244,7 @@ export function feedbackColumn(withRelatedRuns = false) {
       }
 
   return columnHelper.accessor("feedback", {
+    id: "feedback",
     header: "Feedback",
     size: 100,
     cell,
@@ -249,6 +257,7 @@ export function enrichmentColumn(
   evaluatorType: EvaluatorType,
 ) {
   return columnHelper.accessor(`enrichment-${slug}`, {
+    id: `enrichment-${slug}`,
     header: `${capitalize(name)} ✨`,
     size: 120,
     cell: (props) => {

@@ -11,7 +11,7 @@ import {
   Switch,
   Text,
 } from "@mantine/core"
-import { notifications, showNotification } from "@mantine/notifications"
+import { notifications } from "@mantine/notifications"
 import { IconCheck, IconPencilShare } from "@tabler/icons-react"
 import Link from "next/link"
 import { hasAccess } from "shared"
