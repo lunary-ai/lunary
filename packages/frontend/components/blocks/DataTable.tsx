@@ -314,7 +314,7 @@ export default function DataTable({
             overflow-x: hidden;
           }
 
-          table {
+          .tableContainer table {
             width: 100% !important;
             table-layout: fixed;
             font-size: 14px;
@@ -324,43 +324,43 @@ export default function DataTable({
             background-color: rgb(248, 249, 250);
           }
 
-          table tbody tr:hover {
+          .tableContainer table tbody tr:hover {
             background-color: var(
               --mantine-primary-color-light-hover
             ) !important;
           }
 
-          thead {
+          .tableContainer thead {
             position: sticky;
             top: 0;
             z-index: 1;
             background-color: var(--mantine-color-body);
           }
 
-          th {
+          .tableContainer th {
             position: relative;
           }
 
-          td code {
+          .tableContainer td code {
             max-height: 60px;
           }
 
-          .light th {
+          .tableContainer .light th {
             border-bottom: 1px solid #ddd;
           }
 
-          .dark th,
-          .dark td {
+          .tableContainer .dark th,
+          .tableContainer .dark td {
             border-bottom: 2px solid #2b2c2f;
           }
 
-          tr {
+          .tableContainer tr {
             width: fit-content;
             height: 30px;
           }
 
-          th,
-          td {
+          .tableContainer th,
+          .tableContainer td {
             overflow: hidden;
             text-overflow: ellipsis;
             padding: 7px 10px;

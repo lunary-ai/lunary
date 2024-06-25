@@ -71,7 +71,7 @@ import RenamableField from "@/components/blocks/RenamableField"
 import { VisibilityState } from "@tanstack/react-table"
 import { notifications } from "@mantine/notifications"
 
-const columns = {
+export const logsColumns = {
   llm: [
     timeColumn("createdAt"),
     nameColumn("Model"),
@@ -115,7 +115,7 @@ const columns = {
   ],
 }
 
-const CHECKS_BY_TYPE = {
+export const CHECKS_BY_TYPE = {
   llm: [
     "type",
     "models",
@@ -600,7 +600,7 @@ export default function Logs() {
           }}
           loading={loading || validating}
           loadMore={loadMore}
-          availableColumns={columns[type]}
+          availableColumns={logsColumns[type]}
           visibleColumns={visibleColumns}
           setVisibleColumns={(newState) => {
             setVisibleColumns(newState)
