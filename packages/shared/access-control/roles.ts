@@ -11,6 +11,7 @@ export type ResourceName =
   | "datasets"
   | "checklists"
   | "evaluations"
+
 export type Role = "owner" | "admin" | "member" | "viewer" | "billing"
 export type Action =
   | "create"
