@@ -478,7 +478,7 @@ export default function Analytics() {
               defaultOpened={showCheckBar}
               value={checks}
               restrictTo={(filter) =>
-                ["tags", "model", "users", "metadata"].includes(filter.id)
+                ["tags", "models", "users", "metadata"].includes(filter.id)
               }
             />
           )}
