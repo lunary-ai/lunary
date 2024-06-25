@@ -7,9 +7,9 @@ import { ProjectContext } from "../context"
 
 import { useAuth } from "../auth"
 import { fetcher } from "../fetcher"
-import { useComputedColorScheme } from "@mantine/core"
+import { useFixedColorScheme } from "../hooks"
 
-type KeyType = string | undefined | ((...args: any[]) => string)
+type KeyType = string | ((...args: any[]) => string)
 
 function generateKey(
   baseKey: KeyType | undefined,
@@ -107,7 +107,7 @@ export function useProjectMutate(key: KeyType, options?: SWRConfiguration) {
 export function useUser() {
   const { isSignedIn } = useAuth()
 
-  const scheme = useComputedColorScheme()
+  const scheme = useFixedColorScheme()
 
   const { data, isLoading, mutate, error } = useSWR(
     () => isSignedIn && `/users/me`,
@@ -133,7 +133,7 @@ export function useOrg() {
     mutate()
   }
 
-  const scheme = useComputedColorScheme()
+  const scheme = useFixedColorScheme()
 
   const users = data?.users?.map((user) => ({
     ...user,
@@ -450,7 +450,7 @@ export function useOrgUser(userId: string) {
     fetcher.patch,
   )
 
-  const scheme = useComputedColorScheme()
+  const scheme = useFixedColorScheme()
 
   const user = {
     ...data,

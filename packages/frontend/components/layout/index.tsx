@@ -1,4 +1,4 @@
-import { Box, Flex, Loader, useComputedColorScheme } from "@mantine/core"
+import { Box, Flex, Loader } from "@mantine/core"
 import { Notifications } from "@mantine/notifications"
 import { ReactNode, useEffect } from "react"
 
@@ -10,6 +10,7 @@ import Sidebar from "./Sidebar"
 import analytics from "@/utils/analytics"
 import { useAuth } from "@/utils/auth"
 import { useOrg, useProject, useUser } from "@/utils/dataHooks"
+import { useColorScheme } from "@mantine/hooks"
 import { ModalsProvider } from "@mantine/modals"
 import UpgradeModal from "./UpgradeModal"
 
@@ -59,7 +60,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   const isPromptPage = router.pathname.startsWith("/prompt")
 
-  const colorScheme = useComputedColorScheme()
+  const colorScheme = useColorScheme()
 
   useEffect(() => {
     if (user) {

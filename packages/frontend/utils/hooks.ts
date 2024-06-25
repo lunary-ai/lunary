@@ -1,4 +1,26 @@
-import { useEffect } from "react"
+// fixes the stutter effect in dark mode
+// needs to be outside the hook as window.computedColorScheme doesn't reflect the update
+// but we need to update the ddefault value
+
+import { useColorScheme, useDidUpdate } from "@mantine/hooks"
+import { useEffect, useState } from "react"
+
+// TODO FIX: THIS ACTUALLY DOESNT WORK WELL WITH MANTINE CSS VARS
+let defaultColorScheme =
+  typeof window !== "undefined" ? window?.computedColorScheme : null
+
+export function useFixedColorScheme() {
+  const [scheme, setScheme] = useState(defaultColorScheme)
+
+  const mantineScheme = useColorScheme()
+
+  useDidUpdate(() => {
+    defaultColorScheme = mantineScheme
+    setScheme(mantineScheme)
+  }, [mantineScheme])
+
+  return scheme
+}
 
 type Shortcut = [string, () => void]
 
