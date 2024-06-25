@@ -81,17 +81,12 @@ const MODEL_COSTS: ModelCost[] = [
     outputCost: 0.024,
   },
   {
-    models: ["claude-3.5-sonnet"],
-    inputCost: 0.003,
-    outputCost: 0.015,
-  },
-  {
     models: ["claude-3-opus"],
     inputCost: 0.015,
     outputCost: 0.075,
   },
   {
-    models: ["claude-3-sonnet"],
+    models: ["claude-3-sonet"],
     inputCost: 0.003,
     outputCost: 0.075,
   },
