@@ -1,6 +1,8 @@
 import sql from "../utils/db"
 import { sleep } from "../utils/misc"
 
+const REFRESH_FREQUENCY = process.env.NODE_ENV === "production" ? 1000 : 10000
+
 export async function startMaterializedViewRefreshJob() {
   try {
     const views = [
@@ -21,7 +23,7 @@ export async function startMaterializedViewRefreshJob() {
         )
       }
 
-      await sleep(1000)
+      await sleep(REFRESH_FREQUENCY)
     }
   } catch (error) {
     console.error(error)

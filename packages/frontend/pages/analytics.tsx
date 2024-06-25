@@ -27,17 +27,18 @@ import {
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
 import "@mantine/dates/styles.css"
-import { useLocalStorage } from "@mantine/hooks"
+import { useDidUpdate, useLocalStorage } from "@mantine/hooks"
 import {
   IconCalendar,
   IconChartAreaLine,
   IconFilter,
 } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
+import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
-import { CheckLogic, serializeLogic } from "shared"
+import { CheckLogic, deserializeLogic, serializeLogic } from "shared"
 
-function getDefaultDateRange() {
+export function getDefaultDateRange() {
   const endOfToday = new Date()
   endOfToday.setHours(23, 59, 59, 999)
 
@@ -148,7 +149,7 @@ function getPresetFromDateRange(dateRange: DateRange): PresetDateRange {
   return "Custom"
 }
 
-function DateRangeSelect({ dateRange, setDateRange }) {
+export function DateRangeSelect({ dateRange, setDateRange }) {
   const selectedOption = getPresetFromDateRange(dateRange)
   const data = ["Today", "7 Days", "30 Days", "3 Months"]
   const displayData = selectedOption === "Custom" ? [...data, "Custom"] : data
@@ -322,6 +323,8 @@ function ChartTooltip({ label, payload }: ChartTooltipProps) {
 // TODO: typescript everywhere
 // TODO: checks in url
 export default function Analytics() {
+  const router = useRouter()
+
   const [dateRange, setDateRange] = useLocalStorage({
     key: "dateRange-analytics",
     getInitialValueInEffect: false,
@@ -422,6 +425,29 @@ export default function Analytics() {
     showCheckBar ||
     checks.filter((f) => f !== "AND" && !["search", "type"].includes(f.id))
       .length > 0
+
+  useDidUpdate(() => {
+    if (typeof serializedChecks === "string") {
+      router.replace(`/analytics?${serializedChecks}`)
+    }
+  }, [serializedChecks, startDate, endDate, granularity])
+
+  useEffect(() => {
+    // restore filters from query params
+    try {
+      const urlParams = new URLSearchParams(window.location.search)
+
+      const paramString = urlParams.toString()
+      if (paramString) {
+        const filtersData = deserializeLogic(paramString)
+        if (filtersData) {
+          setChecks(filtersData)
+        }
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }, [router.asPath])
 
   const commonChartData = {
     startDate: startDate,
