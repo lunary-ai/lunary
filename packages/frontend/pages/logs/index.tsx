@@ -9,7 +9,6 @@ import {
   Group,
   Loader,
   Menu,
-  SegmentedControl,
   Stack,
   Text,
 } from "@mantine/core"
@@ -32,17 +31,13 @@ import {
   IconBrandOpenai,
   IconDotsVertical,
   IconFileExport,
-  IconListTree,
-  IconMessages,
-  IconFilter,
-  IconSquaresDiagonal,
   IconLayersIntersect,
   IconTrash,
   IconCopy,
 } from "@tabler/icons-react"
 
 import { NextSeo } from "next-seo"
-import { use, useContext, useEffect, useState } from "react"
+import { useContext, useEffect, useMemo, useState } from "react"
 
 import { ChatReplay } from "@/components/blocks/RunChat"
 import RunInputOutput from "@/components/blocks/RunInputOutput"
@@ -232,23 +227,29 @@ export default function Logs() {
     }
   }, [selectedRun?.projectId])
 
-  useDidUpdate(() => {
-    let serialized = serializeLogic(filters)
+  const fullUrlPath = useMemo(() => {
+    let serializedString = serializeLogic(filters)
 
-    if (typeof serialized === "string") {
-      setSerializedChecks(serialized)
-
+    if (typeof serializedString === "string") {
       if (viewId) {
-        serialized += `&view=${viewId}`
+        serializedString += `&view=${viewId}`
       }
 
       if (selectedRunId) {
-        serialized += `&selected=${selectedRunId}`
+        serializedString += `&selected=${selectedRunId}`
       }
 
-      router.replace(`/logs?${serialized}`)
+      console.log(`serialized: ${serializedString}`)
     }
+
+    return serializedString
   }, [filters, viewId, selectedRunId])
+
+  useDidUpdate(() => {
+    if (typeof fullUrlPath === "string") {
+      router.replace(`/logs?${fullUrlPath}`)
+    }
+  }, [fullUrlPath])
 
   // Ensure the 'type' filter is always the first filter and re-add it if it was removed
   useEffect(() => {
