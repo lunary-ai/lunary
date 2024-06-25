@@ -25,7 +25,8 @@
   ],
   "dependencies": {
     "concurrently": "^8.2.2",
-    "patch-package": "^8.0.0"
+    "patch-package": "^8.0.0",
+    "react-markdown": "^9.0.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.42.1",
