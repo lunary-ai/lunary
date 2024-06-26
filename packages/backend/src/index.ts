@@ -22,7 +22,9 @@ import { startMaterializedViewRefreshJob } from "./jobs/materializedViews"
 checkDbConnection()
 setupCronJobs()
 
-startMaterializedViewRefreshJob()
+if (process.env.NODE_ENV === "production") {
+  startMaterializedViewRefreshJob()
+}
 initSentry()
 
 const app = new Koa()
