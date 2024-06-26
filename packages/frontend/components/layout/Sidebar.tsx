@@ -1,7 +1,6 @@
 import {
   Box,
   Flex,
-  Group,
   Menu,
   NavLink,
   SegmentedControl,
@@ -59,6 +58,7 @@ import { useEffect, useState } from "react"
 import { ResourceName, hasAccess, hasReadAccess, serializeLogic } from "shared"
 import config from "@/utils/config"
 import { useViews } from "@/utils/dataHooks/views"
+import { on } from "events"
 
 function NavbarLink({
   icon: Icon,
@@ -86,6 +86,7 @@ function NavbarLink({
       w="100%"
       onClick={onClick}
       c={c}
+      shallow={true}
       label={`${label}${soon ? " (soon)" : ""}`}
       disabled={disabled || soon}
       active={active}

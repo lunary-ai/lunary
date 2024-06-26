@@ -31,6 +31,7 @@ export type Check = {
   soon?: boolean
   params: (CheckParam | CheckLabel)[]
   disableInEvals?: boolean
+  uniqueInBar?: boolean // if true, only one check of this type can be in a filter bar
   onlyInEvals?: boolean
 }
 

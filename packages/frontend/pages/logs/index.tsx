@@ -37,7 +37,7 @@ import {
 } from "@tabler/icons-react"
 
 import { NextSeo } from "next-seo"
-import { useContext, useEffect, useMemo, useState } from "react"
+import { use, useContext, useEffect, useMemo, useState } from "react"
 
 import { ChatReplay } from "@/components/blocks/RunChat"
 import RunInputOutput from "@/components/blocks/RunInputOutput"
@@ -56,7 +56,11 @@ import {
   useRun,
 } from "@/utils/dataHooks"
 
-import { useDebouncedState, useDidUpdate } from "@mantine/hooks"
+import {
+  useDebouncedState,
+  useDidUpdate,
+  useThrottledValue,
+} from "@mantine/hooks"
 import { ProjectContext } from "@/utils/context"
 import { CheckLogic, deserializeLogic, serializeLogic } from "shared"
 import { useRouter } from "next/router"
@@ -65,6 +69,7 @@ import { useView, useViews } from "@/utils/dataHooks/views"
 import RenamableField from "@/components/blocks/RenamableField"
 import { VisibilityState } from "@tanstack/react-table"
 import { notifications } from "@mantine/notifications"
+import { useChecksFromURL, useStateFromURL } from "@/utils/hooks"
 
 export const logsColumns = {
   llm: [
@@ -74,7 +79,6 @@ export const logsColumns = {
     // enrichmentColumn("topics"),
     // enrichmentColumn("sentiment"),
     // enrichmentColumn("pii"),
-
     userColumn(),
     {
       header: "Tokens",
@@ -169,23 +173,23 @@ export default function Logs() {
   const { project, isLoading: projectLoading, setProjectId } = useProject()
   const { org } = useOrg()
 
-  const [filters, setChecks] = useState<CheckLogic>([
-    "AND",
-    { id: "type", params: { type: "llm" } },
-  ])
+  const { checks, setChecks, serializedChecks } = useChecksFromURL(
+    ["AND", { id: "type", params: { type: "llm" } }],
+    ["view", "selected", "search"],
+  )
 
   const { insert: insertView, isInserting: isInsertingView } = useViews()
-
-  const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
-  const [serializedChecks, setSerializedChecks] = useState<string>("")
 
   const [visibleColumns, setVisibleColumns] = useState<VisibilityState>()
   const [columnsTouched, setColumnsTouched] = useState(false)
 
-  const [viewId, setViewId] = useState<string | undefined>()
-  const { view, update: updateView, remove: removeView } = useView(viewId)
+  const [viewId, setViewId] = useStateFromURL<string | undefined>("view")
+  const [selectedRunId, setSelectedRunId] = useStateFromURL<string | undefined>(
+    "selected",
+  )
+  const [type, setType] = useStateFromURL<string>("type", "llm")
 
-  const [type, setType] = useState<"llm" | "trace" | "thread">("llm")
+  const { view, update: updateView, remove: removeView } = useView(viewId)
 
   const [query, setQuery] = useDebouncedState<string | null>(null, 300)
 
@@ -199,144 +203,43 @@ export default function Logs() {
 
   const { run: selectedRun, loading: runLoading } = useRun(selectedRunId)
 
-  // useEffect(() => {
-  //   const newColumns = { ...defaultColumns }
-  //   if (type === "llm" && Array.isArray(evaluators)) {
-  //     for (const evaluator of evaluators) {
-  //       if (
-  //         newColumns.llm
-  //           .map(({ accessorKey }) => accessorKey)
-  //           .includes("enrichment-" + evaluator.slug)
-  //       ) {
-  //         continue
-  //       }
-
-  //       newColumns.llm.splice(
-  //         3,
-  //         0,
-  //         enrichmentColumn(evaluator.name, evaluator.slug, evaluator.type),
-  //       )
-  //     }
-  //     setColumns(newColumns)
-  //   }
-  // }, [type, evaluators])
-
   useEffect(() => {
     if (selectedRun && selectedRun.projectId !== projectId) {
       setProjectId(selectedRun.projectId)
     }
   }, [selectedRun?.projectId])
 
-  const fullUrlPath = useMemo(() => {
-    let serializedString = serializeLogic(filters)
-
-    if (typeof serializedString === "string") {
-      if (viewId) {
-        serializedString += `&view=${viewId}`
-      }
-
-      if (selectedRunId) {
-        serializedString += `&selected=${selectedRunId}`
-      }
-
-      console.log(`serialized: ${serializedString}`)
-    }
-
-    return serializedString
-  }, [filters, viewId, selectedRunId])
-
-  useDidUpdate(() => {
-    if (typeof fullUrlPath === "string") {
-      router.replace(`/logs?${fullUrlPath}`)
-    }
-  }, [fullUrlPath])
-
-  // Ensure the 'type' filter is always the first filter and re-add it if it was removed
   useEffect(() => {
-    const typeFilter = filters.find((filter) => filter.id === "type")
+    // Add type filter if not present
+    const typeFilter = checks.find((filter) => filter.id === "type")
     if (!typeFilter) {
-      const newFilters = filters[0] === "AND" ? filters : ["AND", ...filters]
+      const newFilters = checks[0] === "AND" ? checks : ["AND", ...checks]
       setChecks([
         newFilters[0],
         { id: "type", params: { type } },
         ...newFilters.slice(1),
       ])
     }
-  }, [filters])
 
-  useEffect(() => {
-    // restore filters and selected log from query params
-    try {
-      const urlParams = new URLSearchParams(window.location.search)
-
-      const selectedId = urlParams.get("selected")
-      setSelectedRunId(selectedId)
-
-      const type = urlParams.get("type")
-      if (type === "llm" || type === "trace" || type === "thread") {
-        setType(type)
-      }
-
-      const search = urlParams.get("search")
-      setQuery(search)
-
-      const paramString = urlParams.toString()
-      if (paramString) {
-        const filtersData = deserializeLogic(paramString)
-        if (filtersData) {
-          setChecks(filtersData)
-        }
-      }
-
-      const viewIdParam = urlParams.get("view")
-      setViewId(viewIdParam || undefined)
-    } catch (e) {
-      console.error(e)
-    }
-  }, [router.asPath])
-
-  useEffect(() => {
-    if (selectedRunId) {
-      router.push({
-        pathname: router.pathname,
-        query: { ...router.query, selected: selectedRunId },
-      })
-    } else {
-      const { selected, ...query } = router.query
-
-      router.push({
-        pathname: router.pathname,
-        query,
-      })
-    }
-  }, [selectedRunId])
-
-  useDidUpdate(() => {
-    // Change type filter and remove filters imcompatible with type
-    const newChecks = editCheck(filters, "type", { type }).filter(
+    const newChecks = editCheck(checks, "type", { type }).filter(
       (f) =>
         f === "AND" ||
         CHECKS_BY_TYPE[type].includes(f.id) ||
         ["type", "search"].includes(f.id),
     )
     setChecks(newChecks)
-  }, [type])
 
-  useDidUpdate(() => {
     if (view?.columns) {
       setVisibleColumns(view.columns)
     }
-  }, [view])
 
-  // Convert search query to filter
-  useDidUpdate(() => {
-    const newChecks = editCheck(
-      filters,
+    const searchChecks = editCheck(
+      checks,
       "search",
       query?.length ? { query } : null,
     )
-    setChecks(newChecks)
-  }, [query])
+    setChecks(searchChecks)
+  }, [type, view, query])
 
   const exportUrl = `/runs?${serializedChecks}&projectId=${projectId}`
 
@@ -379,14 +282,14 @@ export default function Logs() {
     if (!viewId) {
       const newView = await insertView({
         name: "New View",
-        data: filters,
+        data: checks,
         columns: visibleColumns,
       })
 
       setViewId(newView.id)
     } else {
       await updateView({
-        data: filters,
+        data: checks,
         columns: visibleColumns,
       })
 
@@ -432,12 +335,14 @@ export default function Logs() {
       setViewId(newView.id)
     }
   }
-
   // Show button if column changed or view has changes, or it's not a view
-  const showSaveView =
-    columnsTouched ||
-    (filters.length > 2 &&
-      (!view || JSON.stringify(view.data) !== JSON.stringify(filters)))
+  const showSaveView = useMemo(
+    () =>
+      columnsTouched ||
+      (checks.length > 2 &&
+        (!view || JSON.stringify(view.data) !== JSON.stringify(checks))),
+    [columnsTouched, checks, view],
+  )
 
   return (
     <Empty
@@ -540,7 +445,7 @@ export default function Logs() {
               )}
               <CheckPicker
                 minimal
-                value={filters}
+                value={checks}
                 onChange={setChecks}
                 restrictTo={(f) => CHECKS_BY_TYPE[type].includes(f.id)}
               />

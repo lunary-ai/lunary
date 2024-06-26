@@ -100,7 +100,11 @@ export default function SmartCheckSelect({
         maw={130}
         onRemove={() => handleValueRemove(item)}
       >
-        {renderLabel(data?.find((d) => getItemValue(d) === item))}
+        {renderLabel(
+          Array.isArray(data)
+            ? data?.find((d) => getItemValue(d) === item)
+            : item,
+        )}
       </Pill>
     ))
   }

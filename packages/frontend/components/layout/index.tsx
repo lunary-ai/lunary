@@ -68,6 +68,60 @@ export default function Layout({ children }: { children: ReactNode }) {
     }
   }, [user])
 
+  useEffect(() => {
+    const handleRouteChangeStart = (url, { shallow }) => {
+      console.log(
+        `App is changing to: ${url}, Event: routeChangeStart, Shallow: ${shallow}`,
+      )
+    }
+
+    const handleRouteChangeComplete = (url, { shallow }) => {
+      console.log(
+        `App changed to: ${url}, Event: routeChangeComplete, Shallow: ${shallow}`,
+      )
+    }
+
+    const handleRouteChangeError = (err, url, { shallow }) => {
+      console.warn(
+        `App encountered an error while changing to: ${url}, Event: routeChangeError, Shallow: ${shallow}, Error: ${err}, Cancelled: ${err.cancelled}`,
+      )
+    }
+
+    const handleBeforeHistoryChange = (url, { shallow }) => {
+      console.log(
+        `App is about to change the browser's history to: ${url}, Event: beforeHistoryChange, Shallow: ${shallow}`,
+      )
+    }
+
+    const handleHashChangeStart = (url, { shallow }) => {
+      console.log(
+        `App hash is changing to: ${url}, Event: hashChangeStart, Shallow: ${shallow}`,
+      )
+    }
+
+    const handleHashChangeComplete = (url, { shallow }) => {
+      console.log(
+        `App hash changed to: ${url}, Event: hashChangeComplete, Shallow: ${shallow}`,
+      )
+    }
+
+    router.events.on("routeChangeStart", handleRouteChangeStart)
+    router.events.on("routeChangeComplete", handleRouteChangeComplete)
+    router.events.on("routeChangeError", handleRouteChangeError)
+    router.events.on("beforeHistoryChange", handleBeforeHistoryChange)
+    router.events.on("hashChangeStart", handleHashChangeStart)
+    router.events.on("hashChangeComplete", handleHashChangeComplete)
+
+    return () => {
+      router.events.off("routeChangeStart", handleRouteChangeStart)
+      router.events.off("routeChangeComplete", handleRouteChangeComplete)
+      router.events.off("routeChangeError", handleRouteChangeError)
+      router.events.off("beforeHistoryChange", handleBeforeHistoryChange)
+      router.events.off("hashChangeStart", handleHashChangeStart)
+      router.events.off("hashChangeComplete", handleHashChangeComplete)
+    }
+  }, [router])
+
   if (!isAuthPage && !isPublicPage && (!user || !org)) {
     return (
       <Flex align="center" justify="center" h="100vh">
