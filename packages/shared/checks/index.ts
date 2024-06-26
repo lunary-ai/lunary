@@ -31,7 +31,7 @@ export const CHECKS: Check[] = [
     ],
   },
   {
-    id: "fulltype",
+    id: "type",
     name: "Type",
     uiType: "basic",
     disableInEvals: true,
@@ -69,40 +69,6 @@ export const CHECKS: Check[] = [
           },
           {
             label: "Trace",
-            value: "trace",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "type",
-    name: "Type",
-    uiType: "basic",
-    disableInEvals: true,
-    params: [
-      {
-        type: "label",
-        label: "Type is",
-      },
-      {
-        type: "select",
-        id: "type",
-        width: 100,
-        defaultValue: "llm",
-        searchable: false,
-        options: [
-          {
-            label: "LLM Calls",
-            value: "llm",
-          },
-          {
-            label: "Threads",
-            value: "thread",
-          },
-
-          {
-            label: "Traces",
             value: "trace",
           },
         ],

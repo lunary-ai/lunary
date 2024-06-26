@@ -16,7 +16,6 @@ import templates from "./templates"
 import users from "./users"
 import evaluators from "./evaluator"
 import analytics from "./analytics"
-import views from "./views"
 
 const v1 = new Router({
   prefix: "/v1",
@@ -49,6 +48,5 @@ v1.use(evaluations.routes())
 v1.use(projectUsers.routes())
 v1.use(checklists.routes())
 v1.use(analytics.routes())
-v1.use(views.routes())
 
 export default v1

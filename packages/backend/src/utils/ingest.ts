@@ -166,8 +166,6 @@ export const ingestChatEvent = async (
     metadata: metadata || extra,
   })
 
-  console.log({ coreMessage })
-
   if (typeof parentRunId === "undefined") {
     throw new Error("parentRunId is undefined")
   }
