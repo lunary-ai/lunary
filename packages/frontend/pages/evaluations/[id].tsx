@@ -40,6 +40,8 @@ export default function EvalResults() {
   const { checklist } = useChecklist(evaluation?.checklistId)
   const { dataset } = useDataset(evaluation?.datasetId)
 
+  const showTestIndicator = !!checklist
+
   return (
     <Container size="100%">
       <Stack>
@@ -84,7 +86,10 @@ export default function EvalResults() {
           <>
             {data?.length > 0 ? (
               <Stack gap="xl">
-                <ResultsMatrix data={data} />
+                <ResultsMatrix
+                  data={data}
+                  showTestIndicator={showTestIndicator}
+                />
               </Stack>
             ) : (
               <p>No data</p>

@@ -1,5 +1,6 @@
 import {
   Badge,
+  Button,
   Code,
   Group,
   HoverCard,
@@ -12,6 +13,7 @@ import { formatCost } from "@/utils/format"
 import { ChatMessage } from "../SmartViewer/Message"
 import SmartViewer from "../SmartViewer"
 import { MODELS, Provider } from "shared"
+import { IconFileExport } from "@tabler/icons-react"
 
 // We create a matrix of results for each prompt, variable and model.
 // The matrix is a 3D array, where each dimension represents a different variable, prompt and model.
@@ -133,7 +135,7 @@ function AggregateContent({ results }) {
   )
 }
 
-export default function ResultsMatrix({ data }) {
+export default function ResultsMatrix({ data, showTestIndicator }) {
   const prompts = Array.from(
     new Set(data.map((result) => JSON.stringify(result.messages))),
   ).map((result: any) => JSON.parse(result))
@@ -174,8 +176,72 @@ export default function ResultsMatrix({ data }) {
     ...prompts.map((messages) => getVariableKeysForPrompt(messages).length),
   )
 
+  function exportToCsv() {
+    const columns = [
+      "Prompt",
+      "Variable Variation",
+      "Model",
+      "Passed",
+      "Output",
+    ]
+    const rows = []
+
+    prompts.forEach((messages) => {
+      const variableVariations = getVariableVariationsForPrompt(messages)
+      variableVariations.forEach((variables) => {
+        providers.forEach((provider) => {
+          const result = getResultForPromptVariationProvider(
+            messages,
+            variables,
+            provider,
+          )
+          if (result) {
+            const textResult = result.error
+              ? JSON.stringify(result.error)
+              : result.output?.content
+
+            rows.push([
+              JSON.stringify(messages),
+              JSON.stringify(variables),
+              provider.model,
+              result.passed ? "Yes" : "No",
+              `"${textResult.replace(/"/g, '""')}"`, // Escape double quotes and wrap in double quotes
+            ])
+          }
+        })
+      })
+    })
+
+    const csvContent = [
+      columns.join(","),
+      ...rows.map((row) => row.join(",")),
+    ].join("\n")
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+    const link = document.createElement("a")
+    const url = URL.createObjectURL(blob)
+    link.setAttribute("href", url)
+    link.setAttribute("download", "results.csv")
+    link.style.visibility = "hidden"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   return (
-    <Stack>
+    <>
+      <Button
+        w="fit-content"
+        ml="auto"
+        variant="light"
+        color="blue"
+        onClick={() => {
+          exportToCsv()
+        }}
+        leftSection={<IconFileExport size={16} />}
+      >
+        Export to CSV
+      </Button>
       <div className={classes["matrix-container"]}>
         <table className={classes["matrix-table"]}>
           <thead>
@@ -275,6 +341,6 @@ export default function ResultsMatrix({ data }) {
           </tbody>
         </table>
       </div>
-    </Stack>
+    </>
   )
 }
