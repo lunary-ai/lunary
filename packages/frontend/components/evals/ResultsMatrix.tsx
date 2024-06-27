@@ -65,23 +65,25 @@ function ResultDetails({ details }) {
   )
 }
 
-function ResultCell({ result }) {
+function ResultCell({ result, showTestIndicator }) {
   return result ? (
     <>
       {result.status === "success" ? (
         <Stack align="center" justify="between">
           <ChatMessage data={result.output} mah={300} compact w="100%" />
 
-          <HoverCard width={500} disabled={!result.results.length}>
-            <HoverCard.Target>
-              <Badge color={result.passed ? "green" : "red"}>
-                {result.passed ? "Passed" : "Failed"}
-              </Badge>
-            </HoverCard.Target>
-            <HoverCard.Dropdown>
-              <ResultDetails details={result.results} />
-            </HoverCard.Dropdown>
-          </HoverCard>
+          {showTestIndicator && (
+            <HoverCard width={500} disabled={!result.results.length}>
+              <HoverCard.Target>
+                <Badge color={result.passed ? "green" : "red"}>
+                  {result.passed ? "Passed" : "Failed"}
+                </Badge>
+              </HoverCard.Target>
+              <HoverCard.Dropdown>
+                <ResultDetails details={result.results} />
+              </HoverCard.Dropdown>
+            </HoverCard>
+          )}
           <Group gap="xs">
             <Text c="dimmed" size="xs">
               {(+result.duration / 1000).toFixed(2)}s -{" "}
@@ -98,12 +100,12 @@ function ResultCell({ result }) {
   )
 }
 
-function AggregateContent({ results }) {
+function AggregateContent({ results, showTestIndicator }) {
   const { passed, failed, duration, cost } = getAggegateForVariation(results)
 
   return (
     <>
-      {passed + failed > 1 && (
+      {passed + failed > 1 && showTestIndicator && (
         <Progress.Root size={20} w={100}>
           <Progress.Section
             value={(passed / (passed + failed)) * 100}
@@ -269,6 +271,7 @@ export default function ResultsMatrix({ data, showTestIndicator }) {
                       </HoverCard.Dropdown>
                     </HoverCard>
                     <AggregateContent
+                      showTestIndicator={showTestIndicator}
                       results={data.filter((result) =>
                         compareObjects(result.provider, provider),
                       )}
@@ -300,6 +303,7 @@ export default function ResultsMatrix({ data, showTestIndicator }) {
                           </HoverCard.Dropdown>
                         </HoverCard>
                         <AggregateContent
+                          showTestIndicator={showTestIndicator}
                           results={data.filter((result) =>
                             compareObjects(result.messages, messages),
                           )}
@@ -331,7 +335,10 @@ export default function ResultsMatrix({ data, showTestIndicator }) {
                     )
                     return (
                       <td className={classes["output-cell"]} key={k}>
-                        <ResultCell result={result} />
+                        <ResultCell
+                          result={result}
+                          showTestIndicator={showTestIndicator}
+                        />
                       </td>
                     )
                   })}
