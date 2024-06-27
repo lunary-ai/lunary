@@ -40,6 +40,7 @@ export default function EvalResults() {
   const { checklist } = useChecklist(evaluation?.checklistId)
   const { dataset } = useDataset(evaluation?.datasetId)
 
+  // Only show 'Passed' labels if a checklist was used
   const showTestIndicator = !!checklist
 
   return (
