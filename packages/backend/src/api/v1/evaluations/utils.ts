@@ -68,10 +68,10 @@ export async function runEval({
       const endedAt = new Date()
 
       // Create virtual run to be able to run checks
-      const output = res.choices[0].message
+      const output = res?.choices[0].message
 
-      const promptTokens = res.usage?.prompt_tokens
-      const completionTokens = res.usage?.completion_tokens
+      const promptTokens = res?.usage?.prompt_tokens
+      const completionTokens = res?.usage?.completion_tokens
       const duration = endedAt.getTime() - createdAt.getTime()
 
       const virtualRun = {
