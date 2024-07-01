@@ -182,6 +182,40 @@ orgs.post("/upgrade", async (ctx: Context) => {
   ctx.body = { ok: true }
 })
 
+orgs.post("/upgrade-to-premium", async (ctx: Context) => {
+  const orgId = ctx.state.orgId as string;
+
+  // Retrieve the organization's current plan to check if it's already premium
+  const [org] = await sql`
+    select id, plan from org where id = ${orgId}
+  `;
+
+  if (!org) {
+    ctx.status = 404;
+    ctx.body = { message: "Organization not found" };
+    return;
+  }
+
+  if (org.plan === 'unlimited') {
+    ctx.status = 200;
+    ctx.body = { message: "Already on unlimited plan" };
+    return;
+  }
+
+  // Update the organization's plan to premium in the database
+  await sql`
+    update org set plan = 'unlimited' where id = ${orgId}
+  `;
+
+  // Optionally log this change or handle any internal business logic necessary
+  // Log the upgrade for auditing
+  
+  ctx.status = 200;
+  ctx.body = { message: "Organization upgraded to unlimited plan" };
+});
+
+
+
 orgs.post("/playground", async (ctx: Context) => {
   const orgId = ctx.state.orgId as string
   const requestBodySchema = z.object({
@@ -247,4 +281,9 @@ orgs.post("/playground", async (ctx: Context) => {
   )
 })
 
+
+
+
 export default orgs
+
+

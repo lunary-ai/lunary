@@ -1,0 +1,29 @@
+# Use a base image with Node.js installed
+FROM node:latest
+
+# Set the working directory inside the container
+WORKDIR /app
+
+
+# Copy only the frontend folder to the working directory
+COPY frontend ./frontend
+
+COPY shared ./shared
+
+COPY ml ./ml
+
+WORKDIR /app/shared
+
+RUN npm install
+
+# Set the working directory to the frontend folder
+WORKDIR /app/frontend
+
+# Build the frontend code
+
+RUN npm install --legacy-peer-deps
+RUN npm install /app/shared --legacy-peer-deps
+
+
+# Start the frontend server
+# CMD ["npm", "start"]

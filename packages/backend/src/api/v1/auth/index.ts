@@ -47,6 +47,7 @@ auth.post("/method", async (ctx: Context) => {
 
 // TODO: split signup and join
 auth.post("/signup", async (ctx: Context) => {
+  
   const bodySchema = z.object({
     email: z.string().email().transform(sanitizeEmail),
     password: z.string().min(6).optional(), // optional if SAML flow
