@@ -15,6 +15,8 @@ import SmartViewer from "../SmartViewer"
 import { MODELS, Provider } from "shared"
 import { IconFileExport } from "@tabler/icons-react"
 
+import { json2csv } from "json-2-csv"
+
 // We create a matrix of results for each prompt, variable and model.
 // The matrix is a 3D array, where each dimension represents a different variable, prompt and model.
 
@@ -178,15 +180,8 @@ export default function ResultsMatrix({ data, showTestIndicator }) {
     ...prompts.map((messages) => getVariableKeysForPrompt(messages).length),
   )
 
-  function exportToCsv() {
-    const columns = [
-      "Prompt",
-      "Variable Variation",
-      "Model",
-      "Passed",
-      "Output",
-    ]
-    const rows = []
+  async function exportToCsv() {
+    const rows = [] as any[]
 
     prompts.forEach((messages) => {
       const variableVariations = getVariableVariationsForPrompt(messages)
@@ -202,26 +197,27 @@ export default function ResultsMatrix({ data, showTestIndicator }) {
               ? JSON.stringify(result.error)
               : result.output?.content
 
-            rows.push([
-              JSON.stringify(messages),
-              JSON.stringify(variables),
-              provider.model,
-              result.passed ? "Yes" : "No",
-              `"${textResult.replace(/"/g, '""')}"`, // Escape double quotes and wrap in double quotes
-            ])
+            rows.push(
+              {
+                Prompt: JSON.stringify(messages),
+                Variables: JSON.stringify(variables),
+                Model: provider.model,
+                Passed: result.passed ? "Yes" : "No",
+                Output: textResult,
+              }, // Escape double quotes and wrap in double quotes
+            )
           }
         })
       })
     })
 
-    const csvContent = [
-      columns.join(","),
-      ...rows.map((row) => row.join(",")),
-    ].join("\n")
+    const csv = await json2csv(rows, {
+      arrayIndexesAsKeys: false,
+    })
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-    const link = document.createElement("a")
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
     const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
     link.setAttribute("href", url)
     link.setAttribute("download", "results.csv")
     link.style.visibility = "hidden"
