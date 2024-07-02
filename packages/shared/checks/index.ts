@@ -15,7 +15,7 @@ export * from "./serialize"
 export const CHECKS: Check[] = [
   {
     id: "tools",
-    name: "Tools",
+    name: "Tool name",
     uiType: "basic",
     disableInEvals: true,
     params: [
@@ -25,7 +25,7 @@ export const CHECKS: Check[] = [
       },
       {
         type: "text",
-        id: "value",
+        id: "toolName",
         placeholder: "value",
       },
     ],

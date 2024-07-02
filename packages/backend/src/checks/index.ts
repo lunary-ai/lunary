@@ -9,6 +9,7 @@ import aiSimilarity from "./ai/similarity"
 import rouge from "rouge"
 import { or } from "../utils/checks"
 import { isOpenAIMessage } from "../utils/misc"
+import { CleanRun } from "../utils/ingest"
 
 function getTextsTypes(field: "any" | "input" | "output", run: any) {
   let textsToCheck = []
@@ -31,6 +32,7 @@ export type CheckRunner = {
     details?: any
   }>
   sql?: (params: any) => any // todo: postgres sql type
+  ingestionCheck?: (run: CleanRun, params: any) => Promise<boolean>
 }
 
 export function lastMsg(field: any) {
@@ -93,10 +95,43 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   {
     id: "models",
     sql: ({ models }) => sql`(r.name = any(${models}))`,
+    ingestionCheck: async (run, params) => {
+      const { models } = params
+      for (const model of models) {
+        if (model === run.name) {
+          return false
+        }
+      }
+      return true
+    },
+  },
+  {
+    id: "tools",
+    sql: () => {},
+    ingestionCheck: async (run, params) => {
+      const { toolName } = params
+      if (run.type === "tool" && toolName === run.name) {
+        return false
+      }
+      return true
+    },
   },
   {
     id: "tags",
     sql: ({ tags }) => sql`(tags && ${sql.array(tags)})`,
+    ingestionCheck: async (run, params) => {
+      const { tags } = params
+
+      if (run.tags) {
+        for (const tag of run.tags) {
+          if (tags.includes(tag.toString())) {
+            return false
+          }
+        }
+      }
+
+      return true
+    },
   },
   {
     id: "templates",
@@ -108,6 +143,15 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       if (!key || !value) return sql`true`
       return sql`(CAST(metadata->>${key} AS TEXT) = ${value})`
     },
+    ingestionCheck: async (run, params) => {
+      const { key, value } = params
+
+      if (run.metadata && run.metadata[key] === value) {
+        return false
+      }
+
+      return true
+    },
   },
   {
     id: "status",
@@ -116,6 +160,19 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   {
     id: "users",
     sql: ({ users }) => sql`(external_user_id = ANY(${sql.array(users, 20)}))`, // 20 is to specify it's a postgres int4
+    ingestionCheck: async (run, params) => {
+      const { users } = params
+
+      for (let userId of users) {
+        const [dbUserId] =
+          await sql`select external_id from external_user where id = ${userId}`
+        if (dbUserId.externalId === run.userId) {
+          return false
+        }
+      }
+
+      return true
+    },
   },
   {
     id: "feedback",
@@ -568,14 +625,6 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       )
 
       const results = { ...regexResults, ...mlResults }
-      console.log(
-        text,
-        entities.filter((entity: string) =>
-          ["person", "location", "org", "misc"].includes(entity),
-        ),
-        mlResults,
-        "\n\n\n\n",
-      )
 
       let passed = false
       if (type === "contains") {

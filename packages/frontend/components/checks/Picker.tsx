@@ -161,6 +161,7 @@ export default function CheckPicker({
   restrictTo = (filter) => true,
   defaultOpened = false,
   disabled = false,
+  buttonText = "Add"
 }: {
   value?: CheckLogic
   onChange?: (data: CheckLogic) => void
@@ -168,6 +169,7 @@ export default function CheckPicker({
   restrictTo?: (filter: Check) => boolean
   defaultOpened?: boolean
   disabled?: boolean
+  buttonText?: string
 }) {
   const [modalOpened, setModalOpened] = useState(false)
 
@@ -229,7 +231,7 @@ export default function CheckPicker({
                     variant="light"
                     onClick={() => setModalOpened(true)}
                   >
-                    Add
+                    {buttonText}
                   </Button>
                   <ChecksModal
                     opened={modalOpened}

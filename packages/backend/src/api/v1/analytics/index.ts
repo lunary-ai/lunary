@@ -791,9 +791,10 @@ analytics.get(
       endDate: z.string().datetime().optional(),
       timeZone: z.string().optional(),
       userId: z.string().optional(),
+      name: z.string().optional(),
     })
     const { projectId } = ctx.state
-    const { startDate, endDate, timeZone, userId } = querySchema.parse(
+    const { startDate, endDate, timeZone, userId, name } = querySchema.parse(
       ctx.request.query,
     )
 
@@ -808,6 +809,11 @@ analytics.get(
     let userFilter = sql``
     if (userId) {
       userFilter = sql`and external_user_id = ${userId}`
+    }
+
+    let nameFilter = sql``
+    if (name) {
+      nameFilter = sql`and name = ${name}`
     }
 
     const topModels = await sql`
@@ -825,6 +831,7 @@ analytics.get(
         and name is not null
         ${dateFilter}
         ${userFilter}
+        ${nameFilter}
       group by
         name
       order by
