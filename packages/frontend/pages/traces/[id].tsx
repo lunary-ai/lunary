@@ -57,10 +57,9 @@ function TraceTree({
 }) {
   // each run contains a child_runs array containing the ids of the runs it spawned
   const run = runs.find((run) => run.id === parentId)
-
-  const timeAfterFirst = Math.abs(
-    new Date(run.createdAt).getTime() - new Date(firstDate).getTime(),
-  )
+  if (run.input === "__NOT_INGESTED__") {
+    run.status = "filtered"
+  }
 
   const color = getColorForRunType(run?.type)
 
@@ -151,12 +150,6 @@ function TraceTree({
           >
             {run?.name || run?.type}
           </Badge>
-
-          {/* {run.name && (
-              <Code color={`var(--mantine-color-${color}-light)`}>
-                {run.name}
-              </Code>
-            )} */}
 
           {run?.type === "llm" && run.cost && (
             <Badge variant="outline" color="gray">

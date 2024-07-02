@@ -14,20 +14,22 @@ projects.get("/", checkAccess("projects", "read"), async (ctx: Context) => {
 
   const rows = await sql`
     select
-      id,
-      created_at,
-      name,
-      org_id,
-      exists(select * from run where project_id = project.id) as activated,
-      (select api_key from api_key where project_id = project.id and type = 'public') as public_api_key,
-      (select api_key from api_key where project_id = project.id and type = 'private') as private_api_key,
+      p.id,
+      p.created_at,
+      p.name,
+      p.org_id,
+      ingestion_rule.filters,
+      exists(select * from run where project_id = p.id) as activated,
+      (select api_key from api_key where project_id = p.id and type = 'public') as public_api_key,
+      (select api_key from api_key where project_id = p.id and type = 'private') as private_api_key,
       (select array_agg(project_id) as id from account_project where account_id = ${userId}) as projects
     from
-      project
+      project p
       left join account_project on account_project.account_id = ${userId}
+      left join ingestion_rule on p.id = ingestion_rule.project_id
     where
       org_id = ${orgId}
-      and project.id = account_project.project_id
+      and p.id = account_project.project_id
   `
 
   ctx.body = rows
@@ -160,29 +162,42 @@ projects.patch(
   "/:projectId",
   checkAccess("projects", "update"),
   async (ctx: Context) => {
-    const { projectId } = ctx.params
-    const { userId } = ctx.state
+    const bodySchema = z.object({
+      name: z.string().optional(),
+      filters: z.array(z.any()).optional(),
+    });
+    const { name, filters } = bodySchema.parse(ctx.request.body);
+    const { projectId } = ctx.params;
+    const { userId } = ctx.state;
 
-    const hasProjectAccess = await checkProjectAccess(projectId, userId)
+    // TODO: this should be in a middleware
+    const hasProjectAccess = await checkProjectAccess(projectId, userId);
     if (!hasProjectAccess) {
-      ctx.throw(401, "Unauthorized")
+      ctx.throw(401, "Unauthorized");
     }
 
-    const bodySchema = z.object({
-      name: z.string(),
-    })
-    const { name } = bodySchema.parse(ctx.request.body)
 
-    await sql`
-      update project
-      set
-        name = ${name}
-      where
-        id = ${projectId}
-    `
-    ctx.status = 200
-    ctx.body = {}
-  },
-)
+    if (name) {
+      await sql`
+        update project
+        set name = ${name}
+        where id = ${projectId}
+      `;
+    }
+
+    if (filters) {
+      await sql`
+        insert into ingestion_rule (project_id, type, filters)
+        values (${projectId}, 'filtering', ${filters})
+        on conflict (project_id, type)
+        do update set filters = excluded.filters
+      `;
+    }
+
+    ctx.status = 200;
+    ctx.body = {};
+  }
+);
+
 
 export default projects

@@ -8,6 +8,7 @@ import { ProjectContext } from "../context"
 import { useAuth } from "../auth"
 import { fetcher } from "../fetcher"
 import { useFixedColorScheme } from "../hooks"
+import { CheckLogic } from "shared"
 
 type KeyType = string | ((...args: any[]) => string)
 
@@ -196,6 +197,8 @@ export function useProject() {
     `/projects/${projectId}`,
     fetcher.patch,
   )
+
+
   const { trigger: dropMutation } = useSWRMutation(
     `/projects/${projectId}`,
     fetcher.delete,
@@ -209,9 +212,14 @@ export function useProject() {
     mutate(newProjects)
   }
 
+  async function updateSmartDatafilters(filters: CheckLogic) {
+    return updateMutation({filters})
+  }
+
+
   async function drop(): Promise<Boolean> {
     try {
-      const res = await dropMutation()
+      await dropMutation()
       const newProjects = projects.filter((p) => p.id !== projectId)
       setProjectId(newProjects[0]?.id)
       mutate(newProjects)
@@ -224,6 +232,7 @@ export function useProject() {
   return {
     project,
     update,
+    updateSmartDatafilters,
     drop,
     setProjectId: setProjectId,
     mutate,
