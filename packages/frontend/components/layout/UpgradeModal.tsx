@@ -126,7 +126,10 @@ function RenderPlanCard({
   const { plan } = org
 
   const buttonText = useCallback(() => {
-    if (planId === "scale") return { children: "Get a Quote", variant }
+    if (planId === "scale") return { children: "Get a Quote", variant }\
+
+    if (org?.canceled && planId === "free") 
+      return { children: "Will switch soon", variant: "outline", disabled: true}
 
     if (org?.canceled && planId === plan)
       return { children: "Reactivate", variant }
