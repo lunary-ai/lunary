@@ -155,7 +155,7 @@ auth.post("/signup", async (ctx: Context) => {
 
     await sendVerifyEmail(email, name)
     await sendSlackMessage(
-      `<b>🔔 New signup from ${email}</b>
+      `🔔 New signup from ${email}
       ${name} is ${
         signupMethod === "signup"
           ? `building ${projectName} @ ${orgName} (${employeeCount}).`

@@ -154,7 +154,7 @@ async function cancelSubscription(object: Stripe.Subscription) {
   await Promise.all(emailPromises)
 
   await sendSlackMessage(
-    `<b>😭💔 ${org.name} subscription is now deleted</b>`,
+    `😭💔 ${org.name} subscription is now deleted`,
     "billing",
   )
 }
