@@ -2,6 +2,7 @@ import {
   ActionIcon,
   Box,
   Button,
+  MantineSize,
   Modal,
   Text,
   Textarea,
@@ -14,11 +15,15 @@ import { IconArrowsMaximize } from "@tabler/icons-react"
 type VariableTextareaProps = TextareaProps & {
   name: string
   value: string
+  w?: MantineSize
+  onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void
+  [key: string]: any
 }
 
 export default function VariableTextarea({
   name,
   value,
+  w,
   onChange,
   ...props
 }: VariableTextareaProps) {
@@ -29,7 +34,7 @@ export default function VariableTextarea({
       <Modal
         opened={opened}
         onClose={close}
-        title={<Title order={3}>Edit variable</Title>}
+        title={<Title order={3}>Edit variable content</Title>}
         overlayProps={{
           backgroundOpacity: 0.55,
           blur: 3,
@@ -38,6 +43,7 @@ export default function VariableTextarea({
       >
         <Textarea
           size="md"
+          placeholder="Paste variable content here"
           radius="sm"
           minRows={2}
           rows={10}
@@ -46,12 +52,17 @@ export default function VariableTextarea({
           onChange={onChange}
         />
 
-        <Button my="md" style={{ float: "right" }} onClick={close}>
+        <Button
+          my="md"
+          variant="default"
+          style={{ float: "right" }}
+          onClick={close}
+        >
           Save
         </Button>
       </Modal>
 
-      <Box style={{ position: "relative" }}>
+      <Box style={{ position: "relative" }} w={w}>
         <Textarea {...props} onChange={onChange} value={value} />
         <ActionIcon
           size="xs"
@@ -60,12 +71,11 @@ export default function VariableTextarea({
           variant="transparent"
           style={{
             position: "absolute",
-            right: "5%",
-            bottom: "5%",
-            marginBottom: "0.3rem",
+            right: "10px",
+            bottom: "7px",
           }}
         >
-          <IconArrowsMaximize />
+          <IconArrowsMaximize size={14} />
         </ActionIcon>
       </Box>
     </>

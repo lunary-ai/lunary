@@ -41,8 +41,8 @@ export default function PromptVariableEditor({
             >
               <Badge
                 key={name}
-                miw={50}
-                maw={90}
+                miw="fit-content"
+                maw={100}
                 px="sm"
                 variant="outline"
                 tt="none"
@@ -54,6 +54,7 @@ export default function PromptVariableEditor({
                 w="100%"
                 required={true}
                 radius="sm"
+                placeholder="Enter content here"
                 rows={1}
                 maxRows={1}
                 name={name}
