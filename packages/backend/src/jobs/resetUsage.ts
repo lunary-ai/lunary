@@ -1,5 +1,5 @@
 import sql from "@/src/utils/db"
-import { sendTelegramMessage } from "@/src/utils/notifications"
+import { sendSlackMessage } from "@/src/utils/notifications"
 import { sendEmail } from "../utils/sendEmail"
 import { LIMITED_EMAIL } from "../utils/emails"
 
@@ -44,7 +44,7 @@ RETURNING *;`
       // send telegram message to user
       if (alreadyLimited.find((u) => u.id === org.id)) continue
 
-      await sendTelegramMessage(
+      await sendSlackMessage(
         `⛔ limited ${org.name} because too many events`,
         "users",
       )

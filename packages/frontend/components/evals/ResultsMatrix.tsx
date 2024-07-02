@@ -1,5 +1,6 @@
 import {
   Badge,
+  Button,
   Code,
   Group,
   HoverCard,
@@ -12,6 +13,9 @@ import { formatCost } from "@/utils/format"
 import { ChatMessage } from "../SmartViewer/Message"
 import SmartViewer from "../SmartViewer"
 import { MODELS, Provider } from "shared"
+import { IconFileExport } from "@tabler/icons-react"
+
+import { json2csv } from "json-2-csv"
 
 // We create a matrix of results for each prompt, variable and model.
 // The matrix is a 3D array, where each dimension represents a different variable, prompt and model.
@@ -63,23 +67,25 @@ function ResultDetails({ details }) {
   )
 }
 
-function ResultCell({ result }) {
+function ResultCell({ result, showTestIndicator }) {
   return result ? (
     <>
       {result.status === "success" ? (
         <Stack align="center" justify="between">
           <ChatMessage data={result.output} mah={300} compact w="100%" />
 
-          <HoverCard width={500} disabled={!result.results.length}>
-            <HoverCard.Target>
-              <Badge color={result.passed ? "green" : "red"}>
-                {result.passed ? "Passed" : "Failed"}
-              </Badge>
-            </HoverCard.Target>
-            <HoverCard.Dropdown>
-              <ResultDetails details={result.results} />
-            </HoverCard.Dropdown>
-          </HoverCard>
+          {showTestIndicator && (
+            <HoverCard width={500} disabled={!result.results.length}>
+              <HoverCard.Target>
+                <Badge color={result.passed ? "green" : "red"}>
+                  {result.passed ? "Passed" : "Failed"}
+                </Badge>
+              </HoverCard.Target>
+              <HoverCard.Dropdown>
+                <ResultDetails details={result.results} />
+              </HoverCard.Dropdown>
+            </HoverCard>
+          )}
           <Group gap="xs">
             <Text c="dimmed" size="xs">
               {(+result.duration / 1000).toFixed(2)}s -{" "}
@@ -96,12 +102,12 @@ function ResultCell({ result }) {
   )
 }
 
-function AggregateContent({ results }) {
+function AggregateContent({ results, showTestIndicator }) {
   const { passed, failed, duration, cost } = getAggegateForVariation(results)
 
   return (
     <>
-      {passed + failed > 1 && (
+      {passed + failed > 1 && showTestIndicator && (
         <Progress.Root size={20} w={100}>
           <Progress.Section
             value={(passed / (passed + failed)) * 100}
@@ -133,7 +139,7 @@ function AggregateContent({ results }) {
   )
 }
 
-export default function ResultsMatrix({ data }) {
+export default function ResultsMatrix({ data, showTestIndicator }) {
   const prompts = Array.from(
     new Set(data.map((result) => JSON.stringify(result.messages))),
   ).map((result: any) => JSON.parse(result))
@@ -174,8 +180,66 @@ export default function ResultsMatrix({ data }) {
     ...prompts.map((messages) => getVariableKeysForPrompt(messages).length),
   )
 
+  async function exportToCsv() {
+    const rows = [] as any[]
+
+    prompts.forEach((messages) => {
+      const variableVariations = getVariableVariationsForPrompt(messages)
+      variableVariations.forEach((variables) => {
+        providers.forEach((provider) => {
+          const result = getResultForPromptVariationProvider(
+            messages,
+            variables,
+            provider,
+          )
+          if (result) {
+            const textResult = result.error
+              ? JSON.stringify(result.error)
+              : result.output?.content
+
+            rows.push(
+              {
+                Prompt: JSON.stringify(messages),
+                Variables: JSON.stringify(variables),
+                Model: provider.model,
+                Passed: result.passed ? "Yes" : "No",
+                Output: textResult,
+              }, // Escape double quotes and wrap in double quotes
+            )
+          }
+        })
+      })
+    })
+
+    const csv = await json2csv(rows, {
+      arrayIndexesAsKeys: false,
+    })
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.setAttribute("href", url)
+    link.setAttribute("download", "results.csv")
+    link.style.visibility = "hidden"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   return (
-    <Stack>
+    <>
+      <Button
+        w="fit-content"
+        ml="auto"
+        variant="light"
+        color="blue"
+        onClick={() => {
+          exportToCsv()
+        }}
+        leftSection={<IconFileExport size={16} />}
+      >
+        Export to CSV
+      </Button>
       <div className={classes["matrix-container"]}>
         <table className={classes["matrix-table"]}>
           <thead>
@@ -203,6 +267,7 @@ export default function ResultsMatrix({ data }) {
                       </HoverCard.Dropdown>
                     </HoverCard>
                     <AggregateContent
+                      showTestIndicator={showTestIndicator}
                       results={data.filter((result) =>
                         compareObjects(result.provider, provider),
                       )}
@@ -234,6 +299,7 @@ export default function ResultsMatrix({ data }) {
                           </HoverCard.Dropdown>
                         </HoverCard>
                         <AggregateContent
+                          showTestIndicator={showTestIndicator}
                           results={data.filter((result) =>
                             compareObjects(result.messages, messages),
                           )}
@@ -265,7 +331,10 @@ export default function ResultsMatrix({ data }) {
                     )
                     return (
                       <td className={classes["output-cell"]} key={k}>
-                        <ResultCell result={result} />
+                        <ResultCell
+                          result={result}
+                          showTestIndicator={showTestIndicator}
+                        />
                       </td>
                     )
                   })}
@@ -275,6 +344,6 @@ export default function ResultsMatrix({ data }) {
           </tbody>
         </table>
       </div>
-    </Stack>
+    </>
   )
 }

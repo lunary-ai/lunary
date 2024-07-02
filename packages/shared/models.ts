@@ -10,6 +10,11 @@ export const MODELS = [
     provider: "openai",
   },
   {
+    id: "claude-3-5-sonnet-20240620",
+    name: "claude-3-5-sonnet",
+    provider: "anthropic",
+  },
+  {
     id: "claude-3-opus-20240229",
     name: "claude-3-opus",
     provider: "anthropic",

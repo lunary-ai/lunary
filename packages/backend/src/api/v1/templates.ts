@@ -11,12 +11,24 @@ const templates = new Router({
 
 templates.get("/", async (ctx: Context) => {
   const templates = await sql`
-    select t.*, coalesce(json_agg(tv.*) filter (where tv.id is not null), '[]') as versions
-    from template t
-    left join template_version tv on tv.template_id = t.id
-    where t.project_id = ${ctx.state.projectId}
-    group by t.id, t.name, t.slug, t.mode, t.created_at, t.group, t.project_id
-    order by t.created_at desc
+    select 
+     t.*, 
+     coalesce(json_agg(tv.*) filter (where tv.id is not null), '[]') as versions
+    from 
+      template t
+      left join template_version tv on tv.template_id = t.id
+    where 
+      t.project_id = ${ctx.state.projectId}
+    group by 
+      t.id, 
+      t.name, 
+      t.slug, 
+      t.mode, 
+      t.created_at, 
+      t.group, 
+      t.project_id
+    order by 
+      t.created_at desc
   `
 
   // uncamel each template's versions' extras' keys
@@ -27,6 +39,33 @@ templates.get("/", async (ctx: Context) => {
   }
 
   ctx.body = templates
+})
+templates.get("/latest", async (ctx: Context) => {
+  const templateVersions = await sql`
+    select 
+      distinct on (tv.template_id)
+      tv.id::text, 
+      t.slug, 
+      tv.content,
+      tv.extra,
+      tv.created_at,
+      tv.version
+    from
+      template_version tv
+      left join template t on tv.template_id = t.id
+    where
+      tv.is_draft = false
+      and project_id = ${ctx.state.projectId} 
+    order by
+      tv.template_id,
+      tv.created_at desc; 
+  `
+
+  for (const version of templateVersions) {
+    version.extra = unCamelObject(version.extra)
+  }
+
+  ctx.body = templateVersions
 })
 
 // insert template + a first version, and return the template with versions
