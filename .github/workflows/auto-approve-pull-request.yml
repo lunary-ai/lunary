@@ -1,16 +1,16 @@
-name: Auto-approve PRs
+# name: Auto-approve PRs
 
-on:
-  pull_request:
-    types: [opened, reopened, synchronize]
+# on:
+#   pull_request:
+#     types: [opened, reopened, synchronize]
 
-jobs:
-  auto-approve:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Auto-approve PR
-        uses: hmarr/auto-approve-action@v3
-        with:
-          github-token: ${{ secrets.LUNARY_BOT_GH_TOKEN }}
+# jobs:
+#   auto-approve:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v3
+#       - name: Auto-approve PR
+#         uses: hmarr/auto-approve-action@v3
+#         with:
+#           github-token: ${{ secrets.LUNARY_BOT_GH_TOKEN }}

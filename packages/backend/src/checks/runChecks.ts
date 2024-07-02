@@ -58,6 +58,7 @@ async function checkRun(
   run: any,
   check: LogicElement,
   isRadar: Boolean,
+  forceIngestionCheck: Boolean,
 ): Promise<CheckResults> {
   if (typeof check === "string") {
     // Handle AND or OR
@@ -69,7 +70,12 @@ async function checkRun(
     const subChecks = check.slice(1)
     if (logicType === "OR") {
       for (const subCheck of subChecks) {
-        const result = await checkRun(run, subCheck, isRadar)
+        const result = await checkRun(
+          run,
+          subCheck,
+          isRadar,
+          forceIngestionCheck,
+        )
         if (result.passed) {
           return { passed: true, details: [result] }
         }
@@ -81,7 +87,9 @@ async function checkRun(
     } else {
       // Handle nested AND
       const results: CheckResults[] = await Promise.all(
-        subChecks.map((subCheck) => checkRun(run, subCheck, isRadar)),
+        subChecks.map((subCheck) =>
+          checkRun(run, subCheck, isRadar, forceIngestionCheck),
+        ),
       )
       return {
         passed: results.every((result) => result.passed),
@@ -95,6 +103,11 @@ async function checkRun(
 
   if (!runner || (!runner.sql && !runner.evaluator)) {
     return { passed: true }
+  }
+
+  if (forceIngestionCheck && runner.ingestionCheck) {
+    const passed = await runner.ingestionCheck(run, params)
+    return { passed, filterId: id }
   }
 
   if (runner.sql) {
@@ -134,7 +147,7 @@ export async function runChecksOnRun(
     const subChecks = checks.slice(1)
     if (logicType === "OR") {
       for (const check of subChecks) {
-        const res = await checkRun(run, check, isRadar)
+        const res = await checkRun(run, check, isRadar, false)
         results.push(res)
         if (res.passed) {
           passed = true
@@ -144,7 +157,7 @@ export async function runChecksOnRun(
     } else {
       // Handle nested AND
       for (const check of subChecks) {
-        const res = await checkRun(run, check, isRadar)
+        const res = await checkRun(run, check, isRadar, false)
         results.push(res)
         passed = res.passed
         if (!res.passed) break
@@ -153,4 +166,35 @@ export async function runChecksOnRun(
   }
 
   return { passed, results }
+}
+
+export async function checkIngestionRule(run: any, checks: CheckLogic) {
+  if (!checks.length || (checks.length === 1 && checks[0] === "AND"))
+    return true
+
+  let passed = false
+  const results: CheckResults[] = []
+
+  const logicType = checks[0]
+  const subChecks = checks.slice(1)
+  if (logicType === "OR") {
+    for (const check of subChecks) {
+      const res = await checkRun(run, check, false, true)
+      results.push(res)
+      if (res.passed) {
+        passed = true
+        break
+      }
+    }
+  } else {
+    // Handle nested AND
+    for (const check of subChecks) {
+      const res = await checkRun(run, check, false, true)
+      results.push(res)
+      passed = res.passed
+      if (!res.passed) break
+    }
+  }
+
+  return passed
 }
