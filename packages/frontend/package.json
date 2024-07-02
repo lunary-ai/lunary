@@ -26,7 +26,7 @@
     "jose": "^5.2.0",
     "json-2-csv": "^5.5.1",
     "jsonrepair": "^3.5.1",
-    "next": "^14.1.0",
+    "next": "^14.2.4",
     "next-seo": "^6.4.0",
     "posthog-js": "1.131.4",
     "random-word-slugs": "^0.1.7",

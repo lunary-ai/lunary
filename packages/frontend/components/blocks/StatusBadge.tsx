@@ -1,15 +1,26 @@
 import { Badge, ThemeIcon } from "@mantine/core"
-import { IconCheck, IconCross, IconX } from "@tabler/icons-react"
+import { IconCheck, IconShieldBolt, IconX } from "@tabler/icons-react"
 import ProtectedText from "./ProtectedText"
 
-const getColor = (status) => {
-  switch (status) {
-    case "success":
-      return "green"
-    case "error":
-      return "red"
-    default:
-      return "blue"
+function getColor(status) {
+  if (status === "success") {
+    return "green"
+  } else if (status === "error") {
+    return "red"
+  } else if (status === "filtered") {
+    return "gray"
+  } else {
+    return "blue"
+  }
+}
+
+function Icon({ status }) {
+  if (status === "success") {
+    return <IconCheck strokeWidth={4} size="12" />
+  } else if (status === "filtered") {
+    return <IconShieldBolt size="12" />
+  } else {
+    return <IconX strokeWidth={4} size={11} />
   }
 }
 
@@ -19,11 +30,7 @@ export default function StatusBadge({ status, minimal = false }) {
   if (minimal)
     return (
       <ThemeIcon color={color} size="sm" radius="lg" variant="outline">
-        {status === "success" ? (
-          <IconCheck strokeWidth={4} size="12" />
-        ) : (
-          <IconX strokeWidth={4} size={11} />
-        )}
+        <Icon status={status} />
       </ThemeIcon>
     )
 
