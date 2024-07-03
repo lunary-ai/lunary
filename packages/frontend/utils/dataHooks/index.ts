@@ -8,6 +8,7 @@ import { ProjectContext } from "../context"
 import { useAuth } from "../auth"
 import { fetcher } from "../fetcher"
 import { useFixedColorScheme } from "../hooks"
+import { CheckLogic } from "shared"
 
 type KeyType = string | ((...args: any[]) => string)
 
@@ -196,6 +197,8 @@ export function useProject() {
     `/projects/${projectId}`,
     fetcher.patch,
   )
+
+
   const { trigger: dropMutation } = useSWRMutation(
     `/projects/${projectId}`,
     fetcher.delete,
@@ -209,9 +212,14 @@ export function useProject() {
     mutate(newProjects)
   }
 
+  async function updateSmartDatafilters(filters: CheckLogic) {
+    return updateMutation({filters})
+  }
+
+
   async function drop(): Promise<Boolean> {
     try {
-      const res = await dropMutation()
+      await dropMutation()
       const newProjects = projects.filter((p) => p.id !== projectId)
       setProjectId(newProjects[0]?.id)
       mutate(newProjects)
@@ -224,6 +232,7 @@ export function useProject() {
   return {
     project,
     update,
+    updateSmartDatafilters,
     drop,
     setProjectId: setProjectId,
     mutate,
@@ -423,30 +432,6 @@ export function useRunsUsageByUser(range = null) {
     usageByUser: reduceUsersUsage(usageByUser || []),
     loading: isLoading,
   }
-}
-
-export function useAppUserList(usageRange) {
-  const {
-    data: users,
-    isLoading,
-    isValidating,
-  } = useProjectSWR(`/external-users?days=${usageRange}`)
-
-  return { users, isLoading, isValidating }
-}
-
-export function useAppUsers(usageRange = 30) {
-  const { users, isLoading } = useAppUserList(usageRange)
-
-  const maxLastSeen = new Date(
-    new Date().getTime() - usageRange * 24 * 60 * 60 * 1000,
-  )
-    .toISOString()
-    .slice(0, 10)
-
-  const appUsers = users?.filter((u) => u.lastSeen > maxLastSeen)
-
-  return { users: appUsers || [], loading: isLoading }
 }
 
 export function useOrgUser(userId: string) {

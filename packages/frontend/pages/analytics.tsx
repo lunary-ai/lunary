@@ -1,17 +1,28 @@
 import LineChart from "@/components/analytics/LineChart"
+import TopModels from "@/components/analytics/TopModels"
+import TopTemplates from "@/components/analytics/TopTemplates"
+import TopUsersCard from "@/components/analytics/TopUsers"
 import CheckPicker from "@/components/checks/Picker"
 import Empty from "@/components/layout/Empty"
-import { AreaChart } from "@mantine/charts"
 import { useProject } from "@/utils/dataHooks"
-import { useAnalyticsData } from "@/utils/dataHooks/analytics"
-import { formatCost } from "@/utils/format"
 import {
+  useAnalyticsChartData,
+  useTopModels,
+  useTopTemplates,
+} from "@/utils/dataHooks/analytics"
+import { useExternalUsers } from "@/utils/dataHooks/external-users"
+import { formatCost } from "@/utils/format"
+import { getFilteredChartTooltipPayload } from "@mantine/charts"
+import {
+  Box,
   Button,
   Container,
   Group,
+  Paper,
   Select,
   SimpleGrid,
   Stack,
+  Text,
   Title,
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
@@ -25,7 +36,6 @@ import {
 import { NextSeo } from "next-seo"
 import { useEffect, useState } from "react"
 import { CheckLogic, serializeLogic } from "shared"
-import { endOfToday } from "date-fns"
 
 function getDefaultDateRange() {
   const endOfToday = new Date()
@@ -281,6 +291,33 @@ function GranularitySelect({
   )
 }
 
+interface ChartTooltipProps {
+  label: string
+  payload: Record<string, any>[] | undefined
+}
+
+function ChartTooltip({ label, payload }: ChartTooltipProps) {
+  if (!payload) return null
+
+  return (
+    <Paper px="md" py="sm" withBorder shadow="md" radius="md">
+      <Text fw={500} mb={5}>
+        {label}
+      </Text>
+      {getFilteredChartTooltipPayload(payload)
+        .filter(({ value }) => value > 0)
+        .map((item: any) => (
+          <Group>
+            <Box w="10px" h="10px" bg={item.color}></Box>
+            <Text key={item.name} fz="sm">
+              {item.name}: {item.value}
+            </Text>
+          </Group>
+        ))}
+    </Paper>
+  )
+}
+
 // TODO: refactor (put utils functions and components in other file)
 // TODO: typescript everywhere
 // TODO: checks in url
@@ -306,17 +343,29 @@ export default function Analytics() {
 
   const { project } = useProject()
 
-  // TODO: refactor this
-
-  const { data: tokensData, isLoading: tokensDataLoading } = useAnalyticsData(
-    "tokens",
+  const { data: topModels, isLoading: topModelsLoading } = useTopModels({
     startDate,
     endDate,
-    granularity,
-    serializedChecks,
-  )
+  })
 
-  const { data: costData, isLoading: costDataLoading } = useAnalyticsData(
+  const { data: topTemplates, isLoading: topTemplatesLoading } =
+    useTopTemplates(startDate, endDate)
+
+  const { users: topUsers, loading: topUsersLoading } = useExternalUsers({
+    startDate,
+    endDate,
+  })
+
+  const { data: tokensData, isLoading: tokensDataLoading } =
+    useAnalyticsChartData(
+      "tokens",
+      startDate,
+      endDate,
+      granularity,
+      serializedChecks,
+    )
+
+  const { data: costData, isLoading: costDataLoading } = useAnalyticsChartData(
     "costs",
     startDate,
     endDate,
@@ -324,33 +373,35 @@ export default function Analytics() {
     serializedChecks,
   )
 
-  const { data: errorsData, isLoading: errorsDataLoading } = useAnalyticsData(
-    "errors",
-    startDate,
-    endDate,
-    granularity,
-    serializedChecks,
-  )
+  const { data: errorsData, isLoading: errorsDataLoading } =
+    useAnalyticsChartData(
+      "errors",
+      startDate,
+      endDate,
+      granularity,
+      serializedChecks,
+    )
 
   const { data: newUsersData, isLoading: newUsersDataLoading } =
-    useAnalyticsData("users/new", startDate, endDate, granularity)
+    useAnalyticsChartData("users/new", startDate, endDate, granularity)
 
   const { data: activeUsersData, isLoading: activeUsersDataLoading } =
-    useAnalyticsData("users/active", startDate, endDate, granularity)
+    useAnalyticsChartData("users/active", startDate, endDate, granularity)
 
   const { data: avgUserCostData, isLoading: avgUserCostDataLoading } =
-    useAnalyticsData("users/average-cost", startDate, endDate, granularity)
+    useAnalyticsChartData("users/average-cost", startDate, endDate, granularity)
 
-  const { data: runCountData, isLoading: runCountLoading } = useAnalyticsData(
-    "run-types",
-    startDate,
-    endDate,
-    granularity,
-    serializedChecks,
-  )
+  const { data: runCountData, isLoading: runCountLoading } =
+    useAnalyticsChartData(
+      "run-types",
+      startDate,
+      endDate,
+      granularity,
+      serializedChecks,
+    )
 
   const { data: averageLatencyData, isLoading: averageLatencyDataLoading } =
-    useAnalyticsData(
+    useAnalyticsChartData(
       "latency",
       startDate,
       endDate,
@@ -359,7 +410,7 @@ export default function Analytics() {
     )
 
   const { data: feedbackRatioData, isLoading: feedbackRatioLoading } =
-    useAnalyticsData(
+    useAnalyticsChartData(
       "feedback-ratio",
       startDate,
       endDate,
@@ -427,22 +478,46 @@ export default function Analytics() {
               defaultOpened={showCheckBar}
               value={checks}
               restrictTo={(filter) =>
-                ["tags", "model", "users", "metadata"].includes(filter.id)
+                ["tags", "models", "users", "metadata"].includes(filter.id)
               }
             />
           )}
 
-          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-            <LineChart
-              data={tokensData}
-              loading={tokensDataLoading}
-              splitBy="name"
-              props={["tokens"]}
-              agg="sum"
-              title="Tokens"
-              {...commonChartData}
+          <SimpleGrid cols={3}>
+            <TopModels topModels={topModels} isLoading={topModelsLoading} />
+            <TopTemplates
+              topTemplates={topTemplates}
+              isLoading={topTemplatesLoading}
             />
+            <TopUsersCard topUsers={topUsers} isLoading={topUsersLoading} />
+          </SimpleGrid>
 
+          {/* <AreaChart
+            h={300}
+            data={data}
+            dataKey="date"
+            type="stacked"
+            series={series}
+            withDots={false}
+            tooltipProps={{
+              content: ({ label, payload }) => (
+                <ChartTooltip label={label} payload={payload} />
+              ),
+            }}
+          /> */}
+
+          <LineChart
+            data={tokensData}
+            loading={tokensDataLoading}
+            splitBy="name"
+            props={["tokens"]}
+            agg="sum"
+            title="Tokens"
+            description="The number of tokens generated by your LLM calls"
+            {...commonChartData}
+          />
+
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
             <LineChart
               data={costData}
               loading={costDataLoading}
@@ -451,6 +526,7 @@ export default function Analytics() {
               props={["costs"]}
               agg="sum"
               title="Costs"
+              description="The total cost generated by your LLM calls"
               {...commonChartData}
             />
 
@@ -461,6 +537,7 @@ export default function Analytics() {
               description="How many errors were captured in your app"
               agg="sum"
               props={["errors"]}
+              colors={["red"]}
               {...commonChartData}
             />
 
@@ -473,27 +550,31 @@ export default function Analytics() {
                   props={["users"]}
                   agg="sum"
                   title="New Users"
+                  description="The number of new tracked users for the selected period"
                   {...commonChartData}
                 />
 
                 <LineChart
-                  data={activeUsersData}
+                  data={activeUsersData?.data}
+                  stat={activeUsersData?.stat}
                   loading={activeUsersDataLoading}
                   props={["users"]}
-                  agg="max"
                   title="Active Users"
+                  colors={["violet"]}
+                  description="The number of active users for the selected period"
                   {...commonChartData}
                 />
               </>
             )}
 
             <LineChart
-              data={avgUserCostData}
+              data={avgUserCostData?.data}
+              stat={avgUserCostData?.stat}
               loading={avgUserCostDataLoading}
               props={["cost"]}
               formatter={formatCost}
-              agg="avg"
               title="Avg. User Cost"
+              description="The average cost of each of your users"
               {...commonChartData}
             />
 
@@ -504,16 +585,19 @@ export default function Analytics() {
               splitBy="type"
               agg="sum"
               title="Runs Volume"
+              description="The total number of runs generated by your app"
               {...commonChartData}
             />
 
             <LineChart
-              data={averageLatencyData}
+              data={averageLatencyData?.data}
+              stat={averageLatencyData?.stat}
               loading={averageLatencyDataLoading}
               props={["avgDuration"]}
-              agg="avg"
               formatter={(value) => `${value.toFixed(2)}s`}
               title="Avg. LLM Latency"
+              description="The number of active users"
+              colors={["yellow"]}
               {...commonChartData}
             />
 

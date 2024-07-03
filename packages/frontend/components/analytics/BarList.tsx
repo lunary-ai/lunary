@@ -5,8 +5,8 @@ type BarListProps = {
   data: any[]
   filterZero?: boolean
   columns: {
+    key: string
     name?: string
-    key?: string
     main?: boolean // Use this column for the bar chart calculations?
     bar?: boolean // Bar chart column ?
     render?: (value, row?) => React.ReactNode
@@ -15,12 +15,7 @@ type BarListProps = {
 
 // A table of progress bars, with the progress value the proportion relative to the total
 // and the second column the value of the bar
-function BarList({
-  data,
-  columns,
-
-  filterZero = true,
-}: BarListProps) {
+function BarList({ data, columns, filterZero = true }: BarListProps) {
   const dataColumns = columns.filter((col) => !col.bar && col.key)
   const main = dataColumns.find((col) => col.main) || dataColumns[0]
   const mainTotal = data.reduce((acc, item) => acc + (item[main.key] || 0), 0)
@@ -42,7 +37,7 @@ function BarList({
         <Table.Thead style={{ textAlign: "left" }}>
           <Table.Tr>
             {columns.map(({ name }, i) => (
-              <th style={{ width: i === 0 ? "50%" : "25%" }} key={i}>
+              <th style={{ width: i === 0 ? "60%" : "25%" }} key={i}>
                 {name || ""}
               </th>
             ))}
@@ -82,6 +77,7 @@ function BarList({
                       </Progress.Root>
                       <Flex
                         w="90%"
+                        px="sm"
                         h="25px"
                         pos="absolute"
                         align="center"
@@ -93,7 +89,12 @@ function BarList({
                           size="12px"
                           style={{
                             textAlign: "center",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            padding: ".3rem",
                           }}
+                          title={item.value}
                         >
                           {item.value}
                         </Text>

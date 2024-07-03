@@ -1,6 +1,6 @@
+import { checkIngestionRule } from "@/src/checks/runChecks"
+import { calcRunCost } from "@/src/utils/calcCost"
 import sql from "@/src/utils/db"
-import * as Sentry from "@sentry/node"
-import Router from "koa-router"
 import {
   CleanRun,
   Event,
@@ -8,9 +8,10 @@ import {
   clearUndefined,
   ingestChatEvent,
 } from "@/src/utils/ingest"
-import { calcRunCost } from "@/src/utils/calcCost"
-import { z } from "zod"
 import Context from "@/src/utils/koa"
+import * as Sentry from "@sentry/node"
+import Router from "koa-router"
+import { z } from "zod"
 
 const router = new Router()
 
@@ -262,12 +263,37 @@ export async function processEventsIngestion(
     error?: string
   }[] = []
 
+  const [ingestionRule] =
+    await sql`select * from ingestion_rule where project_id = ${projectId} and type = 'filtering'`
+
   for (let event of sorted) {
     if (Array.isArray(event) && event.length === 1) {
       event = event[0]
     }
     try {
       const cleanedEvent = await cleanEvent(event)
+
+      let passedIngestionRule = true
+
+      if (ingestionRule) {
+        passedIngestionRule = await checkIngestionRule(
+          cleanedEvent,
+          ingestionRule.filters,
+        )
+      }
+
+      if (cleanedEvent.event === "end") {
+        const [dbRun] =
+          await sql`select * from run where id = ${cleanedEvent.runId}`
+        if (dbRun.input === "__NOT_INGESTED__") {
+          passedIngestionRule = false
+        }
+      }
+
+      if (!passedIngestionRule) {
+        cleanedEvent.input = "__NOT_INGESTED__"
+        cleanedEvent.output = "__NOT_INGESTED__"
+      }
 
       await registerEvent(projectId, cleanedEvent, insertedIds)
 

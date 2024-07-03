@@ -61,7 +61,6 @@ function RenderFunction({
   type,
 }) {
   const fontColor = type === "functionCall" ? "#40c057" : "inherit"
-
   return (
     <Code block bg={codeBg}>
       <Text
@@ -439,6 +438,7 @@ export function ChatMessage({
   compact?: boolean
   mah?: number
 }) {
+  console.log(data)
   // TODO FIX
   // Flickering dark mode bug: this is due to scheme being 'light' for a few ms
   const scheme = useColorScheme()
@@ -451,6 +451,8 @@ export function ChatMessage({
 
   // Add/remove the 'id' and 'name' props required on tool calls
   useEffect(() => {
+    if (!data) return
+
     // Add/remove the 'name' props required on tool calls
     if (data.role === "tool" && editable && typeof data.name !== "string") {
       onChange({ ...data, name: "some-tool-name" })
