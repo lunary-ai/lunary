@@ -7,7 +7,8 @@
  * - Text
  */
 
-import { Card, Code, Flex, Group, SimpleGrid, Stack, Text } from "@mantine/core"
+import { Card, Code, Flex, Stack, Text, Tooltip } from "@mantine/core"
+import { IconShieldBolt } from "@tabler/icons-react"
 import { useMemo } from "react"
 import ProtectedText from "../blocks/ProtectedText"
 import { ChatMessage } from "./Message"
@@ -86,54 +87,78 @@ export default function SmartViewer({
     return checkIsRetrieverObjects(parsed)
   }, [parsed])
 
-  return (
-    <pre className={compact ? "compact" : ""} id="HERE">
-      {error && (
-        <ChatMessage
-          data={{
-            role: "error",
-            text:
-              typeof error.stack === "string"
-                ? compact
-                  ? error.message || error.stack
-                  : error.stack
-                : typeof error === "object"
-                  ? JSON.stringify(error, null, 2)
-                  : error,
-          }}
-          compact={compact}
-        />
-      )}
+  let Message
+  if (error) {
+    Message = (
+      <ChatMessage
+        data={{
+          role: "error",
+          text:
+            typeof error.stack === "string"
+              ? compact
+                ? error.message || error.stack
+                : error.stack
+              : typeof error === "object"
+                ? JSON.stringify(error, null, 2)
+                : error,
+        }}
+        compact={compact}
+      />
+    )
+  }
 
-      {data && (
-        <ProtectedText>
-          {isObject ? (
-            isMessages ? (
-              <MessageViewer data={parsed} compact={compact} />
-            ) : isRetrieverObjects ? (
-              <Stack>
-                {parsed.map((obj, i) => (
-                  <RetrieverObject key={i} data={obj} compact={compact} />
-                ))}
-              </Stack>
-            ) : (
-              <Code
-                color="var(--mantine-color-blue-light)"
-                style={{ overflow: "hidden" }}
-              >
-                <RenderJson data={parsed} compact={compact} />
-              </Code>
-            )
+  if (data && data !== "__NOT_INGESTED__") {
+    Message = (
+      <ProtectedText>
+        {isObject ? (
+          isMessages ? (
+            <MessageViewer data={parsed} compact={compact} />
+          ) : isRetrieverObjects ? (
+            <Stack>
+              {parsed.map((obj, i) => (
+                <RetrieverObject key={i} data={obj} compact={compact} />
+              ))}
+            </Stack>
           ) : (
             <Code
               color="var(--mantine-color-blue-light)"
               style={{ overflow: "hidden" }}
             >
-              {parsed}
+              <RenderJson data={parsed} compact={compact} />
             </Code>
-          )}
-        </ProtectedText>
-      )}
+          )
+        ) : (
+          <Code
+            color="var(--mantine-color-blue-light)"
+            style={{ overflow: "hidden" }}
+          >
+            {parsed}
+          </Code>
+        )}
+      </ProtectedText>
+    )
+  } else {
+    Message = (
+      <Code
+        color="var(--mantine-color-gray-light)"
+        style={{ overflow: "hidden" }}
+      >
+        <Flex align="center">
+          <Tooltip label="Matched Smart Data Filter rules">
+            <IconShieldBolt size="16px" />
+          </Tooltip>
+          <Text ml="md" size="xs">
+            Not ingested
+          </Text>
+        </Flex>
+      </Code>
+    )
+  }
+
+  return (
+    <pre className={compact ? "compact" : ""} id="HERE">
+      {error && Message}
+      {data && Message}
       <style jsx>{`
         pre {
           white-space: pre-wrap;

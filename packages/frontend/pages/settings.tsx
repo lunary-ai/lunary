@@ -18,19 +18,20 @@ import {
 import { NextSeo } from "next-seo"
 import Router from "next/router"
 
-import { useOrg, useUser, useProject } from "@/utils/dataHooks"
-import useSWR from "swr"
 import RenamableField from "@/components/blocks/RenamableField"
-import { CheckLogic, hasAccess } from "shared"
 import { SettingsCard } from "@/components/blocks/SettingsCard"
-import { IconCheck, IconFilter, IconRefreshAlert } from "@tabler/icons-react"
-import { useState } from "react"
+import CheckPicker from "@/components/checks/Picker"
+// import config from "@/utils/config"
+import { useOrg, useProject, useUser } from "@/utils/dataHooks"
 import errorHandler from "@/utils/errors"
 import { fetcher } from "@/utils/fetcher"
-import { notifications } from "@mantine/notifications"
 import { modals } from "@mantine/modals"
-import CheckPicker from "@/components/checks/Picker"
-import { AreaChart } from "@mantine/charts"
+import { notifications } from "@mantine/notifications"
+import { IconCheck, IconFilter, IconRefreshAlert } from "@tabler/icons-react"
+import { useEffect, useState } from "react"
+import { CheckLogic, hasAccess } from "shared"
+import useSWR from "swr"
+import config from "@/utils/config"
 
 function Keys() {
   const [regenerating, setRegenerating] = useState(false)
@@ -142,18 +143,26 @@ function Keys() {
 
 export default function AppAnalytics() {
   const { org } = useOrg()
-  const { update, project, setProjectId, drop } = useProject()
+  const { update, project, setProjectId, drop, updateSmartDatafilters } =
+    useProject()
   const [isLoading, setIsLoading] = useState(false)
   const { user } = useUser()
-  const [filters, setChecks] = useState<CheckLogic>([
-    "AND",
-    { id: "type", params: { type: "llm" } },
-  ])
+  const [filters, setChecks] = useState<CheckLogic>(["AND"])
+
+  useEffect(() => {
+    if (project) {
+      setChecks(project.filters)
+    }
+  }, [project])
 
   // TODO: better route for project usage
   const { data: projectUsage, isLoading: projectUsageLoading } = useSWR(
     project?.id && org && `/orgs/${org.id}/usage?projectId=${project?.id}`,
   )
+
+  const smartDataFilterEnabled = config.IS_SELF_HOSTED
+    ? org.license.samlEnabled
+    : org.samlEnabled
 
   return (
     <Container className="unblockable">
@@ -183,32 +192,31 @@ export default function AppAnalytics() {
         {user.role !== "viewer" && <Keys />}
 
         <SettingsCard
-          title={<>Smart Data Masking ✨</>}
+          title={<>Smart Data Filtering ✨</>}
           align="start"
           paywallConfig={{
             Icon: IconFilter,
-            feature: "Smart Data Masking",
+            feature: "Smart Data Filtering",
             p: 12,
             plan: "enterprise",
             list: [
-              "Mask or filter out sensitive data",
+              "Filter out sensitive data",
               "LLM-powered detection or custom regex patterns",
             ],
-            enabled: !process.env.NEXT_PUBLIC_DEMO,
+            enabled: smartDataFilterEnabled,
           }}
         >
           <Text>
-            Smart Data Masking allows you to filter out sensitive data from your
+            Smart Data Filters allows you to filter out sensitive data from your
             project.
           </Text>
           <CheckPicker
             defaultOpened={true}
             value={filters}
             onChange={setChecks}
+            buttonText="Add filter"
             restrictTo={(f) =>
-              ["tools", "tags", "metadata", "users", "pii", "regex"].includes(
-                f.id,
-              )
+              ["metadata", "users", "tags", "tools", "models"].includes(f.id)
             }
           />
 
@@ -218,9 +226,10 @@ export default function AppAnalytics() {
               style={{ float: "right" }}
               onClick={() => {
                 setIsLoading(true)
+                updateSmartDatafilters(filters)
                 setTimeout(() => setIsLoading(false), 1000)
               }}
-              variant="default"
+              variant="full"
             >
               Save
             </Button>
@@ -238,8 +247,7 @@ export default function AppAnalytics() {
               "Use custom models for evaluations",
               "Add and overwrite cost mappings",
             ],
-
-            enabled: !process.env.NEXT_PUBLIC_DEMO,
+            enabled: true,
           }}
         >
           <Text>Add custom models and cost mappings to your project.</Text>

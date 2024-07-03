@@ -4,13 +4,14 @@ import {
   UPGRADE_EMAIL,
   FULLY_CANCELED_EMAIL,
 } from "@/src/utils/emails"
-import { sendTelegramMessage } from "@/src/utils/notifications"
+import { sendSlackMessage } from "@/src/utils/notifications"
 import Stripe from "stripe"
 import stripe from "@/src/utils/stripe"
 
 import sql from "@/src/utils/db"
 import Router from "koa-router"
 import { Context } from "koa"
+import { clearUndefined } from "@/src/utils/ingest"
 
 const router = new Router({
   prefix: "/stripe",
@@ -51,7 +52,7 @@ async function setupSubscription(object: Stripe.Checkout.Session) {
   const users = await sql`
     select email, name
     from account
-    where org_id = ${org.id}
+    where id = ${org.id}
   `
 
   const emailPromises = users.map((user) =>
@@ -60,20 +61,18 @@ async function setupSubscription(object: Stripe.Checkout.Session) {
 
   await Promise.all(emailPromises)
 
-  await sendTelegramMessage(
-    `<b>💸${org.name} just upgraded to ${plan} (${period})</b>`,
-    "revenue",
+  await sendSlackMessage(
+    `💸${org.name} just upgraded to ${plan} (${period})`,
+    "billing",
   )
 }
 
 async function updateSubscription(object: Stripe.Subscription) {
   const { customer, cancel_at_period_end, metadata, id } = object
 
-  metadata
-
-  const plan = metadata.plan || "team"
-  const period = metadata.period || "monthly"
   const canceled = cancel_at_period_end
+  const plan = metadata?.plan
+  const period = metadata?.period
 
   const [currentOrg] = await sql`
     SELECT plan, plan_period, canceled
@@ -88,7 +87,7 @@ async function updateSubscription(object: Stripe.Subscription) {
   if (
     canceled === currentOrg.canceled &&
     ((!plan && !period) ||
-      (currentOrg.plan === plan && currentOrg.plan_period === period))
+      (currentOrg.plan === plan && currentOrg.planPeriod === period))
   ) {
     console.log(`🔥 updateSubscription: nothing to update`)
     return
@@ -96,7 +95,7 @@ async function updateSubscription(object: Stripe.Subscription) {
 
   const [org] = await sql`
     UPDATE org
-    SET ${sql({ plan, planPeriod: period, canceled })}
+    SET ${sql(clearUndefined({ plan, planPeriod: period, canceled }))}
     WHERE stripe_customer = ${customer as string}
     RETURNING id, name
   `
@@ -105,23 +104,25 @@ async function updateSubscription(object: Stripe.Subscription) {
     const [users] = await sql`
       select email, name
       from account
-      where org_id = ${org.id}
+      where id = ${org.id}
     `
 
-    const emailPromises = users.map((user) => {
-      return sendEmail(CANCELED_EMAIL(user.email, user.name))
-    })
+    if (users.length) {
+      const emailPromises = users.map((user) => {
+        return sendEmail(CANCELED_EMAIL(user.email, user.name))
+      })
 
-    await Promise.all(emailPromises)
+      await Promise.all(emailPromises)
+    }
 
-    await sendTelegramMessage(
-      `<b>😭💔 ${org.name} subscription canceled their plans</b>`,
-      "revenue",
+    await sendSlackMessage(
+      `😭💔 ${org.name} subscription canceled their plans`,
+      "billing",
     )
   } else if (plan || period) {
-    await sendTelegramMessage(
-      `<b>🔔 ${org.name} subscription updated to: ${plan} (${period})</b>`,
-      "revenue",
+    await sendSlackMessage(
+      `🔔 ${org.name} subscription updated to: ${plan} (${period})`,
+      "billing",
     )
   }
 }
@@ -143,7 +144,7 @@ async function cancelSubscription(object: Stripe.Subscription) {
   const [users] = await sql`
     select email, name
     from account
-    where org_id = ${org.id}
+    where id = ${org.id}
   `
 
   const emailPromises = users.map((user) => {
@@ -152,9 +153,9 @@ async function cancelSubscription(object: Stripe.Subscription) {
 
   await Promise.all(emailPromises)
 
-  await sendTelegramMessage(
-    `<b>😭💔 ${org.name} subscription is now deleted</b>`,
-    "revenue",
+  await sendSlackMessage(
+    `😭💔 ${org.name} subscription is now deleted`,
+    "billing",
   )
 }
 

@@ -1,29 +1,33 @@
-const threads = {
-  revenue: 3,
-  users: 13,
-  bugs: 19,
+const channels = {
+  billing: process.env.SLACK_BILLING_CHANNEL,
+  users: process.env.SLACK_USERS_CHANNEL,
 }
 
-export const sendTelegramMessage = async (
+export const sendSlackMessage = async (
   msg: string,
-  thread: "revenue" | "users" | "bugs",
+  thread: "billing" | "users",
 ) => {
-  if (!process.env.TELEGRAM_BOT_KEY || !process.env.TELEGRAM_CHAT_ID) return
+  if (!process.env.SLACK_BOT_TOKEN) return
 
   if (msg.includes("test@lunary.ai")) return // ignore test runner emails
 
   try {
-    const threadId = threads[thread] || null
+    const channelId = channels[thread] || null
 
-    await fetch(
-      `https://api.telegram.org/bot${
-        process.env.TELEGRAM_BOT_KEY
-      }/sendMessage?chat_id=${
-        process.env.TELEGRAM_CHAT_ID
-      }&parse_mode=HTML&disable_web_page_preview=True&text=${encodeURIComponent(
-        msg,
-      )}${threadId ? `&reply_to_message_id=${threadId}` : ""}`,
-    )
+    if (!channelId) {
+      console.error("No channel found for", thread)
+      return
+    }
+
+    await fetch(`https://hooks.slack.com/services/${channelId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        text: msg,
+      }),
+    })
   } catch (e) {
     console.error(e)
   }

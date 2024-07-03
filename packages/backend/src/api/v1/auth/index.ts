@@ -2,7 +2,7 @@ import { Db } from "@/src/types"
 import sql from "@/src/utils/db"
 import { sendVerifyEmail } from "@/src/utils/emails"
 import Context from "@/src/utils/koa"
-import { sendTelegramMessage } from "@/src/utils/notifications"
+import { sendSlackMessage } from "@/src/utils/notifications"
 import Router from "koa-router"
 import { z } from "zod"
 import saml, { getLoginUrl } from "./saml"
@@ -154,8 +154,8 @@ auth.post("/signup", async (ctx: Context) => {
     })
 
     await sendVerifyEmail(email, name)
-    await sendTelegramMessage(
-      `<b>🔔 New signup from ${email}</b>
+    await sendSlackMessage(
+      `🔔 New signup from ${email}
       ${name} is ${
         signupMethod === "signup"
           ? `building ${projectName} @ ${orgName} (${employeeCount}).`

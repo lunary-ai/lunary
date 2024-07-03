@@ -92,9 +92,10 @@ function PromptVariation({ i, variationId, content, onDelete, markSaved }) {
           label="Ideal output (optional)"
           description="Useful for assessing the proximity of the LLM response to an anticipated output."
           required={false}
+          placeholder="What would be the ideal output for this variation?"
           autosize
-          maxRows={6}
-          minRows={3}
+          maxRows={8}
+          minRows={1}
           value={variation?.idealOutput || ""}
           onChange={(e) => setIdealOutput(e.target.value)}
         />
