@@ -179,7 +179,7 @@ export default function SmartCheckSelect({
 
       <Combobox.Dropdown
         miw={180}
-        style={{ maxHeight: "13.3rem", overflowY: "scroll" }}
+        style={{ maxHeight: "300px", overflowY: "scroll" }}
       >
         <Combobox.Search
           value={search}
