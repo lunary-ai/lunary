@@ -105,9 +105,23 @@ export default function SmartViewer({
         compact={compact}
       />
     )
-  }
-
-  if (data && data !== "__NOT_INGESTED__") {
+  } else if (data && data === "__NOT_INGESTED__") {
+    Message = (
+      <Code
+        color="var(--mantine-color-gray-light)"
+        style={{ overflow: "hidden" }}
+      >
+        <Flex align="center">
+          <Tooltip label="Matched Smart Data Filter rules">
+            <IconShieldBolt size="16px" />
+          </Tooltip>
+          <Text ml="md" size="xs">
+            Not ingested
+          </Text>
+        </Flex>
+      </Code>
+    )
+  } else {
     Message = (
       <ProtectedText>
         {isObject ? (
@@ -136,22 +150,6 @@ export default function SmartViewer({
           </Code>
         )}
       </ProtectedText>
-    )
-  } else {
-    Message = (
-      <Code
-        color="var(--mantine-color-gray-light)"
-        style={{ overflow: "hidden" }}
-      >
-        <Flex align="center">
-          <Tooltip label="Matched Smart Data Filter rules">
-            <IconShieldBolt size="16px" />
-          </Tooltip>
-          <Text ml="md" size="xs">
-            Not ingested
-          </Text>
-        </Flex>
-      </Code>
     )
   }
 
