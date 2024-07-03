@@ -263,7 +263,7 @@ export async function processEventsIngestion(
     error?: string
   }[] = []
 
-  const [{ filters }] =
+  const [ingestionRule] =
     await sql`select * from ingestion_rule where project_id = ${projectId} and type = 'filtering'`
 
   for (let event of sorted) {
@@ -273,7 +273,14 @@ export async function processEventsIngestion(
     try {
       const cleanedEvent = await cleanEvent(event)
 
-      let passedIngestionRule = await checkIngestionRule(cleanedEvent, filters)
+      let passedIngestionRule = true
+
+      if (ingestionRule) {
+        passedIngestionRule = await checkIngestionRule(
+          cleanedEvent,
+          ingestionRule.filters,
+        )
+      }
 
       if (cleanedEvent.event === "end") {
         const [dbRun] =
@@ -287,8 +294,6 @@ export async function processEventsIngestion(
         cleanedEvent.input = "__NOT_INGESTED__"
         cleanedEvent.output = "__NOT_INGESTED__"
       }
-
-      console.log(filters)
 
       await registerEvent(projectId, cleanedEvent, insertedIds)
 
