@@ -154,9 +154,6 @@ export default function SmartCheckSelect({
         handleValueSelect(newItem)
       }
     } else if (event.key === "Backspace" && search.length === 0) {
-      // TODO: Recreate error
-      if (!value) return
-
       event.preventDefault()
       handleValueRemove(value[value.length - 1])
     }
