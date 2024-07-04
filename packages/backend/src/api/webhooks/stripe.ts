@@ -52,7 +52,7 @@ async function setupSubscription(object: Stripe.Checkout.Session) {
   const users = await sql`
     select email, name
     from account
-    where org_id = ${org.id}
+    where id = ${org.id}
   `
 
   const emailPromises = users.map((user) =>
@@ -104,7 +104,7 @@ async function updateSubscription(object: Stripe.Subscription) {
     const [users] = await sql`
       select email, name
       from account
-      where org_id = ${org.id}
+      where id = ${org.id}
     `
 
     if (users.length) {
@@ -144,7 +144,7 @@ async function cancelSubscription(object: Stripe.Subscription) {
   const [users] = await sql`
     select email, name
     from account
-    where org_id = ${org.id}
+    where id = ${org.id}
   `
 
   const emailPromises = users.map((user) => {
@@ -154,7 +154,7 @@ async function cancelSubscription(object: Stripe.Subscription) {
   await Promise.all(emailPromises)
 
   await sendSlackMessage(
-    `<b>😭💔 ${org.name} subscription is now deleted</b>`,
+    `😭💔 ${org.name} subscription is now deleted`,
     "billing",
   )
 }

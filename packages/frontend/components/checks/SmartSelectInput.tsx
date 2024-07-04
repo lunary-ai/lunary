@@ -177,13 +177,21 @@ export default function SmartCheckSelect({
         </PillsInput>
       </Combobox.DropdownTarget>
 
-      <Combobox.Dropdown miw={180}>
+      <Combobox.Dropdown
+        miw={180}
+        style={{ maxHeight: "300px", overflowY: "scroll" }}
+      >
         <Combobox.Search
           value={search}
-          display={shouldDisplaySearch ? "initial" : "none"}
+          display={shouldDisplaySearch ? "flex" : "none"}
           onChange={(event) => setSearch(event.currentTarget.value)}
           onKeyDown={handleKeyDown}
           placeholder={allowCustom ? `Type to create new` : "Search..."}
+          style={{
+            top: 0,
+            zIndex: 2,
+            position: "sticky",
+          }}
         />
         <Combobox.Options>
           {renderedOptions?.length > 0 ? (

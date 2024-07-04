@@ -34,6 +34,7 @@ import {
   IconTarget,
   IconTextWrap,
   IconThumbUp,
+  IconTool,
   IconTools,
   IconUser,
   IconUserCheck,
@@ -60,6 +61,10 @@ const CHECKS_UI_DATA: ChecksUIData = {
   model: {
     icon: IconBrandOpenai,
     color: "violet",
+  },
+  tools: {
+    icon: IconTool,
+    color: "gray",
   },
   tags: {
     icon: IconTag,

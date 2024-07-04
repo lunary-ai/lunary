@@ -32,17 +32,17 @@ async function getRadarRuns(radar: any) {
   // get more recent runs first
   return await sql`
     select 
-      run.* 
+      r.* 
     from 
-      run
-      left join radar_result on run.id = radar_result.run_id
+      run r
+      left join radar_result on r.id = radar_result.run_id
         and radar_result.radar_id = ${radar.id}
     where 
       project_id = ${radar.projectId}
       and (${filtersQuery})
       and radar_result.run_id is null
     order by 
-      run.created_at desc
+      r.created_at desc
     limit ${RUNS_BATCH_SIZE}
   `
 }
