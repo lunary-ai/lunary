@@ -1,11 +1,15 @@
 import {
+  ActionIcon,
   Box,
+  Collapse,
   Flex,
+  Group,
   Menu,
   NavLink,
   SegmentedControl,
   Stack,
   Text,
+  TextInput,
   ThemeIcon,
   useMantineColorScheme,
 } from "@mantine/core"
@@ -14,27 +18,29 @@ import {
   IconActivity,
   IconActivityHeartbeat,
   IconAnalyze,
+  IconArrowRight,
   IconBolt,
+  IconBooks,
   IconBrandOpenai,
-  IconCheckbox,
   IconChevronRight,
   IconCreditCard,
   IconDatabase,
   IconFlask2Filled,
   IconFlaskFilled,
+  IconHelpCircle,
   IconHelpOctagon,
-  IconLayersLinked,
+  IconHelpSmall,
   IconListSearch,
   IconListTree,
   IconLogout,
   IconMessage2,
   IconMessages,
   IconMoon,
-  IconMoonStars,
+  IconNotebook,
   IconPaint,
   IconPlayerPlay,
+  IconSearch,
   IconSettings,
-  IconShieldBolt,
   IconSparkles,
   IconSun,
   IconTimeline,
@@ -58,7 +64,7 @@ import { useEffect, useState } from "react"
 import { ResourceName, hasAccess, hasReadAccess, serializeLogic } from "shared"
 import config from "@/utils/config"
 import { useViews } from "@/utils/dataHooks/views"
-import { on } from "events"
+import { useDisclosure, useFocusTrap } from "@mantine/hooks"
 
 function NavbarLink({
   icon: Icon,
@@ -66,8 +72,6 @@ function NavbarLink({
   link,
   soon,
   onClick,
-  c,
-  subMenu,
   disabled = false,
 }) {
   const router = useRouter()
@@ -84,36 +88,125 @@ function NavbarLink({
       component={!onClick ? Link : "button"}
       href={link}
       w="100%"
+      pl={5}
       onClick={onClick}
-      c={c}
-      shallow={true}
-      label={`${label}${soon ? " (soon)" : ""}`}
+      h={30}
+      label={<Text size="xs">{`${label}${soon ? " (soon)" : ""}`}</Text>}
       disabled={disabled || soon}
       active={active}
       leftSection={
-        <ThemeIcon
-          variant={active ? "light" : "subtle"}
-          color={active ? c || "blue" : c || "blue.4"}
-          size="sm"
-        >
-          <Icon size={14} />
+        <ThemeIcon variant={"subtle"} size="md" mr={-10}>
+          <Icon size={14} opacity={0.7} />
         </ThemeIcon>
       }
-    >
-      {subMenu?.map((item) => (
-        <NavbarLink {...item} key={item.label + item.link} />
-      ))}
-    </NavLink>
+    />
   )
 }
 
 type MenuItem = {
   label: string
-  icon: any
-  link: string
-  resource: ResourceName
+  icon?: any
+  link?: string
+  resource?: ResourceName
   disabled?: boolean
+  searchable?: boolean
+  c?: string
+  isSection?: boolean
   subMenu?: MenuItem[]
+}
+
+const ViewIcons = {
+  llm: IconBrandOpenai,
+  thread: IconMessages,
+  trace: IconListTree,
+}
+
+function MenuSection({ item }) {
+  const { user } = useUser()
+
+  const [opened, { toggle }] = useDisclosure(true)
+  const [query, setQuery] = useState("")
+
+  const [searchOn, setSearchOn] = useState(false)
+
+  const focusTrapRef = useFocusTrap()
+
+  const filtered = item.subMenu?.filter((subItem) =>
+    subItem.label.toLowerCase().includes(query.toLowerCase()),
+  )
+
+  return (
+    <Box mb="sm" mt="sm">
+      <Group gap={3} align="center" justify="space-between" px="sm">
+        {searchOn ? (
+          <TextInput
+            size="xs"
+            py={0}
+            h={16}
+            leftSection={<IconSearch size={12} />}
+            mb={15}
+            styles={{
+              input: {},
+            }}
+            ref={focusTrapRef}
+            placeholder="Search"
+            value={query}
+            onChange={(e) => setQuery(e.currentTarget.value)}
+            onBlur={() => {
+              setSearchOn(false)
+              setQuery("")
+            }}
+          />
+        ) : (
+          <>
+            <Text
+              mb={5}
+              fz={12}
+              fw={400}
+              opacity={0.8}
+              onClick={toggle}
+              style={{ cursor: "pointer" }}
+            >
+              {item.label}
+            </Text>
+            <Group gap={6} align="center">
+              {item.searchable && opened && (
+                <IconSearch
+                  onClick={() => setSearchOn(true)}
+                  size={14}
+                  ml="auto"
+                  opacity={0.4}
+                  style={{
+                    cursor: "pointer",
+                    position: "relative",
+                    top: -2,
+                  }}
+                />
+              )}
+
+              <IconChevronRight
+                onClick={toggle}
+                size={14}
+                opacity={0.6}
+                style={{
+                  cursor: "pointer",
+                  position: "relative",
+                  top: -2,
+                  transform: `rotate(${opened ? 90 : 0}deg)`,
+                }}
+              />
+            </Group>
+          </>
+        )}
+      </Group>
+
+      <Collapse in={opened}>
+        {filtered
+          ?.filter((subItem) => hasReadAccess(user.role, subItem.resource))
+          .map((subItem) => <NavbarLink {...subItem} key={subItem.label} />)}
+      </Collapse>
+    </Box>
+  )
 }
 
 export default function Sidebar() {
@@ -142,9 +235,12 @@ export default function Sidebar() {
   const projectViews = (views || [])
     .map((v) => {
       const serialized = serializeLogic(v.data)
+
+      const Icon = ViewIcons[v.data[1].params.type]
+
       return {
         label: v.name,
-        icon: IconLayersLinked,
+        icon: Icon,
         link: `/logs?${serialized}&view=${v.id}`,
         resource: "logs",
       }
@@ -153,27 +249,20 @@ export default function Sidebar() {
 
   const APP_MENU: MenuItem[] = [
     {
-      label: "Analytics",
-      icon: IconTimeline,
-      link: "/analytics",
-      resource: "analytics",
-    },
-    {
-      label: "Logs",
-      icon: IconListSearch,
-      link: "/logs",
-      resource: "logs",
+      label: "Observe",
+      isSection: true,
+      c: "blue",
       subMenu: [
+        {
+          label: "Analytics",
+          icon: IconTimeline,
+          link: "/analytics",
+          resource: "analytics",
+        },
         {
           label: "LLM",
           icon: IconBrandOpenai,
           link: "/logs?type=llm",
-          resource: "logs",
-        },
-        {
-          label: "Threads",
-          icon: IconMessages,
-          link: "/logs?type=thread",
           resource: "logs",
         },
         {
@@ -182,30 +271,26 @@ export default function Sidebar() {
           link: "/logs?type=trace",
           resource: "logs",
         },
-        ...projectViews,
+        {
+          label: "Threads",
+          icon: IconMessages,
+          link: "/logs?type=thread",
+          resource: "logs",
+        },
+        { label: "Users", icon: IconUsers, link: "/users", resource: "users" },
       ],
     },
-    { label: "Users", icon: IconUsers, link: "/users", resource: "users" },
     {
-      label: "Prompts",
-      icon: IconPlayerPlay,
-      link: "/prompts",
-      resource: "prompts",
-    },
-    {
-      label: "Radars",
-      icon: IconShieldBolt,
-      link: "/radars",
-      resource: "radars",
-      disabled: isSelfHosted ? org.license && !org.license.radarEnabled : false,
-    },
-    {
-      label: "Evaluations",
-      icon: IconFlask2Filled,
-      link: "/evaluations",
-      resource: "evaluations",
+      label: "Build",
+      c: "violet",
       disabled: isSelfHosted ? org.license && !org.license.evalEnabled : false,
       subMenu: [
+        {
+          label: "Prompts",
+          icon: IconNotebook,
+          link: "/prompts",
+          resource: "prompts",
+        },
         {
           label: "Playground",
           icon: IconFlaskFilled,
@@ -213,10 +298,29 @@ export default function Sidebar() {
           resource: "evaluations",
         },
         {
-          label: "Real-time",
+          label: "Evaluators",
           icon: IconActivityHeartbeat,
           link: "/evaluations/realtime",
           resource: "evaluations",
+        },
+      ],
+    },
+    !!projectViews.length && {
+      label: "Smart Views",
+      icon: IconListSearch,
+      searchable: true,
+      resource: "logs",
+      subMenu: projectViews,
+    },
+    {
+      label: "Project",
+      resource: "apiKeys",
+      subMenu: [
+        {
+          label: "Settings",
+          icon: IconSettings,
+          link: "/settings",
+          resource: "apiKeys",
         },
         {
           label: "Datasets",
@@ -224,19 +328,7 @@ export default function Sidebar() {
           link: "/datasets",
           resource: "datasets",
         },
-        {
-          label: "Checklists",
-          icon: IconCheckbox,
-          link: "/evaluations/checklists",
-          resource: "checklists",
-        },
       ],
-    },
-    {
-      label: "Settings & Keys",
-      icon: IconSettings,
-      link: "/settings",
-      resource: "apiKeys",
     },
   ]
 
@@ -244,7 +336,7 @@ export default function Sidebar() {
     {
       label: "Upgrade",
       onClick: openUpgrade,
-      c: "violet",
+      c: "vioplet",
       icon: IconBolt,
       disabled: !canUpgrade,
       resource: "billing",
@@ -359,9 +451,9 @@ export default function Sidebar() {
           </Combobox>
 
           {user &&
-            APP_MENU.filter((item) =>
-              hasReadAccess(user.role, item.resource),
-            ).map((item) => <NavbarLink {...item} key={item.label} />)}
+            APP_MENU.filter((item) => !item.disabled).map((item) => (
+              <MenuSection item={item} key={item.label} />
+            ))}
         </Box>
         {user &&
           (hasAccess(user.role, "billing", "read") ||
@@ -414,38 +506,58 @@ export default function Sidebar() {
               />
             )}
 
-            <NavLink
-              component={Link}
-              href="https://lunary.ai/changelog"
-              label="Changelog"
-              leftSection={<IconActivity size={14} />}
-            />
+            <Group p="sm" justify="space-between">
+              <Menu>
+                <Menu.Target>
+                  <ActionIcon
+                    variant="outline"
+                    color="gray"
+                    radius="xl"
+                    size={26}
+                  >
+                    <IconHelpSmall size={60} stroke={1.5} />
+                  </ActionIcon>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  {process.env.NEXT_PUBLIC_CRISP_ID && (
+                    <Menu.Item
+                      leftSection={<IconMessage2 size={14} />}
+                      onClick={() => {
+                        $crisp.push(["do", "chat:open"])
+                      }}
+                    >
+                      Feedback
+                    </Menu.Item>
+                  )}
+                  <Menu.Item
+                    component="a"
+                    href="https://lunary.ai/docs"
+                    leftSection={<IconHelpOctagon size={14} />}
+                  >
+                    Documentation
+                  </Menu.Item>
+                  <Menu.Item
+                    component="a"
+                    href="https://lunary.ai/changelog"
+                    leftSection={<IconActivity size={14} />}
+                  >
+                    Changelog
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
 
-            {process.env.NEXT_PUBLIC_CRISP_ID && (
-              <NavLink
-                onClick={() => {
-                  $crisp.push(["do", "chat:open"])
-                }}
-                label="Help & Feedback"
-                leftSection={<IconMessage2 size={14} />}
-              />
-            )}
-            <NavLink
-              component="a"
-              href="https://lunary.ai/docs"
-              label="Documentation"
-              leftSection={<IconHelpOctagon size={14} />}
-            />
-
-            <Menu closeOnItemClick={false}>
-              <Menu.Target>
-                <NavLink
-                  color="red"
-                  h={50}
-                  data-testid="account-sidebar-item"
-                  leftSection={<UserAvatar size={24} profile={user} />}
-                  rightSection={<IconChevronRight size={16} opacity={0.5} />}
-                  label={
+              <Menu closeOnItemClick={false}>
+                <Menu.Target>
+                  <ActionIcon variant="subtle" radius="xl" size={32}>
+                    <UserAvatar
+                      size={26}
+                      profile={user}
+                      data-testid="account-sidebar-item"
+                    />
+                  </ActionIcon>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Item>
                     <Stack gap={0}>
                       <Text
                         mb={-3}
@@ -470,49 +582,49 @@ export default function Sidebar() {
                         {user?.email}
                       </Text>
                     </Stack>
-                  }
-                />
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Item leftSection={<IconPaint size={14} />}>
-                  <SegmentedControl
-                    value={colorScheme}
-                    size="xs"
-                    onChange={setColorScheme}
-                    data={[
-                      { value: "auto", label: "Auto" },
-                      {
-                        value: "light",
-                        label: (
-                          <IconSun
-                            style={{ position: "relative", top: 2 }}
-                            size={15}
-                          />
-                        ),
-                      },
-                      {
-                        value: "dark",
-                        label: (
-                          <IconMoon
-                            style={{ position: "relative", top: 2 }}
-                            size={15}
-                          />
-                        ),
-                      },
-                    ]}
-                  />
-                </Menu.Item>
-                <Menu.Divider />
-                <Menu.Item
-                  c="red"
-                  data-testid="logout-button"
-                  onClick={() => auth.signOut()}
-                  leftSection={<IconLogout size={14} />}
-                >
-                  Logout
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
+                  </Menu.Item>
+                  <Menu.Item
+                    leftSection={<IconPaint opacity={0.6} size={14} />}
+                  >
+                    <SegmentedControl
+                      value={colorScheme}
+                      size="xs"
+                      onChange={setColorScheme}
+                      data={[
+                        { value: "auto", label: "Auto" },
+                        {
+                          value: "light",
+                          label: (
+                            <IconSun
+                              style={{ position: "relative", top: 2 }}
+                              size={15}
+                            />
+                          ),
+                        },
+                        {
+                          value: "dark",
+                          label: (
+                            <IconMoon
+                              style={{ position: "relative", top: 2 }}
+                              size={15}
+                            />
+                          ),
+                        },
+                      ]}
+                    />
+                  </Menu.Item>
+                  <Menu.Divider />
+                  <Menu.Item
+                    c="red"
+                    data-testid="logout-button"
+                    onClick={() => auth.signOut()}
+                    leftSection={<IconLogout size={14} />}
+                  >
+                    Logout
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+            </Group>
           </Box>
         </>
       )}
