@@ -56,7 +56,7 @@ import {
   useRun,
 } from "@/utils/dataHooks"
 
-import { useDebouncedState } from "@mantine/hooks"
+import { useDebouncedState, useDidUpdate } from "@mantine/hooks"
 import { ProjectContext } from "@/utils/context"
 
 import { useRouter } from "next/router"
@@ -183,7 +183,7 @@ export default function Logs() {
 
   const { checks, setChecks, serializedChecks } = useChecksFromURL(
     ["AND", { id: "type", params: { type: "llm" } }],
-    ["view", "selected", "search"],
+    ["type", "view", "selected", "search"],
   )
 
   const { insert: insertView, isInserting: isInsertingView } = useViews()
@@ -217,46 +217,59 @@ export default function Logs() {
     }
   }, [selectedRun?.projectId])
 
-  useEffect(() => {
-    let newChecks = [...checks]
-    let shouldUpdate = false
+  // useEffect(() => {
+  //   let newChecks = [...checks]
+  //   let shouldUpdate = false
 
-    // Add type filter if not present
-    const typeFilter = newChecks.find((filter) => filter.id === "type")
-    if (!typeFilter) {
-      newChecks = newChecks[0] === "AND" ? newChecks : ["AND", ...newChecks]
-      newChecks = [
-        newChecks[0],
-        { id: "type", params: { type } },
-        ...newChecks.slice(1),
-      ]
-      shouldUpdate = true
-    }
+  //   // Add type filter if not present
+  //   const typeFilter = newChecks.find((filter) => filter.id === "type")
+  //   if (!typeFilter) {
+  //     newChecks = newChecks[0] === "AND" ? newChecks : ["AND", ...newChecks]
+  //     newChecks = [
+  //       newChecks[0],
+  //       { id: "type", params: { type } },
+  //       ...newChecks.slice(1),
+  //     ]
+  //     shouldUpdate = true
+  //   }
 
-    // Update type filter
-    newChecks = editCheck(newChecks, "type", { type }).filter(
-      (f) =>
-        f === "AND" ||
-        CHECKS_BY_TYPE[type].includes(f.id) ||
-        ["type", "search"].includes(f.id),
-    )
-    shouldUpdate = true
+  //   // Update type filter
+  //   newChecks = editCheck(newChecks, "type", { type }).filter(
+  //     (f) =>
+  //       f === "AND" ||
+  //       CHECKS_BY_TYPE[type].includes(f.id) ||
+  //       ["type", "search"].includes(f.id),
+  //   )
+  //   shouldUpdate = true
 
+  //   // Update search filter
+  //   if (query !== null) {
+  //     newChecks = editCheck(
+  //       newChecks,
+  //       "search",
+  //       query.length ? { query } : null,
+  //     )
+  //     shouldUpdate = true
+  //   }
+
+  //   // Only update if changes were made
+  //   if (shouldUpdate) {
+  //     setChecks(newChecks)
+  //   }
+  // }, [type, query])
+
+  useDidUpdate(() => {
     // Update search filter
     if (query !== null) {
-      newChecks = editCheck(
-        newChecks,
+      const newChecks = editCheck(
+        checks,
         "search",
         query.length ? { query } : null,
       )
-      shouldUpdate = true
-    }
 
-    // Only update if changes were made
-    if (shouldUpdate) {
       setChecks(newChecks)
     }
-  }, [type, query])
+  }, [query])
 
   useEffect(() => {
     // Update visible columns if view changes

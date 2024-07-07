@@ -5,7 +5,7 @@ import {
   useThrottledValue,
 } from "@mantine/hooks"
 import { useRouter } from "next/router"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { CheckLogic, deserializeLogic, serializeLogic } from "shared"
 
 type Shortcut = [string, () => void]
@@ -102,53 +102,55 @@ export function useChecksFromURL(
   ignoreKeys: string[] = [],
 ) {
   const router = useRouter()
-  const [checks, setChecks] = useState<CheckLogic>(defaultValue || ["AND"])
+  const [checks, setChecks] = useState<CheckLogic>(defaultValue)
 
   const serializedChecks = useMemo(() => serializeLogic(checks), [checks])
 
+  const parseUrlParams = useCallback(() => {
+    const params = new URLSearchParams(router.asPath.split("?")[1] || "")
+    ignoreKeys.forEach((key) => params.delete(key))
+    return params.toString()
+  }, [router.asPath, ignoreKeys.toString()])
+
+  // Load checks from URL when the component mounts or URL changes
   useEffect(() => {
     if (!router.isReady) return
 
-    const params = new URLSearchParams(router.asPath.split("?")[1])
-    ignoreKeys.forEach((key) => params.delete(key))
-
-    const paramString = params.toString()
+    const paramString = parseUrlParams()
     if (paramString) {
       const filtersData = deserializeLogic(paramString)
-
       if (
         filtersData &&
         JSON.stringify(filtersData) !== JSON.stringify(checks)
       ) {
         setChecks(filtersData)
       }
+    } else {
+      // Reset to default value if no filters in URL
+      setChecks(defaultValue)
     }
-  }, [router.isReady, router.asPath, ignoreKeys.toString()])
+  }, [router.isReady, parseUrlParams])
 
-  useDidUpdate(() => {
-    if (!router.isReady || typeof serializedChecks !== "string") return
+  // Update URL when checks change
+  useEffect(() => {
+    if (!router.isReady) return
 
-    const newParams = new URLSearchParams(serializedChecks)
-    ignoreKeys.forEach((key) => {
-      if (router.query[key]) {
-        newParams.set(key, router.query[key] as string)
-      }
-    })
+    const currentUrlParams = parseUrlParams()
+    if (currentUrlParams !== serializedChecks) {
+      const newParams = new URLSearchParams(serializedChecks)
+      ignoreKeys.forEach((key) => {
+        if (router.query[key]) {
+          newParams.set(key, router.query[key] as string)
+        }
+      })
 
-    const currentParams = new URLSearchParams(router.asPath.split("?")[1])
-
-    console.log(
-      `Updating from ${currentParams.toString()} to ${newParams.toString()}`,
-    )
-
-    if (currentParams.toString() === newParams.toString()) {
-      return
+      router.replace(
+        { pathname: router.pathname, query: newParams.toString() },
+        undefined,
+        { shallow: true },
+      )
     }
-
-    router.replace(`/logs?${newParams.toString()}`, undefined, {
-      shallow: true,
-    })
-  }, [router.isReady, serializedChecks, router.asPath, ignoreKeys.toString()])
+  }, [router.isReady, serializedChecks, parseUrlParams, ignoreKeys.toString()])
 
   return { checks, setChecks, serializedChecks }
 }

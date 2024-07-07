@@ -1,4 +1,5 @@
 import sql from "./db"
+import { setTimeout } from "timers/promises"
 
 interface ModelCost {
   models: string[]
@@ -202,9 +203,20 @@ export async function calcRunCost(run: any) {
     ORDER BY start_date DESC NULLS LAST, org_id IS NOT NULL DESC
   `
 
-  const mapping = mappings.find((mapping) =>
-    new RegExp(mapping.pattern).test(run.name),
-  )
+  const mapping = mappings.find(async (mapping) => {
+    try {
+      const regex = new RegExp(mapping.pattern)
+      const timeoutMs = 100 // Adjust timeout as needed
+
+      const testPromise = regex.test(run.name)
+      const timeoutPromise = setTimeout(timeoutMs, false)
+
+      return await Promise.race([testPromise, timeoutPromise])
+    } catch (error) {
+      console.error(`Invalid regex pattern: ${mapping.pattern}`, error)
+      return false
+    }
+  })
 
   if (!mapping) return calcRunCostLegacy(run)
 
@@ -218,8 +230,12 @@ export async function calcRunCost(run: any) {
     inputUnits = run.duration || 0
     outputUnits = 0
   } else if (mapping.unit === "CHARACTERS") {
-    inputUnits = JSON.stringify(run.input).length || 0
-    outputUnits = JSON.stringify(run.output).length || 0
+    inputUnits =
+      (typeof run.input === "string" ? run.input : JSON.stringify(run.input))
+        .length || 0
+    outputUnits =
+      (typeof run.output === "string" ? run.output : JSON.stringify(run.output))
+        .length || 0
   }
 
   const inputCost = (mapping.inputCost * inputUnits) / 1_000_000

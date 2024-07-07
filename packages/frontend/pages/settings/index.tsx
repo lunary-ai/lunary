@@ -23,7 +23,12 @@ import useSWR from "swr"
 import RenamableField from "@/components/blocks/RenamableField"
 import { CheckLogic, hasAccess } from "shared"
 import { SettingsCard } from "@/components/blocks/SettingsCard"
-import { IconCheck, IconFilter, IconRefreshAlert } from "@tabler/icons-react"
+import {
+  IconCheck,
+  IconFilter,
+  IconPencil,
+  IconRefreshAlert,
+} from "@tabler/icons-react"
 import { useState } from "react"
 import errorHandler from "@/utils/errors"
 import { fetcher } from "@/utils/fetcher"
@@ -249,8 +254,9 @@ export default function AppAnalytics() {
             component={Link}
             data-testid="add-model-button"
             href={`/settings/models`}
+            leftSection={<IconPencil size={16} />}
           >
-            View Model Mappings
+            Edit Mappings
           </Button>
         </SettingsCard>
 

@@ -116,6 +116,7 @@ export default function Models() {
               label="Unit"
               placeholder="Select unit"
               defaultValue="TOKENS"
+              description="Unit of measurement"
               data={[
                 { value: "TOKENS", label: "Tokens" },
                 { value: "CHARACTERS", label: "Characters" },
@@ -127,6 +128,7 @@ export default function Models() {
             <NumberInput
               label="Input Cost"
               placeholder="Enter input cost in USD"
+              description="Cost per million"
               required
               key={form.key("inputCost")}
               {...form.getInputProps("inputCost")}
@@ -134,6 +136,8 @@ export default function Models() {
             <NumberInput
               label="Output Cost"
               placeholder="Enter output cost in USD"
+              description="Cost per million"
+              disabled={form.values.unit === "MILLISECONDS"}
               required
               key={form.key("outputCost")}
               {...form.getInputProps("outputCost")}
@@ -148,27 +152,21 @@ export default function Models() {
               size="sm"
               onClick={() => handleInsert()}
             >
-              Add Model
+              Add Model Mapping
             </Button>
           </Flex>
         </Card>
-        <Card withBorder>
+        <Card withBorder p={0}>
           <Table striped highlightOnHover>
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>Type</Table.Th>
-                <Table.Th>Model Name</Table.Th>
-                <Table.Th>Match Regex</Table.Th>
+                <Table.Th>Model</Table.Th>
+                <Table.Th>Regex</Table.Th>
                 <Table.Th>Unit</Table.Th>
-                <Table.Th>Date</Table.Th>
-                <Table.Th>
-                  Input Cost
-                  <br />/ M
-                </Table.Th>
-                <Table.Th>
-                  Output Cost
-                  <br />/ M
-                </Table.Th>
+                <Table.Th>Apply Date</Table.Th>
+                <Table.Th>Input $ / M</Table.Th>
+                <Table.Th>Output $ / M</Table.Th>
                 <Table.Th>Tokenizer</Table.Th>
               </Table.Tr>
             </Table.Thead>
