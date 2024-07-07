@@ -225,5 +225,6 @@ export async function calcRunCost(run: any) {
   const inputCost = (mapping.inputCost * inputUnits) / 1_000_000
   const outputCost = (mapping.outputCost * outputUnits) / 1_000_000
 
-  return inputCost + outputCost
+  // Round to 5 decimal places
+  return Number((inputCost + outputCost).toFixed(5))
 }

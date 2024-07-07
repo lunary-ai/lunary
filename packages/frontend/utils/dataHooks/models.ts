@@ -22,16 +22,6 @@ export function useModelMappings() {
     fetcher.patch,
   )
 
-  const { trigger: remove, isMutating: isRemoving } = useProjectMutation(
-    (id: string) => `/models/${id}`,
-    fetcher.delete,
-    {
-      onSuccess() {
-        mutate()
-      },
-    },
-  )
-
   return {
     models: data,
     insert,
@@ -40,7 +30,5 @@ export function useModelMappings() {
     isUpdating,
     mutate,
     loading: isLoading,
-    remove,
-    isRemoving,
   }
 }

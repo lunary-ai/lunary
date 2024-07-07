@@ -1,4 +1,6 @@
 import { useModelMappings } from "@/utils/dataHooks/models"
+import errorHandler from "@/utils/errors"
+import { fetcher } from "@/utils/fetcher"
 import {
   ActionIcon,
   Badge,
@@ -7,7 +9,6 @@ import {
   Code,
   Container,
   Flex,
-  Group,
   NumberInput,
   Select,
   SimpleGrid,
@@ -17,26 +18,37 @@ import {
   TextInput,
   Title,
   Tooltip,
-  TooltipFloating,
 } from "@mantine/core"
 import { useForm } from "@mantine/form"
+import { modals } from "@mantine/modals"
+
 import { IconTrash } from "@tabler/icons-react"
 
 export default function Models() {
-  const { models, insert, isInserting, remove } = useModelMappings()
+  const { models, insert, isInserting, mutate } = useModelMappings()
 
   const form = useForm({
     initialValues: {
-      name: "gpt-4-preview",
-      pattern: "(?i)^(gpt-4-preview)$",
+      name: "gpt-4o",
+      pattern: "(?i)^(gpt-4o)$",
       unit: "TOKENS",
-      inputCost: 0.01,
-      outputCost: 0.01,
+      inputCost: 1,
+      outputCost: 1,
       tokenizer: "openai",
       startDate: new Date(),
     },
 
-    validate: {},
+    validate: {
+      name: (value) => (value.length < 3 ? "Name is too short" : undefined),
+      pattern: (value) =>
+        value.length < 3 ? "Pattern is too short" : undefined,
+      unit: (value) => (!value ? "Unit is required" : undefined),
+      inputCost: (value) =>
+        value < 0 ? "Input cost must be greater than 0" : undefined,
+      outputCost: (value) =>
+        value < 0 ? "Output cost must be greater than 0" : undefined,
+      tokenizer: (value) => (!value ? "Tokenizer is required" : undefined),
+    },
   })
 
   async function handleInsert() {
@@ -45,6 +57,24 @@ export default function Models() {
     } catch (error) {
       console.error(error)
     }
+  }
+
+  async function removeMapping(id) {
+    modals.openConfirmModal({
+      title: "Please confirm your action",
+      confirmProps: { color: "red" },
+      children: (
+        <Text size="sm">
+          Are you sure you want to delete this model mapping? This action cannot
+          be undone.
+        </Text>
+      ),
+      labels: { confirm: "Confirm", cancel: "Cancel" },
+      onConfirm: async () => {
+        await errorHandler(fetcher.delete(`/models/${id}`))
+        mutate()
+      },
+    })
   }
 
   return (
@@ -62,8 +92,8 @@ export default function Models() {
               {...form.getInputProps("name")}
             />
             <TextInput
-              label="Match Regex"
-              placeholder="Enter match regex"
+              label="Pattern (Regex)"
+              placeholder="Enter the pattern regex"
               required
               key={form.key("pattern")}
               {...form.getInputProps("pattern")}
@@ -178,7 +208,7 @@ export default function Models() {
                         variant="light"
                         size="sm"
                         ml={-10}
-                        onClick={() => remove(model.id)}
+                        onClick={() => removeMapping(model.id)}
                       >
                         <IconTrash size={14} />
                       </ActionIcon>
