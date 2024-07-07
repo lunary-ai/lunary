@@ -19,12 +19,14 @@ import {
   IconActivityHeartbeat,
   IconAnalyze,
   IconArrowRight,
+  IconBinaryTree2,
   IconBolt,
   IconBooks,
   IconBrandOpenai,
   IconChevronRight,
   IconCreditCard,
   IconDatabase,
+  IconFlask,
   IconFlask2Filled,
   IconFlaskFilled,
   IconHelpCircle,
@@ -83,13 +85,15 @@ function NavbarLink({
       : router.asPath.startsWith(link)
     : router.pathname.startsWith(link)
 
+  const handleNavigation = (link) => {
+    router.push(link, undefined, { shallow: true })
+  }
+
   return (
     <NavLink
-      component={!onClick ? Link : "button"}
-      href={link}
       w="100%"
       pl={5}
-      onClick={onClick}
+      onClick={onClick || (() => handleNavigation(link))}
       h={30}
       label={<Text size="xs">{`${label}${soon ? " (soon)" : ""}`}</Text>}
       disabled={disabled || soon}
@@ -203,7 +207,7 @@ function MenuSection({ item }) {
       <Collapse in={opened}>
         {filtered
           ?.filter((subItem) => hasReadAccess(user.role, subItem.resource))
-          .map((subItem) => <NavbarLink {...subItem} key={subItem.label} />)}
+          .map((subItem, i) => <NavbarLink {...subItem} key={i} />)}
       </Collapse>
     </Box>
   )
@@ -267,7 +271,7 @@ export default function Sidebar() {
         },
         {
           label: "Traces",
-          icon: IconListTree,
+          icon: IconBinaryTree2,
           link: "/logs?type=trace",
           resource: "logs",
         },
@@ -293,7 +297,7 @@ export default function Sidebar() {
         },
         {
           label: "Playground",
-          icon: IconFlaskFilled,
+          icon: IconFlask,
           link: "/evaluations/new",
           resource: "evaluations",
         },
@@ -328,31 +332,15 @@ export default function Sidebar() {
           link: "/datasets",
           resource: "datasets",
         },
-      ],
-    },
-  ]
-
-  const orgMenu = [
-    {
-      label: "Upgrade",
-      onClick: openUpgrade,
-      c: "vioplet",
-      icon: IconBolt,
-      disabled: !canUpgrade,
-      resource: "billing",
-    },
-    {
-      label: "Usage & Billing",
-      link: "/billing",
-      icon: IconCreditCard,
-      disabled: !billingEnabled,
-      resource: "billing",
-    },
-    {
-      link: "/team",
-      label: "Team",
-      icon: IconUsers,
-      resource: "teamMembers",
+        !!canUpgrade && {
+          label: "Upgrade",
+          onClick: openUpgrade,
+          c: "vioplet",
+          icon: IconBolt,
+          disabled: !canUpgrade,
+          resource: "billing",
+        },
+      ].filter((item) => item),
     },
   ]
 
@@ -392,8 +380,10 @@ export default function Sidebar() {
       justify="space-between"
       align="start"
       w={200}
+      mah="100vh"
       direction="column"
       style={{
+        overflowY: "auto",
         borderRight: "1px solid var(--mantine-color-default-border)",
       }}
     >
@@ -455,30 +445,6 @@ export default function Sidebar() {
               <MenuSection item={item} key={item.label} />
             ))}
         </Box>
-        {user &&
-          (hasAccess(user.role, "billing", "read") ||
-            hasAccess(user.role, "teamMembers", "read")) && (
-            <Box w="100%" mt="xl">
-              <Text
-                ml="xs"
-                h={20}
-                fz={12}
-                fw={700}
-                style={{
-                  textTransform: "uppercase",
-                }}
-              >
-                {org?.name}
-              </Text>
-
-              {orgMenu
-                .filter((item) => hasAccess(user.role, item.resource, "read"))
-                .filter((item) => !item.disabled)
-                .map((item) => (
-                  <NavbarLink {...item} key={item.label} />
-                ))}
-            </Box>
-          )}
       </Stack>
 
       {user && (
@@ -613,6 +579,25 @@ export default function Sidebar() {
                       ]}
                     />
                   </Menu.Item>
+                  <Menu.Divider />
+                  {billingEnabled &&
+                    hasAccess(user.role, "billing", "read") && (
+                      <Menu.Item
+                        leftSection={<IconCreditCard opacity={0.6} size={14} />}
+                        onClick={() => router.push("/billing")}
+                      >
+                        Usage & Billing
+                      </Menu.Item>
+                    )}
+
+                  {hasAccess(user.role, "teamMembers", "read") && (
+                    <Menu.Item
+                      leftSection={<IconUsers opacity={0.6} size={14} />}
+                      onClick={() => router.push("/team")}
+                    >
+                      Team
+                    </Menu.Item>
+                  )}
                   <Menu.Divider />
                   <Menu.Item
                     c="red"

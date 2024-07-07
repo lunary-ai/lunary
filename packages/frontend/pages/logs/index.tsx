@@ -206,35 +206,49 @@ export default function Logs() {
   }, [selectedRun?.projectId])
 
   useEffect(() => {
+    let newChecks = [...checks]
+    let shouldUpdate = false
+
     // Add type filter if not present
-    const typeFilter = checks.find((filter) => filter.id === "type")
+    const typeFilter = newChecks.find((filter) => filter.id === "type")
     if (!typeFilter) {
-      const newFilters = checks[0] === "AND" ? checks : ["AND", ...checks]
-      setChecks([
-        newFilters[0],
+      newChecks = newChecks[0] === "AND" ? newChecks : ["AND", ...newChecks]
+      newChecks = [
+        newChecks[0],
         { id: "type", params: { type } },
-        ...newFilters.slice(1),
-      ])
+        ...newChecks.slice(1),
+      ]
+      shouldUpdate = true
     }
 
-    const newChecks = editCheck(checks, "type", { type }).filter(
+    // Update type filter
+    newChecks = editCheck(newChecks, "type", { type }).filter(
       (f) =>
         f === "AND" ||
         CHECKS_BY_TYPE[type].includes(f.id) ||
         ["type", "search"].includes(f.id),
     )
-    setChecks(newChecks)
+    shouldUpdate = true
 
+    // Update search filter
+    if (query !== null) {
+      newChecks = editCheck(
+        newChecks,
+        "search",
+        query.length ? { query } : null,
+      )
+      shouldUpdate = true
+    }
+
+    // Only update if changes were made
+    if (shouldUpdate) {
+      setChecks(newChecks)
+    }
+
+    // Update visible columns if view changes
     if (view?.columns) {
       setVisibleColumns(view.columns)
     }
-
-    const searchChecks = editCheck(
-      checks,
-      "search",
-      query?.length ? { query } : null,
-    )
-    setChecks(searchChecks)
   }, [type, view, query])
 
   const exportUrl = `/runs?${serializedChecks}&projectId=${projectId}`

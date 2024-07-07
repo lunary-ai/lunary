@@ -1,6 +1,6 @@
 import { useDidUpdate, useThrottledValue } from "@mantine/hooks"
 import { useRouter } from "next/router"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { CheckLogic, deserializeLogic, serializeLogic } from "shared"
 
 type Shortcut = [string, () => void]
@@ -47,8 +47,10 @@ export function useStateFromURL<T>(
   const router = useRouter()
   const [state, setState] = useState<T>(defaultValue as T)
   const throttledState = useThrottledValue(state, 300)
+  const prevThrottledState = useRef(throttledState)
 
   useEffect(() => {
+    console.log(`UPDATE IN QUERY: ${key} = ${throttledState}`)
     const value = router.query[key]
     if (value === undefined) {
       return
@@ -58,13 +60,18 @@ export function useStateFromURL<T>(
       ? options.parse(value as string)
       : (value as unknown as T)
 
+    console.log(`Setting state from URL: ${key} = ${parsedValue}`)
+
     setState(parsedValue)
   }, [router.query[key]])
 
   useEffect(() => {
-    const query = { ...router.query, [key]: throttledState as string }
-    router.replace({ query }, undefined, { shallow: true })
-  }, [throttledState])
+    if (throttledState !== prevThrottledState.current) {
+      const query = { ...router.query, [key]: throttledState as string }
+      router.replace({ query }, undefined, { shallow: true })
+      prevThrottledState.current = throttledState
+    }
+  }, [throttledState, key, router])
 
   return [state, setState] as const
 }
@@ -76,21 +83,20 @@ export function useChecksFromURL(
   const router = useRouter()
   const [checks, setChecks] = useState<CheckLogic>(defaultValue || ["AND"])
 
-  const serialized = useMemo(() => {
-    return serializeLogic(checks)
-  }, [checks])
+  const serialized = useMemo(() => serializeLogic(checks), [checks])
   const serializedChecks = useThrottledValue(serialized, 300)
+  const prevSerializedChecks = useRef(serializedChecks)
 
   useDidUpdate(() => {
     if (
       serializedChecks === "" ||
-      serializedChecks === router.asPath.replace("/logs?", "")
+      serializedChecks === router.asPath.replace("/logs?", "") ||
+      serializedChecks === prevSerializedChecks.current
     ) {
       return
     }
 
     const currentParams = new URLSearchParams(router.asPath.split("?")[1])
-
     const newParams = new URLSearchParams(serializedChecks)
     ignoreKeys.forEach((key) => {
       if (currentParams.has(key)) {
@@ -98,11 +104,17 @@ export function useChecksFromURL(
       }
     })
 
-    // router.replace({
-    //   pathname: "/logs",
-    //   query: newParams.toString(),
-    // })
-  }, [serializedChecks])
+    router.replace(
+      {
+        pathname: "/logs",
+        query: newParams.toString(),
+      },
+      undefined,
+      { shallow: true },
+    )
+
+    prevSerializedChecks.current = serializedChecks
+  }, [serializedChecks, router, ignoreKeys])
 
   useEffect(() => {
     const params = new URLSearchParams(router.asPath.split("?")[1])
@@ -112,12 +124,14 @@ export function useChecksFromURL(
 
     if (paramString) {
       const filtersData = deserializeLogic(paramString)
-      if (filtersData) {
-        console.log("Restoring filters from query params", filtersData)
+      if (
+        filtersData &&
+        JSON.stringify(filtersData) !== JSON.stringify(checks)
+      ) {
         setChecks(filtersData)
       }
     }
-  }, [router.asPath])
+  }, [router.asPath, ignoreKeys])
 
   return { checks, setChecks, serializedChecks }
 }
