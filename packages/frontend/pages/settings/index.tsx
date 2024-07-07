@@ -248,7 +248,7 @@ export default function AppAnalytics() {
             variant="default"
             component={Link}
             data-testid="add-model-button"
-            href={`/models`}
+            href={`/settings/models`}
           >
             View Model Mappings
           </Button>

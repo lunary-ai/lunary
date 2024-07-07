@@ -7,7 +7,7 @@
  * - Text
  */
 
-import { Card, Code, Flex, Group, SimpleGrid, Stack, Text } from "@mantine/core"
+import { Card, Code, Flex, Stack, Text } from "@mantine/core"
 import { useMemo } from "react"
 import ProtectedText from "../blocks/ProtectedText"
 import { ChatMessage } from "./Message"

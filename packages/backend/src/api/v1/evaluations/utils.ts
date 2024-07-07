@@ -5,6 +5,7 @@ import { compilePrompt, runAImodel } from "@/src/utils/playground"
 import { Provider } from "shared"
 
 interface RunEvalParams {
+  projectId: string
   evaluationId: string
   promptId: string
   checklistId: string
@@ -15,6 +16,7 @@ interface RunEvalParams {
 }
 
 export async function runEval({
+  projectId,
   evaluationId,
   promptId,
   checklistId,
@@ -92,12 +94,12 @@ export async function runEval({
         idealOutput,
         // So the SQL queries don't fail:
         id: "00000000-0000-4000-8000-000000000000",
-        projectId: "00000000-0000-4000-8000-000000000000",
+        projectId,
         isPublic: false,
         cost: 0,
       }
 
-      const cost = calcRunCost(virtualRun)
+      const cost = await calcRunCost(virtualRun)
       virtualRun.cost = cost || 0
       virtualRun.duration = virtualRun.duration / 1000 // needs to be in ms in calcRunCost, but needs to be in seconds in the checks
 
