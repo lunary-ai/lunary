@@ -37,7 +37,7 @@ import {
 } from "@tabler/icons-react"
 
 import { NextSeo } from "next-seo"
-import { use, useContext, useEffect, useMemo, useState } from "react"
+import { use, useContext, useEffect, useMemo, useRef, useState } from "react"
 
 import { ChatReplay } from "@/components/blocks/RunChat"
 import RunInputOutput from "@/components/blocks/RunInputOutput"
@@ -112,9 +112,7 @@ export const logsColumns = {
 
 export const CHECKS_BY_TYPE = {
   llm: [
-    "type",
     "models",
-
     // "enrichment",
     "tags",
     "users",
@@ -128,7 +126,6 @@ export const CHECKS_BY_TYPE = {
     "radar",
   ],
   trace: [
-    "type",
     "tags",
     "users",
     "status",
@@ -138,7 +135,6 @@ export const CHECKS_BY_TYPE = {
     "radar",
   ],
   thread: [
-    "type",
     "tags",
     "users",
     // "feedback",
@@ -163,6 +159,22 @@ function editCheck(filters, id, params) {
   return newChecks
 }
 
+function useTraceUpdate(props) {
+  const prev = useRef(props)
+  useEffect(() => {
+    const changedProps = Object.entries(props).reduce((ps, [k, v]) => {
+      if (prev.current[k] !== v) {
+        ps[k] = [prev.current[k], v]
+      }
+      return ps
+    }, {})
+    if (Object.keys(changedProps).length > 0) {
+      console.log("Changed props:", changedProps)
+    }
+    prev.current = props
+  })
+}
+
 export default function Logs() {
   const router = useRouter()
   const { projectId } = useContext(ProjectContext)
@@ -183,7 +195,7 @@ export default function Logs() {
   const [selectedRunId, setSelectedRunId] = useStateFromURL<string | undefined>(
     "selected",
   )
-  const [type, setType] = useStateFromURL<string>("type", "llm")
+  const [type] = useStateFromURL<string>("type", "llm")
 
   const { view, update: updateView, remove: removeView } = useView(viewId)
 
@@ -198,6 +210,41 @@ export default function Logs() {
   } = useProjectInfiniteSWR(`/runs?${serializedChecks}`)
 
   const { run: selectedRun, loading: runLoading } = useRun(selectedRunId)
+
+  // useTraceUpdate({
+  //   checks,
+  //   setChecks,
+  //   serializedChecks,
+  //   visibleColumns,
+  //   setVisibleColumns,
+  //   columnsTouched,
+  //   setColumnsTouched,
+  //   viewId,
+  //   setViewId,
+  //   selectedRunId,
+  //   setSelectedRunId,
+  //   type,
+  //   setType,
+  //   view,
+  //   updateView,
+  //   removeView,
+  //   query,
+  //   setQuery,
+  //   logs,
+  //   loading,
+  //   validating,
+  //   loadMore,
+  //   mutate,
+  //   selectedRun,
+  //   runLoading,
+  //   projectId,
+  //   setProjectId,
+  //   project,
+  //   projectLoading,
+  //   org,
+  //   insertView,
+  //   isInsertingView,
+  // })
 
   useEffect(() => {
     if (selectedRun && selectedRun.projectId !== projectId) {
@@ -244,14 +291,19 @@ export default function Logs() {
     if (shouldUpdate) {
       setChecks(newChecks)
     }
+  }, [type, query])
 
+  useEffect(() => {
     // Update visible columns if view changes
     if (view?.columns) {
       setVisibleColumns(view.columns)
     }
-  }, [type, view, query])
+  }, [view])
 
-  const exportUrl = `/runs?${serializedChecks}&projectId=${projectId}`
+  const exportUrl = useMemo(
+    () => `/runs?${serializedChecks}&projectId=${projectId}`,
+    [serializedChecks, projectId],
+  )
 
   function exportButton(url: string) {
     return {
@@ -519,8 +571,13 @@ export default function Logs() {
           availableColumns={logsColumns[type]}
           visibleColumns={visibleColumns}
           setVisibleColumns={(newState) => {
-            setVisibleColumns(newState)
-            setColumnsTouched(true)
+            const updated = {
+              ...visibleColumns,
+              ...newState,
+            }
+            console.log(`triggering set visible columns`)
+
+            setVisibleColumns(updated)
           }}
           data={logs}
         />

@@ -4,6 +4,7 @@ import useSWRInfinite from "swr/infinite"
 import useSWRMutation, { SWRMutationConfiguration } from "swr/mutation"
 import { getUserColor } from "../colors"
 import { ProjectContext } from "../context"
+import { useMemo } from "react"
 
 import { useAuth } from "../auth"
 import { fetcher } from "../fetcher"
@@ -190,14 +191,17 @@ export function useProject() {
 
   const { projects, isLoading, mutate } = useProjects()
 
-  const project = projects?.find((p) => p.id === projectId)
+  const project = useMemo(
+    () => projects?.find((p) => p.id === projectId),
+    [projects, projectId],
+  )
 
   const { trigger: updateMutation } = useSWRMutation(
-    `/projects/${projectId}`,
+    projectId && `/projects/${projectId}`,
     fetcher.patch,
   )
   const { trigger: dropMutation } = useSWRMutation(
-    `/projects/${projectId}`,
+    projectId && `/projects/${projectId}`,
     fetcher.delete,
   )
 
@@ -225,7 +229,7 @@ export function useProject() {
     project,
     update,
     drop,
-    setProjectId: setProjectId,
+    setProjectId,
     mutate,
     isLoading,
   }

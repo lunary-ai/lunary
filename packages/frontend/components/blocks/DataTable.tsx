@@ -84,7 +84,11 @@ export default function DataTable({
     columnResizeMode: "onChange",
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    onColumnVisibilityChange: setVisibleColumns,
+    onColumnVisibilityChange: (fn) => {
+      if (!fn || !setVisibleColumns) return
+      const data = fn() // for some reason, need to call the function to get the updated state
+      setVisibleColumns(data as VisibilityState)
+    },
     state: {
       sorting,
       columnVisibility: visibleColumns,

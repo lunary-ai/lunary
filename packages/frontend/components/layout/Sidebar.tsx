@@ -119,10 +119,10 @@ type MenuItem = {
   subMenu?: MenuItem[]
 }
 
-const ViewIcons = {
+const VIEW_ICONS = {
   llm: IconBrandOpenai,
   thread: IconMessages,
-  trace: IconListTree,
+  trace: IconBinaryTree2,
 }
 
 function MenuSection({ item }) {
@@ -207,7 +207,9 @@ function MenuSection({ item }) {
       <Collapse in={opened}>
         {filtered
           ?.filter((subItem) => hasReadAccess(user.role, subItem.resource))
-          .map((subItem, i) => <NavbarLink {...subItem} key={i} />)}
+          .map((subItem) => (
+            <NavbarLink {...subItem} key={subItem.link || subItem.label} />
+          ))}
       </Collapse>
     </Box>
   )
@@ -240,7 +242,7 @@ export default function Sidebar() {
     .map((v) => {
       const serialized = serializeLogic(v.data)
 
-      const Icon = ViewIcons[v.data[1].params.type]
+      const Icon = VIEW_ICONS[v.data[1].params.type]
 
       return {
         label: v.name,
@@ -342,7 +344,7 @@ export default function Sidebar() {
         },
       ].filter((item) => item),
     },
-  ]
+  ].filter((item) => item)
 
   async function createProject() {
     if (org.plan === "free" && projects.length >= 3) {

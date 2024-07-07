@@ -509,7 +509,7 @@ export default function Analytics() {
             />
           )}
 
-          <SimpleGrid cols={3}>
+          <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
             <TopModels topModels={topModels} isLoading={topModelsLoading} />
             <TopTemplates
               topTemplates={topTemplates}

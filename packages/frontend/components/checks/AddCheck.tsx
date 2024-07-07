@@ -14,19 +14,19 @@ export function AddCheckButton({ checks, onSelect, defaultOpened }) {
 
   const combobox = useCombobox({
     onDropdownClose: () => {
-      combobox.resetSelectedOption()
-      combobox.focusTarget()
+      combobox?.resetSelectedOption()
+      combobox?.focusTarget()
 
       setSearch("")
     },
 
     onDropdownOpen: () => {
-      combobox.focusSearchInput()
+      combobox?.focusSearchInput()
     },
   })
 
   useEffect(() => {
-    if (defaultOpened) {
+    if (defaultOpened && combobox) {
       combobox.openDropdown()
       combobox.focusTarget()
       combobox.focusSearchInput()
