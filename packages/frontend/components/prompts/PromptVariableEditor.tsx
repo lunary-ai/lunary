@@ -39,14 +39,7 @@ export default function PromptVariableEditor({
               justify="space-between"
               gap="lg"
             >
-              <Badge
-                key={name}
-                miw={50}
-                maw={90}
-                px="sm"
-                variant="outline"
-                tt="none"
-              >
+              <Badge key={name} miw={50} maw={90} px="sm" variant="outline">
                 {name}
               </Badge>
               <VariableTextarea

@@ -159,21 +159,21 @@ function editCheck(filters, id, params) {
   return newChecks
 }
 
-function useTraceUpdate(props) {
-  const prev = useRef(props)
-  useEffect(() => {
-    const changedProps = Object.entries(props).reduce((ps, [k, v]) => {
-      if (prev.current[k] !== v) {
-        ps[k] = [prev.current[k], v]
-      }
-      return ps
-    }, {})
-    if (Object.keys(changedProps).length > 0) {
-      console.log("Changed props:", changedProps)
-    }
-    prev.current = props
-  })
-}
+// function useTraceUpdate(props) {
+//   const prev = useRef(props)
+//   useEffect(() => {
+//     const changedProps = Object.entries(props).reduce((ps, [k, v]) => {
+//       if (prev.current[k] !== v) {
+//         ps[k] = [prev.current[k], v]
+//       }
+//       return ps
+//     }, {})
+//     if (Object.keys(changedProps).length > 0) {
+//       console.log("Changed props:", changedProps)
+//     }
+//     prev.current = props
+//   })
+// }
 
 export default function Logs() {
   const router = useRouter()
@@ -210,41 +210,6 @@ export default function Logs() {
   } = useProjectInfiniteSWR(`/runs?${serializedChecks}`)
 
   const { run: selectedRun, loading: runLoading } = useRun(selectedRunId)
-
-  // useTraceUpdate({
-  //   checks,
-  //   setChecks,
-  //   serializedChecks,
-  //   visibleColumns,
-  //   setVisibleColumns,
-  //   columnsTouched,
-  //   setColumnsTouched,
-  //   viewId,
-  //   setViewId,
-  //   selectedRunId,
-  //   setSelectedRunId,
-  //   type,
-  //   setType,
-  //   view,
-  //   updateView,
-  //   removeView,
-  //   query,
-  //   setQuery,
-  //   logs,
-  //   loading,
-  //   validating,
-  //   loadMore,
-  //   mutate,
-  //   selectedRun,
-  //   runLoading,
-  //   projectId,
-  //   setProjectId,
-  //   project,
-  //   projectLoading,
-  //   org,
-  //   insertView,
-  //   isInsertingView,
-  // })
 
   useEffect(() => {
     if (selectedRun && selectedRun.projectId !== projectId) {

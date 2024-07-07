@@ -49,12 +49,12 @@ const ParamItem = ({
       ) : (
         <Text size="sm">
           {typeof value === "string" || typeof value === "number" ? (
-            <Badge variant="outline" tt="none" color={color}>
+            <Badge variant="outline" color={color}>
               {value}
             </Badge>
           ) : Array.isArray(value) ? (
             value.map((v, i) => (
-              <Badge key={i} variant="outline" tt="none" mr="xs">
+              <Badge key={i} variant="outline" mr="xs">
                 {v}
               </Badge>
             ))
@@ -97,7 +97,7 @@ function RenderTools({ tools }) {
     return (
       <HoverCard key={i}>
         <HoverCard.Target>
-          <Badge color="pink" variant="outline" tt="none">
+          <Badge color="pink" variant="outline">
             {tool.function?.name}
           </Badge>
         </HoverCard.Target>
@@ -253,7 +253,7 @@ export default function RunInputOutput({
                     name="Model"
                     value={run.name}
                     render={(value) => (
-                      <Badge variant="light" tt="none" color="blue">
+                      <Badge variant="light" color="blue">
                         {value}
                       </Badge>
                     )}

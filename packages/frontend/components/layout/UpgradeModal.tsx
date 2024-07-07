@@ -197,7 +197,6 @@ function RenderPlanCard({
 
         {mostPopular && planId !== plan && (
           <Badge
-            tt="none"
             size="md"
             pl={3}
             leftSection={<IconCircleCheck size={16} />}

@@ -31,6 +31,7 @@ import { notifications } from "@mantine/notifications"
 import { modals } from "@mantine/modals"
 import CheckPicker from "@/components/checks/Picker"
 import { AreaChart } from "@mantine/charts"
+import Link from "next/link"
 
 function Keys() {
   const [regenerating, setRegenerating] = useState(false)
@@ -242,80 +243,15 @@ export default function AppAnalytics() {
             enabled: !process.env.NEXT_PUBLIC_DEMO,
           }}
         >
-          <Text>Add custom models and cost mappings to your project.</Text>
-
-          <Table withColumnBorders withRowBorders withTableBorder>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Model Name</Table.Th>
-                <Table.Th>Match Regex</Table.Th>
-                <Table.Th>Unit</Table.Th>
-                <Table.Th>Input Cost</Table.Th>
-                <Table.Th>Output Cost</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              <Table.Tr>
-                <Table.Td>gpt-4-preview</Table.Td>
-                <Table.Td>(?i)^(gpt-4-preview)$</Table.Td>
-                <Table.Td>Tokens</Table.Td>
-                <Table.Td>$0.01</Table.Td>
-                <Table.Td>$0.01</Table.Td>
-              </Table.Tr>
-            </Table.Tbody>
-          </Table>
-
-          <Group wrap="nowrap">
-            <TextInput
-              label="Model Name"
-              placeholder="Enter model name"
-              defaultValue="gpt-4-preview"
-              required
-            />
-            <TextInput
-              label="Match Regex"
-              placeholder="Enter match regex"
-              defaultValue="(?i)^(gpt-4-preview)$"
-              required
-            />
-            <Select
-              label="Unit"
-              placeholder="Select unit"
-              defaultValue="TOKENS"
-              data={[
-                { value: "TOKENS", label: "Tokens" },
-                { value: "CHARACTERS", label: "Characters" },
-                { value: "SECONDS", label: "Seconds" },
-              ]}
-              required
-            />
-            <NumberInput
-              label="Input Cost"
-              defaultValue={0.01}
-              placeholder="Enter input cost in USD"
-              required
-            />
-            <NumberInput
-              label="Output Cost"
-              defaultValue={0.01}
-              placeholder="Enter output cost in USD"
-              required
-            />
-          </Group>
-
-          <Flex justify="flex-end" w="100%">
-            <Button
-              loading={isLoading}
-              style={{ float: "right" }}
-              variant="default"
-              onClick={() => {
-                setIsLoading(true)
-                setTimeout(() => setIsLoading(false), 1000)
-              }}
-            >
-              Add Model
-            </Button>
-          </Flex>
+          <Button
+            color="blue"
+            variant="default"
+            component={Link}
+            data-testid="add-model-button"
+            href={`/models`}
+          >
+            View Model Mappings
+          </Button>
         </SettingsCard>
 
         {user && hasAccess(user.role, "projects", "delete") && (
