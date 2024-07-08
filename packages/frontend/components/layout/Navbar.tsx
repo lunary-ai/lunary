@@ -35,6 +35,8 @@ export default function Navbar() {
 
   // check if has ?verified=true in url
   useEffect(() => {
+    if (!router.isReady) return
+
     const verified = router.query.verified === "true"
 
     if (verified) {
@@ -47,10 +49,15 @@ export default function Navbar() {
         message: "You now have access to all features.",
       })
 
-      // remove query param
-      router.replace(router.pathname, undefined, { shallow: true })
+      // remove verified query param if present
+      const { verified, ...otherParams } = router.query
+      router.replace(
+        { pathname: router.pathname, query: otherParams },
+        undefined,
+        { shallow: true },
+      )
     }
-  }, [router.query])
+  }, [router.query, router.isReady])
 
   const sendVerification = async () => {
     if (sendingEmail) return

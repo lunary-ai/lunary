@@ -30,7 +30,7 @@ export default function Models() {
   const form = useForm({
     initialValues: {
       name: "gpt-4o",
-      pattern: "(?i)^(gpt-4o)$",
+      pattern: "^(gpt-4o)$",
       unit: "TOKENS",
       inputCost: 1,
       outputCost: 1,
@@ -86,6 +86,7 @@ export default function Models() {
           <SimpleGrid cols={3} spacing="md">
             <TextInput
               label="Model Name"
+              description="Name of the model"
               placeholder="Enter model name"
               required
               key={form.key("name")}
@@ -94,6 +95,7 @@ export default function Models() {
             <TextInput
               label="Pattern (Regex)"
               placeholder="Enter the pattern regex"
+              description="Case insensitive by default"
               required
               key={form.key("pattern")}
               {...form.getInputProps("pattern")}
@@ -102,6 +104,8 @@ export default function Models() {
               label="Tokenizer"
               placeholder="Select tokenizer"
               required
+              description="Tokenizer used for token counting"
+              disabled={form.values.unit === "MILLISECONDS"}
               key={form.key("tokenizer")}
               {...form.getInputProps("tokenizer")}
               data={[
@@ -176,11 +180,15 @@ export default function Models() {
                   <Table.Td>
                     {model.orgId ? (
                       <Tooltip label="Custom mapping defined by you. Takes precedence over default.">
-                        <Badge color="pink">custom</Badge>
+                        <Badge color="pink" variant="light">
+                          custom
+                        </Badge>
                       </Tooltip>
                     ) : (
                       <Tooltip label="Price defined by Lunary. Can be overwritten.">
-                        <Badge color="blue">default</Badge>
+                        <Badge color="cyan" variant="light">
+                          default
+                        </Badge>
                       </Tooltip>
                     )}
                   </Table.Td>

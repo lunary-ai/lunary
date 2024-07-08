@@ -4,12 +4,9 @@ import { Context } from "koa"
 
 function cleanOpenAiMessage(message: any) {
   // remove empty toolCalls if any empty
-  // if (Array.isArray(message.toolCalls) && !message.toolCalls.length) {
-  // delete message.toolCalls
-  // }
-
-  // TODO: when OpenAI supports it, remove this line
-  delete message.toolCalls
+  if (Array.isArray(message.toolCalls) && !message.toolCalls.length) {
+    delete message.toolCalls
+  }
 
   if (message.content === null) {
     message.content = ""

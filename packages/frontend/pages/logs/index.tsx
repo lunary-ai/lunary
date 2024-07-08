@@ -175,6 +175,8 @@ function editCheck(filters, id, params) {
 //   })
 // }
 
+const IGNORED_KEYS = ["view", "selected", "search"]
+
 export default function Logs() {
   const router = useRouter()
   const { projectId } = useContext(ProjectContext)
@@ -183,7 +185,7 @@ export default function Logs() {
 
   const { checks, setChecks, serializedChecks } = useChecksFromURL(
     ["AND", { id: "type", params: { type: "llm" } }],
-    ["type", "view", "selected", "search"],
+    IGNORED_KEYS,
   )
 
   const { insert: insertView, isInserting: isInsertingView } = useViews()
@@ -292,25 +294,6 @@ export default function Logs() {
         if (org?.plan === "free") {
           openUpgrade("export")
           return
-        }
-
-        // TODO: Remove once OpenAI supports
-        if (url.includes("exportType=ojsonl")) {
-          modals.open({
-            title: "Tool calls removed",
-            children: (
-              <>
-                <Text size="sm">
-                  Note: OpenAI fine-tunes currently do not support tool calls in
-                  the JSONL fine-tuning format. They will be removed from the
-                  export to ensure it does not break the import.
-                </Text>
-                <Button fullWidth onClick={() => modals.closeAll()} mt="md">
-                  Acknowledge
-                </Button>
-              </>
-            ),
-          })
         }
 
         fetcher.getFile(url)

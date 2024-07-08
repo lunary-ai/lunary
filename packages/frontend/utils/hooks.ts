@@ -5,7 +5,7 @@ import {
   useThrottledValue,
 } from "@mantine/hooks"
 import { useRouter } from "next/router"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { use, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { CheckLogic, deserializeLogic, serializeLogic } from "shared"
 
 type Shortcut = [string, () => void]
@@ -75,6 +75,9 @@ export function useStateFromURL<T>(
 
     if (throttledState !== prevThrottledState.current) {
       const query = { ...router.query, [key]: throttledState as string }
+
+      console.log(`PUSHING REPLACE STATE ${key} ${throttledState}`)
+
       router.replace({ query }, undefined, { shallow: true })
 
       prevThrottledState.current = throttledState
@@ -97,6 +100,30 @@ export function useStateFromURL<T>(
  *   - serializedChecks: A throttled value of the serialized checks, used for updating the URL.
  */
 
+// compare checks even if not same order
+function compareSerializedChecks(a: string, b: string) {
+  const aParts = a.split("&").sort()
+  const bParts = b.split("&").sort()
+
+  return aParts.join("&") === bParts.join("&")
+}
+
+function useTraceUpdate(props) {
+  const prev = useRef(props)
+  useEffect(() => {
+    const changedProps = Object.entries(props).reduce((ps, [k, v]) => {
+      if (prev.current[k] !== v) {
+        ps[k] = [prev.current[k], v]
+      }
+      return ps
+    }, {})
+    if (Object.keys(changedProps).length > 0) {
+      console.log("Changed props:", changedProps)
+    }
+    prev.current = props
+  })
+}
+
 export function useChecksFromURL(
   defaultValue: CheckLogic,
   ignoreKeys: string[] = [],
@@ -105,18 +132,20 @@ export function useChecksFromURL(
   const [checks, setChecks] = useState<CheckLogic>(defaultValue)
 
   const serializedChecks = useMemo(() => serializeLogic(checks), [checks])
+  const throttledSerializedChecks = useThrottledValue(serializedChecks, 300)
 
-  const parseUrlParams = useCallback(() => {
+  const parseUrlParams = useMemo(() => {
+    if (!router.isReady) return ""
     const params = new URLSearchParams(router.asPath.split("?")[1] || "")
     ignoreKeys.forEach((key) => params.delete(key))
     return params.toString()
-  }, [router.asPath, ignoreKeys.toString()])
+  }, [router.asPath, ignoreKeys, router.isReady])
 
   // Load checks from URL when the component mounts or URL changes
   useEffect(() => {
     if (!router.isReady) return
 
-    const paramString = parseUrlParams()
+    const paramString = parseUrlParams
     if (paramString) {
       const filtersData = deserializeLogic(paramString)
       if (
@@ -126,7 +155,6 @@ export function useChecksFromURL(
         setChecks(filtersData)
       }
     } else {
-      // Reset to default value if no filters in URL
       setChecks(defaultValue)
     }
   }, [router.isReady, parseUrlParams])
@@ -135,22 +163,39 @@ export function useChecksFromURL(
   useEffect(() => {
     if (!router.isReady) return
 
-    const currentUrlParams = parseUrlParams()
-    if (currentUrlParams !== serializedChecks) {
-      const newParams = new URLSearchParams(serializedChecks)
-      ignoreKeys.forEach((key) => {
-        if (router.query[key]) {
-          newParams.set(key, router.query[key] as string)
-        }
-      })
+    const currentParams = new URLSearchParams(router.asPath.split("?")[1] || "")
+    const updatedQuery = {}
 
+    // Update query with serializedChecks, excluding ignored keys
+    if (throttledSerializedChecks) {
+      const parsed = new URLSearchParams(throttledSerializedChecks)
+
+      for (const [key, value] of parsed) {
+        updatedQuery[key] = value
+      }
+    }
+
+    // Add existing params not in serializedChecks or ignoreKeys
+    for (const [key, value] of currentParams) {
+      if (!updatedQuery.hasOwnProperty(key) && !ignoreKeys.includes(key)) {
+        updatedQuery[key] = value
+      }
+    }
+
+    // Only update if the query has changed
+    if (
+      !compareSerializedChecks(
+        parseUrlParams,
+        new URLSearchParams(updatedQuery).toString(),
+      )
+    ) {
       router.replace(
-        { pathname: router.pathname, query: newParams.toString() },
+        { pathname: router.pathname, query: updatedQuery },
         undefined,
         { shallow: true },
       )
     }
-  }, [router.isReady, serializedChecks, parseUrlParams, ignoreKeys.toString()])
+  }, [router.isReady, throttledSerializedChecks, parseUrlParams, ignoreKeys])
 
   return { checks, setChecks, serializedChecks }
 }

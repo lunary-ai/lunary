@@ -149,16 +149,17 @@ function MenuSection({ item }) {
             h={16}
             leftSection={<IconSearch size={12} />}
             mb={15}
-            styles={{
-              input: {},
-            }}
             ref={focusTrapRef}
             placeholder="Search"
             value={query}
             onChange={(e) => setQuery(e.currentTarget.value)}
             onBlur={() => {
               setSearchOn(false)
-              setQuery("")
+
+              // leave time for the click event to trigger
+              setTimeout(() => {
+                setQuery("")
+              }, 200)
             }}
           />
         ) : (

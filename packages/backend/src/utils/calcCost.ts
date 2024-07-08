@@ -1,5 +1,7 @@
 import sql from "./db"
 import { setTimeout } from "timers/promises"
+import * as Sentry from "@sentry/node"
+import { filterAsync, findAsyncSequential } from "./misc"
 
 interface ModelCost {
   models: string[]
@@ -193,54 +195,69 @@ export async function calcRunCost(run: any) {
   // Then use the inputCost and outputCost from the mapping. They are expressed in USD per 1.000.000. The unit can be 'TOKENS', 'MILLISECONDS' or 'CHARACTERS'. The cost is always per 1.000.000 units.
   // If cost is per character, use run.input and run.output length (stringified) to calculate the cost
 
-  const [org] = await sql`
-    SELECT org_id FROM project WHERE id = ${run.projectId}
-  `
+  try {
+    const [{ orgId }] = await sql`
+    SELECT org_id FROM project WHERE id = ${run.projectId}`
 
-  const mappings = await sql`
+    const mappings = await sql`
     SELECT * FROM model_mapping
-    WHERE org_id IS NULL OR org_id = ${org.id}
+    WHERE org_id = ${orgId} OR org_id IS NULL
     ORDER BY start_date DESC NULLS LAST, org_id IS NOT NULL DESC
   `
 
-  const mapping = mappings.find(async (mapping) => {
-    try {
-      const regex = new RegExp(mapping.pattern)
-      const timeoutMs = 100 // Adjust timeout as needed
+    const mapping = await findAsyncSequential(mappings, async (mapping) => {
+      try {
+        const regex = new RegExp(mapping.pattern)
 
-      const testPromise = regex.test(run.name)
-      const timeoutPromise = setTimeout(timeoutMs, false)
+        // Add a timeout to protect against regex slow/attacks
+        const timeoutMs = 200
 
-      return await Promise.race([testPromise, timeoutPromise])
-    } catch (error) {
-      console.error(`Invalid regex pattern: ${mapping.pattern}`, error)
-      return false
+        const testPromise = regex.test(run.name)
+        const timeoutPromise = setTimeout(timeoutMs, false)
+
+        return await Promise.race([testPromise, timeoutPromise])
+      } catch (error) {
+        console.error(`Invalid regex pattern: ${mapping.pattern}`, error)
+        return false
+      }
+    })
+
+    if (!mapping) return calcRunCostLegacy(run)
+
+    let inputUnits = 0
+    let outputUnits = 0
+
+    if (mapping.unit === "TOKENS") {
+      inputUnits = run.promptTokens || 0
+      outputUnits = run.completionTokens || 0
+    } else if (mapping.unit === "MILLISECONDS") {
+      inputUnits = run.duration || 0
+      outputUnits = 0
+    } else if (mapping.unit === "CHARACTERS") {
+      inputUnits =
+        (typeof run.input === "string" ? run.input : JSON.stringify(run.input))
+          .length || 0
+      outputUnits =
+        (typeof run.output === "string"
+          ? run.output
+          : JSON.stringify(run.output)
+        ).length || 0
     }
-  })
 
-  if (!mapping) return calcRunCostLegacy(run)
+    const inputCost = (mapping.inputCost * inputUnits) / 1_000_000
+    const outputCost = (mapping.outputCost * outputUnits) / 1_000_000
 
-  let inputUnits = 0
-  let outputUnits = 0
+    const finalCost = Number((inputCost + outputCost).toFixed(5))
 
-  if (mapping.unit === "TOKENS") {
-    inputUnits = run.promptTokens || 0
-    outputUnits = run.completionTokens || 0
-  } else if (mapping.unit === "MILLISECONDS") {
-    inputUnits = run.duration || 0
-    outputUnits = 0
-  } else if (mapping.unit === "CHARACTERS") {
-    inputUnits =
-      (typeof run.input === "string" ? run.input : JSON.stringify(run.input))
-        .length || 0
-    outputUnits =
-      (typeof run.output === "string" ? run.output : JSON.stringify(run.output))
-        .length || 0
+    // Round to 5 decimal places
+    return finalCost
+  } catch (error) {
+    console.error(
+      "Error calculating run cost, defaulting to legacy method",
+      error,
+    )
+    Sentry.captureException(error)
+
+    return calcRunCostLegacy(run)
   }
-
-  const inputCost = (mapping.inputCost * inputUnits) / 1_000_000
-  const outputCost = (mapping.outputCost * outputUnits) / 1_000_000
-
-  // Round to 5 decimal places
-  return Number((inputCost + outputCost).toFixed(5))
 }
