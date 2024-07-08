@@ -43,6 +43,7 @@ import {
   IconPlayerPlay,
   IconSearch,
   IconSettings,
+  IconSettings2,
   IconSparkles,
   IconSun,
   IconTimeline,
@@ -140,7 +141,7 @@ function MenuSection({ item }) {
   )
 
   return (
-    <Box mb="sm" mt="sm">
+    <Box mb="sm" mt="md">
       <Group gap={3} align="center" justify="space-between" px="sm">
         {searchOn ? (
           <TextInput
@@ -310,6 +311,12 @@ export default function Sidebar() {
           link: "/evaluations/realtime",
           resource: "evaluations",
         },
+        {
+          label: "Datasets",
+          icon: IconDatabase,
+          link: "/datasets",
+          resource: "datasets",
+        },
       ],
     },
     !!projectViews.length && {
@@ -319,32 +326,20 @@ export default function Sidebar() {
       resource: "logs",
       subMenu: projectViews,
     },
-    {
-      label: "Project",
-      resource: "apiKeys",
-      subMenu: [
-        {
-          label: "Settings",
-          icon: IconSettings,
-          link: "/settings",
-          resource: "apiKeys",
-        },
-        {
-          label: "Datasets",
-          icon: IconDatabase,
-          link: "/datasets",
-          resource: "datasets",
-        },
-        !!canUpgrade && {
-          label: "Upgrade",
-          onClick: openUpgrade,
-          c: "vioplet",
-          icon: IconBolt,
-          disabled: !canUpgrade,
-          resource: "billing",
-        },
-      ].filter((item) => item),
-    },
+    // {
+    //   label: "Project",
+    //   resource: "apiKeys",
+    //   subMenu: [
+    //     !!canUpgrade && {
+    //       label: "Upgrade",
+    //       onClick: openUpgrade,
+    //       c: "vioplet",
+    //       icon: IconBolt,
+    //       disabled: !canUpgrade,
+    //       resource: "billing",
+    //     },
+    //   ].filter((item) => item),
+    // },
   ].filter((item) => item)
 
   async function createProject() {
@@ -392,56 +387,78 @@ export default function Sidebar() {
     >
       <Stack w="100%" gap={0}>
         <Box w="100%">
-          <Combobox
-            store={combobox}
-            withinPortal={false}
-            onOptionSubmit={(id) => {
-              setProjectId(id)
-              combobox.closeDropdown()
-            }}
-          >
-            <Combobox.Target>
-              <InputBase
-                component="button"
-                size="xs"
-                mx="xs"
-                my="xs"
-                w="auto"
-                type="button"
-                pointer
-                leftSection={<IconAnalyze size={16} />}
-                rightSection={<Combobox.Chevron />}
-                onClick={() => combobox.toggleDropdown()}
-                rightSectionPointerEvents="none"
-              >
-                {project?.name || (
-                  <Input.Placeholder>Select project</Input.Placeholder>
-                )}
-              </InputBase>
-            </Combobox.Target>
-            <Combobox.Dropdown>
-              <Combobox.Options>
-                {projects?.map((item) => (
-                  <Combobox.Option value={item.id} key={item.id}>
-                    {item.name}
-                  </Combobox.Option>
-                ))}
-              </Combobox.Options>
-              <Combobox.Footer>
-                <Button
-                  loading={createProjectLoading}
+          <Group wrap="nowrap" my="xs" pb="xs" mx="xs" justify="space-between">
+            <Combobox
+              store={combobox}
+              withinPortal={false}
+              onOptionSubmit={(id) => {
+                setProjectId(id)
+                combobox.closeDropdown()
+              }}
+              styles={{
+                dropdown: { minWidth: "fit-content", maxWidth: 600 },
+              }}
+            >
+              <Combobox.Target>
+                <InputBase
+                  component="button"
                   size="xs"
-                  onClick={createProject}
-                  data-testid="new-project"
-                  variant="light"
-                  fullWidth
-                  leftSection={<IconPlus size={12} />}
+                  variant="unstyled"
+                  w="fit-content"
+                  fw={500}
+                  fz="xl"
+                  type="button"
+                  style={{
+                    fontSize: 20,
+                    textOverflow: "ellipsis",
+                    overflow: "hidden",
+                  }}
+                  pointer
+                  leftSection={
+                    <ThemeIcon size={19} ml={-4} variant="light">
+                      <IconAnalyze size={15} />
+                    </ThemeIcon>
+                  }
+                  rightSection={<Combobox.Chevron />}
+                  onClick={() => combobox.toggleDropdown()}
+                  rightSectionPointerEvents="none"
                 >
-                  Create project
-                </Button>
-              </Combobox.Footer>
-            </Combobox.Dropdown>
-          </Combobox>
+                  {project?.name || (
+                    <Input.Placeholder>Select project</Input.Placeholder>
+                  )}
+                </InputBase>
+              </Combobox.Target>
+              <Combobox.Dropdown w={400}>
+                <Combobox.Options>
+                  {projects?.map((item) => (
+                    <Combobox.Option value={item.id} key={item.id}>
+                      {item.name}
+                    </Combobox.Option>
+                  ))}
+                </Combobox.Options>
+                <Combobox.Footer>
+                  <Button
+                    loading={createProjectLoading}
+                    onClick={createProject}
+                    data-testid="new-project"
+                    variant="light"
+                    fullWidth
+                    leftSection={<IconPlus size={12} />}
+                  >
+                    Create Project
+                  </Button>
+                </Combobox.Footer>
+              </Combobox.Dropdown>
+            </Combobox>
+            <ActionIcon
+              variant="default"
+              size="sm"
+              component={Link}
+              href="/settings"
+            >
+              <IconSettings size={14} stroke={1} />
+            </ActionIcon>
+          </Group>
 
           {user &&
             APP_MENU.filter((item) => !item.disabled).map((item) => (

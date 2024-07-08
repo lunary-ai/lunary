@@ -379,7 +379,7 @@ export default function Logs() {
         <NextSeo title="Requests" />
 
         <Stack>
-          <Card withBorder p={4} px="sm">
+          <Card withBorder p={2} px="sm">
             <Flex justify="space-between">
               <SearchBar
                 query={query}
@@ -532,13 +532,11 @@ export default function Logs() {
           availableColumns={logsColumns[type]}
           visibleColumns={visibleColumns}
           setVisibleColumns={(newState) => {
-            const updated = {
-              ...visibleColumns,
+            console.log(`newState`, newState)
+            setVisibleColumns((prev) => ({
+              ...prev,
               ...newState,
-            }
-            console.log(`triggering set visible columns`)
-
-            setVisibleColumns(updated)
+            }))
           }}
           data={logs}
         />

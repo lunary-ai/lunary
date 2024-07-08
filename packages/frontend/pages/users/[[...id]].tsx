@@ -50,7 +50,6 @@ import TopModels from "@/components/analytics/TopModels"
 import LineChart from "@/components/analytics/LineChart"
 import Link from "next/link"
 import { deserializeDateRange, getDefaultDateRange } from "../analytics"
-import { run } from "node:test"
 
 const columns = [
   {
@@ -321,7 +320,7 @@ export default function Users() {
       <Stack h={"calc(100vh - var(--navbar-with-filters-size))"}>
         <NextSeo title="Users" />
 
-        <Card withBorder p={4} px="sm">
+        <Card withBorder p={2} px="sm">
           <SearchBar
             query={search}
             ml={-8}

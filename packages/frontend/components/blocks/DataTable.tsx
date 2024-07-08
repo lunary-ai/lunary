@@ -23,19 +23,10 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 
-import { useLocalStorage } from "@mantine/hooks"
-import { useVirtual } from "@tanstack/react-virtual"
+import { useVirtual, useVirtualizer } from "@tanstack/react-virtual"
 
 // outside for reference
 const emptyArray = []
-
-const DEFAULT_AUTO_HIDABLE_COLUMNS = [
-  "feedback",
-  "tags",
-  "user",
-  "templateVersionId",
-]
-const CHAT_AUTO_HIDABLE_COLUMNS = ["tags", "user"]
 
 export default function DataTable({
   type,
@@ -58,20 +49,12 @@ export default function DataTable({
   loadMore?: (() => void) | null
   defaultSortBy?: string
 }) {
-  const autoHidableColumns =
-    type === "thread" ? CHAT_AUTO_HIDABLE_COLUMNS : DEFAULT_AUTO_HIDABLE_COLUMNS
-
   const [sorting, setSorting] = useState<SortingState>([
     {
       id: defaultSortBy,
       desc: true,
     },
   ])
-
-  const [columnsTouched, setColumnsTouched] = useLocalStorage({
-    key: "columnsTouched-" + type,
-    defaultValue: false,
-  })
 
   //we need a reference to the scrolling element for logic down below
   const tableContainerRef = useRef<HTMLDivElement>(null)
@@ -87,6 +70,7 @@ export default function DataTable({
     onColumnVisibilityChange: (fn) => {
       if (!fn || !setVisibleColumns) return
       const data = fn() // for some reason, need to call the function to get the updated state
+
       setVisibleColumns(data as VisibilityState)
     },
     state: {
@@ -98,16 +82,18 @@ export default function DataTable({
 
   const { rows } = table.getRowModel()
 
-  const rowVirtualizer = useVirtual({
-    size: rows.length,
-    parentRef: tableContainerRef,
+  const rowVirtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => tableContainerRef.current,
+    estimateSize: () => 34,
+    overscan: 40,
   })
 
-  const items = rowVirtualizer.virtualItems
+  const items = rowVirtualizer.getVirtualItems()
   const paddingTop = items.length > 0 ? items[0].start : 0
   const paddingBottom =
     items.length > 0
-      ? rowVirtualizer.totalSize - items[items.length - 1].end
+      ? rowVirtualizer.getTotalSize() - items[items.length - 1].end
       : 0
 
   //called on scroll and possibly on mount to fetch more data as the user scrolls and reaches bottom of table
@@ -132,23 +118,6 @@ export default function DataTable({
   useEffect(() => {
     fetchMoreOnBottomReached(tableContainerRef.current)
   }, [fetchMoreOnBottomReached])
-
-  useEffect(() => {
-    if (!table || !rows?.length || columnsTouched) return
-
-    table.getAllColumns().forEach((column) => {
-      if (!autoHidableColumns.includes(column.id)) return
-
-      const isUsed = rows.some(
-        (row) =>
-          row.original[column.id] ||
-          // Special case with feedback column which is sometimes in parentFeedback
-          (column.id === "feedback" && row.original.parentFeedback),
-      )
-
-      column.toggleVisibility(isUsed)
-    })
-  }, [table, rows, columnsTouched])
 
   return (
     <>
@@ -184,7 +153,6 @@ export default function DataTable({
                     key={column.id}
                     onClick={() => {
                       column.toggleVisibility()
-                      setColumnsTouched(true)
                     }}
                   >
                     <Group>
