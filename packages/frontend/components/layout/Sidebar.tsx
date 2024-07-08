@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import {
   ActionIcon,
   Box,
@@ -14,51 +13,30 @@ import {
   ThemeIcon,
   useMantineColorScheme,
 } from "@mantine/core"
-=======
-import { Box, Flex, Menu, NavLink, Stack, Text, ThemeIcon } from "@mantine/core"
->>>>>>> main
 
 import {
   IconActivity,
   IconActivityHeartbeat,
   IconAnalyze,
-  IconArrowRight,
   IconBinaryTree2,
-  IconBolt,
-<<<<<<< HEAD
-  IconBooks,
   IconBrandOpenai,
-=======
-  IconCheckbox,
->>>>>>> main
   IconChevronRight,
   IconCreditCard,
   IconDatabase,
   IconFlask,
-  IconFlask2Filled,
-  IconFlaskFilled,
-  IconHelpCircle,
   IconHelpOctagon,
-<<<<<<< HEAD
   IconHelpSmall,
-=======
->>>>>>> main
   IconListSearch,
   IconLogout,
   IconMessage2,
-<<<<<<< HEAD
   IconMessages,
   IconMoon,
   IconNotebook,
   IconPaint,
-=======
->>>>>>> main
-  IconPlayerPlay,
   IconSearch,
   IconSettings,
-  IconSettings2,
   IconSparkles,
-  IconStars,
+  IconSun,
   IconTimeline,
   IconUsers,
 } from "@tabler/icons-react"
@@ -77,13 +55,10 @@ import { IconPlus } from "@tabler/icons-react"
 import { useAuth } from "@/utils/auth"
 import { useProject, useProjects } from "@/utils/dataHooks"
 import { useEffect, useState } from "react"
-import { ResourceName, hasAccess, hasReadAccess } from "shared"
+import { ResourceName, hasAccess, hasReadAccess, serializeLogic } from "shared"
 import config from "@/utils/config"
-<<<<<<< HEAD
 import { useViews } from "@/utils/dataHooks/views"
 import { useDisclosure, useFocusTrap } from "@mantine/hooks"
-=======
->>>>>>> main
 
 function NavbarLink({
   icon: Icon,
@@ -95,7 +70,12 @@ function NavbarLink({
 }) {
   const router = useRouter()
 
-  const active = router.pathname.startsWith(link)
+  // For logs pages, we want to compare the full url because it contains the view ID and filters info
+  const active = router.pathname.startsWith("/logs")
+    ? router.asPath.includes(`&view`)
+      ? router.asPath.includes(`&view=${link.split("view=")[1]}`)
+      : router.asPath.startsWith(link)
+    : router.pathname.startsWith(link)
 
   const handleNavigation = (link) => {
     router.push(link, undefined, { shallow: true })
@@ -115,13 +95,7 @@ function NavbarLink({
           <Icon size={14} opacity={0.7} />
         </ThemeIcon>
       }
-<<<<<<< HEAD
     />
-=======
-    >
-      {subMenu?.map((item) => <NavbarLink {...item} key={item.label} />)}
-    </NavLink>
->>>>>>> main
   )
 }
 
@@ -242,12 +216,9 @@ export default function Sidebar() {
   const { user } = useUser()
   const { org } = useOrg()
   const { projects, isLoading: loading, insert } = useProjects()
-<<<<<<< HEAD
   const { views } = useViews()
 
   const { colorScheme, setColorScheme } = useMantineColorScheme({})
-=======
->>>>>>> main
 
   const [createProjectLoading, setCreateProjectLoading] = useState(false)
 
@@ -260,7 +231,6 @@ export default function Sidebar() {
 
   const canUpgrade = billingEnabled && ["free", "pro"].includes(org?.plan)
 
-<<<<<<< HEAD
   const projectViews = (views || [])
     .map((v) => {
       const serialized = serializeLogic(v.data)
@@ -308,20 +278,6 @@ export default function Sidebar() {
         },
         { label: "Users", icon: IconUsers, link: "/users", resource: "users" },
       ],
-=======
-  const APP_MENU: MenuItem[] = [
-    {
-      label: "Analytics",
-      icon: IconTimeline,
-      link: "/analytics",
-      resource: "analytics",
-    },
-    {
-      label: "Logs",
-      icon: IconListSearch,
-      link: "/logs",
-      resource: "logs",
->>>>>>> main
     },
     {
       label: "Build",
@@ -567,7 +523,6 @@ export default function Sidebar() {
                 </Menu.Dropdown>
               </Menu>
 
-<<<<<<< HEAD
               <Menu closeOnItemClick={false}>
                 <Menu.Target>
                   <ActionIcon variant="subtle" radius="xl" size={32}>
@@ -580,33 +535,6 @@ export default function Sidebar() {
                 </Menu.Target>
                 <Menu.Dropdown>
                   <Menu.Item>
-=======
-            {process.env.NEXT_PUBLIC_CRISP_ID && (
-              <NavLink
-                onClick={() => {
-                  $crisp.push(["do", "chat:open"])
-                }}
-                label="Help & Feedback"
-                leftSection={<IconMessage2 size={14} />}
-              />
-            )}
-            <NavLink
-              component="a"
-              href="https://lunary.ai/docs"
-              label="Documentation"
-              leftSection={<IconHelpOctagon size={14} />}
-            />
-
-            <Menu width={200}>
-              <Menu.Target>
-                <NavLink
-                  color="red"
-                  h={50}
-                  data-testid="account-sidebar-item"
-                  leftSection={<UserAvatar size={24} profile={user} />}
-                  rightSection={<IconChevronRight size={16} opacity={0.5} />}
-                  label={
->>>>>>> main
                     <Stack gap={0}>
                       <Text
                         mb={-3}
@@ -631,7 +559,6 @@ export default function Sidebar() {
                         {user?.email}
                       </Text>
                     </Stack>
-<<<<<<< HEAD
                   </Menu.Item>
                   <Menu.Item
                     leftSection={<IconPaint opacity={0.6} size={14} />}
@@ -694,22 +621,6 @@ export default function Sidebar() {
                 </Menu.Dropdown>
               </Menu>
             </Group>
-=======
-                  }
-                />
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Item
-                  c="red"
-                  data-testid="logout-button"
-                  onClick={() => auth.signOut()}
-                  leftSection={<IconLogout size={14} />}
-                >
-                  Logout
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
->>>>>>> main
           </Box>
         </>
       )}

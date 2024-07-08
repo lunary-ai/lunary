@@ -6,9 +6,11 @@ import { getUserColor } from "../colors"
 import { ProjectContext } from "../context"
 import { useMemo } from "react"
 
+import { useComputedColorScheme } from "@mantine/core"
+
 import { useAuth } from "../auth"
 import { fetcher } from "../fetcher"
-import { useFixedColorScheme } from "../hooks"
+
 import { CheckLogic } from "shared"
 
 type KeyType = string | ((...args: any[]) => string)
@@ -109,7 +111,7 @@ export function useProjectMutate(key: KeyType, options?: SWRConfiguration) {
 export function useUser() {
   const { isSignedIn } = useAuth()
 
-  const scheme = useFixedColorScheme()
+  const scheme = useComputedColorScheme()
 
   const { data, isLoading, mutate, error } = useSWR(
     () => isSignedIn && `/users/me`,
@@ -135,7 +137,7 @@ export function useOrg() {
     mutate()
   }
 
-  const scheme = useFixedColorScheme()
+  const scheme = useComputedColorScheme()
 
   const users = data?.users?.map((user) => ({
     ...user,
@@ -202,7 +204,6 @@ export function useProject() {
     fetcher.patch,
   )
 
-
   const { trigger: dropMutation } = useSWRMutation(
     projectId && `/projects/${projectId}`,
     fetcher.delete,
@@ -217,9 +218,8 @@ export function useProject() {
   }
 
   async function updateSmartDatafilters(filters: CheckLogic) {
-    return updateMutation({filters})
+    return updateMutation({ filters })
   }
-
 
   async function drop(): Promise<Boolean> {
     try {
@@ -463,7 +463,7 @@ export function useOrgUser(userId: string) {
     fetcher.patch,
   )
 
-  const scheme = useFixedColorScheme()
+  const scheme = useComputedColorScheme()
 
   const user = {
     ...data,
