@@ -15,20 +15,20 @@
     "@mantine/hooks": "^7.11.1",
     "@mantine/modals": "^7.11.1",
     "@mantine/notifications": "^7.11.1",
-    "@sentry/nextjs": "^7.109.0",
-    "@tabler/icons-react": "^2.46.0",
+    "@sentry/nextjs": "^8.15.0",
+    "@tabler/icons-react": "^3.9.0",
     "@tanstack/react-table": "^8.19.2",
     "@tanstack/react-virtual": "^3.8.1",
     "bcrypt": "^5.1.1",
     "crisp-sdk-web": "^1.0.21",
     "date-fns": "^3.6.0",
     "dayjs": "^1.11.11",
-    "jose": "^5.2.0",
+    "jose": "^5.6.3",
     "json-2-csv": "^5.5.1",
     "jsonrepair": "^3.5.1",
     "next": "^14.2.4",
     "next-seo": "^6.4.0",
-    "posthog-js": "1.131.4",
+    "posthog-js": "^1.145.0",
     "random-word-slugs": "^0.1.7",
     "react": "^18.3.1",
     "react-confetti": "^6.1.0",
@@ -46,6 +46,6 @@
     "postcss": "^8.4.33",
     "postcss-preset-mantine": "^1.12.3",
     "postcss-simple-vars": "^7.0.1",
-    "typescript": "5.4.4"
+    "typescript": "^5.5.3"
   }
 }
