@@ -532,7 +532,6 @@ export default function Logs() {
           availableColumns={logsColumns[type]}
           visibleColumns={visibleColumns}
           setVisibleColumns={(newState) => {
-            console.log(`newState`, newState)
             setVisibleColumns((prev) => ({
               ...prev,
               ...newState,

@@ -11,7 +11,7 @@ export const MODELS = [
   },
   {
     id: "claude-3-5-sonnet-20240620",
-    name: "claude-3.5-sonnet",
+    name: "claude-3-5-sonnet",
     provider: "anthropic",
   },
   {

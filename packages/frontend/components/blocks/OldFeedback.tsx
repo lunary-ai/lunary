@@ -1,9 +1,4 @@
-import {
-  Group,
-  Indicator,
-  Tooltip,
-  useComputedColorScheme,
-} from "@mantine/core"
+import { Group, Indicator, Tooltip } from "@mantine/core"
 
 import {
   IconMessage,
@@ -14,6 +9,7 @@ import {
 } from "@tabler/icons-react"
 import { useEffect } from "react"
 import analytics from "../../utils/analytics"
+import { useFixedColorScheme } from "@/utils/hooks"
 
 export default function Feedback({
   data = {},
@@ -22,7 +18,7 @@ export default function Feedback({
   data: Record<string, any>
   isFromParent?: boolean
 }) {
-  const scheme = useComputedColorScheme()
+  const scheme = useFixedColorScheme()
   useEffect(() => {
     // Feature tracking
     if (data) analytics.trackOnce("HasFeedback")

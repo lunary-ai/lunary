@@ -23,7 +23,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 
-import { useVirtual, useVirtualizer } from "@tanstack/react-virtual"
+import { useVirtualizer } from "@tanstack/react-virtual"
 
 // outside for reference
 const emptyArray = []

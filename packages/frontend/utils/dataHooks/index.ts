@@ -8,9 +8,10 @@ import { useMemo } from "react"
 
 import { useAuth } from "../auth"
 import { fetcher } from "../fetcher"
-import { useComputedColorScheme } from "@mantine/core"
+import { useFixedColorScheme } from "../hooks"
+import { CheckLogic } from "shared"
 
-type KeyType = string | undefined | ((...args: any[]) => string)
+type KeyType = string | ((...args: any[]) => string)
 
 function generateKey(
   baseKey: KeyType | undefined,
@@ -108,7 +109,7 @@ export function useProjectMutate(key: KeyType, options?: SWRConfiguration) {
 export function useUser() {
   const { isSignedIn } = useAuth()
 
-  const scheme = useComputedColorScheme()
+  const scheme = useFixedColorScheme()
 
   const { data, isLoading, mutate, error } = useSWR(
     () => isSignedIn && `/users/me`,
@@ -134,7 +135,7 @@ export function useOrg() {
     mutate()
   }
 
-  const scheme = useComputedColorScheme()
+  const scheme = useFixedColorScheme()
 
   const users = data?.users?.map((user) => ({
     ...user,
@@ -200,6 +201,8 @@ export function useProject() {
     projectId && `/projects/${projectId}`,
     fetcher.patch,
   )
+
+
   const { trigger: dropMutation } = useSWRMutation(
     projectId && `/projects/${projectId}`,
     fetcher.delete,
@@ -213,9 +216,14 @@ export function useProject() {
     mutate(newProjects)
   }
 
+  async function updateSmartDatafilters(filters: CheckLogic) {
+    return updateMutation({filters})
+  }
+
+
   async function drop(): Promise<Boolean> {
     try {
-      const res = await dropMutation()
+      await dropMutation()
       const newProjects = projects.filter((p) => p.id !== projectId)
       setProjectId(newProjects[0]?.id)
       mutate(newProjects)
@@ -228,6 +236,7 @@ export function useProject() {
   return {
     project,
     update,
+    updateSmartDatafilters,
     drop,
     setProjectId,
     mutate,
@@ -454,7 +463,7 @@ export function useOrgUser(userId: string) {
     fetcher.patch,
   )
 
-  const scheme = useComputedColorScheme()
+  const scheme = useFixedColorScheme()
 
   const user = {
     ...data,

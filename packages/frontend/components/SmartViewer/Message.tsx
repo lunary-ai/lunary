@@ -14,7 +14,6 @@ import {
   TextInput,
   Textarea,
   ThemeIcon,
-  useComputedColorScheme,
 } from "@mantine/core"
 import {
   IconInfoCircle,
@@ -27,6 +26,7 @@ import Image from "next/image"
 import ProtectedText from "../blocks/ProtectedText"
 import { RenderJson } from "./RenderJson"
 
+import { useColorScheme } from "@mantine/hooks"
 import { circularPro } from "@/utils/theme"
 import { useEffect } from "react"
 
@@ -61,7 +61,6 @@ function RenderFunction({
   type,
 }) {
   const fontColor = type === "functionCall" ? "#40c057" : "inherit"
-
   return (
     <Code block bg={codeBg}>
       <Text
@@ -439,10 +438,10 @@ export function ChatMessage({
   compact?: boolean
   mah?: number
 }) {
+  console.log(data)
   // TODO FIX
   // Flickering dark mode bug: this is due to scheme being 'light' for a few ms
-
-  const scheme = useComputedColorScheme()
+  const scheme = useColorScheme()
 
   const color = getColorForRole(data?.role)
 

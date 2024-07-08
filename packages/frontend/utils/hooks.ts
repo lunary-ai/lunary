@@ -1,11 +1,6 @@
-import {
-  useDebouncedValue,
-  useDidUpdate,
-  useShallowEffect,
-  useThrottledValue,
-} from "@mantine/hooks"
+import { useThrottledValue } from "@mantine/hooks"
 import { useRouter } from "next/router"
-import { use, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { CheckLogic, deserializeLogic, serializeLogic } from "shared"
 
 type Shortcut = [string, () => void]

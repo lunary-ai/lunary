@@ -1,20 +1,21 @@
 import { openUpgrade } from "@/components/layout/UpgradeModal"
 import { useOrg } from "@/utils/dataHooks"
+import { useFixedColorScheme } from "@/utils/hooks"
 import {
   ActionIcon,
   Button,
   Group,
   Popover,
   Stack,
+  TextInput,
   Textarea,
-  useComputedColorScheme,
 } from "@mantine/core"
 import { IconMessage, IconThumbDown, IconThumbUp } from "@tabler/icons-react"
 import { useState } from "react"
 import { Feedback } from "shared"
 
 function getColor(color: string) {
-  const scheme = useComputedColorScheme()
+  const scheme = useFixedColorScheme()
   return scheme === "light" ? `var(--mantine-color-${color}-5)` : color
 }
 
