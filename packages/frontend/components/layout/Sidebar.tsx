@@ -59,6 +59,7 @@ import { ResourceName, hasAccess, hasReadAccess, serializeLogic } from "shared"
 import config from "@/utils/config"
 import { useViews } from "@/utils/dataHooks/views"
 import { useDisclosure, useFocusTrap } from "@mantine/hooks"
+import { getIconComponent } from "../blocks/IconPicker"
 
 function NavbarLink({
   icon: Icon,
@@ -109,12 +110,6 @@ type MenuItem = {
   c?: string
   isSection?: boolean
   subMenu?: MenuItem[]
-}
-
-const VIEW_ICONS = {
-  llm: IconBrandOpenai,
-  thread: IconMessages,
-  trace: IconBinaryTree2,
 }
 
 function MenuSection({ item }) {
@@ -235,7 +230,7 @@ export default function Sidebar() {
     .map((v) => {
       const serialized = serializeLogic(v.data)
 
-      const Icon = VIEW_ICONS[v.data[1].params.type]
+      const Icon = getIconComponent(v.icon)
 
       return {
         label: v.name,

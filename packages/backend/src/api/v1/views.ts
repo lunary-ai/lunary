@@ -4,9 +4,17 @@ import { clearUndefined } from "@/src/utils/ingest"
 import Context from "@/src/utils/koa"
 import Router from "koa-router"
 import { CheckLogic } from "shared"
+import { z } from "zod"
 
 const views = new Router({
   prefix: "/views",
+})
+
+const ViewSchema = z.object({
+  name: z.string(),
+  data: z.any(),
+  columns: z.any(),
+  icon: z.string().optional(),
 })
 
 views.get("/", checkAccess("logs", "list"), async (ctx: Context) => {
@@ -30,11 +38,8 @@ views.get("/:id", checkAccess("logs", "read"), async (ctx: Context) => {
 views.post("/", async (ctx: Context) => {
   const { projectId, userId } = ctx.state
 
-  const { name, data, columns } = ctx.request.body as {
-    name: string
-    data: CheckLogic
-    columns: any
-  }
+  const validatedData = ViewSchema.parse(ctx.request.body)
+  const { name, data, columns, icon } = validatedData
 
   const [insertedCheck] = await sql`
     insert into view ${sql({
@@ -43,6 +48,7 @@ views.post("/", async (ctx: Context) => {
       projectId,
       data,
       columns,
+      icon,
     })}
     returning *
   `
@@ -52,15 +58,13 @@ views.post("/", async (ctx: Context) => {
 views.patch("/:id", async (ctx: Context) => {
   const { projectId } = ctx.state
   const { id } = ctx.params
-  const { name, data, columns } = ctx.request.body as {
-    name: string
-    data: CheckLogic
-    columns: any
-  }
+
+  const validatedData = ViewSchema.partial().parse(ctx.request.body)
+  const { name, data, columns, icon } = validatedData
 
   const [updatedView] = await sql`
     update view
-    set ${sql(clearUndefined({ name, data, updatedAt: new Date(), columns }))}
+    set ${sql(clearUndefined({ name, data, updatedAt: new Date(), columns, icon }))}
     where project_id = ${projectId}
     and id = ${id}
     returning *

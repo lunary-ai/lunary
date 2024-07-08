@@ -111,7 +111,7 @@ export function tagsColumn() {
 export function inputColumn(label = "input") {
   return columnHelper.accessor("input", {
     header: label,
-    size: 200,
+    minSize: 250,
     enableSorting: false,
     cell: (props) => <SmartViewer data={props.getValue()} compact />,
   })
@@ -120,6 +120,7 @@ export function inputColumn(label = "input") {
 export function outputColumn(label = "Response") {
   return columnHelper.accessor("output", {
     header: label,
+    minSize: 250,
     enableSorting: false,
     cell: (props) => (
       <SmartViewer
@@ -199,7 +200,7 @@ export function nameColumn(label = "Name") {
 export function costColumn() {
   return columnHelper.accessor("cost", {
     header: "Cost",
-    size: 60,
+    size: 90,
     sortingFn: (a, b) => a - b,
     cell: (props) => {
       const cost = props.getValue()

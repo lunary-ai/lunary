@@ -136,10 +136,12 @@ export default function DataTable({
                 pos="absolute"
                 right={15}
                 top={5}
+                size={24}
                 style={{ zIndex: 2 }}
-                variant="transparent"
-                color={`var(--mantine-color-default-color)`}
-                opacity={0.5}
+                variant="light"
+                color="gray"
+                // color={`var(--mantine-color-default-color)`}
+                opacity={1}
               >
                 <IconColumns3 size={16} />
               </ActionIcon>
@@ -171,7 +173,8 @@ export default function DataTable({
           <table
             // striped
             // withColumnBorders
-            width={table.getCenterTotalSize()}
+            // width={table.getCenterTotalSize()}
+            width="auto"
             cellSpacing={0}
           >
             <thead>
@@ -282,8 +285,7 @@ export default function DataTable({
         <style global jsx>{`
           .tableContainer {
             height: 100%;
-            overflow-y: scroll;
-            overflow-x: hidden;
+            overflow: auto;
           }
 
           .tableContainer table {

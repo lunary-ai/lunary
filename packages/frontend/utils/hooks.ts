@@ -53,8 +53,8 @@ export function useStateFromURL<T>(
     if (!router.isReady) return
 
     const value = router.query[key]
-    // allow null values
     if (value === undefined) {
+      setState(defaultValue as T)
       return
     }
 
@@ -63,15 +63,18 @@ export function useStateFromURL<T>(
       : (value as unknown as T)
 
     setState(parsedValue)
-  }, [router.isReady, router.query[key]])
+  }, [router.isReady, router.query, key, defaultValue, options.parse])
 
   useEffect(() => {
     if (!router.isReady) return
 
     if (throttledState !== prevThrottledState.current) {
-      const query = { ...router.query, [key]: throttledState as string }
-
-      console.log(`PUSHING REPLACE STATE ${key} ${throttledState}`)
+      const query = { ...router.query }
+      if (throttledState === undefined || throttledState === null) {
+        delete query[key]
+      } else {
+        query[key] = throttledState as string
+      }
 
       router.replace({ query }, undefined, { shallow: true })
 
@@ -103,21 +106,20 @@ function compareSerializedChecks(a: string, b: string) {
   return aParts.join("&") === bParts.join("&")
 }
 
-function useTraceUpdate(props) {
-  const prev = useRef(props)
-  useEffect(() => {
-    const changedProps = Object.entries(props).reduce((ps, [k, v]) => {
-      if (prev.current[k] !== v) {
-        ps[k] = [prev.current[k], v]
-      }
-      return ps
-    }, {})
-    if (Object.keys(changedProps).length > 0) {
-      console.log("Changed props:", changedProps)
-    }
-    prev.current = props
-  })
-}
+// function useTraceUpdate(props) {
+//   const prev = useRef(props)
+//   useEffect(() => {
+//     const changedProps = Object.entries(props).reduce((ps, [k, v]) => {
+//       if (prev.current[k] !== v) {
+//         ps[k] = [prev.current[k], v]
+//       }
+//       return ps
+//     }, {})
+//     if (Object.keys(changedProps).length > 0) {
+//     }
+//     prev.current = props
+//   })
+// }
 
 export function useChecksFromURL(
   defaultValue: CheckLogic,

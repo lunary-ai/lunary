@@ -31,13 +31,13 @@ import {
   IconBrandOpenai,
   IconDotsVertical,
   IconFileExport,
-  IconLayersIntersect,
   IconTrash,
-  IconCopy,
+  IconStack2,
+  IconStackPop,
 } from "@tabler/icons-react"
 
 import { NextSeo } from "next-seo"
-import { use, useContext, useEffect, useMemo, useRef, useState } from "react"
+import { useContext, useEffect, useMemo, useState } from "react"
 
 import { ChatReplay } from "@/components/blocks/RunChat"
 import RunInputOutput from "@/components/blocks/RunInputOutput"
@@ -66,6 +66,7 @@ import RenamableField from "@/components/blocks/RenamableField"
 import { VisibilityState } from "@tanstack/react-table"
 import { notifications } from "@mantine/notifications"
 import { useChecksFromURL, useStateFromURL } from "@/utils/hooks"
+import IconPicker from "@/components/blocks/IconPicker"
 
 export const logsColumns = {
   llm: [
@@ -78,18 +79,18 @@ export const logsColumns = {
     userColumn(),
     {
       header: "Tokens",
-      size: 40,
+      size: 70,
       id: "tokens",
       sortingFn: (a, b) => a.tokens.total - b.tokens.total,
       cell: (props) => props.getValue(),
       accessorFn: (row) => row.tokens.total,
     },
     costColumn(),
-    feedbackColumn(),
-    tagsColumn(),
-    templateColumn(),
     inputColumn("Prompt"),
     outputColumn("Result"),
+    tagsColumn(),
+    feedbackColumn(),
+    templateColumn(),
   ],
   trace: [
     timeColumn("createdAt", "Time"),
@@ -141,6 +142,12 @@ export const CHECKS_BY_TYPE = {
     "metadata",
     "radar",
   ],
+}
+
+const VIEW_ICONS = {
+  llm: "IconBrandOpenai",
+  thread: "IconMessages",
+  trace: "IconBinaryTree2",
 }
 
 function editCheck(filters, id, params) {
@@ -277,6 +284,8 @@ export default function Logs() {
     // Update visible columns if view changes
     if (view?.columns) {
       setVisibleColumns(view.columns)
+    } else {
+      setVisibleColumns(logsColumns[type])
     }
   }, [view])
 
@@ -303,10 +312,13 @@ export default function Logs() {
 
   async function saveView() {
     if (!viewId) {
+      const icon = VIEW_ICONS[checks[1]?.params?.type]
+
       const newView = await insertView({
         name: "New View",
         data: checks,
         columns: visibleColumns,
+        icon,
       })
 
       setViewId(newView.id)
@@ -348,6 +360,7 @@ export default function Logs() {
         name: `Copy of ${view.name}`,
         data: view.data,
         columns: view.columns,
+        icon: view.icon,
       })
 
       notifications.show({
@@ -434,6 +447,16 @@ export default function Logs() {
             <Group>
               {view && (
                 <Group gap="xs">
+                  <IconPicker
+                    size={26}
+                    variant="light"
+                    value={view.icon}
+                    onChange={(icon) => {
+                      updateView({
+                        icon,
+                      })
+                    }}
+                  />
                   <RenamableField
                     defaultValue={view.name}
                     onRename={(newName) => {
@@ -450,7 +473,7 @@ export default function Logs() {
                     </Menu.Target>
                     <Menu.Dropdown>
                       <Menu.Item
-                        leftSection={<IconCopy size={16} />}
+                        leftSection={<IconStackPop size={16} />}
                         onClick={() => duplicateView()}
                       >
                         Duplicate
@@ -475,7 +498,7 @@ export default function Logs() {
             </Group>
             {!!showSaveView && (
               <Button
-                leftSection={<IconLayersIntersect size={16} />}
+                leftSection={<IconStack2 size={16} />}
                 size="xs"
                 onClick={() => saveView()}
                 variant="default"
@@ -536,6 +559,8 @@ export default function Logs() {
               ...prev,
               ...newState,
             }))
+
+            setColumnsTouched(true)
           }}
           data={logs}
         />

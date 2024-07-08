@@ -11,6 +11,9 @@ create table view (
     constraint fk_checklist_project_id foreign key (project_id) references project(id) on delete cascade
 );
 
+ALTER TABLE view ADD COLUMN icon text;
+
+
 CREATE TYPE model_unit AS ENUM ('CHARACTERS', 'TOKENS', 'MILLISECONDS', 'IMAGES');
 
 create table model_mapping (

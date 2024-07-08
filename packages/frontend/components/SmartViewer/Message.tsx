@@ -438,8 +438,6 @@ export function ChatMessage({
   compact?: boolean
   mah?: number
 }) {
-  console.log(data)
-
   const scheme = useComputedColorScheme()
 
   const color = getColorForRole(data?.role)
