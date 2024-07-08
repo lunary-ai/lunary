@@ -90,6 +90,9 @@ import {
   IconBinaryTree2,
   IconStack3,
   IconStack2,
+  IconFlag,
+  IconFlame,
+  IconFlask,
 } from "@tabler/icons-react"
 
 const ALL_ICONS = [
@@ -167,7 +170,6 @@ const ALL_ICONS = [
   { name: "IconNews", icon: IconNews },
   { name: "IconMessage2Question", icon: IconMessage2Question },
   { name: "IconMessage2Search", icon: IconMessage2Search },
-  { name: "IconMessage2Share", icon: IconMessage2Share },
   { name: "IconMessage2Bolt", icon: IconMessage2Bolt },
   { name: "IconMessage2Star", icon: IconMessage2Star },
   { name: "IconMessage2Dollar", icon: IconMessage2Dollar },
@@ -181,6 +183,9 @@ const ALL_ICONS = [
   { name: "IconMessages", icon: IconMessage },
   { name: "IconMail", icon: IconMail },
   { name: "IconBinaryTree2", icon: IconBinaryTree2 },
+  { name: "IconFlag", icon: IconFlag },
+  { name: "IconFlame", icon: IconFlame },
+  { name: "IconFlask", icon: IconFlask },
 ]
 
 export default function IconPicker({ value, onChange, ...props }) {
