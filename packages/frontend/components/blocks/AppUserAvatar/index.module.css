@@ -1,5 +1,5 @@
 .anchor {
-  max-width: 100%;
+  max-width: min(100%, 300px);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

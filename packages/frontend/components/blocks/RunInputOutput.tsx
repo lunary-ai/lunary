@@ -43,7 +43,7 @@ const ParamItem = ({
   color?: string
 }) => {
   return (
-    <Group>
+    <Group wrap="nowrap">
       <Text size="sm">{name}: </Text>
       {render ? (
         render(value)
@@ -94,7 +94,6 @@ const ParamItem = ({
 // ]
 
 function RenderTools({ tools }) {
-  console.log(tools)
   return tools?.map((tool, i) => {
     const toolObject = tool.function || tool.toolSpec // toolSpec is for langchain I believe
 
