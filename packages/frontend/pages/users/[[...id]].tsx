@@ -326,8 +326,8 @@ export default function Users() {
       <Stack h={"calc(100vh - var(--navbar-with-filters-size))"}>
         <NextSeo title="Users" />
 
-        <Flex justify="space-between" align="center">
-          <Card withBorder p={2} px="sm">
+        <Flex justify="space-between">
+          <Card withBorder p={2} px="sm" w={"100%"}>
             <SearchBar
               query={search}
               ml={-8}
