@@ -198,7 +198,7 @@ export default function NewRealtimeEvaluator() {
 
         <Card style={{ overflow: "visible" }} shadow="md" p="lg">
           <Stack>
-            <Tooltip label="Only real-time evaluators are available at the moment">
+            <Tooltip label="(Soon) Only real-time evaluators are available at the moment">
               <Group w="fit-content">
                 <Switch
                   size="lg"

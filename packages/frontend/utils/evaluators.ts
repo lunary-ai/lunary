@@ -32,13 +32,26 @@ const EVALUATOR_TYPES = {
         type: "select",
         id: "entities",
         width: 230,
-        defaultValue: ["ip", "email", "person", "location", "org", "misc"],
+        defaultValue: [
+          "email",
+          "phone",
+          "person",
+          "location",
+          "org",
+          "ssn",
+          "cc",
+          "phone",
+        ],
         multiple: true,
         searchable: true,
         options: [
           {
             label: "Email",
             value: "email",
+          },
+          {
+            label: "Phone",
+            value: "phone",
           },
           {
             label: "Person",
@@ -53,8 +66,16 @@ const EVALUATOR_TYPES = {
             value: "org",
           },
           {
-            label: "Misc",
-            value: "misc",
+            label: "SSN",
+            value: "ssn",
+          },
+          {
+            label: "Credit Card",
+            value: "cc",
+          },
+          {
+            label: "Custom Expressions",
+            value: "regex",
           },
         ],
       },
