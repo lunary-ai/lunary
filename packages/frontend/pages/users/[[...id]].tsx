@@ -50,6 +50,7 @@ import TopModels from "@/components/analytics/TopModels"
 import LineChart from "@/components/analytics/LineChart"
 import Link from "next/link"
 import { deserializeDateRange, getDefaultDateRange } from "../analytics"
+import { parseAsString, useQueryState } from "nuqs"
 
 const columns = [
   {
@@ -289,7 +290,11 @@ function SelectedUser({ id, onClose }) {
 }
 
 export default function Users() {
-  const [search, setSearch] = useState("")
+  const [search, setSearch] = useQueryState<string | undefined>(
+    "search",
+    parseAsString,
+  )
+
   const [debouncedSearch] = useDebouncedValue(search, 200)
   const [columnVisibility, setColumnVisibility] = useLocalStorage({
     key: "users-columns",
@@ -299,6 +304,7 @@ export default function Users() {
   const { users, loading, validating, loadMore } = useExternalUsers({
     search: debouncedSearch,
   })
+
   const router = useRouter()
 
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
@@ -329,6 +335,7 @@ export default function Users() {
             size="sm"
           />
         </Card>
+
         <DataTable
           type="users"
           availableColumns={columns}

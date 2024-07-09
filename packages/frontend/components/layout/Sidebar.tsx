@@ -87,13 +87,13 @@ function NavbarLink({
       w="100%"
       pl={5}
       onClick={onClick || (() => handleNavigation(link))}
-      h={30}
-      label={<Text size="xs">{`${label}${soon ? " (soon)" : ""}`}</Text>}
+      h={33}
+      label={<Text size={13}>{`${label}${soon ? " (soon)" : ""}`}</Text>}
       disabled={disabled || soon}
       active={active}
       leftSection={
         <ThemeIcon variant={"subtle"} size="md" mr={-10}>
-          <Icon size={14} opacity={0.7} />
+          <Icon size={16} opacity={0.7} />
         </ThemeIcon>
       }
     />
@@ -153,7 +153,7 @@ function MenuSection({ item }) {
           <>
             <Text
               mb={5}
-              fz={12}
+              fz={13}
               fw={400}
               opacity={0.8}
               onClick={toggle}
@@ -395,7 +395,7 @@ export default function Sidebar() {
                   fz="xl"
                   type="button"
                   style={{
-                    fontSize: 20,
+                    wordBreak: "break-all",
                     textOverflow: "ellipsis",
                     overflow: "hidden",
                   }}

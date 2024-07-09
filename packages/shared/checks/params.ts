@@ -65,11 +65,11 @@ export const FIELD_PARAM: CheckParam = {
   defaultValue: "output",
   options: [
     {
-      label: "Input",
+      label: "Prompt",
       value: "input",
     },
     {
-      label: "Output",
+      label: "Response",
       value: "output",
     },
   ],
