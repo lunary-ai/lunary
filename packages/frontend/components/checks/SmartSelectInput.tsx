@@ -18,6 +18,7 @@ export default function SmartCheckSelect({
   placeholder,
   searchable,
   customSearch,
+  placeholderSearch,
   width,
   allowCustom,
   renderListItem,
@@ -45,6 +46,8 @@ export default function SmartCheckSelect({
   const data = useSWRforData ? swrCheckData || [] : localData
 
   const fixedValue = value || (multiple ? [] : null)
+
+  const hasValue = multiple ? fixedValue.length > 0 : !!fixedValue
 
   const shouldDisplaySearch = data?.length > 5 || searchable !== false
 
@@ -166,13 +169,17 @@ export default function SmartCheckSelect({
         <PillsInput
           onClick={() => combobox.openDropdown()}
           variant={minimal ? "unstyled" : "default"}
-          size="xs"
+          size={minimal ? "xs" : "sm"}
           miw={width}
+          mb={minimal ? 0 : "xs"}
           w="min-content"
         >
           <Combobox.Target>
             <Pill.Group style={{ flexWrap: "nowrap", overflow: "hidden" }}>
               {renderedValue}
+              {placeholder && !hasValue && (
+                <PillsInput.Field placeholder={placeholder} />
+              )}
             </Pill.Group>
           </Combobox.Target>
         </PillsInput>
@@ -188,7 +195,8 @@ export default function SmartCheckSelect({
           onChange={(event) => setSearch(event.currentTarget.value)}
           onKeyDown={handleKeyDown}
           placeholder={
-            placeholder || (allowCustom ? `Type to create new` : "Search...")
+            placeholderSearch ||
+            (allowCustom ? `Type to create new` : "Search...")
           }
           style={{
             top: 0,

@@ -26,7 +26,8 @@ const EVALUATOR_TYPES = {
     params: [
       {
         type: "label",
-        label: "Look for these entities",
+        label: "Entities to look for",
+        description: "Select the types of entities to look for.",
       },
       {
         type: "select",
@@ -43,7 +44,7 @@ const EVALUATOR_TYPES = {
           "phone",
         ],
         multiple: true,
-        placeholder: "Enter custom regex",
+        placeholder: "Select types",
         searchable: true,
         options: [
           {
@@ -78,7 +79,8 @@ const EVALUATOR_TYPES = {
       },
       {
         type: "label",
-        label: "Custom Regex Expressions (optional)",
+        label: "Custom Regex Expressions",
+        description: "Add custom regex expressions to detect PII (optional).",
       },
       {
         type: "select",
@@ -87,6 +89,7 @@ const EVALUATOR_TYPES = {
         multiple: true,
         defaultValue: [],
         placeholder: "Enter custom regex",
+        placeholderSearch: "Paste a custom regex to add",
         width: 300,
       },
     ],

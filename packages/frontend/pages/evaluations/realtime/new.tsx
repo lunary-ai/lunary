@@ -9,6 +9,7 @@ import {
   Button,
   Card,
   Container,
+  Fieldset,
   Flex,
   Group,
   SimpleGrid,
@@ -182,20 +183,16 @@ export default function NewRealtimeEvaluator() {
         </Stack>
 
         {hasParams && selectedEvaluator && (
-          <Card withBorder bg="transparent">
-            <Stack>
-              <Text>Configure the evaluator:</Text>
-
-              <RenderCheckNode
-                node={params}
-                minimal={false}
-                setNode={(newNode) => {
-                  setParams(newNode as CheckLogic)
-                }}
-                checks={[selectedEvaluator]}
-              />
-            </Stack>
-          </Card>
+          <Fieldset legend="Configure" style={{ overflow: "visible" }}>
+            <RenderCheckNode
+              node={params}
+              minimal={false}
+              setNode={(newNode) => {
+                setParams(newNode as CheckLogic)
+              }}
+              checks={[selectedEvaluator]}
+            />
+          </Fieldset>
         )}
 
         <Card style={{ overflow: "visible" }} shadow="md" p="lg">

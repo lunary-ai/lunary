@@ -135,6 +135,7 @@ export function RenderCheckNode({
                 width={width}
                 value={paramData}
                 onChange={onChangeParam}
+                minimal={minimal}
               />
             </ErrorBoundary>
           </Fragment>
