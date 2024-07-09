@@ -52,7 +52,6 @@ function renderLanguageEnrichment(languageDetections: LanguageDetectionResult) {
     </Group>
   )
 }
-
 function renderPIIEnrichment(data: Record<string, any[]>) {
   const [opened, { close, open }] = useDisclosure(false)
 
@@ -84,39 +83,14 @@ function renderPIIEnrichment(data: Record<string, any[]>) {
           {piiCount} PII
         </Badge>
       </Popover.Target>
-      <Popover.Dropdown style={{ pointerEvents: "none" }} w="300">
-        <Stack>
-          {Object.entries(data)
-            .filter(([_, items]) => items.some(Boolean))
-            .map(([key, items]) => {
-              const uniqueItemEntities = new Set()
-              items
-                .filter(Boolean)
-                .forEach((item) =>
-                  item.forEach((subItem: { entity: string }) =>
-                    uniqueItemEntities.add(subItem.entity),
-                  ),
-                )
-              return (
-                <div key={key}>
-                  <strong style={{ textTransform: "capitalize" }}>
-                    {key}:
-                  </strong>
-                  <Group>
-                    {Array.from(uniqueItemEntities).map((entity) => (
-                      <Badge
-                        key={entity as string}
-                        variant="filled"
-                        color="blue"
-                      >
-                        {entity as string}
-                      </Badge>
-                    ))}
-                  </Group>
-                </div>
-              )
-            })}
-        </Stack>
+      <Popover.Dropdown style={{ pointerEvents: "none" }} w={300}>
+        <Group justify="space-between">
+          {Array.from(uniqueEntities).map((entity) => (
+            <Badge key={entity as string} variant="light">
+              {entity as string}
+            </Badge>
+          ))}
+        </Group>
       </Popover.Dropdown>
     </Popover>
   )
