@@ -92,6 +92,22 @@ const EVALUATOR_TYPES = {
         placeholderSearch: "Paste a custom regex to add",
         width: 300,
       },
+      {
+        type: "label",
+        label: "Exclude strings",
+        description:
+          "Add case-insentive strings to exclude from the PII detection.",
+      },
+      {
+        type: "select",
+        id: "excludedEntities",
+        allowCustom: true,
+        multiple: true,
+        defaultValue: [],
+        placeholder: "Enter a strings to exclude from detection",
+        placeholderSearch: "Enter a string to exclude",
+        width: 300,
+      },
     ],
   },
   summarization: {
