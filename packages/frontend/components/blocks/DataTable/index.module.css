@@ -90,7 +90,7 @@
 }
 
 .resizer.isResizing {
-  background: blue;
+  filter: invert(1);
   opacity: 1;
 }
 
