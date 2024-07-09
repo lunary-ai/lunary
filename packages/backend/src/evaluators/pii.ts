@@ -38,27 +38,26 @@ function parseMessages(messages: unknown) {
 interface Params {
   entities: string[]
 }
-export async function evaluate(run: Run, params: Oarans) {
+export async function evaluate(run: Run, params: Params) {
   const { entities } = params
   const input = parseMessages(run.input)
   const output = parseMessages(run.output)
   const error = parseMessages(run.error)
 
-  const [inputLanguages, outputLanguages, errrorLanguages] = await Promise.all([
+  const [inputPIIs, outputPIIs, errorPIIs] = await Promise.all([
     detectPIIs(input, entities),
     detectPIIs(output, entities),
     detectPIIs(error, entities),
   ])
 
-  const languages = {
-    input: inputLanguages,
-    output: outputLanguages,
-    error: errrorLanguages,
+  const PIIs = {
+    input: inputPIIs,
+    output: outputPIIs,
+    error: errorPIIs,
   }
 
   // TODO: zod for languages, SHOLUD NOT INGEST IN DB IF NOT CORRECT FORMAT
-
-  return languages
+  return PIIs
 }
 
 // TODO: type
