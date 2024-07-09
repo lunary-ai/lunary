@@ -1,4 +1,3 @@
-import { fileURLToPath } from "url"
 import type { CheckLogic, CheckParam } from "."
 import { CHECKS } from "."
 
@@ -32,6 +31,7 @@ function deserializeParamValue(
   filterParam: CheckParam,
   value: string,
 ): any | undefined {
+  // Deserialize based on the filter parameter type
   switch (filterParam.type) {
     case "select":
       if (filterParam.multiple) {
@@ -60,15 +60,8 @@ export function serializeLogic(logic: CheckLogic): string {
   function serializeParamValue(param: any): string {
     if (Array.isArray(param)) {
       const all = param.map(serializeParamValue)
-
-      if (all.some((f) => typeof f !== "undefined")) return ""
-      return all.join(".")
-    } else if (
-      param &&
-      typeof param === "object" &&
-      param.params &&
-      !Object.values(param.params).some((f) => typeof f === "undefined")
-    ) {
+      return all.filter(Boolean).join(".")
+    } else if (param && typeof param === "object" && param.params) {
       const data = Object.entries(param.params)
         .map(([key, value]) => {
           const filterParam = CHECKS.find(
@@ -79,27 +72,27 @@ export function serializeLogic(logic: CheckLogic): string {
             return ""
           }
 
-          return paramSerializer(filterParam, value)
+          const serialized = paramSerializer(filterParam, value)
+          return serialized !== undefined ? serialized : ""
         })
-        .filter((serializedValue) => serializedValue !== "")
+        .filter(Boolean)
         .join(".")
-
-      if (!data) return ""
 
       return param.id + "=" + data
     }
     return ""
   }
 
-  return logic
-    .map(serializeParamValue)
-    .filter((f) => f)
-    .join("&")
+  return logic.map(serializeParamValue).filter(Boolean).join("&")
 }
 
-export function deserializeLogic(logicString: string): CheckLogic | undefined {
+export function deserializeLogic(
+  logicString: string,
+  returnEmpty?: boolean,
+): CheckLogic | undefined {
   const deserializeParam = (param: string): any => {
     const [id, params] = param.split("=")
+
     const filter = CHECKS.find((filter) => filter.id === id)
 
     if (!filter) {
@@ -114,7 +107,7 @@ export function deserializeLogic(logicString: string): CheckLogic | undefined {
 
     const values: string[] = params
       .split(".")
-      .map((value) => value.replaceAll("%2C", ","))
+      .map((value) => value.replaceAll("%2C", ",").replaceAll("%2E", "."))
 
     for (const [i, v] of values.entries()) {
       const filterParam = filterParams[i]
@@ -123,7 +116,16 @@ export function deserializeLogic(logicString: string): CheckLogic | undefined {
         return undefined
       }
 
-      paramsData[filterParam.id] = deserializeParamValue(filterParam, v)
+      if (!returnEmpty && v === "") {
+        return undefined
+      }
+
+      // If returnEmpty is true, we return undefined if the value is an empty string,
+      // otherwise we don't return the check at all
+      const deserializedValue =
+        v === "" ? undefined : deserializeParamValue(filterParam, v)
+
+      paramsData[filterParam.id] = deserializedValue
     }
 
     return {
@@ -132,10 +134,6 @@ export function deserializeLogic(logicString: string): CheckLogic | undefined {
     }
   }
 
-  const logic = logicString
-    .split("&")
-    .map(deserializeParam)
-    .filter((f) => f)
-
+  const logic = logicString.split("&").map(deserializeParam).filter(Boolean)
   return ["AND", ...logic] as CheckLogic
 }

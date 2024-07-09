@@ -176,6 +176,13 @@ export default function CheckPicker({
 
   const options = CHECKS.filter(restrictTo)
 
+  const allowedToAdd = options.filter(
+    (check) =>
+      !minimal ||
+      !check.uniqueInBar ||
+      !value.some((v) => typeof v === "object" && v.id === check.id),
+  )
+
   // insert {id: filterId, params: { [param1]: defaultValue, [param2]: defaultValue }}
   const insertChecks = (filters: Check[]) => {
     const arr: CheckLogic =
@@ -221,7 +228,7 @@ export default function CheckPicker({
             <>
               {minimal ? (
                 <AddCheckButton
-                  checks={options}
+                  checks={allowedToAdd}
                   onSelect={(filter) => insertChecks([filter])}
                   defaultOpened={defaultOpened}
                 />

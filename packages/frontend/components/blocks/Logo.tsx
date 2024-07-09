@@ -1,8 +1,7 @@
-import { Anchor, Group, Text } from "@mantine/core"
-import { useColorScheme } from "@mantine/hooks"
+import { Anchor, Group, Text, useComputedColorScheme } from "@mantine/core"
 
 export default function Logo() {
-  const scheme = useColorScheme()
+  const scheme = useComputedColorScheme()
 
   return (
     <Anchor

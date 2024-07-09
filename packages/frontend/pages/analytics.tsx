@@ -27,17 +27,19 @@ import {
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
 import "@mantine/dates/styles.css"
-import { useLocalStorage } from "@mantine/hooks"
+import { useDidUpdate, useLocalStorage } from "@mantine/hooks"
 import {
   IconCalendar,
   IconChartAreaLine,
   IconFilter,
 } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
-import { useEffect, useState } from "react"
-import { CheckLogic, serializeLogic } from "shared"
+import { useRouter } from "next/router"
+import { useQueryState } from "nuqs"
+import { useEffect, useMemo, useState } from "react"
+import { CheckLogic, deserializeLogic, serializeLogic } from "shared"
 
-function getDefaultDateRange() {
+export function getDefaultDateRange() {
   const endOfToday = new Date()
   endOfToday.setHours(23, 59, 59, 999)
 
@@ -148,7 +150,7 @@ function getPresetFromDateRange(dateRange: DateRange): PresetDateRange {
   return "Custom"
 }
 
-function DateRangeSelect({ dateRange, setDateRange }) {
+export function DateRangeSelect({ dateRange, setDateRange }) {
   const selectedOption = getPresetFromDateRange(dateRange)
   const data = ["Today", "7 Days", "30 Days", "3 Months"]
   const displayData = selectedOption === "Custom" ? [...data, "Custom"] : data
@@ -296,6 +298,8 @@ interface ChartTooltipProps {
   payload: Record<string, any>[] | undefined
 }
 
+const DEFAULT_CHECK = ["AND"]
+
 function ChartTooltip({ label, payload }: ChartTooltipProps) {
   if (!payload) return null
 
@@ -320,7 +324,6 @@ function ChartTooltip({ label, payload }: ChartTooltipProps) {
 
 // TODO: refactor (put utils functions and components in other file)
 // TODO: typescript everywhere
-// TODO: checks in url
 export default function Analytics() {
   const [dateRange, setDateRange] = useLocalStorage({
     key: "dateRange-analytics",
@@ -336,10 +339,15 @@ export default function Analytics() {
     defaultValue: determineGranularity(dateRange),
   })
 
-  // TODO: put checks in their own component
-  const [checks, setChecks] = useState<CheckLogic>(["AND"])
+  const [checks, setChecks] = useQueryState("filters", {
+    parse: (value) => deserializeLogic(value, true),
+    serialize: serializeLogic,
+    defaultValue: DEFAULT_CHECK,
+  })
+
+  const serializedChecks = useMemo(() => serializeLogic(checks), [checks])
+
   const [showCheckBar, setShowCheckBar] = useState(false)
-  const serializedChecks = serializeLogic(checks)
 
   const { project } = useProject()
 
@@ -420,7 +428,7 @@ export default function Analytics() {
 
   const showBar =
     showCheckBar ||
-    checks.filter((f) => f !== "AND" && !["search", "type"].includes(f.id))
+    checks?.filter((f) => f !== "AND" && !["search", "type"].includes(f.id))
       .length > 0
 
   const commonChartData = {
@@ -437,62 +445,59 @@ export default function Analytics() {
       showProjectId
       enable={!project?.activated}
     >
-      <Container size="xl" my="lg">
-        <NextSeo title="Analytics" />
-        <Stack gap="lg">
-          <Title order={2}>Overview</Title>
-
-          <Group gap="xs">
-            <Group gap={0}>
-              <DateRangeSelect
-                dateRange={dateRange}
-                setDateRange={setDateRange}
-              />
-              <DateRangePicker
-                dateRange={dateRange}
-                setDateRange={setDateRange}
-              />
-              <GranularitySelect
-                dateRange={dateRange}
-                granularity={granularity}
-                setGranularity={setGranularity}
-              />
-            </Group>
-
-            {!showBar && (
-              <Button
-                variant="subtle"
-                onClick={() => setShowCheckBar(true)}
-                leftSection={<IconFilter size={12} />}
-                size="xs"
-              >
-                Add filters
-              </Button>
-            )}
+      <NextSeo title="Analytics" />
+      <Stack gap="lg">
+        <Group gap="xs">
+          <Group gap={0}>
+            <DateRangeSelect
+              dateRange={dateRange}
+              setDateRange={setDateRange}
+            />
+            <DateRangePicker
+              dateRange={dateRange}
+              setDateRange={setDateRange}
+            />
+            <GranularitySelect
+              dateRange={dateRange}
+              granularity={granularity}
+              setGranularity={setGranularity}
+            />
           </Group>
 
-          {showBar && (
-            <CheckPicker
-              minimal
-              onChange={setChecks}
-              defaultOpened={showCheckBar}
-              value={checks}
-              restrictTo={(filter) =>
-                ["tags", "models", "users", "metadata"].includes(filter.id)
-              }
-            />
+          {!showBar && (
+            <Button
+              variant="subtle"
+              onClick={() => setShowCheckBar(true)}
+              leftSection={<IconFilter size={12} />}
+              size="xs"
+            >
+              Add filters
+            </Button>
           )}
+        </Group>
 
-          <SimpleGrid cols={3}>
-            <TopModels topModels={topModels} isLoading={topModelsLoading} />
-            <TopTemplates
-              topTemplates={topTemplates}
-              isLoading={topTemplatesLoading}
-            />
-            <TopUsersCard topUsers={topUsers} isLoading={topUsersLoading} />
-          </SimpleGrid>
+        {showBar && (
+          <CheckPicker
+            minimal
+            onChange={setChecks}
+            defaultOpened={showCheckBar}
+            value={checks}
+            restrictTo={(filter) =>
+              ["tags", "models", "users", "metadata"].includes(filter.id)
+            }
+          />
+        )}
 
-          {/* <AreaChart
+        <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
+          <TopModels topModels={topModels} isLoading={topModelsLoading} />
+          <TopTemplates
+            topTemplates={topTemplates}
+            isLoading={topTemplatesLoading}
+          />
+          <TopUsersCard topUsers={topUsers} isLoading={topUsersLoading} />
+        </SimpleGrid>
+
+        {/* <AreaChart
             h={300}
             data={data}
             dataKey="date"
@@ -506,113 +511,112 @@ export default function Analytics() {
             }}
           /> */}
 
+        <LineChart
+          data={tokensData}
+          loading={tokensDataLoading}
+          splitBy="name"
+          props={["tokens"]}
+          agg="sum"
+          title="Tokens"
+          description="The number of tokens generated by your LLM calls"
+          {...commonChartData}
+        />
+
+        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
           <LineChart
-            data={tokensData}
-            loading={tokensDataLoading}
+            data={costData}
+            loading={costDataLoading}
+            formatter={formatCost}
             splitBy="name"
-            props={["tokens"]}
+            props={["costs"]}
             agg="sum"
-            title="Tokens"
-            description="The number of tokens generated by your LLM calls"
+            title="Costs"
+            description="The total cost generated by your LLM calls"
             {...commonChartData}
           />
 
-          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-            <LineChart
-              data={costData}
-              loading={costDataLoading}
-              formatter={formatCost}
-              splitBy="name"
-              props={["costs"]}
-              agg="sum"
-              title="Costs"
-              description="The total cost generated by your LLM calls"
-              {...commonChartData}
-            />
+          <LineChart
+            data={errorsData}
+            title="Errors Volume"
+            loading={errorsDataLoading}
+            description="How many errors were captured in your app"
+            agg="sum"
+            props={["errors"]}
+            colors={["red"]}
+            {...commonChartData}
+          />
 
-            <LineChart
-              data={errorsData}
-              title="Errors Volume"
-              loading={errorsDataLoading}
-              description="How many errors were captured in your app"
-              agg="sum"
-              props={["errors"]}
-              colors={["red"]}
-              {...commonChartData}
-            />
+          {checks.length < 2 && (
+            // Only show new users if no filters are applied, as it's not a metric that can be filtered
+            <>
+              <LineChart
+                data={newUsersData}
+                loading={newUsersDataLoading}
+                props={["users"]}
+                agg="sum"
+                title="New Users"
+                description="The number of new tracked users for the selected period"
+                {...commonChartData}
+              />
 
-            {checks.length < 2 && (
-              // Only show new users if no filters are applied, as it's not a metric that can be filtered
-              <>
-                <LineChart
-                  data={newUsersData}
-                  loading={newUsersDataLoading}
-                  props={["users"]}
-                  agg="sum"
-                  title="New Users"
-                  description="The number of new tracked users for the selected period"
-                  {...commonChartData}
-                />
+              <LineChart
+                data={activeUsersData?.data}
+                stat={activeUsersData?.stat}
+                loading={activeUsersDataLoading}
+                props={["users"]}
+                title="Active Users"
+                colors={["violet"]}
+                description="The number of active users for the selected period"
+                {...commonChartData}
+              />
+            </>
+          )}
 
-                <LineChart
-                  data={activeUsersData?.data}
-                  stat={activeUsersData?.stat}
-                  loading={activeUsersDataLoading}
-                  props={["users"]}
-                  title="Active Users"
-                  colors={["violet"]}
-                  description="The number of active users for the selected period"
-                  {...commonChartData}
-                />
-              </>
-            )}
+          <LineChart
+            data={avgUserCostData?.data}
+            stat={avgUserCostData?.stat}
+            loading={avgUserCostDataLoading}
+            props={["cost"]}
+            formatter={formatCost}
+            title="Avg. User Cost"
+            description="The average cost of each of your users"
+            {...commonChartData}
+          />
 
-            <LineChart
-              data={avgUserCostData?.data}
-              stat={avgUserCostData?.stat}
-              loading={avgUserCostDataLoading}
-              props={["cost"]}
-              formatter={formatCost}
-              title="Avg. User Cost"
-              description="The average cost of each of your users"
-              {...commonChartData}
-            />
+          <LineChart
+            data={runCountData}
+            loading={runCountLoading}
+            props={["runs"]}
+            splitBy="type"
+            agg="sum"
+            title="Runs Volume"
+            description="The total number of runs generated by your app"
+            {...commonChartData}
+          />
 
-            <LineChart
-              data={runCountData}
-              loading={runCountLoading}
-              props={["runs"]}
-              splitBy="type"
-              agg="sum"
-              title="Runs Volume"
-              description="The total number of runs generated by your app"
-              {...commonChartData}
-            />
+          <LineChart
+            data={averageLatencyData?.data}
+            stat={averageLatencyData?.stat}
+            loading={averageLatencyDataLoading}
+            props={["avgDuration"]}
+            formatter={(value) => `${value.toFixed(2)}s`}
+            title="Avg. LLM Latency"
+            description="The number of active users"
+            colors={["yellow"]}
+            {...commonChartData}
+          />
 
-            <LineChart
-              data={averageLatencyData?.data}
-              stat={averageLatencyData?.stat}
-              loading={averageLatencyDataLoading}
-              props={["avgDuration"]}
-              formatter={(value) => `${value.toFixed(2)}s`}
-              title="Avg. LLM Latency"
-              description="The number of active users"
-              colors={["yellow"]}
-              {...commonChartData}
-            />
-
-            <LineChart
-              data={feedbackRatioData}
-              loading={feedbackRatioLoading}
-              props={["ratio"]}
-              agg="avg"
-              title="Thumbs Up/Down Ratio"
-              description="The ratio of thumbs up to thumbs down feedback"
-              {...commonChartData}
-            />
-          </SimpleGrid>
-        </Stack>
-      </Container>
+          <LineChart
+            data={feedbackRatioData}
+            loading={feedbackRatioLoading}
+            props={["ratio"]}
+            agg="avg"
+            title="Thumbs Up/Down Ratio"
+            description="The ratio of thumbs up to thumbs down feedback"
+            {...commonChartData}
+          />
+        </SimpleGrid>
+      </Stack>
     </Empty>
   )
 }

@@ -8,6 +8,7 @@ import {
   PillsInput,
   useCombobox,
 } from "@mantine/core"
+import local from "next/font/local"
 
 import { useEffect, useState } from "react"
 
@@ -37,12 +38,15 @@ export default function SmartCheckSelect({
   })
 
   const [search, setSearch] = useState("")
-  const [localData, setLocalData] = useState(options || [])
 
   const useSWRforData = typeof options === "function"
+
+  const [localData, setLocalData] = useState(useSWRforData ? [] : options || [])
+
   const { data: swrCheckData, isLoading } = useProjectSWR(
     useSWRforData ? options() : null,
   )
+
   const data = useSWRforData ? swrCheckData || [] : localData
 
   const fixedValue = value || (multiple ? [] : null)
@@ -104,10 +108,15 @@ export default function SmartCheckSelect({
         maw={130}
         onRemove={() => handleValueRemove(item)}
       >
-        {renderLabel(data?.find((d) => getItemValue(d) === item))}
+        {renderLabel(
+          Array.isArray(data)
+            ? data?.find((d) => getItemValue(d) === item)
+            : item,
+        )}
       </Pill>
     ))
   }
+
   const renderedValue = multiple
     ? getRenderedValues()
     : renderLabel(data?.find((d) => getItemValue(d) === value))

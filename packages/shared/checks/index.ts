@@ -34,6 +34,7 @@ export const CHECKS: Check[] = [
     id: "type",
     name: "Type",
     uiType: "basic",
+
     disableInEvals: true,
     params: [
       {
@@ -78,6 +79,7 @@ export const CHECKS: Check[] = [
   {
     id: "models",
     name: "Model name",
+    uniqueInBar: true,
     uiType: "basic",
     disableInEvals: true,
     params: [
@@ -116,6 +118,7 @@ export const CHECKS: Check[] = [
   {
     id: "templates",
     name: "Templates",
+    uniqueInBar: true,
     uiType: "basic",
     disableInEvals: true,
     params: [
@@ -135,6 +138,7 @@ export const CHECKS: Check[] = [
   {
     id: "status",
     name: "Status",
+    uniqueInBar: true,
     uiType: "basic",
     disableInEvals: true,
     params: [
@@ -183,6 +187,7 @@ export const CHECKS: Check[] = [
     id: "users",
     name: "Users",
     uiType: "basic",
+    uniqueInBar: true,
     disableInEvals: true,
     params: [
       {
