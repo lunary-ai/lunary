@@ -88,10 +88,6 @@ export default function DataTable({
     onSortingChange: setSorting,
   })
 
-  useEffect(() => {
-    console.log(table.getState())
-  }, [columns])
-
   const { rows } = table.getRowModel()
 
   const rowVirtualizer = useVirtualizer({

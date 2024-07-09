@@ -194,7 +194,9 @@ export default function Logs() {
 
   const { insert: insertView, isInserting: isInsertingView } = useViews()
 
-  const [visibleColumns, setVisibleColumns] = useState<VisibilityState>()
+  const [allColumns, setAllColumns] = useState(logsColumns)
+
+  const [visibleColumns, setVisibleColumns] = useState<VisibilityState>({})
   const [columnsTouched, setColumnsTouched] = useState(false)
 
   const [viewId, setViewId] = useQueryState<string | undefined>("view", {
@@ -240,14 +242,12 @@ export default function Logs() {
   const { run: selectedRun, loading: runLoading } = useRun(selectedRunId)
 
   useEffect(() => {
-    const newColumns = { ...visibleColumns }
+    const newColumns = { ...allColumns }
     if (type === "llm" && Array.isArray(evaluators)) {
       for (const evaluator of evaluators) {
-        if (
-          newColumns.llm
-            .map(({ accessorKey }) => accessorKey)
-            .includes("enrichment-" + evaluator.slug)
-        ) {
+        const id = "enrichment-" + evaluator.slug
+
+        if (newColumns.llm.map(({ accessorKey }) => accessorKey).includes(id)) {
           continue
         }
 
@@ -258,9 +258,9 @@ export default function Logs() {
         )
         console.log(newColumns.llm)
       }
-      setVisibleColumns(newColumns)
+      setAllColumns(newColumns)
     }
-  }, [type, evaluators])
+  }, [type, evaluators, allColumns])
 
   useEffect(() => {
     if (selectedRun && selectedRun.projectId !== projectId) {
@@ -417,7 +417,8 @@ export default function Logs() {
   const showSaveView = useMemo(
     () =>
       columnsTouched ||
-      (checks.length > 1 &&
+      (checks &&
+        checks.length > 1 &&
         (!view || JSON.stringify(view.data) !== JSON.stringify(checks))),
     [columnsTouched, checks, view],
   )
