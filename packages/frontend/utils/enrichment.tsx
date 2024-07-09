@@ -82,7 +82,7 @@ function renderPIIEnrichment(data: any) {
                   <strong style={{ textTransform: "capitalize" }}>
                     {key}:
                   </strong>
-                  <div>{items.join(", ")}</div>
+                  <div>{JSON.stringify(items)}</div>
                 </div>
               ),
           )}
