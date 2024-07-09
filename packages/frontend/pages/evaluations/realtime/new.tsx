@@ -24,7 +24,7 @@ import { notifications } from "@mantine/notifications"
 import { IconCircleCheck, IconCirclePlus, IconX } from "@tabler/icons-react"
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
-import { CheckLogic, serializeLogic } from "shared"
+import { CHECKS, CheckLogic, serializeLogic } from "shared"
 
 function EvaluatorCard({
   evaluator,
@@ -110,6 +110,7 @@ export default function NewRealtimeEvaluator() {
   useEffect(() => {
     if (selectedEvaluator) {
       setParams({
+        id: selectedEvaluator.id,
         params: selectedEvaluator.params.reduce((acc, param) => {
           if (param.id) {
             acc[param.id] = param.defaultValue
@@ -119,8 +120,6 @@ export default function NewRealtimeEvaluator() {
       })
     }
   }, [selectedEvaluator])
-
-  console.log(params)
 
   async function createEvaluator() {
     // TODO: validation
@@ -182,7 +181,7 @@ export default function NewRealtimeEvaluator() {
           </SimpleGrid>
         </Stack>
 
-        {hasParams && (
+        {hasParams && selectedEvaluator && (
           <Stack>
             <Text>Configure the evaluator:</Text>
 

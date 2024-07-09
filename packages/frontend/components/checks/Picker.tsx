@@ -24,6 +24,15 @@ export function RenderCheckNode({
   setNode: (node: CheckLogic | LogicData) => void
   removeNode: () => void
 }) {
+  console.log({
+    minimal,
+    node,
+    disabled,
+    checks,
+    setNode,
+    removeNode,
+  })
+
   if (typeof node === "string" && ["AND", "OR"].includes(node)) return null
 
   if (Array.isArray(node)) {
@@ -83,6 +92,8 @@ export function RenderCheckNode({
   const s = node as LogicData
 
   const check = checks.find((f) => f.id === s?.id)
+
+  console.log(`check found for - ${s?.id}`, s)
 
   if (!check) return null
 
@@ -198,6 +209,8 @@ export default function CheckPicker({
   }
 
   const Container = minimal ? Group : Stack
+
+  console.log({ value })
 
   return (
     <Box style={disabled ? { pointerEvents: "none", opacity: 0.8 } : {}}>
