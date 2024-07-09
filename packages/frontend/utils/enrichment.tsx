@@ -29,21 +29,27 @@ export function renderEnrichment(data: any, type: EvaluatorType) {
 }
 
 function renderLanguageEnrichment(languageDetections: LanguageDetectionResult) {
-  const outputEmojis = languageDetections.output.map((detectionResult) => {
+  const languages = languageDetections.output.map((detectionResult) => {
     if (detectionResult === null) {
       return ""
     }
-    return getFlagEmoji(detectionResult.isoCode)
-  })
+
+    const languageNames = new Intl.DisplayNames(["en"], { type: "language" })
+
+    return {
+      emoji: getFlagEmoji(detectionResult.isoCode),
+      name: languageNames.of(detectionResult.isoCode),
+    }
+  }) as { emoji: string; name: string }[]
 
   return (
-    <Stack>
-      <Group gap="0">
-        {outputEmojis.map((emoji) => (
+    <Group gap="xs" justify="center">
+      {languages.map(({ emoji, name }) => (
+        <Tooltip key={name} label={name}>
           <Text size="lg">{emoji}</Text>
-        ))}
-      </Group>
-    </Stack>
+        </Tooltip>
+      ))}
+    </Group>
   )
 }
 
