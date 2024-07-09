@@ -26,19 +26,34 @@ const EVALUATOR_TYPES = {
     params: [
       {
         type: "label",
-        label: "Look for",
+        label: "Entities to look for",
+        description: "Select the types of entities to look for.",
       },
       {
         type: "select",
-        id: "entities",
+        id: "types",
         width: 230,
-        defaultValue: ["ip", "email", "person", "location", "org", "misc"],
+        defaultValue: [
+          "email",
+          "phone",
+          "person",
+          "location",
+          "org",
+          "ssn",
+          "cc",
+          "phone",
+        ],
         multiple: true,
+        placeholder: "Select types",
         searchable: true,
         options: [
           {
             label: "Email",
             value: "email",
+          },
+          {
+            label: "Phone",
+            value: "phone",
           },
           {
             label: "Person",
@@ -53,10 +68,29 @@ const EVALUATOR_TYPES = {
             value: "org",
           },
           {
-            label: "Misc",
-            value: "misc",
+            label: "SSN",
+            value: "ssn",
+          },
+          {
+            label: "Credit Card",
+            value: "cc",
           },
         ],
+      },
+      {
+        type: "label",
+        label: "Custom Regex Expressions",
+        description: "Add custom regex expressions to detect PII (optional).",
+      },
+      {
+        type: "select",
+        id: "customRegexes",
+        allowCustom: true,
+        multiple: true,
+        defaultValue: [],
+        placeholder: "Enter custom regex",
+        placeholderSearch: "Paste a custom regex to add",
+        width: 300,
       },
     ],
   },
@@ -121,7 +155,7 @@ const EVALUATOR_TYPES = {
     ],
   },
   topics: {
-    name: "Topics",
+    name: "Classify",
     id: "topics",
     icon: IconBadge,
     color: "violet",
@@ -131,6 +165,8 @@ const EVALUATOR_TYPES = {
       {
         type: "label",
         label: "Enter predefined topics",
+        description:
+          "Add predefined topics to help the model classify conversations.",
       },
       {
         type: "select",
@@ -246,6 +282,7 @@ const EVALUATOR_TYPES = {
     icon: IconBrain,
     color: "blue",
     name: "G-Eval",
+    soon: true,
     uiType: "ai",
     description:
       "G-Eval is a framework that uses LLMs with chain-of-thoughts (CoT) to evaluate LLM outputs based on ANY custom criteria",

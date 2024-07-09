@@ -39,11 +39,22 @@ const CheckInputs = {
     )
   },
 
-  label: ({ label }) => {
+  label: ({ label, description, minimal }) => {
     return (
-      <Text size="xs" className={classes["input-label"]} component="div">
-        {label}
-      </Text>
+      <div>
+        <Text
+          size={minimal ? "xs" : "sm"}
+          className={classes["input-label"]}
+          component="div"
+        >
+          {label}
+        </Text>
+        {!minimal && description && (
+          <Text size="xs" c="dimmed" className={classes["input-description"]}>
+            {description}
+          </Text>
+        )}
+      </div>
     )
   },
 }

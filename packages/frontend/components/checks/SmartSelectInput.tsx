@@ -13,11 +13,13 @@ import local from "next/font/local"
 import { useEffect, useState } from "react"
 
 export default function SmartCheckSelect({
+  minimal,
   options,
   multiple,
   placeholder,
   searchable,
   customSearch,
+  placeholderSearch,
   width,
   allowCustom,
   renderListItem,
@@ -48,6 +50,8 @@ export default function SmartCheckSelect({
   const data = useSWRforData ? swrCheckData || [] : localData
 
   const fixedValue = value || (multiple ? [] : null)
+
+  const hasValue = multiple ? fixedValue.length > 0 : !!fixedValue
 
   const shouldDisplaySearch = data?.length > 5 || searchable !== false
 
@@ -173,14 +177,18 @@ export default function SmartCheckSelect({
       <Combobox.DropdownTarget>
         <PillsInput
           onClick={() => combobox.openDropdown()}
-          variant="unstyled"
-          size="xs"
+          variant={minimal ? "unstyled" : "default"}
+          size={minimal ? "xs" : "sm"}
           miw={width}
+          mb={minimal ? 0 : "xs"}
           w="min-content"
         >
           <Combobox.Target>
             <Pill.Group style={{ flexWrap: "nowrap", overflow: "hidden" }}>
               {renderedValue}
+              {placeholder && !hasValue && (
+                <PillsInput.Field placeholder={placeholder} />
+              )}
             </Pill.Group>
           </Combobox.Target>
         </PillsInput>
@@ -188,14 +196,17 @@ export default function SmartCheckSelect({
 
       <Combobox.Dropdown
         miw={180}
-        style={{ maxHeight: "300px", overflowY: "scroll" }}
+        style={{ maxHeight: minimal ? 300 : 500, overflowY: "scroll" }}
       >
         <Combobox.Search
           value={search}
           display={shouldDisplaySearch ? "flex" : "none"}
           onChange={(event) => setSearch(event.currentTarget.value)}
           onKeyDown={handleKeyDown}
-          placeholder={allowCustom ? `Type to create new` : "Search..."}
+          placeholder={
+            placeholderSearch ||
+            (allowCustom ? `Type to create new` : "Search...")
+          }
           style={{
             top: 0,
             zIndex: 2,

@@ -1,11 +1,5 @@
 import DataTable from "@/components/blocks/DataTable"
-import {
-  parseAsArrayOf,
-  parseAsJson,
-  parseAsString,
-  parseAsStringEnum,
-  useQueryState,
-} from "nuqs"
+import { parseAsString, parseAsStringEnum, useQueryState } from "nuqs"
 
 import {
   ActionIcon,
@@ -23,6 +17,7 @@ import {
 import {
   costColumn,
   durationColumn,
+  enrichmentColumn,
   feedbackColumn,
   inputColumn,
   nameColumn,
@@ -75,6 +70,7 @@ import { notifications } from "@mantine/notifications"
 
 import IconPicker from "@/components/blocks/IconPicker"
 import { deserializeLogic, serializeLogic } from "shared"
+import { useEvaluators } from "@/utils/dataHooks/evaluators"
 
 export const logsColumns = {
   llm: [
@@ -229,6 +225,8 @@ export default function Logs() {
 
   const { view, update: updateView, remove: removeView } = useView(viewId)
 
+  const { evaluators } = useEvaluators()
+
   const [query, setQuery] = useDebouncedState<string | null>(null, 300)
 
   const {
@@ -240,6 +238,29 @@ export default function Logs() {
   } = useProjectInfiniteSWR(`/runs?${serializedChecks}`)
 
   const { run: selectedRun, loading: runLoading } = useRun(selectedRunId)
+
+  useEffect(() => {
+    const newColumns = { ...visibleColumns }
+    if (type === "llm" && Array.isArray(evaluators)) {
+      for (const evaluator of evaluators) {
+        if (
+          newColumns.llm
+            .map(({ accessorKey }) => accessorKey)
+            .includes("enrichment-" + evaluator.slug)
+        ) {
+          continue
+        }
+
+        newColumns.llm.splice(
+          3,
+          0,
+          enrichmentColumn(evaluator.name, evaluator.slug, evaluator.type),
+        )
+        console.log(newColumns.llm)
+      }
+      setVisibleColumns(newColumns)
+    }
+  }, [type, evaluators])
 
   useEffect(() => {
     if (selectedRun && selectedRun.projectId !== projectId) {
@@ -571,6 +592,7 @@ export default function Logs() {
               setSelectedRunId(row.id)
             }
           }}
+          key={logsColumns[type]}
           loading={loading || validating}
           loadMore={loadMore}
           availableColumns={logsColumns[type]}

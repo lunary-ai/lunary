@@ -1,19 +1,34 @@
 .custom-input {
   display: flex;
   gap: 8px;
-  border: 1px solid var(--mantine-color-default-border);
-  background: var(--mantine-color-body);
-  padding: 0px 10px;
-  align-items: center;
-  border-radius: var(--mantine-radius-default);
 
-  > *:not(:last-of-type) {
-    border-right: 1px solid var(--mantine-color-default-border);
-    height: 100%;
-  }
+  background: var(--mantine-color-body);
+
+  align-items: center;
 
   > :globals(.mantine-MultiSelect-root) {
     min-width: 80px;
+  }
+
+  &.minimal {
+    border: 1px solid var(--mantine-color-default-border);
+    border-radius: var(--mantine-radius-default);
+    padding: 0px 10px;
+    > *:not(:last-of-type) {
+      border-right: 1px solid var(--mantine-color-default-border);
+      height: 100%;
+    }
+  }
+
+  &:not(.minimal) {
+    display: flex;
+
+    flex-direction: column;
+    align-items: flex-start;
+
+    > *:not(:last-of-type) {
+      font-size: 16px !important;
+    }
   }
 }
 

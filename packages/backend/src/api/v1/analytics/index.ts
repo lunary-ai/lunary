@@ -840,8 +840,6 @@ analytics.get(
       limit 5
     `
 
-    console.log(topModels)
-
     ctx.body = topModels
   },
 )

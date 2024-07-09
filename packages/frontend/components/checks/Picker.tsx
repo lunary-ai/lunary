@@ -9,7 +9,7 @@ import classes from "./index.module.css"
 import { IconX } from "@tabler/icons-react"
 import CHECKS_UI_DATA from "./ChecksUIData"
 
-function RenderCheckNode({
+export function RenderCheckNode({
   minimal,
   node,
   disabled,
@@ -87,70 +87,71 @@ function RenderCheckNode({
   if (!check) return null
 
   return (
-    <Group>
-      <div className={classes["custom-input"]}>
-        {check?.params.map((param, i) => {
-          const CustomInput = CheckInputs[param.type]
-          if (!CustomInput) return null
+    <div
+      className={`${classes["custom-input"]} ${minimal ? classes.minimal : ""}`}
+    >
+      {check?.params.map((param, i) => {
+        const CustomInput = CheckInputs[param.type]
+        if (!CustomInput) return null
 
-          const isParamNotLabel = param.type !== "label"
+        const isParamNotLabel = param.type !== "label"
 
-          const paramData = isParamNotLabel ? s.params[param.id] : null
+        const paramData = isParamNotLabel ? s.params[param.id] : null
 
-          const UIItem = CHECKS_UI_DATA[check.id] || CHECKS_UI_DATA["other"]
+        const UIItem = CHECKS_UI_DATA[check.id] || CHECKS_UI_DATA["other"]
 
-          function getWidth() {
-            if (!isParamNotLabel || !param.width) {
-              return
-            }
-
-            if (minimal) {
-              return param.width
-            }
-
-            return param.width * 1.1
-          }
-          const width = getWidth()
-
-          const onChangeParam = (value) => {
-            isParamNotLabel &&
-              setNode({
-                id: s.id,
-                params: {
-                  ...(s.params || {}),
-                  [param.id]: value,
-                },
-              })
+        function getWidth() {
+          if (!isParamNotLabel || !param.width) {
+            return
           }
 
-          return (
-            <Fragment key={i}>
-              <ErrorBoundary>
-                <CustomInput
-                  {...param}
-                  // Allow setting custom renderers for inputs like Selects
-                  renderListItem={UIItem.renderListItem}
-                  renderLabel={UIItem.renderLabel}
-                  width={width}
-                  value={paramData}
-                  onChange={onChangeParam}
-                />
-              </ErrorBoundary>
-            </Fragment>
-          )
-        })}
-        {typeof removeNode !== "undefined" && (
-          <IconX
-            opacity={0.5}
-            cursor="pointer"
-            size={14}
-            onClick={() => {
-              removeNode()
-            }}
-          />
-        )}
-      </div>
-    </Group>
+          if (minimal) {
+            return param.width
+          }
+
+          return param.width * 1.1
+        }
+        const width = getWidth()
+
+        const onChangeParam = (value) => {
+          isParamNotLabel &&
+            setNode({
+              id: s.id,
+              params: {
+                ...(s.params || {}),
+                [param.id]: value,
+              },
+            })
+        }
+
+        return (
+          <Fragment key={i}>
+            <ErrorBoundary>
+              <CustomInput
+                {...param}
+                // Allow setting custom renderers for inputs like Selects
+                renderListItem={UIItem.renderListItem}
+                renderLabel={UIItem.renderLabel}
+                width={width}
+                value={paramData}
+                onChange={onChangeParam}
+                minimal={minimal}
+              />
+            </ErrorBoundary>
+          </Fragment>
+        )
+      })}
+      {typeof removeNode !== "undefined" && (
+        <IconX
+          opacity={0.5}
+          cursor="pointer"
+          size={14}
+          onClick={() => {
+            removeNode()
+          }}
+        />
+      )}
+    </div>
   )
 }
 

@@ -15,6 +15,7 @@ import {
   Textarea,
   ThemeIcon,
   useComputedColorScheme,
+  Tooltip,
 } from "@mantine/core"
 import {
   IconInfoCircle,
@@ -32,6 +33,7 @@ import { circularPro } from "@/utils/theme"
 import { useEffect } from "react"
 
 import { openConfirmModal } from "@mantine/modals"
+import { getFlagEmoji } from "@/utils/format"
 
 const ghostTextAreaStyles = {
   variant: "unstyled",
@@ -441,7 +443,7 @@ export function ChatMessage({
       {...props}
     >
       {!compact && (
-        <>
+        <Group justify="space-between">
           {editable ? (
             <RoleSelector
               data={data}
@@ -458,9 +460,13 @@ export function ChatMessage({
               {data.role}
             </Text>
           )}
-        </>
+          {data?.languageDetection && (
+            <Tooltip label={data.languageDetection.confidence}>
+              <Box>{getFlagEmoji(data.languageDetection.isoCode)}</Box>
+            </Tooltip>
+          )}
+        </Group>
       )}
-
       <ChatMessageContent
         data={data}
         color={color}
