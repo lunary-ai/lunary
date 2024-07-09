@@ -298,6 +298,8 @@ interface ChartTooltipProps {
   payload: Record<string, any>[] | undefined
 }
 
+const DEFAULT_CHECK = ["AND"]
+
 function ChartTooltip({ label, payload }: ChartTooltipProps) {
   if (!payload) return null
 
@@ -340,7 +342,7 @@ export default function Analytics() {
   const [checks, setChecks] = useQueryState("filters", {
     parse: (value) => deserializeLogic(value, true),
     serialize: serializeLogic,
-    defaultValue: ["AND"],
+    defaultValue: DEFAULT_CHECK,
   })
 
   const serializedChecks = useMemo(() => serializeLogic(checks), [checks])

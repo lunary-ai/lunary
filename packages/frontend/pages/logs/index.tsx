@@ -71,6 +71,7 @@ import { notifications } from "@mantine/notifications"
 import IconPicker from "@/components/blocks/IconPicker"
 import { deserializeLogic, serializeLogic } from "shared"
 import { useEvaluators } from "@/utils/dataHooks/evaluators"
+import { useTraceUpdate } from "@/utils/hooks"
 
 export const logsColumns = {
   llm: [
@@ -186,6 +187,8 @@ function editCheck(filters, id, params) {
 //   })
 // }
 
+const DEFAULT_CHECK = ["AND"]
+
 export default function Logs() {
   const router = useRouter()
   const { projectId } = useContext(ProjectContext)
@@ -216,7 +219,7 @@ export default function Logs() {
   const [checks, setChecks] = useQueryState("filters", {
     parse: (value) => deserializeLogic(value, true),
     serialize: serializeLogic,
-    defaultValue: ["AND"],
+    defaultValue: DEFAULT_CHECK,
     clearOnDefault: true,
   })
 
@@ -327,9 +330,9 @@ export default function Logs() {
     if (view?.columns) {
       setVisibleColumns(view.columns)
     } else {
-      setVisibleColumns(logsColumns[type])
+      setVisibleColumns(allColumns[type])
     }
-  }, [view])
+  }, [view, type, allColumns])
 
   const exportUrl = useMemo(
     () => `/runs?${serializedChecks}&projectId=${projectId}`,
@@ -354,7 +357,7 @@ export default function Logs() {
 
   async function saveView() {
     if (!viewId) {
-      const icon = VIEW_ICONS[checks[1]?.params?.type]
+      const icon = VIEW_ICONS[type]
 
       const newView = await insertView({
         name: "New View",
@@ -422,6 +425,26 @@ export default function Logs() {
         (!view || JSON.stringify(view.data) !== JSON.stringify(checks))),
     [columnsTouched, checks, view],
   )
+
+  useTraceUpdate({
+    projectId,
+    serializedChecks,
+    type,
+    checks,
+    query,
+    viewId,
+    selectedRunId,
+    allColumns,
+    evaluators,
+    visibleColumns,
+    showSaveView,
+    logs,
+    loading,
+    validating,
+    runLoading,
+  })
+
+  console.log("Rendering Logs")
 
   return (
     <Empty
