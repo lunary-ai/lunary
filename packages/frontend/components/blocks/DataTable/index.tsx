@@ -139,22 +139,6 @@ export default function DataTable({
     [items, rowVirtualizer],
   )
 
-  // useTraceUpdate({
-  //   type,
-  //   rows,
-  //   availableColumns,
-  //   visibleColumns,
-  //   loading,
-  //   onRowClicked,
-  //   loadMore,
-  //   defaultSortBy,
-  //   sorting,
-  //   data,
-  //   rowVirtualizer,
-  // })
-
-  // console.log(`Rerendering`)
-
   return (
     <>
       <Card withBorder p={0} className={scheme} h="auto">

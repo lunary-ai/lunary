@@ -1,5 +1,5 @@
 import { Run } from "shared"
-import { lastMsg } from "../checks"
+import { sleep } from "../utils/misc"
 import { callML } from "../utils/ml"
 
 // TOOD: refacto this with all the other parsing function already in use
@@ -36,18 +36,20 @@ function parseMessages(messages: unknown) {
 }
 
 interface Params {
-  entities: string[]
+  types: string[]
+  customRegexes: string[]
+  excludedEntities: string[]
 }
 export async function evaluate(run: Run, params: Params) {
-  const { entities } = params
+  const { types: entityTypes, customRegexes, excludedEntities } = params
   const input = parseMessages(run.input)
   const output = parseMessages(run.output)
   const error = parseMessages(run.error)
 
   const [inputPIIs, outputPIIs, errorPIIs] = await Promise.all([
-    detectPIIs(input, entities),
-    detectPIIs(output, entities),
-    detectPIIs(error, entities),
+    detectPIIs(input, entityTypes, customRegexes, excludedEntities),
+    detectPIIs(output, entityTypes, customRegexes, excludedEntities),
+    detectPIIs(error, entityTypes, customRegexes, excludedEntities),
   ])
 
   const PIIs = {
@@ -56,14 +58,21 @@ export async function evaluate(run: Run, params: Params) {
     error: errorPIIs,
   }
 
+  await sleep(1000)
+
   // TODO: zod for languages, SHOLUD NOT INGEST IN DB IF NOT CORRECT FORMAT
   return PIIs
 }
 
 // TODO: type
-async function detectPIIs(texts: string[], entities: string[]): Promise<any> {
+async function detectPIIs(
+  texts: string[],
+  entityTypes: string[] = [],
+  customRegexes: string[] = [],
+  excludedEntities: string[] = []
+): Promise<any> {
   try {
-    return callML("pii", { texts, entities })
+    return callML("pii", { texts, entityTypes, customRegexes, excludedEntities })
   } catch (error) {
     console.error(error)
     console.log(texts)
