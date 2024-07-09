@@ -73,7 +73,7 @@ import { deserializeLogic, serializeLogic } from "shared"
 import { useEvaluators } from "@/utils/dataHooks/evaluators"
 import { useTraceUpdate } from "@/utils/hooks"
 
-export const logsColumns = {
+export const defaultColumns = {
   llm: [
     timeColumn("createdAt"),
     nameColumn("Model"),
@@ -197,7 +197,7 @@ export default function Logs() {
 
   const { insert: insertView, isInserting: isInsertingView } = useViews()
 
-  const [allColumns, setAllColumns] = useState(logsColumns)
+  const [allColumns, setAllColumns] = useState(defaultColumns)
 
   const [visibleColumns, setVisibleColumns] = useState<VisibilityState>({})
   const [columnsTouched, setColumnsTouched] = useState(false)
@@ -259,11 +259,10 @@ export default function Logs() {
           0,
           enrichmentColumn(evaluator.name, evaluator.slug, evaluator.type),
         )
-        console.log(newColumns.llm)
       }
       setAllColumns(newColumns)
     }
-  }, [type, evaluators, allColumns])
+  }, [type, evaluators])
 
   useEffect(() => {
     if (selectedRun && selectedRun.projectId !== projectId) {
@@ -444,8 +443,6 @@ export default function Logs() {
     runLoading,
   })
 
-  console.log("Rendering Logs")
-
   return (
     <Empty
       enable={!loading && !projectLoading && project && !project.activated}
@@ -616,10 +613,10 @@ export default function Logs() {
               setSelectedRunId(row.id)
             }
           }}
-          key={logsColumns[type]}
+          key={allColumns[type]}
           loading={loading || validating}
           loadMore={loadMore}
-          availableColumns={logsColumns[type]}
+          availableColumns={allColumns[type]}
           visibleColumns={visibleColumns}
           setVisibleColumns={(newState) => {
             setVisibleColumns((prev) => ({
