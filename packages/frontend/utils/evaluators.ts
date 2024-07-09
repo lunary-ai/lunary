@@ -79,6 +79,19 @@ const EVALUATOR_TYPES = {
           },
         ],
       },
+      {
+        type: "label",
+        label: "Custom expressions",
+      },
+      {
+        type: "select",
+        id: "regex",
+        allowCustom: true,
+        multiple: true,
+        defaultValue: [],
+        placeholder: "Enter custom regex",
+        width: 300,
+      },
     ],
   },
   summarization: {
