@@ -58,7 +58,6 @@ export async function evaluate(run: Run, params: Params) {
     error: errorPIIs,
   }
 
-  await sleep(1000)
 
   // TODO: zod for languages, SHOLUD NOT INGEST IN DB IF NOT CORRECT FORMAT
   return PIIs
