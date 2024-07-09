@@ -161,7 +161,7 @@ export default function CheckPicker({
   restrictTo = (filter) => true,
   defaultOpened = false,
   disabled = false,
-  buttonText = "Add"
+  buttonText = "Add",
 }: {
   value?: CheckLogic
   onChange?: (data: CheckLogic) => void
@@ -181,8 +181,6 @@ export default function CheckPicker({
       !check.uniqueInBar ||
       !value.some((v) => typeof v === "object" && v.id === check.id),
   )
-
-  // const options = CHECKS.filter(restrictTo)
 
   // insert {id: filterId, params: { [param1]: defaultValue, [param2]: defaultValue }}
   const insertChecks = (filters: Check[]) => {

@@ -1,4 +1,11 @@
 import DataTable from "@/components/blocks/DataTable"
+import {
+  parseAsArrayOf,
+  parseAsJson,
+  parseAsString,
+  parseAsStringEnum,
+  useQueryState,
+} from "nuqs"
 
 import {
   ActionIcon,
@@ -65,8 +72,9 @@ import { useView, useViews } from "@/utils/dataHooks/views"
 import RenamableField from "@/components/blocks/RenamableField"
 import { VisibilityState } from "@tanstack/react-table"
 import { notifications } from "@mantine/notifications"
-import { useChecksFromURL, useStateFromURL } from "@/utils/hooks"
+
 import IconPicker from "@/components/blocks/IconPicker"
+import { deserializeLogic, serializeLogic } from "shared"
 
 export const logsColumns = {
   llm: [
@@ -124,7 +132,7 @@ export const CHECKS_BY_TYPE = {
     "cost",
     "duration",
     "tokens",
-    "radar",
+    // "radar",
   ],
   trace: [
     "tags",
@@ -133,14 +141,14 @@ export const CHECKS_BY_TYPE = {
     // "feedback",
     "duration",
     "metadata",
-    "radar",
+    // "radar",
   ],
   thread: [
     "tags",
     "users",
     // "feedback",
     "metadata",
-    "radar",
+    // "radar",
   ],
 }
 
@@ -182,29 +190,42 @@ function editCheck(filters, id, params) {
 //   })
 // }
 
-const IGNORED_KEYS = ["view", "selected", "search"]
-
 export default function Logs() {
   const router = useRouter()
   const { projectId } = useContext(ProjectContext)
   const { project, isLoading: projectLoading, setProjectId } = useProject()
   const { org } = useOrg()
 
-  const { checks, setChecks, serializedChecks } = useChecksFromURL(
-    ["AND", { id: "type", params: { type: "llm" } }],
-    IGNORED_KEYS,
-  )
-
   const { insert: insertView, isInserting: isInsertingView } = useViews()
 
   const [visibleColumns, setVisibleColumns] = useState<VisibilityState>()
   const [columnsTouched, setColumnsTouched] = useState(false)
 
-  const [viewId, setViewId] = useStateFromURL<string | undefined>("view")
-  const [selectedRunId, setSelectedRunId] = useStateFromURL<string | undefined>(
+  const [viewId, setViewId] = useQueryState<string | undefined>("view", {
+    ...parseAsString,
+    history: "push",
+  })
+
+  const [selectedRunId, setSelectedRunId] = useQueryState<string | undefined>(
     "selected",
+    parseAsString,
   )
-  const [type] = useStateFromURL<string>("type", "llm")
+  const [type] = useQueryState<string>(
+    "type",
+    parseAsStringEnum(["llm", "trace", "thread"]).withDefault("llm"),
+  )
+
+  const [checks, setChecks] = useQueryState("filters", {
+    parse: (value) => deserializeLogic(value, true),
+    serialize: serializeLogic,
+    defaultValue: ["AND"],
+    clearOnDefault: true,
+  })
+
+  const serializedChecks = useMemo(() => {
+    const checksWithType = editCheck(checks, "type", { type })
+    return serializeLogic(checksWithType)
+  }, [checks, type])
 
   const { view, update: updateView, remove: removeView } = useView(viewId)
 
@@ -375,7 +396,7 @@ export default function Logs() {
   const showSaveView = useMemo(
     () =>
       columnsTouched ||
-      (checks.length > 2 &&
+      (checks.length > 1 &&
         (!view || JSON.stringify(view.data) !== JSON.stringify(checks))),
     [columnsTouched, checks, view],
   )

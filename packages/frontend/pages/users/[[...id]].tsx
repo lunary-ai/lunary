@@ -189,7 +189,7 @@ function SelectedUser({ id, onClose }) {
                   leftSection={<IconActivity size={16} />}
                   size="xs"
                   component={Link}
-                  href={`/logs?users=${id}`}
+                  href={`/logs?filters=users=${id}`}
                   variant="outline"
                 >
                   Activity
@@ -199,7 +199,7 @@ function SelectedUser({ id, onClose }) {
                   component={Link}
                   color="grape"
                   size="xs"
-                  href={`/analytics?users=${id}`}
+                  href={`/analytics?filters=users=${id}`}
                   variant="outline"
                 >
                   Analytics

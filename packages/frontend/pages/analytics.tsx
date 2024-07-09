@@ -35,7 +35,8 @@ import {
 } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { useRouter } from "next/router"
-import { useEffect, useState } from "react"
+import { useQueryState } from "nuqs"
+import { useEffect, useMemo, useState } from "react"
 import { CheckLogic, deserializeLogic, serializeLogic } from "shared"
 
 export function getDefaultDateRange() {
@@ -321,10 +322,7 @@ function ChartTooltip({ label, payload }: ChartTooltipProps) {
 
 // TODO: refactor (put utils functions and components in other file)
 // TODO: typescript everywhere
-// TODO: checks in url
 export default function Analytics() {
-  const router = useRouter()
-
   const [dateRange, setDateRange] = useLocalStorage({
     key: "dateRange-analytics",
     getInitialValueInEffect: false,
@@ -339,10 +337,15 @@ export default function Analytics() {
     defaultValue: determineGranularity(dateRange),
   })
 
-  // TODO: put checks in their own component
-  const [checks, setChecks] = useState<CheckLogic>(["AND"])
+  const [checks, setChecks] = useQueryState("filters", {
+    parse: (value) => deserializeLogic(value, true),
+    serialize: serializeLogic,
+    defaultValue: ["AND"],
+  })
+
+  const serializedChecks = useMemo(() => serializeLogic(checks), [checks])
+
   const [showCheckBar, setShowCheckBar] = useState(false)
-  const serializedChecks = serializeLogic(checks)
 
   const { project } = useProject()
 
@@ -423,31 +426,8 @@ export default function Analytics() {
 
   const showBar =
     showCheckBar ||
-    checks.filter((f) => f !== "AND" && !["search", "type"].includes(f.id))
+    checks?.filter((f) => f !== "AND" && !["search", "type"].includes(f.id))
       .length > 0
-
-  useDidUpdate(() => {
-    if (typeof serializedChecks === "string") {
-      router.replace(`/analytics?${serializedChecks}`)
-    }
-  }, [serializedChecks, startDate, endDate, granularity])
-
-  useEffect(() => {
-    // restore filters from query params
-    try {
-      const urlParams = new URLSearchParams(window.location.search)
-
-      const paramString = urlParams.toString()
-      if (paramString) {
-        const filtersData = deserializeLogic(paramString)
-        if (filtersData) {
-          setChecks(filtersData)
-        }
-      }
-    } catch (e) {
-      console.error(e)
-    }
-  }, [router.asPath])
 
   const commonChartData = {
     startDate: startDate,
