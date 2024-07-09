@@ -1,4 +1,4 @@
-import { Badge, Box, Group, Popover, Text, Tooltip } from "@mantine/core"
+import { Badge, Box, Group, Popover, Stack, Text, Tooltip } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import {
   IconCheck,
@@ -7,7 +7,7 @@ import {
   IconMoodSmile,
   IconX,
 } from "@tabler/icons-react"
-import { EvaluatorType } from "shared"
+import { EvaluatorType, LanguageDetectionResult } from "shared"
 import { getFlagEmoji } from "./format"
 
 export function renderEnrichment(data: any, type: EvaluatorType) {
@@ -27,9 +27,23 @@ export function renderEnrichment(data: any, type: EvaluatorType) {
   return renderer(data)
 }
 
-function renderLanguageEnrichment(data: string) {
-  const emoji = getFlagEmoji(data)
-  return <Text size="lg">{emoji}</Text>
+function renderLanguageEnrichment(languageDetections: LanguageDetectionResult) {
+  const outputEmojis = languageDetections.output.map((detectionResult) => {
+    if (detectionResult === null) {
+      return ""
+    }
+    return getFlagEmoji(detectionResult.isoCode)
+  })
+
+  return (
+    <Stack>
+      <Group gap="0">
+        {outputEmojis.map((emoji) => (
+          <Text size="lg">{emoji}</Text>
+        ))}
+      </Group>
+    </Stack>
+  )
 }
 
 function renderPIIEnrichment(data: any) {

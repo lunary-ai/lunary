@@ -9,7 +9,7 @@ import classes from "./index.module.css"
 import { IconX } from "@tabler/icons-react"
 import CHECKS_UI_DATA from "./ChecksUIData"
 
-function RenderCheckNode({
+export function RenderCheckNode({
   minimal,
   node,
   disabled,
@@ -161,7 +161,7 @@ export default function CheckPicker({
   restrictTo = (filter) => true,
   defaultOpened = false,
   disabled = false,
-  buttonText = "Add"
+  buttonText = "Add",
 }: {
   value?: CheckLogic
   onChange?: (data: CheckLogic) => void

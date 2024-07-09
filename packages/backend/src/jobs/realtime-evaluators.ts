@@ -6,7 +6,7 @@ import { RealtimeEvaluator } from "shared/evaluators"
 import { sleep } from "../utils/misc"
 import evaluators from "../evaluators"
 
-const RUNS_BATCH_SIZE = 1
+const RUNS_BATCH_SIZE = 30
 
 async function runEvaluator(evaluator: RealtimeEvaluator, run: Run) {
   try {
@@ -85,7 +85,7 @@ async function evaluatorJob() {
       console.log(
         `Skipping Real-time Evaluator ${evaluator.id} (${i} / ${evaluators.length})`,
       )
-      await sleep(1000)
+      await sleep(500)
       continue
     }
 

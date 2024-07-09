@@ -44,6 +44,7 @@ evaluators.get("/:id", async (ctx: Context) => {
 })
 
 evaluators.post("/", async (ctx: Context) => {
+  console.log(ctx.request.body)
   const requestBody = z.object({
     ownerId: z.string().optional(),
     name: z.string(),

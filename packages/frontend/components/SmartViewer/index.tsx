@@ -87,6 +87,7 @@ export default function SmartViewer({
     return checkIsRetrieverObjects(parsed)
   }, [parsed])
 
+  // TODO: refacto, c'est degueulasse
   let Message
   if (error) {
     Message = (

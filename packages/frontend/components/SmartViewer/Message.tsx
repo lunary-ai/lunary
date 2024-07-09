@@ -14,6 +14,7 @@ import {
   TextInput,
   Textarea,
   ThemeIcon,
+  Tooltip,
 } from "@mantine/core"
 import {
   IconInfoCircle,
@@ -31,6 +32,7 @@ import { circularPro } from "@/utils/theme"
 import { useEffect } from "react"
 
 import { openConfirmModal } from "@mantine/modals"
+import { getFlagEmoji } from "@/utils/format"
 
 const ghostTextAreaStyles = {
   variant: "unstyled",
@@ -438,7 +440,6 @@ export function ChatMessage({
   compact?: boolean
   mah?: number
 }) {
-  console.log(data)
   // TODO FIX
   // Flickering dark mode bug: this is due to scheme being 'light' for a few ms
   const scheme = useColorScheme()
@@ -504,7 +505,7 @@ export function ChatMessage({
       {...props}
     >
       {!compact && (
-        <>
+        <Group justify="space-between">
           {editable ? (
             <RoleSelector
               data={data}
@@ -521,9 +522,13 @@ export function ChatMessage({
               {data.role}
             </Text>
           )}
-        </>
+          {data?.languageDetection && (
+            <Tooltip label={data.languageDetection.confidence}>
+              <Box>{getFlagEmoji(data.languageDetection.isoCode)}</Box>
+            </Tooltip>
+          )}
+        </Group>
       )}
-
       <ChatMessageContent
         data={data}
         color={color}
@@ -532,7 +537,6 @@ export function ChatMessage({
         onChange={onChange}
         editable={editable}
       />
-
       <style jsx>{`
         :global(pre) {
           white-space: pre-wrap;

@@ -1,4 +1,4 @@
-import CheckPicker from "@/components/checks/Picker"
+import CheckPicker, { RenderCheckNode } from "@/components/checks/Picker"
 import { useLogCount, useUser } from "@/utils/dataHooks"
 import { useEvaluators } from "@/utils/dataHooks/evaluators"
 import EVALUATOR_TYPES from "@/utils/evaluators"
@@ -81,7 +81,6 @@ function EvaluatorCard({
 }
 
 export default function NewRealtimeEvaluator() {
-  return 1
   const router = useRouter()
 
   const { user } = useUser()
@@ -89,7 +88,8 @@ export default function NewRealtimeEvaluator() {
 
   const [name, setName] = useState<string>("")
   const [type, setType] = useState<string>()
-  const [params, setParams] = useState<any>({})
+  const [params, setParams] = useState<any>()
+  const [isBenchmark, setIsBenchmark] = useState<boolean>(false)
   const [filters, setFilters] = useState<CheckLogic>([
     "AND",
     { id: "type", params: { type: "llm" } },
@@ -110,7 +110,6 @@ export default function NewRealtimeEvaluator() {
   useEffect(() => {
     if (selectedEvaluator) {
       setParams({
-        id: selectedEvaluator.id,
         params: selectedEvaluator.params.reduce((acc, param) => {
           if (param.id) {
             acc[param.id] = param.defaultValue
@@ -120,6 +119,8 @@ export default function NewRealtimeEvaluator() {
       })
     }
   }, [selectedEvaluator])
+
+  console.log(params)
 
   async function createEvaluator() {
     // TODO: validation
@@ -209,6 +210,17 @@ export default function NewRealtimeEvaluator() {
                 />
               </Group>
             </Tooltip>
+
+            <Group w="fit-content">
+              <Switch
+                size="lg"
+                label="Is benchmark"
+                onLabel="ON"
+                offLabel="OFF"
+                checked={isBenchmark}
+                onClick={(event) => setIsBenchmark(event.currentTarget.checked)}
+              />
+            </Group>
 
             <Box>
               <Text mb="5" mt="sm">
