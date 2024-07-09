@@ -26,11 +26,11 @@ const EVALUATOR_TYPES = {
     params: [
       {
         type: "label",
-        label: "Look for",
+        label: "Look for these entities",
       },
       {
         type: "select",
-        id: "entities",
+        id: "types",
         width: 230,
         defaultValue: [
           "email",
@@ -43,6 +43,7 @@ const EVALUATOR_TYPES = {
           "phone",
         ],
         multiple: true,
+        placeholder: "Enter custom regex",
         searchable: true,
         options: [
           {
@@ -73,19 +74,15 @@ const EVALUATOR_TYPES = {
             label: "Credit Card",
             value: "cc",
           },
-          {
-            label: "Custom Expressions",
-            value: "regex",
-          },
         ],
       },
       {
         type: "label",
-        label: "Custom expressions",
+        label: "Custom Regex Expressions (optional)",
       },
       {
         type: "select",
-        id: "regex",
+        id: "customRegexes",
         allowCustom: true,
         multiple: true,
         defaultValue: [],
@@ -155,7 +152,7 @@ const EVALUATOR_TYPES = {
     ],
   },
   topics: {
-    name: "Topics",
+    name: "Classify",
     id: "topics",
     icon: IconBadge,
     color: "violet",
@@ -165,6 +162,8 @@ const EVALUATOR_TYPES = {
       {
         type: "label",
         label: "Enter predefined topics",
+        description:
+          "Add predefined topics to help the model classify conversations.",
       },
       {
         type: "select",

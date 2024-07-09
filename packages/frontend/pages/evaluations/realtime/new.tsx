@@ -182,23 +182,25 @@ export default function NewRealtimeEvaluator() {
         </Stack>
 
         {hasParams && selectedEvaluator && (
-          <Stack>
-            <Text>Configure the evaluator:</Text>
+          <Card withBorder bg="transparent">
+            <Stack>
+              <Text>Configure the evaluator:</Text>
 
-            <RenderCheckNode
-              node={params}
-              minimal={false}
-              setNode={(newNode) => {
-                setParams(newNode as CheckLogic)
-              }}
-              checks={[selectedEvaluator]}
-            />
-          </Stack>
+              <RenderCheckNode
+                node={params}
+                minimal={false}
+                setNode={(newNode) => {
+                  setParams(newNode as CheckLogic)
+                }}
+                checks={[selectedEvaluator]}
+              />
+            </Stack>
+          </Card>
         )}
 
         <Card style={{ overflow: "visible" }} shadow="md" p="lg">
           <Stack>
-            <Tooltip label="(Soon) Only real-time evaluators are available at the moment">
+            <Tooltip label="Only real-time evaluators are available at the moment">
               <Group w="fit-content">
                 <Switch
                   size="lg"

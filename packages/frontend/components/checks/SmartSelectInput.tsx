@@ -8,10 +8,11 @@ import {
   PillsInput,
   useCombobox,
 } from "@mantine/core"
-import local from "next/font/local"
+
 import { useEffect, useState } from "react"
 
 export default function SmartCheckSelect({
+  minimal,
   options,
   multiple,
   placeholder,
@@ -164,7 +165,7 @@ export default function SmartCheckSelect({
       <Combobox.DropdownTarget>
         <PillsInput
           onClick={() => combobox.openDropdown()}
-          variant="unstyled"
+          variant={minimal ? "unstyled" : "default"}
           size="xs"
           miw={width}
           w="min-content"
@@ -179,14 +180,16 @@ export default function SmartCheckSelect({
 
       <Combobox.Dropdown
         miw={180}
-        style={{ maxHeight: "300px", overflowY: "scroll" }}
+        style={{ maxHeight: minimal ? 300 : 500, overflowY: "scroll" }}
       >
         <Combobox.Search
           value={search}
           display={shouldDisplaySearch ? "flex" : "none"}
           onChange={(event) => setSearch(event.currentTarget.value)}
           onKeyDown={handleKeyDown}
-          placeholder={allowCustom ? `Type to create new` : "Search..."}
+          placeholder={
+            placeholder || (allowCustom ? `Type to create new` : "Search...")
+          }
           style={{
             top: 0,
             zIndex: 2,

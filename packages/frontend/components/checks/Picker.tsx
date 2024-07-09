@@ -24,15 +24,6 @@ export function RenderCheckNode({
   setNode: (node: CheckLogic | LogicData) => void
   removeNode: () => void
 }) {
-  console.log({
-    minimal,
-    node,
-    disabled,
-    checks,
-    setNode,
-    removeNode,
-  })
-
   if (typeof node === "string" && ["AND", "OR"].includes(node)) return null
 
   if (Array.isArray(node)) {
@@ -93,75 +84,73 @@ export function RenderCheckNode({
 
   const check = checks.find((f) => f.id === s?.id)
 
-  console.log(`check found for - ${s?.id}`, s)
-
   if (!check) return null
 
   return (
-    <Group>
-      <div className={classes["custom-input"]}>
-        {check?.params.map((param, i) => {
-          const CustomInput = CheckInputs[param.type]
-          if (!CustomInput) return null
+    <div
+      className={`${classes["custom-input"]} ${minimal ? classes.minimal : ""}`}
+    >
+      {check?.params.map((param, i) => {
+        const CustomInput = CheckInputs[param.type]
+        if (!CustomInput) return null
 
-          const isParamNotLabel = param.type !== "label"
+        const isParamNotLabel = param.type !== "label"
 
-          const paramData = isParamNotLabel ? s.params[param.id] : null
+        const paramData = isParamNotLabel ? s.params[param.id] : null
 
-          const UIItem = CHECKS_UI_DATA[check.id] || CHECKS_UI_DATA["other"]
+        const UIItem = CHECKS_UI_DATA[check.id] || CHECKS_UI_DATA["other"]
 
-          function getWidth() {
-            if (!isParamNotLabel || !param.width) {
-              return
-            }
-
-            if (minimal) {
-              return param.width
-            }
-
-            return param.width * 1.1
-          }
-          const width = getWidth()
-
-          const onChangeParam = (value) => {
-            isParamNotLabel &&
-              setNode({
-                id: s.id,
-                params: {
-                  ...(s.params || {}),
-                  [param.id]: value,
-                },
-              })
+        function getWidth() {
+          if (!isParamNotLabel || !param.width) {
+            return
           }
 
-          return (
-            <Fragment key={i}>
-              <ErrorBoundary>
-                <CustomInput
-                  {...param}
-                  // Allow setting custom renderers for inputs like Selects
-                  renderListItem={UIItem.renderListItem}
-                  renderLabel={UIItem.renderLabel}
-                  width={width}
-                  value={paramData}
-                  onChange={onChangeParam}
-                />
-              </ErrorBoundary>
-            </Fragment>
-          )
-        })}
-        {typeof removeNode !== "undefined" && (
-          <IconX
-            opacity={0.5}
-            cursor="pointer"
-            size={14}
-            onClick={() => {
-              removeNode()
-            }}
-          />
-        )}
-      </div>
-    </Group>
+          if (minimal) {
+            return param.width
+          }
+
+          return param.width * 1.1
+        }
+        const width = getWidth()
+
+        const onChangeParam = (value) => {
+          isParamNotLabel &&
+            setNode({
+              id: s.id,
+              params: {
+                ...(s.params || {}),
+                [param.id]: value,
+              },
+            })
+        }
+
+        return (
+          <Fragment key={i}>
+            <ErrorBoundary>
+              <CustomInput
+                {...param}
+                // Allow setting custom renderers for inputs like Selects
+                renderListItem={UIItem.renderListItem}
+                renderLabel={UIItem.renderLabel}
+                width={width}
+                value={paramData}
+                onChange={onChangeParam}
+              />
+            </ErrorBoundary>
+          </Fragment>
+        )
+      })}
+      {typeof removeNode !== "undefined" && (
+        <IconX
+          opacity={0.5}
+          cursor="pointer"
+          size={14}
+          onClick={() => {
+            removeNode()
+          }}
+        />
+      )}
+    </div>
   )
 }
 
@@ -209,8 +198,6 @@ export default function CheckPicker({
   }
 
   const Container = minimal ? Group : Stack
-
-  console.log({ value })
 
   return (
     <Box style={disabled ? { pointerEvents: "none", opacity: 0.8 } : {}}>
