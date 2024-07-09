@@ -45,27 +45,17 @@ const ghostTextAreaStyles = {
   width: "100%",
 }
 
-function RenderFunction({
-  color,
-  editable,
-  onChange,
-  compact,
-  codeBg,
-  data,
-  type,
-}) {
-  const fontColor = type === "functionCall" ? "#40c057" : "inherit"
+function RenderFunction({ color, editable, onChange, compact, data }) {
   return (
-    <Code block bg={codeBg}>
+    <Code className={classes.textMessage}>
       <Text
         component="div"
-        className={classes.functionCallText}
+        className={`${classes.functionCallText} ${
+          compact ? classes.compact : ""
+        }`}
         c={color}
-        style={{ fontFamily: circularPro.style.fontFamily }}
-        mb={compact ? 4 : "xs"}
-        mt={compact ? -6 : 0}
       >
-        <Text span c={fontColor}>{`function call: `}</Text>
+        <span>{`function: `}</span>
 
         {editable ? (
           <TextInput
@@ -82,9 +72,7 @@ function RenderFunction({
             onChange={(e) => onChange({ ...data, name: e.target.value })}
           />
         ) : (
-          <Text c={fontColor} span fw="bold" size="sm">
-            {data?.name}
-          </Text>
+          <b>{data?.name}</b>
         )}
       </Text>
 
@@ -107,26 +95,11 @@ function RenderFunction({
   )
 }
 
-function FunctionCallMessage({ data, color, compact, codeBg }) {
-  return (
-    <RenderFunction
-      color={color}
-      data={data}
-      compact={compact}
-      codeBg={codeBg}
-      type="functionCall"
-    />
-  )
+function FunctionCallMessage({ data, color, compact }) {
+  return <RenderFunction color={color} data={data} compact={compact} />
 }
 
-function ToolCallsMessage({
-  toolCalls,
-  editable,
-  onChange,
-  color,
-  compact,
-  codeBg,
-}) {
+function ToolCallsMessage({ toolCalls, editable, onChange, color, compact }) {
   return (
     <>
       {toolCalls.map((toolCall, index) => (
@@ -171,8 +144,6 @@ function ToolCallsMessage({
             color={color}
             compact={compact}
             data={toolCall.function}
-            codeBg={codeBg}
-            type="toolCall"
           />
 
           {editable && (
@@ -205,9 +176,11 @@ function ToolCallsMessage({
   )
 }
 
-function TextMessage({ data, onChange = () => {}, editable = false, codeBg }) {
+function TextMessage({ data, compact, onChange = () => {}, editable = false }) {
+  const text = data.content || data.text
+
   return (
-    <Code block bg={codeBg}>
+    <Code className={classes.textMessage}>
       <ProtectedText>
         {editable ? (
           <Textarea
@@ -217,8 +190,10 @@ function TextMessage({ data, onChange = () => {}, editable = false, codeBg }) {
             onChange={(e) => onChange({ ...data, content: e.target.value })}
             {...ghostTextAreaStyles}
           />
+        ) : compact ? (
+          text?.substring(0, 150) // truncate text to render less
         ) : (
-          data.content || data.text
+          text
         )}
       </ProtectedText>
     </Code>
@@ -241,9 +216,9 @@ function MiniatureImage({ src }) {
   )
 }
 
-function ImageMessage({ data, codeBg, compact }) {
+function ImageMessage({ data, compact }) {
   return (
-    <Code block bg={codeBg}>
+    <Code className={classes.textMessage}>
       <Stack gap={compact ? "5" : "md"}>
         {data.content.map((item, index) => {
           if (item.type === "text") {
@@ -288,10 +263,16 @@ function ChatMessageContent({
   data,
   color,
   compact,
-  codeBg,
+
   onChange,
   editable,
 }) {
+  const hasTextContent =
+    typeof data?.text === "string" || typeof data?.content === "string"
+  const hasImageContent = Array.isArray(data?.content)
+  const hasFunctionCall = data?.functionCall
+  const hasToolCalls = data?.toolCalls || data?.tool_calls
+
   return (
     <Stack gap="xs">
       {typeof data?.name === "string" && !compact && (
@@ -316,37 +297,32 @@ function ChatMessageContent({
         />
       )}
 
-      {(typeof data?.text === "string" ||
-        typeof data?.content === "string") && (
+      {hasTextContent && (!compact || !hasToolCalls) && (
         <TextMessage
           data={data}
+          compact={compact}
           onChange={onChange}
           editable={editable}
-          codeBg={codeBg}
         />
       )}
 
-      {Array.isArray(data?.content) && (
-        <ImageMessage data={data} codeBg={codeBg} compact={compact} />
-      )}
+      {hasImageContent && <ImageMessage data={data} compact={compact} />}
 
-      {data?.functionCall && (
+      {hasFunctionCall && (
         <FunctionCallMessage
           data={data.functionCall}
           color={color}
           compact={compact}
-          codeBg={codeBg}
         />
       )}
 
-      {(data?.toolCalls || data?.tool_calls) && (
+      {hasToolCalls && (
         <ToolCallsMessage
           toolCalls={data.toolCalls || data.tool_calls}
           color={color}
           editable={editable}
           onChange={(toolCalls) => onChange({ ...data, toolCalls })}
           compact={compact}
-          codeBg={codeBg}
         />
       )}
 
@@ -408,14 +384,12 @@ export function ChatMessage({
   editable = false,
   onChange,
   compact = false,
-  mah,
   ...props
 }: {
   data: any
   editable?: boolean
   onChange?: any
   compact?: boolean
-  mah?: number
 }) {
   const scheme = useComputedColorScheme()
 
@@ -425,10 +399,10 @@ export function ChatMessage({
 
   // Add/remove the 'id' and 'name' props required on tool calls
   useEffect(() => {
-    if (!data) return
+    if (!data || !editable) return
 
     // Add/remove the 'name' props required on tool calls
-    if (data.role === "tool" && editable && typeof data.name !== "string") {
+    if (data.role === "tool" && typeof data.name !== "string") {
       onChange({ ...data, name: "some-tool-name" })
     } else if (
       data.role !== "tool" &&
@@ -440,11 +414,7 @@ export function ChatMessage({
       onChange(data)
     }
 
-    if (
-      data.role === "tool" &&
-      editable &&
-      typeof data.toolCallId !== "string"
-    ) {
+    if (data.role === "tool" && typeof data.toolCallId !== "string") {
       onChange({ ...data, toolCallId: "call_123" })
     } else if (data.role !== "tool" && typeof data.toolCallId === "string") {
       delete data.toolCallId
@@ -453,7 +423,6 @@ export function ChatMessage({
 
     if (
       data.role === "assistant" &&
-      editable &&
       Array.isArray(data.toolCalls) &&
       data.toolCalls.length === 0
     ) {
@@ -461,7 +430,7 @@ export function ChatMessage({
       delete data.toolCalls
       onChange(data)
     }
-  }, [data])
+  }, [data, editable])
 
   return (
     <Paper
@@ -496,21 +465,9 @@ export function ChatMessage({
         data={data}
         color={color}
         compact={compact}
-        codeBg={codeBg}
         onChange={onChange}
         editable={editable}
       />
-
-      <style jsx>{`
-        :global(pre) {
-          white-space: pre-wrap;
-        }
-
-        :global(pre code) {
-          padding: 10px;
-          display: block;
-        }
-      `}</style>
     </Paper>
   )
 }

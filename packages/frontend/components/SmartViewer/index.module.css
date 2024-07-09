@@ -21,8 +21,8 @@
 
 .paper.compact {
   padding: 0 !important;
-  max-height: 80px;
-  overflow: scroll;
+
+  overflow: hidden;
   border-radius: var(--mantine-radius-md);
 }
 
@@ -30,12 +30,15 @@
   display: flex;
   align-items: center;
   font-size: 14px !important;
+  font-family: var(--mantine-font-family);
   height: 18px;
   max-width: 300px;
   justify-content: flex-start;
+  margin-bottom: var(--mantine-spacing-xs);
 
-  > * {
-    font-size: 14px !important;
+  &.compact {
+    margin-bottom: -10px;
+    margin-top: -4px;
   }
 }
 
@@ -60,17 +63,33 @@
 .pre {
   white-space: pre-wrap;
   margin: 0;
-}
 
-.pre.compact {
-  max-height: 96px;
-  overflow: hidden;
-  width: 100%;
+  pre {
+    white-space: pre-wrap;
+  }
 }
 
 .pre code {
   padding: 10px;
   display: block;
+  overflow: hidden;
+}
+
+.pre.compact {
+  max-height: 60px;
+  overflow: hidden;
+  width: 100%;
+  white-space: pre-wrap;
+
+  border-radius: 6px;
+
+  pre {
+    padding-top: 4px;
+    line-height: 1.2;
+  }
+}
+
+.pre.compact code {
   overflow: hidden;
 }
 
@@ -92,6 +111,11 @@
   margin-bottom: 5px;
   margin-top: -2px;
   width: 80px;
+}
+
+.textMessage {
+  display: block;
+  background-color: light-dark(rgba(255, 255, 255, 0.5), rgba(0, 0, 0, 0.6));
 }
 
 .bubbleMessageIcon {

@@ -36,12 +36,9 @@
   position: relative;
 }
 
-.tableContainer td pre {
-  height: 50px;
-  line-height: 1.2;
-  padding-top: 4px !important;
-  overflow: hidden;
-  border-radius: 6px;
+.tableContainer td {
+  align-items: center;
+  display: flex;
 }
 
 .tableContainer .light th {
@@ -56,6 +53,10 @@
 .tableContainer tr {
   position: relative;
   height: fit-content;
+}
+
+.tableContainer tbody {
+  position: relative;
 }
 
 .tableContainer tbody tr {

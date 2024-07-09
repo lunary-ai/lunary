@@ -231,7 +231,6 @@ export default function DataTable({
             <tbody
               style={{
                 height: `${rowVirtualizer.getTotalSize()}px`, //tells scrollbar how big the table is
-                position: "relative", //needed for absolute positioning of rows
               }}
             >
               {rowVirtualizer.getVirtualItems().map((virtualRow, index) => {
@@ -270,11 +269,6 @@ export default function DataTable({
                   </tr>
                 )
               })}
-              {/* {paddingBottom > 0 && (
-                <tr>
-                  <td style={{ height: `${paddingBottom}px` }} />
-                </tr>
-              )} */}
             </tbody>
           </table>
 
@@ -290,12 +284,6 @@ export default function DataTable({
           )}
         </div>
       </Card>
-      {/* {!!hiddenColumns.length && (
-        <Text color="dimmed" size="xs">
-          {`The following unused columns were hidden: `}
-          {hiddenColumns.map((c) => c.id).join(", ")}
-        </Text>
-      )} */}
     </>
   )
 }
