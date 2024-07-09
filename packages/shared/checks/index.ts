@@ -565,6 +565,51 @@ export const CHECKS: Check[] = [
     ],
   },
   {
+    id: "entities",
+    name: "PII",
+    uiType: "ai",
+    disableInEvals: true,
+    params: [
+      {
+        type: "label",
+        label: "Contains",
+      },
+      {
+        type: "select",
+        id: "types",
+        multiple: true,
+        width: 100,
+        searchable: true,
+        options: [
+          {
+            label: "Email",
+            value: "email",
+          },
+          {
+            label: "Phone",
+            value: "phone",
+          },
+          {
+            label: "Person",
+            value: "person",
+          },
+          {
+            label: "Location",
+            value: "location",
+          },
+          {
+            label: "Org",
+            value: "org",
+          },
+          {
+            label: "Credit Card",
+            value: "cc",
+          },
+        ],
+      },
+    ],
+  },
+  {
     id: "radar",
     name: "Radar Match",
     uiType: "smart",

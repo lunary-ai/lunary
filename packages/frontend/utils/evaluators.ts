@@ -68,10 +68,6 @@ const EVALUATOR_TYPES = {
             value: "org",
           },
           {
-            label: "SSN",
-            value: "ssn",
-          },
-          {
             label: "Credit Card",
             value: "cc",
           },

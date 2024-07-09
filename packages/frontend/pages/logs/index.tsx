@@ -71,7 +71,7 @@ import { notifications } from "@mantine/notifications"
 import IconPicker from "@/components/blocks/IconPicker"
 import { deserializeLogic, serializeLogic } from "shared"
 import { useEvaluators } from "@/utils/dataHooks/evaluators"
-import { useTraceUpdate } from "@/utils/hooks"
+// import { useTraceUpdate } from "@/utils/hooks"
 
 export const defaultColumns = {
   llm: [
@@ -123,6 +123,7 @@ export const CHECKS_BY_TYPE = {
     "tags",
     "users",
     "languages",
+    "entities",
     "templates",
     "status",
     "metadata",

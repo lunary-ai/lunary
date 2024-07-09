@@ -174,6 +174,26 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     },
   },
   {
+    id: "entities",
+    sql: ({ types }) => {
+      if (!types.length) return sql`true`
+
+      return and([
+        sql`e.type = 'pii'`,
+        or(
+          types.map((type: string) => {
+            const jsonSql = { type }
+            return sql`(
+              er.result::jsonb -> 'input' -> 0 @> ${sql.json([jsonSql])}
+              OR
+              er.result::jsonb -> 'output' -> 0 @> ${sql.json([jsonSql])}
+            )`
+          }),
+        ),
+      ])
+    },
+  },
+  {
     id: "users",
     sql: ({ users }) => sql`(external_user_id = ANY(${sql.array(users, 20)}))`, // 20 is to specify it's a postgres int4
     ingestionCheck: async (run, params) => {
