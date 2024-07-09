@@ -1,4 +1,11 @@
-import { ReactNode, useCallback, useEffect, useRef, useState } from "react"
+import {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 
 import {
   ActionIcon,
@@ -118,6 +125,20 @@ export default function DataTable({
     fetchMoreOnBottomReached(tableContainerRef.current)
   }, [fetchMoreOnBottomReached])
 
+  const items = rowVirtualizer.getVirtualItems()
+
+  const paddingTop = useMemo(
+    () => (items.length > 0 ? items[0].start : 0),
+    [items],
+  )
+  const paddingBottom = useMemo(
+    () =>
+      items.length > 0
+        ? rowVirtualizer.getTotalSize() - items[items.length - 1].end
+        : 0,
+    [items, rowVirtualizer],
+  )
+
   // useTraceUpdate({
   //   type,
   //   rows,
@@ -235,7 +256,12 @@ export default function DataTable({
                 height: `${rowVirtualizer.getTotalSize()}px`, //tells scrollbar how big the table is
               }}
             >
-              {rowVirtualizer.getVirtualItems().map((virtualRow, index) => {
+              {paddingTop > 0 && (
+                <tr>
+                  <td style={{ height: `${paddingTop}px` }} />
+                </tr>
+              )}
+              {items.map((virtualRow, index) => {
                 const row = rows[virtualRow.index]
                 return (
                   <tr
@@ -250,7 +276,7 @@ export default function DataTable({
                     }
                     ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
                     style={{
-                      transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
+                      // transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
                       height: `${virtualRow.size}px`,
                       ...(onRowClicked ? { cursor: "pointer" } : {}),
                     }}
@@ -271,6 +297,11 @@ export default function DataTable({
                   </tr>
                 )
               })}
+              {paddingBottom > 0 && (
+                <tr>
+                  <td style={{ height: `${paddingBottom}px` }} />
+                </tr>
+              )}
             </tbody>
           </table>
 
