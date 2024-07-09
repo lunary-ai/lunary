@@ -2,36 +2,71 @@ import { Run } from "shared"
 import { lastMsg } from "../checks"
 import { callML } from "../utils/ml"
 
-interface PiiParams {
-  entities: ("email" | "ip")[]
+// TOOD: refacto this with all the other parsing function already in use
+function parseMessages(messages: unknown) {
+  if (!messages) {
+    return [""]
+  }
+  if (typeof messages === "string" && messages.length) {
+    return [messages]
+  }
+
+  if (messages === "__NOT_INGESTED__") {
+    return [""]
+  }
+
+  if (Array.isArray(messages)) {
+    let contentArray = []
+    for (const message of messages) {
+      let content = message.content || message.text
+      if (typeof content === "string" && content.length) {
+        contentArray.push(content)
+      } else {
+        contentArray.push(JSON.stringify(message))
+      }
+    }
+    return contentArray
+  }
+
+  if (typeof messages === "object") {
+    return [JSON.stringify(messages)]
+  }
+
+  return [""]
 }
 
-export async function evaluate(run: Run, params: PiiParams) {
+interface Params {
+  entities: string[]
+}
+export async function evaluate(run: Run, params: Oarans) {
   const { entities } = params
-  const results: {
-    emails?: string[]
-    ips?: string[]
-  } = {}
+  const input = parseMessages(run.input)
+  const output = parseMessages(run.output)
+  const error = parseMessages(run.error)
 
-  const text = lastMsg(run.input) + lastMsg(run.output)
-  if (!text.length) {
-    return null
+  const [inputLanguages, outputLanguages, errrorLanguages] = await Promise.all([
+    detectPIIs(input, entities),
+    detectPIIs(output, entities),
+    detectPIIs(error, entities),
+  ])
+
+  const languages = {
+    input: inputLanguages,
+    output: outputLanguages,
+    error: errrorLanguages,
   }
 
-  if (entities.includes("email")) {
-    const emailRegex = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi
-    results.emails = [...new Set(text.match(emailRegex))]
+  // TODO: zod for languages, SHOLUD NOT INGEST IN DB IF NOT CORRECT FORMAT
+
+  return languages
+}
+
+// TODO: type
+async function detectPIIs(texts: string[], entities: string[]): Promise<any> {
+  try {
+    return callML("pii", { texts, entities })
+  } catch (error) {
+    console.error(error)
+    console.log(texts)
   }
-
-  if (entities.includes("ip")) {
-    const ipRegex = /(?:\d{1,3}\.){3}\d{1,3}/gi
-    results.ips = [...new Set(text.match(ipRegex))]
-  }
-
-  const mlResults = await callML("pii", {
-    text,
-    entities,
-  })
-
-  return { ...results, ...mlResults }
 }
