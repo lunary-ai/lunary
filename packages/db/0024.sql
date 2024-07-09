@@ -1,3 +1,5 @@
+
+
 create table view (
     id uuid default uuid_generate_v4() primary key,
     name text not null,
@@ -116,3 +118,11 @@ VALUES
 ('codestral-2405', '^(codestral-2405)$', 'TOKENS', 1, 3, 'mistral', NULL),
 ('open-mixtral-8x22b', '^(open-mixtral-8x22b)$', 'TOKENS', 2, 6, '', NULL),
 ('open-mixtral-8x7b', '^(open-mixtral-8x7b)$', 'TOKENS', 0.7, 0.7, '', NULL);
+
+
+
+-- Index on evaluator table
+CREATE INDEX idx_evaluator_type ON evaluator (type);
+
+-- Index on evaluation_result_v2 table
+CREATE INDEX idx_evaluation_result_v2_result_jsonb ON evaluation_result_v2 USING GIN (result);

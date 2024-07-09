@@ -7,7 +7,7 @@ import aiSimilarity from "./ai/similarity"
 // import aiNER from "./ai/ner"
 // import aiToxicity from "./ai/toxic"
 import rouge from "rouge"
-import { or } from "../utils/checks"
+import { and, or } from "../utils/checks"
 import { isOpenAIMessage } from "../utils/misc"
 import { CleanRun } from "../utils/ingest"
 
@@ -156,6 +156,22 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   {
     id: "status",
     sql: ({ status }) => sql`(status = ${status})`,
+  },
+  {
+    id: "languages",
+    sql: ({ field, codes }) => {
+      if (!codes || !codes.length) return sql`true`
+
+      return and([
+        sql`e.type = 'language'`,
+        or(
+          codes.map((code: string) => {
+            const jsonSql = [{ isoCode: code }]
+            return sql`er.result::jsonb -> ${field} @> ${sql.json(jsonSql)}`
+          }),
+        ),
+      ])
+    },
   },
   {
     id: "users",

@@ -29,7 +29,6 @@ import ProtectedText from "../blocks/ProtectedText"
 import { RenderJson } from "./RenderJson"
 import classes from "./index.module.css"
 
-import { circularPro } from "@/utils/theme"
 import { useEffect } from "react"
 
 import { openConfirmModal } from "@mantine/modals"

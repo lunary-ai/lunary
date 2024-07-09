@@ -122,6 +122,7 @@ export const CHECKS_BY_TYPE = {
     // "enrichment",
     "tags",
     "users",
+    "languages",
     "templates",
     "status",
     "metadata",
