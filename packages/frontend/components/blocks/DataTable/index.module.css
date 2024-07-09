@@ -34,6 +34,10 @@
 
 .tableContainer th {
   position: relative;
+
+  td {
+    position: relative;
+  }
 }
 
 .tableContainer td {

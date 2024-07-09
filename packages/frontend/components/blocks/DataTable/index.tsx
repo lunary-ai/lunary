@@ -136,7 +136,7 @@ export default function DataTable({
 
   return (
     <>
-      <Card withBorder p={0} className={scheme}>
+      <Card withBorder p={0} className={scheme} h="auto">
         <div
           ref={tableContainerRef}
           className={classes.tableContainer}
@@ -179,7 +179,7 @@ export default function DataTable({
                 ))}
             </Menu.Dropdown>
           </Menu>
-          <table width="auto" cellSpacing={0}>
+          <table cellSpacing={0}>
             <thead>
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
@@ -217,8 +217,10 @@ export default function DataTable({
                           {...{
                             onMouseDown: header.getResizeHandler(),
                             onTouchStart: header.getResizeHandler(),
-                            className: `resizer ${
-                              header.column.getIsResizing() ? "isResizing" : ""
+                            className: `${classes.resizer} ${
+                              header.column.getIsResizing()
+                                ? classes.isResizing
+                                : ""
                             }`,
                           }}
                         />
