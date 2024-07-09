@@ -47,21 +47,23 @@ function renderLanguageEnrichment(languageDetections: LanguageDetectionResult) {
   )
 }
 
-function renderPIIEnrichment(data: any) {
+function renderPIIEnrichment(data: Record<string, any[]>) {
   const [opened, { close, open }] = useDisclosure(false)
 
-  let piiCount = 0
-  for (const key in data) {
-    if (Array.isArray(data[key])) {
-      piiCount += data[key].filter((item) => item !== null).length
-    }
-  }
+  const uniqueEntities = new Set()
+  Object.values(data).forEach((items) =>
+    items
+      .filter(Boolean)
+      .forEach((item) =>
+        item.forEach((subItem: { entity: string }) =>
+          uniqueEntities.add(subItem.entity),
+        ),
+      ),
+  )
 
-  if (piiCount === 0) {
-    return null
-  }
+  const piiCount = uniqueEntities.size
 
-  console.log(data)
+  if (piiCount === 0) return null
 
   return (
     <Popover
@@ -77,34 +79,38 @@ function renderPIIEnrichment(data: any) {
         </Badge>
       </Popover.Target>
       <Popover.Dropdown style={{ pointerEvents: "none" }} w="300">
-        <Text size="sm">
+        <Stack>
           {Object.entries(data)
-            .filter(
-              ([key, items]) =>
-                items.filter((item) => item !== null).length > 0,
-            )
-            .map(
-              ([key, items]) =>
-                items.length > 0 && (
-                  <div key={key}>
-                    <strong style={{ textTransform: "capitalize" }}>
-                      {key}:
-                    </strong>
-                    {items
-                      ?.filter((item) => item !== null)
-                      .map((item: any) => (
-                        <Group key={item.entity}>
-                          {item.map((subItem) => (
-                            <Badge variant="filled" color="blue">
-                              {subItem.entity}
-                            </Badge>
-                          ))}
-                        </Group>
-                      ))}
-                  </div>
-                ),
-            )}
-        </Text>
+            .filter(([_, items]) => items.some(Boolean))
+            .map(([key, items]) => {
+              const uniqueItemEntities = new Set()
+              items
+                .filter(Boolean)
+                .forEach((item) =>
+                  item.forEach((subItem: { entity: string }) =>
+                    uniqueItemEntities.add(subItem.entity),
+                  ),
+                )
+              return (
+                <div key={key}>
+                  <strong style={{ textTransform: "capitalize" }}>
+                    {key}:
+                  </strong>
+                  <Group>
+                    {Array.from(uniqueItemEntities).map((entity) => (
+                      <Badge
+                        key={entity as string}
+                        variant="filled"
+                        color="blue"
+                      >
+                        {entity as string}
+                      </Badge>
+                    ))}
+                  </Group>
+                </div>
+              )
+            })}
+        </Stack>
       </Popover.Dropdown>
     </Popover>
   )
