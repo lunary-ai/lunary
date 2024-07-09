@@ -25,7 +25,7 @@ import {
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
 import "@mantine/dates/styles.css"
-import { useLocalStorage } from "@mantine/hooks"
+import { useLocalStorage, useSessionStorage } from "@mantine/hooks"
 import {
   IconCalendar,
   IconChartAreaLine,
@@ -322,7 +322,7 @@ function ChartTooltip({ label, payload }: ChartTooltipProps) {
 // TODO: refactor (put utils functions and components in other file)
 // TODO: typescript everywhere
 export default function Analytics() {
-  const [dateRange, setDateRange] = useLocalStorage({
+  const [dateRange, setDateRange] = useSessionStorage({
     key: "dateRange-analytics",
     getInitialValueInEffect: false,
     deserialize: deserializeDateRange,
