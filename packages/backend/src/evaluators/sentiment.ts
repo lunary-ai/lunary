@@ -35,7 +35,6 @@ function parseMessages(messages: unknown) {
 }
 
 export async function evaluate(run: Run) {
-  console.log("SENTIMENT")
   const input = parseMessages(run.input)
   const output = parseMessages(run.output)
   const error = parseMessages(run.error)
