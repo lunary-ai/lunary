@@ -7,11 +7,13 @@
   font-family: inherit;
   font-size: inherit;
   padding: 0 !important;
+  min-height: none;
 }
 
 .ghostTextAreaRoot {
   font-family: inherit;
   font-size: inherit;
+  padding: var(--mantine-spacing-xs) !important;
 }
 
 .paper {
