@@ -1,6 +1,6 @@
 import { ChatMessage } from "@/components/SmartViewer/Message"
 import { Box, Stack } from "@mantine/core"
-
+import classes from "./index.module.css"
 function getLastMessage(messages) {
   if (Array.isArray(messages)) {
     return messages[messages.length - 1]
@@ -15,12 +15,12 @@ export default function MessageViewer({ data, compact }) {
   return compact ? (
     <ChatMessage data={getLastMessage(obj)} compact />
   ) : (
-    <Box mah={700} style={{ overflowY: "auto" }}>
+    <div className={classes.messageStack}>
       <Stack>
         {obj.map((message, i) => (
           <ChatMessage key={i} data={message} />
         ))}
       </Stack>
-    </Box>
+    </div>
   )
 }

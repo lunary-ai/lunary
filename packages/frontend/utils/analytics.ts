@@ -21,28 +21,15 @@ const w = {
 
     return () => {}
   },
-  get plausible() {
-    if (
-      typeof window !== "undefined" &&
-      typeof window["plausible"] !== "undefined"
-    )
-      return window["plausible"]
-
-    return () => {}
-  },
 }
 
 const handleRouteChange = async () => {
   posthog?.capture("$pageview")
-
-  // w.gosquared("track")
 }
 
 const track = (event: string, data?: any) => {
   try {
     posthog?.capture(event, data)
-
-    w.plausible(event, { props: data })
 
     w?.crisp?.push(["set", "session:event", [[[event, data]]]])
   } catch (e) {

@@ -38,7 +38,13 @@ export function useGlobalShortcut(shortcuts: Shortcut[]) {
   }, [shortcuts])
 }
 
-// Start of Selection
+/**
+ * A custom hook that synchronizes state with URL parameters.
+ * @param key - The URL parameter key to sync with.
+ * @param defaultValue - The default value if the URL parameter is not present.
+ * @param options - Additional options for parsing the URL value.
+ * @returns A tuple containing the current state and a function to update it.
+ */
 export function useStateFromURL<T>(
   key: string,
   defaultValue?: T,
@@ -106,20 +112,24 @@ function compareSerializedChecks(a: string, b: string) {
   return aParts.join("&") === bParts.join("&")
 }
 
-// function useTraceUpdate(props) {
-//   const prev = useRef(props)
-//   useEffect(() => {
-//     const changedProps = Object.entries(props).reduce((ps, [k, v]) => {
-//       if (prev.current[k] !== v) {
-//         ps[k] = [prev.current[k], v]
-//       }
-//       return ps
-//     }, {})
-//     if (Object.keys(changedProps).length > 0) {
-//     }
-//     prev.current = props
-//   })
-// }
+export function useTraceUpdate(props: any) {
+  const prev = useRef(props)
+  useEffect(() => {
+    const changedProps = Object.entries(props).reduce(
+      (lookup, [key, value]) => {
+        if (prev.current[key] !== value) {
+          lookup[key] = [prev.current[key], value]
+        }
+        return lookup
+      },
+      {},
+    )
+    if (Object.keys(changedProps).length > 0) {
+      console.log("Changed props:", changedProps)
+    }
+    prev.current = props
+  })
+}
 
 export function useChecksFromURL(
   defaultValue: CheckLogic,
@@ -195,4 +205,42 @@ export function useChecksFromURL(
   }, [router.isReady, throttledSerializedChecks, parseUrlParams, ignoreKeys])
 
   return { checks, setChecks, serializedChecks }
+}
+
+/**
+ * Custom hook to manage project ID storage.
+ *
+ * This hook saves the project ID to both sessionStorage and localStorage.
+ * This approach ensures that:
+ * 1. Tabs are not synchronized (due to sessionStorage usage)
+ * 2. The last selected project is remembered across browser sessions (due to localStorage usage)
+ *
+ * @returns {[string | null, (id: string | null) => void]} A tuple containing the current project ID and a setter function
+ */
+export function useProjectIdStorage() {
+  const [projectId, setProjectId] = useState<string | null>(null)
+
+  useEffect(() => {
+    const sessionProjectId = sessionStorage.getItem("projectId")
+    if (sessionProjectId) {
+      setProjectId(sessionProjectId)
+    } else {
+      const localProjectId = localStorage.getItem("projectId")
+      if (localProjectId) {
+        setProjectId(localProjectId)
+        sessionStorage.setItem("projectId", localProjectId)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (projectId) {
+        sessionStorage.setItem("projectId", projectId)
+        localStorage.setItem("projectId", projectId)
+      }
+    }
+  }, [projectId])
+
+  return [projectId, setProjectId] as const
 }

@@ -1,0 +1,113 @@
+.messageStack {
+  max-height: 700px;
+  overflow-y: auto;
+}
+
+.ghostTextArea {
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0 !important;
+}
+
+.ghostTextAreaRoot {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.paper {
+  padding: 12px;
+  padding-top: 8px;
+}
+
+.paper.compact {
+  padding: 0 !important;
+  max-height: 80px;
+  overflow: scroll;
+  border-radius: var(--mantine-radius-md);
+}
+
+.functionCallText {
+  display: flex;
+  align-items: center;
+  font-size: 14px !important;
+  height: 18px;
+  max-width: 300px;
+  justify-content: flex-start;
+
+  > * {
+    font-size: 14px !important;
+  }
+}
+
+.toolCallActionIcon {
+  position: absolute;
+  top: 16px;
+  right: -8px;
+}
+
+.responsiveImage {
+  position: relative;
+  width: 100%;
+  height: 500px;
+}
+
+.miniatureImage {
+  position: relative;
+  width: 40px;
+  height: 40px;
+}
+
+.pre {
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+.pre.compact {
+  max-height: 96px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.pre code {
+  padding: 10px;
+  display: block;
+  overflow: hidden;
+}
+
+/* Fixes for json-view-lite */
+.pre :global(code div[role="list"] > div) {
+  padding-left: 8px;
+}
+
+/* Hide first expander btn */
+.pre :global(code > div > div > span[role="button"]) {
+  display: none;
+}
+
+.pre :global(code span[role="button"]) {
+  cursor: pointer;
+}
+
+.roleSelector {
+  margin-bottom: 5px;
+  margin-top: -2px;
+  width: 80px;
+}
+
+.bubbleMessageIcon {
+  margin-top: 6px;
+}
+
+.bubbleMessageContent {
+  white-space: pre-line;
+}
+
+.bubbleMessagePaper {
+  margin-bottom: var(--mantine-spacing-xs);
+  padding-left: var(--mantine-spacing-md);
+  padding-right: var(--mantine-spacing-md);
+  padding-top: var(--mantine-spacing-sm);
+  padding-bottom: var(--mantine-spacing-sm);
+  border-radius: var(--mantine-radius-lg);
+  max-width: 430px;
+}

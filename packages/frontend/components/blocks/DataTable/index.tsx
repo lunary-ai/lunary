@@ -22,6 +22,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
+import classes from "./index.module.css"
 
 import { useVirtualizer } from "@tanstack/react-virtual"
 
@@ -85,16 +86,14 @@ export default function DataTable({
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => 34,
-    overscan: 40,
+    estimateSize: () => 70,
+    measureElement:
+      typeof window !== "undefined" &&
+      navigator.userAgent.indexOf("Firefox") === -1
+        ? (element) => element?.getBoundingClientRect().height
+        : undefined,
+    overscan: 4,
   })
-
-  const items = rowVirtualizer.getVirtualItems()
-  const paddingTop = items.length > 0 ? items[0].start : 0
-  const paddingBottom =
-    items.length > 0
-      ? rowVirtualizer.getTotalSize() - items[items.length - 1].end
-      : 0
 
   //called on scroll and possibly on mount to fetch more data as the user scrolls and reaches bottom of table
   const fetchMoreOnBottomReached = useCallback(
@@ -119,12 +118,28 @@ export default function DataTable({
     fetchMoreOnBottomReached(tableContainerRef.current)
   }, [fetchMoreOnBottomReached])
 
+  // useTraceUpdate({
+  //   type,
+  //   rows,
+  //   availableColumns,
+  //   visibleColumns,
+  //   loading,
+  //   onRowClicked,
+  //   loadMore,
+  //   defaultSortBy,
+  //   sorting,
+  //   data,
+  //   rowVirtualizer,
+  // })
+
+  // console.log(`Rerendering`)
+
   return (
     <>
       <Card withBorder p={0} className={scheme}>
         <div
           ref={tableContainerRef}
-          className="tableContainer"
+          className={classes.tableContainer}
           onScroll={(e) => {
             fetchMoreOnBottomReached(e.currentTarget)
           }}
@@ -133,15 +148,9 @@ export default function DataTable({
             <Menu.Target>
               <ActionIcon
                 component="span"
-                pos="absolute"
-                right={15}
-                top={5}
-                size={24}
-                style={{ zIndex: 2 }}
                 variant="light"
                 color="gray"
-                // color={`var(--mantine-color-default-color)`}
-                opacity={1}
+                className={classes.columnIcon}
               >
                 <IconColumns3 size={16} />
               </ActionIcon>
@@ -170,13 +179,7 @@ export default function DataTable({
                 ))}
             </Menu.Dropdown>
           </Menu>
-          <table
-            // striped
-            // withColumnBorders
-            // width={table.getCenterTotalSize()}
-            width="auto"
-            cellSpacing={0}
-          >
+          <table width="auto" cellSpacing={0}>
             <thead>
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
@@ -185,7 +188,9 @@ export default function DataTable({
                       <th
                         key={header.id}
                         colSpan={header.colSpan}
-                        style={{ width: header.getSize() }}
+                        style={{
+                          width: header.getSize(),
+                        }}
                       >
                         {header.isPlaceholder ? null : (
                           <Group
@@ -223,30 +228,31 @@ export default function DataTable({
                 </tr>
               ))}
             </thead>
-            <tbody>
-              {paddingTop > 0 && (
-                <tr>
-                  <td style={{ height: `${paddingTop}px` }} />
-                </tr>
-              )}
-              {items.map((virtualRow) => {
+            <tbody
+              style={{
+                height: `${rowVirtualizer.getTotalSize()}px`, //tells scrollbar how big the table is
+                position: "relative", //needed for absolute positioning of rows
+              }}
+            >
+              {rowVirtualizer.getVirtualItems().map((virtualRow, index) => {
                 const row = rows[virtualRow.index]
                 return (
                   <tr
                     key={row.id}
-                    ref={virtualRow.measureRef}
                     onClick={
                       onRowClicked
                         ? () => onRowClicked(row.original)
                         : undefined
                     }
-                    style={
-                      onRowClicked
-                        ? {
-                            cursor: "pointer",
-                          }
-                        : {}
+                    className={
+                      virtualRow.index % 2 ? "ListItemOdd" : "ListItemEven"
                     }
+                    ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
+                    style={{
+                      transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
+                      height: `${virtualRow.size}px`,
+                      ...(onRowClicked ? { cursor: "pointer" } : {}),
+                    }}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <td
@@ -264,109 +270,25 @@ export default function DataTable({
                   </tr>
                 )
               })}
-              {paddingBottom > 0 && (
+              {/* {paddingBottom > 0 && (
                 <tr>
                   <td style={{ height: `${paddingBottom}px` }} />
                 </tr>
-              )}
+              )} */}
             </tbody>
           </table>
+
           {loading && (
             <Text m="auto" p="md" c="dimmed" size="xs" ta="center">
               Fetching...
             </Text>
           )}
-          {!items.length && !loading && (
+          {!rows.length && !loading && (
             <Text m="auto" p="md" c="dimmed" size="xs" ta="center">
               No data
             </Text>
           )}
         </div>
-        <style global jsx>{`
-          .tableContainer {
-            height: 100%;
-            overflow: auto;
-          }
-
-          .tableContainer table {
-            width: 100% !important;
-            table-layout: fixed;
-            font-size: 14px;
-          }
-
-          .light table tbody tr:nth-child(odd) {
-            background-color: rgb(248, 249, 250);
-          }
-
-          .tableContainer table tbody tr:hover {
-            background-color: var(
-              --mantine-primary-color-light-hover
-            ) !important;
-          }
-
-          .tableContainer thead {
-            position: sticky;
-            top: 0;
-            z-index: 1;
-            background-color: var(--mantine-color-body);
-          }
-
-          .tableContainer th {
-            position: relative;
-          }
-
-          .tableContainer td code {
-            max-height: 60px;
-          }
-
-          .tableContainer .light th {
-            border-bottom: 1px solid #ddd;
-          }
-
-          .tableContainer .dark th,
-          .tableContainer .dark td {
-            border-bottom: 2px solid #2b2c2f;
-          }
-
-          .tableContainer tr {
-            width: fit-content;
-            height: 30px;
-          }
-
-          .tableContainer th,
-          .tableContainer td {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            padding: 7px 10px;
-          }
-
-          .resizer {
-            position: absolute;
-            right: 0;
-            top: 0;
-            height: 100%;
-            width: 5px;
-            background: rgba(0, 0, 0, 0.5);
-            cursor: col-resize;
-            user-select: none;
-            touch-action: none;
-          }
-
-          .resizer.isResizing {
-            background: blue;
-            opacity: 1;
-          }
-
-          @media (hover: hover) {
-            .resizer {
-              opacity: 0;
-            }
-
-            *:hover > .resizer {
-              opacity: 1;
-            }
-          }
-        `}</style>
       </Card>
       {/* {!!hiddenColumns.length && (
         <Text color="dimmed" size="xs">

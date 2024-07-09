@@ -1,7 +1,8 @@
 import { formatAppUser } from "@/utils/format"
 import { Anchor, Avatar, Group } from "@mantine/core"
 import { memo } from "react"
-import ProtectedText from "./ProtectedText"
+import ProtectedText from "../ProtectedText"
+import styles from "./index.module.css"
 
 const colors = [
   "cyan",
@@ -38,16 +39,7 @@ function AppUserAvatar({
         {nameOrEmail?.slice(0, 2)?.toUpperCase()}
       </Avatar>
       {withName && (
-        <Anchor
-          style={{
-            maxWidth: "100%",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            fontSize: 14,
-          }}
-          href={`/users/${user.id}`}
-        >
+        <Anchor className={styles.anchor} href={`/users/${user.id}`}>
           <ProtectedText>{nameOrEmail}</ProtectedText>
         </Anchor>
       )}

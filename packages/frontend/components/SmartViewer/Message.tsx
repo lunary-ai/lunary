@@ -26,6 +26,7 @@ import {
 import Image from "next/image"
 import ProtectedText from "../blocks/ProtectedText"
 import { RenderJson } from "./RenderJson"
+import classes from "./index.module.css"
 
 import { circularPro } from "@/utils/theme"
 import { useEffect } from "react"
@@ -34,18 +35,11 @@ import { openConfirmModal } from "@mantine/modals"
 
 const ghostTextAreaStyles = {
   variant: "unstyled",
-  p: 0,
-  styles: {
-    root: {
-      fontFamily: "inherit",
-      fontSize: "inherit",
-    },
-    input: {
-      padding: "0 !important",
-      fontFamily: "inherit",
-      fontSize: "inherit",
-    },
+  classNames: {
+    root: classes.ghostTextAreaRoot,
+    input: classes.ghostTextArea,
   },
+
   autosize: true,
   minRows: 1,
   width: "100%",
@@ -64,30 +58,20 @@ function RenderFunction({
   return (
     <Code block bg={codeBg}>
       <Text
-        w={300}
         component="div"
-        fz={14}
-        h={18}
-        styles={{
-          root: {
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-start",
-          },
-        }}
+        className={classes.functionCallText}
         c={color}
         style={{ fontFamily: circularPro.style.fontFamily }}
         mb={compact ? 4 : "xs"}
         mt={compact ? -6 : 0}
       >
-        <Text fz="inherit" span c={fontColor}>{`function call: `}</Text>
+        <Text span c={fontColor}>{`function call: `}</Text>
 
         {editable ? (
           <TextInput
             value={data?.name}
             size="compact-xs"
             variant="filled"
-            opacity={0.7}
             styles={{
               input: {
                 paddingInlineStart: 6,
@@ -161,7 +145,7 @@ function ToolCallsMessage({
                     },
                   }}
                   placeholder="Tool call ID"
-                  opacity={0.5}
+                  opacity={0.8}
                   radius="sm"
                   onChange={(e) => {
                     const newToolCalls = [...toolCalls]
@@ -194,10 +178,8 @@ function ToolCallsMessage({
           {editable && (
             <ActionIcon
               color="red"
-              pos="absolute"
+              className={classes.toolCallActionIcon}
               size={22}
-              top={16}
-              right={-8}
               onClick={() => {
                 openConfirmModal({
                   title: "Are you sure?",
@@ -245,7 +227,7 @@ function TextMessage({ data, onChange = () => {}, editable = false, codeBg }) {
 
 function ResponsiveImage({ src }) {
   return (
-    <div style={{ position: "relative", width: "100%", height: "500px" }}>
+    <div className={classes.responsiveImage}>
       <Image src={src} alt="Image" fill />
     </div>
   )
@@ -253,7 +235,7 @@ function ResponsiveImage({ src }) {
 
 function MiniatureImage({ src }) {
   return (
-    <div style={{ position: "relative", width: "40px", height: "40px" }}>
+    <div className={classes.miniatureImage}>
       <Image src={src} alt="Image" fill />
     </div>
   )
@@ -403,17 +385,14 @@ function ChatMessageContent({
 function RoleSelector({ data, color, scheme, onChange }) {
   return (
     <Select
+      className={classes.roleSelector}
       variant="unstyled"
       size="xs"
-      mb={5}
-      mt={-2}
-      w={80}
       allowDeselect={false}
       withCheckIcon={false}
       color={color}
       styles={{
         input: {
-          opacity: 0.7,
           color: color + "." + (scheme === "dark" ? 2 : 8),
         },
       }}
@@ -442,9 +421,7 @@ export function ChatMessage({
 
   const color = getColorForRole(data?.role)
 
-  const codeBg = scheme
-    ? `rgba(${scheme === "dark" ? "0,0,0" : "255,255,255"},0.6)`
-    : "transparent"
+  const codeBg = `light-dark(rgba(255,255,255,0.5), rgba(0,0,0,0.6))`
 
   // Add/remove the 'id' and 'name' props required on tool calls
   useEffect(() => {
@@ -488,16 +465,10 @@ export function ChatMessage({
 
   return (
     <Paper
-      p={compact ? 0 : 12}
-      pt={compact ? 0 : 8}
-      mah={mah || (compact ? 80 : undefined)}
-      style={{
-        overflow: mah ? "scroll" : "hidden",
-        backgroundColor: `var(--mantine-color-${color}-${
-          scheme === "light" ? 2 : color === "gray" ? 7 : 9
-        })`,
-        borderRadius: 8,
-      }}
+      className={`${classes.paper} ${compact ? classes.compact : ""}`}
+      bg={`var(--mantine-color-${color}-${
+        scheme === "light" ? 2 : color === "gray" ? 7 : 9
+      })`}
       {...props}
     >
       {!compact && (
