@@ -326,15 +326,17 @@ export default function Users() {
       <Stack h={"calc(100vh - var(--navbar-with-filters-size))"}>
         <NextSeo title="Users" />
 
-        <Card withBorder p={2} px="sm">
-          <SearchBar
-            query={search}
-            ml={-8}
-            setQuery={setSearch}
-            variant="unstyled"
-            size="sm"
-          />
-        </Card>
+        <Flex justify="space-between" align="center">
+          <Card withBorder p={2} px="sm">
+            <SearchBar
+              query={search}
+              ml={-8}
+              setQuery={setSearch}
+              variant="unstyled"
+              size="sm"
+            />
+          </Card>
+        </Flex>
 
         <DataTable
           type="users"

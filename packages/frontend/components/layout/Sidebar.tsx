@@ -86,9 +86,14 @@ function NavbarLink({
     <NavLink
       w="100%"
       pl={5}
+      styles={{
+        label: {
+          fontSize: 14,
+        },
+      }}
       onClick={onClick || (() => handleNavigation(link))}
       h={33}
-      label={<Text size={13}>{`${label}${soon ? " (soon)" : ""}`}</Text>}
+      label={`${label}${soon ? " (soon)" : ""}`}
       disabled={disabled || soon}
       active={active}
       leftSection={
