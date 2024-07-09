@@ -425,23 +425,23 @@ export default function Logs() {
     [columnsTouched, checks, view],
   )
 
-  useTraceUpdate({
-    projectId,
-    serializedChecks,
-    type,
-    checks,
-    query,
-    viewId,
-    selectedRunId,
-    allColumns,
-    evaluators,
-    visibleColumns,
-    showSaveView,
-    logs,
-    loading,
-    validating,
-    runLoading,
-  })
+  // useTraceUpdate({
+  //   projectId,
+  //   serializedChecks,
+  //   type,
+  //   checks,
+  //   query,
+  //   viewId,
+  //   selectedRunId,
+  //   allColumns,
+  //   evaluators,
+  //   visibleColumns,
+  //   showSaveView,
+  //   logs,
+  //   loading,
+  //   validating,
+  //   runLoading,
+  // })
 
   return (
     <Empty
