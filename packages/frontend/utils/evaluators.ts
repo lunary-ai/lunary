@@ -280,6 +280,7 @@ const EVALUATOR_TYPES = {
     icon: IconBrain,
     color: "blue",
     name: "G-Eval",
+    soon: true,
     uiType: "ai",
     description:
       "G-Eval is a framework that uses LLMs with chain-of-thoughts (CoT) to evaluate LLM outputs based on ANY custom criteria",
