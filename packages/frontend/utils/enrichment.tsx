@@ -9,6 +9,7 @@ import {
 } from "@tabler/icons-react"
 import { EvaluatorType, LanguageDetectionResult } from "shared"
 import { getFlagEmoji } from "./format"
+import ErrorBoundary from "@/components/blocks/ErrorBoundary"
 
 export function renderEnrichment(data: any, type: EvaluatorType) {
   const renderers: Record<EvaluatorType, (data: any) => any> = {
@@ -24,7 +25,7 @@ export function renderEnrichment(data: any, type: EvaluatorType) {
   }
 
   const renderer = renderers[type] || JSON.stringify
-  return renderer(data)
+  return <ErrorBoundary>{renderer(data)}</ErrorBoundary>
 }
 
 function renderLanguageEnrichment(languageDetections: LanguageDetectionResult) {
@@ -52,13 +53,15 @@ function renderPIIEnrichment(data: any) {
   let piiCount = 0
   for (const key in data) {
     if (Array.isArray(data[key])) {
-      piiCount += data[key].length
+      piiCount += data[key].filter((item) => item !== null).length
     }
   }
 
   if (piiCount === 0) {
-    return ""
+    return null
   }
+
+  console.log(data)
 
   return (
     <Popover
@@ -75,17 +78,32 @@ function renderPIIEnrichment(data: any) {
       </Popover.Target>
       <Popover.Dropdown style={{ pointerEvents: "none" }} w="300">
         <Text size="sm">
-          {Object.entries(data).map(
-            ([key, items]) =>
-              items.length > 0 && (
-                <div key={key}>
-                  <strong style={{ textTransform: "capitalize" }}>
-                    {key}:
-                  </strong>
-                  <div>{JSON.stringify(items)}</div>
-                </div>
-              ),
-          )}
+          {Object.entries(data)
+            .filter(
+              ([key, items]) =>
+                items.filter((item) => item !== null).length > 0,
+            )
+            .map(
+              ([key, items]) =>
+                items.length > 0 && (
+                  <div key={key}>
+                    <strong style={{ textTransform: "capitalize" }}>
+                      {key}:
+                    </strong>
+                    {items
+                      ?.filter((item) => item !== null)
+                      .map((item: any) => (
+                        <Group key={item.entity}>
+                          {item.map((subItem) => (
+                            <Badge variant="filled" color="blue">
+                              {subItem.entity}
+                            </Badge>
+                          ))}
+                        </Group>
+                      ))}
+                  </div>
+                ),
+            )}
         </Text>
       </Popover.Dropdown>
     </Popover>
