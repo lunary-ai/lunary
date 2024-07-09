@@ -32,7 +32,7 @@ import classes from "./index.module.css"
 import { useEffect } from "react"
 
 import { openConfirmModal } from "@mantine/modals"
-import { getFlagEmoji } from "@/utils/format"
+import { getFlagEmoji, getLanguageName } from "@/utils/format"
 
 const ghostTextAreaStyles = {
   variant: "unstyled",
@@ -460,7 +460,9 @@ export function ChatMessage({
             </Text>
           )}
           {data?.languageDetection && (
-            <Tooltip label={data.languageDetection.confidence}>
+            <Tooltip
+              label={`${getLanguageName(data.languageDetection.isoCode)} (${Number(data.languageDetection.confidence.toFixed(3))})`}
+            >
               <Box>{getFlagEmoji(data.languageDetection.isoCode)}</Box>
             </Tooltip>
           )}

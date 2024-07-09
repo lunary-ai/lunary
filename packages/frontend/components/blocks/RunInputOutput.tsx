@@ -255,7 +255,7 @@ export default function RunInputOutput({
 
             <Card withBorder radius="md">
               <Group justify="space-between" align="start">
-                <Stack gap="xs">
+                <Stack gap={10}>
                   {run.name && (
                     <ParamItem
                       name="Model"

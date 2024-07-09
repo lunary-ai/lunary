@@ -16,35 +16,32 @@ import { getFilteredChartTooltipPayload } from "@mantine/charts"
 import {
   Box,
   Button,
-  Container,
   Group,
   Paper,
   Select,
   SimpleGrid,
   Stack,
   Text,
-  Title,
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
 import "@mantine/dates/styles.css"
-import { useDidUpdate, useLocalStorage } from "@mantine/hooks"
+import { useLocalStorage } from "@mantine/hooks"
 import {
   IconCalendar,
   IconChartAreaLine,
   IconFilter,
 } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
-import { useRouter } from "next/router"
 import { useQueryState } from "nuqs"
 import { useEffect, useMemo, useState } from "react"
-import { CheckLogic, deserializeLogic, serializeLogic } from "shared"
+import { deserializeLogic, serializeLogic } from "shared"
 
 export function getDefaultDateRange() {
   const endOfToday = new Date()
   endOfToday.setHours(23, 59, 59, 999)
 
   const oneWeekAgoDate = new Date(endOfToday)
-  oneWeekAgoDate.setDate(oneWeekAgoDate.getDate() - 7)
+  oneWeekAgoDate.setDate(oneWeekAgoDate.getDate() - 30)
   oneWeekAgoDate.setHours(0, 0, 0, 0)
   const defaultRange: [Date, Date] = [oneWeekAgoDate, endOfToday]
   return defaultRange
@@ -331,6 +328,7 @@ export default function Analytics() {
     deserialize: deserializeDateRange,
     defaultValue: getDefaultDateRange(),
   })
+
   const [startDate, endDate] = dateRange
 
   const [granularity, setGranularity] = useLocalStorage<Granularity>({
