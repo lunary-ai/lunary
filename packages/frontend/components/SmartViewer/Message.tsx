@@ -33,6 +33,7 @@ import { useEffect } from "react"
 
 import { openConfirmModal } from "@mantine/modals"
 import { getFlagEmoji } from "@/utils/format"
+import { renderSentimentEnrichment } from "@/utils/enrichment"
 
 const ghostTextAreaStyles = {
   variant: "unstyled",
@@ -459,11 +460,14 @@ export function ChatMessage({
               {data.role}
             </Text>
           )}
-          {data?.languageDetection && (
-            <Tooltip label={data.languageDetection.confidence}>
-              <Box>{getFlagEmoji(data.languageDetection.isoCode)}</Box>
-            </Tooltip>
-          )}
+          <Group>
+            {renderSentimentEnrichment(data?.sentimentAnalysis?.score)}
+            {data?.languageDetection && (
+              <Tooltip label={data.languageDetection.confidence}>
+                <Box>{getFlagEmoji(data.languageDetection.isoCode)}</Box>
+              </Tooltip>
+            )}
+          </Group>
         </Group>
       )}
       <ChatMessageContent
