@@ -96,3 +96,9 @@ export function getFlagEmoji(languageCode: string) {
     .map((char) => 127397 + char.charCodeAt(0))
   return String.fromCodePoint(...codePoints)
 }
+
+export function getLanguageName(languageCode: string) {
+  return new Intl.DisplayNames(["en"], {
+    type: "language",
+  }).of(languageCode)
+}
