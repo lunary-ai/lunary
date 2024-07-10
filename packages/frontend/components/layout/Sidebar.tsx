@@ -78,20 +78,18 @@ function NavbarLink({
       : router.asPath.startsWith(link)
     : router.pathname.startsWith(link)
 
-  const handleNavigation = (link) => {
-    router.push(link, undefined, { shallow: true })
-  }
-
   return (
     <NavLink
       w="100%"
+      href={link}
+      component={Link}
       pl={5}
       styles={{
         label: {
           fontSize: 14,
         },
       }}
-      onClick={onClick || (() => handleNavigation(link))}
+      onClick={onClick}
       h={33}
       label={`${label}${soon ? " (soon)" : ""}`}
       disabled={disabled || soon}
