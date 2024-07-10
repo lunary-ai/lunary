@@ -723,68 +723,7 @@ export const CHECKS: Check[] = [
       },
     ],
   },
-  {
-    id: "pii",
-    name: "PII",
-    uiType: "ai",
-    description:
-      "Uses AI to detect if the given field contains personal identifiable information (PII).",
-    params: [
-      FIELD_PARAM,
-      MATCH_PARAM,
-      {
-        type: "select",
-        id: "entities",
-        width: 230,
-        defaultValue: [
-          "person",
-          "location",
-          "org",
-          "email",
-          "cc",
-          "phone",
-          "ip",
-          // "ssn",
-        ],
-        multiple: true,
-        searchable: true,
-        options: [
-          {
-            label: "Name",
-            value: "person",
-          },
-          {
-            label: "Location",
-            value: "location",
-          },
-          {
-            label: "Organization",
-            value: "org",
-          },
-          {
-            label: "Email",
-            value: "email",
-          },
-          {
-            label: "Credit Card",
-            value: "cc",
-          },
-          {
-            label: "Phone",
-            value: "phone",
-          },
-          {
-            label: "IP Address",
-            value: "ip",
-          },
-          // {
-          //   label: "SSN",
-          //   value: "ssn",
-          // },
-        ],
-      },
-    ],
-  },
+
   {
     id: "assertion",
     name: "Assertion",

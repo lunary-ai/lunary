@@ -125,6 +125,7 @@ export const CHECKS_BY_TYPE = {
     "languages",
     "entities",
     "templates",
+    "sentiment",
     "status",
     "metadata",
     "feedback",
@@ -251,6 +252,7 @@ export default function Logs() {
     if (type === "llm" && Array.isArray(evaluators)) {
       for (const evaluator of evaluators) {
         const id = "enrichment-" + evaluator.id
+        console.log(id)
 
         if (newColumns.llm.map(({ accessorKey }) => accessorKey).includes(id)) {
           continue
@@ -577,7 +579,7 @@ export default function Logs() {
 
         <Drawer
           opened={!!selectedRunId}
-          size="xl"
+          size="xxl"
           keepMounted
           position="right"
           title={selectedRun ? formatDateTime(selectedRun.createdAt) : ""}

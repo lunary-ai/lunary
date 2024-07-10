@@ -75,7 +75,7 @@ export function statusColumn() {
 export function tagsColumn() {
   return columnHelper.accessor("tags", {
     header: "Tags",
-    size: 80,
+    size: 120,
     minSize: 80,
     cell: (props) => {
       const tags = props.getValue()
@@ -147,7 +147,7 @@ export function templateColumn() {
 export function userColumn() {
   return columnHelper.accessor("user", {
     header: "User",
-    size: 120,
+    size: 130,
     cell: (props) => {
       const user = props.getValue()
 
