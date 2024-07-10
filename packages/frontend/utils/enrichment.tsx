@@ -213,7 +213,7 @@ function renderToneEnrichment(data: string[]) {
   )
 }
 
-function renderSentimentEnrichment(data: number) {
+export function renderSentimentEnrichment(data: number) {
   const [opened, { close, open }] = useDisclosure(false)
   let emoji
   let type
