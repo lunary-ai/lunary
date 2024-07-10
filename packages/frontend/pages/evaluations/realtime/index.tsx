@@ -81,10 +81,10 @@ export default function RealtimeEvaluators() {
 
   return (
     <Container>
-      <Stack gap="lg">
+      <Stack>
         <Group align="center" justify="space-between">
           <Group align="center">
-            <Title>Real-time Evaluations</Title>
+            <Title>Evaluators</Title>
             <Badge variant="light" color="blue">
               Beta
             </Badge>
@@ -103,13 +103,15 @@ export default function RealtimeEvaluators() {
           Run evaluations on your production data in real-time.
         </Text>
 
-        {evaluators?.map((evaluator) => (
-          <EvaluationCard
-            key={evaluator.id}
-            id={evaluator.id}
-            initialData={evaluator}
-          />
-        ))}
+        <Stack gap="xl">
+          {evaluators?.map((evaluator) => (
+            <EvaluationCard
+              key={evaluator.id}
+              id={evaluator.id}
+              initialData={evaluator}
+            />
+          ))}
+        </Stack>
       </Stack>
     </Container>
   )

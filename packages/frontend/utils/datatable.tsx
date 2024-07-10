@@ -230,15 +230,15 @@ export function feedbackColumn(withRelatedRuns = false) {
 
 export function enrichmentColumn(
   name: string,
-  slug: string,
+  id: string,
   evaluatorType: EvaluatorType,
 ) {
-  return columnHelper.accessor(`enrichment-${slug}`, {
+  return columnHelper.accessor(`enrichment-${id}`, {
     header: `${capitalize(name)} ✨`,
-    id: `enrichment-${slug}`,
+    id: `enrichment-${id}`,
     size: 120,
     cell: (props) => {
-      const data = props.row.original[`enrichment-${slug}`]
+      const data = props.row.original[`enrichment-${id}`]
       if (!data) {
         return null
       }

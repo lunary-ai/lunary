@@ -250,7 +250,7 @@ export default function Logs() {
     const newColumns = { ...allColumns }
     if (type === "llm" && Array.isArray(evaluators)) {
       for (const evaluator of evaluators) {
-        const id = "enrichment-" + evaluator.slug
+        const id = "enrichment-" + evaluator.id
 
         if (newColumns.llm.map(({ accessorKey }) => accessorKey).includes(id)) {
           continue
@@ -259,7 +259,7 @@ export default function Logs() {
         newColumns.llm.splice(
           3,
           0,
-          enrichmentColumn(evaluator.name, evaluator.slug, evaluator.type),
+          enrichmentColumn(evaluator.name, evaluator.id, evaluator.type),
         )
       }
       setAllColumns(newColumns)
