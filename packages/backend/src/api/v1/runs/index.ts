@@ -137,6 +137,30 @@ function formatRun(run: any) {
     }
   }
 
+  const sentimentEvaluationResults = run.evaluationResults.find(
+    (result) => result.evaluatorType === "sentiment"
+  )
+  const sentimentAnalyses = sentimentEvaluationResults?.result
+  if (sentimentAnalyses) {
+    if (Array.isArray(formattedRun.input)) {
+      for (let i = 0; i < formattedRun.input.length; i++) {
+        formattedRun.input[i].sentimentAnalysis = sentimentAnalyses.input[i]
+      }
+    } else if (formattedRun.input && typeof formattedRun.input !== "string") {
+      formattedRun.input.sentimentAnalysis = sentimentAnalyses.input[0]
+    }
+    if (Array.isArray(formattedRun.output)) {
+      for (let i = 0; i < run.output.length; i++) {
+        formattedRun.output[i].sentimentAnalysis = sentimentAnalyses.output[i]
+      }
+    } else if (formattedRun.output && typeof formattedRun.input !== "string") {
+      formattedRun.output.sentimentAnalysis = sentimentAnalyses.output[0]
+    }
+    if (formattedRun.error && typeof formattedRun.input !== "string") {
+      formattedRun.error.sentimentAnalysis = sentimentAnalyses.error[0]
+    }
+  }
+
   for (let evaluationResult of run.evaluationResults || []) {
     formattedRun[`enrichment-${evaluationResult.evaluatorSlug}`] =
       evaluationResult
