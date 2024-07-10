@@ -213,19 +213,19 @@ function renderToneEnrichment(data: string[]) {
   )
 }
 
-export function renderSentimentEnrichment(data: number) {
+export function renderSentimentEnrichment(score: number) {
   const [opened, { close, open }] = useDisclosure(false)
   let emoji
   let type
 
-  if (typeof data !== "number") {
+  if (typeof score !== "number") {
     return ""
   }
 
-  if (data > 0.5) {
+  if (score > 0.2) {
     emoji = <IconMoodSmile color="teal" />
     type = "positive"
-  } else if (data < -0.5) {
+  } else if (score < -0.2) {
     emoji = <IconMoodSad color="crimson" />
     type = "negative"
   } else {
@@ -247,7 +247,7 @@ export function renderSentimentEnrichment(data: number) {
         </Box>
       </Popover.Target>
       <Popover.Dropdown style={{ pointerEvents: "none" }} w="300">
-        <Text size="sm">{`Sentiment analysis score: ${data} (${type})`}</Text>
+        <Text size="sm">{`Sentiment analysis score: ${score} (${type})`}</Text>
       </Popover.Dropdown>
     </Popover>
   )
