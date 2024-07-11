@@ -579,7 +579,7 @@ export default function Logs() {
 
         <Drawer
           opened={!!selectedRunId}
-          size="xxl"
+          size="xl"
           keepMounted
           position="right"
           title={selectedRun ? formatDateTime(selectedRun.createdAt) : ""}

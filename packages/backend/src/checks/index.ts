@@ -201,13 +201,13 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       let expression
       switch (sentiment) {
         case "positive":
-          expression = sql`>= 0.2`
+          expression = sql`>= 0.5`
           break
         case "negative":
-          expression = sql`<= -0.2`
+          expression = sql`<= -0.5`
           break
         case "neutral":
-          expression = sql`BETWEEN -0.2 AND 0.2`
+          expression = sql`BETWEEN -0.5 AND 0.5`
           break
       }
 
