@@ -138,7 +138,7 @@ function formatRun(run: any) {
   }
 
   const sentimentEvaluationResults = run.evaluationResults.find(
-    (result) => result.evaluatorType === "sentiment"
+    (result) => result.evaluatorType === "sentiment",
   )
   const sentimentAnalyses = sentimentEvaluationResults?.result
   if (sentimentAnalyses) {
@@ -162,7 +162,7 @@ function formatRun(run: any) {
   }
 
   for (let evaluationResult of run.evaluationResults || []) {
-    formattedRun[`enrichment-${evaluationResult.evaluatorSlug}`] =
+    formattedRun[`enrichment-${evaluationResult.evaluatorId}`] =
       evaluationResult
   }
   return formattedRun
