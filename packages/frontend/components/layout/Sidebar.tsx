@@ -221,6 +221,7 @@ export default function Sidebar() {
   const [createProjectLoading, setCreateProjectLoading] = useState(false)
 
   const combobox = useCombobox()
+  const [search, setSearch] = useState("")
 
   const isSelfHosted = config.IS_SELF_HOSTED
 
@@ -418,12 +419,26 @@ export default function Sidebar() {
                 </InputBase>
               </Combobox.Target>
               <Combobox.Dropdown w={400}>
+                <Combobox.Search
+                  value={search}
+                  onChange={(event) => setSearch(event.currentTarget.value)}
+                  placeholder={"Type to filter..."}
+                  style={{
+                    top: 0,
+                    zIndex: 2,
+                    position: "sticky",
+                  }}
+                />
                 <Combobox.Options>
-                  {projects?.map((item) => (
-                    <Combobox.Option value={item.id} key={item.id}>
-                      {item.name}
-                    </Combobox.Option>
-                  ))}
+                  {projects
+                    ?.filter((item) =>
+                      item.name.toLowerCase().includes(search.toLowerCase()),
+                    )
+                    .map((item) => (
+                      <Combobox.Option value={item.id} key={item.id}>
+                        {item.name}
+                      </Combobox.Option>
+                    ))}
                 </Combobox.Options>
                 <Combobox.Footer>
                   <Button

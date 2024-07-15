@@ -84,7 +84,7 @@ function renderPIIEnrichment(data: Record<string, any[]>) {
         </Badge>
       </Popover.Target>
       <Popover.Dropdown style={{ pointerEvents: "none" }} w={300}>
-        <Group justify="space-between">
+        <Group>
           {Array.from(uniqueEntities).map((entity) => (
             <Badge key={entity as string} variant="light">
               {entity as string}
