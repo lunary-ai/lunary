@@ -20,7 +20,7 @@ import { mutate } from "swr"
 import AppUserAvatar from "./AppUserAvatar"
 import Feedbacks from "./Feedbacks"
 
-const OUTPUT_ROLES = ["assistant", "ai", "tool"]
+const OUTPUT_ROLES = ["assistant", "ai", "system", "tool"]
 const INPUT_ROLES = ["user"]
 
 function parseMessageFromRun(run) {
@@ -192,7 +192,7 @@ export function ChatReplay({ run, mutateLogs }) {
     run.user?.id && `/external-users/${run.user?.id}`,
   )
 
-  const sorted = runs?.sort((a, b) => {
+  const sorted = runs?.data?.sort((a, b) => {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   })
 
