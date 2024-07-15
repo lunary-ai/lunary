@@ -64,4 +64,5 @@ prexit(async () => {
   console.log("Shutting down server...")
   await sql.end({ timeout: 5 })
   await new Promise((r) => server.close(r))
+  process.exit(1)
 })
