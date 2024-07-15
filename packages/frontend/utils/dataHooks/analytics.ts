@@ -1,7 +1,7 @@
 import { useProjectSWR } from "."
 
 export function useAnalyticsChartData(
-  key: string,
+  key?: string,
   startDate: Date,
   endDate: Date,
   granularity: string,

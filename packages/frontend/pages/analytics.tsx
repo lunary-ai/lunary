@@ -25,7 +25,11 @@ import {
 } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
 import "@mantine/dates/styles.css"
-import { useLocalStorage, useSessionStorage } from "@mantine/hooks"
+import {
+  useInViewport,
+  useLocalStorage,
+  useSessionStorage,
+} from "@mantine/hooks"
 import {
   IconCalendar,
   IconChartAreaLine,
@@ -33,7 +37,7 @@ import {
 } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { useQueryState } from "nuqs"
-import { useEffect, useMemo, useState } from "react"
+import { use, useEffect, useMemo, useState } from "react"
 import { deserializeLogic, serializeLogic } from "shared"
 
 export function getDefaultDateRange() {
@@ -319,7 +323,71 @@ function ChartTooltip({ label, payload }: ChartTooltipProps) {
   )
 }
 
-// TODO: refactor (put utils functions and components in other file)
+function AnalyticsChart({
+  dataKey,
+  splitBy,
+  props,
+  agg,
+  title,
+  description,
+  startDate,
+  endDate,
+  granularity,
+  serializedChecks,
+  formatter,
+  colors,
+}: {
+  dataKey: string
+  splitBy?: string
+  props: string[]
+  agg?: "sum" | "avg"
+  title: string
+  description: string
+  startDate: Date
+  endDate: Date
+  granularity: Granularity
+  serializedChecks: string
+  formatter?: (value: number) => string
+  colors?: string[]
+}) {
+  const { ref, inViewport } = useInViewport()
+  const [load, setLoad] = useState(inViewport)
+
+  const { data, isLoading } = useAnalyticsChartData(
+    load && dataKey,
+    startDate,
+    endDate,
+    granularity,
+    serializedChecks,
+  )
+
+  useEffect(() => {
+    if (inViewport) {
+      setLoad(true)
+    }
+  }, [inViewport])
+
+  return (
+    <Box ref={ref}>
+      <LineChart
+        data={data?.data}
+        stat={data?.stat}
+        loading={isLoading}
+        splitBy={splitBy}
+        props={props}
+        agg={agg}
+        title={title}
+        description={description}
+        startDate={startDate}
+        endDate={endDate}
+        granularity={granularity}
+        formatter={formatter}
+        colors={colors}
+      />
+    </Box>
+  )
+}
+
 // TODO: typescript everywhere
 export default function Analytics() {
   const [dateRange, setDateRange] = useSessionStorage({
@@ -362,68 +430,6 @@ export default function Analytics() {
     endDate,
   })
 
-  const { data: tokensData, isLoading: tokensDataLoading } =
-    useAnalyticsChartData(
-      "tokens",
-      startDate,
-      endDate,
-      granularity,
-      serializedChecks,
-    )
-
-  const { data: costData, isLoading: costDataLoading } = useAnalyticsChartData(
-    "costs",
-    startDate,
-    endDate,
-    granularity,
-    serializedChecks,
-  )
-
-  const { data: errorsData, isLoading: errorsDataLoading } =
-    useAnalyticsChartData(
-      "errors",
-      startDate,
-      endDate,
-      granularity,
-      serializedChecks,
-    )
-
-  const { data: newUsersData, isLoading: newUsersDataLoading } =
-    useAnalyticsChartData("users/new", startDate, endDate, granularity)
-
-  const { data: activeUsersData, isLoading: activeUsersDataLoading } =
-    useAnalyticsChartData("users/active", startDate, endDate, granularity)
-
-  const { data: avgUserCostData, isLoading: avgUserCostDataLoading } =
-    useAnalyticsChartData("users/average-cost", startDate, endDate, granularity)
-
-  const { data: runCountData, isLoading: runCountLoading } =
-    useAnalyticsChartData(
-      "run-types",
-      startDate,
-      endDate,
-      granularity,
-      serializedChecks,
-    )
-
-  const { data: averageLatencyData, isLoading: averageLatencyDataLoading } =
-    useAnalyticsChartData(
-      "latency",
-      startDate,
-      endDate,
-      granularity,
-      serializedChecks,
-    )
-
-  const { data: feedbackRatioData, isLoading: feedbackRatioLoading } =
-    useAnalyticsChartData(
-      "feedback-ratio",
-      startDate,
-      endDate,
-      granularity,
-      serializedChecks,
-    )
-
   const showBar =
     showCheckBar ||
     checks?.filter((f) => f !== "AND" && !["search", "type"].includes(f.id))
@@ -433,6 +439,7 @@ export default function Analytics() {
     startDate: startDate,
     endDate: endDate,
     granularity: granularity,
+    serializedChecks: serializedChecks,
   }
 
   return (
@@ -509,9 +516,8 @@ export default function Analytics() {
             }}
           /> */}
 
-        <LineChart
-          data={tokensData}
-          loading={tokensDataLoading}
+        <AnalyticsChart
+          dataKey="tokens"
           splitBy="name"
           props={["tokens"]}
           agg="sum"
@@ -521,22 +527,20 @@ export default function Analytics() {
         />
 
         <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-          <LineChart
-            data={costData}
-            loading={costDataLoading}
-            formatter={formatCost}
+          <AnalyticsChart
+            dataKey="costs"
             splitBy="name"
             props={["costs"]}
             agg="sum"
             title="Costs"
             description="The total cost generated by your LLM calls"
+            formatter={formatCost}
             {...commonChartData}
           />
 
-          <LineChart
-            data={errorsData}
+          <AnalyticsChart
+            dataKey="errors"
             title="Errors Volume"
-            loading={errorsDataLoading}
             description="How many errors were captured in your app"
             agg="sum"
             props={["errors"]}
@@ -547,9 +551,8 @@ export default function Analytics() {
           {checks.length < 2 && (
             // Only show new users if no filters are applied, as it's not a metric that can be filtered
             <>
-              <LineChart
-                data={newUsersData}
-                loading={newUsersDataLoading}
+              <AnalyticsChart
+                dataKey="users/new"
                 props={["users"]}
                 agg="sum"
                 title="New Users"
@@ -557,10 +560,8 @@ export default function Analytics() {
                 {...commonChartData}
               />
 
-              <LineChart
-                data={activeUsersData?.data}
-                stat={activeUsersData?.stat}
-                loading={activeUsersDataLoading}
+              <AnalyticsChart
+                dataKey="users/active"
                 props={["users"]}
                 title="Active Users"
                 colors={["violet"]}
@@ -570,43 +571,37 @@ export default function Analytics() {
             </>
           )}
 
-          <LineChart
-            data={avgUserCostData?.data}
-            stat={avgUserCostData?.stat}
-            loading={avgUserCostDataLoading}
+          <AnalyticsChart
+            dataKey="users/average-cost"
             props={["cost"]}
-            formatter={formatCost}
             title="Avg. User Cost"
             description="The average cost of each of your users"
+            formatter={formatCost}
             {...commonChartData}
           />
 
-          <LineChart
-            data={runCountData}
-            loading={runCountLoading}
-            props={["runs"]}
+          <AnalyticsChart
+            dataKey="run-types"
             splitBy="type"
+            props={["runs"]}
             agg="sum"
             title="Runs Volume"
             description="The total number of runs generated by your app"
             {...commonChartData}
           />
 
-          <LineChart
-            data={averageLatencyData?.data}
-            stat={averageLatencyData?.stat}
-            loading={averageLatencyDataLoading}
+          <AnalyticsChart
+            dataKey="latency"
             props={["avgDuration"]}
-            formatter={(value) => `${value.toFixed(2)}s`}
             title="Avg. LLM Latency"
             description="The number of active users"
+            formatter={(value) => `${value.toFixed(2)}s`}
             colors={["yellow"]}
             {...commonChartData}
           />
 
-          <LineChart
-            data={feedbackRatioData}
-            loading={feedbackRatioLoading}
+          <AnalyticsChart
+            dataKey="feedback-ratio"
             props={["ratio"]}
             agg="avg"
             title="Thumbs Up/Down Ratio"
