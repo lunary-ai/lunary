@@ -40,8 +40,9 @@ export function getColorFromSeed(seed: string) {
     .split("")
     .reduce((acc, curr) => acc + curr.charCodeAt(0), 0)
   const colors = Object.keys(theme.colors).filter(
-    (c) => !["gray", "white", "black"].includes(c),
+    (c) => !["gray", "dark", "white", "black", "light"].includes(c),
   )
+  console.log({ colors: theme.colors })
   return colors[seedInt % colors.length]
 }
 
