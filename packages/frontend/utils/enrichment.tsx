@@ -1,4 +1,4 @@
-import { Badge, Box, Group, Popover, Text, Tooltip } from "@mantine/core"
+import { Badge, Box, Group, Popover, Stack, Text, Tooltip } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import {
   IconCheck,
@@ -7,10 +7,12 @@ import {
   IconMoodSmile,
   IconX,
 } from "@tabler/icons-react"
-import { EvaluatorType } from "shared"
+import { EnrichmentData, EvaluatorType, LanguageDetectionResult } from "shared"
 import { getFlagEmoji } from "./format"
+import ErrorBoundary from "@/components/blocks/ErrorBoundary"
 
-export function renderEnrichment(data: any, type: EvaluatorType) {
+export function renderEnrichment(data: EnrichmentData, type: EvaluatorType) {
+  return ""
   const renderers: Record<EvaluatorType, (data: any) => any> = {
     language: renderLanguageEnrichment,
     pii: renderPIIEnrichment,
@@ -24,27 +26,57 @@ export function renderEnrichment(data: any, type: EvaluatorType) {
   }
 
   const renderer = renderers[type] || JSON.stringify
-  return renderer(data)
+  return <ErrorBoundary>{renderer(data)}</ErrorBoundary>
 }
 
-function renderLanguageEnrichment(data: string) {
-  const emoji = getFlagEmoji(data)
-  return <Text size="lg">{emoji}</Text>
-}
-
-function renderPIIEnrichment(data: any) {
-  const [opened, { close, open }] = useDisclosure(false)
-
-  let piiCount = 0
-  for (const key in data) {
-    if (Array.isArray(data[key])) {
-      piiCount += data[key].length
-    }
-  }
-
-  if (piiCount === 0) {
+function renderLanguageEnrichment(languageDetections: LanguageDetectionResult) {
+  if (
+    !languageDetections?.input ||
+    !languageDetections?.error ||
+    !languageDetections?.error
+  ) {
     return ""
   }
+  const languages = languageDetections.output.map((detectionResult) => {
+    if (detectionResult === null) {
+      return ""
+    }
+
+    const languageNames = new Intl.DisplayNames(["en"], { type: "language" })
+
+    return {
+      emoji: getFlagEmoji(detectionResult.isoCode),
+      name: languageNames.of(detectionResult.isoCode),
+    }
+  }) as { emoji: string; name: string }[]
+
+  return (
+    <Group gap="xs" justify="center">
+      {languages.map(({ emoji, name }) => (
+        <Tooltip key={name} label={name}>
+          <Text size="lg">{emoji}</Text>
+        </Tooltip>
+      ))}
+    </Group>
+  )
+}
+function renderPIIEnrichment(data: EnrichmentData) {
+  const [opened, { close, open }] = useDisclosure(false)
+
+  const uniqueEntities = new Set()
+  Object.values(data).forEach((items) =>
+    items
+      .filter(Boolean)
+      .forEach((item) =>
+        item.forEach((subItem: { entity: string }) =>
+          uniqueEntities.add(subItem.entity),
+        ),
+      ),
+  )
+
+  const piiCount = uniqueEntities.size
+
+  if (piiCount === 0) return null
 
   return (
     <Popover
@@ -59,26 +91,20 @@ function renderPIIEnrichment(data: any) {
           {piiCount} PII
         </Badge>
       </Popover.Target>
-      <Popover.Dropdown style={{ pointerEvents: "none" }} w="300">
-        <Text size="sm">
-          {Object.entries(data).map(
-            ([key, items]) =>
-              items.length > 0 && (
-                <div key={key}>
-                  <strong style={{ textTransform: "capitalize" }}>
-                    {key}:
-                  </strong>
-                  <div>{items.join(", ")}</div>
-                </div>
-              ),
-          )}
-        </Text>
+      <Popover.Dropdown style={{ pointerEvents: "none" }} w={300}>
+        <Group>
+          {Array.from(uniqueEntities).map((entity) => (
+            <Badge key={entity as string} variant="light">
+              {entity as string}
+            </Badge>
+          ))}
+        </Group>
       </Popover.Dropdown>
     </Popover>
   )
 }
 
-function renderToxicityEnrichment(data: string[]) {
+function renderToxicityEnrichment(data: EnrichmentData) {
   const [opened, { close, open }] = useDisclosure(false)
 
   if (data.length === 0) {
@@ -108,7 +134,7 @@ function renderToxicityEnrichment(data: string[]) {
   )
 }
 
-function renderTopicsEnrichment(data: string[]) {
+function renderTopicsEnrichment(data: EnrichmentData) {
   const [opened, { close, open }] = useDisclosure(false)
 
   if (data.length === 0) {
@@ -160,7 +186,7 @@ function renderTopicsEnrichment(data: string[]) {
     </Popover>
   )
 }
-function renderToneEnrichment(data: string[]) {
+function renderToneEnrichment(data: EnrichmentData) {
   const [opened, { close, open }] = useDisclosure(false)
 
   if (data.length === 0) {
@@ -195,19 +221,29 @@ function renderToneEnrichment(data: string[]) {
   )
 }
 
-function renderSentimentEnrichment(data: number) {
+export function renderSentimentEnrichment(data?: EnrichmentData) {
+  if (!data || !data.input || data.input.length === 0) {
+    return null
+  }
+
+  const { input } = data
+
+  // get last input item for the quick glance
+  const lastInput = input[input.length - 1]
+  const { score, subjectivity } = lastInput
+
   const [opened, { close, open }] = useDisclosure(false)
   let emoji
   let type
 
-  if (typeof data !== "number") {
-    return ""
+  if (typeof score !== "number" || isNaN(score) || subjectivity < 0.4) {
+    return null
   }
 
-  if (data > 0.5) {
+  if (score > 0.2) {
     emoji = <IconMoodSmile color="teal" />
     type = "positive"
-  } else if (data < -0.5) {
+  } else if (score < -0.2) {
     emoji = <IconMoodSad color="crimson" />
     type = "negative"
   } else {
@@ -216,22 +252,11 @@ function renderSentimentEnrichment(data: number) {
   }
 
   return (
-    <Popover
-      width={200}
-      position="bottom"
-      withArrow
-      shadow="md"
-      opened={opened}
-    >
-      <Popover.Target>
-        <Box onMouseEnter={open} onMouseLeave={close}>
-          {emoji}
-        </Box>
-      </Popover.Target>
-      <Popover.Dropdown style={{ pointerEvents: "none" }} w="300">
-        <Text size="sm">{`Sentiment analysis score: ${data} (${type})`}</Text>
-      </Popover.Dropdown>
-    </Popover>
+    <Tooltip label={`Sentiment analysis: ${type}`} opened={opened}>
+      <Box onMouseEnter={open} onMouseLeave={close}>
+        {emoji}
+      </Box>
+    </Tooltip>
   )
 }
 

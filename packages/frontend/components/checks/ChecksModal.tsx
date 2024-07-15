@@ -13,7 +13,6 @@ import {
   Title,
   Tooltip,
   UnstyledButton,
-  useMantineTheme,
 } from "@mantine/core"
 import { IconCircleCheck, IconCirclePlus } from "@tabler/icons-react"
 import classes from "./index.module.css"

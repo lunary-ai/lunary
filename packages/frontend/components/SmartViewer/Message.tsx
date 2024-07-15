@@ -14,6 +14,8 @@ import {
   TextInput,
   Textarea,
   ThemeIcon,
+  useComputedColorScheme,
+  Tooltip,
 } from "@mantine/core"
 import {
   IconInfoCircle,
@@ -25,69 +27,43 @@ import {
 import Image from "next/image"
 import ProtectedText from "../blocks/ProtectedText"
 import { RenderJson } from "./RenderJson"
+import classes from "./index.module.css"
 
-import { useColorScheme } from "@mantine/hooks"
-import { circularPro } from "@/utils/theme"
 import { useEffect } from "react"
 
 import { openConfirmModal } from "@mantine/modals"
+import { getFlagEmoji, getLanguageName } from "@/utils/format"
+import { renderSentimentEnrichment } from "@/utils/enrichment"
 
 const ghostTextAreaStyles = {
   variant: "unstyled",
-  p: 0,
-  styles: {
-    root: {
-      fontFamily: "inherit",
-      fontSize: "inherit",
-    },
-    input: {
-      padding: "0 !important",
-      fontFamily: "inherit",
-      fontSize: "inherit",
-    },
+  classNames: {
+    root: classes.ghostTextAreaRoot,
+    input: classes.ghostTextArea,
   },
+
   autosize: true,
   minRows: 1,
   width: "100%",
 }
 
-function RenderFunction({
-  color,
-  editable,
-  onChange,
-  compact,
-  codeBg,
-  data,
-  type,
-}) {
-  const fontColor = type === "functionCall" ? "#40c057" : "inherit"
+function RenderFunction({ color, editable, onChange, compact, data }) {
   return (
-    <Code block bg={codeBg}>
+    <Code className={classes.textMessage}>
       <Text
-        w={300}
         component="div"
-        fz={14}
-        h={18}
-        styles={{
-          root: {
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-start",
-          },
-        }}
+        className={`${classes.functionCallText} ${
+          compact ? classes.compact : ""
+        }`}
         c={color}
-        style={{ fontFamily: circularPro.style.fontFamily }}
-        mb={compact ? 4 : "xs"}
-        mt={compact ? -6 : 0}
       >
-        <Text fz="inherit" span c={fontColor}>{`function call: `}</Text>
+        <span>{`function: `}</span>
 
         {editable ? (
           <TextInput
             value={data?.name}
             size="compact-xs"
             variant="filled"
-            opacity={0.7}
             styles={{
               input: {
                 paddingInlineStart: 6,
@@ -98,9 +74,7 @@ function RenderFunction({
             onChange={(e) => onChange({ ...data, name: e.target.value })}
           />
         ) : (
-          <Text c={fontColor} span fw="bold" size="sm">
-            {data?.name}
-          </Text>
+          <b>{data?.name}</b>
         )}
       </Text>
 
@@ -123,26 +97,11 @@ function RenderFunction({
   )
 }
 
-function FunctionCallMessage({ data, color, compact, codeBg }) {
-  return (
-    <RenderFunction
-      color={color}
-      data={data}
-      compact={compact}
-      codeBg={codeBg}
-      type="functionCall"
-    />
-  )
+function FunctionCallMessage({ data, color, compact }) {
+  return <RenderFunction color={color} data={data} compact={compact} />
 }
 
-function ToolCallsMessage({
-  toolCalls,
-  editable,
-  onChange,
-  color,
-  compact,
-  codeBg,
-}) {
+function ToolCallsMessage({ toolCalls, editable, onChange, color, compact }) {
   return (
     <>
       {toolCalls.map((toolCall, index) => (
@@ -161,7 +120,7 @@ function ToolCallsMessage({
                     },
                   }}
                   placeholder="Tool call ID"
-                  opacity={0.5}
+                  opacity={0.8}
                   radius="sm"
                   onChange={(e) => {
                     const newToolCalls = [...toolCalls]
@@ -187,17 +146,13 @@ function ToolCallsMessage({
             color={color}
             compact={compact}
             data={toolCall.function}
-            codeBg={codeBg}
-            type="toolCall"
           />
 
           {editable && (
             <ActionIcon
               color="red"
-              pos="absolute"
+              className={classes.toolCallActionIcon}
               size={22}
-              top={16}
-              right={-8}
               onClick={() => {
                 openConfirmModal({
                   title: "Are you sure?",
@@ -223,9 +178,11 @@ function ToolCallsMessage({
   )
 }
 
-function TextMessage({ data, onChange = () => {}, editable = false, codeBg }) {
+function TextMessage({ data, compact, onChange = () => {}, editable = false }) {
+  const text = data.content || data.text
+
   return (
-    <Code block bg={codeBg}>
+    <Code className={classes.textMessage}>
       <ProtectedText>
         {editable ? (
           <Textarea
@@ -235,8 +192,10 @@ function TextMessage({ data, onChange = () => {}, editable = false, codeBg }) {
             onChange={(e) => onChange({ ...data, content: e.target.value })}
             {...ghostTextAreaStyles}
           />
+        ) : compact ? (
+          text?.substring(0, 150) // truncate text to render less
         ) : (
-          data.content || data.text
+          text
         )}
       </ProtectedText>
     </Code>
@@ -245,7 +204,7 @@ function TextMessage({ data, onChange = () => {}, editable = false, codeBg }) {
 
 function ResponsiveImage({ src }) {
   return (
-    <div style={{ position: "relative", width: "100%", height: "500px" }}>
+    <div className={classes.responsiveImage}>
       <Image src={src} alt="Image" fill />
     </div>
   )
@@ -253,15 +212,15 @@ function ResponsiveImage({ src }) {
 
 function MiniatureImage({ src }) {
   return (
-    <div style={{ position: "relative", width: "40px", height: "40px" }}>
+    <div className={classes.miniatureImage}>
       <Image src={src} alt="Image" fill />
     </div>
   )
 }
 
-function ImageMessage({ data, codeBg, compact }) {
+function ImageMessage({ data, compact }) {
   return (
-    <Code block bg={codeBg}>
+    <Code className={classes.textMessage}>
       <Stack gap={compact ? "5" : "md"}>
         {data.content.map((item, index) => {
           if (item.type === "text") {
@@ -306,10 +265,16 @@ function ChatMessageContent({
   data,
   color,
   compact,
-  codeBg,
+
   onChange,
   editable,
 }) {
+  const hasTextContent =
+    typeof data?.text === "string" || typeof data?.content === "string"
+  const hasImageContent = Array.isArray(data?.content)
+  const hasFunctionCall = data?.functionCall
+  const hasToolCalls = data?.toolCalls || data?.tool_calls
+
   return (
     <Stack gap="xs">
       {typeof data?.name === "string" && !compact && (
@@ -334,37 +299,32 @@ function ChatMessageContent({
         />
       )}
 
-      {(typeof data?.text === "string" ||
-        typeof data?.content === "string") && (
+      {hasTextContent && (!compact || !hasToolCalls) && (
         <TextMessage
           data={data}
+          compact={compact}
           onChange={onChange}
           editable={editable}
-          codeBg={codeBg}
         />
       )}
 
-      {Array.isArray(data?.content) && (
-        <ImageMessage data={data} codeBg={codeBg} compact={compact} />
-      )}
+      {hasImageContent && <ImageMessage data={data} compact={compact} />}
 
-      {data?.functionCall && (
+      {hasFunctionCall && (
         <FunctionCallMessage
           data={data.functionCall}
           color={color}
           compact={compact}
-          codeBg={codeBg}
         />
       )}
 
-      {(data?.toolCalls || data?.tool_calls) && (
+      {hasToolCalls && (
         <ToolCallsMessage
           toolCalls={data.toolCalls || data.tool_calls}
           color={color}
           editable={editable}
           onChange={(toolCalls) => onChange({ ...data, toolCalls })}
           compact={compact}
-          codeBg={codeBg}
         />
       )}
 
@@ -403,17 +363,14 @@ function ChatMessageContent({
 function RoleSelector({ data, color, scheme, onChange }) {
   return (
     <Select
+      className={classes.roleSelector}
       variant="unstyled"
       size="xs"
-      mb={5}
-      mt={-2}
-      w={80}
       allowDeselect={false}
       withCheckIcon={false}
       color={color}
       styles={{
         input: {
-          opacity: 0.7,
           color: color + "." + (scheme === "dark" ? 2 : 8),
         },
       }}
@@ -429,32 +386,25 @@ export function ChatMessage({
   editable = false,
   onChange,
   compact = false,
-  mah,
   ...props
 }: {
   data: any
   editable?: boolean
   onChange?: any
   compact?: boolean
-  mah?: number
 }) {
-  console.log(data)
-  // TODO FIX
-  // Flickering dark mode bug: this is due to scheme being 'light' for a few ms
-  const scheme = useColorScheme()
+  const scheme = useComputedColorScheme()
 
   const color = getColorForRole(data?.role)
 
-  const codeBg = scheme
-    ? `rgba(${scheme === "dark" ? "0,0,0" : "255,255,255"},0.6)`
-    : "transparent"
+  const codeBg = `light-dark(rgba(255,255,255,0.5), rgba(0,0,0,0.6))`
 
   // Add/remove the 'id' and 'name' props required on tool calls
   useEffect(() => {
-    if (!data) return
+    if (!data || !editable) return
 
     // Add/remove the 'name' props required on tool calls
-    if (data.role === "tool" && editable && typeof data.name !== "string") {
+    if (data.role === "tool" && typeof data.name !== "string") {
       onChange({ ...data, name: "some-tool-name" })
     } else if (
       data.role !== "tool" &&
@@ -466,11 +416,7 @@ export function ChatMessage({
       onChange(data)
     }
 
-    if (
-      data.role === "tool" &&
-      editable &&
-      typeof data.toolCallId !== "string"
-    ) {
+    if (data.role === "tool" && typeof data.toolCallId !== "string") {
       onChange({ ...data, toolCallId: "call_123" })
     } else if (data.role !== "tool" && typeof data.toolCallId === "string") {
       delete data.toolCallId
@@ -479,7 +425,6 @@ export function ChatMessage({
 
     if (
       data.role === "assistant" &&
-      editable &&
       Array.isArray(data.toolCalls) &&
       data.toolCalls.length === 0
     ) {
@@ -487,24 +432,18 @@ export function ChatMessage({
       delete data.toolCalls
       onChange(data)
     }
-  }, [data])
+  }, [data, editable])
 
   return (
     <Paper
-      p={compact ? 0 : 12}
-      pt={compact ? 0 : 8}
-      mah={mah || (compact ? 80 : undefined)}
-      style={{
-        overflow: mah ? "scroll" : "hidden",
-        backgroundColor: `var(--mantine-color-${color}-${
-          scheme === "light" ? 2 : color === "gray" ? 7 : 9
-        })`,
-        borderRadius: 8,
-      }}
+      className={`${classes.paper} ${compact ? classes.compact : ""}`}
+      bg={`var(--mantine-color-${color}-${
+        scheme === "light" ? 2 : color === "gray" ? 7 : 9
+      })`}
       {...props}
     >
       {!compact && (
-        <>
+        <Group justify="space-between">
           {editable ? (
             <RoleSelector
               data={data}
@@ -521,28 +460,25 @@ export function ChatMessage({
               {data.role}
             </Text>
           )}
-        </>
+          <Group>
+            {renderSentimentEnrichment(data?.sentimentAnalysis?.score)}
+            {data?.languageDetection && (
+              <Tooltip
+                label={`${getLanguageName(data.languageDetection.isoCode)} (${Number(data.languageDetection.confidence.toFixed(3))})`}
+              >
+                <Box>{getFlagEmoji(data.languageDetection.isoCode)}</Box>
+              </Tooltip>
+            )}
+          </Group>
+        </Group>
       )}
-
       <ChatMessageContent
         data={data}
         color={color}
         compact={compact}
-        codeBg={codeBg}
         onChange={onChange}
         editable={editable}
       />
-
-      <style jsx>{`
-        :global(pre) {
-          white-space: pre-wrap;
-        }
-
-        :global(pre code) {
-          padding: 10px;
-          display: block;
-        }
-      `}</style>
     </Paper>
   )
 }
@@ -558,7 +494,7 @@ const ROLE_ICONS = {
 
 // Used for chat replays
 export function BubbleMessage({ role, content, extra }) {
-  const alignLeft = ["ai", "assistant", "system"].includes(role)
+  const alignLeft = ["ai", "assistant", "bot", "tool", "system"].includes(role)
 
   const Icon = ROLE_ICONS[role || "assistant"]
 

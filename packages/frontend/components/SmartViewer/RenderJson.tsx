@@ -20,14 +20,14 @@ export const Json = ({ data, compact }) => {
     return data
   }, [data])
 
-  const isObject = typeof parsed === "object"
+  // const isObject = typeof parsed === "object"
 
-  const isFatObject = useMemo(() => {
-    if (!isObject || !parsed) return false
-    if (Object.keys(parsed).length > 3) return true
-    if (JSON.stringify(parsed).length > 300) return true
-    return false
-  }, [parsed])
+  // const isFatObject = useMemo(() => {
+  //   if (!isObject || !parsed) return false
+  //   if (Object.keys(parsed).length > 3) return true
+  //   if (JSON.stringify(parsed).length > 300) return true
+  //   return false
+  // }, [parsed])
 
   return (
     <ProtectedText>

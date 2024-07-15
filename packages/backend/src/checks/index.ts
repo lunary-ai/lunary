@@ -7,7 +7,7 @@ import aiSimilarity from "./ai/similarity"
 // import aiNER from "./ai/ner"
 // import aiToxicity from "./ai/toxic"
 import rouge from "rouge"
-import { or } from "../utils/checks"
+import { and, or } from "../utils/checks"
 import { isOpenAIMessage } from "../utils/misc"
 import { CleanRun } from "../utils/ingest"
 
@@ -156,6 +156,79 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   {
     id: "status",
     sql: ({ status }) => sql`(status = ${status})`,
+  },
+  {
+    id: "languages",
+    sql: ({ field, codes }) => {
+      if (!codes || !codes.length) return sql`true`
+
+      return and([
+        sql`e.type = 'language'`,
+        or(
+          codes.map((code: string) => {
+            const jsonSql = [{ isoCode: code }]
+            return sql`er.result::jsonb -> ${field} @> ${sql.json(jsonSql)}`
+          }),
+        ),
+      ])
+    },
+  },
+  {
+    id: "entities",
+    sql: ({ types }) => {
+      if (!types.length) return sql`true`
+
+      return and([
+        sql`e.type = 'pii'`,
+        or(
+          types.map((type: string) => {
+            const jsonSql = [{ type }]
+            return sql`(
+              er.result::jsonb -> 'input' @> ${sql.json(jsonSql)}
+              OR
+              er.result::jsonb -> 'output' @> ${sql.json(jsonSql)}
+            )`
+          }),
+        ),
+      ])
+    },
+  },
+  {
+    id: "sentiment",
+    sql: ({ sentiment }) => {
+      if (!sentiment) return sql`true`
+
+      let expression
+      switch (sentiment) {
+        case "positive":
+          expression = sql`>= 0.5`
+          break
+        case "negative":
+          expression = sql`<= -0.5`
+          break
+        case "neutral":
+          expression = sql`BETWEEN -0.5 AND 0.5`
+          break
+      }
+
+      return and([
+        sql`e.type = 'sentiment'`,
+        or([
+          sql`(
+            SELECT (elem ->> 'score')::float ${expression}
+            FROM jsonb_array_elements(er.result::jsonb -> 'input') AS elem
+            ORDER BY (elem->>'index')::int DESC
+            LIMIT 1
+          )`,
+          sql`(
+            SELECT (elem ->> 'score')::float ${expression}
+            FROM jsonb_array_elements(er.result::jsonb -> 'output') AS elem
+            ORDER BY (elem->>'index')::int DESC
+            LIMIT 1
+          )`,
+        ]),
+      ])
+    },
   },
   {
     id: "users",
@@ -339,8 +412,14 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   },
   {
     id: "date",
-    sql: ({ operator, date }) =>
-      sql`created_at ${postgresOperators(operator)} '${date}'`,
+    sql: ({ operator, date }) => {
+      const parsed = new Date(date)
+      const isValid = parsed instanceof Date && !isNaN(parsed.getTime())
+
+      if (!date || isValid) return sql`true`
+
+      return sql`r.created_at ${postgresOperators(operator)} ${parsed}`
+    },
   },
   {
     id: "duration",
@@ -443,30 +522,30 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       }
     },
   },
-  {
-    id: "sentiment",
-    async evaluator(run, params) {
-      const { field, sentiment } = params
+  // {
+  //   id: "sentiment",
+  //   async evaluator(run, params) {
+  //     const { field, sentiment } = params
 
-      const score = await aiSentiment(lastMsg(run[field]))
+  //     const score = await aiSentiment(lastMsg(run[field]))
 
-      let passed = false
+  //     let passed = false
 
-      if (sentiment === "positive") {
-        passed = score >= 0.7
-      } else if (sentiment === "negative") {
-        passed = score <= 0.4
-      } else {
-        passed = score >= 0.4 && score <= 0.7
-      }
+  //     if (sentiment === "positive") {
+  //       passed = score >= 0.7
+  //     } else if (sentiment === "negative") {
+  //       passed = score <= 0.4
+  //     } else {
+  //       passed = score >= 0.4 && score <= 0.7
+  //     }
 
-      return {
-        passed,
-        reason: `Sentiment score: ${score}`,
-        details: { sentiment: score },
-      }
-    },
-  },
+  //     return {
+  //       passed,
+  //       reason: `Sentiment score: ${score}`,
+  //       details: { sentiment: score },
+  //     }
+  //   },
+  // },
   {
     id: "tone",
     async evaluator(run, params) {
@@ -548,101 +627,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       }
     },
   },
-  {
-    id: "entities",
-    async evaluator(run, params) {
-      const { field, type, entities } = params
 
-      const result = await callML("ner", { text: [lastMsg(run[field])] })
-
-      let passed = false
-
-      if (type === "contains") {
-        passed = entities.some((entity) => result[entity]?.length > 0)
-      } else {
-        passed = entities.every((entity) => result[entity]?.length === 0)
-      }
-
-      let labels = {
-        per: "Persons",
-        org: "Organizations",
-        loc: "Locations",
-      }
-
-      let reason = "No entities detected"
-      if (passed) {
-        reason =
-          "Entities detected: " +
-          Object.keys(result)
-            .filter((key) => result[key].length > 0)
-            .map((key) => labels[key] + ": " + result[key].join(", "))
-            .join(", ")
-      }
-
-      return {
-        passed,
-        reason,
-        details: result,
-      }
-    },
-  },
-  {
-    id: "pii",
-    async evaluator(run, params) {
-      const { field, type, entities } = params
-      const regexResults = {}
-
-      const texts = getTextsTypes(field, run)
-      const text = texts.join(" ")
-      if (!text.length) {
-        return null
-      }
-
-      if (entities.includes("email")) {
-        const emailRegex = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gim
-        regexResults.email = [...new Set(text.match(emailRegex))]
-      }
-
-      if (entities.includes("ip")) {
-        const ipRegex = /(?:\d{1,3}\.){3}\d{1,3}/gim
-        regexResults.ip = [...new Set(text.match(ipRegex))]
-      }
-
-      if (entities.includes("cc")) {
-        const ccRegex = /\d{13,16}/gim
-        regexResults.cc = [...new Set(text.match(ccRegex))]
-      }
-
-      const mlResults = await callML(
-        "pii",
-        {
-          text,
-          entities: entities.filter((entity: string) =>
-            ["person", "location", "org", "misc"].includes(entity),
-          ),
-        },
-        process.env.NEW_ML_URL,
-      )
-
-      const results = { ...regexResults, ...mlResults }
-
-      let passed = false
-      if (type === "contains") {
-        passed = Object.keys(results).some(
-          (entity: string) => results[entity]?.length > 0,
-        )
-      } else {
-        passed = Object.keys(results).every(
-          (entity: string) => results[entity]?.length === 0,
-        )
-      }
-
-      return {
-        passed,
-        details: "",
-      }
-    },
-  },
   {
     id: "toxicity",
     async evaluator(run, params) {

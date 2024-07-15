@@ -1,3 +1,8 @@
+import sql from "./db"
+import { setTimeout } from "timers/promises"
+import * as Sentry from "@sentry/node"
+import { filterAsync, findAsyncSequential } from "./misc"
+
 interface ModelCost {
   models: string[]
   inputCost: number
@@ -142,20 +147,26 @@ const MODEL_COSTS: ModelCost[] = [
   },
 ]
 
-export function calcRunCost(run: any) {
+function cleanModelName(name: string) {
+  return name
+    .toLowerCase()
+    .replaceAll("gpt4", "gpt-4")
+    .replaceAll("gpt3", "gpt-3")
+    .replaceAll("gpt-35", "gpt-3.5")
+    .replaceAll("claude3", "claude-3")
+    .replaceAll("claude2", "claude-2")
+    .replaceAll("claude1", "claude-1")
+}
+
+// Old ways of calculating cost
+// Now everything is stored in the database
+export function calcRunCostLegacy(run: any) {
   if (run.duration && run.duration < 0.01 * 1000) return null // cached llm calls
   if (run.type !== "llm" || !run.name) return null
 
   const modelCost = MODEL_COSTS.find((c) =>
     c.models.find((model) => {
-      const cleanedName = run.name
-        .toLowerCase()
-        .replaceAll("gpt4", "gpt-4")
-        .replaceAll("gpt3", "gpt-3")
-        .replaceAll("gpt-35", "gpt-3.5")
-        .replaceAll("claude3", "claude-3")
-        .replaceAll("claude2", "claude-2")
-        .replaceAll("claude1", "claude-1")
+      const cleanedName = cleanModelName(run.name)
 
       // Azure models have a different naming scheme
       return cleanedName.includes(model)
@@ -170,4 +181,83 @@ export function calcRunCost(run: any) {
   const inputCost = (modelCost.inputCost * promptTokens) / 1000
   const outputCost = (modelCost.outputCost * completionTokens) / 1000
   return inputCost + outputCost
+}
+
+export async function calcRunCost(run: any) {
+  if (run.duration && run.duration < 0.01 * 1000) return null // cached llm calls
+  if (run.type !== "llm" || !run.name) return null
+
+  // Look at table model_mapping, in this logic:
+  // Find all mappings with org_id null or org_id = run.project_id.org_id
+  // Then check if the mapping.pattern matches run.name
+  // If there are multiple use the most recent one via startDate (might also be null, in which case consider older)
+
+  // Then use the inputCost and outputCost from the mapping. They are expressed in USD per 1.000.000. The unit can be 'TOKENS', 'MILLISECONDS' or 'CHARACTERS'. The cost is always per 1.000.000 units.
+  // If cost is per character, use run.input and run.output length (stringified) to calculate the cost
+
+  try {
+    const [{ orgId }] = await sql`
+    SELECT org_id FROM project WHERE id = ${run.projectId}`
+
+    const mappings = await sql`
+    SELECT * FROM model_mapping
+    WHERE org_id = ${orgId} OR org_id IS NULL
+    ORDER BY start_date DESC NULLS LAST, org_id IS NOT NULL DESC
+  `
+
+    const mapping = await findAsyncSequential(mappings, async (mapping) => {
+      try {
+        const regex = new RegExp(mapping.pattern)
+
+        // Add a timeout to protect against regex slow/attacks
+        const timeoutMs = 200
+
+        const testPromise = regex.test(run.name)
+        const timeoutPromise = setTimeout(timeoutMs, false)
+
+        return await Promise.race([testPromise, timeoutPromise])
+      } catch (error) {
+        console.error(`Invalid regex pattern: ${mapping.pattern}`, error)
+        return false
+      }
+    })
+
+    if (!mapping) return calcRunCostLegacy(run)
+
+    let inputUnits = 0
+    let outputUnits = 0
+
+    if (mapping.unit === "TOKENS") {
+      inputUnits = run.promptTokens || 0
+      outputUnits = run.completionTokens || 0
+    } else if (mapping.unit === "MILLISECONDS") {
+      inputUnits = run.duration || 0
+      outputUnits = 0
+    } else if (mapping.unit === "CHARACTERS") {
+      inputUnits =
+        (typeof run.input === "string" ? run.input : JSON.stringify(run.input))
+          .length || 0
+      outputUnits =
+        (typeof run.output === "string"
+          ? run.output
+          : JSON.stringify(run.output)
+        ).length || 0
+    }
+
+    const inputCost = (mapping.inputCost * inputUnits) / 1_000_000
+    const outputCost = (mapping.outputCost * outputUnits) / 1_000_000
+
+    const finalCost = Number((inputCost + outputCost).toFixed(5))
+
+    // Round to 5 decimal places
+    return finalCost
+  } catch (error) {
+    console.error(
+      "Error calculating run cost, defaulting to legacy method",
+      error,
+    )
+    Sentry.captureException(error)
+
+    return calcRunCostLegacy(run)
+  }
 }

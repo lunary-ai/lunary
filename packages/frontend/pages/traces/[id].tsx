@@ -133,7 +133,6 @@ function TraceTree({
             color={color}
             pl={0}
             pr={5}
-            tt="none"
             maw="250px"
             leftSection={
               Icon && (

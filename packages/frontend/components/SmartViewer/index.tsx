@@ -14,6 +14,7 @@ import ProtectedText from "../blocks/ProtectedText"
 import { ChatMessage } from "./Message"
 import MessageViewer from "./MessageViewer"
 import { RenderJson } from "./RenderJson"
+import classes from "./index.module.css"
 
 const checkIsMessage = (obj) => {
   return (
@@ -87,6 +88,7 @@ export default function SmartViewer({
     return checkIsRetrieverObjects(parsed)
   }, [parsed])
 
+  // TODO: refacto, c'est degueulasse
   let Message
   if (error) {
     Message = (
@@ -107,10 +109,7 @@ export default function SmartViewer({
     )
   } else if (data && data === "__NOT_INGESTED__") {
     Message = (
-      <Code
-        color="var(--mantine-color-gray-light)"
-        style={{ overflow: "hidden" }}
-      >
+      <Code color="var(--mantine-color-gray-light)">
         <Flex align="center">
           <Tooltip label="Matched Smart Data Filter rules">
             <IconShieldBolt size="16px" />
@@ -134,60 +133,24 @@ export default function SmartViewer({
               ))}
             </Stack>
           ) : (
-            <Code
-              color="var(--mantine-color-blue-light)"
-              style={{ overflow: "hidden" }}
-            >
+            <Code color="var(--mantine-color-blue-light)">
               <RenderJson data={parsed} compact={compact} />
             </Code>
           )
         ) : (
-          <Code
-            color="var(--mantine-color-blue-light)"
-            style={{ overflow: "hidden" }}
-          >
-            {parsed}
-          </Code>
+          <Code color="var(--mantine-color-blue-light)">{parsed}</Code>
         )}
       </ProtectedText>
     )
   }
 
   return (
-    <pre className={compact ? "compact" : ""} id="HERE">
+    <pre
+      className={`${classes.pre} ${compact ? classes.compact : ""}`}
+      id="HERE"
+    >
       {error && Message}
       {data && Message}
-      <style jsx>{`
-        pre {
-          white-space: pre-wrap;
-          margin: 0;
-        }
-
-        pre.compact {
-          max-height: 96px;
-          overflow: hidden;
-          width: 100%;
-        }
-
-        pre :global(code) {
-          padding: 10px;
-          display: block;
-        }
-
-        /* Fixes for json-view-lite */
-        pre :global(code div[role="list"] > div) {
-          padding-left: 8px;
-        }
-
-        /* Hide first expander btn */
-        pre :global(code > div > div > span[role="button"]) {
-          display: none;
-        }
-
-        pre :global(code span[role="button"]) {
-          cursor: pointer;
-        }
-      `}</style>
     </pre>
   )
 }

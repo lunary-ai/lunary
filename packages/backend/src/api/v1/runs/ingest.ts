@@ -136,12 +136,13 @@ async function registerRunEvent(
       const [runData] = await sql`
         select created_at, input, params, name from run where id = ${runId}
       `
-      cost = calcRunCost({
+      cost = await calcRunCost({
         type,
         promptTokens: tokensUsage?.prompt,
         completionTokens: tokensUsage?.completion,
         name: runData?.name,
         duration: +timestamp - +runData?.createdAt,
+        projectId,
       })
     }
 

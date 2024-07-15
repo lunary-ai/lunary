@@ -1,4 +1,4 @@
-import { Avatar, MantineSize, Text } from "@mantine/core"
+import { Avatar, Text } from "@mantine/core"
 import { memo } from "react"
 
 function UserAvatar({

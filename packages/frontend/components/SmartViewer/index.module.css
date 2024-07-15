@@ -1,0 +1,139 @@
+.messageStack {
+  max-height: 700px;
+  overflow-y: auto;
+}
+
+.ghostTextArea {
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0 !important;
+  min-height: none;
+}
+
+.ghostTextAreaRoot {
+  font-family: inherit;
+  font-size: inherit;
+  padding: var(--mantine-spacing-xs) !important;
+}
+
+.paper {
+  padding: 12px;
+  padding-top: 8px;
+}
+
+.paper.compact {
+  padding: 0 !important;
+
+  overflow: hidden;
+  border-radius: var(--mantine-radius-md);
+}
+
+.functionCallText {
+  display: flex;
+  align-items: center;
+  font-size: 14px !important;
+  font-family: var(--mantine-font-family);
+  height: 18px;
+  max-width: 300px;
+  justify-content: flex-start;
+  margin-bottom: var(--mantine-spacing-xs);
+
+  &.compact {
+    margin-bottom: -10px;
+    margin-top: -4px;
+  }
+}
+
+.toolCallActionIcon {
+  position: absolute;
+  top: 16px;
+  right: -8px;
+}
+
+.responsiveImage {
+  position: relative;
+  width: 100%;
+  height: 500px;
+}
+
+.miniatureImage {
+  position: relative;
+  width: 40px;
+  height: 40px;
+}
+
+.pre {
+  white-space: pre-wrap;
+  margin: 0;
+
+  pre {
+    white-space: pre-wrap;
+  }
+}
+
+.pre code {
+  padding: 10px;
+  display: block;
+  overflow: hidden;
+}
+
+.pre.compact {
+  max-height: 60px;
+  overflow: hidden;
+  width: 100%;
+  white-space: pre-wrap;
+
+  border-radius: 6px;
+
+  pre {
+    padding-top: 4px;
+    line-height: 1.2;
+  }
+}
+
+.pre.compact code {
+  overflow: hidden;
+}
+
+/* Fixes for json-view-lite */
+.pre :global(code div[role="list"] > div) {
+  padding-left: 8px;
+}
+
+/* Hide first expander btn */
+.pre :global(code > div > div > span[role="button"]) {
+  display: none;
+}
+
+.pre :global(code span[role="button"]) {
+  cursor: pointer;
+}
+
+.roleSelector {
+  margin-bottom: 5px;
+  margin-top: -2px;
+  width: 80px;
+}
+
+.textMessage {
+  display: block;
+  background-color: light-dark(rgba(255, 255, 255, 0.5), rgba(0, 0, 0, 0.6));
+}
+
+.bubbleMessageIcon {
+  margin-top: 6px;
+}
+
+.bubbleMessageContent {
+  white-space: pre-line;
+}
+
+.bubbleMessagePaper {
+  margin-bottom: var(--mantine-spacing-xs);
+  padding-left: var(--mantine-spacing-md);
+  padding-right: var(--mantine-spacing-md);
+  padding-top: var(--mantine-spacing-sm);
+  padding-bottom: var(--mantine-spacing-sm);
+  border-radius: var(--mantine-radius-lg);
+  max-width: 430px;
+}

@@ -43,7 +43,7 @@ import {
 import Feedback from "../blocks/OldFeedback"
 import AppUserAvatar from "../blocks/AppUserAvatar"
 import { Group, Text } from "@mantine/core"
-import { capitalize, formatAppUser } from "@/utils/format"
+import { capitalize, formatAppUser, getFlagEmoji } from "@/utils/format"
 
 type CheckUI = {
   icon: React.FC<any>
@@ -84,6 +84,21 @@ const CHECKS_UI_DATA: ChecksUIData = {
   templates: {
     icon: IconEditCircle,
     color: "indigo",
+  },
+  languages: {
+    icon: IconWorldWww,
+    color: "blue",
+    renderLabel({ value }) {
+      const languageNames = new Intl.DisplayNames(["en"], {
+        type: "language",
+      })
+
+      return (
+        <Text size="sm">
+          {`${getFlagEmoji(value)}  ${languageNames.of(value)}`}
+        </Text>
+      )
+    },
   },
   feedback: {
     icon: IconThumbUp,

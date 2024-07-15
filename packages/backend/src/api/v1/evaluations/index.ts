@@ -73,6 +73,7 @@ evaluations.post(
           count++
           queue.enqueue(async () => {
             await runEval({
+              projectId,
               evaluationId: evaluation.id,
               promptId: prompt.id,
               variation,
@@ -219,7 +220,7 @@ evaluations.post(
       cost: 0,
     }
 
-    const cost = calcRunCost(virtualRun)
+    const cost = await calcRunCost(virtualRun)
     virtualRun.cost = cost
     virtualRun.duration = virtualRun.duration / 1000 // needs to be in ms in calcRunCost, but needs to be in seconds in the checks
 

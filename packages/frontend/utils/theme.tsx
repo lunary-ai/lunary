@@ -71,6 +71,11 @@ export const themeOverride = createTheme({
         shadow: "sm",
       },
     },
+    Badge: {
+      defaultProps: {
+        tt: "none",
+      },
+    },
     Combobox: {
       defaultProps: {
         withArrow: true,

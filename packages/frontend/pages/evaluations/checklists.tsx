@@ -134,6 +134,7 @@ export function ChecklistModal({ open, onClose }) {
             .
           </InputDescription>
           <CheckPicker
+            minimal={true}
             restrictTo={(filter) => !filter.disableInEvals}
             value={data}
             onChange={setData}

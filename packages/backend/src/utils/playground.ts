@@ -11,7 +11,9 @@ function convertInputToOpenAIMessages(input: any[]) {
   return input.map(
     ({ toolCallId, role, content, text, functionCall, toolCalls, name }) => {
       return clearUndefined({
-        role: role.replace("ai", "assistant"),
+        role: role
+          .replace("ai", "assistant")
+          .replace("AIMessageChunk", "assistant"),
         content: content || text,
         function_call: functionCall || undefined,
         tool_calls: toolCalls || undefined,

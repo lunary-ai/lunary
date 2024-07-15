@@ -1,0 +1,105 @@
+.columnIcon {
+  position: absolute;
+  right: 15px;
+  top: 5px;
+  font-size: 24px;
+  z-index: 2;
+}
+
+.tableContainer {
+  height: 100%;
+  overflow: auto;
+}
+
+.tableContainer table {
+  width: 100% !important;
+  table-layout: fixed;
+  font-size: 14px;
+}
+
+.light table tbody tr.ListItemOdd {
+  background-color: rgb(248, 249, 250);
+}
+
+.tableContainer table tbody tr:hover {
+  background-color: var(--mantine-primary-color-light-hover) !important;
+}
+
+.tableContainer thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: var(--mantine-color-body);
+}
+
+.tableContainer th {
+  position: relative;
+
+  td {
+    position: relative;
+  }
+}
+
+.tableContainer td {
+  align-items: center;
+  /* display: flex; */
+}
+
+.tableContainer .light th {
+  border-bottom: 1px solid #ddd;
+}
+
+.tableContainer .dark th,
+.tableContainer .dark td {
+  border-bottom: 2px solid #2b2c2f;
+}
+
+.tableContainer tr {
+  position: relative;
+  height: fit-content;
+  width: 100%;
+}
+
+.tableContainer tbody {
+  position: relative;
+}
+
+.tableContainer tbody tr {
+  /* display: flex; */
+  /* position: absolute; */
+  width: 100%;
+}
+
+.tableContainer th,
+.tableContainer td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 7px 10px;
+}
+
+.resizer {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 5px;
+  background: rgba(0, 0, 0, 0.5);
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
+}
+
+.resizer.isResizing {
+  filter: invert(1);
+  opacity: 1;
+}
+
+@media (hover: hover) {
+  .resizer {
+    opacity: 0;
+  }
+
+  *:hover > .resizer {
+    opacity: 1;
+  }
+}

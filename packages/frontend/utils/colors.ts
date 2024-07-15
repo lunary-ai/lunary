@@ -6,6 +6,7 @@ export function getColorForRole(role) {
   const colorMap = {
     ai: "green",
     assistant: "green",
+    AIMessageChunk: "green",
     human: "blue",
     user: "blue",
     error: "red",
@@ -38,7 +39,10 @@ export function getColorFromSeed(seed: string) {
   const seedInt = seed
     .split("")
     .reduce((acc, curr) => acc + curr.charCodeAt(0), 0)
-  const colors = Object.keys(theme.colors)
+  const colors = Object.keys(theme.colors).filter(
+    (c) => !["gray", "dark", "white", "black", "light"].includes(c),
+  )
+
   return colors[seedInt % colors.length]
 }
 

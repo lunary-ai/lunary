@@ -83,13 +83,7 @@ function DatasetCard({ defaultValue, onDelete }) {
               }}
             />
             {dataset?.prompts && (
-              <Badge
-                variant="light"
-                radius="sm"
-                color="blue"
-                size="md"
-                tt="none"
-              >
+              <Badge variant="light" radius="sm" color="blue" size="md">
                 {`${dataset.prompts?.length} prompt${dataset.prompts?.length > 1 ? "s" : ""}`}
               </Badge>
             )}
@@ -99,7 +93,6 @@ function DatasetCard({ defaultValue, onDelete }) {
               radius="sm"
               color={dataset?.format === "chat" ? "violet" : "gray"}
               size="md"
-              tt="none"
             >
               {dataset?.format}
             </Badge>
