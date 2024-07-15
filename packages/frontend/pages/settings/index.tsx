@@ -213,6 +213,7 @@ export default function AppAnalytics() {
           </Text>
           <CheckPicker
             defaultOpened={true}
+            minimal={true}
             value={filters}
             onChange={setChecks}
             buttonText="Add filter"
