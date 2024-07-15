@@ -180,7 +180,7 @@ export default function CheckPicker({
     (check) =>
       !minimal ||
       !check.uniqueInBar ||
-      !value.some((v) => typeof v === "object" && v.id === check.id),
+      !value?.some((v) => typeof v === "object" && v.id === check.id),
   )
 
   // insert {id: filterId, params: { [param1]: defaultValue, [param2]: defaultValue }}
