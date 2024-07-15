@@ -42,7 +42,7 @@ export function getColorFromSeed(seed: string) {
   const colors = Object.keys(theme.colors).filter(
     (c) => !["gray", "dark", "white", "black", "light"].includes(c),
   )
-  console.log({ colors: theme.colors })
+
   return colors[seedInt % colors.length]
 }
 
