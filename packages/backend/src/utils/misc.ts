@@ -36,3 +36,23 @@ export const isOpenAIMessage = (field: any) =>
     field.functionCall ||
     field.tool_calls ||
     field.function_call)
+
+export async function findAsyncSequential<T>(
+  array: T[],
+  predicate: (t: T) => Promise<boolean>,
+): Promise<T | undefined> {
+  for (const t of array) {
+    if (await predicate(t)) {
+      return t
+    }
+  }
+  return undefined
+}
+
+export async function filterAsync<T>(
+  array: T[],
+  predicate: (item: T) => Promise<boolean>,
+): Promise<T[]> {
+  const results = await Promise.all(array.map(predicate))
+  return array.filter((_, index) => results[index])
+}

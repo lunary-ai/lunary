@@ -1,4 +1,5 @@
 import DataTable from "@/components/blocks/DataTable"
+import { parseAsString, parseAsStringEnum, useQueryState } from "nuqs"
 
 import {
   ActionIcon,
@@ -9,7 +10,6 @@ import {
   Group,
   Loader,
   Menu,
-  SegmentedControl,
   Stack,
   Text,
 } from "@mantine/core"
@@ -17,6 +17,7 @@ import {
 import {
   costColumn,
   durationColumn,
+  enrichmentColumn,
   feedbackColumn,
   inputColumn,
   nameColumn,
@@ -32,13 +33,13 @@ import {
   IconBrandOpenai,
   IconDotsVertical,
   IconFileExport,
-  IconListTree,
-  IconMessages,
-  IconFilter,
+  IconTrash,
+  IconStack2,
+  IconStackPop,
 } from "@tabler/icons-react"
 
 import { NextSeo } from "next-seo"
-import { useContext, useEffect, useState } from "react"
+import { useContext, useEffect, useMemo, useState } from "react"
 
 import { ChatReplay } from "@/components/blocks/RunChat"
 import RunInputOutput from "@/components/blocks/RunInputOutput"
@@ -56,14 +57,23 @@ import {
   useProjectInfiniteSWR,
   useRun,
 } from "@/utils/dataHooks"
-import { useEvaluators } from "@/utils/dataHooks/evaluators"
+
 import { useDebouncedState, useDidUpdate } from "@mantine/hooks"
 import { ProjectContext } from "@/utils/context"
-import { CheckLogic, deserializeLogic, serializeLogic } from "shared"
+
 import { useRouter } from "next/router"
 import { modals } from "@mantine/modals"
+import { useView, useViews } from "@/utils/dataHooks/views"
+import RenamableField from "@/components/blocks/RenamableField"
+import { VisibilityState } from "@tanstack/react-table"
+import { notifications } from "@mantine/notifications"
 
-const columns = {
+import IconPicker from "@/components/blocks/IconPicker"
+import { deserializeLogic, serializeLogic } from "shared"
+import { useEvaluators } from "@/utils/dataHooks/evaluators"
+// import { useTraceUpdate } from "@/utils/hooks"
+
+export const defaultColumns = {
   llm: [
     timeColumn("createdAt"),
     nameColumn("Model"),
@@ -71,22 +81,21 @@ const columns = {
     // enrichmentColumn("topics"),
     // enrichmentColumn("sentiment"),
     // enrichmentColumn("pii"),
-
     userColumn(),
     {
       header: "Tokens",
-      size: 40,
+      size: 70,
       id: "tokens",
       sortingFn: (a, b) => a.tokens.total - b.tokens.total,
       cell: (props) => props.getValue(),
       accessorFn: (row) => row.tokens.total,
     },
     costColumn(),
-    feedbackColumn(),
-    tagsColumn(),
-    templateColumn(),
     inputColumn("Prompt"),
     outputColumn("Result"),
+    tagsColumn(),
+    feedbackColumn(),
+    templateColumn(),
   ],
   trace: [
     timeColumn("createdAt", "Time"),
@@ -107,37 +116,49 @@ const columns = {
   ],
 }
 
-const CHECKS_BY_TYPE = {
+export const CHECKS_BY_TYPE = {
   llm: [
+    "date",
     "models",
     // "enrichment",
     "tags",
     "users",
+    "languages",
+    "entities",
     "templates",
+    "sentiment",
     "status",
     "metadata",
     "feedback",
     "cost",
     "duration",
     "tokens",
-    "radar",
+    // "radar",
   ],
   trace: [
+    "date",
     "tags",
     "users",
     "status",
     // "feedback",
     "duration",
     "metadata",
-    "radar",
+    // "radar",
   ],
   thread: [
+    "date",
     "tags",
     "users",
     // "feedback",
     "metadata",
-    "radar",
+    // "radar",
   ],
+}
+
+const VIEW_ICONS = {
+  llm: "IconBrandOpenai",
+  thread: "IconMessages",
+  trace: "IconBinaryTree2",
 }
 
 function editCheck(filters, id, params) {
@@ -156,20 +177,66 @@ function editCheck(filters, id, params) {
   return newChecks
 }
 
+// function useTraceUpdate(props) {
+//   const prev = useRef(props)
+//   useEffect(() => {
+//     const changedProps = Object.entries(props).reduce((ps, [k, v]) => {
+//       if (prev.current[k] !== v) {
+//         ps[k] = [prev.current[k], v]
+//       }
+//       return ps
+//     }, {})
+//     if (Object.keys(changedProps).length > 0) {
+//       console.log("Changed props:", changedProps)
+//     }
+//     prev.current = props
+//   })
+// }
+
+const DEFAULT_CHECK = ["AND"]
+
 export default function Logs() {
   const router = useRouter()
   const { projectId } = useContext(ProjectContext)
   const { project, isLoading: projectLoading, setProjectId } = useProject()
   const { org } = useOrg()
 
-  const [filters, setChecks] = useState<CheckLogic>([
-    "AND",
-    { id: "type", params: { type: "llm" } },
-  ])
-  const [showCheckBar, setShowCheckBar] = useState(false)
-  const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
-  const [serializedChecks, setSerializedChecks] = useState<string>("")
-  const [type, setType] = useState<"llm" | "trace" | "thread">("llm")
+  const { insert: insertView, isInserting: isInsertingView } = useViews()
+
+  const [allColumns, setAllColumns] = useState(defaultColumns)
+
+  const [visibleColumns, setVisibleColumns] = useState<VisibilityState>({})
+  const [columnsTouched, setColumnsTouched] = useState(false)
+
+  const [viewId, setViewId] = useQueryState<string | undefined>("view", {
+    ...parseAsString,
+    history: "push",
+  })
+
+  const [selectedRunId, setSelectedRunId] = useQueryState<string | undefined>(
+    "selected",
+    parseAsString,
+  )
+  const [type] = useQueryState<string>(
+    "type",
+    parseAsStringEnum(["llm", "trace", "thread"]).withDefault("llm"),
+  )
+
+  const [checks, setChecks] = useQueryState("filters", {
+    parse: (value) => deserializeLogic(value, true),
+    serialize: serializeLogic,
+    defaultValue: DEFAULT_CHECK,
+    clearOnDefault: true,
+  })
+
+  const serializedChecks = useMemo(() => {
+    const checksWithType = editCheck(checks, "type", { type })
+    return serializeLogic(checksWithType)
+  }, [checks, type])
+
+  const { view, update: updateView, remove: removeView } = useView(viewId)
+
+  const { evaluators } = useEvaluators()
 
   const [query, setQuery] = useDebouncedState<string | null>(null, 300)
 
@@ -183,27 +250,26 @@ export default function Logs() {
 
   const { run: selectedRun, loading: runLoading } = useRun(selectedRunId)
 
-  // useEffect(() => {
-  //   const newColumns = { ...defaultColumns }
-  //   if (type === "llm" && Array.isArray(evaluators)) {
-  //     for (const evaluator of evaluators) {
-  //       if (
-  //         newColumns.llm
-  //           .map(({ accessorKey }) => accessorKey)
-  //           .includes("enrichment-" + evaluator.slug)
-  //       ) {
-  //         continue
-  //       }
+  useEffect(() => {
+    const newColumns = { ...allColumns }
+    if (type === "llm" && Array.isArray(evaluators)) {
+      for (const evaluator of evaluators) {
+        const id = "enrichment-" + evaluator.id
+        console.log(id)
 
-  //       newColumns.llm.splice(
-  //         3,
-  //         0,
-  //         enrichmentColumn(evaluator.name, evaluator.slug, evaluator.type),
-  //       )
-  //     }
-  //     setColumns(newColumns)
-  //   }
-  // }, [type, evaluators])
+        if (newColumns.llm.map(({ accessorKey }) => accessorKey).includes(id)) {
+          continue
+        }
+
+        newColumns.llm.splice(
+          3,
+          0,
+          enrichmentColumn(evaluator.name, evaluator.id, evaluator.type),
+        )
+      }
+      setAllColumns(newColumns)
+    }
+  }, [type, evaluators])
 
   useEffect(() => {
     if (selectedRun && selectedRun.projectId !== projectId) {
@@ -211,89 +277,73 @@ export default function Logs() {
     }
   }, [selectedRun?.projectId])
 
-  useDidUpdate(() => {
-    let serialized = serializeLogic(filters)
+  // useEffect(() => {
+  //   let newChecks = [...checks]
+  //   let shouldUpdate = false
 
-    if (typeof serialized === "string") {
-      setSerializedChecks(serialized)
-      if (selectedRunId) {
-        serialized += `&selected=${selectedRunId}`
-      }
-      router.replace(`/logs?${serialized}`)
-    }
-  }, [filters])
+  //   // Add type filter if not present
+  //   const typeFilter = newChecks.find((filter) => filter.id === "type")
+  //   if (!typeFilter) {
+  //     newChecks = newChecks[0] === "AND" ? newChecks : ["AND", ...newChecks]
+  //     newChecks = [
+  //       newChecks[0],
+  //       { id: "type", params: { type } },
+  //       ...newChecks.slice(1),
+  //     ]
+  //     shouldUpdate = true
+  //   }
 
-  useEffect(() => {
-    // restore filters and selected log from query params
-    try {
-      const urlParams = new URLSearchParams(window.location.search)
+  //   // Update type filter
+  //   newChecks = editCheck(newChecks, "type", { type }).filter(
+  //     (f) =>
+  //       f === "AND" ||
+  //       CHECKS_BY_TYPE[type].includes(f.id) ||
+  //       ["type", "search"].includes(f.id),
+  //   )
+  //   shouldUpdate = true
 
-      const selectedId = urlParams.get("selected")
-      setSelectedRunId(selectedId)
+  //   // Update search filter
+  //   if (query !== null) {
+  //     newChecks = editCheck(
+  //       newChecks,
+  //       "search",
+  //       query.length ? { query } : null,
+  //     )
+  //     shouldUpdate = true
+  //   }
 
-      const type = urlParams.get("type")
-      if (type === "llm" || type === "trace" || type === "thread") {
-        setType(type)
-      }
-
-      const search = urlParams.get("search")
-      setQuery(search)
-
-      const paramString = urlParams.toString()
-      if (paramString) {
-        const filtersData = deserializeLogic(paramString)
-        if (filtersData) {
-          setChecks(filtersData)
-        }
-      }
-    } catch (e) {
-      console.error(e)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (selectedRunId) {
-      router.push({
-        pathname: router.pathname,
-        query: { ...router.query, selected: selectedRunId },
-      })
-    } else {
-      const { selected, ...query } = router.query
-
-      router.push({
-        pathname: router.pathname,
-        query,
-      })
-    }
-  }, [selectedRunId])
+  //   // Only update if changes were made
+  //   if (shouldUpdate) {
+  //     setChecks(newChecks)
+  //   }
+  // }, [type, query])
 
   useDidUpdate(() => {
-    // Change type filter and remove filters imcompatible with type
-    const newChecks = editCheck(filters, "type", { type }).filter(
-      (f) =>
-        f === "AND" ||
-        CHECKS_BY_TYPE[type].includes(f.id) ||
-        ["type", "search"].includes(f.id),
-    )
-    setChecks(newChecks)
-  }, [type])
+    // Update search filter
+    if (query !== null) {
+      const newChecks = editCheck(
+        checks,
+        "search",
+        query.length ? { query } : null,
+      )
 
-  // Convert search query to filter
-  useDidUpdate(() => {
-    const newChecks = editCheck(
-      filters,
-      "search",
-      query?.length ? { query } : null,
-    )
-    setChecks(newChecks)
+      setChecks(newChecks)
+    }
   }, [query])
 
-  const exportUrl = `/runs?${serializedChecks}&projectId=${projectId}`
+  useEffect(() => {
+    // Update visible columns if view changes
+    if (view?.columns) {
+      setVisibleColumns(view.columns)
+    } else {
+      setVisibleColumns(allColumns[type])
+    }
+  }, [view, type, allColumns])
 
-  const showBar =
-    showCheckBar ||
-    filters.filter((f) => f !== "AND" && !["search", "type"].includes(f.id))
-      .length > 0
+  const exportUrl = useMemo(
+    () => `/runs?${serializedChecks}&projectId=${projectId}`,
+    [serializedChecks, projectId],
+  )
 
   function exportButton(url: string) {
     return {
@@ -306,29 +356,99 @@ export default function Logs() {
           return
         }
 
-        // TODO: Remove once OpenAI supports
-        if (url.includes("exportType=ojsonl")) {
-          modals.open({
-            title: "Tool calls removed",
-            children: (
-              <>
-                <Text size="sm">
-                  Note: OpenAI fine-tunes currently do not support tool calls in
-                  the JSONL fine-tuning format. They will be removed from the
-                  export to ensure it does not break the import.
-                </Text>
-                <Button fullWidth onClick={() => modals.closeAll()} mt="md">
-                  Acknowledge
-                </Button>
-              </>
-            ),
-          })
-        }
-
         fetcher.getFile(url)
       },
     }
   }
+
+  async function saveView() {
+    if (!viewId) {
+      const icon = VIEW_ICONS[type]
+
+      const newView = await insertView({
+        name: "New View",
+        data: checks,
+        columns: visibleColumns,
+        icon,
+      })
+
+      setViewId(newView.id)
+    } else {
+      await updateView({
+        data: checks,
+        columns: visibleColumns,
+      })
+
+      notifications.show({
+        title: "View saved",
+        message: "Your view has been saved.",
+      })
+    }
+
+    setColumnsTouched(false)
+  }
+
+  async function deleteView() {
+    modals.openConfirmModal({
+      title: "Please confirm your action",
+      confirmProps: { color: "red" },
+      children: (
+        <Text size="sm">
+          Are you sure you want to delete this view? This cannot be undone.
+        </Text>
+      ),
+      labels: { confirm: "Confirm", cancel: "Cancel" },
+      onConfirm: async () => {
+        await removeView(view.id)
+        router.push("/logs")
+      },
+    })
+  }
+
+  async function duplicateView() {
+    if (view) {
+      const newView = await insertView({
+        name: `Copy of ${view.name}`,
+        data: view.data,
+        columns: view.columns,
+        icon: view.icon,
+      })
+
+      notifications.show({
+        title: "View duplicated",
+        message: `A copy of the view has been created with the name "Copy of ${view.name}".`,
+      })
+
+      setViewId(newView.id)
+    }
+  }
+  // Show button if column changed or view has changes, or it's not a view
+  const showSaveView = useMemo(
+    () =>
+      columnsTouched ||
+      (checks &&
+        checks.length > 1 &&
+        (!view || JSON.stringify(view.data) !== JSON.stringify(checks))),
+    [columnsTouched, checks, view],
+  )
+
+  // useTraceUpdate({
+  //   projectId,
+  //   serializedChecks,
+  //   type,
+  //   checks,
+  //   query,
+  //   viewId,
+  //   selectedRunId,
+  //   allColumns,
+  //   evaluators,
+  //   visibleColumns,
+  //   showSaveView,
+  //   logs,
+  //   loading,
+  //   validating,
+  //   runLoading,
+  // })
 
   return (
     <Empty
@@ -342,7 +462,7 @@ export default function Logs() {
         <NextSeo title="Requests" />
 
         <Stack>
-          <Card withBorder p={4} px="sm">
+          <Card withBorder p={2} px="sm">
             <Flex justify="space-between">
               <SearchBar
                 query={query}
@@ -353,63 +473,6 @@ export default function Logs() {
               />
 
               <Group gap="xs">
-                {!showBar && (
-                  <Button
-                    variant="subtle"
-                    onClick={() => setShowCheckBar(true)}
-                    leftSection={<IconFilter size={12} />}
-                    size="xs"
-                  >
-                    Add filters
-                  </Button>
-                )}
-                <SegmentedControl
-                  value={type}
-                  size="xs"
-                  w="fit-content"
-                  onChange={setType}
-                  data={[
-                    {
-                      label: (
-                        <Group gap="xs" wrap="nowrap" mx="xs">
-                          <IconBrandOpenai
-                            size="16px"
-                            color="var(--mantine-color-blue-5)"
-                          />
-                          <Text size="xs">LLM</Text>
-                        </Group>
-                      ),
-                      value: "llm",
-                    },
-
-                    {
-                      label: (
-                        <Group gap="xs" wrap="nowrap" mx="xs">
-                          <IconListTree
-                            size="16px"
-                            color="var(--mantine-color-blue-5)"
-                          />
-                          <Text size="xs">Traces</Text>
-                        </Group>
-                      ),
-                      value: "trace",
-                    },
-
-                    {
-                      label: (
-                        <Group gap="xs" wrap="nowrap" mx="xs">
-                          <IconMessages
-                            size="16px"
-                            color="var(--mantine-color-blue-5)"
-                          />
-                          <Text size="xs">Threads</Text>
-                        </Group>
-                      ),
-                      value: "thread",
-                    },
-                  ]}
-                />
-
                 <Menu position="bottom-end">
                   <Menu.Target>
                     <ActionIcon variant="light">
@@ -449,15 +512,72 @@ export default function Logs() {
               </Group>
             </Flex>
           </Card>
-          {showBar && (
-            <CheckPicker
-              minimal
-              defaultOpened={showCheckBar}
-              value={filters}
-              onChange={setChecks}
-              restrictTo={(f) => CHECKS_BY_TYPE[type].includes(f.id)}
-            />
-          )}
+
+          <Group justify="space-between" align="center">
+            <Group>
+              {view && (
+                <Group gap="xs">
+                  <IconPicker
+                    size={26}
+                    variant="light"
+                    value={view.icon}
+                    onChange={(icon) => {
+                      updateView({
+                        icon,
+                      })
+                    }}
+                  />
+                  <RenamableField
+                    defaultValue={view.name}
+                    onRename={(newName) => {
+                      updateView({
+                        name: newName,
+                      })
+                    }}
+                  />
+                  <Menu position="bottom-end">
+                    <Menu.Target>
+                      <ActionIcon variant="subtle">
+                        <IconDotsVertical size={12} />
+                      </ActionIcon>
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      <Menu.Item
+                        leftSection={<IconStackPop size={16} />}
+                        onClick={() => duplicateView()}
+                      >
+                        Duplicate
+                      </Menu.Item>
+                      <Menu.Item
+                        color="red"
+                        leftSection={<IconTrash size={16} />}
+                        onClick={() => deleteView()}
+                      >
+                        Delete
+                      </Menu.Item>
+                    </Menu.Dropdown>
+                  </Menu>
+                </Group>
+              )}
+              <CheckPicker
+                minimal
+                value={checks}
+                onChange={setChecks}
+                restrictTo={(f) => CHECKS_BY_TYPE[type].includes(f.id)}
+              />
+            </Group>
+            {!!showSaveView && (
+              <Button
+                leftSection={<IconStack2 size={16} />}
+                size="xs"
+                onClick={() => saveView()}
+                variant="default"
+                loading={isInsertingView}
+              >
+                Save View
+              </Button>
+            )}
+          </Group>
         </Stack>
 
         <Drawer
@@ -500,9 +620,19 @@ export default function Logs() {
               setSelectedRunId(row.id)
             }
           }}
+          key={allColumns[type]}
           loading={loading || validating}
           loadMore={loadMore}
-          columns={columns[type]}
+          availableColumns={allColumns[type]}
+          visibleColumns={visibleColumns}
+          setVisibleColumns={(newState) => {
+            setVisibleColumns((prev) => ({
+              ...prev,
+              ...newState,
+            }))
+
+            setColumnsTouched(true)
+          }}
           data={logs}
         />
       </Stack>

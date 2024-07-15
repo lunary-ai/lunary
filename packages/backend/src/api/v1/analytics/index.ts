@@ -53,7 +53,7 @@ analytics.get(
         order by
           date;
       `
-      ctx.body = res
+      ctx.body = { data: res }
       return
     } else {
       const res = await sql`
@@ -76,7 +76,7 @@ analytics.get(
         order by d.date;
     `
 
-      ctx.body = res
+      ctx.body = { data: res }
       return
     }
   },
@@ -122,7 +122,7 @@ analytics.get(
         order by
           date;
       `
-      ctx.body = res
+      ctx.body = { data: res }
       return
     } else {
       const res = await sql`
@@ -145,7 +145,7 @@ analytics.get(
         order by d.date;
     `
 
-      ctx.body = res
+      ctx.body = { data: res }
       return
     }
   },
@@ -191,7 +191,7 @@ analytics.get(
         order by
           date;
       `
-      ctx.body = res
+      ctx.body = { data: res }
       return
     } else {
       const res = await sql`
@@ -213,7 +213,7 @@ analytics.get(
         order by d.date;
     `
 
-      ctx.body = res
+      ctx.body = { data: res }
       return
     }
   },
@@ -272,7 +272,7 @@ analytics.get(
           date
 
       `
-      ctx.body = res
+      ctx.body = { data: res }
       return
     } else {
       const res = await sql`
@@ -299,7 +299,7 @@ analytics.get(
         order by
           d.date;
       `
-      ctx.body = res
+      ctx.body = { data: res }
       return
     }
   },
@@ -572,7 +572,7 @@ analytics.get(
         order by
           date;
       `
-      ctx.body = res
+      ctx.body = { data: res }
       return
     } else {
       const res = await sql`
@@ -595,7 +595,7 @@ analytics.get(
         order by d.date;
     `
 
-      ctx.body = res
+      ctx.body = { data: res }
       return
     }
   },
@@ -741,7 +741,7 @@ analytics.get(
       order by
         date;
       `
-      ctx.body = res
+      ctx.body = { data: res }
       return
     } else {
       const res = await sql`
@@ -776,7 +776,7 @@ analytics.get(
         order by
           d.date;
         `
-      ctx.body = res
+      ctx.body = { data: res }
       return
     }
   },
@@ -839,8 +839,6 @@ analytics.get(
         cost desc
       limit 5
     `
-
-    console.log(topModels)
 
     ctx.body = topModels
   },

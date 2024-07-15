@@ -57,7 +57,7 @@ function prepareDataForRecharts(
     props.forEach((prop) => {
       if (splitBy) {
         uniqueSplitByValues.forEach((splitByValue) => {
-          dayData[`${splitByValue} ${prop}`] = findDataValue(
+          dayData[`${splitByValue || "(unknown)"} ${prop}`] = findDataValue(
             data,
             splitBy,
             splitByValue,
@@ -147,7 +147,7 @@ const formatDate = (date, granularity) => {
   if (!date) return
   switch (granularity) {
     case "daily":
-      return format(parseISO(date), "MMM d")
+      return format(parseISO(date), "MMM do")
     case "hourly":
       return format(parseISO(date), "eee, HH'h'")
     case "weekly":
@@ -317,7 +317,7 @@ function LineChartComponent({
             blur={5}
             backgroundOpacity={0.05}
             p="lg"
-            zIndex={3}
+            zIndex={2}
           />
           <Center
             ta="center"

@@ -35,7 +35,7 @@ function TopUsers({ topUsers, isLoading }: TopUsersProps) {
     )
   }
 
-  if (topUsers.length === 0) {
+  if (topUsers?.length === 0) {
     return (
       <>
         <Overlay blur={5} opacity={0.1} p="lg" zIndex={1} />

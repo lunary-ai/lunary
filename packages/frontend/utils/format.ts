@@ -87,9 +87,18 @@ export function slugify(str) {
 
 export function getFlagEmoji(languageCode: string) {
   const countryCode = languageCodeToCountryCode[languageCode]
+  if (!countryCode) {
+    return ""
+  }
+
   const codePoints = countryCode
-    .toUpperCase()
     .split("")
     .map((char) => 127397 + char.charCodeAt(0))
   return String.fromCodePoint(...codePoints)
+}
+
+export function getLanguageName(languageCode: string) {
+  return new Intl.DisplayNames(["en"], {
+    type: "language",
+  }).of(languageCode)
 }

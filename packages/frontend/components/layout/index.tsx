@@ -1,4 +1,4 @@
-import { Box, Flex, Loader } from "@mantine/core"
+import { Box, Flex, Loader, useComputedColorScheme } from "@mantine/core"
 import { Notifications } from "@mantine/notifications"
 import { ReactNode, useEffect } from "react"
 
@@ -9,13 +9,17 @@ import Sidebar from "./Sidebar"
 
 import analytics from "@/utils/analytics"
 import { useAuth } from "@/utils/auth"
-import { useOrg, useProject, useUser } from "@/utils/dataHooks"
-import { useColorScheme } from "@mantine/hooks"
+import { useOrg, useUser } from "@/utils/dataHooks"
 import { ModalsProvider } from "@mantine/modals"
 import UpgradeModal from "./UpgradeModal"
 
 export default function Layout({ children }: { children: ReactNode }) {
   const router = useRouter()
+  const { user } = useUser()
+  const { org } = useOrg()
+
+  const colorScheme = useComputedColorScheme()
+  const { isSignedIn } = useAuth()
 
   const isAuthPage = !![
     "/login",
@@ -36,8 +40,6 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   const isPublicPage = isLLMCallPage
 
-  const { isSignedIn } = useAuth()
-
   useEffect(() => {
     if (isMaintenanceMode) {
       router.push("/maintenance")
@@ -54,13 +56,8 @@ export default function Layout({ children }: { children: ReactNode }) {
       return
     }
   }, [isSignedIn])
-  const { user } = useUser()
-  const { org } = useOrg()
-  const { project } = useProject()
 
   const isPromptPage = router.pathname.startsWith("/prompt")
-
-  const colorScheme = useColorScheme()
 
   useEffect(() => {
     if (user) {

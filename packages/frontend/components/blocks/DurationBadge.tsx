@@ -23,7 +23,6 @@ export default function DurationBadge({
             <IconBolt size="12" />
           </ThemeIcon>
         }
-        tt="none"
       >
         Cached ({(duration / 1000).toFixed(2)}s)
       </Badge>
@@ -41,7 +40,6 @@ export default function DurationBadge({
           <IconClock size="12" />
         </ThemeIcon>
       }
-      tt="none"
     >
       {(duration / 1000).toFixed(2)}s
     </Badge>

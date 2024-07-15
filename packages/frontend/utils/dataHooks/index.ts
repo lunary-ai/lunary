@@ -4,10 +4,13 @@ import useSWRInfinite from "swr/infinite"
 import useSWRMutation, { SWRMutationConfiguration } from "swr/mutation"
 import { getUserColor } from "../colors"
 import { ProjectContext } from "../context"
+import { useMemo } from "react"
+
+import { useComputedColorScheme } from "@mantine/core"
 
 import { useAuth } from "../auth"
 import { fetcher } from "../fetcher"
-import { useFixedColorScheme } from "../hooks"
+
 import { CheckLogic } from "shared"
 
 type KeyType = string | ((...args: any[]) => string)
@@ -66,20 +69,23 @@ export function useProjectMutation(
 }
 
 export function useProjectInfiniteSWR(key: string, ...args: any[]) {
-  const PAGE_SIZE = 1
+  const PAGE_SIZE = 100
 
   const { projectId } = useContext(ProjectContext)
 
   function getKey(pageIndex, previousPageData) {
-    if (previousPageData && !previousPageData.length) return null
-    return generateKey(key, projectId, `page=${pageIndex}&limit=100`)
+    if (previousPageData && !previousPageData.data?.length) return null
+    return generateKey(key, projectId, `page=${pageIndex}&limit=${PAGE_SIZE}`)
   }
 
   const { data, isLoading, isValidating, size, setSize, mutate } =
     useSWRInfinite(getKey, ...(args as [any]))
 
+  const total = data?.[0]?.total
+  const items = data?.map((d) => d.data).flat()
+
   function loadMore() {
-    const hasMore = data && data[data.length - 1]?.length >= PAGE_SIZE
+    const hasMore = items && items?.length < total
 
     if (hasMore) {
       setSize((size) => size + 1)
@@ -87,7 +93,8 @@ export function useProjectInfiniteSWR(key: string, ...args: any[]) {
   }
 
   return {
-    data: data?.flat(),
+    data: items,
+    total,
     loading: isLoading,
     validating: isValidating,
     loadMore,
@@ -108,7 +115,7 @@ export function useProjectMutate(key: KeyType, options?: SWRConfiguration) {
 export function useUser() {
   const { isSignedIn } = useAuth()
 
-  const scheme = useFixedColorScheme()
+  const scheme = useComputedColorScheme()
 
   const { data, isLoading, mutate, error } = useSWR(
     () => isSignedIn && `/users/me`,
@@ -134,7 +141,7 @@ export function useOrg() {
     mutate()
   }
 
-  const scheme = useFixedColorScheme()
+  const scheme = useComputedColorScheme()
 
   const users = data?.users?.map((user) => ({
     ...user,
@@ -191,16 +198,18 @@ export function useProject() {
 
   const { projects, isLoading, mutate } = useProjects()
 
-  const project = projects?.find((p) => p.id === projectId)
+  const project = useMemo(
+    () => projects?.find((p) => p.id === projectId),
+    [projects, projectId],
+  )
 
   const { trigger: updateMutation } = useSWRMutation(
-    `/projects/${projectId}`,
+    projectId && `/projects/${projectId}`,
     fetcher.patch,
   )
 
-
   const { trigger: dropMutation } = useSWRMutation(
-    `/projects/${projectId}`,
+    projectId && `/projects/${projectId}`,
     fetcher.delete,
   )
 
@@ -213,9 +222,8 @@ export function useProject() {
   }
 
   async function updateSmartDatafilters(filters: CheckLogic) {
-    return updateMutation({filters})
+    return updateMutation({ filters })
   }
-
 
   async function drop(): Promise<Boolean> {
     try {
@@ -234,7 +242,7 @@ export function useProject() {
     update,
     updateSmartDatafilters,
     drop,
-    setProjectId: setProjectId,
+    setProjectId,
     mutate,
     isLoading,
   }
@@ -459,7 +467,7 @@ export function useOrgUser(userId: string) {
     fetcher.patch,
   )
 
-  const scheme = useFixedColorScheme()
+  const scheme = useComputedColorScheme()
 
   const user = {
     ...data,

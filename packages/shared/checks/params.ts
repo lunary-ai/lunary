@@ -28,9 +28,26 @@ export const FORMAT_PARAM: CheckParam = {
 export const NUMBER_PARAM: CheckParam = {
   type: "select",
   id: "operator",
-  width: 50,
+  width: 80,
+
   defaultValue: "lt",
   options: [
+    {
+      label: "is",
+      value: "eq",
+    },
+    {
+      label: "is not",
+      value: "neq",
+    },
+    {
+      label: "greater than",
+      value: "gt",
+    },
+    {
+      label: "less than",
+      value: "lt",
+    },
     {
       label: ">=",
       value: "gte",
@@ -38,22 +55,6 @@ export const NUMBER_PARAM: CheckParam = {
     {
       label: "<=",
       value: "lte",
-    },
-    {
-      label: "=",
-      value: "eq",
-    },
-    {
-      label: "!=",
-      value: "neq",
-    },
-    {
-      label: ">",
-      value: "gt",
-    },
-    {
-      label: "<",
-      value: "lt",
     },
   ],
 }
@@ -65,11 +66,11 @@ export const FIELD_PARAM: CheckParam = {
   defaultValue: "output",
   options: [
     {
-      label: "Input",
+      label: "Prompt",
       value: "input",
     },
     {
-      label: "Output",
+      label: "Response",
       value: "output",
     },
   ],

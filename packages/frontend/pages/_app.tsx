@@ -1,6 +1,7 @@
 import "@mantine/core/styles.css"
 import "@mantine/notifications/styles.css"
-import "@mantine/charts/styles.css"
+// import "@mantine/charts/styles.css"
+import "@mantine/dates/styles.css"
 import "../styles/globals.css"
 
 import { MantineProvider } from "@mantine/core"
@@ -17,14 +18,11 @@ import { fetcher } from "@/utils/fetcher"
 import { circularPro, themeOverride } from "@/utils/theme"
 import { SWRConfig } from "swr"
 import { ProjectContext } from "@/utils/context"
-import { useLocalStorage } from "@mantine/hooks"
+import { useProjectIdStorage } from "@/utils/hooks"
 
 export default function App({ Component, pageProps }: AppProps) {
-  const [projectId, setProjectId] = useLocalStorage({
-    key: "projectId",
-    defaultValue: null,
-    getInitialValueInEffect: false,
-  })
+  const [projectId, setProjectId] = useProjectIdStorage()
+
   return (
     <>
       <style jsx global>{`

@@ -2,6 +2,11 @@ import { Flex, NumberInput, Text, TextInput } from "@mantine/core"
 import classes from "./index.module.css"
 import SmartCheckSelect from "./SmartSelectInput"
 
+import { DateTimePicker } from "@mantine/dates"
+
+const minDate = new Date(2021, 0, 1)
+const maxDate = new Date()
+
 const CheckInputs = {
   select: SmartCheckSelect,
 
@@ -39,11 +44,35 @@ const CheckInputs = {
     )
   },
 
-  label: ({ label }) => {
+  label: ({ label, description, minimal }) => {
     return (
-      <Text size="xs" className={classes["input-label"]} component="div">
-        {label}
-      </Text>
+      <div>
+        <Text
+          size={minimal ? "xs" : "sm"}
+          className={classes["input-label"]}
+          component="div"
+        >
+          {label}
+        </Text>
+        {!minimal && description && (
+          <Text size="xs" c="dimmed" className={classes["input-description"]}>
+            {description}
+          </Text>
+        )}
+      </div>
+    )
+  },
+  date: ({ placeholder, value, onChange }) => {
+    return (
+      <DateTimePicker
+        minDate={minDate}
+        maxDate={maxDate}
+        variant="unstyled"
+        size="xs"
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder || "Select date"}
+      />
     )
   },
 }

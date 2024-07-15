@@ -7,31 +7,32 @@ import {
   Container,
   Flex,
   Group,
-  NumberInput,
   Popover,
-  Select,
   Stack,
-  Table,
   Text,
-  TextInput,
 } from "@mantine/core"
 import { NextSeo } from "next-seo"
 import Router from "next/router"
 
 import RenamableField from "@/components/blocks/RenamableField"
-import { SettingsCard } from "@/components/blocks/SettingsCard"
 import CheckPicker from "@/components/checks/Picker"
-// import config from "@/utils/config"
-import { useOrg, useProject, useUser } from "@/utils/dataHooks"
+import { SettingsCard } from "@/components/blocks/SettingsCard"
+import {
+  IconCheck,
+  IconPencil,
+  IconFilter,
+  IconRefreshAlert,
+} from "@tabler/icons-react"
 import errorHandler from "@/utils/errors"
 import { fetcher } from "@/utils/fetcher"
 import { modals } from "@mantine/modals"
 import { notifications } from "@mantine/notifications"
-import { IconCheck, IconFilter, IconRefreshAlert } from "@tabler/icons-react"
+import { useOrg, useProject, useUser } from "@/utils/dataHooks"
 import { useEffect, useState } from "react"
 import { CheckLogic, hasAccess } from "shared"
 import useSWR from "swr"
 import config from "@/utils/config"
+import Link from "next/link"
 
 function Keys() {
   const [regenerating, setRegenerating] = useState(false)
@@ -212,6 +213,7 @@ export default function AppAnalytics() {
           </Text>
           <CheckPicker
             defaultOpened={true}
+            minimal={true}
             value={filters}
             onChange={setChecks}
             buttonText="Add filter"
@@ -250,80 +252,16 @@ export default function AppAnalytics() {
             enabled: true,
           }}
         >
-          <Text>Add custom models and cost mappings to your project.</Text>
-
-          <Table withColumnBorders withRowBorders withTableBorder>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Model Name</Table.Th>
-                <Table.Th>Match Regex</Table.Th>
-                <Table.Th>Unit</Table.Th>
-                <Table.Th>Input Cost</Table.Th>
-                <Table.Th>Output Cost</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              <Table.Tr>
-                <Table.Td>gpt-4-preview</Table.Td>
-                <Table.Td>(?i)^(gpt-4-preview)$</Table.Td>
-                <Table.Td>Tokens</Table.Td>
-                <Table.Td>$0.01</Table.Td>
-                <Table.Td>$0.01</Table.Td>
-              </Table.Tr>
-            </Table.Tbody>
-          </Table>
-
-          <Group wrap="nowrap">
-            <TextInput
-              label="Model Name"
-              placeholder="Enter model name"
-              defaultValue="gpt-4-preview"
-              required
-            />
-            <TextInput
-              label="Match Regex"
-              placeholder="Enter match regex"
-              defaultValue="(?i)^(gpt-4-preview)$"
-              required
-            />
-            <Select
-              label="Unit"
-              placeholder="Select unit"
-              defaultValue="TOKENS"
-              data={[
-                { value: "TOKENS", label: "Tokens" },
-                { value: "CHARACTERS", label: "Characters" },
-                { value: "SECONDS", label: "Seconds" },
-              ]}
-              required
-            />
-            <NumberInput
-              label="Input Cost"
-              defaultValue={0.01}
-              placeholder="Enter input cost in USD"
-              required
-            />
-            <NumberInput
-              label="Output Cost"
-              defaultValue={0.01}
-              placeholder="Enter output cost in USD"
-              required
-            />
-          </Group>
-
-          <Flex justify="flex-end" w="100%">
-            <Button
-              loading={isLoading}
-              style={{ float: "right" }}
-              variant="default"
-              onClick={() => {
-                setIsLoading(true)
-                setTimeout(() => setIsLoading(false), 1000)
-              }}
-            >
-              Add Model
-            </Button>
-          </Flex>
+          <Button
+            color="blue"
+            variant="default"
+            component={Link}
+            data-testid="add-model-button"
+            href={`/settings/models`}
+            leftSection={<IconPencil size={16} />}
+          >
+            Edit Mappings
+          </Button>
         </SettingsCard>
 
         {user && hasAccess(user.role, "projects", "delete") && (

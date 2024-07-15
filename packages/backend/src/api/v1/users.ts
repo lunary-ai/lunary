@@ -12,7 +12,6 @@ import { signJWT } from "./auth/utils"
 import { roles } from "shared"
 import { checkAccess } from "@/src/utils/authorization"
 import Context from "@/src/utils/koa"
-import config from "@/src/utils/config"
 
 const users = new Router({
   prefix: "/users",

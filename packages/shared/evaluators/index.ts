@@ -31,9 +31,26 @@ interface NormalEvaluator extends BaseEvaluator {
   mode: "normal"
 }
 
-interface RealtimeEvaluator extends BaseEvaluator {
+export interface RealtimeEvaluator extends BaseEvaluator {
   mode: "realtime"
   filters: any // TODO
 }
 
 type Evaluator = NormalEvaluator | RealtimeEvaluator
+
+interface BaseLanguageDetectionResult {
+  isoCode: string
+  confidence: number
+}
+
+export type EnrichmentData = {
+  input: Array<Record<string, any>>
+  output: Array<Record<string, any>>
+  error: Array<Record<string, any>>
+}
+
+export type LanguageDetectionResult = EnrichmentData & {
+  input: Array<BaseLanguageDetectionResult | null>
+  output: Array<BaseLanguageDetectionResult | null>
+  error: Array<BaseLanguageDetectionResult | null>
+}

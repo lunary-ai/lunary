@@ -12,6 +12,57 @@ import type { Check } from "./types"
 export * from "./types"
 export * from "./serialize"
 
+const ALL_LANGUAGES = [
+  "en", // English
+  "zh", // Chinese
+  "hi", // Hindi
+  "es", // Spanish
+  "fr", // French
+  "ar", // Arabic
+  "bn", // Bengali
+  "ru", // Russian
+  "pt", // Portuguese
+  "id", // Indonesian
+  "ur", // Urdu
+  "de", // German
+  "ja", // Japanese
+  "sw", // Swahili
+  "ta", // Tamil
+  "vi", // Vietnamese
+  "ko", // Korean
+  "tr", // Turkish
+  "fa", // Persian
+  "it", // Italian
+  "pa", // Punjabi
+  "pl", // Polish
+  "uk", // Ukrainian
+  "nl", // Dutch
+  "ro", // Romanian
+  "el", // Greek
+  "hu", // Hungarian
+  "he", // Hebrew
+  "th", // Thai
+  "sv", // Swedish
+  "fi", // Finnish
+  "no", // Norwegian
+  "da", // Danish
+  "cs", // Czech
+  "sk", // Slovak
+  "bg", // Bulgarian
+  "sr", // Serbian
+  "hr", // Croatian
+  "lt", // Lithuanian
+  "lv", // Latvian
+  "et", // Estonian
+  "sl", // Slovenian
+  "mk", // Macedonian
+  "sq", // Albanian
+  "hy", // Armenian
+  "ka", // Georgian
+  "az", // Azerbaijani
+  "ms", // Malay
+]
+
 export const CHECKS: Check[] = [
   {
     id: "tools",
@@ -34,6 +85,7 @@ export const CHECKS: Check[] = [
     id: "type",
     name: "Type",
     uiType: "basic",
+
     disableInEvals: true,
     params: [
       {
@@ -78,6 +130,7 @@ export const CHECKS: Check[] = [
   {
     id: "models",
     name: "Model name",
+    uniqueInBar: true,
     uiType: "basic",
     disableInEvals: true,
     params: [
@@ -116,6 +169,7 @@ export const CHECKS: Check[] = [
   {
     id: "templates",
     name: "Templates",
+    uniqueInBar: true,
     uiType: "basic",
     disableInEvals: true,
     params: [
@@ -135,6 +189,7 @@ export const CHECKS: Check[] = [
   {
     id: "status",
     name: "Status",
+    uniqueInBar: true,
     uiType: "basic",
     disableInEvals: true,
     params: [
@@ -183,6 +238,7 @@ export const CHECKS: Check[] = [
     id: "users",
     name: "Users",
     uiType: "basic",
+    uniqueInBar: true,
     disableInEvals: true,
     params: [
       {
@@ -392,10 +448,25 @@ export const CHECKS: Check[] = [
     uiType: "basic",
     disableInEvals: true,
     params: [
-      NUMBER_PARAM,
       {
         type: "label",
-        label: "Date",
+        label: "Start Date",
+      },
+      {
+        type: "select",
+        id: "operator",
+        width: 50,
+        defaultValue: "lt",
+        options: [
+          {
+            label: "after",
+            value: "gt",
+          },
+          {
+            label: "before",
+            value: "lt",
+          },
+        ],
       },
       {
         type: "date",
@@ -482,6 +553,74 @@ export const CHECKS: Check[] = [
         min: 0,
         id: "tokens",
         width: 70,
+      },
+    ],
+  },
+  {
+    id: "languages",
+    name: "Language",
+    uiType: "ai",
+    disableInEvals: true,
+    params: [
+      FIELD_PARAM,
+      {
+        type: "label",
+        label: "contains",
+      },
+      {
+        type: "select",
+        id: "codes",
+        multiple: true,
+        width: 100,
+        options: ALL_LANGUAGES.map((code) => ({
+          label: code,
+          value: code,
+        })),
+      },
+    ],
+  },
+  {
+    id: "entities",
+    name: "PII",
+    uiType: "ai",
+    disableInEvals: true,
+    params: [
+      {
+        type: "label",
+        label: "Contains",
+      },
+      {
+        type: "select",
+        id: "types",
+        multiple: true,
+        width: 100,
+        searchable: true,
+        options: [
+          {
+            label: "Email",
+            value: "email",
+          },
+          {
+            label: "Phone",
+            value: "phone",
+          },
+          {
+            label: "Person",
+            value: "person",
+          },
+          {
+            label: "Location",
+            value: "location",
+          },
+          {
+            label: "Org",
+            value: "org",
+          },
+          {
+            label: "Credit Card",
+            value: "cc",
+          },
+        ],
       },
     ],
   },
@@ -599,68 +738,7 @@ export const CHECKS: Check[] = [
       },
     ],
   },
-  {
-    id: "pii",
-    name: "PII",
-    uiType: "ai",
-    description:
-      "Uses AI to detect if the given field contains personal identifiable information (PII).",
-    params: [
-      FIELD_PARAM,
-      MATCH_PARAM,
-      {
-        type: "select",
-        id: "entities",
-        width: 230,
-        defaultValue: [
-          "person",
-          "location",
-          "org",
-          "email",
-          "cc",
-          "phone",
-          "ip",
-          // "ssn",
-        ],
-        multiple: true,
-        searchable: true,
-        options: [
-          {
-            label: "Name",
-            value: "person",
-          },
-          {
-            label: "Location",
-            value: "location",
-          },
-          {
-            label: "Organization",
-            value: "org",
-          },
-          {
-            label: "Email",
-            value: "email",
-          },
-          {
-            label: "Credit Card",
-            value: "cc",
-          },
-          {
-            label: "Phone",
-            value: "phone",
-          },
-          {
-            label: "IP Address",
-            value: "ip",
-          },
-          // {
-          //   label: "SSN",
-          //   value: "ssn",
-          // },
-        ],
-      },
-    ],
-  },
+
   {
     id: "assertion",
     name: "Assertion",

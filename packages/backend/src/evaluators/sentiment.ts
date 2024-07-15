@@ -1,22 +1,68 @@
+import { callML } from "@/src/utils/ml"
 import { Run } from "shared"
-import { lastMsg } from "../checks"
-import openai from "@/src/utils/openai"
-import lunary from "lunary"
+
+// TOOD: refacto this with all the other parsing function already in use
+function parseMessages(messages: unknown) {
+  if (!messages) {
+    return [""]
+  }
+  if (typeof messages === "string" && messages.length) {
+    return [messages]
+  }
+
+  if (messages === "__NOT_INGESTED__") {
+    return [""]
+  }
+
+  if (Array.isArray(messages)) {
+    let contentArray = []
+    for (const message of messages) {
+      let content = message.content || message.text
+      if (typeof content === "string" && content.length) {
+        contentArray.push(content)
+      } else {
+        contentArray.push(JSON.stringify(message))
+      }
+    }
+    return contentArray
+  }
+
+  if (typeof messages === "object") {
+    return [JSON.stringify(messages)]
+  }
+
+  return [""]
+}
 
 export async function evaluate(run: Run) {
-  const input = lastMsg(run.input)
+  const input = parseMessages(run.input)
+  const output = parseMessages(run.output)
+  const error = parseMessages(run.error)
 
-  const template = await lunary.renderTemplate("sentiment", {
-    input,
-  })
+  const [inputSentiment, outputSentiment] = await Promise.all([
+    analyzeSentiment(input),
+    analyzeSentiment(output),
+  ])
 
-  const res = await openai.chat.completions.create(template)
+  const sentiments = {
+    input: inputSentiment,
+    output: outputSentiment,
+    error: error.map(e => 0) 
+  }
 
-  const output = res.choices[0]?.message?.content
 
-  if (!output) ""
+  // TODO: zod for languages, SHOLUD NOT INGEST IN DB IF NOT CORRECT FORMAT
+  return sentiments 
+}
 
-  const result = parseFloat(output.toLowerCase().trim())
-
-  return result
+// TODO: type
+async function analyzeSentiment(
+  texts: string[],
+): Promise<any> {
+  try {
+    return callML("sentiment", { texts })
+  } catch (error) {
+    console.error(error)
+    console.log(texts)
+  }
 }

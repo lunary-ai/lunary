@@ -4,8 +4,6 @@ import Feedback from "@/components/blocks/OldFeedback"
 import ProtectedText from "@/components/blocks/ProtectedText"
 import { Badge, Button, Group } from "@mantine/core"
 import { createColumnHelper } from "@tanstack/react-table"
-import { useEffect } from "react"
-import analytics from "./analytics"
 
 import Link from "next/link"
 import { EvaluatorType } from "shared"
@@ -18,7 +16,7 @@ export function timeColumn(timeColumn, label = "Time") {
   return columnHelper.accessor(timeColumn, {
     header: label,
     id: timeColumn,
-    size: 80,
+    size: 130,
     sortingFn: (a, b) =>
       new Date(a.getValue(timeColumn)).getTime() -
       new Date(b.getValue(timeColumn)).getTime(),
@@ -77,28 +75,17 @@ export function statusColumn() {
 export function tagsColumn() {
   return columnHelper.accessor("tags", {
     header: "Tags",
-    size: 70,
+    size: 120,
+    minSize: 80,
     cell: (props) => {
       const tags = props.getValue()
-
-      useEffect(() => {
-        // Feature tracking
-        if (tags) analytics.trackOnce("HasTags")
-      }, [tags])
 
       if (!tags) return null
 
       return (
         <Group gap={4}>
           {tags.map((tag) => (
-            <Badge
-              key={tag}
-              variant="outline"
-              style={{
-                textTransform: "none",
-                maxWidth: "100%",
-              }}
-            >
+            <Badge key={tag} variant="outline">
               {tag}
             </Badge>
           ))}
@@ -111,7 +98,7 @@ export function tagsColumn() {
 export function inputColumn(label = "input") {
   return columnHelper.accessor("input", {
     header: label,
-    size: 200,
+    minSize: 250,
     enableSorting: false,
     cell: (props) => <SmartViewer data={props.getValue()} compact />,
   })
@@ -120,6 +107,7 @@ export function inputColumn(label = "input") {
 export function outputColumn(label = "Response") {
   return columnHelper.accessor("output", {
     header: label,
+    minSize: 250,
     enableSorting: false,
     cell: (props) => (
       <SmartViewer
@@ -159,7 +147,7 @@ export function templateColumn() {
 export function userColumn() {
   return columnHelper.accessor("user", {
     header: "User",
-    size: 120,
+    size: 130,
     cell: (props) => {
       const user = props.getValue()
 
@@ -173,7 +161,7 @@ export function userColumn() {
 export function nameColumn(label = "Name") {
   return columnHelper.accessor("name", {
     header: label,
-    size: 80,
+    size: 100,
     minSize: 30,
     cell: (props) => {
       const { status, type } = props.row.original
@@ -182,9 +170,6 @@ export function nameColumn(label = "Name") {
       return (
         <Badge
           variant="outline"
-          style={{
-            textTransform: "none",
-          }}
           color={
             status === "success" ? "green" : status === "error" ? "red" : "gray"
           }
@@ -199,7 +184,7 @@ export function nameColumn(label = "Name") {
 export function costColumn() {
   return columnHelper.accessor("cost", {
     header: "Cost",
-    size: 60,
+    size: 90,
     sortingFn: (a, b) => a - b,
     cell: (props) => {
       const cost = props.getValue()
@@ -245,14 +230,15 @@ export function feedbackColumn(withRelatedRuns = false) {
 
 export function enrichmentColumn(
   name: string,
-  slug: string,
+  id: string,
   evaluatorType: EvaluatorType,
 ) {
-  return columnHelper.accessor(`enrichment-${slug}`, {
+  return columnHelper.accessor(`enrichment-${id}`, {
     header: `${capitalize(name)} ✨`,
+    id: `enrichment-${id}`,
     size: 120,
     cell: (props) => {
-      const data = props.row.original[`enrichment-${slug}`]
+      const data = props.row.original[`enrichment-${id}`]
       if (!data) {
         return null
       }

@@ -22,6 +22,7 @@ import TokensBadge from "./TokensBadge"
 import Feedbacks from "./Feedbacks"
 import config from "@/utils/config"
 import { useState } from "react"
+import AppUserAvatar from "./AppUserAvatar"
 
 const isChatMessages = (obj) => {
   return Array.isArray(obj)
@@ -42,19 +43,19 @@ const ParamItem = ({
   color?: string
 }) => {
   return (
-    <Group>
+    <Group wrap="nowrap">
       <Text size="sm">{name}: </Text>
       {render ? (
         render(value)
       ) : (
         <Text size="sm">
           {typeof value === "string" || typeof value === "number" ? (
-            <Badge variant="outline" tt="none" color={color}>
+            <Badge variant="outline" color={color}>
               {value}
             </Badge>
           ) : Array.isArray(value) ? (
             value.map((v, i) => (
-              <Badge key={i} variant="outline" tt="none" mr="xs">
+              <Badge key={i} variant="outline" mr="xs">
                 {v}
               </Badge>
             ))
@@ -94,22 +95,28 @@ const ParamItem = ({
 
 function RenderTools({ tools }) {
   return tools?.map((tool, i) => {
+    const toolObject = tool.function || tool.toolSpec // toolSpec is for langchain I believe
+
+    const spec = toolObject?.parameters || toolObject?.inputSchema
+
     return (
       <HoverCard key={i}>
         <HoverCard.Target>
-          <Badge color="pink" variant="outline" tt="none">
-            {tool.function?.name}
+          <Badge color="pink" variant="outline">
+            {toolObject?.name || "Unknown"}
           </Badge>
         </HoverCard.Target>
-        <HoverCard.Dropdown miw={400}>
+        <HoverCard.Dropdown maw={400}>
           <ScrollArea.Autosize mah={300}>
             <Stack>
-              {tool.function?.description && (
-                <Text size="sm">{tool.function?.description}</Text>
+              {toolObject?.description && (
+                <Text size="sm">{toolObject?.description}</Text>
               )}
-              <Text size="sm">
-                <pre>{JSON.stringify(tool.function?.parameters, null, 2)}</pre>
-              </Text>
+              {spec && (
+                <Text size="sm">
+                  <pre>{JSON.stringify(spec, null, 2)}</pre>
+                </Text>
+              )}
             </Stack>
           </ScrollArea.Autosize>
         </HoverCard.Dropdown>
@@ -248,16 +255,28 @@ export default function RunInputOutput({
 
             <Card withBorder radius="md">
               <Group justify="space-between" align="start">
-                <Stack gap="xs">
-                  <ParamItem
-                    name="Model"
-                    value={run.name}
-                    render={(value) => (
-                      <Badge variant="light" tt="none" color="blue">
-                        {value}
-                      </Badge>
-                    )}
-                  />
+                <Stack gap={10}>
+                  {run.name && (
+                    <ParamItem
+                      name="Model"
+                      value={run.name}
+                      render={(value) => (
+                        <Badge variant="light" color="blue">
+                          {value}
+                        </Badge>
+                      )}
+                    />
+                  )}
+                  {run.user && (
+                    <ParamItem
+                      name="User"
+                      value={run.user}
+                      render={(user) => (
+                        <AppUserAvatar size="sm" user={user} withName />
+                      )}
+                    />
+                  )}
+
                   {PARAMS.map(
                     ({ key, name, render }) =>
                       typeof run.params?.[key] !== "undefined" &&
@@ -274,6 +293,7 @@ export default function RunInputOutput({
                   {run.tags?.length > 0 && (
                     <ParamItem name="Tags" value={run.tags} />
                   )}
+
                   {Object.entries(run.metadata || {})
                     .filter(([key]) => key !== "enrichment")
                     .map(([key, value]) => {

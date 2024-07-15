@@ -1,6 +1,21 @@
-import { ReactNode, useCallback, useEffect, useRef, useState } from "react"
+import {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 
-import { ActionIcon, Card, Checkbox, Group, Menu, Text } from "@mantine/core"
+import {
+  ActionIcon,
+  Card,
+  Checkbox,
+  Group,
+  Menu,
+  Text,
+  useComputedColorScheme,
+} from "@mantine/core"
 import {
   IconChevronDown,
   IconChevronUp,
@@ -14,26 +29,19 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
+import classes from "./index.module.css"
 
-import { useLocalStorage } from "@mantine/hooks"
-import { useVirtual } from "@tanstack/react-virtual"
-import { useFixedColorScheme } from "@/utils/hooks"
+import { useVirtualizer } from "@tanstack/react-virtual"
 
 // outside for reference
 const emptyArray = []
 
-const DEFAULT_AUTO_HIDABLE_COLUMNS = [
-  "feedback",
-  "tags",
-  "user",
-  "templateVersionId",
-]
-const CHAT_AUTO_HIDABLE_COLUMNS = ["tags", "user"]
-
 export default function DataTable({
   type,
   data,
-  columns = [],
+  availableColumns = [],
+  visibleColumns,
+  setVisibleColumns,
   loading = false,
   onRowClicked = undefined,
   loadMore = undefined,
@@ -41,15 +49,14 @@ export default function DataTable({
 }: {
   type: string
   data?: any[]
-  columns?: any[]
+  availableColumns?: any[]
+  visibleColumns?: VisibilityState
+  setVisibleColumns?: (columns: VisibilityState) => void
   loading?: boolean
   onRowClicked?: (row: any) => void
   loadMore?: (() => void) | null
   defaultSortBy?: string
 }) {
-  const autoHidableColumns =
-    type === "thread" ? CHAT_AUTO_HIDABLE_COLUMNS : DEFAULT_AUTO_HIDABLE_COLUMNS
-
   const [sorting, setSorting] = useState<SortingState>([
     {
       id: defaultSortBy,
@@ -57,49 +64,43 @@ export default function DataTable({
     },
   ])
 
-  const [columnVisibility, setColumnVisibility] =
-    useLocalStorage<VisibilityState>({
-      key: "columnVisibility-" + type,
-      defaultValue: {},
-    })
-
-  const [columnsTouched, setColumnsTouched] = useLocalStorage({
-    key: "columnsTouched-" + type,
-    defaultValue: false,
-  })
-
   //we need a reference to the scrolling element for logic down below
   const tableContainerRef = useRef<HTMLDivElement>(null)
 
-  const scheme = useFixedColorScheme()
+  const scheme = useComputedColorScheme()
 
   const table = useReactTable({
     data: data ?? emptyArray, // So it doesn't break when data is undefined because of reference
-    columns,
+    columns: availableColumns,
     columnResizeMode: "onChange",
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
+    onColumnVisibilityChange: (fn) => {
+      if (!fn || !setVisibleColumns) return
+      const data = fn() // for some reason, need to call the function to get the updated state
+
+      setVisibleColumns(data as VisibilityState)
+    },
     state: {
       sorting,
-      columnVisibility,
+      columnVisibility: visibleColumns,
     },
     onSortingChange: setSorting,
   })
 
   const { rows } = table.getRowModel()
 
-  const rowVirtualizer = useVirtual({
-    size: rows.length,
-    parentRef: tableContainerRef,
+  const rowVirtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => tableContainerRef.current,
+    estimateSize: () => 70,
+    measureElement:
+      typeof window !== "undefined" &&
+      navigator.userAgent.indexOf("Firefox") === -1
+        ? (element) => element?.getBoundingClientRect().height
+        : undefined,
+    overscan: 4,
   })
-
-  const items = rowVirtualizer.virtualItems
-  const paddingTop = items.length > 0 ? items[0].start : 0
-  const paddingBottom =
-    items.length > 0
-      ? rowVirtualizer.totalSize - items[items.length - 1].end
-      : 0
 
   //called on scroll and possibly on mount to fetch more data as the user scrolls and reaches bottom of table
   const fetchMoreOnBottomReached = useCallback(
@@ -124,29 +125,26 @@ export default function DataTable({
     fetchMoreOnBottomReached(tableContainerRef.current)
   }, [fetchMoreOnBottomReached])
 
-  useEffect(() => {
-    if (!table || !rows?.length || columnsTouched) return
+  const items = rowVirtualizer.getVirtualItems()
 
-    table.getAllColumns().forEach((column) => {
-      if (!autoHidableColumns.includes(column.id)) return
-
-      const isUsed = rows.some(
-        (row) =>
-          row.original[column.id] ||
-          // Special case with feedback column which is sometimes in parentFeedback
-          (column.id === "feedback" && row.original.parentFeedback),
-      )
-
-      column.toggleVisibility(isUsed)
-    })
-  }, [table, rows, columnsTouched])
+  const paddingTop = useMemo(
+    () => (items.length > 0 ? items[0].start : 0),
+    [items],
+  )
+  const paddingBottom = useMemo(
+    () =>
+      items.length > 0
+        ? rowVirtualizer.getTotalSize() - items[items.length - 1].end
+        : 0,
+    [items, rowVirtualizer],
+  )
 
   return (
     <>
-      <Card withBorder p={0} className={scheme}>
+      <Card withBorder p={0} className={scheme} h="auto">
         <div
           ref={tableContainerRef}
-          className="tableContainer"
+          className={classes.tableContainer}
           onScroll={(e) => {
             fetchMoreOnBottomReached(e.currentTarget)
           }}
@@ -155,13 +153,9 @@ export default function DataTable({
             <Menu.Target>
               <ActionIcon
                 component="span"
-                pos="absolute"
-                right={15}
-                top={5}
-                style={{ zIndex: 2 }}
-                variant="transparent"
-                color={`var(--mantine-color-default-color)`}
-                opacity={0.5}
+                variant="light"
+                color="gray"
+                className={classes.columnIcon}
               >
                 <IconColumns3 size={16} />
               </ActionIcon>
@@ -175,7 +169,6 @@ export default function DataTable({
                     key={column.id}
                     onClick={() => {
                       column.toggleVisibility()
-                      setColumnsTouched(true)
                     }}
                   >
                     <Group>
@@ -191,12 +184,7 @@ export default function DataTable({
                 ))}
             </Menu.Dropdown>
           </Menu>
-          <table
-            // striped
-            // withColumnBorders
-            width={table.getCenterTotalSize()}
-            cellSpacing={0}
-          >
+          <table cellSpacing={0}>
             <thead>
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
@@ -205,7 +193,9 @@ export default function DataTable({
                       <th
                         key={header.id}
                         colSpan={header.colSpan}
-                        style={{ width: header.getSize() }}
+                        style={{
+                          width: header.getSize(),
+                        }}
                       >
                         {header.isPlaceholder ? null : (
                           <Group
@@ -232,8 +222,10 @@ export default function DataTable({
                           {...{
                             onMouseDown: header.getResizeHandler(),
                             onTouchStart: header.getResizeHandler(),
-                            className: `resizer ${
-                              header.column.getIsResizing() ? "isResizing" : ""
+                            className: `${classes.resizer} ${
+                              header.column.getIsResizing()
+                                ? classes.isResizing
+                                : ""
                             }`,
                           }}
                         />
@@ -243,30 +235,35 @@ export default function DataTable({
                 </tr>
               ))}
             </thead>
-            <tbody>
+            <tbody
+              style={{
+                height: `${rowVirtualizer.getTotalSize()}px`, //tells scrollbar how big the table is
+              }}
+            >
               {paddingTop > 0 && (
                 <tr>
                   <td style={{ height: `${paddingTop}px` }} />
                 </tr>
               )}
-              {items.map((virtualRow) => {
+              {items.map((virtualRow, index) => {
                 const row = rows[virtualRow.index]
                 return (
                   <tr
                     key={row.id}
-                    ref={virtualRow.measureRef}
                     onClick={
                       onRowClicked
                         ? () => onRowClicked(row.original)
                         : undefined
                     }
-                    style={
-                      onRowClicked
-                        ? {
-                            cursor: "pointer",
-                          }
-                        : {}
+                    className={
+                      virtualRow.index % 2 ? "ListItemOdd" : "ListItemEven"
                     }
+                    ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
+                    style={{
+                      // transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
+                      height: `${virtualRow.size}px`,
+                      ...(onRowClicked ? { cursor: "pointer" } : {}),
+                    }}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <td
@@ -291,110 +288,19 @@ export default function DataTable({
               )}
             </tbody>
           </table>
+
           {loading && (
             <Text m="auto" p="md" c="dimmed" size="xs" ta="center">
               Fetching...
             </Text>
           )}
-          {!items.length && !loading && (
+          {!rows.length && !loading && (
             <Text m="auto" p="md" c="dimmed" size="xs" ta="center">
               No data
             </Text>
           )}
         </div>
-        <style global jsx>{`
-          .tableContainer {
-            height: 100%;
-            overflow-y: scroll;
-            overflow-x: hidden;
-          }
-
-          table {
-            width: 100% !important;
-            table-layout: fixed;
-            font-size: 14px;
-          }
-
-          .light table tbody tr:nth-child(odd) {
-            background-color: rgb(248, 249, 250);
-          }
-
-          table tbody tr:hover {
-            background-color: var(
-              --mantine-primary-color-light-hover
-            ) !important;
-          }
-
-          thead {
-            position: sticky;
-            top: 0;
-            z-index: 1;
-            background-color: var(--mantine-color-body);
-          }
-
-          th {
-            position: relative;
-          }
-
-          td code {
-            max-height: 60px;
-          }
-
-          .light th {
-            border-bottom: 1px solid #ddd;
-          }
-
-          .dark th,
-          .dark td {
-            border-bottom: 2px solid #2b2c2f;
-          }
-
-          tr {
-            width: fit-content;
-            height: 30px;
-          }
-
-          th,
-          td {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            padding: 7px 10px;
-          }
-
-          .resizer {
-            position: absolute;
-            right: 0;
-            top: 0;
-            height: 100%;
-            width: 5px;
-            background: rgba(0, 0, 0, 0.5);
-            cursor: col-resize;
-            user-select: none;
-            touch-action: none;
-          }
-
-          .resizer.isResizing {
-            background: blue;
-            opacity: 1;
-          }
-
-          @media (hover: hover) {
-            .resizer {
-              opacity: 0;
-            }
-
-            *:hover > .resizer {
-              opacity: 1;
-            }
-          }
-        `}</style>
       </Card>
-      {/* {!!hiddenColumns.length && (
-        <Text color="dimmed" size="xs">
-          {`The following unused columns were hidden: `}
-          {hiddenColumns.map((c) => c.id).join(", ")}
-        </Text>
-      )} */}
     </>
   )
 }
