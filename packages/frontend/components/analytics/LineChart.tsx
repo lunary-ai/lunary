@@ -317,7 +317,7 @@ function LineChartComponent({
             blur={5}
             backgroundOpacity={0.05}
             p="lg"
-            zIndex={3}
+            zIndex={2}
           />
           <Center
             ta="center"

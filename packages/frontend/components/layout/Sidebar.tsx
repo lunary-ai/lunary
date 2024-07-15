@@ -60,6 +60,7 @@ import config from "@/utils/config"
 import { useViews } from "@/utils/dataHooks/views"
 import { useDisclosure, useFocusTrap } from "@mantine/hooks"
 import { getIconComponent } from "../blocks/IconPicker"
+import { set } from "date-fns"
 
 function NavbarLink({
   icon: Icon,
@@ -220,7 +221,16 @@ export default function Sidebar() {
 
   const [createProjectLoading, setCreateProjectLoading] = useState(false)
 
-  const combobox = useCombobox()
+  const combobox = useCombobox({
+    onDropdownClose: () => {
+      combobox.resetSelectedOption()
+      setSearch("")
+    },
+    onDropdownOpen: () => {
+      combobox.focusSearchInput()
+    },
+  })
+
   const [search, setSearch] = useState("")
 
   const isSelfHosted = config.IS_SELF_HOSTED
@@ -363,6 +373,14 @@ export default function Sidebar() {
     }
   }, [project, projects, loading, setProjectId])
 
+  const projectOptions = projects
+    ?.filter((item) => item.name.toLowerCase().includes(search.toLowerCase()))
+    .map((item) => (
+      <Combobox.Option value={item.id} key={item.id}>
+        {item.name}
+      </Combobox.Option>
+    ))
+
   return (
     <Flex
       justify="space-between"
@@ -430,15 +448,11 @@ export default function Sidebar() {
                   }}
                 />
                 <Combobox.Options>
-                  {projects
-                    ?.filter((item) =>
-                      item.name.toLowerCase().includes(search.toLowerCase()),
-                    )
-                    .map((item) => (
-                      <Combobox.Option value={item.id} key={item.id}>
-                        {item.name}
-                      </Combobox.Option>
-                    ))}
+                  {projectOptions?.length > 0 ? (
+                    projectOptions
+                  ) : (
+                    <Combobox.Empty>No projects found</Combobox.Empty>
+                  )}
                 </Combobox.Options>
                 <Combobox.Footer>
                   <Button
