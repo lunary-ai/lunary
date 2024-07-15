@@ -12,6 +12,7 @@ import { getFlagEmoji } from "./format"
 import ErrorBoundary from "@/components/blocks/ErrorBoundary"
 
 export function renderEnrichment(data: EnrichmentData, type: EvaluatorType) {
+  return ""
   const renderers: Record<EvaluatorType, (data: any) => any> = {
     language: renderLanguageEnrichment,
     pii: renderPIIEnrichment,
@@ -29,6 +30,13 @@ export function renderEnrichment(data: EnrichmentData, type: EvaluatorType) {
 }
 
 function renderLanguageEnrichment(languageDetections: LanguageDetectionResult) {
+  if (
+    !languageDetections?.input ||
+    !languageDetections?.error ||
+    !languageDetections?.error
+  ) {
+    return ""
+  }
   const languages = languageDetections.output.map((detectionResult) => {
     if (detectionResult === null) {
       return ""

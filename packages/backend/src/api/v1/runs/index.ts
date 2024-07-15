@@ -111,60 +111,80 @@ function formatRun(run: any) {
   }
 
   // TODO: c'est horrible
-  const evaluationResults = run.evaluationResults.find(
-    (result) => result.evaluatorType === "language",
-  )
-  const languageDetections = evaluationResults?.result
-  if (languageDetections) {
-    if (Array.isArray(formattedRun.input)) {
-      for (let i = 0; i < formattedRun.input.length; i++) {
-        formattedRun.input[i].languageDetection = languageDetections.input[i]
-      }
-    } else if (formattedRun.input && typeof formattedRun.input !== "string") {
-      formattedRun.input.languageDetection = languageDetections.input[0]
-    }
+  // const evaluationResults = run.evaluationResults.find(
+  //   (result) => result.evaluatorType === "language",
+  // )
+  // const languageDetections = evaluationResults?.result
+  // if (
+  //   languageDetections?.input &&
+  //   languageDetections?.output &&
+  //   languageDetections?.error
+  // ) {
+  //   if (Array.isArray(formattedRun.input)) {
+  //     for (let i = 0; i < formattedRun.input.length; i++) {
+  //       if (
+  //         typeof formattedRun.input[i] === "object" &&
+  //         languageDetections.input
+  //       ) {
+  //         formattedRun.input[i].languageDetection = languageDetections.input[i]
+  //       }
+  //     }
+  //   } else if (formattedRun.input && typeof formattedRun.input === "object") {
+  //     formattedRun.input.languageDetection = languageDetections.input[0]
+  //   }
 
-    if (Array.isArray(formattedRun.output)) {
-      for (let i = 0; i < run.output.length; i++) {
-        formattedRun.output[i].languageDetection = languageDetections.output[i]
-      }
-    } else if (formattedRun.output && typeof formattedRun.input !== "string") {
-      formattedRun.output.languageDetection = languageDetections.output[0]
-    }
+  //   if (Array.isArray(formattedRun.output)) {
+  //     for (let i = 0; i < run.output.length; i++) {
+  //       if (typeof formattedRun.output[i] === "object") {
+  //         formattedRun.output[i].languageDetection =
+  //           languageDetections.output[i]
+  //       }
+  //     }
+  //   } else if (formattedRun.output && typeof formattedRun.input === "object") {
+  //     formattedRun.output.languageDetection = languageDetections.output[0]
+  //   }
 
-    if (formattedRun.error && typeof formattedRun.input !== "string") {
-      formattedRun.error.languageDetection = languageDetections.error[0]
-    }
-  }
+  //   if (formattedRun.error && typeof formattedRun.input === "object") {
+  //     formattedRun.error.languageDetection = languageDetections.error[0]
+  //   }
+  // }
 
-  const sentimentEvaluationResults = run.evaluationResults.find(
-    (result) => result.evaluatorType === "sentiment",
-  )
-  const sentimentAnalyses = sentimentEvaluationResults?.result
-  if (sentimentAnalyses) {
-    if (Array.isArray(formattedRun.input)) {
-      for (let i = 0; i < formattedRun.input.length; i++) {
-        formattedRun.input[i].sentimentAnalysis = sentimentAnalyses.input[i]
-      }
-    } else if (formattedRun.input && typeof formattedRun.input !== "string") {
-      formattedRun.input.sentimentAnalysis = sentimentAnalyses.input[0]
-    }
-    if (Array.isArray(formattedRun.output)) {
-      for (let i = 0; i < run.output.length; i++) {
-        formattedRun.output[i].sentimentAnalysis = sentimentAnalyses.output[i]
-      }
-    } else if (formattedRun.output && typeof formattedRun.input !== "string") {
-      formattedRun.output.sentimentAnalysis = sentimentAnalyses.output[0]
-    }
-    if (formattedRun.error && typeof formattedRun.input !== "string") {
-      formattedRun.error.sentimentAnalysis = sentimentAnalyses.error[0]
-    }
-  }
+  // const sentimentEvaluationResults = run.evaluationResults.find(
+  //   (result) => result.evaluatorType === "sentiment",
+  // )
+  // const sentimentAnalyses = sentimentEvaluationResults?.result
+  // if (
+  //   sentimentAnalyses?.input &&
+  //   sentimentAnalyses?.output &&
+  //   sentimentAnalyses?.error
+  // ) {
+  //   if (Array.isArray(formattedRun.input)) {
+  //     for (let i = 0; i < formattedRun.input.length; i++) {
+  //       if (typeof formattedRun.input[i] === "object") {
+  //         formattedRun.input[i].sentimentAnalysis = sentimentAnalyses.input[i]
+  //       }
+  //     }
+  //   } else if (formattedRun.input && typeof formattedRun.input === "object") {
+  //     formattedRun.input.sentimentAnalysis = sentimentAnalyses.input[0]
+  //   }
+  //   if (Array.isArray(formattedRun.output)) {
+  //     for (let i = 0; i < run.output.length; i++) {
+  //       if (formattedRun.output && typeof formattedRun.output[i] === "object") {
+  //         formattedRun.output[i].sentimentAnalysis = sentimentAnalyses.output[i]
+  //       }
+  //     }
+  //   } else if (formattedRun.output && typeof formattedRun.input === "object") {
+  //     formattedRun.output.sentimentAnalysis = sentimentAnalyses.output[0]
+  //   }
+  //   if (formattedRun.error && typeof formattedRun.input === "object") {
+  //     formattedRun.error.sentimentAnalysis = sentimentAnalyses.error[0]
+  //   }
+  // }
 
-  for (let evaluationResult of run.evaluationResults || []) {
-    formattedRun[`enrichment-${evaluationResult.evaluatorId}`] =
-      evaluationResult
-  }
+  // for (let evaluationResult of run.evaluationResults || []) {
+  //   formattedRun[`enrichment-${evaluationResult.evaluatorId}`] =
+  //     evaluationResult
+  // }
   return formattedRun
 }
 
