@@ -213,12 +213,12 @@ function renderToneEnrichment(data: EnrichmentData) {
   )
 }
 
-export function renderSentimentEnrichment(data: EnrichmentData) {
-  const { input } = data
-
-  if (!input || input.length === 0) {
+export function renderSentimentEnrichment(data?: EnrichmentData) {
+  if (!data || !data.input || data.input.length === 0) {
     return null
   }
+
+  const { input } = data
 
   // get last input item for the quick glance
   const lastInput = input[input.length - 1]
