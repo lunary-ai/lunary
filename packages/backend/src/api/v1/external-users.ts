@@ -38,39 +38,52 @@ users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
     `
   }
 
-  const users = await sql`
-    with user_costs as (
+  const [users, total] = await Promise.all([
+    sql`
+      with user_costs as (
+        select
+          external_user_id,
+          coalesce(sum(cost), 0) as cost
+        from
+          run r
+        where
+          project_id = ${projectId} 
+          ${createAtQuery}
+        group by
+          external_user_id
+      )
       select
-        external_user_id,
-        coalesce(sum(cost), 0) as cost
+        eu.id,
+        eu.created_at,
+        eu.external_id,
+        eu.last_seen,
+        eu.props,
+        uc.cost
       from
-        run r
+        public.external_user eu
+        left join user_costs uc on eu.id = uc.external_user_id
       where
-        project_id = ${projectId} 
-        ${createAtQuery}
-      group by
-        external_user_id
-    )
-    select
-      eu.id,
-      eu.created_at,
-      eu.external_id,
-      eu.last_seen,
-      eu.props,
-      uc.cost
-    from
-      public.external_user eu
-      left join user_costs uc on eu.id = uc.external_user_id
-    where
-      eu.project_id = ${projectId} 
-      ${searchQuery} 
-    order by
-      cost desc nulls last
-    limit ${limit}
-    offset ${page * limit}
-  `
+        eu.project_id = ${projectId} 
+        ${searchQuery} 
+      order by
+        cost desc nulls last
+      limit ${limit}
+      offset ${page * limit}
+    `,
+    sql`
+      select count(*) as total
+      from public.external_user eu
+      where eu.project_id = ${projectId} 
+      ${searchQuery}
+    `,
+  ])
 
-  ctx.body = users
+  ctx.body = {
+    total: +total[0].total,
+    page,
+    limit,
+    data: users,
+  }
 })
 
 // TODO: deprecated?

@@ -55,7 +55,8 @@ import { parseAsString, useQueryState } from "nuqs"
 const columns = [
   {
     header: "User",
-    size: 80,
+    size: 200,
+    minSize: 100,
     id: "props",
     cell: (props) => {
       const user = props.row.original
@@ -245,7 +246,7 @@ function SelectedUser({ id, onClose }) {
 
             <Box w={"100%"}>
               <LineChart
-                data={runCountData?.filter((d) => d.type === "chat")}
+                data={runCountData?.data?.filter((d) => d.type === "chat")}
                 loading={runCountLoading}
                 props={["runs"]}
                 splitBy="type"
@@ -257,7 +258,7 @@ function SelectedUser({ id, onClose }) {
             </Box>
             <Box w={"100%"}>
               <LineChart
-                data={tokensData}
+                data={tokensData?.data}
                 loading={tokensDataLoading}
                 splitBy="name"
                 props={["tokens"]}

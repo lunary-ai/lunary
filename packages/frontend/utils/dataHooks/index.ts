@@ -69,20 +69,23 @@ export function useProjectMutation(
 }
 
 export function useProjectInfiniteSWR(key: string, ...args: any[]) {
-  const PAGE_SIZE = 1
+  const PAGE_SIZE = 100
 
   const { projectId } = useContext(ProjectContext)
 
   function getKey(pageIndex, previousPageData) {
-    if (previousPageData && !previousPageData.length) return null
-    return generateKey(key, projectId, `page=${pageIndex}&limit=100`)
+    if (previousPageData && !previousPageData.data?.length) return null
+    return generateKey(key, projectId, `page=${pageIndex}&limit=${PAGE_SIZE}`)
   }
 
   const { data, isLoading, isValidating, size, setSize, mutate } =
     useSWRInfinite(getKey, ...(args as [any]))
 
+  const total = data?.[0]?.total
+  const items = data?.map((d) => d.data).flat()
+
   function loadMore() {
-    const hasMore = data && data[data.length - 1]?.length >= PAGE_SIZE
+    const hasMore = items && items?.length < total
 
     if (hasMore) {
       setSize((size) => size + 1)
@@ -90,7 +93,8 @@ export function useProjectInfiniteSWR(key: string, ...args: any[]) {
   }
 
   return {
-    data: data?.flat(),
+    data: items,
+    total,
     loading: isLoading,
     validating: isValidating,
     loadMore,

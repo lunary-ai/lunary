@@ -242,7 +242,20 @@ runs.get("/", async (ctx: Context) => {
     return fileExport(runs, exportType, ctx)
   }
 
-  ctx.body = runs
+  const total = await sql`
+    select count(*) as count
+    from public.run r
+    where r.project_id = ${projectId}
+      ${parentRunCheck}
+      and (${filtersQuery})
+  `
+
+  ctx.body = {
+    total: +total[0].count,
+    page: Number(page),
+    limit: Number(limit),
+    data: runs,
+  }
 })
 
 // TODO: refactor with GET / by putting logic inside a function
