@@ -7,11 +7,11 @@ import {
   IconMoodSmile,
   IconX,
 } from "@tabler/icons-react"
-import { EvaluatorType, LanguageDetectionResult } from "shared"
+import { EnrichmentData, EvaluatorType, LanguageDetectionResult } from "shared"
 import { getFlagEmoji } from "./format"
 import ErrorBoundary from "@/components/blocks/ErrorBoundary"
 
-export function renderEnrichment(data: any, type: EvaluatorType) {
+export function renderEnrichment(data: EnrichmentData, type: EvaluatorType) {
   const renderers: Record<EvaluatorType, (data: any) => any> = {
     language: renderLanguageEnrichment,
     pii: renderPIIEnrichment,
@@ -52,7 +52,7 @@ function renderLanguageEnrichment(languageDetections: LanguageDetectionResult) {
     </Group>
   )
 }
-function renderPIIEnrichment(data: Record<string, any[]>) {
+function renderPIIEnrichment(data: EnrichmentData) {
   const [opened, { close, open }] = useDisclosure(false)
 
   const uniqueEntities = new Set()
@@ -96,7 +96,7 @@ function renderPIIEnrichment(data: Record<string, any[]>) {
   )
 }
 
-function renderToxicityEnrichment(data: string[]) {
+function renderToxicityEnrichment(data: EnrichmentData) {
   const [opened, { close, open }] = useDisclosure(false)
 
   if (data.length === 0) {
@@ -126,7 +126,7 @@ function renderToxicityEnrichment(data: string[]) {
   )
 }
 
-function renderTopicsEnrichment(data: string[]) {
+function renderTopicsEnrichment(data: EnrichmentData) {
   const [opened, { close, open }] = useDisclosure(false)
 
   if (data.length === 0) {
@@ -178,7 +178,7 @@ function renderTopicsEnrichment(data: string[]) {
     </Popover>
   )
 }
-function renderToneEnrichment(data: string[]) {
+function renderToneEnrichment(data: EnrichmentData) {
   const [opened, { close, open }] = useDisclosure(false)
 
   if (data.length === 0) {
@@ -213,13 +213,23 @@ function renderToneEnrichment(data: string[]) {
   )
 }
 
-export function renderSentimentEnrichment(score: number) {
+export function renderSentimentEnrichment(data: EnrichmentData) {
+  const { input } = data
+
+  if (!input || input.length === 0) {
+    return null
+  }
+
+  // get last input item for the quick glance
+  const lastInput = input[input.length - 1]
+  const { score, subjectivity } = lastInput
+
   const [opened, { close, open }] = useDisclosure(false)
   let emoji
   let type
 
-  if (typeof score !== "number") {
-    return ""
+  if (typeof score !== "number" || isNaN(score) || subjectivity < 0.4) {
+    return null
   }
 
   if (score > 0.2) {
@@ -234,22 +244,11 @@ export function renderSentimentEnrichment(score: number) {
   }
 
   return (
-    <Popover
-      width={200}
-      position="bottom"
-      withArrow
-      shadow="md"
-      opened={opened}
-    >
-      <Popover.Target>
-        <Box onMouseEnter={open} onMouseLeave={close}>
-          {emoji}
-        </Box>
-      </Popover.Target>
-      <Popover.Dropdown style={{ pointerEvents: "none" }} w="300">
-        <Text size="sm">{`Sentiment analysis score: ${score} (${type})`}</Text>
-      </Popover.Dropdown>
-    </Popover>
+    <Tooltip label={`Sentiment analysis: ${type}`} opened={opened}>
+      <Box onMouseEnter={open} onMouseLeave={close}>
+        {emoji}
+      </Box>
+    </Tooltip>
   )
 }
 

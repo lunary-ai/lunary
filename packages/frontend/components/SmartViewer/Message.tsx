@@ -494,7 +494,7 @@ const ROLE_ICONS = {
 
 // Used for chat replays
 export function BubbleMessage({ role, content, extra }) {
-  const alignLeft = ["ai", "assistant", "system"].includes(role)
+  const alignLeft = ["ai", "assistant", "bot", "tool", "system"].includes(role)
 
   const Icon = ROLE_ICONS[role || "assistant"]
 

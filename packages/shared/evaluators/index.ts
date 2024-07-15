@@ -43,7 +43,13 @@ interface BaseLanguageDetectionResult {
   confidence: number
 }
 
-export type LanguageDetectionResult = {
+export type EnrichmentData = {
+  input: Array<Record<string, any>>
+  output: Array<Record<string, any>>
+  error: Array<Record<string, any>>
+}
+
+export type LanguageDetectionResult = EnrichmentData & {
   input: Array<BaseLanguageDetectionResult | null>
   output: Array<BaseLanguageDetectionResult | null>
   error: Array<BaseLanguageDetectionResult | null>

@@ -375,6 +375,7 @@ export default function Sidebar() {
 
   const projectOptions = projects
     ?.filter((item) => item.name.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => a.name.localeCompare(b.name))
     .map((item) => (
       <Combobox.Option value={item.id} key={item.id}>
         {item.name}

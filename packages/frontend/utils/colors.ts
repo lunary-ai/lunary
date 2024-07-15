@@ -6,6 +6,7 @@ export function getColorForRole(role) {
   const colorMap = {
     ai: "green",
     assistant: "green",
+    AIMessageChunk: "green",
     human: "blue",
     user: "blue",
     error: "red",
