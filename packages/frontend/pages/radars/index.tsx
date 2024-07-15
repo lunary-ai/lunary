@@ -4,6 +4,7 @@ import Paywall from "@/components/layout/Paywall"
 import { useRadar, useRadars, useUser } from "@/utils/dataHooks"
 import {
   ActionIcon,
+  Alert,
   Badge,
   Box,
   Button,
@@ -27,6 +28,7 @@ import { notifications } from "@mantine/notifications"
 import {
   IconBell,
   IconDotsVertical,
+  IconInfoTriangle,
   IconListSearch,
   IconPencil,
   IconPlus,
@@ -395,9 +397,22 @@ export default function Radar() {
           <Group align="center" justify="space-between">
             <Group align="center">
               <Title>Radars</Title>
-              <Badge variant="light" color="violet">
-                Beta
-              </Badge>
+              <Box ml="md" py="30px">
+                <Alert
+                  color="yellow"
+                  // variant="outline"
+                  p="sm"
+                  fz="xl"
+                  variant="filled"
+                  icon={<IconInfoTriangle size={32} />}
+                  title={
+                    <Text size="sm">
+                      Deprecation warning: This feature will soon be replaced by
+                      Realtime Evaluators.
+                    </Text>
+                  }
+                ></Alert>
+              </Box>
             </Group>
 
             {hasAccess(user.role, "radars", "create") && (

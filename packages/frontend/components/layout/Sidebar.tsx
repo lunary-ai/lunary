@@ -35,6 +35,7 @@ import {
   IconPaint,
   IconSearch,
   IconSettings,
+  IconShieldBolt,
   IconSparkles,
   IconSun,
   IconTimeline,
@@ -286,6 +287,15 @@ export default function Sidebar() {
           resource: "logs",
         },
         { label: "Users", icon: IconUsers, link: "/users", resource: "users" },
+        {
+          label: "Radars",
+          icon: IconShieldBolt,
+          link: "/radars",
+          resource: "radars",
+          disabled: isSelfHosted
+            ? org.license && !org.license.radarEnabled
+            : false,
+        },
       ],
     },
     {
