@@ -25,7 +25,6 @@
   ],
   "dependencies": {
     "concurrently": "^8.2.2",
-    "nuqs": "^1.17.4",
     "patch-package": "^8.0.0"
   },
   "devDependencies": {
