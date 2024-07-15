@@ -448,10 +448,25 @@ export const CHECKS: Check[] = [
     uiType: "basic",
     disableInEvals: true,
     params: [
-      NUMBER_PARAM,
       {
         type: "label",
-        label: "Date",
+        label: "Start Date",
+      },
+      {
+        type: "select",
+        id: "operator",
+        width: 50,
+        defaultValue: "lt",
+        options: [
+          {
+            label: "after",
+            value: "gt",
+          },
+          {
+            label: "before",
+            value: "lt",
+          },
+        ],
       },
       {
         type: "date",

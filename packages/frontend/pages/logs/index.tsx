@@ -118,6 +118,7 @@ export const defaultColumns = {
 
 export const CHECKS_BY_TYPE = {
   llm: [
+    "date",
     "models",
     // "enrichment",
     "tags",
@@ -135,6 +136,7 @@ export const CHECKS_BY_TYPE = {
     // "radar",
   ],
   trace: [
+    "date",
     "tags",
     "users",
     "status",
@@ -144,6 +146,7 @@ export const CHECKS_BY_TYPE = {
     // "radar",
   ],
   thread: [
+    "date",
     "tags",
     "users",
     // "feedback",

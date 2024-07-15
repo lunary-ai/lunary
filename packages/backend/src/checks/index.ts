@@ -412,8 +412,14 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   },
   {
     id: "date",
-    sql: ({ operator, date }) =>
-      sql`created_at ${postgresOperators(operator)} '${date}'`,
+    sql: ({ operator, date }) => {
+      const parsed = new Date(date)
+      const isValid = parsed instanceof Date && !isNaN(parsed.getTime())
+
+      if (!date || isValid) return sql`true`
+
+      return sql`r.created_at ${postgresOperators(operator)} ${parsed}`
+    },
   },
   {
     id: "duration",

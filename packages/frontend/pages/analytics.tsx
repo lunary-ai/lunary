@@ -12,19 +12,10 @@ import {
 } from "@/utils/dataHooks/analytics"
 import { useExternalUsers } from "@/utils/dataHooks/external-users"
 import { formatCost } from "@/utils/format"
-import { getFilteredChartTooltipPayload } from "@mantine/charts"
-import {
-  Box,
-  Button,
-  Group,
-  Paper,
-  Select,
-  SimpleGrid,
-  Stack,
-  Text,
-} from "@mantine/core"
+
+import { Box, Button, Group, Select, SimpleGrid, Stack } from "@mantine/core"
 import { DatePickerInput } from "@mantine/dates"
-import "@mantine/dates/styles.css"
+
 import {
   useInViewport,
   useLocalStorage,
@@ -37,7 +28,7 @@ import {
 } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { useQueryState } from "nuqs"
-import { use, useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { deserializeLogic, serializeLogic } from "shared"
 
 export function getDefaultDateRange() {
@@ -294,34 +285,7 @@ function GranularitySelect({
   )
 }
 
-interface ChartTooltipProps {
-  label: string
-  payload: Record<string, any>[] | undefined
-}
-
 const DEFAULT_CHECK = ["AND"]
-
-function ChartTooltip({ label, payload }: ChartTooltipProps) {
-  if (!payload) return null
-
-  return (
-    <Paper px="md" py="sm" withBorder shadow="md" radius="md">
-      <Text fw={500} mb={5}>
-        {label}
-      </Text>
-      {getFilteredChartTooltipPayload(payload)
-        .filter(({ value }) => value > 0)
-        .map((item: any) => (
-          <Group>
-            <Box w="10px" h="10px" bg={item.color}></Box>
-            <Text key={item.name} fz="sm">
-              {item.name}: {item.value}
-            </Text>
-          </Group>
-        ))}
-    </Paper>
-  )
-}
 
 function AnalyticsChart({
   dataKey,
