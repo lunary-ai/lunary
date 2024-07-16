@@ -416,7 +416,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       const parsed = new Date(date)
       const isValid = parsed instanceof Date && !isNaN(parsed.getTime())
 
-      if (!date || isValid) return sql`true`
+      if (!date || !isValid) return sql`true`
 
       return sql`r.created_at ${postgresOperators(operator)} ${parsed}`
     },
