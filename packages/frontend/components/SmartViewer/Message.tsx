@@ -461,14 +461,14 @@ export function ChatMessage({
             </Text>
           )}
           <Group>
-            {renderSentimentEnrichment(data?.sentimentAnalysis?.score)}
-            {data?.languageDetection && (
+            {/* {renderSentimentEnrichment(data?.sentimentAnalysis?.score)} */}
+            {/* {data?.languageDetection && (
               <Tooltip
                 label={`${getLanguageName(data.languageDetection.isoCode)} (${Number(data.languageDetection.confidence.toFixed(3))})`}
               >
                 <Box>{getFlagEmoji(data.languageDetection.isoCode)}</Box>
               </Tooltip>
-            )}
+            )} */}
           </Group>
         </Group>
       )}
@@ -499,6 +499,14 @@ export function BubbleMessage({ role, content, extra }) {
   const Icon = ROLE_ICONS[role || "assistant"]
 
   const color = getColorForRole(role)
+
+  if (typeof content === "object") {
+    if (role === "assistant") {
+      content = content.output
+    } else {
+      content = content.input
+    }
+  }
 
   return (
     <>
