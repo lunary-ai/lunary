@@ -70,7 +70,10 @@ const CheckInputs = {
         variant="unstyled"
         size="xs"
         value={value}
-        onChange={onChange}
+        onChange={(date: Date) => {
+          date.setHours(23, 59, 59, 999)
+          return onChange(date)
+        }}
         placeholder={placeholder || "Select date"}
       />
     )
