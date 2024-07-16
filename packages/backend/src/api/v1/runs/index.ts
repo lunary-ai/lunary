@@ -101,7 +101,7 @@ function formatRun(run: any) {
     params: processParams(run.params),
 
     metadata: run.metadata,
-    user: {
+    user: run.externalUserId && {
       id: run.externalUserId,
       externalId: run.userExternalId,
       createdAt: run.userCreatedAt,

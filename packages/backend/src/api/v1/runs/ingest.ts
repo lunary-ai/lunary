@@ -132,10 +132,13 @@ async function registerRunEvent(
   } else if (eventName === "end") {
     let cost = undefined
 
-    if (type === "llm") {
-      const [runData] = await sql`
+    const [runData] = await sql`
         select created_at, input, params, name from run where id = ${runId}
       `
+    if (typeof runData.metadata === "object") {
+      metadata = { ...runData.metadata, metadata }
+    }
+    if (type === "llm") {
       cost = await calcRunCost({
         type,
         promptTokens: tokensUsage?.prompt,
@@ -153,6 +156,7 @@ async function registerRunEvent(
       promptTokens: tokensUsage?.prompt,
       completionTokens: tokensUsage?.completion,
       cost,
+      metadata,
     }
 
     if (input) {
