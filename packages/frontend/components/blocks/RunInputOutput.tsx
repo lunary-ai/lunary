@@ -169,6 +169,14 @@ export default function RunInputOutput({
     ? true
     : org?.plan === "team" || org?.plan === "custom"
 
+  const shouldDisplayCard =
+    run.name ||
+    run.user ||
+    Object.keys(run.params || {}).length !== 0 ||
+    run.tags?.length > 0 ||
+    run.metadata ||
+    canEnablePlayground
+
   return (
     <ErrorBoundary>
       <Stack>
@@ -253,89 +261,92 @@ export default function RunInputOutput({
               </Group>
             )}
 
-            <Card withBorder radius="md">
-              <Group justify="space-between" align="start">
-                <Stack gap={10}>
-                  {run.name && (
-                    <ParamItem
-                      name="Model"
-                      value={run.name}
-                      render={(value) => (
-                        <Badge variant="light" color="blue">
-                          {value}
-                        </Badge>
-                      )}
-                    />
-                  )}
-                  {run.user && (
-                    <ParamItem
-                      name="User"
-                      value={run.user}
-                      render={(user) => (
-                        <AppUserAvatar size="sm" user={user} withName />
-                      )}
-                    />
-                  )}
+            {shouldDisplayCard && (
+              <Card withBorder radius="md">
+                <Group justify="space-between" align="start">
+                  <Stack gap={10}>
+                    {run.name && (
+                      <ParamItem
+                        name="Model"
+                        value={run.name}
+                        render={(value) => (
+                          <Badge variant="light" color="blue">
+                            {value}
+                          </Badge>
+                        )}
+                      />
+                    )}
 
-                  {PARAMS.map(
-                    ({ key, name, render }) =>
-                      typeof run.params?.[key] !== "undefined" &&
-                      run.params[key] !== null && (
-                        <ParamItem
-                          key={key}
-                          name={name}
-                          color="grey"
-                          value={run.params?.[key]}
-                          render={render}
-                        />
-                      ),
-                  )}
-                  {run.tags?.length > 0 && (
-                    <ParamItem name="Tags" value={run.tags} />
-                  )}
+                    {run.user && (
+                      <ParamItem
+                        name="User"
+                        value={run.user}
+                        render={(user) => (
+                          <AppUserAvatar size="sm" user={user} withName />
+                        )}
+                      />
+                    )}
 
-                  {Object.entries(run.metadata || {})
-                    .filter(([key]) => key !== "enrichment")
-                    .map(([key, value]) => {
-                      if (!value || value.hasOwnProperty("toString")) {
-                        return null
-                      }
+                    {PARAMS.map(
+                      ({ key, name, render }) =>
+                        typeof run.params?.[key] !== "undefined" &&
+                        run.params[key] !== null && (
+                          <ParamItem
+                            key={key}
+                            name={name}
+                            color="grey"
+                            value={run.params?.[key]}
+                            render={render}
+                          />
+                        ),
+                    )}
+                    {run.tags?.length > 0 && (
+                      <ParamItem name="Tags" value={run.tags} />
+                    )}
 
-                      return (
-                        <ParamItem
-                          key={key}
-                          name={key}
-                          color="blue"
-                          value={value}
-                          render={(value) => (
-                            <CopyText ml={0} value={value.toString()} />
-                          )}
-                        />
-                      )
-                    })}
-                </Stack>
+                    {Object.entries(run.metadata || {})
+                      .filter(([key]) => key !== "enrichment")
+                      .map(([key, value]) => {
+                        if (!value || value.hasOwnProperty("toString")) {
+                          return null
+                        }
 
-                {canEnablePlayground && (
-                  <Stack>
-                    <Button
-                      variant="outline"
-                      size="xs"
-                      w="fit-content"
-                      display="inline"
-                      rightSection={<IconPencilShare size="14" />}
-                      component={Link}
-                      href={`/prompts/${
-                        run.templateVersionId || `?clone=` + run.id
-                      }`}
-                    >
-                      {run.templateVersionId
-                        ? "Open template"
-                        : "Open in Playground"}
-                    </Button>
+                        return (
+                          <ParamItem
+                            key={key}
+                            name={key}
+                            color="blue"
+                            value={value}
+                            render={(value) => (
+                              <CopyText ml={0} value={value.toString()} />
+                            )}
+                          />
+                        )
+                      })}
                   </Stack>
-                )}
-              </Group>
-            </Card>
+
+                  {canEnablePlayground && (
+                    <Stack>
+                      <Button
+                        variant="outline"
+                        size="xs"
+                        w="fit-content"
+                        display="inline"
+                        rightSection={<IconPencilShare size="14" />}
+                        component={Link}
+                        href={`/prompts/${
+                          run.templateVersionId || `?clone=` + run.id
+                        }`}
+                      >
+                        {run.templateVersionId
+                          ? "Open template"
+                          : "Open in Playground"}
+                      </Button>
+                    </Stack>
+                  )}
+                </Group>
+              </Card>
+            )}
           </>
         )}
 
