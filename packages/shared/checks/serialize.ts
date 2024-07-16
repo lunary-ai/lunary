@@ -20,8 +20,10 @@ function paramSerializer(param: CheckParam, value: any) {
     case "number":
       return encode(value)
     case "date":
-      // get timestamp
-      return encode(value.getTime())
+      const date = new Date(value)
+      const utcTimeStamp = date.getTime() - date.getTimezoneOffset() * 60000
+
+      return encode(utcTimeStamp)
     default:
       return undefined
   }
@@ -44,7 +46,8 @@ function deserializeParamValue(
     case "number":
       return Number(decodeURIComponent(value))
     case "date":
-      return new Date(Number(value))
+      const utcTimestamp = Number(value)
+      return new Date(utcTimestamp + new Date().getTimezoneOffset() * 60000)
     default:
       return undefined
   }
