@@ -26,6 +26,7 @@ async function registerRunEvent(
     type,
     userId,
     templateId,
+    templateVersionId,
     userProps,
     event: eventName,
     runId,
@@ -47,8 +48,9 @@ async function registerRunEvent(
     tags = metadata?.tags
   }
 
-  if (!templateId) {
-    templateId = metadata?.templateId
+  if (!templateVersionId) {
+    templateVersionId =
+      templateId || metadata?.templateId || metadata?.templateVersionId
   }
 
   let parentRunIdToUse = parentRunId
@@ -122,7 +124,7 @@ async function registerRunEvent(
           status: "started",
           params: params || extra,
           metadata,
-          templateVersionId: templateId,
+          templateVersionId,
           parentRunId: parentRunIdToUse,
           input,
           runtime,

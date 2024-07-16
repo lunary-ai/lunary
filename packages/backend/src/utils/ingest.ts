@@ -29,7 +29,8 @@ export interface Event {
   message?: string | any // deprecated (for logs)
   extra?: any
   feedback?: any
-  templateId?: string
+  templateId?: string // deprecated, use templateVersionId
+  templateVersionId?: string
   metadata?: any
   tokensUsage?: {
     prompt: number
