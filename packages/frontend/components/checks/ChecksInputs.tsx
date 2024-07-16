@@ -63,6 +63,8 @@ const CheckInputs = {
     )
   },
   date: ({ placeholder, value, onChange }) => {
+    const defaultValue = new Date()
+    defaultValue.setHours(23, 59, 59, 999)
     return (
       <DateTimePicker
         minDate={minDate}
@@ -70,7 +72,13 @@ const CheckInputs = {
         variant="unstyled"
         size="xs"
         value={value}
-        onChange={onChange}
+        defaultValue={defaultValue}
+        onChange={(date: Date) => {
+          if (!value) {
+            date.setHours(23, 59, 59, 999)
+          }
+          return onChange(date)
+        }}
         placeholder={placeholder || "Select date"}
       />
     )
