@@ -1,5 +1,3 @@
-import "./instrument"
-
 import Koa from "koa"
 import bodyParser from "koa-bodyparser"
 import logger from "koa-logger"
@@ -16,8 +14,7 @@ import sql, { checkDbConnection } from "./utils/db"
 import { errorMiddleware } from "./utils/errors"
 import { setDefaultBody } from "./utils/misc"
 import ratelimit from "./utils/ratelimit"
-import * as Sentry from "@sentry/node"
-
+import { initSentry, requestHandler, tracingMiddleWare } from "./utils/sentry"
 import licenseMiddleware from "./utils/license"
 import config from "./utils/config"
 import { startMaterializedViewRefreshJob } from "./jobs/materializedViews"
@@ -28,14 +25,16 @@ setupCronJobs()
 if (process.env.NODE_ENV === "production") {
   startMaterializedViewRefreshJob()
 }
+initSentry()
 
 const app = new Koa()
-Sentry.setupKoaErrorHandler(app)
+
 // Forward proxy headers
 app.proxy = true
 
 // MiddleWares
-
+app.use(requestHandler)
+app.use(tracingMiddleWare)
 app.use(errorMiddleware)
 app.use(logger())
 app.use(corsMiddleware)
@@ -64,5 +63,4 @@ prexit(async () => {
   console.log("Shutting down server...")
   await sql.end({ timeout: 5 })
   await new Promise((r) => server.close(r))
-  process.exit(1)
 })

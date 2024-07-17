@@ -1,5 +1,3 @@
-const { withSentryConfig } = require("@sentry/nextjs")
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -28,7 +26,7 @@ const nextConfig = {
       return []
     }
 
-    const redirects =  [
+    const redirects = [
       {
         source: "/ingest/:path*",
         destination: "https://app.posthog.com/:path*",
@@ -61,15 +59,4 @@ const nextConfig = {
   transpilePackages: ["shared"],
 }
 
-const sentryWebpackPluginOptions = {
-  org: "lunary-9r",
-  project: "node-koa",
-  // An auth token is required for uploading source maps.
-  // authToken: process.env.SENTRY_AUTH_TOKEN,
-  silent: true, // Suppresses all logs
-}
-
-module.exports =
-  process.env.NEXT_PUBLIC_IS_SELF_HOSTED === 'true' || process.env.CI
-    ? nextConfig
-    : withSentryConfig(nextConfig, sentryWebpackPluginOptions)
+module.exports = nextConfig
