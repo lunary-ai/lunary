@@ -43,6 +43,9 @@ function deserializeParamValue(
     case "number":
       return Number(decodeURIComponent(value))
     case "date":
+      if (value === "lt" || value === "gt") {
+        return decodeURIComponent(value)
+      }
       return new Date(decodeURIComponent(value))
     default:
       return undefined
@@ -62,6 +65,14 @@ export function serializeLogic(logic: CheckLogic): string {
       return all.filter(Boolean).join(".")
     } else if (param && typeof param === "object" && param.params) {
       const data = Object.entries(param.params)
+        .sort(([keyA], [keyB]) => {
+          if (keyA === "operator") {
+            return -1
+          }
+          if (keyB === "operator") {
+            return 1
+          }
+        })
         .map(([key, value]) => {
           const filterParam = CHECKS.find(
             (filter) => filter.id === param.id,
