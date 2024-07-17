@@ -418,7 +418,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
 
       if (!date || !isValid) return sql`true`
 
-      return sql`r.created_at ${postgresOperators(operator)} to_timestamp(${parsed.getTime()}::bigint / 1000)`
+      return sql`r.created_at ${postgresOperators(operator)} ${parsed}`
     },
   },
   {
