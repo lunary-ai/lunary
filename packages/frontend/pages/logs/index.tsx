@@ -229,9 +229,16 @@ export default function Logs() {
     clearOnDefault: true,
   })
 
-  const { view, update: updateView, remove: removeView } = useView(viewId)
+
+  const {
+    view,
+    update: updateView,
+    remove: removeView,
+    loading: viewLoading,
+  } = useView(viewId)
 
   const serializedChecks = useMemo(() => {
+    // TODO: find a better way, because it will call two times /runs
     if (view) {
       return serializeLogic(view.data)
     }
@@ -454,7 +461,13 @@ export default function Logs() {
 
   return (
     <Empty
-      enable={!loading && !projectLoading && project && !project.activated}
+      enable={
+        !viewLoading &&
+        !loading &&
+        !projectLoading &&
+        project &&
+        !project.activated
+      }
       Icon={IconBrandOpenai}
       title="Waiting for recordings..."
       showProjectId
@@ -519,7 +532,7 @@ export default function Logs() {
             <Group>
               {view && (
                 <Group gap="xs">
-                  <IconPicker
+                  {/* <IconPicker
                     size={26}
                     variant="light"
                     value={view.icon}
@@ -528,7 +541,7 @@ export default function Logs() {
                         icon,
                       })
                     }}
-                  />
+                  /> */}
                   <RenamableField
                     defaultValue={view.name}
                     onRename={(newName) => {
@@ -544,12 +557,12 @@ export default function Logs() {
                       </ActionIcon>
                     </Menu.Target>
                     <Menu.Dropdown>
-                      <Menu.Item
+                      {/* <Menu.Item
                         leftSection={<IconStackPop size={16} />}
                         onClick={() => duplicateView()}
                       >
                         Duplicate
-                      </Menu.Item>
+                      </Menu.Item> */}
                       <Menu.Item
                         color="red"
                         leftSection={<IconTrash size={16} />}
