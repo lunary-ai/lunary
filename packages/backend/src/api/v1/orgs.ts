@@ -30,7 +30,8 @@ orgs.get("/", async (ctx: Context) => {
       saml_enabled,
       stripe_customer,
       stripe_subscription,  
-      name
+      name,
+      seat_allowance 
     from
       org
     where

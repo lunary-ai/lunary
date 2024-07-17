@@ -96,7 +96,7 @@ export default function Join() {
     },
   })
 
-  const handleSignup = async ({
+  async function handleSignup({
     email,
     name,
     redirectUrl,
@@ -106,7 +106,7 @@ export default function Join() {
     name: string
     redirectUrl?: string
     password?: string
-  }) => {
+  }) {
     setLoading(true)
 
     const signupData = {
@@ -180,9 +180,10 @@ export default function Join() {
     return <Loader />
   }
 
-  const { orgUserCount, orgName, orgId, orgPlan } = joinData
+  const { orgUserCount, orgName, orgId, orgPlan, orgSeatAllowance } = joinData
+  const seatAllowance = orgSeatAllowance || SEAT_ALLOWANCE[orgPlan]
 
-  if (orgUserCount > SEAT_ALLOWANCE[orgPlan]) {
+  if (orgUserCount > seatAllowance) {
     return <TeamFull orgName={orgName} />
   }
 
