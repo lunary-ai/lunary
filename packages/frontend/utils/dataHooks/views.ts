@@ -25,7 +25,7 @@ export function useViews() {
   }
 }
 
-export function useView(id?: string, initialData?: any) {
+export function useView(id: string | null, initialData?: any) {
   const { mutate: mutateViews } = useViews()
 
   const {
