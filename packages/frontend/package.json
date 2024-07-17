@@ -15,7 +15,6 @@
     "@mantine/hooks": "^7.11.1",
     "@mantine/modals": "^7.11.1",
     "@mantine/notifications": "^7.11.1",
-    "@sentry/nextjs": "^7.109.0",
     "@tabler/icons-react": "^3.9.0",
     "@tanstack/react-table": "^8.19.2",
     "@tanstack/react-virtual": "^3.8.1",
