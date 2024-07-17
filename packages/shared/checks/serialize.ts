@@ -20,7 +20,7 @@ function paramSerializer(param: CheckParam, value: any) {
     case "number":
       return encode(value)
     case "date":
-      const date = new Date(value)
+      const date = value
       const utcTimeStamp = date.getTime() - date.getTimezoneOffset() * 60000
 
       return encode(utcTimeStamp)
