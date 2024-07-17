@@ -204,7 +204,7 @@ auth.get("/join-data", async (ctx: Context) => {
   } = await verifyJWT(token)
 
   const [org] = await sql`
-    select name, plan from org where id = ${orgId}
+    select name, plan, seat_allowance from org where id = ${orgId}
   `
 
   const [orgUserCountResult] = await sql`
@@ -217,6 +217,7 @@ auth.get("/join-data", async (ctx: Context) => {
     orgName: org?.name,
     orgPlan: org?.plan,
     orgId: orgId,
+    orgSeatAllowance: org?.seatAllowance,
   }
 })
 

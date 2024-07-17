@@ -465,7 +465,8 @@ function InviteMemberCard() {
   })
 
   async function invite({ email }) {
-    if (org?.users?.length >= SEAT_ALLOWANCE[org?.plan]) {
+    const seatAllowance = org?.seatAllowance || SEAT_ALLOWANCE[org?.plan]
+    if (org?.users?.length >= seatAllowance) {
       return openUpgrade("team")
     }
 
