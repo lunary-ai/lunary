@@ -10,13 +10,15 @@ export default function SeatAllowanceCard() {
     return null
   }
 
+  const seatAllowance = org?.seatAllowance || SEAT_ALLOWANCE[org?.plan]
+
   return (
     <SettingsCard title="Seat Allowance">
       <Text fz="lg" fw={500}>
-        {org?.users?.length} / {SEAT_ALLOWANCE[org?.plan]} users
+        {org?.users?.length} / {seatAllowance} users
       </Text>
       <Progress
-        value={((org?.users?.length || 0) / SEAT_ALLOWANCE[org?.plan]) * 100}
+        value={((org?.users?.length || 0) / seatAllowance) * 100}
         size="lg"
         color="orange"
         radius="xl"
