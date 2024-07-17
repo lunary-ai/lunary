@@ -20,7 +20,7 @@ function paramSerializer(param: CheckParam, value: any) {
     case "number":
       return encode(value)
     case "date":
-      return encode(new Date(value.getTime()).toISOString())
+      return encode(new Date(value).toISOString())
     default:
       return undefined
   }
@@ -43,7 +43,6 @@ function deserializeParamValue(
     case "number":
       return Number(decodeURIComponent(value))
     case "date":
-      console.log(decodeURIComponent(value))
       return new Date(decodeURIComponent(value))
     default:
       return undefined
