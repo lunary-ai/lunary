@@ -229,12 +229,15 @@ export default function Logs() {
     clearOnDefault: true,
   })
 
+  const { view, update: updateView, remove: removeView } = useView(viewId)
+
   const serializedChecks = useMemo(() => {
+    if (view) {
+      return serializeLogic(view.data)
+    }
     const checksWithType = editCheck(checks, "type", { type })
     return serializeLogic(checksWithType)
-  }, [checks, type])
-
-  const { view, update: updateView, remove: removeView } = useView(viewId)
+  }, [checks, type, view])
 
   const { evaluators } = useEvaluators()
 
@@ -255,7 +258,6 @@ export default function Logs() {
     if (type === "llm" && Array.isArray(evaluators)) {
       for (const evaluator of evaluators) {
         const id = "enrichment-" + evaluator.id
-        console.log(id)
 
         if (newColumns.llm.map(({ accessorKey }) => accessorKey).includes(id)) {
           continue
@@ -367,7 +369,7 @@ export default function Logs() {
 
       const newView = await insertView({
         name: "New View",
-        data: checks,
+        data: editCheck(checks, "type", { type }),
         columns: visibleColumns,
         icon,
       })
@@ -375,7 +377,7 @@ export default function Logs() {
       setViewId(newView.id)
     } else {
       await updateView({
-        data: checks,
+        data: editCheck(checks, "type", { type }),
         columns: visibleColumns,
       })
 
@@ -559,12 +561,14 @@ export default function Logs() {
                   </Menu>
                 </Group>
               )}
-              <CheckPicker
-                minimal
-                value={checks}
-                onChange={setChecks}
-                restrictTo={(f) => CHECKS_BY_TYPE[type].includes(f.id)}
-              />
+              {!view && (
+                <CheckPicker
+                  minimal
+                  value={checks}
+                  onChange={setChecks}
+                  restrictTo={(f) => CHECKS_BY_TYPE[type].includes(f.id)}
+                />
+              )}
             </Group>
             {!!showSaveView && (
               <Button
