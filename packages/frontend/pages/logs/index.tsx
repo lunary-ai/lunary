@@ -229,6 +229,7 @@ export default function Logs() {
     clearOnDefault: true,
   })
 
+
   const {
     view,
     update: updateView,
