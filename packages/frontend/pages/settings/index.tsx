@@ -162,8 +162,8 @@ export default function AppAnalytics() {
   )
 
   const smartDataFilterEnabled = config.IS_SELF_HOSTED
-    ? org.license.samlEnabled
-    : org.samlEnabled
+    ? org.license.dataFilteringEnabled
+    : org.dataFilteringEnabled
 
   return (
     <Container className="unblockable">
@@ -204,7 +204,7 @@ export default function AppAnalytics() {
               "Filter out sensitive data",
               "LLM-powered detection or custom regex patterns",
             ],
-            enabled: smartDataFilterEnabled,
+            enabled: !smartDataFilterEnabled,
           }}
         >
           <Text>
