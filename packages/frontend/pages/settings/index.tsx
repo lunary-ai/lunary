@@ -192,6 +192,19 @@ export default function AppAnalytics() {
 
         {user.role !== "viewer" && <Keys />}
 
+        <SettingsCard title={<>Custom Models 🧠</>} align="start">
+          <Button
+            color="blue"
+            variant="default"
+            component={Link}
+            data-testid="add-model-button"
+            href={`/settings/models`}
+            leftSection={<IconPencil size={16} />}
+          >
+            Edit Mappings
+          </Button>
+        </SettingsCard>
+
         <SettingsCard
           title={<>Smart Data Filtering ✨</>}
           align="start"
@@ -236,32 +249,6 @@ export default function AppAnalytics() {
               Save
             </Button>
           </Flex>
-        </SettingsCard>
-        <SettingsCard
-          title={<>Custom Models 🧠</>}
-          align="start"
-          paywallConfig={{
-            Icon: IconFilter,
-            feature: "Custom Models",
-            p: 12,
-            plan: "enterprise",
-            list: [
-              "Use custom models for evaluations",
-              "Add and overwrite cost mappings",
-            ],
-            enabled: true,
-          }}
-        >
-          <Button
-            color="blue"
-            variant="default"
-            component={Link}
-            data-testid="add-model-button"
-            href={`/settings/models`}
-            leftSection={<IconPencil size={16} />}
-          >
-            Edit Mappings
-          </Button>
         </SettingsCard>
 
         {user && hasAccess(user.role, "projects", "delete") && (
