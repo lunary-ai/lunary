@@ -12,7 +12,6 @@ import { getFlagEmoji } from "./format"
 import ErrorBoundary from "@/components/blocks/ErrorBoundary"
 
 export function renderEnrichment(data: EnrichmentData, type: EvaluatorType) {
-  return ""
   const renderers: Record<EvaluatorType, (data: any) => any> = {
     language: renderLanguageEnrichment,
     pii: renderPIIEnrichment,
@@ -107,6 +106,7 @@ function renderPIIEnrichment(data: EnrichmentData) {
 function renderToxicityEnrichment(data: EnrichmentData) {
   const [opened, { close, open }] = useDisclosure(false)
 
+  console.log(data)
   if (data.length === 0) {
     return ""
   }
@@ -127,7 +127,7 @@ function renderToxicityEnrichment(data: EnrichmentData) {
       <Popover.Dropdown style={{ pointerEvents: "none" }} w="300">
         <Text size="sm">
           <strong>Toxic Comments:</strong>
-          <div>{data.join(", ")}</div>
+          {/* <div>{data.join(", ")}</div> */}
         </Text>
       </Popover.Dropdown>
     </Popover>
