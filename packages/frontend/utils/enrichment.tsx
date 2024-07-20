@@ -23,7 +23,7 @@ export function renderEnrichment(data: EnrichmentData, type: EvaluatorType) {
     toxicity: renderToxicityEnrichment,
     topics: renderTopicsEnrichment,
     sentiment: renderSentimentEnrichment,
-    assert: renderAssertEnrichment,
+    assertion: renderAssertionEnrichment,
     tone: renderToneEnrichment,
     guidelines: renderGuidelinesEnrichment,
     replies: renderRepliesEnrichment,
@@ -111,32 +111,37 @@ function renderPIIEnrichment(data: EnrichmentData) {
 function renderToxicityEnrichment(data: EnrichmentData) {
   const [opened, { close, open }] = useDisclosure(false)
 
-  console.log(data)
   if (data.length === 0) {
     return ""
   }
 
-  return (
-    <Popover
-      width={200}
-      position="bottom"
-      withArrow
-      shadow="md"
-      opened={opened}
-    >
-      <Popover.Target>
-        <Badge onMouseEnter={open} onMouseLeave={close} color="red">
-          Toxicity
-        </Badge>
-      </Popover.Target>
-      <Popover.Dropdown style={{ pointerEvents: "none" }} w="300">
-        <Text size="sm">
-          <strong>Toxic Comments:</strong>
-          {/* <div>{data.join(", ")}</div> */}
-        </Text>
-      </Popover.Dropdown>
-    </Popover>
-  )
+  const toxicityCategories = [
+    ...new Set([...data.input, ...data.output]),
+  ].filter((category) => category)
+
+  if (toxicityCategories.length) {
+    return (
+      <Popover
+        width={200}
+        position="bottom"
+        withArrow
+        shadow="md"
+        opened={opened}
+      >
+        <Popover.Target>
+          <Badge onMouseEnter={open} onMouseLeave={close} color="red">
+            Toxicity
+          </Badge>
+        </Popover.Target>
+        <Popover.Dropdown style={{ pointerEvents: "none" }} w="300">
+          <Text size="sm">
+            <strong>Toxic Comments:</strong>
+            {/* <div>{data.join(", ")}</div> */}
+          </Text>
+        </Popover.Dropdown>
+      </Popover>
+    )
+  }
 }
 
 function renderTopicsEnrichment(data: EnrichmentData) {
@@ -265,7 +270,8 @@ export function renderSentimentEnrichment(data?: EnrichmentData) {
   )
 }
 
-function renderAssertEnrichment(data: AssertionResult) {
+function renderAssertionEnrichment(data: AssertionResult) {
+  console.log(data)
   if (typeof data !== "object" || typeof data.result !== "boolean") return null
 
   return (

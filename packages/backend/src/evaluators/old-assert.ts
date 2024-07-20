@@ -7,6 +7,7 @@ interface AssertParams {
   conditions: string[]
 }
 
+// Used in playground
 export async function evaluate(run: Run, params: AssertParams) {
   const { conditions } = params
 
