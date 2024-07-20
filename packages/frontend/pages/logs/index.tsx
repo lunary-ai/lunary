@@ -177,22 +177,6 @@ function editCheck(filters, id, params) {
   return newChecks
 }
 
-// function useTraceUpdate(props) {
-//   const prev = useRef(props)
-//   useEffect(() => {
-//     const changedProps = Object.entries(props).reduce((ps, [k, v]) => {
-//       if (prev.current[k] !== v) {
-//         ps[k] = [prev.current[k], v]
-//       }
-//       return ps
-//     }, {})
-//     if (Object.keys(changedProps).length > 0) {
-//       console.log("Changed props:", changedProps)
-//     }
-//     prev.current = props
-//   })
-// }
-
 const DEFAULT_CHECK = ["AND"]
 
 export default function Logs() {
@@ -310,8 +294,6 @@ export default function Logs() {
     setChecks(view.data)
     setVisibleColumns(view.columns)
   }, [view])
-
-  useTraceUpdate({ projectId, viewId, selectedRunId, type, checks, query })
 
   const exportUrl = useMemo(
     () => `/runs?${serializedChecks}&projectId=${projectId}`,
