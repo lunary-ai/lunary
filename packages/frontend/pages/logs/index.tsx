@@ -71,6 +71,7 @@ import { notifications } from "@mantine/notifications"
 import { deserializeLogic, serializeLogic } from "shared"
 import { useEvaluators } from "@/utils/dataHooks/evaluators"
 import IconPicker from "@/components/blocks/IconPicker"
+import { useTraceUpdate } from "@/utils/hooks"
 
 export const defaultColumns = {
   llm: [
@@ -279,47 +280,6 @@ export default function Logs() {
       setProjectId(selectedRun.projectId)
     }
   }, [selectedRun?.projectId])
-
-  // useEffect(() => {
-  //   let newChecks = [...checks]
-  //   let shouldUpdate = false
-
-  //   // Add type filter if not present
-  //   const typeFilter = newChecks.find((filter) => filter.id === "type")
-  //   if (!typeFilter) {
-  //     newChecks = newChecks[0] === "AND" ? newChecks : ["AND", ...newChecks]
-  //     newChecks = [
-  //       newChecks[0],
-  //       { id: "type", params: { type } },
-  //       ...newChecks.slice(1),
-  //     ]
-  //     shouldUpdate = true
-  //   }
-
-  //   // Update type filter
-  //   newChecks = editCheck(newChecks, "type", { type }).filter(
-  //     (f) =>
-  //       f === "AND" ||
-  //       CHECKS_BY_TYPE[type].includes(f.id) ||
-  //       ["type", "search"].includes(f.id),
-  //   )
-  //   shouldUpdate = true
-
-  //   // Update search filter
-  //   if (query !== null) {
-  //     newChecks = editCheck(
-  //       newChecks,
-  //       "search",
-  //       query.length ? { query } : null,
-  //     )
-  //     shouldUpdate = true
-  //   }
-
-  //   // Only update if changes were made
-  //   if (shouldUpdate) {
-  //     setChecks(newChecks)
-  //   }
-  // }, [type, query])
 
   useDidUpdate(() => {
     // Update search filter
