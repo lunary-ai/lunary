@@ -152,17 +152,34 @@ const EVALUATOR_TYPES = {
     params: [
       {
         type: "label",
-        label: "List of conditions",
+        label: "Condition",
+      },
+      {
+        type: "text",
+        allowCustom: true,
+        id: "sentence",
+        defaultValue: "The answer is spoken like a pirate.",
+        placeholder: "Is spoken like a pirate",
+        width: 300,
+      },
+      {
+        type: "label",
+        label: "Evaluator Model to use",
+        description:
+          "Select or type a custom model to use for evaluating. Note: you need to set the proper API key for the model.",
       },
       {
         type: "select",
-        multiple: true,
-        allowCustom: true,
-        id: "conditions",
-        options: ["answer is spoken like a pirate"],
-        defaultValue: ["answer is spoken like a pirate"],
-        placeholder: "Is spoken like a pirate",
-        width: 300,
+        id: "model",
+        defaultValue: "gpt-4o-mini",
+        options: [
+          "gpt-4o-mini",
+          "gpt-4o",
+          "bedrock/meta.llama3-8b-instruct-v1:0",
+          "claude-3-5-sonnet-20240620",
+          "claude-3-haiku-20240307",
+        ],
+        width: 200,
       },
     ],
   },
