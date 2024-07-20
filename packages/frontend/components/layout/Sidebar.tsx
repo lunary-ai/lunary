@@ -72,10 +72,17 @@ function NavbarLink({
 }) {
   const router = useRouter()
 
-  // For logs pages, we want to compare the full url because it contains the view ID and filters info
+  // For logs pages, we want to compare the view param to see if a view is selected
+
   const active = router.pathname.startsWith("/logs")
-    ? router.asPath.includes(`&view`)
-      ? router.asPath.includes(`&view=${link.split("view=")[1]}`)
+    ? router.asPath.includes(`view=`)
+      ? (() => {
+          const linkParams = new URLSearchParams(link.split("?")[1])
+          const viewParam = linkParams.get("view")
+          return viewParam
+            ? router.asPath.includes(`view=${viewParam}`)
+            : router.asPath.startsWith(link)
+        })()
       : router.asPath.startsWith(link)
     : router.pathname.startsWith(link)
 
@@ -249,7 +256,7 @@ export default function Sidebar() {
       return {
         label: v.name,
         icon: Icon,
-        link: `/logs?view=${v.id}`,
+        link: `/logs?view=${v.id}&filters=${serialized}&type=${v.type}`,
         resource: "logs",
       }
     })

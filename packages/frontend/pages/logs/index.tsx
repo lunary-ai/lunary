@@ -58,7 +58,11 @@ import {
   useRun,
 } from "@/utils/dataHooks"
 
-import { useDebouncedState, useDidUpdate } from "@mantine/hooks"
+import {
+  useDebouncedState,
+  useDidUpdate,
+  useShallowEffect,
+} from "@mantine/hooks"
 import { ProjectContext } from "@/utils/context"
 
 import { useRouter } from "next/router"
@@ -72,6 +76,7 @@ import { deserializeLogic, serializeLogic } from "shared"
 import { useEvaluators } from "@/utils/dataHooks/evaluators"
 import IconPicker from "@/components/blocks/IconPicker"
 import { useTraceUpdate } from "@/utils/hooks"
+import { set } from "date-fns"
 
 export const defaultColumns = {
   llm: [
@@ -289,7 +294,7 @@ export default function Logs() {
     setType(view.type)
     setChecks(view.data)
     setVisibleColumns(view.columns)
-  }, [view])
+  }, [view, viewId])
 
   const exportUrl = useMemo(
     () => `/runs?${serializedChecks}&projectId=${projectId}`,
