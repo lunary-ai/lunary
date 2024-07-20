@@ -110,6 +110,44 @@ function formatRun(run: any) {
     },
   }
 
+  const evaluationResults = run.evaluationResults.find(
+    (result) => result.evaluatorType === "topics",
+  )
+  const topicDetections = evaluationResults?.result
+  // if (
+  //   topicDetections?.input &&
+  //   topicDetections?.output &&
+  //   topicDetections?.error
+  // ) {
+  //   if (Array.isArray(formattedRun.input)) {
+  //     for (let i = 0; i < formattedRun.input.length; i++) {
+  //       if (
+  //         typeof formattedRun.input[i] === "object" &&
+  //         topicDetections.input
+  //       ) {
+  //         formattedRun.input[i].topicDetection = topicDetections.input[i]
+  //       }
+  //     }
+  //   } else if (formattedRun.input && typeof formattedRun.input === "object") {
+  //     formattedRun.input.languageDetection = languageDetections.input[0]
+  //   }
+
+  //   if (Array.isArray(formattedRun.output)) {
+  //     for (let i = 0; i < run.output.length; i++) {
+  //       if (typeof formattedRun.output[i] === "object") {
+  //         formattedRun.output[i].languageDetection =
+  //           languageDetections.output[i]
+  //       }
+  //     }
+  //   } else if (formattedRun.output && typeof formattedRun.input === "object") {
+  //     formattedRun.output.languageDetection = languageDetections.output[0]
+  //   }
+
+  //   if (formattedRun.error && typeof formattedRun.input === "object") {
+  //     formattedRun.error.languageDetection = languageDetections.error[0]
+  //   }
+  // }
+
   // TODO: c'est horrible
   // const evaluationResults = run.evaluationResults.find(
   //   (result) => result.evaluatorType === "language",
@@ -181,10 +219,11 @@ function formatRun(run: any) {
   //   }
   // }
 
-  // for (let evaluationResult of run.evaluationResults || []) {
-  //   formattedRun[`enrichment-${evaluationResult.evaluatorId}`] =
-  //     evaluationResult
-  // }
+  console.log
+  for (let evaluationResult of run.evaluationResults || []) {
+    formattedRun[`enrichment-${evaluationResult.evaluatorId}`] =
+      evaluationResult
+  }
   return formattedRun
 }
 
@@ -222,13 +261,25 @@ runs.get("/", async (ctx: Context) => {
       eu.last_seen as user_last_seen,
       eu.props as user_props,
       t.slug as template_slug,
-      rpfc.feedback as parent_feedback
+      rpfc.feedback as parent_feedback,
+      coalesce(array_agg(
+          jsonb_build_object(
+              'evaluatorName', e.name,
+              'evaluatorSlug', e.slug,
+              'evaluatorId', e.id,
+              'result', er.result, 
+              'createdAt', er.created_at,
+              'updatedAt', er.updated_at
+          )
+      ) filter (where er.run_id is not null), '{}') as evaluation_results
     from
       public.run r
       left join external_user eu on r.external_user_id = eu.id
       left join run_parent_feedback_cache rpfc on r.id = rpfc.id
       left join template_version tv on r.template_version_id = tv.id
       left join template t on tv.template_id = t.id
+      left join evaluation_result_v2 er on r.id = er.run_id 
+      left join evaluator e on er.evaluator_id = e.id
     where
       r.project_id = ${projectId}
       ${parentRunCheck}
