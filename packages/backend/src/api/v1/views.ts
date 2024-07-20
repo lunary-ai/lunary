@@ -3,7 +3,7 @@ import sql from "@/src/utils/db"
 import { clearUndefined } from "@/src/utils/ingest"
 import Context from "@/src/utils/koa"
 import Router from "koa-router"
-import { CheckLogic } from "shared"
+
 import { z } from "zod"
 
 const views = new Router({
@@ -15,6 +15,7 @@ const ViewSchema = z.object({
   data: z.any(),
   columns: z.any(),
   icon: z.string().optional(),
+  type: z.enum(["llm", "thread", "trace"]),
 })
 
 views.get("/", checkAccess("logs", "list"), async (ctx: Context) => {
@@ -39,7 +40,7 @@ views.post("/", async (ctx: Context) => {
   const { projectId, userId } = ctx.state
 
   const validatedData = ViewSchema.parse(ctx.request.body)
-  const { name, data, columns, icon } = validatedData
+  const { name, data, columns, icon, type } = validatedData
 
   const [insertedCheck] = await sql`
     insert into view ${sql({
@@ -49,6 +50,7 @@ views.post("/", async (ctx: Context) => {
       data,
       columns,
       icon,
+      type,
     })}
     returning *
   `

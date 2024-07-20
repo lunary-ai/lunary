@@ -150,11 +150,10 @@ const EVALUATOR_TYPES = {
       },
       {
         type: "text",
-        allowCustom: true,
         id: "sentence",
         defaultValue: "The answer is spoken like a pirate.",
         placeholder: "Is spoken like a pirate",
-        width: 300,
+        width: 400,
       },
       {
         type: "label",
@@ -166,6 +165,7 @@ const EVALUATOR_TYPES = {
         type: "select",
         id: "model",
         defaultValue: "gpt-4o-mini",
+        allowCustom: true,
         options: [
           "gpt-4o-mini",
           "gpt-4o",

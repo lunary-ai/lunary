@@ -217,7 +217,7 @@ export default function Logs() {
     "selected",
     parseAsString,
   )
-  const [type] = useQueryState<string>(
+  const [type, setType] = useQueryState<string>(
     "type",
     parseAsStringEnum(["llm", "trace", "thread"]).withDefault("llm"),
   )
@@ -303,6 +303,14 @@ export default function Logs() {
     }
   }, [view, type, allColumns])
 
+  useEffect(() => {
+    if (!view) return
+
+    setType(view.type)
+    setChecks(view.data)
+    setVisibleColumns(view.columns)
+  }, [view])
+
   const exportUrl = useMemo(
     () => `/runs?${serializedChecks}&projectId=${projectId}`,
     [serializedChecks, projectId],
@@ -330,7 +338,8 @@ export default function Logs() {
 
       const newView = await insertView({
         name: "New View",
-        data: editCheck(checks, "type", { type }),
+        type,
+        data: checks,
         columns: visibleColumns,
         icon,
       })
@@ -338,7 +347,7 @@ export default function Logs() {
       setViewId(newView.id)
     } else {
       await updateView({
-        data: editCheck(checks, "type", { type }),
+        data: checks,
         columns: visibleColumns,
       })
 
@@ -372,6 +381,7 @@ export default function Logs() {
     if (view) {
       const newView = await insertView({
         name: `Copy of ${view.name}`,
+        type: view.type,
         data: view.data,
         columns: view.columns,
         icon: view.icon,
@@ -385,12 +395,6 @@ export default function Logs() {
       setViewId(newView.id)
     }
   }
-
-  useDidUpdate(() => {
-    if (view?.data) {
-      setChecks(view.data)
-    }
-  }, [view])
 
   // Show button if column changed or view has changes, or it's not a view
   const showSaveView = useMemo(

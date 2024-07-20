@@ -34,7 +34,6 @@ export function useView(id: string | null, initialData?: any) {
     fetcher.patch,
     {
       onSuccess(data) {
-        console.log("data", data)
         mutate(data)
         mutateViews()
       },
