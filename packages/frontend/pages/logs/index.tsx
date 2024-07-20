@@ -68,10 +68,9 @@ import RenamableField from "@/components/blocks/RenamableField"
 import { VisibilityState } from "@tanstack/react-table"
 import { notifications } from "@mantine/notifications"
 
-import IconPicker from "@/components/blocks/IconPicker"
 import { deserializeLogic, serializeLogic } from "shared"
 import { useEvaluators } from "@/utils/dataHooks/evaluators"
-// import { useTraceUpdate } from "@/utils/hooks"
+import IconPicker from "@/components/blocks/IconPicker"
 
 export const defaultColumns = {
   llm: [
@@ -229,7 +228,6 @@ export default function Logs() {
     clearOnDefault: true,
   })
 
-
   const {
     view,
     update: updateView,
@@ -238,10 +236,6 @@ export default function Logs() {
   } = useView(viewId)
 
   const serializedChecks = useMemo(() => {
-    // TODO: find a better way, because it will call two times /runs
-    if (view) {
-      return serializeLogic(view.data)
-    }
     const checksWithType = editCheck(checks, "type", { type })
     return serializeLogic(checksWithType)
   }, [checks, type, view])
@@ -431,6 +425,13 @@ export default function Logs() {
       setViewId(newView.id)
     }
   }
+
+  useDidUpdate(() => {
+    if (view?.data) {
+      setChecks(view.data)
+    }
+  }, [view])
+
   // Show button if column changed or view has changes, or it's not a view
   const showSaveView = useMemo(
     () =>
@@ -440,24 +441,6 @@ export default function Logs() {
         (!view || JSON.stringify(view.data) !== JSON.stringify(checks))),
     [columnsTouched, checks, view],
   )
-
-  // useTraceUpdate({
-  //   projectId,
-  //   serializedChecks,
-  //   type,
-  //   checks,
-  //   query,
-  //   viewId,
-  //   selectedRunId,
-  //   allColumns,
-  //   evaluators,
-  //   visibleColumns,
-  //   showSaveView,
-  //   logs,
-  //   loading,
-  //   validating,
-  //   runLoading,
-  // })
 
   return (
     <Empty
@@ -532,7 +515,7 @@ export default function Logs() {
             <Group>
               {view && (
                 <Group gap="xs">
-                  {/* <IconPicker
+                  <IconPicker
                     size={26}
                     variant="light"
                     value={view.icon}
@@ -541,7 +524,7 @@ export default function Logs() {
                         icon,
                       })
                     }}
-                  /> */}
+                  />
                   <RenamableField
                     defaultValue={view.name}
                     onRename={(newName) => {
@@ -557,12 +540,12 @@ export default function Logs() {
                       </ActionIcon>
                     </Menu.Target>
                     <Menu.Dropdown>
-                      {/* <Menu.Item
+                      <Menu.Item
                         leftSection={<IconStackPop size={16} />}
                         onClick={() => duplicateView()}
                       >
                         Duplicate
-                      </Menu.Item> */}
+                      </Menu.Item>
                       <Menu.Item
                         color="red"
                         leftSection={<IconTrash size={16} />}
@@ -574,14 +557,13 @@ export default function Logs() {
                   </Menu>
                 </Group>
               )}
-              {!view && (
-                <CheckPicker
-                  minimal
-                  value={checks}
-                  onChange={setChecks}
-                  restrictTo={(f) => CHECKS_BY_TYPE[type].includes(f.id)}
-                />
-              )}
+
+              <CheckPicker
+                minimal
+                value={checks}
+                onChange={setChecks}
+                restrictTo={(f) => CHECKS_BY_TYPE[type].includes(f.id)}
+              />
             </Group>
             {!!showSaveView && (
               <Button

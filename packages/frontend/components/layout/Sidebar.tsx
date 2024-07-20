@@ -61,7 +61,6 @@ import config from "@/utils/config"
 import { useViews } from "@/utils/dataHooks/views"
 import { useDisclosure, useFocusTrap } from "@mantine/hooks"
 import { getIconComponent } from "../blocks/IconPicker"
-import { set } from "date-fns"
 
 function NavbarLink({
   icon: Icon,
@@ -250,7 +249,7 @@ export default function Sidebar() {
       return {
         label: v.name,
         icon: Icon,
-        link: `/logs?${serialized}&view=${v.id}`,
+        link: `/logs?view=${v.id}`,
         resource: "logs",
       }
     })
