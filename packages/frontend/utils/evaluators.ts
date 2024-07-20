@@ -135,8 +135,8 @@ const EVALUATOR_TYPES = {
       "Detects toxic, offensive, obscene, or hateful language. English only at the moment.",
     params: [],
   },
-  assert: {
-    id: "assert",
+  assertion: {
+    id: "assertion",
     name: "Assertion",
     icon: IconEyeCheck,
     color: "blue",
@@ -150,16 +150,16 @@ const EVALUATOR_TYPES = {
       },
       {
         type: "text",
-        id: "sentence",
+        id: "statement",
         defaultValue: "The answer is spoken like a pirate.",
         placeholder: "Is spoken like a pirate",
         width: 400,
       },
       {
         type: "label",
-        label: "Evaluator Model to use",
+        label: "Model to use",
         description:
-          "Select or type a custom model to use for evaluating. Note: you need to set the proper API key for the model.",
+          "Select or type a custom model to use for evaluating. Note: you need to configure the proper API key for the model.",
       },
       {
         type: "select",
@@ -169,9 +169,9 @@ const EVALUATOR_TYPES = {
         options: [
           "gpt-4o-mini",
           "gpt-4o",
-          "bedrock/meta.llama3-8b-instruct-v1:0",
           "claude-3-5-sonnet-20240620",
           "claude-3-haiku-20240307",
+          "bedrock/meta.llama3-8b-instruct-v1:0",
         ],
         width: 200,
       },

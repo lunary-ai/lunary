@@ -54,3 +54,8 @@ export type LanguageDetectionResult = EnrichmentData & {
   output: Array<BaseLanguageDetectionResult | null>
   error: Array<BaseLanguageDetectionResult | null>
 }
+
+export type AssertionResult = {
+  result: boolean
+  reason: string
+}

@@ -7,7 +7,12 @@ import {
   IconMoodSmile,
   IconX,
 } from "@tabler/icons-react"
-import { EnrichmentData, EvaluatorType, LanguageDetectionResult } from "shared"
+import {
+  AssertionResult,
+  EnrichmentData,
+  EvaluatorType,
+  LanguageDetectionResult,
+} from "shared"
 import { getFlagEmoji } from "./format"
 import ErrorBoundary from "@/components/blocks/ErrorBoundary"
 
@@ -260,7 +265,9 @@ export function renderSentimentEnrichment(data?: EnrichmentData) {
   )
 }
 
-function renderAssertEnrichment(data: any) {
+function renderAssertEnrichment(data: AssertionResult) {
+  if (typeof data !== "object" || typeof data.result !== "boolean") return null
+
   return (
     <Tooltip label={data.reason} disabled={!data.reason?.length}>
       <IconX color={data.result ? "green" : "red"} />

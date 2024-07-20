@@ -18,6 +18,7 @@ import {
   Title,
 } from "@mantine/core"
 import {
+  IconActivity,
   IconActivityHeartbeat,
   IconDotsVertical,
   IconEdit,
@@ -26,6 +27,7 @@ import {
 } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { useRouter } from "next/router"
+import Empty from "@/components/layout/Empty"
 
 const FEATURE_LIST = [
   "Real-time LLM-based evaluations on production data",
@@ -80,40 +82,49 @@ export default function RealtimeEvaluators() {
   // )
 
   return (
-    <Container>
-      <Stack>
-        <Group align="center" justify="space-between">
-          <Group align="center">
-            <Title>Evaluators</Title>
-            <Badge variant="light" color="blue">
-              Beta
-            </Badge>
+    <Empty
+      enable={!evaluators.length}
+      Icon={IconActivityHeartbeat}
+      title="Real-time Evaluations"
+      buttonLabel="Create First Evaluator"
+      onClick={() => router.push("/evaluations/realtime/new")}
+      description="Run evaluations on your production data in real-time with task-optimized models."
+    >
+      <Container>
+        <Stack>
+          <Group align="center" justify="space-between">
+            <Group align="center">
+              <Title>Evaluators</Title>
+              <Badge variant="light" color="blue">
+                Beta
+              </Badge>
+            </Group>
+
+            <Button
+              leftSection={<IconPlus size={12} />}
+              variant="default"
+              onClick={() => router.push("/evaluations/realtime/new")}
+            >
+              New Evaluator
+            </Button>
           </Group>
 
-          <Button
-            leftSection={<IconPlus size={12} />}
-            variant="default"
-            onClick={() => router.push("/evaluations/realtime/new")}
-          >
-            New Evaluator
-          </Button>
-        </Group>
+          <Text size="xl" mb="md">
+            Run evaluations on your production data in real-time.
+          </Text>
 
-        <Text size="xl" mb="md">
-          Run evaluations on your production data in real-time.
-        </Text>
-
-        <Stack gap="xl">
-          {evaluators?.map((evaluator) => (
-            <EvaluationCard
-              key={evaluator.id}
-              id={evaluator.id}
-              initialData={evaluator}
-            />
-          ))}
+          <Stack gap="xl">
+            {evaluators?.map((evaluator) => (
+              <EvaluationCard
+                key={evaluator.id}
+                id={evaluator.id}
+                initialData={evaluator}
+              />
+            ))}
+          </Stack>
         </Stack>
-      </Stack>
-    </Container>
+      </Container>
+    </Empty>
   )
 }
 

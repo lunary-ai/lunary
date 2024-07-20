@@ -311,6 +311,8 @@ export default function Logs() {
     setVisibleColumns(view.columns)
   }, [view])
 
+  useTraceUpdate({ projectId, viewId, selectedRunId, type, checks, query })
+
   const exportUrl = useMemo(
     () => `/runs?${serializedChecks}&projectId=${projectId}`,
     [serializedChecks, projectId],
