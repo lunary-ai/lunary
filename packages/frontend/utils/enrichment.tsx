@@ -270,7 +270,7 @@ function renderAssertEnrichment(data: AssertionResult) {
 
   return (
     <Tooltip label={data.reason} disabled={!data.reason?.length}>
-      <IconX color={data.result ? "green" : "red"} />
+      {data.result ? <IconCheck color="green" /> : <IconX color="red" />}
     </Tooltip>
   )
 }

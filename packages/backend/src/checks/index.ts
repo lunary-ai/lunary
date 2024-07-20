@@ -193,6 +193,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       ])
     },
   },
+
   {
     id: "sentiment",
     sql: ({ sentiment }) => {

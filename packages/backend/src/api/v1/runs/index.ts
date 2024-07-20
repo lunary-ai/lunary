@@ -219,7 +219,6 @@ function formatRun(run: any) {
   //   }
   // }
 
-  console.log
   for (let evaluationResult of run.evaluationResults || []) {
     formattedRun[`enrichment-${evaluationResult.evaluatorId}`] =
       evaluationResult
@@ -309,6 +308,8 @@ runs.get("/", async (ctx: Context) => {
       left join run_parent_feedback_cache rpfc on r.id = rpfc.id
       left join template_version tv on r.template_version_id = tv.id
       left join template t on tv.template_id = t.id
+      left join evaluation_result_v2 er on r.id = er.run_id 
+      left join evaluator e on er.evaluator_id = e.id
     where 
       r.project_id = ${projectId}
       ${parentRunCheck}
