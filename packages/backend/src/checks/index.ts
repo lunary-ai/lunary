@@ -435,6 +435,9 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     id: "tokens",
     // sum completion_tokens and prompt_tokens if field is total
     sql: ({ field, operator, tokens }) => {
+      if (!tokens) return sql`true`
+
+      console.log({ field, operator, tokens })
       if (field === "total") {
         return sql`completion_tokens + prompt_tokens ${postgresOperators(
           operator,

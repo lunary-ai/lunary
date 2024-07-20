@@ -517,45 +517,46 @@ export const CHECKS: Check[] = [
       },
     ],
   },
-  // {
-  //   id: "tokens",
-  //   name: "Tokens",
-  //   disableInEvals: true,
-  //   uiType: "basic",
-  //   params: [
-  //     {
-  //       type: "select",
-  //       id: "field",
-  //       width: 100,
-  //       defaultValue: "total",
-  //       options: [
-  //         {
-  //           label: "Completion",
-  //           value: "completion",
-  //         },
-  //         {
-  //           label: "Prompt",
-  //           value: "prompt",
-  //         },
-  //         {
-  //           label: "Total",
-  //           value: "total",
-  //         },
-  //       ],
-  //     },
-  //     {
-  //       type: "label",
-  //       label: "Tokens",
-  //     },
-  //     NUMBER_PARAM,
-  //     {
-  //       type: "number",
-  //       min: 0,
-  //       id: "tokens",
-  //       width: 70,
-  //     },
-  //   ],
-  // },
+  {
+    id: "tokens",
+    name: "Tokens",
+    disableInEvals: true,
+    uiType: "basic",
+    params: [
+      {
+        type: "select",
+        id: "field",
+        width: 100,
+        defaultValue: "total",
+        options: [
+          {
+            label: "Completion",
+            value: "completion",
+          },
+          {
+            label: "Prompt",
+            value: "prompt",
+          },
+          {
+            label: "Total",
+            value: "total",
+          },
+        ],
+      },
+      {
+        type: "label",
+        label: "Tokens",
+      },
+      NUMBER_PARAM,
+      {
+        type: "number",
+        min: 0,
+        defaultValue: 100,
+        id: "tokens",
+        width: 70,
+      },
+    ],
+  },
   {
     id: "languages",
     name: "Language",

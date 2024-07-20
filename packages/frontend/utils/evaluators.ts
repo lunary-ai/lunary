@@ -147,6 +147,7 @@ const EVALUATOR_TYPES = {
       {
         type: "label",
         label: "Condition",
+        description: "Enter the condition to check for.",
       },
       {
         type: "text",

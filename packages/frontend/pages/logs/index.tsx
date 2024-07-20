@@ -120,20 +120,18 @@ export const CHECKS_BY_TYPE = {
   llm: [
     "date",
     "models",
-    // "enrichment",
     "tags",
     "users",
-    // "languages",
-    // "entities",
+    "languages",
+    "entities",
     "templates",
-    // "sentiment",
+    "sentiment",
     "status",
     "metadata",
     "feedback",
     "cost",
     "duration",
     "tokens",
-    // "radar",
   ],
   trace: [
     "date",
@@ -143,7 +141,6 @@ export const CHECKS_BY_TYPE = {
     // "feedback",
     "duration",
     "metadata",
-    // "radar",
   ],
   thread: [
     "date",
@@ -151,7 +148,6 @@ export const CHECKS_BY_TYPE = {
     "users",
     // "feedback",
     "metadata",
-    // "radar",
   ],
 }
 

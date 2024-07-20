@@ -64,23 +64,20 @@ export function serializeLogic(logic: CheckLogic): string {
       const all = param.map(serializeParamValue)
       return all.filter(Boolean).join(".")
     } else if (param && typeof param === "object" && param.params) {
-      const data = Object.entries(param.params)
-        .sort(([keyA], [keyB]) => {
-          if (keyA === "operator") {
-            return -1
-          }
-          if (keyB === "operator") {
-            return 1
-          }
-        })
-        .map(([key, value]) => {
-          const filterParam = CHECKS.find(
-            (filter) => filter.id === param.id,
-          )?.params.find((param) => (param as CheckParam).id === key)
+      const filter = CHECKS.find((filter) => filter.id === param.id)
+      if (!filter) {
+        return ""
+      }
 
-          if (!filterParam || filterParam.type === "label") {
-            return ""
-          }
+      const filterParams = filter.params.filter(
+        (param) => param.type !== "label",
+      ) as CheckParam[]
+
+      // we look at the original filter params keys to make sure they are oredered correctly
+      const data = filterParams
+        .map((filterParam) => {
+          const value =
+            filterParam.id in param.params ? param.params[filterParam.id] : ""
 
           const serialized = paramSerializer(filterParam, value)
           return serialized !== undefined ? serialized : ""
@@ -93,7 +90,9 @@ export function serializeLogic(logic: CheckLogic): string {
     return ""
   }
 
-  return logic.map(serializeParamValue).filter(Boolean).join("&")
+  const finalResult = logic.map(serializeParamValue).filter(Boolean).join("&")
+
+  return finalResult
 }
 
 export function deserializeLogic(
