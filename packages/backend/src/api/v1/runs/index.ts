@@ -129,7 +129,7 @@ function formatRun(run: any) {
     }
 
     if (formattedRun.error && typeof formattedRun.error === "object") {
-      formattedRun.output.enrichments = []
+      formattedRun.error.enrichments = []
     }
 
     for (const {
