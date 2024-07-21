@@ -92,10 +92,13 @@ export default function NewRealtimeEvaluator() {
   const [params, setParams] = useState<any>()
   const [isBenchmark, setIsBenchmark] = useState<boolean>(false)
   const [filters, setFilters] = useState<CheckLogic>([
-    "AND",
+    "OR",
     { id: "type", params: { type: "llm" } },
+    { id: "type", params: { type: "chat" } },
   ])
+
   const serializedFilters = serializeLogic(filters)
+
   const { count: logCount } = useLogCount(serializedFilters)
 
   const evaluatorTypes = Object.values(EVALUATOR_TYPES)

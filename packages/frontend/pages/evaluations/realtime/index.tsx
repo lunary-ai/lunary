@@ -22,6 +22,7 @@ import {
   IconActivityHeartbeat,
   IconDotsVertical,
   IconEdit,
+  IconPencil,
   IconPlus,
   IconTrash,
 } from "@tabler/icons-react"
@@ -161,6 +162,15 @@ function EvaluationCard({ id, initialData }) {
           </Menu.Target>
 
           <Menu.Dropdown>
+            <Menu.Item
+              leftSection={
+                <IconPencil color="blue" width="15px" height="15px" />
+              }
+              disabled
+              onClick={() => {}}
+            >
+              Update
+            </Menu.Item>
             <Menu.Item
               leftSection={<IconTrash color="red" width="15px" height="15px" />}
               onClick={() => deleteEvaluator()}
