@@ -19,8 +19,8 @@
 .piiBadge {
   padding: 2px 4px;
   border-radius: 4px;
-  background-color: var(--mantine-color-red-1);
-  color: var(--mantine-color-red-9);
+  /* background-color: var(--mantine-color-red-1); */
+  /* color: var(--mantine-color-red-9); */
   font-size: 12px;
   font-weight: 500;
 }

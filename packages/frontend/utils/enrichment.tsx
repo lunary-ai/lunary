@@ -17,6 +17,7 @@ import { getFlagEmoji } from "./format"
 import ErrorBoundary from "@/components/blocks/ErrorBoundary"
 import { useMemo } from "react"
 import { set } from "date-fns"
+import { getPIIColor } from "./colors"
 
 export function renderEnrichment(data: EnrichmentData, type: EvaluatorType) {
   const renderers: Record<EvaluatorType, (data: any) => any> = {
@@ -65,16 +66,6 @@ function renderLanguageEnrichment(languageDetections: LanguageDetectionResult) {
       ))}
     </Group>
   )
-}
-
-const PII_COLORS = {
-  person: "blue",
-  email: "orange",
-  phone: "yellow",
-  location: "green",
-  cc: "red",
-  ip: "purple",
-  regex: "gray",
 }
 
 function renderPIIEnrichment(data: EnrichmentData) {
@@ -127,7 +118,7 @@ function renderPIIEnrichment(data: EnrichmentData) {
             <Badge
               key={entity as string}
               variant="light"
-              color={PII_COLORS[type] || "gray"}
+              color={getPIIColor(type)}
             >
               {entity as string}
             </Badge>

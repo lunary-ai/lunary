@@ -1,4 +1,4 @@
-import { getColorForRole } from "@/utils/colors"
+import { getColorForRole, getPIIColor } from "@/utils/colors"
 import {
   ActionIcon,
   Box,
@@ -16,7 +16,6 @@ import {
   ThemeIcon,
   useComputedColorScheme,
   Tooltip,
-  Highlight,
 } from "@mantine/core"
 import {
   IconInfoCircle,
@@ -30,7 +29,7 @@ import ProtectedText from "../blocks/ProtectedText"
 import { RenderJson } from "./RenderJson"
 import classes from "./index.module.css"
 
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react"
 
 import { openConfirmModal } from "@mantine/modals"
 import { getFlagEmoji, getLanguageName } from "@/utils/format"
@@ -191,14 +190,29 @@ function HighlightPii({
     return <>{text}</>
   }
 
-  const uniquePIIentities = piiDetection.filter(
-    (entity, index, self) =>
-      self.findIndex((t) => t.entity === entity.entity) === index,
-  )
+  const HighlightBadge = ({ children, highlightIndex }) => {
+    const piiType = piiDetection.find((pii) => pii.entity === children)?.type
+    const bgColor = `light-dark(var(--mantine-color-${getPIIColor(piiType)}-2), var(--mantine-color-${getPIIColor(piiType)}-9))`
+
+    return (
+      <Tooltip label={piiType} position="top" withArrow>
+        <span
+          style={{
+            backgroundColor: bgColor,
+            // color: `var(--mantine-color-${getPIIColor(piiType)}-10)`,
+          }}
+          className={classes.piiBadge}
+        >
+          {children}
+        </span>
+      </Tooltip>
+    )
+  }
 
   return (
     <Highlighter
       highlightClassName={classes.piiBadge}
+      highlightTag={HighlightBadge}
       searchWords={piiDetection.map((pii) => pii.entity)}
       autoEscape={true}
       caseSensitive={true}
@@ -473,15 +487,22 @@ export function ChatMessage({
     }
   }, [data, editable])
 
-  const sentiment = data?.enrichments.find(
-    (enrichment) => enrichment.type === "sentiment",
-  )?.result
-  const piiDetection = data?.enrichments.find(
-    (enrichment) => enrichment.type === "pii",
-  )?.result
-  const language = data?.enrichments.find(
-    (enrichment) => enrichment.type === "language",
-  )?.result
+  const sentiment = useMemo(() => {
+    return data?.enrichments?.find(
+      (enrichment) => enrichment.type === "sentiment",
+    )?.result
+  }, [data?.enrichments])
+
+  const piiDetection = useMemo(() => {
+    return data?.enrichments?.find((enrichment) => enrichment.type === "pii")
+      ?.result
+  }, [data?.enrichments])
+
+  const language = useMemo(() => {
+    return data?.enrichments?.find(
+      (enrichment) => enrichment.type === "language",
+    )?.result
+  }, [data?.enrichments])
 
   return (
     <Paper
