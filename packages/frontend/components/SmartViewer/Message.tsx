@@ -490,6 +490,16 @@ export function ChatMessage({
     }
   }, [data, editable])
 
+  const sentiment = data?.enrichments.find(
+    (enrichment) => enrichment.type === "sentiment",
+  )?.result
+  const piiDetection = data?.enrichments.find(
+    (enrichment) => enrichment.type === "pii",
+  )?.result
+  const language = data?.enrichments.find(
+    (enrichment) => enrichment.type === "language",
+  )?.result
+
   return (
     <Paper
       className={`${classes.paper} ${compact ? classes.compact : ""}`}
@@ -517,12 +527,12 @@ export function ChatMessage({
             </Text>
           )}
           <Group>
-            {renderSentimentEnrichment(data?.sentimentAnalysis?.score)}
-            {data?.languageDetection && (
+            {renderSentimentEnrichment(sentiment?.score)}
+            {language && (
               <Tooltip
-                label={`${getLanguageName(data.languageDetection.isoCode)} (${Number(data.languageDetection.confidence.toFixed(3))})`}
+                label={`${getLanguageName(language.isoCode)} (${Number(language.confidence.toFixed(3))})`}
               >
-                <Box>{getFlagEmoji(data.languageDetection.isoCode)}</Box>
+                <Box>{getFlagEmoji(language.isoCode)}</Box>
               </Tooltip>
             )}
           </Group>
@@ -531,7 +541,7 @@ export function ChatMessage({
       <ChatMessageContent
         data={data}
         color={color}
-        piiDetection={data.piiDetection}
+        piiDetection={piiDetection}
         compact={compact}
         onChange={onChange}
         editable={editable}
