@@ -1,7 +1,4 @@
 import { Run } from "shared"
-import openai from "@/src/utils/openai"
-import lunary from "lunary"
-import { lastMsg } from "../checks"
 import { callML } from "../utils/ml"
 
 interface TopicsParams {
@@ -50,20 +47,19 @@ export async function evaluate(run: Run, params: TopicsParams) {
   const output = parseMessages(run.output)
   const error = parseMessages(run.error)
 
-  const [inputPIIs, outputPIIs, errorPIIs] = await Promise.all([
+  const [inputTopics, outputTopics, errorTopics] = await Promise.all([
     detectTopics(input, topics),
     detectTopics(output, topics),
     detectTopics(error, topics),
   ])
 
-  const PIIs = {
-    input: inputPIIs,
-    output: outputPIIs,
-    error: errorPIIs,
+  const result = {
+    input: inputTopics,
+    output: outputTopics,
+    error: errorTopics,
   }
 
-  // TODO: zod for languages, SHOLUD NOT INGEST IN DB IF NOT CORRECT FORMAT
-  return topics
+  return result
 }
 
 async function detectTopics(

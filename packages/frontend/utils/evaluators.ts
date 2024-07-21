@@ -70,7 +70,8 @@ const EVALUATOR_TYPES = {
       {
         type: "label",
         label: "Custom Regex Expressions",
-        description: "Add custom regex expressions to detect PII (optional).",
+        description:
+          "Add custom regex expressions to detect PII (optional). Use the PCRE Regex format.",
       },
       {
         type: "select",

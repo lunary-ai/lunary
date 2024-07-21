@@ -1,4 +1,4 @@
-import { Badge, Box, Group, Popover, Stack, Text, Tooltip } from "@mantine/core"
+import { Badge, Box, Group, Popover, Text, Tooltip } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import {
   IconCheck,
@@ -16,7 +16,6 @@ import {
 import { getFlagEmoji } from "./format"
 import ErrorBoundary from "@/components/blocks/ErrorBoundary"
 import { useMemo } from "react"
-import { set } from "date-fns"
 import { getPIIColor } from "./colors"
 
 export function renderEnrichment(data: EnrichmentData, type: EvaluatorType) {
@@ -173,8 +172,36 @@ function renderToxicityEnrichment(data: EnrichmentData) {
 function renderTopicsEnrichment(data: EnrichmentData) {
   const [opened, { close, open }] = useDisclosure(false)
 
-  if (data.length === 0) {
-    return ""
+  console.log(data, Object.values(data).flat().flat())
+  const uniqueTopics = Array.from(
+    new Set(
+      Object.values(data)
+        .flat()
+        .flat()
+        .filter(Boolean)
+        .map((t) => t.topic),
+    ),
+  )
+
+  if (uniqueTopics.length === 0) {
+    return null
+  }
+
+  if (uniqueTopics.length < 4) {
+    return (
+      <Group gap={3}>
+        {uniqueTopics.map((topic, index) => (
+          <Badge
+            key={index}
+            onMouseEnter={open}
+            onMouseLeave={close}
+            variant="default"
+          >
+            {topic}
+          </Badge>
+        ))}
+      </Group>
+    )
   }
 
   return (
@@ -186,37 +213,14 @@ function renderTopicsEnrichment(data: EnrichmentData) {
       opened={opened}
     >
       <Popover.Target>
-        <div>
-          {data.length < 3 ? (
-            <Group gap={2}>
-              {data.map((topic, index) => (
-                <Badge
-                  key={index}
-                  onMouseEnter={open}
-                  onMouseLeave={close}
-                  color="blue"
-                  styles={{ label: { textTransform: "lowercase" } }}
-                >
-                  {topic}
-                </Badge>
-              ))}
-            </Group>
-          ) : (
-            <Badge
-              onMouseEnter={open}
-              onMouseLeave={close}
-              color="blue"
-              styles={{ label: { textTransform: "lowercase" } }}
-            >
-              {data.length + " topics"}
-            </Badge>
-          )}
-        </div>
+        <Badge onMouseEnter={open} onMouseLeave={close} variant="default">
+          {uniqueTopics.length + " topics"}
+        </Badge>
       </Popover.Target>
       <Popover.Dropdown style={{ pointerEvents: "none" }} w="300">
         <Text size="sm">
           <strong>Topics:</strong>
-          <div>{data.join(", ")}</div>
+          <div>{uniqueTopics.join(", ")}</div>
         </Text>
       </Popover.Dropdown>
     </Popover>
