@@ -178,7 +178,57 @@ function ToolCallsMessage({ toolCalls, editable, onChange, color, compact }) {
   )
 }
 
-function TextMessage({ data, compact, onChange = () => {}, editable = false }) {
+function HighlightPii({
+  text,
+  piiDetection,
+}: {
+  text: string
+  piiDetection: { type: string; entity: string }[] // Contains the detected PII
+}) {
+  if (!piiDetection || piiDetection.length === 0) {
+    return <>{text}</>
+  }
+
+  let lastIndex = 0
+  const elements = []
+
+  piiDetection.forEach((pii, index) => {
+    const startIndex = text.indexOf(pii.entity, lastIndex)
+    if (startIndex === -1) return
+
+    const endIndex = startIndex + pii.entity.length
+
+    if (startIndex > lastIndex) {
+      elements.push(
+        <span key={`text-${index}`}>
+          {text.substring(lastIndex, startIndex)}
+        </span>,
+      )
+    }
+
+    elements.push(
+      <span key={`pii-${index}`} className={classes.piiBadge}>
+        {pii.entity}
+      </span>,
+    )
+
+    lastIndex = endIndex
+  })
+
+  if (lastIndex < text.length) {
+    elements.push(<span key="text-end">{text.substring(lastIndex)}</span>)
+  }
+
+  return <>{elements}</>
+}
+
+function TextMessage({
+  data,
+  compact,
+  onChange = () => {},
+  piiDetection,
+  editable = false,
+}) {
   const text = data.content || data.text
 
   return (
@@ -192,10 +242,15 @@ function TextMessage({ data, compact, onChange = () => {}, editable = false }) {
             onChange={(e) => onChange({ ...data, content: e.target.value })}
             {...ghostTextAreaStyles}
           />
-        ) : compact ? (
-          text?.substring(0, 150) // truncate text to render less
         ) : (
-          text
+          <HighlightPii
+            text={
+              compact
+                ? text?.substring(0, 150) // truncate text to render less
+                : text
+            }
+            piiDetection={piiDetection}
+          />
         )}
       </ProtectedText>
     </Code>
@@ -265,7 +320,7 @@ function ChatMessageContent({
   data,
   color,
   compact,
-
+  piiDetection,
   onChange,
   editable,
 }) {
@@ -303,6 +358,7 @@ function ChatMessageContent({
         <TextMessage
           data={data}
           compact={compact}
+          piiDetection={piiDetection}
           onChange={onChange}
           editable={editable}
         />
@@ -461,20 +517,21 @@ export function ChatMessage({
             </Text>
           )}
           <Group>
-            {/* {renderSentimentEnrichment(data?.sentimentAnalysis?.score)} */}
-            {/* {data?.languageDetection && (
+            {renderSentimentEnrichment(data?.sentimentAnalysis?.score)}
+            {data?.languageDetection && (
               <Tooltip
                 label={`${getLanguageName(data.languageDetection.isoCode)} (${Number(data.languageDetection.confidence.toFixed(3))})`}
               >
                 <Box>{getFlagEmoji(data.languageDetection.isoCode)}</Box>
               </Tooltip>
-            )} */}
+            )}
           </Group>
         </Group>
       )}
       <ChatMessageContent
         data={data}
         color={color}
+        piiDetection={data.piiDetection}
         compact={compact}
         onChange={onChange}
         editable={editable}

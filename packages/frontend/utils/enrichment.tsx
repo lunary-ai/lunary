@@ -15,6 +15,8 @@ import {
 } from "shared"
 import { getFlagEmoji } from "./format"
 import ErrorBoundary from "@/components/blocks/ErrorBoundary"
+import { useMemo } from "react"
+import { set } from "date-fns"
 
 export function renderEnrichment(data: EnrichmentData, type: EvaluatorType) {
   const renderers: Record<EvaluatorType, (data: any) => any> = {
@@ -64,23 +66,42 @@ function renderLanguageEnrichment(languageDetections: LanguageDetectionResult) {
     </Group>
   )
 }
+
+const PII_COLORS = {
+  person: "blue",
+  email: "orange",
+  phone: "yellow",
+  location: "green",
+  cc: "red",
+  ip: "purple",
+  regex: "gray",
+}
+
 function renderPIIEnrichment(data: EnrichmentData) {
   const [opened, { close, open }] = useDisclosure(false)
 
-  const uniqueEntities = new Set()
-  Object.values(data).forEach((items) =>
-    items
-      .filter(Boolean)
-      .forEach((item) =>
-        item.forEach((subItem: { entity: string }) =>
-          uniqueEntities.add(subItem.entity),
-        ),
-      ),
-  )
+  const uniqueEntities: { entity: string; type: string }[] = useMemo(() => {
+    const entities = new Set()
+    const entityTypeArray = []
 
-  const piiCount = uniqueEntities.size
+    for (const items of Object.values(data)) {
+      for (const item of items.filter(Boolean)) {
+        for (const subItem of item) {
+          if (!entities.has(subItem.entity)) {
+            entities.add(subItem.entity)
+            entityTypeArray.push({ entity: subItem.entity, type: subItem.type })
+          }
+        }
+      }
+    }
+    return entityTypeArray
+  }, [data])
+
+  const piiCount = uniqueEntities.length
 
   if (piiCount === 0) return null
+
+  const size = piiCount > 20 ? 500 : 350
 
   return (
     <Popover
@@ -91,17 +112,31 @@ function renderPIIEnrichment(data: EnrichmentData) {
       opened={opened}
     >
       <Popover.Target>
-        <Badge onMouseEnter={open} onMouseLeave={close} color="blue">
+        <Badge
+          color="orange"
+          variant="light"
+          onMouseEnter={open}
+          onMouseLeave={close}
+        >
           {piiCount} PII
         </Badge>
       </Popover.Target>
-      <Popover.Dropdown style={{ pointerEvents: "none" }} w={300}>
-        <Group>
-          {Array.from(uniqueEntities).map((entity) => (
-            <Badge key={entity as string} variant="light">
+      <Popover.Dropdown w={size}>
+        <Group p="sm" px={4}>
+          {uniqueEntities.slice(0, 40).map(({ entity, type }) => (
+            <Badge
+              key={entity as string}
+              variant="light"
+              color={PII_COLORS[type] || "gray"}
+            >
               {entity as string}
             </Badge>
           ))}
+          {uniqueEntities.length > 40 && (
+            <Badge variant="light" color="gray" ml="auto">
+              and {uniqueEntities.length - 40} more
+            </Badge>
+          )}
         </Group>
       </Popover.Dropdown>
     </Popover>
