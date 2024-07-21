@@ -182,11 +182,14 @@ export const CHECK_RUNNERS: CheckRunner[] = [
         sql`e.type = 'pii'`,
         or(
           types.map((type: string) => {
-            const jsonSql = [{ type }]
-            return sql`(
-              er.result::jsonb -> 'input' @> ${sql.json(jsonSql)}
-              OR
-              er.result::jsonb -> 'output' @> ${sql.json(jsonSql)}
+            return sql`EXISTS (
+              SELECT 1
+              FROM jsonb_array_elements(er.result -> 'input') as input_array
+              WHERE input_array @> ${sql.json([{ type }])}
+            ) OR EXISTS (
+              SELECT 1
+              FROM jsonb_array_elements(er.result -> 'output') as output_array
+              WHERE output_array @> ${sql.json([{ type }])}
             )`
           }),
         ),

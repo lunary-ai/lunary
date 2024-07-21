@@ -99,7 +99,6 @@ function formatRun(run: any) {
     status: run.status,
     siblingRunId: run.siblingRunId,
     params: processParams(run.params),
-
     metadata: run.metadata,
     user: run.externalUserId && {
       id: run.externalUserId,
@@ -124,7 +123,7 @@ function formatRun(run: any) {
       for (const message of formattedRun.output) {
         message.enrichments = []
       }
-    } else if (typeof formattedRun.output === "object") {
+    } else if (formattedRun.output && typeof formattedRun.output === "object") {
       formattedRun.output.enrichments = []
     }
 
