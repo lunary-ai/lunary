@@ -47,7 +47,7 @@ export async function evaluate(run: Run) {
   const toxicity = {
     input: inputToxicity,
     output: outputToxicity,
-    error: error.map((e) => []),
+    error: error.map((e) => null),
   }
 
   // TODO: zod for languages, SHOLUD NOT INGEST IN DB IF NOT CORRECT FORMAT

@@ -230,7 +230,9 @@ export default function NewRealtimeEvaluator() {
                 value={filters}
                 onChange={setFilters}
                 restrictTo={(filter) =>
-                  ["tags", "type", "users", "metadata"].includes(filter.id)
+                  ["tags", "type", "users", "metadata", "date"].includes(
+                    filter.id,
+                  )
                 }
               />
             </Box>

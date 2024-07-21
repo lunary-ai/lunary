@@ -4,7 +4,7 @@ export type EvaluatorType =
   | "sentiment"
   | "language"
   | "toxicity"
-  | "assert"
+  | "assertion"
   | "topics"
   | "tone"
   | "factualness"
