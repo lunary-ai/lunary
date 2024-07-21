@@ -124,12 +124,12 @@ function formatRun(run: any) {
       for (const message of formattedRun.output) {
         message.enrichments = []
       }
-    } else if (typeof formattedRun.output === "object") {
+    } else if (formattedRun.output && typeof formattedRun.output === "object") {
       formattedRun.output.enrichments = []
     }
 
-    if (typeof formattedRun.error === "object") {
-      formattedRun.output.enrichments = []
+    if (formattedRun.error && typeof formattedRun.error === "object") {
+      formattedRun.error.enrichments = []
     }
 
     for (const {
@@ -152,7 +152,7 @@ function formatRun(run: any) {
             })
           }
         }
-      } else if (formattedRun.input === "object") {
+      } else if (formattedRun.input && typeof formattedRun.input === "object") {
         formattedRun.input.enrichments.push({
           result: result.input[0],
           type: evaluatorType,
@@ -171,7 +171,10 @@ function formatRun(run: any) {
             })
           }
         }
-      } else if (formattedRun.output === "object") {
+      } else if (
+        formattedRun.output &&
+        typeof formattedRun.output === "object"
+      ) {
         formattedRun.output.enrichments.push({
           result: result.output[0],
           type: evaluatorType,
@@ -179,7 +182,7 @@ function formatRun(run: any) {
         })
       }
 
-      if (typeof formattedRun.error === "object") {
+      if (formattedRun.error && typeof formattedRun.error === "object") {
         formattedRun.error.enrichments.push({
           result: result.error[0],
           type: evaluatorType,
