@@ -306,7 +306,6 @@ export function renderSentimentEnrichment(data?: EnrichmentData) {
 }
 
 function renderAssertionEnrichment(data: AssertionResult) {
-  console.log(data)
   if (typeof data !== "object" || typeof data.result !== "boolean") return null
 
   return (
@@ -319,7 +318,7 @@ function renderAssertionEnrichment(data: AssertionResult) {
 function renderGuidelinesEnrichment(data: any) {
   return (
     <Tooltip label={data.reason} disabled={!data.reason?.length}>
-      <IconX color={data.result ? "green" : "red"} />
+      {data.result ? <IconCheck color="green" /> : <IconX color={"red"} />}
     </Tooltip>
   )
 }
