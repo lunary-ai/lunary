@@ -34,7 +34,7 @@ import { useEffect, useMemo } from "react"
 import { openConfirmModal } from "@mantine/modals"
 import { getFlagEmoji, getLanguageName } from "@/utils/format"
 import { renderSentimentEnrichment } from "@/utils/enrichment"
-import Highlighter from "react-highlight-words"
+import HighlightPii from "./HighlightPii"
 
 const ghostTextAreaStyles = {
   variant: "unstyled",
@@ -48,7 +48,14 @@ const ghostTextAreaStyles = {
   width: "100%",
 }
 
-function RenderFunction({ color, editable, onChange, compact, data }) {
+function RenderFunction({
+  color,
+  editable,
+  onChange,
+  compact,
+  data,
+  piiDetection,
+}) {
   return (
     <Code className={classes.textMessage}>
       <Text
@@ -91,18 +98,36 @@ function RenderFunction({ color, editable, onChange, compact, data }) {
         </>
       ) : (
         <pre style={{ marginBottom: 0 }}>
-          <RenderJson compact={compact} data={data?.arguments} />
+          <RenderJson
+            compact={compact}
+            data={data?.arguments}
+            piiDetection={piiDetection}
+          />
         </pre>
       )}
     </Code>
   )
 }
 
-function FunctionCallMessage({ data, color, compact }) {
-  return <RenderFunction color={color} data={data} compact={compact} />
+function FunctionCallMessage({ data, color, compact, piiDetection }) {
+  return (
+    <RenderFunction
+      color={color}
+      data={data}
+      compact={compact}
+      piiDetection={piiDetection}
+    />
+  )
 }
 
-function ToolCallsMessage({ toolCalls, editable, onChange, color, compact }) {
+function ToolCallsMessage({
+  toolCalls,
+  editable,
+  onChange,
+  color,
+  compact,
+  piiDetection,
+}) {
   return (
     <>
       {toolCalls.map((toolCall, index) => (
@@ -139,6 +164,7 @@ function ToolCallsMessage({ toolCalls, editable, onChange, color, compact }) {
           <RenderFunction
             key={index}
             editable={editable}
+            piiDetection={piiDetection}
             onChange={(newData) => {
               const newToolCalls = [...toolCalls]
               newToolCalls[index].function = newData
@@ -176,48 +202,6 @@ function ToolCallsMessage({ toolCalls, editable, onChange, color, compact }) {
         </Box>
       ))}
     </>
-  )
-}
-
-function HighlightPii({
-  text,
-  piiDetection,
-}: {
-  text: string
-  piiDetection: { type: string; entity: string }[] // Contains the detected PII
-}) {
-  if (!piiDetection || piiDetection.length === 0) {
-    return <>{text}</>
-  }
-
-  const HighlightBadge = ({ children, highlightIndex }) => {
-    const piiType = piiDetection.find((pii) => pii.entity === children)?.type
-    const bgColor = `light-dark(var(--mantine-color-${getPIIColor(piiType)}-2), var(--mantine-color-${getPIIColor(piiType)}-9))`
-
-    return (
-      <Tooltip label={piiType} position="top" withArrow>
-        <span
-          style={{
-            backgroundColor: bgColor,
-            // color: `var(--mantine-color-${getPIIColor(piiType)}-10)`,
-          }}
-          className={classes.piiBadge}
-        >
-          {children}
-        </span>
-      </Tooltip>
-    )
-  }
-
-  return (
-    <Highlighter
-      highlightClassName={classes.piiBadge}
-      highlightTag={HighlightBadge}
-      searchWords={piiDetection.map((pii) => pii.entity)}
-      autoEscape={true}
-      caseSensitive={true}
-      textToHighlight={text}
-    />
   )
 }
 
@@ -377,6 +361,7 @@ function ChatMessageContent({
         <ToolCallsMessage
           toolCalls={data.toolCalls || data.tool_calls}
           color={color}
+          piiDetection={piiDetection}
           editable={editable}
           onChange={(toolCalls) => onChange({ ...data, toolCalls })}
           compact={compact}
@@ -564,7 +549,7 @@ const ROLE_ICONS = {
 }
 
 // Used for chat replays
-export function BubbleMessage({ role, content, extra }) {
+export function BubbleMessage({ role, content, extra, enrichments }) {
   const alignLeft = ["ai", "assistant", "bot", "tool", "system"].includes(role)
 
   const Icon = ROLE_ICONS[role || "assistant"]
@@ -578,6 +563,10 @@ export function BubbleMessage({ role, content, extra }) {
       content = content.input
     }
   }
+
+  const piiDetection = useMemo(() => {
+    return enrichments?.find((enrichment) => enrichment.type === "pii")?.result
+  }, [enrichments])
 
   return (
     <>
@@ -599,7 +588,9 @@ export function BubbleMessage({ role, content, extra }) {
             withBorder
             maw={430}
           >
-            <span style={{ whiteSpace: "pre-line" }}>{content}</span>
+            <span style={{ whiteSpace: "pre-line" }}>
+              <HighlightPii text={content} piiDetection={piiDetection} />
+            </span>
           </Paper>
           {extra}
         </div>

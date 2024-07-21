@@ -124,7 +124,7 @@ function formatRun(run: any) {
       for (const message of formattedRun.output) {
         message.enrichments = []
       }
-    } else if (formattedRun.output && typeof formattedRun.output === "object") {
+    } else if (typeof formattedRun.output === "object") {
       formattedRun.output.enrichments = []
     }
 
@@ -446,6 +446,9 @@ runs.get("/:id", async (ctx) => {
     from
         run r
         left join external_user eu on r.external_user_id = eu.id
+        left join run_parent_feedback_cache rpfc on r.id = rpfc.id
+        left join template_version tv on r.template_version_id = tv.id
+        left join template t on tv.template_id = t.id
         left join evaluation_result_v2 er on r.id = er.run_id 
         left join evaluator e on er.evaluator_id = e.id
     where

@@ -438,13 +438,12 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     sql: ({ field, operator, tokens }) => {
       if (!tokens) return sql`true`
 
-      console.log({ field, operator, tokens })
       if (field === "total") {
         return sql`completion_tokens + prompt_tokens ${postgresOperators(
           operator,
         )} ${tokens}`
       } else {
-        return sql`${sql(field + "_tokens")} ${postgresOperators(
+        return sql`${sql(field + "_tokens")} ${postgresisOperators(
           operator,
         )} ${tokens}`
       }

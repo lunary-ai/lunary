@@ -23,6 +23,10 @@
   /* color: var(--mantine-color-red-9); */
   font-size: 12px;
   font-weight: 500;
+
+  &.blurred {
+    filter: blur(3px);
+  }
 }
 
 .paper {
