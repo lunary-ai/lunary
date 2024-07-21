@@ -16,6 +16,7 @@ import {
   ThemeIcon,
   useComputedColorScheme,
   Tooltip,
+  Highlight,
 } from "@mantine/core"
 import {
   IconInfoCircle,
@@ -34,6 +35,7 @@ import { useEffect } from "react"
 import { openConfirmModal } from "@mantine/modals"
 import { getFlagEmoji, getLanguageName } from "@/utils/format"
 import { renderSentimentEnrichment } from "@/utils/enrichment"
+import Highlighter from "react-highlight-words"
 
 const ghostTextAreaStyles = {
   variant: "unstyled",
@@ -189,37 +191,20 @@ function HighlightPii({
     return <>{text}</>
   }
 
-  let lastIndex = 0
-  const elements = []
+  const uniquePIIentities = piiDetection.filter(
+    (entity, index, self) =>
+      self.findIndex((t) => t.entity === entity.entity) === index,
+  )
 
-  piiDetection.forEach((pii, index) => {
-    const startIndex = text.indexOf(pii.entity, lastIndex)
-    if (startIndex === -1) return
-
-    const endIndex = startIndex + pii.entity.length
-
-    if (startIndex > lastIndex) {
-      elements.push(
-        <span key={`text-${index}`}>
-          {text.substring(lastIndex, startIndex)}
-        </span>,
-      )
-    }
-
-    elements.push(
-      <span key={`pii-${index}`} className={classes.piiBadge}>
-        {pii.entity}
-      </span>,
-    )
-
-    lastIndex = endIndex
-  })
-
-  if (lastIndex < text.length) {
-    elements.push(<span key="text-end">{text.substring(lastIndex)}</span>)
-  }
-
-  return <>{elements}</>
+  return (
+    <Highlighter
+      highlightClassName={classes.piiBadge}
+      searchWords={piiDetection.map((pii) => pii.entity)}
+      autoEscape={true}
+      caseSensitive={true}
+      textToHighlight={text}
+    />
+  )
 }
 
 function TextMessage({
@@ -452,8 +437,6 @@ export function ChatMessage({
   const scheme = useComputedColorScheme()
 
   const color = getColorForRole(data?.role)
-
-  const codeBg = `light-dark(rgba(255,255,255,0.5), rgba(0,0,0,0.6))`
 
   // Add/remove the 'id' and 'name' props required on tool calls
   useEffect(() => {
