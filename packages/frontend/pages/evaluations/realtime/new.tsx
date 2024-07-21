@@ -231,6 +231,7 @@ export default function NewRealtimeEvaluator() {
               <CheckPicker
                 minimal
                 value={filters}
+                showAndOr
                 onChange={setFilters}
                 restrictTo={(filter) =>
                   ["tags", "type", "users", "metadata", "date"].includes(

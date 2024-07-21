@@ -227,6 +227,7 @@ export default function AppAnalytics() {
           <CheckPicker
             defaultOpened={true}
             minimal={true}
+            showAndOr={true}
             value={filters}
             onChange={setChecks}
             buttonText="Add filter"

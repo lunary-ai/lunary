@@ -14,6 +14,7 @@ export function RenderCheckNode({
   node,
   disabled,
   checks,
+  showAndOr,
   setNode,
   removeNode,
 }: {
@@ -21,6 +22,7 @@ export function RenderCheckNode({
   node: CheckLogic
   checks: Check[]
   disabled?: boolean
+  showAndOr?: boolean
   setNode: (node: CheckLogic | LogicData) => void
   removeNode: () => void
 }) {
@@ -35,6 +37,7 @@ export function RenderCheckNode({
         key={i}
         checks={checks}
         disabled={disabled}
+        showAndOr={showAndOr}
         node={n as CheckLogic}
         removeNode={() => {
           const newNode = [...node]
@@ -50,7 +53,8 @@ export function RenderCheckNode({
     )
 
     return node.map((n, i) => {
-      const showOperator = i !== 0 && i !== node.length - 1 && !minimal
+      const showOperator =
+        i !== 0 && i !== node.length - 1 && (!minimal || showAndOr)
       return showOperator ? (
         <Group key={i} gap={showOperator ? "xs" : 0}>
           {showCheckNode(n, i)}
@@ -159,6 +163,7 @@ export default function CheckPicker({
   value = ["AND"],
   onChange = (data) => {},
   minimal = false,
+  showAndOr = false,
   restrictTo = (filter) => true,
   defaultOpened = false,
   disabled = false,
@@ -167,6 +172,7 @@ export default function CheckPicker({
   value?: CheckLogic
   onChange?: (data: CheckLogic) => void
   minimal?: boolean
+  showAndOr?: boolean
   restrictTo?: (filter: Check) => boolean
   defaultOpened?: boolean
   disabled?: boolean
@@ -215,6 +221,7 @@ export default function CheckPicker({
             minimal={minimal}
             node={value}
             disabled={disabled}
+            showAndOr={showAndOr}
             setNode={(newNode) => {
               onChange(newNode as CheckLogic)
             }}
