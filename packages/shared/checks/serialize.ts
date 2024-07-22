@@ -90,7 +90,12 @@ export function serializeLogic(logic: CheckLogic): string {
     return ""
   }
 
-  const finalResult = logic.map(serializeParamValue).filter(Boolean).join("&")
+  let finalResult = logic.map(serializeParamValue).filter(Boolean).join("&")
+
+  // Check if the first logic item is 'OR' and prepend it to the serialized string
+  if (logic[0] === "OR") {
+    finalResult = "OR&" + finalResult
+  }
 
   return finalResult
 }
@@ -143,6 +148,12 @@ export function deserializeLogic(
     }
   }
 
-  const logic = logicString.split("&").map(deserializeParam).filter(Boolean)
-  return ["AND", ...logic] as CheckLogic
+  const isOrLogic = logicString.startsWith("OR&")
+  const logic = logicString
+    .replace(/^OR&/, "")
+    .split("&")
+    .map(deserializeParam)
+    .filter(Boolean)
+
+  return [isOrLogic ? "OR" : "AND", ...logic] as CheckLogic
 }

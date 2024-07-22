@@ -144,7 +144,7 @@ export default function NewRealtimeEvaluator() {
       mode: "realtime",
       params: params.params,
       type,
-      filters: serializedFilters,
+      filters,
       ownerId: user.id,
     })
     router.push("/evaluations/realtime")

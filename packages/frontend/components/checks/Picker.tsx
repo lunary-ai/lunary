@@ -62,7 +62,7 @@ export function RenderCheckNode({
             <Select
               variant="unstyled"
               c="dimmed"
-              w={80}
+              w={65}
               size="xs"
               fw="bold"
               data={["AND", "OR"]}
@@ -72,6 +72,7 @@ export function RenderCheckNode({
                 if (val !== null) {
                   newNodeArray[0] = val
                 }
+
                 setNode(newNodeArray as CheckLogic)
               }}
             />
