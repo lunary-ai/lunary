@@ -172,7 +172,6 @@ function renderToxicityEnrichment(data: EnrichmentData) {
 function renderTopicsEnrichment(data: EnrichmentData) {
   const [opened, { close, open }] = useDisclosure(false)
 
-  console.log(data, Object.values(data).flat().flat())
   const uniqueTopics = Array.from(
     new Set(
       Object.values(data)
