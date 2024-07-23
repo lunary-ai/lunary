@@ -56,6 +56,7 @@ async function main() {
     }
 
     for (const migrationFile of pendingMigrations) {
+      console.log(`Running migration: ${migrationFile}`)
       const migrationPath = path.join(migrationsDir, migrationFile)
       await sql.begin(async (sql) => {
         await sql.file(migrationPath)
