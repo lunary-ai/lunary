@@ -1,9 +1,7 @@
-name: Auto-approve PRs
-
+name: Auto-approve PRs (Non-blocking)
 on:
   pull_request:
     types: [opened, reopened, synchronize]
-
 jobs:
   auto-approve:
     runs-on: ubuntu-latest
@@ -11,6 +9,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Auto-approve PR
+        continue-on-error: true
         uses: hmarr/auto-approve-action@v3
         with:
           github-token: ${{ secrets.LUNARY_BOT_GH_TOKEN }}
+      - name: Always succeed
+        run: exit 0
