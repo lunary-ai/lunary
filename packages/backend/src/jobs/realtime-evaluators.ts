@@ -6,7 +6,7 @@ import { RealtimeEvaluator } from "shared/evaluators"
 import { sleep } from "../utils/misc"
 import evaluators from "../evaluators"
 
-const RUNS_BATCH_SIZE = 30
+const RUNS_BATCH_SIZE = 10
 
 async function runEvaluator(evaluator: RealtimeEvaluator, run: Run) {
   try {
@@ -71,7 +71,7 @@ async function evaluatorJob() {
     from 
       evaluator e 
     where
-      mode = 'realtime'
+      mode = 'realtime' and project_id = 'befa0759-fbf1-4c5e-a51c-dd2dbe70f053'
     order by 
       random()
   `

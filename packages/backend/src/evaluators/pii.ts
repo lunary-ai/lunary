@@ -58,20 +58,23 @@ export async function evaluate(run: Run, params: Params) {
     error: errorPIIs,
   }
 
-
   // TODO: zod for languages, SHOLUD NOT INGEST IN DB IF NOT CORRECT FORMAT
   return PIIs
 }
 
-// TODO: type
 async function detectPIIs(
   texts: string[],
   entityTypes: string[] = [],
   customRegexes: string[] = [],
-  excludedEntities: string[] = []
+  excludedEntities: string[] = [],
 ): Promise<any> {
   try {
-    return callML("pii", { texts, entityTypes, customRegexes, excludedEntities })
+    return callML("pii", {
+      texts,
+      entityTypes,
+      customRegexes,
+      excludedEntities,
+    })
   } catch (error) {
     console.error(error)
     console.log(texts)

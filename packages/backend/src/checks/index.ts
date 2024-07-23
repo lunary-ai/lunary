@@ -182,17 +182,21 @@ export const CHECK_RUNNERS: CheckRunner[] = [
         sql`e.type = 'pii'`,
         or(
           types.map((type: string) => {
-            const jsonSql = [{ type }]
-            return sql`(
-              er.result::jsonb -> 'input' @> ${sql.json(jsonSql)}
-              OR
-              er.result::jsonb -> 'output' @> ${sql.json(jsonSql)}
+            return sql`EXISTS (
+              SELECT 1
+              FROM jsonb_array_elements(er.result -> 'input') as input_array
+              WHERE input_array @> ${sql.json([{ type }])}
+            ) OR EXISTS (
+              SELECT 1
+              FROM jsonb_array_elements(er.result -> 'output') as output_array
+              WHERE output_array @> ${sql.json([{ type }])}
             )`
           }),
         ),
       ])
     },
   },
+
   {
     id: "sentiment",
     sql: ({ sentiment }) => {
@@ -435,12 +439,14 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     id: "tokens",
     // sum completion_tokens and prompt_tokens if field is total
     sql: ({ field, operator, tokens }) => {
+      if (!tokens) return sql`true`
+
       if (field === "total") {
         return sql`completion_tokens + prompt_tokens ${postgresOperators(
           operator,
         )} ${tokens}`
       } else {
-        return sql`${sql(field + "_tokens")} ${postgresOperators(
+        return sql`${sql(field + "_tokens")} ${postgresisOperators(
           operator,
         )} ${tokens}`
       }

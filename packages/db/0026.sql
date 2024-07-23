@@ -1,0 +1,1 @@
+alter table view add column type text not null default 'llm';

@@ -164,40 +164,93 @@ projects.patch(
   async (ctx: Context) => {
     const bodySchema = z.object({
       name: z.string().optional(),
-      filters: z.array(z.any()).optional(),
-    });
-    const { name, filters } = bodySchema.parse(ctx.request.body);
-    const { projectId } = ctx.params;
-    const { userId } = ctx.state;
+    })
+    const { name } = bodySchema.parse(ctx.request.body)
+    const { projectId } = ctx.params
+    const { userId } = ctx.state
 
     // TODO: this should be in a middleware
-    const hasProjectAccess = await checkProjectAccess(projectId, userId);
+    const hasProjectAccess = await checkProjectAccess(projectId, userId)
     if (!hasProjectAccess) {
-      ctx.throw(401, "Unauthorized");
+      ctx.throw(401, "Unauthorized")
     }
-
 
     if (name) {
       await sql`
-        update project
-        set name = ${name}
-        where id = ${projectId}
-      `;
+        update project set name = ${name} where id = ${projectId}
+      `
     }
 
-    if (filters) {
-      await sql`
-        insert into ingestion_rule (project_id, type, filters)
-        values (${projectId}, 'filtering', ${filters})
-        on conflict (project_id, type)
-        do update set filters = excluded.filters
-      `;
+    ctx.status = 200
+    ctx.body = {}
+  },
+)
+
+projects.get(
+  "/:projectId/rules",
+  checkAccess("projects", "update"),
+  async (ctx: Context) => {
+    const { projectId } = ctx.params
+    const { userId } = ctx.state
+
+    const hasProjectAccess = await checkProjectAccess(projectId, userId)
+    if (!hasProjectAccess) {
+      ctx.throw(401, "Unauthorized")
     }
 
-    ctx.status = 200;
-    ctx.body = {};
-  }
-);
+    const rules =
+      await sql`select * from ingestion_rule where project_id = ${projectId}`
 
+    ctx.body = rules
+  },
+)
+
+projects.post(
+  "/:projectId/rules",
+  checkAccess("projects", "update"),
+  async (ctx: Context) => {
+    const bodySchema = z.object({
+      type: z.enum(["filtering", "masking"]).default("filtering"),
+      filters: z.array(z.any()).optional(),
+    })
+    const { type, filters } = bodySchema.parse(ctx.request.body)
+    const { projectId } = ctx.params
+    const { userId } = ctx.state
+
+    const hasProjectAccess = await checkProjectAccess(projectId, userId)
+    if (!hasProjectAccess) {
+      ctx.throw(401, "Unauthorized")
+    }
+
+    await sql`
+      insert into ingestion_rule (project_id, type, filters)
+      values (${projectId}, ${type}, ${filters})
+      on conflict (project_id, type)
+      do update set filters = excluded.filters
+    `
+
+    ctx.status = 200
+    ctx.body = {}
+  },
+)
+
+projects.delete(
+  "/:projectId/rules",
+  checkAccess("projects", "update"),
+  async (ctx: Context) => {
+    const { projectId } = ctx.params
+    const { userId } = ctx.state
+
+    const hasProjectAccess = await checkProjectAccess(projectId, userId)
+    if (!hasProjectAccess) {
+      ctx.throw(401, "Unauthorized")
+    }
+
+    await sql`delete from ingestion_rule where project_id = ${projectId}`
+
+    ctx.status = 200
+    ctx.body = {}
+  },
+)
 
 export default projects

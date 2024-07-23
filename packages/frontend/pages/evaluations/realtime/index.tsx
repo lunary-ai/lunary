@@ -18,14 +18,17 @@ import {
   Title,
 } from "@mantine/core"
 import {
+  IconActivity,
   IconActivityHeartbeat,
   IconDotsVertical,
   IconEdit,
+  IconPencil,
   IconPlus,
   IconTrash,
 } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
 import { useRouter } from "next/router"
+import Empty from "@/components/layout/Empty"
 
 const FEATURE_LIST = [
   "Real-time LLM-based evaluations on production data",
@@ -42,78 +45,87 @@ export default function RealtimeEvaluators() {
     return <Loader />
   }
 
+  // return (
+  //   <Paywall
+  //     plan="enterprise"
+  //     feature="Realtime Evaluations"
+  //     Icon={IconActivityHeartbeat}
+  //     p="xl"
+  //     enabled={!org.license.realtimeEvalsEnabled}
+  //     description="Run evaluations on your production data in real-time."
+  //     list={FEATURE_LIST}
+  //   >
+  //     <Container>
+  //       <Stack>
+  //         <Group align="center" justify="space-between">
+  //           <Group align="center">
+  //             <Title>Realtime Evaluations</Title>
+  //             <Badge variant="teal" color="violet">
+  //               Enteprise
+  //             </Badge>
+  //           </Group>
+
+  //           <Group>
+  //             <Button variant="default" leftSection={<IconPlus size={12} />}>
+  //               New
+  //             </Button>
+  //           </Group>
+  //         </Group>
+
+  //         <Text size="lg" mb="md">
+  //           Run evaluations on your production data in real-time. They can be
+  //           used to enrich your data with additional information, such as
+  //           sentiment analysis, topic recognition, and more.
+  //         </Text>
+  //       </Stack>
+  //     </Container>
+  //   </Paywall>
+  // )
+
   return (
-    <Paywall
-      plan="enterprise"
-      feature="Realtime Evaluations"
+    <Empty
+      enable={!evaluators.length}
       Icon={IconActivityHeartbeat}
-      p="xl"
-      enabled={!org.license.realtimeEvalsEnabled}
-      description="Run evaluations on your production data in real-time."
-      list={FEATURE_LIST}
+      title="Real-time Evaluations"
+      buttonLabel="Create First Evaluator"
+      onClick={() => router.push("/evaluations/realtime/new")}
+      description="Run evaluations on your production data in real-time with task-optimized models."
     >
       <Container>
         <Stack>
           <Group align="center" justify="space-between">
             <Group align="center">
-              <Title>Realtime Evaluations</Title>
-              <Badge variant="teal" color="violet">
-                Enteprise
+              <Title>Evaluators</Title>
+              <Badge variant="light" color="blue">
+                Beta
               </Badge>
             </Group>
 
-            <Group>
-              <Button variant="default" leftSection={<IconPlus size={12} />}>
-                New
-              </Button>
-            </Group>
+            <Button
+              leftSection={<IconPlus size={12} />}
+              variant="default"
+              onClick={() => router.push("/evaluations/realtime/new")}
+            >
+              New Evaluator
+            </Button>
           </Group>
 
-          <Text size="lg" mb="md">
-            Run evaluations on your production data in real-time. They can be
-            used to enrich your data with additional information, such as
-            sentiment analysis, topic recognition, and more.
+          <Text size="xl" mb="md">
+            Run evaluations on your production data in real-time.
           </Text>
+
+          <Stack gap="xl">
+            {evaluators?.map((evaluator) => (
+              <EvaluationCard
+                key={evaluator.id}
+                id={evaluator.id}
+                initialData={evaluator}
+              />
+            ))}
+          </Stack>
         </Stack>
       </Container>
-    </Paywall>
-  )
-
-  return (
-    <Container>
-      <Stack>
-        <Group align="center" justify="space-between">
-          <Group align="center">
-            <Title>Evaluators</Title>
-            <Badge variant="light" color="blue">
-              Beta
-            </Badge>
-          </Group>
-
-          <Button
-            leftSection={<IconPlus size={12} />}
-            variant="default"
-            onClick={() => router.push("/evaluations/realtime/new")}
-          >
-            New Evaluator
-          </Button>
-        </Group>
-
-        <Text size="xl" mb="md">
-          Run evaluations on your production data in real-time.
-        </Text>
-
-        <Stack gap="xl">
-          {evaluators?.map((evaluator) => (
-            <EvaluationCard
-              key={evaluator.id}
-              id={evaluator.id}
-              initialData={evaluator}
-            />
-          ))}
-        </Stack>
-      </Stack>
-    </Container>
+    </Empty>
   )
 }
 
@@ -150,6 +162,15 @@ function EvaluationCard({ id, initialData }) {
           </Menu.Target>
 
           <Menu.Dropdown>
+            <Menu.Item
+              leftSection={
+                <IconPencil color="blue" width="15px" height="15px" />
+              }
+              disabled
+              onClick={() => {}}
+            >
+              Update
+            </Menu.Item>
             <Menu.Item
               leftSection={<IconTrash color="red" width="15px" height="15px" />}
               onClick={() => deleteEvaluator()}

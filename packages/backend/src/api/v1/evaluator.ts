@@ -44,7 +44,6 @@ evaluators.get("/:id", async (ctx: Context) => {
 })
 
 evaluators.post("/", async (ctx: Context) => {
-  console.log(ctx.request.body)
   const requestBody = z.object({
     ownerId: z.string().optional(),
     name: z.string(),
@@ -53,7 +52,7 @@ evaluators.post("/", async (ctx: Context) => {
     type: z.string(),
     mode: z.string(),
     params: z.record(z.any()),
-    filters: z.string(),
+    filters: z.array(z.any()),
   })
 
   const { projectId } = ctx.state
@@ -63,7 +62,6 @@ evaluators.post("/", async (ctx: Context) => {
   const [insertedEvaluator] = await sql`
     insert into evaluator ${sql({
       ...evaluator,
-      filters: deserializeLogic(evaluator.filters),
       projectId,
     })} 
     returning *
@@ -79,7 +77,7 @@ evaluators.patch("/:id", async (ctx: Context) => {
     type: z.string(),
     mode: z.string(),
     params: z.record(z.any()),
-    filters: z.record(z.any()),
+    filters: z.array(z.any()),
   })
 
   const { projectId } = ctx.state

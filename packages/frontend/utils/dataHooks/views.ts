@@ -9,17 +9,10 @@ export function useViews() {
     fetcher.post,
   )
 
-  const { trigger: update, isMutating: isUpdating } = useProjectMutation(
-    `/views`,
-    fetcher.patch,
-  )
-
   return {
     views: data,
     insert,
     isInserting,
-    update,
-    isUpdating,
     mutate,
     loading: isLoading,
   }
@@ -40,7 +33,8 @@ export function useView(id: string | null, initialData?: any) {
     id && `/views/${id}`,
     fetcher.patch,
     {
-      onSuccess() {
+      onSuccess(data) {
+        mutate(data)
         mutateViews()
       },
     },
