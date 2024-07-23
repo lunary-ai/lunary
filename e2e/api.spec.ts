@@ -43,7 +43,7 @@ test("regenerate api keys", async ({ page }) => {
 test("private api /logs", async ({ page }) => {
   // Test API query
 
-  const res = await fetch(process.env.API_URL + "/v1/runs", {
+  const res = await fetch(apiUrl + "/v1/runs", {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -58,7 +58,7 @@ test("private api /logs", async ({ page }) => {
 test("create dataset", async ({ page }) => {
   // Test API query
 
-  const res = await fetch(process.env.API_URL + "/v1/datasets", {
+  const res = await fetch(apiUrl + "/v1/datasets", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -77,7 +77,7 @@ test("create dataset", async ({ page }) => {
 test("get dataset publicly via slug", async ({ page }) => {
   // Test API query
 
-  const res = await fetch(process.env.API_URL + "/v1/datasets/test-dataset", {
+  const res = await fetch(apiUrl + "/v1/datasets/test-dataset", {
     method: "GET",
     headers: {
       // Use the legacy way to pass the API key (used in old SDKs)
