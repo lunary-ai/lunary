@@ -568,12 +568,11 @@ export default function Sidebar() {
               </Menu>
 
               <Menu closeOnItemClick={false}>
-                <Menu.Target>
+                <Menu.Target data-testid="account-sidebar-item">
                   <ActionIcon variant="subtle" radius="xl" size={32}>
                     <UserAvatar
                       size={26}
                       profile={user}
-                      data-testid="account-sidebar-item"
                     />
                   </ActionIcon>
                 </Menu.Target>
