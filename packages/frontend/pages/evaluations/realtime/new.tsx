@@ -82,7 +82,6 @@ function EvaluatorCard({
 }
 
 export default function NewRealtimeEvaluator() {
-  return ""
   const router = useRouter()
 
   const { user } = useUser()
@@ -93,10 +92,13 @@ export default function NewRealtimeEvaluator() {
   const [params, setParams] = useState<any>()
   const [isBenchmark, setIsBenchmark] = useState<boolean>(false)
   const [filters, setFilters] = useState<CheckLogic>([
-    "AND",
+    "OR",
     { id: "type", params: { type: "llm" } },
+    { id: "type", params: { type: "chat" } },
   ])
+
   const serializedFilters = serializeLogic(filters)
+
   const { count: logCount } = useLogCount(serializedFilters)
 
   const evaluatorTypes = Object.values(EVALUATOR_TYPES)
@@ -142,7 +144,7 @@ export default function NewRealtimeEvaluator() {
       mode: "realtime",
       params: params.params,
       type,
-      filters: serializedFilters,
+      filters,
       ownerId: user.id,
     })
     router.push("/evaluations/realtime")
@@ -229,9 +231,12 @@ export default function NewRealtimeEvaluator() {
               <CheckPicker
                 minimal
                 value={filters}
+                showAndOr
                 onChange={setFilters}
                 restrictTo={(filter) =>
-                  ["tags", "type", "users", "metadata"].includes(filter.id)
+                  ["tags", "type", "users", "metadata", "date"].includes(
+                    filter.id,
+                  )
                 }
               />
             </Box>

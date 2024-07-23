@@ -61,7 +61,6 @@ import config from "@/utils/config"
 import { useViews } from "@/utils/dataHooks/views"
 import { useDisclosure, useFocusTrap } from "@mantine/hooks"
 import { getIconComponent } from "../blocks/IconPicker"
-import { set } from "date-fns"
 
 function NavbarLink({
   icon: Icon,
@@ -73,10 +72,17 @@ function NavbarLink({
 }) {
   const router = useRouter()
 
-  // For logs pages, we want to compare the full url because it contains the view ID and filters info
+  // For logs pages, we want to compare the view param to see if a view is selected
+
   const active = router.pathname.startsWith("/logs")
-    ? router.asPath.includes(`&view`)
-      ? router.asPath.includes(`&view=${link.split("view=")[1]}`)
+    ? router.asPath.includes(`view=`)
+      ? (() => {
+          const linkParams = new URLSearchParams(link.split("?")[1])
+          const viewParam = linkParams.get("view")
+          return viewParam
+            ? router.asPath.includes(`view=${viewParam}`)
+            : router.asPath.startsWith(link)
+        })()
       : router.asPath.startsWith(link)
     : router.pathname.startsWith(link)
 
@@ -250,7 +256,7 @@ export default function Sidebar() {
       return {
         label: v.name,
         icon: Icon,
-        link: `/logs?${serialized}&view=${v.id}`,
+        link: `/logs?view=${v.id}&filters=${serialized}&type=${v.type}`,
         resource: "logs",
       }
     })
@@ -562,12 +568,11 @@ export default function Sidebar() {
               </Menu>
 
               <Menu closeOnItemClick={false}>
-                <Menu.Target>
+                <Menu.Target data-testid="account-sidebar-item">
                   <ActionIcon variant="subtle" radius="xl" size={32}>
                     <UserAvatar
                       size={26}
                       profile={user}
-                      data-testid="account-sidebar-item"
                     />
                   </ActionIcon>
                 </Menu.Target>

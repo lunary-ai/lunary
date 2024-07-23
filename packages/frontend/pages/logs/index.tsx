@@ -58,7 +58,11 @@ import {
   useRun,
 } from "@/utils/dataHooks"
 
-import { useDebouncedState, useDidUpdate } from "@mantine/hooks"
+import {
+  useDebouncedState,
+  useDidUpdate,
+  useShallowEffect,
+} from "@mantine/hooks"
 import { ProjectContext } from "@/utils/context"
 
 import { useRouter } from "next/router"
@@ -68,10 +72,11 @@ import RenamableField from "@/components/blocks/RenamableField"
 import { VisibilityState } from "@tanstack/react-table"
 import { notifications } from "@mantine/notifications"
 
-import IconPicker from "@/components/blocks/IconPicker"
 import { deserializeLogic, serializeLogic } from "shared"
 import { useEvaluators } from "@/utils/dataHooks/evaluators"
-// import { useTraceUpdate } from "@/utils/hooks"
+import IconPicker from "@/components/blocks/IconPicker"
+import { useTraceUpdate } from "@/utils/hooks"
+import { set } from "date-fns"
 
 export const defaultColumns = {
   llm: [
@@ -120,20 +125,18 @@ export const CHECKS_BY_TYPE = {
   llm: [
     "date",
     "models",
-    // "enrichment",
     "tags",
     "users",
-    // "languages",
-    // "entities",
+    "languages",
+    "entities",
     "templates",
-    // "sentiment",
+    "sentiment",
     "status",
     "metadata",
     "feedback",
     "cost",
     "duration",
     "tokens",
-    // "radar",
   ],
   trace: [
     "date",
@@ -143,7 +146,6 @@ export const CHECKS_BY_TYPE = {
     // "feedback",
     "duration",
     "metadata",
-    // "radar",
   ],
   thread: [
     "date",
@@ -151,7 +153,6 @@ export const CHECKS_BY_TYPE = {
     "users",
     // "feedback",
     "metadata",
-    // "radar",
   ],
 }
 
@@ -177,22 +178,6 @@ function editCheck(filters, id, params) {
   return newChecks
 }
 
-// function useTraceUpdate(props) {
-//   const prev = useRef(props)
-//   useEffect(() => {
-//     const changedProps = Object.entries(props).reduce((ps, [k, v]) => {
-//       if (prev.current[k] !== v) {
-//         ps[k] = [prev.current[k], v]
-//       }
-//       return ps
-//     }, {})
-//     if (Object.keys(changedProps).length > 0) {
-//       console.log("Changed props:", changedProps)
-//     }
-//     prev.current = props
-//   })
-// }
-
 const DEFAULT_CHECK = ["AND"]
 
 export default function Logs() {
@@ -217,7 +202,7 @@ export default function Logs() {
     "selected",
     parseAsString,
   )
-  const [type] = useQueryState<string>(
+  const [type, setType] = useQueryState<string>(
     "type",
     parseAsStringEnum(["llm", "trace", "thread"]).withDefault("llm"),
   )
@@ -229,7 +214,6 @@ export default function Logs() {
     clearOnDefault: true,
   })
 
-
   const {
     view,
     update: updateView,
@@ -238,10 +222,6 @@ export default function Logs() {
   } = useView(viewId)
 
   const serializedChecks = useMemo(() => {
-    // TODO: find a better way, because it will call two times /runs
-    if (view) {
-      return serializeLogic(view.data)
-    }
     const checksWithType = editCheck(checks, "type", { type })
     return serializeLogic(checksWithType)
   }, [checks, type, view])
@@ -286,47 +266,6 @@ export default function Logs() {
     }
   }, [selectedRun?.projectId])
 
-  // useEffect(() => {
-  //   let newChecks = [...checks]
-  //   let shouldUpdate = false
-
-  //   // Add type filter if not present
-  //   const typeFilter = newChecks.find((filter) => filter.id === "type")
-  //   if (!typeFilter) {
-  //     newChecks = newChecks[0] === "AND" ? newChecks : ["AND", ...newChecks]
-  //     newChecks = [
-  //       newChecks[0],
-  //       { id: "type", params: { type } },
-  //       ...newChecks.slice(1),
-  //     ]
-  //     shouldUpdate = true
-  //   }
-
-  //   // Update type filter
-  //   newChecks = editCheck(newChecks, "type", { type }).filter(
-  //     (f) =>
-  //       f === "AND" ||
-  //       CHECKS_BY_TYPE[type].includes(f.id) ||
-  //       ["type", "search"].includes(f.id),
-  //   )
-  //   shouldUpdate = true
-
-  //   // Update search filter
-  //   if (query !== null) {
-  //     newChecks = editCheck(
-  //       newChecks,
-  //       "search",
-  //       query.length ? { query } : null,
-  //     )
-  //     shouldUpdate = true
-  //   }
-
-  //   // Only update if changes were made
-  //   if (shouldUpdate) {
-  //     setChecks(newChecks)
-  //   }
-  // }, [type, query])
-
   useDidUpdate(() => {
     // Update search filter
     if (query !== null) {
@@ -348,6 +287,14 @@ export default function Logs() {
       setVisibleColumns(allColumns[type])
     }
   }, [view, type, allColumns])
+
+  useEffect(() => {
+    if (!view) return
+
+    setType(view.type)
+    setChecks(view.data)
+    setVisibleColumns(view.columns)
+  }, [view, viewId])
 
   const exportUrl = useMemo(
     () => `/runs?${serializedChecks}&projectId=${projectId}`,
@@ -376,7 +323,8 @@ export default function Logs() {
 
       const newView = await insertView({
         name: "New View",
-        data: editCheck(checks, "type", { type }),
+        type,
+        data: checks,
         columns: visibleColumns,
         icon,
       })
@@ -384,7 +332,7 @@ export default function Logs() {
       setViewId(newView.id)
     } else {
       await updateView({
-        data: editCheck(checks, "type", { type }),
+        data: checks,
         columns: visibleColumns,
       })
 
@@ -418,6 +366,7 @@ export default function Logs() {
     if (view) {
       const newView = await insertView({
         name: `Copy of ${view.name}`,
+        type: view.type,
         data: view.data,
         columns: view.columns,
         icon: view.icon,
@@ -431,6 +380,7 @@ export default function Logs() {
       setViewId(newView.id)
     }
   }
+
   // Show button if column changed or view has changes, or it's not a view
   const showSaveView = useMemo(
     () =>
@@ -440,24 +390,6 @@ export default function Logs() {
         (!view || JSON.stringify(view.data) !== JSON.stringify(checks))),
     [columnsTouched, checks, view],
   )
-
-  // useTraceUpdate({
-  //   projectId,
-  //   serializedChecks,
-  //   type,
-  //   checks,
-  //   query,
-  //   viewId,
-  //   selectedRunId,
-  //   allColumns,
-  //   evaluators,
-  //   visibleColumns,
-  //   showSaveView,
-  //   logs,
-  //   loading,
-  //   validating,
-  //   runLoading,
-  // })
 
   return (
     <Empty
@@ -532,7 +464,7 @@ export default function Logs() {
             <Group>
               {view && (
                 <Group gap="xs">
-                  {/* <IconPicker
+                  <IconPicker
                     size={26}
                     variant="light"
                     value={view.icon}
@@ -541,7 +473,7 @@ export default function Logs() {
                         icon,
                       })
                     }}
-                  /> */}
+                  />
                   <RenamableField
                     defaultValue={view.name}
                     onRename={(newName) => {
@@ -557,12 +489,12 @@ export default function Logs() {
                       </ActionIcon>
                     </Menu.Target>
                     <Menu.Dropdown>
-                      {/* <Menu.Item
+                      <Menu.Item
                         leftSection={<IconStackPop size={16} />}
                         onClick={() => duplicateView()}
                       >
                         Duplicate
-                      </Menu.Item> */}
+                      </Menu.Item>
                       <Menu.Item
                         color="red"
                         leftSection={<IconTrash size={16} />}
@@ -574,14 +506,13 @@ export default function Logs() {
                   </Menu>
                 </Group>
               )}
-              {!view && (
-                <CheckPicker
-                  minimal
-                  value={checks}
-                  onChange={setChecks}
-                  restrictTo={(f) => CHECKS_BY_TYPE[type].includes(f.id)}
-                />
-              )}
+
+              <CheckPicker
+                minimal
+                value={checks}
+                onChange={setChecks}
+                restrictTo={(f) => CHECKS_BY_TYPE[type].includes(f.id)}
+              />
             </Group>
             {!!showSaveView && (
               <Button

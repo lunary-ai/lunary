@@ -15,6 +15,7 @@ import { ChatMessage } from "./Message"
 import MessageViewer from "./MessageViewer"
 import { RenderJson } from "./RenderJson"
 import classes from "./index.module.css"
+import HighlightPii from "./HighlightPii"
 
 const checkIsMessage = (obj) => {
   return (
