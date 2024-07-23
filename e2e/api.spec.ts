@@ -1,91 +1,89 @@
-// import { test, expect } from "@playwright/test"
+import { test, expect } from "@playwright/test"
 
-// let privateKey = null
-// let publicKey = null
+let privateKey = null
+let publicKey = null
 
-// // run tests one after another
-// test.describe.configure({ mode: "serial" })
+// run tests one after another
+test.describe.configure({ mode: "serial" })
 
-// test("regenerate api keys", async ({ page }) => {
-//   await page.goto("/settings")
+test("regenerate api keys", async ({ page }) => {
+  await page.goto("/settings")
 
-//   await page.waitForLoadState("networkidle")
+  await page.waitForLoadState("networkidle")
 
-//   publicKey = await page.getByTestId("private-key").textContent()
+  publicKey = await page.getByTestId("public-key").textContent()
 
-//   const firstPrivateKey = await page.getByTestId("private-key").textContent()
+  const firstPrivateKey = await page.getByTestId("private-key").textContent()
 
-//   expect(publicKey).toHaveLength(36) // uuid length
-//   expect(firstPrivateKey).toHaveLength(36) // uuid length
+  expect(publicKey).toHaveLength(36) // uuid length
+  expect(firstPrivateKey).toHaveLength(36) // uuid length
 
-//   await page.waitForTimeout(300) // helps with flakiness in local
+  await page.waitForTimeout(300) // helps with flakiness in local
 
-//   await page.getByTestId("regenerate-private-key-button").click()
+  await page.getByTestId("regenerate-private-key-button").click()
 
-//   const promise = page.waitForResponse((resp) =>
-//     resp.url().includes("/regenerate-key"),
-//   )
-//   await page.getByTestId("confirm-button").click()
-//   // wait until button re-contain "Regenerate"
-//   await promise
+  const promise = page.waitForResponse((resp) =>
+    resp.url().includes("/regenerate-key"),
+  )
+  await page.getByTestId("confirm-button").click()
+  // wait until button re-contain "Regenerate"
+  await promise
 
-//   const secondPrivateKey = await page.getByTestId("private-key").textContent()
+  await page.waitForTimeout(100)
 
-//   expect(firstPrivateKey).not.toEqual(secondPrivateKey)
+  const secondPrivateKey = await page.getByTestId("private-key").textContent()
 
-//   privateKey = secondPrivateKey
-// })
+  expect(firstPrivateKey).not.toEqual(secondPrivateKey)
 
-// test("private api /logs", async ({ page }) => {
-//   // Test API query
+  privateKey = secondPrivateKey
+})
 
-//   const res = await fetch(process.env.API_URL + "/v1/runs", {
-//     method: "GET",
-//     headers: {
-//       "Content-Type": "application/json",
-//       "X-API-Key": privateKey!,
-//     },
-//   })
+test("private api /logs", async ({ page }) => {
+  // Test API query
 
-//   const json = await res.json()
+  const res = await fetch(process.env.API_URL + "/v1/runs", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "X-API-Key": privateKey!,
+    },
+  })
 
-//   // expect to be an array
-//   expect(json).toBeInstanceOf(Array)
-// })
+  const json = await res.json()
+  expect(json.data).toBeInstanceOf(Array)
+})
 
-// test("create dataset", async ({ page }) => {
-//   // Test API query
+test("create dataset", async ({ page }) => {
+  // Test API query
 
-//   const res = await fetch(process.env.API_URL + "/v1/dataset", {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/json",
-//       "X-API-Key": privateKey!,
-//     },
-//     body: JSON.stringify({
-//       slug: "test-dataset",
-//       type: "chat",
-//     }),
-//   })
+  const res = await fetch(process.env.API_URL + "/v1/datasets", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-API-Key": privateKey!,
+    },
+    body: JSON.stringify({
+      slug: "test-dataset",
+      type: "chat",
+    }),
+  })
 
-//   const json = await res.json()
+  const json = await res.json()
+  expect(json.slug).toEqual("test-dataset")
+})
 
-//   expect(json.slug).toEqual("test-dataset")
-// })
+test("get dataset publicly via slug", async ({ page }) => {
+  // Test API query
 
-// test("get dataset publicly via slug", async ({ page }) => {
-//   // Test API query
+  const res = await fetch(process.env.API_URL + "/v1/datasets/test-dataset", {
+    method: "GET",
+    headers: {
+      // Use the legacy way to pass the API key (used in old SDKs)
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${publicKey!}`,
+    },
+  })
 
-//   const res = await fetch(process.env.API_URL + "/v1/dataset/test-dataset", {
-//     method: "GET",
-//     headers: {
-//       // Use the legacy way to pass the API key (used in old SDKs)
-//       "Content-Type": "application/json",
-//       Authorization: `Bearer ${publicKey!}`,
-//     },
-//   })
-
-//   const json = await res.json()
-
-//   expect(json.runs).toBeInstanceOf(Array)
-// })
+  const json = await res.json()
+  expect(json.items).toBeInstanceOf(Array)
+})
