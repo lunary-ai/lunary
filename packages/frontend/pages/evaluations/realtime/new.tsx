@@ -212,7 +212,7 @@ export default function NewRealtimeEvaluator() {
               </Group>
             </Tooltip>
 
-            <Group w="fit-content">
+            {/* <Group w="fit-content">
               <Switch
                 size="lg"
                 label="Is benchmark"
@@ -221,7 +221,7 @@ export default function NewRealtimeEvaluator() {
                 checked={isBenchmark}
                 onClick={(event) => setIsBenchmark(event.currentTarget.checked)}
               />
-            </Group>
+            </Group> */}
 
             <Box>
               <Text mb="5" mt="sm">
