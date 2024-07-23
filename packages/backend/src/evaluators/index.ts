@@ -1,6 +1,6 @@
 import * as pii from "./pii"
 import * as language from "./language"
-import * as assert from "./assert"
+import * as assertion from "./assertion"
 import * as tone from "./tone"
 import * as topics from "./topics"
 import * as toxicity from "./toxicity"
@@ -11,7 +11,7 @@ import * as replies from "./replies"
 const evaluators = {
   pii,
   language,
-  assert,
+  assertion,
   tone,
   topics,
   toxicity,

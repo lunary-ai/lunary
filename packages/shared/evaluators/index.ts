@@ -4,7 +4,7 @@ export type EvaluatorType =
   | "sentiment"
   | "language"
   | "toxicity"
-  | "assert"
+  | "assertion"
   | "topics"
   | "tone"
   | "factualness"
@@ -53,4 +53,9 @@ export type LanguageDetectionResult = EnrichmentData & {
   input: Array<BaseLanguageDetectionResult | null>
   output: Array<BaseLanguageDetectionResult | null>
   error: Array<BaseLanguageDetectionResult | null>
+}
+
+export type AssertionResult = {
+  result: boolean
+  reason: string
 }

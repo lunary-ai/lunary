@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [backend, radar, ml]
+        service: [backend, realtime-evaluators]
     steps:
       - name: Check out the private Ops repo
         uses: actions/checkout@v4
@@ -82,7 +82,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [frontend, lunary-ee]
+        service: [frontend]
     steps:
       - name: Check out the private Ops repo
         uses: actions/checkout@v4

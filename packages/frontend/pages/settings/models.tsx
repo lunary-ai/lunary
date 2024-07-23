@@ -124,7 +124,7 @@ export default function Models() {
               data={[
                 { value: "TOKENS", label: "Tokens" },
                 { value: "CHARACTERS", label: "Characters" },
-                { value: "MILLISECONDS", label: "Milliseconds" },
+                // { value: "MILLISECONDS", label: "Duration" }, disabled for now
               ]}
               key={form.key("unit")}
               {...form.getInputProps("unit")}
@@ -132,7 +132,11 @@ export default function Models() {
             <NumberInput
               label="Input Cost"
               placeholder="Enter input cost in USD"
-              description="Cost per million"
+              description={
+                form.values.unit === "MILLISECONDS"
+                  ? "Cost per second"
+                  : "Cost per million"
+              }
               required
               key={form.key("inputCost")}
               {...form.getInputProps("inputCost")}
@@ -140,7 +144,11 @@ export default function Models() {
             <NumberInput
               label="Output Cost"
               placeholder="Enter output cost in USD"
-              description="Cost per million"
+              description={
+                form.values.unit === "MILLISECONDS"
+                  ? "Cost per second"
+                  : "Cost per million"
+              }
               disabled={form.values.unit === "MILLISECONDS"}
               required
               key={form.key("outputCost")}

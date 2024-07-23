@@ -1,4 +1,4 @@
-import { Badge, Box, Group, Popover, Stack, Text, Tooltip } from "@mantine/core"
+import { Badge, Box, Group, Popover, Text, Tooltip } from "@mantine/core"
 import { useDisclosure } from "@mantine/hooks"
 import {
   IconCheck,
@@ -7,19 +7,25 @@ import {
   IconMoodSmile,
   IconX,
 } from "@tabler/icons-react"
-import { EnrichmentData, EvaluatorType, LanguageDetectionResult } from "shared"
+import {
+  AssertionResult,
+  EnrichmentData,
+  EvaluatorType,
+  LanguageDetectionResult,
+} from "shared"
 import { getFlagEmoji } from "./format"
 import ErrorBoundary from "@/components/blocks/ErrorBoundary"
+import { useMemo } from "react"
+import { getPIIColor } from "./colors"
 
 export function renderEnrichment(data: EnrichmentData, type: EvaluatorType) {
-  return ""
   const renderers: Record<EvaluatorType, (data: any) => any> = {
     language: renderLanguageEnrichment,
     pii: renderPIIEnrichment,
     toxicity: renderToxicityEnrichment,
     topics: renderTopicsEnrichment,
     sentiment: renderSentimentEnrichment,
-    assert: renderAssertEnrichment,
+    assertion: renderAssertionEnrichment,
     tone: renderToneEnrichment,
     guidelines: renderGuidelinesEnrichment,
     replies: renderRepliesEnrichment,
@@ -60,23 +66,32 @@ function renderLanguageEnrichment(languageDetections: LanguageDetectionResult) {
     </Group>
   )
 }
+
 function renderPIIEnrichment(data: EnrichmentData) {
   const [opened, { close, open }] = useDisclosure(false)
 
-  const uniqueEntities = new Set()
-  Object.values(data).forEach((items) =>
-    items
-      .filter(Boolean)
-      .forEach((item) =>
-        item.forEach((subItem: { entity: string }) =>
-          uniqueEntities.add(subItem.entity),
-        ),
-      ),
-  )
+  const uniqueEntities: { entity: string; type: string }[] = useMemo(() => {
+    const entities = new Set()
+    const entityTypeArray = []
 
-  const piiCount = uniqueEntities.size
+    for (const items of Object.values(data)) {
+      for (const item of items.filter(Boolean)) {
+        for (const subItem of item) {
+          if (!entities.has(subItem.entity)) {
+            entities.add(subItem.entity)
+            entityTypeArray.push({ entity: subItem.entity, type: subItem.type })
+          }
+        }
+      }
+    }
+    return entityTypeArray
+  }, [data])
+
+  const piiCount = uniqueEntities.length
 
   if (piiCount === 0) return null
+
+  const size = piiCount > 20 ? 500 : 350
 
   return (
     <Popover
@@ -87,17 +102,31 @@ function renderPIIEnrichment(data: EnrichmentData) {
       opened={opened}
     >
       <Popover.Target>
-        <Badge onMouseEnter={open} onMouseLeave={close} color="blue">
+        <Badge
+          color="orange"
+          variant="light"
+          onMouseEnter={open}
+          onMouseLeave={close}
+        >
           {piiCount} PII
         </Badge>
       </Popover.Target>
-      <Popover.Dropdown style={{ pointerEvents: "none" }} w={300}>
-        <Group>
-          {Array.from(uniqueEntities).map((entity) => (
-            <Badge key={entity as string} variant="light">
+      <Popover.Dropdown w={size}>
+        <Group p="sm" px={4}>
+          {uniqueEntities.slice(0, 40).map(({ entity, type }) => (
+            <Badge
+              key={entity as string}
+              variant="light"
+              color={getPIIColor(type)}
+            >
               {entity as string}
             </Badge>
           ))}
+          {uniqueEntities.length > 40 && (
+            <Badge variant="light" color="gray" ml="auto">
+              and {uniqueEntities.length - 40} more
+            </Badge>
+          )}
         </Group>
       </Popover.Dropdown>
     </Popover>
@@ -111,34 +140,67 @@ function renderToxicityEnrichment(data: EnrichmentData) {
     return ""
   }
 
-  return (
-    <Popover
-      width={200}
-      position="bottom"
-      withArrow
-      shadow="md"
-      opened={opened}
-    >
-      <Popover.Target>
-        <Badge onMouseEnter={open} onMouseLeave={close} color="red">
-          Toxicity
-        </Badge>
-      </Popover.Target>
-      <Popover.Dropdown style={{ pointerEvents: "none" }} w="300">
-        <Text size="sm">
-          <strong>Toxic Comments:</strong>
-          <div>{data.join(", ")}</div>
-        </Text>
-      </Popover.Dropdown>
-    </Popover>
-  )
+  const toxicityCategories = [
+    ...new Set([...data.input, ...data.output]),
+  ].filter((category) => category)
+
+  if (toxicityCategories.length) {
+    return (
+      <Popover
+        width={200}
+        position="bottom"
+        withArrow
+        shadow="md"
+        opened={opened}
+      >
+        <Popover.Target>
+          <Badge onMouseEnter={open} onMouseLeave={close} color="red">
+            Toxicity
+          </Badge>
+        </Popover.Target>
+        <Popover.Dropdown style={{ pointerEvents: "none" }} w="300">
+          <Text size="sm">
+            <strong>Toxic Comments:</strong>
+            {/* <div>{data.join(", ")}</div> */}
+          </Text>
+        </Popover.Dropdown>
+      </Popover>
+    )
+  }
 }
 
 function renderTopicsEnrichment(data: EnrichmentData) {
   const [opened, { close, open }] = useDisclosure(false)
 
-  if (data.length === 0) {
-    return ""
+  const uniqueTopics = Array.from(
+    new Set(
+      Object.values(data)
+        .flat()
+        .flat()
+        .filter(Boolean)
+        .map((t) => t.topic),
+    ),
+  )
+
+  if (uniqueTopics.length === 0) {
+    return null
+  }
+
+  if (uniqueTopics.length < 4) {
+    return (
+      <Group gap={3}>
+        {uniqueTopics.map((topic, index) => (
+          <Badge
+            key={index}
+            onMouseEnter={open}
+            onMouseLeave={close}
+            variant="default"
+          >
+            {topic}
+          </Badge>
+        ))}
+      </Group>
+    )
   }
 
   return (
@@ -150,37 +212,14 @@ function renderTopicsEnrichment(data: EnrichmentData) {
       opened={opened}
     >
       <Popover.Target>
-        <div>
-          {data.length < 3 ? (
-            <Group gap={2}>
-              {data.map((topic, index) => (
-                <Badge
-                  key={index}
-                  onMouseEnter={open}
-                  onMouseLeave={close}
-                  color="blue"
-                  styles={{ label: { textTransform: "lowercase" } }}
-                >
-                  {topic}
-                </Badge>
-              ))}
-            </Group>
-          ) : (
-            <Badge
-              onMouseEnter={open}
-              onMouseLeave={close}
-              color="blue"
-              styles={{ label: { textTransform: "lowercase" } }}
-            >
-              {data.length + " topics"}
-            </Badge>
-          )}
-        </div>
+        <Badge onMouseEnter={open} onMouseLeave={close} variant="default">
+          {uniqueTopics.length + " topics"}
+        </Badge>
       </Popover.Target>
       <Popover.Dropdown style={{ pointerEvents: "none" }} w="300">
         <Text size="sm">
           <strong>Topics:</strong>
-          <div>{data.join(", ")}</div>
+          <div>{uniqueTopics.join(", ")}</div>
         </Text>
       </Popover.Dropdown>
     </Popover>
@@ -260,10 +299,12 @@ export function renderSentimentEnrichment(data?: EnrichmentData) {
   )
 }
 
-function renderAssertEnrichment(data: any) {
+function renderAssertionEnrichment(data: AssertionResult) {
+  if (typeof data !== "object" || typeof data.result !== "boolean") return null
+
   return (
     <Tooltip label={data.reason} disabled={!data.reason?.length}>
-      <IconX color={data.result ? "green" : "red"} />
+      {data.result ? <IconCheck color="green" /> : <IconX color="red" />}
     </Tooltip>
   )
 }
@@ -271,7 +312,7 @@ function renderAssertEnrichment(data: any) {
 function renderGuidelinesEnrichment(data: any) {
   return (
     <Tooltip label={data.reason} disabled={!data.reason?.length}>
-      <IconX color={data.result ? "green" : "red"} />
+      {data.result ? <IconCheck color="green" /> : <IconX color={"red"} />}
     </Tooltip>
   )
 }

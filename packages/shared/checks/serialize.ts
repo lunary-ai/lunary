@@ -64,23 +64,20 @@ export function serializeLogic(logic: CheckLogic): string {
       const all = param.map(serializeParamValue)
       return all.filter(Boolean).join(".")
     } else if (param && typeof param === "object" && param.params) {
-      const data = Object.entries(param.params)
-        .sort(([keyA], [keyB]) => {
-          if (keyA === "operator") {
-            return -1
-          }
-          if (keyB === "operator") {
-            return 1
-          }
-        })
-        .map(([key, value]) => {
-          const filterParam = CHECKS.find(
-            (filter) => filter.id === param.id,
-          )?.params.find((param) => (param as CheckParam).id === key)
+      const filter = CHECKS.find((filter) => filter.id === param.id)
+      if (!filter) {
+        return ""
+      }
 
-          if (!filterParam || filterParam.type === "label") {
-            return ""
-          }
+      const filterParams = filter.params.filter(
+        (param) => param.type !== "label",
+      ) as CheckParam[]
+
+      // we look at the original filter params keys to make sure they are oredered correctly
+      const data = filterParams
+        .map((filterParam) => {
+          const value =
+            filterParam.id in param.params ? param.params[filterParam.id] : ""
 
           const serialized = paramSerializer(filterParam, value)
           return serialized !== undefined ? serialized : ""
@@ -93,7 +90,14 @@ export function serializeLogic(logic: CheckLogic): string {
     return ""
   }
 
-  return logic.map(serializeParamValue).filter(Boolean).join("&")
+  let finalResult = logic.map(serializeParamValue).filter(Boolean).join("&")
+
+  // Check if the first logic item is 'OR' and prepend it to the serialized string
+  if (logic[0] === "OR") {
+    finalResult = "OR&" + finalResult
+  }
+
+  return finalResult
 }
 
 export function deserializeLogic(
@@ -144,6 +148,12 @@ export function deserializeLogic(
     }
   }
 
-  const logic = logicString.split("&").map(deserializeParam).filter(Boolean)
-  return ["AND", ...logic] as CheckLogic
+  const isOrLogic = logicString.startsWith("OR&")
+  const logic = logicString
+    .replace(/^OR&/, "")
+    .split("&")
+    .map(deserializeParam)
+    .filter(Boolean)
+
+  return [isOrLogic ? "OR" : "AND", ...logic] as CheckLogic
 }

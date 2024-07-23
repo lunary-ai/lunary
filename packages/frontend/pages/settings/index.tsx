@@ -7,8 +7,12 @@ import {
   Container,
   Flex,
   Group,
+  Loader,
   Popover,
+  SegmentedControl,
   Stack,
+  Switch,
+  Tabs,
   Text,
 } from "@mantine/core"
 import { NextSeo } from "next-seo"
@@ -22,12 +26,13 @@ import {
   IconPencil,
   IconFilter,
   IconRefreshAlert,
+  IconIdBadge,
 } from "@tabler/icons-react"
 import errorHandler from "@/utils/errors"
 import { fetcher } from "@/utils/fetcher"
 import { modals } from "@mantine/modals"
 import { notifications } from "@mantine/notifications"
-import { useOrg, useProject, useUser } from "@/utils/dataHooks"
+import { useOrg, useProject, useProjectRules, useUser } from "@/utils/dataHooks"
 import { useEffect, useState } from "react"
 import { CheckLogic, hasAccess } from "shared"
 import useSWR from "swr"
@@ -142,28 +147,142 @@ function Keys() {
   )
 }
 
-export default function AppAnalytics() {
+function SmartDataRule() {
   const { org } = useOrg()
-  const { update, project, setProjectId, drop, updateSmartDatafilters } =
-    useProject()
-  const [isLoading, setIsLoading] = useState(false)
-  const { user } = useUser()
+  const { addRule, addRulesLoading, deleteRule, maskingRule, filteringRule } =
+    useProjectRules()
+
   const [filters, setChecks] = useState<CheckLogic>(["AND"])
 
-  useEffect(() => {
-    if (project) {
-      setChecks(project.filters)
-    }
-  }, [project])
+  const smartDataFilterEnabled = config.IS_SELF_HOSTED
+    ? org.license.dataFilteringEnabled
+    : org.dataFilteringEnabled
+
+  return (
+    <SettingsCard
+      title={<>Smart Data Rules ✨</>}
+      align="start"
+      paywallConfig={{
+        Icon: IconFilter,
+        feature: "Smart Data Rules",
+        p: 12,
+        plan: "enterprise",
+        list: [
+          "Filter out sensitive data",
+          "LLM-powered detection or custom regex patterns",
+        ],
+        enabled: !smartDataFilterEnabled,
+      }}
+    >
+      <Text>Filter out or hide sensitive data from your project.</Text>
+
+      <Tabs variant="outline" defaultValue="filtering" w={"100%"}>
+        <Tabs.List>
+          <Tabs.Tab value="filtering">Ingestion Filtering</Tabs.Tab>
+          <Tabs.Tab value="masking">PII Masking</Tabs.Tab>
+        </Tabs.List>
+
+        <Tabs.Panel value="filtering" p="md">
+          <Stack>
+            <Text>
+              Prevent data from being ingested into your project. Click below
+              button to add conditions and filter out data based on metadata,
+              users, tags, tools, or models. Input and output data from runs
+              matching will be redacted.
+            </Text>
+            <CheckPicker
+              minimal={true}
+              showAndOr={true}
+              value={filteringRule?.filters}
+              onChange={setChecks}
+              buttonText="Add filter"
+              restrictTo={(f) =>
+                ["metadata", "users", "tags", "tools", "models"].includes(f.id)
+              }
+            />
+
+            <Flex justify="flex-end">
+              <Button
+                loading={addRulesLoading}
+                style={{ float: "right" }}
+                onClick={() => {
+                  addRule({ type: "filtering", filters })
+                }}
+                variant="full"
+              >
+                Save
+              </Button>
+            </Flex>
+          </Stack>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="masking" p="md">
+          <Stack>
+            <Text>
+              Masking allows you to hide sensitive data in the dashboard.
+            </Text>
+
+            <Alert w="100%" icon={<IconIdBadge />}>
+              Masking requires a PII Real-time Evaluator enabled.
+            </Alert>
+            {addRulesLoading && <Loader />}
+            <Switch
+              size="lg"
+              label="Enabled"
+              checked={!!maskingRule}
+              onChange={(e) => {
+                const { checked } = e.currentTarget
+
+                if (checked) {
+                  addRule({
+                    type: "masking",
+                  })
+                } else {
+                  deleteRule(maskingRule.id)
+                }
+              }}
+            />
+
+            {/* // <Flex justify="flex-end">
+            //   <Button
+            //     loading={addRulesLoading}
+            //     style={{ float: "right" }}
+            //     onClick={async () => {
+            //       addRule({
+            //         type: "masking",
+            //         filters: ["AND"],
+            //         enabled: true,
+            //       })
+            //     }}
+            //     variant="full"
+            //   >
+            //     Save
+            //   </Button>
+            // </Flex> */}
+          </Stack>
+        </Tabs.Panel>
+      </Tabs>
+    </SettingsCard>
+  )
+}
+
+export default function AppAnalytics() {
+  const { org } = useOrg()
+  const {
+    update,
+    project,
+    setProjectId,
+    drop,
+    addSmartDataRule,
+    smartDataRuleLoading,
+  } = useProject()
+
+  const { user } = useUser()
 
   // TODO: better route for project usage
   const { data: projectUsage, isLoading: projectUsageLoading } = useSWR(
     project?.id && org && `/orgs/${org.id}/usage?projectId=${project?.id}`,
   )
-
-  const smartDataFilterEnabled = config.IS_SELF_HOSTED
-    ? org.license.dataFilteringEnabled
-    : org.dataFilteringEnabled
 
   return (
     <Container className="unblockable">
@@ -205,51 +324,7 @@ export default function AppAnalytics() {
           </Button>
         </SettingsCard>
 
-        <SettingsCard
-          title={<>Smart Data Filtering ✨</>}
-          align="start"
-          paywallConfig={{
-            Icon: IconFilter,
-            feature: "Smart Data Filtering",
-            p: 12,
-            plan: "enterprise",
-            list: [
-              "Filter out sensitive data",
-              "LLM-powered detection or custom regex patterns",
-            ],
-            enabled: !smartDataFilterEnabled,
-          }}
-        >
-          <Text>
-            Smart Data Filters allows you to filter out sensitive data from your
-            project.
-          </Text>
-          <CheckPicker
-            defaultOpened={true}
-            minimal={true}
-            value={filters}
-            onChange={setChecks}
-            buttonText="Add filter"
-            restrictTo={(f) =>
-              ["metadata", "users", "tags", "tools", "models"].includes(f.id)
-            }
-          />
-
-          <Flex justify="flex-end" w="100%">
-            <Button
-              loading={isLoading}
-              style={{ float: "right" }}
-              onClick={() => {
-                setIsLoading(true)
-                updateSmartDatafilters(filters)
-                setTimeout(() => setIsLoading(false), 1000)
-              }}
-              variant="full"
-            >
-              Save
-            </Button>
-          </Flex>
-        </SettingsCard>
+        <SmartDataRule />
 
         {user && hasAccess(user.role, "projects", "delete") && (
           <SettingsCard title="Danger Zone" align="start">
