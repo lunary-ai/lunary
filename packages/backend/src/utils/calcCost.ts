@@ -244,12 +244,13 @@ export async function calcRunCost(run: any) {
     } else if (mapping.unit === "CHARACTERS") {
       inputUnits =
         (typeof run.input === "string" ? run.input : JSON.stringify(run.input))
-          .length || 0
+          ?.length || 0
+
       outputUnits =
         (typeof run.output === "string"
           ? run.output
           : JSON.stringify(run.output)
-        ).length || 0
+        )?.length || 0
 
       inputCost = (inputCost * inputUnits) / 1_000_000
       outputCost = (outputCost * outputUnits) / 1_000_000
