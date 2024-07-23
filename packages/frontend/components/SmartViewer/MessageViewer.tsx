@@ -10,7 +10,7 @@ function getLastMessage(messages) {
   return messages
 }
 
-export default function MessageViewer({ data, compact }) {
+export default function MessageViewer({ data, compact, piiDetection }) {
   const obj = Array.isArray(data) ? data : [data]
 
   return compact ? (

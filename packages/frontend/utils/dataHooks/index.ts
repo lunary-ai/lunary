@@ -221,10 +221,6 @@ export function useProject() {
     mutate(newProjects)
   }
 
-  async function updateSmartDatafilters(filters: CheckLogic) {
-    return updateMutation({ filters })
-  }
-
   async function drop(): Promise<Boolean> {
     try {
       await dropMutation()
@@ -240,11 +236,56 @@ export function useProject() {
   return {
     project,
     update,
-    updateSmartDatafilters,
     drop,
     setProjectId,
     mutate,
     isLoading,
+  }
+}
+
+export function useProjectRules() {
+  const { projectId } = useContext(ProjectContext)
+
+  const {
+    data: rules,
+    isLoading,
+    mutate,
+  } = useProjectSWR(projectId && `/projects/${projectId}/rules`)
+
+  const { trigger: addRule, isMutating: addRulesLoading } = useSWRMutation(
+    projectId && `/projects/${projectId}/rules`,
+    fetcher.post,
+    {
+      onSuccess() {
+        mutate()
+      },
+    },
+  )
+
+  const { trigger: deleteRule, isMutating: deleteRulesLoading } =
+    useSWRMutation(
+      projectId && `/projects/${projectId}/rules`,
+      fetcher.delete,
+      {
+        onSuccess() {
+          mutate()
+        },
+      },
+    )
+
+  const maskingRule = rules?.find((r) => r.type === "masking")
+  const filteringRule = rules?.find((r) => r.type === "filtering")
+
+  return {
+    rules,
+    isLoading,
+    mutate,
+    addRule,
+    addRulesLoading,
+    deleteRule,
+    deleteRulesLoading,
+    maskingRule,
+    filteringRule,
   }
 }
 

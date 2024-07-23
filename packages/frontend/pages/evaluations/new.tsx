@@ -176,13 +176,6 @@ export default function NewEvaluation() {
     hasAccess(user.role, "evaluations", "create")
 
   return (
-    // <Paywall
-    //   plan="unlimited"
-    //   feature="Evaluations"
-    //   Icon={IconFlask2Filled}
-    //   description="Experiment with different models and parameters to find the best performing combinations."
-    //   list={FEATURE_LIST}
-    // >
     <>
       <ChecklistModal
         open={checklistModal}
@@ -428,6 +421,5 @@ export default function NewEvaluation() {
         </Stack>
       </Container>
     </>
-    // </Paywall>
   )
 }

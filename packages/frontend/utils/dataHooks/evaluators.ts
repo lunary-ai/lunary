@@ -1,3 +1,4 @@
+import { CheckLogic } from "shared"
 import { useProjectMutation, useProjectSWR } from "."
 import { fetcher } from "../fetcher"
 
@@ -9,7 +10,7 @@ interface CreateEvaluatorData {
   type: string
   mode: string
   params: Record<string, any>
-  filters?: string
+  filters?: CheckLogic
 }
 
 export function useEvaluators() {

@@ -18,6 +18,21 @@ export function getColorForRole(role) {
   return colorMap[role] || defaultColor
 }
 
+export function getPIIColor(type) {
+  const defaultColor = "gray"
+  const colorMap = {
+    person: "blue",
+    email: "orange",
+    phone: "yellow",
+    location: "green",
+    cc: "red",
+    ip: "purple",
+    regex: "gray",
+  }
+
+  return colorMap[type] || defaultColor
+}
+
 export function getColorForRunType(type) {
   const defaultColor = "gray"
 

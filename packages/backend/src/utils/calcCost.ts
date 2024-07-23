@@ -227,12 +227,20 @@ export async function calcRunCost(run: any) {
     let inputUnits = 0
     let outputUnits = 0
 
+    let inputCost = 0
+    let outputCost = 0
+
     if (mapping.unit === "TOKENS") {
       inputUnits = run.promptTokens || 0
       outputUnits = run.completionTokens || 0
+
+      inputCost = (inputCost * inputUnits) / 1_000_000
+      outputCost = (outputCost * outputUnits) / 1_000_000
     } else if (mapping.unit === "MILLISECONDS") {
       inputUnits = run.duration || 0
       outputUnits = 0
+
+      inputCost = inputCost * inputUnits
     } else if (mapping.unit === "CHARACTERS") {
       inputUnits =
         (typeof run.input === "string" ? run.input : JSON.stringify(run.input))
@@ -242,10 +250,10 @@ export async function calcRunCost(run: any) {
           ? run.output
           : JSON.stringify(run.output)
         ).length || 0
-    }
 
-    const inputCost = (mapping.inputCost * inputUnits) / 1_000_000
-    const outputCost = (mapping.outputCost * outputUnits) / 1_000_000
+      inputCost = (inputCost * inputUnits) / 1_000_000
+      outputCost = (outputCost * outputUnits) / 1_000_000
+    }
 
     const finalCost = Number((inputCost + outputCost).toFixed(5))
 

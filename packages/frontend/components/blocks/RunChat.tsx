@@ -42,6 +42,8 @@ function parseMessageFromRun(run) {
       ),
       id: run.id,
       feedback: run.feedback,
+      enrichments: msg.enrichments,
+
       ...(siblingRunId && { siblingRunId }),
       ...(OUTPUT_ROLES.includes(role) && {
         took:
@@ -71,18 +73,20 @@ function Message({
   const runId = router?.query?.selected
   const { updateFeedback } = useRun(msg.id)
   const { data: relatedRuns } = useProjectSWR(runId && `/runs/${runId}/related`)
+
   return (
     <>
       <BubbleMessage
         role={msg.role}
         content={msg.content}
+        enrichments={msg.enrichments}
         extra={
           <>
-            {!!msg.took && (
+            {/* {!!msg.took && (
               <Text c="dimmed" size="xs">
                 {msg.took}ms
               </Text>
-            )}
+            )} */}
 
             {msg.role !== "user" && (
               <Feedbacks

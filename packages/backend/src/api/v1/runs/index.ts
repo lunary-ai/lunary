@@ -99,7 +99,6 @@ function formatRun(run: any) {
     status: run.status,
     siblingRunId: run.siblingRunId,
     params: processParams(run.params),
-
     metadata: run.metadata,
     user: run.externalUserId && {
       id: run.externalUserId,
@@ -110,81 +109,95 @@ function formatRun(run: any) {
     },
   }
 
-  // TODO: c'est horrible
-  // const evaluationResults = run.evaluationResults.find(
-  //   (result) => result.evaluatorType === "language",
-  // )
-  // const languageDetections = evaluationResults?.result
-  // if (
-  //   languageDetections?.input &&
-  //   languageDetections?.output &&
-  //   languageDetections?.error
-  // ) {
-  //   if (Array.isArray(formattedRun.input)) {
-  //     for (let i = 0; i < formattedRun.input.length; i++) {
-  //       if (
-  //         typeof formattedRun.input[i] === "object" &&
-  //         languageDetections.input
-  //       ) {
-  //         formattedRun.input[i].languageDetection = languageDetections.input[i]
-  //       }
-  //     }
-  //   } else if (formattedRun.input && typeof formattedRun.input === "object") {
-  //     formattedRun.input.languageDetection = languageDetections.input[0]
-  //   }
+  try {
+    // TODO: put in process input function
+    if (Array.isArray(formattedRun.input)) {
+      for (const message of formattedRun.input) {
+        message.enrichments = []
+      }
+    } else if (typeof formattedRun.input === "object") {
+      formattedRun.input.enrichments = []
+    }
 
-  //   if (Array.isArray(formattedRun.output)) {
-  //     for (let i = 0; i < run.output.length; i++) {
-  //       if (typeof formattedRun.output[i] === "object") {
-  //         formattedRun.output[i].languageDetection =
-  //           languageDetections.output[i]
-  //       }
-  //     }
-  //   } else if (formattedRun.output && typeof formattedRun.input === "object") {
-  //     formattedRun.output.languageDetection = languageDetections.output[0]
-  //   }
+    if (Array.isArray(formattedRun.output)) {
+      for (const message of formattedRun.output) {
+        message.enrichments = []
+      }
+    } else if (formattedRun.output && typeof formattedRun.output === "object") {
+      formattedRun.output.enrichments = []
+    }
 
-  //   if (formattedRun.error && typeof formattedRun.input === "object") {
-  //     formattedRun.error.languageDetection = languageDetections.error[0]
-  //   }
-  // }
+    if (formattedRun.error && typeof formattedRun.error === "object") {
+      formattedRun.error.enrichments = []
+    }
 
-  // const sentimentEvaluationResults = run.evaluationResults.find(
-  //   (result) => result.evaluatorType === "sentiment",
-  // )
-  // const sentimentAnalyses = sentimentEvaluationResults?.result
-  // if (
-  //   sentimentAnalyses?.input &&
-  //   sentimentAnalyses?.output &&
-  //   sentimentAnalyses?.error
-  // ) {
-  //   if (Array.isArray(formattedRun.input)) {
-  //     for (let i = 0; i < formattedRun.input.length; i++) {
-  //       if (typeof formattedRun.input[i] === "object") {
-  //         formattedRun.input[i].sentimentAnalysis = sentimentAnalyses.input[i]
-  //       }
-  //     }
-  //   } else if (formattedRun.input && typeof formattedRun.input === "object") {
-  //     formattedRun.input.sentimentAnalysis = sentimentAnalyses.input[0]
-  //   }
-  //   if (Array.isArray(formattedRun.output)) {
-  //     for (let i = 0; i < run.output.length; i++) {
-  //       if (formattedRun.output && typeof formattedRun.output[i] === "object") {
-  //         formattedRun.output[i].sentimentAnalysis = sentimentAnalyses.output[i]
-  //       }
-  //     }
-  //   } else if (formattedRun.output && typeof formattedRun.input === "object") {
-  //     formattedRun.output.sentimentAnalysis = sentimentAnalyses.output[0]
-  //   }
-  //   if (formattedRun.error && typeof formattedRun.input === "object") {
-  //     formattedRun.error.sentimentAnalysis = sentimentAnalyses.error[0]
-  //   }
-  // }
+    for (const {
+      result,
+      evaluatorType,
+      evaluatorId,
+    } of run.evaluationResults) {
+      if (!result?.input || !result?.output || !result?.error) {
+        continue
+      }
 
-  // for (let evaluationResult of run.evaluationResults || []) {
-  //   formattedRun[`enrichment-${evaluationResult.evaluatorId}`] =
-  //     evaluationResult
-  // }
+      if (Array.isArray(formattedRun.input)) {
+        for (let i = 0; i < formattedRun.input.length; i++) {
+          const message = formattedRun.input[i]
+          if (typeof message === "object") {
+            message.enrichments.push({
+              result: result.input[i],
+              type: evaluatorType,
+              id: evaluatorId,
+            })
+          }
+        }
+      } else if (formattedRun.input && typeof formattedRun.input === "object") {
+        formattedRun.input.enrichments.push({
+          result: result.input[0],
+          type: evaluatorType,
+          id: evaluatorId,
+        })
+      }
+
+      if (Array.isArray(formattedRun.output)) {
+        for (let i = 0; i < formattedRun.output.length; i++) {
+          const message = formattedRun.output[i]
+          if (typeof message === "object") {
+            message.enrichments.push({
+              result: result.output[i],
+              type: evaluatorType,
+              id: evaluatorId,
+            })
+          }
+        }
+      } else if (
+        formattedRun.output &&
+        typeof formattedRun.output === "object"
+      ) {
+        formattedRun.output.enrichments.push({
+          result: result.output[0],
+          type: evaluatorType,
+          id: evaluatorId,
+        })
+      }
+
+      if (formattedRun.error && typeof formattedRun.error === "object") {
+        formattedRun.error.enrichments.push({
+          result: result.error[0],
+          type: evaluatorType,
+          id: evaluatorId,
+        })
+      }
+    }
+  } catch (error) {
+    console.error(error)
+  }
+
+  // TODO: put in an array nammed enrichment instead
+  for (let evaluationResult of run.evaluationResults || []) {
+    formattedRun[`enrichment-${evaluationResult.evaluatorId}`] =
+      evaluationResult
+  }
   return formattedRun
 }
 
@@ -222,13 +235,26 @@ runs.get("/", async (ctx: Context) => {
       eu.last_seen as user_last_seen,
       eu.props as user_props,
       t.slug as template_slug,
-      rpfc.feedback as parent_feedback
+      rpfc.feedback as parent_feedback,
+      coalesce(array_agg(
+          jsonb_build_object(
+              'evaluatorName', e.name,
+              'evaluatorSlug', e.slug,
+              'evaluatorType', e.type,
+              'evaluatorId', e.id,
+              'result', er.result, 
+              'createdAt', er.created_at,
+              'updatedAt', er.updated_at
+          )
+      ) filter (where er.run_id is not null), '{}') as evaluation_results
     from
       public.run r
       left join external_user eu on r.external_user_id = eu.id
       left join run_parent_feedback_cache rpfc on r.id = rpfc.id
       left join template_version tv on r.template_version_id = tv.id
       left join template t on tv.template_id = t.id
+      left join evaluation_result_v2 er on r.id = er.run_id 
+      left join evaluator e on er.evaluator_id = e.id
     where
       r.project_id = ${projectId}
       ${parentRunCheck}
@@ -258,6 +284,8 @@ runs.get("/", async (ctx: Context) => {
       left join run_parent_feedback_cache rpfc on r.id = rpfc.id
       left join template_version tv on r.template_version_id = tv.id
       left join template t on tv.template_id = t.id
+      left join evaluation_result_v2 er on r.id = er.run_id 
+      left join evaluator e on er.evaluator_id = e.id
     where 
       r.project_id = ${projectId}
       ${parentRunCheck}
@@ -417,6 +445,9 @@ runs.get("/:id", async (ctx) => {
     from
         run r
         left join external_user eu on r.external_user_id = eu.id
+        left join run_parent_feedback_cache rpfc on r.id = rpfc.id
+        left join template_version tv on r.template_version_id = tv.id
+        left join template t on tv.template_id = t.id
         left join evaluation_result_v2 er on r.id = er.run_id 
         left join evaluator e on er.evaluator_id = e.id
     where
