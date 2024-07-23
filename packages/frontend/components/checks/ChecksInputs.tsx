@@ -32,12 +32,12 @@ const CheckInputs = {
       </Flex>
     )
   },
-  text: ({ placeholder, width, value, onChange }) => {
+  text: ({ placeholder, width, value, minimal, onChange }) => {
     return (
       <TextInput
-        size="xs"
+        size={minimal ? "xs" : "sm"}
         w={width}
-        variant="unstyled"
+        variant={minimal ? "unstyled" : "default"}
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.currentTarget.value)}

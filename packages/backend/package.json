@@ -4,6 +4,7 @@
   "scripts": {
     "start": "npm run migrate:db && tsx src/index.ts",
     "start:radar": "tsx src/radar.ts",
+    "start:realtime-evaluators": "tsx src/realtime-evaluators.ts",
     "dev:realtime-evaluators": "tsx --env-file=.env --watch src/realtime-evaluators.ts",
     "migrate:db": "tsx src/migrate.ts",
     "build": "tsup src/index.ts --format esm",

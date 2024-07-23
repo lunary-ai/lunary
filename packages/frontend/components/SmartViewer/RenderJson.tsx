@@ -3,8 +3,9 @@ import ProtectedText from "../blocks/ProtectedText"
 // import { JsonView, defaultStyles } from "react-json-view-lite"
 // import errorHandler from "@/utils/errors"
 import ErrorBoundary from "../blocks/ErrorBoundary"
+import HighlightPii from "./HighlightPii"
 
-export const Json = ({ data, compact }) => {
+export const Json = ({ data, compact, piiDetection }) => {
   if (!data) return null
 
   const parsed = useMemo(() => {
@@ -31,13 +32,18 @@ export const Json = ({ data, compact }) => {
 
   return (
     <ProtectedText>
-      {compact ? JSON.stringify(parsed) : JSON.stringify(parsed, null, 2)}
+      <HighlightPii
+        text={
+          compact ? JSON.stringify(parsed) : JSON.stringify(parsed, null, 2)
+        }
+        piiDetection={piiDetection}
+      />
     </ProtectedText>
   )
 }
 
-export const RenderJson = ({ data, compact }) => (
+export const RenderJson = ({ data, compact, piiDetection }) => (
   <ErrorBoundary>
-    <Json data={data} compact={compact} />
+    <Json data={data} compact={compact} piiDetection={piiDetection} />
   </ErrorBoundary>
 )

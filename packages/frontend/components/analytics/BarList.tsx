@@ -24,7 +24,7 @@ type BarListProps = {
 function BarList({ data, columns, filterZero = true }: BarListProps) {
   const dataColumns = columns.filter((col) => !col.bar && col.key)
   const main = dataColumns.find((col) => col.main) || dataColumns[0]
-  const mainTotal = data.reduce((acc, item) => acc + (item[main.key] || 0), 0)
+  const mainTotal = data?.reduce((acc, item) => acc + (item[main.key] || 0), 0)
   const scheme = useComputedColorScheme()
 
   if (!data) return <>No data.</>
