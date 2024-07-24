@@ -216,7 +216,7 @@ orgs.post("/playground", async (ctx: Context) => {
     )
   }
 
-  // substract play allowance
+  // subtract play allowance
   await sql`
     update org
     set play_allowance = play_allowance - 1

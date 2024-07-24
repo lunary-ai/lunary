@@ -1,9 +1,6 @@
 name: Run tests
 
 on:
-  push:
-    branches-ignore:
-      - "main"
   pull_request:
     types: [opened, synchronize]
   workflow_dispatch:
