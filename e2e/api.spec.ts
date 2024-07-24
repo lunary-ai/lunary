@@ -31,7 +31,7 @@ test("regenerate api keys", async ({ page }) => {
   // wait until button re-contain "Regenerate"
   await promise
 
-  await page.waitForTimeout(100)
+  await page.waitForTimeout(300)
 
   const secondPrivateKey = await page.getByTestId("private-key").textContent()
 
