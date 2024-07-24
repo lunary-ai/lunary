@@ -24,14 +24,11 @@ test("regenerate api keys", async ({ page }) => {
 
   await page.getByTestId("regenerate-private-key-button").click()
 
-  const promise = page.waitForResponse((resp) =>
-    resp.url().includes("/regenerate-key"),
-  )
   await page.getByTestId("confirm-button").click()
-  // wait until button re-contain "Regenerate"
-  await promise
 
-  await page.waitForTimeout(300)
+  await page.waitForResponse((resp) => resp.url().includes("/regenerate-key"))
+
+  await page.waitForTimeout(1000)
 
   const secondPrivateKey = await page.getByTestId("private-key").textContent()
 
