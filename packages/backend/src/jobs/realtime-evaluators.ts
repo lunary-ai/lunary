@@ -71,7 +71,7 @@ async function evaluatorJob() {
     from 
       evaluator e 
     where
-      mode = 'realtime' and project_id = 'befa0759-fbf1-4c5e-a51c-dd2dbe70f053'
+      mode = 'realtime' 
     order by 
       random()
   `
