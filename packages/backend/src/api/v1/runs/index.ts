@@ -219,11 +219,26 @@ runs.get("/", async (ctx: Context) => {
     page = "0",
     parentRunId,
     exportType,
+    sort_field,
+    sort_direction,
   } = ctx.query as Query
 
   let parentRunCheck = sql``
   if (parentRunId) {
     parentRunCheck = sql`and parent_run_id = ${parentRunId}`
+  }
+
+  const allowedSortFields = {
+    createdAt: "r.created_at",
+    duration: "r.duration",
+    tokens: "(r.prompt_tokens + r.completion_tokens)",
+    cost: "r.cost",
+  }
+
+  let orderByClause = `r.created_at desc`
+  if (sort_field && sort_field in allowedSortFields) {
+    const direction = sort_direction === "asc" ? `asc` : `desc`
+    orderByClause = `${allowedSortFields[sort_field]} ${direction} nulls last`
   }
 
   const rows = await sql`
@@ -265,7 +280,7 @@ runs.get("/", async (ctx: Context) => {
       t.slug,
       rpfc.feedback
     order by
-      r.created_at desc
+       ${sql.unsafe(orderByClause)}  
     limit ${exportType ? 10000 : Number(limit)}
     offset ${Number(page) * Number(limit)}
   `

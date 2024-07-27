@@ -80,7 +80,7 @@ export const defaultColumns = {
     userColumn(),
     {
       header: "Tokens",
-      size: 70,
+      size: 100,
       id: "tokens",
       sortingFn: (a, b) => a.tokens.total - b.tokens.total,
       cell: (props) => props.getValue(),
@@ -189,6 +189,12 @@ export default function Logs() {
     history: "push",
   })
 
+  const [sortField, setSortField] = useQueryState("sort_field", parseAsString)
+  const [sortDirection, setSortDirection] = useQueryState(
+    "sort_direction",
+    parseAsStringEnum(["asc", "desc"]),
+  )
+
   const [selectedRunId, setSelectedRunId] = useQueryState<string | undefined>(
     "selected",
     parseAsString,
@@ -204,6 +210,13 @@ export default function Logs() {
     defaultValue: DEFAULT_CHECK,
     clearOnDefault: true,
   })
+
+  const sortParams = useMemo(() => {
+    if (sortField && sortDirection) {
+      return `&sort_field=${sortField}&sort_direction=${sortDirection}`
+    }
+    return ""
+  }, [sortField, sortDirection])
 
   const {
     view,
@@ -227,7 +240,7 @@ export default function Logs() {
     validating,
     loadMore,
     mutate,
-  } = useProjectInfiniteSWR(`/runs?${serializedChecks}`)
+  } = useProjectInfiniteSWR(`/runs?${serializedChecks}${sortParams}`)
 
   const { run: selectedRun, loading: runLoading } = useRun(selectedRunId)
 
@@ -559,7 +572,7 @@ export default function Logs() {
               setSelectedRunId(row.id)
             }
           }}
-          key={allColumns[type]}
+          key={JSON.stringify(allColumns[type])}
           loading={loading || validating}
           loadMore={loadMore}
           availableColumns={allColumns[type]}

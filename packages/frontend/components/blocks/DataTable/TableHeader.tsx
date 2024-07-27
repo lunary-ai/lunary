@@ -5,11 +5,13 @@ import {
   IconChevronDown,
 } from "@tabler/icons-react"
 import { flexRender, Header } from "@tanstack/react-table"
+import { useQueryState } from "nuqs"
 import classes from "./index.module.css"
 
 interface SortIconProps {
   status: false | "asc" | "desc"
 }
+
 function SortIcon({ status }: SortIconProps) {
   if (status === false) {
     return <IconSelector size={14} />
@@ -23,34 +25,47 @@ function SortIcon({ status }: SortIconProps) {
 interface TableHeaderProps {
   header: Header<any, unknown>
 }
-export default function TableHeader({ header }: TableHeaderProps) {
-  const name = flexRender(header.column.columnDef.header, header.getContext())
-  const size = header.getSize()
-  const canColumnBeSorted = header.column.getCanSort()
-  const sortStatus = header.column.getIsSorted()
 
-  function handleClick() {
-    console.log(header.column.getCanSort())
+export default function TableHeader({ header }: TableHeaderProps) {
+  const [sortField, setSortField] = useQueryState("sort_field")
+  const [sortDirection, setSortDirection] = useQueryState("sort_direction")
+
+  const name = flexRender(header.column.columnDef.header, header.getContext())
+  const canColumnBeSorted = header.column.getCanSort()
+  const isSorted = sortField === header.id
+  const currentSortDirection = isSorted ? sortDirection : false
+
+  async function handleClick() {
+    if (!canColumnBeSorted) return
+
+    if (isSorted) {
+      if (currentSortDirection === "desc") {
+        await setSortDirection("asc")
+      } else {
+        await setSortField(null)
+        await setSortDirection(null)
+      }
+    } else {
+      await setSortField(header.id)
+      await setSortDirection("desc")
+    }
   }
 
   return (
     <th
       style={{ width: `calc(var(--header-${header?.id}-size) * 1px)` }}
-      // style={{ width: header.getSize() }}
       onClick={handleClick}
     >
       <Group>
         {name}
-        {canColumnBeSorted && <SortIcon status={sortStatus} />}
+        {canColumnBeSorted && <SortIcon status={currentSortDirection} />}
       </Group>
       <div
         onMouseDown={header.getResizeHandler()}
-        {...{
-          onTouchStart: header.getResizeHandler(),
-          className: `${classes.resizer} ${
-            header.column.getIsResizing() ? classes.isResizing : ""
-          }`,
-        }}
+        onTouchStart={header.getResizeHandler()}
+        className={`${classes.resizer} ${
+          header.column.getIsResizing() ? classes.isResizing : ""
+        }`}
       />
     </th>
   )

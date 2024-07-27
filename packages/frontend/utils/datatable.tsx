@@ -38,7 +38,7 @@ export function durationColumn(unit = "s"): ColumnDef<any> {
   return {
     id: "duration",
     header: "Duration",
-    size: 100,
+    size: 110,
     enableSorting: true,
     cell: (props) => {
       if (!props.getValue()) return null
