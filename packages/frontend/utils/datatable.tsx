@@ -3,7 +3,7 @@ import AppUserAvatar from "@/components/blocks/AppUserAvatar"
 import Feedback from "@/components/blocks/OldFeedback"
 import ProtectedText from "@/components/blocks/ProtectedText"
 import { Badge, Button, Group } from "@mantine/core"
-import { createColumnHelper } from "@tanstack/react-table"
+import { ColumnDef, createColumnHelper } from "@tanstack/react-table"
 
 import Link from "next/link"
 import { EvaluatorType } from "shared"
@@ -34,11 +34,12 @@ export function timeColumn(timeColumn, label = "Time") {
   })
 }
 
-export function durationColumn(unit = "s") {
+export function durationColumn(unit = "s"): ColumnDef<any> {
   return {
     id: "duration",
     header: "Duration",
-    size: 70,
+    size: 100,
+    enableSorting: true,
     cell: (props) => {
       if (!props.getValue()) return null
       if (unit === "s") {
@@ -63,6 +64,7 @@ export function statusColumn() {
   return columnHelper.accessor("status", {
     id: "status",
     header: "Status",
+    enableSorting: false,
     size: 60,
     cell: (props) => (
       <Badge color={props.getValue() === "success" ? "green" : "red"}>
@@ -77,6 +79,7 @@ export function tagsColumn() {
     header: "Tags",
     size: 120,
     minSize: 80,
+    enableSorting: false,
     cell: (props) => {
       const tags = props.getValue()
 
@@ -148,6 +151,7 @@ export function userColumn() {
   return columnHelper.accessor("user", {
     header: "User",
     size: 130,
+    enableSorting: false,
     cell: (props) => {
       const user = props.getValue()
 
@@ -163,6 +167,7 @@ export function nameColumn(label = "Name") {
     header: label,
     size: 100,
     minSize: 30,
+    enableSorting: false,
     cell: (props) => {
       const { status, type } = props.row.original
       const name = props.getValue()
@@ -185,7 +190,7 @@ export function costColumn() {
   return columnHelper.accessor("cost", {
     header: "Cost",
     size: 90,
-    sortingFn: (a, b) => a - b,
+    enableSorting: true,
     cell: (props) => {
       const cost = props.getValue()
       return <ProtectedText>{formatCost(cost)}</ProtectedText>
@@ -224,6 +229,7 @@ export function feedbackColumn(withRelatedRuns = false) {
   return columnHelper.accessor("feedback", {
     header: "Feedback",
     size: 100,
+    enableSorting: false,
     cell,
   })
 }
@@ -237,6 +243,7 @@ export function enrichmentColumn(
     header: `${capitalize(name)} ✨`,
     id: `enrichment-${id}`,
     size: 120,
+    enableSorting: false,
     cell: (props) => {
       const data = props.row.original[`enrichment-${id}`]
       if (!data) {
