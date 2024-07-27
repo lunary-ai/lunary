@@ -1,8 +1,8 @@
 import { Group } from "@mantine/core"
 import {
-  IconSelector,
-  IconChevronUp,
   IconChevronDown,
+  IconChevronUp,
+  IconSelector,
 } from "@tabler/icons-react"
 import { flexRender, Header } from "@tanstack/react-table"
 import { useQueryState } from "nuqs"
@@ -53,10 +53,14 @@ export default function TableHeader({ header }: TableHeaderProps) {
 
   return (
     <th
-      style={{ width: `calc(var(--header-${header?.id}-size) * 1px)` }}
-      onClick={handleClick}
+      style={{
+        userSelect: "none",
+        WebkitUserSelect: "none",
+        MozUserSelect: "none",
+        width: `calc(var(--header-${header?.id}-size) * 1px)`,
+      }}
     >
-      <Group>
+      <Group onClick={handleClick}>
         {name}
         {canColumnBeSorted && <SortIcon status={currentSortDirection} />}
       </Group>

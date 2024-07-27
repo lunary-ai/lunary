@@ -115,7 +115,7 @@ function formatRun(run: any) {
       for (const message of formattedRun.input) {
         message.enrichments = []
       }
-    } else if (typeof formattedRun.input === "object") {
+    } else if (formattedRun.input && typeof formattedRun.input === "object") {
       formattedRun.input.enrichments = []
     }
 
