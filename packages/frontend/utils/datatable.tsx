@@ -16,7 +16,7 @@ export function timeColumn(timeColumn, label = "Time") {
   return columnHelper.accessor(timeColumn, {
     header: label,
     id: timeColumn,
-    size: 130,
+    size: 140,
     sortingFn: (a, b) =>
       new Date(a.getValue(timeColumn)).getTime() -
       new Date(b.getValue(timeColumn)).getTime(),
@@ -41,10 +41,15 @@ export function durationColumn(unit = "s"): ColumnDef<any> {
     size: 110,
     enableSorting: true,
     cell: (props) => {
-      if (!props.getValue()) return null
-      if (unit === "s") {
+      const value = props?.getValue() || 0
+
+      if (value === 0) {
+        return "0.00s"
+      } else if (unit === "s") {
+        // console.log(props.getValue())
         return `${(props.getValue() / 1000).toFixed(2)}s`
       } else if (unit === "full") {
+        console.log(props.getValue())
         return msToTime(props.getValue())
       }
     },
@@ -189,7 +194,7 @@ export function nameColumn(label = "Name") {
 export function costColumn() {
   return columnHelper.accessor("cost", {
     header: "Cost",
-    size: 90,
+    size: 100,
     enableSorting: true,
     cell: (props) => {
       const cost = props.getValue()
