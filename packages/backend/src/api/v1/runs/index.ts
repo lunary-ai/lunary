@@ -29,6 +29,8 @@ interface Query {
   limit?: string
   page?: string
   order?: string
+  sortField?: string
+  sortDirection?: string
 }
 
 function processInput(input: unknown) {
@@ -219,8 +221,8 @@ runs.get("/", async (ctx: Context) => {
     page = "0",
     parentRunId,
     exportType,
-    sort_field,
-    sort_direction,
+    sortField,
+    sortDirection,
   } = ctx.query as Query
 
   let parentRunCheck = sql``
@@ -228,17 +230,16 @@ runs.get("/", async (ctx: Context) => {
     parentRunCheck = sql`and parent_run_id = ${parentRunId}`
   }
 
-  const allowedSortFields = {
+  const sortMapping = {
     createdAt: "r.created_at",
     duration: "r.duration",
     tokens: "(r.prompt_tokens + r.completion_tokens)",
     cost: "r.cost",
   }
-
-  let orderByClause = `r.created_at desc`
-  if (sort_field && sort_field in allowedSortFields) {
-    const direction = sort_direction === "asc" ? `asc` : `desc`
-    orderByClause = `${allowedSortFields[sort_field]} ${direction} nulls last`
+  let orderByClause = `r.created_at desc nulls last`
+  if (sortField && sortField in sortMapping) {
+    const direction = sortDirection === "desc" ? `desc` : `asc`
+    orderByClause = `${sortMapping[sortField]} ${direction} nulls last`
   }
 
   const rows = await sql`

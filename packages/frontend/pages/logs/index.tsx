@@ -71,6 +71,7 @@ import { useRouter } from "next/router"
 import IconPicker from "@/components/blocks/IconPicker"
 import { useEvaluators } from "@/utils/dataHooks/evaluators"
 import { deserializeLogic, serializeLogic } from "shared"
+import { useSortParams } from "@/utils/hooks"
 
 export const defaultColumns = {
   llm: [
@@ -189,12 +190,6 @@ export default function Logs() {
     history: "push",
   })
 
-  const [sortField, setSortField] = useQueryState("sort_field", parseAsString)
-  const [sortDirection, setSortDirection] = useQueryState(
-    "sort_direction",
-    parseAsStringEnum(["asc", "desc"]),
-  )
-
   const [selectedRunId, setSelectedRunId] = useQueryState<string | undefined>(
     "selected",
     parseAsString,
@@ -211,12 +206,7 @@ export default function Logs() {
     clearOnDefault: true,
   })
 
-  const sortParams = useMemo(() => {
-    if (sortField && sortDirection) {
-      return `&sort_field=${sortField}&sort_direction=${sortDirection}`
-    }
-    return ""
-  }, [sortField, sortDirection])
+  const { sortParams } = useSortParams()
 
   const {
     view,
@@ -572,7 +562,7 @@ export default function Logs() {
               setSelectedRunId(row.id)
             }
           }}
-          key={JSON.stringify(allColumns[type])}
+          key={allColumns[type].length}
           loading={loading || validating}
           loadMore={loadMore}
           availableColumns={allColumns[type]}

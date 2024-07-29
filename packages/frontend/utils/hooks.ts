@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react"
+import { parseAsString, parseAsStringEnum, useQueryState } from "nuqs"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 type Shortcut = [string, () => void]
 
@@ -91,4 +92,37 @@ export function useProjectIdStorage() {
   }, [projectId])
 
   return [projectId, setProjectId] as const
+}
+
+export function useSortParams() {
+  const [sortField, setSortField] = useQueryState(
+    "sortField",
+    parseAsString.withDefault("createdAt"),
+  )
+
+  const [sortDirection, setSortDirection] = useQueryState(
+    "sortDirection",
+    parseAsStringEnum(["asc", "desc"]).withDefault("desc"),
+  )
+
+  useEffect(() => {
+    // Update the url query, because nuqs does not set query params in the URL when we provide a default value
+    setSortField(sortField)
+    setSortDirection(sortDirection)
+  }, [])
+
+  const sortParams = useMemo(() => {
+    if (sortField && sortDirection) {
+      return `&sortField=${sortField}&sortDirection=${sortDirection}`
+    }
+    return ""
+  }, [sortField, sortDirection])
+
+  return {
+    sortField,
+    setSortField,
+    sortDirection,
+    setSortDirection,
+    sortParams,
+  }
 }

@@ -1,4 +1,5 @@
 import { useProjectInfiniteSWR } from "."
+import { useSortParams } from "../hooks"
 
 export function useExternalUsers({
   startDate,
@@ -21,8 +22,9 @@ export function useExternalUsers({
     queryParams.append("search", search)
   }
 
+  const { sortParams } = useSortParams()
   const { data, loading, validating, loadMore } = useProjectInfiniteSWR(
-    `/external-users?${queryParams.toString()}`,
+    `/external-users?${queryParams.toString()}&${sortParams}`,
   )
 
   return { users: data, loading, validating, loadMore }

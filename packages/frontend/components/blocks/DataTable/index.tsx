@@ -1,4 +1,4 @@
-import React, {
+import {
   ReactNode,
   useCallback,
   useEffect,
@@ -20,16 +20,14 @@ import { IconColumns3 } from "@tabler/icons-react"
 import {
   SortingState,
   VisibilityState,
-  flexRender,
   getCoreRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
 import classes from "./index.module.css"
 
-import { useVirtualizer } from "@tanstack/react-virtual"
+import TableBody from "./TableBody"
 import TableHeader from "./TableHeader"
-import { useQueryState } from "nuqs"
 
 // outside for reference
 const emptyArray = []
@@ -55,16 +53,6 @@ export default function DataTable({
   loadMore?: (() => void) | null
   defaultSortBy?: string
 }) {
-  const [sorting, setSorting] = useState<SortingState>([
-    {
-      id: defaultSortBy,
-      desc: true,
-    },
-  ])
-
-  const [hello, setHello] = useQueryState("hello", { defaultValue: "123" })
-  console.log(hello)
-
   const tableContainerRef = useRef<HTMLDivElement>(null)
 
   const scheme = useComputedColorScheme()
@@ -79,14 +67,11 @@ export default function DataTable({
     onColumnVisibilityChange: (fn) => {
       if (!fn || !setVisibleColumns) return
       const data = fn() // for some reason, need to call the function to get the updated state
-
       setVisibleColumns(data as VisibilityState)
     },
     state: {
-      sorting,
       columnVisibility: visibleColumns,
     },
-    onSortingChange: setSorting,
   })
 
   const columnSizeVars = useMemo(() => {
@@ -104,7 +89,6 @@ export default function DataTable({
     (containerRefElement?: HTMLDivElement | null) => {
       if (containerRefElement) {
         const { scrollHeight, scrollTop, clientHeight } = containerRefElement
-        //once the user has scrolled within 600px of the bottom of the table, fetch more data if there is any
         if (
           scrollHeight - scrollTop - clientHeight < 600 &&
           !loading &&
@@ -182,7 +166,7 @@ export default function DataTable({
                 </tr>
               ))}
             </thead>
-            <MemoizedTableBody
+            <TableBody
               table={table}
               tableContainerRef={tableContainerRef}
               onRowClicked={onRowClicked}
@@ -204,89 +188,3 @@ export default function DataTable({
     </>
   )
 }
-
-interface TableBodyProps {
-  table: ReturnType<typeof useReactTable>
-  tableContainerRef: React.RefObject<HTMLDivElement>
-  onRowClicked?: (row: any) => void
-}
-
-function TableBody({ table, tableContainerRef, onRowClicked }: TableBodyProps) {
-  const { rows } = table.getRowModel()
-
-  const rowVirtualizer = useVirtualizer({
-    count: rows.length,
-    getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => 70,
-    measureElement:
-      typeof window !== "undefined" &&
-      navigator.userAgent.indexOf("Firefox") === -1
-        ? (element) => element?.getBoundingClientRect().height
-        : undefined,
-    overscan: 4,
-  })
-
-  const items = rowVirtualizer.getVirtualItems()
-
-  const paddingTop = items.length > 0 ? items[0].start : 0
-  const paddingBottom =
-    items.length > 0
-      ? rowVirtualizer.getTotalSize() - items[items.length - 1].end
-      : 0
-
-  return (
-    <tbody
-      style={{
-        height: `${rowVirtualizer.getTotalSize()}px`,
-      }}
-    >
-      {paddingTop > 0 && (
-        <tr>
-          <td style={{ height: `${paddingTop}px` }} />
-        </tr>
-      )}
-      {items.map((virtualRow) => {
-        const row = rows[virtualRow.index]
-        return (
-          <tr
-            key={row.id}
-            data-index={virtualRow.index}
-            onClick={
-              onRowClicked ? () => onRowClicked(row.original) : undefined
-            }
-            className={virtualRow.index % 2 ? "ListItemOdd" : "ListItemEven"}
-            ref={(node) => rowVirtualizer.measureElement(node)}
-            style={{
-              // transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
-              height: `${virtualRow.size}px`,
-              ...(onRowClicked ? { cursor: "pointer" } : {}),
-            }}
-          >
-            {row.getVisibleCells().map((cell) => (
-              <td
-                key={cell.id}
-                style={{
-                  width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
-                }}
-              >
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </td>
-            ))}
-          </tr>
-        )
-      })}
-      {paddingBottom > 0 && (
-        <tr>
-          <td style={{ height: `${paddingBottom}px` }} />
-        </tr>
-      )}
-    </tbody>
-  )
-}
-
-const MemoizedTableBody = React.memo(TableBody, (prevProps, nextProps) => {
-  return (
-    prevProps.table.options.data === nextProps.table.options.data &&
-    prevProps.onRowClicked === nextProps.onRowClicked
-  )
-})

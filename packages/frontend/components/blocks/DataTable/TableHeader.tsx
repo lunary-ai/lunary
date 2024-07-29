@@ -1,3 +1,4 @@
+import { useSortParams } from "@/utils/hooks"
 import { Group } from "@mantine/core"
 import {
   IconChevronDown,
@@ -5,7 +6,6 @@ import {
   IconSelector,
 } from "@tabler/icons-react"
 import { flexRender, Header } from "@tanstack/react-table"
-import { useQueryState } from "nuqs"
 import classes from "./index.module.css"
 
 interface SortIconProps {
@@ -27,8 +27,8 @@ interface TableHeaderProps {
 }
 
 export default function TableHeader({ header }: TableHeaderProps) {
-  const [sortField, setSortField] = useQueryState("sort_field")
-  const [sortDirection, setSortDirection] = useQueryState("sort_direction")
+  const { sortField, setSortField, sortDirection, setSortDirection } =
+    useSortParams()
 
   const name = flexRender(header.column.columnDef.header, header.getContext())
   const canColumnBeSorted = header.column.getCanSort()
