@@ -33,9 +33,9 @@ import {
   IconBrandOpenai,
   IconDotsVertical,
   IconFileExport,
-  IconTrash,
   IconStack2,
   IconStackPop,
+  IconTrash,
 } from "@tabler/icons-react"
 
 import { NextSeo } from "next-seo"
@@ -44,52 +44,44 @@ import { useContext, useEffect, useMemo, useState } from "react"
 import { ChatReplay } from "@/components/blocks/RunChat"
 import RunInputOutput from "@/components/blocks/RunInputOutput"
 import SearchBar from "@/components/blocks/SearchBar"
-import { openUpgrade } from "@/components/layout/UpgradeModal"
 import CheckPicker from "@/components/checks/Picker"
 import Empty from "@/components/layout/Empty"
+import { openUpgrade } from "@/components/layout/UpgradeModal"
 
 import analytics from "@/utils/analytics"
-import { formatDateTime } from "@/utils/format"
-import { fetcher } from "@/utils/fetcher"
 import {
-  useProject,
   useOrg,
+  useProject,
   useProjectInfiniteSWR,
   useRun,
 } from "@/utils/dataHooks"
+import { fetcher } from "@/utils/fetcher"
+import { formatDateTime } from "@/utils/format"
 
-import {
-  useDebouncedState,
-  useDidUpdate,
-  useShallowEffect,
-} from "@mantine/hooks"
 import { ProjectContext } from "@/utils/context"
+import { useDebouncedState, useDidUpdate } from "@mantine/hooks"
 
-import { useRouter } from "next/router"
-import { modals } from "@mantine/modals"
-import { useView, useViews } from "@/utils/dataHooks/views"
 import RenamableField from "@/components/blocks/RenamableField"
-import { VisibilityState } from "@tanstack/react-table"
+import { useView, useViews } from "@/utils/dataHooks/views"
+import { modals } from "@mantine/modals"
 import { notifications } from "@mantine/notifications"
+import { VisibilityState } from "@tanstack/react-table"
+import { useRouter } from "next/router"
 
-import { deserializeLogic, serializeLogic } from "shared"
-import { useEvaluators } from "@/utils/dataHooks/evaluators"
 import IconPicker from "@/components/blocks/IconPicker"
-import { useTraceUpdate } from "@/utils/hooks"
-import { set } from "date-fns"
+import { useEvaluators } from "@/utils/dataHooks/evaluators"
+import { deserializeLogic, serializeLogic } from "shared"
+import { useSortParams } from "@/utils/hooks"
 
 export const defaultColumns = {
   llm: [
     timeColumn("createdAt"),
     nameColumn("Model"),
     durationColumn(),
-    // enrichmentColumn("topics"),
-    // enrichmentColumn("sentiment"),
-    // enrichmentColumn("pii"),
     userColumn(),
     {
       header: "Tokens",
-      size: 70,
+      size: 100,
       id: "tokens",
       sortingFn: (a, b) => a.tokens.total - b.tokens.total,
       cell: (props) => props.getValue(),
@@ -214,6 +206,8 @@ export default function Logs() {
     clearOnDefault: true,
   })
 
+  const { sortParams } = useSortParams()
+
   const {
     view,
     update: updateView,
@@ -236,7 +230,7 @@ export default function Logs() {
     validating,
     loadMore,
     mutate,
-  } = useProjectInfiniteSWR(`/runs?${serializedChecks}`)
+  } = useProjectInfiniteSWR(`/runs?${serializedChecks}${sortParams}`)
 
   const { run: selectedRun, loading: runLoading } = useRun(selectedRunId)
 
@@ -568,7 +562,7 @@ export default function Logs() {
               setSelectedRunId(row.id)
             }
           }}
-          key={allColumns[type]}
+          key={allColumns[type].length}
           loading={loading || validating}
           loadMore={loadMore}
           availableColumns={allColumns[type]}

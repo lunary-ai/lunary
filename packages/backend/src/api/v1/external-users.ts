@@ -17,9 +17,19 @@ users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
     startDate: z.string().datetime().optional(),
     endDate: z.string().datetime().optional(),
     timeZone: z.string().optional(),
+    sortField: z.string().optional().default("createdAt"),
+    sortDirection: z.string().optional().default("desc"),
   })
-  const { limit, page, search, startDate, endDate, timeZone } =
-    querySchema.parse(ctx.request.query)
+  const {
+    limit,
+    page,
+    search,
+    startDate,
+    endDate,
+    timeZone,
+    sortDirection,
+    sortField,
+  } = querySchema.parse(ctx.request.query)
 
   let searchQuery = sql``
   if (search) {
@@ -37,6 +47,14 @@ users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
       and r.created_at at time zone ${timeZone} <= ${endDate}
     `
   }
+
+  const sortMapping = {
+    createdAt: "eu.created_at",
+    lastSeen: "eu.last_seen",
+    cost: "uc.cost",
+  }
+
+  let orderByClause = `${sortMapping[sortField]} ${sortDirection} nulls last`
 
   const [users, total] = await Promise.all([
     sql`
@@ -66,7 +84,7 @@ users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
         eu.project_id = ${projectId} 
         ${searchQuery} 
       order by
-        cost desc nulls last
+        ${sql.unsafe(orderByClause)} 
       limit ${limit}
       offset ${page * limit}
     `,

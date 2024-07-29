@@ -3,7 +3,7 @@ import AppUserAvatar from "@/components/blocks/AppUserAvatar"
 import Feedback from "@/components/blocks/OldFeedback"
 import ProtectedText from "@/components/blocks/ProtectedText"
 import { Badge, Button, Group } from "@mantine/core"
-import { createColumnHelper } from "@tanstack/react-table"
+import { ColumnDef, createColumnHelper } from "@tanstack/react-table"
 
 import Link from "next/link"
 import { EvaluatorType } from "shared"
@@ -16,7 +16,7 @@ export function timeColumn(timeColumn, label = "Time") {
   return columnHelper.accessor(timeColumn, {
     header: label,
     id: timeColumn,
-    size: 130,
+    size: 140,
     sortingFn: (a, b) =>
       new Date(a.getValue(timeColumn)).getTime() -
       new Date(b.getValue(timeColumn)).getTime(),
@@ -34,16 +34,22 @@ export function timeColumn(timeColumn, label = "Time") {
   })
 }
 
-export function durationColumn(unit = "s") {
+export function durationColumn(unit = "s"): ColumnDef<any> {
   return {
     id: "duration",
     header: "Duration",
-    size: 70,
+    size: 110,
+    enableSorting: true,
     cell: (props) => {
-      if (!props.getValue()) return null
-      if (unit === "s") {
+      const value = props?.getValue() || 0
+
+      if (value === 0) {
+        return "0.00s"
+      } else if (unit === "s") {
+        // console.log(props.getValue())
         return `${(props.getValue() / 1000).toFixed(2)}s`
       } else if (unit === "full") {
+        console.log(props.getValue())
         return msToTime(props.getValue())
       }
     },
@@ -63,6 +69,7 @@ export function statusColumn() {
   return columnHelper.accessor("status", {
     id: "status",
     header: "Status",
+    enableSorting: false,
     size: 60,
     cell: (props) => (
       <Badge color={props.getValue() === "success" ? "green" : "red"}>
@@ -77,6 +84,7 @@ export function tagsColumn() {
     header: "Tags",
     size: 120,
     minSize: 80,
+    enableSorting: false,
     cell: (props) => {
       const tags = props.getValue()
 
@@ -148,6 +156,7 @@ export function userColumn() {
   return columnHelper.accessor("user", {
     header: "User",
     size: 130,
+    enableSorting: false,
     cell: (props) => {
       const user = props.getValue()
 
@@ -163,6 +172,7 @@ export function nameColumn(label = "Name") {
     header: label,
     size: 100,
     minSize: 30,
+    enableSorting: false,
     cell: (props) => {
       const { status, type } = props.row.original
       const name = props.getValue()
@@ -184,8 +194,8 @@ export function nameColumn(label = "Name") {
 export function costColumn() {
   return columnHelper.accessor("cost", {
     header: "Cost",
-    size: 90,
-    sortingFn: (a, b) => a - b,
+    size: 100,
+    enableSorting: true,
     cell: (props) => {
       const cost = props.getValue()
       return <ProtectedText>{formatCost(cost)}</ProtectedText>
@@ -224,6 +234,7 @@ export function feedbackColumn(withRelatedRuns = false) {
   return columnHelper.accessor("feedback", {
     header: "Feedback",
     size: 100,
+    enableSorting: false,
     cell,
   })
 }
@@ -237,6 +248,7 @@ export function enrichmentColumn(
     header: `${capitalize(name)} ✨`,
     id: `enrichment-${id}`,
     size: 120,
+    enableSorting: false,
     cell: (props) => {
       const data = props.row.original[`enrichment-${id}`]
       if (!data) {

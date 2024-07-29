@@ -16,22 +16,18 @@ import {
   Text,
   useComputedColorScheme,
 } from "@mantine/core"
-import {
-  IconChevronDown,
-  IconChevronUp,
-  IconColumns3,
-} from "@tabler/icons-react"
+import { IconColumns3 } from "@tabler/icons-react"
 import {
   SortingState,
   VisibilityState,
-  flexRender,
   getCoreRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
 import classes from "./index.module.css"
 
-import { useVirtualizer } from "@tanstack/react-virtual"
+import TableBody from "./TableBody"
+import TableHeader from "./TableHeader"
 
 // outside for reference
 const emptyArray = []
@@ -57,14 +53,6 @@ export default function DataTable({
   loadMore?: (() => void) | null
   defaultSortBy?: string
 }) {
-  const [sorting, setSorting] = useState<SortingState>([
-    {
-      id: defaultSortBy,
-      desc: true,
-    },
-  ])
-
-  //we need a reference to the scrolling element for logic down below
   const tableContainerRef = useRef<HTMLDivElement>(null)
 
   const scheme = useComputedColorScheme()
@@ -75,39 +63,32 @@ export default function DataTable({
     columnResizeMode: "onChange",
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    manualSorting: true,
     onColumnVisibilityChange: (fn) => {
       if (!fn || !setVisibleColumns) return
       const data = fn() // for some reason, need to call the function to get the updated state
-
       setVisibleColumns(data as VisibilityState)
     },
     state: {
-      sorting,
       columnVisibility: visibleColumns,
     },
-    onSortingChange: setSorting,
   })
 
-  const { rows } = table.getRowModel()
+  const columnSizeVars = useMemo(() => {
+    const headers = table.getFlatHeaders()
+    const colSizes: { [key: string]: number } = {}
+    for (let i = 0; i < headers.length; i++) {
+      const header = headers[i]!
+      colSizes[`--header-${header.id}-size`] = header.getSize()
+      colSizes[`--col-${header.column.id}-size`] = header.column.getSize()
+    }
+    return colSizes
+  }, [table.getState().columnSizingInfo, table.getState().columnSizing])
 
-  const rowVirtualizer = useVirtualizer({
-    count: rows.length,
-    getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => 70,
-    measureElement:
-      typeof window !== "undefined" &&
-      navigator.userAgent.indexOf("Firefox") === -1
-        ? (element) => element?.getBoundingClientRect().height
-        : undefined,
-    overscan: 4,
-  })
-
-  //called on scroll and possibly on mount to fetch more data as the user scrolls and reaches bottom of table
   const fetchMoreOnBottomReached = useCallback(
     (containerRefElement?: HTMLDivElement | null) => {
       if (containerRefElement) {
         const { scrollHeight, scrollTop, clientHeight } = containerRefElement
-        //once the user has scrolled within 600px of the bottom of the table, fetch more data if there is any
         if (
           scrollHeight - scrollTop - clientHeight < 600 &&
           !loading &&
@@ -124,20 +105,6 @@ export default function DataTable({
   useEffect(() => {
     fetchMoreOnBottomReached(tableContainerRef.current)
   }, [fetchMoreOnBottomReached])
-
-  const items = rowVirtualizer.getVirtualItems()
-
-  const paddingTop = useMemo(
-    () => (items.length > 0 ? items[0].start : 0),
-    [items],
-  )
-  const paddingBottom = useMemo(
-    () =>
-      items.length > 0
-        ? rowVirtualizer.getTotalSize() - items[items.length - 1].end
-        : 0,
-    [items, rowVirtualizer],
-  )
 
   return (
     <>
@@ -184,109 +151,26 @@ export default function DataTable({
                 ))}
             </Menu.Dropdown>
           </Menu>
-          <table cellSpacing={0}>
+          <table
+            cellSpacing={0}
+            style={{
+              ...columnSizeVars,
+            }}
+          >
             <thead>
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <th
-                        key={header.id}
-                        colSpan={header.colSpan}
-                        style={{
-                          width: header.getSize(),
-                        }}
-                      >
-                        {header.isPlaceholder ? null : (
-                          <Group
-                            gap={4}
-                            // onClick={header.column.getToggleSortingHandler()}
-                            // style={
-                            //   header.column.getCanSort()
-                            //     ? { cursor: "pointer" }
-                            //     : {}
-                            // }
-                          >
-                            {flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
-                            {{
-                              asc: <IconChevronUp size={14} />,
-                              desc: <IconChevronDown size={14} />,
-                            }[header.column.getIsSorted() as string] ?? null}
-                          </Group>
-                        )}
-
-                        <div
-                          {...{
-                            onMouseDown: header.getResizeHandler(),
-                            onTouchStart: header.getResizeHandler(),
-                            className: `${classes.resizer} ${
-                              header.column.getIsResizing()
-                                ? classes.isResizing
-                                : ""
-                            }`,
-                          }}
-                        />
-                      </th>
-                    )
-                  })}
+                  {headerGroup.headers.map((header) => (
+                    <TableHeader key={header.id} header={header} />
+                  ))}
                 </tr>
               ))}
             </thead>
-            <tbody
-              style={{
-                height: `${rowVirtualizer.getTotalSize()}px`, //tells scrollbar how big the table is
-              }}
-            >
-              {paddingTop > 0 && (
-                <tr>
-                  <td style={{ height: `${paddingTop}px` }} />
-                </tr>
-              )}
-              {items.map((virtualRow, index) => {
-                const row = rows[virtualRow.index]
-                return (
-                  <tr
-                    key={row.id}
-                    onClick={
-                      onRowClicked
-                        ? () => onRowClicked(row.original)
-                        : undefined
-                    }
-                    className={
-                      virtualRow.index % 2 ? "ListItemOdd" : "ListItemEven"
-                    }
-                    ref={(node) => rowVirtualizer.measureElement(node)} //measure dynamic row height
-                    style={{
-                      // transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
-                      height: `${virtualRow.size}px`,
-                      ...(onRowClicked ? { cursor: "pointer" } : {}),
-                    }}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <td
-                        key={cell.id}
-                        style={{
-                          width: cell.column.getSize(),
-                        }}
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                )
-              })}
-              {paddingBottom > 0 && (
-                <tr>
-                  <td style={{ height: `${paddingBottom}px` }} />
-                </tr>
-              )}
-            </tbody>
+            <TableBody
+              table={table}
+              tableContainerRef={tableContainerRef}
+              onRowClicked={onRowClicked}
+            />
           </table>
 
           {loading && (
@@ -294,7 +178,7 @@ export default function DataTable({
               Fetching...
             </Text>
           )}
-          {!rows.length && !loading && (
+          {!table.getRowModel().rows.length && !loading && (
             <Text m="auto" p="md" c="dimmed" size="xs" ta="center">
               No data
             </Text>

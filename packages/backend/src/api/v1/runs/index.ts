@@ -29,6 +29,8 @@ interface Query {
   limit?: string
   page?: string
   order?: string
+  sortField?: string
+  sortDirection?: string
 }
 
 function processInput(input: unknown) {
@@ -115,7 +117,7 @@ function formatRun(run: any) {
       for (const message of formattedRun.input) {
         message.enrichments = []
       }
-    } else if (typeof formattedRun.input === "object") {
+    } else if (formattedRun.input && typeof formattedRun.input === "object") {
       formattedRun.input.enrichments = []
     }
 
@@ -219,11 +221,25 @@ runs.get("/", async (ctx: Context) => {
     page = "0",
     parentRunId,
     exportType,
+    sortField,
+    sortDirection,
   } = ctx.query as Query
 
   let parentRunCheck = sql``
   if (parentRunId) {
     parentRunCheck = sql`and parent_run_id = ${parentRunId}`
+  }
+
+  const sortMapping = {
+    createdAt: "r.created_at",
+    duration: "r.duration",
+    tokens: "(r.prompt_tokens + r.completion_tokens)",
+    cost: "r.cost",
+  }
+  let orderByClause = `r.created_at desc nulls last`
+  if (sortField && sortField in sortMapping) {
+    const direction = sortDirection === "desc" ? `desc` : `asc`
+    orderByClause = `${sortMapping[sortField]} ${direction} nulls last`
   }
 
   const rows = await sql`
@@ -265,7 +281,7 @@ runs.get("/", async (ctx: Context) => {
       t.slug,
       rpfc.feedback
     order by
-      r.created_at desc
+       ${sql.unsafe(orderByClause)}  
     limit ${exportType ? 10000 : Number(limit)}
     offset ${Number(page) * Number(limit)}
   `
