@@ -29,6 +29,7 @@ import classes from "./index.module.css"
 
 import { useVirtualizer } from "@tanstack/react-virtual"
 import TableHeader from "./TableHeader"
+import { useQueryState } from "nuqs"
 
 // outside for reference
 const emptyArray = []
@@ -60,6 +61,9 @@ export default function DataTable({
       desc: true,
     },
   ])
+
+  const [hello, setHello] = useQueryState("hello", { defaultValue: "123" })
+  console.log(hello)
 
   const tableContainerRef = useRef<HTMLDivElement>(null)
 
@@ -246,6 +250,7 @@ function TableBody({ table, tableContainerRef, onRowClicked }: TableBodyProps) {
         return (
           <tr
             key={row.id}
+            data-index={virtualRow.index}
             onClick={
               onRowClicked ? () => onRowClicked(row.original) : undefined
             }
