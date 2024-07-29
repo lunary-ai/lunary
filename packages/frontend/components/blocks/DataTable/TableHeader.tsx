@@ -42,8 +42,8 @@ export default function TableHeader({ header }: TableHeaderProps) {
       if (currentSortDirection === "desc") {
         await setSortDirection("asc")
       } else {
-        await setSortField(null)
-        await setSortDirection(null)
+        await setSortField("createdAt")
+        await setSortDirection("desc")
       }
     } else {
       await setSortField(header.id)
