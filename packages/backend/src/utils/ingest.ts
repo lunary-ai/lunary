@@ -38,6 +38,7 @@ export interface Event {
     message: string
     stack?: string
   }
+  appId?: string
   [key: string]: unknown
 }
 

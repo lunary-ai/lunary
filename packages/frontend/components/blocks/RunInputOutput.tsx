@@ -170,11 +170,11 @@ export default function RunInputOutput({
     : org?.plan === "team" || org?.plan === "custom"
 
   const shouldDisplayCard =
-    run.name ||
-    run.user ||
-    Object.keys(run.params || {}).length !== 0 ||
-    run.tags?.length > 0 ||
-    run.metadata ||
+    run?.name ||
+    run?.user ||
+    Object.keys(run?.params || {}).length !== 0 ||
+    run?.tags?.length > 0 ||
+    run?.metadata ||
     canEnablePlayground
 
   return (
