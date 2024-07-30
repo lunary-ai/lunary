@@ -44,6 +44,11 @@ async function registerRunEvent(
     runtime,
   } = event as CleanRun
 
+  /* When using multiple LangChain callbacks for the same events, the project ID is associated with the event.
+   * The projectId passed to this function is the public key, so it may not necessarily be the correct one for the current event.
+   */
+  projectId = event.appId || projectId
+
   if (!tags) {
     tags = metadata?.tags
   }
