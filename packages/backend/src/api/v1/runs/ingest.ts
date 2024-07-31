@@ -157,7 +157,7 @@ async function registerRunEvent(
     const [runData] = await sql`
         select created_at, input, params, name from run where id = ${runId}
       `
-    if (typeof runData.metadata === "object") {
+    if (typeof runData?.metadata === "object") {
       metadata = { ...runData.metadata, metadata }
     }
     if (type === "llm") {
