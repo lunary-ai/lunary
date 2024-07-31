@@ -171,6 +171,10 @@ async function registerRunEvent(
       })
     }
 
+    if (typeof output === "boolean") {
+      output = JSON.stringify(output)
+    }
+
     const runToInsert = {
       endedAt: timestamp,
       output: output,
@@ -330,7 +334,7 @@ export async function processEventsIngestion(
       })
     } catch (error: unknown) {
       if (
-        !(error instanceof DuplicateError) ||
+        !(error instanceof DuplicateError) &&
         !(error instanceof ProjectNotFoundError)
       ) {
         Sentry.withScope((scope) => {
