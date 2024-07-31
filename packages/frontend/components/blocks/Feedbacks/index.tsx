@@ -88,7 +88,7 @@ export default function Feedbacks({
   }
 
   const update = (feedback) => {
-    if (org.plan === "free") {
+    if (org?.plan === "free") {
       return openUpgrade()
     }
     updateFeedback(feedback)
