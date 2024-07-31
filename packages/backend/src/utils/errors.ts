@@ -12,7 +12,10 @@ export async function errorMiddleware(ctx: Context, next: Next) {
   } catch (error: any) {
     console.error(error)
 
-    if (process.env.NODE_ENV === "production") {
+    if (
+      process.env.NODE_ENV === "production" &&
+      ctx.message !== "Invalid API key"
+    ) {
       Sentry.captureException(error)
     }
 
@@ -30,5 +33,19 @@ export async function errorMiddleware(ctx: Context, next: Next) {
     ctx.body = {
       message: error.message || "An unexpected error occurred",
     }
+  }
+}
+
+export class DuplicateError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "DupplicateError"
+  }
+}
+
+export class ProjectNotFoundError extends Error {
+  constructor(projectId: string) {
+    super(`Project with id ${projectId} does not exist.`)
+    this.name = "ProjectNotFoundError"
   }
 }
