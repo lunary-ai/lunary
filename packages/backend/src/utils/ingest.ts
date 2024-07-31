@@ -1,5 +1,6 @@
 import { completeRunUsage } from "./countToken"
 import sql from "./db"
+import { ProjectNotFoundError } from "./errors"
 
 export interface Event {
   type:
@@ -168,6 +169,12 @@ export const ingestChatEvent = async (
 
   if (typeof parentRunId === "undefined") {
     throw new Error("parentRunId is undefined")
+  }
+
+  const [projectExists] =
+    await sql`select exists(select 1 from project where id = ${projectId})`
+  if (!projectExists) {
+    throw new ProjectNotFoundError(projectId)
   }
 
   // Now you can safely use parentRunId in your
