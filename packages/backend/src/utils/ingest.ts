@@ -1,4 +1,4 @@
-import { completeRunUsage } from "./countToken"
+import { completeRunUsage, completeRunUsageWithTimeout } from "./countToken"
 import sql from "./db"
 import { ProjectNotFoundError } from "./errors"
 
@@ -117,7 +117,7 @@ function cleanMetadata(object: any) {
   )
 }
 
-export const cleanEvent = async (event: any): Promise<Event> => {
+export async function cleanEvent(event: any): Promise<Event> {
   const { timestamp, runId, parentRunId, tags, name, ...rest } =
     recursiveToCamel(event)
 
@@ -134,7 +134,7 @@ export const cleanEvent = async (event: any): Promise<Event> => {
     metadata: cleanMetadata(rest.metadata),
     name: typeof name === "string" ? name.replace("models/", "") : undefined,
     tags: typeof tags === "string" ? [tags] : tags,
-    tokensUsage: await completeRunUsage(event),
+    tokensUsage: await completeRunUsageWithTimeout(event),
     runId: await ensureIsUUID(runId),
     parentRunId: await ensureIsUUID(parentRunId),
     timestamp: isoTimestamp,
