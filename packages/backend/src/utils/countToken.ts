@@ -245,6 +245,7 @@ async function numTokensFromMessages(
 
 // If model is openai and it's missing some token usage, we can try to compute it
 export async function completeRunUsage(run) {
+  return 0
   if (
     run.type !== "llm" ||
     run.event !== "end" ||
