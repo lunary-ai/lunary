@@ -43,6 +43,13 @@ export class DuplicateError extends Error {
   }
 }
 
+export class TimeoutError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "TimeoutError"
+  }
+}
+
 export class ProjectNotFoundError extends Error {
   constructor(projectId: string) {
     super(`Project with id ${projectId} does not exist.`)
