@@ -1,8 +1,13 @@
 import cl100k_base from "js-tiktoken/ranks/cl100k_base"
 
-import { Tiktoken, getEncodingNameForModel } from "js-tiktoken/lite"
+import * as Sentry from "@sentry/node"
+import {
+  Tiktoken,
+  TiktokenEncoding,
+  getEncodingNameForModel,
+} from "js-tiktoken/lite"
 import sql from "./db"
-import { ensureIsUUID } from "./ingest"
+import { withTimeout } from "./timeout"
 
 const cache = {}
 
@@ -46,15 +51,11 @@ async function getEncoding(
   }
 }
 
-async function encodingForModel(model) {
-  let encodingName
+async function encodingForModel(model: string) {
+  let encodingName: TiktokenEncoding
 
-  // TODO: Remove this once this PR merged:
-  // https://github.com/dqbd/tiktoken/pull/79/files
-  if (model?.includes("gpt-4") || model?.includes("gpt-3.5")) {
-    encodingName = "cl100k_base"
-  } else if (model?.includes("claude")) {
-    encodingName = "claude"
+  if (model?.includes("claude")) {
+    encodingName = "gpt2"
   } else {
     try {
       encodingName = getEncodingNameForModel(model)
@@ -64,7 +65,7 @@ async function encodingForModel(model) {
     }
   }
 
-  return await getEncoding(encodingName)
+  return getEncoding(encodingName)
 }
 
 const GOOGLE_MODELS = [
@@ -104,7 +105,7 @@ async function countGoogleTokens(model, input) {
     )
     const data = await res.json()
 
-    return data.tokenCount
+    return data.tokenCount as number
   } catch (e) {
     console.error("Error while counting tokens with Google API", e)
     return
@@ -200,7 +201,6 @@ function formatFunctionSpecsAsTypescriptNS(functions) {
  * Returns the number of tokens in an array of messages passed to OpenAI.
  *
  */
-
 async function numTokensFromMessages(
   messages,
   functions,
@@ -243,9 +243,7 @@ async function numTokensFromMessages(
   return numTokens
 }
 
-// If model is openai and it's missing some token usage, we can try to compute it
-export async function completeRunUsage(run) {
-  return 0
+export async function completeRunUsage(run: any) {
   if (
     run.type !== "llm" ||
     run.event !== "end" ||
@@ -255,56 +253,60 @@ export async function completeRunUsage(run) {
 
   const tokensUsage = run.tokensUsage || {}
 
-  try {
-    // get run input
+  const [runData] =
+    await sql`select input, params, name from run where id = ${run.runId}`
+  const modelName = runData.name
 
-    const [runData] = await sql`
-      SELECT input, params, name FROM run WHERE id = ${run.runId}
-    `
+  const isGoogleModel =
+    modelName && GOOGLE_MODELS.find((model) => modelName.includes(model))
+  if (isGoogleModel) {
+    const [inputTokens, outputTokens] = await Promise.all([
+      countGoogleTokens(isGoogleModel, runData.input),
+      countGoogleTokens(isGoogleModel, run.output),
+    ])
+    tokensUsage.prompt = inputTokens
+    tokensUsage.completion = outputTokens
+  } else {
+    const enc = await encodingForModel(modelName)
 
-    // Get model name (in older sdk it wasn't sent in "end" event)
-    const modelName = runData.name?.replaceAll("gpt-35", "gpt-3.5") // Azure fix
+    if (!tokensUsage.prompt && runData?.input) {
+      const inputTokens = Array.isArray(runData.input)
+        ? await numTokensFromMessages(
+            runData.input,
+            // @ts-ignore
+            runData.params?.functions || runData.params?.tools,
+            modelName,
+          )
+        : enc.encode(JSON.stringify(runData.input)).length
 
-    const isGoogleModel =
-      modelName && GOOGLE_MODELS.find((model) => modelName.includes(model))
-    if (isGoogleModel) {
-      // For Google models we need to use their API to count tokens
-      const inputTokens = await countGoogleTokens(isGoogleModel, runData.input)
       tokensUsage.prompt = inputTokens
-
-      const outputTokens = await countGoogleTokens(isGoogleModel, run.output)
-      tokensUsage.completion = outputTokens
-    } else {
-      const enc = await encodingForModel(modelName)
-
-      if (!tokensUsage.prompt && runData?.input) {
-        const inputTokens = Array.isArray(runData.input)
-          ? await numTokensFromMessages(
-              runData.input,
-              // @ts-ignore
-              runData.params?.functions || runData.params?.tools,
-              modelName,
-            )
-          : enc.encode(JSON.stringify(runData.input)).length
-
-        tokensUsage.prompt = inputTokens
-      }
-
-      if (!tokensUsage.completion && run.output) {
-        const outputString =
-          typeof run.output === "object" && run.output.text
-            ? run.output.text
-            : JSON.stringify(run.output)
-
-        const outputTokens = enc.encode(outputString).length
-
-        tokensUsage.completion = outputTokens
-      }
     }
 
-    return tokensUsage
-  } catch (e) {
-    console.error(`Error while computing tokens usage for run ${run.runId}`, e)
-    return run.tokensUsage
+    if (!tokensUsage.completion && run.output) {
+      const outputString =
+        typeof run.output === "object" && run.output.text
+          ? run.output.text
+          : JSON.stringify(run.output)
+
+      const outputTokens = enc.encode(outputString).length
+
+      tokensUsage.completion = outputTokens
+    }
+  }
+
+  return tokensUsage
+}
+
+export async function completeRunUsageWithTimeout(run: any) {
+  try {
+    return withTimeout(
+      () => completeRunUsage(run),
+      5000,
+      "Timeout for run usage completion",
+    )
+  } catch (error: unknown) {
+    console.error(error, JSON.stringify(run, null, 2))
+    Sentry.captureException(error, { contexts: { run } })
+    return run.tokenUsage
   }
 }
