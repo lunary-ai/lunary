@@ -101,5 +101,5 @@ export function getEncodingNameForOpenAIModel(
     }
   }
 
-  return "o200k_base"
+  return "cl100k_base"
 }
