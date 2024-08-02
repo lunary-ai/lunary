@@ -10,12 +10,16 @@ filters.get("/models", async (ctx: Context) => {
   const { projectId } = ctx.state
 
   const rows = await sql`
-    select
-      name
+    select distinct
+      r.name
     from
-      model_name_cache
+      run r
     where
-      project_id = ${projectId}
+      r.project_id = ${projectId} 
+      and r.type = 'llm'
+      and r.name is not null
+    order by
+      name;
   `
 
   ctx.body = rows.map((row) => row.name)
