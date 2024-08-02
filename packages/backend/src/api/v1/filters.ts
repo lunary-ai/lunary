@@ -29,12 +29,12 @@ filters.get("/tags", async (ctx: Context) => {
   const { projectId } = ctx.state
 
   const rows = await sql`
-    select
-      tag
+    select distinct
+      unnest(tags) as tag 
     from
-      tag_cache
+      run
     where
-      project_id = ${projectId}
+      project_id = ${projectId} 
   `
 
   ctx.body = rows.map((row) => row.tag)
