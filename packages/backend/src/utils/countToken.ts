@@ -15,9 +15,9 @@ function getEncodingNameForModel(modelName: string): TiktokenEncoding {
     return getEncodingNameForOpenAIModel(modelName)
   } else {
     console.warn(
-      `Warning: model ${modelName} not found. Using o200k_base encoding.`,
+      `Warning: model ${modelName} not found. Using cl100k_base encoding.`,
     )
-    return "o200k_base"
+    return "cl100k_base"
   }
 }
 
