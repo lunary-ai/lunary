@@ -1,4 +1,4 @@
-import { completeRunUsage, completeRunUsageWithTimeout } from "./countToken"
+import { completeRunUsageWithTimeout } from "./countToken"
 import sql from "./db"
 import { ProjectNotFoundError } from "./errors"
 
