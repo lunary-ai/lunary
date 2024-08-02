@@ -4,7 +4,6 @@ import { sleep } from "../utils/misc"
 export async function startMaterializedViewRefreshJob() {
   try {
     const views = [
-      "model_name_cache",
       "tag_cache",
       "metadata_cache",
       "feedback_cache",
