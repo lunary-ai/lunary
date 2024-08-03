@@ -40,21 +40,6 @@ filters.get("/tags", async (ctx: Context) => {
   ctx.body = rows.map((row) => row.tag)
 })
 
-filters.get("/feedback", async (ctx: Context) => {
-  const { projectId } = ctx.state
-
-  const rows = await sql`
-    select
-      feedback
-    from
-      feedback_cache
-    where
-      project_id = ${projectId}
-  `
-
-  ctx.body = rows.map((row) => row.feedback)
-})
-
 filters.get("/metadata", async (ctx: Context) => {
   const { projectId } = ctx.state
 
