@@ -196,14 +196,19 @@ export async function calcRunCost(run: any) {
   // If cost is per character, use run.input and run.output length (stringified) to calculate the cost
 
   try {
-    const [{ orgId }] = await sql`
-    SELECT org_id FROM project WHERE id = ${run.projectId}`
+    const [{ orgId }] =
+      await sql`select org_id from project where id = ${run.projectId}`
 
     const mappings = await sql`
-    SELECT * FROM model_mapping
-    WHERE org_id = ${orgId} OR org_id IS NULL
-    ORDER BY start_date DESC NULLS LAST, org_id IS NOT NULL DESC
-  `
+      select 
+        * 
+      from 
+        model_mapping
+      where
+        org_id = ${orgId} or org_id is null 
+      order by 
+        start_date desc nulls last, org_id is not null desc
+    `
 
     const mapping = await findAsyncSequential(mappings, async (mapping) => {
       try {
@@ -231,6 +236,7 @@ export async function calcRunCost(run: any) {
     let outputCost = 0
 
     if (mapping.unit === "TOKENS") {
+      console.log(run, mapping)
       inputUnits = run.promptTokens || 0
       outputUnits = run.completionTokens || 0
 
@@ -258,6 +264,9 @@ export async function calcRunCost(run: any) {
 
     const finalCost = Number((inputCost + outputCost).toFixed(5))
 
+    if (finalCost === 0) {
+      return calcRunCostLegacy(run)
+    }
     // Round to 5 decimal places
     return finalCost
   } catch (error) {
