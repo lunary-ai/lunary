@@ -236,6 +236,7 @@ export async function calcRunCost(run: any) {
     let outputCost = mapping.outputCost
 
     if (mapping.unit === "TOKENS") {
+      console.log(run, mapping)
       inputUnits = run.promptTokens || 0
       outputUnits = run.completionTokens || 0
 
