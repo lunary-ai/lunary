@@ -1,7 +1,7 @@
-import sql from "./db"
-import { setTimeout } from "timers/promises"
 import * as Sentry from "@sentry/node"
-import { filterAsync, findAsyncSequential } from "./misc"
+import { setTimeout } from "timers/promises"
+import sql from "./db"
+import { findAsyncSequential } from "./misc"
 
 interface ModelCost {
   models: string[]
@@ -232,11 +232,10 @@ export async function calcRunCost(run: any) {
     let inputUnits = 0
     let outputUnits = 0
 
-    let inputCost = 0
-    let outputCost = 0
+    let inputCost = mapping.inputCost
+    let outputCost = mapping.outputCost
 
     if (mapping.unit === "TOKENS") {
-      console.log(run, mapping)
       inputUnits = run.promptTokens || 0
       outputUnits = run.completionTokens || 0
 
