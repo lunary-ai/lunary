@@ -3,11 +3,7 @@ import { sleep } from "../utils/misc"
 
 export async function startMaterializedViewRefreshJob() {
   try {
-    const views = [
-      "metadata_cache",
-      "feedback_cache",
-      "run_parent_feedback_cache",
-    ]
+    const views = ["feedback_cache", "run_parent_feedback_cache"]
 
     while (true) {
       for (const view of views) {

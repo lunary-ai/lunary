@@ -52,28 +52,27 @@ filters.get("/feedback", async (ctx: Context) => {
       project_id = ${projectId}
   `
 
-  ctx.body = rows.map((row) => row.feedback) // stringify so  it works with selected
+  ctx.body = rows.map((row) => row.feedback)
 })
 
-// get all unique keys in metadata table
 filters.get("/metadata", async (ctx: Context) => {
   const { projectId } = ctx.state
-  // show the metadatas relevant to the type
-  const { type } = ctx.query
 
   const rows = await sql`
-    select
-      key
+    select distinct
+      jsonb_object_keys(metadata) as key
     from
-      metadata_cache
+      run
     where
-      project_id = ${projectId}
+      project_id = ${projectId} 
+      and metadata is not null
+    order by
+      key;
   `
 
   ctx.body = rows.map((row) => row.key)
 })
 
-// get external users
 filters.get("/users", async (ctx) => {
   const { projectId } = ctx.state
 
