@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react"
-import { useRouter } from "next/router"
-
+import DurationBadge from "@/components/blocks/DurationBadge"
+import RunInputOutput from "@/components/blocks/RunInputOutput"
+import StatusBadge from "@/components/blocks/StatusBadge"
+import TokensBadge from "@/components/blocks/TokensBadge"
+import { useProjectSWR, useRun } from "@/utils/dataHooks"
+import { capitalize, formatCost } from "@/utils/format"
 import {
   Badge,
   Box,
   Card,
-  Flex,
-  Grid,
   Group,
   Loader,
   Stack,
@@ -14,15 +15,6 @@ import {
   ThemeIcon,
   Title,
 } from "@mantine/core"
-
-import DurationBadge from "@/components/blocks/DurationBadge"
-import TokensBadge from "@/components/blocks/TokensBadge"
-import StatusBadge from "@/components/blocks/StatusBadge"
-
-import { useProjectSWR, useRun } from "@/utils/dataHooks"
-import { capitalize, formatCost } from "@/utils/format"
-import RunInputOutput from "@/components/blocks/RunInputOutput"
-import { getColorForRunType } from "../../utils/colors"
 import {
   IconCloudDownload,
   IconCode,
@@ -32,6 +24,9 @@ import {
   IconRobot,
   IconTool,
 } from "@tabler/icons-react"
+import { useRouter } from "next/router"
+import { useEffect, useState } from "react"
+import { getColorForRunType } from "../../utils/colors"
 
 import RunsChat from "@/components/blocks/RunChat"
 
@@ -233,7 +228,7 @@ export default function AgentRun({}) {
   const focusedRun = relatedRuns?.find((run) => run.id === focused)
 
   return (
-    <Stack gap="xl">
+    <Stack p="24px 24px 0 24px" h="100vh" gap="xl">
       <Title order={1}>
         {capitalize(run?.type)} Trace {run.name ? `(${run.name})` : ""}
       </Title>
@@ -255,8 +250,8 @@ export default function AgentRun({}) {
         )}
       </Group>
 
-      <Flex align="start" w="100%" style={{ gap: 20, wordBreak: "break-all" }}>
-        <Box flex={`0 0 600px`}>
+      <Group>
+        <Box style={{ flex: "0 0 600px", overflowY: "auto", height: "100%" }}>
           {relatedRuns && (
             <TraceTree
               isFirst
@@ -268,20 +263,23 @@ export default function AgentRun({}) {
             />
           )}
         </Box>
-        <Box flex={`1 1 400px`}>
-          <Card
-            withBorder
-            style={{
-              position: "sticky",
-              top: 85,
-              maxHeight: "calc(100vh - 220px)",
-              overflow: "auto",
-            }}
-          >
-            <RenderRun run={focusedRun} relatedRuns={relatedRuns} />
-          </Card>
+
+        <Box style={{ flex: "1 1 400px", overflowY: "auto", height: "100%" }}>
+          <Box p="md">
+            <Card
+              withBorder
+              style={{
+                position: "sticky",
+                top: 0,
+                maxHeight: "calc(100vh - 200px)",
+                overflow: "auto",
+              }}
+            >
+              <RenderRun run={focusedRun} relatedRuns={relatedRuns} />
+            </Card>
+          </Box>
         </Box>
-      </Flex>
+      </Group>
     </Stack>
   )
 }

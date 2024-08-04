@@ -25,7 +25,7 @@ function TopModels({ topModels, isLoading }: TopModelsProps) {
     )
   }
 
-  if (topModels.length === 0) {
+  if (topModels?.length === 0) {
     return (
       <>
         <Overlay blur={5} opacity={0.1} p="lg" zIndex={1} />
@@ -61,6 +61,7 @@ function TopModels({ topModels, isLoading }: TopModelsProps) {
         {
           name: "Model",
           bar: true,
+          key: "model",
         },
         {
           name: "Tokens",
