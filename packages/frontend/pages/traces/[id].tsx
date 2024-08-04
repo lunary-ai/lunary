@@ -250,7 +250,7 @@ export default function AgentRun({}) {
         )}
       </Group>
 
-      <Group>
+      <Group style={{ flex: 1, minHeight: 0 }}>
         <Box style={{ flex: "0 0 600px", overflowY: "auto", height: "100%" }}>
           {relatedRuns && (
             <TraceTree
