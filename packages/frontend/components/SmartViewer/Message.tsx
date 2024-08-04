@@ -313,7 +313,10 @@ function ChatMessageContent({
   const hasFunctionCall = data?.functionCall
   const hasToolCalls = data?.toolCalls || data?.tool_calls
 
-  console.log(editable)
+  let renderTextMessage = hasTextContent && (!compact || !hasToolCalls)
+  if (hasTextContent && textContent.length === 0 && !editable) {
+    renderTextMessage = false
+  }
 
   return (
     <Stack gap="xs">
@@ -339,7 +342,7 @@ function ChatMessageContent({
         />
       )}
 
-      {editable && hasTextContent && (!compact || !hasToolCalls) && (
+      {renderTextMessage && (
         <TextMessage
           data={data}
           compact={compact}
