@@ -11,8 +11,8 @@ jobs:
       - name: Check out the private ml repo
         uses: actions/checkout@v4
         with:
-          repository: lunary-ai/ml
           token: ${{ secrets.GH_TOKEN }}
+          path: ml
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -34,6 +34,7 @@ jobs:
       - name: Build and push ml
         uses: docker/build-push-action@v5
         with:
+          context: ml
           push: true
           tags: |
             lunary/ml:latest
