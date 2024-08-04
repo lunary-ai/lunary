@@ -169,14 +169,14 @@ templates.post(
   checkAccess("prompts", "update"),
   async (ctx: Context) => {
     const paramsSchema = z.object({
-      id: z.string().uuid(),
+      id: z.coerce.number(),
     })
     const bodySchema = z.object({
       content: z.array(z.any()),
       extra: z.any(),
       testValues: z.any(),
       isDraft: z.boolean(),
-      notes: z.string().optional(),
+      notes: z.string().optional().nullable(),
     })
 
     const { projectId } = ctx.state
