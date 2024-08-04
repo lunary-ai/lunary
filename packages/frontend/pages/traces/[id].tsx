@@ -77,7 +77,6 @@ function TraceTree({
         <Box>
           {!isLastOfParent && (
             <svg
-              height="calc(100% + 3px)"
               width={20}
               strokeWidth={1}
               stroke="var(--mantine-color-gray-5)"
@@ -86,6 +85,7 @@ function TraceTree({
                 position: "absolute",
                 left: 1,
                 top: -3,
+                height: "calc(100% + 3px",
               }}
             >
               <line x1={10} y1="0" x2={10} y2="100%" />
@@ -104,11 +104,11 @@ function TraceTree({
             strokeLinecap="square"
             stroke="var(--mantine-color-gray-5)"
             fill="none"
-            stroke-linejoin="round"
+            strokeLinejoin="round"
           >
             <path
               d="M19 19h-6a8 8 0 0 1 -8 -8v-6"
-              vector-effect="non-scaling-stroke"
+              vectorEffect="non-scaling-stroke"
             />
           </svg>
 

@@ -307,8 +307,9 @@ function ChatMessageContent({
   onChange,
   editable,
 }) {
+  const textContent = data?.text || data?.content
   const hasTextContent =
-    typeof data?.text === "string" || typeof data?.content === "string"
+    typeof textContent === "string" && textContent.length > 0
   const hasImageContent = Array.isArray(data?.content)
   const hasFunctionCall = data?.functionCall
   const hasToolCalls = data?.toolCalls || data?.tool_calls
@@ -436,6 +437,11 @@ export function ChatMessage({
   const scheme = useComputedColorScheme()
 
   const color = getColorForRole(data?.role)
+
+  if (data.role === "AIMessageChunk") {
+    // Fix for wrong name passed down inside the langchain SDK
+    data.role = "assistant"
+  }
 
   // Add/remove the 'id' and 'name' props required on tool calls
   useEffect(() => {
