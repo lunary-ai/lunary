@@ -141,8 +141,16 @@ users.get("/runs/usage", checkAccess("users", "read"), async (ctx) => {
 
 users.get("/:id", checkAccess("users", "read"), async (ctx: Context) => {
   const { id } = ctx.params
+  const { projectId } = ctx.state
+
   const [row] = await sql`
-    select * from external_user where id = ${id} limit 1
+    select 
+      * 
+    from 
+      external_user 
+    where 
+      id = ${id} 
+      and project_id = ${projectId}
   `
 
   ctx.body = row
@@ -150,8 +158,15 @@ users.get("/:id", checkAccess("users", "read"), async (ctx: Context) => {
 
 users.delete("/:id", checkAccess("users", "delete"), async (ctx: Context) => {
   const { id } = ctx.params
+  const { projectId } = ctx.state
 
-  await sql`delete from external_user where id = ${id}`
+  await sql`
+    delete 
+    from external_user 
+    where 
+      id = ${id}
+      and project_id = ${projectId}
+    `
 
   ctx.status = 204
 })
