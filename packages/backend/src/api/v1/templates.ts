@@ -167,6 +167,7 @@ templates.post(
   "/:id/versions",
   checkAccess("prompts", "update"),
   async (ctx: Context) => {
+    const { projectId } = ctx.state
     const { content, extra, testValues, isDraft, notes } = ctx.request.body as {
       content: any[]
       extra: any
@@ -174,19 +175,30 @@ templates.post(
       isDraft: boolean
       notes: string
     }
+    const templateId = ctx.params.id as string
+
+    console.log(templateId, projectId)
+    const [template] =
+      await sql`select id from template where id = ${templateId} and project_id = ${projectId}
+    `
+
+    if (!template) {
+      ctx.throw(403, "Unauthorized")
+    }
 
     const [templateVersion] = await sql`
-    insert into template_version ${sql(
-      clearUndefined({
-        templateId: ctx.params.id,
-        content: sql.json(content),
-        extra: sql.json(unCamelObject(extra)),
-        test_values: sql.json(testValues),
-        isDraft,
-        notes,
-      }),
-    )} returning *
-  `
+      insert into template_version ${sql(
+        clearUndefined({
+          templateId: ctx.params.id,
+          content: sql.json(content),
+          extra: sql.json(unCamelObject(extra)),
+          test_values: sql.json(testValues),
+          isDraft,
+          notes,
+        }),
+      )} 
+      returning *
+    `
 
     ctx.body = templateVersion
   },
