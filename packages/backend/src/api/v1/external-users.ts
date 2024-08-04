@@ -18,7 +18,10 @@ users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
     endDate: z.string().datetime().optional(),
     timeZone: z.string().optional(),
     sortField: z.string().optional().default("createdAt"),
-    sortDirection: z.string().optional().default("desc"),
+    sortDirection: z
+      .union([z.literal("acs"), z.literal("desc")])
+      .optional()
+      .default("desc"),
   })
   const {
     limit,
