@@ -307,11 +307,16 @@ function ChatMessageContent({
   onChange,
   editable,
 }) {
-  const hasTextContent =
-    typeof data?.text === "string" || typeof data?.content === "string"
+  const textContent = data?.text || data?.content
+  const hasTextContent = typeof textContent === "string"
   const hasImageContent = Array.isArray(data?.content)
   const hasFunctionCall = data?.functionCall
   const hasToolCalls = data?.toolCalls || data?.tool_calls
+
+  let renderTextMessage = hasTextContent && (!compact || !hasToolCalls)
+  if (hasTextContent && textContent.length === 0 && !editable) {
+    renderTextMessage = false
+  }
 
   return (
     <Stack gap="xs">
@@ -337,7 +342,7 @@ function ChatMessageContent({
         />
       )}
 
-      {hasTextContent && (!compact || !hasToolCalls) && (
+      {renderTextMessage && (
         <TextMessage
           data={data}
           compact={compact}
@@ -436,6 +441,11 @@ export function ChatMessage({
   const scheme = useComputedColorScheme()
 
   const color = getColorForRole(data?.role)
+
+  if (data.role === "AIMessageChunk") {
+    // Fix for wrong name passed down inside the langchain SDK
+    data.role = "assistant"
+  }
 
   // Add/remove the 'id' and 'name' props required on tool calls
   useEffect(() => {
