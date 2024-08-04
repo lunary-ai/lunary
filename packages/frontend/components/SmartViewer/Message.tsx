@@ -308,11 +308,12 @@ function ChatMessageContent({
   editable,
 }) {
   const textContent = data?.text || data?.content
-  const hasTextContent =
-    typeof textContent === "string" && textContent.length > 0
+  const hasTextContent = typeof textContent === "string"
   const hasImageContent = Array.isArray(data?.content)
   const hasFunctionCall = data?.functionCall
   const hasToolCalls = data?.toolCalls || data?.tool_calls
+
+  console.log(editable)
 
   return (
     <Stack gap="xs">
@@ -338,7 +339,7 @@ function ChatMessageContent({
         />
       )}
 
-      {hasTextContent && (!compact || !hasToolCalls) && (
+      {editable && hasTextContent && (!compact || !hasToolCalls) && (
         <TextMessage
           data={data}
           compact={compact}
