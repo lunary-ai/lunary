@@ -4,6 +4,7 @@ import { clearUndefined } from "@/src/utils/ingest"
 import Context from "@/src/utils/koa"
 import { unCamelObject } from "@/src/utils/misc"
 import Router from "koa-router"
+import { z } from "zod"
 
 const templates = new Router({
   prefix: "/templates",
@@ -167,17 +168,23 @@ templates.post(
   "/:id/versions",
   checkAccess("prompts", "update"),
   async (ctx: Context) => {
-    const { projectId } = ctx.state
-    const { content, extra, testValues, isDraft, notes } = ctx.request.body as {
-      content: any[]
-      extra: any
-      testValues: any
-      isDraft: boolean
-      notes: string
-    }
-    const templateId = ctx.params.id as string
+    const paramsSchema = z.object({
+      id: z.string().uuid(),
+    })
+    const bodySchema = z.object({
+      content: z.array(z.any()),
+      extra: z.any(),
+      testValues: z.any(),
+      isDraft: z.boolean(),
+      notes: z.string().optional(),
+    })
 
-    console.log(templateId, projectId)
+    const { projectId } = ctx.state
+    const { content, extra, testValues, isDraft, notes } = bodySchema.parse(
+      ctx.request.body,
+    )
+    const { id: templateId } = paramsSchema.parse(ctx.params)
+
     const [template] =
       await sql`select id from template where id = ${templateId} and project_id = ${projectId}
     `
