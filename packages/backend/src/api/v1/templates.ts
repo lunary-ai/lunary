@@ -4,6 +4,7 @@ import { clearUndefined } from "@/src/utils/ingest"
 import Context from "@/src/utils/koa"
 import { unCamelObject } from "@/src/utils/misc"
 import Router from "koa-router"
+import { z } from "zod"
 
 const templates = new Router({
   prefix: "/templates",
@@ -167,26 +168,44 @@ templates.post(
   "/:id/versions",
   checkAccess("prompts", "update"),
   async (ctx: Context) => {
-    const { content, extra, testValues, isDraft, notes } = ctx.request.body as {
-      content: any[]
-      extra: any
-      testValues: any
-      isDraft: boolean
-      notes: string
+    const paramsSchema = z.object({
+      id: z.coerce.number(),
+    })
+    const bodySchema = z.object({
+      content: z.array(z.any()),
+      extra: z.any(),
+      testValues: z.any(),
+      isDraft: z.boolean(),
+      notes: z.string().optional().nullable(),
+    })
+
+    const { projectId } = ctx.state
+    const { content, extra, testValues, isDraft, notes } = bodySchema.parse(
+      ctx.request.body,
+    )
+    const { id: templateId } = paramsSchema.parse(ctx.params)
+
+    const [template] =
+      await sql`select id from template where id = ${templateId} and project_id = ${projectId}
+    `
+
+    if (!template) {
+      ctx.throw(403, "Unauthorized")
     }
 
     const [templateVersion] = await sql`
-    insert into template_version ${sql(
-      clearUndefined({
-        templateId: ctx.params.id,
-        content: sql.json(content),
-        extra: sql.json(unCamelObject(extra)),
-        test_values: sql.json(testValues),
-        isDraft,
-        notes,
-      }),
-    )} returning *
-  `
+      insert into template_version ${sql(
+        clearUndefined({
+          templateId: ctx.params.id,
+          content: sql.json(content),
+          extra: sql.json(unCamelObject(extra)),
+          test_values: sql.json(testValues),
+          isDraft,
+          notes,
+        }),
+      )} 
+      returning *
+    `
 
     ctx.body = templateVersion
   },

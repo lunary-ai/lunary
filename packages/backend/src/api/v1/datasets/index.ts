@@ -107,8 +107,15 @@ datasets.patch(
     }
 
     const [dataset] = await sql`
-    update dataset set slug = ${slug} where id = ${id} and project_id = ${projectId} returning *
-  `
+      update 
+        dataset 
+      set 
+        slug = ${slug} 
+      where 
+      id = ${id} 
+      and project_id = ${projectId} 
+      returning *
+    `
 
     ctx.body = dataset
   },
@@ -218,8 +225,23 @@ datasets.patch(
   checkAccess("datasets", "update"),
   async (ctx: Context) => {
     const { id } = ctx.params
+    const { projectId } = ctx.state
     const { messages } = ctx.request.body as {
       messages: string
+    }
+
+    const [dataset] = await sql`
+      select 
+        d.id 
+      from 
+        dataset_prompt dp
+        left join dataset d on dp.dataset_id = d.id
+      where
+        d.project_id = ${projectId}
+    `
+
+    if (!dataset) {
+      ctx.throw(403, "Unauthorized")
     }
 
     const [prompt] =
