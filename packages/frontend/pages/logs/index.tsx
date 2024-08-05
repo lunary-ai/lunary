@@ -540,6 +540,7 @@ export default function Logs() {
                   withFeedback={true}
                   withPlayground={true}
                   withImportToDataset={true}
+                  withOpenTrace={true}
                   withShare={true}
                   mutateLogs={mutate}
                 />
