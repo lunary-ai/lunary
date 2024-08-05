@@ -129,16 +129,20 @@ export async function cleanEvent(event: any): Promise<Event> {
     console.error(event)
   }
 
-  return {
+  const cleanedRun = {
     ...rest,
     metadata: cleanMetadata(rest.metadata),
     name: typeof name === "string" ? name.replace("models/", "") : undefined,
     tags: typeof tags === "string" ? [tags] : tags,
-    tokensUsage: await completeRunUsageWithTimeout(event),
     runId: await ensureIsUUID(runId),
     parentRunId: await ensureIsUUID(parentRunId),
     timestamp: isoTimestamp,
   }
+
+  // Do it after because we need the sanitized runId/parentRunId
+  cleanedRun.tokensUsage = await completeRunUsageWithTimeout(cleanedRun)
+
+  return cleanedRun
 }
 
 export const clearUndefined = (obj: any): any =>
