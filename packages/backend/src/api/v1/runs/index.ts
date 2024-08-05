@@ -109,6 +109,7 @@ function formatRun(run: any) {
       lastSeen: run.userLastSeen,
       props: run.userProps,
     },
+    traceId: run.rootParentRunId,
   }
 
   try {
@@ -244,56 +245,56 @@ runs.get("/", async (ctx: Context) => {
 
   const rows = await sql`
     with runs as (
-        select
-            r.*,
-            eu.id as user_id,
-            eu.external_id as user_external_id,
-            eu.created_at as user_created_at,
-            eu.last_seen as user_last_seen,
-            eu.props as user_props,
-            t.slug as template_slug,
-            rpfc.feedback as parent_feedback
-        from
-            public.run r
-            left join external_user eu on r.external_user_id = eu.id
-            left join run_parent_feedback_cache rpfc on r.id = rpfc.id
-            left join template_version tv on r.template_version_id = tv.id
-            left join template t on tv.template_id = t.id
-            left join evaluation_result_v2 er on r.id = er.run_id
-            left join evaluator e on er.evaluator_id = e.id
-        where
-          r.project_id = ${projectId}
-          ${parentRunCheck}
-          and (${filtersQuery})
-        order by
-            ${sql.unsafe(orderByClause)}  
-        limit ${exportType ? 10000 : Number(limit)}
-        offset ${Number(page) * Number(limit)}
-    ),
-    evaluation_results as (
-        select
-            r.id,
-            coalesce(array_agg(
-              jsonb_build_object(
-                  'evaluatorName', e.name,
-                  'evaluatorSlug', e.slug,
-                  'evaluatorType', e.type,
-                  'evaluatorId', e.id,
-                  'result', er.result, 
-                  'createdAt', er.created_at,
-                  'updatedAt', er.updated_at
-              )
-          ) filter (where er.run_id is not null), '{}') as evaluation_results
-        from
-            runs r
-        left join evaluation_result_v2 er on r.id = er.run_id
-        left join evaluator e on er.evaluator_id = e.id
-        group by r.id
-    )
     select
         r.*,
-        er.evaluation_results
+        eu.id as user_id,
+        eu.external_id as user_external_id,
+        eu.created_at as user_created_at,
+        eu.last_seen as user_last_seen,
+        eu.props as user_props,
+        t.slug as template_slug,
+        rpfc.feedback as parent_feedback
     from
+        public.run r
+        left join external_user eu on r.external_user_id = eu.id
+        left join run_parent_feedback_cache rpfc on r.id = rpfc.id
+        left join template_version tv on r.template_version_id = tv.id
+        left join template t on tv.template_id = t.id
+        left join evaluation_result_v2 er on r.id = er.run_id
+        left join evaluator e on er.evaluator_id = e.id
+    where
+        r.project_id = ${projectId}
+        ${parentRunCheck}
+        and (${filtersQuery})
+    order by
+        ${sql.unsafe(orderByClause)}  
+    limit ${exportType ? 10000 : Number(limit)}
+    offset ${Number(page) * Number(limit)}
+),
+evaluation_results as (
+    select
+        r.id,
+        coalesce(array_agg(
+            jsonb_build_object(
+                'evaluatorName', e.name,
+                'evaluatorSlug', e.slug,
+                'evaluatorType', e.type,
+                'evaluatorId', e.id,
+                'result', er.result, 
+                'createdAt', er.created_at,
+                'updatedAt', er.updated_at
+            )
+        ) filter (where er.run_id is not null), '{}') as evaluation_results
+    from
+            runs r
+    left join evaluation_result_v2 er on r.id = er.run_id
+    left join evaluator e on er.evaluator_id = e.id
+    group by r.id
+)
+select
+    r.*,
+    er.evaluation_results
+from
       runs r
       left join evaluation_results er on r.id = er.id;
   `
@@ -453,38 +454,50 @@ runs.get("/:id", async (ctx) => {
   const { orgId } = ctx.state
 
   const [row] = await sql`
+     with recursive run_hierarchy as (
+      select id, parent_run_id, id as root_parent_run_id
+      from run
+      where id = ${id} and parent_run_id is not null
+
+      union all
+
+      select r.id, r.parent_run_id, rh.root_parent_run_id
+      from run r
+      join run_hierarchy rh on r.id = rh.parent_run_id
+    )
     select
-        r.*,
-        eu.id as user_id,
-        eu.external_id as user_external_id,
-        eu.created_at as user_created_at,
-        eu.last_seen as user_last_seen,
-        eu.props as user_props,
-        coalesce(array_agg(
-            jsonb_build_object(
-                'evaluatorName', e.name,
-                'evaluatorSlug', e.slug,
-                'evaluatorId', e.id,
-                'evaluatorType', e.type,
-                'result', er.result, 
-                'createdAt', er.created_at,
-                'updatedAt', er.updated_at
-            )
-        ) filter (where er.run_id is not null), '{}') as evaluation_results
+      r.*,
+      eu.id as user_id,
+      eu.external_id as user_external_id,
+      eu.created_at as user_created_at,
+      eu.last_seen as user_last_seen,
+      eu.props as user_props,
+      (select id from run_hierarchy where parent_run_id is null) as root_parent_run_id,
+      coalesce(array_agg(
+        jsonb_build_object(
+          'evaluatorName', e.name,
+          'evaluatorSlug', e.slug,
+          'evaluatorId', e.id,
+          'evaluatorType', e.type,
+          'result', er.result, 
+          'createdAt', er.created_at,
+          'updatedAt', er.updated_at
+        )
+      ) filter (where er.run_id is not null), '{}') as evaluation_results
     from
-        run r
-        left join external_user eu on r.external_user_id = eu.id
-        left join run_parent_feedback_cache rpfc on r.id = rpfc.id
-        left join template_version tv on r.template_version_id = tv.id
-        left join template t on tv.template_id = t.id
-        left join evaluation_result_v2 er on r.id = er.run_id 
-        left join evaluator e on er.evaluator_id = e.id
+      run r
+      left join external_user eu on r.external_user_id = eu.id
+      left join run_parent_feedback_cache rpfc on r.id = rpfc.id
+      left join template_version tv on r.template_version_id = tv.id
+      left join template t on tv.template_id = t.id
+      left join evaluation_result_v2 er on r.id = er.run_id 
+      left join evaluator e on er.evaluator_id = e.id
     where
-        r.project_id in (select id from project where org_id = ${orgId})
-        and r.id = ${id}
+      r.project_id in (select id from project where org_id = ${orgId})
+      and r.id = ${id}
     group by
-        r.id,
-        eu.id
+      r.id,
+      eu.id
     `
 
   ctx.body = formatRun(row)

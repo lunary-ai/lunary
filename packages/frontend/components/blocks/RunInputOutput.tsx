@@ -12,7 +12,11 @@ import {
   Text,
 } from "@mantine/core"
 import { notifications, showNotification } from "@mantine/notifications"
-import { IconCheck, IconPencilShare } from "@tabler/icons-react"
+import {
+  IconBinaryTree2,
+  IconCheck,
+  IconPencilShare,
+} from "@tabler/icons-react"
 import Link from "next/link"
 import { hasAccess } from "shared"
 import SmartViewer from "../SmartViewer"
@@ -148,6 +152,7 @@ export default function RunInputOutput({
   withFeedback = false,
   withImportToDataset = false,
   withPlayground = true,
+  withOpenTrace = false,
   withShare = false,
   mutateLogs,
 }) {
@@ -200,6 +205,7 @@ export default function RunInputOutput({
                     }
                   />
                 </Group>
+
                 <Group>
                   {hasAccess(user.role, "logs", "update") && (
                     <Switch
@@ -325,8 +331,8 @@ export default function RunInputOutput({
                       })}
                   </Stack>
 
-                  {canEnablePlayground && (
-                    <Stack>
+                  <Group>
+                    {canEnablePlayground && (
                       <Button
                         variant="outline"
                         size="xs"
@@ -342,8 +348,22 @@ export default function RunInputOutput({
                           ? "Open template"
                           : "Open in Playground"}
                       </Button>
-                    </Stack>
-                  )}
+                    )}
+                    {run.traceId && withOpenTrace && (
+                      <Button
+                        variant="outline"
+                        color="yellow"
+                        size="xs"
+                        w="fit-content"
+                        display="inline"
+                        rightSection={<IconBinaryTree2 size="14" />}
+                        component={Link}
+                        href={`/traces/${run.traceId}`}
+                      >
+                        Open parent Trace
+                      </Button>
+                    )}
+                  </Group>
                 </Group>
               </Card>
             )}
