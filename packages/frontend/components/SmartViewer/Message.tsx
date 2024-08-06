@@ -442,7 +442,7 @@ export function ChatMessage({
 
   const color = getColorForRole(data?.role)
 
-  if (data.role === "AIMessageChunk") {
+  if (data?.role === "AIMessageChunk") {
     // Fix for wrong name passed down inside the langchain SDK
     data.role = "assistant"
   }
