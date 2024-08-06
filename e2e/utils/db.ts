@@ -52,3 +52,9 @@ export async function populateLogs() {
   ]
   await sql`insert into run ${sql(logs)}`
 }
+
+  export async function  getRecoveryToken(email: string) {
+  const [account] = await sql`
+    select recovery_token from account where email = ${email} `
+  return account.recoveryToken;
+}
