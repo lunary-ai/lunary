@@ -184,6 +184,9 @@ async function registerRunEvent(
       cost,
       metadata,
     }
+    if (!runToInsert.metadata) {
+      delete runToInsert.metadata
+    }
 
     if (input) {
       // in the case of agent_context, the input is sent as the end
