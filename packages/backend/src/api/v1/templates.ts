@@ -172,7 +172,7 @@ templates.post(
       id: z.coerce.number(),
     })
     const bodySchema = z.object({
-      content: z.array(z.any()),
+      content: z.any(),
       extra: z.any(),
       testValues: z.any(),
       isDraft: z.boolean(),
