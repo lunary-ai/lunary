@@ -19,7 +19,7 @@ users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
     timeZone: z.string().optional(),
     sortField: z.string().optional().default("createdAt"),
     sortDirection: z
-      .union([z.literal("acs"), z.literal("desc")])
+      .union([z.literal("asc"), z.literal("desc")])
       .optional()
       .default("desc"),
   })
