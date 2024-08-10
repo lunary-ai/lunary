@@ -44,7 +44,6 @@ export async function populateLogs() {
       cost: 3.75e-5,
       external_user_id: 91823,
       feedback: null,
-      sibling_run_id: null,
       template_version_id: null,
       runtime: "langchain-js",
       metadata: "{}",
