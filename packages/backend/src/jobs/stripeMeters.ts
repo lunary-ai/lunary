@@ -61,7 +61,7 @@ export default async function stripeCounters() {
         (item) => item.price.lookup_key === "team_seats",
       )
 
-      if (!seatItem) throw new Error("No team_seats item found")
+      if (!seatItem) return
 
       if (seatItem.quantity !== count) {
         await stripe.subscriptionItems.update(seatItem.id, {
