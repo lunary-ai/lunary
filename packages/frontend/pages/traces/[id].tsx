@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react"
-import { useRouter } from "next/router"
-
+import DurationBadge from "@/components/blocks/DurationBadge"
+import RunInputOutput from "@/components/blocks/RunInputOutput"
+import StatusBadge from "@/components/blocks/StatusBadge"
+import TokensBadge from "@/components/blocks/TokensBadge"
+import { useProjectSWR, useRun } from "@/utils/dataHooks"
+import { capitalize, formatCost } from "@/utils/format"
 import {
   Badge,
   Box,
   Card,
-  Flex,
-  Grid,
   Group,
   Loader,
   Stack,
@@ -14,15 +15,6 @@ import {
   ThemeIcon,
   Title,
 } from "@mantine/core"
-
-import DurationBadge from "@/components/blocks/DurationBadge"
-import TokensBadge from "@/components/blocks/TokensBadge"
-import StatusBadge from "@/components/blocks/StatusBadge"
-
-import { useProjectSWR, useRun } from "@/utils/dataHooks"
-import { capitalize, formatCost } from "@/utils/format"
-import RunInputOutput from "@/components/blocks/RunInputOutput"
-import { getColorForRunType } from "../../utils/colors"
 import {
   IconCloudDownload,
   IconCode,
@@ -32,6 +24,9 @@ import {
   IconRobot,
   IconTool,
 } from "@tabler/icons-react"
+import { useRouter } from "next/router"
+import { useEffect, useState } from "react"
+import { getColorForRunType } from "../../utils/colors"
 
 import RunsChat from "@/components/blocks/RunChat"
 
@@ -82,7 +77,6 @@ function TraceTree({
         <Box>
           {!isLastOfParent && (
             <svg
-              height="calc(100% + 3px)"
               width={20}
               strokeWidth={1}
               stroke="var(--mantine-color-gray-5)"
@@ -91,6 +85,7 @@ function TraceTree({
                 position: "absolute",
                 left: 1,
                 top: -3,
+                height: "calc(100% + 3px",
               }}
             >
               <line x1={10} y1="0" x2={10} y2="100%" />
@@ -109,11 +104,11 @@ function TraceTree({
             strokeLinecap="square"
             stroke="var(--mantine-color-gray-5)"
             fill="none"
-            stroke-linejoin="round"
+            strokeLinejoin="round"
           >
             <path
               d="M19 19h-6a8 8 0 0 1 -8 -8v-6"
-              vector-effect="non-scaling-stroke"
+              vectorEffect="non-scaling-stroke"
             />
           </svg>
 
@@ -233,7 +228,7 @@ export default function AgentRun({}) {
   const focusedRun = relatedRuns?.find((run) => run.id === focused)
 
   return (
-    <Stack gap="xl">
+    <Stack p="24px 24px 0 24px" h="100vh" gap="xl">
       <Title order={1}>
         {capitalize(run?.type)} Trace {run.name ? `(${run.name})` : ""}
       </Title>
@@ -255,8 +250,8 @@ export default function AgentRun({}) {
         )}
       </Group>
 
-      <Flex align="start" w="100%" style={{ gap: 20, wordBreak: "break-all" }}>
-        <Box flex={`0 0 600px`}>
+      <Group style={{ flex: 1, minHeight: 0 }}>
+        <Box style={{ flex: "0 0 600px", overflowY: "auto", height: "100%" }}>
           {relatedRuns && (
             <TraceTree
               isFirst
@@ -268,20 +263,23 @@ export default function AgentRun({}) {
             />
           )}
         </Box>
-        <Box flex={`1 1 400px`}>
-          <Card
-            withBorder
-            style={{
-              position: "sticky",
-              top: 85,
-              maxHeight: "calc(100vh - 220px)",
-              overflow: "auto",
-            }}
-          >
-            <RenderRun run={focusedRun} relatedRuns={relatedRuns} />
-          </Card>
+
+        <Box style={{ flex: "1 1 400px", overflowY: "auto", height: "100%" }}>
+          <Box p="md">
+            <Card
+              withBorder
+              style={{
+                position: "sticky",
+                top: 0,
+                maxHeight: "calc(100vh - 200px)",
+                overflow: "auto",
+              }}
+            >
+              <RenderRun run={focusedRun} relatedRuns={relatedRuns} />
+            </Card>
+          </Box>
         </Box>
-      </Flex>
+      </Group>
     </Stack>
   )
 }

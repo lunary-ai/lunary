@@ -1,5 +1,6 @@
-import { completeRunUsage } from "./countToken"
+import { completeRunUsageWithTimeout } from "./countToken"
 import sql from "./db"
+import { ProjectNotFoundError } from "./errors"
 
 export interface Event {
   type:
@@ -116,7 +117,7 @@ function cleanMetadata(object: any) {
   )
 }
 
-export const cleanEvent = async (event: any): Promise<Event> => {
+export async function cleanEvent(event: any): Promise<Event> {
   const { timestamp, runId, parentRunId, tags, name, ...rest } =
     recursiveToCamel(event)
 
@@ -128,16 +129,20 @@ export const cleanEvent = async (event: any): Promise<Event> => {
     console.error(event)
   }
 
-  return {
+  const cleanedRun = {
     ...rest,
     metadata: cleanMetadata(rest.metadata),
     name: typeof name === "string" ? name.replace("models/", "") : undefined,
     tags: typeof tags === "string" ? [tags] : tags,
-    tokensUsage: await completeRunUsage(event),
     runId: await ensureIsUUID(runId),
     parentRunId: await ensureIsUUID(parentRunId),
     timestamp: isoTimestamp,
   }
+
+  // Do it after because we need the sanitized runId/parentRunId
+  cleanedRun.tokensUsage = await completeRunUsageWithTimeout(cleanedRun)
+
+  return cleanedRun
 }
 
 export const clearUndefined = (obj: any): any =>
@@ -168,6 +173,12 @@ export const ingestChatEvent = async (
 
   if (typeof parentRunId === "undefined") {
     throw new Error("parentRunId is undefined")
+  }
+
+  const [projectExists] =
+    await sql`select exists(select 1 from project where id = ${projectId})`
+  if (!projectExists) {
+    throw new ProjectNotFoundError(projectId)
   }
 
   // Now you can safely use parentRunId in your
@@ -238,9 +249,6 @@ export const ingestChatEvent = async (
 
   if (previousRun) {
     // Those are computed columns, so we need to remove them
-    delete previousRun.inputText
-    delete previousRun.outputText
-    delete previousRun.errorText
     delete previousRun.duration
 
     if (isRetry) {

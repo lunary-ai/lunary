@@ -1,6 +1,7 @@
 import { checkIngestionRule } from "@/src/checks/runChecks"
 import { calcRunCost } from "@/src/utils/calcCost"
 import sql from "@/src/utils/db"
+import { DuplicateError, ProjectNotFoundError } from "@/src/utils/errors"
 import {
   CleanRun,
   Event,
@@ -63,6 +64,12 @@ async function registerRunEvent(
   let externalUserId
   // Only do on start event to save on DB calls and have correct lastSeen
   if (typeof userId === "string" && !["end", "error"].includes(eventName)) {
+    const [projectExists] =
+      await sql`select exists(select 1 from project where id = ${projectId})`
+    if (!projectExists) {
+      throw new ProjectNotFoundError(projectId)
+    }
+
     const [result] = await sql`
       insert into external_user ${sql(
         clearUndefined({
@@ -116,6 +123,14 @@ async function registerRunEvent(
   }
 
   if (eventName === "start") {
+    const [dbRun] = await sql`select * from run where id = ${runId}`
+
+    if (dbRun?.id === runId) {
+      throw new DuplicateError(
+        "Run with this ID already exists in the database.",
+      )
+    }
+
     await sql`
       insert into run ${sql(
         clearUndefined({
@@ -140,10 +155,10 @@ async function registerRunEvent(
     let cost = undefined
 
     const [runData] = await sql`
-        select created_at, input, params, name from run where id = ${runId}
+        select created_at, input, params, name, metadata from run where id = ${runId}
       `
-    if (typeof runData.metadata === "object") {
-      metadata = { ...runData.metadata, metadata }
+    if (typeof runData?.metadata === "object" && metadata) {
+      metadata = { ...runData.metadata, ...metadata }
     }
     if (type === "llm") {
       cost = await calcRunCost({
@@ -156,6 +171,10 @@ async function registerRunEvent(
       })
     }
 
+    if (typeof output === "boolean") {
+      output = JSON.stringify(output)
+    }
+
     const runToInsert = {
       endedAt: timestamp,
       output: output,
@@ -164,6 +183,9 @@ async function registerRunEvent(
       completionTokens: tokensUsage?.completion,
       cost,
       metadata,
+    }
+    if (!runToInsert.metadata) {
+      delete runToInsert.metadata
     }
 
     if (input) {
@@ -297,7 +319,7 @@ export async function processEventsIngestion(
       if (cleanedEvent.event === "end") {
         const [dbRun] =
           await sql`select * from run where id = ${cleanedEvent.runId}`
-        if (dbRun.input === "__NOT_INGESTED__") {
+        if (dbRun?.input === "__NOT_INGESTED__") {
           passedIngestionRule = false
         }
       }
@@ -313,21 +335,26 @@ export async function processEventsIngestion(
         id: event.runId,
         success: true,
       })
-    } catch (e: any) {
-      Sentry.withScope((scope) => {
-        scope.setExtras({ event: JSON.stringify(event) })
-        Sentry.captureException(e)
-      })
+    } catch (error: unknown) {
+      if (
+        !(error instanceof DuplicateError) &&
+        !(error instanceof ProjectNotFoundError)
+      ) {
+        Sentry.withScope((scope) => {
+          scope.setExtras({ event: JSON.stringify(event) })
+          Sentry.captureException(error)
+        })
+      }
 
       console.error(`Error ingesting event`, {
-        error: e,
+        error: error,
         event,
       })
 
       results.push({
         id: event.runId,
         success: false,
-        error: e.message,
+        error: error.message,
       })
     }
   }

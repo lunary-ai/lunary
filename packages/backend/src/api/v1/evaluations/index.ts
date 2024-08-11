@@ -201,8 +201,6 @@ evaluations.post(
       type: "llm",
       input,
       output,
-      inputText: JSON.stringify(input),
-      outputText: JSON.stringify(output),
       status: "success",
       // params: extra,
       name: model || "custom",

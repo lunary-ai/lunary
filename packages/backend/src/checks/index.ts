@@ -461,7 +461,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   {
     id: "search",
     sql: ({ query }) =>
-      sql`(r.input_text ilike ${`%${query}%`} or r.output_text ilike ${`%${query}%`})`,
+      sql`(r.input::text ilike ${`%${query}%`} or r.output::text ilike ${`%${query}%`})`,
   },
   {
     id: "string",
@@ -488,23 +488,12 @@ export const CHECK_RUNNERS: CheckRunner[] = [
         textParam = "%" + textParam + "%"
       }
 
-      // problem for the following: output_text is stringified JSON, so contains starts with JSON
-      // else if (type === "starts") {
-      //   operator = caseSensitive ? sql`LIKE` : sql`ILIKE`
-      //   textParam = text + "%"
-      // } else if (type === "ends") {
-      //   operator = caseSensitive ? sql`LIKE` : sql`ILIKE`
-      //   textParam = "%" + text
-      // } else if (type === "equals") {
-      //   operator = sql`=`
-      // }
-
-      let field = sql`input_text || output_text`
+      let field = sql`(input::text || output::text)`
 
       if (fields === "input") {
-        field = sql`input_text`
+        field = sql`input::text`
       } else if (fields === "output") {
-        field = sql`output_text`
+        field = sql`output::text`
       }
 
       return sql`${field} ${operator} ${textParam}`

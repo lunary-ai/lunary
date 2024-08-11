@@ -33,9 +33,6 @@ export interface Run {
   isPublic: boolean
   siblingRunId?: string
   templateVersionId?: number
-  inputText?: string
-  outputText?: string
-  errorText?: string
   runtime?: string
   metadata?: Record<string, any>
   ipAddresses?: string[]

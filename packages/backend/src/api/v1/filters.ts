@@ -10,12 +10,16 @@ filters.get("/models", async (ctx: Context) => {
   const { projectId } = ctx.state
 
   const rows = await sql`
-    select
-      name
+    select distinct
+      r.name
     from
-      model_name_cache
+      run r
     where
-      project_id = ${projectId}
+      r.project_id = ${projectId} 
+      and r.type = 'llm'
+      and r.name is not null
+    order by
+      name;
   `
 
   ctx.body = rows.map((row) => row.name)
@@ -25,51 +29,35 @@ filters.get("/tags", async (ctx: Context) => {
   const { projectId } = ctx.state
 
   const rows = await sql`
-    select
-      tag
+    select distinct
+      unnest(tags) as tag 
     from
-      tag_cache
+      run
     where
-      project_id = ${projectId}
+      project_id = ${projectId} 
   `
 
   ctx.body = rows.map((row) => row.tag)
 })
 
-filters.get("/feedback", async (ctx: Context) => {
-  const { projectId } = ctx.state
-
-  const rows = await sql`
-    select
-      feedback
-    from
-      feedback_cache
-    where
-      project_id = ${projectId}
-  `
-
-  ctx.body = rows.map((row) => row.feedback) // stringify so  it works with selected
-})
-
-// get all unique keys in metadata table
 filters.get("/metadata", async (ctx: Context) => {
   const { projectId } = ctx.state
-  // show the metadatas relevant to the type
-  const { type } = ctx.query
 
   const rows = await sql`
-    select
-      key
+    select distinct
+      jsonb_object_keys(metadata) as key
     from
-      metadata_cache
+      run
     where
-      project_id = ${projectId}
+      project_id = ${projectId} 
+      and metadata is not null
+    order by
+      key;
   `
 
   ctx.body = rows.map((row) => row.key)
 })
 
-// get external users
 filters.get("/users", async (ctx) => {
   const { projectId } = ctx.state
 
