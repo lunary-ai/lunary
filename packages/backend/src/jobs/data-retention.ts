@@ -1,7 +1,11 @@
+import config from "../utils/config"
 import sql from "../utils/db"
 import * as Sentry from "@sentry/node"
 
 export default async function purgeRuns() {
+  if (config.IS_SELF_HOSTED) {
+    return
+  }
   try {
     const deletedRunsCount = await sql.begin(async (sql) => {
       await sql`create temporary table runs_to_delete_temp (run_id uuid)`
