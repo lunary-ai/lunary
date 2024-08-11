@@ -80,8 +80,6 @@ export async function runEval({
         type: "llm",
         input,
         output,
-        inputText: JSON.stringify(input),
-        outputText: JSON.stringify(output),
         status: "success",
         params: provider.config,
         name: provider.model,
