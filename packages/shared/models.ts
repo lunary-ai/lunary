@@ -1,6 +1,6 @@
 export const MODELS = [
   {
-    id: "gpt-4o",
+    id: "gpt-4o-2024-08-06",
     name: "gpt-4o",
     provider: "openai",
   },
