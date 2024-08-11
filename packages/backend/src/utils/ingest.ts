@@ -249,9 +249,6 @@ export const ingestChatEvent = async (
 
   if (previousRun) {
     // Those are computed columns, so we need to remove them
-    delete previousRun.inputText
-    delete previousRun.outputText
-    delete previousRun.errorText
     delete previousRun.duration
 
     if (isRetry) {
