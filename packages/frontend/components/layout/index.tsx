@@ -12,6 +12,7 @@ import { useAuth } from "@/utils/auth"
 import { useOrg, useUser } from "@/utils/dataHooks"
 import { ModalsProvider } from "@mantine/modals"
 import UpgradeModal from "./UpgradeModal"
+import { showErrorNotification } from "@/utils/errors"
 
 export default function Layout({ children }: { children: ReactNode }) {
   const router = useRouter()
@@ -19,7 +20,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const { org } = useOrg()
 
   const colorScheme = useComputedColorScheme()
-  const { isSignedIn } = useAuth()
+  const { isSignedIn, signOut } = useAuth()
 
   const isAuthPage = !![
     "/login",
@@ -56,6 +57,20 @@ export default function Layout({ children }: { children: ReactNode }) {
       return
     }
   }, [isSignedIn])
+
+  useEffect(() => {
+    if (isSignedIn && org?.license?.expiresAt) {
+      const expiresAt = new Date(org.license.expiresAt)
+      if (expiresAt < new Date()) {
+        showErrorNotification(
+          "License expired",
+          "Please renew your license to access Lunary.",
+        )
+        signOut()
+      } else {
+      }
+    }
+  }, [isSignedIn, org])
 
   const isPromptPage = router.pathname.startsWith("/prompt")
   const isTracePage = router.pathname.startsWith("/traces")
