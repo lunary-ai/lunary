@@ -1,0 +1,1 @@
+alter type user_role add value 'analytics';
