@@ -1,8 +1,12 @@
-import { useProjectMutation, useProjectSWR } from "."
+import { hasAccess } from "shared"
+import { useProjectMutation, useProjectSWR, useUser } from "."
 import { fetcher } from "../fetcher"
 
 export function useViews() {
-  const { data, isLoading, mutate } = useProjectSWR(`/views`)
+  const { user } = useUser()
+  const { data, isLoading, mutate } = useProjectSWR(
+    hasAccess(user?.role, "logs", "list") && `/views`,
+  )
 
   const { trigger: insert, isMutating: isInserting } = useProjectMutation(
     `/views`,

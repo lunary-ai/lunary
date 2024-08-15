@@ -9,35 +9,34 @@ import {
   Group,
   Loader,
   Popover,
-  SegmentedControl,
   Stack,
   Switch,
   Tabs,
   Text,
 } from "@mantine/core"
 import { NextSeo } from "next-seo"
-import Router from "next/router"
+import Router, { useRouter } from "next/router"
 
 import RenamableField from "@/components/blocks/RenamableField"
-import CheckPicker from "@/components/checks/Picker"
 import { SettingsCard } from "@/components/blocks/SettingsCard"
-import {
-  IconCheck,
-  IconPencil,
-  IconFilter,
-  IconRefreshAlert,
-  IconIdBadge,
-} from "@tabler/icons-react"
+import CheckPicker from "@/components/checks/Picker"
+import config from "@/utils/config"
+import { useOrg, useProject, useProjectRules, useUser } from "@/utils/dataHooks"
 import errorHandler from "@/utils/errors"
 import { fetcher } from "@/utils/fetcher"
 import { modals } from "@mantine/modals"
 import { notifications } from "@mantine/notifications"
-import { useOrg, useProject, useProjectRules, useUser } from "@/utils/dataHooks"
+import {
+  IconCheck,
+  IconFilter,
+  IconIdBadge,
+  IconPencil,
+  IconRefreshAlert,
+} from "@tabler/icons-react"
+import Link from "next/link"
 import { useEffect, useState } from "react"
 import { CheckLogic, hasAccess } from "shared"
 import useSWR from "swr"
-import config from "@/utils/config"
-import Link from "next/link"
 
 function Keys() {
   const [regenerating, setRegenerating] = useState(false)
@@ -276,6 +275,7 @@ export default function AppAnalytics() {
     addSmartDataRule,
     smartDataRuleLoading,
   } = useProject()
+  const router = useRouter()
 
   const { user } = useUser()
 
@@ -283,6 +283,16 @@ export default function AppAnalytics() {
   const { data: projectUsage, isLoading: projectUsageLoading } = useSWR(
     project?.id && org && `/orgs/${org.id}/usage?projectId=${project?.id}`,
   )
+
+  useEffect(() => {
+    if (!hasAccess(user?.role, "settings", "read")) {
+      router.push("/analytics")
+    }
+  }, [user.role])
+
+  if (projectUsageLoading || !user.role) {
+    return <Loader />
+  }
 
   return (
     <Container className="unblockable">

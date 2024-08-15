@@ -11,6 +11,8 @@ export type ResourceName =
   | "datasets"
   | "checklists"
   | "evaluations"
+  | "settings"
+
 export type Role = "owner" | "admin" | "member" | "viewer" | "billing"
 export type Action =
   | "create"
@@ -116,6 +118,13 @@ export const roles: Record<
         list: true,
         run: true,
       },
+      settings: {
+        create: true,
+        read: true,
+        update: true,
+        delete: true,
+        list: true,
+      },
     },
   },
   admin: {
@@ -202,6 +211,13 @@ export const roles: Record<
         list: true,
         run: true,
       },
+      settings: {
+        create: true,
+        read: true,
+        update: true,
+        delete: true,
+        list: true,
+      },
     },
   },
   member: {
@@ -285,6 +301,13 @@ export const roles: Record<
         list: true,
         run: true,
       },
+      settings: {
+        create: true,
+        read: true,
+        update: true,
+        delete: true,
+        list: true,
+      },
     },
   },
   viewer: {
@@ -360,6 +383,10 @@ export const roles: Record<
         list: true,
         run: false,
       },
+      settings: {
+        read: true,
+        list: true,
+      },
     },
   },
   prompt_editor: {
@@ -391,6 +418,21 @@ export const roles: Record<
         read: true,
         update: false,
         delete: false,
+        list: true,
+      },
+    },
+  },
+  analytics: {
+    value: "analytics",
+    name: "Analytics Viewer",
+    description: "Can only access the Analytics page",
+    permissions: {
+      analytics: { read: true },
+      projects: {
+        read: true,
+        list: true,
+      },
+      users: {
         list: true,
       },
     },
