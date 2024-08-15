@@ -54,6 +54,7 @@ import {
   useProject,
   useProjectInfiniteSWR,
   useRun,
+  useUser,
 } from "@/utils/dataHooks"
 import { fetcher } from "@/utils/fetcher"
 import { formatDateTime } from "@/utils/format"
@@ -70,7 +71,7 @@ import { useRouter } from "next/router"
 
 import IconPicker from "@/components/blocks/IconPicker"
 import { useEvaluators } from "@/utils/dataHooks/evaluators"
-import { deserializeLogic, serializeLogic } from "shared"
+import { deserializeLogic, hasAccess, serializeLogic } from "shared"
 import { useSortParams } from "@/utils/hooks"
 
 export const defaultColumns = {
@@ -174,6 +175,7 @@ const DEFAULT_CHECK = ["AND"]
 
 export default function Logs() {
   const router = useRouter()
+  const { user } = useUser()
   const { projectId } = useContext(ProjectContext)
   const { project, isLoading: projectLoading, setProjectId } = useProject()
   const { org } = useOrg()
@@ -233,6 +235,16 @@ export default function Logs() {
   } = useProjectInfiniteSWR(`/runs?${serializedChecks}${sortParams}`)
 
   const { run: selectedRun, loading: runLoading } = useRun(selectedRunId)
+
+  useEffect(() => {
+    if (!hasAccess(user?.role, "settings", "read")) {
+      router.push("/analytics")
+    }
+  }, [user.role])
+
+  if (!user.role) {
+    return <Loader />
+  }
 
   useEffect(() => {
     const newColumns = { ...allColumns }

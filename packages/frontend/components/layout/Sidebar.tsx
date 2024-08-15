@@ -485,14 +485,16 @@ export default function Sidebar() {
                 </Combobox.Footer>
               </Combobox.Dropdown>
             </Combobox>
-            <ActionIcon
-              variant="default"
-              size="sm"
-              component={Link}
-              href="/settings"
-            >
-              <IconSettings size={14} stroke={1} />
-            </ActionIcon>
+            {hasAccess(user.role, "billing", "read") && (
+              <ActionIcon
+                variant="default"
+                size="sm"
+                component={Link}
+                href="/settings"
+              >
+                <IconSettings size={14} stroke={1} />
+              </ActionIcon>
+            )}
           </Group>
 
           {user &&
@@ -570,10 +572,7 @@ export default function Sidebar() {
               <Menu closeOnItemClick={false}>
                 <Menu.Target data-testid="account-sidebar-item">
                   <ActionIcon variant="subtle" radius="xl" size={32}>
-                    <UserAvatar
-                      size={26}
-                      profile={user}
-                    />
+                    <UserAvatar size={26} profile={user} />
                   </ActionIcon>
                 </Menu.Target>
                 <Menu.Dropdown>
