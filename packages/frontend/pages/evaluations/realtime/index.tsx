@@ -37,50 +37,52 @@ const FEATURE_LIST = [
 ]
 
 export default function RealtimeEvaluators() {
-  const { org } = useOrg()
   const router = useRouter()
   const { evaluators, isLoading } = useEvaluators()
+  const { org } = useOrg()
 
   if (isLoading) {
     return <Loader />
   }
 
-  // return (
-  //   <Paywall
-  //     plan="enterprise"
-  //     feature="Realtime Evaluations"
-  //     Icon={IconActivityHeartbeat}
-  //     p="xl"
-  //     enabled={!org.license.realtimeEvalsEnabled}
-  //     description="Run evaluations on your production data in real-time."
-  //     list={FEATURE_LIST}
-  //   >
-  //     <Container>
-  //       <Stack>
-  //         <Group align="center" justify="space-between">
-  //           <Group align="center">
-  //             <Title>Realtime Evaluations</Title>
-  //             <Badge variant="teal" color="violet">
-  //               Enteprise
-  //             </Badge>
-  //           </Group>
+  if (org?.plan === "free") {
+    return (
+      <Paywall
+        plan="enterprise"
+        feature="Realtime Evaluations"
+        Icon={IconActivityHeartbeat}
+        p="xl"
+        enabled={!org.license.realtimeEvalsEnabled}
+        description="Run evaluations on your production data in real-time."
+        list={FEATURE_LIST}
+      >
+        <Container>
+          <Stack>
+            <Group align="center" justify="space-between">
+              <Group align="center">
+                <Title>Realtime Evaluations</Title>
+                <Badge variant="teal" color="violet">
+                  Enteprise
+                </Badge>
+              </Group>
 
-  //           <Group>
-  //             <Button variant="default" leftSection={<IconPlus size={12} />}>
-  //               New
-  //             </Button>
-  //           </Group>
-  //         </Group>
+              <Group>
+                <Button variant="default" leftSection={<IconPlus size={12} />}>
+                  New
+                </Button>
+              </Group>
+            </Group>
 
-  //         <Text size="lg" mb="md">
-  //           Run evaluations on your production data in real-time. They can be
-  //           used to enrich your data with additional information, such as
-  //           sentiment analysis, topic recognition, and more.
-  //         </Text>
-  //       </Stack>
-  //     </Container>
-  //   </Paywall>
-  // )
+            <Text size="lg" mb="md">
+              Run evaluations on your production data in real-time. They can be
+              used to enrich your data with additional information, such as
+              sentiment analysis, topic recognition, and more.
+            </Text>
+          </Stack>
+        </Container>
+      </Paywall>
+    )
+  }
 
   return (
     <Empty
