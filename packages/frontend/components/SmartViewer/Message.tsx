@@ -1,4 +1,4 @@
-import { getColorForRole, getPIIColor } from "@/utils/colors"
+import { getColorForRole } from "@/utils/colors"
 import {
   ActionIcon,
   Box,
@@ -14,8 +14,8 @@ import {
   TextInput,
   Textarea,
   ThemeIcon,
-  useComputedColorScheme,
   Tooltip,
+  useComputedColorScheme,
 } from "@mantine/core"
 import {
   IconInfoCircle,
@@ -31,9 +31,9 @@ import classes from "./index.module.css"
 
 import { useEffect, useMemo } from "react"
 
-import { openConfirmModal } from "@mantine/modals"
+import { renderSentimentEnrichment2 } from "@/utils/enrichment"
 import { getFlagEmoji, getLanguageName } from "@/utils/format"
-import { renderSentimentEnrichment } from "@/utils/enrichment"
+import { openConfirmModal } from "@mantine/modals"
 import HighlightPii from "./HighlightPii"
 
 const ghostTextAreaStyles = {
@@ -526,7 +526,11 @@ export function ChatMessage({
             </Text>
           )}
           <Group>
-            {renderSentimentEnrichment(sentiment?.score)}
+            {sentiment &&
+              renderSentimentEnrichment2(
+                sentiment?.score,
+                sentiment?.subjectivity,
+              )}
             {language && (
               <Tooltip
                 label={`${getLanguageName(language.isoCode)} (${Number(language.confidence.toFixed(3))})`}

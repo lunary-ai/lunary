@@ -245,7 +245,7 @@ runs.get("/", async (ctx: Context) => {
 
   const rows = await sql`
     with runs as (
-    select
+      select distinct
         r.*,
         eu.id as user_id,
         eu.external_id as user_external_id,
@@ -270,8 +270,8 @@ runs.get("/", async (ctx: Context) => {
         ${sql.unsafe(orderByClause)}  
     limit ${exportType ? 10000 : Number(limit)}
     offset ${Number(page) * Number(limit)}
-),
-evaluation_results as (
+  ),
+  evaluation_results as (
     select
         r.id,
         coalesce(array_agg(
@@ -290,13 +290,14 @@ evaluation_results as (
     left join evaluation_result_v2 er on r.id = er.run_id
     left join evaluator e on er.evaluator_id = e.id
     group by r.id
-)
-select
+  )
+  select
     r.*,
     er.evaluation_results
-from
-      runs r
-      left join evaluation_results er on r.id = er.id;
+  from
+    runs r
+    left join evaluation_results er on r.id = er.id
+  
   `
 
   const runs = rows.map(formatRun)
@@ -306,20 +307,33 @@ from
   }
 
   const total = await sql`
-    select 
-      count(*) as count
-    from 
-      public.run r
-      left join external_user eu on r.external_user_id = eu.id
-      left join run_parent_feedback_cache rpfc on r.id = rpfc.id
-      left join template_version tv on r.template_version_id = tv.id
-      left join template t on tv.template_id = t.id
-      left join evaluation_result_v2 er on r.id = er.run_id 
-      left join evaluator e on er.evaluator_id = e.id
-    where 
-      r.project_id = ${projectId}
-      ${parentRunCheck}
-      and (${filtersQuery})
+    with runs as (
+      select distinct on (r.id)
+        r.*,
+        eu.id as user_id,
+        eu.external_id as user_external_id,
+        eu.created_at as user_created_at,
+        eu.last_seen as user_last_seen,
+        eu.props as user_props,
+        t.slug as template_slug,
+        rpfc.feedback as parent_feedback
+    from
+        public.run r
+        left join external_user eu on r.external_user_id = eu.id
+        left join run_parent_feedback_cache rpfc on r.id = rpfc.id
+        left join template_version tv on r.template_version_id = tv.id
+        left join template t on tv.template_id = t.id
+        left join evaluation_result_v2 er on r.id = er.run_id
+        left join evaluator e on er.evaluator_id = e.id
+    where
+        r.project_id = ${projectId}
+        ${parentRunCheck}
+        and (${filtersQuery})
+    )
+    select
+      count(*) 
+    from
+      runs;
   `
 
   ctx.body = {
@@ -350,27 +364,34 @@ runs.get("/count", async (ctx: Context) => {
   }
 
   const [{ count }] = await sql`
-    with runs as (select
+   with runs as (
+      select distinct on (r.id)
+        r.*,
+        eu.id as user_id,
+        eu.external_id as user_external_id,
+        eu.created_at as user_created_at,
+        eu.last_seen as user_last_seen,
+        eu.props as user_props,
+        t.slug as template_slug,
+        rpfc.feedback as parent_feedback
+    from
+        public.run r
+        left join external_user eu on r.external_user_id = eu.id
+        left join run_parent_feedback_cache rpfc on r.id = rpfc.id
+        left join template_version tv on r.template_version_id = tv.id
+        left join template t on tv.template_id = t.id
+        left join evaluation_result_v2 er on r.id = er.run_id
+        left join evaluator e on er.evaluator_id = e.id
+    where
+        r.project_id = ${projectId}
+        ${parentRunCheck}
+        and (${filtersQuery})
+    )
+    select
       count(*) 
     from
-      public.run r
-      left join external_user eu on r.external_user_id = eu.id
-      left join run_parent_feedback_cache rpfc on r.id = rpfc.id
-      left join template_version tv on r.template_version_id = tv.id
-      left join template t on tv.template_id = t.id
-      left join evaluation_result_v2 er on r.id = er.run_id 
-      left join evaluator e on er.evaluator_id = e.id
-    where
-      r.project_id = ${projectId}
-      ${parentRunCheck}
-      and (${filtersQuery})
-    group by
-      r.id,
-      eu.id,
-      t.slug,
-      rpfc.feedback)
-    select count(*) from runs
-  `
+      runs;
+`
 
   ctx.body = count
 })
