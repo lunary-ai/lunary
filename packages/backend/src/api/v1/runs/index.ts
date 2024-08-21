@@ -245,7 +245,7 @@ runs.get("/", async (ctx: Context) => {
 
   const rows = await sql`
     with runs as (
-      select
+      select distinct
         r.*,
         eu.id as user_id,
         eu.external_id as user_external_id,
@@ -291,12 +291,13 @@ runs.get("/", async (ctx: Context) => {
     left join evaluator e on er.evaluator_id = e.id
     group by r.id
   )
-  select distinct on (r.id)
+  select
     r.*,
     er.evaluation_results
   from
     runs r
-    left join evaluation_results er on r.id = er.id;
+    left join evaluation_results er on r.id = er.id
+  
   `
 
   const runs = rows.map(formatRun)
