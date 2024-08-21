@@ -267,8 +267,14 @@ export function renderSentimentEnrichment(data?: EnrichmentData) {
 
   const { input } = data
 
-  // get last input item for the quick glance
   const lastInput = input[input.length - 1]
+  if (
+    !lastInput &&
+    typeof lastInput === "object" &&
+    !Array.isArray(lastInput)
+  ) {
+    return null
+  }
   const { score, subjectivity } = lastInput
 
   const [opened, { close, open }] = useDisclosure(false)
