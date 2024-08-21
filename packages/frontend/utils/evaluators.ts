@@ -1,6 +1,7 @@
 import {
   IconBadge,
   IconBiohazard,
+  IconCheck,
   IconEyeCheck,
   IconIdBadge,
   IconLanguage,
@@ -100,6 +101,15 @@ const EVALUATOR_TYPES = {
         width: 300,
       },
     ],
+  },
+  factualness: {
+    id: "factualness",
+    name: "Factualness",
+    icon: IconCheck,
+    color: "blue",
+    description:
+      "Checks if the LLM's response is relevant given the context and the prompt.",
+    params: [],
   },
   summarization: {
     id: "summarization",
