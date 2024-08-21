@@ -43,21 +43,30 @@ function renderLanguageEnrichment(languageDetections: LanguageDetectionResult) {
   ) {
     return ""
   }
-  const languages = languageDetections.output.map((detectionResult) => {
-    if (detectionResult === null) {
+
+  languageDetections = [
+    ...new Set([
+      ...languageDetections.input.map((lang) => lang?.isoCode),
+      ...languageDetections.output.map((lang) => lang?.isoCode),
+      ...languageDetections.error.map((lang) => lang?.isoCode),
+    ]),
+  ]
+
+  const languages = languageDetections.map((isoCode) => {
+    if (!isoCode) {
       return ""
     }
 
     const languageNames = new Intl.DisplayNames(["en"], { type: "language" })
 
     return {
-      emoji: getFlagEmoji(detectionResult.isoCode),
-      name: languageNames.of(detectionResult.isoCode),
+      emoji: getFlagEmoji(isoCode),
+      name: languageNames.of(isoCode),
     }
   }) as { emoji: string; name: string }[]
 
   return (
-    <Group gap="xs" justify="center">
+    <Group gap="0" justify="center">
       {languages.map(({ emoji, name }) => (
         <Tooltip key={name} label={name}>
           <Text size="lg">{emoji}</Text>
@@ -261,24 +270,80 @@ function renderToneEnrichment(data: EnrichmentData) {
 }
 
 export function renderSentimentEnrichment(data?: EnrichmentData) {
+  const [opened, { close, open }] = useDisclosure(false)
+
   if (!data || !data.input || data.input.length === 0) {
     return null
   }
 
-  const { input } = data
+  const sentiments = [...data.input, ...data.output].map((sentiment) => {
+    let emoji, type
+    if (
+      !sentiment &&
+      typeof sentiment === "object" &&
+      !Array.isArray(sentiment)
+    ) {
+      emoji = <IconMoodNeutral color="gray" />
+      type = "neutral"
+    } else {
+      const { score, subjectivity } = sentiment
 
-  // get last input item for the quick glance
-  const lastInput = input[input.length - 1]
-  const { score, subjectivity } = lastInput
+      if (typeof score !== "number" || isNaN(score) || subjectivity < 0.4) {
+        emoji = <IconMoodNeutral color="gray" />
+        type = "neutral"
+      } else {
+        if (score > 0.2) {
+          emoji = <IconMoodSmile color="teal" />
+          type = "positive"
+        } else if (score < -0.2) {
+          console.log(score, subjectivity)
+          emoji = <IconMoodSad color="crimson" />
+          type = "negative"
+        } else {
+          emoji = <IconMoodNeutral color="gray" />
+          type = "neutral"
+        }
+      }
+    }
+    return {
+      emoji,
+      type,
+    }
+  })
 
-  const [opened, { close, open }] = useDisclosure(false)
-  let emoji
-  let type
-
-  if (typeof score !== "number" || isNaN(score) || subjectivity < 0.4) {
-    return null
+  let uniqueSentiments = Array.from(
+    new Map(sentiments.map((item) => [item.type, item])).values(),
+  )
+  const hasNonNeutral = uniqueSentiments.some(
+    (sentiment) => sentiment.type !== "neutral",
+  )
+  if (hasNonNeutral) {
+    uniqueSentiments = uniqueSentiments.filter(
+      (sentiment) => sentiment.type !== "neutral",
+    )
   }
 
+  return (
+    <ErrorBoundary>
+      <Group gap="0">
+        {uniqueSentiments.map((sentiment) => (
+          <Box onMouseEnter={open} onMouseLeave={close}>
+            {sentiment.emoji}
+          </Box>
+        ))}
+      </Group>
+    </ErrorBoundary>
+  )
+}
+
+// TODO: refactor with above
+export function renderSentimentEnrichment2(
+  score: number,
+  subjectivity: number,
+) {
+  const [opened, { close, open }] = useDisclosure(false)
+
+  let type, emoji
   if (score > 0.2) {
     emoji = <IconMoodSmile color="teal" />
     type = "positive"
