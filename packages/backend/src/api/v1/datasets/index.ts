@@ -176,13 +176,34 @@ datasets.get(
   checkAccess("datasets", "read"),
   async (ctx: Context) => {
     const { id } = ctx.params as { id: string }
+    const { projectId } = ctx.state
 
     const [prompt] = await sql`
-      select * from dataset_prompt where id = ${id} order by created_at asc
+      select
+        dp.*
+      from
+        dataset_prompt dp
+        left join dataset d on dp.dataset_id = d.id
+      where
+        dp.id = ${id}
+        and d.project_id = ${projectId} 
+      order by
+        d.created_at asc
     `
 
+    if (!prompt) {
+      ctx.throw(403, "You do not have access to this ressource.")
+    }
+
     const variations = await sql`
-      select * from dataset_prompt_variation where prompt_id = ${id} order by created_at asc
+      select 
+        * 
+      from 
+        dataset_prompt_variation 
+      where 
+        prompt_id = ${id} 
+      order by 
+        created_at asc
     `
 
     prompt.variations = variations
@@ -256,10 +277,19 @@ datasets.get(
   checkAccess("datasets", "read"),
   async (ctx: Context) => {
     const { id } = ctx.params
+    const { projectId } = ctx.state
 
     const [variation] = await sql`
-    select * from dataset_prompt_variation where id = ${id}
-  `
+      select
+        dpv.*
+      from
+        dataset_prompt_variation dpv
+        left join dataset_prompt dp on dpv.prompt_id = dp.id
+        left join dataset d on dp.dataset_id = d.id
+      where
+        dpv.id = ${id} 
+        and d.project_id = ${projectId} 
+    `
 
     if (!variation) {
       ctx.throw(404, "Variation not found")
@@ -274,21 +304,22 @@ datasets.delete(
   checkAccess("datasets", "update"),
   async (ctx: Context) => {
     const { id: variationId } = ctx.params
+    const { projectId } = ctx.state
 
     const [promptVariation] = await sql`
       select
-        *
+        dpv.*
       from
         dataset_prompt_variation dpv
         left join dataset_prompt dp on dpv.prompt_id = dp.id
         left join dataset d on dp.dataset_id = d.id
-        left join project p on d.project_id = p.id
       where
-        p.org_id = ${ctx.state.orgId} 
-        and dpv.id = ${variationId}
+        dpv.id = ${variationId} 
+        and d.project_id = ${projectId} 
     `
+
     if (!promptVariation) {
-      ctx.throw(401, "You do not have access to this ressource.")
+      ctx.throw(403, "You do not have access to this ressource.")
     }
 
     await sql`delete from dataset_prompt_variation where id = ${variationId}`
@@ -302,12 +333,29 @@ datasets.patch(
   checkAccess("datasets", "update"),
   async (ctx: Context) => {
     const { variationId } = ctx.params
+    const { projectId } = ctx.state
     const { variables, idealOutput } = ctx.request.body as {
       variables: any
       idealOutput: string
     }
 
-    const [variation] = await sql`update dataset_prompt_variation set
+    const [variation] = await sql`
+      select
+        dpv.*
+      from
+        dataset_prompt_variation dpv
+        left join dataset_prompt dp on dpv.prompt_id = dp.id
+        left join dataset d on dp.dataset_id = d.id
+      where
+        dpv.id = ${variationId} 
+        and d.project_id = ${projectId} 
+    `
+
+    if (!variation) {
+      ctx.throw(403, "You do not have access to this ressource.")
+    }
+
+    const [updatedVariation] = await sql`update dataset_prompt_variation set
     ${sql(
       clearUndefined({
         variables,
@@ -318,7 +366,7 @@ datasets.patch(
     returning *
   `
 
-    ctx.body = variation
+    ctx.body = updatedVariation
   },
 )
 
@@ -326,10 +374,26 @@ datasets.post(
   "/variations",
   checkAccess("datasets", "update"),
   async (ctx: Context) => {
+    const { projectId } = ctx.state
     const { promptId, variables, idealOutput } = ctx.request.body as {
       promptId: string
       variables: any
       idealOutput: string
+    }
+
+    const [dataset] = await sql`
+      select
+        d.*
+      from 
+        dataset_prompt dp 
+        left join dataset d on dp.dataset_id = d.id
+      where
+        dp.id = ${promptId} 
+        and d.project_id = ${projectId}
+    `
+
+    if (!dataset) {
+      ctx.throw(403, "You do not have access to this ressource.")
     }
 
     const [variation] = await sql`insert into dataset_prompt_variation
