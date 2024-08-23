@@ -105,6 +105,7 @@ const EVALUATOR_TYPES = {
   factualness: {
     id: "factualness",
     name: "Factualness",
+    soon: true,
     icon: IconCheck,
     color: "blue",
     description:
