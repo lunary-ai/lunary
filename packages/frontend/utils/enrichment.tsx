@@ -296,7 +296,6 @@ export function renderSentimentEnrichment(data?: EnrichmentData) {
           emoji = <IconMoodSmile color="teal" />
           type = "positive"
         } else if (score < -0.2) {
-          console.log(score, subjectivity)
           emoji = <IconMoodSad color="crimson" />
           type = "negative"
         } else {
