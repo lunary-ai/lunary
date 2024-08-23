@@ -193,7 +193,6 @@ export default function IconPicker({ value, onChange, ...props }) {
     <ActionIcon
       key={index}
       onClick={() => {
-        console.log(IconObj.name)
         onChange(IconObj.name)
       }}
       variant="light"

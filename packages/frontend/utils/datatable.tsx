@@ -46,7 +46,6 @@ export function durationColumn(unit = "s"): ColumnDef<any> {
       if (value === 0) {
         return "0.00s"
       } else if (unit === "s") {
-        // console.log(props.getValue())
         return `${(props.getValue() / 1000).toFixed(2)}s`
       } else if (unit === "full") {
         console.log(props.getValue())
