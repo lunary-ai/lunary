@@ -104,8 +104,6 @@ function parseAttributes(attributes: any, nameID: string) {
 }
 
 route.get("/success", async (ctx: Context) => {
-  // const { orgId } = ctx.params as { orgId: string }
-
   ctx.redirect(process.env.APP_URL!)
 })
 
@@ -120,12 +118,18 @@ route.get("/metadata", async (ctx: Context) => {
 
 route.post("/download-idp-xml", async (ctx: Context) => {
   const { orgId } = ctx.params as { orgId: string }
+  const { userId } = ctx.state
 
   const bodySchema = z.object({
     content: z.string().url().or(z.string().min(1)),
   })
 
   const { content } = bodySchema.parse(ctx.request.body)
+
+  const [user] = await sql`select * from account where id = ${userId}`
+  if (user?.orgId !== orgId) {
+    ctx.throw(403, "Forbidden: Insufficient permissions")
+  }
 
   let xml = content
 
@@ -135,15 +139,28 @@ route.post("/download-idp-xml", async (ctx: Context) => {
     xml = data
   }
 
-  await sql`update org set saml_idp_xml = ${xml} where id = ${orgId}`
+  await sql`
+    update 
+     org 
+    set 
+      saml_idp_xml = ${xml} 
+    where 
+      id = ${orgId}
+    `
 
   ctx.body = { success: true }
   ctx.status = 201
 })
 
-// User gets redirected here after logging in with SAML
+// Assertion Consumer Service
 route.post("/acs", async (ctx: Context) => {
   const { orgId } = ctx.params as { orgId: string }
+  const { userId } = ctx.state
+
+  const [user] = await sql`select * from account where id = ${userId}`
+  if (user?.orgId !== orgId) {
+    ctx.throw(403, "Forbidden: Insufficient permissions")
+  }
 
   const idp = await getOrgIdp(orgId)
   const sp = await getOrgSp(orgId)
@@ -156,7 +173,7 @@ route.post("/acs", async (ctx: Context) => {
     ctx.throw(400, "No attributes found")
   }
 
-  if (conditions?.notBefore && conditions.notOnOrAfter) {
+  if (conditions?.notBefore && conditions?.notOnOrAfter) {
     const notBefore = new Date(conditions.notBefore)
     const notOnOrAfter = new Date(conditions.notOnOrAfter)
     const now = new Date()
@@ -170,8 +187,16 @@ route.post("/acs", async (ctx: Context) => {
 
   const singleUseToken = await generateOneTimeToken()
 
-  const [account] =
-    await sql`update account set ${sql({ name, singleUseToken, lastLoginAt: new Date() })} where email = ${email} and org_id = ${orgId} returning *`
+  const [account] = await sql`
+    update 
+      account 
+    set 
+      ${sql({ name, singleUseToken, lastLoginAt: new Date() })} 
+    where 
+      email = ${email} 
+      and org_id = ${orgId} 
+    returning *
+  `
 
   if (!account) {
     ctx.throw(
@@ -180,12 +205,10 @@ route.post("/acs", async (ctx: Context) => {
     )
   }
 
-  // Redirect with an one-time token that can be exchanged for an auth token
   ctx.redirect(`${process.env.APP_URL!}/login?ott=${singleUseToken}`)
 })
 
 route.post("/slo", async (ctx: Context) => {
-  // const { orgId } = ctx.params as { orgId: string }
   ctx.body = "SAML SLO"
 })
 
