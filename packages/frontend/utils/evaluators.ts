@@ -109,19 +109,19 @@ const EVALUATOR_TYPES = {
     icon: IconCheck,
     color: "blue",
     description:
-      "Checks if the LLM's response is relevant given the context and the prompt.",
+      "Checks if the LLM's response is grounded to the system's message context.",
     params: [],
   },
-  summarization: {
-    id: "summarization",
-    name: "Summarization",
-    icon: IconTextWrap,
-    soon: true,
-    color: "blue",
-    description:
-      "The summarization metric uses LLMs to determine whether your agent is generating factually correct summaries while including the necessary details from the original text.",
-    params: [],
-  },
+  // summarization: {
+  //   id: "summarization",
+  //   name: "Summarization",
+  //   icon: IconTextWrap,
+  //   soon: true,
+  //   color: "blue",
+  //   description:
+  //     "The summarization metric uses LLMs to determine whether your agent is generating factually correct summaries while including the necessary details from the original text.",
+  //   params: [],
+  // },
   sentiment: {
     id: "sentiment",
     name: "Sentiment",

@@ -208,7 +208,7 @@ export function useProject() {
     fetcher.patch,
   )
 
-  const { trigger: dropMutation } = useSWRMutation(
+  const { trigger: dropMutation, isMutating: dropLoading } = useSWRMutation(
     projectId && `/projects/${projectId}`,
     fetcher.delete,
   )
@@ -237,6 +237,7 @@ export function useProject() {
     project,
     update,
     drop,
+    dropLoading,
     setProjectId,
     mutate,
     isLoading,
