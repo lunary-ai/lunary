@@ -32,6 +32,8 @@ import {
   IconIdBadge,
   IconPencil,
   IconRefreshAlert,
+  IconShield,
+  IconShieldCog,
 } from "@tabler/icons-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
@@ -267,14 +269,7 @@ function SmartDataRule() {
 
 export default function AppAnalytics() {
   const { org } = useOrg()
-  const {
-    update,
-    project,
-    setProjectId,
-    drop,
-    addSmartDataRule,
-    smartDataRuleLoading,
-  } = useProject()
+  const { update, project, setProjectId, drop, dropLoading } = useProject()
   const router = useRouter()
 
   const { user } = useUser()
@@ -336,6 +331,25 @@ export default function AppAnalytics() {
 
         <SmartDataRule />
 
+        <SettingsCard
+          title={<>Guardrails 🔒</>}
+          align="start"
+          paywallConfig={{
+            Icon: IconShieldCog,
+            feature: "Guardrails",
+            p: 12,
+            plan: "enterprise",
+            list: [
+              "Ban certain topics",
+              "Intercept prompt injections",
+              "Ensure no PII is leaked",
+            ],
+            enabled: true,
+          }}
+        >
+          <Button>Open Guardrails settings</Button>
+        </SettingsCard>
+
         {user && hasAccess(user.role, "projects", "delete") && (
           <SettingsCard title="Danger Zone" align="start">
             <Text>
@@ -361,6 +375,7 @@ export default function AppAnalytics() {
                     color="red"
                     w={80}
                     data-testid="delete-project-popover-button"
+                    loading={dropLoading}
                     onClick={async () => {
                       const dropped = await drop()
                       if (dropped) {
