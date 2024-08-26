@@ -143,6 +143,10 @@ async function handleResponse(res: Response) {
       return signOut()
     }
 
+    if (res.status === 429) {
+      return showErrorNotification("Too many requests", "Retry in one minute")
+    }
+
     const { error, message } = await res.json()
 
     showErrorNotification(error, message)

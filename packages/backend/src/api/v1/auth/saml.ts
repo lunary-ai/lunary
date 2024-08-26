@@ -8,6 +8,7 @@ import { sanitizeEmail } from "./utils"
 import { randomBytes } from "crypto"
 import { SignJWT } from "jose"
 import z from "zod"
+import { aggressiveRatelimit } from "@/src/utils/ratelimit"
 
 // Required for SAMLify to work
 samlify.setSchemaValidator(validator)
@@ -116,7 +117,7 @@ route.get("/metadata", async (ctx: Context) => {
   ctx.body = sp.getMetadata()
 })
 
-route.post("/download-idp-xml", async (ctx: Context) => {
+route.post("/download-idp-xml", aggressiveRatelimit, async (ctx: Context) => {
   const { orgId } = ctx.params as { orgId: string }
   const { userId } = ctx.state
 
@@ -134,9 +135,16 @@ route.post("/download-idp-xml", async (ctx: Context) => {
   let xml = content
 
   if (content.startsWith("http")) {
-    const response = await fetch(content)
-    const data = await response.text()
-    xml = data
+    const url = new URL(content)
+    if (
+      url.hostname === "login.microsoftonline.com" ||
+      url.hostname.endsWith(".okta.com") ||
+      url.hostname.endsWith(".oktapreview.com")
+    ) {
+      const response = await fetch(content)
+      const data = await response.text()
+      xml = data
+    }
   }
 
   await sql`

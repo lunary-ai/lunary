@@ -25,3 +25,18 @@ export default ratelimit({
   //   // some logic that returns a boolean
   // },
 })
+
+export const aggressiveRatelimit = ratelimit({
+  driver: "memory",
+  db: db,
+  duration: 60000,
+  errorMessage: "Sometimes You Just Have to Slow Down.",
+  id: (ctx) => ctx.request.ip || ctx.ip || ctx.state.userId,
+  headers: {
+    remaining: "Rate-Limit-Remaining",
+    reset: "Rate-Limit-Reset",
+    total: "Rate-Limit-Total",
+  },
+  max: 10,
+  disableHeader: false,
+})
