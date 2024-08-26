@@ -1,6 +1,25 @@
+import nodemailer from "nodemailer"
+
 import sql from "./db"
 
-export async function sendEmail(body: any) {
+type EmailTemplate = {
+  from: string
+  to: string[]
+  text: string
+  subject: string
+  reply_to: string
+  html?: string
+}
+
+export function sendEmail(body: EmailTemplate) {
+  if (process.env.RESEND_KEY) {
+    return sendEmailResend(body)
+  } else {
+    return sendEmailNodemailer(body)
+  }
+}
+
+export async function sendEmailResend(body: EmailTemplate) {
   if (!process.env.RESEND_KEY) {
     return console.warn("RESEND_KEY is not set, skipping email sending")
   }
@@ -30,4 +49,29 @@ export async function sendEmail(body: any) {
   }
 
   return await res.json()
+}
+
+// sendEmail function using nodemailer which accepts a body and sends an email 
+export async function sendEmailNodemailer(body: EmailTemplate) {
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASSWORD,
+    },
+  });
+
+  const info = await transporter.sendMail({
+    from: body.from,
+    to: body.to,
+    subject: body.subject,
+    text: body.text,
+    html: body.html,
+  });
+
+  console.log('Message sent: %s', info.messageId);
+  console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+
+  return info;
 }
