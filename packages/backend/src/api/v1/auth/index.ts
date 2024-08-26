@@ -331,7 +331,14 @@ auth.post("/reset-password", async (ctx: Context) => {
   const passwordHash = await hashPassword(password)
 
   const [user] = await sql`
-    update account set password_hash = ${passwordHash}, last_login_at = NOW() where email = ${email} returning *
+    update 
+      account 
+    set 
+      password_hash = ${passwordHash}, 
+      last_login_at = now() 
+    where 
+      email = ${email} 
+    returning *
   `
 
   const authToken = await signJWT({
