@@ -59,6 +59,7 @@ function prepareDataForRecharts(
     props.forEach((prop) => {
       if (splitBy) {
         uniqueSplitByValues.forEach((splitByValue) => {
+          if (!splitByValue) return;
           dayData[`${splitByValue || "(unknown)"} ${prop}`] = findDataValue(
             data,
             splitBy,
@@ -309,6 +310,8 @@ function LineChartComponent({
     granularity,
   )
 
+  console.log(cleanedData, props, splitBy)
+
   if (cleanData === false && data?.length) {
     cleanedData = data
   }
@@ -475,7 +478,6 @@ function LineChartComponent({
               formatter={formatter}
               content={({ active, payload, label }) => {
                 if (active && payload && payload.length) {
-                  console.log(payload)
                   return (
                     <Card shadow="md" withBorder>
                       <Flex>
@@ -483,7 +485,7 @@ function LineChartComponent({
                           {formatDate(label, granularity)}
                         </Title>
 
-                        <Title order={1} size="sm" ta="right" ml="auto">
+                        <Title order={1} size="sm" ml="50%" ta="center">
                           Total:{" "}
                           {formatter(
                             sum(payload.map((item) => item.value || 0)),
