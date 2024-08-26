@@ -313,7 +313,7 @@ auth.post("/request-password-reset", async (ctx: Context) => {
   } catch (error) {
     console.error(error)
     // Do not send error message to client if email is not found
-    ctx.body = {}
+    ctx.body = { ok: true }
   }
 })
 
@@ -325,8 +325,11 @@ auth.post("/reset-password", async (ctx: Context) => {
   const { token, password } = bodySchema.parse(ctx.request.body)
 
   const {
-    payload: { email },
+    payload: { email, type },
   } = await verifyJWT<{ email: string }>(token)
+  if (type !== "reset_token") {
+    ctx.throw(403, "Unauthorized")
+  }
 
   const passwordHash = await hashPassword(password)
 

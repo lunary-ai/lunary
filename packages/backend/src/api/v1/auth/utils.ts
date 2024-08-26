@@ -188,7 +188,7 @@ export async function requestPasswordReset(email: string) {
   const [user] = await sql`select id from account where email = ${email}`
 
   const ONE_HOUR = 60 * 60
-  const token = await signJWT({ email }, ONE_HOUR)
+  const token = await signJWT({ email, type: "password_reset" }, ONE_HOUR)
 
   await sql`update account set recovery_token = ${token} where id = ${user.id}`
 
