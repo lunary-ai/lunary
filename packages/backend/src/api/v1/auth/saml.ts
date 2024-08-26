@@ -110,7 +110,10 @@ route.get("/success", async (ctx: Context) => {
 
 // Returns the Service Provider metadata
 route.get("/metadata", async (ctx: Context) => {
-  const { orgId } = ctx.params as { orgId: string }
+  const paramsSchema = z.object({
+    orgId: z.string().uuid(),
+  })
+  const { orgId } = paramsSchema.parse(ctx.params)
   const sp = await getOrgSp(orgId)
 
   ctx.type = "application/xml"
