@@ -402,6 +402,13 @@ export const roles: Record<
         list: true,
         run: true,
       },
+      teamMembers: {
+        create: false,
+        read: true,
+        update: false,
+        delete: false,
+        list: true,
+      },
       projects: {
         read: true,
         list: true,
@@ -413,6 +420,13 @@ export const roles: Record<
     name: "Billing",
     description: "Manage billing settings and invoices",
     permissions: {
+      teamMembers: {
+        create: false,
+        read: true,
+        update: false,
+        delete: false,
+        list: true,
+      },
       billing: {
         create: false,
         read: true,
