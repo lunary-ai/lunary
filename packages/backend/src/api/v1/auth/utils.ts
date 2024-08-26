@@ -187,8 +187,11 @@ export async function authMiddleware(ctx: Context, next: Next) {
 export async function requestPasswordReset(email: string) {
   const [user] = await sql`select id from account where email = ${email}`
 
-  const ONE_HOUR = 60 * 60
-  const token = await signJWT({ email }, ONE_HOUR)
+  const FIFTEEN_MINUTES = 15 * 60
+  const token = await signJWT(
+    { email, type: "password_reset" },
+    FIFTEEN_MINUTES,
+  )
 
   await sql`update account set recovery_token = ${token} where id = ${user.id}`
 
