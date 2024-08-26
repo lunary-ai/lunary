@@ -297,8 +297,9 @@ export default function Logs() {
   useEffect(() => {
     if (!view) return
 
-    setType(view.type)
-    setChecks(view.data)
+    // Fixes a weird issue with custom views
+    setType(view.type || "llm")
+    setChecks(view.data || [])
     setVisibleColumns(view.columns)
   }, [view, viewId])
 
