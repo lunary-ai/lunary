@@ -293,21 +293,12 @@ auth.post("/request-password-reset", async (ctx: Context) => {
       Db.Account[]
     >`select * from account where email = ${email}`
 
-    if (recoveryToken) {
-      if (await isJWTExpired(recoveryToken)) {
-        // Edge case 1: User has made a password reset request more than one hour ago, but has not completed the flow
-        await requestPasswordReset(email)
-        ctx.body = { ok: true }
-        return
-      } else {
-        // Edge case 2: User has already made a password request less than one hour ago
-        throw new Error(
-          "Password reset request already initiated less than one hour ago",
-        )
-      }
+    if (recoveryToken && !(await isJWTExpired(recoveryToken))) {
+      await requestPasswordReset(email)
+      ctx.body = { ok: true }
+      return
     }
 
-    // Base case: User is making his first password reset request since the last one has been successfully reset
     await requestPasswordReset(email)
     ctx.body = { ok: true }
   } catch (error) {
