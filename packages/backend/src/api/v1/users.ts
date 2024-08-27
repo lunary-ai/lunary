@@ -199,12 +199,6 @@ users.post("/", checkAccess("teamMembers", "create"), async (ctx: Context) => {
     )
   }
 
-  const [orgUserCountResult] = await sql`
-    select count(*) from account where org_id = ${orgId}
-  `
-
-  const orgUserCount = orgUserCountResult.count
-
   const token = await signJWT({ email, orgId }, FIFTEEN_DAYS)
   const userToInsert = {
     email,
@@ -220,11 +214,26 @@ users.post("/", checkAccess("teamMembers", "create"), async (ctx: Context) => {
     ctx.throw(400, "User with this email already exists")
   }
 
+  for (const projectId of projects) {
+    const [project] =
+      await sql`select org_id from project where id = ${projectId}`
+    if (project.orgId !== orgId) {
+      ctx.throw(
+        403,
+        "Unauthorized: Project does not belong to the specified organization",
+      )
+    }
+  }
+
   const [user] = await sql`insert into account ${sql(userToInsert)} returning *`
 
   for (const projectId of projects) {
     await sql`
-      insert into account_project (account_id, project_id) values (${user.id}, ${projectId}) returning *
+      insert into account_project 
+        (account_id, project_id)
+      values 
+        (${user.id}, ${projectId})
+      returning *
     `
   }
 
@@ -302,6 +311,17 @@ users.patch(
       ctx.throw(403, "You cannot modify the owner role")
     }
 
+    for (const projectId of projects) {
+      const [project] =
+        await sql`select org_id from project where id = ${projectId}`
+      if (project.orgId !== orgId) {
+        ctx.throw(
+          403,
+          "Unauthorized: Project does not belong to the specified organization",
+        )
+      }
+    }
+
     const [currentUser] =
       await sql`select * from account where id = ${currentUserId}`
 
@@ -310,16 +330,15 @@ users.patch(
     }
 
     const [userToModify] = await sql`select * from account where id = ${userId}`
-    if (!userToModify || userToModify.org_id !== currentUser.org_id) {
+    if (!userToModify || userToModify.orgId !== currentUser.orgId) {
       ctx.throw(404, "User not found in your organization")
     }
 
     await sql`update account set role = ${role} where id = ${userId}`
 
-    // Get existing project IDs for the user
     const existingProjects = await sql`
- select project_id from account_project where account_id = ${userId}
-`
+      select project_id from account_project where account_id = ${userId}
+    `
 
     const existingProjectIds = existingProjects.map((row) => row.projectId)
 
@@ -329,18 +348,18 @@ users.patch(
 
     for (const projectId of projectsToDelete) {
       await sql`
-   delete from account_project
-   where account_id = ${userId} and project_id = ${projectId}
- `
+        delete from account_project
+        where account_id = ${userId} and project_id = ${projectId}
+      `
     }
 
     for (const projectId of projects) {
       await sql`
-    insert into account_project (account_id, project_id)
-    values (${userId}, ${projectId})
-    on conflict (account_id, project_id)
-    do nothing
-   `
+        insert into account_project (account_id, project_id)
+        values (${userId}, ${projectId})
+        on conflict (account_id, project_id)
+        do nothing
+      `
     }
 
     ctx.status = 200
