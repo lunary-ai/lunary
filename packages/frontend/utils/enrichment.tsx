@@ -336,10 +336,7 @@ export function renderSentimentEnrichment(data?: EnrichmentData) {
 }
 
 // TODO: refactor with above
-export function renderSentimentEnrichment2(
-  score: number,
-  subjectivity: number,
-) {
+export function SentimentEnrichment2({ score }) {
   const [opened, { close, open }] = useDisclosure(false)
 
   let type, emoji
