@@ -581,21 +581,46 @@ runs.patch(
 
 runs.get("/:id/related", checkAccess("logs", "read"), async (ctx) => {
   const id = ctx.params.id
+  const { projectId } = ctx.state
 
   const related = await sql`
-    WITH RECURSIVE related_runs AS (
-      SELECT r1.*
-      FROM run r1
-      WHERE r1.id = ${id}
+    with recursive related_runs as (
+      select 
+        r1.*
+      from 
+        run r1
+      where
+        r1.id = ${id}
+        and project_id = ${projectId}
 
-      UNION ALL
-      SELECT r2.*
-      FROM run r2
-      INNER JOIN related_runs rr ON rr.id = r2.parent_run_id
+      union all 
+
+      select 
+        r2.*
+      from 
+        run r2
+        inner join related_runs rr on rr.id = r2.parent_run_id
   )
-  SELECT rr.created_at, rr.tags, rr.project_id, rr.id, rr.status, rr.name, rr.ended_at, rr.error, rr.input, rr.output, 
-        rr.params, rr.type, rr.parent_run_id, rr.completion_tokens, rr.prompt_tokens, rr.feedback, rr.metadata
-  FROM related_runs rr;
+  select 
+    rr.created_at, 
+    rr.tags, 
+    rr.project_id, 
+    rr.id, 
+    rr.status, 
+    rr.name, 
+    rr.ended_at, 
+    rr.error, 
+    rr.input, 
+    rr.output, 
+    rr.params, 
+    rr.type, 
+    rr.parent_run_id, 
+    rr.completion_tokens, 
+    rr.prompt_tokens, 
+    rr.feedback, 
+    rr.metadata
+  from 
+    related_runs rr;
   `
 
   ctx.body = related
