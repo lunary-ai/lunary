@@ -1,4 +1,5 @@
 export type ResourceName =
+  | "org"
   | "projects"
   | "billing"
   | "teamMembers"
@@ -39,6 +40,9 @@ export const roles: Record<
     description: "Owner of the organization",
     free: true,
     permissions: {
+      org: {
+        update: true,
+      },
       projects: {
         create: true,
         read: true,

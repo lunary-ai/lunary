@@ -9,6 +9,7 @@ import { z } from "zod"
 import { PassThrough } from "stream"
 
 import { handleStream, runAImodel } from "@/src/utils/playground"
+import { checkAccess } from "@/src/utils/authorization"
 
 const orgs = new Router({
   prefix: "/orgs/:orgId",
@@ -41,7 +42,7 @@ orgs.get("/", async (ctx: Context) => {
   ctx.body = row
 })
 
-orgs.patch("/", async (ctx: Context) => {
+orgs.patch("/", checkAccess("org", "update"), async (ctx: Context) => {
   const orgId = ctx.state.orgId as string
   const bodySchema = z.object({
     name: z.string(),
