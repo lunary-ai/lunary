@@ -134,7 +134,7 @@ function TraceTree({
                 <ThemeIcon
                   variant="subtle"
                   color={isActive ? "white" : color}
-                  size="sm"
+                  size="xs"
                   radius="lg"
                 >
                   <Icon strokeWidth={2} size={13} />
