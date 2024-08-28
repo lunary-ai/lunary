@@ -182,7 +182,7 @@ function TraceTree({
   )
 }
 
-const RenderRun = ({ run, relatedRuns }) => {
+function RenderRun({ run, relatedRuns }) {
   const directChilds = relatedRuns
     ?.filter((r) => r.parentRunId === run.id)
     .sort(

@@ -47,7 +47,7 @@ const ParamItem = ({
   color?: string
 }) => {
   return (
-    <Group wrap="nowrap">
+    <Group>
       <Text size="sm">{name}: </Text>
       {render ? (
         render(value)
@@ -106,7 +106,7 @@ function RenderTools({ tools }) {
     return (
       <HoverCard key={i}>
         <HoverCard.Target>
-          <Badge color="pink" variant="outline">
+          <Badge maw="120px" color="pink" variant="outline">
             {toolObject?.name || "Unknown"}
           </Badge>
         </HoverCard.Target>
