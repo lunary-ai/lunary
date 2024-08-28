@@ -1,9 +1,14 @@
 import { signJWT } from "@/src/api/v1/auth/utils"
 import { sendEmail } from "./sendEmail"
 
-function extractFirstName(name: string) {
+function sanitizeName(name: string): string {
+  return name.replace(/\s+/g, " ").trim()
+}
+
+function extractFirstName(name: string): string {
   if (!name) return "there"
-  return name.split(" ")[0]
+  const sanitizedName = sanitizeName(name)
+  return sanitizedName.split(" ")[0]
 }
 
 export async function sendVerifyEmail(email: string, name: string = "") {
