@@ -11,7 +11,14 @@ import { sendEmail } from "@/src/utils/sendEmail"
 import { RESET_PASSWORD } from "@/src/utils/emails"
 
 export function sanitizeEmail(email: string) {
-  return email.toLowerCase().trim()
+  const [username, domain] = email.toLowerCase().trim().split("@")
+
+  if (domain === "gmail.com") {
+    // Dots don't matter in Gmail addresses https://support.google.com/mail/answer/7436150?hl=en
+    return `${username.replaceAll(".", "")}@${domain}`
+  }
+
+  return `${username}@${domain}`
 }
 
 export async function verifyPassword(

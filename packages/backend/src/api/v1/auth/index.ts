@@ -75,7 +75,7 @@ auth.post("/signup", async (ctx: Context) => {
     token,
   } = bodySchema.parse(ctx.request.body)
 
-  // Spamming hotfix
+  // Prevent spaming
   if (orgName?.includes("https://") || name.includes("http://")) {
     ctx.throw(403, "Bad request")
   }
