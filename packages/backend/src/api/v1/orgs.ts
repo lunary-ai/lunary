@@ -160,7 +160,7 @@ orgs.post("/upgrade", async (ctx: Context) => {
     })
 
     return (ctx.body = { ok: true, url: checkoutSession.url })
-  } else {44G
+  } else {
     // const subscription = await stripe.subscriptions.retrieve(
     //   org.stripeSubscription,
     // )
