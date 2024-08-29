@@ -14,7 +14,7 @@ import { IconAnalyze, IconCheck, IconCross } from "@tabler/icons-react"
 
 import { NextSeo } from "next-seo"
 import Router from "next/router"
-import { Fragment, useMemo, useState } from "react"
+import { Fragment, useEffect, useMemo, useState } from "react"
 
 import { notifications } from "@mantine/notifications"
 import { fetcher } from "@/utils/fetcher"
@@ -23,47 +23,27 @@ const API_URL = process.env.API_URL
 
 const VerifyEmailPage = () => {
   const [verificationStatus, setVerificationStatus] = useState("error")
-
   const { token } = Router.query
 
-  const form = useForm({
-    initialValues: { token: (token as string) },
-
-    validate: {
-      token: (val) =>
-        val.trim().length < 1 ? "Password must be at least 5 characters" : null,
-    }
-  })
-
   const verifyEmail = async ({ token }: { token: string }) => {
-    setVerificationStatus("verifying");
+    setVerificationStatus("verifying")
 
     try {
-      const res = await fetcher.post(`/users/verify-email`, { arg: { token } })
+      await fetcher.get(`/users/verify-email?token=${token}`)
 
-      if (res.ok) {
-        setVerificationStatus("verified");
-        notifications.show({
-          icon: <IconCheck size={18} />,
-          color: "teal",
-          title: "Success",
-          message: "Email verified successfully",
-        })
-      } else {
-        const error = await res.text();
-        setVerificationStatus("error");
+      setVerificationStatus("verified")
+      notifications.show({
+        icon: <IconCheck size={18} />,
+        color: "teal",
+        title: "Success",
+        message: "Email verified successfully",
+      })
 
-        notifications.show({
-          icon: <IconCross size={18} />,
-          color: "red",
-          title: "Error",
-          message: error,
-        })
-      }
+      setTimeout(() => Router.push("/"), 100)
     } catch (error) {
       console.error(error)
 
-      setVerificationStatus("error");
+      setVerificationStatus("error")
       notifications.show({
         icon: <IconCross size={18} />,
         color: "red",
@@ -73,15 +53,15 @@ const VerifyEmailPage = () => {
     }
   }
 
-  useMemo(() => {
+  useEffect(() => {
     if (token) {
-      verifyEmail({ token: (token as string) })
+      verifyEmail({ token: token as string })
     }
   }, [token])
 
   return (
     <Container py={100} size={600}>
-      <NextSeo title="Login" />
+      <NextSeo title="verify email" />
       <Stack align="center" gap={50}>
         <Stack align="center">
           {verificationStatus === "verified" ? (
@@ -96,10 +76,10 @@ const VerifyEmailPage = () => {
             </Fragment>
           ) : verificationStatus === "verifying" ? (
             <Fragment>
-                <Loader color={"#206dce"} type="dots" />
-                <Title order={2} fw={700} size={40} ta="center">
-                  Verifying your email
-                </Title>
+              <Loader color={"#206dce"} type="dots" />
+              <Title order={2} fw={700} size={40} ta="center">
+                Verifying your email
+              </Title>
             </Fragment>
           ) : (
             <Fragment>

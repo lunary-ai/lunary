@@ -95,7 +95,10 @@ users.get("/me", async (ctx: Context) => {
 })
 
 users.get("/verify-email", async (ctx: Context) => {
-  const token = ctx.request.query.token as string
+  const bodySchema = z.object({
+    token: z.string()
+  })
+  const { token } = bodySchema.parse(ctx.request.query)
 
   const {
     payload: { email },
