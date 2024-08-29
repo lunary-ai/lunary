@@ -24,7 +24,7 @@ export default function SmartCheckSelect({
   allowCustom,
   renderListItem,
   renderLabel = (item) => (typeof item === "object" ? item?.label : item),
-  getItemValue = (item) => (typeof item === "object" ? `${item.value}` : item),
+  getItemValue = (item) => (typeof item === "object" ? `${item?.value}` : item),
   value,
   onChange,
 }) {
