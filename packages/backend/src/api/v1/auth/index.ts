@@ -318,7 +318,7 @@ auth.post("/reset-password", async (ctx: Context) => {
   const {
     payload: { email, type },
   } = await verifyJWT<{ email: string }>(token)
-  if (type !== "reset_token") {
+  if (type !== "password_reset") {
     ctx.throw(403, "Unauthorized")
   }
 
