@@ -143,19 +143,19 @@ function SelectedUser({ id, onClose }) {
 
   const { data: tokensData, isLoading: tokensDataLoading } =
     useAnalyticsChartData(
-      id && "tokens",
       startDate,
       endDate,
       granularity,
+      id && "tokens",
       `users=${id}`,
     )
 
   const { data: runCountData, isLoading: runCountLoading } =
     useAnalyticsChartData(
-      id && "run-types",
       startDate,
       endDate,
       granularity,
+      id && "run-types",
       `users=${id}`,
     )
 

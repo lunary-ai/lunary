@@ -318,10 +318,10 @@ function AnalyticsChart({
   const [load, setLoad] = useState(inViewport)
 
   const { data, isLoading } = useAnalyticsChartData(
-    load && dataKey,
     startDate,
     endDate,
     granularity,
+    load ? dataKey : undefined,
     serializedChecks,
   )
 
@@ -384,14 +384,16 @@ export default function Analytics() {
   const { data: topModels, isLoading: topModelsLoading } = useTopModels({
     startDate,
     endDate,
+    checks: serializedChecks
   })
 
   const { data: topTemplates, isLoading: topTemplatesLoading } =
-    useTopTemplates(startDate, endDate)
+    useTopTemplates(startDate, endDate, serializedChecks)
 
   const { users: topUsers, loading: topUsersLoading } = useExternalUsers({
     startDate,
     endDate,
+    checks: serializedChecks
   })
 
   const showBar =

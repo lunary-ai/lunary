@@ -5,10 +5,12 @@ export function useExternalUsers({
   startDate,
   endDate,
   search,
+  checks
 }: {
   startDate?: Date
   endDate?: Date
   search?: string
+  checks?: string
 }) {
   const queryParams = new URLSearchParams()
   if (startDate && endDate) {
@@ -20,6 +22,10 @@ export function useExternalUsers({
 
   if (search) {
     queryParams.append("search", search)
+  }
+
+  if (checks) {
+    queryParams.append("checks", checks)
   }
 
   const { sortParams } = useSortParams()
