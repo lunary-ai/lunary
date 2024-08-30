@@ -7,8 +7,7 @@ import * as argon2 from "argon2"
 
 import bcrypt from "bcrypt"
 import { validateUUID } from "@/src/utils/misc"
-import { sendEmail } from "@/src/utils/sendEmail"
-import { RESET_PASSWORD } from "@/src/utils/emails"
+import { sendEmail, RESET_PASSWORD } from "@/src/emails"
 
 export function sanitizeEmail(email: string) {
   const [username, domain] = email.toLowerCase().trim().split("@")

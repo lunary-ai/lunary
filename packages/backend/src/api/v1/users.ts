@@ -1,17 +1,17 @@
-import Router from "koa-router"
 import sql from "@/src/utils/db"
+import Router from "koa-router"
 import {
   INVITE_EMAIL,
-  WELCOME_EMAIL,
+  sendEmail,
   sendVerifyEmail,
-} from "@/src/utils/emails"
-import { jwtVerify } from "jose"
-import { z } from "zod"
-import { sendEmail } from "@/src/utils/sendEmail"
-import { signJWT } from "./auth/utils"
-import { roles } from "shared"
+  WELCOME_EMAIL,
+} from "@/src/emails"
 import { checkAccess } from "@/src/utils/authorization"
 import Context from "@/src/utils/koa"
+import { jwtVerify } from "jose"
+import { roles } from "shared"
+import { z } from "zod"
+import { signJWT } from "./auth/utils"
 
 const users = new Router({
   prefix: "/users",
@@ -95,7 +95,10 @@ users.get("/me", async (ctx: Context) => {
 })
 
 users.get("/verify-email", async (ctx: Context) => {
-  const token = ctx.request.query.token as string
+  const bodySchema = z.object({
+    token: z.string(),
+  })
+  const { token } = bodySchema.parse(ctx.request.query)
 
   const {
     payload: { email },

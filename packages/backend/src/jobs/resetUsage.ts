@@ -1,7 +1,6 @@
 import sql from "@/src/utils/db"
 import { sendSlackMessage } from "@/src/utils/notifications"
-import { sendEmail } from "../utils/sendEmail"
-import { LIMITED_EMAIL } from "../utils/emails"
+import { LIMITED_EMAIL, sendEmail } from "../emails"
 
 async function updateLimitedStatus() {
   // set limited = false for all users that have been under the limit

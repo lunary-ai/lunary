@@ -1,6 +1,7 @@
+import { sendVerifyEmail } from "@/src/emails"
 import { Db } from "@/src/types"
+import config from "@/src/utils/config"
 import sql from "@/src/utils/db"
-import { sendVerifyEmail } from "@/src/utils/emails"
 import Context from "@/src/utils/koa"
 import { sendSlackMessage } from "@/src/utils/notifications"
 import Router from "koa-router"
@@ -15,7 +16,6 @@ import {
   verifyJWT,
   verifyPassword,
 } from "./utils"
-import config from "@/src/utils/config"
 
 const auth = new Router({
   prefix: "/auth",

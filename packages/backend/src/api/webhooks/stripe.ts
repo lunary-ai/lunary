@@ -1,9 +1,3 @@
-import { sendEmail } from "@/src/utils/sendEmail"
-import {
-  CANCELED_EMAIL,
-  UPGRADE_EMAIL,
-  FULLY_CANCELED_EMAIL,
-} from "@/src/utils/emails"
 import { sendSlackMessage } from "@/src/utils/notifications"
 import Stripe from "stripe"
 import stripe from "@/src/utils/stripe"
@@ -12,6 +6,12 @@ import sql from "@/src/utils/db"
 import Router from "koa-router"
 import { Context } from "koa"
 import { clearUndefined } from "@/src/utils/ingest"
+import {
+  sendEmail,
+  CANCELED_EMAIL,
+  UPGRADE_EMAIL,
+  FULLY_CANCELED_EMAIL,
+} from "@/src/emails"
 
 const router = new Router({
   prefix: "/stripe",
