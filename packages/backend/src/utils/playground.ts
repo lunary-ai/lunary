@@ -186,12 +186,30 @@ function validateToolCalls(model: string, toolCalls: any) {
     (!model.includes("gpt") &&
       !model.includes("claude") &&
       !model.includes("mistral")) ||
-    !Array.isArray(toolCalls) ||
-    toolCalls.find((t: any) => t.type !== "function" || !t.function?.name)
+    !Array.isArray(toolCalls)
   )
     return undefined
 
-  return toolCalls
+  // Check if it's the format with name, description, and input_schema
+  const isNameDescriptionFormat = toolCalls.every(
+    (t: any) => t.name && t.description && t.input_schema,
+  )
+
+  if (isNameDescriptionFormat) {
+    return toolCalls
+  }
+
+  // Check if it's the format with type "function" and function.name
+  const isFunctionTypeFormat = toolCalls.every(
+    (t: any) => t.type === "function" && t.function?.name,
+  )
+
+  if (isFunctionTypeFormat) {
+    return toolCalls
+  }
+
+  // If neither format is valid, return undefined
+  return undefined
 }
 
 export async function runAImodel(

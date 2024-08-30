@@ -78,6 +78,19 @@ export default function ProviderEditor({
     },
   })
 
+  const validateToolCalls = (toolCalls: any[]) => {
+    if (!Array.isArray(toolCalls)) return false
+
+    const isNameDescriptionFormat = toolCalls.every(
+      (t) => t.name && t.description && t.input_schema,
+    )
+    const isFunctionTypeFormat = toolCalls.every(
+      (t) => t.type === "function" && t.function?.name,
+    )
+
+    return isNameDescriptionFormat || isFunctionTypeFormat
+  }
+
   return (
     <>
       <ParamItem
@@ -204,24 +217,25 @@ export default function ProviderEditor({
             >
               <JsonInput
                 autosize
-                placeholder={`[{
-  type: "function",
-  function: {
-    name: "get_current_weather",
-    description: "Get the current weather in a given location",
-    parameters: {
-      type: "object",
-      properties: {
-        location: {
-          type: "string",
-          description: "The city and state, e.g. San Francisco, CA",
-        },
-        unit: { type: "string", enum: ["celsius", "fahrenheit"] },
-      },
-    },
-  },
-}]`}
-                // defaultValue={tempJSON}
+                placeholder={`[
+  {
+    "type": "function",
+    "function": {
+      "name": "get_current_weather",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string",
+            "description": "The city and state, e.g. San Francisco, CA"
+          },
+          "unit": { "type": "string", "enum": ["celsius", "fahrenheit"] }
+        }
+      }
+    }
+  }
+]`}
                 value={tempJSON}
                 onChange={(val) => {
                   setTempJSON(val)
@@ -244,14 +258,8 @@ export default function ProviderEditor({
                         ? undefined
                         : JSON.parse(jsonrepair(tempJSON.trim()))
 
-                      if (
-                        !empty &&
-                        repaired.find(
-                          (item) =>
-                            item.type !== "function" || !item.function.name,
-                        )
-                      ) {
-                        throw new Error("All items must have a function type")
+                      if (!empty && !validateToolCalls(repaired)) {
+                        throw new Error("Invalid tool calls format")
                       }
 
                       onChange({
@@ -265,9 +273,7 @@ export default function ProviderEditor({
                     } catch (e) {
                       console.error(e)
                       notifications.show({
-                        title:
-                          "Please enter a valid OpenAI tools array. " +
-                          e.message,
+                        title: "Please enter valid tool calls. " + e.message,
                         message: "Click here to open the docs.",
                         color: "red",
                         onClick: () =>

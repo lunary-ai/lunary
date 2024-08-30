@@ -134,7 +134,7 @@ function TraceTree({
                 <ThemeIcon
                   variant="subtle"
                   color={isActive ? "white" : color}
-                  size="sm"
+                  size="xs"
                   radius="lg"
                 >
                   <Icon strokeWidth={2} size={13} />
@@ -182,7 +182,7 @@ function TraceTree({
   )
 }
 
-const RenderRun = ({ run, relatedRuns }) => {
+function RenderRun({ run, relatedRuns }) {
   const directChilds = relatedRuns
     ?.filter((r) => r.parentRunId === run.id)
     .sort(

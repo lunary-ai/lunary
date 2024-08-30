@@ -31,7 +31,7 @@ import classes from "./index.module.css"
 
 import { useEffect, useMemo } from "react"
 
-import { renderSentimentEnrichment2 } from "@/utils/enrichment"
+import { SentimentEnrichment2 } from "@/utils/enrichment"
 import { getFlagEmoji, getLanguageName } from "@/utils/format"
 import { openConfirmModal } from "@mantine/modals"
 import HighlightPii from "./HighlightPii"
@@ -526,11 +526,7 @@ export function ChatMessage({
             </Text>
           )}
           <Group>
-            {sentiment &&
-              renderSentimentEnrichment2(
-                sentiment?.score,
-                sentiment?.subjectivity,
-              )}
+            {sentiment && <SentimentEnrichment2 score={sentiment?.score} />}
             {language && (
               <Tooltip
                 label={`${getLanguageName(language.isoCode)} (${Number(language.confidence.toFixed(3))})`}

@@ -75,7 +75,7 @@ auth.post("/signup", async (ctx: Context) => {
     token,
   } = bodySchema.parse(ctx.request.body)
 
-  // Spamming hotfix
+  // Prevent spaming
   if (orgName?.includes("https://") || name.includes("http://")) {
     ctx.throw(403, "Bad request")
   }
@@ -318,7 +318,7 @@ auth.post("/reset-password", async (ctx: Context) => {
   const {
     payload: { email, type },
   } = await verifyJWT<{ email: string }>(token)
-  if (type !== "reset_token") {
+  if (type !== "password_reset") {
     ctx.throw(403, "Unauthorized")
   }
 
