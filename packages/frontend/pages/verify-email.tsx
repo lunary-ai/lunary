@@ -1,27 +1,57 @@
-import {
-  Button,
-  Container,
-  Loader,
-  Paper,
-  PasswordInput,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core"
-
-import { useForm } from "@mantine/form"
+import { fetcher } from "@/utils/fetcher"
+import { Container, Loader, Stack, Text, Title } from "@mantine/core"
+import { notifications } from "@mantine/notifications"
 import { IconAnalyze, IconCheck, IconCross } from "@tabler/icons-react"
-
 import { NextSeo } from "next-seo"
 import Router from "next/router"
-import { Fragment, useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 
-import { notifications } from "@mantine/notifications"
-import { fetcher } from "@/utils/fetcher"
+function VerifiedContent() {
+  return (
+    <>
+      <IconCheck color={"#206dce"} size={60} />
+      <Title order={2} fw={700} size={40} ta="center">
+        Email verified
+      </Title>
+      <Text c="dimmed" fz="sm" ta="center">
+        Redirecting...
+      </Text>
+    </>
+  )
+}
 
-const API_URL = process.env.API_URL
+function VerifyingContent() {
+  return (
+    <>
+      <Loader color={"#206dce"} type="dots" />
+      <Title order={2} fw={700} size={40} ta="center">
+        Verifying your email
+      </Title>
+    </>
+  )
+}
 
-const VerifyEmailPage = () => {
+function ErrorContent() {
+  return (
+    <>
+      <IconAnalyze color={"#206dce"} size={60} />
+      <Title order={2} fw={700} size={40} ta="center">
+        Verify your email
+      </Title>
+      <Text c="dimmed" fz="sm" ta="center">
+        Please check your email for the verification link
+      </Text>
+    </>
+  )
+}
+
+function VerificationContent({ status }) {
+  if (status === "verified") return <VerifiedContent />
+  if (status === "verifying") return <VerifyingContent />
+  return <ErrorContent />
+}
+
+export default function VerifyEmailPage() {
   const [verificationStatus, setVerificationStatus] = useState("error")
   const { token } = Router.query
 
@@ -64,38 +94,9 @@ const VerifyEmailPage = () => {
       <NextSeo title="verify email" />
       <Stack align="center" gap={50}>
         <Stack align="center">
-          {verificationStatus === "verified" ? (
-            <Fragment>
-              <IconCheck color={"#206dce"} size={60} />
-              <Title order={2} fw={700} size={40} ta="center">
-                Email verified
-              </Title>
-              <Text c="dimmed" fz="sm" ta="center">
-                Redirecting...
-              </Text>
-            </Fragment>
-          ) : verificationStatus === "verifying" ? (
-            <Fragment>
-              <Loader color={"#206dce"} type="dots" />
-              <Title order={2} fw={700} size={40} ta="center">
-                Verifying your email
-              </Title>
-            </Fragment>
-          ) : (
-            <Fragment>
-              <IconAnalyze color={"#206dce"} size={60} />
-              <Title order={2} fw={700} size={40} ta="center">
-                Verify your email
-              </Title>
-              <Text c="dimmed" fz="sm" ta="center">
-                Please check your email for the verification link
-              </Text>
-            </Fragment>
-          )}
+          <VerificationContent status={verificationStatus} />
         </Stack>
       </Stack>
     </Container>
   )
 }
-
-export default VerifyEmailPage
