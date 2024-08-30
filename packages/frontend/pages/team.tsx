@@ -102,7 +102,7 @@ function SAMLConfig() {
     link.setAttribute("download", "SP_Metadata.xml")
     document.body.appendChild(link)
     link.click()
-    link.parentNode.removeChild(link)
+    link.parentNode?.removeChild(link)
     setSpLoading(false)
   }
 
@@ -330,6 +330,12 @@ export function RoleSelect({
   disabled = false,
   minimal = false,
   additionalOptions = [],
+}: {
+  value: string
+  setValue: (value: string) => void
+  disabled?: boolean
+  minimal?: boolean
+  additionalOptions?: React.JSX.Element[]
 }) {
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),

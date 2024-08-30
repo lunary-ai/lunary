@@ -1,44 +1,31 @@
-import { signJWT } from "@/src/api/v1/auth/utils"
-import { sendEmail } from "./sendEmail"
+import { MailOptions } from "."
+import config from "../utils/config"
+import { extractFirstName } from "./utils"
 
-function sanitizeName(name: string): string {
-  return name.replace(/\s+/g, " ").trim()
-}
-
-function extractFirstName(name: string): string {
-  if (!name) return "there"
-  const sanitizedName = sanitizeName(name)
-  return sanitizedName.split(" ")[0]
-}
-
-export async function sendVerifyEmail(email: string, name: string = "") {
-  const token = await signJWT({ email })
-
-  const confirmLink = `${process.env.API_URL}/v1/users/verify-email?token=${token}`
-
-  await sendEmail(CONFIRM_EMAIL(email, name, confirmLink))
-}
-
-export function INVITE_EMAIL(email: string, orgName: string, link: string) {
+export function INVITE_EMAIL(
+  email: string,
+  orgName: string,
+  inviteLink: string,
+): MailOptions {
   return {
-    subject: `You've been invited to Lunary`,
-    to: [email],
-    reply_to: "hello@lunary.ai",
-    from: process.env.GENERIC_SENDER,
+    subject: "You've been invited to Lunary",
+    to: email,
+    from: config.GENERIC_SENDER_ADDRESS!,
     text: `Hi, 
 
 You've been invited to join ${orgName} on Lunary. 
 
 Please click on the following link to accept the invitation: 
 
-${link}
+${inviteLink}
 
 We're looking forward to having you on board!
 
 You can reply to this email if you have any question.
 
 Thanks
-- The Lunary team`,
+- The Lunary team
+`,
   }
 }
 
@@ -46,12 +33,11 @@ export function CONFIRM_EMAIL(
   email: string,
   name: string,
   confirmLink: string,
-) {
+): MailOptions {
   return {
-    subject: `confirm your email`,
-    to: [email],
-    reply_to: "hello@lunary.ai",
-    from: process.env.GENERIC_SENDER,
+    subject: `Confirm your email`,
+    to: email,
+    from: config.GENERIC_SENDER_ADDRESS!,
 
     text: `Hi ${extractFirstName(name)},
 
@@ -68,12 +54,14 @@ Thanks
   }
 }
 
-export function RESET_PASSWORD(email: string, confirmLink: string) {
+export function RESET_PASSWORD(
+  email: string,
+  confirmLink: string,
+): MailOptions {
   return {
     subject: `Reset your password`,
-    to: [email],
-    reply_to: "hello@lunary.ai",
-    from: process.env.GENERIC_SENDER,
+    to: email,
+    from: config.GENERIC_SENDER_ADDRESS!,
     text: `Hi, 
 
 Please click on the link below to reset your password:
@@ -86,12 +74,15 @@ You can reply to this email if you have any question.
   }
 }
 
-export function WELCOME_EMAIL(email: string, name: string, projectId: string) {
+export function WELCOME_EMAIL(
+  email: string,
+  name: string,
+  projectId: string,
+): MailOptions {
   return {
-    subject: `welcome to Lunary`,
-    to: [email],
-    reply_to: "vince@lunary.ai",
-    from: process.env.PERSONAL_SENDER || process.env.GENERIC_SENDER,
+    subject: `Welcome to Lunary`,
+    to: email,
+    from: config.PERSONAL_SENDER_ADDRESS || config.GENERIC_SENDER_ADDRESS!,
     text: `Hi ${extractFirstName(name)},
 
 I'm Vince, co-founder of lunary. 
@@ -111,12 +102,15 @@ Vince`,
   }
 }
 
-export function UPGRADE_EMAIL(email: string, name: string, plan: string) {
+export function UPGRADE_EMAIL(
+  email: string,
+  name: string,
+  plan: string,
+): MailOptions {
   return {
     subject: `Your account has been upgraded`,
-    to: [email],
-    reply_to: "hello@lunary.ai",
-    from: process.env.GENERIC_SENDER,
+    to: email,
+    from: config.GENERIC_SENDER_ADDRESS!,
     text: `Hi ${extractFirstName(name)},
 
 Your account has been upgraded to the ${plan} plan.
@@ -125,16 +119,15 @@ The extra features and higher limits are now available to you.
 
 Reply to this email if you have any question.
 
-- The Lunary Team`,
+- The Lunary team`,
   }
 }
 
-export function CANCELED_EMAIL(email: string, name: string) {
+export function CANCELED_EMAIL(email: string, name: string): MailOptions {
   return {
     subject: `Important: subscription canceled`,
-    to: [email],
-    from: process.env.GENERIC_SENDER,
-    reply_to: "hello@lunary.ai",
+    to: email,
+    from: config.GENERIC_SENDER_ADDRESS!,
     text: `Hi ${extractFirstName(name)},
 
 You have canceled your subscription. We're sad to see you go :(
@@ -143,22 +136,21 @@ At the end of your billing period, your account will be downgraded to the free p
 
 *Important: any data older than 30 days (free plan limits) will be permanently deleted.*
 
-If this was a mistake, you can upgrade again at any time here: https://app.lunary.ai/billing
+If this was a mistake, you can upgrade again at any time here: ${process.env.APP_URL}/billing
 
 Would you mind telling us why you canceled? We're always looking to improve. 
 
 Thank you for trying Lunary.
 
-Vince & Hugh - founders of Lunary`,
+- The Lunary team`,
   }
 }
 
-export function FULLY_CANCELED_EMAIL(email: string, name: string) {
+export function FULLY_CANCELED_EMAIL(email: string, name: string): MailOptions {
   return {
-    subject: `Sorry to see you go..`,
-    reply_to: "hello@lunary.ai",
-    to: [email],
-    from: process.env.GENERIC_SENDER,
+    subject: `Sorry to see you go...`,
+    to: email,
+    from: config.GENERIC_SENDER_ADDRESS!,
     text: `Hi ${extractFirstName(name)},
 
 Your account has been downgraded to the free plan.
@@ -173,27 +165,26 @@ If you can take 30 seconds to reply to this email with one of the following reas
 4. It's too expensive
 5. Other: ____________
 
-If this was a mistake, you can upgrade again at any time here: https://app.lunary.ai/billing
+If this was a mistake, you can upgrade again at any time here: ${process.env.APP_URL}/billing
 
 Thank you for trying Lunary.
 
-Vince & Hugh - founders of Lunary`,
+- The Lunary team`,
   }
 }
 
-export function LIMITED_EMAIL(email: string, name: string) {
+export function LIMITED_EMAIL(email: string, name: string): MailOptions {
   return {
     subject: `Action Required: Events limit reached`,
-    to: [email],
-    reply_to: "hello@lunary.ai",
-    from: process.env.GENERIC_SENDER,
+    to: email,
+    from: config.GENERIC_SENDER_ADDRESS!,
     text: `Hi ${extractFirstName(name)},
   
 Congratulations! You've reached your free ingested event limit for the month, which means you're making great use of Lunary. 
 
 As a result, your account has been temporarily limited (don't worry, your data is safe and sound).
 
-To continue enjoying our services without interruption, please consider upgrading your account here: https://app.lunary.ai/billing
+To continue enjoying our services without interruption, please consider upgrading your account here: ${process.env.APP_URL}/billing
 
 If you have any questions, feel free to reply to this email.
 
