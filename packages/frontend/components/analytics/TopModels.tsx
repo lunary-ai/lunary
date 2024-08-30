@@ -17,7 +17,7 @@ interface TopModelsProps {
 }
 
 function TopModels({ topModels, isLoading }: TopModelsProps) {
-  if (isLoading) {
+  if (isLoading || !topModels) {
     return (
       <Flex align="center" justify="center" h="280px">
         <Loader />
@@ -25,7 +25,7 @@ function TopModels({ topModels, isLoading }: TopModelsProps) {
     )
   }
 
-  if (topModels?.length === 0) {
+  if (topModels && topModels.length <= 0) {
     return (
       <>
         <Overlay blur={5} opacity={0.1} p="lg" zIndex={1} />
