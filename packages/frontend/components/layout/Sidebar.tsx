@@ -307,7 +307,6 @@ export default function Sidebar() {
     {
       label: "Build",
       c: "violet",
-      disabled: isSelfHosted ? org.license && !org.license.evalEnabled : false,
       subMenu: [
         {
           label: "Prompts",
@@ -320,18 +319,27 @@ export default function Sidebar() {
           icon: IconFlask,
           link: "/evaluations/new",
           resource: "evaluations",
+          disabled: isSelfHosted
+            ? org.license && !org.license.evalEnabled
+            : false,
         },
         {
           label: "Evaluators",
           icon: IconActivityHeartbeat,
           link: "/evaluations/realtime",
           resource: "evaluations",
+          disabled: isSelfHosted
+            ? org.license && !org.license.evalEnabled
+            : false,
         },
         {
           label: "Datasets",
           icon: IconDatabase,
           link: "/datasets",
           resource: "datasets",
+          disabled: isSelfHosted
+            ? org.license && !org.license.evalEnabled
+            : false,
         },
       ],
     },
