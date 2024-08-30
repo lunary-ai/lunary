@@ -166,12 +166,6 @@ route.post("/download-idp-xml", aggressiveRatelimit, async (ctx: Context) => {
 // Assertion Consumer Service
 route.post("/acs", async (ctx: Context) => {
   const { orgId } = ctx.params as { orgId: string }
-  const { userId } = ctx.state
-
-  const [user] = await sql`select * from account where id = ${userId}`
-  if (user?.orgId !== orgId) {
-    ctx.throw(403, "Forbidden: Insufficient permissions")
-  }
 
   const idp = await getOrgIdp(orgId)
   const sp = await getOrgSp(orgId)
