@@ -318,10 +318,10 @@ function AnalyticsChart({
   const [load, setLoad] = useState(inViewport)
 
   const { data, isLoading } = useAnalyticsChartData(
+    load ? dataKey : undefined,
     startDate,
     endDate,
     granularity,
-    load ? dataKey : undefined,
     serializedChecks,
   )
 
@@ -392,7 +392,7 @@ export default function Analytics() {
 
   const { users: topUsers, loading: topUsersLoading } = useExternalUsers({
     startDate,
-    endDate,
+      endDate,
     checks: serializedChecks
   })
 

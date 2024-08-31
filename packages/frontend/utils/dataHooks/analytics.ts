@@ -1,17 +1,16 @@
 import { useProjectSWR } from "."
 
 export function useAnalyticsChartData(
+  key: string | null | undefined,
   startDate: Date,
   endDate: Date,
   granularity: string,
-  key?: string,
   checks?: string,
 ) {
   const timeZone = new window.Intl.DateTimeFormat().resolvedOptions().timeZone
   const checksParam = checks ? `&checks=${checks}` : ""
   const { data, isLoading } = useProjectSWR(
-    key &&
-      `/analytics/${key}?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&timeZone=${timeZone}&granularity=${granularity}${checksParam}`,
+    key ?`/analytics/${key}?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&timeZone=${timeZone}&granularity=${granularity}${checksParam}` : undefined
   )
 
   return { data, isLoading }
