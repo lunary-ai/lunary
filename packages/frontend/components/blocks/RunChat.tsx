@@ -63,6 +63,7 @@ function parseMessageFromRun(run) {
 
 function Message({
   msg,
+  user,
   siblings,
   selectedIndex,
   handleRetrySelect,
@@ -77,6 +78,7 @@ function Message({
   return (
     <>
       <BubbleMessage
+        user={user}
         role={msg.role}
         content={msg.content}
         enrichments={msg.enrichments}
@@ -132,7 +134,7 @@ function Message({
   )
 }
 
-function RunsChat({ runs, mutateLogs }) {
+function RunsChat({ runs, mutateLogs, user }) {
   const [selectedRetries, setSelectedRetries] = useState({})
 
   // Each chat run has input = [user message], output = [bot message]
@@ -175,6 +177,7 @@ function RunsChat({ runs, mutateLogs }) {
               <Message
                 key={i}
                 msg={msg}
+                user={user}
                 siblings={siblings}
                 selectedIndex={selectedIndex}
                 handleRetrySelect={handleRetrySelect}
@@ -243,7 +246,7 @@ export function ChatReplay({ run, mutateLogs }) {
 
       {loading && <Loader />}
 
-      <RunsChat runs={sorted} mutateLogs={mutateLogs} />
+      <RunsChat runs={sorted} mutateLogs={mutateLogs} user={user}  />
     </Stack>
   )
 }
