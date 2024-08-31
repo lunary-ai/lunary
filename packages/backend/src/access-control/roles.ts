@@ -50,13 +50,6 @@ export const roles = {
         list: true,
         run: true,
       },
-      radars: {
-        create: true,
-        read: true,
-        update: true,
-        delete: true,
-        list: true,
-      },
       datasets: {
         create: true,
         read: true,

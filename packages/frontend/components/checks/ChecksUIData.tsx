@@ -216,10 +216,6 @@ const CHECKS_UI_DATA: ChecksUIData = {
     icon: IconRulerMeasure,
     color: "blue",
   },
-  radar: {
-    icon: IconShieldBolt,
-    color: "red",
-  },
   search: {
     icon: IconSearch,
     color: "blue",
