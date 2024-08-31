@@ -73,22 +73,6 @@ filters.get("/users", async (ctx) => {
   ctx.body = rows
 })
 
-filters.get("/radars", async (ctx) => {
-  const { projectId } = ctx.state
-
-  const rows = await sql`
-    select
-      id as value,
-      description as label
-    from
-      radar
-    where
-      project_id = ${projectId}
-  `
-
-  ctx.body = rows
-})
-
 filters.get("/templates", async (ctx) => {
   const { projectId } = ctx.state
 
