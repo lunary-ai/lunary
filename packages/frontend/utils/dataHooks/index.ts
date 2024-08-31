@@ -716,63 +716,6 @@ export function useDatasetPromptVariation(id: string) {
   }
 }
 
-export function useRadars() {
-  const { data: radars, isLoading, mutate } = useProjectSWR(`/radars`)
-
-  // insert mutation
-  const { trigger: insert } = useProjectMutation(`/radars`, fetcher.post, {
-    populateCache(result, currentData) {
-      return [...currentData, result]
-    },
-  })
-
-  return {
-    radars,
-    insert,
-    mutate,
-    loading: isLoading,
-  }
-}
-
-export function useRadar(id, initialData?: any) {
-  const { mutate: mutateRadars } = useRadars()
-
-  const {
-    data: radar,
-    isLoading,
-    mutate,
-  } = useProjectSWR(id && `/radars/${id}`, {
-    fallbackData: initialData,
-  })
-
-  const { trigger: update } = useProjectMutation(
-    id && `/radars/${id}`,
-    fetcher.patch,
-    {},
-  )
-
-  const { trigger: remove } = useProjectMutation(
-    id && `/radars/${id}`,
-    fetcher.delete,
-    {
-      onSuccess() {
-        mutateRadars((radars) => radars.filter((r) => r.id !== id))
-      },
-    },
-  )
-
-  const { data: chart } = useProjectSWR(id && `/radars/${id}/chart`)
-
-  return {
-    radar,
-    chart,
-    update,
-    remove,
-    mutate,
-    loading: isLoading,
-  }
-}
-
 export function useEvaluations() {
   const { data, isLoading } = useProjectSWR(`/evaluations`)
 

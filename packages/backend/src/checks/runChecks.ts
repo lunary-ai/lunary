@@ -32,7 +32,6 @@ async function sqlEval(sqlFragment: any, run: any): Promise<boolean> {
 
   // those are eval-specific and differ from the run object
   delete run.idealOutput
-  delete run.radarId
   delete run.runId
   delete run.results
   delete run.passed
@@ -70,7 +69,6 @@ async function sqlEval(sqlFragment: any, run: any): Promise<boolean> {
 async function checkRun(
   run: any,
   check: LogicElement,
-  isRadar: Boolean,
   forceIngestionCheck: Boolean,
 ): Promise<CheckResults> {
   if (typeof check === "string") {
@@ -83,12 +81,7 @@ async function checkRun(
     const subChecks = check.slice(1)
     if (logicType === "OR") {
       for (const subCheck of subChecks) {
-        const result = await checkRun(
-          run,
-          subCheck,
-          isRadar,
-          forceIngestionCheck,
-        )
+        const result = await checkRun(run, subCheck, forceIngestionCheck)
         if (result.passed) {
           return { passed: true, details: [result] }
         }
@@ -101,7 +94,7 @@ async function checkRun(
       // Handle nested AND
       const results: CheckResults[] = await Promise.all(
         subChecks.map((subCheck) =>
-          checkRun(run, subCheck, isRadar, forceIngestionCheck),
+          checkRun(run, subCheck, forceIngestionCheck),
         ),
       )
       return {
@@ -124,9 +117,6 @@ async function checkRun(
   }
 
   if (runner.sql) {
-    if (isRadar) {
-      params.isRadar = true
-    }
     const snippet = runner.sql(params)
 
     const passed = await sqlEval(snippet, run)
@@ -141,7 +131,6 @@ export async function runChecksOnRun(
   run: any,
   checks: CheckLogic,
   optimize = false,
-  isRadar = false,
 ) {
   if (!checks.length) return { passed: true, results: [] }
 
@@ -160,7 +149,7 @@ export async function runChecksOnRun(
     const subChecks = checks.slice(1)
     if (logicType === "OR") {
       for (const check of subChecks) {
-        const res = await checkRun(run, check, isRadar, false)
+        const res = await checkRun(run, check, false)
         results.push(res)
         if (res.passed) {
           passed = true
@@ -170,7 +159,7 @@ export async function runChecksOnRun(
     } else {
       // Handle nested AND
       for (const check of subChecks) {
-        const res = await checkRun(run, check, isRadar, false)
+        const res = await checkRun(run, check, false)
         results.push(res)
         passed = res.passed
         if (!res.passed) break

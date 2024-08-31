@@ -38,22 +38,20 @@ async function setupSubscription(object: Stripe.Checkout.Session) {
     planPeriod: period,
     limited: false,
     playAllowance: 1000,
-    radarAllowance: 1000,
     evalAllowance: 1000,
   }
 
   const [org] = await sql`
-    UPDATE org
-    SET ${sql(orgData)}
-    WHERE id = ${client_reference_id}
-    RETURNING id, name
+    update
+       org
+    set 
+      ${sql(orgData)}
+    where 
+      id = ${client_reference_id}
+    returning id, name
   `
 
-  const users = await sql`
-    select email, name
-    from account
-    where id = ${org.id}
-  `
+  const users = await sql`select email, name from account where id = ${org.id}`
 
   const emailPromises = users.map((user) =>
     sendEmail(UPGRADE_EMAIL(user.email, user.name, plan)),

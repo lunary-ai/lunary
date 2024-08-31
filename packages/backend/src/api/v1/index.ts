@@ -9,7 +9,6 @@ import evaluations from "./evaluations"
 import projectUsers from "./external-users"
 import filters from "./filters"
 import projects from "./projects"
-import radars from "./radars"
 import runs from "./runs/index"
 import templateVersions from "./template-versions"
 import templates from "./templates"
@@ -42,7 +41,6 @@ v1.use(projects.routes())
 v1.use(runs.routes())
 v1.use(evaluators.routes())
 v1.use(datasets.routes())
-v1.use(radars.routes())
 v1.use(templates.routes())
 v1.use(templateVersions.routes())
 v1.use(filters.routes())
