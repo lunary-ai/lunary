@@ -8,7 +8,6 @@ export type ResourceName =
   | "logs"
   | "users"
   | "prompts"
-  | "radars"
   | "datasets"
   | "checklists"
   | "evaluations"
@@ -92,13 +91,6 @@ export const roles: Record<
         delete: true,
         list: true,
         run: true,
-      },
-      radars: {
-        create: true,
-        read: true,
-        update: true,
-        delete: true,
-        list: true,
       },
       datasets: {
         create: true,
@@ -186,13 +178,6 @@ export const roles: Record<
         list: true,
         run: true,
       },
-      radars: {
-        create: true,
-        read: true,
-        update: true,
-        delete: true,
-        list: true,
-      },
       datasets: {
         create: true,
         read: true,
@@ -276,13 +261,6 @@ export const roles: Record<
         list: true,
         run: true,
       },
-      radars: {
-        create: true,
-        read: true,
-        update: true,
-        delete: true,
-        list: true,
-      },
       datasets: {
         create: true,
         read: true,
@@ -357,13 +335,6 @@ export const roles: Record<
         delete: false,
         list: false,
         run: false,
-      },
-      radars: {
-        create: false,
-        read: true,
-        update: false,
-        delete: false,
-        list: true,
       },
       datasets: {
         create: false,

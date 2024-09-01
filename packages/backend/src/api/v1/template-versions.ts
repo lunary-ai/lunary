@@ -128,6 +128,7 @@ versions.patch(
           test_values: sql.json(testValues),
           is_draft: isDraft,
           notes,
+          publishedAt: isDraft ? null : sql`now()`,
         }),
       )}
       where 
