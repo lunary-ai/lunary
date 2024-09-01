@@ -146,15 +146,6 @@ export const FEATURES: Feature[] = [
     ],
   },
   {
-    id: "radar",
-    title: "Radars & Alerts",
-    Icon: IconShieldBolt,
-    plans: [
-      { id: "team", value: true },
-      { id: "enterprise", value: true },
-    ],
-  },
-  {
     id: "api",
     title: "Full API Access",
     Icon: IconLink,

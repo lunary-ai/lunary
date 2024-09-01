@@ -5,7 +5,6 @@ const TWO_HOURS = 2 * 60 * 60 * 1000
 const cache = {
   license: {
     // Everything is set to true by default in case there's a problem connecting to the license server
-    radarEnabled: true,
     evalEnabled: true,
     samlEnabled: true,
     accessControlEnabled: true,

@@ -49,7 +49,6 @@ export default async function purgeRuns() {
           runs_to_delete
       `
 
-      await sql`delete from radar_result where radar_result.run_id in (select run_id from runs_to_delete_temp)`
       await sql`delete from evaluation_result_v2 where evaluation_result_v2.run_id in (select run_id from runs_to_delete_temp)`
       const { count } =
         await sql`delete from run where id in (select run_id from runs_to_delete_temp)`
