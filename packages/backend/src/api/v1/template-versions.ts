@@ -128,6 +128,9 @@ versions.patch(
           test_values: sql.json(testValues),
           is_draft: isDraft,
           notes,
+
+          /* publishedAt is set to curnt date if the template is not a draft */
+          publishedAt: isDraft ? undefined : sql`now()`,
         }),
       )}
       where 
