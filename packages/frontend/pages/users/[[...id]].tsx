@@ -31,7 +31,7 @@ import {
   IconX,
 } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
-import Router from "next/router"
+import Router, { NextRouter } from "next/router"
 import { useEffect, useState } from "react"
 import analytics from "../../utils/analytics"
 import CopyText from "@/components/blocks/CopyText"
@@ -82,6 +82,12 @@ const columns = [
   timeColumn("lastSeen", "Last Seen"),
   costColumn(),
 ]
+
+function queryString(query) {
+  return Object.entries(query)
+    .map(([key, value]) => `${key}=${value}`)
+    .join("&")
+}
 
 function SelectedUser({ id, onClose }) {
   const { data: user, isLoading: userLoading } = useProjectSWR(
@@ -349,7 +355,10 @@ export default function Users() {
             analytics.trackOnce("OpenUser")
 
             setSelectedUserId(row.id)
-            router.push(`/users/${row.id}`)
+            router.replace(`/users/${row.id}?${queryString({
+              sortField: router.query.sortField,
+              sortDirection: router.query.sortDirection
+            })}`)
           }}
           loading={loading || validating}
           loadMore={loadMore}
@@ -359,7 +368,10 @@ export default function Users() {
           id={selectedUserId}
           onClose={() => {
             setSelectedUserId(null)
-            router.push("/users")
+            router.replace(`/users?${queryString({
+              sortField: router.query.sortField,
+              sortDirection: router.query.sortDirection
+            })}`)
           }}
         />
       </Stack>
