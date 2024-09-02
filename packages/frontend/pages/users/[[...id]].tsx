@@ -31,7 +31,7 @@ import {
   IconX,
 } from "@tabler/icons-react"
 import { NextSeo } from "next-seo"
-import Router, { NextRouter } from "next/router"
+import Router from "next/router"
 import { useEffect, useState } from "react"
 import analytics from "../../utils/analytics"
 import CopyText from "@/components/blocks/CopyText"
