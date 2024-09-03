@@ -211,10 +211,14 @@ users.post("/", checkAccess("teamMembers", "create"), async (ctx: Context) => {
   }
 
   const [existingUser] = await sql`
-    select id from account where email = ${email}
+    select id, org_id from account where email = ${email}
   `
+  if (existingUser && existingUser.orgId !== orgId) {
+    ctx.throw(400, "This user is part of a different Organization.")
+  }
+
   if (existingUser) {
-    ctx.throw(400, "User with this email already exists")
+    ctx.throw(400, "This user is already part of your Organization.")
   }
 
   for (const projectId of projects) {
