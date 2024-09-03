@@ -175,7 +175,7 @@ async function registerRunEvent(
       output = JSON.stringify(output)
     }
 
-    const runToInsert = {
+    const runToInsert = clearUndefined({
       endedAt: timestamp,
       output: output,
       status: "success",
@@ -183,7 +183,7 @@ async function registerRunEvent(
       completionTokens: tokensUsage?.completion,
       cost,
       metadata,
-    }
+    })
     if (!runToInsert.metadata) {
       delete runToInsert.metadata
     }
