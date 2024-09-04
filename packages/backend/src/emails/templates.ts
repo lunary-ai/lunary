@@ -20,14 +20,15 @@ Please click on the following link to accept the invitation:
 ${inviteLink}
 
 ${
-  !config.IS_SELF_HOSTED &&
-  `We're looking forward to having you on board!
+  !config.IS_SELF_HOSTED
+    ? `We're looking forward to having you on board!
 
 You can reply to this email if you have any question.
 
 Thanks
 - The Lunary team
 `
+    : ""
 }
 `,
   }
