@@ -60,7 +60,7 @@ export default function EvalResults() {
             {checklist && (
               <Group>
                 <Text>Checklist:</Text>
-                <CheckPicker value={checklist.data} disabled />
+                <CheckPicker minimal={true} value={checklist.data} disabled />
               </Group>
             )}
             {dataset && (
