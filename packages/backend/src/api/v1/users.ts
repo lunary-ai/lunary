@@ -12,6 +12,7 @@ import { jwtVerify } from "jose"
 import { roles } from "shared"
 import { z } from "zod"
 import { signJWT } from "./auth/utils"
+import config from "@/src/utils/config"
 
 const users = new Router({
   prefix: "/users",
@@ -131,14 +132,18 @@ users.get("/verify-email", async (ctx: Context) => {
   const { orgId, name } = acc
 
   const [project] = await sql`
-      SELECT id
-      FROM project
-      WHERE org_id = ${orgId}
+      select 
+        id
+      from 
+        project
+      where 
+        org_id = ${orgId}
     `
   const id = project?.id
 
-  await sendEmail(WELCOME_EMAIL(email, name, id))
-  // redirect to home page
+  if (!config.IS_SELF_HOSTED) {
+    await sendEmail(WELCOME_EMAIL(email, name, id))
+  }
   ctx.redirect(process.env.APP_URL!)
 })
 
@@ -254,8 +259,11 @@ users.post("/", checkAccess("teamMembers", "create"), async (ctx: Context) => {
     group by account.id
   `
 
+  const link = org.samlEnabled
+    ? process.env.APP_URL
+    : `${process.env.APP_URL}/join?token=${token}`
+
   if (!org.samlEnabled) {
-    const link = `${process.env.APP_URL}/join?token=${token}`
     await sendEmail(INVITE_EMAIL(email, org.name, link))
   }
 

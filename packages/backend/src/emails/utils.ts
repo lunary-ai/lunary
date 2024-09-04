@@ -1,6 +1,7 @@
 import { signJWT } from "@/src/api/v1/auth/utils"
 import { sendEmail } from "./sender"
 import { CONFIRM_EMAIL } from "./templates"
+import config from "../utils/config"
 
 function sanitizeName(name: string): string {
   return name.replace(/\s+/g, " ").trim()
@@ -17,5 +18,7 @@ export async function sendVerifyEmail(email: string, name: string = "") {
 
   const confirmLink = `${process.env.APP_URL}/verify-email?token=${token}`
 
-  await sendEmail(CONFIRM_EMAIL(email, name, confirmLink))
+  if (!config.IS_SELF_HOSTED) {
+    await sendEmail(CONFIRM_EMAIL(email, name, confirmLink))
+  }
 }
