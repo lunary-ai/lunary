@@ -282,14 +282,19 @@ export default function NewEvaluation() {
               </Button>
             </Steps.Step>
             <Steps.Step n={3} label="Checklist (optional)">
-              <Text size="lg" mb="md" mt={-6}>
-                Assertions against which to run the dataset that will result in
-                a{" "}
-                <Text c="green" span fw="bold">
-                  PASS
+              <Group justify="space-between">
+                <Text size="lg" mb="md" mt={-6}>
+                  Assertions against which to run the dataset that will result
+                  in a{" "}
+                  <Text c="green" span fw="bold">
+                    PASS
+                  </Text>
+                  .
                 </Text>
-                .
-              </Text>
+                <Anchor href="/evaluations/checklists" mb="md">
+                  Edit checklists
+                </Anchor>
+              </Group>
               <Select
                 placeholder="Select a preset checklist or create a new one."
                 onChange={(datasetId) => setChecklistId(datasetId)}
