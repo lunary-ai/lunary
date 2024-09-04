@@ -5,10 +5,10 @@ import ProtectedText from "../ProtectedText"
 import styles from "./index.module.css"
 
 const colors = [
+  "blue",
   "cyan",
   "purple",
   "violet",
-  "blue",
   "red",
   "teal",
   "yellow",
@@ -34,16 +34,14 @@ function AppUserAvatar({
   const nameOrEmail = formatAppUser(user)
 
   return (
-    <Group gap="xs" wrap="nowrap">
-      <Avatar lh={0.4} radius="xl" color={color} size={size}>
-        {nameOrEmail?.slice(0, 2)?.toUpperCase()}
-      </Avatar>
-      {withName && (
-        <Anchor className={styles.anchor} href={`/users/${user.id}`}>
-          <ProtectedText>{nameOrEmail}</ProtectedText>
-        </Anchor>
-      )}
-    </Group>
+    <Anchor className={styles.anchor} href={`/users/${user.id}`}>
+      <Group gap="xs" wrap="nowrap">
+        <Avatar lh={0.4} radius="xl" color={color} size={size}>
+          {nameOrEmail?.slice(0, 2)?.toUpperCase()}
+        </Avatar>
+        {withName && <ProtectedText>{nameOrEmail}</ProtectedText>}
+      </Group>
+    </Anchor>
   )
 }
 
