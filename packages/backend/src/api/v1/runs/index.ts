@@ -234,7 +234,7 @@ runs.get("/", async (ctx: Context) => {
   const sortMapping = {
     createdAt: "r.created_at",
     duration: "r.duration",
-    tokens: "(r.prompt_tokens + r.completion_tokens)",
+    tokens: "total_tokens",
     cost: "r.cost",
   }
   let orderByClause = `r.created_at desc nulls last`
@@ -247,6 +247,7 @@ runs.get("/", async (ctx: Context) => {
     with runs as (
       select distinct
         r.*,
+        (r.prompt_tokens + r.completion_tokens) as total_tokens,
         eu.id as user_id,
         eu.external_id as user_external_id,
         eu.created_at as user_created_at,
