@@ -18,11 +18,19 @@ import {
 import { notifications } from "@mantine/notifications"
 
 import { MODELS, Provider } from "shared"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import Link from "next/link"
 import { IconInfoCircle, IconTools } from "@tabler/icons-react"
 
-export const ParamItem = ({ name, value, description }) => (
+export const ParamItem = ({
+  name,
+  value,
+  description,
+}: {
+  name: string
+  value: any
+  description?: string
+}) => (
   <Group justify="space-between">
     <Group gap={5}>
       <Text size="sm">{name}</Text>
@@ -53,30 +61,27 @@ export default function ProviderEditor({
   const [tempJSON, setTempJSON] = useState<any>("")
   const [jsonModalOpened, setJsonModalOpened] = useState(false)
 
-  const configHandler = (key: string, isCheckbox?: boolean) => ({
-    size: "xs",
-    [isCheckbox ? "checked" : "value"]: isNullishButNotZero(
-      value?.config?.[key],
-    )
-      ? isCheckbox
-        ? false
-        : ""
-      : value?.config?.[key], // empty string is important to reset the value)
-    onChange: (val) => {
-      // Handle checkboxes
-      if (isCheckbox) val = val.currentTarget.checked
+  const configHandler = (key: string, isCheckbox?: boolean) => {
+    return {
+      size: "xs",
+      onChange: (val) => {
+        // Handle checkboxes
+        if (isCheckbox) val = val.currentTarget.checked
 
-      if (isNullishButNotZero(val)) val = undefined // handle empty strings and booleans
+        if (isNullishButNotZero(val)) val = undefined // handle empty strings and booleans
 
-      onChange({
-        ...value,
-        config: {
-          ...value.config,
-          [key]: val,
-        },
-      })
-    },
-  })
+        onChange({
+          ...value,
+          config: {
+            ...value?.config,
+            [key]: val,
+          },
+        })
+      },
+    }
+  }
+
+  console.log(value.config)
 
   const validateToolCalls = (toolCalls: any[]) => {
     if (!Array.isArray(toolCalls)) return false
@@ -126,6 +131,7 @@ export default function ProviderEditor({
             decimalScale={2}
             style={{ zIndex: 0 }}
             w={90}
+            value={value?.config.temperature}
             {...configHandler("temperature")}
           />
         }
@@ -139,6 +145,7 @@ export default function ProviderEditor({
             max={32000}
             step={100}
             w={90}
+            value={value?.config.max_tokens || value?.config.maxTokens}
             {...configHandler("max_tokens")}
           />
         }
@@ -153,6 +160,9 @@ export default function ProviderEditor({
             decimalScale={2}
             step={0.1}
             w={90}
+            value={
+              value?.config.frequency_penalty || value?.config.frequencyPenalty
+            }
             {...configHandler("frequency_penalty")}
           />
         }
@@ -167,6 +177,9 @@ export default function ProviderEditor({
             decimalScale={2}
             step={0.1}
             w={90}
+            value={
+              value?.config.presence_penalty || value?.config.presencePenalty
+            }
             {...configHandler("presence_penalty")}
           />
         }
@@ -181,6 +194,7 @@ export default function ProviderEditor({
             decimalScale={2}
             step={0.1}
             w={90}
+            value={value?.config.top_p || value?.config.topP}
             {...configHandler("top_p")}
           />
         }
@@ -188,7 +202,12 @@ export default function ProviderEditor({
 
       <ParamItem
         name="Stream"
-        value={<Checkbox {...configHandler("stream", true)} />}
+        value={
+          <Checkbox
+            {...configHandler("stream", true)}
+            checked={!isNullishButNotZero(value?.config.stream)}
+          />
+        }
       />
 
       <ParamItem
