@@ -83,12 +83,6 @@ const columns = [
   costColumn(),
 ]
 
-function queryString(query) {
-  return Object.entries(query)
-    .map(([key, value]) => `${key}=${value}`)
-    .join("&")
-}
-
 function SelectedUser({ id, onClose }) {
   const { data: user, isLoading: userLoading } = useProjectSWR(
     id && `/external-users/${id}`,
@@ -103,6 +97,7 @@ function SelectedUser({ id, onClose }) {
   function confirmDelete() {
     modals.openConfirmModal({
       title: "Please confirm your action",
+      // @ts-ignore
       confirmProps: { color: "red", "data-testid": "confirm" },
       children: (
         <Text size="sm">
@@ -165,7 +160,11 @@ function SelectedUser({ id, onClose }) {
       `users=${id}`,
     )
 
-  const commonChartData = {
+  const commonChartData: {
+    startDate: Date,
+    endDate: Date,
+    granularity: "daily",
+  } = {
     startDate,
     endDate,
     granularity: "daily",
@@ -302,6 +301,14 @@ export default function Users() {
     parseAsString,
   )
 
+  const [sortField, setSortField] = useQueryState<string | undefined>(
+    "sortField", parseAsString,
+  )
+
+  const [sortDirection, setSortDirection] = useQueryState<string | undefined>(
+    "sortDirection", parseAsString,
+  )
+
   const [debouncedSearch] = useDebouncedValue(search, 200)
   const [columnVisibility, setColumnVisibility] = useLocalStorage({
     key: "users-columns",
@@ -355,10 +362,10 @@ export default function Users() {
             analytics.trackOnce("OpenUser")
 
             setSelectedUserId(row.id)
-            router.replace(`/users/${row.id}?${queryString({
-              sortField: router.query.sortField,
-              sortDirection: router.query.sortDirection
-            })}`)
+            router.replace({
+              pathname: `/users/${row.id}`,
+              query: { sortField, sortDirection }
+            })
           }}
           loading={loading || validating}
           loadMore={loadMore}
@@ -368,10 +375,10 @@ export default function Users() {
           id={selectedUserId}
           onClose={() => {
             setSelectedUserId(null)
-            router.replace(`/users?${queryString({
-              sortField: router.query.sortField,
-              sortDirection: router.query.sortDirection
-            })}`)
+            router.replace({
+              pathname: "/users",
+              query: { sortField, sortDirection }
+            })
           }}
         />
       </Stack>
