@@ -6,6 +6,7 @@ import { cleanSlug } from "@/utils/format"
 import {
   ActionIcon,
   Alert,
+  Anchor,
   Button,
   Card,
   Container,
@@ -77,6 +78,7 @@ export function ChecklistCard({ defaultValue, onDelete }) {
         <CheckPicker
           value={checklist?.data}
           restrictTo={(filter) => !filter.disableInEvals}
+          minimal={true}
           onChange={(newData) => {
             update(
               { data: newData },
@@ -127,11 +129,18 @@ export function ChecklistModal({ open, onClose }) {
         <Stack gap={0}>
           <InputLabel mb={-5}>Checks</InputLabel>
           <InputDescription mb={16}>
-            Define the checks that will result in a{" "}
-            <Text c="green" span fw="bold">
-              PASS
-            </Text>
-            .
+            <Group>
+              <>
+                Define the checks that will result in a{" "}
+                <Text c="green" span fw="bold">
+                  PASS
+                </Text>
+                .
+              </>
+              <Anchor href="/evaluations/checklists" mt="sm">
+                Edit checklists
+              </Anchor>
+            </Group>
           </InputDescription>
           <CheckPicker
             minimal={true}
