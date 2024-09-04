@@ -18,7 +18,7 @@ import {
 import { notifications } from "@mantine/notifications"
 
 import { MODELS, Provider } from "shared"
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import { IconInfoCircle, IconTools } from "@tabler/icons-react"
 
@@ -80,8 +80,6 @@ export default function ProviderEditor({
       },
     }
   }
-
-  console.log(value.config)
 
   const validateToolCalls = (toolCalls: any[]) => {
     if (!Array.isArray(toolCalls)) return false
