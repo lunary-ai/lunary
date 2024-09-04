@@ -1,8 +1,12 @@
 import sql from "@/src/utils/db"
 import { sendSlackMessage } from "@/src/utils/notifications"
 import { LIMITED_EMAIL, sendEmail } from "../emails"
+import config from "../utils/config"
 
 async function updateLimitedStatus() {
+  if (config.IS_SELF_HOSTED) {
+    return
+  }
   // set limited = false for all users that have been under the limit
   // for the last 30 days
   const alreadyLimited = await sql`UPDATE "public"."org" p
