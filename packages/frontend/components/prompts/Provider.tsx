@@ -26,6 +26,10 @@ function convertOpenAIToolsToAnthropic(openAITools) {
   return openAITools.map((openAITool) => {
     const openAIFunction = openAITool.function
 
+    if (!openAIFunction) {
+      return openAITool
+    }
+
     const anthropicTool = {
       name: openAIFunction.name,
       description: openAIFunction.description,
@@ -67,6 +71,22 @@ export const ParamItem = ({ name, value, description }) => (
   </Group>
 )
 
+const validateToolCalls = (toolCalls: any[]) => {
+  console.log(`validatin`, toolCalls)
+  if (!Array.isArray(toolCalls)) return false
+
+  const isNameDescriptionFormat = toolCalls.every(
+    (t) => t.name && t.description && t.input_schema,
+  )
+  const isFunctionTypeFormat = toolCalls.every(
+    (t) => t.type === "function" && t.function?.name,
+  )
+
+  console.log(isNameDescriptionFormat, isFunctionTypeFormat)
+
+  return isNameDescriptionFormat || isFunctionTypeFormat
+}
+
 const isNullishButNotZero = (val: any) =>
   val === undefined || val === null || val === ""
 
@@ -107,19 +127,6 @@ export default function ProviderEditor({
     },
   })
 
-  const validateToolCalls = (toolCalls: any[]) => {
-    if (!Array.isArray(toolCalls)) return false
-
-    const isNameDescriptionFormat = toolCalls.every(
-      (t) => t.name && t.description && t.input_schema,
-    )
-    const isFunctionTypeFormat = toolCalls.every(
-      (t) => t.type === "function" && t.function?.name,
-    )
-
-    return isNameDescriptionFormat || isFunctionTypeFormat
-  }
-
   return (
     <>
       <ParamItem
@@ -139,16 +146,22 @@ export default function ProviderEditor({
               if (!model || !value.model) {
                 return
               }
-              const isPreviousProviderOpenAI = value.model.startsWith("gpt")
+              // Handle conversion between OpenAI and Anthropic tools format
+              const isPreviousProviderOpenAI =
+                value.model.startsWith("gpt") || value.model.includes("mistral")
+              const isNewProviderOpenAI =
+                model.startsWith("gpt") || model.includes("mistral")
+
               const isPreviousProviderAnthropic =
                 value.model.startsWith("claude")
-              const isNewProviderOpenAI = model.startsWith("gpt")
+
               const isNewProviderAnthropic = model.startsWith("claude")
 
               if (isPreviousProviderOpenAI && isNewProviderAnthropic) {
                 const tools = value.config.tools
                 value.config.tools = convertOpenAIToolsToAnthropic(tools)
               }
+
               onChange({
                 ...value,
                 model,
@@ -299,6 +312,8 @@ export default function ProviderEditor({
                       const repaired = empty
                         ? undefined
                         : JSON.parse(jsonrepair(tempJSON.trim()))
+
+                      console.log(empty, repaired)
 
                       if (!empty && !validateToolCalls(repaired)) {
                         throw new Error("Invalid tool calls format")

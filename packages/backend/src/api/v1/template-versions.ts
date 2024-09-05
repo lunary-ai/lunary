@@ -15,6 +15,11 @@ const versions = new Router({
 // Otherwise it returns stuff like maxTokens instead of max_tokens and OpenAI breaks
 const unCameledSql = postgres(process.env.DATABASE_URL!)
 
+export function unCamelExtras(version: any) {
+  version.extra = unCamelObject(version.extra)
+  return version
+}
+
 //Warning: Route used by SDK to fetch the latest version of a template
 versions.get("/latest", async (ctx: Context) => {
   const { projectId } = ctx.state
@@ -47,8 +52,6 @@ versions.get("/latest", async (ctx: Context) => {
     ctx.throw("Template not found, is the project ID correct?", 404)
   }
 
-  latestVersion.extra = unCamelObject(latestVersion.extra)
-
   // This makes sure OpenAI messages are not camel cased as used in the app
   // For example: message.toolCallId instead of message.tool_call_id
   if (typeof latestVersion.content !== "string") {
@@ -57,7 +60,7 @@ versions.get("/latest", async (ctx: Context) => {
     )
   }
 
-  ctx.body = latestVersion
+  ctx.body = unCamelExtras(latestVersion)
 })
 
 versions.get("/:id", async (ctx: Context) => {
@@ -78,13 +81,11 @@ versions.get("/:id", async (ctx: Context) => {
     ctx.throw(401, "You do not have access to this ressource.")
   }
 
-  version.extra = unCamelObject(version.extra)
-
   const [template] = await sql`
     select * from template where project_id = ${projectId} and id = ${version.templateId}
   `
 
-  ctx.body = { ...version, template }
+  ctx.body = { ...unCamelExtras(version), template }
 })
 
 versions.patch(
@@ -120,7 +121,7 @@ versions.patch(
     }
 
     const [updatedTemplateVersion] = await sql`
-      update template_version 
+      update template_version
       set ${sql(
         clearUndefined({
           content: sql.json(content),
@@ -136,7 +137,7 @@ versions.patch(
       returning *
     `
 
-    ctx.body = updatedTemplateVersion
+    ctx.body = unCamelExtras(updatedTemplateVersion)
   },
 )
 
