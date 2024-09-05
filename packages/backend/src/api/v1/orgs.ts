@@ -189,7 +189,7 @@ orgs.post("/playground", async (ctx: Context) => {
   const requestBodySchema = z.object({
     content: z.array(z.any()).or(z.string()),
     extra: z.any(),
-    variables: z.record(z.string()).optional().default({}),
+    variables: z.record(z.string()).nullable().optional().default({}),
   })
   const { content, extra, variables } = requestBodySchema.parse(
     ctx.request.body,

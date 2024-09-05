@@ -10,9 +10,16 @@ export async function setDefaultBody(ctx: Context, next: Next) {
 }
 
 export function unCamelObject(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(unCamelObject)
+  }
+  if (typeof obj !== "object" || obj === null) {
+    return obj
+  }
   const newObj: any = {}
   for (const key in obj) {
-    newObj[key.replace(/([A-Z])/g, "_$1").toLowerCase()] = obj[key]
+    const newKey = key.replace(/([A-Z])/g, "_$1").toLowerCase()
+    newObj[newKey] = unCamelObject(obj[key])
   }
   return newObj
 }

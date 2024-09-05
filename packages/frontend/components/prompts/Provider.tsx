@@ -22,6 +22,52 @@ import { useState } from "react"
 import Link from "next/link"
 import { IconInfoCircle, IconTools } from "@tabler/icons-react"
 
+function convertOpenAIToolsToAnthropic(openAITools) {
+  return openAITools.map((openAITool) => {
+    const openAIFunction = openAITool.function
+
+    if (!openAIFunction) {
+      return openAITool
+    }
+
+    const anthropicTool = {
+      name: openAIFunction.name,
+      description: openAIFunction.description,
+      input_schema: {
+        type: "object",
+        properties: {},
+        required: openAIFunction.parameters.required || [],
+      },
+    }
+
+    for (const [key, value] of Object.entries(
+      openAIFunction.parameters.properties,
+    )) {
+      anthropicTool.input_schema.properties[key] = {
+        type: value.type,
+        description: value.description,
+      }
+    }
+
+    return anthropicTool
+  })
+}
+
+function convertAnthropicToolsToOpenAI(anthropicTools) {
+  return anthropicTools.map((anthropicTool) => ({
+    type: "function",
+    function: {
+      name: anthropicTool.name,
+      description: anthropicTool.description,
+      parameters: {
+        type: "object",
+        properties: anthropicTool.input_schema.properties,
+        required: anthropicTool.input_schema.required,
+      },
+    },
+  }))
+}
+
 export const ParamItem = ({ name, value, description }) => (
   <Group justify="space-between">
     <Group gap={5}>
@@ -39,6 +85,19 @@ export const ParamItem = ({ name, value, description }) => (
     )}
   </Group>
 )
+
+const validateToolCalls = (toolCalls: any[]) => {
+  if (!Array.isArray(toolCalls)) return false
+
+  const isNameDescriptionFormat = toolCalls.every(
+    (t) => t.name && t.description && t.input_schema,
+  )
+  const isFunctionTypeFormat = toolCalls.every(
+    (t) => t.type === "function" && t.function?.name,
+  )
+
+  return isNameDescriptionFormat || isFunctionTypeFormat
+}
 
 const isNullishButNotZero = (val: any) =>
   val === undefined || val === null || val === ""
@@ -78,19 +137,6 @@ export default function ProviderEditor({
     },
   })
 
-  const validateToolCalls = (toolCalls: any[]) => {
-    if (!Array.isArray(toolCalls)) return false
-
-    const isNameDescriptionFormat = toolCalls.every(
-      (t) => t.name && t.description && t.input_schema,
-    )
-    const isFunctionTypeFormat = toolCalls.every(
-      (t) => t.type === "function" && t.function?.name,
-    )
-
-    return isNameDescriptionFormat || isFunctionTypeFormat
-  }
-
   return (
     <>
       <ParamItem
@@ -107,9 +153,35 @@ export default function ProviderEditor({
             inputMode="search"
             value={value?.model}
             onChange={(model) => {
+              if (!model || !value.model) {
+                return
+              }
+              // Handle conversion between OpenAI and Anthropic tools format
+              const isPreviousProviderOpenAI =
+                value.model.startsWith("gpt") || value.model.includes("mistral")
+              const isNewProviderOpenAI =
+                model.startsWith("gpt") || model.includes("mistral")
+
+              const isPreviousProviderAnthropic =
+                value.model.startsWith("claude")
+
+              const isNewProviderAnthropic = model.startsWith("claude")
+
+              let updatedTools = value.config.tools
+
+              if (isPreviousProviderOpenAI && isNewProviderAnthropic) {
+                updatedTools = convertOpenAIToolsToAnthropic(value.config.tools)
+              } else if (isPreviousProviderAnthropic && isNewProviderOpenAI) {
+                updatedTools = convertAnthropicToolsToOpenAI(value.config.tools)
+              }
+
               onChange({
                 ...value,
                 model,
+                config: {
+                  ...value.config,
+                  tools: updatedTools,
+                },
               })
             }}
           />
@@ -257,6 +329,8 @@ export default function ProviderEditor({
                       const repaired = empty
                         ? undefined
                         : JSON.parse(jsonrepair(tempJSON.trim()))
+
+                      console.log(empty, repaired)
 
                       if (!empty && !validateToolCalls(repaired)) {
                         throw new Error("Invalid tool calls format")

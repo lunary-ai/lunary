@@ -5,6 +5,7 @@ import Context from "@/src/utils/koa"
 import { unCamelObject } from "@/src/utils/misc"
 import Router from "koa-router"
 import { z } from "zod"
+import { unCamelExtras } from "./template-versions"
 
 const templates = new Router({
   prefix: "/templates",
@@ -34,9 +35,7 @@ templates.get("/", async (ctx: Context) => {
 
   // uncamel each template's versions' extras' keys
   for (const template of templates) {
-    for (const version of template.versions) {
-      version.extra = unCamelObject(version.extra)
-    }
+    template.versions = template.versions.map(unCamelExtras)
   }
 
   ctx.body = templates
@@ -62,11 +61,7 @@ templates.get("/latest", async (ctx: Context) => {
       tv.created_at desc; 
   `
 
-  for (const version of templateVersions) {
-    version.extra = unCamelObject(version.extra)
-  }
-
-  ctx.body = templateVersions
+  ctx.body = templateVersions.map(unCamelExtras)
 })
 
 // insert template + a first version, and return the template with versions
@@ -93,13 +88,15 @@ templates.post("/", checkAccess("prompts", "create"), async (ctx: Context) => {
     })} returning *
   `
 
+  delete extra.stop
+
   const [templateVersion] = await sql`
     insert into template_version ${sql(
       clearUndefined({
         templateId: template.id,
         content: sql.json(content),
-        extra: sql.json(unCamelObject(extra)),
-        testValues: sql.json(testValues),
+        extra: sql.json(unCamelObject(clearUndefined(extra))),
+        testValues: testValues ? sql.json(testValues) : undefined,
         isDraft: isDraft,
         notes,
       }),
@@ -108,7 +105,7 @@ templates.post("/", checkAccess("prompts", "create"), async (ctx: Context) => {
 
   ctx.body = {
     ...template,
-    versions: [templateVersion],
+    versions: [unCamelExtras(templateVersion)],
   }
 })
 
@@ -207,7 +204,7 @@ templates.post(
       returning *
     `
 
-    ctx.body = templateVersion
+    ctx.body = unCamelExtras(templateVersion)
   },
 )
 
