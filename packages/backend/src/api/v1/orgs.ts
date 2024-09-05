@@ -194,7 +194,6 @@ orgs.post("/playground", async (ctx: Context) => {
   const { content, extra, variables } = requestBodySchema.parse(
     ctx.request.body,
   )
-  console.log(content, extra, variables)
 
   ctx.request.socket.setTimeout(0)
   ctx.request.socket.setNoDelay(true)
