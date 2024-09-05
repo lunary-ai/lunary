@@ -87,7 +87,6 @@ export const ParamItem = ({ name, value, description }) => (
 )
 
 const validateToolCalls = (toolCalls: any[]) => {
-  console.log(`validatin`, toolCalls)
   if (!Array.isArray(toolCalls)) return false
 
   const isNameDescriptionFormat = toolCalls.every(
@@ -96,8 +95,6 @@ const validateToolCalls = (toolCalls: any[]) => {
   const isFunctionTypeFormat = toolCalls.every(
     (t) => t.type === "function" && t.function?.name,
   )
-
-  console.log(isNameDescriptionFormat, isFunctionTypeFormat)
 
   return isNameDescriptionFormat || isFunctionTypeFormat
 }
@@ -129,8 +126,6 @@ export default function ProviderEditor({
       if (isCheckbox) val = val.currentTarget.checked
 
       if (isNullishButNotZero(val)) val = undefined // handle empty strings and booleans
-
-      console.log(val)
 
       onChange({
         ...value,
