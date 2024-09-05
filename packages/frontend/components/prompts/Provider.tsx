@@ -53,6 +53,21 @@ function convertOpenAIToolsToAnthropic(openAITools) {
   })
 }
 
+function convertAnthropicToolsToOpenAI(anthropicTools) {
+  return anthropicTools.map((anthropicTool) => ({
+    type: "function",
+    function: {
+      name: anthropicTool.name,
+      description: anthropicTool.description,
+      parameters: {
+        type: "object",
+        properties: anthropicTool.input_schema.properties,
+        required: anthropicTool.input_schema.required,
+      },
+    },
+  }))
+}
+
 export const ParamItem = ({ name, value, description }) => (
   <Group justify="space-between">
     <Group gap={5}>
@@ -157,14 +172,21 @@ export default function ProviderEditor({
 
               const isNewProviderAnthropic = model.startsWith("claude")
 
+              let updatedTools = value.config.tools
+
               if (isPreviousProviderOpenAI && isNewProviderAnthropic) {
-                const tools = value.config.tools
-                value.config.tools = convertOpenAIToolsToAnthropic(tools)
+                updatedTools = convertOpenAIToolsToAnthropic(value.config.tools)
+              } else if (isPreviousProviderAnthropic && isNewProviderOpenAI) {
+                updatedTools = convertAnthropicToolsToOpenAI(value.config.tools)
               }
 
               onChange({
                 ...value,
                 model,
+                config: {
+                  ...value.config,
+                  tools: updatedTools,
+                },
               })
             }}
           />
