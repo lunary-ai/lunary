@@ -180,6 +180,12 @@ function Playground() {
         const run = await fetcher.get(`/runs/${clone}?projectId=${project?.id}`)
 
         if (run?.input) {
+          if (Array.isArray(run.input)) {
+            for (const input of run.input) {
+              delete input.enrichments
+            }
+          }
+
           setTemplateVersion({
             // ...templateVersion,
             content: run.input,

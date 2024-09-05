@@ -18,10 +18,10 @@ import {
   useComputedColorScheme,
 } from "@mantine/core"
 import {
+  IconCircleMinus,
   IconInfoCircle,
   IconRobot,
   IconTool,
-  IconTrash,
   IconUser,
 } from "@tabler/icons-react"
 import Image from "next/image"
@@ -178,8 +178,12 @@ function ToolCallsMessage({
           {editable && (
             <ActionIcon
               color="red"
+              variant="transparent"
               className={classes.toolCallActionIcon}
-              size={22}
+              size="sm"
+              pos="absolute"
+              top="35px"
+              right="2px"
               onClick={() => {
                 openConfirmModal({
                   title: "Are you sure?",
@@ -196,7 +200,7 @@ function ToolCallsMessage({
                 })
               }}
             >
-              <IconTrash size={16} />
+              <IconCircleMinus size="14" />
             </ActionIcon>
           )}
         </Box>
@@ -525,16 +529,18 @@ export function ChatMessage({
               {data.role}
             </Text>
           )}
-          <Group>
-            {sentiment && <SentimentEnrichment2 score={sentiment?.score} />}
-            {language && (
-              <Tooltip
-                label={`${getLanguageName(language.isoCode)} (${Number(language.confidence.toFixed(3))})`}
-              >
-                <Box>{getFlagEmoji(language.isoCode)}</Box>
-              </Tooltip>
-            )}
-          </Group>
+          {!editable && (
+            <Group>
+              {sentiment && <SentimentEnrichment2 score={sentiment?.score} />}
+              {language && (
+                <Tooltip
+                  label={`${getLanguageName(language.isoCode)} (${Number(language.confidence.toFixed(3))})`}
+                >
+                  <Box>{getFlagEmoji(language.isoCode)}</Box>
+                </Tooltip>
+              )}
+            </Group>
+          )}
         </Group>
       )}
       <ChatMessageContent
