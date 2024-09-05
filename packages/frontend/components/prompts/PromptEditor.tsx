@@ -51,7 +51,7 @@ export function PromptEditor({
                   onChange(newContent)
                 }}
               >
-                <IconCircleMinus size="12" />
+                <IconCircleMinus size="14" />
               </ActionIcon>
             </Box>
           ))}

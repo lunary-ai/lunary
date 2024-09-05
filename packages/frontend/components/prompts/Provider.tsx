@@ -22,6 +22,33 @@ import { useState } from "react"
 import Link from "next/link"
 import { IconInfoCircle, IconTools } from "@tabler/icons-react"
 
+function convertOpenAIToolsToAnthropic(openAITools) {
+  return openAITools.map((openAITool) => {
+    const openAIFunction = openAITool.function
+
+    const anthropicTool = {
+      name: openAIFunction.name,
+      description: openAIFunction.description,
+      input_schema: {
+        type: "object",
+        properties: {},
+        required: openAIFunction.parameters.required || [],
+      },
+    }
+
+    for (const [key, value] of Object.entries(
+      openAIFunction.parameters.properties,
+    )) {
+      anthropicTool.input_schema.properties[key] = {
+        type: value.type,
+        description: value.description,
+      }
+    }
+
+    return anthropicTool
+  })
+}
+
 export const ParamItem = ({ name, value, description }) => (
   <Group justify="space-between">
     <Group gap={5}>
@@ -68,6 +95,8 @@ export default function ProviderEditor({
 
       if (isNullishButNotZero(val)) val = undefined // handle empty strings and booleans
 
+      console.log(val)
+
       onChange({
         ...value,
         config: {
@@ -107,6 +136,19 @@ export default function ProviderEditor({
             inputMode="search"
             value={value?.model}
             onChange={(model) => {
+              if (!model || !value.model) {
+                return
+              }
+              const isPreviousProviderOpenAI = value.model.startsWith("gpt")
+              const isPreviousProviderAnthropic =
+                value.model.startsWith("claude")
+              const isNewProviderOpenAI = model.startsWith("gpt")
+              const isNewProviderAnthropic = model.startsWith("claude")
+
+              if (isPreviousProviderOpenAI && isNewProviderAnthropic) {
+                const tools = value.config.tools
+                value.config.tools = convertOpenAIToolsToAnthropic(tools)
+              }
               onChange({
                 ...value,
                 model,

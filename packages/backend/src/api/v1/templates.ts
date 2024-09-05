@@ -93,13 +93,15 @@ templates.post("/", checkAccess("prompts", "create"), async (ctx: Context) => {
     })} returning *
   `
 
+  delete extra.stop
+
   const [templateVersion] = await sql`
     insert into template_version ${sql(
       clearUndefined({
         templateId: template.id,
         content: sql.json(content),
-        extra: sql.json(unCamelObject(extra)),
-        testValues: sql.json(testValues),
+        extra: sql.json(unCamelObject(clearUndefined(extra))),
+        testValues: testValues ? sql.json(testValues) : undefined,
         isDraft: isDraft,
         notes,
       }),
