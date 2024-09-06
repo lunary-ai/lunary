@@ -1,12 +1,12 @@
-import { Flex, NumberInput, Text, TextInput } from "@mantine/core"
-import classes from "./index.module.css"
-import SmartCheckSelect from "./SmartSelectInput"
+import { Flex, NumberInput, Text, TextInput } from "@mantine/core";
+import classes from "./index.module.css";
+import SmartCheckSelect from "./SmartSelectInput";
 
-import { DateTimePicker } from "@mantine/dates"
-import { useEffect } from "react"
+import { DateTimePicker } from "@mantine/dates";
+import { useEffect } from "react";
 
-const minDate = new Date(2021, 0, 1)
-const maxDate = new Date()
+const minDate = new Date(2021, 0, 1);
+const maxDate = new Date();
 
 const CheckInputs = {
   select: SmartCheckSelect,
@@ -30,7 +30,7 @@ const CheckInputs = {
           {unit}
         </Text>
       </Flex>
-    )
+    );
   },
   text: ({ placeholder, width, value, minimal, onChange }) => {
     return (
@@ -42,7 +42,7 @@ const CheckInputs = {
         value={value}
         onChange={(e) => onChange(e.currentTarget.value)}
       />
-    )
+    );
   },
 
   label: ({ label, description, minimal }) => {
@@ -61,15 +61,15 @@ const CheckInputs = {
           </Text>
         )}
       </div>
-    )
+    );
   },
   date: ({ placeholder, value, onChange }) => {
-    const defaultValue = new Date()
-    defaultValue.setHours(23, 59, 59, 999)
+    const defaultValue = new Date();
+    defaultValue.setHours(23, 59, 59, 999);
 
     useEffect(() => {
-      onChange(defaultValue)
-    }, [])
+      onChange(defaultValue);
+    }, []);
 
     return (
       <DateTimePicker
@@ -81,17 +81,17 @@ const CheckInputs = {
         defaultValue={defaultValue}
         onChange={(date: Date) => {
           if (!value) {
-            date.setHours(23, 59, 59, 999)
+            date.setHours(23, 59, 59, 999);
           }
           // There's a bug in the picker, it doesn't return the exact date selected
-          date.setSeconds(0)
-          date.setMilliseconds(0)
-          return onChange(date)
+          date.setSeconds(0);
+          date.setMilliseconds(0);
+          return onChange(date);
         }}
         placeholder={placeholder || "Select date"}
       />
-    )
+    );
   },
-}
+};
 
-export default CheckInputs
+export default CheckInputs;

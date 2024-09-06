@@ -1,17 +1,17 @@
-import { ChatMessage } from "@/components/SmartViewer/Message"
-import { Stack } from "@mantine/core"
-import classes from "./index.module.css"
+import { ChatMessage } from "@/components/SmartViewer/Message";
+import { Stack } from "@mantine/core";
+import classes from "./index.module.css";
 
 function getLastMessage(messages) {
   if (Array.isArray(messages)) {
-    return messages[messages.length - 1]
+    return messages[messages.length - 1];
   }
 
-  return messages
+  return messages;
 }
 
 export default function MessageViewer({ data, compact, piiDetection }) {
-  const obj = Array.isArray(data) ? data : [data]
+  const obj = Array.isArray(data) ? data : [data];
 
   return compact ? (
     <ChatMessage data={getLastMessage(obj)} compact />
@@ -23,5 +23,5 @@ export default function MessageViewer({ data, compact, piiDetection }) {
         ))}
       </Stack>
     </div>
-  )
+  );
 }

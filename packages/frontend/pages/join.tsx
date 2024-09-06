@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
 
 import {
   Anchor,
@@ -12,21 +12,21 @@ import {
   Text,
   TextInput,
   Title,
-} from "@mantine/core"
+} from "@mantine/core";
 
-import { useForm } from "@mantine/form"
-import { IconAnalyze, IconAt, IconCheck, IconUser } from "@tabler/icons-react"
+import { useForm } from "@mantine/form";
+import { IconAnalyze, IconAt, IconCheck, IconUser } from "@tabler/icons-react";
 
-import analytics from "@/utils/analytics"
-import errorHandler from "@/utils/errors"
-import { fetcher } from "@/utils/fetcher"
-import { SEAT_ALLOWANCE } from "@/utils/pricing"
-import { NextSeo } from "next-seo"
-import Router, { useRouter } from "next/router"
-import Confetti from "react-confetti"
-import { notifications } from "@mantine/notifications"
-import { useJoinData } from "@/utils/dataHooks"
-import config from "@/utils/config"
+import analytics from "@/utils/analytics";
+import errorHandler from "@/utils/errors";
+import { fetcher } from "@/utils/fetcher";
+import { SEAT_ALLOWANCE } from "@/utils/pricing";
+import { NextSeo } from "next-seo";
+import Router, { useRouter } from "next/router";
+import Confetti from "react-confetti";
+import { notifications } from "@mantine/notifications";
+import { useJoinData } from "@/utils/dataHooks";
+import config from "@/utils/config";
 
 function TeamFull({ orgName }) {
   return (
@@ -47,7 +47,7 @@ function TeamFull({ orgName }) {
               component="button"
               type="button"
               onClick={() => {
-                $crisp.push(["do", "chat:open"])
+                $crisp.push(["do", "chat:open"]);
               }}
             >
               Contact support →
@@ -56,23 +56,23 @@ function TeamFull({ orgName }) {
         </Flex>
       </Stack>
     </Container>
-  )
+  );
 }
 export default function Join() {
-  const router = useRouter()
-  const { token } = router.query
+  const router = useRouter();
+  const { token } = router.query;
 
-  const { data: joinData } = useJoinData(token as string)
+  const { data: joinData } = useJoinData(token as string);
 
-  const [loading, setLoading] = useState(false)
-  const [step, setStep] = useState(1)
+  const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(1);
 
   useEffect(() => {
     if (router.isReady) {
-      router.query.step = String(step)
-      router.replace(router)
+      router.query.step = String(step);
+      router.replace(router);
     }
-  }, [step, router.isReady])
+  }, [step, router.isReady]);
 
   const form = useForm({
     initialValues: {
@@ -94,7 +94,7 @@ export default function Join() {
           ? "Passwords do not match"
           : null,
     },
-  })
+  });
 
   async function handleSignup({
     email,
@@ -102,12 +102,12 @@ export default function Join() {
     redirectUrl,
     password,
   }: {
-    email: string
-    name: string
-    redirectUrl?: string
-    password?: string
+    email: string;
+    name: string;
+    redirectUrl?: string;
+    password?: string;
   }) {
-    setLoading(true)
+    setLoading(true);
 
     const signupData = {
       email,
@@ -117,74 +117,74 @@ export default function Join() {
       token,
       password,
       redirectUrl,
-    }
+    };
 
     const ok = await errorHandler(
       fetcher.post("/auth/signup", {
         arg: signupData,
       }),
-    )
+    );
 
     if (ok) {
-      analytics.track("Join", { email, name, orgId })
+      analytics.track("Join", { email, name, orgId });
 
       notifications.show({
         icon: <IconCheck size={18} />,
         color: "teal",
         message: `You have joined ${orgName}`,
-      })
+      });
 
-      window.location.href = redirectUrl || "/login"
+      window.location.href = redirectUrl || "/login";
     }
 
-    setLoading(false)
+    setLoading(false);
   }
 
   const continueStep = async () => {
-    const { email, name, password } = form.values
+    const { email, name, password } = form.values;
 
-    setLoading(true)
+    setLoading(true);
     try {
       if (step === 1) {
         const { method, redirect } = await fetcher.post("/auth/method", {
           arg: {
             email,
           },
-        })
+        });
 
         if (method === "saml") {
           await handleSignup({
             email,
             name,
             redirectUrl: redirect,
-          })
+          });
         } else {
-          setStep(2)
+          setStep(2);
         }
       } else if (step === 2) {
         await handleSignup({
           email,
           name,
           password,
-        })
+        });
 
-        setStep(3)
+        setStep(3);
       }
     } catch (error) {
-      console.error(error)
+      console.error(error);
     }
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
   if (!joinData) {
-    return <Loader />
+    return <Loader />;
   }
 
-  const { orgUserCount, orgName, orgId, orgPlan, orgSeatAllowance } = joinData
-  const seatAllowance = orgSeatAllowance || SEAT_ALLOWANCE[orgPlan]
+  const { orgUserCount, orgName, orgId, orgPlan, orgSeatAllowance } = joinData;
+  const seatAllowance = orgSeatAllowance || SEAT_ALLOWANCE[orgPlan];
 
   if (orgUserCount > seatAllowance) {
-    return <TeamFull orgName={orgName} />
+    return <TeamFull orgName={orgName} />;
   }
 
   return (
@@ -291,5 +291,5 @@ export default function Join() {
         </Paper>
       </Stack>
     </Container>
-  )
+  );
 }

@@ -1,8 +1,8 @@
-import { formatAppUser } from "@/utils/format"
-import { Anchor, Avatar, Group } from "@mantine/core"
-import { memo } from "react"
-import ProtectedText from "../ProtectedText"
-import styles from "./index.module.css"
+import { formatAppUser } from "@/utils/format";
+import { Anchor, Avatar, Group } from "@mantine/core";
+import { memo } from "react";
+import ProtectedText from "../ProtectedText";
+import styles from "./index.module.css";
 
 const colors = [
   "cyan",
@@ -15,23 +15,23 @@ const colors = [
   "pink",
   "indigo",
   "green",
-]
+];
 
 function AppUserAvatar({
   user,
   size = "md",
   withName = false,
 }: {
-  user: any
-  size?: any
-  withName?: boolean
+  user: any;
+  size?: any;
+  withName?: boolean;
 }) {
   // use user.id (int) as seed for random color
-  const color = colors[user?.id % colors.length]
+  const color = colors[user?.id % colors.length];
 
-  if (!user) return null
+  if (!user) return null;
 
-  const nameOrEmail = formatAppUser(user)
+  const nameOrEmail = formatAppUser(user);
 
   return (
     <Group gap="xs" wrap="nowrap">
@@ -44,7 +44,7 @@ function AppUserAvatar({
         </Anchor>
       )}
     </Group>
-  )
+  );
 }
 
-export default memo(AppUserAvatar)
+export default memo(AppUserAvatar);

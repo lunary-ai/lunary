@@ -1,20 +1,20 @@
-import { checkIngestionRule } from "@/src/checks/runChecks"
-import { calcRunCost } from "@/src/utils/calcCost"
-import sql from "@/src/utils/db"
-import { DuplicateError, ProjectNotFoundError } from "@/src/utils/errors"
+import { checkIngestionRule } from "@/src/checks/runChecks";
+import { calcRunCost } from "@/src/utils/calcCost";
+import sql from "@/src/utils/db";
+import { DuplicateError, ProjectNotFoundError } from "@/src/utils/errors";
 import {
   CleanRun,
   Event,
   cleanEvent,
   clearUndefined,
   ingestChatEvent,
-} from "@/src/utils/ingest"
-import Context from "@/src/utils/koa"
-import * as Sentry from "@sentry/node"
-import Router from "koa-router"
-import { z } from "zod"
+} from "@/src/utils/ingest";
+import Context from "@/src/utils/koa";
+import * as Sentry from "@sentry/node";
+import Router from "koa-router";
+import { z } from "zod";
 
-const router = new Router()
+const router = new Router();
 
 async function registerRunEvent(
   projectId: string,
@@ -43,31 +43,31 @@ async function registerRunEvent(
     feedback,
     metadata,
     runtime,
-  } = event as CleanRun
+  } = event as CleanRun;
 
   /* When using multiple LangChain callbacks for the same events, the project ID is associated with the event.
    * The projectId passed to this function is the public key, so it may not necessarily be the correct one for the current event.
    */
-  projectId = event.appId || projectId
+  projectId = event.appId || projectId;
 
   if (!tags) {
-    tags = metadata?.tags
+    tags = metadata?.tags;
   }
 
   if (!templateVersionId) {
     templateVersionId =
-      templateId || metadata?.templateId || metadata?.templateVersionId
+      templateId || metadata?.templateId || metadata?.templateVersionId;
   }
 
-  let parentRunIdToUse = parentRunId
+  let parentRunIdToUse = parentRunId;
 
-  let externalUserId
+  let externalUserId;
   // Only do on start event to save on DB calls and have correct lastSeen
   if (typeof userId === "string" && !["end", "error"].includes(eventName)) {
     const [projectExists] =
-      await sql`select exists(select 1 from project where id = ${projectId})`
+      await sql`select exists(select 1 from project where id = ${projectId})`;
     if (!projectExists) {
-      throw new ProjectNotFoundError(projectId)
+      throw new ProjectNotFoundError(projectId);
     }
 
     const [result] = await sql`
@@ -84,51 +84,51 @@ async function registerRunEvent(
         last_seen = excluded.last_seen,
         props = excluded.props
       returning id
-    `
+    `;
 
-    externalUserId = result?.id
+    externalUserId = result?.id;
   }
 
   if (eventName === "start" && parentRunIdToUse) {
     // Check if parent run exists in database
     const [data] =
-      await sql`select external_user_id from run where id = ${parentRunIdToUse}`
+      await sql`select external_user_id from run where id = ${parentRunIdToUse}`;
 
     if (!data) {
       // Could be that the parent run is not yet created
       // For example if the server-side event reached here before the frontend event, will throw foreign-key constraint error
       // So we retry once after 2s
       // A cleaner solution would be to use a queue, but this is simpler for now
-      console.warn(`Error getting parent run user.`)
+      console.warn(`Error getting parent run user.`);
 
       if (allowRetry) {
         console.log(
           "Retrying insertion in 2s in case parent not inserted yet...",
-        )
+        );
 
         // TODO: better way to wait for parent run to be inserted
-        await new Promise((resolve) => setTimeout(resolve, 2000))
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
-        return await registerRunEvent(projectId, event, insertedIds, false)
+        return await registerRunEvent(projectId, event, insertedIds, false);
       } else {
         // Prevent foreign key constraint error
-        parentRunIdToUse = undefined
+        parentRunIdToUse = undefined;
       }
     }
 
     // This allow user id to correctly cascade to childs runs if for example it's set on the frontend and not passed to the backend
     if (data?.externalUserId) {
-      externalUserId = data?.externalUserId
+      externalUserId = data?.externalUserId;
     }
   }
 
   if (eventName === "start") {
-    const [dbRun] = await sql`select * from run where id = ${runId}`
+    const [dbRun] = await sql`select * from run where id = ${runId}`;
 
     if (dbRun?.id === runId) {
       throw new DuplicateError(
         "Run with this ID already exists in the database.",
-      )
+      );
     }
 
     await sql`
@@ -150,15 +150,15 @@ async function registerRunEvent(
           runtime,
         }),
       )}
-    `
+    `;
   } else if (eventName === "end") {
-    let cost = undefined
+    let cost = undefined;
 
     const [runData] = await sql`
         select created_at, input, params, name, metadata from run where id = ${runId}
-      `
+      `;
     if (typeof runData?.metadata === "object" && metadata) {
-      metadata = { ...runData.metadata, ...metadata }
+      metadata = { ...runData.metadata, ...metadata };
     }
     if (type === "llm") {
       cost = await calcRunCost({
@@ -168,11 +168,11 @@ async function registerRunEvent(
         name: runData?.name,
         duration: +timestamp - +runData?.createdAt,
         projectId,
-      })
+      });
     }
 
     if (typeof output === "boolean") {
-      output = JSON.stringify(output)
+      output = JSON.stringify(output);
     }
 
     const runToInsert = clearUndefined({
@@ -183,21 +183,21 @@ async function registerRunEvent(
       completionTokens: tokensUsage?.completion,
       cost,
       metadata,
-    })
+    });
     if (!runToInsert.metadata) {
-      delete runToInsert.metadata
+      delete runToInsert.metadata;
     }
 
     if (input) {
       // in the case of agent_context, the input is sent as the end
-      runToInsert.input = input
+      runToInsert.input = input;
     }
 
     await sql`
       update run
       set ${sql(runToInsert)}
       where id = ${runId}
-    `
+    `;
   } else if (eventName === "error") {
     await sql`
         update run
@@ -207,13 +207,13 @@ async function registerRunEvent(
           error: error,
         })}
         where id = ${runId}
-      `
+      `;
   } else if (eventName === "feedback") {
     const [feedbackData] = await sql`
       select feedback
       from run
       where id = ${runId}
-    `
+    `;
 
     await sql`
       update 
@@ -226,12 +226,12 @@ async function registerRunEvent(
         })}
       where 
         id = ${runId}
-    `
+    `;
   } else if (eventName === "chat") {
     await ingestChatEvent(projectId, {
       externalUserId,
       ...event,
-    })
+    });
   } else if (eventName === "update" && type === "llm") {
     await sql`
       update 
@@ -240,20 +240,20 @@ async function registerRunEvent(
         metadata = ${sql.json(metadata || {})}
       where 
         id = ${runId}
-    `
+    `;
   }
 
-  insertedIds.add(runId)
+  insertedIds.add(runId);
 }
 
 async function registerLogEvent(
   projectId: string,
   event: Event,
 ): Promise<void> {
-  const { event: eventName, parentRunId, message, extra, metadata } = event
+  const { event: eventName, parentRunId, message, extra, metadata } = event;
 
   if (parentRunId === undefined || eventName === undefined) {
-    throw new Error("parentRunId and eventName must be defined")
+    throw new Error("parentRunId and eventName must be defined");
   }
 
   await sql`
@@ -261,7 +261,7 @@ async function registerLogEvent(
     values (${parentRunId}, ${projectId}, ${eventName}, ${message}, ${sql.json(
       metadata || extra || {},
     )})
-  `
+  `;
 }
 
 async function registerEvent(
@@ -269,14 +269,14 @@ async function registerEvent(
   event: Event,
   insertedIds: Set<string>,
 ): Promise<void> {
-  const { type } = event
+  const { type } = event;
 
   if (type === "log") {
-    await registerLogEvent(projectId, event)
-    return
+    await registerLogEvent(projectId, event);
+    return;
   }
 
-  await registerRunEvent(projectId, event, insertedIds)
+  await registerRunEvent(projectId, event, insertedIds);
 }
 
 export async function processEventsIngestion(
@@ -284,114 +284,114 @@ export async function processEventsIngestion(
   events: Event | Event[],
 ): Promise<{ id?: string; success: boolean; error?: string }[]> {
   // Used to check if parentRunId was already inserted
-  const insertedIds = new Set<string>()
+  const insertedIds = new Set<string>();
 
   // Event processing order is important for foreign key constraints
   const sorted = (Array.isArray(events) ? events : [events]).sort(
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
-  )
+  );
 
   const results: {
-    id?: string
-    success: boolean
-    error?: string
-  }[] = []
+    id?: string;
+    success: boolean;
+    error?: string;
+  }[] = [];
 
   const [ingestionRule] =
-    await sql`select * from ingestion_rule where project_id = ${projectId} and type = 'filtering'`
+    await sql`select * from ingestion_rule where project_id = ${projectId} and type = 'filtering'`;
 
   for (let event of sorted) {
     if (Array.isArray(event) && event.length === 1) {
-      event = event[0]
+      event = event[0];
     }
     try {
-      const cleanedEvent = await cleanEvent(event)
+      const cleanedEvent = await cleanEvent(event);
 
-      let passedIngestionRule = true
+      let passedIngestionRule = true;
 
       if (ingestionRule) {
         passedIngestionRule = await checkIngestionRule(
           cleanedEvent,
           ingestionRule.filters,
-        )
+        );
       }
 
       if (cleanedEvent.event === "end") {
         const [dbRun] =
-          await sql`select * from run where id = ${cleanedEvent.runId}`
+          await sql`select * from run where id = ${cleanedEvent.runId}`;
         if (dbRun?.input === "__NOT_INGESTED__") {
-          passedIngestionRule = false
+          passedIngestionRule = false;
         }
       }
 
       if (!passedIngestionRule) {
-        cleanedEvent.input = "__NOT_INGESTED__"
-        cleanedEvent.output = "__NOT_INGESTED__"
+        cleanedEvent.input = "__NOT_INGESTED__";
+        cleanedEvent.output = "__NOT_INGESTED__";
       }
 
-      await registerEvent(projectId, cleanedEvent, insertedIds)
+      await registerEvent(projectId, cleanedEvent, insertedIds);
 
       results.push({
         id: event.runId,
         success: true,
-      })
+      });
     } catch (error: unknown) {
       if (
         !(error instanceof DuplicateError) &&
         !(error instanceof ProjectNotFoundError)
       ) {
         Sentry.withScope((scope) => {
-          scope.setExtras({ event: JSON.stringify(event) })
-          Sentry.captureException(error)
-        })
+          scope.setExtras({ event: JSON.stringify(event) });
+          Sentry.captureException(error);
+        });
       }
 
       console.error(`Error ingesting event`, {
         error: error,
         event,
-      })
+      });
 
       results.push({
         id: event.runId,
         success: false,
         error: error.message,
-      })
+      });
     }
   }
 
-  console.log(`Inserted ${insertedIds.size} run for project ${projectId}`)
-  return results
+  console.log(`Inserted ${insertedIds.size} run for project ${projectId}`);
+  return results;
 }
 
 router.post("/", async (ctx: Context) => {
-  const result = z.string().uuid().safeParse(ctx.state.projectId)
+  const result = z.string().uuid().safeParse(ctx.state.projectId);
   if (!result.success) {
-    ctx.status = 402
-    ctx.body = { message: "Incorrect project id format" }
-    return
+    ctx.status = 402;
+    ctx.body = { message: "Incorrect project id format" };
+    return;
   }
 
-  const projectId = result.data
+  const projectId = result.data;
   const [project] =
-    await sql`select * from project where id = ${projectId} limit 1`
+    await sql`select * from project where id = ${projectId} limit 1`;
 
   if (!project) {
-    ctx.status = 401
-    ctx.body = { message: "This project does not exist" }
-    return
+    ctx.status = 401;
+    ctx.body = { message: "This project does not exist" };
+    return;
   }
 
   const { events } = ctx.request.body as {
-    events: Event | Event[]
-  }
+    events: Event | Event[];
+  };
 
   if (!events) {
-    throw new Error("Missing events payload.")
+    throw new Error("Missing events payload.");
   }
 
-  const results = await processEventsIngestion(projectId, events)
+  const results = await processEventsIngestion(projectId, events);
 
-  ctx.body = { results }
-})
+  ctx.body = { results };
+});
 
-export default router
+export default router;

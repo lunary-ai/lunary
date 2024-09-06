@@ -1,5 +1,5 @@
-import { setTimeout } from "node:timers/promises"
-import { TimeoutError } from "./errors"
+import { setTimeout } from "node:timers/promises";
+import { TimeoutError } from "./errors";
 
 export async function withTimeout<T>(
   asyncFn: (...args: any[]) => Promise<T>,
@@ -7,8 +7,8 @@ export async function withTimeout<T>(
   errorMessage: string = "Function execution timeout",
 ) {
   const timeoutPromise = setTimeout(ms).then(() => {
-    throw new TimeoutError(errorMessage)
-  })
+    throw new TimeoutError(errorMessage);
+  });
 
-  return Promise.race([asyncFn(), timeoutPromise])
+  return Promise.race([asyncFn(), timeoutPromise]);
 }

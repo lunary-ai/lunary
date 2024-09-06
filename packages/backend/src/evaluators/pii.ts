@@ -1,65 +1,65 @@
-import { Run } from "shared"
-import { sleep } from "../utils/misc"
-import { callML } from "../utils/ml"
+import { Run } from "shared";
+import { sleep } from "../utils/misc";
+import { callML } from "../utils/ml";
 
 // TOOD: refacto this with all the other parsing function already in use
 function parseMessages(messages: unknown) {
   if (!messages) {
-    return [""]
+    return [""];
   }
   if (typeof messages === "string" && messages.length) {
-    return [messages]
+    return [messages];
   }
 
   if (messages === "__NOT_INGESTED__") {
-    return [""]
+    return [""];
   }
 
   if (Array.isArray(messages)) {
-    let contentArray = []
+    let contentArray = [];
     for (const message of messages) {
-      let content = message.content || message.text
+      let content = message.content || message.text;
       if (typeof content === "string" && content.length) {
-        contentArray.push(content)
+        contentArray.push(content);
       } else {
-        contentArray.push(JSON.stringify(message))
+        contentArray.push(JSON.stringify(message));
       }
     }
-    return contentArray
+    return contentArray;
   }
 
   if (typeof messages === "object") {
-    return [JSON.stringify(messages)]
+    return [JSON.stringify(messages)];
   }
 
-  return [""]
+  return [""];
 }
 
 interface Params {
-  types: string[]
-  customRegexes: string[]
-  excludedEntities: string[]
+  types: string[];
+  customRegexes: string[];
+  excludedEntities: string[];
 }
 export async function evaluate(run: Run, params: Params) {
-  const { types: entityTypes, customRegexes, excludedEntities } = params
-  const input = parseMessages(run.input)
-  const output = parseMessages(run.output)
-  const error = parseMessages(run.error)
+  const { types: entityTypes, customRegexes, excludedEntities } = params;
+  const input = parseMessages(run.input);
+  const output = parseMessages(run.output);
+  const error = parseMessages(run.error);
 
   const [inputPIIs, outputPIIs, errorPIIs] = await Promise.all([
     detectPIIs(input, entityTypes, customRegexes, excludedEntities),
     detectPIIs(output, entityTypes, customRegexes, excludedEntities),
     detectPIIs(error, entityTypes, customRegexes, excludedEntities),
-  ])
+  ]);
 
   const PIIs = {
     input: inputPIIs,
     output: outputPIIs,
     error: errorPIIs,
-  }
+  };
 
   // TODO: zod for languages, SHOLUD NOT INGEST IN DB IF NOT CORRECT FORMAT
-  return PIIs
+  return PIIs;
 }
 
 async function detectPIIs(
@@ -74,9 +74,9 @@ async function detectPIIs(
       entityTypes,
       customRegexes,
       excludedEntities,
-    })
+    });
   } catch (error) {
-    console.error(error)
-    console.log(texts)
+    console.error(error);
+    console.log(texts);
   }
 }

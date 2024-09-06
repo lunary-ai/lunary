@@ -1,6 +1,6 @@
-import { Anchor, Center, Container, Stack, Text, Title } from "@mantine/core"
-import { NextSeo } from "next-seo"
-import Confetti from "react-confetti"
+import { Anchor, Center, Container, Stack, Text, Title } from "@mantine/core";
+import { NextSeo } from "next-seo";
+import Confetti from "react-confetti";
 
 export default function ThankYou() {
   return (
@@ -36,5 +36,5 @@ export default function ThankYou() {
         </Stack>
       </Center>
     </Container>
-  )
+  );
 }

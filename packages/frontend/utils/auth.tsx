@@ -1,34 +1,34 @@
-import { useLocalStorage } from "@mantine/hooks"
-import { decodeJwt } from "jose"
-import { createContext, useContext, useEffect, useMemo } from "react"
+import { useLocalStorage } from "@mantine/hooks";
+import { decodeJwt } from "jose";
+import { createContext, useContext, useEffect, useMemo } from "react";
 
-const SIGN_OUT_EVENT = "sign-out"
+const SIGN_OUT_EVENT = "sign-out";
 export async function signOut() {
-  window.localStorage.clear()
-  window.dispatchEvent(new Event(SIGN_OUT_EVENT))
+  window.localStorage.clear();
+  window.dispatchEvent(new Event(SIGN_OUT_EVENT));
 }
 
 interface AuthContext {
-  isSignedIn: boolean
+  isSignedIn: boolean;
   setJwt: (
     val: string | ((prevState: string | null) => string | null) | null,
-  ) => void
-  signOut: () => void
+  ) => void;
+  signOut: () => void;
 }
 
-const AuthContext = createContext<AuthContext | null>(null)
+const AuthContext = createContext<AuthContext | null>(null);
 
 function checkJwt(jwt) {
   try {
-    const payload = decodeJwt(jwt)
-    const exp = payload.exp
+    const payload = decodeJwt(jwt);
+    const exp = payload.exp;
 
     if (!exp || exp < Date.now() / 1000) {
-      throw new Error("Token expired")
+      throw new Error("Token expired");
     }
-    return true
+    return true;
   } catch (error) {
-    return false
+    return false;
   }
 }
 
@@ -39,33 +39,33 @@ export function AuthProvider({ children }) {
     serialize: (value) => value || "",
     deserialize: (localStorageValue) => localStorageValue || null,
     defaultValue: null,
-  })
+  });
 
-  const isSignedIn = useMemo(() => checkJwt(jwt), [jwt])
+  const isSignedIn = useMemo(() => checkJwt(jwt), [jwt]);
 
   function doSignOut() {
-    removeJwt()
+    removeJwt();
     // Router.push("/login")
   }
 
   useEffect(() => {
-    window.addEventListener(SIGN_OUT_EVENT, doSignOut)
+    window.addEventListener(SIGN_OUT_EVENT, doSignOut);
     return () => {
-      window.removeEventListener(SIGN_OUT_EVENT, doSignOut)
-    }
-  }, [])
+      window.removeEventListener(SIGN_OUT_EVENT, doSignOut);
+    };
+  }, []);
 
   return (
     <AuthContext.Provider value={{ isSignedIn, setJwt, signOut }}>
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext)
+  const context = useContext(AuthContext);
   if (context === null) {
-    throw new Error("useAuth must be used within a AuthProvider")
+    throw new Error("useAuth must be used within a AuthProvider");
   }
-  return context
+  return context;
 }

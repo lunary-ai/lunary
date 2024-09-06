@@ -1,15 +1,15 @@
-import { checkAccess } from "@/src/utils/authorization"
-import { convertChecksToSQL } from "@/src/utils/checks"
-import sql from "@/src/utils/db"
-import Context from "@/src/utils/koa"
-import Router from "koa-router"
-import { deserializeLogic } from "shared"
-import { z } from "zod"
-import { parseQuery } from "./utils"
+import { checkAccess } from "@/src/utils/authorization";
+import { convertChecksToSQL } from "@/src/utils/checks";
+import sql from "@/src/utils/db";
+import Context from "@/src/utils/koa";
+import Router from "koa-router";
+import { deserializeLogic } from "shared";
+import { z } from "zod";
+import { parseQuery } from "./utils";
 
 const analytics = new Router({
   prefix: "/analytics",
-})
+});
 
 // TODO: access middleware
 
@@ -17,11 +17,11 @@ analytics.get(
   "/tokens",
   checkAccess("analytics", "read"),
   async (ctx: Context) => {
-    const { projectId } = ctx.state
+    const { projectId } = ctx.state;
     const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
       projectId,
       ctx.query,
-    )
+    );
 
     if (granularity === "weekly") {
       const res = await sql`
@@ -52,9 +52,9 @@ analytics.get(
           weekly_sums
         order by
           date;
-      `
-      ctx.body = { data: res }
-      return
+      `;
+      ctx.body = { data: res };
+      return;
     } else {
       const res = await sql`
         with dates as (
@@ -74,23 +74,23 @@ analytics.get(
           d.date,
           r.name
         order by d.date;
-    `
+    `;
 
-      ctx.body = { data: res }
-      return
+      ctx.body = { data: res };
+      return;
     }
   },
-)
+);
 
 analytics.get(
   "/costs",
   checkAccess("analytics", "read"),
   async (ctx: Context) => {
-    const { projectId } = ctx.state
+    const { projectId } = ctx.state;
     const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
       projectId,
       ctx.query,
-    )
+    );
 
     if (granularity === "weekly") {
       const res = await sql`
@@ -121,9 +121,9 @@ analytics.get(
           weekly_costs 
         order by
           date;
-      `
-      ctx.body = { data: res }
-      return
+      `;
+      ctx.body = { data: res };
+      return;
     } else {
       const res = await sql`
         with dates as (
@@ -143,23 +143,23 @@ analytics.get(
           d.date,
           r.name
         order by d.date;
-    `
+    `;
 
-      ctx.body = { data: res }
-      return
+      ctx.body = { data: res };
+      return;
     }
   },
-)
+);
 
 analytics.get(
   "/errors",
   checkAccess("analytics", "read"),
   async (ctx: Context) => {
-    const { projectId } = ctx.state
+    const { projectId } = ctx.state;
     const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
       projectId,
       ctx.query,
-    )
+    );
 
     if (granularity === "weekly") {
       const res = await sql`
@@ -190,9 +190,9 @@ analytics.get(
           weekly_errors
         order by
           date;
-      `
-      ctx.body = { data: res }
-      return
+      `;
+      ctx.body = { data: res };
+      return;
     } else {
       const res = await sql`
         with dates as (
@@ -211,31 +211,31 @@ analytics.get(
         group by 
           d.date
         order by d.date;
-    `
+    `;
 
-      ctx.body = { data: res }
-      return
+      ctx.body = { data: res };
+      return;
     }
   },
-)
+);
 
 analytics.get(
   "/users/new",
   checkAccess("analytics", "read"),
   async (ctx: Context) => {
-    const { projectId } = ctx.state
+    const { projectId } = ctx.state;
     const { datesQuery, granularity, timeZone } = parseQuery(
       projectId,
       ctx.query,
-    )
+    );
 
     const localCreatedAtMap = {
       hourly: sql`date_trunc('hour', eu.created_at at time zone ${timeZone})::timestamp as local_created_at`,
       daily: sql`date_trunc('day', eu.created_at at time zone ${timeZone})::timestamp as local_created_at`,
       weekly: sql`date_trunc('day', eu.created_at at time zone ${timeZone})::timestamp as local_created_at`,
-    }
+    };
 
-    const localCreatedAt = localCreatedAtMap[granularity]
+    const localCreatedAt = localCreatedAtMap[granularity];
 
     if (granularity === "weekly") {
       const res = await sql`
@@ -271,9 +271,9 @@ analytics.get(
         order by
           date
 
-      `
-      ctx.body = { data: res }
-      return
+      `;
+      ctx.body = { data: res };
+      return;
     } else {
       const res = await sql`
         with dates as (
@@ -298,18 +298,18 @@ analytics.get(
           d.date
         order by
           d.date;
-      `
-      ctx.body = { data: res }
-      return
+      `;
+      ctx.body = { data: res };
+      return;
     }
   },
-)
+);
 
 analytics.get(
   "/users/active",
   checkAccess("analytics", "read"),
   async (ctx: Context) => {
-    const { projectId } = ctx.state
+    const { projectId } = ctx.state;
     const {
       datesQuery,
       filteredRunsQuery,
@@ -318,14 +318,14 @@ analytics.get(
       localCreatedAt,
       startDate,
       endDate,
-    } = parseQuery(projectId, ctx.query)
+    } = parseQuery(projectId, ctx.query);
 
     const distinctMap = {
       hourly: sql`distinct on (r.external_user_id, date_trunc('hour', r.created_at at time zone ${timeZone})::timestamp)`,
       daily: sql`distinct on (r.external_user_id, date_trunc('day', r.created_at at time zone ${timeZone})::timestamp)`,
       weekly: sql`distinct on (r.external_user_id, date_trunc('day', r.created_at at time zone ${timeZone})::timestamp)`,
-    }
-    const distinct = distinctMap[granularity]
+    };
+    const distinct = distinctMap[granularity];
 
     const [{ stat }] = await sql`
       select
@@ -337,7 +337,7 @@ analytics.get(
         and r.external_user_id is not null
         and created_at >= ${startDate} at time zone ${timeZone} 
         and created_at <= ${endDate} at time zone ${timeZone} 
-    `
+    `;
 
     if (granularity === "weekly") {
       const data = await sql`
@@ -375,9 +375,9 @@ analytics.get(
           weekly_active_users
         order by
           date;
-      `
-      ctx.body = { data, stat: stat || 0 }
-      return
+      `;
+      ctx.body = { data, stat: stat || 0 };
+      return;
     } else {
       const data = await sql`
         with dates as (
@@ -403,19 +403,19 @@ analytics.get(
         group by 
           d.date
         order by d.date;
-    `
+    `;
 
-      ctx.body = { data, stat: stat || 0 }
-      return
+      ctx.body = { data, stat: stat || 0 };
+      return;
     }
   },
-)
+);
 
 analytics.get(
   "/users/average-cost",
   checkAccess("analytics", "read"),
   async (ctx: Context) => {
-    const { projectId } = ctx.state
+    const { projectId } = ctx.state;
     const {
       datesQuery,
       filteredRunsQuery,
@@ -424,7 +424,7 @@ analytics.get(
       localCreatedAt,
       startDate,
       endDate,
-    } = parseQuery(projectId, ctx.query)
+    } = parseQuery(projectId, ctx.query);
 
     const [{ stat }] = await sql`
       with total_costs as (
@@ -446,7 +446,7 @@ analytics.get(
         avg(total_cost) as stat 
       from
         total_costs;
-    `
+    `;
 
     if (granularity === "weekly") {
       const data = await sql`
@@ -489,9 +489,9 @@ analytics.get(
           weekly_user_cost
         order by
           date;
-      `
-      ctx.body = { data, stat: stat || 0 }
-      return
+      `;
+      ctx.body = { data, stat: stat || 0 };
+      return;
     } else {
       const data = await sql`
         with dates as (
@@ -523,23 +523,23 @@ analytics.get(
           coalesce(avg(r.total_cost)::float, 0) != 0
         order by
           d.date;
-      `
+      `;
 
-      ctx.body = { data, stat }
-      return
+      ctx.body = { data, stat };
+      return;
     }
   },
-)
+);
 
 analytics.get(
   "/run-types",
   checkAccess("analytics", "read"),
   async (ctx: Context) => {
-    const { projectId } = ctx.state
+    const { projectId } = ctx.state;
     const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
       projectId,
       ctx.query,
-    )
+    );
 
     if (granularity === "weekly") {
       const res = await sql`
@@ -571,9 +571,9 @@ analytics.get(
           weekly_sums
         order by
           date;
-      `
-      ctx.body = { data: res }
-      return
+      `;
+      ctx.body = { data: res };
+      return;
     } else {
       const res = await sql`
         with dates as (
@@ -593,19 +593,19 @@ analytics.get(
           d.date,
           r.type
         order by d.date;
-    `
+    `;
 
-      ctx.body = { data: res }
-      return
+      ctx.body = { data: res };
+      return;
     }
   },
-)
+);
 
 analytics.get(
   "/latency",
   checkAccess("analytics", "read"),
   async (ctx: Context) => {
-    const { projectId } = ctx.state
+    const { projectId } = ctx.state;
     const {
       datesQuery,
       filteredRunsQuery,
@@ -613,7 +613,7 @@ analytics.get(
       startDate,
       endDate,
       timeZone,
-    } = parseQuery(projectId, ctx.query)
+    } = parseQuery(projectId, ctx.query);
 
     const [{ stat }] = await sql`
       select
@@ -625,7 +625,7 @@ analytics.get(
         and type = 'llm'
         and created_at >= ${startDate} at time zone ${timeZone} 
         and created_at <= ${endDate} at time zone ${timeZone} 
-    `
+    `;
 
     if (granularity === "weekly") {
       const data = await sql`
@@ -655,9 +655,9 @@ analytics.get(
           weekly_avg
         order by
           date;
-      `
-      ctx.body = { data, stat: stat || 0 }
-      return
+      `;
+      ctx.body = { data, stat: stat || 0 };
+      return;
     } else {
       const data = await sql`
         with dates as (
@@ -677,23 +677,23 @@ analytics.get(
         having 
           coalesce(avg(extract(epoch from r.duration))::float, 0) != 0
         order by d.date;
-    `
+    `;
 
-      ctx.body = { data, stat: stat || 0 }
-      return
+      ctx.body = { data, stat: stat || 0 };
+      return;
     }
   },
-)
+);
 
 analytics.get(
   "/feedback-ratio",
   checkAccess("analytics", "read"),
   async (ctx: Context) => {
-    const { projectId } = ctx.state
+    const { projectId } = ctx.state;
     const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
       projectId,
       ctx.query,
-    )
+    );
 
     if (granularity === "weekly") {
       const res = await sql`
@@ -740,9 +740,9 @@ analytics.get(
         weekly_avg
       order by
         date;
-      `
-      ctx.body = { data: res }
-      return
+      `;
+      ctx.body = { data: res };
+      return;
     } else {
       const res = await sql`
         with dates as (
@@ -775,12 +775,12 @@ analytics.get(
           d.date
         order by
           d.date;
-        `
-      ctx.body = { data: res }
-      return
+        `;
+      ctx.body = { data: res };
+      return;
     }
   },
-)
+);
 
 analytics.get(
   "/top/models",
@@ -792,28 +792,28 @@ analytics.get(
       timeZone: z.string().optional(),
       userId: z.string().optional(),
       name: z.string().optional(),
-    })
-    const { projectId } = ctx.state
+    });
+    const { projectId } = ctx.state;
     const { startDate, endDate, timeZone, userId, name } = querySchema.parse(
       ctx.request.query,
-    )
+    );
 
-    let dateFilter = sql``
+    let dateFilter = sql``;
     if (startDate && endDate && timeZone) {
       dateFilter = sql`
         and date_trunc('day', created_at at time zone ${timeZone})::timestamp  >= ${startDate}
         and date_trunc('day', created_at at time zone ${timeZone})::timestamp  <= ${endDate}
-      `
+      `;
     }
 
-    let userFilter = sql``
+    let userFilter = sql``;
     if (userId) {
-      userFilter = sql`and external_user_id = ${userId}`
+      userFilter = sql`and external_user_id = ${userId}`;
     }
 
-    let nameFilter = sql``
+    let nameFilter = sql``;
     if (name) {
-      nameFilter = sql`and name = ${name}`
+      nameFilter = sql`and name = ${name}`;
     }
 
     const topModels = await sql`
@@ -838,11 +838,11 @@ analytics.get(
         total_tokens desc,
         cost desc
       limit 5
-    `
+    `;
 
-    ctx.body = topModels
+    ctx.body = topModels;
   },
-)
+);
 
 analytics.get(
   "/top/templates",
@@ -852,11 +852,11 @@ analytics.get(
       startDate: z.string().datetime(),
       endDate: z.string().datetime(),
       timeZone: z.string(),
-    })
-    const { projectId } = ctx.state
+    });
+    const { projectId } = ctx.state;
     const { startDate, endDate, timeZone } = querySchema.parse(
       ctx.request.query,
-    )
+    );
 
     const topTemplates = await sql`
       select
@@ -881,10 +881,10 @@ analytics.get(
         usage_count desc
       limit 5
     
-    `
+    `;
 
-    ctx.body = topTemplates
+    ctx.body = topTemplates;
   },
-)
+);
 
-export default analytics
+export default analytics;

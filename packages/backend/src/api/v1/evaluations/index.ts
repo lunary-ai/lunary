@@ -1,46 +1,46 @@
-import { runChecksOnRun } from "@/src/checks/runChecks"
-import { checkAccess } from "@/src/utils/authorization"
-import { calcRunCost } from "@/src/utils/calcCost"
-import { getReadableDateTime } from "@/src/utils/date"
-import sql from "@/src/utils/db"
-import Context from "@/src/utils/koa"
-import Router from "koa-router"
-import { RunEvent } from "lunary/types"
+import { runChecksOnRun } from "@/src/checks/runChecks";
+import { checkAccess } from "@/src/utils/authorization";
+import { calcRunCost } from "@/src/utils/calcCost";
+import { getReadableDateTime } from "@/src/utils/date";
+import sql from "@/src/utils/db";
+import Context from "@/src/utils/koa";
+import Router from "koa-router";
+import { RunEvent } from "lunary/types";
 
-import Queue from "queue-promise"
-import { PassThrough } from "stream"
-import { runEval } from "./utils"
+import Queue from "queue-promise";
+import { PassThrough } from "stream";
+import { runEval } from "./utils";
 
-const evaluations = new Router({ prefix: "/evaluations" })
+const evaluations = new Router({ prefix: "/evaluations" });
 
-const MAX_PARALLEL_EVALS = 4
+const MAX_PARALLEL_EVALS = 4;
 
 evaluations.post(
   "/",
   checkAccess("evaluations", "create"),
   async (ctx: Context) => {
-    const { name, datasetId, checklistId, providers } = ctx.request.body as any
-    const { userId, projectId, orgId } = ctx.state
+    const { name, datasetId, checklistId, providers } = ctx.request.body as any;
+    const { userId, projectId, orgId } = ctx.state;
 
-    ctx.request.socket.setTimeout(0)
-    ctx.request.socket.setNoDelay(true)
-    ctx.request.socket.setKeepAlive(true)
+    ctx.request.socket.setTimeout(0);
+    ctx.request.socket.setNoDelay(true);
+    ctx.request.socket.setKeepAlive(true);
 
     ctx.set({
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache",
       Connection: "keep-alive",
-    })
+    });
 
     const queue = new Queue({
       concurrent: MAX_PARALLEL_EVALS,
       start: true,
-    })
+    });
 
     const [{ plan }] =
-      await sql`select plan, eval_allowance from org where id = ${orgId}`
+      await sql`select plan, eval_allowance from org where id = ${orgId}`;
     if (plan === "free") {
-      ctx.throw(403, "You can't create evaluations on the free plan.")
+      ctx.throw(403, "You can't create evaluations on the free plan.");
     }
 
     // TODO: transactions, but not working with because of nesting
@@ -53,24 +53,24 @@ evaluations.post(
       checklistId,
       models: [], // TODO: remove this legacy col from DB,
       checks: [], // TODO: remove this legacy col from DB,
-    }
+    };
 
     const [evaluation] =
-      await sql`insert into evaluation ${sql(evaluationToInsert)} returning *`
+      await sql`insert into evaluation ${sql(evaluationToInsert)} returning *`;
 
     const prompts = await sql`
       select * from dataset_prompt where dataset_id = ${datasetId}
-    `
+    `;
 
-    let count = 0
+    let count = 0;
 
     for (const prompt of prompts) {
       const variations = await sql`
         select * from dataset_prompt_variation where prompt_id = ${prompt.id}
-      `
+      `;
       for (const variation of variations) {
         for (const provider of evaluation.providers) {
-          count++
+          count++;
           queue.enqueue(async () => {
             await runEval({
               projectId,
@@ -81,64 +81,64 @@ evaluations.post(
               prompt: prompt.messages,
               checklistId,
               orgId,
-            })
-            console.log(`Task ${count} don with model ${provider.model} done`)
-          })
+            });
+            console.log(`Task ${count} don with model ${provider.model} done`);
+          });
         }
       }
     }
 
-    const stream = new PassThrough()
-    stream.pipe(ctx.res)
-    ctx.status = 200
-    ctx.body = stream
+    const stream = new PassThrough();
+    stream.pipe(ctx.res);
+    ctx.status = 200;
+    ctx.body = stream;
 
-    let done = 0
+    let done = 0;
 
     queue.on("dequeue", () => {
-      done++
-      const percentDone = (1 - (count - done) / count) * 100
-      console.log(`Active: ${done} of ${count} (${percentDone}%)`)
-      stream.write(JSON.stringify({ percentDone }) + "\n")
-    })
+      done++;
+      const percentDone = (1 - (count - done) / count) * 100;
+      console.log(`Active: ${done} of ${count} (${percentDone}%)`);
+      stream.write(JSON.stringify({ percentDone }) + "\n");
+    });
 
-    console.log(`Queue started with ${count} tasks`)
+    console.log(`Queue started with ${count} tasks`);
 
     queue.on("end", () => {
-      console.log("Queue is empty now")
+      console.log("Queue is empty now");
 
-      stream.write(JSON.stringify({ id: evaluation?.id }) + "\n")
+      stream.write(JSON.stringify({ id: evaluation?.id }) + "\n");
 
-      stream.end()
-    })
+      stream.end();
+    });
   },
-)
+);
 
 evaluations.get(
   "/:id",
   checkAccess("evaluations", "read"),
   async (ctx: Context) => {
-    const { projectId } = ctx.state
-    const { id } = ctx.params
+    const { projectId } = ctx.state;
+    const { id } = ctx.params;
 
     const [evaluation] = await sql`
     select * from evaluation where id = ${id} and project_id = ${projectId}
-  `
+  `;
 
     if (!evaluation) {
-      ctx.throw(404, "Evaluation not found")
+      ctx.throw(404, "Evaluation not found");
     }
 
-    ctx.body = evaluation
+    ctx.body = evaluation;
   },
-)
+);
 
 evaluations.get(
   "/result/:evaluationId",
   checkAccess("evaluations", "read"),
   async (ctx: Context) => {
-    const { evaluationId } = ctx.params
-    const { projectId } = ctx.state
+    const { evaluationId } = ctx.params;
+    const { projectId } = ctx.state;
 
     const results = await sql`
       select 
@@ -152,50 +152,50 @@ evaluations.get(
       where 
         er.evaluation_id = ${evaluationId}
         and e.project_id = ${projectId}
-      `
+      `;
 
-    ctx.body = results
+    ctx.body = results;
   },
-)
+);
 
 evaluations.get(
   "/",
   checkAccess("evaluations", "list"),
   async (ctx: Context) => {
-    const { projectId } = ctx.state
+    const { projectId } = ctx.state;
 
     const evaluations = await sql`
     select * from evaluation where project_id = ${projectId} order by created_at desc
-  `
+  `;
 
-    ctx.body = evaluations
+    ctx.body = evaluations;
   },
-)
+);
 
 // special route used by the SDK to run evaluations
 evaluations.post(
   "/run",
   // checkAccess("evaluations", "create"),
   async (ctx: Context) => {
-    const { projectId } = ctx.state
+    const { projectId } = ctx.state;
     const { checklist, input, output, idealOutput, duration, model } = ctx
       .request.body as {
-      checklist: string
-      input: any
-      output: any
-      duration?: number
-      idealOutput?: string
-      model?: string
-    }
+      checklist: string;
+      input: any;
+      output: any;
+      duration?: number;
+      idealOutput?: string;
+      model?: string;
+    };
 
     const [checklistData] =
-      await sql` select * from checklist where slug = ${checklist} and project_id = ${projectId}`
+      await sql` select * from checklist where slug = ${checklist} and project_id = ${projectId}`;
 
     if (!checklistData) {
-      ctx.throw(400, "Invalid checklist, is the slug correct?")
+      ctx.throw(400, "Invalid checklist, is the slug correct?");
     }
 
-    const checks = checklistData.data
+    const checks = checklistData.data;
 
     const virtualRun: RunEvent = {
       type: "llm",
@@ -216,17 +216,17 @@ evaluations.post(
       projectId: "00000000-0000-4000-8000-000000000000",
       isPublic: false,
       cost: 0,
-    }
+    };
 
-    const cost = await calcRunCost(virtualRun)
-    virtualRun.cost = cost
-    virtualRun.duration = virtualRun.duration / 1000 // needs to be in ms in calcRunCost, but needs to be in seconds in the checks
+    const cost = await calcRunCost(virtualRun);
+    virtualRun.cost = cost;
+    virtualRun.duration = virtualRun.duration / 1000; // needs to be in ms in calcRunCost, but needs to be in seconds in the checks
 
     // run checks
-    const { passed, results } = await runChecksOnRun(virtualRun, checks)
+    const { passed, results } = await runChecksOnRun(virtualRun, checks);
 
-    ctx.body = { passed, results }
+    ctx.body = { passed, results };
   },
-)
+);
 
-export default evaluations
+export default evaluations;

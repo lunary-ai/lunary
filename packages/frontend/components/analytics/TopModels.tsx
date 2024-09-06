@@ -1,19 +1,19 @@
-import { formatCost, formatLargeNumber } from "@/utils/format"
-import AnalyticsCard from "./AnalyticsCard"
-import BarList from "./BarList"
-import { Center, Flex, Loader, Overlay } from "@mantine/core"
+import { formatCost, formatLargeNumber } from "@/utils/format";
+import AnalyticsCard from "./AnalyticsCard";
+import BarList from "./BarList";
+import { Center, Flex, Loader, Overlay } from "@mantine/core";
 
 interface TopModel {
-  name: string
-  cost: number
-  totalTokens: number
-  completionTokens: number
-  promptTokens: number
+  name: string;
+  cost: number;
+  totalTokens: number;
+  completionTokens: number;
+  promptTokens: number;
 }
 
 interface TopModelsProps {
-  topModels: TopModel[]
-  isLoading: boolean
+  topModels: TopModel[];
+  isLoading: boolean;
 }
 
 function TopModels({ topModels, isLoading }: TopModelsProps) {
@@ -22,7 +22,7 @@ function TopModels({ topModels, isLoading }: TopModelsProps) {
       <Flex align="center" justify="center" h="280px">
         <Loader />
       </Flex>
-    )
+    );
   }
 
   if (topModels?.length === 0) {
@@ -33,7 +33,7 @@ function TopModels({ topModels, isLoading }: TopModelsProps) {
           No data available for this period
         </Center>
       </>
-    )
+    );
   }
 
   return (
@@ -76,7 +76,7 @@ function TopModels({ topModels, isLoading }: TopModelsProps) {
         },
       ]}
     />
-  )
+  );
 }
 
 export default function TopModelsCard({
@@ -87,5 +87,5 @@ export default function TopModelsCard({
     <AnalyticsCard title="Top Models">
       <TopModels topModels={topModels} isLoading={isLoading} />
     </AnalyticsCard>
-  )
+  );
 }

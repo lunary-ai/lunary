@@ -1,6 +1,6 @@
-import ratelimit from "koa-ratelimit"
+import ratelimit from "koa-ratelimit";
 
-const db = new Map()
+const db = new Map();
 
 export default ratelimit({
   driver: "memory",
@@ -17,14 +17,14 @@ export default ratelimit({
   disableHeader: false,
   whitelist: (ctx) => {
     // don't limit logged in users
-    if (ctx.state.userId) return true
-    return false
+    if (ctx.state.userId) return true;
+    return false;
     // some logic that returns a boolean
   },
   // blacklist: (ctx) => {
   //   // some logic that returns a boolean
   // },
-})
+});
 
 export const aggressiveRatelimit = ratelimit({
   driver: "memory",
@@ -39,4 +39,4 @@ export const aggressiveRatelimit = ratelimit({
   },
   max: 10,
   disableHeader: false,
-})
+});

@@ -8,17 +8,17 @@ import {
   Textarea,
   TextareaProps,
   Title,
-} from "@mantine/core"
-import { useDisclosure } from "@mantine/hooks"
-import { IconArrowsMaximize } from "@tabler/icons-react"
+} from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { IconArrowsMaximize } from "@tabler/icons-react";
 
 type VariableTextareaProps = TextareaProps & {
-  name: string
-  value: string
-  w?: MantineSize
-  onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void
-  [key: string]: any
-}
+  name: string;
+  value: string;
+  w?: MantineSize;
+  onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  [key: string]: any;
+};
 
 export default function VariableTextarea({
   name,
@@ -27,7 +27,7 @@ export default function VariableTextarea({
   onChange,
   ...props
 }: VariableTextareaProps) {
-  const [opened, { open, close }] = useDisclosure(false)
+  const [opened, { open, close }] = useDisclosure(false);
 
   return (
     <>
@@ -79,5 +79,5 @@ export default function VariableTextarea({
         </ActionIcon>
       </Box>
     </>
-  )
+  );
 }

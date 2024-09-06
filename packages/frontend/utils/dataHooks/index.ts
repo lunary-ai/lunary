@@ -1,46 +1,46 @@
-import { useContext } from "react"
-import useSWR, { SWRConfiguration, useSWRConfig } from "swr"
-import useSWRInfinite from "swr/infinite"
-import useSWRMutation, { SWRMutationConfiguration } from "swr/mutation"
-import { getUserColor } from "../colors"
-import { ProjectContext } from "../context"
-import { useMemo } from "react"
+import { useContext } from "react";
+import useSWR, { SWRConfiguration, useSWRConfig } from "swr";
+import useSWRInfinite from "swr/infinite";
+import useSWRMutation, { SWRMutationConfiguration } from "swr/mutation";
+import { getUserColor } from "../colors";
+import { ProjectContext } from "../context";
+import { useMemo } from "react";
 
-import { useComputedColorScheme } from "@mantine/core"
+import { useComputedColorScheme } from "@mantine/core";
 
-import { useAuth } from "../auth"
-import { fetcher } from "../fetcher"
+import { useAuth } from "../auth";
+import { fetcher } from "../fetcher";
 
-import { CheckLogic } from "shared"
+import { CheckLogic } from "shared";
 
-type KeyType = string | ((...args: any[]) => string)
+type KeyType = string | ((...args: any[]) => string);
 
 function generateKey(
   baseKey: KeyType | undefined,
   projectId: string | undefined,
   extraParams?: string,
 ) {
-  const resolvedKey = typeof baseKey === "function" ? baseKey() : baseKey
-  if (!projectId || !resolvedKey) return null
+  const resolvedKey = typeof baseKey === "function" ? baseKey() : baseKey;
+  if (!projectId || !resolvedKey) return null;
 
-  const operator = resolvedKey.includes("?") ? "&" : "?"
+  const operator = resolvedKey.includes("?") ? "&" : "?";
 
   let url = `${resolvedKey}${
     !resolvedKey.endsWith("?") ? operator : ""
-  }projectId=${projectId}`
+  }projectId=${projectId}`;
   if (extraParams) {
-    url += `&${extraParams}`
+    url += `&${extraParams}`;
   }
 
-  return url
+  return url;
 }
 export function useProjectSWR(key?: KeyType, options?: SWRConfiguration) {
-  const { projectId } = useContext(ProjectContext)
+  const { projectId } = useContext(ProjectContext);
 
   const { data, error, isLoading, isValidating, mutate } = useSWR(
     () => generateKey(key, projectId),
     options,
-  )
+  );
 
   return {
     data,
@@ -48,7 +48,7 @@ export function useProjectSWR(key?: KeyType, options?: SWRConfiguration) {
     isLoading: projectId === null ? true : isLoading,
     isValidating,
     mutate,
-  }
+  };
 }
 
 export function useProjectMutation(
@@ -59,36 +59,36 @@ export function useProjectMutation(
     | typeof fetcher.delete,
   options?: SWRMutationConfiguration<any, any>,
 ) {
-  const { projectId } = useContext(ProjectContext)
+  const { projectId } = useContext(ProjectContext);
 
   return useSWRMutation(
     () => generateKey(key, projectId),
     customFetcher,
     options,
-  )
+  );
 }
 
 export function useProjectInfiniteSWR(key: string, ...args: any[]) {
-  const PAGE_SIZE = 100
+  const PAGE_SIZE = 100;
 
-  const { projectId } = useContext(ProjectContext)
+  const { projectId } = useContext(ProjectContext);
 
   function getKey(pageIndex, previousPageData) {
-    if (previousPageData && !previousPageData.data?.length) return null
-    return generateKey(key, projectId, `page=${pageIndex}&limit=${PAGE_SIZE}`)
+    if (previousPageData && !previousPageData.data?.length) return null;
+    return generateKey(key, projectId, `page=${pageIndex}&limit=${PAGE_SIZE}`);
   }
 
   const { data, isLoading, isValidating, size, setSize, mutate } =
-    useSWRInfinite(getKey, ...(args as [any]))
+    useSWRInfinite(getKey, ...(args as [any]));
 
-  const total = data?.[0]?.total
-  const items = data?.map((d) => d.data).flat()
+  const total = data?.[0]?.total;
+  const items = data?.map((d) => d.data).flat();
 
   function loadMore() {
-    const hasMore = items && items?.length < total
+    const hasMore = items && items?.length < total;
 
     if (hasMore) {
-      setSize((size) => size + 1)
+      setSize((size) => size + 1);
     }
   }
 
@@ -99,137 +99,137 @@ export function useProjectInfiniteSWR(key: string, ...args: any[]) {
     validating: isValidating,
     loadMore,
     mutate,
-  }
+  };
 }
 
 export function useProjectMutate(key: KeyType, options?: SWRConfiguration) {
-  const { projectId } = useContext(ProjectContext)
+  const { projectId } = useContext(ProjectContext);
 
-  const { mutate } = useSWRConfig()
+  const { mutate } = useSWRConfig();
 
   return (data) => {
-    mutate(generateKey(key, projectId), data, false)
-  }
+    mutate(generateKey(key, projectId), data, false);
+  };
 }
 
 export function useUser() {
-  const { isSignedIn } = useAuth()
+  const { isSignedIn } = useAuth();
 
-  const scheme = useComputedColorScheme()
+  const scheme = useComputedColorScheme();
 
   const { data, isLoading, mutate, error } = useSWR(
     () => isSignedIn && `/users/me`,
-  )
+  );
 
-  const color = data ? getUserColor(scheme, data.id) : null
-  const user = data ? { ...data, color } : null
+  const color = data ? getUserColor(scheme, data.id) : null;
+  const user = data ? { ...data, color } : null;
 
-  return { user, loading: isLoading, mutate, error }
+  return { user, loading: isLoading, mutate, error };
 }
 
 export function useOrg() {
-  const { isSignedIn } = useAuth()
+  const { isSignedIn } = useAuth();
 
   const { data, isLoading, mutate } = useSWR(
     () => isSignedIn && `/users/me/org`,
-  )
+  );
 
-  const { trigger: createUserTrigger } = useSWRMutation(`/users`, fetcher.post)
+  const { trigger: createUserTrigger } = useSWRMutation(`/users`, fetcher.post);
 
   async function addUserToOrg(user) {
-    await createUserTrigger(user)
-    mutate()
+    await createUserTrigger(user);
+    mutate();
   }
 
-  const scheme = useComputedColorScheme()
+  const scheme = useComputedColorScheme();
 
   const users = data?.users?.map((user) => ({
     ...user,
     color: getUserColor(scheme, user.id),
-  }))
+  }));
 
-  const org = data ? { ...data, users } : null
+  const org = data ? { ...data, users } : null;
 
   const { trigger: updateOrg } = useSWRMutation(
     `/orgs/${org?.id}`,
     fetcher.patch,
-  )
+  );
 
-  return { org, loading: isLoading, updateOrg, addUserToOrg, mutate }
+  return { org, loading: isLoading, updateOrg, addUserToOrg, mutate };
 }
 
 export function useJoinData(token?: string) {
   const { data, error, isLoading } = useSWR(
     token ? `/auth/join-data?token=${token}` : null,
-  )
+  );
 
   return {
     data,
     isLoading,
     error,
-  }
+  };
 }
 
 export function useProjects() {
-  const { isSignedIn } = useAuth()
+  const { isSignedIn } = useAuth();
 
-  const { data, isLoading, mutate } = useSWR(() => isSignedIn && `/projects`)
+  const { data, isLoading, mutate } = useSWR(() => isSignedIn && `/projects`);
 
   const { trigger: insertMutation } = useSWRMutation(
     () => `/projects`,
     fetcher.post,
     {
       populateCache(result, currentData) {
-        return [...currentData, result]
+        return [...currentData, result];
       },
     },
-  )
+  );
 
   return {
     projects: data || [],
     mutate,
     insert: insertMutation,
     isLoading: isLoading,
-  }
+  };
 }
 
 export function useProject() {
-  const { projectId, setProjectId } = useContext(ProjectContext)
+  const { projectId, setProjectId } = useContext(ProjectContext);
 
-  const { projects, isLoading, mutate } = useProjects()
+  const { projects, isLoading, mutate } = useProjects();
 
   const project = useMemo(
     () => projects?.find((p) => p.id === projectId),
     [projects, projectId],
-  )
+  );
 
   const { trigger: updateMutation } = useSWRMutation(
     projectId && `/projects/${projectId}`,
     fetcher.patch,
-  )
+  );
 
   const { trigger: dropMutation, isMutating: dropLoading } = useSWRMutation(
     projectId && `/projects/${projectId}`,
     fetcher.delete,
-  )
+  );
 
   async function update(name: string) {
-    await updateMutation({ name })
+    await updateMutation({ name });
     const newProjects = projects.map((p) =>
       p.id === projectId ? { ...p, name } : p,
-    )
-    mutate(newProjects)
+    );
+    mutate(newProjects);
   }
 
   async function drop(): Promise<Boolean> {
     try {
-      await dropMutation()
-      const newProjects = projects.filter((p) => p.id !== projectId)
-      setProjectId(newProjects[0]?.id)
-      mutate(newProjects)
-      return true
+      await dropMutation();
+      const newProjects = projects.filter((p) => p.id !== projectId);
+      setProjectId(newProjects[0]?.id);
+      mutate(newProjects);
+      return true;
     } catch (error) {
-      return false
+      return false;
     }
   }
 
@@ -241,27 +241,27 @@ export function useProject() {
     setProjectId,
     mutate,
     isLoading,
-  }
+  };
 }
 
 export function useProjectRules() {
-  const { projectId } = useContext(ProjectContext)
+  const { projectId } = useContext(ProjectContext);
 
   const {
     data: rules,
     isLoading,
     mutate,
-  } = useProjectSWR(projectId && `/projects/${projectId}/rules`)
+  } = useProjectSWR(projectId && `/projects/${projectId}/rules`);
 
   const { trigger: addRule, isMutating: addRulesLoading } = useSWRMutation(
     projectId && `/projects/${projectId}/rules`,
     fetcher.post,
     {
       onSuccess() {
-        mutate()
+        mutate();
       },
     },
-  )
+  );
 
   const { trigger: deleteRule, isMutating: deleteRulesLoading } =
     useSWRMutation(
@@ -269,13 +269,13 @@ export function useProjectRules() {
       fetcher.delete,
       {
         onSuccess() {
-          mutate()
+          mutate();
         },
       },
-    )
+    );
 
-  const maskingRule = rules?.find((r) => r.type === "masking")
-  const filteringRule = rules?.find((r) => r.type === "filtering")
+  const maskingRule = rules?.find((r) => r.type === "masking");
+  const filteringRule = rules?.find((r) => r.type === "filtering");
 
   return {
     rules,
@@ -287,17 +287,17 @@ export function useProjectRules() {
     deleteRulesLoading,
     maskingRule,
     filteringRule,
-  }
+  };
 }
 
 export function useTemplates() {
-  const { data: templates, isLoading, mutate } = useProjectSWR(`/templates`)
+  const { data: templates, isLoading, mutate } = useProjectSWR(`/templates`);
 
   // insert mutation
   const { trigger: insert, isMutating: isInserting } = useProjectMutation(
     `/templates`,
     fetcher.post,
-  )
+  );
 
   return {
     templates,
@@ -305,7 +305,7 @@ export function useTemplates() {
     mutate,
     loading: isLoading,
     isInserting,
-  }
+  };
 }
 
 export function useTemplate(id: string) {
@@ -313,12 +313,12 @@ export function useTemplate(id: string) {
     data: template,
     isLoading,
     mutate,
-  } = useProjectSWR(id && `/templates/${id}`)
+  } = useProjectSWR(id && `/templates/${id}`);
 
   const { trigger: update } = useProjectMutation(
     id && `/templates/${id}`,
     fetcher.patch,
-  )
+  );
 
   const { trigger: remove } = useProjectMutation(
     id && `/templates/${id}`,
@@ -326,13 +326,13 @@ export function useTemplate(id: string) {
     {
       revalidate: false,
     },
-  )
+  );
 
   // insert mutation
   const { trigger: insertVersion } = useProjectMutation(
     `/templates/${id}/versions`,
     fetcher.post,
-  )
+  );
 
   return {
     template,
@@ -341,7 +341,7 @@ export function useTemplate(id: string) {
     remove,
     mutate,
     loading: isLoading,
-  }
+  };
 }
 
 export function useTemplateVersion(id: string) {
@@ -349,35 +349,35 @@ export function useTemplateVersion(id: string) {
     data: templateVersion,
     isLoading,
     mutate,
-  } = useProjectSWR(id && `/template_versions/${id}`)
+  } = useProjectSWR(id && `/template_versions/${id}`);
 
   const { trigger: update } = useProjectMutation(
     `/template_versions/${id}`,
     fetcher.patch,
-  )
+  );
 
   return {
     templateVersion,
     update,
     mutate,
     loading: isLoading,
-  }
+  };
 }
 
 export function buildLogsAPIUrl(data = {}) {
-  let url = `/runs?`
+  let url = `/runs?`;
 
   const params = Object.entries(data)
     .map(([key, value]) => {
-      return `${key}=${value}`
+      return `${key}=${value}`;
     })
-    .join("&")
+    .join("&");
 
-  return url + params
+  return url + params;
 }
 
 export function useLogs(params: any) {
-  return useProjectInfiniteSWR(buildLogsAPIUrl(params))
+  return useProjectInfiniteSWR(buildLogsAPIUrl(params));
 }
 
 export function useRun(id: string | null, initialData?: any) {
@@ -387,7 +387,7 @@ export function useRun(id: string | null, initialData?: any) {
     mutate,
   } = useProjectSWR(id && `/runs/${id}`, {
     fallbackData: initialData,
-  })
+  });
 
   const { trigger: update } = useProjectMutation(
     id && `/runs/${id}`,
@@ -395,21 +395,21 @@ export function useRun(id: string | null, initialData?: any) {
     {
       revalidate: false,
     },
-  )
+  );
 
   const { trigger: updateTrigger } = useProjectMutation(
     id && `/runs/${id}/feedback`,
     fetcher.patch,
-  )
+  );
 
   async function updateRun(data) {
-    mutate({ ...run, ...data })
-    await update(data)
+    mutate({ ...run, ...data });
+    await update(data);
   }
 
   async function updateFeedback(feedback) {
-    await updateTrigger(feedback)
-    await mutate()
+    await updateTrigger(feedback);
+    await mutate();
   }
 
   return {
@@ -418,122 +418,122 @@ export function useRun(id: string | null, initialData?: any) {
     updateFeedback,
     mutate,
     loading: isLoading,
-  }
+  };
 }
 
 export function useLogCount(filters: any) {
-  const { data, isLoading } = useProjectSWR(`/runs/count?${filters}`)
+  const { data, isLoading } = useProjectSWR(`/runs/count?${filters}`);
 
-  return { count: data, isLoading }
+  return { count: data, isLoading };
 }
 
 export function useRunsUsage(range, userId?: string) {
-  const userIdStr = userId ? `&userId=${userId}` : ""
+  const userIdStr = userId ? `&userId=${userId}` : "";
   const { data: usage, isLoading } = useProjectSWR(
     `/runs/usage?days=${range}${userIdStr}`,
-  )
+  );
 
-  return { usage, loading: isLoading }
+  return { usage, loading: isLoading };
 }
 
 export function useRunsUsageByDay(range, userId?: string) {
-  const userIdStr = userId ? `&userId=${userId}` : ""
+  const userIdStr = userId ? `&userId=${userId}` : "";
 
   const { data, isLoading } = useProjectSWR(
     `/runs/usage?days=${range}${userIdStr}&daily=true`,
-  )
+  );
 
-  return { dailyUsage: data, loading: isLoading }
+  return { dailyUsage: data, loading: isLoading };
 }
 
 export function useRunsUsageByUser(range = null) {
   const { data: usageByUser, isLoading } = useProjectSWR(
     `/external-users/runs/usage`,
-  )
+  );
 
   const reduceUsersUsage = (usage) => {
-    const userData = []
+    const userData = [];
 
-    const uniqueUserIds = Array.from(new Set(usage.map((u) => u.user_id)))
+    const uniqueUserIds = Array.from(new Set(usage.map((u) => u.user_id)));
 
     for (let id of uniqueUserIds) {
-      const userUsage = usage.filter((u) => u.user_id === id)
+      const userUsage = usage.filter((u) => u.user_id === id);
       const totalCost = userUsage.reduce((acc, curr) => {
-        acc += curr.cost
-        return acc
-      }, 0)
+        acc += curr.cost;
+        return acc;
+      }, 0);
 
       const totalAgentRuns = userUsage.reduce((acc, curr) => {
-        acc += curr.success + curr.errors
-        return acc
-      }, 0)
+        acc += curr.success + curr.errors;
+        return acc;
+      }, 0);
 
       userData.push({
         user_id: id,
         agentRuns: totalAgentRuns,
         cost: totalCost,
-      })
+      });
     }
 
-    return userData
-  }
+    return userData;
+  };
 
   return {
     usageByUser: reduceUsersUsage(usageByUser || []),
     loading: isLoading,
-  }
+  };
 }
 
 export function useOrgUser(userId: string) {
-  const { mutate: mutateOrg } = useOrg()
+  const { mutate: mutateOrg } = useOrg();
 
   const { data, isLoading, mutate } = useProjectSWR(
     userId && `/users/${userId}`,
-  )
+  );
 
   async function removeUserFromOrg() {
-    await triggerDelete()
-    await mutateOrg()
+    await triggerDelete();
+    await mutateOrg();
   }
   const { trigger: triggerDelete } = useProjectMutation(
     `/users/${userId}`,
     fetcher.delete,
-  )
+  );
 
   async function updateUser(data: any) {
-    await triggerUpdate(data)
-    await mutateOrg()
+    await triggerUpdate(data);
+    await mutateOrg();
   }
   const { trigger: triggerUpdate } = useProjectMutation(
     `/users/${userId}`,
     fetcher.patch,
-  )
+  );
 
-  const scheme = useComputedColorScheme()
+  const scheme = useComputedColorScheme();
 
   const user = {
     ...data,
     color: getUserColor(scheme, data?.id),
-  }
+  };
 
-  return { user, loading: isLoading, mutate, removeUserFromOrg, updateUser }
+  return { user, loading: isLoading, mutate, removeUserFromOrg, updateUser };
 }
 
 export function useChecklists(type: string) {
   const { data, isLoading, mutate } = useProjectSWR(
     type && `/checklists?type=${type}`,
-  )
+  );
 
   // insert mutation
   const { trigger: insert, isMutating: isInserting } = useProjectMutation(
     `/checklists`,
     fetcher.post,
-  )
+  );
 
   const { trigger: update, isMutating: isUpdating } = useProjectMutation(
     `/checklists`,
     fetcher.patch,
-  )
+  );
 
   return {
     checklists: data,
@@ -543,7 +543,7 @@ export function useChecklists(type: string) {
     isUpdating,
     mutate,
     loading: isLoading,
-  }
+  };
 }
 
 export function useChecklist(id: string, initialData?: any) {
@@ -553,12 +553,12 @@ export function useChecklist(id: string, initialData?: any) {
     mutate,
   } = useProjectSWR(id && `/checklists/${id}`, {
     fallbackData: initialData,
-  })
+  });
 
   const { trigger: update } = useProjectMutation(
     id && `/checklists/${id}`,
     fetcher.patch,
-  )
+  );
 
   const { trigger: remove } = useProjectMutation(
     id && `/checklists/${id}`,
@@ -566,7 +566,7 @@ export function useChecklist(id: string, initialData?: any) {
     {
       revalidate: false,
     },
-  )
+  );
 
   return {
     checklist,
@@ -574,27 +574,27 @@ export function useChecklist(id: string, initialData?: any) {
     remove,
     mutate,
     loading: isLoading,
-  }
+  };
 }
 
 export function useDatasets() {
-  const { data, isLoading, mutate } = useProjectSWR(`/datasets`)
+  const { data, isLoading, mutate } = useProjectSWR(`/datasets`);
 
   // insert mutation
   const { trigger: insert, isMutating: isInserting } = useProjectMutation(
     `/datasets`,
     fetcher.post,
-  )
+  );
 
   const { trigger: insertPrompt } = useProjectMutation(
     `/datasets/prompts`,
     fetcher.post,
-  )
+  );
 
   const { trigger: update, isMutating: isUpdating } = useProjectMutation(
     `/datasets`,
     fetcher.patch,
-  )
+  );
 
   return {
     datasets: data || [],
@@ -605,11 +605,11 @@ export function useDatasets() {
     mutate,
     isLoading,
     insertPrompt,
-  }
+  };
 }
 
 export function useDataset(id: string, initialData?: any) {
-  const { mutate: mutateDatasets } = useDatasets()
+  const { mutate: mutateDatasets } = useDatasets();
 
   const {
     data: dataset,
@@ -618,25 +618,25 @@ export function useDataset(id: string, initialData?: any) {
     mutate,
   } = useProjectSWR(id && id !== "new" && `/datasets/${id}`, {
     fallbackData: initialData,
-  })
+  });
 
   const { trigger: update } = useProjectMutation(
     `/datasets/${id}`,
     fetcher.patch,
-  )
+  );
 
   const { trigger: remove } = useProjectMutation(
     `/datasets/${id}`,
     fetcher.delete,
     {
       onSuccess() {
-        mutateDatasets((datasets) => datasets.filter((d) => d.id !== id))
+        mutateDatasets((datasets) => datasets.filter((d) => d.id !== id));
       },
     },
-  )
+  );
 
   const { trigger: insertPrompt, isMutating: isInsertingPrompt } =
-    useProjectMutation(`/datasets/prompts`, fetcher.post)
+    useProjectMutation(`/datasets/prompts`, fetcher.post);
 
   return {
     dataset,
@@ -647,7 +647,7 @@ export function useDataset(id: string, initialData?: any) {
     loading: isLoading,
     isValidating,
     isInsertingPrompt,
-  }
+  };
 }
 
 export function useDatasetPrompt(id: string) {
@@ -655,12 +655,12 @@ export function useDatasetPrompt(id: string) {
     data: prompt,
     isLoading,
     mutate,
-  } = useProjectSWR(id && `/datasets/prompts/${id}`)
+  } = useProjectSWR(id && `/datasets/prompts/${id}`);
 
   const { trigger: update } = useProjectMutation(
     id && `/datasets/prompts/${id}`,
     fetcher.patch,
-  )
+  );
 
   const { trigger: remove } = useProjectMutation(
     id && `/datasets/prompts/${id}`,
@@ -668,10 +668,10 @@ export function useDatasetPrompt(id: string) {
     {
       revalidate: false,
     },
-  )
+  );
 
   const { trigger: insertVariation, isMutating: isInsertingVariation } =
-    useProjectMutation(id && `/datasets/variations`, fetcher.post)
+    useProjectMutation(id && `/datasets/variations`, fetcher.post);
 
   return {
     prompt,
@@ -681,7 +681,7 @@ export function useDatasetPrompt(id: string) {
     loading: isLoading,
     insertVariation,
     isInsertingVariation,
-  }
+  };
 }
 
 export function useDatasetPromptVariation(id: string) {
@@ -689,7 +689,7 @@ export function useDatasetPromptVariation(id: string) {
     data: variation,
     isLoading,
     mutate,
-  } = useProjectSWR(id && `/datasets/variations/${id}`)
+  } = useProjectSWR(id && `/datasets/variations/${id}`);
 
   const { trigger: update } = useProjectMutation(
     id && `/datasets/variations/${id}`,
@@ -697,7 +697,7 @@ export function useDatasetPromptVariation(id: string) {
     {
       revalidate: false,
     },
-  )
+  );
 
   const { trigger: remove } = useProjectMutation(
     id && `/datasets/variations/${id}`,
@@ -705,7 +705,7 @@ export function useDatasetPromptVariation(id: string) {
     {
       revalidate: false,
     },
-  )
+  );
 
   return {
     variation,
@@ -713,16 +713,16 @@ export function useDatasetPromptVariation(id: string) {
     remove,
     mutate,
     loading: isLoading,
-  }
+  };
 }
 
 export function useEvaluations() {
-  const { data, isLoading } = useProjectSWR(`/evaluations`)
+  const { data, isLoading } = useProjectSWR(`/evaluations`);
 
   return {
     evaluations: data || [],
     isLoading,
-  }
+  };
 }
 
 export function useEvaluation(id: string) {
@@ -730,11 +730,11 @@ export function useEvaluation(id: string) {
     data: evaluation,
     isLoading,
     mutate,
-  } = useProjectSWR(id && `/evaluations/${id}`)
+  } = useProjectSWR(id && `/evaluations/${id}`);
 
   return {
     evaluation,
     mutate,
     loading: isLoading,
-  }
+  };
 }

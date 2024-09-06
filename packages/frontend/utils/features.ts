@@ -24,20 +24,20 @@ import {
   IconThumbUpFilled,
   IconUserShield,
   IconUsers,
-} from "@tabler/icons-react"
+} from "@tabler/icons-react";
 
 type Feature = {
-  id: string
-  title: string
+  id: string;
+  title: string;
 
-  Icon: any
-  description?: string
+  Icon: any;
+  description?: string;
   plans: {
-    id: string
-    value: string | boolean
-    help?: string
-  }[]
-}
+    id: string;
+    value: string | boolean;
+    help?: string;
+  }[];
+};
 
 export const FEATURES: Feature[] = [
   {
@@ -237,4 +237,4 @@ export const FEATURES: Feature[] = [
     Icon: IconMoodNerd,
     plans: [{ id: "enterprise", value: true }],
   },
-]
+];

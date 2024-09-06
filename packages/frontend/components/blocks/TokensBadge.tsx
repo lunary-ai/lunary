@@ -1,8 +1,8 @@
-import { Badge, ThemeIcon } from "@mantine/core"
-import { IconCashBanknote } from "@tabler/icons-react"
+import { Badge, ThemeIcon } from "@mantine/core";
+import { IconCashBanknote } from "@tabler/icons-react";
 
 export default function TokensBadge({ tokens }) {
-  if (!tokens) return null
+  if (!tokens) return null;
 
   return (
     <Badge
@@ -18,5 +18,5 @@ export default function TokensBadge({ tokens }) {
     >
       {tokens} tokens
     </Badge>
-  )
+  );
 }

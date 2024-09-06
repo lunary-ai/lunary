@@ -1,45 +1,45 @@
-import LineChart from "@/components/analytics/LineChart"
-import TopModels from "@/components/analytics/TopModels"
-import TopTemplates from "@/components/analytics/TopTemplates"
-import TopUsersCard from "@/components/analytics/TopUsers"
-import CheckPicker from "@/components/checks/Picker"
-import Empty from "@/components/layout/Empty"
-import { useProject } from "@/utils/dataHooks"
+import LineChart from "@/components/analytics/LineChart";
+import TopModels from "@/components/analytics/TopModels";
+import TopTemplates from "@/components/analytics/TopTemplates";
+import TopUsersCard from "@/components/analytics/TopUsers";
+import CheckPicker from "@/components/checks/Picker";
+import Empty from "@/components/layout/Empty";
+import { useProject } from "@/utils/dataHooks";
 import {
   useAnalyticsChartData,
   useTopModels,
   useTopTemplates,
-} from "@/utils/dataHooks/analytics"
-import { useExternalUsers } from "@/utils/dataHooks/external-users"
-import { formatCost } from "@/utils/format"
+} from "@/utils/dataHooks/analytics";
+import { useExternalUsers } from "@/utils/dataHooks/external-users";
+import { formatCost } from "@/utils/format";
 
-import { Box, Button, Group, Select, SimpleGrid, Stack } from "@mantine/core"
-import { DatePickerInput } from "@mantine/dates"
+import { Box, Button, Group, Select, SimpleGrid, Stack } from "@mantine/core";
+import { DatePickerInput } from "@mantine/dates";
 
 import {
   useInViewport,
   useLocalStorage,
   useSessionStorage,
-} from "@mantine/hooks"
+} from "@mantine/hooks";
 import {
   IconCalendar,
   IconChartAreaLine,
   IconFilter,
-} from "@tabler/icons-react"
-import { NextSeo } from "next-seo"
-import { useQueryState } from "nuqs"
-import { useEffect, useMemo, useState } from "react"
-import { deserializeLogic, serializeLogic } from "shared"
+} from "@tabler/icons-react";
+import { NextSeo } from "next-seo";
+import { useQueryState } from "nuqs";
+import { useEffect, useMemo, useState } from "react";
+import { deserializeLogic, serializeLogic } from "shared";
 
 export function getDefaultDateRange() {
-  const endOfToday = new Date()
-  endOfToday.setHours(23, 59, 59, 999)
+  const endOfToday = new Date();
+  endOfToday.setHours(23, 59, 59, 999);
 
-  const oneWeekAgoDate = new Date(endOfToday)
-  oneWeekAgoDate.setDate(oneWeekAgoDate.getDate() - 30)
-  oneWeekAgoDate.setHours(0, 0, 0, 0)
-  const defaultRange: [Date, Date] = [oneWeekAgoDate, endOfToday]
-  return defaultRange
+  const oneWeekAgoDate = new Date(endOfToday);
+  oneWeekAgoDate.setDate(oneWeekAgoDate.getDate() - 30);
+  oneWeekAgoDate.setHours(0, 0, 0, 0);
+  const defaultRange: [Date, Date] = [oneWeekAgoDate, endOfToday];
+  return defaultRange;
 }
 
 /**
@@ -47,109 +47,109 @@ export function getDefaultDateRange() {
  * corrupted data (e.g., if the data was manually changed by the user).
  */
 export function deserializeDateRange(value: any): [Date, Date] {
-  const defaultRange: [Date, Date] = getDefaultDateRange()
+  const defaultRange: [Date, Date] = getDefaultDateRange();
 
   if (!value) {
-    return defaultRange
+    return defaultRange;
   }
   try {
-    const range = JSON.parse(value)
+    const range = JSON.parse(value);
 
     if (!Array.isArray(range) || range.length !== 2) {
-      return defaultRange
+      return defaultRange;
     }
     if (isNaN(Date.parse(range[0])) || isNaN(Date.parse(range[1]))) {
-      return defaultRange
+      return defaultRange;
     }
 
-    const [startDate, endDate] = [new Date(range[0]), new Date(range[1])]
+    const [startDate, endDate] = [new Date(range[0]), new Date(range[1])];
 
-    return [startDate, endDate]
+    return [startDate, endDate];
   } catch {
-    return defaultRange
+    return defaultRange;
   }
 }
 
-type PresetDateRange = "Today" | "7 Days" | "30 Days" | "3 Months" | "Custom"
-type DateRange = [Date, Date]
+type PresetDateRange = "Today" | "7 Days" | "30 Days" | "3 Months" | "Custom";
+type DateRange = [Date, Date];
 
 // TODO tests
 export function getDateRangeFromPreset(preset: PresetDateRange) {
-  const endOfDay = new Date()
-  endOfDay.setHours(23, 59, 59, 999)
+  const endOfDay = new Date();
+  endOfDay.setHours(23, 59, 59, 999);
 
-  const startDate = new Date(endOfDay)
-  startDate.setHours(0, 0, 0, 0)
+  const startDate = new Date(endOfDay);
+  startDate.setHours(0, 0, 0, 0);
 
   if (preset === "7 Days") {
-    startDate.setDate(startDate.getDate() - 7)
+    startDate.setDate(startDate.getDate() - 7);
   } else if (preset === "30 Days") {
-    startDate.setDate(startDate.getDate() - 30)
+    startDate.setDate(startDate.getDate() - 30);
   } else if (preset === "3 Months") {
-    startDate.setMonth(startDate.getMonth() - 3)
+    startDate.setMonth(startDate.getMonth() - 3);
   }
 
-  return [startDate, endOfDay]
+  return [startDate, endOfDay];
 }
 
 // TODO: unit tests
 function getPresetFromDateRange(dateRange: DateRange): PresetDateRange {
-  const [startDate, endDate] = [new Date(dateRange[0]), new Date(dateRange[1])]
-  startDate.setHours(0, 0, 0, 0)
-  endDate.setHours(23, 59, 59, 999)
+  const [startDate, endDate] = [new Date(dateRange[0]), new Date(dateRange[1])];
+  startDate.setHours(0, 0, 0, 0);
+  endDate.setHours(23, 59, 59, 999);
 
-  const startOfToday = new Date()
-  startOfToday.setHours(0, 0, 0, 0)
-  const endOfToday = new Date(startOfToday)
-  endOfToday.setHours(23, 59, 59, 999)
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const endOfToday = new Date(startOfToday);
+  endOfToday.setHours(23, 59, 59, 999);
   if (
     startDate.getTime() === startOfToday.getTime() &&
     endDate.getTime() === endOfToday.getTime()
   ) {
-    return "Today"
+    return "Today";
   }
 
-  const sevenDaysAgo = new Date(endOfToday)
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-  sevenDaysAgo.setHours(0, 0, 0, 0)
+  const sevenDaysAgo = new Date(endOfToday);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
   if (
     startDate.getTime() === sevenDaysAgo.getTime() &&
     endDate.getTime() === endOfToday.getTime()
   ) {
-    return "7 Days"
+    return "7 Days";
   }
 
-  const thirtyDaysAgo = new Date(endOfToday)
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-  thirtyDaysAgo.setHours(0, 0, 0, 0)
+  const thirtyDaysAgo = new Date(endOfToday);
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  thirtyDaysAgo.setHours(0, 0, 0, 0);
   if (
     startDate.getTime() === thirtyDaysAgo.getTime() &&
     endDate.getTime() === endOfToday.getTime()
   ) {
-    return "30 Days"
+    return "30 Days";
   }
 
-  const threeMonthsAgo = new Date(endOfToday)
-  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3)
-  threeMonthsAgo.setHours(0, 0, 0, 0)
+  const threeMonthsAgo = new Date(endOfToday);
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+  threeMonthsAgo.setHours(0, 0, 0, 0);
   if (
     startDate.getTime() === threeMonthsAgo.getTime() &&
     endDate.getTime() === endOfToday.getTime()
   ) {
-    return "3 Months"
+    return "3 Months";
   }
 
-  return "Custom"
+  return "Custom";
 }
 
 export function DateRangeSelect({ dateRange, setDateRange }) {
-  const selectedOption = getPresetFromDateRange(dateRange)
-  const data = ["Today", "7 Days", "30 Days", "3 Months"]
-  const displayData = selectedOption === "Custom" ? [...data, "Custom"] : data
+  const selectedOption = getPresetFromDateRange(dateRange);
+  const data = ["Today", "7 Days", "30 Days", "3 Months"];
+  const displayData = selectedOption === "Custom" ? [...data, "Custom"] : data;
 
   function handleSelectChange(value) {
-    const newDateRange = getDateRangeFromPreset(value)
-    setDateRange(newDateRange)
+    const newDateRange = getDateRangeFromPreset(value);
+    setDateRange(newDateRange);
   }
 
   return (
@@ -170,31 +170,31 @@ export function DateRangeSelect({ dateRange, setDateRange }) {
       value={selectedOption}
       onChange={handleSelectChange}
     />
-  )
+  );
 }
 
 interface DateRangePickerProps {
-  dateRange: [Date, Date]
-  setDateRange: (dates: [Date, Date]) => void
+  dateRange: [Date, Date];
+  setDateRange: (dates: [Date, Date]) => void;
 }
 
 function DateRangePicker({ dateRange, setDateRange }: DateRangePickerProps) {
   const [localDateRange, setLocalDateRange] = useState<
     [Date | null, Date | null]
-  >([dateRange[0], dateRange[1]])
+  >([dateRange[0], dateRange[1]]);
 
   useEffect(() => {
-    setLocalDateRange([dateRange[0], dateRange[1]])
-  }, [dateRange])
+    setLocalDateRange([dateRange[0], dateRange[1]]);
+  }, [dateRange]);
 
   function handleDateChange(dates: [Date | null, Date | null]) {
-    setLocalDateRange(dates)
+    setLocalDateRange(dates);
     if (dates[0] && dates[1]) {
-      const [startDate, endDate] = dates
-      startDate.setHours(0, 0, 0, 0)
-      endDate.setHours(23, 59, 59, 99)
+      const [startDate, endDate] = dates;
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(23, 59, 59, 99);
 
-      setDateRange([dates[0], dates[1]])
+      setDateRange([dates[0], dates[1]]);
     }
   }
   return (
@@ -215,28 +215,28 @@ function DateRangePicker({ dateRange, setDateRange }: DateRangePickerProps) {
       onChange={handleDateChange}
       maxDate={new Date()}
     />
-  )
+  );
 }
 
-type Granularity = "hourly" | "daily" | "weekly"
+type Granularity = "hourly" | "daily" | "weekly";
 
 interface GranularitySelectProps {
-  dateRange: [Date, Date]
-  granularity: Granularity
-  setGranularity: (granularity: Granularity) => void
+  dateRange: [Date, Date];
+  granularity: Granularity;
+  setGranularity: (granularity: Granularity) => void;
 }
 
 const determineGranularity = (
   dateRange: [Date, Date],
 ): "hourly" | "daily" | "weekly" => {
-  const [startDate, endDate] = dateRange
+  const [startDate, endDate] = dateRange;
   const diffDays =
-    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
 
-  if (diffDays <= 1) return "hourly"
-  if (diffDays <= 60) return "daily"
-  return "weekly"
-}
+  if (diffDays <= 1) return "hourly";
+  if (diffDays <= 60) return "daily";
+  return "weekly";
+};
 
 function GranularitySelect({
   dateRange,
@@ -248,23 +248,23 @@ function GranularitySelect({
   >([
     { value: "daily", label: "Daily" },
     { value: "weekly", label: "Weekly" },
-  ])
+  ]);
 
   useEffect(() => {
-    const newGranularity = determineGranularity(dateRange)
-    setGranularity(newGranularity)
+    const newGranularity = determineGranularity(dateRange);
+    setGranularity(newGranularity);
 
     if (newGranularity === "hourly") {
-      setOptions([{ value: "hourly", label: "Hourly" }])
+      setOptions([{ value: "hourly", label: "Hourly" }]);
     } else if (newGranularity === "daily") {
-      setOptions([{ value: "daily", label: "Daily" }])
+      setOptions([{ value: "daily", label: "Daily" }]);
     } else {
       setOptions([
         { value: "daily", label: "Daily" },
         { value: "weekly", label: "Weekly" },
-      ])
+      ]);
     }
-  }, [dateRange, setGranularity])
+  }, [dateRange, setGranularity]);
 
   return (
     <Select
@@ -282,10 +282,10 @@ function GranularitySelect({
       value={granularity}
       onChange={(value) => setGranularity(value as Granularity)}
     />
-  )
+  );
 }
 
-const DEFAULT_CHECK = ["AND"]
+const DEFAULT_CHECK = ["AND"];
 
 function AnalyticsChart({
   dataKey,
@@ -301,21 +301,21 @@ function AnalyticsChart({
   formatter,
   colors,
 }: {
-  dataKey: string
-  splitBy?: string
-  props: string[]
-  agg?: "sum" | "avg"
-  title: string
-  description: string
-  startDate: Date
-  endDate: Date
-  granularity: Granularity
-  serializedChecks: string
-  formatter?: (value: number) => string
-  colors?: string[]
+  dataKey: string;
+  splitBy?: string;
+  props: string[];
+  agg?: "sum" | "avg";
+  title: string;
+  description: string;
+  startDate: Date;
+  endDate: Date;
+  granularity: Granularity;
+  serializedChecks: string;
+  formatter?: (value: number) => string;
+  colors?: string[];
 }) {
-  const { ref, inViewport } = useInViewport()
-  const [load, setLoad] = useState(inViewport)
+  const { ref, inViewport } = useInViewport();
+  const [load, setLoad] = useState(inViewport);
 
   const { data, isLoading } = useAnalyticsChartData(
     load && dataKey,
@@ -323,13 +323,13 @@ function AnalyticsChart({
     endDate,
     granularity,
     serializedChecks,
-  )
+  );
 
   useEffect(() => {
     if (inViewport) {
-      setLoad(true)
+      setLoad(true);
     }
-  }, [inViewport])
+  }, [inViewport]);
 
   return (
     <Box ref={ref}>
@@ -349,7 +349,7 @@ function AnalyticsChart({
         colors={colors}
       />
     </Box>
-  )
+  );
 }
 
 // TODO: typescript everywhere
@@ -359,52 +359,52 @@ export default function Analytics() {
     getInitialValueInEffect: false,
     deserialize: deserializeDateRange,
     defaultValue: getDefaultDateRange(),
-  })
+  });
 
-  const [startDate, endDate] = dateRange
+  const [startDate, endDate] = dateRange;
 
   const [granularity, setGranularity] = useLocalStorage<Granularity>({
     key: "granularity-analytics",
     getInitialValueInEffect: false,
     defaultValue: determineGranularity(dateRange),
-  })
+  });
 
   const [checks, setChecks] = useQueryState("filters", {
     parse: (value) => deserializeLogic(value, true),
     serialize: serializeLogic,
     defaultValue: DEFAULT_CHECK,
-  })
+  });
 
-  const serializedChecks = useMemo(() => serializeLogic(checks), [checks])
+  const serializedChecks = useMemo(() => serializeLogic(checks), [checks]);
 
-  const [showCheckBar, setShowCheckBar] = useState(false)
+  const [showCheckBar, setShowCheckBar] = useState(false);
 
-  const { project } = useProject()
+  const { project } = useProject();
 
   const { data: topModels, isLoading: topModelsLoading } = useTopModels({
     startDate,
     endDate,
-  })
+  });
 
   const { data: topTemplates, isLoading: topTemplatesLoading } =
-    useTopTemplates(startDate, endDate)
+    useTopTemplates(startDate, endDate);
 
   const { users: topUsers, loading: topUsersLoading } = useExternalUsers({
     startDate,
     endDate,
-  })
+  });
 
   const showBar =
     showCheckBar ||
     checks?.filter((f) => f !== "AND" && !["search", "type"].includes(f.id))
-      .length > 0
+      .length > 0;
 
   const commonChartData = {
     startDate: startDate,
     endDate: endDate,
     granularity: granularity,
     serializedChecks: serializedChecks,
-  }
+  };
 
   return (
     <Empty
@@ -575,5 +575,5 @@ export default function Analytics() {
         </SimpleGrid>
       </Stack>
     </Empty>
-  )
+  );
 }

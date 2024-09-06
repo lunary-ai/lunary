@@ -13,27 +13,27 @@ import {
   Title,
   Tooltip,
   UnstyledButton,
-} from "@mantine/core"
-import { IconCircleCheck, IconCirclePlus } from "@tabler/icons-react"
-import classes from "./index.module.css"
-import { CHECKS, Check } from "shared"
-import CHECKS_UI_DATA from "./ChecksUIData"
-import { useMemo, useState } from "react"
-import { theme } from "@/utils/theme"
+} from "@mantine/core";
+import { IconCircleCheck, IconCirclePlus } from "@tabler/icons-react";
+import classes from "./index.module.css";
+import { CHECKS, Check } from "shared";
+import CHECKS_UI_DATA from "./ChecksUIData";
+import { useMemo, useState } from "react";
+import { theme } from "@/utils/theme";
 
 function CheckCard({
   onItemClick,
   filter,
   isSelected,
 }: {
-  onItemClick: (id: string) => void
-  filter: Check
-  isSelected: boolean
+  onItemClick: (id: string) => void;
+  filter: Check;
+  isSelected: boolean;
 }) {
-  const uiData = CHECKS_UI_DATA[filter.id] || CHECKS_UI_DATA["other"]
+  const uiData = CHECKS_UI_DATA[filter.id] || CHECKS_UI_DATA["other"];
 
   if (!uiData) {
-    return null
+    return null;
   }
 
   return (
@@ -75,7 +75,7 @@ function CheckCard({
         </UnstyledButton>
       </Tooltip>
     </Card>
-  )
+  );
 }
 
 export default function ChecksModal({
@@ -84,20 +84,20 @@ export default function ChecksModal({
   setOpened,
   onFinish,
 }: {
-  checks: Check[]
-  opened: boolean
-  setOpened: (opened: boolean) => void
-  onFinish: (ids: string[]) => void
+  checks: Check[];
+  opened: boolean;
+  setOpened: (opened: boolean) => void;
+  onFinish: (ids: string[]) => void;
 }) {
-  const [searchTerm, setSearchTerm] = useState("")
-  const types = ["Basic", "Smart", "AI"]
-  const [selected, setSelected] = useState<Check[]>([])
+  const [searchTerm, setSearchTerm] = useState("");
+  const types = ["Basic", "Smart", "AI"];
+  const [selected, setSelected] = useState<Check[]>([]);
 
   const filteredChecks = useMemo(() => {
     return checks.filter((filter) =>
       filter.name.toLowerCase().includes(searchTerm.toLowerCase()),
-    )
-  }, [checks, searchTerm])
+    );
+  }, [checks, searchTerm]);
 
   return (
     <Modal
@@ -114,7 +114,7 @@ export default function ChecksModal({
       }
       opened={opened}
       onClose={() => {
-        setOpened(false)
+        setOpened(false);
       }}
       size="xl"
     >
@@ -149,19 +149,19 @@ export default function ChecksModal({
                           setSelected((currentSelected) => {
                             const isSelected = currentSelected.some(
                               (item) => item.id === id,
-                            )
+                            );
                             if (isSelected) {
                               return currentSelected.filter(
                                 (item) => item.id !== id,
-                              )
+                              );
                             }
                             const itemToAdd = checks.find(
                               (item) => item.id === id,
-                            )
+                            );
                             return itemToAdd
                               ? [...currentSelected, itemToAdd]
-                              : currentSelected
-                          })
+                              : currentSelected;
+                          });
                         }}
                       />
                     ))}
@@ -182,7 +182,7 @@ export default function ChecksModal({
           <Anchor
             href="#"
             onClick={() => {
-              $crisp.push(["do", "chat:open"])
+              $crisp.push(["do", "chat:open"]);
             }}
             variant="transparent"
           >
@@ -192,14 +192,14 @@ export default function ChecksModal({
         <Button
           size="sm"
           onClick={() => {
-            setOpened(false)
-            onFinish(selected.map((s) => s.id))
-            setSelected([])
+            setOpened(false);
+            onFinish(selected.map((s) => s.id));
+            setSelected([]);
           }}
         >
           Add
         </Button>
       </Group>
     </Modal>
-  )
+  );
 }

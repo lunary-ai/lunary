@@ -1,44 +1,44 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
 import {
   ActionIcon,
   Combobox,
   Group,
   ScrollArea,
   useCombobox,
-} from "@mantine/core"
-import CHECKS_UI_DATA from "./ChecksUIData"
-import { IconPlus } from "@tabler/icons-react"
+} from "@mantine/core";
+import CHECKS_UI_DATA from "./ChecksUIData";
+import { IconPlus } from "@tabler/icons-react";
 
 export function AddCheckButton({ checks, onSelect, defaultOpened }) {
-  const [search, setSearch] = useState("")
+  const [search, setSearch] = useState("");
 
   const combobox = useCombobox({
     onDropdownClose: () => {
-      combobox?.resetSelectedOption()
-      combobox?.focusTarget()
+      combobox?.resetSelectedOption();
+      combobox?.focusTarget();
 
-      setSearch("")
+      setSearch("");
     },
 
     onDropdownOpen: () => {
-      combobox?.focusSearchInput()
+      combobox?.focusSearchInput();
     },
-  })
+  });
 
   useEffect(() => {
     if (defaultOpened && combobox) {
-      combobox.openDropdown()
-      combobox.focusTarget()
-      combobox.focusSearchInput()
+      combobox.openDropdown();
+      combobox.focusTarget();
+      combobox.focusSearchInput();
     }
-  }, [defaultOpened])
+  }, [defaultOpened]);
 
   const options = checks
     .filter((item) =>
       item.name.toLowerCase().includes(search.toLowerCase().trim()),
     )
     .map((item) => {
-      const UIItem = CHECKS_UI_DATA[item.id] || CHECKS_UI_DATA["other"]
+      const UIItem = CHECKS_UI_DATA[item.id] || CHECKS_UI_DATA["other"];
       return (
         <Combobox.Option value={item.id} key={item.id} variant="">
           <Group gap={6}>
@@ -46,8 +46,8 @@ export function AddCheckButton({ checks, onSelect, defaultOpened }) {
             {item.name}
           </Group>
         </Combobox.Option>
-      )
-    })
+      );
+    });
 
   return (
     <>
@@ -57,8 +57,8 @@ export function AddCheckButton({ checks, onSelect, defaultOpened }) {
         position="bottom-start"
         withinPortal={false}
         onOptionSubmit={(val) => {
-          onSelect(checks.find((item) => item.id === val))
-          combobox.closeDropdown()
+          onSelect(checks.find((item) => item.id === val));
+          combobox.closeDropdown();
         }}
       >
         <Combobox.Target withAriaAttributes={false}>
@@ -89,5 +89,5 @@ export function AddCheckButton({ checks, onSelect, defaultOpened }) {
         </Combobox.Dropdown>
       </Combobox>
     </>
-  )
+  );
 }

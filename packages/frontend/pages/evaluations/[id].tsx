@@ -1,11 +1,11 @@
-import ResultsMatrix from "@/components/evals/ResultsMatrix"
-import CheckPicker from "@/components/checks/Picker"
+import ResultsMatrix from "@/components/evals/ResultsMatrix";
+import CheckPicker from "@/components/checks/Picker";
 import {
   useChecklist,
   useDataset,
   useEvaluation,
   useProjectSWR,
-} from "@/utils/dataHooks"
+} from "@/utils/dataHooks";
 import {
   Anchor,
   Badge,
@@ -17,31 +17,31 @@ import {
   Stack,
   Text,
   Title,
-} from "@mantine/core"
-import { IconDatabase } from "@tabler/icons-react"
-import Link from "next/link"
+} from "@mantine/core";
+import { IconDatabase } from "@tabler/icons-react";
+import Link from "next/link";
 
-import { useRouter } from "next/router"
+import { useRouter } from "next/router";
 
 // We create a matrix of results for each prompt, variable and model.
 // The matrix is a 3D array, where each dimension represents a different
 
 export default function EvalResults() {
-  const router = useRouter()
+  const router = useRouter();
 
-  const id = router.query.id as string
+  const id = router.query.id as string;
 
   const { data, isLoading: loading } = useProjectSWR(
     id && `/evaluations/result/${id}`,
-  )
+  );
 
-  const { evaluation } = useEvaluation(id)
+  const { evaluation } = useEvaluation(id);
 
-  const { checklist } = useChecklist(evaluation?.checklistId)
-  const { dataset } = useDataset(evaluation?.datasetId)
+  const { checklist } = useChecklist(evaluation?.checklistId);
+  const { dataset } = useDataset(evaluation?.datasetId);
 
   // Only show 'Passed' labels if a checklist was used
-  const showTestIndicator = !!checklist
+  const showTestIndicator = !!checklist;
 
   return (
     <Container size="100%">
@@ -99,5 +99,5 @@ export default function EvalResults() {
         )}
       </Stack>
     </Container>
-  )
+  );
 }
