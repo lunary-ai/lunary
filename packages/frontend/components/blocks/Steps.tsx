@@ -1,4 +1,4 @@
-import { Box, Group, Text, Title } from "@mantine/core"
+import { Box, Group, Text, Title } from "@mantine/core";
 
 function Steps({ children, ...props }) {
   return (
@@ -10,7 +10,7 @@ function Steps({ children, ...props }) {
     >
       {children}
     </Box>
-  )
+  );
 }
 
 Steps.Step = ({ label, n, children }) => (
@@ -44,6 +44,6 @@ Steps.Step = ({ label, n, children }) => (
       </div>
     </Group>
   </Box>
-)
+);
 
-export default Steps
+export default Steps;

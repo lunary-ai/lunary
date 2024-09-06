@@ -1,32 +1,32 @@
-import sql from "@/src/utils/db"
-import { clearUndefined } from "@/src/utils/ingest"
-import Context from "@/src/utils/koa"
-import Router from "koa-router"
-import { deserializeLogic } from "shared"
-import { z } from "zod"
+import sql from "@/src/utils/db";
+import { clearUndefined } from "@/src/utils/ingest";
+import Context from "@/src/utils/koa";
+import Router from "koa-router";
+import { deserializeLogic } from "shared";
+import { z } from "zod";
 
 const evaluators = new Router({
   prefix: "/evaluators",
-})
+});
 
 // TODO: access control
 // TODO: route to get the number of runs checks are applied to, for new evaluators
 // TODO: proper schema validation for params and filters
 
 evaluators.get("/", async (ctx: Context) => {
-  const { projectId } = ctx.state
+  const { projectId } = ctx.state;
 
   const evaluators =
-    await sql`select * from evaluator where project_id = ${projectId}`
+    await sql`select * from evaluator where project_id = ${projectId}`;
 
   // TODO: return number of runs the evaluator will be applied to
 
-  ctx.body = evaluators
-})
+  ctx.body = evaluators;
+});
 
 evaluators.get("/:id", async (ctx: Context) => {
-  const { projectId } = ctx.state
-  const { id: evaluatorId } = ctx.params
+  const { projectId } = ctx.state;
+  const { id: evaluatorId } = ctx.params;
 
   const [evaluator] = await sql`
     select  
@@ -36,12 +36,12 @@ evaluators.get("/:id", async (ctx: Context) => {
     where
       id = ${evaluatorId}
       and project_id = ${projectId}
-  `
+  `;
 
   // TODO: return number of runs the evaluator will be applied to
 
-  ctx.body = evaluator
-})
+  ctx.body = evaluator;
+});
 
 evaluators.post("/", async (ctx: Context) => {
   const requestBody = z.object({
@@ -53,10 +53,10 @@ evaluators.post("/", async (ctx: Context) => {
     mode: z.string(),
     params: z.record(z.any()),
     filters: z.array(z.any()),
-  })
+  });
 
-  const { projectId } = ctx.state
-  const evaluator = requestBody.parse(ctx.request.body)
+  const { projectId } = ctx.state;
+  const evaluator = requestBody.parse(ctx.request.body);
 
   // TODO: do not allow insert if the (project_id, slug) already exist (+ add constraint in db)
   const [insertedEvaluator] = await sql`
@@ -65,10 +65,10 @@ evaluators.post("/", async (ctx: Context) => {
       projectId,
     })} 
     returning *
-  `
+  `;
 
-  ctx.body = insertedEvaluator
-})
+  ctx.body = insertedEvaluator;
+});
 
 evaluators.patch("/:id", async (ctx: Context) => {
   const requestBody = z.object({
@@ -78,11 +78,11 @@ evaluators.patch("/:id", async (ctx: Context) => {
     mode: z.string(),
     params: z.record(z.any()),
     filters: z.array(z.any()),
-  })
+  });
 
-  const { projectId } = ctx.state
-  const { id: evaluatorId } = ctx.params
-  const evaluator = requestBody.parse(ctx.request.body)
+  const { projectId } = ctx.state;
+  const { id: evaluatorId } = ctx.params;
+  const evaluator = requestBody.parse(ctx.request.body);
 
   const [updatedEvaluator] = await sql`
     update 
@@ -93,14 +93,14 @@ evaluators.patch("/:id", async (ctx: Context) => {
       project_id = ${projectId}
       and id = ${evaluatorId}
     returning *
-  `
+  `;
 
-  ctx.body = updatedEvaluator
-})
+  ctx.body = updatedEvaluator;
+});
 
 evaluators.delete("/:id", async (ctx: Context) => {
-  const { projectId } = ctx.state
-  const { id: evaluatorId } = ctx.params
+  const { projectId } = ctx.state;
+  const { id: evaluatorId } = ctx.params;
 
   await sql`
     delete 
@@ -109,9 +109,9 @@ evaluators.delete("/:id", async (ctx: Context) => {
       project_id = ${projectId}
       and id = ${evaluatorId}
     returning *
-  `
+  `;
 
-  ctx.status = 200
-})
+  ctx.status = 200;
+});
 
-export default evaluators
+export default evaluators;

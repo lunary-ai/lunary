@@ -1,25 +1,25 @@
-import { useMemo } from "react"
-import ProtectedText from "../blocks/ProtectedText"
+import { useMemo } from "react";
+import ProtectedText from "../blocks/ProtectedText";
 // import { JsonView, defaultStyles } from "react-json-view-lite"
 // import errorHandler from "@/utils/errors"
-import ErrorBoundary from "../blocks/ErrorBoundary"
-import HighlightPii from "./HighlightPii"
+import ErrorBoundary from "../blocks/ErrorBoundary";
+import HighlightPii from "./HighlightPii";
 
 export const Json = ({ data, compact, piiDetection }) => {
-  if (!data) return null
+  if (!data) return null;
 
   const parsed = useMemo(() => {
-    if (!data) return null
+    if (!data) return null;
     if (typeof data === "string" && data?.startsWith("{")) {
       try {
-        return JSON.parse(data)
+        return JSON.parse(data);
       } catch (e) {
-        return data
+        return data;
       }
     }
 
-    return data
-  }, [data])
+    return data;
+  }, [data]);
 
   // const isObject = typeof parsed === "object"
 
@@ -39,11 +39,11 @@ export const Json = ({ data, compact, piiDetection }) => {
         piiDetection={piiDetection}
       />
     </ProtectedText>
-  )
-}
+  );
+};
 
 export const RenderJson = ({ data, compact, piiDetection }) => (
   <ErrorBoundary>
     <Json data={data} compact={compact} piiDetection={piiDetection} />
   </ErrorBoundary>
-)
+);

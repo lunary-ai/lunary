@@ -1,8 +1,8 @@
-import Paywall from "@/components/layout/Paywall"
-import { useOrg } from "@/utils/dataHooks"
-import { useEvaluator, useEvaluators } from "@/utils/dataHooks/evaluators"
-import { slugify } from "@/utils/format"
-import EVALUATOR_TYPES from "@/utils/evaluators"
+import Paywall from "@/components/layout/Paywall";
+import { useOrg } from "@/utils/dataHooks";
+import { useEvaluator, useEvaluators } from "@/utils/dataHooks/evaluators";
+import { slugify } from "@/utils/format";
+import EVALUATOR_TYPES from "@/utils/evaluators";
 
 import {
   ActionIcon,
@@ -16,7 +16,7 @@ import {
   Stack,
   Text,
   Title,
-} from "@mantine/core"
+} from "@mantine/core";
 import {
   IconActivity,
   IconActivityHeartbeat,
@@ -25,24 +25,24 @@ import {
   IconPencil,
   IconPlus,
   IconTrash,
-} from "@tabler/icons-react"
-import { NextSeo } from "next-seo"
-import { useRouter } from "next/router"
-import Empty from "@/components/layout/Empty"
+} from "@tabler/icons-react";
+import { NextSeo } from "next-seo";
+import { useRouter } from "next/router";
+import Empty from "@/components/layout/Empty";
 
 const FEATURE_LIST = [
   "Real-time LLM-based evaluations on production data",
   "Enrich logs, with sentiment analysis, topic recognition, PII detection, and more",
   "Use local models like Llama 3 or connect to external APIs",
-]
+];
 
 export default function RealtimeEvaluators() {
-  const router = useRouter()
-  const { evaluators, isLoading } = useEvaluators()
-  const { org } = useOrg()
+  const router = useRouter();
+  const { evaluators, isLoading } = useEvaluators();
+  const { org } = useOrg();
 
   if (isLoading) {
-    return <Loader />
+    return <Loader />;
   }
 
   if (org?.plan === "free") {
@@ -81,7 +81,7 @@ export default function RealtimeEvaluators() {
           </Stack>
         </Container>
       </Paywall>
-    )
+    );
   }
 
   return (
@@ -128,13 +128,13 @@ export default function RealtimeEvaluators() {
         </Stack>
       </Container>
     </Empty>
-  )
+  );
 }
 
 function EvaluationCard({ id, initialData }) {
-  const { evaluator, delete: deleteEvaluator } = useEvaluator(id, initialData)
+  const { evaluator, delete: deleteEvaluator } = useEvaluator(id, initialData);
 
-  const { description, icon: Icon } = EVALUATOR_TYPES[evaluator.type]
+  const { description, icon: Icon } = EVALUATOR_TYPES[evaluator.type];
 
   return (
     <Card p="lg" withBorder>
@@ -183,5 +183,5 @@ function EvaluationCard({ id, initialData }) {
         </Menu>
       </Group>
     </Card>
-  )
+  );
 }

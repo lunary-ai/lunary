@@ -1,4 +1,4 @@
-import { Group, Avatar, Stack, Rating, Text } from "@mantine/core"
+import { Group, Avatar, Stack, Rating, Text } from "@mantine/core";
 
 export default function SocialProof() {
   return (
@@ -28,5 +28,5 @@ export default function SocialProof() {
         </Text>
       </Stack>
     </Group>
-  )
+  );
 }

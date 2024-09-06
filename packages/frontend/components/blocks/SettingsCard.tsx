@@ -1,5 +1,5 @@
-import { Card, Stack, Title } from "@mantine/core"
-import Paywall from "../layout/Paywall"
+import { Card, Stack, Title } from "@mantine/core";
+import Paywall from "../layout/Paywall";
 
 // so we can have an harmonized title for all cards
 export function SettingsCard({
@@ -9,11 +9,11 @@ export function SettingsCard({
   paywallConfig,
   gap = "lg",
 }: {
-  title
-  children: React.ReactNode
-  paywallConfig?: any
-  align?: string
-  gap?: string
+  title;
+  children: React.ReactNode;
+  paywallConfig?: any;
+  align?: string;
+  gap?: string;
 }) {
   if (paywallConfig?.enabled) {
     return (
@@ -33,7 +33,7 @@ export function SettingsCard({
           </Stack>
         </Stack>
       </Card>
-    )
+    );
   }
 
   return (
@@ -43,5 +43,5 @@ export function SettingsCard({
         {children}
       </Stack>
     </Card>
-  )
+  );
 }

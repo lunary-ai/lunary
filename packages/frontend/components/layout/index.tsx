@@ -1,26 +1,26 @@
-import { Box, Flex, Loader, useComputedColorScheme } from "@mantine/core"
-import { Notifications } from "@mantine/notifications"
-import { ReactNode, useEffect } from "react"
+import { Box, Flex, Loader, useComputedColorScheme } from "@mantine/core";
+import { Notifications } from "@mantine/notifications";
+import { ReactNode, useEffect } from "react";
 
-import { useRouter } from "next/router"
+import { useRouter } from "next/router";
 
-import Navbar from "./Navbar"
-import Sidebar from "./Sidebar"
+import Navbar from "./Navbar";
+import Sidebar from "./Sidebar";
 
-import analytics from "@/utils/analytics"
-import { useAuth } from "@/utils/auth"
-import { useOrg, useUser } from "@/utils/dataHooks"
-import { ModalsProvider } from "@mantine/modals"
-import UpgradeModal from "./UpgradeModal"
-import { showErrorNotification } from "@/utils/errors"
+import analytics from "@/utils/analytics";
+import { useAuth } from "@/utils/auth";
+import { useOrg, useUser } from "@/utils/dataHooks";
+import { ModalsProvider } from "@mantine/modals";
+import UpgradeModal from "./UpgradeModal";
+import { showErrorNotification } from "@/utils/errors";
 
 export default function Layout({ children }: { children: ReactNode }) {
-  const router = useRouter()
-  const { user } = useUser()
-  const { org } = useOrg()
+  const router = useRouter();
+  const { user } = useUser();
+  const { org } = useOrg();
 
-  const colorScheme = useComputedColorScheme()
-  const { isSignedIn, signOut } = useAuth()
+  const colorScheme = useComputedColorScheme();
+  const { isSignedIn, signOut } = useAuth();
 
   const isAuthPage = !![
     "/login",
@@ -28,69 +28,69 @@ export default function Layout({ children }: { children: ReactNode }) {
     "/join",
     "/request-password-reset",
     "/reset-password",
-  ].find((path) => router.pathname.startsWith(path))
+  ].find((path) => router.pathname.startsWith(path));
 
   const isSignupLastStep =
-    router.pathname === "/signup" && router.query.step === "3"
+    router.pathname === "/signup" && router.query.step === "3";
 
   const isMaintenanceMode =
     process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "on" &&
-    router.pathname !== "/maintenance"
+    router.pathname !== "/maintenance";
 
-  const isLLMCallPage = router.pathname.startsWith("/logs/[id]")
+  const isLLMCallPage = router.pathname.startsWith("/logs/[id]");
 
-  const isPublicPage = isLLMCallPage
+  const isPublicPage = isLLMCallPage;
 
   useEffect(() => {
     if (isMaintenanceMode) {
-      router.push("/maintenance")
-      return
+      router.push("/maintenance");
+      return;
     }
 
     if (isAuthPage && isSignedIn && !isSignupLastStep) {
-      router.push("/")
-      return
+      router.push("/");
+      return;
     }
 
     if (!isAuthPage && !isSignedIn && !isPublicPage) {
-      router.push("/login")
-      return
+      router.push("/login");
+      return;
     }
-  }, [isSignedIn])
+  }, [isSignedIn]);
 
   useEffect(() => {
     if (isSignedIn && org?.license?.expiresAt) {
-      const expiresAt = new Date(org.license.expiresAt)
+      const expiresAt = new Date(org.license.expiresAt);
       if (expiresAt < new Date()) {
         showErrorNotification(
           "License expired",
           "Please renew your license to access Lunary.",
-        )
-        signOut()
+        );
+        signOut();
       } else {
       }
     }
-  }, [isSignedIn, org])
+  }, [isSignedIn, org]);
 
-  const isPromptPage = router.pathname.startsWith("/prompt")
-  const isTracePage = router.pathname.startsWith("/traces")
-  const disablePagePadding = isPromptPage || isTracePage
+  const isPromptPage = router.pathname.startsWith("/prompt");
+  const isTracePage = router.pathname.startsWith("/traces");
+  const disablePagePadding = isPromptPage || isTracePage;
 
   useEffect(() => {
     if (user) {
       analytics.identify(user.id, {
         email: user.email,
         name: user.user_metadata?.name,
-      })
+      });
     }
-  }, [user])
+  }, [user]);
 
   if (!isAuthPage && !isPublicPage && (!user || !org)) {
     return (
       <Flex align="center" justify="center" h="100vh">
         <Loader />
       </Flex>
-    )
+    );
   }
 
   return (
@@ -122,5 +122,5 @@ export default function Layout({ children }: { children: ReactNode }) {
         </Flex>
       </ModalsProvider>
     </>
-  )
+  );
 }

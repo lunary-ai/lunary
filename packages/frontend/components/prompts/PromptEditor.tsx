@@ -1,15 +1,15 @@
-import { Box, Stack, Textarea, ActionIcon } from "@mantine/core"
-import { IconCircleMinus, IconCirclePlus } from "@tabler/icons-react"
-import { ChatMessage } from "@/components/SmartViewer/Message"
+import { Box, Stack, Textarea, ActionIcon } from "@mantine/core";
+import { IconCircleMinus, IconCirclePlus } from "@tabler/icons-react";
+import { ChatMessage } from "@/components/SmartViewer/Message";
 
 export function PromptEditor({
   value,
   onChange,
   isText,
 }: {
-  value: any
-  onChange: (value: any) => void
-  isText: boolean
+  value: any;
+  onChange: (value: any) => void;
+  isText: boolean;
 }) {
   if (isText) {
     return (
@@ -21,7 +21,7 @@ export function PromptEditor({
         mb="lg"
         autosize
       />
-    )
+    );
   } else {
     return (
       <Stack>
@@ -33,9 +33,9 @@ export function PromptEditor({
                 key={i}
                 editable={true}
                 onChange={(newMessage) => {
-                  const newContent = value ? [...value] : []
-                  newContent[i] = newMessage
-                  onChange(newContent)
+                  const newContent = value ? [...value] : [];
+                  newContent[i] = newMessage;
+                  onChange(newContent);
                 }}
               />
               <ActionIcon
@@ -46,9 +46,9 @@ export function PromptEditor({
                 color="red"
                 variant="transparent"
                 onClick={() => {
-                  const newContent = [...value]
-                  newContent.splice(i, 1)
-                  onChange(newContent)
+                  const newContent = [...value];
+                  newContent.splice(i, 1);
+                  onChange(newContent);
                 }}
               >
                 <IconCircleMinus size="14" />
@@ -61,13 +61,16 @@ export function PromptEditor({
           variant="transparent"
           color="gray"
           onClick={() => {
-            const newContent = [...(value || []), { content: "", role: "user" }]
-            onChange(newContent)
+            const newContent = [
+              ...(value || []),
+              { content: "", role: "user" },
+            ];
+            onChange(newContent);
           }}
         >
           <IconCirclePlus size="16" />
         </ActionIcon>
       </Stack>
-    )
+    );
   }
 }

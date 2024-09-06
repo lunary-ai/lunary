@@ -1,36 +1,36 @@
-import sql from "@/src/utils/db"
-import { Context } from "koa"
-import Router from "koa-router"
+import sql from "@/src/utils/db";
+import { Context } from "koa";
+import Router from "koa-router";
 
-import ingest from "./ingest"
-import { fileExport } from "./export"
-import { Feedback, deserializeLogic } from "shared"
-import { convertChecksToSQL } from "@/src/utils/checks"
-import { checkAccess } from "@/src/utils/authorization"
-import { jsonrepair } from "jsonrepair"
-import { z } from "zod"
+import ingest from "./ingest";
+import { fileExport } from "./export";
+import { Feedback, deserializeLogic } from "shared";
+import { convertChecksToSQL } from "@/src/utils/checks";
+import { checkAccess } from "@/src/utils/authorization";
+import { jsonrepair } from "jsonrepair";
+import { z } from "zod";
 
 const runs = new Router({
   prefix: "/runs",
-})
+});
 
 interface Query {
-  type?: "llm" | "trace" | "thread"
-  search?: string
-  models?: string[]
-  tags?: string[]
-  tokens?: string
-  exportType?: "csv" | "jsonl"
-  minDuration?: string
-  maxDuration?: string
-  startTime?: string
-  endTime?: string
-  parentRunId?: string
-  limit?: string
-  page?: string
-  order?: string
-  sortField?: string
-  sortDirection?: string
+  type?: "llm" | "trace" | "thread";
+  search?: string;
+  models?: string[];
+  tags?: string[];
+  tokens?: string;
+  exportType?: "csv" | "jsonl";
+  minDuration?: string;
+  maxDuration?: string;
+  startTime?: string;
+  endTime?: string;
+  parentRunId?: string;
+  limit?: string;
+  page?: string;
+  order?: string;
+  sortField?: string;
+  sortDirection?: string;
 }
 
 function processInput(input: unknown) {
@@ -40,10 +40,10 @@ function processInput(input: unknown) {
     Object.keys(input).length === 1 &&
     input.hasOwnProperty("input")
   ) {
-    return input.input
+    return input.input;
   }
 
-  return input
+  return input;
 }
 
 function processOutput(output: unknown) {
@@ -53,24 +53,24 @@ function processOutput(output: unknown) {
     Object.keys(output).length === 1 &&
     output.hasOwnProperty("output")
   ) {
-    return output.output
+    return output.output;
   }
 
-  return output
+  return output;
 }
 
 function processParams(params: any) {
-  if (!params) return {}
+  if (!params) return {};
   try {
     // handles tools received as string (eg. litellm)
     if (params.tools && typeof params.tools === "string") {
-      params.tools = JSON.parse(jsonrepair(params.tools))
+      params.tools = JSON.parse(jsonrepair(params.tools));
     }
   } catch (e) {
-    console.error(e)
-    console.error("Error parsing tools")
+    console.error(e);
+    console.error("Error parsing tools");
   }
-  return params
+  return params;
 }
 
 function formatRun(run: any) {
@@ -110,28 +110,28 @@ function formatRun(run: any) {
       props: run.userProps,
     },
     traceId: run.rootParentRunId,
-  }
+  };
 
   try {
     // TODO: put in process input function
     if (Array.isArray(formattedRun.input)) {
       for (const message of formattedRun.input) {
-        message.enrichments = []
+        message.enrichments = [];
       }
     } else if (formattedRun.input && typeof formattedRun.input === "object") {
-      formattedRun.input.enrichments = []
+      formattedRun.input.enrichments = [];
     }
 
     if (Array.isArray(formattedRun.output)) {
       for (const message of formattedRun.output) {
-        message.enrichments = []
+        message.enrichments = [];
       }
     } else if (formattedRun.output && typeof formattedRun.output === "object") {
-      formattedRun.output.enrichments = []
+      formattedRun.output.enrichments = [];
     }
 
     if (formattedRun.error && typeof formattedRun.error === "object") {
-      formattedRun.error.enrichments = []
+      formattedRun.error.enrichments = [];
     }
 
     for (const {
@@ -140,18 +140,18 @@ function formatRun(run: any) {
       evaluatorId,
     } of run.evaluationResults) {
       if (!result?.input || !result?.output || !result?.error) {
-        continue
+        continue;
       }
 
       if (Array.isArray(formattedRun.input)) {
         for (let i = 0; i < formattedRun.input.length; i++) {
-          const message = formattedRun.input[i]
+          const message = formattedRun.input[i];
           if (typeof message === "object") {
             message.enrichments.push({
               result: result.input[i],
               type: evaluatorType,
               id: evaluatorId,
-            })
+            });
           }
         }
       } else if (formattedRun.input && typeof formattedRun.input === "object") {
@@ -159,18 +159,18 @@ function formatRun(run: any) {
           result: result.input[0],
           type: evaluatorType,
           id: evaluatorId,
-        })
+        });
       }
 
       if (Array.isArray(formattedRun.output)) {
         for (let i = 0; i < formattedRun.output.length; i++) {
-          const message = formattedRun.output[i]
+          const message = formattedRun.output[i];
           if (typeof message === "object") {
             message.enrichments.push({
               result: result.output[i],
               type: evaluatorType,
               id: evaluatorId,
-            })
+            });
           }
         }
       } else if (
@@ -181,7 +181,7 @@ function formatRun(run: any) {
           result: result.output[0],
           type: evaluatorType,
           id: evaluatorId,
-        })
+        });
       }
 
       if (formattedRun.error && typeof formattedRun.error === "object") {
@@ -189,33 +189,33 @@ function formatRun(run: any) {
           result: result.error[0],
           type: evaluatorType,
           id: evaluatorId,
-        })
+        });
       }
     }
     // TODO: put in an array nammed enrichment instead
     for (let evaluationResult of run.evaluationResults || []) {
       formattedRun[`enrichment-${evaluationResult.evaluatorId}`] =
-        evaluationResult
+        evaluationResult;
     }
   } catch (error) {
-    console.error(error)
+    console.error(error);
   }
 
-  return formattedRun
+  return formattedRun;
 }
 
-runs.use("/ingest", ingest.routes())
+runs.use("/ingest", ingest.routes());
 
 runs.get("/", async (ctx: Context) => {
-  const { projectId } = ctx.state
+  const { projectId } = ctx.state;
 
-  const queryString = ctx.querystring
-  const deserializedChecks = deserializeLogic(queryString)
+  const queryString = ctx.querystring;
+  const deserializedChecks = deserializeLogic(queryString);
 
   const filtersQuery =
     deserializedChecks?.length && deserializedChecks.length > 1 // first is always ["AND"]
       ? convertChecksToSQL(deserializedChecks)
-      : sql`r.type = 'llm'` // default to type llm
+      : sql`r.type = 'llm'`; // default to type llm
 
   const {
     limit = "50",
@@ -224,11 +224,11 @@ runs.get("/", async (ctx: Context) => {
     exportType,
     sortField,
     sortDirection,
-  } = ctx.query as Query
+  } = ctx.query as Query;
 
-  let parentRunCheck = sql``
+  let parentRunCheck = sql``;
   if (parentRunId) {
-    parentRunCheck = sql`and parent_run_id = ${parentRunId}`
+    parentRunCheck = sql`and parent_run_id = ${parentRunId}`;
   }
 
   const sortMapping = {
@@ -236,11 +236,11 @@ runs.get("/", async (ctx: Context) => {
     duration: "r.duration",
     tokens: "total_tokens",
     cost: "r.cost",
-  }
-  let orderByClause = `r.created_at desc nulls last`
+  };
+  let orderByClause = `r.created_at desc nulls last`;
   if (sortField && sortField in sortMapping) {
-    const direction = sortDirection === "desc" ? `desc` : `asc`
-    orderByClause = `${sortMapping[sortField]} ${direction} nulls last`
+    const direction = sortDirection === "desc" ? `desc` : `asc`;
+    orderByClause = `${sortMapping[sortField]} ${direction} nulls last`;
   }
 
   const rows = await sql`
@@ -299,12 +299,12 @@ runs.get("/", async (ctx: Context) => {
     runs r
     left join evaluation_results er on r.id = er.id
   
-  `
+  `;
 
-  const runs = rows.map(formatRun)
+  const runs = rows.map(formatRun);
 
   if (exportType) {
-    return fileExport(runs, exportType, ctx)
+    return fileExport(runs, exportType, ctx);
   }
 
   const total = await sql`
@@ -335,33 +335,33 @@ runs.get("/", async (ctx: Context) => {
       count(*) 
     from
       runs;
-  `
+  `;
 
   ctx.body = {
     total: +total[0].count,
     page: Number(page),
     limit: Number(limit),
     data: runs,
-  }
-})
+  };
+});
 
 // TODO: refactor with GET / by putting logic inside a function
 runs.get("/count", async (ctx: Context) => {
-  const { projectId } = ctx.state
+  const { projectId } = ctx.state;
 
-  const queryString = ctx.querystring
-  const deserializedChecks = deserializeLogic(queryString)
+  const queryString = ctx.querystring;
+  const deserializedChecks = deserializeLogic(queryString);
 
   const filtersQuery =
     deserializedChecks?.length && deserializedChecks.length > 1 // first is always ["AND"]
       ? convertChecksToSQL(deserializedChecks)
-      : sql`r.type = 'llm'` // default to type llm
+      : sql`r.type = 'llm'`; // default to type llm
 
-  const { parentRunId } = ctx.query as Query
+  const { parentRunId } = ctx.query as Query;
 
-  let parentRunCheck = sql``
+  let parentRunCheck = sql``;
   if (parentRunId) {
-    parentRunCheck = sql`and parent_run_id = ${parentRunId}`
+    parentRunCheck = sql`and parent_run_id = ${parentRunId}`;
   }
 
   const [{ count }] = await sql`
@@ -392,24 +392,24 @@ runs.get("/count", async (ctx: Context) => {
       count(*) 
     from
       runs;
-`
+`;
 
-  ctx.body = count
-})
+  ctx.body = count;
+});
 
 runs.get("/usage", checkAccess("logs", "read"), async (ctx) => {
-  const { projectId } = ctx.state
+  const { projectId } = ctx.state;
   const { days, userId, daily } = ctx.query as {
-    days: string
-    userId: string
-    daily: string
-  }
+    days: string;
+    userId: string;
+    daily: string;
+  };
 
-  const daysNum = parseInt(days)
-  const userIdNum = userId ? parseInt(userId) : null
+  const daysNum = parseInt(days);
+  const userIdNum = userId ? parseInt(userId) : null;
 
   if (isNaN(daysNum) || (userId && isNaN(userIdNum))) {
-    ctx.throw(400, "Invalid query parameters")
+    ctx.throw(400, "Invalid query parameters");
   }
 
   // TODO: probably cleaner to split this into two routes
@@ -438,13 +438,13 @@ runs.get("/usage", checkAccess("logs", "read"), async (ctx) => {
           ${daily ? sql`date,` : sql``}
           run.name, 
           run.type
-          `
+          `;
 
-  ctx.body = runsUsage
-})
+  ctx.body = runsUsage;
+});
 
 runs.get("/:id/public", async (ctx) => {
-  const { id } = ctx.params
+  const { id } = ctx.params;
 
   const [row] = await sql`
       select
@@ -462,18 +462,18 @@ runs.get("/:id/public", async (ctx) => {
           and r.is_public = true
       order by
           r.created_at desc
-      limit 1`
+      limit 1`;
 
-  if (!row) throw new Error("Run not found. It might not be public.")
+  if (!row) throw new Error("Run not found. It might not be public.");
 
-  ctx.body = formatRun(row)
-})
+  ctx.body = formatRun(row);
+});
 
 runs.get("/:id", async (ctx) => {
-  const { id } = ctx.params
+  const { id } = ctx.params;
 
   // Use orgId in case teammates shares URL to run and teammates is on another project.
-  const { orgId } = ctx.state
+  const { orgId } = ctx.state;
 
   const [row] = await sql`
      with recursive run_hierarchy as (
@@ -520,27 +520,27 @@ runs.get("/:id", async (ctx) => {
     group by
       r.id,
       eu.id
-    `
+    `;
 
-  ctx.body = formatRun(row)
-})
+  ctx.body = formatRun(row);
+});
 
 runs.patch("/:id", checkAccess("logs", "update"), async (ctx: Context) => {
   // TODO: tags and isPublic should probably have their own endpoint
   const requestBody = z.object({
     isPublic: z.boolean().optional(),
     tags: z.union([z.array(z.string()), z.null()]),
-  })
-  const { projectId } = ctx.state
-  const { id } = ctx.params
-  const { isPublic, tags } = requestBody.parse(ctx.request.body)
+  });
+  const { projectId } = ctx.state;
+  const { id } = ctx.params;
+  const { isPublic, tags } = requestBody.parse(ctx.request.body);
 
-  let valuesToUpdate = {}
+  let valuesToUpdate = {};
   if (isPublic !== undefined) {
-    valuesToUpdate.isPublic = isPublic
+    valuesToUpdate.isPublic = isPublic;
   }
   if (tags) {
-    valuesToUpdate.tags = tags
+    valuesToUpdate.tags = tags;
   }
 
   await sql`
@@ -549,23 +549,23 @@ runs.patch("/:id", checkAccess("logs", "update"), async (ctx: Context) => {
       set ${sql(valuesToUpdate)}
       where
           project_id= ${projectId as string}
-          and id = ${id}`
+          and id = ${id}`;
 
-  ctx.status = 200
-})
+  ctx.status = 200;
+});
 
 runs.patch(
   "/:id/feedback",
   checkAccess("logs", "update"),
   async (ctx: Context) => {
-    const { projectId } = ctx.state
-    const { id } = ctx.params
-    const feedback = Feedback.parse(ctx.request.body)
+    const { projectId } = ctx.state;
+    const { id } = ctx.params;
+    const feedback = Feedback.parse(ctx.request.body);
 
     let [{ feedback: existingFeedback }] =
-      (await sql`select feedback from run where id = ${id}`) || {}
+      (await sql`select feedback from run where id = ${id}`) || {};
 
-    const newFeedback = { ...existingFeedback, ...feedback }
+    const newFeedback = { ...existingFeedback, ...feedback };
 
     await sql`
       update 
@@ -574,15 +574,15 @@ runs.patch(
         feedback = ${sql.json(newFeedback)} 
       where 
         id = ${id} 
-        and project_id = ${projectId}`
+        and project_id = ${projectId}`;
 
-    ctx.status = 200
+    ctx.status = 200;
   },
-)
+);
 
 runs.get("/:id/related", checkAccess("logs", "read"), async (ctx) => {
-  const id = ctx.params.id
-  const { projectId } = ctx.state
+  const id = ctx.params.id;
+  const { projectId } = ctx.state;
 
   const related = await sql`
     with recursive related_runs as (
@@ -622,15 +622,15 @@ runs.get("/:id/related", checkAccess("logs", "read"), async (ctx) => {
     rr.metadata
   from 
     related_runs rr;
-  `
+  `;
 
-  ctx.body = related
-})
+  ctx.body = related;
+});
 
 // public route
 runs.get("/:id/feedback", async (ctx) => {
-  const { projectId } = ctx.state
-  const { id } = ctx.params
+  const { projectId } = ctx.state;
+  const { id } = ctx.params;
 
   const [row] = await sql`
       select
@@ -639,13 +639,13 @@ runs.get("/:id/feedback", async (ctx) => {
           run
       where
           project_id = ${projectId} and id = ${id}
-      limit 1`
+      limit 1`;
 
   if (!row) {
-    ctx.throw(404, "Run not found")
+    ctx.throw(404, "Run not found");
   }
 
-  ctx.body = row.feedback
-})
+  ctx.body = row.feedback;
+});
 
-export default runs
+export default runs;

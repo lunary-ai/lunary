@@ -1,7 +1,7 @@
-import OrgUserBadge from "@/components/blocks/OrgUserBadge"
-import RenamableField from "@/components/blocks/RenamableField"
-import { useDataset, useDatasets, useUser } from "@/utils/dataHooks"
-import { cleanSlug } from "@/utils/format"
+import OrgUserBadge from "@/components/blocks/OrgUserBadge";
+import RenamableField from "@/components/blocks/RenamableField";
+import { useDataset, useDatasets, useUser } from "@/utils/dataHooks";
+import { cleanSlug } from "@/utils/format";
 import {
   ActionIcon,
   Alert,
@@ -16,21 +16,24 @@ import {
   Stack,
   Text,
   Title,
-} from "@mantine/core"
-import { modals } from "@mantine/modals"
+} from "@mantine/core";
+import { modals } from "@mantine/modals";
 import {
   IconMessages,
   IconPencil,
   IconPlus,
   IconTextCaption,
   IconTrash,
-} from "@tabler/icons-react"
-import Router from "next/router"
-import { generateSlug } from "random-word-slugs"
-import { hasAccess } from "shared"
+} from "@tabler/icons-react";
+import Router from "next/router";
+import { generateSlug } from "random-word-slugs";
+import { hasAccess } from "shared";
 
 function DatasetCard({ defaultValue, onDelete }) {
-  const { update, dataset, remove } = useDataset(defaultValue?.id, defaultValue)
+  const { update, dataset, remove } = useDataset(
+    defaultValue?.id,
+    defaultValue,
+  );
 
   return (
     <Card p="lg" withBorder pos="relative" style={{ overflow: "visible" }}>
@@ -52,10 +55,10 @@ function DatasetCard({ defaultValue, onDelete }) {
             labels: { confirm: "Confirm", cancel: "Cancel" },
 
             onConfirm: async () => {
-              onDelete()
-              remove()
+              onDelete();
+              remove();
             },
-          })
+          });
         }}
         color="red"
         variant="subtle"
@@ -79,7 +82,7 @@ function DatasetCard({ defaultValue, onDelete }) {
                       slug: cleanSlug(newName),
                     }),
                   },
-                )
+                );
               }}
             />
             {dataset?.prompts && (
@@ -110,12 +113,12 @@ function DatasetCard({ defaultValue, onDelete }) {
         </Button>
       </Group>
     </Card>
-  )
+  );
 }
 
 export default function Datasets() {
-  const { datasets, isLoading, mutate, insert, isInserting } = useDatasets()
-  const { user } = useUser()
+  const { datasets, isLoading, mutate, insert, isInserting } = useDatasets();
+  const { user } = useUser();
 
   function createDataset(format) {
     insert(
@@ -125,10 +128,10 @@ export default function Datasets() {
       },
       {
         onSuccess: (dataset) => {
-          Router.push(`/datasets/${dataset.id}`)
+          Router.push(`/datasets/${dataset.id}`);
         },
       },
-    )
+    );
   }
 
   return (
@@ -157,7 +160,7 @@ export default function Datasets() {
                 <Menu.Item
                   leftSection={<IconMessages size={12} />}
                   onClick={() => {
-                    createDataset("chat")
+                    createDataset("chat");
                   }}
                 >
                   New Chat Dataset (OpenAI compatible)
@@ -165,7 +168,7 @@ export default function Datasets() {
                 <Menu.Item
                   leftSection={<IconTextCaption size={12} />}
                   onClick={() => {
-                    createDataset("text")
+                    createDataset("text");
                   }}
                 >
                   New Text Dataset
@@ -197,7 +200,7 @@ export default function Datasets() {
                         {
                           revalidate: false,
                         },
-                      )
+                      );
                     }}
                   />
                 ))
@@ -207,5 +210,5 @@ export default function Datasets() {
         )}
       </Stack>
     </Container>
-  )
+  );
 }

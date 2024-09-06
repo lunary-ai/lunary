@@ -1,7 +1,7 @@
-import LineChart from "@/components/analytics/LineChart"
-import { UpgradePlans, openUpgrade } from "@/components/layout/UpgradeModal"
-import errorHandler from "@/utils/errors"
-import { useOrg } from "@/utils/dataHooks"
+import LineChart from "@/components/analytics/LineChart";
+import { UpgradePlans, openUpgrade } from "@/components/layout/UpgradeModal";
+import errorHandler from "@/utils/errors";
+import { useOrg } from "@/utils/dataHooks";
 import {
   Alert,
   Badge,
@@ -13,40 +13,40 @@ import {
   Stack,
   Text,
   Title,
-} from "@mantine/core"
+} from "@mantine/core";
 import {
   IconBolt,
   IconBrandStripe,
   IconInfoTriangle,
-} from "@tabler/icons-react"
-import { NextSeo } from "next-seo"
-import { Label, ReferenceLine } from "recharts"
-import useSWR from "swr"
-import { EVENTS_ALLOWANCE } from "@/utils/pricing"
-import { fetcher } from "@/utils/fetcher"
-import SeatAllowanceCard from "@/components/blocks/SeatAllowanceCard"
-import { SettingsCard } from "@/components/blocks/SettingsCard"
+} from "@tabler/icons-react";
+import { NextSeo } from "next-seo";
+import { Label, ReferenceLine } from "recharts";
+import useSWR from "swr";
+import { EVENTS_ALLOWANCE } from "@/utils/pricing";
+import { fetcher } from "@/utils/fetcher";
+import SeatAllowanceCard from "@/components/blocks/SeatAllowanceCard";
+import { SettingsCard } from "@/components/blocks/SettingsCard";
 
 export default function Billing() {
-  const { org, loading } = useOrg()
+  const { org, loading } = useOrg();
 
-  const { data: usage } = useSWR(`/orgs/${org?.id}/usage`)
+  const { data: usage } = useSWR(`/orgs/${org?.id}/usage`);
 
-  const plan = org?.plan
+  const plan = org?.plan;
 
-  if (loading) return <Loader />
+  if (loading) return <Loader />;
 
   const redirectToCustomerPortal = async () => {
     const data = await errorHandler(
       await fetcher.get(`/orgs/${org.id}/billing-portal`),
-    )
+    );
 
-    if (!data) return
+    if (!data) return;
 
-    window.location.href = data.url
-  }
+    window.location.href = data.url;
+  };
 
-  const canUpgrade = plan && ["free", "pro"].includes(plan)
+  const canUpgrade = plan && ["free", "pro"].includes(plan);
 
   return (
     <Container className="unblockable">
@@ -168,5 +168,5 @@ export default function Billing() {
         )}
       </Stack>
     </Container>
-  )
+  );
 }

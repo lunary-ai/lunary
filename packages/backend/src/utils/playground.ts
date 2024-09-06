@@ -1,11 +1,11 @@
-import { clearUndefined } from "./ingest"
-import OpenAI from "openai"
-import { MODELS } from "shared"
-import { ReadableStream } from "stream/web"
-import { getOpenAIParams } from "./openai"
-import stripe from "./stripe"
-import sql from "./db"
-import config from "./config"
+import { clearUndefined } from "./ingest";
+import OpenAI from "openai";
+import { MODELS } from "shared";
+import { ReadableStream } from "stream/web";
+import { getOpenAIParams } from "./openai";
+import stripe from "./stripe";
+import sql from "./db";
+import config from "./config";
 
 function convertInputToOpenAIMessages(input: any[]) {
   return input.map(
@@ -19,21 +19,21 @@ function convertInputToOpenAIMessages(input: any[]) {
         tool_calls: toolCalls || undefined,
         name: name || undefined,
         tool_call_id: toolCallId || undefined,
-      })
+      });
     },
-  )
+  );
 }
 
 type ChunkResult = {
-  choices: { message: any }[]
+  choices: { message: any }[];
   usage: {
-    completion_tokens: number
-  }
-}
+    completion_tokens: number;
+  };
+};
 
 const checkIsAsyncIterable = (obj: any) => {
-  return obj && typeof obj[Symbol.asyncIterator] === "function"
-}
+  return obj && typeof obj[Symbol.asyncIterator] === "function";
+};
 
 export async function handleStream(
   stream: ReadableStream,
@@ -43,64 +43,65 @@ export async function handleStream(
 ) {
   try {
     if (!checkIsAsyncIterable(stream)) {
-      onNewToken(stream)
-      return onComplete()
+      onNewToken(stream);
+      return onComplete();
     }
 
-    let tokens = 0
-    let choices: any[] = []
-    let res: ChunkResult
+    let tokens = 0;
+    let choices: any[] = [];
+    let res: ChunkResult;
 
     for await (const part of stream) {
       // 1 chunk = 1 token
-      tokens += 1
+      tokens += 1;
 
-      const chunk = part.choices[0]
-      if (!chunk) continue // Happens with AzureOpenai for first element
+      const chunk = part.choices[0];
+      if (!chunk) continue; // Happens with AzureOpenai for first element
 
-      const { index, delta } = chunk
+      const { index, delta } = chunk;
 
-      const { content, function_call, role, tool_calls, tool_call_id } = delta
+      const { content, function_call, role, tool_calls, tool_call_id } = delta;
 
       if (!choices[index]) {
         choices.splice(index, 0, {
           message: { role, function_call },
-        })
+        });
       }
 
       if (content) {
-        if (!choices[index].message.content) choices[index].message.content = ""
-        choices[index].message.content += content
+        if (!choices[index].message.content)
+          choices[index].message.content = "";
+        choices[index].message.content += content;
       }
 
-      if (role) choices[index].message.role = role
+      if (role) choices[index].message.role = role;
 
-      if (tool_call_id) choices[index].message.tool_call_id = tool_call_id
+      if (tool_call_id) choices[index].message.tool_call_id = tool_call_id;
 
       if (function_call?.name)
-        choices[index].message.function_call.name = function_call.name
+        choices[index].message.function_call.name = function_call.name;
 
       if (function_call?.arguments)
         choices[index].message.function_call.arguments +=
-          function_call.arguments
+          function_call.arguments;
 
       if (tool_calls) {
         if (!choices[index].message.tool_calls)
-          choices[index].message.tool_calls = []
+          choices[index].message.tool_calls = [];
 
         for (const tool_call of tool_calls) {
           const existingCallIndex = choices[index].message.tool_calls.findIndex(
             (tc) => tc.index === tool_call.index,
-          )
+          );
 
           if (existingCallIndex === -1) {
-            choices[index].message.tool_calls.push(tool_call)
+            choices[index].message.tool_calls.push(tool_call);
           } else {
             const existingCall =
-              choices[index].message.tool_calls[existingCallIndex]
+              choices[index].message.tool_calls[existingCallIndex];
 
             if (tool_call.function?.arguments) {
-              existingCall.function.arguments += tool_call.function.arguments
+              existingCall.function.arguments += tool_call.function.arguments;
             }
           }
         }
@@ -111,9 +112,9 @@ export async function handleStream(
         usage: {
           completion_tokens: tokens,
         },
-      }
+      };
 
-      onNewToken(res)
+      onNewToken(res);
     }
 
     // remove the `index` property from the tool_calls if any
@@ -121,24 +122,24 @@ export async function handleStream(
     choices = choices.map((c) => {
       if (c.message.tool_calls) {
         c.message.tool_calls = c.message.tool_calls.map((tc) => {
-          const { index, ...rest } = tc
-          return rest
-        })
+          const { index, ...rest } = tc;
+          return rest;
+        });
       }
-      return c
-    })
+      return c;
+    });
 
     res = {
       choices,
       tokens,
-    }
+    };
 
-    onNewToken(res)
+    onNewToken(res);
 
-    onComplete()
+    onComplete();
   } catch (error) {
-    console.error(error)
-    onError(error)
+    console.error(error);
+    onError(error);
   }
 }
 
@@ -147,8 +148,8 @@ export function compileTextTemplate(
   content: string,
   variables: Record<string, string>,
 ) {
-  const regex = /{{(.*?)}}/g
-  return content.replace(regex, (_, g1) => variables[g1] || "")
+  const regex = /{{(.*?)}}/g;
+  return content.replace(regex, (_, g1) => variables[g1] || "");
 }
 
 const OPENROUTER_HEADERS = {
@@ -156,27 +157,27 @@ const OPENROUTER_HEADERS = {
   "HTTP-Referer": `https://lunary.ai`, // Optional, for including your app on openrouter.ai rankings.
   "X-Title": `Lunary.ai`,
   "Content-Type": "application/json",
-}
+};
 
 export function compilePrompt(content: any, variables: any) {
   // support string messages
   const originalMessages =
-    typeof content === "string" ? [{ role: "user", content }] : [...content]
+    typeof content === "string" ? [{ role: "user", content }] : [...content];
 
-  let compiledMessages = []
+  let compiledMessages = [];
 
   if (variables) {
     for (const item of originalMessages) {
       compiledMessages.push({
         ...item,
         content: compileTextTemplate(item.content, variables),
-      })
+      });
     }
   } else {
-    compiledMessages = [...originalMessages]
+    compiledMessages = [...originalMessages];
   }
 
-  return compiledMessages
+  return compiledMessages;
 }
 
 // set undefined if it's invalid toolCalls
@@ -188,28 +189,28 @@ function validateToolCalls(model: string, toolCalls: any) {
       !model.includes("mistral")) ||
     !Array.isArray(toolCalls)
   )
-    return undefined
+    return undefined;
 
   // Check if it's the format with name, description, and input_schema
   const isNameDescriptionFormat = toolCalls.every(
     (t: any) => t.name && t.description && t.input_schema,
-  )
+  );
 
   if (isNameDescriptionFormat) {
-    return toolCalls
+    return toolCalls;
   }
 
   // Check if it's the format with type "function" and function.name
   const isFunctionTypeFormat = toolCalls.every(
     (t: any) => t.type === "function" && t.function?.name,
-  )
+  );
 
   if (isFunctionTypeFormat) {
-    return toolCalls
+    return toolCalls;
   }
 
   // If neither format is valid, return undefined
-  return undefined
+  return undefined;
 }
 
 export async function runAImodel(
@@ -222,7 +223,7 @@ export async function runAImodel(
 ) {
   if (orgId) {
     const [{ stripeCustomer }] =
-      await sql`select stripe_customer from org where id = ${orgId}`
+      await sql`select stripe_customer from org where id = ${orgId}`;
 
     if (
       process.env.NODE_ENV === "production" &&
@@ -237,22 +238,22 @@ export async function runAImodel(
           },
         })
         .then(() => console.log("Metered"))
-        .catch(console.error)
+        .catch(console.error);
     }
   }
 
-  const copy = compilePrompt(content, variables)
+  const copy = compilePrompt(content, variables);
 
-  const messages = convertInputToOpenAIMessages(copy)
-  const modelObj = MODELS.find((m) => m.id === model)
+  const messages = convertInputToOpenAIMessages(copy);
+  const modelObj = MODELS.find((m) => m.id === model);
 
-  let clientParams = {}
-  let paramsOverwrite = {}
+  let clientParams = {};
+  let paramsOverwrite = {};
 
-  const useAnthropic = modelObj?.provider === "anthropic"
+  const useAnthropic = modelObj?.provider === "anthropic";
 
   // disable streaming with anthropic, as their API is too different.
-  const doStream = stream && !useAnthropic
+  const doStream = stream && !useAnthropic;
 
   switch (modelObj?.provider) {
     case "anthropic":
@@ -264,10 +265,10 @@ export async function runAImodel(
         baseURL: "https://api.anthropic.com/v1/",
         fetch: async (url: string, options: any) => {
           // Anthropic doesn't use OpenAI's /chat/completions endpoint
-          const newUrl = url.replace("/chat/completions", "/messages")
-          return fetch(newUrl, options)
+          const newUrl = url.replace("/chat/completions", "/messages");
+          return fetch(newUrl, options);
         },
-      }
+      };
 
       paramsOverwrite = {
         messages: messages.filter((m) =>
@@ -275,28 +276,28 @@ export async function runAImodel(
         ),
         system: messages.filter((m) => m.role === "system")[0]?.content,
         max_tokens: extra?.max_tokens || 4096, // required by anthropic
-      }
-      break
+      };
+      break;
 
     case "openai":
-      clientParams = getOpenAIParams()
-      break
+      clientParams = getOpenAIParams();
+      break;
     case "mistral":
       clientParams = {
         apiKey: process.env.MISTRAL_API_KEY,
         baseURL: "https://api.mistral.ai/v1/",
-      }
-      break
+      };
+      break;
     case "openrouter":
       clientParams = {
         apiKey: process.env.OPENROUTER_API_KEY,
         baseURL: "https://openrouter.ai/api/v1",
         defaultHeaders: OPENROUTER_HEADERS,
-      }
-      break
+      };
+      break;
   }
 
-  const openai = new OpenAI(clientParams)
+  const openai = new OpenAI(clientParams);
 
   let res = await openai.chat.completions.create({
     model,
@@ -312,9 +313,9 @@ export async function runAImodel(
     tools: validateToolCalls(model, extra?.tools),
     seed: extra?.seed,
     ...paramsOverwrite,
-  })
+  });
 
-  const useOpenRouter = modelObj?.provider === "openrouter"
+  const useOpenRouter = modelObj?.provider === "openrouter";
 
   // openrouter requires a second request to get usage
   if (!stream && useOpenRouter && res.id) {
@@ -322,7 +323,7 @@ export async function runAImodel(
     const generationData: any = await fetch(
       `https://openrouter.ai/api/v1/generation?id=${res.id}`,
       { headers: OPENROUTER_HEADERS },
-    ).then((res) => res.json())
+    ).then((res) => res.json());
 
     res.usage = {
       prompt_tokens: generationData?.data?.tokens_prompt,
@@ -330,7 +331,7 @@ export async function runAImodel(
       total_tokens:
         (generationData?.data?.tokens_prompt || 0) +
         (generationData?.data?.tokens_completion || 0),
-    }
+    };
   }
 
   // Anthropic uses different format, convert to OpenAi
@@ -354,8 +355,8 @@ export async function runAImodel(
         total_tokens:
           (res.usage?.input_tokens || 0) + (res.usage?.output_tokens || 0),
       },
-    }
+    };
   }
 
-  return res as OpenAI.ChatCompletion
+  return res as OpenAI.ChatCompletion;
 }

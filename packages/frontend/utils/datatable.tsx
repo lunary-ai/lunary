@@ -1,16 +1,16 @@
-import SmartViewer from "@/components/SmartViewer"
-import AppUserAvatar from "@/components/blocks/AppUserAvatar"
-import Feedback from "@/components/blocks/OldFeedback"
-import ProtectedText from "@/components/blocks/ProtectedText"
-import { Badge, Button, Group } from "@mantine/core"
-import { ColumnDef, createColumnHelper } from "@tanstack/react-table"
+import SmartViewer from "@/components/SmartViewer";
+import AppUserAvatar from "@/components/blocks/AppUserAvatar";
+import Feedback from "@/components/blocks/OldFeedback";
+import ProtectedText from "@/components/blocks/ProtectedText";
+import { Badge, Button, Group } from "@mantine/core";
+import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
 
-import Link from "next/link"
-import { EvaluatorType } from "shared"
-import { useProjectSWR } from "./dataHooks"
-import { renderEnrichment } from "./enrichment"
-import { capitalize, formatCost, formatDateTime, msToTime } from "./format"
-const columnHelper = createColumnHelper<any>()
+import Link from "next/link";
+import { EvaluatorType } from "shared";
+import { useProjectSWR } from "./dataHooks";
+import { renderEnrichment } from "./enrichment";
+import { capitalize, formatCost, formatDateTime, msToTime } from "./format";
+const columnHelper = createColumnHelper<any>();
 
 export function timeColumn(timeColumn, label = "Time") {
   return columnHelper.accessor(timeColumn, {
@@ -22,16 +22,16 @@ export function timeColumn(timeColumn, label = "Time") {
       new Date(b.getValue(timeColumn)).getTime(),
     cell: (info) => {
       const isToday =
-        new Date(info.getValue()).toDateString() === new Date().toDateString()
+        new Date(info.getValue()).toDateString() === new Date().toDateString();
       if (isToday) {
         return new Date(info.getValue()).toLocaleTimeString(
           typeof window !== "undefined" ? window.navigator.language : "en-US",
-        )
+        );
       } else {
-        return formatDateTime(info.getValue())
+        return formatDateTime(info.getValue());
       }
     },
-  })
+  });
 }
 
 export function durationColumn(unit = "s"): ColumnDef<any> {
@@ -41,27 +41,27 @@ export function durationColumn(unit = "s"): ColumnDef<any> {
     size: 110,
     enableSorting: true,
     cell: (props) => {
-      const value = props?.getValue() || 0
+      const value = props?.getValue() || 0;
 
       if (value === 0) {
-        return "0.00s"
+        return "0.00s";
       } else if (unit === "s") {
-        return `${(props.getValue() / 1000).toFixed(2)}s`
+        return `${(props.getValue() / 1000).toFixed(2)}s`;
       } else if (unit === "full") {
-        console.log(props.getValue())
-        return msToTime(props.getValue())
+        console.log(props.getValue());
+        return msToTime(props.getValue());
       }
     },
     accessorFn: (row) => {
       if (!row.endedAt) {
-        return NaN
+        return NaN;
       }
 
       const duration =
-        new Date(row.endedAt).getTime() - new Date(row.createdAt).getTime()
-      return duration
+        new Date(row.endedAt).getTime() - new Date(row.createdAt).getTime();
+      return duration;
     },
-  }
+  };
 }
 
 export function statusColumn() {
@@ -75,7 +75,7 @@ export function statusColumn() {
         <ProtectedText>{props.getValue()}</ProtectedText>
       </Badge>
     ),
-  })
+  });
 }
 
 export function tagsColumn() {
@@ -85,9 +85,9 @@ export function tagsColumn() {
     minSize: 80,
     enableSorting: false,
     cell: (props) => {
-      const tags = props.getValue()
+      const tags = props.getValue();
 
-      if (!tags) return null
+      if (!tags) return null;
 
       return (
         <Group gap={4}>
@@ -97,9 +97,9 @@ export function tagsColumn() {
             </Badge>
           ))}
         </Group>
-      )
+      );
     },
-  })
+  });
 }
 
 export function inputColumn(label = "input") {
@@ -108,7 +108,7 @@ export function inputColumn(label = "input") {
     minSize: 250,
     enableSorting: false,
     cell: (props) => <SmartViewer data={props.getValue()} compact />,
-  })
+  });
 }
 
 export function outputColumn(label = "Response") {
@@ -123,7 +123,7 @@ export function outputColumn(label = "Response") {
         compact
       />
     ),
-  })
+  });
 }
 
 export function templateColumn() {
@@ -131,11 +131,11 @@ export function templateColumn() {
     header: "Template",
     enableSorting: false,
     cell: (props) => {
-      const templateVersionId = props.getValue()
+      const templateVersionId = props.getValue();
 
-      if (!templateVersionId) return null
+      if (!templateVersionId) return null;
 
-      const row = props.row.original
+      const row = props.row.original;
 
       return (
         <Button
@@ -146,9 +146,9 @@ export function templateColumn() {
         >
           {row.templateSlug}
         </Button>
-      )
+      );
     },
-  })
+  });
 }
 
 export function userColumn() {
@@ -157,13 +157,13 @@ export function userColumn() {
     size: 130,
     enableSorting: false,
     cell: (props) => {
-      const user = props.getValue()
+      const user = props.getValue();
 
-      if (!user?.id) return null
+      if (!user?.id) return null;
 
-      return <AppUserAvatar size="sm" user={user} withName />
+      return <AppUserAvatar size="sm" user={user} withName />;
     },
-  })
+  });
 }
 
 export function nameColumn(label = "Name") {
@@ -173,8 +173,8 @@ export function nameColumn(label = "Name") {
     minSize: 30,
     enableSorting: false,
     cell: (props) => {
-      const { status, type } = props.row.original
-      const name = props.getValue()
+      const { status, type } = props.row.original;
+      const name = props.getValue();
 
       return (
         <Badge
@@ -185,9 +185,9 @@ export function nameColumn(label = "Name") {
         >
           {name || type}
         </Badge>
-      )
+      );
     },
-  })
+  });
 }
 
 export function costColumn() {
@@ -196,22 +196,22 @@ export function costColumn() {
     size: 100,
     enableSorting: true,
     cell: (props) => {
-      const cost = props.getValue()
-      return <ProtectedText>{formatCost(cost)}</ProtectedText>
+      const cost = props.getValue();
+      return <ProtectedText>{formatCost(cost)}</ProtectedText>;
     },
-  })
+  });
 }
 
 export function feedbackColumn(withRelatedRuns = false) {
   const cell = withRelatedRuns
     ? (props) => {
-        const run = props.row.original
+        const run = props.row.original;
 
-        const { data: relatedRuns } = useProjectSWR(`/runs/${run.id}/related`)
+        const { data: relatedRuns } = useProjectSWR(`/runs/${run.id}/related`);
 
         const allFeedbacks = [run, ...(relatedRuns || [])]
           .filter((run) => run.feedback)
-          .map((run) => run.feedback)
+          .map((run) => run.feedback);
 
         return (
           <Group gap="xs">
@@ -219,23 +219,23 @@ export function feedbackColumn(withRelatedRuns = false) {
               <Feedback data={feedback} key={i} />
             ))}
           </Group>
-        )
+        );
       }
     : (props) => {
-        const run = props.row.original
+        const run = props.row.original;
 
-        const feedback = run.feedback || run.parentFeedback
-        const isParentFeedback = !run.feedback && run.parentFeedback
+        const feedback = run.feedback || run.parentFeedback;
+        const isParentFeedback = !run.feedback && run.parentFeedback;
 
-        return <Feedback data={feedback} isFromParent={isParentFeedback} />
-      }
+        return <Feedback data={feedback} isFromParent={isParentFeedback} />;
+      };
 
   return columnHelper.accessor("feedback", {
     header: "Feedback",
     size: 100,
     enableSorting: false,
     cell,
-  })
+  });
 }
 
 export function enrichmentColumn(
@@ -249,11 +249,11 @@ export function enrichmentColumn(
     size: 120,
     enableSorting: false,
     cell: (props) => {
-      const data = props.row.original[`enrichment-${id}`]
+      const data = props.row.original[`enrichment-${id}`];
       if (!data) {
-        return null
+        return null;
       }
-      return renderEnrichment(data.result, evaluatorType)
+      return renderEnrichment(data.result, evaluatorType);
     },
-  })
+  });
 }

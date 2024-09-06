@@ -1,12 +1,12 @@
-import { useOrgUser } from "@/utils/dataHooks"
-import { Badge } from "@mantine/core"
-import UserAvatar from "./UserAvatar"
+import { useOrgUser } from "@/utils/dataHooks";
+import { Badge } from "@mantine/core";
+import UserAvatar from "./UserAvatar";
 
 export default function OrgUserBadge({ userId }) {
-  const { user, loading } = useOrgUser(userId)
+  const { user, loading } = useOrgUser(userId);
 
   if (!userId || loading) {
-    return null
+    return null;
   }
 
   return (
@@ -21,5 +21,5 @@ export default function OrgUserBadge({ userId }) {
     >
       {user?.name || "Unknown"}
     </Badge>
-  )
+  );
 }

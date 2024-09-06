@@ -1,23 +1,23 @@
-import sql from "../utils/db"
-import { sleep } from "../utils/misc"
+import sql from "../utils/db";
+import { sleep } from "../utils/misc";
 
 export async function startMaterializedViewRefreshJob() {
   try {
-    const views = ["run_parent_feedback_cache"]
+    const views = ["run_parent_feedback_cache"];
 
     while (true) {
       for (const view of views) {
         await sql`refresh materialized view concurrently ${sql(view)};`.catch(
           (error) => {
-            console.error(`Error refreshing materialized view: ${view}`)
-            console.error(error)
+            console.error(`Error refreshing materialized view: ${view}`);
+            console.error(error);
           },
-        )
+        );
       }
 
-      await sleep(1000)
+      await sleep(1000);
     }
   } catch (error) {
-    console.error(error)
+    console.error(error);
   }
 }

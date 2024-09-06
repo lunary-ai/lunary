@@ -2,7 +2,7 @@
  * TODO everything, this is just a mockup
  */
 
-import { AreaChart, Area, CartesianGrid, ResponsiveContainer } from "recharts"
+import { AreaChart, Area, CartesianGrid, ResponsiveContainer } from "recharts";
 
 export default function TinyPercentChart({ height, width, data, negative }) {
   return (
@@ -26,5 +26,5 @@ export default function TinyPercentChart({ height, width, data, negative }) {
         />
       </AreaChart>
     </ResponsiveContainer>
-  )
+  );
 }

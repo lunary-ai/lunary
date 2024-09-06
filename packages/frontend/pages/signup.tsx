@@ -1,5 +1,5 @@
-import Router, { useRouter } from "next/router"
-import React, { useEffect, useMemo, useState } from "react"
+import Router, { useRouter } from "next/router";
+import React, { useEffect, useMemo, useState } from "react";
 
 import {
   Alert,
@@ -19,12 +19,12 @@ import {
   TextInput,
   ThemeIcon,
   Title,
-} from "@mantine/core"
+} from "@mantine/core";
 
-import Confetti from "react-confetti"
+import Confetti from "react-confetti";
 
-import { useForm } from "@mantine/form"
-import { notifications } from "@mantine/notifications"
+import { useForm } from "@mantine/form";
+import { notifications } from "@mantine/notifications";
 import {
   IconAnalyze,
   IconArrowRight,
@@ -36,15 +36,15 @@ import {
   IconMail,
   IconMessageBolt,
   IconUser,
-} from "@tabler/icons-react"
+} from "@tabler/icons-react";
 
-import SocialProof from "@/components/blocks/SocialProof"
-import analytics from "@/utils/analytics"
-import { fetcher } from "@/utils/fetcher"
-import { NextSeo } from "next-seo"
-import { useAuth } from "@/utils/auth"
-import config from "@/utils/config"
-import Script from "next/script"
+import SocialProof from "@/components/blocks/SocialProof";
+import analytics from "@/utils/analytics";
+import { fetcher } from "@/utils/fetcher";
+import { NextSeo } from "next-seo";
+import { useAuth } from "@/utils/auth";
+import config from "@/utils/config";
+import Script from "next/script";
 
 function getRandomizedChoices() {
   const choices = [
@@ -56,22 +56,22 @@ function getRandomizedChoices() {
     { label: "Friend", value: "friend" },
     { label: "LangFlow", value: "langflow" },
     { label: "Other", value: "other" },
-  ]
+  ];
 
-  return choices.sort(() => Math.random() - 0.5)
+  return choices.sort(() => Math.random() - 0.5);
 }
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function SignupPage() {
-  const [loading, setLoading] = useState(false)
-  const [step, setStep] = useState(1)
+  const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(1);
 
-  const choices = useMemo(() => getRandomizedChoices(), [])
+  const choices = useMemo(() => getRandomizedChoices(), []);
 
-  const router = useRouter()
+  const router = useRouter();
 
-  const auth = useAuth()
+  const auth = useAuth();
 
   const form = useForm({
     initialValues: {
@@ -96,12 +96,12 @@ function SignupPage() {
         val.length <= 1 ? "Please select a value" : null,
       password: (val) => {
         if (val.length < 6) {
-          return "Password must be at least 6 characters"
+          return "Password must be at least 6 characters";
         }
-        return null
+        return null;
       },
     },
-  })
+  });
 
   async function handleSignup({
     email,
@@ -112,20 +112,20 @@ function SignupPage() {
     employeeCount,
     whereFindUs,
   }: {
-    email: string
-    password: string
-    name: string
-    projectName: string
-    orgName: string
-    employeeCount: string
-    whereFindUs: string
+    email: string;
+    password: string;
+    name: string;
+    projectName: string;
+    orgName: string;
+    employeeCount: string;
+    whereFindUs: string;
   }) {
-    setLoading(true)
+    setLoading(true);
 
     if (orgName.includes("https://")) {
       // shadow ban spam
-      await sleep(100000000)
-      return
+      await sleep(100000000);
+      return;
     }
 
     try {
@@ -140,13 +140,13 @@ function SignupPage() {
           whereFindUs,
           signupMethod: "signup",
         },
-      })
+      });
 
       if (!token) {
-        throw new Error("No token received")
+        throw new Error("No token received");
       }
 
-      auth.setJwt(token)
+      auth.setJwt(token);
 
       analytics.track("Signup", {
         email,
@@ -155,7 +155,7 @@ function SignupPage() {
         orgName,
         whereFindUs,
         employeeCount,
-      })
+      });
 
       if (!config.IS_SELF_HOSTED) {
         notifications.show({
@@ -163,14 +163,14 @@ function SignupPage() {
           color: "teal",
           title: "Email sent",
           message: "Check your emails for the confirmation link",
-        })
+        });
       }
 
-      nextStep()
+      nextStep();
     } catch (error) {
-      console.error(error)
+      console.error(error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -181,34 +181,34 @@ function SignupPage() {
           (field) => form.validateField(field).hasError,
         )
       ) {
-        return
+        return;
       }
     }
 
     if (step === 2 && !form.values.orgName) {
-      form.setFieldValue("orgName", form.values.name + "'s Org")
+      form.setFieldValue("orgName", form.values.name + "'s Org");
     }
 
     analytics.track("Signup Step " + (step + 1), {
       email: form.values.email,
       name: form.values.name,
-    })
+    });
 
-    setStep(step + 1)
+    setStep(step + 1);
 
-    router.query.step = String(step + 1)
-    router.push(router)
+    router.query.step = String(step + 1);
+    router.push(router);
   }
 
   useEffect(() => {
     if (step === 3) {
-      ;(async function () {
+      (async function () {
         window.SavvyCal =
           window.SavvyCal ||
           function () {
-            ;(SavvyCal.q = SavvyCal.q || []).push(arguments)
-          }
-        SavvyCal("init")
+            (SavvyCal.q = SavvyCal.q || []).push(arguments);
+          };
+        SavvyCal("init");
         SavvyCal("inline", {
           link: "vince/chat",
           selector: "#booking-page",
@@ -217,12 +217,12 @@ function SignupPage() {
           hideAvatar: true,
           hideBanner: true,
           theme: "os",
-        })
-      })()
+        });
+      })();
     }
-  }, [step])
+  }, [step]);
 
-  const isBigCompany = form.values.employeeCount !== "1-5"
+  const isBigCompany = form.values.employeeCount !== "1-5";
 
   return (
     <Container size={step === 3 ? 1200 : 800} mih="60%">
@@ -268,11 +268,11 @@ function SignupPage() {
                             error={form.errors.name}
                             {...form.getInputProps("name")}
                             onChange={(e) => {
-                              form.setFieldValue("name", e.target.value)
+                              form.setFieldValue("name", e.target.value);
                               form.setFieldValue(
                                 "orgName",
                                 e.target.value + "'s Org",
-                              )
+                              );
                             }}
                           />
 
@@ -280,7 +280,7 @@ function SignupPage() {
                             label="Password"
                             onKeyDown={(e) => {
                               if (e.key === "Enter") {
-                                nextStep()
+                                nextStep();
                               }
                             }}
                             error={form.errors.password}
@@ -372,9 +372,9 @@ function SignupPage() {
                             <Button
                               size="sm"
                               onClick={() => {
-                                router.query.step = String(1)
-                                router.push(router)
-                                setStep(1)
+                                router.query.step = String(1);
+                                router.push(router);
+                                setStep(1);
                               }}
                               fullWidth
                               variant="transparent"
@@ -476,7 +476,7 @@ function SignupPage() {
                   <Button
                     onClick={() => {
                       // use this to refresh properly
-                      window.location.href = "/"
+                      window.location.href = "/";
                     }}
                     variant="default"
                     rightSection={<IconArrowRight size={16} />}
@@ -495,7 +495,7 @@ function SignupPage() {
 
                   <Button
                     onClick={() => {
-                      window.location.href = "/"
+                      window.location.href = "/";
                     }}
                     variant={isBigCompany ? "outline" : "filled"}
                     mb="xl"
@@ -514,7 +514,7 @@ function SignupPage() {
                       <Button
                         variant="outline"
                         onClick={() => {
-                          $crisp.push(["do", "chat:open"])
+                          $crisp.push(["do", "chat:open"]);
                         }}
                         rightSection={<IconMessageBolt size={18} />}
                       >
@@ -545,7 +545,7 @@ function SignupPage() {
         }
       `}</style>
     </Container>
-  )
+  );
 }
 
-export default SignupPage
+export default SignupPage;

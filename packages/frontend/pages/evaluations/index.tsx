@@ -1,5 +1,5 @@
-import { useRouter } from "next/router"
-import { useEffect } from "react"
+import { useRouter } from "next/router";
+import { useEffect } from "react";
 
 // const FEATURE_LIST = [
 //   "Define assertions to test variations of prompts",
@@ -8,11 +8,11 @@ import { useEffect } from "react"
 // ]
 
 export default function Evaluations() {
-  const router = useRouter()
+  const router = useRouter();
 
   useEffect(() => {
-    router.push("/evaluations/new")
-  }, [])
+    router.push("/evaluations/new");
+  }, []);
 
-  return null
+  return null;
 }

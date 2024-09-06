@@ -1,9 +1,9 @@
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react";
 
-import { BubbleMessage } from "@/components/SmartViewer/Message"
+import { BubbleMessage } from "@/components/SmartViewer/Message";
 
-import { useProjectSWR, useRun } from "@/utils/dataHooks"
-import { formatDateTime } from "@/utils/format"
+import { useProjectSWR, useRun } from "@/utils/dataHooks";
+import { formatDateTime } from "@/utils/format";
 import {
   Button,
   Card,
@@ -13,25 +13,25 @@ import {
   Stack,
   Text,
   Title,
-} from "@mantine/core"
-import { IconNeedleThread } from "@tabler/icons-react"
-import Router, { useRouter } from "next/router"
-import { mutate } from "swr"
-import AppUserAvatar from "./AppUserAvatar"
-import Feedbacks from "./Feedbacks"
+} from "@mantine/core";
+import { IconNeedleThread } from "@tabler/icons-react";
+import Router, { useRouter } from "next/router";
+import { mutate } from "swr";
+import AppUserAvatar from "./AppUserAvatar";
+import Feedbacks from "./Feedbacks";
 
-const OUTPUT_ROLES = ["assistant", "ai", "system", "tool"]
-const INPUT_ROLES = ["user"]
+const OUTPUT_ROLES = ["assistant", "ai", "system", "tool"];
+const INPUT_ROLES = ["user"];
 
 function parseMessageFromRun(run) {
   function extractMessages(msg, role, siblingRunId) {
-    if (!msg) return []
+    if (!msg) return [];
 
     if (Array.isArray(msg)) {
       return msg
         .map((item) => extractMessages(item, role, siblingRunId))
         .flat()
-        .filter((msg) => msg.content !== undefined)
+        .filter((msg) => msg.content !== undefined);
     }
 
     return {
@@ -49,13 +49,13 @@ function parseMessageFromRun(run) {
         took:
           new Date(run.endedAt).getTime() - new Date(run.createdAt).getTime(),
       }),
-    }
+    };
   }
 
   return [
     extractMessages(run.input, "user", run.siblingRunId),
     extractMessages(run.output, "assistant", run.siblingRunId),
-  ]
+  ];
 }
 
 // Renders a list of run (or just one)
@@ -69,10 +69,12 @@ function Message({
   run,
   mutateLogs,
 }) {
-  const router = useRouter()
-  const runId = router?.query?.selected
-  const { updateFeedback } = useRun(msg.id)
-  const { data: relatedRuns } = useProjectSWR(runId && `/runs/${runId}/related`)
+  const router = useRouter();
+  const runId = router?.query?.selected;
+  const { updateFeedback } = useRun(msg.id);
+  const { data: relatedRuns } = useProjectSWR(
+    runId && `/runs/${runId}/related`,
+  );
 
   return (
     <>
@@ -93,21 +95,21 @@ function Message({
                 feedback={run.feedback}
                 updateFeedback={async (feedback) => {
                   try {
-                    const newRelatedRuns = [...relatedRuns]
-                    await updateFeedback(feedback)
+                    const newRelatedRuns = [...relatedRuns];
+                    await updateFeedback(feedback);
 
                     newRelatedRuns.find(({ id }, i) => {
                       if (id === msg.id) {
-                        newRelatedRuns[i].feedback = feedback
+                        newRelatedRuns[i].feedback = feedback;
                       }
-                    })
+                    });
 
                     await mutate(`/runs/${runId}/related`, () => relatedRuns, {
                       revalidate: false,
-                    })
-                    await mutateLogs()
+                    });
+                    await mutateLogs();
                   } catch (error) {
-                    console.error(error)
+                    console.error(error);
                   }
                 }}
               />
@@ -129,11 +131,11 @@ function Message({
         />
       )}
     </>
-  )
+  );
 }
 
 function RunsChat({ runs, mutateLogs }) {
-  const [selectedRetries, setSelectedRetries] = useState({})
+  const [selectedRetries, setSelectedRetries] = useState({});
 
   // Each chat run has input = [user message], output = [bot message]
   const messages = useMemo(
@@ -143,21 +145,21 @@ function RunsChat({ runs, mutateLogs }) {
         .flat(2)
         .sort((a, b) => a.timestamp - b.timestamp),
     [runs],
-  )
+  );
 
   const getSiblingsOf = useCallback(
     (run) => {
-      return runs?.filter((m) => [m.siblingRunId, m.id].includes(run.id))
+      return runs?.filter((m) => [m.siblingRunId, m.id].includes(run.id));
     },
     [runs],
-  )
+  );
 
   const handleRetrySelect = (messageId, retryIndex) => {
     setSelectedRetries((prevRetries) => ({
       ...prevRetries,
       [messageId]: retryIndex,
-    }))
-  }
+    }));
+  };
 
   return (
     <Stack gap={0}>
@@ -165,9 +167,9 @@ function RunsChat({ runs, mutateLogs }) {
         ?.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
         .filter((run) => !run.siblingRunId) // Use the main tree as reference
         .map((run, i) => {
-          const siblings = getSiblingsOf(run)
-          const selectedIndex = selectedRetries[run.id] || 0
-          const picked = siblings[selectedIndex]
+          const siblings = getSiblingsOf(run);
+          const selectedIndex = selectedRetries[run.id] || 0;
+          const picked = siblings[selectedIndex];
 
           return messages
             .filter((m) => m.id === picked.id)
@@ -181,24 +183,24 @@ function RunsChat({ runs, mutateLogs }) {
                 run={run}
                 mutateLogs={mutateLogs}
               />
-            ))
+            ));
         })}
     </Stack>
-  )
+  );
 }
 
 export function ChatReplay({ run, mutateLogs }) {
   const { data: runs, isLoading: loading } = useProjectSWR(
     run.id && `/runs?type=chat&parentRunId=${run.id}`,
-  )
+  );
 
   const { data: user } = useProjectSWR(
     run.user?.id && `/external-users/${run.user?.id}`,
-  )
+  );
 
   const sorted = runs?.data?.sort((a, b) => {
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  })
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
 
   return (
     <Stack>
@@ -207,7 +209,7 @@ export function ChatReplay({ run, mutateLogs }) {
         ml="auto"
         w="fit-content"
         onClick={() => {
-          Router.push(`/traces/${run.id}`)
+          Router.push(`/traces/${run.id}`);
         }}
         rightSection={<IconNeedleThread size="16" />}
       >
@@ -245,7 +247,7 @@ export function ChatReplay({ run, mutateLogs }) {
 
       <RunsChat runs={sorted} mutateLogs={mutateLogs} />
     </Stack>
-  )
+  );
 }
 
-export default RunsChat
+export default RunsChat;

@@ -1,13 +1,13 @@
-import sql from "@/src/utils/db"
-import Router from "koa-router"
-import { Context } from "koa"
+import sql from "@/src/utils/db";
+import Router from "koa-router";
+import { Context } from "koa";
 
 const filters = new Router({
   prefix: "/filters",
-})
+});
 
 filters.get("/models", async (ctx: Context) => {
-  const { projectId } = ctx.state
+  const { projectId } = ctx.state;
 
   const rows = await sql`
     select distinct
@@ -20,13 +20,13 @@ filters.get("/models", async (ctx: Context) => {
       and r.name is not null
     order by
       name;
-  `
+  `;
 
-  ctx.body = rows.map((row) => row.name)
-})
+  ctx.body = rows.map((row) => row.name);
+});
 
 filters.get("/tags", async (ctx: Context) => {
-  const { projectId } = ctx.state
+  const { projectId } = ctx.state;
 
   const rows = await sql`
     select distinct
@@ -35,13 +35,13 @@ filters.get("/tags", async (ctx: Context) => {
       run
     where
       project_id = ${projectId} 
-  `
+  `;
 
-  ctx.body = rows.map((row) => row.tag)
-})
+  ctx.body = rows.map((row) => row.tag);
+});
 
 filters.get("/metadata", async (ctx: Context) => {
-  const { projectId } = ctx.state
+  const { projectId } = ctx.state;
 
   const rows = await sql`
     select distinct
@@ -53,13 +53,13 @@ filters.get("/metadata", async (ctx: Context) => {
       and metadata is not null
     order by
       key;
-  `
+  `;
 
-  ctx.body = rows.map((row) => row.key)
-})
+  ctx.body = rows.map((row) => row.key);
+});
 
 filters.get("/users", async (ctx) => {
-  const { projectId } = ctx.state
+  const { projectId } = ctx.state;
 
   const rows = await sql`
     select
@@ -68,13 +68,13 @@ filters.get("/users", async (ctx) => {
       external_user
     where
       project_id = ${projectId}
-  `
+  `;
 
-  ctx.body = rows
-})
+  ctx.body = rows;
+});
 
 filters.get("/templates", async (ctx) => {
-  const { projectId } = ctx.state
+  const { projectId } = ctx.state;
 
   const rows = await sql`
     select
@@ -84,9 +84,9 @@ filters.get("/templates", async (ctx) => {
       template
     where
       project_id = ${projectId}
-  `
+  `;
 
-  ctx.body = rows
-})
+  ctx.body = rows;
+});
 
-export default filters
+export default filters;

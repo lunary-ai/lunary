@@ -1,6 +1,6 @@
-import { MailOptions } from "."
-import config from "../utils/config"
-import { extractFirstName } from "./utils"
+import { MailOptions } from ".";
+import config from "../utils/config";
+import { extractFirstName } from "./utils";
 
 export function INVITE_EMAIL(
   email: string,
@@ -31,7 +31,7 @@ Thanks
     : ""
 }
 `,
-  }
+  };
 }
 
 export function CONFIRM_EMAIL(
@@ -56,7 +56,7 @@ You can reply to this email if you have any question.
 
 Thanks
 - The Lunary team`,
-  }
+  };
 }
 
 export function RESET_PASSWORD(
@@ -76,7 +76,7 @@ ${confirmLink}
 You can reply to this email if you have any question.
 
 - The Lunary team`,
-  }
+  };
 }
 
 export function WELCOME_EMAIL(
@@ -104,7 +104,7 @@ In your opinion, what can we do to make lunary better?
 
 Thanks
 Vince`,
-  }
+  };
 }
 
 export function UPGRADE_EMAIL(
@@ -125,7 +125,7 @@ The extra features and higher limits are now available to you.
 Reply to this email if you have any question.
 
 - The Lunary team`,
-  }
+  };
 }
 
 export function CANCELED_EMAIL(email: string, name: string): MailOptions {
@@ -148,7 +148,7 @@ Would you mind telling us why you canceled? We're always looking to improve.
 Thank you for trying Lunary.
 
 - The Lunary team`,
-  }
+  };
 }
 
 export function FULLY_CANCELED_EMAIL(email: string, name: string): MailOptions {
@@ -175,7 +175,7 @@ If this was a mistake, you can upgrade again at any time here: ${process.env.APP
 Thank you for trying Lunary.
 
 - The Lunary team`,
-  }
+  };
 }
 
 export function LIMITED_EMAIL(email: string, name: string): MailOptions {
@@ -196,5 +196,5 @@ If you have any questions, feel free to reply to this email.
 Thank you for being a part of Lunary.
 
 - The Lunary team`,
-  }
+  };
 }

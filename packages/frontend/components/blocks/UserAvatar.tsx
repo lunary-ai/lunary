@@ -1,12 +1,12 @@
-import { Avatar, Text } from "@mantine/core"
-import { memo } from "react"
+import { Avatar, Text } from "@mantine/core";
+import { memo } from "react";
 
 function UserAvatar({
   profile: user,
   size = "md",
 }: {
-  profile: any
-  size?: string | number
+  profile: any;
+  size?: string | number;
 }) {
   return (
     <Avatar
@@ -25,7 +25,7 @@ function UserAvatar({
           .join("")}
       </Text>
     </Avatar>
-  )
+  );
 }
 
-export default memo(UserAvatar)
+export default memo(UserAvatar);

@@ -1,5 +1,5 @@
 // TODO: use zod
-const IS_SELF_HOSTED = process.env.IS_SELF_HOSTED === "true" ? true : false
+const IS_SELF_HOSTED = process.env.IS_SELF_HOSTED === "true" ? true : false;
 
 const config = {
   IS_SELF_HOSTED,
@@ -12,6 +12,6 @@ const config = {
   SMTP_PORT: Number.parseInt(process.env.SMTP_PORT || "465"),
   SMTP_USER: process.env.SMTP_USER,
   SMTP_PASSWORD: process.env.SMTP_PASSWORD,
-}
+};
 
-export default config
+export default config;
