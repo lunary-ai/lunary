@@ -1,13 +1,13 @@
-import { Box, Button, Group, Select, Stack } from "@mantine/core"
-import { Fragment, useState } from "react"
-import { CHECKS, Check, CheckLogic, CheckParam, LogicData } from "shared"
-import ErrorBoundary from "../blocks/ErrorBoundary"
-import { AddCheckButton } from "./AddCheck"
-import CheckInputs from "./ChecksInputs"
-import ChecksModal from "./ChecksModal"
-import classes from "./index.module.css"
-import { IconX } from "@tabler/icons-react"
-import CHECKS_UI_DATA from "./ChecksUIData"
+import { Box, Button, Group, Select, Stack } from "@mantine/core";
+import { Fragment, useState } from "react";
+import { CHECKS, Check, CheckLogic, CheckParam, LogicData } from "shared";
+import ErrorBoundary from "../blocks/ErrorBoundary";
+import { AddCheckButton } from "./AddCheck";
+import CheckInputs from "./ChecksInputs";
+import ChecksModal from "./ChecksModal";
+import classes from "./index.module.css";
+import { IconX } from "@tabler/icons-react";
+import CHECKS_UI_DATA from "./ChecksUIData";
 
 export function RenderCheckNode({
   minimal,
@@ -18,18 +18,18 @@ export function RenderCheckNode({
   setNode,
   removeNode,
 }: {
-  minimal: boolean
-  node: CheckLogic
-  checks: Check[]
-  disabled?: boolean
-  showAndOr?: boolean
-  setNode: (node: CheckLogic | LogicData) => void
-  removeNode: () => void
+  minimal: boolean;
+  node: CheckLogic;
+  checks: Check[];
+  disabled?: boolean;
+  showAndOr?: boolean;
+  setNode: (node: CheckLogic | LogicData) => void;
+  removeNode: () => void;
 }) {
-  if (typeof node === "string" && ["AND", "OR"].includes(node)) return null
+  if (typeof node === "string" && ["AND", "OR"].includes(node)) return null;
 
   if (Array.isArray(node)) {
-    const currentOperator = node[0] as "AND" | "OR"
+    const currentOperator = node[0] as "AND" | "OR";
 
     const showCheckNode = (n, i) => (
       <RenderCheckNode
@@ -40,21 +40,21 @@ export function RenderCheckNode({
         showAndOr={showAndOr}
         node={n as CheckLogic}
         removeNode={() => {
-          const newNode = [...node]
-          newNode.splice(i, 1)
-          setNode(newNode as CheckLogic)
+          const newNode = [...node];
+          newNode.splice(i, 1);
+          setNode(newNode as CheckLogic);
         }}
         setNode={(newNode) => {
-          const newNodeArray = [...node]
-          newNodeArray[i] = newNode
-          setNode(newNodeArray as CheckLogic)
+          const newNodeArray = [...node];
+          newNodeArray[i] = newNode;
+          setNode(newNodeArray as CheckLogic);
         }}
       />
-    )
+    );
 
     return node.map((n, i) => {
       const showOperator =
-        i !== 0 && i !== node.length - 1 && (!minimal || showAndOr)
+        i !== 0 && i !== node.length - 1 && (!minimal || showAndOr);
       return showOperator ? (
         <Group key={i} gap={showOperator ? "xs" : 0}>
           {showCheckNode(n, i)}
@@ -68,55 +68,55 @@ export function RenderCheckNode({
               data={["AND", "OR"]}
               value={currentOperator}
               onChange={(val) => {
-                const newNodeArray = [...node]
+                const newNodeArray = [...node];
                 if (val !== null) {
-                  newNodeArray[0] = val
+                  newNodeArray[0] = val;
                 }
 
-                setNode(newNodeArray as CheckLogic)
+                setNode(newNodeArray as CheckLogic);
               }}
             />
           )}
         </Group>
       ) : (
         showCheckNode(n, i)
-      )
-    })
+      );
+    });
   }
 
   // ts assert node is LogicElement
-  const s = node as LogicData
+  const s = node as LogicData;
 
-  const check = checks.find((f) => f.id === s?.id)
+  const check = checks.find((f) => f.id === s?.id);
 
-  if (!check) return null
+  if (!check) return null;
 
   return (
     <div
       className={`${classes["custom-input"]} ${minimal ? classes.minimal : ""}`}
     >
       {check?.params.map((param, i) => {
-        const CustomInput = CheckInputs[param.type]
-        if (!CustomInput) return null
+        const CustomInput = CheckInputs[param.type];
+        if (!CustomInput) return null;
 
-        const isParamNotLabel = param.type !== "label"
+        const isParamNotLabel = param.type !== "label";
 
-        const paramData = isParamNotLabel ? s.params[param.id] : null
+        const paramData = isParamNotLabel ? s.params[param.id] : null;
 
-        const UIItem = CHECKS_UI_DATA[check.id] || CHECKS_UI_DATA["other"]
+        const UIItem = CHECKS_UI_DATA[check.id] || CHECKS_UI_DATA["other"];
 
         function getWidth() {
           if (!isParamNotLabel || !param.width) {
-            return
+            return;
           }
 
           if (minimal) {
-            return param.width
+            return param.width;
           }
 
-          return param.width * 1.1
+          return param.width * 1.1;
         }
-        const width = getWidth()
+        const width = getWidth();
 
         const onChangeParam = (value) => {
           isParamNotLabel &&
@@ -126,8 +126,8 @@ export function RenderCheckNode({
                 ...(s.params || {}),
                 [param.id]: value,
               },
-            })
-        }
+            });
+        };
 
         return (
           <Fragment key={i}>
@@ -144,7 +144,7 @@ export function RenderCheckNode({
               />
             </ErrorBoundary>
           </Fragment>
-        )
+        );
       })}
       {typeof removeNode !== "undefined" && (
         <IconX
@@ -152,12 +152,12 @@ export function RenderCheckNode({
           cursor="pointer"
           size={14}
           onClick={() => {
-            removeNode()
+            removeNode();
           }}
         />
       )}
     </div>
-  )
+  );
 }
 
 export default function CheckPicker({
@@ -170,30 +170,30 @@ export default function CheckPicker({
   disabled = false,
   buttonText = "Add",
 }: {
-  value?: CheckLogic
-  onChange?: (data: CheckLogic) => void
-  minimal?: boolean
-  showAndOr?: boolean
-  restrictTo?: (filter: Check) => boolean
-  defaultOpened?: boolean
-  disabled?: boolean
-  buttonText?: string
+  value?: CheckLogic;
+  onChange?: (data: CheckLogic) => void;
+  minimal?: boolean;
+  showAndOr?: boolean;
+  restrictTo?: (filter: Check) => boolean;
+  defaultOpened?: boolean;
+  disabled?: boolean;
+  buttonText?: string;
 }) {
-  const [modalOpened, setModalOpened] = useState(false)
+  const [modalOpened, setModalOpened] = useState(false);
 
-  const options = CHECKS.filter(restrictTo)
+  const options = CHECKS.filter(restrictTo);
 
   const allowedToAdd = options.filter(
     (check) =>
       !minimal ||
       !check.uniqueInBar ||
       !value?.some((v) => typeof v === "object" && v.id === check.id),
-  )
+  );
 
   // insert {id: filterId, params: { [param1]: defaultValue, [param2]: defaultValue }}
   const insertChecks = (filters: Check[]) => {
     const arr: CheckLogic =
-      Array.isArray(value) && !!value.length ? [...value] : ["AND"]
+      Array.isArray(value) && !!value.length ? [...value] : ["AND"];
 
     filters.forEach((filter) => {
       const filterLogic = {
@@ -201,18 +201,18 @@ export default function CheckPicker({
         params: filter.params
           .filter((param) => param.type !== "label")
           .reduce((acc, { id, defaultValue }: CheckParam) => {
-            acc[id] = defaultValue
-            return acc
+            acc[id] = defaultValue;
+            return acc;
           }, {}),
-      }
+      };
 
-      arr.push(filterLogic)
-    })
+      arr.push(filterLogic);
+    });
 
-    onChange(arr)
-  }
+    onChange(arr);
+  };
 
-  const Container = minimal ? Group : Stack
+  const Container = minimal ? Group : Stack;
 
   return (
     <Box style={disabled ? { pointerEvents: "none", opacity: 0.8 } : {}}>
@@ -224,10 +224,10 @@ export default function CheckPicker({
             disabled={disabled}
             showAndOr={showAndOr}
             setNode={(newNode) => {
-              onChange(newNode as CheckLogic)
+              onChange(newNode as CheckLogic);
             }}
             removeNode={() => {
-              onChange(["AND"])
+              onChange(["AND"]);
             }}
             checks={options}
           />
@@ -256,8 +256,8 @@ export default function CheckPicker({
                     onFinish={(ids) => {
                       const checks = ids
                         .map((id) => options.find((option) => option.id === id))
-                        .filter(Boolean) as Check[]
-                      insertChecks(checks)
+                        .filter(Boolean) as Check[];
+                      insertChecks(checks);
                     }}
                   />
                 </>
@@ -267,5 +267,5 @@ export default function CheckPicker({
         </>
       </Container>
     </Box>
-  )
+  );
 }

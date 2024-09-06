@@ -1,14 +1,14 @@
-import { flexRender, useReactTable } from "@tanstack/react-table"
-import { useVirtualizer } from "@tanstack/react-virtual"
-import { memo } from "react"
+import { flexRender, useReactTable } from "@tanstack/react-table";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { memo } from "react";
 
 interface TableBodyProps {
-  table: ReturnType<typeof useReactTable>
-  tableContainerRef: React.RefObject<HTMLDivElement>
-  onRowClicked?: (row: any) => void
+  table: ReturnType<typeof useReactTable>;
+  tableContainerRef: React.RefObject<HTMLDivElement>;
+  onRowClicked?: (row: any) => void;
 }
 function TableBody({ table, tableContainerRef, onRowClicked }: TableBodyProps) {
-  const { rows } = table.getRowModel()
+  const { rows } = table.getRowModel();
 
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
@@ -20,15 +20,15 @@ function TableBody({ table, tableContainerRef, onRowClicked }: TableBodyProps) {
         ? (element) => element?.getBoundingClientRect().height
         : undefined,
     overscan: 4,
-  })
+  });
 
-  const items = rowVirtualizer.getVirtualItems()
+  const items = rowVirtualizer.getVirtualItems();
 
-  const paddingTop = items.length > 0 ? items[0].start : 0
+  const paddingTop = items.length > 0 ? items[0].start : 0;
   const paddingBottom =
     items.length > 0
       ? rowVirtualizer.getTotalSize() - items[items.length - 1].end
-      : 0
+      : 0;
 
   return (
     <tbody
@@ -42,7 +42,7 @@ function TableBody({ table, tableContainerRef, onRowClicked }: TableBodyProps) {
         </tr>
       )}
       {items.map((virtualRow) => {
-        const row = rows[virtualRow.index]
+        const row = rows[virtualRow.index];
         return (
           <tr
             key={row.id}
@@ -68,7 +68,7 @@ function TableBody({ table, tableContainerRef, onRowClicked }: TableBodyProps) {
               </td>
             ))}
           </tr>
-        )
+        );
       })}
       {paddingBottom > 0 && (
         <tr>
@@ -76,7 +76,7 @@ function TableBody({ table, tableContainerRef, onRowClicked }: TableBodyProps) {
         </tr>
       )}
     </tbody>
-  )
+  );
 }
 
 // Avoid unnecessary rerendering of the body (for example when the column size is changed)
@@ -84,5 +84,5 @@ export default memo(TableBody, (prevProps, nextProps) => {
   return (
     prevProps.table.options.data === nextProps.table.options.data &&
     prevProps.onRowClicked === nextProps.onRowClicked
-  )
-})
+  );
+});

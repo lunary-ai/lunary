@@ -1,11 +1,11 @@
-import sql from "@/src/utils/db"
-import { sendSlackMessage } from "@/src/utils/notifications"
-import { LIMITED_EMAIL, sendEmail } from "../emails"
-import config from "../utils/config"
+import sql from "@/src/utils/db";
+import { sendSlackMessage } from "@/src/utils/notifications";
+import { LIMITED_EMAIL, sendEmail } from "../emails";
+import config from "../utils/config";
 
 async function updateLimitedStatus() {
   if (config.IS_SELF_HOSTED) {
-    return
+    return;
   }
   // set limited = false for all users that have been under the limit
   // for the last 30 days
@@ -21,7 +21,7 @@ async function updateLimitedStatus() {
     HAVING COUNT(r.id) > 10000
   )
   RETURNING *;
-  `
+  `;
 
   // get all free users with more than 10000 runs in the last 30 days
   // and set their `limited` to true
@@ -40,51 +40,51 @@ async function updateLimitedStatus() {
 UPDATE "public"."org" 
 SET limited = TRUE 
 WHERE id IN (SELECT id FROM over_limit_users)
-RETURNING *;`
+RETURNING *;`;
 
   for (const org of orgsToLimit) {
     try {
       // send telegram message to user
-      if (alreadyLimited.find((u) => u.id === org.id)) continue
+      if (alreadyLimited.find((u) => u.id === org.id)) continue;
 
       await sendSlackMessage(
         `⛔ limited ${org.name} because too many events`,
         "users",
-      )
+      );
 
       // send email to user
 
       const users =
-        await sql`SELECT email, name FROM account WHERE org_id = ${org.id};`
+        await sql`SELECT email, name FROM account WHERE org_id = ${org.id};`;
 
       for (const user of users) {
-        await sendEmail(LIMITED_EMAIL(user.email, user.name))
+        await sendEmail(LIMITED_EMAIL(user.email, user.name));
       }
     } catch (error) {
-      console.error(error)
+      console.error(error);
     }
   }
 }
 
 // reset playground allowance
 async function resetPlaygroundAllowance() {
-  await sql`UPDATE "public"."org" o SET play_allowance = 3 WHERE o.plan = 'free';`
-  await sql`UPDATE "public"."org" o SET play_allowance = 1000 WHERE o.plan = 'pro' OR o.plan = 'team';`
-  await sql`UPDATE "public"."org" o SET play_allowance = 1000 WHERE o.plan = 'unlimited' OR o.plan = 'custom';`
+  await sql`UPDATE "public"."org" o SET play_allowance = 3 WHERE o.plan = 'free';`;
+  await sql`UPDATE "public"."org" o SET play_allowance = 1000 WHERE o.plan = 'pro' OR o.plan = 'team';`;
+  await sql`UPDATE "public"."org" o SET play_allowance = 1000 WHERE o.plan = 'unlimited' OR o.plan = 'custom';`;
 }
 
 export default async function resetUsage() {
   try {
-    console.log("[JOB]: resetting AI allowance")
-    await resetPlaygroundAllowance()
+    console.log("[JOB]: resetting AI allowance");
+    await resetPlaygroundAllowance();
   } catch (error) {
-    console.error(error)
+    console.error(error);
   }
 
   try {
-    console.log("[JOB]: updating limited status")
-    await updateLimitedStatus()
+    console.log("[JOB]: updating limited status");
+    await updateLimitedStatus();
   } catch (error) {
-    console.error(error)
+    console.error(error);
   }
 }

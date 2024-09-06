@@ -1,23 +1,23 @@
-import * as Sentry from "@sentry/node"
-import sql from "./db"
-import { withTimeout } from "./timeout"
-import { countGoogleTokens, isGoogleModel } from "./tokens/google"
-import { get_encoding, Tiktoken, TiktokenEncoding } from "tiktoken"
+import * as Sentry from "@sentry/node";
+import sql from "./db";
+import { withTimeout } from "./timeout";
+import { countGoogleTokens, isGoogleModel } from "./tokens/google";
+import { get_encoding, Tiktoken, TiktokenEncoding } from "tiktoken";
 import {
   getEncodingNameForOpenAIModel,
   isOpenAIModelName,
-} from "./tokens/openai"
+} from "./tokens/openai";
 
 function getEncodingNameForModel(modelName: string): TiktokenEncoding {
   if (modelName?.includes("claude")) {
-    return "cl100k_base" // TODO
+    return "cl100k_base"; // TODO
   } else if (isOpenAIModelName(modelName)) {
-    return getEncodingNameForOpenAIModel(modelName)
+    return getEncodingNameForOpenAIModel(modelName);
   } else {
     console.warn(
       `Warning: model ${modelName} not found. Using cl100k_base encoding.`,
-    )
-    return "cl100k_base"
+    );
+    return "cl100k_base";
   }
 }
 
@@ -63,29 +63,29 @@ function formatFunctionSpecsAsTypescriptNS(functions: any) {
             ([name, prop]) => `  ${paramSignature({ ...prop, name })}`,
           ),
           "},",
-        ].join("\n")
+        ].join("\n");
       } else if (pSpec?.type === "array") {
         return [
           `${pSpec.description ? "// " + pSpec.description : ""}`,
           `${pSpec.name}: ${pSpec.type}<${paramSignature(pSpec.items)}>,`,
-        ].join("\n")
+        ].join("\n");
       }
 
       // TODO: enum type support
       return `${pSpec.name}: ${pSpec.type}, ${
         pSpec.description ? "// " + pSpec.description : ""
-      }`
+      }`;
     } catch (error) {
       console.error("Error while formatting function spec as typescript", {
         error,
         pSpec,
-      })
-      return ""
+      });
+      return "";
     }
   }
 
   function functionSignature(fSpec) {
-    const func = !fSpec.type ? fSpec : fSpec.function
+    const func = !fSpec.type ? fSpec : fSpec.function;
 
     return [
       `${func.description ? "// " + func.description : ""}`,
@@ -94,16 +94,16 @@ function formatFunctionSpecsAsTypescriptNS(functions: any) {
         ([name, param]) => `  ${paramSignature({ ...param, name })}`,
       ),
       "}) => any;",
-    ].join("\n")
+    ].join("\n");
   }
 
   const final = [
     "namespace functions {",
     functions.map((f) => functionSignature(f)).join("\n"),
     "}", // `// namespace functions` doesn't count towards token length
-  ].join("\n")
+  ].join("\n");
 
-  return final
+  return final;
 }
 
 /*
@@ -115,23 +115,23 @@ async function numTokensFromMessages(
   functions: unknown,
   enc: Tiktoken,
 ) {
-  let tokensPerMessage, tokensPerName
+  let tokensPerMessage, tokensPerName;
 
-  tokensPerMessage = 3
-  tokensPerName = 1
+  tokensPerMessage = 3;
+  tokensPerName = 1;
 
-  messages = Array.isArray(messages) ? messages : [messages]
+  messages = Array.isArray(messages) ? messages : [messages];
 
-  let numTokens = 0
+  let numTokens = 0;
   for (let message of messages) {
-    numTokens += tokensPerMessage
+    numTokens += tokensPerMessage;
     for (let [key, value] of Object.entries(message)) {
       numTokens += enc.encode(
         typeof value === "object" ? JSON.stringify(value) : String(value),
-      ).length
+      ).length;
 
       if (key === "role") {
-        numTokens += tokensPerName
+        numTokens += tokensPerName;
       }
     }
   }
@@ -140,15 +140,15 @@ async function numTokensFromMessages(
     try {
       numTokens += enc.encode(
         formatFunctionSpecsAsTypescriptNS(functions),
-      ).length
+      ).length;
     } catch (error) {
       // console.error(error)
-      console.error("Warning: function token counting failed. Skipping.")
+      console.error("Warning: function token counting failed. Skipping.");
     }
   }
 
-  numTokens += 3 // every reply is primed with assistant
-  return numTokens
+  numTokens += 3; // every reply is primed with assistant
+  return numTokens;
 }
 
 export async function completeRunUsage(run: any) {
@@ -157,28 +157,28 @@ export async function completeRunUsage(run: any) {
     run.event !== "end" ||
     (run.tokensUsage?.prompt && run.tokensUsage?.completion)
   )
-    return run.tokensUsage
+    return run.tokensUsage;
 
-  const tokensUsage = run.tokensUsage || {}
+  const tokensUsage = run.tokensUsage || {};
 
   const [runData] =
-    await sql`select input, params, name from run where id = ${run.runId}`
-  const modelName = runData?.name
+    await sql`select input, params, name from run where id = ${run.runId}`;
+  const modelName = runData?.name;
 
   if (typeof modelName !== "string") {
-    return run.tokenUsage
+    return run.tokenUsage;
   }
 
   if (isGoogleModel(modelName)) {
     const [inputTokens, outputTokens] = await Promise.all([
       countGoogleTokens(modelName, runData.input),
       countGoogleTokens(modelName, run.output),
-    ])
-    tokensUsage.prompt = inputTokens
-    tokensUsage.completion = outputTokens
+    ]);
+    tokensUsage.prompt = inputTokens;
+    tokensUsage.completion = outputTokens;
   } else {
-    const encodingName = getEncodingNameForModel(modelName)
-    const enc = await get_encoding(encodingName)
+    const encodingName = getEncodingNameForModel(modelName);
+    const enc = await get_encoding(encodingName);
 
     if (!tokensUsage.prompt && runData?.input) {
       const inputTokens = Array.isArray(runData.input)
@@ -188,24 +188,24 @@ export async function completeRunUsage(run: any) {
             runData.params?.functions || runData.params?.tools,
             enc,
           )
-        : enc.encode(JSON.stringify(runData.input)).length
+        : enc.encode(JSON.stringify(runData.input)).length;
 
-      tokensUsage.prompt = inputTokens
+      tokensUsage.prompt = inputTokens;
     }
 
     if (!tokensUsage.completion && run.output) {
       const outputString =
         typeof run.output === "object" && run.output.text
           ? run.output.text
-          : JSON.stringify(run.output)
+          : JSON.stringify(run.output);
 
-      const outputTokens = enc.encode(outputString).length
+      const outputTokens = enc.encode(outputString).length;
 
-      tokensUsage.completion = outputTokens
+      tokensUsage.completion = outputTokens;
     }
   }
 
-  return tokensUsage
+  return tokensUsage;
 }
 
 export async function completeRunUsageWithTimeout(run: any) {
@@ -214,10 +214,10 @@ export async function completeRunUsageWithTimeout(run: any) {
       () => completeRunUsage(run),
       5000,
       "Timeout for run usage completion",
-    )
+    );
   } catch (error: unknown) {
-    console.error(error, JSON.stringify(run, null, 2))
-    Sentry.captureException(error, { contexts: { run } })
-    return run.tokenUsage
+    console.error(error, JSON.stringify(run, null, 2));
+    Sentry.captureException(error, { contexts: { run } });
+    return run.tokenUsage;
   }
 }

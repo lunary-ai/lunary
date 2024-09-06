@@ -1,28 +1,28 @@
-import { Input } from "@mantine/core"
-import { useFocusWithin } from "@mantine/hooks"
-import { IconSearch, IconX } from "@tabler/icons-react"
-import HotkeysInfo from "./HotkeysInfo"
+import { Input } from "@mantine/core";
+import { useFocusWithin } from "@mantine/hooks";
+import { IconSearch, IconX } from "@tabler/icons-react";
+import HotkeysInfo from "./HotkeysInfo";
 
-import { useGlobalShortcut } from "@/utils/hooks"
+import { useGlobalShortcut } from "@/utils/hooks";
 
 export default function SearchBar({ query, setQuery, ...props }) {
-  const { ref, focused } = useFocusWithin()
+  const { ref, focused } = useFocusWithin();
 
   useGlobalShortcut([
     [
       "mod+K",
       () => {
-        if (ref.current?.focus) ref.current.focus()
+        if (ref.current?.focus) ref.current.focus();
       },
     ],
-  ])
+  ]);
 
-  const showCross = query && query.length > 0
+  const showCross = query && query.length > 0;
 
   const clearInput = () => {
-    setQuery("")
-    ref.current.value = ""
-  }
+    setQuery("");
+    ref.current.value = "";
+  };
 
   return (
     <Input
@@ -51,5 +51,5 @@ export default function SearchBar({ query, setQuery, ...props }) {
       onChange={(e) => setQuery(e.currentTarget.value)}
       {...props}
     />
-  )
+  );
 }

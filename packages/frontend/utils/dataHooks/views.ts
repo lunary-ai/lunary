@@ -1,17 +1,17 @@
-import { hasAccess } from "shared"
-import { useProjectMutation, useProjectSWR, useUser } from "."
-import { fetcher } from "../fetcher"
+import { hasAccess } from "shared";
+import { useProjectMutation, useProjectSWR, useUser } from ".";
+import { fetcher } from "../fetcher";
 
 export function useViews() {
-  const { user } = useUser()
+  const { user } = useUser();
   const { data, isLoading, mutate } = useProjectSWR(
     hasAccess(user?.role, "logs", "list") && `/views`,
-  )
+  );
 
   const { trigger: insert, isMutating: isInserting } = useProjectMutation(
     `/views`,
     fetcher.post,
-  )
+  );
 
   return {
     views: data,
@@ -19,11 +19,11 @@ export function useViews() {
     isInserting,
     mutate,
     loading: isLoading,
-  }
+  };
 }
 
 export function useView(id: string | null, initialData?: any) {
-  const { mutate: mutateViews } = useViews()
+  const { mutate: mutateViews } = useViews();
 
   const {
     data: view,
@@ -31,18 +31,18 @@ export function useView(id: string | null, initialData?: any) {
     mutate,
   } = useProjectSWR(id && `/views/${id}`, {
     fallbackData: initialData,
-  })
+  });
 
   const { trigger: update } = useProjectMutation(
     id && `/views/${id}`,
     fetcher.patch,
     {
       onSuccess(data) {
-        mutate(data)
-        mutateViews()
+        mutate(data);
+        mutateViews();
       },
     },
-  )
+  );
 
   const { trigger: remove } = useProjectMutation(
     id && `/views/${id}`,
@@ -50,10 +50,10 @@ export function useView(id: string | null, initialData?: any) {
     {
       revalidate: false,
       onSuccess() {
-        mutateViews()
+        mutateViews();
       },
     },
-  )
+  );
 
   return {
     view,
@@ -61,5 +61,5 @@ export function useView(id: string | null, initialData?: any) {
     remove,
     mutate,
     loading: isLoading,
-  }
+  };
 }

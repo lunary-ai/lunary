@@ -187,4 +187,4 @@ export const languageCodeToCountryCode = {
   za: "CN",
   zh: "CN",
   zu: "ZA",
-}
+};

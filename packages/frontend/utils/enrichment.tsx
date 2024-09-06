@@ -1,22 +1,22 @@
-import { Badge, Box, Group, Popover, Text, Tooltip } from "@mantine/core"
-import { useDisclosure } from "@mantine/hooks"
+import { Badge, Box, Group, Popover, Text, Tooltip } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import {
   IconCheck,
   IconMoodNeutral,
   IconMoodSad,
   IconMoodSmile,
   IconX,
-} from "@tabler/icons-react"
+} from "@tabler/icons-react";
 import {
   AssertionResult,
   EnrichmentData,
   EvaluatorType,
   LanguageDetectionResult,
-} from "shared"
-import { getFlagEmoji } from "./format"
-import ErrorBoundary from "@/components/blocks/ErrorBoundary"
-import { useMemo } from "react"
-import { getPIIColor } from "./colors"
+} from "shared";
+import { getFlagEmoji } from "./format";
+import ErrorBoundary from "@/components/blocks/ErrorBoundary";
+import { useMemo } from "react";
+import { getPIIColor } from "./colors";
 
 export function renderEnrichment(data: EnrichmentData, type: EvaluatorType) {
   const renderers: Record<EvaluatorType, (data: any) => any> = {
@@ -29,10 +29,10 @@ export function renderEnrichment(data: EnrichmentData, type: EvaluatorType) {
     tone: renderToneEnrichment,
     guidelines: renderGuidelinesEnrichment,
     replies: renderRepliesEnrichment,
-  }
+  };
 
-  const renderer = renderers[type] || JSON.stringify
-  return <ErrorBoundary>{renderer(data)}</ErrorBoundary>
+  const renderer = renderers[type] || JSON.stringify;
+  return <ErrorBoundary>{renderer(data)}</ErrorBoundary>;
 }
 
 function renderLanguageEnrichment(languageDetections: LanguageDetectionResult) {
@@ -41,7 +41,7 @@ function renderLanguageEnrichment(languageDetections: LanguageDetectionResult) {
     !languageDetections?.error ||
     !languageDetections?.error
   ) {
-    return ""
+    return "";
   }
 
   languageDetections = [
@@ -50,20 +50,20 @@ function renderLanguageEnrichment(languageDetections: LanguageDetectionResult) {
       ...languageDetections.output.map((lang) => lang?.isoCode),
       ...languageDetections.error.map((lang) => lang?.isoCode),
     ]),
-  ]
+  ];
 
   const languages = languageDetections.map((isoCode) => {
     if (!isoCode) {
-      return ""
+      return "";
     }
 
-    const languageNames = new Intl.DisplayNames(["en"], { type: "language" })
+    const languageNames = new Intl.DisplayNames(["en"], { type: "language" });
 
     return {
       emoji: getFlagEmoji(isoCode),
       name: languageNames.of(isoCode),
-    }
-  }) as { emoji: string; name: string }[]
+    };
+  }) as { emoji: string; name: string }[];
 
   return (
     <Group gap="0" justify="center">
@@ -73,34 +73,37 @@ function renderLanguageEnrichment(languageDetections: LanguageDetectionResult) {
         </Tooltip>
       ))}
     </Group>
-  )
+  );
 }
 
 function renderPIIEnrichment(data: EnrichmentData) {
-  const [opened, { close, open }] = useDisclosure(false)
+  const [opened, { close, open }] = useDisclosure(false);
 
   const uniqueEntities: { entity: string; type: string }[] = useMemo(() => {
-    const entities = new Set()
-    const entityTypeArray = []
+    const entities = new Set();
+    const entityTypeArray = [];
 
     for (const items of Object.values(data)) {
       for (const item of items.filter(Boolean)) {
         for (const subItem of item) {
           if (!entities.has(subItem.entity)) {
-            entities.add(subItem.entity)
-            entityTypeArray.push({ entity: subItem.entity, type: subItem.type })
+            entities.add(subItem.entity);
+            entityTypeArray.push({
+              entity: subItem.entity,
+              type: subItem.type,
+            });
           }
         }
       }
     }
-    return entityTypeArray
-  }, [data])
+    return entityTypeArray;
+  }, [data]);
 
-  const piiCount = uniqueEntities.length
+  const piiCount = uniqueEntities.length;
 
-  if (piiCount === 0) return null
+  if (piiCount === 0) return null;
 
-  const size = piiCount > 20 ? 500 : 350
+  const size = piiCount > 20 ? 500 : 350;
 
   return (
     <Popover
@@ -139,19 +142,19 @@ function renderPIIEnrichment(data: EnrichmentData) {
         </Group>
       </Popover.Dropdown>
     </Popover>
-  )
+  );
 }
 
 function renderToxicityEnrichment(data: EnrichmentData) {
-  const [opened, { close, open }] = useDisclosure(false)
+  const [opened, { close, open }] = useDisclosure(false);
 
   if (data.length === 0) {
-    return ""
+    return "";
   }
 
   const toxicityCategories = [
     ...new Set([...data.input, ...data.output]),
-  ].filter((category) => category)
+  ].filter((category) => category);
 
   if (toxicityCategories.length) {
     return (
@@ -174,12 +177,12 @@ function renderToxicityEnrichment(data: EnrichmentData) {
           </Text>
         </Popover.Dropdown>
       </Popover>
-    )
+    );
   }
 }
 
 function renderTopicsEnrichment(data: EnrichmentData) {
-  const [opened, { close, open }] = useDisclosure(false)
+  const [opened, { close, open }] = useDisclosure(false);
 
   const uniqueTopics = Array.from(
     new Set(
@@ -189,10 +192,10 @@ function renderTopicsEnrichment(data: EnrichmentData) {
         .filter(Boolean)
         .map((t) => t.topic),
     ),
-  )
+  );
 
   if (uniqueTopics.length === 0) {
-    return null
+    return null;
   }
 
   if (uniqueTopics.length < 4) {
@@ -209,7 +212,7 @@ function renderTopicsEnrichment(data: EnrichmentData) {
           </Badge>
         ))}
       </Group>
-    )
+    );
   }
 
   return (
@@ -232,13 +235,13 @@ function renderTopicsEnrichment(data: EnrichmentData) {
         </Text>
       </Popover.Dropdown>
     </Popover>
-  )
+  );
 }
 function renderToneEnrichment(data: EnrichmentData) {
-  const [opened, { close, open }] = useDisclosure(false)
+  const [opened, { close, open }] = useDisclosure(false);
 
   if (data.length === 0) {
-    return ""
+    return "";
   }
 
   return (
@@ -266,60 +269,60 @@ function renderToneEnrichment(data: EnrichmentData) {
         </Text>
       </Popover.Dropdown>
     </Popover>
-  )
+  );
 }
 
 export function renderSentimentEnrichment(data?: EnrichmentData) {
-  const [opened, { close, open }] = useDisclosure(false)
+  const [opened, { close, open }] = useDisclosure(false);
 
   if (!data || !data.input || data.input.length === 0) {
-    return null
+    return null;
   }
 
   const sentiments = [...data.input, ...data.output].map((sentiment) => {
-    let emoji, type
+    let emoji, type;
     if (
       !sentiment &&
       typeof sentiment === "object" &&
       !Array.isArray(sentiment)
     ) {
-      emoji = <IconMoodNeutral color="gray" />
-      type = "neutral"
+      emoji = <IconMoodNeutral color="gray" />;
+      type = "neutral";
     } else {
-      const { score, subjectivity } = sentiment
+      const { score, subjectivity } = sentiment;
 
       if (typeof score !== "number" || isNaN(score) || subjectivity < 0.4) {
-        emoji = <IconMoodNeutral color="gray" />
-        type = "neutral"
+        emoji = <IconMoodNeutral color="gray" />;
+        type = "neutral";
       } else {
         if (score > 0.2) {
-          emoji = <IconMoodSmile color="teal" />
-          type = "positive"
+          emoji = <IconMoodSmile color="teal" />;
+          type = "positive";
         } else if (score < -0.2) {
-          emoji = <IconMoodSad color="crimson" />
-          type = "negative"
+          emoji = <IconMoodSad color="crimson" />;
+          type = "negative";
         } else {
-          emoji = <IconMoodNeutral color="gray" />
-          type = "neutral"
+          emoji = <IconMoodNeutral color="gray" />;
+          type = "neutral";
         }
       }
     }
     return {
       emoji,
       type,
-    }
-  })
+    };
+  });
 
   let uniqueSentiments = Array.from(
     new Map(sentiments.map((item) => [item.type, item])).values(),
-  )
+  );
   const hasNonNeutral = uniqueSentiments.some(
     (sentiment) => sentiment.type !== "neutral",
-  )
+  );
   if (hasNonNeutral) {
     uniqueSentiments = uniqueSentiments.filter(
       (sentiment) => sentiment.type !== "neutral",
-    )
+    );
   }
 
   return (
@@ -332,23 +335,23 @@ export function renderSentimentEnrichment(data?: EnrichmentData) {
         ))}
       </Group>
     </ErrorBoundary>
-  )
+  );
 }
 
 // TODO: refactor with above
 export function SentimentEnrichment2({ score }) {
-  const [opened, { close, open }] = useDisclosure(false)
+  const [opened, { close, open }] = useDisclosure(false);
 
-  let type, emoji
+  let type, emoji;
   if (score > 0.2) {
-    emoji = <IconMoodSmile color="teal" />
-    type = "positive"
+    emoji = <IconMoodSmile color="teal" />;
+    type = "positive";
   } else if (score < -0.2) {
-    emoji = <IconMoodSad color="crimson" />
-    type = "negative"
+    emoji = <IconMoodSad color="crimson" />;
+    type = "negative";
   } else {
-    emoji = <IconMoodNeutral color="gray" />
-    type = "neutral"
+    emoji = <IconMoodNeutral color="gray" />;
+    type = "neutral";
   }
 
   return (
@@ -357,17 +360,17 @@ export function SentimentEnrichment2({ score }) {
         {emoji}
       </Box>
     </Tooltip>
-  )
+  );
 }
 
 function renderAssertionEnrichment(data: AssertionResult) {
-  if (typeof data !== "object" || typeof data.result !== "boolean") return null
+  if (typeof data !== "object" || typeof data.result !== "boolean") return null;
 
   return (
     <Tooltip label={data.reason} disabled={!data.reason?.length}>
       {data.result ? <IconCheck color="green" /> : <IconX color="red" />}
     </Tooltip>
-  )
+  );
 }
 
 function renderGuidelinesEnrichment(data: any) {
@@ -375,9 +378,9 @@ function renderGuidelinesEnrichment(data: any) {
     <Tooltip label={data.reason} disabled={!data.reason?.length}>
       {data.result ? <IconCheck color="green" /> : <IconX color={"red"} />}
     </Tooltip>
-  )
+  );
 }
 
 function renderRepliesEnrichment(data: any) {
-  return <IconX color={data === "true" ? "green" : "red"} />
+  return <IconX color={data === "true" ? "green" : "red"} />;
 }

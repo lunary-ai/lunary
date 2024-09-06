@@ -9,12 +9,12 @@ import {
   Text,
   ThemeIcon,
   Title,
-} from "@mantine/core"
-import { IconMessage } from "@tabler/icons-react"
-import CopyText from "../blocks/CopyText"
-import { useProject } from "@/utils/dataHooks"
-import { ListFeatures } from "./Paywall"
-import config from "@/utils/config"
+} from "@mantine/core";
+import { IconMessage } from "@tabler/icons-react";
+import CopyText from "../blocks/CopyText";
+import { useProject } from "@/utils/dataHooks";
+import { ListFeatures } from "./Paywall";
+import config from "@/utils/config";
 
 export default function Empty({
   Icon,
@@ -27,20 +27,20 @@ export default function Empty({
   onClick,
   showProjectId,
 }: {
-  title: string
-  description?: string
-  enable?: boolean
-  features?: string[]
-  showProjectId?: boolean
-  Icon?: React.ComponentType<any>
-  buttonLabel?: string
-  onClick?: () => void
-  children?: React.ReactNode
+  title: string;
+  description?: string;
+  enable?: boolean;
+  features?: string[];
+  showProjectId?: boolean;
+  Icon?: React.ComponentType<any>;
+  buttonLabel?: string;
+  onClick?: () => void;
+  children?: React.ReactNode;
 }) {
-  const { project } = useProject()
+  const { project } = useProject();
 
   if (!enable && children) {
-    return children
+    return children;
   }
 
   const btnProps =
@@ -52,7 +52,7 @@ export default function Empty({
           component: "a",
           target: "_blank",
           href: `https://lunary.ai/docs?app=${project?.id}`,
-        }
+        };
 
   return (
     <Box
@@ -109,7 +109,7 @@ export default function Empty({
                     color="blue"
                     variant="light"
                     onClick={() => {
-                      $crisp.push(["do", "chat:open"])
+                      $crisp.push(["do", "chat:open"]);
                     }}
                   >
                     Chat with us
@@ -122,5 +122,5 @@ export default function Empty({
       </Overlay>
       {children && <Box p="xl">{children}</Box>}
     </Box>
-  )
+  );
 }

@@ -10,7 +10,7 @@ import {
   Text,
   Title,
   Loader,
-} from "@mantine/core"
+} from "@mantine/core";
 import {
   Area,
   AreaChart,
@@ -18,22 +18,22 @@ import {
   ResponsiveContainer,
   Tooltip,
   XAxis,
-} from "recharts"
+} from "recharts";
 
-import { formatLargeNumber } from "@/utils/format"
-import { IconBolt, IconInfoCircle } from "@tabler/icons-react"
+import { formatLargeNumber } from "@/utils/format";
+import { IconBolt, IconInfoCircle } from "@tabler/icons-react";
 import {
   eachDayOfInterval,
   eachHourOfInterval,
   eachWeekOfInterval,
   format,
   parseISO,
-} from "date-fns"
-import { Fragment } from "react"
-import ErrorBoundary from "../blocks/ErrorBoundary"
-import { openUpgrade } from "../layout/UpgradeModal"
-import { theme } from "@/utils/theme"
-import { slugify } from "@/utils/format"
+} from "date-fns";
+import { Fragment } from "react";
+import ErrorBoundary from "../blocks/ErrorBoundary";
+import { openUpgrade } from "../layout/UpgradeModal";
+import { theme } from "@/utils/theme";
+import { slugify } from "@/utils/format";
 
 function prepareDataForRecharts(
   data: any[],
@@ -43,16 +43,16 @@ function prepareDataForRecharts(
   endDate: Date,
   granularity: "daily" | "hourly" | "weekly",
 ): any[] {
-  const output: any[] = []
+  const output: any[] = [];
 
-  if (!data) data = []
+  if (!data) data = [];
 
-  const uniqueSplitByValues = getUniqueSplitByValues(data, splitBy)
-  const interval = getIntervalFunction(granularity)
+  const uniqueSplitByValues = getUniqueSplitByValues(data, splitBy);
+  const interval = getIntervalFunction(granularity);
 
   interval({ start: startDate, end: endDate }).forEach((date) => {
-    const formattedDate = formatDateForGranularity(date, granularity)
-    const dayData: { [key: string]: any } = { date: formattedDate }
+    const formattedDate = formatDateForGranularity(date, granularity);
+    const dayData: { [key: string]: any } = { date: formattedDate };
 
     props.forEach((prop) => {
       if (splitBy) {
@@ -64,8 +64,8 @@ function prepareDataForRecharts(
             formattedDate,
             granularity,
             prop,
-          )
-        })
+          );
+        });
       } else {
         dayData[prop] = findDataValue(
           data,
@@ -74,16 +74,16 @@ function prepareDataForRecharts(
           formattedDate,
           granularity,
           prop,
-        )
+        );
       }
-    })
+    });
 
-    output.push(dayData)
-  })
+    output.push(dayData);
+  });
 
   return output.sort(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
-  )
+  );
 }
 
 function getUniqueSplitByValues(
@@ -92,7 +92,7 @@ function getUniqueSplitByValues(
 ): string[] {
   return splitBy
     ? Array.from(new Set(data.map((item) => item[splitBy]?.toString())))
-    : []
+    : [];
 }
 
 function getIntervalFunction(granularity: "daily" | "hourly" | "weekly") {
@@ -100,7 +100,7 @@ function getIntervalFunction(granularity: "daily" | "hourly" | "weekly") {
     ? eachDayOfInterval
     : granularity === "hourly"
       ? eachHourOfInterval
-      : eachWeekOfInterval
+      : eachWeekOfInterval;
 }
 
 function formatDateForGranularity(
@@ -114,7 +114,7 @@ function formatDateForGranularity(
       : granularity === "hourly"
         ? "yyyy-MM-dd'T'HH"
         : "yyyy-'W'ww",
-  )
+  );
 }
 
 function findDataValue(
@@ -132,7 +132,7 @@ function findDataValue(
         format(parseISO(item.date), getDateFormat(granularity)) ===
           formattedDate,
     )?.[prop] || 0
-  )
+  );
 }
 
 function getDateFormat(granularity: "daily" | "hourly" | "weekly"): string {
@@ -140,20 +140,20 @@ function getDateFormat(granularity: "daily" | "hourly" | "weekly"): string {
     ? "yyyy-MM-dd"
     : granularity === "hourly"
       ? "yyyy-MM-dd'T'HH"
-      : "yyyy-'W'ww"
+      : "yyyy-'W'ww";
 }
 
 const formatDate = (date, granularity) => {
-  if (!date) return
+  if (!date) return;
   switch (granularity) {
     case "daily":
-      return format(parseISO(date), "MMM do")
+      return format(parseISO(date), "MMM do");
     case "hourly":
-      return format(parseISO(date), "eee, HH'h'")
+      return format(parseISO(date), "eee, HH'h'");
     case "weekly":
-      return format(parseISO(date), "MMM d")
+      return format(parseISO(date), "MMM d");
   }
-}
+};
 const CustomizedAxisTick = ({ x, y, payload, index, data, granularity }) => {
   // // Hide the first and last tick
   // if (index === 0 || index === data.length - 1) {
@@ -161,7 +161,7 @@ const CustomizedAxisTick = ({ x, y, payload, index, data, granularity }) => {
   // }
 
   // offset the first and last tick to make it look better
-  const offset = index === 0 ? 42 : index === 1 ? -42 : 0
+  const offset = index === 0 ? 42 : index === 1 ? -42 : 0;
 
   return (
     <g transform={`translate(${x + offset},${y})`}>
@@ -169,65 +169,65 @@ const CustomizedAxisTick = ({ x, y, payload, index, data, granularity }) => {
         {formatDate(payload.value, granularity)}
       </text>
     </g>
-  )
-}
+  );
+};
 
 type LineChartData = {
-  date: string
-  [key: string]: any
-}[]
+  date: string;
+  [key: string]: any;
+}[];
 
 type LineChartProps = {
-  data: LineChartData
-  title: string | JSX.Element
-  props: string[]
-  blocked?: boolean
-  formatter?: (value: number) => string
-  height?: number
-  loading?: boolean
-  splitBy?: string
+  data: LineChartData;
+  title: string | JSX.Element;
+  props: string[];
+  blocked?: boolean;
+  formatter?: (value: number) => string;
+  height?: number;
+  loading?: boolean;
+  splitBy?: string;
 
-  description?: string
-  startDate: Date
-  endDate: Date
-  granularity: "daily" | "hourly" | "weekly"
-  agg: string
-  chartExtra?: JSX.Element
-  stat?: number
-  colors?: string[]
-  cleanData?: boolean
-}
+  description?: string;
+  startDate: Date;
+  endDate: Date;
+  granularity: "daily" | "hourly" | "weekly";
+  agg: string;
+  chartExtra?: JSX.Element;
+  stat?: number;
+  colors?: string[];
+  cleanData?: boolean;
+};
 
 function getFigure(agg: string, data: any[], prop: string) {
   const propKeys = Object.keys(data[0] || {}).filter((key) =>
     key.includes(prop),
-  )
+  );
 
   if (agg === "sum") {
     return data.reduce((acc, item) => {
-      propKeys.forEach((key) => (acc += item[key] ?? 0))
-      return acc
-    }, 0)
+      propKeys.forEach((key) => (acc += item[key] ?? 0));
+      return acc;
+    }, 0);
   } else if (agg === "avg") {
-    const filteredData = data.filter((item) => item[prop] !== 0)
+    const filteredData = data.filter((item) => item[prop] !== 0);
     return (
       filteredData.reduce((acc, item) => {
-        propKeys.forEach((key) => (acc += item[key] ?? 0))
-        return acc
+        propKeys.forEach((key) => (acc += item[key] ?? 0));
+        return acc;
       }, 0) / filteredData.length || 0
-    )
+    );
   } else if (agg === "max") {
     return data.reduce((acc, item) => {
-      propKeys.forEach((key) => (acc = Math.max(acc, item[key] ?? -Infinity)))
-      return acc
-    }, -Infinity)
+      propKeys.forEach((key) => (acc = Math.max(acc, item[key] ?? -Infinity)));
+      return acc;
+    }, -Infinity);
   } else if (agg === "min") {
     return data.reduce((acc, item) => {
-      propKeys.forEach((key) => (acc = Math.min(acc, item[key] ?? Infinity)))
-      return acc
-    }, Infinity)
+      propKeys.forEach((key) => (acc = Math.min(acc, item[key] ?? Infinity)));
+      return acc;
+    }, Infinity);
   }
-  return 0
+  return 0;
 }
 function LineChartComponent({
   data,
@@ -255,21 +255,21 @@ function LineChartComponent({
           endDate: Date,
           granularity: "daily" | "hourly" | "weekly",
         ): LineChartData => {
-          const data: LineChartData = []
+          const data: LineChartData = [];
           const interval =
             granularity === "daily"
               ? eachDayOfInterval
               : granularity === "hourly"
                 ? eachHourOfInterval
-                : eachWeekOfInterval
+                : eachWeekOfInterval;
           interval({ start: startDate, end: endDate }).forEach((date) => {
-            const users = Math.floor(Math.random() * 6000) + 4000
+            const users = Math.floor(Math.random() * 6000) + 4000;
             data.push({
               date: date.toISOString(),
               users: users,
-            })
-          })
-          return data
+            });
+          });
+          return data;
         })(startDate, endDate, granularity)
       : data,
     splitBy,
@@ -277,18 +277,18 @@ function LineChartComponent({
     startDate,
     endDate,
     granularity,
-  )
+  );
 
   if (cleanData === false && data?.length) {
-    cleanedData = data
+    cleanedData = data;
   }
 
-  const hasData = blocked ? true : cleanedData?.length
+  const hasData = blocked ? true : cleanedData?.length;
   // (splitBy ? Object.keys(cleanedData[0]).length > 1 : data?.length)
   const total =
     stat === undefined || stat === null
       ? getFigure(agg, cleanedData, props[0])
-      : stat
+      : stat;
 
   return (
     <Card withBorder p={0} className="lineChart" radius="md">
@@ -426,7 +426,7 @@ function LineChartComponent({
                     data={cleanedData}
                     granularity={granularity}
                   />
-                )
+                );
               }}
               interval={0}
               ticks={[
@@ -457,10 +457,10 @@ function LineChartComponent({
                           ),
                       )}
                     </Card>
-                  )
+                  );
                 }
 
-                return null
+                return null;
               }}
             />
 
@@ -515,13 +515,13 @@ function LineChartComponent({
         }
       `}</style>
     </Card>
-  )
+  );
 }
 
 const LineChart = (props: LineChartProps) => (
   <ErrorBoundary>
     <LineChartComponent {...props} />
   </ErrorBoundary>
-)
+);
 
-export default LineChart
+export default LineChart;

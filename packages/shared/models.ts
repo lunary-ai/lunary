@@ -138,4 +138,4 @@ export const MODELS = [
     name: "llama-2-70b-chat",
     provider: "openrouter",
   },
-]
+];

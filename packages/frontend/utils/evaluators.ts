@@ -7,7 +7,7 @@ import {
   IconLanguage,
   IconMoodSmile,
   IconTextWrap,
-} from "@tabler/icons-react"
+} from "@tabler/icons-react";
 
 // TODO: typescript
 const EVALUATOR_TYPES = {
@@ -216,6 +216,6 @@ const EVALUATOR_TYPES = {
       },
     ],
   },
-}
+};
 
-export default EVALUATOR_TYPES
+export default EVALUATOR_TYPES;

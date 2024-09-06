@@ -1,65 +1,65 @@
-import { Run } from "shared"
-import { callML } from "../utils/ml"
+import { Run } from "shared";
+import { callML } from "../utils/ml";
 
 interface TopicsParams {
-  topics: string[]
+  topics: string[];
 }
 
 // TOOD: refacto this with all the other parsing function already in use
 function parseMessages(messages: unknown) {
   if (!messages) {
-    return [""]
+    return [""];
   }
   if (typeof messages === "string" && messages.length) {
-    return [messages]
+    return [messages];
   }
 
   if (messages === "__NOT_INGESTED__") {
-    return [""]
+    return [""];
   }
 
   if (Array.isArray(messages)) {
-    let contentArray = []
+    let contentArray = [];
     for (const message of messages) {
       if (message?.type === "system") {
-        continue
+        continue;
       }
-      let content = message.content || message.text
+      let content = message.content || message.text;
       if (typeof content === "string" && content.length) {
-        contentArray.push(content)
+        contentArray.push(content);
       } else {
-        contentArray.push(JSON.stringify(message))
+        contentArray.push(JSON.stringify(message));
       }
     }
-    return contentArray
+    return contentArray;
   }
 
   if (typeof messages === "object") {
-    return [JSON.stringify(messages)]
+    return [JSON.stringify(messages)];
   }
 
-  return [""]
+  return [""];
 }
 
 export async function evaluate(run: Run, params: TopicsParams) {
-  const { topics } = params
-  const input = parseMessages(run.input)
-  const output = parseMessages(run.output)
-  const error = parseMessages(run.error)
+  const { topics } = params;
+  const input = parseMessages(run.input);
+  const output = parseMessages(run.output);
+  const error = parseMessages(run.error);
 
   const [inputTopics, outputTopics, errorTopics] = await Promise.all([
     detectTopics(input, topics),
     detectTopics(output, topics),
     detectTopics(error, topics),
-  ])
+  ]);
 
   const result = {
     input: inputTopics,
     output: outputTopics,
     error: errorTopics,
-  }
+  };
 
-  return result
+  return result;
 }
 
 async function detectTopics(
@@ -70,9 +70,9 @@ async function detectTopics(
     return callML("topic", {
       texts,
       topics,
-    })
+    });
   } catch (error) {
-    console.error(error)
-    console.log(texts)
+    console.error(error);
+    console.log(texts);
   }
 }

@@ -1,4 +1,4 @@
-import { ActionIcon, Flex, Popover } from "@mantine/core"
+import { ActionIcon, Flex, Popover } from "@mantine/core";
 
 import {
   IconAccessPoint,
@@ -93,7 +93,7 @@ import {
   IconFlag,
   IconFlame,
   IconFlask,
-} from "@tabler/icons-react"
+} from "@tabler/icons-react";
 
 const ALL_ICONS = [
   { name: "IconAnalyze", icon: IconAnalyze },
@@ -186,14 +186,14 @@ const ALL_ICONS = [
   { name: "IconFlag", icon: IconFlag },
   { name: "IconFlame", icon: IconFlame },
   { name: "IconFlask", icon: IconFlask },
-]
+];
 
 export default function IconPicker({ value, onChange, ...props }) {
   const Icons = ALL_ICONS.map((IconObj, index) => (
     <ActionIcon
       key={index}
       onClick={() => {
-        onChange(IconObj.name)
+        onChange(IconObj.name);
       }}
       variant="light"
     >
@@ -204,9 +204,9 @@ export default function IconPicker({ value, onChange, ...props }) {
         }`}
       />
     </ActionIcon>
-  ))
+  ));
 
-  const CurrentIconObj = ALL_ICONS.find((IconObj) => IconObj.name === value)
+  const CurrentIconObj = ALL_ICONS.find((IconObj) => IconObj.name === value);
 
   return (
     <Popover width={270} withArrow shadow="md" keepMounted={false}>
@@ -221,10 +221,10 @@ export default function IconPicker({ value, onChange, ...props }) {
         </Flex>
       </Popover.Dropdown>
     </Popover>
-  )
+  );
 }
 
 export function getIconComponent(iconName) {
-  const IconObj = ALL_ICONS.find((IconObj) => IconObj.name === iconName)
-  return IconObj ? IconObj.icon : IconStack2
+  const IconObj = ALL_ICONS.find((IconObj) => IconObj.name === iconName);
+  return IconObj ? IconObj.icon : IconStack2;
 }

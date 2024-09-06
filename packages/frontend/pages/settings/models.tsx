@@ -1,6 +1,6 @@
-import { useModelMappings } from "@/utils/dataHooks/models"
-import errorHandler from "@/utils/errors"
-import { fetcher } from "@/utils/fetcher"
+import { useModelMappings } from "@/utils/dataHooks/models";
+import errorHandler from "@/utils/errors";
+import { fetcher } from "@/utils/fetcher";
 import {
   ActionIcon,
   Badge,
@@ -18,14 +18,14 @@ import {
   TextInput,
   Title,
   Tooltip,
-} from "@mantine/core"
-import { useForm } from "@mantine/form"
-import { modals } from "@mantine/modals"
+} from "@mantine/core";
+import { useForm } from "@mantine/form";
+import { modals } from "@mantine/modals";
 
-import { IconTrash } from "@tabler/icons-react"
+import { IconTrash } from "@tabler/icons-react";
 
 export default function Models() {
-  const { models, insert, isInserting, mutate } = useModelMappings()
+  const { models, insert, isInserting, mutate } = useModelMappings();
 
   const form = useForm({
     initialValues: {
@@ -49,13 +49,13 @@ export default function Models() {
         value < 0 ? "Output cost must be greater than 0" : undefined,
       tokenizer: (value) => (!value ? "Tokenizer is required" : undefined),
     },
-  })
+  });
 
   async function handleInsert() {
     try {
-      await insert(form.values)
+      await insert(form.values);
     } catch (error) {
-      console.error(error)
+      console.error(error);
     }
   }
 
@@ -71,10 +71,10 @@ export default function Models() {
       ),
       labels: { confirm: "Confirm", cancel: "Cancel" },
       onConfirm: async () => {
-        await errorHandler(fetcher.delete(`/models/${id}`))
-        mutate()
+        await errorHandler(fetcher.delete(`/models/${id}`));
+        mutate();
       },
-    })
+    });
   }
 
   return (
@@ -235,5 +235,5 @@ export default function Models() {
         </Card>
       </Stack>
     </Container>
-  )
+  );
 }

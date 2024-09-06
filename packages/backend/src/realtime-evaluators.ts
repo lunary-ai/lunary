@@ -1,3 +1,3 @@
-import runEvaluatorsJob from "./jobs/realtime-evaluators"
+import runEvaluatorsJob from "./jobs/realtime-evaluators";
 
-runEvaluatorsJob()
+runEvaluatorsJob();

@@ -1,85 +1,85 @@
-import sql from "../utils/db"
-import { callML } from "../utils/ml"
-import aiAssert from "./ai/assert"
-import aiFact from "./ai/fact"
-import aiSentiment from "./ai/sentiment"
-import aiSimilarity from "./ai/similarity"
+import sql from "../utils/db";
+import { callML } from "../utils/ml";
+import aiAssert from "./ai/assert";
+import aiFact from "./ai/fact";
+import aiSentiment from "./ai/sentiment";
+import aiSimilarity from "./ai/similarity";
 // import aiNER from "./ai/ner"
 // import aiToxicity from "./ai/toxic"
-import rouge from "rouge"
-import { and, or } from "../utils/checks"
-import { isOpenAIMessage } from "../utils/misc"
-import { CleanRun } from "../utils/ingest"
+import rouge from "rouge";
+import { and, or } from "../utils/checks";
+import { isOpenAIMessage } from "../utils/misc";
+import { CleanRun } from "../utils/ingest";
 
 function getTextsTypes(field: "any" | "input" | "output", run: any) {
-  let textsToCheck = []
+  let textsToCheck = [];
   if (field === "any") {
-    textsToCheck.push(lastMsg(run["input"]), lastMsg(run["output"]))
+    textsToCheck.push(lastMsg(run["input"]), lastMsg(run["output"]));
   } else {
-    textsToCheck.push(lastMsg(run[field]))
+    textsToCheck.push(lastMsg(run[field]));
   }
 
-  return textsToCheck.filter(Boolean)
+  return textsToCheck.filter(Boolean);
 }
 
 export type CheckRunner = {
-  id: string
+  id: string;
   evaluator?: (
     run: any,
     params: any,
   ) => Promise<{
-    passed: boolean
-    details?: any
-  }>
-  sql?: (params: any) => any // todo: postgres sql type
-  ingestionCheck?: (run: CleanRun, params: any) => Promise<boolean>
-}
+    passed: boolean;
+    details?: any;
+  }>;
+  sql?: (params: any) => any; // todo: postgres sql type
+  ingestionCheck?: (run: CleanRun, params: any) => Promise<boolean>;
+};
 
 export function lastMsg(field: any) {
   if (typeof field === "string" || !field) {
-    return field
+    return field;
   } else if (Array.isArray(field) && isOpenAIMessage(field[0])) {
-    const lastContent = field.at(-1).content
+    const lastContent = field.at(-1).content;
     return typeof lastContent === "string"
       ? lastContent
-      : JSON.stringify(lastContent)
+      : JSON.stringify(lastContent);
   } else if (isOpenAIMessage(field)) {
-    return field.content
+    return field.content;
   } else {
-    return JSON.stringify(field)
+    return JSON.stringify(field);
   }
 }
 
 function postgresOperators(operator: string) {
   switch (operator) {
     case "gt":
-      return sql`>`
+      return sql`>`;
     case "gte":
-      return sql`>=`
+      return sql`>=`;
     case "lt":
-      return sql`<`
+      return sql`<`;
     case "lte":
-      return sql`<=`
+      return sql`<=`;
     case "eq":
-      return sql`=`
+      return sql`=`;
     case "neq":
-      return sql`!=`
+      return sql`!=`;
     case "iequals":
-      return sql`ILIKE`
+      return sql`ILIKE`;
     case "icontains":
-      return sql`ILIKE`
+      return sql`ILIKE`;
     case "contains":
-      return sql`LIKE`
+      return sql`LIKE`;
     case "startswith":
-      return sql`LIKE`
+      return sql`LIKE`;
     case "istartswith":
-      return sql`ILIKE`
+      return sql`ILIKE`;
     case "endswith":
-      return sql`LIKE`
+      return sql`LIKE`;
     case "iendswith":
-      return sql`ILIKE`
+      return sql`ILIKE`;
     default:
-      throw new Error(`Unsupported operator: ${operator}`)
+      throw new Error(`Unsupported operator: ${operator}`);
   }
 }
 
@@ -96,41 +96,41 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     id: "models",
     sql: ({ models }) => sql`(r.name = any(${models}))`,
     ingestionCheck: async (run, params) => {
-      const { models } = params
+      const { models } = params;
       for (const model of models) {
         if (model === run.name) {
-          return false
+          return false;
         }
       }
-      return true
+      return true;
     },
   },
   {
     id: "tools",
     sql: () => {},
     ingestionCheck: async (run, params) => {
-      const { toolName } = params
+      const { toolName } = params;
       if (run.type === "tool" && toolName === run.name) {
-        return false
+        return false;
       }
-      return true
+      return true;
     },
   },
   {
     id: "tags",
     sql: ({ tags }) => sql`(tags && ${sql.array(tags)})`,
     ingestionCheck: async (run, params) => {
-      const { tags } = params
+      const { tags } = params;
 
       if (run.tags) {
         for (const tag of run.tags) {
           if (tags.includes(tag.toString())) {
-            return false
+            return false;
           }
         }
       }
 
-      return true
+      return true;
     },
   },
   {
@@ -140,17 +140,17 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   {
     id: "metadata",
     sql: ({ key, value }) => {
-      if (!key || !value) return sql`true`
-      return sql`(CAST(metadata->>${key} AS TEXT) = ${value})`
+      if (!key || !value) return sql`true`;
+      return sql`(CAST(metadata->>${key} AS TEXT) = ${value})`;
     },
     ingestionCheck: async (run, params) => {
-      const { key, value } = params
+      const { key, value } = params;
 
       if (run.metadata && run.metadata[key] === value) {
-        return false
+        return false;
       }
 
-      return true
+      return true;
     },
   },
   {
@@ -160,23 +160,23 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   {
     id: "languages",
     sql: ({ field, codes }) => {
-      if (!codes || !codes.length) return sql`true`
+      if (!codes || !codes.length) return sql`true`;
 
       return and([
         sql`e.type = 'language'`,
         or(
           codes.map((code: string) => {
-            const jsonSql = [{ isoCode: code }]
-            return sql`er.result::jsonb -> ${field} @> ${sql.json(jsonSql)}`
+            const jsonSql = [{ isoCode: code }];
+            return sql`er.result::jsonb -> ${field} @> ${sql.json(jsonSql)}`;
           }),
         ),
-      ])
+      ]);
     },
   },
   {
     id: "entities",
     sql: ({ types }) => {
-      if (!types.length) return sql`true`
+      if (!types.length) return sql`true`;
 
       return and([
         sql`e.type = 'pii'`,
@@ -190,29 +190,29 @@ export const CHECK_RUNNERS: CheckRunner[] = [
               SELECT 1
               FROM jsonb_array_elements(er.result -> 'output') as output_array
               WHERE output_array @> ${sql.json([{ type }])}
-            )`
+            )`;
           }),
         ),
-      ])
+      ]);
     },
   },
 
   {
     id: "sentiment",
     sql: ({ sentiment }) => {
-      if (!sentiment) return sql`true`
+      if (!sentiment) return sql`true`;
 
-      let expression
+      let expression;
       switch (sentiment) {
         case "positive":
-          expression = sql`>= 0.5`
-          break
+          expression = sql`>= 0.5`;
+          break;
         case "negative":
-          expression = sql`<= -0.5`
-          break
+          expression = sql`<= -0.5`;
+          break;
         case "neutral":
-          expression = sql`BETWEEN -0.5 AND 0.5`
-          break
+          expression = sql`BETWEEN -0.5 AND 0.5`;
+          break;
       }
 
       return and([
@@ -231,24 +231,24 @@ export const CHECK_RUNNERS: CheckRunner[] = [
             LIMIT 1
           )`,
         ]),
-      ])
+      ]);
     },
   },
   {
     id: "users",
     sql: ({ users }) => sql`(external_user_id = ANY(${sql.array(users, 20)}))`, // 20 is to specify it's a postgres int4
     ingestionCheck: async (run, params) => {
-      const { users } = params
+      const { users } = params;
 
       for (let userId of users) {
         const [dbUserId] =
-          await sql`select external_id from external_user where id = ${userId}`
+          await sql`select external_id from external_user where id = ${userId}`;
         if (dbUserId.externalId === run.userId) {
-          return false
+          return false;
         }
       }
 
-      return true
+      return true;
     },
   },
   {
@@ -259,82 +259,84 @@ export const CHECK_RUNNERS: CheckRunner[] = [
 
       return or(
         types.map((type: string) => {
-          const parsedType = JSON.parse(type)
-          const key = Object.keys(parsedType)[0]
-          const value = parsedType[key]
+          const parsedType = JSON.parse(type);
+          const key = Object.keys(parsedType)[0];
+          const value = parsedType[key];
 
           if (key === "comment") {
             // comment is a special case because there can be infinite values
-            return sql`(r.feedback->${key} is not null or rpfc.feedback->${key} is not null)`
+            return sql`(r.feedback->${key} is not null or rpfc.feedback->${key} is not null)`;
           } else if (key === "thumb") {
-            return sql`(r.feedback->>'thumbs' = ${value} or rpfc.feedback->>'thumbs' = ${value} or r.feedback->>'thumb' = ${value} or rpfc.feedback->>'thumb' = ${value})`
+            return sql`(r.feedback->>'thumbs' = ${value} or rpfc.feedback->>'thumbs' = ${value} or r.feedback->>'thumb' = ${value} or rpfc.feedback->>'thumb' = ${value})`;
           } else {
-            return sql`(r.feedback->>${key} = ${value} OR rpfc.feedback->>${key} = ${value})`
+            return sql`(r.feedback->>${key} = ${value} OR rpfc.feedback->>${key} = ${value})`;
           }
         }),
-      )
+      );
     },
   },
   {
     id: "regex",
     evaluator: async (run, params) => {
-      const { regex, type, field } = params
+      const { regex, type, field } = params;
 
-      const re = new RegExp(regex)
+      const re = new RegExp(regex);
 
-      const has = re.test(lastMsg(run[field]))
+      const has = re.test(lastMsg(run[field]));
 
-      const passed = type === "contains" ? has : !has
+      const passed = type === "contains" ? has : !has;
 
       const runField =
-        typeof run[field] === "string" ? run[field] : JSON.stringify(run[field])
+        typeof run[field] === "string"
+          ? run[field]
+          : JSON.stringify(run[field]);
 
-      const match = has ? runField.match(re)[0] : ""
+      const match = has ? runField.match(re)[0] : "";
 
       return {
         passed,
         details: { match },
-      }
+      };
     },
   },
   {
     id: "json",
     evaluator: async (run, params) => {
-      const { field, type } = params
-      let passed = false
-      let reason = ""
+      const { field, type } = params;
+      let passed = false;
+      let reason = "";
 
-      const fieldText = getTextsTypes(field, run)[0]
+      const fieldText = getTextsTypes(field, run)[0];
 
       if (type === "valid") {
         try {
-          JSON.parse(fieldText)
-          passed = true
+          JSON.parse(fieldText);
+          passed = true;
         } catch (e: any) {
-          reason = e.message
+          reason = e.message;
         }
       } else if (type === "invalid") {
         try {
-          JSON.parse(fieldText)
-          passed = false
+          JSON.parse(fieldText);
+          passed = false;
         } catch (e) {}
       } else if (type === "contains") {
-        const regex = /{.*?}/gs // Non-greedy match on anything between {}
-        const matches = fieldText.match(regex)
+        const regex = /{.*?}/gs; // Non-greedy match on anything between {}
+        const matches = fieldText.match(regex);
         if (matches) {
           passed = matches.some((match) => {
             try {
-              JSON.parse(match)
-              return true // Found valid JSON
+              JSON.parse(match);
+              return true; // Found valid JSON
             } catch (e) {}
-          })
+          });
         }
       }
 
       return {
         passed,
         reason,
-      }
+      };
     },
   },
   // {
@@ -405,12 +407,12 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   {
     id: "date",
     sql: ({ operator, date }) => {
-      const parsed = new Date(date)
-      const isValid = parsed instanceof Date && !isNaN(parsed.getTime())
+      const parsed = new Date(date);
+      const isValid = parsed instanceof Date && !isNaN(parsed.getTime());
 
-      if (!date || !isValid) return sql`true`
+      if (!date || !isValid) return sql`true`;
 
-      return sql`r.created_at ${postgresOperators(operator)} ${parsed}`
+      return sql`r.created_at ${postgresOperators(operator)} ${parsed}`;
     },
   },
   {
@@ -427,16 +429,16 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     id: "tokens",
     // sum completion_tokens and prompt_tokens if field is total
     sql: ({ field, operator, tokens }) => {
-      if (!tokens) return sql`true`
+      if (!tokens) return sql`true`;
 
       if (field === "total") {
         return sql`completion_tokens + prompt_tokens ${postgresOperators(
           operator,
-        )} ${tokens}`
+        )} ${tokens}`;
       } else {
         return sql`${sql(field + "_tokens")} ${postgresisOperators(
           operator,
-        )} ${tokens}`
+        )} ${tokens}`;
       }
     },
   },
@@ -450,53 +452,53 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     sql: ({ fields, type, text, sensitive }) => {
       // inspiration (r.input ilike ${ "%" + search + "%" } or r.output ilike ${"%" + search + "%"})`;
 
-      let operator = sql`LIKE`
-      let caseSensitive = sensitive === "true"
+      let operator = sql`LIKE`;
+      let caseSensitive = sensitive === "true";
 
-      let textParam = text
+      let textParam = text;
 
       if (type === "starts") {
         // JSON fragment: ..., {"content": "text...
-        textParam = `, "content": "${text}`
+        textParam = `, "content": "${text}`;
       } else if (type === "ends") {
-        textParam = `${text}"}`
+        textParam = `${text}"}`;
       }
 
       if (type === "contains" || type === "starts" || type === "ends") {
-        operator = caseSensitive ? sql`LIKE` : sql`ILIKE`
-        textParam = "%" + textParam + "%"
+        operator = caseSensitive ? sql`LIKE` : sql`ILIKE`;
+        textParam = "%" + textParam + "%";
       } else if (type === "notcontains") {
-        operator = caseSensitive ? sql`NOT LIKE` : sql`NOT ILIKE`
-        textParam = "%" + textParam + "%"
+        operator = caseSensitive ? sql`NOT LIKE` : sql`NOT ILIKE`;
+        textParam = "%" + textParam + "%";
       }
 
-      let field = sql`(input::text || output::text)`
+      let field = sql`(input::text || output::text)`;
 
       if (fields === "input") {
-        field = sql`input::text`
+        field = sql`input::text`;
       } else if (fields === "output") {
-        field = sql`output::text`
+        field = sql`output::text`;
       }
 
-      return sql`${field} ${operator} ${textParam}`
+      return sql`${field} ${operator} ${textParam}`;
     },
   },
 
   {
     id: "assertion",
     async evaluator(run, params) {
-      const { assertion } = params
+      const { assertion } = params;
 
       const { passed, reason } = await aiAssert(
         lastMsg(run["output"]),
         assertion,
-      )
+      );
 
       return {
         passed,
         reason,
         details: { reason },
-      }
+      };
     },
   },
   // {
@@ -526,110 +528,110 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   {
     id: "tone",
     async evaluator(run, params) {
-      const { persona } = params
+      const { persona } = params;
       // using aiAsertion
       const { passed, reason } = await aiAssert(
         lastMsg(run["output"]),
         `The tone of the response is spoken in a '${persona}' way.`,
-      )
+      );
 
       return {
         passed,
         reason,
         details: { reason },
-      }
+      };
     },
   },
   {
     id: "factualness",
     async evaluator(run, params) {
-      const { choices } = params
+      const { choices } = params;
 
-      const input = lastMsg(run["input"])
-      const output = lastMsg(run["output"])
+      const input = lastMsg(run["input"]);
+      const output = lastMsg(run["output"]);
 
-      if (!run.idealOutput) throw new Error("No ideal response to compare to")
+      if (!run.idealOutput) throw new Error("No ideal response to compare to");
 
-      const { result, reason } = await aiFact(input, output, run.idealOutput)
+      const { result, reason } = await aiFact(input, output, run.idealOutput);
 
-      const passed = choices.includes(result)
+      const passed = choices.includes(result);
 
       return {
         passed,
         reason,
-      }
+      };
     },
   },
 
   {
     id: "rouge",
     async evaluator(run, params) {
-      const { percent, rouge: rougeType } = params
+      const { percent, rouge: rougeType } = params;
 
-      const output = lastMsg(run["output"])
+      const output = lastMsg(run["output"]);
 
       if (!run.idealOutput)
         throw new Error(
           "You need to set an ideal output for each prompt in the dataset in order to use the Rouge Evaluator.",
-        )
+        );
 
-      const scorer = rouge[rougeType]
+      const scorer = rouge[rougeType];
 
-      const rougeScore = scorer(output, run.idealOutput) * 100
+      const rougeScore = scorer(output, run.idealOutput) * 100;
 
-      const passed = rougeScore >= parseInt(percent)
+      const passed = rougeScore >= parseInt(percent);
 
       return {
         passed,
         reason: `Rouge score: ${rougeScore} >= ${percent}%`,
         details: { rouge: rougeScore },
-      }
+      };
     },
   },
   {
     id: "similarity",
     async evaluator(run, params) {
-      const { algorithm, percent } = params
-      const output = lastMsg(run["output"])
+      const { algorithm, percent } = params;
+      const output = lastMsg(run["output"]);
 
-      if (!run.idealOutput) throw new Error("No ideal response to compare to")
+      if (!run.idealOutput) throw new Error("No ideal response to compare to");
 
-      const similarity = await aiSimilarity(output, run.idealOutput, algorithm)
+      const similarity = await aiSimilarity(output, run.idealOutput, algorithm);
 
-      const passed = similarity >= percent
+      const passed = similarity >= percent;
 
       return {
         passed,
         details: { similarity },
-      }
+      };
     },
   },
 
   {
     id: "toxicity",
     async evaluator(run, params) {
-      const { field, type } = params
+      const { field, type } = params;
 
       const labels = await callML("toxicity", {
         texts: getTextsTypes(field, run),
-      })
+      });
 
-      const hasToxicity = labels.length > 0
+      const hasToxicity = labels.length > 0;
 
-      const passed = type === "contains" ? hasToxicity : !hasToxicity
+      const passed = type === "contains" ? hasToxicity : !hasToxicity;
 
-      let reason = "No toxicity detected"
+      let reason = "No toxicity detected";
       if (hasToxicity) {
-        reason = `Toxicity detected: ${labels.join(", ")}`
+        reason = `Toxicity detected: ${labels.join(", ")}`;
       }
 
       return {
         passed,
         reason,
         details: { labels },
-      }
+      };
     },
   },
-]
+];
 
-export default CHECK_RUNNERS
+export default CHECK_RUNNERS;

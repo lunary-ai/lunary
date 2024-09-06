@@ -3,7 +3,7 @@ import {
   Indicator,
   Tooltip,
   useComputedColorScheme,
-} from "@mantine/core"
+} from "@mantine/core";
 
 import {
   IconMessage,
@@ -11,32 +11,32 @@ import {
   IconStar,
   IconThumbDown,
   IconThumbUp,
-} from "@tabler/icons-react"
-import { useEffect } from "react"
-import analytics from "../../utils/analytics"
+} from "@tabler/icons-react";
+import { useEffect } from "react";
+import analytics from "../../utils/analytics";
 
 export default function Feedback({
   data = {},
   isFromParent,
 }: {
-  data: Record<string, any>
-  isFromParent?: boolean
+  data: Record<string, any>;
+  isFromParent?: boolean;
 }) {
-  const scheme = useComputedColorScheme()
+  const scheme = useComputedColorScheme();
 
   useEffect(() => {
     // Feature tracking
-    if (data) analytics.trackOnce("HasFeedback")
-  }, [data])
+    if (data) analytics.trackOnce("HasFeedback");
+  }, [data]);
 
-  if (!data) return null
+  if (!data) return null;
 
   if (data.type === "thumb") {
-    data = { thumb: data.value }
+    data = { thumb: data.value };
   }
 
   if (data.type === "comment") {
-    data = { comment: data.value }
+    data = { comment: data.value };
   }
 
   const getIconProps = (color: string) => ({
@@ -44,7 +44,7 @@ export default function Feedback({
     fillOpacity: 0.2,
     fill: scheme === "light" ? `var(--mantine-color-${color}-5)` : color,
     color: scheme === "light" ? `var(--mantine-color-${color}-5)` : color,
-  })
+  });
 
   return (
     <Tooltip
@@ -88,5 +88,5 @@ export default function Feedback({
         </Group>
       </Indicator>
     </Tooltip>
-  )
+  );
 }

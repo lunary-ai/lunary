@@ -1,14 +1,14 @@
-import config from "../utils/config"
-import sql from "../utils/db"
-import * as Sentry from "@sentry/node"
+import config from "../utils/config";
+import sql from "../utils/db";
+import * as Sentry from "@sentry/node";
 
 export default async function purgeRuns() {
   if (config.IS_SELF_HOSTED) {
-    return
+    return;
   }
   try {
     const deletedRunsCount = await sql.begin(async (sql) => {
-      await sql`create temporary table runs_to_delete_temp (run_id uuid)`
+      await sql`create temporary table runs_to_delete_temp (run_id uuid)`;
 
       await sql`
         with orgs as (
@@ -47,22 +47,22 @@ export default async function purgeRuns() {
           run_id
         from
           runs_to_delete
-      `
+      `;
 
-      await sql`delete from evaluation_result_v2 where evaluation_result_v2.run_id in (select run_id from runs_to_delete_temp)`
+      await sql`delete from evaluation_result_v2 where evaluation_result_v2.run_id in (select run_id from runs_to_delete_temp)`;
       const { count } =
-        await sql`delete from run where id in (select run_id from runs_to_delete_temp)`
+        await sql`delete from run where id in (select run_id from runs_to_delete_temp)`;
 
-      await sql`drop table runs_to_delete_temp`
-      return count
-    })
+      await sql`drop table runs_to_delete_temp`;
+      return count;
+    });
     console.info(
       `[JOB] Data retention job completed: ${deletedRunsCount} runs purged`,
-    )
+    );
   } catch (error) {
-    console.error(error)
+    console.error(error);
     if (process.env.NODE_ENV === "production") {
-      Sentry.captureException(error)
+      Sentry.captureException(error);
     }
   }
 }

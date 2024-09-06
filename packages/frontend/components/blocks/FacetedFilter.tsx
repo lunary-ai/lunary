@@ -1,7 +1,7 @@
 // DEPRECATED: Use CheckPicker
 // Kept to copy search method for users and render prop
 
-import { useProject, useProjects } from "@/utils/dataHooks"
+import { useProject, useProjects } from "@/utils/dataHooks";
 import {
   Button,
   Checkbox,
@@ -11,9 +11,9 @@ import {
   Group,
   Pill,
   useCombobox,
-} from "@mantine/core"
-import { IconCirclePlus } from "@tabler/icons-react"
-import { useEffect, useRef, useState } from "react"
+} from "@mantine/core";
+import { IconCirclePlus } from "@tabler/icons-react";
+import { useEffect, useRef, useState } from "react";
 
 // TODO: proper props type
 export default function FacetedCheck({
@@ -25,50 +25,50 @@ export default function FacetedCheck({
   withSearch = true,
   withUserSearch = false,
 }: {
-  name: string
-  items: string[] | any
-  render?: any
-  selectedItems: any
-  setSelectedItems: any
-  withSearch?: boolean
-  withUserSearch?: boolean
+  name: string;
+  items: string[] | any;
+  render?: any;
+  selectedItems: any;
+  setSelectedItems: any;
+  withSearch?: boolean;
+  withUserSearch?: boolean;
 }) {
-  const [search, setSearch] = useState("")
+  const [search, setSearch] = useState("");
 
-  const { project } = useProject()
+  const { project } = useProject();
 
-  const prevAppIdRef = useRef<string>(null)
+  const prevAppIdRef = useRef<string>(null);
 
   useEffect(() => {
     if (app?.id) {
       if (prevAppIdRef.current !== app.id) {
-        setSelectedItems([])
+        setSelectedItems([]);
       }
-      prevAppIdRef.current = app.id
+      prevAppIdRef.current = app.id;
     }
-  }, [app, prevAppIdRef, setSelectedItems])
+  }, [app, prevAppIdRef, setSelectedItems]);
 
   const combobox = useCombobox({
     onDropdownClose: () => {
-      combobox.resetSelectedOption()
-      combobox.focusTarget()
-      setSearch("")
+      combobox.resetSelectedOption();
+      combobox.focusTarget();
+      setSearch("");
     },
 
     onDropdownOpen: () => {
-      combobox.focusSearchInput()
+      combobox.focusSearchInput();
     },
-  })
+  });
 
   function defaultSearchCheck(item) {
     if (typeof item === "string") {
-      return item?.toLowerCase()?.includes(search.toLowerCase().trim())
+      return item?.toLowerCase()?.includes(search.toLowerCase().trim());
     }
-    return true
+    return true;
   }
 
   function userSearchCheck(item) {
-    const searchTerm = search.toLowerCase().trim()
+    const searchTerm = search.toLowerCase().trim();
 
     return (
       item.external_id.toLowerCase().includes(searchTerm) ||
@@ -80,10 +80,10 @@ export default function FacetedCheck({
         item.props.firstName.toLowerCase().includes(searchTerm)) ||
       (item.props?.lastName &&
         item.props.lastName.toLowerCase().includes(searchTerm))
-    )
+    );
   }
 
-  const searchCheck = withUserSearch ? userSearchCheck : defaultSearchCheck
+  const searchCheck = withUserSearch ? userSearchCheck : defaultSearchCheck;
 
   const options = items.filter(searchCheck).map((item) => (
     <Combobox.Option value={item} key={item}>
@@ -98,7 +98,7 @@ export default function FacetedCheck({
         {render ? render(item) : <span>{item}</span>}
       </Group>
     </Combobox.Option>
-  ))
+  ));
 
   return (
     <Combobox
@@ -111,7 +111,7 @@ export default function FacetedCheck({
           current.includes(val)
             ? current.filter((item) => item !== val)
             : [...current, val],
-        )
+        );
       }}
     >
       <Combobox.Target withAriaAttributes={false}>
@@ -155,5 +155,5 @@ export default function FacetedCheck({
         </Combobox.Options>
       </Combobox.Dropdown>
     </Combobox>
-  )
+  );
 }
