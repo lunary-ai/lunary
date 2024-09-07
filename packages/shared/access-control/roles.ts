@@ -1,4 +1,5 @@
 export type ResourceName =
+  | "org"
   | "projects"
   | "billing"
   | "teamMembers"
@@ -7,13 +8,12 @@ export type ResourceName =
   | "logs"
   | "users"
   | "prompts"
-  | "radars"
   | "datasets"
   | "checklists"
   | "evaluations"
-  | "settings"
+  | "settings";
 
-export type Role = "owner" | "admin" | "member" | "viewer" | "billing"
+export type Role = "owner" | "admin" | "member" | "viewer" | "billing";
 export type Action =
   | "create"
   | "read"
@@ -21,16 +21,16 @@ export type Action =
   | "delete"
   | "list"
   | "export"
-  | "run"
+  | "run";
 
 export const roles: Record<
   Role,
   {
-    value: Role
-    name: string
-    free?: boolean
-    description: string
-    permissions: Record<ResourceName, Partial<Record<Action, boolean>>>
+    value: Role;
+    name: string;
+    free?: boolean;
+    description: string;
+    permissions: Record<ResourceName, Partial<Record<Action, boolean>>>;
   }
 > = {
   owner: {
@@ -39,6 +39,9 @@ export const roles: Record<
     description: "Owner of the organization",
     free: true,
     permissions: {
+      org: {
+        update: true,
+      },
       projects: {
         create: true,
         read: true,
@@ -88,13 +91,6 @@ export const roles: Record<
         delete: true,
         list: true,
         run: true,
-      },
-      radars: {
-        create: true,
-        read: true,
-        update: true,
-        delete: true,
-        list: true,
       },
       datasets: {
         create: true,
@@ -182,13 +178,6 @@ export const roles: Record<
         list: true,
         run: true,
       },
-      radars: {
-        create: true,
-        read: true,
-        update: true,
-        delete: true,
-        list: true,
-      },
       datasets: {
         create: true,
         read: true,
@@ -272,13 +261,6 @@ export const roles: Record<
         list: true,
         run: true,
       },
-      radars: {
-        create: true,
-        read: true,
-        update: true,
-        delete: true,
-        list: true,
-      },
       datasets: {
         create: true,
         read: true,
@@ -354,13 +336,6 @@ export const roles: Record<
         list: false,
         run: false,
       },
-      radars: {
-        create: false,
-        read: true,
-        update: false,
-        delete: false,
-        list: true,
-      },
       datasets: {
         create: false,
         read: true,
@@ -402,6 +377,13 @@ export const roles: Record<
         list: true,
         run: true,
       },
+      teamMembers: {
+        create: false,
+        read: true,
+        update: false,
+        delete: false,
+        list: true,
+      },
       projects: {
         read: true,
         list: true,
@@ -413,6 +395,13 @@ export const roles: Record<
     name: "Billing",
     description: "Manage billing settings and invoices",
     permissions: {
+      teamMembers: {
+        create: false,
+        read: true,
+        update: false,
+        delete: false,
+        list: true,
+      },
       billing: {
         create: false,
         read: true,
@@ -437,16 +426,16 @@ export const roles: Record<
       },
     },
   },
-}
+};
 
 export function hasReadAccess(
   userRole: Role,
   resourceName: ResourceName,
 ): boolean {
   try {
-    return roles[userRole].permissions[resourceName].read || false
+    return roles[userRole].permissions[resourceName].read || false;
   } catch (error) {
-    return false
+    return false;
   }
 }
 
@@ -456,8 +445,8 @@ export function hasAccess(
   action: keyof (typeof roles)[Role]["permissions"][ResourceName],
 ) {
   try {
-    return roles[userRole].permissions[resourceName][action]
+    return roles[userRole].permissions[resourceName][action];
   } catch (error) {
-    return false
+    return false;
   }
 }

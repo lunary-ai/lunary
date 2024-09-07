@@ -5,12 +5,12 @@ import {
   MATCH_PARAM,
   NUMBER_PARAM,
   PERCENT_PARAM,
-} from "./params"
+} from "./params";
 
-import type { Check } from "./types"
+import type { Check } from "./types";
 
-export * from "./types"
-export * from "./serialize"
+export * from "./types";
+export * from "./serialize";
 
 const ALL_LANGUAGES = [
   "en", // English
@@ -61,7 +61,7 @@ const ALL_LANGUAGES = [
   "ka", // Georgian
   "az", // Azerbaijani
   "ms", // Malay
-]
+];
 
 export const CHECKS: Check[] = [
   {
@@ -254,7 +254,7 @@ export const CHECKS: Check[] = [
         searchable: true,
         getItemValue: (item) => `${item.id}`,
         customSearch: (search, item) => {
-          const searchTerm = search.toLowerCase().trim()
+          const searchTerm = search.toLowerCase().trim();
 
           const toCheck = [
             item.externalId,
@@ -262,11 +262,11 @@ export const CHECKS: Check[] = [
             item.props?.name,
             item.props?.firstName,
             item.props?.lastName,
-          ]
+          ];
 
           return toCheck.some((check) =>
             check?.toLowerCase().includes(searchTerm),
-          )
+          );
         },
       },
     ],
@@ -625,27 +625,7 @@ export const CHECKS: Check[] = [
       },
     ],
   },
-  {
-    id: "radar",
-    name: "Radar Match",
-    uiType: "smart",
-    disableInEvals: true,
-    params: [
-      {
-        type: "label",
-        label: "Matches radar",
-      },
-      {
-        type: "select",
-        id: "ids",
-        width: 200,
-        placeholder: "Select radars",
-        multiple: true,
-        options: () => `/filters/radars`,
-        searchable: true,
-      },
-    ],
-  },
+
   {
     id: "search",
     name: "Search Match",
@@ -1118,4 +1098,4 @@ export const CHECKS: Check[] = [
       },
     ],
   },
-]
+];

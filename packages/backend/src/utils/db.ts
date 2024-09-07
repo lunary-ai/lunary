@@ -1,6 +1,6 @@
-import postgres from "postgres"
+import postgres from "postgres";
 
-const isProduction = process.env.NODE_ENV === "production"
+const isProduction = process.env.NODE_ENV === "production";
 
 const sql = postgres(process.env.DATABASE_URL!, {
   idle_timeout: 20,
@@ -15,7 +15,7 @@ const sql = postgres(process.env.DATABASE_URL!, {
   },
   debug: process.env.LUNARY_DEBUG ? debugFn : () => {},
   onnotice: process.env.LUNARY_DEBUG ? console.log : () => {},
-})
+});
 
 function debugFn(
   connection: number,
@@ -24,25 +24,25 @@ function debugFn(
   paramTypes: any[],
 ) {
   for (let i = 0; i <= parameters.length; i++) {
-    let regex = new RegExp(`\\$${i + 1}`, "g")
-    query = query.replace(regex, `'${parameters[i]}'`)
+    let regex = new RegExp(`\\$${i + 1}`, "g");
+    query = query.replace(regex, `'${parameters[i]}'`);
   }
 
-  console.log("connection:", connection)
-  console.log("query:", query)
-  console.log("parameters:", parameters)
-  console.log("paramTypes:", paramTypes)
-  console.log("-----\n")
+  console.log("connection:", connection);
+  console.log("query:", query);
+  console.log("parameters:", parameters);
+  console.log("paramTypes:", paramTypes);
+  console.log("-----\n");
 }
 
 export async function checkDbConnection() {
   try {
-    await sql`select 1`
-    console.log("✅ Connected to database")
+    await sql`select 1`;
+    console.log("✅ Connected to database");
   } catch (error) {
-    console.error("❌ Could not connect to database")
-    process.exit(1)
+    console.error("❌ Could not connect to database");
+    process.exit(1);
   }
 }
 
-export default sql
+export default sql;

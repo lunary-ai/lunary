@@ -1,15 +1,16 @@
-import sql from "@/src/utils/db"
-import Router from "koa-router"
-import { Context } from "koa"
-import { checkAccess } from "@/src/utils/authorization"
-import { z } from "zod"
+import sql from "@/src/utils/db";
+import Router from "koa-router";
+import { Context } from "koa";
+import { checkAccess } from "@/src/utils/authorization";
+import { z } from "zod";
+import { buildFiltersQuery } from "./analytics/utils";
 
 const users = new Router({
   prefix: "/external-users",
-})
+});
 
 users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
-  const { projectId } = ctx.state
+  const { projectId } = ctx.state;
   const querySchema = z.object({
     limit: z.coerce.number().optional().default(100),
     page: z.coerce.number().optional().default(0),
@@ -22,7 +23,8 @@ users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
       .union([z.literal("asc"), z.literal("desc")])
       .optional()
       .default("desc"),
-  })
+    checks: z.string().optional(),
+  });
   const {
     limit,
     page,
@@ -32,32 +34,35 @@ users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
     timeZone,
     sortDirection,
     sortField,
-  } = querySchema.parse(ctx.request.query)
+    checks,
+  } = querySchema.parse(ctx.request.query);
 
-  let searchQuery = sql``
+  let searchQuery = sql``;
   if (search) {
     searchQuery = sql`and (
       lower(external_id) ilike lower(${`%${search}%`}) 
       or lower(props->>'email') ilike lower(${`%${search}%`}) 
       or lower(props->>'name') ilike lower(${`%${search}%`})
-    )`
+    )`;
   }
 
-  let createAtQuery = sql``
+  let createAtQuery = sql``;
   if (startDate && endDate && timeZone) {
     createAtQuery = sql`
       and r.created_at at time zone ${timeZone} >= ${startDate}
       and r.created_at at time zone ${timeZone} <= ${endDate}
-    `
+    `;
   }
+
+  const filtersQuery = buildFiltersQuery(checks || "");
 
   const sortMapping = {
     createdAt: "eu.created_at",
     lastSeen: "eu.last_seen",
     cost: "uc.cost",
-  }
+  };
 
-  let orderByClause = `${sortMapping[sortField]} ${sortDirection} nulls last`
+  let orderByClause = `${sortMapping[sortField]} ${sortDirection} nulls last`;
 
   const [users, total] = await Promise.all([
     sql`
@@ -68,7 +73,8 @@ users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
         from
           run r
         where
-          project_id = ${projectId} 
+          ${filtersQuery}
+          and project_id = ${projectId} 
           ${createAtQuery}
         group by
           external_user_id
@@ -97,22 +103,22 @@ users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
       where eu.project_id = ${projectId} 
       ${searchQuery}
     `,
-  ])
+  ]);
 
   ctx.body = {
     total: +total[0].total,
     page,
     limit,
     data: users,
-  }
-})
+  };
+});
 
 // TODO: deprecated?
 users.get("/runs/usage", checkAccess("users", "read"), async (ctx) => {
-  const { projectId } = ctx.state
-  const days = ctx.query.days as string
+  const { projectId } = ctx.state;
+  const days = ctx.query.days as string;
 
-  const daysNum = days ? parseInt(days) : 1
+  const daysNum = days ? parseInt(days) : 1;
 
   const runsUsage = await sql`
       select
@@ -134,14 +140,14 @@ users.get("/runs/usage", checkAccess("users", "read"), async (ctx) => {
           run.external_user_id,
           run.name, 
           run.type
-          `
+          `;
 
-  ctx.body = runsUsage
-})
+  ctx.body = runsUsage;
+});
 
 users.get("/:id", checkAccess("users", "read"), async (ctx: Context) => {
-  const { id } = ctx.params
-  const { projectId } = ctx.state
+  const { id } = ctx.params;
+  const { projectId } = ctx.state;
 
   const [row] = await sql`
     select 
@@ -151,14 +157,14 @@ users.get("/:id", checkAccess("users", "read"), async (ctx: Context) => {
     where 
       id = ${id} 
       and project_id = ${projectId}
-  `
+  `;
 
-  ctx.body = row
-})
+  ctx.body = row;
+});
 
 users.delete("/:id", checkAccess("users", "delete"), async (ctx: Context) => {
-  const { id } = ctx.params
-  const { projectId } = ctx.state
+  const { id } = ctx.params;
+  const { projectId } = ctx.state;
 
   await sql`
     delete 
@@ -166,9 +172,9 @@ users.delete("/:id", checkAccess("users", "delete"), async (ctx: Context) => {
     where 
       id = ${id}
       and project_id = ${projectId}
-    `
+    `;
 
-  ctx.status = 204
-})
+  ctx.status = 204;
+});
 
-export default users
+export default users;

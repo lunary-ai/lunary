@@ -1,23 +1,23 @@
-import sql from "@/src/utils/db"
-import { compilePrompt, compileTextTemplate } from "@/src/utils/playground"
+import sql from "@/src/utils/db";
+import { compilePrompt, compileTextTemplate } from "@/src/utils/playground";
 
 export async function getDatasetById(datasetId: string, projectId: string) {
   const [dataset] =
-    await sql`select * from dataset where  id = ${datasetId} and project_id = ${projectId}`
+    await sql`select * from dataset where  id = ${datasetId} and project_id = ${projectId}`;
 
   if (!dataset) {
-    throw new Error("Dataset not found")
+    throw new Error("Dataset not found");
   }
 
   dataset.prompts =
-    await sql`select * from dataset_prompt where dataset_id = ${datasetId} order by created_at asc`
+    await sql`select * from dataset_prompt where dataset_id = ${datasetId} order by created_at asc`;
 
   for (const prompt of dataset.prompts) {
     prompt.variations =
-      await sql`select * from dataset_prompt_variation where prompt_id = ${prompt.id} order by created_at asc`
+      await sql`select * from dataset_prompt_variation where prompt_id = ${prompt.id} order by created_at asc`;
   }
 
-  return dataset
+  return dataset;
 }
 
 // TODO: refacto?
@@ -44,16 +44,16 @@ export async function getDatasetBySlug(slug: string, projectId: string) {
     order by
       p.created_at asc,
       pv.created_at asc
-    `
+    `;
 
-  const { id, ownerId } = rows[0]
+  const { id, ownerId } = rows[0];
   const dataset = {
     id,
     slug,
     ownerId,
     projectId,
     items: [],
-  }
+  };
 
   for (const { promptMessages, variables, idealOutput } of rows) {
     const item = {
@@ -62,9 +62,9 @@ export async function getDatasetBySlug(slug: string, projectId: string) {
           ? compileTextTemplate(promptMessages, variables)
           : compilePrompt(promptMessages, variables),
       idealOutput,
-    }
-    dataset.items.push(item)
+    };
+    dataset.items.push(item);
   }
 
-  return dataset
+  return dataset;
 }
