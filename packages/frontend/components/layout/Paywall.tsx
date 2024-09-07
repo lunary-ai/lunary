@@ -1,4 +1,4 @@
-import { useOrg } from "@/utils/dataHooks"
+import { useOrg } from "@/utils/dataHooks";
 import {
   Box,
   Button,
@@ -10,11 +10,11 @@ import {
   Text,
   ThemeIcon,
   Title,
-} from "@mantine/core"
-import { IconBolt, IconCheck } from "@tabler/icons-react"
-import { openUpgrade } from "./UpgradeModal"
+} from "@mantine/core";
+import { IconBolt, IconCheck } from "@tabler/icons-react";
+import { openUpgrade } from "./UpgradeModal";
 
-const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1)
+const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export const ListFeatures = ({ features }) => {
   return (
@@ -34,8 +34,8 @@ export const ListFeatures = ({ features }) => {
         </List.Item>
       ))}
     </List>
-  )
-}
+  );
+};
 
 export default function Paywall({
   plan,
@@ -47,16 +47,16 @@ export default function Paywall({
   Icon,
   p,
 }: {
-  plan: string
-  feature: string
-  description: string
-  enabled?: boolean
-  list?: string[]
-  children: React.ReactNode
-  Icon?: React.ComponentType<any>
-  p?: number
+  plan: string;
+  feature: string;
+  description: string;
+  enabled?: boolean;
+  list?: string[];
+  children: React.ReactNode;
+  Icon?: React.ComponentType<any>;
+  p?: number;
 }) {
-  const { org } = useOrg()
+  const { org } = useOrg();
 
   // Automatically disable paywall in these cases
   if (
@@ -64,15 +64,15 @@ export default function Paywall({
       ? !enabled
       : ["custom", plan].includes(org?.plan) || process.env.NEXT_PUBLIC_DEMO
   ) {
-    return children
+    return children;
   }
 
   // Legacy Unlimited plan has access to all features
   if (plan === "team" && org?.plan === "unlimited") {
-    return children
+    return children;
   }
 
-  const isEnterpriseFeature = plan === "enterprise"
+  const isEnterpriseFeature = plan === "enterprise";
 
   return (
     <Box
@@ -145,5 +145,5 @@ export default function Paywall({
       </Overlay>
       <Box>{children}</Box>
     </Box>
-  )
+  );
 }

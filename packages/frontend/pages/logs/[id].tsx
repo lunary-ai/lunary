@@ -1,22 +1,22 @@
-import { Button, Container, Group, Loader, Stack, Text } from "@mantine/core"
+import { Button, Container, Group, Loader, Stack, Text } from "@mantine/core";
 
-import RunInputOutput from "@/components/blocks/RunInputOutput"
-import Logo from "@/components/blocks/Logo"
+import RunInputOutput from "@/components/blocks/RunInputOutput";
+import Logo from "@/components/blocks/Logo";
 
-import useSWR from "swr"
-import { useRouter } from "next/router"
-import { useAuth } from "@/utils/auth"
-import Link from "next/link"
+import useSWR from "swr";
+import { useRouter } from "next/router";
+import { useAuth } from "@/utils/auth";
+import Link from "next/link";
 
 export default function PublicRun() {
-  const router = useRouter()
-  const id = router.query?.id as string
+  const router = useRouter();
+  const id = router.query?.id as string;
 
-  const { isSignedIn } = useAuth()
+  const { isSignedIn } = useAuth();
 
   const { data, isLoading, error } = useSWR(
     id && `/runs/${id}${isSignedIn ? "" : `/public`}`,
-  )
+  );
 
   return (
     <Container size="sm">
@@ -43,5 +43,5 @@ export default function PublicRun() {
         )}
       </Stack>
     </Container>
-  )
+  );
 }

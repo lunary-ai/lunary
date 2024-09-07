@@ -1,59 +1,59 @@
-import { parseAsString, parseAsStringEnum, useQueryState } from "nuqs"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { parseAsString, parseAsStringEnum, useQueryState } from "nuqs";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-type Shortcut = [string, () => void]
+type Shortcut = [string, () => void];
 
 export function useGlobalShortcut(shortcuts: Shortcut[]) {
   useEffect(() => {
-    let timeoutId: number | null = null
+    let timeoutId: number | null = null;
 
     const handleKeyDown = (evt: KeyboardEvent) => {
       if (timeoutId !== null) {
-        clearTimeout(timeoutId)
+        clearTimeout(timeoutId);
       }
 
       timeoutId = window.setTimeout(() => {
         shortcuts.forEach(([keyCombination, action]) => {
-          const [mod, key] = keyCombination.split("+")
+          const [mod, key] = keyCombination.split("+");
           const isModPressed =
-            mod === "mod" ? evt.ctrlKey || evt.metaKey : evt[`${mod}Key`]
+            mod === "mod" ? evt.ctrlKey || evt.metaKey : evt[`${mod}Key`];
           if (isModPressed && evt.key.toLowerCase() === key.toLowerCase()) {
-            action()
-            evt.preventDefault()
+            action();
+            evt.preventDefault();
           }
-        })
-      }, 10)
-    }
+        });
+      }, 10);
+    };
 
-    document.addEventListener("keydown", handleKeyDown)
+    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.removeEventListener("keydown", handleKeyDown)
+      document.removeEventListener("keydown", handleKeyDown);
       if (timeoutId !== null) {
-        clearTimeout(timeoutId)
+        clearTimeout(timeoutId);
       }
-    }
-  }, [shortcuts])
+    };
+  }, [shortcuts]);
 }
 
 // This helps to debug why a component is re-rendered
 export function useTraceUpdate(props: any) {
-  const prev = useRef(props)
+  const prev = useRef(props);
   useEffect(() => {
     const changedProps = Object.entries(props).reduce(
       (lookup, [key, value]) => {
         if (prev.current[key] !== value) {
-          lookup[key] = [prev.current[key], value]
+          lookup[key] = [prev.current[key], value];
         }
-        return lookup
+        return lookup;
       },
       {},
-    )
+    );
     if (Object.keys(changedProps).length > 0) {
-      console.log("Changed props:", changedProps)
+      console.log("Changed props:", changedProps);
     }
-    prev.current = props
-  })
+    prev.current = props;
+  });
 }
 
 /**
@@ -67,56 +67,56 @@ export function useTraceUpdate(props: any) {
  * @returns {[string | null, (id: string | null) => void]} A tuple containing the current project ID and a setter function
  */
 export function useProjectIdStorage() {
-  const [projectId, setProjectId] = useState<string | null>(null)
+  const [projectId, setProjectId] = useState<string | null>(null);
 
   useEffect(() => {
-    const sessionProjectId = sessionStorage.getItem("projectId")
+    const sessionProjectId = sessionStorage.getItem("projectId");
     if (sessionProjectId) {
-      setProjectId(sessionProjectId)
+      setProjectId(sessionProjectId);
     } else {
-      const localProjectId = localStorage.getItem("projectId")
+      const localProjectId = localStorage.getItem("projectId");
       if (localProjectId) {
-        setProjectId(localProjectId)
-        sessionStorage.setItem("projectId", localProjectId)
+        setProjectId(localProjectId);
+        sessionStorage.setItem("projectId", localProjectId);
       }
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       if (projectId) {
-        sessionStorage.setItem("projectId", projectId)
-        localStorage.setItem("projectId", projectId)
+        sessionStorage.setItem("projectId", projectId);
+        localStorage.setItem("projectId", projectId);
       }
     }
-  }, [projectId])
+  }, [projectId]);
 
-  return [projectId, setProjectId] as const
+  return [projectId, setProjectId] as const;
 }
 
 export function useSortParams() {
   const [sortField, setSortField] = useQueryState(
     "sortField",
     parseAsString.withDefault("createdAt"),
-  )
+  );
 
   const [sortDirection, setSortDirection] = useQueryState(
     "sortDirection",
     parseAsStringEnum(["asc", "desc"]).withDefault("desc"),
-  )
+  );
 
   useEffect(() => {
     // Update the url query, because nuqs does not set query params in the URL when we provide a default value
-    setSortField(sortField)
-    setSortDirection(sortDirection)
-  }, [])
+    setSortField(sortField);
+    setSortDirection(sortDirection);
+  }, []);
 
   const sortParams = useMemo(() => {
     if (sortField && sortDirection) {
-      return `&sortField=${sortField}&sortDirection=${sortDirection}`
+      return `&sortField=${sortField}&sortDirection=${sortDirection}`;
     }
-    return ""
-  }, [sortField, sortDirection])
+    return "";
+  }, [sortField, sortDirection]);
 
   return {
     sortField,
@@ -124,5 +124,5 @@ export function useSortParams() {
     sortDirection,
     setSortDirection,
     sortParams,
-  }
+  };
 }

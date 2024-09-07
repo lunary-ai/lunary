@@ -1,5 +1,5 @@
-import { Badge, ThemeIcon } from "@mantine/core"
-import { IconBolt, IconClock } from "@tabler/icons-react"
+import { Badge, ThemeIcon } from "@mantine/core";
+import { IconBolt, IconClock } from "@tabler/icons-react";
 
 export default function DurationBadge({
   cached = false,
@@ -9,7 +9,7 @@ export default function DurationBadge({
 }) {
   const duration = endedAt
     ? new Date(endedAt).getTime() - new Date(createdAt).getTime()
-    : NaN
+    : NaN;
 
   if (cached) {
     return (
@@ -26,7 +26,7 @@ export default function DurationBadge({
       >
         Cached ({(duration / 1000).toFixed(2)}s)
       </Badge>
-    )
+    );
   }
 
   return (
@@ -43,5 +43,5 @@ export default function DurationBadge({
     >
       {(duration / 1000).toFixed(2)}s
     </Badge>
-  )
+  );
 }

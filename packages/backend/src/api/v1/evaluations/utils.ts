@@ -1,18 +1,18 @@
-import { runChecksOnRun } from "@/src/checks/runChecks"
-import { calcRunCost } from "@/src/utils/calcCost"
-import sql from "@/src/utils/db"
-import { compilePrompt, runAImodel } from "@/src/utils/playground"
-import { Provider } from "shared"
+import { runChecksOnRun } from "@/src/checks/runChecks";
+import { calcRunCost } from "@/src/utils/calcCost";
+import sql from "@/src/utils/db";
+import { compilePrompt, runAImodel } from "@/src/utils/playground";
+import { Provider } from "shared";
 
 interface RunEvalParams {
-  projectId: string
-  evaluationId: string
-  promptId: string
-  checklistId: string
-  provider: Provider
-  prompt: any
-  variation: any
-  orgId: string
+  projectId: string;
+  evaluationId: string;
+  promptId: string;
+  checklistId: string;
+  provider: Provider;
+  prompt: any;
+  variation: any;
+  orgId: string;
 }
 
 export async function runEval({
@@ -26,29 +26,29 @@ export async function runEval({
   orgId,
 }: RunEvalParams) {
   try {
-    console.log(`=============================`)
+    console.log(`=============================`);
     console.log(
       `Running eval for ${provider.model} with variation ${JSON.stringify(variation.variables)} and config ${JSON.stringify(provider.config)}`,
-    )
-    const { variables, idealOutput } = variation
+    );
+    const { variables, idealOutput } = variation;
 
-    let checks = []
+    let checks = [];
 
     if (checklistId) {
       const [checklist] =
-        await sql`select * from checklist where id = ${checklistId}`
+        await sql`select * from checklist where id = ${checklistId}`;
 
-      checks = checklist.data
+      checks = checklist.data;
     }
 
     // run AI query
-    const createdAt = new Date()
+    const createdAt = new Date();
 
-    const input = compilePrompt(prompt, variables)
+    const input = compilePrompt(prompt, variables);
 
     try {
-      let res
-      let attempts = 0
+      let res;
+      let attempts = 0;
       while (attempts < 3) {
         // retry 2 times
         try {
@@ -59,22 +59,22 @@ export async function runEval({
             provider.model,
             false,
             orgId,
-          )
-          break // Break the loop if the call was successful
+          );
+          break; // Break the loop if the call was successful
         } catch (error) {
-          attempts++
-          if (attempts >= 3) throw error // Rethrow error after 2 retries
+          attempts++;
+          if (attempts >= 3) throw error; // Rethrow error after 2 retries
         }
       }
 
-      const endedAt = new Date()
+      const endedAt = new Date();
 
       // Create virtual run to be able to run checks
-      const output = res?.choices[0].message
+      const output = res?.choices[0].message;
 
-      const promptTokens = res?.usage?.prompt_tokens
-      const completionTokens = res?.usage?.completion_tokens
-      const duration = endedAt.getTime() - createdAt.getTime()
+      const promptTokens = res?.usage?.prompt_tokens;
+      const completionTokens = res?.usage?.completion_tokens;
+      const duration = endedAt.getTime() - createdAt.getTime();
 
       const virtualRun = {
         type: "llm",
@@ -95,14 +95,14 @@ export async function runEval({
         projectId,
         isPublic: false,
         cost: 0,
-      }
+      };
 
-      const cost = await calcRunCost(virtualRun)
-      virtualRun.cost = cost || 0
-      virtualRun.duration = virtualRun.duration / 1000 // needs to be in ms in calcRunCost, but needs to be in seconds in the checks
+      const cost = await calcRunCost(virtualRun);
+      virtualRun.cost = cost || 0;
+      virtualRun.duration = virtualRun.duration / 1000; // needs to be in ms in calcRunCost, but needs to be in seconds in the checks
 
       // run checks
-      const { passed, results } = await runChecksOnRun(virtualRun, checks)
+      const { passed, results } = await runChecksOnRun(virtualRun, checks);
 
       // insert into eval_result
       await sql`
@@ -119,9 +119,9 @@ export async function runEval({
         cost,
         duration,
       })}
-      `
+      `;
 
-      console.log(`Eval for ${provider.model} passed: ${passed}`)
+      console.log(`Eval for ${provider.model} passed: ${passed}`);
     } catch (error: any) {
       await sql`
         insert into evaluation_result ${sql({
@@ -132,9 +132,9 @@ export async function runEval({
           provider,
           error: error.message,
         })}
-        `
+        `;
     }
   } catch (error) {
-    console.error(error)
+    console.error(error);
   }
 }

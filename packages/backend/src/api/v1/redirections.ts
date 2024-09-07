@@ -1,49 +1,49 @@
-import { Context } from "koa"
-import Router from "koa-router"
-import { processEventsIngestion } from "./runs/ingest"
-import { Event } from "@/src/utils/ingest"
-import { z } from "zod"
-import sql from "@/src/utils/db"
+import { Context } from "koa";
+import Router from "koa-router";
+import { processEventsIngestion } from "./runs/ingest";
+import { Event } from "@/src/utils/ingest";
+import { z } from "zod";
+import sql from "@/src/utils/db";
 
-const redirections = new Router()
+const redirections = new Router();
 
 // LEGACY ROUTE FOR EVENT INGESTION
 redirections.post("/api/report", async (ctx: Context) => {
   const { events } = ctx.request.body as {
-    events: Event | Event[]
-  }
+    events: Event | Event[];
+  };
 
   if (!events || !Array.isArray(events) || events.length === 0) {
-    ctx.throw(400, "Missing events payload.")
+    ctx.throw(400, "Missing events payload.");
   }
 
-  const projectId = events[0]?.projectId || events[0].app
+  const projectId = events[0]?.projectId || events[0].app;
 
-  const parsedProjectId = z.string().uuid().safeParse(projectId)
+  const parsedProjectId = z.string().uuid().safeParse(projectId);
   if (!parsedProjectId.success) {
-    ctx.throw(402, "Incorrect project id format")
+    ctx.throw(402, "Incorrect project id format");
   }
 
-  const validatedProjectId = parsedProjectId.data
+  const validatedProjectId = parsedProjectId.data;
   const [project] =
-    await sql`select * from project where id = ${validatedProjectId} limit 1`
+    await sql`select * from project where id = ${validatedProjectId} limit 1`;
 
   if (!project) {
-    ctx.throw(401, "This project does not exist")
-    return
+    ctx.throw(401, "This project does not exist");
+    return;
   }
 
-  const result = await processEventsIngestion(validatedProjectId, events)
+  const result = await processEventsIngestion(validatedProjectId, events);
 
-  ctx.body = result
-})
+  ctx.body = result;
+});
 
 // LEGACY TEMPLATE ROUTE
 redirections.get("/api/v1/template", async (ctx: Context) => {
   const { slug, app_id } = ctx.request.query as {
-    slug: string
-    app_id: string
-  }
+    slug: string;
+    app_id: string;
+  };
 
   // For some reasons redirects don't work with the JS SDK
   // So we need to fetch the latest template version here
@@ -55,9 +55,9 @@ redirections.get("/api/v1/template", async (ctx: Context) => {
         Authorization: `Bearer ${app_id}`,
       },
     },
-  ).then((res) => res.json())
+  ).then((res) => res.json());
 
-  ctx.body = latestTemplateVersion
-})
+  ctx.body = latestTemplateVersion;
+});
 
-export default redirections
+export default redirections;

@@ -6,16 +6,16 @@ import {
   Text,
   TextInput,
   Title,
-} from "@mantine/core"
-import { useForm } from "@mantine/form"
-import { notifications } from "@mantine/notifications"
-import { IconAnalyze, IconAt, IconCheck } from "@tabler/icons-react"
-import { NextSeo } from "next-seo"
-import { useState } from "react"
-import errorHandler from "../utils/errors"
+} from "@mantine/core";
+import { useForm } from "@mantine/form";
+import { notifications } from "@mantine/notifications";
+import { IconAnalyze, IconAt, IconCheck } from "@tabler/icons-react";
+import { NextSeo } from "next-seo";
+import { useState } from "react";
+import errorHandler from "../utils/errors";
 
 export default function PasswordReset() {
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
   const form = useForm({
     initialValues: {
@@ -25,10 +25,10 @@ export default function PasswordReset() {
     validate: {
       email: (val) => (/^\S+@\S+$/.test(val) ? null : "Invalid email"),
     },
-  })
+  });
 
   async function handlePasswordReset({ email }) {
-    setLoading(true)
+    setLoading(true);
 
     const res = await errorHandler(
       fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/request-password-reset`, {
@@ -38,7 +38,7 @@ export default function PasswordReset() {
         },
         body: JSON.stringify({ email }),
       }),
-    )
+    );
 
     if (res.ok) {
       notifications.show({
@@ -47,9 +47,9 @@ export default function PasswordReset() {
         title: "Email sent 💌",
         message:
           "Check your emails to verify your email. Please check your spam folder as we currently have deliverability issues.",
-      })
+      });
     }
-    setLoading(false)
+    setLoading(false);
   }
 
   return (
@@ -90,5 +90,5 @@ export default function PasswordReset() {
         </Paper>
       </Stack>
     </Container>
-  )
+  );
 }

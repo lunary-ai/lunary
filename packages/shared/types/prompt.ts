@@ -1,1 +1,1 @@
-export type TemplateVariables = Record<string, string>
+export type TemplateVariables = Record<string, string>;

@@ -1,4 +1,4 @@
-import { jsonrepair } from "jsonrepair"
+import { jsonrepair } from "jsonrepair";
 
 import {
   ActionIcon,
@@ -13,14 +13,14 @@ import {
   Select,
   Text,
   Tooltip,
-} from "@mantine/core"
+} from "@mantine/core";
 
-import { notifications } from "@mantine/notifications"
+import { notifications } from "@mantine/notifications";
 
-import { MODELS, Provider } from "shared"
-import { useState } from "react"
-import Link from "next/link"
-import { IconInfoCircle, IconTools } from "@tabler/icons-react"
+import { MODELS, Provider } from "shared";
+import { useState } from "react";
+import Link from "next/link";
+import { IconInfoCircle, IconTools } from "@tabler/icons-react";
 
 export const ParamItem = ({ name, value, description }) => (
   <Group justify="space-between">
@@ -38,20 +38,20 @@ export const ParamItem = ({ name, value, description }) => (
       value
     )}
   </Group>
-)
+);
 
 const isNullishButNotZero = (val: any) =>
-  val === undefined || val === null || val === ""
+  val === undefined || val === null || val === "";
 
 export default function ProviderEditor({
   value,
   onChange,
 }: {
-  value: Provider
-  onChange: (value: Provider) => void
+  value: Provider;
+  onChange: (value: Provider) => void;
 }) {
-  const [tempJSON, setTempJSON] = useState<any>("")
-  const [jsonModalOpened, setJsonModalOpened] = useState(false)
+  const [tempJSON, setTempJSON] = useState<any>("");
+  const [jsonModalOpened, setJsonModalOpened] = useState(false);
 
   const configHandler = (key: string, isCheckbox?: boolean) => ({
     size: "xs",
@@ -64,9 +64,9 @@ export default function ProviderEditor({
       : value?.config?.[key], // empty string is important to reset the value)
     onChange: (val) => {
       // Handle checkboxes
-      if (isCheckbox) val = val.currentTarget.checked
+      if (isCheckbox) val = val.currentTarget.checked;
 
-      if (isNullishButNotZero(val)) val = undefined // handle empty strings and booleans
+      if (isNullishButNotZero(val)) val = undefined; // handle empty strings and booleans
 
       onChange({
         ...value,
@@ -74,22 +74,22 @@ export default function ProviderEditor({
           ...value.config,
           [key]: val,
         },
-      })
+      });
     },
-  })
+  });
 
   const validateToolCalls = (toolCalls: any[]) => {
-    if (!Array.isArray(toolCalls)) return false
+    if (!Array.isArray(toolCalls)) return false;
 
     const isNameDescriptionFormat = toolCalls.every(
       (t) => t.name && t.description && t.input_schema,
-    )
+    );
     const isFunctionTypeFormat = toolCalls.every(
       (t) => t.type === "function" && t.function?.name,
-    )
+    );
 
-    return isNameDescriptionFormat || isFunctionTypeFormat
-  }
+    return isNameDescriptionFormat || isFunctionTypeFormat;
+  };
 
   return (
     <>
@@ -110,7 +110,7 @@ export default function ProviderEditor({
               onChange({
                 ...value,
                 model,
-              })
+              });
             }}
           />
         }
@@ -238,7 +238,7 @@ export default function ProviderEditor({
 ]`}
                 value={tempJSON}
                 onChange={(val) => {
-                  setTempJSON(val)
+                  setTempJSON(val);
                 }}
               />
               <Group mt="sm" align="right">
@@ -248,18 +248,18 @@ export default function ProviderEditor({
                   variant="default"
                   onClick={() => {
                     try {
-                      const empty = !tempJSON?.trim().length
+                      const empty = !tempJSON?.trim().length;
 
                       if (!empty && tempJSON?.trim()[0] !== "[") {
-                        throw new Error("Not an array")
+                        throw new Error("Not an array");
                       }
 
                       const repaired = empty
                         ? undefined
-                        : JSON.parse(jsonrepair(tempJSON.trim()))
+                        : JSON.parse(jsonrepair(tempJSON.trim()));
 
                       if (!empty && !validateToolCalls(repaired)) {
-                        throw new Error("Invalid tool calls format")
+                        throw new Error("Invalid tool calls format");
                       }
 
                       onChange({
@@ -268,10 +268,10 @@ export default function ProviderEditor({
                           ...value.config,
                           tools: empty ? undefined : repaired,
                         },
-                      })
-                      setJsonModalOpened(false)
+                      });
+                      setJsonModalOpened(false);
                     } catch (e) {
-                      console.error(e)
+                      console.error(e);
                       notifications.show({
                         title: "Please enter valid tool calls. " + e.message,
                         message: "Click here to open the docs.",
@@ -281,7 +281,7 @@ export default function ProviderEditor({
                             "https://platform.openai.com/docs/guides/function-calling",
                             "_blank",
                           ),
-                      })
+                      });
                     }
                   }}
                 >
@@ -293,8 +293,8 @@ export default function ProviderEditor({
               size="compact-xs"
               variant="outline"
               onClick={() => {
-                setTempJSON(JSON.stringify(value?.config?.tools, null, 2))
-                setJsonModalOpened(true)
+                setTempJSON(JSON.stringify(value?.config?.tools, null, 2));
+                setJsonModalOpened(true);
               }}
             >
               {`Edit ${value?.config?.tools?.length ? `(${value.config.tools.length})` : ""}`}
@@ -303,5 +303,5 @@ export default function ProviderEditor({
         }
       />
     </>
-  )
+  );
 }

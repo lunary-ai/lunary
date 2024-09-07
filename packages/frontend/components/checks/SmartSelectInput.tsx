@@ -1,4 +1,4 @@
-import { useProjectSWR } from "@/utils/dataHooks"
+import { useProjectSWR } from "@/utils/dataHooks";
 import {
   CheckIcon,
   Combobox,
@@ -7,10 +7,10 @@ import {
   Pill,
   PillsInput,
   useCombobox,
-} from "@mantine/core"
-import local from "next/font/local"
+} from "@mantine/core";
+import local from "next/font/local";
 
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
 
 export default function SmartCheckSelect({
   minimal,
@@ -30,76 +30,78 @@ export default function SmartCheckSelect({
 }) {
   const combobox = useCombobox({
     onDropdownClose: () => {
-      combobox.resetSelectedOption()
+      combobox.resetSelectedOption();
     },
     onDropdownOpen: () => {
-      combobox.focusSearchInput()
+      combobox.focusSearchInput();
     },
-  })
+  });
 
-  const [search, setSearch] = useState("")
+  const [search, setSearch] = useState("");
 
-  const useSWRforData = typeof options === "function"
+  const useSWRforData = typeof options === "function";
 
-  const [localData, setLocalData] = useState(useSWRforData ? [] : options || [])
+  const [localData, setLocalData] = useState(
+    useSWRforData ? [] : options || [],
+  );
 
   const { data: swrCheckData, isLoading } = useProjectSWR(
     useSWRforData ? options() : null,
-  )
+  );
 
-  const data = useSWRforData ? swrCheckData || [] : localData
+  const data = useSWRforData ? swrCheckData || [] : localData;
 
-  const fixedValue = value || (multiple ? [] : null)
+  const fixedValue = value || (multiple ? [] : null);
 
-  const hasValue = multiple ? fixedValue.length > 0 : !!fixedValue
+  const hasValue = multiple ? fixedValue.length > 0 : !!fixedValue;
 
-  const shouldDisplaySearch = data?.length > 5 || searchable !== false
+  const shouldDisplaySearch = data?.length > 5 || searchable !== false;
 
   useEffect(() => {
     if (data && isLoading === false && shouldDisplaySearch) {
-      combobox.focusSearchInput()
+      combobox.focusSearchInput();
     }
-  }, [isLoading])
+  }, [isLoading]);
 
   useEffect(() => {
     if (allowCustom && value) {
-      const valueArray = multiple ? value : [value]
+      const valueArray = multiple ? value : [value];
       valueArray.forEach((val) => {
         if (!localData.some((item) => getItemValue(item) === val)) {
-          const newOption = { label: val, value: val }
+          const newOption = { label: val, value: val };
           setLocalData((prevData) => {
-            const updatedData = [...prevData, newOption]
+            const updatedData = [...prevData, newOption];
             const uniqueData = updatedData.filter(
               (item, index, self) =>
                 index ===
                 self.findIndex((t) => getItemValue(t) === getItemValue(item)),
-            )
-            return uniqueData
-          })
+            );
+            return uniqueData;
+          });
         }
-      })
+      });
     }
-  }, [localData, value, allowCustom])
+  }, [localData, value, allowCustom]);
   const handleValueSelect = (val: string) => {
-    setSearch("")
+    setSearch("");
     return multiple
       ? onChange(
           fixedValue.includes(val)
             ? fixedValue.filter((v) => v !== val)
             : [...fixedValue, val],
         )
-      : onChange(val)
-  }
+      : onChange(val);
+  };
 
   const handleValueRemove = (val: string) => {
     return multiple
       ? onChange(fixedValue.filter((v) => v !== val))
-      : onChange(null)
-  }
+      : onChange(null);
+  };
 
   function getRenderedValues() {
     if (fixedValue?.length >= 4) {
-      return <Pill>{fixedValue?.length} selected</Pill>
+      return <Pill>{fixedValue?.length} selected</Pill>;
     }
     return fixedValue.map((item) => (
       <Pill
@@ -114,30 +116,30 @@ export default function SmartCheckSelect({
             : item,
         )}
       </Pill>
-    ))
+    ));
   }
 
   const renderedValue = multiple
     ? getRenderedValues()
-    : renderLabel(data?.find((d) => getItemValue(d) === value))
+    : renderLabel(data?.find((d) => getItemValue(d) === value));
 
   function optionsFilter(item) {
     if (search.length === 0) {
-      return true
+      return true;
     }
 
     if (customSearch) {
-      return customSearch(search, item)
+      return customSearch(search, item);
     }
 
     return getItemValue(item)
       .toLowerCase()
-      .includes(search.trim().toLowerCase())
+      .includes(search.trim().toLowerCase());
   }
   const renderedOptions = data?.filter(optionsFilter).map((item) => {
     const active = multiple
       ? fixedValue.includes(getItemValue(item))
-      : getItemValue(item) === value
+      : getItemValue(item) === value;
     return (
       <Combobox.Option
         value={getItemValue(item)}
@@ -149,28 +151,28 @@ export default function SmartCheckSelect({
           {renderListItem ? renderListItem(item) : renderLabel(item)}
         </Group>
       </Combobox.Option>
-    )
-  })
+    );
+  });
 
   useEffect(() => {
     if (!value) {
-      combobox.openDropdown()
+      combobox.openDropdown();
     }
-  }, [])
+  }, []);
 
   const handleKeyDown = (event) => {
     if (event.key === "Enter" && allowCustom && search.trim().length > 0) {
-      const newItem = search.trim()
+      const newItem = search.trim();
       if (!localData.some((item) => getItemValue(item) === newItem)) {
-        const newOption = { label: newItem, value: newItem }
-        setLocalData((prevData) => [...prevData, newOption])
-        handleValueSelect(newItem)
+        const newOption = { label: newItem, value: newItem };
+        setLocalData((prevData) => [...prevData, newOption]);
+        handleValueSelect(newItem);
       }
     } else if (event.key === "Backspace" && search.length === 0) {
-      event.preventDefault()
-      handleValueRemove(value[value.length - 1])
+      event.preventDefault();
+      handleValueRemove(value[value.length - 1]);
     }
-  }
+  };
 
   return (
     <Combobox store={combobox} onOptionSubmit={handleValueSelect}>
@@ -230,5 +232,5 @@ export default function SmartCheckSelect({
         </Combobox.Options>
       </Combobox.Dropdown>
     </Combobox>
-  )
+  );
 }

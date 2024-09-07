@@ -1,5 +1,5 @@
-import ErrorBoundary from "@/components/blocks/ErrorBoundary"
-import { Card, Text } from "@mantine/core"
+import ErrorBoundary from "@/components/blocks/ErrorBoundary";
+import { Card, Text } from "@mantine/core";
 
 function AnalyticsCard({ title, children }) {
   return (
@@ -9,7 +9,7 @@ function AnalyticsCard({ title, children }) {
       </Text>
       <ErrorBoundary>{children}</ErrorBoundary>
     </Card>
-  )
+  );
 }
 
-export default AnalyticsCard
+export default AnalyticsCard;

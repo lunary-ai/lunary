@@ -1,14 +1,14 @@
-import { convertChecksToSQL } from "@/src/utils/checks"
-import sql from "@/src/utils/db"
-import Context from "@/src/utils/koa"
-import { deserializeLogic } from "shared"
-import { z } from "zod"
+import { convertChecksToSQL } from "@/src/utils/checks";
+import sql from "@/src/utils/db";
+import Context from "@/src/utils/koa";
+import { deserializeLogic } from "shared";
+import { z } from "zod";
 
 function buildFiltersQuery(checks: string) {
-  const deserializedChecks = deserializeLogic(checks)
+  const deserializedChecks = deserializeLogic(checks);
   return deserializedChecks?.length && deserializedChecks.length > 1
     ? convertChecksToSQL(deserializedChecks)
-    : sql`1 = 1`
+    : sql`1 = 1`;
 }
 
 export function parseQuery(projectId: string, query: unknown) {
@@ -25,19 +25,19 @@ export function parseQuery(projectId: string, query: unknown) {
       checks: z.string().optional(),
     })
     .transform(({ startDate, endDate, timeZone, granularity, checks }) => {
-      const filtersQuery = buildFiltersQuery(checks || "")
+      const filtersQuery = buildFiltersQuery(checks || "");
       const granularityToIntervalMap = {
         hourly: "1 hour",
         daily: "1 day",
         weekly: "7 days",
-      }
+      };
       const localCreatedAtMap = {
         hourly: sql`date_trunc('hour', r.created_at at time zone ${timeZone})::timestamp as local_created_at`,
         daily: sql`date_trunc('day', r.created_at at time zone ${timeZone})::timestamp as local_created_at`,
         weekly: sql`date_trunc('day', r.created_at at time zone ${timeZone})::timestamp as local_created_at`,
-      }
-      const interval = granularityToIntervalMap[granularity]
-      const localCreatedAt = localCreatedAtMap[granularity]
+      };
+      const interval = granularityToIntervalMap[granularity];
+      const localCreatedAt = localCreatedAtMap[granularity];
 
       const datesQuery = sql`
         select 
@@ -50,7 +50,7 @@ export function parseQuery(projectId: string, query: unknown) {
           )::timestamp as date) t
         where
           date <= current_timestamp at time zone ${timeZone} 
-      `
+      `;
 
       const filteredRunsQuery = sql`
         select 
@@ -61,7 +61,7 @@ export function parseQuery(projectId: string, query: unknown) {
         where
           ${filtersQuery}
           and r.project_id = ${projectId}
-    `
+    `;
 
       return {
         startDate,
@@ -71,7 +71,7 @@ export function parseQuery(projectId: string, query: unknown) {
         granularity,
         timeZone,
         localCreatedAt,
-      }
+      };
     })
-    .parse(query)
+    .parse(query);
 }

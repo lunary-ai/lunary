@@ -1,5 +1,5 @@
-import DataTable from "@/components/blocks/DataTable"
-import { parseAsString, parseAsStringEnum, useQueryState } from "nuqs"
+import DataTable from "@/components/blocks/DataTable";
+import { parseAsString, parseAsStringEnum, useQueryState } from "nuqs";
 
 import {
   ActionIcon,
@@ -12,7 +12,7 @@ import {
   Menu,
   Stack,
   Text,
-} from "@mantine/core"
+} from "@mantine/core";
 
 import {
   costColumn,
@@ -26,7 +26,7 @@ import {
   templateColumn,
   timeColumn,
   userColumn,
-} from "@/utils/datatable"
+} from "@/utils/datatable";
 
 import {
   IconBraces,
@@ -36,43 +36,43 @@ import {
   IconStack2,
   IconStackPop,
   IconTrash,
-} from "@tabler/icons-react"
+} from "@tabler/icons-react";
 
-import { NextSeo } from "next-seo"
-import { useContext, useEffect, useMemo, useState } from "react"
+import { NextSeo } from "next-seo";
+import { useContext, useEffect, useMemo, useState } from "react";
 
-import { ChatReplay } from "@/components/blocks/RunChat"
-import RunInputOutput from "@/components/blocks/RunInputOutput"
-import SearchBar from "@/components/blocks/SearchBar"
-import CheckPicker from "@/components/checks/Picker"
-import Empty from "@/components/layout/Empty"
-import { openUpgrade } from "@/components/layout/UpgradeModal"
+import { ChatReplay } from "@/components/blocks/RunChat";
+import RunInputOutput from "@/components/blocks/RunInputOutput";
+import SearchBar from "@/components/blocks/SearchBar";
+import CheckPicker from "@/components/checks/Picker";
+import Empty from "@/components/layout/Empty";
+import { openUpgrade } from "@/components/layout/UpgradeModal";
 
-import analytics from "@/utils/analytics"
+import analytics from "@/utils/analytics";
 import {
   useOrg,
   useProject,
   useProjectInfiniteSWR,
   useRun,
   useUser,
-} from "@/utils/dataHooks"
-import { fetcher } from "@/utils/fetcher"
-import { formatDateTime } from "@/utils/format"
+} from "@/utils/dataHooks";
+import { fetcher } from "@/utils/fetcher";
+import { formatDateTime } from "@/utils/format";
 
-import { ProjectContext } from "@/utils/context"
-import { useDebouncedState, useDidUpdate } from "@mantine/hooks"
+import { ProjectContext } from "@/utils/context";
+import { useDebouncedState, useDidUpdate } from "@mantine/hooks";
 
-import RenamableField from "@/components/blocks/RenamableField"
-import { useView, useViews } from "@/utils/dataHooks/views"
-import { modals } from "@mantine/modals"
-import { notifications } from "@mantine/notifications"
-import { VisibilityState } from "@tanstack/react-table"
-import { useRouter } from "next/router"
+import RenamableField from "@/components/blocks/RenamableField";
+import { useView, useViews } from "@/utils/dataHooks/views";
+import { modals } from "@mantine/modals";
+import { notifications } from "@mantine/notifications";
+import { VisibilityState } from "@tanstack/react-table";
+import { useRouter } from "next/router";
 
-import IconPicker from "@/components/blocks/IconPicker"
-import { useEvaluators } from "@/utils/dataHooks/evaluators"
-import { deserializeLogic, hasAccess, serializeLogic } from "shared"
-import { useSortParams } from "@/utils/hooks"
+import IconPicker from "@/components/blocks/IconPicker";
+import { useEvaluators } from "@/utils/dataHooks/evaluators";
+import { deserializeLogic, hasAccess, serializeLogic } from "shared";
+import { useSortParams } from "@/utils/hooks";
 
 export const defaultColumns = {
   llm: [
@@ -112,7 +112,7 @@ export const defaultColumns = {
     tagsColumn(),
     feedbackColumn(true),
   ],
-}
+};
 
 export const CHECKS_BY_TYPE = {
   llm: [
@@ -147,84 +147,84 @@ export const CHECKS_BY_TYPE = {
     // "feedback",
     "metadata",
   ],
-}
+};
 
 const VIEW_ICONS = {
   llm: "IconBrandOpenai",
   thread: "IconMessages",
   trace: "IconBinaryTree2",
-}
+};
 
 function editCheck(filters, id, params) {
   if (!params) {
     // Remove filter
-    return filters.filter((f) => f.id !== id)
+    return filters.filter((f) => f.id !== id);
   }
 
-  const newChecks = [...filters]
-  const index = newChecks.findIndex((f) => f.id === id)
+  const newChecks = [...filters];
+  const index = newChecks.findIndex((f) => f.id === id);
   if (index === -1) {
-    newChecks.push({ id, params })
+    newChecks.push({ id, params });
   } else {
-    newChecks[index] = { id, params }
+    newChecks[index] = { id, params };
   }
-  return newChecks
+  return newChecks;
 }
 
-const DEFAULT_CHECK = ["AND"]
+const DEFAULT_CHECK = ["AND"];
 
 export default function Logs() {
-  const router = useRouter()
-  const { user } = useUser()
-  const { projectId } = useContext(ProjectContext)
-  const { project, isLoading: projectLoading, setProjectId } = useProject()
-  const { org } = useOrg()
+  const router = useRouter();
+  const { user } = useUser();
+  const { projectId } = useContext(ProjectContext);
+  const { project, isLoading: projectLoading, setProjectId } = useProject();
+  const { org } = useOrg();
 
-  const { insert: insertView, isInserting: isInsertingView } = useViews()
+  const { insert: insertView, isInserting: isInsertingView } = useViews();
 
-  const [allColumns, setAllColumns] = useState(defaultColumns)
+  const [allColumns, setAllColumns] = useState(defaultColumns);
 
-  const [visibleColumns, setVisibleColumns] = useState<VisibilityState>({})
-  const [columnsTouched, setColumnsTouched] = useState(false)
+  const [visibleColumns, setVisibleColumns] = useState<VisibilityState>({});
+  const [columnsTouched, setColumnsTouched] = useState(false);
 
   const [viewId, setViewId] = useQueryState<string | undefined>("view", {
     ...parseAsString,
     history: "push",
-  })
+  });
 
   const [selectedRunId, setSelectedRunId] = useQueryState<string | undefined>(
     "selected",
     parseAsString,
-  )
+  );
   const [type, setType] = useQueryState<string>(
     "type",
     parseAsStringEnum(["llm", "trace", "thread"]).withDefault("llm"),
-  )
+  );
 
   const [checks, setChecks] = useQueryState("filters", {
     parse: (value) => deserializeLogic(value, true),
     serialize: serializeLogic,
     defaultValue: DEFAULT_CHECK,
     clearOnDefault: true,
-  })
+  });
 
-  const { sortParams } = useSortParams()
+  const { sortParams } = useSortParams();
 
   const {
     view,
     update: updateView,
     remove: removeView,
     loading: viewLoading,
-  } = useView(viewId)
+  } = useView(viewId);
 
   const serializedChecks = useMemo(() => {
-    const checksWithType = editCheck(checks, "type", { type })
-    return serializeLogic(checksWithType)
-  }, [checks, type, view])
+    const checksWithType = editCheck(checks, "type", { type });
+    return serializeLogic(checksWithType);
+  }, [checks, type, view]);
 
-  const { evaluators } = useEvaluators()
+  const { evaluators } = useEvaluators();
 
-  const [query, setQuery] = useDebouncedState<string | null>(null, 300)
+  const [query, setQuery] = useDebouncedState<string | null>(null, 300);
 
   const {
     data: logs,
@@ -232,45 +232,45 @@ export default function Logs() {
     validating,
     loadMore,
     mutate,
-  } = useProjectInfiniteSWR(`/runs?${serializedChecks}${sortParams}`)
+  } = useProjectInfiniteSWR(`/runs?${serializedChecks}${sortParams}`);
 
-  const { run: selectedRun, loading: runLoading } = useRun(selectedRunId)
+  const { run: selectedRun, loading: runLoading } = useRun(selectedRunId);
 
   useEffect(() => {
     if (!hasAccess(user?.role, "settings", "read")) {
-      router.push("/analytics")
+      router.push("/analytics");
     }
-  }, [user.role])
+  }, [user.role]);
 
   if (!user.role) {
-    return <Loader />
+    return <Loader />;
   }
 
   useEffect(() => {
-    const newColumns = { ...allColumns }
+    const newColumns = { ...allColumns };
     if (type === "llm" && Array.isArray(evaluators)) {
       for (const evaluator of evaluators) {
-        const id = "enrichment-" + evaluator.id
+        const id = "enrichment-" + evaluator.id;
 
         if (newColumns.llm.map(({ accessorKey }) => accessorKey).includes(id)) {
-          continue
+          continue;
         }
 
         newColumns.llm.splice(
           3,
           0,
           enrichmentColumn(evaluator.name, evaluator.id, evaluator.type),
-        )
+        );
       }
-      setAllColumns(newColumns)
+      setAllColumns(newColumns);
     }
-  }, [type, evaluators])
+  }, [type, evaluators]);
 
   useEffect(() => {
     if (selectedRun && selectedRun.projectId !== projectId) {
-      setProjectId(selectedRun.projectId)
+      setProjectId(selectedRun.projectId);
     }
-  }, [selectedRun?.projectId])
+  }, [selectedRun?.projectId]);
 
   useDidUpdate(() => {
     // Update search filter
@@ -279,53 +279,53 @@ export default function Logs() {
         checks,
         "search",
         query.length ? { query } : null,
-      )
+      );
 
-      setChecks(newChecks)
+      setChecks(newChecks);
     }
-  }, [query])
+  }, [query]);
 
   useEffect(() => {
     // Update visible columns if view changes
     if (view?.columns) {
-      setVisibleColumns(view.columns)
+      setVisibleColumns(view.columns);
     } else {
-      setVisibleColumns(allColumns[type])
+      setVisibleColumns(allColumns[type]);
     }
-  }, [view, type, allColumns])
+  }, [view, type, allColumns]);
 
   useEffect(() => {
-    if (!view) return
+    if (!view) return;
 
-    setType(view.type)
-    setChecks(view.data)
-    setVisibleColumns(view.columns)
-  }, [view, viewId])
+    setType(view.type);
+    setChecks(view.data);
+    setVisibleColumns(view.columns);
+  }, [view, viewId]);
 
   const exportUrl = useMemo(
     () => `/runs?${serializedChecks}&projectId=${projectId}`,
     [serializedChecks, projectId],
-  )
+  );
 
   function exportButton(url: string) {
     return {
       component: "a",
       onClick: () => {
-        analytics.trackOnce("ClickExport")
+        analytics.trackOnce("ClickExport");
 
         if (org?.plan === "free") {
-          openUpgrade("export")
-          return
+          openUpgrade("export");
+          return;
         }
 
-        fetcher.getFile(url)
+        fetcher.getFile(url);
       },
-    }
+    };
   }
 
   async function saveView() {
     if (!viewId) {
-      const icon = VIEW_ICONS[type]
+      const icon = VIEW_ICONS[type];
 
       const newView = await insertView({
         name: "New View",
@@ -333,22 +333,22 @@ export default function Logs() {
         data: checks,
         columns: visibleColumns,
         icon,
-      })
+      });
 
-      setViewId(newView.id)
+      setViewId(newView.id);
     } else {
       await updateView({
         data: checks,
         columns: visibleColumns,
-      })
+      });
 
       notifications.show({
         title: "View saved",
         message: "Your view has been saved.",
-      })
+      });
     }
 
-    setColumnsTouched(false)
+    setColumnsTouched(false);
   }
 
   async function deleteView() {
@@ -362,10 +362,10 @@ export default function Logs() {
       ),
       labels: { confirm: "Confirm", cancel: "Cancel" },
       onConfirm: async () => {
-        await removeView(view.id)
-        router.push("/logs")
+        await removeView(view.id);
+        router.push("/logs");
       },
-    })
+    });
   }
 
   async function duplicateView() {
@@ -376,14 +376,14 @@ export default function Logs() {
         data: view.data,
         columns: view.columns,
         icon: view.icon,
-      })
+      });
 
       notifications.show({
         title: "View duplicated",
         message: `A copy of the view has been created with the name "Copy of ${view.name}".`,
-      })
+      });
 
-      setViewId(newView.id)
+      setViewId(newView.id);
     }
   }
 
@@ -395,7 +395,7 @@ export default function Logs() {
         checks.length > 1 &&
         (!view || JSON.stringify(view.data) !== JSON.stringify(checks))),
     [columnsTouched, checks, view],
-  )
+  );
 
   return (
     <Empty
@@ -477,7 +477,7 @@ export default function Logs() {
                     onChange={(icon) => {
                       updateView({
                         icon,
-                      })
+                      });
                     }}
                   />
                   <RenamableField
@@ -485,7 +485,7 @@ export default function Logs() {
                     onRename={(newName) => {
                       updateView({
                         name: newName,
-                      })
+                      });
                     }}
                   />
                   <Menu position="bottom-end">
@@ -568,11 +568,11 @@ export default function Logs() {
           type={type}
           onRowClicked={(row) => {
             if (["agent", "chain"].includes(row.type)) {
-              analytics.trackOnce("OpenTrace")
-              router.push(`/traces/${row.id}`)
+              analytics.trackOnce("OpenTrace");
+              router.push(`/traces/${row.id}`);
             } else {
-              analytics.trackOnce("OpenRun")
-              setSelectedRunId(row.id)
+              analytics.trackOnce("OpenRun");
+              setSelectedRunId(row.id);
             }
           }}
           key={allColumns[type].length}
@@ -584,13 +584,13 @@ export default function Logs() {
             setVisibleColumns((prev) => ({
               ...prev,
               ...newState,
-            }))
+            }));
 
-            setColumnsTouched(true)
+            setColumnsTouched(true);
           }}
           data={logs}
         />
       </Stack>
     </Empty>
-  )
+  );
 }

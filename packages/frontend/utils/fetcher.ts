@@ -1,64 +1,64 @@
-import Router from "next/router"
-import { signOut } from "./auth"
-import { showErrorNotification } from "./errors"
+import Router from "next/router";
+import { signOut } from "./auth";
+import { showErrorNotification } from "./errors";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL as string
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL as string;
 
 export function buildUrl(path: string) {
   if (path.includes("/auth")) {
-    return `${BASE_URL}${path}`
+    return `${BASE_URL}${path}`;
   }
-  return `${BASE_URL}/v1${path}`
+  return `${BASE_URL}/v1${path}`;
 }
 
 export function getHeaders() {
-  const authToken = localStorage.getItem("auth-token")
+  const authToken = localStorage.getItem("auth-token");
   return authToken
     ? {
         Authorization: `Bearer ${authToken}`,
       }
-    : undefined
+    : undefined;
 }
 
 function get(path) {
   return fetch(buildUrl(path), {
     headers: getHeaders(),
-  }).then(handleResponse)
+  }).then(handleResponse);
 }
 
 function getText(path) {
   return fetch(buildUrl(path), {
     headers: getHeaders(),
-  }).then((res) => res.text())
+  }).then((res) => res.text());
 }
 
 async function getFile(path) {
   const res = await fetch(buildUrl(path), {
     headers: getHeaders(),
-  })
+  });
 
   if (!res.ok) {
-    const { error, message } = await res.json()
+    const { error, message } = await res.json();
 
-    showErrorNotification(error, message)
-    throw new Error(message)
+    showErrorNotification(error, message);
+    throw new Error(message);
   }
 
-  const contentType = res.headers.get("Content-Type") as string
-  const fileExtension = contentType.split("/")[1]
+  const contentType = res.headers.get("Content-Type") as string;
+  const fileExtension = contentType.split("/")[1];
 
-  const blob = await res.blob()
-  const url = window.URL.createObjectURL(blob)
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
 
-  const a = document.createElement("a")
-  a.href = url
-  a.download = `export.${fileExtension}`
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `export.${fileExtension}`;
 
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 
-  window.URL.revokeObjectURL(url)
+  window.URL.revokeObjectURL(url);
 }
 
 async function getStream(url, args, onChunk) {
@@ -70,30 +70,30 @@ async function getStream(url, args, onChunk) {
       ...getHeaders(),
     },
     body: JSON.stringify(args),
-  })
+  });
 
   if (!res.ok) {
-    const { error, message } = await res.json()
-    showErrorNotification(error, message)
-    throw new Error(message)
+    const { error, message } = await res.json();
+    showErrorNotification(error, message);
+    throw new Error(message);
   }
 
-  const reader = res.body?.getReader()
+  const reader = res.body?.getReader();
 
   if (!reader) {
-    throw new Error("Error creating a stream from the response.")
+    throw new Error("Error creating a stream from the response.");
   }
 
-  let decoder = new TextDecoder()
+  let decoder = new TextDecoder();
 
   while (true) {
-    const { done, value } = await reader.read()
+    const { done, value } = await reader.read();
 
-    if (done) break
+    if (done) break;
 
-    const chunk = decoder.decode(value, { stream: true }).trim().split("\n")
+    const chunk = decoder.decode(value, { stream: true }).trim().split("\n");
 
-    for (const item of chunk) onChunk(item)
+    for (const item of chunk) onChunk(item);
   }
 }
 
@@ -105,7 +105,7 @@ function post(path, { arg }) {
       ...getHeaders(),
     },
     body: JSON.stringify(arg),
-  }).then(handleResponse)
+  }).then(handleResponse);
 }
 
 function patch(path, { arg }) {
@@ -116,22 +116,22 @@ function patch(path, { arg }) {
       ...getHeaders(),
     },
     body: JSON.stringify(arg),
-  }).then(handleResponse)
+  }).then(handleResponse);
 }
 
 async function del(path) {
   return fetch(buildUrl(path), {
     method: "DELETE",
     headers: getHeaders(),
-  }).then(handleResponse)
+  }).then(handleResponse);
 }
 
 async function handleResponse(res: Response) {
-  const isLoginPage = Router.pathname === "/login"
+  const isLoginPage = Router.pathname === "/login";
 
   // There's no body sent back on HTTP 204 (used for DELETE)
   if (res.status === 204) {
-    return
+    return;
   }
 
   if (!res.ok) {
@@ -140,20 +140,20 @@ async function handleResponse(res: Response) {
       !isLoginPage &&
       process.env.NODE_ENV !== "development"
     ) {
-      return signOut()
+      return signOut();
     }
 
     if (res.status === 429) {
-      return showErrorNotification("Too many requests", "Retry in one minute")
+      return showErrorNotification("Too many requests", "Retry in one minute");
     }
 
-    const { error, message } = await res.json()
+    const { error, message } = await res.json();
 
-    showErrorNotification(error, message)
-    throw new Error(message)
+    showErrorNotification(error, message);
+    throw new Error(message);
   }
 
-  return res.json()
+  return res.json();
 }
 
 export const fetcher = {
@@ -164,4 +164,4 @@ export const fetcher = {
   post,
   patch,
   delete: del,
-}
+};

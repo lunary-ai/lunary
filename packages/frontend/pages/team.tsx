@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react";
 
 import {
   ActionIcon,
@@ -24,7 +24,7 @@ import {
   Title,
   Tooltip,
   useCombobox,
-} from "@mantine/core"
+} from "@mantine/core";
 import {
   IconCheck,
   IconCopy,
@@ -32,43 +32,43 @@ import {
   IconDownload,
   IconLogin,
   IconTrash,
-} from "@tabler/icons-react"
-import { NextSeo } from "next-seo"
-import { z } from "zod"
+} from "@tabler/icons-react";
+import { NextSeo } from "next-seo";
+import { z } from "zod";
 
-import { CopyInput } from "@/components/blocks/CopyText"
-import UserAvatar from "@/components/blocks/UserAvatar"
+import { CopyInput } from "@/components/blocks/CopyText";
+import UserAvatar from "@/components/blocks/UserAvatar";
 import {
   // useInvitations,
   useOrg,
   useOrgUser,
   useProjects,
   useUser,
-} from "@/utils/dataHooks"
-import { fetcher } from "@/utils/fetcher"
-import { useDisclosure } from "@mantine/hooks"
-import { notifications } from "@mantine/notifications"
-import { hasAccess, roles } from "shared"
-import classes from "./team.module.css"
-import { useForm } from "@mantine/form"
-import SearchBar from "@/components/blocks/SearchBar"
-import { SettingsCard } from "@/components/blocks/SettingsCard"
-import { SEAT_ALLOWANCE } from "@/utils/pricing"
-import { openUpgrade } from "@/components/layout/UpgradeModal"
-import config from "@/utils/config"
-import RenamableField from "@/components/blocks/RenamableField"
-import errorHandler from "@/utils/errors"
+} from "@/utils/dataHooks";
+import { fetcher } from "@/utils/fetcher";
+import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
+import { hasAccess, roles } from "shared";
+import classes from "./team.module.css";
+import { useForm } from "@mantine/form";
+import SearchBar from "@/components/blocks/SearchBar";
+import { SettingsCard } from "@/components/blocks/SettingsCard";
+import { SEAT_ALLOWANCE } from "@/utils/pricing";
+import { openUpgrade } from "@/components/layout/UpgradeModal";
+import config from "@/utils/config";
+import RenamableField from "@/components/blocks/RenamableField";
+import errorHandler from "@/utils/errors";
 
 function SAMLConfig() {
-  const { org, updateOrg, mutate } = useOrg()
+  const { org, updateOrg, mutate } = useOrg();
 
-  const [idpXml, setIdpXml] = useState(org?.samlIdpXml)
-  const [idpLoading, setIdpLoading] = useState(false)
-  const [spLoading, setSpLoading] = useState(false)
+  const [idpXml, setIdpXml] = useState(org?.samlIdpXml);
+  const [idpLoading, setIdpLoading] = useState(false);
+  const [spLoading, setSpLoading] = useState(false);
 
   // Check if URL is supplied, if so download the xml
   async function addIdpXml() {
-    setIdpLoading(true)
+    setIdpLoading(true);
 
     const res = await errorHandler(
       fetcher.post(`/auth/saml/${org?.id}/download-idp-xml`, {
@@ -76,7 +76,7 @@ function SAMLConfig() {
           content: idpXml,
         },
       }),
-    )
+    );
 
     if (res) {
       notifications.show({
@@ -84,31 +84,31 @@ function SAMLConfig() {
         message: "The IDP XML has been added successfully",
         icon: <IconCheck />,
         color: "green",
-      })
+      });
 
-      mutate()
+      mutate();
     }
 
-    setIdpLoading(false)
+    setIdpLoading(false);
   }
 
   async function downloadSpXml() {
-    setSpLoading(true)
-    const response = await fetcher.getText(`/auth/saml/${org?.id}/metadata/`)
-    const blob = new Blob([response], { type: "text/xml" })
-    const downloadUrl = window.URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.href = downloadUrl
-    link.setAttribute("download", "SP_Metadata.xml")
-    document.body.appendChild(link)
-    link.click()
-    link.parentNode?.removeChild(link)
-    setSpLoading(false)
+    setSpLoading(true);
+    const response = await fetcher.getText(`/auth/saml/${org?.id}/metadata/`);
+    const blob = new Blob([response], { type: "text/xml" });
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.setAttribute("download", "SP_Metadata.xml");
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode?.removeChild(link);
+    setSpLoading(false);
   }
 
   const samlEnabled = config.IS_SELF_HOSTED
     ? org.license.samlEnabled
-    : org.samlEnabled
+    : org.samlEnabled;
 
   return (
     <SettingsCard
@@ -139,7 +139,7 @@ function SAMLConfig() {
           variant="light"
           loading={idpLoading}
           onClick={() => {
-            addIdpXml()
+            addIdpXml();
           }}
         >
           Add IDP XML
@@ -202,7 +202,7 @@ function SAMLConfig() {
         Download Service Provider Metadata XML
       </Button>
     </SettingsCard>
-  )
+  );
 }
 
 function InviteLinkModal({ opened, setOpened, link }) {
@@ -222,7 +222,7 @@ function InviteLinkModal({ opened, setOpened, link }) {
       <Button
         leftSection={<IconCopy size={18} />}
         onClick={() => {
-          navigator.clipboard.writeText(link)
+          navigator.clipboard.writeText(link);
         }}
         variant="light"
         fullWidth
@@ -231,29 +231,29 @@ function InviteLinkModal({ opened, setOpened, link }) {
         Copy Link
       </Button>
     </Modal>
-  )
+  );
 }
 
 // TODO: split in two components (instead of useInvitation)
 function UserMenu({ user, isInvitation }) {
-  const [opened, { open, close }] = useDisclosure(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const { user: currentUser } = useUser()
-  const { removeUserFromOrg } = useOrgUser(user.id)
+  const [opened, { open, close }] = useDisclosure(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { user: currentUser } = useUser();
+  const { removeUserFromOrg } = useOrgUser(user.id);
 
   if (["admin", "owner"].includes(user.role) && currentUser?.role !== "owner") {
-    return null
+    return null;
   }
 
   if (currentUser?.id === user.id) {
-    return null
+    return null;
   }
 
   async function confirm() {
-    setIsLoading(true)
-    await removeUserFromOrg()
-    setIsLoading(false)
-    close()
+    setIsLoading(true);
+    await removeUserFromOrg();
+    setIsLoading(false);
+    close();
   }
 
   return (
@@ -304,14 +304,14 @@ function UserMenu({ user, isInvitation }) {
               onClick={() => {
                 navigator.clipboard.writeText(
                   `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/join?token=${user.singleUseToken}`,
-                )
+                );
                 notifications.show({
                   icon: <IconCheck size={18} />,
                   title: "Link copied",
                   color: "green",
                   message: "",
                   autoClose: 2000,
-                })
+                });
               }}
               leftSection={<IconCopy size={16} />}
             >
@@ -321,7 +321,7 @@ function UserMenu({ user, isInvitation }) {
         </Menu.Dropdown>
       </Menu>
     </>
-  )
+  );
 }
 
 export function RoleSelect({
@@ -331,21 +331,21 @@ export function RoleSelect({
   minimal = false,
   additionalOptions = [],
 }: {
-  value: string
-  setValue: (value: string) => void
-  disabled?: boolean
-  minimal?: boolean
-  additionalOptions?: React.JSX.Element[]
+  value: string;
+  setValue: (value: string) => void;
+  disabled?: boolean;
+  minimal?: boolean;
+  additionalOptions?: React.JSX.Element[];
 }) {
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
-  })
+  });
 
-  const { org } = useOrg()
+  const { org } = useOrg();
 
   const canUsePaidRoles = config.IS_SELF_HOSTED
     ? org.license.accessControlEnabled
-    : org?.plan === "custom"
+    : org?.plan === "custom";
 
   const options = Object.values(roles).map(
     ({ value, name, description, free }) =>
@@ -374,16 +374,16 @@ export function RoleSelect({
           </Combobox.Option>
         </Tooltip>
       ),
-  )
+  );
 
-  options.push(...additionalOptions)
+  options.push(...additionalOptions);
 
   return (
     <Combobox
       store={combobox}
       onOptionSubmit={(val) => {
-        setValue(val)
-        combobox.closeDropdown()
+        setValue(val);
+        combobox.closeDropdown();
       }}
     >
       <Combobox.Target>
@@ -413,18 +413,18 @@ export function RoleSelect({
         <Combobox.Options>{options}</Combobox.Options>
       </Combobox.Dropdown>
     </Combobox>
-  )
+  );
 }
 
 function ProjectMultiSelect({ value, setValue, disabled }) {
-  const { projects } = useProjects()
+  const { projects } = useProjects();
 
   const data = [
     ...projects.map((project) => ({
       value: project.id,
       label: project.name,
     })),
-  ]
+  ];
 
   return (
     <MultiSelect
@@ -435,29 +435,29 @@ function ProjectMultiSelect({ value, setValue, disabled }) {
       disabled={disabled}
       readOnly={disabled}
     />
-  )
+  );
 }
 
 function InviteMemberCard() {
-  const [role, setRole] = useState("member")
-  const { projects } = useProjects()
-  const [selectedProjects, setSelectedProjects] = useState([])
-  const [opened, setOpened] = useState(false)
-  const [inviteLink, setInviteLink] = useState("")
-  const { org, mutate } = useOrg()
+  const [role, setRole] = useState("member");
+  const { projects } = useProjects();
+  const [selectedProjects, setSelectedProjects] = useState([]);
+  const [opened, setOpened] = useState(false);
+  const [inviteLink, setInviteLink] = useState("");
+  const { org, mutate } = useOrg();
 
-  const [isLoading, setIsLoading] = useState(false)
-  const { addUserToOrg } = useOrg()
+  const [isLoading, setIsLoading] = useState(false);
+  const { addUserToOrg } = useOrg();
 
   useEffect(() => {
-    setSelectedProjects(projects.map((p) => p.id))
-  }, [projects])
+    setSelectedProjects(projects.map((p) => p.id));
+  }, [projects]);
 
   useEffect(() => {
     if (["admin", "billing"].includes(role)) {
-      setSelectedProjects(projects.map((p) => p.id))
+      setSelectedProjects(projects.map((p) => p.id));
     }
-  }, [role])
+  }, [role]);
 
   const form = useForm({
     initialValues: {
@@ -468,21 +468,21 @@ function InviteMemberCard() {
       email: (value) =>
         z.string().email().safeParse(value).success ? null : "Invalid email",
     },
-  })
+  });
 
   async function invite({ email }) {
-    const seatAllowance = org?.seatAllowance || SEAT_ALLOWANCE[org?.plan]
+    const seatAllowance = org?.seatAllowance || SEAT_ALLOWANCE[org?.plan];
     if (org?.users?.length >= seatAllowance) {
-      return openUpgrade("team")
+      return openUpgrade("team");
     }
 
     try {
-      setIsLoading(true)
+      setIsLoading(true);
       const { user: newUser } = await addUserToOrg({
         email,
         role,
         projects: selectedProjects,
-      })
+      });
 
       if (!config.IS_SELF_HOSTED) {
         notifications.show({
@@ -490,26 +490,26 @@ function InviteMemberCard() {
           message: "An email has been sent to them",
           icon: <IconCheck />,
           color: "green",
-        })
+        });
 
-        mutate()
+        mutate();
 
-        return
+        return;
       } else {
-        const link = `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/join?token=${newUser.singleUseToken}`
-        setIsLoading(false)
-        setInviteLink(link)
-        setOpened(true)
-        return
+        const link = `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/join?token=${newUser.singleUseToken}`;
+        setIsLoading(false);
+        setInviteLink(link);
+        setOpened(true);
+        return;
       }
     } catch (error) {
-      console.error(error)
+      console.error(error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
-  const upgradeForGranular = org?.plan !== "custom"
+  const upgradeForGranular = org?.plan !== "custom";
 
   return (
     <SettingsCard title="Invite Team Member">
@@ -556,42 +556,42 @@ function InviteMemberCard() {
         </Group>
       </form>
     </SettingsCard>
-  )
+  );
 }
 
 function UpdateUserForm({ user, onClose }) {
-  const [role, setRole] = useState(user.role)
-  const { projects } = useProjects()
-  const { org } = useOrg()
+  const [role, setRole] = useState(user.role);
+  const { projects } = useProjects();
+  const { org } = useOrg();
 
-  const [userProjects, setUserProjects] = useState(user.projects)
-  const { updateUser } = useOrgUser(user.id)
-  const [isLoading, setIsLoading] = useState(false)
+  const [userProjects, setUserProjects] = useState(user.projects);
+  const { updateUser } = useOrgUser(user.id);
+  const [isLoading, setIsLoading] = useState(false);
 
   const canUsePaidRoles = config.IS_SELF_HOSTED
     ? org.license.accessControlEnabled
-    : org?.plan === "custom"
+    : org?.plan === "custom";
 
   useEffect(() => {
     if (["admin", "billing"].includes(role)) {
-      setUserProjects(projects.map((p) => p.id))
+      setUserProjects(projects.map((p) => p.id));
     }
-  }, [role])
+  }, [role]);
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
     try {
-      await updateUser({ role, projects: userProjects })
+      await updateUser({ role, projects: userProjects });
 
-      onClose()
+      onClose();
     } catch (error) {
-      console.error("Error updating role:", error)
+      console.error("Error updating role:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <form onSubmit={handleSubmit}>
@@ -615,38 +615,38 @@ function UpdateUserForm({ user, onClose }) {
         </Button>
       </Group>
     </form>
-  )
+  );
 }
 
 function MemberList({ users, isInvitation }) {
-  const { user: currentUser } = useUser()
-  const { projects } = useProjects()
-  const { org } = useOrg()
-  const [opened, { close, open }] = useDisclosure(false)
+  const { user: currentUser } = useUser();
+  const { projects } = useProjects();
+  const { org } = useOrg();
+  const [opened, { close, open }] = useDisclosure(false);
 
-  const [searchValue, setSearchValue] = useState("")
-  const [role, setRole] = useState("")
+  const [searchValue, setSearchValue] = useState("");
+  const [role, setRole] = useState("");
 
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [selectedUser, setSelectedUser] = useState(null)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const handleOpenModal = (user) => {
-    setSelectedUser(user)
-    setIsModalOpen(true)
-  }
+    setSelectedUser(user);
+    setIsModalOpen(true);
+  };
 
   const additionalOptions = [
     <Combobox.Option value="all" key="all">
       <Text size="sm">All</Text>
     </Combobox.Option>,
-  ]
+  ];
 
   users = users
     .filter(
       (user) =>
         user.name?.includes(searchValue) || user.email.includes(searchValue),
     )
-    .filter((user) => role === "all" || user.role.includes(role))
+    .filter((user) => role === "all" || user.role.includes(role));
 
   return (
     <>
@@ -763,17 +763,17 @@ function MemberList({ users, isInvitation }) {
         )}
       </Stack>
     </>
-  )
+  );
 }
 function MemberListCard() {
-  const { org } = useOrg()
+  const { org } = useOrg();
 
   const invitedUsers = org?.users.filter(
     (user) => user.verified === false && user.role !== "owner",
-  )
+  );
   const activatedUsers = org?.users.filter(
     (user) => user.verified === true || user.role === "owner",
-  )
+  );
 
   return (
     <Tabs defaultValue="members">
@@ -791,16 +791,16 @@ function MemberListCard() {
         <MemberList users={invitedUsers} isInvitation={true} />
       </Tabs.Panel>
     </Tabs>
-  )
+  );
 }
 
 // TODO: put back at root level
 export default function Team() {
-  const { org, updateOrg, mutate } = useOrg()
-  const { user } = useUser()
+  const { org, updateOrg, mutate } = useOrg();
+  const { user } = useUser();
   const samlEnabled = config.IS_SELF_HOSTED
     ? org.license.samlEnabled
-    : org.samlEnabled
+    : org.samlEnabled;
 
   return (
     <Container className="unblockable">
@@ -813,8 +813,8 @@ export default function Team() {
             defaultValue={org?.name}
             order={2}
             onRename={(newName) => {
-              updateOrg({ id: org.id, name: newName })
-              mutate({ ...org, name: newName })
+              updateOrg({ id: org.id, name: newName });
+              mutate({ ...org, name: newName });
             }}
           />
         </Group>
@@ -824,5 +824,5 @@ export default function Team() {
         {["admin", "owner"].includes(user.role) && <SAMLConfig />}
       </Stack>
     </Container>
-  )
+  );
 }

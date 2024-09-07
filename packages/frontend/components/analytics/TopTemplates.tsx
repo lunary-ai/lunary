@@ -1,20 +1,20 @@
-import { formatCost, formatLargeNumber } from "@/utils/format"
-import { Center, Flex, Loader, Overlay } from "@mantine/core"
-import AnalyticsCard from "./AnalyticsCard"
-import BarList from "./BarList"
+import { formatCost, formatLargeNumber } from "@/utils/format";
+import { Center, Flex, Loader, Overlay } from "@mantine/core";
+import AnalyticsCard from "./AnalyticsCard";
+import BarList from "./BarList";
 
 interface TopTemplates {
-  slug: string
-  usageCount: number
-  cost: number
-  totalTokens: number
-  completionTokens: number
-  promptTokens: number
+  slug: string;
+  usageCount: number;
+  cost: number;
+  totalTokens: number;
+  completionTokens: number;
+  promptTokens: number;
 }
 
 interface TopTemplatesProps {
-  topTemplates: TopTemplates[]
-  isLoading: boolean
+  topTemplates: TopTemplates[];
+  isLoading: boolean;
 }
 
 function TopTemplates({ topTemplates, isLoading }: TopTemplatesProps) {
@@ -23,7 +23,7 @@ function TopTemplates({ topTemplates, isLoading }: TopTemplatesProps) {
       <Flex align="center" justify="center" h="280px">
         <Loader />
       </Flex>
-    )
+    );
   }
 
   if (topTemplates.length === 0) {
@@ -34,7 +34,7 @@ function TopTemplates({ topTemplates, isLoading }: TopTemplatesProps) {
           No templates used available for this period
         </Center>
       </>
-    )
+    );
   }
 
   return (
@@ -76,7 +76,7 @@ function TopTemplates({ topTemplates, isLoading }: TopTemplatesProps) {
         },
       ]}
     />
-  )
+  );
 }
 
 export default function TopTemplatesCard({
@@ -87,5 +87,5 @@ export default function TopTemplatesCard({
     <AnalyticsCard title="Top Templates">
       <TopTemplates topTemplates={topTemplates} isLoading={isLoading} />
     </AnalyticsCard>
-  )
+  );
 }

@@ -1,4 +1,4 @@
-import { useDatasets, useOrg, useRun, useUser } from "@/utils/dataHooks"
+import { useDatasets, useOrg, useRun, useUser } from "@/utils/dataHooks";
 import {
   Badge,
   Button,
@@ -10,30 +10,30 @@ import {
   Stack,
   Switch,
   Text,
-} from "@mantine/core"
-import { notifications, showNotification } from "@mantine/notifications"
+} from "@mantine/core";
+import { notifications, showNotification } from "@mantine/notifications";
 import {
   IconBinaryTree2,
   IconCheck,
   IconPencilShare,
-} from "@tabler/icons-react"
-import Link from "next/link"
-import { hasAccess } from "shared"
-import SmartViewer from "../SmartViewer"
-import CopyText, { SuperCopyButton } from "./CopyText"
-import ErrorBoundary from "./ErrorBoundary"
-import TokensBadge from "./TokensBadge"
-import Feedbacks from "./Feedbacks"
-import config from "@/utils/config"
-import { useState } from "react"
-import AppUserAvatar from "./AppUserAvatar"
+} from "@tabler/icons-react";
+import Link from "next/link";
+import { hasAccess } from "shared";
+import SmartViewer from "../SmartViewer";
+import CopyText, { SuperCopyButton } from "./CopyText";
+import ErrorBoundary from "./ErrorBoundary";
+import TokensBadge from "./TokensBadge";
+import Feedbacks from "./Feedbacks";
+import config from "@/utils/config";
+import { useState } from "react";
+import AppUserAvatar from "./AppUserAvatar";
 
 const isChatMessages = (obj) => {
   return Array.isArray(obj)
     ? obj.every(isChatMessages)
     : (typeof obj.text === "string" && typeof obj.role === "string") ||
-        typeof obj.content === "string"
-}
+        typeof obj.content === "string";
+};
 
 const ParamItem = ({
   name,
@@ -41,10 +41,10 @@ const ParamItem = ({
   render,
   color = "blue",
 }: {
-  name: string
-  value: any
-  render?: (value: any) => React.ReactNode
-  color?: string
+  name: string;
+  value: any;
+  render?: (value: any) => React.ReactNode;
+  color?: string;
 }) => {
   return (
     <Group>
@@ -69,8 +69,8 @@ const ParamItem = ({
         </Text>
       )}
     </Group>
-  )
-}
+  );
+};
 
 // tools format: [
 //   {
@@ -99,9 +99,9 @@ const ParamItem = ({
 
 function RenderTools({ tools }) {
   return tools?.map((tool, i) => {
-    const toolObject = tool.function || tool.toolSpec // toolSpec is for langchain I believe
+    const toolObject = tool.function || tool.toolSpec; // toolSpec is for langchain I believe
 
-    const spec = toolObject?.parameters || toolObject?.inputSchema
+    const spec = toolObject?.parameters || toolObject?.inputSchema;
 
     return (
       <HoverCard key={i}>
@@ -125,8 +125,8 @@ function RenderTools({ tools }) {
           </ScrollArea.Autosize>
         </HoverCard.Dropdown>
       </HoverCard>
-    )
-  })
+    );
+  });
 }
 
 const PARAMS = [
@@ -145,7 +145,7 @@ const PARAMS = [
     render: (value) => <RenderTools tools={value} />,
   },
   { key: "toolChoice", name: "Tool Choice" },
-]
+];
 
 export default function RunInputOutput({
   initialRun,
@@ -156,23 +156,23 @@ export default function RunInputOutput({
   withShare = false,
   mutateLogs,
 }) {
-  const { user } = useUser()
-  const { org } = useOrg()
-  const { run, update, updateFeedback } = useRun(initialRun?.id, initialRun)
-  const [selectedDataset, setSelectedDataset] = useState<string | null>("")
+  const { user } = useUser();
+  const { org } = useOrg();
+  const { run, update, updateFeedback } = useRun(initialRun?.id, initialRun);
+  const [selectedDataset, setSelectedDataset] = useState<string | null>("");
 
   const canEnablePlayground =
     withPlayground &&
     run?.type === "llm" &&
     run?.input &&
     isChatMessages(run?.input) &&
-    hasAccess(user.role, "prompts", "read")
+    hasAccess(user.role, "prompts", "read");
 
-  const { datasets, insertPrompt } = useDatasets()
+  const { datasets, insertPrompt } = useDatasets();
 
   const canImportToDataset = config.IS_SELF_HOSTED
     ? true
-    : org?.plan === "team" || org?.plan === "custom"
+    : org?.plan === "team" || org?.plan === "custom";
 
   const shouldDisplayCard =
     run?.name ||
@@ -180,7 +180,7 @@ export default function RunInputOutput({
     Object.keys(run?.params || {}).length !== 0 ||
     run?.tags?.length > 0 ||
     run?.metadata ||
-    canEnablePlayground
+    canEnablePlayground;
 
   return (
     <ErrorBoundary>
@@ -221,17 +221,17 @@ export default function RunInputOutput({
                       checked={run.isPublic}
                       color={run.isPublic ? "red" : "blue"}
                       onChange={async (e) => {
-                        const checked = e.currentTarget.checked as boolean
-                        update({ ...run, isPublic: checked })
+                        const checked = e.currentTarget.checked as boolean;
+                        update({ ...run, isPublic: checked });
                         if (checked) {
-                          const url = `${window.location.origin}/logs/${run.id}`
-                          await navigator.clipboard.writeText(url)
+                          const url = `${window.location.origin}/logs/${run.id}`;
+                          await navigator.clipboard.writeText(url);
 
                           notifications.show({
                             top: 100,
                             title: "Run is now public",
                             message: "Link copied to clipboard",
-                          })
+                          });
                         }
                       }}
                     />
@@ -252,14 +252,14 @@ export default function RunInputOutput({
                           datasetId: value,
                           messages: run.input,
                           idealOutput: run.output,
-                        })
+                        });
                         notifications.show({
                           title: "The run has been added to the dataset",
                           message: "",
                           icon: <IconCheck />,
                           color: "green",
-                        })
-                        setSelectedDataset(null)
+                        });
+                        setSelectedDataset(null);
                       }}
                     />
                   )}
@@ -314,7 +314,7 @@ export default function RunInputOutput({
                       .filter(([key]) => key !== "enrichment")
                       .map(([key, value]) => {
                         if (!value || value.hasOwnProperty("toString")) {
-                          return null
+                          return null;
                         }
 
                         return (
@@ -327,7 +327,7 @@ export default function RunInputOutput({
                               <CopyText ml={0} value={value.toString()} />
                             )}
                           />
-                        )
+                        );
                       })}
                   </Stack>
 
@@ -404,10 +404,10 @@ export default function RunInputOutput({
                     feedback={run.feedback}
                     updateFeedback={async (feedback) => {
                       try {
-                        await updateFeedback(feedback)
-                        await mutateLogs()
+                        await updateFeedback(feedback);
+                        await mutateLogs();
                       } catch (error) {
-                        console.error(error)
+                        console.error(error);
                       }
                     }}
                   />
@@ -422,5 +422,5 @@ export default function RunInputOutput({
         )}
       </Stack>
     </ErrorBoundary>
-  )
+  );
 }

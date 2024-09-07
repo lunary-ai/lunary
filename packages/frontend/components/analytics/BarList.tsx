@@ -5,29 +5,29 @@ import {
   Text,
   Tooltip,
   useComputedColorScheme,
-} from "@mantine/core"
+} from "@mantine/core";
 
 type BarListProps = {
-  data: any[]
-  filterZero?: boolean
+  data: any[];
+  filterZero?: boolean;
   columns: {
-    key: string
-    name?: string
-    main?: boolean // Use this column for the bar chart calculations?
-    bar?: boolean // Bar chart column ?
-    render?: (value, row?) => React.ReactNode
-  }[]
-}
+    key: string;
+    name?: string;
+    main?: boolean; // Use this column for the bar chart calculations?
+    bar?: boolean; // Bar chart column ?
+    render?: (value, row?) => React.ReactNode;
+  }[];
+};
 
 // A table of progress bars, with the progress value the proportion relative to the total
 // and the second column the value of the bar
 function BarList({ data, columns, filterZero = true }: BarListProps) {
-  const dataColumns = columns.filter((col) => !col.bar && col.key)
-  const main = dataColumns.find((col) => col.main) || dataColumns[0]
-  const mainTotal = data?.reduce((acc, item) => acc + (item[main.key] || 0), 0)
-  const scheme = useComputedColorScheme()
+  const dataColumns = columns.filter((col) => !col.bar && col.key);
+  const main = dataColumns.find((col) => col.main) || dataColumns[0];
+  const mainTotal = data?.reduce((acc, item) => acc + (item[main.key] || 0), 0);
+  const scheme = useComputedColorScheme();
 
-  if (!data) return <>No data.</>
+  if (!data) return <>No data.</>;
 
   return (
     <>
@@ -147,7 +147,7 @@ function BarList({ data, columns, filterZero = true }: BarListProps) {
         `}</style>
       </Table>
     </>
-  )
+  );
 }
 
-export default BarList
+export default BarList;

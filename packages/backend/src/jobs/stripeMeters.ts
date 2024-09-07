@@ -1,12 +1,12 @@
-import config from "../utils/config"
-import sql from "../utils/db"
-import stripe from "../utils/stripe"
-import * as Sentry from "@sentry/node"
+import config from "../utils/config";
+import sql from "../utils/db";
+import stripe from "../utils/stripe";
+import * as Sentry from "@sentry/node";
 
 // Count the run events in the past hour and send them to Stripe
 // for all orgs with a stripe_customer
 export default async function stripeCounters() {
-  if (config.IS_SELF_HOSTED || !process.env.STRIPE_SECRET_KEY) return
+  if (config.IS_SELF_HOSTED || !process.env.STRIPE_SECRET_KEY) return;
 
   // only team plans
   const orgs = await sql`
@@ -15,9 +15,9 @@ export default async function stripeCounters() {
             o.stripe_customer,
             o.stripe_subscription
         FROM org o
-            WHERE o.stripe_customer IS NOT NULL AND o.plan = 'team' AND o.stripe_subscription IS NOT NULL`
+            WHERE o.stripe_customer IS NOT NULL AND o.plan = 'team' AND o.stripe_subscription IS NOT NULL`;
 
-  console.log(`Counting runs for ${orgs.length} orgs`)
+  console.log(`Counting runs for ${orgs.length} orgs`);
 
   for (const org of orgs) {
     // count the number of events in the past hour (each 'run' where 'run.project.org = org.id')
@@ -32,7 +32,7 @@ export default async function stripeCounters() {
                     FROM project
                     WHERE org_id = ${org.id}
                 )
-                AND created_at > NOW() - INTERVAL '1 hour'`
+                AND created_at > NOW() - INTERVAL '1 hour'`;
 
       await stripe.billing.meterEvents.create({
         event_name: "runs",
@@ -40,10 +40,10 @@ export default async function stripeCounters() {
           value: count.toString(),
           stripe_customer_id: org.stripeCustomer,
         },
-      })
+      });
     } catch (e) {
-      console.error(`Error counting runs for org ${org.id}: ${e.message}`)
-      Sentry.captureException(e)
+      console.error(`Error counting runs for org ${org.id}: ${e.message}`);
+      Sentry.captureException(e);
     }
 
     // Count team members and update quantity of 'team_seats' sub item if needed
@@ -52,27 +52,27 @@ export default async function stripeCounters() {
             SELECT
                 COUNT(*)
             FROM account
-            WHERE org_id = ${org.id}`
+            WHERE org_id = ${org.id}`;
 
       const subscription = await stripe.subscriptions.retrieve(
         org.stripeSubscription,
-      )
+      );
       const seatItem = subscription.items.data.find(
         (item) => item.price.lookup_key === "team_seats",
-      )
+      );
 
-      if (!seatItem) return
+      if (!seatItem) return;
 
       if (seatItem.quantity !== count) {
         await stripe.subscriptionItems.update(seatItem.id, {
           quantity: count,
-        })
+        });
       }
     } catch (e) {
       console.error(
         `Error counting team members for org ${org.id}: ${e.message}`,
-      )
-      Sentry.captureException(e)
+      );
+      Sentry.captureException(e);
     }
   }
 }
