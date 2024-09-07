@@ -52,6 +52,7 @@ versions.get("/latest", async (ctx: Context) => {
     ctx.throw("Template not found, is the project ID correct?", 404);
   }
 
+
   // This makes sure OpenAI messages are not camel cased as used in the app
   // For example: message.toolCallId instead of message.tool_call_id
   if (typeof latestVersion.content !== "string") {
@@ -80,6 +81,7 @@ versions.get("/:id", async (ctx: Context) => {
   if (!version) {
     ctx.throw(401, "You do not have access to this ressource.");
   }
+
 
   const [template] = await sql`
     select * from template where project_id = ${projectId} and id = ${version.templateId}

@@ -5,6 +5,7 @@ import Context from "@/src/utils/koa";
 import { unCamelObject } from "@/src/utils/misc";
 import Router from "koa-router";
 import { z } from "zod";
+
 import { unCamelExtras } from "./template-versions";
 
 const templates = new Router({
@@ -40,6 +41,7 @@ templates.get("/", async (ctx: Context) => {
 
   ctx.body = templates;
 });
+
 templates.get("/latest", async (ctx: Context) => {
   const templateVersions = await sql`
     select 

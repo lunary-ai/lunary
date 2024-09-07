@@ -97,6 +97,7 @@ function SelectedUser({ id, onClose }) {
   function confirmDelete() {
     modals.openConfirmModal({
       title: "Please confirm your action",
+      // @ts-ignore
       confirmProps: { color: "red", "data-testid": "confirm" },
       children: (
         <Text size="sm">
@@ -159,7 +160,11 @@ function SelectedUser({ id, onClose }) {
       `users=${id}`,
     );
 
-  const commonChartData = {
+  const commonChartData: {
+    startDate: Date;
+    endDate: Date;
+    granularity: "daily";
+  } = {
     startDate,
     endDate,
     granularity: "daily",
@@ -296,6 +301,17 @@ export default function Users() {
     parseAsString,
   );
 
+  const [sortField] = useQueryState<string | undefined>(
+    "sortField",
+    parseAsString,
+  );
+
+  const [sortDirection] = useQueryState<string | undefined>(
+    "sortDirection",
+    parseAsString,
+  );
+
+
   const [debouncedSearch] = useDebouncedValue(search, 200);
   const [columnVisibility, setColumnVisibility] = useLocalStorage({
     key: "users-columns",
@@ -349,7 +365,11 @@ export default function Users() {
             analytics.trackOnce("OpenUser");
 
             setSelectedUserId(row.id);
-            router.push(`/users/${row.id}`);
+
+            router.replace({
+              pathname: `/users/${row.id}`,
+              query: { sortField, sortDirection },
+            });
           }}
           loading={loading || validating}
           loadMore={loadMore}
@@ -359,7 +379,10 @@ export default function Users() {
           id={selectedUserId}
           onClose={() => {
             setSelectedUserId(null);
-            router.push("/users");
+            router.replace({
+              pathname: "/users",
+              query: { sortField, sortDirection },
+            });
           }}
         />
       </Stack>

@@ -8,7 +8,7 @@ export function useExternalUsers({
 }: {
   startDate?: Date;
   endDate?: Date;
-  search?: string;
+  search?: string | null;
 }) {
   const queryParams = new URLSearchParams();
   if (startDate && endDate) {
