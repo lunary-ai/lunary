@@ -77,6 +77,7 @@ export function ChecklistCard({ defaultValue, onDelete }) {
         <CheckPicker
           value={checklist?.data}
           restrictTo={(filter) => !filter.disableInEvals}
+          minimal={true}
           onChange={(newData) => {
             update(
               { data: newData },

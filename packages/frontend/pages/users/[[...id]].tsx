@@ -311,6 +311,7 @@ export default function Users() {
     parseAsString,
   );
 
+
   const [debouncedSearch] = useDebouncedValue(search, 200);
   const [columnVisibility, setColumnVisibility] = useLocalStorage({
     key: "users-columns",
@@ -364,6 +365,7 @@ export default function Users() {
             analytics.trackOnce("OpenUser");
 
             setSelectedUserId(row.id);
+
             router.replace({
               pathname: `/users/${row.id}`,
               query: { sortField, sortDirection },

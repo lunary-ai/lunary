@@ -25,12 +25,12 @@
     "patch-package": "^8.0.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.42.1",
-    "@types/node": "^20.11.25",
+    "@playwright/test": "^1.47.0",
+    "@types/node": "^22.5.4",
     "dotenv": "^16.4.5",
-    "prettier": "^3.3.1",
-    "tsup": "^8.0.1",
-    "tsx": "^4.7.0",
-    "typescript": "^5.3.3"
+    "prettier": "^3.3.3",
+    "tsup": "^8.2.4",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4"
   }
 }
