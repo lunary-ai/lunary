@@ -34,6 +34,7 @@ users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
     timeZone,
     sortDirection,
     sortField,
+    checks,
   } = querySchema.parse(ctx.request.query);
 
   let searchQuery = sql``;
