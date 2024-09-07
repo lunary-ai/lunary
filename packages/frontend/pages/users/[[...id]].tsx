@@ -161,9 +161,9 @@ function SelectedUser({ id, onClose }) {
     )
 
   const commonChartData: {
-    startDate: Date,
-    endDate: Date,
-    granularity: "daily",
+    startDate: Date
+    endDate: Date
+    granularity: "daily"
   } = {
     startDate,
     endDate,
@@ -301,12 +301,14 @@ export default function Users() {
     parseAsString,
   )
 
-  const [sortField, setSortField] = useQueryState<string | undefined>(
-    "sortField", parseAsString,
+  const [sortField] = useQueryState<string | undefined>(
+    "sortField",
+    parseAsString,
   )
 
-  const [sortDirection, setSortDirection] = useQueryState<string | undefined>(
-    "sortDirection", parseAsString,
+  const [sortDirection] = useQueryState<string | undefined>(
+    "sortDirection",
+    parseAsString,
   )
 
   const [debouncedSearch] = useDebouncedValue(search, 200)
@@ -364,7 +366,7 @@ export default function Users() {
             setSelectedUserId(row.id)
             router.replace({
               pathname: `/users/${row.id}`,
-              query: { sortField, sortDirection }
+              query: { sortField, sortDirection },
             })
           }}
           loading={loading || validating}
@@ -377,7 +379,7 @@ export default function Users() {
             setSelectedUserId(null)
             router.replace({
               pathname: "/users",
-              query: { sortField, sortDirection }
+              query: { sortField, sortDirection },
             })
           }}
         />
