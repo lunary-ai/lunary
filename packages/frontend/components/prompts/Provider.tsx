@@ -86,6 +86,7 @@ export const ParamItem = ({ name, value, description }) => (
   </Group>
 );
 
+
 const validateToolCalls = (toolCalls: any[]) => {
   if (!Array.isArray(toolCalls)) return false;
 
@@ -136,6 +137,7 @@ export default function ProviderEditor({
       });
     },
   });
+
 
   return (
     <>
