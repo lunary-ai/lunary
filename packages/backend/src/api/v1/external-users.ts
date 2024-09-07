@@ -3,6 +3,7 @@ import Router from "koa-router";
 import { Context } from "koa";
 import { checkAccess } from "@/src/utils/authorization";
 import { z } from "zod";
+import { buildFiltersQuery } from "./analytics/utils";
 
 const users = new Router({
   prefix: "/external-users",
@@ -22,6 +23,7 @@ users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
       .union([z.literal("asc"), z.literal("desc")])
       .optional()
       .default("desc"),
+    checks: z.string().optional(),
   });
   const {
     limit,
@@ -32,6 +34,7 @@ users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
     timeZone,
     sortDirection,
     sortField,
+    checks,
   } = querySchema.parse(ctx.request.query);
 
   let searchQuery = sql``;
@@ -51,6 +54,8 @@ users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
     `;
   }
 
+  const filtersQuery = buildFiltersQuery(checks || "");
+
   const sortMapping = {
     createdAt: "eu.created_at",
     lastSeen: "eu.last_seen",
@@ -68,7 +73,8 @@ users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
         from
           run r
         where
-          project_id = ${projectId} 
+          ${filtersQuery}
+          and project_id = ${projectId} 
           ${createAtQuery}
         group by
           external_user_id

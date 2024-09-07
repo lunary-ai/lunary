@@ -4,7 +4,7 @@ import Context from "@/src/utils/koa";
 import { deserializeLogic } from "shared";
 import { z } from "zod";
 
-function buildFiltersQuery(checks: string) {
+export function buildFiltersQuery(checks: string) {
   const deserializedChecks = deserializeLogic(checks);
   return deserializedChecks?.length && deserializedChecks.length > 1
     ? convertChecksToSQL(deserializedChecks)
