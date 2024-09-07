@@ -1,7 +1,7 @@
 import { useProjectSWR } from ".";
 
 export function useAnalyticsChartData(
-  key?: string,
+  key: string | null | undefined,
   startDate: Date,
   endDate: Date,
   granularity: string,
@@ -10,15 +10,20 @@ export function useAnalyticsChartData(
   const timeZone = new window.Intl.DateTimeFormat().resolvedOptions().timeZone;
   const checksParam = checks ? `&checks=${checks}` : "";
   const { data, isLoading } = useProjectSWR(
-    key &&
-      `/analytics/${key}?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&timeZone=${timeZone}&granularity=${granularity}${checksParam}`,
+    key
+      ? `/analytics/${key}?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&timeZone=${timeZone}&granularity=${granularity}${checksParam}`
+      : undefined,
   );
 
   return { data, isLoading };
 }
 
-export function useTopModels(params: { startDate?: Date; endDate?: Date }) {
-  const { startDate, endDate } = params || {};
+export function useTopModels(params: {
+  startDate?: Date;
+  endDate?: Date;
+  checks?: string;
+}) {
+  const { startDate, endDate, checks } = params || {};
 
   const queryParams = new URLSearchParams();
   if (startDate && endDate) {
@@ -29,6 +34,10 @@ export function useTopModels(params: { startDate?: Date; endDate?: Date }) {
     queryParams.append("timeZone", timeZone);
   }
 
+  if (checks) {
+    queryParams.append("checks", checks);
+  }
+
   const { data, isLoading } = useProjectSWR(
     params && `/analytics/top/models?${queryParams.toString()}`,
   );
@@ -36,10 +45,15 @@ export function useTopModels(params: { startDate?: Date; endDate?: Date }) {
   return { data, isLoading };
 }
 
-export function useTopTemplates(startDate: Date, endDate: Date) {
+export function useTopTemplates(
+  startDate: Date,
+  endDate: Date,
+  checks: string,
+) {
   const timeZone = new window.Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const checksParam = checks ? `&checks=${checks}` : "";
   const { data, isLoading } = useProjectSWR(
-    `/analytics/top/templates?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&timeZone=${timeZone}`,
+    `/analytics/top/templates?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&timeZone=${timeZone}${checksParam}`,
   );
 
   return { data, isLoading };

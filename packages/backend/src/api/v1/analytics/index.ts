@@ -1,11 +1,9 @@
 import { checkAccess } from "@/src/utils/authorization";
-import { convertChecksToSQL } from "@/src/utils/checks";
 import sql from "@/src/utils/db";
 import Context from "@/src/utils/koa";
 import Router from "koa-router";
-import { deserializeLogic } from "shared";
 import { z } from "zod";
-import { parseQuery } from "./utils";
+import { buildFiltersQuery, parseQuery } from "./utils";
 
 const analytics = new Router({
   prefix: "/analytics",
@@ -792,28 +790,29 @@ analytics.get(
       timeZone: z.string().optional(),
       userId: z.string().optional(),
       name: z.string().optional(),
+      checks: z.string().optional(),
     });
     const { projectId } = ctx.state;
-    const { startDate, endDate, timeZone, userId, name } = querySchema.parse(
-      ctx.request.query,
-    );
+    const { startDate, endDate, timeZone, userId, name, checks } =
+      querySchema.parse(ctx.request.query);
+    const filtersQuery = buildFiltersQuery(checks || "");
 
     let dateFilter = sql``;
     if (startDate && endDate && timeZone) {
       dateFilter = sql`
-        and date_trunc('day', created_at at time zone ${timeZone})::timestamp  >= ${startDate}
-        and date_trunc('day', created_at at time zone ${timeZone})::timestamp  <= ${endDate}
+        and date_trunc('day', r.created_at at time zone ${timeZone})::timestamp  >= ${startDate}
+        and date_trunc('day', r.created_at at time zone ${timeZone})::timestamp  <= ${endDate}
       `;
     }
 
     let userFilter = sql``;
     if (userId) {
-      userFilter = sql`and external_user_id = ${userId}`;
+      userFilter = sql`and r.external_user_id = ${userId}`;
     }
 
     let nameFilter = sql``;
     if (name) {
-      nameFilter = sql`and name = ${name}`;
+      nameFilter = sql`and r.name = ${name}`;
     }
 
     const topModels = await sql`
@@ -824,16 +823,17 @@ analytics.get(
         coalesce(sum(prompt_tokens + completion_tokens), 0)::int as total_tokens,
         coalesce(sum(cost), 0)::float as cost
       from
-        run
+        run r
       where
-        project_id = ${projectId} 
-        and type = 'llm'
-        and name is not null
+        ${filtersQuery}
+        and r.project_id = ${projectId} 
+        and r.type = 'llm'
+        and r.name is not null
         ${dateFilter}
         ${userFilter}
         ${nameFilter}
       group by
-        name
+        r.name
       order by
         total_tokens desc,
         cost desc
@@ -852,11 +852,13 @@ analytics.get(
       startDate: z.string().datetime(),
       endDate: z.string().datetime(),
       timeZone: z.string(),
+      checks: z.string().optional(),
     });
     const { projectId } = ctx.state;
-    const { startDate, endDate, timeZone } = querySchema.parse(
+    const { startDate, endDate, timeZone, checks } = querySchema.parse(
       ctx.request.query,
     );
+    const filtersQuery = buildFiltersQuery(checks || "");
 
     const topTemplates = await sql`
       select
@@ -871,7 +873,8 @@ analytics.get(
         left join template_version tv on r.template_version_id = tv.id
         left join template t on tv.template_id = t.id
       where
-        r.project_id = ${projectId}
+        ${filtersQuery}
+        and r.project_id = ${projectId}
         and r.template_version_id is not null
         and date_trunc('day', r.created_at at time zone ${timeZone})::timestamp  >= ${startDate}
         and date_trunc('day', r.created_at at time zone ${timeZone})::timestamp  <= ${endDate}
