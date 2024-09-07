@@ -1,37 +1,38 @@
-import { useProjectInfiniteSWR } from "."
-import { useSortParams } from "../hooks"
+import { useProjectInfiniteSWR } from ".";
+import { useSortParams } from "../hooks";
 
 export function useExternalUsers({
   startDate,
   endDate,
   search,
-  checks
+  checks,
 }: {
-  startDate?: Date
-  endDate?: Date
-  search?: string
-  checks?: string
+  startDate?: Date;
+  endDate?: Date;
+  search?: string | null;
+  checks?: string;
 }) {
-  const queryParams = new URLSearchParams()
+  const queryParams = new URLSearchParams();
   if (startDate && endDate) {
-    const timeZone = new window.Intl.DateTimeFormat().resolvedOptions().timeZone
-    queryParams.append("startDate", startDate.toISOString())
-    queryParams.append("endDate", endDate.toISOString())
-    queryParams.append("timeZone", timeZone)
+    const timeZone = new window.Intl.DateTimeFormat().resolvedOptions()
+      .timeZone;
+    queryParams.append("startDate", startDate.toISOString());
+    queryParams.append("endDate", endDate.toISOString());
+    queryParams.append("timeZone", timeZone);
   }
 
   if (search) {
-    queryParams.append("search", search)
+    queryParams.append("search", search);
   }
 
   if (checks) {
-    queryParams.append("checks", checks)
+    queryParams.append("checks", checks);
   }
 
-  const { sortParams } = useSortParams()
+  const { sortParams } = useSortParams();
   const { data, loading, validating, loadMore } = useProjectInfiniteSWR(
     `/external-users?${queryParams.toString()}&${sortParams}`,
-  )
+  );
 
-  return { users: data, loading, validating, loadMore }
+  return { users: data, loading, validating, loadMore };
 }

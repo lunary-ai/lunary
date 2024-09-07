@@ -1,5 +1,5 @@
-import AnalyticsCard from "./AnalyticsCard"
-import BarList from "./BarList"
+import AnalyticsCard from "./AnalyticsCard";
+import BarList from "./BarList";
 
 export default function AgentSummary({ usage }) {
   return (
@@ -43,5 +43,5 @@ export default function AgentSummary({ usage }) {
         ]}
       />
     </AnalyticsCard>
-  )
+  );
 }

@@ -1,4 +1,4 @@
-import { SettingsCard } from "@/components/blocks/SettingsCard"
+import { SettingsCard } from "@/components/blocks/SettingsCard";
 import {
   ActionIcon,
   Badge,
@@ -16,9 +16,9 @@ import {
   Textarea,
   TextInput,
   Title,
-} from "@mantine/core"
-import { IconTrash } from "@tabler/icons-react"
-import { useState } from "react"
+} from "@mantine/core";
+import { IconTrash } from "@tabler/icons-react";
+import { useState } from "react";
 
 function FilterSlider({ label }) {
   return (
@@ -36,35 +36,35 @@ function FilterSlider({ label }) {
         ]}
       />
     </Group>
-  )
+  );
 }
 
 function TopicModal() {
-  const [opened, setOpened] = useState(false)
-  const [name, setName] = useState("")
-  const [definition, setDefinition] = useState("")
-  const [samplePhrases, setSamplePhrases] = useState(["", ""])
+  const [opened, setOpened] = useState(false);
+  const [name, setName] = useState("");
+  const [definition, setDefinition] = useState("");
+  const [samplePhrases, setSamplePhrases] = useState(["", ""]);
 
   const handleAddPhrase = () => {
-    setSamplePhrases([...samplePhrases, ""])
-  }
+    setSamplePhrases([...samplePhrases, ""]);
+  };
 
   const handlePhraseChange = (index, value) => {
-    const newPhrases = [...samplePhrases]
-    newPhrases[index] = value
-    setSamplePhrases(newPhrases)
-  }
+    const newPhrases = [...samplePhrases];
+    newPhrases[index] = value;
+    setSamplePhrases(newPhrases);
+  };
 
   const handleDeletePhrase = (index) => {
-    const newPhrases = samplePhrases.filter((_, i) => i !== index)
-    setSamplePhrases(newPhrases)
-  }
+    const newPhrases = samplePhrases.filter((_, i) => i !== index);
+    setSamplePhrases(newPhrases);
+  };
 
   const handleSubmit = () => {
     // TODO: Implement submission logic
-    console.log({ name, definition, samplePhrases })
-    setOpened(false)
-  }
+    console.log({ name, definition, samplePhrases });
+    setOpened(false);
+  };
 
   return (
     <>
@@ -132,7 +132,7 @@ function TopicModal() {
         </Stack>
       </Modal>
     </>
-  )
+  );
 }
 
 export default function Filters() {
@@ -267,5 +267,5 @@ export default function Filters() {
         </SettingsCard>
       </Stack>
     </Container>
-  )
+  );
 }

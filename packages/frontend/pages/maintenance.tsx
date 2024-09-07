@@ -1,14 +1,14 @@
 // pages/maintenance.tsx
-import { useRouter } from "next/router"
-import React, { useEffect } from "react"
+import { useRouter } from "next/router";
+import React, { useEffect } from "react";
 
 export default function Maintenance() {
-  const router = useRouter()
+  const router = useRouter();
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_MAINTENANCE_MODE !== "on") {
-      router.push("/")
+      router.push("/");
     }
-  }, [router])
+  }, [router]);
 
   return (
     <div>
@@ -18,5 +18,5 @@ export default function Maintenance() {
         accessible once we&apos;re back.
       </p>
     </div>
-  )
+  );
 }

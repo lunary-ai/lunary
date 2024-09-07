@@ -1,13 +1,13 @@
-import { formatDistanceToNow } from "date-fns"
-import { languageCodeToCountryCode } from "./countries"
+import { formatDistanceToNow } from "date-fns";
+import { languageCodeToCountryCode } from "./countries";
 
 export const formatCost = (cost = 0) => {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     maximumSignificantDigits: 3,
-  }).format(cost)
-}
+  }).format(cost);
+};
 
 export function formatLargeNumber(number) {
   return new Intl.NumberFormat(
@@ -15,12 +15,12 @@ export function formatLargeNumber(number) {
     {
       notation: "compact",
     },
-  ).format(number || 0)
+  ).format(number || 0);
 }
 
 export function formatAppUser(user) {
-  if (!user) return ""
-  return user.props?.name ?? user.props?.email ?? user.externalId
+  if (!user) return "";
+  return user.props?.name ?? user.props?.email ?? user.externalId;
 }
 
 export function formatDateTime(date) {
@@ -32,28 +32,28 @@ export function formatDateTime(date) {
       hour: "numeric",
       minute: "numeric",
     },
-  )
+  );
 }
 
 export function msToTime(duration) {
   let seconds = Math.floor((duration / 1000) % 60),
     minutes = Math.floor((duration / (1000 * 60)) % 60),
     hours = Math.floor((duration / (1000 * 60 * 60)) % 24),
-    days = Math.floor((duration / (1000 * 60 * 60 * 24)) % 24)
+    days = Math.floor((duration / (1000 * 60 * 60 * 24)) % 24);
 
-  const m = minutes
-  const s = seconds
-  const h = hours
-  const d = days
+  const m = minutes;
+  const s = seconds;
+  const h = hours;
+  const d = days;
 
   return `${d > 0 ? d + "d " : ""}${h > 0 ? h + "h " : ""}${
     m > 0 ? m + "m " : ""
-  }${s}s`
+  }${s}s`;
 }
 
 export function capitalize(s) {
-  if (typeof s !== "string") return ""
-  return s.charAt(0).toUpperCase() + s.slice(1)
+  if (typeof s !== "string") return "";
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 export function cleanSlug(text: string): string {
@@ -65,7 +65,7 @@ export function cleanSlug(text: string): string {
     .trim()
     .replace(/\s+/g, "-")
     .replace(/[^\w-]+/g, "")
-    .replace(/--+/g, "-")
+    .replace(/--+/g, "-");
 }
 
 export function formatCompactFromNow(date) {
@@ -76,29 +76,29 @@ export function formatCompactFromNow(date) {
     .replace("about", "~")
     .replace("minute", "min")
     .replace(" hours", "h")
-    .replace(" hour", "h")
+    .replace(" hour", "h");
 }
 export function slugify(str) {
   return str
     .toLowerCase()
     .replace(/ /g, "-")
-    .replace(/[^\w-]+/g, "")
+    .replace(/[^\w-]+/g, "");
 }
 
 export function getFlagEmoji(languageCode: string) {
-  const countryCode = languageCodeToCountryCode[languageCode]
+  const countryCode = languageCodeToCountryCode[languageCode];
   if (!countryCode) {
-    return ""
+    return "";
   }
 
   const codePoints = countryCode
     .split("")
-    .map((char) => 127397 + char.charCodeAt(0))
-  return String.fromCodePoint(...codePoints)
+    .map((char) => 127397 + char.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
 }
 
 export function getLanguageName(languageCode: string) {
   return new Intl.DisplayNames(["en"], {
     type: "language",
-  }).of(languageCode)
+  }).of(languageCode);
 }

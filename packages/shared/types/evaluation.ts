@@ -1,24 +1,24 @@
-import { Message } from "./openai"
+import { Message } from "./openai";
 
 export interface Evaluation {
-  name?: string
-  prompts: Prompt[]
-  providers: any[]
-  checklistId: string
-  datasetId: string
+  name?: string;
+  prompts: Prompt[];
+  providers: any[];
+  checklistId: string;
+  datasetId: string;
 }
 
 export interface Prompt {
-  messages: Message[]
-  variations: Variation[]
+  messages: Message[];
+  variations: Variation[];
 }
 
 export interface Variation {
-  variables: Record<string, string>
-  idealOutput?: string
+  variables: Record<string, string>;
+  idealOutput?: string;
 }
 
 export interface Provider {
-  model: string
-  config: Record<string, any>
+  model: string;
+  config: Record<string, any>;
 }

@@ -5,8 +5,8 @@ import {
   Group,
   Input,
   Tooltip,
-} from "@mantine/core"
-import { IconCheck, IconCopy } from "@tabler/icons-react"
+} from "@mantine/core";
+import { IconCheck, IconCopy } from "@tabler/icons-react";
 
 export const SuperCopyButton = ({ value }) => (
   <CopyButton value={value} timeout={2000}>
@@ -22,7 +22,7 @@ export const SuperCopyButton = ({ value }) => (
       </Tooltip>
     )}
   </CopyButton>
-)
+);
 
 export default function CopyText({ c = "violet", value, ...props }) {
   return (
@@ -32,7 +32,7 @@ export default function CopyText({ c = "violet", value, ...props }) {
       </Code>
       <SuperCopyButton value={value} />
     </Group>
-  )
+  );
 }
 
 export const CopyInput = ({ value, ...props }) => (
@@ -43,4 +43,4 @@ export const CopyInput = ({ value, ...props }) => (
     rightSection={<SuperCopyButton value={value} />}
     {...props}
   />
-)
+);

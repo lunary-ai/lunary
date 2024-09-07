@@ -1,6 +1,6 @@
-import { completeRunUsageWithTimeout } from "./countToken"
-import sql from "./db"
-import { ProjectNotFoundError } from "./errors"
+import { completeRunUsageWithTimeout } from "./countToken";
+import sql from "./db";
+import { ProjectNotFoundError } from "./errors";
 
 export interface Event {
   type:
@@ -14,46 +14,48 @@ export interface Event {
     | "chat" // deprecated
     | "convo" // deprecated
     | "message"
-    | "thread"
-  event?: string
-  level?: string
-  runId?: string
-  parentRunId?: string
+    | "thread";
+  event?: string;
+  level?: string;
+  runId?: string;
+  parentRunId?: string;
   // convo?: string
-  timestamp: string
-  input?: any
-  tags?: string[]
-  name?: string
-  output?: any
-  message?: string | any // deprecated (for logs)
-  extra?: any
-  feedback?: any
-  templateId?: string // deprecated, use templateVersionId
-  templateVersionId?: string
-  metadata?: any
+  timestamp: string;
+  input?: any;
+  tags?: string[];
+  name?: string;
+  output?: any;
+  message?: string | any; // deprecated (for logs)
+  extra?: any;
+  feedback?: any;
+  templateId?: string; // deprecated, use templateVersionId
+  templateVersionId?: string;
+  metadata?: any;
   tokensUsage?: {
-    prompt: number
-    completion: number
-  }
+    prompt: number;
+    completion: number;
+  };
   error?: {
-    message: string
-    stack?: string
-  }
-  appId?: string
-  [key: string]: unknown
+    message: string;
+    stack?: string;
+  };
+  appId?: string;
+  [key: string]: unknown;
 }
 
 export interface CleanRun extends Event {
-  runId: string
-  event: string
+  runId: string;
+  event: string;
 }
 
 export const uuidFromSeed = async (seed: string): Promise<string> => {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(seed)
-  const hash = await crypto.subtle.digest("SHA-256", data)
-  const hashArray = Array.from(new Uint8Array(hash))
-  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
+  const encoder = new TextEncoder();
+  const data = encoder.encode(seed);
+  const hash = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hash));
+  const hashHex = hashArray
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
   return (
     hashHex.substring(0, 8) +
     "-" +
@@ -65,27 +67,27 @@ export const uuidFromSeed = async (seed: string): Promise<string> => {
     hashHex.substring(17, 20) +
     "-" +
     hashHex.substring(20, 32)
-  )
-}
+  );
+};
 
 /* Enabled the user to use any string as run ids.
  * Useful for example for interop with Vercel'AI SDK as they use their own run ids format.
  * This function will convert any string to a valid UUID.
  */
 export const ensureIsUUID = async (id: string): Promise<string | undefined> => {
-  if (typeof id !== "string") return undefined
+  if (typeof id !== "string") return undefined;
   if (!id || id.length === 36)
-    return id // TODO: better UUID check
-  else return await uuidFromSeed(id)
-}
+    return id; // TODO: better UUID check
+  else return await uuidFromSeed(id);
+};
 
 // Converts snake_case to camelCase
 // I found some (probably unintended) snake_case props in the tracer events, so normalize everything
 const recursiveToCamel = (item: any): any => {
   if (Array.isArray(item)) {
-    return item.map((el: unknown) => recursiveToCamel(el))
+    return item.map((el: unknown) => recursiveToCamel(el));
   } else if (typeof item === "function" || item !== Object(item)) {
-    return item
+    return item;
   }
   return Object.fromEntries(
     Object.entries(item as Record<string, unknown>).map(
@@ -96,37 +98,37 @@ const recursiveToCamel = (item: any): any => {
         recursiveToCamel(value),
       ],
     ),
-  )
-}
+  );
+};
 
 // keep only 1st level string,int,boolean and array of those
 function cleanMetadata(object: any) {
-  if (!object) return undefined
+  if (!object) return undefined;
 
-  const validTypes = ["string", "number", "boolean"]
+  const validTypes = ["string", "number", "boolean"];
 
   return Object.fromEntries(
     Object.entries(object).filter(([key, value]) => {
-      if (key === "enrichment") return true
-      if (validTypes.includes(typeof value)) return true
+      if (key === "enrichment") return true;
+      if (validTypes.includes(typeof value)) return true;
       if (Array.isArray(value)) {
-        return value.every((v) => validTypes.includes(typeof v))
+        return value.every((v) => validTypes.includes(typeof v));
       }
-      return false
+      return false;
     }),
-  )
+  );
 }
 
 export async function cleanEvent(event: any): Promise<Event> {
   const { timestamp, runId, parentRunId, tags, name, ...rest } =
-    recursiveToCamel(event)
+    recursiveToCamel(event);
 
-  let isoTimestamp
+  let isoTimestamp;
   try {
-    isoTimestamp = new Date(timestamp).toISOString()
+    isoTimestamp = new Date(timestamp).toISOString();
   } catch (error) {
-    console.error("Couldn't parse timestamp")
-    console.error(event)
+    console.error("Couldn't parse timestamp");
+    console.error(event);
   }
 
   const cleanedRun = {
@@ -137,16 +139,16 @@ export async function cleanEvent(event: any): Promise<Event> {
     runId: await ensureIsUUID(runId),
     parentRunId: await ensureIsUUID(parentRunId),
     timestamp: isoTimestamp,
-  }
+  };
 
   // Do it after because we need the sanitized runId/parentRunId
-  cleanedRun.tokensUsage = await completeRunUsageWithTimeout(cleanedRun)
+  cleanedRun.tokensUsage = await completeRunUsageWithTimeout(cleanedRun);
 
-  return cleanedRun
+  return cleanedRun;
 }
 
 export const clearUndefined = (obj: any): any =>
-  Object.fromEntries(Object.entries(obj).filter(([_, v]) => v !== undefined))
+  Object.fromEntries(Object.entries(obj).filter(([_, v]) => v !== undefined));
 
 export const ingestChatEvent = async (
   projectId: string,
@@ -161,24 +163,24 @@ export const ingestChatEvent = async (
     feedback,
     threadTags,
     timestamp,
-  } = run
+  } = run;
 
-  const { role, isRetry, tags, content, extra, metadata } = run.message as any
+  const { role, isRetry, tags, content, extra, metadata } = run.message as any;
 
   const coreMessage = clearUndefined({
     role,
     content,
     metadata: metadata || extra,
-  })
+  });
 
   if (typeof parentRunId === "undefined") {
-    throw new Error("parentRunId is undefined")
+    throw new Error("parentRunId is undefined");
   }
 
   const [projectExists] =
-    await sql`select exists(select 1 from project where id = ${projectId})`
+    await sql`select exists(select 1 from project where id = ${projectId})`;
   if (!projectExists) {
-    throw new ProjectNotFoundError(projectId)
+    throw new ProjectNotFoundError(projectId);
   }
 
   // Now you can safely use parentRunId in your
@@ -201,10 +203,10 @@ export const ingestChatEvent = async (
       tags = EXCLUDED.tags,
       input = EXCLUDED.input
     RETURNING *
-  `
+  `;
 
   if (!result) {
-    throw new Error("Error upserting run")
+    throw new Error("Error upserting run");
   }
 
   // Reconciliate messages with runs
@@ -230,10 +232,10 @@ export const ingestChatEvent = async (
     SELECT * FROM run
     WHERE parent_run_id = ${parentRunId!}
     ORDER BY created_at DESC
-    LIMIT 1`
+    LIMIT 1`;
 
-  const OUTPUT_TYPES = ["assistant", "tool", "bot"]
-  const INPUT_TYPES = ["user", "system"] // system is mostly used for giving context about the user
+  const OUTPUT_TYPES = ["assistant", "tool", "bot"];
+  const INPUT_TYPES = ["user", "system"]; // system is mostly used for giving context about the user
 
   const shared = clearUndefined({
     id,
@@ -242,14 +244,14 @@ export const ingestChatEvent = async (
     metadata: metadata || extra,
     externalUserId,
     feedback,
-  })
+  });
 
-  let update: any = {} // todo: type
-  let operation = "insert"
+  let update: any = {}; // todo: type
+  let operation = "insert";
 
   if (previousRun) {
     // Those are computed columns, so we need to remove them
-    delete previousRun.duration
+    delete previousRun.duration;
 
     if (isRetry) {
       // copy previousRun data into new run with new id, set `sibling_of` to previousRun, clear output, then:
@@ -261,57 +263,57 @@ export const ingestChatEvent = async (
         feedback: run.feedback || null, // reset feedback if retry
         output: OUTPUT_TYPES.includes(role) ? [coreMessage] : null,
         input: INPUT_TYPES.includes(role) ? [coreMessage] : previousRun.input,
-      }
+      };
 
-      delete update.id // remove id to force using new one
+      delete update.id; // remove id to force using new one
 
-      operation = "insert"
+      operation = "insert";
     } else if (OUTPUT_TYPES.includes(role)) {
       // append coreMessage to output (if if was an array, otherwise create an array)
 
-      update.output = [...(previousRun.output || []), coreMessage]
+      update.output = [...(previousRun.output || []), coreMessage];
 
-      operation = "update"
+      operation = "update";
     } else if (INPUT_TYPES.includes(role)) {
       if (previousRun.output) {
         // if last is bot message, create new run with input array
 
-        update.input = [coreMessage]
-        operation = "insert"
+        update.input = [coreMessage];
+        operation = "insert";
       } else {
         // append coreMessage to input (if if was an array, otherwise create an array)
 
-        update.input = [...(previousRun.input || []), coreMessage]
+        update.input = [...(previousRun.input || []), coreMessage];
 
-        operation = "update"
+        operation = "update";
       }
     }
   } else {
     // create new run with either input or output depending on role
     if (OUTPUT_TYPES.includes(role)) {
-      update.output = [coreMessage]
+      update.output = [coreMessage];
     } else if (INPUT_TYPES.includes(role)) {
-      update.input = [coreMessage]
+      update.input = [coreMessage];
     }
-    operation = "insert"
+    operation = "insert";
   }
 
   if (operation === "insert") {
-    update.type = "chat"
-    update.createdAt = timestamp
-    update.endedAt = timestamp
-    update.parentRunId = run.parentRunId
+    update.type = "chat";
+    update.createdAt = timestamp;
+    update.endedAt = timestamp;
+    update.parentRunId = run.parentRunId;
 
     await sql`
       INSERT INTO run ${sql({ ...shared, ...update })}
-    `
+    `;
   } else if (operation === "update") {
-    update.endedAt = timestamp
+    update.endedAt = timestamp;
 
     await sql`
       UPDATE run SET ${sql({ ...shared, ...update })} WHERE id = ${
         previousRun.id
       }
-    `
+    `;
   }
-}
+};

@@ -1,4 +1,4 @@
-import { TiktokenEncoding } from "tiktoken"
+import { TiktokenEncoding } from "tiktoken";
 
 const MODEL_TO_ENCODING: Record<string, TiktokenEncoding> = {
   // chat
@@ -51,7 +51,7 @@ const MODEL_TO_ENCODING: Record<string, TiktokenEncoding> = {
   // open source
   gpt2: "gpt2",
   "gpt-2": "gpt2", // Maintains consistency with gpt-4
-}
+};
 
 const MODEL_PREFIX_TO_ENCODING: Record<string, TiktokenEncoding> = {
   // chat
@@ -66,21 +66,21 @@ const MODEL_PREFIX_TO_ENCODING: Record<string, TiktokenEncoding> = {
   "ft:gpt-3.5-turbo": "cl100k_base",
   "ft:davinci-002": "cl100k_base",
   "ft:babbage-002": "cl100k_base",
-}
+};
 
 /**
  * Checks if the given model name is a recognized OpenAI model.
  */
 export function isOpenAIModelName(modelName: string): boolean {
   if (modelName in MODEL_TO_ENCODING) {
-    return true
+    return true;
   }
   for (const modelPrefix of Object.keys(MODEL_PREFIX_TO_ENCODING)) {
     if (modelName.startsWith(modelPrefix)) {
-      return true
+      return true;
     }
   }
-  return false
+  return false;
 }
 
 /**
@@ -91,15 +91,15 @@ export function getEncodingNameForOpenAIModel(
   modelName: string,
 ): TiktokenEncoding {
   if (modelName in MODEL_TO_ENCODING) {
-    return MODEL_TO_ENCODING[modelName]
+    return MODEL_TO_ENCODING[modelName];
   }
   for (const [modelPrefix, encoding] of Object.entries(
     MODEL_PREFIX_TO_ENCODING,
   )) {
     if (modelName.startsWith(modelPrefix)) {
-      return encoding
+      return encoding;
     }
   }
 
-  return "cl100k_base"
+  return "cl100k_base";
 }

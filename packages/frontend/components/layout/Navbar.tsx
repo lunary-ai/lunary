@@ -1,67 +1,67 @@
-import { Anchor, Button, Flex, Group } from "@mantine/core"
+import { Anchor, Button, Flex, Group } from "@mantine/core";
 
 import {
   IconAlertTriangle,
   IconAlertTriangleFilled,
   IconCheck,
-} from "@tabler/icons-react"
+} from "@tabler/icons-react";
 
-import { useOrg, useUser } from "@/utils/dataHooks"
-import { notifications } from "@mantine/notifications"
-import { useRouter } from "next/router"
-import { useEffect, useState } from "react"
-import errorHandler from "../../utils/errors"
-import { openUpgrade } from "./UpgradeModal"
+import { useOrg, useUser } from "@/utils/dataHooks";
+import { notifications } from "@mantine/notifications";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import errorHandler from "../../utils/errors";
+import { openUpgrade } from "./UpgradeModal";
 
 const floatingBtn = {
   position: "fixed",
   top: 12,
   right: 24,
   zIndex: 100,
-}
+};
 
 export default function Navbar() {
-  const router = useRouter()
+  const router = useRouter();
 
-  const { user, mutate } = useUser()
-  const { org } = useOrg()
+  const { user, mutate } = useUser();
+  const { org } = useOrg();
 
-  const [emailSent, setEmailSent] = useState(false)
-  const [sendingEmail, setSendingEmail] = useState(false)
+  const [emailSent, setEmailSent] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
 
-  const currentPath = router.pathname
+  const currentPath = router.pathname;
 
   // const user = useUser()
 
   // check if has ?verified=true in url
   useEffect(() => {
-    if (!router.isReady) return
+    if (!router.isReady) return;
 
-    const verified = router.query.verified === "true"
+    const verified = router.query.verified === "true";
 
     if (verified) {
-      mutate() // force update user
+      mutate(); // force update user
       notifications.show({
         id: "verified",
         icon: <IconCheck size={18} />,
         color: "teal",
         title: "Email verified",
         message: "You now have access to all features.",
-      })
+      });
 
       // remove verified query param if present
-      const { verified, ...otherParams } = router.query
+      const { verified, ...otherParams } = router.query;
       router.replace(
         { pathname: router.pathname, query: otherParams },
         undefined,
         { shallow: true },
-      )
+      );
     }
-  }, [router.query, router.isReady])
+  }, [router.query, router.isReady]);
 
   const sendVerification = async () => {
-    if (sendingEmail) return
-    setSendingEmail(true)
+    if (sendingEmail) return;
+    setSendingEmail(true);
 
     const ok = await errorHandler(
       fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/users/send-verification`, {
@@ -74,7 +74,7 @@ export default function Navbar() {
           "Content-Type": "application/json",
         },
       }),
-    )
+    );
 
     if (ok) {
       notifications.show({
@@ -82,13 +82,13 @@ export default function Navbar() {
         color: "teal",
         title: "Email sent 💌",
         message: "Check your emails to verify your email.",
-      })
+      });
 
-      setEmailSent(true)
+      setEmailSent(true);
     }
 
-    setSendingEmail(false)
-  }
+    setSendingEmail(false);
+  };
 
   return (
     <Flex
@@ -164,5 +164,5 @@ export default function Navbar() {
         )}
       </Group>
     </Flex>
-  )
+  );
 }

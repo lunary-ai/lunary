@@ -6,18 +6,18 @@ import {
   Stack,
   Text,
   Title,
-} from "@mantine/core"
+} from "@mantine/core";
 
-import { useForm } from "@mantine/form"
-import { IconAnalyze, IconCheck } from "@tabler/icons-react"
+import { useForm } from "@mantine/form";
+import { IconAnalyze, IconCheck } from "@tabler/icons-react";
 
-import { NextSeo } from "next-seo"
-import Router from "next/router"
-import { useState } from "react"
-import { notifications } from "@mantine/notifications"
+import { NextSeo } from "next-seo";
+import Router from "next/router";
+import { useState } from "react";
+import { notifications } from "@mantine/notifications";
 
 export default function UpdatePassword() {
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
   const form = useForm({
     initialValues: {
@@ -28,27 +28,27 @@ export default function UpdatePassword() {
       password: (val) =>
         val.length < 5 ? "Password must be at least 5 characters" : null,
     },
-  })
+  });
 
   const handlePasswordReset = async ({ password }: { password: string }) => {
-    setLoading(true)
+    setLoading(true);
 
     // TODO: reset password with supertoken
-    const ok = true
+    const ok = true;
 
     notifications.show({
       icon: <IconCheck size={18} />,
       color: "teal",
       title: "Success",
       message: "Password updated successfully",
-    })
+    });
 
     if (ok) {
-      Router.push("/")
+      Router.push("/");
     }
 
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
   return (
     <Container py={100} size={600}>
@@ -87,5 +87,5 @@ export default function UpdatePassword() {
         </Paper>
       </Stack>
     </Container>
-  )
+  );
 }

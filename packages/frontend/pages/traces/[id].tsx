@@ -1,9 +1,9 @@
-import DurationBadge from "@/components/blocks/DurationBadge"
-import RunInputOutput from "@/components/blocks/RunInputOutput"
-import StatusBadge from "@/components/blocks/StatusBadge"
-import TokensBadge from "@/components/blocks/TokensBadge"
-import { useProjectSWR, useRun } from "@/utils/dataHooks"
-import { capitalize, formatCost } from "@/utils/format"
+import DurationBadge from "@/components/blocks/DurationBadge";
+import RunInputOutput from "@/components/blocks/RunInputOutput";
+import StatusBadge from "@/components/blocks/StatusBadge";
+import TokensBadge from "@/components/blocks/TokensBadge";
+import { useProjectSWR, useRun } from "@/utils/dataHooks";
+import { capitalize, formatCost } from "@/utils/format";
 import {
   Badge,
   Box,
@@ -14,7 +14,7 @@ import {
   Text,
   ThemeIcon,
   Title,
-} from "@mantine/core"
+} from "@mantine/core";
 import {
   IconCloudDownload,
   IconCode,
@@ -23,12 +23,12 @@ import {
   IconMessages,
   IconRobot,
   IconTool,
-} from "@tabler/icons-react"
-import { useRouter } from "next/router"
-import { useEffect, useState } from "react"
-import { getColorForRunType } from "../../utils/colors"
+} from "@tabler/icons-react";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import { getColorForRunType } from "../../utils/colors";
 
-import RunsChat from "@/components/blocks/RunChat"
+import RunsChat from "@/components/blocks/RunChat";
 
 const typeIcon = {
   convo: IconMessages,
@@ -39,7 +39,7 @@ const typeIcon = {
   llm: IconCode,
   tool: IconTool,
   retriever: IconCloudDownload,
-}
+};
 
 function TraceTree({
   isFirst = false,
@@ -51,25 +51,25 @@ function TraceTree({
   firstDate,
 }) {
   // each run contains a child_runs array containing the ids of the runs it spawned
-  const run = runs.find((run) => run.id === parentId)
+  const run = runs.find((run) => run.id === parentId);
   if (run.input === "__NOT_INGESTED__") {
-    run.status = "filtered"
+    run.status = "filtered";
   }
 
-  const color = getColorForRunType(run?.type)
+  const color = getColorForRunType(run?.type);
 
-  const showStatus = !["convo", "thread", "chat"].includes(run?.type)
+  const showStatus = !["convo", "thread", "chat"].includes(run?.type);
 
-  const Icon = typeIcon[run?.type]
+  const Icon = typeIcon[run?.type];
 
-  const isActive = run.id === focused
+  const isActive = run.id === focused;
 
   const shownRuns = runs
     .filter((run) => run.parentRunId === parentId)
     .sort(
       (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-    )
+    );
 
   return (
     <Group pos="relative">
@@ -179,7 +179,7 @@ function TraceTree({
         ))}
       </div>
     </Group>
-  )
+  );
 }
 
 function RenderRun({ run, relatedRuns }) {
@@ -188,44 +188,44 @@ function RenderRun({ run, relatedRuns }) {
     .sort(
       (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-    )
+    );
 
-  if (run?.type === "chat") return <RunsChat runs={[run]} />
-  if (run?.type === "thread") return <RunsChat runs={directChilds} />
-  return <RunInputOutput initialRun={run} withFeedback={true} />
+  if (run?.type === "chat") return <RunsChat runs={[run]} />;
+  if (run?.type === "thread") return <RunsChat runs={directChilds} />;
+  return <RunInputOutput initialRun={run} withFeedback={true} />;
 }
 
 export default function AgentRun({}) {
-  const router = useRouter()
-  const { id } = router.query
+  const router = useRouter();
+  const { id } = router.query;
 
-  const [focused, setFocused] = useState(id)
+  const [focused, setFocused] = useState(id);
 
-  const { run } = useRun(id as string)
+  const { run } = useRun(id as string);
 
   useEffect(() => {
-    if (run) setFocused(run.id)
-  }, [run])
+    if (run) setFocused(run.id);
+  }, [run]);
 
-  const { data: relatedRuns } = useProjectSWR(`/runs/${id}/related`)
+  const { data: relatedRuns } = useProjectSWR(`/runs/${id}/related`);
 
-  if (!run) return <Loader />
+  if (!run) return <Loader />;
 
   const totalTokens = relatedRuns?.reduce((acc, run) => {
     if (run?.type === "llm") {
-      return acc + run.completionTokens + run.promptTokens
+      return acc + run.completionTokens + run.promptTokens;
     }
-    return acc
-  }, 0)
+    return acc;
+  }, 0);
 
   const totalCost = relatedRuns?.reduce((acc, run) => {
     if (run?.type === "llm") {
-      return acc + run.cost
+      return acc + run.cost;
     }
-    return acc
-  }, 0)
+    return acc;
+  }, 0);
 
-  const focusedRun = relatedRuns?.find((run) => run.id === focused)
+  const focusedRun = relatedRuns?.find((run) => run.id === focused);
 
   return (
     <Stack p="24px 24px 0 24px" h="100vh" gap="xl">
@@ -281,5 +281,5 @@ export default function AgentRun({}) {
         </Box>
       </Group>
     </Stack>
-  )
+  );
 }

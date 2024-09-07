@@ -8,7 +8,7 @@ export function getReadableDateTime(date = new Date()) {
     minute: "2-digit",
     second: "2-digit",
     hour12: true,
-  })
-  const readableDateTime = formatter.format(date)
-  return readableDateTime
+  });
+  const readableDateTime = formatter.format(date);
+  return readableDateTime;
 }

@@ -22,30 +22,29 @@ const nextConfig = {
     ],
   },
   async rewrites() {
-    const redirects =  [
+    const redirects = [
       {
-        source: '/api/:path*',
-        destination: 'http://localhost:3333/:path*'
+        source: "/api/:path*",
+        destination: "http://localhost:3333/:path*",
       },
       {
-        source: '/api/auth/:path*',
-        destination: 'http://localhost:3333/auth/:path*'
-      }
-    ]
+        source: "/api/auth/:path*",
+        destination: "http://localhost:3333/auth/:path*",
+      },
+    ];
 
-
-    return redirects
+    return redirects;
   },
   webpack: (config, { webpack }) => {
     config.plugins.push(
       new webpack.IgnorePlugin({
         resourceRegExp: /^pg-native$|^cloudflare:sockets$/,
       }),
-    )
+    );
 
-    return config
+    return config;
   },
   transpilePackages: ["shared"],
-}
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;
