@@ -1,10 +1,10 @@
-import Router from "koa-router"
-import stripe from "./stripe"
+import Router from "koa-router";
+import stripe from "./stripe";
 
 const webhooks = new Router({
   prefix: "/webhooks",
-})
+});
 
-webhooks.use(stripe.routes())
+webhooks.use(stripe.routes());
 
-export default webhooks
+export default webhooks;

@@ -1,19 +1,19 @@
-import { convertChecksToSQL } from "@/src/utils/checks"
-import sql from "@/src/utils/db"
-import * as Sentry from "@sentry/node"
-import { Run } from "shared"
-import { RealtimeEvaluator } from "shared/evaluators"
-import { sleep } from "../utils/misc"
-import evaluators from "../evaluators"
+import { convertChecksToSQL } from "@/src/utils/checks";
+import sql from "@/src/utils/db";
+import * as Sentry from "@sentry/node";
+import { Run } from "shared";
+import { RealtimeEvaluator } from "shared/evaluators";
+import { sleep } from "../utils/misc";
+import evaluators from "../evaluators";
 
-const RUNS_BATCH_SIZE = 10
+const RUNS_BATCH_SIZE = 10;
 
 async function runEvaluator(evaluator: RealtimeEvaluator, run: Run) {
   try {
     const result = await evaluators[evaluator.type].evaluate(
       run,
       evaluator.params,
-    )
+    );
 
     if (typeof result !== "undefined" && result !== null) {
       await sql`
@@ -23,23 +23,23 @@ async function runEvaluator(evaluator: RealtimeEvaluator, run: Run) {
         runId: run.id,
         result,
       })}
-    `
+    `;
     }
   } catch (error) {
     if (process.env.NODE_ENV === "production") {
-      Sentry.captureException(error)
+      Sentry.captureException(error);
     }
     console.error(
       `Error while evaluating run ${run.id} with evaluator ${evaluator.id}: `,
       error,
-    )
+    );
   }
 }
 
 async function getEvaluatorRuns(evaluator: any) {
   const filtersQuery = convertChecksToSQL(
     evaluator.filters || ["AND", { id: "type", params: { type: "llm" } }],
-  )
+  );
 
   return await sql`
     select 
@@ -55,14 +55,14 @@ async function getEvaluatorRuns(evaluator: any) {
     order by 
       r.created_at desc
     limit ${RUNS_BATCH_SIZE}
-  `
+  `;
 }
 
 async function evaluatorJob() {
-  const [{ exists }] = await sql`select exists(select 1 from run)`
+  const [{ exists }] = await sql`select exists(select 1 from run)`;
   if (!exists) {
     // No runs, sleep to not spam the logs
-    await sleep(20000)
+    await sleep(20000);
   }
 
   const evaluators = await sql<RealtimeEvaluator[]>`
@@ -74,39 +74,39 @@ async function evaluatorJob() {
       mode = 'realtime' 
     order by 
       random()
-  `
+  `;
 
   for (let i = 0; i < evaluators.length; i++) {
-    const evaluator = evaluators[i]
+    const evaluator = evaluators[i];
 
-    const runs = await getEvaluatorRuns(evaluator)
+    const runs = await getEvaluatorRuns(evaluator);
 
     if (!runs.length) {
       console.log(
         `Skipping Real-time Evaluator ${evaluator.id} (${i} / ${evaluators.length})`,
-      )
-      await sleep(500)
-      continue
+      );
+      await sleep(500);
+      continue;
     }
 
     console.log(
       `Starting Real-time Evaluator ${evaluator.id} - ${runs.length} runs (${i + 1} / ${evaluators.length})`,
-    )
+    );
 
-    await Promise.all(runs.map((run) => runEvaluator(evaluator, run)))
+    await Promise.all(runs.map((run) => runEvaluator(evaluator, run)));
   }
 }
 
 export default async function runEvaluatorsJob() {
   while (true) {
     try {
-      await evaluatorJob()
+      await evaluatorJob();
     } catch (error) {
-      await sleep(3000) // Avoid spamming the ml service when there are connection errors
+      await sleep(3000); // Avoid spamming the ml service when there are connection errors
       if (process.env.NODE_ENV === "production") {
-        Sentry.captureException(error)
+        Sentry.captureException(error);
       }
-      console.error(error)
+      console.error(error);
     }
   }
 }

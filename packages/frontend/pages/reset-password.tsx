@@ -5,22 +5,22 @@ import {
   PasswordInput,
   Stack,
   Title,
-} from "@mantine/core"
+} from "@mantine/core";
 
-import { useForm } from "@mantine/form"
-import { IconAnalyze } from "@tabler/icons-react"
+import { useForm } from "@mantine/form";
+import { IconAnalyze } from "@tabler/icons-react";
 
-import { NextSeo } from "next-seo"
-import { useRouter } from "next/router"
-import { useState } from "react"
-import { fetcher } from "@/utils/fetcher"
-import { useAuth } from "@/utils/auth"
-import analytics from "@/utils/analytics"
+import { NextSeo } from "next-seo";
+import { useRouter } from "next/router";
+import { useState } from "react";
+import { fetcher } from "@/utils/fetcher";
+import { useAuth } from "@/utils/auth";
+import analytics from "@/utils/analytics";
 
 export default function UpdatePassword() {
-  const { setJwt } = useAuth()
-  const [loading, setLoading] = useState(false)
-  const router = useRouter()
+  const { setJwt } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const form = useForm({
     initialValues: {
@@ -31,16 +31,16 @@ export default function UpdatePassword() {
       password: (val) => {
         // TODO: refactor with other forms
         if (val.length < 6) {
-          return "Password must be at least 6 characters"
+          return "Password must be at least 6 characters";
         }
 
-        return null
+        return null;
       },
     },
-  })
+  });
 
   const handlePasswordReset = async ({ password }: { password: string }) => {
-    setLoading(true)
+    setLoading(true);
 
     try {
       const { token } = await fetcher.post("/auth/reset-password", {
@@ -48,16 +48,16 @@ export default function UpdatePassword() {
           password,
           token: router.query.token,
         },
-      })
+      });
 
-      setJwt(token)
+      setJwt(token);
 
-      analytics.track("Password Reset")
+      analytics.track("Password Reset");
     } catch (error) {
-      console.error(error)
-      setLoading(false)
+      console.error(error);
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Container py={100} size={600}>
@@ -92,5 +92,5 @@ export default function UpdatePassword() {
         </Paper>
       </Stack>
     </Container>
-  )
+  );
 }

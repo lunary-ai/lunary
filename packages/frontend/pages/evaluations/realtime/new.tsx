@@ -1,9 +1,9 @@
-import CheckPicker, { RenderCheckNode } from "@/components/checks/Picker"
-import { useLogCount, useUser } from "@/utils/dataHooks"
-import { useEvaluators } from "@/utils/dataHooks/evaluators"
-import EVALUATOR_TYPES from "@/utils/evaluators"
-import { slugify } from "@/utils/format"
-import { theme } from "@/utils/theme"
+import CheckPicker, { RenderCheckNode } from "@/components/checks/Picker";
+import { useLogCount, useUser } from "@/utils/dataHooks";
+import { useEvaluators } from "@/utils/dataHooks/evaluators";
+import EVALUATOR_TYPES from "@/utils/evaluators";
+import { slugify } from "@/utils/format";
+import { theme } from "@/utils/theme";
 import {
   Box,
   Button,
@@ -20,21 +20,21 @@ import {
   Title,
   Tooltip,
   UnstyledButton,
-} from "@mantine/core"
-import { notifications } from "@mantine/notifications"
-import { IconCircleCheck, IconCirclePlus, IconX } from "@tabler/icons-react"
-import { useRouter } from "next/router"
-import { useEffect, useState } from "react"
-import { CHECKS, CheckLogic, serializeLogic } from "shared"
+} from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { IconCircleCheck, IconCirclePlus, IconX } from "@tabler/icons-react";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import { CHECKS, CheckLogic, serializeLogic } from "shared";
 
 function EvaluatorCard({
   evaluator,
   isSelected,
   onItemClick,
 }: {
-  onItemClick: (type: string) => void
-  isSelected: boolean
-  evaluator: any
+  onItemClick: (type: string) => void;
+  isSelected: boolean;
+  evaluator: any;
 }) {
   return (
     <Card
@@ -78,38 +78,38 @@ function EvaluatorCard({
         </UnstyledButton>
       </Tooltip>
     </Card>
-  )
+  );
 }
 
 export default function NewRealtimeEvaluator() {
-  const router = useRouter()
+  const router = useRouter();
 
-  const { user } = useUser()
-  const { insert: insertEvaluator } = useEvaluators()
+  const { user } = useUser();
+  const { insert: insertEvaluator } = useEvaluators();
 
-  const [name, setName] = useState<string>("")
-  const [type, setType] = useState<string>()
-  const [params, setParams] = useState<any>()
-  const [isBenchmark, setIsBenchmark] = useState<boolean>(false)
+  const [name, setName] = useState<string>("");
+  const [type, setType] = useState<string>();
+  const [params, setParams] = useState<any>();
+  const [isBenchmark, setIsBenchmark] = useState<boolean>(false);
   const [filters, setFilters] = useState<CheckLogic>([
     "OR",
     { id: "type", params: { type: "llm" } },
     { id: "type", params: { type: "chat" } },
-  ])
+  ]);
 
-  const serializedFilters = serializeLogic(filters)
+  const serializedFilters = serializeLogic(filters);
 
-  const { count: logCount } = useLogCount(serializedFilters)
+  const { count: logCount } = useLogCount(serializedFilters);
 
-  const evaluatorTypes = Object.values(EVALUATOR_TYPES)
+  const evaluatorTypes = Object.values(EVALUATOR_TYPES);
 
   const selectedEvaluator = evaluatorTypes.find(
     (evaluator) => evaluator.id === type,
-  )
+  );
 
-  const hasParams = Boolean(selectedEvaluator?.params?.length)
+  const hasParams = Boolean(selectedEvaluator?.params?.length);
 
-  const IconComponent = selectedEvaluator?.icon
+  const IconComponent = selectedEvaluator?.icon;
 
   useEffect(() => {
     if (selectedEvaluator) {
@@ -117,13 +117,13 @@ export default function NewRealtimeEvaluator() {
         id: selectedEvaluator.id,
         params: selectedEvaluator.params.reduce((acc, param) => {
           if (param.id) {
-            acc[param.id] = param.defaultValue
+            acc[param.id] = param.defaultValue;
           }
-          return acc
+          return acc;
         }, {}),
-      })
+      });
     }
-  }, [selectedEvaluator])
+  }, [selectedEvaluator]);
 
   async function createEvaluator() {
     // TODO: validation
@@ -135,8 +135,8 @@ export default function NewRealtimeEvaluator() {
         message: "Evaluator name required",
         color: "red",
         autoClose: 4000,
-      })
-      return
+      });
+      return;
     }
     await insertEvaluator({
       name,
@@ -146,8 +146,8 @@ export default function NewRealtimeEvaluator() {
       type,
       filters,
       ownerId: user.id,
-    })
-    router.push("/evaluations/realtime")
+    });
+    router.push("/evaluations/realtime");
   }
 
   return (
@@ -177,8 +177,8 @@ export default function NewRealtimeEvaluator() {
                   evaluator={evaluator}
                   isSelected={type === evaluator.id}
                   onItemClick={(type) => {
-                    setType(type)
-                    setName(evaluator.name)
+                    setType(type);
+                    setName(evaluator.name);
                   }}
                 />
               ))}
@@ -191,7 +191,7 @@ export default function NewRealtimeEvaluator() {
               node={params}
               minimal={false}
               setNode={(newNode) => {
-                setParams(newNode as CheckLogic)
+                setParams(newNode as CheckLogic);
               }}
               checks={[selectedEvaluator]}
             />
@@ -254,7 +254,7 @@ export default function NewRealtimeEvaluator() {
           <Button
             disabled={!selectedEvaluator}
             onClick={() => {
-              createEvaluator()
+              createEvaluator();
             }}
             leftSection={IconComponent && <IconComponent size={16} />}
             size="md"
@@ -267,5 +267,5 @@ export default function NewRealtimeEvaluator() {
         </Group>
       </Stack>
     </Container>
-  )
+  );
 }

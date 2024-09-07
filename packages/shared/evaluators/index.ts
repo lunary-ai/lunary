@@ -10,52 +10,52 @@ export type EvaluatorType =
   | "factualness"
   | "geval"
   | "guidelines"
-  | "replies"
-export type EvaluatorMode = "normal" | "realtime"
+  | "replies";
+export type EvaluatorMode = "normal" | "realtime";
 
 interface BaseEvaluator {
-  id: string
-  createdAt: string
-  updatedAt: string
-  projectId: string
-  ownerId?: string
-  name: string
-  slug: string
-  description?: string
-  type: EvaluatorType
-  mode: EvaluatorMode
-  params: any // TODO
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  projectId: string;
+  ownerId?: string;
+  name: string;
+  slug: string;
+  description?: string;
+  type: EvaluatorType;
+  mode: EvaluatorMode;
+  params: any; // TODO
 }
 
 interface NormalEvaluator extends BaseEvaluator {
-  mode: "normal"
+  mode: "normal";
 }
 
 export interface RealtimeEvaluator extends BaseEvaluator {
-  mode: "realtime"
-  filters: any // TODO
+  mode: "realtime";
+  filters: any; // TODO
 }
 
-type Evaluator = NormalEvaluator | RealtimeEvaluator
+type Evaluator = NormalEvaluator | RealtimeEvaluator;
 
 interface BaseLanguageDetectionResult {
-  isoCode: string
-  confidence: number
+  isoCode: string;
+  confidence: number;
 }
 
 export type EnrichmentData = {
-  input: Array<Record<string, any>>
-  output: Array<Record<string, any>>
-  error: Array<Record<string, any>>
-}
+  input: Array<Record<string, any>>;
+  output: Array<Record<string, any>>;
+  error: Array<Record<string, any>>;
+};
 
 export type LanguageDetectionResult = EnrichmentData & {
-  input: Array<BaseLanguageDetectionResult | null>
-  output: Array<BaseLanguageDetectionResult | null>
-  error: Array<BaseLanguageDetectionResult | null>
-}
+  input: Array<BaseLanguageDetectionResult | null>;
+  output: Array<BaseLanguageDetectionResult | null>;
+  error: Array<BaseLanguageDetectionResult | null>;
+};
 
 export type AssertionResult = {
-  result: boolean
-  reason: string
-}
+  result: boolean;
+  reason: string;
+};

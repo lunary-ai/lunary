@@ -11,9 +11,9 @@ export type ResourceName =
   | "datasets"
   | "checklists"
   | "evaluations"
-  | "settings"
+  | "settings";
 
-export type Role = "owner" | "admin" | "member" | "viewer" | "billing"
+export type Role = "owner" | "admin" | "member" | "viewer" | "billing";
 export type Action =
   | "create"
   | "read"
@@ -21,16 +21,16 @@ export type Action =
   | "delete"
   | "list"
   | "export"
-  | "run"
+  | "run";
 
 export const roles: Record<
   Role,
   {
-    value: Role
-    name: string
-    free?: boolean
-    description: string
-    permissions: Record<ResourceName, Partial<Record<Action, boolean>>>
+    value: Role;
+    name: string;
+    free?: boolean;
+    description: string;
+    permissions: Record<ResourceName, Partial<Record<Action, boolean>>>;
   }
 > = {
   owner: {
@@ -426,16 +426,16 @@ export const roles: Record<
       },
     },
   },
-}
+};
 
 export function hasReadAccess(
   userRole: Role,
   resourceName: ResourceName,
 ): boolean {
   try {
-    return roles[userRole].permissions[resourceName].read || false
+    return roles[userRole].permissions[resourceName].read || false;
   } catch (error) {
-    return false
+    return false;
   }
 }
 
@@ -445,8 +445,8 @@ export function hasAccess(
   action: keyof (typeof roles)[Role]["permissions"][ResourceName],
 ) {
   try {
-    return roles[userRole].permissions[resourceName][action]
+    return roles[userRole].permissions[resourceName][action];
   } catch (error) {
-    return false
+    return false;
   }
 }

@@ -1,7 +1,7 @@
-import { Kbd, Text } from "@mantine/core"
+import { Kbd, Text } from "@mantine/core";
 
 export default function HotkeysInfo({ hot, size, style }) {
-  const fz = size === "xs" ? 10 : 14
+  const fz = size === "xs" ? 10 : 14;
 
   return (
     <span style={style}>
@@ -15,5 +15,5 @@ export default function HotkeysInfo({ hot, size, style }) {
         {hot?.replace("Enter", "⏎")}
       </Kbd>
     </span>
-  )
+  );
 }
