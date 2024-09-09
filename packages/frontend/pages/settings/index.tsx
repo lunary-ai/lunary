@@ -33,6 +33,7 @@ import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import {
   IconCheck,
+  IconDatabaseShare,
   IconFilter,
   IconIdBadge,
   IconPencil,
@@ -354,6 +355,21 @@ export default function AppAnalytics() {
         >
           <Button>Open Guardrails settings</Button>
         </SettingsCard>
+
+        <SettingsCard
+          title="Data Warehouse Connection"
+          align="start"
+          paywallConfig={{
+            Icon: IconDatabaseShare,
+            feature: "Data Warehouse",
+            p: 12,
+            plan: "enterprise",
+            list: ["Sync your data with a data warehouse provider"],
+            enabled: config.IS_SELF_HOSTED
+              ? org.license.dataWarehouseEnabled
+              : org.dataWarehouseEnabled,
+          }}
+        ></SettingsCard>
 
         {user && hasAccess(user.role, "projects", "delete") && (
           <SettingsCard title="Danger Zone" align="start">
