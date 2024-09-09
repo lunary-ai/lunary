@@ -293,6 +293,15 @@ export default function Sidebar() {
           resource: "logs",
         },
         { label: "Users", icon: IconUsers, link: "/users", resource: "users" },
+        {
+          label: "Enrichments",
+          icon: IconSparkles,
+          link: "/enrichments",
+          resource: "enrichments",
+          disabled: isSelfHosted
+            ? org.license && org.license.realtimeEvalsEnabled
+            : false,
+        },
       ],
     },
     {
@@ -309,15 +318,6 @@ export default function Sidebar() {
           label: "Playground",
           icon: IconFlask,
           link: "/evaluations/new",
-          resource: "evaluations",
-          disabled: isSelfHosted
-            ? org.license && !org.license.evalEnabled
-            : false,
-        },
-        {
-          label: "Evaluators",
-          icon: IconActivityHeartbeat,
-          link: "/evaluations/realtime",
           resource: "evaluations",
           disabled: isSelfHosted
             ? org.license && !org.license.evalEnabled
@@ -341,20 +341,6 @@ export default function Sidebar() {
       resource: "logs",
       subMenu: projectViews,
     },
-    // {
-    //   label: "Project",
-    //   resource: "apiKeys",
-    //   subMenu: [
-    //     !!canUpgrade && {
-    //       label: "Upgrade",
-    //       onClick: openUpgrade,
-    //       c: "vioplet",
-    //       icon: IconBolt,
-    //       disabled: !canUpgrade,
-    //       resource: "billing",
-    //     },
-    //   ].filter((item) => item),
-    // },
   ].filter((item) => item);
 
   async function createProject() {
@@ -396,6 +382,8 @@ export default function Sidebar() {
         {item.name}
       </Combobox.Option>
     ));
+
+  console.log(APP_MENU);
 
   return (
     <Flex

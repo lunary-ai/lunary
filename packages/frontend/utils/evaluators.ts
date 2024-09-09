@@ -151,6 +151,7 @@ const EVALUATOR_TYPES = {
     id: "assertion",
     name: "Assertion",
     icon: IconEyeCheck,
+    soon: true,
     color: "blue",
     description:
       "Checks if the input or output matches the given requirement, using an LLM to grade the output.",

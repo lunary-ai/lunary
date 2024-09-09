@@ -1,6 +1,6 @@
 import CheckPicker, { RenderCheckNode } from "@/components/checks/Picker";
 import { useLogCount, useUser } from "@/utils/dataHooks";
-import { useEvaluators } from "@/utils/dataHooks/evaluators";
+import { useEnrichers } from "@/utils/dataHooks/evaluators";
 import EVALUATOR_TYPES from "@/utils/evaluators";
 import { slugify } from "@/utils/format";
 import { theme } from "@/utils/theme";
@@ -81,16 +81,15 @@ function EvaluatorCard({
   );
 }
 
-export default function NewRealtimeEvaluator() {
+export default function NewEnrichment() {
   const router = useRouter();
 
   const { user } = useUser();
-  const { insert: insertEvaluator } = useEvaluators();
+  const { insert: insertEnricher } = useEnrichers();
 
   const [name, setName] = useState<string>("");
   const [type, setType] = useState<string>();
   const [params, setParams] = useState<any>();
-  const [isBenchmark, setIsBenchmark] = useState<boolean>(false);
   const [filters, setFilters] = useState<CheckLogic>([
     "OR",
     { id: "type", params: { type: "llm" } },
@@ -138,7 +137,7 @@ export default function NewRealtimeEvaluator() {
       });
       return;
     }
-    await insertEvaluator({
+    await insertEnricher({
       name,
       slug: slugify(name),
       mode: "realtime",
@@ -147,26 +146,26 @@ export default function NewRealtimeEvaluator() {
       filters,
       ownerId: user.id,
     });
-    router.push("/evaluations/realtime");
+    router.push("/enrichments");
   }
 
   return (
     <Container>
       <Stack gap="xl">
         <Group align="center">
-          <Title>Add Evaluator</Title>
+          <Title>New Data Enrichment</Title>
         </Group>
 
         <TextInput
           label="Name"
-          placeholder="Your evaluator name"
+          placeholder="Your data enrichment name"
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
 
         <Stack>
-          <Text>Select the type of evaluator you want to add:</Text>
+          <Text>Select the type of data enrichment you want to add:</Text>
 
           <SimpleGrid cols={5} spacing="md">
             {evaluatorTypes
@@ -200,29 +199,6 @@ export default function NewRealtimeEvaluator() {
 
         <Card style={{ overflow: "visible" }} shadow="md" p="lg">
           <Stack>
-            <Tooltip label="Only real-time evaluators are available at the moment">
-              <Group w="fit-content">
-                <Switch
-                  size="lg"
-                  label="Enable real-time evaluation ✨"
-                  onLabel="ON"
-                  offLabel="OFF"
-                  checked={true}
-                />
-              </Group>
-            </Tooltip>
-
-            {/* <Group w="fit-content">
-              <Switch
-                size="lg"
-                label="Is benchmark"
-                onLabel="ON"
-                offLabel="OFF"
-                checked={isBenchmark}
-                onClick={(event) => setIsBenchmark(event.currentTarget.checked)}
-              />
-            </Group> */}
-
             <Box>
               <Text mb="5" mt="sm">
                 Select the logs to apply to:
@@ -261,7 +237,7 @@ export default function NewRealtimeEvaluator() {
             variant="default"
           >
             {selectedEvaluator
-              ? `Create ${selectedEvaluator.name} Evaluator`
+              ? `Create ${selectedEvaluator.name} Enrichment`
               : "Create"}
           </Button>
         </Group>

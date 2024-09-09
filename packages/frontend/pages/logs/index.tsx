@@ -70,7 +70,7 @@ import { VisibilityState } from "@tanstack/react-table";
 import { useRouter } from "next/router";
 
 import IconPicker from "@/components/blocks/IconPicker";
-import { useEvaluators } from "@/utils/dataHooks/evaluators";
+import { useEnrichers } from "@/utils/dataHooks/evaluators";
 import { deserializeLogic, hasAccess, serializeLogic } from "shared";
 import { useSortParams } from "@/utils/hooks";
 
@@ -222,7 +222,7 @@ export default function Logs() {
     return serializeLogic(checksWithType);
   }, [checks, type, view]);
 
-  const { evaluators } = useEvaluators();
+  const { enrichers: evaluators } = useEnrichers();
 
   const [query, setQuery] = useDebouncedState<string | null>(null, 300);
 
@@ -297,8 +297,8 @@ export default function Logs() {
   useEffect(() => {
     if (!view) return;
 
-    setType(view.type);
-    setChecks(view.data);
+    setType(view.type || "llm");
+    setChecks(view.data || []);
     setVisibleColumns(view.columns);
   }, [view, viewId]);
 
