@@ -11,6 +11,7 @@ export type ResourceName =
   | "datasets"
   | "checklists"
   | "evaluations"
+  | "enrichments"
   | "settings";
 
 export type Role = "owner" | "admin" | "member" | "viewer" | "billing";
@@ -114,6 +115,14 @@ export const roles: Record<
         list: true,
         run: true,
       },
+      enrichments: {
+        create: true,
+        read: true,
+        update: true,
+        delete: true,
+        list: true,
+        run: true,
+      },
       settings: {
         create: true,
         read: true,
@@ -193,6 +202,14 @@ export const roles: Record<
         list: true,
       },
       evaluations: {
+        create: true,
+        read: true,
+        update: true,
+        delete: true,
+        list: true,
+        run: true,
+      },
+      enrichments: {
         create: true,
         read: true,
         update: true,
@@ -283,6 +300,14 @@ export const roles: Record<
         list: true,
         run: true,
       },
+      enrichments: {
+        create: true,
+        read: true,
+        update: true,
+        delete: true,
+        list: true,
+        run: true,
+      },
       settings: {
         create: true,
         read: true,
@@ -348,6 +373,13 @@ export const roles: Record<
         read: true,
         update: false,
         delete: false,
+        list: true,
+      },
+      enrichments: {
+        create: false,
+        read: true,
+        update: false,
+        delete: true,
         list: true,
       },
       evaluations: {

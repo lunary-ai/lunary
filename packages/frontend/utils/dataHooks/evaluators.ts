@@ -13,7 +13,7 @@ interface CreateEvaluatorData {
   filters?: CheckLogic;
 }
 
-export function useEvaluators() {
+export function useEnrichers() {
   const { data, isLoading, mutate } = useProjectSWR(`/evaluators`);
 
   const { trigger: insertMutation } = useProjectMutation(
@@ -26,15 +26,15 @@ export function useEvaluators() {
   }
 
   return {
-    evaluators: data,
+    enrichers: data,
     mutate,
     isLoading,
     insert,
   };
 }
 
-export function useEvaluator(id: string, initialData?: any) {
-  const { mutate: mutateEvaluators } = useEvaluators();
+export function useEnricher(id: string, initialData?: any) {
+  const { mutate: mutateEvaluators } = useEnrichers();
 
   const { data, isLoading, mutate } = useProjectSWR(id && `/evaluators/${id}`, {
     fallbackData: initialData,
@@ -56,7 +56,7 @@ export function useEvaluator(id: string, initialData?: any) {
   );
 
   return {
-    evaluator: data,
+    enricher: data,
     update: updateMutation,
     delete: deleteMutation,
     mutate,

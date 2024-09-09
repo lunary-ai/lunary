@@ -310,8 +310,6 @@ function LineChartComponent({
     granularity,
   );
 
-  console.log(cleanedData, props, splitBy);
-
   if (cleanData === false && data?.length) {
     cleanedData = data;
   }

@@ -86,7 +86,6 @@ export const ParamItem = ({ name, value, description }) => (
   </Group>
 );
 
-
 const validateToolCalls = (toolCalls: any[]) => {
   if (!Array.isArray(toolCalls)) return false;
 
@@ -137,7 +136,6 @@ export default function ProviderEditor({
       });
     },
   });
-
 
   return (
     <>
@@ -336,8 +334,6 @@ export default function ProviderEditor({
                       const repaired = empty
                         ? undefined
                         : JSON.parse(jsonrepair(tempJSON.trim()));
-
-                      console.log(empty, repaired);
 
                       if (!empty && !validateToolCalls(repaired)) {
                         throw new Error("Invalid tool calls format");
