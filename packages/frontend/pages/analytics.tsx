@@ -31,21 +31,6 @@ import { useQueryState } from "nuqs";
 import { useEffect, useMemo, useState } from "react";
 import { deserializeLogic, serializeLogic } from "shared";
 
-type AnalyticsCardOptions = {
-  dataKey: string;
-  splitBy?: string;
-  props: string[];
-  agg?: "sum" | "avg";
-  title: string;
-  description: string;
-  startDate: Date;
-  endDate: Date;
-  granularity: Granularity;
-  serializedChecks: string;
-  formatter?: (value: number) => string;
-  colors?: string[];
-};
-
 export function getDefaultDateRange() {
   const endOfToday = new Date();
   endOfToday.setHours(23, 59, 59, 999);
@@ -315,7 +300,20 @@ function AnalyticsChart({
   serializedChecks,
   formatter,
   colors,
-}: AnalyticsCardOptions) {
+}: {
+  dataKey: string;
+  splitBy?: string;
+  props: string[];
+  agg?: "sum" | "avg";
+  title: string;
+  description: string;
+  startDate: Date;
+  endDate: Date;
+  granularity: Granularity;
+  serializedChecks: string;
+  formatter?: (value: number) => string;
+  colors?: string[];
+}) {
   const { ref, inViewport } = useInViewport();
   const [load, setLoad] = useState(inViewport);
 

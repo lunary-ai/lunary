@@ -10,7 +10,6 @@ import {
   Text,
   Title,
   Loader,
-  Flex,
 } from "@mantine/core";
 import {
   Area,
@@ -19,7 +18,6 @@ import {
   ResponsiveContainer,
   Tooltip,
   XAxis,
-  YAxis,
 } from "recharts";
 
 import { formatLargeNumber } from "@/utils/format";
@@ -59,7 +57,6 @@ function prepareDataForRecharts(
     props.forEach((prop) => {
       if (splitBy) {
         uniqueSplitByValues.forEach((splitByValue) => {
-          if (!splitByValue) return;
           dayData[`${splitByValue || "(unknown)"} ${prop}`] = findDataValue(
             data,
             splitBy,
@@ -175,31 +172,6 @@ const CustomizedAxisTick = ({ x, y, payload, index, data, granularity }) => {
   );
 };
 
-function arrayIterator<T>(
-  array: T[],
-  indefinite: boolean = false,
-): IterableIterator<T> {
-  let index = 0;
-  return {
-    [Symbol.iterator]: (): IterableIterator<T> => this,
-
-    next: (): IteratorResult<T> => {
-      if (indefinite && index === array.length) {
-        index = 0;
-      }
-
-      if (index < array.length) {
-        return { value: array[index++], done: false };
-      }
-      return { value: undefined, done: true };
-    },
-  };
-}
-
-function sum(array: number[]) {
-  return array.reduce((a, b) => a + b, 0);
-}
-
 type LineChartData = {
   date: string;
   [key: string]: any;
@@ -257,7 +229,6 @@ function getFigure(agg: string, data: any[], prop: string) {
   }
   return 0;
 }
-
 function LineChartComponent({
   data,
   title,
@@ -277,8 +248,6 @@ function LineChartComponent({
   cleanData = true,
   colors = ["blue", "pink", "indigo", "green", "violet", "yellow"],
 }: LineChartProps) {
-  const colorIterator = arrayIterator(colors, true);
-
   let cleanedData = prepareDataForRecharts(
     blocked
       ? ((
@@ -314,14 +283,12 @@ function LineChartComponent({
     cleanedData = data;
   }
 
-  const hasData = blocked || cleanedData?.length > 0;
+  const hasData = blocked ? true : cleanedData?.length;
   // (splitBy ? Object.keys(cleanedData[0]).length > 1 : data?.length)
   const total =
     stat === undefined || stat === null
       ? getFigure(agg, cleanedData, props[0])
       : stat;
-
-  const colorMapping: { [key: string]: string } = {};
 
   return (
     <Card withBorder p={0} className="lineChart" radius="md">
@@ -478,38 +445,17 @@ function LineChartComponent({
                 if (active && payload && payload.length) {
                   return (
                     <Card shadow="md" withBorder>
-                      <Flex>
-                        <Title order={3} size="sm">
-                          {formatDate(label, granularity)}
-                        </Title>
-
-                        <Title order={1} size="sm" ml="50%" ta="center">
-                          Total:{" "}
-                          {formatter(
-                            sum(payload.map((item) => item.value || 0)),
-                          )}
-                        </Title>
-                      </Flex>
-
-                      {payload.map((item, i) => {
-                        if (!item.name || !item.value) {
-                          return null;
-                        }
-
-                        return (
-                          item.value > 0 &&
-                          item.name && (
-                            <Text
-                              style={{
-                                color: theme.colors[colorMapping[item.name]][4],
-                              }}
-                              key={i}
-                            >
-                              {`${item.name}: ${item.value ? formatter(item.value) : 0}`}
-                            </Text>
-                          )
-                        );
-                      })}
+                      <Title order={3} size="sm">
+                        {formatDate(label, granularity)}
+                      </Title>
+                      {payload.map(
+                        (item, i) =>
+                          item.value !== 0 && (
+                            <Text key={i}>{`${item.name}: ${formatter(
+                              item.value,
+                            )}`}</Text>
+                          ),
+                      )}
                     </Card>
                   );
                 }
@@ -518,56 +464,46 @@ function LineChartComponent({
               }}
             />
 
-            <defs>
-              {Object.keys(cleanedData[0] || {})
+            {cleanedData[0] &&
+              Object.keys(cleanedData[0])
                 .filter((prop) => prop !== "date")
-                .map((prop, i) => {
-                  const color = colorIterator.next().value;
-                  colorMapping[prop] = color;
-
-                  return (
-                    <linearGradient
-                      color={theme.colors[color][6]}
-                      id={slugify(prop)}
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop
-                        offset="5%"
-                        stopColor={theme.colors[color][4]}
-                        stopOpacity={0.4}
-                      />
-                      <stop
-                        offset="95%"
-                        stopColor={theme.colors[color][4]}
-                        stopOpacity={0}
-                      />
-                    </linearGradient>
-                  );
-                })}
-            </defs>
-
-            {Object.keys(cleanedData[0] || {})
-              .filter((prop) => prop !== "date")
-              .map((prop, i) => {
-                const color = colorMapping[prop];
-                return (
-                  <Area
-                    type="monotone"
-                    color={theme.colors[color][4]}
-                    dataKey={prop}
-                    stackId={i}
-                    stroke={theme.colors[color][4]}
-                    dot={false}
-                    fill={`url(#${slugify(prop)})`}
-                    strokeWidth={2}
-                    strokeLinejoin="round"
-                    strokeLinecap="round"
-                  />
-                );
-              })}
+                .map((prop, i) => (
+                  <Fragment key={prop}>
+                    <defs key={prop}>
+                      <linearGradient
+                        color={theme.colors[colors[i % colors.length]][6]}
+                        id={slugify(prop)}
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="currentColor"
+                          stopOpacity={0.4}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="currentColor"
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <Area
+                      type="monotone"
+                      color={theme.colors[colors[i % colors.length]][4]}
+                      dataKey={prop}
+                      stackId="1"
+                      stroke="currentColor"
+                      dot={false}
+                      fill={`url(#${slugify(prop)})`}
+                      strokeWidth={2}
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                    />
+                  </Fragment>
+                ))}
 
             {chartExtra}
           </AreaChart>
