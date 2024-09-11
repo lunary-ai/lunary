@@ -20,7 +20,8 @@ interface Query {
   models?: string[]
   tags?: string[]
   tokens?: string
-  exportType?: "csv" | "jsonl"
+  exportType?: "trace" | "thread"
+  exportFormat?: "csv" | "ojsonl" | "jsonl"
   minDuration?: string
   maxDuration?: string
   startTime?: string
@@ -222,6 +223,7 @@ runs.get("/", async (ctx: Context) => {
     page = "0",
     parentRunId,
     exportType,
+    exportFormat,
     sortField,
     sortDirection,
   } = ctx.query as Query
@@ -303,8 +305,11 @@ runs.get("/", async (ctx: Context) => {
 
   const runs = rows.map(formatRun)
 
-  if (exportType) {
-    return fileExport(runs, exportType, ctx)
+  if (exportFormat) {
+    return fileExport(
+      { ctx, sql, runs, projectId },
+      exportFormat, exportType,
+    )
   }
 
   const total = await sql`
@@ -368,7 +373,7 @@ runs.get("/count", async (ctx: Context) => {
    with runs as (
       select distinct on (r.id)
         r.*,
-        eu.id as user_id,
+        eu.id as user_id,2
         eu.external_id as user_external_id,
         eu.created_at as user_created_at,
         eu.last_seen as user_last_seen,
