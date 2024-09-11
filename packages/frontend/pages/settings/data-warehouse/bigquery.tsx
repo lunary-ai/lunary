@@ -84,7 +84,8 @@ export default function BigQuery() {
           title="Connector successfully created"
           icon={<IconCheck />}
         >
-          A new BigQuery dataset "lunary" will be populated in a few minutes.
+          A new BigQuery dataset "lunary" will be populated in a few minutes, if
+          you're setting it up for the first time.
         </Alert>
       )}
     </Container>
