@@ -1,17 +1,14 @@
-import { useContext } from "react";
+import { useContext, useMemo } from "react";
 import useSWR, { SWRConfiguration, useSWRConfig } from "swr";
 import useSWRInfinite from "swr/infinite";
 import useSWRMutation, { SWRMutationConfiguration } from "swr/mutation";
 import { getUserColor } from "../colors";
 import { ProjectContext } from "../context";
-import { useMemo } from "react";
 
 import { useComputedColorScheme } from "@mantine/core";
 
 import { useAuth } from "../auth";
 import { fetcher } from "../fetcher";
-
-import { CheckLogic } from "shared";
 
 type KeyType = string | ((...args: any[]) => string);
 

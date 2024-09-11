@@ -13,6 +13,8 @@
   "dependencies": {
     "@authenio/samlify-node-xmllint": "^2.0.0",
     "@aws-sdk/client-comprehend": "^3.645.0",
+    "@google-cloud/bigquery": "^7.9.0",
+    "@google-cloud/datastream": "^3.2.0",
     "@json2csv/plainjs": "^7.0.6",
     "@koa/cors": "^5.0.0",
     "@sentry/node": "^7.99.0",
