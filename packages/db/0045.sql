@@ -6,5 +6,5 @@ create table _data_warehouse_connector(
   type text,
   status text,
   constraint fk_checklist_project_id foreign key (project_id) references project(id) on delete cascade
-)
+);
 create unique index on  _data_warehouse_connector(project_id);
