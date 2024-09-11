@@ -45,6 +45,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { CheckLogic, hasAccess } from "shared";
 import useSWR from "swr";
+import DataWarehouseCard from "@/components/settings/data-warehouse";
 
 function Keys() {
   const [regenerating, setRegenerating] = useState(false);
@@ -356,20 +357,7 @@ export default function AppAnalytics() {
           <Button>Open Guardrails settings</Button>
         </SettingsCard>
 
-        <SettingsCard
-          title="Data Warehouse Connection"
-          align="start"
-          paywallConfig={{
-            Icon: IconDatabaseShare,
-            feature: "Data Warehouse",
-            p: 12,
-            plan: "enterprise",
-            list: ["Sync your data with a data warehouse provider"],
-            enabled: config.IS_SELF_HOSTED
-              ? org.license.dataWarehouseEnabled
-              : org.dataWarehouseEnabled,
-          }}
-        ></SettingsCard>
+        <DataWarehouseCard />
 
         {user && hasAccess(user.role, "projects", "delete") && (
           <SettingsCard title="Danger Zone" align="start">
