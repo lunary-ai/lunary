@@ -116,7 +116,9 @@ function formatRun(run: any) {
     // TODO: put in process input function
     if (Array.isArray(formattedRun.input)) {
       for (const message of formattedRun.input) {
-        message.enrichments = [];
+        if (message && typeof message === "object") {
+          message.enrichments = [];
+        }
       }
     } else if (formattedRun.input && typeof formattedRun.input === "object") {
       formattedRun.input.enrichments = [];
@@ -124,7 +126,9 @@ function formatRun(run: any) {
 
     if (Array.isArray(formattedRun.output)) {
       for (const message of formattedRun.output) {
-        message.enrichments = [];
+        if (message && typeof message === "object") {
+          message.enrichments = [];
+        }
       }
     } else if (formattedRun.output && typeof formattedRun.output === "object") {
       formattedRun.output.enrichments = [];
@@ -146,7 +150,7 @@ function formatRun(run: any) {
       if (Array.isArray(formattedRun.input)) {
         for (let i = 0; i < formattedRun.input.length; i++) {
           const message = formattedRun.input[i];
-          if (typeof message === "object") {
+          if (message && typeof message === "object") {
             message.enrichments.push({
               result: result.input[i],
               type: evaluatorType,
