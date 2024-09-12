@@ -33,7 +33,7 @@ import AppUserAvatar from "./AppUserAvatar";
 import { useRouter } from "next/router";
 
 import { CHECKS } from "shared/checks";
-import { CHECKS_BY_TYPE } from "@/pages/logs";
+import { CHECKS_BY_TYPE } from "shared";
 
 const METADATA_TO_CHECK = {
   Model: "models",

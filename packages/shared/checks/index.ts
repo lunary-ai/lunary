@@ -63,6 +63,41 @@ const ALL_LANGUAGES = [
   "ms", // Malay
 ];
 
+export const CHECKS_BY_TYPE = {
+  llm: [
+    "date",
+    "models",
+    "tags",
+    "users",
+    "languages",
+    "entities",
+    "templates",
+    "sentiment",
+    "status",
+    "metadata",
+    "feedback",
+    "cost",
+    "duration",
+    "tokens",
+  ],
+  trace: [
+    "date",
+    "tags",
+    "users",
+    "status",
+    // "feedback",
+    "duration",
+    "metadata",
+  ],
+  thread: [
+    "date",
+    "tags",
+    "users",
+    // "feedback",
+    "metadata",
+  ],
+};
+
 export const CHECKS: Check[] = [
   {
     id: "tools",

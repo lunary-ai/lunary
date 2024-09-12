@@ -71,7 +71,7 @@ import { useRouter } from "next/router";
 
 import IconPicker from "@/components/blocks/IconPicker";
 import { useEnrichers } from "@/utils/dataHooks/evaluators";
-import { deserializeLogic, hasAccess, serializeLogic } from "shared";
+import { deserializeLogic, hasAccess, serializeLogic, CHECKS_BY_TYPE } from "shared";
 import { useSortParams } from "@/utils/hooks";
 
 export const defaultColumns = {
@@ -114,40 +114,6 @@ export const defaultColumns = {
   ],
 };
 
-export const CHECKS_BY_TYPE = {
-  llm: [
-    "date",
-    "models",
-    "tags",
-    "users",
-    "languages",
-    "entities",
-    "templates",
-    "sentiment",
-    "status",
-    "metadata",
-    "feedback",
-    "cost",
-    "duration",
-    "tokens",
-  ],
-  trace: [
-    "date",
-    "tags",
-    "users",
-    "status",
-    // "feedback",
-    "duration",
-    "metadata",
-  ],
-  thread: [
-    "date",
-    "tags",
-    "users",
-    // "feedback",
-    "metadata",
-  ],
-};
 
 const VIEW_ICONS = {
   llm: "IconBrandOpenai",
