@@ -170,11 +170,19 @@ export default function ProviderEditor({
 
               let updatedTools = value.config.tools;
 
-              if (isPreviousProviderOpenAI && isNewProviderAnthropic) {
+              if (
+                isPreviousProviderOpenAI &&
+                isNewProviderAnthropic &&
+                value.config.tools
+              ) {
                 updatedTools = convertOpenAIToolsToAnthropic(
                   value.config.tools,
                 );
-              } else if (isPreviousProviderAnthropic && isNewProviderOpenAI) {
+              } else if (
+                isPreviousProviderAnthropic &&
+                isNewProviderOpenAI &&
+                value.config.tools
+              ) {
                 updatedTools = convertAnthropicToolsToOpenAI(
                   value.config.tools,
                 );
