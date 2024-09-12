@@ -1,5 +1,6 @@
 import { useDatasets, useOrg, useRun, useUser } from "@/utils/dataHooks";
 import {
+  ActionIcon,
   Badge,
   Button,
   Card,
@@ -10,12 +11,14 @@ import {
   Stack,
   Switch,
   Text,
+  Tooltip,
 } from "@mantine/core";
 import { notifications, showNotification } from "@mantine/notifications";
 import {
   IconBinaryTree2,
   IconCheck,
   IconPencilShare,
+  IconSearch,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { hasAccess } from "shared";
@@ -27,6 +30,15 @@ import Feedbacks from "./Feedbacks";
 import config from "@/utils/config";
 import { useState } from "react";
 import AppUserAvatar from "./AppUserAvatar";
+import { useRouter } from "next/router";
+
+import { CHECKS } from "shared/checks";
+import { CHECKS_BY_TYPE } from "@/pages/logs";
+
+const METADATA_TO_CHECK = {
+  Model: "models",
+  User: "users"
+}
 
 const isChatMessages = (obj) => {
   return Array.isArray(obj)
@@ -46,6 +58,44 @@ const ParamItem = ({
   render?: (value: any) => React.ReactNode;
   color?: string;
 }) => {
+  const router = useRouter();
+  const filterName = METADATA_TO_CHECK[name] || name.toLowerCase();
+
+  const filter = CHECKS.find(check => {
+    if (CHECKS_BY_TYPE.llm.includes(check.id)) return false;
+    return filterName === check.id;
+  })
+
+  const filterByItem = () => {
+    if (!filter) return;
+
+    const params = filter.params
+      .filter((param) => param.type !== "label")
+      .reduce((acc, { id, defaultValue, getItemValue }) => {
+        if ((["models"]).includes(id)) {
+          acc[id] = value;
+        } else if (id === "tags") { 
+          acc[id] = value.join(",")
+        } else {
+          acc[id] = getItemValue ? getItemValue(value) : defaultValue;
+        }
+        return acc;
+      }, {});
+
+    const filters = Object.keys(params).map(key => {
+      return `${key}=${params[key]}`;
+    }).join("&");
+
+    router.push({
+      pathname: "/logs",
+      query: {
+        ...router.query,
+        selected: null,
+        filters,
+      }
+    });
+  }
+
   return (
     <Group>
       <Text size="sm">{name}: </Text>
@@ -67,6 +117,18 @@ const ParamItem = ({
             JSON.stringify(value)
           )}
         </Text>
+      )}
+
+      {filter && (
+        <Tooltip label={`Filter by ${name}`} position="right">
+          <ActionIcon
+            color={"gray"}
+            variant="transparent"
+            onClick={filterByItem}
+          >
+            <IconSearch size="16px"></IconSearch>
+          </ActionIcon>
+        </Tooltip>
       )}
     </Group>
   );
