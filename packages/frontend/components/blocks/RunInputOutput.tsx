@@ -66,7 +66,7 @@ const ParamItem = ({
     return filterName === check.id;
   })
 
-  const filterByItem = () => {
+  function filterByItem() {
     if (!filter) return;
 
     const params = filter.params
