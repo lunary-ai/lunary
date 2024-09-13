@@ -316,15 +316,15 @@ users.patch(
 
     const { projects, role } = UpdateUserSchema.parse(ctx.request.body);
 
-    // const [{ plan }] =
-    //   await sql`select plan, eval_allowance from org where id = ${orgId}`;
+    const [{ plan }] =
+      await sql`select plan, eval_allowance from org where id = ${orgId}`;
 
-    // if (["free", "pro", "team", "unlimited"].includes(plan)) {
-    //   ctx.throw(
-    //     403,
-    //     "You must be an enterprise customer to change a user role",
-    //   );
-    // }
+    if (["free", "pro", "team", "unlimited"].includes(plan)) {
+      ctx.throw(
+        403,
+        "You must be an enterprise customer to change a user role",
+      );
+    }
 
     // if (role === "owner") {
     //   ctx.throw(403, "You cannot modify the owner role");
