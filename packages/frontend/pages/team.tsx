@@ -337,6 +337,7 @@ export function RoleSelect({
   minimal?: boolean;
   additionalOptions?: React.JSX.Element[];
 }) {
+  const { user: currentUser } = useUser();
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
@@ -349,7 +350,7 @@ export function RoleSelect({
 
   const options = Object.values(roles).map(
     ({ value, name, description, free }) =>
-      value !== "owner" && (
+      (value === "owner" ? currentUser.role === "owner" : true) && (
         <Tooltip
           key={value}
           label={
@@ -559,7 +560,7 @@ function InviteMemberCard() {
   );
 }
 
-function UpdateUserForm({ user, onClose }) {
+function UpdateUserForm({ user, onClose, setShowConfirmation, setOnConfirm }) {
   const [role, setRole] = useState(user.role);
   const { projects } = useProjects();
   const { org } = useOrg();
@@ -573,7 +574,7 @@ function UpdateUserForm({ user, onClose }) {
     : org?.plan === "custom";
 
   useEffect(() => {
-    if (["admin", "billing"].includes(role)) {
+    if (["owner", "admin", "billing"].includes(role)) {
       setUserProjects(projects.map((p) => p.id));
     }
   }, [role]);
@@ -583,7 +584,12 @@ function UpdateUserForm({ user, onClose }) {
     setIsLoading(true);
 
     try {
-      await updateUser({ role, projects: userProjects });
+      if (role === "owner") {
+        setOnConfirm(() => () => updateUser({ role, projects: userProjects }));
+        setShowConfirmation(true);
+      } else {
+        await updateUser({ role, projects: userProjects });
+      }
 
       onClose();
     } catch (error) {
@@ -602,7 +608,9 @@ function UpdateUserForm({ user, onClose }) {
         <ProjectMultiSelect
           value={userProjects}
           setValue={setUserProjects}
-          disabled={["admin", "billing"].includes(role) || !canUsePaidRoles}
+          disabled={
+            ["owner", "admin", "billing"].includes(role) || !canUsePaidRoles
+          }
         />
       </Input.Wrapper>
 
@@ -629,6 +637,21 @@ function MemberList({ users, isInvitation }) {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [onConfirm, setOnConfirm] = useState<(value: any) => void>();
+
+  const confirmOwnerUpdate = async (value) => {
+    setShowConfirmation(false);
+
+    if (value) {
+      try {
+        onConfirm?.(value);
+      } catch (error) {
+        console.error("Error updating role:", error);
+      }
+    }
+  };
 
   const handleOpenModal = (user) => {
     setSelectedUser(user);
@@ -658,12 +681,44 @@ function MemberList({ users, isInvitation }) {
         {selectedUser && (
           <UpdateUserForm
             user={selectedUser}
+            setOnConfirm={setOnConfirm}
+            setShowConfirmation={setShowConfirmation}
             onClose={() => setIsModalOpen(false)}
           />
         )}
       </Modal>
+
+      <Modal
+        opened={showConfirmation}
+        onClose={() => setShowConfirmation(false)}
+        title={<Title size="h3">Transfer organization ownership?</Title>}
+      >
+        <Text size="sm">
+          Are you sure you want to transfer the ownership of your organizationto
+          this this user? This action will make you an admin.
+        </Text>
+
+        <Group mt="md" justify="end">
+          <Button
+            color="red"
+            variant="outline"
+            onClick={() => confirmOwnerUpdate(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="filled"
+            color="red"
+            type="submit"
+            onClick={() => confirmOwnerUpdate(true)}
+          >
+            Confirm
+          </Button>
+        </Group>
+      </Modal>
+
       <Stack gap="0">
-        <Group w="100%" wrap="no-wrap">
+        <Group w="100%" wrap="nowrap">
           <SearchBar
             query={searchValue}
             setQuery={setSearchValue}
