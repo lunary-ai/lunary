@@ -47,14 +47,12 @@ function TableBody({ table, tableContainerRef, onRowClicked }: TableBodyProps) {
           <tr
             key={row.id}
             data-index={virtualRow.index}
-            onClick={
-              onRowClicked ? () => onRowClicked(row.original) : undefined
-            }
+            onClick={() => onRowClicked?.(row.original)}
             className={virtualRow.index % 2 ? "ListItemOdd" : "ListItemEven"}
             ref={(node) => rowVirtualizer.measureElement(node)}
             style={{
               height: `${virtualRow.size}px`,
-              ...(onRowClicked ? { cursor: "pointer" } : {}),
+              cursor: onRowClicked ? "pointer" : "auto",
             }}
           >
             {row.getVisibleCells().map((cell) => (
