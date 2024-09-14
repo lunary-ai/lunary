@@ -85,7 +85,6 @@ async function evaluatorJob() {
       console.log(
         `Skipping Real-time Evaluator ${evaluator.id} (${i} / ${evaluators.length})`,
       );
-      await sleep(500);
       continue;
     }
 
