@@ -326,9 +326,9 @@ users.patch(
       );
     }
 
-    if (role === "owner") {
-      ctx.throw(403, "You cannot modify the owner role");
-    }
+    // if (role === "owner") {
+    //   ctx.throw(403, "You cannot modify the owner role");
+    // }
 
     for (const projectId of projects) {
       const [project] =
@@ -352,6 +352,10 @@ users.patch(
       await sql`select * from account where id = ${userId}`;
     if (!userToModify || userToModify.orgId !== currentUser.orgId) {
       ctx.throw(404, "User not found in your organization");
+    }
+
+    if (role === "owner") {
+      await sql`update account set role = ${"admin"} where id = ${currentUserId}`;
     }
 
     await sql`update account set role = ${role} where id = ${userId}`;
