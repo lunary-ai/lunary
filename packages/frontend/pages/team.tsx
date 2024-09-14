@@ -574,7 +574,7 @@ function UpdateUserForm({ user, onClose, setShowConfirmation, setOnConfirm }) {
     : org?.plan === "custom";
 
   useEffect(() => {
-    if (["admin", "billing"].includes(role)) {
+    if (["owner", "admin", "billing"].includes(role)) {
       setUserProjects(projects.map((p) => p.id));
     }
   }, [role]);
@@ -608,7 +608,9 @@ function UpdateUserForm({ user, onClose, setShowConfirmation, setOnConfirm }) {
         <ProjectMultiSelect
           value={userProjects}
           setValue={setUserProjects}
-          disabled={["admin", "billing"].includes(role) || !canUsePaidRoles}
+          disabled={
+            ["owner", "admin", "billing"].includes(role) || !canUsePaidRoles
+          }
         />
       </Input.Wrapper>
 
@@ -689,18 +691,24 @@ function MemberList({ users, isInvitation }) {
       <Modal
         opened={showConfirmation}
         onClose={() => setShowConfirmation(false)}
-        title={<Title size="h3">Make user owner?</Title>}
+        title={<Title size="h3">Transfer organization ownership?</Title>}
       >
         <Text size="sm">
-          Are you sure you want to make this user owner of your team?
+          Are you sure you want to transfer the ownership of your organizationto
+          this this user? This action will make you an admin.
         </Text>
 
         <Group mt="md" justify="end">
-          <Button variant="outline" onClick={() => confirmOwnerUpdate(false)}>
+          <Button
+            color="red"
+            variant="outline"
+            onClick={() => confirmOwnerUpdate(false)}
+          >
             Cancel
           </Button>
           <Button
             variant="filled"
+            color="red"
             type="submit"
             onClick={() => confirmOwnerUpdate(true)}
           >
