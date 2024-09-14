@@ -148,7 +148,7 @@ export function compileTextTemplate(
   content: string,
   variables: Record<string, string>,
 ) {
-  const regex = /{{(.*?)}}/g;
+  const regex = /{{([^{}]*)}}/g;
   return content.replace(regex, (_, g1) => variables[g1] || "");
 }
 
