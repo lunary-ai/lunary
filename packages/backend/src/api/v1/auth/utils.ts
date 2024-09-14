@@ -75,7 +75,7 @@ interface SessionData {
 }
 
 const publicRoutes = [
-  new RegExp(`/auth/.+`),
+  new RegExp(`^/auth/.+`),
   "/api/report", // required legacy route
   "/api/v1/template", // legacy template route
   "/v1/health",

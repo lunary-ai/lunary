@@ -2,14 +2,14 @@ import sql from "../utils/db";
 import { callML } from "../utils/ml";
 import aiAssert from "./ai/assert";
 import aiFact from "./ai/fact";
-import aiSentiment from "./ai/sentiment";
 import aiSimilarity from "./ai/similarity";
 // import aiNER from "./ai/ner"
 // import aiToxicity from "./ai/toxic"
+import RE2 from "re2";
 import rouge from "rouge";
 import { and, or } from "../utils/checks";
-import { isOpenAIMessage } from "../utils/misc";
 import { CleanRun } from "../utils/ingest";
+import { isOpenAIMessage } from "../utils/misc";
 
 function getTextsTypes(field: "any" | "input" | "output", run: any) {
   let textsToCheck = [];
@@ -280,18 +280,19 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     evaluator: async (run, params) => {
       const { regex, type, field } = params;
 
-      const re = new RegExp(regex);
-
-      const has = re.test(lastMsg(run[field]));
-
-      const passed = type === "contains" ? has : !has;
+      // Use RE2 instead of RegExp for safer regex execution
+      const re = new RE2(regex);
 
       const runField =
         typeof run[field] === "string"
           ? run[field]
           : JSON.stringify(run[field]);
 
-      const match = has ? runField.match(re)[0] : "";
+      const has = re.test(lastMsg(runField));
+
+      const passed = type === "contains" ? has : !has;
+
+      const match = has ? re.exec(runField)[0] : "";
 
       return {
         passed,
