@@ -261,7 +261,7 @@ export async function calcRunCost(run: any) {
       outputCost = (outputCost * outputUnits) / 1_000_000;
     }
 
-    const finalCost = Number((inputCost + outputCost).toFixed(5));
+    const finalCost = Number((inputCost + outputCost).toFixed(10));
 
     if (finalCost === 0) {
       return calcRunCostLegacy(run);
