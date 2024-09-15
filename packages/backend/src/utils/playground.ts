@@ -1,11 +1,11 @@
-import { clearUndefined } from "./ingest";
+import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
 import { MODELS } from "shared";
 import { ReadableStream } from "stream/web";
+import sql from "./db";
+import { clearUndefined } from "./ingest";
 import { getOpenAIParams } from "./openai";
 import stripe from "./stripe";
-import sql from "./db";
-import config from "./config";
 
 function convertInputToOpenAIMessages(input: any[]) {
   return input.map(
@@ -213,6 +213,118 @@ function validateToolCalls(model: string, toolCalls: any) {
   return undefined;
 }
 
+interface ChatCompletion {
+  id: string;
+  object: string;
+  created: number;
+  model: string;
+  choices: Choice[];
+  usage: Usage;
+  system_fingerprint: string;
+}
+
+interface Choice {
+  index: number;
+  message: Message;
+  logprobs: null;
+  finish_reason: string;
+}
+
+interface Message {
+  role: string;
+  content: string;
+}
+
+interface Usage {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+  completion_tokens_details: CompletionTokensDetails;
+}
+
+interface CompletionTokensDetails {
+  reasoning_tokens: number;
+}
+
+function getOpenAIMessage(message: Anthropic.Messages.Message): ChatCompletion {
+  return {
+    id: message.id,
+    object: "chat.completion",
+    created: Math.floor(Date.now() / 1000),
+    model: message.model,
+    choices: [
+      {
+        index: 0,
+        message: {
+          role: message.role,
+          content: message.content
+            .filter((block) => block.type === "text")
+            .map((block) => (block as { text: string }).text)
+            .join(""),
+          tool_calls:
+            message.content[1]?.type === "function"
+              ? [
+                  {
+                    id: message.content[1].id,
+                    type: "function",
+                    function: {
+                      name: message.content[1].name,
+                      arguments: message.content[1].input,
+                    },
+                  },
+                ]
+              : null,
+        },
+        logprobs: null,
+        finish_reason: message.stop_reason || "stop",
+      },
+    ],
+    usage: {
+      prompt_tokens: message.usage.input_tokens,
+      completion_tokens: message.usage.output_tokens,
+      total_tokens: message.usage.input_tokens + message.usage.output_tokens,
+      completion_tokens_details: {
+        reasoning_tokens: message.usage.output_tokens,
+      },
+    },
+    system_fingerprint: "anthropic_conversion",
+  };
+}
+
+function getAnthropicMessage(message: any): any {
+  console.log(message);
+  const res = {
+    role: message.role !== "tool" ? message.role : "user",
+    content: [
+      {
+        type: "text",
+        text: message?.content || "<empty>",
+      },
+    ],
+  };
+
+  if (message?.tool_calls) {
+    res.content[1] = {
+      type: "tool_use",
+      id: message.tool_calls[0].id,
+      name: message.tool_calls[0].function.name,
+      input: JSON.parse(message.tool_calls[0].function.arguments),
+    };
+  }
+
+  if (message.role === "tool") {
+    res.content = [
+      {
+        type: "tool_result",
+        tool_use_id: message.tool_call_id,
+        content: "15 degrees",
+      },
+    ];
+  }
+  console.log(res);
+  return res;
+}
+
 export async function runAImodel(
   content: any,
   extra: any,
@@ -247,38 +359,36 @@ export async function runAImodel(
   const messages = convertInputToOpenAIMessages(copy);
   const modelObj = MODELS.find((m) => m.id === model);
 
+  const useAnthropic = modelObj?.provider === "anthropic";
+  if (useAnthropic) {
+    const anthropic = new Anthropic({
+      apiKey: process.env.ANTHORPIC_API_KEY,
+    });
+
+    const res = await anthropic.messages.create({
+      model,
+      messages: messages
+        .filter((m) => m.role !== "system")
+        .map(getAnthropicMessage),
+      system: messages.filter((m) => m.role === "system")[0]?.content,
+      stream: false,
+      temperature: extra?.temperature,
+      max_tokens: extra?.max_tokens || 4096,
+      top_p: extra?.top_p,
+      presence_penalty: extra?.presence_penalty,
+      frequency_penalty: extra?.frequency_penalty,
+      functions: extra?.functions,
+      tools: validateToolCalls(model, extra?.tools),
+      seed: extra?.seed,
+    });
+
+    return getOpenAIMessage(res);
+  }
+
   let clientParams = {};
   let paramsOverwrite = {};
 
-  const useAnthropic = modelObj?.provider === "anthropic";
-
-  // disable streaming with anthropic, as their API is too different.
-  const doStream = stream && !useAnthropic;
-
   switch (modelObj?.provider) {
-    case "anthropic":
-      clientParams = {
-        defaultHeaders: {
-          "x-api-key": process.env.ANTHROPIC_API_KEY,
-          "anthropic-version": "2023-06-01",
-        },
-        baseURL: "https://api.anthropic.com/v1/",
-        fetch: async (url: string, options: any) => {
-          // Anthropic doesn't use OpenAI's /chat/completions endpoint
-          const newUrl = url.replace("/chat/completions", "/messages");
-          return fetch(newUrl, options);
-        },
-      };
-
-      paramsOverwrite = {
-        messages: messages.filter((m) =>
-          ["user", "assistant"].includes(m.role),
-        ),
-        system: messages.filter((m) => m.role === "system")[0]?.content,
-        max_tokens: extra?.max_tokens || 4096, // required by anthropic
-      };
-      break;
-
     case "openai":
       clientParams = getOpenAIParams();
       break;
@@ -302,7 +412,7 @@ export async function runAImodel(
   let res = await openai.chat.completions.create({
     model,
     messages,
-    stream: doStream,
+    stream: stream,
     temperature: extra?.temperature,
     max_tokens: extra?.max_tokens,
     top_p: extra?.top_p,
@@ -331,30 +441,6 @@ export async function runAImodel(
       total_tokens:
         (generationData?.data?.tokens_prompt || 0) +
         (generationData?.data?.tokens_completion || 0),
-    };
-  }
-
-  // Anthropic uses different format, convert to OpenAi
-  if (useAnthropic) {
-    res = {
-      id: res.id,
-      model: res.model,
-      object: "chat.completion",
-      created: Date.now(),
-      choices: [
-        {
-          message: { role: "assistant", content: res.content[0].text },
-          index: 1,
-          finish_reason: res.stop_reason === "max_tokens" ? "length" : "stop",
-          logprobs: null,
-        },
-      ],
-      usage: {
-        prompt_tokens: res.usage?.input_tokens,
-        completion_tokens: res.usage?.output_tokens,
-        total_tokens:
-          (res.usage?.input_tokens || 0) + (res.usage?.output_tokens || 0),
-      },
     };
   }
 
