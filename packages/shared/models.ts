@@ -48,6 +48,11 @@ export const MODELS = [
   { id: "gpt-4-0125-preview", name: "gpt-4-0125-preview", provider: "openai" },
   { id: "gpt-4", name: "gpt-4", provider: "openai" },
   {
+    id: "gpt-4o-2024-05-13",
+    name: "gpt-4o-2024-05-13",
+    provider: "openai",
+  },
+  {
     id: "gpt-4-vision-preview",
     name: "gpt-4-vision-preview",
     provider: "openai",
