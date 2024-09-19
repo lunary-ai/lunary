@@ -383,8 +383,6 @@ export default function Sidebar() {
       </Combobox.Option>
     ));
 
-  console.log(APP_MENU);
-
   return (
     <Flex
       justify="space-between"
