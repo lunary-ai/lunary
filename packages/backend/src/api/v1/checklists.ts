@@ -4,6 +4,7 @@ import { clearUndefined } from "@/src/utils/ingest";
 import Context from "@/src/utils/koa";
 import Router from "koa-router";
 import { CheckLogic } from "shared";
+import { z } from "zod";
 
 const checklists = new Router({
   prefix: "/checklists",
@@ -11,13 +12,20 @@ const checklists = new Router({
 
 checklists.get("/", checkAccess("checklists", "list"), async (ctx: Context) => {
   const { projectId } = ctx.state;
-  // TODO: full zod
-  const { type } = ctx.query as { type: string };
+  const querySchema = z.object({ type: z.string() });
+  const { type } = querySchema.parse(ctx.query);
 
-  const rows = await sql`select * from checklist 
-        where project_id = ${projectId} 
-        and type = ${type} 
-        order by updated_at desc`;
+  const rows = await sql`
+    select 
+      * 
+    from 
+      checklist 
+    where 
+      project_id = ${projectId} 
+      and type = ${type} 
+    order by 
+      updated_at desc`;
+
   ctx.body = rows;
 });
 
@@ -26,49 +34,62 @@ checklists.get(
   checkAccess("checklists", "read"),
   async (ctx: Context) => {
     const { projectId } = ctx.state;
-    const { id } = ctx.params;
+    const paramsSchema = z.object({ id: z.string().uuid() });
+    const { id } = paramsSchema.parse(ctx.params);
 
-    const [check] = await sql`select * from checklist 
-        where project_id = ${projectId} 
+    const [check] = await sql`
+      select 
+        * 
+      from 
+        checklist 
+      where 
+        project_id = ${projectId} 
         and id = ${id}`;
+
     ctx.body = check;
   },
 );
 
-checklists.post("/", async (ctx: Context) => {
-  const { projectId, userId } = ctx.state;
-  const { slug, type, data } = ctx.request.body as {
-    slug: string;
-    type: string;
-    data: CheckLogic;
-  };
+checklists.post(
+  "/",
+  checkAccess("checklists", "create"),
+  async (ctx: Context) => {
+    const { projectId, userId } = ctx.state;
+    const bodySchema = z.object({
+      slug: z.string(),
+      type: z.string(),
+      data: z.any() as z.ZodType<CheckLogic>,
+    });
+    const { slug, type, data } = bodySchema.parse(ctx.request.body);
 
-  const [insertedCheck] = await sql`
-    insert into checklist ${sql({
-      slug,
-      ownerId: userId,
-      projectId,
-      type,
-      data,
-    })}
+    const [insertedCheck] = await sql`
+    insert into checklist 
+    ${sql({ slug, ownerId: userId, projectId, type, data })}
     returning *
   `;
-  ctx.body = insertedCheck;
-});
+
+    ctx.body = insertedCheck;
+  },
+);
 
 checklists.patch("/:id", async (ctx: Context) => {
   const { projectId } = ctx.state;
-  const { id } = ctx.params;
-  const { slug, data } = ctx.request.body as {
-    slug: string;
-    data: CheckLogic;
-  };
+  const paramsSchema = z.object({ id: z.string().uuid() });
+  const bodySchema = z.object({
+    slug: z.string(),
+    data: z.any() as z.ZodType<CheckLogic>,
+  });
+  const { slug, data } = bodySchema.parse(ctx.request.body);
+  const { id } = paramsSchema.parse(ctx.params);
 
   const [updatedCheck] = await sql`
-    update checklist
-    set ${sql(clearUndefined({ slug, data, updatedAt: new Date() }))}
-    where project_id = ${projectId}
-    and id = ${id}
+    update 
+      checklist
+    set 
+        ${sql(clearUndefined({ slug, data, updatedAt: new Date() }))}
+    where 
+      project_id = ${projectId}
+      and id = ${id}
     returning *
   `;
   ctx.body = updatedCheck;
@@ -79,14 +100,17 @@ checklists.delete(
   checkAccess("checklists", "delete"),
   async (ctx: Context) => {
     const { projectId } = ctx.state;
-    const { id } = ctx.params;
+    const paramsSchema = z.object({ id: z.string().uuid() });
+    const { id } = paramsSchema.parse(ctx.params);
 
     await sql`
-    delete from checklist
-    where project_id = ${projectId}
-    and id = ${id}
-    returning *
-  `;
+      delete from 
+        checklist
+      where 
+        project_id = ${projectId}
+        and id = ${id}
+      returning *
+    `;
 
     ctx.status = 200;
   },
