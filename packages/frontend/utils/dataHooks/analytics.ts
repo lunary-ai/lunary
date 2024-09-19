@@ -42,7 +42,19 @@ export function useTopModels(params: {
     params && `/analytics/top/models?${queryParams.toString()}`,
   );
 
-  return { data, isLoading };
+  const topModels = data
+    ? data.map(
+        ({ name, promptTokens, completionTokens, totalTokens, cost }) => ({
+          name,
+          promptTokens: BigInt(promptTokens),
+          completionTokens: BigInt(completionTokens.toString()),
+          totalTokens: BigInt(totalTokens.toString()),
+          cost,
+        }),
+      )
+    : [];
+
+  return { data: topModels, isLoading };
 }
 
 export function useTopTemplates(

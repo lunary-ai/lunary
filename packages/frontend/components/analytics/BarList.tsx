@@ -24,7 +24,17 @@ type BarListProps = {
 function BarList({ data, columns, filterZero = true }: BarListProps) {
   const dataColumns = columns.filter((col) => !col.bar && col.key);
   const main = dataColumns.find((col) => col.main) || dataColumns[0];
-  const mainTotal = data?.reduce((acc, item) => acc + (item[main.key] || 0), 0);
+  const mainTotal = data?.reduce(
+    (acc, item) => {
+      const value = item[main.key];
+      if (typeof value === "bigint") {
+        return acc + (value || BigInt(0));
+      } else {
+        return acc + (value || 0);
+      }
+    },
+    typeof data?.[0]?.[main.key] === "bigint" ? BigInt(0) : 0,
+  );
   const scheme = useComputedColorScheme();
 
   if (!data) return <>No data.</>;
@@ -51,8 +61,8 @@ function BarList({ data, columns, filterZero = true }: BarListProps) {
         </Table.Thead>
         <Table.Tbody>
           {data
-            .sort((a, b) => b[main.key] - a[main.key])
-            .filter((item) => !filterZero || item[main.key] > 0)
+            .filter((item) => !filterZero || BigInt(item[main.key]) > BigInt(0))
+            // .sort((a, b) => BigInt(b[main.key]) - BigInt(a[main.key]))
             .splice(0, 5)
             .map((item, index) => (
               <Table.Tr key={index}>
@@ -75,9 +85,22 @@ function BarList({ data, columns, filterZero = true }: BarListProps) {
                         {item.barSections?.map(({ count, color, tooltip }) => (
                           <Tooltip key={color} label={tooltip}>
                             <Progress.Section
-                              value={(count / mainTotal) * 100}
+                              value={Number(
+                                BigInt(BigInt(count) / BigInt(mainTotal)) *
+                                  BigInt(100),
+                              )}
                               color={color}
-                            ></Progress.Section>
+                            >
+                              {() => {
+                                console.log(
+                                  Number(
+                                    BigInt(BigInt(count) / BigInt(mainTotal)) *
+                                      BigInt(100),
+                                  ),
+                                );
+                                return <></>;
+                              }}
+                            </Progress.Section>
                           </Tooltip>
                         ))}
                       </Progress.Root>

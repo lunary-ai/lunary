@@ -818,9 +818,9 @@ analytics.get(
     const topModels = await sql`
       select
         name,
-        coalesce(sum(prompt_tokens), 0)::int as prompt_tokens,
-        coalesce(sum(completion_tokens), 0)::int as completion_tokens,
-        coalesce(sum(prompt_tokens + completion_tokens), 0)::int as total_tokens,
+        coalesce(sum(prompt_tokens), 0)::bigint as prompt_tokens,
+        coalesce(sum(completion_tokens), 0)::bigint as completion_tokens,
+        coalesce(sum(prompt_tokens + completion_tokens), 0)::bigint as total_tokens,
         coalesce(sum(cost), 0)::float as cost
       from
         run r
@@ -840,7 +840,15 @@ analytics.get(
       limit 5
     `;
 
-    ctx.body = topModels;
+    ctx.body = topModels.map(
+      ({ name, promptTokens, completionTokens, totalTokens, cost }) => ({
+        name,
+        promptTokens: promptTokens.toString(),
+        completionTokens: completionTokens.toString(),
+        totalTokens: totalTokens.toString(),
+        cost,
+      }),
+    );
   },
 );
 
