@@ -10,6 +10,99 @@ import { checkAccess } from "@/src/utils/authorization";
 import { jsonrepair } from "jsonrepair";
 import { z } from "zod";
 
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     Run:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         projectId:
+ *           type: string
+ *         isPublic:
+ *           type: boolean
+ *         feedback:
+ *           $ref: '#/components/schemas/Feedback'
+ *         parentFeedback:
+ *           $ref: '#/components/schemas/Feedback'
+ *         type:
+ *           type: string
+ *         name:
+ *           type: string
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         endedAt:
+ *           type: string
+ *           format: date-time
+ *         duration:
+ *           type: number
+ *         templateVersionId:
+ *           type: string
+ *         templateSlug:
+ *           type: string
+ *         cost:
+ *           type: number
+ *         tokens:
+ *           type: object
+ *           properties:
+ *             completion:
+ *               type: number
+ *             prompt:
+ *               type: number
+ *             total:
+ *               type: number
+ *         tags:
+ *           type: array
+ *           items:
+ *             type: string
+ *         input:
+ *           type: object
+ *         output:
+ *           type: object
+ *         error:
+ *           type: object
+ *         status:
+ *           type: string
+ *         siblingRunId:
+ *           type: string
+ *         params:
+ *           type: object
+ *         metadata:
+ *           type: object
+ *         user:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: string
+ *             externalId:
+ *               type: string
+ *             createdAt:
+ *               type: string
+ *               format: date-time
+ *             lastSeen:
+ *               type: string
+ *               format: date-time
+ *             props:
+ *               type: object
+ *         traceId:
+ *           type: string
+ *
+ *     Feedback:
+ *       type: object
+ *       properties:
+ *         score:
+ *           type: number
+ *         flags:
+ *           type: array
+ *           items:
+ *             type: string
+ *         comment:
+ *           type: string
+ */
+
 const runs = new Router({
   prefix: "/runs",
 });
@@ -210,6 +303,103 @@ function formatRun(run: any) {
 
 runs.use("/ingest", ingest.routes());
 
+/**
+ * @openapi
+ * /api/v1/runs:
+ *   get:
+ *     summary: Get runs
+ *     description: Retrieve a list of runs with optional filtering and sorting
+ *     parameters:
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *           enum: [llm, trace, thread]
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: models
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *       - in: query
+ *         name: tags
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *       - in: query
+ *         name: tokens
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: exportType
+ *         schema:
+ *           type: string
+ *           enum: [csv, jsonl]
+ *       - in: query
+ *         name: minDuration
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: maxDuration
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: startTime
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: endTime
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: parentRunId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: sortField
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: sortDirection
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 total:
+ *                   type: number
+ *                 page:
+ *                   type: number
+ *                 limit:
+ *                   type: number
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Run'
+ */
 runs.get("/", async (ctx: Context) => {
   const { projectId } = ctx.state;
 
@@ -349,7 +539,25 @@ runs.get("/", async (ctx: Context) => {
   };
 });
 
-// TODO: refactor with GET / by putting logic inside a function
+/**
+ * @openapi
+ * /api/v1/runs/count:
+ *   get:
+ *     summary: Get run count
+ *     description: Retrieve the count of runs with optional filtering
+ *     parameters:
+ *       - in: query
+ *         name: parentRunId
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: integer
+ */
 runs.get("/count", async (ctx: Context) => {
   const { projectId } = ctx.state;
 
@@ -401,6 +609,55 @@ runs.get("/count", async (ctx: Context) => {
   ctx.body = count;
 });
 
+/**
+ * @openapi
+ * /api/v1/runs/usage:
+ *   get:
+ *     summary: Get run usage statistics
+ *     description: Retrieve usage statistics for runs
+ *     parameters:
+ *       - in: query
+ *         name: days
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: daily
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   date:
+ *                     type: string
+ *                   name:
+ *                     type: string
+ *                   type:
+ *                     type: string
+ *                   completion_tokens:
+ *                     type: integer
+ *                   prompt_tokens:
+ *                     type: integer
+ *                   cost:
+ *                     type: number
+ *                   errors:
+ *                     type: integer
+ *                   success:
+ *                     type: integer
+ *       400:
+ *         description: Invalid query parameters
+ */
 runs.get("/usage", checkAccess("logs", "read"), async (ctx) => {
   const { projectId } = ctx.state;
   const { days, userId, daily } = ctx.query as {
@@ -447,6 +704,27 @@ runs.get("/usage", checkAccess("logs", "read"), async (ctx) => {
   ctx.body = runsUsage;
 });
 
+/**
+ * @openapi
+ * /api/v1/runs/{id}/public:
+ *   get:
+ *     summary: Get a public run
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Run'
+ *       404:
+ *         description: Run not found or not public
+ */
 runs.get("/:id/public", async (ctx) => {
   const { id } = ctx.params;
 
@@ -473,6 +751,27 @@ runs.get("/:id/public", async (ctx) => {
   ctx.body = formatRun(row);
 });
 
+/**
+ * @openapi
+ * /api/v1/runs/{id}:
+ *   get:
+ *     summary: Get a specific run
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Run'
+ *       404:
+ *         description: Run not found
+ */
 runs.get("/:id", async (ctx) => {
   const { id } = ctx.params;
 
@@ -529,6 +828,36 @@ runs.get("/:id", async (ctx) => {
   ctx.body = formatRun(row);
 });
 
+/**
+ * @openapi
+ * /api/v1/runs/{id}:
+ *   patch:
+ *     summary: Update a run
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               isPublic:
+ *                 type: boolean
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: Successful update
+ *       400:
+ *         description: Invalid input
+ */
 runs.patch("/:id", checkAccess("logs", "update"), async (ctx: Context) => {
   // TODO: tags and isPublic should probably have their own endpoint
   const requestBody = z.object({
@@ -558,6 +887,29 @@ runs.patch("/:id", checkAccess("logs", "update"), async (ctx: Context) => {
   ctx.status = 200;
 });
 
+/**
+ * @openapi
+ * /api/v1/runs/{id}/feedback:
+ *   patch:
+ *     summary: Update run feedback
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Feedback'
+ *     responses:
+ *       200:
+ *         description: Feedback updated successfully
+ *       400:
+ *         description: Invalid input
+ */
 runs.patch(
   "/:id/feedback",
   checkAccess("logs", "update"),
@@ -584,6 +936,27 @@ runs.patch(
   },
 );
 
+/**
+ * @openapi
+ * /api/v1/runs/{id}/related:
+ *   get:
+ *     summary: Get related runs
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Run'
+ */
 runs.get("/:id/related", checkAccess("logs", "read"), async (ctx) => {
   const id = ctx.params.id;
   const { projectId } = ctx.state;
@@ -631,23 +1004,40 @@ runs.get("/:id/related", checkAccess("logs", "read"), async (ctx) => {
   ctx.body = related;
 });
 
-// public route
+/**
+ * @openapi
+ * /api/v1/runs/{id}/feedback:
+ *   get:
+ *     summary: Get run feedback
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Feedback'
+ *       404:
+ *         description: Run not found
+ */
 runs.get("/:id/feedback", async (ctx) => {
-  const { projectId } = ctx.state;
   const { id } = ctx.params;
 
   const [row] = await sql`
-      select
-          feedback
-      from
-          run
-      where
-          project_id = ${projectId} and id = ${id}
-      limit 1`;
+    select
+      r.feedback
+    from
+      run r
+    where
+      r.id = ${id}
+  `;
 
-  if (!row) {
-    ctx.throw(404, "Run not found");
-  }
+  if (!row) throw new Error("Run not found.");
 
   ctx.body = row.feedback;
 });

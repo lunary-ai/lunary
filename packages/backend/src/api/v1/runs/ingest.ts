@@ -14,6 +14,85 @@ import * as Sentry from "@sentry/node";
 import Router from "koa-router";
 import { z } from "zod";
 
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     Event:
+ *       type: object
+ *       properties:
+ *         type:
+ *           type: string
+ *           enum: [llm, chain, agent, tool, log, embed, retriever, chat, convo, message, thread]
+ *         event:
+ *           type: string
+ *         level:
+ *           type: string
+ *         runId:
+ *           type: string
+ *         parentRunId:
+ *           type: string
+ *         timestamp:
+ *           type: string
+ *           format: date-time
+ *         input:
+ *           type: object
+ *         tags:
+ *           type: array
+ *           items:
+ *             type: string
+ *         name:
+ *           type: string
+ *         output:
+ *           type: object
+ *         message:
+ *           oneOf:
+ *             - type: string
+ *             - type: object
+ *         extra:
+ *           type: object
+ *         feedback:
+ *           type: object
+ *         templateId:
+ *           type: string
+ *         templateVersionId:
+ *           type: string
+ *         metadata:
+ *           type: object
+ *         tokensUsage:
+ *           type: object
+ *           properties:
+ *             prompt:
+ *               type: number
+ *             completion:
+ *               type: number
+ *         error:
+ *           type: object
+ *           properties:
+ *             message:
+ *               type: string
+ *             stack:
+ *               type: string
+ *         appId:
+ *           type: string
+ *       additionalProperties: true
+ *
+ *     IngestResponse:
+ *       type: object
+ *       properties:
+ *         results:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: string
+ *               success:
+ *                 type: boolean
+ *               error:
+ *                 type: string
+ */
+
 const router = new Router();
 
 async function registerRunEvent(
@@ -363,6 +442,37 @@ export async function processEventsIngestion(
   return results;
 }
 
+/**
+ * @openapi
+ * /api/v1/runs/ingest:
+ *   post:
+ *     summary: Ingest run events
+ *     tags: [Runs]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               events:
+ *                 oneOf:
+ *                   - $ref: '#/components/schemas/Event'
+ *                   - type: array
+ *                     items:
+ *                       $ref: '#/components/schemas/Event'
+ *     responses:
+ *       200:
+ *         description: Successful ingestion
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/IngestResponse'
+ *       401:
+ *         description: Project does not exist
+ *       402:
+ *         description: Incorrect project id format
+ */
 router.post("/", async (ctx: Context) => {
   const result = z.string().uuid().safeParse(ctx.state.projectId);
   if (!result.success) {

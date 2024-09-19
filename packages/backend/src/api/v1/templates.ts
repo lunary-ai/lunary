@@ -12,6 +12,22 @@ const templates = new Router({
   prefix: "/templates",
 });
 
+/**
+ * @openapi
+ * /api/v1/templates:
+ *   get:
+ *     summary: List all templates
+ *     tags: [Templates]
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Template'
+ */
 templates.get("/", async (ctx: Context) => {
   const templates = await sql`
     select 
@@ -42,6 +58,22 @@ templates.get("/", async (ctx: Context) => {
   ctx.body = templates;
 });
 
+/**
+ * @openapi
+ * /api/v1/templates/latest:
+ *   get:
+ *     summary: Get latest template versions
+ *     tags: [Templates]
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/TemplateVersion'
+ */
 templates.get("/latest", async (ctx: Context) => {
   const templateVersions = await sql`
     select 
@@ -66,7 +98,26 @@ templates.get("/latest", async (ctx: Context) => {
   ctx.body = templateVersions.map(unCamelExtras);
 });
 
-// insert template + a first version, and return the template with versions
+/**
+ * @openapi
+ * /api/v1/templates:
+ *   post:
+ *     summary: Create a new template
+ *     tags: [Templates]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TemplateInput'
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Template'
+ */
 templates.post("/", checkAccess("prompts", "create"), async (ctx: Context) => {
   const { projectId, userId } = ctx.state;
 
@@ -111,6 +162,26 @@ templates.post("/", checkAccess("prompts", "create"), async (ctx: Context) => {
   };
 });
 
+/**
+ * @openapi
+ * /api/v1/templates/{id}:
+ *   get:
+ *     summary: Get a specific template
+ *     tags: [Templates]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Template'
+ */
 templates.get("/:id", async (ctx: Context) => {
   const [row] = await sql`
     select * from template where project_id = ${ctx.state.projectId} and id = ${ctx.params.id}
@@ -119,6 +190,22 @@ templates.get("/:id", async (ctx: Context) => {
   ctx.body = row;
 });
 
+/**
+ * @openapi
+ * /api/v1/templates/{id}:
+ *   delete:
+ *     summary: Delete a template
+ *     tags: [Templates]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: Successful deletion
+ */
 templates.delete(
   "/:id",
   checkAccess("prompts", "delete"),
@@ -131,6 +218,32 @@ templates.delete(
   },
 );
 
+/**
+ * @openapi
+ * /api/v1/templates/{id}:
+ *   patch:
+ *     summary: Update a template
+ *     tags: [Templates]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TemplateUpdateInput'
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Template'
+ */
 templates.patch(
   "/:id",
   checkAccess("prompts", "update"),
@@ -163,6 +276,32 @@ templates.patch(
   },
 );
 
+/**
+ * @openapi
+ * /api/v1/templates/{id}/versions:
+ *   post:
+ *     summary: Create a new version for a template
+ *     tags: [Templates, Versions]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TemplateVersionInput'
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TemplateVersion'
+ */
 templates.post(
   "/:id/versions",
   checkAccess("prompts", "update"),
@@ -209,5 +348,112 @@ templates.post(
     ctx.body = unCamelExtras(templateVersion);
   },
 );
+
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     Template:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         name:
+ *           type: string
+ *         slug:
+ *           type: string
+ *         mode:
+ *           type: string
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         group:
+ *           type: string
+ *         projectId:
+ *           type: string
+ *         versions:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/TemplateVersion'
+ *     TemplateVersion:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         templateId:
+ *           type: string
+ *         content:
+ *           type: array
+ *         extra:
+ *           type: object
+ *         testValues:
+ *           type: object
+ *         isDraft:
+ *           type: boolean
+ *         notes:
+ *           type: string
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         version:
+ *           type: number
+ *     TemplateInput:
+ *       type: object
+ *       required:
+ *         - slug
+ *         - mode
+ *         - content
+ *       properties:
+ *         slug:
+ *           type: string
+ *         mode:
+ *           type: string
+ *         content:
+ *           type: array
+ *         extra:
+ *           type: object
+ *         testValues:
+ *           type: object
+ *         isDraft:
+ *           type: boolean
+ *         notes:
+ *           type: string
+ *     TemplateUpdateInput:
+ *       type: object
+ *       properties:
+ *         slug:
+ *           type: string
+ *         mode:
+ *           type: string
+ *     TemplateVersionInput:
+ *       type: object
+ *       required:
+ *         - content
+ *         - isDraft
+ *       properties:
+ *         content:
+ *           type: array
+ *         extra:
+ *           type: object
+ *         testValues:
+ *           type: object
+ *         isDraft:
+ *           type: boolean
+ *         notes:
+ *           type: string
+ *     TemplateVersionUpdateInput:
+ *       type: object
+ *       properties:
+ *         content:
+ *           type: [array, string]
+ *         extra:
+ *           type: object
+ *         testValues:
+ *           type: object
+ *         isDraft:
+ *           type: boolean
+ *         notes:
+ *           type: string
+ */
 
 export default templates;

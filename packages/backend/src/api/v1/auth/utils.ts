@@ -78,6 +78,7 @@ const publicRoutes = [
   new RegExp(`^/auth/.+`),
   "/api/report", // required legacy route
   "/api/v1/template", // legacy template route
+  "/v1/openapi",
   "/v1/health",
   "/v1/health-check",
   "/webhooks/stripe",

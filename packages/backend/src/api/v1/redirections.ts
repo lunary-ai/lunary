@@ -60,4 +60,14 @@ redirections.get("/api/v1/template", async (ctx: Context) => {
   ctx.body = latestTemplateVersion;
 });
 
+// REDIRECTION FOR RENAMED TEMPLATE VERSIONS ROUTES
+redirections.all("/api/v1/template_versions(.*)", async (ctx: Context) => {
+  const newPath = ctx.path.replace(
+    "/api/v1/template_versions",
+    "/api/v1/template-versions",
+  );
+  ctx.status = 301;
+  ctx.redirect(newPath);
+});
+
 export default redirections;
