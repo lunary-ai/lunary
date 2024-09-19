@@ -2,7 +2,7 @@
 
 # 📈 lunary
 
-**Open-source observability, prompt management & evaluations for LLMs**
+**Open-source Observability, Prompt Management & Analytics for LLMs**
 
 [website](https://lunary.ai) - [docs](https://lunary.ai/docs) - [self host](https://lunary.ai/docs/self-host)
 
