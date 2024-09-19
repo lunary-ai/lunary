@@ -280,7 +280,6 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     evaluator: async (run, params) => {
       const { regex, type, field } = params;
 
-      // Use RE2 instead of RegExp for safer regex execution
       const re = new RE2(regex);
 
       const runField =
@@ -322,7 +321,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
           passed = false;
         } catch (e) {}
       } else if (type === "contains") {
-        const regex = /{.*?}/gs; // Non-greedy match on anything between {}
+        const regex = new RE2(/{.*?}/g);
         const matches = fieldText.match(regex);
         if (matches) {
           passed = matches.some((match) => {
