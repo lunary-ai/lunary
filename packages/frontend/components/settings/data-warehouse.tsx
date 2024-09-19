@@ -54,8 +54,8 @@ export default function DataWarehouseCard() {
         plan: "enterprise",
         list: ["Synchronize your data with a data warehouse provider"],
         enabled: config.IS_SELF_HOSTED
-          ? org.license.dataWarehouseEnabled
-          : org.dataWarehouseEnabled,
+          ? !org.license.dataWarehouseEnabled
+          : !org.dataWarehouseEnabled,
       }}
     >
       <Text mb="lg">Synchronize your data with a data warehouse provider</Text>

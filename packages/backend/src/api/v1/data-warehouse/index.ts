@@ -3,6 +3,7 @@ import Router from "koa-router";
 import { z } from "zod";
 import { createNewDatastream } from "./utils";
 import sql from "@/src/utils/db";
+import config from "@/src/utils/config";
 
 const dataWarehouse = new Router({
   prefix: "/data-warehouse",
@@ -21,12 +22,13 @@ dataWarehouse.post("/bigquery", async (ctx: Context) => {
   const bodySchema = z.object({
     apiKey: z.string().transform((apiKey) => JSON.parse(apiKey)),
   });
-
-  // TODO: validate apiKey first with Zod
-
   const { apiKey } = bodySchema.parse(ctx.request.body);
 
-  await createNewDatastream(apiKey, process.env.DATABASE_URL!, ctx);
+  if (config.DATA_WAREHOUSE_EXPORTS_ALLOWED) {
+    await createNewDatastream(apiKey, process.env.DATABASE_URL!, ctx);
+  } else {
+    ctx.throw(403, "Forbidden");
+  }
 
   ctx.body = {};
 });
