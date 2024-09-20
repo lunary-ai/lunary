@@ -23,6 +23,26 @@ import Link from "next/link";
 import { IconInfoCircle, IconTools } from "@tabler/icons-react";
 
 function convertOpenAIToolsToAnthropic(openAITools) {
+  function convertProperties(openAIProperties) {
+    const anthropicProperties = {};
+
+    for (const [key, value] of Object.entries(openAIProperties)) {
+      const anthropicProperty = {
+        type: value.type,
+        description: value.description,
+      };
+
+      if (value.type === "object" && value.properties) {
+        anthropicProperty.properties = convertProperties(value.properties);
+        anthropicProperty.required = value.required || [];
+      }
+
+      anthropicProperties[key] = anthropicProperty;
+    }
+
+    return anthropicProperties;
+  }
+
   return openAITools.map((openAITool) => {
     const openAIFunction = openAITool.function;
 
@@ -40,14 +60,9 @@ function convertOpenAIToolsToAnthropic(openAITools) {
       },
     };
 
-    for (const [key, value] of Object.entries(
+    anthropicTool.input_schema.properties = convertProperties(
       openAIFunction.parameters.properties,
-    )) {
-      anthropicTool.input_schema.properties[key] = {
-        type: value.type,
-        description: value.description,
-      };
-    }
+    );
 
     return anthropicTool;
   });
