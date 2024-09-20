@@ -36,12 +36,10 @@ jobs:
           endpoint: "lunary/lunary"
 
       - name: Build ${{ matrix.service }}
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./ops/${{ matrix.service }}.Dockerfile
-          load: true
-          push: false
           tags: |
             lunary/${{ matrix.service }}:latest
             lunary/${{ matrix.service }}:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
