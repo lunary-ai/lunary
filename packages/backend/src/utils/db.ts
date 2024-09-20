@@ -11,11 +11,19 @@ const sql = postgres(process.env.DATABASE_URL!, {
   },
   types: {
     bigint: {
-      ... postgres.BigInt,
+      ...postgres.BigInt,
 
-      // Convert BigInt to Number since postgres limit is 2 Billion
-      // But Javascript Limit is 8 Quadrillion
-      parse: (x: any) => Number(x),
+      // Convert Postgres BIGINT to JS Number
+      // Postgres BIGINT range: -9_223_372_036_854_775_808 to 9_223_372_036_854_775_807
+      // JS Number.MAX_SAFE_INTEGER: 9_007_199_254_740_991
+      // Values outside JS safe range will be capped at +/- Infinity, because above Number.MAX_SAFE_INTEGER there are rounding approximations
+      parse: (x: string) => {
+        const number = Number(x);
+        if (number > Number.MAX_SAFE_INTEGER) {
+          return Infinity;
+        }
+        return Number(x);
+      },
     },
   },
   max: isProduction ? 50 : 5,
