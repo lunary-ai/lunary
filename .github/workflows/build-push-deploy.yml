@@ -1,20 +1,18 @@
 name: Build Docker Images, Push to Registry, and Deploy to Production
 
-on: push
-# on:
-#   push:
-#     branches:
-#       - main
-#   release:
-#     types: [published]
+on:
+  push:
+    branches:
+      - main
+  release:
+    types: [published]
 
 jobs:
-  build:
+  build-push:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [backend, realtime-evaluators, frontend]
-
+        service: [backend, frontend, realtime-evaluators]
     steps:
       - name: Check out the private Ops repo
         uses: actions/checkout@v4
@@ -35,7 +33,19 @@ jobs:
           driver: cloud
           endpoint: "lunary/lunary"
 
-      - name: Build ${{ matrix.service }}
+      - name: Generate date
+        id: date
+        run: echo "date=$(date +%Y-%m-%d-%Hh%Mm%Ss)" >> $GITHUB_OUTPUT
+
+      - name: Get short commit hash
+        id: commit
+        run: echo "hash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Remove 'v' prefix from release tag
+        id: release_tag
+        run: echo "tag=$(echo ${{ github.event.release.tag_name }} | sed 's/^v//')" >> $GITHUB_OUTPUT
+
+      - name: Build and push ${{ matrix.service }}
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -48,13 +58,30 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # push:
-  #   needs: build
+  # deploy:
+  #   needs: build-push
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Deploy to Production
+  #       uses: appleboy/ssh-action@master
+  #       with:
+  #         host: ${{ secrets.PRODUCTION_IP_ADDRESS }}
+  #         username: root
+  #         key: ${{ secrets.SSH_PRIVATE_KEY }}
+  #         port: ${{ secrets.PRODUCTION_PORT }}
+  #         script: |
+  #           docker image prune -f
+  #           cd /opt/lunary
+  #           docker compose pull
+  #           docker compose down
+  #           docker compose up -d
+
+  # build-push-others:
+  #   needs: deploy
   #   runs-on: ubuntu-latest
   #   strategy:
   #     matrix:
-  #       service: [backend, realtime-evaluators, frontend]
-
+  #       service: [frontend]
   #   steps:
   #     - name: Check out the private Ops repo
   #       uses: actions/checkout@v4
@@ -75,12 +102,24 @@ jobs:
   #         driver: cloud
   #         endpoint: "lunary/lunary"
 
-  #     - name: Build ${{ matrix.service }}
+  #     - name: Generate date
+  #       id: date
+  #       run: echo "date=$(date +%Y-%m-%d-%Hh%Mm%Ss)" >> $GITHUB_OUTPUT
+
+  #     - name: Get short commit hash
+  #       id: commit
+  #       run: echo "hash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+  #     - name: Remove 'v' prefix from release tag
+  #       id: release_tag
+  #       run: echo "tag=$(echo ${{ github.event.release.tag_name }} | sed 's/^v//')" >> $GITHUB_OUTPUT
+
+  #     - name: Build and push frontend
   #       uses: docker/build-push-action@v5
   #       with:
   #         context: .
   #         file: ./ops/${{ matrix.service }}.Dockerfile
-  #         push: push
+  #         push: true
   #         tags: |
   #           lunary/${{ matrix.service }}:latest
   #           lunary/${{ matrix.service }}:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
@@ -88,21 +127,3 @@ jobs:
   #         platforms: linux/arm64,linux/amd64
   #         cache-from: type=gha
   #         cache-to: type=gha,mode=max
-
-  # deploy:
-  #   needs: push
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Deploy to Production
-  #       uses: appleboy/ssh-action@master
-  #       with:
-  #         host: ${{ secrets.PRODUCTION_IP_ADDRESS }}
-  #         username: root
-  #         key: ${{ secrets.SSH_PRIVATE_KEY }}
-  #         port: ${{ secrets.PRODUCTION_PORT }}
-  #         script: |
-  #           docker image prune -f
-  #           cd /opt/lunary
-  #           docker compose pull
-  #           docker compose down
-  #           docker compose up -d
