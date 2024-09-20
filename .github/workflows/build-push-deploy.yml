@@ -36,7 +36,7 @@ jobs:
           endpoint: "lunary/lunary"
 
       - name: Build ${{ matrix.service }}
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: ./ops/${{ matrix.service }}.Dockerfile
