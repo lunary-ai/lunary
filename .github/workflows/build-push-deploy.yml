@@ -53,11 +53,7 @@ jobs:
           file: ./ops/${{ matrix.service }}.Dockerfile
           tags: |
             lunary/${{ matrix.service }}:latest
-            lunary/${{ matrix.service }}:rev-${{ steps.date.outputs.date }}-${{ steps.commit.outputs.hash }}
-            ${{ github.event.release.tag_name != '' && format('lunary/{0}:{1}', matrix.service, steps.release_tag.outputs.tag) || '' }}
           platforms: linux/arm64,linux/amd64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
   # deploy:
   #   needs: build-push
