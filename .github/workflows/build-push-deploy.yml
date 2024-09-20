@@ -1,11 +1,12 @@
 name: Build Docker Images, Push to Registry, and Deploy to Production
 
 on:
-  push:
-    branches:
-      - main
-  release:
-    types: [published]
+  push
+  # push:
+  #   branches:
+  #     - main
+  # release:
+  #   types: [published]
 
 jobs:
   build-push:
@@ -46,7 +47,7 @@ jobs:
         run: echo "tag=$(echo ${{ github.event.release.tag_name }} | sed 's/^v//')" >> $GITHUB_OUTPUT
 
       - name: Build and push ${{ matrix.service }}
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./ops/${{ matrix.service }}.Dockerfile
