@@ -52,8 +52,7 @@ jobs:
           context: .
           file: ./ops/${{ matrix.service }}.Dockerfile
           tags: |
-            lunary/${{ matrix.service }}:latest
-          platforms: linux/arm64,linux/amd64
+            lunary/${{ matrix.service }}:test
 
   # deploy:
   #   needs: build-push
