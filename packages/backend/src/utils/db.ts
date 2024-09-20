@@ -19,10 +19,10 @@ const sql = postgres(process.env.DATABASE_URL!, {
       // Values outside JS safe range will be capped at +/- Infinity, because above Number.MAX_SAFE_INTEGER there are rounding approximations
       parse: (x: string) => {
         const number = Number(x);
-        if (number > Number.MAX_SAFE_INTEGER) {
+        if (!Number.isSafeInteger(number)) {
           return Infinity;
         }
-        return Number(x);
+        return number;
       },
     },
   },
