@@ -22,12 +22,13 @@ type BarListProps = {
 // A table of progress bars, with the progress value the proportion relative to the total
 // and the second column the value of the bar
 function BarList({ data, columns, filterZero = true }: BarListProps) {
+  // Moved to avoid unnecessary computations
+  if (!data) return <>No data.</>;
+
   const dataColumns = columns.filter((col) => !col.bar && col.key);
   const main = dataColumns.find((col) => col.main) || dataColumns[0];
   const mainTotal = data?.reduce((acc, item) => acc + (item[main.key] || 0), 0);
   const scheme = useComputedColorScheme();
-
-  if (!data) return <>No data.</>;
 
   return (
     <>
