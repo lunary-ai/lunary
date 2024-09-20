@@ -262,14 +262,14 @@ function getOpenAIMessage(message: Anthropic.Messages.Message): ChatCompletion {
             .map((block) => (block as { text: string }).text)
             .join(""),
           tool_calls:
-            message.content[1]?.type === "function"
+            message.content[1]?.type === "tool_use"
               ? [
                   {
                     id: message.content[1].id,
                     type: "function",
                     function: {
                       name: message.content[1].name,
-                      arguments: message.content[1].input,
+                      arguments: JSON.stringify(message.content[1].input),
                     },
                   },
                 ]
