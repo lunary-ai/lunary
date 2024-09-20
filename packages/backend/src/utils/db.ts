@@ -9,6 +9,15 @@ const sql = postgres(process.env.DATABASE_URL!, {
     ...postgres.camel,
     undefined: null,
   },
+  types: {
+    bigint: {
+      ... postgres.BigInt,
+
+      // Convert BigInt to Number since postgres limit is 2 Billion
+      // But Javascript Limit is 8 Quadrillion
+      parse: (x: any) => Number(x),
+    },
+  },
   max: isProduction ? 50 : 5,
   connection: {
     application_name: `backend-${isProduction ? "production" : "development"}-${new Date().getTime()}`,
