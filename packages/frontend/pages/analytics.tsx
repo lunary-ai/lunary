@@ -28,8 +28,10 @@ import {
 } from "@tabler/icons-react";
 import { NextSeo } from "next-seo";
 import { useQueryState } from "nuqs";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { deserializeLogic, serializeLogic } from "shared";
+
+import { createSwapy, Swapy } from "swapy";
 
 export function getDefaultDateRange() {
   const endOfToday = new Date();
@@ -408,6 +410,14 @@ export default function Analytics() {
     serializedChecks: serializedChecks,
   };
 
+  const swapyRef = useRef<Swapy | null>(null)
+
+  useEffect(() => {
+    const container = window['c'] = document.querySelector('.container')
+    swapyRef.current = window['s'] = createSwapy(container)
+    return () => swapyRef.current?.destroy()
+  }, [])
+
   return (
     <Empty
       Icon={IconChartAreaLine}
@@ -459,13 +469,32 @@ export default function Analytics() {
           />
         )}
 
-        <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
-          <TopModels topModels={topModels} isLoading={topModelsLoading} />
-          <TopTemplates
-            topTemplates={topTemplates}
-            isLoading={topTemplatesLoading}
-          />
-          <TopUsersCard topUsers={topUsers} isLoading={topUsersLoading} />
+        <SimpleGrid
+          cols={{ base: 1, sm: 3 }}
+          spacing="md"
+          className="container"
+        >
+          <Box className="slot a" data-swapy-slot="1">
+            <Box data-swapy-item="a">
+              <TopModels topModels={topModels} isLoading={topModelsLoading} />
+            </Box>
+          </Box>
+
+          <Box className="slot a" data-swapy-slot="2">
+            <Box data-swapy-item="b">
+              <TopTemplates
+                topTemplates={topTemplates}
+                isLoading={topTemplatesLoading}
+              />
+            </Box>
+          </Box>
+
+          <Box className="slot a" data-swapy-slot="3">
+            <Box data-swapy-item="c">
+              <div data-swapy-handle="c" style={{height: '10px', width: "100rem", backgroundColor: "black"}}></div>
+              <TopUsersCard topUsers={topUsers} isLoading={topUsersLoading} />
+            </Box>
+          </Box>
         </SimpleGrid>
 
         {/* <AreaChart

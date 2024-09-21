@@ -22,7 +22,8 @@
   ],
   "dependencies": {
     "concurrently": "^8.2.2",
-    "patch-package": "^8.0.0"
+    "patch-package": "^8.0.0",
+    "swapy": "^0.2.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.47.0",
