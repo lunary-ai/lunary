@@ -241,6 +241,7 @@ export default function Sidebar() {
   const [search, setSearch] = useState("");
 
   const isSelfHosted = config.IS_SELF_HOSTED;
+  console.log(config);
 
   const billingEnabled =
     process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY && !config.IS_SELF_HOSTED;
@@ -382,6 +383,8 @@ export default function Sidebar() {
         {item.name}
       </Combobox.Option>
     ));
+
+  console.log(APP_MENU);
 
   return (
     <Flex
