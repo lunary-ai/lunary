@@ -199,33 +199,24 @@ export const CHECK_RUNNERS: CheckRunner[] = [
 
   {
     id: "sentiment",
-    sql: ({ sentiment }) => {
+    sql: ({
+      sentiment,
+    }: {
+      sentiment: "positive" | "negative" | "neutral";
+    }) => {
       if (!sentiment) return sql`true`;
-
-      let expression;
-      switch (sentiment) {
-        case "positive":
-          expression = sql`>= 0.5`;
-          break;
-        case "negative":
-          expression = sql`<= -0.5`;
-          break;
-        case "neutral":
-          expression = sql`BETWEEN -0.5 AND 0.5`;
-          break;
-      }
 
       return and([
         sql`e.type = 'sentiment'`,
         or([
           sql`(
-            SELECT (elem ->> 'score')::float ${expression}
+            SELECT (elem ->> 'label') = ${sentiment} 
             FROM jsonb_array_elements(er.result::jsonb -> 'input') AS elem
             ORDER BY (elem->>'index')::int DESC
             LIMIT 1
           )`,
           sql`(
-            SELECT (elem ->> 'score')::float ${expression}
+            SELECT (elem ->> 'label') = ${sentiment} 
             FROM jsonb_array_elements(er.result::jsonb -> 'output') AS elem
             ORDER BY (elem->>'index')::int DESC
             LIMIT 1

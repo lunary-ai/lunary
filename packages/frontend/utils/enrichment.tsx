@@ -12,6 +12,7 @@ import {
   EnrichmentData,
   EvaluatorType,
   LanguageDetectionResult,
+  SentimentAnalysisResult,
 } from "shared";
 import { getFlagEmoji } from "./format";
 import ErrorBoundary from "@/components/blocks/ErrorBoundary";
@@ -280,36 +281,25 @@ export function renderSentimentEnrichment(data?: EnrichmentData) {
   }
 
   const sentiments = [...data.input, ...data.output].map((sentiment) => {
-    let emoji, type;
-    if (
-      !sentiment &&
-      typeof sentiment === "object" &&
-      !Array.isArray(sentiment)
-    ) {
-      emoji = <IconMoodNeutral color="gray" />;
-      type = "neutral";
-    } else {
-      const { score, subjectivity } = sentiment;
-
-      if (typeof score !== "number" || isNaN(score) || subjectivity < 0.4) {
-        emoji = <IconMoodNeutral color="gray" />;
-        type = "neutral";
-      } else {
-        if (score > 0.2) {
-          emoji = <IconMoodSmile color="teal" />;
-          type = "positive";
-        } else if (score < -0.2) {
-          emoji = <IconMoodSad color="crimson" />;
-          type = "negative";
-        } else {
-          emoji = <IconMoodNeutral color="gray" />;
-          type = "neutral";
-        }
-      }
+    if (sentiment?.label === "positive") {
+      return {
+        emoji: <IconMoodSmile color="teal" />,
+        type: "positive",
+      };
+    } else if (sentiment?.label === "negative") {
+      return {
+        emoji: <IconMoodSad color="crimson" />,
+        type: "negative",
+      };
+    } else if (sentiment?.label === "neutral") {
+      return {
+        emoji: <IconMoodNeutral color="gray" />,
+        type: "neutral",
+      };
     }
     return {
-      emoji,
-      type,
+      emoji: null,
+      type: null,
     };
   });
 
@@ -339,23 +329,32 @@ export function renderSentimentEnrichment(data?: EnrichmentData) {
 }
 
 // TODO: refactor with above
-export function SentimentEnrichment2({ score }) {
+export function SentimentEnrichment2({
+  sentiment,
+}: {
+  sentiment: SentimentAnalysisResult;
+}) {
   const [opened, { close, open }] = useDisclosure(false);
 
+  if (!sentiment) {
+    return null;
+  }
+
+  const { label, score } = sentiment;
+
   let type, emoji;
-  if (score > 0.2) {
+  if (label === "positive") {
     emoji = <IconMoodSmile color="teal" />;
-    type = "positive";
-  } else if (score < -0.2) {
+  } else if (label === "negative") {
     emoji = <IconMoodSad color="crimson" />;
     type = "negative";
-  } else {
+  } else if (label === "neutral") {
     emoji = <IconMoodNeutral color="gray" />;
     type = "neutral";
   }
 
   return (
-    <Tooltip label={`Sentiment analysis: ${type}`} opened={opened}>
+    <Tooltip label={`Score: ${score}`} opened={opened}>
       <Box onMouseEnter={open} onMouseLeave={close}>
         {emoji}
       </Box>

@@ -789,9 +789,9 @@ export const CHECKS: Check[] = [
   },
   {
     id: "sentiment",
-    name: "Sentiment",
+    name: "User Sentiment",
     uiType: "ai",
-    description: "Uses AI to detect the sentiment of the given field.",
+    description: "Uses AI to detect users sentiments.",
     params: [
       FIELD_PARAM,
       {

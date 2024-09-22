@@ -292,7 +292,6 @@ function getOpenAIMessage(message: Anthropic.Messages.Message): ChatCompletion {
 }
 
 function getAnthropicMessage(message: any): any {
-  console.log(message);
   const res = {
     role: message.role !== "tool" ? message.role : "user",
     content: [
@@ -321,7 +320,6 @@ function getAnthropicMessage(message: any): any {
       },
     ];
   }
-  console.log(res);
   return res;
 }
 
