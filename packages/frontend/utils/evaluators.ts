@@ -124,10 +124,10 @@ const EVALUATOR_TYPES = {
   // },
   sentiment: {
     id: "sentiment",
-    name: "Sentiment",
+    name: "User Sentiment",
     icon: IconMoodSmile,
     color: "green",
-    description: "Uses AI to detect the sentiment of the given field.",
+    description: "Uses AI to detect users sentiment.",
     params: [],
   },
   language: {

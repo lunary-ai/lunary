@@ -19,9 +19,9 @@ export interface Run {
   projectId: string;
   status?: string;
   name?: string;
-  error?: Record<string, any>;
-  input?: Record<string, any>;
-  output?: Record<string, any>;
+  input?: unknown;
+  output?: unknown;
+  error?: unknown;
   params?: Record<string, any>;
   type: string;
   parentRunId?: string;

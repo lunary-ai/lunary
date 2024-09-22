@@ -83,7 +83,7 @@ function EnricherCard({ id, initialData }) {
 
 const FEATURE_LIST = [
   "Automatic data labelling and scoring on production data, in real time",
-  "Sentiment analysis, topic recognition, PII detection, and more",
+  "User Sentiment analysis, topic recognition, PII detection, and more",
   "Define custom LLM-based enrichers",
 ];
 
@@ -126,7 +126,7 @@ export default function Enrichments() {
 
             <Text size="lg" mb="md">
               Gain insight from your production data in real time, by adding
-              additional information, such as sentiment analysis, topic
+              additional information, such as user sentiment analysis, topic
               recognition, and more.
             </Text>
           </Stack>
