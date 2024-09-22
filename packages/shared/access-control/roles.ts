@@ -146,6 +146,7 @@ export const roles: Record<
         list: true,
       },
       billing: {
+        read: true,
         update: true,
       },
       teamMembers: {
