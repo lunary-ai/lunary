@@ -8,6 +8,7 @@
     "load-env": "bash ./load-env.sh"
   },
   "dependencies": {
+    "@hello-pangea/dnd": "^17.0.0",
     "@mantine/charts": "^7.12.2",
     "@mantine/core": "^7.11.1",
     "@mantine/dates": "^7.11.1",
@@ -35,6 +36,7 @@
     "react-dom": "^18.3.1",
     "react-highlight-words": "^0.20.0",
     "react-json-view-lite": "^1.5.0",
+    "react-wordcloud": "^1.2.7",
     "recharts": "^2.12.7",
     "shared": "*",
     "swr": "^2.2.4",

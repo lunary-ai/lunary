@@ -1,7 +1,13 @@
 import ErrorBoundary from "@/components/blocks/ErrorBoundary";
 import { Card, Text } from "@mantine/core";
+import { ReactNode } from "react";
 
-function AnalyticsCard({ title, children }) {
+interface AnalyticsCardProps {
+  title?: string;
+  children: ReactNode;
+}
+
+function AnalyticsCard({ title, children }: AnalyticsCardProps) {
   return (
     <Card withBorder h={"100%"} style={{ "&:children": { maxWidth: "100%" } }}>
       <Text c="dimmed" tt="uppercase" fw={700} fz="xs">
