@@ -3,7 +3,7 @@ import { Card, Text } from "@mantine/core";
 
 function AnalyticsCard({ title, children }) {
   return (
-    <Card withBorder style={{ "&:children": { maxWidth: "100%" } }}>
+    <Card withBorder h={"100%"} style={{ "&:children": { maxWidth: "100%" } }}>
       <Text c="dimmed" tt="uppercase" fw={700} fz="xs">
         {title}
       </Text>
