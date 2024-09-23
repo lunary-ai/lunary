@@ -486,7 +486,10 @@ export function ChatMessage({
     }
   }, [data, editable]);
 
-  const sentiment = useMemo(() => {
+  const sentiment: {
+    label: "positive" | "negative" | "neutral";
+    score: number;
+  } = useMemo(() => {
     return data?.enrichments?.find(
       (enrichment) => enrichment.type === "sentiment",
     )?.result;
@@ -531,7 +534,7 @@ export function ChatMessage({
           )}
           {!editable && (
             <Group>
-              {sentiment && <SentimentEnrichment2 score={sentiment?.score} />}
+              {sentiment && <SentimentEnrichment2 sentiment={sentiment} />}
               {language && (
                 <Tooltip
                   label={`${getLanguageName(language.isoCode)} (${Number(language.confidence.toFixed(3))})`}

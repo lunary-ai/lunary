@@ -470,7 +470,7 @@ export default function Sidebar() {
                 </Combobox.Footer>
               </Combobox.Dropdown>
             </Combobox>
-            {hasAccess(user.role, "billing", "read") && (
+            {hasAccess(user.role, "settings", "read") && (
               <ActionIcon
                 variant="default"
                 size="sm"
