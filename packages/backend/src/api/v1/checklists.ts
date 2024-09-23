@@ -72,17 +72,20 @@ checklists.post(
   },
 );
 
-checklists.patch("/:id", async (ctx: Context) => {
-  const { projectId } = ctx.state;
-  const paramsSchema = z.object({ id: z.string().uuid() });
-  const bodySchema = z.object({
-    slug: z.string(),
-    data: z.any() as z.ZodType<CheckLogic>,
-  });
-  const { slug, data } = bodySchema.parse(ctx.request.body);
-  const { id } = paramsSchema.parse(ctx.params);
+checklists.patch(
+  "/:id",
+  checkAccess("checklists", "update"),
+  async (ctx: Context) => {
+    const { projectId } = ctx.state;
+    const paramsSchema = z.object({ id: z.string().uuid() });
+    const bodySchema = z.object({
+      slug: z.string(),
+      data: z.any() as z.ZodType<CheckLogic>,
+    });
+    const { slug, data } = bodySchema.parse(ctx.request.body);
+    const { id } = paramsSchema.parse(ctx.params);
 
-  const [updatedCheck] = await sql`
+    const [updatedCheck] = await sql`
     update 
       checklist
     set 
@@ -92,8 +95,9 @@ checklists.patch("/:id", async (ctx: Context) => {
       and id = ${id}
     returning *
   `;
-  ctx.body = updatedCheck;
-});
+    ctx.body = updatedCheck;
+  },
+);
 
 checklists.delete(
   "/:id",

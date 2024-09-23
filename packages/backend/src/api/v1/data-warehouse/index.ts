@@ -23,6 +23,13 @@ dataWarehouse.post("/bigquery", async (ctx: Context) => {
     apiKey: z.string().transform((apiKey) => JSON.parse(apiKey)),
   });
   const { apiKey } = bodySchema.parse(ctx.request.body);
+  const { userId } = ctx.state;
+
+  const [user] = await sql`select * from account where id = ${userId}`;
+
+  if (user.role !== "owner") {
+    ctx.throw(403, "Forbidden");
+  }
 
   if (config.DATA_WAREHOUSE_EXPORTS_ALLOWED) {
     await createNewDatastream(apiKey, process.env.DATABASE_URL!, ctx);
