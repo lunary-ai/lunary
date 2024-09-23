@@ -188,7 +188,7 @@ users.post("/", checkAccess("teamMembers", "create"), async (ctx: Context) => {
     projects: z.array(z.string()).min(1),
   });
   const { email, role, projects } = bodySchema.parse(ctx.request.body);
-  const { orgId } = ctx.state;
+  const { orgId, userId } = ctx.state;
 
   const FIFTEEN_DAYS = 60 * 60 * 24 * 15;
 
@@ -205,6 +205,11 @@ users.post("/", checkAccess("teamMembers", "create"), async (ctx: Context) => {
       401,
       "Your plan doesn't allow you to access granular access control.",
     );
+  }
+
+  const [currentUser] = await sql`select * from account where id = ${userId}`;
+  if (currentUser.role !== "owner" && role === "billing") {
+    ctx.throw(403, "Only owners can add billing members to the organization.");
   }
 
   const token = await signJWT({ email, orgId }, FIFTEEN_DAYS);
