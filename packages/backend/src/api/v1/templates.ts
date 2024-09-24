@@ -17,6 +17,10 @@ const templates = new Router({
  * /api/v1/templates:
  *   get:
  *     summary: List all templates
+ *     description: |
+ *       List all the prompt templates in your project, along with their versions.
+ *
+ *       Useful for usecases where you might want to pre-load all the templates in your application.
  *     tags: [Templates]
  *     responses:
  *       200:
@@ -58,22 +62,6 @@ templates.get("/", async (ctx: Context) => {
   ctx.body = templates;
 });
 
-/**
- * @openapi
- * /api/v1/templates/latest:
- *   get:
- *     summary: Get latest template versions
- *     tags: [Templates]
- *     responses:
- *       200:
- *         description: Successful response
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/TemplateVersion'
- */
 templates.get("/latest", async (ctx: Context) => {
   const templateVersions = await sql`
     select 
@@ -121,16 +109,18 @@ templates.get("/latest", async (ctx: Context) => {
 templates.post("/", checkAccess("prompts", "create"), async (ctx: Context) => {
   const { projectId, userId } = ctx.state;
 
-  const { slug, mode, content, extra, testValues, isDraft, notes } = ctx.request
-    .body as {
-    slug: string;
-    mode: string;
-    content: any[];
-    extra: any;
-    testValues: any;
-    isDraft: boolean;
-    notes: string;
-  };
+  const bodySchema = z.object({
+    slug: z.string(),
+    mode: z.string(),
+    content: z.array(z.any()),
+    extra: z.any(),
+    testValues: z.any().optional(),
+    isDraft: z.boolean(),
+    notes: z.string().optional(),
+  });
+
+  const { slug, mode, content, extra, testValues, isDraft, notes } =
+    bodySchema.parse(ctx.request.body);
 
   const [template] = await sql`
     insert into template ${sql({
@@ -181,11 +171,15 @@ templates.post("/", checkAccess("prompts", "create"), async (ctx: Context) => {
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Template'
+ *       404:
+ *         description: Template not found
  */
 templates.get("/:id", async (ctx: Context) => {
   const [row] = await sql`
     select * from template where project_id = ${ctx.state.projectId} and id = ${ctx.params.id}
   `;
+
+  if (!row) return ctx.throw(404, "Template not found");
 
   ctx.body = row;
 });

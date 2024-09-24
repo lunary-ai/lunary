@@ -308,7 +308,15 @@ runs.use("/ingest", ingest.routes());
  * /api/v1/runs:
  *   get:
  *     summary: Get runs
- *     description: Retrieve a list of runs with optional filtering and sorting
+ *     tags: [Runs]
+ *     description: |
+ *       The Runs API endpoint allows you to retrieve data about specific runs from your Lunary application.
+ *
+ *       The most common run types are 'llm', 'agent', 'chain', 'tool', 'thread' and 'chat'.
+ *
+ *       It supports various filters to narrow down the results according to your needs.
+ *
+ *       This endpoint supports GET requests and expects query parameters for filtering the results.
  *     parameters:
  *       - in: query
  *         name: type
@@ -399,6 +407,48 @@ runs.use("/ingest", ingest.routes());
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/Run'
+ *         examples:
+ *           application/json:
+ *             value:
+ *               total: 200
+ *               page: 1
+ *               limit: 10
+ *               data:
+ *                 - type: llm
+ *                   name: gpt-4o
+ *                   createdAt: "2024-01-01T12:00:00Z"
+ *                   endedAt: "2024-01-01T12:00:03Z"
+ *                   duration: 3
+ *                   tokens:
+ *                     completion: 100
+ *                     prompt: 50
+ *                     total: 150
+ *                   feedback: null
+ *                   status: success
+ *                   tags: ["example"]
+ *                   templateSlug: example-template
+ *                   templateVersionId: 1234
+ *                   input:
+ *                     - role: user
+ *                       content: Hello world!
+ *                   output:
+ *                     - role: assistant
+ *                       content: Hello. How are you?
+ *                   error: null
+ *                   user:
+ *                     id: "11111111"
+ *                     externalId: user123
+ *                     createdAt: "2021-12-01T12:00:00Z"
+ *                     lastSeen: "2022-01-01T12:00:00Z"
+ *                     props:
+ *                       name: Jane Doe
+ *                       email: user1@apple.com
+ *                   cost: 0.05
+ *                   params:
+ *                     temperature: 0.5
+ *                     maxTokens: 100
+ *                     tools: []
+ *                   metadata: null
  */
 runs.get("/", async (ctx: Context) => {
   const { projectId } = ctx.state;
@@ -539,25 +589,6 @@ runs.get("/", async (ctx: Context) => {
   };
 });
 
-/**
- * @openapi
- * /api/v1/runs/count:
- *   get:
- *     summary: Get run count
- *     description: Retrieve the count of runs with optional filtering
- *     parameters:
- *       - in: query
- *         name: parentRunId
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Successful response
- *         content:
- *           application/json:
- *             schema:
- *               type: integer
- */
 runs.get("/count", async (ctx: Context) => {
   const { projectId } = ctx.state;
 
@@ -613,6 +644,7 @@ runs.get("/count", async (ctx: Context) => {
  * @openapi
  * /api/v1/runs/usage:
  *   get:
+ *     tags: [Runs]
  *     summary: Get run usage statistics
  *     description: Retrieve usage statistics for runs
  *     parameters:
@@ -704,27 +736,6 @@ runs.get("/usage", checkAccess("logs", "read"), async (ctx) => {
   ctx.body = runsUsage;
 });
 
-/**
- * @openapi
- * /api/v1/runs/{id}/public:
- *   get:
- *     summary: Get a public run
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Successful response
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Run'
- *       404:
- *         description: Run not found or not public
- */
 runs.get("/:id/public", async (ctx) => {
   const { id } = ctx.params;
 
@@ -756,6 +767,7 @@ runs.get("/:id/public", async (ctx) => {
  * /api/v1/runs/{id}:
  *   get:
  *     summary: Get a specific run
+ *     tags: [Runs]
  *     parameters:
  *       - in: path
  *         name: id
@@ -825,6 +837,8 @@ runs.get("/:id", async (ctx) => {
       eu.id
     `;
 
+  if (!row) return ctx.throw(404, "Run not found");
+
   ctx.body = formatRun(row);
 });
 
@@ -833,6 +847,7 @@ runs.get("/:id", async (ctx) => {
  * /api/v1/runs/{id}:
  *   patch:
  *     summary: Update a run
+ *     tags: [Runs]
  *     parameters:
  *       - in: path
  *         name: id
@@ -892,6 +907,7 @@ runs.patch("/:id", checkAccess("logs", "update"), async (ctx: Context) => {
  * /api/v1/runs/{id}/feedback:
  *   patch:
  *     summary: Update run feedback
+ *     tags: [Runs]
  *     parameters:
  *       - in: path
  *         name: id
@@ -936,27 +952,6 @@ runs.patch(
   },
 );
 
-/**
- * @openapi
- * /api/v1/runs/{id}/related:
- *   get:
- *     summary: Get related runs
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Successful response
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Run'
- */
 runs.get("/:id/related", checkAccess("logs", "read"), async (ctx) => {
   const id = ctx.params.id;
   const { projectId } = ctx.state;
@@ -1008,6 +1003,7 @@ runs.get("/:id/related", checkAccess("logs", "read"), async (ctx) => {
  * @openapi
  * /api/v1/runs/{id}/feedback:
  *   get:
+ *     tags: [Runs]
  *     summary: Get run feedback
  *     parameters:
  *       - in: path
@@ -1037,7 +1033,7 @@ runs.get("/:id/feedback", async (ctx) => {
       r.id = ${id}
   `;
 
-  if (!row) throw new Error("Run not found.");
+  if (!row) return ctx.throw(404, "Run not found");
 
   ctx.body = row.feedback;
 });

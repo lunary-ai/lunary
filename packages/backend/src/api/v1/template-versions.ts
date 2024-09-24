@@ -22,13 +22,20 @@ export function unCamelExtras(version: any) {
   version.extra = unCamelObject(version.extra);
   return version;
 }
-
 /**
  * @openapi
  * /api/v1/template-versions/latest:
  *   get:
  *     summary: Get the latest version of a template
- *     tags: [Template Versions]
+ *     description: |
+ *       This is the most common endpoint you'll use when working with prompt templates.
+ *
+ *       This route is used by the Lunary SDK to fetch the latest version of a template before making an LLM call.
+ *
+ *       This route differs from all the next ones in that:
+ *       - it requires only the `slug` parameter to reference a template
+ *       - it doesn't require using a Private Key to authenticate the request (Public Key is enough)
+ *     tags: [Templates]
  *     parameters:
  *       - in: query
  *         name: slug
@@ -93,7 +100,7 @@ versions.get("/latest", async (ctx: Context) => {
  * /api/v1/template-versions/{id}:
  *   get:
  *     summary: Get a specific template version
- *     tags: [Template Versions]
+ *     tags: [Templates]
  *     parameters:
  *       - in: path
  *         name: id
@@ -141,7 +148,7 @@ versions.get("/:id", async (ctx: Context) => {
  * /api/v1/template-versions/{id}:
  *   patch:
  *     summary: Update a template version
- *     tags: [Template Versions]
+ *     tags: [Templates]
  *     parameters:
  *       - in: path
  *         name: id
