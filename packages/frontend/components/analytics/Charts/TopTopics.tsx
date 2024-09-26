@@ -1,5 +1,6 @@
 import { BarChart } from "@mantine/charts";
 import AnalyticsCard from "../AnalyticsCard";
+import { Title } from "@mantine/core";
 
 export const data = [
   { topic: "Annual Leave", frequency: 100 },
@@ -11,7 +12,8 @@ export const data = [
 
 export default function TopTopics() {
   return (
-    <AnalyticsCard title="Most Frequent Topics">
+    <AnalyticsCard>
+      <Title order={3}>Most frequent topics</Title>
       <BarChart
         mt="md"
         h={300}
