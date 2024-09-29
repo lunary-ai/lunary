@@ -359,6 +359,9 @@ export async function runAImodel(
 
   const useAnthropic = modelObj?.provider === "anthropic";
   if (useAnthropic) {
+    if (!process.env.ANTHROPIC_API_KEY)
+      throw Error("No Anthropic API key found");
+
     const anthropic = new Anthropic({
       apiKey: process.env.ANTHORPIC_API_KEY,
     });
@@ -388,15 +391,25 @@ export async function runAImodel(
 
   switch (modelObj?.provider) {
     case "openai":
-      clientParams = getOpenAIParams();
+      const params = getOpenAIParams();
+      if (!params)
+        throw Error("No OpenAI API key found");
+
+      clientParams = params;
       break;
     case "mistral":
+      if (!process.env.MISTRAL_API_KEY)
+        throw Error("No Mistral API key found");
+
       clientParams = {
         apiKey: process.env.MISTRAL_API_KEY,
         baseURL: "https://api.mistral.ai/v1/",
       };
       break;
     case "openrouter":
+      if (!process.env.OPENROUTER_API_KEY)
+        throw Error("No OpenRouter API key found");
+
       clientParams = {
         apiKey: process.env.OPENROUTER_API_KEY,
         baseURL: "https://openrouter.ai/api/v1",

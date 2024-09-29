@@ -23,26 +23,6 @@ import Link from "next/link";
 import { IconInfoCircle, IconTools } from "@tabler/icons-react";
 
 function convertOpenAIToolsToAnthropic(openAITools) {
-  function convertProperties(openAIProperties) {
-    const anthropicProperties = {};
-
-    for (const [key, value] of Object.entries(openAIProperties)) {
-      const anthropicProperty = {
-        type: value.type,
-        description: value.description,
-      };
-
-      if (value.type === "object" && value.properties) {
-        anthropicProperty.properties = convertProperties(value.properties);
-        anthropicProperty.required = value.required || [];
-      }
-
-      anthropicProperties[key] = anthropicProperty;
-    }
-
-    return anthropicProperties;
-  }
-
   return openAITools.map((openAITool) => {
     const openAIFunction = openAITool.function;
 
@@ -53,16 +33,8 @@ function convertOpenAIToolsToAnthropic(openAITools) {
     const anthropicTool = {
       name: openAIFunction.name,
       description: openAIFunction.description,
-      input_schema: {
-        type: "object",
-        properties: {},
-        required: openAIFunction.parameters.required || [],
-      },
+      input_schema: openAIFunction.parameters,
     };
-
-    anthropicTool.input_schema.properties = convertProperties(
-      openAIFunction.parameters.properties,
-    );
 
     return anthropicTool;
   });
@@ -74,11 +46,7 @@ function convertAnthropicToolsToOpenAI(anthropicTools) {
     function: {
       name: anthropicTool.name,
       description: anthropicTool.description,
-      parameters: {
-        type: "object",
-        properties: anthropicTool.input_schema.properties,
-        required: anthropicTool.input_schema.required,
-      },
+      parameters: anthropicTool.input_schema,
     },
   }));
 }
