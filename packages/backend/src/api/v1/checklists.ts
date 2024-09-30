@@ -79,7 +79,7 @@ checklists.patch(
     const { projectId } = ctx.state;
     const paramsSchema = z.object({ id: z.string().uuid() });
     const bodySchema = z.object({
-      slug: z.string(),
+      slug: z.string().optional(),
       data: z.any() as z.ZodType<CheckLogic>,
     });
     const { slug, data } = bodySchema.parse(ctx.request.body);
