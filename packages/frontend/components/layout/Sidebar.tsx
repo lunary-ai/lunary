@@ -11,6 +11,7 @@ import {
   Text,
   TextInput,
   ThemeIcon,
+  Tooltip,
   useMantineColorScheme,
 } from "@mantine/core";
 
@@ -414,12 +415,11 @@ export default function Sidebar() {
                   component="button"
                   size="xs"
                   variant="unstyled"
-                  w="fit-content"
+                  w={"100%"}
                   fw={500}
                   fz="xl"
                   type="button"
                   style={{
-                    wordBreak: "break-all",
                     textOverflow: "ellipsis",
                     overflow: "hidden",
                   }}
@@ -433,9 +433,23 @@ export default function Sidebar() {
                   onClick={() => combobox.toggleDropdown()}
                   rightSectionPointerEvents="none"
                 >
-                  {project?.name || (
-                    <Input.Placeholder>Select project</Input.Placeholder>
-                  )}
+                  <Tooltip label={project?.name}>
+                    {project?.name ? (
+                      <span
+                        style={{
+                          textOverflow: "ellipsis",
+                          overflow: "hidden",
+                          whiteSpace: "nowrap",
+                          height: "100%",
+                          display: "block",
+                        }}
+                      >
+                        {project.name}
+                      </span>
+                    ) : (
+                      <Input.Placeholder>Select project</Input.Placeholder>
+                    )}
+                  </Tooltip>
                 </InputBase>
               </Combobox.Target>
               <Combobox.Dropdown w={400}>
