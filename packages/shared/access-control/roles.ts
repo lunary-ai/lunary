@@ -456,6 +456,10 @@ export const roles: Record<
       users: {
         list: true,
       },
+      teamMembers: {
+        list: true,
+        read: true,
+      },
     },
   },
 };
