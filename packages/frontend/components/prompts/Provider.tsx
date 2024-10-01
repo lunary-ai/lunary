@@ -33,21 +33,8 @@ function convertOpenAIToolsToAnthropic(openAITools) {
     const anthropicTool = {
       name: openAIFunction.name,
       description: openAIFunction.description,
-      input_schema: {
-        type: "object",
-        properties: {},
-        required: openAIFunction.parameters.required || [],
-      },
+      input_schema: openAIFunction.parameters,
     };
-
-    for (const [key, value] of Object.entries(
-      openAIFunction.parameters.properties,
-    )) {
-      anthropicTool.input_schema.properties[key] = {
-        type: value.type,
-        description: value.description,
-      };
-    }
 
     return anthropicTool;
   });
@@ -59,11 +46,7 @@ function convertAnthropicToolsToOpenAI(anthropicTools) {
     function: {
       name: anthropicTool.name,
       description: anthropicTool.description,
-      parameters: {
-        type: "object",
-        properties: anthropicTool.input_schema.properties,
-        required: anthropicTool.input_schema.required,
-      },
+      parameters: anthropicTool.input_schema,
     },
   }));
 }

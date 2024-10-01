@@ -311,8 +311,8 @@ export const roles: Record<
       settings: {
         create: true,
         read: true,
-        update: true,
-        delete: true,
+        update: false,
+        delete: false,
         list: true,
       },
     },
@@ -455,6 +455,10 @@ export const roles: Record<
       },
       users: {
         list: true,
+      },
+      teamMembers: {
+        list: true,
+        read: true,
       },
     },
   },

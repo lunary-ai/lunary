@@ -59,3 +59,8 @@ export type AssertionResult = {
   result: boolean;
   reason: string;
 };
+
+export interface SentimentAnalysisResult {
+  label: "positive" | "neutral" | "negative";
+  score: number; // 0.0 to 1.0
+}

@@ -2,11 +2,11 @@ import { convertChecksToSQL } from "@/src/utils/checks";
 import sql from "@/src/utils/db";
 import * as Sentry from "@sentry/node";
 import { Run } from "shared";
-import { RealtimeEvaluator } from "shared/evaluators";
+import { RealtimeEvaluator } from "shared/enrichers";
 import { sleep } from "../utils/misc";
 import evaluators from "../evaluators";
 
-const RUNS_BATCH_SIZE = 50;
+const RUNS_BATCH_SIZE = 20;
 
 async function runEvaluator(evaluator: RealtimeEvaluator, run: Run) {
   try {
@@ -72,6 +72,7 @@ async function evaluatorJob() {
       evaluator e 
     where
       mode = 'realtime' 
+      and project_id = '07ff18c9-f052-4260-9e89-ea93fe9ba8c5' 
     order by 
       random()
   `;

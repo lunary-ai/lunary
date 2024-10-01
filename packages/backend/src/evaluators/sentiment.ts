@@ -1,65 +1,70 @@
 import { callML } from "@/src/utils/ml";
-import { Run } from "shared";
+import {
+  Run,
+  SentimentAnalysisResult,
+  UserMessage,
+  userMessageSchema,
+} from "shared";
 
-// TOOD: refacto this with all the other parsing function already in use
-function parseMessages(messages: unknown) {
-  if (!messages) {
-    return [""];
+function getContent(userMessage: UserMessage): string {
+  if (typeof userMessage.content === "string") {
+    return userMessage.content;
   }
-  if (typeof messages === "string" && messages.length) {
-    return [messages];
-  }
-
-  if (messages === "__NOT_INGESTED__") {
-    return [""];
-  }
-
-  if (Array.isArray(messages)) {
-    let contentArray = [];
-    for (const message of messages) {
-      let content = message.content || message.text;
-      if (typeof content === "string" && content.length) {
-        contentArray.push(content);
-      } else {
-        contentArray.push(JSON.stringify(message));
-      }
-    }
-    return contentArray;
-  }
-
-  if (typeof messages === "object") {
-    return [JSON.stringify(messages)];
-  }
-
-  return [""];
+  const contentParts = userMessage.content
+    .filter((contentPart) => contentPart.type === "text")
+    .map((contentPart) => contentPart.text)
+    .join("\n");
+  return contentParts;
 }
 
-export async function evaluate(run: Run) {
-  const input = parseMessages(run.input);
-  const output = parseMessages(run.output);
-  const error = parseMessages(run.error);
+// TODO: does it happen than a message is an valid object with role and content, but not an array? It should always be an array
+function getContents(messages: unknown): Array<string | null> {
+  // TODO: should we accept if not all messages in the array aren't valid?
+  if (!messages || !Array.isArray(messages)) {
+    return [null];
+  }
 
-  const [inputSentiment, outputSentiment] = await Promise.all([
-    analyzeSentiment(input),
-    analyzeSentiment(output),
-  ]);
+  const contents = [];
+  for (const message of messages) {
+    const { success, data: userMessage } = userMessageSchema.safeParse(message);
+
+    if (!success) {
+      contents.push("");
+      continue;
+    }
+    const content = getContent(userMessage);
+    contents.push(content);
+  }
+  return contents;
+}
+
+// We only want to analyze user messages, at least for now
+export async function evaluate(run: Run) {
+  const inputMessagesContents = getContents(run.input);
+  const outputMessagesContents = getContents(run.output); // will always be an array of empty string
+  const errorMessagesContent = getContents(run.error); // will always be an array of empty string
+
+  const inputMessageSentimentAnalysis = await analyzeSentiment(
+    inputMessagesContents,
+  );
 
   const sentiments = {
-    input: inputSentiment,
-    output: outputSentiment,
-    error: error.map((e) => 0),
+    input: inputMessageSentimentAnalysis,
+    output: outputMessagesContents.map(() => null),
+    error: errorMessagesContent.map(() => null),
   };
 
-  // TODO: zod for languages, SHOLUD NOT INGEST IN DB IF NOT CORRECT FORMAT
   return sentiments;
 }
 
-// TODO: type
-async function analyzeSentiment(texts: string[]): Promise<any> {
+async function analyzeSentiment(
+  texts: Array<string | null>,
+): Promise<Array<SentimentAnalysisResult | null>> {
   try {
     return callML("sentiment", { texts });
   } catch (error) {
     console.error(error);
     console.log(texts);
+    return texts.map(() => null);
   }
 }

@@ -262,14 +262,14 @@ function getOpenAIMessage(message: Anthropic.Messages.Message): ChatCompletion {
             .map((block) => (block as { text: string }).text)
             .join(""),
           tool_calls:
-            message.content[1]?.type === "function"
+            message.content[1]?.type === "tool_use"
               ? [
                   {
                     id: message.content[1].id,
                     type: "function",
                     function: {
                       name: message.content[1].name,
-                      arguments: message.content[1].input,
+                      arguments: JSON.stringify(message.content[1].input),
                     },
                   },
                 ]
@@ -292,7 +292,6 @@ function getOpenAIMessage(message: Anthropic.Messages.Message): ChatCompletion {
 }
 
 function getAnthropicMessage(message: any): any {
-  console.log(message);
   const res = {
     role: message.role !== "tool" ? message.role : "user",
     content: [
@@ -321,7 +320,6 @@ function getAnthropicMessage(message: any): any {
       },
     ];
   }
-  console.log(res);
   return res;
 }
 
@@ -361,6 +359,9 @@ export async function runAImodel(
 
   const useAnthropic = modelObj?.provider === "anthropic";
   if (useAnthropic) {
+    if (!process.env.ANTHROPIC_API_KEY)
+      throw Error("No Anthropic API key found");
+
     const anthropic = new Anthropic({
       apiKey: process.env.ANTHORPIC_API_KEY,
     });
@@ -390,15 +391,25 @@ export async function runAImodel(
 
   switch (modelObj?.provider) {
     case "openai":
-      clientParams = getOpenAIParams();
+      const params = getOpenAIParams();
+      if (!params)
+        throw Error("No OpenAI API key found");
+
+      clientParams = params;
       break;
     case "mistral":
+      if (!process.env.MISTRAL_API_KEY)
+        throw Error("No Mistral API key found");
+
       clientParams = {
         apiKey: process.env.MISTRAL_API_KEY,
         baseURL: "https://api.mistral.ai/v1/",
       };
       break;
     case "openrouter":
+      if (!process.env.OPENROUTER_API_KEY)
+        throw Error("No OpenRouter API key found");
+
       clientParams = {
         apiKey: process.env.OPENROUTER_API_KEY,
         baseURL: "https://openrouter.ai/api/v1",
