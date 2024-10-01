@@ -13,7 +13,10 @@ const users = new Router({
  * @openapi
  * /api/v1/external-users:
  *   get:
- *     summary: List external users
+ *     summary: List project users
+ *     description: |
+ *       This endpoint retrieves a list of users tracked within the project.
+ *       It supports pagination, filtering, and sorting options.
  *     tags: [Users]
  *     parameters:
  *       - in: query
@@ -182,45 +185,6 @@ users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
   };
 });
 
-/**
- * @openapi
- * /api/v1/external-users/runs/usage:
- *   get:
- *     summary: Get run usage for external users (deprecated)
- *     tags: [Users]
- *     parameters:
- *       - in: query
- *         name: days
- *         schema:
- *           type: integer
- *           default: 1
- *     responses:
- *       200:
- *         description: Successful response
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   userId:
- *                     type: string
- *                   name:
- *                     type: string
- *                   type:
- *                     type: string
- *                   completionTokens:
- *                     type: integer
- *                   promptTokens:
- *                     type: integer
- *                   cost:
- *                     type: number
- *                   errors:
- *                     type: integer
- *                   success:
- *                     type: integer
- */
 users.get("/runs/usage", checkAccess("users", "read"), async (ctx) => {
   const { projectId } = ctx.state;
   const days = ctx.query.days as string;
@@ -256,7 +220,7 @@ users.get("/runs/usage", checkAccess("users", "read"), async (ctx) => {
  * @openapi
  * /api/v1/external-users/{id}:
  *   get:
- *     summary: Get a specific external user
+ *     summary: Get a specific user
  *     tags: [Users]
  *     parameters:
  *       - in: path
@@ -293,7 +257,7 @@ users.get("/:id", checkAccess("users", "read"), async (ctx: Context) => {
  * @openapi
  * /api/v1/external-users/{id}:
  *   delete:
- *     summary: Delete a specific external user
+ *     summary: Delete a specific user
  *     tags: [Users]
  *     parameters:
  *       - in: path

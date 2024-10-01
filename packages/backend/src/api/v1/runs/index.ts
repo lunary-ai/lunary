@@ -847,6 +847,7 @@ runs.get("/:id", async (ctx) => {
  * /api/v1/runs/{id}:
  *   patch:
  *     summary: Update a run
+ *     description: This endpoint allows updating the public visibility status and tags of a run. The `isPublic` field can be set to true or false to change the run's visibility. The `tags` field can be updated with an array of strings or set to null to remove all tags.
  *     tags: [Runs]
  *     parameters:
  *       - in: path
@@ -999,28 +1000,6 @@ runs.get("/:id/related", checkAccess("logs", "read"), async (ctx) => {
   ctx.body = related;
 });
 
-/**
- * @openapi
- * /api/v1/runs/{id}/feedback:
- *   get:
- *     tags: [Runs]
- *     summary: Get run feedback
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Successful response
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Feedback'
- *       404:
- *         description: Run not found
- */
 runs.get("/:id/feedback", async (ctx) => {
   const { id } = ctx.params;
 
