@@ -138,6 +138,16 @@ function LoginPage() {
     if (ott) exchangeToken(ott);
   }, [router.query.ott]);
 
+  useEffect(() => {
+    const email = router.query.email
+      ? decodeURIComponent(router.query.email as string)
+      : "";
+    if (email) {
+      form.setFieldValue("email", email);
+      determineAuthMethod(email);
+    }
+  }, [router.query.email]);
+
   return (
     <Container pt="60" size="600">
       <NextSeo title="Login" />

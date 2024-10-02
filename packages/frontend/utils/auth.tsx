@@ -1,11 +1,21 @@
 import { useLocalStorage } from "@mantine/hooks";
 import { decodeJwt } from "jose";
+import Router from "next/router";
 import { createContext, useContext, useEffect, useMemo } from "react";
 
 const SIGN_OUT_EVENT = "sign-out";
+
 export async function signOut() {
+  const jwt = window.localStorage.getItem("auth-token");
+  if (jwt) {
+    const payload = decodeJwt(jwt);
+    const email = payload.email as string;
+    const encodedEmail = encodeURIComponent(email);
+    Router.push(`/login?email=${encodedEmail}`);
+  } else {
+    Router.push("/login");
+  }
   window.localStorage.clear();
-  window.dispatchEvent(new Event(SIGN_OUT_EVENT));
 }
 
 interface AuthContext {

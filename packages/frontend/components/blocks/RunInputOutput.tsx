@@ -1,3 +1,4 @@
+import config from "@/utils/config";
 import { useDatasets, useOrg, useRun, useUser } from "@/utils/dataHooks";
 import {
   Badge,
@@ -11,22 +12,21 @@ import {
   Switch,
   Text,
 } from "@mantine/core";
-import { notifications, showNotification } from "@mantine/notifications";
+import { notifications } from "@mantine/notifications";
 import {
   IconBinaryTree2,
   IconCheck,
   IconPencilShare,
 } from "@tabler/icons-react";
 import Link from "next/link";
+import { useState } from "react";
 import { hasAccess } from "shared";
 import SmartViewer from "../SmartViewer";
+import AppUserAvatar from "./AppUserAvatar";
 import CopyText, { SuperCopyButton } from "./CopyText";
 import ErrorBoundary from "./ErrorBoundary";
-import TokensBadge from "./TokensBadge";
 import Feedbacks from "./Feedbacks";
-import config from "@/utils/config";
-import { useState } from "react";
-import AppUserAvatar from "./AppUserAvatar";
+import TokensBadge from "./TokensBadge";
 
 const isChatMessages = (obj) => {
   return Array.isArray(obj)
