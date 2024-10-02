@@ -8,6 +8,7 @@ import * as argon2 from "argon2";
 import bcrypt from "bcrypt";
 import { validateUUID } from "@/src/utils/misc";
 import { sendEmail, RESET_PASSWORD } from "@/src/emails";
+import { JWTExpired } from "jose/errors";
 
 export function sanitizeEmail(email: string) {
   return email.toLowerCase().trim();
@@ -153,7 +154,6 @@ export async function authMiddleware(ctx: Context, next: Next) {
         throw new Error("No bearer token provided.");
       }
       const { payload } = await verifyJWT<SessionData>(key);
-
       ctx.state.userId = payload.userId;
       ctx.state.orgId = payload.orgId;
 
@@ -176,6 +176,9 @@ export async function authMiddleware(ctx: Context, next: Next) {
       }
     } catch (error) {
       console.error(error);
+      if (error instanceof JWTExpired) {
+        ctx.throw(401, "Session expired");
+      }
       ctx.throw(401, "Invalid access token");
     }
   }

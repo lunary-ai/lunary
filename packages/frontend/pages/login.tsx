@@ -104,6 +104,7 @@ function LoginPage() {
       }
 
       auth.setJwt(token);
+      router.push("/");
       analytics.track("Login", { method: "password" });
     } catch (error) {
       console.error(error);
@@ -137,6 +138,19 @@ function LoginPage() {
 
     if (ott) exchangeToken(ott);
   }, [router.query.ott]);
+
+  useEffect(() => {
+    const email = router.query.email
+      ? decodeURIComponent(router.query.email as string)
+      : "";
+    console.log(form.values.password);
+    if (email && !form.values.email) {
+      console.log("here");
+      form.setFieldValue("email", email);
+      determineAuthMethod(email);
+      console.log(step);
+    }
+  }, [router.query.email]);
 
   return (
     <Container pt="60" size="600">
