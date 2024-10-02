@@ -28,5 +28,5 @@ test("logout and back in login", async ({ page }) => {
 
   await page.getByRole("button", { name: "Login" }).click();
 
-  await page.waitForURL("**/analytics");
+  await page.waitForURL("**/analytics*");
 });
