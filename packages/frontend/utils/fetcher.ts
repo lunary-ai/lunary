@@ -1,6 +1,7 @@
 import Router from "next/router";
 import { signOut } from "./auth";
 import { showErrorNotification } from "./errors";
+import { showNotification } from "@mantine/notifications";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL as string;
 
@@ -149,6 +150,12 @@ async function handleResponse(res: Response) {
 
     const { error, message } = await res.json();
 
+    if (message === "Session expired") {
+      showErrorNotification(message, "Please log in again.");
+      return;
+    } else if (message === "Invalid access token") {
+      return;
+    }
     showErrorNotification(error, message);
     throw new Error(message);
   }

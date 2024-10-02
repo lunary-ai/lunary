@@ -1,32 +1,32 @@
-import { test } from "@playwright/test"
+import { test } from "@playwright/test";
 
 test("logout and back in login", async ({ page }) => {
-  await page.goto("/")
+  await page.goto("/");
 
-  await page.waitForLoadState("networkidle")
+  await page.waitForLoadState("networkidle");
 
   // logout
-  await page.getByTestId("account-sidebar-item").click()
-  await page.getByTestId("logout-button").click()
+  await page.getByTestId("account-sidebar-item").click();
+  await page.getByTestId("logout-button").click();
 
-  await page.waitForURL("**/login")
+  await page.waitForURL("**/login*");
 
   // log back in
-  await page.getByPlaceholder("Your email").click()
-  await page.getByPlaceholder("Your email").fill("test@lunary.ai")
+  await page.getByPlaceholder("Your email").click();
+  await page.getByPlaceholder("Your email").fill("test@lunary.ai");
 
   const promise = page.waitForResponse((resp) => {
-    return resp.url().includes("/method")
-  })
+    return resp.url().includes("/method");
+  });
 
-  await page.getByTestId("continue-button").click()
+  await page.getByTestId("continue-button").click();
 
-  await promise
+  await promise;
 
-  await page.getByPlaceholder("Your password").click()
-  await page.getByPlaceholder("Your password").fill("testtest")
+  await page.getByPlaceholder("Your password").click();
+  await page.getByPlaceholder("Your password").fill("testtest");
 
-  await page.getByRole("button", { name: "Login" }).click()
+  await page.getByRole("button", { name: "Login" }).click();
 
-  await page.waitForURL("**/analytics")
-})
+  await page.waitForURL("**/analytics*");
+});
