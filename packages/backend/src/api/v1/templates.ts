@@ -18,8 +18,7 @@ const templates = new Router({
  *   get:
  *     summary: List all templates
  *     description: |
- *       List all the prompt templates in your project, along with their versions.
- *
+ *       List all the prompt templates in your project, along with their versions. |
  *       Useful for usecases where you might want to pre-load all the templates in your application.
  *     tags: [Templates]
  *     responses:
@@ -92,8 +91,8 @@ templates.get("/latest", async (ctx: Context) => {
  *   post:
  *     summary: Create a new template
  *     description: |
- *       Creates a new template with the provided details. The template includes
- *       a slug, mode, content, and additional configuration options.
+ *       Creates a new template with the provided details. |
+ *       The template includes a slug, mode, content, and additional configuration options.
  *     tags: [Templates]
  *     requestBody:
  *       required: true
@@ -131,19 +130,13 @@ templates.get("/latest", async (ctx: Context) => {
  *               slug: "greeting-template"
  *               mode: "openai"
  *               createdAt: "2023-06-01T12:00:00Z"
- *               versions: [
- *                 {
- *                   id: "789e0123-e45b-67d8-a901-234567890000"
- *                   content: [
- *                     {
- *                       "role": "system",
- *                       "content": "You are a friendly AI assistant."
- *                     },
- *                     {
- *                       "role": "user",
- *                       "content": "Hello, how are you?"
- *                     }
- *                   ]
+ *               versions:
+ *                 - id: "789e0123-e45b-67d8-a901-234567890000"
+ *                   content:
+ *                     - role: "system"
+ *                       content: "You are a friendly AI assistant."
+ *                     - role: "user"
+ *                       content: "Hello, how are you?"
  *                   extra:
  *                     temperature: 0.7
  *                     max_tokens: 150
@@ -151,8 +144,6 @@ templates.get("/latest", async (ctx: Context) => {
  *                   notes: "Initial greeting template"
  *                   createdAt: "2023-06-01T12:00:00Z"
  *                   version: 1
- *                 }
- *               ]
  */
 templates.post("/", checkAccess("prompts", "create"), async (ctx: Context) => {
   const { projectId, userId } = ctx.state;
@@ -206,7 +197,7 @@ templates.post("/", checkAccess("prompts", "create"), async (ctx: Context) => {
  *   get:
  *     summary: Get a specific template
  *     description: |
- *       Get a specific prompt template by its ID.
+ *       Get a specific prompt template and all its versions by its ID.
  *     tags: [Templates]
  *     parameters:
  *       - in: path
@@ -251,13 +242,20 @@ templates.post("/", checkAccess("prompts", "create"), async (ctx: Context) => {
  *         description: Template not found
  */
 templates.get("/:id", async (ctx: Context) => {
-  const [row] = await sql`
+  const [template] = await sql`
     select * from template where project_id = ${ctx.state.projectId} and id = ${ctx.params.id}
   `;
 
-  if (!row) return ctx.throw(404, "Template not found");
+  if (!template) return ctx.throw(404, "Template not found");
 
-  ctx.body = row;
+  const versions = await sql`
+    select * from template_version where template_id = ${template.id} order by version desc
+  `;
+
+  ctx.body = {
+    ...template,
+    versions: versions.map(unCamelExtras),
+  };
 });
 
 /**
@@ -280,9 +278,7 @@ templates.delete(
   "/:id",
   checkAccess("prompts", "delete"),
   async (ctx: Context) => {
-    await sql`
-    delete from template where project_id = ${ctx.state.projectId} and id = ${ctx.params.id}
-  `;
+    await sql`delete from template where project_id = ${ctx.state.projectId} and id = ${ctx.params.id}`;
     ctx.status = 204;
   },
 );
@@ -325,27 +321,23 @@ templates.delete(
  *               mode: "openai"
  *               projectId: "456e7890-e12b-34d5-a678-426614174111"
  *               createdAt: "2023-01-01T00:00:00Z"
- *               versions: [
- *                 {
- *                   id: "789e0123-e45b-67d8-a901-426614174222"
+ *               versions:
+ *                 - id: "789e0123-e45b-67d8-a901-426614174222"
  *                   templateId: "123e4567-e89b-12d3-a456-426614174000"
- *                   content: [
- *                     { role: "system", content: "You are a helpful customer support agent." },
- *                     { role: "user", content: "I have a question about my order." }
- *                   ]
- *                   extra: {
+ *                   content:
+ *                     - role: "system"
+ *                       content: "You are a helpful customer support agent."
+ *                     - role: "user"
+ *                       content: "I have a question about my order."
+ *                   extra:
  *                     temperature: 0.7
  *                     max_tokens: 150
- *                   }
- *                   testValues: {
+ *                   testValues:
  *                     orderNumber: "ORD-12345"
- *                   }
  *                   isDraft: false
  *                   notes: "Updated version for improved customer support"
  *                   createdAt: "2023-01-02T12:00:00Z"
  *                   version: 1
- *                 }
- *               ]
  *       404:
  *         description: Template not found
  *       400:
@@ -375,17 +367,12 @@ templates.patch(
       ctx.throw(404, "Template not found");
     }
 
-    const versions = await sql`
-    select * from template_version where template_id = ${ctx.params.id}
-  `;
-
-    for (const version of versions) {
-      version.extra = unCamelObject(version.extra);
-    }
+    const versions =
+      await sql`select * from template_version where template_id = ${ctx.params.id} order by version desc`;
 
     ctx.body = {
       ...template,
-      versions,
+      versions: versions.map(unCamelExtras),
     };
   },
 );

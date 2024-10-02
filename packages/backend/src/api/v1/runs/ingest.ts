@@ -490,11 +490,15 @@ export async function processEventsIngestion(
  *     summary: Ingest run events
  *     description: |
  *       This endpoint is for reporting data from platforms not supported by our SDKs.
- *       Use the HTTP integration to send data to the Lunary API endpoint. This is ideal for custom languages where our SDKs are unavailable.
- *       The endpoint accepts POST requests with a JSON body containing an array of Event objects.
- *       You need to pass your project's Public or Private Key as the Bearer token in the Authorization header.
+ *
+ *       You can use either your project's Public or Private Key as the Bearer token in the Authorization header.
+ *
+ *       The expected body is an array of Event objects.
+ *
+ *       For LLM calls, you would first track a `start` event with the `input` data.
  *       Once your LLM call succeeds, you would need to send an `end` event to the API endpoint with the `output` data from the LLM call.
- *       For a step-by-step guide on sending LLM data to the Lunary API, see the Custom Integration page.
+ *
+ *       For a full step-by-step guide on sending LLM data to the Lunary API, see the [Custom Integration](/docs/integrations/custom) guide.
  *     tags: [Runs]
  *     security:
  *       - bearerAuth: []

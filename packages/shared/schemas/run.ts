@@ -3,7 +3,7 @@ import { z } from "zod";
 export const Feedback = z.union([
   z.object({
     thumb: z.enum(["up", "down"]).nullable().optional(),
-    comment: z.string().nullable(),
+    comment: z.string().nullable().optional(),
   }),
   z.null(),
 ]);

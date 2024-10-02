@@ -767,6 +767,7 @@ runs.get("/:id/public", async (ctx) => {
  * /api/v1/runs/{id}:
  *   get:
  *     summary: Get a specific run
+ *     description: Retrieve detailed information about a specific run by its ID.
  *     tags: [Runs]
  *     parameters:
  *       - in: path
@@ -868,6 +869,9 @@ runs.get("/:id", async (ctx) => {
  *                 type: array
  *                 items:
  *                   type: string
+ *           example:
+ *             isPublic: true
+ *             tags: ["important", "customer-facing"]
  *     responses:
  *       200:
  *         description: Successful update
@@ -921,6 +925,9 @@ runs.patch("/:id", checkAccess("logs", "update"), async (ctx: Context) => {
  *         application/json:
  *           schema:
  *             $ref: '#/components/schemas/Feedback'
+ *           example:
+ *             thumb: "up"
+ *             comment: "This response was very helpful!"
  *     responses:
  *       200:
  *         description: Feedback updated successfully

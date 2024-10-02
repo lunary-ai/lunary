@@ -7,9 +7,7 @@ import { checkAccess } from "@/src/utils/authorization";
 import { z } from "zod";
 import { clearUndefined } from "@/src/utils/ingest";
 
-const versions = new Router({
-  prefix: "/template-versions",
-});
+const versions = new Router();
 
 // Use unCameledSql to avoid camel casing the results so they're compatible with openai's SDK
 // Otherwise it returns stuff like maxTokens instead of max_tokens and OpenAI breaks
@@ -190,7 +188,7 @@ versions.patch(
           test_values: sql.json(testValues),
           is_draft: isDraft,
           notes,
-          publishedAt: isDraft ? null : sql`now()`,
+          published_at: isDraft ? null : sql`now()`,
         }),
       )}
       where 
