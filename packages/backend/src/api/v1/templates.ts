@@ -18,7 +18,7 @@ const templates = new Router({
  *   get:
  *     summary: List all templates
  *     description: |
- *       List all the prompt templates in your project, along with their versions. |
+ *       List all the prompt templates in your project, along with their versions.
  *       Useful for usecases where you might want to pre-load all the templates in your application.
  *     tags: [Templates]
  *     responses:
@@ -91,7 +91,7 @@ templates.get("/latest", async (ctx: Context) => {
  *   post:
  *     summary: Create a new template
  *     description: |
- *       Creates a new template with the provided details. |
+ *       Creates a new template with the provided details.
  *       The template includes a slug, mode, content, and additional configuration options.
  *     tags: [Templates]
  *     requestBody:
@@ -383,7 +383,7 @@ templates.patch(
  *   post:
  *     summary: Create a new version for a template
  *     description: |
- *       This endpoint allows you to push a new version of a prompt. |
+ *       This endpoint allows you to push a new version of a prompt.
  *       You can specify the content, extra parameters, test values, draft status, and notes for the new version.
  *     tags: [Templates, Versions]
  *     parameters:
