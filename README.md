@@ -1,10 +1,14 @@
 <div align="center">
 
-# 📈 lunary
+<p align="center">
+  <img src="https://lunary.ai/logo-blue-bg.svg" alt="Lunary Logo" width="200" height="200">
+</p>
 
-**Open-source Observability, Prompt Management & Analytics for LLMs**
+# lunary
 
-[website](https://lunary.ai) - [docs](https://lunary.ai/docs) - [self host](https://lunary.ai/docs/self-host)
+**Developer toolkit for LLM chatbots**
+
+[website](https://lunary.ai) - [docs](https://lunary.ai/docs)
 
 [![npm version](https://badge.fury.io/js/lunary.svg)](https://badge.fury.io/js/lunary) ![PyPI - Version](https://img.shields.io/pypi/v/lunary) ![GitHub last commit (by committer)](https://img.shields.io/github/last-commit/lunary-ai/lunary) ![GitHub commit activity (branch)](https://img.shields.io/github/commit-activity/w/lunary-ai/lunary)
 
@@ -12,14 +16,14 @@
 
 ## Features
 
-Lunary helps LLM developers take their apps to the next level.
+Lunary helps developers of LLM Chatbots develop and improve them.
 
-- 💵 Analytics (cost, token, latency, ..)
-- 🔍 Monitoring (logs, traces, user tracking, ..)
-- ⛩️ Prompt Templates (versioning, team collaboration, ..)
+- 🖲️ Conversation & feedback tracking
+- 💵 Analytics (costs, token, latency, ..)
+- 🔍 Debugging (logs, traces, user tracking, ..)
+- ⛩️ Prompt Directory (versioning, team collaboration, ..)
 - 🏷️ Create fine-tuning datasets
-- 🖲️ Chat & feedback tracking
-- 🧪 Evaluations
+- 🧪 Automatic topic classification
 
 It also designed to be:
 
@@ -43,6 +47,7 @@ Lunary natively supports:
 - [LangChain](https://lunary.ai/docs/langchain) (JS & Python)
 - [OpenAI module](https://lunary.ai/docs/js/openai)
 - [LiteLLM](https://docs.litellm.ai/docs/observability/lunary_integration)
+- [Flowise](https://lunary.ai/docs/integrations/flowise)
 
 Additionally you can use it with any other LLM by manually sending events.
 

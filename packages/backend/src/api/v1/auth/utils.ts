@@ -79,6 +79,7 @@ const publicRoutes = [
   new RegExp(`^/auth/.+`),
   "/api/report", // required legacy route
   "/api/v1/template", // legacy template route
+  "/v1/openapi",
   "/v1/health",
   "/v1/health-check",
   "/webhooks/stripe",
@@ -87,6 +88,7 @@ const publicRoutes = [
   new RegExp(`/v1/runs/.+/public`), // public run data
   new RegExp(`/v1/runs/.+/feedback`), // getFeedback in SDKs
   `/v1/template_versions/latest`,
+  `/v1/template-versions/latest`,
   "/v1/users/verify-email",
   "/v1/users/send-verification",
   new RegExp(`/v1/datasets/.+`), // getDataSets in SDKs
