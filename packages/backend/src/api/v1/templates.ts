@@ -354,13 +354,21 @@ templates.patch(
 
     const { slug, mode } = bodySchema.parse(ctx.request.body);
 
+    console.log(
+      clearUndefined({
+        slug,
+        mode,
+      }),
+    );
+
     const [template] = await sql`
-    update template set
-      ${slug ? sql`slug = ${slug},` : sql``}
-      ${mode ? sql`mode = ${mode},` : sql``}
-    where project_id = ${ctx.state.projectId} and id = ${ctx.params.id}
-    returning *
-  `;
+    update template set ${sql(
+      clearUndefined({
+        slug,
+        mode,
+      }),
+    )}
+    where project_id = ${ctx.state.projectId} and id = ${ctx.params.id} returning *`;
 
     if (!template) {
       ctx.throw(404, "Template not found");
