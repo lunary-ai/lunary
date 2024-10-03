@@ -19,6 +19,22 @@ const ModelSchema = z.object({
   startDate: z.coerce.date().optional(),
 });
 
+/**
+ * @openapi
+ * /api/v1/models:
+ *   get:
+ *     summary: List models
+ *     tags: [Models]
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Model'
+ */
 models.get("/", checkAccess("logs", "list"), async (ctx: Context) => {
   const { orgId } = ctx.state;
 
@@ -27,6 +43,26 @@ models.get("/", checkAccess("logs", "list"), async (ctx: Context) => {
         order by updated_at desc`;
 });
 
+/**
+ * @openapi
+ * /api/v1/models:
+ *   post:
+ *     summary: Create a new model
+ *     tags: [Models]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ModelInput'
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Model'
+ */
 models.post("/", async (ctx: Context) => {
   const { orgId } = ctx.state;
 
@@ -44,6 +80,32 @@ models.post("/", async (ctx: Context) => {
   ctx.body = insertedModel;
 });
 
+/**
+ * @openapi
+ * /api/v1/models/{id}:
+ *   patch:
+ *     summary: Update a model
+ *     tags: [Models]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ModelInput'
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Model'
+ */
 models.patch("/:id", async (ctx: Context) => {
   const { orgId } = ctx.state;
   const { id } = ctx.params;
@@ -60,6 +122,22 @@ models.patch("/:id", async (ctx: Context) => {
   ctx.body = updatedModel;
 });
 
+/**
+ * @openapi
+ * /api/v1/models/{id}:
+ *   delete:
+ *     summary: Delete a model
+ *     tags: [Models]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful deletion
+ */
 models.delete("/:id", checkAccess("logs", "delete"), async (ctx: Context) => {
   const { orgId } = ctx.state;
   const { id } = ctx.params;
@@ -73,5 +151,63 @@ models.delete("/:id", checkAccess("logs", "delete"), async (ctx: Context) => {
 
   ctx.status = 200;
 });
+
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     Model:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         name:
+ *           type: string
+ *         pattern:
+ *           type: string
+ *         unit:
+ *           type: string
+ *           enum: [TOKENS, CHARACTERS, MILLISECONDS]
+ *         inputCost:
+ *           type: number
+ *         outputCost:
+ *           type: number
+ *         tokenizer:
+ *           type: string
+ *         startDate:
+ *           type: string
+ *           format: date-time
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *     ModelInput:
+ *       type: object
+ *       required:
+ *         - name
+ *         - pattern
+ *         - unit
+ *         - inputCost
+ *         - outputCost
+ *       properties:
+ *         name:
+ *           type: string
+ *         pattern:
+ *           type: string
+ *         unit:
+ *           type: string
+ *           enum: [TOKENS, CHARACTERS, MILLISECONDS]
+ *         inputCost:
+ *           type: number
+ *         outputCost:
+ *           type: number
+ *         tokenizer:
+ *           type: string
+ *         startDate:
+ *           type: string
+ *           format: date-time
+ */
 
 export default models;
