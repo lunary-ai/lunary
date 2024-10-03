@@ -358,7 +358,6 @@ templates.patch(
     update template set
       ${slug ? sql`slug = ${slug},` : sql``}
       ${mode ? sql`mode = ${mode},` : sql``}
-      updated_at = now()
     where project_id = ${ctx.state.projectId} and id = ${ctx.params.id}
     returning *
   `;
