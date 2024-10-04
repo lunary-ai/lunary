@@ -210,7 +210,6 @@ route.post("/acs", async (ctx: Context) => {
     );
   }
 
-  // OTT is safe for passing through the URL, then exchanged for real auth token
   ctx.redirect(`${process.env.APP_URL!}/login?ott=${singleUseToken}`);
 });
 

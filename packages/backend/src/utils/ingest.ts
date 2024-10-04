@@ -183,6 +183,8 @@ export const ingestChatEvent = async (
     throw new ProjectNotFoundError(projectId);
   }
 
+  // Now you can safely use parentRunId in your
+
   const [result] = await sql`
     INSERT INTO run ${sql(
       clearUndefined({
