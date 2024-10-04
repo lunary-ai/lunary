@@ -1,5 +1,6 @@
 import {
   Anchor,
+  Box,
   Button,
   Container,
   Paper,
@@ -143,102 +144,100 @@ function LoginPage() {
     const email = router.query.email
       ? decodeURIComponent(router.query.email as string)
       : "";
-    console.log(form.values.password);
     if (email && !form.values.email) {
-      console.log("here");
       form.setFieldValue("email", email);
       determineAuthMethod(email);
-      console.log(step);
     }
   }, [router.query.email]);
 
   return (
-    <Container pt="60" size="600">
-      <NextSeo title="Login" />
-      <Stack align="center" gap="50">
-        <Stack align="center">
-          <IconAnalyze color="#206dce" size="60" />
-          <Title order={2} fw="700" size="40" ta="center">
-            Welcome back
-          </Title>
-        </Stack>
-        <Paper radius="md" p="xl" withBorder miw="350">
-          <Text size="lg" mb="xl" fw="700">
-            Sign In
-          </Text>
-
-          {step !== "saml" && (
-            <form
-              onSubmit={
-                step === "email"
-                  ? (e) => {
-                      determineAuthMethod(form.values.email);
-                      e.preventDefault();
-                    }
-                  : form.onSubmit(handleLoginWithPassword)
-              }
-            >
-              <Stack>
-                <TextInput
-                  leftSection={<IconAt size="16" />}
-                  label="Email"
-                  type="email"
-                  autoComplete="email"
-                  value={form.values.email}
-                  onChange={(event) =>
-                    form.setFieldValue("email", event.currentTarget.value)
-                  }
-                  error={form.errors.email}
-                  placeholder="Your email"
-                />
-                <TextInput
-                  type="password"
-                  opacity={step === "email" ? 0 : 1}
-                  h={step === "email" ? 0 : "auto"}
-                  autoComplete="current-password"
-                  label="Password"
-                  value={form.values.password}
-                  onChange={(event) =>
-                    form.setFieldValue("password", event.currentTarget.value)
-                  }
-                  error={form.errors.password}
-                  placeholder="Your password"
-                />
-                <Button
-                  mt={step === "email" ? 0 : "md"}
-                  type="submit"
-                  fullWidth
-                  loading={loading}
-                  data-testid="continue-button"
-                >
-                  {step === "email" ? "Continue" : "Login"}
-                </Button>
-              </Stack>
-            </form>
-          )}
-
-          {step === "saml" && (
-            <p>
-              Redirecting to your SSO login.
-              <br />
-              If you are not redirected in 5s,{" "}
-              <Anchor href={ssoURI || ""}>click here</Anchor>.
-            </p>
-          )}
-
-          <Text size="sm" mt="sm" style={{ textAlign: "center" }}>
-            {`Don't have an account? `}
-            <Anchor href="/signup">Sign Up</Anchor>
-          </Text>
-
-          {step === "password" && (
-            <Text size="sm" mt="sm" style={{ textAlign: "center" }}>
-              <Anchor href="/request-password-reset">Forgot password?</Anchor>
+    <Box style={{ backgroundColor: "var(--mantine-color-gray-0)" }} h="100vh">
+      <Container size="600" pt="60">
+        <NextSeo title="Login" />
+        <Stack align="center" gap="50">
+          <Stack align="center">
+            <IconAnalyze color="#4f87ff" size="60" />
+          </Stack>
+          <Paper radius="md" p="xl" miw="350" shadow="md">
+            <Text size="xl" mb="lg" fw="700" ta="center">
+              Welcome back!
             </Text>
-          )}
-        </Paper>
-      </Stack>
-    </Container>
+
+            {step !== "saml" && (
+              <form
+                onSubmit={
+                  step === "email"
+                    ? (e) => {
+                        determineAuthMethod(form.values.email);
+                        e.preventDefault();
+                      }
+                    : form.onSubmit(handleLoginWithPassword)
+                }
+              >
+                <Stack>
+                  <TextInput
+                    leftSection={<IconAt size="16" />}
+                    label="Email"
+                    type="email"
+                    autoComplete="email"
+                    value={form.values.email}
+                    onChange={(event) =>
+                      form.setFieldValue("email", event.currentTarget.value)
+                    }
+                    error={form.errors.email}
+                    placeholder="Your email"
+                  />
+                  <TextInput
+                    type="password"
+                    opacity={step === "email" ? 0 : 1}
+                    h={step === "email" ? 0 : "auto"}
+                    autoComplete="current-password"
+                    label="Password"
+                    value={form.values.password}
+                    onChange={(event) =>
+                      form.setFieldValue("password", event.currentTarget.value)
+                    }
+                    error={form.errors.password}
+                    placeholder="Your password"
+                  />
+                  <Button
+                    mt={step === "email" ? 0 : "md"}
+                    type="submit"
+                    fullWidth
+                    className="CtaBtn"
+                    size="md"
+                    loading={loading}
+                    data-testid="continue-button"
+                  >
+                    {step === "email" ? "Continue" : "Login"}
+                  </Button>
+                </Stack>
+              </form>
+            )}
+
+            {step === "saml" && (
+              <p>
+                Redirecting to your SSO login.
+                <br />
+                If you are not redirected in 5s,{" "}
+                <Anchor href={ssoURI || ""}>click here</Anchor>.
+              </p>
+            )}
+
+            <Text size="sm" mt="sm" style={{ textAlign: "center" }}>
+              {`Don't have an account? `}
+              <Anchor href="/signup">Sign Up</Anchor>
+            </Text>
+
+            {step === "password" && (
+              <Text size="sm" mt="sm" style={{ textAlign: "center" }}>
+                <Anchor href="/request-password-reset">Forgot password?</Anchor>
+              </Text>
+            )}
+          </Paper>
+        </Stack>
+      </Container>
+    </Box>
   );
 }
 export default LoginPage;

@@ -30,6 +30,8 @@ export default function Layout({ children }: { children: ReactNode }) {
     "/reset-password",
   ].find((path) => router.pathname.startsWith(path));
 
+  const isSignupPage = router.pathname.startsWith("/signup");
+
   const isSignupLastStep =
     router.pathname === "/signup" && router.query.step === "3";
 
@@ -74,7 +76,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   const isPromptPage = router.pathname.startsWith("/prompt");
   const isTracePage = router.pathname.startsWith("/traces");
-  const disablePagePadding = isPromptPage || isTracePage;
+  const disablePagePadding = isPromptPage || isTracePage || isAuthPage;
 
   useEffect(() => {
     if (user) {
