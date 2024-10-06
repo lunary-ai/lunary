@@ -6,6 +6,7 @@ import {
   Anchor,
   Box,
   Button,
+  Center,
   Container,
   Grid,
   Group,

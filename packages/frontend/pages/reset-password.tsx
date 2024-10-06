@@ -1,15 +1,6 @@
-import {
-  Box,
-  Button,
-  Container,
-  Paper,
-  PasswordInput,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Button, Paper, PasswordInput, Stack, Text } from "@mantine/core";
 
 import { useForm } from "@mantine/form";
-import { IconAnalyze } from "@tabler/icons-react";
 
 import { NextSeo } from "next-seo";
 import { useRouter } from "next/router";
