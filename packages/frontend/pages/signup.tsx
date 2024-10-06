@@ -267,6 +267,7 @@ function SignupPage() {
                                 size="md"
                                 mt="md"
                                 radius="md"
+                                data-testid="continue-button"
                                 className="CtaBtn"
                                 onClick={nextStep}
                                 fullWidth
@@ -339,6 +340,7 @@ function SignupPage() {
                                   mt="md"
                                   className="CtaBtn"
                                   type="submit"
+                                  data-testid="finish-button"
                                   fullWidth
                                   loading={loading}
                                 >
@@ -443,6 +445,7 @@ function SignupPage() {
                     }}
                     variant={isBigCompany ? "outline" : "filled"}
                     mb="xl"
+                    data-testid="open-dashboard-button"
                     rightSection={<IconArrowRight size={18} />}
                     size="lg"
                   >
