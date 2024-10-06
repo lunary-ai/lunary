@@ -17,6 +17,7 @@ import { useState } from "react";
 import { fetcher } from "@/utils/fetcher";
 import { useAuth } from "@/utils/auth";
 import analytics from "@/utils/analytics";
+import AuthLayout from "@/components/layout/AuthLayout";
 
 export default function UpdatePassword() {
   const { setJwt } = useAuth();
@@ -61,46 +62,39 @@ export default function UpdatePassword() {
   };
 
   return (
-    <Box style={{ backgroundColor: "var(--mantine-color-gray-0)" }} h="100vh">
-      <Container py={100} size={600}>
-        <NextSeo title="Reset password" />
-        <Stack align="center" gap={50}>
-          <Stack align="center">
-            <IconAnalyze color={"#4f87ff"} size={60} />
-          </Stack>
-          <Paper radius="md" p="xl" miw={350} shadow="md">
-            <Text size="lg" mb="lg" fw="700" ta="center">
-              Reset your password
-            </Text>
-            <form onSubmit={form.onSubmit(handlePasswordReset)}>
-              <Stack>
-                <PasswordInput
-                  label="New Password"
-                  type="password"
-                  autoComplete="new-password"
-                  value={form.values.password}
-                  onChange={(event) =>
-                    form.setFieldValue("password", event.currentTarget.value)
-                  }
-                  error={form.errors.password && "Invalid password"}
-                  placeholder="Your new password"
-                />
+    <AuthLayout>
+      <NextSeo title="Reset password" />
+      <Paper radius="md" p="xl" miw={350} shadow="md">
+        <Text size="lg" mb="lg" fw="700" ta="center">
+          Reset your password
+        </Text>
+        <form onSubmit={form.onSubmit(handlePasswordReset)}>
+          <Stack>
+            <PasswordInput
+              label="New Password"
+              type="password"
+              autoComplete="new-password"
+              value={form.values.password}
+              onChange={(event) =>
+                form.setFieldValue("password", event.currentTarget.value)
+              }
+              error={form.errors.password && "Invalid password"}
+              placeholder="Your new password"
+            />
 
-                <Button
-                  className="CtaBtn"
-                  mt="md"
-                  size="md"
-                  type="submit"
-                  fullWidth
-                  loading={loading}
-                >
-                  Confirm
-                </Button>
-              </Stack>
-            </form>
-          </Paper>
-        </Stack>
-      </Container>
-    </Box>
+            <Button
+              className="CtaBtn"
+              mt="md"
+              size="md"
+              type="submit"
+              fullWidth
+              loading={loading}
+            >
+              Confirm
+            </Button>
+          </Stack>
+        </form>
+      </Paper>
+    </AuthLayout>
   );
 }

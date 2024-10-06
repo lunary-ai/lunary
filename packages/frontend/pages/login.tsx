@@ -21,6 +21,7 @@ import { NextSeo } from "next-seo";
 import { useAuth } from "@/utils/auth";
 import { useRouter } from "next/router";
 import { notifications } from "@mantine/notifications";
+import AuthLayout from "@/components/layout/AuthLayout";
 
 function LoginPage() {
   const router = useRouter();
@@ -151,13 +152,10 @@ function LoginPage() {
   }, [router.query.email]);
 
   return (
-    <Box style={{ backgroundColor: "var(--mantine-color-gray-0)" }} h="100vh">
+    <AuthLayout>
       <Container size="600" pt="60">
         <NextSeo title="Login" />
         <Stack align="center" gap="50">
-          <Stack align="center">
-            <IconAnalyze color="#4f87ff" size="60" />
-          </Stack>
           <Paper radius="md" p="xl" miw="350" shadow="md">
             <Text size="xl" mb="lg" fw="700" ta="center">
               Welcome back!
@@ -237,7 +235,7 @@ function LoginPage() {
           </Paper>
         </Stack>
       </Container>
-    </Box>
+    </AuthLayout>
   );
 }
 export default LoginPage;
