@@ -1,10 +1,11 @@
 import {
+  Box,
   Button,
   Container,
   Paper,
   PasswordInput,
   Stack,
-  Title,
+  Text,
 } from "@mantine/core";
 
 import { useForm } from "@mantine/form";
@@ -60,37 +61,46 @@ export default function UpdatePassword() {
   };
 
   return (
-    <Container py={100} size={600}>
-      <NextSeo title="Reset password" />
-      <Stack align="center" gap={50}>
-        <Stack align="center">
-          <IconAnalyze color={"#206dce"} size={60} />
-          <Title order={2} fw={700} size={40} ta="center">
-            Reset password
-          </Title>
-        </Stack>
-        <Paper radius="md" p="xl" withBorder miw={350}>
-          <form onSubmit={form.onSubmit(handlePasswordReset)}>
-            <Stack>
-              <PasswordInput
-                label="New Password"
-                type="password"
-                autoComplete="new-password"
-                value={form.values.password}
-                onChange={(event) =>
-                  form.setFieldValue("password", event.currentTarget.value)
-                }
-                error={form.errors.password && "Invalid password"}
-                placeholder="Your new password"
-              />
+    <Box style={{ backgroundColor: "var(--mantine-color-gray-0)" }} h="100vh">
+      <Container py={100} size={600}>
+        <NextSeo title="Reset password" />
+        <Stack align="center" gap={50}>
+          <Stack align="center">
+            <IconAnalyze color={"#4f87ff"} size={60} />
+          </Stack>
+          <Paper radius="md" p="xl" miw={350} shadow="md">
+            <Text size="lg" mb="lg" fw="700" ta="center">
+              Reset your password
+            </Text>
+            <form onSubmit={form.onSubmit(handlePasswordReset)}>
+              <Stack>
+                <PasswordInput
+                  label="New Password"
+                  type="password"
+                  autoComplete="new-password"
+                  value={form.values.password}
+                  onChange={(event) =>
+                    form.setFieldValue("password", event.currentTarget.value)
+                  }
+                  error={form.errors.password && "Invalid password"}
+                  placeholder="Your new password"
+                />
 
-              <Button mt="md" type="submit" fullWidth loading={loading}>
-                Submit
-              </Button>
-            </Stack>
-          </form>
-        </Paper>
-      </Stack>
-    </Container>
+                <Button
+                  className="CtaBtn"
+                  mt="md"
+                  size="md"
+                  type="submit"
+                  fullWidth
+                  loading={loading}
+                >
+                  Confirm
+                </Button>
+              </Stack>
+            </form>
+          </Paper>
+        </Stack>
+      </Container>
+    </Box>
   );
 }

@@ -22,9 +22,9 @@ export default function SocialProof() {
             span
             fw="bolder"
           >
-            2500+
+            4500+
           </Text>{" "}
-          AI devs build better apps
+          GenAI devs build better apps
         </Text>
       </Stack>
     </Group>
