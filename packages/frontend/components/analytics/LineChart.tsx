@@ -291,7 +291,7 @@ function LineChartComponent({
       : stat;
 
   return (
-    <Card withBorder p={0} className="lineChart" radius="md">
+    <Card withBorder className="lineChart" radius="md">
       <Group gap="xs">
         {typeof title === "string" ? (
           <Text c="dimmed" fw={50} fz="md" m="md" mr={0}>

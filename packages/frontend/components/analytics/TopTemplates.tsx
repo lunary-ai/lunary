@@ -1,5 +1,5 @@
 import { formatCost, formatLargeNumber } from "@/utils/format";
-import { Center, Flex, Loader, Overlay } from "@mantine/core";
+import { Box, Center, Flex, Loader, Overlay } from "@mantine/core";
 import AnalyticsCard from "./AnalyticsCard";
 import BarList from "./BarList";
 
@@ -28,12 +28,12 @@ function TopTemplates({ topTemplates, isLoading }: TopTemplatesProps) {
 
   if (topTemplates.length === 0) {
     return (
-      <>
-        <Overlay blur={5} opacity={0.1} p="lg" zIndex={1} />
+      <Box>
+        {/* <Overlay blur={5} opacity={0.1} p="lg" zIndex={1} /> */}
         <Center ta="center" h="100%" w="100%">
           No templates used available for this period
         </Center>
-      </>
+      </Box>
     );
   }
 
