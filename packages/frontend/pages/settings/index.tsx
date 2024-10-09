@@ -398,14 +398,18 @@ export default function Settings() {
           </SettingsCard>
         )}
 
-        {frontendVersion && backendVersion && (
+        {(frontendVersion || backendVersion) && (
           <Group justify="flex-end">
-            <Text c="dimmed" size="sm">
-              Frontend: {frontendVersion}
-            </Text>
-            <Text c="dimmed" size="sm">
-              Backend: {backendVersion}
-            </Text>
+            {frontendVersion && (
+              <Text c="dimmed" size="sm">
+                Frontend: {frontendVersion}
+              </Text>
+            )}
+            {backendVersion && (
+              <Text c="dimmed" size="sm">
+                Backend: {backendVersion}
+              </Text>
+            )}
           </Group>
         )}
       </Stack>
