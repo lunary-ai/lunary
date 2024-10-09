@@ -1,18 +1,11 @@
-import {
-  Button,
-  Container,
-  Paper,
-  Stack,
-  Text,
-  TextInput,
-  Title,
-} from "@mantine/core";
+import { Button, Paper, Stack, Text, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
-import { IconAnalyze, IconAt, IconCheck } from "@tabler/icons-react";
+import { IconAt, IconCheck } from "@tabler/icons-react";
 import { NextSeo } from "next-seo";
 import { useState } from "react";
 import errorHandler from "../utils/errors";
+import AuthLayout from "@/components/layout/AuthLayout";
 
 export default function PasswordReset() {
   const [loading, setLoading] = useState(false);
@@ -53,42 +46,45 @@ export default function PasswordReset() {
   }
 
   return (
-    <Container py={100} size={600}>
-      <NextSeo title="Login" />
-      <Stack align="center" gap={50}>
-        <Stack align="center">
-          <IconAnalyze color={"#206dce"} size={60} />
-          <Title order={2} fw={700} size={40} ta="center">
-            Forgot password
-          </Title>
-        </Stack>
+    <AuthLayout>
+      <NextSeo title="Request password reset" />
 
-        <Paper radius="md" p="xl" withBorder miw={350}>
-          <Text size="lg" mb="xl" fw={500}>
-            Request reset link
-          </Text>
+      <Paper radius="md" p="xl" maw={400} miw={350} shadow="md">
+        <Text size="lg" mb="lg" fw={500} ta="center">
+          Password Recovery
+        </Text>
 
-          <form onSubmit={form.onSubmit(handlePasswordReset)}>
-            <Stack>
-              <TextInput
-                leftSection={<IconAt size="16" />}
-                label="Email"
-                type="email"
-                value={form.values.email}
-                onChange={(event) =>
-                  form.setFieldValue("email", event.currentTarget.value)
-                }
-                error={form.errors.email && "Invalid email"}
-                placeholder="Your email"
-              />
+        <Text mb="lg" opacity={0.8}>
+          Enter your email address and if it is registered, we will send you a
+          link to reset your password.
+        </Text>
 
-              <Button mt="md" type="submit" fullWidth loading={loading}>
-                Submit
-              </Button>
-            </Stack>
-          </form>
-        </Paper>
-      </Stack>
-    </Container>
+        <form onSubmit={form.onSubmit(handlePasswordReset)}>
+          <Stack gap="lg">
+            <TextInput
+              leftSection={<IconAt size="16" />}
+              label="Email"
+              type="email"
+              value={form.values.email}
+              onChange={(event) =>
+                form.setFieldValue("email", event.currentTarget.value)
+              }
+              error={form.errors.email && "Invalid email"}
+              placeholder="Your email"
+            />
+
+            <Button
+              className="CtaBtn"
+              type="submit"
+              fullWidth
+              size="md"
+              loading={loading}
+            >
+              Request reset link
+            </Button>
+          </Stack>
+        </form>
+      </Paper>
+    </AuthLayout>
   );
 }

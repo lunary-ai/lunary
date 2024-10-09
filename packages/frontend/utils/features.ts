@@ -99,9 +99,10 @@ export const FEATURES: Feature[] = [
     title: "AI Playground",
     Icon: IconPlayerPlay,
     plans: [
+      { id: "free", value: "Limited usage" },
       {
         id: "team",
-        value: "300 / month included",
+        value: "500 / month included",
         help: "then $0.05 per query",
       },
       { id: "enterprise", value: true },
@@ -138,7 +139,7 @@ export const FEATURES: Feature[] = [
   },
   {
     id: "feedback",
-    title: "Edit Feedback",
+    title: "Human Reviews",
     Icon: IconThumbUpFilled,
     plans: [
       { id: "team", value: true },
