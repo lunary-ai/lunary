@@ -22,6 +22,7 @@ import { SettingsCard } from "@/components/blocks/SettingsCard";
 import CheckPicker from "@/components/checks/Picker";
 import config from "@/utils/config";
 import {
+  useLunaryVersion,
   useOrg,
   useProject,
   useProjectRules,
@@ -274,9 +275,11 @@ function SmartDataRule() {
   );
 }
 
-export default function AppAnalytics() {
+export default function Settings() {
   const { org } = useOrg();
   const { update, project, setProjectId, drop, dropLoading } = useProject();
+
+  const { backendVersion, frontendVersion } = useLunaryVersion();
   const router = useRouter();
 
   const { user } = useUser();
@@ -320,9 +323,7 @@ export default function AppAnalytics() {
           formatter={(val) => `${val} runs`}
           props={["count"]}
         />
-
         {user.role !== "viewer" && <Keys />}
-
         <SettingsCard title={<>Custom Models 🧠</>} align="start">
           <Button
             color="blue"
@@ -335,9 +336,7 @@ export default function AppAnalytics() {
             Edit Mappings
           </Button>
         </SettingsCard>
-
         <SmartDataRule />
-
         <SettingsCard
           title={<>Guardrails 🔒</>}
           align="start"
@@ -356,9 +355,7 @@ export default function AppAnalytics() {
         >
           <Button>Open Guardrails settings</Button>
         </SettingsCard>
-
         <DataWarehouseCard />
-
         {user && hasAccess(user.role, "projects", "delete") && (
           <SettingsCard title="Danger Zone" align="start">
             <Text>
@@ -399,6 +396,17 @@ export default function AppAnalytics() {
               </Popover.Dropdown>
             </Popover>
           </SettingsCard>
+        )}
+
+        {frontendVersion && backendVersion && (
+          <Group justify="flex-end">
+            <Text c="dimmed" size="sm">
+              Frontend: {frontendVersion}
+            </Text>
+            <Text c="dimmed" size="sm">
+              Backend: {backendVersion}
+            </Text>
+          </Group>
         )}
       </Stack>
     </Container>
