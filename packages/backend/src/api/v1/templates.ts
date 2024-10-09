@@ -12,6 +12,25 @@ const templates = new Router({
   prefix: "/templates",
 });
 
+/**
+ * @openapi
+ * /api/v1/templates:
+ *   get:
+ *     summary: List all templates
+ *     description: |
+ *       List all the prompt templates in your project, along with their versions.
+ *       Useful for usecases where you might want to pre-load all the templates in your application.
+ *     tags: [Templates]
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Template'
+ */
 templates.get("/", async (ctx: Context) => {
   const templates = await sql`
     select 
@@ -66,20 +85,81 @@ templates.get("/latest", async (ctx: Context) => {
   ctx.body = templateVersions.map(unCamelExtras);
 });
 
-// insert template + a first version, and return the template with versions
+/**
+ * @openapi
+ * /api/v1/templates:
+ *   post:
+ *     summary: Create a new template
+ *     description: |
+ *       Creates a new template with the provided details.
+ *       The template includes a slug, mode, content, and additional configuration options.
+ *     tags: [Templates]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TemplateInput'
+ *           example:
+ *             slug: "greeting-template"
+ *             mode: "openai"
+ *             content: [
+ *               {
+ *                 "role": "system",
+ *                 "content": "You are a friendly AI assistant."
+ *               },
+ *               {
+ *                 "role": "user",
+ *                 "content": "Hello, how are you?"
+ *               }
+ *             ]
+ *             extra:
+ *               temperature: 0.7
+ *               max_tokens: 150
+ *             isDraft: false
+ *             notes: "Initial greeting template"
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Template'
+ *             example:
+ *               id: "123e4567-e89b-12d3-a456-426614174000"
+ *               slug: "greeting-template"
+ *               mode: "openai"
+ *               createdAt: "2023-06-01T12:00:00Z"
+ *               versions:
+ *                 - id: "789e0123-e45b-67d8-a901-234567890000"
+ *                   content:
+ *                     - role: "system"
+ *                       content: "You are a friendly AI assistant."
+ *                     - role: "user"
+ *                       content: "Hello, how are you?"
+ *                   extra:
+ *                     temperature: 0.7
+ *                     max_tokens: 150
+ *                   isDraft: false
+ *                   notes: "Initial greeting template"
+ *                   createdAt: "2023-06-01T12:00:00Z"
+ *                   version: 1
+ */
 templates.post("/", checkAccess("prompts", "create"), async (ctx: Context) => {
   const { projectId, userId } = ctx.state;
 
-  const { slug, mode, content, extra, testValues, isDraft, notes } = ctx.request
-    .body as {
-    slug: string;
-    mode: string;
-    content: any[];
-    extra: any;
-    testValues: any;
-    isDraft: boolean;
-    notes: string;
-  };
+  const bodySchema = z.object({
+    slug: z.string(),
+    mode: z.enum(["text", "openai"]),
+    content: z.array(z.any()),
+    extra: z.any(),
+    testValues: z.any().optional(),
+    isDraft: z.boolean(),
+    notes: z.string().optional(),
+  });
+
+  const { slug, mode, content, extra, testValues, isDraft, notes } =
+    bodySchema.parse(ctx.request.body);
 
   const [template] = await sql`
     insert into template ${sql({
@@ -111,58 +191,247 @@ templates.post("/", checkAccess("prompts", "create"), async (ctx: Context) => {
   };
 });
 
+/**
+ * @openapi
+ * /api/v1/templates/{id}:
+ *   get:
+ *     summary: Get a specific template
+ *     description: |
+ *       Get a specific prompt template and all its versions by its ID.
+ *     tags: [Templates]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Template'
+ *             example:
+ *               id: "123e4567-e89b-12d3-a456-426614174000"
+ *               name: "Customer Support Chat"
+ *               slug: "customer-support-chat"
+ *               mode: "openai"
+ *               createdAt: "2023-01-01T00:00:00Z"
+ *               projectId: "987e6543-e21b-12d3-a456-426614174000"
+ *               versions:
+ *                 - id: "abcd1234-e56f-78g9-h012-ijklmnopqrst"
+ *                   templateId: "123e4567-e89b-12d3-a456-426614174000"
+ *                   content:
+ *                     - role: "system"
+ *                       content: "You are a helpful customer support agent."
+ *                     - role: "user"
+ *                       content: "Hello, I have a question about my order."
+ *                     - role: "assistant"
+ *                       content: "Of course! I'd be happy to help you with your order. Could you please provide me with your order number?"
+ *                   extra:
+ *                     temperature: 0.7
+ *                     maxTokens: 150
+ *                   testValues:
+ *                     orderNumber: "ORD-12345"
+ *                   isDraft: false
+ *                   notes: "Updated to improve response clarity"
+ *                   createdAt: "2023-01-02T12:00:00Z"
+ *                   version: 1
+ *       404:
+ *         description: Template not found
+ */
 templates.get("/:id", async (ctx: Context) => {
-  const [row] = await sql`
+  const [template] = await sql`
     select * from template where project_id = ${ctx.state.projectId} and id = ${ctx.params.id}
   `;
 
-  ctx.body = row;
+  if (!template) return ctx.throw(404, "Template not found");
+
+  const versions = await sql`
+    select * from template_version where template_id = ${template.id} order by version desc
+  `;
+
+  ctx.body = {
+    ...template,
+    versions: versions.map(unCamelExtras),
+  };
 });
 
+/**
+ * @openapi
+ * /api/v1/templates/{id}:
+ *   delete:
+ *     summary: Delete a template
+ *     tags: [Templates]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: Successful deletion
+ */
 templates.delete(
   "/:id",
   checkAccess("prompts", "delete"),
   async (ctx: Context) => {
-    await sql`
-    delete from template where project_id = ${ctx.state.projectId} and id = ${ctx.params.id}
-  `;
-
+    await sql`delete from template where project_id = ${ctx.state.projectId} and id = ${ctx.params.id}`;
     ctx.status = 204;
   },
 );
 
+/**
+ * @openapi
+ * /api/v1/templates/{id}:
+ *   patch:
+ *     summary: Update a template
+ *     description: |
+ *       This endpoint allows you to update the slug and mode of an existing template.
+ *       The mode can be either "text" or "openai" (array of chat messages).
+ *     tags: [Templates]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the template to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TemplateUpdateInput'
+ *           example:
+ *             slug: "updated-customer-support-chat"
+ *             mode: "openai"
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Template'
+ *             example:
+ *               id: "123e4567-e89b-12d3-a456-426614174000"
+ *               slug: "updated-customer-support-chat"
+ *               mode: "openai"
+ *               projectId: "456e7890-e12b-34d5-a678-426614174111"
+ *               createdAt: "2023-01-01T00:00:00Z"
+ *               versions:
+ *                 - id: "789e0123-e45b-67d8-a901-426614174222"
+ *                   templateId: "123e4567-e89b-12d3-a456-426614174000"
+ *                   content:
+ *                     - role: "system"
+ *                       content: "You are a helpful customer support agent."
+ *                     - role: "user"
+ *                       content: "I have a question about my order."
+ *                   extra:
+ *                     temperature: 0.7
+ *                     max_tokens: 150
+ *                   testValues:
+ *                     orderNumber: "ORD-12345"
+ *                   isDraft: false
+ *                   notes: "Updated version for improved customer support"
+ *                   createdAt: "2023-01-02T12:00:00Z"
+ *                   version: 1
+ *       404:
+ *         description: Template not found
+ *       400:
+ *         description: Invalid input
+ */
 templates.patch(
   "/:id",
   checkAccess("prompts", "update"),
   async (ctx: Context) => {
-    const { slug, mode } = ctx.request.body as {
-      slug: string;
-      mode: string;
-    };
+    const bodySchema = z.object({
+      slug: z.string().optional(),
+      mode: z.enum(["text", "openai"]).optional(),
+    });
+
+    const { slug, mode } = bodySchema.parse(ctx.request.body);
+
+    console.log(
+      clearUndefined({
+        slug,
+        mode,
+      }),
+    );
 
     const [template] = await sql`
-    update template set
-      slug = ${slug},
-      mode = ${mode}
-    where project_id = ${ctx.state.projectId} and id = ${ctx.params.id}
-    returning *
-  `;
+    update template set ${sql(
+      clearUndefined({
+        slug,
+        mode,
+      }),
+    )}
+    where project_id = ${ctx.state.projectId} and id = ${ctx.params.id} returning *`;
 
-    const versions = await sql`
-    select * from template_version where template_id = ${ctx.params.id}
-  `;
-
-    for (const version of versions) {
-      version.extra = unCamelObject(version.extra);
+    if (!template) {
+      ctx.throw(404, "Template not found");
     }
+
+    const versions =
+      await sql`select * from template_version where template_id = ${ctx.params.id} order by version desc`;
 
     ctx.body = {
       ...template,
-      versions,
+      versions: versions.map(unCamelExtras),
     };
   },
 );
 
+/**
+ * @openapi
+ * /api/v1/templates/{id}/versions:
+ *   post:
+ *     summary: Create a new version for a template
+ *     description: |
+ *       This endpoint allows you to push a new version of a prompt.
+ *       You can specify the content, extra parameters, test values, draft status, and notes for the new version.
+ *     tags: [Templates, Versions]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the template to create a new version for
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TemplateVersionInput'
+ *           example:
+ *             content: "Hello {{name}}, welcome to {{company}}!"
+ *             extra:
+ *               temperature: 0.7
+ *               max_tokens: 150
+ *             isDraft: false
+ *             notes: "Updated welcome message with company name"
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TemplateVersion'
+ *             example:
+ *               id: "123"
+ *               templateId: "456"
+ *               content: "Hello {{name}}, welcome to {{company}}!"
+ *               extra:
+ *                 temperature: 0.7
+ *                 max_tokens: 150
+ *               isDraft: false
+ *               notes: "Updated welcome message with company name"
+ *               createdAt: "2023-06-01T12:00:00Z"
+ *               version: 2
+ */
 templates.post(
   "/:id/versions",
   checkAccess("prompts", "update"),
@@ -209,5 +478,115 @@ templates.post(
     ctx.body = unCamelExtras(templateVersion);
   },
 );
+
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     Template:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         name:
+ *           type: string
+ *         slug:
+ *           type: string
+ *         mode:
+ *           type: string
+ *           enum: ["text", "openai"]
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         group:
+ *           type: string
+ *         projectId:
+ *           type: string
+ *         versions:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/TemplateVersion'
+ *     TemplateVersion:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         templateId:
+ *           type: string
+ *         content:
+ *           type: array
+ *         extra:
+ *           type: object
+ *         testValues:
+ *           type: object
+ *         isDraft:
+ *           type: boolean
+ *         notes:
+ *           type: string
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         version:
+ *           type: number
+ *     TemplateInput:
+ *       type: object
+ *       required:
+ *         - slug
+ *         - mode
+ *         - content
+ *       properties:
+ *         slug:
+ *           type: string
+ *         mode:
+ *           type: string
+ *           enum: ["text", "openai"]
+ *         content:
+ *           type: array
+ *         extra:
+ *           type: object
+ *         testValues:
+ *           type: object
+ *         isDraft:
+ *           type: boolean
+ *         notes:
+ *           type: string
+ *     TemplateUpdateInput:
+ *       type: object
+ *       properties:
+ *         slug:
+ *           type: string
+ *         mode:
+ *           type: string
+ *           enum: ["text", "openai"]
+ *     TemplateVersionInput:
+ *       type: object
+ *       required:
+ *         - content
+ *         - isDraft
+ *       properties:
+ *         content:
+ *           type: array
+ *         extra:
+ *           type: object
+ *         testValues:
+ *           type: object
+ *         isDraft:
+ *           type: boolean
+ *         notes:
+ *           type: string
+ *     TemplateVersionUpdateInput:
+ *       type: object
+ *       properties:
+ *         content:
+ *           type: [array, string]
+ *         extra:
+ *           type: object
+ *         testValues:
+ *           type: object
+ *         isDraft:
+ *           type: boolean
+ *         notes:
+ *           type: string
+ */
 
 export default templates;

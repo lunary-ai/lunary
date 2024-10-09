@@ -8,10 +8,47 @@ import { clearUndefined } from "@/src/utils/ingest";
 import { checkAccess } from "@/src/utils/authorization";
 import { lastMsg } from "@/src/checks";
 
+interface DefaultPrompt {
+  chat: { role: string; content: string }[];
+  text: string;
+}
+
+const DEFAULT_PROMPT: DefaultPrompt = {
+  chat: [
+    {
+      role: "system",
+      content: "You are a helpful assistant.",
+    },
+    {
+      role: "user",
+      content: "Hello! I need help with something.",
+    },
+  ],
+  text: "What is the result of 1 + 1?",
+};
+
 const datasets = new Router({
   prefix: "/datasets",
 });
 
+/**
+ * @openapi
+ * /api/v1/datasets:
+ *   get:
+ *     summary: List datasets
+ *     tags: [Datasets]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of datasets
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Dataset'
+ */
 datasets.get("/", checkAccess("datasets", "list"), async (ctx: Context) => {
   const { projectId } = ctx.state;
 
@@ -21,6 +58,28 @@ datasets.get("/", checkAccess("datasets", "list"), async (ctx: Context) => {
   ctx.body = rows;
 });
 
+/**
+ * @openapi
+ * /api/v1/datasets/{identifier}:
+ *   get:
+ *     summary: Get dataset by ID or slug
+ *     tags: [Datasets]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: identifier
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Dataset details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Dataset'
+ */
 datasets.get("/:identifier", async (ctx: Context) => {
   const { projectId } = ctx.state;
   const { identifier } = ctx.params;
@@ -44,20 +103,34 @@ datasets.get("/:identifier", async (ctx: Context) => {
   }
 });
 
-const DEFAULT_PROMPT = {
-  chat: [
-    {
-      role: "system",
-      content: "You are a helpful assistant.",
-    },
-    {
-      role: "user",
-      content: "Hello! I need help with something.",
-    },
-  ],
-  text: "What is the result of 1 + 1?",
-};
-
+/**
+ * @openapi
+ * /api/v1/datasets:
+ *   post:
+ *     summary: Create a new dataset
+ *     tags: [Datasets]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               slug:
+ *                 type: string
+ *               format:
+ *                 type: string
+ *                 default: "text"
+ *     responses:
+ *       200:
+ *         description: Created dataset
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Dataset'
+ */
 datasets.post("/", checkAccess("datasets", "create"), async (ctx: Context) => {
   const { projectId, userId } = ctx.state;
   const body = z.object({
@@ -79,7 +152,7 @@ datasets.post("/", checkAccess("datasets", "create"), async (ctx: Context) => {
   const [prompt] = await sql`insert into dataset_prompt
     ${sql({
       datasetId: dataset.id,
-      messages: DEFAULT_PROMPT[format],
+      messages: DEFAULT_PROMPT[format as keyof DefaultPrompt],
     })}
     returning *
   `;
@@ -95,6 +168,37 @@ datasets.post("/", checkAccess("datasets", "create"), async (ctx: Context) => {
   ctx.body = dataset;
 });
 
+/**
+ * @openapi
+ * /api/v1/datasets/{id}:
+ *   patch:
+ *     summary: Update a dataset
+ *     tags: [Datasets]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               slug:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Updated dataset
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Dataset'
+ */
 datasets.patch(
   "/:id",
   checkAccess("datasets", "update"),
@@ -121,6 +225,24 @@ datasets.patch(
   },
 );
 
+/**
+ * @openapi
+ * /api/v1/datasets/{id}:
+ *   delete:
+ *     summary: Delete a dataset
+ *     tags: [Datasets]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Dataset deleted successfully
+ */
 datasets.delete(
   "/:id",
   checkAccess("datasets", "delete"),
@@ -134,6 +256,35 @@ datasets.delete(
   },
 );
 
+/**
+ * @openapi
+ * /api/v1/datasets/prompts:
+ *   post:
+ *     summary: Create a new prompt
+ *     tags: [Datasets, Prompts]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               datasetId:
+ *                 type: string
+ *               messages:
+ *                 type: array
+ *               idealOutput:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Created prompt
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DatasetPrompt'
+ */
 datasets.post(
   "/prompts",
   checkAccess("datasets", "update"),
@@ -152,7 +303,7 @@ datasets.post(
     const [prompt] = await sql`insert into dataset_prompt
     ${sql({
       datasetId,
-      messages: messages || DEFAULT_PROMPT[format],
+      messages: messages || DEFAULT_PROMPT[format as keyof DefaultPrompt],
     })}
     returning *
   `;
@@ -171,6 +322,28 @@ datasets.post(
   },
 );
 
+/**
+ * @openapi
+ * /api/v1/datasets/prompts/{id}:
+ *   get:
+ *     summary: Get prompt by ID
+ *     tags: [Datasets, Prompts]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Prompt details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DatasetPrompt'
+ */
 datasets.get(
   "/prompts/:id",
   checkAccess("datasets", "read"),
@@ -212,6 +385,24 @@ datasets.get(
   },
 );
 
+/**
+ * @openapi
+ * /api/v1/datasets/prompts/{id}:
+ *   delete:
+ *     summary: Delete a prompt
+ *     tags: [Datasets, Prompts]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Prompt deleted successfully
+ */
 datasets.delete(
   "/prompts/:id",
   checkAccess("datasets", "update"),
@@ -241,6 +432,37 @@ datasets.delete(
   },
 );
 
+/**
+ * @openapi
+ * /api/v1/datasets/prompts/{id}:
+ *   patch:
+ *     summary: Update a prompt
+ *     tags: [Datasets, Prompts]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               messages:
+ *                 type: array
+ *     responses:
+ *       200:
+ *         description: Updated prompt
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DatasetPrompt'
+ */
 datasets.patch(
   "/prompts/:id",
   checkAccess("datasets", "update"),
@@ -272,6 +494,28 @@ datasets.patch(
   },
 );
 
+/**
+ * @openapi
+ * /api/v1/datasets/variations/{id}:
+ *   get:
+ *     summary: Get prompt variation by ID
+ *     tags: [Datasets, Prompts, Variations]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Prompt variation details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DatasetPromptVariation'
+ */
 datasets.get(
   "/variations/:id",
   checkAccess("datasets", "read"),
@@ -299,6 +543,24 @@ datasets.get(
   },
 );
 
+/**
+ * @openapi
+ * /api/v1/datasets/variations/{id}:
+ *   delete:
+ *     summary: Delete a prompt variation
+ *     tags: [Datasets, Prompts, Variations]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Prompt variation deleted successfully
+ */
 datasets.delete(
   "/variations/:id",
   checkAccess("datasets", "update"),
@@ -328,6 +590,39 @@ datasets.delete(
   },
 );
 
+/**
+ * @openapi
+ * /api/v1/datasets/variations/{variationId}:
+ *   patch:
+ *     summary: Update a prompt variation
+ *     tags: [Datasets, Prompts, Variations]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: variationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               variables:
+ *                 type: object
+ *               idealOutput:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Updated prompt variation
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DatasetPromptVariation'
+ */
 datasets.patch(
   "/variations/:variationId",
   checkAccess("datasets", "update"),
@@ -370,6 +665,35 @@ datasets.patch(
   },
 );
 
+/**
+ * @openapi
+ * /api/v1/datasets/variations:
+ *   post:
+ *     summary: Create a new prompt variation
+ *     tags: [Datasets, Prompts, Variations]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               promptId:
+ *                 type: string
+ *               variables:
+ *                 type: object
+ *               idealOutput:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Created prompt variation
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DatasetPromptVariation'
+ */
 datasets.post(
   "/variations",
   checkAccess("datasets", "update"),
@@ -410,5 +734,44 @@ datasets.post(
     ctx.body = variation;
   },
 );
+
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     Dataset:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         slug:
+ *           type: string
+ *         format:
+ *           type: string
+ *         ownerId:
+ *           type: string
+ *         projectId:
+ *           type: string
+ *     DatasetPrompt:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         datasetId:
+ *           type: string
+ *         messages:
+ *           type: array
+ *     DatasetPromptVariation:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         promptId:
+ *           type: string
+ *         variables:
+ *           type: object
+ *         idealOutput:
+ *           type: string
+ */
 
 export default datasets;
