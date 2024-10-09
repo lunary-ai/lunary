@@ -37,6 +37,10 @@ v1.get("/health", async (ctx) => {
   ctx.body = { status: "OK" };
 });
 
+v1.get("/version", async (ctx) => {
+  ctx.body = { version: process.env.LUNARY_VERSION };
+});
+
 v1.use(orgs.routes());
 v1.use(users.routes());
 v1.use(projects.routes());
