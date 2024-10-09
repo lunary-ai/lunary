@@ -154,7 +154,8 @@ route.post("/download-idp-xml", aggressiveRatelimit, async (ctx: Context) => {
     update 
      org 
     set 
-      saml_idp_xml = ${xml} 
+      saml_idp_xml = ${xml},
+      saml_enabled = true
     where 
       id = ${orgId}
     `;
