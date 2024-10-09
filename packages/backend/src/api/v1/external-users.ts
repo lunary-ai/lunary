@@ -9,6 +9,78 @@ const users = new Router({
   prefix: "/external-users",
 });
 
+/**
+ * @openapi
+ * /api/v1/external-users:
+ *   get:
+ *     summary: List project users
+ *     description: |
+ *       This endpoint retrieves a list of users tracked within the project.
+ *       It supports pagination, filtering, and sorting options.
+ *     tags: [Users]
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 100
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *       - in: query
+ *         name: timeZone
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: sortField
+ *         schema:
+ *           type: string
+ *           default: createdAt
+ *       - in: query
+ *         name: sortDirection
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *       - in: query
+ *         name: checks
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 total:
+ *                   type: integer
+ *                 page:
+ *                   type: integer
+ *                 limit:
+ *                   type: integer
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ */
 users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
   const { projectId } = ctx.state;
   const querySchema = z.object({
@@ -113,7 +185,6 @@ users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
   };
 });
 
-// TODO: deprecated?
 users.get("/runs/usage", checkAccess("users", "read"), async (ctx) => {
   const { projectId } = ctx.state;
   const days = ctx.query.days as string;
@@ -145,6 +216,26 @@ users.get("/runs/usage", checkAccess("users", "read"), async (ctx) => {
   ctx.body = runsUsage;
 });
 
+/**
+ * @openapi
+ * /api/v1/external-users/{id}:
+ *   get:
+ *     summary: Get a specific user
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ */
 users.get("/:id", checkAccess("users", "read"), async (ctx: Context) => {
   const { id } = ctx.params;
   const { projectId } = ctx.state;
@@ -162,6 +253,22 @@ users.get("/:id", checkAccess("users", "read"), async (ctx: Context) => {
   ctx.body = row;
 });
 
+/**
+ * @openapi
+ * /api/v1/external-users/{id}:
+ *   delete:
+ *     summary: Delete a specific user
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: Successful deletion
+ */
 users.delete("/:id", checkAccess("users", "delete"), async (ctx: Context) => {
   const { id } = ctx.params;
   const { projectId } = ctx.state;
@@ -176,5 +283,28 @@ users.delete("/:id", checkAccess("users", "delete"), async (ctx: Context) => {
 
   ctx.status = 204;
 });
+
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         externalId:
+ *           type: string
+ *         lastSeen:
+ *           type: string
+ *           format: date-time
+ *         props:
+ *           type: object
+ *         cost:
+ *           type: number
+ */
 
 export default users;

@@ -30,7 +30,6 @@ redirections.post("/api/report", async (ctx: Context) => {
 
   if (!project) {
     ctx.throw(401, "This project does not exist");
-    return;
   }
 
   const result = await processEventsIngestion(validatedProjectId, events);
