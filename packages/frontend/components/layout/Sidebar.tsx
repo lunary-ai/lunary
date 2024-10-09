@@ -17,7 +17,6 @@ import {
 
 import {
   IconActivity,
-  IconActivityHeartbeat,
   IconAnalyze,
   IconBinaryTree2,
   IconBrandOpenai,
@@ -36,7 +35,6 @@ import {
   IconPaint,
   IconSearch,
   IconSettings,
-  IconShieldBolt,
   IconSparkles,
   IconSun,
   IconTimeline,
@@ -55,12 +53,12 @@ import { Button, Combobox, Input, InputBase, useCombobox } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
 
 import { useAuth } from "@/utils/auth";
-import { useProject, useProjects } from "@/utils/dataHooks";
-import { useEffect, useState } from "react";
-import { ResourceName, hasAccess, hasReadAccess, serializeLogic } from "shared";
 import config from "@/utils/config";
+import { useProject, useProjects } from "@/utils/dataHooks";
 import { useViews } from "@/utils/dataHooks/views";
 import { useDisclosure, useFocusTrap } from "@mantine/hooks";
+import { useEffect, useState } from "react";
+import { ResourceName, hasAccess, hasReadAccess, serializeLogic } from "shared";
 import { getIconComponent } from "../blocks/IconPicker";
 
 function NavbarLink({

@@ -49,6 +49,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          build-args: |
+            VERSION=${{ steps.release_tag.outputs.tag != '' && steps.release_tag.outputs.tag || format('rev-{0}-{1}', steps.date.outputs.date, steps.commit.outputs.hash) }}
           file: ./ops/${{ matrix.service }}.Dockerfile
           push: true
           tags: |

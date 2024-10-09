@@ -735,3 +735,13 @@ export function useEvaluation(id: string) {
     loading: isLoading,
   };
 }
+
+export function useLunaryVersion() {
+  const { data: backendVersion, isLoading } = useSWR("/version");
+
+  return {
+    backendVersion: backendVersion ? backendVersion.version : null,
+    frontendVersion: process.env.NEXT_PUBLIC_LUNARY_VERSION,
+    isLoading,
+  };
+}
