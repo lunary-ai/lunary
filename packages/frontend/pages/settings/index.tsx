@@ -20,6 +20,7 @@ import Router, { useRouter } from "next/router";
 import RenamableField from "@/components/blocks/RenamableField";
 import { SettingsCard } from "@/components/blocks/SettingsCard";
 import CheckPicker from "@/components/checks/Picker";
+import DataWarehouseCard from "@/components/settings/data-warehouse";
 import config from "@/utils/config";
 import {
   useLunaryVersion,
@@ -34,19 +35,16 @@ import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import {
   IconCheck,
-  IconDatabaseShare,
   IconFilter,
   IconIdBadge,
   IconPencil,
   IconRefreshAlert,
-  IconShield,
   IconShieldCog,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { CheckLogic, hasAccess } from "shared";
 import useSWR from "swr";
-import DataWarehouseCard from "@/components/settings/data-warehouse";
 
 function Keys() {
   const [regenerating, setRegenerating] = useState(false);
