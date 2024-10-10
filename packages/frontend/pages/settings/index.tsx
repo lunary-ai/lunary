@@ -94,7 +94,7 @@ function Keys() {
           events and send requests to the API.
         </Text>
       </Alert>
-      {hasAccess(user.role, "projects", "update") && (
+      {hasAccess(user.role, "privateKeys", "list") && (
         <Alert
           variant="light"
           styles={{
