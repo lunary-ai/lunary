@@ -33,7 +33,7 @@ const datasets = new Router({
 
 /**
  * @openapi
- * /api/v1/datasets:
+ * /v1/datasets:
  *   get:
  *     summary: List datasets
  *     tags: [Datasets]
@@ -60,7 +60,7 @@ datasets.get("/", checkAccess("datasets", "list"), async (ctx: Context) => {
 
 /**
  * @openapi
- * /api/v1/datasets/{identifier}:
+ * /v1/datasets/{identifier}:
  *   get:
  *     summary: Get dataset by ID or slug
  *     tags: [Datasets]
@@ -105,7 +105,7 @@ datasets.get("/:identifier", async (ctx: Context) => {
 
 /**
  * @openapi
- * /api/v1/datasets:
+ * /v1/datasets:
  *   post:
  *     summary: Create a new dataset
  *     tags: [Datasets]
@@ -170,7 +170,7 @@ datasets.post("/", checkAccess("datasets", "create"), async (ctx: Context) => {
 
 /**
  * @openapi
- * /api/v1/datasets/{id}:
+ * /v1/datasets/{id}:
  *   patch:
  *     summary: Update a dataset
  *     tags: [Datasets]
@@ -227,7 +227,7 @@ datasets.patch(
 
 /**
  * @openapi
- * /api/v1/datasets/{id}:
+ * /v1/datasets/{id}:
  *   delete:
  *     summary: Delete a dataset
  *     tags: [Datasets]
@@ -258,7 +258,7 @@ datasets.delete(
 
 /**
  * @openapi
- * /api/v1/datasets/prompts:
+ * /v1/datasets/prompts:
  *   post:
  *     summary: Create a new prompt
  *     tags: [Datasets, Prompts]
@@ -324,7 +324,7 @@ datasets.post(
 
 /**
  * @openapi
- * /api/v1/datasets/prompts/{id}:
+ * /v1/datasets/prompts/{id}:
  *   get:
  *     summary: Get prompt by ID
  *     tags: [Datasets, Prompts]
@@ -387,7 +387,7 @@ datasets.get(
 
 /**
  * @openapi
- * /api/v1/datasets/prompts/{id}:
+ * /v1/datasets/prompts/{id}:
  *   delete:
  *     summary: Delete a prompt
  *     tags: [Datasets, Prompts]
@@ -434,7 +434,7 @@ datasets.delete(
 
 /**
  * @openapi
- * /api/v1/datasets/prompts/{id}:
+ * /v1/datasets/prompts/{id}:
  *   patch:
  *     summary: Update a prompt
  *     tags: [Datasets, Prompts]
@@ -496,7 +496,7 @@ datasets.patch(
 
 /**
  * @openapi
- * /api/v1/datasets/variations/{id}:
+ * /v1/datasets/variations/{id}:
  *   get:
  *     summary: Get prompt variation by ID
  *     tags: [Datasets, Prompts, Variations]
@@ -545,7 +545,7 @@ datasets.get(
 
 /**
  * @openapi
- * /api/v1/datasets/variations/{id}:
+ * /v1/datasets/variations/{id}:
  *   delete:
  *     summary: Delete a prompt variation
  *     tags: [Datasets, Prompts, Variations]
@@ -592,7 +592,7 @@ datasets.delete(
 
 /**
  * @openapi
- * /api/v1/datasets/variations/{variationId}:
+ * /v1/datasets/variations/{variationId}:
  *   patch:
  *     summary: Update a prompt variation
  *     tags: [Datasets, Prompts, Variations]
@@ -667,7 +667,7 @@ datasets.patch(
 
 /**
  * @openapi
- * /api/v1/datasets/variations:
+ * /v1/datasets/variations:
  *   post:
  *     summary: Create a new prompt variation
  *     tags: [Datasets, Prompts, Variations]

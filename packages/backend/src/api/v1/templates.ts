@@ -14,7 +14,7 @@ const templates = new Router({
 
 /**
  * @openapi
- * /api/v1/templates:
+ * /v1/templates:
  *   get:
  *     summary: List all templates
  *     description: |
@@ -87,7 +87,7 @@ templates.get("/latest", async (ctx: Context) => {
 
 /**
  * @openapi
- * /api/v1/templates:
+ * /v1/templates:
  *   post:
  *     summary: Create a new template
  *     description: |
@@ -193,7 +193,7 @@ templates.post("/", checkAccess("prompts", "create"), async (ctx: Context) => {
 
 /**
  * @openapi
- * /api/v1/templates/{id}:
+ * /v1/templates/{id}:
  *   get:
  *     summary: Get a specific template
  *     description: |
@@ -260,7 +260,7 @@ templates.get("/:id", async (ctx: Context) => {
 
 /**
  * @openapi
- * /api/v1/templates/{id}:
+ * /v1/templates/{id}:
  *   delete:
  *     summary: Delete a template
  *     tags: [Templates]
@@ -285,7 +285,7 @@ templates.delete(
 
 /**
  * @openapi
- * /api/v1/templates/{id}:
+ * /v1/templates/{id}:
  *   patch:
  *     summary: Update a template
  *     description: |
@@ -386,7 +386,7 @@ templates.patch(
 
 /**
  * @openapi
- * /api/v1/templates/{id}/versions:
+ * /v1/templates/{id}/versions:
  *   post:
  *     summary: Create a new version for a template
  *     description: |
