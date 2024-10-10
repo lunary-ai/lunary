@@ -1,5 +1,5 @@
-import { useContext, useMemo } from "react";
-import useSWR, { SWRConfiguration, useSWRConfig } from "swr";
+import { useContext, useMemo, useState } from "react";
+import useSWR, { Key, SWRConfiguration, useSWRConfig } from "swr";
 import useSWRInfinite from "swr/infinite";
 import useSWRMutation, { SWRMutationConfiguration } from "swr/mutation";
 import { getUserColor } from "../colors";
@@ -10,10 +10,8 @@ import { useComputedColorScheme } from "@mantine/core";
 import { useAuth } from "../auth";
 import { fetcher } from "../fetcher";
 
-type KeyType = string | ((...args: any[]) => string);
-
 function generateKey(
-  baseKey: KeyType | undefined,
+  baseKey: Key,
   projectId: string | undefined,
   extraParams?: string,
 ) {
@@ -31,7 +29,7 @@ function generateKey(
 
   return url;
 }
-export function useProjectSWR(key?: KeyType, options?: SWRConfiguration) {
+export function useProjectSWR(key?: Key, options?: SWRConfiguration) {
   const { projectId } = useContext(ProjectContext);
 
   const { data, error, isLoading, isValidating, mutate } = useSWR(
@@ -49,7 +47,7 @@ export function useProjectSWR(key?: KeyType, options?: SWRConfiguration) {
 }
 
 export function useProjectMutation(
-  key: KeyType,
+  key: Key,
   customFetcher:
     | typeof fetcher.post
     | typeof fetcher.patch
@@ -99,7 +97,7 @@ export function useProjectInfiniteSWR(key: string, ...args: any[]) {
   };
 }
 
-export function useProjectMutate(key: KeyType, options?: SWRConfiguration) {
+export function useProjectMutate(key: Key, options?: SWRConfiguration) {
   const { projectId } = useContext(ProjectContext);
 
   const { mutate } = useSWRConfig();
@@ -374,20 +372,23 @@ export function buildLogsAPIUrl(data = {}) {
 }
 
 export function useLogs(params: any) {
+  console.log("LOGS");
   return useProjectInfiniteSWR(buildLogsAPIUrl(params));
 }
 
 export function useRun(id: string | null, initialData?: any) {
+  const [runDeleted, setRunDeleted] = useState(false);
+
   const {
     data: run,
     isLoading,
     mutate,
-  } = useProjectSWR(id && `/runs/${id}`, {
+  } = useProjectSWR(id && !runDeleted ? `/runs/${id}` : null, {
     fallbackData: initialData,
   });
 
   const { trigger: update } = useProjectMutation(
-    id && `/runs/${id}`,
+    id && !runDeleted ? `/runs/${id}` : null,
     fetcher.patch,
     {
       revalidate: false,
@@ -395,8 +396,16 @@ export function useRun(id: string | null, initialData?: any) {
   );
 
   const { trigger: updateTrigger } = useProjectMutation(
-    id && `/runs/${id}/feedback`,
+    id && !runDeleted ? `/runs/${id}/feedback` : null,
     fetcher.patch,
+  );
+
+  const { trigger: deleteTrigger } = useProjectMutation(
+    id && !runDeleted ? `/runs/${id}` : null,
+    fetcher.delete,
+    {
+      revalidate: false,
+    },
   );
 
   async function updateRun(data) {
@@ -409,15 +418,21 @@ export function useRun(id: string | null, initialData?: any) {
     await mutate();
   }
 
+  async function deleteRun() {
+    await deleteTrigger();
+    setRunDeleted(true);
+  }
+
   return {
     run,
     update: updateRun,
     updateFeedback,
+    deleteRun,
     mutate,
     loading: isLoading,
+    runDeleted,
   };
 }
-
 export function useLogCount(filters: any) {
   const { data, isLoading } = useProjectSWR(`/runs/count?${filters}`);
 

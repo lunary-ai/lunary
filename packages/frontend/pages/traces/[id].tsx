@@ -2,11 +2,12 @@ import DurationBadge from "@/components/blocks/DurationBadge";
 import RunInputOutput from "@/components/blocks/RunInputOutput";
 import StatusBadge from "@/components/blocks/StatusBadge";
 import TokensBadge from "@/components/blocks/TokensBadge";
-import { useProjectSWR, useRun } from "@/utils/dataHooks";
+import { useProjectSWR, useRun, useUser } from "@/utils/dataHooks";
 import { capitalize, formatCost } from "@/utils/format";
 import {
   Badge,
   Box,
+  Button,
   Card,
   Group,
   Loader,
@@ -29,6 +30,9 @@ import { useEffect, useState } from "react";
 import { getColorForRunType } from "../../utils/colors";
 
 import RunsChat from "@/components/blocks/RunChat";
+import errorHandler from "@/utils/errors";
+import { modals } from "@mantine/modals";
+import { hasAccess } from "shared";
 
 const typeIcon = {
   convo: IconMessages,
@@ -52,6 +56,9 @@ function TraceTree({
 }) {
   // each run contains a child_runs array containing the ids of the runs it spawned
   const run = runs.find((run) => run.id === parentId);
+  if (!run) {
+    return;
+  }
   if (run.input === "__NOT_INGESTED__") {
     run.status = "filtered";
   }
@@ -195,19 +202,41 @@ function RenderRun({ run, relatedRuns }) {
   return <RunInputOutput initialRun={run} withFeedback={true} />;
 }
 
-export default function AgentRun({}) {
+export default function Trace({}) {
   const router = useRouter();
   const { id } = router.query;
+  const { user } = useUser();
 
   const [focused, setFocused] = useState(id);
 
-  const { run } = useRun(id as string);
+  const { run, deleteRun, runDeleted } = useRun(id as string);
+
+  function openModal() {
+    modals.openConfirmModal({
+      title: "Delete Trace",
+      children: (
+        <Text size="sm">
+          Are you sure you want to delete this Trace? This action will
+          permanently remove The trace and all its children. This cannot be
+          undone.
+        </Text>
+      ),
+      labels: { confirm: "Confirm", cancel: "Cancel" },
+      confirmProps: { color: "red" },
+      onConfirm: async () => {
+        await errorHandler(deleteRun());
+        await router.replace("/logs?type=trace&mutate=true");
+      },
+    });
+  }
 
   useEffect(() => {
     if (run) setFocused(run.id);
   }, [run]);
 
-  const { data: relatedRuns } = useProjectSWR(`/runs/${id}/related`);
+  const { data: relatedRuns } = useProjectSWR(
+    !runDeleted && `/runs/${id}/related`,
+  );
 
   if (!run) return <Loader />;
 
@@ -232,24 +261,30 @@ export default function AgentRun({}) {
       <Title order={1}>
         {capitalize(run?.type)} Trace {run.name ? `(${run.name})` : ""}
       </Title>
-      <Group>
-        {run.status && <StatusBadge status={run.status} />}
-        {run.createdAt && (
-          <Text>{`Started at ${new Date(
-            run.createdAt,
-          ).toLocaleString()}`}</Text>
-        )}
-        <TokensBadge tokens={totalTokens} />
-        {totalCost && (
-          <Badge variant="outline" color="gray">
-            {formatCost(totalCost)}
-          </Badge>
-        )}
-        {run.endedAt && (
-          <DurationBadge createdAt={run.createdAt} endedAt={run.endedAt} />
+      <Group justify="space-between" pr="md">
+        <Group>
+          {run.status && <StatusBadge status={run.status} />}
+          {run.createdAt && (
+            <Text>{`Started at ${new Date(
+              run.createdAt,
+            ).toLocaleString()}`}</Text>
+          )}
+          <TokensBadge tokens={totalTokens} />
+          {totalCost && (
+            <Badge variant="outline" color="gray">
+              {formatCost(totalCost)}
+            </Badge>
+          )}
+          {run.endedAt && (
+            <DurationBadge createdAt={run.createdAt} endedAt={run.endedAt} />
+          )}
+        </Group>
+        {hasAccess(user?.role, "logs", "delete") && (
+          <Button variant="outline" color="red" onClick={openModal}>
+            Delete Trace
+          </Button>
         )}
       </Group>
-
       <Group style={{ flex: 1, minHeight: 0 }}>
         <Box style={{ flex: "0 0 600px", overflowY: "auto", height: "100%" }}>
           {relatedRuns && (

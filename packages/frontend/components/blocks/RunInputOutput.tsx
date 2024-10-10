@@ -1,11 +1,13 @@
 import config from "@/utils/config";
 import { useDatasets, useOrg, useRun, useUser } from "@/utils/dataHooks";
 import {
+  ActionIcon,
   Badge,
   Button,
   Card,
   Group,
   HoverCard,
+  Menu,
   ScrollArea,
   Select,
   Stack,
@@ -16,7 +18,11 @@ import { notifications } from "@mantine/notifications";
 import {
   IconBinaryTree2,
   IconCheck,
+  IconDots,
+  IconEye,
+  IconEyeClosed,
   IconPencilShare,
+  IconTrash,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -27,6 +33,10 @@ import CopyText, { SuperCopyButton } from "./CopyText";
 import ErrorBoundary from "./ErrorBoundary";
 import Feedbacks from "./Feedbacks";
 import TokensBadge from "./TokensBadge";
+import { modals } from "@mantine/modals";
+import errorHandler from "@/utils/errors";
+import { useRouter } from "next/router";
+import { parseAsBoolean, parseAsString, useQueryState } from "nuqs";
 
 const isChatMessages = (obj) => {
   return Array.isArray(obj)
@@ -158,8 +168,20 @@ export default function RunInputOutput({
 }) {
   const { user } = useUser();
   const { org } = useOrg();
-  const { run, update, updateFeedback } = useRun(initialRun?.id, initialRun);
+  const { run, update, updateFeedback, deleteRun } = useRun(
+    initialRun?.id,
+    initialRun,
+  );
   const [selectedDataset, setSelectedDataset] = useState<string | null>("");
+
+  const [selectedRunId, setSelectedRunId] = useQueryState<string | undefined>(
+    "selected",
+    parseAsString,
+  );
+  const [shouldMutate, setShouldMutate] = useQueryState<boolean | undefined>(
+    "mutate",
+    parseAsBoolean,
+  );
 
   const canEnablePlayground =
     withPlayground &&
@@ -181,6 +203,22 @@ export default function RunInputOutput({
     run?.tags?.length > 0 ||
     run?.metadata ||
     canEnablePlayground;
+
+  function openModal() {
+    modals.openConfirmModal({
+      title: "Delete Log",
+      children: (
+        <Text size="sm">Are you sure you want to delete this Log?</Text>
+      ),
+      labels: { confirm: "Confirm", cancel: "Cancel" },
+      confirmProps: { color: "red" },
+      onConfirm: async () => {
+        await errorHandler(deleteRun());
+        setSelectedRunId(null);
+        setShouldMutate(true);
+      },
+    });
+  }
 
   return (
     <ErrorBoundary>
@@ -207,35 +245,6 @@ export default function RunInputOutput({
                 </Group>
 
                 <Group>
-                  {hasAccess(user.role, "logs", "update") && (
-                    <Switch
-                      label={
-                        <Text
-                          size="sm"
-                          mr="sm"
-                          data-testid="make-log-public-switch"
-                        >
-                          Make public
-                        </Text>
-                      }
-                      checked={run.isPublic}
-                      color={run.isPublic ? "red" : "blue"}
-                      onChange={async (e) => {
-                        const checked = e.currentTarget.checked as boolean;
-                        update({ ...run, isPublic: checked });
-                        if (checked) {
-                          const url = `${window.location.origin}/logs/${run.id}`;
-                          await navigator.clipboard.writeText(url);
-
-                          notifications.show({
-                            top: 100,
-                            title: "Run is now public",
-                            message: "Link copied to clipboard",
-                          });
-                        }
-                      }}
-                    />
-                  )}
                   {canImportToDataset && withImportToDataset && (
                     <Select
                       searchable
@@ -262,6 +271,78 @@ export default function RunInputOutput({
                         setSelectedDataset(null);
                       }}
                     />
+                  )}
+
+                  {hasAccess(user.role, "logs", "update") && (
+                    <Menu data-testid="selected-run-menu">
+                      <Menu.Target>
+                        <ActionIcon variant="default">
+                          <IconDots size={16} />
+                        </ActionIcon>
+                      </Menu.Target>
+                      <Menu.Dropdown>
+                        <Menu.Item
+                          data-testid="toggle-run-visibility"
+                          leftSection={
+                            run.isPublic ? (
+                              <IconEyeClosed size={16} />
+                            ) : (
+                              <IconEye size={16} />
+                            )
+                          }
+                          onClick={async () => {
+                            const newIsPublic = !run.isPublic;
+                            await update({ ...run, isPublic: newIsPublic });
+                            if (newIsPublic) {
+                              const url = `${window.location.origin}/logs/${run.id}`;
+                              await navigator.clipboard.writeText(url);
+
+                              notifications.show({
+                                title: "Run is now public",
+                                message: "Link copied to clipboard",
+                                icon: <IconCheck />,
+                                color: "green",
+                                position: "bottom-right",
+                              });
+                            } else {
+                              notifications.show({
+                                title: "Run is now private",
+                                message: "",
+                                icon: <IconCheck />,
+                                color: "green",
+                                position: "bottom-right",
+                              });
+                            }
+                          }}
+                        >
+                          {run.isPublic ? "Make private" : "Make public"}
+                        </Menu.Item>
+                        {canEnablePlayground && (
+                          <Menu.Item
+                            leftSection={<IconPencilShare size={16} />}
+                            component={Link}
+                            href={`/prompts/${run.templateVersionId || `?clone=` + run.id}`}
+                          >
+                            {run.templateVersionId
+                              ? "Open template"
+                              : "Open in Playground"}
+                          </Menu.Item>
+                        )}
+                        {hasAccess(user.role, "logs", "delete") && (
+                          <Menu.Item
+                            leftSection={
+                              <IconTrash
+                                size={16}
+                                color="var(--mantine-color-red-filled)"
+                              />
+                            }
+                            onClick={openModal}
+                          >
+                            <Text c="red">Delete</Text>
+                          </Menu.Item>
+                        )}
+                      </Menu.Dropdown>
+                    </Menu>
                   )}
                 </Group>
               </Group>
@@ -332,7 +413,7 @@ export default function RunInputOutput({
                   </Stack>
 
                   <Group>
-                    {canEnablePlayground && (
+                    {canEnablePlayground && !withShare && (
                       <Button
                         variant="outline"
                         size="xs"
