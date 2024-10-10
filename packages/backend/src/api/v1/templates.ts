@@ -388,7 +388,7 @@ templates.patch(
  * @openapi
  * /v1/templates/{id}/versions:
  *   post:
- *     summary: Create a new version for a template
+ *     summary: Create a new version
  *     description: |
  *       This endpoint allows you to push a new version of a prompt.
  *       You can specify the content, extra parameters, test values, draft status, and notes for the new version.

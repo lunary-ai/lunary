@@ -24,7 +24,7 @@ export function unCamelExtras(version: any) {
  * @openapi
  * /v1/template-versions/latest:
  *   get:
- *     summary: Get the latest version of a template
+ *     summary: Get the latest version
  *     description: |
  *       This is the most common endpoint you'll use when working with prompt templates.
  *
