@@ -269,9 +269,9 @@ function ImageMessage({ data, compact }) {
             return <ProtectedText key={index}>{item.text}</ProtectedText>;
           } else if (item.type === "image_url") {
             return compact ? (
-              <MiniatureImage src={item.imageUrl.url} />
+              <MiniatureImage key={index} src={item.imageUrl.url} />
             ) : (
-              <ResponsiveImage src={item.imageUrl.url} />
+              <ResponsiveImage key={index} src={item.imageUrl.url} />
             );
           }
           return null;
