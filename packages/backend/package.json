@@ -60,6 +60,8 @@
     "@types/koa-router": "^7.4.8",
     "@types/node": "^22.5.4",
     "@types/node-cron": "^3.0.11",
-    "@types/nodemailer": "^6.4.15"
+    "@types/nodemailer": "^6.4.15",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "openapi": "^1.0.1"
   }
 }
