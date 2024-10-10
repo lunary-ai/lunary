@@ -485,7 +485,7 @@ export async function processEventsIngestion(
 
 /**
  * @openapi
- * /api/v1/runs/ingest:
+ * /v1/runs/ingest:
  *   post:
  *     summary: Ingest run events
  *     description: |
