@@ -1049,7 +1049,7 @@ runs.delete("/:id", checkAccess("logs", "delete"), async (ctx: Context) => {
   const { id } = z.object({ id: z.string().uuid() }).parse(ctx.params);
   const { projectId } = ctx.state;
 
-  await sql`
+  const [deletedRun] = await sql`
     delete 
       from run
     where 
@@ -1057,6 +1057,11 @@ runs.delete("/:id", checkAccess("logs", "delete"), async (ctx: Context) => {
       and project_id = ${projectId}
     returning id
   `;
+
+  if (!deletedRun) {
+    ctx.status = 404;
+    return;
+  }
 
   ctx.status = 200;
 });
