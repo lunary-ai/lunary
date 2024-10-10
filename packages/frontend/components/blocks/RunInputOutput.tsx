@@ -274,7 +274,7 @@ export default function RunInputOutput({
                   )}
 
                   {hasAccess(user.role, "logs", "update") && (
-                    <Menu>
+                    <Menu data-testid="selected-run-menu">
                       <Menu.Target>
                         <ActionIcon variant="default">
                           <IconDots size={16} />
@@ -282,6 +282,7 @@ export default function RunInputOutput({
                       </Menu.Target>
                       <Menu.Dropdown>
                         <Menu.Item
+                          data-testid="toggle-run-visibility"
                           leftSection={
                             run.isPublic ? (
                               <IconEyeClosed size={16} />
