@@ -68,8 +68,8 @@ function renderLanguageEnrichment(languageDetections: LanguageDetectionResult) {
 
   return (
     <Group gap="0" justify="center">
-      {languages.map(({ emoji, name }) => (
-        <Tooltip key={name} label={name}>
+      {languages.map(({ emoji, name }, index) => (
+        <Tooltip key={index} label={name}>
           <Text size="lg">{emoji}</Text>
         </Tooltip>
       ))}
@@ -319,7 +319,7 @@ export function renderSentimentEnrichment(data?: EnrichmentData) {
     <ErrorBoundary>
       <Group gap="0">
         {uniqueSentiments.map((sentiment) => (
-          <Box onMouseEnter={open} onMouseLeave={close}>
+          <Box onMouseEnter={open} onMouseLeave={close} key={sentiment.type}>
             {sentiment.emoji}
           </Box>
         ))}
