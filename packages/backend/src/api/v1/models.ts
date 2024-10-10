@@ -21,7 +21,7 @@ const ModelSchema = z.object({
 
 /**
  * @openapi
- * /api/v1/models:
+ * /v1/models:
  *   get:
  *     summary: List models
  *     tags: [Models]
@@ -45,7 +45,7 @@ models.get("/", checkAccess("logs", "list"), async (ctx: Context) => {
 
 /**
  * @openapi
- * /api/v1/models:
+ * /v1/models:
  *   post:
  *     summary: Create a new model
  *     tags: [Models]
@@ -82,7 +82,7 @@ models.post("/", async (ctx: Context) => {
 
 /**
  * @openapi
- * /api/v1/models/{id}:
+ * /v1/models/{id}:
  *   patch:
  *     summary: Update a model
  *     tags: [Models]
@@ -124,7 +124,7 @@ models.patch("/:id", async (ctx: Context) => {
 
 /**
  * @openapi
- * /api/v1/models/{id}:
+ * /v1/models/{id}:
  *   delete:
  *     summary: Delete a model
  *     tags: [Models]

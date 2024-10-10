@@ -11,7 +11,7 @@ const users = new Router({
 
 /**
  * @openapi
- * /api/v1/external-users:
+ * /v1/external-users:
  *   get:
  *     summary: List project users
  *     description: |
@@ -218,7 +218,7 @@ users.get("/runs/usage", checkAccess("users", "read"), async (ctx) => {
 
 /**
  * @openapi
- * /api/v1/external-users/{id}:
+ * /v1/external-users/{id}:
  *   get:
  *     summary: Get a specific user
  *     tags: [Users]
@@ -255,7 +255,7 @@ users.get("/:id", checkAccess("users", "read"), async (ctx: Context) => {
 
 /**
  * @openapi
- * /api/v1/external-users/{id}:
+ * /v1/external-users/{id}:
  *   delete:
  *     summary: Delete a specific user
  *     tags: [Users]

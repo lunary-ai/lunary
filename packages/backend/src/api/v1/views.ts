@@ -20,7 +20,7 @@ const ViewSchema = z.object({
 
 /**
  * @openapi
- * /api/v1/views:
+ * /v1/views:
  *   get:
  *     summary: List all views
  *     description: Retrieves a list of all views for the current project, ordered by most recently updated.
@@ -55,7 +55,7 @@ views.get("/", checkAccess("logs", "list"), async (ctx: Context) => {
 
 /**
  * @openapi
- * /api/v1/views/{id}:
+ * /v1/views/{id}:
  *   get:
  *     summary: Get a specific view
  *     description: Retrieves details of a specific view by its ID.
@@ -98,7 +98,7 @@ views.get("/:id", checkAccess("logs", "read"), async (ctx: Context) => {
 
 /**
  * @openapi
- * /api/v1/views:
+ * /v1/views:
  *   post:
  *     summary: Create a new view
  *     description: Creates a new dashboard view with the provided details.
@@ -155,7 +155,7 @@ views.post("/", async (ctx: Context) => {
 
 /**
  * @openapi
- * /api/v1/views/{id}:
+ * /v1/views/{id}:
  *   patch:
  *     summary: Update a view
  *     description: Updates an existing view with the provided details.
@@ -213,7 +213,7 @@ views.patch("/:id", async (ctx: Context) => {
 
 /**
  * @openapi
- * /api/v1/views/{id}:
+ * /v1/views/{id}:
  *   delete:
  *     summary: Delete a view
  *     description: Deletes a specific view by its ID.

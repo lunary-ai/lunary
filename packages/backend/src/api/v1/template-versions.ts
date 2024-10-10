@@ -22,7 +22,7 @@ export function unCamelExtras(version: any) {
 }
 /**
  * @openapi
- * /api/v1/template-versions/latest:
+ * /v1/template-versions/latest:
  *   get:
  *     summary: Get the latest version of a template
  *     description: |
@@ -120,7 +120,7 @@ versions.get("/:id", async (ctx: Context) => {
 
 /**
  * @openapi
- * /api/v1/template-versions/{id}:
+ * /v1/template-versions/{id}:
  *   patch:
  *     summary: Update a template version
  *     tags: [Templates]

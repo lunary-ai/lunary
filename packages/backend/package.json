@@ -6,7 +6,6 @@
     "start:realtime-evaluators": "tsx src/realtime-evaluators.ts",
     "dev:realtime-evaluators": "tsx --env-file=.env --watch src/realtime-evaluators.ts",
     "migrate:db": "tsx src/migrate.ts",
-    "openapi": "tsx src/openapi.ts",
     "build": "tsup src/index.ts --format esm",
     "dev": "tsx --env-file=.env --watch src/index.ts",
     "test": "tsx src/index.ts"
