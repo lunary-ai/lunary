@@ -1,5 +1,10 @@
 import DataTable from "@/components/blocks/DataTable";
-import { parseAsString, parseAsStringEnum, useQueryState } from "nuqs";
+import {
+  parseAsBoolean,
+  parseAsString,
+  parseAsStringEnum,
+  useQueryState,
+} from "nuqs";
 
 import {
   ActionIcon,
@@ -192,6 +197,11 @@ export default function Logs() {
     history: "push",
   });
 
+  const [shouldMutate, setShouldMutate] = useQueryState<boolean | undefined>(
+    "mutate",
+    parseAsBoolean,
+  );
+
   const [selectedRunId, setSelectedRunId] = useQueryState<string | undefined>(
     "selected",
     parseAsString,
@@ -233,10 +243,21 @@ export default function Logs() {
     loading,
     validating,
     loadMore,
-    mutate,
+    mutate: mutateLogs,
   } = useProjectInfiniteSWR(`/runs?${serializedChecks}${sortParams}`);
 
-  const { run: selectedRun, loading: runLoading } = useRun(selectedRunId);
+  useEffect(() => {
+    if (shouldMutate) {
+      mutateLogs();
+      setShouldMutate(null);
+    }
+  }, [shouldMutate]);
+
+  const {
+    run: selectedRun,
+    loading: runLoading,
+    deleteRun,
+  } = useRun(selectedRunId);
 
   useEffect(() => {
     if (!hasAccess(user?.role, "settings", "read")) {
@@ -556,11 +577,15 @@ export default function Logs() {
                   withImportToDataset={true}
                   withOpenTrace={true}
                   withShare={true}
-                  mutateLogs={mutate}
+                  mutateLogs={mutateLogs}
                 />
               )}
               {selectedRun?.type === "thread" && (
-                <ChatReplay run={selectedRun} mutateLogs={mutate} />
+                <ChatReplay
+                  run={selectedRun}
+                  mutateLogs={mutateLogs}
+                  deleteRun={deleteRun}
+                />
               )}
             </>
           )}

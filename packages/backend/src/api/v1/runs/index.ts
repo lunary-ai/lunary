@@ -1024,4 +1024,41 @@ runs.get("/:id/feedback", async (ctx) => {
   ctx.body = row.feedback;
 });
 
+/**
+ * @openapi
+ * /api/v1/runs/{id}:
+ *   delete:
+ *     summary: Delete a run
+ *     description: Delete a specific run by its ID. This action is irreversible.
+ *     tags: [Runs]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: Run successfully deleted
+ *       403:
+ *         description: Forbidden - User doesn't have permission to delete runs
+ *       404:
+ *         description: Run not found
+ */
+runs.delete("/:id", checkAccess("logs", "delete"), async (ctx: Context) => {
+  const { id } = z.object({ id: z.string().uuid() }).parse(ctx.params);
+  const { projectId } = ctx.state;
+
+  await sql`
+    delete 
+      from run
+    where 
+      id = ${id}
+      and project_id = ${projectId}
+    returning id
+  `;
+
+  ctx.status = 200;
+});
+
 export default runs;

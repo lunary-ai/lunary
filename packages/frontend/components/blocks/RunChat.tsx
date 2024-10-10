@@ -2,20 +2,25 @@ import { useCallback, useMemo, useState } from "react";
 
 import { BubbleMessage } from "@/components/SmartViewer/Message";
 
-import { useProjectSWR, useRun } from "@/utils/dataHooks";
+import { useProjectSWR, useRun, useUser } from "@/utils/dataHooks";
+import errorHandler from "@/utils/errors";
 import { formatDateTime } from "@/utils/format";
 import {
-  Button,
+  ActionIcon,
   Card,
   Group,
   Loader,
+  Menu,
   Pagination,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
-import { IconNeedleThread } from "@tabler/icons-react";
+import { modals } from "@mantine/modals";
+import { IconDots, IconNeedleThread, IconTrash } from "@tabler/icons-react";
 import Router, { useRouter } from "next/router";
+import { parseAsString, useQueryState } from "nuqs";
+import { hasAccess } from "shared";
 import { mutate } from "swr";
 import AppUserAvatar from "./AppUserAvatar";
 import Feedbacks from "./Feedbacks";
@@ -189,7 +194,12 @@ function RunsChat({ runs, mutateLogs }) {
   );
 }
 
-export function ChatReplay({ run, mutateLogs }) {
+export function ChatReplay({ run, mutateLogs, deleteRun }) {
+  const [_, setSelectedRunId] = useQueryState<string | undefined>(
+    "selected",
+    parseAsString,
+  );
+
   const { data: runs, isLoading: loading } = useProjectSWR(
     run.id && `/runs?type=chat&parentRunId=${run.id}`,
   );
@@ -202,19 +212,57 @@ export function ChatReplay({ run, mutateLogs }) {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
+  const { user: currentUser } = useUser();
+
+  async function handleDeleteThread() {
+    modals.openConfirmModal({
+      title: "Delete Thread",
+      children: (
+        <Text size="sm">
+          Are you sure you want to delete this Thread? This action will
+          permanently remove the Thread and all its children. This cannot be
+          undone.
+        </Text>
+      ),
+      labels: { confirm: "Delete", cancel: "Cancel" },
+      confirmProps: { color: "red" },
+      onConfirm: async () => {
+        await errorHandler(deleteRun(run.id));
+        setSelectedRunId(null);
+        mutateLogs();
+      },
+    });
+  }
+
   return (
     <Stack>
-      <Button
-        variant="outline"
-        ml="auto"
-        w="fit-content"
-        onClick={() => {
-          Router.push(`/traces/${run.id}`);
-        }}
-        rightSection={<IconNeedleThread size="16" />}
-      >
-        View trace
-      </Button>
+      <Group justify="right">
+        <Menu>
+          <Menu.Target>
+            <ActionIcon variant="default">
+              <IconDots size={16} />
+            </ActionIcon>
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Item
+              leftSection={<IconNeedleThread size={16} />}
+              onClick={() => {
+                Router.push(`/traces/${run.id}`);
+              }}
+            >
+              View Trace
+            </Menu.Item>
+            {hasAccess(currentUser.role, "logs", "delete") && (
+              <Menu.Item
+                leftSection={<IconTrash size={16} color="red" />}
+                onClick={handleDeleteThread}
+              >
+                <Text c="red">Delete Thread</Text>
+              </Menu.Item>
+            )}
+          </Menu.Dropdown>
+        </Menu>
+      </Group>
 
       <Card withBorder radius="md">
         <Stack gap="xs">
