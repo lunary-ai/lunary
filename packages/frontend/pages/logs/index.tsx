@@ -271,22 +271,26 @@ export default function Logs() {
 
   useEffect(() => {
     const newColumns = { ...allColumns };
-    if (type === "llm" && Array.isArray(evaluators)) {
-      for (const evaluator of evaluators) {
-        const id = "enrichment-" + evaluator.id;
 
-        if (newColumns.llm.map(({ accessorKey }) => accessorKey).includes(id)) {
-          continue;
+    if (type === "llm") {
+      newColumns.llm = newColumns.llm.filter(
+        (col) =>
+          !(col.accessorKey && col.accessorKey.startsWith("enrichment-")),
+      );
+
+      if (Array.isArray(evaluators)) {
+        for (const evaluator of evaluators) {
+          const id = "enrichment-" + evaluator.id;
+          newColumns.llm.splice(
+            3,
+            0,
+            enrichmentColumn(evaluator.name, evaluator.id, evaluator.type),
+          );
         }
-
-        newColumns.llm.splice(
-          3,
-          0,
-          enrichmentColumn(evaluator.name, evaluator.id, evaluator.type),
-        );
       }
-      setAllColumns(newColumns);
     }
+
+    setAllColumns(newColumns);
   }, [type, evaluators]);
 
   useEffect(() => {

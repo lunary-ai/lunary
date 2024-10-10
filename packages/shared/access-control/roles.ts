@@ -3,7 +3,7 @@ export type ResourceName =
   | "projects"
   | "billing"
   | "teamMembers"
-  | "apiKeys"
+  | "privateKeys"
   | "analytics"
   | "logs"
   | "users"
@@ -61,7 +61,7 @@ export const roles: Record<
         delete: true,
         list: true,
       },
-      apiKeys: {
+      privateKeys: {
         create: true,
         read: true,
         update: true,
@@ -155,7 +155,7 @@ export const roles: Record<
         delete: true,
         list: true,
       },
-      apiKeys: {
+      privateKeys: {
         create: true,
         read: true,
         update: true,
@@ -246,12 +246,12 @@ export const roles: Record<
         delete: false,
         list: true,
       },
-      apiKeys: {
-        create: true,
-        read: true,
-        update: true,
+      privateKeys: {
+        create: false,
+        read: false,
+        update: false,
         delete: false,
-        list: true,
+        list: false,
       },
       analytics: { read: true },
       logs: {
@@ -336,12 +336,12 @@ export const roles: Record<
         delete: false,
         list: true,
       },
-      apiKeys: {
+      privateKeys: {
         create: false,
-        read: true,
+        read: false,
         update: false,
         delete: false,
-        list: true,
+        list: false,
       },
       analytics: { read: true },
       logs: {
