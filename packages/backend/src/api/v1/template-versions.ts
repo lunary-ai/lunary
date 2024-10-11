@@ -1,11 +1,11 @@
 import sql from "@/src/utils/db";
-import Router from "koa-router";
-import { Context } from "koa";
-import postgres from "postgres";
-import { unCamelObject } from "@/src/utils/misc";
-import { checkAccess } from "@/src/utils/authorization";
-import { z } from "zod";
 import { clearUndefined } from "@/src/utils/ingest";
+import { unCamelObject } from "@/src/utils/misc";
+import { Context } from "koa";
+import Router from "koa-router";
+import postgres from "postgres";
+import { hasAccess } from "shared";
+import { z } from "zod";
 
 const versions = new Router();
 
@@ -147,23 +147,34 @@ versions.get("/:id", async (ctx: Context) => {
  *       401:
  *         description: Unauthorized access
  */
-versions.patch(
-  "/:id",
-  checkAccess("prompts", "update"),
-  async (ctx: Context) => {
-    const bodySchema = z.object({
-      content: z.union([z.array(z.any()), z.string()]),
-      extra: z.any(),
-      testValues: z.any(),
-      isDraft: z.boolean(),
-      notes: z.string().optional().nullable(),
-    });
+versions.patch("/:id", async (ctx: Context) => {
+  const bodySchema = z.object({
+    content: z.union([z.array(z.any()), z.string()]),
+    extra: z.any(),
+    testValues: z.any(),
+    isDraft: z.boolean(),
+    notes: z.string().optional().nullable(),
+  });
 
-    const { content, extra, testValues, isDraft, notes } = bodySchema.parse(
-      ctx.request.body,
-    );
+  const { content, extra, testValues, isDraft, notes } = bodySchema.parse(
+    ctx.request.body,
+  );
+  const { userId } = ctx.state;
 
-    const [templateVersion] = await sql`
+  const [user] = await sql`select * from account where id = ${userId}`;
+  if (
+    (isDraft && !hasAccess(user.role, "prompts", "create_draft")) ||
+    (!isDraft && !hasAccess(user.role, "prompts", "create"))
+  ) {
+    ctx.status = 403;
+    ctx.body = {
+      error: "Forbidden",
+      message: "You don't have access to this resource",
+    };
+    return;
+  }
+
+  const [templateVersion] = await sql`
       select
         *
       from
@@ -175,11 +186,11 @@ versions.patch(
         and p.org_id = ${ctx.state.orgId}
     `;
 
-    if (!templateVersion) {
-      ctx.throw(401, "You don't have access to this template");
-    }
+  if (!templateVersion) {
+    ctx.throw(401, "You don't have access to this template");
+  }
 
-    const [updatedTemplateVersion] = await sql`
+  const [updatedTemplateVersion] = await sql`
       update template_version
       set ${sql(
         clearUndefined({
@@ -196,8 +207,7 @@ versions.patch(
       returning *
     `;
 
-    ctx.body = unCamelExtras(updatedTemplateVersion);
-  },
-);
+  ctx.body = unCamelExtras(updatedTemplateVersion);
+});
 
 export default versions;

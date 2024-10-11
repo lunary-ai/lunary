@@ -629,18 +629,22 @@ export default function Sidebar() {
                       ]}
                     />
                   </Menu.Item>
-                  <Menu.Divider />
                   {billingEnabled &&
                     hasAccess(user.role, "billing", "read") && (
-                      <Menu.Item
-                        leftSection={<IconCreditCard opacity={0.6} size={14} />}
-                        onClick={() => router.push("/billing")}
-                      >
-                        Usage & Billing
-                      </Menu.Item>
+                      <>
+                        <Menu.Divider />
+                        <Menu.Item
+                          leftSection={
+                            <IconCreditCard opacity={0.6} size={14} />
+                          }
+                          onClick={() => router.push("/billing")}
+                        >
+                          Usage & Billing
+                        </Menu.Item>
+                      </>
                     )}
 
-                  {hasAccess(user.role, "teamMembers", "read") && (
+                  {hasAccess(user.role, "teamMembers", "list") && (
                     <Menu.Item
                       leftSection={<IconUsers opacity={0.6} size={14} />}
                       onClick={() => router.push("/team")}

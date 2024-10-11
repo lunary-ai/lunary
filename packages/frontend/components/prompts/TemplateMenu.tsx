@@ -18,7 +18,7 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 
-import { useTemplate, useTemplates } from "@/utils/dataHooks";
+import { useTemplate, useTemplates, useUser } from "@/utils/dataHooks";
 import { useHover } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
@@ -26,6 +26,7 @@ import { notifications } from "@mantine/notifications";
 import { cleanSlug, formatCompactFromNow } from "@/utils/format";
 import Router from "next/router";
 import { useEffect, useState } from "react";
+import { hasAccess } from "shared";
 import SearchBar from "../blocks/SearchBar";
 
 export const defaultTemplateVersion = {
@@ -52,6 +53,7 @@ function TemplateListItem({
 }) {
   const { templates, mutate, insert } = useTemplates();
   const { remove, update } = useTemplate(template?.id);
+  const { user } = useUser();
 
   const lastDeployed = template.versions
     .filter((v) => v && !v.isDraft)
@@ -165,46 +167,56 @@ function TemplateListItem({
         whiteSpace: "nowrap",
       }}
       leftSection={
-        <Menu>
-          <Menu.Target>
-            {active || hovered ? (
-              <ActionIcon size="sm" radius="sm" variant="light">
-                <IconDotsVertical size={12} />
-              </ActionIcon>
-            ) : (
-              <span />
-            )}
-          </Menu.Target>
-          <Menu.Dropdown>
-            <Menu.Item
-              leftSection={<IconPencil size={13} />}
-              onClick={() => {
-                setRename(template.id);
-              }}
-            >
-              Rename
-            </Menu.Item>
+        (hasAccess(user.role, "prompts", "create") ||
+          hasAccess(user.role, "prompts", "update") ||
+          hasAccess(user.role, "prompts", "delete")) && (
+          <Menu>
+            <Menu.Target>
+              {active || hovered ? (
+                <ActionIcon size="sm" radius="sm" variant="light">
+                  <IconDotsVertical size={12} />
+                </ActionIcon>
+              ) : (
+                <span />
+              )}
+            </Menu.Target>
+            <Menu.Dropdown>
+              {hasAccess(user.role, "prompts", "update") && (
+                <Menu.Item
+                  leftSection={<IconPencil size={13} />}
+                  onClick={() => {
+                    setRename(template.id);
+                  }}
+                >
+                  Rename
+                </Menu.Item>
+              )}
 
-            <Menu.Item
-              leftSection={<IconLayersSubtract size={13} />}
-              onClick={() => {
-                duplicateTemplate();
-              }}
-            >
-              Duplicate
-            </Menu.Item>
+              {hasAccess(user.role, "prompts", "create") && (
+                <Menu.Item
+                  leftSection={<IconLayersSubtract size={13} />}
+                  onClick={() => {
+                    duplicateTemplate();
+                  }}
+                >
+                  Duplicate
+                </Menu.Item>
+              )}
 
-            <Menu.Item
-              color="red"
-              leftSection={<IconTrash size={13} />}
-              onClick={() => {
-                confirmDelete();
-              }}
-            >
-              Delete
-            </Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
+              {hasAccess(user.role, "prompts", "delete") && (
+                <Menu.Item
+                  color="red"
+                  leftSection={<IconTrash size={13} />}
+                  onClick={() => {
+                    confirmDelete();
+                  }}
+                >
+                  Delete
+                </Menu.Item>
+              )}
+            </Menu.Dropdown>
+          </Menu>
+        )
       }
       onClick={() => {
         if (sortedVersions[0])
@@ -256,6 +268,7 @@ function TemplateList({
   switchTemplateVersion,
 }) {
   const { templates, loading, isInserting } = useTemplates();
+  const { user } = useUser();
 
   const [filter, setFilter] = useState("");
   const [filteredTemplates, setFilteredTemplates] = useState(templates);
@@ -278,16 +291,18 @@ function TemplateList({
         fw="bold"
         variant="subtle"
         rightSection={
-          <ActionIcon
-            size="xs"
-            radius="sm"
-            variant="outline"
-            loading={isInserting}
-            data-testid="create-template"
-            onClick={createTemplate}
-          >
-            <IconPlus size={12} />
-          </ActionIcon>
+          hasAccess(user.role, "prompts", "create") && (
+            <ActionIcon
+              size="xs"
+              radius="sm"
+              variant="outline"
+              loading={isInserting}
+              data-testid="create-template"
+              onClick={createTemplate}
+            >
+              <IconPlus size={12} />
+            </ActionIcon>
+          )
         }
       />
 

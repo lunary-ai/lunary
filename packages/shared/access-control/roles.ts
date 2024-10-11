@@ -1,3 +1,13 @@
+export type Role =
+  | "owner"
+  | "admin"
+  | "member"
+  | "viewer"
+  | "collaborator"
+  | "billing"
+  | "prompt_editor"
+  | "analytics";
+
 export type ResourceName =
   | "org"
   | "projects"
@@ -14,9 +24,9 @@ export type ResourceName =
   | "enrichments"
   | "settings";
 
-export type Role = "owner" | "admin" | "member" | "viewer" | "billing";
 export type Action =
   | "create"
+  | "create_draft"
   | "read"
   | "update"
   | "delete"
@@ -92,6 +102,7 @@ export const roles: Record<
         delete: true,
         list: true,
         run: true,
+        create_draft: true,
       },
       datasets: {
         create: true,
@@ -181,6 +192,7 @@ export const roles: Record<
       },
       prompts: {
         create: true,
+        create_draft: true,
         read: true,
         update: true,
         delete: true,
@@ -233,7 +245,7 @@ export const roles: Record<
     description: "Full access to most resources",
     permissions: {
       projects: {
-        create: true,
+        create: false,
         read: true,
         update: true,
         delete: false,
@@ -244,7 +256,7 @@ export const roles: Record<
         read: true,
         update: false,
         delete: false,
-        list: true,
+        list: false,
       },
       privateKeys: {
         create: false,
@@ -257,21 +269,22 @@ export const roles: Record<
       logs: {
         create: true,
         read: true,
-        update: true,
-        delete: true,
+        update: false,
+        delete: false,
         list: true,
         export: true,
       },
       users: {
         create: false,
         read: true,
-        update: false,
-        delete: false,
+        update: true,
+        delete: true,
         list: true,
         export: true,
       },
       prompts: {
         create: true,
+        create_draft: true,
         read: true,
         update: true,
         delete: true,
@@ -309,11 +322,11 @@ export const roles: Record<
         run: true,
       },
       settings: {
-        create: true,
-        read: true,
+        create: false,
+        read: false,
         update: false,
         delete: false,
-        list: true,
+        list: false,
       },
     },
   },
@@ -334,7 +347,7 @@ export const roles: Record<
         read: true,
         update: false,
         delete: false,
-        list: true,
+        list: false,
       },
       privateKeys: {
         create: false,
@@ -379,7 +392,7 @@ export const roles: Record<
         create: false,
         read: true,
         update: false,
-        delete: true,
+        delete: false,
         list: true,
       },
       evaluations: {
@@ -391,8 +404,88 @@ export const roles: Record<
         run: false,
       },
       settings: {
+        read: false,
+        list: false,
+      },
+    },
+  },
+  collaborator: {
+    value: "collaborator",
+    name: "Collaborator",
+    description: "Can view resources, comment logs, and create prompt drafts",
+    permissions: {
+      projects: {
+        create: false,
         read: true,
+        update: false,
+        delete: false,
         list: true,
+      },
+      teamMembers: {
+        create: false,
+        read: true,
+        update: false,
+        delete: false,
+        list: false,
+      },
+      privateKeys: {
+        create: false,
+        read: false,
+        update: false,
+        delete: false,
+        list: false,
+      },
+      analytics: { read: true },
+      logs: {
+        create: false,
+        read: true,
+        update: true,
+        delete: false,
+        list: true,
+        export: false,
+      },
+      users: { read: true, list: true },
+      prompts: {
+        create: false,
+        create_draft: true,
+        read: true,
+        update: false,
+        delete: false,
+        list: true,
+        run: true,
+      },
+      datasets: {
+        create: false,
+        read: true,
+        update: false,
+        delete: false,
+        list: true,
+      },
+      checklists: {
+        create: false,
+        read: true,
+        update: false,
+        delete: false,
+        list: true,
+      },
+      enrichments: {
+        create: false,
+        read: true,
+        update: false,
+        delete: false,
+        list: true,
+      },
+      evaluations: {
+        create: false,
+        read: true,
+        update: false,
+        delete: false,
+        list: true,
+        run: false,
+      },
+      settings: {
+        read: false,
+        list: false,
       },
     },
   },
@@ -403,6 +496,7 @@ export const roles: Record<
     permissions: {
       prompts: {
         create: true,
+        create_draft: true,
         read: true,
         update: true,
         delete: true,
@@ -469,7 +563,7 @@ export function hasReadAccess(
   resourceName: ResourceName,
 ): boolean {
   try {
-    return roles[userRole].permissions[resourceName].read || false;
+    return roles[userRole].permissions[resourceName]?.read || false;
   } catch (error) {
     return false;
   }
@@ -479,9 +573,9 @@ export function hasAccess(
   userRole: Role,
   resourceName: ResourceName,
   action: keyof (typeof roles)[Role]["permissions"][ResourceName],
-) {
+): boolean {
   try {
-    return roles[userRole].permissions[resourceName][action];
+    return roles[userRole].permissions[resourceName][action] || false;
   } catch (error) {
     return false;
   }
