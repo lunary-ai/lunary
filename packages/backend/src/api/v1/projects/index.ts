@@ -188,7 +188,7 @@ projects.patch(
 
 projects.get(
   "/:projectId/rules",
-  checkAccess("projects", "update"),
+  checkAccess("projects", "read"),
   async (ctx: Context) => {
     const { projectId } = ctx.params;
     const { userId } = ctx.state;

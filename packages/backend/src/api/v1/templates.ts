@@ -7,6 +7,7 @@ import Router from "koa-router";
 import { z } from "zod";
 
 import { unCamelExtras } from "./template-versions";
+import { hasAccess } from "shared";
 
 const templates = new Router({
   prefix: "/templates",
@@ -432,36 +433,46 @@ templates.patch(
  *               createdAt: "2023-06-01T12:00:00Z"
  *               version: 2
  */
-templates.post(
-  "/:id/versions",
-  checkAccess("prompts", "update"),
-  async (ctx: Context) => {
-    const paramsSchema = z.object({
-      id: z.coerce.number(),
-    });
-    const bodySchema = z.object({
-      content: z.any(),
-      extra: z.any(),
-      testValues: z.any(),
-      isDraft: z.boolean(),
-      notes: z.string().optional().nullable(),
-    });
+templates.post("/:id/versions", async (ctx: Context) => {
+  const paramsSchema = z.object({
+    id: z.coerce.number(),
+  });
+  const bodySchema = z.object({
+    content: z.any(),
+    extra: z.any(),
+    testValues: z.any(),
+    isDraft: z.boolean(),
+    notes: z.string().optional().nullable(),
+  });
 
-    const { projectId } = ctx.state;
-    const { content, extra, testValues, isDraft, notes } = bodySchema.parse(
-      ctx.request.body,
-    );
-    const { id: templateId } = paramsSchema.parse(ctx.params);
+  const { projectId, userId } = ctx.state;
+  const { content, extra, testValues, isDraft, notes } = bodySchema.parse(
+    ctx.request.body,
+  );
+  const { id: templateId } = paramsSchema.parse(ctx.params);
 
-    const [template] =
-      await sql`select id from template where id = ${templateId} and project_id = ${projectId}
+  const [user] = await sql`select * from account where id = ${userId}`;
+  if (
+    (isDraft && !hasAccess(user.role, "prompts", "create_draft")) ||
+    (!isDraft && !hasAccess(user.role, "prompts", "create"))
+  ) {
+    ctx.status = 403;
+    ctx.body = {
+      error: "Forbidden",
+      message: "You don't have access to this resource",
+    };
+    return;
+  }
+
+  const [template] =
+    await sql`select id from template where id = ${templateId} and project_id = ${projectId}
     `;
 
-    if (!template) {
-      ctx.throw(403, "Unauthorized");
-    }
+  if (!template) {
+    ctx.throw(403, "Unauthorized");
+  }
 
-    const [templateVersion] = await sql`
+  const [templateVersion] = await sql`
       insert into template_version ${sql(
         clearUndefined({
           templateId: ctx.params.id,
@@ -475,9 +486,8 @@ templates.post(
       returning *
     `;
 
-    ctx.body = unCamelExtras(templateVersion);
-  },
-);
+  ctx.body = unCamelExtras(templateVersion);
+});
 
 /**
  * @openapi
