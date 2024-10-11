@@ -259,12 +259,6 @@ export default function Logs() {
     deleteRun,
   } = useRun(selectedRunId);
 
-  useEffect(() => {
-    if (!hasAccess(user?.role, "settings", "read")) {
-      router.push("/analytics");
-    }
-  }, [user.role]);
-
   if (!user.role) {
     return <Loader />;
   }

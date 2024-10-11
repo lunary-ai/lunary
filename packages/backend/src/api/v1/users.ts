@@ -18,27 +18,24 @@ const users = new Router({
   prefix: "/users",
 });
 
-users.get(
-  "/me/org",
-  checkAccess("teamMembers", "read"),
-  async (ctx: Context) => {
-    const { userId } = ctx.state;
+users.get("/me/org", async (ctx: Context) => {
+  const { userId } = ctx.state;
 
-    const [user] =
-      await sql`select * from account where id = ${ctx.state.userId}`;
-    const isAdmin = user.role === "admin" || user.role === "owner";
+  const [user] =
+    await sql`select * from account where id = ${ctx.state.userId}`;
+  const isAdmin = user.role === "admin" || user.role === "owner";
 
-    const [org] = await sql`
+  const [org] = await sql`
       select * from org where id = (select org_id from account where id = ${userId})
     `;
 
-    if (!org) {
-      ctx.status = 401;
-      ctx.body = { message: "Unauthorized" };
-      return;
-    }
+  if (!org) {
+    ctx.status = 401;
+    ctx.body = { message: "Unauthorized" };
+    return;
+  }
 
-    const users = await sql`
+  const users = await sql`
       select
         account.id,
         account.created_at,
@@ -62,11 +59,10 @@ users.get(
         account.name
     `;
 
-    org.users = users;
-    org.license = ctx.state.license || {};
-    ctx.body = org;
-  },
-);
+  org.users = users;
+  org.license = ctx.state.license || {};
+  ctx.body = org;
+});
 
 users.get("/me", async (ctx: Context) => {
   const { userId } = ctx.state;
