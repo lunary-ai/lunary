@@ -479,22 +479,35 @@ function Playground() {
           <Stack style={{ zIndex: 0 }}>
             {template && templateVersion && (
               <Group>
-                <Button
-                  leftSection={<IconDeviceFloppy size={18} />}
-                  size="xs"
-                  loading={loading}
-                  data-testid="save-template"
-                  disabled={loading || (template?.id && !hasChanges)}
-                  variant="outline"
-                  // rightSection={
-                  // <HotkeysInfo hot="S" size="sm" style={{ marginTop: -4 }} />
-                  // }
-                  onClick={saveTemplate}
-                >
-                  {templateVersion?.id
-                    ? "Save changes"
-                    : "Save as new template"}
-                </Button>
+                {!templateVersion?.id &&
+                  hasAccess(user.role, "prompts", "create") && (
+                    <Button
+                      leftSection={<IconDeviceFloppy size={18} />}
+                      size="xs"
+                      loading={loading}
+                      data-testid="save-template"
+                      disabled={loading || (template?.id && !hasChanges)}
+                      variant="outline"
+                      onClick={saveTemplate}
+                    >
+                      Save as new template
+                    </Button>
+                  )}
+
+                {templateVersion?.id &&
+                  hasAccess(user.role, "prompts", "create_draft") && (
+                    <Button
+                      leftSection={<IconDeviceFloppy size={18} />}
+                      size="xs"
+                      loading={loading}
+                      data-testid="save-template"
+                      disabled={loading || (template?.id && !hasChanges)}
+                      variant="outline"
+                      onClick={saveTemplate}
+                    >
+                      Save changes
+                    </Button>
+                  )}
 
                 {hasAccess(user.role, "prompts", "update") &&
                   templateVersion?.id && (
