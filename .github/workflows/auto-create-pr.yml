@@ -20,7 +20,7 @@ jobs:
 
           if [[ $BRANCH_NAME == *"/"* ]]; then
             IFS="/" read -ra PARTS <<< "$BRANCH_NAME"
-            PR_TITLE="${PARTS[0]}: ${PARTS[1]^}"
+            PR_TITLE="${PARTS[0]}: ${PARTS[1]}"
             PR_TITLE="${PR_TITLE//-/ }"
           else
             PR_TITLE="${BRANCH_NAME//-/ }"
