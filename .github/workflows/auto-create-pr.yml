@@ -1,12 +1,10 @@
 name: Auto Create Pull Request
 
-on:
-  push:
-    branches-ignore:
-      - main
+on: create
 
 jobs:
   create-pull-request:
+    if: github.event.ref_type == 'branch'
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
