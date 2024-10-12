@@ -62,6 +62,7 @@ export default function DataWarehouseCard() {
       <Group gap="xl">
         {PROVIDERS.map(({ name, iconSrc, settingsPath, disabled }) => (
           <Tooltip
+            key={name}
             label={
               disabled
                 ? `You license does not allow access to ${name} connection`

@@ -13,7 +13,7 @@ projects.get("/", checkAccess("projects", "read"), async (ctx: Context) => {
   const { orgId, userId } = ctx.state;
 
   const rows = await sql`
-    select
+    select distinct on (p.id)
       p.id,
       p.created_at,
       p.name,
@@ -209,10 +209,17 @@ projects.post(
   "/:projectId/rules",
   checkAccess("projects", "update"),
   async (ctx: Context) => {
-    const bodySchema = z.object({
-      type: z.enum(["filtering", "masking"]).default("filtering"),
-      filters: z.array(z.any()).optional(),
-    });
+    const bodySchema = z.discriminatedUnion("type", [
+      z.object({
+        type: z.literal("filtering"),
+        filters: z.array(z.any()),
+      }),
+      z.object({
+        type: z.literal("masking"),
+        filters: z.undefined().transform(() => null),
+      }),
+    ]);
+
     const { type, filters } = bodySchema.parse(ctx.request.body);
     const { projectId } = ctx.params;
     const { userId } = ctx.state;
