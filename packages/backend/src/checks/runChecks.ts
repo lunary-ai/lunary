@@ -174,14 +174,14 @@ export async function checkIngestionRule(run: any, checks: CheckLogic) {
   if (!checks.length || (checks.length === 1 && checks[0] === "AND"))
     return true;
 
-  let passed = false;
+  let passed = true;
   const results: CheckResults[] = [];
 
   const logicType = checks[0];
   const subChecks = checks.slice(1);
   if (logicType === "OR") {
     for (const check of subChecks) {
-      const res = await checkRun(run, check, false, true);
+      const res = await checkRun(run, check, true);
       results.push(res);
       if (res.passed) {
         passed = true;
@@ -191,7 +191,7 @@ export async function checkIngestionRule(run: any, checks: CheckLogic) {
   } else {
     // Handle nested AND
     for (const check of subChecks) {
-      const res = await checkRun(run, check, false, true);
+      const res = await checkRun(run, check, true);
       results.push(res);
       passed = res.passed;
       if (!res.passed) break;

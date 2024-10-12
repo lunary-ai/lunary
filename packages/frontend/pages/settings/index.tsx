@@ -159,7 +159,13 @@ function SmartDataRule() {
   const { addRule, addRulesLoading, deleteRule, maskingRule, filteringRule } =
     useProjectRules();
 
-  const [filters, setChecks] = useState<CheckLogic>(["AND"]);
+  const [checks, setChecks] = useState<CheckLogic>(["AND"]);
+
+  useEffect(() => {
+    if (filteringRule?.filters) {
+      setChecks(filteringRule.filters);
+    }
+  }, [filteringRule]);
 
   const smartDataFilterEnabled = config.IS_SELF_HOSTED
     ? org.license.dataFilteringEnabled
@@ -200,7 +206,7 @@ function SmartDataRule() {
             <CheckPicker
               minimal={true}
               showAndOr={true}
-              value={filteringRule?.filters}
+              value={checks}
               onChange={setChecks}
               buttonText="Add filter"
               restrictTo={(f) =>
@@ -213,7 +219,7 @@ function SmartDataRule() {
                 loading={addRulesLoading}
                 style={{ float: "right" }}
                 onClick={() => {
-                  addRule({ type: "filtering", filters });
+                  addRule({ type: "filtering", filters: checks });
                 }}
                 variant="full"
               >
