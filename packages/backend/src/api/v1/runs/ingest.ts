@@ -431,14 +431,14 @@ export async function processEventsIngestion(
 
       if (ingestionRule) {
         passedIngestionRule = await checkIngestionRule(
-          cleanedEvent,
+          structuredClone(cleanedEvent),
           ingestionRule.filters,
         );
       }
 
       if (cleanedEvent.event === "end") {
         const [dbRun] =
-          await sql`select * from run where id = ${cleanedEvent.runId}`;
+          await sql`select * from run where id = ${cleanedEvent.runId || null}`;
         if (dbRun?.input === "__NOT_INGESTED__") {
           passedIngestionRule = false;
         }
