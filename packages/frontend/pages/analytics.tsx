@@ -862,7 +862,7 @@ function SaveAsModal({ opened, close, title, onConfirm }) {
   );
 }
 
-function CustomChart({ index, chart, chartsState, toggleChart }) {
+function SelectableCustomChart({ index, chart, chartsState, toggleChart }) {
   const { chart: item, remove } = useChart(chart.id, chart);
   return (
     <Selectable
@@ -881,6 +881,29 @@ function CustomChart({ index, chart, chartsState, toggleChart }) {
       {CHARTS.find((c) => item.type === c.name)?.component(item.config.props)}
     </Selectable>
   );
+}
+
+function CustomChart({ chartID }) {
+  const { ref, inViewport } = useInViewport();
+  const [load, setLoad] = useState(inViewport);
+  useEffect(() => {
+    if (inViewport) {
+      setLoad(true);
+    }
+  }, [inViewport]);
+
+  if (!load) { return null }
+
+  const { chart: data } = useChart(chartID);
+  const chart = CHARTS.find((c) => data.type === c.name)
+
+  if (!chart) return null
+
+  return (
+    <Box ref={ref}>
+      {chart.component(data.config.props)}
+    </Box>
+  )
 }
 
 function ChartSelector({
@@ -937,7 +960,7 @@ function ChartSelector({
           <Tabs.Panel value="charts" p="md">
             <Stack mah={"75vh"} style={{ overflowY: "auto" }}>
               <Text>Main Charts</Text>
-              <SimpleGrid cols={{ sm: 1, md: 3 }} spacing="md">
+              <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="md">
                 {ALL_CHARTS.main.map((chartID) => (
                   <Selectable
                     key={chartID}
@@ -951,7 +974,7 @@ function ChartSelector({
               </SimpleGrid>
 
               <Text>Extra Charts</Text>
-              <SimpleGrid cols={{ m: 1, md: 3 }} spacing="md">
+              <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="md">
                 {ALL_CHARTS.extras.map((chartID) => (
                   <Selectable
                     key={chartID}
@@ -965,9 +988,9 @@ function ChartSelector({
               </SimpleGrid>
 
               <Text>Custom Charts</Text>
-              <SimpleGrid cols={{ m: 1, md: 3 }} spacing="md">
+              <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="md">
                 {charts?.map((chart, index) => (
-                  <CustomChart
+                  <SelectableCustomChart
                     index={index}
                     chart={chart}
                     chartsState={chartsState}
@@ -991,7 +1014,7 @@ function ChartSelector({
                       filters: "",
                     },
                   },
-                });
+                }).then(() => setActiveTab("charts"));
               }}
             />
           </Tabs.Panel>
@@ -1445,14 +1468,8 @@ export default function Analytics() {
         if (chartProps[id])
           return <AnalyticsChart {...chartProps[id]} {...commonChartData} />;
 
-        const chart = getChartConfig();
         return (
-          <DynamicChart
-            key={chart.id}
-            chartConfig={chart}
-            onUpdateConfig={(newConfig) => {}}
-            onRemove={() => {}}
-          />
+          <CustomChart chartID={id}/>
         );
     }
   };
