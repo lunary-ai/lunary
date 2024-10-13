@@ -12,7 +12,9 @@ export type ResourceName =
   | "checklists"
   | "evaluations"
   | "enrichments"
-  | "settings";
+  | "settings"
+  | "dashboards"
+  | "charts";
 
 export type Role = "owner" | "admin" | "member" | "viewer" | "billing";
 export type Action =
@@ -130,6 +132,20 @@ export const roles: Record<
         delete: true,
         list: true,
       },
+      dashboards: {
+        create: true,
+        read: true,
+        update: true,
+        delete: true,
+        list: true
+      },
+      charts: {
+        create: true,
+        read: true,
+        update: true,
+        delete: true,
+        list: true
+      }
     },
   },
   admin: {
@@ -138,6 +154,9 @@ export const roles: Record<
     free: true,
     description: "Admin-level access to the entire org",
     permissions: {
+      org: {
+        update: false,
+      },
       projects: {
         create: true,
         read: true,
@@ -224,6 +243,20 @@ export const roles: Record<
         delete: true,
         list: true,
       },
+      dashboards: {
+        create: true,
+        read: true,
+        update: true,
+        delete: true,
+        list: true
+      },
+      charts: {
+        create: true,
+        read: true,
+        update: true,
+        delete: true,
+        list: true
+      }
     },
   },
   member: {
@@ -232,6 +265,13 @@ export const roles: Record<
     free: true,
     description: "Full access to most resources",
     permissions: {
+      org: {
+        update: false,
+      },
+      billing: {
+        read: false,
+        update: false,
+      },
       projects: {
         create: true,
         read: true,
@@ -315,6 +355,20 @@ export const roles: Record<
         delete: false,
         list: true,
       },
+      dashboards: {
+        create: false,
+        read: true,
+        update: false,
+        delete: false,
+        list: true
+      },
+      charts: {
+        create: false,
+        read: true,
+        update: false,
+        delete: false,
+        list: true
+      }
     },
   },
   viewer: {
@@ -322,6 +376,13 @@ export const roles: Record<
     name: "Viewer",
     description: "View-only access to most resources",
     permissions: {
+      org: {
+        update: false,
+      },
+      billing: {
+        read: false,
+        update: false,
+      },
       projects: {
         create: false,
         read: true,
@@ -394,6 +455,20 @@ export const roles: Record<
         read: true,
         list: true,
       },
+      dashboards: {
+        create: false,
+        read: true,
+        update: false,
+        delete: false,
+        list: true
+      },
+      charts: {
+        create: false,
+        read: true,
+        update: false,
+        delete: false,
+        list: true
+      }
     },
   },
   prompt_editor: {

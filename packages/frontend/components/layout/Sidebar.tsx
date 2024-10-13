@@ -61,6 +61,7 @@ import config from "@/utils/config";
 import { useViews } from "@/utils/dataHooks/views";
 import { useDisclosure, useFocusTrap } from "@mantine/hooks";
 import { getIconComponent } from "../blocks/IconPicker";
+import { useDashboards } from "@/utils/dataHooks/dashboards";
 
 function NavbarLink({
   icon: Icon,
@@ -74,17 +75,29 @@ function NavbarLink({
 
   // For logs pages, we want to compare the view param to see if a view is selected
 
-  const active = router.pathname.startsWith("/logs")
-    ? router.asPath.includes(`view=`)
-      ? (() => {
-          const linkParams = new URLSearchParams(link.split("?")[1]);
-          const viewParam = linkParams.get("view");
-          return viewParam
-            ? router.asPath.includes(`view=${viewParam}`)
-            : router.asPath.startsWith(link);
-        })()
-      : router.asPath.startsWith(link)
-    : router.pathname.startsWith(link);
+  const active = (() => {
+    const linkParams = new URLSearchParams(link.split("?")[1]);
+    if (router.pathname.startsWith("/logs")) {
+      if (router.asPath.includes(`view=`)) {
+        const viewParam = linkParams.get("view");
+        if (viewParam) {
+          return router.asPath.includes(`view=${viewParam}`);
+        }
+      }
+      return router.asPath.startsWith(link);
+    } else if (router.pathname.startsWith("/analytics")) {
+      if (router.asPath.includes(`dashboard=`)) {
+        if (link === "/analytics") return false;
+
+        const dashboardParam = linkParams.get("dashboard");
+        if (dashboardParam) {
+          return router.asPath.includes(`dashboard=${dashboardParam}`);
+        }
+      }
+      return router.asPath.startsWith(link);
+    }
+    return router.pathname.startsWith(link);
+  })();
 
   return (
     <NavLink
@@ -177,7 +190,6 @@ function MenuSection({ item }) {
                 <IconSearch
                   onClick={() => setSearchOn(true)}
                   size={14}
-                  ml="auto"
                   opacity={0.4}
                   style={{
                     cursor: "pointer",
@@ -223,6 +235,7 @@ export default function Sidebar() {
   const { org } = useOrg();
   const { projects, isLoading: loading, insert } = useProjects();
   const { views } = useViews();
+  const { dashboards } = useDashboards();
 
   const { colorScheme, setColorScheme } = useMantineColorScheme({});
 
@@ -261,6 +274,16 @@ export default function Sidebar() {
       };
     })
     .sort((a, b) => a.label.localeCompare(b.label));
+
+  const projectDashboards = (dashboards || []).map((d) => {
+    return {
+      label: d.name,
+      searchable: true,
+      icon: IconTimeline,
+      link: `/analytics?dashboard=${d.id}`,
+      resource: "analytics",
+    };
+  });
 
   const APP_MENU: MenuItem[] = [
     {
@@ -334,14 +357,27 @@ export default function Sidebar() {
         },
       ],
     },
-    !!projectViews.length && {
+  ];
+
+  if (projectDashboards.length) {
+    APP_MENU.push({
+      label: "Dashboards",
+      icon: IconListSearch,
+      searchable: true,
+      resource: "logs",
+      subMenu: projectDashboards,
+    });
+  }
+
+  if (projectViews.length) {
+    APP_MENU.push({
       label: "Smart Views",
       icon: IconListSearch,
       searchable: true,
       resource: "logs",
       subMenu: projectViews,
-    },
-  ].filter((item) => item);
+    });
+  }
 
   async function createProject() {
     if (org.plan === "free" && projects.length >= 3) {

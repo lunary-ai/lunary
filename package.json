@@ -24,6 +24,8 @@
     "@mantine/charts": "^7.12.2",
     "concurrently": "^8.2.2",
     "patch-package": "^8.0.0",
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1",
     "recharts": "^2.12.7",
     "swapy": "^0.2.1"
   },

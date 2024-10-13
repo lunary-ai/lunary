@@ -579,3 +579,173 @@ export default function Analytics2() {
 }
 {
 }
+
+
+
+
+import React, { useState } from 'react';
+import { Box, Grid, TextInput, NumberInput, Checkbox, Select } from '@mantine/core';
+
+// Example chart components (replace these with your actual chart components)
+const BarChart = ({ barSize, layout, margin, axis, grid }) => <div>BarChart preview</div>;
+const LineChart = ({ stroke, strokeWidth, interpolation, dot, grid }) => <div>LineChart preview</div>;
+const PieChart = ({ radius, innerRadius, paddingAngle, startAngle, endAngle }) => <div>PieChart preview</div>;
+const AreaChart = ({ baseLine, curveType, fillOpacity, margin, stack }) => <div>AreaChart preview</div>;
+const RadarChart = ({ startAngle, endAngle, angleField, radiusField, grid }) => <div>RadarChart preview</div>;
+
+const charts = [
+  {
+    name: "BarChart",
+    props: [
+      { barSize: "number" },
+      { layout: "string" },
+      { margin: { top: "number", right: "number", bottom: "number", left: "number" } },
+      { axis: { tickSize: "number", tickPadding: "number" } },
+      { grid: "boolean" },
+    ],
+    component: BarChart,
+  },
+  {
+    name: "LineChart",
+    props: [
+      { stroke: "string" },
+      { strokeWidth: "number" },
+      { interpolation: "string" },
+      { dot: "boolean" },
+      { grid: "boolean" },
+    ],
+    component: LineChart,
+  },
+  {
+    name: "PieChart",
+    props: [
+      { radius: "number" },
+      { innerRadius: "number" },
+      { paddingAngle: "number" },
+      { startAngle: "number" },
+      { endAngle: "number" },
+    ],
+    component: PieChart,
+  },
+  {
+    name: "AreaChart",
+    props: [
+      { baseLine: "number" },
+      { curveType: "string" },
+      { fillOpacity: "number" },
+      { margin: { top: "number", right: "number", bottom: "number", left: "number" } },
+      { stack: "boolean" },
+    ],
+    component: AreaChart,
+  },
+  {
+    name: "RadarChart",
+    props: [
+      { startAngle: "number" },
+      { endAngle: "number" },
+      { angleField: "string" },
+      { radiusField: "string" },
+      { grid: "boolean" },
+    ],
+    component: RadarChart,
+  }
+];
+
+const DynamicChartPreview = () => {
+  const [selectedChart, setSelectedChart] = useState(charts[0]);
+  const [chartProps, setChartProps] = useState({});
+
+  const handlePropChange = (propName, value) => {
+    setChartProps((prevProps) => ({
+      ...prevProps,
+      [propName]: value,
+    }));
+  };
+
+  const renderPropInput = (prop, propName) => {
+    switch (prop) {
+      case "number":
+        return (
+          <NumberInput
+            label={propName}
+            value={chartProps[propName] || 0}
+            onChange={(value) => handlePropChange(propName, value)}
+          />
+        );
+      case "string":
+        return (
+          <TextInput
+            label={propName}
+            value={chartProps[propName] || ""}
+            onChange={(event) => handlePropChange(propName, event.target.value)}
+          />
+        );
+      case "boolean":
+        return (
+          <Checkbox
+            label={propName}
+            checked={chartProps[propName] || false}
+            onChange={(event) => handlePropChange(propName, event.target.checked)}
+          />
+        );
+      case "array":
+        // For now, handle arrays as simple text input (could extend this further)
+        return (
+          <TextInput
+            label={propName}
+            value={chartProps[propName] || ""}
+            onChange={(event) => handlePropChange(propName, event.target.value.split(','))}
+          />
+        );
+      case "object":
+        // Recursively render inputs for object properties
+        return (
+          <Box>
+            <h4>{propName}</h4>
+            {Object.keys(prop).map((subPropName) =>
+              renderPropInput(prop[subPropName], subPropName)
+            )}
+          </Box>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <Grid>
+      <Grid.Col span={6}>
+        <Box>
+          <h3>{selectedChart.name} Preview</h3>
+          <selectedChart.component {...chartProps} />
+        </Box>
+      </Grid.Col>
+
+      <Grid.Col span={6}>
+        <Box>
+          <h3>Chart Controls</h3>
+          {selectedChart.props.map((prop) => {
+            const propName = Object.keys(prop)[0];
+            return (
+              <Box key={propName} mb="sm">
+                {renderPropInput(prop[propName], propName)}
+              </Box>
+            );
+          })}
+          <Select
+            label="Select Chart"
+            value={selectedChart.name}
+            onChange={(name) => {
+              const chart = charts.find((c) => c.name === name);
+              setSelectedChart(chart);
+              setChartProps({});
+            }}
+            data={charts.map((chart) => chart.name)}
+          />
+        </Box>
+      </Grid.Col>
+    </Grid>
+  );
+};
+
+export default DynamicChartPreview;

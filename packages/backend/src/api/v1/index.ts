@@ -18,6 +18,8 @@ import analytics from "./analytics";
 import views from "./views";
 import models from "./models";
 import dataWarehouse from "./data-warehouse";
+import dashboards from "./dashboards";
+import charts from "./charts";
 
 const v1 = new Router({
   prefix: "/v1",
@@ -52,5 +54,7 @@ v1.use(analytics.routes());
 v1.use(views.routes());
 v1.use(models.routes());
 v1.use(dataWarehouse.routes());
+v1.use(dashboards.routes());
+v1.use(charts.routes());
 
 export default v1;
