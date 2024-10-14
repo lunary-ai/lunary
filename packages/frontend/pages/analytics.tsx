@@ -83,6 +83,7 @@ import Sentiment from "@/components/analytics/Charts/Sentiment";
 
 import { Grid, TextInput, NumberInput, Checkbox } from "@mantine/core";
 import { useChart, useCharts } from "@/utils/dataHooks/charts";
+import ErrorBoundary from "@/components/blocks/ErrorBoundary";
 
 // Example chart components (replace these with your actual chart components)
 const DemoLineChart = ({ stroke, strokeWidth, interpolation, dot, grid }) => (
@@ -892,18 +893,20 @@ function CustomChart({ chartID }) {
     }
   }, [inViewport]);
 
-  if (!load) { return null }
+  if (!load) {
+    return null;
+  }
 
   const { chart: data } = useChart(chartID);
-  const chart = CHARTS.find((c) => data.type === c.name)
+  const chart = CHARTS.find((c) => data.type === c.name);
 
-  if (!chart) return null
+  if (!chart) return null;
 
   return (
     <Box ref={ref}>
-      {chart.component(data.config.props)}
+      <ErrorBoundary>{chart.component(data.config.props)}</ErrorBoundary>
     </Box>
-  )
+  );
 }
 
 function ChartSelector({
@@ -931,7 +934,6 @@ function ChartSelector({
             flexDirection: "column",
           },
         }}
-        style={{}}
       >
         <Tabs
           variant="outline"
@@ -1021,6 +1023,50 @@ function ChartSelector({
         </Tabs>
       </Modal>
     </>
+  );
+}
+
+function DynamicSelectFields() {
+  const [first, setFirst] = useState("runs");
+  const [second, setSecond] = useState<string | null>(null);
+
+  const firstOptions = ["runs", "users", "models", "templates"];
+
+  const secondOptions = useMemo(() => {
+    switch (first) {
+      case "runs":
+        return ["id", "name", "tags", "metadata"];
+      case "users":
+        return ["name", "userProps"];
+      case "templates":
+        return [];
+      case "models":
+        return [];
+      default:
+        return [];
+    }
+  }, [first]);
+
+  return (
+    <Grid>
+      <Grid.Col>
+        <Select
+          defaultValue={first}
+          data={firstOptions}
+          onChange={(value) => value && setFirst(value)}
+        />
+      </Grid.Col>
+
+      <Grid.Col>
+        {secondOptions?.length && (
+          <Select
+            defaultValue={second}
+            data={secondOptions}
+            onChange={(value) => setSecond(value)}
+          />
+        )}
+      </Grid.Col>
+    </Grid>
   );
 }
 
@@ -1151,6 +1197,12 @@ function DynamicChartPreview({ chart, chartProps, setChartProps }) {
           height: "45rem",
         }}
       >
+        <Box>
+          <h3>Data Endpoint</h3>
+          <Box mb="sm">
+            <DynamicSelectFields />
+          </Box>
+        </Box>
         <Box>
           <h3>Chart Config</h3>
           {Object.keys(selectedChart.props).map((propName) => {
@@ -1468,9 +1520,7 @@ export default function Analytics() {
         if (chartProps[id])
           return <AnalyticsChart {...chartProps[id]} {...commonChartData} />;
 
-        return (
-          <CustomChart chartID={id}/>
-        );
+        return <CustomChart chartID={id} />;
     }
   };
 
