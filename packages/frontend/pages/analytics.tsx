@@ -5,7 +5,7 @@ import TopUsersCard from "@/components/analytics/TopUsers";
 import CheckPicker from "@/components/checks/Picker";
 import Empty from "@/components/layout/Empty";
 import DynamicChart from "@/components/analytics/Charts/DynamicChart";
-import { useProject } from "@/utils/dataHooks";
+import { useProject, useProjectSWR } from "@/utils/dataHooks";
 import {
   useAnalyticsChartData,
   useTopModels,
@@ -1026,16 +1026,13 @@ function ChartSelector({
   );
 }
 
-function DynamicSelectFields() {
-  const [first, setFirst] = useState("runs");
+function DynamicSelectFields({ first }) {
   const [second, setSecond] = useState<string | null>(null);
-
-  const firstOptions = ["runs", "users", "models", "templates"];
-
+  const [third, setThird] = useState<string | null>(null);
   const secondOptions = useMemo(() => {
     switch (first) {
       case "runs":
-        return ["id", "name", "tags", "metadata"];
+        return ["id", "name", "type", "tags", "metadata", "cost", "feedback"];
       case "users":
         return ["name", "userProps"];
       case "templates":
@@ -1047,16 +1044,25 @@ function DynamicSelectFields() {
     }
   }, [first]);
 
+  const { data, isLoading } = useProjectSWR((...args: any[]) => {
+    switch (second) {
+      case "metadata":
+        return "/filters/metadata" as string;
+      default: return ""
+    }
+  });
+
+  const thirdOptions = useMemo(() => {
+    switch (second) {
+      case "feedback":
+        return ["positive", "negative"];
+      default:
+        return null;
+    }
+  }, [second]);
+
   return (
     <Grid>
-      <Grid.Col>
-        <Select
-          defaultValue={first}
-          data={firstOptions}
-          onChange={(value) => value && setFirst(value)}
-        />
-      </Grid.Col>
-
       <Grid.Col>
         {secondOptions?.length && (
           <Select
@@ -1066,8 +1072,42 @@ function DynamicSelectFields() {
           />
         )}
       </Grid.Col>
+
+      <Grid.Col>
+        {thirdOptions?.length && (
+          <Select
+            defaultValue={third}
+            data={thirdOptions}
+            onChange={(value) => setThird(value)}
+          />
+        )}
+      </Grid.Col>
     </Grid>
   );
+}
+
+function DynamicSelect() {
+  const [first, setFirst] = useState("runs");
+  const firstOptions = ["runs", "users", "models", "templates"];
+
+  return (
+    <Group>
+      <Box>
+        <h3>Data Source</h3>
+        <Select
+          defaultValue={first}
+          data={firstOptions}
+          onChange={(value) => value && setFirst(value)}
+        />
+      </Box>
+      <Box>
+        <h5>Y Axis</h5>
+        <DynamicSelectFields first={first} />
+        <h5>X Axis</h5>
+        <DynamicSelectFields first={first} />
+      </Box>
+    </Group>
+  )
 }
 
 function DynamicChartPreview({ chart, chartProps, setChartProps }) {
@@ -1197,11 +1237,8 @@ function DynamicChartPreview({ chart, chartProps, setChartProps }) {
           height: "45rem",
         }}
       >
-        <Box>
-          <h3>Data Endpoint</h3>
-          <Box mb="sm">
-            <DynamicSelectFields />
-          </Box>
+        <Box mb="sm">
+          <DynamicSelect />
         </Box>
         <Box>
           <h3>Chart Config</h3>
