@@ -20,6 +20,7 @@ import {
   Button,
   Card,
   CloseButton,
+  Flex,
   Group,
   Input,
   JsonInput,
@@ -264,13 +265,21 @@ const CHARTS = [
   {
     name: "BarChart",
     props: { ...BASE_CHART_PROPS },
-    component({ dataKey, ...props }) {
+    component({ data, dataKey, ...props }) {
+      const { data: chartData, isLoading } = useProjectSWR(() => {
+        if (data.source === "runs") {
+          return ""
+        } else {
+          return null;
+        }
+      })
+      console.log(data);
       return (
         <MantineBarChart
           h={300}
           dataKey={dataKey}
           series={CHART_SERIES}
-          data={CHART_DATA}
+          data={chartData}
           {...props}
         />
       );
@@ -994,7 +1003,7 @@ function ChartSelector({
                 {charts?.map((chart, index) => (
                   <SelectableCustomChart
                     index={index}
-                    chart={chart}
+                    chart={chart} key={index}
                     chartsState={chartsState}
                     toggleChart={toggleChart}
                   />
@@ -1026,9 +1035,10 @@ function ChartSelector({
   );
 }
 
-function DynamicSelectFields({ first }) {
-  const [second, setSecond] = useState<string | null>(null);
-  const [third, setThird] = useState<string | null>(null);
+function DynamicSelectFields({ first, value, onChange }) {
+  const [color, setColor] = useState<string | null>(value?.color || null);
+  const [second, setSecond] = useState<string | null>(value?.second || null);
+  const [third, setThird] = useState<string | null>(value?.third || null);
   const secondOptions = useMemo(() => {
     switch (first) {
       case "runs":
@@ -1044,51 +1054,90 @@ function DynamicSelectFields({ first }) {
     }
   }, [first]);
 
-  const { data, isLoading } = useProjectSWR((...args: any[]) => {
+  const { data, isLoading } = useProjectSWR(() => {
     switch (second) {
       case "metadata":
-        return "/filters/metadata" as string;
-      default: return ""
+        return "/filters/metadata";
+      default:
+        return null
     }
   });
 
   const thirdOptions = useMemo(() => {
     switch (second) {
       case "feedback":
-        return ["positive", "negative"];
+        return [];
+      case "metadata":
+        return data;
       default:
         return null;
     }
-  }, [second]);
+  }, [second, data]);
+
+  useEffect(() => {
+    onChange({ second, third, color });
+  }, [first, second, third])
 
   return (
-    <Grid>
-      <Grid.Col>
-        {secondOptions?.length && (
-          <Select
-            defaultValue={second}
-            data={secondOptions}
-            onChange={(value) => setSecond(value)}
-          />
-        )}
-      </Grid.Col>
-
-      <Grid.Col>
-        {thirdOptions?.length && (
-          <Select
-            defaultValue={third}
-            data={thirdOptions}
-            onChange={(value) => setThird(value)}
-          />
-        )}
-      </Grid.Col>
-    </Grid>
+    <Flex gap="sm">
+      {secondOptions?.length && (
+        <Select
+          defaultValue={second}
+          data={secondOptions}
+          onChange={(value) => setSecond(value)}
+        />
+      )}
+      {thirdOptions?.length && (
+        <Select
+          defaultValue={third}
+          data={thirdOptions}
+          onChange={(value) => setThird(value)}
+        />
+      )}
+      {secondOptions?.length && (
+        <ColorSelector color={color} setColor={setColor} />
+      )}
+    </Flex>
   );
 }
 
-function DynamicSelect() {
-  const [first, setFirst] = useState("runs");
+function ColorSelector({ color, setColor }) {
+  const colors = [
+    { value: "red", label: "Red" },
+    { value: "orange", label: "Orange" },
+    { value: "yellow", label: "Yellow" },
+    { value: "green", label: "Green" },
+    { value: "blue", label: "Blue" },
+    { value: "indigo", label: "Indigo" },
+    { value: "violet", label: "Violet" },
+  ];
+
+  return (
+    <Select
+      data={colors} value={color}
+      onChange={(value) => setColor(value)}
+    />
+  );
+}
+
+function DynamicSelect({ data, setChartData }) {
+  const [first, setFirst] = useState(data.source || "runs");
   const firstOptions = ["runs", "users", "models", "templates"];
+
+  const onChange = (index, { second, third }) => {
+    if (!second) return;
+
+    const newData = { ...data };
+
+    if (!newData.series) {
+      newData.series = [];
+    }
+
+    newData.series[index] = { second, third };
+
+    console.log(newData);
+    setChartData(newData);
+  }
 
   return (
     <Group>
@@ -1097,20 +1146,39 @@ function DynamicSelect() {
         <Select
           defaultValue={first}
           data={firstOptions}
-          onChange={(value) => value && setFirst(value)}
+          onChange={(value) => {
+            if (value) {
+              setChartData({ ...data, source: value });
+              setFirst(value);
+            }
+          }}
         />
       </Box>
       <Box>
-        <h5>Y Axis</h5>
-        <DynamicSelectFields first={first} />
-        <h5>X Axis</h5>
-        <DynamicSelectFields first={first} />
+        <h5>First Series</h5>
+        <DynamicSelectFields
+          first={first}
+          onChange={value => onChange(0, value)}
+          value={data.series ? data.series[0] : null}
+        />
+        <h5>Second Series</h5>
+        <DynamicSelectFields
+          first={first}
+          onChange={value => onChange(1, value)}
+          value={data.series ? data.series[1] : null}
+        />
+        <h5>Third Series</h5>
+        <DynamicSelectFields
+          first={first}
+          onChange={value => onChange(2, value)}
+          value={data.series ? data.series[2] : null}
+        />
       </Box>
     </Group>
   )
 }
 
-function DynamicChartPreview({ chart, chartProps, setChartProps }) {
+function DynamicChartPreview({ chart, props, setProps, data, setData }) {
   const selectedChart = useMemo(
     () => CHARTS.find((item) => item.name === chart),
     [chart],
@@ -1124,7 +1192,7 @@ function DynamicChartPreview({ chart, chartProps, setChartProps }) {
     );
 
   const handlePropChange = (propName, value) => {
-    setChartProps((prevProps) => ({
+    setProps((prevProps) => ({
       ...prevProps,
       [propName]: value,
     }));
@@ -1226,7 +1294,7 @@ function DynamicChartPreview({ chart, chartProps, setChartProps }) {
       <Grid.Col span={{ sm: 12, md: 6 }}>
         <Box>
           <h3>{selectedChart.name} Preview</h3>
-          <selectedChart.component {...chartProps} />
+          <selectedChart.component data={data} {...props} />
         </Box>
       </Grid.Col>
 
@@ -1238,7 +1306,7 @@ function DynamicChartPreview({ chart, chartProps, setChartProps }) {
         }}
       >
         <Box mb="sm">
-          <DynamicSelect />
+          <DynamicSelect data={data} setChartData={setData} />
         </Box>
         <Box>
           <h3>Chart Config</h3>
@@ -1248,7 +1316,7 @@ function DynamicChartPreview({ chart, chartProps, setChartProps }) {
                 {renderPropInput(
                   selectedChart.props[propName],
                   propName,
-                  chartProps[propName],
+                  props[propName],
                   handlePropChange,
                 )}
               </Box>
@@ -1263,6 +1331,7 @@ function DynamicChartPreview({ chart, chartProps, setChartProps }) {
 function CustomChartWizard({ onConfirm }) {
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
+  const [chartData, setChartData] = useState({});
   const [chartProps, setChartProps] = useState({});
   const [chart, setChart] = useState(CHARTS[0].name);
   const [active, setActive] = useState(0);
@@ -1296,8 +1365,10 @@ function CustomChartWizard({ onConfirm }) {
           />
           <DynamicChartPreview
             chart={chart}
-            chartProps={chartProps}
-            setChartProps={setChartProps}
+            data={chartData}
+            props={chartProps}
+            setData={setChartData}
+            setProps={setChartProps}
           />
         </Stepper.Step>
         <Stepper.Completed>
@@ -1483,11 +1554,11 @@ export default function Analytics() {
     },
   };
 
-  const [editMode, setEditMode] = useState(false);
+  const [editMode, setEditMode] = useState(true);
   const [
     chartSelectedOpened,
     { open: openChartSelector, close: closeChartSelector },
-  ] = useDisclosure(false);
+  ] = useDisclosure(true);
   const [saveAsOpened, { open: openSaveAs, close: closeSaveAs }] =
     useDisclosure(false);
   const [confirmOpened, { open: openConfirm, close: closeConfirm }] =
@@ -1802,6 +1873,66 @@ export default function Analytics() {
               type={DND_TYPES.EXTRAS}
             >
               {getChartComponent(chartsState.extras[0])}
+            </Draggable>
+          </Droppable>
+
+          <Droppable
+            onDrop={(item) =>
+              handleDropChart(item, "extras", chartsState.extras[0])
+            }
+            editMode={editMode}
+            type={DND_TYPES.EXTRAS}
+          >
+            <Draggable
+              id={chartsState.extras[0]}
+              editMode={editMode}
+              type={DND_TYPES.EXTRAS}
+            >
+              <MantineBarChart
+                h={300}
+                series={[
+                  // { name: "totalTokens", color: "indigo.6" },
+                  { name: "promptTokens", color: "blue.6" },
+                  { name: "completionTokens", color: "teal.6" },
+                ]}
+                dataKey="cost"
+                data={[
+                  {
+                    "name": "claude-3-opus-20240229",
+                    "promptTokens": 60993,
+                    "completionTokens": 13375,
+                    "totalTokens": 74368,
+                    "cost": 1.9180200000000016
+                  },
+                  {
+                    "name": "gpt-3.5-turbo",
+                    "promptTokens": 7646,
+                    "completionTokens": 3218,
+                    "totalTokens": 10864,
+                    "cost": 0.00864
+                  },
+                  {
+                    "name": "claude-3-haiku-20240307",
+                    "promptTokens": 7600,
+                    "completionTokens": 1645,
+                    "totalTokens": 9245,
+                    "cost": 0.0039562500000000006
+                  },
+                  {
+                    "name": "gpt-4-turbo",
+                    "promptTokens": 2300,
+                    "completionTokens": 1153,
+                    "totalTokens": 3453,
+                    "cost": 0.05758999999999999
+                  },
+                  {
+                    "name": "claude-3-5-sonnet-20240620",
+                    "promptTokens": 34,
+                    "completionTokens": 113,
+                    "totalTokens": 147,
+                    "cost": 0.001797
+                  }
+                ]} />
             </Draggable>
           </Droppable>
 

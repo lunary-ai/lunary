@@ -10,7 +10,7 @@ import { useComputedColorScheme } from "@mantine/core";
 import { useAuth } from "../auth";
 import { fetcher } from "../fetcher";
 
-type KeyType = string | ((...args: any[]) => string) | undefined | null;
+type KeyType = string | ((...args: any[]) => string | null) | undefined | null;
 
 function generateKey(
   baseKey: KeyType | undefined,
