@@ -5,7 +5,7 @@ import TopUsersCard from "@/components/analytics/TopUsers";
 import CheckPicker from "@/components/checks/Picker";
 import Empty from "@/components/layout/Empty";
 import DynamicChart from "@/components/analytics/Charts/DynamicChart";
-import { useProject, useProjectSWR } from "@/utils/dataHooks";
+import { useProject, useProjectSWR, useTemplates } from "@/utils/dataHooks";
 import {
   useAnalyticsChartData,
   useTopModels,
@@ -20,6 +20,7 @@ import {
   Button,
   Card,
   CloseButton,
+  ColorPicker,
   Flex,
   Group,
   Input,
@@ -85,6 +86,7 @@ import Sentiment from "@/components/analytics/Charts/Sentiment";
 import { Grid, TextInput, NumberInput, Checkbox } from "@mantine/core";
 import { useChart, useCharts } from "@/utils/dataHooks/charts";
 import ErrorBoundary from "@/components/blocks/ErrorBoundary";
+import ImageMultiSelect from "@/components/blocks/ImageSelectField";
 
 // Example chart components (replace these with your actual chart components)
 const DemoLineChart = ({ stroke, strokeWidth, interpolation, dot, grid }) => (
@@ -265,21 +267,12 @@ const CHARTS = [
   {
     name: "BarChart",
     props: { ...BASE_CHART_PROPS },
-    component({ data, dataKey, ...props }) {
-      const { data: chartData, isLoading } = useProjectSWR(() => {
-        if (data.source === "runs") {
-          return ""
-        } else {
-          return null;
-        }
-      })
-      console.log(data);
+    component({ data, props, series }) {
       return (
         <MantineBarChart
           h={300}
-          dataKey={dataKey}
-          series={CHART_SERIES}
-          data={chartData}
+          series={series}
+          data={data}
           {...props}
         />
       );
@@ -304,13 +297,12 @@ const CHARTS = [
       ...BASE_CHART_PROPS,
       connectNulls: { type: "boolean" },
     },
-    component({ dataKey, ...props }) {
+    component({ props, data, series }) {
       return (
         <MantineLineChart
           h={300}
-          data={CHART_DATA}
-          dataKey={dataKey}
-          series={CHART_SERIES}
+          data={data}
+          series={series}
           {...props}
         />
       );
@@ -319,13 +311,12 @@ const CHARTS = [
   {
     name: "AreaChart",
     props: { ...BASE_CHART_PROPS, connectNulls: { type: "boolean" } },
-    component({ dataKey, ...props }) {
+    component({ props, data, series }) {
       return (
         <MantineAreaChart
           h={300}
-          data={CHART_DATA}
-          dataKey={dataKey}
-          series={CHART_SERIES}
+          data={data}
+          series={series}
           {...props}
         />
       );
@@ -334,13 +325,12 @@ const CHARTS = [
   {
     name: "RadarChart",
     props: { ...BASE_CHART_PROPS },
-    component({ dataKey, ...props }) {
+    component({ props, data, series }) {
       return (
         <MantineRadarChart
           h={300}
-          data={CHART_DATA}
-          dataKey={dataKey}
-          series={CHART_SERIES}
+          data={data}
+          series={series}
           {...props}
         />
       );
@@ -349,7 +339,7 @@ const CHARTS = [
   {
     name: "PieChart",
     props: { ...BASE_CHART_PROPS },
-    component({ dataKey, ...props }) {
+    component({ props }) {
       const data: any = [];
       for (const serie of CHART_SERIES) {
         data.push({ ...serie, value: CHART_DATA[0][serie.name] });
@@ -360,7 +350,7 @@ const CHARTS = [
   {
     name: "DonutChart",
     props: { ...BASE_CHART_PROPS },
-    component({ dataKey, ...props }) {
+    component({ props }) {
       const data: any = [];
       for (const serie of CHART_SERIES) {
         data.push({ ...serie, value: CHART_DATA[0][serie.name] });
@@ -874,6 +864,38 @@ function SaveAsModal({ opened, close, title, onConfirm }) {
 
 function SelectableCustomChart({ index, chart, chartsState, toggleChart }) {
   const { chart: item, remove } = useChart(chart.id, chart);
+  const { name, data, props } = (item?.config || {});
+
+  const [dateRange, setDateRange] = useSessionStorage({
+    key: "dateRange-analytics",
+    getInitialValueInEffect: false,
+    deserialize: deserializeDateRange,
+    defaultValue: getDefaultDateRange(),
+  });
+
+  const [startDate, endDate] = dateRange;
+
+  const chartData = (() => {
+    if (!data.source || data.source === "runs") {
+      return useTopModels({ startDate, endDate });
+    } else if (data.source === "templates") {
+      return useTopTemplates(startDate, endDate);
+    } else if (data.source === "users") {
+      // TODO: FIX!!
+      return useExternalUsers({ startDate, endDate });
+    } else {
+      return useProjectSWR(() => null)
+    }
+  })();
+
+  const series = data.series.map(serie => {
+    if (!serie.field) return null;
+    return {
+      name: serie.field,
+      color: serie.color
+    }
+  }).filter(Boolean);
+
   return (
     <Selectable
       key={index}
@@ -888,7 +910,12 @@ function SelectableCustomChart({ index, chart, chartsState, toggleChart }) {
       isSelected={chartsState.extras.includes(item.id)}
       onSelect={() => toggleChart(item.id, "extras")}
     >
-      {CHARTS.find((c) => item.type === c.name)?.component(item.config.props)}
+      {CHARTS.find((c) => name === c.name)?.component({
+        data: ("data" in chartData
+          ? chartData.data
+          : chartData.users
+          || []), props, series
+      })}
     </Selectable>
   );
 }
@@ -906,14 +933,45 @@ function CustomChart({ chartID }) {
     return null;
   }
 
-  const { chart: data } = useChart(chartID);
-  const chart = CHARTS.find((c) => data.type === c.name);
+  const { chart: item } = useChart(chartID);
+  const chart = CHARTS.find((c) => item.config.name === c.name);
 
   if (!chart) return null;
 
+  const { name, data, props } = (item?.config || {});
+  const [dateRange, setDateRange] = useSessionStorage({
+    key: "dateRange-analytics",
+    getInitialValueInEffect: false,
+    deserialize: deserializeDateRange,
+    defaultValue: getDefaultDateRange(),
+  });
+
+  const [startDate, endDate] = dateRange;
+
+  const chartData = (() => {
+    if (!data.source || data.source === "runs") {
+      return useTopModels({ startDate, endDate });
+    } else if (data.source === "templates") {
+      return useTopTemplates(startDate, endDate);
+    } else if (data.source === "users") {
+      // TODO: FIX!!
+      return useExternalUsers({ startDate, endDate });
+    } else {
+      return useProjectSWR(() => null)
+    }
+  })();
+
+  const series = data.series.map(serie => {
+    if (!serie.field) return null;
+    return {
+      name: serie.field,
+      color: serie.color
+    }
+  }).filter(Boolean);
+
   return (
     <Box ref={ref}>
-      <ErrorBoundary>{chart.component(data.config.props)}</ErrorBoundary>
+      <ErrorBoundary>{chart.component({ data: chartData, props, series })}</ErrorBoundary>
     </Box>
   );
 }
@@ -1013,19 +1071,10 @@ function ChartSelector({
           </Tabs.Panel>
           <Tabs.Panel value="wizard" p="md">
             <CustomChartWizard
-              onConfirm={({ name, chart, chartProps }) => {
-                console.log(name, chart, chartProps);
-                return insertChart({
-                  name,
-                  type: chart,
-                  config: {
-                    props: chartProps,
-                    data: {
-                      entrypoint: "users",
-                      filters: "",
-                    },
-                  },
-                }).then(() => setActiveTab("charts"));
+              onConfirm={({ name, chartConfig }) => {
+                console.log(name, chartConfig);
+                return insertChart(chartConfig)
+                  .then(() => setActiveTab("charts"));
               }}
             />
           </Tabs.Panel>
@@ -1036,17 +1085,18 @@ function ChartSelector({
 }
 
 function DynamicSelectFields({ first, value, onChange }) {
-  const [color, setColor] = useState<string | null>(value?.color || null);
-  const [second, setSecond] = useState<string | null>(value?.second || null);
-  const [third, setThird] = useState<string | null>(value?.third || null);
-  const secondOptions = useMemo(() => {
+  const [color, setColor] = useState<string | undefined>(value?.color);
+  const [field, setField] = useState<string | null>(value?.field || null);
+  const [subField, setSubField] = useState<string | null>(value?.subField || null);
+  const fieldOptions = useMemo(() => {
     switch (first) {
       case "runs":
-        return ["id", "name", "type", "tags", "metadata", "cost", "feedback"];
+        return ["name", "cost", "promptTokens", "completionTokens", "totalTokens"];
+      // return ["id", "name", "type", "tags", "metadata", "cost", "feedback"];
       case "users":
-        return ["name", "userProps"];
+        return ['id', 'createdAt', 'externalId', 'lastSeen', 'props', 'cost'];
       case "templates":
-        return [];
+        return ["name", "cost", "promptTokens", "completionTokens", "totalTokens"];
       case "models":
         return [];
       default:
@@ -1055,7 +1105,7 @@ function DynamicSelectFields({ first, value, onChange }) {
   }, [first]);
 
   const { data, isLoading } = useProjectSWR(() => {
-    switch (second) {
+    switch (field) {
       case "metadata":
         return "/filters/metadata";
       default:
@@ -1063,8 +1113,8 @@ function DynamicSelectFields({ first, value, onChange }) {
     }
   });
 
-  const thirdOptions = useMemo(() => {
-    switch (second) {
+  const subFieldOptions = useMemo(() => {
+    switch (field) {
       case "feedback":
         return [];
       case "metadata":
@@ -1072,30 +1122,31 @@ function DynamicSelectFields({ first, value, onChange }) {
       default:
         return null;
     }
-  }, [second, data]);
+  }, [field, data]);
 
   useEffect(() => {
-    onChange({ second, third, color });
-  }, [first, second, third])
+    onChange({ field, subField, color });
+  }, [field, subField, color])
 
   return (
     <Flex gap="sm">
-      {secondOptions?.length && (
+      {fieldOptions?.length && (
         <Select
-          defaultValue={second}
-          data={secondOptions}
-          onChange={(value) => setSecond(value)}
+          defaultValue={field}
+          data={fieldOptions}
+          onChange={(value) => setField(value)}
         />
       )}
-      {thirdOptions?.length && (
+      {subFieldOptions?.length && (
         <Select
-          defaultValue={third}
-          data={thirdOptions}
-          onChange={(value) => setThird(value)}
+          defaultValue={subField}
+          data={subFieldOptions}
+          onChange={(value) => setSubField(value)}
         />
       )}
-      {secondOptions?.length && (
-        <ColorSelector color={color} setColor={setColor} />
+      {fieldOptions?.length && (
+        <ColorPicker value={color} onChange={setColor} size="xs" />
+        // <ColorSelector color={color} setColor={setColor} />
       )}
     </Flex>
   );
@@ -1120,23 +1171,16 @@ function ColorSelector({ color, setColor }) {
   );
 }
 
-function DynamicSelect({ data, setChartData }) {
-  const [first, setFirst] = useState(data.source || "runs");
+function DynamicSelect({ config, setConfig }) {
+  const [first, setFirst] = useState(config.data.source || "runs");
   const firstOptions = ["runs", "users", "models", "templates"];
 
-  const onChange = (index, { second, third }) => {
-    if (!second) return;
-
-    const newData = { ...data };
-
-    if (!newData.series) {
-      newData.series = [];
-    }
-
-    newData.series[index] = { second, third };
-
-    console.log(newData);
-    setChartData(newData);
+  const onChange = (index, value) => {
+    setConfig((config) => {
+      const newConfig = { ...config };
+      newConfig.data.series[index] = value;
+      return newConfig;
+    });
   }
 
   return (
@@ -1147,10 +1191,13 @@ function DynamicSelect({ data, setChartData }) {
           defaultValue={first}
           data={firstOptions}
           onChange={(value) => {
-            if (value) {
-              setChartData({ ...data, source: value });
-              setFirst(value);
-            }
+            setFirst(value);
+            setConfig((config) => ({
+              ...config, data: {
+                ...config.data,
+                source: value
+              }
+            }));
           }}
         />
       </Box>
@@ -1159,42 +1206,44 @@ function DynamicSelect({ data, setChartData }) {
         <DynamicSelectFields
           first={first}
           onChange={value => onChange(0, value)}
-          value={data.series ? data.series[0] : null}
+          value={config.data.series ? config.data.series[0] : null}
         />
         <h5>Second Series</h5>
         <DynamicSelectFields
           first={first}
           onChange={value => onChange(1, value)}
-          value={data.series ? data.series[1] : null}
+          value={config.data.series ? config.data.series[1] : null}
         />
         <h5>Third Series</h5>
         <DynamicSelectFields
           first={first}
           onChange={value => onChange(2, value)}
-          value={data.series ? data.series[2] : null}
+          value={config.data.series ? config.data.series[2] : null}
         />
       </Box>
     </Group>
   )
 }
 
-function DynamicChartPreview({ chart, props, setProps, data, setData }) {
+function DynamicChartPreview({ chartConfig, setChartConfig }) {
   const selectedChart = useMemo(
-    () => CHARTS.find((item) => item.name === chart),
-    [chart],
+    () => CHARTS.find((item) => item.name === chartConfig.name),
+    [chartConfig],
   );
 
   if (!selectedChart)
     return (
       <Text>
-        No chart found with name: <code>{chart}</code>
+        No chart found with name: <code>{chartConfig.name}</code>
       </Text>
     );
 
   const handlePropChange = (propName, value) => {
-    setProps((prevProps) => ({
-      ...prevProps,
-      [propName]: value,
+    setChartConfig((config) => ({
+      ...config, props: {
+        ...config.props,
+        [propName]: value
+      }
     }));
   };
 
@@ -1289,12 +1338,48 @@ function DynamicChartPreview({ chart, props, setProps, data, setData }) {
     }
   };
 
+  const [dateRange, setDateRange] = useSessionStorage({
+    key: "dateRange-analytics",
+    getInitialValueInEffect: false,
+    deserialize: deserializeDateRange,
+    defaultValue: getDefaultDateRange(),
+  });
+
+  const [startDate, endDate] = dateRange;
+
+  const { data, props, series } = useMemo(() => {
+    const { name, data, props } = chartConfig;
+
+    const chartData = (() => {
+      if (!data.source || data.source === "runs") {
+        return useTopModels({ startDate, endDate });
+      } else if (data.source === "templates") {
+        return useTopTemplates(startDate, endDate);
+      } else if (data.source === "users") {
+        // TODO: FIX!!
+        return useExternalUsers({ startDate, endDate });
+      } else {
+        return useProjectSWR(() => null)
+      }
+    })();
+
+    const series = data.series.map(serie => {
+      if (!serie.field) return null;
+      return {
+        name: serie.field,
+        color: serie.color
+      }
+    }).filter(Boolean);
+
+    return { data: chartData, props, series }
+  }, [chartConfig])
+
   return (
     <Grid pt="sm">
       <Grid.Col span={{ sm: 12, md: 6 }}>
         <Box>
           <h3>{selectedChart.name} Preview</h3>
-          <selectedChart.component data={data} {...props} />
+          <selectedChart.component props={props} series={series} data={data} />
         </Box>
       </Grid.Col>
 
@@ -1306,7 +1391,7 @@ function DynamicChartPreview({ chart, props, setProps, data, setData }) {
         }}
       >
         <Box mb="sm">
-          <DynamicSelect data={data} setChartData={setData} />
+          <DynamicSelect config={chartConfig} setConfig={setChartConfig} />
         </Box>
         <Box>
           <h3>Chart Config</h3>
@@ -1315,8 +1400,7 @@ function DynamicChartPreview({ chart, props, setProps, data, setData }) {
               <Box key={propName} mb="sm">
                 {renderPropInput(
                   selectedChart.props[propName],
-                  propName,
-                  props[propName],
+                  propName, chartConfig.props[propName],
                   handlePropChange,
                 )}
               </Box>
@@ -1331,9 +1415,10 @@ function DynamicChartPreview({ chart, props, setProps, data, setData }) {
 function CustomChartWizard({ onConfirm }) {
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
-  const [chartData, setChartData] = useState({});
-  const [chartProps, setChartProps] = useState({});
-  const [chart, setChart] = useState(CHARTS[0].name);
+  const [chartConfig, setChartConfig] = useState({
+    name: CHARTS[0].name, props: {},
+    data: { source: null, series: [] },
+  });
   const [active, setActive] = useState(0);
 
   const nextStep = () =>
@@ -1349,8 +1434,8 @@ function CustomChartWizard({ onConfirm }) {
         <Stepper.Step label="First step" description="Chart Type">
           <Select
             label="Select Chart"
-            value={chart}
-            onChange={(name) => name && setChart(name)}
+            value={chartConfig.name}
+            onChange={(name) => name && setChartConfig((config) => ({ ...config, name }))}
             data={CHARTS.map((chart) => chart.name)}
           />
         </Stepper.Step>
@@ -1364,11 +1449,8 @@ function CustomChartWizard({ onConfirm }) {
             placeholder="My Custom Chart"
           />
           <DynamicChartPreview
-            chart={chart}
-            data={chartData}
-            props={chartProps}
-            setData={setChartData}
-            setProps={setChartProps}
+            chartConfig={chartConfig}
+            setChartConfig={setChartConfig}
           />
         </Stepper.Step>
         <Stepper.Completed>
@@ -1385,11 +1467,8 @@ function CustomChartWizard({ onConfirm }) {
             onClick={() => {
               nextStep();
               setSaving(true);
-              onConfirm({
-                name,
-                chart,
-                chartProps,
-              }).then(() => setSaving(false));
+              onConfirm({ name, config: chartConfig })
+                .then(() => setSaving(false));
             }}
           >
             Finish
