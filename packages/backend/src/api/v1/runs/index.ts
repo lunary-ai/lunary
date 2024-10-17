@@ -108,23 +108,23 @@ const runs = new Router({
 });
 
 interface Query {
-  type?: "llm" | "trace" | "thread"
-  search?: string
-  models?: string[]
-  tags?: string[]
-  tokens?: string
-  exportType?: "trace" | "thread"
-  exportFormat?: "csv" | "ojsonl" | "jsonl"
-  minDuration?: string
-  maxDuration?: string
-  startTime?: string
-  endTime?: string
-  parentRunId?: string
-  limit?: string
-  page?: string
-  order?: string
-  sortField?: string
-  sortDirection?: string
+  type?: "llm" | "trace" | "thread";
+  search?: string;
+  models?: string[];
+  tags?: string[];
+  tokens?: string;
+  exportType?: "trace" | "thread";
+  exportFormat?: "csv" | "ojsonl" | "jsonl";
+  minDuration?: string;
+  maxDuration?: string;
+  startTime?: string;
+  endTime?: string;
+  parentRunId?: string;
+  limit?: string;
+  page?: string;
+  order?: string;
+  sortField?: string;
+  sortDirection?: string;
 }
 
 function processInput(input: unknown) {
@@ -550,10 +550,7 @@ runs.get("/", async (ctx: Context) => {
   const runs = rows.map(formatRun);
 
   if (exportFormat) {
-    return fileExport(
-      { ctx, sql, runs, projectId },
-      exportFormat, exportType,
-    )
+    return fileExport({ ctx, sql, runs, projectId }, exportFormat, exportType);
   }
 
   const total = await sql`
