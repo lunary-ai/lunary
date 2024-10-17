@@ -613,7 +613,7 @@ runs.get("/count", async (ctx: Context) => {
    with runs as (
       select distinct on (r.id)
         r.*,
-        eu.id as user_id,2
+        eu.id as user_id,
         eu.external_id as user_external_id,
         eu.created_at as user_created_at,
         eu.last_seen as user_last_seen,
