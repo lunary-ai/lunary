@@ -105,7 +105,7 @@ export const defaultColumns = {
     nameColumn("Agent"),
     durationColumn(),
     userColumn(),
-    feedbackColumn(true),
+    feedbackColumn(false),
     tagsColumn(),
     inputColumn("Input"),
     outputColumn(),
@@ -115,7 +115,7 @@ export const defaultColumns = {
     userColumn(),
     inputColumn("Last Message"),
     tagsColumn(),
-    feedbackColumn(true),
+    feedbackColumn(false),
   ],
 };
 
@@ -141,7 +141,7 @@ export const CHECKS_BY_TYPE = {
     "tags",
     "users",
     "status",
-    // "feedback",
+    "feedback",
     "duration",
     "metadata",
   ],
@@ -149,7 +149,7 @@ export const CHECKS_BY_TYPE = {
     "date",
     "tags",
     "users",
-    // "feedback",
+    "feedback",
     "metadata",
   ],
 };
@@ -455,9 +455,9 @@ export default function Logs() {
                   </Menu.Target>
                   <Menu.Dropdown>
                     <Menu.Item
-                      disabled={type === "thread"}
+                      // disabled={type === "thread"}
                       leftSection={<IconFileExport size={16} />}
-                      {...exportButton(exportUrl + "&exportType=csv")}
+                      {...exportButton(exportUrl + `&exportType=${type}&exportFormat=csv`)}
                     >
                       Export to CSV
                     </Menu.Item>
@@ -465,9 +465,8 @@ export default function Logs() {
                     {type === "llm" && (
                       <Menu.Item
                         color="dimmed"
-                        disabled={type === "thread"}
                         leftSection={<IconBrandOpenai size={16} />}
-                        {...exportButton(exportUrl + "&exportType=ojsonl")}
+                        {...exportButton(exportUrl + "&exportFormat=ojsonl")}
                       >
                         Export to OpenAI JSONL
                       </Menu.Item>
@@ -475,9 +474,9 @@ export default function Logs() {
 
                     <Menu.Item
                       color="dimmed"
-                      disabled={type === "thread"}
+                      // disabled={type === "thread"}
                       leftSection={<IconBraces size={16} />}
-                      {...exportButton(exportUrl + "&exportType=jsonl")}
+                      {...exportButton(exportUrl + `&exportType=${type}&exportFormat=jsonl`)}
                     >
                       Export to raw JSONL
                     </Menu.Item>
