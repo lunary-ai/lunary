@@ -1,7 +1,7 @@
-import { Text, ScrollArea, Group, Box } from "@mantine/core"
-import SmartViewer from "@/components/SmartViewer"
-import TokensBadge from "../blocks/TokensBadge"
-import { PromptEditor } from "./PromptEditor"
+import { Text, ScrollArea, Group, Box } from "@mantine/core";
+import SmartViewer from "@/components/SmartViewer";
+import TokensBadge from "../blocks/TokensBadge";
+import { PromptEditor } from "./PromptEditor";
 
 function TemplateInputArea({
   template,
@@ -12,19 +12,19 @@ function TemplateInputArea({
   outputTokens,
   error,
 }: {
-  template: any
-  setTemplate: (template: any) => void
-  saveTemplate: () => void
-  setHasChanges: (hasChanges: boolean) => void
-  output: any
-  outputTokens: number
-  error: any
+  template: any;
+  setTemplate: (template: any) => void;
+  saveTemplate: () => void;
+  setHasChanges: (hasChanges: boolean) => void;
+  output: any;
+  outputTokens: number;
+  error: any;
 }) {
-  const isText = typeof template?.content === "string"
+  const isText = typeof template?.content === "string";
   const handleContentChange = (newContent: any) => {
-    setTemplate({ ...template, content: newContent })
-    setHasChanges(true)
-  }
+    setTemplate({ ...template, content: newContent });
+    setHasChanges(true);
+  };
 
   return (
     <Box h="100%">
@@ -45,7 +45,7 @@ function TemplateInputArea({
         </>
       )}
     </Box>
-  )
+  );
 }
 
-export default TemplateInputArea
+export default TemplateInputArea;

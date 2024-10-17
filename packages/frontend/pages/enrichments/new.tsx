@@ -1,9 +1,9 @@
-import CheckPicker, { RenderCheckNode } from "@/components/checks/Picker"
-import { useLogCount, useUser } from "@/utils/dataHooks"
-import { useEvaluators } from "@/utils/dataHooks/evaluators"
-import EVALUATOR_TYPES from "@/utils/evaluators"
-import { slugify } from "@/utils/format"
-import { theme } from "@/utils/theme"
+import CheckPicker, { RenderCheckNode } from "@/components/checks/Picker";
+import { useLogCount, useUser } from "@/utils/dataHooks";
+import { useEnrichers } from "@/utils/dataHooks/evaluators";
+import EVALUATOR_TYPES from "@/utils/evaluators";
+import { slugify } from "@/utils/format";
+import { theme } from "@/utils/theme";
 import {
   Box,
   Button,
@@ -20,21 +20,21 @@ import {
   Title,
   Tooltip,
   UnstyledButton,
-} from "@mantine/core"
-import { notifications } from "@mantine/notifications"
-import { IconCircleCheck, IconCirclePlus, IconX } from "@tabler/icons-react"
-import { useRouter } from "next/router"
-import { useEffect, useState } from "react"
-import { CHECKS, CheckLogic, serializeLogic } from "shared"
+} from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { IconCircleCheck, IconCirclePlus, IconX } from "@tabler/icons-react";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import { CHECKS, CheckLogic, serializeLogic } from "shared";
 
 function EvaluatorCard({
   evaluator,
   isSelected,
   onItemClick,
 }: {
-  onItemClick: (type: string) => void
-  isSelected: boolean
-  evaluator: any
+  onItemClick: (type: string) => void;
+  isSelected: boolean;
+  evaluator: any;
 }) {
   return (
     <Card
@@ -78,38 +78,37 @@ function EvaluatorCard({
         </UnstyledButton>
       </Tooltip>
     </Card>
-  )
+  );
 }
 
-export default function NewRealtimeEvaluator() {
-  const router = useRouter()
+export default function NewEnrichment() {
+  const router = useRouter();
 
-  const { user } = useUser()
-  const { insert: insertEvaluator } = useEvaluators()
+  const { user } = useUser();
+  const { insert: insertEnricher } = useEnrichers();
 
-  const [name, setName] = useState<string>("")
-  const [type, setType] = useState<string>()
-  const [params, setParams] = useState<any>()
-  const [isBenchmark, setIsBenchmark] = useState<boolean>(false)
+  const [name, setName] = useState<string>("");
+  const [type, setType] = useState<string>();
+  const [params, setParams] = useState<any>();
   const [filters, setFilters] = useState<CheckLogic>([
     "OR",
     { id: "type", params: { type: "llm" } },
     { id: "type", params: { type: "chat" } },
-  ])
+  ]);
 
-  const serializedFilters = serializeLogic(filters)
+  const serializedFilters = serializeLogic(filters);
 
-  const { count: logCount } = useLogCount(serializedFilters)
+  const { count: logCount } = useLogCount(serializedFilters);
 
-  const evaluatorTypes = Object.values(EVALUATOR_TYPES)
+  const evaluatorTypes = Object.values(EVALUATOR_TYPES);
 
   const selectedEvaluator = evaluatorTypes.find(
     (evaluator) => evaluator.id === type,
-  )
+  );
 
-  const hasParams = Boolean(selectedEvaluator?.params?.length)
+  const hasParams = Boolean(selectedEvaluator?.params?.length);
 
-  const IconComponent = selectedEvaluator?.icon
+  const IconComponent = selectedEvaluator?.icon;
 
   useEffect(() => {
     if (selectedEvaluator) {
@@ -117,13 +116,13 @@ export default function NewRealtimeEvaluator() {
         id: selectedEvaluator.id,
         params: selectedEvaluator.params.reduce((acc, param) => {
           if (param.id) {
-            acc[param.id] = param.defaultValue
+            acc[param.id] = param.defaultValue;
           }
-          return acc
+          return acc;
         }, {}),
-      })
+      });
     }
-  }, [selectedEvaluator])
+  }, [selectedEvaluator]);
 
   async function createEvaluator() {
     // TODO: validation
@@ -135,10 +134,10 @@ export default function NewRealtimeEvaluator() {
         message: "Evaluator name required",
         color: "red",
         autoClose: 4000,
-      })
-      return
+      });
+      return;
     }
-    await insertEvaluator({
+    await insertEnricher({
       name,
       slug: slugify(name),
       mode: "realtime",
@@ -146,27 +145,27 @@ export default function NewRealtimeEvaluator() {
       type,
       filters,
       ownerId: user.id,
-    })
-    router.push("/evaluations/realtime")
+    });
+    router.push("/enrichments");
   }
 
   return (
     <Container>
       <Stack gap="xl">
         <Group align="center">
-          <Title>Add Evaluator</Title>
+          <Title>New Data Enrichment</Title>
         </Group>
 
         <TextInput
           label="Name"
-          placeholder="Your evaluator name"
+          placeholder="Your data enrichment name"
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
 
         <Stack>
-          <Text>Select the type of evaluator you want to add:</Text>
+          <Text>Select the type of data enrichment you want to add:</Text>
 
           <SimpleGrid cols={5} spacing="md">
             {evaluatorTypes
@@ -177,8 +176,8 @@ export default function NewRealtimeEvaluator() {
                   evaluator={evaluator}
                   isSelected={type === evaluator.id}
                   onItemClick={(type) => {
-                    setType(type)
-                    setName(evaluator.name)
+                    setType(type);
+                    setName(evaluator.name);
                   }}
                 />
               ))}
@@ -191,7 +190,7 @@ export default function NewRealtimeEvaluator() {
               node={params}
               minimal={false}
               setNode={(newNode) => {
-                setParams(newNode as CheckLogic)
+                setParams(newNode as CheckLogic);
               }}
               checks={[selectedEvaluator]}
             />
@@ -200,29 +199,6 @@ export default function NewRealtimeEvaluator() {
 
         <Card style={{ overflow: "visible" }} shadow="md" p="lg">
           <Stack>
-            <Tooltip label="Only real-time evaluators are available at the moment">
-              <Group w="fit-content">
-                <Switch
-                  size="lg"
-                  label="Enable real-time evaluation ✨"
-                  onLabel="ON"
-                  offLabel="OFF"
-                  checked={true}
-                />
-              </Group>
-            </Tooltip>
-
-            {/* <Group w="fit-content">
-              <Switch
-                size="lg"
-                label="Is benchmark"
-                onLabel="ON"
-                offLabel="OFF"
-                checked={isBenchmark}
-                onClick={(event) => setIsBenchmark(event.currentTarget.checked)}
-              />
-            </Group> */}
-
             <Box>
               <Text mb="5" mt="sm">
                 Select the logs to apply to:
@@ -254,18 +230,18 @@ export default function NewRealtimeEvaluator() {
           <Button
             disabled={!selectedEvaluator}
             onClick={() => {
-              createEvaluator()
+              createEvaluator();
             }}
             leftSection={IconComponent && <IconComponent size={16} />}
             size="md"
             variant="default"
           >
             {selectedEvaluator
-              ? `Create ${selectedEvaluator.name} Evaluator`
+              ? `Create ${selectedEvaluator.name} Enrichment`
               : "Create"}
           </Button>
         </Group>
       </Stack>
     </Container>
-  )
+  );
 }

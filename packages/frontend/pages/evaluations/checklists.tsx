@@ -1,7 +1,7 @@
-import RenamableField from "@/components/blocks/RenamableField"
-import CheckPicker from "@/components/checks/Picker"
-import { useChecklist, useChecklists, useUser } from "@/utils/dataHooks"
-import { cleanSlug } from "@/utils/format"
+import RenamableField from "@/components/blocks/RenamableField";
+import CheckPicker from "@/components/checks/Picker";
+import { useChecklist, useChecklists, useUser } from "@/utils/dataHooks";
+import { cleanSlug } from "@/utils/format";
 
 import {
   ActionIcon,
@@ -18,18 +18,18 @@ import {
   Text,
   TextInput,
   Title,
-} from "@mantine/core"
-import { modals } from "@mantine/modals"
-import { IconPlus, IconTrash } from "@tabler/icons-react"
-import { generateSlug } from "random-word-slugs"
-import { useState } from "react"
-import { CheckLogic, hasAccess } from "shared"
+} from "@mantine/core";
+import { modals } from "@mantine/modals";
+import { IconPlus, IconTrash } from "@tabler/icons-react";
+import { generateSlug } from "random-word-slugs";
+import { useState } from "react";
+import { CheckLogic, hasAccess } from "shared";
 
 export function ChecklistCard({ defaultValue, onDelete }) {
   const { checklist, update, remove } = useChecklist(
     defaultValue?.id,
     defaultValue,
-  )
+  );
 
   return (
     <Card p="lg" withBorder pos="relative" style={{ overflow: "visible" }}>
@@ -51,10 +51,10 @@ export function ChecklistCard({ defaultValue, onDelete }) {
             labels: { confirm: "Confirm", cancel: "Cancel" },
 
             onConfirm: async () => {
-              onDelete()
-              remove()
+              onDelete();
+              remove();
             },
-          })
+          });
         }}
         color="red"
         variant="subtle"
@@ -66,11 +66,11 @@ export function ChecklistCard({ defaultValue, onDelete }) {
           <RenamableField
             defaultValue={checklist?.slug}
             onRename={(newName) => {
-              const cleaned = cleanSlug(newName)
+              const cleaned = cleanSlug(newName);
               update(
                 { slug: cleaned },
                 { optimisticData: (data) => ({ ...data, slug: cleaned }) },
-              )
+              );
             }}
           />
         </Group>
@@ -82,33 +82,33 @@ export function ChecklistCard({ defaultValue, onDelete }) {
             update(
               { data: newData },
               { optimisticData: (data) => ({ ...data, data: newData }) },
-            )
+            );
           }}
         />
       </Stack>
     </Card>
-  )
+  );
 }
 
 export function ChecklistModal({ open, onClose }) {
-  const [slug, setSlug] = useState(generateSlug())
-  const [data, setData] = useState<CheckLogic>(["AND"])
+  const [slug, setSlug] = useState(generateSlug());
+  const [data, setData] = useState<CheckLogic>(["AND"]);
 
-  const { insert, isInserting, mutate } = useChecklists("evaluation")
+  const { insert, isInserting, mutate } = useChecklists("evaluation");
 
   async function createChecklist() {
-    if (!slug.length || data.length < 2) return
+    if (!slug.length || data.length < 2) return;
 
     const res = await insert({
       slug: cleanSlug(slug),
       data,
       type: "evaluation",
-    })
-    await mutate()
-    onClose(res?.id)
+    });
+    await mutate();
+    onClose(res?.id);
   }
 
-  const canCreate = slug.length > 0 && data.length > 1
+  const canCreate = slug.length > 0 && data.length > 1;
 
   return (
     <Modal
@@ -155,21 +155,21 @@ export function ChecklistModal({ open, onClose }) {
         </Group>
       </Stack>
     </Modal>
-  )
+  );
 }
 
 export default function Checklists() {
-  const { checklists, loading, mutate } = useChecklists("evaluation")
-  const { user } = useUser()
-  const [checklistModal, setChecklistModal] = useState(false)
+  const { checklists, loading, mutate } = useChecklists("evaluation");
+  const { user } = useUser();
+  const [checklistModal, setChecklistModal] = useState(false);
 
   return (
     <Container>
       <ChecklistModal
         open={checklistModal}
         onClose={() => {
-          setChecklistModal(false)
-          mutate()
+          setChecklistModal(false);
+          mutate();
         }}
       />
       <Stack>
@@ -213,7 +213,7 @@ export default function Checklists() {
                           {
                             revalidate: false,
                           },
-                        )
+                        );
                       }}
                     />
                   ))}
@@ -224,5 +224,5 @@ export default function Checklists() {
         )}
       </Stack>
     </Container>
-  )
+  );
 }

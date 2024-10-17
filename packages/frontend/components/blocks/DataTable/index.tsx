@@ -5,7 +5,7 @@ import {
   useMemo,
   useRef,
   useState,
-} from "react"
+} from "react";
 
 import {
   ActionIcon,
@@ -15,22 +15,22 @@ import {
   Menu,
   Text,
   useComputedColorScheme,
-} from "@mantine/core"
-import { IconColumns3 } from "@tabler/icons-react"
+} from "@mantine/core";
+import { IconColumns3 } from "@tabler/icons-react";
 import {
   SortingState,
   VisibilityState,
   getCoreRowModel,
   getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table"
-import classes from "./index.module.css"
+} from "@tanstack/react-table";
+import classes from "./index.module.css";
 
-import TableBody from "./TableBody"
-import TableHeader from "./TableHeader"
+import TableBody from "./TableBody";
+import TableHeader from "./TableHeader";
 
 // outside for reference
-const emptyArray = []
+const emptyArray = [];
 
 export default function DataTable({
   type,
@@ -43,19 +43,19 @@ export default function DataTable({
   loadMore = undefined,
   defaultSortBy = "createdAt",
 }: {
-  type: string
-  data?: any[]
-  availableColumns?: any[]
-  visibleColumns?: VisibilityState
-  setVisibleColumns?: (columns: VisibilityState) => void
-  loading?: boolean
-  onRowClicked?: (row: any) => void
-  loadMore?: (() => void) | null
-  defaultSortBy?: string
+  type: string;
+  data?: any[];
+  availableColumns?: any[];
+  visibleColumns?: VisibilityState;
+  setVisibleColumns?: (columns: VisibilityState) => void;
+  loading?: boolean;
+  onRowClicked?: (row: any) => void;
+  loadMore?: (() => void) | null;
+  defaultSortBy?: string;
 }) {
-  const tableContainerRef = useRef<HTMLDivElement>(null)
+  const tableContainerRef = useRef<HTMLDivElement>(null);
 
-  const scheme = useComputedColorScheme()
+  const scheme = useComputedColorScheme();
 
   const table = useReactTable({
     data: data ?? emptyArray, // So it doesn't break when data is undefined because of reference
@@ -65,46 +65,46 @@ export default function DataTable({
     getSortedRowModel: getSortedRowModel(),
     manualSorting: true,
     onColumnVisibilityChange: (fn) => {
-      if (!fn || !setVisibleColumns) return
-      const data = fn() // for some reason, need to call the function to get the updated state
-      setVisibleColumns(data as VisibilityState)
+      if (!fn || !setVisibleColumns) return;
+      const data = fn(); // for some reason, need to call the function to get the updated state
+      setVisibleColumns(data as VisibilityState);
     },
     state: {
       columnVisibility: visibleColumns,
     },
-  })
+  });
 
   const columnSizeVars = useMemo(() => {
-    const headers = table.getFlatHeaders()
-    const colSizes: { [key: string]: number } = {}
+    const headers = table.getFlatHeaders();
+    const colSizes: { [key: string]: number } = {};
     for (let i = 0; i < headers.length; i++) {
-      const header = headers[i]!
-      colSizes[`--header-${header.id}-size`] = header.getSize()
-      colSizes[`--col-${header.column.id}-size`] = header.column.getSize()
+      const header = headers[i]!;
+      colSizes[`--header-${header.id}-size`] = header.getSize();
+      colSizes[`--col-${header.column.id}-size`] = header.column.getSize();
     }
-    return colSizes
-  }, [table.getState().columnSizingInfo, table.getState().columnSizing])
+    return colSizes;
+  }, [table.getState().columnSizingInfo, table.getState().columnSizing]);
 
   const fetchMoreOnBottomReached = useCallback(
     (containerRefElement?: HTMLDivElement | null) => {
       if (containerRefElement) {
-        const { scrollHeight, scrollTop, clientHeight } = containerRefElement
+        const { scrollHeight, scrollTop, clientHeight } = containerRefElement;
         if (
           scrollHeight - scrollTop - clientHeight < 600 &&
           !loading &&
           loadMore
         ) {
-          loadMore()
+          loadMore();
         }
       }
     },
     [loadMore, loading],
-  )
+  );
 
   //a check on mount and after a fetch to see if the table is already scrolled to the bottom and immediately needs to fetch more data
   useEffect(() => {
-    fetchMoreOnBottomReached(tableContainerRef.current)
-  }, [fetchMoreOnBottomReached])
+    fetchMoreOnBottomReached(tableContainerRef.current);
+  }, [fetchMoreOnBottomReached]);
 
   return (
     <>
@@ -113,7 +113,7 @@ export default function DataTable({
           ref={tableContainerRef}
           className={classes.tableContainer}
           onScroll={(e) => {
-            fetchMoreOnBottomReached(e.currentTarget)
+            fetchMoreOnBottomReached(e.currentTarget);
           }}
         >
           <Menu closeOnItemClick={false}>
@@ -135,7 +135,7 @@ export default function DataTable({
                   <Menu.Item
                     key={column.id}
                     onClick={() => {
-                      column.toggleVisibility()
+                      column.toggleVisibility();
                     }}
                   >
                     <Group>
@@ -186,5 +186,5 @@ export default function DataTable({
         </div>
       </Card>
     </>
-  )
+  );
 }

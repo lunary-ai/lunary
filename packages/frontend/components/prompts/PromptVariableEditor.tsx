@@ -1,16 +1,16 @@
-import { Badge, Box, Group, Stack, Text, Tooltip } from "@mantine/core"
-import { IconInfoCircle } from "@tabler/icons-react"
-import { TemplateVariables } from "shared"
-import VariableTextarea from "./VariableTextarea"
+import { Badge, Box, Group, Stack, Text, Tooltip } from "@mantine/core";
+import { IconInfoCircle } from "@tabler/icons-react";
+import { TemplateVariables } from "shared";
+import VariableTextarea from "./VariableTextarea";
 
 export default function PromptVariableEditor({
   value: templateVariables = {},
   onChange,
 }: {
-  value: TemplateVariables
-  onChange: (value: TemplateVariables) => void
+  value: TemplateVariables;
+  onChange: (value: TemplateVariables) => void;
 }) {
-  const hasVariables = Object.keys(templateVariables).length > 0
+  const hasVariables = Object.keys(templateVariables).length > 0;
 
   return (
     <Box>
@@ -70,5 +70,5 @@ export default function PromptVariableEditor({
           ))}
       </Stack>
     </Box>
-  )
+  );
 }

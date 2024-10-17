@@ -17,30 +17,30 @@ interface TraceRun extends Run {
 function cleanOpenAiMessage(message: any) {
   // remove empty toolCalls if any empty
   if (Array.isArray(message.toolCalls) && !message.toolCalls.length) {
-    delete message.toolCalls
+    delete message.toolCalls;
   }
 
   if (message.content === null) {
-    message.content = ""
+    message.content = "";
   }
 
   // openai format is snake_case
-  return unCamelObject(message)
+  return unCamelObject(message);
 }
 
 function validateOpenAiMessages(messages: any[] | any): any[] {
   const isValid =
     messages && Array.isArray(messages)
       ? messages.every(isOpenAIMessage)
-      : isOpenAIMessage(messages)
+      : isOpenAIMessage(messages);
 
-  if (!isValid) return []
+  if (!isValid) return [];
 
   if (!Array.isArray(messages)) {
-    return [messages]
+    return [messages];
   }
 
-  return messages
+  return messages;
 }
 
 async function getRelatedRuns(sql: any, runId: string, projectId: string) {
@@ -116,8 +116,8 @@ export async function fileExport(
     const csv = parser.parse(data)
     const buffer = Buffer.from(csv, "utf-8")
 
-    ctx.set("Content-Type", "text/csv")
-    ctx.set("Content-Disposition", 'attachment; filename="export.csv"')
+    ctx.set("Content-Type", "text/csv");
+    ctx.set("Content-Disposition", 'attachment; filename="export.csv"');
 
     ctx.body = buffer
   } else if (exportFormat === "ojsonl") {
@@ -127,7 +127,7 @@ export async function fileExport(
         return (
           validateOpenAiMessages(row.input).length &&
           validateOpenAiMessages(row.output).length
-        )
+        );
       })
       // convert to JSON string format { messages: [input, output]}
       .map((row) =>
@@ -141,12 +141,12 @@ export async function fileExport(
 
       .map((row) => JSON.stringify(row))
       .filter((line) => line.length > 0)
-      .join("\n")
+      .join("\n");
 
-    const buffer = Buffer.from(jsonl, "utf-8")
+    const buffer = Buffer.from(jsonl, "utf-8");
 
-    ctx.set("Content-Type", "application/jsonl")
-    ctx.set("Content-Disposition", 'attachment; filename="export.jsonl"')
+    ctx.set("Content-Type", "application/jsonl");
+    ctx.set("Content-Disposition", 'attachment; filename="export.jsonl"');
 
     ctx.body = buffer
   } else if (exportFormat === "jsonl") {
@@ -162,15 +162,15 @@ export async function fileExport(
       )
     )
       .filter((line) => line.length > 0)
-      .join("\n")
+      .join("\n");
 
-    const buffer = Buffer.from(jsonl, "utf-8")
+    const buffer = Buffer.from(jsonl, "utf-8");
 
-    ctx.set("Content-Type", "application/jsonl")
-    ctx.set("Content-Disposition", 'attachment; filename="export.jsonl"')
+    ctx.set("Content-Type", "application/jsonl");
+    ctx.set("Content-Disposition", 'attachment; filename="export.jsonl"');
 
-    ctx.body = buffer
+    ctx.body = buffer;
   } else {
-    ctx.throw(400, "Invalid export type")
+    ctx.throw(400, "Invalid export type");
   }
 }

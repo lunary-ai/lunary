@@ -1,4 +1,4 @@
-import { getColorForRole } from "@/utils/colors"
+import { getColorForRole } from "@/utils/colors";
 import {
   ActionIcon,
   Box,
@@ -16,25 +16,25 @@ import {
   ThemeIcon,
   Tooltip,
   useComputedColorScheme,
-} from "@mantine/core"
+} from "@mantine/core";
 import {
+  IconCircleMinus,
   IconInfoCircle,
   IconRobot,
   IconTool,
-  IconTrash,
   IconUser,
-} from "@tabler/icons-react"
-import Image from "next/image"
-import ProtectedText from "../blocks/ProtectedText"
-import { RenderJson } from "./RenderJson"
-import classes from "./index.module.css"
+} from "@tabler/icons-react";
+import Image from "next/image";
+import ProtectedText from "../blocks/ProtectedText";
+import { RenderJson } from "./RenderJson";
+import classes from "./index.module.css";
 
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo } from "react";
 
-import { SentimentEnrichment2 } from "@/utils/enrichment"
-import { getFlagEmoji, getLanguageName } from "@/utils/format"
-import { openConfirmModal } from "@mantine/modals"
-import HighlightPii from "./HighlightPii"
+import { SentimentEnrichment2 } from "@/utils/enrichment";
+import { getFlagEmoji, getLanguageName } from "@/utils/format";
+import { openConfirmModal } from "@mantine/modals";
+import HighlightPii from "./HighlightPii";
 
 const ghostTextAreaStyles = {
   variant: "unstyled",
@@ -46,7 +46,7 @@ const ghostTextAreaStyles = {
   autosize: true,
   minRows: 1,
   width: "100%",
-}
+};
 
 function RenderFunction({
   color,
@@ -106,7 +106,7 @@ function RenderFunction({
         </pre>
       )}
     </Code>
-  )
+  );
 }
 
 function FunctionCallMessage({ data, color, compact, piiDetection }) {
@@ -117,7 +117,7 @@ function FunctionCallMessage({ data, color, compact, piiDetection }) {
       compact={compact}
       piiDetection={piiDetection}
     />
-  )
+  );
 }
 
 function ToolCallsMessage({
@@ -149,9 +149,9 @@ function ToolCallsMessage({
                   opacity={0.8}
                   radius="sm"
                   onChange={(e) => {
-                    const newToolCalls = [...toolCalls]
-                    newToolCalls[index].id = e.target.value
-                    onChange(newToolCalls)
+                    const newToolCalls = [...toolCalls];
+                    newToolCalls[index].id = e.target.value;
+                    onChange(newToolCalls);
                   }}
                 />
               ) : (
@@ -166,9 +166,9 @@ function ToolCallsMessage({
             editable={editable}
             piiDetection={piiDetection}
             onChange={(newData) => {
-              const newToolCalls = [...toolCalls]
-              newToolCalls[index].function = newData
-              onChange(newToolCalls)
+              const newToolCalls = [...toolCalls];
+              newToolCalls[index].function = newData;
+              onChange(newToolCalls);
             }}
             color={color}
             compact={compact}
@@ -178,8 +178,12 @@ function ToolCallsMessage({
           {editable && (
             <ActionIcon
               color="red"
+              variant="transparent"
               className={classes.toolCallActionIcon}
-              size={22}
+              size="sm"
+              pos="absolute"
+              top="35px"
+              right="2px"
               onClick={() => {
                 openConfirmModal({
                   title: "Are you sure?",
@@ -189,20 +193,20 @@ function ToolCallsMessage({
                     confirm: "Delete",
                   },
                   onConfirm: () => {
-                    const newToolCalls = [...toolCalls]
-                    newToolCalls.splice(index, 1)
-                    onChange(newToolCalls)
+                    const newToolCalls = [...toolCalls];
+                    newToolCalls.splice(index, 1);
+                    onChange(newToolCalls);
                   },
-                })
+                });
               }}
             >
-              <IconTrash size={16} />
+              <IconCircleMinus size="14" />
             </ActionIcon>
           )}
         </Box>
       ))}
     </>
-  )
+  );
 }
 
 function TextMessage({
@@ -212,7 +216,7 @@ function TextMessage({
   piiDetection,
   editable = false,
 }) {
-  const text = data.content || data.text
+  const text = data.content || data.text;
 
   return (
     <Code className={classes.textMessage}>
@@ -237,7 +241,7 @@ function TextMessage({
         )}
       </ProtectedText>
     </Code>
-  )
+  );
 }
 
 function ResponsiveImage({ src }) {
@@ -245,7 +249,7 @@ function ResponsiveImage({ src }) {
     <div className={classes.responsiveImage}>
       <Image src={src} alt="Image" fill />
     </div>
-  )
+  );
 }
 
 function MiniatureImage({ src }) {
@@ -253,7 +257,7 @@ function MiniatureImage({ src }) {
     <div className={classes.miniatureImage}>
       <Image src={src} alt="Image" fill />
     </div>
-  )
+  );
 }
 
 function ImageMessage({ data, compact }) {
@@ -262,19 +266,19 @@ function ImageMessage({ data, compact }) {
       <Stack gap={compact ? "5" : "md"}>
         {data.content.map((item, index) => {
           if (item.type === "text") {
-            return <ProtectedText key={index}>{item.text}</ProtectedText>
+            return <ProtectedText key={index}>{item.text}</ProtectedText>;
           } else if (item.type === "image_url") {
             return compact ? (
-              <MiniatureImage src={item.imageUrl.url} />
+              <MiniatureImage key={index} src={item.imageUrl.url} />
             ) : (
-              <ResponsiveImage src={item.imageUrl.url} />
-            )
+              <ResponsiveImage key={index} src={item.imageUrl.url} />
+            );
           }
-          return null
+          return null;
         })}
       </Stack>
     </Code>
-  )
+  );
 }
 
 function PropEditor({ value, onChange, editable, placeholder, label }) {
@@ -296,7 +300,7 @@ function PropEditor({ value, onChange, editable, placeholder, label }) {
         <Text size="xs">{value}</Text>
       )}
     </Group>
-  )
+  );
 }
 
 function ChatMessageContent({
@@ -307,15 +311,15 @@ function ChatMessageContent({
   onChange,
   editable,
 }) {
-  const textContent = data?.text || data?.content
-  const hasTextContent = typeof textContent === "string"
-  const hasImageContent = Array.isArray(data?.content)
-  const hasFunctionCall = data?.functionCall
-  const hasToolCalls = data?.toolCalls || data?.tool_calls
+  const textContent = data?.text || data?.content;
+  const hasTextContent = typeof textContent === "string";
+  const hasImageContent = Array.isArray(data?.content);
+  const hasFunctionCall = data?.functionCall;
+  const hasToolCalls = data?.toolCalls || data?.tool_calls;
 
-  let renderTextMessage = hasTextContent && (!compact || !hasToolCalls)
+  let renderTextMessage = hasTextContent && (!compact || !hasToolCalls);
   if (hasTextContent && textContent.length === 0 && !editable) {
-    renderTextMessage = false
+    renderTextMessage = false;
   }
 
   return (
@@ -394,7 +398,7 @@ function ChatMessageContent({
                     type: "function",
                   },
                 ],
-              })
+              });
             }}
           >
             Add Tool Calls payload
@@ -402,7 +406,7 @@ function ChatMessageContent({
         </>
       )}
     </Stack>
-  )
+  );
 }
 
 function RoleSelector({ data, color, scheme, onChange }) {
@@ -423,7 +427,7 @@ function RoleSelector({ data, color, scheme, onChange }) {
       data={["system", "user", "assistant", "tool"]}
       onChange={(role) => onChange({ ...data, role })}
     />
-  )
+  );
 }
 
 export function ChatMessage({
@@ -433,42 +437,42 @@ export function ChatMessage({
   compact = false,
   ...props
 }: {
-  data: any
-  editable?: boolean
-  onChange?: any
-  compact?: boolean
+  data: any;
+  editable?: boolean;
+  onChange?: any;
+  compact?: boolean;
 }) {
-  const scheme = useComputedColorScheme()
+  const scheme = useComputedColorScheme();
 
-  const color = getColorForRole(data?.role)
+  const color = getColorForRole(data?.role);
 
   if (data?.role === "AIMessageChunk") {
     // Fix for wrong name passed down inside the langchain SDK
-    data.role = "assistant"
+    data.role = "assistant";
   }
 
   // Add/remove the 'id' and 'name' props required on tool calls
   useEffect(() => {
-    if (!data || !editable) return
+    if (!data || !editable) return;
 
     // Add/remove the 'name' props required on tool calls
     if (data.role === "tool" && typeof data.name !== "string") {
-      onChange({ ...data, name: "some-tool-name" })
+      onChange({ ...data, name: "some-tool-name" });
     } else if (
       data.role !== "tool" &&
       data.role !== "user" &&
       typeof data.name === "string"
     ) {
       // "user" messages can also have a name
-      delete data.name
-      onChange(data)
+      delete data.name;
+      onChange(data);
     }
 
     if (data.role === "tool" && typeof data.toolCallId !== "string") {
-      onChange({ ...data, toolCallId: "call_123" })
+      onChange({ ...data, toolCallId: "call_123" });
     } else if (data.role !== "tool" && typeof data.toolCallId === "string") {
-      delete data.toolCallId
-      onChange(data)
+      delete data.toolCallId;
+      onChange(data);
     }
 
     if (
@@ -477,27 +481,30 @@ export function ChatMessage({
       data.toolCalls.length === 0
     ) {
       // remove the toolCalls array if it's empty, otherwise OpenAI returns an error
-      delete data.toolCalls
-      onChange(data)
+      delete data.toolCalls;
+      onChange(data);
     }
-  }, [data, editable])
+  }, [data, editable]);
 
-  const sentiment = useMemo(() => {
+  const sentiment: {
+    label: "positive" | "negative" | "neutral";
+    score: number;
+  } = useMemo(() => {
     return data?.enrichments?.find(
       (enrichment) => enrichment.type === "sentiment",
-    )?.result
-  }, [data?.enrichments])
+    )?.result;
+  }, [data?.enrichments]);
 
   const piiDetection = useMemo(() => {
     return data?.enrichments?.find((enrichment) => enrichment.type === "pii")
-      ?.result
-  }, [data?.enrichments])
+      ?.result;
+  }, [data?.enrichments]);
 
   const language = useMemo(() => {
     return data?.enrichments?.find(
       (enrichment) => enrichment.type === "language",
-    )?.result
-  }, [data?.enrichments])
+    )?.result;
+  }, [data?.enrichments]);
 
   return (
     <Paper
@@ -525,16 +532,18 @@ export function ChatMessage({
               {data.role}
             </Text>
           )}
-          <Group>
-            {sentiment && <SentimentEnrichment2 score={sentiment?.score} />}
-            {language && (
-              <Tooltip
-                label={`${getLanguageName(language.isoCode)} (${Number(language.confidence.toFixed(3))})`}
-              >
-                <Box>{getFlagEmoji(language.isoCode)}</Box>
-              </Tooltip>
-            )}
-          </Group>
+          {!editable && (
+            <Group>
+              {sentiment && <SentimentEnrichment2 sentiment={sentiment} />}
+              {language && (
+                <Tooltip
+                  label={`${getLanguageName(language.isoCode)} (${Number(language.confidence.toFixed(3))})`}
+                >
+                  <Box>{getFlagEmoji(language.isoCode)}</Box>
+                </Tooltip>
+              )}
+            </Group>
+          )}
         </Group>
       )}
       <ChatMessageContent
@@ -546,7 +555,7 @@ export function ChatMessage({
         editable={editable}
       />
     </Paper>
-  )
+  );
 }
 
 const ROLE_ICONS = {
@@ -556,27 +565,27 @@ const ROLE_ICONS = {
   system: IconInfoCircle,
   function: IconTool,
   tool: IconTool,
-}
+};
 
 // Used for chat replays
 export function BubbleMessage({ role, content, extra, enrichments }) {
-  const alignLeft = ["ai", "assistant", "bot", "tool", "system"].includes(role)
+  const alignLeft = ["ai", "assistant", "bot", "tool", "system"].includes(role);
 
-  const Icon = ROLE_ICONS[role || "assistant"]
+  const Icon = ROLE_ICONS[role || "assistant"];
 
-  const color = getColorForRole(role)
+  const color = getColorForRole(role);
 
   if (typeof content === "object") {
     if (role === "assistant") {
-      content = content.output
+      content = content.output;
     } else {
-      content = content.input
+      content = content.input;
     }
   }
 
   const piiDetection = useMemo(() => {
-    return enrichments?.find((enrichment) => enrichment.type === "pii")?.result
-  }, [enrichments])
+    return enrichments?.find((enrichment) => enrichment.type === "pii")?.result;
+  }, [enrichments]);
 
   return (
     <>
@@ -608,5 +617,5 @@ export function BubbleMessage({ role, content, extra, enrichments }) {
 
       <Space h="lg" />
     </>
-  )
+  );
 }

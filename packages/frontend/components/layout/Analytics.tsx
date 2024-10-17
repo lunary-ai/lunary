@@ -1,38 +1,38 @@
-import { useRouter } from "next/router"
-import { useEffect, Component } from "react"
-import Script from "next/script"
+import { useRouter } from "next/router";
+import { useEffect, Component } from "react";
+import Script from "next/script";
 
-import { PostHogProvider } from "posthog-js/react"
+import { PostHogProvider } from "posthog-js/react";
 
-import posthog from "posthog-js"
+import posthog from "posthog-js";
 
-import analytics from "@/utils/analytics"
+import analytics from "@/utils/analytics";
 
-import { Crisp } from "crisp-sdk-web"
+import { Crisp } from "crisp-sdk-web";
 
 class CrispChat extends Component {
   componentDidMount() {
     if (process.env.NEXT_PUBLIC_CRISP_ID) {
-      Crisp.configure(process.env.NEXT_PUBLIC_CRISP_ID)
+      Crisp.configure(process.env.NEXT_PUBLIC_CRISP_ID);
     }
   }
 
   render() {
-    return null
+    return null;
   }
 }
 
 export default function AnalyticsWrapper({ children }) {
-  const router = useRouter()
+  const router = useRouter();
 
   useEffect(() => {
-    analytics.handleRouteChange()
+    analytics.handleRouteChange();
 
-    router.events.on("routeChangeComplete", analytics.handleRouteChange)
+    router.events.on("routeChangeComplete", analytics.handleRouteChange);
     return () => {
-      router.events.off("routeChangeComplete", analytics.handleRouteChange)
-    }
-  }, [])
+      router.events.off("routeChangeComplete", analytics.handleRouteChange);
+    };
+  }, []);
 
   return (
     <>
@@ -55,5 +55,5 @@ export default function AnalyticsWrapper({ children }) {
         children
       )}
     </>
-  )
+  );
 }

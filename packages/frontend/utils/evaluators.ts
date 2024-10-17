@@ -7,7 +7,7 @@ import {
   IconLanguage,
   IconMoodSmile,
   IconTextWrap,
-} from "@tabler/icons-react"
+} from "@tabler/icons-react";
 
 // TODO: typescript
 const EVALUATOR_TYPES = {
@@ -124,10 +124,10 @@ const EVALUATOR_TYPES = {
   // },
   sentiment: {
     id: "sentiment",
-    name: "Sentiment",
+    name: "User Sentiment",
     icon: IconMoodSmile,
     color: "green",
-    description: "Uses AI to detect the sentiment of the given field.",
+    description: "Uses AI to detect users sentiment.",
     params: [],
   },
   language: {
@@ -151,6 +151,7 @@ const EVALUATOR_TYPES = {
     id: "assertion",
     name: "Assertion",
     icon: IconEyeCheck,
+    soon: true,
     color: "blue",
     description:
       "Checks if the input or output matches the given requirement, using an LLM to grade the output.",
@@ -216,6 +217,6 @@ const EVALUATOR_TYPES = {
       },
     ],
   },
-}
+};
 
-export default EVALUATOR_TYPES
+export default EVALUATOR_TYPES;

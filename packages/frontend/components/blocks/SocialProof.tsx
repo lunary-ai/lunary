@@ -1,4 +1,4 @@
-import { Group, Avatar, Stack, Rating, Text } from "@mantine/core"
+import { Group, Avatar, Stack, Rating, Text } from "@mantine/core";
 
 export default function SocialProof() {
   return (
@@ -22,11 +22,11 @@ export default function SocialProof() {
             span
             fw="bolder"
           >
-            2500+
+            4500+
           </Text>{" "}
-          AI devs build better apps
+          GenAI devs build better apps
         </Text>
       </Stack>
     </Group>
-  )
+  );
 }

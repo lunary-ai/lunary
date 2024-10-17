@@ -39,23 +39,23 @@ import {
   IconUser,
   IconUserCheck,
   IconWorldWww,
-} from "@tabler/icons-react"
-import Feedback from "../blocks/OldFeedback"
-import AppUserAvatar from "../blocks/AppUserAvatar"
-import { Group, Text } from "@mantine/core"
-import { capitalize, formatAppUser, getFlagEmoji } from "@/utils/format"
+} from "@tabler/icons-react";
+import Feedback from "../blocks/OldFeedback";
+import AppUserAvatar from "../blocks/AppUserAvatar";
+import { Group, Text } from "@mantine/core";
+import { capitalize, formatAppUser, getFlagEmoji } from "@/utils/format";
 
 type CheckUI = {
-  icon: React.FC<any>
-  color: string
-  renderListItem?: (value: any) => JSX.Element
-  renderLabel?: (value: any) => JSX.Element
-  getItemValue?: (value: any) => string
-}
+  icon: React.FC<any>;
+  color: string;
+  renderListItem?: (value: any) => JSX.Element;
+  renderLabel?: (value: any) => JSX.Element;
+  getItemValue?: (value: any) => string;
+};
 
 type ChecksUIData = {
-  [key: string]: CheckUI
-}
+  [key: string]: CheckUI;
+};
 
 const CHECKS_UI_DATA: ChecksUIData = {
   model: {
@@ -91,27 +91,27 @@ const CHECKS_UI_DATA: ChecksUIData = {
     renderLabel({ value }) {
       const languageNames = new Intl.DisplayNames(["en"], {
         type: "language",
-      })
+      });
 
       return (
         <Text size="sm">
           {`${getFlagEmoji(value)}  ${languageNames.of(value)}`}
         </Text>
-      )
+      );
     },
   },
   feedback: {
     icon: IconThumbUp,
     color: "green",
     renderListItem: (item) => {
-      const key = Object.keys(item)[0]
-      const value = item[key] || ""
+      const key = Object.keys(item)[0];
+      const value = item[key] || "";
       return (
         <>
           <Feedback data={item} />
           <Text size="xs">{`${capitalize(key)}${value ? ": " + value : ""}`}</Text>
         </>
-      )
+      );
     },
     renderLabel: (value) => <Feedback data={value} />,
   },
@@ -257,6 +257,6 @@ const CHECKS_UI_DATA: ChecksUIData = {
     icon: IconFilter,
     color: "gray",
   },
-}
+};
 
-export default CHECKS_UI_DATA
+export default CHECKS_UI_DATA;

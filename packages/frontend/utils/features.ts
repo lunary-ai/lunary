@@ -24,20 +24,20 @@ import {
   IconThumbUpFilled,
   IconUserShield,
   IconUsers,
-} from "@tabler/icons-react"
+} from "@tabler/icons-react";
 
 type Feature = {
-  id: string
-  title: string
+  id: string;
+  title: string;
 
-  Icon: any
-  description?: string
+  Icon: any;
+  description?: string;
   plans: {
-    id: string
-    value: string | boolean
-    help?: string
-  }[]
-}
+    id: string;
+    value: string | boolean;
+    help?: string;
+  }[];
+};
 
 export const FEATURES: Feature[] = [
   {
@@ -99,9 +99,10 @@ export const FEATURES: Feature[] = [
     title: "AI Playground",
     Icon: IconPlayerPlay,
     plans: [
+      { id: "free", value: "Limited usage" },
       {
         id: "team",
-        value: "300 / month included",
+        value: "500 / month included",
         help: "then $0.05 per query",
       },
       { id: "enterprise", value: true },
@@ -138,7 +139,7 @@ export const FEATURES: Feature[] = [
   },
   {
     id: "feedback",
-    title: "Edit Feedback",
+    title: "Human Reviews",
     Icon: IconThumbUpFilled,
     plans: [
       { id: "team", value: true },
@@ -237,4 +238,4 @@ export const FEATURES: Feature[] = [
     Icon: IconMoodNerd,
     plans: [{ id: "enterprise", value: true }],
   },
-]
+];

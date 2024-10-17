@@ -1,12 +1,13 @@
-import DurationBadge from "@/components/blocks/DurationBadge"
-import RunInputOutput from "@/components/blocks/RunInputOutput"
-import StatusBadge from "@/components/blocks/StatusBadge"
-import TokensBadge from "@/components/blocks/TokensBadge"
-import { useProjectSWR, useRun } from "@/utils/dataHooks"
-import { capitalize, formatCost } from "@/utils/format"
+import DurationBadge from "@/components/blocks/DurationBadge";
+import RunInputOutput from "@/components/blocks/RunInputOutput";
+import StatusBadge from "@/components/blocks/StatusBadge";
+import TokensBadge from "@/components/blocks/TokensBadge";
+import { useProjectSWR, useRun, useUser } from "@/utils/dataHooks";
+import { capitalize, formatCost } from "@/utils/format";
 import {
   Badge,
   Box,
+  Button,
   Card,
   Group,
   Loader,
@@ -14,7 +15,7 @@ import {
   Text,
   ThemeIcon,
   Title,
-} from "@mantine/core"
+} from "@mantine/core";
 import {
   IconCloudDownload,
   IconCode,
@@ -23,12 +24,15 @@ import {
   IconMessages,
   IconRobot,
   IconTool,
-} from "@tabler/icons-react"
-import { useRouter } from "next/router"
-import { useEffect, useState } from "react"
-import { getColorForRunType } from "../../utils/colors"
+} from "@tabler/icons-react";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import { getColorForRunType } from "../../utils/colors";
 
-import RunsChat from "@/components/blocks/RunChat"
+import RunsChat from "@/components/blocks/RunChat";
+import errorHandler from "@/utils/errors";
+import { modals } from "@mantine/modals";
+import { hasAccess } from "shared";
 
 const typeIcon = {
   convo: IconMessages,
@@ -39,7 +43,7 @@ const typeIcon = {
   llm: IconCode,
   tool: IconTool,
   retriever: IconCloudDownload,
-}
+};
 
 function TraceTree({
   isFirst = false,
@@ -51,25 +55,28 @@ function TraceTree({
   firstDate,
 }) {
   // each run contains a child_runs array containing the ids of the runs it spawned
-  const run = runs.find((run) => run.id === parentId)
+  const run = runs.find((run) => run.id === parentId);
+  if (!run) {
+    return;
+  }
   if (run.input === "__NOT_INGESTED__") {
-    run.status = "filtered"
+    run.status = "filtered";
   }
 
-  const color = getColorForRunType(run?.type)
+  const color = getColorForRunType(run?.type);
 
-  const showStatus = !["convo", "thread", "chat"].includes(run?.type)
+  const showStatus = !["convo", "thread", "chat"].includes(run?.type);
 
-  const Icon = typeIcon[run?.type]
+  const Icon = typeIcon[run?.type];
 
-  const isActive = run.id === focused
+  const isActive = run.id === focused;
 
   const shownRuns = runs
     .filter((run) => run.parentRunId === parentId)
     .sort(
       (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-    )
+    );
 
   return (
     <Group pos="relative">
@@ -179,7 +186,7 @@ function TraceTree({
         ))}
       </div>
     </Group>
-  )
+  );
 }
 
 function RenderRun({ run, relatedRuns }) {
@@ -188,68 +195,96 @@ function RenderRun({ run, relatedRuns }) {
     .sort(
       (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-    )
+    );
 
-  if (run?.type === "chat") return <RunsChat runs={[run]} />
-  if (run?.type === "thread") return <RunsChat runs={directChilds} />
-  return <RunInputOutput initialRun={run} withFeedback={true} />
+  if (run?.type === "chat") return <RunsChat runs={[run]} />;
+  if (run?.type === "thread") return <RunsChat runs={directChilds} />;
+  return <RunInputOutput initialRun={run} withFeedback={true} />;
 }
 
-export default function AgentRun({}) {
-  const router = useRouter()
-  const { id } = router.query
+export default function Trace({}) {
+  const router = useRouter();
+  const { id } = router.query;
+  const { user } = useUser();
 
-  const [focused, setFocused] = useState(id)
+  const [focused, setFocused] = useState(id);
 
-  const { run } = useRun(id as string)
+  const { run, deleteRun, runDeleted } = useRun(id as string);
+
+  function openModal() {
+    modals.openConfirmModal({
+      title: "Delete Trace",
+      children: (
+        <Text size="sm">
+          Are you sure you want to delete this Trace? This action will
+          permanently remove The trace and all its children. This cannot be
+          undone.
+        </Text>
+      ),
+      labels: { confirm: "Confirm", cancel: "Cancel" },
+      confirmProps: { color: "red" },
+      onConfirm: async () => {
+        await errorHandler(deleteRun());
+        await router.replace("/logs?type=trace&mutate=true");
+      },
+    });
+  }
 
   useEffect(() => {
-    if (run) setFocused(run.id)
-  }, [run])
+    if (run) setFocused(run.id);
+  }, [run]);
 
-  const { data: relatedRuns } = useProjectSWR(`/runs/${id}/related`)
+  const { data: relatedRuns } = useProjectSWR(
+    !runDeleted && `/runs/${id}/related`,
+  );
 
-  if (!run) return <Loader />
+  if (!run) return <Loader />;
 
   const totalTokens = relatedRuns?.reduce((acc, run) => {
     if (run?.type === "llm") {
-      return acc + run.completionTokens + run.promptTokens
+      return acc + run.completionTokens + run.promptTokens;
     }
-    return acc
-  }, 0)
+    return acc;
+  }, 0);
 
   const totalCost = relatedRuns?.reduce((acc, run) => {
     if (run?.type === "llm") {
-      return acc + run.cost
+      return acc + run.cost;
     }
-    return acc
-  }, 0)
+    return acc;
+  }, 0);
 
-  const focusedRun = relatedRuns?.find((run) => run.id === focused)
+  const focusedRun = relatedRuns?.find((run) => run.id === focused);
 
   return (
     <Stack p="24px 24px 0 24px" h="100vh" gap="xl">
       <Title order={1}>
         {capitalize(run?.type)} Trace {run.name ? `(${run.name})` : ""}
       </Title>
-      <Group>
-        {run.status && <StatusBadge status={run.status} />}
-        {run.createdAt && (
-          <Text>{`Started at ${new Date(
-            run.createdAt,
-          ).toLocaleString()}`}</Text>
-        )}
-        <TokensBadge tokens={totalTokens} />
-        {totalCost && (
-          <Badge variant="outline" color="gray">
-            {formatCost(totalCost)}
-          </Badge>
-        )}
-        {run.endedAt && (
-          <DurationBadge createdAt={run.createdAt} endedAt={run.endedAt} />
+      <Group justify="space-between" pr="md">
+        <Group>
+          {run.status && <StatusBadge status={run.status} />}
+          {run.createdAt && (
+            <Text>{`Started at ${new Date(
+              run.createdAt,
+            ).toLocaleString()}`}</Text>
+          )}
+          <TokensBadge tokens={totalTokens} />
+          {totalCost && (
+            <Badge variant="outline" color="gray">
+              {formatCost(totalCost)}
+            </Badge>
+          )}
+          {run.endedAt && (
+            <DurationBadge createdAt={run.createdAt} endedAt={run.endedAt} />
+          )}
+        </Group>
+        {hasAccess(user?.role, "logs", "delete") && (
+          <Button variant="outline" color="red" onClick={openModal}>
+            Delete Trace
+          </Button>
         )}
       </Group>
-
       <Group style={{ flex: 1, minHeight: 0 }}>
         <Box style={{ flex: "0 0 600px", overflowY: "auto", height: "100%" }}>
           {relatedRuns && (
@@ -281,5 +316,5 @@ export default function AgentRun({}) {
         </Box>
       </Group>
     </Stack>
-  )
+  );
 }

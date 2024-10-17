@@ -11,12 +11,12 @@ import {
   Text,
   TextInput,
   ThemeIcon,
+  Tooltip,
   useMantineColorScheme,
-} from "@mantine/core"
+} from "@mantine/core";
 
 import {
   IconActivity,
-  IconActivityHeartbeat,
   IconAnalyze,
   IconBinaryTree2,
   IconBrandOpenai,
@@ -35,32 +35,31 @@ import {
   IconPaint,
   IconSearch,
   IconSettings,
-  IconShieldBolt,
   IconSparkles,
   IconSun,
   IconTimeline,
   IconUsers,
-} from "@tabler/icons-react"
+} from "@tabler/icons-react";
 
-import UserAvatar from "@/components/blocks/UserAvatar"
-import { useOrg, useUser } from "@/utils/dataHooks"
-import Link from "next/link"
-import { useRouter } from "next/router"
-import { openUpgrade } from "./UpgradeModal"
+import UserAvatar from "@/components/blocks/UserAvatar";
+import { useOrg, useUser } from "@/utils/dataHooks";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { openUpgrade } from "./UpgradeModal";
 
-import analytics from "@/utils/analytics"
-import { Button, Combobox, Input, InputBase, useCombobox } from "@mantine/core"
+import analytics from "@/utils/analytics";
+import { Button, Combobox, Input, InputBase, useCombobox } from "@mantine/core";
 
-import { IconPlus } from "@tabler/icons-react"
+import { IconPlus } from "@tabler/icons-react";
 
-import { useAuth } from "@/utils/auth"
-import { useProject, useProjects } from "@/utils/dataHooks"
-import { useEffect, useState } from "react"
-import { ResourceName, hasAccess, hasReadAccess, serializeLogic } from "shared"
-import config from "@/utils/config"
-import { useViews } from "@/utils/dataHooks/views"
-import { useDisclosure, useFocusTrap } from "@mantine/hooks"
-import { getIconComponent } from "../blocks/IconPicker"
+import { useAuth } from "@/utils/auth";
+import config from "@/utils/config";
+import { useProject, useProjects } from "@/utils/dataHooks";
+import { useViews } from "@/utils/dataHooks/views";
+import { useDisclosure, useFocusTrap } from "@mantine/hooks";
+import { useEffect, useState } from "react";
+import { ResourceName, hasAccess, hasReadAccess, serializeLogic } from "shared";
+import { getIconComponent } from "../blocks/IconPicker";
 
 function NavbarLink({
   icon: Icon,
@@ -70,21 +69,21 @@ function NavbarLink({
   onClick,
   disabled = false,
 }) {
-  const router = useRouter()
+  const router = useRouter();
 
   // For logs pages, we want to compare the view param to see if a view is selected
 
   const active = router.pathname.startsWith("/logs")
     ? router.asPath.includes(`view=`)
       ? (() => {
-          const linkParams = new URLSearchParams(link.split("?")[1])
-          const viewParam = linkParams.get("view")
+          const linkParams = new URLSearchParams(link.split("?")[1]);
+          const viewParam = linkParams.get("view");
           return viewParam
             ? router.asPath.includes(`view=${viewParam}`)
-            : router.asPath.startsWith(link)
+            : router.asPath.startsWith(link);
         })()
       : router.asPath.startsWith(link)
-    : router.pathname.startsWith(link)
+    : router.pathname.startsWith(link);
 
   return (
     <NavLink
@@ -108,34 +107,34 @@ function NavbarLink({
         </ThemeIcon>
       }
     />
-  )
+  );
 }
 
 type MenuItem = {
-  label: string
-  icon?: any
-  link?: string
-  resource?: ResourceName
-  disabled?: boolean
-  searchable?: boolean
-  c?: string
-  isSection?: boolean
-  subMenu?: MenuItem[]
-}
+  label: string;
+  icon?: any;
+  link?: string;
+  resource?: ResourceName;
+  disabled?: boolean;
+  searchable?: boolean;
+  c?: string;
+  isSection?: boolean;
+  subMenu?: MenuItem[];
+};
 
 function MenuSection({ item }) {
-  const { user } = useUser()
+  const { user } = useUser();
 
-  const [opened, { toggle }] = useDisclosure(true)
-  const [query, setQuery] = useState("")
+  const [opened, { toggle }] = useDisclosure(true);
+  const [query, setQuery] = useState("");
 
-  const [searchOn, setSearchOn] = useState(false)
+  const [searchOn, setSearchOn] = useState(false);
 
-  const focusTrapRef = useFocusTrap()
+  const focusTrapRef = useFocusTrap();
 
   const filtered = item.subMenu?.filter((subItem) =>
     subItem.label.toLowerCase().includes(query.toLowerCase()),
-  )
+  );
 
   return (
     <Box mb="sm" mt="md">
@@ -152,12 +151,12 @@ function MenuSection({ item }) {
             value={query}
             onChange={(e) => setQuery(e.currentTarget.value)}
             onBlur={() => {
-              setSearchOn(false)
+              setSearchOn(false);
 
               // leave time for the click event to trigger
               setTimeout(() => {
-                setQuery("")
-              }, 200)
+                setQuery("");
+              }, 200);
             }}
           />
         ) : (
@@ -211,56 +210,56 @@ function MenuSection({ item }) {
           ))}
       </Collapse>
     </Box>
-  )
+  );
 }
 
 export default function Sidebar() {
-  const auth = useAuth()
-  const router = useRouter()
-  const { project, setProjectId } = useProject()
+  const auth = useAuth();
+  const router = useRouter();
+  const { project, setProjectId } = useProject();
 
-  const { user } = useUser()
-  const { org } = useOrg()
-  const { projects, isLoading: loading, insert } = useProjects()
-  const { views } = useViews()
+  const { user } = useUser();
+  const { org } = useOrg();
+  const { projects, isLoading: loading, insert } = useProjects();
+  const { views } = useViews();
 
-  const { colorScheme, setColorScheme } = useMantineColorScheme({})
+  const { colorScheme, setColorScheme } = useMantineColorScheme({});
 
-  const [createProjectLoading, setCreateProjectLoading] = useState(false)
+  const [createProjectLoading, setCreateProjectLoading] = useState(false);
 
   const combobox = useCombobox({
     onDropdownClose: () => {
-      combobox.resetSelectedOption()
-      setSearch("")
+      combobox.resetSelectedOption();
+      setSearch("");
     },
     onDropdownOpen: () => {
-      combobox.focusSearchInput()
+      combobox.focusSearchInput();
     },
-  })
+  });
 
-  const [search, setSearch] = useState("")
+  const [search, setSearch] = useState("");
 
-  const isSelfHosted = config.IS_SELF_HOSTED
+  const isSelfHosted = config.IS_SELF_HOSTED;
 
   const billingEnabled =
-    process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY && !config.IS_SELF_HOSTED
+    process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY && !config.IS_SELF_HOSTED;
 
-  const canUpgrade = billingEnabled && ["free", "pro"].includes(org?.plan)
+  const canUpgrade = billingEnabled && ["free", "pro"].includes(org?.plan);
 
   const projectViews = (views || [])
     .map((v) => {
-      const serialized = serializeLogic(v.data)
+      const serialized = serializeLogic(v.data);
 
-      const Icon = getIconComponent(v.icon)
+      const Icon = getIconComponent(v.icon);
 
       return {
         label: v.name,
         icon: Icon,
         link: `/logs?view=${v.id}&filters=${serialized}&type=${v.type}`,
         resource: "logs",
-      }
+      };
     })
-    .sort((a, b) => a.label.localeCompare(b.label))
+    .sort((a, b) => a.label.localeCompare(b.label));
 
   const APP_MENU: MenuItem[] = [
     {
@@ -293,6 +292,15 @@ export default function Sidebar() {
           resource: "logs",
         },
         { label: "Users", icon: IconUsers, link: "/users", resource: "users" },
+        {
+          label: "Enrichments",
+          icon: IconSparkles,
+          link: "/enrichments",
+          resource: "enrichments",
+          disabled: isSelfHosted
+            ? org.license && org.license.realtimeEvalsEnabled
+            : false,
+        },
       ],
     },
     {
@@ -309,15 +317,6 @@ export default function Sidebar() {
           label: "Playground",
           icon: IconFlask,
           link: "/evaluations/new",
-          resource: "evaluations",
-          disabled: isSelfHosted
-            ? org.license && !org.license.evalEnabled
-            : false,
-        },
-        {
-          label: "Evaluators",
-          icon: IconActivityHeartbeat,
-          link: "/evaluations/realtime",
           resource: "evaluations",
           disabled: isSelfHosted
             ? org.license && !org.license.evalEnabled
@@ -341,52 +340,38 @@ export default function Sidebar() {
       resource: "logs",
       subMenu: projectViews,
     },
-    // {
-    //   label: "Project",
-    //   resource: "apiKeys",
-    //   subMenu: [
-    //     !!canUpgrade && {
-    //       label: "Upgrade",
-    //       onClick: openUpgrade,
-    //       c: "vioplet",
-    //       icon: IconBolt,
-    //       disabled: !canUpgrade,
-    //       resource: "billing",
-    //     },
-    //   ].filter((item) => item),
-    // },
-  ].filter((item) => item)
+  ].filter((item) => item);
 
   async function createProject() {
     if (org.plan === "free" && projects.length >= 3) {
-      return openUpgrade("projects")
+      return openUpgrade("projects");
     }
 
-    setCreateProjectLoading(true)
+    setCreateProjectLoading(true);
 
-    const name = `Project #${projects.length + 1}`
+    const name = `Project #${projects.length + 1}`;
     try {
-      const { id } = await insert({ name })
+      const { id } = await insert({ name });
       analytics.track("Create Project", {
         name,
-      })
+      });
 
-      setCreateProjectLoading(false)
-      setProjectId(id)
-      router.push(`/settings`)
+      setCreateProjectLoading(false);
+      setProjectId(id);
+      router.push(`/settings`);
     } catch (error) {
-      console.error(error)
+      console.error(error);
     } finally {
-      setCreateProjectLoading(false)
+      setCreateProjectLoading(false);
     }
   }
 
   // Select first project if none selected
   useEffect(() => {
     if (!project && projects?.length && !loading) {
-      setProjectId(projects[0].id)
+      setProjectId(projects[0].id);
     }
-  }, [project, projects, loading, setProjectId])
+  }, [project, projects, loading, setProjectId]);
 
   const projectOptions = projects
     ?.filter((item) => item.name.toLowerCase().includes(search.toLowerCase()))
@@ -395,7 +380,7 @@ export default function Sidebar() {
       <Combobox.Option value={item.id} key={item.id}>
         {item.name}
       </Combobox.Option>
-    ))
+    ));
 
   return (
     <Flex
@@ -416,8 +401,8 @@ export default function Sidebar() {
               store={combobox}
               withinPortal={false}
               onOptionSubmit={(id) => {
-                setProjectId(id)
-                combobox.closeDropdown()
+                setProjectId(id);
+                combobox.closeDropdown();
               }}
               styles={{
                 dropdown: { minWidth: "fit-content", maxWidth: 600 },
@@ -428,12 +413,11 @@ export default function Sidebar() {
                   component="button"
                   size="xs"
                   variant="unstyled"
-                  w="fit-content"
+                  w={"100%"}
                   fw={500}
                   fz="xl"
                   type="button"
                   style={{
-                    wordBreak: "break-all",
                     textOverflow: "ellipsis",
                     overflow: "hidden",
                   }}
@@ -447,9 +431,23 @@ export default function Sidebar() {
                   onClick={() => combobox.toggleDropdown()}
                   rightSectionPointerEvents="none"
                 >
-                  {project?.name || (
-                    <Input.Placeholder>Select project</Input.Placeholder>
-                  )}
+                  <Tooltip label={project?.name}>
+                    {project?.name ? (
+                      <span
+                        style={{
+                          textOverflow: "ellipsis",
+                          overflow: "hidden",
+                          whiteSpace: "nowrap",
+                          height: "100%",
+                          display: "block",
+                        }}
+                      >
+                        {project.name}
+                      </span>
+                    ) : (
+                      <Input.Placeholder>Select project</Input.Placeholder>
+                    )}
+                  </Tooltip>
                 </InputBase>
               </Combobox.Target>
               <Combobox.Dropdown w={400}>
@@ -484,7 +482,7 @@ export default function Sidebar() {
                 </Combobox.Footer>
               </Combobox.Dropdown>
             </Combobox>
-            {hasAccess(user.role, "billing", "read") && (
+            {hasAccess(user.role, "settings", "read") && (
               <ActionIcon
                 variant="default"
                 size="sm"
@@ -545,7 +543,7 @@ export default function Sidebar() {
                     <Menu.Item
                       leftSection={<IconMessage2 size={14} />}
                       onClick={() => {
-                        $crisp.push(["do", "chat:open"])
+                        $crisp.push(["do", "chat:open"]);
                       }}
                     >
                       Feedback
@@ -631,18 +629,22 @@ export default function Sidebar() {
                       ]}
                     />
                   </Menu.Item>
-                  <Menu.Divider />
                   {billingEnabled &&
                     hasAccess(user.role, "billing", "read") && (
-                      <Menu.Item
-                        leftSection={<IconCreditCard opacity={0.6} size={14} />}
-                        onClick={() => router.push("/billing")}
-                      >
-                        Usage & Billing
-                      </Menu.Item>
+                      <>
+                        <Menu.Divider />
+                        <Menu.Item
+                          leftSection={
+                            <IconCreditCard opacity={0.6} size={14} />
+                          }
+                          onClick={() => router.push("/billing")}
+                        >
+                          Usage & Billing
+                        </Menu.Item>
+                      </>
                     )}
 
-                  {hasAccess(user.role, "teamMembers", "read") && (
+                  {hasAccess(user.role, "teamMembers", "list") && (
                     <Menu.Item
                       leftSection={<IconUsers opacity={0.6} size={14} />}
                       onClick={() => router.push("/team")}
@@ -666,5 +668,5 @@ export default function Sidebar() {
         </>
       )}
     </Flex>
-  )
+  );
 }

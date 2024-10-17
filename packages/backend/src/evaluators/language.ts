@@ -1,6 +1,6 @@
-import { Run } from "shared"
-import { callML } from "../utils/ml"
-import { sleep } from "../utils/misc"
+import { Run } from "shared";
+import { callML } from "../utils/ml";
+import { sleep } from "../utils/misc";
 
 /* 
 
@@ -74,73 +74,73 @@ NULL
 
 */
 
-type Input = string | Array<any> | object | null
-type Output = string | Array<any> | object | null
-type Error = string | object | null
+type Input = string | Array<any> | object | null;
+type Output = string | Array<any> | object | null;
+type Error = string | object | null;
 
 // TOOD: refacto this with all the other parsing function already in use
 function parseMessages(messages: unknown) {
   if (!messages) {
-    return [""]
+    return [""];
   }
   if (typeof messages === "string" && messages.length) {
-    return [messages]
+    return [messages];
   }
 
   if (messages === "__NOT_INGESTED__") {
-    return [""]
+    return [""];
   }
 
   if (Array.isArray(messages)) {
-    let contentArray = []
+    let contentArray = [];
     for (const message of messages) {
-      let content = message.content || message.text
+      let content = message.content || message.text;
       if (typeof content === "string" && content.length) {
-        contentArray.push(content)
+        contentArray.push(content);
       } else {
-        contentArray.push(JSON.stringify(message))
+        contentArray.push(JSON.stringify(message));
       }
     }
-    return contentArray
+    return contentArray;
   }
 
   if (typeof messages === "object") {
-    return [JSON.stringify(messages)]
+    return [JSON.stringify(messages)];
   }
 
-  return [""]
+  return [""];
 }
 // Output format: {"input": [ {iso_code: 'en', confidence: 1} ], "output": ..., "errror" : ... }
 // TODO: document the data format (array of string for each message in input, output array of isocode, null if no detection) + json schema in the db
 // TODO: there shouldn't be output and error at the same time for a run in the DB
 
 export async function evaluate(run: Run, params: unknown) {
-  const input = parseMessages(run.input)
-  const output = parseMessages(run.output)
-  const error = parseMessages(run.error)
+  const input = parseMessages(run.input);
+  const output = parseMessages(run.output);
+  const error = parseMessages(run.error);
 
   const [inputLanguages, outputLanguages, errrorLanguages] = await Promise.all([
     detectLanguages(input),
     detectLanguages(output),
     detectLanguages(error),
-  ])
+  ]);
 
   const languages = {
     input: inputLanguages,
     output: outputLanguages,
     error: errrorLanguages,
-  }
+  };
 
   // TODO: zod for languages, SHOLUD NOT INGEST IN DB IF NOT CORRECT FORMAT
-  return languages
+  return languages;
 }
 
 // TODO: type
 async function detectLanguages(texts: string[]): Promise<any> {
   try {
-    return callML("language", { texts })
+    return callML("language", { texts });
   } catch (error) {
-    console.error(error)
-    console.log(texts)
+    console.error(error);
+    console.log(texts);
   }
 }

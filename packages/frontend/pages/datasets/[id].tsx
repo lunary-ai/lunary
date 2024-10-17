@@ -1,16 +1,16 @@
-import PromptVariableEditor from "@/components/prompts/PromptVariableEditor"
-import RenamableField from "@/components/blocks/RenamableField"
-import { PromptEditor } from "@/components/prompts/PromptEditor"
+import PromptVariableEditor from "@/components/prompts/PromptVariableEditor";
+import RenamableField from "@/components/blocks/RenamableField";
+import { PromptEditor } from "@/components/prompts/PromptEditor";
 import {
   useDataset,
   useDatasetPrompt,
   useDatasetPromptVariation,
-} from "@/utils/dataHooks"
-import { cleanSlug, formatCompactFromNow } from "@/utils/format"
+} from "@/utils/dataHooks";
+import { cleanSlug, formatCompactFromNow } from "@/utils/format";
 import {
   useCheckedPromptVariables,
   usePromptVariables,
-} from "@/utils/promptsHooks"
+} from "@/utils/promptsHooks";
 import {
   ActionIcon,
   Anchor,
@@ -24,31 +24,31 @@ import {
   Tabs,
   Text,
   Textarea,
-} from "@mantine/core"
-import { useDebouncedState } from "@mantine/hooks"
-import { modals } from "@mantine/modals"
-import { IconCircleMinus, IconPlus } from "@tabler/icons-react"
-import { useRouter } from "next/router"
-import { useEffect, useState } from "react"
-import { notifications } from "@mantine/notifications"
+} from "@mantine/core";
+import { useDebouncedState } from "@mantine/hooks";
+import { modals } from "@mantine/modals";
+import { IconCircleMinus, IconPlus } from "@tabler/icons-react";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import { notifications } from "@mantine/notifications";
 
 function PromptVariation({ i, variationId, content, onDelete, markSaved }) {
   const { variation, update, remove, mutate } =
-    useDatasetPromptVariation(variationId)
+    useDatasetPromptVariation(variationId);
 
-  const { prompt } = useDatasetPrompt(variation?.promptId)
+  const { prompt } = useDatasetPrompt(variation?.promptId);
 
   const [debouncedVariation, setDebouncedVariation] = useDebouncedState(
     null,
     500,
-  )
+  );
 
   const variables = useCheckedPromptVariables(
     content,
     variation?.variables || {},
-  )
+  );
 
-  const hasVariables = Object.keys(variables).length > 0
+  const hasVariables = Object.keys(variables).length > 0;
 
   useEffect(() => {
     if (debouncedVariation) {
@@ -56,23 +56,23 @@ function PromptVariation({ i, variationId, content, onDelete, markSaved }) {
         revalidate: false,
         optimisticData: (data) => ({ ...data, ...debouncedVariation }),
         onSuccess: () => {
-          markSaved()
+          markSaved();
         },
-      })
+      });
     }
-  }, [debouncedVariation])
+  }, [debouncedVariation]);
 
   const setVariables = (newVars) => {
-    const updatedVariation = { ...variation, variables: newVars }
-    mutate(updatedVariation, { revalidate: false })
-    setDebouncedVariation(updatedVariation)
-  }
+    const updatedVariation = { ...variation, variables: newVars };
+    mutate(updatedVariation, { revalidate: false });
+    setDebouncedVariation(updatedVariation);
+  };
 
   const setIdealOutput = (idealOutput) => {
-    const updatedVariation = { ...variation, idealOutput }
-    mutate(updatedVariation, { revalidate: false })
-    setDebouncedVariation(updatedVariation)
-  }
+    const updatedVariation = { ...variation, idealOutput };
+    mutate(updatedVariation, { revalidate: false });
+    setDebouncedVariation(updatedVariation);
+  };
 
   return (
     <Fieldset
@@ -84,7 +84,7 @@ function PromptVariation({ i, variationId, content, onDelete, markSaved }) {
         <PromptVariableEditor
           value={variables}
           onChange={(update) => {
-            setVariables(update)
+            setVariables(update);
           }}
         />
 
@@ -103,8 +103,8 @@ function PromptVariation({ i, variationId, content, onDelete, markSaved }) {
       {prompt?.variations?.length > 1 && (
         <ActionIcon
           onClick={async () => {
-            await remove()
-            onDelete()
+            await remove();
+            onDelete();
           }}
           pos="absolute"
           top={-25}
@@ -116,7 +116,7 @@ function PromptVariation({ i, variationId, content, onDelete, markSaved }) {
         </ActionIcon>
       )}
     </Fieldset>
-  )
+  );
 }
 
 function PromptTab({ isText, promptId, onDelete, markSaved, canBeDeleted }) {
@@ -128,12 +128,15 @@ function PromptTab({ isText, promptId, onDelete, markSaved, canBeDeleted }) {
     insertVariation,
     isInsertingVariation,
     mutate,
-  } = useDatasetPrompt(promptId)
+  } = useDatasetPrompt(promptId);
 
-  const promptVariables = usePromptVariables(prompt?.messages)
-  const hasVariables = Object.keys(promptVariables).length > 0
+  const promptVariables = usePromptVariables(prompt?.messages);
+  const hasVariables = Object.keys(promptVariables).length > 0;
 
-  const [debouncedMessages, setDebouncedMessages] = useDebouncedState(null, 500)
+  const [debouncedMessages, setDebouncedMessages] = useDebouncedState(
+    null,
+    500,
+  );
 
   useEffect(() => {
     if (debouncedMessages) {
@@ -141,23 +144,23 @@ function PromptTab({ isText, promptId, onDelete, markSaved, canBeDeleted }) {
         { messages: debouncedMessages },
         {
           onSuccess: () => {
-            markSaved()
+            markSaved();
           },
         },
-      )
+      );
     }
-  }, [debouncedMessages])
+  }, [debouncedMessages]);
 
   if (loading) {
-    return <Loader />
+    return <Loader />;
   }
 
   return (
     <Stack>
       <PromptEditor
         onChange={(value) => {
-          mutate({ ...prompt, messages: value }, { revalidate: false })
-          setDebouncedMessages(value)
+          mutate({ ...prompt, messages: value }, { revalidate: false });
+          setDebouncedMessages(value);
         }}
         value={prompt?.messages}
         isText={isText}
@@ -175,7 +178,7 @@ function PromptTab({ isText, promptId, onDelete, markSaved, canBeDeleted }) {
               variations: prompt.variations.filter(
                 (v) => v.id !== variation.id,
               ),
-            })
+            });
           }}
         />
       ))}
@@ -191,11 +194,14 @@ function PromptTab({ isText, promptId, onDelete, markSaved, canBeDeleted }) {
           variant="outline"
           loading={isInsertingVariation}
           onClick={async () => {
-            const variation = await insertVariation({ variables: {}, promptId })
+            const variation = await insertVariation({
+              variables: {},
+              promptId,
+            });
             mutate({
               ...prompt,
               variations: [...prompt.variations, variation],
-            })
+            });
           }}
         >
           Add variable variation
@@ -218,17 +224,17 @@ function PromptTab({ isText, promptId, onDelete, markSaved, canBeDeleted }) {
 
             onConfirm: async () => {
               if (canBeDeleted) {
-                await remove()
-                onDelete()
+                await remove();
+                onDelete();
               } else {
                 notifications.show({
                   title: "You can't delete this Prompt",
                   message: "You need at least one Prompt in your Dataset",
                   color: "red",
-                })
+                });
               }
             },
-          })
+          });
         }}
         color="red"
         variant="subtle"
@@ -237,35 +243,35 @@ function PromptTab({ isText, promptId, onDelete, markSaved, canBeDeleted }) {
         Remove prompt
       </Button>
     </Stack>
-  )
+  );
 }
 
 export default function NewDataset() {
-  const router = useRouter()
+  const router = useRouter();
 
-  const [activePrompt, setActivePrompt] = useState<string | null>(null)
+  const [activePrompt, setActivePrompt] = useState<string | null>(null);
 
-  const datasetId = router.query.id as string
+  const datasetId = router.query.id as string;
   const { dataset, loading, update, insertPrompt, mutate, isInsertingPrompt } =
-    useDataset(datasetId)
+    useDataset(datasetId);
 
-  const [lastSaved, setLastSaved] = useState<number>(dataset?.updatedAt)
+  const [lastSaved, setLastSaved] = useState<number>(dataset?.updatedAt);
 
   useEffect(() => {
     if (
       (dataset?.prompts.length > 0 && !activePrompt) ||
       (activePrompt && !dataset?.prompts.find((p) => p.id === activePrompt))
     ) {
-      setActivePrompt(dataset.prompts[0].id)
+      setActivePrompt(dataset.prompts[0].id);
     }
-  }, [dataset, activePrompt])
+  }, [dataset, activePrompt]);
 
   function markSaved() {
-    setLastSaved(Date.now())
+    setLastSaved(Date.now());
   }
 
   if (loading) {
-    return <Loader />
+    return <Loader />;
   }
 
   return (
@@ -274,8 +280,8 @@ export default function NewDataset() {
         <Anchor
           href="#"
           onClick={(e) => {
-            e.preventDefault()
-            router.back()
+            e.preventDefault();
+            router.back();
           }}
         >
           ← Back
@@ -298,7 +304,7 @@ export default function NewDataset() {
                           slug: cleanSlug(newName),
                         }),
                       },
-                    )
+                    );
                   }}
                 />
               )}
@@ -340,15 +346,15 @@ export default function NewDataset() {
                   { datasetId },
                   {
                     onSuccess: () => {
-                      markSaved()
+                      markSaved();
                     },
                   },
-                )
+                );
                 mutate({
                   ...dataset,
                   prompts: [...dataset.prompts, prompt],
-                })
-                setActivePrompt(prompt.id)
+                });
+                setActivePrompt(prompt.id);
               }}
               size="sm"
             >
@@ -367,7 +373,7 @@ export default function NewDataset() {
                   mutate({
                     ...dataset,
                     prompts: dataset.prompts.filter((p) => p.id !== prompt.id),
-                  })
+                  });
                 }}
               />
             </Tabs.Panel>
@@ -384,5 +390,5 @@ export default function NewDataset() {
         </Button> */}
       </Stack>
     </Container>
-  )
+  );
 }

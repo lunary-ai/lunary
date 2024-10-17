@@ -1,13 +1,13 @@
-import Steps from "@/components/blocks/Steps"
-import Paywall from "@/components/layout/Paywall"
+import Steps from "@/components/blocks/Steps";
+import Paywall from "@/components/layout/Paywall";
 import {
   useChecklists,
   useDatasets,
   useEvaluations,
   useProject,
   useUser,
-} from "@/utils/dataHooks"
-import { fetcher } from "@/utils/fetcher"
+} from "@/utils/dataHooks";
+import { fetcher } from "@/utils/fetcher";
 
 import {
   Alert,
@@ -27,38 +27,38 @@ import {
   Text,
   Title,
   Tooltip,
-} from "@mantine/core"
-import { IconFlask2Filled, IconRefresh, IconTable } from "@tabler/icons-react"
-import { useRouter } from "next/router"
-import { useEffect, useRef, useState } from "react"
-import { ChecklistModal } from "./checklists"
-import ProviderEditor from "@/components/prompts/Provider"
-import { MODELS, Provider, hasAccess } from "shared"
-import { useLocalStorage } from "@mantine/hooks"
-import OrgUserBadge from "@/components/blocks/OrgUserBadge"
-import Link from "next/link"
+} from "@mantine/core";
+import { IconFlask2Filled, IconRefresh, IconTable } from "@tabler/icons-react";
+import { useRouter } from "next/router";
+import { useEffect, useRef, useState } from "react";
+import { ChecklistModal } from "./checklists";
+import ProviderEditor from "@/components/prompts/Provider";
+import { MODELS, Provider, hasAccess } from "shared";
+import { useLocalStorage } from "@mantine/hooks";
+import OrgUserBadge from "@/components/blocks/OrgUserBadge";
+import Link from "next/link";
 
 const FEATURE_LIST = [
   "Define assertions to test variations of prompts",
   "Powerful AI powered assertion engine",
   "Compare results with OpenAI, Anthropic, Mistral and more",
-]
+];
 
 const BASE_PROVIDER: Provider = {
   model: "gpt-4o",
   config: {},
-}
+};
 
 function ProviderModal({ open, onClose, initialProvider }) {
   const [provider, setProvider] = useState<Provider>(
     initialProvider || BASE_PROVIDER,
-  )
+  );
 
   useEffect(() => {
     if (initialProvider) {
-      setProvider(initialProvider)
+      setProvider(initialProvider);
     }
-  }, [initialProvider])
+  }, [initialProvider]);
 
   return (
     <Modal
@@ -75,7 +75,7 @@ function ProviderModal({ open, onClose, initialProvider }) {
           </Button>
           <Button
             onClick={() => {
-              onClose(provider)
+              onClose(provider);
             }}
           >
             Save
@@ -83,68 +83,69 @@ function ProviderModal({ open, onClose, initialProvider }) {
         </Group>
       </Stack>
     </Modal>
-  )
+  );
 }
 
 export default function NewEvaluation() {
-  const [checklistModal, setChecklistModal] = useState(false)
-  const [providerModal, setProviderModal] = useState(false)
+  const [checklistModal, setChecklistModal] = useState(false);
+  const [providerModal, setProviderModal] = useState(false);
 
-  const [datasetId, setDatasetId] = useState<string | null>()
-  const [checklistId, setChecklistId] = useState<string | null>()
-  const [editingProvider, setEditingProvider] = useState<Provider | null>(null)
+  const [datasetId, setDatasetId] = useState<string | null>();
+  const [checklistId, setChecklistId] = useState<string | null>();
+  const [editingProvider, setEditingProvider] = useState<Provider | null>(null);
 
   const [providers, setProviders] = useLocalStorage<any[]>({
     key: "providers",
     defaultValue: [BASE_PROVIDER],
-  })
+  });
 
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
-  const [progress, setProgress] = useState(0)
+  const [progress, setProgress] = useState(0);
 
-  const router = useRouter()
+  const router = useRouter();
 
-  const { project } = useProject()
+  const { project } = useProject();
 
-  const { datasets, isLoading: datasetsLoading } = useDatasets()
-  const { checklists, loading: checklistsLoading } = useChecklists("evaluation")
+  const { datasets, isLoading: datasetsLoading } = useDatasets();
+  const { checklists, loading: checklistsLoading } =
+    useChecklists("evaluation");
 
-  const { evaluations, isLoading } = useEvaluations()
-  const { user } = useUser()
+  const { evaluations, isLoading } = useEvaluations();
+  const { user } = useUser();
 
   // make sure to only fetch once
-  const ref = useRef({ done: false })
+  const ref = useRef({ done: false });
 
   useEffect(() => {
     if (!project || ref.current?.done || datasetsLoading || checklistsLoading)
-      return
+      return;
 
-    const { clone } = router.query
+    const { clone } = router.query;
 
     if (clone) {
-      ref.current.done = true
+      ref.current.done = true;
       const fetchEval = async () => {
         const cloneEval = await fetcher.get(
           `/evaluations/${clone}?projectId=${project?.id}`,
-        )
+        );
 
-        if (!cloneEval) return
+        if (!cloneEval) return;
 
-        setDatasetId(cloneEval.datasetId)
-        setProviders(cloneEval.providers)
-        setChecklistId(cloneEval.checklistId)
-      }
+        setDatasetId(cloneEval.datasetId);
+        setProviders(cloneEval.providers);
+        setChecklistId(cloneEval.checklistId);
+      };
 
-      fetchEval()
+      fetchEval();
     }
-  }, [project, router.query, datasetsLoading, checklistsLoading])
+  }, [project, router.query, datasetsLoading, checklistsLoading]);
 
   async function startEval() {
-    setLoading(true)
+    setLoading(true);
 
     try {
-      setProgress(0)
+      setProgress(0);
 
       await fetcher.getStream(
         `/evaluations?projectId=${project.id}`,
@@ -154,47 +155,47 @@ export default function NewEvaluation() {
           checklistId,
         },
         (chunk) => {
-          const parsedLine = JSON.parse(chunk)
+          const parsedLine = JSON.parse(chunk);
 
-          setProgress(parsedLine.percentDone)
+          setProgress(parsedLine.percentDone);
 
           if (parsedLine.id) {
-            router.push(`/evaluations/${parsedLine.id}`)
+            router.push(`/evaluations/${parsedLine.id}`);
           }
         },
-      )
+      );
     } catch (error) {
-      console.error(error)
+      console.error(error);
     }
 
-    setLoading(false)
+    setLoading(false);
   }
 
   const canStartEvaluation =
     datasetId &&
     providers.length > 0 &&
-    hasAccess(user.role, "evaluations", "create")
+    hasAccess(user.role, "evaluations", "create");
 
   return (
     <>
       <ChecklistModal
         open={checklistModal}
         onClose={(id) => {
-          setChecklistModal(false)
-          if (id) setChecklistId(id)
+          setChecklistModal(false);
+          if (id) setChecklistId(id);
         }}
       />
       <ProviderModal
         open={providerModal}
         onClose={(provider) => {
-          setProviderModal(false)
+          setProviderModal(false);
           if (provider) {
             const updatedProviders = editingProvider
               ? providers.map((p) => (p === editingProvider ? provider : p))
-              : [...providers, provider]
-            setProviders(updatedProviders)
+              : [...providers, provider];
+            setProviders(updatedProviders);
           }
-          setEditingProvider(null) // Reset after closing
+          setEditingProvider(null); // Reset after closing
         }}
         initialProvider={editingProvider}
       />
@@ -242,7 +243,7 @@ export default function NewEvaluation() {
                 component="div"
                 multiline
                 onClick={() => {
-                  setProviderModal(true)
+                  setProviderModal(true);
                 }}
               >
                 <Pill.Group>
@@ -257,9 +258,9 @@ export default function NewEvaluation() {
                         )
                       }
                       onClick={(e) => {
-                        e.stopPropagation()
-                        setEditingProvider(provider)
-                        setProviderModal(true)
+                        e.stopPropagation();
+                        setEditingProvider(provider);
+                        setProviderModal(true);
                       }}
                       style={{
                         cursor: "pointer",
@@ -426,5 +427,5 @@ export default function NewEvaluation() {
         </Stack>
       </Container>
     </>
-  )
+  );
 }

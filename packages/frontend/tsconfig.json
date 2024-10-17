@@ -18,14 +18,14 @@
     "paths": {
       "@/*": ["./*"],
       "@/lib/*": ["lib/*"],
-      "@/components/*": ["components/*"],
+      "@/components/*": ["components/*"]
     },
     "plugins": [
       {
-        "name": "next",
-      },
+        "name": "next"
+      }
     ],
-    "strictNullChecks": true,
+    "strictNullChecks": true
   },
   "include": [
     "next-env.d.ts",
@@ -33,7 +33,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "../backend/src/api/stripe.ts",
-    "../backend/src/api/signup.ts",
+    "../backend/src/api/signup.ts"
   ],
-  "exclude": ["node_modules"],
+  "exclude": ["node_modules"]
 }

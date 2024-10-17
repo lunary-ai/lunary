@@ -1,4 +1,4 @@
-import type { CheckParam } from "./types"
+import type { CheckParam } from "./types";
 
 export const FORMAT_PARAM: CheckParam = {
   type: "select",
@@ -23,7 +23,7 @@ export const FORMAT_PARAM: CheckParam = {
       value: "contains",
     },
   ],
-}
+};
 
 export const NUMBER_PARAM: CheckParam = {
   type: "select",
@@ -57,7 +57,7 @@ export const NUMBER_PARAM: CheckParam = {
       value: "lte",
     },
   ],
-}
+};
 
 export const FIELD_PARAM: CheckParam = {
   type: "select",
@@ -74,7 +74,7 @@ export const FIELD_PARAM: CheckParam = {
       value: "output",
     },
   ],
-}
+};
 
 export const FIELD_PARAM_ANY: CheckParam = {
   type: "select",
@@ -95,7 +95,7 @@ export const FIELD_PARAM_ANY: CheckParam = {
       value: "any",
     },
   ],
-}
+};
 
 export const MATCH_PARAM: CheckParam = {
   type: "select",
@@ -112,7 +112,7 @@ export const MATCH_PARAM: CheckParam = {
       value: "not_contains",
     },
   ],
-}
+};
 
 export const PERCENT_PARAM: CheckParam = {
   type: "number",
@@ -123,4 +123,4 @@ export const PERCENT_PARAM: CheckParam = {
   step: 5,
   max: 100,
   defaultValue: 50,
-}
+};

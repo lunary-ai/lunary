@@ -1,16 +1,16 @@
-import { useOrg } from "@/utils/dataHooks"
-import { SEAT_ALLOWANCE } from "@/utils/pricing"
-import { Card, Progress, Stack, Text } from "@mantine/core"
-import { SettingsCard } from "./SettingsCard"
+import { useOrg } from "@/utils/dataHooks";
+import { SEAT_ALLOWANCE } from "@/utils/pricing";
+import { Card, Progress, Stack, Text } from "@mantine/core";
+import { SettingsCard } from "./SettingsCard";
 
 export default function SeatAllowanceCard() {
-  const { org } = useOrg()
+  const { org } = useOrg();
 
   if (!org?.plan) {
-    return null
+    return null;
   }
 
-  const seatAllowance = org?.seatAllowance || SEAT_ALLOWANCE[org?.plan]
+  const seatAllowance = org?.seatAllowance || SEAT_ALLOWANCE[org?.plan];
 
   return (
     <SettingsCard title="Seat Allowance">
@@ -24,5 +24,5 @@ export default function SeatAllowanceCard() {
         radius="xl"
       />
     </SettingsCard>
-  )
+  );
 }
