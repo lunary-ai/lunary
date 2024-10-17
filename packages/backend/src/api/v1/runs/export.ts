@@ -1,17 +1,17 @@
-import { isOpenAIMessage, unCamelObject } from "@/src/utils/misc"
-import { Parser } from "@json2csv/plainjs"
-import { Context } from "koa"
-import { Run } from "shared"
+import { isOpenAIMessage, unCamelObject } from "@/src/utils/misc";
+import { Parser } from "@json2csv/plainjs";
+import { Context } from "koa";
+import { Run } from "shared";
 
 interface ExportType {
-  sql: any
-  ctx: Context
-  runs: Array<any>
-  projectId: string
+  sql: any;
+  ctx: Context;
+  runs: Array<any>;
+  projectId: string;
 }
 
 interface TraceRun extends Run {
-  children: TraceRun[]
+  children: TraceRun[];
 }
 
 function cleanOpenAiMessage(message: any) {
@@ -82,8 +82,8 @@ async function getRelatedRuns(sql: any, runId: string, projectId: string) {
     rr.metadata
   from 
     related_runs rr;
-  `
-  return related
+  `;
+  return related;
 }
 
 function getTraceChildren(run: Run, runs: Run[]): TraceRun {
@@ -101,8 +101,8 @@ function getTraceChildren(run: Run, runs: Run[]): TraceRun {
 
   return {
     ...run,
-    children: childRuns.map((subRun) => getTraceChildren(subRun, runs))
-  }
+    children: childRuns.map((subRun) => getTraceChildren(subRun, runs)),
+  };
 }
 
 export async function fileExport(
@@ -111,15 +111,15 @@ export async function fileExport(
   exportType?: "trace" | "thread",
 ) {
   if (exportFormat === "csv") {
-    const data = runs.length > 0 ? runs : [{}]
-    const parser = new Parser()
-    const csv = parser.parse(data)
-    const buffer = Buffer.from(csv, "utf-8")
+    const data = runs.length > 0 ? runs : [{}];
+    const parser = new Parser();
+    const csv = parser.parse(data);
+    const buffer = Buffer.from(csv, "utf-8");
 
     ctx.set("Content-Type", "text/csv");
     ctx.set("Content-Disposition", 'attachment; filename="export.csv"');
 
-    ctx.body = buffer
+    ctx.body = buffer;
   } else if (exportFormat === "ojsonl") {
     const jsonl = runs
       // make sure it's a valid row of OpenAI messages
@@ -148,16 +148,16 @@ export async function fileExport(
     ctx.set("Content-Type", "application/jsonl");
     ctx.set("Content-Disposition", 'attachment; filename="export.jsonl"');
 
-    ctx.body = buffer
+    ctx.body = buffer;
   } else if (exportFormat === "jsonl") {
     const jsonl = (
       await Promise.all(
         runs.map(async (row) => {
           if (exportType === "trace") {
-            const related = await getRelatedRuns(sql, row.id, projectId)
-            row = getTraceChildren(row, related)
+            const related = await getRelatedRuns(sql, row.id, projectId);
+            row = getTraceChildren(row, related);
           }
-          return JSON.stringify(row)
+          return JSON.stringify(row);
         }),
       )
     )
