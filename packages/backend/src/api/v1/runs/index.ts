@@ -461,7 +461,7 @@ runs.get("/", async (ctx: Context) => {
     deserializedChecks?.length && deserializedChecks.length > 1 // first is always ["AND"]
       ? convertChecksToSQL(deserializedChecks)
       : sql`r.type = 'llm'`; // default to type llm
-  1;
+
   const {
     limit = "50",
     page = "0",

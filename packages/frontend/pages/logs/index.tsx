@@ -105,7 +105,7 @@ export const defaultColumns = {
     nameColumn("Agent"),
     durationColumn(),
     userColumn(),
-    feedbackColumn(false),
+    feedbackColumn(true),
     tagsColumn(),
     inputColumn("Input"),
     outputColumn(),
@@ -115,7 +115,7 @@ export const defaultColumns = {
     userColumn(),
     inputColumn("Last Message"),
     tagsColumn(),
-    feedbackColumn(false),
+    feedbackColumn(true),
   ],
 };
 
