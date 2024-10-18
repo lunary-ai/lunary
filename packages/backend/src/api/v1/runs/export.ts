@@ -3,11 +3,14 @@ import { Parser } from "@json2csv/plainjs";
 import { Context } from "koa";
 import { Run } from "shared";
 
+import { Writable, Readable } from "stream";
+
 interface ExportType {
   sql: any;
   ctx: Context;
-  runs: Array<any>;
   projectId: string;
+  cursor?: any;
+  formatRun: (run: any) => any;
 }
 
 interface TraceRun extends Run {
@@ -106,20 +109,25 @@ function getTraceChildren(run: Run, runs: Run[]): TraceRun {
 }
 
 export async function fileExport(
-  { ctx, sql, runs, projectId }: ExportType,
+  { ctx, sql, cursor, formatRun, projectId }: ExportType,
   exportFormat: "csv" | "ojsonl" | "jsonl",
   exportType?: "trace" | "thread",
 ) {
   if (exportFormat === "csv") {
-    const data = runs.length > 0 ? runs : [{}];
     const parser = new Parser();
-    const csv = parser.parse(data);
-    const buffer = Buffer.from(csv, "utf-8");
 
     ctx.set("Content-Type", "text/csv");
     ctx.set("Content-Disposition", 'attachment; filename="export.csv"');
 
-    ctx.body = buffer;
+    const stream = Readable.from({
+      async *[Symbol.asyncIterator]() {
+        for await (const [row] of cursor) {
+          yield parser.parse(formatRun(row));
+        }
+      },
+    });
+    ctx.body = stream;
+
   } else if (exportFormat === "ojsonl") {
     const jsonl = runs
       // make sure it's a valid row of OpenAI messages
