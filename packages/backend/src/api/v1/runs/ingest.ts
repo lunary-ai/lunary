@@ -283,6 +283,8 @@ async function registerRunEvent(
     if (type === "llm") {
       cost = await calcRunCost({
         type,
+        input: runData.input,
+        output,
         promptTokens: tokensUsage?.prompt,
         completionTokens: tokensUsage?.completion,
         name: runData?.name,
