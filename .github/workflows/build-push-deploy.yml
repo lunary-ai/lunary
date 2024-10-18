@@ -29,7 +29,7 @@ jobs:
 
       - name: Update Helm chart version
         # run: bash update.sh ${{ github.event.release.tag_name }}
-        run: bash update.sh 1.5.5-alpha
+        run: bash update.sh 0.0.0
 
       - name: Publish Helm chart
         run: bash publish.sh
