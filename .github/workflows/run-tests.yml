@@ -7,6 +7,7 @@ on:
 
 jobs:
   run-tests:
+    if: ${{ !contains(github.head_ref, 'ci') && !contains(github.ref, 'ci') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -36,7 +37,6 @@ jobs:
         run: npm ci
 
       - name: Install Playwright
-        # if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
 
       - name: Start backend
