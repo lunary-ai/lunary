@@ -127,57 +127,52 @@ export async function fileExport(
       },
     });
     ctx.body = stream;
-
   } else if (exportFormat === "ojsonl") {
-    const jsonl = runs
-      // make sure it's a valid row of OpenAI messages
-      .filter((row) => {
-        return (
-          validateOpenAiMessages(row.input).length &&
-          validateOpenAiMessages(row.output).length
-        );
-      })
-      // convert to JSON string format { messages: [input, output]}
-      .map((row) =>
-        unCamelObject({
-          messages: [
-            ...validateOpenAiMessages(row.input),
-            ...validateOpenAiMessages(row.output),
-          ].map(cleanOpenAiMessage),
-        }),
-      )
-
-      .map((row) => JSON.stringify(row))
-      .filter((line) => line.length > 0)
-      .join("\n");
-
-    const buffer = Buffer.from(jsonl, "utf-8");
-
     ctx.set("Content-Type", "application/jsonl");
     ctx.set("Content-Disposition", 'attachment; filename="export.jsonl"');
 
-    ctx.body = buffer;
+    const stream = Readable.from({
+      async *[Symbol.asyncIterator]() {
+        for await (const [row] of cursor) {
+          // make sure it's a valid row of OpenAI messages
+          const input = validateOpenAiMessages(row.input);
+          const output = validateOpenAiMessages(row.output);
+
+          if (input.length && output.length) {
+            // convert to JSON string format { messages: [input, output]}
+            const line = JSON.stringify(unCamelObject({
+              messages: [...input, ...output]
+                .map(cleanOpenAiMessage),
+            }));
+            if (line.length > 0) {
+              yield line + "\n";
+            }
+          }
+        }
+      },
+    });
+    ctx.body = stream;
   } else if (exportFormat === "jsonl") {
-    const jsonl = (
-      await Promise.all(
-        runs.map(async (row) => {
+    ctx.set("Content-Type", "application/jsonl");
+    ctx.set("Content-Disposition", 'attachment; filename="export.jsonl"');
+
+    const stream = Readable.from({
+      async *[Symbol.asyncIterator]() {
+        for await (const [row] of cursor) {
+          let line;
           if (exportType === "trace") {
             const related = await getRelatedRuns(sql, row.id, projectId);
-            row = getTraceChildren(row, related);
+            line = JSON.stringify(getTraceChildren(row, related));
+          } else {
+            line = JSON.stringify(row);
           }
-          return JSON.stringify(row);
-        }),
-      )
-    )
-      .filter((line) => line.length > 0)
-      .join("\n");
-
-    const buffer = Buffer.from(jsonl, "utf-8");
-
-    ctx.set("Content-Type", "application/jsonl");
-    ctx.set("Content-Disposition", 'attachment; filename="export.jsonl"');
-
-    ctx.body = buffer;
+          if (line.length > 0) {
+            yield line + "\n";
+          }
+        }
+      },
+    });
+    ctx.body = stream;
   } else {
     ctx.throw(400, "Invalid export type");
   }
