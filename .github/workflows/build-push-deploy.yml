@@ -96,7 +96,7 @@ jobs:
           push: true
           tags: |
             lunary/ml:latest
-            ${{ github.event.release.tag_name != '' && format('lunary/ml:{1}', steps.release_tag.outputs.tag) || '' }}
+            ${{ github.event.release.tag_name != '' && format('lunary/ml:{0}', steps.release_tag.outputs.tag) || '' }}
           platforms: linux/arm64,linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
