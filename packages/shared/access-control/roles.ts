@@ -153,7 +153,7 @@ export const roles: Record<
         create: true,
         read: true,
         update: true,
-        delete: false,
+        delete: true,
         list: true,
       },
       billing: {

@@ -2,8 +2,7 @@ import { isOpenAIMessage, unCamelObject } from "@/src/utils/misc";
 import { Parser } from "@json2csv/plainjs";
 import { Context } from "koa";
 import { Run } from "shared";
-
-import { Writable, Readable } from "stream";
+import { Readable } from "stream";
 
 interface ExportType {
   sql: any;

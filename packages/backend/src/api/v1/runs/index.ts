@@ -844,7 +844,9 @@ runs.get("/:id", async (ctx) => {
       eu.id
     `;
 
-  if (!row) return ctx.throw(404, "Run not found");
+  if (!row) {
+    return ctx.throw(404, "Run not found");
+  }
 
   ctx.body = formatRun(row);
 });
@@ -970,7 +972,7 @@ runs.get("/:id/related", checkAccess("logs", "read"), async (ctx) => {
   const id = ctx.params.id;
   const { projectId } = ctx.state;
 
-  const related = await sql`
+  const relatedRuns = await sql`
     with recursive related_runs as (
       select 
         r1.*
@@ -1004,13 +1006,14 @@ runs.get("/:id/related", checkAccess("logs", "read"), async (ctx) => {
     rr.parent_run_id, 
     rr.completion_tokens, 
     rr.prompt_tokens, 
+    coalesce(rr.cost, 0) as cost,
     rr.feedback, 
     rr.metadata
   from 
     related_runs rr;
   `;
 
-  ctx.body = related;
+  ctx.body = relatedRuns;
 });
 
 runs.get("/:id/feedback", async (ctx) => {
