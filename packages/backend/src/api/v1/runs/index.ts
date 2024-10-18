@@ -489,7 +489,7 @@ runs.get("/", async (ctx: Context) => {
     orderByClause = `${sortMapping[sortField]} ${direction} nulls last`;
   }
 
-  const rows = await sql`
+  const query = sql`
     with runs as (
       select distinct
         r.*,
@@ -532,8 +532,7 @@ runs.get("/", async (ctx: Context) => {
                 'updatedAt', er.updated_at
             )
         ) filter (where er.run_id is not null), '{}') as evaluation_results
-    from
-            runs r
+    from runs r
     left join evaluation_result_v2 er on r.id = er.run_id
     left join evaluator e on er.evaluator_id = e.id
     group by r.id
@@ -544,14 +543,19 @@ runs.get("/", async (ctx: Context) => {
   from
     runs r
     left join evaluation_results er on r.id = er.id
-  
   `;
 
-  const runs = rows.map(formatRun);
-
   if (exportFormat) {
-    return fileExport({ ctx, sql, runs, projectId }, exportFormat, exportType);
+    const cursor = query.cursor();
+    return fileExport(
+      { ctx, sql, cursor, formatRun, projectId },
+      exportFormat,
+      exportType,
+    );
   }
+
+  const rows = await query;
+  const runs = rows.map(formatRun);
 
   const total = await sql`
     with runs as (
