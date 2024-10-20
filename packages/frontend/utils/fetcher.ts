@@ -45,21 +45,27 @@ async function getFile(path) {
     throw new Error(message);
   }
 
+  console.log(res.headers)
+
   const contentType = res.headers.get("Content-Type") as string;
   const fileExtension = contentType.split("/")[1];
 
-  const blob = await res.blob();
-  const url = window.URL.createObjectURL(blob);
+  const { createWriteStream } = await import('streamsaver');
+  const fileStream = createWriteStream(`export.${fileExtension}`);
+  await res.body?.pipeTo(fileStream);
 
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `export.${fileExtension}`;
+  // const blob = await res.blob();
+  // const url = window.URL.createObjectURL(blob);
 
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  // const a = document.createElement("a");
+  // a.href = url;
+  // a.download = `export.${fileExtension}`;
 
-  window.URL.revokeObjectURL(url);
+  // document.body.appendChild(a);
+  // a.click();
+  // a.remove();
+
+  // window.URL.revokeObjectURL(url);
 }
 
 async function getStream(url, args, onChunk) {

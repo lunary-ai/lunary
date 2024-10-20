@@ -21,8 +21,10 @@
     "packages/*"
   ],
   "dependencies": {
+    "@types/streamsaver": "^2.0.5",
     "concurrently": "^8.2.2",
-    "patch-package": "^8.0.0"
+    "patch-package": "^8.0.0",
+    "streamsaver": "^2.0.6"
   },
   "devDependencies": {
     "@playwright/test": "^1.47.0",
