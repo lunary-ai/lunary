@@ -26,7 +26,7 @@ function TopTemplates({ topTemplates, isLoading }: TopTemplatesProps) {
     );
   }
 
-  if (topTemplates.length === 0) {
+  if (topTemplates?.length === 0) {
     return (
       <>
         <Overlay blur={5} opacity={0.1} p="lg" zIndex={1} />
@@ -55,6 +55,7 @@ function TopTemplates({ topTemplates, isLoading }: TopTemplatesProps) {
       }))}
       columns={[
         {
+          key: "template",
           name: "Template",
           bar: true,
         },
