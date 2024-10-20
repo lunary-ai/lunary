@@ -66,6 +66,7 @@ import {
   IconMinus,
   IconPlus,
   IconRestore,
+  IconSelect,
   IconTrash,
   IconUserEdit,
 } from "@tabler/icons-react";
@@ -86,35 +87,18 @@ import Sentiment from "@/components/analytics/Charts/Sentiment";
 import { Grid, TextInput, NumberInput, Checkbox } from "@mantine/core";
 import { useChart, useCharts } from "@/utils/dataHooks/charts";
 import ErrorBoundary from "@/components/blocks/ErrorBoundary";
-import ImageMultiSelect from "@/components/blocks/ImageSelectField";
 
-// Example chart components (replace these with your actual chart components)
-const DemoLineChart = ({ stroke, strokeWidth, interpolation, dot, grid }) => (
-  <div>LineChart preview</div>
-);
-const PieChart = ({
-  radius,
-  innerRadius,
-  paddingAngle,
-  startAngle,
-  endAngle,
-}) => <div>PieChart preview</div>;
-const AreaChart = ({ baseLine, curveType, fillOpacity, margin, stack }) => (
-  <div>AreaChart preview</div>
-);
-const RadarChart = ({
-  startAngle,
-  endAngle,
-  angleField,
-  radiusField,
-  grid,
-}) => <div>RadarChart preview</div>;
+const getPreviousDate = (day) => {
+  const date = new Date();
+  date.setDate(date.getDate() - day);
+  return date.toISOString();
+}
 
 const BASE_CHART_PROPS = {
-  dataKey: {
-    type: "string",
-    required: true,
-  },
+  // dataKey: {
+  //   type: "string",
+  //   required: true,
+  // },
   gridAxis: {
     type: "segmented",
     options: [
@@ -136,27 +120,6 @@ const BASE_CHART_PROPS = {
       },
     ],
   },
-  // tickLine: {
-  //   type: "segmented",
-  //   options: [
-  //     {
-  //       label: "x",
-  //       value: "x",
-  //     },
-  //     {
-  //       label: "y",
-  //       value: "y",
-  //     },
-  //     {
-  //       label: "xy",
-  //       value: "xy",
-  //     },
-  //     {
-  //       label: "none",
-  //       value: "none",
-  //     },
-  //   ],
-  // },
   withXAxis: {
     type: "boolean",
     defaultValue: true,
@@ -175,82 +138,36 @@ const BASE_CHART_PROPS = {
   withTooltip: {
     type: "boolean",
     defaultValue: true,
-  },
-  // xAxisProps: {
-  //   type: "group",
-  //   children: {
-  //     xAxisId: {
-  //       type: "string",
-  //     },
-  //     width: {
-  //       type: "number",
-  //     },
-  //     height: {
-  //       type: "number",
-  //     },
-  //     mirror: {
-  //       type: "boolean",
-  //     },
-  //     orientation: {
-  //       type: "segmented",
-  //       options: [
-  //         {
-  //           label: "Top",
-  //           value: "top",
-  //         },
-  //         {
-  //           label: "Bottom",
-  //           value: "bottom",
-  //         },
-  //       ],
-  //     },
-  //     padding: {
-  //       type: "array",
-  //       options: ["gap", "no-gap"],
-  //     },
-  //     minTickGap: {
-  //       type: "number",
-  //     },
-  //     reversed: {
-  //       type: "boolean",
-  //     },
-  //     angle: {
-  //       type: "number",
-  //     },
-  //     tickMargin: {
-  //       type: "number",
-  //     },
-  //   },
-  // },
+  }
 };
 
 const CHART_DATA = [
   {
-    date: "Mar 22",
+    date: getPreviousDate(15),
     Apples: 2890,
     Oranges: 2338,
     Tomatoes: 2452,
   },
   {
-    date: "Mar 23",
+    date: getPreviousDate(12),
     Apples: 2756,
     Oranges: 2103,
     Tomatoes: 2402,
   },
   {
-    date: "Mar 24",
+    date: getPreviousDate(8),
     Apples: 3322,
     Oranges: 986,
     Tomatoes: 1821,
   },
   {
-    date: "Mar 25",
+    date: getPreviousDate(4),
     Apples: 3470,
     Oranges: 2108,
     Tomatoes: 2809,
   },
   {
-    date: "Mar 26",
+    date: getPreviousDate(1),
     Apples: 3129,
     Oranges: 1726,
     Tomatoes: 2290,
@@ -258,15 +175,80 @@ const CHART_DATA = [
 ];
 
 const CHART_SERIES = [
-  { name: "Apples", color: "indigo.6" },
-  { name: "Oranges", color: "blue.6" },
-  { name: "Tomatoes", color: "teal.6" },
+  { name: "Apples", color: "indigo" },
+  { name: "Oranges", color: "blue" },
+  { name: "Tomatoes", color: "teal" },
 ];
 
 const CHARTS = [
   {
+    name: "LunaryChart",
+    props: {
+      height: { type: "number", defaultValue: 230 },
+      splitBy: { type: "string" },
+      granularity: {
+        type: "segmented",
+        options: [
+          { label: "Day", value: "daily" },
+          { label: "Week", value: "weekly" },
+          { label: "Hourly", value: "hourly" },
+        ],
+        defaultValue: "daily"
+      },
+      agg: {
+        type: "segmented",
+        options: [
+          { label: "Sum", value: "sum" },
+          { label: "Average", value: "agg" }
+        ]
+      },
+      title: { type: "string" },
+      description: { type: "string" }
+    },
+    component({ data, props, series }) {
+      const [dateRange, _] = useSessionStorage({
+        key: "dateRange-analytics",
+        getInitialValueInEffect: false,
+        deserialize: deserializeDateRange,
+        defaultValue: getDefaultDateRange(),
+      });
+
+      const [startDate, endDate] = dateRange;
+      console.log(data)
+      return <LineChart
+        data={data.map(item => {
+          // TODO: Clean this up!!
+          return { ...item, date: new Date(item.date || item.createdAt || new Date()).toISOString() };
+        })} startDate={startDate} endDate={endDate}
+        props={series.map(serie => serie.name)}
+        colors={[
+          ...series.map(serie => serie.color).filter(Boolean),
+          "blue", "pink", "indigo", "green", "violet", "yellow"
+        ]}
+        granularity={"daily"}
+        {...props}
+      />
+    }
+  },
+  {
     name: "BarChart",
-    props: { ...BASE_CHART_PROPS },
+    props: {
+      ...BASE_CHART_PROPS,
+      orientation: {
+        type: "segmented",
+        options: [
+          {
+            label: "Horizontal",
+            value: "horizontal",
+          },
+          {
+            label: "Vertical",
+            value: "vertical",
+          },
+        ],
+        defaultValue: "horizontal"
+      },
+    },
     component({ data, props, series }) {
       return (
         <MantineBarChart
@@ -396,6 +378,22 @@ const DND_TYPES = {
   MAIN: "main",
   EXTRAS: "extras",
 };
+
+function useChartData(data, startDate, endDate) {
+  if (!data.source || data.source === "runs") {
+    const { data, isLoading } = useProjectSWR("/runs");
+    return { data: data?.data, isLoading };
+  } else if (data.source === "models") {
+    const { data, isLoading } = useProjectSWR("/models");
+    console.log({ data, isLoading })
+    return { data: data, isLoading };
+  } else if (data.source === "templates")
+    return useTopTemplates(startDate, endDate)
+  else if (data.source === "users") {
+    const { users, loading } = useExternalUsers({ startDate, endDate });
+    return { data: users, isLoading: loading };
+  } else return useAnalyticsChartData(null, startDate, endDate, "")
+}
 
 export function getDefaultDateRange() {
   const endOfToday = new Date();
@@ -768,15 +766,20 @@ function Droppable({ type, children, editMode, onDrop }) {
 function Selectable({
   header,
   isSelected,
+  icon,
   icons,
   children,
   onSelect,
 }: {
+  icons?: any[];
+  children: any;
   header?: string;
   isSelected?: boolean;
-  children: any;
-  icons?: any[];
-  onSelect: () => any;
+  icon?: (props: {
+    onClick: () => any;
+    selected: boolean
+  }) => any;
+  onSelect?: () => any;
 }) {
   const [selected, setSelected] = useState(!!isSelected);
 
@@ -791,9 +794,9 @@ function Selectable({
         <Group justify="space-between">
           <Text fw={500}>{header}</Text>
 
-          <ActionIcon onClick={onSelected} color={selected ? "red" : undefined}>
+          {icon ? icon({ selected, onClick: onSelected }) : (<ActionIcon onClick={onSelected} color={selected ? "red" : undefined}>
             {selected ? <IconMinus size="12" /> : <IconPlus size="12" />}
-          </ActionIcon>
+          </ActionIcon>)}
 
           {icons &&
             icons.map((icon) => (
@@ -875,18 +878,7 @@ function SelectableCustomChart({ index, chart, chartsState, toggleChart }) {
 
   const [startDate, endDate] = dateRange;
 
-  const chartData = (() => {
-    if (!data.source || data.source === "runs") {
-      return useTopModels({ startDate, endDate });
-    } else if (data.source === "templates") {
-      return useTopTemplates(startDate, endDate);
-    } else if (data.source === "users") {
-      // TODO: FIX!!
-      return useExternalUsers({ startDate, endDate });
-    } else {
-      return useProjectSWR(() => null)
-    }
-  })();
+  const chartData = useChartData(data, startDate, endDate);
 
   const series = data.series.map(serie => {
     if (!serie.field) return null;
@@ -911,10 +903,7 @@ function SelectableCustomChart({ index, chart, chartsState, toggleChart }) {
       onSelect={() => toggleChart(item.id, "extras")}
     >
       {CHARTS.find((c) => name === c.name)?.component({
-        data: ("data" in chartData
-          ? chartData.data
-          : chartData.users
-          || []), props, series
+        data: chartData.data || [], props, series: series || []
       })}
     </Selectable>
   );
@@ -930,7 +919,7 @@ function CustomChart({ chartID }) {
   }, [inViewport]);
 
   if (!load) {
-    return null;
+    // return null;
   }
 
   const { chart: item } = useChart(chartID);
@@ -948,18 +937,9 @@ function CustomChart({ chartID }) {
 
   const [startDate, endDate] = dateRange;
 
-  const chartData = (() => {
-    if (!data.source || data.source === "runs") {
-      return useTopModels({ startDate, endDate });
-    } else if (data.source === "templates") {
-      return useTopTemplates(startDate, endDate);
-    } else if (data.source === "users") {
-      // TODO: FIX!!
-      return useExternalUsers({ startDate, endDate });
-    } else {
-      return useProjectSWR(() => null)
-    }
-  })();
+  const chartData = useChartData(data, startDate, endDate);
+
+  if (chartData.isLoading) return null;
 
   const series = data.series.map(serie => {
     if (!serie.field) return null;
@@ -971,7 +951,7 @@ function CustomChart({ chartID }) {
 
   return (
     <Box ref={ref}>
-      <ErrorBoundary>{chart.component({ data: chartData, props, series })}</ErrorBoundary>
+      <ErrorBoundary>{chart.component({ data: chartData.data, props, series })}</ErrorBoundary>
     </Box>
   );
 }
@@ -1071,9 +1051,8 @@ function ChartSelector({
           </Tabs.Panel>
           <Tabs.Panel value="wizard" p="md">
             <CustomChartWizard
-              onConfirm={({ name, chartConfig }) => {
-                console.log(name, chartConfig);
-                return insertChart(chartConfig)
+              onConfirm={({ name, config }) => {
+                return insertChart({ name, type: config.name, config })
                   .then(() => setActiveTab("charts"));
               }}
             />
@@ -1085,20 +1064,19 @@ function ChartSelector({
 }
 
 function DynamicSelectFields({ first, value, onChange }) {
-  const [color, setColor] = useState<string | undefined>(value?.color);
+  const [color, setColor] = useState<string | undefined>(value?.color || "blue");
   const [field, setField] = useState<string | null>(value?.field || null);
   const [subField, setSubField] = useState<string | null>(value?.subField || null);
   const fieldOptions = useMemo(() => {
     switch (first) {
       case "runs":
-        return ["name", "cost", "promptTokens", "completionTokens", "totalTokens"];
-      // return ["id", "name", "type", "tags", "metadata", "cost", "feedback"];
+        return ['projectId', 'isPublic', 'feedback', 'parentFeedback', 'type', 'name', 'createdAt', 'endedAt', 'duration', 'cost', 'tokens', 'tags', 'input', 'output', 'params', 'metadata', 'user'];
       case "users":
         return ['id', 'createdAt', 'externalId', 'lastSeen', 'props', 'cost'];
       case "templates":
         return ["name", "cost", "promptTokens", "completionTokens", "totalTokens"];
       case "models":
-        return [];
+        return ['id', 'name', 'pattern', 'unit', 'inputCost', 'outputCost', 'tokenizer', 'startDate', 'createdAt', 'updatedAt', 'orgId'];
       default:
         return [];
     }
@@ -1145,8 +1123,8 @@ function DynamicSelectFields({ first, value, onChange }) {
         />
       )}
       {fieldOptions?.length && (
-        <ColorPicker value={color} onChange={setColor} size="xs" />
-        // <ColorSelector color={color} setColor={setColor} />
+        // <ColorPicker value={color} onChange={setColor} size="xs" />
+        <ColorSelector color={color} setColor={setColor} />
       )}
     </Flex>
   );
@@ -1154,13 +1132,15 @@ function DynamicSelectFields({ first, value, onChange }) {
 
 function ColorSelector({ color, setColor }) {
   const colors = [
+    { value: "blue", label: "Blue" },
     { value: "red", label: "Red" },
     { value: "orange", label: "Orange" },
     { value: "yellow", label: "Yellow" },
     { value: "green", label: "Green" },
-    { value: "blue", label: "Blue" },
     { value: "indigo", label: "Indigo" },
     { value: "violet", label: "Violet" },
+    { value: "pink", label: "Pink" },
+    { value: "gray", label: "Gray" },
   ];
 
   return (
@@ -1174,6 +1154,8 @@ function ColorSelector({ color, setColor }) {
 function DynamicSelect({ config, setConfig }) {
   const [first, setFirst] = useState(config.data.source || "runs");
   const firstOptions = ["runs", "users", "models", "templates"];
+
+  const [seriesLength, setSeriesLength] = useState(config.data.series?.length || 1);
 
   const onChange = (index, value) => {
     setConfig((config) => {
@@ -1201,26 +1183,32 @@ function DynamicSelect({ config, setConfig }) {
           }}
         />
       </Box>
-      <Box>
-        <h5>First Series</h5>
-        <DynamicSelectFields
-          first={first}
-          onChange={value => onChange(0, value)}
-          value={config.data.series ? config.data.series[0] : null}
-        />
-        <h5>Second Series</h5>
-        <DynamicSelectFields
-          first={first}
-          onChange={value => onChange(1, value)}
-          value={config.data.series ? config.data.series[1] : null}
-        />
-        <h5>Third Series</h5>
-        <DynamicSelectFields
-          first={first}
-          onChange={value => onChange(2, value)}
-          value={config.data.series ? config.data.series[2] : null}
-        />
-      </Box>
+      <Flex gap="sm" direction={"column"}>
+        <h3>Display Fields</h3>
+        {Array.from({ length: seriesLength }).map((_, index) => (
+          <Flex key={index} align="center">
+            <DynamicSelectFields
+              first={first} onChange={(value: any) => onChange(index, value)}
+              value={config.data.series ? config.data.series[index] : null}
+            />
+            <ActionIcon ml="sm" onClick={() => {
+              if (seriesLength > 1) {
+                config.data.series.splice(index, 1);
+                setSeriesLength(len => len - 1)
+              } else {
+                onChange(index, {
+                  field: undefined,
+                  subField: undefined,
+                  color: undefined
+                });
+              }
+            }}>
+              <IconCancel size={16} />
+            </ActionIcon>
+          </Flex>
+        ))}
+        <Button onClick={() => setSeriesLength((len: number) => len + 1)}>Add Field</Button>
+      </Flex>
     </Group>
   )
 }
@@ -1237,6 +1225,31 @@ function DynamicChartPreview({ chartConfig, setChartConfig }) {
         No chart found with name: <code>{chartConfig.name}</code>
       </Text>
     );
+
+
+  const [dateRange, setDateRange] = useSessionStorage({
+    key: "dateRange-analytics",
+    getInitialValueInEffect: false,
+    deserialize: deserializeDateRange,
+    defaultValue: getDefaultDateRange(),
+  });
+
+  const [startDate, endDate] = dateRange;
+  const { data, props } = chartConfig;
+
+  const series = chartConfig.data.series.map(serie => {
+    if (!serie.field) return null;
+    return {
+      name: serie.field,
+      color: serie.color
+    }
+  }).filter(Boolean)
+
+  const chartData = useChartData(data, startDate, endDate);
+
+  if (chartData.isLoading) {
+    return <Loader />
+  }
 
   const handlePropChange = (propName, value) => {
     setChartConfig((config) => ({
@@ -1338,48 +1351,15 @@ function DynamicChartPreview({ chartConfig, setChartConfig }) {
     }
   };
 
-  const [dateRange, setDateRange] = useSessionStorage({
-    key: "dateRange-analytics",
-    getInitialValueInEffect: false,
-    deserialize: deserializeDateRange,
-    defaultValue: getDefaultDateRange(),
-  });
-
-  const [startDate, endDate] = dateRange;
-
-  const { data, props, series } = useMemo(() => {
-    const { name, data, props } = chartConfig;
-
-    const chartData = (() => {
-      if (!data.source || data.source === "runs") {
-        return useTopModels({ startDate, endDate });
-      } else if (data.source === "templates") {
-        return useTopTemplates(startDate, endDate);
-      } else if (data.source === "users") {
-        // TODO: FIX!!
-        return useExternalUsers({ startDate, endDate });
-      } else {
-        return useProjectSWR(() => null)
-      }
-    })();
-
-    const series = data.series.map(serie => {
-      if (!serie.field) return null;
-      return {
-        name: serie.field,
-        color: serie.color
-      }
-    }).filter(Boolean);
-
-    return { data: chartData, props, series }
-  }, [chartConfig])
-
   return (
     <Grid pt="sm">
       <Grid.Col span={{ sm: 12, md: 6 }}>
         <Box>
           <h3>{selectedChart.name} Preview</h3>
-          <selectedChart.component props={props} series={series} data={data} />
+          <selectedChart.component
+            props={props} series={series || []}
+            data={(chartData.data || []).slice(0, chartConfig.limit)}
+          />
         </Box>
       </Grid.Col>
 
@@ -1390,11 +1370,35 @@ function DynamicChartPreview({ chartConfig, setChartConfig }) {
           height: "45rem",
         }}
       >
-        <Box mb="sm">
+        <Group mb="sm" gap="md">
           <DynamicSelect config={chartConfig} setConfig={setChartConfig} />
-        </Box>
+        </Group>
         <Box>
           <h3>Chart Config</h3>
+          <Group>
+            <DateRangeSelect
+              dateRange={dateRange}
+              setDateRange={setDateRange}
+            />
+            <DateRangePicker
+              dateRange={dateRange}
+              setDateRange={setDateRange}
+            />
+          </Group>
+          <Box mb="sm">
+            <h5>Data Limit</h5>
+            <NumberInput
+              defaultValue={chartConfig.limit || chartData.data?.length}
+              onChange={(limit) => setChartConfig(conf => ({ ...conf, limit }))}
+            />
+          </Box>
+          <Box mb="sm">
+            <h5>Data Key</h5>
+            <Select
+              data={Object.keys((chartData.data || [{}])[0])}
+              onChange={(value) => handlePropChange("dataKey", value)}
+            />
+          </Box>
           {Object.keys(selectedChart.props).map((propName) => {
             return (
               <Box key={propName} mb="sm">
@@ -1432,21 +1436,35 @@ function CustomChartWizard({ onConfirm }) {
 
       <Stepper active={active} onStepClick={setActive}>
         <Stepper.Step label="First step" description="Chart Type">
-          <Select
-            label="Select Chart"
-            value={chartConfig.name}
-            onChange={(name) => name && setChartConfig((config) => ({ ...config, name }))}
-            data={CHARTS.map((chart) => chart.name)}
-          />
+          <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="md">
+            {CHARTS.map(chart => {
+              return <Selectable
+                header={chart.name}
+                icon={() => (
+                  <ActionIcon onClick={() => {
+                    setChartConfig(config => ({
+                      ...config, name: chart.name
+                    }));
+                    nextStep();
+                  }}>
+                    <IconPlus size="12" />
+                  </ActionIcon>
+                )}
+              >
+                {chart.component({
+                  data: CHART_DATA,
+                  series: CHART_SERIES,
+                  props: { dataKey: "date" }
+                })}
+              </Selectable>
+            })}
+          </SimpleGrid>
         </Stepper.Step>
         <Stepper.Step label="Second step" description="Chart Configuration">
           <TextInput
-            pt="sm"
-            required
             value={name}
-            onChange={(event) => setName(event.target.value)}
-            label="Chart Name"
-            placeholder="My Custom Chart"
+            onChange={(ev) => setName(ev.currentTarget.value)}
+            placeholder="Chart Name" required
           />
           <DynamicChartPreview
             chartConfig={chartConfig}
@@ -1675,14 +1693,6 @@ export default function Analytics() {
   useEffect(() => {
     setTempChartsState(dashboard ? dashboard.charts : DEFAULT_CHARTS);
   }, [dashboard, dashboardLoading]);
-
-  const getChartConfig = () => {
-    return {
-      id: Date.now(),
-      splitBy: "Department",
-      groupBy: "Month",
-    };
-  };
 
   const getChartComponent = (id: string) => {
     switch (id) {
@@ -1952,66 +1962,6 @@ export default function Analytics() {
               type={DND_TYPES.EXTRAS}
             >
               {getChartComponent(chartsState.extras[0])}
-            </Draggable>
-          </Droppable>
-
-          <Droppable
-            onDrop={(item) =>
-              handleDropChart(item, "extras", chartsState.extras[0])
-            }
-            editMode={editMode}
-            type={DND_TYPES.EXTRAS}
-          >
-            <Draggable
-              id={chartsState.extras[0]}
-              editMode={editMode}
-              type={DND_TYPES.EXTRAS}
-            >
-              <MantineBarChart
-                h={300}
-                series={[
-                  // { name: "totalTokens", color: "indigo.6" },
-                  { name: "promptTokens", color: "blue.6" },
-                  { name: "completionTokens", color: "teal.6" },
-                ]}
-                dataKey="cost"
-                data={[
-                  {
-                    "name": "claude-3-opus-20240229",
-                    "promptTokens": 60993,
-                    "completionTokens": 13375,
-                    "totalTokens": 74368,
-                    "cost": 1.9180200000000016
-                  },
-                  {
-                    "name": "gpt-3.5-turbo",
-                    "promptTokens": 7646,
-                    "completionTokens": 3218,
-                    "totalTokens": 10864,
-                    "cost": 0.00864
-                  },
-                  {
-                    "name": "claude-3-haiku-20240307",
-                    "promptTokens": 7600,
-                    "completionTokens": 1645,
-                    "totalTokens": 9245,
-                    "cost": 0.0039562500000000006
-                  },
-                  {
-                    "name": "gpt-4-turbo",
-                    "promptTokens": 2300,
-                    "completionTokens": 1153,
-                    "totalTokens": 3453,
-                    "cost": 0.05758999999999999
-                  },
-                  {
-                    "name": "claude-3-5-sonnet-20240620",
-                    "promptTokens": 34,
-                    "completionTokens": 113,
-                    "totalTokens": 147,
-                    "cost": 0.001797
-                  }
-                ]} />
             </Draggable>
           </Droppable>
 
