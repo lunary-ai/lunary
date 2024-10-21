@@ -1,7 +1,6 @@
 import Router from "next/router";
 import { signOut } from "./auth";
 import { showErrorNotification } from "./errors";
-import { showNotification } from "@mantine/notifications";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL as string;
 
@@ -45,21 +44,12 @@ async function getFile(path) {
     throw new Error(message);
   }
 
+  const { createWriteStream } = await import("streamsaver");
   const contentType = res.headers.get("Content-Type") as string;
   const fileExtension = contentType.split("/")[1];
 
-  const blob = await res.blob();
-  const url = window.URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `export.${fileExtension}`;
-
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-
-  window.URL.revokeObjectURL(url);
+  const fileStream = createWriteStream(`export.${fileExtension}`);
+  await res.body?.pipeTo(fileStream);
 }
 
 async function getStream(url, args, onChunk) {
