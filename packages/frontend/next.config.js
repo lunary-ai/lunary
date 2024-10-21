@@ -40,6 +40,11 @@ const nextConfig = {
         destination: process.env.API_URL + "/api/report",
       },
       {
+        // This one is for the people on Flowise with the old endpoint saved
+        source: "/v1/runs/ingest",
+        destination: process.env.API_URL + "/v1/runs/ingest",
+      },
+      {
         source: "/api/v1/template",
         destination: process.env.API_URL + "/api/v1/template",
       },
