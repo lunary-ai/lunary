@@ -5,6 +5,7 @@ on:
 jobs:
   auto-approve:
     runs-on: ubuntu-latest
+    if: github.event.pull_request.user.login == 'hughcrt' || github.event.pull_request.user.login == 'vincelwt'
     steps:
       - name: Checkout code
         uses: actions/checkout@v3

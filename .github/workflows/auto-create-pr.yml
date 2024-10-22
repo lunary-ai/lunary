@@ -13,7 +13,6 @@ jobs:
           fetch-depth: 0
 
       - name: Create Pull Request
-        id: create_pr
         run: |
           BRANCH_NAME="${{ github.ref_name }}"
 
@@ -25,21 +24,10 @@ jobs:
             PR_TITLE="${BRANCH_NAME//-/ }"
           fi
 
-          PR_URL=$(gh pr create \
+          gh pr create \
             -B main \
             -H "$BRANCH_NAME" \
             --title "$PR_TITLE" \
-            --body "" \
-            --json url \
-            --jq .url)
-
-          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-
-      - name: Auto-approve PR
-        if: ${{ github.event.sender.login == 'hughcrt' || github.event.sender.login == 'vincelwt' }}
-        run: |
-          gh pr review "${{ steps.create_pr.outputs.pr_url }}" --approve
+            --body ""
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
