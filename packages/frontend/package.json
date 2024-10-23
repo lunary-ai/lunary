@@ -38,8 +38,7 @@
     "recharts": "^2.12.7",
     "shared": "*",
     "swr": "^2.2.4",
-    "zod": "^3.23.8",
-    "streamsaver": "^2.0.6"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/streamsaver": "^2.0.5",
