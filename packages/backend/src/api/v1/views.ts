@@ -13,7 +13,7 @@ const views = new Router({
 const ViewSchema = z.object({
   name: z.string(),
   data: z.array(z.any()),
-  columns: z.array(z.any()),
+  columns: z.any(),
   icon: z.string().optional(),
   type: z.enum(["llm", "thread", "trace"]),
 });

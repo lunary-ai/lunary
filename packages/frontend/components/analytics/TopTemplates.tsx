@@ -39,7 +39,7 @@ function TopTemplates({ topTemplates, isLoading }: TopTemplatesProps) {
 
   return (
     <BarList
-      data={topTemplates.map((template) => ({
+      data={topTemplates?.map((template) => ({
         value: template.slug,
         usage: template.usageCount,
         tokens: template.totalTokens,

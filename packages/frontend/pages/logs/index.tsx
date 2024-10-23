@@ -145,13 +145,7 @@ export const CHECKS_BY_TYPE = {
     "duration",
     "metadata",
   ],
-  thread: [
-    "date",
-    "tags",
-    "users",
-    "feedback",
-    "metadata",
-  ],
+  thread: ["date", "tags", "users", "feedback", "metadata"],
 };
 
 const VIEW_ICONS = {
@@ -457,7 +451,9 @@ export default function Logs() {
                     <Menu.Item
                       // disabled={type === "thread"}
                       leftSection={<IconFileExport size={16} />}
-                      {...exportButton(exportUrl + `&exportType=${type}&exportFormat=csv`)}
+                      {...exportButton(
+                        exportUrl + `&exportType=${type}&exportFormat=csv`,
+                      )}
                     >
                       Export to CSV
                     </Menu.Item>
@@ -476,7 +472,9 @@ export default function Logs() {
                       color="dimmed"
                       // disabled={type === "thread"}
                       leftSection={<IconBraces size={16} />}
-                      {...exportButton(exportUrl + `&exportType=${type}&exportFormat=jsonl`)}
+                      {...exportButton(
+                        exportUrl + `&exportType=${type}&exportFormat=jsonl`,
+                      )}
                     >
                       Export to raw JSONL
                     </Menu.Item>
