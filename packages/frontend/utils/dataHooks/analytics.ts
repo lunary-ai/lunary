@@ -48,7 +48,7 @@ export function useTopModels(params: {
 export function useTopTemplates(
   startDate: Date,
   endDate: Date,
-  checks: string,
+  checks?: string,
 ) {
   const timeZone = new window.Intl.DateTimeFormat().resolvedOptions().timeZone;
   const checksParam = checks ? `&checks=${checks}` : "";

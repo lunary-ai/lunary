@@ -4,7 +4,8 @@ import TopTemplates from "@/components/analytics/TopTemplates";
 import TopUsersCard from "@/components/analytics/TopUsers";
 import CheckPicker from "@/components/checks/Picker";
 import Empty from "@/components/layout/Empty";
-import { useProject } from "@/utils/dataHooks";
+import DynamicChart from "@/components/analytics/Charts/DynamicChart";
+import { useProject, useProjectSWR, useTemplates } from "@/utils/dataHooks";
 import {
   useAnalyticsChartData,
   useTopModels,
@@ -18,13 +19,34 @@ import {
   Box,
   Button,
   Card,
+  CloseButton,
+  ColorPicker,
+  Flex,
   Group,
+  Input,
+  JsonInput,
+  Loader,
+  Menu,
   Modal,
+  rem,
+  SegmentedControl,
   Select,
   SimpleGrid,
   Stack,
+  Stepper,
+  Tabs,
   Text,
 } from "@mantine/core";
+import {
+  BarChart as MantineBarChart,
+  LineChart as MantineLineChart,
+  PieChart as MantinePieChart,
+  RadarChart as MantineRadarChart,
+  ScatterChart as MantineScatterChart,
+  AreaChart as MantineAreaChart,
+  DonutChart as MantineDonutChart,
+  BubbleChart as MantineBubbleChart,
+} from "@mantine/charts";
 import { DatePickerInput } from "@mantine/dates";
 
 import {
@@ -34,22 +56,291 @@ import {
 } from "@mantine/hooks";
 import {
   IconCalendar,
+  IconCancel,
   IconChartAreaLine,
+  IconChartLine,
   IconCheck,
+  IconCopyCheckFilled,
   IconEdit,
   IconFilter,
   IconMinus,
   IconPlus,
   IconRestore,
+  IconSelect,
+  IconTrash,
+  IconUserEdit,
 } from "@tabler/icons-react";
 import { NextSeo } from "next-seo";
-import { useQueryState } from "nuqs";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { parseAsString, useQueryState } from "nuqs";
+import { useEffect, useMemo, useState } from "react";
 import { deserializeLogic, serializeLogic } from "shared";
 
-import { createSwapy, Swapy } from "swapy";
+import { DndProvider, useDrag, useDrop } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+
 import { useDisclosure } from "@mantine/hooks";
-import { ALL } from "dns";
+import { useDashboard, useDashboards } from "@/utils/dataHooks/dashboards";
+import { useRouter } from "next/router";
+import TopTopics from "@/components/analytics/Charts/TopTopics";
+import Sentiment from "@/components/analytics/Charts/Sentiment";
+
+import { Grid, TextInput, NumberInput, Checkbox } from "@mantine/core";
+import { useChart, useCharts } from "@/utils/dataHooks/charts";
+import ErrorBoundary from "@/components/blocks/ErrorBoundary";
+
+const getPreviousDate = (day) => {
+  const date = new Date();
+  date.setDate(date.getDate() - day);
+  return date.toISOString();
+}
+
+const BASE_CHART_PROPS = {
+  // dataKey: {
+  //   type: "string",
+  //   required: true,
+  // },
+  gridAxis: {
+    type: "segmented",
+    options: [
+      {
+        label: "x",
+        value: "x",
+      },
+      {
+        label: "y",
+        value: "y",
+      },
+      {
+        label: "xy",
+        value: "xy",
+      },
+      {
+        label: "none",
+        value: "none",
+      },
+    ],
+  },
+  withXAxis: {
+    type: "boolean",
+    defaultValue: true,
+  },
+  withYAxis: {
+    type: "boolean",
+    defaultValue: true,
+  },
+  withDots: {
+    type: "boolean",
+    defaultValue: true,
+  },
+  withLegend: {
+    type: "boolean",
+  },
+  withTooltip: {
+    type: "boolean",
+    defaultValue: true,
+  }
+};
+
+const CHART_DATA = [
+  {
+    date: getPreviousDate(15),
+    Apples: 2890,
+    Oranges: 2338,
+    Tomatoes: 2452,
+  },
+  {
+    date: getPreviousDate(12),
+    Apples: 2756,
+    Oranges: 2103,
+    Tomatoes: 2402,
+  },
+  {
+    date: getPreviousDate(8),
+    Apples: 3322,
+    Oranges: 986,
+    Tomatoes: 1821,
+  },
+  {
+    date: getPreviousDate(4),
+    Apples: 3470,
+    Oranges: 2108,
+    Tomatoes: 2809,
+  },
+  {
+    date: getPreviousDate(1),
+    Apples: 3129,
+    Oranges: 1726,
+    Tomatoes: 2290,
+  },
+];
+
+const CHART_SERIES = [
+  { name: "Apples", color: "indigo" },
+  { name: "Oranges", color: "blue" },
+  { name: "Tomatoes", color: "teal" },
+];
+
+const CHARTS = [
+  {
+    name: "LunaryChart",
+    props: {
+      height: { type: "number", defaultValue: 230 },
+      splitBy: { type: "string" },
+      granularity: {
+        type: "segmented",
+        options: [
+          { label: "Day", value: "daily" },
+          { label: "Week", value: "weekly" },
+          { label: "Hourly", value: "hourly" },
+        ],
+        defaultValue: "daily"
+      },
+      agg: {
+        type: "segmented",
+        options: [
+          { label: "Sum", value: "sum" },
+          { label: "Average", value: "agg" }
+        ]
+      },
+      title: { type: "string" },
+      description: { type: "string" }
+    },
+    component({ data, props, series }) {
+      const [dateRange, _] = useSessionStorage({
+        key: "dateRange-analytics",
+        getInitialValueInEffect: false,
+        deserialize: deserializeDateRange,
+        defaultValue: getDefaultDateRange(),
+      });
+
+      const [startDate, endDate] = dateRange;
+      console.log(data)
+      return <LineChart
+        data={data.map(item => {
+          // TODO: Clean this up!!
+          return { ...item, date: new Date(item.date || item.createdAt || new Date()).toISOString() };
+        })} startDate={startDate} endDate={endDate}
+        props={series.map(serie => serie.name)}
+        colors={[
+          ...series.map(serie => serie.color).filter(Boolean),
+          "blue", "pink", "indigo", "green", "violet", "yellow"
+        ]}
+        granularity={"daily"}
+        {...props}
+      />
+    }
+  },
+  {
+    name: "BarChart",
+    props: {
+      ...BASE_CHART_PROPS,
+      orientation: {
+        type: "segmented",
+        options: [
+          {
+            label: "Horizontal",
+            value: "horizontal",
+          },
+          {
+            label: "Vertical",
+            value: "vertical",
+          },
+        ],
+        defaultValue: "horizontal"
+      },
+    },
+    component({ data, props, series }) {
+      return (
+        <MantineBarChart
+          h={300}
+          series={series}
+          data={data}
+          {...props}
+        />
+      );
+    },
+  },
+  {
+    name: "LineChart",
+    props: {
+      curveType: {
+        type: "array",
+        defaultValue: "linear",
+        options: [
+          "linear",
+          "bump",
+          "natural",
+          "monotone",
+          "step",
+          "stepBefore",
+          "stepAfter",
+        ],
+      },
+      ...BASE_CHART_PROPS,
+      connectNulls: { type: "boolean" },
+    },
+    component({ props, data, series }) {
+      return (
+        <MantineLineChart
+          h={300}
+          data={data}
+          series={series}
+          {...props}
+        />
+      );
+    },
+  },
+  {
+    name: "AreaChart",
+    props: { ...BASE_CHART_PROPS, connectNulls: { type: "boolean" } },
+    component({ props, data, series }) {
+      return (
+        <MantineAreaChart
+          h={300}
+          data={data}
+          series={series}
+          {...props}
+        />
+      );
+    },
+  },
+  {
+    name: "RadarChart",
+    props: { ...BASE_CHART_PROPS },
+    component({ props, data, series }) {
+      return (
+        <MantineRadarChart
+          h={300}
+          data={data}
+          series={series}
+          {...props}
+        />
+      );
+    },
+  },
+  {
+    name: "PieChart",
+    props: { ...BASE_CHART_PROPS },
+    component({ props }) {
+      const data: any = [];
+      for (const serie of CHART_SERIES) {
+        data.push({ ...serie, value: CHART_DATA[0][serie.name] });
+      }
+      return <MantinePieChart h={300} data={data} {...props} />;
+    },
+  },
+  {
+    name: "DonutChart",
+    props: { ...BASE_CHART_PROPS },
+    component({ props }) {
+      const data: any = [];
+      for (const serie of CHART_SERIES) {
+        data.push({ ...serie, value: CHART_DATA[0][serie.name] });
+      }
+      return <MantineDonutChart h={300} data={data} {...props} />;
+    },
+  },
+];
 
 const ALL_CHARTS = {
   main: ["models", "templates", "users"],
@@ -63,9 +354,46 @@ const ALL_CHARTS = {
     "run-types",
     "latency",
     "feedback-ratio",
+    "top-topics",
+    "sentiments",
   ],
-  customs: [],
 };
+
+const DEFAULT_CHARTS = {
+  main: ["models", "templates", "users"],
+  extras: [
+    "tokens",
+    "costs",
+    "errors",
+    "users/new",
+    "users/active",
+    "users/average-cost",
+    "run-types",
+    "latency",
+    "feedback-ratio",
+  ],
+};
+
+const DND_TYPES = {
+  MAIN: "main",
+  EXTRAS: "extras",
+};
+
+function useChartData(data, startDate, endDate) {
+  if (!data.source || data.source === "runs") {
+    const { data, isLoading } = useProjectSWR("/runs");
+    return { data: data?.data, isLoading };
+  } else if (data.source === "models") {
+    const { data, isLoading } = useProjectSWR("/models");
+    console.log({ data, isLoading })
+    return { data: data, isLoading };
+  } else if (data.source === "templates")
+    return useTopTemplates(startDate, endDate)
+  else if (data.source === "users") {
+    const { users, loading } = useExternalUsers({ startDate, endDate });
+    return { data: users, isLoading: loading };
+  } else return useAnalyticsChartData(null, startDate, endDate, "")
+}
 
 export function getDefaultDateRange() {
   const endOfToday = new Date();
@@ -375,7 +703,7 @@ function AnalyticsChart({
         loading={isLoading}
         splitBy={splitBy}
         props={props}
-        agg={agg}
+        agg={agg || "sum"}
         title={title}
         description={description}
         startDate={startDate}
@@ -388,30 +716,70 @@ function AnalyticsChart({
   );
 }
 
-function Draggable({ id, children }) {
+function Draggable({ id, type, children, editMode }) {
+  const [{ isDragging }, element] = useDrag(
+    () => ({
+      type,
+      item: { id },
+      collect: (monitor) => ({
+        isDragging: !!monitor.isDragging(),
+      }),
+      canDrag: () => editMode,
+    }),
+    [editMode],
+  );
+
   return (
-    <Box data-swapy-item={id} h={"100%"}>
+    <Box
+      ref={element}
+      h="100%"
+      style={{
+        opacity: isDragging ? 0.5 : 1,
+        cursor: editMode ? "move" : "auto",
+      }}
+    >
       {children}
     </Box>
   );
 }
 
-function Droppable({ slot, children }) {
+function Droppable({ type, children, editMode, onDrop }) {
+  const [{ isOver }, element] = useDrop(
+    () => ({
+      accept: type,
+      drop: onDrop,
+      collect: (monitor) => ({
+        isOver: !!monitor.isOver(),
+      }),
+      canDrop: () => editMode,
+    }),
+    [editMode],
+  );
+
   return (
-    <Box data-swapy-slot={slot} h={"100%"}>
+    <Box ref={element} h="100%">
       {children}
     </Box>
   );
 }
 
 function Selectable({
+  header,
   isSelected,
+  icon,
+  icons,
   children,
   onSelect,
 }: {
-  isSelected?: boolean;
+  icons?: any[];
   children: any;
-  onSelect: () => any;
+  header?: string;
+  isSelected?: boolean;
+  icon?: (props: {
+    onClick: () => any;
+    selected: boolean
+  }) => any;
+  onSelect?: () => any;
 }) {
   const [selected, setSelected] = useState(!!isSelected);
 
@@ -422,21 +790,25 @@ function Selectable({
 
   return (
     <Card withBorder>
-      <Card.Section
-        style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          alignItems: "center",
-        }}
-      >
-        <ActionIcon
-          onClick={onSelected}
-          variant={selected ? "filled" : "outline"}
-          size="xs"
-          m="sm"
-        >
-          {selected ? <IconMinus size={12} /> : <IconPlus size={12} />}
-        </ActionIcon>
+      <Card.Section p="xs">
+        <Group justify="space-between">
+          <Text fw={500}>{header}</Text>
+
+          {icon ? icon({ selected, onClick: onSelected }) : (<ActionIcon onClick={onSelected} color={selected ? "red" : undefined}>
+            {selected ? <IconMinus size="12" /> : <IconPlus size="12" />}
+          </ActionIcon>)}
+
+          {icons &&
+            icons.map((icon) => (
+              <ActionIcon
+                variant="subtle"
+                color={icon.color}
+                onClick={icon.onClick}
+              >
+                <icon.icon size="12" />
+              </ActionIcon>
+            ))}
+        </Group>
       </Card.Section>
 
       <Card.Section>{children}</Card.Section>
@@ -444,56 +816,714 @@ function Selectable({
   );
 }
 
-function DroppableContext({ enable, children, dependencies }) {
-  const contextID = `dnd-context-${Math.round(Math.random() * 100)}`;
-  const swapyRef = useRef<Swapy | null>(null);
+function SaveAsModal({ opened, close, title, onConfirm }) {
+  const [name, setName] = useState("");
+  const [error, setError] = useState("");
+
+  const confirm = async () => {
+    try {
+      await onConfirm(name);
+      close();
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  return (
+    <Modal
+      centered
+      opened={opened}
+      onClose={confirm}
+      radius={"md"}
+      title={title}
+    >
+      <Input.Wrapper error={error}>
+        <Input
+          mt="md"
+          value={name}
+          placeholder="Clearable input"
+          onChange={(event) => setName(event.currentTarget.value)}
+          rightSectionPointerEvents="all"
+          rightSection={
+            <CloseButton
+              aria-label="Clear input"
+              onClick={() => setName("")}
+              style={{ display: name ? undefined : "none" }}
+            />
+          }
+        />
+      </Input.Wrapper>
+      <Group align="right" mt="md">
+        <Button variant="subtle" onClick={close}>
+          Cancel
+        </Button>
+        <Button variant="filled" onClick={confirm}>
+          Save
+        </Button>
+      </Group>
+    </Modal>
+  );
+}
+
+function SelectableCustomChart({ index, chart, chartsState, toggleChart }) {
+  const { chart: item, remove } = useChart(chart.id, chart);
+  const { name, data, props } = (item?.config || {});
+
+  const [dateRange, setDateRange] = useSessionStorage({
+    key: "dateRange-analytics",
+    getInitialValueInEffect: false,
+    deserialize: deserializeDateRange,
+    defaultValue: getDefaultDateRange(),
+  });
+
+  const [startDate, endDate] = dateRange;
+
+  const chartData = useChartData(data, startDate, endDate);
+
+  const series = data.series.map(serie => {
+    if (!serie.field) return null;
+    return {
+      name: serie.field,
+      color: serie.color
+    }
+  }).filter(Boolean);
+
+  return (
+    <Selectable
+      key={index}
+      header={item.id}
+      icons={[
+        {
+          icon: IconTrash,
+          color: "red",
+          onClick: remove,
+        },
+      ]}
+      isSelected={chartsState.extras.includes(item.id)}
+      onSelect={() => toggleChart(item.id, "extras")}
+    >
+      {CHARTS.find((c) => name === c.name)?.component({
+        data: chartData.data || [], props, series: series || []
+      })}
+    </Selectable>
+  );
+}
+
+function CustomChart({ chartID }) {
+  const { ref, inViewport } = useInViewport();
+  const [load, setLoad] = useState(inViewport);
+  useEffect(() => {
+    if (inViewport) {
+      setLoad(true);
+    }
+  }, [inViewport]);
+
+  if (!load) {
+    // return null;
+  }
+
+  const { chart: item } = useChart(chartID);
+  const chart = CHARTS.find((c) => item.config.name === c.name);
+
+  if (!chart) return null;
+
+  const { name, data, props } = (item?.config || {});
+  const [dateRange, setDateRange] = useSessionStorage({
+    key: "dateRange-analytics",
+    getInitialValueInEffect: false,
+    deserialize: deserializeDateRange,
+    defaultValue: getDefaultDateRange(),
+  });
+
+  const [startDate, endDate] = dateRange;
+
+  const chartData = useChartData(data, startDate, endDate);
+
+  if (chartData.isLoading) return null;
+
+  const series = data.series.map(serie => {
+    if (!serie.field) return null;
+    return {
+      name: serie.field,
+      color: serie.color
+    }
+  }).filter(Boolean);
+
+  return (
+    <Box ref={ref}>
+      <ErrorBoundary>{chart.component({ data: chartData.data, props, series })}</ErrorBoundary>
+    </Box>
+  );
+}
+
+function ChartSelector({
+  opened,
+  close,
+  chartsState,
+  toggleChart,
+  getChartComponent,
+}) {
+  const [activeTab, setActiveTab] = useState("charts");
+  const { insert: insertChart, charts } = useCharts();
+
+  return (
+    <>
+      <Modal
+        opened={opened}
+        onClose={close}
+        centered
+        size="80vw"
+        radius={"md"}
+        transitionProps={{ transition: "fade", duration: 200 }}
+        styles={{
+          body: {
+            display: "flex",
+            flexDirection: "column",
+          },
+        }}
+      >
+        <Tabs
+          variant="outline"
+          value={activeTab}
+          styles={{
+            root: { minHeight: "75vh" },
+          }}
+        >
+          <Tabs.List>
+            <Tabs.Tab
+              value="charts"
+              leftSection={<IconChartLine />}
+              onClick={() => setActiveTab("charts")}
+            >
+              All Charts
+            </Tabs.Tab>
+            <Tabs.Tab
+              value="wizard"
+              leftSection={<IconPlus />}
+              onClick={() => setActiveTab("wizard")}
+            >
+              Chart Wizard
+            </Tabs.Tab>
+          </Tabs.List>
+
+          <Tabs.Panel value="charts" p="md">
+            <Stack mah={"75vh"} style={{ overflowY: "auto" }}>
+              <Text>Main Charts</Text>
+              <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="md">
+                {ALL_CHARTS.main.map((chartID) => (
+                  <Selectable
+                    key={chartID}
+                    header={chartID}
+                    isSelected={chartsState.main.includes(chartID)}
+                    onSelect={() => toggleChart(chartID, "main")}
+                  >
+                    {getChartComponent(chartID)}
+                  </Selectable>
+                ))}
+              </SimpleGrid>
+
+              <Text>Extra Charts</Text>
+              <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="md">
+                {ALL_CHARTS.extras.map((chartID) => (
+                  <Selectable
+                    key={chartID}
+                    header={chartID}
+                    isSelected={chartsState.extras.includes(chartID)}
+                    onSelect={() => toggleChart(chartID, "extras")}
+                  >
+                    {getChartComponent(chartID)}
+                  </Selectable>
+                ))}
+              </SimpleGrid>
+
+              <Text>Custom Charts</Text>
+              <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="md">
+                {charts?.map((chart, index) => (
+                  <SelectableCustomChart
+                    index={index}
+                    chart={chart} key={index}
+                    chartsState={chartsState}
+                    toggleChart={toggleChart}
+                  />
+                ))}
+              </SimpleGrid>
+            </Stack>
+          </Tabs.Panel>
+          <Tabs.Panel value="wizard" p="md">
+            <CustomChartWizard
+              onConfirm={({ name, config }) => {
+                return insertChart({ name, type: config.name, config })
+                  .then(() => setActiveTab("charts"));
+              }}
+            />
+          </Tabs.Panel>
+        </Tabs>
+      </Modal>
+    </>
+  );
+}
+
+function DynamicSelectFields({ first, value, onChange }) {
+  const [color, setColor] = useState<string | undefined>(value?.color || "blue");
+  const [field, setField] = useState<string | null>(value?.field || null);
+  const [subField, setSubField] = useState<string | null>(value?.subField || null);
+  const fieldOptions = useMemo(() => {
+    switch (first) {
+      case "runs":
+        return ['projectId', 'isPublic', 'feedback', 'parentFeedback', 'type', 'name', 'createdAt', 'endedAt', 'duration', 'cost', 'tokens', 'tags', 'input', 'output', 'params', 'metadata', 'user'];
+      case "users":
+        return ['id', 'createdAt', 'externalId', 'lastSeen', 'props', 'cost'];
+      case "templates":
+        return ["name", "cost", "promptTokens", "completionTokens", "totalTokens"];
+      case "models":
+        return ['id', 'name', 'pattern', 'unit', 'inputCost', 'outputCost', 'tokenizer', 'startDate', 'createdAt', 'updatedAt', 'orgId'];
+      default:
+        return [];
+    }
+  }, [first]);
+
+  const { data, isLoading } = useProjectSWR(() => {
+    switch (field) {
+      case "metadata":
+        return "/filters/metadata";
+      default:
+        return null
+    }
+  });
+
+  const subFieldOptions = useMemo(() => {
+    switch (field) {
+      case "feedback":
+        return [];
+      case "metadata":
+        return data;
+      default:
+        return null;
+    }
+  }, [field, data]);
 
   useEffect(() => {
-    if (swapyRef.current) {
-      swapyRef.current.enable(enable);
-      swapyRef.current.destroy();
-      return;
+    onChange({ field, subField, color });
+  }, [field, subField, color])
+
+  return (
+    <Flex gap="sm">
+      {fieldOptions?.length && (
+        <Select
+          defaultValue={field}
+          data={fieldOptions}
+          onChange={(value) => setField(value)}
+        />
+      )}
+      {subFieldOptions?.length && (
+        <Select
+          defaultValue={subField}
+          data={subFieldOptions}
+          onChange={(value) => setSubField(value)}
+        />
+      )}
+      {fieldOptions?.length && (
+        // <ColorPicker value={color} onChange={setColor} size="xs" />
+        <ColorSelector color={color} setColor={setColor} />
+      )}
+    </Flex>
+  );
+}
+
+function ColorSelector({ color, setColor }) {
+  const colors = [
+    { value: "blue", label: "Blue" },
+    { value: "red", label: "Red" },
+    { value: "orange", label: "Orange" },
+    { value: "yellow", label: "Yellow" },
+    { value: "green", label: "Green" },
+    { value: "indigo", label: "Indigo" },
+    { value: "violet", label: "Violet" },
+    { value: "pink", label: "Pink" },
+    { value: "gray", label: "Gray" },
+  ];
+
+  return (
+    <Select
+      data={colors} value={color}
+      onChange={(value) => setColor(value)}
+    />
+  );
+}
+
+function DynamicSelect({ config, setConfig }) {
+  const [first, setFirst] = useState(config.data.source || "runs");
+  const firstOptions = ["runs", "users", "models", "templates"];
+
+  const [seriesLength, setSeriesLength] = useState(config.data.series?.length || 1);
+
+  const onChange = (index, value) => {
+    setConfig((config) => {
+      const newConfig = { ...config };
+      newConfig.data.series[index] = value;
+      return newConfig;
+    });
+  }
+
+  return (
+    <Group>
+      <Box>
+        <h3>Data Source</h3>
+        <Select
+          defaultValue={first}
+          data={firstOptions}
+          onChange={(value) => {
+            setFirst(value);
+            setConfig((config) => ({
+              ...config, data: {
+                ...config.data,
+                source: value
+              }
+            }));
+          }}
+        />
+      </Box>
+      <Flex gap="sm" direction={"column"}>
+        <h3>Display Fields</h3>
+        {Array.from({ length: seriesLength }).map((_, index) => (
+          <Flex key={index} align="center">
+            <DynamicSelectFields
+              first={first} onChange={(value: any) => onChange(index, value)}
+              value={config.data.series ? config.data.series[index] : null}
+            />
+            <ActionIcon ml="sm" onClick={() => {
+              if (seriesLength > 1) {
+                config.data.series.splice(index, 1);
+                setSeriesLength(len => len - 1)
+              } else {
+                onChange(index, {
+                  field: undefined,
+                  subField: undefined,
+                  color: undefined
+                });
+              }
+            }}>
+              <IconCancel size={16} />
+            </ActionIcon>
+          </Flex>
+        ))}
+        <Button onClick={() => setSeriesLength((len: number) => len + 1)}>Add Field</Button>
+      </Flex>
+    </Group>
+  )
+}
+
+function DynamicChartPreview({ chartConfig, setChartConfig }) {
+  const selectedChart = useMemo(
+    () => CHARTS.find((item) => item.name === chartConfig.name),
+    [chartConfig],
+  );
+
+  if (!selectedChart)
+    return (
+      <Text>
+        No chart found with name: <code>{chartConfig.name}</code>
+      </Text>
+    );
+
+
+  const [dateRange, setDateRange] = useSessionStorage({
+    key: "dateRange-analytics",
+    getInitialValueInEffect: false,
+    deserialize: deserializeDateRange,
+    defaultValue: getDefaultDateRange(),
+  });
+
+  const [startDate, endDate] = dateRange;
+  const { data, props } = chartConfig;
+
+  const series = chartConfig.data.series.map(serie => {
+    if (!serie.field) return null;
+    return {
+      name: serie.field,
+      color: serie.color
     }
+  }).filter(Boolean)
 
-    if (!enable) return;
+  const chartData = useChartData(data, startDate, endDate);
 
-    const container = document.querySelector(`#${contextID}`);
-    swapyRef.current = createSwapy(container, {
-      continuousMode: true,
-    });
-    swapyRef.current.enable(enable);
+  if (chartData.isLoading) {
+    return <Loader />
+  }
 
-    swapyRef.current.onSwap(({ data }) => {
-      const mapping: { [index: string]: (string | null)[] } = {
-        main: [],
-        extras: [],
-        customs: [],
-      };
+  const handlePropChange = (propName, value) => {
+    setChartConfig((config) => ({
+      ...config, props: {
+        ...config.props,
+        [propName]: value
+      }
+    }));
+  };
 
-      data.array.forEach((item) => {
-        if (item.slotId.startsWith("main:")) {
-          mapping.main.push(item.itemId);
-        } else if (item.slotId.startsWith("extra:")) {
-          mapping.extras.push(item.itemId);
-        } else {
-          mapping.customs.push(item.itemId);
-        }
-      });
+  const convertCase = (camelStr) => {
+    return (camelStr.charAt(0).toUpperCase() + camelStr.slice(1)).split(
+      /(?=[A-Z])/,
+    );
+  };
 
-      localStorage.chartsState = JSON.stringify(mapping);
-    });
+  const renderPropInput = (prop, propName, value, handleValue) => {
+    switch (prop.type) {
+      case "number":
+        return (
+          <NumberInput
+            label={convertCase(propName)}
+            required={prop.required}
+            value={value || prop.defaultValue || 0}
+            onChange={(value) => handleValue(propName, value)}
+          />
+        );
+      case "string":
+        return (
+          <TextInput
+            label={convertCase(propName)}
+            required={prop.required}
+            value={value || prop.defaultValue || ""}
+            onChange={(event) => handleValue(propName, event.target.value)}
+          />
+        );
+      case "boolean":
+        return (
+          <Checkbox
+            label={convertCase(propName)}
+            required={prop.required}
+            checked={
+              /* To avoid the value defaulting to undefined which would result in this being an 'uncontrolled' component  */
+              typeof value !== "undefined"
+                ? value
+                : typeof prop.defaultValue !== "undefined"
+                  ? prop.defaultValue
+                  : false
+            }
+            onChange={(event) => handleValue(propName, event.target.checked)}
+          />
+        );
+      case "array":
+        return (
+          <Box>
+            <h6>{convertCase(propName)}</h6>
+            <Select
+              data={prop.options}
+              defaultValue={prop.defaultValue}
+              onChange={(value) => handleValue(propName, value)}
+            />
+          </Box>
+        );
+      case "segmented":
+        return (
+          <Box>
+            <h6>{convertCase(propName)}</h6>
+            <SegmentedControl
+              data={prop.options}
+              defaultValue={prop.defaultValue}
+              onChange={(value) => handleValue(propName, value)}
+            />
+          </Box>
+        );
+      case "group":
+        const subProps = value || {};
+        return (
+          <Box>
+            <h4>{propName}</h4>
+            {Object.keys(prop.children).map((subPropName) => {
+              return (
+                <Box key={subPropName} mb="sm">
+                  {renderPropInput(
+                    prop.children[subPropName],
+                    subPropName,
+                    subProps[subPropName],
+                    (_, value) => {
+                      subProps[subPropName] = value;
+                      handleValue(propName, subProps);
+                    },
+                  )}
+                </Box>
+              );
+            })}
+          </Box>
+        );
+      default:
+        return null;
+    }
+  };
 
-    return () => {
-      swapyRef.current?.destroy();
-      swapyRef.current = null;
-    };
-  }, [enable, ...dependencies]);
+  return (
+    <Grid pt="sm">
+      <Grid.Col span={{ sm: 12, md: 6 }}>
+        <Box>
+          <h3>{selectedChart.name} Preview</h3>
+          <selectedChart.component
+            props={props} series={series || []}
+            data={(chartData.data || []).slice(0, chartConfig.limit)}
+          />
+        </Box>
+      </Grid.Col>
 
-  return <Box id={contextID}>{children}</Box>;
+      <Grid.Col
+        span={{ sm: 12, md: 6 }}
+        style={{
+          overflowY: "scroll",
+          height: "45rem",
+        }}
+      >
+        <Group mb="sm" gap="md">
+          <DynamicSelect config={chartConfig} setConfig={setChartConfig} />
+        </Group>
+        <Box>
+          <h3>Chart Config</h3>
+          <Group>
+            <DateRangeSelect
+              dateRange={dateRange}
+              setDateRange={setDateRange}
+            />
+            <DateRangePicker
+              dateRange={dateRange}
+              setDateRange={setDateRange}
+            />
+          </Group>
+          <Box mb="sm">
+            <h5>Data Limit</h5>
+            <NumberInput
+              defaultValue={chartConfig.limit || chartData.data?.length}
+              onChange={(limit) => setChartConfig(conf => ({ ...conf, limit }))}
+            />
+          </Box>
+          <Box mb="sm">
+            <h5>Data Key</h5>
+            <Select
+              data={Object.keys((chartData.data || [{}])[0])}
+              onChange={(value) => handlePropChange("dataKey", value)}
+            />
+          </Box>
+          {Object.keys(selectedChart.props).map((propName) => {
+            return (
+              <Box key={propName} mb="sm">
+                {renderPropInput(
+                  selectedChart.props[propName],
+                  propName, chartConfig.props[propName],
+                  handlePropChange,
+                )}
+              </Box>
+            );
+          })}
+        </Box>
+      </Grid.Col>
+    </Grid>
+  );
+}
+
+function CustomChartWizard({ onConfirm }) {
+  const [name, setName] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [chartConfig, setChartConfig] = useState({
+    name: CHARTS[0].name, props: {},
+    data: { source: null, series: [] },
+  });
+  const [active, setActive] = useState(0);
+
+  const nextStep = () =>
+    setActive((current) => (current < 3 ? current + 1 : current));
+  const prevStep = () =>
+    setActive((current) => (current > 0 ? current - 1 : current));
+
+  return (
+    <Stack>
+      <Text>Custom Chart</Text>
+
+      <Stepper active={active} onStepClick={setActive}>
+        <Stepper.Step label="First step" description="Chart Type">
+          <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="md">
+            {CHARTS.map(chart => {
+              return <Selectable
+                header={chart.name}
+                icon={() => (
+                  <ActionIcon onClick={() => {
+                    setChartConfig(config => ({
+                      ...config, name: chart.name
+                    }));
+                    nextStep();
+                  }}>
+                    <IconPlus size="12" />
+                  </ActionIcon>
+                )}
+              >
+                {chart.component({
+                  data: CHART_DATA,
+                  series: CHART_SERIES,
+                  props: { dataKey: "date" }
+                })}
+              </Selectable>
+            })}
+          </SimpleGrid>
+        </Stepper.Step>
+        <Stepper.Step label="Second step" description="Chart Configuration">
+          <TextInput
+            value={name}
+            onChange={(ev) => setName(ev.currentTarget.value)}
+            placeholder="Chart Name" required
+          />
+          <DynamicChartPreview
+            chartConfig={chartConfig}
+            setChartConfig={setChartConfig}
+          />
+        </Stepper.Step>
+        <Stepper.Completed>
+          {saving ? <Loader size={20} /> : <Text>Chart Saved</Text>}
+        </Stepper.Completed>
+      </Stepper>
+
+      <Group justify="center" mt="xl">
+        <Button variant="default" disabled={active === 0} onClick={prevStep}>
+          Back
+        </Button>
+        {active === 1 ? (
+          <Button
+            onClick={() => {
+              nextStep();
+              setSaving(true);
+              onConfirm({ name, config: chartConfig })
+                .then(() => setSaving(false));
+            }}
+          >
+            Finish
+          </Button>
+        ) : (
+          <Button onClick={nextStep}>Next step</Button>
+        )}
+      </Group>
+    </Stack>
+  );
+}
+
+function ConfirmModal({ title, opened, close, onConfirm }) {
+  return (
+    <Modal centered opened={opened} onClose={close} radius={"md"} title={title}>
+      <Group align="right" mt="md">
+        <Button variant="subtle" onClick={close}>
+          Cancel
+        </Button>
+        <Button
+          variant="filled"
+          color="red"
+          onClick={() => {
+            onConfirm();
+            close();
+          }}
+        >
+          Confirm
+        </Button>
+      </Group>
+    </Modal>
+  );
 }
 
 // TODO: typescript everywhere
 export default function Analytics() {
+  const router = useRouter();
   const [dateRange, setDateRange] = useSessionStorage({
     key: "dateRange-analytics",
     getInitialValueInEffect: false,
@@ -621,16 +1651,48 @@ export default function Analytics() {
     },
   };
 
-  const [editMode, setEditMode] = useState(false);
-  const [opened, { open: openChartSelector, close: closeChartSelector }] =
-    useDisclosure(editMode);
+  const [editMode, setEditMode] = useState(true);
+  const [
+    chartSelectedOpened,
+    { open: openChartSelector, close: closeChartSelector },
+  ] = useDisclosure(true);
+  const [saveAsOpened, { open: openSaveAs, close: closeSaveAs }] =
+    useDisclosure(false);
+  const [confirmOpened, { open: openConfirm, close: closeConfirm }] =
+    useDisclosure(false);
+  const [confirmReset, { open: openConfirmReset, close: closeConfirmReset }] =
+    useDisclosure(false);
 
-  const [chartsState, setChartsState] = useState(
-    (localStorage.chartsState && JSON.parse(localStorage.chartsState)) ||
-      ALL_CHARTS,
+  const { insert: insertDashboard } = useDashboards();
+
+  const [dashboardID, setDashboardID] = useQueryState<string | undefined>(
+    "dashboard",
+    {
+      ...parseAsString,
+      history: "push",
+    },
   );
 
-  const [newChartsState, setNewChartsState] = useState(chartsState);
+  const {
+    dashboard,
+    update: updateDashboard,
+    remove: removeDashboard,
+    loading: dashboardLoading,
+  } = useDashboard(dashboardID);
+
+  // Temporary charts state used in edit mode
+  const [tempChartsState, setTempChartsState] = useState(
+    dashboard ? dashboard.charts : DEFAULT_CHARTS,
+  );
+
+  const chartsState = useMemo(() => {
+    if (editMode) return tempChartsState;
+    return dashboard ? dashboard.charts : DEFAULT_CHARTS;
+  }, [editMode, tempChartsState, dashboard]);
+
+  useEffect(() => {
+    setTempChartsState(dashboard ? dashboard.charts : DEFAULT_CHARTS);
+  }, [dashboard, dashboardLoading]);
 
   const getChartComponent = (id: string) => {
     switch (id) {
@@ -646,91 +1708,115 @@ export default function Analytics() {
       case "users":
         return <TopUsersCard topUsers={topUsers} isLoading={topUsersLoading} />;
 
+      case "top-topics":
+        return <TopTopics />;
+      case "sentiments":
+        return <Sentiment />;
+
       default:
-        if (!chartProps[id]) return;
-        return <AnalyticsChart {...chartProps[id]} {...commonChartData} />;
+        if (chartProps[id])
+          return <AnalyticsChart {...chartProps[id]} {...commonChartData} />;
+
+        return <CustomChart chartID={id} />;
     }
   };
 
+  const onToggleMode = async () => {
+    if (editMode) {
+      // Exiting edit mode
+
+      if (dashboard) {
+        await updateDashboard({ charts: tempChartsState });
+      } else {
+        return openSaveAs();
+      }
+    } else {
+      setTempChartsState(dashboard?.charts || DEFAULT_CHARTS);
+    }
+
+    setEditMode(!editMode);
+  };
+
   const toggleChart = (chartID: string, group: string) => {
-    const newState = { ...newChartsState };
-    if (newChartsState[group].includes(chartID)) {
+    const newState = { ...tempChartsState };
+    if (tempChartsState[group].includes(chartID)) {
       newState[group] = newState[group].filter((id) => id !== chartID);
     } else {
       newState[group].push(chartID);
     }
-    setNewChartsState(newState);
+    setTempChartsState(newState);
+  };
+
+  const createDashboard = async (name: string) => {
+    if (!name) {
+      throw new Error("Dashboard name is required");
+    }
+
+    const entry = await insertDashboard({
+      name,
+      charts: tempChartsState,
+    });
+    setDashboardID(entry.id);
+
+    onToggleMode();
+  };
+
+  const handleDropChart = (item: { id: string }, id, chartID) => {
+    const newState = { ...tempChartsState };
+    const itemIndex = newState[id].indexOf(item.id);
+    const index = newState[id].indexOf(chartID);
+
+    newState[id].splice(itemIndex, 1);
+    newState[id].splice(index, 0, item.id);
+
+    setTempChartsState(newState);
   };
 
   return (
     <Empty
+      showProjectId
       Icon={IconChartAreaLine}
       title="Waiting for data..."
       description="Analytics will appear here once you have some data."
-      showProjectId
-      enable={!project?.activated}
+      enable={!project?.activated || dashboardLoading}
     >
       <NextSeo title="Analytics" />
 
-      <Modal
-        opened={opened}
-        onClose={closeChartSelector}
-        centered
-        size="80vw"
-        radius={"md"}
-        transitionProps={{ transition: "fade", duration: 200 }}
-        styles={{
-          body: {
-            display: "flex",
-            flexDirection: "column",
-          },
+      <ChartSelector
+        opened={chartSelectedOpened}
+        toggleChart={toggleChart}
+        close={closeChartSelector}
+        chartsState={tempChartsState}
+        getChartComponent={getChartComponent}
+      />
+
+      <SaveAsModal
+        opened={saveAsOpened}
+        close={closeSaveAs}
+        title="Dashboard Name"
+        onConfirm={createDashboard}
+      />
+
+      <ConfirmModal
+        opened={confirmOpened}
+        close={closeConfirm}
+        onConfirm={() => {
+          removeDashboard();
+          router.push("/analytics");
         }}
-      >
-        <Stack mah={"80vh"} style={{ overflowY: "auto" }}>
-          <Text>Main Charts</Text>
-          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-            {ALL_CHARTS.main.map((chartID) => (
-              <Selectable
-                isSelected={chartsState.main.includes(chartID)}
-                onSelect={() => toggleChart(chartID, "main")}
-              >
-                {getChartComponent(chartID)}
-              </Selectable>
-            ))}
-          </SimpleGrid>
+        title={`Delete dashboard "${dashboard?.name}"`}
+      />
 
-          <Text>Extra Charts</Text>
-          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-            {ALL_CHARTS.extras.map((chartID) => (
-              <Selectable
-                isSelected={chartsState.extras.includes(chartID)}
-                onSelect={() => toggleChart(chartID, "extras")}
-              >
-                {getChartComponent(chartID)}
-              </Selectable>
-            ))}
-          </SimpleGrid>
-        </Stack>
+      <ConfirmModal
+        opened={confirmReset}
+        close={closeConfirmReset}
+        onConfirm={() => {
+          setTempChartsState(DEFAULT_CHARTS);
+        }}
+        title={`Reset to defult charts?`}
+      />
 
-        <Group gap="sm" mt="10" style={{ justifyContent: "flex-end" }}>
-          <Button variant="subtle" onClick={closeChartSelector}>
-            Cancel
-          </Button>
-          <Button
-            onClick={() => {
-              setChartsState(newChartsState);
-              closeChartSelector();
-            }}
-          >
-            Apply
-          </Button>
-        </Group>
-      </Modal>
-
-      <DroppableContext
-        enable={editMode && !opened}
-        dependencies={[topUsers, topModels, topTemplates, checks]}
-      >
+      <DndProvider backend={HTML5Backend}>
         <Stack gap="lg">
           <Group gap="xs">
             <Group gap={0}>
@@ -773,7 +1859,7 @@ export default function Analytics() {
                   <ActionIcon
                     color="red"
                     variant="outline"
-                    onClick={() => setChartsState(ALL_CHARTS)}
+                    onClick={openConfirmReset}
                     size="sm"
                   >
                     <IconRestore size={12} />
@@ -783,17 +1869,53 @@ export default function Analytics() {
 
               <Button
                 variant={editMode ? "filled" : "outline"}
-                onClick={() => {
-                  setEditMode(!editMode);
-                }}
+                onClick={onToggleMode}
                 leftSection={
                   editMode ? <IconCheck size={12} /> : <IconEdit size={12} />
                 }
                 size="xs"
               >
-                {editMode ? "Done" : "Edit"}
+                {editMode ? "Save" : "Edit"}
               </Button>
+
+              {editMode && dashboard && (
+                <Button
+                  variant="outline"
+                  onClick={openSaveAs}
+                  leftSection={<IconCopyCheckFilled size={12} />}
+                  size="xs"
+                >
+                  Save As
+                </Button>
+              )}
+
+              {editMode && (
+                <ActionIcon
+                  color="red"
+                  variant="outline"
+                  onClick={() => {
+                    console.log(dashboard?.charts, tempChartsState);
+                    setTempChartsState(dashboard?.charts || DEFAULT_CHARTS);
+                    setEditMode(false);
+                  }}
+                  size="sm"
+                >
+                  <IconCancel size={12} />
+                </ActionIcon>
+              )}
             </Group>
+
+            {dashboard && !editMode && (
+              <Button
+                color="red"
+                variant="outline"
+                onClick={openConfirm}
+                leftSection={<IconTrash size={12} />}
+                size="xs"
+              >
+                Delete
+              </Button>
+            )}
           </Group>
 
           {showBar && (
@@ -809,42 +1931,60 @@ export default function Analytics() {
           )}
 
           <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
-            {chartsState.main.map((chartID, index) => (
-              <Droppable slot={`main:${index + 1}`}>
-                <Draggable id={chartID}>{getChartComponent(chartID)}</Draggable>
+            {chartsState.main.map((chartID) => (
+              <Droppable
+                key={chartID}
+                onDrop={(item) => handleDropChart(item, "main", chartID)}
+                editMode={editMode}
+                type={DND_TYPES.MAIN}
+              >
+                <Draggable
+                  id={chartID}
+                  editMode={editMode}
+                  type={DND_TYPES.MAIN}
+                >
+                  {getChartComponent(chartID)}
+                </Draggable>
               </Droppable>
             ))}
           </SimpleGrid>
 
-          {/* <AreaChart
-            h={300}
-            data={data}
-            dataKey="date"
-            type="stacked"
-            series={series}
-            withDots={false}
-            tooltipProps={{
-              content: ({ label, payload }) => (
-                <ChartTooltip label={label} payload={payload} />
-              ),
-            }}
-          /> */}
-
-          <Droppable slot="extra:1">
-            <Draggable id={chartsState.extras[0]}>
+          <Droppable
+            onDrop={(item) =>
+              handleDropChart(item, "extras", chartsState.extras[0])
+            }
+            editMode={editMode}
+            type={DND_TYPES.EXTRAS}
+          >
+            <Draggable
+              id={chartsState.extras[0]}
+              editMode={editMode}
+              type={DND_TYPES.EXTRAS}
+            >
               {getChartComponent(chartsState.extras[0])}
             </Draggable>
           </Droppable>
 
           <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-            {chartsState.extras.slice(1).map((chartID, index) => (
-              <Droppable slot={`extra:${index + 2}`}>
-                <Draggable id={chartID}>{getChartComponent(chartID)}</Draggable>
+            {chartsState.extras.slice(1).map((chartID) => (
+              <Droppable
+                key={chartID}
+                onDrop={(item) => handleDropChart(item, "extras", chartID)}
+                editMode={editMode}
+                type={DND_TYPES.EXTRAS}
+              >
+                <Draggable
+                  id={chartID}
+                  editMode={editMode}
+                  type={DND_TYPES.EXTRAS}
+                >
+                  {getChartComponent(chartID)}
+                </Draggable>
               </Droppable>
             ))}
           </SimpleGrid>
         </Stack>
-      </DroppableContext>
+      </DndProvider>
     </Empty>
   );
 }

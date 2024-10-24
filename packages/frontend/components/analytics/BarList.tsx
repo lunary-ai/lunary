@@ -75,7 +75,7 @@ function BarList({ data, columns, filterZero = true }: BarListProps) {
                         pos="absolute"
                       >
                         {item.barSections?.map(({ count, color, tooltip }, n: number) => (
-                          <Tooltip id={`${n}`} label={tooltip}>
+                          <Tooltip id={`${n}`} label={tooltip} key={n}>
                             <Progress.Section
                               value={(count / mainTotal) * 100}
                               color={color}

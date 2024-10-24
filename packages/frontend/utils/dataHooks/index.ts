@@ -10,7 +10,7 @@ import { useComputedColorScheme } from "@mantine/core";
 import { useAuth } from "../auth";
 import { fetcher } from "../fetcher";
 
-type KeyType = string | ((...args: any[]) => string);
+type KeyType = string | ((...args: any[]) => string | null) | undefined | null;
 
 function generateKey(
   baseKey: KeyType | undefined,
@@ -449,7 +449,7 @@ export function useRunsUsageByUser(range = null) {
   );
 
   const reduceUsersUsage = (usage) => {
-    const userData = [];
+    const userData: any = [];
 
     const uniqueUserIds = Array.from(new Set(usage.map((u) => u.user_id)));
 
@@ -613,7 +613,7 @@ export function useDataset(id: string, initialData?: any) {
     isLoading,
     isValidating,
     mutate,
-  } = useProjectSWR(id && id !== "new" && `/datasets/${id}`, {
+  } = useProjectSWR(id && id !== "new" ? `/datasets/${id}` : null, {
     fallbackData: initialData,
   });
 
