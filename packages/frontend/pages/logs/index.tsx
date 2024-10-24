@@ -61,7 +61,7 @@ import {
   useRun,
   useUser,
 } from "@/utils/dataHooks";
-import { fetcher } from "@/utils/fetcher";
+import { buildUrl, fetcher } from "@/utils/fetcher";
 import { formatDateTime } from "@/utils/format";
 
 import { ProjectContext } from "@/utils/context";
@@ -323,15 +323,15 @@ export default function Logs() {
     setVisibleColumns(view.columns);
   }, [view, viewId]);
 
-  const exportUrl = useMemo(
-    () => `/runs?${serializedChecks}&projectId=${projectId}`,
-    [serializedChecks, projectId],
-  );
+  // const exportUrl = useMemo(
+  //   () => `/runs?${serializedChecks}&projectId=${projectId}`,
+  //   [serializedChecks, projectId],
+  // );
 
-  function exportButton(url: string) {
+  function exportButton({ serializedChecks, projectId, type = null, format }) {
     return {
       component: "a",
-      onClick: () => {
+      onClick: async () => {
         analytics.trackOnce("ClickExport");
 
         if (org?.plan === "free") {
@@ -339,7 +339,12 @@ export default function Logs() {
           return;
         }
 
-        fetcher.getFile(url);
+        const { token } = await fetcher.post("/runs/generate-export-token");
+        const url = buildUrl(
+          `/runs/exports/${token}?${serializedChecks}&projectId=` +
+          `${projectId}&type=${type}&exportFormat=${format}`
+        );
+        window.open(url, "_blank");
       },
     };
   }
@@ -457,7 +462,7 @@ export default function Logs() {
                     <Menu.Item
                       // disabled={type === "thread"}
                       leftSection={<IconFileExport size={16} />}
-                      {...exportButton(exportUrl + `&exportType=${type}&exportFormat=csv`)}
+                      {...exportButton({ serializedChecks, projectId, type, format: "csv" })}
                     >
                       Export to CSV
                     </Menu.Item>
@@ -466,7 +471,7 @@ export default function Logs() {
                       <Menu.Item
                         color="dimmed"
                         leftSection={<IconBrandOpenai size={16} />}
-                        {...exportButton(exportUrl + "&exportFormat=ojsonl")}
+                        {...exportButton({ serializedChecks, projectId, format: "ojsonl" })}
                       >
                         Export to OpenAI JSONL
                       </Menu.Item>
@@ -476,7 +481,7 @@ export default function Logs() {
                       color="dimmed"
                       // disabled={type === "thread"}
                       leftSection={<IconBraces size={16} />}
-                      {...exportButton(exportUrl + `&exportType=${type}&exportFormat=jsonl`)}
+                      {...exportButton({ serializedChecks, projectId, type, format: "jsonl" })}
                     >
                       Export to raw JSONL
                     </Menu.Item>
