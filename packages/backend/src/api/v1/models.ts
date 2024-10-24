@@ -63,7 +63,7 @@ models.get("/", checkAccess("logs", "list"), async (ctx: Context) => {
  *             schema:
  *               $ref: '#/components/schemas/Model'
  */
-models.post("/", async (ctx: Context) => {
+models.post("/", checkAccess("settings", "read"), async (ctx: Context) => {
   const { orgId } = ctx.state;
 
   const validatedData = ModelSchema.parse(ctx.request.body);
@@ -106,21 +106,25 @@ models.post("/", async (ctx: Context) => {
  *             schema:
  *               $ref: '#/components/schemas/Model'
  */
-models.patch("/:id", async (ctx: Context) => {
-  const { orgId } = ctx.state;
-  const { id } = ctx.params;
+models.patch(
+  "/:id",
+  checkAccess("settings", "update"),
+  async (ctx: Context) => {
+    const { orgId } = ctx.state;
+    const { id } = ctx.params;
 
-  const validatedData = ModelSchema.partial().parse(ctx.request.body);
+    const validatedData = ModelSchema.partial().parse(ctx.request.body);
 
-  const [updatedModel] = await sql`
+    const [updatedModel] = await sql`
     update model_mapping
     set ${sql(clearUndefined({ ...validatedData, updatedAt: new Date() }))}
     where org_id = ${orgId}
     and id = ${id}
     returning *
   `;
-  ctx.body = updatedModel;
-});
+    ctx.body = updatedModel;
+  },
+);
 
 /**
  * @openapi
@@ -138,19 +142,23 @@ models.patch("/:id", async (ctx: Context) => {
  *       200:
  *         description: Successful deletion
  */
-models.delete("/:id", checkAccess("logs", "delete"), async (ctx: Context) => {
-  const { orgId } = ctx.state;
-  const { id } = ctx.params;
+models.delete(
+  "/:id",
+  checkAccess("settings", "delete"),
+  async (ctx: Context) => {
+    const { orgId } = ctx.state;
+    const { id } = ctx.params;
 
-  await sql`
+    await sql`
     delete from model_mapping
     where org_id = ${orgId}
     and id = ${id}
     returning *
   `;
 
-  ctx.status = 200;
-});
+    ctx.status = 200;
+  },
+);
 
 /**
  * @openapi
