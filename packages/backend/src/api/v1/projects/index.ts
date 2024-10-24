@@ -1,9 +1,10 @@
 import { checkAccess, checkProjectAccess } from "@/src/utils/authorization";
 import sql from "@/src/utils/db";
 import Context from "@/src/utils/koa";
-import Router from "koa-router";
-import { z } from "zod";
 import { randomUUID } from "crypto";
+import Router from "koa-router";
+import { hasAccess } from "shared";
+import { z } from "zod";
 
 const projects = new Router({
   prefix: "/projects",
@@ -11,6 +12,9 @@ const projects = new Router({
 
 projects.get("/", checkAccess("projects", "read"), async (ctx: Context) => {
   const { orgId, userId } = ctx.state;
+
+  const [{ role: userRole }] =
+    await sql`select role from account where id = ${userId}`;
 
   const rows = await sql`
     select distinct on (p.id)
@@ -21,7 +25,7 @@ projects.get("/", checkAccess("projects", "read"), async (ctx: Context) => {
       ingestion_rule.filters,
       exists(select * from run where project_id = p.id) as activated,
       (select api_key from api_key where project_id = p.id and type = 'public') as public_api_key,
-      (select api_key from api_key where project_id = p.id and type = 'private') as private_api_key,
+      ${hasAccess(userRole, "privateKeys", "read") ? sql`(select api_key from api_key where project_id = p.id and type = 'private') as private_api_key,` : sql``}
       (select array_agg(project_id) as id from account_project where account_id = ${userId}) as projects
     from
       project p
