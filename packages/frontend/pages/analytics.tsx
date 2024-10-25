@@ -87,6 +87,7 @@ import Sentiment from "@/components/analytics/Charts/Sentiment";
 import { Grid, TextInput, NumberInput, Checkbox } from "@mantine/core";
 import { useChart, useCharts } from "@/utils/dataHooks/charts";
 import ErrorBoundary from "@/components/blocks/ErrorBoundary";
+import { showErrorNotification } from "@/utils/errors";
 
 const getPreviousDate = (day) => {
   const date = new Date();
@@ -818,14 +819,13 @@ function Selectable({
 
 function SaveAsModal({ opened, close, title, onConfirm }) {
   const [name, setName] = useState("");
-  const [error, setError] = useState("");
 
   const confirm = async () => {
     try {
       await onConfirm(name);
       close();
     } catch (error) {
-      setError(error.message);
+      showErrorNotification(error.message);
     }
   };
 
@@ -837,7 +837,7 @@ function SaveAsModal({ opened, close, title, onConfirm }) {
       radius={"md"}
       title={title}
     >
-      <Input.Wrapper error={error}>
+      <Input.Wrapper>
         <Input
           mt="md"
           value={name}
