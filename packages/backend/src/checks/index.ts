@@ -107,7 +107,8 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   },
   {
     id: "tools",
-    sql: () => {},
+    // sql: ({ toolName }) => sql`r.type = 'tool' and r.name = ${toolName}`,
+    sql: ({ toolName }) => sql``,
     ingestionCheck: async (run, params) => {
       const { toolName } = params;
       if (run.type === "tool" && toolName === run.name) {

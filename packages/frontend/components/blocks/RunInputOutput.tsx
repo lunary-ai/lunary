@@ -66,6 +66,8 @@ const ParamItem = ({
     return filterName === check.id;
   })
 
+  console.log(filter, name, value)
+
   function filterByItem() {
     if (!filter) return;
 
@@ -76,6 +78,8 @@ const ParamItem = ({
           acc[id] = value;
         } else if (id === "tags") { 
           acc[id] = value.join(",")
+        } else if (id === "toolName") {
+          acc["tools"] = value[0].function.name;
         } else {
           acc[id] = getItemValue ? getItemValue(value) : defaultValue;
         }
@@ -90,7 +94,7 @@ const ParamItem = ({
       pathname: "/logs",
       query: {
         ...router.query,
-        selected: null,
+        selected: undefined,
         filters,
       }
     });

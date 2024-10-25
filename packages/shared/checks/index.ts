@@ -79,6 +79,7 @@ export const CHECKS_BY_TYPE = {
     "cost",
     "duration",
     "tokens",
+    "tools"
   ],
   trace: [
     "date",
@@ -109,10 +110,17 @@ export const CHECKS: Check[] = [
         type: "label",
         label: "Tool name is",
       },
+      // {
+      //   type: "text",
+      //   id: "toolName",
+      //   placeholder: "value",
+      // },
       {
-        type: "text",
+        type: "select",
+        multiple: false,
         id: "toolName",
-        placeholder: "value",
+        width: 100,
+        options: (type) => `/filters/tools`,
       },
     ],
   },

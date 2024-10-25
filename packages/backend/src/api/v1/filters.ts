@@ -6,6 +6,25 @@ const filters = new Router({
   prefix: "/filters",
 });
 
+filters.get("/tools", async (ctx: Context) => {
+  const { projectId } = ctx.state;
+
+  const rows = await sql`
+    select distinct
+      r.name
+    from
+      run r
+    where
+      r.project_id = ${projectId} 
+      and r.type = 'tool'
+      and r.name is not null
+    order by
+      name;
+  `;
+
+  ctx.body = rows.map((row) => row.name);
+});
+
 filters.get("/models", async (ctx: Context) => {
   const { projectId } = ctx.state;
 

@@ -213,7 +213,7 @@ runs.use("/ingest", ingest.routes());
 runs.get("/", async (ctx: Context) => {
   const { projectId } = ctx.state;
 
-  const queryString = ctx.querystring;
+  const queryString = ctx.querystring.replace("type=llm&", "");
   const deserializedChecks = deserializeLogic(queryString);
 
   const filtersQuery =
@@ -310,6 +310,8 @@ runs.get("/", async (ctx: Context) => {
   if (exportType) {
     return fileExport(runs, exportType, ctx);
   }
+
+  console.log(queryString, runs, rows.toString())
 
   const total = await sql`
     with runs as (
