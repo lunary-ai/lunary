@@ -262,6 +262,7 @@ export const CHECKS: Check[] = [
             item.props?.name,
             item.props?.firstName,
             item.props?.lastName,
+            item.props?.orgId,
           ];
 
           return toCheck.some((check) =>
