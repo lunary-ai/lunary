@@ -137,15 +137,15 @@ export const roles: Record<
         read: true,
         update: true,
         delete: true,
-        list: true
+        list: true,
       },
       charts: {
         create: true,
         read: true,
         update: true,
         delete: true,
-        list: true
-      }
+        list: true,
+      },
     },
   },
   admin: {
@@ -248,15 +248,15 @@ export const roles: Record<
         read: true,
         update: true,
         delete: true,
-        list: true
+        list: true,
       },
       charts: {
         create: true,
         read: true,
         update: true,
         delete: true,
-        list: true
-      }
+        list: true,
+      },
     },
   },
   member: {
@@ -360,15 +360,15 @@ export const roles: Record<
         read: true,
         update: false,
         delete: false,
-        list: true
+        list: true,
       },
       charts: {
         create: false,
         read: true,
         update: false,
         delete: false,
-        list: true
-      }
+        list: true,
+      },
     },
   },
   viewer: {
@@ -460,15 +460,15 @@ export const roles: Record<
         read: true,
         update: false,
         delete: false,
-        list: true
+        list: true,
       },
       charts: {
         create: false,
         read: true,
         update: false,
         delete: false,
-        list: true
-      }
+        list: true,
+      },
     },
   },
   prompt_editor: {

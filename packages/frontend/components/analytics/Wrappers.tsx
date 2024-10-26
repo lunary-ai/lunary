@@ -3,7 +3,6 @@ import { IconMinus, IconPlus } from "@tabler/icons-react";
 import { useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 
-
 export function Selectable({
   header,
   isSelected,
@@ -61,63 +60,61 @@ export function Selectable({
   );
 }
 
-
 export function Draggable({ id, children, editMode }) {
-    const [{ isDragging }, element] = useDrag(
-      () => ({
-        type: "chart",
-        item: { id },
-        collect: (monitor) => ({
-          isDragging: !!monitor.isDragging(),
-        }),
-        canDrag: () => editMode,
+  const [{ isDragging }, element] = useDrag(
+    () => ({
+      type: "chart",
+      item: { id },
+      collect: (monitor) => ({
+        isDragging: !!monitor.isDragging(),
       }),
-      [editMode],
-    );
-  
-    return (
-      <Box
-        ref={element}
-        h="100%"
-        style={{
-          opacity: isDragging ? 0.5 : 1,
-          cursor: editMode ? "move" : "auto",
-        }}
-      >
-        {children}
-      </Box>
-    );
-  }
-  
-  export function Droppable({ children, editMode, onDrop }) {
-    const [{ isOver }, element] = useDrop(
-      () => ({
-        accept: "chart",
-        drop: onDrop,
-        collect: (monitor) => ({
-          isOver: !!monitor.isOver(),
-        }),
-        canDrop: () => editMode,
+      canDrag: () => editMode,
+    }),
+    [editMode],
+  );
+
+  return (
+    <Box
+      ref={element}
+      h="100%"
+      style={{
+        opacity: isDragging ? 0.5 : 1,
+        cursor: editMode ? "move" : "auto",
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
+
+export function Droppable({ children, editMode, onDrop }) {
+  const [{ isOver }, element] = useDrop(
+    () => ({
+      accept: "chart",
+      drop: onDrop,
+      collect: (monitor) => ({
+        isOver: !!monitor.isOver(),
       }),
-      [editMode],
-    );
-  
-    return (
-      <Box
-        ref={element}
-        h="100%"
-        style={
-          isOver
-            ? {
-                opacity: 0.4,
-                border: "2px dashed #ccc",
-                borderRadius: "var(--mantine-radius-md)",
-              }
-            : {}
-        }
-      >
-        {children}
-      </Box>
-    );
-  }
-  
+      canDrop: () => editMode,
+    }),
+    [editMode],
+  );
+
+  return (
+    <Box
+      ref={element}
+      h="100%"
+      style={
+        isOver
+          ? {
+              opacity: 0.4,
+              border: "2px dashed #ccc",
+              borderRadius: "var(--mantine-radius-md)",
+            }
+          : {}
+      }
+    >
+      {children}
+    </Box>
+  );
+}

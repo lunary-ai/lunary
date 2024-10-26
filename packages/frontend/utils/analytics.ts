@@ -113,17 +113,19 @@ export const ALL_CHARTS = {
 };
 
 export const DEFAULT_CHARTS = [
-    "models", "templates", "users",
-    "tokens",
-    "costs",
-    "errors",
-    "users/new",
-    "users/active",
-    "users/average-cost",
-    "run-types",
-    "latency",
-    "feedback-ratio",
-  ];
+  "models",
+  "templates",
+  "users",
+  "tokens",
+  "costs",
+  "errors",
+  "users/new",
+  "users/active",
+  "users/average-cost",
+  "run-types",
+  "latency",
+  "feedback-ratio",
+];
 
 export const DEFAULT_DASHBOARD = {
   id: "default",

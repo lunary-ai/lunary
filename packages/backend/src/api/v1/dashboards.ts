@@ -24,15 +24,19 @@ dashboards.get("/", checkAccess("dashboards", "list"), async (ctx: Context) => {
         order by updated_at desc`;
 });
 
-dashboards.get("/:id", checkAccess("dashboards", "read"), async (ctx: Context) => {
-  const { projectId } = ctx.state;
-  const { id } = ctx.params;
+dashboards.get(
+  "/:id",
+  checkAccess("dashboards", "read"),
+  async (ctx: Context) => {
+    const { projectId } = ctx.state;
+    const { id } = ctx.params;
 
-  const [dashboard] =
-    await sql`select * from dashboard where project_id = ${projectId} and id = ${id}`;
+    const [dashboard] =
+      await sql`select * from dashboard where project_id = ${projectId} and id = ${id}`;
 
-  ctx.body = dashboard;
-});
+    ctx.body = dashboard;
+  },
+);
 
 dashboards.post("/", async (ctx: Context) => {
   const { projectId, userId } = ctx.state;
@@ -46,7 +50,7 @@ dashboards.post("/", async (ctx: Context) => {
       ownerId: userId,
       projectId,
       charts,
-      description
+      description,
     })}
     returning *
   `;

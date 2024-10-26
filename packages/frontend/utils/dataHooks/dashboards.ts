@@ -23,10 +23,7 @@ export function useDashboards() {
   };
 }
 
-export function useDashboard(
-  id: string | null,
-  initialData?: any,
-) {
+export function useDashboard(id: string | null, initialData?: any) {
   if (id === DEFAULT_DASHBOARD.id) {
     return {
       dashboard: DEFAULT_DASHBOARD,
