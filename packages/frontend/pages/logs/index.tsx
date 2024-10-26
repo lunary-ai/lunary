@@ -240,7 +240,7 @@ export default function Logs() {
 
   useEffect(() => {
     if (!hasAccess(user?.role, "settings", "read")) {
-      router.push("/analytics");
+      router.push("/dashboards");
     }
   }, [user.role]);
 

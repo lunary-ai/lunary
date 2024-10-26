@@ -9,11 +9,6 @@ const getPreviousDate = (day) => {
   return date.toISOString();
 };
 
-export const DND_TYPES = {
-  MAIN: "main",
-  EXTRAS: "extras",
-};
-
 export const BASE_CHART_PROPS = {
   // dataKey: {
   //   type: "string",
@@ -117,9 +112,7 @@ export const ALL_CHARTS = {
   ],
 };
 
-export const DEFAULT_CHARTS = {
-  main: [],
-  extras: [
+export const DEFAULT_CHARTS = [
     "models", "templates", "users",
     "tokens",
     "costs",
@@ -130,8 +123,7 @@ export const DEFAULT_CHARTS = {
     "run-types",
     "latency",
     "feedback-ratio",
-  ],
-};
+  ];
 
 export const DEFAULT_DASHBOARD = {
   id: "default",

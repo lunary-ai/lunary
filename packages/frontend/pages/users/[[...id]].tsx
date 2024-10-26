@@ -49,7 +49,7 @@ import TopModels from "@/components/analytics/TopModels";
 
 import LineChart from "@/components/analytics/LineChart";
 import Link from "next/link";
-import { deserializeDateRange, getDefaultDateRange } from "../analytics";
+import { deserializeDateRange, getDefaultDateRange } from "../dashboards";
 import { parseAsString, useQueryState } from "nuqs";
 
 const columns = [
@@ -206,7 +206,7 @@ function SelectedUser({ id, onClose }) {
                   component={Link}
                   color="grape"
                   size="xs"
-                  href={`/analytics?filters=users=${id}`}
+                  href={`/dashboards?filters=users=${id}`}
                   variant="outline"
                 >
                   Analytics

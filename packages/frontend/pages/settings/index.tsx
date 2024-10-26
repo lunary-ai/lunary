@@ -288,7 +288,7 @@ export default function AppAnalytics() {
 
   useEffect(() => {
     if (!hasAccess(user?.role, "settings", "read")) {
-      router.push("/analytics");
+      router.push("/dashboards");
     }
   }, [user.role]);
 

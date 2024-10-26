@@ -4,6 +4,7 @@ import {
   Collapse,
   Flex,
   Group,
+  Loader,
   Menu,
   NavLink,
   SegmentedControl,
@@ -227,14 +228,19 @@ export default function Sidebar() {
   const { user } = useUser();
   const { views } = useViews();
   const { projects, isLoading: loading, insert } = useProjects();
-  const { dashboards, loading: dashboardsLoading } = useDashboards();
+  const {
+    dashboards,
+    insert: insertDashboard,
+    isInserting: isInsertingDashboard,
+  } = useDashboards();
 
   const { colorScheme, setColorScheme } = useMantineColorScheme({});
   const [createProjectLoading, setCreateProjectLoading] = useState(false);
   const [dashboardID, setDashboardID] = useQueryState<string | undefined>(
-    "dashboard", { ...parseAsString, history: "push" }
+    "dashboard",
+    { ...parseAsString, history: "push" },
   );
-  const { dashboard } = useDashboard(dashboardID);
+  const { dashboard } = useDashboard(dashboardID || DEFAULT_DASHBOARD.id);
 
   const projectsCombobox = useCombobox({
     onDropdownClose: () => {
@@ -281,8 +287,8 @@ export default function Sidebar() {
         {
           label: "Dashboards",
           icon: IconTimeline,
-          link: "/analytics",
-          resource: "analytics",
+          link: "/dashboards",
+          resource: "dashboards",
         },
         {
           label: "LLM",
@@ -366,7 +372,7 @@ export default function Sidebar() {
     const name = `Project #${projects.length + 1}`;
     try {
       const { id } = await insert({ name });
-      analytics.track("Create Project", {
+      dashboards.track("Create Project", {
         name,
       });
 
@@ -406,6 +412,27 @@ export default function Sidebar() {
     ));
 
   const [opened, { toggle }] = useDisclosure(true);
+
+  async function createDashboard() {
+    const dashboard = await insertDashboard({
+      name: "New Dashboard",
+      charts: DEFAULT_DASHBOARD.charts,
+    });
+    switchDashboard(dashboard.id);
+  }
+
+  function switchDashboard(id) {
+    if (router.pathname.startsWith("/dashboards")) {
+      setDashboardID(id);
+    } else {
+      router.push(`/dashboards`, {
+        query: {
+          ...router.query,
+          dashboard: id,
+        },
+      });
+    }
+  }
 
   return (
     <Flex
@@ -506,19 +533,18 @@ export default function Sidebar() {
             )}
           </Group>
 
-          <Box mb="sm" mt="md">
+          <Group
+            mb="sm"
+            mt="md"
+            style={{ display: "flex", justifyContent: "center" }}
+          >
             <Combobox
+              w="75%"
               store={dashboardsComboBox}
               withinPortal={false}
               onOptionSubmit={(id) => {
-                setDashboardID(id);
-                router.push(`/analytics`, {
-                  query: {
-                    ...router.query,
-                    dashboard: id,
-                  }
-                });
                 dashboardsComboBox.closeDropdown();
+                switchDashboard(id);
               }}
               styles={{
                 dropdown: { minWidth: "fit-content", maxWidth: 600 },
@@ -536,7 +562,7 @@ export default function Sidebar() {
                     wordBreak: "break-all",
                     textOverflow: "ellipsis",
                     overflow: "hidden",
-                    paddingInline: "10px"
+                    paddingInline: "10px",
                   }}
                   pointer
                   leftSection={
@@ -548,7 +574,7 @@ export default function Sidebar() {
                   onClick={() => dashboardsComboBox.toggleDropdown()}
                   rightSectionPointerEvents="none"
                 >
-                  {dashboard?.name || "Hi"}
+                  {dashboard?.name}
                 </InputBase>
               </Combobox.Target>
               <Combobox.Dropdown w={400}>
@@ -571,7 +597,15 @@ export default function Sidebar() {
                 </Combobox.Options>
               </Combobox.Dropdown>
             </Combobox>
-          </Box>
+
+            <ActionIcon variant="outline" w="10%">
+              {isInsertingDashboard ? (
+                <Loader />
+              ) : (
+                <IconPlus size={16} onClick={createDashboard} />
+              )}
+            </ActionIcon>
+          </Group>
 
           {user &&
             APP_MENU.filter((item) => !item.disabled).map((item) => (
