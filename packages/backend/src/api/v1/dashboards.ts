@@ -13,6 +13,7 @@ const dashboards = new Router({
 const dashboardschema = z.object({
   name: z.string(),
   charts: z.any(),
+  filters: z.any(),
   description: z.string().optional(),
 });
 
@@ -42,7 +43,7 @@ dashboards.post("/", async (ctx: Context) => {
   const { projectId, userId } = ctx.state;
 
   const validatedData = dashboardschema.parse(ctx.request.body);
-  const { name, charts, description } = validatedData;
+  const { name, charts, description, filters } = validatedData;
 
   const [insertedCheck] = await sql`
     insert into dashboard ${sql({
@@ -51,6 +52,7 @@ dashboards.post("/", async (ctx: Context) => {
       projectId,
       charts,
       description,
+      filters,
     })}
     returning *
   `;
@@ -62,11 +64,11 @@ dashboards.patch("/:id", async (ctx: Context) => {
   const { id } = ctx.params;
 
   const validatedData = dashboardschema.partial().parse(ctx.request.body);
-  const { name, charts, description } = validatedData;
+  const { name, charts, description, filters } = validatedData;
 
   const [updateddashboard] = await sql`
     update dashboard
-    set ${sql(clearUndefined({ name, charts, description, updatedAt: new Date() }))}
+    set ${sql(clearUndefined({ name, charts, description, filters, updatedAt: new Date() }))}
     where project_id = ${projectId}
     and id = ${id}
     returning *

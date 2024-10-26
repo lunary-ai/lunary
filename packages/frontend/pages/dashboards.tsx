@@ -70,6 +70,8 @@ import {
   ALL_CHARTS,
   DEFAULT_CHARTS,
   DEFAULT_DASHBOARD,
+  deserializeDateRange,
+  getDefaultDateRange,
 } from "@/utils/analytics";
 import RenamableField from "@/components/blocks/RenamableField";
 import {
@@ -84,44 +86,7 @@ import {
   Draggable,
 } from "@/components/analytics/Wrappers";
 
-export function getDefaultDateRange() {
-  const endOfToday = new Date();
-  endOfToday.setHours(23, 59, 59, 999);
-
-  const oneWeekAgoDate = new Date(endOfToday);
-  oneWeekAgoDate.setDate(oneWeekAgoDate.getDate() - 30);
-  oneWeekAgoDate.setHours(0, 0, 0, 0);
-  const defaultRange: [Date, Date] = [oneWeekAgoDate, endOfToday];
-  return defaultRange;
-}
-
-/**
- * This deserialize function handles the old localStorage format and
- * corrupted data (e.g., if the data was manually changed by the user).
- */
-export function deserializeDateRange(value: any): [Date, Date] {
-  const defaultRange: [Date, Date] = getDefaultDateRange();
-
-  if (!value) {
-    return defaultRange;
-  }
-  try {
-    const range = JSON.parse(value);
-
-    if (!Array.isArray(range) || range.length !== 2) {
-      return defaultRange;
-    }
-    if (isNaN(Date.parse(range[0])) || isNaN(Date.parse(range[1]))) {
-      return defaultRange;
-    }
-
-    const [startDate, endDate] = [new Date(range[0]), new Date(range[1])];
-
-    return [startDate, endDate];
-  } catch {
-    return defaultRange;
-  }
-}
+import type { CheckLogic } from "shared";
 
 type PresetDateRange = "Today" | "7 Days" | "30 Days" | "3 Months" | "Custom";
 type DateRange = [Date, Date];
@@ -517,26 +482,49 @@ function ChartSelector({
 // TODO: typescript everywhere
 export default function Analytics() {
   const router = useRouter();
-  const [dateRange, setDateRange] = useSessionStorage({
-    key: "dateRange-analytics",
-    getInitialValueInEffect: false,
-    deserialize: deserializeDateRange,
-    defaultValue: getDefaultDateRange(),
-  });
+
+  const [dashboardID, setDashboardID] = useQueryState<string | undefined>(
+    "dashboard",
+    {
+      ...parseAsString,
+      history: "push",
+    },
+  );
+
+  const {
+    dashboard,
+    update: updateDashboard,
+    remove: removeDashboard,
+    loading: dashboardLoading,
+  } = useDashboard(dashboardID || DEFAULT_DASHBOARD.id);
+
+  const dateRange = useMemo(() => {
+    return dashboard?.filters.dateRange
+      ? deserializeDateRange(dashboard.filters.dateRange)
+      : getDefaultDateRange();
+  }, [dashboard]);
 
   const [startDate, endDate] = dateRange;
 
-  const [granularity, setGranularity] = useLocalStorage<Granularity>({
-    key: "granularity-analytics",
-    getInitialValueInEffect: false,
-    defaultValue: determineGranularity(dateRange),
-  });
+  const granularity = useMemo(() => {
+    return dashboard?.filters.granularity || determineGranularity(dateRange);
+  }, [dashboard]);
 
-  const [checks, setChecks] = useQueryState("filters", {
-    parse: (value) => deserializeLogic(value, true),
-    serialize: serializeLogic,
-    defaultValue: DEFAULT_CHECK,
-  });
+  const checks = useMemo(() => {
+    return dashboard?.filters.checks
+      ? deserializeLogic(dashboard.filters.checks, true)
+      : (DEFAULT_CHECK as CheckLogic);
+  }, [dashboard]);
+
+  function setChecks(checks) {
+    // dashboard &&
+    //   updateDashboard({
+    //     filters: {
+    //       ...dashboard.filters,
+    //       checks: serializeLogic(checks),
+    //     },
+    //   });
+  }
 
   const serializedChecks = useMemo(() => serializeLogic(checks), [checks]);
 
@@ -658,21 +646,6 @@ export default function Analytics() {
 
   const { insert: insertDashboard } = useDashboards();
 
-  const [dashboardID, setDashboardID] = useQueryState<string | undefined>(
-    "dashboard",
-    {
-      ...parseAsString,
-      history: "push",
-    },
-  );
-
-  const {
-    dashboard,
-    update: updateDashboard,
-    remove: removeDashboard,
-    loading: dashboardLoading,
-  } = useDashboard(dashboardID || DEFAULT_DASHBOARD.id);
-
   // Temporary charts state used in edit mode
   const [tempChartsState, setTempChartsState] = useState(
     dashboard ? dashboard.charts : DEFAULT_CHARTS,
@@ -686,6 +659,26 @@ export default function Analytics() {
   useEffect(() => {
     setTempChartsState(dashboard ? dashboard.charts : DEFAULT_CHARTS);
   }, [dashboard, dashboardLoading]);
+
+  function setDateRange(dateRange) {
+    // dashboard &&
+    //   updateDashboard({
+    //     filters: {
+    //       ...dashboard.filters,
+    //       dateRange: [dateRange[0].toISOString(), dateRange[1].toISOString()],
+    //     },
+    //   });
+  }
+
+  function setGranularity(granularity) {
+    // dashboard &&
+    //   updateDashboard({
+    //     filters: {
+    //       ...dashboard.filters,
+    //       granularity,
+    //     },
+    //   });
+  }
 
   function getChartComponent(id: string) {
     switch (id) {
@@ -747,6 +740,10 @@ export default function Analytics() {
 
     const entry = await insertDashboard({
       name,
+      filters: {
+        checks: serializedChecks,
+        dateRange: [startDate.toISOString(), endDate.toISOString()],
+      },
       charts: tempChartsState,
     });
     setDashboardID(entry.id);

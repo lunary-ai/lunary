@@ -33,11 +33,12 @@ import { useSessionStorage, useInViewport } from "@mantine/hooks";
 import { IconCancel, IconTrash, IconPlus } from "@tabler/icons-react";
 
 import {
+  CHART_DATA,
+  CHART_SERIES,
+  BASE_CHART_PROPS,
   deserializeDateRange,
   getDefaultDateRange,
-  DateRangeSelect,
-} from "@/pages/dashboards";
-import { CHART_DATA, CHART_SERIES, BASE_CHART_PROPS } from "@/utils/analytics";
+} from "@/utils/analytics";
 import { useProjectSWR } from "@/utils/dataHooks";
 import { useChart } from "@/utils/dataHooks/charts";
 import {

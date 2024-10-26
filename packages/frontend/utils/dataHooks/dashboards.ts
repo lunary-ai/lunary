@@ -2,6 +2,7 @@ import { hasAccess } from "shared";
 import { useProjectMutation, useProjectSWR, useUser } from ".";
 import { fetcher } from "../fetcher";
 import { DEFAULT_DASHBOARD } from "../analytics";
+import { useState } from "react";
 
 export function useDashboards() {
   const { user } = useUser();
@@ -25,10 +26,16 @@ export function useDashboards() {
 
 export function useDashboard(id: string | null, initialData?: any) {
   if (id === DEFAULT_DASHBOARD.id) {
+    const [dashboard, setDashboard] = useState(DEFAULT_DASHBOARD);
     return {
-      dashboard: DEFAULT_DASHBOARD,
+      dashboard,
       remove: () => {},
-      update: () => {},
+      update: (data) => {
+        setDashboard({
+          ...dashboard,
+          ...data,
+        });
+      },
       mutate: () => {},
       loading: false,
     };

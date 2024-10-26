@@ -1,6 +1,3 @@
-import { data } from "@/components/analytics/Charts/TopTopics";
-import { deserializeDateRange, getDefaultDateRange } from "@/pages/analytics";
-import { useSessionStorage } from "@mantine/hooks";
 import posthog from "posthog-js";
 
 const getPreviousDate = (day) => {
@@ -127,11 +124,55 @@ export const DEFAULT_CHARTS = [
   "feedback-ratio",
 ];
 
+export function getDefaultDateRange() {
+  const endOfToday = new Date();
+  endOfToday.setHours(23, 59, 59, 999);
+
+  const oneWeekAgoDate = new Date(endOfToday);
+  oneWeekAgoDate.setDate(oneWeekAgoDate.getDate() - 30);
+  oneWeekAgoDate.setHours(0, 0, 0, 0);
+  const defaultRange: [Date, Date] = [oneWeekAgoDate, endOfToday];
+  return defaultRange;
+}
+
 export const DEFAULT_DASHBOARD = {
   id: "default",
   name: "Default",
   charts: DEFAULT_CHARTS,
+  filters: {
+    checks: "",
+    granularity: "daily",
+    dateRange: getDefaultDateRange(),
+  },
 };
+
+/**
+ * This deserialize function handles the old localStorage format and
+ * corrupted data (e.g., if the data was manually changed by the user).
+ */
+export function deserializeDateRange(value: any): [Date, Date] {
+  const defaultRange: [Date, Date] = getDefaultDateRange();
+
+  if (!value) {
+    return defaultRange;
+  }
+  try {
+    const range = JSON.parse(value);
+
+    if (!Array.isArray(range) || range.length !== 2) {
+      return defaultRange;
+    }
+    if (isNaN(Date.parse(range[0])) || isNaN(Date.parse(range[1]))) {
+      return defaultRange;
+    }
+
+    const [startDate, endDate] = [new Date(range[0]), new Date(range[1])];
+
+    return [startDate, endDate];
+  } catch {
+    return defaultRange;
+  }
+}
 
 if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
   posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
