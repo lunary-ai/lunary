@@ -257,7 +257,6 @@ const determineGranularity = (
 };
 
 function GranularitySelect({
-  dateRange,
   granularity,
   setGranularity,
 }: GranularitySelectProps) {
@@ -269,12 +268,9 @@ function GranularitySelect({
   ]);
 
   useEffect(() => {
-    const newGranularity = determineGranularity(dateRange);
-    setGranularity(newGranularity);
-
-    if (newGranularity === "hourly") {
+    if (granularity === "hourly") {
       setOptions([{ value: "hourly", label: "Hourly" }]);
-    } else if (newGranularity === "daily") {
+    } else if (granularity === "daily") {
       setOptions([{ value: "daily", label: "Daily" }]);
     } else {
       setOptions([
@@ -282,7 +278,7 @@ function GranularitySelect({
         { value: "weekly", label: "Weekly" },
       ]);
     }
-  }, [dateRange, setGranularity]);
+  }, [granularity]);
 
   return (
     <Select
@@ -498,33 +494,21 @@ export default function Analytics() {
     loading: dashboardLoading,
   } = useDashboard(dashboardID || DEFAULT_DASHBOARD.id);
 
-  const dateRange = useMemo(() => {
-    return dashboard?.filters.dateRange
+  const { dateRange, granularity, checks } = useMemo(() => {
+    const dateRange = dashboard?.filters.dateRange
       ? deserializeDateRange(dashboard.filters.dateRange)
       : getDefaultDateRange();
+
+    return {
+      dateRange,
+      granularity: determineGranularity(dateRange),
+      checks: dashboard?.filters.checks
+        ? deserializeLogic(dashboard.filters.checks, true)
+        : (DEFAULT_CHECK as CheckLogic),
+    };
   }, [dashboard]);
 
   const [startDate, endDate] = dateRange;
-
-  const granularity = useMemo(() => {
-    return dashboard?.filters.granularity || determineGranularity(dateRange);
-  }, [dashboard]);
-
-  const checks = useMemo(() => {
-    return dashboard?.filters.checks
-      ? deserializeLogic(dashboard.filters.checks, true)
-      : (DEFAULT_CHECK as CheckLogic);
-  }, [dashboard]);
-
-  function setChecks(checks) {
-    // dashboard &&
-    //   updateDashboard({
-    //     filters: {
-    //       ...dashboard.filters,
-    //       checks: serializeLogic(checks),
-    //     },
-    //   });
-  }
 
   const serializedChecks = useMemo(() => serializeLogic(checks), [checks]);
 
@@ -661,23 +645,35 @@ export default function Analytics() {
   }, [dashboard, dashboardLoading]);
 
   function setDateRange(dateRange) {
-    // dashboard &&
-    //   updateDashboard({
-    //     filters: {
-    //       ...dashboard.filters,
-    //       dateRange: [dateRange[0].toISOString(), dateRange[1].toISOString()],
-    //     },
-    //   });
+    console.log("setting: ", dateRange);
+    dashboard &&
+      updateDashboard({
+        filters: {
+          ...dashboard.filters,
+          dateRange: [dateRange[0].toISOString(), dateRange[1].toISOString()],
+        },
+      });
   }
 
   function setGranularity(granularity) {
-    // dashboard &&
-    //   updateDashboard({
-    //     filters: {
-    //       ...dashboard.filters,
-    //       granularity,
-    //     },
-    //   });
+    console.log("setting: ", granularity);
+    dashboard &&
+      updateDashboard({
+        filters: {
+          ...dashboard.filters,
+          granularity,
+        },
+      });
+  }
+
+  function setChecks(checks) {
+    dashboard &&
+      updateDashboard({
+        filters: {
+          ...dashboard.filters,
+          checks: serializeLogic(checks),
+        },
+      });
   }
 
   function getChartComponent(id: string) {
@@ -809,120 +805,121 @@ export default function Analytics() {
 
       <DndProvider backend={HTML5Backend}>
         <Stack gap="lg">
-          <Group
-            gap="xs"
+          <Stack
             style={{
               position: "sticky",
               top: 0,
               zIndex: 1,
               backgroundColor: "var(--mantine-color-body)",
-              paddingBlock: 24,
+              paddingTop: 20,
+              paddingBottom: 10,
             }}
           >
-            <Group gap={0}>
-              <DateRangeSelect
-                dateRange={dateRange}
-                setDateRange={setDateRange}
-              />
-              <DateRangePicker
-                dateRange={dateRange}
-                setDateRange={setDateRange}
-              />
-              <GranularitySelect
-                dateRange={dateRange}
-                granularity={granularity}
-                setGranularity={setGranularity}
-              />
-            </Group>
+            <Group gap="xs">
+              <Group gap={0}>
+                <DateRangeSelect
+                  dateRange={dateRange}
+                  setDateRange={setDateRange}
+                />
+                <DateRangePicker
+                  dateRange={dateRange}
+                  setDateRange={setDateRange}
+                />
+                <GranularitySelect
+                  granularity={granularity}
+                  setGranularity={setGranularity}
+                />
+              </Group>
 
-            {!showBar && (
-              <Button
-                variant="subtle"
-                onClick={() => setShowCheckBar(true)}
-                leftSection={<IconFilter size={12} />}
-                size="xs"
-              >
-                Add filters
-              </Button>
-            )}
-
-            <Group gap="sm" ml="auto">
-              <Button
-                variant="filled"
-                onClick={() => {
-                  !editMode && onToggleMode();
-                  openChartSelector();
-                }}
-                leftSection={<IconPlus size={12} />}
-                size="xs"
-              >
-                Add
-              </Button>
-
-              <Button
-                variant="outline"
-                onClick={onToggleMode}
-                leftSection={
-                  editMode ? <IconCheck size={12} /> : <IconEdit size={12} />
-                }
-                size="xs"
-              >
-                {editMode ? "Save" : "Edit"}
-              </Button>
-
-              {editMode && dashboard && (
+              {!showBar && (
                 <Button
-                  variant="gradient"
-                  onClick={openSaveAs}
-                  leftSection={<IconCopyCheckFilled size={12} />}
+                  variant="subtle"
+                  onClick={() => setShowCheckBar(true)}
+                  leftSection={<IconFilter size={12} />}
                   size="xs"
                 >
-                  Save As
+                  Add filters
                 </Button>
               )}
 
-              {editMode && (
-                <ActionIcon
-                  color="red"
-                  variant="outline"
+              <Group gap="sm" ml="auto">
+                <Button
+                  variant="filled"
                   onClick={() => {
-                    closeChartSelector();
-                    setTempChartsState(dashboard?.charts || DEFAULT_CHARTS);
-                    setEditMode(false);
+                    !editMode && onToggleMode();
+                    openChartSelector();
                   }}
-                  size="sm"
-                >
-                  <IconCancel size={12} />
-                </ActionIcon>
-              )}
-            </Group>
-
-            {!editMode &&
-              dashboard &&
-              dashboard?.id !== DEFAULT_DASHBOARD.id && (
-                <Button
-                  color="red"
-                  variant="outline"
-                  onClick={openConfirm}
-                  leftSection={<IconTrash size={12} />}
+                  leftSection={<IconPlus size={12} />}
                   size="xs"
                 >
-                  Delete
+                  Add
                 </Button>
-              )}
-          </Group>
 
-          {showBar && (
-            <CheckPicker
-              minimal
-              onChange={setChecks}
-              defaultOpened={showCheckBar}
-              value={checks}
-              restrictTo={(filter) =>
-                ["tags", "models", "users", "metadata"].includes(filter.id)
-              }
-            />
-          )}
+                <Button
+                  variant="outline"
+                  onClick={onToggleMode}
+                  leftSection={
+                    editMode ? <IconCheck size={12} /> : <IconEdit size={12} />
+                  }
+                  size="xs"
+                >
+                  {editMode ? "Save" : "Edit"}
+                </Button>
+
+                {editMode && dashboard && (
+                  <Button
+                    variant="gradient"
+                    onClick={openSaveAs}
+                    leftSection={<IconCopyCheckFilled size={12} />}
+                    size="xs"
+                  >
+                    Save As
+                  </Button>
+                )}
+
+                {editMode && (
+                  <ActionIcon
+                    color="red"
+                    variant="outline"
+                    onClick={() => {
+                      closeChartSelector();
+                      setTempChartsState(dashboard?.charts || DEFAULT_CHARTS);
+                      setEditMode(false);
+                    }}
+                    size="sm"
+                  >
+                    <IconCancel size={12} />
+                  </ActionIcon>
+                )}
+              </Group>
+
+              {!editMode &&
+                dashboard &&
+                dashboard?.id !== DEFAULT_DASHBOARD.id && (
+                  <Button
+                    color="red"
+                    variant="outline"
+                    onClick={openConfirm}
+                    leftSection={<IconTrash size={12} />}
+                    size="xs"
+                  >
+                    Delete
+                  </Button>
+                )}
+            </Group>
+
+            {showBar && (
+              <CheckPicker
+                minimal
+                onChange={setChecks}
+                defaultOpened={showCheckBar}
+                value={checks}
+                restrictTo={(filter) =>
+                  ["tags", "models", "users", "metadata"].includes(filter.id)
+                }
+              />
+            )}
+          </Stack>
 
           {dashboard && editMode && dashboard?.id !== DEFAULT_DASHBOARD.id && (
             <Group gap="xs">
