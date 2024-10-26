@@ -20,6 +20,7 @@ import {
   IconAnalyze,
   IconBinaryTree2,
   IconBrandOpenai,
+  IconChevronDown,
   IconChevronRight,
   IconCreditCard,
   IconDatabase,
@@ -48,7 +49,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { openUpgrade } from "./UpgradeModal";
 
-import analytics from "@/utils/analytics";
+import analytics, { DEFAULT_DASHBOARD } from "@/utils/analytics";
 import { Button, Combobox, Input, InputBase, useCombobox } from "@mantine/core";
 
 import { IconPlus } from "@tabler/icons-react";
@@ -61,7 +62,8 @@ import config from "@/utils/config";
 import { useViews } from "@/utils/dataHooks/views";
 import { useDisclosure, useFocusTrap } from "@mantine/hooks";
 import { getIconComponent } from "../blocks/IconPicker";
-import { useDashboards } from "@/utils/dataHooks/dashboards";
+import { useDashboard, useDashboards } from "@/utils/dataHooks/dashboards";
+import { useQueryState, parseAsString } from "nuqs";
 
 function NavbarLink({
   icon: Icon,
@@ -82,16 +84,6 @@ function NavbarLink({
         const viewParam = linkParams.get("view");
         if (viewParam) {
           return router.asPath.includes(`view=${viewParam}`);
-        }
-      }
-      return router.asPath.startsWith(link);
-    } else if (router.pathname.startsWith("/analytics")) {
-      if (router.asPath.includes(`dashboard=`)) {
-        if (link === "/analytics") return false;
-
-        const dashboardParam = linkParams.get("dashboard");
-        if (dashboardParam) {
-          return router.asPath.includes(`dashboard=${dashboardParam}`);
         }
       }
       return router.asPath.startsWith(link);
@@ -231,25 +223,30 @@ export default function Sidebar() {
   const router = useRouter();
   const { project, setProjectId } = useProject();
 
-  const { user } = useUser();
   const { org } = useOrg();
-  const { projects, isLoading: loading, insert } = useProjects();
+  const { user } = useUser();
   const { views } = useViews();
-  const { dashboards } = useDashboards();
+  const { projects, isLoading: loading, insert } = useProjects();
+  const { dashboards, loading: dashboardsLoading } = useDashboards();
 
   const { colorScheme, setColorScheme } = useMantineColorScheme({});
-
   const [createProjectLoading, setCreateProjectLoading] = useState(false);
+  const [dashboardID, setDashboardID] = useQueryState<string | undefined>(
+    "dashboard", { ...parseAsString, history: "push" }
+  );
+  const { dashboard } = useDashboard(dashboardID);
 
-  const combobox = useCombobox({
+  const projectsCombobox = useCombobox({
     onDropdownClose: () => {
-      combobox.resetSelectedOption();
+      projectsCombobox.resetSelectedOption();
       setSearch("");
     },
     onDropdownOpen: () => {
-      combobox.focusSearchInput();
+      projectsCombobox.focusSearchInput();
     },
   });
+
+  const dashboardsComboBox = useCombobox();
 
   const [search, setSearch] = useState("");
 
@@ -275,16 +272,6 @@ export default function Sidebar() {
     })
     .sort((a, b) => a.label.localeCompare(b.label));
 
-  const projectDashboards = (dashboards || []).map((d) => {
-    return {
-      label: d.name,
-      searchable: true,
-      icon: IconTimeline,
-      link: `/analytics?dashboard=${d.id}`,
-      resource: "analytics",
-    };
-  });
-
   const APP_MENU: MenuItem[] = [
     {
       label: "Observe",
@@ -292,7 +279,7 @@ export default function Sidebar() {
       c: "blue",
       subMenu: [
         {
-          label: "Analytics",
+          label: "Dashboards",
           icon: IconTimeline,
           link: "/analytics",
           resource: "analytics",
@@ -359,16 +346,6 @@ export default function Sidebar() {
     },
   ];
 
-  if (projectDashboards.length) {
-    APP_MENU.push({
-      label: "Dashboards",
-      icon: IconListSearch,
-      searchable: true,
-      resource: "logs",
-      subMenu: projectDashboards,
-    });
-  }
-
   if (projectViews.length) {
     APP_MENU.push({
       label: "Smart Views",
@@ -419,6 +396,17 @@ export default function Sidebar() {
       </Combobox.Option>
     ));
 
+  const dashboardOptions = dashboards
+    ?.filter((item) => item.name.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((item) => (
+      <Combobox.Option value={item.id} key={item.id}>
+        {item.name}
+      </Combobox.Option>
+    ));
+
+  const [opened, { toggle }] = useDisclosure(true);
+
   return (
     <Flex
       justify="space-between"
@@ -435,11 +423,11 @@ export default function Sidebar() {
         <Box w="100%">
           <Group wrap="nowrap" my="xs" pb="xs" mx="xs" justify="space-between">
             <Combobox
-              store={combobox}
+              store={projectsCombobox}
               withinPortal={false}
               onOptionSubmit={(id) => {
                 setProjectId(id);
-                combobox.closeDropdown();
+                projectsCombobox.closeDropdown();
               }}
               styles={{
                 dropdown: { minWidth: "fit-content", maxWidth: 600 },
@@ -466,7 +454,7 @@ export default function Sidebar() {
                     </ThemeIcon>
                   }
                   rightSection={<Combobox.Chevron />}
-                  onClick={() => combobox.toggleDropdown()}
+                  onClick={() => projectsCombobox.toggleDropdown()}
                   rightSectionPointerEvents="none"
                 >
                   {project?.name || (
@@ -517,6 +505,73 @@ export default function Sidebar() {
               </ActionIcon>
             )}
           </Group>
+
+          <Box mb="sm" mt="md">
+            <Combobox
+              store={dashboardsComboBox}
+              withinPortal={false}
+              onOptionSubmit={(id) => {
+                setDashboardID(id);
+                router.push(`/analytics`, {
+                  query: {
+                    ...router.query,
+                    dashboard: id,
+                  }
+                });
+                dashboardsComboBox.closeDropdown();
+              }}
+              styles={{
+                dropdown: { minWidth: "fit-content", maxWidth: 600 },
+              }}
+            >
+              <Combobox.Target>
+                <InputBase
+                  component="button"
+                  size="xs"
+                  variant="filled"
+                  fw={500}
+                  fz="xl"
+                  type="button"
+                  style={{
+                    wordBreak: "break-all",
+                    textOverflow: "ellipsis",
+                    overflow: "hidden",
+                    paddingInline: "10px"
+                  }}
+                  pointer
+                  leftSection={
+                    <ThemeIcon size={19} ml={-4} variant="light">
+                      <IconTimeline size={15} />
+                    </ThemeIcon>
+                  }
+                  rightSection={<IconChevronDown size={15} />}
+                  onClick={() => dashboardsComboBox.toggleDropdown()}
+                  rightSectionPointerEvents="none"
+                >
+                  {dashboard?.name || "Hi"}
+                </InputBase>
+              </Combobox.Target>
+              <Combobox.Dropdown w={400}>
+                <Combobox.Search
+                  value={search}
+                  onChange={(event) => setSearch(event.currentTarget.value)}
+                  placeholder={"Search..."}
+                  style={{
+                    top: 0,
+                    zIndex: 2,
+                    position: "sticky",
+                  }}
+                />
+                <Combobox.Options>
+                  {dashboardOptions?.length > 0 ? (
+                    dashboardOptions
+                  ) : (
+                    <Combobox.Empty>No dashboards found</Combobox.Empty>
+                  )}
+                </Combobox.Options>
+              </Combobox.Dropdown>
+            </Combobox>
+          </Box>
 
           {user &&
             APP_MENU.filter((item) => !item.disabled).map((item) => (

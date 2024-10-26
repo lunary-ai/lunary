@@ -72,6 +72,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     }
   }, [isSignedIn, org]);
 
+  const isDashboardPage = router.pathname.startsWith("/analytics");
   const isPromptPage = router.pathname.startsWith("/prompt");
   const isTracePage = router.pathname.startsWith("/traces");
   const disablePagePadding = isPromptPage || isTracePage;
@@ -109,6 +110,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
           <Box
             p={disablePagePadding ? 0 : 24}
+            pt={isDashboardPage ? 0 : undefined}
             pos="relative"
             flex={1}
             style={{

@@ -1,6 +1,7 @@
 import { hasAccess } from "shared";
 import { useProjectMutation, useProjectSWR, useUser } from ".";
 import { fetcher } from "../fetcher";
+import { DEFAULT_DASHBOARD } from "../analytics";
 
 export function useDashboards() {
   const { user } = useUser();
@@ -14,7 +15,7 @@ export function useDashboards() {
   );
 
   return {
-    dashboards: data,
+    dashboards: Array.isArray(data) ? [DEFAULT_DASHBOARD, ...data] : data,
     insert,
     isInserting,
     mutate,
@@ -22,7 +23,20 @@ export function useDashboards() {
   };
 }
 
-export function useDashboard(id: string | null, initialData?: any) {
+export function useDashboard(
+  id: string | null,
+  initialData?: any,
+) {
+  if (id === DEFAULT_DASHBOARD.id) {
+    return {
+      dashboard: DEFAULT_DASHBOARD,
+      remove: () => {},
+      update: () => {},
+      mutate: () => {},
+      loading: false,
+    };
+  }
+
   const { mutate: mutateViews } = useDashboards();
 
   const {

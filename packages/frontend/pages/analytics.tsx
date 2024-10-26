@@ -28,6 +28,7 @@ import {
   Loader,
   Menu,
   Modal,
+  Overlay,
   rem,
   SegmentedControl,
   Select,
@@ -61,12 +62,15 @@ import {
   IconChartLine,
   IconCheck,
   IconCopyCheckFilled,
+  IconDotsVertical,
   IconEdit,
   IconFilter,
   IconMinus,
   IconPlus,
   IconRestore,
   IconSelect,
+  IconStackPop,
+  IconTimeline,
   IconTrash,
   IconUserEdit,
 } from "@tabler/icons-react";
@@ -89,97 +93,17 @@ import { useChart, useCharts } from "@/utils/dataHooks/charts";
 import ErrorBoundary from "@/components/blocks/ErrorBoundary";
 import { showErrorNotification } from "@/utils/errors";
 
-const getPreviousDate = (day) => {
-  const date = new Date();
-  date.setDate(date.getDate() - day);
-  return date.toISOString();
-}
-
-const BASE_CHART_PROPS = {
-  // dataKey: {
-  //   type: "string",
-  //   required: true,
-  // },
-  gridAxis: {
-    type: "segmented",
-    options: [
-      {
-        label: "x",
-        value: "x",
-      },
-      {
-        label: "y",
-        value: "y",
-      },
-      {
-        label: "xy",
-        value: "xy",
-      },
-      {
-        label: "none",
-        value: "none",
-      },
-    ],
-  },
-  withXAxis: {
-    type: "boolean",
-    defaultValue: true,
-  },
-  withYAxis: {
-    type: "boolean",
-    defaultValue: true,
-  },
-  withDots: {
-    type: "boolean",
-    defaultValue: true,
-  },
-  withLegend: {
-    type: "boolean",
-  },
-  withTooltip: {
-    type: "boolean",
-    defaultValue: true,
-  }
-};
-
-const CHART_DATA = [
-  {
-    date: getPreviousDate(15),
-    Apples: 2890,
-    Oranges: 2338,
-    Tomatoes: 2452,
-  },
-  {
-    date: getPreviousDate(12),
-    Apples: 2756,
-    Oranges: 2103,
-    Tomatoes: 2402,
-  },
-  {
-    date: getPreviousDate(8),
-    Apples: 3322,
-    Oranges: 986,
-    Tomatoes: 1821,
-  },
-  {
-    date: getPreviousDate(4),
-    Apples: 3470,
-    Oranges: 2108,
-    Tomatoes: 2809,
-  },
-  {
-    date: getPreviousDate(1),
-    Apples: 3129,
-    Oranges: 1726,
-    Tomatoes: 2290,
-  },
-];
-
-const CHART_SERIES = [
-  { name: "Apples", color: "indigo" },
-  { name: "Oranges", color: "blue" },
-  { name: "Tomatoes", color: "teal" },
-];
+import {
+  ALL_CHARTS,
+  BASE_CHART_PROPS,
+  CHART_DATA,
+  CHART_SERIES,
+  DEFAULT_CHARTS,
+  DEFAULT_DASHBOARD,
+  DND_TYPES,
+} from "@/utils/analytics";
+import IconPicker from "@/components/blocks/IconPicker";
+import RenamableField from "@/components/blocks/RenamableField";
 
 const CHARTS = [
   {
@@ -194,17 +118,17 @@ const CHARTS = [
           { label: "Week", value: "weekly" },
           { label: "Hourly", value: "hourly" },
         ],
-        defaultValue: "daily"
+        defaultValue: "daily",
       },
       agg: {
         type: "segmented",
         options: [
           { label: "Sum", value: "sum" },
-          { label: "Average", value: "agg" }
-        ]
+          { label: "Average", value: "agg" },
+        ],
       },
       title: { type: "string" },
-      description: { type: "string" }
+      description: { type: "string" },
     },
     component({ data, props, series }) {
       const [dateRange, _] = useSessionStorage({
@@ -215,21 +139,35 @@ const CHARTS = [
       });
 
       const [startDate, endDate] = dateRange;
-      console.log(data)
-      return <LineChart
-        data={data.map(item => {
-          // TODO: Clean this up!!
-          return { ...item, date: new Date(item.date || item.createdAt || new Date()).toISOString() };
-        })} startDate={startDate} endDate={endDate}
-        props={series.map(serie => serie.name)}
-        colors={[
-          ...series.map(serie => serie.color).filter(Boolean),
-          "blue", "pink", "indigo", "green", "violet", "yellow"
-        ]}
-        granularity={"daily"}
-        {...props}
-      />
-    }
+      console.log(data);
+      return (
+        <LineChart
+          data={data.map((item) => {
+            // TODO: Clean this up!!
+            return {
+              ...item,
+              date: new Date(
+                item.date || item.createdAt || new Date(),
+              ).toISOString(),
+            };
+          })}
+          startDate={startDate}
+          endDate={endDate}
+          props={series.map((serie) => serie.name)}
+          colors={[
+            ...series.map((serie) => serie.color).filter(Boolean),
+            "blue",
+            "pink",
+            "indigo",
+            "green",
+            "violet",
+            "yellow",
+          ]}
+          granularity={"daily"}
+          {...props}
+        />
+      );
+    },
   },
   {
     name: "BarChart",
@@ -247,18 +185,11 @@ const CHARTS = [
             value: "vertical",
           },
         ],
-        defaultValue: "horizontal"
+        defaultValue: "horizontal",
       },
     },
     component({ data, props, series }) {
-      return (
-        <MantineBarChart
-          h={300}
-          series={series}
-          data={data}
-          {...props}
-        />
-      );
+      return <MantineBarChart h={300} series={series} data={data} {...props} />;
     },
   },
   {
@@ -282,12 +213,7 @@ const CHARTS = [
     },
     component({ props, data, series }) {
       return (
-        <MantineLineChart
-          h={300}
-          data={data}
-          series={series}
-          {...props}
-        />
+        <MantineLineChart h={300} data={data} series={series} {...props} />
       );
     },
   },
@@ -296,12 +222,7 @@ const CHARTS = [
     props: { ...BASE_CHART_PROPS, connectNulls: { type: "boolean" } },
     component({ props, data, series }) {
       return (
-        <MantineAreaChart
-          h={300}
-          data={data}
-          series={series}
-          {...props}
-        />
+        <MantineAreaChart h={300} data={data} series={series} {...props} />
       );
     },
   },
@@ -310,12 +231,7 @@ const CHARTS = [
     props: { ...BASE_CHART_PROPS },
     component({ props, data, series }) {
       return (
-        <MantineRadarChart
-          h={300}
-          data={data}
-          series={series}
-          {...props}
-        />
+        <MantineRadarChart h={300} data={data} series={series} {...props} />
       );
     },
   },
@@ -343,57 +259,19 @@ const CHARTS = [
   },
 ];
 
-const ALL_CHARTS = {
-  main: ["models", "templates", "users"],
-  extras: [
-    "tokens",
-    "costs",
-    "errors",
-    "users/new",
-    "users/active",
-    "users/average-cost",
-    "run-types",
-    "latency",
-    "feedback-ratio",
-    "top-topics",
-    "sentiments",
-  ],
-};
-
-const DEFAULT_CHARTS = {
-  main: ["models", "templates", "users"],
-  extras: [
-    "tokens",
-    "costs",
-    "errors",
-    "users/new",
-    "users/active",
-    "users/average-cost",
-    "run-types",
-    "latency",
-    "feedback-ratio",
-  ],
-};
-
-const DND_TYPES = {
-  MAIN: "main",
-  EXTRAS: "extras",
-};
-
 function useChartData(data, startDate, endDate) {
   if (!data.source || data.source === "runs") {
     const { data, isLoading } = useProjectSWR("/runs");
     return { data: data?.data, isLoading };
   } else if (data.source === "models") {
     const { data, isLoading } = useProjectSWR("/models");
-    console.log({ data, isLoading })
     return { data: data, isLoading };
   } else if (data.source === "templates")
-    return useTopTemplates(startDate, endDate)
+    return useTopTemplates(startDate, endDate);
   else if (data.source === "users") {
     const { users, loading } = useExternalUsers({ startDate, endDate });
     return { data: users, isLoading: loading };
-  } else return useAnalyticsChartData(null, startDate, endDate, "")
+  } else return useAnalyticsChartData(null, startDate, endDate, "");
 }
 
 export function getDefaultDateRange() {
@@ -720,8 +598,8 @@ function AnalyticsChart({
 function Draggable({ id, type, children, editMode }) {
   const [{ isDragging }, element] = useDrag(
     () => ({
-      type,
-      item: { id },
+      type: "chart",
+      item: { id, type },
       collect: (monitor) => ({
         isDragging: !!monitor.isDragging(),
       }),
@@ -747,7 +625,7 @@ function Draggable({ id, type, children, editMode }) {
 function Droppable({ type, children, editMode, onDrop }) {
   const [{ isOver }, element] = useDrop(
     () => ({
-      accept: type,
+      accept: "chart",
       drop: onDrop,
       collect: (monitor) => ({
         isOver: !!monitor.isOver(),
@@ -758,7 +636,19 @@ function Droppable({ type, children, editMode, onDrop }) {
   );
 
   return (
-    <Box ref={element} h="100%">
+    <Box
+      ref={element}
+      h="100%"
+      style={
+        isOver
+          ? {
+              opacity: 0.4,
+              border: "2px dashed #ccc",
+              borderRadius: "var(--mantine-radius-md)",
+            }
+          : {}
+      }
+    >
       {children}
     </Box>
   );
@@ -776,10 +666,7 @@ function Selectable({
   children: any;
   header?: string;
   isSelected?: boolean;
-  icon?: (props: {
-    onClick: () => any;
-    selected: boolean
-  }) => any;
+  icon?: (props: { onClick: () => any; selected: boolean }) => any;
   onSelect?: () => any;
 }) {
   const [selected, setSelected] = useState(!!isSelected);
@@ -795,9 +682,16 @@ function Selectable({
         <Group justify="space-between">
           <Text fw={500}>{header}</Text>
 
-          {icon ? icon({ selected, onClick: onSelected }) : (<ActionIcon onClick={onSelected} color={selected ? "red" : undefined}>
-            {selected ? <IconMinus size="12" /> : <IconPlus size="12" />}
-          </ActionIcon>)}
+          {icon ? (
+            icon({ selected, onClick: onSelected })
+          ) : (
+            <ActionIcon
+              onClick={onSelected}
+              color={selected ? "red" : undefined}
+            >
+              {selected ? <IconMinus size="12" /> : <IconPlus size="12" />}
+            </ActionIcon>
+          )}
 
           {icons &&
             icons.map((icon) => (
@@ -830,13 +724,7 @@ function SaveAsModal({ opened, close, title, onConfirm }) {
   };
 
   return (
-    <Modal
-      centered
-      opened={opened}
-      onClose={confirm}
-      radius={"md"}
-      title={title}
-    >
+    <Modal centered opened={opened} onClose={close} radius={"md"} title={title}>
       <Input.Wrapper>
         <Input
           mt="md"
@@ -867,7 +755,7 @@ function SaveAsModal({ opened, close, title, onConfirm }) {
 
 function SelectableCustomChart({ index, chart, chartsState, toggleChart }) {
   const { chart: item, remove } = useChart(chart.id, chart);
-  const { name, data, props } = (item?.config || {});
+  const { name, data, props } = item?.config || {};
 
   const [dateRange, setDateRange] = useSessionStorage({
     key: "dateRange-analytics",
@@ -880,13 +768,15 @@ function SelectableCustomChart({ index, chart, chartsState, toggleChart }) {
 
   const chartData = useChartData(data, startDate, endDate);
 
-  const series = data.series.map(serie => {
-    if (!serie.field) return null;
-    return {
-      name: serie.field,
-      color: serie.color
-    }
-  }).filter(Boolean);
+  const series = data.series
+    .map((serie) => {
+      if (!serie.field) return null;
+      return {
+        name: serie.field,
+        color: serie.color,
+      };
+    })
+    .filter(Boolean);
 
   return (
     <Selectable
@@ -903,7 +793,9 @@ function SelectableCustomChart({ index, chart, chartsState, toggleChart }) {
       onSelect={() => toggleChart(item.id, "extras")}
     >
       {CHARTS.find((c) => name === c.name)?.component({
-        data: chartData.data || [], props, series: series || []
+        data: chartData.data || [],
+        props,
+        series: series || [],
       })}
     </Selectable>
   );
@@ -927,7 +819,7 @@ function CustomChart({ chartID }) {
 
   if (!chart) return null;
 
-  const { name, data, props } = (item?.config || {});
+  const { name, data, props } = item?.config || {};
   const [dateRange, setDateRange] = useSessionStorage({
     key: "dateRange-analytics",
     getInitialValueInEffect: false,
@@ -941,17 +833,21 @@ function CustomChart({ chartID }) {
 
   if (chartData.isLoading) return null;
 
-  const series = data.series.map(serie => {
-    if (!serie.field) return null;
-    return {
-      name: serie.field,
-      color: serie.color
-    }
-  }).filter(Boolean);
+  const series = data.series
+    .map((serie) => {
+      if (!serie.field) return null;
+      return {
+        name: serie.field,
+        color: serie.color,
+      };
+    })
+    .filter(Boolean);
 
   return (
     <Box ref={ref}>
-      <ErrorBoundary>{chart.component({ data: chartData.data, props, series })}</ErrorBoundary>
+      <ErrorBoundary>
+        {chart.component({ data: chartData.data, props, series })}
+      </ErrorBoundary>
     </Box>
   );
 }
@@ -1023,7 +919,7 @@ function ChartSelector({
               </SimpleGrid>
 
               <Text>Extra Charts</Text>
-              <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="md">
+              <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="md">
                 {ALL_CHARTS.extras.map((chartID) => (
                   <Selectable
                     key={chartID}
@@ -1037,11 +933,12 @@ function ChartSelector({
               </SimpleGrid>
 
               <Text>Custom Charts</Text>
-              <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="md">
+              <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="md">
                 {charts?.map((chart, index) => (
                   <SelectableCustomChart
                     index={index}
-                    chart={chart} key={index}
+                    chart={chart}
+                    key={index}
                     chartsState={chartsState}
                     toggleChart={toggleChart}
                   />
@@ -1052,8 +949,9 @@ function ChartSelector({
           <Tabs.Panel value="wizard" p="md">
             <CustomChartWizard
               onConfirm={({ name, config }) => {
-                return insertChart({ name, type: config.name, config })
-                  .then(() => setActiveTab("charts"));
+                return insertChart({ name, type: config.name, config }).then(
+                  () => setActiveTab("charts"),
+                );
               }}
             />
           </Tabs.Panel>
@@ -1064,19 +962,59 @@ function ChartSelector({
 }
 
 function DynamicSelectFields({ first, value, onChange }) {
-  const [color, setColor] = useState<string | undefined>(value?.color || "blue");
+  const [color, setColor] = useState<string | undefined>(
+    value?.color || "blue",
+  );
   const [field, setField] = useState<string | null>(value?.field || null);
-  const [subField, setSubField] = useState<string | null>(value?.subField || null);
+  const [subField, setSubField] = useState<string | null>(
+    value?.subField || null,
+  );
   const fieldOptions = useMemo(() => {
     switch (first) {
       case "runs":
-        return ['projectId', 'isPublic', 'feedback', 'parentFeedback', 'type', 'name', 'createdAt', 'endedAt', 'duration', 'cost', 'tokens', 'tags', 'input', 'output', 'params', 'metadata', 'user'];
+        return [
+          "projectId",
+          "isPublic",
+          "feedback",
+          "parentFeedback",
+          "type",
+          "name",
+          "createdAt",
+          "endedAt",
+          "duration",
+          "cost",
+          "tokens",
+          "tags",
+          "input",
+          "output",
+          "params",
+          "metadata",
+          "user",
+        ];
       case "users":
-        return ['id', 'createdAt', 'externalId', 'lastSeen', 'props', 'cost'];
+        return ["id", "createdAt", "externalId", "lastSeen", "props", "cost"];
       case "templates":
-        return ["name", "cost", "promptTokens", "completionTokens", "totalTokens"];
+        return [
+          "name",
+          "cost",
+          "promptTokens",
+          "completionTokens",
+          "totalTokens",
+        ];
       case "models":
-        return ['id', 'name', 'pattern', 'unit', 'inputCost', 'outputCost', 'tokenizer', 'startDate', 'createdAt', 'updatedAt', 'orgId'];
+        return [
+          "id",
+          "name",
+          "pattern",
+          "unit",
+          "inputCost",
+          "outputCost",
+          "tokenizer",
+          "startDate",
+          "createdAt",
+          "updatedAt",
+          "orgId",
+        ];
       default:
         return [];
     }
@@ -1087,7 +1025,7 @@ function DynamicSelectFields({ first, value, onChange }) {
       case "metadata":
         return "/filters/metadata";
       default:
-        return null
+        return null;
     }
   });
 
@@ -1104,7 +1042,7 @@ function DynamicSelectFields({ first, value, onChange }) {
 
   useEffect(() => {
     onChange({ field, subField, color });
-  }, [field, subField, color])
+  }, [field, subField, color]);
 
   return (
     <Flex gap="sm">
@@ -1144,10 +1082,7 @@ function ColorSelector({ color, setColor }) {
   ];
 
   return (
-    <Select
-      data={colors} value={color}
-      onChange={(value) => setColor(value)}
-    />
+    <Select data={colors} value={color} onChange={(value) => setColor(value)} />
   );
 }
 
@@ -1155,7 +1090,9 @@ function DynamicSelect({ config, setConfig }) {
   const [first, setFirst] = useState(config.data.source || "runs");
   const firstOptions = ["runs", "users", "models", "templates"];
 
-  const [seriesLength, setSeriesLength] = useState(config.data.series?.length || 1);
+  const [seriesLength, setSeriesLength] = useState(
+    config.data.series?.length || 1,
+  );
 
   const onChange = (index, value) => {
     setConfig((config) => {
@@ -1163,7 +1100,7 @@ function DynamicSelect({ config, setConfig }) {
       newConfig.data.series[index] = value;
       return newConfig;
     });
-  }
+  };
 
   return (
     <Group>
@@ -1175,10 +1112,11 @@ function DynamicSelect({ config, setConfig }) {
           onChange={(value) => {
             setFirst(value);
             setConfig((config) => ({
-              ...config, data: {
+              ...config,
+              data: {
                 ...config.data,
-                source: value
-              }
+                source: value,
+              },
             }));
           }}
         />
@@ -1188,29 +1126,35 @@ function DynamicSelect({ config, setConfig }) {
         {Array.from({ length: seriesLength }).map((_, index) => (
           <Flex key={index} align="center">
             <DynamicSelectFields
-              first={first} onChange={(value: any) => onChange(index, value)}
+              first={first}
+              onChange={(value: any) => onChange(index, value)}
               value={config.data.series ? config.data.series[index] : null}
             />
-            <ActionIcon ml="sm" onClick={() => {
-              if (seriesLength > 1) {
-                config.data.series.splice(index, 1);
-                setSeriesLength(len => len - 1)
-              } else {
-                onChange(index, {
-                  field: undefined,
-                  subField: undefined,
-                  color: undefined
-                });
-              }
-            }}>
+            <ActionIcon
+              ml="sm"
+              onClick={() => {
+                if (seriesLength > 1) {
+                  config.data.series.splice(index, 1);
+                  setSeriesLength((len) => len - 1);
+                } else {
+                  onChange(index, {
+                    field: undefined,
+                    subField: undefined,
+                    color: undefined,
+                  });
+                }
+              }}
+            >
               <IconCancel size={16} />
             </ActionIcon>
           </Flex>
         ))}
-        <Button onClick={() => setSeriesLength((len: number) => len + 1)}>Add Field</Button>
+        <Button onClick={() => setSeriesLength((len: number) => len + 1)}>
+          Add Field
+        </Button>
       </Flex>
     </Group>
-  )
+  );
 }
 
 function DynamicChartPreview({ chartConfig, setChartConfig }) {
@@ -1226,7 +1170,6 @@ function DynamicChartPreview({ chartConfig, setChartConfig }) {
       </Text>
     );
 
-
   const [dateRange, setDateRange] = useSessionStorage({
     key: "dateRange-analytics",
     getInitialValueInEffect: false,
@@ -1237,26 +1180,29 @@ function DynamicChartPreview({ chartConfig, setChartConfig }) {
   const [startDate, endDate] = dateRange;
   const { data, props } = chartConfig;
 
-  const series = chartConfig.data.series.map(serie => {
-    if (!serie.field) return null;
-    return {
-      name: serie.field,
-      color: serie.color
-    }
-  }).filter(Boolean)
+  const series = chartConfig.data.series
+    .map((serie) => {
+      if (!serie.field) return null;
+      return {
+        name: serie.field,
+        color: serie.color,
+      };
+    })
+    .filter(Boolean);
 
   const chartData = useChartData(data, startDate, endDate);
 
   if (chartData.isLoading) {
-    return <Loader />
+    return <Loader />;
   }
 
   const handlePropChange = (propName, value) => {
     setChartConfig((config) => ({
-      ...config, props: {
+      ...config,
+      props: {
         ...config.props,
-        [propName]: value
-      }
+        [propName]: value,
+      },
     }));
   };
 
@@ -1357,7 +1303,8 @@ function DynamicChartPreview({ chartConfig, setChartConfig }) {
         <Box>
           <h3>{selectedChart.name} Preview</h3>
           <selectedChart.component
-            props={props} series={series || []}
+            props={props}
+            series={series || []}
             data={(chartData.data || []).slice(0, chartConfig.limit)}
           />
         </Box>
@@ -1389,7 +1336,9 @@ function DynamicChartPreview({ chartConfig, setChartConfig }) {
             <h5>Data Limit</h5>
             <NumberInput
               defaultValue={chartConfig.limit || chartData.data?.length}
-              onChange={(limit) => setChartConfig(conf => ({ ...conf, limit }))}
+              onChange={(limit) =>
+                setChartConfig((conf) => ({ ...conf, limit }))
+              }
             />
           </Box>
           <Box mb="sm">
@@ -1404,7 +1353,8 @@ function DynamicChartPreview({ chartConfig, setChartConfig }) {
               <Box key={propName} mb="sm">
                 {renderPropInput(
                   selectedChart.props[propName],
-                  propName, chartConfig.props[propName],
+                  propName,
+                  chartConfig.props[propName],
                   handlePropChange,
                 )}
               </Box>
@@ -1420,7 +1370,8 @@ function CustomChartWizard({ onConfirm }) {
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
   const [chartConfig, setChartConfig] = useState({
-    name: CHARTS[0].name, props: {},
+    name: CHARTS[0].name,
+    props: {},
     data: { source: null, series: [] },
   });
   const [active, setActive] = useState(0);
@@ -1437,26 +1388,31 @@ function CustomChartWizard({ onConfirm }) {
       <Stepper active={active} onStepClick={setActive}>
         <Stepper.Step label="First step" description="Chart Type">
           <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="md">
-            {CHARTS.map(chart => {
-              return <Selectable
-                header={chart.name}
-                icon={() => (
-                  <ActionIcon onClick={() => {
-                    setChartConfig(config => ({
-                      ...config, name: chart.name
-                    }));
-                    nextStep();
-                  }}>
-                    <IconPlus size="12" />
-                  </ActionIcon>
-                )}
-              >
-                {chart.component({
-                  data: CHART_DATA,
-                  series: CHART_SERIES,
-                  props: { dataKey: "date" }
-                })}
-              </Selectable>
+            {CHARTS.map((chart) => {
+              return (
+                <Selectable
+                  header={chart.name}
+                  icon={() => (
+                    <ActionIcon
+                      onClick={() => {
+                        setChartConfig((config) => ({
+                          ...config,
+                          name: chart.name,
+                        }));
+                        nextStep();
+                      }}
+                    >
+                      <IconPlus size="12" />
+                    </ActionIcon>
+                  )}
+                >
+                  {chart.component({
+                    data: CHART_DATA,
+                    series: CHART_SERIES,
+                    props: { dataKey: "date" },
+                  })}
+                </Selectable>
+              );
             })}
           </SimpleGrid>
         </Stepper.Step>
@@ -1464,7 +1420,8 @@ function CustomChartWizard({ onConfirm }) {
           <TextInput
             value={name}
             onChange={(ev) => setName(ev.currentTarget.value)}
-            placeholder="Chart Name" required
+            placeholder="Chart Name"
+            required
           />
           <DynamicChartPreview
             chartConfig={chartConfig}
@@ -1485,8 +1442,9 @@ function CustomChartWizard({ onConfirm }) {
             onClick={() => {
               nextStep();
               setSaving(true);
-              onConfirm({ name, config: chartConfig })
-                .then(() => setSaving(false));
+              onConfirm({ name, config: chartConfig }).then(() =>
+                setSaving(false),
+              );
             }}
           >
             Finish
@@ -1651,11 +1609,11 @@ export default function Analytics() {
     },
   };
 
-  const [editMode, setEditMode] = useState(true);
+  const [editMode, setEditMode] = useState(false);
   const [
     chartSelectedOpened,
     { open: openChartSelector, close: closeChartSelector },
-  ] = useDisclosure(true);
+  ] = useDisclosure(false);
   const [saveAsOpened, { open: openSaveAs, close: closeSaveAs }] =
     useDisclosure(false);
   const [confirmOpened, { open: openConfirm, close: closeConfirm }] =
@@ -1678,7 +1636,7 @@ export default function Analytics() {
     update: updateDashboard,
     remove: removeDashboard,
     loading: dashboardLoading,
-  } = useDashboard(dashboardID);
+  } = useDashboard(dashboardID || DEFAULT_DASHBOARD.id);
 
   // Temporary charts state used in edit mode
   const [tempChartsState, setTempChartsState] = useState(
@@ -1763,10 +1721,19 @@ export default function Analytics() {
 
   const handleDropChart = (item: { id: string }, id, chartID) => {
     const newState = { ...tempChartsState };
-    const itemIndex = newState[id].indexOf(item.id);
-    const index = newState[id].indexOf(chartID);
 
+    let itemIndex = newState.main.indexOf(item.id);
+    if (itemIndex === -1) {
+      id = "extras";
+      itemIndex = newState.extras.indexOf(item.id);
+    }
     newState[id].splice(itemIndex, 1);
+
+    let index = newState.main.indexOf(chartID);
+    if (index === -1) {
+      id = "extras";
+      index = newState.extras.indexOf(chartID);
+    }
     newState[id].splice(index, 0, item.id);
 
     setTempChartsState(newState);
@@ -1818,7 +1785,16 @@ export default function Analytics() {
 
       <DndProvider backend={HTML5Backend}>
         <Stack gap="lg">
-          <Group gap="xs">
+          <Group
+            gap="xs"
+            style={{
+              position: "sticky",
+              top: 0,
+              zIndex: 1,
+              backgroundColor: "var(--mantine-color-body)",
+              paddingBlock: 24,
+            }}
+          >
             <Group gap={0}>
               <DateRangeSelect
                 dateRange={dateRange}
@@ -1847,28 +1823,20 @@ export default function Analytics() {
             )}
 
             <Group gap="sm" ml="auto">
-              {editMode && (
-                <Group>
-                  <ActionIcon
-                    variant="outline"
-                    onClick={openChartSelector}
-                    size="sm"
-                  >
-                    <IconPlus size={12} />
-                  </ActionIcon>
-                  <ActionIcon
-                    color="red"
-                    variant="outline"
-                    onClick={openConfirmReset}
-                    size="sm"
-                  >
-                    <IconRestore size={12} />
-                  </ActionIcon>
-                </Group>
-              )}
+              <Button
+                variant="filled"
+                onClick={() => {
+                  !editMode && onToggleMode();
+                  openChartSelector();
+                }}
+                leftSection={<IconPlus size={12} />}
+                size="xs"
+              >
+                Add
+              </Button>
 
               <Button
-                variant={editMode ? "filled" : "outline"}
+                variant="outline"
                 onClick={onToggleMode}
                 leftSection={
                   editMode ? <IconCheck size={12} /> : <IconEdit size={12} />
@@ -1880,7 +1848,7 @@ export default function Analytics() {
 
               {editMode && dashboard && (
                 <Button
-                  variant="outline"
+                  variant="gradient"
                   onClick={openSaveAs}
                   leftSection={<IconCopyCheckFilled size={12} />}
                   size="xs"
@@ -1905,17 +1873,19 @@ export default function Analytics() {
               )}
             </Group>
 
-            {dashboard && !editMode && (
-              <Button
-                color="red"
-                variant="outline"
-                onClick={openConfirm}
-                leftSection={<IconTrash size={12} />}
-                size="xs"
-              >
-                Delete
-              </Button>
-            )}
+            {!editMode &&
+              dashboard &&
+              dashboard?.id !== DEFAULT_DASHBOARD.id && (
+                <Button
+                  color="red"
+                  variant="outline"
+                  onClick={openConfirm}
+                  leftSection={<IconTrash size={12} />}
+                  size="xs"
+                >
+                  Delete
+                </Button>
+              )}
           </Group>
 
           {showBar && (
@@ -1928,6 +1898,42 @@ export default function Analytics() {
                 ["tags", "models", "users", "metadata"].includes(filter.id)
               }
             />
+          )}
+
+          {dashboard && editMode && dashboard?.id !== DEFAULT_DASHBOARD.id && (
+            <Group gap="xs">
+              <IconTimeline size={16} />
+              <RenamableField
+                defaultValue={dashboard.name}
+                onRename={(newName) => {
+                  updateDashboard({
+                    name: newName,
+                  });
+                }}
+              />
+              <Menu position="bottom-end">
+                <Menu.Target>
+                  <ActionIcon variant="subtle">
+                    <IconDotsVertical size={12} />
+                  </ActionIcon>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Item
+                    leftSection={<IconStackPop size={16} />}
+                    onClick={() => openSaveAs()}
+                  >
+                    Duplicate
+                  </Menu.Item>
+                  <Menu.Item
+                    color="red"
+                    leftSection={<IconTrash size={16} />}
+                    onClick={() => removeDashboard()}
+                  >
+                    Delete
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+            </Group>
           )}
 
           <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
@@ -1983,6 +1989,29 @@ export default function Analytics() {
               </Droppable>
             ))}
           </SimpleGrid>
+
+          {editMode && (
+            <Card
+              p="md"
+              withBorder
+              radius="md"
+              style={{
+                border: "2px dashed #ccc",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              onClick={openChartSelector}
+            >
+              <Button
+                size="lg"
+                variant="transparent"
+                leftSection={<IconPlus size={15} />}
+              >
+                Add
+              </Button>
+            </Card>
+          )}
         </Stack>
       </DndProvider>
     </Empty>
