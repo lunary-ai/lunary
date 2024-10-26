@@ -1,6 +1,7 @@
 create table dashboard (
     id uuid default uuid_generate_v4 () primary key,
     name text not null,
+    description text null,
     created_at timestamp with time zone default now(),
     updated_at timestamp with time zone default now(),
     owner_id uuid not null,
