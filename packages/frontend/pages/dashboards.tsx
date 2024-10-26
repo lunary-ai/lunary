@@ -18,6 +18,7 @@ import {
   Box,
   Button,
   Card,
+  Grid,
   Group,
   Menu,
   Modal,
@@ -962,65 +963,71 @@ export default function Analytics() {
             </Group>
           )}
 
-          <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
+          <Grid>
             {chartsState.slice(0, 3).map((chartID) => (
+              <Grid.Col span={4} key={chartID}>
+                <Droppable
+                  onDrop={(item) => handleDropChart(item, chartID)}
+                  editMode={editMode}
+                >
+                  <Draggable id={chartID} editMode={editMode}>
+                    {getChartComponent(chartID)}
+                  </Draggable>
+                </Droppable>
+              </Grid.Col>
+            ))}
+
+            <Grid.Col span={12}>
               <Droppable
-                key={chartID}
-                onDrop={(item) => handleDropChart(item, chartID)}
+                onDrop={(item) => handleDropChart(item, chartsState[3])}
                 editMode={editMode}
               >
-                <Draggable id={chartID} editMode={editMode}>
-                  {getChartComponent(chartID)}
+                <Draggable id={chartsState[3]} editMode={editMode}>
+                  {getChartComponent(chartsState[3])}
                 </Draggable>
               </Droppable>
-            ))}
-          </SimpleGrid>
+            </Grid.Col>
 
-          <Droppable
-            onDrop={(item) => handleDropChart(item, chartsState[3])}
-            editMode={editMode}
-          >
-            <Draggable id={chartsState[3]} editMode={editMode}>
-              {getChartComponent(chartsState[3])}
-            </Draggable>
-          </Droppable>
-
-          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
             {chartsState.slice(4).map((chartID) => (
-              <Droppable
-                key={chartID}
-                onDrop={(item) => handleDropChart(item, chartID)}
-                editMode={editMode}
-              >
-                <Draggable id={chartID} editMode={editMode}>
-                  {getChartComponent(chartID)}
-                </Draggable>
-              </Droppable>
+              <Grid.Col span={6}>
+                <Droppable
+                  key={chartID}
+                  onDrop={(item) => handleDropChart(item, chartID)}
+                  editMode={editMode}
+                >
+                  <Draggable id={chartID} editMode={editMode}>
+                    {getChartComponent(chartID)}
+                  </Draggable>
+                </Droppable>
+              </Grid.Col>
             ))}
-          </SimpleGrid>
 
-          {editMode && (
-            <Card
-              p="md"
-              withBorder
-              radius="md"
-              style={{
-                border: "2px dashed #ccc",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-              onClick={openChartSelector}
-            >
-              <Button
-                size="lg"
-                variant="transparent"
-                leftSection={<IconPlus size={15} />}
-              >
-                Add
-              </Button>
-            </Card>
-          )}
+            <Grid.Col span="auto">
+              {editMode && (
+                <Card
+                  p="md"
+                  h="100%"
+                  withBorder
+                  radius="md"
+                  style={{
+                    border: "2px dashed #ccc",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  onClick={openChartSelector}
+                >
+                  <Button
+                    size="lg"
+                    variant="transparent"
+                    leftSection={<IconPlus size={15} />}
+                  >
+                    Add
+                  </Button>
+                </Card>
+              )}
+            </Grid.Col>
+          </Grid>
         </Stack>
       </DndProvider>
     </Empty>
