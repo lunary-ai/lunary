@@ -1722,18 +1722,10 @@ export default function Analytics() {
   const handleDropChart = (item: { id: string }, id, chartID) => {
     const newState = { ...tempChartsState };
 
-    let itemIndex = newState.main.indexOf(item.id);
-    if (itemIndex === -1) {
-      id = "extras";
-      itemIndex = newState.extras.indexOf(item.id);
-    }
-    newState[id].splice(itemIndex, 1);
+    let itemIndex = newState[id].indexOf(item.id);
+    let index = newState[id].indexOf(chartID);
 
-    let index = newState.main.indexOf(chartID);
-    if (index === -1) {
-      id = "extras";
-      index = newState.extras.indexOf(chartID);
-    }
+    newState[id].splice(itemIndex, 1);
     newState[id].splice(index, 0, item.id);
 
     setTempChartsState(newState);
@@ -1937,17 +1929,17 @@ export default function Analytics() {
           )}
 
           <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
-            {chartsState.main.map((chartID) => (
+            {chartsState.extras.slice(0, 3).map((chartID) => (
               <Droppable
                 key={chartID}
-                onDrop={(item) => handleDropChart(item, "main", chartID)}
+                onDrop={(item) => handleDropChart(item, "extras", chartID)}
                 editMode={editMode}
-                type={DND_TYPES.MAIN}
+                type={DND_TYPES.EXTRAS}
               >
                 <Draggable
                   id={chartID}
                   editMode={editMode}
-                  type={DND_TYPES.MAIN}
+                  type={DND_TYPES.EXTRAS}
                 >
                   {getChartComponent(chartID)}
                 </Draggable>
@@ -1957,22 +1949,22 @@ export default function Analytics() {
 
           <Droppable
             onDrop={(item) =>
-              handleDropChart(item, "extras", chartsState.extras[0])
+              handleDropChart(item, "extras", chartsState.extras[3])
             }
             editMode={editMode}
             type={DND_TYPES.EXTRAS}
           >
             <Draggable
-              id={chartsState.extras[0]}
+              id={chartsState.extras[3]}
               editMode={editMode}
               type={DND_TYPES.EXTRAS}
             >
-              {getChartComponent(chartsState.extras[0])}
+              {getChartComponent(chartsState.extras[3])}
             </Draggable>
           </Droppable>
 
           <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-            {chartsState.extras.slice(1).map((chartID) => (
+            {chartsState.extras.slice(4).map((chartID) => (
               <Droppable
                 key={chartID}
                 onDrop={(item) => handleDropChart(item, "extras", chartID)}

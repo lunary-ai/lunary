@@ -118,8 +118,9 @@ export const ALL_CHARTS = {
 };
 
 export const DEFAULT_CHARTS = {
-  main: ["models", "templates", "users"],
+  main: [],
   extras: [
+    "models", "templates", "users",
     "tokens",
     "costs",
     "errors",
