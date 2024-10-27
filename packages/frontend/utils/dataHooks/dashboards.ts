@@ -16,7 +16,7 @@ export function useDashboards() {
   );
 
   return {
-    dashboards: Array.isArray(data) ? [DEFAULT_DASHBOARD, ...data] : data,
+    dashboards: data,
     insert,
     isInserting,
     mutate,
@@ -25,22 +25,6 @@ export function useDashboards() {
 }
 
 export function useDashboard(id: string | null, initialData?: any) {
-  if (id === DEFAULT_DASHBOARD.id) {
-    const [dashboard, setDashboard] = useState(DEFAULT_DASHBOARD);
-    return {
-      dashboard,
-      remove: () => {},
-      update: (data) => {
-        setDashboard({
-          ...dashboard,
-          ...data,
-        });
-      },
-      mutate: () => {},
-      loading: false,
-    };
-  }
-
   const { mutate: mutateViews } = useDashboards();
 
   const {

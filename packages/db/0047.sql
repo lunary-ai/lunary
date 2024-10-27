@@ -24,5 +24,3 @@ create table chart (
     constraint fk_checklist_owner_id foreign key (owner_id) references account (id) on delete set null,
     constraint fk_checklist_project_id foreign key (project_id) references project (id) on delete cascade
 );
-
-alter table dashboard add column filters jsonb not null;

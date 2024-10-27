@@ -27,14 +27,11 @@ import {
   Stack,
   Tabs,
   Text,
+  Title,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 
-import {
-  useInViewport,
-  useLocalStorage,
-  useSessionStorage,
-} from "@mantine/hooks";
+import { useInViewport, useLocalStorage } from "@mantine/hooks";
 import {
   IconCalendar,
   IconCancel,
@@ -45,6 +42,8 @@ import {
   IconDotsVertical,
   IconEdit,
   IconFilter,
+  IconPin,
+  IconPinned,
   IconPlus,
   IconStackPop,
   IconTimeline,
@@ -69,7 +68,6 @@ import { useCharts } from "@/utils/dataHooks/charts";
 import {
   ALL_CHARTS,
   DEFAULT_CHARTS,
-  DEFAULT_DASHBOARD,
   deserializeDateRange,
   getDefaultDateRange,
 } from "@/utils/analytics";
@@ -239,7 +237,7 @@ function DateRangePicker({ dateRange, setDateRange }: DateRangePickerProps) {
 type Granularity = "hourly" | "daily" | "weekly";
 
 interface GranularitySelectProps {
-  dateRange: [Date, Date];
+  // dateRange: [Date, Date];
   granularity: Granularity;
   setGranularity: (granularity: Granularity) => void;
 }
@@ -479,6 +477,12 @@ function ChartSelector({
 export default function Analytics() {
   const router = useRouter();
 
+  const [pinnedDashboard, setPinnedDashboard] = useLocalStorage<
+    string | undefined
+  >({
+    key: "dashboard",
+  });
+
   const [dashboardID, setDashboardID] = useQueryState<string | undefined>(
     "dashboard",
     {
@@ -487,12 +491,22 @@ export default function Analytics() {
     },
   );
 
+  if (!dashboardID && pinnedDashboard) {
+    setDashboardID(pinnedDashboard);
+  }
+
   const {
     dashboard,
     update: updateDashboard,
-    remove: removeDashboard,
+    remove: removeDashboardFn,
     loading: dashboardLoading,
-  } = useDashboard(dashboardID || DEFAULT_DASHBOARD.id);
+  } = useDashboard(dashboardID);
+
+  useEffect(() => {
+    if (!dashboardLoading && !dashboard) {
+      if (dashboardID) setDashboardID(null);
+    }
+  }, [dashboardLoading]);
 
   const { dateRange, granularity, checks } = useMemo(() => {
     const dateRange = dashboard?.filters.dateRange
@@ -644,8 +658,15 @@ export default function Analytics() {
     setTempChartsState(dashboard ? dashboard.charts : DEFAULT_CHARTS);
   }, [dashboard, dashboardLoading]);
 
+  function removeDashboard() {
+    removeDashboardFn();
+    if (pinnedDashboard === dashboard?.id) {
+      setPinnedDashboard("");
+    }
+    router.push("/dashboards");
+  }
+
   function setDateRange(dateRange) {
-    console.log("setting: ", dateRange);
     dashboard &&
       updateDashboard({
         filters: {
@@ -656,7 +677,6 @@ export default function Analytics() {
   }
 
   function setGranularity(granularity) {
-    console.log("setting: ", granularity);
     dashboard &&
       updateDashboard({
         filters: {
@@ -843,6 +863,24 @@ export default function Analytics() {
               )}
 
               <Group gap="sm" ml="auto">
+                {dashboard &&
+                  (pinnedDashboard === dashboard.id ? (
+                    <ActionIcon
+                      variant="outline"
+                      color="red"
+                      onClick={() => setPinnedDashboard("")}
+                    >
+                      <IconPinned size={12} />
+                    </ActionIcon>
+                  ) : (
+                    <ActionIcon
+                      variant="outline"
+                      onClick={() => setPinnedDashboard(dashboard.id)}
+                    >
+                      <IconPin size={12} />
+                    </ActionIcon>
+                  ))}
+
                 <Button
                   variant="filled"
                   onClick={() => {
@@ -893,45 +931,6 @@ export default function Analytics() {
                 )}
               </Group>
 
-              {!editMode &&
-                dashboard &&
-                dashboard?.id !== DEFAULT_DASHBOARD.id && (
-                  <Button
-                    color="red"
-                    variant="outline"
-                    onClick={openConfirm}
-                    leftSection={<IconTrash size={12} />}
-                    size="xs"
-                  >
-                    Delete
-                  </Button>
-                )}
-            </Group>
-
-            {showBar && (
-              <CheckPicker
-                minimal
-                onChange={setChecks}
-                defaultOpened={showCheckBar}
-                value={checks}
-                restrictTo={(filter) =>
-                  ["tags", "models", "users", "metadata"].includes(filter.id)
-                }
-              />
-            )}
-          </Stack>
-
-          {dashboard && editMode && dashboard?.id !== DEFAULT_DASHBOARD.id && (
-            <Group gap="xs">
-              <IconTimeline size={16} />
-              <RenamableField
-                defaultValue={dashboard.name}
-                onRename={(newName) => {
-                  updateDashboard({
-                    name: newName,
-                  });
-                }}
-              />
               <Menu position="bottom-end">
                 <Menu.Target>
                   <ActionIcon variant="subtle">
@@ -945,17 +944,49 @@ export default function Analytics() {
                   >
                     Duplicate
                   </Menu.Item>
-                  <Menu.Item
-                    color="red"
-                    leftSection={<IconTrash size={16} />}
-                    onClick={() => removeDashboard()}
-                  >
-                    Delete
-                  </Menu.Item>
+                  {dashboard && (
+                    <Menu.Item
+                      color="red"
+                      leftSection={<IconTrash size={16} />}
+                      onClick={() => removeDashboard()}
+                    >
+                      Delete
+                    </Menu.Item>
+                  )}
                 </Menu.Dropdown>
               </Menu>
             </Group>
-          )}
+
+            {showBar && (
+              <CheckPicker
+                minimal
+                onChange={setChecks}
+                defaultOpened={showCheckBar}
+                value={checks}
+                restrictTo={(filter) =>
+                  ["tags", "models", "users", "metadata"].includes(filter.id)
+                }
+              />
+            )}
+
+            {dashboard && (
+              <Group gap="xs">
+                <IconTimeline size={16} />
+                {editMode ? (
+                  <RenamableField
+                    defaultValue={dashboard.name}
+                    onRename={(newName) => {
+                      updateDashboard({
+                        name: newName,
+                      });
+                    }}
+                  />
+                ) : (
+                  <Title order={3}>{dashboard.name}</Title>
+                )}
+              </Group>
+            )}
+          </Stack>
 
           <Grid>
             {chartsState.slice(0, 3).map((chartID) => (
