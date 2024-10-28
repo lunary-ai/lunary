@@ -403,20 +403,19 @@ function ChartSelector({
               leftSection={<IconChartLine />}
               onClick={() => setActiveTab("charts")}
             >
-              All Charts
+              All Insights
             </Tabs.Tab>
             <Tabs.Tab
               value="wizard"
               leftSection={<IconPlus />}
               onClick={() => setActiveTab("wizard")}
             >
-              Chart Wizard
+              Custom Insight
             </Tabs.Tab>
           </Tabs.List>
 
           <Tabs.Panel value="charts" p="md">
             <Stack mah={"75vh"} style={{ overflowY: "auto" }}>
-              <Text>Main Charts</Text>
               <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="md">
                 {ALL_CHARTS.main.map((chartID) => (
                   <Selectable
@@ -430,7 +429,6 @@ function ChartSelector({
                 ))}
               </SimpleGrid>
 
-              <Text>Extra Charts</Text>
               <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="md">
                 {ALL_CHARTS.extras.map((chartID) => (
                   <Selectable

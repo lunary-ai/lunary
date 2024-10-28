@@ -20,10 +20,10 @@ export function Selectable({
 }) {
   const [selected, setSelected] = useState(!!isSelected);
 
-  const onSelected = () => {
+  function onSelected() {
     setSelected(!selected);
     onSelect?.();
-  };
+  }
 
   return (
     <Card withBorder>
