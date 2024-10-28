@@ -31,10 +31,10 @@ function generateKey(
 
   return url;
 }
-export function useProjectSWR(key?: KeyType, options?: SWRConfiguration) {
+export function useProjectSWR<T>(key?: KeyType, options?: SWRConfiguration) {
   const { projectId } = useContext(ProjectContext);
 
-  const { data, error, isLoading, isValidating, mutate } = useSWR(
+  const { data, error, isLoading, isValidating, mutate } = useSWR<T>(
     () => generateKey(key, projectId),
     options,
   );
@@ -92,8 +92,8 @@ export function useProjectInfiniteSWR(key: string, ...args: any[]) {
   return {
     data: items,
     total,
-    loading: isLoading,
-    validating: isValidating,
+    isLoading,
+    isValidating,
     loadMore,
     mutate,
   };

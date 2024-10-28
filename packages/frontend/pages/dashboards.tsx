@@ -640,7 +640,7 @@ export default function Analytics() {
       dataKey: "latency",
       props: ["avgDuration"],
       title: "Avg. LLM Latency",
-      description: "The number of active users",
+      description: "The average duration of your LLM Calls",
       formatter: (value) => `${value.toFixed(2)}s`,
       colors: ["yellow"],
     },

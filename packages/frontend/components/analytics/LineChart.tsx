@@ -248,6 +248,7 @@ function LineChartComponent({
   cleanData = true,
   colors = ["blue", "pink", "indigo", "green", "violet", "yellow"],
 }: LineChartProps) {
+  console.log(data);
   let cleanedData = prepareDataForRecharts(
     blocked
       ? ((
