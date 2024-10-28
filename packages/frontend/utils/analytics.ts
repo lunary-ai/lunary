@@ -1,4 +1,5 @@
 import posthog from "posthog-js";
+import { getDefaultDateRange } from "shared";
 
 const getPreviousDate = (day) => {
   const date = new Date();
@@ -107,43 +108,6 @@ export const ALL_CHARTS = {
     "top-topics",
     "sentiments",
   ],
-};
-
-export const DEFAULT_CHARTS = [
-  "models",
-  "templates",
-  "users",
-  "tokens",
-  "costs",
-  "errors",
-  "users/new",
-  "users/active",
-  "users/average-cost",
-  "run-types",
-  "latency",
-  "feedback-ratio",
-];
-
-export function getDefaultDateRange() {
-  const endOfToday = new Date();
-  endOfToday.setHours(23, 59, 59, 999);
-
-  const oneWeekAgoDate = new Date(endOfToday);
-  oneWeekAgoDate.setDate(oneWeekAgoDate.getDate() - 30);
-  oneWeekAgoDate.setHours(0, 0, 0, 0);
-  const defaultRange: [Date, Date] = [oneWeekAgoDate, endOfToday];
-  return defaultRange;
-}
-
-export const DEFAULT_DASHBOARD = {
-  id: "default",
-  name: "Default",
-  charts: DEFAULT_CHARTS,
-  filters: {
-    checks: "",
-    granularity: "daily",
-    dateRange: getDefaultDateRange(),
-  },
 };
 
 /**

@@ -16,11 +16,11 @@ export function useDashboards() {
   );
 
   return {
-    dashboards: data,
+    dashboards: data || [],
     insert,
     isInserting,
     mutate,
-    loading: isLoading,
+    isLoading,
   };
 }
 
