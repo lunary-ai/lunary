@@ -6,7 +6,7 @@ import { useState } from "react";
 
 export function useDashboards() {
   const { user } = useUser();
-  const { data, isLoading, mutate } = useProjectSWR(
+  const { data, isLoading, mutate } = useProjectSWR<unknown[]>(
     hasAccess(user?.role, "dashboards", "list") ? `/dashboards` : null,
   );
 
