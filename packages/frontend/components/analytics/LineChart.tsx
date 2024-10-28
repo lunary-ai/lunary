@@ -36,9 +36,6 @@ interface ChartTooltipProps {
 function ChartTooltip({ label, payload }: ChartTooltipProps) {
   if (!payload) return null;
 
-  console.log(
-    payload.filter(({ value }) => typeof value === "number" && value !== 0),
-  );
   if (
     payload.filter(({ value }) => typeof value === "number" && value !== 0)
       .length === 0
