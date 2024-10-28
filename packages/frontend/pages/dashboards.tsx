@@ -789,7 +789,7 @@ export default function Analytics() {
       Icon={IconChartAreaLine}
       title="Waiting for data..."
       description="Analytics will appear here once you have some data."
-      enable={!project?.activated || dashboardLoading}
+      enable={project && !project?.activated}
     >
       <NextSeo title="Analytics" />
 
@@ -898,17 +898,6 @@ export default function Analytics() {
                 >
                   {editMode ? "Save" : "Edit"}
                 </Button>
-
-                {editMode && dashboard && (
-                  <Button
-                    variant="gradient"
-                    onClick={openSaveAs}
-                    leftSection={<IconCopyCheckFilled size={12} />}
-                    size="xs"
-                  >
-                    Save As
-                  </Button>
-                )}
 
                 {editMode && (
                   <ActionIcon
