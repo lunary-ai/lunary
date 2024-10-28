@@ -4,22 +4,17 @@ import {
   Button,
   Card,
   Center,
-  Tooltip as MantineTooltip,
   Group,
+  Loader,
+  Tooltip as MantineTooltip,
   Overlay,
   Text,
-  Title,
-  Loader,
 } from "@mantine/core";
-import {
-  Area,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-} from "recharts";
+import { ResponsiveContainer } from "recharts";
 
+import { generateSeries } from "@/pages/demo";
 import { formatLargeNumber } from "@/utils/format";
+import { AreaChart } from "@mantine/charts";
 import { IconBolt, IconInfoCircle } from "@tabler/icons-react";
 import {
   eachDayOfInterval,
@@ -28,13 +23,9 @@ import {
   format,
   parseISO,
 } from "date-fns";
-import { Fragment, useMemo } from "react";
+import { useMemo } from "react";
 import ErrorBoundary from "../blocks/ErrorBoundary";
 import { openUpgrade } from "../layout/UpgradeModal";
-import { theme } from "@/utils/theme";
-import { slugify } from "@/utils/format";
-import { AreaChart } from "@mantine/charts";
-import { generateSeries } from "@/pages/demo";
 
 function prepareDataForRecharts(
   data: any[],
