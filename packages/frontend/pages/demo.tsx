@@ -17,7 +17,7 @@ const COLOR_PALETTE = [
   "cyan.6",
 ];
 
-function generateSeries(seriesNames: string[]) {
+export function generateSeries(seriesNames: string[]) {
   const sortedSeriesNames = [...seriesNames].sort((a, b) => a.localeCompare(b));
 
   const seriesWithColors = sortedSeriesNames.map((name, index) => ({

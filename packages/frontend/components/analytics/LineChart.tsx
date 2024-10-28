@@ -13,7 +13,6 @@ import {
 } from "@mantine/core";
 import {
   Area,
-  AreaChart,
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
@@ -29,11 +28,13 @@ import {
   format,
   parseISO,
 } from "date-fns";
-import { Fragment } from "react";
+import { Fragment, useMemo } from "react";
 import ErrorBoundary from "../blocks/ErrorBoundary";
 import { openUpgrade } from "../layout/UpgradeModal";
 import { theme } from "@/utils/theme";
 import { slugify } from "@/utils/format";
+import { AreaChart } from "@mantine/charts";
+import { generateSeries } from "@/pages/demo";
 
 function prepareDataForRecharts(
   data: any[],
@@ -248,7 +249,6 @@ function LineChartComponent({
   cleanData = true,
   colors = ["blue", "pink", "indigo", "green", "violet", "yellow"],
 }: LineChartProps) {
-  console.log(data);
   let cleanedData = prepareDataForRecharts(
     blocked
       ? ((
@@ -291,6 +291,24 @@ function LineChartComponent({
       ? getFigure(agg, cleanedData, props[0])
       : stat;
 
+  const series = useMemo(() => {
+    if (!cleanedData || cleanedData.length === 0) {
+      return [];
+    }
+
+    const seriesSet = new Set<string>();
+    cleanedData.forEach((item) => {
+      Object.keys(item).forEach((key) => {
+        if (key !== "value") {
+          seriesSet.add(key);
+        }
+      });
+    });
+
+    const seriesNames = Array.from(seriesSet);
+
+    return generateSeries(seriesNames);
+  }, [cleanedData]);
   return (
     <Card withBorder className="lineChart" p={0} radius="md">
       <Group gap="xs">
@@ -397,117 +415,14 @@ function LineChartComponent({
 
         <ResponsiveContainer width="100%" height={height}>
           <AreaChart
-            width={500}
-            height={420}
-            data={hasData ? cleanedData : []}
-            margin={{
-              top: 10,
-              right: 0,
-              left: 0,
-              bottom: 10,
-            }}
-          >
-            {hasData && (
-              <CartesianGrid
-                strokeDasharray="3 3"
-                horizontal={true}
-                opacity={0.5}
-                vertical={false}
-              />
-            )}
-            <XAxis
-              dataKey="date"
-              tick={({ x, y, payload, index }) => {
-                return (
-                  <CustomizedAxisTick
-                    x={x}
-                    y={y}
-                    payload={payload}
-                    index={index}
-                    data={cleanedData}
-                    granularity={granularity}
-                  />
-                );
-              }}
-              interval={0}
-              ticks={[
-                // only show the first and last tick
-                cleanedData[0]?.date,
-                cleanedData[cleanedData.length - 1]?.date,
-              ]}
-              padding={{ left: 0, right: 0 }}
-              axisLine={false}
-              tickLine={false}
-            />
-
-            <Tooltip
-              formatter={formatter}
-              content={({ active, payload, label }) => {
-                if (active && payload && payload.length) {
-                  return (
-                    <Card shadow="md" withBorder>
-                      <Title order={3} size="sm">
-                        {formatDate(label, granularity)}
-                      </Title>
-                      {payload.map(
-                        (item, i) =>
-                          item.value !== 0 && (
-                            <Text key={i}>{`${item.name}: ${formatter(
-                              item.value,
-                            )}`}</Text>
-                          ),
-                      )}
-                    </Card>
-                  );
-                }
-
-                return null;
-              }}
-            />
-
-            {cleanedData[0] &&
-              Object.keys(cleanedData[0])
-                .filter((prop) => prop !== "date")
-                .map((prop, i) => (
-                  <Fragment key={prop}>
-                    <defs key={prop}>
-                      <linearGradient
-                        color={theme.colors[colors[i % colors.length]][6]}
-                        id={slugify(prop)}
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="5%"
-                          stopColor="currentColor"
-                          stopOpacity={0.4}
-                        />
-                        <stop
-                          offset="95%"
-                          stopColor="currentColor"
-                          stopOpacity={0}
-                        />
-                      </linearGradient>
-                    </defs>
-                    <Area
-                      type="monotone"
-                      color={theme.colors[colors[i % colors.length]][4]}
-                      dataKey={prop}
-                      stackId="1"
-                      stroke="currentColor"
-                      dot={false}
-                      fill={`url(#${slugify(prop)})`}
-                      strokeWidth={2}
-                      strokeLinejoin="round"
-                      strokeLinecap="round"
-                    />
-                  </Fragment>
-                ))}
-
-            {chartExtra}
-          </AreaChart>
+            h={300}
+            data={cleanedData || []}
+            dataKey="value"
+            type="stacked"
+            series={series}
+            withDots={false}
+            withYAxis={false}
+          />
         </ResponsiveContainer>
       </Box>
       <style jsx>{`
