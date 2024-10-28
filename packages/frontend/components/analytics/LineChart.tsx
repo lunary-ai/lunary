@@ -8,13 +8,14 @@ import {
   Loader,
   Tooltip as MantineTooltip,
   Overlay,
+  Paper,
   Text,
 } from "@mantine/core";
 import { ResponsiveContainer } from "recharts";
 
 import { generateSeries } from "@/pages/demo";
 import { formatLargeNumber } from "@/utils/format";
-import { AreaChart } from "@mantine/charts";
+import { AreaChart, getFilteredChartTooltipPayload } from "@mantine/charts";
 import { IconBolt, IconInfoCircle } from "@tabler/icons-react";
 import {
   eachDayOfInterval,
@@ -26,6 +27,40 @@ import {
 import { useMemo } from "react";
 import ErrorBoundary from "../blocks/ErrorBoundary";
 import { openUpgrade } from "../layout/UpgradeModal";
+
+interface ChartTooltipProps {
+  label: string;
+  payload: Record<string, any>[] | undefined;
+}
+
+function ChartTooltip({ label, payload }: ChartTooltipProps) {
+  if (!payload) return null;
+
+  console.log(
+    payload.filter(({ value }) => typeof value === "number" && value !== 0),
+  );
+  if (
+    payload.filter(({ value }) => typeof value === "number" && value !== 0)
+      .length === 0
+  ) {
+    return null;
+  }
+
+  return (
+    <Paper px="md" py="sm" withBorder shadow="md" radius="md">
+      <Text fw={500} mb={5}>
+        {label}
+      </Text>
+      {getFilteredChartTooltipPayload(payload)
+        .filter((item) => typeof item.value === "number" && item.value !== 0)
+        .map((item: any) => (
+          <Text key={item.name} c={item.color} fz="sm">
+            {item.name}: {item.value}
+          </Text>
+        ))}
+    </Paper>
+  );
+}
 
 function prepareDataForRecharts(
   data: any[],
@@ -413,6 +448,11 @@ function LineChartComponent({
             series={series}
             withDots={false}
             withYAxis={false}
+            tooltipProps={{
+              content: ({ label, payload }) => (
+                <ChartTooltip label={label} payload={payload} />
+              ),
+            }}
           />
         </ResponsiveContainer>
       </Box>
