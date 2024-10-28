@@ -68,6 +68,7 @@ import { useCharts } from "@/utils/dataHooks/charts";
 import {
   ALL_CHARTS,
   DEFAULT_CHARTS,
+  DEFAULT_DASHBOARD,
   deserializeDateRange,
   getDefaultDateRange,
 } from "@/utils/analytics";
@@ -508,24 +509,43 @@ export default function Analytics() {
     }
   }, [dashboardLoading]);
 
-  const { dateRange, granularity, checks } = useMemo(() => {
-    if (!dashboard) {
-      const dateRange = getDefaultDateRange();
-      return {
-        dateRange,
-        granularity: determineGranularity(dateRange),
-        checks: DEFAULT_CHECK as CheckLogic,
-      };
-    }
+  const [editMode, setEditMode] = useState(false);
+  const [
+    chartSelectedOpened,
+    { open: openChartSelector, close: closeChartSelector },
+  ] = useDisclosure(false);
+  const [saveAsOpened, { open: openSaveAs, close: closeSaveAs }] =
+    useDisclosure(false);
+  const [confirmOpened, { open: openConfirm, close: closeConfirm }] =
+    useDisclosure(false);
 
-    const dateRange = deserializeDateRange(dashboard.filters.dateRange);
+  const { insert: insertDashboard } = useDashboards();
+
+  const [defaultDashboard, setDefaultDashboard] = useState(DEFAULT_DASHBOARD);
+
+  useEffect(() => {
+    setTempDashboardState(dashboard || defaultDashboard);
+  }, [dashboard, dashboardLoading]);
+
+  // Temporary state used in edit mode
+  const [tempDashboardState, setTempDashboardState] = useState(
+    dashboard || defaultDashboard,
+  );
+
+  const dashboardState = useMemo(() => {
+    if (editMode) return tempDashboardState;
+    return dashboard || defaultDashboard;
+  }, [editMode, dashboard, tempDashboardState, defaultDashboard]);
+
+  const { dateRange, granularity, checks } = useMemo(() => {
+    const dateRange = deserializeDateRange(dashboardState.filters.dateRange);
 
     return {
       dateRange,
       granularity: determineGranularity(dateRange),
-      checks: deserializeLogic(dashboard.filters.checks, true),
+      checks: deserializeLogic(dashboardState.filters.checks, true),
     };
-  }, [dashboard, dashboard?.filters]);
+  }, [dashboardState]);
 
   const [startDate, endDate] = dateRange;
 
@@ -635,34 +655,6 @@ export default function Analytics() {
     },
   };
 
-  const [editMode, setEditMode] = useState(false);
-  const [
-    chartSelectedOpened,
-    { open: openChartSelector, close: closeChartSelector },
-  ] = useDisclosure(false);
-  const [saveAsOpened, { open: openSaveAs, close: closeSaveAs }] =
-    useDisclosure(false);
-  const [confirmOpened, { open: openConfirm, close: closeConfirm }] =
-    useDisclosure(false);
-  const [confirmReset, { open: openConfirmReset, close: closeConfirmReset }] =
-    useDisclosure(false);
-
-  const { insert: insertDashboard } = useDashboards();
-
-  // Temporary charts state used in edit mode
-  const [tempChartsState, setTempChartsState] = useState(
-    dashboard ? dashboard.charts : DEFAULT_CHARTS,
-  );
-
-  const chartsState = useMemo(() => {
-    if (editMode) return tempChartsState;
-    return dashboard ? dashboard.charts : DEFAULT_CHARTS;
-  }, [editMode, tempChartsState, dashboard]);
-
-  useEffect(() => {
-    setTempChartsState(dashboard ? dashboard.charts : DEFAULT_CHARTS);
-  }, [dashboard, dashboardLoading]);
-
   function removeDashboard() {
     removeDashboardFn();
     if (pinnedDashboard === dashboard?.id) {
@@ -672,13 +664,22 @@ export default function Analytics() {
   }
 
   function setDateRange(dateRange) {
-    dashboard &&
-      updateDashboard({
+    if (dashboardState.id === "default") {
+      setDefaultDashboard({
+        ...dashboardState,
         filters: {
-          ...dashboard.filters,
+          ...dashboardState.filters,
           dateRange: [dateRange[0].toISOString(), dateRange[1].toISOString()],
         },
       });
+    } else {
+      updateDashboard({
+        filters: {
+          ...dashboardState.filters,
+          dateRange: [dateRange[0].toISOString(), dateRange[1].toISOString()],
+        },
+      });
+    }
   }
 
   function setGranularity(granularity) {
@@ -733,25 +734,25 @@ export default function Analytics() {
       // Exiting edit mode
 
       if (dashboard) {
-        await updateDashboard({ charts: tempChartsState });
+        await updateDashboard(tempDashboardState);
       } else {
         return openSaveAs();
       }
     } else {
-      setTempChartsState(dashboard?.charts || DEFAULT_CHARTS);
+      setTempDashboardState(dashboard || defaultDashboard);
     }
 
     setEditMode(!editMode);
   }
 
   function toggleChart(chartID: string) {
-    let newState = [...tempChartsState];
-    if (tempChartsState.includes(chartID)) {
-      newState = newState.filter((id) => id !== chartID);
+    let newState = { ...tempDashboardState };
+    if (tempDashboardState.charts.includes(chartID)) {
+      newState.charts = newState.charts.filter((id) => id !== chartID);
     } else {
-      newState.push(chartID);
+      newState.charts.push(chartID);
     }
-    setTempChartsState(newState);
+    setTempDashboardState(newState);
   }
 
   async function createDashboard(name: string) {
@@ -765,7 +766,7 @@ export default function Analytics() {
         checks: serializedChecks,
         dateRange: [startDate.toISOString(), endDate.toISOString()],
       },
-      charts: tempChartsState,
+      charts: tempDashboardState.charts,
     });
     setDashboardID(entry.id);
 
@@ -773,15 +774,15 @@ export default function Analytics() {
   }
 
   function handleDropChart(item: { id: string }, chartID) {
-    const newState = [...tempChartsState];
+    const newState = { ...tempDashboardState };
 
-    let itemIndex = newState.indexOf(item.id);
-    let index = newState.indexOf(chartID);
+    let itemIndex = newState.charts.indexOf(item.id);
+    let index = newState.charts.indexOf(chartID);
 
-    newState.splice(itemIndex, 1);
-    newState.splice(index, 0, item.id);
+    newState.charts.splice(itemIndex, 1);
+    newState.charts.splice(index, 0, item.id);
 
-    setTempChartsState(newState);
+    setTempDashboardState(newState);
   }
 
   return (
@@ -798,7 +799,7 @@ export default function Analytics() {
         opened={chartSelectedOpened}
         toggleChart={toggleChart}
         close={closeChartSelector}
-        chartsState={tempChartsState}
+        chartsState={dashboardState.charts}
         getChartComponent={getChartComponent}
       />
 
@@ -817,15 +818,6 @@ export default function Analytics() {
           router.push("/dashboards");
         }}
         title={`Delete dashboard "${dashboard?.name}"`}
-      />
-
-      <ConfirmModal
-        opened={confirmReset}
-        close={closeConfirmReset}
-        onConfirm={() => {
-          setTempChartsState(DEFAULT_CHARTS);
-        }}
-        title={`Reset to defult charts?`}
       />
 
       <DndProvider backend={HTML5Backend}>
@@ -926,7 +918,7 @@ export default function Analytics() {
                     variant="outline"
                     onClick={() => {
                       closeChartSelector();
-                      setTempChartsState(dashboard?.charts || DEFAULT_CHARTS);
+                      setTempDashboardState(dashboard || defaultDashboard);
                       setEditMode(false);
                     }}
                     size="sm"
@@ -953,7 +945,7 @@ export default function Analytics() {
                     <Menu.Item
                       color="red"
                       leftSection={<IconTrash size={16} />}
-                      onClick={() => removeDashboard()}
+                      onClick={() => openConfirm()}
                     >
                       Delete
                     </Menu.Item>
@@ -994,7 +986,7 @@ export default function Analytics() {
           </Stack>
 
           <Grid>
-            {chartsState.slice(0, 3).map((chartID) => (
+            {dashboardState.charts.slice(0, 3).map((chartID) => (
               <Grid.Col span={4} key={chartID}>
                 <Droppable
                   onDrop={(item) => handleDropChart(item, chartID)}
@@ -1009,16 +1001,18 @@ export default function Analytics() {
 
             <Grid.Col span={12}>
               <Droppable
-                onDrop={(item) => handleDropChart(item, chartsState[3])}
+                onDrop={(item) =>
+                  handleDropChart(item, dashboardState.charts[3])
+                }
                 editMode={editMode}
               >
-                <Draggable id={chartsState[3]} editMode={editMode}>
-                  {getChartComponent(chartsState[3])}
+                <Draggable id={dashboardState.charts[3]} editMode={editMode}>
+                  {getChartComponent(dashboardState.charts[3])}
                 </Draggable>
               </Droppable>
             </Grid.Col>
 
-            {chartsState.slice(4).map((chartID) => (
+            {dashboardState.charts.slice(4).map((chartID) => (
               <Grid.Col span={6}>
                 <Droppable
                   key={chartID}

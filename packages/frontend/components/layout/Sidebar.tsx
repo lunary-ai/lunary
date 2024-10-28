@@ -173,54 +173,31 @@ function DashboardLink({ item }) {
         </ThemeIcon>
       }
       rightSection={
-        <Group gap="xs" id="dd">
-          <Combobox
-            store={dashboardsComboBox}
-            withinPortal={false}
-            onOptionSubmit={(id) => {
-              dashboardsComboBox.closeDropdown();
-              switchDashboard(id);
-            }}
-            styles={{
-              dropdown: { minWidth: "fit-content", maxWidth: 600 },
-            }}
-          >
-            <Combobox.Target>
-              <ActionIcon
-                variant="outline"
-                color="grey"
-                onClick={() => dashboardsComboBox.toggleDropdown()}
-              >
-                <IconChevronDown size={15} />
-              </ActionIcon>
-            </Combobox.Target>
-            <Combobox.Dropdown
-              w={400}
-              p="sm"
-              style={{ color: "var(--mantine-color-text)" }}
-            >
-              <Combobox.Options>
-                {dashboards ? (
-                  dashboards.map((item) => (
-                    <Combobox.Option value={item.id} key={item.id}>
-                      {item.name}
-                    </Combobox.Option>
-                  ))
-                ) : (
-                  <Combobox.Empty>No dashboards found</Combobox.Empty>
-                )}
-              </Combobox.Options>
-            </Combobox.Dropdown>
-          </Combobox>
-
-          {/* <ActionIcon variant="transparent">
-            {isInsertingDashboard ? (
-              <Loader />
-            ) : (
-              <IconPlus size={16} onClick={createDashboard} />
-            )}
-          </ActionIcon> */}
-        </Group>
+        dashboards?.length ? (
+          <Group gap="xs" id="dd">
+            <Menu position="bottom-end">
+              <Menu.Target>
+                <ActionIcon variant="subtle">
+                  <IconChevronDown size={12} />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                {dashboards.map((item) => (
+                  <Menu.Item
+                    value={item.id}
+                    key={item.id}
+                    leftSection={<IconTimeline size={12} />}
+                    onClick={() => switchDashboard(item.id)}
+                  >
+                    {item.name}
+                  </Menu.Item>
+                ))}
+              </Menu.Dropdown>
+            </Menu>
+          </Group>
+        ) : (
+          <></>
+        )
       }
     />
   );
