@@ -157,7 +157,7 @@ export function deserializeDateRange(value: any): [Date, Date] {
     return defaultRange;
   }
   try {
-    const range = JSON.parse(value);
+    const range = typeof value === "string" ? JSON.parse(value) : value;
 
     if (!Array.isArray(range) || range.length !== 2) {
       return defaultRange;

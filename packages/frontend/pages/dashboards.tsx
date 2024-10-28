@@ -509,18 +509,23 @@ export default function Analytics() {
   }, [dashboardLoading]);
 
   const { dateRange, granularity, checks } = useMemo(() => {
-    const dateRange = dashboard?.filters.dateRange
-      ? deserializeDateRange(dashboard.filters.dateRange)
-      : getDefaultDateRange();
+    if (!dashboard) {
+      const dateRange = getDefaultDateRange();
+      return {
+        dateRange,
+        granularity: determineGranularity(dateRange),
+        checks: DEFAULT_CHECK as CheckLogic,
+      };
+    }
+
+    const dateRange = deserializeDateRange(dashboard.filters.dateRange);
 
     return {
       dateRange,
       granularity: determineGranularity(dateRange),
-      checks: dashboard?.filters.checks
-        ? deserializeLogic(dashboard.filters.checks, true)
-        : (DEFAULT_CHECK as CheckLogic),
+      checks: deserializeLogic(dashboard.filters.checks, true),
     };
-  }, [dashboard]);
+  }, [dashboard, dashboard?.filters]);
 
   const [startDate, endDate] = dateRange;
 
