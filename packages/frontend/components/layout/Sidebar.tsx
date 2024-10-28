@@ -47,7 +47,11 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { openUpgrade } from "./UpgradeModal";
 
-import analytics from "@/utils/analytics";
+import analytics, {
+  DEFAULT_CHARTS,
+  DEFAULT_DASHBOARD,
+  getDefaultDateRange,
+} from "@/utils/analytics";
 import { Button, Combobox, Input, InputBase, useCombobox } from "@mantine/core";
 
 import { IconPlus } from "@tabler/icons-react";
@@ -121,8 +125,6 @@ function DashboardLink({ item }) {
     { ...parseAsString, history: "push" },
   );
 
-  const dashboardsComboBox = useCombobox();
-
   const { dashboards, insert: insertDashboard } = useDashboards();
 
   function switchDashboard(id) {
@@ -146,6 +148,20 @@ function DashboardLink({ item }) {
     }
     return router.pathname.startsWith(item.link);
   })();
+
+  async function createDashboard() {
+    const item = await insertDashboard({
+      name: `Dashboard ${dashboards?.length || 1}`,
+      charts: DEFAULT_CHARTS,
+      description: "",
+      filters: {
+        checks: "",
+        granularity: "daily",
+        dateRange: getDefaultDateRange(),
+      },
+    });
+    switchDashboard(item.id);
+  }
 
   return (
     <NavLink
@@ -181,7 +197,13 @@ function DashboardLink({ item }) {
                   <IconChevronDown size={12} />
                 </ActionIcon>
               </Menu.Target>
-              <Menu.Dropdown>
+              <Menu.Dropdown
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                }}
+              >
                 {dashboards.map((item) => (
                   <Menu.Item
                     value={item.id}
@@ -192,6 +214,15 @@ function DashboardLink({ item }) {
                     {item.name}
                   </Menu.Item>
                 ))}
+
+                <Button
+                  mt="sm"
+                  variant="outline"
+                  leftSection={<IconPlus size={12} />}
+                  onClick={() => createDashboard()}
+                >
+                  Create
+                </Button>
               </Menu.Dropdown>
             </Menu>
           </Group>

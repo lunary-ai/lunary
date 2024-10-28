@@ -661,43 +661,37 @@ export default function Analytics() {
     router.push("/dashboards");
   }
 
-  function setDateRange(dateRange) {
-    if (dashboardState.id === "default") {
+  function updateFilterState(state) {
+    if (dashboardState.id === DEFAULT_DASHBOARD.id) {
       setDefaultDashboard({
         ...dashboardState,
         filters: {
           ...dashboardState.filters,
-          dateRange: [dateRange[0].toISOString(), dateRange[1].toISOString()],
+          ...state,
         },
       });
     } else {
       updateDashboard({
         filters: {
           ...dashboardState.filters,
-          dateRange: [dateRange[0].toISOString(), dateRange[1].toISOString()],
+          ...state,
         },
       });
     }
   }
 
+  function setDateRange(dateRange) {
+    updateFilterState({
+      dateRange: [dateRange[0].toISOString(), dateRange[1].toISOString()],
+    });
+  }
+
   function setGranularity(granularity) {
-    dashboard &&
-      updateDashboard({
-        filters: {
-          ...dashboard.filters,
-          granularity,
-        },
-      });
+    updateFilterState({ granularity });
   }
 
   function setChecks(checks) {
-    dashboard &&
-      updateDashboard({
-        filters: {
-          ...dashboard.filters,
-          checks: serializeLogic(checks),
-        },
-      });
+    updateFilterState({ checks: serializeLogic(checks) });
   }
 
   function getChartComponent(id: string) {
@@ -760,8 +754,10 @@ export default function Analytics() {
 
     const entry = await insertDashboard({
       name,
+      description: "",
       filters: {
         checks: serializedChecks,
+        granularity: "daily",
         dateRange: [startDate.toISOString(), endDate.toISOString()],
       },
       charts: tempDashboardState.charts,
@@ -971,6 +967,7 @@ export default function Analytics() {
                   <RenamableField
                     defaultValue={dashboard.name}
                     onRename={(newName) => {
+                      if (!newName) return;
                       updateDashboard({
                         name: newName,
                       });
