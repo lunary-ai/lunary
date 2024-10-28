@@ -777,13 +777,14 @@ export default function Analytics() {
     setTempDashboardState(newState);
   }
 
+  console.log(project);
   return (
     <Empty
       showProjectId
       Icon={IconChartAreaLine}
       title="Waiting for data..."
       description="Analytics will appear here once you have some data."
-      enable={false}
+      enable={project && !project?.activated}
     >
       <NextSeo title="Analytics" />
 

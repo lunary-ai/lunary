@@ -37,7 +37,6 @@ import {
   CHART_SERIES,
   BASE_CHART_PROPS,
   deserializeDateRange,
-  getDefaultDateRange,
 } from "@/utils/analytics";
 import { useProjectSWR } from "@/utils/dataHooks";
 import { useChart } from "@/utils/dataHooks/charts";
@@ -52,6 +51,7 @@ import LineChart from "@/components/analytics/LineChart";
 
 import ErrorBoundary from "../blocks/ErrorBoundary";
 import { Selectable } from "./Wrappers";
+import { getDefaultDateRange } from "shared";
 
 const CHARTS = [
   {

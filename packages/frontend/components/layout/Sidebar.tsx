@@ -121,17 +121,7 @@ function DashboardLink({ item }) {
     { ...parseAsString, history: "push" },
   );
 
-  const dashboardsComboBox = useCombobox();
-
-  const { dashboards, insert: insertDashboard } = useDashboards();
-
-  function switchDashboard(id) {
-    if (router.pathname.startsWith("/dashboards")) {
-      setDashboardID(id);
-    } else {
-      router.push(`/dashboards?dashboard=${id}`);
-    }
-  }
+  const { dashboards } = useDashboards();
 
   const active = (() => {
     const linkParams = new URLSearchParams(item.link.split("?")[1]);
@@ -187,7 +177,10 @@ function DashboardLink({ item }) {
                     value={item.id}
                     key={item.id}
                     leftSection={<IconTimeline size={12} />}
-                    onClick={() => switchDashboard(item.id)}
+                    onClick={() => {
+                      console.log(item.id);
+                      router.push(`/dashboards/${item.id}`);
+                    }}
                   >
                     {item.name}
                   </Menu.Item>
