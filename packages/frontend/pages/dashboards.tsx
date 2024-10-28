@@ -700,30 +700,30 @@ export default function Analytics() {
   }
 
   function getChartComponent(id: string) {
-    switch (id) {
-      case "models":
-        return <TopModels topModels={topModels} isLoading={topModelsLoading} />;
-      case "templates":
-        return (
-          <TopTemplates
-            topTemplates={topTemplates}
-            isLoading={topTemplatesLoading}
-          />
-        );
-      case "users":
-        return <TopUsersCard topUsers={topUsers} isLoading={topUsersLoading} />;
-
-      case "top-topics":
-        return <TopTopics />;
-      case "sentiments":
-        return <Sentiment />;
-
-      default:
-        if (chartProps[id])
-          return <AnalyticsChart {...chartProps[id]} {...commonChartData} />;
-
-        return <CustomChart chartID={id} />;
+    if (id === "models") {
+      return <TopModels topModels={topModels} isLoading={topModelsLoading} />;
     }
+    if (id === "templates") {
+      return (
+        <TopTemplates
+          topTemplates={topTemplates}
+          isLoading={topTemplatesLoading}
+        />
+      );
+    }
+    if (id === "users") {
+      return <TopUsersCard topUsers={topUsers} isLoading={topUsersLoading} />;
+    }
+    if (id === "top-topics") {
+      return <TopTopics />;
+    }
+    if (id === "sentiments") {
+      return <Sentiment />;
+    }
+    if (chartProps[id]) {
+      return <AnalyticsChart {...chartProps[id]} {...commonChartData} />;
+    }
+    return <CustomChart chartID={id} />;
   }
 
   async function onToggleMode() {
