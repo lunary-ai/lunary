@@ -9,8 +9,6 @@ const analytics = new Router({
   prefix: "/analytics",
 });
 
-// TODO: access middleware
-
 analytics.get(
   "/tokens",
   checkAccess("analytics", "read"),
@@ -310,12 +308,12 @@ analytics.get(
     const { projectId } = ctx.state;
     const {
       datesQuery,
-      filteredRunsQuery,
       granularity,
       timeZone,
       localCreatedAt,
       startDate,
       endDate,
+      filteredRunsQuery,
     } = parseQuery(projectId, ctx.query);
 
     const distinctMap = {
@@ -324,6 +322,10 @@ analytics.get(
       weekly: sql`distinct on (r.external_user_id, date_trunc('day', r.created_at at time zone ${timeZone})::timestamp)`,
     };
     const distinct = distinctMap[granularity];
+
+    const firstDimensionKey = ctx.query.firstDimensionKey;
+    const secondDimensionKey = ctx.query.secondDimensionKey;
+    console.log(ctx.query);
 
     const [{ stat }] = await sql`
       select
@@ -336,6 +338,42 @@ analytics.get(
         and created_at >= ${startDate} at time zone ${timeZone} 
         and created_at <= ${endDate} at time zone ${timeZone} 
     `;
+
+    if (
+      firstDimensionKey === "undefined" ||
+      secondDimensionKey === "undefined"
+    ) {
+      const data = await sql`
+        with dates as (
+          ${datesQuery}
+        ),
+        filtered_runs as (
+          select 
+            ${distinct}
+            *,
+            ${localCreatedAt}
+          from
+            run r
+          where
+            r.project_id = ${projectId}          
+            and r.external_user_id is not null
+        )
+        select
+          d.date,
+          coalesce(count(r.external_user_id)::int, 0) as users
+        from
+          dates d
+          left join filtered_runs r on d.date = r.local_created_at
+        group by 
+          d.date
+        order by d.date;
+    `;
+
+      ctx.body = { data, stat: stat || 0 };
+      return;
+    }
+
+    // TODO: stats + weekly + refacto queries
 
     if (granularity === "weekly") {
       const data = await sql`
@@ -377,7 +415,48 @@ analytics.get(
       ctx.body = { data, stat: stat || 0 };
       return;
     } else {
-      const data = await sql`
+      let rows;
+
+      if (secondDimensionKey !== "date") {
+        rows = await sql<
+          { value: string; firstDimensionValue: "string"; userCount: Number }[]
+        >`
+        with second_dimension as (
+          	select distinct
+              props ->> ${secondDimensionKey as string} as value
+            from
+              public.external_user
+        ),
+        filtered_runs as (
+          ${filteredRunsQuery}
+        ),
+        users as (
+          select distinct on (eu.id)
+            eu.*
+          from
+            filtered_runs r
+            left join external_user eu on eu.id = r.external_user_id 
+          where
+            r.external_user_id = eu.id
+        )
+        select
+          sd.value as value, 
+          coalesce(u.props ->> ${firstDimensionKey as string}, 'Unknown') as first_dimension_value, 
+          coalesce(count(u.id)::int, 0) as user_count
+        from
+          second_dimension sd
+          left join users u on u.props ->> ${secondDimensionKey as string} = sd.value
+        group by
+          sd.value,
+          first_dimension_value
+        order by
+          sd.value,
+          first_dimension_value
+      `;
+      } else {
+        rows = await sql<
+          { value: Date; firstDimensionValue: "string"; userCount: Number }[]
+        >`
         with dates as (
           ${datesQuery}
         ),
@@ -393,15 +472,48 @@ analytics.get(
             and r.external_user_id is not null
         )
         select
-          d.date,
-          coalesce(count(r.external_user_id)::int, 0) as users
+          d.date as value,
+          coalesce(eu.props ->> ${firstDimensionKey as string}, 'Unknown') as first_dimension_value, 
+          coalesce(count(r.external_user_id)::int, 0) as user_count
         from
           dates d
           left join filtered_runs r on d.date = r.local_created_at
+          left join external_user eu on eu.id = r.external_user_id
         group by 
-          d.date
-        order by d.date;
+          d.date,
+          first_dimension_value
+        order by 
+          d.date;
     `;
+      }
+
+      let dateObj: {
+        [secondDimensionValue: string]: {
+          value: string;
+          [key: string]: number;
+        };
+      } = {};
+
+      for (const row of rows) {
+        let secondDimensionValue =
+          row.value instanceof Date
+            ? row.value.toISOString().split("T")[0]
+            : row.value;
+
+        const propValue = row.firstDimensionValue as string;
+
+        const userCount = row.userCount as number;
+
+        if (!dateObj[secondDimensionValue]) {
+          dateObj[secondDimensionValue] = { value: secondDimensionValue };
+        }
+        if (!dateObj[secondDimensionValue][propValue]) {
+          dateObj[secondDimensionValue][propValue] = 0;
+        }
+        dateObj[secondDimensionValue][propValue] += userCount;
+      }
+
+      const data = Object.values(dateObj);
 
       ctx.body = { data, stat: stat || 0 };
       return;

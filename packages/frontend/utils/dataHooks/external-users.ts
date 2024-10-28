@@ -1,4 +1,4 @@
-import { useProjectInfiniteSWR } from ".";
+import { useProjectInfiniteSWR, useProjectSWR } from ".";
 import { useSortParams } from "../hooks";
 
 export function useExternalUsers({
@@ -30,9 +30,21 @@ export function useExternalUsers({
   }
 
   const { sortParams } = useSortParams();
-  const { data, loading, validating, loadMore } = useProjectInfiniteSWR(
+  const {
+    data,
+    isLoading: loading,
+    isValidating: validating,
+    loadMore,
+  } = useProjectInfiniteSWR(
     `/external-users?${queryParams.toString()}&${sortParams}`,
   );
 
   return { users: data, loading, validating, loadMore };
+}
+
+export function useExternalUsersProps() {
+  const { data, isLoading } = useProjectSWR<string[]>(
+    "/external-users/props/keys",
+  );
+  return { props: data || [], isLoading };
 }

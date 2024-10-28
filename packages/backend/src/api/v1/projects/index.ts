@@ -4,6 +4,7 @@ import Context from "@/src/utils/koa";
 import Router from "koa-router";
 import { z } from "zod";
 import { randomUUID } from "crypto";
+import { DEFAULT_DASHBOARD } from "shared";
 
 const projects = new Router({
   prefix: "/projects",
@@ -36,7 +37,7 @@ projects.get("/", checkAccess("projects", "read"), async (ctx: Context) => {
 });
 
 projects.post("/", checkAccess("projects", "create"), async (ctx: Context) => {
-  const { orgId } = ctx.state;
+  const { orgId, userId } = ctx.state;
 
   const bodySchema = z.object({
     name: z.string(),
@@ -80,6 +81,16 @@ projects.post("/", checkAccess("projects", "create"), async (ctx: Context) => {
     },
   ];
   await sql`insert into api_key ${sql(privateKey)}`;
+
+  await sql`
+    insert into dashboard ${sql({
+      ...DEFAULT_DASHBOARD,
+      projectId: project.id,
+      ownerId: userId,
+    })}
+    returning *
+  `;
+
   ctx.body = project;
 });
 

@@ -45,7 +45,7 @@ dashboards.post("/", async (ctx: Context) => {
   const validatedData = dashboardSchema.parse(ctx.request.body);
   const { name, charts, description, filters } = validatedData;
 
-  const [insertedCheck] = await sql`
+  const [insertedDashboard] = await sql`
     insert into dashboard ${sql({
       name,
       ownerId: userId,
@@ -56,7 +56,7 @@ dashboards.post("/", async (ctx: Context) => {
     })}
     returning *
   `;
-  ctx.body = insertedCheck;
+  ctx.body = insertedDashboard;
 });
 
 dashboards.patch("/:id", async (ctx: Context) => {

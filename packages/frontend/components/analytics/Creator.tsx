@@ -657,7 +657,7 @@ export function SelectableCustomChart({
           onClick: remove,
         },
       ]}
-      isSelected={chartsState.extras.includes(item.id)}
+      isSelected={chartsState.extras?.includes(item.id)}
       onSelect={() => toggleChart(item.id, "extras")}
     >
       {CHARTS.find((c) => name === c.name)?.component({

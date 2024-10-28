@@ -52,7 +52,7 @@ import {
 import { NextSeo } from "next-seo";
 import { parseAsString, useQueryState } from "nuqs";
 import { useEffect, useMemo, useState } from "react";
-import { deserializeLogic, serializeLogic } from "shared";
+import { DEFAULT_DASHBOARD, deserializeLogic, serializeLogic } from "shared";
 
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -65,13 +65,7 @@ import Sentiment from "@/components/analytics/Charts/Sentiment";
 
 import { useCharts } from "@/utils/dataHooks/charts";
 
-import {
-  ALL_CHARTS,
-  DEFAULT_CHARTS,
-  DEFAULT_DASHBOARD,
-  deserializeDateRange,
-  getDefaultDateRange,
-} from "@/utils/analytics";
+import { ALL_CHARTS, deserializeDateRange } from "@/utils/analytics";
 import RenamableField from "@/components/blocks/RenamableField";
 import {
   SelectableCustomChart,
@@ -640,7 +634,7 @@ export default function Analytics() {
       dataKey: "latency",
       props: ["avgDuration"],
       title: "Avg. LLM Latency",
-      description: "The number of active users",
+      description: "The average duration of your LLM Calls",
       formatter: (value) => `${value.toFixed(2)}s`,
       colors: ["yellow"],
     },
@@ -785,7 +779,7 @@ export default function Analytics() {
       Icon={IconChartAreaLine}
       title="Waiting for data..."
       description="Analytics will appear here once you have some data."
-      enable={!project?.activated || dashboardLoading}
+      enable={project && !project?.activated}
     >
       <NextSeo title="Analytics" />
 
@@ -894,17 +888,6 @@ export default function Analytics() {
                 >
                   {editMode ? "Save" : "Edit"}
                 </Button>
-
-                {editMode && dashboard && (
-                  <Button
-                    variant="gradient"
-                    onClick={openSaveAs}
-                    leftSection={<IconCopyCheckFilled size={12} />}
-                    size="xs"
-                  >
-                    Save As
-                  </Button>
-                )}
 
                 {editMode && (
                   <ActionIcon

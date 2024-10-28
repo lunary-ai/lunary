@@ -6,16 +6,18 @@ export function useAnalyticsChartData(
   endDate: Date,
   granularity: string,
   checks?: string,
+  firstDimensionKey?: string,
+  secondDimensionKey?: string,
 ) {
   const timeZone = new window.Intl.DateTimeFormat().resolvedOptions().timeZone;
   const checksParam = checks ? `&checks=${checks}` : "";
-  const { data, isLoading } = useProjectSWR(
+  const { data, isLoading, error } = useProjectSWR(
     key
-      ? `/analytics/${key}?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&timeZone=${timeZone}&granularity=${granularity}${checksParam}`
+      ? `/analytics/${key}?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&timeZone=${timeZone}&granularity=${granularity}${checksParam}&firstDimensionKey=${firstDimensionKey}&secondDimensionKey=${secondDimensionKey}`
       : undefined,
   );
 
-  return { data, isLoading };
+  return { data, isLoading, error };
 }
 
 export function useTopModels(params: {
