@@ -80,7 +80,7 @@ import {
 } from "@/components/analytics/Wrappers";
 
 import type { CheckLogic } from "shared";
-import Router from "next/router";
+import Router, { useRouter } from "next/router";
 
 type PresetDateRange = "Today" | "7 Days" | "30 Days" | "3 Months" | "Custom";
 type DateRange = [Date, Date];
@@ -447,6 +447,9 @@ function ChartSelector({
                     key={index}
                     chartsState={chartsState}
                     toggleChart={toggleChart}
+                    onEdit={() => {
+                      setActiveTab("wizard");
+                    }}
                   />
                 ))}
               </SimpleGrid>
