@@ -1094,7 +1094,10 @@ export function CustomChartCreator({ onConfirm }) {
       <Group>
         <Select
           label="Metric"
-          data={[{ value: "users/active", label: "Total Active Users" }]}
+          data={[
+            { value: "users/active", label: "Total Active Users" },
+            { value: "users/new", label: "Total New Users" },
+          ]}
           value={metric}
           onChange={(value) => value && setMetric(value)}
           mb="lg"

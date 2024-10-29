@@ -1,10 +1,5 @@
-import { Text, Card, Group, ActionIcon, Box } from "@mantine/core";
-import {
-  IconCircleCheck,
-  IconCirclePlus,
-  IconMinus,
-  IconPlus,
-} from "@tabler/icons-react";
+import { ActionIcon, Box, Card, Group } from "@mantine/core";
+import { IconCircleCheck, IconCirclePlus } from "@tabler/icons-react";
 import { useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 
@@ -46,7 +41,7 @@ export function Selectable({
                 right: "15px",
                 zIndex: 30,
               }}
-              color={selected ? "gray" : "blue"}
+              color={selected ? "blue" : "gray"}
             >
               {selected ? (
                 <IconCircleCheck size="22" />
