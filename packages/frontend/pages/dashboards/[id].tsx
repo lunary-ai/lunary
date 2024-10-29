@@ -468,6 +468,7 @@ function ChartSelector({
 
 // TODO: typescript everywhere
 export default function Analytics() {
+  const router = useRouter();
   const dashboardId = router.query?.id as string;
 
   const {
