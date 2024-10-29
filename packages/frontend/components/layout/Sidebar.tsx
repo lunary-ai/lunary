@@ -190,8 +190,8 @@ function DashboardLink({ item }) {
               >
                 {dashboards.map((item) => (
                   <Menu.Item
-                    value={item.id}
                     key={item.id}
+                    onClick={() => router.push(`/dashboards/${item.id}`)}
                     leftSection={<IconTimeline size={12} />}
                     onClick={() => {
                       router.push(`/dashboards/${item.id}`);
@@ -336,6 +336,7 @@ function MenuSection({ item }) {
 export default function Sidebar() {
   const auth = useAuth();
   const router = useRouter();
+
   const { project, setProjectId } = useProject();
 
   const { org } = useOrg();

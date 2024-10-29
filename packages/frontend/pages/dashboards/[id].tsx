@@ -20,6 +20,7 @@ import {
   Card,
   Grid,
   Group,
+  Loader,
   Menu,
   Modal,
   Select,
@@ -59,7 +60,6 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 
 import { useDisclosure } from "@mantine/hooks";
 import { useDashboard, useDashboards } from "@/utils/dataHooks/dashboards";
-import { useRouter } from "next/router";
 import TopTopics from "@/components/analytics/Charts/TopTopics";
 import Sentiment from "@/components/analytics/Charts/Sentiment";
 
@@ -80,6 +80,7 @@ import {
 } from "@/components/analytics/Wrappers";
 
 import type { CheckLogic } from "shared";
+import Router from "next/router";
 
 type PresetDateRange = "Today" | "7 Days" | "30 Days" | "3 Months" | "Custom";
 type DateRange = [Date, Date];
@@ -742,7 +743,7 @@ export default function Analytics() {
       },
       charts: tempDashboardState.charts,
     });
-    setDashboardID(entry.id);
+    setDashboardId(entry.id);
 
     onToggleMode();
   }
@@ -759,7 +760,6 @@ export default function Analytics() {
     setTempDashboardState(newState);
   }
 
-  console.log(project);
   return (
     <Empty
       showProjectId
