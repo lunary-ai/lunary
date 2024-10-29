@@ -1,8 +1,8 @@
+import { checkAccess } from "@/src/utils/authorization";
 import sql from "@/src/utils/db";
 import { clearUndefined } from "@/src/utils/ingest";
 import Context from "@/src/utils/koa";
 import Router from "koa-router";
-import { deserializeLogic } from "shared";
 import { z } from "zod";
 
 const evaluators = new Router({
@@ -13,16 +13,20 @@ const evaluators = new Router({
 // TODO: route to get the number of runs checks are applied to, for new evaluators
 // TODO: proper schema validation for params and filters
 
-evaluators.get("/", async (ctx: Context) => {
-  const { projectId } = ctx.state;
+evaluators.get(
+  "/",
+  checkAccess("evaluations", "list"),
+  async (ctx: Context) => {
+    const { projectId } = ctx.state;
 
-  const evaluators =
-    await sql`select * from evaluator where project_id = ${projectId}`;
+    const evaluators =
+      await sql`select * from evaluator where project_id = ${projectId}`;
 
-  // TODO: return number of runs the evaluator will be applied to
+    // TODO: return number of runs the evaluator will be applied to
 
-  ctx.body = evaluators;
-});
+    ctx.body = evaluators;
+  },
+);
 
 evaluators.get("/:id", async (ctx: Context) => {
   const { projectId } = ctx.state;
