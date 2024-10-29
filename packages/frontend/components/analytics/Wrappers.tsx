@@ -28,9 +28,7 @@ export function Selectable({
   return (
     <Card withBorder>
       <Card.Section p="xs">
-        <Group justify="space-between">
-          <Text fw={500}>{header}</Text>
-
+        <Group justify="end">
           {icon ? (
             icon({ selected, onClick: onSelected })
           ) : (

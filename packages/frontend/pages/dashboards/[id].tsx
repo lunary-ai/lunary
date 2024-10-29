@@ -655,37 +655,43 @@ export default function Analytics() {
     router.push("/dashboards");
   }
 
-  function updateFilterState(state) {
-    if (dashboardState.id === DEFAULT_DASHBOARD.id) {
+  function setDateRange(dateRange) {
+    if (dashboardState.id === "default") {
       setDefaultDashboard({
         ...dashboardState,
         filters: {
           ...dashboardState.filters,
-          ...state,
+          dateRange: [dateRange[0].toISOString(), dateRange[1].toISOString()],
         },
       });
     } else {
       updateDashboard({
         filters: {
           ...dashboardState.filters,
-          ...state,
+          dateRange: [dateRange[0].toISOString(), dateRange[1].toISOString()],
         },
       });
     }
   }
 
-  function setDateRange(dateRange) {
-    updateFilterState({
-      dateRange: [dateRange[0].toISOString(), dateRange[1].toISOString()],
-    });
-  }
-
   function setGranularity(granularity) {
-    updateFilterState({ granularity });
+    dashboard &&
+      updateDashboard({
+        filters: {
+          ...dashboard.filters,
+          granularity,
+        },
+      });
   }
 
   function setChecks(checks) {
-    updateFilterState({ checks: serializeLogic(checks) });
+    dashboard &&
+      updateDashboard({
+        filters: {
+          ...dashboard.filters,
+          checks: serializeLogic(checks),
+        },
+      });
   }
 
   function getChartComponent(id: string) {
@@ -748,10 +754,8 @@ export default function Analytics() {
 
     const entry = await insertDashboard({
       name,
-      description: "",
       filters: {
         checks: serializedChecks,
-        granularity: "daily",
         dateRange: [startDate.toISOString(), endDate.toISOString()],
       },
       charts: tempDashboardState.charts,
@@ -773,13 +777,14 @@ export default function Analytics() {
     setTempDashboardState(newState);
   }
 
+  console.log(project);
   return (
     <Empty
       showProjectId
       Icon={IconChartAreaLine}
       title="Waiting for data..."
       description="Analytics will appear here once you have some data."
-      enable={false}
+      enable={project && !project?.activated}
     >
       <NextSeo title="Analytics" />
 
@@ -950,7 +955,6 @@ export default function Analytics() {
                   <RenamableField
                     defaultValue={dashboard.name}
                     onRename={(newName) => {
-                      if (!newName) return;
                       updateDashboard({
                         name: newName,
                       });

@@ -1,8 +1,23 @@
 import { hasAccess } from "shared";
 import { useProjectMutation, useProjectSWR, useUser } from ".";
 import { fetcher } from "../fetcher";
-import { DEFAULT_DASHBOARD } from "../analytics";
-import { useState } from "react";
+
+// TODO: zod schema in shared package, share between frontend and backend
+interface Dashboard {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  projectId: string;
+  name: string;
+  description: string | null;
+  charts: string[];
+  filters: {
+    checks: string;
+    dateRange: [string, string];
+    granularity: "daily" | "weekly" | "monthly";
+  };
+  ownerId: string;
+}
 
 type Dashboard = {
   id: string;
@@ -18,7 +33,7 @@ type Dashboard = {
 
 export function useDashboards() {
   const { user } = useUser();
-  const { data, isLoading, mutate } = useProjectSWR<unknown[]>(
+  const { data, isLoading, mutate } = useProjectSWR<Dashboard[]>(
     hasAccess(user?.role, "dashboards", "list") ? `/dashboards` : null,
   );
 
@@ -43,7 +58,7 @@ export function useDashboard(id: string | null, initialData?: any) {
     data: dashboard,
     isLoading,
     mutate,
-  } = useProjectSWR(id && `/dashboards/${id}`, {
+  } = useProjectSWR<Dashboard>(id && `/dashboards/${id}`, {
     fallbackData: initialData,
   });
 

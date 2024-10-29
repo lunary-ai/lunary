@@ -125,15 +125,7 @@ function DashboardLink({ item }) {
     { ...parseAsString, history: "push" },
   );
 
-  const { dashboards, insert: insertDashboard } = useDashboards();
-
-  function switchDashboard(id) {
-    if (router.pathname.startsWith("/dashboards")) {
-      setDashboardID(id);
-    } else {
-      router.push(`/dashboards?dashboard=${id}`);
-    }
-  }
+  const { dashboards } = useDashboards();
 
   const active = (() => {
     const linkParams = new URLSearchParams(item.link.split("?")[1]);
@@ -209,7 +201,10 @@ function DashboardLink({ item }) {
                     value={item.id}
                     key={item.id}
                     leftSection={<IconTimeline size={12} />}
-                    onClick={() => switchDashboard(item.id)}
+                    onClick={async () => {
+                      console.log(item.id);
+                      await router.push(`/dashboards/${item.id}`);
+                    }}
                   >
                     {item.name}
                   </Menu.Item>
@@ -309,7 +304,8 @@ function MenuSection({ item }) {
                 />
               )}
 
-              <IconChevronRight
+              {/* TODO: put back */}
+              {/* <IconChevronRight
                 onClick={toggle}
                 size={14}
                 opacity={0.6}
@@ -319,7 +315,7 @@ function MenuSection({ item }) {
                   top: -2,
                   transform: `rotate(${opened ? 90 : 0}deg)`,
                 }}
-              />
+              /> */}
             </Group>
           </>
         )}

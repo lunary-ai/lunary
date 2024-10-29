@@ -755,15 +755,6 @@ export function SelectableCustomChart({
 }) {
   const { chart: item, remove, loading } = useChart(chart.id, chart);
 
-  if (loading) {
-    return (
-      <Container>
-        <Loader variant="dots" />
-        <div>Loading chart...</div>
-      </Container>
-    );
-  }
-
   const startDate = new Date("2024-10-21T16:00:00.000Z");
   const endDate = new Date("2024-10-29T15:59:59.999Z");
 
@@ -811,7 +802,7 @@ export function SelectableCustomChart({
           onClick: remove,
         },
       ]}
-      isSelected={chartsState.extras?.includes(item.id)}
+      isSelected={chartsState?.includes(item.id)}
       onSelect={() => toggleChart(item.id, "extras")}
     >
       <Container>
