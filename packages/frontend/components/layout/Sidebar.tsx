@@ -177,9 +177,9 @@ function DashboardLink({ item }) {
                     value={item.id}
                     key={item.id}
                     leftSection={<IconTimeline size={12} />}
-                    onClick={() => {
+                    onClick={async () => {
                       console.log(item.id);
-                      router.push(`/dashboards/${item.id}`);
+                      await router.push(`/dashboards/${item.id}`);
                     }}
                   >
                     {item.name}
@@ -271,7 +271,8 @@ function MenuSection({ item }) {
                 />
               )}
 
-              <IconChevronRight
+              {/* TODO: put back */}
+              {/* <IconChevronRight
                 onClick={toggle}
                 size={14}
                 opacity={0.6}
@@ -281,7 +282,7 @@ function MenuSection({ item }) {
                   top: -2,
                   transform: `rotate(${opened ? 90 : 0}deg)`,
                 }}
-              />
+              /> */}
             </Group>
           </>
         )}
