@@ -80,7 +80,7 @@ import {
 } from "@/components/analytics/Wrappers";
 
 import type { CheckLogic } from "shared";
-import Router from "next/router";
+import router from "next/router";
 
 type PresetDateRange = "Today" | "7 Days" | "30 Days" | "3 Months" | "Custom";
 type DateRange = [Date, Date];
@@ -469,13 +469,7 @@ function ChartSelector({
 
 // TODO: typescript everywhere
 export default function Analytics() {
-  const router = useRouter();
-
   const dashboardID = router.query?.id as string;
-
-  function setDashboardID(id) {
-    router.push(`/dashboards/${id}`);
-  }
 
   const {
     dashboard,
@@ -802,6 +796,7 @@ export default function Analytics() {
               top: 0,
               zIndex: 1,
               backgroundColor: "var(--mantine-color-body)",
+              padding: 0,
               paddingTop: 20,
               paddingBottom: 10,
             }}
@@ -947,7 +942,6 @@ export default function Analytics() {
               </Group>
             )}
           </Stack>
-
           <Grid>
             {dashboardState.charts.slice(0, 3).map((chartID) => (
               <Grid.Col span={4} key={chartID}>
