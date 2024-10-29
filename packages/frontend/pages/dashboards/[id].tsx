@@ -470,22 +470,10 @@ function ChartSelector({
 export default function Analytics() {
   const router = useRouter();
 
-  const [pinnedDashboard, setPinnedDashboard] = useLocalStorage<
-    string | undefined
-  >({
-    key: "dashboard",
-  });
+  const dashboardID = router.query?.id as string;
 
-  const [dashboardID, setDashboardID] = useQueryState<string | undefined>(
-    "dashboard",
-    {
-      ...parseAsString,
-      history: "push",
-    },
-  );
-
-  if (!dashboardID && pinnedDashboard) {
-    setDashboardID(pinnedDashboard);
+  function setDashboardID(id) {
+    router.push(`/dashboards/${id}`);
   }
 
   const {
@@ -494,12 +482,6 @@ export default function Analytics() {
     remove: removeDashboardFn,
     loading: dashboardLoading,
   } = useDashboard(dashboardID);
-
-  useEffect(() => {
-    if (!dashboardLoading && !dashboard) {
-      if (dashboardID) setDashboardID(null);
-    }
-  }, [dashboardLoading]);
 
   const [editMode, setEditMode] = useState(false);
   const [
@@ -808,7 +790,6 @@ export default function Analytics() {
         close={closeConfirm}
         onConfirm={() => {
           removeDashboard();
-          router.push("/dashboards");
         }}
         title={`Delete dashboard "${dashboard?.name}"`}
       />
@@ -853,7 +834,7 @@ export default function Analytics() {
               )}
 
               <Group gap="sm" ml="auto">
-                {dashboard &&
+                {/* {dashboard &&
                   (pinnedDashboard === dashboard.id ? (
                     <ActionIcon
                       variant="outline"
@@ -869,7 +850,7 @@ export default function Analytics() {
                     >
                       <IconPin size={12} />
                     </ActionIcon>
-                  ))}
+                  ))} */}
 
                 <Button
                   variant="filled"

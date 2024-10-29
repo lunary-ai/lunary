@@ -47,11 +47,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { openUpgrade } from "./UpgradeModal";
 
-import analytics, {
-  DEFAULT_CHARTS,
-  DEFAULT_DASHBOARD,
-  getDefaultDateRange,
-} from "@/utils/analytics";
+import analytics from "@/utils/analytics";
 import { Button, Combobox, Input, InputBase, useCombobox } from "@mantine/core";
 
 import { IconPlus } from "@tabler/icons-react";
@@ -59,6 +55,7 @@ import { IconPlus } from "@tabler/icons-react";
 import { useAuth } from "@/utils/auth";
 import { useProject, useProjects } from "@/utils/dataHooks";
 import { useEffect, useState } from "react";
+import { DEFAULT_CHARTS, DEFAULT_DASHBOARD, getDefaultDateRange } from "shared";
 import { ResourceName, hasAccess, hasReadAccess, serializeLogic } from "shared";
 import config from "@/utils/config";
 import { useViews } from "@/utils/dataHooks/views";
@@ -120,12 +117,7 @@ function NavbarLink({
 
 function DashboardLink({ item }) {
   const router = useRouter();
-  const [dashboardID, setDashboardID] = useQueryState<string | undefined>(
-    "dashboard",
-    { ...parseAsString, history: "push" },
-  );
-
-  const { dashboards } = useDashboards();
+  const { dashboards, insert: insertDashboard } = useDashboards();
 
   const active = (() => {
     const linkParams = new URLSearchParams(item.link.split("?")[1]);
@@ -152,7 +144,7 @@ function DashboardLink({ item }) {
         dateRange: getDefaultDateRange(),
       },
     });
-    switchDashboard(item.id);
+    router.push(`/dashboards/${item.id}`);
   }
 
   return (
@@ -201,9 +193,8 @@ function DashboardLink({ item }) {
                     value={item.id}
                     key={item.id}
                     leftSection={<IconTimeline size={12} />}
-                    onClick={async () => {
-                      console.log(item.id);
-                      await router.push(`/dashboards/${item.id}`);
+                    onClick={() => {
+                      router.push(`/dashboards/${item.id}`);
                     }}
                   >
                     {item.name}

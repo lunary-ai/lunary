@@ -19,18 +19,6 @@ interface Dashboard {
   ownerId: string;
 }
 
-type Dashboard = {
-  id: string;
-  name: string;
-  description: string;
-  charts: string[];
-  filters: {
-    checks: string;
-    granularity: string;
-    dateRange: [Date, Date];
-  };
-};
-
 export function useDashboards() {
   const { user } = useUser();
   const { data, isLoading, mutate } = useProjectSWR<Dashboard[]>(

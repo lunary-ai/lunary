@@ -60,6 +60,7 @@ import LineChart from "@/components/analytics/LineChart";
 
 import ErrorBoundary from "../blocks/ErrorBoundary";
 import { Selectable } from "./Wrappers";
+import AnalyticsCard from "./AnalyticsCard";
 
 const COLOR_PALETTE = [
   "violet.6",
@@ -763,16 +764,16 @@ export function SelectableCustomChart({
     isLoading: chartLoading,
     error: chartError,
   } = useAnalyticsChartData(
-    item.config.props.metric,
+    item?.config.props.metric,
     startDate,
     endDate,
     "daily",
     undefined,
-    item.config.props.firstDimensionKey,
-    item.config.props.secondDimensionKey,
+    item?.config.props.firstDimensionKey,
+    item?.config.props.secondDimensionKey,
   );
 
-  if (chartLoading) {
+  if (loading || chartLoading) {
     return (
       <Container>
         <Loader variant="dots" />
@@ -810,13 +811,13 @@ export function SelectableCustomChart({
           Active Users
         </Title>
 
-        {chart.config.props.series.length > 0 ? (
+        {item.config.props.series.length > 0 ? (
           <BarChart
             h={300}
             data={data?.data || []}
             dataKey="value"
             type="stacked"
-            series={chart.config.props.series}
+            series={item.config.props.series}
             withLegend
           />
         ) : (
@@ -908,15 +909,6 @@ export function SelectableCustomChart({
 export function CustomChart({ chartID }) {
   const { chart, loading } = useChart(chartID);
 
-  if (loading) {
-    return (
-      <Container>
-        <Loader variant="dots" />
-        <div>Loading chart...</div>
-      </Container>
-    );
-  }
-
   const startDate = new Date("2024-10-21T16:00:00.000Z");
   const endDate = new Date("2024-10-29T15:59:59.999Z");
 
@@ -925,16 +917,16 @@ export function CustomChart({ chartID }) {
     isLoading: chartLoading,
     error: chartError,
   } = useAnalyticsChartData(
-    chart.config.props.metric,
+    chart?.config.props.metric,
     startDate,
     endDate,
     "daily",
     undefined,
-    chart.config.props.firstDimensionKey,
-    chart.config.props.secondDimensionKey,
+    chart?.config.props.firstDimensionKey,
+    chart?.config.props.secondDimensionKey,
   );
 
-  if (chartLoading) {
+  if (loading || chartLoading) {
     return (
       <Container>
         <Loader variant="dots" />
@@ -954,14 +946,10 @@ export function CustomChart({ chartID }) {
   }
 
   return (
-    <Container>
-      <Title order={3} mb="md">
-        Active Users
-      </Title>
-
+    <AnalyticsCard title="Active Users">
       {chart.config.props.series.length > 0 ? (
         <BarChart
-          h={300}
+          h={230}
           data={data?.data || []}
           dataKey="value"
           type="stacked"
@@ -973,7 +961,7 @@ export function CustomChart({ chartID }) {
           No series available to display the chart.
         </Alert>
       )}
-    </Container>
+    </AnalyticsCard>
   );
 }
 
@@ -1071,7 +1059,7 @@ export function CustomChartCreator({ onConfirm }) {
           w="90%"
           value={name}
           onChange={(ev) => setName(ev.currentTarget.value)}
-          placeholder="Chart Name"
+          placeholder="Insight Name"
           required
         />
         <Button
@@ -1106,7 +1094,7 @@ export function CustomChartCreator({ onConfirm }) {
         />
 
         <Select
-          label="Breakdown by (1)"
+          label="First Dimension"
           data={breakdownSelectValues}
           value={firstDimensionKey}
           onChange={(value) => value && setFirstDimensionKey(value)}
@@ -1115,7 +1103,7 @@ export function CustomChartCreator({ onConfirm }) {
         />
 
         <Select
-          label="Breakdown by (2)"
+          label="Second Dimension"
           data={[
             ...breakdownSelectValues.map(({ value, label }) => ({
               value,
