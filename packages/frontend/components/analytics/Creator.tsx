@@ -1063,45 +1063,26 @@ export function CustomChartCreator({ onConfirm, config = {} }) {
   return (
     <Container>
       <Title order={3} mb="md">
-        Active Users
+        Total Active Users by {firstDimensionKey} and {secondDimensionKey}
       </Title>
 
-      <Group m="md">
+      <Group my="md" justify="space-between">
         <TextInput
+          label="Insight Description (optional)"
           w="90%"
-          value={name}
+          value={"Description"}
           onChange={(ev) => setName(ev.currentTarget.value)}
-          placeholder="Insight Name"
-          required
+          placeholder="Insight Description"
         />
-        <Button
-          onClick={() => {
-            if (!name) return;
-
-            onConfirm({
-              name,
-              config: {
-                name: "CustomBarChart",
-                props: {
-                  firstDimensionKey,
-                  secondDimensionKey,
-                  metric,
-                  series,
-                },
-              },
-            });
-          }}
-        >
-          Save
-        </Button>
       </Group>
 
-      <Group>
+      <Group mb="lg">
         <Select
           label="Metric"
           data={[
             { value: "users/active", label: "Total Active Users" },
             { value: "users/new", label: "Total New Users" },
+            { value: "conversations", label: "Total Conversations" },
           ]}
           value={metric}
           onChange={(value) => value && setMetric(value)}
@@ -1109,7 +1090,7 @@ export function CustomChartCreator({ onConfirm, config = {} }) {
         />
 
         <Select
-          label="First Dimension"
+          label="First breakdown"
           data={breakdownSelectValues}
           value={firstDimensionKey}
           onChange={(value) => value && setFirstDimensionKey(value)}
@@ -1118,7 +1099,7 @@ export function CustomChartCreator({ onConfirm, config = {} }) {
         />
 
         <Select
-          label="Second Dimension"
+          label="Second breakdown"
           data={[
             ...breakdownSelectValues.map(({ value, label }) => ({
               value,
@@ -1148,6 +1129,29 @@ export function CustomChartCreator({ onConfirm, config = {} }) {
           No series available to display the chart.
         </Alert>
       )}
+
+      <Button
+        mt="xl"
+        style={{ float: "right" }}
+        onClick={() => {
+          if (!name) return;
+
+          onConfirm({
+            name,
+            config: {
+              name: "CustomBarChart",
+              props: {
+                firstDimensionKey,
+                secondDimensionKey,
+                metric,
+                series,
+              },
+            },
+          });
+        }}
+      >
+        Save
+      </Button>
     </Container>
   );
 }
