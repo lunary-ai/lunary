@@ -335,15 +335,9 @@ function LineChartComponent({
   return (
     <Card withBorder className="lineChart" p={0} radius="md">
       <Group gap="xs">
-        {typeof title === "string" ? (
-          <Text c="dimmed" fw={50} fz="md" m="md" mr={0}>
-            {title}
-          </Text>
-        ) : (
-          <Box m="lg" mb="sm">
-            {title}
-          </Box>
-        )}
+        <Text c="dimmed" fw={50} fz="md" m="md" mr={0}>
+          {title}
+        </Text>
 
         {description && (
           <MantineTooltip label={description}>

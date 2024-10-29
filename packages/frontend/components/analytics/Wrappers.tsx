@@ -31,8 +31,8 @@ export function Selectable({
   }
 
   return (
-    <Card withBorder>
-      <Card.Section p="xs">
+    <Card>
+      <Card.Section>
         <Group justify="end">
           {icon ? (
             icon({ selected, onClick: onSelected })
@@ -40,6 +40,12 @@ export function Selectable({
             <ActionIcon
               variant="transparent"
               onClick={onSelected}
+              style={{
+                position: "absolute",
+                top: "15px",
+                right: "15px",
+                zIndex: 30,
+              }}
               color={selected ? "gray" : "blue"}
             >
               {selected ? (
@@ -63,7 +69,7 @@ export function Selectable({
         </Group>
       </Card.Section>
 
-      <Card.Section h="100%">{children}</Card.Section>
+      <Card.Section h="calc(100% + 33px)">{children}</Card.Section>
     </Card>
   );
 }

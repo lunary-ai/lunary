@@ -155,7 +155,7 @@ export default function TotalUsersByDepartment() {
 
   return (
     <AnalyticsCard>
-      <Group position="apart" align="center">
+      <Group align="center">
         <Title order={4}>Total Users By {splitBy}</Title>
         <Group>
           {/* Split By Selector */}
