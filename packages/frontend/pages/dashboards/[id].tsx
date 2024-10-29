@@ -76,7 +76,7 @@ import RenamableField from "@/components/blocks/RenamableField";
 import { ALL_CHARTS, deserializeDateRange } from "@/utils/analytics";
 
 import type { CheckLogic } from "shared";
-import Router, { useRouter } from "next/router";
+import router from "next/router";
 
 type PresetDateRange = "Today" | "7 Days" | "30 Days" | "3 Months" | "Custom";
 type DateRange = [Date, Date];

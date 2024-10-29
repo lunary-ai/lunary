@@ -13,6 +13,8 @@ import {
   Image,
   Flex,
   Button,
+  Title,
+  Anchor,
 } from "@mantine/core";
 import {
   IconArrowRight,
@@ -53,6 +55,7 @@ export default function Dashboard() {
 
   return (
     <Container>
+      <Title mb="lg">Dashboards</Title>
       <Tabs defaultValue="dashboards">
         <Tabs.List>
           <Tabs.Tab value="dashboards" leftSection={<IconTimeline size={15} />}>
@@ -64,9 +67,16 @@ export default function Dashboard() {
         </Tabs.List>
 
         <Tabs.Panel value="dashboards">
-          <SimpleGrid cols={3} m="md">
+          <SimpleGrid cols={3} my="md">
             {dashboards.map((dashboard) => (
-              <Card shadow="sm" radius="md">
+              <Card
+                shadow="sm"
+                radius="md"
+                display="flex"
+                component={Anchor}
+                href={`/dashboards/${dashboard.id}`}
+                style={{ justifyContent: "center" }}
+              >
                 <Card.Section withBorder inheritPadding py="xs">
                   <Group justify="space-between">
                     <IconTimeline size={30} />
@@ -95,7 +105,7 @@ export default function Dashboard() {
                     </Menu>
                   </Group>
                 </Card.Section>
-
+                {/* 
                 <Card.Section>{dashboard.description}</Card.Section>
 
                 <Flex p="sm" direction={"column"} align={"center"}>
@@ -132,7 +142,7 @@ export default function Dashboard() {
                       Open Dashboard
                     </Button>
                   </Group>
-                </Card.Section>
+                </Card.Section> */}
               </Card>
             ))}
 
