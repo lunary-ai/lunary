@@ -120,11 +120,6 @@ function NavbarLink({
 
 function DashboardLink({ item }) {
   const router = useRouter();
-  const [dashboardID, setDashboardID] = useQueryState<string | undefined>(
-    "dashboard",
-    { ...parseAsString, history: "push" },
-  );
-
   const { dashboards } = useDashboards();
 
   const active = (() => {
@@ -198,13 +193,9 @@ function DashboardLink({ item }) {
               >
                 {dashboards.map((item) => (
                   <Menu.Item
-                    value={item.id}
                     key={item.id}
+                    onClick={() => router.push(`/dashboards/${item.id}`)}
                     leftSection={<IconTimeline size={12} />}
-                    onClick={async () => {
-                      console.log(item.id);
-                      await router.push(`/dashboards/${item.id}`);
-                    }}
                   >
                     {item.name}
                   </Menu.Item>
@@ -345,6 +336,7 @@ function MenuSection({ item }) {
 export default function Sidebar() {
   const auth = useAuth();
   const router = useRouter();
+
   const { project, setProjectId } = useProject();
 
   const { org } = useOrg();

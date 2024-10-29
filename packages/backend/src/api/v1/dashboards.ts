@@ -14,7 +14,7 @@ const dashboardSchema = z.object({
   name: z.string(),
   charts: z.any(),
   filters: z.any(),
-  description: z.string().optional(),
+  description: z.string().optional().nullable(),
 });
 
 dashboards.get("/", checkAccess("dashboards", "list"), async (ctx: Context) => {

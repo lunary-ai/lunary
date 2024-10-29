@@ -20,6 +20,7 @@ import {
   Card,
   Grid,
   Group,
+  Loader,
   Menu,
   Modal,
   Select,
@@ -59,7 +60,6 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 
 import { useDisclosure } from "@mantine/hooks";
 import { useDashboard, useDashboards } from "@/utils/dataHooks/dashboards";
-import { useRouter } from "next/router";
 import TopTopics from "@/components/analytics/Charts/TopTopics";
 import Sentiment from "@/components/analytics/Charts/Sentiment";
 
@@ -80,6 +80,7 @@ import {
 } from "@/components/analytics/Wrappers";
 
 import type { CheckLogic } from "shared";
+import Router from "next/router";
 
 type PresetDateRange = "Today" | "7 Days" | "30 Days" | "3 Months" | "Custom";
 type DateRange = [Date, Date];
@@ -468,36 +469,22 @@ function ChartSelector({
 
 // TODO: typescript everywhere
 export default function Analytics() {
-  const router = useRouter();
-
-  const [pinnedDashboard, setPinnedDashboard] = useLocalStorage<
-    string | undefined
-  >({
-    key: "dashboard",
-  });
-
-  const [dashboardID, setDashboardID] = useQueryState<string | undefined>(
-    "dashboard",
-    {
-      ...parseAsString,
-      history: "push",
-    },
+  const [dashboardId, setDashboardId] = useState<string>(
+    Router.query.id as string,
   );
 
-  if (!dashboardID && pinnedDashboard) {
-    setDashboardID(pinnedDashboard);
-  }
+  const [pinnedDashboard, setPinnedDashboard] = useState<string>();
 
   const {
     dashboard,
     update: updateDashboard,
     remove: removeDashboardFn,
     loading: dashboardLoading,
-  } = useDashboard(dashboardID);
+  } = useDashboard(dashboardId);
 
   useEffect(() => {
     if (!dashboardLoading && !dashboard) {
-      if (dashboardID) setDashboardID(null);
+      if (dashboardId) setDashboardId(null);
     }
   }, [dashboardLoading]);
 
@@ -760,7 +747,7 @@ export default function Analytics() {
       },
       charts: tempDashboardState.charts,
     });
-    setDashboardID(entry.id);
+    setDashboardId(entry.id);
 
     onToggleMode();
   }
@@ -777,7 +764,6 @@ export default function Analytics() {
     setTempDashboardState(newState);
   }
 
-  console.log(project);
   return (
     <Empty
       showProjectId
