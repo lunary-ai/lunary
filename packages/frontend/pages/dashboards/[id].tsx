@@ -20,7 +20,6 @@ import {
   Card,
   Grid,
   Group,
-  Loader,
   Menu,
   Modal,
   Select,
@@ -29,55 +28,52 @@ import {
   Tabs,
   Text,
   Title,
+  useComputedColorScheme,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 
-import { useInViewport, useLocalStorage } from "@mantine/hooks";
+import { useInViewport } from "@mantine/hooks";
 import {
   IconCalendar,
   IconCancel,
   IconChartAreaLine,
   IconChartLine,
   IconCheck,
-  IconCopyCheckFilled,
   IconDotsVertical,
   IconEdit,
   IconFilter,
-  IconPin,
-  IconPinned,
   IconPlus,
   IconStackPop,
   IconTimeline,
   IconTrash,
 } from "@tabler/icons-react";
 import { NextSeo } from "next-seo";
-import { parseAsString, useQueryState } from "nuqs";
 import { useEffect, useMemo, useState } from "react";
 import { DEFAULT_DASHBOARD, deserializeLogic, serializeLogic } from "shared";
 
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
-import { useDisclosure } from "@mantine/hooks";
-import { useDashboard, useDashboards } from "@/utils/dataHooks/dashboards";
-import TopTopics from "@/components/analytics/Charts/TopTopics";
 import Sentiment from "@/components/analytics/Charts/Sentiment";
+import TopTopics from "@/components/analytics/Charts/TopTopics";
+import { useDashboard, useDashboards } from "@/utils/dataHooks/dashboards";
+import { useDisclosure } from "@mantine/hooks";
 
 import { useCharts } from "@/utils/dataHooks/charts";
 
-import { ALL_CHARTS, deserializeDateRange } from "@/utils/analytics";
-import RenamableField from "@/components/blocks/RenamableField";
 import {
-  SelectableCustomChart,
-  CustomChartCreator,
   CustomChart,
+  CustomChartCreator,
+  SelectableCustomChart,
 } from "@/components/analytics/Creator";
-import { SaveAsModal, ConfirmModal } from "@/components/analytics/Modals";
+import { ConfirmModal, SaveAsModal } from "@/components/analytics/Modals";
 import {
-  Selectable,
-  Droppable,
   Draggable,
+  Droppable,
+  Selectable,
 } from "@/components/analytics/Wrappers";
+import RenamableField from "@/components/blocks/RenamableField";
+import { ALL_CHARTS, deserializeDateRange } from "@/utils/analytics";
 
 import type { CheckLogic } from "shared";
 import Router, { useRouter } from "next/router";
@@ -472,20 +468,14 @@ function ChartSelector({
 
 // TODO: typescript everywhere
 export default function Analytics() {
-  const router = useRouter();
-
-  const dashboardID = router.query?.id as string;
-
-  function setDashboardID(id) {
-    router.push(`/dashboards/${id}`);
-  }
+  const dashboardId = router.query?.id as string;
 
   const {
     dashboard,
     update: updateDashboard,
     remove: removeDashboardFn,
     loading: dashboardLoading,
-  } = useDashboard(dashboardID);
+  } = useDashboard(dashboardId);
 
   const [editMode, setEditMode] = useState(false);
   const [
@@ -497,6 +487,7 @@ export default function Analytics() {
   const [confirmOpened, { open: openConfirm, close: closeConfirm }] =
     useDisclosure(false);
 
+  const colorScheme = useComputedColorScheme();
   const { insert: insertDashboard } = useDashboards();
 
   const [defaultDashboard, setDefaultDashboard] = useState(DEFAULT_DASHBOARD);
@@ -635,9 +626,9 @@ export default function Analytics() {
 
   function removeDashboard() {
     removeDashboardFn();
-    if (pinnedDashboard === dashboard?.id) {
-      setPinnedDashboard("");
-    }
+    // if (pinnedDashboard === dashboard?.id) {
+    //   setPinnedDashboard("");
+    // }
     router.push("/dashboards");
   }
 
@@ -704,7 +695,7 @@ export default function Analytics() {
     if (chartProps[id]) {
       return <AnalyticsChart {...chartProps[id]} {...commonChartData} />;
     }
-    return <CustomChart chartID={id} />;
+    return <CustomChart chartID={id} {...commonChartData} />;
   }
 
   async function onToggleMode() {
@@ -746,7 +737,7 @@ export default function Analytics() {
       },
       charts: tempDashboardState.charts,
     });
-    setDashboardId(entry.id);
+    router.push(`/dashboards/${entry.id}`);
 
     onToggleMode();
   }
@@ -800,13 +791,14 @@ export default function Analytics() {
       <DndProvider backend={HTML5Backend}>
         <Stack gap="lg">
           <Stack
+            top="0"
+            pos="sticky"
+            pt="20"
+            pb="10"
+            bg={colorScheme === "light" ? "#fcfcfc" : "inherit"}
             style={{
-              position: "sticky",
-              top: 0,
               zIndex: 1,
-              backgroundColor: "var(--mantine-color-body)",
-              paddingTop: 20,
-              paddingBottom: 10,
+              borderBottom: "1px solid #dee2e6",
             }}
           >
             <Group gap="xs">
@@ -837,24 +829,6 @@ export default function Analytics() {
               )}
 
               <Group gap="sm" ml="auto">
-                {/* {dashboard &&
-                  (pinnedDashboard === dashboard.id ? (
-                    <ActionIcon
-                      variant="outline"
-                      color="red"
-                      onClick={() => setPinnedDashboard("")}
-                    >
-                      <IconPinned size={12} />
-                    </ActionIcon>
-                  ) : (
-                    <ActionIcon
-                      variant="outline"
-                      onClick={() => setPinnedDashboard(dashboard.id)}
-                    >
-                      <IconPin size={12} />
-                    </ActionIcon>
-                  ))} */}
-
                 <Button
                   variant="filled"
                   onClick={() => {
@@ -920,35 +894,41 @@ export default function Analytics() {
               </Menu>
             </Group>
 
-            {showBar && (
-              <CheckPicker
-                minimal
-                onChange={setChecks}
-                defaultOpened={showCheckBar}
-                value={checks}
-                restrictTo={(filter) =>
-                  ["tags", "models", "users", "metadata"].includes(filter.id)
-                }
-              />
-            )}
+            <Group>
+              {dashboard && (
+                <Group gap="xs">
+                  <IconTimeline size={16} />
+                  {editMode ? (
+                    <RenamableField
+                      defaultValue={dashboard.name}
+                      onRename={(newName) => {
+                        updateDashboard({
+                          name: newName,
+                        });
+                      }}
+                    />
+                  ) : (
+                    <Title order={3}>{dashboard.name}</Title>
+                  )}
+                </Group>
+              )}
 
-            {dashboard && (
-              <Group gap="xs">
-                <IconTimeline size={16} />
-                {editMode ? (
-                  <RenamableField
-                    defaultValue={dashboard.name}
-                    onRename={(newName) => {
-                      updateDashboard({
-                        name: newName,
-                      });
-                    }}
+              {showBar && (
+                <Group ml="lg">
+                  <CheckPicker
+                    minimal
+                    onChange={setChecks}
+                    defaultOpened={showCheckBar}
+                    value={checks}
+                    restrictTo={(filter) =>
+                      ["tags", "models", "users", "metadata"].includes(
+                        filter.id,
+                      )
+                    }
                   />
-                ) : (
-                  <Title order={3}>{dashboard.name}</Title>
-                )}
-              </Group>
-            )}
+                </Group>
+              )}
+            </Group>
           </Stack>
 
           <Grid>

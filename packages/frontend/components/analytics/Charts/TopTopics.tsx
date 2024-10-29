@@ -12,8 +12,7 @@ export const data = [
 
 export default function TopTopics() {
   return (
-    <AnalyticsCard>
-      <Title order={3}>Most frequent topics</Title>
+    <AnalyticsCard title="Most frequent topics">
       <BarChart
         mt="md"
         h={300}

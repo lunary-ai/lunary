@@ -5544,10 +5544,10 @@ export default function Sentiment() {
   };
 
   return (
-    <AnalyticsCard>
-      <Group justify="space-between" align="center">
-        <Title order={4}>Average Sentiment</Title>
+    <AnalyticsCard title="Average Sentiment">
+      <Group justify="end" align="center">
         <Select
+          mt="md"
           value={timeRange}
           onChange={(value) => setTimeRange(value)}
           data={[

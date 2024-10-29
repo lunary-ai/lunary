@@ -191,11 +191,8 @@ function DashboardLink({ item }) {
                 {dashboards.map((item) => (
                   <Menu.Item
                     key={item.id}
-                    onClick={() => router.push(`/dashboards/${item.id}`)}
+                    onClick={() => router.replace(`/dashboards/${item.id}`)}
                     leftSection={<IconTimeline size={12} />}
-                    onClick={() => {
-                      router.push(`/dashboards/${item.id}`);
-                    }}
                   >
                     {item.name}
                   </Menu.Item>

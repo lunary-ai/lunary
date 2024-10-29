@@ -30,7 +30,7 @@ function TopTemplates({ topTemplates, isLoading }: TopTemplatesProps) {
     return (
       <Box>
         {/* <Overlay blur={5} opacity={0.1} p="lg" zIndex={1} /> */}
-        <Center ta="center" h="100%" w="100%">
+        <Center ta="center" h="100%" w="100%" mt="lg">
           No templates used available for this period
         </Center>
       </Box>

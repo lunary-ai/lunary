@@ -13,7 +13,6 @@ import {
 } from "@mantine/core";
 import { ResponsiveContainer } from "recharts";
 
-import { generateSeries } from "@/pages/demo";
 import { formatLargeNumber } from "@/utils/format";
 import { AreaChart, getFilteredChartTooltipPayload } from "@mantine/charts";
 import { IconBolt, IconInfoCircle } from "@tabler/icons-react";
@@ -27,6 +26,7 @@ import {
 import { useMemo } from "react";
 import ErrorBoundary from "../blocks/ErrorBoundary";
 import { openUpgrade } from "../layout/UpgradeModal";
+import { generateSeries } from "./Creator";
 
 interface ChartTooltipProps {
   label: string;
@@ -335,15 +335,9 @@ function LineChartComponent({
   return (
     <Card withBorder className="lineChart" p={0} radius="md">
       <Group gap="xs">
-        {typeof title === "string" ? (
-          <Text c="dimmed" fw={50} fz="md" m="md" mr={0}>
-            {title}
-          </Text>
-        ) : (
-          <Box m="lg" mb="sm">
-            {title}
-          </Box>
-        )}
+        <Text c="dimmed" fw={50} fz="md" m="md" mr={0}>
+          {title}
+        </Text>
 
         {description && (
           <MantineTooltip label={description}>
