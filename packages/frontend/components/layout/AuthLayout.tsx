@@ -20,7 +20,11 @@ export default function AuthLayout({
     >
       <Box style={{ position: "absolute", top: 10, left: 10 }}>
         <IconAnalyze
-          color={scheme === "dark" ? "white" : "#5468ff"}
+          color={
+            scheme === "dark"
+              ? "white"
+              : "var(--mantine-color-blue-light-color)"
+          }
           size={40}
         />
       </Box>

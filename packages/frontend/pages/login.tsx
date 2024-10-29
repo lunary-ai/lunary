@@ -202,7 +202,6 @@ function LoginPage() {
                     mt={step === "email" ? 0 : "md"}
                     type="submit"
                     fullWidth
-                    className="CtaBtn"
                     size="md"
                     loading={loading}
                     data-testid="continue-button"

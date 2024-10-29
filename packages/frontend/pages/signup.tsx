@@ -267,7 +267,6 @@ function SignupPage() {
                               mt="md"
                               radius="md"
                               data-testid="continue-button"
-                              className="CtaBtn"
                               onClick={nextStep}
                               fullWidth
                               loading={loading}
@@ -336,7 +335,6 @@ function SignupPage() {
                               <Button
                                 size="md"
                                 mt="md"
-                                className="CtaBtn"
                                 type="submit"
                                 data-testid="finish-button"
                                 fullWidth
