@@ -16,6 +16,9 @@ import {
   Stepper,
   SimpleGrid,
   Text,
+  Alert,
+  Container,
+  Title,
 } from "@mantine/core";
 
 import {
@@ -27,17 +30,19 @@ import {
   AreaChart as MantineAreaChart,
   DonutChart as MantineDonutChart,
   BubbleChart as MantineBubbleChart,
+  BarChart,
 } from "@mantine/charts";
 
 import { useSessionStorage, useInViewport } from "@mantine/hooks";
 import { IconCancel, IconTrash, IconPlus } from "@tabler/icons-react";
+
+import { getDefaultDateRange } from "shared";
 
 import {
   CHART_DATA,
   CHART_SERIES,
   BASE_CHART_PROPS,
   deserializeDateRange,
-  getDefaultDateRange,
 } from "@/utils/analytics";
 import { useProjectSWR } from "@/utils/dataHooks";
 import { useChart } from "@/utils/dataHooks/charts";
@@ -46,14 +51,136 @@ import {
   useTopModels,
   useTopTemplates,
 } from "@/utils/dataHooks/analytics";
-import { useExternalUsers } from "@/utils/dataHooks/external-users";
+import {
+  useExternalUsers,
+  useExternalUsersProps,
+} from "@/utils/dataHooks/external-users";
 
 import LineChart from "@/components/analytics/LineChart";
 
 import ErrorBoundary from "../blocks/ErrorBoundary";
 import { Selectable } from "./Wrappers";
 
+const COLOR_PALETTE = [
+  "violet.6",
+  "blue.6",
+  "green.6",
+  "red.6",
+  "orange.6",
+  "teal.6",
+  "purple.6",
+  "yellow.6",
+  "pink.6",
+  "cyan.6",
+];
+
+export function generateSeries(seriesNames: string[]) {
+  const sortedSeriesNames = [...seriesNames].sort((a, b) => a.localeCompare(b));
+
+  const seriesWithColors = sortedSeriesNames.map((name, index) => ({
+    name,
+    color: COLOR_PALETTE[index] || "gray.6",
+  }));
+
+  return seriesWithColors;
+}
+
 const CHARTS = [
+  {
+    name: "LunaryBarChart",
+    props: {
+      metric: {
+        type: "array",
+        defaultValue: "users/active",
+        options: [{ value: "users/active", label: "Total Active Users" }],
+      },
+      "First Dimension": (chartConfig, propName, value, handlePropChange) => {
+        const { props, isLoading: usersPropsLoading } = useExternalUsersProps();
+        return {
+          type: "select",
+          options: (props || []).map((prop) => ({
+            value: prop,
+            label: prop.charAt(0).toUpperCase() + String(prop).slice(1),
+          })),
+        };
+      },
+      "Second Dimension": (
+        { props: chartProps },
+        propName,
+        value,
+        handlePropChange,
+      ) => {
+        const { props, isLoading: usersPropsLoading } = useExternalUsersProps();
+        return {
+          type: "select",
+          defaultValue: "date",
+          options: [
+            ...(props || []).map((prop) => ({
+              value: prop,
+              disabled: value === chartProps["First Dimension"],
+              label: prop.charAt(0).toUpperCase() + String(prop).slice(1),
+            })),
+            { value: "date", label: "Date" },
+          ],
+        };
+      },
+    },
+    component({ props: chartProps }) {
+      const startDate = new Date("2024-10-21T16:00:00.000Z");
+      const endDate = new Date("2024-10-29T15:59:59.999Z");
+
+      const {
+        data,
+        isLoading: chartLoading,
+        error: chartError,
+      } = useAnalyticsChartData(
+        "users/active",
+        startDate,
+        endDate,
+        "daily",
+        undefined,
+        chartProps["First Dimension"],
+        chartProps["Second Dimension"],
+      );
+
+      // Fetch unique props keys for the project
+      const { props, isLoading: usersPropsLoading } = useExternalUsersProps();
+
+      const series = useMemo(() => {
+        if (!data || !data.data || data.data.length === 0) {
+          return [];
+        }
+
+        const seriesSet = new Set<string>();
+        data.data.forEach((item) => {
+          Object.keys(item).forEach((key) => {
+            if (key !== "value") {
+              seriesSet.add(key);
+            }
+          });
+        });
+
+        const seriesNames = Array.from(seriesSet);
+
+        return generateSeries(seriesNames);
+      }, [data]);
+
+      return series.length > 0 ? (
+        <BarChart
+          h={300}
+          data={data?.data || []}
+          dataKey="value"
+          type="stacked"
+          series={series}
+          withLegend
+        />
+      ) : (
+        <Alert title="No Data" color="yellow">
+          No series available to display the chart.
+        </Alert>
+      );
+    },
+  },
   {
     name: "LunaryChart",
     props: {
@@ -473,6 +600,10 @@ function DynamicChartPreview({ chartConfig, setChartConfig }) {
   }
 
   function renderPropInput(prop, propName, value, handleValue) {
+    if (typeof prop === "function") {
+      prop = prop(chartConfig, propName, value, handlePropChange);
+    }
+
     switch (prop.type) {
       case "number":
         return (
@@ -622,29 +753,52 @@ export function SelectableCustomChart({
   chartsState,
   toggleChart,
 }) {
-  const { chart: item, remove } = useChart(chart.id, chart);
-  const { name, data, props } = item?.config || {};
+  const { chart: item, remove, loading } = useChart(chart.id, chart);
 
-  const [dateRange, _] = useSessionStorage({
-    key: "dateRange-analytics",
-    getInitialValueInEffect: false,
-    deserialize: deserializeDateRange,
-    defaultValue: getDefaultDateRange(),
-  });
+  if (loading) {
+    return (
+      <Container>
+        <Loader variant="dots" />
+        <div>Loading chart...</div>
+      </Container>
+    );
+  }
 
-  const [startDate, endDate] = dateRange;
+  const startDate = new Date("2024-10-21T16:00:00.000Z");
+  const endDate = new Date("2024-10-29T15:59:59.999Z");
 
-  const chartData = useChartData(data, startDate, endDate);
+  const {
+    data,
+    isLoading: chartLoading,
+    error: chartError,
+  } = useAnalyticsChartData(
+    item.config.props.metric,
+    startDate,
+    endDate,
+    "daily",
+    undefined,
+    item.config.props.firstDimensionKey,
+    item.config.props.secondDimensionKey,
+  );
 
-  const series = data.series
-    .map((serie) => {
-      if (!serie.field) return null;
-      return {
-        name: serie.field,
-        color: serie.color,
-      };
-    })
-    .filter(Boolean);
+  if (chartLoading) {
+    return (
+      <Container>
+        <Loader variant="dots" />
+        <div>Loading chart data...</div>
+      </Container>
+    );
+  }
+
+  if (chartError) {
+    return (
+      <Container>
+        <Alert title="Error!" color="red">
+          Error loading chart data.
+        </Alert>
+      </Container>
+    );
+  }
 
   return (
     <Selectable
@@ -660,153 +814,346 @@ export function SelectableCustomChart({
       isSelected={chartsState.extras?.includes(item.id)}
       onSelect={() => toggleChart(item.id, "extras")}
     >
-      {CHARTS.find((c) => name === c.name)?.component({
-        data: chartData.data || [],
-        props,
-        series: series || [],
-      })}
+      <Container>
+        <Title order={3} mb="md">
+          Active Users
+        </Title>
+
+        {chart.config.props.series.length > 0 ? (
+          <BarChart
+            h={300}
+            data={data?.data || []}
+            dataKey="value"
+            type="stacked"
+            series={chart.config.props.series}
+            withLegend
+          />
+        ) : (
+          <Alert title="No Data" color="yellow">
+            No series available to display the chart.
+          </Alert>
+        )}
+      </Container>
     </Selectable>
   );
 }
 
-export function CustomChart({ chartID }) {
-  const { ref, inViewport } = useInViewport();
-  const [load, setLoad] = useState(inViewport);
-  useEffect(() => {
-    if (inViewport) {
-      setLoad(true);
-    }
-  }, [inViewport]);
+// export function CustomChart({ chartID }) {
+//   const { ref, inViewport } = useInViewport();
+//   const [load, setLoad] = useState(inViewport);
+//   useEffect(() => {
+//     if (inViewport) {
+//       setLoad(true);
+//     }
+//   }, [inViewport]);
 
-  if (!load) {
-    // return null;
+//   if (!load) {
+//     // return null;
+//   }
+
+//   const { chart: item } = useChart(chartID);
+//   const chart = CHARTS.find((c) => item.config.name === c.name);
+
+//   if (!chart) return null;
+
+//   const { name, data, props } = item?.config || {};
+//   const [dateRange, setDateRange] = useSessionStorage({
+//     key: "dateRange-analytics",
+//     getInitialValueInEffect: false,
+//     deserialize: deserializeDateRange,
+//     defaultValue: getDefaultDateRange(),
+//   });
+
+//   const [startDate, endDate] = dateRange;
+
+//   const chartData = useChartData(data, startDate, endDate);
+
+//   if (chartData.isLoading) return null;
+
+//   const series = data.series
+//     .map((serie) => {
+//       if (!serie.field) return null;
+//       return {
+//         name: serie.field,
+//         color: serie.color,
+//       };
+//     })
+//     .filter(Boolean);
+
+//   return (
+//     <Box ref={ref}>
+//       <ErrorBoundary>
+//         {chart.component({ data: chartData.data, props, series })}
+//       </ErrorBoundary>
+//     </Box>
+//   );
+// }
+
+// export function CustomChartCreator({ onConfirm }) {
+//   const [name, setName] = useState("");
+//   const [chartConfig, setChartConfig] = useState({
+//     name: CHARTS[0].name, props: {},
+//     data: { source: null, series: [] },
+//   });
+
+//   return (
+//     <Stack>
+//       <Text>Custom Chart</Text>
+
+//       <TextInput
+//         value={name}
+//         onChange={(ev) => setName(ev.currentTarget.value)}
+//         placeholder="Chart Name"
+//         required
+//       />
+//       <DynamicChartPreview
+//         chartConfig={chartConfig}
+//         setChartConfig={setChartConfig}
+//       />
+//     </Stack>
+//   );
+// }
+
+export function CustomChart({ chartID }) {
+  const { chart, loading } = useChart(chartID);
+
+  if (loading) {
+    return (
+      <Container>
+        <Loader variant="dots" />
+        <div>Loading chart...</div>
+      </Container>
+    );
   }
 
-  const { chart: item } = useChart(chartID);
-  const chart = CHARTS.find((c) => item.config.name === c.name);
+  const startDate = new Date("2024-10-21T16:00:00.000Z");
+  const endDate = new Date("2024-10-29T15:59:59.999Z");
 
-  if (!chart) return null;
+  const {
+    data,
+    isLoading: chartLoading,
+    error: chartError,
+  } = useAnalyticsChartData(
+    chart.config.props.metric,
+    startDate,
+    endDate,
+    "daily",
+    undefined,
+    chart.config.props.firstDimensionKey,
+    chart.config.props.secondDimensionKey,
+  );
 
-  const { name, data, props } = item?.config || {};
-  const [dateRange, setDateRange] = useSessionStorage({
-    key: "dateRange-analytics",
-    getInitialValueInEffect: false,
-    deserialize: deserializeDateRange,
-    defaultValue: getDefaultDateRange(),
-  });
+  if (chartLoading) {
+    return (
+      <Container>
+        <Loader variant="dots" />
+        <div>Loading chart data...</div>
+      </Container>
+    );
+  }
 
-  const [startDate, endDate] = dateRange;
-
-  const chartData = useChartData(data, startDate, endDate);
-
-  if (chartData.isLoading) return null;
-
-  const series = data.series
-    .map((serie) => {
-      if (!serie.field) return null;
-      return {
-        name: serie.field,
-        color: serie.color,
-      };
-    })
-    .filter(Boolean);
+  if (chartError) {
+    return (
+      <Container>
+        <Alert title="Error!" color="red">
+          Error loading chart data.
+        </Alert>
+      </Container>
+    );
+  }
 
   return (
-    <Box ref={ref}>
-      <ErrorBoundary>
-        {chart.component({ data: chartData.data, props, series })}
-      </ErrorBoundary>
-    </Box>
+    <Container>
+      <Title order={3} mb="md">
+        Active Users
+      </Title>
+
+      {chart.config.props.series.length > 0 ? (
+        <BarChart
+          h={300}
+          data={data?.data || []}
+          dataKey="value"
+          type="stacked"
+          series={chart.config.props.series}
+          withLegend
+        />
+      ) : (
+        <Alert title="No Data" color="yellow">
+          No series available to display the chart.
+        </Alert>
+      )}
+    </Container>
   );
 }
 
 export function CustomChartCreator({ onConfirm }) {
   const [name, setName] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [chartConfig, setChartConfig] = useState({
-    name: CHARTS[0].name,
-    props: {},
-    data: { source: null, series: [] },
-  });
-  const [active, setActive] = useState(0);
+  const [metric, setMetric] = useState("users/active");
 
-  const nextStep = () =>
-    setActive((current) => (current < 3 ? current + 1 : current));
-  const prevStep = () =>
-    setActive((current) => (current > 0 ? current - 1 : current));
+  const [firstDimensionKey, setFirstDimensionKey] = useState("");
+  const [secondDimensionKey, setSecondDimensionKey] = useState("date");
+
+  const startDate = new Date("2024-10-21T16:00:00.000Z");
+  const endDate = new Date("2024-10-29T15:59:59.999Z");
+
+  const {
+    data,
+    isLoading: chartLoading,
+    error: chartError,
+  } = useAnalyticsChartData(
+    metric,
+    startDate,
+    endDate,
+    "daily",
+    undefined,
+    firstDimensionKey,
+    secondDimensionKey,
+  );
+
+  // Fetch unique props keys for the project
+  const { props, isLoading: usersPropsLoading } = useExternalUsersProps();
+
+  useEffect(() => {
+    setSecondDimensionKey("date");
+  }, [firstDimensionKey]);
+
+  const series = useMemo(() => {
+    if (!data || !data.data || data.data.length === 0) {
+      return [];
+    }
+
+    const seriesSet = new Set<string>();
+    data.data.forEach((item) => {
+      Object.keys(item).forEach((key) => {
+        if (key !== "value") {
+          seriesSet.add(key);
+        }
+      });
+    });
+
+    const seriesNames = Array.from(seriesSet);
+
+    return generateSeries(seriesNames);
+  }, [data]);
+
+  if (chartLoading) {
+    return (
+      <Container>
+        <Loader variant="dots" />
+        <div>Loading chart data...</div>
+      </Container>
+    );
+  }
+
+  if (chartError) {
+    return (
+      <Container>
+        <Alert title="Error!" color="red">
+          Error loading chart data.
+        </Alert>
+      </Container>
+    );
+  }
+
+  if (usersPropsLoading) {
+    return (
+      <Container>
+        <Loader variant="dots" />
+        <div>Loading properties...</div>
+      </Container>
+    );
+  }
+
+  const breakdownSelectValues = props.map((prop) => ({
+    value: prop,
+    label: prop.charAt(0).toUpperCase() + String(prop).slice(1),
+  }));
 
   return (
-    <Stack>
-      <Text>Custom Chart</Text>
+    <Container>
+      <Title order={3} mb="md">
+        Active Users
+      </Title>
 
-      <Stepper active={active} onStepClick={setActive}>
-        <Stepper.Step label="First step" description="Chart Type">
-          <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="md">
-            {CHARTS.map((chart) => {
-              return (
-                <Selectable
-                  header={chart.name}
-                  icon={() => (
-                    <ActionIcon
-                      onClick={() => {
-                        setChartConfig((config) => ({
-                          ...config,
-                          name: chart.name,
-                        }));
-                        nextStep();
-                      }}
-                    >
-                      <IconPlus size="12" />
-                    </ActionIcon>
-                  )}
-                >
-                  {chart.component({
-                    data: CHART_DATA,
-                    series: CHART_SERIES,
-                    props: { dataKey: "date" },
-                  })}
-                </Selectable>
-              );
-            })}
-          </SimpleGrid>
-        </Stepper.Step>
-        <Stepper.Step label="Second step" description="Chart Configuration">
-          <TextInput
-            value={name}
-            onChange={(ev) => setName(ev.currentTarget.value)}
-            placeholder="Chart Name"
-            required
-          />
-          <DynamicChartPreview
-            chartConfig={chartConfig}
-            setChartConfig={setChartConfig}
-          />
-        </Stepper.Step>
-        <Stepper.Completed>
-          {saving ? <Loader size={20} /> : <Text>Chart Saved</Text>}
-        </Stepper.Completed>
-      </Stepper>
+      <Group m="md">
+        <TextInput
+          w="90%"
+          value={name}
+          onChange={(ev) => setName(ev.currentTarget.value)}
+          placeholder="Chart Name"
+          required
+        />
+        <Button
+          onClick={() => {
+            if (!name) return;
 
-      <Group justify="center" mt="xl">
-        <Button variant="default" disabled={active === 0} onClick={prevStep}>
-          Back
+            onConfirm({
+              name,
+              config: {
+                name: "CustomBarChart",
+                props: {
+                  firstDimensionKey,
+                  secondDimensionKey,
+                  metric,
+                  series,
+                },
+              },
+            });
+          }}
+        >
+          Save
         </Button>
-        {active === 1 ? (
-          <Button
-            onClick={() => {
-              nextStep();
-              setSaving(true);
-              onConfirm({ name, config: chartConfig }).then(() =>
-                setSaving(false),
-              );
-            }}
-          >
-            Finish
-          </Button>
-        ) : (
-          <Button onClick={nextStep}>Next step</Button>
-        )}
       </Group>
-    </Stack>
+
+      <Group>
+        <Select
+          label="Metric"
+          data={[{ value: "users/active", label: "Total Active Users" }]}
+          value={metric}
+          onChange={(value) => value && setMetric(value)}
+          mb="lg"
+        />
+
+        <Select
+          label="Breakdown by (1)"
+          data={breakdownSelectValues}
+          value={firstDimensionKey}
+          onChange={(value) => value && setFirstDimensionKey(value)}
+          mb="lg"
+          searchable
+        />
+
+        <Select
+          label="Breakdown by (2)"
+          data={[
+            ...breakdownSelectValues.map(({ value, label }) => ({
+              value,
+              label,
+              disabled: value === firstDimensionKey,
+            })),
+            { value: "date", label: "Date" },
+          ]}
+          value={secondDimensionKey}
+          onChange={(value) => value && setSecondDimensionKey(value)}
+          mb="lg"
+          searchable
+        />
+      </Group>
+
+      {series.length > 0 ? (
+        <BarChart
+          h={300}
+          data={data?.data || []}
+          dataKey="value"
+          type="stacked"
+          series={series}
+          withLegend
+        />
+      ) : (
+        <Alert title="No Data" color="yellow">
+          No series available to display the chart.
+        </Alert>
+      )}
+    </Container>
   );
 }

@@ -4,6 +4,18 @@ import { fetcher } from "../fetcher";
 import { DEFAULT_DASHBOARD } from "../analytics";
 import { useState } from "react";
 
+type Dashboard = {
+  id: string;
+  name: string;
+  description: string;
+  charts: string[];
+  filters: {
+    checks: string;
+    granularity: string;
+    dateRange: [Date, Date];
+  };
+};
+
 export function useDashboards() {
   const { user } = useUser();
   const { data, isLoading, mutate } = useProjectSWR<unknown[]>(
@@ -16,7 +28,7 @@ export function useDashboards() {
   );
 
   return {
-    dashboards: data || [],
+    dashboards: (data || []) as Dashboard[],
     insert,
     isInserting,
     mutate,
@@ -58,7 +70,7 @@ export function useDashboard(id: string | null, initialData?: any) {
   );
 
   return {
-    dashboard,
+    dashboard: dashboard as Dashboard,
     update,
     remove,
     mutate,
