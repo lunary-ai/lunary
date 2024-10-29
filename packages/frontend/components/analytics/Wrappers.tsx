@@ -1,5 +1,10 @@
 import { Text, Card, Group, ActionIcon, Box } from "@mantine/core";
-import { IconMinus, IconPlus } from "@tabler/icons-react";
+import {
+  IconCircleCheck,
+  IconCirclePlus,
+  IconMinus,
+  IconPlus,
+} from "@tabler/icons-react";
 import { useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 
@@ -33,10 +38,15 @@ export function Selectable({
             icon({ selected, onClick: onSelected })
           ) : (
             <ActionIcon
+              variant="transparent"
               onClick={onSelected}
-              color={selected ? "red" : undefined}
+              color={selected ? "gray" : "blue"}
             >
-              {selected ? <IconMinus size="12" /> : <IconPlus size="12" />}
+              {selected ? (
+                <IconCircleCheck size="22" />
+              ) : (
+                <IconCirclePlus size="22" />
+              )}
             </ActionIcon>
           )}
 
@@ -53,7 +63,7 @@ export function Selectable({
         </Group>
       </Card.Section>
 
-      <Card.Section>{children}</Card.Section>
+      <Card.Section h="100%">{children}</Card.Section>
     </Card>
   );
 }

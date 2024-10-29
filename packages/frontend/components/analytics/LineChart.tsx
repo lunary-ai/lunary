@@ -13,7 +13,6 @@ import {
 } from "@mantine/core";
 import { ResponsiveContainer } from "recharts";
 
-import { generateSeries } from "@/pages/demo";
 import { formatLargeNumber } from "@/utils/format";
 import { AreaChart, getFilteredChartTooltipPayload } from "@mantine/charts";
 import { IconBolt, IconInfoCircle } from "@tabler/icons-react";
@@ -27,6 +26,7 @@ import {
 import { useMemo } from "react";
 import ErrorBoundary from "../blocks/ErrorBoundary";
 import { openUpgrade } from "../layout/UpgradeModal";
+import { generateSeries } from "./Creator";
 
 interface ChartTooltipProps {
   label: string;

@@ -906,11 +906,11 @@ export function SelectableCustomChart({
 //   );
 // }
 
-export function CustomChart({ chartID }) {
+export function CustomChart({ chartID, startDate, endDate, granularity }) {
   const { chart, loading } = useChart(chartID);
 
-  const startDate = new Date("2024-10-21T16:00:00.000Z");
-  const endDate = new Date("2024-10-29T15:59:59.999Z");
+  // const startDate = new Date("2024-10-21T16:00:00.000Z");
+  // const endDate = new Date("2024-10-29T15:59:59.999Z");
 
   const {
     data,
@@ -920,7 +920,7 @@ export function CustomChart({ chartID }) {
     chart?.config.props.metric,
     startDate,
     endDate,
-    "daily",
+    granularity,
     undefined,
     chart?.config.props.firstDimensionKey,
     chart?.config.props.secondDimensionKey,
@@ -947,7 +947,7 @@ export function CustomChart({ chartID }) {
 
   return (
     <AnalyticsCard title="Active Users">
-      {chart.config.props.series.length > 0 ? (
+      {chart?.config.props.series.length > 0 ? (
         <BarChart
           h={230}
           data={data?.data || []}
@@ -969,8 +969,8 @@ export function CustomChartCreator({ onConfirm }) {
   const [name, setName] = useState("");
   const [metric, setMetric] = useState("users/active");
 
-  const [firstDimensionKey, setFirstDimensionKey] = useState("");
-  const [secondDimensionKey, setSecondDimensionKey] = useState("date");
+  const [firstDimensionKey, setFirstDimensionKey] = useState();
+  const [secondDimensionKey, setSecondDimensionKey] = useState();
 
   const startDate = new Date("2024-10-21T16:00:00.000Z");
   const endDate = new Date("2024-10-29T15:59:59.999Z");
@@ -995,6 +995,13 @@ export function CustomChartCreator({ onConfirm }) {
   useEffect(() => {
     setSecondDimensionKey("date");
   }, [firstDimensionKey]);
+
+  useEffect(() => {
+    if (props) {
+      setFirstDimensionKey(props[0]);
+      setSecondDimensionKey("date");
+    }
+  }, [props]);
 
   const series = useMemo(() => {
     if (!data || !data.data || data.data.length === 0) {
