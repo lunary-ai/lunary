@@ -33,10 +33,7 @@ import {
 import { NextSeo } from "next-seo";
 import Router from "next/router";
 import { useEffect, useState } from "react";
-import analytics, {
-  deserializeDateRange,
-  getDefaultDateRange,
-} from "../../utils/analytics";
+import analytics, { deserializeDateRange } from "../../utils/analytics";
 import CopyText from "@/components/blocks/CopyText";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
@@ -53,6 +50,7 @@ import TopModels from "@/components/analytics/TopModels";
 import LineChart from "@/components/analytics/LineChart";
 import Link from "next/link";
 import { parseAsString, useQueryState } from "nuqs";
+import { getDefaultDateRange } from "shared";
 
 const columns = [
   {

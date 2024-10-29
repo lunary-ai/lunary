@@ -1,5 +1,5 @@
 import { useDashboards } from "@/utils/dataHooks/dashboards";
-import { Loader } from "@mantine/core";
+import { Anchor, Loader } from "@mantine/core";
 
 export default function Dashboard() {
   const { dashboards, isLoading } = useDashboards();
@@ -11,7 +11,12 @@ export default function Dashboard() {
   return (
     <div>
       <h1>Dashboard</h1>
-      {dashboards.map((dashboard) => dashboard.name)}
+      {dashboards.map((dashboard) => (
+        <>
+          <Anchor href={`/dashboards/${dashboard.id}`}>{dashboard.name}</Anchor>
+          <br />
+        </>
+      ))}
     </div>
   );
 }

@@ -325,7 +325,6 @@ analytics.get(
 
     const firstDimensionKey = ctx.query.firstDimensionKey;
     const secondDimensionKey = ctx.query.secondDimensionKey;
-    console.log(ctx.query);
 
     const [{ stat }] = await sql`
       select
