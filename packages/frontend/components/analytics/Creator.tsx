@@ -34,7 +34,7 @@ import {
 } from "@mantine/charts";
 
 import { useSessionStorage, useInViewport } from "@mantine/hooks";
-import { IconCancel, IconTrash, IconPlus } from "@tabler/icons-react";
+import { IconCancel, IconTrash, IconPlus, IconEdit } from "@tabler/icons-react";
 
 import { getDefaultDateRange } from "shared";
 
@@ -798,6 +798,11 @@ export function SelectableCustomChart({
       header={item.id}
       icons={[
         {
+          icon: IconEdit,
+          color: "blue",
+          onClick: () => {},
+        },
+        {
           icon: IconTrash,
           color: "red",
           onClick: remove,
@@ -965,8 +970,8 @@ export function CustomChart({ chartID, startDate, endDate, granularity }) {
   );
 }
 
-export function CustomChartCreator({ onConfirm }) {
-  const [name, setName] = useState("");
+export function CustomChartCreator({ onConfirm, config = {} }) {
+  const [name, setName] = useState(config?.name || "");
   const [metric, setMetric] = useState("users/active");
 
   const [firstDimensionKey, setFirstDimensionKey] = useState();

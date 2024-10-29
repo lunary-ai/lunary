@@ -72,7 +72,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     }
   }, [isSignedIn, org]);
 
-  const isDashboardPage = router.pathname.startsWith("/dashboards");
+  const isDashboardPage = router.pathname.startsWith("/dashboards/");
   const isPromptPage = router.pathname.startsWith("/prompt");
   const isTracePage = router.pathname.startsWith("/traces");
   const disablePagePadding = isPromptPage || isTracePage;
