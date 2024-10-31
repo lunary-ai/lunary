@@ -1,15 +1,15 @@
-import sql from "../../packages/backend/src/utils/db"
+import sql from "../../packages/backend/src/utils/db";
 
 export function setOrgPro() {
-  return sql`update org set plan = 'pro' where name = 'TESTORG'`
+  return sql`update org set plan = 'pro' where name = 'test test''s Org'`;
 }
 
 export function setOrgFree() {
-  return sql`update org set plan = 'free' where name = 'TESTORG'`
+  return sql`update org set plan = 'free' where name = 'test test''s Org'`;
 }
 
 export function deleteOrg() {
-  return sql`delete from org where name = 'TESTORG'`
+  return sql`delete from org where name = 'test test''s Org'`;
 }
 
 export async function populateLogs() {
@@ -20,10 +20,10 @@ export async function populateLogs() {
       project p
       left join org on p.org_id = org.id
     where
-      org.name = 'TESTORG'
-  `
+      org.name = 'test test''s Org'
+  `;
 
-  await sql`insert into external_user ${sql({ id: 91823, projectId: project.id, externalId: "Salut-123" })}`
+  await sql`insert into external_user ${sql({ id: 91823, projectId: project.id, externalId: "Salut-123" })}`;
   const logs = [
     {
       created_at: "2024-04-11 02:32:30.457+00",
@@ -48,6 +48,6 @@ export async function populateLogs() {
       runtime: "langchain-js",
       metadata: "{}",
     },
-  ]
-  await sql`insert into run ${sql(logs)}`
+  ];
+  await sql`insert into run ${sql(logs)}`;
 }

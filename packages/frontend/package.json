@@ -15,6 +15,7 @@
     "@mantine/hooks": "7.11.1",
     "@mantine/modals": "7.11.1",
     "@mantine/notifications": "7.11.1",
+    "@react-oauth/google": "^0.12.1",
     "@tabler/icons-react": "^3.9.0",
     "@tanstack/react-table": "^8.19.2",
     "@tanstack/react-virtual": "^3.8.1",
@@ -37,15 +38,15 @@
     "react-json-view-lite": "^1.5.0",
     "recharts": "^2.12.7",
     "shared": "*",
+    "streamsaver": "^2.0.6",
     "swr": "^2.2.4",
-    "zod": "^3.23.8",
-    "streamsaver": "^2.0.6"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@types/streamsaver": "^2.0.5",
     "@types/node": "20.10.5",
     "@types/react": "18.2.45",
     "@types/react-dom": "^18.2.18",
+    "@types/streamsaver": "^2.0.5",
     "postcss": "^8.4.33",
     "postcss-preset-mantine": "^1.12.3",
     "postcss-simple-vars": "^7.0.1",

@@ -42,43 +42,4 @@ span.limited,
   max-width: 100%;
 }
 
-/* CSS */
-.CtaBtn {
-  align-items: center;
-  appearance: none;
-  background-image: radial-gradient(
-    100% 100% at 100% 0,
-    #5adaff 0,
-    #5468ff 100%
-  );
-  border: 0;
 
-  box-shadow:
-    rgba(45, 35, 66, 0.3) 0 2px 4px,
-    rgba(45, 35, 66, 0.2) 0 7px 10px -3px,
-    rgba(58, 65, 111, 0.2) 0 -3px 0 inset;
-
-  color: #fff;
-
-  justify-content: center;
-
-  transition:
-    box-shadow 0.15s,
-    transform 0.15s;
-  user-select: none;
-  white-space: nowrap;
-  will-change: box-shadow, transform;
-
-  &:hover {
-    box-shadow:
-      rgba(45, 35, 66, 0.4) 0 4px 8px,
-      rgba(45, 35, 66, 0.3) 0 7px 13px -3px,
-      #3c4fe0 0 -3px 0 inset;
-    transform: translateY(-2px);
-  }
-
-  &:active {
-    box-shadow: #3c4fe0 0 3px 7px inset;
-    transform: translateY(2px);
-  }
-}
