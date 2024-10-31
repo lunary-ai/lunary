@@ -1,27 +1,29 @@
 import {
   Anchor,
-  Box,
   Button,
   Container,
+  Divider,
+  Group,
   Paper,
   Stack,
   Text,
   TextInput,
-  Title,
 } from "@mantine/core";
 
 import { useForm } from "@mantine/form";
-import { IconAnalyze, IconAt } from "@tabler/icons-react";
+import { IconAt } from "@tabler/icons-react";
 
 import { useEffect, useState } from "react";
 
-import analytics from "@/utils/analytics";
-import { fetcher } from "@/utils/fetcher";
-import { NextSeo } from "next-seo";
-import { useAuth } from "@/utils/auth";
-import { useRouter } from "next/router";
-import { notifications } from "@mantine/notifications";
+import GoogleLoginButton from "@/components/blocks/GoogleLoginButton";
 import AuthLayout from "@/components/layout/AuthLayout";
+import analytics from "@/utils/analytics";
+import { useAuth } from "@/utils/auth";
+import { fetcher } from "@/utils/fetcher";
+import { notifications } from "@mantine/notifications";
+import { NextSeo } from "next-seo";
+import { useRouter } from "next/router";
+import config from "@/utils/config";
 
 function LoginPage() {
   const router = useRouter();
@@ -185,24 +187,37 @@ function LoginPage() {
                     error={form.errors.email}
                     placeholder="Your email"
                   />
-                  <TextInput
-                    type="password"
-                    opacity={step === "email" ? 0 : 1}
-                    h={step === "email" ? 0 : "auto"}
-                    autoComplete="current-password"
-                    label="Password"
-                    value={form.values.password}
-                    onChange={(event) =>
-                      form.setFieldValue("password", event.currentTarget.value)
-                    }
-                    error={form.errors.password}
-                    placeholder="Your password"
-                  />
+
+                  <Stack gap="sm">
+                    <TextInput
+                      type="password"
+                      opacity={step === "email" ? 0 : 1}
+                      h={step === "email" ? 0 : "auto"}
+                      autoComplete="current-password"
+                      label="Password"
+                      value={form.values.password}
+                      onChange={(event) =>
+                        form.setFieldValue(
+                          "password",
+                          event.currentTarget.value,
+                        )
+                      }
+                      error={form.errors.password}
+                      placeholder="Your password"
+                    />
+                    {step === "password" && (
+                      <Text size="sm">
+                        <Anchor href="/request-password-reset">
+                          Forgot password?
+                        </Anchor>
+                      </Text>
+                    )}
+                  </Stack>
+
                   <Button
-                    mt={step === "email" ? 0 : "md"}
+                    mt={step === "email" ? 0 : "sm"}
                     type="submit"
                     fullWidth
-                    className="CtaBtn"
                     size="md"
                     loading={loading}
                     data-testid="continue-button"
@@ -227,10 +242,18 @@ function LoginPage() {
               <Anchor href="/signup">Sign Up</Anchor>
             </Text>
 
-            {step === "password" && (
-              <Text size="sm" mt="sm" style={{ textAlign: "center" }}>
-                <Anchor href="/request-password-reset">Forgot password?</Anchor>
-              </Text>
+            {!config.IS_SELF_HOSTED && (
+              <Stack mt="lg">
+                <Group w="100%">
+                  <Divider
+                    size="xs"
+                    w="100%"
+                    c="dimmed"
+                    label={<Text size="sm">OR</Text>}
+                  />
+                </Group>
+                <GoogleLoginButton />
+              </Stack>
             )}
           </Paper>
         </Stack>

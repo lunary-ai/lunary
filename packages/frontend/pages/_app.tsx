@@ -14,11 +14,13 @@ import { DefaultSeo } from "next-seo";
 
 import ErrorBoundary from "@/components/blocks/ErrorBoundary";
 import { AuthProvider } from "@/utils/auth";
-import { fetcher } from "@/utils/fetcher";
-import { circularPro, themeOverride } from "@/utils/theme";
-import { SWRConfig } from "swr";
 import { ProjectContext } from "@/utils/context";
+import { fetcher } from "@/utils/fetcher";
 import { useProjectIdStorage } from "@/utils/hooks";
+import { circularPro, themeOverride } from "@/utils/theme";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import { SWRConfig } from "swr";
+import config from "@/utils/config";
 
 export default function App({ Component, pageProps }: AppProps) {
   const [projectId, setProjectId] = useProjectIdStorage();
@@ -34,29 +36,36 @@ export default function App({ Component, pageProps }: AppProps) {
         <link href="https://lunary.ai/logo.png" rel="icon" type="image/png" />
       </Head>
       <ErrorBoundary>
-        <AuthProvider>
-          <SWRConfig
-            value={{
-              fetcher: fetcher.get,
-              dedupingInterval: 10000,
-            }}
-          >
-            <DefaultSeo
-              title="Dashboard"
-              titleTemplate="%s | Lunary"
-              defaultTitle="Dashboard | Lunary"
-            />
-            <MantineProvider theme={themeOverride} defaultColorScheme="auto">
-              <AnalyticsWrapper>
-                <ProjectContext.Provider value={{ projectId, setProjectId }}>
-                  <Layout>
-                    <Component {...pageProps} />
-                  </Layout>
-                </ProjectContext.Provider>
-              </AnalyticsWrapper>
-            </MantineProvider>
-          </SWRConfig>
-        </AuthProvider>
+        <GoogleOAuthProvider
+          clientId={
+            (process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID as string) ||
+            "OAUTH DISABLED"
+          }
+        >
+          <AuthProvider>
+            <SWRConfig
+              value={{
+                fetcher: fetcher.get,
+                dedupingInterval: 10000,
+              }}
+            >
+              <DefaultSeo
+                title="Dashboard"
+                titleTemplate="%s | Lunary"
+                defaultTitle="Dashboard | Lunary"
+              />
+              <MantineProvider theme={themeOverride} defaultColorScheme="auto">
+                <AnalyticsWrapper>
+                  <ProjectContext.Provider value={{ projectId, setProjectId }}>
+                    <Layout>
+                      <Component {...pageProps} />
+                    </Layout>
+                  </ProjectContext.Provider>
+                </AnalyticsWrapper>
+              </MantineProvider>
+            </SWRConfig>
+          </AuthProvider>
+        </GoogleOAuthProvider>
       </ErrorBoundary>
     </>
   );

@@ -210,3 +210,4 @@ packages/ml/venv
 packages/ml/env
 
 *.sentryclirc
+*.swp

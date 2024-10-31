@@ -73,13 +73,7 @@ export default function PasswordReset() {
               placeholder="Your email"
             />
 
-            <Button
-              className="CtaBtn"
-              type="submit"
-              fullWidth
-              size="md"
-              loading={loading}
-            >
+            <Button type="submit" fullWidth size="md" loading={loading}>
               Request reset link
             </Button>
           </Stack>

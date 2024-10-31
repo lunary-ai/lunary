@@ -27,22 +27,6 @@ test("signup flow", async ({ page }) => {
 
   await page.getByTestId("continue-button").click();
 
-  await page.getByPlaceholder("Your project name").click();
-  await page.getByPlaceholder("Your project name").fill("TESTPROJECT");
-
-  await page.getByPlaceholder("Organization name").click();
-  await page.getByPlaceholder("Organization name").fill("TESTORG");
-
-  // await page.getByLabel("6-49").check();
-
-  await page.getByTestId("finish-button").click();
-
-  await page.waitForNavigation();
-
-  // await expect(page.getByText("Are you free in the next days")).toBeVisible();
-
-  await page.getByTestId("open-dashboard-button").click();
-
   await page.waitForURL("**/analytics");
 
   await expect(

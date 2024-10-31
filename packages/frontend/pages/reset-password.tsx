@@ -73,14 +73,7 @@ export default function UpdatePassword() {
               placeholder="Your new password"
             />
 
-            <Button
-              className="CtaBtn"
-              mt="md"
-              size="md"
-              type="submit"
-              fullWidth
-              loading={loading}
-            >
+            <Button mt="md" size="md" type="submit" fullWidth loading={loading}>
               Confirm
             </Button>
           </Stack>
