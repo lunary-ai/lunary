@@ -1,4 +1,4 @@
-import { useLocalStorage } from "@mantine/hooks";
+import { readLocalStorageValue, useLocalStorage } from "@mantine/hooks";
 import { decodeJwt } from "jose";
 import Router from "next/router";
 import { createContext, useContext, useEffect, useMemo } from "react";
@@ -16,6 +16,7 @@ export async function signOut() {
     Router.push("/login");
   }
   window.localStorage.clear();
+  window.sessionStorage.clear();
 }
 
 interface AuthContext {
@@ -51,10 +52,16 @@ export function AuthProvider({ children }) {
     defaultValue: null,
   });
 
-  const isSignedIn = useMemo(() => checkJwt(jwt), [jwt]);
+  const actualJwtValue = readLocalStorageValue({ key: "auth-token" });
+  const isSignedIn = useMemo(
+    () => checkJwt(jwt) && actualJwtValue, // sometimes jwt (the state) is set but the actual value in local storage is null. It's random https://linear.app/lunary/issue/LLM-2173/create-our-own-uselocalstorage-hook-because-the-mantine-one-is-not
+    [jwt, actualJwtValue],
+  );
 
   function doSignOut() {
     removeJwt();
+    sessionStorage.removeItem("projectId");
+    sessionStorage.removeItem("dateRange-analytics");
     // Router.push("/login")
   }
 

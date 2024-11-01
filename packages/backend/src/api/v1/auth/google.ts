@@ -67,7 +67,7 @@ google.post("/", async (ctx: Context) => {
       orgId: existingUser.orgId,
     });
 
-    ctx.body = { token: jwt };
+    ctx.body = { token: jwt, isNewUser: true };
     return;
   }
 
@@ -138,7 +138,7 @@ google.post("/", async (ctx: Context) => {
     orgId: org.id,
   });
 
-  ctx.body = { token, isNewUser: true };
+  ctx.body = { token, isNewUser: true, email: user.email, name: userData.name };
 });
 
 export default google;
