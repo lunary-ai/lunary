@@ -9,6 +9,11 @@ export async function signOut() {
   const jwt = window.localStorage.getItem("auth-token");
   window.localStorage.clear();
   window.sessionStorage.clear();
+
+  // used by the useProjectIdStorage hook
+  const event = new Event("userSignedOut");
+  window.dispatchEvent(event);
+
   if (jwt) {
     const payload = decodeJwt(jwt);
     const email = payload.email as string;
