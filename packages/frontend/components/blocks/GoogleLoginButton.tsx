@@ -1,3 +1,4 @@
+import analytics from "@/utils/analytics";
 import { useAuth } from "@/utils/auth";
 import { fetcher } from "@/utils/fetcher";
 import { Button, Text, useComputedColorScheme } from "@mantine/core";
@@ -22,7 +23,15 @@ export default function GoogleLoginButton() {
           },
         });
 
-        const { token } = response;
+        const { token, isNewUser } = response;
+
+        if (isNewUser) {
+          analytics.track("Signup", {
+            email: response.email,
+            name: response.name,
+            method: "google",
+          });
+        }
 
         if (token) {
           auth.setJwt(token);

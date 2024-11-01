@@ -140,9 +140,7 @@ function SignupPage() {
       analytics.track("Signup", {
         email,
         name,
-        projectName,
-        orgName,
-        whereFindUs,
+        method: "email_password",
       });
 
       if (!config.IS_SELF_HOSTED) {
