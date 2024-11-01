@@ -59,8 +59,6 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 function SignupPage() {
   const [loading, setLoading] = useState(false);
 
-  const choices = useMemo(() => getRandomizedChoices(), []);
-
   const router = useRouter();
 
   const auth = useAuth();
@@ -164,8 +162,6 @@ function SignupPage() {
       setLoading(false);
     }
   }
-
-  const isBigCompany = form.values.employeeCount !== "1-5";
 
   return (
     <AuthLayout>

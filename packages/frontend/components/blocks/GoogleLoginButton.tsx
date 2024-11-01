@@ -26,6 +26,7 @@ export default function GoogleLoginButton() {
 
         if (token) {
           auth.setJwt(token);
+          router.push("/");
         }
       } catch (error) {
         console.error("Google login error:", error);
@@ -36,12 +37,6 @@ export default function GoogleLoginButton() {
       }
     },
   });
-
-  useEffect(() => {
-    if (auth.isSignedIn) {
-      router.push("/");
-    }
-  }, [auth.isSignedIn]);
 
   return (
     <Button
