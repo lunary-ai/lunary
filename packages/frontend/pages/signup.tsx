@@ -59,8 +59,6 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 function SignupPage() {
   const [loading, setLoading] = useState(false);
 
-  const choices = useMemo(() => getRandomizedChoices(), []);
-
   const router = useRouter();
 
   const auth = useAuth();
@@ -142,9 +140,7 @@ function SignupPage() {
       analytics.track("Signup", {
         email,
         name,
-        projectName,
-        orgName,
-        whereFindUs,
+        method: "email_password",
       });
 
       if (!config.IS_SELF_HOSTED) {
@@ -164,8 +160,6 @@ function SignupPage() {
       setLoading(false);
     }
   }
-
-  const isBigCompany = form.values.employeeCount !== "1-5";
 
   return (
     <AuthLayout>

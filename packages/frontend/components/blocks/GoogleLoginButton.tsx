@@ -1,3 +1,4 @@
+import analytics from "@/utils/analytics";
 import { useAuth } from "@/utils/auth";
 import { fetcher } from "@/utils/fetcher";
 import { Button, Text, useComputedColorScheme } from "@mantine/core";
@@ -6,6 +7,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import GoogleIconSrc from "public/assets/google-icon.svg";
+import { useEffect } from "react";
 
 export default function GoogleLoginButton() {
   const router = useRouter();
@@ -21,7 +23,15 @@ export default function GoogleLoginButton() {
           },
         });
 
-        const { token } = response;
+        const { token, isNewUser } = response;
+
+        if (isNewUser) {
+          analytics.track("Signup", {
+            email: response.email,
+            name: response.name,
+            method: "google",
+          });
+        }
 
         if (token) {
           auth.setJwt(token);
