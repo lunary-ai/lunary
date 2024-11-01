@@ -7,6 +7,8 @@ const SIGN_OUT_EVENT = "sign-out";
 
 export async function signOut() {
   const jwt = window.localStorage.getItem("auth-token");
+  window.localStorage.clear();
+  window.sessionStorage.clear();
   if (jwt) {
     const payload = decodeJwt(jwt);
     const email = payload.email as string;
@@ -15,8 +17,6 @@ export async function signOut() {
   } else {
     Router.push("/login");
   }
-  window.localStorage.clear();
-  window.sessionStorage.clear();
 }
 
 interface AuthContext {
