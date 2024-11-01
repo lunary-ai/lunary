@@ -91,6 +91,18 @@ export function useProjectIdStorage() {
     }
   }, [projectId]);
 
+  useEffect(() => {
+    const handleSignOut = () => {
+      setProjectId(null);
+    };
+
+    window.addEventListener("userSignedOut", handleSignOut);
+
+    return () => {
+      window.removeEventListener("userSignedOut", handleSignOut);
+    };
+  }, []);
+
   return [projectId, setProjectId] as const;
 }
 
