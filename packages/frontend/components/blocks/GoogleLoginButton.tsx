@@ -6,6 +6,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import GoogleIconSrc from "public/assets/google-icon.svg";
+import { useEffect } from "react";
 
 export default function GoogleLoginButton() {
   const router = useRouter();
@@ -25,7 +26,6 @@ export default function GoogleLoginButton() {
 
         if (token) {
           auth.setJwt(token);
-          router.push("/");
         }
       } catch (error) {
         console.error("Google login error:", error);
@@ -36,6 +36,12 @@ export default function GoogleLoginButton() {
       }
     },
   });
+
+  useEffect(() => {
+    if (auth.isSignedIn) {
+      router.push("/");
+    }
+  }, [auth.isSignedIn]);
 
   return (
     <Button
