@@ -206,7 +206,7 @@ export default function Dashboards() {
   }
 
   useMemo(() => {
-    if (dashboards?.length === 0) {
+    if (!isLoading && dashboards && dashboards.length === 0) {
       if (insertingDefaultPromise) return;
       insertingDefaultPromise = insert(DEFAULT_DASHBOARD);
     }
