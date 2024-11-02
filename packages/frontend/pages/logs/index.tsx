@@ -399,6 +399,8 @@ export default function Logs() {
     [columnsTouched, checks, view],
   );
 
+  console.log(logs);
+
   return (
     <Empty
       enable={

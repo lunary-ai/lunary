@@ -1,11 +1,51 @@
 import { showErrorNotification } from "@/utils/errors";
-import { Modal, Group, Button, Input, CloseButton } from "@mantine/core";
-import { useState } from "react";
+import {
+  Modal,
+  Group,
+  Button,
+  Input,
+  CloseButton,
+  Title,
+  Text,
+  Card,
+  Stack,
+} from "@mantine/core";
+import { useRef, useState } from "react";
 
-export function ConfirmModal({ title, opened, close, onConfirm }) {
+export function ConfirmModal({
+  title,
+  opened,
+  close,
+  onConfirm,
+  confirmText,
+}: {
+  title: string;
+  opened: boolean;
+  close: () => void;
+  onConfirm: () => void;
+  confirmText?: string;
+}) {
+  const input = useRef<HTMLInputElement | null>(null);
+
   return (
-    <Modal centered opened={opened} onClose={close} radius={"md"} title={title}>
-      <Group align="right" mt="md">
+    <Modal
+      centered
+      opened={opened}
+      onClose={close}
+      radius={"md"}
+      title={<Title size="small">{title}</Title>}
+    >
+      {confirmText && (
+        <Card withBorder>
+          <Stack>
+            <Text>
+              Enter "<b>{confirmText}</b>" to continue
+            </Text>
+            <Input ref={(ref) => (input.current = ref)} />
+          </Stack>
+        </Card>
+      )}
+      <Group mt="md">
         <Button variant="subtle" onClick={close}>
           Cancel
         </Button>
@@ -13,8 +53,11 @@ export function ConfirmModal({ title, opened, close, onConfirm }) {
           variant="filled"
           color="red"
           onClick={() => {
-            onConfirm();
-            close();
+            if (input.current?.value === confirmText) {
+              onConfirm();
+              close();
+            } else {
+            }
           }}
         >
           Confirm

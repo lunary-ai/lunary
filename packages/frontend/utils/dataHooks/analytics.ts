@@ -1,6 +1,6 @@
 import { useProjectSWR } from ".";
 
-export function useAnalyticsChartData(
+export function useAnalyticsChartData<T>(
   key: string | null | undefined,
   startDate: Date,
   endDate: Date,
@@ -11,7 +11,7 @@ export function useAnalyticsChartData(
 ) {
   const timeZone = new window.Intl.DateTimeFormat().resolvedOptions().timeZone;
   const checksParam = checks ? `&checks=${checks}` : "";
-  const { data, isLoading, error } = useProjectSWR(
+  const { data, isLoading, error } = useProjectSWR<T>(
     key
       ? `/analytics/${key}?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&timeZone=${timeZone}&granularity=${granularity}${checksParam}&firstDimensionKey=${firstDimensionKey}&secondDimensionKey=${secondDimensionKey}`
       : undefined,
@@ -20,7 +20,7 @@ export function useAnalyticsChartData(
   return { data, isLoading, error };
 }
 
-export function useTopModels(params: {
+export function useTopModels<T>(params: {
   startDate?: Date;
   endDate?: Date;
   checks?: string;
@@ -40,21 +40,21 @@ export function useTopModels(params: {
     queryParams.append("checks", checks);
   }
 
-  const { data, isLoading } = useProjectSWR(
+  const { data, isLoading } = useProjectSWR<T>(
     params && `/analytics/top/models?${queryParams.toString()}`,
   );
 
   return { data, isLoading };
 }
 
-export function useTopTemplates(
+export function useTopTemplates<T>(
   startDate: Date,
   endDate: Date,
   checks?: string,
 ) {
   const timeZone = new window.Intl.DateTimeFormat().resolvedOptions().timeZone;
   const checksParam = checks ? `&checks=${checks}` : "";
-  const { data, isLoading } = useProjectSWR(
+  const { data, isLoading } = useProjectSWR<T>(
     `/analytics/top/templates?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&timeZone=${timeZone}${checksParam}`,
   );
 

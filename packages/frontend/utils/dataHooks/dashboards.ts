@@ -9,6 +9,7 @@ interface Dashboard {
   updatedAt: string;
   projectId: string;
   name: string;
+  pinned: boolean;
   description: string | null;
   charts: string[];
   filters: {

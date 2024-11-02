@@ -1,177 +1,271 @@
-import { useDashboards } from "@/utils/dataHooks/dashboards";
+import { useDashboard, useDashboards } from "@/utils/dataHooks/dashboards";
 import {
   ActionIcon,
   Card,
-  Container,
   Group,
-  Loader,
   Menu,
-  rem,
-  SimpleGrid,
-  Tabs,
   Text,
-  Image,
   Flex,
-  Button,
-  Title,
   Anchor,
+  Avatar,
+  Grid,
+  Stack,
+  MenuItem,
+  Loader,
 } from "@mantine/core";
 import {
-  IconArrowRight,
-  IconAt,
-  IconCalendar,
-  IconChartArea,
-  IconDots,
-  IconDownload,
-  IconEye,
-  IconFileZip,
+  IconBrandOpenai,
+  IconDotsVertical,
+  IconEdit,
   IconLink,
-  IconPhoneCall,
-  IconPhoto,
   IconPin,
+  IconPinned,
   IconPlus,
-  IconTimeline,
   IconTrash,
-  IconUser,
 } from "@tabler/icons-react";
 import { useCharts } from "@/utils/dataHooks/charts";
-import { useProjectSWR } from "@/utils/dataHooks";
+import { useProjectSWR, useProjectMutation } from "@/utils/dataHooks";
+import { useRouter } from "next/router";
+import SearchBar from "@/components/blocks/SearchBar";
+import { useDebouncedState, useDisclosure } from "@mantine/hooks";
+import Empty from "@/components/layout/Empty";
+import { NextSeo } from "next-seo";
+import { ConfirmModal } from "@/components/analytics/Modals";
+import { DEFAULT_CHARTS, DEFAULT_DASHBOARD, getDefaultDateRange } from "shared";
+import { fetcher } from "@/utils/fetcher";
+import { useMemo } from "react";
 
-function OwnerName({ ownerId }) {
-  const { data: user, isLoading: userLoading } = useProjectSWR(
-    ownerId && `/users/${ownerId}`,
+const colors = [
+  "cyan",
+  "purple",
+  "violet",
+  "blue",
+  "red",
+  "teal",
+  "yellow",
+  "pink",
+  "indigo",
+  "green",
+];
+
+// Used to create default dashboards for existing projects
+let insertingDefaultPromise;
+
+function OwnerCard({ ownerId }) {
+  const { data: user, isLoading } = useProjectSWR<any>(`/users/${ownerId}`);
+
+  if (isLoading) return "Loading...";
+
+  const color = colors[user?.id % colors.length];
+
+  return (
+    <Group gap="xs" wrap="nowrap">
+      <Avatar lh={0.4} radius="xl" color={color} size="sm">
+        {(user.name || user.email)?.slice(0, 2)?.toUpperCase()}
+      </Avatar>
+      <Text size="xs">{user.name}</Text>
+    </Group>
   );
-
-  return user?.name;
 }
 
-export default function Dashboard() {
-  const { dashboards, isLoading } = useDashboards();
-  const { charts, loading: chartsLoading } = useCharts();
+function Dashboard({ item }) {
+  const router = useRouter();
+  const { dashboard, update, remove, loading } = useDashboard(item.id, item);
+  const [confirmOpened, { open: openConfirm, close: closeConfirm }] =
+    useDisclosure(false);
 
-  if (isLoading || chartsLoading) {
+  const { trigger } = useProjectMutation(`/dashboards`, fetcher.post);
+
+  if (loading) {
     return <Loader />;
   }
 
-  return (
-    <Container>
-      <Title mb="lg">Dashboards</Title>
-      <Tabs defaultValue="dashboards">
-        <Tabs.List>
-          <Tabs.Tab value="dashboards" leftSection={<IconTimeline size={15} />}>
-            Dashboards
-          </Tabs.Tab>
-          <Tabs.Tab value="charts" leftSection={<IconChartArea size={15} />}>
-            Charts
-          </Tabs.Tab>
-        </Tabs.List>
+  function togglePin(dashboard) {
+    update({
+      pinned: !dashboard.pinned,
+    });
+  }
 
-        <Tabs.Panel value="dashboards">
-          <SimpleGrid cols={3} my="md">
-            {dashboards.map((dashboard) => (
-              <Card
-                shadow="sm"
-                radius="md"
-                display="flex"
+  async function duplicate() {
+    const dash = await trigger({
+      pinned: false,
+      name: `${dashboard.name} (copy)`,
+      charts: dashboard.charts,
+      filters: dashboard.filters,
+      description: dashboard.description,
+    });
+    router.push(`/dashboards/${dash.id}`);
+  }
+
+  return (
+    <>
+      <ConfirmModal
+        opened={confirmOpened}
+        close={closeConfirm}
+        onConfirm={() => {
+          remove();
+        }}
+        confirmText={`Delete ${dashboard.name}`}
+        title={`Delete "${dashboard.name}"`}
+      />
+      <Grid.Col span={6}>
+        <Card align="center" withBorder radius="md" p="xs">
+          <Flex justify="space-between" align="center" wrap="nowrap" gap={0}>
+            <ActionIcon
+              variant="transparent"
+              onClick={() => togglePin(dashboard)}
+            >
+              {dashboard.pinned ? (
+                <IconPinned size={20} color="red" />
+              ) : (
+                <IconPin size={20} />
+              )}
+            </ActionIcon>
+            <Group gap="xl" pt="xs" pb="md">
+              {/** @ts-ignore */}
+              <Text
                 component={Anchor}
                 href={`/dashboards/${dashboard.id}`}
-                style={{ justifyContent: "center" }}
+                tt="uppercase"
+                fw={700}
+                size="xs"
               >
-                <Card.Section withBorder inheritPadding py="xs">
-                  <Group justify="space-between">
-                    <IconTimeline size={30} />
-                    <Text fw={500}>{dashboard.name}</Text>
-                    <Menu withinPortal position="bottom-end" shadow="sm">
-                      <Menu.Target>
-                        <ActionIcon variant="subtle" color="gray">
-                          <IconDots
-                            style={{ width: rem(16), height: rem(16) }}
-                          />
-                        </ActionIcon>
-                      </Menu.Target>
+                {dashboard.name}
+              </Text>
+              {dashboard.description && <Text>{dashboard.description}</Text>}
+            </Group>
+            <Group wrap="nowrap" gap="xs">
+              <OwnerCard ownerId={dashboard.ownerId} />
+              <Text size="xs" c="dimmed">
+                •
+              </Text>
+              <Text size="xs" c="dimmed">
+                {new Date(dashboard.createdAt).toLocaleString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                  hour: "numeric",
+                  minute: "numeric",
+                })}
+              </Text>
+            </Group>
 
-                      <Menu.Dropdown>
-                        <Menu.Item
-                          leftSection={
-                            <IconTrash
-                              style={{ width: rem(14), height: rem(14) }}
-                            />
-                          }
-                          color="red"
-                        >
-                          Delete
-                        </Menu.Item>
-                      </Menu.Dropdown>
-                    </Menu>
-                  </Group>
-                </Card.Section>
-                {/* 
-                <Card.Section>{dashboard.description}</Card.Section>
+            <Menu position="bottom-end">
+              <Menu.Target>
+                <ActionIcon variant="light">
+                  <IconDotsVertical size={12} />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <MenuItem
+                  leftSection={<IconLink size={15} />}
+                  onClick={() => router.push(`/dashboards/${dashboard.id}`)}
+                >
+                  View
+                </MenuItem>
+                <MenuItem
+                  leftSection={<IconEdit size={15} />}
+                  onClick={duplicate}
+                >
+                  Duplicate
+                </MenuItem>
+                {/* <MenuItem leftSection={<IconEdit size={15} />}>Edit</MenuItem> */}
+                <MenuItem
+                  color="red"
+                  leftSection={<IconTrash size={15} />}
+                  onClick={openConfirm}
+                >
+                  Delete
+                </MenuItem>
+              </Menu.Dropdown>
+            </Menu>
+          </Flex>
+        </Card>
+      </Grid.Col>
+    </>
+  );
+}
 
-                <Flex p="sm" direction={"column"} align={"center"}>
-                  <Group wrap="nowrap" gap={10} mt={5}>
-                    <IconCalendar stroke={1.5} size="1rem" />
-                    {"Created at: "}
-                    <Text fz="xs" c="dimmed">
-                      {new Date(dashboard.createdAt).toLocaleString(undefined, {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </Text>
-                  </Group>
-                  <Group wrap="nowrap" gap={10} mt={3}>
-                    <IconUser stroke={1.5} size="1rem" />
-                    {"Created by: "}
-                    <Text fz="xs" c="dimmed">
-                      <OwnerName ownerId={dashboard.ownerId} />
-                    </Text>
-                  </Group>
-                </Flex>
+export default function Dashboards() {
+  const router = useRouter();
+  const { dashboards, isLoading, insert } = useDashboards();
+  // const { charts, loading: chartsLoading } = useCharts<any>();
+  const [query, setQuery] = useDebouncedState<string | null>(null, 300);
 
-                <Card.Section pb="sm">
-                  <Group justify="center">
-                    <ActionIcon>
-                      <IconPin size="15" />
+  async function createDashboard() {
+    const dash = await insert({
+      name: `Dashboard ${dashboards?.length || 1}`,
+      charts: DEFAULT_CHARTS,
+      pinned: false,
+      filters: {
+        checks: "",
+        granularity: "daily",
+        dateRange: getDefaultDateRange(),
+      },
+    });
+    router.push(`/dashboards/${dash.id}`);
+  }
+
+  useMemo(() => {
+    if (dashboards?.length === 0) {
+      if (insertingDefaultPromise) return;
+      insertingDefaultPromise = insert(DEFAULT_DASHBOARD);
+    }
+  }, [dashboards]);
+
+  return (
+    <Empty
+      enable={isLoading}
+      Icon={IconBrandOpenai}
+      title="Waiting for data..."
+      description="Once you create a dashboard, they will appear here."
+    >
+      <Stack h={"calc(100vh - var(--navbar-with-filters-size))"}>
+        <NextSeo title="Dashboards" />
+
+        <Stack>
+          <Card withBorder p={2} px="sm">
+            <Flex justify="space-between">
+              <SearchBar
+                query={query}
+                ml={-8}
+                setQuery={setQuery}
+                variant="unstyled"
+                size="sm"
+              />
+
+              <Group gap="xs">
+                <Menu position="bottom-end">
+                  <Menu.Target>
+                    <ActionIcon variant="light">
+                      <IconDotsVertical size={12} />
                     </ActionIcon>
-
-                    <Button
-                      variant="outline"
-                      rightSection={<IconLink size={14} />}
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    <MenuItem
+                      leftSection={<IconPlus size={12} />}
+                      onClick={createDashboard}
                     >
-                      Open Dashboard
-                    </Button>
-                  </Group>
-                </Card.Section> */}
-              </Card>
+                      Create Dashboard
+                    </MenuItem>
+                  </Menu.Dropdown>
+                </Menu>
+              </Group>
+            </Flex>
+          </Card>
+        </Stack>
+
+        <Grid>
+          {dashboards
+            .sort(
+              (a, b) =>
+                new Date(a.createdAt).getTime() -
+                new Date(b.createdAt).getTime(),
+            )
+            .map((dashboard) => (
+              <Dashboard item={dashboard} />
             ))}
-
-            <Card
-              p="md"
-              h="100%"
-              withBorder
-              radius="md"
-              style={{
-                border: "2px dashed",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-              onClick={() => {}}
-            >
-              <Button
-                size="lg"
-                variant="transparent"
-                leftSection={<IconPlus size={15} />}
-              >
-                Create
-              </Button>
-            </Card>
-          </SimpleGrid>
-        </Tabs.Panel>
-
-        <Tabs.Panel value="charts">{charts.map((chart) => {})}</Tabs.Panel>
-      </Tabs>
-    </Container>
+        </Grid>
+      </Stack>
+    </Empty>
   );
 }

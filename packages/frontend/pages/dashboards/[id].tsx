@@ -321,7 +321,7 @@ function AnalyticsChart({
   const { ref, inViewport } = useInViewport();
   const [load, setLoad] = useState(inViewport);
 
-  const { data, isLoading } = useAnalyticsChartData(
+  const { data, isLoading } = useAnalyticsChartData<any>(
     load ? dataKey : undefined,
     startDate,
     endDate,
@@ -364,7 +364,7 @@ function ChartSelector({
   getChartComponent,
 }) {
   const [activeTab, setActiveTab] = useState("charts");
-  const { insert: insertChart, charts } = useCharts();
+  const { insert: insertChart, charts } = useCharts<any>();
 
   return (
     <>
@@ -488,29 +488,26 @@ export default function Analytics() {
   const colorScheme = useComputedColorScheme();
   const { insert: insertDashboard } = useDashboards();
 
-  const [defaultDashboard, setDefaultDashboard] = useState(DEFAULT_DASHBOARD);
-
   useEffect(() => {
-    setTempDashboardState(dashboard || defaultDashboard);
+    setTempDashboardState(dashboard);
   }, [dashboard, dashboardLoading]);
 
   // Temporary state used in edit mode
-  const [tempDashboardState, setTempDashboardState] = useState(
-    dashboard || defaultDashboard,
-  );
+  const [tempDashboardState, setTempDashboardState] = useState(dashboard);
 
   const dashboardState = useMemo(() => {
     if (editMode) return tempDashboardState;
-    return dashboard || defaultDashboard;
-  }, [editMode, dashboard, tempDashboardState, defaultDashboard]);
+    console.log(dashboard);
+    return dashboard;
+  }, [editMode, dashboard, tempDashboardState]);
 
   const { dateRange, granularity, checks } = useMemo(() => {
-    const dateRange = deserializeDateRange(dashboardState.filters.dateRange);
+    const dateRange = deserializeDateRange(dashboardState?.filters.dateRange);
 
     return {
       dateRange,
       granularity: determineGranularity(dateRange),
-      checks: deserializeLogic(dashboardState.filters.checks, true),
+      checks: deserializeLogic(dashboardState?.filters.checks || "", true),
     };
   }, [dashboardState]);
 
@@ -624,49 +621,34 @@ export default function Analytics() {
 
   function removeDashboard() {
     removeDashboardFn();
-    // if (pinnedDashboard === dashboard?.id) {
-    //   setPinnedDashboard("");
-    // }
     router.push("/dashboards");
   }
 
   function setDateRange(dateRange) {
-    if (dashboardState.id === "default") {
-      setDefaultDashboard({
-        ...dashboardState,
-        filters: {
-          ...dashboardState.filters,
-          dateRange: [dateRange[0].toISOString(), dateRange[1].toISOString()],
-        },
-      });
-    } else {
-      updateDashboard({
-        filters: {
-          ...dashboardState.filters,
-          dateRange: [dateRange[0].toISOString(), dateRange[1].toISOString()],
-        },
-      });
-    }
+    updateDashboard({
+      filters: {
+        ...dashboardState.filters,
+        dateRange: [dateRange[0].toISOString(), dateRange[1].toISOString()],
+      },
+    });
   }
 
   function setGranularity(granularity) {
-    dashboard &&
-      updateDashboard({
-        filters: {
-          ...dashboard.filters,
-          granularity,
-        },
-      });
+    updateDashboard({
+      filters: {
+        ...dashboardState.filters,
+        granularity,
+      },
+    });
   }
 
   function setChecks(checks) {
-    dashboard &&
-      updateDashboard({
-        filters: {
-          ...dashboard.filters,
-          checks: serializeLogic(checks),
-        },
-      });
+    updateDashboard({
+      filters: {
+        ...dashboardState.filters,
+        checks: serializeLogic(checks),
+      },
+    });
   }
 
   function getChartComponent(id: string) {
@@ -706,7 +688,7 @@ export default function Analytics() {
         return openSaveAs();
       }
     } else {
-      setTempDashboardState(dashboard || defaultDashboard);
+      setTempDashboardState(dashboard);
     }
 
     setEditMode(!editMode);
@@ -758,7 +740,7 @@ export default function Analytics() {
       Icon={IconChartAreaLine}
       title="Waiting for data..."
       description="Analytics will appear here once you have some data."
-      enable={project && !project?.activated}
+      enable={project && !project?.activated && dashboardLoading}
     >
       <NextSeo title="Analytics" />
 
@@ -766,7 +748,7 @@ export default function Analytics() {
         opened={chartSelectedOpened}
         toggleChart={toggleChart}
         close={closeChartSelector}
-        chartsState={dashboardState.charts}
+        chartsState={dashboardState?.charts || []}
         getChartComponent={getChartComponent}
       />
 
@@ -793,10 +775,14 @@ export default function Analytics() {
             pos="sticky"
             pt="20"
             pb="10"
-            bg={colorScheme === "light" ? "#fcfcfc" : "inherit"}
+            bg={"var(--mantine-color-body)"}
             style={{
               zIndex: 1,
-              borderBottom: "1px solid #dee2e6",
+              borderBottom:
+                "2px solid " +
+                (colorScheme === "dark"
+                  ? "var(--mantine-color-dark-4)"
+                  : "var(--mantine-color-gray-3)"),
             }}
           >
             <Group gap="xs">
@@ -856,7 +842,7 @@ export default function Analytics() {
                     variant="outline"
                     onClick={() => {
                       closeChartSelector();
-                      setTempDashboardState(dashboard || defaultDashboard);
+                      setTempDashboardState(dashboard);
                       setEditMode(false);
                     }}
                     size="sm"
@@ -930,7 +916,7 @@ export default function Analytics() {
           </Stack>
 
           <Grid>
-            {dashboardState.charts.slice(0, 3).map((chartID) => (
+            {dashboardState?.charts.slice(0, 3).map((chartID) => (
               <Grid.Col span={4} key={chartID}>
                 <Droppable
                   onDrop={(item) => handleDropChart(item, chartID)}
@@ -946,17 +932,17 @@ export default function Analytics() {
             <Grid.Col span={12}>
               <Droppable
                 onDrop={(item) =>
-                  handleDropChart(item, dashboardState.charts[3])
+                  handleDropChart(item, dashboardState?.charts[3])
                 }
                 editMode={editMode}
               >
-                <Draggable id={dashboardState.charts[3]} editMode={editMode}>
-                  {getChartComponent(dashboardState.charts[3])}
+                <Draggable id={dashboardState?.charts[3]} editMode={editMode}>
+                  {getChartComponent(dashboardState?.charts[3])}
                 </Draggable>
               </Droppable>
             </Grid.Col>
 
-            {dashboardState.charts.slice(4).map((chartID) => (
+            {dashboardState?.charts.slice(4).map((chartID) => (
               <Grid.Col span={6}>
                 <Droppable
                   key={chartID}

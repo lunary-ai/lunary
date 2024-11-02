@@ -2,9 +2,9 @@ import { hasAccess } from "shared";
 import { useProjectMutation, useProjectSWR, useUser } from ".";
 import { fetcher } from "../fetcher";
 
-export function useCharts() {
+export function useCharts<T>() {
   const { user } = useUser();
-  const { data, isLoading, mutate } = useProjectSWR(
+  const { data, isLoading, mutate } = useProjectSWR<T>(
     hasAccess(user?.role, "charts", "list") ? `/charts` : null,
   );
 
@@ -22,14 +22,14 @@ export function useCharts() {
   };
 }
 
-export function useChart(id: string | null, initialData?: any) {
+export function useChart<T>(id: string | null, initialData?: any) {
   const { mutate: mutateViews } = useCharts();
 
   const {
     data: chart,
     isLoading,
     mutate,
-  } = useProjectSWR(id && `/charts/${id}`, {
+  } = useProjectSWR<T>(id && `/charts/${id}`, {
     fallbackData: initialData,
   });
 

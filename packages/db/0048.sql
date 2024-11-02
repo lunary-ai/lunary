@@ -1,0 +1,1 @@
+alter table dashboard add column pinned boolean default false not null;

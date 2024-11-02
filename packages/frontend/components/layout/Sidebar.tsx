@@ -119,6 +119,8 @@ function DashboardLink({ item }) {
   const router = useRouter();
   const { dashboards, insert: insertDashboard } = useDashboards();
 
+  const pinned = dashboards.filter((d) => d.pinned);
+
   const active = (() => {
     const linkParams = new URLSearchParams(item.link.split("?")[1]);
     if (router.pathname.startsWith("/logs")) {
@@ -137,7 +139,7 @@ function DashboardLink({ item }) {
     const item = await insertDashboard({
       name: `Dashboard ${dashboards?.length || 1}`,
       charts: DEFAULT_CHARTS,
-      description: "",
+      pinned: false,
       filters: {
         checks: "",
         granularity: "daily",
@@ -173,7 +175,7 @@ function DashboardLink({ item }) {
         </ThemeIcon>
       }
       rightSection={
-        dashboards?.length ? (
+        pinned?.length ? (
           <Group gap="xs" id="dd">
             <Menu position="bottom-end">
               <Menu.Target>
@@ -188,7 +190,7 @@ function DashboardLink({ item }) {
                   justifyContent: "center",
                 }}
               >
-                {dashboards.map((item) => (
+                {pinned.map((item) => (
                   <Menu.Item
                     key={item.id}
                     onClick={() => router.replace(`/dashboards/${item.id}`)}

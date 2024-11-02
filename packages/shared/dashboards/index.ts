@@ -25,8 +25,8 @@ export function getDefaultDateRange() {
 }
 
 export const DEFAULT_DASHBOARD = {
-  id: "default", // Used in chart state to determine if there is an active custom dashboard
   name: "Default",
+  pinned: true,
   description: "Lunary's Default dashboard",
   charts: DEFAULT_CHARTS,
   filters: {
