@@ -528,15 +528,14 @@ function InviteMemberCard() {
           <TextInput
             label="Email"
             placeholder="john@example.com"
-            mt="md"
             type="email"
             required
             {...form.getInputProps("email")}
           />
-          <Input.Wrapper mt="md" label="Role">
+          <Input.Wrapper label="Role">
             <RoleSelect value={role} setValue={setRole} />
           </Input.Wrapper>
-          <Input.Wrapper mt="md" label="Projects">
+          <Input.Wrapper label="Projects">
             <Tooltip
               label="Upgrade to manage project access granuarly"
               position="top"
@@ -553,8 +552,8 @@ function InviteMemberCard() {
           </Input.Wrapper>
         </Group>
 
-        <Group mt="md" justify="end">
-          <Button variant="light" type="submit" loading={isLoading}>
+        <Group mt="lg" justify="end">
+          <Button variant="default" size="md" type="submit" loading={isLoading}>
             Invite
           </Button>
         </Group>
@@ -816,7 +815,7 @@ function MemberList({ users, isInvitation }) {
           </Card>
         ) : (
           <Card withBorder p="lg">
-            <Text>Nothing here.</Text>
+            <Text c="gray.8">Nothing here.</Text>
           </Card>
         )}
       </Stack>

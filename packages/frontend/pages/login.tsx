@@ -157,7 +157,7 @@ function LoginPage() {
     <AuthLayout>
       <Container size="600" pt="60">
         <NextSeo title="Login" />
-        <Stack align="center" gap="50">
+        <Stack align="center" gap="xl">
           <Paper radius="md" p="xl" miw="350" shadow="md">
             <Text size="xl" mb="lg" fw="700" ta="center">
               Welcome back!
@@ -174,7 +174,7 @@ function LoginPage() {
                     : form.onSubmit(handleLoginWithPassword)
                 }
               >
-                <Stack>
+                <Stack gap={step === "email" ? "sm" : "md"}>
                   <TextInput
                     leftSection={<IconAt size="16" />}
                     label="Email"
@@ -188,7 +188,7 @@ function LoginPage() {
                     placeholder="Your email"
                   />
 
-                  <Stack gap="sm">
+                  <Stack gap="xs">
                     <TextInput
                       type="password"
                       opacity={step === "email" ? 0 : 1}
@@ -206,16 +206,13 @@ function LoginPage() {
                       placeholder="Your password"
                     />
                     {step === "password" && (
-                      <Text size="sm">
-                        <Anchor href="/request-password-reset">
-                          Forgot password?
-                        </Anchor>
-                      </Text>
+                      <Anchor mb="xs" size="sm" href="/request-password-reset">
+                        Forgot password?
+                      </Anchor>
                     )}
                   </Stack>
 
                   <Button
-                    mt={step === "email" ? 0 : "sm"}
                     type="submit"
                     fullWidth
                     size="md"

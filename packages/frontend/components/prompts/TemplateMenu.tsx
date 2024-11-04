@@ -265,9 +265,10 @@ function TemplateList({
   rename,
   setRename,
   createTemplate,
+  isInserting,
   switchTemplateVersion,
 }) {
-  const { templates, loading, isInserting } = useTemplates();
+  const { templates, loading } = useTemplates();
   const { user } = useUser();
 
   const [filter, setFilter] = useState("");
