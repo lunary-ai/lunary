@@ -974,8 +974,8 @@ export function CustomChartCreator({ onConfirm, config = {} }) {
   const [name, setName] = useState(config?.name || "");
   const [metric, setMetric] = useState("users/active");
 
-  const [firstDimensionKey, setFirstDimensionKey] = useState();
-  const [secondDimensionKey, setSecondDimensionKey] = useState();
+  const [firstDimensionKey, setFirstDimensionKey] = useState<string>();
+  const [secondDimensionKey, setSecondDimensionKey] = useState<string>();
 
   const startDate = new Date("2024-10-21T16:00:00.000Z");
   const endDate = new Date("2024-10-29T15:59:59.999Z");
@@ -984,7 +984,7 @@ export function CustomChartCreator({ onConfirm, config = {} }) {
     data,
     isLoading: chartLoading,
     error: chartError,
-  } = useAnalyticsChartData(
+  } = useAnalyticsChartData<any>(
     metric,
     startDate,
     endDate,
@@ -1134,10 +1134,8 @@ export function CustomChartCreator({ onConfirm, config = {} }) {
         mt="xl"
         style={{ float: "right" }}
         onClick={() => {
-          if (!name) return;
-
           onConfirm({
-            name,
+            name: `Total Active Users by ${firstDimensionKey} and ${secondDimensionKey}`,
             config: {
               name: "CustomBarChart",
               props: {

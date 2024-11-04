@@ -525,6 +525,10 @@ export default function Sidebar() {
               onOptionSubmit={(id) => {
                 setProjectId(id);
                 projectsCombobox.closeDropdown();
+
+                if (router.pathname.startsWith("/dashboards/")) {
+                  router.push(`/dashboards`);
+                }
               }}
               styles={{
                 dropdown: { minWidth: "fit-content", maxWidth: 600 },

@@ -432,10 +432,6 @@ function ChartSelector({
                     {getChartComponent(chartID)}
                   </Selectable>
                 ))}
-              </SimpleGrid>
-
-              <Title mt="lg">Custom Charts</Title>
-              <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="md">
                 {charts?.map((chart, index) => (
                   <SelectableCustomChart
                     index={index}

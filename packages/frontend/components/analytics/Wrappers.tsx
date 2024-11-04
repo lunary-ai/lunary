@@ -52,9 +52,15 @@ export function Selectable({
           )}
 
           {icons &&
-            icons.map((icon) => (
+            icons.reverse().map((icon, index) => (
               <ActionIcon
                 variant="subtle"
+                style={{
+                  position: "absolute",
+                  top: "15px",
+                  right: `${30 * (index + 1) + 20}px`,
+                  zIndex: 30,
+                }}
                 color={icon.color}
                 onClick={icon.onClick}
               >
