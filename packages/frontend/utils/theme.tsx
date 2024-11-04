@@ -47,7 +47,7 @@ export const themeOverride = createTheme({
   primaryShade: 7,
   colors: {
     blue: generateColors("#0099ff"),
-    indigo: generateColors("#6600ff"),
+    // indigo: generateColors("#6600ff"),
 
     teal: generateColors("#1bd5a7"),
   },

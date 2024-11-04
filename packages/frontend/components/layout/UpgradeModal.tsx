@@ -2,10 +2,8 @@ import analytics from "@/utils/analytics";
 
 import { ContextModalProps, modals } from "@mantine/modals";
 import {
-  IconAnalyze,
   IconArrowDown,
   IconArrowUp,
-  IconBrandDocker,
   IconCheck,
   IconCircleCheck,
   IconCross,
@@ -14,19 +12,15 @@ import {
 
 import {
   Badge,
-  Box,
   Button,
   Card,
   Container,
-  Divider,
   Group,
   Highlight,
-  List,
   Mark,
   Stack,
   Table,
   Text,
-  ThemeIcon,
   Title,
   Tooltip,
 } from "@mantine/core";
@@ -126,7 +120,7 @@ function RenderPlanCard({
   const { plan } = org;
 
   const buttonText = useCallback(() => {
-    if (planId === "scale") return { children: "Get a Quote", variant };
+    if (planId === "enterprise") return { children: "Get a Quote", variant };
 
     if (org?.canceled && planId === "free")
       return {
@@ -169,8 +163,7 @@ function RenderPlanCard({
       onClick={() => onClick(plan)}
       fullWidth
       loading={loading}
-      gradient={{ from: "violet", to: "blue", deg: 45 }}
-      color="violet"
+      color="violet.5"
       mt="auto"
       {...buttonText()}
     />
@@ -318,8 +311,8 @@ export function UpgradePlans({
               >
                 <RenderPlanCard
                   planId="team"
-                  variant="gradient"
                   mostPopular
+                  color="violet.5"
                   description="Go to production with advanced features."
                   price={20}
                   onClick={() => upgradePlan("team")}
@@ -334,13 +327,13 @@ export function UpgradePlans({
                 shadow={!showFeatures ? "sm" : null}
               >
                 <RenderPlanCard
-                  planId="scale"
+                  planId="enterprise"
                   variant="default"
                   color="gray"
                   description="Custom plans for your team's exact needs."
                   price={"Custom"}
                   onClick={() => window.open("https://lunary.ai/schedule")}
-                  loading={loading === "scale"}
+                  loading={loading === "enterprise"}
                 />
               </Card>
             </Table.Th>
@@ -386,7 +379,6 @@ export function UpgradePlans({
               <Table.Td>
                 <RenderPlanCard
                   planId="team"
-                  variant="gradient"
                   mostPopular
                   onlyCTA
                   onClick={() => upgradePlan("team")}

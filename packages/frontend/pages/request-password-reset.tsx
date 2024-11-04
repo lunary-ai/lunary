@@ -39,7 +39,7 @@ export default function PasswordReset() {
         color: "teal",
         title: "Email sent 💌",
         message:
-          "Check your emails to verify your email. Please check your spam folder as we currently have deliverability issues.",
+          "Check your inbox to verify your email and reset your password.",
       });
     }
     setLoading(false);
