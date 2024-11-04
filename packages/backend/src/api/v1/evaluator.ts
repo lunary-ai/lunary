@@ -102,11 +102,14 @@ evaluators.patch("/:id", async (ctx: Context) => {
   ctx.body = updatedEvaluator;
 });
 
-evaluators.delete("/:id", async (ctx: Context) => {
-  const { projectId } = ctx.state;
-  const { id: evaluatorId } = ctx.params;
+evaluators.delete(
+  "/:id",
+  checkAccess("evaluations", "delete"),
+  async (ctx: Context) => {
+    const { projectId } = ctx.state;
+    const { id: evaluatorId } = ctx.params;
 
-  await sql`
+    await sql`
     delete 
       from evaluator 
     where 
@@ -115,7 +118,8 @@ evaluators.delete("/:id", async (ctx: Context) => {
     returning *
   `;
 
-  ctx.status = 200;
-});
+    ctx.status = 200;
+  },
+);
 
 export default evaluators;
