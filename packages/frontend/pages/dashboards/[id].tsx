@@ -493,7 +493,6 @@ export default function Analytics() {
 
   const dashboardState = useMemo(() => {
     if (editMode) return tempDashboardState;
-    console.log(dashboard);
     return dashboard;
   }, [editMode, dashboard, tempDashboardState]);
 

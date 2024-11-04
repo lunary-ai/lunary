@@ -332,7 +332,6 @@ function LineChartComponent({
 
     return generateSeries(seriesNames);
   }, [cleanedData]);
-  console.log(description);
   return (
     <Card withBorder className="lineChart" p={0} radius="md">
       <Group gap="xs">
