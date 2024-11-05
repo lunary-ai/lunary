@@ -154,7 +154,8 @@ route.post("/download-idp-xml", aggressiveRatelimit, async (ctx: Context) => {
     update 
      org 
     set 
-      saml_idp_xml = ${xml} 
+      saml_idp_xml = ${xml},
+      saml_enabled = true
     where 
       id = ${orgId}
     `;
@@ -210,6 +211,7 @@ route.post("/acs", async (ctx: Context) => {
     );
   }
 
+  // OTT is safe for passing through the URL, then exchanged for real auth token
   ctx.redirect(`${process.env.APP_URL!}/login?ott=${singleUseToken}`);
 });
 

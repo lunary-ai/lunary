@@ -34,8 +34,7 @@ checklists.get(
   checkAccess("checklists", "read"),
   async (ctx: Context) => {
     const { projectId } = ctx.state;
-    const paramsSchema = z.object({ id: z.string().uuid() });
-    const { id } = paramsSchema.parse(ctx.params);
+    const { id } = z.object({ id: z.string().uuid() }).parse(ctx.params);
 
     const [check] = await sql`
       select 
@@ -79,7 +78,7 @@ checklists.patch(
     const { projectId } = ctx.state;
     const paramsSchema = z.object({ id: z.string().uuid() });
     const bodySchema = z.object({
-      slug: z.string(),
+      slug: z.string().optional(),
       data: z.any() as z.ZodType<CheckLogic>,
     });
     const { slug, data } = bodySchema.parse(ctx.request.body);
@@ -104,8 +103,7 @@ checklists.delete(
   checkAccess("checklists", "delete"),
   async (ctx: Context) => {
     const { projectId } = ctx.state;
-    const paramsSchema = z.object({ id: z.string().uuid() });
-    const { id } = paramsSchema.parse(ctx.params);
+    const { id } = z.object({ id: z.string().uuid() }).parse(ctx.params);
 
     await sql`
       delete from 

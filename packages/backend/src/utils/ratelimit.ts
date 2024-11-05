@@ -2,6 +2,11 @@ import ratelimit from "koa-ratelimit";
 
 const db = new Map();
 
+const MAX_REQUESTS_PER_MINUTE = parseInt(
+  process.env.MAX_REQUESTS_PER_MINUTE || "150",
+  10,
+);
+
 export default ratelimit({
   driver: "memory",
   db: db,
@@ -13,17 +18,13 @@ export default ratelimit({
     reset: "Rate-Limit-Reset",
     total: "Rate-Limit-Total",
   },
-  max: 150, // limit unlogged IPs to 50 requests per minute
+  max: MAX_REQUESTS_PER_MINUTE,
   disableHeader: false,
   whitelist: (ctx) => {
     // don't limit logged in users
     if (ctx.state.userId) return true;
     return false;
-    // some logic that returns a boolean
   },
-  // blacklist: (ctx) => {
-  //   // some logic that returns a boolean
-  // },
 });
 
 export const aggressiveRatelimit = ratelimit({

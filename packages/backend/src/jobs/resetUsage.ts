@@ -68,7 +68,7 @@ RETURNING *;`;
 
 // reset playground allowance
 async function resetPlaygroundAllowance() {
-  await sql`UPDATE "public"."org" o SET play_allowance = 3 WHERE o.plan = 'free';`;
+  await sql`UPDATE "public"."org" o SET play_allowance = 10 WHERE o.plan = 'free';`;
   await sql`UPDATE "public"."org" o SET play_allowance = 1000 WHERE o.plan = 'pro' OR o.plan = 'team';`;
   await sql`UPDATE "public"."org" o SET play_allowance = 1000 WHERE o.plan = 'unlimited' OR o.plan = 'custom';`;
 }

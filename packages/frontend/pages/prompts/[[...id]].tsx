@@ -13,6 +13,21 @@ import {
   Textarea,
 } from "@mantine/core";
 
+import HotkeysInfo from "@/components/blocks/HotkeysInfo";
+import { openUpgrade } from "@/components/layout/UpgradeModal";
+import TemplateInputArea from "@/components/prompts/TemplateInputArea";
+import TemplateList, {
+  defaultTemplateVersion,
+} from "@/components/prompts/TemplateMenu";
+import {
+  useOrg,
+  useProject,
+  useTemplate,
+  useTemplates,
+  useTemplateVersion,
+  useUser,
+} from "@/utils/dataHooks";
+import { notifications } from "@mantine/notifications";
 import {
   IconBolt,
   IconBracketsAngle,
@@ -21,35 +36,20 @@ import {
   IconGitCommit,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
-import { openUpgrade } from "@/components/layout/UpgradeModal";
-import HotkeysInfo from "@/components/blocks/HotkeysInfo";
-import TemplateInputArea from "@/components/prompts/TemplateInputArea";
-import TemplateList, {
-  defaultTemplateVersion,
-} from "@/components/prompts/TemplateMenu";
-import { notifications } from "@mantine/notifications";
 import { generateSlug } from "random-word-slugs";
-import {
-  useOrg,
-  useTemplates,
-  useTemplate,
-  useTemplateVersion,
-  useUser,
-  useProject,
-} from "@/utils/dataHooks";
 
 import analytics from "@/utils/analytics";
-import { useGlobalShortcut } from "@/utils/hooks";
 import { fetcher } from "@/utils/fetcher";
+import { useGlobalShortcut } from "@/utils/hooks";
 
 import Empty from "@/components/layout/Empty";
 
 import { useCheckedPromptVariables } from "@/utils/promptsHooks";
 import { openConfirmModal } from "@mantine/modals";
 
-import { ParamItem } from "@/components/prompts/Provider";
-import ProviderEditor from "@/components/prompts/Provider";
 import PromptVariableEditor from "@/components/prompts/PromptVariableEditor";
+import ProviderEditor, { ParamItem } from "@/components/prompts/Provider";
+import { hasAccess } from "shared";
 
 function NotepadButton({ value, onChange }) {
   const [modalOpened, setModalOpened] = useState(false);
@@ -106,6 +106,7 @@ function Playground() {
   const router = useRouter();
 
   const { project } = useProject();
+  const { user } = useUser();
 
   const [template, setTemplate] = useState<any>();
   const [templateVersion, setTemplateVersion] = useState<any>(
@@ -478,38 +479,52 @@ function Playground() {
           <Stack style={{ zIndex: 0 }}>
             {template && templateVersion && (
               <Group>
-                <Button
-                  leftSection={<IconDeviceFloppy size={18} />}
-                  size="xs"
-                  loading={loading}
-                  data-testid="save-template"
-                  disabled={loading || (template?.id && !hasChanges)}
-                  variant="outline"
-                  // rightSection={
-                  // <HotkeysInfo hot="S" size="sm" style={{ marginTop: -4 }} />
-                  // }
-                  onClick={saveTemplate}
-                >
-                  {templateVersion?.id
-                    ? "Save changes"
-                    : "Save as new template"}
-                </Button>
+                {!templateVersion?.id &&
+                  hasAccess(user.role, "prompts", "create") && (
+                    <Button
+                      leftSection={<IconDeviceFloppy size={18} />}
+                      size="xs"
+                      loading={loading}
+                      data-testid="save-template"
+                      disabled={loading || (template?.id && !hasChanges)}
+                      variant="outline"
+                      onClick={saveTemplate}
+                    >
+                      Save as new template
+                    </Button>
+                  )}
 
-                {templateVersion?.id && (
-                  <Button
-                    leftSection={<IconGitCommit size={18} />}
-                    size="xs"
-                    loading={loading}
-                    data-testid="deploy-template"
-                    disabled={
-                      loading || !(templateVersion?.isDraft || hasChanges)
-                    }
-                    variant="filled"
-                    onClick={commitTemplate}
-                  >
-                    Deploy
-                  </Button>
-                )}
+                {templateVersion?.id &&
+                  hasAccess(user.role, "prompts", "create_draft") && (
+                    <Button
+                      leftSection={<IconDeviceFloppy size={18} />}
+                      size="xs"
+                      loading={loading}
+                      data-testid="save-template"
+                      disabled={loading || (template?.id && !hasChanges)}
+                      variant="outline"
+                      onClick={saveTemplate}
+                    >
+                      Save changes
+                    </Button>
+                  )}
+
+                {hasAccess(user.role, "prompts", "update") &&
+                  templateVersion?.id && (
+                    <Button
+                      leftSection={<IconGitCommit size={18} />}
+                      size="xs"
+                      loading={loading}
+                      data-testid="deploy-template"
+                      disabled={
+                        loading || !(templateVersion?.isDraft || hasChanges)
+                      }
+                      variant="filled"
+                      onClick={commitTemplate}
+                    >
+                      Deploy
+                    </Button>
+                  )}
               </Group>
             )}
 

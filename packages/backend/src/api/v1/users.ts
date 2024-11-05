@@ -1,5 +1,3 @@
-import sql from "@/src/utils/db";
-import Router from "koa-router";
 import {
   INVITE_EMAIL,
   sendEmail,
@@ -7,38 +5,38 @@ import {
   WELCOME_EMAIL,
 } from "@/src/emails";
 import { checkAccess } from "@/src/utils/authorization";
+import config from "@/src/utils/config";
+import sql from "@/src/utils/db";
 import Context from "@/src/utils/koa";
 import { jwtVerify } from "jose";
-import { roles } from "shared";
+import Router from "koa-router";
+import { hasAccess, roles } from "shared";
 import { z } from "zod";
 import { signJWT } from "./auth/utils";
-import config from "@/src/utils/config";
 
 const users = new Router({
   prefix: "/users",
 });
 
-users.get(
-  "/me/org",
-  checkAccess("teamMembers", "read"),
-  async (ctx: Context) => {
-    const { userId } = ctx.state;
+users.get("/me/org", async (ctx: Context) => {
+  const { userId } = ctx.state;
 
-    const [user] =
-      await sql`select * from account where id = ${ctx.state.userId}`;
-    const isAdmin = user.role === "admin" || user.role === "owner";
+  const [user] =
+    await sql`select * from account where id = ${ctx.state.userId}`;
+  const isAdmin = user.role === "admin" || user.role === "owner";
 
-    const [org] = await sql`
+  const [org] = await sql`
       select * from org where id = (select org_id from account where id = ${userId})
     `;
 
-    if (!org) {
-      ctx.status = 401;
-      ctx.body = { message: "Unauthorized" };
-      return;
-    }
+  if (!org) {
+    ctx.status = 401;
+    ctx.body = { message: "Unauthorized" };
+    return;
+  }
 
-    const users = await sql`
+  if (hasAccess(user.role, "teamMembers", "list")) {
+    org.users = await sql`
       select
         account.id,
         account.created_at,
@@ -61,12 +59,10 @@ users.get(
         account.role,
         account.name
     `;
-
-    org.users = users;
-    org.license = ctx.state.license || {};
-    ctx.body = org;
-  },
-);
+  }
+  org.license = ctx.state.license || {};
+  ctx.body = org;
+});
 
 users.get("/me", async (ctx: Context) => {
   const { userId } = ctx.state;
@@ -331,10 +327,6 @@ users.patch(
       );
     }
 
-    // if (role === "owner") {
-    //   ctx.throw(403, "You cannot modify the owner role");
-    // }
-
     for (const projectId of projects) {
       const [project] =
         await sql`select org_id from project where id = ${projectId}`;
@@ -353,8 +345,16 @@ users.patch(
       ctx.throw(403, "You do not have permission to modify this user");
     }
 
+    if (role === "billing" && currentUser.role !== "owner") {
+      ctx.throw(
+        403,
+        "Only owners can add billing members to the organization.",
+      );
+    }
+
     const [userToModify] =
       await sql`select * from account where id = ${userId}`;
+
     if (!userToModify || userToModify.orgId !== currentUser.orgId) {
       ctx.throw(404, "User not found in your organization");
     }

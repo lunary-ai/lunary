@@ -44,21 +44,12 @@ async function getFile(path) {
     throw new Error(message);
   }
 
+  const { createWriteStream } = await import("streamsaver");
   const contentType = res.headers.get("Content-Type") as string;
   const fileExtension = contentType.split("/")[1];
 
-  const blob = await res.blob();
-  const url = window.URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `export.${fileExtension}`;
-
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-
-  window.URL.revokeObjectURL(url);
+  const fileStream = createWriteStream(`export.${fileExtension}`);
+  await res.body?.pipeTo(fileStream);
 }
 
 async function getStream(url, args, onChunk) {
@@ -149,6 +140,12 @@ async function handleResponse(res: Response) {
 
     const { error, message } = await res.json();
 
+    if (message === "Session expired") {
+      showErrorNotification(message, "Please log in again.");
+      return;
+    } else if (message === "Invalid access token") {
+      return;
+    }
     showErrorNotification(error, message);
     throw new Error(message);
   }

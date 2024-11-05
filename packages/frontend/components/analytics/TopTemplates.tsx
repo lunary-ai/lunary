@@ -26,7 +26,7 @@ function TopTemplates({ topTemplates, isLoading }: TopTemplatesProps) {
     );
   }
 
-  if (topTemplates.length === 0) {
+  if (topTemplates?.length === 0) {
     return (
       <Box>
         {/* <Overlay blur={5} opacity={0.1} p="lg" zIndex={1} /> */}
@@ -39,7 +39,7 @@ function TopTemplates({ topTemplates, isLoading }: TopTemplatesProps) {
 
   return (
     <BarList
-      data={topTemplates.map((template) => ({
+      data={topTemplates?.map((template) => ({
         value: template.slug,
         usage: template.usageCount,
         tokens: template.totalTokens,
@@ -55,6 +55,7 @@ function TopTemplates({ topTemplates, isLoading }: TopTemplatesProps) {
       }))}
       columns={[
         {
+          key: "template",
           name: "Template",
           bar: true,
         },

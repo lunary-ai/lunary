@@ -735,7 +735,7 @@ export default function Analytics() {
       Icon={IconChartAreaLine}
       title="Waiting for data..."
       description="Analytics will appear here once you have some data."
-      enable={project && !project?.activated && dashboardLoading}
+      enable={project && !project?.activated}
     >
       <NextSeo title="Analytics" />
 

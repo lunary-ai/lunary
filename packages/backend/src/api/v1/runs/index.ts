@@ -10,6 +10,99 @@ import { checkAccess } from "@/src/utils/authorization";
 import { jsonrepair } from "jsonrepair";
 import { z } from "zod";
 
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     Run:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         projectId:
+ *           type: string
+ *         isPublic:
+ *           type: boolean
+ *         feedback:
+ *           $ref: '#/components/schemas/Feedback'
+ *         parentFeedback:
+ *           $ref: '#/components/schemas/Feedback'
+ *         type:
+ *           type: string
+ *         name:
+ *           type: string
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         endedAt:
+ *           type: string
+ *           format: date-time
+ *         duration:
+ *           type: number
+ *         templateVersionId:
+ *           type: string
+ *         templateSlug:
+ *           type: string
+ *         cost:
+ *           type: number
+ *         tokens:
+ *           type: object
+ *           properties:
+ *             completion:
+ *               type: number
+ *             prompt:
+ *               type: number
+ *             total:
+ *               type: number
+ *         tags:
+ *           type: array
+ *           items:
+ *             type: string
+ *         input:
+ *           type: object
+ *         output:
+ *           type: object
+ *         error:
+ *           type: object
+ *         status:
+ *           type: string
+ *         siblingRunId:
+ *           type: string
+ *         params:
+ *           type: object
+ *         metadata:
+ *           type: object
+ *         user:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: string
+ *             externalId:
+ *               type: string
+ *             createdAt:
+ *               type: string
+ *               format: date-time
+ *             lastSeen:
+ *               type: string
+ *               format: date-time
+ *             props:
+ *               type: object
+ *         traceId:
+ *           type: string
+ *
+ *     Feedback:
+ *       type: object
+ *       properties:
+ *         score:
+ *           type: number
+ *         flags:
+ *           type: array
+ *           items:
+ *             type: string
+ *         comment:
+ *           type: string
+ */
+
 const runs = new Router({
   prefix: "/runs",
 });
@@ -20,7 +113,8 @@ interface Query {
   models?: string[];
   tags?: string[];
   tokens?: string;
-  exportType?: "csv" | "jsonl";
+  exportType?: "trace" | "thread";
+  exportFormat?: "csv" | "ojsonl" | "jsonl";
   minDuration?: string;
   maxDuration?: string;
   startTime?: string;
@@ -210,6 +304,153 @@ function formatRun(run: any) {
 
 runs.use("/ingest", ingest.routes());
 
+/**
+ * @openapi
+ * /v1/runs:
+ *   get:
+ *     summary: Get runs
+ *     tags: [Runs]
+ *     description: |
+ *       The Runs API endpoint allows you to retrieve data about specific runs from your Lunary application.
+ *
+ *       The most common run types are 'llm', 'agent', 'chain', 'tool', 'thread' and 'chat'.
+ *
+ *       It supports various filters to narrow down the results according to your needs.
+ *
+ *       This endpoint supports GET requests and expects query parameters for filtering the results.
+ *     parameters:
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *           enum: [llm, trace, thread]
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: models
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *       - in: query
+ *         name: tags
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *       - in: query
+ *         name: tokens
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: exportType
+ *         schema:
+ *           type: string
+ *           enum: [csv, jsonl]
+ *       - in: query
+ *         name: minDuration
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: maxDuration
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: startTime
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: endTime
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: parentRunId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: sortField
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: sortDirection
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 total:
+ *                   type: number
+ *                 page:
+ *                   type: number
+ *                 limit:
+ *                   type: number
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Run'
+ *         examples:
+ *           application/json:
+ *             value:
+ *               total: 200
+ *               page: 1
+ *               limit: 10
+ *               data:
+ *                 - type: llm
+ *                   name: gpt-4o
+ *                   createdAt: "2024-01-01T12:00:00Z"
+ *                   endedAt: "2024-01-01T12:00:03Z"
+ *                   duration: 3
+ *                   tokens:
+ *                     completion: 100
+ *                     prompt: 50
+ *                     total: 150
+ *                   feedback: null
+ *                   status: success
+ *                   tags: ["example"]
+ *                   templateSlug: example-template
+ *                   templateVersionId: 1234
+ *                   input:
+ *                     - role: user
+ *                       content: Hello world!
+ *                   output:
+ *                     - role: assistant
+ *                       content: Hello. How are you?
+ *                   error: null
+ *                   user:
+ *                     id: "11111111"
+ *                     externalId: user123
+ *                     createdAt: "2021-12-01T12:00:00Z"
+ *                     lastSeen: "2022-01-01T12:00:00Z"
+ *                     props:
+ *                       name: Jane Doe
+ *                       email: user1@apple.com
+ *                   cost: 0.05
+ *                   params:
+ *                     temperature: 0.5
+ *                     maxTokens: 100
+ *                     tools: []
+ *                   metadata: null
+ */
 runs.get("/", async (ctx: Context) => {
   const { projectId } = ctx.state;
 
@@ -226,6 +467,7 @@ runs.get("/", async (ctx: Context) => {
     page = "0",
     parentRunId,
     exportType,
+    exportFormat,
     sortField,
     sortDirection,
   } = ctx.query as Query;
@@ -247,7 +489,7 @@ runs.get("/", async (ctx: Context) => {
     orderByClause = `${sortMapping[sortField]} ${direction} nulls last`;
   }
 
-  const rows = await sql`
+  const query = sql`
     with runs as (
       select distinct
         r.*,
@@ -290,8 +532,7 @@ runs.get("/", async (ctx: Context) => {
                 'updatedAt', er.updated_at
             )
         ) filter (where er.run_id is not null), '{}') as evaluation_results
-    from
-            runs r
+    from runs r
     left join evaluation_result_v2 er on r.id = er.run_id
     left join evaluator e on er.evaluator_id = e.id
     group by r.id
@@ -302,14 +543,19 @@ runs.get("/", async (ctx: Context) => {
   from
     runs r
     left join evaluation_results er on r.id = er.id
-  
   `;
 
-  const runs = rows.map(formatRun);
-
-  if (exportType) {
-    return fileExport(runs, exportType, ctx);
+  if (exportFormat) {
+    const cursor = query.cursor();
+    return fileExport(
+      { ctx, sql, cursor, formatRun, projectId },
+      exportFormat,
+      exportType,
+    );
   }
+
+  const rows = await query;
+  const runs = rows.map(formatRun);
 
   const total = await sql`
     with runs as (
@@ -349,7 +595,6 @@ runs.get("/", async (ctx: Context) => {
   };
 });
 
-// TODO: refactor with GET / by putting logic inside a function
 runs.get("/count", async (ctx: Context) => {
   const { projectId } = ctx.state;
 
@@ -401,6 +646,56 @@ runs.get("/count", async (ctx: Context) => {
   ctx.body = count;
 });
 
+/**
+ * @openapi
+ * /v1/runs/usage:
+ *   get:
+ *     tags: [Runs]
+ *     summary: Get run usage statistics
+ *     description: Retrieve usage statistics for runs
+ *     parameters:
+ *       - in: query
+ *         name: days
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: daily
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   date:
+ *                     type: string
+ *                   name:
+ *                     type: string
+ *                   type:
+ *                     type: string
+ *                   completion_tokens:
+ *                     type: integer
+ *                   prompt_tokens:
+ *                     type: integer
+ *                   cost:
+ *                     type: number
+ *                   errors:
+ *                     type: integer
+ *                   success:
+ *                     type: integer
+ *       400:
+ *         description: Invalid query parameters
+ */
 runs.get("/usage", checkAccess("logs", "read"), async (ctx) => {
   const { projectId } = ctx.state;
   const { days, userId, daily } = ctx.query as {
@@ -473,6 +768,29 @@ runs.get("/:id/public", async (ctx) => {
   ctx.body = formatRun(row);
 });
 
+/**
+ * @openapi
+ * /v1/runs/{id}:
+ *   get:
+ *     summary: Get a specific run
+ *     description: Retrieve detailed information about a specific run by its ID.
+ *     tags: [Runs]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Run'
+ *       404:
+ *         description: Run not found
+ */
 runs.get("/:id", async (ctx) => {
   const { id } = ctx.params;
 
@@ -526,9 +844,48 @@ runs.get("/:id", async (ctx) => {
       eu.id
     `;
 
+  if (!row) {
+    return ctx.throw(404, "Run not found");
+  }
+
   ctx.body = formatRun(row);
 });
 
+/**
+ * @openapi
+ * /v1/runs/{id}:
+ *   patch:
+ *     summary: Update a run
+ *     description: This endpoint allows updating the public visibility status and tags of a run. The `isPublic` field can be set to true or false to change the run's visibility. The `tags` field can be updated with an array of strings or set to null to remove all tags.
+ *     tags: [Runs]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               isPublic:
+ *                 type: boolean
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *           example:
+ *             isPublic: true
+ *             tags: ["important", "customer-facing"]
+ *     responses:
+ *       200:
+ *         description: Successful update
+ *       400:
+ *         description: Invalid input
+ */
 runs.patch("/:id", checkAccess("logs", "update"), async (ctx: Context) => {
   // TODO: tags and isPublic should probably have their own endpoint
   const requestBody = z.object({
@@ -558,6 +915,33 @@ runs.patch("/:id", checkAccess("logs", "update"), async (ctx: Context) => {
   ctx.status = 200;
 });
 
+/**
+ * @openapi
+ * /v1/runs/{id}/feedback:
+ *   patch:
+ *     summary: Update run feedback
+ *     tags: [Runs]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Feedback'
+ *           example:
+ *             thumb: "up"
+ *             comment: "This response was very helpful!"
+ *     responses:
+ *       200:
+ *         description: Feedback updated successfully
+ *       400:
+ *         description: Invalid input
+ */
 runs.patch(
   "/:id/feedback",
   checkAccess("logs", "update"),
@@ -588,7 +972,7 @@ runs.get("/:id/related", checkAccess("logs", "read"), async (ctx) => {
   const id = ctx.params.id;
   const { projectId } = ctx.state;
 
-  const related = await sql`
+  const relatedRuns = await sql`
     with recursive related_runs as (
       select 
         r1.*
@@ -622,34 +1006,73 @@ runs.get("/:id/related", checkAccess("logs", "read"), async (ctx) => {
     rr.parent_run_id, 
     rr.completion_tokens, 
     rr.prompt_tokens, 
+    coalesce(rr.cost, 0) as cost,
     rr.feedback, 
     rr.metadata
   from 
     related_runs rr;
   `;
 
-  ctx.body = related;
+  ctx.body = relatedRuns;
 });
 
-// public route
 runs.get("/:id/feedback", async (ctx) => {
-  const { projectId } = ctx.state;
   const { id } = ctx.params;
 
   const [row] = await sql`
-      select
-          feedback
-      from
-          run
-      where
-          project_id = ${projectId} and id = ${id}
-      limit 1`;
+    select
+      r.feedback
+    from
+      run r
+    where
+      r.id = ${id}
+  `;
 
-  if (!row) {
-    ctx.throw(404, "Run not found");
-  }
+  if (!row) return ctx.throw(404, "Run not found");
 
   ctx.body = row.feedback;
+});
+
+/**
+ * @openapi
+ * /v1/runs/{id}:
+ *   delete:
+ *     summary: Delete a run
+ *     description: Delete a specific run by its ID. This action is irreversible.
+ *     tags: [Runs]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: Run successfully deleted
+ *       403:
+ *         description: Forbidden - User doesn't have permission to delete runs
+ *       404:
+ *         description: Run not found
+ */
+runs.delete("/:id", checkAccess("logs", "delete"), async (ctx: Context) => {
+  const { id } = z.object({ id: z.string().uuid() }).parse(ctx.params);
+  const { projectId } = ctx.state;
+
+  const [deletedRun] = await sql`
+    delete 
+      from run
+    where 
+      id = ${id}
+      and project_id = ${projectId}
+    returning id
+  `;
+
+  if (!deletedRun) {
+    ctx.status = 404;
+    return;
+  }
+
+  ctx.status = 200;
 });
 
 export default runs;

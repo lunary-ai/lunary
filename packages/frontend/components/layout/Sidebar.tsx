@@ -11,6 +11,7 @@ import {
   Text,
   TextInput,
   ThemeIcon,
+  Tooltip,
   useMantineColorScheme,
 } from "@mantine/core";
 
@@ -53,13 +54,13 @@ import { Button, Combobox, Input, InputBase, useCombobox } from "@mantine/core";
 import { IconPlus } from "@tabler/icons-react";
 
 import { useAuth } from "@/utils/auth";
+import config from "@/utils/config";
 import { useProject, useProjects } from "@/utils/dataHooks";
+import { useViews } from "@/utils/dataHooks/views";
+import { useDisclosure, useFocusTrap } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 import { DEFAULT_CHARTS, DEFAULT_DASHBOARD, getDefaultDateRange } from "shared";
 import { ResourceName, hasAccess, hasReadAccess, serializeLogic } from "shared";
-import config from "@/utils/config";
-import { useViews } from "@/utils/dataHooks/views";
-import { useDisclosure, useFocusTrap } from "@mantine/hooks";
 import { getIconComponent } from "../blocks/IconPicker";
 import { useDashboards } from "@/utils/dataHooks/dashboards";
 import { useQueryState, parseAsString } from "nuqs";
@@ -539,12 +540,11 @@ export default function Sidebar() {
                   component="button"
                   size="xs"
                   variant="unstyled"
-                  w="fit-content"
+                  w={"100%"}
                   fw={500}
                   fz="xl"
                   type="button"
                   style={{
-                    wordBreak: "break-all",
                     textOverflow: "ellipsis",
                     overflow: "hidden",
                   }}
@@ -558,9 +558,23 @@ export default function Sidebar() {
                   onClick={() => projectsCombobox.toggleDropdown()}
                   rightSectionPointerEvents="none"
                 >
-                  {project?.name || (
-                    <Input.Placeholder>Select project</Input.Placeholder>
-                  )}
+                  <Tooltip label={project?.name}>
+                    {project?.name ? (
+                      <span
+                        style={{
+                          textOverflow: "ellipsis",
+                          overflow: "hidden",
+                          whiteSpace: "nowrap",
+                          height: "100%",
+                          display: "block",
+                        }}
+                      >
+                        {project.name}
+                      </span>
+                    ) : (
+                      <Input.Placeholder>Select project</Input.Placeholder>
+                    )}
+                  </Tooltip>
                 </InputBase>
               </Combobox.Target>
               <Combobox.Dropdown w={400}>
@@ -742,18 +756,22 @@ export default function Sidebar() {
                       ]}
                     />
                   </Menu.Item>
-                  <Menu.Divider />
                   {billingEnabled &&
                     hasAccess(user.role, "billing", "read") && (
-                      <Menu.Item
-                        leftSection={<IconCreditCard opacity={0.6} size={14} />}
-                        onClick={() => router.push("/billing")}
-                      >
-                        Usage & Billing
-                      </Menu.Item>
+                      <>
+                        <Menu.Divider />
+                        <Menu.Item
+                          leftSection={
+                            <IconCreditCard opacity={0.6} size={14} />
+                          }
+                          onClick={() => router.push("/billing")}
+                        >
+                          Usage & Billing
+                        </Menu.Item>
+                      </>
                     )}
 
-                  {hasAccess(user.role, "teamMembers", "read") && (
+                  {hasAccess(user.role, "teamMembers", "list") && (
                     <Menu.Item
                       leftSection={<IconUsers opacity={0.6} size={14} />}
                       onClick={() => router.push("/team")}

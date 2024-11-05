@@ -1,5 +1,10 @@
 import DataTable from "@/components/blocks/DataTable";
-import { parseAsString, parseAsStringEnum, useQueryState } from "nuqs";
+import {
+  parseAsBoolean,
+  parseAsString,
+  parseAsStringEnum,
+  useQueryState,
+} from "nuqs";
 
 import {
   ActionIcon,
@@ -100,7 +105,7 @@ export const defaultColumns = {
     nameColumn("Agent"),
     durationColumn(),
     userColumn(),
-    feedbackColumn(true),
+    feedbackColumn(false),
     tagsColumn(),
     inputColumn("Input"),
     outputColumn(),
@@ -110,7 +115,7 @@ export const defaultColumns = {
     userColumn(),
     inputColumn("Last Message"),
     tagsColumn(),
-    feedbackColumn(true),
+    feedbackColumn(false),
   ],
 };
 
@@ -136,17 +141,11 @@ export const CHECKS_BY_TYPE = {
     "tags",
     "users",
     "status",
-    // "feedback",
+    "feedback",
     "duration",
     "metadata",
   ],
-  thread: [
-    "date",
-    "tags",
-    "users",
-    // "feedback",
-    "metadata",
-  ],
+  thread: ["date", "tags", "users", "feedback", "metadata"],
 };
 
 const VIEW_ICONS = {
@@ -192,6 +191,11 @@ export default function Logs() {
     history: "push",
   });
 
+  const [shouldMutate, setShouldMutate] = useQueryState<boolean | undefined>(
+    "mutate",
+    parseAsBoolean,
+  );
+
   const [selectedRunId, setSelectedRunId] = useQueryState<string | undefined>(
     "selected",
     parseAsString,
@@ -233,16 +237,24 @@ export default function Logs() {
     isLoading,
     isValidating,
     loadMore,
-    mutate,
+    mutate: mutateLogs,
   } = useProjectInfiniteSWR(`/runs?${serializedChecks}${sortParams}`);
 
-  const { run: selectedRun, loading: runLoading } = useRun(selectedRunId);
-
   useEffect(() => {
+    if (shouldMutate) {
+      mutateLogs();
+      setShouldMutate(null);
+    }
     if (!hasAccess(user?.role, "settings", "read")) {
       router.push("/dashboards");
     }
-  }, [user.role]);
+  }, [shouldMutate]);
+
+  const {
+    run: selectedRun,
+    loading: runLoading,
+    deleteRun,
+  } = useRun(selectedRunId);
 
   if (!user.role) {
     return <Loader />;
@@ -250,22 +262,26 @@ export default function Logs() {
 
   useEffect(() => {
     const newColumns = { ...allColumns };
-    if (type === "llm" && Array.isArray(evaluators)) {
-      for (const evaluator of evaluators) {
-        const id = "enrichment-" + evaluator.id;
 
-        if (newColumns.llm.map(({ accessorKey }) => accessorKey).includes(id)) {
-          continue;
+    if (type === "llm") {
+      newColumns.llm = newColumns.llm.filter(
+        (col) =>
+          !(col.accessorKey && col.accessorKey.startsWith("enrichment-")),
+      );
+
+      if (Array.isArray(evaluators)) {
+        for (const evaluator of evaluators) {
+          const id = "enrichment-" + evaluator.id;
+          newColumns.llm.splice(
+            3,
+            0,
+            enrichmentColumn(evaluator.name, evaluator.id, evaluator.type),
+          );
         }
-
-        newColumns.llm.splice(
-          3,
-          0,
-          enrichmentColumn(evaluator.name, evaluator.id, evaluator.type),
-        );
       }
-      setAllColumns(newColumns);
     }
+
+    setAllColumns(newColumns);
   }, [type, evaluators]);
 
   useEffect(() => {
@@ -438,9 +454,11 @@ export default function Logs() {
                   </Menu.Target>
                   <Menu.Dropdown>
                     <Menu.Item
-                      disabled={type === "thread"}
+                      // disabled={type === "thread"}
                       leftSection={<IconFileExport size={16} />}
-                      {...exportButton(exportUrl + "&exportType=csv")}
+                      {...exportButton(
+                        exportUrl + `&exportType=${type}&exportFormat=csv`,
+                      )}
                     >
                       Export to CSV
                     </Menu.Item>
@@ -448,9 +466,8 @@ export default function Logs() {
                     {type === "llm" && (
                       <Menu.Item
                         color="dimmed"
-                        disabled={type === "thread"}
                         leftSection={<IconBrandOpenai size={16} />}
-                        {...exportButton(exportUrl + "&exportType=ojsonl")}
+                        {...exportButton(exportUrl + "&exportFormat=ojsonl")}
                       >
                         Export to OpenAI JSONL
                       </Menu.Item>
@@ -458,9 +475,11 @@ export default function Logs() {
 
                     <Menu.Item
                       color="dimmed"
-                      disabled={type === "thread"}
+                      // disabled={type === "thread"}
                       leftSection={<IconBraces size={16} />}
-                      {...exportButton(exportUrl + "&exportType=jsonl")}
+                      {...exportButton(
+                        exportUrl + `&exportType=${type}&exportFormat=jsonl`,
+                      )}
                     >
                       Export to raw JSONL
                     </Menu.Item>
@@ -558,11 +577,15 @@ export default function Logs() {
                   withImportToDataset={true}
                   withOpenTrace={true}
                   withShare={true}
-                  mutateLogs={mutate}
+                  mutateLogs={mutateLogs}
                 />
               )}
               {selectedRun?.type === "thread" && (
-                <ChatReplay run={selectedRun} mutateLogs={mutate} />
+                <ChatReplay
+                  run={selectedRun}
+                  mutateLogs={mutateLogs}
+                  deleteRun={deleteRun}
+                />
               )}
             </>
           )}

@@ -19,6 +19,22 @@ const ModelSchema = z.object({
   startDate: z.coerce.date().optional(),
 });
 
+/**
+ * @openapi
+ * /v1/models:
+ *   get:
+ *     summary: List models
+ *     tags: [Models]
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Model'
+ */
 models.get("/", checkAccess("logs", "list"), async (ctx: Context) => {
   const { orgId } = ctx.state;
 
@@ -27,7 +43,27 @@ models.get("/", checkAccess("logs", "list"), async (ctx: Context) => {
         order by updated_at desc`;
 });
 
-models.post("/", async (ctx: Context) => {
+/**
+ * @openapi
+ * /v1/models:
+ *   post:
+ *     summary: Create a new model
+ *     tags: [Models]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ModelInput'
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Model'
+ */
+models.post("/", checkAccess("settings", "read"), async (ctx: Context) => {
   const { orgId } = ctx.state;
 
   const validatedData = ModelSchema.parse(ctx.request.body);
@@ -44,34 +80,142 @@ models.post("/", async (ctx: Context) => {
   ctx.body = insertedModel;
 });
 
-models.patch("/:id", async (ctx: Context) => {
-  const { orgId } = ctx.state;
-  const { id } = ctx.params;
+/**
+ * @openapi
+ * /v1/models/{id}:
+ *   patch:
+ *     summary: Update a model
+ *     tags: [Models]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ModelInput'
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Model'
+ */
+models.patch(
+  "/:id",
+  checkAccess("settings", "update"),
+  async (ctx: Context) => {
+    const { orgId } = ctx.state;
+    const { id } = ctx.params;
 
-  const validatedData = ModelSchema.partial().parse(ctx.request.body);
+    const validatedData = ModelSchema.partial().parse(ctx.request.body);
 
-  const [updatedModel] = await sql`
+    const [updatedModel] = await sql`
     update model_mapping
     set ${sql(clearUndefined({ ...validatedData, updatedAt: new Date() }))}
     where org_id = ${orgId}
     and id = ${id}
     returning *
   `;
-  ctx.body = updatedModel;
-});
+    ctx.body = updatedModel;
+  },
+);
 
-models.delete("/:id", checkAccess("logs", "delete"), async (ctx: Context) => {
-  const { orgId } = ctx.state;
-  const { id } = ctx.params;
+/**
+ * @openapi
+ * /v1/models/{id}:
+ *   delete:
+ *     summary: Delete a model
+ *     tags: [Models]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful deletion
+ */
+models.delete(
+  "/:id",
+  checkAccess("settings", "delete"),
+  async (ctx: Context) => {
+    const { orgId } = ctx.state;
+    const { id } = ctx.params;
 
-  await sql`
+    await sql`
     delete from model_mapping
     where org_id = ${orgId}
     and id = ${id}
     returning *
   `;
 
-  ctx.status = 200;
-});
+    ctx.status = 200;
+  },
+);
+
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     Model:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         name:
+ *           type: string
+ *         pattern:
+ *           type: string
+ *         unit:
+ *           type: string
+ *           enum: [TOKENS, CHARACTERS, MILLISECONDS]
+ *         inputCost:
+ *           type: number
+ *         outputCost:
+ *           type: number
+ *         tokenizer:
+ *           type: string
+ *         startDate:
+ *           type: string
+ *           format: date-time
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *     ModelInput:
+ *       type: object
+ *       required:
+ *         - name
+ *         - pattern
+ *         - unit
+ *         - inputCost
+ *         - outputCost
+ *       properties:
+ *         name:
+ *           type: string
+ *         pattern:
+ *           type: string
+ *         unit:
+ *           type: string
+ *           enum: [TOKENS, CHARACTERS, MILLISECONDS]
+ *         inputCost:
+ *           type: number
+ *         outputCost:
+ *           type: number
+ *         tokenizer:
+ *           type: string
+ *         startDate:
+ *           type: string
+ *           format: date-time
+ */
 
 export default models;

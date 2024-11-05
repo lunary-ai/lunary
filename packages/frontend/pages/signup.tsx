@@ -1,19 +1,17 @@
-import Router, { useRouter } from "next/router";
-import React, { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/router";
+import { useMemo, useState } from "react";
 
 import {
-  Alert,
   Anchor,
   Box,
   Button,
   Container,
+  Divider,
   Grid,
   Group,
   List,
   Paper,
   PasswordInput,
-  Radio,
-  Select,
   Stack,
   Text,
   TextInput,
@@ -21,30 +19,23 @@ import {
   Title,
 } from "@mantine/core";
 
-import Confetti from "react-confetti";
-
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import {
-  IconAnalyze,
-  IconArrowRight,
   IconAt,
-  IconBuildingStore,
   IconCheck,
   IconCircleCheck,
-  IconFolderBolt,
-  IconMail,
-  IconMessageBolt,
   IconUser,
 } from "@tabler/icons-react";
 
+import GoogleLoginButton from "@/components/blocks/GoogleLoginButton";
 import SocialProof from "@/components/blocks/SocialProof";
+import AuthLayout from "@/components/layout/AuthLayout";
 import analytics from "@/utils/analytics";
-import { fetcher } from "@/utils/fetcher";
-import { NextSeo } from "next-seo";
 import { useAuth } from "@/utils/auth";
 import config from "@/utils/config";
-import Script from "next/script";
+import { fetcher } from "@/utils/fetcher";
+import { NextSeo } from "next-seo";
 
 function getRandomizedChoices() {
   const choices = [
@@ -55,6 +46,8 @@ function getRandomizedChoices() {
     { label: "Hacker News", value: "hackernews" },
     { label: "Friend", value: "friend" },
     { label: "LangFlow", value: "langflow" },
+    { label: "Flowise", value: "flowise" },
+    { label: "GitHub", value: "github" },
     { label: "Other", value: "other" },
   ];
 
@@ -65,9 +58,6 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function SignupPage() {
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState(1);
-
-  const choices = useMemo(() => getRandomizedChoices(), []);
 
   const router = useRouter();
 
@@ -79,7 +69,7 @@ function SignupPage() {
       name: "",
       projectName: "Project #1",
       orgName: "",
-      employeeCount: "",
+      // employeeCount: "",
       whereFindUs: "",
       password: "",
     },
@@ -92,8 +82,8 @@ function SignupPage() {
         val.length <= 3 ? "Can you pick something longer?" : null,
       orgName: (val) =>
         val.length <= 3 ? "Can you pick something longer?" : null,
-      employeeCount: (val) =>
-        val.length <= 1 ? "Please select a value" : null,
+      // employeeCount: (val) =>
+      //   val.length <= 1 ? "Please select a value" : null,
       password: (val) => {
         if (val.length < 6) {
           return "Password must be at least 6 characters";
@@ -109,7 +99,7 @@ function SignupPage() {
     name,
     projectName,
     orgName,
-    employeeCount,
+    // employeeCount,
     whereFindUs,
   }: {
     email: string;
@@ -117,7 +107,7 @@ function SignupPage() {
     name: string;
     projectName: string;
     orgName: string;
-    employeeCount: string;
+    // employeeCount: string;
     whereFindUs: string;
   }) {
     setLoading(true);
@@ -136,7 +126,6 @@ function SignupPage() {
           name,
           projectName,
           orgName,
-          employeeCount,
           whereFindUs,
           signupMethod: "signup",
         },
@@ -151,10 +140,7 @@ function SignupPage() {
       analytics.track("Signup", {
         email,
         name,
-        projectName,
-        orgName,
-        whereFindUs,
-        employeeCount,
+        method: "email_password",
       });
 
       if (!config.IS_SELF_HOSTED) {
@@ -163,10 +149,11 @@ function SignupPage() {
           color: "teal",
           title: "Email sent",
           message: "Check your emails for the confirmation link",
+          autoClose: 10000,
         });
       }
 
-      nextStep();
+      router.push("/");
     } catch (error) {
       console.error(error);
     } finally {
@@ -174,216 +161,88 @@ function SignupPage() {
     }
   }
 
-  function nextStep() {
-    if (step === 1) {
-      if (
-        ["email", "name", "password"].some(
-          (field) => form.validateField(field).hasError,
-        )
-      ) {
-        return;
-      }
-    }
-
-    if (step === 2 && !form.values.orgName) {
-      form.setFieldValue("orgName", form.values.name + "'s Org");
-    }
-
-    analytics.track("Signup Step " + (step + 1), {
-      email: form.values.email,
-      name: form.values.name,
-    });
-
-    setStep(step + 1);
-
-    router.query.step = String(step + 1);
-    router.push(router);
-  }
-
-  useEffect(() => {
-    if (step === 3) {
-      (async function () {
-        window.SavvyCal =
-          window.SavvyCal ||
-          function () {
-            (SavvyCal.q = SavvyCal.q || []).push(arguments);
-          };
-        SavvyCal("init");
-        SavvyCal("inline", {
-          link: "vince/chat",
-          selector: "#booking-page",
-          email: form.values.email,
-          displayName: form.values.name,
-          hideAvatar: true,
-          hideBanner: true,
-          theme: "os",
-        });
-      })();
-    }
-  }, [step]);
-
-  const isBigCompany = form.values.employeeCount !== "1-5";
-
   return (
-    <Container size={step === 3 ? 1200 : 800} mih="60%">
-      <NextSeo title="Sign Up" />
+    <AuthLayout>
+      <Container size={1200}>
+        <NextSeo title="Sign Up" />
 
-      <Script async src="https://embed.savvycal.com/v1/embed.js" />
-
-      <Stack align="center" gap={50}>
-        {step < 3 && (
+        <Stack align="center" gap={50}>
           <>
-            <Stack align="center">
-              <IconAnalyze color={"#206dce"} size={60} />
-              <Title order={2} fw={700} size={40} ta="center">
-                lunary cloud
-              </Title>
-            </Stack>
-            <Grid gutter={50} align="center" mb="sm">
+            <Grid gutter={50} align="center">
               <Grid.Col span={{ base: 12, md: 6 }}>
-                <Paper radius="md" p="xl" withBorder>
+                <Paper miw={350} radius="md" p="xl" shadow="md">
                   <form onSubmit={form.onSubmit(handleSignup)}>
                     <Stack gap="lg">
-                      {step === 1 && (
-                        <>
-                          <Title order={2} fw={700} ta="center">
-                            Get Started
-                          </Title>
-                          <TextInput
-                            leftSection={<IconAt size="16" />}
-                            label="Email"
-                            type="email"
-                            autoComplete="email"
-                            error={form.errors.email}
-                            placeholder="Your email"
-                            {...form.getInputProps("email")}
-                          />
+                      <Title order={2} fw={700} ta="center">
+                        Create your account
+                      </Title>
+                      <TextInput
+                        leftSection={<IconAt size="16" />}
+                        label="Email"
+                        type="email"
+                        autoComplete="email"
+                        error={form.errors.email}
+                        placeholder="Your email"
+                        {...form.getInputProps("email")}
+                      />
 
-                          <TextInput
-                            label="Full Name"
-                            autoComplete="name"
-                            description="Only used to address you properly."
-                            leftSection={<IconUser size="16" />}
-                            placeholder="Your full name"
-                            error={form.errors.name}
-                            {...form.getInputProps("name")}
-                            onChange={(e) => {
-                              form.setFieldValue("name", e.target.value);
-                              form.setFieldValue(
-                                "orgName",
-                                e.target.value + "'s Org",
-                              );
-                            }}
-                          />
+                      <TextInput
+                        label="Name"
+                        autoComplete="name"
+                        leftSection={<IconUser size="16" />}
+                        placeholder="Your full name"
+                        error={form.errors.name}
+                        {...form.getInputProps("name")}
+                        onChange={(e) => {
+                          form.setFieldValue("name", e.target.value);
+                          form.setFieldValue(
+                            "orgName",
+                            e.target.value + "'s Org",
+                          );
+                        }}
+                      />
 
-                          <PasswordInput
-                            label="Password"
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                nextStep();
-                              }
-                            }}
-                            error={form.errors.password}
-                            placeholder="Your password"
-                            {...form.getInputProps("password")}
-                          />
+                      <PasswordInput
+                        label="Password"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            handleSignup(form.values);
+                          }
+                        }}
+                        error={form.errors.password}
+                        placeholder="Pick a  password"
+                        {...form.getInputProps("password")}
+                      />
 
-                          <Button
-                            size="md"
-                            mt="md"
-                            onClick={nextStep}
-                            fullWidth
-                            loading={loading}
-                          >
-                            {`Continue →`}
-                          </Button>
+                      <Button
+                        size="md"
+                        mt="md"
+                        radius="md"
+                        data-testid="continue-button"
+                        type="submit"
+                        fullWidth
+                        loading={loading}
+                      >
+                        {`Create Account`}
+                      </Button>
 
-                          <Text size="sm" style={{ textAlign: "center" }}>
-                            {`Already have an account? `}
-                            <Anchor href="/login">Log In</Anchor>
-                          </Text>
-                        </>
-                      )}
+                      <Text size="sm" style={{ textAlign: "center" }}>
+                        {`Already have an account? `}
+                        <Anchor href="/login">Log In</Anchor>
+                      </Text>
 
-                      {step === 2 && (
-                        <>
-                          <Title order={2} fw={700} ta="center">
-                            Create an Organization
-                          </Title>
-
-                          <TextInput
-                            label="Organization Name"
-                            description="E.g. your company name"
-                            leftSection={<IconBuildingStore size="16" />}
-                            placeholder="Organization name"
-                            error={
-                              form.errors.orgName && "This field is required"
-                            }
-                            {...form.getInputProps("orgName")}
-                          />
-
-                          <TextInput
-                            label="Project Name"
-                            description="Can be changed later"
-                            leftSection={<IconFolderBolt size="16" />}
-                            placeholder="Your project name"
-                            error={
-                              form.errors.projectName &&
-                              "This field is required"
-                            }
-                            {...form.getInputProps("projectName")}
-                          />
-
-                          <Radio.Group
-                            label="Company Size"
-                            error={
-                              form.errors.employeeCount &&
-                              "This field is required"
-                            }
-                            {...form.getInputProps("employeeCount")}
-                          >
-                            <Group mt="xs">
-                              <Radio value="1-5" label="1-5" />
-                              <Radio value="6-49" label="6-49" />
-                              <Radio value="50-99" label="50-99" />
-                              <Radio value="100+" label="100+" />
-                            </Group>
-                          </Radio.Group>
-
-                          <Select
-                            label="Where did you find us?"
-                            description="This helps us focus our efforts :)"
-                            placeholder="Select an option"
-                            data={choices}
-                            {...form.getInputProps("whereFindUs")}
-                          />
-
-                          <Stack gap="xs">
-                            <Button
-                              size="md"
-                              mt="md"
-                              type="submit"
-                              fullWidth
-                              loading={loading}
-                            >
-                              {`Create account`}
-                            </Button>
-
-                            <Button
-                              size="sm"
-                              onClick={() => {
-                                router.query.step = String(1);
-                                router.push(router);
-                                setStep(1);
-                              }}
-                              fullWidth
-                              variant="transparent"
-                              color="dimmed"
-                            >
-                              {`← Go back`}
-                            </Button>
-                          </Stack>
-                        </>
+                      {!config.IS_SELF_HOSTED && (
+                        <Stack>
+                          <Group w="100%">
+                            <Divider
+                              size="xs"
+                              w="100%"
+                              c="dimmed"
+                              label={<Text size="sm">OR</Text>}
+                            />
+                          </Group>
+                          <GoogleLoginButton />
+                        </Stack>
                       )}
                     </Stack>
                   </form>
@@ -391,160 +250,56 @@ function SignupPage() {
               </Grid.Col>
 
               <Grid.Col span={{ base: 12, md: 6 }}>
-                <Box>
-                  <List
-                    spacing="xl"
-                    size="md"
-                    icon={
-                      <ThemeIcon
-                        variant="light"
-                        color="teal"
-                        size={24}
-                        radius="xl"
-                      >
-                        <IconCircleCheck size="16" />
-                      </ThemeIcon>
-                    }
-                  >
-                    <List.Item>
-                      <Text fw="bold">Free usage every month</Text>
-                      <Text>
-                        1K free events per day. Forever.
-                        <br />
-                        No credit card required.
-                      </Text>
-                    </List.Item>
-                    <List.Item>
-                      <Text fw="bold">Collect data immediately</Text>
-                      <Text>
-                        Integrate with dev-friendly SDKs, with native support
-                        for LangChain and OpenAI.
-                      </Text>
-                    </List.Item>
-                    <List.Item>
-                      <Text fw="bold">No config required</Text>
-                      <Text>Get insights without a complicated setup.</Text>
-                    </List.Item>
-                  </List>
-                </Box>
+                <Stack gap={50}>
+                  <Box>
+                    <List
+                      spacing="xl"
+                      size="md"
+                      icon={
+                        <ThemeIcon
+                          variant="light"
+                          color="teal"
+                          size={24}
+                          radius="xl"
+                        >
+                          <IconCircleCheck size="16" />
+                        </ThemeIcon>
+                      }
+                    >
+                      <List.Item>
+                        <Text fw="bold">No credit card required.</Text>
+                        <Text size="sm" opacity={0.8}>
+                          1K free events per day. Forever.
+                        </Text>
+                      </List.Item>
+                      <List.Item>
+                        <Text fw="bold">Collect data immediately</Text>
+                        <Text size="sm" opacity={0.8}>
+                          10+ integrations like LangChain and OpenAI.
+                        </Text>
+                      </List.Item>
+                      <List.Item>
+                        <Text fw="bold">Improve your chatbot</Text>
+                        <Text size="sm" opacity={0.8}>
+                          Get insights without a complicated setup.
+                        </Text>
+                      </List.Item>
+                    </List>
+                  </Box>
+                  <SocialProof />
+                </Stack>
               </Grid.Col>
             </Grid>
-            <SocialProof />
           </>
-        )}
-
-        {step === 3 && (
-          <>
-            {typeof window !== "undefined" && !isBigCompany && (
-              <Confetti
-                recycle={false}
-                numberOfPieces={500}
-                gravity={0.3}
-                width={window.innerWidth}
-                height={window.innerHeight}
-              />
-            )}
-
-            <Stack align="center" w={800}>
-              {/* <IconAnalyze color={"#206dce"} size={60} /> */}
-
-              <Title order={2} fw={700} size={40} ta="center">
-                {`You're all set 🎉`}
-              </Title>
-
-              {isBigCompany ? (
-                <>
-                  <Text size="xl" ta="center" my="xl">
-                    Are you free in the next days for a quick call?
-                    <br />
-                    We'd love to understand your use-case and help you directly
-                    with the integration.
-                  </Text>
-                  {/* <Cal
-                    // namespace="lunary"
-                    calLink="vincelwt/lunary"
-                    className="calcom-embed"
-                    config={{
-                      hideEventTypeDetails: "true",
-                      layout: "month_view",
-                      name: form.values.name,
-                      email: form.values.email,
-                    }}
-                  /> */}
-                  <div id="booking-page" />
-
-                  <Button
-                    onClick={() => {
-                      // use this to refresh properly
-                      window.location.href = "/";
-                    }}
-                    variant="default"
-                    rightSection={<IconArrowRight size={16} />}
-                    size="md"
-                  >
-                    Skip to Dashboard
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Alert fw={500} icon={<IconMail />} my="lg">
-                    <Text size="md" fw={500}>
-                      Check your emails for the confirmation link.
-                    </Text>
-                  </Alert>
-
-                  <Button
-                    onClick={() => {
-                      window.location.href = "/";
-                    }}
-                    variant={isBigCompany ? "outline" : "filled"}
-                    mb="xl"
-                    rightSection={<IconArrowRight size={18} />}
-                    size="lg"
-                  >
-                    Open Dashboard
-                  </Button>
-
-                  <Text size="lg">
-                    {`Want to say hi? We'd love to talk to you.`}
-                  </Text>
-
-                  <Group>
-                    {!config.IS_SELF_HOSTED && (
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          $crisp.push(["do", "chat:open"]);
-                        }}
-                        rightSection={<IconMessageBolt size={18} />}
-                      >
-                        Chat
-                      </Button>
-                    )}
-
-                    <Button
-                      variant="outline"
-                      color="teal.8"
-                      component="a"
-                      href="mailto:hello@lunary.ai"
-                      rightSection={<IconMail size={18} />}
-                    >
-                      Email
-                    </Button>
-                  </Group>
-                </>
-              )}
-            </Stack>
-          </>
-        )}
-      </Stack>
-      <style jsx global>{`
-        #booking-page {
-          width: 1200px;
-          max-width: 90vw;
-        }
-      `}</style>
-    </Container>
+        </Stack>
+        <style jsx global>{`
+          #booking-page {
+            width: 1200px;
+            max-width: 90vw;
+          }
+        `}</style>
+      </Container>
+    </AuthLayout>
   );
 }
 

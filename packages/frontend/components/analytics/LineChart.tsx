@@ -434,7 +434,7 @@ function LineChartComponent({
           <AreaChart
             h={300}
             data={cleanedData || []}
-            dataKey="value"
+            dataKey="date"
             type="stacked"
             series={series}
             withDots={false}

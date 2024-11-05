@@ -13,11 +13,12 @@ function UserAvatar({
       variant="outline"
       radius="xl"
       size={size}
+      src={user.avatarUrl}
       styles={{
         placeholder: { border: "none", background: user?.color },
       }}
     >
-      <Text c="white" size="130%" mt={"1%"} fw="bold">
+      <Text c="white" size="110%" mt={"1%"} fw="bold">
         {user?.name
           ?.split(" ")
           .map((n) => n[0])

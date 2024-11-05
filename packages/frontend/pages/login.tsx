@@ -2,24 +2,28 @@ import {
   Anchor,
   Button,
   Container,
+  Divider,
+  Group,
   Paper,
   Stack,
   Text,
   TextInput,
-  Title,
 } from "@mantine/core";
 
 import { useForm } from "@mantine/form";
-import { IconAnalyze, IconAt } from "@tabler/icons-react";
+import { IconAt } from "@tabler/icons-react";
 
 import { useEffect, useState } from "react";
 
+import GoogleLoginButton from "@/components/blocks/GoogleLoginButton";
+import AuthLayout from "@/components/layout/AuthLayout";
 import analytics from "@/utils/analytics";
-import { fetcher } from "@/utils/fetcher";
-import { NextSeo } from "next-seo";
 import { useAuth } from "@/utils/auth";
-import { useRouter } from "next/router";
+import { fetcher } from "@/utils/fetcher";
 import { notifications } from "@mantine/notifications";
+import { NextSeo } from "next-seo";
+import { useRouter } from "next/router";
+import config from "@/utils/config";
 
 function LoginPage() {
   const router = useRouter();
@@ -104,6 +108,7 @@ function LoginPage() {
       }
 
       auth.setJwt(token);
+      router.push("/");
       analytics.track("Login", { method: "password" });
     } catch (error) {
       console.error(error);
@@ -138,93 +143,122 @@ function LoginPage() {
     if (ott) exchangeToken(ott);
   }, [router.query.ott]);
 
+  useEffect(() => {
+    const email = router.query.email
+      ? decodeURIComponent(router.query.email as string)
+      : "";
+    if (email && !form.values.email) {
+      form.setFieldValue("email", email);
+      determineAuthMethod(email);
+    }
+  }, [router.query.email]);
+
   return (
-    <Container pt="60" size="600">
-      <NextSeo title="Login" />
-      <Stack align="center" gap="50">
-        <Stack align="center">
-          <IconAnalyze color="#206dce" size="60" />
-          <Title order={2} fw="700" size="40" ta="center">
-            Welcome back
-          </Title>
-        </Stack>
-        <Paper radius="md" p="xl" withBorder miw="350">
-          <Text size="lg" mb="xl" fw="700">
-            Sign In
-          </Text>
-
-          {step !== "saml" && (
-            <form
-              onSubmit={
-                step === "email"
-                  ? (e) => {
-                      determineAuthMethod(form.values.email);
-                      e.preventDefault();
-                    }
-                  : form.onSubmit(handleLoginWithPassword)
-              }
-            >
-              <Stack>
-                <TextInput
-                  leftSection={<IconAt size="16" />}
-                  label="Email"
-                  type="email"
-                  autoComplete="email"
-                  value={form.values.email}
-                  onChange={(event) =>
-                    form.setFieldValue("email", event.currentTarget.value)
-                  }
-                  error={form.errors.email}
-                  placeholder="Your email"
-                />
-                <TextInput
-                  type="password"
-                  opacity={step === "email" ? 0 : 1}
-                  h={step === "email" ? 0 : "auto"}
-                  autoComplete="current-password"
-                  label="Password"
-                  value={form.values.password}
-                  onChange={(event) =>
-                    form.setFieldValue("password", event.currentTarget.value)
-                  }
-                  error={form.errors.password}
-                  placeholder="Your password"
-                />
-                <Button
-                  mt={step === "email" ? 0 : "md"}
-                  type="submit"
-                  fullWidth
-                  loading={loading}
-                  data-testid="continue-button"
-                >
-                  {step === "email" ? "Continue" : "Login"}
-                </Button>
-              </Stack>
-            </form>
-          )}
-
-          {step === "saml" && (
-            <p>
-              Redirecting to your SSO login.
-              <br />
-              If you are not redirected in 5s,{" "}
-              <Anchor href={ssoURI || ""}>click here</Anchor>.
-            </p>
-          )}
-
-          <Text size="sm" mt="sm" style={{ textAlign: "center" }}>
-            {`Don't have an account? `}
-            <Anchor href="/signup">Sign Up</Anchor>
-          </Text>
-
-          {step === "password" && (
-            <Text size="sm" mt="sm" style={{ textAlign: "center" }}>
-              <Anchor href="/request-password-reset">Forgot password?</Anchor>
+    <AuthLayout>
+      <Container size="600" pt="60">
+        <NextSeo title="Login" />
+        <Stack align="center" gap="50">
+          <Paper radius="md" p="xl" miw="350" shadow="md">
+            <Text size="xl" mb="lg" fw="700" ta="center">
+              Welcome back!
             </Text>
-          )}
-        </Paper>
-      </Stack>
-    </Container>
+
+            {step !== "saml" && (
+              <form
+                onSubmit={
+                  step === "email"
+                    ? (e) => {
+                        determineAuthMethod(form.values.email);
+                        e.preventDefault();
+                      }
+                    : form.onSubmit(handleLoginWithPassword)
+                }
+              >
+                <Stack>
+                  <TextInput
+                    leftSection={<IconAt size="16" />}
+                    label="Email"
+                    type="email"
+                    autoComplete="email"
+                    value={form.values.email}
+                    onChange={(event) =>
+                      form.setFieldValue("email", event.currentTarget.value)
+                    }
+                    error={form.errors.email}
+                    placeholder="Your email"
+                  />
+
+                  <Stack gap="sm">
+                    <TextInput
+                      type="password"
+                      opacity={step === "email" ? 0 : 1}
+                      h={step === "email" ? 0 : "auto"}
+                      autoComplete="current-password"
+                      label="Password"
+                      value={form.values.password}
+                      onChange={(event) =>
+                        form.setFieldValue(
+                          "password",
+                          event.currentTarget.value,
+                        )
+                      }
+                      error={form.errors.password}
+                      placeholder="Your password"
+                    />
+                    {step === "password" && (
+                      <Text size="sm">
+                        <Anchor href="/request-password-reset">
+                          Forgot password?
+                        </Anchor>
+                      </Text>
+                    )}
+                  </Stack>
+
+                  <Button
+                    mt={step === "email" ? 0 : "sm"}
+                    type="submit"
+                    fullWidth
+                    size="md"
+                    loading={loading}
+                    data-testid="continue-button"
+                  >
+                    {step === "email" ? "Continue" : "Login"}
+                  </Button>
+                </Stack>
+              </form>
+            )}
+
+            {step === "saml" && (
+              <p>
+                Redirecting to your SSO login.
+                <br />
+                If you are not redirected in 5s,{" "}
+                <Anchor href={ssoURI || ""}>click here</Anchor>.
+              </p>
+            )}
+
+            <Text size="sm" mt="sm" style={{ textAlign: "center" }}>
+              {`Don't have an account? `}
+              <Anchor href="/signup">Sign Up</Anchor>
+            </Text>
+
+            {!config.IS_SELF_HOSTED && (
+              <Stack mt="lg">
+                <Group w="100%">
+                  <Divider
+                    size="xs"
+                    w="100%"
+                    c="dimmed"
+                    label={<Text size="sm">OR</Text>}
+                  />
+                </Group>
+                <GoogleLoginButton />
+              </Stack>
+            )}
+          </Paper>
+        </Stack>
+      </Container>
+    </AuthLayout>
   );
 }
 export default LoginPage;
