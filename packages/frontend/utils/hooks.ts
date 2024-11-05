@@ -117,12 +117,6 @@ export function useSortParams() {
     parseAsStringEnum(["asc", "desc"]).withDefault("desc"),
   );
 
-  useEffect(() => {
-    // Update the url query, because nuqs does not set query params in the URL when we provide a default value
-    setSortField(sortField);
-    setSortDirection(sortDirection);
-  }, []);
-
   const sortParams = useMemo(() => {
     if (sortField && sortDirection) {
       return `&sortField=${sortField}&sortDirection=${sortDirection}`;

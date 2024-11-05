@@ -262,7 +262,7 @@ export default function Dashboards() {
                 new Date(b.createdAt).getTime(),
             )
             .map((dashboard) => (
-              <Dashboard item={dashboard} />
+              <Dashboard key={dashboard.id} item={dashboard} />
             ))}
         </Grid>
       </Stack>
