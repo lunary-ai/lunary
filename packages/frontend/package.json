@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@hello-pangea/dnd": "^17.0.0",
-    "@mantine/charts": "7.12.2",
+    "@mantine/charts": "7.11.1",
     "@mantine/core": "7.11.1",
     "@mantine/dates": "7.11.1",
     "@mantine/form": "7.11.1",

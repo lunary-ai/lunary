@@ -439,6 +439,24 @@ function LineChartComponent({
             series={series}
             withDots={false}
             withYAxis={false}
+            xAxisProps={{
+              tick: ({ x, y, payload, index }) => (
+                <CustomizedAxisTick
+                  x={x}
+                  y={y}
+                  payload={payload}
+                  index={index}
+                  data={cleanedData}
+                  granularity={granularity}
+                />
+              ),
+              interval: 0,
+              ticks: [
+                // only show the first and last tick
+                cleanedData[0]?.date,
+                cleanedData[cleanedData.length - 1]?.date,
+              ],
+            }}
             tooltipProps={{
               content: ({ label, payload }) => (
                 <ChartTooltip label={label} payload={payload} />
