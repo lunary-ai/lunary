@@ -11,14 +11,13 @@ import {
   ScrollArea,
   Select,
   Stack,
-  Switch,
   Text,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import {
   IconBinaryTree2,
   IconCheck,
-  IconDots,
+  IconDotsVertical,
   IconEye,
   IconEyeClosed,
   IconPencilShare,
@@ -35,7 +34,6 @@ import Feedbacks from "./Feedbacks";
 import TokensBadge from "./TokensBadge";
 import { modals } from "@mantine/modals";
 import errorHandler from "@/utils/errors";
-import { useRouter } from "next/router";
 import { parseAsBoolean, parseAsString, useQueryState } from "nuqs";
 
 const isChatMessages = (obj) => {
@@ -81,31 +79,6 @@ const ParamItem = ({
     </Group>
   );
 };
-
-// tools format: [
-//   {
-//     "type": "function",
-//     "function": {
-//       "name": "translate",
-//       "description": "Translate a text from one language to another",
-//       "parameters": {
-//         "type": "object",
-//         "properties": {
-//           "to": {
-//             "type": "string"
-//           },
-//           "from": {
-//             "type": "string"
-//           },
-//           "text": {
-//             "type": "string"
-//           }
-//         },
-//        "required": ["to", "from", "text"]
-//       }
-//     }
-//   }
-// ]
 
 function RenderTools({ tools }) {
   return tools?.map((tool, i) => {
@@ -277,7 +250,7 @@ export default function RunInputOutput({
                     <Menu data-testid="selected-run-menu">
                       <Menu.Target>
                         <ActionIcon variant="default">
-                          <IconDots size={16} />
+                          <IconDotsVertical size={16} />
                         </ActionIcon>
                       </Menu.Target>
                       <Menu.Dropdown>

@@ -5,12 +5,14 @@ import TokensBadge from "@/components/blocks/TokensBadge";
 import { useProjectSWR, useRun, useUser } from "@/utils/dataHooks";
 import { capitalize, formatCost } from "@/utils/format";
 import {
+  ActionIcon,
   Badge,
   Box,
   Button,
   Card,
   Group,
   Loader,
+  Menu,
   Stack,
   Text,
   ThemeIcon,
@@ -19,11 +21,13 @@ import {
 import {
   IconCloudDownload,
   IconCode,
+  IconDotsVertical,
   IconLink,
   IconMessage,
   IconMessages,
   IconRobot,
   IconTool,
+  IconTrash,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -280,9 +284,26 @@ export default function Trace({}) {
           )}
         </Group>
         {hasAccess(user?.role, "logs", "delete") && (
-          <Button variant="outline" color="red" onClick={openModal}>
-            Delete Trace
-          </Button>
+          <Menu>
+            <Menu.Target>
+              <ActionIcon variant="default">
+                <IconDotsVertical size={16} />
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item
+                leftSection={
+                  <IconTrash
+                    size={16}
+                    color="var(--mantine-color-red-filled)"
+                  />
+                }
+                onClick={openModal}
+              >
+                <Text c="red">Delete Trace</Text>
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
         )}
       </Group>
       <Group style={{ flex: 1, minHeight: 0 }}>
