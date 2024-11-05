@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@mantine/charts": "7.11.1",
+    "@mantine/colors-generator": "^7.13.4",
     "@mantine/core": "7.11.1",
     "@mantine/dates": "7.11.1",
     "@mantine/form": "7.11.1",
@@ -20,6 +21,7 @@
     "@tanstack/react-table": "^8.19.2",
     "@tanstack/react-virtual": "^3.8.1",
     "bcrypt": "^5.1.1",
+    "chroma-js": "^3.1.2",
     "crisp-sdk-web": "^1.0.25",
     "date-fns": "^3.6.0",
     "dayjs": "^1.11.13",

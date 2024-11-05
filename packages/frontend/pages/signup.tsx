@@ -216,7 +216,7 @@ function SignupPage() {
 
                       <Button
                         size="md"
-                        mt="md"
+                        mt="xs"
                         radius="md"
                         data-testid="continue-button"
                         type="submit"
