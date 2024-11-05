@@ -5,25 +5,25 @@ import {
   IconChartArcs,
   IconDatabase,
   IconFileInvoice,
-  IconFlask2,
   IconFolder,
   IconHeadset,
   IconHistory,
   IconLink,
   IconLinkPlus,
   IconLockAccess,
-  IconMailAi,
   IconMasksTheater,
   IconMoodNerd,
+  IconMoodSmile,
   IconPaint,
   IconPlayerPlay,
-  IconShieldBolt,
   IconStatusChange,
   IconTableExport,
+  IconTags,
   IconTemplate,
-  IconThumbUpFilled,
+  IconThumbUp,
   IconUserShield,
   IconUsers,
+  IconView360,
 } from "@tabler/icons-react";
 
 type Feature = {
@@ -55,7 +55,7 @@ export const FEATURES: Feature[] = [
     title: "Logs / Events",
     Icon: IconBolt,
     plans: [
-      { id: "free", value: "10k included" },
+      { id: "free", value: "10k" },
       {
         id: "team",
         value: "50k included",
@@ -71,17 +71,29 @@ export const FEATURES: Feature[] = [
     plans: [
       { id: "free", value: "1" },
       { id: "team", value: "10" },
-      { id: "enterprise", value: "♾️" },
+      { id: "enterprise", value: "Custom" },
     ],
   },
   {
     id: "history",
     title: "History",
     Icon: IconHistory,
+    description: "How long we keep the data you've recorded",
     plans: [
       { id: "free", value: "1-month" },
-      { id: "team", value: "Unlimited" },
+      { id: "team", value: "2 years" },
       { id: "enterprise", value: "Unlimited" },
+    ],
+  },
+  {
+    id: "views",
+    title: "Smart Views",
+    Icon: IconView360,
+    description: "Create reusable filters to analyze your data",
+    plans: [
+      { id: "free", value: true },
+      { id: "team", value: true },
+      { id: "enterprise", value: true },
     ],
   },
   {
@@ -95,30 +107,30 @@ export const FEATURES: Feature[] = [
     ],
   },
   {
+    id: "api",
+    title: "Full API Access",
+    Icon: IconLink,
+    plans: [
+      { id: "free", value: true },
+      { id: "team", value: true },
+      { id: "enterprise", value: true },
+    ],
+  },
+  {
     id: "playground",
     title: "AI Playground",
     Icon: IconPlayerPlay,
+    description: "Test your prompts directly with 25+ LLMs",
     plans: [
       { id: "free", value: "Limited usage" },
       {
         id: "team",
-        value: "500 / month included",
+        value: "1000 / month",
         help: "then $0.05 per query",
       },
       { id: "enterprise", value: true },
     ],
   },
-  {
-    id: "evaluations",
-    title: "Evaluations",
-    Icon: IconFlask2,
-    description: "AI evaluators count towards your AI playground usage",
-    plans: [
-      { id: "team", value: true },
-      { id: "enterprise", value: true },
-    ],
-  },
-
   {
     id: "projects",
     title: "Unlimited Projects",
@@ -130,8 +142,9 @@ export const FEATURES: Feature[] = [
   },
   {
     id: "analytics",
-    title: "Advanced Analytics",
+    title: "Custom Dashboards",
     Icon: IconChartArcs,
+    description: "Create custom analytics dashboards to visualize your data",
     plans: [
       { id: "team", value: true },
       { id: "enterprise", value: true },
@@ -140,16 +153,29 @@ export const FEATURES: Feature[] = [
   {
     id: "feedback",
     title: "Human Reviews",
-    Icon: IconThumbUpFilled,
+    Icon: IconThumbUp,
+    description: "Review AI outputs with your team, create fine-tuned datasets",
     plans: [
       { id: "team", value: true },
       { id: "enterprise", value: true },
     ],
   },
   {
-    id: "api",
-    title: "Full API Access",
-    Icon: IconLink,
+    id: "topics",
+    title: "Topics",
+    Icon: IconTags,
+    description:
+      "Automatically classify your chatbot conversations into topics",
+    plans: [
+      { id: "team", value: true },
+      { id: "enterprise", value: true },
+    ],
+  },
+  {
+    id: "sentiment",
+    title: "Sentiment",
+    Icon: IconMoodSmile,
+    description: "Detect the sentiment of your chatbot conversations",
     plans: [
       { id: "team", value: true },
       { id: "enterprise", value: true },
@@ -181,6 +207,8 @@ export const FEATURES: Feature[] = [
     id: "docker",
     title: "Host on your servers",
     Icon: IconDatabase,
+    description:
+      "Install and host Lunary on your own infrastructure with our Kubernetes or Docker setups.",
     plans: [{ id: "enterprise", value: true }],
   },
   {
@@ -193,6 +221,7 @@ export const FEATURES: Feature[] = [
     id: "rbac",
     title: "Granular Access Control",
     Icon: IconLockAccess,
+    description: "Control access to your data and projects.",
     plans: [{ id: "enterprise", value: true }],
   },
   {
@@ -221,9 +250,15 @@ export const FEATURES: Feature[] = [
     plans: [{ id: "enterprise", value: true }],
   },
   {
-    id: "datalake",
-    title: "Data Lakes connectors",
+    id: "data-warehouse",
+    title: "Data Warehouse connectors",
     Icon: IconLinkPlus,
+    plans: [{ id: "enterprise", value: true }],
+  },
+  {
+    id: "papertrail",
+    title: "Audit Papertrail",
+    Icon: IconHistory,
     plans: [{ id: "enterprise", value: true }],
   },
   {
