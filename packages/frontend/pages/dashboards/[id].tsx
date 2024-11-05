@@ -363,7 +363,7 @@ function ChartSelector({
   toggleChart,
   getChartComponent,
 }) {
-  const [activeTab, setActiveTab] = useState("charts");
+  const [activeTab, setActiveTab] = useState("default");
   const { insert: insertChart, charts } = useCharts<any>();
 
   return (
@@ -382,6 +382,16 @@ function ChartSelector({
           },
         }}
       >
+        <Button
+          variant="outline"
+          leftSection={<IconPlus />}
+          style={{
+            position: "absolute",
+            right: "15%",
+          }}
+        >
+          Create Insight
+        </Button>
         <Tabs
           variant="outline"
           value={activeTab}
@@ -391,23 +401,23 @@ function ChartSelector({
         >
           <Tabs.List>
             <Tabs.Tab
-              value="charts"
+              value="default"
               leftSection={<IconChartLine />}
-              onClick={() => setActiveTab("charts")}
+              onClick={() => setActiveTab("default")}
             >
-              All Insights
+              Default Insights
             </Tabs.Tab>
             <Tabs.Tab
-              value="wizard"
-              leftSection={<IconPlus />}
-              onClick={() => setActiveTab("wizard")}
+              value="custom"
+              leftSection={<IconChartAreaLine />}
+              onClick={() => setActiveTab("custom")}
             >
-              Custom Insight
+              Custom Insights
             </Tabs.Tab>
           </Tabs.List>
 
-          <Tabs.Panel value="charts" p="md">
-            <Stack mah={"75vh"} style={{ overflowY: "auto" }}>
+          <Tabs.Panel value="default" p="md">
+            <Stack style={{ overflowY: "auto" }}>
               <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="md">
                 {ALL_CHARTS.main.map((chartID) => (
                   <Selectable
@@ -432,6 +442,12 @@ function ChartSelector({
                     {getChartComponent(chartID)}
                   </Selectable>
                 ))}
+              </SimpleGrid>
+            </Stack>
+          </Tabs.Panel>
+          <Tabs.Panel value="custom" p="md">
+            <Stack style={{ overflowY: "auto" }}>
+              <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="md">
                 {charts?.map((chart, index) => (
                   <SelectableCustomChart
                     index={index}
@@ -443,15 +459,13 @@ function ChartSelector({
                 ))}
               </SimpleGrid>
             </Stack>
-          </Tabs.Panel>
-          <Tabs.Panel value="wizard" p="md">
-            <CustomChartCreator
+            {/* <CustomChartCreator
               onConfirm={({ name, config }) => {
                 return insertChart({ name, type: config.name, config }).then(
                   () => setActiveTab("charts"),
                 );
               }}
-            />
+            /> */}
           </Tabs.Panel>
         </Tabs>
       </Modal>
