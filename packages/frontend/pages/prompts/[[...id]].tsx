@@ -121,6 +121,7 @@ function Playground() {
 
   const [streaming, setStreaming] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isInsertingTemplate, setInsertingTemplate] = useState(false);
 
   const [output, setOutput] = useState<any>(null);
   const [outputTokens, setOutputTokens] = useState<any>(null);
@@ -280,6 +281,7 @@ function Playground() {
 
   const createTemplate = async () => {
     confirmDiscard(async () => {
+      setInsertingTemplate(true);
       const slug = generateSlug(2);
       const newTemplate = await insert({
         mode: "openai",
@@ -289,7 +291,8 @@ function Playground() {
       setTemplate(newTemplate);
       setRename(newTemplate.id);
       switchTemplateVersion(newTemplate.versions[0]);
-      mutate();
+      await mutate();
+      setInsertingTemplate(false);
     });
   };
 
@@ -436,6 +439,7 @@ function Playground() {
           <TemplateList
             rename={rename}
             createTemplate={createTemplate}
+            isInserting={isInsertingTemplate}
             setRename={setRename}
             activeTemplate={template}
             activeVersion={templateVersion}
@@ -611,7 +615,7 @@ function Playground() {
             />
 
             {template && (
-              <Card shadow="sm" p="sm" my="md">
+              <Card withBorder p="sm" my="md">
                 <PromptVariableEditor
                   value={variables}
                   onChange={(update) => {

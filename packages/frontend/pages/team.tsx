@@ -37,7 +37,12 @@ import { NextSeo } from "next-seo";
 import { z } from "zod";
 
 import { CopyInput } from "@/components/blocks/CopyText";
+import RenamableField from "@/components/blocks/RenamableField";
+import SearchBar from "@/components/blocks/SearchBar";
+import { SettingsCard } from "@/components/blocks/SettingsCard";
 import UserAvatar from "@/components/blocks/UserAvatar";
+import { openUpgrade } from "@/components/layout/UpgradeModal";
+import config from "@/utils/config";
 import {
   // useInvitations,
   useOrg,
@@ -45,19 +50,14 @@ import {
   useProjects,
   useUser,
 } from "@/utils/dataHooks";
+import errorHandler from "@/utils/errors";
 import { fetcher } from "@/utils/fetcher";
+import { SEAT_ALLOWANCE } from "@/utils/pricing";
+import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { hasAccess, roles } from "shared";
 import classes from "./team.module.css";
-import { useForm } from "@mantine/form";
-import SearchBar from "@/components/blocks/SearchBar";
-import { SettingsCard } from "@/components/blocks/SettingsCard";
-import { SEAT_ALLOWANCE } from "@/utils/pricing";
-import { openUpgrade } from "@/components/layout/UpgradeModal";
-import config from "@/utils/config";
-import RenamableField from "@/components/blocks/RenamableField";
-import errorHandler from "@/utils/errors";
 
 function SAMLConfig() {
   const { org, updateOrg, mutate } = useOrg();
@@ -364,7 +364,10 @@ export function RoleSelect({
           <Combobox.Option
             value={value}
             key={value}
-            disabled={!free && !canUsePaidRoles}
+            disabled={
+              (!free && !canUsePaidRoles) ||
+              (value === "billing" && currentUser.role !== "owner")
+            }
           >
             <Text size="sm">{name}</Text>
             {minimal !== true && (
@@ -525,15 +528,14 @@ function InviteMemberCard() {
           <TextInput
             label="Email"
             placeholder="john@example.com"
-            mt="md"
             type="email"
             required
             {...form.getInputProps("email")}
           />
-          <Input.Wrapper mt="md" label="Role">
+          <Input.Wrapper label="Role">
             <RoleSelect value={role} setValue={setRole} />
           </Input.Wrapper>
-          <Input.Wrapper mt="md" label="Projects">
+          <Input.Wrapper label="Projects">
             <Tooltip
               label="Upgrade to manage project access granuarly"
               position="top"
@@ -550,8 +552,8 @@ function InviteMemberCard() {
           </Input.Wrapper>
         </Group>
 
-        <Group mt="md" justify="end">
-          <Button variant="light" type="submit" loading={isLoading}>
+        <Group mt="lg" justify="end">
+          <Button variant="default" size="md" type="submit" loading={isLoading}>
             Invite
           </Button>
         </Group>
@@ -813,7 +815,7 @@ function MemberList({ users, isInvitation }) {
           </Card>
         ) : (
           <Card withBorder p="lg">
-            <Text>Nothing here.</Text>
+            <Text c="gray.8">Nothing here.</Text>
           </Card>
         )}
       </Stack>
@@ -823,10 +825,10 @@ function MemberList({ users, isInvitation }) {
 function MemberListCard() {
   const { org } = useOrg();
 
-  const invitedUsers = org?.users.filter(
+  const invitedUsers = org?.users?.filter(
     (user) => user.verified === false && user.role !== "owner",
   );
-  const activatedUsers = org?.users.filter(
+  const activatedUsers = org?.users?.filter(
     (user) => user.verified === true || user.role === "owner",
   );
 

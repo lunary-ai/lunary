@@ -7,6 +7,8 @@ import { sendSlackMessage } from "@/src/utils/notifications";
 import Router from "koa-router";
 import { z } from "zod";
 import saml, { getLoginUrl } from "./saml";
+import google from "./google";
+
 import {
   hashPassword,
   isJWTExpired,
@@ -155,18 +157,13 @@ auth.post("/signup", async (ctx: Context) => {
 
     await sendVerifyEmail(email, name);
     await sendSlackMessage(
-      `🔔 New signup from ${email}
-      ${name} is ${
-        signupMethod === "signup"
-          ? `building ${projectName} @ ${orgName} (${employeeCount}).`
-          : "joining an org."
-      }
-      
-Found us: ${whereFindUs}`,
+      signupMethod === "signup"
+        ? `🔔 New signup from ${name} (${email})`
+        : `🔔 ${name} (${email}) joined ${orgName} `,
       "users",
     );
-
     ctx.body = { token };
+
     return;
   } else if (signupMethod === "join") {
     const { payload } = await verifyJWT(token!);
@@ -374,5 +371,6 @@ auth.post("/exchange-token", async (ctx: Context) => {
 });
 
 auth.use(saml.routes());
+auth.use(google.routes());
 
 export default auth;

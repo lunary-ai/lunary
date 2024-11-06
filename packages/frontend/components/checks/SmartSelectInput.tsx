@@ -83,7 +83,6 @@ export default function SmartCheckSelect({
     }
   }, [localData, value, allowCustom]);
   const handleValueSelect = (val: string) => {
-    setSearch("");
     return multiple
       ? onChange(
           fixedValue.includes(val)
