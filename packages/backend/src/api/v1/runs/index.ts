@@ -10,6 +10,10 @@ import { checkAccess } from "@/src/utils/authorization";
 import { jsonrepair } from "jsonrepair";
 import { z } from "zod";
 
+import crypto from "crypto";
+
+const EXPORTERS = new Map()
+
 /**
  * @openapi
  * components:
@@ -546,12 +550,13 @@ runs.get("/", async (ctx: Context) => {
   `;
 
   if (exportFormat) {
+    const token = crypto.randomBytes(32).toString('hex');
     const cursor = query.cursor();
-    return fileExport(
-      { ctx, sql, cursor, formatRun, projectId },
-      exportFormat,
-      exportType,
-    );
+
+    EXPORTERS.set(token, { cursor, projectId, exportFormat, exportType });
+
+    ctx.body = { token };
+    return;
   }
 
   const rows = await query;
@@ -1073,6 +1078,27 @@ runs.delete("/:id", checkAccess("logs", "delete"), async (ctx: Context) => {
   }
 
   ctx.status = 200;
+});
+
+runs.get("/download/:token", async (ctx) => {
+  const { token } = z
+    .object({ token: z.string() })
+    .parse(ctx.params);
+
+  const exporter = EXPORTERS.get(token);
+  if (!exporter) {
+    ctx.throw(404, "Export not found");
+  }
+
+  // One time use
+  EXPORTERS.delete(token);
+
+  const { cursor, projectId, exportFormat, exportType } = exporter;
+  return fileExport(
+    { ctx, sql, cursor, formatRun, projectId },
+    exportFormat,
+    exportType,
+  );
 });
 
 export default runs;
