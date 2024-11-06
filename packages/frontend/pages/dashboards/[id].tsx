@@ -15,6 +15,7 @@ import { formatCost } from "@/utils/format";
 
 import {
   ActionIcon,
+  Alert,
   Box,
   Button,
   Card,
@@ -34,6 +35,8 @@ import { DatePickerInput } from "@mantine/dates";
 
 import { useInViewport } from "@mantine/hooks";
 import {
+  IconAlertTriangle,
+  IconArrowLeft,
   IconCalendar,
   IconCancel,
   IconChartAreaLine,
@@ -363,113 +366,155 @@ function ChartSelector({
   toggleChart,
   getChartComponent,
 }) {
+  const [page, setPage] = useState("insights");
   const [activeTab, setActiveTab] = useState("default");
+  const [creatorConfig, setCreatorConfig] = useState();
   const { insert: insertChart, charts } = useCharts<any>();
 
   return (
-    <>
-      <Modal
-        opened={opened}
-        onClose={close}
-        centered
-        size="80vw"
-        radius={"md"}
-        transitionProps={{ transition: "fade", duration: 200 }}
-        styles={{
-          body: {
-            display: "flex",
-            flexDirection: "column",
-          },
-        }}
-      >
-        <Button
-          variant="outline"
-          leftSection={<IconPlus />}
-          style={{
-            position: "absolute",
-            right: "15%",
-          }}
-        >
-          Create Insight
-        </Button>
-        <Tabs
-          variant="outline"
-          value={activeTab}
-          styles={{
-            root: { minHeight: "75vh" },
-          }}
-        >
-          <Tabs.List>
-            <Tabs.Tab
+    <Modal
+      opened={opened}
+      onClose={close}
+      centered
+      size="80vw"
+      radius={"md"}
+      transitionProps={{ transition: "fade", duration: 200 }}
+      styles={{
+        body: {
+          display: "flex",
+          height: "75vh",
+          flexDirection: "column",
+        },
+      }}
+    >
+      {page === "insights" ? (
+        <>
+          <Button
+            variant="outline"
+            leftSection={<IconPlus />}
+            style={{
+              position: "absolute",
+              right: "15%",
+              zIndex: 100,
+            }}
+            onClick={() => setPage("creator")}
+          >
+            Create Insight
+          </Button>
+          <Tabs variant="outline" value={activeTab}>
+            <Tabs.List>
+              <Tabs.Tab
+                value="default"
+                leftSection={<IconChartLine />}
+                onClick={() => setActiveTab("default")}
+              >
+                Default Insights
+              </Tabs.Tab>
+              <Tabs.Tab
+                value="custom"
+                leftSection={<IconChartAreaLine />}
+                onClick={() => setActiveTab("custom")}
+              >
+                Custom Insights
+              </Tabs.Tab>
+            </Tabs.List>
+
+            <Tabs.Panel
               value="default"
-              leftSection={<IconChartLine />}
-              onClick={() => setActiveTab("default")}
+              p="md"
+              style={{ overflowY: "scroll", maxHeight: "75vh" }}
             >
-              Default Insights
-            </Tabs.Tab>
-            <Tabs.Tab
-              value="custom"
-              leftSection={<IconChartAreaLine />}
-              onClick={() => setActiveTab("custom")}
+              <Stack style={{ overflowY: "auto" }}>
+                <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="md">
+                  {ALL_CHARTS.main.map((chartID) => (
+                    <Selectable
+                      key={chartID}
+                      header={chartID}
+                      isSelected={chartsState.includes(chartID)}
+                      onSelect={() => toggleChart(chartID)}
+                    >
+                      {getChartComponent(chartID)}
+                    </Selectable>
+                  ))}
+                </SimpleGrid>
+
+                <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="md">
+                  {ALL_CHARTS.extras.map((chartID) => (
+                    <Selectable
+                      key={chartID}
+                      header={chartID}
+                      isSelected={chartsState.includes(chartID)}
+                      onSelect={() => toggleChart(chartID)}
+                    >
+                      {getChartComponent(chartID)}
+                    </Selectable>
+                  ))}
+                </SimpleGrid>
+              </Stack>
+            </Tabs.Panel>
+            <Tabs.Panel value="custom" p="md">
+              <Stack style={{ overflowY: "auto" }}>
+                {charts?.length ? (
+                  <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="md">
+                    {charts.map((chart, index) => (
+                      <SelectableCustomChart
+                        index={index}
+                        chart={chart}
+                        key={index}
+                        edit={(item) => {
+                          setPage("creator");
+                          setCreatorConfig(item);
+                        }}
+                        chartsState={chartsState}
+                        toggleChart={toggleChart}
+                      />
+                    ))}
+                  </SimpleGrid>
+                ) : (
+                  <Alert
+                    icon={<IconAlertTriangle size={16} />}
+                    title="No Custom Insights"
+                    color="red"
+                  >
+                    Create one using the button above
+                  </Alert>
+                )}
+              </Stack>
+            </Tabs.Panel>
+          </Tabs>
+        </>
+      ) : (
+        <>
+          <Group
+            justify="start"
+            p="sm"
+            m="xl"
+            style={{
+              borderBottom: "1px solid var(--mantine-color-default-border)",
+            }}
+          >
+            <Button
+              variant="default"
+              onClick={() => setPage("insights")}
+              leftSection={<IconArrowLeft size={16} />}
             >
-              Custom Insights
-            </Tabs.Tab>
-          </Tabs.List>
-
-          <Tabs.Panel value="default" p="md">
-            <Stack style={{ overflowY: "auto" }}>
-              <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="md">
-                {ALL_CHARTS.main.map((chartID) => (
-                  <Selectable
-                    key={chartID}
-                    header={chartID}
-                    isSelected={chartsState.includes(chartID)}
-                    onSelect={() => toggleChart(chartID)}
-                  >
-                    {getChartComponent(chartID)}
-                  </Selectable>
-                ))}
-              </SimpleGrid>
-
-              <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="md">
-                {ALL_CHARTS.extras.map((chartID) => (
-                  <Selectable
-                    key={chartID}
-                    header={chartID}
-                    isSelected={chartsState.includes(chartID)}
-                    onSelect={() => toggleChart(chartID)}
-                  >
-                    {getChartComponent(chartID)}
-                  </Selectable>
-                ))}
-              </SimpleGrid>
-            </Stack>
-          </Tabs.Panel>
-          <Tabs.Panel value="custom" p="md">
-            <Stack style={{ overflowY: "auto" }}>
-              <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="md">
-                {charts?.map((chart, index) => (
-                  <SelectableCustomChart
-                    index={index}
-                    chart={chart}
-                    key={index}
-                    chartsState={chartsState}
-                    toggleChart={toggleChart}
-                  />
-                ))}
-              </SimpleGrid>
-            </Stack>
-            {/* <CustomChartCreator
-              onConfirm={({ name, config }) => {
-                return insertChart({ name, type: config.name, config }).then(
-                  () => setActiveTab("charts"),
-                );
-              }}
-            /> */}
-          </Tabs.Panel>
-        </Tabs>
-      </Modal>
-    </>
+              Back
+            </Button>
+          </Group>
+          <CustomChartCreator
+            config={creatorConfig}
+            onConfirm={({ name, config }) => {
+              return insertChart({ name, type: config.name, config }).then(
+                () => {
+                  setPage("insights");
+                  setActiveTab("custom");
+                },
+              );
+            }}
+          />
+        </>
+      )}
+    </Modal>
   );
 }
 

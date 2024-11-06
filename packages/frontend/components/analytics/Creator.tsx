@@ -751,6 +751,7 @@ function DynamicChartPreview({ chartConfig, setChartConfig }) {
 export function SelectableCustomChart({
   index,
   chart,
+  edit,
   chartsState,
   toggleChart,
 }) {
@@ -800,7 +801,7 @@ export function SelectableCustomChart({
         {
           icon: IconEdit,
           color: "blue",
-          onClick: () => {},
+          onClick: () => edit(item.config),
         },
         {
           icon: IconTrash,
@@ -835,87 +836,8 @@ export function SelectableCustomChart({
   );
 }
 
-// export function CustomChart({ chartID }) {
-//   const { ref, inViewport } = useInViewport();
-//   const [load, setLoad] = useState(inViewport);
-//   useEffect(() => {
-//     if (inViewport) {
-//       setLoad(true);
-//     }
-//   }, [inViewport]);
-
-//   if (!load) {
-//     // return null;
-//   }
-
-//   const { chart: item } = useChart(chartID);
-//   const chart = CHARTS.find((c) => item.config.name === c.name);
-
-//   if (!chart) return null;
-
-//   const { name, data, props } = item?.config || {};
-//   const [dateRange, setDateRange] = useSessionStorage({
-//     key: "dateRange-analytics",
-//     getInitialValueInEffect: false,
-//     deserialize: deserializeDateRange,
-//     defaultValue: getDefaultDateRange(),
-//   });
-
-//   const [startDate, endDate] = dateRange;
-
-//   const chartData = useChartData(data, startDate, endDate);
-
-//   if (chartData.isLoading) return null;
-
-//   const series = data.series
-//     .map((serie) => {
-//       if (!serie.field) return null;
-//       return {
-//         name: serie.field,
-//         color: serie.color,
-//       };
-//     })
-//     .filter(Boolean);
-
-//   return (
-//     <Box ref={ref}>
-//       <ErrorBoundary>
-//         {chart.component({ data: chartData.data, props, series })}
-//       </ErrorBoundary>
-//     </Box>
-//   );
-// }
-
-// export function CustomChartCreator({ onConfirm }) {
-//   const [name, setName] = useState("");
-//   const [chartConfig, setChartConfig] = useState({
-//     name: CHARTS[0].name, props: {},
-//     data: { source: null, series: [] },
-//   });
-
-//   return (
-//     <Stack>
-//       <Text>Custom Chart</Text>
-
-//       <TextInput
-//         value={name}
-//         onChange={(ev) => setName(ev.currentTarget.value)}
-//         placeholder="Chart Name"
-//         required
-//       />
-//       <DynamicChartPreview
-//         chartConfig={chartConfig}
-//         setChartConfig={setChartConfig}
-//       />
-//     </Stack>
-//   );
-// }
-
 export function CustomChart({ chartID, startDate, endDate, granularity }) {
   const { chart, loading } = useChart(chartID);
-
-  // const startDate = new Date("2024-10-21T16:00:00.000Z");
-  // const endDate = new Date("2024-10-29T15:59:59.999Z");
 
   const {
     data,
@@ -970,12 +892,23 @@ export function CustomChart({ chartID, startDate, endDate, granularity }) {
   );
 }
 
-export function CustomChartCreator({ onConfirm, config = {} }) {
+export function CustomChartCreator({
+  onConfirm,
+  config = {},
+}: {
+  onConfirm: any;
+  config?: any;
+}) {
+  console.log(config);
   const [name, setName] = useState(config?.name || "");
-  const [metric, setMetric] = useState("users/active");
+  const [metric, setMetric] = useState(config?.props?.metric || "users/active");
 
-  const [firstDimensionKey, setFirstDimensionKey] = useState<string>();
-  const [secondDimensionKey, setSecondDimensionKey] = useState<string>();
+  const [firstDimensionKey, setFirstDimensionKey] = useState<string>(
+    config?.props?.firstDimensionKey,
+  );
+  const [secondDimensionKey, setSecondDimensionKey] = useState<string>(
+    config?.props?.secondDimensionKey || "date",
+  );
 
   const startDate = new Date("2024-10-21T16:00:00.000Z");
   const endDate = new Date("2024-10-29T15:59:59.999Z");
@@ -996,10 +929,6 @@ export function CustomChartCreator({ onConfirm, config = {} }) {
 
   // Fetch unique props keys for the project
   const { props, isLoading: usersPropsLoading } = useExternalUsersProps();
-
-  useEffect(() => {
-    setSecondDimensionKey("date");
-  }, [firstDimensionKey]);
 
   useEffect(() => {
     if (props) {
