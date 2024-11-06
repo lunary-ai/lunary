@@ -87,6 +87,7 @@ const publicRoutes = [
   `/v1/runs/ingest`,
   new RegExp(`/v1/runs/.+/public`), // public run data
   new RegExp(`/v1/runs/.+/feedback`), // getFeedback in SDKs
+  new RegExp(`/v1/runs/download/.+`), // run exports
   `/v1/template_versions/latest`,
   `/v1/template-versions/latest`,
   "/v1/users/verify-email",
