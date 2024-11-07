@@ -796,6 +796,11 @@ export default function Analytics() {
       description="Analytics will appear here once you have some data."
       enable={project && !project?.activated}
     >
+      <style>
+        {`.header, .sidebar {
+          opacity: ${editMode ? 0.6 : 1};
+        }`}
+      </style>
       <NextSeo title="Analytics" />
 
       <ChartSelector
@@ -823,7 +828,7 @@ export default function Analytics() {
       />
 
       <DndProvider backend={HTML5Backend}>
-        <Stack gap="lg">
+        <Stack gap="lg" className="charts">
           <Stack
             top="0"
             pos="sticky"
@@ -838,6 +843,7 @@ export default function Analytics() {
                   ? "var(--mantine-color-dark-4)"
                   : "var(--mantine-color-gray-3)"),
             }}
+            className="header"
           >
             <Group gap="xs">
               <Group gap={0}>
@@ -971,7 +977,7 @@ export default function Analytics() {
 
           <Grid>
             {dashboardState?.charts.slice(0, 3).map((chartID) => (
-              <Grid.Col span={4} key={chartID}>
+              <Grid.Col className="chart" span={4} key={chartID}>
                 <Droppable
                   onDrop={(item) => handleDropChart(item, chartID)}
                   editMode={editMode}
@@ -983,7 +989,7 @@ export default function Analytics() {
               </Grid.Col>
             ))}
 
-            <Grid.Col span={12}>
+            <Grid.Col className="chart" span={12}>
               <Droppable
                 onDrop={(item) =>
                   handleDropChart(item, dashboardState?.charts[3])
@@ -997,7 +1003,7 @@ export default function Analytics() {
             </Grid.Col>
 
             {dashboardState?.charts.slice(4).map((chartID) => (
-              <Grid.Col span={6}>
+              <Grid.Col className="chart" span={6}>
                 <Droppable
                   key={chartID}
                   onDrop={(item) => handleDropChart(item, chartID)}
@@ -1010,7 +1016,7 @@ export default function Analytics() {
               </Grid.Col>
             ))}
 
-            <Grid.Col span="auto">
+            <Grid.Col className="chart" span="auto">
               {editMode && (
                 <Card
                   p="md"

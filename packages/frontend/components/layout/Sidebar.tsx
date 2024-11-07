@@ -507,6 +507,7 @@ export default function Sidebar() {
 
   return (
     <Flex
+      className="sidebar"
       justify="space-between"
       align="start"
       w={200}
