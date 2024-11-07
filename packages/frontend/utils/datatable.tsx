@@ -48,7 +48,6 @@ export function durationColumn(unit = "s"): ColumnDef<any> {
       } else if (unit === "s") {
         return `${(props.getValue() / 1000).toFixed(2)}s`;
       } else if (unit === "full") {
-        console.log(props.getValue());
         return msToTime(props.getValue());
       }
     },

@@ -8,7 +8,6 @@ import {
   ActionIcon,
   Badge,
   Box,
-  Button,
   Card,
   Group,
   Loader,
@@ -26,6 +25,7 @@ import {
   IconMessage,
   IconMessages,
   IconRobot,
+  IconSpeakerphone,
   IconTool,
   IconTrash,
 } from "@tabler/icons-react";
@@ -47,6 +47,7 @@ const typeIcon = {
   llm: IconCode,
   tool: IconTool,
   retriever: IconCloudDownload,
+  "custom-event": IconSpeakerphone,
 };
 
 function TraceTree({
@@ -69,7 +70,9 @@ function TraceTree({
 
   const color = getColorForRunType(run?.type);
 
-  const showStatus = !["convo", "thread", "chat"].includes(run?.type);
+  const showStatus = !["convo", "thread", "chat", "custom-event"].includes(
+    run?.type,
+  );
 
   const Icon = typeIcon[run?.type];
 
@@ -201,6 +204,7 @@ function RenderRun({ run, relatedRuns }) {
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
 
+  if (run?.type === "custom-event") return run.name;
   if (run?.type === "chat") return <RunsChat runs={[run]} />;
   if (run?.type === "thread") return <RunsChat runs={directChilds} />;
   return <RunInputOutput initialRun={run} withFeedback={true} />;

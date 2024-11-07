@@ -363,6 +363,48 @@ async function registerRunEvent(
       where 
         id = ${runId}
     `;
+  } else if (eventName === "custom-event") {
+    // custom event
+    const { externalUserId, parentRunId, threadTags, timestamp } = event;
+
+    if (typeof parentRunId !== "string") {
+      throw new Error("No parent run ID provided");
+    }
+
+    const [projectExists] =
+      await sql`select exists(select 1 from project where id = ${projectId})`;
+    if (!projectExists) {
+      throw new ProjectNotFoundError(projectId);
+    }
+
+    const [thread] = await sql`
+      insert into run ${sql(
+        clearUndefined({
+          id: parentRunId,
+          type: "thread",
+          projectId,
+          externalUserId,
+          tags: threadTags,
+        }),
+      )}
+      on conflict (id)
+      do update set
+        external_user_id = excluded.external_user_id,
+        tags = excluded.tags
+      returning *
+    `;
+
+    await sql`insert into run ${sql({
+      id: runId,
+      createdAt: timestamp,
+      endedAt: timestamp,
+      type: "custom-event",
+      name,
+      projectId,
+      parentRunId: thread.id,
+      externalUserId,
+      metadata,
+    })}`;
   }
 
   insertedIds.add(runId);
