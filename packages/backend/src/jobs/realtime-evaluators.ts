@@ -72,7 +72,6 @@ async function evaluatorJob() {
       evaluator e 
     where
       mode = 'realtime' 
-      and type = 'topics'
     order by 
       random()
   `;
