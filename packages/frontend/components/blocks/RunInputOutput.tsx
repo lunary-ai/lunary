@@ -14,6 +14,7 @@ import {
   Stack,
   Text,
   Title,
+  Tooltip,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
@@ -23,6 +24,7 @@ import {
   IconDotsVertical,
   IconEye,
   IconEyeClosed,
+  IconInfoCircle,
   IconPencilShare,
   IconTrash,
 } from "@tabler/icons-react";
@@ -385,7 +387,18 @@ export default function RunInputOutput({
                         );
                       })}
 
-                    {run.scores.length && <Title size="md">Scores</Title>}
+                    {Boolean(run.scores.length) && (
+                      <Group mt="md" gap="xs">
+                        <Title size="md">Scores</Title>
+                        <Tooltip
+                          label={
+                            "Custom scores that have been reported via the SDK"
+                          }
+                        >
+                          <IconInfoCircle size={16} opacity={0.5} />
+                        </Tooltip>
+                      </Group>
+                    )}
                     {run.scores.map((score, i) => (
                       <Badge key={i} variant="outline" color="blue">
                         {score.label}: {score.value}
