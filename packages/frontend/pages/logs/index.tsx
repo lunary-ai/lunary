@@ -145,13 +145,7 @@ export const CHECKS_BY_TYPE = {
     "duration",
     "metadata",
   ],
-  thread: [
-    "date",
-    "tags",
-    "users",
-    "feedback",
-    "metadata",
-  ],
+  thread: ["date", "tags", "users", "feedback", "metadata"],
 };
 
 const VIEW_ICONS = {
@@ -342,7 +336,7 @@ export default function Logs() {
         const { token } = await fetcher.post("/runs/generate-export-token");
         const url = buildUrl(
           `/runs/exports/${token}?${serializedChecks}&projectId=` +
-          `${projectId}&type=${type}&exportFormat=${format}`
+            `${projectId}&type=${type}&exportFormat=${format}`,
         );
         window.open(url, "_blank");
       },
@@ -462,7 +456,12 @@ export default function Logs() {
                     <Menu.Item
                       // disabled={type === "thread"}
                       leftSection={<IconFileExport size={16} />}
-                      {...exportButton({ serializedChecks, projectId, type, format: "csv" })}
+                      {...exportButton({
+                        serializedChecks,
+                        projectId,
+                        type,
+                        format: "csv",
+                      })}
                     >
                       Export to CSV
                     </Menu.Item>
@@ -471,7 +470,11 @@ export default function Logs() {
                       <Menu.Item
                         color="dimmed"
                         leftSection={<IconBrandOpenai size={16} />}
-                        {...exportButton({ serializedChecks, projectId, format: "ojsonl" })}
+                        {...exportButton({
+                          serializedChecks,
+                          projectId,
+                          format: "ojsonl",
+                        })}
                       >
                         Export to OpenAI JSONL
                       </Menu.Item>
@@ -481,7 +484,12 @@ export default function Logs() {
                       color="dimmed"
                       // disabled={type === "thread"}
                       leftSection={<IconBraces size={16} />}
-                      {...exportButton({ serializedChecks, projectId, type, format: "jsonl" })}
+                      {...exportButton({
+                        serializedChecks,
+                        projectId,
+                        type,
+                        format: "jsonl",
+                      })}
                     >
                       Export to raw JSONL
                     </Menu.Item>

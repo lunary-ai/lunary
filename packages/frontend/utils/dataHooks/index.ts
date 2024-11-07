@@ -77,7 +77,7 @@ export function useProjectInfiniteSWR(key: string, ...args: any[]) {
     useSWRInfinite(getKey, ...(args as [any]));
 
   const total = data?.[0]?.total;
-  const items = data?.map((d) => d.data).flat();
+  const items = data?.map((d) => d?.data).flat();
 
   function loadMore() {
     const hasMore = items && items?.length < total;
@@ -112,6 +112,7 @@ export function useUser() {
 
   const scheme = useComputedColorScheme();
 
+  // console.trace();
   const { data, isLoading, mutate, error } = useSWR(
     () => isSignedIn && `/users/me`,
   );

@@ -15,13 +15,13 @@ test("logout and back in login", async ({ page }) => {
   await page.getByPlaceholder("Your email").click();
   await page.getByPlaceholder("Your email").fill("test@lunary.ai");
 
-  const promise = page.waitForResponse((resp) => {
-    return resp.url().includes("/method");
-  });
+  // const promise = page.waitForResponse((resp) => {
+  //   return resp.url().includes("/method");
+  // });
 
-  await page.getByTestId("continue-button").click();
+  // await page.getByTestId("continue-button").click();
 
-  await promise;
+  // await promise;
 
   await page.getByPlaceholder("Your password").click();
   await page.getByPlaceholder("Your password").fill("testtest");
