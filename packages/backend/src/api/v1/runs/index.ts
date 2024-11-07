@@ -12,8 +12,6 @@ import { z } from "zod";
 
 import crypto from "crypto";
 
-const EXPORTERS = new Map();
-
 /**
  * @openapi
  * components:
@@ -1110,7 +1108,8 @@ runs.get("/exports/:token", async (ctx) => {
 
   await fileExport(
     { ctx, sql, cursor: query.cursor(), formatRun, projectId },
-    exportFormat, !type || type === "llm" ? "thread" : type,
+    exportFormat,
+    !type || type === "llm" ? "thread" : type,
   );
 
   await sql`update account set single_use_token = null where id = ${ctx.state.userId}`;
