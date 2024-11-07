@@ -8,6 +8,7 @@ import { formatDateTime } from "@/utils/format";
 import {
   ActionIcon,
   Card,
+  Center,
   Group,
   Loader,
   Menu,
@@ -175,6 +176,14 @@ function RunsChat({ runs, mutateLogs }) {
           const siblings = getSiblingsOf(run);
           const selectedIndex = selectedRetries[run.id] || 0;
           const picked = siblings[selectedIndex];
+
+          if (run.type === "custom-event") {
+            return (
+              <Center key={i} c="dimmed" my="lg">
+                <Text>{run.name}</Text>
+              </Center>
+            );
+          }
 
           return messages
             .filter((m) => m.id === picked.id)

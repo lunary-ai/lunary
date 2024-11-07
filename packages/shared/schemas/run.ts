@@ -7,8 +7,14 @@ export const Feedback = z.union([
   }),
   z.null(),
 ]);
-
 export type Feedback = z.infer<typeof Feedback>;
+
+export const Score = z.object({
+  label: z.string(),
+  value: z.union([z.number(), z.string(), z.boolean()]),
+  comment: z.string().nullable(),
+});
+export type Score = z.infer<typeof Scor>;
 
 export interface Run {
   id: string;
