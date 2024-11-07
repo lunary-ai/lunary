@@ -2,17 +2,17 @@ import sql from "@/src/utils/db";
 import { Context } from "koa";
 import Router from "koa-router";
 
-import ingest from "./ingest";
-import { fileExport } from "./export";
-import { Feedback, deserializeLogic } from "shared";
-import { convertChecksToSQL } from "@/src/utils/checks";
 import { checkAccess } from "@/src/utils/authorization";
+import { convertChecksToSQL } from "@/src/utils/checks";
 import { jsonrepair } from "jsonrepair";
+import { Feedback, Score, deserializeLogic } from "shared";
 import { z } from "zod";
+import { fileExport } from "./export";
+import ingest from "./ingest";
 
 import crypto from "crypto";
 
-const EXPORTERS = new Map()
+const EXPORTERS = new Map();
 
 /**
  * @openapi
@@ -208,6 +208,7 @@ function formatRun(run: any) {
       props: run.userProps,
     },
     traceId: run.rootParentRunId,
+    scores: run.scores,
   };
 
   try {
@@ -550,7 +551,7 @@ runs.get("/", async (ctx: Context) => {
   `;
 
   if (exportFormat) {
-    const token = crypto.randomBytes(32).toString('hex');
+    const token = crypto.randomBytes(32).toString("hex");
     const cursor = query.cursor();
 
     EXPORTERS.set(token, { cursor, projectId, exportFormat, exportType });
@@ -832,9 +833,17 @@ runs.get("/:id", async (ctx) => {
           'createdAt', er.created_at,
           'updatedAt', er.updated_at
         )
-      ) filter (where er.run_id is not null), '{}') as evaluation_results
+      ) filter (where er.run_id is not null), '{}') as evaluation_results,
+      coalesce(array_agg(
+        json_build_object(
+          'label', rs.label,
+          'value', rs.value, 
+          'comment', rs.comment
+      )
+    ) filter (where rs.run_id is not null), '{}') as scores 
     from
       run r
+      left join run_score rs on r.id = rs.run_id
       left join external_user eu on r.external_user_id = eu.id
       left join run_parent_feedback_cache rpfc on r.id = rpfc.id
       left join template_version tv on r.template_version_id = tv.id
@@ -846,7 +855,8 @@ runs.get("/:id", async (ctx) => {
       and r.id = ${id}
     group by
       r.id,
-      eu.id
+      eu.id,
+      rs.run_id
     `;
 
   if (!row) {
@@ -973,6 +983,78 @@ runs.patch(
   },
 );
 
+/**
+ * @openapi
+ * /v1/runs/{id}/score:
+ *   patch:
+ *     summary: Update run score
+ *     tags: [Runs]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Score'
+ *           example:
+ *             label: "accuracy"
+ *             value: 0.95
+ *             comment: "High accuracy score"
+ *     responses:
+ *       200:
+ *         description: Score updated successfully
+ *       400:
+ *         description: Invalid input
+ */
+runs.patch(
+  "/:id/score",
+  checkAccess("logs", "update"),
+  async (ctx: Context) => {
+    const { id: runId } = ctx.params;
+    const { label, value, comment } = Score.parse(ctx.request.body);
+
+    let [existingScore] =
+      await sql`select * from run_score where run_id = ${runId}`;
+
+    if (!existingScore) {
+      await sql`insert into run_score ${sql({ runId, label, value, comment })}`;
+    } else {
+      await sql`update run_score set ${sql({ label, value, comment })} where run_id = ${runId}`;
+    }
+
+    ctx.status = 200;
+  },
+);
+
+/**
+ * @openapi
+ * /v1/runs/{id}/related:
+ *   get:
+ *     summary: Get related runs
+ *     tags: [Runs]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Run'
+ *       404:
+ *         description: Run not found
+ */
 runs.get("/:id/related", checkAccess("logs", "read"), async (ctx) => {
   const id = ctx.params.id;
   const { projectId } = ctx.state;
@@ -1081,9 +1163,7 @@ runs.delete("/:id", checkAccess("logs", "delete"), async (ctx: Context) => {
 });
 
 runs.get("/download/:token", async (ctx) => {
-  const { token } = z
-    .object({ token: z.string() })
-    .parse(ctx.params);
+  const { token } = z.object({ token: z.string() }).parse(ctx.params);
 
   const exporter = EXPORTERS.get(token);
   if (!exporter) {

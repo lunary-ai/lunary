@@ -150,12 +150,11 @@ export async function cleanEvent(event: any): Promise<Event> {
 export const clearUndefined = (obj: any): any =>
   Object.fromEntries(Object.entries(obj).filter(([_, v]) => v !== undefined));
 
-export const ingestChatEvent = async (
+export async function ingestChatEvent(
   projectId: string,
   run: Event,
-): Promise<void> => {
+): Promise<void> {
   // create parent thread run if it doesn't exist
-
   const {
     runId: id,
     externalUserId,
@@ -173,8 +172,8 @@ export const ingestChatEvent = async (
     metadata: metadata || extra,
   });
 
-  if (typeof parentRunId === "undefined") {
-    throw new Error("parentRunId is undefined");
+  if (typeof parentRunId !== "string") {
+    throw new Error("No parent run ID provided");
   }
 
   const [projectExists] =
@@ -184,7 +183,7 @@ export const ingestChatEvent = async (
   }
 
   const [result] = await sql`
-    INSERT INTO run ${sql(
+    insert into run ${sql(
       clearUndefined({
         id: parentRunId,
         type: "thread",
@@ -194,13 +193,12 @@ export const ingestChatEvent = async (
         input: coreMessage,
       }),
     )}
-    ON CONFLICT (id)
-    DO UPDATE SET
-      project_id = EXCLUDED.project_id,
-      external_user_id = EXCLUDED.external_user_id,
-      tags = EXCLUDED.tags,
-      input = EXCLUDED.input
-    RETURNING *
+    on conflict (id)
+    do update set 
+      external_user_id = excluded.external_user_id,
+      tags = excluded.tags,
+      input = excluded.input
+    returning *
   `;
 
   if (!result) {
@@ -223,9 +221,7 @@ export const ingestChatEvent = async (
   // else
   //     create new run with either input or output depending on role
   // note; in any case, update the ID to the latest received
-
   // check if previous run exists. for that, look at the last run of the thread
-
   const [previousRun] = await sql`
     SELECT * FROM run
     WHERE parent_run_id = ${parentRunId!}
@@ -247,6 +243,8 @@ export const ingestChatEvent = async (
   let update: any = {}; // todo: type
   let operation = "insert";
 
+  console.log(run, previousRun, "\n");
+
   if (previousRun) {
     // Those are computed columns, so we need to remove them
     delete previousRun.duration;
@@ -266,21 +264,30 @@ export const ingestChatEvent = async (
       delete update.id; // remove id to force using new one
 
       operation = "insert";
+    } else if (previousRun.type === "custom-event") {
+      operation = "insert";
+
+      if (OUTPUT_TYPES.includes(role)) {
+        update.output = [coreMessage];
+      } else if (INPUT_TYPES.includes(role)) {
+        update.input = [coreMessage];
+      }
     } else if (OUTPUT_TYPES.includes(role)) {
       // append coreMessage to output (if if was an array, otherwise create an array)
-
       update.output = [...(previousRun.output || []), coreMessage];
 
       operation = "update";
     } else if (INPUT_TYPES.includes(role)) {
       if (previousRun.output) {
         // if last is bot message, create new run with input array
-
         update.input = [coreMessage];
         operation = "insert";
+      } else if (previousRun.type === "custom-event") {
+        update.output = [coreMessage];
+        operation = "insert";
+        console.log("HEREk");
       } else {
         // append coreMessage to input (if if was an array, otherwise create an array)
-
         update.input = [...(previousRun.input || []), coreMessage];
 
         operation = "update";
@@ -309,9 +316,8 @@ export const ingestChatEvent = async (
     update.endedAt = timestamp;
 
     await sql`
-      UPDATE run SET ${sql({ ...shared, ...update })} WHERE id = ${
-        previousRun.id
-      }
+      UPDATE run SET ${sql({ ...shared, ...update })} WHERE id = ${previousRun.id}
     `;
   }
-};
+  // console.log(operation, update, shared, "\n\n");
+}

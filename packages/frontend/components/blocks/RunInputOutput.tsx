@@ -1,5 +1,6 @@
 import config from "@/utils/config";
 import { useDatasets, useOrg, useRun, useUser } from "@/utils/dataHooks";
+import errorHandler from "@/utils/errors";
 import {
   ActionIcon,
   Badge,
@@ -12,7 +13,9 @@ import {
   Select,
   Stack,
   Text,
+  Title,
 } from "@mantine/core";
+import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import {
   IconBinaryTree2,
@@ -24,6 +27,7 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import Link from "next/link";
+import { parseAsBoolean, parseAsString, useQueryState } from "nuqs";
 import { useState } from "react";
 import { hasAccess } from "shared";
 import SmartViewer from "../SmartViewer";
@@ -32,9 +36,6 @@ import CopyText, { SuperCopyButton } from "./CopyText";
 import ErrorBoundary from "./ErrorBoundary";
 import Feedbacks from "./Feedbacks";
 import TokensBadge from "./TokensBadge";
-import { modals } from "@mantine/modals";
-import errorHandler from "@/utils/errors";
-import { parseAsBoolean, parseAsString, useQueryState } from "nuqs";
 
 const isChatMessages = (obj) => {
   return Array.isArray(obj)
@@ -383,6 +384,13 @@ export default function RunInputOutput({
                           />
                         );
                       })}
+
+                    {run.scores.length && <Title size="md">Scores</Title>}
+                    {run.scores.map((score, i) => (
+                      <Badge key={i} variant="outline" color="blue">
+                        {score.label}: {score.value}
+                      </Badge>
+                    ))}
                   </Stack>
 
                   <Group>

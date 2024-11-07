@@ -86,11 +86,15 @@ function postgresOperators(operator: string) {
 export const CHECK_RUNNERS: CheckRunner[] = [
   {
     id: "type",
-    sql: ({ type }) =>
-      type === "trace"
-        ? // matches agent and chain runs with no parent or parent is a chat run
-          sql`(r.type in ('agent','chain') and (parent_run_id is null OR EXISTS (SELECT 1 FROM run AS parent_run WHERE parent_run.id = r.parent_run_id AND parent_run.type = 'chat')))`
-        : sql`(r.type = ${type})`,
+    sql: ({ type }) => {
+      if (type === "trace") {
+        return sql`(r.type in ('agent','chain') and (parent_run_id is null OR EXISTS (SELECT 1 FROM run AS parent_run WHERE parent_run.id = r.parent_run_id AND parent_run.type = 'chat')))`;
+      } else if (type == "chat") {
+        return sql`(r.type = 'chat' or r.type = 'custom-event')`;
+      } else {
+        return sql`(r.type = ${type})`;
+      }
+    },
   },
   {
     id: "models",
