@@ -200,6 +200,7 @@ export default function Logs() {
     "selected",
     parseAsString,
   );
+
   const [type, setType] = useQueryState<string>(
     "type",
     parseAsStringEnum(["llm", "trace", "thread"]).withDefault(

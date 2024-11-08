@@ -1,5 +1,6 @@
 import config from "@/utils/config";
 import { useDatasets, useOrg, useRun, useUser } from "@/utils/dataHooks";
+import errorHandler from "@/utils/errors";
 import {
   ActionIcon,
   Badge,
@@ -12,7 +13,10 @@ import {
   Select,
   Stack,
   Text,
+  Title,
+  Tooltip,
 } from "@mantine/core";
+import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import {
   IconBinaryTree2,
@@ -20,10 +24,12 @@ import {
   IconDotsVertical,
   IconEye,
   IconEyeClosed,
+  IconInfoCircle,
   IconPencilShare,
   IconTrash,
 } from "@tabler/icons-react";
 import Link from "next/link";
+import { parseAsBoolean, parseAsString, useQueryState } from "nuqs";
 import { useState } from "react";
 import { hasAccess } from "shared";
 import SmartViewer from "../SmartViewer";
@@ -32,9 +38,6 @@ import CopyText, { SuperCopyButton } from "./CopyText";
 import ErrorBoundary from "./ErrorBoundary";
 import Feedbacks from "./Feedbacks";
 import TokensBadge from "./TokensBadge";
-import { modals } from "@mantine/modals";
-import errorHandler from "@/utils/errors";
-import { parseAsBoolean, parseAsString, useQueryState } from "nuqs";
 
 const isChatMessages = (obj) => {
   return Array.isArray(obj)
@@ -383,6 +386,24 @@ export default function RunInputOutput({
                           />
                         );
                       })}
+
+                    {Boolean(run.scores.length) && (
+                      <Group mt="md" gap="xs">
+                        <Title size="md">Scores</Title>
+                        <Tooltip
+                          label={
+                            "Custom scores that have been reported via the SDK"
+                          }
+                        >
+                          <IconInfoCircle size={16} opacity={0.5} />
+                        </Tooltip>
+                      </Group>
+                    )}
+                    {run.scores.map((score, i) => (
+                      <Badge key={i} variant="outline" color="blue">
+                        {score.label}: {score.value}
+                      </Badge>
+                    ))}
                   </Stack>
 
                   <Group>
