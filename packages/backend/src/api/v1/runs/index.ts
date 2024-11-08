@@ -1019,7 +1019,7 @@ runs.patch(
     const { label, value, comment } = Score.parse(ctx.request.body);
 
     let [existingScore] =
-      await sql`select * from run_score where run_id = ${runId}`;
+      await sql`select * from run_score where run_id = ${runId} and label = ${label}`;
 
     if (!existingScore) {
       await sql`insert into run_score ${sql({ runId, label, value, comment })}`;
