@@ -575,6 +575,10 @@ export function BubbleMessage({ role, content, extra, enrichments }) {
 
   const color = getColorForRole(role);
 
+  if (!content) {
+    return;
+  }
+
   if (typeof content === "object") {
     if (role === "assistant") {
       content = content.output;
