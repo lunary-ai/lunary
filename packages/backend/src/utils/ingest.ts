@@ -243,8 +243,6 @@ export async function ingestChatEvent(
   let update: any = {}; // todo: type
   let operation = "insert";
 
-  console.log(run, previousRun, "\n");
-
   if (previousRun) {
     // Those are computed columns, so we need to remove them
     delete previousRun.duration;
@@ -279,13 +277,10 @@ export async function ingestChatEvent(
       operation = "update";
     } else if (INPUT_TYPES.includes(role)) {
       if (previousRun.output) {
+        console.log("HERE BUDDY");
         // if last is bot message, create new run with input array
         update.input = [coreMessage];
         operation = "insert";
-      } else if (previousRun.type === "custom-event") {
-        update.output = [coreMessage];
-        operation = "insert";
-        console.log("HEREk");
       } else {
         // append coreMessage to input (if if was an array, otherwise create an array)
         update.input = [...(previousRun.input || []), coreMessage];
