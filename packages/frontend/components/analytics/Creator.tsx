@@ -34,7 +34,13 @@ import {
 } from "@mantine/charts";
 
 import { useSessionStorage, useInViewport } from "@mantine/hooks";
-import { IconCancel, IconTrash, IconPlus, IconEdit } from "@tabler/icons-react";
+import {
+  IconCancel,
+  IconTrash,
+  IconPlus,
+  IconEdit,
+  IconCalendar,
+} from "@tabler/icons-react";
 
 import { getDefaultDateRange } from "shared";
 
@@ -61,6 +67,8 @@ import LineChart from "@/components/analytics/LineChart";
 import ErrorBoundary from "../blocks/ErrorBoundary";
 import { Selectable } from "./Wrappers";
 import AnalyticsCard from "./AnalyticsCard";
+import { DateRangeSelect } from "@/pages/dashboards/[id]";
+import { DatePickerInput } from "@mantine/dates";
 
 const COLOR_PALETTE = [
   "violet.6",
@@ -74,6 +82,117 @@ const COLOR_PALETTE = [
   "pink.6",
   "cyan.6",
 ];
+
+export type Granularity = "hourly" | "daily" | "weekly";
+
+interface GranularitySelectProps {
+  // dateRange: [Date, Date];
+  granularity: Granularity;
+  setGranularity: (granularity: Granularity) => void;
+}
+
+interface DateRangePickerProps {
+  dateRange: [Date, Date];
+  setDateRange: (dates: [Date, Date]) => void;
+}
+
+export const determineGranularity = (
+  dateRange: [Date, Date],
+): "hourly" | "daily" | "weekly" => {
+  const [startDate, endDate] = dateRange;
+  const diffDays =
+    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
+
+  if (diffDays <= 1) return "hourly";
+  if (diffDays <= 60) return "daily";
+  return "weekly";
+};
+
+export function GranularitySelect({
+  granularity,
+  setGranularity,
+}: GranularitySelectProps) {
+  const [options, setOptions] = useState<
+    { value: Granularity; label: string }[]
+  >([
+    { value: "daily", label: "Daily" },
+    { value: "weekly", label: "Weekly" },
+  ]);
+
+  useEffect(() => {
+    if (granularity === "hourly") {
+      setOptions([{ value: "hourly", label: "Hourly" }]);
+    } else if (granularity === "daily") {
+      setOptions([{ value: "daily", label: "Daily" }]);
+    } else {
+      setOptions([
+        { value: "daily", label: "Daily" },
+        { value: "weekly", label: "Weekly" },
+      ]);
+    }
+  }, [granularity]);
+
+  return (
+    <Select
+      placeholder="Granularity"
+      w="100"
+      size="xs"
+      allowDeselect={false}
+      ml="md"
+      styles={{
+        input: {
+          height: 32,
+        },
+      }}
+      data={options}
+      value={granularity}
+      onChange={(value) => setGranularity(value as Granularity)}
+    />
+  );
+}
+
+export function DateRangePicker({
+  dateRange,
+  setDateRange,
+}: DateRangePickerProps) {
+  const [localDateRange, setLocalDateRange] = useState<
+    [Date | null, Date | null]
+  >([dateRange[0], dateRange[1]]);
+
+  useEffect(() => {
+    setLocalDateRange([dateRange[0], dateRange[1]]);
+  }, [dateRange]);
+
+  function handleDateChange(dates: [Date | null, Date | null]) {
+    setLocalDateRange(dates);
+    if (dates[0] && dates[1]) {
+      const [startDate, endDate] = dates;
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(23, 59, 59, 99);
+
+      setDateRange([dates[0], dates[1]]);
+    }
+  }
+  return (
+    <DatePickerInput
+      type="range"
+      placeholder="Pick date range"
+      leftSection={<IconCalendar size={18} stroke={1.5} />}
+      size="xs"
+      w="fit-content"
+      styles={{
+        input: {
+          borderTopLeftRadius: 0,
+          height: 32,
+          borderBottomLeftRadius: 0,
+        },
+      }}
+      value={localDateRange}
+      onChange={handleDateChange}
+      maxDate={new Date()}
+    />
+  );
+}
 
 export function generateSeries(seriesNames: string[]) {
   const sortedSeriesNames = [...seriesNames].sort((a, b) => a.localeCompare(b));
@@ -755,7 +874,7 @@ export function SelectableCustomChart({
   chartsState,
   toggleChart,
 }) {
-  const { chart: item, remove, loading } = useChart(chart.id, chart);
+  const { chart: item, loading } = useChart<any>(chart.id, chart);
 
   const startDate = new Date("2024-10-21T16:00:00.000Z");
   const endDate = new Date("2024-10-29T15:59:59.999Z");
@@ -764,7 +883,7 @@ export function SelectableCustomChart({
     data,
     isLoading: chartLoading,
     error: chartError,
-  } = useAnalyticsChartData(
+  } = useAnalyticsChartData<any>(
     item?.config.props.metric,
     startDate,
     endDate,
@@ -794,56 +913,45 @@ export function SelectableCustomChart({
   }
 
   return (
-    <Selectable
-      key={index}
-      header={item.id}
+    <AnalyticsCard
+      title={"Active Users"}
+      selectable={true}
       icons={[
         {
           icon: IconEdit,
           color: "blue",
           onClick: () => edit(item.config),
         },
-        {
-          icon: IconTrash,
-          color: "red",
-          onClick: remove,
-        },
       ]}
       isSelected={chartsState?.includes(item.id)}
       onSelect={() => toggleChart(item.id, "extras")}
     >
-      <Container>
-        <Title order={3} mb="md">
-          Active Users
-        </Title>
-
-        {item.config.props.series.length > 0 ? (
-          <BarChart
-            h={300}
-            data={data?.data || []}
-            dataKey="value"
-            type="stacked"
-            series={item.config.props.series}
-            withLegend
-          />
-        ) : (
-          <Alert title="No Data" color="yellow">
-            No series available to display the chart.
-          </Alert>
-        )}
-      </Container>
-    </Selectable>
+      {item.config.props.series.length > 0 ? (
+        <BarChart
+          h={300}
+          data={data?.data || []}
+          dataKey="value"
+          type="stacked"
+          series={item.config.props.series}
+          withLegend
+        />
+      ) : (
+        <Alert title="No Data" color="yellow">
+          No series available to display the chart.
+        </Alert>
+      )}
+    </AnalyticsCard>
   );
 }
 
 export function CustomChart({ chartID, startDate, endDate, granularity }) {
-  const { chart, loading } = useChart(chartID);
+  const { chart, loading } = useChart<any>(chartID);
 
   const {
     data,
     isLoading: chartLoading,
     error: chartError,
-  } = useAnalyticsChartData(
+  } = useAnalyticsChartData<any>(
     chart?.config.props.metric,
     startDate,
     endDate,
@@ -989,19 +1097,35 @@ export function CustomChartCreator({
     label: prop.charAt(0).toUpperCase() + String(prop).slice(1),
   }));
 
+  const dateRange = getDefaultDateRange();
+  const granularity = determineGranularity(dateRange);
+
+  function setDateRange(dateRange) {}
+
+  function setGranularity(granularity) {}
+
   return (
     <Container>
       <Title order={3} mb="md">
         Total Active Users by {firstDimensionKey} and {secondDimensionKey}
       </Title>
 
-      <Group my="md" justify="space-between">
+      <Group my="md" justify="space-between" align="end" gap="sm">
         <TextInput
+          w="100%"
           label="Insight Description (optional)"
-          w="90%"
           value={"Description"}
           onChange={(ev) => setName(ev.currentTarget.value)}
           placeholder="Insight Description"
+        />
+      </Group>
+
+      <Group my="md" gap={0}>
+        <DateRangeSelect dateRange={dateRange} setDateRange={setDateRange} />
+        <DateRangePicker dateRange={dateRange} setDateRange={setDateRange} />
+        <GranularitySelect
+          granularity={granularity}
+          setGranularity={setGranularity}
         />
       </Group>
 
@@ -1022,6 +1146,7 @@ export function CustomChartCreator({
           label="First breakdown"
           data={breakdownSelectValues}
           value={firstDimensionKey}
+          defaultValue={firstDimensionKey}
           onChange={(value) => value && setFirstDimensionKey(value)}
           mb="lg"
           searchable
@@ -1038,6 +1163,7 @@ export function CustomChartCreator({
             { value: "date", label: "Date" },
           ]}
           value={secondDimensionKey}
+          defaultValue={secondDimensionKey}
           onChange={(value) => value && setSecondDimensionKey(value)}
           mb="lg"
           searchable
@@ -1059,26 +1185,31 @@ export function CustomChartCreator({
         </Alert>
       )}
 
-      <Button
-        mt="xl"
-        style={{ float: "right" }}
-        onClick={() => {
-          onConfirm({
-            name: `Total Active Users by ${firstDimensionKey} and ${secondDimensionKey}`,
-            config: {
-              name: "CustomBarChart",
-              props: {
-                firstDimensionKey,
-                secondDimensionKey,
-                metric,
-                series,
+      <Group gap="sm" justify="right" mt="xl">
+        {config?.name && (
+          <Button color="red" onClick={() => {}}>
+            Delete
+          </Button>
+        )}
+        <Button
+          onClick={() => {
+            onConfirm({
+              name: `Total Active Users by ${firstDimensionKey} and ${secondDimensionKey}`,
+              config: {
+                name: "CustomBarChart",
+                props: {
+                  firstDimensionKey,
+                  secondDimensionKey,
+                  metric,
+                  series,
+                },
               },
-            },
-          });
-        }}
-      >
-        Save
-      </Button>
+            });
+          }}
+        >
+          Save
+        </Button>
+      </Group>
     </Container>
   );
 }

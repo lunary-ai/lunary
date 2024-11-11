@@ -72,6 +72,7 @@ function TopUsers({ topUsers, isLoading }: TopUsersProps) {
       columns={[
         {
           name: "User",
+          key: "user",
           render: (_, user) => (
             <Group
               my={-4}
@@ -113,9 +114,13 @@ function TopUsers({ topUsers, isLoading }: TopUsersProps) {
   );
 }
 
-export default function TopUsersCard({ topUsers, isLoading }: TopUsersProps) {
+export default function TopUsersCard({
+  topUsers,
+  isLoading,
+  ...props
+}: TopUsersProps) {
   return (
-    <AnalyticsCard title="Top Users">
+    <AnalyticsCard title="Top Users" {...props}>
       <TopUsers topUsers={topUsers} isLoading={isLoading} />
     </AnalyticsCard>
   );

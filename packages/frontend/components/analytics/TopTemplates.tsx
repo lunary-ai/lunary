@@ -83,9 +83,10 @@ function TopTemplates({ topTemplates, isLoading }: TopTemplatesProps) {
 export default function TopTemplatesCard({
   topTemplates,
   isLoading,
+  ...props
 }: TopTemplatesProps) {
   return (
-    <AnalyticsCard title="Top Templates">
+    <AnalyticsCard title="Top Templates" {...props}>
       <TopTemplates topTemplates={topTemplates} isLoading={isLoading} />
     </AnalyticsCard>
   );

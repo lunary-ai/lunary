@@ -27,6 +27,7 @@ import { useMemo } from "react";
 import ErrorBoundary from "../blocks/ErrorBoundary";
 import { openUpgrade } from "../layout/UpgradeModal";
 import { generateSeries } from "./Creator";
+import AnalyticsCard from "./AnalyticsCard";
 
 interface ChartTooltipProps {
   label: string;
@@ -220,6 +221,8 @@ type LineChartProps = {
   stat?: number;
   colors?: string[];
   cleanData?: boolean;
+
+  extraProps: any;
 };
 
 function getFigure(agg: string, data: any[], prop: string) {
@@ -255,12 +258,10 @@ function getFigure(agg: string, data: any[], prop: string) {
 }
 function LineChartComponent({
   data,
-  title,
   props,
   blocked = false,
   formatter = formatLargeNumber,
   height = 230,
-  description,
   loading = false,
   splitBy = undefined,
   startDate,
@@ -333,19 +334,7 @@ function LineChartComponent({
     return generateSeries(seriesNames);
   }, [cleanedData]);
   return (
-    <Card withBorder className="lineChart" p={0} radius="md">
-      <Group gap="xs">
-        <Text c="dimmed" fw={50} fz="md" m="md" mr={0}>
-          {title}
-        </Text>
-
-        {description && (
-          <MantineTooltip label={description}>
-            <IconInfoCircle size={16} opacity={0.5} />
-          </MantineTooltip>
-        )}
-      </Group>
-
+    <>
       {loading && (
         <>
           <Overlay
@@ -470,14 +459,18 @@ function LineChartComponent({
           justify-content: center;
         }
       `}</style>
-    </Card>
+    </>
   );
 }
 
 const LineChart = (props: LineChartProps) => (
-  <ErrorBoundary>
+  <AnalyticsCard
+    title={props.title}
+    description={props.description}
+    {...props.extraProps}
+  >
     <LineChartComponent {...props} />
-  </ErrorBoundary>
+  </AnalyticsCard>
 );
 
 export default LineChart;

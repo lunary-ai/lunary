@@ -67,6 +67,10 @@ import { useCharts } from "@/utils/dataHooks/charts";
 import {
   CustomChart,
   CustomChartCreator,
+  DateRangePicker,
+  determineGranularity,
+  Granularity,
+  GranularitySelect,
   SelectableCustomChart,
 } from "@/components/analytics/Creator";
 import { ConfirmModal, SaveAsModal } from "@/components/analytics/Modals";
@@ -78,8 +82,10 @@ import {
 import RenamableField from "@/components/blocks/RenamableField";
 import { ALL_CHARTS, deserializeDateRange } from "@/utils/analytics";
 
-import type { CheckLogic } from "shared";
+import type { CheckLogic, LogicElement } from "shared";
 import { useRouter } from "next/router";
+import AnalyticsCard from "@/components/analytics/AnalyticsCard";
+import { PieChart } from "@mantine/charts";
 
 type PresetDateRange = "Today" | "7 Days" | "30 Days" | "3 Months" | "Custom";
 type DateRange = [Date, Date];
@@ -184,114 +190,6 @@ export function DateRangeSelect({ dateRange, setDateRange }) {
   );
 }
 
-interface DateRangePickerProps {
-  dateRange: [Date, Date];
-  setDateRange: (dates: [Date, Date]) => void;
-}
-
-function DateRangePicker({ dateRange, setDateRange }: DateRangePickerProps) {
-  const [localDateRange, setLocalDateRange] = useState<
-    [Date | null, Date | null]
-  >([dateRange[0], dateRange[1]]);
-
-  useEffect(() => {
-    setLocalDateRange([dateRange[0], dateRange[1]]);
-  }, [dateRange]);
-
-  function handleDateChange(dates: [Date | null, Date | null]) {
-    setLocalDateRange(dates);
-    if (dates[0] && dates[1]) {
-      const [startDate, endDate] = dates;
-      startDate.setHours(0, 0, 0, 0);
-      endDate.setHours(23, 59, 59, 99);
-
-      setDateRange([dates[0], dates[1]]);
-    }
-  }
-  return (
-    <DatePickerInput
-      type="range"
-      placeholder="Pick date range"
-      leftSection={<IconCalendar size={18} stroke={1.5} />}
-      size="xs"
-      w="fit-content"
-      styles={{
-        input: {
-          borderTopLeftRadius: 0,
-          height: 32,
-          borderBottomLeftRadius: 0,
-        },
-      }}
-      value={localDateRange}
-      onChange={handleDateChange}
-      maxDate={new Date()}
-    />
-  );
-}
-
-type Granularity = "hourly" | "daily" | "weekly";
-
-interface GranularitySelectProps {
-  // dateRange: [Date, Date];
-  granularity: Granularity;
-  setGranularity: (granularity: Granularity) => void;
-}
-
-const determineGranularity = (
-  dateRange: [Date, Date],
-): "hourly" | "daily" | "weekly" => {
-  const [startDate, endDate] = dateRange;
-  const diffDays =
-    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
-
-  if (diffDays <= 1) return "hourly";
-  if (diffDays <= 60) return "daily";
-  return "weekly";
-};
-
-function GranularitySelect({
-  granularity,
-  setGranularity,
-}: GranularitySelectProps) {
-  const [options, setOptions] = useState<
-    { value: Granularity; label: string }[]
-  >([
-    { value: "daily", label: "Daily" },
-    { value: "weekly", label: "Weekly" },
-  ]);
-
-  useEffect(() => {
-    if (granularity === "hourly") {
-      setOptions([{ value: "hourly", label: "Hourly" }]);
-    } else if (granularity === "daily") {
-      setOptions([{ value: "daily", label: "Daily" }]);
-    } else {
-      setOptions([
-        { value: "daily", label: "Daily" },
-        { value: "weekly", label: "Weekly" },
-      ]);
-    }
-  }, [granularity]);
-
-  return (
-    <Select
-      placeholder="Granularity"
-      w="100"
-      size="xs"
-      allowDeselect={false}
-      ml="md"
-      styles={{
-        input: {
-          height: 32,
-        },
-      }}
-      data={options}
-      value={granularity}
-      onChange={(value) => setGranularity(value as Granularity)}
-    />
-  );
-}
-
 const DEFAULT_CHECK = ["AND"];
 
 function AnalyticsChart({
@@ -307,6 +205,7 @@ function AnalyticsChart({
   serializedChecks,
   formatter,
   colors,
+  ...extraProps
 }: {
   dataKey: string;
   splitBy?: string;
@@ -354,6 +253,7 @@ function AnalyticsChart({
         granularity={granularity}
         formatter={formatter}
         colors={colors}
+        extraProps={extraProps}
       />
     </Box>
   );
@@ -426,29 +326,27 @@ function ChartSelector({
             >
               <Stack style={{ overflowY: "auto" }}>
                 <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="md">
-                  {ALL_CHARTS.main.map((chartID) => (
-                    <Selectable
-                      key={chartID}
-                      header={chartID}
-                      isSelected={chartsState.includes(chartID)}
-                      onSelect={() => toggleChart(chartID)}
-                    >
-                      {getChartComponent(chartID)}
-                    </Selectable>
-                  ))}
+                  {ALL_CHARTS.main.map((chartID) =>
+                    getChartComponent(chartID, {
+                      selectable: true,
+                      isSelected: chartsState.includes(chartID),
+                      onSelect() {
+                        toggleChart(chartID);
+                      },
+                    }),
+                  )}
                 </SimpleGrid>
 
                 <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="md">
-                  {ALL_CHARTS.extras.map((chartID) => (
-                    <Selectable
-                      key={chartID}
-                      header={chartID}
-                      isSelected={chartsState.includes(chartID)}
-                      onSelect={() => toggleChart(chartID)}
-                    >
-                      {getChartComponent(chartID)}
-                    </Selectable>
-                  ))}
+                  {ALL_CHARTS.extras.map((chartID) =>
+                    getChartComponent(chartID, {
+                      selectable: true,
+                      isSelected: chartsState.includes(chartID),
+                      onSelect() {
+                        toggleChart(chartID);
+                      },
+                    }),
+                  )}
                 </SimpleGrid>
               </Stack>
             </Tabs.Panel>
@@ -551,7 +449,7 @@ export default function Analytics() {
   const [tempDashboardState, setTempDashboardState] = useState(dashboard);
 
   const dashboardState = useMemo(() => {
-    if (editMode) return tempDashboardState;
+    // if (editMode) return tempDashboardState;
     return dashboard;
   }, [editMode, dashboard, tempDashboardState]);
 
@@ -705,20 +603,33 @@ export default function Analytics() {
     });
   }
 
-  function getChartComponent(id: string) {
+  function getChartComponent(id: string, props?: any) {
     if (id === "models") {
-      return <TopModels topModels={topModels} isLoading={topModelsLoading} />;
+      return (
+        <TopModels
+          topModels={topModels}
+          isLoading={topModelsLoading}
+          {...(props || {})}
+        />
+      );
     }
     if (id === "templates") {
       return (
         <TopTemplates
+          {...(props || {})}
           topTemplates={topTemplates}
           isLoading={topTemplatesLoading}
         />
       );
     }
     if (id === "users") {
-      return <TopUsersCard topUsers={topUsers} isLoading={topUsersLoading} />;
+      return (
+        <TopUsersCard
+          topUsers={topUsers}
+          isLoading={topUsersLoading}
+          {...(props || {})}
+        />
+      );
     }
     if (id === "top-topics") {
       return <TopTopics />;
@@ -727,9 +638,15 @@ export default function Analytics() {
       return <Sentiment />;
     }
     if (chartProps[id]) {
-      return <AnalyticsChart {...chartProps[id]} {...commonChartData} />;
+      return (
+        <AnalyticsChart
+          {...chartProps[id]}
+          {...commonChartData}
+          {...(props || {})}
+        />
+      );
     }
-    return <CustomChart chartID={id} {...commonChartData} />;
+    return <CustomChart chartID={id} {...commonChartData} {...(props || {})} />;
   }
 
   async function onToggleMode() {
@@ -983,7 +900,11 @@ export default function Analytics() {
                   editMode={editMode}
                 >
                   <Draggable id={chartID} editMode={editMode}>
-                    {getChartComponent(chartID)}
+                    {getChartComponent(chartID, {
+                      selectable: editMode,
+                      isSelected: tempDashboardState?.charts.includes(chartID),
+                      onSelect: () => toggleChart(chartID),
+                    })}
                   </Draggable>
                 </Droppable>
               </Grid.Col>
@@ -997,7 +918,13 @@ export default function Analytics() {
                 editMode={editMode}
               >
                 <Draggable id={dashboardState?.charts[3]} editMode={editMode}>
-                  {getChartComponent(dashboardState?.charts[3])}
+                  {getChartComponent(dashboardState?.charts[3], {
+                    selectable: editMode,
+                    isSelected: tempDashboardState?.charts.includes(
+                      dashboardState?.charts[3],
+                    ),
+                    onSelect: () => toggleChart(dashboardState?.charts[3]),
+                  })}
                 </Draggable>
               </Droppable>
             </Grid.Col>
@@ -1010,7 +937,11 @@ export default function Analytics() {
                   editMode={editMode}
                 >
                   <Draggable id={chartID} editMode={editMode}>
-                    {getChartComponent(chartID)}
+                    {getChartComponent(chartID, {
+                      selectable: editMode,
+                      isSelected: tempDashboardState?.charts.includes(chartID),
+                      onSelect: () => toggleChart(chartID),
+                    })}
                   </Draggable>
                 </Droppable>
               </Grid.Col>
