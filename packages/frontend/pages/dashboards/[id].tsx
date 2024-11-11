@@ -31,13 +31,11 @@ import {
   Title,
   useComputedColorScheme,
 } from "@mantine/core";
-import { DatePickerInput } from "@mantine/dates";
 
 import { useInViewport } from "@mantine/hooks";
 import {
   IconAlertTriangle,
   IconArrowLeft,
-  IconCalendar,
   IconCancel,
   IconChartAreaLine,
   IconChartLine,
@@ -52,7 +50,7 @@ import {
 } from "@tabler/icons-react";
 import { NextSeo } from "next-seo";
 import { useEffect, useMemo, useState } from "react";
-import { DEFAULT_DASHBOARD, deserializeLogic, serializeLogic } from "shared";
+import { deserializeLogic, serializeLogic } from "shared";
 
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -74,18 +72,12 @@ import {
   SelectableCustomChart,
 } from "@/components/analytics/Creator";
 import { ConfirmModal, SaveAsModal } from "@/components/analytics/Modals";
-import {
-  Draggable,
-  Droppable,
-  Selectable,
-} from "@/components/analytics/Wrappers";
+import { Draggable, Droppable } from "@/components/analytics/Wrappers";
 import RenamableField from "@/components/blocks/RenamableField";
 import { ALL_CHARTS, deserializeDateRange } from "@/utils/analytics";
+import PieChart from "@/components/analytics/PieChart";
 
-import type { CheckLogic, LogicElement } from "shared";
 import { useRouter } from "next/router";
-import AnalyticsCard from "@/components/analytics/AnalyticsCard";
-import { PieChart } from "@mantine/charts";
 
 type PresetDateRange = "Today" | "7 Days" | "30 Days" | "3 Months" | "Custom";
 type DateRange = [Date, Date];
@@ -205,6 +197,7 @@ function AnalyticsChart({
   serializedChecks,
   formatter,
   colors,
+  chartType,
   ...extraProps
 }: {
   dataKey: string;
@@ -219,6 +212,7 @@ function AnalyticsChart({
   serializedChecks: string;
   formatter?: (value: number) => string;
   colors?: string[];
+  chartType: "line" | "pie";
 }) {
   const { ref, inViewport } = useInViewport();
   const [load, setLoad] = useState(inViewport);
@@ -237,24 +231,45 @@ function AnalyticsChart({
     }
   }, [inViewport]);
 
+  chartType === "pie" && console.log(chartType, data?.data);
+
   return (
     <Box ref={ref}>
-      <LineChart
-        data={data?.data}
-        stat={data?.stat}
-        loading={isLoading}
-        splitBy={splitBy}
-        props={props}
-        agg={agg || "sum"}
-        title={title}
-        description={description}
-        startDate={startDate}
-        endDate={endDate}
-        granularity={granularity}
-        formatter={formatter}
-        colors={colors}
-        extraProps={extraProps}
-      />
+      {chartType === "pie" ? (
+        <PieChart
+          data={data?.data}
+          stat={data?.stat}
+          loading={isLoading}
+          splitBy={splitBy}
+          props={props}
+          agg={agg || "sum"}
+          title={title}
+          description={description}
+          startDate={startDate}
+          endDate={endDate}
+          granularity={granularity}
+          formatter={formatter}
+          colors={colors}
+          extraProps={extraProps}
+        />
+      ) : (
+        <LineChart
+          data={data?.data}
+          stat={data?.stat}
+          loading={isLoading}
+          splitBy={splitBy}
+          props={props}
+          agg={agg || "sum"}
+          title={title}
+          description={description}
+          startDate={startDate}
+          endDate={endDate}
+          granularity={granularity}
+          formatter={formatter}
+          colors={colors}
+          extraProps={extraProps}
+        />
+      )}
     </Box>
   );
 }
@@ -545,6 +560,13 @@ export default function Analytics() {
       title: "Avg. User Cost",
       description: "The average cost of each of your users",
       formatter: formatCost,
+    },
+    "users/languages": {
+      chartType: "pie",
+      dataKey: "users/languages",
+      props: ["name", "value"],
+      title: "Languages",
+      description: "Language distribution across users",
     },
     "run-types": {
       dataKey: "run-types",
@@ -924,6 +946,23 @@ export default function Analytics() {
                       dashboardState?.charts[3],
                     ),
                     onSelect: () => toggleChart(dashboardState?.charts[3]),
+                  })}
+                </Draggable>
+              </Droppable>
+            </Grid.Col>
+
+            <Grid.Col className="chart" span={6}>
+              <Droppable
+                key={"users/languages"}
+                onDrop={(item) => handleDropChart(item, "users/languages")}
+                editMode={editMode}
+              >
+                <Draggable id={"users/languages"} editMode={editMode}>
+                  {getChartComponent("users/languages", {
+                    selectable: editMode,
+                    isSelected:
+                      tempDashboardState?.charts.includes("users/languages"),
+                    onSelect: () => toggleChart("users/languages"),
                   })}
                 </Draggable>
               </Droppable>

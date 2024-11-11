@@ -641,6 +641,23 @@ analytics.get(
 );
 
 analytics.get(
+  "/users/languages",
+  checkAccess("analytics", "read"),
+  async (ctx: Context) => {
+    ctx.body = {
+      data: [
+        { name: "English", value: 400, color: "indigo.6" },
+        { name: "French", value: 300, color: "yellow.6" },
+        { name: "Spanish", value: 100, color: "teal.6" },
+        { name: "Japanese", value: 300, color: "red.6" },
+        { name: "Chinese", value: 100, color: "cyan.6" },
+        { name: "Other", value: 200, color: "gray.6" },
+      ],
+    };
+  },
+);
+
+analytics.get(
   "/run-types",
   checkAccess("analytics", "read"),
   async (ctx: Context) => {

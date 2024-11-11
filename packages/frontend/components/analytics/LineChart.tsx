@@ -359,7 +359,7 @@ function LineChartComponent({
       )}
 
       {typeof total === "number" && (
-        <Text fw={500} fz={24} mt={-12} ml="md">
+        <Text fw={500} fz={24} ml="md">
           {formatter(total)}
         </Text>
       )}
