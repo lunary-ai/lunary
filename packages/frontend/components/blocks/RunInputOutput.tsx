@@ -387,7 +387,7 @@ export default function RunInputOutput({
                         );
                       })}
 
-                    {Boolean(run.scores.length) && (
+                    {run.scores && Boolean(run.scores.length) && (
                       <Group mt="md" gap="xs">
                         <Title size="md">Scores</Title>
                         <Tooltip
@@ -399,7 +399,7 @@ export default function RunInputOutput({
                         </Tooltip>
                       </Group>
                     )}
-                    {run.scores.map((score, i) => (
+                    {run.scores?.map((score, i) => (
                       <Badge key={i} variant="outline" color="blue">
                         {score.label}: {score.value}
                       </Badge>
