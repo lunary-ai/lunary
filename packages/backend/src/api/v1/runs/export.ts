@@ -107,10 +107,6 @@ function getTraceChildren(run: Run, runs: Run[]): TraceRun {
   };
 }
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 export async function fileExport(
   { ctx, sql, cursor, formatRun, projectId }: ExportType,
   exportFormat: "csv" | "ojsonl" | "jsonl",
@@ -125,8 +121,6 @@ export async function fileExport(
     const stream = Readable.from({
       async *[Symbol.asyncIterator]() {
         for await (const [row] of cursor) {
-          // TODO: Remove this. Simulate a large dataset
-          await sleep(25);
           yield parser.parse(formatRun(row));
         }
       },
@@ -145,10 +139,11 @@ export async function fileExport(
 
           if (input.length && output.length) {
             // convert to JSON string format { messages: [input, output]}
-            const line = JSON.stringify(unCamelObject({
-              messages: [...input, ...output]
-                .map(cleanOpenAiMessage),
-            }));
+            const line = JSON.stringify(
+              unCamelObject({
+                messages: [...input, ...output].map(cleanOpenAiMessage),
+              }),
+            );
             if (line.length > 0) {
               yield line + "\n";
             }

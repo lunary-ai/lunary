@@ -1160,7 +1160,7 @@ runs.post("/generate-export-token", async (ctx) => {
   const token = crypto.randomBytes(32).toString("hex");
 
   try {
-    await sql`update account set single_use_token = ${token} where id = ${ctx.state.userId}`;
+    await sql`update account set export_single_use_token = ${token} where id = ${ctx.state.userId}`;
   } catch (error: any) {
     return ctx.throw(error.message, 500);
   }
@@ -1181,7 +1181,7 @@ runs.get("/exports/:token", async (ctx) => {
   }
 
   const [user] =
-    await sql`select name from account where single_use_token = ${token}`;
+    await sql`select name from account where export_single_use_token = ${token}`;
   if (!user) {
     return ctx.throw(401, "Invalid token");
   }
@@ -1194,7 +1194,7 @@ runs.get("/exports/:token", async (ctx) => {
     !type || type === "llm" ? "thread" : type,
   );
 
-  await sql`update account set single_use_token = null where id = ${ctx.state.userId}`;
+  await sql`update account set export_single_use_token = null where id = ${ctx.state.userId}`;
 });
 
 export default runs;
