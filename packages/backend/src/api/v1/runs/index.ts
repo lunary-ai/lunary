@@ -1162,7 +1162,23 @@ runs.delete("/:id", checkAccess("logs", "delete"), async (ctx: Context) => {
   ctx.status = 200;
 });
 
-// TODO: openAPI
+/**
+ * @openapi
+ * /v1/runs/generate-export-token:
+ *   post:
+ *     summary: Generate an export token
+ *     tags: [Runs]
+ *     responses:
+ *       200:
+ *         description: Export token generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ */
 runs.post("/generate-export-token", async (ctx) => {
   const { userId } = ctx.state;
   const token = crypto.randomBytes(32).toString("hex");
@@ -1172,7 +1188,41 @@ runs.post("/generate-export-token", async (ctx) => {
   ctx.body = { token };
 });
 
-// TODO: openAPI
+/**
+ * @openapi
+ * /v1/runs/exports/{token}:
+ *   get:
+ *     summary: Export runs data
+ *     tags: [Runs]
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: type
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [llm, trace, thread]
+ *       - in: query
+ *         name: exportFormat
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [csv, jsonl, ojsonl]
+ *     responses:
+ *       200:
+ *         description: Export successful
+ *         content:
+ *           application/octet-stream:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       401:
+ *         description: Invalid token
+ */
 runs.get("/exports/:token", async (ctx) => {
   const { type, exportFormat } = z
     .object({
