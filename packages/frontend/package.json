@@ -30,7 +30,7 @@
     "jsonrepair": "^3.5.1",
     "next": "^14.2.8",
     "next-seo": "^6.6.0",
-    "nuqs": "^1.19.1",
+    "nuqs": "^2.2.1",
     "posthog-js": "^1.160.3",
     "random-word-slugs": "^0.1.7",
     "react": "^18.3.1",

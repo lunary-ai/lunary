@@ -73,8 +73,6 @@ const CheckInputs = {
       }
     }, []);
 
-    console.log(value, defaultValue);
-
     return (
       <DateTimePicker
         minDate={minDate}
