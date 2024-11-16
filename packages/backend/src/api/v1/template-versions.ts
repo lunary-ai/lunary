@@ -96,6 +96,7 @@ versions.get("/latest", async (ctx: Context) => {
 versions.get("/:id", async (ctx: Context) => {
   const { id: versionId } = ctx.params;
   const { projectId } = ctx.state;
+  console.log("projectId", projectId);
 
   const [version] = await sql`
     select
@@ -103,9 +104,10 @@ versions.get("/:id", async (ctx: Context) => {
     from
       template_version tv
       left join template t on tv.template_id = t.id
-      left join project p on t.project_id = p.id and p.id = ${projectId}
+      left join project p on t.project_id = p.id 
     where
       tv.id = ${versionId}
+      and p.id = ${projectId}
   `;
   if (!version) {
     ctx.throw(401, "You do not have access to this ressource.");
