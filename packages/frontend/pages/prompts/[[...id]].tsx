@@ -628,19 +628,25 @@ function Playground() {
               </Card>
             )}
 
-            <Button
-              leftSection={<IconBolt size="16" />}
-              size="sm"
-              disabled={loading}
-              onClick={runPlayground}
-              data-testid="run-playground"
-              loading={streaming}
-              rightSection={
-                <HotkeysInfo hot="Enter" size="sm" style={{ marginTop: -4 }} />
-              }
-            >
-              {template?.id ? "Test template" : "Run"}
-            </Button>
+            {hasAccess(user.role, "prompts", "run") && (
+              <Button
+                leftSection={<IconBolt size="16" />}
+                size="sm"
+                disabled={loading}
+                onClick={runPlayground}
+                data-testid="run-playground"
+                loading={streaming}
+                rightSection={
+                  <HotkeysInfo
+                    hot="Enter"
+                    size="sm"
+                    style={{ marginTop: -4 }}
+                  />
+                }
+              >
+                {template?.id ? "Test template" : "Run"}
+              </Button>
+            )}
           </Stack>
         </Box>
       </Flex>
