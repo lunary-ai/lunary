@@ -78,7 +78,7 @@ export function AddCheckButton({ checks, onSelect, defaultOpened }) {
             placeholder="Type to filter"
           />
           <Combobox.Options>
-            <ScrollArea.Autosize mah={200} type="always">
+            <ScrollArea.Autosize mah={200} type="always" scrollbars="y">
               {options.length > 0 ? (
                 options
               ) : (
