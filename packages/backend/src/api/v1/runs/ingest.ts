@@ -168,7 +168,16 @@ async function registerRunEvent(
   /* When using multiple LangChain callbacks for the same events, the project ID is associated with the event.
    * The projectId passed to this function is the public key, so it may not necessarily be the correct one for the current event.
    */
-  projectId = event.appId || projectId;
+  const apiKey = event.appId;
+  if (typeof apiKey === "string") {
+    const [project] = await sql`
+      select project_id from api_key where api_key = ${apiKey}
+    `;
+
+    if (project) {
+      projectId = project.projectId;
+    }
+  }
 
   if (!tags) {
     tags = metadata?.tags;
@@ -184,12 +193,6 @@ async function registerRunEvent(
   let externalUserId;
   // Only do on start event to save on DB calls and have correct lastSeen
   if (typeof userId === "string" && !["end", "error"].includes(eventName)) {
-    const [projectExists] =
-      await sql`select exists(select 1 from project where id = ${projectId})`;
-    if (!projectExists) {
-      throw new ProjectNotFoundError(projectId);
-    }
-
     const [result] = await sql`
       insert into external_user ${sql(
         clearUndefined({
