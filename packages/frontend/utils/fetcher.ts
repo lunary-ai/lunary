@@ -86,7 +86,7 @@ async function getStream(url, args, onChunk) {
   }
 }
 
-function post(path, { arg }) {
+function post(path, { arg = {} } = {}) {
   return fetch(buildUrl(path), {
     method: "POST",
     headers: {
@@ -96,7 +96,6 @@ function post(path, { arg }) {
     body: JSON.stringify(arg),
   }).then(handleResponse);
 }
-
 function patch(path, { arg }) {
   return fetch(buildUrl(path), {
     method: "PATCH",
