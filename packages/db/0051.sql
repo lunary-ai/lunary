@@ -1,1 +1,0 @@
-alter table account add column if not exists export_single_use_token text null default null;
