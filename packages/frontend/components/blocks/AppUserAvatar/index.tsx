@@ -35,14 +35,12 @@ function AppUserAvatar({
 
   return (
     <Group gap="xs" wrap="nowrap">
-      <Avatar lh={0.4} radius="xl" color={color} size={size}>
-        {nameOrEmail?.slice(0, 2)?.toUpperCase()}
-      </Avatar>
-      {withName && (
-        <Anchor className={styles.anchor} href={`/users/${user.id}`}>
-          <ProtectedText>{nameOrEmail}</ProtectedText>
-        </Anchor>
-      )}
+      <Anchor className={styles.anchor} href={`/users/${user.id}`}>
+        <Avatar lh={0.4} radius="xl" color={color} size={size}>
+          {nameOrEmail?.slice(0, 2)?.toUpperCase()}
+        </Avatar>
+      </Anchor>
+      {withName && <ProtectedText>{nameOrEmail}</ProtectedText>}
     </Group>
   );
 }

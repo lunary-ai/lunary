@@ -18,7 +18,7 @@ import {
   Tooltip,
   useComputedColorScheme,
   Title,
-} from "@mantine/core"
+} from "@mantine/core";
 import {
   IconCircleMinus,
   IconInfoCircle,
@@ -31,16 +31,16 @@ import ProtectedText from "../blocks/ProtectedText";
 import { RenderJson } from "./RenderJson";
 import classes from "./index.module.css";
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react";
 
-import { SentimentEnrichment2 } from "@/utils/enrichment"
-import { getFlagEmoji, getLanguageName } from "@/utils/format"
-import { openConfirmModal } from "@mantine/modals"
-import HighlightPii from "./HighlightPii"
-import AppUserAvatar from "../blocks/AppUserAvatar"
-import { useDisclosure, useLocalStorage } from "@mantine/hooks"
-import { useAnalyticsChartData } from "@/utils/dataHooks/analytics"
-import { deserializeDateRange, getDefaultDateRange } from "@/pages/analytics"
+import { SentimentEnrichment2 } from "@/utils/enrichment";
+import { getFlagEmoji, getLanguageName } from "@/utils/format";
+import { openConfirmModal } from "@mantine/modals";
+import HighlightPii from "./HighlightPii";
+import AppUserAvatar from "../blocks/AppUserAvatar";
+import { useDisclosure, useLocalStorage } from "@mantine/hooks";
+import { useAnalyticsChartData } from "@/utils/dataHooks/analytics";
+import { deserializeDateRange, getDefaultDateRange } from "@/pages/analytics";
 
 const ghostTextAreaStyles = {
   variant: "unstyled",
@@ -582,7 +582,7 @@ function UserAvatarWithInfo({ user }) {
           <AppUserAvatar size="md" user={user} />
         </Group>
       </HoverCard.Target>
-      <HoverCard.Dropdown style={{ pointerEvents: 'none' }}>
+      <HoverCard.Dropdown style={{ pointerEvents: "none" }}>
         <Text size="sm" ta={"center"}>
           <Title size={"small"}>{user.externalId} </Title>
         </Text>
@@ -593,19 +593,20 @@ function UserAvatarWithInfo({ user }) {
 
 function MessageIcon({ role, color, user }) {
   if (role === "user" && user) {
-    return <UserAvatarWithInfo user={user} />
+    return <UserAvatarWithInfo user={user} />;
   } else {
     const Icon = ROLE_ICONS[role || "assistant"];
-    if (Icon) return (
-      <ThemeIcon size={36} mt={6} variant="light" radius="xl" color={color}>
-        <Icon size={24} />
-      </ThemeIcon>
-    )
+    if (Icon)
+      return (
+        <ThemeIcon size={36} mt={6} variant="light" radius="xl" color={color}>
+          <Icon size={24} />
+        </ThemeIcon>
+      );
   }
 }
 
 // Used for chat replays
-export function BubbleMessage({ role, content, extra, enrichments }) {
+export function BubbleMessage({ role, content, extra, enrichments, user }) {
   const alignLeft = ["ai", "assistant", "bot", "tool", "system"].includes(role);
 
   const Icon = ROLE_ICONS[role || "assistant"];
@@ -635,7 +636,7 @@ export function BubbleMessage({ role, content, extra, enrichments }) {
         align="start"
         gap="md"
       >
-        <MessageIcon role={role} user={user} color={color}/>
+        <MessageIcon role={role} user={user} color={color} />
         <div>
           <Paper
             mb="xs"

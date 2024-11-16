@@ -142,8 +142,8 @@ function Message({
   );
 }
 
-function RunsChat({ runs, mutateLogs, user }) {
-  const [selectedRetries, setSelectedRetries] = useState({})
+function RunsChat({ runs, mutateLogs }) {
+  const [selectedRetries, setSelectedRetries] = useState({});
 
   // Each chat run has input = [user message], output = [bot message]
   const messages = useMemo(
@@ -193,7 +193,7 @@ function RunsChat({ runs, mutateLogs, user }) {
               <Message
                 key={i}
                 msg={msg}
-                user={user}
+                user={run.user}
                 siblings={siblings}
                 selectedIndex={selectedIndex}
                 handleRetrySelect={handleRetrySelect}
@@ -278,16 +278,14 @@ export function ChatReplay({ run, mutateLogs, deleteRun }) {
 
       <Card withBorder radius="md">
         <Stack gap="xs">
-          <Group justify="space-between">
-            <Text>User</Text>
-            <Text>
-              {user ? (
+          {user && (
+            <Group justify="space-between">
+              <Text>User</Text>
+              <Text>
                 <AppUserAvatar size="sm" user={user} withName />
-              ) : (
-                "Unknown"
-              )}
-            </Text>
-          </Group>
+              </Text>
+            </Group>
+          )}
           <Group justify="space-between">
             <Text>First message</Text>
             <Text>{formatDateTime(run.createdAt)}</Text>
@@ -305,7 +303,7 @@ export function ChatReplay({ run, mutateLogs, deleteRun }) {
 
       {loading && <Loader />}
 
-      <RunsChat runs={sorted} mutateLogs={mutateLogs} user={user}  />
+      <RunsChat runs={sorted} mutateLogs={mutateLogs} />
     </Stack>
   );
 }
