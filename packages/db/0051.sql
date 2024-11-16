@@ -1,0 +1,1 @@
+alter table evaluator add constraint evaluator_project_id_slug_unique unique (project_id, slug);
