@@ -318,7 +318,7 @@ export default function Logs() {
     setVisibleColumns(view.columns);
   }, [view, viewId]);
 
-  function exportButton({ serializedChecks, projectId, type = null, format }) {
+  function exportButton({ serializedChecks, projectId, type, format }) {
     return {
       component: "a",
       onClick: async () => {
@@ -469,6 +469,7 @@ export default function Logs() {
                         {...exportButton({
                           serializedChecks,
                           projectId,
+                          type,
                           format: "ojsonl",
                         })}
                       >

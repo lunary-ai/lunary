@@ -120,8 +120,22 @@ export async function fileExport(
 
     const stream = Readable.from({
       async *[Symbol.asyncIterator]() {
+        let isFirst = true;
         for await (const [row] of cursor) {
-          yield parser.parse(formatRun(row));
+          let line;
+          if (exportType === "trace") {
+            const related = await getRelatedRuns(sql, row.id, projectId);
+            line = parser.parse(getTraceChildren(formatRun(row), related));
+          } else {
+            line = parser.parse(formatRun(row));
+          }
+          if (isFirst) {
+            isFirst = false;
+          } else {
+            line = line.trim().split("\n").slice(1).join("\\n");
+          }
+          // console.log(line);
+          yield line + "\n";
         }
       },
     });

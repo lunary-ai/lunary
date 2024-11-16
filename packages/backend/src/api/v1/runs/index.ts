@@ -1174,6 +1174,7 @@ runs.post("/generate-export-token", async (ctx) => {
 
 // TODO: openAPI
 runs.get("/exports/:token", async (ctx) => {
+  console.log(ctx.query);
   const { type, exportFormat } = z
     .object({
       type: z.union([
