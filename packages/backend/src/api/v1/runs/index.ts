@@ -12,8 +12,6 @@ import ingest from "./ingest";
 
 import crypto from "crypto";
 
-const EXPORTERS = new Map();
-
 /**
  * @openapi
  * components:
@@ -117,7 +115,6 @@ interface Query {
   models?: string[];
   tags?: string[];
   tokens?: string;
-  exportType?: "trace" | "thread";
   exportFormat?: "csv" | "ojsonl" | "jsonl";
   minDuration?: string;
   maxDuration?: string;
@@ -129,6 +126,7 @@ interface Query {
   order?: string;
   sortField?: string;
   sortDirection?: string;
+  token?: string;
 }
 
 function processInput(input: unknown) {
@@ -307,6 +305,102 @@ function formatRun(run: any) {
   return formattedRun;
 }
 
+function getRunQuery({ ctx }: { ctx: Context }) {
+  const { projectId } = ctx.state;
+
+  const queryString = ctx.querystring;
+  const deserializedChecks = deserializeLogic(queryString);
+
+  const filtersQuery =
+    deserializedChecks?.length && deserializedChecks.length > 1 // first is always ["AND"]
+      ? convertChecksToSQL(deserializedChecks)
+      : sql`r.type = 'llm'`; // default to type llm
+
+  const {
+    type,
+    limit = "50",
+    page = "0",
+    parentRunId,
+    sortField,
+    sortDirection,
+  } = ctx.query as Query;
+
+  let parentRunCheck = sql``;
+  if (parentRunId) {
+    parentRunCheck = sql`and parent_run_id = ${parentRunId}`;
+  }
+
+  const sortMapping: { [index: string]: string } = {
+    createdAt: "r.created_at",
+    duration: "r.duration",
+    tokens: "total_tokens",
+    cost: "r.cost",
+  };
+  let orderByClause = `r.created_at desc nulls last`;
+  if (sortField && sortField in sortMapping) {
+    const direction = sortDirection === "desc" ? `desc` : `asc`;
+    orderByClause = `${sortMapping[sortField]} ${direction} nulls last`;
+  }
+
+  const query = sql`
+    with runs as (
+      select distinct
+        r.*,
+        (r.prompt_tokens + r.completion_tokens) as total_tokens,
+        eu.id as user_id,
+        eu.external_id as user_external_id,
+        eu.created_at as user_created_at,
+        eu.last_seen as user_last_seen,
+        eu.props as user_props,
+        t.slug as template_slug,
+        rpfc.feedback as parent_feedback
+    from
+        public.run r
+        left join external_user eu on r.external_user_id = eu.id
+        left join run_parent_feedback_cache rpfc on r.id = rpfc.id
+        left join template_version tv on r.template_version_id = tv.id
+        left join template t on tv.template_id = t.id
+        left join evaluation_result_v2 er on r.id = er.run_id
+        left join evaluator e on er.evaluator_id = e.id
+    where
+        r.project_id = ${projectId}
+        ${parentRunCheck}
+        and (${filtersQuery})
+    order by
+        ${sql.unsafe(orderByClause)}  
+    limit ${type ? 10000 : Number(limit)}
+    offset ${Number(page) * Number(limit)}
+  ),
+  evaluation_results as (
+    select
+        r.id,
+        coalesce(array_agg(
+            jsonb_build_object(
+                'evaluatorName', e.name,
+                'evaluatorSlug', e.slug,
+                'evaluatorType', e.type,
+                'evaluatorId', e.id,
+                'result', er.result, 
+                'createdAt', er.created_at,
+                'updatedAt', er.updated_at
+            )
+        ) filter (where er.run_id is not null), '{}') as evaluation_results
+    from runs r
+    left join evaluation_result_v2 er on r.id = er.run_id
+    left join evaluator e on er.evaluator_id = e.id
+    group by r.id
+  )
+  select
+    r.*,
+    er.evaluation_results
+  from
+    runs r
+    left join evaluation_results er on r.id = er.id
+  `;
+
+  return { query, projectId, parentRunCheck, filtersQuery, page, limit };
+}
+
 runs.use("/ingest", ingest.routes());
 
 /**
@@ -457,108 +551,8 @@ runs.use("/ingest", ingest.routes());
  *                   metadata: null
  */
 runs.get("/", async (ctx: Context) => {
-  const { projectId } = ctx.state;
-
-  const queryString = ctx.querystring;
-  const deserializedChecks = deserializeLogic(queryString);
-
-  const filtersQuery =
-    deserializedChecks?.length && deserializedChecks.length > 1 // first is always ["AND"]
-      ? convertChecksToSQL(deserializedChecks)
-      : sql`r.type = 'llm'`; // default to type llm
-
-  const {
-    limit = "50",
-    page = "0",
-    parentRunId,
-    exportType,
-    exportFormat,
-    sortField,
-    sortDirection,
-  } = ctx.query as Query;
-
-  let parentRunCheck = sql``;
-  if (parentRunId) {
-    parentRunCheck = sql`and parent_run_id = ${parentRunId}`;
-  }
-
-  const sortMapping = {
-    createdAt: "r.created_at",
-    duration: "r.duration",
-    tokens: "total_tokens",
-    cost: "r.cost",
-  };
-  let orderByClause = `r.created_at desc nulls last`;
-  if (sortField && sortField in sortMapping) {
-    const direction = sortDirection === "desc" ? `desc` : `asc`;
-    orderByClause = `${sortMapping[sortField]} ${direction} nulls last`;
-  }
-
-  const query = sql`
-    with runs as (
-      select distinct
-        r.*,
-        (r.prompt_tokens + r.completion_tokens) as total_tokens,
-        eu.id as user_id,
-        eu.external_id as user_external_id,
-        eu.created_at as user_created_at,
-        eu.last_seen as user_last_seen,
-        eu.props as user_props,
-        t.slug as template_slug,
-        rpfc.feedback as parent_feedback
-    from
-        public.run r
-        left join external_user eu on r.external_user_id = eu.id
-        left join run_parent_feedback_cache rpfc on r.id = rpfc.id
-        left join template_version tv on r.template_version_id = tv.id
-        left join template t on tv.template_id = t.id
-        left join evaluation_result_v2 er on r.id = er.run_id
-        left join evaluator e on er.evaluator_id = e.id
-    where
-        r.project_id = ${projectId}
-        ${parentRunCheck}
-        and (${filtersQuery})
-    order by
-        ${sql.unsafe(orderByClause)}  
-    limit ${exportType ? 10000 : Number(limit)}
-    offset ${Number(page) * Number(limit)}
-  ),
-  evaluation_results as (
-    select
-        r.id,
-        coalesce(array_agg(
-            jsonb_build_object(
-                'evaluatorName', e.name,
-                'evaluatorSlug', e.slug,
-                'evaluatorType', e.type,
-                'evaluatorId', e.id,
-                'result', er.result, 
-                'createdAt', er.created_at,
-                'updatedAt', er.updated_at
-            )
-        ) filter (where er.run_id is not null), '{}') as evaluation_results
-    from runs r
-    left join evaluation_result_v2 er on r.id = er.run_id
-    left join evaluator e on er.evaluator_id = e.id
-    group by r.id
-  )
-  select
-    r.*,
-    er.evaluation_results
-  from
-    runs r
-    left join evaluation_results er on r.id = er.id
-  `;
-
-  if (exportFormat) {
-    const token = crypto.randomBytes(32).toString("hex");
-    const cursor = query.cursor();
-
-    EXPORTERS.set(token, { cursor, projectId, exportFormat, exportType });
-
-    ctx.body = { token };
-    return;
-  }
+  const { query, projectId, parentRunCheck, filtersQuery, page, limit } =
+    getRunQuery({ ctx });
 
   const rows = await query;
   const runs = rows.map(formatRun);
@@ -1168,23 +1162,99 @@ runs.delete("/:id", checkAccess("logs", "delete"), async (ctx: Context) => {
   ctx.status = 200;
 });
 
-runs.get("/download/:token", async (ctx) => {
+/**
+ * @openapi
+ * /v1/runs/generate-export-token:
+ *   post:
+ *     summary: Generate an export token
+ *     tags: [Runs]
+ *     responses:
+ *       200:
+ *         description: Export token generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ */
+runs.post("/generate-export-token", async (ctx) => {
+  const { userId } = ctx.state;
+  const token = crypto.randomBytes(32).toString("hex");
+
+  await sql`update account set export_single_use_token = ${token} where id = ${userId}`;
+
+  ctx.body = { token };
+});
+
+/**
+ * @openapi
+ * /v1/runs/exports/{token}:
+ *   get:
+ *     summary: Export runs data
+ *     tags: [Runs]
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: type
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [llm, trace, thread]
+ *       - in: query
+ *         name: exportFormat
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [csv, jsonl, ojsonl]
+ *     responses:
+ *       200:
+ *         description: Export successful
+ *         content:
+ *           application/octet-stream:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       401:
+ *         description: Invalid token
+ */
+runs.get("/exports/:token", async (ctx) => {
+  const { type, exportFormat } = z
+    .object({
+      type: z.union([
+        z.literal("llm"),
+        z.literal("trace"),
+        z.literal("thread"),
+      ]),
+      exportFormat: z.union([
+        z.literal("csv"),
+        z.literal("jsonl"),
+        z.literal("ojsonl"),
+      ]),
+    })
+    .parse(ctx.query);
   const { token } = z.object({ token: z.string() }).parse(ctx.params);
 
-  const exporter = EXPORTERS.get(token);
-  if (!exporter) {
-    ctx.throw(404, "Export not found");
+  const [user] =
+    await sql`select name from account where export_single_use_token = ${token}`;
+  if (!user) {
+    return ctx.throw(401, "Invalid token");
   }
 
-  // One time use
-  EXPORTERS.delete(token);
+  const { query, projectId } = getRunQuery({ ctx });
 
-  const { cursor, projectId, exportFormat, exportType } = exporter;
-  return fileExport(
-    { ctx, sql, cursor, formatRun, projectId },
+  await fileExport(
+    { ctx, sql, cursor: query.cursor(), formatRun, projectId },
     exportFormat,
-    exportType,
+    type,
   );
+
+  await sql`update account set export_single_use_token = null where id = ${ctx.state.userId}`;
 });
 
 export default runs;
