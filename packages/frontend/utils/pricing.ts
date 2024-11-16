@@ -4,7 +4,7 @@ export const SEAT_ALLOWANCE = {
   team: 10,
   unlimited: 10,
   custom: 100,
-}
+};
 
 export const EVENTS_ALLOWANCE = {
   free: 1000,
@@ -12,4 +12,4 @@ export const EVENTS_ALLOWANCE = {
   team: 1666,
   unlimited: 100000,
   custom: 1000000,
-}
+};

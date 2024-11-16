@@ -7,30 +7,30 @@ import {
   Progress,
   Stack,
   Text,
-} from "@mantine/core"
-import classes from "./index.module.css"
-import { formatCost } from "@/utils/format"
-import { ChatMessage } from "../SmartViewer/Message"
-import SmartViewer from "../SmartViewer"
-import { MODELS, Provider } from "shared"
-import { IconFileExport } from "@tabler/icons-react"
+} from "@mantine/core";
+import classes from "./index.module.css";
+import { formatCost } from "@/utils/format";
+import { ChatMessage } from "../SmartViewer/Message";
+import SmartViewer from "../SmartViewer";
+import { MODELS, Provider } from "shared";
+import { IconFileExport } from "@tabler/icons-react";
 
-import { json2csv } from "json-2-csv"
+import { json2csv } from "json-2-csv";
 
 // We create a matrix of results for each prompt, variable and model.
 // The matrix is a 3D array, where each dimension represents a different variable, prompt and model.
 
 const compareObjects = (a, b) => {
-  return JSON.stringify(a) === JSON.stringify(b)
-}
+  return JSON.stringify(a) === JSON.stringify(b);
+};
 
 const getAggegateForVariation = (
   results,
 ): {
-  passed: number // percentage passed
-  failed: number // percentage failed
-  duration: number // average duration
-  cost: number // average cost
+  passed: number; // percentage passed
+  failed: number; // percentage failed
+  duration: number; // average duration
+  cost: number; // average cost
 } => {
   return {
     passed: results.filter((result) => result.passed).length,
@@ -42,12 +42,12 @@ const getAggegateForVariation = (
     ).toFixed(2),
     cost:
       results.reduce((acc, result) => acc + result.cost, 0) / results.length,
-  }
-}
+  };
+};
 
 function ResultDetails({ details }) {
   if (typeof details !== "object") {
-    return <Text>Details not available</Text>
+    return <Text>Details not available</Text>;
   }
 
   return (
@@ -61,10 +61,10 @@ function ResultDetails({ details }) {
             </Badge>
             <Text>{reason}</Text>
           </Group>
-        )
+        );
       })}
     </Stack>
-  )
+  );
 }
 
 function ResultCell({ result, showTestIndicator }) {
@@ -99,11 +99,11 @@ function ResultCell({ result, showTestIndicator }) {
     </>
   ) : (
     <Badge color="gray">N/A</Badge>
-  )
+  );
 }
 
 function AggregateContent({ results, showTestIndicator }) {
-  const { passed, failed, duration, cost } = getAggegateForVariation(results)
+  const { passed, failed, duration, cost } = getAggegateForVariation(results);
 
   return (
     <>
@@ -136,23 +136,23 @@ function AggregateContent({ results, showTestIndicator }) {
         )}
       </Group>
     </>
-  )
+  );
 }
 
 export default function ResultsMatrix({ data, showTestIndicator }) {
   const prompts = Array.from(
     new Set(data.map((result) => JSON.stringify(result.messages))),
-  ).map((result: any) => JSON.parse(result))
+  ).map((result: any) => JSON.parse(result));
 
   const providers: Provider[] = Array.from(
     new Set(data.map((result) => JSON.stringify(result.provider))),
-  ).map((provider: any) => JSON.parse(provider))
+  ).map((provider: any) => JSON.parse(provider));
 
   function getVariableKeysForPrompt(messages) {
     return Object.keys(
       data.find((result) => compareObjects(result.messages, messages))
         .variables || {},
-    )
+    );
   }
 
   function getVariableVariationsForPrompt(messages) {
@@ -162,9 +162,9 @@ export default function ResultsMatrix({ data, showTestIndicator }) {
           .filter((result) => compareObjects(result.messages, messages))
           .map((result) => JSON.stringify(result.variables)),
       ),
-    ]
+    ];
 
-    return variations.map((variation: any) => JSON.parse(variation))
+    return variations.map((variation: any) => JSON.parse(variation));
   }
 
   function getResultForPromptVariationProvider(messages, variables, provider) {
@@ -173,29 +173,29 @@ export default function ResultsMatrix({ data, showTestIndicator }) {
         compareObjects(result.messages, messages) &&
         compareObjects(result.variables, variables) &&
         compareObjects(result.provider, provider),
-    )
+    );
   }
 
   const highestNumberOfVariables = Math.max(
     ...prompts.map((messages) => getVariableKeysForPrompt(messages).length),
-  )
+  );
 
   async function exportToCsv() {
-    const rows = [] as any[]
+    const rows = [] as any[];
 
     prompts.forEach((messages) => {
-      const variableVariations = getVariableVariationsForPrompt(messages)
+      const variableVariations = getVariableVariationsForPrompt(messages);
       variableVariations.forEach((variables) => {
         providers.forEach((provider) => {
           const result = getResultForPromptVariationProvider(
             messages,
             variables,
             provider,
-          )
+          );
           if (result) {
             const textResult = result.error
               ? JSON.stringify(result.error)
-              : result.output?.content
+              : result.output?.content;
 
             rows.push(
               {
@@ -205,25 +205,25 @@ export default function ResultsMatrix({ data, showTestIndicator }) {
                 Passed: result.passed ? "Yes" : "No",
                 Output: textResult,
               }, // Escape double quotes and wrap in double quotes
-            )
+            );
           }
-        })
-      })
-    })
+        });
+      });
+    });
 
     const csv = await json2csv(rows, {
       arrayIndexesAsKeys: false,
-    })
+    });
 
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.setAttribute("href", url)
-    link.setAttribute("download", "results.csv")
-    link.style.visibility = "hidden"
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "results.csv");
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 
   return (
@@ -234,7 +234,7 @@ export default function ResultsMatrix({ data, showTestIndicator }) {
         variant="light"
         color="blue"
         onClick={() => {
-          exportToCsv()
+          exportToCsv();
         }}
         leftSection={<IconFileExport size={16} />}
       >
@@ -279,9 +279,9 @@ export default function ResultsMatrix({ data, showTestIndicator }) {
           </thead>
           <tbody>
             {prompts.map((messages, i) => {
-              const variableKeys = getVariableKeysForPrompt(messages)
+              const variableKeys = getVariableKeysForPrompt(messages);
               const variableVariations =
-                getVariableVariationsForPrompt(messages)
+                getVariableVariationsForPrompt(messages);
 
               return variableVariations.map((variableVariation, k) => (
                 <tr key={k}>
@@ -328,7 +328,7 @@ export default function ResultsMatrix({ data, showTestIndicator }) {
                       messages,
                       variableVariation,
                       provider,
-                    )
+                    );
                     return (
                       <td className={classes["output-cell"]} key={k}>
                         <ResultCell
@@ -336,14 +336,14 @@ export default function ResultsMatrix({ data, showTestIndicator }) {
                           showTestIndicator={showTestIndicator}
                         />
                       </td>
-                    )
+                    );
                   })}
                 </tr>
-              ))
+              ));
             })}
           </tbody>
         </table>
       </div>
     </>
-  )
+  );
 }

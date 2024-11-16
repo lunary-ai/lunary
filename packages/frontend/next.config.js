@@ -23,7 +23,7 @@ const nextConfig = {
   },
   async rewrites() {
     if (!process.env.API_URL) {
-      return []
+      return [];
     }
 
     const redirects = [
@@ -40,23 +40,28 @@ const nextConfig = {
         destination: process.env.API_URL + "/api/report",
       },
       {
+        // This one is for the people on Flowise with the old endpoint saved
+        source: "/v1/runs/ingest",
+        destination: process.env.API_URL + "/v1/runs/ingest",
+      },
+      {
         source: "/api/v1/template",
         destination: process.env.API_URL + "/api/v1/template",
       },
-    ]
+    ];
 
-    return redirects
+    return redirects;
   },
   webpack: (config, { webpack }) => {
     config.plugins.push(
       new webpack.IgnorePlugin({
         resourceRegExp: /^pg-native$|^cloudflare:sockets$/,
       }),
-    )
+    );
 
-    return config
+    return config;
   },
   transpilePackages: ["shared"],
-}
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

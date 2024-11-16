@@ -7,15 +7,15 @@
  * - Text
  */
 
-import { Card, Code, Flex, Stack, Text, Tooltip } from "@mantine/core"
-import { IconShieldBolt } from "@tabler/icons-react"
-import { useMemo } from "react"
-import ProtectedText from "../blocks/ProtectedText"
-import { ChatMessage } from "./Message"
-import MessageViewer from "./MessageViewer"
-import { RenderJson } from "./RenderJson"
-import classes from "./index.module.css"
-import HighlightPii from "./HighlightPii"
+import { Card, Code, Flex, Stack, Text, Tooltip } from "@mantine/core";
+import { IconShieldBolt } from "@tabler/icons-react";
+import { useMemo } from "react";
+import ProtectedText from "../blocks/ProtectedText";
+import { ChatMessage } from "./Message";
+import MessageViewer from "./MessageViewer";
+import { RenderJson } from "./RenderJson";
+import classes from "./index.module.css";
+import HighlightPii from "./HighlightPii";
 
 const checkIsMessage = (obj) => {
   return (
@@ -26,15 +26,15 @@ const checkIsMessage = (obj) => {
     typeof obj?.function_call === "object" ||
     typeof obj?.toolCalls === "object" ||
     typeof obj?.tool_calls === "object"
-  )
-}
+  );
+};
 
 const checkIsRetrieverObjects = (obj) => {
   return Array.isArray(obj)
     ? obj.every(checkIsRetrieverObjects)
     : (typeof obj.title === "string" || typeof obj.id !== "undefined") &&
-        (typeof obj.source === "string" || typeof obj.summary === "string")
-}
+        (typeof obj.source === "string" || typeof obj.summary === "string");
+};
 
 function RetrieverObject({ data, compact }) {
   return (
@@ -50,7 +50,7 @@ function RetrieverObject({ data, compact }) {
         {data.source && <Text size="sm">{data.source}</Text>}
       </Flex>
     </Card>
-  )
+  );
 }
 
 export default function SmartViewer({
@@ -58,39 +58,39 @@ export default function SmartViewer({
   error,
   compact = false,
 }: {
-  data: any
-  error?: any
-  compact?: boolean
+  data: any;
+  error?: any;
+  compact?: boolean;
 }) {
   const parsed = useMemo(() => {
-    if (!data) return null
+    if (!data) return null;
     if (typeof data === "string" && data?.startsWith("{")) {
       try {
-        return JSON.parse(data)
+        return JSON.parse(data);
       } catch (e) {
-        return data
+        return data;
       }
     }
 
-    return data
-  }, [data])
+    return data;
+  }, [data]);
 
-  const isObject = typeof parsed === "object"
+  const isObject = typeof parsed === "object";
 
   const isMessages = useMemo(() => {
-    if (!parsed) return false
+    if (!parsed) return false;
     return Array.isArray(parsed)
       ? parsed.every(checkIsMessage)
-      : checkIsMessage(parsed)
-  }, [parsed])
+      : checkIsMessage(parsed);
+  }, [parsed]);
 
   const isRetrieverObjects = useMemo(() => {
-    if (!parsed) return false
-    return checkIsRetrieverObjects(parsed)
-  }, [parsed])
+    if (!parsed) return false;
+    return checkIsRetrieverObjects(parsed);
+  }, [parsed]);
 
   // TODO: refacto, c'est degueulasse
-  let Message
+  let Message;
   if (error) {
     Message = (
       <ChatMessage
@@ -107,7 +107,7 @@ export default function SmartViewer({
         }}
         compact={compact}
       />
-    )
+    );
   } else if (data && data === "__NOT_INGESTED__") {
     Message = (
       <Code color="var(--mantine-color-gray-light)">
@@ -120,7 +120,7 @@ export default function SmartViewer({
           </Text>
         </Flex>
       </Code>
-    )
+    );
   } else {
     Message = (
       <ProtectedText>
@@ -142,7 +142,7 @@ export default function SmartViewer({
           <Code color="var(--mantine-color-blue-light)">{parsed}</Code>
         )}
       </ProtectedText>
-    )
+    );
   }
 
   return (
@@ -153,5 +153,5 @@ export default function SmartViewer({
       {error && Message}
       {data && Message}
     </pre>
-  )
+  );
 }

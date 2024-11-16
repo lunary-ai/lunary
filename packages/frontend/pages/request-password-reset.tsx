@@ -1,21 +1,14 @@
-import {
-  Button,
-  Container,
-  Paper,
-  Stack,
-  Text,
-  TextInput,
-  Title,
-} from "@mantine/core"
-import { useForm } from "@mantine/form"
-import { notifications } from "@mantine/notifications"
-import { IconAnalyze, IconAt, IconCheck } from "@tabler/icons-react"
-import { NextSeo } from "next-seo"
-import { useState } from "react"
-import errorHandler from "../utils/errors"
+import { Button, Paper, Stack, Text, TextInput } from "@mantine/core";
+import { useForm } from "@mantine/form";
+import { notifications } from "@mantine/notifications";
+import { IconAt, IconCheck } from "@tabler/icons-react";
+import { NextSeo } from "next-seo";
+import { useState } from "react";
+import errorHandler from "../utils/errors";
+import AuthLayout from "@/components/layout/AuthLayout";
 
 export default function PasswordReset() {
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
   const form = useForm({
     initialValues: {
@@ -25,10 +18,10 @@ export default function PasswordReset() {
     validate: {
       email: (val) => (/^\S+@\S+$/.test(val) ? null : "Invalid email"),
     },
-  })
+  });
 
   async function handlePasswordReset({ email }) {
-    setLoading(true)
+    setLoading(true);
 
     const res = await errorHandler(
       fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/request-password-reset`, {
@@ -38,7 +31,7 @@ export default function PasswordReset() {
         },
         body: JSON.stringify({ email }),
       }),
-    )
+    );
 
     if (res.ok) {
       notifications.show({
@@ -46,49 +39,46 @@ export default function PasswordReset() {
         color: "teal",
         title: "Email sent 💌",
         message:
-          "Check your emails to verify your email. Please check your spam folder as we currently have deliverability issues.",
-      })
+          "Check your inbox to verify your email and reset your password.",
+      });
     }
-    setLoading(false)
+    setLoading(false);
   }
 
   return (
-    <Container py={100} size={600}>
-      <NextSeo title="Login" />
-      <Stack align="center" gap={50}>
-        <Stack align="center">
-          <IconAnalyze color={"#206dce"} size={60} />
-          <Title order={2} fw={700} size={40} ta="center">
-            Forgot password
-          </Title>
-        </Stack>
+    <AuthLayout>
+      <NextSeo title="Request password reset" />
 
-        <Paper radius="md" p="xl" withBorder miw={350}>
-          <Text size="lg" mb="xl" fw={500}>
-            Request reset link
-          </Text>
+      <Paper radius="md" p="xl" maw={400} miw={350} shadow="md">
+        <Text size="lg" mb="lg" fw={500} ta="center">
+          Password Recovery
+        </Text>
 
-          <form onSubmit={form.onSubmit(handlePasswordReset)}>
-            <Stack>
-              <TextInput
-                leftSection={<IconAt size="16" />}
-                label="Email"
-                type="email"
-                value={form.values.email}
-                onChange={(event) =>
-                  form.setFieldValue("email", event.currentTarget.value)
-                }
-                error={form.errors.email && "Invalid email"}
-                placeholder="Your email"
-              />
+        <Text mb="lg" opacity={0.8}>
+          Enter your email address and if it is registered, we will send you a
+          link to reset your password.
+        </Text>
 
-              <Button mt="md" type="submit" fullWidth loading={loading}>
-                Submit
-              </Button>
-            </Stack>
-          </form>
-        </Paper>
-      </Stack>
-    </Container>
-  )
+        <form onSubmit={form.onSubmit(handlePasswordReset)}>
+          <Stack gap="lg">
+            <TextInput
+              leftSection={<IconAt size="16" />}
+              label="Email"
+              type="email"
+              value={form.values.email}
+              onChange={(event) =>
+                form.setFieldValue("email", event.currentTarget.value)
+              }
+              error={form.errors.email && "Invalid email"}
+              placeholder="Your email"
+            />
+
+            <Button type="submit" fullWidth size="md" loading={loading}>
+              Request reset link
+            </Button>
+          </Stack>
+        </form>
+      </Paper>
+    </AuthLayout>
+  );
 }

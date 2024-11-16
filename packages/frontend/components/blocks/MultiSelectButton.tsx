@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState } from "react";
 import {
   useCombobox,
   Combobox,
@@ -7,7 +7,7 @@ import {
   Box,
   Group,
   CheckIcon,
-} from "@mantine/core"
+} from "@mantine/core";
 
 // TODO: object that maps a filter label with it's hooks
 
@@ -19,7 +19,7 @@ export default function MultiSelectButton({
 }) {
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
-  })
+  });
 
   const options = items.map((item) => (
     <Combobox.Option value={item} key={item}>
@@ -28,7 +28,7 @@ export default function MultiSelectButton({
         <span>{item}</span>
       </Group>
     </Combobox.Option>
-  ))
+  ));
 
   return (
     <>
@@ -45,7 +45,7 @@ export default function MultiSelectButton({
                 ? current.filter((item) => item !== val)
                 : [...current, val],
             combobox.closeDropdown(),
-          )
+          );
         }}
       >
         <Combobox.Target>
@@ -57,5 +57,5 @@ export default function MultiSelectButton({
         </Combobox.Dropdown>
       </Combobox>
     </>
-  )
+  );
 }

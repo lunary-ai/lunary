@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   Box,
@@ -11,53 +11,53 @@ import {
   Stack,
   Text,
   Textarea,
-} from "@mantine/core"
+} from "@mantine/core";
 
+import HotkeysInfo from "@/components/blocks/HotkeysInfo";
+import { openUpgrade } from "@/components/layout/UpgradeModal";
+import TemplateInputArea from "@/components/prompts/TemplateInputArea";
+import TemplateList, {
+  defaultTemplateVersion,
+} from "@/components/prompts/TemplateMenu";
+import {
+  useOrg,
+  useProject,
+  useTemplate,
+  useTemplates,
+  useTemplateVersion,
+  useUser,
+} from "@/utils/dataHooks";
+import { notifications } from "@mantine/notifications";
 import {
   IconBolt,
   IconBracketsAngle,
   IconCheck,
   IconDeviceFloppy,
   IconGitCommit,
-} from "@tabler/icons-react"
-import { useRouter } from "next/router"
-import { openUpgrade } from "@/components/layout/UpgradeModal"
-import HotkeysInfo from "@/components/blocks/HotkeysInfo"
-import TemplateInputArea from "@/components/prompts/TemplateInputArea"
-import TemplateList, {
-  defaultTemplateVersion,
-} from "@/components/prompts/TemplateMenu"
-import { notifications } from "@mantine/notifications"
-import { generateSlug } from "random-word-slugs"
-import {
-  useOrg,
-  useTemplates,
-  useTemplate,
-  useTemplateVersion,
-  useUser,
-  useProject,
-} from "@/utils/dataHooks"
+} from "@tabler/icons-react";
+import { useRouter } from "next/router";
+import { generateSlug } from "random-word-slugs";
 
-import analytics from "@/utils/analytics"
-import { useGlobalShortcut } from "@/utils/hooks"
-import { fetcher } from "@/utils/fetcher"
+import analytics from "@/utils/analytics";
+import { fetcher } from "@/utils/fetcher";
+import { useGlobalShortcut } from "@/utils/hooks";
 
-import Empty from "@/components/layout/Empty"
+import Empty from "@/components/layout/Empty";
 
-import { useCheckedPromptVariables } from "@/utils/promptsHooks"
-import { openConfirmModal } from "@mantine/modals"
+import { useCheckedPromptVariables } from "@/utils/promptsHooks";
+import { openConfirmModal } from "@mantine/modals";
 
-import { ParamItem } from "@/components/prompts/Provider"
-import ProviderEditor from "@/components/prompts/Provider"
-import PromptVariableEditor from "@/components/prompts/PromptVariableEditor"
+import PromptVariableEditor from "@/components/prompts/PromptVariableEditor";
+import ProviderEditor, { ParamItem } from "@/components/prompts/Provider";
+import { hasAccess } from "shared";
 
 function NotepadButton({ value, onChange }) {
-  const [modalOpened, setModalOpened] = useState(false)
-  const [tempValue, setTempValue] = useState(value)
+  const [modalOpened, setModalOpened] = useState(false);
+  const [tempValue, setTempValue] = useState(value);
 
   useEffect(() => {
-    setTempValue(value)
-  }, [value])
+    setTempValue(value);
+  }, [value]);
 
   return (
     <>
@@ -81,8 +81,8 @@ function NotepadButton({ value, onChange }) {
             size="xs"
             variant="default"
             onClick={() => {
-              onChange(tempValue)
-              setModalOpened(false)
+              onChange(tempValue);
+              setModalOpened(false);
             }}
           >
             Save
@@ -93,127 +93,137 @@ function NotepadButton({ value, onChange }) {
         size="compact-xs"
         variant="outline"
         onClick={() => {
-          setModalOpened(true)
+          setModalOpened(true);
         }}
       >
         {`Open`}
       </Button>
     </>
-  )
+  );
 }
 
 function Playground() {
-  const router = useRouter()
+  const router = useRouter();
 
-  const { project } = useProject()
+  const { project } = useProject();
+  const { user } = useUser();
 
-  const [template, setTemplate] = useState<any>()
+  const [template, setTemplate] = useState<any>();
   const [templateVersion, setTemplateVersion] = useState<any>(
     defaultTemplateVersion,
-  )
+  );
 
-  const [hasChanges, setHasChanges] = useState(false)
+  const [hasChanges, setHasChanges] = useState(false);
 
-  const { templates, insert, mutate } = useTemplates()
-  const { insertVersion } = useTemplate(template?.id)
-  const { update: updateVersion } = useTemplateVersion(templateVersion?.id)
+  const { templates, insert, mutate } = useTemplates();
+  const { insertVersion } = useTemplate(template?.id);
+  const { update: updateVersion } = useTemplateVersion(templateVersion?.id);
 
-  const [streaming, setStreaming] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [streaming, setStreaming] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [isInsertingTemplate, setInsertingTemplate] = useState(false);
 
-  const [output, setOutput] = useState<any>(null)
-  const [outputTokens, setOutputTokens] = useState<any>(null)
-  const [error, setError] = useState(null)
+  const [output, setOutput] = useState<any>(null);
+  const [outputTokens, setOutputTokens] = useState<any>(null);
+  const [error, setError] = useState(null);
 
-  const [rename, setRename] = useState(null)
+  const [rename, setRename] = useState(null);
 
   useGlobalShortcut([
     [
       "mod+S",
       () => {
-        if (hasChanges) saveTemplate()
+        if (hasChanges) saveTemplate();
       },
     ],
     [
       "mod+Enter",
       () => {
-        if (!streaming) runPlayground()
+        if (!streaming) runPlayground();
       },
     ],
-  ])
+  ]);
 
-  const { mutate: revalidateUser } = useUser()
-  const { org } = useOrg()
+  const { mutate: revalidateUser } = useUser();
+  const { org } = useOrg();
 
   // make sure to only fetch once
-  const ref = useRef({ done: false })
+  const ref = useRef({ done: false });
 
   useEffect(() => {
-    if (!project || ref.current?.done) return
+    if (!project || ref.current?.done) return;
 
-    const { clone, id } = router.query
+    const { clone, id } = router.query;
 
     // check if we want to clone an existing run
     if (id) {
-      ref.current.done = true
+      ref.current.done = true;
 
       const fetchTemplate = async () => {
-        setLoading(true)
+        setLoading(true);
 
         const data = await fetcher.get(
           `/template_versions/${id}?projectId=${project?.id}`,
-        )
+        );
 
         if (data) {
-          setTemplateVersion(data)
-          setTemplate(data.template)
+          setTemplateVersion(data);
+          setTemplate(data.template);
         }
 
-        setLoading(false)
-      }
+        setLoading(false);
+      };
 
-      fetchTemplate()
+      fetchTemplate();
     } else if (clone) {
-      ref.current.done = true
+      ref.current.done = true;
       const fetchRun = async () => {
-        setLoading(true)
-        const run = await fetcher.get(`/runs/${clone}?projectId=${project?.id}`)
+        setLoading(true);
+        const run = await fetcher.get(
+          `/runs/${clone}?projectId=${project?.id}`,
+        );
 
         if (run?.input) {
+          if (Array.isArray(run.input)) {
+            for (const input of run.input) {
+              delete input.enrichments;
+            }
+          }
+
           setTemplateVersion({
             // ...templateVersion,
             content: run.input,
             extra: { ...run.params, model: run.name },
-          })
+          });
 
-          setTemplate({ mode: "openai" })
+          setTemplate({ mode: "openai" });
 
-          setOutput(run.output)
+          setOutput(run.output);
 
-          setOutputTokens(run.tokens?.completion)
+          setOutputTokens(run.tokens?.completion);
         }
 
-        setLoading(false)
+        setLoading(false);
 
         // remove the query params
-        router.push("/prompts")
-      }
+        router.push("/prompts");
+      };
 
-      fetchRun()
+      fetchRun();
     } else {
-      setTemplate({ mode: "openai" })
-      setTemplateVersion(defaultTemplateVersion)
+      setTemplate({ mode: "openai" });
+      setTemplateVersion(defaultTemplateVersion);
     }
-  }, [project, router.query])
+  }, [project, router.query]);
 
   useEffect(() => {
-    setHasChanges(false)
-  }, [template?.id])
+    setHasChanges(false);
+  }, [template?.id]);
 
   // Save as draft without deploying
   const saveTemplate = async () => {
     if (templateVersion.isDraft && templateVersion.id) {
-      await updateVersion(templateVersion)
+      await updateVersion(templateVersion);
     } else {
       const data = {
         testValues: templateVersion.testValues,
@@ -221,28 +231,28 @@ function Playground() {
         extra: templateVersion.extra,
         notes: templateVersion.notes,
         isDraft: true,
-      }
+      };
 
       if (template?.id) {
-        const newVersion = await insertVersion(data)
+        const newVersion = await insertVersion(data);
 
-        switchTemplateVersion(newVersion)
+        switchTemplateVersion(newVersion);
       } else {
         const newTemplate = await insert({
           slug: generateSlug(),
           mode: "openai",
           ...data,
-        })
+        });
 
-        setTemplate(newTemplate)
-        switchTemplateVersion(newTemplate?.versions[0])
+        setTemplate(newTemplate);
+        switchTemplateVersion(newTemplate?.versions[0]);
       }
     }
 
-    setHasChanges(false)
+    setHasChanges(false);
 
-    mutate()
-  }
+    mutate();
+  };
 
   const confirmDiscard = useCallback(
     (onProceed) => {
@@ -258,31 +268,33 @@ function Playground() {
           ),
           labels: { confirm: "Confirm", cancel: "Cancel" },
           onConfirm() {
-            onProceed()
-            setHasChanges(false)
+            onProceed();
+            setHasChanges(false);
           },
-        })
+        });
       }
 
-      onProceed()
+      onProceed();
     },
     [hasChanges],
-  )
+  );
 
   const createTemplate = async () => {
     confirmDiscard(async () => {
-      const slug = generateSlug(2)
+      setInsertingTemplate(true);
+      const slug = generateSlug(2);
       const newTemplate = await insert({
         mode: "openai",
         slug,
         ...defaultTemplateVersion,
-      })
-      setTemplate(newTemplate)
-      setRename(newTemplate.id)
-      switchTemplateVersion(newTemplate.versions[0])
-      mutate()
-    })
-  }
+      });
+      setTemplate(newTemplate);
+      setRename(newTemplate.id);
+      switchTemplateVersion(newTemplate.versions[0]);
+      await mutate();
+      setInsertingTemplate(false);
+    });
+  };
 
   // Deploy the template
   const commitTemplate = async () => {
@@ -290,9 +302,9 @@ function Playground() {
       await updateVersion({
         ...templateVersion,
         isDraft: false,
-      })
+      });
 
-      setTemplateVersion({ ...templateVersion, isDraft: false })
+      setTemplateVersion({ ...templateVersion, isDraft: false });
     } else {
       const data = {
         testValues: templateVersion.testValues,
@@ -300,21 +312,21 @@ function Playground() {
         extra: templateVersion.extra,
         notes: templateVersion.notes,
         isDraft: false,
-      }
+      };
 
       if (!template?.id) {
         const newTemplate = await insert({
           slug: generateSlug(2),
           mode: "openai",
           ...data,
-        })
+        });
 
-        setTemplate(newTemplate)
-        switchTemplateVersion(newTemplate?.versions[0])
+        setTemplate(newTemplate);
+        switchTemplateVersion(newTemplate?.versions[0]);
       } else {
-        const newVersion = await insertVersion(data)
+        const newVersion = await insertVersion(data);
 
-        switchTemplateVersion(newVersion)
+        switchTemplateVersion(newVersion);
       }
     }
 
@@ -323,28 +335,28 @@ function Playground() {
       icon: <IconCheck size={24} />,
       message: "A new version of your template is now being served.",
       color: "teal",
-    })
+    });
 
-    setHasChanges(false)
+    setHasChanges(false);
 
-    mutate()
-  }
+    mutate();
+  };
 
   const runPlayground = async () => {
-    const model = template.extra?.model
+    const model = template.extra?.model;
 
     if (org?.plan === "free" || !org?.playAllowance) {
-      return openUpgrade("playground")
+      return openUpgrade("playground");
     }
 
     analytics.track("RunPlayground", {
       model,
-    })
+    });
 
-    setError(null)
-    setOutput(null)
-    setOutputTokens(0)
-    setStreaming(true)
+    setError(null);
+    setOutput(null);
+    setOutputTokens(0);
+    setStreaming(true);
 
     try {
       await fetcher.getStream(
@@ -356,53 +368,53 @@ function Playground() {
         },
         (chunk) => {
           try {
-            const parsedLine = JSON.parse(chunk)
+            const parsedLine = JSON.parse(chunk);
 
-            setOutput(parsedLine.choices[0]?.message)
-            setOutputTokens(parsedLine.usage?.completion_tokens || 0)
-            setError(null)
+            setOutput(parsedLine.choices[0]?.message);
+            setOutputTokens(parsedLine.usage?.completion_tokens || 0);
+            setError(null);
           } catch (error) {
-            console.error(error)
+            console.error(error);
           }
         },
-      )
+      );
 
       // scroll template-input-area to the end
-      const element = document.getElementById("template-input-area")
-      element.scrollTop = element.scrollHeight
+      const element = document.getElementById("template-input-area");
+      element.scrollTop = element.scrollHeight;
     } catch (e) {
-      console.error(e)
-      setError(e)
+      console.error(e);
+      setError(e);
     }
 
-    revalidateUser()
+    revalidateUser();
 
-    setStreaming(false)
-  }
+    setStreaming(false);
+  };
 
   // reset output when the template or template version changes, but not if cloned
   useEffect(() => {
     if (!router.query.clone) {
-      setOutput(null)
-      setError(null)
-      setOutputTokens(0)
+      setOutput(null);
+      setError(null);
+      setOutputTokens(0);
     }
   }, [
     template?.id,
     templateVersion?.id,
     templateVersion?.extra?.model,
     typeof templateVersion?.content, // when switching from chat to text mode
-  ])
+  ]);
 
   const switchTemplateVersion = (v) => {
-    setTemplateVersion(v)
-    router.push(`/prompts/${v.id}`)
-  }
+    setTemplateVersion(v);
+    router.push(`/prompts/${v.id}`);
+  };
 
   const variables = useCheckedPromptVariables(
     templateVersion?.content,
     templateVersion?.testValues,
-  )
+  );
 
   return (
     <Empty
@@ -427,21 +439,22 @@ function Playground() {
           <TemplateList
             rename={rename}
             createTemplate={createTemplate}
+            isInserting={isInsertingTemplate}
             setRename={setRename}
             activeTemplate={template}
             activeVersion={templateVersion}
             switchTemplateVersion={(t, v) => {
               const proceed = () => {
-                setTemplate(t)
-                switchTemplateVersion(v)
-              }
+                setTemplate(t);
+                switchTemplateVersion(v);
+              };
 
               // means we are deleting the template and already went through confirm
-              if (!t) return proceed()
+              if (!t) return proceed();
 
               confirmDiscard(() => {
-                proceed()
-              })
+                proceed();
+              });
             }}
           />
         </Box>
@@ -470,38 +483,52 @@ function Playground() {
           <Stack style={{ zIndex: 0 }}>
             {template && templateVersion && (
               <Group>
-                <Button
-                  leftSection={<IconDeviceFloppy size={18} />}
-                  size="xs"
-                  loading={loading}
-                  data-testid="save-template"
-                  disabled={loading || (template?.id && !hasChanges)}
-                  variant="outline"
-                  // rightSection={
-                  // <HotkeysInfo hot="S" size="sm" style={{ marginTop: -4 }} />
-                  // }
-                  onClick={saveTemplate}
-                >
-                  {templateVersion?.id
-                    ? "Save changes"
-                    : "Save as new template"}
-                </Button>
+                {!templateVersion?.id &&
+                  hasAccess(user.role, "prompts", "create") && (
+                    <Button
+                      leftSection={<IconDeviceFloppy size={18} />}
+                      size="xs"
+                      loading={loading}
+                      data-testid="save-template"
+                      disabled={loading || (template?.id && !hasChanges)}
+                      variant="outline"
+                      onClick={saveTemplate}
+                    >
+                      Save as new template
+                    </Button>
+                  )}
 
-                {templateVersion?.id && (
-                  <Button
-                    leftSection={<IconGitCommit size={18} />}
-                    size="xs"
-                    loading={loading}
-                    data-testid="deploy-template"
-                    disabled={
-                      loading || !(templateVersion?.isDraft || hasChanges)
-                    }
-                    variant="filled"
-                    onClick={commitTemplate}
-                  >
-                    Deploy
-                  </Button>
-                )}
+                {templateVersion?.id &&
+                  hasAccess(user.role, "prompts", "create_draft") && (
+                    <Button
+                      leftSection={<IconDeviceFloppy size={18} />}
+                      size="xs"
+                      loading={loading}
+                      data-testid="save-template"
+                      disabled={loading || (template?.id && !hasChanges)}
+                      variant="outline"
+                      onClick={saveTemplate}
+                    >
+                      Save changes
+                    </Button>
+                  )}
+
+                {hasAccess(user.role, "prompts", "update") &&
+                  templateVersion?.id && (
+                    <Button
+                      leftSection={<IconGitCommit size={18} />}
+                      size="xs"
+                      loading={loading}
+                      data-testid="deploy-template"
+                      disabled={
+                        loading || !(templateVersion?.isDraft || hasChanges)
+                      }
+                      variant="filled"
+                      onClick={commitTemplate}
+                    >
+                      Deploy
+                    </Button>
+                  )}
               </Group>
             )}
 
@@ -527,22 +554,22 @@ function Playground() {
                       : "chat"
                   }
                   onChange={(value) => {
-                    const newTemplateVersion = { ...templateVersion }
+                    const newTemplateVersion = { ...templateVersion };
                     const isTextAlready =
-                      typeof templateVersion.content === "string"
+                      typeof templateVersion.content === "string";
                     if (isTextAlready && value !== "text") {
                       // Switching from text to custom/openai
                       newTemplateVersion.content = [
                         { role: "user", content: templateVersion.content },
-                      ]
+                      ];
                     } else if (!isTextAlready && value === "text") {
                       // Switching from custom/openai to text
-                      const firstUserMessage = templateVersion.content[0]
+                      const firstUserMessage = templateVersion.content[0];
 
                       newTemplateVersion.content =
-                        firstUserMessage?.content || ""
+                        firstUserMessage?.content || "";
                     }
-                    setTemplateVersion(newTemplateVersion)
+                    setTemplateVersion(newTemplateVersion);
                   }}
                 />
               }
@@ -559,14 +586,14 @@ function Playground() {
                       const data = {
                         ...templateVersion,
                         notes,
-                      }
+                      };
 
-                      setTemplateVersion(data)
+                      setTemplateVersion(data);
 
                       // save directly without bumping version so no changes are lost
-                      await updateVersion(data)
+                      await updateVersion(data);
 
-                      mutate()
+                      mutate();
                     }}
                   />
                 }
@@ -579,23 +606,23 @@ function Playground() {
                 config: templateVersion?.extra,
               }}
               onChange={(val) => {
-                setHasChanges(true)
+                setHasChanges(true);
                 setTemplateVersion({
                   ...templateVersion,
                   extra: { ...val.config, model: val.model },
-                })
+                });
               }}
             />
 
             {template && (
-              <Card shadow="sm" p="sm" my="md">
+              <Card withBorder p="sm" my="md">
                 <PromptVariableEditor
                   value={variables}
                   onChange={(update) => {
                     setTemplateVersion({
                       ...templateVersion,
                       testValues: update,
-                    })
+                    });
                   }}
                 />
               </Card>
@@ -618,7 +645,7 @@ function Playground() {
         </Box>
       </Flex>
     </Empty>
-  )
+  );
 }
 
-export default Playground
+export default Playground;

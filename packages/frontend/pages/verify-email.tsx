@@ -1,10 +1,10 @@
-import { fetcher } from "@/utils/fetcher"
-import { Container, Loader, Stack, Text, Title } from "@mantine/core"
-import { notifications } from "@mantine/notifications"
-import { IconAnalyze, IconCheck, IconCross } from "@tabler/icons-react"
-import { NextSeo } from "next-seo"
-import Router from "next/router"
-import { useEffect, useState } from "react"
+import { fetcher } from "@/utils/fetcher";
+import { Container, Loader, Stack, Text, Title } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { IconAnalyze, IconCheck, IconCross } from "@tabler/icons-react";
+import { NextSeo } from "next-seo";
+import Router from "next/router";
+import { useEffect, useState } from "react";
 
 function VerifiedContent() {
   return (
@@ -17,7 +17,7 @@ function VerifiedContent() {
         Redirecting...
       </Text>
     </>
-  )
+  );
 }
 
 function VerifyingContent() {
@@ -28,7 +28,7 @@ function VerifyingContent() {
         Verifying your email
       </Title>
     </>
-  )
+  );
 }
 
 function ErrorContent() {
@@ -42,52 +42,52 @@ function ErrorContent() {
         Please check your email for the verification link
       </Text>
     </>
-  )
+  );
 }
 
 function VerificationContent({ status }) {
-  if (status === "verified") return <VerifiedContent />
-  if (status === "verifying") return <VerifyingContent />
-  return <ErrorContent />
+  if (status === "verified") return <VerifiedContent />;
+  if (status === "verifying") return <VerifyingContent />;
+  return <ErrorContent />;
 }
 
 export default function VerifyEmailPage() {
-  const [verificationStatus, setVerificationStatus] = useState("error")
-  const { token } = Router.query
+  const [verificationStatus, setVerificationStatus] = useState("error");
+  const { token } = Router.query;
 
   const verifyEmail = async ({ token }: { token: string }) => {
-    setVerificationStatus("verifying")
+    setVerificationStatus("verifying");
 
     try {
-      await fetcher.get(`/users/verify-email?token=${token}`)
+      await fetcher.get(`/users/verify-email?token=${token}`);
 
-      setVerificationStatus("verified")
+      setVerificationStatus("verified");
       notifications.show({
         icon: <IconCheck size={18} />,
         color: "teal",
         title: "Success",
         message: "Email verified successfully",
-      })
+      });
 
-      setTimeout(() => Router.push("/"), 100)
+      setTimeout(() => Router.push("/"), 100);
     } catch (error) {
-      console.error(error)
+      console.error(error);
 
-      setVerificationStatus("error")
+      setVerificationStatus("error");
       notifications.show({
         icon: <IconCross size={18} />,
         color: "red",
         title: "Error",
         message: error.message,
-      })
+      });
     }
-  }
+  };
 
   useEffect(() => {
     if (token) {
-      verifyEmail({ token: token as string })
+      verifyEmail({ token: token as string });
     }
-  }, [token])
+  }, [token]);
 
   return (
     <Container py={100} size={600}>
@@ -98,5 +98,5 @@ export default function VerifyEmailPage() {
         </Stack>
       </Stack>
     </Container>
-  )
+  );
 }

@@ -1,45 +1,39 @@
-import analytics from "@/utils/analytics"
+import analytics from "@/utils/analytics";
 
-import { ContextModalProps, modals } from "@mantine/modals"
+import { ContextModalProps, modals } from "@mantine/modals";
 import {
-  IconAnalyze,
   IconArrowDown,
   IconArrowUp,
-  IconBrandDocker,
   IconCheck,
   IconCircleCheck,
   IconCross,
   IconInfoCircle,
-} from "@tabler/icons-react"
+} from "@tabler/icons-react";
 
 import {
   Badge,
-  Box,
   Button,
   Card,
   Container,
-  Divider,
   Group,
   Highlight,
-  List,
   Mark,
   Stack,
   Table,
   Text,
-  ThemeIcon,
   Title,
   Tooltip,
-} from "@mantine/core"
+} from "@mantine/core";
 
-import { useCallback, useEffect, useState } from "react"
-import SocialProof from "../blocks/SocialProof"
-import errorHandler from "@/utils/errors"
-import { notifications } from "@mantine/notifications"
-import { capitalize } from "@/utils/format"
-import { useOrg } from "@/utils/dataHooks"
-import { fetcher } from "@/utils/fetcher"
-import { FEATURES } from "@/utils/features"
-import { theme } from "@/utils/theme"
+import { useCallback, useEffect, useState } from "react";
+import SocialProof from "../blocks/SocialProof";
+import errorHandler from "@/utils/errors";
+import { notifications } from "@mantine/notifications";
+import { capitalize } from "@/utils/format";
+import { useOrg } from "@/utils/dataHooks";
+import { fetcher } from "@/utils/fetcher";
+import { FEATURES } from "@/utils/features";
+import { theme } from "@/utils/theme";
 
 function PlanFeature({ title, id, highlight, Icon, description }) {
   return (
@@ -54,16 +48,16 @@ function PlanFeature({ title, id, highlight, Icon, description }) {
         </Tooltip>
       )}
     </Group>
-  )
+  );
 }
 
 function RenderPrice({ price, period }) {
   // year = 2 months free
-  const discount = period === "yearly" ? 2 / 12 : 0
-  const isString = typeof price === "string"
+  const discount = period === "yearly" ? 2 / 12 : 0;
+  const isString = typeof price === "string";
   const monthlyPrice = isString
     ? price
-    : `$${Math.floor(price * (1 - discount))}`
+    : `$${Math.floor(price * (1 - discount))}`;
 
   return (
     <>
@@ -87,7 +81,7 @@ function RenderPrice({ price, period }) {
         )}
       </Group>
     </>
-  )
+  );
 }
 
 function AcceptedPayments() {
@@ -97,7 +91,7 @@ function AcceptedPayments() {
       <img height={24} src="/assets/apple-pay.webp" alt="apple pay" />
       <img height={24} src="/assets/accepted-cards.webp" alt="Accepted cards" />
     </Group>
-  )
+  );
 }
 
 function RenderPlanCard({
@@ -111,57 +105,57 @@ function RenderPlanCard({
   color,
   loading,
 }: {
-  planId: string
-  price: string | number
-  onClick: (plan: string) => void
-  variant: string
-  mostPopular?: boolean
-  description: string
-  color?: string
-  loading?: boolean
-  onlyCTA?: boolean
+  planId: string;
+  price: string | number;
+  onClick: (plan: string) => void;
+  variant: string;
+  mostPopular?: boolean;
+  description: string;
+  color?: string;
+  loading?: boolean;
+  onlyCTA?: boolean;
 }) {
-  const { org } = useOrg()
+  const { org } = useOrg();
 
-  const { plan } = org
+  const { plan } = org;
 
   const buttonText = useCallback(() => {
-    if (planId === "scale") return { children: "Get a Quote", variant }
+    if (planId === "enterprise") return { children: "Get a Quote", variant };
 
     if (org?.canceled && planId === "free")
       return {
         children: "Will switch soon",
         variant: "outline",
         disabled: true,
-      }
+      };
 
     if (org?.canceled && planId === plan)
-      return { children: "Reactivate", variant }
+      return { children: "Reactivate", variant };
 
     if (org?.canceled)
       return {
         children: `Reactivate on ${capitalize(planId)}`,
         variant,
-      }
+      };
 
     // Switch to yearly
     // if (newPlan === plan && period !== org?.planPeriod)
     //   return { children: "Switch to " + period, variant: "outline" }
 
-    if (planId === plan) return { children: "Current plan", disabled: true }
+    if (planId === plan) return { children: "Current plan", disabled: true };
 
     if (planId === "free" && plan !== "free") {
-      return null
+      return null;
     }
 
     // if (newPlan === "pro" && plan === "unlimited")
     // return { children: "Downgrade", variant: "subtle" }
 
     if (planId === "team" && plan !== "free")
-      return { children: "Switch to Team", variant }
+      return { children: "Switch to Team", variant };
 
-    return { children: "Upgrade", variant }
-  }, [org, plan])
+    return { children: "Upgrade", variant };
+  }, [org, plan]);
 
   const CTA = buttonText() ? (
     <Button
@@ -169,14 +163,13 @@ function RenderPlanCard({
       onClick={() => onClick(plan)}
       fullWidth
       loading={loading}
-      gradient={{ from: "violet", to: "blue", deg: 45 }}
-      color="violet"
+      color="violet.5"
       mt="auto"
       {...buttonText()}
     />
-  ) : null
+  ) : null;
 
-  if (onlyCTA) return CTA
+  if (onlyCTA) return CTA;
 
   return (
     <Stack justify="space-between" h="100%">
@@ -216,11 +209,11 @@ function RenderPlanCard({
       </Stack>
       {CTA}
     </Stack>
-  )
+  );
 }
 
 function FeaturePlanValue({ data }) {
-  const { value, help } = data || {}
+  const { value, help } = data || {};
 
   return (
     <Stack gap={5} align="center">
@@ -238,24 +231,24 @@ function FeaturePlanValue({ data }) {
         </Text>
       )}
     </Stack>
-  )
+  );
 }
 
 export function UpgradePlans({
   highlight,
   defaultExpand,
 }: {
-  highlight?: string
-  defaultExpand?: boolean
+  highlight?: string;
+  defaultExpand?: boolean;
 }) {
-  const { org } = useOrg()
-  const [period, setPeriod] = useState("monthly")
-  const [loading, setLoading] = useState(null)
+  const { org } = useOrg();
+  const [period, setPeriod] = useState("monthly");
+  const [loading, setLoading] = useState(null);
 
-  const [showFeatures, setShowFeatures] = useState(defaultExpand)
+  const [showFeatures, setShowFeatures] = useState(defaultExpand);
 
   const upgradePlan = async (plan) => {
-    setLoading(plan)
+    setLoading(plan);
 
     const res = await errorHandler(
       fetcher.post(`/orgs/${org.id}/upgrade`, {
@@ -265,27 +258,27 @@ export function UpgradePlans({
           origin: window.location.origin,
         },
       }),
-    )
+    );
 
     if (res?.ok) {
       //   // Redirect to Stripe Checkout session
-      if (res.url) return (window.location.href = res.url)
+      if (res.url) return (window.location.href = res.url);
 
       notifications.show({
         title: "Plan updated",
         message: `Your plan has been updated to ${plan}!`,
         icon: <IconCheck />,
         color: "green",
-      })
+      });
 
       // Give time for the Stripe webhook to update the plan
       setTimeout(() => {
-        window.location.href = "/billing/thank-you"
-      }, 1000)
+        window.location.href = "/billing/thank-you";
+      }, 1000);
     }
 
-    setLoading(null)
-  }
+    setLoading(null);
+  };
 
   return (
     <>
@@ -318,8 +311,8 @@ export function UpgradePlans({
               >
                 <RenderPlanCard
                   planId="team"
-                  variant="gradient"
                   mostPopular
+                  color="violet.5"
                   description="Go to production with advanced features."
                   price={20}
                   onClick={() => upgradePlan("team")}
@@ -334,13 +327,13 @@ export function UpgradePlans({
                 shadow={!showFeatures ? "sm" : null}
               >
                 <RenderPlanCard
-                  planId="scale"
+                  planId="enterprise"
                   variant="default"
                   color="gray"
                   description="Custom plans for your team's exact needs."
                   price={"Custom"}
                   onClick={() => window.open("https://lunary.ai/schedule")}
-                  loading={loading === "scale"}
+                  loading={loading === "enterprise"}
                 />
               </Card>
             </Table.Th>
@@ -386,7 +379,6 @@ export function UpgradePlans({
               <Table.Td>
                 <RenderPlanCard
                   planId="team"
-                  variant="gradient"
                   mostPopular
                   onlyCTA
                   onClick={() => upgradePlan("team")}
@@ -432,7 +424,7 @@ export function UpgradePlans({
         </Group>
       )}
     </>
-  )
+  );
 }
 
 function UpgradeModal({
@@ -442,12 +434,12 @@ function UpgradeModal({
 }: ContextModalProps<{ highlight: string }>) {
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
-      analytics.track("Upgrade Modal")
-  }, [])
+      analytics.track("Upgrade Modal");
+  }, []);
 
-  const { org } = useOrg()
+  const { org } = useOrg();
 
-  if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) return null
+  if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) return null;
 
   return (
     <Container px={0} pb="md" size="xl">
@@ -476,7 +468,7 @@ function UpgradeModal({
         {org?.plan === "free" && <AcceptedPayments />}
       </Group>
     </Container>
-  )
+  );
 }
 
 export function openUpgrade(highlight?: string) {
@@ -487,7 +479,7 @@ export function openUpgrade(highlight?: string) {
     innerProps: {
       highlight,
     },
-  })
+  });
 }
 
-export default UpgradeModal
+export default UpgradeModal;

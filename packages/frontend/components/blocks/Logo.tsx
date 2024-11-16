@@ -1,7 +1,7 @@
-import { Anchor, Group, Text, useComputedColorScheme } from "@mantine/core"
+import { Anchor, Group, Text, useComputedColorScheme } from "@mantine/core";
 
 export default function Logo() {
-  const scheme = useComputedColorScheme()
+  const scheme = useComputedColorScheme();
 
   return (
     <Anchor
@@ -18,5 +18,5 @@ export default function Logo() {
         <Text>lunary</Text>
       </Group>
     </Anchor>
-  )
+  );
 }

@@ -1,6 +1,6 @@
 export const MODELS = [
   {
-    id: "gpt-4o-2024-08-06",
+    id: "gpt-4o",
     name: "gpt-4o",
     provider: "openai",
   },
@@ -47,6 +47,11 @@ export const MODELS = [
   { id: "gpt-4-1106-preview", name: "gpt-4-1106-preview", provider: "openai" },
   { id: "gpt-4-0125-preview", name: "gpt-4-0125-preview", provider: "openai" },
   { id: "gpt-4", name: "gpt-4", provider: "openai" },
+  {
+    id: "gpt-4o-2024-05-13",
+    name: "gpt-4o-2024-05-13",
+    provider: "openai",
+  },
   {
     id: "gpt-4-vision-preview",
     name: "gpt-4-vision-preview",
@@ -138,4 +143,4 @@ export const MODELS = [
     name: "llama-2-70b-chat",
     provider: "openrouter",
   },
-]
+];

@@ -1,26 +1,26 @@
-import Highlighter from "react-highlight-words"
-import { useProject, useProjectRules } from "@/utils/dataHooks"
-import { Tooltip } from "@mantine/core"
-import { getPIIColor } from "@/utils/colors"
-import classes from "./index.module.css"
+import Highlighter from "react-highlight-words";
+import { useProject, useProjectRules } from "@/utils/dataHooks";
+import { Tooltip } from "@mantine/core";
+import { getPIIColor } from "@/utils/colors";
+import classes from "./index.module.css";
 
 export default function HighlightPii({
   text,
   piiDetection,
 }: {
-  text: string
-  piiDetection: { type: string; entity: string }[] // Contains the detected PII
+  text: string;
+  piiDetection: { type: string; entity: string }[]; // Contains the detected PII
 }) {
   if (!piiDetection || piiDetection.length === 0) {
-    return <>{text}</>
+    return <>{text}</>;
   }
 
-  const { maskingRule } = useProjectRules()
+  const { maskingRule } = useProjectRules();
 
   const HighlightBadge = ({ children }) => {
-    const piiType = piiDetection.find((pii) => pii.entity === children)?.type
-    const bgColor = `light-dark(var(--mantine-color-${getPIIColor(piiType)}-2), var(--mantine-color-${getPIIColor(piiType)}-9))`
-    const length = children.length
+    const piiType = piiDetection.find((pii) => pii.entity === children)?.type;
+    const bgColor = `light-dark(var(--mantine-color-${getPIIColor(piiType)}-2), var(--mantine-color-${getPIIColor(piiType)}-9))`;
+    const length = children.length;
     return (
       <Tooltip
         label={`${piiType} ${maskingRule ? "masked" : "detected"}`}
@@ -36,8 +36,8 @@ export default function HighlightPii({
           {maskingRule ? "x".repeat(length) : children}
         </span>
       </Tooltip>
-    )
-  }
+    );
+  };
 
   return (
     <Highlighter
@@ -47,5 +47,5 @@ export default function HighlightPii({
       caseSensitive={true}
       textToHighlight={text}
     />
-  )
+  );
 }

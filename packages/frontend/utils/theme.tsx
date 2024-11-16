@@ -1,6 +1,7 @@
-import { DEFAULT_THEME, createTheme, mergeMantineTheme } from "@mantine/core"
-import Link from "next/link"
-import localFont from "next/font/local"
+import { DEFAULT_THEME, createTheme, mergeMantineTheme } from "@mantine/core";
+import Link from "next/link";
+import localFont from "next/font/local";
+import { generateColors } from "@mantine/colors-generator";
 
 export const circularPro = localFont({
   display: "swap",
@@ -35,13 +36,20 @@ export const circularPro = localFont({
     //   style: "normal",
     // },
   ],
-})
+});
 
 export const themeOverride = createTheme({
   defaultRadius: "md",
   fontFamily: circularPro.style.fontFamily,
   headings: {
     fontWeight: "700",
+  },
+  primaryShade: 7,
+  colors: {
+    blue: generateColors("#0099ff"),
+    // indigo: generateColors("#6600ff"),
+
+    teal: generateColors("#1bd5a7"),
   },
   components: {
     Anchor: {
@@ -95,6 +103,6 @@ export const themeOverride = createTheme({
       },
     },
   },
-})
+});
 
-export const theme = mergeMantineTheme(DEFAULT_THEME, themeOverride)
+export const theme = mergeMantineTheme(DEFAULT_THEME, themeOverride);

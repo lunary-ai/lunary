@@ -9,24 +9,25 @@ import {
   ScrollArea,
   Text,
   TextInput,
-} from "@mantine/core"
+} from "@mantine/core";
 import {
   IconDotsVertical,
   IconLayersSubtract,
   IconPencil,
   IconPlus,
   IconTrash,
-} from "@tabler/icons-react"
+} from "@tabler/icons-react";
 
-import { useTemplate, useTemplates } from "@/utils/dataHooks"
-import { useHover } from "@mantine/hooks"
-import { modals } from "@mantine/modals"
-import { notifications } from "@mantine/notifications"
+import { useTemplate, useTemplates, useUser } from "@/utils/dataHooks";
+import { useHover } from "@mantine/hooks";
+import { modals } from "@mantine/modals";
+import { notifications } from "@mantine/notifications";
 
-import { cleanSlug, formatCompactFromNow } from "@/utils/format"
-import Router from "next/router"
-import { useEffect, useState } from "react"
-import SearchBar from "../blocks/SearchBar"
+import { cleanSlug, formatCompactFromNow } from "@/utils/format";
+import Router from "next/router";
+import { useEffect, useState } from "react";
+import { hasAccess } from "shared";
+import SearchBar from "../blocks/SearchBar";
 
 export const defaultTemplateVersion = {
   content: [
@@ -40,7 +41,7 @@ export const defaultTemplateVersion = {
   },
   testValues: {},
   isDraft: true,
-}
+};
 
 function TemplateListItem({
   template,
@@ -50,18 +51,19 @@ function TemplateListItem({
   setRename,
   switchTemplateVersion,
 }) {
-  const { templates, mutate, insert } = useTemplates()
-  const { remove, update } = useTemplate(template?.id)
+  const { templates, mutate, insert } = useTemplates();
+  const { remove, update } = useTemplate(template?.id);
+  const { user } = useUser();
 
   const lastDeployed = template.versions
     .filter((v) => v && !v.isDraft)
-    .sort((a, b) => b.id - a.id)[0]
+    .sort((a, b) => b.id - a.id)[0];
 
-  const { hovered, ref } = useHover()
+  const { hovered, ref } = useHover();
 
-  const active = activeTemplate?.id === template.id
+  const active = activeTemplate?.id === template.id;
 
-  const sortedVersions = template.versions.sort((a, b) => b.id - a.id)
+  const sortedVersions = template.versions.sort((a, b) => b.id - a.id);
 
   const confirmDelete = () => {
     modals.openConfirmModal({
@@ -76,25 +78,25 @@ function TemplateListItem({
       labels: { confirm: "Confirm", cancel: "Cancel" },
 
       onConfirm: async () => {
-        switchTemplateVersion(null, defaultTemplateVersion)
+        switchTemplateVersion(null, defaultTemplateVersion);
 
-        Router.replace(`/prompts`)
+        Router.replace(`/prompts`);
 
         mutate((templates) => templates.filter((t) => t.id !== template?.id), {
           revalidate: false,
-        })
+        });
 
-        remove()
+        remove();
       },
-    })
-  }
+    });
+  };
 
   async function applyRename(name) {
-    setRename(null)
+    setRename(null);
     // make sure it's a valid slug
-    const slugified = cleanSlug(name)
+    const slugified = cleanSlug(name);
 
-    if (slugified === "" || slugified === template.slug) return
+    if (slugified === "" || slugified === template.slug) return;
 
     // if there is already a template with this slug, Show notif
     if (templates?.find((t) => t.slug === slugified && t.id !== template.id)) {
@@ -102,13 +104,13 @@ function TemplateListItem({
         title: "Error",
         message: "This template name is already taken",
         color: "red",
-      })
-      return
+      });
+      return;
     }
 
-    await update({ ...template, slug: slugified })
+    await update({ ...template, slug: slugified });
 
-    mutate()
+    mutate();
   }
 
   async function duplicateTemplate() {
@@ -118,16 +120,16 @@ function TemplateListItem({
       content: sortedVersions[0].content,
       extra: sortedVersions[0].extra,
       testValues: sortedVersions[0].testValues,
-    })
+    });
 
     notifications.show({
       title: "Template duplicated",
       message: `Template ${template.slug} has been duplicated`,
-    })
+    });
 
-    await mutate()
+    await mutate();
 
-    switchTemplateVersion(newTemplate, newTemplate?.versions[0])
+    switchTemplateVersion(newTemplate, newTemplate?.versions[0]);
   }
 
   return (
@@ -137,7 +139,7 @@ function TemplateListItem({
       px="md"
       active={active}
       onDoubleClick={() => {
-        setRename(template.id)
+        setRename(template.id);
       }}
       label={
         rename === template.id ? (
@@ -149,7 +151,7 @@ function TemplateListItem({
               h={35}
               px={10}
               onKeyPress={(e) => {
-                if (e.key === "Enter") applyRename(e.target.value)
+                if (e.key === "Enter") applyRename(e.target.value);
               }}
               onBlur={(e) => applyRename(e.target.value)}
             />
@@ -165,50 +167,60 @@ function TemplateListItem({
         whiteSpace: "nowrap",
       }}
       leftSection={
-        <Menu>
-          <Menu.Target>
-            {active || hovered ? (
-              <ActionIcon size="sm" radius="sm" variant="light">
-                <IconDotsVertical size={12} />
-              </ActionIcon>
-            ) : (
-              <span />
-            )}
-          </Menu.Target>
-          <Menu.Dropdown>
-            <Menu.Item
-              leftSection={<IconPencil size={13} />}
-              onClick={() => {
-                setRename(template.id)
-              }}
-            >
-              Rename
-            </Menu.Item>
+        (hasAccess(user.role, "prompts", "create") ||
+          hasAccess(user.role, "prompts", "update") ||
+          hasAccess(user.role, "prompts", "delete")) && (
+          <Menu>
+            <Menu.Target>
+              {active || hovered ? (
+                <ActionIcon size="sm" radius="sm" variant="light">
+                  <IconDotsVertical size={12} />
+                </ActionIcon>
+              ) : (
+                <span />
+              )}
+            </Menu.Target>
+            <Menu.Dropdown>
+              {hasAccess(user.role, "prompts", "update") && (
+                <Menu.Item
+                  leftSection={<IconPencil size={13} />}
+                  onClick={() => {
+                    setRename(template.id);
+                  }}
+                >
+                  Rename
+                </Menu.Item>
+              )}
 
-            <Menu.Item
-              leftSection={<IconLayersSubtract size={13} />}
-              onClick={() => {
-                duplicateTemplate()
-              }}
-            >
-              Duplicate
-            </Menu.Item>
+              {hasAccess(user.role, "prompts", "create") && (
+                <Menu.Item
+                  leftSection={<IconLayersSubtract size={13} />}
+                  onClick={() => {
+                    duplicateTemplate();
+                  }}
+                >
+                  Duplicate
+                </Menu.Item>
+              )}
 
-            <Menu.Item
-              color="red"
-              leftSection={<IconTrash size={13} />}
-              onClick={() => {
-                confirmDelete()
-              }}
-            >
-              Delete
-            </Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
+              {hasAccess(user.role, "prompts", "delete") && (
+                <Menu.Item
+                  color="red"
+                  leftSection={<IconTrash size={13} />}
+                  onClick={() => {
+                    confirmDelete();
+                  }}
+                >
+                  Delete
+                </Menu.Item>
+              )}
+            </Menu.Dropdown>
+          </Menu>
+        )
       }
       onClick={() => {
         if (sortedVersions[0])
-          switchTemplateVersion(template, sortedVersions[0])
+          switchTemplateVersion(template, sortedVersions[0]);
       }}
     >
       <ScrollArea.Autosize mah="200px">
@@ -244,7 +256,7 @@ function TemplateListItem({
         ))}
       </ScrollArea.Autosize>
     </NavLink>
-  )
+  );
 }
 
 function TemplateList({
@@ -253,22 +265,24 @@ function TemplateList({
   rename,
   setRename,
   createTemplate,
+  isInserting,
   switchTemplateVersion,
 }) {
-  const { templates, loading, isInserting } = useTemplates()
+  const { templates, loading } = useTemplates();
+  const { user } = useUser();
 
-  const [filter, setFilter] = useState("")
-  const [filteredTemplates, setFilteredTemplates] = useState(templates)
+  const [filter, setFilter] = useState("");
+  const [filteredTemplates, setFilteredTemplates] = useState(templates);
 
   useEffect(() => {
     if (templates) {
       setFilteredTemplates(
         templates.filter((t) => t.slug.includes(filter.toLowerCase())),
-      )
+      );
     }
-  }, [filter, templates])
+  }, [filter, templates]);
 
-  if (loading) return <Loader />
+  if (loading) return <Loader />;
 
   return (
     <ScrollArea h="100%">
@@ -278,16 +292,18 @@ function TemplateList({
         fw="bold"
         variant="subtle"
         rightSection={
-          <ActionIcon
-            size="xs"
-            radius="sm"
-            variant="outline"
-            loading={isInserting}
-            data-testid="create-template"
-            onClick={createTemplate}
-          >
-            <IconPlus size={12} />
-          </ActionIcon>
+          hasAccess(user.role, "prompts", "create") && (
+            <ActionIcon
+              size="xs"
+              radius="sm"
+              variant="outline"
+              loading={isInserting}
+              data-testid="create-template"
+              onClick={createTemplate}
+            >
+              <IconPlus size={12} />
+            </ActionIcon>
+          )
         }
       />
 
@@ -313,7 +329,7 @@ function TemplateList({
         />
       ))}
     </ScrollArea>
-  )
+  );
 }
 
-export default TemplateList
+export default TemplateList;

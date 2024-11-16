@@ -1,0 +1,33 @@
+name: Auto Create Pull Request
+
+on: create
+
+jobs:
+  create-pull-request:
+    if: github.event.ref_type == 'branch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create Pull Request
+        run: |
+          BRANCH_NAME="${{ github.ref_name }}"
+
+          if [[ $BRANCH_NAME == *"/"* ]]; then
+            IFS="/" read -ra PARTS <<< "$BRANCH_NAME"
+            PR_TITLE="${PARTS[0]}: ${PARTS[1]}"
+            PR_TITLE="${PR_TITLE//-/ }"
+          else
+            PR_TITLE="${BRANCH_NAME//-/ }"
+          fi
+
+          gh pr create \
+            -B main \
+            -H "$BRANCH_NAME" \
+            --title "$PR_TITLE" \
+            --body ""
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

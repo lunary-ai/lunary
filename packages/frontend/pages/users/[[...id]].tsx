@@ -1,4 +1,4 @@
-import DataTable from "@/components/blocks/DataTable"
+import DataTable from "@/components/blocks/DataTable";
 
 import {
   ActionIcon,
@@ -12,16 +12,16 @@ import {
   Stack,
   Text,
   Title,
-} from "@mantine/core"
+} from "@mantine/core";
 
-import { costColumn, timeColumn } from "@/utils/datatable"
+import { costColumn, timeColumn } from "@/utils/datatable";
 
-import AppUserAvatar from "@/components/blocks/AppUserAvatar"
-import SearchBar from "@/components/blocks/SearchBar"
-import Empty from "@/components/layout/Empty"
-import { useExternalUsers } from "@/utils/dataHooks/external-users"
-import { formatAppUser } from "@/utils/format"
-import { useDebouncedValue, useLocalStorage } from "@mantine/hooks"
+import AppUserAvatar from "@/components/blocks/AppUserAvatar";
+import SearchBar from "@/components/blocks/SearchBar";
+import Empty from "@/components/layout/Empty";
+import { useExternalUsers } from "@/utils/dataHooks/external-users";
+import { formatAppUser } from "@/utils/format";
+import { useDebouncedValue, useLocalStorage } from "@mantine/hooks";
 import {
   IconActivity,
   IconChartAreaLine,
@@ -29,28 +29,28 @@ import {
   IconTrash,
   IconUsers,
   IconX,
-} from "@tabler/icons-react"
-import { NextSeo } from "next-seo"
-import Router from "next/router"
-import { useEffect, useState } from "react"
-import analytics from "../../utils/analytics"
-import CopyText from "@/components/blocks/CopyText"
-import { modals } from "@mantine/modals"
-import { notifications } from "@mantine/notifications"
-import { fetcher } from "@/utils/fetcher"
+} from "@tabler/icons-react";
+import { NextSeo } from "next-seo";
+import Router from "next/router";
+import { useEffect, useState } from "react";
+import analytics from "../../utils/analytics";
+import CopyText from "@/components/blocks/CopyText";
+import { modals } from "@mantine/modals";
+import { notifications } from "@mantine/notifications";
+import { fetcher } from "@/utils/fetcher";
 import {
   useAnalyticsChartData,
   useTopModels,
-} from "@/utils/dataHooks/analytics"
-import SmartViewer from "@/components/SmartViewer"
-import { useProjectSWR } from "@/utils/dataHooks"
-import { useRouter } from "next/router"
-import TopModels from "@/components/analytics/TopModels"
+} from "@/utils/dataHooks/analytics";
+import SmartViewer from "@/components/SmartViewer";
+import { useProjectSWR } from "@/utils/dataHooks";
+import { useRouter } from "next/router";
+import TopModels from "@/components/analytics/TopModels";
 
-import LineChart from "@/components/analytics/LineChart"
-import Link from "next/link"
-import { deserializeDateRange, getDefaultDateRange } from "../analytics"
-import { parseAsString, useQueryState } from "nuqs"
+import LineChart from "@/components/analytics/LineChart";
+import Link from "next/link";
+import { deserializeDateRange, getDefaultDateRange } from "../analytics";
+import { parseAsString, useQueryState } from "nuqs";
 
 const columns = [
   {
@@ -59,7 +59,7 @@ const columns = [
     minSize: 100,
     id: "props",
     cell: (props) => {
-      const user = props.row.original
+      const user = props.row.original;
 
       return (
         <Group gap={8} wrap="nowrap">
@@ -75,28 +75,29 @@ const columns = [
             {formatAppUser(user)}
           </Text>
         </Group>
-      )
+      );
     },
   },
   timeColumn("createdAt", "First Seen"),
   timeColumn("lastSeen", "Last Seen"),
   costColumn(),
-]
+];
 
 function SelectedUser({ id, onClose }) {
   const { data: user, isLoading: userLoading } = useProjectSWR(
     id && `/external-users/${id}`,
-  )
+  );
   const { data: topModels, isLoading: topModelsLoading } = useTopModels(
     id && {
       userId: id,
     },
-  )
-  const { name, email, ...extraProps } = user?.props || ({} as any)
+  );
+  const { name, email, ...extraProps } = user?.props || ({} as any);
 
   function confirmDelete() {
     modals.openConfirmModal({
       title: "Please confirm your action",
+      // @ts-ignore
       confirmProps: { color: "red", "data-testid": "confirm" },
       children: (
         <Text size="sm">
@@ -112,9 +113,9 @@ function SelectedUser({ id, onClose }) {
           message: "Your user data is being deleted",
           autoClose: false,
           withCloseButton: false,
-        })
+        });
 
-        await fetcher.delete(`/external-users/${id}`)
+        await fetcher.delete(`/external-users/${id}`);
 
         notifications.update({
           id: notifId,
@@ -124,11 +125,11 @@ function SelectedUser({ id, onClose }) {
           icon: <IconCheck size={18} />,
           loading: false,
           autoClose: 2000,
-        })
+        });
 
-        Router.push("/users")
+        Router.push("/users");
       },
-    })
+    });
   }
 
   const [dateRange, setDateRange] = useLocalStorage({
@@ -136,10 +137,10 @@ function SelectedUser({ id, onClose }) {
     getInitialValueInEffect: false,
     deserialize: deserializeDateRange,
     defaultValue: getDefaultDateRange(),
-  })
-  const [startDate, endDate] = dateRange
+  });
+  const [startDate, endDate] = dateRange;
 
-  const [granularity] = useState("daily")
+  const [granularity] = useState("daily");
 
   const { data: tokensData, isLoading: tokensDataLoading } =
     useAnalyticsChartData(
@@ -148,7 +149,7 @@ function SelectedUser({ id, onClose }) {
       endDate,
       granularity,
       `users=${id}`,
-    )
+    );
 
   const { data: runCountData, isLoading: runCountLoading } =
     useAnalyticsChartData(
@@ -157,13 +158,17 @@ function SelectedUser({ id, onClose }) {
       endDate,
       granularity,
       `users=${id}`,
-    )
+    );
 
-  const commonChartData = {
+  const commonChartData: {
+    startDate: Date;
+    endDate: Date;
+    granularity: "daily";
+  } = {
     startDate,
     endDate,
     granularity: "daily",
-  }
+  };
 
   return (
     <Drawer
@@ -278,7 +283,7 @@ function SelectedUser({ id, onClose }) {
               color="red"
               variant="light"
               onClick={() => {
-                confirmDelete()
+                confirmDelete();
               }}
             >
               Remove Data
@@ -287,34 +292,45 @@ function SelectedUser({ id, onClose }) {
         </>
       )}
     </Drawer>
-  )
+  );
 }
 
 export default function Users() {
   const [search, setSearch] = useQueryState<string | undefined>(
     "search",
     parseAsString,
-  )
+  );
 
-  const [debouncedSearch] = useDebouncedValue(search, 200)
+  const [sortField] = useQueryState<string | undefined>(
+    "sortField",
+    parseAsString,
+  );
+
+  const [sortDirection] = useQueryState<string | undefined>(
+    "sortDirection",
+    parseAsString,
+  );
+
+
+  const [debouncedSearch] = useDebouncedValue(search, 200);
   const [columnVisibility, setColumnVisibility] = useLocalStorage({
     key: "users-columns",
     defaultValue: {},
-  })
+  });
 
   const { users, loading, validating, loadMore } = useExternalUsers({
     search: debouncedSearch,
-  })
+  });
 
-  const router = useRouter()
+  const router = useRouter();
 
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    const id = router.query.id as string
+    const id = router.query.id as string;
 
-    setSelectedUserId(id)
-  }, [router.query.id])
+    setSelectedUserId(id);
+  }, [router.query.id]);
 
   return (
     <Empty
@@ -346,10 +362,14 @@ export default function Users() {
           setVisibleColumns={setColumnVisibility}
           data={users}
           onRowClicked={(row) => {
-            analytics.trackOnce("OpenUser")
+            analytics.trackOnce("OpenUser");
 
-            setSelectedUserId(row.id)
-            router.push(`/users/${row.id}`)
+            setSelectedUserId(row.id);
+
+            router.replace({
+              pathname: `/users/${row.id}`,
+              query: { sortField, sortDirection },
+            });
           }}
           loading={loading || validating}
           loadMore={loadMore}
@@ -358,11 +378,14 @@ export default function Users() {
         <SelectedUser
           id={selectedUserId}
           onClose={() => {
-            setSelectedUserId(null)
-            router.push("/users")
+            setSelectedUserId(null);
+            router.replace({
+              pathname: "/users",
+              query: { sortField, sortDirection },
+            });
           }}
         />
       </Stack>
     </Empty>
-  )
+  );
 }

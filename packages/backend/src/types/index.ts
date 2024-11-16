@@ -1,1 +1,1 @@
-export * as Db from "./database"
+export * as Db from "./database";

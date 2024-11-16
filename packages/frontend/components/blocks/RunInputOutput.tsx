@@ -1,39 +1,50 @@
-import { useDatasets, useOrg, useRun, useUser } from "@/utils/dataHooks"
+import config from "@/utils/config";
+import { useDatasets, useOrg, useRun, useUser } from "@/utils/dataHooks";
+import errorHandler from "@/utils/errors";
 import {
+  ActionIcon,
   Badge,
   Button,
   Card,
   Group,
   HoverCard,
+  Menu,
   ScrollArea,
   Select,
   Stack,
-  Switch,
   Text,
-} from "@mantine/core"
-import { notifications, showNotification } from "@mantine/notifications"
+  Title,
+  Tooltip,
+} from "@mantine/core";
+import { modals } from "@mantine/modals";
+import { notifications } from "@mantine/notifications";
 import {
   IconBinaryTree2,
   IconCheck,
+  IconDotsVertical,
+  IconEye,
+  IconEyeClosed,
+  IconInfoCircle,
   IconPencilShare,
-} from "@tabler/icons-react"
-import Link from "next/link"
-import { hasAccess } from "shared"
-import SmartViewer from "../SmartViewer"
-import CopyText, { SuperCopyButton } from "./CopyText"
-import ErrorBoundary from "./ErrorBoundary"
-import TokensBadge from "./TokensBadge"
-import Feedbacks from "./Feedbacks"
-import config from "@/utils/config"
-import { useState } from "react"
-import AppUserAvatar from "./AppUserAvatar"
+  IconTrash,
+} from "@tabler/icons-react";
+import Link from "next/link";
+import { parseAsBoolean, parseAsString, useQueryState } from "nuqs";
+import { useState } from "react";
+import { hasAccess } from "shared";
+import SmartViewer from "../SmartViewer";
+import AppUserAvatar from "./AppUserAvatar";
+import CopyText, { SuperCopyButton } from "./CopyText";
+import ErrorBoundary from "./ErrorBoundary";
+import Feedbacks from "./Feedbacks";
+import TokensBadge from "./TokensBadge";
 
 const isChatMessages = (obj) => {
   return Array.isArray(obj)
     ? obj.every(isChatMessages)
     : (typeof obj.text === "string" && typeof obj.role === "string") ||
-        typeof obj.content === "string"
-}
+        typeof obj.content === "string";
+};
 
 const ParamItem = ({
   name,
@@ -41,10 +52,10 @@ const ParamItem = ({
   render,
   color = "blue",
 }: {
-  name: string
-  value: any
-  render?: (value: any) => React.ReactNode
-  color?: string
+  name: string;
+  value: any;
+  render?: (value: any) => React.ReactNode;
+  color?: string;
 }) => {
   return (
     <Group>
@@ -69,39 +80,14 @@ const ParamItem = ({
         </Text>
       )}
     </Group>
-  )
-}
-
-// tools format: [
-//   {
-//     "type": "function",
-//     "function": {
-//       "name": "translate",
-//       "description": "Translate a text from one language to another",
-//       "parameters": {
-//         "type": "object",
-//         "properties": {
-//           "to": {
-//             "type": "string"
-//           },
-//           "from": {
-//             "type": "string"
-//           },
-//           "text": {
-//             "type": "string"
-//           }
-//         },
-//        "required": ["to", "from", "text"]
-//       }
-//     }
-//   }
-// ]
+  );
+};
 
 function RenderTools({ tools }) {
   return tools?.map((tool, i) => {
-    const toolObject = tool.function || tool.toolSpec // toolSpec is for langchain I believe
+    const toolObject = tool.function || tool.toolSpec; // toolSpec is for langchain I believe
 
-    const spec = toolObject?.parameters || toolObject?.inputSchema
+    const spec = toolObject?.parameters || toolObject?.inputSchema;
 
     return (
       <HoverCard key={i}>
@@ -125,8 +111,8 @@ function RenderTools({ tools }) {
           </ScrollArea.Autosize>
         </HoverCard.Dropdown>
       </HoverCard>
-    )
-  })
+    );
+  });
 }
 
 const PARAMS = [
@@ -145,7 +131,7 @@ const PARAMS = [
     render: (value) => <RenderTools tools={value} />,
   },
   { key: "toolChoice", name: "Tool Choice" },
-]
+];
 
 export default function RunInputOutput({
   initialRun,
@@ -156,23 +142,35 @@ export default function RunInputOutput({
   withShare = false,
   mutateLogs,
 }) {
-  const { user } = useUser()
-  const { org } = useOrg()
-  const { run, update, updateFeedback } = useRun(initialRun?.id, initialRun)
-  const [selectedDataset, setSelectedDataset] = useState<string | null>("")
+  const { user } = useUser();
+  const { org } = useOrg();
+  const { run, update, updateFeedback, deleteRun } = useRun(
+    initialRun?.id,
+    initialRun,
+  );
+  const [selectedDataset, setSelectedDataset] = useState<string | null>("");
+
+  const [selectedRunId, setSelectedRunId] = useQueryState<string | undefined>(
+    "selected",
+    parseAsString,
+  );
+  const [shouldMutate, setShouldMutate] = useQueryState<boolean | undefined>(
+    "mutate",
+    parseAsBoolean,
+  );
 
   const canEnablePlayground =
     withPlayground &&
     run?.type === "llm" &&
     run?.input &&
     isChatMessages(run?.input) &&
-    hasAccess(user.role, "prompts", "read")
+    hasAccess(user.role, "prompts", "read");
 
-  const { datasets, insertPrompt } = useDatasets()
+  const { datasets, insertPrompt } = useDatasets();
 
   const canImportToDataset = config.IS_SELF_HOSTED
     ? true
-    : org?.plan === "team" || org?.plan === "custom"
+    : org?.plan === "team" || org?.plan === "custom";
 
   const shouldDisplayCard =
     run?.name ||
@@ -180,7 +178,23 @@ export default function RunInputOutput({
     Object.keys(run?.params || {}).length !== 0 ||
     run?.tags?.length > 0 ||
     run?.metadata ||
-    canEnablePlayground
+    canEnablePlayground;
+
+  function openModal() {
+    modals.openConfirmModal({
+      title: "Delete Log",
+      children: (
+        <Text size="sm">Are you sure you want to delete this Log?</Text>
+      ),
+      labels: { confirm: "Confirm", cancel: "Cancel" },
+      confirmProps: { color: "red" },
+      onConfirm: async () => {
+        await errorHandler(deleteRun());
+        setSelectedRunId(null);
+        setShouldMutate(true);
+      },
+    });
+  }
 
   return (
     <ErrorBoundary>
@@ -207,35 +221,6 @@ export default function RunInputOutput({
                 </Group>
 
                 <Group>
-                  {hasAccess(user.role, "logs", "update") && (
-                    <Switch
-                      label={
-                        <Text
-                          size="sm"
-                          mr="sm"
-                          data-testid="make-log-public-switch"
-                        >
-                          Make public
-                        </Text>
-                      }
-                      checked={run.isPublic}
-                      color={run.isPublic ? "red" : "blue"}
-                      onChange={async (e) => {
-                        const checked = e.currentTarget.checked as boolean
-                        update({ ...run, isPublic: checked })
-                        if (checked) {
-                          const url = `${window.location.origin}/logs/${run.id}`
-                          await navigator.clipboard.writeText(url)
-
-                          notifications.show({
-                            top: 100,
-                            title: "Run is now public",
-                            message: "Link copied to clipboard",
-                          })
-                        }
-                      }}
-                    />
-                  )}
                   {canImportToDataset && withImportToDataset && (
                     <Select
                       searchable
@@ -252,16 +237,88 @@ export default function RunInputOutput({
                           datasetId: value,
                           messages: run.input,
                           idealOutput: run.output,
-                        })
+                        });
                         notifications.show({
                           title: "The run has been added to the dataset",
                           message: "",
                           icon: <IconCheck />,
                           color: "green",
-                        })
-                        setSelectedDataset(null)
+                        });
+                        setSelectedDataset(null);
                       }}
                     />
+                  )}
+
+                  {hasAccess(user.role, "logs", "update") && (
+                    <Menu data-testid="selected-run-menu">
+                      <Menu.Target>
+                        <ActionIcon variant="default">
+                          <IconDotsVertical size={16} />
+                        </ActionIcon>
+                      </Menu.Target>
+                      <Menu.Dropdown>
+                        <Menu.Item
+                          data-testid="toggle-run-visibility"
+                          leftSection={
+                            run.isPublic ? (
+                              <IconEyeClosed size={16} />
+                            ) : (
+                              <IconEye size={16} />
+                            )
+                          }
+                          onClick={async () => {
+                            const newIsPublic = !run.isPublic;
+                            await update({ ...run, isPublic: newIsPublic });
+                            if (newIsPublic) {
+                              const url = `${window.location.origin}/logs/${run.id}`;
+                              await navigator.clipboard.writeText(url);
+
+                              notifications.show({
+                                title: "Run is now public",
+                                message: "Link copied to clipboard",
+                                icon: <IconCheck />,
+                                color: "green",
+                                position: "bottom-right",
+                              });
+                            } else {
+                              notifications.show({
+                                title: "Run is now private",
+                                message: "",
+                                icon: <IconCheck />,
+                                color: "green",
+                                position: "bottom-right",
+                              });
+                            }
+                          }}
+                        >
+                          {run.isPublic ? "Make private" : "Make public"}
+                        </Menu.Item>
+                        {canEnablePlayground && (
+                          <Menu.Item
+                            leftSection={<IconPencilShare size={16} />}
+                            component={Link}
+                            href={`/prompts/${run.templateVersionId || `?clone=` + run.id}`}
+                          >
+                            {run.templateVersionId
+                              ? "Open template"
+                              : "Open in Playground"}
+                          </Menu.Item>
+                        )}
+                        {hasAccess(user.role, "logs", "delete") && (
+                          <Menu.Item
+                            leftSection={
+                              <IconTrash
+                                size={16}
+                                color="var(--mantine-color-red-filled)"
+                              />
+                            }
+                            onClick={openModal}
+                          >
+                            <Text c="red">Delete</Text>
+                          </Menu.Item>
+                        )}
+                      </Menu.Dropdown>
+                    </Menu>
                   )}
                 </Group>
               </Group>
@@ -314,7 +371,7 @@ export default function RunInputOutput({
                       .filter(([key]) => key !== "enrichment")
                       .map(([key, value]) => {
                         if (!value || value.hasOwnProperty("toString")) {
-                          return null
+                          return null;
                         }
 
                         return (
@@ -327,12 +384,30 @@ export default function RunInputOutput({
                               <CopyText ml={0} value={value.toString()} />
                             )}
                           />
-                        )
+                        );
                       })}
+
+                    {run.scores && Boolean(run.scores.length) && (
+                      <Group mt="md" gap="xs">
+                        <Title size="md">Scores</Title>
+                        <Tooltip
+                          label={
+                            "Custom scores that have been reported via the SDK"
+                          }
+                        >
+                          <IconInfoCircle size={16} opacity={0.5} />
+                        </Tooltip>
+                      </Group>
+                    )}
+                    {run.scores?.map((score, i) => (
+                      <Badge key={i} variant="outline" color="blue">
+                        {score.label}: {score.value}
+                      </Badge>
+                    ))}
                   </Stack>
 
                   <Group>
-                    {canEnablePlayground && (
+                    {canEnablePlayground && !withShare && (
                       <Button
                         variant="outline"
                         size="xs"
@@ -404,10 +479,10 @@ export default function RunInputOutput({
                     feedback={run.feedback}
                     updateFeedback={async (feedback) => {
                       try {
-                        await updateFeedback(feedback)
-                        await mutateLogs()
+                        await updateFeedback(feedback);
+                        await mutateLogs();
                       } catch (error) {
-                        console.error(error)
+                        console.error(error);
                       }
                     }}
                   />
@@ -422,5 +497,5 @@ export default function RunInputOutput({
         )}
       </Stack>
     </ErrorBoundary>
-  )
+  );
 }

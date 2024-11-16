@@ -1,5 +1,5 @@
-import LineChart from "@/components/analytics/LineChart"
-import CopyText from "@/components/blocks/CopyText"
+import LineChart from "@/components/analytics/LineChart";
+import CopyText from "@/components/blocks/CopyText";
 
 import {
   Alert,
@@ -13,46 +13,52 @@ import {
   Switch,
   Tabs,
   Text,
-} from "@mantine/core"
-import { NextSeo } from "next-seo"
-import Router, { useRouter } from "next/router"
+} from "@mantine/core";
+import { NextSeo } from "next-seo";
+import Router, { useRouter } from "next/router";
 
-import RenamableField from "@/components/blocks/RenamableField"
-import { SettingsCard } from "@/components/blocks/SettingsCard"
-import CheckPicker from "@/components/checks/Picker"
-import config from "@/utils/config"
-import { useOrg, useProject, useProjectRules, useUser } from "@/utils/dataHooks"
-import errorHandler from "@/utils/errors"
-import { fetcher } from "@/utils/fetcher"
-import { modals } from "@mantine/modals"
-import { notifications } from "@mantine/notifications"
+import RenamableField from "@/components/blocks/RenamableField";
+import { SettingsCard } from "@/components/blocks/SettingsCard";
+import CheckPicker from "@/components/checks/Picker";
+import DataWarehouseCard from "@/components/settings/data-warehouse";
+import config from "@/utils/config";
+import {
+  useLunaryVersion,
+  useOrg,
+  useProject,
+  useProjectRules,
+  useUser,
+} from "@/utils/dataHooks";
+import errorHandler from "@/utils/errors";
+import { fetcher } from "@/utils/fetcher";
+import { modals } from "@mantine/modals";
+import { notifications } from "@mantine/notifications";
 import {
   IconCheck,
   IconFilter,
   IconIdBadge,
   IconPencil,
   IconRefreshAlert,
-  IconShield,
   IconShieldCog,
-} from "@tabler/icons-react"
-import Link from "next/link"
-import { useEffect, useState } from "react"
-import { CheckLogic, hasAccess } from "shared"
-import useSWR from "swr"
+} from "@tabler/icons-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { CheckLogic, hasAccess } from "shared";
+import useSWR from "swr";
 
 function Keys() {
-  const [regenerating, setRegenerating] = useState(false)
-  const { project, mutate } = useProject()
-  const { user } = useUser()
+  const [regenerating, setRegenerating] = useState(false);
+  const { project, mutate } = useProject();
+  const { user } = useUser();
 
   async function regenerateKey() {
-    setRegenerating(true)
+    setRegenerating(true);
 
     const res = await errorHandler(
       fetcher.post(`/projects/${project.id}/regenerate-key`, {
         arg: { type: "private" },
       }),
-    )
+    );
 
     if (res) {
       notifications.show({
@@ -60,11 +66,11 @@ function Keys() {
         message: "Your private key has been successfully regenerated",
         icon: <IconCheck />,
         color: "green",
-      })
-      await mutate()
+      });
+      await mutate();
     }
 
-    setRegenerating(false)
+    setRegenerating(false);
   }
 
   return (
@@ -88,7 +94,7 @@ function Keys() {
           events and send requests to the API.
         </Text>
       </Alert>
-      {hasAccess(user.role, "projects", "update") && (
+      {hasAccess(user.role, "privateKeys", "list") && (
         <Alert
           variant="light"
           styles={{
@@ -126,9 +132,9 @@ function Keys() {
                     labels: { confirm: "Confirm", cancel: "Cancel" },
 
                     onConfirm: async () => {
-                      await regenerateKey()
+                      await regenerateKey();
                     },
-                  })
+                  });
                 }}
                 leftSection={<IconRefreshAlert size={16} />}
               >
@@ -145,19 +151,25 @@ function Keys() {
         </Alert>
       )}
     </SettingsCard>
-  )
+  );
 }
 
 function SmartDataRule() {
-  const { org } = useOrg()
+  const { org } = useOrg();
   const { addRule, addRulesLoading, deleteRule, maskingRule, filteringRule } =
-    useProjectRules()
+    useProjectRules();
 
-  const [filters, setChecks] = useState<CheckLogic>(["AND"])
+  const [checks, setChecks] = useState<CheckLogic>(["AND"]);
+
+  useEffect(() => {
+    if (filteringRule?.filters) {
+      setChecks(filteringRule.filters);
+    }
+  }, [filteringRule]);
 
   const smartDataFilterEnabled = config.IS_SELF_HOSTED
     ? org.license.dataFilteringEnabled
-    : org.dataFilteringEnabled
+    : org.dataFilteringEnabled;
 
   return (
     <SettingsCard
@@ -194,7 +206,7 @@ function SmartDataRule() {
             <CheckPicker
               minimal={true}
               showAndOr={true}
-              value={filteringRule?.filters}
+              value={checks}
               onChange={setChecks}
               buttonText="Add filter"
               restrictTo={(f) =>
@@ -207,7 +219,7 @@ function SmartDataRule() {
                 loading={addRulesLoading}
                 style={{ float: "right" }}
                 onClick={() => {
-                  addRule({ type: "filtering", filters })
+                  addRule({ type: "filtering", filters: checks });
                 }}
                 variant="full"
               >
@@ -232,14 +244,14 @@ function SmartDataRule() {
               label="Enabled"
               checked={!!maskingRule}
               onChange={(e) => {
-                const { checked } = e.currentTarget
+                const { checked } = e.currentTarget;
 
                 if (checked) {
                   addRule({
                     type: "masking",
-                  })
+                  });
                 } else {
-                  deleteRule(maskingRule.id)
+                  deleteRule(maskingRule.id);
                 }
               }}
             />
@@ -264,29 +276,31 @@ function SmartDataRule() {
         </Tabs.Panel>
       </Tabs>
     </SettingsCard>
-  )
+  );
 }
 
-export default function AppAnalytics() {
-  const { org } = useOrg()
-  const { update, project, setProjectId, drop, dropLoading } = useProject()
-  const router = useRouter()
+export default function Settings() {
+  const { org } = useOrg();
+  const { update, project, setProjectId, drop, dropLoading } = useProject();
 
-  const { user } = useUser()
+  const { backendVersion, frontendVersion } = useLunaryVersion();
+  const router = useRouter();
+
+  const { user } = useUser();
 
   // TODO: better route for project usage
   const { data: projectUsage, isLoading: projectUsageLoading } = useSWR(
     project?.id && org && `/orgs/${org.id}/usage?projectId=${project?.id}`,
-  )
+  );
 
   useEffect(() => {
     if (!hasAccess(user?.role, "settings", "read")) {
-      router.push("/analytics")
+      router.push("/analytics");
     }
-  }, [user.role])
+  }, [user.role]);
 
   if (projectUsageLoading || !user.role) {
-    return <Loader />
+    return <Loader />;
   }
 
   return (
@@ -313,9 +327,7 @@ export default function AppAnalytics() {
           formatter={(val) => `${val} runs`}
           props={["count"]}
         />
-
         {user.role !== "viewer" && <Keys />}
-
         <SettingsCard title={<>Custom Models 🧠</>} align="start">
           <Button
             color="blue"
@@ -328,9 +340,7 @@ export default function AppAnalytics() {
             Edit Mappings
           </Button>
         </SettingsCard>
-
         <SmartDataRule />
-
         <SettingsCard
           title={<>Guardrails 🔒</>}
           align="start"
@@ -349,7 +359,7 @@ export default function AppAnalytics() {
         >
           <Button>Open Guardrails settings</Button>
         </SettingsCard>
-
+        <DataWarehouseCard />
         {user && hasAccess(user.role, "projects", "delete") && (
           <SettingsCard title="Danger Zone" align="start">
             <Text>
@@ -377,10 +387,10 @@ export default function AppAnalytics() {
                     data-testid="delete-project-popover-button"
                     loading={dropLoading}
                     onClick={async () => {
-                      const dropped = await drop()
+                      const dropped = await drop();
                       if (dropped) {
-                        setProjectId(null)
-                        Router.push("/")
+                        setProjectId(null);
+                        Router.push("/");
                       }
                     }}
                   >
@@ -391,7 +401,22 @@ export default function AppAnalytics() {
             </Popover>
           </SettingsCard>
         )}
+
+        {(frontendVersion || backendVersion) && (
+          <Group justify="flex-end">
+            {frontendVersion && (
+              <Text c="dimmed" size="sm">
+                Frontend: {frontendVersion}
+              </Text>
+            )}
+            {backendVersion && (
+              <Text c="dimmed" size="sm">
+                Backend: {backendVersion}
+              </Text>
+            )}
+          </Group>
+        )}
       </Stack>
     </Container>
-  )
+  );
 }

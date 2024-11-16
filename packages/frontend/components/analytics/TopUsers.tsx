@@ -1,4 +1,4 @@
-import { formatAppUser, formatCost } from "@/utils/format"
+import { formatAppUser, formatCost } from "@/utils/format";
 import {
   Anchor,
   Center,
@@ -7,23 +7,23 @@ import {
   Loader,
   Overlay,
   Text,
-} from "@mantine/core"
-import AppUserAvatar from "../blocks/AppUserAvatar"
-import AnalyticsCard from "./AnalyticsCard"
-import BarList from "./BarList"
+} from "@mantine/core";
+import AppUserAvatar from "../blocks/AppUserAvatar";
+import AnalyticsCard from "./AnalyticsCard";
+import BarList from "./BarList";
 
 interface TopUsers {
-  id: number
-  cost: number
-  createdAt: string
-  externalId: string
-  lastSeen: string
-  props: Record<string, any>
+  id: number;
+  cost: number;
+  createdAt: string;
+  externalId: string;
+  lastSeen: string;
+  props: Record<string, any>;
 }
 
 interface TopUsersProps {
-  topUsers: TopUsers[]
-  isLoading: boolean
+  topUsers: TopUsers[];
+  isLoading: boolean;
 }
 
 function TopUsers({ topUsers, isLoading }: TopUsersProps) {
@@ -32,7 +32,7 @@ function TopUsers({ topUsers, isLoading }: TopUsersProps) {
       <Flex align="center" justify="center" h="280px">
         <Loader />
       </Flex>
-    )
+    );
   }
 
   if (topUsers?.length === 0) {
@@ -48,7 +48,7 @@ function TopUsers({ topUsers, isLoading }: TopUsersProps) {
           No users tracked for this period
         </Center>
       </>
-    )
+    );
   }
 
   return (
@@ -110,7 +110,7 @@ function TopUsers({ topUsers, isLoading }: TopUsersProps) {
         },
       ]}
     />
-  )
+  );
 }
 
 export default function TopUsersCard({ topUsers, isLoading }: TopUsersProps) {
@@ -118,5 +118,5 @@ export default function TopUsersCard({ topUsers, isLoading }: TopUsersProps) {
     <AnalyticsCard title="Top Users">
       <TopUsers topUsers={topUsers} isLoading={isLoading} />
     </AnalyticsCard>
-  )
+  );
 }

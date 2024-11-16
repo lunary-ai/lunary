@@ -1,36 +1,134 @@
-import sql from "@/src/utils/db"
-import { Context } from "koa"
-import Router from "koa-router"
+import sql from "@/src/utils/db";
+import { Context } from "koa";
+import Router from "koa-router";
 
-import ingest from "./ingest"
-import { fileExport } from "./export"
-import { Feedback, deserializeLogic } from "shared"
-import { convertChecksToSQL } from "@/src/utils/checks"
-import { checkAccess } from "@/src/utils/authorization"
-import { jsonrepair } from "jsonrepair"
-import { z } from "zod"
+import { checkAccess, checkProjectAccess } from "@/src/utils/authorization";
+import { convertChecksToSQL } from "@/src/utils/checks";
+import { jsonrepair } from "jsonrepair";
+import { Feedback, Score, deserializeLogic } from "shared";
+import { z } from "zod";
+import { fileExport } from "./export";
+import ingest from "./ingest";
+
+import crypto from "crypto";
+
+const EXPORTERS = new Map();
+
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     Run:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         projectId:
+ *           type: string
+ *         isPublic:
+ *           type: boolean
+ *         feedback:
+ *           $ref: '#/components/schemas/Feedback'
+ *         parentFeedback:
+ *           $ref: '#/components/schemas/Feedback'
+ *         type:
+ *           type: string
+ *         name:
+ *           type: string
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         endedAt:
+ *           type: string
+ *           format: date-time
+ *         duration:
+ *           type: number
+ *         templateVersionId:
+ *           type: string
+ *         templateSlug:
+ *           type: string
+ *         cost:
+ *           type: number
+ *         tokens:
+ *           type: object
+ *           properties:
+ *             completion:
+ *               type: number
+ *             prompt:
+ *               type: number
+ *             total:
+ *               type: number
+ *         tags:
+ *           type: array
+ *           items:
+ *             type: string
+ *         input:
+ *           type: object
+ *         output:
+ *           type: object
+ *         error:
+ *           type: object
+ *         status:
+ *           type: string
+ *         siblingRunId:
+ *           type: string
+ *         params:
+ *           type: object
+ *         metadata:
+ *           type: object
+ *         user:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: string
+ *             externalId:
+ *               type: string
+ *             createdAt:
+ *               type: string
+ *               format: date-time
+ *             lastSeen:
+ *               type: string
+ *               format: date-time
+ *             props:
+ *               type: object
+ *         traceId:
+ *           type: string
+ *
+ *     Feedback:
+ *       type: object
+ *       properties:
+ *         score:
+ *           type: number
+ *         flags:
+ *           type: array
+ *           items:
+ *             type: string
+ *         comment:
+ *           type: string
+ */
 
 const runs = new Router({
   prefix: "/runs",
-})
+});
 
 interface Query {
-  type?: "llm" | "trace" | "thread"
-  search?: string
-  models?: string[]
-  tags?: string[]
-  tokens?: string
-  exportType?: "csv" | "jsonl"
-  minDuration?: string
-  maxDuration?: string
-  startTime?: string
-  endTime?: string
-  parentRunId?: string
-  limit?: string
-  page?: string
-  order?: string
-  sortField?: string
-  sortDirection?: string
+  type?: "llm" | "trace" | "thread";
+  search?: string;
+  models?: string[];
+  tags?: string[];
+  tokens?: string;
+  exportType?: "trace" | "thread";
+  exportFormat?: "csv" | "ojsonl" | "jsonl";
+  minDuration?: string;
+  maxDuration?: string;
+  startTime?: string;
+  endTime?: string;
+  parentRunId?: string;
+  limit?: string;
+  page?: string;
+  order?: string;
+  sortField?: string;
+  sortDirection?: string;
 }
 
 function processInput(input: unknown) {
@@ -40,10 +138,10 @@ function processInput(input: unknown) {
     Object.keys(input).length === 1 &&
     input.hasOwnProperty("input")
   ) {
-    return input.input
+    return input.input;
   }
 
-  return input
+  return input;
 }
 
 function processOutput(output: unknown) {
@@ -53,24 +151,24 @@ function processOutput(output: unknown) {
     Object.keys(output).length === 1 &&
     output.hasOwnProperty("output")
   ) {
-    return output.output
+    return output.output;
   }
 
-  return output
+  return output;
 }
 
 function processParams(params: any) {
-  if (!params) return {}
+  if (!params) return {};
   try {
     // handles tools received as string (eg. litellm)
     if (params.tools && typeof params.tools === "string") {
-      params.tools = JSON.parse(jsonrepair(params.tools))
+      params.tools = JSON.parse(jsonrepair(params.tools));
     }
   } catch (e) {
-    console.error(e)
-    console.error("Error parsing tools")
+    console.error(e);
+    console.error("Error parsing tools");
   }
-  return params
+  return params;
 }
 
 function formatRun(run: any) {
@@ -110,28 +208,33 @@ function formatRun(run: any) {
       props: run.userProps,
     },
     traceId: run.rootParentRunId,
-  }
+    scores: run.scores,
+  };
 
   try {
     // TODO: put in process input function
     if (Array.isArray(formattedRun.input)) {
       for (const message of formattedRun.input) {
-        message.enrichments = []
+        if (message && typeof message === "object") {
+          message.enrichments = [];
+        }
       }
     } else if (formattedRun.input && typeof formattedRun.input === "object") {
-      formattedRun.input.enrichments = []
+      formattedRun.input.enrichments = [];
     }
 
     if (Array.isArray(formattedRun.output)) {
       for (const message of formattedRun.output) {
-        message.enrichments = []
+        if (message && typeof message === "object") {
+          message.enrichments = [];
+        }
       }
     } else if (formattedRun.output && typeof formattedRun.output === "object") {
-      formattedRun.output.enrichments = []
+      formattedRun.output.enrichments = [];
     }
 
     if (formattedRun.error && typeof formattedRun.error === "object") {
-      formattedRun.error.enrichments = []
+      formattedRun.error.enrichments = [];
     }
 
     for (const {
@@ -140,18 +243,18 @@ function formatRun(run: any) {
       evaluatorId,
     } of run.evaluationResults) {
       if (!result?.input || !result?.output || !result?.error) {
-        continue
+        continue;
       }
 
       if (Array.isArray(formattedRun.input)) {
         for (let i = 0; i < formattedRun.input.length; i++) {
-          const message = formattedRun.input[i]
-          if (typeof message === "object") {
+          const message = formattedRun.input[i];
+          if (message && typeof message === "object") {
             message.enrichments.push({
               result: result.input[i],
               type: evaluatorType,
               id: evaluatorId,
-            })
+            });
           }
         }
       } else if (formattedRun.input && typeof formattedRun.input === "object") {
@@ -159,18 +262,18 @@ function formatRun(run: any) {
           result: result.input[0],
           type: evaluatorType,
           id: evaluatorId,
-        })
+        });
       }
 
       if (Array.isArray(formattedRun.output)) {
         for (let i = 0; i < formattedRun.output.length; i++) {
-          const message = formattedRun.output[i]
+          const message = formattedRun.output[i];
           if (typeof message === "object") {
             message.enrichments.push({
               result: result.output[i],
               type: evaluatorType,
               id: evaluatorId,
-            })
+            });
           }
         }
       } else if (
@@ -181,7 +284,7 @@ function formatRun(run: any) {
           result: result.output[0],
           type: evaluatorType,
           id: evaluatorId,
-        })
+        });
       }
 
       if (formattedRun.error && typeof formattedRun.error === "object") {
@@ -189,64 +292,213 @@ function formatRun(run: any) {
           result: result.error[0],
           type: evaluatorType,
           id: evaluatorId,
-        })
+        });
       }
     }
     // TODO: put in an array nammed enrichment instead
     for (let evaluationResult of run.evaluationResults || []) {
       formattedRun[`enrichment-${evaluationResult.evaluatorId}`] =
-        evaluationResult
+        evaluationResult;
     }
   } catch (error) {
-    console.error(error)
+    console.error(error);
   }
 
-  return formattedRun
+  return formattedRun;
 }
 
-runs.use("/ingest", ingest.routes())
+runs.use("/ingest", ingest.routes());
 
+/**
+ * @openapi
+ * /v1/runs:
+ *   get:
+ *     summary: Get runs
+ *     tags: [Runs]
+ *     description: |
+ *       The Runs API endpoint allows you to retrieve data about specific runs from your Lunary application.
+ *
+ *       The most common run types are 'llm', 'agent', 'chain', 'tool', 'thread' and 'chat'.
+ *
+ *       It supports various filters to narrow down the results according to your needs.
+ *
+ *       This endpoint supports GET requests and expects query parameters for filtering the results.
+ *     parameters:
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *           enum: [llm, trace, thread]
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: models
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *       - in: query
+ *         name: tags
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *       - in: query
+ *         name: tokens
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: exportType
+ *         schema:
+ *           type: string
+ *           enum: [csv, jsonl]
+ *       - in: query
+ *         name: minDuration
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: maxDuration
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: startTime
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: endTime
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: parentRunId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: sortField
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: sortDirection
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 total:
+ *                   type: number
+ *                 page:
+ *                   type: number
+ *                 limit:
+ *                   type: number
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Run'
+ *         examples:
+ *           application/json:
+ *             value:
+ *               total: 200
+ *               page: 1
+ *               limit: 10
+ *               data:
+ *                 - type: llm
+ *                   name: gpt-4o
+ *                   createdAt: "2024-01-01T12:00:00Z"
+ *                   endedAt: "2024-01-01T12:00:03Z"
+ *                   duration: 3
+ *                   tokens:
+ *                     completion: 100
+ *                     prompt: 50
+ *                     total: 150
+ *                   feedback: null
+ *                   status: success
+ *                   tags: ["example"]
+ *                   templateSlug: example-template
+ *                   templateVersionId: 1234
+ *                   input:
+ *                     - role: user
+ *                       content: Hello world!
+ *                   output:
+ *                     - role: assistant
+ *                       content: Hello. How are you?
+ *                   error: null
+ *                   user:
+ *                     id: "11111111"
+ *                     externalId: user123
+ *                     createdAt: "2021-12-01T12:00:00Z"
+ *                     lastSeen: "2022-01-01T12:00:00Z"
+ *                     props:
+ *                       name: Jane Doe
+ *                       email: user1@apple.com
+ *                   cost: 0.05
+ *                   params:
+ *                     temperature: 0.5
+ *                     maxTokens: 100
+ *                     tools: []
+ *                   metadata: null
+ */
 runs.get("/", async (ctx: Context) => {
-  const { projectId } = ctx.state
+  const { projectId } = ctx.state;
 
-  const queryString = ctx.querystring
-  const deserializedChecks = deserializeLogic(queryString)
+  const queryString = ctx.querystring;
+  const deserializedChecks = deserializeLogic(queryString);
 
   const filtersQuery =
     deserializedChecks?.length && deserializedChecks.length > 1 // first is always ["AND"]
       ? convertChecksToSQL(deserializedChecks)
-      : sql`r.type = 'llm'` // default to type llm
+      : sql`r.type = 'llm'`; // default to type llm
 
   const {
     limit = "50",
     page = "0",
     parentRunId,
     exportType,
+    exportFormat,
     sortField,
     sortDirection,
-  } = ctx.query as Query
+  } = ctx.query as Query;
 
-  let parentRunCheck = sql``
+  let parentRunCheck = sql``;
   if (parentRunId) {
-    parentRunCheck = sql`and parent_run_id = ${parentRunId}`
+    parentRunCheck = sql`and parent_run_id = ${parentRunId}`;
   }
 
   const sortMapping = {
     createdAt: "r.created_at",
     duration: "r.duration",
-    tokens: "(r.prompt_tokens + r.completion_tokens)",
+    tokens: "total_tokens",
     cost: "r.cost",
-  }
-  let orderByClause = `r.created_at desc nulls last`
+  };
+  let orderByClause = `r.created_at desc nulls last`;
   if (sortField && sortField in sortMapping) {
-    const direction = sortDirection === "desc" ? `desc` : `asc`
-    orderByClause = `${sortMapping[sortField]} ${direction} nulls last`
+    const direction = sortDirection === "desc" ? `desc` : `asc`;
+    orderByClause = `${sortMapping[sortField]} ${direction} nulls last`;
   }
 
-  const rows = await sql`
+  const query = sql`
     with runs as (
       select distinct
         r.*,
+        (r.prompt_tokens + r.completion_tokens) as total_tokens,
         eu.id as user_id,
         eu.external_id as user_external_id,
         eu.created_at as user_created_at,
@@ -285,8 +537,7 @@ runs.get("/", async (ctx: Context) => {
                 'updatedAt', er.updated_at
             )
         ) filter (where er.run_id is not null), '{}') as evaluation_results
-    from
-            runs r
+    from runs r
     left join evaluation_result_v2 er on r.id = er.run_id
     left join evaluator e on er.evaluator_id = e.id
     group by r.id
@@ -297,14 +548,20 @@ runs.get("/", async (ctx: Context) => {
   from
     runs r
     left join evaluation_results er on r.id = er.id
-  
-  `
+  `;
 
-  const runs = rows.map(formatRun)
+  if (exportFormat) {
+    const token = crypto.randomBytes(32).toString("hex");
+    const cursor = query.cursor();
 
-  if (exportType) {
-    return fileExport(runs, exportType, ctx)
+    EXPORTERS.set(token, { cursor, projectId, exportFormat, exportType });
+
+    ctx.body = { token };
+    return;
   }
+
+  const rows = await query;
+  const runs = rows.map(formatRun);
 
   const total = await sql`
     with runs as (
@@ -334,33 +591,32 @@ runs.get("/", async (ctx: Context) => {
       count(*) 
     from
       runs;
-  `
+  `;
 
   ctx.body = {
     total: +total[0].count,
     page: Number(page),
     limit: Number(limit),
     data: runs,
-  }
-})
+  };
+});
 
-// TODO: refactor with GET / by putting logic inside a function
 runs.get("/count", async (ctx: Context) => {
-  const { projectId } = ctx.state
+  const { projectId } = ctx.state;
 
-  const queryString = ctx.querystring
-  const deserializedChecks = deserializeLogic(queryString)
+  const queryString = ctx.querystring;
+  const deserializedChecks = deserializeLogic(queryString);
 
   const filtersQuery =
     deserializedChecks?.length && deserializedChecks.length > 1 // first is always ["AND"]
       ? convertChecksToSQL(deserializedChecks)
-      : sql`r.type = 'llm'` // default to type llm
+      : sql`r.type = 'llm'`; // default to type llm
 
-  const { parentRunId } = ctx.query as Query
+  const { parentRunId } = ctx.query as Query;
 
-  let parentRunCheck = sql``
+  let parentRunCheck = sql``;
   if (parentRunId) {
-    parentRunCheck = sql`and parent_run_id = ${parentRunId}`
+    parentRunCheck = sql`and parent_run_id = ${parentRunId}`;
   }
 
   const [{ count }] = await sql`
@@ -391,24 +647,74 @@ runs.get("/count", async (ctx: Context) => {
       count(*) 
     from
       runs;
-`
+`;
 
-  ctx.body = count
-})
+  ctx.body = count;
+});
 
+/**
+ * @openapi
+ * /v1/runs/usage:
+ *   get:
+ *     tags: [Runs]
+ *     summary: Get run usage statistics
+ *     description: Retrieve usage statistics for runs
+ *     parameters:
+ *       - in: query
+ *         name: days
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: daily
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   date:
+ *                     type: string
+ *                   name:
+ *                     type: string
+ *                   type:
+ *                     type: string
+ *                   completion_tokens:
+ *                     type: integer
+ *                   prompt_tokens:
+ *                     type: integer
+ *                   cost:
+ *                     type: number
+ *                   errors:
+ *                     type: integer
+ *                   success:
+ *                     type: integer
+ *       400:
+ *         description: Invalid query parameters
+ */
 runs.get("/usage", checkAccess("logs", "read"), async (ctx) => {
-  const { projectId } = ctx.state
+  const { projectId } = ctx.state;
   const { days, userId, daily } = ctx.query as {
-    days: string
-    userId: string
-    daily: string
-  }
+    days: string;
+    userId: string;
+    daily: string;
+  };
 
-  const daysNum = parseInt(days)
-  const userIdNum = userId ? parseInt(userId) : null
+  const daysNum = parseInt(days);
+  const userIdNum = userId ? parseInt(userId) : null;
 
   if (isNaN(daysNum) || (userId && isNaN(userIdNum))) {
-    ctx.throw(400, "Invalid query parameters")
+    ctx.throw(400, "Invalid query parameters");
   }
 
   // TODO: probably cleaner to split this into two routes
@@ -437,13 +743,13 @@ runs.get("/usage", checkAccess("logs", "read"), async (ctx) => {
           ${daily ? sql`date,` : sql``}
           run.name, 
           run.type
-          `
+          `;
 
-  ctx.body = runsUsage
-})
+  ctx.body = runsUsage;
+});
 
 runs.get("/:id/public", async (ctx) => {
-  const { id } = ctx.params
+  const { id } = ctx.params;
 
   const [row] = await sql`
       select
@@ -461,18 +767,41 @@ runs.get("/:id/public", async (ctx) => {
           and r.is_public = true
       order by
           r.created_at desc
-      limit 1`
+      limit 1`;
 
-  if (!row) throw new Error("Run not found. It might not be public.")
+  if (!row) throw new Error("Run not found. It might not be public.");
 
-  ctx.body = formatRun(row)
-})
+  ctx.body = formatRun(row);
+});
 
+/**
+ * @openapi
+ * /v1/runs/{id}:
+ *   get:
+ *     summary: Get a specific run
+ *     description: Retrieve detailed information about a specific run by its ID.
+ *     tags: [Runs]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Run'
+ *       404:
+ *         description: Run not found
+ */
 runs.get("/:id", async (ctx) => {
-  const { id } = ctx.params
+  const { id } = ctx.params;
 
   // Use orgId in case teammates shares URL to run and teammates is on another project.
-  const { orgId } = ctx.state
+  const { orgId } = ctx.state;
 
   const [row] = await sql`
      with recursive run_hierarchy as (
@@ -504,9 +833,17 @@ runs.get("/:id", async (ctx) => {
           'createdAt', er.created_at,
           'updatedAt', er.updated_at
         )
-      ) filter (where er.run_id is not null), '{}') as evaluation_results
+      ) filter (where er.run_id is not null), '{}') as evaluation_results,
+      coalesce(array_agg(
+        json_build_object(
+          'label', rs.label,
+          'value', rs.value, 
+          'comment', rs.comment
+      )
+    ) filter (where rs.run_id is not null), '{}') as scores 
     from
       run r
+      left join run_score rs on r.id = rs.run_id
       left join external_user eu on r.external_user_id = eu.id
       left join run_parent_feedback_cache rpfc on r.id = rpfc.id
       left join template_version tv on r.template_version_id = tv.id
@@ -518,28 +855,68 @@ runs.get("/:id", async (ctx) => {
       and r.id = ${id}
     group by
       r.id,
-      eu.id
-    `
+      eu.id,
+      rs.run_id
+    `;
 
-  ctx.body = formatRun(row)
-})
+  if (!row) {
+    return ctx.throw(404, "Run not found");
+  }
 
+  ctx.body = formatRun(row);
+});
+
+/**
+ * @openapi
+ * /v1/runs/{id}:
+ *   patch:
+ *     summary: Update a run
+ *     description: This endpoint allows updating the public visibility status and tags of a run. The `isPublic` field can be set to true or false to change the run's visibility. The `tags` field can be updated with an array of strings or set to null to remove all tags.
+ *     tags: [Runs]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               isPublic:
+ *                 type: boolean
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *           example:
+ *             isPublic: true
+ *             tags: ["important", "customer-facing"]
+ *     responses:
+ *       200:
+ *         description: Successful update
+ *       400:
+ *         description: Invalid input
+ */
 runs.patch("/:id", checkAccess("logs", "update"), async (ctx: Context) => {
   // TODO: tags and isPublic should probably have their own endpoint
   const requestBody = z.object({
     isPublic: z.boolean().optional(),
     tags: z.union([z.array(z.string()), z.null()]),
-  })
-  const { projectId } = ctx.state
-  const { id } = ctx.params
-  const { isPublic, tags } = requestBody.parse(ctx.request.body)
+  });
+  const { projectId } = ctx.state;
+  const { id } = ctx.params;
+  const { isPublic, tags } = requestBody.parse(ctx.request.body);
 
-  let valuesToUpdate = {}
+  let valuesToUpdate = {};
   if (isPublic !== undefined) {
-    valuesToUpdate.isPublic = isPublic
+    valuesToUpdate.isPublic = isPublic;
   }
   if (tags) {
-    valuesToUpdate.tags = tags
+    valuesToUpdate.tags = tags;
   }
 
   await sql`
@@ -548,23 +925,50 @@ runs.patch("/:id", checkAccess("logs", "update"), async (ctx: Context) => {
       set ${sql(valuesToUpdate)}
       where
           project_id= ${projectId as string}
-          and id = ${id}`
+          and id = ${id}`;
 
-  ctx.status = 200
-})
+  ctx.status = 200;
+});
 
+/**
+ * @openapi
+ * /v1/runs/{id}/feedback:
+ *   patch:
+ *     summary: Update run feedback
+ *     tags: [Runs]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Feedback'
+ *           example:
+ *             thumb: "up"
+ *             comment: "This response was very helpful!"
+ *     responses:
+ *       200:
+ *         description: Feedback updated successfully
+ *       400:
+ *         description: Invalid input
+ */
 runs.patch(
   "/:id/feedback",
   checkAccess("logs", "update"),
   async (ctx: Context) => {
-    const { projectId } = ctx.state
-    const { id } = ctx.params
-    const feedback = Feedback.parse(ctx.request.body)
+    const { projectId } = ctx.state;
+    const { id } = ctx.params;
+    const feedback = Feedback.parse(ctx.request.body);
 
     let [{ feedback: existingFeedback }] =
-      (await sql`select feedback from run where id = ${id}`) || {}
+      (await sql`select feedback from run where id = ${id}`) || {};
 
-    const newFeedback = { ...existingFeedback, ...feedback }
+    const newFeedback = { ...existingFeedback, ...feedback };
 
     await sql`
       update 
@@ -573,17 +977,95 @@ runs.patch(
         feedback = ${sql.json(newFeedback)} 
       where 
         id = ${id} 
-        and project_id = ${projectId}`
+        and project_id = ${projectId}`;
 
-    ctx.status = 200
+    ctx.status = 200;
   },
-)
+);
 
+/**
+ * @openapi
+ * /v1/runs/{id}/score:
+ *   patch:
+ *     summary: Update run score
+ *     tags: [Runs]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Score'
+ *           example:
+ *             label: "accuracy"
+ *             value: 0.95
+ *             comment: "High accuracy score"
+ *     responses:
+ *       200:
+ *         description: Score updated successfully
+ *       400:
+ *         description: Invalid input
+ */
+runs.patch(
+  "/:id/score",
+  checkAccess("logs", "update"),
+  async (ctx: Context) => {
+    const { id: runId } = ctx.params;
+    const { projectId, userId } = ctx.state;
+    const { label, value, comment } = Score.parse(ctx.request.body);
+
+    const hasProjectAccess = await checkProjectAccess(projectId, userId);
+    if (!hasProjectAccess) {
+      ctx.throw(401, "Unauthorized");
+    }
+
+    let [existingScore] =
+      await sql`select * from run_score where run_id = ${runId} and label = ${label}`;
+
+    if (!existingScore) {
+      await sql`insert into run_score ${sql({ runId, label, value, comment })}`;
+    } else {
+      await sql`update run_score set ${sql({ label, value, comment })} where run_id = ${runId}`;
+    }
+
+    ctx.status = 200;
+  },
+);
+
+/**
+ * @openapi
+ * /v1/runs/{id}/related:
+ *   get:
+ *     summary: Get related runs
+ *     tags: [Runs]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Run'
+ *       404:
+ *         description: Run not found
+ */
 runs.get("/:id/related", checkAccess("logs", "read"), async (ctx) => {
-  const id = ctx.params.id
-  const { projectId } = ctx.state
+  const id = ctx.params.id;
+  const { projectId } = ctx.state;
 
-  const related = await sql`
+  const relatedRuns = await sql`
     with recursive related_runs as (
       select 
         r1.*
@@ -617,34 +1099,92 @@ runs.get("/:id/related", checkAccess("logs", "read"), async (ctx) => {
     rr.parent_run_id, 
     rr.completion_tokens, 
     rr.prompt_tokens, 
+    coalesce(rr.cost, 0) as cost,
     rr.feedback, 
     rr.metadata
   from 
     related_runs rr;
-  `
+  `;
 
-  ctx.body = related
-})
+  ctx.body = relatedRuns;
+});
 
-// public route
 runs.get("/:id/feedback", async (ctx) => {
-  const { projectId } = ctx.state
-  const { id } = ctx.params
+  const { id } = ctx.params;
 
   const [row] = await sql`
-      select
-          feedback
-      from
-          run
-      where
-          project_id = ${projectId} and id = ${id}
-      limit 1`
+    select
+      r.feedback
+    from
+      run r
+    where
+      r.id = ${id}
+  `;
 
-  if (!row) {
-    ctx.throw(404, "Run not found")
+  if (!row) return ctx.throw(404, "Run not found");
+
+  ctx.body = row.feedback;
+});
+
+/**
+ * @openapi
+ * /v1/runs/{id}:
+ *   delete:
+ *     summary: Delete a run
+ *     description: Delete a specific run by its ID. This action is irreversible.
+ *     tags: [Runs]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: Run successfully deleted
+ *       403:
+ *         description: Forbidden - User doesn't have permission to delete runs
+ *       404:
+ *         description: Run not found
+ */
+runs.delete("/:id", checkAccess("logs", "delete"), async (ctx: Context) => {
+  const { id } = z.object({ id: z.string().uuid() }).parse(ctx.params);
+  const { projectId } = ctx.state;
+
+  const [deletedRun] = await sql`
+    delete 
+      from run
+    where 
+      id = ${id}
+      and project_id = ${projectId}
+    returning id
+  `;
+
+  if (!deletedRun) {
+    ctx.status = 404;
+    return;
   }
 
-  ctx.body = row.feedback
-})
+  ctx.status = 200;
+});
 
-export default runs
+runs.get("/download/:token", async (ctx) => {
+  const { token } = z.object({ token: z.string() }).parse(ctx.params);
+
+  const exporter = EXPORTERS.get(token);
+  if (!exporter) {
+    ctx.throw(404, "Export not found");
+  }
+
+  // One time use
+  EXPORTERS.delete(token);
+
+  const { cursor, projectId, exportFormat, exportType } = exporter;
+  return fileExport(
+    { ctx, sql, cursor, formatRun, projectId },
+    exportFormat,
+    exportType,
+  );
+});
+
+export default runs;

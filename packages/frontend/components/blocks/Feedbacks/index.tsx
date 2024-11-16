@@ -1,5 +1,5 @@
-import { openUpgrade } from "@/components/layout/UpgradeModal"
-import { useOrg } from "@/utils/dataHooks"
+import { openUpgrade } from "@/components/layout/UpgradeModal";
+import { useOrg } from "@/utils/dataHooks";
 
 import {
   ActionIcon,
@@ -9,50 +9,50 @@ import {
   Stack,
   Textarea,
   useComputedColorScheme,
-} from "@mantine/core"
-import { IconMessage, IconThumbDown, IconThumbUp } from "@tabler/icons-react"
-import { useState } from "react"
-import { Feedback } from "shared"
+} from "@mantine/core";
+import { IconMessage, IconThumbDown, IconThumbUp } from "@tabler/icons-react";
+import { useState } from "react";
+import { Feedback } from "shared";
 
 function getColor(color: string) {
-  const scheme = useComputedColorScheme()
-  return scheme === "light" ? `var(--mantine-color-${color}-5)` : color
+  const scheme = useComputedColorScheme();
+  return scheme === "light" ? `var(--mantine-color-${color}-5)` : color;
 }
 
 export default function Feedbacks({
   feedback,
   updateFeedback,
 }: {
-  feedback: Feedback
-  updateFeedback: (...props: any) => any
+  feedback: Feedback;
+  updateFeedback: (...props: any) => any;
 }) {
-  const { org } = useOrg()
+  const { org } = useOrg();
 
   if (!feedback) {
-    feedback = { comment: null, thumb: null }
+    feedback = { comment: null, thumb: null };
   }
 
   if (feedback?.thumbs) {
-    feedback.thumb = feedback.thumbs // legacy key name
+    feedback.thumb = feedback.thumbs; // legacy key name
   }
 
   if (feedback?.thumbs && feedback.thumb) {
-    delete feedback.thumbs
+    delete feedback.thumbs;
   }
 
   if (!feedback.comment) {
-    feedback.comment = null
+    feedback.comment = null;
   }
 
   function ThumbFeedback({ value }: { value?: "up" | "down" | null }) {
     function ThumbUp() {
-      const color = getColor(value === "up" ? "green" : "gray")
-      return <IconThumbUp color={color} fill={color} fillOpacity={0.2} />
+      const color = getColor(value === "up" ? "green" : "gray");
+      return <IconThumbUp color={color} fill={color} fillOpacity={0.2} />;
     }
 
     function ThumbDown() {
-      const color = getColor(value === "down" ? "red" : "gray")
-      return <IconThumbDown color={color} fill={color} fillOpacity={0.2} />
+      const color = getColor(value === "down" ? "red" : "gray");
+      return <IconThumbDown color={color} fill={color} fillOpacity={0.2} />;
     }
 
     return (
@@ -61,11 +61,11 @@ export default function Feedbacks({
           variant="transparent"
           onClick={() => {
             if (feedback.thumb === "down") {
-              feedback.thumb = null
+              feedback.thumb = null;
             } else {
-              feedback.thumb = "down"
+              feedback.thumb = "down";
             }
-            update(feedback)
+            update(feedback);
           }}
         >
           <ThumbDown />
@@ -74,28 +74,28 @@ export default function Feedbacks({
           variant="transparent"
           onClick={() => {
             if (feedback.thumb === "up") {
-              feedback.thumb = null
+              feedback.thumb = null;
             } else {
-              feedback.thumb = "up"
+              feedback.thumb = "up";
             }
-            update(feedback)
+            update(feedback);
           }}
         >
           <ThumbUp />
         </ActionIcon>
       </Group>
-    )
+    );
   }
 
   const update = (feedback) => {
     if (org.plan === "free") {
-      return openUpgrade()
+      return openUpgrade();
     }
-    updateFeedback(feedback)
-  }
+    updateFeedback(feedback);
+  };
 
   function CommentFeedback({ value }) {
-    const [comment, setComment] = useState(value)
+    const [comment, setComment] = useState(value);
     return (
       <Popover width={300} trapFocus position="bottom" withArrow shadow="md">
         <Popover.Target>
@@ -119,8 +119,8 @@ export default function Feedbacks({
               variant="default"
               style={{ float: "right" }}
               onClick={() => {
-                feedback.comment = comment
-                update(feedback)
+                feedback.comment = comment;
+                update(feedback);
               }}
             >
               Save
@@ -128,7 +128,7 @@ export default function Feedbacks({
           </Stack>
         </Popover.Dropdown>
       </Popover>
-    )
+    );
   }
 
   return (
@@ -136,5 +136,5 @@ export default function Feedbacks({
       <CommentFeedback value={feedback?.comment} />
       <ThumbFeedback value={feedback?.thumb} />
     </Group>
-  )
+  );
 }
