@@ -1,5 +1,6 @@
 import DataTable from "@/components/blocks/DataTable";
 import {
+  createParser,
   parseAsBoolean,
   parseAsString,
   parseAsStringEnum,
@@ -172,6 +173,11 @@ function editCheck(filters, id, params) {
 
 const DEFAULT_CHECK = ["AND"];
 
+const parser = createParser({
+  parse: deserializeLogic,
+  serialize: serializeLogic,
+});
+
 export default function Logs() {
   const router = useRouter();
   const { user } = useUser();
@@ -208,12 +214,11 @@ export default function Logs() {
     ),
   );
 
-  const [checks, setChecks] = useQueryState("filters", {
-    parse: (value) => deserializeLogic(value, true),
-    serialize: serializeLogic,
-    defaultValue: DEFAULT_CHECK,
-    clearOnDefault: true,
-  });
+  const [checks, setChecks] = useQueryState(
+    "filters",
+    parser.withDefault(DEFAULT_CHECK).withOptions({ clearOnDefault: true }),
+  );
+  console.log(checks);
 
   const { sortParams } = useSortParams();
 

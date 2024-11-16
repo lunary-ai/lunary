@@ -1,4 +1,4 @@
-import { hasAccess } from "shared";
+import { deserializeLogic, hasAccess, serializeLogic } from "shared";
 import { useProjectMutation, useProjectSWR, useUser } from ".";
 import { fetcher } from "../fetcher";
 
@@ -32,6 +32,10 @@ export function useView(id: string | null, initialData?: any) {
   } = useProjectSWR(id && `/views/${id}`, {
     fallbackData: initialData,
   });
+
+  if (view) {
+    view.data = deserializeLogic(serializeLogic(view?.data || [])); // because the params values are serialized in the server json response, we serialize everything first, then deserialize it
+  }
 
   const { trigger: update } = useProjectMutation(
     id && `/views/${id}`,
