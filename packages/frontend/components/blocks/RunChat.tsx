@@ -69,6 +69,7 @@ function parseMessageFromRun(run) {
 
 function Message({
   msg,
+  user,
   siblings,
   selectedIndex,
   handleRetrySelect,
@@ -85,6 +86,7 @@ function Message({
   return (
     <>
       <BubbleMessage
+        user={user}
         role={msg.role}
         content={msg.content}
         enrichments={msg.enrichments}
@@ -191,6 +193,7 @@ function RunsChat({ runs, mutateLogs }) {
               <Message
                 key={i}
                 msg={msg}
+                user={run.user}
                 siblings={siblings}
                 selectedIndex={selectedIndex}
                 handleRetrySelect={handleRetrySelect}
@@ -275,16 +278,14 @@ export function ChatReplay({ run, mutateLogs, deleteRun }) {
 
       <Card withBorder radius="md">
         <Stack gap="xs">
-          <Group justify="space-between">
-            <Text>User</Text>
-            <Text>
-              {user ? (
+          {user && (
+            <Group justify="space-between">
+              <Text>User</Text>
+              <Text>
                 <AppUserAvatar size="sm" user={user} withName />
-              ) : (
-                "Unknown"
-              )}
-            </Text>
-          </Group>
+              </Text>
+            </Group>
+          )}
           <Group justify="space-between">
             <Text>First message</Text>
             <Text>{formatDateTime(run.createdAt)}</Text>
