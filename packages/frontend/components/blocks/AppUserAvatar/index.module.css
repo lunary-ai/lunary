@@ -5,3 +5,7 @@
   text-overflow: ellipsis;
   font-size: 14px;
 }
+
+.anchor:hover {
+  text-decoration: none;
+}
