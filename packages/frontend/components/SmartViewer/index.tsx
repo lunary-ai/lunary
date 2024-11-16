@@ -64,15 +64,26 @@ export default function SmartViewer({
 }) {
   const parsed = useMemo(() => {
     if (!data) return null;
+
+    let parsedData = data;
     if (typeof data === "string" && data?.startsWith("{")) {
       try {
-        return JSON.parse(data);
+        parsedData = JSON.parse(data);
       } catch (e) {
         return data;
       }
     }
 
-    return data;
+    if (
+      typeof parsedData === "object" &&
+      parsedData !== null &&
+      parsedData.enrichments
+    ) {
+      const { enrichments, ...rest } = parsedData;
+      return rest;
+    }
+
+    return parsedData;
   }, [data]);
 
   const isObject = typeof parsed === "object";
