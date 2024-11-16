@@ -277,7 +277,6 @@ export async function ingestChatEvent(
       operation = "update";
     } else if (INPUT_TYPES.includes(role)) {
       if (previousRun.output) {
-        console.log("HERE BUDDY");
         // if last is bot message, create new run with input array
         update.input = [coreMessage];
         operation = "insert";

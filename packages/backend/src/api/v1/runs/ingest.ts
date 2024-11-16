@@ -588,14 +588,17 @@ export async function processEventsIngestion(
  *         description: Incorrect project id format
  */
 router.post("/", async (ctx: Context) => {
-  const result = z.string().uuid().safeParse(ctx.state.projectId);
-  if (!result.success) {
+  const { data: projectId, success } = z
+    .string()
+    .uuid()
+    .safeParse(ctx.state.projectId);
+
+  if (!success) {
     ctx.status = 402;
     ctx.body = { message: "Incorrect project id format" };
     return;
   }
 
-  const projectId = result.data;
   const [project] =
     await sql`select * from project where id = ${projectId} limit 1`;
 
