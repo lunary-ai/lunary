@@ -76,8 +76,8 @@ import { useRouter } from "next/router";
 
 import IconPicker from "@/components/blocks/IconPicker";
 import { useEnrichers } from "@/utils/dataHooks/evaluators";
-import { deserializeLogic, hasAccess, serializeLogic } from "shared";
 import { useSortParams } from "@/utils/hooks";
+import { deserializeLogic, serializeLogic } from "shared";
 
 export const defaultColumns = {
   llm: [
@@ -318,11 +318,6 @@ export default function Logs() {
     setVisibleColumns(view.columns);
   }, [view, viewId]);
 
-  // const exportUrl = useMemo(
-  //   () => `/runs?${serializedChecks}&projectId=${projectId}`,
-  //   [serializedChecks, projectId],
-  // );
-
   function exportButton({ serializedChecks, projectId, type = null, format }) {
     return {
       component: "a",
@@ -337,7 +332,7 @@ export default function Logs() {
         const { token } = await fetcher.post("/runs/generate-export-token");
         const url = buildUrl(
           `/runs/exports/${token}?${serializedChecks}&projectId=` +
-            `${projectId}&type=${type}&exportFormat=${format}`,
+            `${projectId}&exportFormat=${format}`,
         );
         window.open(url, "_blank");
       },

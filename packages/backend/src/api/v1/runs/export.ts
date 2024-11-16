@@ -110,7 +110,7 @@ function getTraceChildren(run: Run, runs: Run[]): TraceRun {
 export async function fileExport(
   { ctx, sql, cursor, formatRun, projectId }: ExportType,
   exportFormat: "csv" | "ojsonl" | "jsonl",
-  exportType?: "trace" | "thread",
+  exportType?: "trace" | "thread" | "llm",
 ) {
   if (exportFormat === "csv") {
     const parser = new Parser();

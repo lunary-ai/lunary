@@ -86,7 +86,7 @@ async function getStream(url, args, onChunk) {
   }
 }
 
-function post(path, { arg={} }={}) {
+function post(path, { arg = {} } = {}) {
   return fetch(buildUrl(path), {
     method: "POST",
     headers: {

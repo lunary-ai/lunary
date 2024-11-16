@@ -1162,29 +1162,33 @@ runs.delete("/:id", checkAccess("logs", "delete"), async (ctx: Context) => {
   ctx.status = 200;
 });
 
+// TODO: openAPI
 runs.post("/generate-export-token", async (ctx) => {
+  const { userId } = ctx.state;
   const token = crypto.randomBytes(32).toString("hex");
 
-  try {
-    await sql`update account set export_single_use_token = ${token} where id = ${ctx.state.userId}`;
-  } catch (error: any) {
-    return ctx.throw(error.message, 500);
-  }
+  await sql`update account set export_single_use_token = ${token} where id = ${userId}`;
 
   ctx.body = { token };
 });
 
+// TODO: openAPI
 runs.get("/exports/:token", async (ctx) => {
-  const { type, exportFormat } = ctx.query as Query;
+  const { type, exportFormat } = z
+    .object({
+      type: z.union([
+        z.literal("llm"),
+        z.literal("trace"),
+        z.literal("thread"),
+      ]),
+      exportFormat: z.union([
+        z.literal("csv"),
+        z.literal("jsonl"),
+        z.literal("ojsonl"),
+      ]),
+    })
+    .parse(ctx.query);
   const { token } = z.object({ token: z.string() }).parse(ctx.params);
-
-  if (!token) {
-    return ctx.throw(400, "Token is required");
-  }
-
-  if (!exportFormat) {
-    return ctx.throw(400, "Export format is required");
-  }
 
   const [user] =
     await sql`select name from account where export_single_use_token = ${token}`;
@@ -1197,7 +1201,7 @@ runs.get("/exports/:token", async (ctx) => {
   await fileExport(
     { ctx, sql, cursor: query.cursor(), formatRun, projectId },
     exportFormat,
-    !type || type === "llm" ? "thread" : type,
+    type,
   );
 
   await sql`update account set export_single_use_token = null where id = ${ctx.state.userId}`;
