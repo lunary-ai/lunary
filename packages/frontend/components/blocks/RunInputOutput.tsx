@@ -144,7 +144,7 @@ export default function RunInputOutput({
 }) {
   const { user } = useUser();
   const { org } = useOrg();
-  const { run, update, updateFeedback, deleteRun } = useRun(
+  const { run, updateVisibility, updateFeedback, deleteRun } = useRun(
     initialRun?.id,
     initialRun,
   );
@@ -249,14 +249,14 @@ export default function RunInputOutput({
                     />
                   )}
 
-                  {hasAccess(user.role, "logs", "update") && (
-                    <Menu data-testid="selected-run-menu">
-                      <Menu.Target>
-                        <ActionIcon variant="default">
-                          <IconDotsVertical size={16} />
-                        </ActionIcon>
-                      </Menu.Target>
-                      <Menu.Dropdown>
+                  <Menu data-testid="selected-run-menu">
+                    <Menu.Target>
+                      <ActionIcon variant="default">
+                        <IconDotsVertical size={16} />
+                      </ActionIcon>
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      {hasAccess(user.role, "logs", "updateVisibility") && (
                         <Menu.Item
                           data-testid="toggle-run-visibility"
                           leftSection={
@@ -268,7 +268,7 @@ export default function RunInputOutput({
                           }
                           onClick={async () => {
                             const newIsPublic = !run.isPublic;
-                            await update({ ...run, isPublic: newIsPublic });
+                            await updateVisibility(newIsPublic);
                             if (newIsPublic) {
                               const url = `${window.location.origin}/logs/${run.id}`;
                               await navigator.clipboard.writeText(url);
@@ -293,33 +293,33 @@ export default function RunInputOutput({
                         >
                           {run.isPublic ? "Make private" : "Make public"}
                         </Menu.Item>
-                        {canEnablePlayground && (
-                          <Menu.Item
-                            leftSection={<IconPencilShare size={16} />}
-                            component={Link}
-                            href={`/prompts/${run.templateVersionId || `?clone=` + run.id}`}
-                          >
-                            {run.templateVersionId
-                              ? "Open template"
-                              : "Open in Playground"}
-                          </Menu.Item>
-                        )}
-                        {hasAccess(user.role, "logs", "delete") && (
-                          <Menu.Item
-                            leftSection={
-                              <IconTrash
-                                size={16}
-                                color="var(--mantine-color-red-filled)"
-                              />
-                            }
-                            onClick={openModal}
-                          >
-                            <Text c="red">Delete</Text>
-                          </Menu.Item>
-                        )}
-                      </Menu.Dropdown>
-                    </Menu>
-                  )}
+                      )}
+                      {canEnablePlayground && (
+                        <Menu.Item
+                          leftSection={<IconPencilShare size={16} />}
+                          component={Link}
+                          href={`/prompts/${run.templateVersionId || `?clone=` + run.id}`}
+                        >
+                          {run.templateVersionId
+                            ? "Open template"
+                            : "Open in Playground"}
+                        </Menu.Item>
+                      )}
+                      {hasAccess(user.role, "logs", "delete") && (
+                        <Menu.Item
+                          leftSection={
+                            <IconTrash
+                              size={16}
+                              color="var(--mantine-color-red-filled)"
+                            />
+                          }
+                          onClick={openModal}
+                        >
+                          <Text c="red">Delete</Text>
+                        </Menu.Item>
+                      )}
+                    </Menu.Dropdown>
+                  </Menu>
                 </Group>
               </Group>
             )}
