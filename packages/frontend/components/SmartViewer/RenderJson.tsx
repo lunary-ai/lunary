@@ -10,25 +10,34 @@ export const Json = ({ data, compact, piiDetection }) => {
 
   const parsed = useMemo(() => {
     if (!data) return null;
+
     if (typeof data === "string" && data?.startsWith("{")) {
       try {
-        return JSON.parse(data);
+        const parsedData = JSON.parse(data);
+        if (
+          typeof parsedData === "object" &&
+          Object.keys(parsedData).length === 1 &&
+          "result" in parsedData
+        ) {
+          return parsedData.result;
+        }
+        return parsedData;
       } catch (e) {
         return data;
       }
     }
 
+    if (
+      typeof data === "object" &&
+      data !== null &&
+      Object.keys(data).length === 1 &&
+      "result" in data
+    ) {
+      return data.result;
+    }
+
     return data;
   }, [data]);
-
-  // const isObject = typeof parsed === "object"
-
-  // const isFatObject = useMemo(() => {
-  //   if (!isObject || !parsed) return false
-  //   if (Object.keys(parsed).length > 3) return true
-  //   if (JSON.stringify(parsed).length > 300) return true
-  //   return false
-  // }, [parsed])
 
   return (
     <ProtectedText>
