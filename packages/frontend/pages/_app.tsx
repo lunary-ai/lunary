@@ -4,6 +4,7 @@ import "@mantine/notifications/styles.css";
 import "@mantine/dates/styles.css";
 import "../styles/globals.css";
 
+import { NuqsAdapter } from "nuqs/adapters/next/pages";
 import { MantineProvider } from "@mantine/core";
 import type { AppProps } from "next/app";
 import Head from "next/head";
@@ -36,36 +37,43 @@ export default function App({ Component, pageProps }: AppProps) {
         <link href="https://lunary.ai/logo.png" rel="icon" type="image/png" />
       </Head>
       <ErrorBoundary>
-        <GoogleOAuthProvider
-          clientId={
-            (process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID as string) ||
-            "OAUTH DISABLED"
-          }
-        >
-          <AuthProvider>
-            <SWRConfig
-              value={{
-                fetcher: fetcher.get,
-                dedupingInterval: 10000,
-              }}
-            >
-              <DefaultSeo
-                title="Dashboard"
-                titleTemplate="%s | Lunary"
-                defaultTitle="Dashboard | Lunary"
-              />
-              <MantineProvider theme={themeOverride} defaultColorScheme="auto">
-                <AnalyticsWrapper>
-                  <ProjectContext.Provider value={{ projectId, setProjectId }}>
-                    <Layout>
-                      <Component {...pageProps} />
-                    </Layout>
-                  </ProjectContext.Provider>
-                </AnalyticsWrapper>
-              </MantineProvider>
-            </SWRConfig>
-          </AuthProvider>
-        </GoogleOAuthProvider>
+        <NuqsAdapter>
+          <GoogleOAuthProvider
+            clientId={
+              (process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID as string) ||
+              "OAUTH DISABLED"
+            }
+          >
+            <AuthProvider>
+              <SWRConfig
+                value={{
+                  fetcher: fetcher.get,
+                  dedupingInterval: 10000,
+                }}
+              >
+                <DefaultSeo
+                  title="Dashboard"
+                  titleTemplate="%s | Lunary"
+                  defaultTitle="Dashboard | Lunary"
+                />
+                <MantineProvider
+                  theme={themeOverride}
+                  defaultColorScheme="auto"
+                >
+                  <AnalyticsWrapper>
+                    <ProjectContext.Provider
+                      value={{ projectId, setProjectId }}
+                    >
+                      <Layout>
+                        <Component {...pageProps} />
+                      </Layout>
+                    </ProjectContext.Provider>
+                  </AnalyticsWrapper>
+                </MantineProvider>
+              </SWRConfig>
+            </AuthProvider>
+          </GoogleOAuthProvider>
+        </NuqsAdapter>
       </ErrorBoundary>
     </>
   );
