@@ -272,13 +272,14 @@ export const roles: Record<
       logs: {
         create: true,
         read: true,
-        update: false,
-        delete: false,
+        update: true,
+        delete: true,
         list: true,
         export: true,
+        updateVisibility: true,
       },
       users: {
-        create: false,
+        create: true,
         read: true,
         update: true,
         delete: true,
