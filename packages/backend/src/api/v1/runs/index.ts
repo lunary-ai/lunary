@@ -368,7 +368,7 @@ function getRunQuery({ ctx }: { ctx: Context }) {
         and (${filtersQuery})
     order by
         ${sql.unsafe(orderByClause)}  
-    limit ${type ? 10000 : Number(limit)}
+    limit ${Number(limit)}
     offset ${Number(page) * Number(limit)}
   ),
   evaluation_results as (
