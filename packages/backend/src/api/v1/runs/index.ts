@@ -1167,11 +1167,10 @@ runs.delete("/:id", checkAccess("logs", "delete"), async (ctx: Context) => {
  * /v1/runs/generate-export-token:
  *   post:
  *     summary: Generate an export token
- *     description: Generate a single-use token for exporting runs
  *     tags: [Runs]
  *     responses:
  *       200:
- *         description: Token successfully generated
+ *         description: Export token generated successfully
  *         content:
  *           application/json:
  *             schema:
@@ -1179,8 +1178,6 @@ runs.delete("/:id", checkAccess("logs", "delete"), async (ctx: Context) => {
  *               properties:
  *                 token:
  *                   type: string
- *       401:
- *         description: Unauthorized
  */
 runs.post("/generate-export-token", async (ctx) => {
   const { userId } = ctx.state;
@@ -1195,10 +1192,7 @@ runs.post("/generate-export-token", async (ctx) => {
  * @openapi
  * /v1/runs/exports/{token}:
  *   get:
- *     summary: Export runs using a single-use token
- *     description: |
- *       Export runs to a file using a single-use token.
- *       The token is invalid after the first use.
+ *     summary: Export runs data
  *     tags: [Runs]
  *     parameters:
  *       - in: path
@@ -1206,26 +1200,30 @@ runs.post("/generate-export-token", async (ctx) => {
  *         required: true
  *         schema:
  *           type: string
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               type:
- *                 type: string
- *                 enum: [llm, thread, trace]
- *               exportFormat:
- *                 type: string
- *                 enum: [csv, jsonl, ojsonl]
+ *       - in: query
+ *         name: type
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [llm, trace, thread]
+ *       - in: query
+ *         name: exportFormat
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [csv, jsonl, ojsonl]
  *     responses:
  *       200:
- *         description: Successful response
+ *         description: Export successful
+ *         content:
+ *           application/octet-stream:
+ *             schema:
+ *               type: string
+ *               format: binary
  *       401:
  *         description: Invalid token
  */
 runs.get("/exports/:token", async (ctx) => {
-  console.log(ctx.query);
   const { type, exportFormat } = z
     .object({
       type: z.union([
