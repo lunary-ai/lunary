@@ -134,7 +134,6 @@ export async function fileExport(
           } else {
             line = line.trim().split("\n").slice(1).join("\\n");
           }
-          // console.log(line);
           yield line + "\n";
         }
       },
