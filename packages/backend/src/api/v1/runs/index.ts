@@ -1162,7 +1162,26 @@ runs.delete("/:id", checkAccess("logs", "delete"), async (ctx: Context) => {
   ctx.status = 200;
 });
 
-// TODO: openAPI
+/**
+ * @openapi
+ * /v1/runs/generate-export-token:
+ *   post:
+ *     summary: Generate an export token
+ *     description: Generate a single-use token for exporting runs
+ *     tags: [Runs]
+ *     responses:
+ *       200:
+ *         description: Token successfully generated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ */
 runs.post("/generate-export-token", async (ctx) => {
   const { userId } = ctx.state;
   const token = crypto.randomBytes(32).toString("hex");
@@ -1172,7 +1191,39 @@ runs.post("/generate-export-token", async (ctx) => {
   ctx.body = { token };
 });
 
-// TODO: openAPI
+/**
+ * @openapi
+ * /v1/runs/exports/{token}:
+ *   get:
+ *     summary: Export runs using a single-use token
+ *     description: |
+ *       Export runs to a file using a single-use token.
+ *       The token is invalid after the first use.
+ *     tags: [Runs]
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               type:
+ *                 type: string
+ *                 enum: [llm, thread, trace]
+ *               exportFormat:
+ *                 type: string
+ *                 enum: [csv, jsonl, ojsonl]
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *       401:
+ *         description: Invalid token
+ */
 runs.get("/exports/:token", async (ctx) => {
   console.log(ctx.query);
   const { type, exportFormat } = z

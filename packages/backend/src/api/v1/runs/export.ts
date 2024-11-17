@@ -134,7 +134,6 @@ export async function fileExport(
           } else {
             line = line.trim().split("\n").slice(1).join("\\n");
           }
-          // console.log(line);
           yield line + "\n";
         }
       },
@@ -163,6 +162,7 @@ export async function fileExport(
             }
           }
         }
+        yield "exports";
       },
     });
     ctx.body = stream;
@@ -184,6 +184,7 @@ export async function fileExport(
             yield line + "\n";
           }
         }
+        yield "exports";
       },
     });
     ctx.body = stream;
