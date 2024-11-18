@@ -1,11 +1,13 @@
 import analytics from "@/utils/analytics";
 import { useAuth } from "@/utils/auth";
 import { fetcher } from "@/utils/fetcher";
-import { Loader, useComputedColorScheme } from "@mantine/core";
+import { Alert, Loader, useComputedColorScheme } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import { IconAlertTriangle, IconX } from "@tabler/icons-react";
 import router, { useRouter } from "next/router";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 
+// Using useMemo runs the callback twice
 function runOnce(callback: any) {
   let isRunning = false,
     result: any;
@@ -51,19 +53,24 @@ export default function GithubOAuthCalllbackPage() {
   const router = useRouter();
   const auth = useAuth();
   const scheme = useComputedColorScheme();
+  const { code, error, error_description } = router.query;
 
-  const login = runOnce(handleLoginWithGithub);
-
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get("code");
-
+  useMemo(() => {
     if (code) {
-      login(auth, code)
+      runOnce(handleLoginWithGithub)(auth, code as string)
         .then(() => router.push("/"))
         .catch(() => router.push("/login"));
     }
-  }, []);
+
+    if (error) {
+      notifications.show({
+        color: "red",
+        title: error === "access_denied" ? "Access Denied" : error,
+        icon: <IconAlertTriangle size={14} />,
+        message: error_description,
+      });
+    }
+  }, [code, error]);
 
   return (
     <div
@@ -86,13 +93,25 @@ export default function GithubOAuthCalllbackPage() {
           padding: 20,
         }}
       >
-        <h1 style={{ fontSize: 24, fontWeight: 600 }}>Signing in...</h1>
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <Loader />
-        </div>
-        <p style={{ fontSize: 16, color: "#666" }}>
-          Please wait while we sign you in with Github.
-        </p>
+        {error ? (
+          <>
+            <h1 style={{ fontSize: 24, fontWeight: 600 }}>Access Denied</h1>
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <IconAlertTriangle color="red" size={70} />
+            </div>
+            <p style={{ fontSize: 16, color: "#666" }}>{error_description}</p>
+          </>
+        ) : (
+          <>
+            <h1 style={{ fontSize: 24, fontWeight: 600 }}>Signing in...</h1>
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <Loader />
+            </div>
+            <p style={{ fontSize: 16, color: "#666" }}>
+              Please wait while we sign you in with Github.
+            </p>
+          </>
+        )}
       </div>
     </div>
   );

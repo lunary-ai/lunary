@@ -42,8 +42,6 @@ async function getGithubUserInfo(accessToken: string) {
 github.post("/", async (ctx: Context) => {
   const { code } = z.object({ code: z.string() }).parse(ctx.request.body);
 
-  console.log(code);
-
   const response = await fetch("https://github.com/login/oauth/access_token", {
     method: "POST",
     headers: {
