@@ -23,7 +23,7 @@
     "bcrypt": "^5.1.1",
     "chroma-js": "^3.1.2",
     "crisp-sdk-web": "^1.0.25",
-    "date-fns": "^3.6.0",
+    "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "jose": "^5.8.0",
     "json-2-csv": "^5.5.5",

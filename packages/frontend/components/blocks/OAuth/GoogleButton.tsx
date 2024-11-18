@@ -7,9 +7,8 @@ import { useGoogleLogin } from "@react-oauth/google";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import GoogleIconSrc from "public/assets/google-icon.svg";
-import { useEffect } from "react";
 
-export default function GoogleLoginButton() {
+export default function GoogleButton() {
   const router = useRouter();
   const auth = useAuth();
   const scheme = useComputedColorScheme();
