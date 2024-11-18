@@ -305,7 +305,8 @@ function formatRun(run: any) {
   return formattedRun;
 }
 
-function getRunQuery({ ctx }: { ctx: Context }) {
+// TODO: should not pass the context to this function
+function getRunQuery(ctx: Context, isExport = false) {
   const { projectId } = ctx.state;
 
   const queryString = ctx.querystring;
@@ -368,7 +369,7 @@ function getRunQuery({ ctx }: { ctx: Context }) {
         and (${filtersQuery})
     order by
         ${sql.unsafe(orderByClause)}  
-    limit ${type ? 10000 : Number(limit)}
+    limit ${isExport ? sql`all` : Number(limit)}
     offset ${Number(page) * Number(limit)}
   ),
   evaluation_results as (
@@ -552,7 +553,7 @@ runs.use("/ingest", ingest.routes());
  */
 runs.get("/", async (ctx: Context) => {
   const { query, projectId, parentRunCheck, filtersQuery, page, limit } =
-    getRunQuery({ ctx });
+    getRunQuery(ctx);
 
   const rows = await query;
   const runs = rows.map(formatRun);
@@ -1280,7 +1281,7 @@ runs.get("/exports/:token", async (ctx) => {
     return ctx.throw(401, "Invalid token");
   }
 
-  const { query, projectId } = getRunQuery({ ctx });
+  const { query, projectId } = getRunQuery(ctx, true);
 
   await fileExport(
     { ctx, sql, cursor: query.cursor(), formatRun, projectId },
