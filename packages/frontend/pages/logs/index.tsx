@@ -446,7 +446,7 @@ export default function Logs() {
               />
 
               <Group gap="xs">
-                <Menu position="bottom-end">
+                <Menu position="bottom-end" data-testid="export-menu">
                   <Menu.Target>
                     <ActionIcon variant="light">
                       <IconDotsVertical size={12} />
@@ -454,7 +454,7 @@ export default function Logs() {
                   </Menu.Target>
                   <Menu.Dropdown>
                     <Menu.Item
-                      // disabled={type === "thread"}
+                      data-testid="export-csv-button"
                       leftSection={<IconFileExport size={16} />}
                       {...exportButton({
                         serializedChecks,
@@ -468,6 +468,7 @@ export default function Logs() {
 
                     {type === "llm" && (
                       <Menu.Item
+                        data-testid="export-openai-jsonl-button"
                         color="dimmed"
                         leftSection={<IconBrandOpenai size={16} />}
                         {...exportButton({
@@ -482,6 +483,7 @@ export default function Logs() {
                     )}
 
                     <Menu.Item
+                      data-testid="export-raw-jsonl-button"
                       color="dimmed"
                       // disabled={type === "thread"}
                       leftSection={<IconBraces size={16} />}
