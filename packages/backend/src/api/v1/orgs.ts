@@ -184,69 +184,73 @@ orgs.post("/upgrade", async (ctx: Context) => {
   ctx.body = { ok: true };
 });
 
-orgs.post("/playground", async (ctx: Context) => {
-  const orgId = ctx.state.orgId as string;
-  const requestBodySchema = z.object({
-    content: z.array(z.any()).or(z.string()),
-    extra: z.any(),
-    variables: z.record(z.string()).nullable().optional().default({}),
-  });
-  const { content, extra, variables } = requestBodySchema.parse(
-    ctx.request.body,
-  );
+orgs.post(
+  "/playground",
+  checkAccess("prompts", "run"),
+  async (ctx: Context) => {
+    const orgId = ctx.state.orgId as string;
+    const requestBodySchema = z.object({
+      content: z.array(z.any()).or(z.string()),
+      extra: z.any(),
+      variables: z.record(z.string()).nullable().optional().default({}),
+    });
+    const { content, extra, variables } = requestBodySchema.parse(
+      ctx.request.body,
+    );
 
-  ctx.request.socket.setTimeout(0);
-  ctx.request.socket.setNoDelay(true);
-  ctx.request.socket.setKeepAlive(true);
+    ctx.request.socket.setTimeout(0);
+    ctx.request.socket.setNoDelay(true);
+    ctx.request.socket.setKeepAlive(true);
 
-  ctx.set({
-    "Content-Type": "text/event-stream",
-    "Cache-Control": "no-cache",
-    Connection: "keep-alive",
-  });
+    ctx.set({
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    });
 
-  const [org] = await sql`
+    const [org] = await sql`
     select play_allowance
     from org
     where id = ${orgId}
   `;
 
-  if (org?.playAllowance <= 0) {
-    throw new Error(
-      "No allowance left today. Wait tomorrow or upgrade to continue using the playground.",
-    );
-  }
+    if (org?.playAllowance <= 0) {
+      throw new Error(
+        "No allowance left today. Wait tomorrow or upgrade to continue using the playground.",
+      );
+    }
 
-  // subtract play allowance
-  await sql`
+    // subtract play allowance
+    await sql`
     update org
     set play_allowance = play_allowance - 1
     where id = ${orgId}
   `;
-  const model = extra?.model || "gpt-3.5-turbo";
+    const model = extra?.model || "gpt-3.5-turbo";
 
-  const res = await runAImodel(content, extra, variables, model, true, orgId);
+    const res = await runAImodel(content, extra, variables, model, true, orgId);
 
-  const stream = new PassThrough();
-  stream.pipe(ctx.res);
-  ctx.status = 200;
-  ctx.body = stream;
+    const stream = new PassThrough();
+    stream.pipe(ctx.res);
+    ctx.status = 200;
+    ctx.body = stream;
 
-  handleStream(
-    res,
-    (data) => {
-      stream.write(JSON.stringify(data) + "\n");
-    },
-    () => {
-      stream.end();
-    },
-    (error) => {
-      ctx.status = 500;
-      ctx.body = { message: "An unexpected error occurred" };
-      console.error(error);
-      stream.end();
-    },
-  );
-});
+    handleStream(
+      res,
+      (data) => {
+        stream.write(JSON.stringify(data) + "\n");
+      },
+      () => {
+        stream.end();
+      },
+      (error) => {
+        ctx.status = 500;
+        ctx.body = { message: "An unexpected error occurred" };
+        console.error(error);
+        stream.end();
+      },
+    );
+  },
+);
 
 export default orgs;

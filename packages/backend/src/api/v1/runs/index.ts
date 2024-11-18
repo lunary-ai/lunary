@@ -1,5 +1,4 @@
 import sql from "@/src/utils/db";
-import { Context } from "koa";
 import Router from "koa-router";
 
 import { checkAccess, checkProjectAccess } from "@/src/utils/authorization";
@@ -11,6 +10,7 @@ import { fileExport } from "./export";
 import ingest from "./ingest";
 
 import crypto from "crypto";
+import Context from "@/src/utils/koa";
 
 /**
  * @openapi
@@ -305,7 +305,8 @@ function formatRun(run: any) {
   return formattedRun;
 }
 
-function getRunQuery({ ctx }: { ctx: Context }) {
+// TODO: should not pass the context to this function
+function getRunQuery(ctx: Context, isExport = false) {
   const { projectId } = ctx.state;
 
   const queryString = ctx.querystring;
@@ -368,7 +369,7 @@ function getRunQuery({ ctx }: { ctx: Context }) {
         and (${filtersQuery})
     order by
         ${sql.unsafe(orderByClause)}  
-    limit ${type ? 10000 : Number(limit)}
+    limit ${isExport ? sql`all` : Number(limit)}
     offset ${Number(page) * Number(limit)}
   ),
   evaluation_results as (
@@ -552,7 +553,7 @@ runs.use("/ingest", ingest.routes());
  */
 runs.get("/", async (ctx: Context) => {
   const { query, projectId, parentRunCheck, filtersQuery, page, limit } =
-    getRunQuery({ ctx });
+    getRunQuery(ctx);
 
   const rows = await query;
   const runs = rows.map(formatRun);
@@ -725,7 +726,7 @@ runs.get("/usage", checkAccess("logs", "read"), async (ctx) => {
       from
           run
       where
-          run.project_id = ${projectId as string}
+          run.project_id = ${projectId}
           and run.created_at >= now() - interval '1 day' * ${daysNum}
           ${userIdNum ? sql`and run.external_user_id = ${userIdNum}` : sql``}
           ${
@@ -862,10 +863,9 @@ runs.get("/:id", async (ctx) => {
 
 /**
  * @openapi
- * /v1/runs/{id}:
+ * /v1/runs/{id}/visibility:
  *   patch:
- *     summary: Update a run
- *     description: This endpoint allows updating the public visibility status and tags of a run. The `isPublic` field can be set to true or false to change the run's visibility. The `tags` field can be updated with an array of strings or set to null to remove all tags.
+ *     summary: Update run visibility
  *     tags: [Runs]
  *     parameters:
  *       - in: path
@@ -880,45 +880,80 @@ runs.get("/:id", async (ctx) => {
  *           schema:
  *             type: object
  *             properties:
- *               isPublic:
+ *               visibility:
  *                 type: boolean
+ *             example:
+ *               visibility: true
+ *     responses:
+ *       200:
+ *         description: Visibility updated successfully
+ *       400:
+ *         description: Invalid input
+ */
+runs.patch(
+  "/:id/visibility",
+  checkAccess("logs", "updateVisibility"),
+  async (ctx: Context) => {
+    const { projectId } = ctx.state;
+    const { id } = ctx.params;
+    const { visibility } = z
+      .object({ visibility: z.boolean() })
+      .parse(ctx.request.body);
+
+    await sql`
+      update run
+      set is_public = ${visibility}
+      where project_id = ${projectId}
+          and id = ${id}`;
+
+    ctx.status = 200;
+  },
+);
+
+/**
+ * @openapi
+ * /v1/runs/{id}/tags:
+ *   patch:
+ *     summary: Update run tags
+ *     tags: [Runs]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
  *               tags:
  *                 type: array
  *                 items:
  *                   type: string
- *           example:
- *             isPublic: true
- *             tags: ["important", "customer-facing"]
+ *             example:
+ *               tags: ["example", "test"]
  *     responses:
  *       200:
- *         description: Successful update
+ *         description: Tags updated successfully
  *       400:
  *         description: Invalid input
  */
-runs.patch("/:id", checkAccess("logs", "update"), async (ctx: Context) => {
-  // TODO: tags and isPublic should probably have their own endpoint
+runs.patch("/:id/tags", checkAccess("logs", "update"), async (ctx: Context) => {
   const requestBody = z.object({
-    isPublic: z.boolean().optional(),
     tags: z.union([z.array(z.string()), z.null()]),
   });
+
   const { projectId } = ctx.state;
   const { id } = ctx.params;
-  const { isPublic, tags } = requestBody.parse(ctx.request.body);
-
-  let valuesToUpdate = {};
-  if (isPublic !== undefined) {
-    valuesToUpdate.isPublic = isPublic;
-  }
-  if (tags) {
-    valuesToUpdate.tags = tags;
-  }
+  const { tags } = requestBody.parse(ctx.request.body);
 
   await sql`
-      update
-          run
-      set ${sql(valuesToUpdate)}
-      where
-          project_id= ${projectId as string}
+      update run
+      set tags = ${tags}
+      where project_id = ${projectId}
           and id = ${id}`;
 
   ctx.status = 200;
@@ -953,7 +988,7 @@ runs.patch("/:id", checkAccess("logs", "update"), async (ctx: Context) => {
  */
 runs.patch(
   "/:id/feedback",
-  checkAccess("logs", "update"),
+  checkAccess("logs", "update"), // TODO: should probably has its own permission
   async (ctx: Context) => {
     const { projectId } = ctx.state;
     const { id } = ctx.params;
@@ -1246,7 +1281,7 @@ runs.get("/exports/:token", async (ctx) => {
     return ctx.throw(401, "Invalid token");
   }
 
-  const { query, projectId } = getRunQuery({ ctx });
+  const { query, projectId } = getRunQuery(ctx, true);
 
   await fileExport(
     { ctx, sql, cursor: query.cursor(), formatRun, projectId },
