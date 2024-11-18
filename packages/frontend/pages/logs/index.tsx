@@ -218,7 +218,6 @@ export default function Logs() {
     "filters",
     parser.withDefault(DEFAULT_CHECK).withOptions({ clearOnDefault: true }),
   );
-  console.log(checks);
 
   const { sortParams } = useSortParams();
 

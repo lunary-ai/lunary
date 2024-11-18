@@ -28,6 +28,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     "/join",
     "/request-password-reset",
     "/reset-password",
+    "/auth",
   ].find((path) => router.pathname.startsWith(path));
 
   const isSignupPage = router.pathname.startsWith("/signup");

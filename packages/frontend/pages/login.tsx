@@ -15,7 +15,10 @@ import { IconAt } from "@tabler/icons-react";
 
 import { useEffect, useState } from "react";
 
-import GoogleLoginButton from "@/components/blocks/GoogleLoginButton";
+import {
+  GithubLoginButton,
+  GoogleLoginButton,
+} from "@/components/blocks/LoginButtons";
 import AuthLayout from "@/components/layout/AuthLayout";
 import analytics from "@/utils/analytics";
 import { useAuth } from "@/utils/auth";
@@ -250,6 +253,7 @@ function LoginPage() {
                   />
                 </Group>
                 <GoogleLoginButton />
+                <GithubLoginButton />
               </Stack>
             )}
           </Paper>
