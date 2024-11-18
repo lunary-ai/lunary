@@ -18,6 +18,7 @@ import {
   verifyJWT,
   verifyPassword,
 } from "./utils";
+import github from "./github";
 
 const auth = new Router({
   prefix: "/auth",
@@ -133,6 +134,7 @@ auth.post("/signup", async (ctx: Context) => {
         projectId: project.id,
         apiKey: project.id,
       };
+
       await sql`
         insert into api_key ${sql(publicKey)}
       `;
@@ -372,5 +374,6 @@ auth.post("/exchange-token", async (ctx: Context) => {
 
 auth.use(saml.routes());
 auth.use(google.routes());
+auth.use(github.routes());
 
 export default auth;
