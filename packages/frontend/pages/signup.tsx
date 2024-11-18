@@ -28,7 +28,6 @@ import {
   IconUser,
 } from "@tabler/icons-react";
 
-import GoogleLoginButton from "@/components/blocks/GoogleLoginButton";
 import SocialProof from "@/components/blocks/SocialProof";
 import AuthLayout from "@/components/layout/AuthLayout";
 import analytics from "@/utils/analytics";
@@ -36,6 +35,7 @@ import { useAuth } from "@/utils/auth";
 import config from "@/utils/config";
 import { fetcher } from "@/utils/fetcher";
 import { NextSeo } from "next-seo";
+import { GoogleLoginButton } from "@/components/blocks/LoginButtons";
 
 function getRandomizedChoices() {
   const choices = [
