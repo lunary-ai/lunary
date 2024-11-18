@@ -15,18 +15,16 @@ import { IconAt } from "@tabler/icons-react";
 
 import { useEffect, useState } from "react";
 
-import {
-  GithubLoginButton,
-  GoogleLoginButton,
-} from "@/components/blocks/LoginButtons";
+import GithubButton from "@/components/blocks/OAuth/GithubButton";
+import GoogleButton from "@/components/blocks/OAuth/GoogleButton";
 import AuthLayout from "@/components/layout/AuthLayout";
 import analytics from "@/utils/analytics";
 import { useAuth } from "@/utils/auth";
+import config from "@/utils/config";
 import { fetcher } from "@/utils/fetcher";
 import { notifications } from "@mantine/notifications";
 import { NextSeo } from "next-seo";
 import { useRouter } from "next/router";
-import config from "@/utils/config";
 
 function LoginPage() {
   const router = useRouter();
@@ -252,8 +250,8 @@ function LoginPage() {
                     label={<Text size="sm">OR</Text>}
                   />
                 </Group>
-                <GoogleLoginButton />
-                <GithubLoginButton />
+                <GoogleButton />
+                <GithubButton accessToken={router.query.code} />
               </Stack>
             )}
           </Paper>

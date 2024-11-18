@@ -16,18 +16,20 @@ async function getGithubUserInfo(accessToken: string) {
     },
   });
 
-  const emailRespnse = await fetch("https://api.github.com/user/emails", {
+  const emailResponse = await fetch("https://api.github.com/user/emails", {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
   });
 
-  if (!userResponse.ok || !emailRespnse.ok) {
-    throw new Error(`Github API error: ${emailRespnse.statusText}`);
+  console.log(userResponse, userResponse.ok);
+
+  if (!userResponse.ok || !emailResponse.ok) {
+    throw new Error(`Github API error: ${emailResponse.statusText}`);
   }
 
   const userData = await userResponse.json();
-  const emails = await emailRespnse.json();
+  const emails = await emailResponse.json();
 
   const email = emails?.find((email: any) => email.primary);
 
@@ -40,7 +42,9 @@ async function getGithubUserInfo(accessToken: string) {
 }
 
 github.post("/", async (ctx: Context) => {
-  const { code } = z.object({ code: z.string() }).parse(ctx.request.body);
+  const { accessToken } = z
+    .object({ accessToken: z.string() })
+    .parse(ctx.request.body);
 
   const response = await fetch("https://github.com/login/oauth/access_token", {
     method: "POST",
@@ -51,7 +55,7 @@ github.post("/", async (ctx: Context) => {
     body: JSON.stringify({
       client_id: process.env.GITHUB_CLIENT_ID,
       client_secret: process.env.GITHUB_CLIENT_SECRET,
-      code,
+      code: accessToken,
     }),
   });
 

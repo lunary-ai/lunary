@@ -35,7 +35,8 @@ import { useAuth } from "@/utils/auth";
 import config from "@/utils/config";
 import { fetcher } from "@/utils/fetcher";
 import { NextSeo } from "next-seo";
-import { GoogleLoginButton } from "@/components/blocks/LoginButtons";
+import GoogleButton from "@/components/blocks/OAuth/GoogleButton";
+import GithubButton from "@/components/blocks/OAuth/GithubButton";
 
 function getRandomizedChoices() {
   const choices = [
@@ -241,7 +242,8 @@ function SignupPage() {
                               label={<Text size="sm">OR</Text>}
                             />
                           </Group>
-                          <GoogleLoginButton />
+                          <GoogleButton />
+                          <GithubButton accessToken={router.query.code} />
                         </Stack>
                       )}
                     </Stack>
