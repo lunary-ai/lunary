@@ -1,9 +1,9 @@
 import sql from "@/src/utils/db";
 import { sendSlackMessage } from "@/src/utils/notifications";
-import { Context } from "node:vm";
 import { signJWT } from "./utils";
 import Router from "koa-router";
 import { z } from "zod";
+import Context from "@/src/utils/koa";
 
 const github = new Router({
   prefix: "/github",
@@ -21,8 +21,6 @@ async function getGithubUserInfo(accessToken: string) {
       Authorization: `Bearer ${accessToken}`,
     },
   });
-
-  console.log(userResponse, userResponse.ok);
 
   if (!userResponse.ok || !emailResponse.ok) {
     throw new Error(`Github API error: ${emailResponse.statusText}`);
