@@ -162,6 +162,7 @@ export async function fileExport(
             }
           }
         }
+        yield "exports";
       },
     });
     ctx.body = stream;
@@ -183,6 +184,7 @@ export async function fileExport(
             yield line + "\n";
           }
         }
+        yield "exports";
       },
     });
     ctx.body = stream;
