@@ -4,7 +4,7 @@ import {
   PlaywrightTestOptions,
   test,
 } from "@playwright/test";
-import { setOrgPro } from "./utils/db";
+import { setOrgFree, setOrgPro } from "./utils/db";
 import fs from "fs";
 
 import { csv2json } from "json-2-csv";
@@ -17,8 +17,14 @@ test.beforeEach(async ({ page }) => {
   page.on("console", (msg) => {
     console.log(msg);
   });
+});
 
+test.beforeAll(async () => {
   await setOrgPro();
+});
+
+test.afterAll(async () => {
+  await setOrgFree();
 });
 
 test("make a log public", async ({ page, context }) => {
@@ -86,38 +92,29 @@ test("test export csv for llm", async ({ page }) => {
   );
 });
 
-// test("test export csv for trace", async ({ page }) => {
-//   page.on("console", (msg) => {
-//     console.log(msg);
-//   });
-//
-//   await page.goto("/logs?type=trace");
-//   await page.waitForLoadState("networkidle");
+test("test export csv for trace", async ({ page }) => {
+  page.on("console", (msg) => {
+    console.log(msg);
+  });
 
-//   const downloadPromise = page.waitForEvent("download");
+  await page.goto("/logs?type=trace");
+  await page.waitForLoadState("networkidle");
 
-//   await page.getByTestId("export-menu").click();
-//   await page.getByTestId("export-csv-button").click();
+  const downloadPromise = page.waitForEvent("download");
 
-//   const file = await downloadPromise;
-//   const path = await file.path();
-//   const content = fs.readFileSync(path, "utf-8");
+  await page.getByTestId("export-menu").click();
+  await page.getByTestId("export-csv-button").click();
 
-//   const logs: any[] = csv2json(content);
+  const file = await downloadPromise;
+  const path = await file.path();
+  const content = fs.readFileSync(path, "utf-8");
 
-//   console.log(logs);
+  const logs: any[] = csv2json(content);
 
-//   const expectedHeaders = TRACE_HEADERS;
-//   expect(Object.keys(logs[0])).toEqual(expectedHeaders);
+  console.log(logs);
 
-//   const logWithChildren = logs.find(
-//     (item: any) => item?.children?.length,
-//   )?.children;
-
-//   if (!logWithChildren) return;
-
-//   expect(Object.keys(logWithChildren[0])).toEqual(expectedHeaders);
-// });
+  expect(Object.keys(logs)).toEqual([]);
+});
 
 test("test export csv for thread", async ({ page }) => {
   await page.goto("/logs?type=thread");
@@ -178,8 +175,6 @@ test("test export jsonl for llm", async ({ page }) => {
   const file = await downloadPromise;
   const path = await file.path();
   const content = fs.readFileSync(path, "utf-8");
-
-  console.log(content.split("\n"));
 
   const json = content
     .split("\n")
