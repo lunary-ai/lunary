@@ -13,6 +13,14 @@ test.describe.configure({ mode: "serial" });
 
 let publicLogUrl: string;
 
+test.beforeEach(async ({ page }) => {
+  page.on("console", (msg) => {
+    console.log(msg);
+  });
+
+  await setOrgPro();
+});
+
 test("make a log public", async ({ page, context }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
 
@@ -33,11 +41,6 @@ test("make a log public", async ({ page, context }) => {
 
 // CSV EXPORTS
 test("test export csv for llm", async ({ page }) => {
-  page.on("console", (msg) => {
-    console.log(msg);
-  });
-  await setOrgPro();
-
   await page.goto("/logs?type=llm");
   await page.waitForLoadState("networkidle");
 
@@ -50,46 +53,44 @@ test("test export csv for llm", async ({ page }) => {
   const path = await file.path();
   const content = fs.readFileSync(path, "utf-8");
 
-  const json = csv2json(content);
-
-  expect(Object.keys(json[0])).toEqual([
-    "id",
-    "projectId",
-    "isPublic",
-    "feedback",
-    "parentFeedback",
-    "type",
-    "name",
-    "createdAt",
-    "endedAt",
-    "duration",
-    "templateVersionId",
-    "templateSlug",
-    "cost",
-    "tokens",
-    "tags",
-    "input",
-    "output",
-    "error",
-    "status",
-    "siblingRunId",
-    "params",
-    "metadata",
-    "user",
-    "traceId",
-    "scores",
-  ]);
-
-  // TODO: check that the content of each column for each row is correct (use json-2-csv to convert the csv to json
-  // TODO: do the same thing for threads and traces (do not forget to check that children has the right)
+  expect(csv2json(content)).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        cost: expect.anything(),
+        createdAt: expect.any(String),
+        duration: expect.any(String),
+        endedAt: expect.any(String),
+        error: expect.any(String),
+        feedback: expect.any(String),
+        id: expect.any(String),
+        input: expect.anything(),
+        isPublic: expect.any(Boolean),
+        metadata: expect.anything(),
+        name: expect.any(String),
+        output: expect.anything(),
+        parentFeedback: expect.any(String),
+        params: expect.anything(),
+        projectId: expect.any(String),
+        scores: expect.anything(),
+        siblingRunId: expect.any(String),
+        status: expect.any(String),
+        tags: expect.anything(),
+        templateSlug: expect.any(String),
+        templateVersionId: expect.any(String),
+        tokens: expect.anything(),
+        traceId: expect.any(String),
+        type: expect.any(String),
+        user: expect.anything(),
+      }),
+    ]),
+  );
 });
 
 // test("test export csv for trace", async ({ page }) => {
 //   page.on("console", (msg) => {
 //     console.log(msg);
 //   });
-//   await setOrgPro();
-
+//
 //   await page.goto("/logs?type=trace");
 //   await page.waitForLoadState("networkidle");
 
@@ -119,11 +120,6 @@ test("test export csv for llm", async ({ page }) => {
 // });
 
 test("test export csv for thread", async ({ page }) => {
-  page.on("console", (msg) => {
-    console.log(msg);
-  });
-  await setOrgPro();
-
   await page.goto("/logs?type=thread");
   await page.waitForLoadState("networkidle");
 
@@ -136,44 +132,41 @@ test("test export csv for thread", async ({ page }) => {
   const path = await file.path();
   const content = fs.readFileSync(path, "utf-8");
 
-  const json = csv2json(content);
-
-  expect(Object.keys(json[0])).toEqual([
-    "id",
-    "projectId",
-    "isPublic",
-    "feedback",
-    "parentFeedback",
-    "type",
-    "name",
-    "createdAt",
-    "endedAt",
-    "duration",
-    "templateVersionId",
-    "templateSlug",
-    "cost",
-    "tokens",
-    "tags",
-    "input",
-    "output",
-    "error",
-    "status",
-    "siblingRunId",
-    "params",
-    "metadata",
-    "user",
-    "traceId",
-    "scores",
-  ]);
+  expect(csv2json(content)).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        cost: expect.anything(),
+        createdAt: expect.any(String),
+        duration: expect.any(String),
+        endedAt: expect.any(String),
+        error: expect.any(String),
+        feedback: expect.any(String),
+        id: expect.any(String),
+        input: expect.anything(),
+        isPublic: expect.any(Boolean),
+        metadata: expect.anything(),
+        name: expect.any(String),
+        output: expect.anything(),
+        parentFeedback: expect.any(String),
+        params: expect.anything(),
+        projectId: expect.any(String),
+        scores: expect.anything(),
+        siblingRunId: expect.any(String),
+        status: expect.any(String),
+        tags: expect.anything(),
+        templateSlug: expect.any(String),
+        templateVersionId: expect.any(String),
+        tokens: expect.anything(),
+        traceId: expect.any(String),
+        type: expect.any(String),
+        user: expect.anything(),
+      }),
+    ]),
+  );
 });
 
 // RAW JSONL
 test("test export jsonl for llm", async ({ page }) => {
-  page.on("console", (msg) => {
-    console.log(msg);
-  });
-  await setOrgPro();
-
   await page.goto("/logs?type=llm");
   await page.waitForLoadState("networkidle");
 
@@ -186,9 +179,14 @@ test("test export jsonl for llm", async ({ page }) => {
   const path = await file.path();
   const content = fs.readFileSync(path, "utf-8");
 
-  const json = JSON.parse(content.split("\n")[0]);
+  console.log(content.split("\n"));
 
-  expect(Object.keys(json)).toEqual([
+  const json = content
+    .split("\n")
+    .filter(Boolean)
+    .map((chunk) => JSON.parse(chunk));
+
+  expect(Object.keys(json[0])).toEqual([
     "id",
     "createdAt",
     "endedAt",
@@ -222,14 +220,50 @@ test("test export jsonl for llm", async ({ page }) => {
     "parentFeedback",
     "evaluationResults",
   ]);
+
+  expect(json[0]).toEqual(
+    expect.objectContaining({
+      id: expect.any(String),
+      createdAt: expect.any(String),
+      endedAt: expect.any(String),
+      duration: expect.any(String),
+      tags: expect.any(Array),
+      projectId: expect.any(String),
+      status: expect.any(String),
+      name: expect.any(String),
+      error: expect.anything(),
+      input: expect.anything(),
+      output: expect.anything(),
+      params: expect.anything(),
+      type: expect.any(String),
+      parentRunId: expect.any(String),
+      promptTokens: expect.any(Number),
+      completionTokens: expect.any(Number),
+      cost: expect.anything(),
+      externalUserId: expect.anything(),
+      feedback: expect.anything(),
+      isPublic: expect.any(Boolean),
+      templateVersionId: expect.anything(),
+      runtime: expect.anything(),
+      metadata: expect.anything(),
+      totalTokens: expect.any(Number),
+      userId: expect.anything(),
+      userExternalId: expect.anything(),
+      userCreatedAt: expect.anything(),
+      userLastSeen: expect.anything(),
+      userProps: expect.anything(),
+      templateSlug: expect.anything(),
+      parentFeedback: expect.anything(),
+      evaluationResults: expect.any(Array),
+    }),
+  );
 });
 
 // test("test export jsonl for trace", async ({ page }) => {
 //   page.on("console", (msg) => {
 //     console.log(msg);
 //   });
-//   await setOrgPro();
-
+//
 //   await page.goto("/logs?type=trace");
 //   await page.waitForLoadState("networkidle");
 
@@ -249,11 +283,6 @@ test("test export jsonl for llm", async ({ page }) => {
 // });
 
 test("test export jsonl for thread", async ({ page }) => {
-  page.on("console", (msg) => {
-    console.log(msg);
-  });
-  await setOrgPro();
-
   await page.goto("/logs?type=thread");
   await page.waitForLoadState("networkidle");
 
@@ -306,11 +335,6 @@ test("test export jsonl for thread", async ({ page }) => {
 
 // OPENAI JSONL
 test("test export openai jsonl", async ({ page }) => {
-  page.on("console", (msg) => {
-    console.log(msg);
-  });
-  await setOrgPro();
-
   await page.goto("/logs?type=llm");
   await page.waitForLoadState("networkidle");
 
