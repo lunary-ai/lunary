@@ -32,7 +32,7 @@ test("make a log public", async ({ page, context }) => {
 });
 
 // CSV EXPORTS
-test("test export csv - llm", async ({ page }) => {
+test("test export csv for llm", async ({ page }) => {
   page.on("console", (msg) => {
     console.log(msg);
   });
@@ -84,7 +84,7 @@ test("test export csv - llm", async ({ page }) => {
   // TODO: do the same thing for threads and traces (do not forget to check that children has the right)
 });
 
-// test("test export csv - trace", async ({ page }) => {
+// test("test export csv for trace", async ({ page }) => {
 //   page.on("console", (msg) => {
 //     console.log(msg);
 //   });
@@ -118,7 +118,7 @@ test("test export csv - llm", async ({ page }) => {
 //   expect(Object.keys(logWithChildren[0])).toEqual(expectedHeaders);
 // });
 
-test("test export csv - thread", async ({ page }) => {
+test("test export csv for thread", async ({ page }) => {
   page.on("console", (msg) => {
     console.log(msg);
   });
@@ -168,7 +168,7 @@ test("test export csv - thread", async ({ page }) => {
 });
 
 // RAW JSONL
-test("test export jsonl - llm", async ({ page }) => {
+test("test export jsonl for llm", async ({ page }) => {
   page.on("console", (msg) => {
     console.log(msg);
   });
@@ -224,7 +224,7 @@ test("test export jsonl - llm", async ({ page }) => {
   ]);
 });
 
-// test("test export jsonl - trace", async ({ page }) => {
+// test("test export jsonl for trace", async ({ page }) => {
 //   page.on("console", (msg) => {
 //     console.log(msg);
 //   });
@@ -248,7 +248,7 @@ test("test export jsonl - llm", async ({ page }) => {
 //   expect(Object.keys(json)).toEqual(expectedHeaders);
 // });
 
-test("test export jsonl - thread", async ({ page }) => {
+test("test export jsonl for thread", async ({ page }) => {
   page.on("console", (msg) => {
     console.log(msg);
   });
