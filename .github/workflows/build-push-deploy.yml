@@ -128,7 +128,7 @@ jobs:
         run: helm registry login registry-1.docker.io -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Update Helm chart version
-        run: bash update.sh ${{ github.event.release.tag_name }}
+        run: bash update.sh ${{ steps.release_tag.outputs.tag }}
 
       - name: Publish Helm chart
         run: bash publish.sh
