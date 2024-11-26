@@ -1,6 +1,5 @@
 {
-  "name": "@lunary/monorepo",
-  "version": "1.0.0",
+  "name": "lunary",
   "private": "true",
   "scripts": {
     "start": "concurrently -n frontend,backend \"npm run start:frontend\" \"npm run start:backend\"",
@@ -15,28 +14,24 @@
     "dev:backend": "npm -w packages/backend run dev",
     "test": "npx playwright test",
     "test:ui": "npx playwright test --ui",
-    "postinstall": "npx patch-package"
+    "postinstall": "npx patch-package",
+    "clean": "rm -rf package-lock.json && rm -rf node_modules &&  rm -rf packages/frontend/node_modules && rm -rf packages/backend/node_modules && rm -rf packages/frontend/.next"
   },
   "workspaces": [
     "packages/*"
   ],
   "dependencies": {
-    "@mantine/charts": "^7.12.2",
-    "concurrently": "^8.2.2",
-    "patch-package": "^8.0.0",
-    "react-dnd": "^16.0.1",
-    "react-dnd-html5-backend": "^16.0.1",
-    "recharts": "^2.12.7",
-    "swapy": "^0.2.1"
+    "concurrently": "^9.1.0",
+    "patch-package": "^8.0.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.47.0",
-    "@types/node": "^22.5.4",
+    "@playwright/test": "^1.49.0",
+    "@types/node": "^22.10.0",
     "dotenv": "^16.4.5",
-    "json-2-csv": "^5.5.6",
-    "prettier": "^3.3.3",
-    "tsup": "^8.2.4",
-    "tsx": "^4.19.0",
-    "typescript": "^5.5.4"
+    "json-2-csv": "^5.5.7",
+    "prettier": "^3.4.1",
+    "tsup": "^8.3.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
   }
 }

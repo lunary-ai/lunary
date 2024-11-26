@@ -78,7 +78,7 @@ import { useRouter } from "next/router";
 import IconPicker from "@/components/blocks/IconPicker";
 import { useEnrichers } from "@/utils/dataHooks/evaluators";
 import { useSortParams } from "@/utils/hooks";
-import { deserializeLogic, serializeLogic } from "shared";
+import { deserializeLogic, hasAccess, serializeLogic } from "shared";
 
 export const defaultColumns = {
   llm: [
