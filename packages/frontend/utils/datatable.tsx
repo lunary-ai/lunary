@@ -22,7 +22,7 @@ export function timeColumn(timeColumn, label = "Time") {
       new Date(b.getValue(timeColumn)).getTime(),
     cell: (info) => {
       const isToday =
-        new Date(info.getValue()).toDateString() === new Date().toDateString();
+        new Date(info.getValue())?.toDateString() === new Date().toDateString();
       if (isToday) {
         return new Date(info.getValue()).toLocaleTimeString(
           typeof window !== "undefined" ? window.navigator.language : "en-US",
@@ -48,7 +48,6 @@ export function durationColumn(unit = "s"): ColumnDef<any> {
       } else if (unit === "s") {
         return `${(props.getValue() / 1000).toFixed(2)}s`;
       } else if (unit === "full") {
-        console.log(props.getValue());
         return msToTime(props.getValue());
       }
     },

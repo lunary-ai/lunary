@@ -110,7 +110,7 @@ function getTraceChildren(run: Run, runs: Run[]): TraceRun {
 export async function fileExport(
   { ctx, sql, cursor, formatRun, projectId }: ExportType,
   exportFormat: "csv" | "ojsonl" | "jsonl",
-  exportType?: "trace" | "thread",
+  exportType?: "trace" | "thread" | "llm",
 ) {
   if (exportFormat === "csv") {
     const parser = new Parser();
@@ -120,8 +120,21 @@ export async function fileExport(
 
     const stream = Readable.from({
       async *[Symbol.asyncIterator]() {
+        let isFirst = true;
         for await (const [row] of cursor) {
-          yield parser.parse(formatRun(row));
+          let line;
+          if (exportType === "trace") {
+            const related = await getRelatedRuns(sql, row.id, projectId);
+            line = parser.parse(getTraceChildren(formatRun(row), related));
+          } else {
+            line = parser.parse(formatRun(row));
+          }
+          if (isFirst) {
+            isFirst = false;
+          } else {
+            line = line.trim().split("\n").slice(1).join("\\n");
+          }
+          yield line + "\n";
         }
       },
     });
@@ -149,6 +162,7 @@ export async function fileExport(
             }
           }
         }
+        yield "exports";
       },
     });
     ctx.body = stream;
@@ -170,6 +184,7 @@ export async function fileExport(
             yield line + "\n";
           }
         }
+        yield "exports";
       },
     });
     ctx.body = stream;

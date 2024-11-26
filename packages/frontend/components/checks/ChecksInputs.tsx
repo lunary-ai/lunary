@@ -68,7 +68,9 @@ const CheckInputs = {
     defaultValue.setHours(23, 59, 59, 999);
 
     useEffect(() => {
-      onChange(defaultValue);
+      if (!value) {
+        onChange(defaultValue);
+      }
     }, []);
 
     return (

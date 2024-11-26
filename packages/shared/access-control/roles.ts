@@ -34,7 +34,8 @@ export type Action =
   | "delete"
   | "list"
   | "export"
-  | "run";
+  | "run"
+  | "updateVisibility";
 
 export const roles: Record<
   Role,
@@ -88,6 +89,7 @@ export const roles: Record<
         delete: true,
         list: true,
         export: true,
+        updateVisibility: true,
       },
       users: {
         create: true,
@@ -200,6 +202,7 @@ export const roles: Record<
         delete: true,
         list: true,
         export: true,
+        updateVisibility: true,
       },
       users: {
         create: true,
@@ -309,13 +312,14 @@ export const roles: Record<
       logs: {
         create: true,
         read: true,
-        update: false,
-        delete: false,
+        update: true,
+        delete: true,
         list: true,
         export: true,
+        updateVisibility: true,
       },
       users: {
-        create: false,
+        create: true,
         read: true,
         update: true,
         delete: true,
@@ -513,7 +517,7 @@ export const roles: Record<
         update: false,
         delete: false,
         list: true,
-        run: true,
+        run: false,
       },
       datasets: {
         create: false,

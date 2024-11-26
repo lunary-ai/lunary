@@ -8,6 +8,7 @@ import { formatDateTime } from "@/utils/format";
 import {
   ActionIcon,
   Card,
+  Center,
   Group,
   Loader,
   Menu,
@@ -68,6 +69,7 @@ function parseMessageFromRun(run) {
 
 function Message({
   msg,
+  user,
   siblings,
   selectedIndex,
   handleRetrySelect,
@@ -84,6 +86,7 @@ function Message({
   return (
     <>
       <BubbleMessage
+        user={user}
         role={msg.role}
         content={msg.content}
         enrichments={msg.enrichments}
@@ -176,12 +179,21 @@ function RunsChat({ runs, mutateLogs }) {
           const selectedIndex = selectedRetries[run.id] || 0;
           const picked = siblings[selectedIndex];
 
+          if (run.type === "custom-event") {
+            return (
+              <Center key={i} c="dimmed" my="lg">
+                <Text>{run.name}</Text>
+              </Center>
+            );
+          }
+
           return messages
             .filter((m) => m.id === picked.id)
             .map((msg, i) => (
               <Message
                 key={i}
                 msg={msg}
+                user={run.user}
                 siblings={siblings}
                 selectedIndex={selectedIndex}
                 handleRetrySelect={handleRetrySelect}
@@ -266,16 +278,14 @@ export function ChatReplay({ run, mutateLogs, deleteRun }) {
 
       <Card withBorder radius="md">
         <Stack gap="xs">
-          <Group justify="space-between">
-            <Text>User</Text>
-            <Text>
-              {user ? (
+          {user && (
+            <Group justify="space-between">
+              <Text>User</Text>
+              <Text>
                 <AppUserAvatar size="sm" user={user} withName />
-              ) : (
-                "Unknown"
-              )}
-            </Text>
-          </Group>
+              </Text>
+            </Group>
+          )}
           <Group justify="space-between">
             <Text>First message</Text>
             <Text>{formatDateTime(run.createdAt)}</Text>

@@ -44,12 +44,10 @@ async function getFile(path) {
     throw new Error(message);
   }
 
-  const { createWriteStream } = await import("streamsaver");
-  const contentType = res.headers.get("Content-Type") as string;
-  const fileExtension = contentType.split("/")[1];
-
-  const fileStream = createWriteStream(`export.${fileExtension}`);
-  await res.body?.pipeTo(fileStream);
+  const data = await res.json();
+  if (data.token) {
+    window.location.assign(buildUrl(`/runs/download/${data.token}`));
+  }
 }
 
 async function getStream(url, args, onChunk) {
@@ -88,7 +86,7 @@ async function getStream(url, args, onChunk) {
   }
 }
 
-function post(path, { arg }) {
+function post(path, { arg = {} } = {}) {
   return fetch(buildUrl(path), {
     method: "POST",
     headers: {
@@ -98,7 +96,6 @@ function post(path, { arg }) {
     body: JSON.stringify(arg),
   }).then(handleResponse);
 }
-
 function patch(path, { arg }) {
   return fetch(buildUrl(path), {
     method: "PATCH",

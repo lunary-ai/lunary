@@ -1,5 +1,6 @@
 import config from "@/utils/config";
 import { useDatasets, useOrg, useRun, useUser } from "@/utils/dataHooks";
+import errorHandler from "@/utils/errors";
 import {
   ActionIcon,
   Badge,
@@ -12,7 +13,10 @@ import {
   Select,
   Stack,
   Text,
+  Title,
+  Tooltip,
 } from "@mantine/core";
+import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import {
   IconBinaryTree2,
@@ -20,10 +24,12 @@ import {
   IconDotsVertical,
   IconEye,
   IconEyeClosed,
+  IconInfoCircle,
   IconPencilShare,
   IconTrash,
 } from "@tabler/icons-react";
 import Link from "next/link";
+import { parseAsBoolean, parseAsString, useQueryState } from "nuqs";
 import { useState } from "react";
 import { hasAccess } from "shared";
 import SmartViewer from "../SmartViewer";
@@ -32,9 +38,6 @@ import CopyText, { SuperCopyButton } from "./CopyText";
 import ErrorBoundary from "./ErrorBoundary";
 import Feedbacks from "./Feedbacks";
 import TokensBadge from "./TokensBadge";
-import { modals } from "@mantine/modals";
-import errorHandler from "@/utils/errors";
-import { parseAsBoolean, parseAsString, useQueryState } from "nuqs";
 
 const isChatMessages = (obj) => {
   return Array.isArray(obj)
@@ -141,7 +144,7 @@ export default function RunInputOutput({
 }) {
   const { user } = useUser();
   const { org } = useOrg();
-  const { run, update, updateFeedback, deleteRun } = useRun(
+  const { run, updateVisibility, updateFeedback, deleteRun } = useRun(
     initialRun?.id,
     initialRun,
   );
@@ -246,14 +249,14 @@ export default function RunInputOutput({
                     />
                   )}
 
-                  {hasAccess(user.role, "logs", "update") && (
-                    <Menu data-testid="selected-run-menu">
-                      <Menu.Target>
-                        <ActionIcon variant="default">
-                          <IconDotsVertical size={16} />
-                        </ActionIcon>
-                      </Menu.Target>
-                      <Menu.Dropdown>
+                  <Menu data-testid="selected-run-menu">
+                    <Menu.Target>
+                      <ActionIcon variant="default">
+                        <IconDotsVertical size={16} />
+                      </ActionIcon>
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      {hasAccess(user.role, "logs", "updateVisibility") && (
                         <Menu.Item
                           data-testid="toggle-run-visibility"
                           leftSection={
@@ -265,7 +268,7 @@ export default function RunInputOutput({
                           }
                           onClick={async () => {
                             const newIsPublic = !run.isPublic;
-                            await update({ ...run, isPublic: newIsPublic });
+                            await updateVisibility(newIsPublic);
                             if (newIsPublic) {
                               const url = `${window.location.origin}/logs/${run.id}`;
                               await navigator.clipboard.writeText(url);
@@ -290,33 +293,33 @@ export default function RunInputOutput({
                         >
                           {run.isPublic ? "Make private" : "Make public"}
                         </Menu.Item>
-                        {canEnablePlayground && (
-                          <Menu.Item
-                            leftSection={<IconPencilShare size={16} />}
-                            component={Link}
-                            href={`/prompts/${run.templateVersionId || `?clone=` + run.id}`}
-                          >
-                            {run.templateVersionId
-                              ? "Open template"
-                              : "Open in Playground"}
-                          </Menu.Item>
-                        )}
-                        {hasAccess(user.role, "logs", "delete") && (
-                          <Menu.Item
-                            leftSection={
-                              <IconTrash
-                                size={16}
-                                color="var(--mantine-color-red-filled)"
-                              />
-                            }
-                            onClick={openModal}
-                          >
-                            <Text c="red">Delete</Text>
-                          </Menu.Item>
-                        )}
-                      </Menu.Dropdown>
-                    </Menu>
-                  )}
+                      )}
+                      {canEnablePlayground && (
+                        <Menu.Item
+                          leftSection={<IconPencilShare size={16} />}
+                          component={Link}
+                          href={`/prompts/${run.templateVersionId || `?clone=` + run.id}`}
+                        >
+                          {run.templateVersionId
+                            ? "Open template"
+                            : "Open in Playground"}
+                        </Menu.Item>
+                      )}
+                      {hasAccess(user.role, "logs", "delete") && (
+                        <Menu.Item
+                          leftSection={
+                            <IconTrash
+                              size={16}
+                              color="var(--mantine-color-red-filled)"
+                            />
+                          }
+                          onClick={openModal}
+                        >
+                          <Text c="red">Delete</Text>
+                        </Menu.Item>
+                      )}
+                    </Menu.Dropdown>
+                  </Menu>
                 </Group>
               </Group>
             )}
@@ -383,6 +386,24 @@ export default function RunInputOutput({
                           />
                         );
                       })}
+
+                    {run.scores && Boolean(run.scores.length) && (
+                      <Group mt="md" gap="xs">
+                        <Title size="md">Scores</Title>
+                        <Tooltip
+                          label={
+                            "Custom scores that have been reported via the SDK"
+                          }
+                        >
+                          <IconInfoCircle size={16} opacity={0.5} />
+                        </Tooltip>
+                      </Group>
+                    )}
+                    {run.scores?.map((score, i) => (
+                      <Badge key={i} variant="outline" color="blue">
+                        {score.label}: {score.value}
+                      </Badge>
+                    ))}
                   </Stack>
 
                   <Group>

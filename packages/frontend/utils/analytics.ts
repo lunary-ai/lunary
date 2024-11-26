@@ -161,11 +161,11 @@ const w = {
   },
 };
 
-const handleRouteChange = async () => {
+async function handleRouteChange() {
   posthog?.capture("$pageview");
-};
+}
 
-const track = (event: string, data?: any) => {
+function track(event: string, data?: any) {
   try {
     posthog?.capture(event, data);
 
@@ -173,10 +173,10 @@ const track = (event: string, data?: any) => {
   } catch (e) {
     console.error(e);
   }
-};
+}
 
 const alreadyTracked = new Set<string>();
-const trackOnce = (event: string, data?: any) => {
+function trackOnce(event: string, data?: any) {
   // Prevent sending too many events
   if (alreadyTracked.has(event)) return;
 
@@ -185,9 +185,9 @@ const trackOnce = (event: string, data?: any) => {
   } catch (e) {
     console.error(e);
   }
-};
+}
 
-const identify = (userId: string, traits: any) => {
+function identify(userId: string, traits: any) {
   try {
     posthog?.identify(userId, traits);
 
@@ -202,7 +202,7 @@ const identify = (userId: string, traits: any) => {
     if (traits.email) w?.crisp?.push(["set", "user:email", traits.email]);
     if (traits.name) w?.crisp?.push(["set", "user:nickname", traits.name]);
 
-    w?.crisp.push([
+    w?.crisp?.push([
       "set",
       "session:data",
       [
@@ -220,7 +220,7 @@ const identify = (userId: string, traits: any) => {
   } catch (e) {
     console.error(e);
   }
-};
+}
 
 const analytics = {
   track,

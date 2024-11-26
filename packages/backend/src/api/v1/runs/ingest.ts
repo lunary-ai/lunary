@@ -168,7 +168,25 @@ async function registerRunEvent(
   /* When using multiple LangChain callbacks for the same events, the project ID is associated with the event.
    * The projectId passed to this function is the public key, so it may not necessarily be the correct one for the current event.
    */
-  projectId = event.appId || projectId;
+  const apiKey = event.appId;
+  // console.log(apiKey, projectId);
+  if (typeof apiKey === "string") {
+    const [project] = await sql`
+      select project_id from api_key where api_key = ${apiKey}
+    `;
+
+    if (project) {
+      projectId = project.projectId;
+    } else {
+      // TODO: this is a temp fix because some projects are not associated with an API key
+      const [project] = await sql`
+        select id from project where id = ${apiKey}
+      `;
+      if (project) {
+        projectId = project.id;
+      }
+    }
+  }
 
   if (!tags) {
     tags = metadata?.tags;
@@ -184,12 +202,6 @@ async function registerRunEvent(
   let externalUserId;
   // Only do on start event to save on DB calls and have correct lastSeen
   if (typeof userId === "string" && !["end", "error"].includes(eventName)) {
-    const [projectExists] =
-      await sql`select exists(select 1 from project where id = ${projectId})`;
-    if (!projectExists) {
-      throw new ProjectNotFoundError(projectId);
-    }
-
     const [result] = await sql`
       insert into external_user ${sql(
         clearUndefined({
@@ -363,6 +375,48 @@ async function registerRunEvent(
       where 
         id = ${runId}
     `;
+  } else if (eventName === "custom-event") {
+    // custom event
+    const { externalUserId, parentRunId, threadTags, timestamp } = event;
+
+    if (typeof parentRunId !== "string") {
+      throw new Error("No parent run ID provided");
+    }
+
+    const [projectExists] =
+      await sql`select exists(select 1 from project where id = ${projectId})`;
+    if (!projectExists) {
+      throw new ProjectNotFoundError(projectId);
+    }
+
+    const [thread] = await sql`
+      insert into run ${sql(
+        clearUndefined({
+          id: parentRunId,
+          type: "thread",
+          projectId,
+          externalUserId,
+          tags: threadTags,
+        }),
+      )}
+      on conflict (id)
+      do update set
+        external_user_id = excluded.external_user_id,
+        tags = excluded.tags
+      returning *
+    `;
+
+    await sql`insert into run ${sql({
+      id: runId,
+      createdAt: timestamp,
+      endedAt: timestamp,
+      type: "custom-event",
+      name,
+      projectId,
+      parentRunId: thread.id,
+      externalUserId,
+      metadata,
+    })}`;
   }
 
   insertedIds.add(runId);
@@ -546,14 +600,17 @@ export async function processEventsIngestion(
  *         description: Incorrect project id format
  */
 router.post("/", async (ctx: Context) => {
-  const result = z.string().uuid().safeParse(ctx.state.projectId);
-  if (!result.success) {
+  const { data: projectId, success } = z
+    .string()
+    .uuid()
+    .safeParse(ctx.state.projectId);
+
+  if (!success) {
     ctx.status = 402;
     ctx.body = { message: "Incorrect project id format" };
     return;
   }
 
-  const projectId = result.data;
   const [project] =
     await sql`select * from project where id = ${projectId} limit 1`;
 

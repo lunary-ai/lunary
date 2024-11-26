@@ -28,7 +28,6 @@ import {
   IconUser,
 } from "@tabler/icons-react";
 
-import GoogleLoginButton from "@/components/blocks/GoogleLoginButton";
 import SocialProof from "@/components/blocks/SocialProof";
 import AuthLayout from "@/components/layout/AuthLayout";
 import analytics from "@/utils/analytics";
@@ -36,6 +35,8 @@ import { useAuth } from "@/utils/auth";
 import config from "@/utils/config";
 import { fetcher } from "@/utils/fetcher";
 import { NextSeo } from "next-seo";
+import GoogleButton from "@/components/blocks/OAuth/GoogleButton";
+import GithubButton from "@/components/blocks/OAuth/GithubButton";
 
 function getRandomizedChoices() {
   const choices = [
@@ -241,7 +242,8 @@ function SignupPage() {
                               label={<Text size="sm">OR</Text>}
                             />
                           </Group>
-                          <GoogleLoginButton />
+                          <GoogleButton />
+                          <GithubButton accessToken={router.query.code} />
                         </Stack>
                       )}
                     </Stack>

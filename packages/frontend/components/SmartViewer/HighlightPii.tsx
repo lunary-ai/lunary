@@ -1,7 +1,7 @@
-import Highlighter from "react-highlight-words";
-import { useProject, useProjectRules } from "@/utils/dataHooks";
-import { Tooltip } from "@mantine/core";
 import { getPIIColor } from "@/utils/colors";
+import { useProjectRules } from "@/utils/dataHooks";
+import { Tooltip } from "@mantine/core";
+import Highlighter from "react-highlight-words";
 import classes from "./index.module.css";
 
 export default function HighlightPii({
@@ -17,7 +17,7 @@ export default function HighlightPii({
 
   const { maskingRule } = useProjectRules();
 
-  const HighlightBadge = ({ children }) => {
+  function HighlightBadge({ children }) {
     const piiType = piiDetection.find((pii) => pii.entity === children)?.type;
     const bgColor = `light-dark(var(--mantine-color-${getPIIColor(piiType)}-2), var(--mantine-color-${getPIIColor(piiType)}-9))`;
     const length = children.length;
@@ -37,7 +37,7 @@ export default function HighlightPii({
         </span>
       </Tooltip>
     );
-  };
+  }
 
   return (
     <Highlighter

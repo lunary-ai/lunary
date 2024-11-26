@@ -388,15 +388,12 @@ export function useRun(id: string | null, initialData?: any) {
     fallbackData: initialData,
   });
 
-  const { trigger: update } = useProjectMutation(
-    id && !runDeleted ? `/runs/${id}` : null,
+  const { trigger: updateVisibilityTrigger } = useProjectMutation(
+    id && !runDeleted ? `/runs/${id}/visibility` : null,
     fetcher.patch,
-    {
-      revalidate: false,
-    },
   );
 
-  const { trigger: updateTrigger } = useProjectMutation(
+  const { trigger: updateFeedbackTrigger } = useProjectMutation(
     id && !runDeleted ? `/runs/${id}/feedback` : null,
     fetcher.patch,
   );
@@ -409,13 +406,13 @@ export function useRun(id: string | null, initialData?: any) {
     },
   );
 
-  async function updateRun(data) {
-    mutate({ ...run, ...data });
-    await update(data);
+  async function updateVisibility(visibility) {
+    await updateVisibilityTrigger({ visibility });
+    await mutate();
   }
 
   async function updateFeedback(feedback) {
-    await updateTrigger(feedback);
+    await updateFeedbackTrigger(feedback);
     await mutate();
   }
 
@@ -426,7 +423,7 @@ export function useRun(id: string | null, initialData?: any) {
 
   return {
     run,
-    update: updateRun,
+    updateVisibility,
     updateFeedback,
     deleteRun,
     mutate,
