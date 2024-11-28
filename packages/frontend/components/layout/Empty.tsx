@@ -144,21 +144,21 @@ const InstallStep = ({
 
   const tabs = [
     {
-      fileName: "JavaScript",
-      code: `# Install the package
-npm install lunary
-
-# Add to your .env file
-LUNARY_PUBLIC_KEY="${project?.id}"`,
-      language: "bash",
-    },
-    {
       fileName: "Python",
       code: `# Install the package
 pip install lunary
 
 # Add to your environment variables
 export LUNARY_PUBLIC_KEY="${project?.id}"`,
+      language: "bash",
+    },
+    {
+      fileName: "JavaScript",
+      code: `# Install the package
+npm install lunary
+
+# Add to your .env file
+LUNARY_PUBLIC_KEY="${project?.id}"`,
       language: "bash",
     },
   ];
@@ -205,20 +205,20 @@ const CodeStep = ({
       language: "python",
     });
   } else {
-    if (samples.js) {
-      tabs.push({
-        fileName: "JavaScript",
-
-        code: samples.js,
-        language: "typescript",
-      });
-    }
     if (samples.py) {
       tabs.push({
         fileName: "Python",
 
         code: samples.py,
         language: "python",
+      });
+    }
+    if (samples.js) {
+      tabs.push({
+        fileName: "JavaScript",
+
+        code: samples.js,
+        language: "typescript",
       });
     }
   }
@@ -571,7 +571,7 @@ export function EmptyOnboarding() {
 
             <Group justify="space-between" w="100%">
               <Group gap={2}>
-                <Text>Project ID: </Text>
+                <Text>Public Key: </Text>
                 <CopyText value={project?.id} />
               </Group>
               <Group gap="sm">
@@ -680,7 +680,7 @@ export default function Empty({
             </Button>
             {showProjectId && (
               <Group>
-                <Text>Project ID: </Text>
+                <Text>Public Key: </Text>
                 <CopyText value={project?.id} />
               </Group>
             )}
