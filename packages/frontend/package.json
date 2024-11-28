@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@mantine/charts": "7.13.4",
+    "@mantine/code-highlight": "^7.13.4",
     "@mantine/colors-generator": "7.13.4",
     "@mantine/core": "7.13.4",
     "@mantine/dates": "7.13.4",
@@ -45,7 +46,6 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@types/streamsaver": "^2.0.5",
     "@types/node": "20.10.5",
     "@types/react": "18.2.45",
     "@types/react-dom": "^18.2.18",
