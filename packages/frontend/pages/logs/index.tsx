@@ -51,7 +51,7 @@ import { ChatReplay } from "@/components/blocks/RunChat";
 import RunInputOutput from "@/components/blocks/RunInputOutput";
 import SearchBar from "@/components/blocks/SearchBar";
 import CheckPicker from "@/components/checks/Picker";
-import Empty from "@/components/layout/Empty";
+import Empty, { EmptyOnboarding } from "@/components/layout/Empty";
 import { openUpgrade } from "@/components/layout/UpgradeModal";
 
 import analytics from "@/utils/analytics";
@@ -417,220 +417,216 @@ export default function Logs() {
     [columnsTouched, checks, view],
   );
 
+  if (
+    !viewLoading &&
+    !loading &&
+    !projectLoading &&
+    project &&
+    !project.activated
+  ) {
+    return <EmptyOnboarding />;
+  }
+
   return (
-    <Empty
-      enable={
-        !viewLoading &&
-        !loading &&
-        !projectLoading &&
-        project &&
-        !project.activated
-      }
-      Icon={IconBrandOpenai}
-      title="Waiting for recordings..."
-      showProjectId
-      description="Once you've setup the SDK, your LLM calls and traces will appear here."
-    >
-      <Stack h={"calc(100vh - var(--navbar-with-filters-size))"}>
-        <NextSeo title="Requests" />
+    <Stack h={"calc(100vh - var(--navbar-with-filters-size))"}>
+      <NextSeo title="Requests" />
 
-        <Stack>
-          <Card withBorder p={2} px="sm">
-            <Flex justify="space-between">
-              <SearchBar
-                query={query}
-                ml={-8}
-                setQuery={setQuery}
-                variant="unstyled"
-                size="sm"
-              />
+      <Stack>
+        <Card withBorder p={2} px="sm">
+          <Flex justify="space-between">
+            <SearchBar
+              query={query}
+              ml={-8}
+              setQuery={setQuery}
+              variant="unstyled"
+              size="sm"
+            />
 
+            <Group gap="xs">
+              <Menu position="bottom-end" data-testid="export-menu">
+                <Menu.Target>
+                  <ActionIcon variant="light">
+                    <IconDotsVertical size={12} />
+                  </ActionIcon>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Item
+                    data-testid="export-csv-button"
+                    leftSection={<IconFileExport size={16} />}
+                    {...exportButton({
+                      serializedChecks,
+                      projectId,
+                      type,
+                      format: "csv",
+                    })}
+                  >
+                    Export to CSV
+                  </Menu.Item>
+
+                  {type === "llm" && (
+                    <Menu.Item
+                      data-testid="export-openai-jsonl-button"
+                      color="dimmed"
+                      leftSection={<IconBrandOpenai size={16} />}
+                      {...exportButton({
+                        serializedChecks,
+                        projectId,
+                        type,
+                        format: "ojsonl",
+                      })}
+                    >
+                      Export to OpenAI JSONL
+                    </Menu.Item>
+                  )}
+
+                  <Menu.Item
+                    data-testid="export-raw-jsonl-button"
+                    color="dimmed"
+                    // disabled={type === "thread"}
+                    leftSection={<IconBraces size={16} />}
+                    {...exportButton({
+                      serializedChecks,
+                      projectId,
+                      type,
+                      format: "jsonl",
+                    })}
+                  >
+                    Export to raw JSONL
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+            </Group>
+          </Flex>
+        </Card>
+
+        <Group justify="space-between" align="center">
+          <Group>
+            {view && (
               <Group gap="xs">
-                <Menu position="bottom-end" data-testid="export-menu">
+                <IconPicker
+                  size={26}
+                  variant="light"
+                  value={view.icon}
+                  onChange={(icon) => {
+                    updateView({
+                      icon,
+                    });
+                  }}
+                />
+                <RenamableField
+                  defaultValue={view.name}
+                  onRename={(newName) => {
+                    updateView({
+                      name: newName,
+                    });
+                  }}
+                />
+                <Menu position="bottom-end">
                   <Menu.Target>
-                    <ActionIcon variant="light">
+                    <ActionIcon variant="subtle">
                       <IconDotsVertical size={12} />
                     </ActionIcon>
                   </Menu.Target>
                   <Menu.Dropdown>
                     <Menu.Item
-                      data-testid="export-csv-button"
-                      leftSection={<IconFileExport size={16} />}
-                      {...exportButton({
-                        serializedChecks,
-                        projectId,
-                        type,
-                        format: "csv",
-                      })}
+                      leftSection={<IconStackPop size={16} />}
+                      onClick={() => duplicateView()}
                     >
-                      Export to CSV
+                      Duplicate
                     </Menu.Item>
-
-                    {type === "llm" && (
-                      <Menu.Item
-                        data-testid="export-openai-jsonl-button"
-                        color="dimmed"
-                        leftSection={<IconBrandOpenai size={16} />}
-                        {...exportButton({
-                          serializedChecks,
-                          projectId,
-                          type,
-                          format: "ojsonl",
-                        })}
-                      >
-                        Export to OpenAI JSONL
-                      </Menu.Item>
-                    )}
-
                     <Menu.Item
-                      data-testid="export-raw-jsonl-button"
-                      color="dimmed"
-                      // disabled={type === "thread"}
-                      leftSection={<IconBraces size={16} />}
-                      {...exportButton({
-                        serializedChecks,
-                        projectId,
-                        type,
-                        format: "jsonl",
-                      })}
+                      color="red"
+                      leftSection={<IconTrash size={16} />}
+                      onClick={() => deleteView()}
                     >
-                      Export to raw JSONL
+                      Delete
                     </Menu.Item>
                   </Menu.Dropdown>
                 </Menu>
               </Group>
-            </Flex>
-          </Card>
-
-          <Group justify="space-between" align="center">
-            <Group>
-              {view && (
-                <Group gap="xs">
-                  <IconPicker
-                    size={26}
-                    variant="light"
-                    value={view.icon}
-                    onChange={(icon) => {
-                      updateView({
-                        icon,
-                      });
-                    }}
-                  />
-                  <RenamableField
-                    defaultValue={view.name}
-                    onRename={(newName) => {
-                      updateView({
-                        name: newName,
-                      });
-                    }}
-                  />
-                  <Menu position="bottom-end">
-                    <Menu.Target>
-                      <ActionIcon variant="subtle">
-                        <IconDotsVertical size={12} />
-                      </ActionIcon>
-                    </Menu.Target>
-                    <Menu.Dropdown>
-                      <Menu.Item
-                        leftSection={<IconStackPop size={16} />}
-                        onClick={() => duplicateView()}
-                      >
-                        Duplicate
-                      </Menu.Item>
-                      <Menu.Item
-                        color="red"
-                        leftSection={<IconTrash size={16} />}
-                        onClick={() => deleteView()}
-                      >
-                        Delete
-                      </Menu.Item>
-                    </Menu.Dropdown>
-                  </Menu>
-                </Group>
-              )}
-
-              <CheckPicker
-                minimal
-                value={checks}
-                onChange={setChecks}
-                restrictTo={(f) => CHECKS_BY_TYPE[type].includes(f.id)}
-              />
-            </Group>
-            {!!showSaveView && (
-              <Button
-                leftSection={<IconStack2 size={16} />}
-                size="xs"
-                onClick={() => saveView()}
-                variant="default"
-                loading={isInsertingView}
-              >
-                Save View
-              </Button>
             )}
+
+            <CheckPicker
+              minimal
+              value={checks}
+              onChange={setChecks}
+              restrictTo={(f) => CHECKS_BY_TYPE[type].includes(f.id)}
+            />
           </Group>
-        </Stack>
-
-        <Drawer
-          opened={!!selectedRunId}
-          size="xl"
-          keepMounted
-          position="right"
-          title={selectedRun ? formatDateTime(selectedRun.createdAt) : ""}
-          onClose={() => setSelectedRunId(null)}
-        >
-          {runLoading ? (
-            <Loader />
-          ) : (
-            <>
-              {selectedRun?.type === "llm" && (
-                <RunInputOutput
-                  initialRun={selectedRun}
-                  withFeedback={true}
-                  withPlayground={true}
-                  withImportToDataset={true}
-                  withOpenTrace={true}
-                  withShare={true}
-                  mutateLogs={mutateLogs}
-                />
-              )}
-              {selectedRun?.type === "thread" && (
-                <ChatReplay
-                  run={selectedRun}
-                  mutateLogs={mutateLogs}
-                  deleteRun={deleteRun}
-                />
-              )}
-            </>
+          {!!showSaveView && (
+            <Button
+              leftSection={<IconStack2 size={16} />}
+              size="xs"
+              onClick={() => saveView()}
+              variant="default"
+              loading={isInsertingView}
+            >
+              Save View
+            </Button>
           )}
-        </Drawer>
-
-        <DataTable
-          type={type}
-          onRowClicked={(row) => {
-            if (["agent", "chain"].includes(row.type)) {
-              analytics.trackOnce("OpenTrace");
-              router.push(`/traces/${row.id}`);
-            } else {
-              analytics.trackOnce("OpenRun");
-              setSelectedRunId(row.id);
-            }
-          }}
-          key={allColumns[type].length}
-          loading={loading || validating}
-          loadMore={loadMore}
-          availableColumns={allColumns[type]}
-          visibleColumns={visibleColumns}
-          setVisibleColumns={(newState) => {
-            setVisibleColumns((prev) => ({
-              ...prev,
-              ...newState,
-            }));
-
-            setColumnsTouched(true);
-          }}
-          data={logs}
-        />
+        </Group>
       </Stack>
-    </Empty>
+
+      <Drawer
+        opened={!!selectedRunId}
+        size="xl"
+        keepMounted
+        position="right"
+        title={selectedRun ? formatDateTime(selectedRun.createdAt) : ""}
+        onClose={() => setSelectedRunId(null)}
+      >
+        {runLoading ? (
+          <Loader />
+        ) : (
+          <>
+            {selectedRun?.type === "llm" && (
+              <RunInputOutput
+                initialRun={selectedRun}
+                withFeedback={true}
+                withPlayground={true}
+                withImportToDataset={true}
+                withOpenTrace={true}
+                withShare={true}
+                mutateLogs={mutateLogs}
+              />
+            )}
+            {selectedRun?.type === "thread" && (
+              <ChatReplay
+                run={selectedRun}
+                mutateLogs={mutateLogs}
+                deleteRun={deleteRun}
+              />
+            )}
+          </>
+        )}
+      </Drawer>
+
+      <DataTable
+        type={type}
+        onRowClicked={(row) => {
+          if (["agent", "chain"].includes(row.type)) {
+            analytics.trackOnce("OpenTrace");
+            router.push(`/traces/${row.id}`);
+          } else {
+            analytics.trackOnce("OpenRun");
+            setSelectedRunId(row.id);
+          }
+        }}
+        key={allColumns[type].length}
+        loading={loading || validating}
+        loadMore={loadMore}
+        availableColumns={allColumns[type]}
+        visibleColumns={visibleColumns}
+        setVisibleColumns={(newState) => {
+          setVisibleColumns((prev) => ({
+            ...prev,
+            ...newState,
+          }));
+
+          setColumnsTouched(true);
+        }}
+        data={logs}
+      />
+    </Stack>
   );
 }

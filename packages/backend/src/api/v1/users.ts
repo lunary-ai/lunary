@@ -64,6 +64,21 @@ users.get("/me/org", async (ctx: Context) => {
   ctx.body = org;
 });
 
+users.post("/feedback", async (ctx: Context) => {
+  const { text } = ctx.request.body as { text: string };
+  await fetch(
+    "https://hooks.slack.com/services/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",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ text }),
+    },
+  );
+  ctx.body = { ok: true };
+});
+
 users.get("/me", async (ctx: Context) => {
   const { userId } = ctx.state;
 
