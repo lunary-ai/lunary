@@ -21,7 +21,6 @@ import {
   IconBinaryTree2,
   IconBrandOpenai,
   IconChevronDown,
-  IconChevronRight,
   IconCreditCard,
   IconDatabase,
   IconFlask,
@@ -56,14 +55,19 @@ import { IconPlus } from "@tabler/icons-react";
 import { useAuth } from "@/utils/auth";
 import config from "@/utils/config";
 import { useProject, useProjects } from "@/utils/dataHooks";
+import { useDashboards } from "@/utils/dataHooks/dashboards";
 import { useViews } from "@/utils/dataHooks/views";
 import { useDisclosure, useFocusTrap } from "@mantine/hooks";
 import { useEffect, useState } from "react";
-import { DEFAULT_CHARTS, DEFAULT_DASHBOARD, getDefaultDateRange } from "shared";
-import { ResourceName, hasAccess, hasReadAccess, serializeLogic } from "shared";
+import {
+  DEFAULT_CHARTS,
+  ResourceName,
+  getDefaultDateRange,
+  hasAccess,
+  hasReadAccess,
+  serializeLogic,
+} from "shared";
 import { getIconComponent } from "../blocks/IconPicker";
-import { useDashboards } from "@/utils/dataHooks/dashboards";
-import { useQueryState, parseAsString } from "nuqs";
 
 function NavbarLink({
   icon: Icon,
@@ -176,7 +180,7 @@ function DashboardLink({ item }) {
         </ThemeIcon>
       }
       rightSection={
-        pinned?.length ? (
+        pinned?.length && (
           <Group gap="xs" id="dd">
             <Menu position="bottom-end">
               <Menu.Target>
@@ -212,8 +216,6 @@ function DashboardLink({ item }) {
               </Menu.Dropdown>
             </Menu>
           </Group>
-        ) : (
-          <></>
         )
       }
     />
