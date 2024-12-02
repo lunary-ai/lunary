@@ -29,9 +29,7 @@ test("signup flow", async ({ page }) => {
 
   await page.waitForURL("**/analytics");
 
-  await expect(
-    page.getByRole("heading", { name: "Waiting for data..." }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Welcome" })).toBeVisible();
 
   await page.context().storageState({ path: authFile });
 
