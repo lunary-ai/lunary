@@ -237,8 +237,8 @@ export default function Logs() {
 
   const {
     data: logs,
-    isLoading,
-    isValidating,
+    isLoading: runsLoading,
+    isValidating: runsValidating,
     loadMore,
     mutate: mutateLogs,
   } = useProjectInfiniteSWR(`/runs?${serializedChecks}${sortParams}`);
@@ -420,7 +420,7 @@ export default function Logs() {
 
   if (
     !viewLoading &&
-    !loading &&
+    !runsLoading &&
     !projectLoading &&
     project &&
     !project.activated
@@ -614,7 +614,7 @@ export default function Logs() {
           }
         }}
         key={allColumns[type].length}
-        loading={loading || validating}
+        loading={runsLoading || runsValidating}
         loadMore={loadMore}
         availableColumns={allColumns[type]}
         visibleColumns={visibleColumns}
