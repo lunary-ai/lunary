@@ -231,8 +231,6 @@ function AnalyticsChart({
     }
   }, [inViewport]);
 
-  chartType === "pie" && console.log(chartType, data?.data);
-
   return (
     <Box ref={ref}>
       {chartType === "pie" ? (
@@ -561,12 +559,12 @@ export default function Analytics() {
       description: "The average cost of each of your users",
       formatter: formatCost,
     },
-    "users/languages": {
+    "top/languages": {
       chartType: "pie",
-      dataKey: "users/languages",
-      props: ["name", "value"],
+      dataKey: "top/languages",
+      props: ["isoCode", "count"],
       title: "Languages",
-      description: "Language distribution across users",
+      description: "Top languages for your runs",
     },
     "run-types": {
       dataKey: "run-types",
@@ -953,16 +951,16 @@ export default function Analytics() {
 
             <Grid.Col className="chart" span={6}>
               <Droppable
-                key={"users/languages"}
-                onDrop={(item) => handleDropChart(item, "users/languages")}
+                key={"top/languages"}
+                onDrop={(item) => handleDropChart(item, "top/languages")}
                 editMode={editMode}
               >
-                <Draggable id={"users/languages"} editMode={editMode}>
-                  {getChartComponent("users/languages", {
+                <Draggable id={"top/languages"} editMode={editMode}>
+                  {getChartComponent("top/languages", {
                     selectable: editMode,
                     isSelected:
-                      tempDashboardState?.charts.includes("users/languages"),
-                    onSelect: () => toggleChart("users/languages"),
+                      tempDashboardState?.charts.includes("top/languages"),
+                    onSelect: () => toggleChart("top/languages"),
                   })}
                 </Draggable>
               </Droppable>

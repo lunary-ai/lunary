@@ -1,33 +1,21 @@
+import { PieChart as MantinePieChart } from "@mantine/charts";
 import {
   Alert,
   Box,
   Button,
-  Card,
   Center,
-  Group,
   Loader,
-  Tooltip as MantineTooltip,
   Overlay,
   Paper,
   Text,
 } from "@mantine/core";
-import { PieChart as MantinePieChart } from "@mantine/charts";
 import { ResponsiveContainer } from "recharts";
 
-import { formatLargeNumber } from "@/utils/format";
-import { AreaChart, getFilteredChartTooltipPayload } from "@mantine/charts";
-import { IconBolt, IconInfoCircle } from "@tabler/icons-react";
-import {
-  eachDayOfInterval,
-  eachHourOfInterval,
-  eachWeekOfInterval,
-  format,
-  parseISO,
-} from "date-fns";
-import { useMemo } from "react";
-import ErrorBoundary from "../blocks/ErrorBoundary";
+import { getColorFromSeed } from "@/utils/colors";
+import { formatLargeNumber, getFlagEmoji } from "@/utils/format";
+import { getFilteredChartTooltipPayload } from "@mantine/charts";
+import { IconBolt } from "@tabler/icons-react";
 import { openUpgrade } from "../layout/UpgradeModal";
-import { generateSeries } from "./Creator";
 import AnalyticsCard from "./AnalyticsCard";
 
 interface ChartTooltipProps {
@@ -138,12 +126,34 @@ function PieChartComponent({
   cleanData = true,
   colors = ["blue", "pink", "indigo", "green", "violet", "yellow"],
 }: PieChartProps) {
-  useMemo(() => console.log(data), [data]);
   // TODO: Some handler function dependeing on what the server sends back
   let cleanedData = data;
 
-  if (cleanData === false && data?.length) {
-    cleanedData = data;
+  if (data?.length) {
+    cleanedData = data.map((item) => ({
+      name: `${getFlagEmoji(item[props[0]])} ${item[props[0]]}`,
+      value: item[props[1]],
+      color: getColorFromSeed(item[props[0]]),
+    }));
+
+    // Calculate sum and threshold
+    const sum = cleanedData.reduce((acc, item) => acc + item.value, 0);
+    const threshold = sum * 0.05;
+
+    const significantItems = cleanedData.filter(
+      (item) => item.value >= threshold,
+    );
+    const smallItems = cleanedData.filter((item) => item.value < threshold);
+
+    const otherSum = smallItems.reduce((acc, item) => acc + item.value, 0);
+
+    cleanedData = [
+      ...significantItems,
+      {
+        name: "Other",
+        value: otherSum,
+      },
+    ];
   }
 
   const hasData = blocked ? true : cleanedData?.length;
@@ -243,11 +253,11 @@ function PieChartComponent({
           <MantinePieChart
             size={160}
             data={cleanedData || []}
-            withLabelsLine
-            labelsPosition="outside"
-            labelsType="value"
             withLabels
+            labelsPosition="inside"
+            labelsType="percent"
             withTooltip
+
             // tooltipProps={{
             //   content: ({ label, payload }) => (
             //     <ChartTooltip label={label} payload={payload} />

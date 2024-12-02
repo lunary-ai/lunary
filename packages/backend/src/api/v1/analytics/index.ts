@@ -641,23 +641,6 @@ analytics.get(
 );
 
 analytics.get(
-  "/users/languages",
-  checkAccess("analytics", "read"),
-  async (ctx: Context) => {
-    ctx.body = {
-      data: [
-        { name: "English", value: 400, color: "indigo.6" },
-        { name: "French", value: 300, color: "yellow.6" },
-        { name: "Spanish", value: 100, color: "teal.6" },
-        { name: "Japanese", value: 300, color: "red.6" },
-        { name: "Chinese", value: 100, color: "cyan.6" },
-        { name: "Other", value: 200, color: "gray.6" },
-      ],
-    };
-  },
-);
-
-analytics.get(
   "/run-types",
   checkAccess("analytics", "read"),
   async (ctx: Context) => {
@@ -1015,6 +998,53 @@ analytics.get(
     `;
 
     ctx.body = topTemplates;
+  },
+);
+
+analytics.get(
+  "/top/languages",
+  checkAccess("analytics", "read"),
+  async (ctx: Context) => {
+    const { projectId } = ctx.state;
+    const {
+      datesQuery,
+      filteredRunsQuery,
+      granularity,
+      timeZone,
+      localCreatedAt,
+      startDate,
+      endDate,
+    } = parseQuery(projectId, ctx.query);
+
+    const data = await sql`
+        with dates as (
+          ${datesQuery}
+        ),
+        filtered_runs as (
+          ${filteredRunsQuery}
+        )
+        select 
+          lang->>'isoCode' as iso_code,
+          count(distinct r.id) as count
+        from 
+          filtered_runs r 
+          join evaluation_result_v2 er on r.id = er.run_id
+          join evaluator e on er.evaluator_id = e.id
+          cross join lateral (
+              select jsonb_array_elements(er.result->'input')
+              union all
+              select jsonb_array_elements(er.result->'output')
+          ) as t(lang)
+        where 
+          e.type = 'language'
+          and lang->>'isoCode' is not null
+        group by 
+          lang->>'isoCode'
+        order by 
+          count(distinct r.id) desc;
+        `;
+
+    ctx.body = { data };
   },
 );
 
