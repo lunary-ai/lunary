@@ -209,9 +209,7 @@ export default function Logs() {
 
   const [type, setType] = useQueryState<string>(
     "type",
-    parseAsStringEnum(["llm", "trace", "thread"]).withDefault(
-      (router.query.type as NonNullable<"llm" | "trace" | "thread">) || "llm",
-    ),
+    parseAsStringEnum(["llm", "trace", "thread"]).withDefault("llm"),
   );
 
   const [checks, setChecks] = useQueryState(
