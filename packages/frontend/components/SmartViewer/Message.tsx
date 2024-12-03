@@ -31,16 +31,14 @@ import ProtectedText from "../blocks/ProtectedText";
 import { RenderJson } from "./RenderJson";
 import classes from "./index.module.css";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 
 import { SentimentEnrichment2 } from "@/utils/enrichment";
 import { getFlagEmoji, getLanguageName } from "@/utils/format";
 import { openConfirmModal } from "@mantine/modals";
 import HighlightPii from "./HighlightPii";
 import AppUserAvatar from "../blocks/AppUserAvatar";
-import { useDisclosure, useLocalStorage } from "@mantine/hooks";
-import { useAnalyticsChartData } from "@/utils/dataHooks/analytics";
-import { deserializeDateRange, getDefaultDateRange } from "@/pages/analytics";
+import { AudioPlayer } from "./AudioPlayer";
 
 const ghostTextAreaStyles = {
   variant: "unstyled",
@@ -122,6 +120,8 @@ function FunctionCallMessage({ data, color, compact, piiDetection }) {
       data={data}
       compact={compact}
       piiDetection={piiDetection}
+      editable={false}
+      onChange={() => {}}
     />
   );
 }
@@ -266,7 +266,30 @@ function MiniatureImage({ src }) {
   );
 }
 
-function ImageMessage({ data, compact }) {
+// Based on OpenAI's ChatCompletionContentPart
+type ChatMessageBlock =
+  | {
+      type: "text";
+      text: string;
+    }
+  | {
+      type: "image_url";
+      image_url: { url: string };
+    }
+  | {
+      type: "input_audio";
+      input_audio: { data: string; format: "wav" | "mp3" };
+    };
+
+function BlockMessage({
+  data,
+  compact,
+}: {
+  data: {
+    content: ChatMessageBlock[];
+  };
+  compact: boolean;
+}) {
   return (
     <Code className={classes.textMessage}>
       <Stack gap={compact ? "5" : "md"}>
@@ -278,6 +301,14 @@ function ImageMessage({ data, compact }) {
               <MiniatureImage key={index} src={item.imageUrl.url} />
             ) : (
               <ResponsiveImage key={index} src={item.imageUrl.url} />
+            );
+          } else if (item.type === "input_audio") {
+            return (
+              <AudioPlayer
+                key={index}
+                src={`data:audio/${item.input_audio.format};base64,${item.input_audio.data}`}
+                compact={compact}
+              />
             );
           }
           return null;
@@ -319,7 +350,7 @@ function ChatMessageContent({
 }) {
   const textContent = data?.text || data?.content;
   const hasTextContent = typeof textContent === "string";
-  const hasImageContent = Array.isArray(data?.content);
+  const hasBlockContent = Array.isArray(data?.content);
   const hasFunctionCall = data?.functionCall;
   const hasToolCalls = data?.toolCalls || data?.tool_calls;
 
@@ -362,7 +393,7 @@ function ChatMessageContent({
         />
       )}
 
-      {hasImageContent && <ImageMessage data={data} compact={compact} />}
+      {hasBlockContent && <BlockMessage data={data} compact={compact} />}
 
       {hasFunctionCall && (
         <FunctionCallMessage

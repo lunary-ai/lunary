@@ -13,6 +13,7 @@ import Router from "koa-router";
 import { hasAccess, roles } from "shared";
 import { z } from "zod";
 import { signJWT } from "./auth/utils";
+import { sendSlackMessage } from "@/src/utils/notifications";
 
 const users = new Router({
   prefix: "/users",
@@ -66,16 +67,7 @@ users.get("/me/org", async (ctx: Context) => {
 
 users.post("/feedback", async (ctx: Context) => {
   const { text } = ctx.request.body as { text: string };
-  await fetch(
-    "https://hooks.slack.com/services/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",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ text }),
-    },
-  );
+  await sendSlackMessage(text, "feedback");
   ctx.body = { ok: true };
 });
 

@@ -57,8 +57,8 @@ const IntegrationButton = ({
 
 const CODE_SAMPLES = {
   openai: {
-    js: `import { monitorOpenAI } from "lunary/openai"
-import OpenAI from "openai"
+    js: `import OpenAI from "openai"
+import { monitorOpenAI } from "lunary/openai"
 
 const openai = monitorOpenAI(new OpenAI())
 
@@ -74,8 +74,21 @@ lunary.monitor(client)
 
 chat_completion = client.chat.completions.create(
     model="gpt-4",
-    messages=[{"role": "user", "content": "Say this is a test"}]
+    messages=[{"role": "user", "content": "Hello!"}]
 )`,
+  },
+  anthropic: {
+    js: `
+import Anthropic from "anthropic"
+import { monitorAnthropic } from "lunary/anthropic"
+
+const anthropic = monitorAnthropic(new Anthropic())
+
+const result = await anthropic.messages.create({
+  model: "claude-3-5-sonnet-20240620",
+  messages: [{ role: "user", content: "Hello!" }]
+})`,
+    py: `coming soon`,
   },
   langchain: {
     js: `import { ChatOpenAI } from "langchain/chat_models/openai"
@@ -102,7 +115,7 @@ litellm.failure_callback = ["lunary"]
 
 response = completion(
     model="gpt-4", 
-    messages=[{"role": "user", "content": "Hi - i'm openai"}]
+    messages=[{"role": "user", "content": "Hello!"}]
 )`,
   },
   custom: {
@@ -503,18 +516,7 @@ export function EmptyOnboarding() {
 
     const content = {
       openai: <IntegrationStepper integration="openai" />,
-      anthropic: (
-        <Stack>
-          <Alert icon={<IconInfoCircle size={32} />} color="blue">
-            <Text size="md">
-              We're working hard on the Anthropic integration. It will be
-              available soon! In the meantime, you can use our LiteLLM
-              integration to connect to Anthropic.
-            </Text>
-          </Alert>
-          <RequestIntegrationForm integrationName="Anthropic" />
-        </Stack>
-      ),
+      anthropic: <IntegrationStepper integration="anthropic" />,
       langchain: <IntegrationStepper integration="langchain" />,
       llamaindex: (
         <Stack>
