@@ -31,16 +31,14 @@ import ProtectedText from "../blocks/ProtectedText";
 import { RenderJson } from "./RenderJson";
 import classes from "./index.module.css";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 
 import { SentimentEnrichment2 } from "@/utils/enrichment";
 import { getFlagEmoji, getLanguageName } from "@/utils/format";
 import { openConfirmModal } from "@mantine/modals";
 import HighlightPii from "./HighlightPii";
 import AppUserAvatar from "../blocks/AppUserAvatar";
-import { useDisclosure, useLocalStorage } from "@mantine/hooks";
-import { useAnalyticsChartData } from "@/utils/dataHooks/analytics";
-import { deserializeDateRange, getDefaultDateRange } from "@/pages/analytics";
+import { AudioPlayer } from "./AudioPlayer";
 
 const ghostTextAreaStyles = {
   variant: "unstyled",
@@ -122,6 +120,8 @@ function FunctionCallMessage({ data, color, compact, piiDetection }) {
       data={data}
       compact={compact}
       piiDetection={piiDetection}
+      editable={false}
+      onChange={() => {}}
     />
   );
 }
@@ -266,10 +266,33 @@ function MiniatureImage({ src }) {
   );
 }
 
-function ImageMessage({ data, compact }) {
+// Based on OpenAI's ChatCompletionContentPart
+type ChatMessageBlock =
+  | {
+      type: "text";
+      text: string;
+    }
+  | {
+      type: "image_url";
+      imageUrl: { url: string };
+    }
+  | {
+      type: "input_audio";
+      inputAudio: { data: string; format: "wav" | "mp3" };
+    };
+
+function BlockMessage({
+  data,
+  compact,
+}: {
+  data: {
+    content: ChatMessageBlock[];
+  };
+  compact: boolean;
+}) {
   return (
     <Code className={classes.textMessage}>
-      <Stack gap={compact ? "5" : "md"}>
+      <Stack gap={compact ? 4 : "sm"}>
         {data.content.map((item, index) => {
           if (item.type === "text") {
             return <ProtectedText key={index}>{item.text}</ProtectedText>;
@@ -278,6 +301,14 @@ function ImageMessage({ data, compact }) {
               <MiniatureImage key={index} src={item.imageUrl.url} />
             ) : (
               <ResponsiveImage key={index} src={item.imageUrl.url} />
+            );
+          } else if (item.type === "input_audio") {
+            return (
+              <AudioPlayer
+                key={index}
+                src={`data:audio/${item.inputAudio.format};base64,${item.inputAudio.data}`}
+                compact={compact}
+              />
             );
           }
           return null;
@@ -319,9 +350,31 @@ function ChatMessageContent({
 }) {
   const textContent = data?.text || data?.content;
   const hasTextContent = typeof textContent === "string";
-  const hasImageContent = Array.isArray(data?.content);
+  const hasBlockContent = Array.isArray(data?.content);
   const hasFunctionCall = data?.functionCall;
   const hasToolCalls = data?.toolCalls || data?.tool_calls;
+  const hasAudio = data?.audio;
+  const hasRefusal = data?.refusal && data?.content === null;
+
+  if (hasRefusal) {
+    return (
+      <Paper
+        p="xs"
+        bg="red.1"
+        c="red.8"
+        withBorder
+        styles={{
+          root: {
+            borderColor: "var(--mantine-color-red-3)",
+          },
+        }}
+      >
+        <Text size="sm" fs="italic">
+          {data.refusal}
+        </Text>
+      </Paper>
+    );
+  }
 
   let renderTextMessage = hasTextContent && (!compact || !hasToolCalls);
   if (hasTextContent && textContent.length === 0 && !editable) {
@@ -362,7 +415,21 @@ function ChatMessageContent({
         />
       )}
 
-      {hasImageContent && <ImageMessage data={data} compact={compact} />}
+      {hasAudio && (
+        <Code className={classes.textMessage}>
+          <AudioPlayer
+            src={
+              data.audio.data
+                ? `data:audio/${data.audio.format || "wav"};base64,${data.audio.data}`
+                : undefined
+            }
+            compact={compact}
+            transcript={data.audio.transcript}
+          />
+        </Code>
+      )}
+
+      {hasBlockContent && <BlockMessage data={data} compact={compact} />}
 
       {hasFunctionCall && (
         <FunctionCallMessage

@@ -150,3 +150,9 @@
   border-radius: var(--mantine-radius-lg);
   max-width: 430px;
 }
+
+.audioPlayer {
+  background-color: var(--mantine-color-default);
+  border-radius: var(--mantine-radius-sm);
+  width: 100%;
+}
