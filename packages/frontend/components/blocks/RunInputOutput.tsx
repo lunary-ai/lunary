@@ -24,8 +24,11 @@ import {
   IconDotsVertical,
   IconEye,
   IconEyeClosed,
+  IconFileMusic,
   IconInfoCircle,
+  IconMicrophone,
   IconPencilShare,
+  IconSpeakerphone,
   IconTrash,
 } from "@tabler/icons-react";
 import Link from "next/link";
@@ -118,9 +121,40 @@ function RenderTools({ tools }) {
 const PARAMS = [
   { key: "temperature", name: "Temperature" },
   { key: "maxTokens", name: "Max tokens" },
+  { key: "maxCompletionTokens", name: "Max completion tokens" },
   { key: "topP", name: "Top P" },
   { key: "topK", name: "Top K" },
+  {
+    key: "audio",
+    name: "Audio",
+    render: (value) => (
+      <Group gap={4}>
+        {value.voice && (
+          <Badge
+            leftSection={<IconSpeakerphone size={14} />}
+            pl={7}
+            variant="light"
+            color="grape"
+          >
+            Voice: {value.voice}
+          </Badge>
+        )}
+        {value.format && (
+          <Badge
+            leftSection={<IconFileMusic size={14} />}
+            variant="light"
+            pl={7}
+            color="violet"
+          >
+            {value.format}
+          </Badge>
+        )}
+      </Group>
+    ),
+  },
+  { key: "modalities", name: "Modalities" },
   { key: "logitBias", name: "Logit bias" },
+
   { key: "presencePenalty", name: "Presence penalty" },
   { key: "frequencyPenalty", name: "Frequency penalty" },
   { key: "stop", name: "Stop" },
