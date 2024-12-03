@@ -37,7 +37,8 @@ export function AudioPlayer({
     };
   }, []);
 
-  const togglePlay = () => {
+  const togglePlay = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
     if (!audioRef.current) return;
 
     if (isPlaying) {
@@ -84,7 +85,7 @@ export function AudioPlayer({
         p={compact ? 0 : 6}
       >
         <audio ref={audioRef} src={src} />
-        <Group gap={3}>
+        <Group gap={3} style={{ overflow: "hidden" }}>
           <ActionIcon
             variant="subtle"
             onClick={togglePlay}
@@ -102,6 +103,7 @@ export function AudioPlayer({
             onChange={handleSliderChange}
             max={duration}
             min={0}
+            showLabelOnHover={false}
             size="xs"
             style={{ flex: 1 }}
           />
