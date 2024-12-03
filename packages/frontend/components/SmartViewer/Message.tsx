@@ -274,11 +274,11 @@ type ChatMessageBlock =
     }
   | {
       type: "image_url";
-      image_url: { url: string };
+      imageUrl: { url: string };
     }
   | {
       type: "input_audio";
-      input_audio: { data: string; format: "wav" | "mp3" };
+      inputAudio: { data: string; format: "wav" | "mp3" };
     };
 
 function BlockMessage({
@@ -292,7 +292,7 @@ function BlockMessage({
 }) {
   return (
     <Code className={classes.textMessage}>
-      <Stack gap={compact ? "5" : "md"}>
+      <Stack gap={compact ? 4 : "sm"}>
         {data.content.map((item, index) => {
           if (item.type === "text") {
             return <ProtectedText key={index}>{item.text}</ProtectedText>;
@@ -306,7 +306,7 @@ function BlockMessage({
             return (
               <AudioPlayer
                 key={index}
-                src={`data:audio/${item.input_audio.format};base64,${item.input_audio.data}`}
+                src={`data:audio/${item.inputAudio.format};base64,${item.inputAudio.data}`}
                 compact={compact}
               />
             );
@@ -353,6 +353,28 @@ function ChatMessageContent({
   const hasBlockContent = Array.isArray(data?.content);
   const hasFunctionCall = data?.functionCall;
   const hasToolCalls = data?.toolCalls || data?.tool_calls;
+  const hasAudio = data?.audio;
+  const hasRefusal = data?.refusal && data?.content === null;
+
+  if (hasRefusal) {
+    return (
+      <Paper
+        p="xs"
+        bg="red.1"
+        c="red.8"
+        withBorder
+        styles={{
+          root: {
+            borderColor: "var(--mantine-color-red-3)",
+          },
+        }}
+      >
+        <Text size="sm" fs="italic">
+          {data.refusal}
+        </Text>
+      </Paper>
+    );
+  }
 
   let renderTextMessage = hasTextContent && (!compact || !hasToolCalls);
   if (hasTextContent && textContent.length === 0 && !editable) {
@@ -391,6 +413,20 @@ function ChatMessageContent({
           onChange={onChange}
           editable={editable}
         />
+      )}
+
+      {hasAudio && (
+        <Code className={classes.textMessage}>
+          <AudioPlayer
+            src={
+              data.audio.data
+                ? `data:audio/${data.audio.format || "wav"};base64,${data.audio.data}`
+                : undefined
+            }
+            compact={compact}
+            transcript={data.audio.transcript}
+          />
+        </Code>
       )}
 
       {hasBlockContent && <BlockMessage data={data} compact={compact} />}

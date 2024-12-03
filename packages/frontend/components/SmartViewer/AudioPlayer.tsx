@@ -1,14 +1,18 @@
-import { ActionIcon, Group, Paper, Slider, Text } from "@mantine/core";
+import { ActionIcon, Box, Group, Paper, Slider, Text } from "@mantine/core";
 import { IconPlayerPause, IconPlayerPlay } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import classes from "./index.module.css";
 
 interface AudioPlayerProps {
-  src: string;
+  src?: string;
   compact?: boolean;
+  transcript?: string;
 }
-
-export function AudioPlayer({ src, compact = false }: AudioPlayerProps) {
+export function AudioPlayer({
+  src,
+  compact = false,
+  transcript,
+}: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -56,37 +60,65 @@ export function AudioPlayer({ src, compact = false }: AudioPlayerProps) {
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
-  return (
-    <Paper className={classes.audioPlayer} p="xs">
-      <audio ref={audioRef} src={src} />
-      <Group gap="xs">
-        <ActionIcon
-          variant="subtle"
-          onClick={togglePlay}
-          size={compact ? "sm" : "md"}
-        >
-          {isPlaying ? (
-            <IconPlayerPause size={16} />
-          ) : (
-            <IconPlayerPlay size={16} />
-          )}
-        </ActionIcon>
-
-        <Slider
-          value={currentTime}
-          onChange={handleSliderChange}
-          max={duration}
-          min={0}
-          size="xs"
-          style={{ flex: 1 }}
-        />
-
-        {!compact && (
-          <Text size="xs" c="dimmed" w={45}>
-            {formatTime(currentTime)}
-          </Text>
+  if (!src) {
+    return (
+      <Text size="sm" c="dimmed" fs="italic">
+        &lt;audio message&gt;
+        {transcript && (
+          <>
+            <br />
+            <Text size="xs" mt={4}>
+              {transcript}
+            </Text>
+          </>
         )}
-      </Group>
-    </Paper>
+      </Text>
+    );
+  }
+
+  return (
+    <>
+      <Paper
+        className={classes.audioPlayer}
+        maw={compact ? 220 : undefined}
+        p={compact ? 0 : 6}
+      >
+        <audio ref={audioRef} src={src} />
+        <Group gap={3}>
+          <ActionIcon
+            variant="subtle"
+            onClick={togglePlay}
+            size={compact ? "sm" : "md"}
+          >
+            {isPlaying ? (
+              <IconPlayerPause size={16} />
+            ) : (
+              <IconPlayerPlay size={16} />
+            )}
+          </ActionIcon>
+
+          <Slider
+            value={currentTime}
+            onChange={handleSliderChange}
+            max={duration}
+            min={0}
+            size="xs"
+            style={{ flex: 1 }}
+          />
+
+          <Text size="xs" c="dimmed" px={compact ? 6 : 8}>
+            {currentTime === 0 && !isPlaying
+              ? formatTime(duration)
+              : formatTime(currentTime)}
+          </Text>
+        </Group>
+      </Paper>
+
+      {transcript && (
+        <Text size="xs" mt={compact ? 6 : "sm"} c="gray">
+          {transcript}
+        </Text>
+      )}
+    </>
   );
 }
