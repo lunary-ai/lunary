@@ -1,11 +1,12 @@
 const channels = {
   billing: process.env.SLACK_BILLING_CHANNEL,
   users: process.env.SLACK_USERS_CHANNEL,
+  feedback: process.env.SLACK_FEEDBACK_CHANNEL,
 };
 
 export const sendSlackMessage = async (
   msg: string,
-  thread: "billing" | "users",
+  thread: "billing" | "users" | "feedback",
 ) => {
   if (!process.env.SLACK_BOT_TOKEN) return;
 
