@@ -8,6 +8,7 @@ export const DEFAULT_CHARTS = [
   "users/new",
   "users/active",
   "users/average-cost",
+  "top/languages",
   "run-types",
   "latency",
   "feedback-ratio",

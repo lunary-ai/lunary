@@ -11,7 +11,7 @@ interface Dashboard {
   name: string;
   pinned: boolean;
   description: string | null;
-  charts: string[];
+  charts: string[]; // TODO: array of charts
   filters: {
     checks: string;
     dateRange: [string, string];
@@ -21,43 +21,39 @@ interface Dashboard {
 }
 
 export function useDashboards() {
-  const { user } = useUser();
-  const { data, isLoading, mutate } = useProjectSWR<Dashboard[]>(
-    hasAccess(user?.role, "dashboards", "list") ? `/dashboards` : null,
-  );
+  const { data, isLoading, mutate } = useProjectSWR<Dashboard[]>("/dashboards");
 
   const { trigger: insert, isMutating: isInserting } = useProjectMutation(
     `/dashboards`,
     fetcher.post,
+    { onSuccess: () => mutate() },
   );
 
   return {
-    dashboards: (data || []) as Dashboard[],
+    dashboards: data || [],
+    isLoading,
     insert,
     isInserting,
     mutate,
-    isLoading,
   };
 }
 
-export function useDashboard(id: string | null, initialData?: any) {
-  const { mutate: mutateViews } = useDashboards();
+export function useDashboard(id: string) {
+  const { mutate: mutateDashboards } = useDashboards();
 
   const {
     data: dashboard,
     isLoading,
     mutate,
-  } = useProjectSWR<Dashboard>(id && `/dashboards/${id}`, {
-    fallbackData: initialData,
-  });
+  } = useProjectSWR<Dashboard>(`/dashboards/${id}`);
 
   const { trigger: update } = useProjectMutation(
-    id && `/dashboards/${id}`,
+    `/dashboards/${id}`,
     fetcher.patch,
     {
       onSuccess(data) {
         mutate(data);
-        mutateViews();
+        mutateDashboards();
       },
     },
   );
@@ -68,16 +64,16 @@ export function useDashboard(id: string | null, initialData?: any) {
     {
       revalidate: false,
       onSuccess() {
-        mutateViews();
+        mutateDashboards();
       },
     },
   );
 
   return {
-    dashboard: dashboard as Dashboard,
+    dashboard,
     update,
     remove,
     mutate,
-    loading: isLoading,
+    isLoading,
   };
 }

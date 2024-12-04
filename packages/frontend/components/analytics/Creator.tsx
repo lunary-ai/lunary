@@ -67,7 +67,7 @@ import LineChart from "@/components/analytics/LineChart";
 import ErrorBoundary from "../blocks/ErrorBoundary";
 import { Selectable } from "./Wrappers";
 import AnalyticsCard from "./AnalyticsCard";
-import { DateRangeSelect } from "@/pages/dashboards/[id]";
+import { DateRangeSelect } from "@/pages/dashboards/old-[id]";
 import { DatePickerInput } from "@mantine/dates";
 
 const COLOR_PALETTE = [
@@ -1007,7 +1007,6 @@ export function CustomChartCreator({
   onConfirm: any;
   config?: any;
 }) {
-  console.log(config);
   const [name, setName] = useState(config?.name || "");
   const [metric, setMetric] = useState(config?.props?.metric || "users/active");
 
@@ -1018,8 +1017,8 @@ export function CustomChartCreator({
     config?.props?.secondDimensionKey || "date",
   );
 
-  const startDate = new Date("2024-10-21T16:00:00.000Z");
-  const endDate = new Date("2024-10-29T15:59:59.999Z");
+  const startDate = new Date("2023-10-21T16:00:00.000Z");
+  const endDate = new Date("2025-10-29T15:59:59.999Z");
 
   const {
     data,
@@ -1035,7 +1034,6 @@ export function CustomChartCreator({
     secondDimensionKey,
   );
 
-  // Fetch unique props keys for the project
   const { props, isLoading: usersPropsLoading } = useExternalUsersProps();
 
   useEffect(() => {

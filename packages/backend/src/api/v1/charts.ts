@@ -19,8 +19,9 @@ const chartSchema = z.object({
 charts.get("/", checkAccess("charts", "list"), async (ctx: Context) => {
   const { projectId } = ctx.state;
 
-  ctx.body = await sql`select * from chart
-        where project_id = ${projectId} 
+  // where project_id = ${projectId}
+  ctx.body = await sql`
+  select * from chart
         order by updated_at desc`;
 });
 

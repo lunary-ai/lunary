@@ -68,15 +68,27 @@ import {
   serializeLogic,
 } from "shared";
 import { getIconComponent } from "../blocks/IconPicker";
+import DashboardsSidebarButton from "../analytics/DashboardsSidebarButton";
 
-function NavbarLink({
+interface NavbarLinkProps {
+  icon: any;
+  label: string;
+  link: string;
+  rightSection?: any;
+  soon?: boolean;
+  onClick?: (event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
+  disabled?: boolean;
+}
+
+export function NavbarLink({
   icon: Icon,
   label,
   link,
-  soon,
-  onClick,
+  rightSection,
+  soon = false,
+  onClick = () => {},
   disabled = false,
-}) {
+}: NavbarLinkProps) {
   const router = useRouter();
 
   // For logs pages, we want to compare the view param to see if a view is selected
@@ -116,6 +128,7 @@ function NavbarLink({
           <Icon size={16} opacity={0.7} />
         </ThemeIcon>
       }
+      rightSection={rightSection}
     />
   );
 }
@@ -320,7 +333,7 @@ function MenuSection({ item }) {
           .map((subItem) => {
             if (subItem.label === "Dashboards") {
               return (
-                <DashboardLink
+                <DashboardsSidebarButton
                   item={subItem}
                   key={subItem.link || subItem.label}
                 />
