@@ -1,23 +1,22 @@
-import { hasAccess } from "shared";
-import { useProjectMutation, useProjectSWR, useUser } from ".";
+import { useProjectMutation, useProjectSWR } from ".";
 import { fetcher } from "../fetcher";
 
 // TODO: zod schema in shared package, share between frontend and backend
-interface Dashboard {
+export interface Dashboard {
   id: string;
   createdAt: string;
   updatedAt: string;
   projectId: string;
-  name: string;
-  pinned: boolean;
-  description: string | null;
-  charts: string[]; // TODO: array of charts
-  filters: {
-    checks: string;
-    dateRange: [string, string];
-    granularity: "daily" | "weekly" | "monthly";
-  };
   ownerId: string;
+  name: string;
+  description: string | null;
+  filters: {
+    checks?: string;
+    dateRange?: [string, string];
+    granularity?: "daily" | "weekly" | "monthly";
+  };
+  isHome: boolean;
+  charts: string[];
 }
 
 export function useDashboards() {

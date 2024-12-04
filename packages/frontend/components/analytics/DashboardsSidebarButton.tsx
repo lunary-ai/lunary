@@ -1,6 +1,11 @@
 import { useDashboards } from "@/utils/dataHooks/dashboards";
-import { ActionIcon, Group, Menu } from "@mantine/core";
-import { IconAnalyze, IconChevronDown } from "@tabler/icons-react";
+import { ActionIcon, Group, Menu, Text } from "@mantine/core";
+import {
+  IconAnalyze,
+  IconChevronDown,
+  IconHome,
+  IconHome2,
+} from "@tabler/icons-react";
 import { useRef } from "react";
 import { NavbarLink } from "../layout/Sidebar";
 import { useRouter } from "next/router";
@@ -10,16 +15,18 @@ export default function DashboardsSidebarButton() {
   const router = useRouter();
   const menuTargetRef = useRef<HTMLElement>(null);
 
+  const homeDashboardId = dashboards.find((dashboard) => dashboard.isHome)?.id;
+
   function DashboardsMenu() {
     return (
-      <Menu position="bottom-end">
+      <Menu position="bottom-end" withArrow={false} offset={3}>
         <Menu.Target ref={menuTargetRef}>
           <ActionIcon variant="subtle">
             <IconChevronDown size={12} />
           </ActionIcon>
         </Menu.Target>
         <Menu.Dropdown>
-          {dashboards.map(({ id, name }) => (
+          {dashboards.map(({ id, name, isHome }) => (
             <Menu.Item
               key={id}
               onClick={(event) => {
@@ -27,7 +34,10 @@ export default function DashboardsSidebarButton() {
                 router.push(`/dashboards/${id}`);
               }}
             >
-              {name}
+              <Group>
+                <Text style={{ overflow: "hidden" }}>{name}</Text>
+                {isHome && <IconHome fill="black" stroke="2px" size={18} />}
+              </Group>
             </Menu.Item>
           ))}
         </Menu.Dropdown>
@@ -40,16 +50,13 @@ export default function DashboardsSidebarButton() {
       <NavbarLink
         onClick={(event) => {
           const target = event.target as HTMLElement;
-          console.log(target);
-          console.log(menuTargetRef);
           if (menuTargetRef.current?.contains(target)) {
-            console.log("contains");
             event.preventDefault();
           }
         }}
         label="Dashboards"
         icon={IconAnalyze}
-        link="/dashboards"
+        link={`/dashboards/${homeDashboardId}`}
         rightSection={<DashboardsMenu />}
       />
     </Group>

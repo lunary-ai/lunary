@@ -23,29 +23,20 @@ dashboards.get("/", async (ctx: Context) => {
     where 
       project_id = ${projectId} 
     order by 
-      pinned desc, 
+      is_home desc, 
       name
   `;
 
-  // TODO
-  ctx.body = dashboards.map((dashboard) => ({
-    ...dashboard,
-    charts: DEFAULT_CHARTS,
-  }));
-
-  // ctx.body = dashboards;
+  ctx.body = dashboards;
 });
 
 dashboards.get("/:id", async (ctx: Context) => {
-  const { projectId } = ctx.state;
   const { id: dashboardId } = z
     .object({ id: z.string().uuid() })
     .parse(ctx.params);
 
   const [dashboard] =
-    await sql`select * from dashboard where project_id = ${projectId} and id = ${dashboardId}`;
-
-  dashboard.charts = DEFAULT_CHARTS; // TODO: fetch charts
+    await sql`select * from dashboard where id = ${dashboardId}`;
 
   ctx.body = dashboard;
 });
@@ -55,33 +46,25 @@ dashboards.post("/", async (ctx: Context) => {
   const bodySchema = z.object({
     name: z.string(),
     description: z.string().optional().nullable().default(null),
-    filters: z.any(), // TODO: proper schema everywhere in the app
-    pinned: z.boolean().optional().nullable().default(false),
-    charts: z
-      .array(z.any())
-      .nullable()
-      .optional()
-      .default(DEFAULT_CHARTS.map()), // TODO
+    filters: z.any(),
+    isHome: z.boolean().optional().nullable().default(false),
+    charts: z.array(z.any()).nullable().optional().default(DEFAULT_CHARTS),
   });
 
-  // TODO: rename chart to `insight`
-
-  type Chart = z.infer<typeof chartSchema>;
-
-  const { name, charts, description, filters, pinned } = bodySchema.parse(
+  const { name, charts, description, filters, isHome } = bodySchema.parse(
     ctx.request.body,
   );
 
   const insertedDashboard = sql.begin(async (sql) => {
-    if (pinned) {
+    if (isHome) {
       await sql`
         update 
           dashboard
         set 
-          pinned = false
+          is_home = false
         where 
           project_id = ${projectId}
-          and pinned = true
+          and is_home = true
       `;
     }
 
@@ -92,16 +75,11 @@ dashboards.post("/", async (ctx: Context) => {
         name,
         description,
         filters,
-        pinned,
+        isHome,
+        charts,
       })}
       returning *
     `;
-
-    for (const chart of charts) {
-    }
-
-    // TODO: insert charts
-    // TODO: charts should be in their own table, not in the dashboard table
 
     return insertedDashboard;
   });
@@ -114,15 +92,15 @@ dashboards.patch("/:id", async (ctx: Context) => {
   const { id: dashboardId } = z
     .object({ id: z.string().uuid() })
     .parse(ctx.params);
+
   const bodySchema = z.object({
     name: z.string().optional(),
-    description: z.string().optional(),
+    description: z.string().optional().nullable(),
     filters: z.any(),
-    pinned: z.boolean().optional(),
-    charts: z.array(z.string()).optional().default([]),
+    isHome: z.boolean().optional(),
+    charts: z.array(z.string()).optional(),
   });
-
-  const { name, charts, description, filters, pinned } = bodySchema.parse(
+  const { name, charts, description, filters, isHome } = bodySchema.parse(
     ctx.request.body,
   );
 
@@ -131,19 +109,21 @@ dashboards.patch("/:id", async (ctx: Context) => {
     name,
     description,
     filters,
-    pinned,
+    isHome,
+    charts,
   });
 
   const updatedDashboard = sql.begin(async (sql) => {
-    if (pinned) {
+    if (isHome) {
       await sql`
         update 
           dashboard
         set 
-          pinned = false
+          is_home = false
         where 
           project_id = ${projectId}
-          and pinned = true
+          and is_home = true
+          and id != ${dashboardId}
       `;
     }
 
@@ -156,8 +136,6 @@ dashboards.patch("/:id", async (ctx: Context) => {
         id = ${dashboardId}
       returning *
     `;
-
-    //TODO: update charts
 
     return updatedDashboard;
   });

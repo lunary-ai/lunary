@@ -78,18 +78,15 @@ analytics.get(
   },
 );
 
-analytics.get(
-  "/costs",
-  checkAccess("analytics", "read"),
-  async (ctx: Context) => {
-    const { projectId } = ctx.state;
-    const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
-      projectId,
-      ctx.query,
-    );
+analytics.get("/costs", async (ctx: Context) => {
+  const { projectId } = ctx.state;
+  const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
+    projectId,
+    ctx.query,
+  );
 
-    if (granularity === "weekly") {
-      const res = await sql`
+  if (granularity === "weekly") {
+    const res = await sql`
         with dates as (
           ${datesQuery}
         ),
@@ -118,10 +115,10 @@ analytics.get(
         order by
           date;
       `;
-      ctx.body = { data: res };
-      return;
-    } else {
-      const res = await sql`
+    ctx.body = { data: res };
+    return;
+  } else {
+    const res = await sql`
         with dates as (
           ${datesQuery}
         ),
@@ -141,11 +138,10 @@ analytics.get(
         order by d.date;
     `;
 
-      ctx.body = { data: res };
-      return;
-    }
-  },
-);
+    ctx.body = { data: res };
+    return;
+  }
+});
 
 analytics.get(
   "/errors",

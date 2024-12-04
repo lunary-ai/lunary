@@ -7,7 +7,8 @@ create table dashboard (
     name text not null,
     description text null,
     filters jsonb not null,
-    pinned boolean default false not null,
+   	is_home boolean default false not null,
+		charts jsonb default '[]' not null,
     constraint fk_checklist_owner_id foreign key (owner_id) references account (id) on delete set null,
     constraint fk_checklist_project_id foreign key (project_id) references project (id) on delete cascade
 );

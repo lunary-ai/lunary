@@ -104,6 +104,12 @@ export function NavbarLink({
       }
       return router.asPath.startsWith(link);
     }
+    if (
+      router.pathname.startsWith("/dashboards/[id]") &&
+      link.startsWith("/dashboards")
+    ) {
+      return true;
+    }
     return router.pathname.startsWith(link);
   })();
 
@@ -129,108 +135,6 @@ export function NavbarLink({
         </ThemeIcon>
       }
       rightSection={rightSection}
-    />
-  );
-}
-
-function DashboardLink({ item }) {
-  const router = useRouter();
-  const { dashboards, insert: insertDashboard } = useDashboards();
-
-  const pinned = dashboards.filter((d) => d.pinned);
-
-  const active = (() => {
-    const linkParams = new URLSearchParams(item.link.split("?")[1]);
-    if (router.pathname.startsWith("/logs")) {
-      if (router.asPath.includes(`view=`)) {
-        const viewParam = linkParams.get("view");
-        if (viewParam) {
-          return router.asPath.includes(`view=${viewParam}`);
-        }
-      }
-      return router.asPath.startsWith(item.link);
-    }
-    return router.pathname.startsWith(item.link);
-  })();
-
-  async function createDashboard() {
-    const item = await insertDashboard({
-      name: `Dashboard ${dashboards?.length || 1}`,
-      charts: DEFAULT_CHARTS,
-      pinned: false,
-      filters: {
-        checks: "",
-        granularity: "daily",
-        dateRange: getDefaultDateRange(),
-      },
-    });
-    router.push(`/dashboards/${item.id}`);
-  }
-
-  return (
-    <NavLink
-      w="100%"
-      href={item.link}
-      component={Link}
-      pl={5}
-      styles={{
-        label: {
-          fontSize: 14,
-        },
-      }}
-      onClick={(ev) => {
-        if ((ev.target as HTMLAnchorElement).matches("span #dd, #dd, #dd *")) {
-          ev.preventDefault();
-        }
-      }}
-      h={33}
-      label={`${item.label}${item.soon ? " (soon)" : ""}`}
-      disabled={item.disabled || item.soon}
-      active={active}
-      leftSection={
-        <ThemeIcon variant={"subtle"} size="md" mr={-10}>
-          <item.icon size={16} opacity={0.7} />
-        </ThemeIcon>
-      }
-      rightSection={
-        pinned?.length && (
-          <Group gap="xs" id="dd">
-            <Menu position="bottom-end">
-              <Menu.Target>
-                <ActionIcon variant="subtle">
-                  <IconChevronDown size={12} />
-                </ActionIcon>
-              </Menu.Target>
-              <Menu.Dropdown
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                }}
-              >
-                {pinned.map((item) => (
-                  <Menu.Item
-                    key={item.id}
-                    onClick={() => router.replace(`/dashboards/${item.id}`)}
-                    leftSection={<IconTimeline size={12} />}
-                  >
-                    {item.name}
-                  </Menu.Item>
-                ))}
-
-                <Button
-                  mt="sm"
-                  variant="outline"
-                  leftSection={<IconPlus size={12} />}
-                  onClick={() => createDashboard()}
-                >
-                  Create
-                </Button>
-              </Menu.Dropdown>
-            </Menu>
-          </Group>
-        )
-      }
     />
   );
 }

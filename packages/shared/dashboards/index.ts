@@ -24,15 +24,3 @@ export function getDefaultDateRange() {
   const defaultRange: [Date, Date] = [oneWeekAgoDate, endOfToday];
   return defaultRange;
 }
-
-export const DEFAULT_DASHBOARD = {
-  name: "Default",
-  pinned: true,
-  description: "Lunary's Default dashboard",
-  charts: DEFAULT_CHARTS,
-  filters: {
-    checks: "",
-    granularity: "daily",
-    dateRange: getDefaultDateRange(),
-  },
-};
