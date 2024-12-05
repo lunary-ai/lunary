@@ -1,3 +1,4 @@
+import { LogicNode, serializeLogic } from "shared";
 import { useProjectSWR } from ".";
 
 function getPrefix(key: string) {
@@ -8,17 +9,18 @@ function getPrefix(key: string) {
   return `/analytics/${key}`;
 }
 
+// TODO: Generics
 export function useAnalyticsChartData<T>(
   key: string | null | undefined,
   startDate: Date,
   endDate: Date,
   granularity: string,
-  checks?: string,
+  checks?: LogicNode,
   firstDimensionKey: string | null = null,
   secondDimensionKey: string | null = null,
 ) {
   const timeZone = new window.Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const checksParam = checks ? `&checks=${checks}` : "";
+  const checksParam = checks ? `&checks=${serializeLogic(checks)}` : "";
   const { data, isLoading, error } = useProjectSWR<T[]>(
     key
       ? `${getPrefix(key)}?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&timeZone=${timeZone}&granularity=${granularity}${checksParam}`

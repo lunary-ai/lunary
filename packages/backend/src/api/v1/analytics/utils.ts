@@ -6,6 +6,7 @@ import { z } from "zod";
 
 export function buildFiltersQuery(checks: string) {
   const deserializedChecks = deserializeLogic(checks);
+  console.log(checks, deserializedChecks);
   return deserializedChecks?.length && deserializedChecks.length > 1
     ? convertChecksToSQL(deserializedChecks)
     : sql`1 = 1`;
@@ -21,6 +22,7 @@ export function parseQuery(projectId: string, query: unknown) {
         z.literal("hourly"),
         z.literal("daily"),
         z.literal("weekly"),
+        z.literal("monthly"),
       ]),
       checks: z.string().optional(),
     })

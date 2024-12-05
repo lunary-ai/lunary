@@ -34,7 +34,7 @@ dashboards.get("/", async (ctx: Context) => {
         ownerId: userId,
         name: "Default Dashboard",
         isHome: true,
-        charts: DEFAULT_CHARTS,
+        chartIds: DEFAULT_CHARTS,
       })}
       returning *
     `;
@@ -73,10 +73,10 @@ dashboards.post("/", async (ctx: Context) => {
     description: z.string().optional().nullable().default(null),
     filters: z.any(),
     isHome: z.boolean().optional().nullable().default(false),
-    charts: z.array(z.any()).nullable().optional().default(DEFAULT_CHARTS),
+    chartIds: z.array(z.string()).nullable().optional().default(DEFAULT_CHARTS),
   });
 
-  const { name, charts, description, filters, isHome } = bodySchema.parse(
+  const { name, chartIds, description, filters, isHome } = bodySchema.parse(
     ctx.request.body,
   );
 
@@ -101,7 +101,7 @@ dashboards.post("/", async (ctx: Context) => {
         description,
         filters,
         isHome,
-        charts,
+        chartIds,
       })}
       returning *
     `;
@@ -123,9 +123,9 @@ dashboards.patch("/:id", async (ctx: Context) => {
     description: z.string().optional(),
     filters: z.any(),
     isHome: z.boolean().optional(),
-    charts: z.array(z.string()).optional(),
+    chartIds: z.array(z.string()).optional(),
   });
-  const { name, charts, description, filters, isHome } = bodySchema.parse(
+  const { name, chartIds, description, filters, isHome } = bodySchema.parse(
     ctx.request.body,
   );
 
@@ -135,7 +135,7 @@ dashboards.patch("/:id", async (ctx: Context) => {
     description,
     filters,
     isHome,
-    charts,
+    chartIds,
   });
 
   const updatedDashboard = sql.begin(async (sql) => {

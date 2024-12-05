@@ -2,6 +2,7 @@ export const DEFAULT_CHARTS = [
   "models/top",
   "templates/top",
   "users/top",
+  "tokens",
   // "models",
   // "templates",
   // "users",

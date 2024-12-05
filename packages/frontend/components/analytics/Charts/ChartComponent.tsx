@@ -1,13 +1,19 @@
 import { useAnalyticsChartData } from "@/utils/dataHooks/analytics";
-import { Box, Center, Flex, Loader, Overlay } from "@mantine/core";
+import { Box, Center, Flex, Loader, Overlay, Text } from "@mantine/core";
 import TopModels from "./TopModels";
 import TopTemplates from "../TopTemplates";
 import TopUsers from "../TopUsers";
 import LineChartComponent from "../OldLineChart";
 import AreaChartComponent from "./AreaChartComponent";
+import { LogicNode } from "shared";
 
 interface ChartProps {
   id: string;
+  dataKey: string;
+  startDate: Date;
+  endDate: Date;
+  granularity: "hourly" | "daily" | "weekly" | "monthly";
+  checks: LogicNode;
 }
 
 export default function ChartComponent({
@@ -16,12 +22,14 @@ export default function ChartComponent({
   startDate,
   endDate,
   granularity,
-}) {
+  checks,
+}: ChartProps) {
   let { data, isLoading } = useAnalyticsChartData<any>(
     dataKey,
     startDate,
     endDate,
     granularity,
+    checks,
   );
 
   if (isLoading) {
@@ -38,12 +46,10 @@ export default function ChartComponent({
 
   if (data.length === 0) {
     return (
-      <Box>
+      <Center ta="center" h="100%" w="100%">
         <Overlay blur={5} opacity={0.1} p="lg" zIndex={1} />
-        <Center ta="center" h="100%" w="100%">
-          No data available for this period
-        </Center>
-      </Box>
+        <Text>No data available for this period</Text>
+      </Center>
     );
   }
 
@@ -60,8 +66,6 @@ export default function ChartComponent({
   }
 
   if (id === "tokens") {
-    console.log(data);
-    // return "Tokens";
     return <AreaChartComponent data={data} />;
   }
 

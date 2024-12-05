@@ -36,7 +36,7 @@ export default function DashboardsSidebarButton() {
             >
               <Group>
                 <Text style={{ overflow: "hidden" }}>{name}</Text>
-                {isHome && <IconHome fill="black" stroke="2px" size={18} />}
+                {isHome && <IconHome2 stroke="2px" size={18} />}
               </Group>
             </Menu.Item>
           ))}

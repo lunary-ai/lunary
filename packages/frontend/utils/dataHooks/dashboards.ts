@@ -1,3 +1,4 @@
+import { LogicNode } from "shared";
 import { useProjectMutation, useProjectSWR } from ".";
 import { fetcher } from "../fetcher";
 
@@ -10,9 +11,12 @@ export interface Dashboard {
   ownerId: string;
   name: string;
   description: string | null;
-  checks: any[];
+  checks: LogicNode;
+  startDate: string;
+  endDate: string;
+  granularity: "hourly" | "daily" | "weekly" | "monthly";
   isHome: boolean;
-  charts: string[];
+  chartIds: string[];
 }
 
 export function useDashboards() {

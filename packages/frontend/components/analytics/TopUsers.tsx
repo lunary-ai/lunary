@@ -1,5 +1,5 @@
 import { formatAppUser, formatCost } from "@/utils/format";
-import { Anchor, Center, Group, Overlay, Text } from "@mantine/core";
+import { Anchor, Box, Center, Group, Overlay, Text } from "@mantine/core";
 import AppUserAvatar from "../blocks/AppUserAvatar";
 import BarList from "./BarList";
 
@@ -13,6 +13,17 @@ interface TopUsers {
 }
 
 export default function TopUsers({ data }: { data: TopUsers[] }) {
+  data = data.filter((user) => user.cost > 0);
+
+  if (data.length === 0) {
+    return (
+      <Center ta="center" h="100%" w="100%">
+        <Overlay blur={5} opacity={0.1} p="lg" zIndex={1} />
+        <Text>No data available for this period</Text>
+      </Center>
+    );
+  }
+
   return (
     <BarList
       customMetric={{

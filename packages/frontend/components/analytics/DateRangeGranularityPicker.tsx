@@ -90,7 +90,13 @@ export function useDateRangeGranularity() {
     setGranularity(determineGranularity(dateRange));
   }, [dateRange]);
 
-  return { dateRange, setDateRange, granularity, setGranularity };
+  return {
+    startDate: dateRange[0],
+    endDate: dateRange[1],
+    setDateRange,
+    granularity,
+    setGranularity,
+  };
 }
 
 // Component to handle date range selection

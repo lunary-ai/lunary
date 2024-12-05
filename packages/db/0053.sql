@@ -1,3 +1,5 @@
+create type granularity_type as enum('hourly', 'daily', 'weekly', 'monthly');
+
 create table dashboard (
     id uuid default uuid_generate_v4 () primary key,
     created_at timestamp with time zone default now(),
@@ -6,9 +8,12 @@ create table dashboard (
     project_id uuid not null,
     name text not null,
     description text null,
-    filters jsonb default '{}' not null,
+    checks jsonb default '[]' not null,
+    startDate timestamptz,
+    endDate timestamptz,
+    granularity granularity_type,
    	is_home boolean default false not null,
-		charts jsonb default '[]' not null,
+		chart_ids jsonb default '[]' not null,
     constraint fk_checklist_owner_id foreign key (owner_id) references account (id) on delete set null,
     constraint fk_checklist_project_id foreign key (project_id) references project (id) on delete cascade
 );

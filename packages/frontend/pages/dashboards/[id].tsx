@@ -25,7 +25,7 @@ import {
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { Chart } from "shared";
+import { Chart, deserializeLogic, LogicNode } from "shared";
 
 function getSpan(index: number) {
   if ([0, 1, 2].includes(index)) {
@@ -50,22 +50,24 @@ export default function Dashboard() {
     remove: removeDashboard,
   } = useDashboard(dashboardId);
 
-  // TODO: rename dashboard `checks` to `filters`
-  const [filters, setFilters] = useState<any>();
-
-  // TODO
-  const { dateRange, setDateRange, granularity, setGranularity } =
-    useDateRangeGranularity();
-
+  const [checks, setChecks] = useState<LogicNode>(["AND"]);
   const [charts, setCharts] = useState<Chart[]>([]);
+
+  const { startDate, endDate, setDateRange, granularity, setGranularity } =
+    useDateRangeGranularity();
 
   useEffect(() => {
     if (!dashboardIsLoading && dashboard) {
-      setFilters(dashboard.checks);
-      setCharts(dashboard.charts.map((chartId) => chartProps[chartId]));
+      setChecks(dashboard.checks);
+      setCharts(dashboard.chartIds.map((chartId) => chartProps[chartId]));
+      if (dashboard.startDate && dashboard.endDate) {
+        setDateRange([
+          new Date(dashboard.startDate),
+          new Date(dashboard.endDate),
+        ]);
+      }
     }
   }, [dashboard]);
-  // const serializedChecks = serializeLogic(checks);
 
   // TODO: isValidating
   if (dashboardIsLoading || !dashboard) {
@@ -81,9 +83,7 @@ export default function Dashboard() {
       <Group justify="space-between">
         <Group>
           <Group gap="xs">
-            {dashboard.isHome && (
-              <IconHome fill="black" stroke="2px" size={22} />
-            )}
+            {dashboard.isHome && <IconHome2 stroke="2px" size={22} />}
             <RenamableField
               defaultValue={dashboard.name}
               onRename={(newName) => updateDashboard({ name: newName })}
@@ -120,15 +120,15 @@ export default function Dashboard() {
             </Menu>
           </Group>
           <DateRangeGranularityPicker
-            dateRange={dateRange}
+            dateRange={[startDate, endDate]}
             setDateRange={setDateRange}
             granularity={granularity}
             setGranularity={setGranularity}
           />
           <CheckPicker
             minimal={true}
-            value={filters}
-            onChange={setFilters}
+            value={checks}
+            onChange={setChecks}
             restrictTo={(filter) =>
               ["models", "tags", "users", "metadata"].includes(filter.id)
             }
@@ -144,49 +144,14 @@ export default function Dashboard() {
               <ChartComponent
                 id={chart.id}
                 dataKey={chart.dataKey}
-                startDate={dateRange[0]}
-                endDate={dateRange[1]}
+                startDate={startDate}
+                endDate={endDate}
                 granularity={granularity}
+                checks={checks}
               />
             </AnalyticsCard>
           </Grid.Col>
         ))}
-
-        {/* <Grid.Col span={4}>
-          <AnalyticsCard title="1">
-            <Text>1</Text>
-          </AnalyticsCard>
-        </Grid.Col>
-
-        <Grid.Col span={4}>
-          <AnalyticsCard title="2">
-            <Text>2</Text>
-          </AnalyticsCard>
-        </Grid.Col>
-
-        <Grid.Col span={4}>
-          <AnalyticsCard title="3">
-            <Text>3</Text>
-          </AnalyticsCard>
-        </Grid.Col>
-
-        <Grid.Col span={12}>
-          <AnalyticsCard title="4">
-            <Text>4</Text>
-          </AnalyticsCard>
-        </Grid.Col>
-
-        <Grid.Col span={6}>
-          <AnalyticsCard title="5">
-            <Text>5</Text>
-          </AnalyticsCard>
-        </Grid.Col>
-
-        <Grid.Col span={6}>
-          <AnalyticsCard title="6">
-            <Text>6</Text>
-          </AnalyticsCard>
-        </Grid.Col> */}
       </Grid>
     </Stack>
   );
