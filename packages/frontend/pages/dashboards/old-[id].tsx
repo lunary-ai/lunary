@@ -1,5 +1,5 @@
-import LineChart from "@/components/analytics/LineChart";
-import TopModels from "@/components/analytics/TopModels";
+import TopModels from "@/components/analytics/Charts/TopModels";
+import LineChart from "@/components/analytics/OldLineChart";
 import TopTemplates from "@/components/analytics/TopTemplates";
 import TopUsersCard from "@/components/analytics/TopUsers";
 import CheckPicker from "@/components/checks/Picker";
@@ -27,7 +27,6 @@ import {
   SimpleGrid,
   Stack,
   Tabs,
-  Text,
   Title,
   useComputedColorScheme,
 } from "@mantine/core";
@@ -56,7 +55,6 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
 import Sentiment from "@/components/analytics/Charts/Sentiment";
-import TopTopics from "@/components/analytics/Charts/TopTopics";
 import { useDashboard, useDashboards } from "@/utils/dataHooks/dashboards";
 import { useDisclosure } from "@mantine/hooks";
 
@@ -72,10 +70,10 @@ import {
   SelectableCustomChart,
 } from "@/components/analytics/Creator";
 import { ConfirmModal, SaveAsModal } from "@/components/analytics/Modals";
+import PieChart from "@/components/analytics/PieChart";
 import { Draggable, Droppable } from "@/components/analytics/Wrappers";
 import RenamableField from "@/components/blocks/RenamableField";
 import { ALL_CHARTS, deserializeDateRange } from "@/utils/analytics";
-import PieChart from "@/components/analytics/PieChart";
 
 import { useRouter } from "next/router";
 
@@ -627,7 +625,7 @@ export default function Analytics() {
     if (id === "models") {
       return (
         <TopModels
-          topModels={topModels}
+          data={topModels}
           isLoading={topModelsLoading}
           {...(props || {})}
         />
@@ -650,9 +648,6 @@ export default function Analytics() {
           {...(props || {})}
         />
       );
-    }
-    if (id === "top-topics") {
-      return <TopTopics />;
     }
     if (id === "sentiments") {
       return <Sentiment />;

@@ -10,11 +10,7 @@ export interface Dashboard {
   ownerId: string;
   name: string;
   description: string | null;
-  filters: {
-    checks?: string;
-    dateRange?: [string, string];
-    granularity?: "daily" | "weekly" | "monthly";
-  };
+  checks: any[];
   isHome: boolean;
   charts: string[];
 }
@@ -46,18 +42,17 @@ export function useDashboard(id: string) {
     mutate,
   } = useProjectSWR<Dashboard>(`/dashboards/${id}`);
 
-  const { trigger: update } = useProjectMutation(
+  const { trigger: updateMutation } = useProjectMutation(
     `/dashboards/${id}`,
     fetcher.patch,
-    {
-      onSuccess(data) {
-        mutate(data);
-        mutateDashboards();
-      },
-    },
+    { onSuccess: () => mutateDashboards() },
   );
 
-  const { trigger: remove } = useProjectMutation(
+  function update(data: Partial<Dashboard>) {
+    updateMutation(data, { optimisticData: { ...dashboard, ...data } });
+  }
+
+  const { trigger: removeMutation } = useProjectMutation(
     id && `/dashboards/${id}`,
     fetcher.delete,
     {
@@ -68,10 +63,14 @@ export function useDashboard(id: string) {
     },
   );
 
+  // function remove() {
+  //   removeMutation();
+  // }
+
   return {
     dashboard,
     update,
-    remove,
+    remove: removeMutation,
     mutate,
     isLoading,
   };

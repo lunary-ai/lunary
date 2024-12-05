@@ -2,11 +2,8 @@ import {
   Alert,
   Box,
   Button,
-  Card,
   Center,
-  Group,
   Loader,
-  Tooltip as MantineTooltip,
   Overlay,
   Paper,
   Text,
@@ -15,7 +12,7 @@ import { ResponsiveContainer } from "recharts";
 
 import { formatLargeNumber } from "@/utils/format";
 import { AreaChart, getFilteredChartTooltipPayload } from "@mantine/charts";
-import { IconBolt, IconInfoCircle } from "@tabler/icons-react";
+import { IconBolt } from "@tabler/icons-react";
 import {
   eachDayOfInterval,
   eachHourOfInterval,
@@ -24,10 +21,8 @@ import {
   parseISO,
 } from "date-fns";
 import { useMemo } from "react";
-import ErrorBoundary from "../blocks/ErrorBoundary";
 import { openUpgrade } from "../layout/UpgradeModal";
 import { generateSeries } from "./Creator";
-import AnalyticsCard from "./AnalyticsCard";
 
 interface ChartTooltipProps {
   label: string;
@@ -205,7 +200,7 @@ type LineChartData = {
 type LineChartProps = {
   data: LineChartData;
   title: string | JSX.Element;
-  props: string[];
+  props?: string[];
   blocked?: boolean;
   formatter?: (value: number) => string;
   height?: number;
@@ -256,9 +251,9 @@ function getFigure(agg: string, data: any[], prop: string) {
   }
   return 0;
 }
-function LineChartComponent({
+export default function LineChartComponent({
   data,
-  props,
+  props = ["value"],
   blocked = false,
   formatter = formatLargeNumber,
   height = 230,
@@ -333,6 +328,7 @@ function LineChartComponent({
 
     return generateSeries(seriesNames);
   }, [cleanedData]);
+
   return (
     <>
       {loading && (
@@ -365,46 +361,6 @@ function LineChartComponent({
       )}
 
       <Box mt="sm" pos="relative">
-        {blocked && (
-          <>
-            <Overlay
-              h="100%"
-              blur={15}
-              backgroundOpacity={0.1}
-              p="lg"
-              zIndex={1}
-            />
-            <Center
-              ta="center"
-              style={{
-                position: "absolute",
-                zIndex: 2,
-              }}
-              h="100%"
-              w="100%"
-            >
-              <Alert
-                title="Advanced Analytics"
-                bg="var(--mantine-primary-color-light)"
-                p="12"
-              >
-                Upgrade to <b>Team</b> to unlock this chart
-                <br />
-                <Button
-                  mt="md"
-                  onClick={() => openUpgrade("analytics")}
-                  size="xs"
-                  variant="gradient"
-                  gradient={{ from: "#0788ff", to: "#9900ff", deg: 30 }}
-                  leftSection={<IconBolt size="16" />}
-                >
-                  Upgrade
-                </Button>
-              </Alert>
-            </Center>
-          </>
-        )}
-
         {!hasData && (
           <>
             <Overlay blur={5} opacity={0.1} p="lg" zIndex={1} />
@@ -462,15 +418,3 @@ function LineChartComponent({
     </>
   );
 }
-
-const LineChart = (props: LineChartProps) => (
-  <AnalyticsCard
-    title={props.title}
-    description={props.description}
-    {...props.extraProps}
-  >
-    <LineChartComponent {...props} />
-  </AnalyticsCard>
-);
-
-export default LineChart;

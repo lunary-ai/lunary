@@ -6,7 +6,7 @@ create table dashboard (
     project_id uuid not null,
     name text not null,
     description text null,
-    filters jsonb not null,
+    filters jsonb default '{}' not null,
    	is_home boolean default false not null,
 		charts jsonb default '[]' not null,
     constraint fk_checklist_owner_id foreign key (owner_id) references account (id) on delete set null,

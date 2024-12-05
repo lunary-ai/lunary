@@ -45,9 +45,9 @@ import {
 import SmartViewer from "@/components/SmartViewer";
 import { useProjectSWR } from "@/utils/dataHooks";
 import { useRouter } from "next/router";
-import TopModels from "@/components/analytics/TopModels";
+import TopModels from "@/components/analytics/Charts/TopModels";
 
-import LineChart from "@/components/analytics/LineChart";
+import LineChart from "@/components/analytics/OldLineChart";
 import Link from "next/link";
 import { parseAsString, useQueryState } from "nuqs";
 import { getDefaultDateRange } from "shared";
@@ -275,7 +275,7 @@ function SelectedUser({ id, onClose }) {
             </Box>
 
             {topModels && (
-              <TopModels topModels={topModels} isLoading={topModelsLoading} />
+              <TopModels data={topModels} isLoading={topModelsLoading} />
             )}
             <Button
               leftSection={<IconTrash size={14} />}

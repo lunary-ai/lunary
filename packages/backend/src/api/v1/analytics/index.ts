@@ -42,7 +42,7 @@ analytics.get(
         )
         select
           date, 
-          tokens, 
+          tokens as value, 
           name
         from
           weekly_sums
@@ -61,7 +61,7 @@ analytics.get(
         )
         select
           d.date,
-          coalesce(sum(r.prompt_tokens + r.completion_tokens)::int, 0) as tokens,
+          coalesce(sum(r.prompt_tokens + r.completion_tokens)::int, 0) as value,
           r.name
         from
           dates d
@@ -1029,7 +1029,7 @@ analytics.get(
 );
 
 analytics.get(
-  "/top/models",
+  "/models/top",
   checkAccess("analytics", "read"),
   async (ctx: Context) => {
     const querySchema = z.object({
@@ -1093,7 +1093,7 @@ analytics.get(
 );
 
 analytics.get(
-  "/top/templates",
+  "/templates/top",
   checkAccess("analytics", "read"),
   async (ctx: Context) => {
     const querySchema = z.object({

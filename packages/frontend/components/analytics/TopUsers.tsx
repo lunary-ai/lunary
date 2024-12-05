@@ -1,15 +1,6 @@
 import { formatAppUser, formatCost } from "@/utils/format";
-import {
-  Anchor,
-  Center,
-  Flex,
-  Group,
-  Loader,
-  Overlay,
-  Text,
-} from "@mantine/core";
+import { Anchor, Center, Group, Overlay, Text } from "@mantine/core";
 import AppUserAvatar from "../blocks/AppUserAvatar";
-import AnalyticsCard from "./AnalyticsCard";
 import BarList from "./BarList";
 
 interface TopUsers {
@@ -21,44 +12,15 @@ interface TopUsers {
   props: Record<string, any>;
 }
 
-interface TopUsersProps {
-  topUsers: TopUsers[];
-  isLoading: boolean;
-}
-
-function TopUsers({ topUsers, isLoading }: TopUsersProps) {
-  if (isLoading) {
-    return (
-      <Flex align="center" justify="center" h="280px">
-        <Loader />
-      </Flex>
-    );
-  }
-
-  if (topUsers?.length === 0) {
-    return (
-      <>
-        <Overlay blur={5} opacity={0.1} p="lg" zIndex={1} />
-        <Center
-          ta="center"
-          style={{ position: "absolute", zIndex: 2 }}
-          h="100%"
-          w="100%"
-        >
-          No users tracked for this period
-        </Center>
-      </>
-    );
-  }
-
+export default function TopUsers({ data }: { data: TopUsers[] }) {
   return (
     <BarList
       customMetric={{
         label: "users",
-        value: topUsers?.length,
+        value: data?.length,
       }}
       filterZero={false}
-      data={topUsers?.map((user) => ({
+      data={data?.map((user) => ({
         barSections: [
           {
             value: "cost",
@@ -111,17 +73,5 @@ function TopUsers({ topUsers, isLoading }: TopUsersProps) {
         },
       ]}
     />
-  );
-}
-
-export default function TopUsersCard({
-  topUsers,
-  isLoading,
-  ...props
-}: TopUsersProps) {
-  return (
-    <AnalyticsCard title="Top Users" {...props}>
-      <TopUsers topUsers={topUsers} isLoading={isLoading} />
-    </AnalyticsCard>
   );
 }

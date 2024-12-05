@@ -1,11 +1,7 @@
 import { formatCost, formatLargeNumber } from "@/utils/format";
-import AnalyticsCard from "./AnalyticsCard";
-import BarList from "./BarList";
-import { Box, Center, Flex, Loader, Overlay } from "@mantine/core";
+import BarList from "../BarList";
 
-import type { ReactNode } from "react";
-
-interface TopModel {
+interface Data {
   name: string;
   cost: number;
   totalTokens: number;
@@ -13,34 +9,10 @@ interface TopModel {
   promptTokens: number;
 }
 
-interface TopModelsProps {
-  topModels: TopModel[];
-  isLoading: boolean;
-}
-
-function TopModels({ topModels, isLoading }: TopModelsProps) {
-  if (isLoading) {
-    return (
-      <Flex align="center" justify="center" h="280px">
-        <Loader />
-      </Flex>
-    );
-  }
-
-  if (topModels?.length === 0) {
-    return (
-      <Box>
-        <Overlay blur={5} opacity={0.1} p="lg" zIndex={1} />
-        <Center ta="center" h="100%" w="100%">
-          No data available for this period
-        </Center>
-      </Box>
-    );
-  }
-
+export default function TopModels({ data }: { data: Data[] }) {
   return (
     <BarList
-      data={topModels.map((model) => ({
+      data={data.map((model) => ({
         value: model.name,
         tokens: model.totalTokens,
         cost: model.cost,
@@ -78,17 +50,5 @@ function TopModels({ topModels, isLoading }: TopModelsProps) {
         },
       ]}
     />
-  );
-}
-
-export default function TopModelsCard({
-  topModels,
-  isLoading,
-  ...props
-}: TopModelsProps) {
-  return (
-    <AnalyticsCard title="Top Models" {...props}>
-      <TopModels topModels={topModels} isLoading={isLoading} />
-    </AnalyticsCard>
   );
 }

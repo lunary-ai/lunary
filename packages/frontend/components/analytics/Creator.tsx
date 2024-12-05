@@ -62,7 +62,7 @@ import {
   useExternalUsersProps,
 } from "@/utils/dataHooks/external-users";
 
-import LineChart from "@/components/analytics/LineChart";
+import LineChart from "@/components/analytics/OldLineChart";
 
 import ErrorBoundary from "../blocks/ErrorBoundary";
 import { Selectable } from "./Wrappers";

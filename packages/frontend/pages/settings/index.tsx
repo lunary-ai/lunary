@@ -1,4 +1,4 @@
-import LineChart from "@/components/analytics/LineChart";
+import LineChart from "@/components/analytics/OldLineChart";
 import CopyText from "@/components/blocks/CopyText";
 
 import {

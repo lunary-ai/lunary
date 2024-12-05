@@ -1,23 +1,31 @@
 import { useProjectSWR } from ".";
 
+function getPrefix(key: string) {
+  if (key === "users/top") {
+    return "/external-users";
+  }
+
+  return `/analytics/${key}`;
+}
+
 export function useAnalyticsChartData<T>(
   key: string | null | undefined,
   startDate: Date,
   endDate: Date,
   granularity: string,
   checks?: string,
-  firstDimensionKey?: string,
-  secondDimensionKey?: string,
+  firstDimensionKey: string | null = null,
+  secondDimensionKey: string | null = null,
 ) {
   const timeZone = new window.Intl.DateTimeFormat().resolvedOptions().timeZone;
   const checksParam = checks ? `&checks=${checks}` : "";
-  const { data, isLoading, error } = useProjectSWR<T>(
+  const { data, isLoading, error } = useProjectSWR<T[]>(
     key
-      ? `/analytics/${key}?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&timeZone=${timeZone}&granularity=${granularity}${checksParam}&firstDimensionKey=${firstDimensionKey}&secondDimensionKey=${secondDimensionKey}`
+      ? `${getPrefix(key)}?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&timeZone=${timeZone}&granularity=${granularity}${checksParam}`
       : undefined,
   );
 
-  return { data, isLoading, error };
+  return { data: data || [], isLoading, error };
 }
 
 export function useTopModels<T>(params: {
@@ -41,7 +49,7 @@ export function useTopModels<T>(params: {
   }
 
   const { data, isLoading } = useProjectSWR<T>(
-    params && `/analytics/top/models?${queryParams.toString()}`,
+    params && `/analytics/models/top?${queryParams.toString()}`,
   );
 
   return { data, isLoading };

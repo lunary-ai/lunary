@@ -13,7 +13,32 @@ const dashboards = new Router({
 // TODO: refactor zod schemas, (use .pick())
 
 dashboards.get("/", async (ctx: Context) => {
-  const { projectId } = ctx.state;
+  const { projectId, userId } = ctx.state;
+
+  // TODO: temporary, make a migration to create a home dashboard for all projects existing project
+  // + add a new dashboard on new project creation
+  const [homeDashboard] = await sql`
+    select 
+      * 
+    from 
+      dashboard
+    where 
+      project_id = ${projectId} 
+      and is_home = true
+  `;
+
+  if (!homeDashboard) {
+    await sql`
+      insert into dashboard ${sql({
+        projectId,
+        ownerId: userId,
+        name: "Default Dashboard",
+        isHome: true,
+        charts: DEFAULT_CHARTS,
+      })}
+      returning *
+    `;
+  }
 
   const dashboards = await sql`
     select 
@@ -95,7 +120,7 @@ dashboards.patch("/:id", async (ctx: Context) => {
 
   const bodySchema = z.object({
     name: z.string().optional(),
-    description: z.string().optional().nullable(),
+    description: z.string().optional(),
     filters: z.any(),
     isHome: z.boolean().optional(),
     charts: z.array(z.string()).optional(),
@@ -145,6 +170,13 @@ dashboards.patch("/:id", async (ctx: Context) => {
 
 dashboards.delete("/:id", async (ctx: Context) => {
   const { id } = z.object({ id: z.string().uuid() }).parse(ctx.params);
+
+  const [dashboardToDelete] =
+    await sql`select * from dashboard where id = ${id}`;
+
+  if (dashboardToDelete.isHome) {
+    ctx.throw(400, "Cannot delete home dashboard");
+  }
 
   await sql`delete from dashboard where id = ${id}`;
 

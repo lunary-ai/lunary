@@ -1,17 +1,20 @@
 export const DEFAULT_CHARTS = [
-  "models",
-  "templates",
-  "users",
-  "tokens",
-  "costs",
-  "errors",
-  "users/new",
-  "users/active",
-  "users/average-cost",
-  "top/languages",
-  "run-types",
-  "latency",
-  "feedback-ratio",
+  "models/top",
+  "templates/top",
+  "users/top",
+  // "models",
+  // "templates",
+  // "users",
+  // "tokens",
+  // "costs",
+  // "errors",
+  // "users/new",
+  // "users/active",
+  // "users/average-cost",
+  // "top/languages",
+  // "run-types",
+  // "latency",
+  // "feedback-ratio",
 ];
 
 export function getDefaultDateRange() {
@@ -23,4 +26,20 @@ export function getDefaultDateRange() {
   oneWeekAgoDate.setHours(0, 0, 0, 0);
   const defaultRange: [Date, Date] = [oneWeekAgoDate, endOfToday];
   return defaultRange;
+}
+
+// export interface Dashboard {
+
+// }
+
+type Aggregation = "sum" | "avg" | null | undefined;
+
+export interface Chart {
+  id: string;
+  name: string;
+  description: string | null;
+  type: "Top" | "Area";
+  dataKey: string;
+  aggregationMethod: Aggregation;
+  splitBy?: string;
 }
