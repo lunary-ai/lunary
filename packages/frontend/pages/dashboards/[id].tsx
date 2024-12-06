@@ -19,12 +19,7 @@ import {
   Stack,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  IconDotsVertical,
-  IconHome,
-  IconHome2,
-  IconTrash,
-} from "@tabler/icons-react";
+import { IconDotsVertical, IconHome2, IconTrash } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
@@ -94,10 +89,29 @@ export default function Dashboard() {
     });
   }
 
-  function handleDrop(item, monitor, chartId: string) {
-    console.log(item, monitor, chartId);
-  }
+  function handleDrop(dragIndex: number, dropIndex: number) {
+    const newCharts = [...charts];
 
+    [newCharts[dragIndex], newCharts[dropIndex]] = [
+      newCharts[dropIndex],
+      newCharts[dragIndex],
+    ];
+    console.log(dragIndex, dropIndex);
+
+    setCharts(newCharts);
+
+    // const { chartId: draggedChartId } = item;
+    // // Find the chart's current position
+    // const fromIndex = charts.findIndex((c) => c.id === draggedChartId);
+    // if (fromIndex === dropIndex) return; // Dropped in the same place, no change
+    // console.log(fromIndex, dropIndex);
+    // const newCharts = [...charts];
+    // // Remove dragged chart from its original position
+    // const [removed] = newCharts.splice(fromIndex, 1);
+    // // Insert it at the new position
+    // newCharts.splice(dropIndex, 0, removed);
+    // setCharts(newCharts);
+  }
   return (
     <>
       <DashboardModal
@@ -172,13 +186,12 @@ export default function Dashboard() {
         <Grid>
           {charts.map((chart, index) => (
             <Grid.Col span={getSpan(index)} key={chart.id}>
-              <Draggable style={{ height: "100%" }}>
-                <Droppable
-                  style={{ height: "100%" }}
-                  onDrop={(item, monitor) =>
-                    handleDrop(item, monitor, chart.id)
-                  }
-                >
+              <Droppable
+                index={index}
+                onDrop={handleDrop}
+                style={{ height: "100%" }}
+              >
+                <Draggable index={index} style={{ height: "100%" }}>
                   <AnalyticsCard
                     title={chart.name}
                     description={chart.description}
@@ -192,8 +205,8 @@ export default function Dashboard() {
                       checks={checks}
                     />
                   </AnalyticsCard>
-                </Droppable>
-              </Draggable>
+                </Draggable>
+              </Droppable>
             </Grid.Col>
           ))}
         </Grid>
@@ -202,25 +215,28 @@ export default function Dashboard() {
   );
 }
 
-function Draggable({ children, ...props }) {
-  const [{ isDragging }, drag] = useDrag(() => ({
-    type: "chart",
-    collect: (monitor) => ({
-      isDragging: !!monitor.isDragging(),
+function Draggable({ children, index, ...props }) {
+  const [{ isDragging }, drag] = useDrag(
+    () => ({
+      type: "chart",
+      item: { index },
+      collect: (monitor) => ({
+        isDragging: !!monitor.isDragging(),
+      }),
     }),
-  }));
+    [index],
+  );
 
   return (
-    <div ref={drag} {...props}>
+    <div ref={drag} style={{ opacity: isDragging ? 0.5 : 1 }} {...props}>
       {children}
     </div>
   );
 }
-
-function Droppable({ children, onDrop, ...props }) {
+function Droppable({ children, onDrop, index, ...props }) {
   const [{ isOver }, drop] = useDrop(() => ({
     accept: "chart",
-    drop: onDrop,
+    drop: (item) => onDrop(item.index, index),
     collect: (monitor) => ({
       isOver: !!monitor.isOver(),
     }),
@@ -228,7 +244,6 @@ function Droppable({ children, onDrop, ...props }) {
 
   return (
     <div ref={drop} {...props}>
-      {isOver && "Over"}
       {children}
     </div>
   );
