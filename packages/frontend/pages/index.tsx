@@ -20,7 +20,7 @@ function IndexPage() {
     }
 
     if (hasAccess(user.role, "analytics", "read")) {
-      router.replace("/analytics");
+      router.replace("/dashboards");
     } else {
       router.replace("/prompts");
     }

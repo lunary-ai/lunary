@@ -26,8 +26,8 @@ export async function runEval({
   orgId,
 }: RunEvalParams) {
   try {
-    console.log(`=============================`);
-    console.log(
+    console.info(`=============================`);
+    console.info(
       `Running eval for ${provider.model} with variation ${JSON.stringify(variation.variables)} and config ${JSON.stringify(provider.config)}`,
     );
     const { variables, idealOutput } = variation;
@@ -120,8 +120,6 @@ export async function runEval({
         duration,
       })}
       `;
-
-      console.log(`Eval for ${provider.model} passed: ${passed}`);
     } catch (error: any) {
       await sql`
         insert into evaluation_result ${sql({

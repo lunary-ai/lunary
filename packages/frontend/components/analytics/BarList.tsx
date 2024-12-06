@@ -1,4 +1,5 @@
 import {
+  Box,
   Flex,
   Progress,
   Table,
@@ -31,7 +32,7 @@ function BarList({ data, columns, filterZero = true }: BarListProps) {
   const scheme = useComputedColorScheme();
 
   return (
-    <>
+    <Box>
       <Table
         layout="fixed"
         w="100%"
@@ -73,8 +74,8 @@ function BarList({ data, columns, filterZero = true }: BarListProps) {
                         w="90%"
                         pos="absolute"
                       >
-                        {item.barSections?.map(({ count, color, tooltip }) => (
-                          <Tooltip key={color} label={tooltip}>
+                        {item.barSections?.map(({ count, color, tooltip }, n: number) => (
+                          <Tooltip id={`${n}`} label={tooltip} key={n}>
                             <Progress.Section
                               value={(count / mainTotal) * 100}
                               color={color}
@@ -147,7 +148,7 @@ function BarList({ data, columns, filterZero = true }: BarListProps) {
           }
         `}</style>
       </Table>
-    </>
+    </Box>
   );
 }
 

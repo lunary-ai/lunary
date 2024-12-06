@@ -1,0 +1,26 @@
+.gridContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-sm);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  border-radius: var(--mantine-radius-md);
+  border: 1px solid var(--mantine-color-gray-2);
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-xl);
+  background-color: var(--mantine-color-white);
+  width: calc(33.333% - var(--mantine-spacing-sm * 2));
+  box-sizing: border-box;
+}
+
+.itemDragging {
+  box-shadow: var(--mantine-shadow-sm);
+}
+
+.symbol {
+  font-size: 30px;
+  font-weight: 700;
+  width: 60px;
+}

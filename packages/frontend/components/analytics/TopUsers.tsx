@@ -1,15 +1,6 @@
 import { formatAppUser, formatCost } from "@/utils/format";
-import {
-  Anchor,
-  Center,
-  Flex,
-  Group,
-  Loader,
-  Overlay,
-  Text,
-} from "@mantine/core";
+import { Anchor, Box, Center, Group, Overlay, Text } from "@mantine/core";
 import AppUserAvatar from "../blocks/AppUserAvatar";
-import AnalyticsCard from "./AnalyticsCard";
 import BarList from "./BarList";
 
 interface TopUsers {
@@ -21,33 +12,15 @@ interface TopUsers {
   props: Record<string, any>;
 }
 
-interface TopUsersProps {
-  topUsers: TopUsers[];
-  isLoading: boolean;
-}
+export default function TopUsers({ data }: { data: TopUsers[] }) {
+  data = data.filter((user) => user.cost > 0);
 
-function TopUsers({ topUsers, isLoading }: TopUsersProps) {
-  if (isLoading) {
+  if (data.length === 0) {
     return (
-      <Flex align="center" justify="center" h="280px">
-        <Loader />
-      </Flex>
-    );
-  }
-
-  if (topUsers?.length === 0) {
-    return (
-      <>
+      <Center ta="center" h="100%" w="100%">
         <Overlay blur={5} opacity={0.1} p="lg" zIndex={1} />
-        <Center
-          ta="center"
-          style={{ position: "absolute", zIndex: 2 }}
-          h="100%"
-          w="100%"
-        >
-          No users tracked for this period
-        </Center>
-      </>
+        <Text>No data available for this period</Text>
+      </Center>
     );
   }
 
@@ -55,10 +28,10 @@ function TopUsers({ topUsers, isLoading }: TopUsersProps) {
     <BarList
       customMetric={{
         label: "users",
-        value: topUsers?.length,
+        value: data?.length,
       }}
       filterZero={false}
-      data={topUsers?.map((user) => ({
+      data={data?.map((user) => ({
         barSections: [
           {
             value: "cost",
@@ -72,6 +45,7 @@ function TopUsers({ topUsers, isLoading }: TopUsersProps) {
       columns={[
         {
           name: "User",
+          key: "user",
           render: (_, user) => (
             <Group
               my={-4}
@@ -110,13 +84,5 @@ function TopUsers({ topUsers, isLoading }: TopUsersProps) {
         },
       ]}
     />
-  );
-}
-
-export default function TopUsersCard({ topUsers, isLoading }: TopUsersProps) {
-  return (
-    <AnalyticsCard title="Top Users">
-      <TopUsers topUsers={topUsers} isLoading={isLoading} />
-    </AnalyticsCard>
   );
 }

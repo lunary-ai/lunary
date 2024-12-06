@@ -64,7 +64,7 @@ async function analyzeSentiment(
     return callML("sentiment", { texts });
   } catch (error) {
     console.error(error);
-    console.log(texts);
+    console.error(texts);
     return texts.map(() => null);
   }
 }
