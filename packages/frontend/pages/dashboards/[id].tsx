@@ -10,6 +10,7 @@ import CheckPicker from "@/components/checks/Picker";
 import { useDashboard } from "@/utils/dataHooks/dashboards";
 import {
   ActionIcon,
+  Box,
   Button,
   Flex,
   Grid,
@@ -19,7 +20,12 @@ import {
   Stack,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconDotsVertical, IconHome2, IconTrash } from "@tabler/icons-react";
+import {
+  IconDotsVertical,
+  IconHome2,
+  IconSettings,
+  IconTrash,
+} from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
@@ -56,6 +62,8 @@ export default function Dashboard() {
 
   const [modalOpened, { open: openModal, close: closeModal }] =
     useDisclosure(false);
+
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     if (!dashboardIsLoading && dashboard) {
@@ -96,21 +104,8 @@ export default function Dashboard() {
       newCharts[dropIndex],
       newCharts[dragIndex],
     ];
-    console.log(dragIndex, dropIndex);
 
     setCharts(newCharts);
-
-    // const { chartId: draggedChartId } = item;
-    // // Find the chart's current position
-    // const fromIndex = charts.findIndex((c) => c.id === draggedChartId);
-    // if (fromIndex === dropIndex) return; // Dropped in the same place, no change
-    // console.log(fromIndex, dropIndex);
-    // const newCharts = [...charts];
-    // // Remove dragged chart from its original position
-    // const [removed] = newCharts.splice(fromIndex, 1);
-    // // Insert it at the new position
-    // newCharts.splice(dropIndex, 0, removed);
-    // setCharts(newCharts);
   }
   return (
     <>
@@ -178,23 +173,27 @@ export default function Dashboard() {
             />
           </Group>
           <Group>
-            <Button onClick={openModal}>Add Chart</Button>
+            <Button
+              variant={isEditing ? "filled" : "default"}
+              leftSection={isEditing ? null : <IconSettings size="18px" />}
+              onClick={() => setIsEditing(!isEditing)}
+            >
+              {isEditing ? "Done" : "Edit"}
+            </Button>
+            {/* <Button onClick={openModal}>Add Chart</Button> */}
             <Button onClick={saveDashboard}>Save</Button>
           </Group>
         </Group>
 
         <Grid>
           {charts.map((chart, index) => (
-            <Grid.Col span={getSpan(index)} key={chart.id}>
-              <Droppable
-                index={index}
-                onDrop={handleDrop}
-                style={{ height: "100%" }}
-              >
-                <Draggable index={index} style={{ height: "100%" }}>
+            <Grid.Col span={getSpan(index)} key={chart.id} h="350px">
+              <Droppable index={index} onDrop={handleDrop}>
+                <Draggable index={index} isEditing={isEditing}>
                   <AnalyticsCard
                     title={chart.name}
                     description={chart.description}
+                    isEditing={isEditing}
                   >
                     <ChartComponent
                       id={chart.id}
@@ -215,7 +214,7 @@ export default function Dashboard() {
   );
 }
 
-function Draggable({ children, index, ...props }) {
+function Draggable({ children, index, isEditing }) {
   const [{ isDragging }, drag] = useDrag(
     () => ({
       type: "chart",
@@ -223,17 +222,37 @@ function Draggable({ children, index, ...props }) {
       collect: (monitor) => ({
         isDragging: !!monitor.isDragging(),
       }),
+      canDrag: isEditing,
     }),
-    [index],
+    [index, isEditing],
   );
 
+  function getCursor() {
+    if (!isEditing) {
+      return "auto";
+    }
+
+    if (isDragging) {
+      return "grabbing";
+    }
+
+    return "grab";
+  }
+
   return (
-    <div ref={drag} style={{ opacity: isDragging ? 0.5 : 1 }} {...props}>
+    <Box
+      ref={drag}
+      style={{
+        height: "100%",
+        opacity: isDragging ? 0.5 : 1,
+        cursor: getCursor(),
+      }}
+    >
       {children}
-    </div>
+    </Box>
   );
 }
-function Droppable({ children, onDrop, index, ...props }) {
+function Droppable({ children, onDrop, index }) {
   const [{ isOver }, drop] = useDrop(() => ({
     accept: "chart",
     drop: (item) => onDrop(item.index, index),
@@ -243,7 +262,11 @@ function Droppable({ children, onDrop, index, ...props }) {
   }));
 
   return (
-    <div ref={drop} {...props}>
+    <div
+      ref={drop}
+      className={isOver ? "" : ""}
+      style={{ height: "100%", opacity: isOver ? 0.4 : 1 }}
+    >
       {children}
     </div>
   );
