@@ -51,7 +51,7 @@ function AnalyticsCard({
           </Text>
 
           <Tooltip label={description || "No description available"}>
-            <IconInfoCircle size={16} opacity={0.5} />
+            <IconInfoCircle style={{ zIndex: 2 }} size={16} opacity={0.5} />
           </Tooltip>
         </Group>
         {isEditing && (
@@ -61,6 +61,7 @@ function AnalyticsCard({
             size="sm"
             color="gray"
             onClick={onDelete}
+            style={{ zIndex: 2 }}
           >
             <IconX size={16} />
           </ActionIcon>

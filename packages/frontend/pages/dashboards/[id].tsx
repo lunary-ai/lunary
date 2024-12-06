@@ -79,7 +79,7 @@ export default function Dashboard() {
     }
   }, [dashboard]);
 
-  // TODO: isValidating
+  // TODO: isValidating?
   if (dashboardIsLoading || !dashboard) {
     return (
       <Flex align="center" justify="center" h="280px">
@@ -108,6 +108,12 @@ export default function Dashboard() {
 
     setCharts(newCharts);
   }
+
+  function handleRemoveChart(index: number) {
+    const newCharts = charts.filter((_, i) => i !== index);
+    setCharts(newCharts);
+  }
+
   return (
     <>
       <DashboardModal
@@ -181,7 +187,6 @@ export default function Dashboard() {
             >
               {isEditing ? "Done" : "Edit"}
             </Button>
-            {/* <Button onClick={openModal}>Add Chart</Button> */}
             <Button onClick={saveDashboard}>Save</Button>
           </Group>
         </Group>
@@ -196,6 +201,7 @@ export default function Dashboard() {
                       title={chart.name}
                       description={chart.description}
                       isEditing={isEditing}
+                      onDelete={() => handleRemoveChart(index)}
                     >
                       <ChartComponent
                         id={chart.id}
@@ -255,6 +261,7 @@ function Draggable({ children, index, isEditing }) {
     </Box>
   );
 }
+
 function Droppable({ children, onDrop, index }) {
   const [{ isOver }, drop] = useDrop(() => ({
     accept: "chart",
@@ -265,11 +272,7 @@ function Droppable({ children, onDrop, index }) {
   }));
 
   return (
-    <div
-      ref={drop}
-      className={isOver ? "" : ""}
-      style={{ height: "100%", opacity: isOver ? 0.4 : 1 }}
-    >
+    <div ref={drop} style={{ height: "100%", opacity: isOver ? 0.4 : 1 }}>
       {children}
     </div>
   );
