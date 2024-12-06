@@ -17,6 +17,7 @@ interface ChartProps {
   color?: string | null;
   primaryDimension?: string | null;
   secondaryDimension?: string | null;
+  aggregationMethod?: string | null;
 }
 
 // refactor props using by a chart object
@@ -30,6 +31,7 @@ export default function ChartComponent({
   color,
   primaryDimension,
   secondaryDimension,
+  aggregationMethod,
 }: ChartProps) {
   let { data, isLoading } = useAnalyticsChartData<any>(
     dataKey,
@@ -81,6 +83,7 @@ export default function ChartComponent({
         granularity={granularity}
         dataKey={dataKey}
         color={color}
+        aggregationMethod={aggregationMethod}
       />
     );
   }

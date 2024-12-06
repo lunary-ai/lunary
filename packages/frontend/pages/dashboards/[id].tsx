@@ -72,6 +72,8 @@ export default function Dashboard() {
     setCharts(orderedCharts);
   }
 
+  const scrollableContainerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!dashboardIsLoading && dashboard) {
       setChecks(dashboard.checks);
@@ -166,8 +168,6 @@ export default function Dashboard() {
     setChartsWithSortOrder(finalCharts);
     closeModal();
   }
-
-  const scrollableContainerRef = useRef<HTMLDivElement>(null);
 
   return (
     <>
@@ -372,8 +372,8 @@ function Droppable({
         const container = scrollContainerRef.current;
         const rect = container.getBoundingClientRect();
 
-        const SCROLL_THRESHOLD = 300;
-        const SCROLL_SPEED = 10;
+        const SCROLL_THRESHOLD = 150;
+        const SCROLL_SPEED = 30;
 
         if (offset.y < rect.top + SCROLL_THRESHOLD) {
           container.scrollTop -= SCROLL_SPEED;

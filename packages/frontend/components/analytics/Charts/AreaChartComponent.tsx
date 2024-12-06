@@ -1,5 +1,5 @@
 import { AreaChart, ChartTooltip } from "@mantine/charts";
-import { Text } from "@mantine/core";
+import { Box, Text } from "@mantine/core";
 import { format, parseISO } from "date-fns";
 import { Granularity } from "../Creator";
 import { formatLargeNumber } from "@/utils/format";
@@ -42,13 +42,6 @@ type Series = {
   name: string;
   color: string;
 };
-
-interface AreaChartProps {
-  data: InputData[];
-  granularity: Granularity;
-  color?: string | null;
-  dataKey?: string;
-}
 
 function transformData(data: InputData[]): TransformedData[] {
   const nameValues = data.reduce(
@@ -96,21 +89,35 @@ function generateSeries(
   }));
 }
 
+interface AreaChartProps {
+  data: InputData[];
+  granularity: Granularity;
+  color?: string | null;
+  dataKey?: string;
+  aggregationMethod?: string | null;
+}
+
 export default function AreaChartComponent({
   data,
   granularity,
   dataKey,
   color,
+  aggregationMethod,
 }: AreaChartProps) {
   const formattedData = transformData(data);
   const series = generateSeries(formattedData, color);
-  const aggValue = formatLargeNumber(getFigure("sum", data, "value")); // TODO: agg for all agg types
+  const aggValue = aggregationMethod
+    ? formatLargeNumber(getFigure(aggregationMethod, data, "value"))
+    : null;
+
+  console.log(aggregationMethod);
 
   return (
     <>
       <Text fw={500} fz={24} mb="md">
-        {dataKey?.includes("cost") ? `$${aggValue}` : aggValue}
+        {dataKey?.includes("cost") && aggValue ? `$${aggValue}` : aggValue}
       </Text>
+      {!aggValue && <Box h="24px" />}
       <AreaChart
         h="230px"
         data={formattedData}
