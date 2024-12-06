@@ -28,10 +28,9 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { Chart, LogicNode } from "shared";
-import { chartProps, DEFAULT_CHARTS } from "shared/dashboards";
 
 function getSpan(index: number) {
   if ([0, 1, 2].includes(index)) {
@@ -168,6 +167,8 @@ export default function Dashboard() {
     closeModal();
   }
 
+  const scrollableContainerRef = useRef<HTMLDivElement>(null);
+
   return (
     <>
       <DashboardModal
@@ -265,34 +266,43 @@ export default function Dashboard() {
           </Group>
         </Stack>
 
-        <Grid>
-          {charts.map((chart, index) => (
-            <Grid.Col span={getSpan(index)} key={chart.id} h="350px">
-              <ErrorBoundary>
-                <Droppable index={index} onDrop={handleDrop}>
-                  <Draggable index={index} isEditing={isEditing}>
-                    <AnalyticsCard
-                      title={chart.name}
-                      description={chart.description}
-                      isEditing={isEditing}
-                      onDelete={() => handleRemoveChart(index)}
-                    >
-                      <ChartComponent
-                        id={chart.id}
-                        dataKey={chart.dataKey}
-                        startDate={startDate}
-                        endDate={endDate}
-                        granularity={granularity}
-                        checks={checks}
-                        color={chart.color}
-                      />
-                    </AnalyticsCard>
-                  </Draggable>
-                </Droppable>
-              </ErrorBoundary>
-            </Grid.Col>
-          ))}
-        </Grid>
+        <Box
+          ref={scrollableContainerRef}
+          style={{ maxHeight: "80vh", overflowY: "auto" }}
+        >
+          <Grid>
+            {charts.map((chart, index) => (
+              <Grid.Col span={getSpan(index)} key={chart.id} h="350px">
+                <ErrorBoundary>
+                  <Droppable
+                    index={index}
+                    onDrop={handleDrop}
+                    scrollContainerRef={scrollableContainerRef}
+                  >
+                    <Draggable index={index} isEditing={isEditing}>
+                      <AnalyticsCard
+                        title={chart.name}
+                        description={chart.description}
+                        isEditing={isEditing}
+                        onDelete={() => handleRemoveChart(index)}
+                      >
+                        <ChartComponent
+                          id={chart.id}
+                          dataKey={chart.dataKey}
+                          startDate={startDate}
+                          endDate={endDate}
+                          granularity={granularity}
+                          checks={checks}
+                          color={chart.color}
+                        />
+                      </AnalyticsCard>
+                    </Draggable>
+                  </Droppable>
+                </ErrorBoundary>
+              </Grid.Col>
+            ))}
+          </Grid>
+        </Box>
       </Stack>
     </>
   );
@@ -344,20 +354,38 @@ function Droppable({
   children,
   onDrop,
   index,
+  scrollContainerRef,
 }: {
   children: React.ReactNode;
   onDrop: (dragIndex: number, dropIndex: number) => void;
   index: number;
+  scrollContainerRef: React.RefObject<HTMLDivElement>;
 }) {
   const [{ isOver }, drop] = useDrop(
     () => ({
       accept: "chart",
       drop: (item: { index: number }) => onDrop(item.index, index),
+      hover: (_, monitor) => {
+        if (!scrollContainerRef.current) return;
+        const offset = monitor.getClientOffset();
+        if (!offset) return;
+        const container = scrollContainerRef.current;
+        const rect = container.getBoundingClientRect();
+
+        const SCROLL_THRESHOLD = 300;
+        const SCROLL_SPEED = 10;
+
+        if (offset.y < rect.top + SCROLL_THRESHOLD) {
+          container.scrollTop -= SCROLL_SPEED;
+        } else if (offset.y > rect.bottom - SCROLL_THRESHOLD) {
+          container.scrollTop += SCROLL_SPEED;
+        }
+      },
       collect: (monitor) => ({
         isOver: !!monitor.isOver(),
       }),
     }),
-    [onDrop, index],
+    [onDrop, index, scrollContainerRef],
   );
 
   return (
