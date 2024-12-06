@@ -76,7 +76,6 @@ export const chartProps: Record<string, Chart> = {
     type: "Area",
     dataKey: "tokens",
     aggregationMethod: "sum",
-    splitBy: "name",
   },
   costs: {
     id: "costs",
@@ -85,7 +84,6 @@ export const chartProps: Record<string, Chart> = {
     type: "Area",
     dataKey: "costs",
     aggregationMethod: "sum",
-    splitBy: "name",
   },
   errors: {
     id: "errors",

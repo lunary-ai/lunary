@@ -68,8 +68,6 @@ export default function Dashboard() {
 
   const [isEditing, setIsEditing] = useState(false);
 
-  console.log(granularity, dashboardIsLoading);
-
   useEffect(() => {
     if (!dashboardIsLoading && dashboard) {
       setChecks(dashboard.checks);
