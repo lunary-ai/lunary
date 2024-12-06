@@ -100,9 +100,9 @@ dashboards.get("/:id", async (ctx: Context) => {
 dashboards.post("/", async (ctx: Context) => {
   const { projectId, userId } = ctx.state;
   const bodySchema = z.object({
-    name: z.string(),
+    name: z.string().optional(),
     description: z.string().optional().nullable().default(null),
-    checks: z.any(),
+    checks: z.any().optional(),
     startDate: z.string().optional(),
     endDate: z.string().optional(),
     granularity: z.string().optional(),
@@ -126,6 +126,8 @@ dashboards.post("/", async (ctx: Context) => {
   } = bodySchema.parse(ctx.request.body);
 
   const insertedDashboard = await sql.begin(async (sql) => {
+    const [{ count }] =
+      await sql`select count(*) from dashboard where project_id = ${projectId}`;
     if (isHome) {
       await sql`
         update dashboard
@@ -136,17 +138,19 @@ dashboards.post("/", async (ctx: Context) => {
     }
 
     const [insertedDashboard] = await sql`
-      insert into dashboard ${sql({
-        project_id: projectId,
-        owner_id: userId,
-        name,
-        description,
-        checks,
-        start_date: startDate || null,
-        end_date: endDate || null,
-        granularity: granularity || null,
-        is_home: isHome,
-      })}
+      insert into dashboard ${sql(
+        clearUndefined({
+          project_id: projectId,
+          owner_id: userId,
+          name: name || `Dashboard ${count + 1}`,
+          description,
+          checks,
+          start_date: startDate || null,
+          end_date: endDate || null,
+          granularity: granularity || null,
+          is_home: isHome,
+        }),
+      )}
       returning *
     `;
 
@@ -164,7 +168,7 @@ dashboards.post("/", async (ctx: Context) => {
           secondary_dimension: null,
           is_custom: false,
           sortOrder: index,
-          color: null,
+          color: chartDef.color || null,
           customChartId: null,
         };
       });

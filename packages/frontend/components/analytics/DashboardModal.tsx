@@ -10,13 +10,14 @@ import {
   SimpleGrid,
   Stack,
   Tabs,
-  Title,
 } from "@mantine/core";
+import { useColorScheme } from "@mantine/hooks";
 import { IconCheck, IconPlus } from "@tabler/icons-react";
 import { useState } from "react";
 import { DEFAULT_CHARTS, LogicNode } from "shared";
 import AnalyticsCard from "./AnalyticsCard";
 import ChartComponent from "./Charts/ChartComponent";
+import { CustomChartCreator } from "./Creator";
 
 interface DashboardModalProps {
   opened: boolean;
@@ -37,10 +38,72 @@ export default function DashboardModal({
   checks,
   onApply,
 }: DashboardModalProps): JSX.Element {
+  const [selectedCharts, setSelectedCharts] = useState<string[]>([]);
+  const [isCreatingCustomChart, setIsCreatingCustomChart] = useState(false);
+
+  function handleApply() {
+    onApply(selectedCharts);
+    setSelectedCharts([]);
+    close();
+  }
+
+  return (
+    <Modal opened={opened} onClose={close} withCloseButton={false} size="80vw">
+      {!isCreatingCustomChart && (
+        <Group justify="right">
+          <Button
+            variant="outline"
+            leftSection={<IconPlus />}
+            onClick={() => setIsCreatingCustomChart(true)}
+          >
+            Create Chart
+          </Button>
+        </Group>
+      )}
+
+      {isCreatingCustomChart ? (
+        <CustomChartCreator />
+      ) : (
+        <ChartSelectionPanel
+          startDate={startDate}
+          endDate={endDate}
+          granularity={granularity}
+          checks={checks}
+          selectedCharts={selectedCharts}
+          setSelectedCharts={setSelectedCharts}
+          onClose={close}
+          onApply={handleApply}
+        />
+      )}
+    </Modal>
+  );
+}
+
+interface ChartSelectionPanelProps {
+  startDate: Date;
+  endDate: Date;
+  granularity: "hourly" | "daily" | "weekly" | "monthly";
+  checks: LogicNode;
+  selectedCharts: string[];
+  setSelectedCharts: React.Dispatch<React.SetStateAction<string[]>>;
+  onClose: () => void;
+  onApply: () => void;
+}
+
+function ChartSelectionPanel({
+  startDate,
+  endDate,
+  granularity,
+  checks,
+  selectedCharts,
+  setSelectedCharts,
+  onClose,
+  onApply,
+}: ChartSelectionPanelProps) {
   const defaultCharts = Object.values(DEFAULT_CHARTS);
   const { customCharts, isLoading: customChartsLoading } = useCustomCharts();
-
-  const [selectedCharts, setSelectedCharts] = useState<string[]>([]);
+  const colorScheme = useColorScheme();
+  const backgroundColor = colorScheme === "light" ? "#fcfcfc" : "inherit";
 
   function toggleChartSelection(chartId: string) {
     setSelectedCharts((prev) =>
@@ -50,21 +113,10 @@ export default function DashboardModal({
     );
   }
 
-  function handleApply() {
-    onApply(selectedCharts);
-    setSelectedCharts([]);
-    close();
-  }
-
   return (
-    <Modal
-      opened={opened}
-      onClose={close}
-      title={<Title order={2}>Add Charts</Title>}
-      size="80vw"
-    >
-      <Tabs defaultValue="default" pb="xl">
-        <Tabs.List>
+    <>
+      <Tabs defaultValue="default" pb="xl" variant="outline">
+        <Tabs.List mt="md">
           <Tabs.Tab value="default">Default Charts</Tabs.Tab>
           <Tabs.Tab value="custom">Custom Charts</Tabs.Tab>
         </Tabs.List>
@@ -189,19 +241,18 @@ export default function DashboardModal({
         style={{
           position: "sticky",
           bottom: 0,
-          backgroundColor: "white",
-          borderTop: "1px solid #ddd",
+          backgroundColor: backgroundColor,
           zIndex: 3,
         }}
         py="md"
       >
         <Group justify="right">
-          <Button variant="default" onClick={close}>
+          <Button variant="default" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleApply}>Apply</Button>
+          <Button onClick={onApply}>Apply</Button>
         </Group>
       </Box>
-    </Modal>
+    </>
   );
 }

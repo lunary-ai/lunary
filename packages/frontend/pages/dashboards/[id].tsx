@@ -7,7 +7,7 @@ import DateRangeGranularityPicker, {
 import ErrorBoundary from "@/components/blocks/ErrorBoundary";
 import RenamableField from "@/components/blocks/RenamableField";
 import CheckPicker from "@/components/checks/Picker";
-import { useDashboard } from "@/utils/dataHooks/dashboards";
+import { useDashboard, useDashboards } from "@/utils/dataHooks/dashboards";
 import {
   ActionIcon,
   Box,
@@ -21,6 +21,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
+  IconDashboard,
   IconDotsVertical,
   IconHome2,
   IconPlus,
@@ -30,7 +31,7 @@ import {
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
-import { Chart, LogicNode } from "shared";
+import { Chart, DEFAULT_CHARTS, LogicNode } from "shared";
 
 function getSpan(index: number) {
   if ([0, 1, 2].includes(index)) {
@@ -55,6 +56,8 @@ export default function Dashboard() {
     remove: removeDashboard,
     isMutating: dashboardIsMutating,
   } = useDashboard(dashboardId);
+
+  const { insert: insertDashboard, dashboards } = useDashboards();
 
   const [checks, setChecks] = useState<LogicNode>(["AND"]);
   const [charts, setCharts] = useState<Chart[]>([]);
@@ -171,15 +174,17 @@ export default function Dashboard() {
 
   return (
     <>
-      <DashboardModal
-        opened={modalOpened}
-        close={closeModal}
-        startDate={startDate}
-        endDate={endDate}
-        granularity={granularity}
-        checks={checks}
-        onApply={handleApply}
-      />
+      {modalOpened && (
+        <DashboardModal
+          opened={modalOpened}
+          close={closeModal}
+          startDate={startDate}
+          endDate={endDate}
+          granularity={granularity}
+          checks={checks}
+          onApply={handleApply}
+        />
+      )}
       <Stack pt="24px">
         <Stack>
           <Group justify="space-between">
@@ -217,6 +222,12 @@ export default function Dashboard() {
                       }}
                     >
                       Delete
+                    </Menu.Item>
+                    <Menu.Item
+                      leftSection={<IconPlus size={16} />}
+                      onClick={() => insertDashboard()}
+                    >
+                      Create new Dashboard
                     </Menu.Item>
                   </Menu.Dropdown>
                 </Menu>
@@ -294,6 +305,7 @@ export default function Dashboard() {
                           granularity={granularity}
                           checks={checks}
                           color={chart.color}
+                          aggregationMethod={chart.aggregationMethod}
                         />
                       </AnalyticsCard>
                     </Draggable>

@@ -95,6 +95,7 @@ interface AreaChartProps {
   color?: string | null;
   dataKey?: string;
   aggregationMethod?: string | null;
+  stat?: number | null;
 }
 
 export default function AreaChartComponent({
@@ -103,14 +104,15 @@ export default function AreaChartComponent({
   dataKey,
   color,
   aggregationMethod,
+  stat,
 }: AreaChartProps) {
   const formattedData = transformData(data);
   const series = generateSeries(formattedData, color);
-  const aggValue = aggregationMethod
-    ? formatLargeNumber(getFigure(aggregationMethod, data, "value"))
-    : null;
-
-  console.log(aggregationMethod);
+  const aggValue = stat
+    ? stat
+    : aggregationMethod
+      ? formatLargeNumber(getFigure(aggregationMethod, data, "value"))
+      : null;
 
   return (
     <>
@@ -149,7 +151,19 @@ export default function AreaChartComponent({
               .map((item) => ({
                 ...item,
                 value: formatLargeNumber(Number.parseInt(item.value)),
+                payload: {
+                  date: item.payload.date,
+                  ...Object.fromEntries(
+                    Object.entries(item.payload).map(([key, value]) => [
+                      key,
+                      typeof value === "number" && value % 1 !== 0
+                        ? value.toFixed(6)
+                        : value,
+                    ]),
+                  ),
+                },
               }));
+            console.log(payload, filteredPayload);
 
             if (filteredPayload.length === 0) {
               return null;

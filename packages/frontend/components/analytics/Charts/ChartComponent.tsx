@@ -33,7 +33,7 @@ export default function ChartComponent({
   secondaryDimension,
   aggregationMethod,
 }: ChartProps) {
-  let { data, isLoading } = useAnalyticsChartData<any>(
+  let { data, stat, isLoading } = useAnalyticsChartData<any>(
     dataKey,
     startDate,
     endDate,
@@ -76,7 +76,9 @@ export default function ChartComponent({
     return <TopUsers data={data} />;
   }
 
-  if (["tokens", "costs", "errors", "users/new"].includes(dataKey)) {
+  if (
+    ["tokens", "costs", "errors", "users/new", "users/active"].includes(dataKey)
+  ) {
     return (
       <AreaChartComponent
         data={data}
@@ -84,6 +86,7 @@ export default function ChartComponent({
         dataKey={dataKey}
         color={color}
         aggregationMethod={aggregationMethod}
+        stat={stat}
       />
     );
   }

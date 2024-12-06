@@ -127,7 +127,7 @@ analytics.get("/costs", async (ctx: Context) => {
         )
         select
           d.date,
-          coalesce(sum(r.cost)::float, 0) as costs,
+          coalesce(sum(r.cost)::float, 0) as value ,
           r.name
         from
           dates d
@@ -224,8 +224,8 @@ analytics.get(
       filteredRunsQuery,
     } = parseQuery(projectId, ctx.query);
 
-    const firstDimensionKey = ctx.query.firstDimensionKey;
-    const secondDimensionKey = ctx.query.secondDimensionKey;
+    const firstDimensionKey = ctx.query.firstDimension || "undefined";
+    const secondDimensionKey = ctx.query.secondDimension || "undefined";
 
     const [{ stat }] = await sql`
       select
@@ -269,7 +269,8 @@ analytics.get(
           )
           select
             d.date,
-            coalesce(count(nu.id)::int, 0) as value
+            coalesce(count(nu.id)::int, 0) as value,
+            'Count' as name
           from
             dates d
             left join new_users nu on nu.local_created_at >= d.date and nu.local_created_at < d.date + interval '7 days'
@@ -303,7 +304,8 @@ analytics.get(
           )
           select
             d.date,
-            coalesce(count(nu.id)::int, 0) as value
+            coalesce(count(nu.id)::int, 0) as value,
+            'Count' as name
           from
             dates d
             left join new_users nu on d.date = nu.local_created_at
@@ -457,8 +459,8 @@ analytics.get(
     };
     const distinct = distinctMap[granularity];
 
-    const firstDimensionKey = ctx.query.firstDimensionKey;
-    const secondDimensionKey = ctx.query.secondDimensionKey;
+    const firstDimensionKey = ctx.query.firstDimension || "undefined";
+    const secondDimensionKey = ctx.query.secondDimension || "undefined";
 
     const [{ stat }] = await sql`
       select
@@ -493,7 +495,8 @@ analytics.get(
         )
         select
           d.date,
-          coalesce(count(r.external_user_id)::int, 0) as users
+          coalesce(count(r.external_user_id)::int, 0) as value,
+          'Count' as name
         from
           dates d
           left join filtered_runs r on d.date = r.local_created_at
@@ -605,9 +608,9 @@ analytics.get(
             and r.external_user_id is not null
         )
         select
-          d.date as value,
+          d.date, 
           coalesce(eu.props ->> ${firstDimensionKey as string}, 'Unknown') as first_dimension_value, 
-          coalesce(count(r.external_user_id)::int, 0) as user_count
+          coalesce(count(r.external_user_id)::int, 0) as value
         from
           dates d
           left join filtered_runs r on d.date = r.local_created_at

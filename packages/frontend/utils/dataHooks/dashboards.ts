@@ -8,7 +8,6 @@ export function useDashboards() {
   const { trigger: insert, isMutating: isInserting } = useProjectMutation(
     `/dashboards`,
     fetcher.post,
-    { onSuccess: () => mutate() },
   );
 
   return {

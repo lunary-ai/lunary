@@ -71,6 +71,14 @@ export const DEFAULT_CHARTS = {
     dataKey: "users/new",
     aggregationMethod: "sum",
   },
+  "users/active": {
+    id: "users/active",
+    name: "Active Users",
+    description: "The number of active users for the selected period",
+    type: "Area",
+    dataKey: "users/active",
+    aggregationMethod: "sum",
+  },
   // "users/new": {
   //   dataKey: "users/new",
   //   props: ["users"],

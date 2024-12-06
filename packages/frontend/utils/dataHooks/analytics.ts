@@ -34,7 +34,7 @@ export function useAnalyticsChartData<T>(
       : undefined,
   );
 
-  return { data: data || [], isLoading, error };
+  return { data: data || [], stat: data?.stat || null, isLoading, error };
 }
 
 export function useTopModels<T>(params: {
