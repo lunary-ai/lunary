@@ -1,4 +1,8 @@
 import { AreaChart, ChartTooltip } from "@mantine/charts";
+import { Text } from "@mantine/core";
+import { format, parseISO } from "date-fns";
+import { Granularity } from "../Creator";
+import { formatLargeNumber } from "@/utils/format";
 
 const COLOR_PALETTE = [
   "violet.6",
@@ -7,10 +11,20 @@ const COLOR_PALETTE = [
   "red.6",
   "orange.6",
   "teal.6",
-  "purple.6",
+  "violet.7",
   "yellow.6",
   "pink.6",
   "cyan.6",
+  "indigo.6",
+  "lime.6",
+  "grape.6",
+  "blue.7",
+  "teal.7",
+  "red.7",
+  "orange.7",
+  "pink.7",
+  "green.7",
+  "cyan.7",
 ];
 
 type InputData = {
@@ -31,6 +45,7 @@ type Series = {
 
 interface AreaChartProps {
   data: InputData[];
+  granularity: Granularity;
 }
 
 function transformData(data: InputData[]): TransformedData[] {
@@ -72,27 +87,115 @@ function generateSeries(data: TransformedData[]): Series[] {
 
   return sortedKeys.map((name, index) => ({
     name,
-    color: COLOR_PALETTE[index] || "gray.6",
+    color: COLOR_PALETTE[index % COLOR_PALETTE.length] || "gray.6",
   }));
 }
 
-export default function AreaChartComponent({ data }: AreaChartProps) {
+export default function AreaChartComponent({
+  data,
+  granularity,
+}: AreaChartProps) {
   const formattedData = transformData(data);
   const series = generateSeries(formattedData);
+  const aggValue = formatLargeNumber(getFigure("sum", data, "value")); // TODO: agg for all agg types
 
   return (
-    <AreaChart
-      h="260"
-      data={formattedData}
-      dataKey="date"
-      series={series}
-      withDots={false}
-      withYAxis={false}
-      tooltipProps={{
-        content: ({ label, payload }) => {
-          return <ChartTooltip label={label} payload={payload} />;
-        },
-      }}
-    />
+    <>
+      <Text fw={500} fz={24} mb="md">
+        {aggValue}
+      </Text>
+      <AreaChart
+        h="230px"
+        data={formattedData}
+        dataKey="date"
+        series={series}
+        withDots={false}
+        withYAxis={false}
+        xAxisProps={{
+          fontSize: "45px",
+          tickFormatter: (value, index) => {
+            if (index === 0 || index === formattedData.length - 1) {
+              return formatDate(value, "daily") || "";
+            }
+            return "";
+          },
+          tickMargin: 8,
+          tick: {
+            fontSize: "16px",
+            fill: "#666",
+            opacity: 0.8,
+            offset: 100,
+          },
+        }}
+        tooltipProps={{
+          content: ({ label, payload }) => {
+            const filteredPayload = (payload || [])
+              .filter((item: any) => item.value > 0)
+              .sort((a: any, b: any) => b.value - a.value)
+              .map((item) => ({
+                ...item,
+                value: formatLargeNumber(Number.parseInt(item.value)),
+              }));
+            console.log(filteredPayload);
+
+            if (filteredPayload.length === 0) {
+              return null;
+            }
+
+            return (
+              <ChartTooltip
+                label={formatDate(label, granularity)}
+                payload={filteredPayload}
+              />
+            );
+          },
+        }}
+      />
+    </>
   );
+}
+
+function formatDate(date, granularity) {
+  if (!date) return;
+  switch (granularity) {
+    case "daily":
+      return format(parseISO(date), "MMM do");
+    case "hourly":
+      return format(parseISO(date), "eee, HH'h'");
+    case "weekly":
+      return format(parseISO(date), "MMM d");
+  }
+}
+
+// TDOO: put in a separate file
+function getFigure(agg: string, data: any[], prop: string) {
+  const propKeys = Object.keys(data[0] || {}).filter((key) =>
+    key.includes(prop),
+  );
+
+  if (agg === "sum") {
+    return data.reduce((acc, item) => {
+      propKeys.forEach((key) => (acc += item[key] ?? 0));
+      return acc;
+    }, 0);
+  } else if (agg === "avg") {
+    const filteredData = data.filter((item) => item[prop] !== 0);
+    return (
+      filteredData.reduce((acc, item) => {
+        propKeys.forEach((key) => (acc += item[key] ?? 0));
+        return acc;
+      }, 0) / filteredData.length || 0
+    );
+  } else if (agg === "max") {
+    return data.reduce((acc, item) => {
+      propKeys.forEach((key) => (acc = Math.max(acc, item[key] ?? -Infinity)));
+      return acc;
+    }, -Infinity);
+  } else if (agg === "min") {
+    return data.reduce((acc, item) => {
+      propKeys.forEach((key) => (acc = Math.min(acc, item[key] ?? Infinity)));
+      return acc;
+    }, Infinity);
+  }
+  return 0;
 }

@@ -1,6 +1,6 @@
 import AnalyticsCard from "@/components/analytics/AnalyticsCard";
 import ChartComponent from "@/components/analytics/Charts/ChartComponent";
-import chartProps from "@/components/analytics/Charts/chartProps";
+import { chartProps } from "shared/dashboards";
 import DashboardModal from "@/components/analytics/DashboardModal";
 import DateRangeGranularityPicker, {
   useDateRangeGranularity,
@@ -24,6 +24,7 @@ import { useDisclosure } from "@mantine/hooks";
 import {
   IconDotsVertical,
   IconHome2,
+  IconPlus,
   IconSettings,
   IconTrash,
 } from "@tabler/icons-react";
@@ -67,6 +68,8 @@ export default function Dashboard() {
 
   const [isEditing, setIsEditing] = useState(false);
 
+  console.log(granularity, dashboardIsLoading);
+
   useEffect(() => {
     if (!dashboardIsLoading && dashboard) {
       setChecks(dashboard.checks);
@@ -77,7 +80,9 @@ export default function Dashboard() {
           new Date(dashboard.endDate),
         ]);
       }
-      setGranularity(dashboard.granularity);
+      if (dashboard.granularity) {
+        setGranularity(dashboard.granularity);
+      }
     }
   }, [dashboard, dashboardIsLoading]);
 
@@ -200,7 +205,11 @@ export default function Dashboard() {
               </Group>
             </Group>
             <Group>
-              <Button onClick={openModal} variant="default">
+              <Button
+                onClick={openModal}
+                variant="default"
+                leftSection={<IconPlus size={14} />}
+              >
                 Add Charts
               </Button>
               <Button

@@ -65,20 +65,8 @@ export default function ChartComponent({
     return <TopUsers data={data} />;
   }
 
-  if (id === "tokens") {
-    return <AreaChartComponent data={data} />;
-  }
-
-  if (id === "costs") {
-    return <AreaChartComponent data={data} />;
-  }
-
-  if (id === "errors") {
-    return <AreaChartComponent data={data} />;
-  }
-
-  if (id === "users/new") {
-    return <AreaChartComponent data={data} />;
+  if (["tokens", "costs", "errors", "users/new"].includes(id)) {
+    return <AreaChartComponent data={data} granularity={granularity} />;
   }
 
   return "No chart available";

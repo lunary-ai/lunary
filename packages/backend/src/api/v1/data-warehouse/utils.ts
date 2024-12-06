@@ -214,7 +214,7 @@ export async function createNewDatastream(
   };
 
   const [operation] = await datastreamClient.createStream(request);
-  console.log(`Stream creation initiated. Operation name: ${operation.name}`);
+  console.info(`Stream creation initiated. Operation name: ${operation.name}`);
 
   const [response] = await operation.promise();
   console.log("Stream created successfully:", response);

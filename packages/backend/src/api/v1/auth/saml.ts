@@ -61,7 +61,6 @@ async function getOrgIdp(orgId: string) {
 }
 
 async function getOrgSp(orgId: string) {
-  console.log(`Getting SP for orgId: ${orgId}`);
   return samlify.ServiceProvider({
     // authnRequestsSigned: true,
     wantAssertionsSigned: true,

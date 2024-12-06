@@ -22,7 +22,7 @@ import {
 } from "date-fns";
 import { useMemo } from "react";
 import { openUpgrade } from "../layout/UpgradeModal";
-import { generateSeries } from "./Creator";
+import { generateSeries, Granularity } from "./Creator";
 
 interface ChartTooltipProps {
   label: string;
@@ -163,7 +163,7 @@ function getDateFormat(granularity: "daily" | "hourly" | "weekly"): string {
       : "yyyy-'W'ww";
 }
 
-const formatDate = (date, granularity) => {
+const formatDate = (date, granularity: Granularity) => {
   if (!date) return;
   switch (granularity) {
     case "daily":
@@ -174,6 +174,7 @@ const formatDate = (date, granularity) => {
       return format(parseISO(date), "MMM d");
   }
 };
+
 const CustomizedAxisTick = ({ x, y, payload, index, data, granularity }) => {
   // // Hide the first and last tick
   // if (index === 0 || index === data.length - 1) {

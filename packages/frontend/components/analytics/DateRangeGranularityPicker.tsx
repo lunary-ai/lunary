@@ -125,13 +125,17 @@ export function GranularitySelect({
 
     if (diffDays <= 1) {
       allowedOptions = [{ value: "hourly", label: "Hourly" }];
-    } else if (diffDays <= 93) {
+    } else if (diffDays <= 30) {
       allowedOptions = [
         { value: "daily", label: "Daily" },
         { value: "weekly", label: "Weekly" },
       ];
     } else {
-      allowedOptions = [{ value: "weekly", label: "Weekly" }];
+      allowedOptions = [
+        { value: "daily", label: "Daily" },
+        { value: "weekly", label: "Weekly" },
+        // TODO: { value: "monthly", label: "Monthly" },
+      ];
     }
 
     setOptions(allowedOptions);

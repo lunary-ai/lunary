@@ -19,6 +19,7 @@ export function useAnalyticsChartData<T>(
   firstDimensionKey: string | null = null,
   secondDimensionKey: string | null = null,
 ) {
+  console.log(granularity);
   const timeZone = new window.Intl.DateTimeFormat().resolvedOptions().timeZone;
   const checksParam = checks ? `&checks=${serializeLogic(checks)}` : "";
   const { data, isLoading, error } = useProjectSWR<T[]>(

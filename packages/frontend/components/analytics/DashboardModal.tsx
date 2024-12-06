@@ -12,7 +12,7 @@ import { useState } from "react";
 import { DEFAULT_CHARTS, LogicNode } from "shared";
 import AnalyticsCard from "./AnalyticsCard";
 import ChartComponent from "./Charts/ChartComponent";
-import chartProps from "./Charts/chartProps";
+import { chartProps } from "shared/dashboards";
 
 interface DashboardModalProps {
   opened: boolean;

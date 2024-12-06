@@ -36,6 +36,7 @@ export function parseQuery(projectId: string, query: unknown) {
         hourly: sql`date_trunc('hour', r.created_at at time zone ${timeZone})::timestamp as local_created_at`,
         daily: sql`date_trunc('day', r.created_at at time zone ${timeZone})::timestamp as local_created_at`,
         weekly: sql`date_trunc('day', r.created_at at time zone ${timeZone})::timestamp as local_created_at`,
+        monthly: sql`date_trunc('month', r.created_at at time zone ${timeZone})::timestamp as local_created_at`,
       };
       const interval = granularityToIntervalMap[granularity];
       const localCreatedAt = localCreatedAtMap[granularity];

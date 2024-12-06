@@ -153,7 +153,7 @@ dashboards.patch("/:id", async (ctx: Context) => {
     isHome,
   } = bodySchema.parse(ctx.request.body);
 
-  console.log(checks);
+  console.info(checks);
   const dashboardToUpdate = clearUndefined({
     updatedAt: new Date(),
     name,
