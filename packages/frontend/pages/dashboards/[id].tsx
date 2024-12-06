@@ -28,9 +28,9 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
-import React, { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
-import { Chart, deserializeLogic, LogicNode } from "shared";
+import { Chart, LogicNode } from "shared";
 
 function getSpan(index: number) {
   if ([0, 1, 2].includes(index)) {
@@ -53,6 +53,7 @@ export default function Dashboard() {
     update: updateDashboard,
     isLoading: dashboardIsLoading,
     remove: removeDashboard,
+    isMutating: dashboardIsMutating,
   } = useDashboard(dashboardId);
 
   const [checks, setChecks] = useState<LogicNode>(["AND"]);
@@ -76,10 +77,30 @@ export default function Dashboard() {
           new Date(dashboard.endDate),
         ]);
       }
+      setGranularity(dashboard.granularity);
     }
-  }, [dashboard]);
+  }, [dashboard, dashboardIsLoading]);
 
-  // TODO: isValidating?
+  const isDirty = useMemo(() => {
+    if (!dashboard) return false;
+
+    const current = {
+      checks,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      granularity,
+      chartIds: charts.map((c) => c.id),
+    };
+    const initial = {
+      checks: dashboard.checks,
+      startDate: dashboard.startDate,
+      endDate: dashboard.endDate,
+      granularity: dashboard.granularity,
+      chartIds: dashboard.chartIds,
+    };
+    return JSON.stringify(current) !== JSON.stringify(initial);
+  }, [dashboard, checks, startDate, endDate, granularity, charts]);
+
   if (dashboardIsLoading || !dashboard) {
     return (
       <Flex align="center" justify="center" h="280px">
@@ -99,8 +120,7 @@ export default function Dashboard() {
   }
 
   function handleDrop(dragIndex: number, dropIndex: number) {
-    const newCharts = [...charts];
-
+    const newCharts = structuredClone(charts);
     [newCharts[dragIndex], newCharts[dropIndex]] = [
       newCharts[dropIndex],
       newCharts[dragIndex],
@@ -114,6 +134,18 @@ export default function Dashboard() {
     setCharts(newCharts);
   }
 
+  // TODO: rename
+  function handleApply(selectedChartIds: string[]) {
+    // TODO: do not remove duplicates, use new ids instead
+    const uniqueIds = Array.from(
+      new Set([...charts.map((chart) => chart.id), ...selectedChartIds]),
+    );
+    const updatedCharts = uniqueIds.map((id) => chartProps[id]);
+
+    setCharts(updatedCharts);
+    closeModal();
+  }
+
   return (
     <>
       <DashboardModal
@@ -123,73 +155,89 @@ export default function Dashboard() {
         endDate={endDate}
         granularity={granularity}
         checks={checks}
+        onApply={handleApply}
       />
       <Stack pt="24px">
-        <Group justify="space-between">
-          <Group>
-            <Group gap="xs">
-              {dashboard.isHome && <IconHome2 stroke="2px" size={22} />}
-              <RenamableField
-                defaultValue={dashboard.name}
-                onRename={(newName) => updateDashboard({ name: newName })}
-              />
+        <Stack>
+          <Group justify="space-between">
+            <Group>
+              <Group gap="xs">
+                {dashboard.isHome && <IconHome2 stroke="2px" size={22} />}
+                <RenamableField
+                  defaultValue={dashboard.name}
+                  onRename={(newName) => updateDashboard({ name: newName })}
+                />
 
-              <Menu position="bottom-end">
-                <Menu.Target>
-                  <ActionIcon variant="subtle">
-                    <IconDotsVertical size={12} />
-                  </ActionIcon>
-                </Menu.Target>
-                <Menu.Dropdown>
-                  <Menu.Item
-                    leftSection={<IconHome2 size={16} />}
-                    disabled={dashboard.isHome}
-                    onClick={() => updateDashboard({ isHome: true })}
-                  >
-                    Set as Home Dashboard
-                  </Menu.Item>
-                  <Menu.Item
-                    color="red"
-                    leftSection={<IconTrash size={16} />}
-                    onClick={() => {
-                      if (dashboard.isHome) {
-                        alert("Cannot delete Home Dashboard");
-                        return;
-                      }
-                      removeDashboard();
-                    }}
-                  >
-                    Delete
-                  </Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
+                <Menu position="bottom-end">
+                  <Menu.Target>
+                    <ActionIcon variant="subtle">
+                      <IconDotsVertical size={12} />
+                    </ActionIcon>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    <Menu.Item
+                      leftSection={<IconHome2 size={16} />}
+                      disabled={dashboard.isHome}
+                      onClick={() => updateDashboard({ isHome: true })}
+                    >
+                      Set as Home Dashboard
+                    </Menu.Item>
+                    <Menu.Item
+                      color="red"
+                      leftSection={<IconTrash size={16} />}
+                      onClick={() => {
+                        if (dashboard.isHome) {
+                          alert("Cannot delete Home Dashboard");
+                          return;
+                        }
+                        removeDashboard();
+                      }}
+                    >
+                      Delete
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
+              </Group>
             </Group>
-            <DateRangeGranularityPicker
-              dateRange={[startDate, endDate]}
-              setDateRange={setDateRange}
-              granularity={granularity}
-              setGranularity={setGranularity}
-            />
-            <CheckPicker
-              minimal={true}
-              value={checks}
-              onChange={setChecks}
-              restrictTo={(filter) =>
-                ["models", "tags", "users", "metadata"].includes(filter.id)
-              }
-            />
+            <Group>
+              <Button onClick={openModal} variant="default">
+                Add Charts
+              </Button>
+              <Button
+                variant={isEditing ? "filled" : "default"}
+                leftSection={isEditing ? null : <IconSettings size="18px" />}
+                onClick={() => setIsEditing(!isEditing)}
+              >
+                {isEditing ? "Done" : "Edit"}
+              </Button>
+              <Button
+                onClick={saveDashboard}
+                leftSection={dashboardIsMutating ? <Loader size="sm" /> : null}
+                disabled={!isDirty || isEditing}
+              >
+                Save
+              </Button>
+            </Group>
           </Group>
-          <Group>
-            <Button
-              variant={isEditing ? "filled" : "default"}
-              leftSection={isEditing ? null : <IconSettings size="18px" />}
-              onClick={() => setIsEditing(!isEditing)}
-            >
-              {isEditing ? "Done" : "Edit"}
-            </Button>
-            <Button onClick={saveDashboard}>Save</Button>
+          <Group justify="space-between">
+            <Group>
+              <DateRangeGranularityPicker
+                dateRange={[startDate, endDate]}
+                setDateRange={setDateRange}
+                granularity={granularity}
+                setGranularity={setGranularity}
+              />
+              <CheckPicker
+                minimal={true}
+                value={checks}
+                onChange={setChecks}
+                restrictTo={(filter) =>
+                  ["models", "tags", "users", "metadata"].includes(filter.id)
+                }
+              />
+            </Group>
           </Group>
-        </Group>
+        </Stack>
 
         <Grid>
           {charts.map((chart, index) => (
@@ -240,12 +288,7 @@ function Draggable({ children, index, isEditing }) {
     if (!isEditing) {
       return "auto";
     }
-
-    if (isDragging) {
-      return "grabbing";
-    }
-
-    return "grab";
+    return isDragging ? "grabbing" : "grab";
   }
 
   return (
@@ -263,13 +306,16 @@ function Draggable({ children, index, isEditing }) {
 }
 
 function Droppable({ children, onDrop, index }) {
-  const [{ isOver }, drop] = useDrop(() => ({
-    accept: "chart",
-    drop: (item) => onDrop(item.index, index),
-    collect: (monitor) => ({
-      isOver: !!monitor.isOver(),
+  const [{ isOver }, drop] = useDrop(
+    () => ({
+      accept: "chart",
+      drop: (item: { index: number }) => onDrop(item.index, index),
+      collect: (monitor) => ({
+        isOver: !!monitor.isOver(),
+      }),
     }),
-  }));
+    [onDrop, index],
+  );
 
   return (
     <div ref={drop} style={{ height: "100%", opacity: isOver ? 0.4 : 1 }}>

@@ -82,11 +82,12 @@ export default function AreaChartComponent({ data }: AreaChartProps) {
 
   return (
     <AreaChart
-      h="300"
+      h="260"
       data={formattedData}
       dataKey="date"
       series={series}
       withDots={false}
+      withYAxis={false}
       tooltipProps={{
         content: ({ label, payload }) => {
           return <ChartTooltip label={label} payload={payload} />;

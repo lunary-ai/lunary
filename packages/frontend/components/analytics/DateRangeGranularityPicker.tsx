@@ -1,16 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
-import { Select, Group } from "@mantine/core";
 import {
   DateRangePicker,
-  GranularitySelect,
   determineGranularity,
   Granularity,
 } from "@/components/analytics/Creator";
+import { DateRangeSelect } from "@/pages/dashboards/old-[id]";
+import { Group, Select } from "@mantine/core";
+import { useEffect, useState } from "react";
 
 type PresetDateRange = "Today" | "7 Days" | "30 Days" | "3 Months" | "Custom";
 type DateRange = [Date, Date];
 
-// Helper functions to handle date range presets
 export function getDateRangeFromPreset(preset: PresetDateRange): DateRange {
   const endOfDay = new Date();
   endOfDay.setHours(23, 59, 59, 999);
@@ -27,6 +26,11 @@ export function getDateRangeFromPreset(preset: PresetDateRange): DateRange {
   }
 
   return [startDate, endOfDay];
+}
+
+function getDiffDays(dateRange: [Date, Date]) {
+  const [startDate, endDate] = dateRange;
+  return (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
 }
 
 function getPresetFromDateRange(dateRange: DateRange): PresetDateRange {
@@ -87,7 +91,9 @@ export function useDateRangeGranularity() {
   );
 
   useEffect(() => {
-    setGranularity(determineGranularity(dateRange));
+    if (!granularity) {
+      setGranularity(determineGranularity(dateRange));
+    }
   }, [dateRange]);
 
   return {
@@ -99,39 +105,61 @@ export function useDateRangeGranularity() {
   };
 }
 
-// Component to handle date range selection
-function DateRangeSelect({ dateRange, setDateRange }) {
-  const selectedOption = getPresetFromDateRange(dateRange);
-  const data = ["Today", "7 Days", "30 Days", "3 Months"];
-  const displayData = selectedOption === "Custom" ? [...data, "Custom"] : data;
+interface GranularitySelectProps {
+  dateRange: [Date, Date];
+  granularity: Granularity;
+  setGranularity: (granularity: Granularity) => void;
+}
+export function GranularitySelect({
+  dateRange,
+  granularity,
+  setGranularity,
+}: GranularitySelectProps) {
+  const [options, setOptions] = useState<
+    { value: Granularity; label: string }[]
+  >([]);
 
-  function handleSelectChange(value) {
-    const newDateRange = getDateRangeFromPreset(value);
-    setDateRange(newDateRange);
-  }
+  useEffect(() => {
+    const diffDays = getDiffDays(dateRange);
+    let allowedOptions: { value: Granularity; label: string }[] = [];
+
+    if (diffDays <= 1) {
+      allowedOptions = [{ value: "hourly", label: "Hourly" }];
+    } else if (diffDays <= 93) {
+      allowedOptions = [
+        { value: "daily", label: "Daily" },
+        { value: "weekly", label: "Weekly" },
+      ];
+    } else {
+      allowedOptions = [{ value: "weekly", label: "Weekly" }];
+    }
+
+    setOptions(allowedOptions);
+
+    if (!allowedOptions.find((opt) => opt.value === granularity)) {
+      setGranularity(allowedOptions[0].value);
+    }
+  }, [dateRange, granularity, setGranularity]);
 
   return (
     <Select
-      placeholder="Select date range"
+      placeholder="Granularity"
       w="100"
       size="xs"
       allowDeselect={false}
+      ml="md"
       styles={{
         input: {
           height: 32,
-          borderTopRightRadius: 0,
-          borderBottomRightRadius: 0,
-          borderRight: 0,
         },
       }}
-      data={displayData}
-      value={selectedOption}
-      onChange={handleSelectChange}
+      data={options}
+      value={granularity}
+      onChange={(value) => setGranularity(value as Granularity)}
     />
   );
 }
 
-// Combined component for date range and granularity selection
 export default function DateRangeGranularityPicker({
   dateRange,
   setDateRange,
@@ -145,6 +173,7 @@ export default function DateRangeGranularityPicker({
       <GranularitySelect
         granularity={granularity}
         setGranularity={setGranularity}
+        dateRange={dateRange}
       />
     </Group>
   );

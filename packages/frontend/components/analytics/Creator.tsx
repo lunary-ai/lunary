@@ -1,62 +1,50 @@
-import { useState, useMemo, useEffect } from "react";
 import {
-  Flex,
-  Select,
-  Group,
-  Box,
   ActionIcon,
+  Alert,
+  Box,
   Button,
+  Checkbox,
+  Container,
+  Flex,
+  Grid,
+  Group,
   Loader,
   NumberInput,
-  TextInput,
-  Checkbox,
   SegmentedControl,
-  Grid,
-  Stack,
-  Stepper,
-  SimpleGrid,
+  Select,
   Text,
-  Alert,
-  Container,
+  TextInput,
   Title,
 } from "@mantine/core";
+import { useEffect, useMemo, useState } from "react";
 
 import {
+  BarChart,
+  AreaChart as MantineAreaChart,
   BarChart as MantineBarChart,
+  DonutChart as MantineDonutChart,
   LineChart as MantineLineChart,
   PieChart as MantinePieChart,
   RadarChart as MantineRadarChart,
-  ScatterChart as MantineScatterChart,
-  AreaChart as MantineAreaChart,
-  DonutChart as MantineDonutChart,
-  BubbleChart as MantineBubbleChart,
-  BarChart,
 } from "@mantine/charts";
 
-import { useSessionStorage, useInViewport } from "@mantine/hooks";
-import {
-  IconCancel,
-  IconTrash,
-  IconPlus,
-  IconEdit,
-  IconCalendar,
-} from "@tabler/icons-react";
+import { useSessionStorage } from "@mantine/hooks";
+import { IconCalendar, IconCancel, IconEdit } from "@tabler/icons-react";
 
 import { getDefaultDateRange } from "shared";
 
 import {
+  BASE_CHART_PROPS,
   CHART_DATA,
   CHART_SERIES,
-  BASE_CHART_PROPS,
   deserializeDateRange,
 } from "@/utils/analytics";
 import { useProjectSWR } from "@/utils/dataHooks";
-import { useChart } from "@/utils/dataHooks/charts";
 import {
   useAnalyticsChartData,
-  useTopModels,
   useTopTemplates,
 } from "@/utils/dataHooks/analytics";
+import { useChart } from "@/utils/dataHooks/charts";
 import {
   useExternalUsers,
   useExternalUsersProps,
@@ -64,11 +52,9 @@ import {
 
 import LineChart from "@/components/analytics/OldLineChart";
 
-import ErrorBoundary from "../blocks/ErrorBoundary";
-import { Selectable } from "./Wrappers";
-import AnalyticsCard from "./AnalyticsCard";
 import { DateRangeSelect } from "@/pages/dashboards/old-[id]";
 import { DatePickerInput } from "@mantine/dates";
+import AnalyticsCard from "./AnalyticsCard";
 
 const COLOR_PALETTE = [
   "violet.6",
@@ -83,7 +69,7 @@ const COLOR_PALETTE = [
   "cyan.6",
 ];
 
-export type Granularity = "hourly" | "daily" | "weekly";
+export type Granularity = "hourly" | "daily" | "weekly" | "monthly";
 
 interface GranularitySelectProps {
   // dateRange: [Date, Date];
@@ -96,9 +82,7 @@ interface DateRangePickerProps {
   setDateRange: (dates: [Date, Date]) => void;
 }
 
-export const determineGranularity = (
-  dateRange: [Date, Date],
-): "hourly" | "daily" | "weekly" => {
+export const determineGranularity = (dateRange: [Date, Date]): Granularity => {
   const [startDate, endDate] = dateRange;
   const diffDays =
     (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);

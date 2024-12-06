@@ -1,15 +1,14 @@
-import ErrorBoundary from "@/components/blocks/ErrorBoundary";
 import { ActionIcon, Card, Group, Text, Tooltip } from "@mantine/core";
 import { useHover } from "@mantine/hooks";
-import { IconCross, IconInfoCircle, IconX } from "@tabler/icons-react";
+import { IconInfoCircle, IconX } from "@tabler/icons-react";
 import { ReactNode } from "react";
 
 interface AnalyticsCardProps {
   title: string;
   description: string | null;
-  isEditing: boolean;
+  isEditing?: boolean;
+  onDelete?: () => void;
   children: ReactNode;
-  onDelete: () => void;
 }
 
 function getShadow(isEditing: boolean, isHovered: boolean) {
@@ -28,8 +27,8 @@ function AnalyticsCard({
   title,
   children,
   description,
-  isEditing,
-  onDelete,
+  isEditing = false,
+  onDelete = () => {},
 }: AnalyticsCardProps) {
   const { hovered, ref } = useHover();
 

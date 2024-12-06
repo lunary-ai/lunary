@@ -90,7 +90,7 @@ dashboards.post("/", async (ctx: Context) => {
     isHome,
   } = bodySchema.parse(ctx.request.body);
 
-  const insertedDashboard = sql.begin(async (sql) => {
+  const insertedDashboard = await sql.begin(async (sql) => {
     if (isHome) {
       await sql`
         update 
@@ -153,6 +153,7 @@ dashboards.patch("/:id", async (ctx: Context) => {
     isHome,
   } = bodySchema.parse(ctx.request.body);
 
+  console.log(checks);
   const dashboardToUpdate = clearUndefined({
     updatedAt: new Date(),
     name,
@@ -165,7 +166,7 @@ dashboards.patch("/:id", async (ctx: Context) => {
     chartIds,
   });
 
-  const updatedDashboard = sql.begin(async (sql) => {
+  const updatedDashboard = await sql.begin(async (sql) => {
     if (isHome) {
       await sql`
         update 

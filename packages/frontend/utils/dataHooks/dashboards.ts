@@ -46,7 +46,7 @@ export function useDashboard(id: string) {
     mutate,
   } = useProjectSWR<Dashboard>(`/dashboards/${id}`);
 
-  const { trigger: updateMutation } = useProjectMutation(
+  const { trigger: updateMutation, isMutating } = useProjectMutation(
     `/dashboards/${id}`,
     fetcher.patch,
     { onSuccess: () => mutateDashboards() },
@@ -67,15 +67,12 @@ export function useDashboard(id: string) {
     },
   );
 
-  // function remove() {
-  //   removeMutation();
-  // }
-
   return {
     dashboard,
     update,
     remove: removeMutation,
     mutate,
     isLoading,
+    isMutating,
   };
 }
