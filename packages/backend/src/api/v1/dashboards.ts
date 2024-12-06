@@ -219,7 +219,6 @@ dashboards.patch("/:id", async (ctx: Context) => {
     charts: z
       .array(
         z.object({
-          id: z.string().uuid(),
           name: z.string(),
           description: z.string().nullable().optional(),
           type: z.string(),
@@ -283,7 +282,6 @@ dashboards.patch("/:id", async (ctx: Context) => {
       `;
 
       const chartInserts = charts.map((chart, index) => ({
-        id: chart.id,
         name: chart.name,
         description: chart.description || null,
         type: chart.type,

@@ -1,3 +1,4 @@
+import { useCustomCharts } from "@/utils/dataHooks/dashboards";
 import {
   ActionIcon,
   Box,
@@ -9,13 +10,13 @@ import {
   SimpleGrid,
   Stack,
   Tabs,
+  Title,
 } from "@mantine/core";
 import { IconCheck, IconPlus } from "@tabler/icons-react";
 import { useState } from "react";
 import { DEFAULT_CHARTS, LogicNode } from "shared";
 import AnalyticsCard from "./AnalyticsCard";
 import ChartComponent from "./Charts/ChartComponent";
-import { useCustomCharts } from "@/utils/dataHooks/dashboards";
 
 interface DashboardModalProps {
   opened: boolean;
@@ -59,10 +60,10 @@ export default function DashboardModal({
     <Modal
       opened={opened}
       onClose={close}
-      title="Dashboard Settings"
+      title={<Title order={2}>Add Charts</Title>}
       size="80vw"
     >
-      <Tabs defaultValue="default">
+      <Tabs defaultValue="default" pb="xl">
         <Tabs.List>
           <Tabs.Tab value="default">Default Charts</Tabs.Tab>
           <Tabs.Tab value="custom">Custom Charts</Tabs.Tab>
@@ -128,10 +129,10 @@ export default function DashboardModal({
               </Flex>
             ) : (
               <SimpleGrid cols={2} spacing="lg">
-                {customCharts.map((chart, index) => {
-                  return 1;
+                {customCharts.map((chart) => {
                   const syntheticId = `custom-${chart.dataKey}-${chart.primaryDimension || "null"}-${chart.secondaryDimension || "null"}`;
                   const isSelected = selectedCharts.includes(syntheticId);
+
                   return (
                     <Box
                       key={syntheticId}
@@ -165,14 +166,14 @@ export default function DashboardModal({
                         </Box>
                         <ChartComponent
                           id={syntheticId}
-                          dataKey={chart.datKey}
+                          dataKey={chart.dataKey}
                           startDate={startDate}
                           endDate={endDate}
                           granularity={granularity}
                           checks={checks}
-                          primaryDimension={chart.primary_dimension}
-                          secondaryDimension={chart.secondary_dimension}
-                          aggregationMethod={chart.aggregation_method}
+                          primaryDimension={chart.primaryDimension}
+                          secondaryDimension={chart.secondaryDimension}
+                          aggregationMethod={chart.aggregationMethod}
                         />
                       </AnalyticsCard>
                     </Box>
@@ -184,12 +185,23 @@ export default function DashboardModal({
         </Tabs.Panel>
       </Tabs>
 
-      <Group justify="right" mt="lg">
-        <Button variant="default" onClick={close}>
-          Cancel
-        </Button>
-        <Button onClick={handleApply}>Apply</Button>
-      </Group>
+      <Box
+        style={{
+          position: "sticky",
+          bottom: 0,
+          backgroundColor: "white",
+          borderTop: "1px solid #ddd",
+          zIndex: 3,
+        }}
+        py="md"
+      >
+        <Group justify="right">
+          <Button variant="default" onClick={close}>
+            Cancel
+          </Button>
+          <Button onClick={handleApply}>Apply</Button>
+        </Group>
+      </Box>
     </Modal>
   );
 }

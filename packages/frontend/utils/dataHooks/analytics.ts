@@ -21,9 +21,16 @@ export function useAnalyticsChartData<T>(
 ) {
   const timeZone = new window.Intl.DateTimeFormat().resolvedOptions().timeZone;
   const checksParam = checks ? `&checks=${serializeLogic(checks)}` : "";
+  const firstDimensionParam = firstDimensionKey
+    ? `&firstDimension=${firstDimensionKey}`
+    : "";
+  const secondDimensionParam = secondDimensionKey
+    ? `&secondDimension=${secondDimensionKey}`
+    : "";
+
   const { data, isLoading, error } = useProjectSWR<T[]>(
     key
-      ? `${getPrefix(key)}?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&timeZone=${timeZone}&granularity=${granularity}${checksParam}`
+      ? `${getPrefix(key)}?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&timeZone=${timeZone}&granularity=${granularity}${checksParam}${firstDimensionParam}${secondDimensionParam}`
       : undefined,
   );
 

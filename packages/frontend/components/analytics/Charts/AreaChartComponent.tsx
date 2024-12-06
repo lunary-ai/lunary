@@ -46,6 +46,7 @@ type Series = {
 interface AreaChartProps {
   data: InputData[];
   granularity: Granularity;
+  color?: string | null;
   dataKey?: string;
 }
 
@@ -82,13 +83,16 @@ function transformData(data: InputData[]): TransformedData[] {
   );
 }
 
-function generateSeries(data: TransformedData[]): Series[] {
+function generateSeries(
+  data: TransformedData[],
+  color?: string | null,
+): Series[] {
   const keys = Object.keys(data[0]).filter((key) => key !== "date");
   const sortedKeys = [...keys].sort((a, b) => a.localeCompare(b));
 
   return sortedKeys.map((name, index) => ({
     name,
-    color: COLOR_PALETTE[index % COLOR_PALETTE.length] || "gray.6",
+    color: color || COLOR_PALETTE[index % COLOR_PALETTE.length] || "gray.6",
   }));
 }
 
@@ -96,9 +100,10 @@ export default function AreaChartComponent({
   data,
   granularity,
   dataKey,
+  color,
 }: AreaChartProps) {
   const formattedData = transformData(data);
-  const series = generateSeries(formattedData);
+  const series = generateSeries(formattedData, color);
   const aggValue = formatLargeNumber(getFigure("sum", data, "value")); // TODO: agg for all agg types
 
   return (

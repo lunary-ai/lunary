@@ -14,8 +14,12 @@ interface ChartProps {
   endDate: Date;
   granularity: "hourly" | "daily" | "weekly" | "monthly";
   checks: LogicNode;
+  color?: string | null;
+  primaryDimension?: string | null;
+  secondaryDimension?: string | null;
 }
 
+// refactor props using by a chart object
 export default function ChartComponent({
   id,
   dataKey,
@@ -23,6 +27,9 @@ export default function ChartComponent({
   endDate,
   granularity,
   checks,
+  color,
+  primaryDimension,
+  secondaryDimension,
 }: ChartProps) {
   let { data, isLoading } = useAnalyticsChartData<any>(
     dataKey,
@@ -30,6 +37,8 @@ export default function ChartComponent({
     endDate,
     granularity,
     checks,
+    primaryDimension,
+    secondaryDimension,
   );
 
   if (isLoading) {
@@ -71,6 +80,7 @@ export default function ChartComponent({
         data={data}
         granularity={granularity}
         dataKey={dataKey}
+        color={color}
       />
     );
   }

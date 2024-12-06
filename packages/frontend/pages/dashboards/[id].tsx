@@ -31,7 +31,7 @@ import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { Chart, LogicNode } from "shared";
-import { chartProps } from "shared/dashboards";
+import { chartProps, DEFAULT_CHARTS } from "shared/dashboards";
 
 function getSpan(index: number) {
   if ([0, 1, 2].includes(index)) {
@@ -119,7 +119,6 @@ export default function Dashboard() {
   }
 
   function saveDashboard() {
-    // When saving, we send the full charts array including sort_order and all fields
     updateDashboard({
       checks,
       startDate: startDate.toISOString(),
@@ -149,7 +148,7 @@ export default function Dashboard() {
 
     for (const id of selectedChartIds) {
       if (!existingIds.has(id)) {
-        const base = chartProps[id];
+        const base = DEFAULT_CHARTS[id];
         const newChart: Chart = {
           id,
           name: base.name,
@@ -285,6 +284,7 @@ export default function Dashboard() {
                         endDate={endDate}
                         granularity={granularity}
                         checks={checks}
+                        color={chart.color}
                       />
                     </AnalyticsCard>
                   </Draggable>
