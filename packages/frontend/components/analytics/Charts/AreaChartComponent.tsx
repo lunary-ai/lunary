@@ -46,6 +46,7 @@ type Series = {
 interface AreaChartProps {
   data: InputData[];
   granularity: Granularity;
+  dataKey?: string;
 }
 
 function transformData(data: InputData[]): TransformedData[] {
@@ -94,6 +95,7 @@ function generateSeries(data: TransformedData[]): Series[] {
 export default function AreaChartComponent({
   data,
   granularity,
+  dataKey,
 }: AreaChartProps) {
   const formattedData = transformData(data);
   const series = generateSeries(formattedData);
@@ -102,7 +104,7 @@ export default function AreaChartComponent({
   return (
     <>
       <Text fw={500} fz={24} mb="md">
-        {aggValue}
+        {dataKey?.includes("cost") ? `$${aggValue}` : aggValue}
       </Text>
       <AreaChart
         h="230px"
@@ -167,7 +169,7 @@ function formatDate(date, granularity) {
 }
 
 // TDOO: put in a separate file
-function getFigure(agg: string, data: any[], prop: string) {
+function getFigure(agg: string, data: any[], prop: string = "value") {
   const propKeys = Object.keys(data[0] || {}).filter((key) =>
     key.includes(prop),
   );

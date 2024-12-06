@@ -24,7 +24,6 @@ export default function ChartComponent({
   granularity,
   checks,
 }: ChartProps) {
-  console.log(dataKey);
   let { data, isLoading } = useAnalyticsChartData<any>(
     dataKey,
     startDate,
@@ -67,7 +66,13 @@ export default function ChartComponent({
   }
 
   if (["tokens", "costs", "errors", "users/new"].includes(dataKey)) {
-    return <AreaChartComponent data={data} granularity={granularity} />;
+    return (
+      <AreaChartComponent
+        data={data}
+        granularity={granularity}
+        dataKey={dataKey}
+      />
+    );
   }
 
   return "No chart available";

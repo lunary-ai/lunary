@@ -81,63 +81,66 @@ const users = new Router({
  *                   items:
  *                     $ref: '#/components/schemas/User'
  */
-users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
-  const { projectId } = ctx.state;
-  const querySchema = z.object({
-    limit: z.coerce.number().optional().default(100),
-    page: z.coerce.number().optional().default(0),
-    search: z.string().optional(),
-    startDate: z.string().datetime().optional(),
-    endDate: z.string().datetime().optional(),
-    timeZone: z.string().optional(),
-    sortField: z.string().optional().default("createdAt"),
-    sortDirection: z
-      .union([z.literal("asc"), z.literal("desc")])
-      .optional()
-      .default("desc"),
-    checks: z.string().optional(),
-  });
-  const {
-    limit,
-    page,
-    search,
-    startDate,
-    endDate,
-    timeZone,
-    sortDirection,
-    sortField,
-    checks,
-  } = querySchema.parse(ctx.request.query);
+users.get(
+  "/",
+  //checkAccess("users", "list"), // disabled until custom dashboards are fully implemented
+  async (ctx: Context) => {
+    const { projectId } = ctx.state;
+    const querySchema = z.object({
+      limit: z.coerce.number().optional().default(100),
+      page: z.coerce.number().optional().default(0),
+      search: z.string().optional(),
+      startDate: z.string().datetime().optional(),
+      endDate: z.string().datetime().optional(),
+      timeZone: z.string().optional(),
+      sortField: z.string().optional().default("createdAt"),
+      sortDirection: z
+        .union([z.literal("asc"), z.literal("desc")])
+        .optional()
+        .default("desc"),
+      checks: z.string().optional(),
+    });
+    const {
+      limit,
+      page,
+      search,
+      startDate,
+      endDate,
+      timeZone,
+      sortDirection,
+      sortField,
+      checks,
+    } = querySchema.parse(ctx.request.query);
 
-  let searchQuery = sql``;
-  if (search) {
-    searchQuery = sql`and (
+    let searchQuery = sql``;
+    if (search) {
+      searchQuery = sql`and (
       lower(external_id) ilike lower(${`%${search}%`})
       or lower(props->>'email') ilike lower(${`%${search}%`})
       or lower(props->>'name') ilike lower(${`%${search}%`})
     )`;
-  }
+    }
 
-  let createAtQuery = sql``;
-  if (startDate && endDate && timeZone) {
-    createAtQuery = sql`
+    let createAtQuery = sql``;
+    if (startDate && endDate && timeZone) {
+      createAtQuery = sql`
       and r.created_at at time zone ${timeZone} >= ${startDate}
       and r.created_at at time zone ${timeZone} <= ${endDate}
     `;
-  }
+    }
 
-  const filtersQuery = buildFiltersQuery(checks || "");
+    const filtersQuery = buildFiltersQuery(checks || "");
 
-  const sortMapping = {
-    createdAt: "eu.created_at",
-    lastSeen: "eu.last_seen",
-    cost: "uc.cost",
-  };
+    const sortMapping = {
+      createdAt: "eu.created_at",
+      lastSeen: "eu.last_seen",
+      cost: "uc.cost",
+    };
 
-  let orderByClause = `${sortMapping[sortField]} ${sortDirection} nulls last`;
+    let orderByClause = `${sortMapping[sortField]} ${sortDirection} nulls last`;
 
-  const [users, total] = await Promise.all([
-    sql`
+    const [users, total] = await Promise.all([
+      sql`
       with user_costs as (
         select
           external_user_id,
@@ -169,21 +172,22 @@ users.get("/", checkAccess("users", "list"), async (ctx: Context) => {
       limit ${limit}
       offset ${page * limit}
     `,
-    sql`
+      sql`
       select count(*) as total
       from public.external_user eu
       where eu.project_id = ${projectId}
       ${searchQuery}
     `,
-  ]);
+    ]);
 
-  ctx.body = {
-    total: +total[0].total,
-    page,
-    limit,
-    data: users,
-  };
-});
+    ctx.body = {
+      total: +total[0].total,
+      page,
+      limit,
+      data: users,
+    };
+  },
+);
 
 users.get("/runs/usage", checkAccess("users", "read"), async (ctx) => {
   const { projectId } = ctx.state;

@@ -50,7 +50,7 @@ import TopModels from "@/components/analytics/Charts/TopModels";
 import LineChart from "@/components/analytics/OldLineChart";
 import Link from "next/link";
 import { parseAsString, useQueryState } from "nuqs";
-import { getDefaultDateRange } from "shared";
+import { deserializeLogic, getDefaultDateRange } from "shared";
 
 const columns = [
   {
@@ -148,7 +148,7 @@ function SelectedUser({ id, onClose }) {
       startDate,
       endDate,
       granularity,
-      `users=${id}`,
+      deserializeLogic(`users=${id}`),
     );
 
   const { data: runCountData, isLoading: runCountLoading } =
@@ -157,7 +157,7 @@ function SelectedUser({ id, onClose }) {
       startDate,
       endDate,
       granularity,
-      `users=${id}`,
+      deserializeLogic(`users=${id}`),
     );
 
   const commonChartData: {
