@@ -1,6 +1,6 @@
 import { useProjectMutation, useProjectSWR } from ".";
 import { fetcher } from "../fetcher";
-import { Dashboard } from "shared/dashboards";
+import { Chart, Dashboard } from "shared/dashboards";
 
 export function useDashboards() {
   const { data, isLoading, mutate } = useProjectSWR<Dashboard[]>("/dashboards");
@@ -57,5 +57,16 @@ export function useDashboard(id: string) {
     mutate,
     isLoading,
     isMutating,
+  };
+}
+
+export function useCustomCharts() {
+  const { data, isLoading } = useProjectSWR<Chart[]>(
+    "/dashboards/charts/custom",
+  );
+
+  return {
+    customCharts: data || [],
+    isLoading,
   };
 }

@@ -42,7 +42,6 @@ dashboards.get("/", async (ctx: Context) => {
         const chartInserts = chartIds.map((chartId, index) => {
           const chartDef = DEFAULT_CHARTS[chartId];
           return {
-            project_id: projectId,
             dashboard_id: insertedDashboard.id,
             name: chartDef.name,
             description: chartDef.description,
@@ -53,6 +52,7 @@ dashboards.get("/", async (ctx: Context) => {
             secondary_dimension: null,
             is_custom: false,
             sortOrder: index,
+            color: chartDef.color || null,
           };
         });
 
@@ -154,7 +154,6 @@ dashboards.post("/", async (ctx: Context) => {
       const chartInserts = chartIds.map((chartId, index) => {
         const chartDef = DEFAULT_CHARTS[chartId];
         return {
-          project_id: projectId,
           dashboard_id: insertedDashboard.id,
           name: chartDef.name,
           description: chartDef.description,
@@ -165,6 +164,8 @@ dashboards.post("/", async (ctx: Context) => {
           secondary_dimension: null,
           is_custom: false,
           sortOrder: index,
+          color: null,
+          customChartId: null,
         };
       });
 
@@ -184,6 +185,21 @@ dashboards.post("/", async (ctx: Context) => {
   `;
 
   ctx.body = { ...insertedDashboard, charts };
+});
+
+dashboards.get("/charts/custom", async (ctx: Context) => {
+  const { projectId } = ctx.state;
+
+  const customCharts = await sql`
+    select
+      *
+    from
+      custom_chart
+    where
+      project_id = ${projectId}
+  `;
+
+  ctx.body = customCharts;
 });
 
 dashboards.patch("/:id", async (ctx: Context) => {
@@ -214,6 +230,7 @@ dashboards.patch("/:id", async (ctx: Context) => {
           isCustom: z.boolean().default(false),
           color: z.string().nullable().optional(),
           sortOrder: z.number().default(0),
+          customChartId: z.string().nullable().optional(),
         }),
       )
       .optional(),
@@ -278,7 +295,7 @@ dashboards.patch("/:id", async (ctx: Context) => {
         color: chart.color || null,
         sortOrder: index,
         dashboard_id: dashboardId,
-        project_id: projectId,
+        customChartId: chart.customChartId || null,
       }));
 
       await sql`

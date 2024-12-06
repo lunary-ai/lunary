@@ -61,6 +61,7 @@ export const DEFAULT_CHARTS = {
     type: "Area",
     dataKey: "errors",
     aggregationMethod: "sum",
+    color: "red",
   },
   "users/new": {
     id: "users/new",
