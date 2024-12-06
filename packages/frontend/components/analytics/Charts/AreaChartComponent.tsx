@@ -163,7 +163,6 @@ export default function AreaChartComponent({
                   ),
                 },
               }));
-            console.log(payload, filteredPayload);
 
             if (filteredPayload.length === 0) {
               return null;

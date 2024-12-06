@@ -777,18 +777,15 @@ analytics.get(
   },
 );
 
-analytics.get(
-  "/run-types",
-  checkAccess("analytics", "read"),
-  async (ctx: Context) => {
-    const { projectId } = ctx.state;
-    const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
-      projectId,
-      ctx.query,
-    );
+analytics.get("/run-types", async (ctx: Context) => {
+  const { projectId } = ctx.state;
+  const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
+    projectId,
+    ctx.query,
+  );
 
-    if (granularity === "weekly") {
-      const res = await sql`
+  if (granularity === "weekly") {
+    const res = await sql`
         with dates as (
           ${datesQuery}
         ),
@@ -811,17 +808,17 @@ analytics.get(
         )
         select
           date, 
-          runs, 
-          type
+          runs as value, 
+          type as name
         from
           weekly_sums
         order by
           date;
       `;
-      ctx.body = { data: res };
-      return;
-    } else {
-      const res = await sql`
+    ctx.body = { data: res };
+    return;
+  } else {
+    const res = await sql`
         with dates as (
           ${datesQuery}
         ),
@@ -830,8 +827,8 @@ analytics.get(
         )
         select
           d.date,
-          coalesce(count(r.type)::int, 0) as runs,
-          r.type
+          coalesce(count(r.type)::int, 0) as value,
+          r.type as name
         from
           dates d
           left join filtered_runs r on d.date = r.local_created_at
@@ -841,27 +838,23 @@ analytics.get(
         order by d.date;
     `;
 
-      ctx.body = { data: res };
-      return;
-    }
-  },
-);
+    ctx.body = { data: res };
+    return;
+  }
+});
 
-analytics.get(
-  "/latency",
-  checkAccess("analytics", "read"),
-  async (ctx: Context) => {
-    const { projectId } = ctx.state;
-    const {
-      datesQuery,
-      filteredRunsQuery,
-      granularity,
-      startDate,
-      endDate,
-      timeZone,
-    } = parseQuery(projectId, ctx.query);
+analytics.get("/latency", async (ctx: Context) => {
+  const { projectId } = ctx.state;
+  const {
+    datesQuery,
+    filteredRunsQuery,
+    granularity,
+    startDate,
+    endDate,
+    timeZone,
+  } = parseQuery(projectId, ctx.query);
 
-    const [{ stat }] = await sql`
+  const [{ stat }] = await sql`
       select
         avg(extract(epoch from r.duration))::float as stat
       from
@@ -873,8 +866,8 @@ analytics.get(
         and created_at <= ${endDate} at time zone ${timeZone} 
     `;
 
-    if (granularity === "weekly") {
-      const data = await sql`
+  if (granularity === "weekly") {
+    const data = await sql`
         with dates as (
           ${datesQuery}
         ),
@@ -896,16 +889,17 @@ analytics.get(
         )
         select
           date, 
-          avg_duration
+          avg_duration as value,
+          'Latency' as name
         from
           weekly_avg
         order by
           date;
       `;
-      ctx.body = { data, stat: stat || 0 };
-      return;
-    } else {
-      const data = await sql`
+    ctx.body = { data, stat: stat || 0 };
+    return;
+  } else {
+    const data = await sql`
         with dates as (
           ${datesQuery}
         ),
@@ -914,7 +908,8 @@ analytics.get(
         )
         select
           d.date,
-          coalesce(avg(extract(epoch from r.duration))::float, 0) as avg_duration
+          coalesce(avg(extract(epoch from r.duration))::float, 0) as value,
+          'Latency' as name
         from
           dates d
           left join filtered_runs r on d.date = r.local_created_at
@@ -925,11 +920,10 @@ analytics.get(
         order by d.date;
     `;
 
-      ctx.body = { data, stat: stat || 0 };
-      return;
-    }
-  },
-);
+    ctx.body = { data, stat: stat || 0 };
+    return;
+  }
+});
 
 analytics.get(
   "/feedback-ratio",

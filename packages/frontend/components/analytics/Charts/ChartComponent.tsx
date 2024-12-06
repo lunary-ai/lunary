@@ -77,7 +77,15 @@ export default function ChartComponent({
   }
 
   if (
-    ["tokens", "costs", "errors", "users/new", "users/active"].includes(dataKey)
+    [
+      "tokens",
+      "costs",
+      "errors",
+      "users/new",
+      "users/active",
+      "run-types",
+      "latency",
+    ].includes(dataKey)
   ) {
     return (
       <AreaChartComponent
