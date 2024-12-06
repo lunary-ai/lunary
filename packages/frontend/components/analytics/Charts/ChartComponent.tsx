@@ -70,12 +70,10 @@ export default function ChartComponent({
   }
 
   if (id === "costs") {
-    console.log(data);
     return <AreaChartComponent data={data} />;
   }
 
   if (id === "errors") {
-    console.log(data);
     return <AreaChartComponent data={data} />;
   }
 

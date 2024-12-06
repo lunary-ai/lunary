@@ -26,7 +26,8 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useDrag, useDrop } from "react-dnd";
 import { Chart, deserializeLogic, LogicNode } from "shared";
 
 function getSpan(index: number) {
@@ -91,6 +92,10 @@ export default function Dashboard() {
       granularity,
       chartIds: charts.map((chart) => chart.id),
     });
+  }
+
+  function handleDrop(item, monitor, chartId: string) {
+    console.log(item, monitor, chartId);
   }
 
   return (
@@ -167,20 +172,64 @@ export default function Dashboard() {
         <Grid>
           {charts.map((chart, index) => (
             <Grid.Col span={getSpan(index)} key={chart.id}>
-              <AnalyticsCard title={chart.name} description={chart.description}>
-                <ChartComponent
-                  id={chart.id}
-                  dataKey={chart.dataKey}
-                  startDate={startDate}
-                  endDate={endDate}
-                  granularity={granularity}
-                  checks={checks}
-                />
-              </AnalyticsCard>
+              <Draggable style={{ height: "100%" }}>
+                <Droppable
+                  style={{ height: "100%" }}
+                  onDrop={(item, monitor) =>
+                    handleDrop(item, monitor, chart.id)
+                  }
+                >
+                  <AnalyticsCard
+                    title={chart.name}
+                    description={chart.description}
+                  >
+                    <ChartComponent
+                      id={chart.id}
+                      dataKey={chart.dataKey}
+                      startDate={startDate}
+                      endDate={endDate}
+                      granularity={granularity}
+                      checks={checks}
+                    />
+                  </AnalyticsCard>
+                </Droppable>
+              </Draggable>
             </Grid.Col>
           ))}
         </Grid>
       </Stack>
     </>
+  );
+}
+
+function Draggable({ children, ...props }) {
+  const [{ isDragging }, drag] = useDrag(() => ({
+    type: "chart",
+    collect: (monitor) => ({
+      isDragging: !!monitor.isDragging(),
+    }),
+  }));
+
+  return (
+    <div ref={drag} {...props}>
+      {children}
+    </div>
+  );
+}
+
+function Droppable({ children, onDrop, ...props }) {
+  const [{ isOver }, drop] = useDrop(() => ({
+    accept: "chart",
+    drop: onDrop,
+    collect: (monitor) => ({
+      isOver: !!monitor.isOver(),
+    }),
+  }));
+
+  return (
+    <div ref={drop} {...props}>
+      {isOver && "Over"}
+      {children}
+    </div>
   );
 }

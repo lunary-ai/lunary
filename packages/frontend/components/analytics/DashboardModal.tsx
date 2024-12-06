@@ -9,7 +9,7 @@ interface DashboardModalProps {
   close: () => void;
   startDate: Date;
   endDate: Date;
-  granularity: "daily" | "weekly" | "monthly" | "monthly";
+  granularity: "hourly" | "daily" | "weekly" | "monthly" | "monthly";
   checks: LogicNode;
 }
 

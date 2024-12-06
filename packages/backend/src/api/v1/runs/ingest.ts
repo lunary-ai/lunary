@@ -169,7 +169,6 @@ async function registerRunEvent(
    * The projectId passed to this function is the public key, so it may not necessarily be the correct one for the current event.
    */
   const apiKey = event.appId;
-  // console.log(apiKey, projectId);
   if (typeof apiKey === "string") {
     const [project] = await sql`
       select project_id from api_key where api_key = ${apiKey}
