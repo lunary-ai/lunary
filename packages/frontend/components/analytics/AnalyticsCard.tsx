@@ -1,7 +1,7 @@
 import ErrorBoundary from "@/components/blocks/ErrorBoundary";
-import { Card, Group, Text, Tooltip } from "@mantine/core";
+import { ActionIcon, Card, Group, Text, Tooltip } from "@mantine/core";
 import { useHover } from "@mantine/hooks";
-import { IconInfoCircle } from "@tabler/icons-react";
+import { IconCross, IconInfoCircle, IconX } from "@tabler/icons-react";
 import { ReactNode } from "react";
 
 interface AnalyticsCardProps {
@@ -9,6 +9,7 @@ interface AnalyticsCardProps {
   description: string | null;
   isEditing: boolean;
   children: ReactNode;
+  onDelete: () => void;
 }
 
 function getShadow(isEditing: boolean, isHovered: boolean) {
@@ -28,9 +29,11 @@ function AnalyticsCard({
   children,
   description,
   isEditing,
+  onDelete,
 }: AnalyticsCardProps) {
   const { hovered, ref } = useHover();
 
+  // TODO : use mantine card sections instead of groups? (https://mantine.dev/core/card/
   return (
     <Card
       ref={ref}
@@ -41,16 +44,29 @@ function AnalyticsCard({
       }}
       shadow={getShadow(isEditing, hovered)}
     >
-      <Group>
-        <Text c="dimmed" fw={50} fz="md">
-          {title}
-        </Text>
+      <Group justify="space-between">
+        <Group>
+          <Text c="dimmed" fw={50} fz="md">
+            {title}
+          </Text>
 
-        <Tooltip label={description || "No description available"}>
-          <IconInfoCircle size={16} opacity={0.5} />
-        </Tooltip>
+          <Tooltip label={description || "No description available"}>
+            <IconInfoCircle size={16} opacity={0.5} />
+          </Tooltip>
+        </Group>
+        {isEditing && (
+          <ActionIcon
+            variant="light"
+            radius="lg"
+            size="sm"
+            color="gray"
+            onClick={onDelete}
+          >
+            <IconX size={16} />
+          </ActionIcon>
+        )}
       </Group>
-      <ErrorBoundary>{children}</ErrorBoundary>
+      {children}
     </Card>
   );
 }

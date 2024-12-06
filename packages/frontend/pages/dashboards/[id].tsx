@@ -5,6 +5,7 @@ import DashboardModal from "@/components/analytics/DashboardModal";
 import DateRangeGranularityPicker, {
   useDateRangeGranularity,
 } from "@/components/analytics/DateRangeGranularityPicker";
+import ErrorBoundary from "@/components/blocks/ErrorBoundary";
 import RenamableField from "@/components/blocks/RenamableField";
 import CheckPicker from "@/components/checks/Picker";
 import { useDashboard } from "@/utils/dataHooks/dashboards";
@@ -188,24 +189,26 @@ export default function Dashboard() {
         <Grid>
           {charts.map((chart, index) => (
             <Grid.Col span={getSpan(index)} key={chart.id} h="350px">
-              <Droppable index={index} onDrop={handleDrop}>
-                <Draggable index={index} isEditing={isEditing}>
-                  <AnalyticsCard
-                    title={chart.name}
-                    description={chart.description}
-                    isEditing={isEditing}
-                  >
-                    <ChartComponent
-                      id={chart.id}
-                      dataKey={chart.dataKey}
-                      startDate={startDate}
-                      endDate={endDate}
-                      granularity={granularity}
-                      checks={checks}
-                    />
-                  </AnalyticsCard>
-                </Draggable>
-              </Droppable>
+              <ErrorBoundary>
+                <Droppable index={index} onDrop={handleDrop}>
+                  <Draggable index={index} isEditing={isEditing}>
+                    <AnalyticsCard
+                      title={chart.name}
+                      description={chart.description}
+                      isEditing={isEditing}
+                    >
+                      <ChartComponent
+                        id={chart.id}
+                        dataKey={chart.dataKey}
+                        startDate={startDate}
+                        endDate={endDate}
+                        granularity={granularity}
+                        checks={checks}
+                      />
+                    </AnalyticsCard>
+                  </Draggable>
+                </Droppable>
+              </ErrorBoundary>
             </Grid.Col>
           ))}
         </Grid>
