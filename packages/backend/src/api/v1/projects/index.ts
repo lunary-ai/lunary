@@ -5,7 +5,6 @@ import { randomUUID } from "crypto";
 import Router from "koa-router";
 import { hasAccess } from "shared";
 import { z } from "zod";
-import { DEFAULT_DASHBOARD } from "shared";
 
 const projects = new Router({
   prefix: "/projects",
@@ -85,15 +84,6 @@ projects.post("/", checkAccess("projects", "create"), async (ctx: Context) => {
     },
   ];
   await sql`insert into api_key ${sql(privateKey)}`;
-
-  await sql`
-    insert into dashboard ${sql({
-      ...DEFAULT_DASHBOARD,
-      projectId: project.id,
-      ownerId: userId,
-    })}
-    returning *
-  `;
 
   ctx.body = project;
 });
