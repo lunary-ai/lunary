@@ -1,22 +1,4 @@
-export const DEFAULT_CHARTS = [
-  "models/top",
-  "templates/top",
-  "users/top",
-  "tokens",
-  // "models",
-  // "templates",
-  // "users",
-  // "tokens",
-  // "costs",
-  // "errors",
-  // "users/new",
-  // "users/active",
-  // "users/average-cost",
-  // "top/languages",
-  // "run-types",
-  // "latency",
-  // "feedback-ratio",
-];
+import { LogicNode } from "../checks";
 
 export function getDefaultDateRange() {
   const endOfToday = new Date();
@@ -29,22 +11,9 @@ export function getDefaultDateRange() {
   return defaultRange;
 }
 
-// export interface Dashboard {
-
-// }
-
 type Aggregation = "sum" | "avg" | null | undefined;
 
-export interface Chart {
-  id: string;
-  name: string;
-  description: string | null;
-  type: "Top" | "Area";
-  dataKey: string;
-  aggregationMethod: Aggregation;
-  splitBy?: string;
-}
-export const chartProps: Record<string, Chart> = {
+export const DEFAULT_CHARTS = {
   "models/top": {
     id: "models/top",
     name: "Top Models",
@@ -153,3 +122,40 @@ export const chartProps: Record<string, Chart> = {
   //   description: "The ratio of thumbs up to thumbs down feedback",
   // },
 };
+
+export const chartProps = Object.keys(DEFAULT_CHARTS);
+
+export type GranularityType = "hourly" | "daily" | "weekly" | "monthly";
+
+export interface Chart {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  projectId: string;
+  dashboardId: string | null;
+  name: string;
+  description: string | null;
+  type: string;
+  dataKey: string;
+  aggregationMethod: string | null;
+  primaryDimension: string | null;
+  secondaryDimension: string | null;
+  isCustom: boolean;
+  color: string | null;
+}
+
+export interface Dashboard {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  ownerId: string;
+  projectId: string;
+  name: string;
+  description: string | null;
+  checks: any;
+  startDate: string | null;
+  endDate: string | null;
+  granularity: GranularityType | null;
+  isHome: boolean;
+  charts: Chart[];
+}

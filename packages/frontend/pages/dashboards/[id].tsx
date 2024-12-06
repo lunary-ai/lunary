@@ -1,6 +1,5 @@
 import AnalyticsCard from "@/components/analytics/AnalyticsCard";
 import ChartComponent from "@/components/analytics/Charts/ChartComponent";
-import { chartProps } from "shared/dashboards";
 import DashboardModal from "@/components/analytics/DashboardModal";
 import DateRangeGranularityPicker, {
   useDateRangeGranularity,
@@ -32,6 +31,7 @@ import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { Chart, LogicNode } from "shared";
+import { chartProps } from "shared/dashboards";
 
 function getSpan(index: number) {
   if ([0, 1, 2].includes(index)) {
@@ -68,16 +68,23 @@ export default function Dashboard() {
 
   const [isEditing, setIsEditing] = useState(false);
 
+  function setChartsWithSortOrder(newCharts: Chart[]) {
+    const orderedCharts = newCharts.map((c, i) => ({ ...c, sortOrder: i }));
+    setCharts(orderedCharts);
+  }
+
   useEffect(() => {
     if (!dashboardIsLoading && dashboard) {
       setChecks(dashboard.checks);
-      setCharts(dashboard.chartIds.map((chartId) => chartProps[chartId]));
+      setChartsWithSortOrder(dashboard.charts || []);
+
       if (dashboard.startDate && dashboard.endDate) {
         setDateRange([
           new Date(dashboard.startDate),
           new Date(dashboard.endDate),
         ]);
       }
+
       if (dashboard.granularity) {
         setGranularity(dashboard.granularity);
       }
@@ -86,20 +93,19 @@ export default function Dashboard() {
 
   const isDirty = useMemo(() => {
     if (!dashboard) return false;
-
     const current = {
       checks,
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
       granularity,
-      chartIds: charts.map((c) => c.id),
+      charts,
     };
     const initial = {
       checks: dashboard.checks,
       startDate: dashboard.startDate,
       endDate: dashboard.endDate,
       granularity: dashboard.granularity,
-      chartIds: dashboard.chartIds,
+      charts: dashboard.charts,
     };
     return JSON.stringify(current) !== JSON.stringify(initial);
   }, [dashboard, checks, startDate, endDate, granularity, charts]);
@@ -113,12 +119,13 @@ export default function Dashboard() {
   }
 
   function saveDashboard() {
+    // When saving, we send the full charts array including sort_order and all fields
     updateDashboard({
       checks,
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
       granularity,
-      chartIds: charts.map((chart) => chart.id),
+      charts,
     });
   }
 
@@ -128,24 +135,37 @@ export default function Dashboard() {
       newCharts[dropIndex],
       newCharts[dragIndex],
     ];
-
-    setCharts(newCharts);
+    setChartsWithSortOrder(newCharts);
   }
 
   function handleRemoveChart(index: number) {
     const newCharts = charts.filter((_, i) => i !== index);
-    setCharts(newCharts);
+    setChartsWithSortOrder(newCharts);
   }
 
-  // TODO: rename
   function handleApply(selectedChartIds: string[]) {
-    // TODO: do not remove duplicates, use new ids instead
-    const uniqueIds = Array.from(
-      new Set([...charts.map((chart) => chart.id), ...selectedChartIds]),
-    );
-    const updatedCharts = uniqueIds.map((id) => chartProps[id]);
+    const existingIds = new Set(charts.map((c) => c.id));
+    const finalCharts = [...charts];
 
-    setCharts(updatedCharts);
+    for (const id of selectedChartIds) {
+      if (!existingIds.has(id)) {
+        const base = chartProps[id];
+        const newChart: Chart = {
+          id,
+          name: base.name,
+          description: base.description,
+          type: base.type,
+          dataKey: base.dataKey,
+          aggregationMethod: base.aggregationMethod || null,
+          primaryDimension: base.primaryDimension || null,
+          secondaryDimension: base.secondaryDimension || null,
+          isCustom: false,
+        };
+        finalCharts.push(newChart);
+      }
+    }
+
+    setChartsWithSortOrder(finalCharts);
     closeModal();
   }
 
@@ -278,7 +298,15 @@ export default function Dashboard() {
   );
 }
 
-function Draggable({ children, index, isEditing }) {
+function Draggable({
+  children,
+  index,
+  isEditing,
+}: {
+  children: React.ReactNode;
+  index: number;
+  isEditing: boolean;
+}) {
   const [{ isDragging }, drag] = useDrag(
     () => ({
       type: "chart",
@@ -312,7 +340,15 @@ function Draggable({ children, index, isEditing }) {
   );
 }
 
-function Droppable({ children, onDrop, index }) {
+function Droppable({
+  children,
+  onDrop,
+  index,
+}: {
+  children: React.ReactNode;
+  onDrop: (dragIndex: number, dropIndex: number) => void;
+  index: number;
+}) {
   const [{ isOver }, drop] = useDrop(
     () => ({
       accept: "chart",

@@ -1,23 +1,6 @@
-import { LogicNode } from "shared";
 import { useProjectMutation, useProjectSWR } from ".";
 import { fetcher } from "../fetcher";
-
-// TODO: zod schema in shared package, share between frontend and backend
-export interface Dashboard {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  projectId: string;
-  ownerId: string;
-  name: string;
-  description: string | null;
-  checks: LogicNode;
-  startDate: string;
-  endDate: string;
-  granularity: "hourly" | "daily" | "weekly" | "monthly";
-  isHome: boolean;
-  chartIds: string[];
-}
+import { Dashboard } from "shared/dashboards";
 
 export function useDashboards() {
   const { data, isLoading, mutate } = useProjectSWR<Dashboard[]>("/dashboards");

@@ -33,7 +33,7 @@ export default function DashboardModal({
   checks,
   onApply,
 }: DashboardModalProps): JSX.Element {
-  const charts = DEFAULT_CHARTS.map((chartId) => chartProps[chartId]);
+  const charts = Object.values(DEFAULT_CHARTS);
   const [selectedCharts, setSelectedCharts] = useState<string[]>([]);
 
   function toggleChartSelection(chartId: string) {
@@ -66,6 +66,7 @@ export default function DashboardModal({
                 key={chart.id}
                 onClick={() => toggleChartSelection(chart.id)}
                 style={{ cursor: "pointer", position: "relative" }}
+                h="400px"
               >
                 <AnalyticsCard
                   title={chart.name}

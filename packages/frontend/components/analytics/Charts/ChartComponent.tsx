@@ -24,6 +24,7 @@ export default function ChartComponent({
   granularity,
   checks,
 }: ChartProps) {
+  console.log(dataKey);
   let { data, isLoading } = useAnalyticsChartData<any>(
     dataKey,
     startDate,
@@ -53,19 +54,19 @@ export default function ChartComponent({
     );
   }
 
-  if (id === "models/top") {
+  if (dataKey === "models/top") {
     return <TopModels data={data} />;
   }
 
-  if (id === "templates/top") {
+  if (dataKey === "templates/top") {
     return <TopTemplates data={data} />;
   }
 
-  if (id === "users/top") {
+  if (dataKey === "users/top") {
     return <TopUsers data={data} />;
   }
 
-  if (["tokens", "costs", "errors", "users/new"].includes(id)) {
+  if (["tokens", "costs", "errors", "users/new"].includes(dataKey)) {
     return <AreaChartComponent data={data} granularity={granularity} />;
   }
 
