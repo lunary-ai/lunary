@@ -44,8 +44,8 @@ export default function AnalyticsWrapper({ children }) {
           dangerouslySetInnerHTML={{
             __html: process.env.NEXT_PUBLIC_CUSTOM_SCRIPT,
           }}
-          onLoad={() => console.log("Custom script loaded.")}
-          onError={() => console.log("Custom script failed to load.")}
+          onLoad={() => console.info("Custom script loaded.")}
+          onError={() => console.info("Custom script failed to load.")}
         />
       )}
 

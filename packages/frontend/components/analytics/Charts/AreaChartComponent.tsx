@@ -136,7 +136,6 @@ export default function AreaChartComponent({
                 ...item,
                 value: formatLargeNumber(Number.parseInt(item.value)),
               }));
-            console.log(filteredPayload);
 
             if (filteredPayload.length === 0) {
               return null;

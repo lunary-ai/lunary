@@ -347,7 +347,7 @@ export async function runAImodel(
             stripe_customer_id: stripeCustomer,
           },
         })
-        .then(() => console.log("Metered"))
+        .then(() => console.info("Metered"))
         .catch(console.error);
     }
   }

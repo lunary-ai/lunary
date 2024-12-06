@@ -62,7 +62,6 @@ function TopicModal() {
 
   const handleSubmit = () => {
     // TODO: Implement submission logic
-    console.log({ name, definition, samplePhrases });
     setOpened(false);
   };
 

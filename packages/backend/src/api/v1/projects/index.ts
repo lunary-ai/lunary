@@ -164,8 +164,6 @@ projects.post(
         where project_id = ${projectId}
           and type = 'private'
       `;
-
-      console.log("Private key regenerated", newKey);
     }
 
     ctx.status = 200;

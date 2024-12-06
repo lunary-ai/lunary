@@ -373,7 +373,6 @@ export function buildLogsAPIUrl(data = {}) {
 }
 
 export function useLogs(params: any) {
-  console.log("LOGS");
   return useProjectInfiniteSWR(buildLogsAPIUrl(params));
 }
 
