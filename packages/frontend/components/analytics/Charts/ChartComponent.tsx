@@ -69,5 +69,19 @@ export default function ChartComponent({
     return <AreaChartComponent data={data} />;
   }
 
+  if (id === "costs") {
+    console.log(data);
+    return <AreaChartComponent data={data} />;
+  }
+
+  if (id === "errors") {
+    console.log(data);
+    return <AreaChartComponent data={data} />;
+  }
+
+  if (id === "users/new") {
+    return <AreaChartComponent data={data} />;
+  }
+
   return "No chart available";
 }

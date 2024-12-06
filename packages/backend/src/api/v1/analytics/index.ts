@@ -108,7 +108,7 @@ analytics.get("/costs", async (ctx: Context) => {
         )
         select
           date, 
-          costs, 
+          costs as value, 
           name
         from
           weekly_costs 
@@ -143,18 +143,15 @@ analytics.get("/costs", async (ctx: Context) => {
   }
 });
 
-analytics.get(
-  "/errors",
-  checkAccess("analytics", "read"),
-  async (ctx: Context) => {
-    const { projectId } = ctx.state;
-    const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
-      projectId,
-      ctx.query,
-    );
+analytics.get("/errors", async (ctx: Context) => {
+  const { projectId } = ctx.state;
+  const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
+    projectId,
+    ctx.query,
+  );
 
-    if (granularity === "weekly") {
-      const res = await sql`
+  if (granularity === "weekly") {
+    const res = await sql`
         with dates as (
           ${datesQuery}
         ),
@@ -177,16 +174,17 @@ analytics.get(
         )
         select
           date, 
-          errors
+          errors as value,
+          'error' as name
         from
           weekly_errors
         order by
           date;
       `;
-      ctx.body = { data: res };
-      return;
-    } else {
-      const res = await sql`
+    ctx.body = { data: res };
+    return;
+  } else {
+    const res = await sql`
         with dates as (
           ${datesQuery}
         ),
@@ -196,7 +194,8 @@ analytics.get(
         )
         select
           d.date,
-          coalesce(count(r.*)::int, 0) as errors
+          coalesce(count(r.*)::int, 0) as value,
+          'error' as name
         from
           dates d
           left join filtered_runs r on d.date = r.local_created_at
@@ -205,11 +204,10 @@ analytics.get(
         order by d.date;
     `;
 
-      ctx.body = { data: res };
-      return;
-    }
-  },
-);
+    ctx.body = { data: res };
+    return;
+  }
+});
 
 analytics.get(
   "/users/new",
@@ -229,7 +227,6 @@ analytics.get(
     const firstDimensionKey = ctx.query.firstDimensionKey;
     const secondDimensionKey = ctx.query.secondDimensionKey;
 
-    // Compute the total number of new users (stat)
     const [{ stat }] = await sql`
       select
         count(distinct eu.id)::int as stat
@@ -272,7 +269,7 @@ analytics.get(
           )
           select
             d.date,
-            coalesce(count(nu.id)::int, 0) as users
+            coalesce(count(nu.id)::int, 0) as value
           from
             dates d
             left join new_users nu on nu.local_created_at >= d.date and nu.local_created_at < d.date + interval '7 days'
@@ -306,7 +303,7 @@ analytics.get(
           )
           select
             d.date,
-            coalesce(count(nu.id)::int, 0) as users
+            coalesce(count(nu.id)::int, 0) as value
           from
             dates d
             left join new_users nu on d.date = nu.local_created_at

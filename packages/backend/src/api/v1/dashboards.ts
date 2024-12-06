@@ -71,14 +71,24 @@ dashboards.post("/", async (ctx: Context) => {
   const bodySchema = z.object({
     name: z.string(),
     description: z.string().optional().nullable().default(null),
-    filters: z.any(),
+    checks: z.any(),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+    granularity: z.string().optional(),
     isHome: z.boolean().optional().nullable().default(false),
     chartIds: z.array(z.string()).nullable().optional().default(DEFAULT_CHARTS),
   });
 
-  const { name, chartIds, description, filters, isHome } = bodySchema.parse(
-    ctx.request.body,
-  );
+  const {
+    name,
+    chartIds,
+    description,
+    checks,
+    startDate,
+    endDate,
+    granularity,
+    isHome,
+  } = bodySchema.parse(ctx.request.body);
 
   const insertedDashboard = sql.begin(async (sql) => {
     if (isHome) {
@@ -99,7 +109,10 @@ dashboards.post("/", async (ctx: Context) => {
         ownerId: userId,
         name,
         description,
-        filters,
+        checks,
+        startDate,
+        endDate,
+        granularity,
         isHome,
         chartIds,
       })}
@@ -121,19 +134,33 @@ dashboards.patch("/:id", async (ctx: Context) => {
   const bodySchema = z.object({
     name: z.string().optional(),
     description: z.string().optional(),
-    filters: z.any(),
+    checks: z.any(),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+    granularity: z.string().optional(),
     isHome: z.boolean().optional(),
     chartIds: z.array(z.string()).optional(),
   });
-  const { name, chartIds, description, filters, isHome } = bodySchema.parse(
-    ctx.request.body,
-  );
+
+  const {
+    name,
+    chartIds,
+    description,
+    checks,
+    startDate,
+    endDate,
+    granularity,
+    isHome,
+  } = bodySchema.parse(ctx.request.body);
 
   const dashboardToUpdate = clearUndefined({
     updatedAt: new Date(),
     name,
     description,
-    filters,
+    checks,
+    startDate,
+    endDate,
+    granularity,
     isHome,
     chartIds,
   });

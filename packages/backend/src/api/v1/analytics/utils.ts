@@ -6,7 +6,6 @@ import { z } from "zod";
 
 export function buildFiltersQuery(checks: string) {
   const deserializedChecks = deserializeLogic(checks);
-  console.log(checks, deserializedChecks);
   return deserializedChecks?.length && deserializedChecks.length > 1
     ? convertChecksToSQL(deserializedChecks)
     : sql`1 = 1`;
