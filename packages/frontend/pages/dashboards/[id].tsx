@@ -19,12 +19,15 @@ import {
   Stack,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconDotsVertical, IconHome2, IconTrash } from "@tabler/icons-react";
+import {
+  IconDotsVertical,
+  IconHome,
+  IconHome2,
+  IconTrash,
+} from "@tabler/icons-react";
 import { useRouter } from "next/router";
-import React, { useEffect, useState, useCallback, FC } from "react";
-import { Chart, LogicNode } from "shared";
-import { DndProvider, useDrag, useDrop, XYCoord } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
+import { useEffect, useState } from "react";
+import { Chart, deserializeLogic, LogicNode } from "shared";
 
 function getSpan(index: number) {
   if ([0, 1, 2].includes(index)) {
@@ -37,88 +40,6 @@ function getSpan(index: number) {
 
   return 6;
 }
-
-const ItemTypes = {
-  CHART: "chart",
-};
-
-interface DraggableChartProps {
-  id: string;
-  index: number;
-  moveChart: (dragIndex: number, hoverIndex: number) => void;
-  children: React.ReactNode;
-}
-
-const DraggableChart: FC<DraggableChartProps> = ({
-  id,
-  index,
-  moveChart,
-  children,
-}) => {
-  const ref = React.useRef<HTMLDivElement>(null);
-
-  const [, drop] = useDrop({
-    accept: ItemTypes.CHART,
-    hover(item: { index: number; id: string }, monitor) {
-      if (!ref.current) {
-        return;
-      }
-      const dragIndex = item.index;
-      const hoverIndex = index;
-
-      // Don't replace items with themselves
-      if (dragIndex === hoverIndex) {
-        return;
-      }
-
-      // Determine rectangle on screen
-      const hoverBoundingRect = ref.current?.getBoundingClientRect();
-
-      // Get vertical middle
-      const hoverMiddleY =
-        (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-
-      // Determine mouse position
-      const clientOffset = monitor.getClientOffset();
-      if (!clientOffset) return;
-
-      const hoverClientY = (clientOffset as XYCoord).y - hoverBoundingRect.top;
-
-      // Only move when the mouse has crossed half of the item height
-      // Dragging downwards
-      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-        return;
-      }
-
-      // Dragging upwards
-      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
-        return;
-      }
-
-      // Perform the move
-      moveChart(dragIndex, hoverIndex);
-
-      // Note: we don't mutate the item here
-      item.index = hoverIndex;
-    },
-  });
-
-  const [{ isDragging }, drag] = useDrag({
-    type: ItemTypes.CHART,
-    item: { id, index },
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
-  });
-
-  drag(drop(ref));
-
-  return (
-    <div ref={ref} style={{ opacity: isDragging ? 0.5 : 1 }}>
-      {children}
-    </div>
-  );
-};
 
 export default function Dashboard() {
   const router = useRouter();
@@ -150,20 +71,17 @@ export default function Dashboard() {
           new Date(dashboard.endDate),
         ]);
       }
-      if (dashboard.granularity) {
-        setGranularity(dashboard.granularity);
-      }
     }
-  }, [dashboard, dashboardIsLoading]);
+  }, [dashboard]);
 
-  const moveChart = useCallback((dragIndex: number, hoverIndex: number) => {
-    setCharts((prevCharts) => {
-      const updated = [...prevCharts];
-      const [removed] = updated.splice(dragIndex, 1);
-      updated.splice(hoverIndex, 0, removed);
-      return updated;
-    });
-  }, []);
+  // TODO: isValidating
+  if (dashboardIsLoading || !dashboard) {
+    return (
+      <Flex align="center" justify="center" h="280px">
+        <Loader />
+      </Flex>
+    );
+  }
 
   function saveDashboard() {
     updateDashboard({
@@ -173,14 +91,6 @@ export default function Dashboard() {
       granularity,
       chartIds: charts.map((chart) => chart.id),
     });
-  }
-
-  if (dashboardIsLoading || !dashboard) {
-    return (
-      <Flex align="center" justify="center" h="280px">
-        <Loader />
-      </Flex>
-    );
   }
 
   return (
@@ -194,9 +104,9 @@ export default function Dashboard() {
         checks={checks}
       />
       <Stack pt="24px">
-        <Group position="apart">
+        <Group justify="space-between">
           <Group>
-            <Group spacing="xs">
+            <Group gap="xs">
               {dashboard.isHome && <IconHome2 stroke="2px" size={22} />}
               <RenamableField
                 defaultValue={dashboard.name}
@@ -211,7 +121,7 @@ export default function Dashboard() {
                 </Menu.Target>
                 <Menu.Dropdown>
                   <Menu.Item
-                    icon={<IconHome2 size={16} />}
+                    leftSection={<IconHome2 size={16} />}
                     disabled={dashboard.isHome}
                     onClick={() => updateDashboard({ isHome: true })}
                   >
@@ -219,7 +129,7 @@ export default function Dashboard() {
                   </Menu.Item>
                   <Menu.Item
                     color="red"
-                    icon={<IconTrash size={16} />}
+                    leftSection={<IconTrash size={16} />}
                     onClick={() => {
                       if (dashboard.isHome) {
                         alert("Cannot delete Home Dashboard");
@@ -254,33 +164,22 @@ export default function Dashboard() {
           </Group>
         </Group>
 
-        <DndProvider backend={HTML5Backend}>
-          <Grid>
-            {charts.map((chart, index) => (
-              <Grid.Col span={getSpan(index)} key={chart.id}>
-                <DraggableChart
+        <Grid>
+          {charts.map((chart, index) => (
+            <Grid.Col span={getSpan(index)} key={chart.id}>
+              <AnalyticsCard title={chart.name} description={chart.description}>
+                <ChartComponent
                   id={chart.id}
-                  index={index}
-                  moveChart={moveChart}
-                >
-                  <AnalyticsCard
-                    title={chart.name}
-                    description={chart.description}
-                  >
-                    <ChartComponent
-                      id={chart.id}
-                      dataKey={chart.dataKey}
-                      startDate={startDate}
-                      endDate={endDate}
-                      granularity={granularity}
-                      checks={checks}
-                    />
-                  </AnalyticsCard>
-                </DraggableChart>
-              </Grid.Col>
-            ))}
-          </Grid>
-        </DndProvider>
+                  dataKey={chart.dataKey}
+                  startDate={startDate}
+                  endDate={endDate}
+                  granularity={granularity}
+                  checks={checks}
+                />
+              </AnalyticsCard>
+            </Grid.Col>
+          ))}
+        </Grid>
       </Stack>
     </>
   );
