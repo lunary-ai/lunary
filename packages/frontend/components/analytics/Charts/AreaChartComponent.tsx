@@ -98,6 +98,35 @@ interface AreaChartProps {
   stat?: number | null;
 }
 
+function getAggValue(
+  data: InputData[],
+  aggregationMethod?: string | null,
+  stat?: number | null,
+  dataKey?: string,
+) {
+  if (stat) return stat.toFixed(2);
+  if (aggregationMethod) {
+    const value = formatLargeNumber(
+      getFigure(aggregationMethod, data, "value").toFixed(2),
+    );
+    if (dataKey?.includes("latency")) {
+      return `${value}s`;
+    }
+    return value;
+  }
+  return null;
+}
+
+function formatAggValue(aggValue: any, dataKey?: string) {
+  if (dataKey?.includes("latency")) {
+    return `${aggValue}s`;
+  }
+  if (dataKey?.includes("cost")) {
+    return `$${aggValue}`;
+  }
+  return aggValue;
+}
+
 export default function AreaChartComponent({
   data,
   granularity,
@@ -108,16 +137,16 @@ export default function AreaChartComponent({
 }: AreaChartProps) {
   const formattedData = transformData(data);
   const series = generateSeries(formattedData, color);
-  const aggValue = stat
-    ? stat
-    : aggregationMethod
-      ? formatLargeNumber(getFigure(aggregationMethod, data, "value"))
-      : null;
+
+  const aggValue = formatAggValue(
+    getAggValue(data, aggregationMethod, stat, dataKey),
+    dataKey,
+  );
 
   return (
     <>
       <Text fw={500} fz={24} mb="md">
-        {dataKey?.includes("cost") && aggValue ? `$${aggValue}` : aggValue}
+        {aggValue || <Box h="24px" />}
       </Text>
       {!aggValue && <Box h="24px" />}
       <AreaChart

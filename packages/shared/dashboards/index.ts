@@ -13,6 +13,7 @@ export function getDefaultDateRange() {
 
 type Aggregation = "sum" | "avg" | null | undefined;
 
+// TODO: types
 export const DEFAULT_CHARTS = {
   "models/top": {
     id: "models/top",
@@ -88,7 +89,6 @@ export const DEFAULT_CHARTS = {
     type: "Area",
     dataKey: "run-types",
     splitBy: "type",
-    props: ["runs"],
     aggregationMethod: "sum",
   },
   latency: {
@@ -97,11 +97,9 @@ export const DEFAULT_CHARTS = {
     description: "The average duration of your LLM Calls",
     type: "Area",
     dataKey: "latency",
-    props: ["avgDuration"],
-    title: "Avg. LLM Latency",
     color: "purple",
+    aggregationMethod: "avg",
   },
-
   // "users/average-cost": {
   //   dataKey: "users/average-cost",
   //   props: ["cost"],
