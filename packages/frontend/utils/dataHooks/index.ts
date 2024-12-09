@@ -757,3 +757,12 @@ export function useLunaryVersion() {
     isLoading,
   };
 }
+
+export function useCustomEventsNames() {
+  const { data, isLoading } = useProjectSWR<string[]>("/filters/custom-events");
+
+  return {
+    names: data || [],
+    isLoading,
+  };
+}

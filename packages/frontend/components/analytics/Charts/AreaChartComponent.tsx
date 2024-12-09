@@ -1,7 +1,7 @@
 import { AreaChart, ChartTooltip } from "@mantine/charts";
 import { Box, Text } from "@mantine/core";
 import { format, parseISO } from "date-fns";
-import { Granularity } from "../Creator";
+import { Granularity } from "../DateRangeGranularityPicker";
 import { formatLargeNumber } from "@/utils/format";
 
 const COLOR_PALETTE = [
@@ -104,7 +104,9 @@ function getAggValue(
   stat?: number | null,
   dataKey?: string,
 ) {
-  if (stat) return stat.toFixed(2);
+  if (stat && stat % 1 !== 0) {
+    return stat.toFixed(2);
+  }
   if (aggregationMethod) {
     const value = formatLargeNumber(
       getFigure(aggregationMethod, data, "value").toFixed(2),
@@ -145,7 +147,7 @@ export default function AreaChartComponent({
 
   return (
     <>
-      <Text fw={500} fz={24} mb="md">
+      <Text fw={500} fz={24} mb="md" px="md">
         {aggValue || <Box h="24px" />}
       </Text>
       {!aggValue && <Box h="24px" />}
@@ -169,13 +171,12 @@ export default function AreaChartComponent({
             fontSize: "16px",
             fill: "#666",
             opacity: 0.8,
-            offset: 100,
           },
         }}
         tooltipProps={{
           content: ({ label, payload }) => {
             const filteredPayload = (payload || [])
-              .filter((item: any) => item.value > 0)
+              .filter((item: any) => item.value !== 0)
               .sort((a: any, b: any) => b.value - a.value)
               .map((item) => ({
                 ...item,

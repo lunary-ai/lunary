@@ -60,11 +60,22 @@ export function useDashboard(id: string) {
 }
 
 export function useCustomCharts() {
-  const { data, isLoading } = useProjectSWR<Chart[]>(
+  const { data, isLoading, mutate } = useProjectSWR<Chart[]>(
     "/dashboards/charts/custom",
   );
 
+  const { trigger } = useProjectMutation(
+    "/dashboards/charts/custom",
+    fetcher.post,
+  );
+
+  async function insertCustomChart(chart: Chart) {
+    await trigger(chart);
+    mutate();
+  }
+
   return {
+    insert: insertCustomChart,
     customCharts: data || [],
     isLoading,
   };

@@ -1,10 +1,6 @@
-import {
-  DateRangePicker,
-  determineGranularity,
-  Granularity,
-} from "@/components/analytics/Creator";
-import { DateRangeSelect } from "@/pages/dashboards/old-[id]";
 import { Group, Select } from "@mantine/core";
+import { DatePickerInput } from "@mantine/dates";
+import { IconCalendar } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 
 type PresetDateRange = "Today" | "7 Days" | "30 Days" | "3 Months" | "Custom";
@@ -110,6 +106,17 @@ interface GranularitySelectProps {
   granularity: Granularity;
   setGranularity: (granularity: Granularity) => void;
 }
+
+export const determineGranularity = (dateRange: [Date, Date]): Granularity => {
+  const [startDate, endDate] = dateRange;
+  const diffDays =
+    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
+
+  if (diffDays <= 1) return "hourly";
+  if (diffDays <= 60) return "daily";
+  return "weekly";
+};
+
 export function GranularitySelect({
   dateRange,
   granularity,
@@ -164,6 +171,80 @@ export function GranularitySelect({
   );
 }
 
+export function DateRangeSelect({ dateRange, setDateRange }) {
+  const selectedOption = getPresetFromDateRange(dateRange);
+  const data = ["Today", "7 Days", "30 Days", "3 Months"];
+  const displayData = selectedOption === "Custom" ? [...data, "Custom"] : data;
+
+  function handleSelectChange(value) {
+    const newDateRange = getDateRangeFromPreset(value);
+    setDateRange(newDateRange);
+  }
+
+  return (
+    <Select
+      placeholder="Select date range"
+      w="100"
+      size="xs"
+      allowDeselect={false}
+      styles={{
+        input: {
+          height: 32,
+          borderTopRightRadius: 0,
+          borderBottomRightRadius: 0,
+          borderRight: 0,
+        },
+      }}
+      data={displayData}
+      value={selectedOption}
+      onChange={handleSelectChange}
+    />
+  );
+}
+
+export function DateRangePicker({
+  dateRange,
+  setDateRange,
+}: DateRangePickerProps) {
+  const [localDateRange, setLocalDateRange] = useState<
+    [Date | null, Date | null]
+  >([dateRange[0], dateRange[1]]);
+
+  useEffect(() => {
+    setLocalDateRange([dateRange[0], dateRange[1]]);
+  }, [dateRange]);
+
+  function handleDateChange(dates: [Date | null, Date | null]) {
+    setLocalDateRange(dates);
+    if (dates[0] && dates[1]) {
+      const [startDate, endDate] = dates;
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(23, 59, 59, 99);
+
+      setDateRange([dates[0], dates[1]]);
+    }
+  }
+  return (
+    <DatePickerInput
+      type="range"
+      placeholder="Pick date range"
+      leftSection={<IconCalendar size={18} stroke={1.5} />}
+      size="xs"
+      w="fit-content"
+      styles={{
+        input: {
+          borderTopLeftRadius: 0,
+          height: 32,
+          borderBottomLeftRadius: 0,
+        },
+      }}
+      value={localDateRange}
+      onChange={handleDateChange}
+      maxDate={new Date()}
+    />
+  );
+}
+
 export default function DateRangeGranularityPicker({
   dateRange,
   setDateRange,
@@ -182,3 +263,4 @@ export default function DateRangeGranularityPicker({
     </Group>
   );
 }
+export type Granularity = "hourly" | "daily" | "weekly" | "monthly";

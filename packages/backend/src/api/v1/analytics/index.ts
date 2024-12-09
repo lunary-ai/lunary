@@ -2,6 +2,7 @@ import { checkAccess } from "@/src/utils/authorization";
 import sql from "@/src/utils/db";
 import Context from "@/src/utils/koa";
 import Router from "koa-router";
+import { deserializeLogic } from "shared";
 import { z } from "zod";
 import { buildFiltersQuery, parseQuery } from "./utils";
 
@@ -9,18 +10,15 @@ const analytics = new Router({
   prefix: "/analytics",
 });
 
-analytics.get(
-  "/tokens",
-  checkAccess("analytics", "read"),
-  async (ctx: Context) => {
-    const { projectId } = ctx.state;
-    const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
-      projectId,
-      ctx.query,
-    );
+analytics.get("/tokens", async (ctx: Context) => {
+  const { projectId } = ctx.state;
+  const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
+    projectId,
+    ctx.query,
+  );
 
-    if (granularity === "weekly") {
-      const res = await sql`
+  if (granularity === "weekly") {
+    const res = await sql`
         with dates as (
           ${datesQuery}
         ),
@@ -49,10 +47,10 @@ analytics.get(
         order by
           date;
       `;
-      ctx.body = { data: res };
-      return;
-    } else {
-      const res = await sql`
+    ctx.body = { data: res };
+    return;
+  } else {
+    const res = await sql`
         with dates as (
           ${datesQuery}
         ),
@@ -72,11 +70,10 @@ analytics.get(
         order by d.date;
     `;
 
-      ctx.body = { data: res };
-      return;
-    }
-  },
-);
+    ctx.body = { data: res };
+    return;
+  }
+});
 
 analytics.get("/costs", async (ctx: Context) => {
   const { projectId } = ctx.state;
@@ -209,260 +206,113 @@ analytics.get("/errors", async (ctx: Context) => {
   }
 });
 
-analytics.get(
-  "/users/new",
-  checkAccess("analytics", "read"),
-  async (ctx: Context) => {
-    const { projectId } = ctx.state;
-    const {
-      datesQuery,
-      granularity,
-      timeZone,
-      localCreatedAt,
-      startDate,
-      endDate,
-      filteredRunsQuery,
-    } = parseQuery(projectId, ctx.query);
+analytics.get("/users/new", async (ctx: Context) => {
+  const { projectId } = ctx.state;
+  const { datesQuery, granularity, timeZone } = parseQuery(
+    projectId,
+    ctx.query,
+  );
 
-    const firstDimensionKey = ctx.query.firstDimension || "undefined";
-    const secondDimensionKey = ctx.query.secondDimension || "undefined";
+  const localCreatedAtMap = {
+    hourly: sql`date_trunc('hour', eu.created_at at time zone ${timeZone})::timestamp as local_created_at`,
+    daily: sql`date_trunc('day', eu.created_at at time zone ${timeZone})::timestamp as local_created_at`,
+    weekly: sql`date_trunc('day', eu.created_at at time zone ${timeZone})::timestamp as local_created_at`,
+  };
 
-    const [{ stat }] = await sql`
-      select
-        count(distinct eu.id)::int as stat
-      from
-        external_user eu
-        join (
-          ${filteredRunsQuery}
-          and error is not null
-        ) fr on eu.id = fr.external_user_id
-      where
-        eu.project_id = ${projectId}
-        and eu.created_at >= ${startDate} at time zone ${timeZone}
-        and eu.created_at <= ${endDate} at time zone ${timeZone}
-    `;
+  const localCreatedAt = localCreatedAtMap[granularity];
 
-    if (
-      firstDimensionKey === "undefined" ||
-      secondDimensionKey === "undefined"
-    ) {
-      if (granularity === "weekly") {
-        const data = await sql`
-          with dates as (
-            ${datesQuery}
-          ),
-          filtered_runs as (
-            ${filteredRunsQuery}
-            and error is not null
-          ),
-          new_users as (
-            select distinct on (eu.id)
-              eu.*,
-              date_trunc('day', fr.created_at at time zone ${timeZone})::timestamp as local_created_at
-            from
-              external_user eu
-              join filtered_runs fr on eu.id = fr.external_user_id
-            where
-              eu.project_id = ${projectId}
-              and eu.created_at >= ${startDate} at time zone ${timeZone}
-              and eu.created_at <= ${endDate} at time zone ${timeZone}
-          )
+  if (granularity === "weekly") {
+    const res = await sql`
+        with dates as (
+          ${datesQuery}
+        ),
+        external_users as (
+          select
+            *,
+            ${localCreatedAt}
+         from
+           external_user eu
+         where
+           eu.project_id = ${projectId} 
+        ),
+        weekly_new_users as (
           select
             d.date,
-            coalesce(count(nu.id)::int, 0) as value,
-            'Count' as name
+            coalesce(count(eu.*)::int, 0) as users
           from
             dates d
-            left join new_users nu on nu.local_created_at >= d.date and nu.local_created_at < d.date + interval '7 days'
+            left join external_users eu on eu.local_created_at >= d.date and eu.local_created_at < d.date + interval '7 days'
           group by
             d.date
-          order by
-            d.date;
-        `;
-        ctx.body = { data, stat: stat || 0 };
-        return;
-      } else {
-        const data = await sql`
-          with dates as (
-            ${datesQuery}
-          ),
-          filtered_runs as (
-            ${filteredRunsQuery}
-            and error is not null
-          ),
-          new_users as (
-            select distinct on (eu.id)
-              eu.*,
-              date_trunc('day', fr.created_at at time zone ${timeZone})::timestamp as local_created_at
-            from
-              external_user eu
-              join filtered_runs fr on eu.id = fr.external_user_id
-            where
-              eu.project_id = ${projectId}
-              and eu.created_at >= ${startDate} at time zone ${timeZone}
-              and eu.created_at <= ${endDate} at time zone ${timeZone}
-          )
+          having 
+            coalesce(count(eu.*)::int, 0) != 0
+        )
+        select 
+          date,
+          users as value,
+          'users' as name
+        from
+          weekly_new_users 
+        order by
+          date
+
+      `;
+    ctx.body = { data: res };
+    return;
+  } else {
+    const res = await sql`
+        with dates as (
+          ${datesQuery}
+        ),
+        external_users as (
           select
-            d.date,
-            coalesce(count(nu.id)::int, 0) as value,
-            'Count' as name
-          from
-            dates d
-            left join new_users nu on d.date = nu.local_created_at
-          group by
-            d.date
-          order by
-            d.date;
-        `;
-        ctx.body = { data, stat: stat || 0 };
-        return;
-      }
-    } else {
-      // Handle breakdown by dimensions
-      let rows;
+            *,
+            ${localCreatedAt}
+         from
+           external_user eu
+         where
+           eu.project_id = ${projectId}
+        )
+        select
+          d.date,
+          coalesce(count(eu.*), 0)::int as value,
+          'users' as name
+        from
+          dates d
+          left join external_users eu on d.date = eu.local_created_at
+        group by
+          d.date
+        order by
+          d.date;
+      `;
+    ctx.body = { data: res };
+    return;
+  }
+});
 
-      if (secondDimensionKey !== "date") {
-        rows = await sql<
-          { value: string; firstDimensionValue: string; userCount: number }[]
-        >`
-          with second_dimension as (
-            select distinct
-              eu.props ->> ${secondDimensionKey as string} as value
-            from
-              public.external_user eu
-            where
-              eu.project_id = ${projectId}
-          ),
-          filtered_runs as (
-            ${filteredRunsQuery}
-            and error is not null
-          ),
-          new_users as (
-            select distinct on (eu.id)
-              eu.*,
-              date_trunc('day', fr.created_at at time zone ${timeZone})::timestamp as local_created_at
-            from
-              external_user eu
-              join filtered_runs fr on eu.id = fr.external_user_id
-            where
-              eu.project_id = ${projectId}
-              and eu.created_at >= ${startDate} at time zone ${timeZone}
-              and eu.created_at <= ${endDate} at time zone ${timeZone}
-          )
-          select
-            sd.value as value,
-            coalesce(nu.props ->> ${firstDimensionKey as string}, 'Unknown') as first_dimension_value,
-            coalesce(count(nu.id)::int, 0) as user_count
-          from
-            second_dimension sd
-            left join new_users nu on nu.props ->> ${secondDimensionKey as string} = sd.value
-          group by
-            sd.value,
-            first_dimension_value
-          order by
-            sd.value,
-            first_dimension_value;
-        `;
-      } else {
-        rows = await sql<
-          { value: Date; firstDimensionValue: string; userCount: number }[]
-        >`
-          with dates as (
-            ${datesQuery}
-          ),
-          filtered_runs as (
-            ${filteredRunsQuery}
-            and error is not null
-          ),
-          new_users as (
-            select distinct on (eu.id)
-              eu.*,
-              date_trunc('day', fr.created_at at time zone ${timeZone})::timestamp as local_created_at
-            from
-              external_user eu
-              join filtered_runs fr on eu.id = fr.external_user_id
-            where
-              eu.project_id = ${projectId}
-              and eu.created_at >= ${startDate} at time zone ${timeZone}
-              and eu.created_at <= ${endDate} at time zone ${timeZone}
-          )
-          select
-            d.date as value,
-            coalesce(nu.props ->> ${firstDimensionKey as string}, 'Unknown') as first_dimension_value,
-            coalesce(count(nu.id)::int, 0) as user_count
-          from
-            dates d
-            left join new_users nu on d.date = nu.local_created_at
-          group by
-            d.date,
-            first_dimension_value
-          order by
-            d.date,
-            first_dimension_value;
-        `;
-      }
+analytics.get("/users/active", async (ctx: Context) => {
+  const { projectId } = ctx.state;
+  const {
+    datesQuery,
+    granularity,
+    timeZone,
+    localCreatedAt,
+    startDate,
+    endDate,
+    filteredRunsQuery,
+  } = parseQuery(projectId, ctx.query);
 
-      // Process the query results into the desired format
-      let dateObj: {
-        [secondDimensionValue: string]: {
-          value: string;
-          [key: string]: number;
-        };
-      } = {};
+  const distinctMap = {
+    hourly: sql`distinct on (r.external_user_id, date_trunc('hour', r.created_at at time zone ${timeZone})::timestamp)`,
+    daily: sql`distinct on (r.external_user_id, date_trunc('day', r.created_at at time zone ${timeZone})::timestamp)`,
+    weekly: sql`distinct on (r.external_user_id, date_trunc('day', r.created_at at time zone ${timeZone})::timestamp)`,
+  };
+  const distinct = distinctMap[granularity];
 
-      for (const row of rows) {
-        let secondDimensionValue =
-          row.value instanceof Date
-            ? row.value.toISOString().split("T")[0]
-            : row.value;
+  const firstDimensionKey = ctx.query.firstDimension || "undefined";
+  const secondDimensionKey = ctx.query.secondDimension || "undefined";
 
-        const propValue = row.firstDimensionValue;
-
-        const userCount = row.userCount;
-
-        if (!dateObj[secondDimensionValue]) {
-          dateObj[secondDimensionValue] = { value: secondDimensionValue };
-        }
-        if (!dateObj[secondDimensionValue][propValue]) {
-          dateObj[secondDimensionValue][propValue] = 0;
-        }
-        dateObj[secondDimensionValue][propValue] += userCount;
-      }
-
-      const data = Object.values(dateObj).filter(({ value }) => value !== null);
-
-      ctx.body = { data, stat: stat || 0 };
-      return;
-    }
-  },
-);
-
-analytics.get(
-  "/users/active",
-  checkAccess("analytics", "read"),
-  async (ctx: Context) => {
-    const { projectId } = ctx.state;
-    const {
-      datesQuery,
-      granularity,
-      timeZone,
-      localCreatedAt,
-      startDate,
-      endDate,
-      filteredRunsQuery,
-    } = parseQuery(projectId, ctx.query);
-
-    const distinctMap = {
-      hourly: sql`distinct on (r.external_user_id, date_trunc('hour', r.created_at at time zone ${timeZone})::timestamp)`,
-      daily: sql`distinct on (r.external_user_id, date_trunc('day', r.created_at at time zone ${timeZone})::timestamp)`,
-      weekly: sql`distinct on (r.external_user_id, date_trunc('day', r.created_at at time zone ${timeZone})::timestamp)`,
-    };
-    const distinct = distinctMap[granularity];
-
-    const firstDimensionKey = ctx.query.firstDimension || "undefined";
-    const secondDimensionKey = ctx.query.secondDimension || "undefined";
-
-    const [{ stat }] = await sql`
+  const [{ stat }] = await sql`
       select
         count(distinct r.external_user_id)::int as stat 
       from
@@ -474,11 +324,8 @@ analytics.get(
         and created_at <= ${endDate} at time zone ${timeZone} 
     `;
 
-    if (
-      firstDimensionKey === "undefined" ||
-      secondDimensionKey === "undefined"
-    ) {
-      const data = await sql`
+  if (firstDimensionKey === "undefined" || secondDimensionKey === "undefined") {
+    const data = await sql`
         with dates as (
           ${datesQuery}
         ),
@@ -505,14 +352,14 @@ analytics.get(
         order by d.date;
     `;
 
-      ctx.body = { data, stat: stat || 0 };
-      return;
-    }
+    ctx.body = { data, stat: stat || 0 };
+    return;
+  }
 
-    // TODO: stats + weekly + refacto queries
+  // TODO: stats + weekly + refacto queries
 
-    if (granularity === "weekly") {
-      const data = await sql`
+  if (granularity === "weekly") {
+    const data = await sql`
         with dates as (
           ${datesQuery}
         ),
@@ -542,21 +389,21 @@ analytics.get(
         )
         select
           date, 
-          users
+          users as value
         from
           weekly_active_users
         order by
           date;
       `;
-      ctx.body = { data, stat: stat || 0 };
-      return;
-    } else {
-      let rows;
+    ctx.body = { data, stat: stat || 0 };
+    return;
+  } else {
+    let rows;
 
-      if (secondDimensionKey !== "date") {
-        rows = await sql<
-          { value: string; firstDimensionValue: "string"; userCount: Number }[]
-        >`
+    if (secondDimensionKey !== "date") {
+      rows = await sql<
+        { value: string; firstDimensionValue: "string"; userCount: Number }[]
+      >`
         with second_dimension as (
           	select distinct
               props ->> ${secondDimensionKey as string} as value
@@ -589,10 +436,10 @@ analytics.get(
           sd.value,
           first_dimension_value
       `;
-      } else {
-        rows = await sql<
-          { value: Date; firstDimensionValue: "string"; userCount: Number }[]
-        >`
+    } else {
+      rows = await sql<
+        { value: Date; firstDimensionValue: "string"; userCount: Number }[]
+      >`
         with dates as (
           ${datesQuery}
         ),
@@ -621,58 +468,53 @@ analytics.get(
         order by 
           d.date;
     `;
-      }
-
-      let dateObj: {
-        [secondDimensionValue: string]: {
-          value: string;
-          [key: string]: number;
-        };
-      } = {};
-
-      for (const row of rows) {
-        let secondDimensionValue =
-          row.value instanceof Date
-            ? row.value.toISOString().split("T")[0]
-            : row.value;
-
-        const propValue = row.firstDimensionValue as string;
-
-        const userCount = row.userCount as number;
-
-        if (!dateObj[secondDimensionValue]) {
-          dateObj[secondDimensionValue] = { value: secondDimensionValue };
-        }
-        if (!dateObj[secondDimensionValue][propValue]) {
-          dateObj[secondDimensionValue][propValue] = 0;
-        }
-        dateObj[secondDimensionValue][propValue] += userCount;
-      }
-
-      const data = Object.values(dateObj).filter(({ value }) => value !== null);
-
-      ctx.body = { data, stat: stat || 0 };
-      return;
     }
-  },
-);
 
-analytics.get(
-  "/users/average-cost",
-  checkAccess("analytics", "read"),
-  async (ctx: Context) => {
-    const { projectId } = ctx.state;
-    const {
-      datesQuery,
-      filteredRunsQuery,
-      granularity,
-      timeZone,
-      localCreatedAt,
-      startDate,
-      endDate,
-    } = parseQuery(projectId, ctx.query);
+    let dateObj: {
+      [secondDimensionValue: string]: {
+        value: string;
+        [key: string]: number;
+      };
+    } = {};
 
-    const [{ stat }] = await sql`
+    for (const row of rows) {
+      let secondDimensionValue =
+        row.value instanceof Date
+          ? row.value.toISOString().split("T")[0]
+          : row.value;
+
+      const propValue = row.firstDimensionValue as string;
+
+      const userCount = row.userCount as number;
+
+      if (!dateObj[secondDimensionValue]) {
+        dateObj[secondDimensionValue] = { value: secondDimensionValue };
+      }
+      if (!dateObj[secondDimensionValue][propValue]) {
+        dateObj[secondDimensionValue][propValue] = 0;
+      }
+      dateObj[secondDimensionValue][propValue] += userCount;
+    }
+
+    const data = Object.values(dateObj).filter(({ value }) => value !== null);
+
+    ctx.body = { data, stat: stat || 0 };
+    return;
+  }
+});
+
+analytics.get("/users/average-cost", async (ctx: Context) => {
+  const { projectId } = ctx.state;
+  const {
+    datesQuery,
+    granularity,
+    timeZone,
+    localCreatedAt,
+    startDate,
+    endDate,
+  } = parseQuery(projectId, ctx.query);
+
+  const [{ stat }] = await sql`
       with total_costs as (
         select
           external_user_id,
@@ -694,8 +536,8 @@ analytics.get(
         total_costs;
     `;
 
-    if (granularity === "weekly") {
-      const data = await sql`
+  if (granularity === "weekly") {
+    const data = await sql`
         with dates as (
           ${datesQuery}
         ),
@@ -730,16 +572,17 @@ analytics.get(
         )
         select
           date, 
-          cost
+          cost as value,
+          'Cost' as name          
         from
           weekly_user_cost
         order by
           date;
       `;
-      ctx.body = { data, stat: stat || 0 };
-      return;
-    } else {
-      const data = await sql`
+    ctx.body = { data, stat: stat || 0 };
+    return;
+  } else {
+    const data = await sql`
         with dates as (
           ${datesQuery}
         ),
@@ -759,7 +602,8 @@ analytics.get(
         )
         select
           d.date,
-          coalesce(avg(r.total_cost)::float, 0) as cost
+          coalesce(avg(r.total_cost)::float, 0) as value,
+          'Cost' as name
         from
           dates d
           left join user_costs r on d.date = r.local_created_at
@@ -771,11 +615,10 @@ analytics.get(
           d.date;
       `;
 
-      ctx.body = { data, stat };
-      return;
-    }
-  },
-);
+    ctx.body = { data, stat };
+    return;
+  }
+});
 
 analytics.get("/run-types", async (ctx: Context) => {
   const { projectId } = ctx.state;
@@ -883,8 +726,6 @@ analytics.get("/latency", async (ctx: Context) => {
             left join filtered_runs r on r.local_created_at >= d.date and r.local_created_at < d.date + interval '7 days'
           group by 
             d.date, r.local_created_at
-          having 
-            coalesce(avg(extract(epoch from r.duration))::float, 0) != 0
           order by d.date
         )
         select
@@ -915,8 +756,6 @@ analytics.get("/latency", async (ctx: Context) => {
           left join filtered_runs r on d.date = r.local_created_at
         group by 
           d.date
-        having 
-          coalesce(avg(extract(epoch from r.duration))::float, 0) != 0
         order by d.date;
     `;
 
@@ -925,18 +764,15 @@ analytics.get("/latency", async (ctx: Context) => {
   }
 });
 
-analytics.get(
-  "/feedback-ratio",
-  checkAccess("analytics", "read"),
-  async (ctx: Context) => {
-    const { projectId } = ctx.state;
-    const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
-      projectId,
-      ctx.query,
-    );
+analytics.get("/feedback-ratio", async (ctx: Context) => {
+  const { projectId } = ctx.state;
+  const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
+    projectId,
+    ctx.query,
+  );
 
-    if (granularity === "weekly") {
-      const res = await sql`
+  if (granularity === "weekly") {
+    const res = await sql`
         with dates as (
           ${datesQuery}
         ),
@@ -960,7 +796,7 @@ analytics.get(
           coalesce(sum(fd.thumbs_up), 0) as total_thumbs_up,
           coalesce(sum(fd.thumbs_down), 0) as total_thumbs_down,
           case 
-            when coalesce(sum(fd.thumbs_up) + sum(fd.thumbs_down), 0) = 0 then null 
+            when coalesce(sum(fd.thumbs_up) + sum(fd.thumbs_down), 0) = 0 then 0 
             else ((sum(fd.thumbs_up)::float - sum(fd.thumbs_down)::float) / (sum(fd.thumbs_up)::float + sum(fd.thumbs_down)::float)) 
           end as ratio
         from
@@ -969,22 +805,21 @@ analytics.get(
         group by 
           d.date,
           case when fd.local_created_at is not null then fd.local_created_at else d.date end
-        having 
-          coalesce(sum(fd.thumbs_up) + sum(fd.thumbs_down), 0) != 0
         order by d.date
       )
       select
         date, 
-        ratio
+        coalesce(ratio, 0) as value,
+        'Ratio' as name
       from
         weekly_avg
       order by
         date;
       `;
-      ctx.body = { data: res };
-      return;
-    } else {
-      const res = await sql`
+    ctx.body = { data: res };
+    return;
+  } else {
+    const res = await sql`
         with dates as (
           ${datesQuery}
         ),
@@ -1001,7 +836,7 @@ analytics.get(
           where 
             feedback is not null
         )
-        select 
+        select date, coalesce(ratio, 0) as value, 'Ratio' as name from (select 
           d.date,
           coalesce(sum(fd.thumbs_up), 0)::int as total_thumbs_up,
           coalesce(sum(fd.thumbs_down), 0)::int as total_thumbs_down,
@@ -1014,13 +849,12 @@ analytics.get(
         group by 
           d.date
         order by
-          d.date;
+          d.date ) r;
         `;
-      ctx.body = { data: res };
-      return;
-    }
-  },
-);
+    ctx.body = { data: res };
+    return;
+  }
+});
 
 analytics.get(
   "/models/top",
@@ -1086,23 +920,20 @@ analytics.get(
   },
 );
 
-analytics.get(
-  "/templates/top",
-  checkAccess("analytics", "read"),
-  async (ctx: Context) => {
-    const querySchema = z.object({
-      startDate: z.string().datetime(),
-      endDate: z.string().datetime(),
-      timeZone: z.string(),
-      checks: z.string().optional(),
-    });
-    const { projectId } = ctx.state;
-    const { startDate, endDate, timeZone, checks } = querySchema.parse(
-      ctx.request.query,
-    );
-    const filtersQuery = buildFiltersQuery(checks || "");
+analytics.get("/templates/top", async (ctx: Context) => {
+  const querySchema = z.object({
+    startDate: z.string().datetime(),
+    endDate: z.string().datetime(),
+    timeZone: z.string(),
+    checks: z.string().optional(),
+  });
+  const { projectId } = ctx.state;
+  const { startDate, endDate, timeZone, checks } = querySchema.parse(
+    ctx.request.query,
+  );
+  const filtersQuery = buildFiltersQuery(checks || "");
 
-    const topTemplates = await sql`
+  const topTemplates = await sql`
       select
         t.slug, 
         count(*)::int as usage_count, 
@@ -1125,58 +956,111 @@ analytics.get(
       order by
         usage_count desc
       limit 5
-    
     `;
 
-    ctx.body = topTemplates;
-  },
-);
+  ctx.body = topTemplates;
+});
 
-analytics.get(
-  "/top/languages",
-  checkAccess("analytics", "read"),
-  async (ctx: Context) => {
-    const { projectId } = ctx.state;
-    const {
-      datesQuery,
-      filteredRunsQuery,
-      granularity,
-      timeZone,
-      localCreatedAt,
-      startDate,
-      endDate,
-    } = parseQuery(projectId, ctx.query);
+analytics.get("/languages/top", async (ctx: Context) => {
+  const { projectId } = ctx.state;
+  const { datesQuery, startDate, endDate, timeZone, filteredRunsQuery } =
+    parseQuery(projectId, ctx.query);
 
-    const data = await sql`
-        with dates as (
-          ${datesQuery}
-        ),
-        filtered_runs as (
-          ${filteredRunsQuery}
-        )
-        select 
-          lang->>'isoCode' as iso_code,
-          count(distinct r.id) as count
-        from 
-          filtered_runs r 
-          join evaluation_result_v2 er on r.id = er.run_id
-          join evaluator e on er.evaluator_id = e.id
-          cross join lateral (
-              select jsonb_array_elements(er.result->'input')
-              union all
-              select jsonb_array_elements(er.result->'output')
-          ) as t(lang)
+  const data = await sql`
+      with dates as (
+        select
+          *
+        from (
+          select generate_series(
+            ${startDate} at time zone ${timeZone},
+            ${endDate} at time zone ${timeZone},
+            '1 day'::interval
+          )::timestamp as date) t
         where 
-          e.type = 'language'
-          and lang->>'isoCode' is not null
-        group by 
-          lang->>'isoCode'
-        order by 
-          count(distinct r.id) desc;
-        `;
+          date <=current_timestamp at time zone ${timeZone}
+        
+      ),
+      filtered_runs as (
+        ${filteredRunsQuery}
+      )
+      select 
+        lang->>'isoCode' as iso_code,
+        count(distinct r.id) as count
+      from 
+          filtered_runs r 
+        join evaluation_result_v2 er on r.id = er.run_id
+        join evaluator e on er.evaluator_id = e.id
+        cross join lateral (
+            select jsonb_array_elements(er.result->'input')
+            union all
+            select jsonb_array_elements(er.result->'output')
+        ) as t(lang)
+      where 
+        e.type = 'language'
+        and lang->>'isoCode' is not null
+      group by 
+        lang->>'isoCode'
+      order by 
+          count(distinct r.id) desc
+      limit 5
+      ;
+      `;
 
-    ctx.body = { data };
-  },
-);
+  ctx.body = { data };
+});
+
+analytics.get("/custom-events", async (ctx: Context) => {
+  const { projectId } = ctx.state;
+  const { startDate, endDate, timeZone, filteredRunsQuery } = parseQuery(
+    projectId,
+    ctx.query,
+  );
+
+  console.log(ctx.query.checks);
+  const checks = deserializeLogic(
+    ctx.query?.checks as string | undefined | '["AND"]',
+  );
+
+  let eventFilter = sql`(r.type = 'custom-event')`;
+  const eventNames = checks?.find((check) => check?.id === "custom-events")
+    ?.params?.["custom-events"];
+  if (eventNames) {
+    eventFilter = sql`(r.type = 'custom-event' and r.name = any(${sql.array(eventNames)}))`;
+  }
+
+  const data = await sql`
+     with dates as (
+        select
+          *
+        from (
+          select generate_series(
+            ${startDate} at time zone ${timeZone},
+            ${endDate} at time zone ${timeZone},
+            '1 day'::interval
+          )::timestamp as date) t
+        where 
+          date <=current_timestamp at time zone ${timeZone}
+      ),
+      filtered_runs as (
+        ${filteredRunsQuery}
+      )
+        select
+          d.date,
+          coalesce(count(r.*)::int, 0) as value,
+          r.name as name
+        from
+          dates d
+          left join filtered_runs r on d.date = r.local_created_at
+        where 
+          ${eventFilter} or r.type is null
+        group by 
+          d.date,
+          r.name
+        order by 
+          d.date;
+  `;
+
+  ctx.body = { data };
+});
 
 export default analytics;

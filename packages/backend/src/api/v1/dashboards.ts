@@ -191,12 +191,57 @@ dashboards.post("/", async (ctx: Context) => {
   ctx.body = { ...insertedDashboard, charts };
 });
 
+dashboards.post("/charts/custom", async (ctx: Context) => {
+  const { projectId } = ctx.state;
+  const bodySchema = z.object({
+    name: z.string(),
+    description: z.string().optional().nullable(),
+    type: z.string(),
+    dataKey: z.string(),
+    aggregationMethod: z.string().nullable().optional(),
+    primaryDimension: z.string().nullable().optional(),
+    secondaryDimension: z.string().nullable().optional(),
+    color: z.string().nullable().optional(),
+  });
+
+  const {
+    name,
+    description,
+    type,
+    dataKey,
+    aggregationMethod,
+    primaryDimension,
+    secondaryDimension,
+    color,
+  } = bodySchema.parse(ctx.request.body);
+
+  const [insertedCustomChart] = await sql`
+    insert into custom_chart ${sql(
+      clearUndefined({
+        projectId,
+        name,
+        description,
+        type,
+        dataKey,
+        aggregationMethod,
+        primaryDimension,
+        secondaryDimension,
+        color,
+      }),
+    )}
+    returning *
+  `;
+
+  ctx.body = insertedCustomChart;
+});
+
 dashboards.get("/charts/custom", async (ctx: Context) => {
   const { projectId } = ctx.state;
 
   const customCharts = await sql`
     select
-      *
+      *,
+      true as is_custom
     from
       custom_chart
     where

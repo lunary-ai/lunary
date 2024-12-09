@@ -22,7 +22,8 @@ import {
 } from "date-fns";
 import { useMemo } from "react";
 import { openUpgrade } from "../layout/UpgradeModal";
-import { generateSeries, Granularity } from "./Creator";
+import { generateSeries } from "./ChartCreator";
+import { Granularity } from "./DateRangeGranularityPicker";
 
 interface ChartTooltipProps {
   label: string;

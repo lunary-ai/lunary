@@ -7,7 +7,11 @@ import DateRangeGranularityPicker, {
 import ErrorBoundary from "@/components/blocks/ErrorBoundary";
 import RenamableField from "@/components/blocks/RenamableField";
 import CheckPicker from "@/components/checks/Picker";
-import { useDashboard, useDashboards } from "@/utils/dataHooks/dashboards";
+import {
+  useCustomCharts,
+  useDashboard,
+  useDashboards,
+} from "@/utils/dataHooks/dashboards";
 import {
   ActionIcon,
   Box,
@@ -21,7 +25,6 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
-  IconDashboard,
   IconDotsVertical,
   IconHome2,
   IconPlus,
@@ -58,6 +61,7 @@ export default function Dashboard() {
   } = useDashboard(dashboardId);
 
   const { insert: insertDashboard, dashboards } = useDashboards();
+  const { customCharts } = useCustomCharts();
 
   const [checks, setChecks] = useState<LogicNode>(["AND"]);
   const [charts, setCharts] = useState<Chart[]>([]);
@@ -151,8 +155,9 @@ export default function Dashboard() {
     const finalCharts = [...charts];
 
     for (const id of selectedChartIds) {
-      if (!existingIds.has(id)) {
-        const base = DEFAULT_CHARTS[id];
+      // Check if it's a default chart
+      const base = DEFAULT_CHARTS[id];
+      if (base && !existingIds.has(id)) {
         const newChart: Chart = {
           id,
           name: base.name,
@@ -165,6 +170,24 @@ export default function Dashboard() {
           isCustom: false,
         };
         finalCharts.push(newChart);
+      } else {
+        const customChart = customCharts.find((cc) => cc.id === id);
+        if (customChart && !existingIds.has(customChart.id)) {
+          const newChart: Chart = {
+            id: customChart.id,
+            name: customChart.name,
+            description: customChart.description,
+            type: customChart.type,
+            dataKey: customChart.dataKey,
+            aggregationMethod: customChart.aggregationMethod,
+            primaryDimension: customChart.primaryDimension,
+            secondaryDimension: customChart.secondaryDimension,
+            isCustom: true,
+            customChartId: customChart.id,
+            color: customChart.color,
+          };
+          finalCharts.push(newChart);
+        }
       }
     }
 
@@ -183,6 +206,8 @@ export default function Dashboard() {
           granularity={granularity}
           checks={checks}
           onApply={handleApply}
+          dashboardStartDate={startDate}
+          dashboardEndDate={endDate}
         />
       )}
       <Stack pt="24px">
@@ -306,6 +331,10 @@ export default function Dashboard() {
                           checks={checks}
                           color={chart.color}
                           aggregationMethod={chart.aggregationMethod}
+                          isCustom={chart.isCustom}
+                          primaryDimension={chart.primaryDimension}
+                          secondaryDimension={chart.secondaryDimension}
+                          chart={chart}
                         />
                       </AnalyticsCard>
                     </Draggable>

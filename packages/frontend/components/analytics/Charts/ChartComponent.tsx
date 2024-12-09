@@ -1,11 +1,13 @@
 import { useAnalyticsChartData } from "@/utils/dataHooks/analytics";
-import { Box, Center, Flex, Loader, Overlay, Text } from "@mantine/core";
-import TopModels from "./TopModels";
+import { BarChart } from "@mantine/charts";
+import { Center, Flex, Loader, Overlay, Text } from "@mantine/core";
+import { useMemo } from "react";
+import { Chart, LogicNode } from "shared";
+import { generateSeries } from "../ChartCreator";
+import { default as TopLanguages, default as TopUsers } from "../TopLanguages";
 import TopTemplates from "../TopTemplates";
-import TopUsers from "../TopUsers";
-import LineChartComponent from "../OldLineChart";
 import AreaChartComponent from "./AreaChartComponent";
-import { LogicNode } from "shared";
+import TopModels from "./TopModels";
 
 interface ChartProps {
   id: string;
@@ -18,9 +20,10 @@ interface ChartProps {
   primaryDimension?: string | null;
   secondaryDimension?: string | null;
   aggregationMethod?: string | null;
+  isCustom?: boolean;
+  chart: Chart;
 }
 
-// refactor props using by a chart object
 export default function ChartComponent({
   id,
   dataKey,
@@ -32,6 +35,8 @@ export default function ChartComponent({
   primaryDimension,
   secondaryDimension,
   aggregationMethod,
+  isCustom = false,
+  chart,
 }: ChartProps) {
   let { data, stat, isLoading } = useAnalyticsChartData<any>(
     dataKey,
@@ -42,6 +47,25 @@ export default function ChartComponent({
     primaryDimension,
     secondaryDimension,
   );
+
+  const series = useMemo(() => {
+    if (!data || !data.data || data.data.length === 0) {
+      return [];
+    }
+
+    const seriesSet = new Set<string>();
+    data.data.forEach((item) => {
+      Object.keys(item).forEach((key) => {
+        if (key !== "value") {
+          seriesSet.add(key);
+        }
+      });
+    });
+
+    const seriesNames = Array.from(seriesSet);
+
+    return generateSeries(seriesNames);
+  }, [data]);
 
   if (isLoading) {
     return (
@@ -64,6 +88,35 @@ export default function ChartComponent({
     );
   }
 
+  if (isCustom && chart.type === "bar") {
+    return (
+      <BarChart
+        mt="32"
+        h={230}
+        withYAxis={false}
+        data={data || []}
+        dataKey="value"
+        type="stacked"
+        series={series}
+        withLegend
+        className="bar-chart"
+      />
+    );
+  }
+
+  if (isCustom && chart.type === "area") {
+    return (
+      <AreaChartComponent
+        data={data}
+        granularity={granularity}
+        dataKey={dataKey}
+        color={color}
+        aggregationMethod={aggregationMethod}
+        stat={stat}
+      />
+    );
+  }
+
   if (dataKey === "models/top") {
     return <TopModels data={data} />;
   }
@@ -76,6 +129,10 @@ export default function ChartComponent({
     return <TopUsers data={data} />;
   }
 
+  if (dataKey === "languages/top") {
+    return <TopLanguages data={data} />;
+  }
+
   if (
     [
       "tokens",
@@ -83,8 +140,10 @@ export default function ChartComponent({
       "errors",
       "users/new",
       "users/active",
+      "users/average-cost",
       "run-types",
       "latency",
+      "feedback-ratio",
     ].includes(dataKey)
   ) {
     return (

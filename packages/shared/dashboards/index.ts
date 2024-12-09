@@ -82,6 +82,15 @@ export const DEFAULT_CHARTS = {
     aggregationMethod: "sum",
     color: "yellow",
   },
+  "users/average-cost": {
+    id: "users/average-cost",
+    name: "Avg. User Cost",
+    description: "The average cost of each of your users",
+    type: "Area",
+    dataKey: "users/average-cost",
+    aggregationMethod: "avg",
+    color: "green",
+  },
   "run-types": {
     id: "run-types",
     name: "Runs Volume",
@@ -93,35 +102,30 @@ export const DEFAULT_CHARTS = {
   },
   latency: {
     id: "latency",
-    name: "Avg. LLM Latency (s)",
+    name: "Avg. LLM Latency",
     description: "The average duration of your LLM Calls",
     type: "Area",
     dataKey: "latency",
     color: "purple",
     aggregationMethod: "avg",
   },
-  // "users/average-cost": {
-  //   dataKey: "users/average-cost",
-  //   props: ["cost"],
-  //   title: "Avg. User Cost",
-  //   description: "The average cost of each of your users",
-  //   formatter: formatCost,
-  // },
-  // "top/languages": {
-  //   chartType: "pie",
-  //   dataKey: "top/languages",
-  //   props: ["isoCode", "count"],
-  //   title: "Languages",
-  //   description: "Top languages for your runs",
-  // },
-
-  // "feedback-ratio": {
-  //   dataKey: "feedback-ratio",
-  //   props: ["ratio"],
-  //   agg: "avg",
-  //   title: "Thumbs Up/Down Ratio",
-  //   description: "The ratio of thumbs up to thumbs down feedback",
-  // },
+  "feedback-ratio": {
+    id: "feedback-ratio",
+    name: "Thumb Up/Down Ratio",
+    description: "The ratio of thumbs up to thumbs down feedback",
+    type: "Area",
+    dataKey: "feedback-ratio",
+    aggregationMethod: "avg",
+    color: "blue",
+  },
+  "languages/top": {
+    id: "languages/top",
+    name: "Top Languages",
+    description: "The top languages in your project",
+    type: "Top",
+    dataKey: "languages/top",
+    aggregationMethod: null,
+  },
 };
 
 export const chartProps = Object.keys(DEFAULT_CHARTS);

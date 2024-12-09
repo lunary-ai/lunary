@@ -16,8 +16,8 @@ import { IconCheck, IconPlus } from "@tabler/icons-react";
 import { useState } from "react";
 import { DEFAULT_CHARTS, LogicNode } from "shared";
 import AnalyticsCard from "./AnalyticsCard";
+import { CustomChartCreator } from "./ChartCreator";
 import ChartComponent from "./Charts/ChartComponent";
-import { CustomChartCreator } from "./Creator";
 
 interface DashboardModalProps {
   opened: boolean;
@@ -27,6 +27,8 @@ interface DashboardModalProps {
   granularity: "hourly" | "daily" | "weekly" | "monthly";
   checks: LogicNode;
   onApply: (selectedChartIds: string[]) => void;
+  dashboardStartDate?: Date;
+  dashboardEndDate?: Date;
 }
 
 export default function DashboardModal({
@@ -37,6 +39,8 @@ export default function DashboardModal({
   granularity,
   checks,
   onApply,
+  dashboardStartDate,
+  dashboardEndDate,
 }: DashboardModalProps): JSX.Element {
   const [selectedCharts, setSelectedCharts] = useState<string[]>([]);
   const [isCreatingCustomChart, setIsCreatingCustomChart] = useState(false);
@@ -62,7 +66,11 @@ export default function DashboardModal({
       )}
 
       {isCreatingCustomChart ? (
-        <CustomChartCreator />
+        <CustomChartCreator
+          dashboardStartDate={dashboardStartDate}
+          dashboardEndDate={dashboardEndDate}
+          onConfirm={() => setIsCreatingCustomChart(false)}
+        />
       ) : (
         <ChartSelectionPanel
           startDate={startDate}
@@ -131,7 +139,7 @@ function ChartSelectionPanel({
                     key={chart.id}
                     onClick={() => toggleChartSelection(chart.id)}
                     style={{ cursor: "pointer", position: "relative" }}
-                    h="400px"
+                    h="350px"
                   >
                     <AnalyticsCard
                       title={chart.name}
@@ -164,6 +172,8 @@ function ChartSelectionPanel({
                         endDate={endDate}
                         granularity={granularity}
                         checks={checks}
+                        isCustom={false}
+                        chart={chart}
                       />
                     </AnalyticsCard>
                   </Box>
@@ -182,15 +192,14 @@ function ChartSelectionPanel({
             ) : (
               <SimpleGrid cols={2} spacing="lg">
                 {customCharts.map((chart) => {
-                  const syntheticId = `custom-${chart.dataKey}-${chart.primaryDimension || "null"}-${chart.secondaryDimension || "null"}`;
-                  const isSelected = selectedCharts.includes(syntheticId);
+                  const isSelected = selectedCharts.includes(chart.id);
 
                   return (
                     <Box
-                      key={syntheticId}
-                      onClick={() => toggleChartSelection(syntheticId)}
+                      key={chart.id}
+                      onClick={() => toggleChartSelection(chart.id)}
                       style={{ cursor: "pointer", position: "relative" }}
-                      h="400px"
+                      h="334px"
                     >
                       <AnalyticsCard
                         title={chart.name}
@@ -217,7 +226,7 @@ function ChartSelectionPanel({
                           </ActionIcon>
                         </Box>
                         <ChartComponent
-                          id={syntheticId}
+                          id={chart.id}
                           dataKey={chart.dataKey}
                           startDate={startDate}
                           endDate={endDate}
@@ -226,6 +235,8 @@ function ChartSelectionPanel({
                           primaryDimension={chart.primaryDimension}
                           secondaryDimension={chart.secondaryDimension}
                           aggregationMethod={chart.aggregationMethod}
+                          isCustom={true}
+                          chart={chart}
                         />
                       </AnalyticsCard>
                     </Box>

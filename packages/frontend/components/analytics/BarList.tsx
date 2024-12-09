@@ -26,7 +26,7 @@ function BarList({ data, columns, filterZero = true }: BarListProps) {
   // Moved to avoid unnecessary computations
   if (!data) return <>No data.</>;
 
-  const dataColumns = columns.filter((col) => !col.bar && col.key);
+  const dataColumns = columns.filter((col) => col.key);
   const main = dataColumns.find((col) => col.main) || dataColumns[0];
   const mainTotal = data?.reduce((acc, item) => acc + (item[main.key] || 0), 0);
   const scheme = useComputedColorScheme();
@@ -74,14 +74,16 @@ function BarList({ data, columns, filterZero = true }: BarListProps) {
                         w="90%"
                         pos="absolute"
                       >
-                        {item.barSections?.map(({ count, color, tooltip }, n: number) => (
-                          <Tooltip id={`${n}`} label={tooltip} key={n}>
-                            <Progress.Section
-                              value={(count / mainTotal) * 100}
-                              color={color}
-                            ></Progress.Section>
-                          </Tooltip>
-                        ))}
+                        {item.barSections?.map(
+                          ({ count, color, tooltip }, n: number) => (
+                            <Tooltip id={`${n}`} label={tooltip} key={n}>
+                              <Progress.Section
+                                value={(count / mainTotal) * 100}
+                                color={color}
+                              ></Progress.Section>
+                            </Tooltip>
+                          ),
+                        )}
                       </Progress.Root>
                       <Flex
                         w="90%"

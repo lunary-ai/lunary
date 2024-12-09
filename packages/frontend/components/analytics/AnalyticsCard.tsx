@@ -41,9 +41,10 @@ function AnalyticsCard({
       style={{
         "&:children": { maxWidth: "100%" },
       }}
+      px="0"
       shadow={getShadow(isEditing, hovered)}
     >
-      <Group justify="space-between">
+      <Group justify="space-between" px="md">
         <Group>
           <Text c="dimmed" fw={50} fz="md">
             {title}
