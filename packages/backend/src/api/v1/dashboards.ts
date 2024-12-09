@@ -1,8 +1,8 @@
 import sql from "@/src/utils/db";
 import { clearUndefined } from "@/src/utils/ingest";
 import Context from "@/src/utils/koa";
-
 import Router from "koa-router";
+import { start } from "repl";
 import { DEFAULT_CHARTS } from "shared";
 import { z } from "zod";
 
@@ -144,10 +144,11 @@ dashboards.post("/", async (ctx: Context) => {
           owner_id: userId,
           name: name || `Dashboard ${count + 1}`,
           description,
-          checks,
-          start_date: startDate || null,
-          end_date: endDate || null,
-          granularity: granularity || null,
+          checks: checks === undefined ? undefined : checks,
+          start_date: startDate === undefined ? undefined : startDate || null,
+          end_date: endDate === undefined ? undefined : endDate || null,
+          granularity:
+            granularity === undefined ? undefined : granularity || null,
           is_home: isHome,
         }),
       )}
@@ -218,15 +219,22 @@ dashboards.post("/charts/custom", async (ctx: Context) => {
   const [insertedCustomChart] = await sql`
     insert into custom_chart ${sql(
       clearUndefined({
-        projectId,
+        project_id: projectId,
         name,
         description,
         type,
-        dataKey,
-        aggregationMethod,
-        primaryDimension,
-        secondaryDimension,
-        color,
+        data_key: dataKey,
+        aggregation_method:
+          aggregationMethod === undefined
+            ? undefined
+            : aggregationMethod || null,
+        primary_dimension:
+          primaryDimension === undefined ? undefined : primaryDimension || null,
+        secondary_dimension:
+          secondaryDimension === undefined
+            ? undefined
+            : secondaryDimension || null,
+        color: color === undefined ? undefined : color || null,
       }),
     )}
     returning *
@@ -251,6 +259,48 @@ dashboards.get("/charts/custom", async (ctx: Context) => {
   ctx.body = customCharts;
 });
 
+dashboards.patch("/charts/custom", async (ctx: Context) => {
+  const { projectId } = ctx.state;
+  const bodySchema = z.object({
+    id: z.string().uuid(),
+    name: z.string().optional(),
+    description: z.string().nullable().optional(),
+    type: z.string().optional(),
+    dataKey: z.string().optional(),
+    aggregationMethod: z.string().nullable().optional(),
+    primaryDimension: z.string().nullable().optional(),
+    secondaryDimension: z.string().nullable().optional(),
+    color: z.string().nullable().optional(),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+    granularity: z.string().optional(),
+    checks: z.any().optional(),
+  });
+
+  const { id, ...updateFields } = bodySchema.parse(ctx.request.body);
+
+  const [updatedChart] = await sql`
+    update 
+      custom_chart
+    set 
+      ${sql(
+        clearUndefined({
+          updated_at: new Date(),
+          ...updateFields,
+        }),
+      )}
+    where id = ${id}
+      and project_id = ${projectId}
+    returning *
+  `;
+
+  if (!updatedChart) {
+    ctx.throw(404, "custom chart not found");
+  }
+
+  ctx.body = updatedChart;
+});
+
 dashboards.patch("/:id", async (ctx: Context) => {
   const { projectId } = ctx.state;
   const { id: dashboardId } = z
@@ -260,7 +310,7 @@ dashboards.patch("/:id", async (ctx: Context) => {
   const bodySchema = z.object({
     name: z.string().optional(),
     description: z.string().optional(),
-    checks: z.any(),
+    checks: z.any().optional(),
     startDate: z.string().optional(),
     endDate: z.string().optional(),
     granularity: z.string().optional(),
@@ -279,6 +329,10 @@ dashboards.patch("/:id", async (ctx: Context) => {
           color: z.string().nullable().optional(),
           sortOrder: z.number().default(0),
           customChartId: z.string().nullable().optional(),
+          startDate: z.string().optional().nullable(),
+          endDate: z.string().optional().nullable(),
+          granularity: z.string().optional().nullable(),
+          checks: z.any().optional().nullable(),
         }),
       )
       .optional(),
@@ -299,10 +353,10 @@ dashboards.patch("/:id", async (ctx: Context) => {
     updated_at: new Date(),
     name,
     description,
-    checks,
-    start_date: startDate || null,
-    end_date: endDate || null,
-    granularity: granularity || null,
+    checks: checks === undefined ? undefined : checks,
+    start_date: startDate === undefined ? undefined : startDate || null,
+    end_date: endDate === undefined ? undefined : endDate || null,
+    granularity: granularity === undefined ? undefined : granularity || null,
     is_home: isHome,
   });
 
@@ -343,6 +397,10 @@ dashboards.patch("/:id", async (ctx: Context) => {
         sortOrder: index,
         dashboard_id: dashboardId,
         customChartId: chart.customChartId || null,
+        startDate: chart.startDate || startDate || undefined,
+        endDate: chart.endDate || endDate || undefined,
+        granularity: chart.granularity || granularity || undefined,
+        checks: chart.checks || undefined,
       }));
 
       await sql`

@@ -29,6 +29,10 @@ create table custom_chart (
     aggregation_method text,
     primary_dimension text,
     secondary_dimension text,
+    checks jsonb, 
+    start_date timestamptz,
+    end_date timestamptz,
+    granularity granularity_type,
     color text,
     constraint fk_custom_chart_project_id foreign key (project_id) references project (id) on delete cascade
 );
@@ -46,6 +50,10 @@ create table chart (
     primary_dimension text,
     secondary_dimension text,
     is_custom boolean default false not null,
+    checks jsonb, 
+    start_date timestamptz,
+    end_date timestamptz,
+    granularity granularity_type,
     sort_order integer default 0 not null,
     color text,
     custom_chart_id uuid,

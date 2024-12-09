@@ -105,7 +105,7 @@ function getAggValue(
   dataKey?: string,
 ) {
   if (stat && stat % 1 !== 0) {
-    return stat.toFixed(2);
+    return stat.toFixed(dataKey === "users/average-cost" ? 6 : 2);
   }
   if (aggregationMethod) {
     const value = formatLargeNumber(

@@ -79,6 +79,12 @@ export default function Dashboard() {
     setCharts(orderedCharts);
   }
 
+  // useEffect(() => {
+  //   if (router.query.id !== dashboardId) {
+  //     router.push("/");
+  //   }
+  // }, [router.query.id, dashboardId]);
+
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -155,7 +161,6 @@ export default function Dashboard() {
     const finalCharts = [...charts];
 
     for (const id of selectedChartIds) {
-      // Check if it's a default chart
       const base = DEFAULT_CHARTS[id];
       if (base && !existingIds.has(id)) {
         const newChart: Chart = {
@@ -172,6 +177,7 @@ export default function Dashboard() {
         finalCharts.push(newChart);
       } else {
         const customChart = customCharts.find((cc) => cc.id === id);
+        console.log(customChart);
         if (customChart && !existingIds.has(customChart.id)) {
           const newChart: Chart = {
             id: customChart.id,
@@ -185,6 +191,10 @@ export default function Dashboard() {
             isCustom: true,
             customChartId: customChart.id,
             color: customChart.color,
+            startDate: customChart.startDate,
+            endDate: customChart.endDate,
+            granularity: customChart.granularity,
+            checks: customChart.checks,
           };
           finalCharts.push(newChart);
         }
@@ -208,6 +218,7 @@ export default function Dashboard() {
           onApply={handleApply}
           dashboardStartDate={startDate}
           dashboardEndDate={endDate}
+          dashboardGranularity={granularity}
         />
       )}
       <Stack pt="24px">
@@ -250,7 +261,10 @@ export default function Dashboard() {
                     </Menu.Item>
                     <Menu.Item
                       leftSection={<IconPlus size={16} />}
-                      onClick={() => insertDashboard()}
+                      onClick={async () => {
+                        const newDashboard = await insertDashboard();
+                        router.push(`/dashboards/${newDashboard.id}`);
+                      }}
                     >
                       Create new Dashboard
                     </Menu.Item>
@@ -325,10 +339,10 @@ export default function Dashboard() {
                         <ChartComponent
                           id={chart.id}
                           dataKey={chart.dataKey}
-                          startDate={startDate}
-                          endDate={endDate}
-                          granularity={granularity}
-                          checks={checks}
+                          startDate={new Date(chart.startDate || startDate)}
+                          endDate={new Date(chart.endDate || endDate)}
+                          granularity={chart.granularity || granularity}
+                          checks={chart.checks || checks}
                           color={chart.color}
                           aggregationMethod={chart.aggregationMethod}
                           isCustom={chart.isCustom}

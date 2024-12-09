@@ -12,12 +12,13 @@ import {
   Tabs,
 } from "@mantine/core";
 import { useColorScheme } from "@mantine/hooks";
-import { IconCheck, IconPlus } from "@tabler/icons-react";
+import { IconCheck, IconPlus, IconPencil } from "@tabler/icons-react";
 import { useState } from "react";
 import { DEFAULT_CHARTS, LogicNode } from "shared";
 import AnalyticsCard from "./AnalyticsCard";
 import { CustomChartCreator } from "./ChartCreator";
 import ChartComponent from "./Charts/ChartComponent";
+import { Granularity } from "./DateRangeGranularityPicker";
 
 interface DashboardModalProps {
   opened: boolean;
@@ -29,6 +30,7 @@ interface DashboardModalProps {
   onApply: (selectedChartIds: string[]) => void;
   dashboardStartDate?: Date;
   dashboardEndDate?: Date;
+  dashboardGranularity?: Granularity;
 }
 
 export default function DashboardModal({
@@ -41,15 +43,22 @@ export default function DashboardModal({
   onApply,
   dashboardStartDate,
   dashboardEndDate,
+  dashboardGranularity,
 }: DashboardModalProps): JSX.Element {
   const [selectedCharts, setSelectedCharts] = useState<string[]>([]);
   const [isCreatingCustomChart, setIsCreatingCustomChart] = useState(false);
+  const [chartToEdit, setChartToEdit] = useState<any>(null);
 
   function handleApply() {
     onApply(selectedCharts);
     setSelectedCharts([]);
     close();
   }
+
+  const handleEditChart = (chart: any) => {
+    setChartToEdit(chart);
+    setIsCreatingCustomChart(true);
+  };
 
   return (
     <Modal opened={opened} onClose={close} withCloseButton={false} size="80vw">
@@ -69,7 +78,12 @@ export default function DashboardModal({
         <CustomChartCreator
           dashboardStartDate={dashboardStartDate}
           dashboardEndDate={dashboardEndDate}
-          onConfirm={() => setIsCreatingCustomChart(false)}
+          dashboardGranularity={dashboardGranularity}
+          onConfirm={() => {
+            setIsCreatingCustomChart(false);
+            setChartToEdit(null);
+          }}
+          config={chartToEdit || {}}
         />
       ) : (
         <ChartSelectionPanel
@@ -81,6 +95,7 @@ export default function DashboardModal({
           setSelectedCharts={setSelectedCharts}
           onClose={close}
           onApply={handleApply}
+          onEditChart={handleEditChart}
         />
       )}
     </Modal>
@@ -96,6 +111,7 @@ interface ChartSelectionPanelProps {
   setSelectedCharts: React.Dispatch<React.SetStateAction<string[]>>;
   onClose: () => void;
   onApply: () => void;
+  onEditChart: (chart: any) => void;
 }
 
 function ChartSelectionPanel({
@@ -107,6 +123,7 @@ function ChartSelectionPanel({
   setSelectedCharts,
   onClose,
   onApply,
+  onEditChart,
 }: ChartSelectionPanelProps) {
   const defaultCharts = Object.values(DEFAULT_CHARTS);
   const { customCharts, isLoading: customChartsLoading } = useCustomCharts();
@@ -137,69 +154,13 @@ function ChartSelectionPanel({
                 return (
                   <Box
                     key={chart.id}
-                    onClick={() => toggleChartSelection(chart.id)}
-                    style={{ cursor: "pointer", position: "relative" }}
+                    style={{ position: "relative" }}
                     h="350px"
                   >
-                    <AnalyticsCard
-                      title={chart.name}
-                      description={chart.description}
-                    >
-                      <Box
-                        style={{
-                          position: "absolute",
-                          top: 10,
-                          right: 10,
-                          zIndex: 3,
-                        }}
-                      >
-                        <ActionIcon
-                          variant="light"
-                          color={isSelected ? "blue" : "gray"}
-                          size="sm"
-                        >
-                          {isSelected ? (
-                            <IconCheck size={16} />
-                          ) : (
-                            <IconPlus size={16} />
-                          )}
-                        </ActionIcon>
-                      </Box>
-                      <ChartComponent
-                        id={chart.id}
-                        dataKey={chart.dataKey}
-                        startDate={startDate}
-                        endDate={endDate}
-                        granularity={granularity}
-                        checks={checks}
-                        isCustom={false}
-                        chart={chart}
-                      />
-                    </AnalyticsCard>
-                  </Box>
-                );
-              })}
-            </SimpleGrid>
-          </Stack>
-        </Tabs.Panel>
-
-        <Tabs.Panel value="custom" pt="lg">
-          <Stack gap="lg">
-            {customChartsLoading ? (
-              <Flex align="center" justify="center" h="200px">
-                <Loader />
-              </Flex>
-            ) : (
-              <SimpleGrid cols={2} spacing="lg">
-                {customCharts.map((chart) => {
-                  const isSelected = selectedCharts.includes(chart.id);
-
-                  return (
                     <Box
-                      key={chart.id}
                       onClick={() => toggleChartSelection(chart.id)}
-                      style={{ cursor: "pointer", position: "relative" }}
-                      h="334px"
+                      style={{ cursor: "pointer" }}
+                      h="100%"
                     >
                       <AnalyticsCard
                         title={chart.name}
@@ -232,13 +193,91 @@ function ChartSelectionPanel({
                           endDate={endDate}
                           granularity={granularity}
                           checks={checks}
-                          primaryDimension={chart.primaryDimension}
-                          secondaryDimension={chart.secondaryDimension}
-                          aggregationMethod={chart.aggregationMethod}
-                          isCustom={true}
+                          isCustom={false}
                           chart={chart}
                         />
                       </AnalyticsCard>
+                    </Box>
+                  </Box>
+                );
+              })}
+            </SimpleGrid>
+          </Stack>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="custom" pt="lg">
+          <Stack gap="lg">
+            {customChartsLoading ? (
+              <Flex align="center" justify="center" h="200px">
+                <Loader />
+              </Flex>
+            ) : (
+              <SimpleGrid cols={2} spacing="lg">
+                {customCharts.map((chart) => {
+                  const isSelected = selectedCharts.includes(chart.id);
+
+                  return (
+                    <Box
+                      key={chart.id}
+                      style={{ position: "relative" }}
+                      h="334px"
+                    >
+                      <Box
+                        onClick={() => toggleChartSelection(chart.id)}
+                        style={{ cursor: "pointer", height: "100%" }}
+                      >
+                        <AnalyticsCard
+                          title={chart.name}
+                          description={chart.description}
+                        >
+                          <Box
+                            style={{
+                              position: "absolute",
+                              top: 10,
+                              right: 10,
+                              zIndex: 3,
+                            }}
+                          >
+                            <ActionIcon
+                              variant="light"
+                              size="sm"
+                              color="gray"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEditChart(chart);
+                              }}
+                              mr="sm"
+                            >
+                              <IconPencil size={16} />
+                            </ActionIcon>
+                            <ActionIcon
+                              variant="light"
+                              color={isSelected ? "blue" : "gray"}
+                              size="sm"
+                            >
+                              {isSelected ? (
+                                <IconCheck size={16} />
+                              ) : (
+                                <IconPlus size={16} />
+                              )}
+                            </ActionIcon>
+                          </Box>
+
+                          <ChartComponent
+                            id={chart.id}
+                            dataKey={chart.dataKey}
+                            startDate={new Date(chart.startDate || startDate)}
+                            endDate={new Date(chart.endDate || endDate)}
+                            granularity={chart.granularity || granularity}
+                            checks={chart.checks || checks}
+                            primaryDimension={chart.primaryDimension}
+                            secondaryDimension={chart.secondaryDimension}
+                            aggregationMethod={chart.aggregationMethod}
+                            isCustom={true}
+                            chart={chart}
+                          />
+                        </AnalyticsCard>
+                      </Box>
                     </Box>
                   );
                 })}

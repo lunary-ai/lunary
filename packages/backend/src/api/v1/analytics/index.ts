@@ -421,6 +421,8 @@ analytics.get("/users/active", async (ctx: Context) => {
             left join external_user eu on eu.id = r.external_user_id 
           where
             r.external_user_id = eu.id
+            and r.created_at >= ${startDate} at time zone ${timeZone}
+            and r.ended_at <= ${endDate} at time zone ${timeZone}
         )
         select
           sd.value as value, 
@@ -1016,7 +1018,6 @@ analytics.get("/custom-events", async (ctx: Context) => {
     ctx.query,
   );
 
-  console.log(ctx.query.checks);
   const checks = deserializeLogic(
     ctx.query?.checks as string | undefined | '["AND"]',
   );

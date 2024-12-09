@@ -6,6 +6,7 @@ import {
   Group,
   Loader,
   Select,
+  Stack,
 } from "@mantine/core";
 import { useEffect, useMemo, useState } from "react";
 
@@ -18,6 +19,11 @@ import { useCustomCharts } from "@/utils/dataHooks/dashboards";
 import { useExternalUsersProps } from "@/utils/dataHooks/external-users";
 import { LogicNode } from "shared";
 import AreaChartComponent from "./Charts/AreaChartComponent";
+import DateRangeGranularityPicker, {
+  useDateRangeGranularity,
+} from "./DateRangeGranularityPicker";
+import { start } from "repl";
+import { set } from "date-fns";
 
 const COLOR_PALETTE = [
   "violet.6",
@@ -45,26 +51,34 @@ export function CustomChartCreator({
   config = {},
   dashboardStartDate,
   dashboardEndDate,
+  dashboardGranularity,
 }: {
-  onConfirm: (chart: any) => void;
+  onConfirm: () => void;
   config?: any;
+  dashboardStartDate?: Date;
+  dashboardEndDate?: Date;
+  dashboardGranularity?: string;
 }) {
-  const [name, setName] = useState("");
-  const [metric, setMetric] = useState("users/active");
-  const [primaryDimension, setPrimaryDimension] = useState<string>();
-  const [secondaryDimension, setSecondaryDimension] = useState<string>();
-  const [checks, setChecks] = useState<LogicNode>(["AND"]);
+  const [name, setName] = useState(config?.name || "");
+  const [metric, setMetric] = useState(config?.dataKey || "users/active");
+  const [primaryDimension, setPrimaryDimension] = useState<string | undefined>(
+    config?.primaryDimension || undefined,
+  );
+  const [secondaryDimension, setSecondaryDimension] = useState<
+    string | undefined
+  >(config?.secondaryDimension || undefined);
+  const [checks, setChecks] = useState<LogicNode>(config?.checks || ["AND"]);
 
   const { props, isLoading: usersPropsLoading } = useExternalUsersProps();
 
   const isCustomEventsMetric = metric === "custom-events";
 
   useEffect(() => {
-    if (props && !primaryDimension) {
+    if (props && !primaryDimension && !isCustomEventsMetric) {
       setPrimaryDimension(props[0]);
       setSecondaryDimension("date");
     }
-  }, [props, primaryDimension]);
+  }, [props, primaryDimension, isCustomEventsMetric]);
 
   useEffect(() => {
     if (!isCustomEventsMetric) {
@@ -73,13 +87,26 @@ export function CustomChartCreator({
   }, [metric]);
 
   useEffect(() => {
-    const chartTitle = isCustomEventsMetric
-      ? "Custom events"
-      : `Total Active Users by ${primaryDimension} and ${secondaryDimension}`;
-    setName(chartTitle);
-  }, [primaryDimension, secondaryDimension, isCustomEventsMetric]);
+    if (!config?.id) {
+      const chartTitle = isCustomEventsMetric
+        ? "Custom events"
+        : `Total Active Users by ${primaryDimension} and ${secondaryDimension}`;
+      setName((prev) => prev || chartTitle);
+    }
+  }, [primaryDimension, secondaryDimension, isCustomEventsMetric, config?.id]);
 
-  const granularity = "daily";
+  const { startDate, endDate, setDateRange, granularity, setGranularity } =
+    useDateRangeGranularity();
+
+  useEffect(() => {
+    if (config?.startDate && config?.endDate && config?.granularity) {
+      setDateRange([new Date(config.startDate), new Date(config.endDate)]);
+      setGranularity(config.granularity);
+    } else {
+      setDateRange([dashboardStartDate, dashboardEndDate]);
+      setGranularity(dashboardGranularity);
+    }
+  }, [dashboardStartDate, dashboardEndDate, dashboardGranularity, config]);
 
   const appliedPrimaryDimension = isCustomEventsMetric
     ? undefined
@@ -94,8 +121,8 @@ export function CustomChartCreator({
     error: chartError,
   } = useAnalyticsChartData<any>(
     metric,
-    dashboardStartDate,
-    dashboardEndDate,
+    startDate,
+    endDate,
     granularity,
     checks,
     appliedPrimaryDimension,
@@ -120,16 +147,8 @@ export function CustomChartCreator({
     label: prop.charAt(0).toUpperCase() + prop.slice(1),
   }));
 
-  // Dummy data for AreaChart (for  events scenario)
-  const dummyAreaData = [
-    { date: "2024-01-01T00:00:00.000Z", value: 10, name: "dummy" },
-    { date: "2024-01-02T00:00:00.000Z", value: 25, name: "dummy" },
-    { date: "2024-01-03T00:00:00.000Z", value: 40, name: "dummy" },
-    { date: "2024-01-04T00:00:00.000Z", value: 20, name: "dummy" },
-    { date: "2024-01-05T00:00:00.000Z", value: 60, name: "dummy" },
-  ];
-
-  const { insert: insertCustomChart } = useCustomCharts();
+  const { insert: insertCustomChart, update: updateCustomChart } =
+    useCustomCharts();
 
   if (chartLoading || usersPropsLoading) {
     return (
@@ -150,29 +169,38 @@ export function CustomChartCreator({
     );
   }
 
-  function handleSave() {
+  const isEditing = !!config?.id;
+
+  async function handleSave() {
     const chartName =
       name ||
       (isCustomEventsMetric
         ? "Custom events"
         : `Total Active Users by ${primaryDimension} and ${secondaryDimension}`);
 
-    insertCustomChart({
+    const chartPayload = {
       name: chartName,
-      description: JSON.stringify({
-        series: isCustomEventsMetric ? ["dummy"] : series,
-      }),
       type: isCustomEventsMetric ? "area" : "bar",
       dataKey: metric,
       primaryDimension: isCustomEventsMetric ? null : primaryDimension,
       secondaryDimension: isCustomEventsMetric ? null : secondaryDimension,
-    }).then((inserted) => {
-      onConfirm();
-    });
+      checks,
+      startDate,
+      endDate,
+      granularity,
+    };
+
+    if (isEditing) {
+      await updateCustomChart(config.id, chartPayload);
+    } else {
+      await insertCustomChart(chartPayload);
+    }
+
+    onConfirm();
   }
 
   return (
-    <Container>
+    <Stack p="xl">
       <RenamableField value={name} onRename={setName} defaultValue={name} />
 
       <Group mb="lg" mt="md">
@@ -223,6 +251,13 @@ export function CustomChartCreator({
             />
           </>
         )}
+
+        <DateRangeGranularityPicker
+          dateRange={[startDate, endDate]}
+          setDateRange={setDateRange}
+          granularity={granularity}
+          setGranularity={setGranularity}
+        />
       </Group>
 
       {isCustomEventsMetric ? (
@@ -250,8 +285,8 @@ export function CustomChartCreator({
       )}
 
       <Group gap="sm" justify="right" mt="xl">
-        <Button onClick={handleSave}>Save</Button>
+        <Button onClick={handleSave}>{isEditing ? "Update" : "Save"}</Button>
       </Group>
-    </Container>
+    </Stack>
   );
 }

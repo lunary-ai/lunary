@@ -11,9 +11,11 @@ export default function Dashboards() {
     if (dashboards.length && !isLoading) {
       const homeDashboard = dashboards.find((dashboard) => dashboard.isHome);
       if (!homeDashboard) {
-        return router.push(`/dashboards/${dashboards[0].id}`);
+        router.push(`/dashboards/${dashboards[0].id}`);
+        return;
       } else {
-        return router.push(`/dashboards/${homeDashboard.id}`);
+        router.push(`/dashboards/${homeDashboard.id}`);
+        return;
       }
     }
   }, [dashboards, isLoading]);
