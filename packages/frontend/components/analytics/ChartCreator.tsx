@@ -22,8 +22,6 @@ import AreaChartComponent from "./Charts/AreaChartComponent";
 import DateRangeGranularityPicker, {
   useDateRangeGranularity,
 } from "./DateRangeGranularityPicker";
-import { start } from "repl";
-import { set } from "date-fns";
 
 const COLOR_PALETTE = [
   "violet.6",
@@ -141,6 +139,7 @@ export function CustomChartCreator({
     });
     return generateSeries(Array.from(seriesSet));
   }, [data]);
+  console.log(series, data);
 
   const breakdownSelectValues = (props || []).map((prop) => ({
     value: prop,
@@ -149,15 +148,6 @@ export function CustomChartCreator({
 
   const { insert: insertCustomChart, update: updateCustomChart } =
     useCustomCharts();
-
-  if (chartLoading || usersPropsLoading) {
-    return (
-      <Container>
-        <Loader variant="dots" />
-        <div>Loading chart data...</div>
-      </Container>
-    );
-  }
 
   if (chartError) {
     return (
@@ -180,7 +170,11 @@ export function CustomChartCreator({
 
     const chartPayload = {
       name: chartName,
-      type: isCustomEventsMetric ? "area" : "bar",
+      type: isCustomEventsMetric
+        ? "area"
+        : secondaryDimension === "date"
+          ? "area"
+          : "bar",
       dataKey: metric,
       primaryDimension: isCustomEventsMetric ? null : primaryDimension,
       secondaryDimension: isCustomEventsMetric ? null : secondaryDimension,
@@ -202,7 +196,6 @@ export function CustomChartCreator({
   return (
     <Stack p="xl">
       <RenamableField value={name} onRename={setName} defaultValue={name} />
-
       <Group mb="lg" mt="md">
         <Select
           label="Metric"
@@ -259,11 +252,18 @@ export function CustomChartCreator({
           setGranularity={setGranularity}
         />
       </Group>
-
       {isCustomEventsMetric ? (
         <AreaChartComponent
           data={data?.data || []}
           granularity="daily"
+          color={null}
+          aggregationMethod={null}
+          stat={null}
+        />
+      ) : appliedSecondaryDimension === "date" && series.length > 0 ? (
+        <AreaChartComponent
+          data={data?.data || []}
+          granularity={granularity}
           color={null}
           aggregationMethod={null}
           stat={null}
@@ -278,12 +278,13 @@ export function CustomChartCreator({
           series={series}
           withLegend
         />
-      ) : (
+      ) : !chartLoading ? (
         <Alert title="No Data" color="yellow">
           No series available to display the chart.
         </Alert>
+      ) : (
+        <Loader h="400px" w="100%" />
       )}
-
       <Group gap="sm" justify="right" mt="xl">
         <Button onClick={handleSave}>{isEditing ? "Update" : "Save"}</Button>
       </Group>

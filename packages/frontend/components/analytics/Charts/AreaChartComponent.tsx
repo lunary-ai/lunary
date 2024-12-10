@@ -80,7 +80,7 @@ function generateSeries(
   data: TransformedData[],
   color?: string | null,
 ): Series[] {
-  const keys = Object.keys(data[0]).filter((key) => key !== "date");
+  const keys = Object.keys(data[0] || {}).filter((key) => key !== "date");
   const sortedKeys = [...keys].sort((a, b) => a.localeCompare(b));
 
   return sortedKeys.map((name, index) => ({
@@ -144,6 +144,8 @@ export default function AreaChartComponent({
     getAggValue(data, aggregationMethod, stat, dataKey),
     dataKey,
   );
+
+  console.log(formattedData);
 
   return (
     <>

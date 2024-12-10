@@ -208,84 +208,323 @@ analytics.get("/errors", async (ctx: Context) => {
 
 analytics.get("/users/new", async (ctx: Context) => {
   const { projectId } = ctx.state;
-  const { datesQuery, granularity, timeZone } = parseQuery(
-    projectId,
-    ctx.query,
-  );
+  const {
+    datesQuery,
+    granularity,
+    timeZone,
+    localCreatedAt,
+    startDate,
+    endDate,
+    filteredRunsQuery,
+  } = parseQuery(projectId, ctx.query);
 
-  const localCreatedAtMap = {
-    hourly: sql`date_trunc('hour', eu.created_at at time zone ${timeZone})::timestamp as local_created_at`,
-    daily: sql`date_trunc('day', eu.created_at at time zone ${timeZone})::timestamp as local_created_at`,
-    weekly: sql`date_trunc('day', eu.created_at at time zone ${timeZone})::timestamp as local_created_at`,
+  const distinctMap = {
+    hourly: sql`distinct on (r.external_user_id, date_trunc('hour', r.created_at at time zone ${timeZone})::timestamp)`,
+    daily: sql`distinct on (r.external_user_id, date_trunc('day', r.created_at at time zone ${timeZone})::timestamp)`,
+    weekly: sql`distinct on (r.external_user_id, date_trunc('day', r.created_at at time zone ${timeZone})::timestamp)`,
   };
+  const distinct = distinctMap[granularity];
 
-  const localCreatedAt = localCreatedAtMap[granularity];
+  const firstDimensionKey = ctx.query.firstDimension || "undefined";
+  const secondDimensionKey = ctx.query.secondDimension || "undefined";
 
-  if (granularity === "weekly") {
-    const res = await sql`
+  const [{ stat }] = await sql`
+    select
+      coalesce(count(distinct r.external_user_id)::int, 0) as stat
+    from
+      run r
+      left join external_user eu on eu.id = r.external_user_id
+    where
+      r.project_id = ${projectId}
+      and r.external_user_id is not null
+      and r.created_at >= ${startDate} at time zone ${timeZone}
+      and r.created_at <= ${endDate} at time zone ${timeZone}
+      and eu.created_at <= r.created_at
+      and eu.created_at >= r.created_at - interval '7 days'
+  `;
+
+  if (firstDimensionKey === "undefined" || secondDimensionKey === "undefined") {
+    if (granularity === "weekly") {
+      const data = await sql`
         with dates as (
           ${datesQuery}
         ),
-        external_users as (
+        filtered_runs as (
           select
-            *,
+            ${distinct}
+            r.*,
             ${localCreatedAt}
-         from
-           external_user eu
-         where
-           eu.project_id = ${projectId} 
+          from
+            run r
+          where
+            r.project_id = ${projectId}
+            and r.external_user_id is not null
         ),
         weekly_new_users as (
           select
             d.date,
-            coalesce(count(eu.*)::int, 0) as users
+            coalesce(count(distinct r.external_user_id)::int, 0) as users
           from
             dates d
-            left join external_users eu on eu.local_created_at >= d.date and eu.local_created_at < d.date + interval '7 days'
+            left join filtered_runs r
+              on r.local_created_at >= d.date
+              and r.local_created_at < d.date + interval '7 days'
+            left join external_user eu
+              on eu.id = r.external_user_id
+              and eu.created_at at time zone ${timeZone} >= d.date
+              and eu.created_at < d.date + interval '7 days'
+          where
+            eu.id is not null
           group by
             d.date
-          having 
-            coalesce(count(eu.*)::int, 0) != 0
+          order by
+            d.date
         )
-        select 
+        select
           date,
-          users as value,
-          'users' as name
+          users as value
         from
-          weekly_new_users 
+          weekly_new_users
         order by
-          date
-
+          date;
       `;
-    ctx.body = { data: res };
-    return;
-  } else {
-    const res = await sql`
+
+      ctx.body = { data, stat: stat || 0 };
+      return;
+    } else {
+      const data = await sql`
         with dates as (
           ${datesQuery}
         ),
-        external_users as (
+        filtered_runs as (
           select
-            *,
+            ${distinct}
+            r.*,
             ${localCreatedAt}
-         from
-           external_user eu
-         where
-           eu.project_id = ${projectId}
+          from
+            run r
+          left join external_user eu on eu.id = r.external_user_id
+          where
+            r.project_id = ${projectId}
+            and r.external_user_id is not null
+            and eu.created_at <= r.created_at
+            and eu.created_at >= r.created_at - interval '7 days'
         )
         select
           d.date,
-          coalesce(count(eu.*), 0)::int as value,
-          'users' as name
+          coalesce(count(distinct r.external_user_id)::int, 0) as value,
+          'Count' as name
         from
           dates d
-          left join external_users eu on d.date = eu.local_created_at
+          left join filtered_runs r on d.date = r.local_created_at
         group by
           d.date
+        order by d.date;
+      `;
+
+      ctx.body = { data, stat: stat || 0 };
+      return;
+    }
+  }
+
+  if (granularity === "weekly" && secondDimensionKey === "date") {
+    const rows = await sql<{ date: Date; name: string; value: number }[]>`
+      with dates as (
+        ${datesQuery}
+      ),
+      filtered_runs as (
+        select
+          r.external_user_id,
+          date_trunc('day', r.created_at at time zone ${timeZone})::timestamp as local_created_at,
+          eu.props ->> ${firstDimensionKey as string} as first_dimension_value
+        from
+          run r
+        left join external_user eu on eu.id = r.external_user_id
+        where
+          r.project_id = ${projectId}
+          and r.external_user_id is not null
+          and r.created_at >= ${startDate} at time zone ${timeZone}
+          and r.created_at <= ${endDate} at time zone ${timeZone}
+          and eu.created_at <= r.created_at
+          and eu.created_at >= r.created_at - interval '7 days'
+      ),
+      weekly_new_users as (
+        select
+          d.date,
+          coalesce(fr.first_dimension_value, 'Unknown') as name,
+          coalesce(count(distinct fr.external_user_id)::int, 0) as value
+        from
+          dates d
+          left join filtered_runs fr on fr.local_created_at >= d.date and fr.local_created_at < d.date + interval '7 days'
+        group by
+          d.date,
+          first_dimension_value
+        order by
+          d.date
+      )
+      select
+        date,
+        name,
+        value
+      from
+        weekly_new_users
+      order by
+        date;
+    `;
+
+    let dateObj: {
+      [dateStr: string]: {
+        date: Date;
+        name: string;
+        value: number;
+      };
+    } = {};
+
+    for (const row of rows) {
+      let dateStr = row.date.toISOString().split("T")[0];
+      const name = row.name;
+
+      dateObj[dateStr] = dateObj[dateStr] || { date: row.date };
+      if (!dateObj[dateStr].value) {
+        dateObj[dateStr].value = 0;
+      }
+      dateObj[dateStr].value += row.value;
+      dateObj[dateStr].name = name;
+    }
+
+    const data = Object.values(dateObj);
+
+    ctx.body = { data, stat: stat || 0 };
+    return;
+  } else {
+    let rows;
+
+    if (secondDimensionKey !== "date") {
+      rows = await sql<
+        { value: string; firstDimensionValue: string; userCount: number }[]
+      >`
+        with second_dimension as (
+          select distinct
+            props ->> ${secondDimensionKey as string} as value
+          from
+            public.external_user
+        ),
+        filtered_runs as (
+          ${filteredRunsQuery}
+        ),
+        users as (
+          select distinct on (eu.id)
+            eu.*
+          from
+            filtered_runs r
+            left join external_user eu on eu.id = r.external_user_id
+          where
+            r.external_user_id = eu.id
+            and r.created_at >= ${startDate} at time zone ${timeZone}
+            and r.ended_at <= ${endDate} at time zone ${timeZone}
+            and eu.created_at <= r.created_at
+            and eu.created_at >= r.created_at - interval '7 days'
+        )
+        select
+          sd.value as value,
+          coalesce(u.props ->> ${firstDimensionKey as string}, 'Unknown') as first_dimension_value,
+          coalesce(count(u.id)::int, 0) as user_count
+        from
+          second_dimension sd
+          left join users u on u.props ->> ${secondDimensionKey as string} = sd.value
+        group by
+          sd.value,
+          first_dimension_value
+        order by
+          sd.value,
+          first_dimension_value
+      `;
+    } else {
+      rows = await sql<{ date: Date; name: string; value: number }[]>`
+        with dates as (
+          ${datesQuery}
+        ),
+        filtered_runs as (
+          select
+            r.external_user_id,
+            date_trunc('day', r.created_at at time zone ${timeZone})::timestamp as local_created_at,
+            eu.props ->> ${firstDimensionKey as string} as first_dimension_value
+          from
+            run r
+          left join external_user eu on eu.id = r.external_user_id
+          where
+            r.project_id = ${projectId}
+            and r.external_user_id is not null
+            and r.created_at >= ${startDate} at time zone ${timeZone}
+            and r.created_at <= ${endDate} at time zone ${timeZone}
+            and eu.created_at <= r.created_at
+            and eu.created_at >= r.created_at - interval '7 days'
+        )
+        select
+          d.date,
+          coalesce(fr.first_dimension_value, 'Unknown') as name,
+          coalesce(count(distinct fr.external_user_id)::int, 0) as value
+        from
+          dates d
+          left join filtered_runs fr on d.date = fr.local_created_at
+        group by
+          d.date,
+          first_dimension_value
         order by
           d.date;
       `;
-    ctx.body = { data: res };
+
+      let dateObj: {
+        [dateStr: string]: {
+          date: Date;
+          name: string;
+          value: number;
+        };
+      } = {};
+
+      for (const row of rows) {
+        let dateStr = row.date.toISOString().split("T")[0];
+        const name = row.name;
+
+        dateObj[dateStr] = dateObj[dateStr] || { date: row.date };
+        if (!dateObj[dateStr].value) {
+          dateObj[dateStr].value = 0;
+        }
+        dateObj[dateStr].value += row.value;
+        dateObj[dateStr].name = name;
+      }
+
+      const data = Object.values(dateObj);
+
+      ctx.body = { data, stat: stat || 0 };
+      return;
+    }
+
+    let dateObj: {
+      [secondDimensionValue: string]: any;
+    } = {};
+
+    for (const row of rows) {
+      let secondDimensionValue =
+        row.value instanceof Date
+          ? row.value.toISOString().split("T")[0]
+          : row.value;
+
+      const propValue = row.firstDimensionValue;
+      const userCount = row.userCount;
+
+      if (!dateObj[secondDimensionValue]) {
+        dateObj[secondDimensionValue] = { value: secondDimensionValue };
+      }
+      if (!dateObj[secondDimensionValue][propValue]) {
+        dateObj[secondDimensionValue][propValue] = 0;
+      }
+      dateObj[secondDimensionValue][propValue] += userCount;
+    }
+
+    const data = Object.values(dateObj).filter(({ value }) => value !== null);
+
+    ctx.body = { data, stat: stat || 0 };
     return;
   }
 });
@@ -439,44 +678,67 @@ analytics.get("/users/active", async (ctx: Context) => {
           first_dimension_value
       `;
     } else {
-      rows = await sql<
-        { value: Date; firstDimensionValue: "string"; userCount: Number }[]
-      >`
-        with dates as (
-          ${datesQuery}
-        ),
-        filtered_runs as (
-          select 
-            ${distinct}
-            *,
-            ${localCreatedAt}
-          from
-            run r
-          where
-            r.project_id = ${projectId}          
-            and r.external_user_id is not null
-        )
-        select
-          d.date, 
-          coalesce(eu.props ->> ${firstDimensionKey as string}, 'Unknown') as first_dimension_value, 
-          coalesce(count(r.external_user_id)::int, 0) as value
-        from
-          dates d
-          left join filtered_runs r on d.date = r.local_created_at
-          left join external_user eu on eu.id = r.external_user_id
-        group by 
-          d.date,
-          first_dimension_value
-        order by 
-          d.date;
-    `;
+      // secondDimensionKey === 'date'
+      rows = await sql<{ date: Date; name: string; value: number }[]>`
+with dates as (
+  ${datesQuery}
+),
+filtered_runs as (
+  select
+    r.external_user_id,
+    date_trunc('day', r.created_at at time zone ${timeZone})::timestamp as local_created_at,
+    eu.props ->> ${firstDimensionKey as string} as first_dimension_value
+  from
+    run r
+  left join external_user eu on eu.id = r.external_user_id
+  where
+    r.project_id = ${projectId}
+    and r.external_user_id is not null
+    and r.created_at >= ${startDate} at time zone ${timeZone}
+    and r.created_at <= ${endDate} at time zone ${timeZone}
+)
+select
+  d.date,
+  coalesce(fr.first_dimension_value, 'Unknown') as name,
+  coalesce(count(distinct fr.external_user_id)::int, 0) as value 
+from
+  dates d
+  left join filtered_runs fr on d.date = fr.local_created_at
+group by
+  d.date,
+  first_dimension_value
+order by
+  d.date;
+  `;
+
+      let dateObj: {
+        [dateStr: string]: {
+          date: Date;
+          name: string;
+          value: number;
+        };
+      } = {};
+
+      for (const row of rows) {
+        let dateStr = row.date.toISOString().split("T")[0];
+        const name = row.name;
+
+        dateObj[dateStr] = dateObj[dateStr] || { date: row.date };
+        if (!dateObj[dateStr].value) {
+          dateObj[dateStr].value = 0;
+        }
+        dateObj[dateStr].value += row.value;
+        dateObj[dateStr].name = name;
+      }
+
+      const data = Object.values(dateObj);
+
+      ctx.body = { data, stat: stat || 0 };
+      return;
     }
 
     let dateObj: {
-      [secondDimensionValue: string]: {
-        value: string;
-        [key: string]: number;
-      };
+      [secondDimensionValue: string]: {};
     } = {};
 
     for (const row of rows) {

@@ -203,6 +203,10 @@ dashboards.post("/charts/custom", async (ctx: Context) => {
     primaryDimension: z.string().nullable().optional(),
     secondaryDimension: z.string().nullable().optional(),
     color: z.string().nullable().optional(),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+    granularity: z.string().optional(),
+    checks: z.any().optional(),
   });
 
   const {
@@ -214,6 +218,10 @@ dashboards.post("/charts/custom", async (ctx: Context) => {
     primaryDimension,
     secondaryDimension,
     color,
+    startDate,
+    endDate,
+    granularity,
+    checks,
   } = bodySchema.parse(ctx.request.body);
 
   const [insertedCustomChart] = await sql`
@@ -235,6 +243,10 @@ dashboards.post("/charts/custom", async (ctx: Context) => {
             ? undefined
             : secondaryDimension || null,
         color: color === undefined ? undefined : color || null,
+        startDate,
+        endDate,
+        granularity,
+        checks,
       }),
     )}
     returning *

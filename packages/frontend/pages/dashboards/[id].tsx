@@ -177,7 +177,6 @@ export default function Dashboard() {
         finalCharts.push(newChart);
       } else {
         const customChart = customCharts.find((cc) => cc.id === id);
-        console.log(customChart);
         if (customChart && !existingIds.has(customChart.id)) {
           const newChart: Chart = {
             id: customChart.id,
@@ -318,7 +317,7 @@ export default function Dashboard() {
 
         <Box
           ref={scrollableContainerRef}
-          style={{ maxHeight: "80vh", overflowY: "auto" }}
+          style={{ maxHeight: "calc(100vh - 110px)", overflowY: "auto" }}
         >
           <Grid>
             {charts.map((chart, index) => (
@@ -342,7 +341,12 @@ export default function Dashboard() {
                           startDate={new Date(chart.startDate || startDate)}
                           endDate={new Date(chart.endDate || endDate)}
                           granularity={chart.granularity || granularity}
-                          checks={chart.checks || checks}
+                          checks={[
+                            ...(Array.isArray(chart.checks)
+                              ? chart.checks
+                              : []),
+                            ...checks,
+                          ]}
                           color={chart.color}
                           aggregationMethod={chart.aggregationMethod}
                           isCustom={chart.isCustom}
