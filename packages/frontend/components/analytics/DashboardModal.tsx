@@ -86,6 +86,7 @@ export default function DashboardModal({
             setChartToEdit(null);
           }}
           config={chartToEdit || {}}
+          setActiveTab={setActiveTab}
         />
       ) : (
         <ChartSelectionPanel

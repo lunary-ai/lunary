@@ -51,6 +51,7 @@ export function CustomChartCreator({
   dashboardStartDate,
   dashboardEndDate,
   dashboardGranularity,
+  setActiveTab,
 }: {
   onConfirm: () => void;
   config?: any;
@@ -93,7 +94,6 @@ export function CustomChartCreator({
       setName(chartTitle);
     }
   }, [primaryDimension, secondaryDimension, isCustomEventsMetric, config?.id]);
-  console.log(primaryDimension);
 
   const { startDate, endDate, setDateRange, granularity, setGranularity } =
     useDateRangeGranularity();
@@ -191,6 +191,7 @@ export function CustomChartCreator({
       await insertCustomChart(chartPayload);
     }
 
+    setActiveTab("custom");
     onConfirm();
   }
 
