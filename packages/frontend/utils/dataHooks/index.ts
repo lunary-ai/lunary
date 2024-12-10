@@ -29,10 +29,10 @@ function generateKey(
 
   return url;
 }
-export function useProjectSWR(key?: Key, options?: SWRConfiguration) {
+export function useProjectSWR<T>(key?: Key, options?: SWRConfiguration) {
   const { projectId } = useContext(ProjectContext);
 
-  const { data, error, isLoading, isValidating, mutate } = useSWR(
+  const { data, error, isLoading, isValidating, mutate } = useSWR<T>(
     () => generateKey(key, projectId),
     options,
   );
@@ -90,8 +90,8 @@ export function useProjectInfiniteSWR(key: string, ...args: any[]) {
   return {
     data: items,
     total,
-    loading: isLoading,
-    validating: isValidating,
+    isLoading,
+    isValidating,
     loadMore,
     mutate,
   };
@@ -373,7 +373,6 @@ export function buildLogsAPIUrl(data = {}) {
 }
 
 export function useLogs(params: any) {
-  console.log("LOGS");
   return useProjectInfiniteSWR(buildLogsAPIUrl(params));
 }
 
@@ -462,7 +461,7 @@ export function useRunsUsageByUser(range = null) {
   );
 
   const reduceUsersUsage = (usage) => {
-    const userData = [];
+    const userData: any = [];
 
     const uniqueUserIds = Array.from(new Set(usage.map((u) => u.user_id)));
 
@@ -626,7 +625,7 @@ export function useDataset(id: string, initialData?: any) {
     isLoading,
     isValidating,
     mutate,
-  } = useProjectSWR(id && id !== "new" && `/datasets/${id}`, {
+  } = useProjectSWR(id && id !== "new" ? `/datasets/${id}` : null, {
     fallbackData: initialData,
   });
 
@@ -755,6 +754,15 @@ export function useLunaryVersion() {
   return {
     backendVersion: backendVersion ? backendVersion.version : null,
     frontendVersion: process.env.NEXT_PUBLIC_LUNARY_VERSION,
+    isLoading,
+  };
+}
+
+export function useCustomEventsNames() {
+  const { data, isLoading } = useProjectSWR<string[]>("/filters/custom-events");
+
+  return {
+    names: data || [],
     isLoading,
   };
 }

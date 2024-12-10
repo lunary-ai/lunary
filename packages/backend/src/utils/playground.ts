@@ -347,7 +347,7 @@ export async function runAImodel(
             stripe_customer_id: stripeCustomer,
           },
         })
-        .then(() => console.log("Metered"))
+        .then(() => console.info("Metered"))
         .catch(console.error);
     }
   }
@@ -392,14 +392,12 @@ export async function runAImodel(
   switch (modelObj?.provider) {
     case "openai":
       const params = getOpenAIParams();
-      if (!params)
-        throw Error("No OpenAI API key found");
+      if (!params) throw Error("No OpenAI API key found");
 
       clientParams = params;
       break;
     case "mistral":
-      if (!process.env.MISTRAL_API_KEY)
-        throw Error("No Mistral API key found");
+      if (!process.env.MISTRAL_API_KEY) throw Error("No Mistral API key found");
 
       clientParams = {
         apiKey: process.env.MISTRAL_API_KEY,

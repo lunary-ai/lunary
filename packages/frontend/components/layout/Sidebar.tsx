@@ -20,7 +20,7 @@ import {
   IconAnalyze,
   IconBinaryTree2,
   IconBrandOpenai,
-  IconChevronRight,
+  IconChevronDown,
   IconCreditCard,
   IconDatabase,
   IconFlask,
@@ -55,35 +55,63 @@ import { IconPlus } from "@tabler/icons-react";
 import { useAuth } from "@/utils/auth";
 import config from "@/utils/config";
 import { useProject, useProjects } from "@/utils/dataHooks";
+import { useDashboards } from "@/utils/dataHooks/dashboards";
 import { useViews } from "@/utils/dataHooks/views";
 import { useDisclosure, useFocusTrap } from "@mantine/hooks";
 import { useEffect, useState } from "react";
-import { ResourceName, hasAccess, hasReadAccess, serializeLogic } from "shared";
+import {
+  DEFAULT_CHARTS,
+  ResourceName,
+  getDefaultDateRange,
+  hasAccess,
+  hasReadAccess,
+  serializeLogic,
+} from "shared";
 import { getIconComponent } from "../blocks/IconPicker";
+import DashboardsSidebarButton from "../analytics/DashboardsSidebarButton";
 
-function NavbarLink({
+interface NavbarLinkProps {
+  icon: any;
+  label: string;
+  link: string;
+  rightSection?: any;
+  soon?: boolean;
+  onClick?: (event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
+  disabled?: boolean;
+}
+
+export function NavbarLink({
   icon: Icon,
   label,
   link,
-  soon,
-  onClick,
+  rightSection,
+  soon = false,
+  onClick = () => {},
   disabled = false,
-}) {
+}: NavbarLinkProps) {
   const router = useRouter();
 
   // For logs pages, we want to compare the view param to see if a view is selected
 
-  const active = router.pathname.startsWith("/logs")
-    ? router.asPath.includes(`view=`)
-      ? (() => {
-          const linkParams = new URLSearchParams(link.split("?")[1]);
-          const viewParam = linkParams.get("view");
-          return viewParam
-            ? router.asPath.includes(`view=${viewParam}`)
-            : router.asPath.startsWith(link);
-        })()
-      : router.asPath.startsWith(link)
-    : router.pathname.startsWith(link);
+  const active = (() => {
+    const linkParams = new URLSearchParams(link.split("?")[1]);
+    if (router.pathname.startsWith("/logs")) {
+      if (router.asPath.includes(`view=`)) {
+        const viewParam = linkParams.get("view");
+        if (viewParam) {
+          return router.asPath.includes(`view=${viewParam}`);
+        }
+      }
+      return router.asPath.startsWith(link);
+    }
+    if (
+      router.pathname.startsWith("/dashboards/[id]") &&
+      link.startsWith("/dashboards")
+    ) {
+      return true;
+    }
+    return router.pathname.startsWith(link);
+  })();
 
   return (
     <NavLink
@@ -106,6 +134,7 @@ function NavbarLink({
           <Icon size={16} opacity={0.7} />
         </ThemeIcon>
       }
+      rightSection={rightSection}
     />
   );
 }
@@ -176,7 +205,6 @@ function MenuSection({ item }) {
                 <IconSearch
                   onClick={() => setSearchOn(true)}
                   size={14}
-                  ml="auto"
                   opacity={0.4}
                   style={{
                     cursor: "pointer",
@@ -186,7 +214,8 @@ function MenuSection({ item }) {
                 />
               )}
 
-              <IconChevronRight
+              {/* TODO: put back */}
+              {/* <IconChevronRight
                 onClick={toggle}
                 size={14}
                 opacity={0.6}
@@ -196,7 +225,7 @@ function MenuSection({ item }) {
                   top: -2,
                   transform: `rotate(${opened ? 90 : 0}deg)`,
                 }}
-              />
+              /> */}
             </Group>
           </>
         )}
@@ -205,9 +234,19 @@ function MenuSection({ item }) {
       <Collapse in={opened}>
         {filtered
           ?.filter((subItem) => hasReadAccess(user.role, subItem.resource))
-          .map((subItem) => (
-            <NavbarLink {...subItem} key={subItem.link || subItem.label} />
-          ))}
+          .map((subItem) => {
+            if (subItem.label === "Dashboards") {
+              return (
+                <DashboardsSidebarButton
+                  item={subItem}
+                  key={subItem.link || subItem.label}
+                />
+              );
+            }
+            return (
+              <NavbarLink {...subItem} key={subItem.link || subItem.label} />
+            );
+          })}
       </Collapse>
     </Box>
   );
@@ -216,24 +255,24 @@ function MenuSection({ item }) {
 export default function Sidebar() {
   const auth = useAuth();
   const router = useRouter();
+
   const { project, setProjectId } = useProject();
 
-  const { user } = useUser();
   const { org } = useOrg();
-  const { projects, isLoading: loading, insert } = useProjects();
+  const { user } = useUser();
   const { views } = useViews();
+  const { projects, isLoading: loading, insert } = useProjects();
 
   const { colorScheme, setColorScheme } = useMantineColorScheme({});
-
   const [createProjectLoading, setCreateProjectLoading] = useState(false);
 
-  const combobox = useCombobox({
+  const projectsCombobox = useCombobox({
     onDropdownClose: () => {
-      combobox.resetSelectedOption();
+      projectsCombobox.resetSelectedOption();
       setSearch("");
     },
     onDropdownOpen: () => {
-      combobox.focusSearchInput();
+      projectsCombobox.focusSearchInput();
     },
   });
 
@@ -268,10 +307,10 @@ export default function Sidebar() {
       c: "blue",
       subMenu: [
         {
-          label: "Analytics",
+          label: "Dashboards",
           icon: IconTimeline,
-          link: "/analytics",
-          resource: "analytics",
+          link: "/dashboards",
+          resource: "dashboards",
         },
         {
           label: "LLM",
@@ -333,14 +372,17 @@ export default function Sidebar() {
         },
       ],
     },
-    !!projectViews.length && {
+  ];
+
+  if (projectViews.length) {
+    APP_MENU.push({
       label: "Smart Views",
       icon: IconListSearch,
       searchable: true,
       resource: "logs",
       subMenu: projectViews,
-    },
-  ].filter((item) => item);
+    });
+  }
 
   async function createProject() {
     if (org.plan === "free" && projects.length >= 3) {
@@ -384,6 +426,7 @@ export default function Sidebar() {
 
   return (
     <Flex
+      className="sidebar"
       justify="space-between"
       align="start"
       w={200}
@@ -398,11 +441,15 @@ export default function Sidebar() {
         <Box w="100%">
           <Group wrap="nowrap" my="xs" pb="xs" mx="xs" justify="space-between">
             <Combobox
-              store={combobox}
+              store={projectsCombobox}
               withinPortal={false}
               onOptionSubmit={(id) => {
                 setProjectId(id);
-                combobox.closeDropdown();
+                projectsCombobox.closeDropdown();
+
+                if (router.pathname.startsWith("/dashboards/")) {
+                  router.push(`/dashboards`);
+                }
               }}
               styles={{
                 dropdown: { minWidth: "fit-content", maxWidth: 600 },
@@ -428,7 +475,7 @@ export default function Sidebar() {
                     </ThemeIcon>
                   }
                   rightSection={<Combobox.Chevron />}
-                  onClick={() => combobox.toggleDropdown()}
+                  onClick={() => projectsCombobox.toggleDropdown()}
                   rightSectionPointerEvents="none"
                 >
                   <Tooltip label={project?.name}>
@@ -495,9 +542,9 @@ export default function Sidebar() {
           </Group>
 
           {user &&
-            APP_MENU.filter((item) => !item.disabled).map((item) => (
-              <MenuSection item={item} key={item.label} />
-            ))}
+            APP_MENU.filter((item) => !item.disabled).map((item) => {
+              return <MenuSection item={item} key={item.label} />;
+            })}
         </Box>
       </Stack>
 

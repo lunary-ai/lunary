@@ -1,4 +1,4 @@
-import LineChart from "@/components/analytics/LineChart";
+import LineChart from "@/components/analytics/OldLineChart";
 import CopyText from "@/components/blocks/CopyText";
 
 import {
@@ -295,7 +295,7 @@ export default function Settings() {
 
   useEffect(() => {
     if (!hasAccess(user?.role, "settings", "read")) {
-      router.push("/analytics");
+      router.push("/dashboards");
     }
   }, [user.role]);
 

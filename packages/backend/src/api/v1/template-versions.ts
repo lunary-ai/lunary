@@ -96,7 +96,6 @@ versions.get("/latest", async (ctx: Context) => {
 versions.get("/:id", async (ctx: Context) => {
   const { id: versionId } = ctx.params;
   const { projectId } = ctx.state;
-  console.log("projectId", projectId);
 
   const [version] = await sql`
     select

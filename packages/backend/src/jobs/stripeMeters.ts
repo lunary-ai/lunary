@@ -17,7 +17,7 @@ export default async function stripeCounters() {
         FROM org o
             WHERE o.stripe_customer IS NOT NULL AND o.plan = 'team' AND o.stripe_subscription IS NOT NULL`;
 
-  console.log(`Counting runs for ${orgs.length} orgs`);
+  console.info(`Counting runs for ${orgs.length} orgs`);
 
   for (const org of orgs) {
     // count the number of events in the past hour (each 'run' where 'run.project.org = org.id')

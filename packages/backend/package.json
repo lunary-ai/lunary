@@ -33,7 +33,7 @@
     "koa-logger": "^3.2.1",
     "koa-ratelimit": "^5.1.0",
     "koa-router": "^12.0.1",
-    "lunary": "^0.7.2",
+    "lunary": "^0.7.15",
     "node-cron": "^3.0.3",
     "nodemailer": "^6.9.15",
     "openai": "^4.28.4",
