@@ -320,7 +320,9 @@ export default function Dashboard() {
           style={{
             maxHeight: "calc(100vh - 150px)",
             overflowY: "auto",
+            overflowX: "hidden",
             zIndex: 5,
+            width: "100%",
           }}
         >
           <Grid>
