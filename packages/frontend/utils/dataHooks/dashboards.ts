@@ -64,24 +64,24 @@ export function useCustomCharts() {
     "/dashboards/charts/custom",
   );
 
-  const { trigger: createTrigger } = useProjectMutation(
+  const { trigger: createTrigger, isMutating: isCreating } = useProjectMutation(
     "/dashboards/charts/custom",
     fetcher.post,
   );
 
-  const { trigger: updateTrigger } = useProjectMutation(
+  const { trigger: updateTrigger, isMutating: isUpdating } = useProjectMutation(
     "/dashboards/charts/custom",
     fetcher.patch,
   );
 
   async function insertCustomChart(chart: Chart) {
     await createTrigger(chart);
-    mutate();
+    await mutate();
   }
 
   async function updateCustomChart(id: string, chart: Partial<Chart>) {
     await updateTrigger({ id, ...chart });
-    mutate();
+    await mutate();
   }
 
   return {
@@ -89,5 +89,6 @@ export function useCustomCharts() {
     update: updateCustomChart,
     customCharts: data || [],
     isLoading,
+    isMutating: isCreating || isUpdating,
   };
 }

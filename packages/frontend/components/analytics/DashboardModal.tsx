@@ -13,7 +13,7 @@ import {
 } from "@mantine/core";
 import { useColorScheme } from "@mantine/hooks";
 import { IconCheck, IconPlus, IconPencil } from "@tabler/icons-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DEFAULT_CHARTS, LogicNode } from "shared";
 import AnalyticsCard from "./AnalyticsCard";
 import { CustomChartCreator } from "./ChartCreator";
@@ -120,7 +120,6 @@ interface ChartSelectionPanelProps {
   activeTab: string;
   setActiveTab: React.Dispatch<React.SetStateAction<string>>;
 }
-
 function ChartSelectionPanel({
   startDate,
   endDate,
@@ -135,7 +134,11 @@ function ChartSelectionPanel({
   setActiveTab,
 }: ChartSelectionPanelProps) {
   const defaultCharts = Object.values(DEFAULT_CHARTS);
-  const { customCharts, isLoading: customChartsLoading } = useCustomCharts();
+  const {
+    customCharts,
+    isLoading: customChartsLoading,
+    isMutating,
+  } = useCustomCharts();
   const colorScheme = useColorScheme();
   const backgroundColor = colorScheme === "light" ? "#fcfcfc" : "inherit";
 
@@ -147,7 +150,17 @@ function ChartSelectionPanel({
     );
   }
 
-  console.log(activeTab);
+  useEffect(() => {
+    if (
+      !customChartsLoading &&
+      customCharts.length === 0 &&
+      activeTab === "custom" &&
+      !isMutating
+    ) {
+      onEditChart(null); // This will trigger the custom chart creator modal
+    }
+  }, [customChartsLoading, customCharts, activeTab, onEditChart, isMutating]);
+
   return (
     <>
       <Tabs value={activeTab} onChange={setActiveTab} pb="xl" variant="outline">
@@ -222,76 +235,82 @@ function ChartSelectionPanel({
                 <Loader />
               </Flex>
             ) : (
-              <SimpleGrid cols={2} spacing="lg">
-                {customCharts.map((chart) => {
-                  const isSelected = selectedCharts.includes(chart.id);
+              <>
+                {customCharts.length > 0 && (
+                  <SimpleGrid cols={2} spacing="lg">
+                    {customCharts.map((chart) => {
+                      const isSelected = selectedCharts.includes(chart.id);
 
-                  return (
-                    <Box
-                      key={chart.id}
-                      style={{ position: "relative" }}
-                      h="334px"
-                    >
-                      <Box
-                        onClick={() => toggleChartSelection(chart.id)}
-                        style={{ cursor: "pointer", height: "100%" }}
-                      >
-                        <AnalyticsCard
-                          title={chart.name}
-                          description={chart.description}
+                      return (
+                        <Box
+                          key={chart.id}
+                          style={{ position: "relative" }}
+                          h="334px"
                         >
                           <Box
-                            style={{
-                              position: "absolute",
-                              top: 10,
-                              right: 10,
-                              zIndex: 3,
-                            }}
+                            onClick={() => toggleChartSelection(chart.id)}
+                            style={{ cursor: "pointer", height: "100%" }}
                           >
-                            <ActionIcon
-                              variant="light"
-                              size="sm"
-                              color="gray"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onEditChart(chart);
-                              }}
-                              mr="sm"
+                            <AnalyticsCard
+                              title={chart.name}
+                              description={chart.description}
                             >
-                              <IconPencil size={16} />
-                            </ActionIcon>
-                            <ActionIcon
-                              variant="light"
-                              color={isSelected ? "blue" : "gray"}
-                              size="sm"
-                            >
-                              {isSelected ? (
-                                <IconCheck size={16} />
-                              ) : (
-                                <IconPlus size={16} />
-                              )}
-                            </ActionIcon>
-                          </Box>
+                              <Box
+                                style={{
+                                  position: "absolute",
+                                  top: 10,
+                                  right: 10,
+                                  zIndex: 3,
+                                }}
+                              >
+                                <ActionIcon
+                                  variant="light"
+                                  size="sm"
+                                  color="gray"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onEditChart(chart);
+                                  }}
+                                  mr="sm"
+                                >
+                                  <IconPencil size={16} />
+                                </ActionIcon>
+                                <ActionIcon
+                                  variant="light"
+                                  color={isSelected ? "blue" : "gray"}
+                                  size="sm"
+                                >
+                                  {isSelected ? (
+                                    <IconCheck size={16} />
+                                  ) : (
+                                    <IconPlus size={16} />
+                                  )}
+                                </ActionIcon>
+                              </Box>
 
-                          <ChartComponent
-                            id={chart.id}
-                            dataKey={chart.dataKey}
-                            startDate={new Date(chart.startDate || startDate)}
-                            endDate={new Date(chart.endDate || endDate)}
-                            granularity={chart.granularity || granularity}
-                            checks={chart.checks || checks}
-                            primaryDimension={chart.primaryDimension}
-                            secondaryDimension={chart.secondaryDimension}
-                            aggregationMethod={chart.aggregationMethod}
-                            isCustom={true}
-                            chart={chart}
-                          />
-                        </AnalyticsCard>
-                      </Box>
-                    </Box>
-                  );
-                })}
-              </SimpleGrid>
+                              <ChartComponent
+                                id={chart.id}
+                                dataKey={chart.dataKey}
+                                startDate={
+                                  new Date(chart.startDate || startDate)
+                                }
+                                endDate={new Date(chart.endDate || endDate)}
+                                granularity={chart.granularity || granularity}
+                                checks={chart.checks || checks}
+                                primaryDimension={chart.primaryDimension}
+                                secondaryDimension={chart.secondaryDimension}
+                                aggregationMethod={chart.aggregationMethod}
+                                isCustom={true}
+                                chart={chart}
+                              />
+                            </AnalyticsCard>
+                          </Box>
+                        </Box>
+                      );
+                    })}
+                  </SimpleGrid>
+                )}
+              </>
             )}
           </Stack>
         </Tabs.Panel>

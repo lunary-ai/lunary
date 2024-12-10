@@ -212,14 +212,7 @@ export function CustomChartCreator({
         />
 
         {isCustomEventsMetric ? (
-          <Box style={{ alignSelf: "flex-end" }}>
-            <CheckPicker
-              minimal
-              value={checks}
-              onChange={setChecks}
-              restrictTo={(filter) => ["custom-events"].includes(filter.id)}
-            />
-          </Box>
+          <></>
         ) : (
           <>
             <Select
@@ -256,6 +249,16 @@ export function CustomChartCreator({
           />
         </Input.Wrapper>
       </Group>
+      {isCustomEventsMetric && (
+        <Box>
+          <CheckPicker
+            minimal
+            value={checks}
+            onChange={setChecks}
+            restrictTo={(filter) => ["custom-events"].includes(filter.id)}
+          />
+        </Box>
+      )}
       {isCustomEventsMetric ? (
         <AreaChartComponent
           data={data?.data || []}
