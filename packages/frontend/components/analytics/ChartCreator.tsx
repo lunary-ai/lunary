@@ -4,6 +4,7 @@ import {
   Button,
   Container,
   Group,
+  Input,
   Loader,
   Select,
   Stack,
@@ -245,12 +246,14 @@ export function CustomChartCreator({
           </>
         )}
 
-        <DateRangeGranularityPicker
-          dateRange={[startDate, endDate]}
-          setDateRange={setDateRange}
-          granularity={granularity}
-          setGranularity={setGranularity}
-        />
+        <Input.Wrapper label="Date">
+          <DateRangeGranularityPicker
+            dateRange={[startDate, endDate]}
+            setDateRange={setDateRange}
+            granularity={granularity}
+            setGranularity={setGranularity}
+          />
+        </Input.Wrapper>
       </Group>
       {isCustomEventsMetric ? (
         <AreaChartComponent
