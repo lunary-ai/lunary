@@ -271,6 +271,25 @@ dashboards.get("/charts/custom", async (ctx: Context) => {
   ctx.body = customCharts;
 });
 
+dashboards.post("/charts/custom/delete", async (ctx: Context) => {
+  const { id: customChartId } = z
+    .object({ id: z.string().uuid() })
+    .parse(ctx.request.body);
+
+  const [deletedChart] = await sql`
+    delete from custom_chart
+    where id = ${customChartId}
+    returning *
+  `;
+
+  if (!deletedChart) {
+    ctx.throw(404, "custom chart not found");
+  }
+
+  ctx.status = 200;
+  ctx.body = deletedChart;
+});
+
 dashboards.patch("/charts/custom", async (ctx: Context) => {
   const { projectId } = ctx.state;
   const bodySchema = z.object({

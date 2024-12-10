@@ -74,6 +74,16 @@ export function useCustomCharts() {
     fetcher.patch,
   );
 
+  const { trigger: deleteTrigger } = useProjectMutation(
+    "/dashboards/charts/custom/delete", // switch to delete
+    fetcher.post,
+  );
+
+  async function deleteCustomChart(id: string) {
+    await deleteTrigger({ id });
+    await mutate();
+  }
+
   async function insertCustomChart(chart: Chart) {
     await createTrigger(chart);
     await mutate();
@@ -90,5 +100,6 @@ export function useCustomCharts() {
     customCharts: data || [],
     isLoading,
     isMutating: isCreating || isUpdating,
+    remove: deleteCustomChart,
   };
 }

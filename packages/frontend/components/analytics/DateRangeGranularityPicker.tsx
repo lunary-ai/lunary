@@ -117,10 +117,18 @@ export const determineGranularity = (dateRange: [Date, Date]): Granularity => {
   return "weekly";
 };
 
+interface GranularitySelectProps {
+  dateRange: [Date, Date];
+  granularity: Granularity;
+  setGranularity: (granularity: Granularity) => void;
+  disableWeekly?: boolean; // new prop
+}
+
 export function GranularitySelect({
   dateRange,
   granularity,
   setGranularity,
+  disableWeekly = false,
 }: GranularitySelectProps) {
   const [options, setOptions] = useState<
     { value: Granularity; label: string }[]
@@ -130,24 +138,24 @@ export function GranularitySelect({
     const diffDays = getDiffDays(dateRange);
     let allowedOptions: { value: Granularity; label: string }[] = [];
 
-    console.log("diffDays", diffDays);
     if (diffDays < 1) {
-      console.log(1);
       allowedOptions = [{ value: "hourly", label: "Hourly" }];
     } else if (diffDays <= 7) {
       allowedOptions = [{ value: "daily", label: "Daily" }];
     } else if (diffDays >= 7 && diffDays <= 31) {
-      console.log(3);
-      allowedOptions = [
-        { value: "daily", label: "Daily" },
-        { value: "weekly", label: "Weekly" },
-      ];
+      allowedOptions = disableWeekly
+        ? [{ value: "daily", label: "Daily" }]
+        : [
+            { value: "daily", label: "Daily" },
+            { value: "weekly", label: "Weekly" },
+          ];
     } else {
-      allowedOptions = [
-        { value: "daily", label: "Daily" },
-        { value: "weekly", label: "Weekly" },
-        // TODO: { value: "monthly", label: "Monthly" },
-      ];
+      allowedOptions = disableWeekly
+        ? [{ value: "daily", label: "Daily" }]
+        : [
+            { value: "daily", label: "Daily" },
+            { value: "weekly", label: "Weekly" },
+          ];
     }
 
     setOptions(allowedOptions);
@@ -155,7 +163,7 @@ export function GranularitySelect({
     if (!allowedOptions.find((opt) => opt.value === granularity)) {
       setGranularity(allowedOptions[0].value);
     }
-  }, [dateRange, granularity, setGranularity]);
+  }, [dateRange, granularity, setGranularity, disableWeekly]);
 
   return (
     <Select
@@ -175,7 +183,6 @@ export function GranularitySelect({
     />
   );
 }
-
 export function DateRangeSelect({ dateRange, setDateRange }) {
   const selectedOption = getPresetFromDateRange(dateRange);
   const data = ["Today", "7 Days", "30 Days", "3 Months"];
@@ -207,10 +214,7 @@ export function DateRangeSelect({ dateRange, setDateRange }) {
   );
 }
 
-export function DateRangePicker({
-  dateRange,
-  setDateRange,
-}: DateRangePickerProps) {
+export function DateRangePicker({ dateRange, setDateRange }) {
   const [localDateRange, setLocalDateRange] = useState<
     [Date | null, Date | null]
   >([dateRange[0], dateRange[1]]);
@@ -249,13 +253,21 @@ export function DateRangePicker({
     />
   );
 }
+interface DateRangeGranularityPickerProps {
+  dateRange: [Date, Date];
+  setDateRange: (range: [Date, Date]) => void;
+  granularity: Granularity;
+  setGranularity: (g: Granularity) => void;
+  disableWeekly?: boolean; // new prop
+}
 
 export default function DateRangeGranularityPicker({
   dateRange,
   setDateRange,
   granularity,
   setGranularity,
-}) {
+  disableWeekly = false, // default false
+}: DateRangeGranularityPickerProps) {
   return (
     <Group gap={0}>
       <DateRangeSelect dateRange={dateRange} setDateRange={setDateRange} />
@@ -264,6 +276,7 @@ export default function DateRangeGranularityPicker({
         granularity={granularity}
         setGranularity={setGranularity}
         dateRange={dateRange}
+        disableWeekly={disableWeekly}
       />
     </Group>
   );

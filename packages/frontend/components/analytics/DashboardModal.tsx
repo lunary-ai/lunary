@@ -12,7 +12,12 @@ import {
   Tabs,
 } from "@mantine/core";
 import { useColorScheme } from "@mantine/hooks";
-import { IconCheck, IconPlus, IconPencil } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconPlus,
+  IconPencil,
+  IconTrash,
+} from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { DEFAULT_CHARTS, LogicNode } from "shared";
 import AnalyticsCard from "./AnalyticsCard";
@@ -120,6 +125,7 @@ interface ChartSelectionPanelProps {
   activeTab: string;
   setActiveTab: React.Dispatch<React.SetStateAction<string>>;
 }
+
 function ChartSelectionPanel({
   startDate,
   endDate,
@@ -138,6 +144,7 @@ function ChartSelectionPanel({
     customCharts,
     isLoading: customChartsLoading,
     isMutating,
+    remove: removeCustomChart,
   } = useCustomCharts();
   const colorScheme = useColorScheme();
   const backgroundColor = colorScheme === "light" ? "#fcfcfc" : "inherit";
@@ -157,9 +164,16 @@ function ChartSelectionPanel({
       activeTab === "custom" &&
       !isMutating
     ) {
-      onEditChart(null); // This will trigger the custom chart creator modal
+      onEditChart(null);
     }
   }, [customChartsLoading, customCharts, activeTab, onEditChart, isMutating]);
+
+  async function handleDeleteChart(e: React.MouseEvent, chartId: string) {
+    e.stopPropagation();
+    if (confirm("Are you sure you want to delete this custom chart?")) {
+      await removeCustomChart(chartId);
+    }
+  }
 
   return (
     <>
@@ -261,6 +275,8 @@ function ChartSelectionPanel({
                                   top: 10,
                                   right: 10,
                                   zIndex: 3,
+                                  display: "flex",
+                                  gap: "4px",
                                 }}
                               >
                                 <ActionIcon
@@ -271,9 +287,18 @@ function ChartSelectionPanel({
                                     e.stopPropagation();
                                     onEditChart(chart);
                                   }}
-                                  mr="sm"
                                 >
                                   <IconPencil size={16} />
+                                </ActionIcon>
+                                <ActionIcon
+                                  variant="light"
+                                  size="sm"
+                                  color="red"
+                                  onClick={(e) =>
+                                    handleDeleteChart(e, chart.id)
+                                  }
+                                >
+                                  <IconTrash size={16} />
                                 </ActionIcon>
                                 <ActionIcon
                                   variant="light"

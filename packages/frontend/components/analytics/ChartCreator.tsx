@@ -246,6 +246,7 @@ export function CustomChartCreator({
             setDateRange={setDateRange}
             granularity={granularity}
             setGranularity={setGranularity}
+            disableWeekly
           />
         </Input.Wrapper>
       </Group>

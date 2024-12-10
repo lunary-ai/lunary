@@ -35,6 +35,7 @@ import { useRouter } from "next/router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { Chart, DEFAULT_CHARTS, LogicNode } from "shared";
+import { mutate } from "swr";
 
 function getSpan(index: number) {
   if ([0, 1, 2].includes(index)) {
@@ -60,7 +61,7 @@ export default function Dashboard() {
     isMutating: dashboardIsMutating,
   } = useDashboard(dashboardId);
 
-  const { insert: insertDashboard, dashboards } = useDashboards();
+  const { insert: insertDashboard, dashboards, mutate } = useDashboards();
   const { customCharts } = useCustomCharts();
 
   const [checks, setChecks] = useState<LogicNode>(["AND"]);
@@ -290,6 +291,7 @@ export default function Dashboard() {
                       leftSection={<IconPlus size={16} />}
                       onClick={async () => {
                         const newDashboard = await insertDashboard();
+                        await mutate();
                         router.push(`/dashboards/${newDashboard.id}`);
                       }}
                     >
