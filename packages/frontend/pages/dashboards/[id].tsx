@@ -317,7 +317,11 @@ export default function Dashboard() {
 
         <Box
           ref={scrollableContainerRef}
-          style={{ maxHeight: "calc(100vh - 110px)", overflowY: "auto" }}
+          style={{
+            maxHeight: "calc(100vh - 150px)",
+            overflowY: "auto",
+            zIndex: 5,
+          }}
         >
           <Grid>
             {charts.map((chart, index) => (
