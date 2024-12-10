@@ -139,7 +139,6 @@ export function CustomChartCreator({
     });
     return generateSeries(Array.from(seriesSet));
   }, [data]);
-  console.log(series, data);
 
   const breakdownSelectValues = (props || []).map((prop) => ({
     value: prop,

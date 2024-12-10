@@ -145,8 +145,6 @@ export default function AreaChartComponent({
     dataKey,
   );
 
-  console.log(formattedData);
-
   return (
     <>
       <Text fw={500} fz={24} mb="md" px="md">

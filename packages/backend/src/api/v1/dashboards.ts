@@ -409,10 +409,10 @@ dashboards.patch("/:id", async (ctx: Context) => {
         sortOrder: index,
         dashboard_id: dashboardId,
         customChartId: chart.customChartId || null,
-        startDate: chart.startDate || startDate || undefined,
-        endDate: chart.endDate || endDate || undefined,
-        granularity: chart.granularity || granularity || undefined,
-        checks: chart.checks || undefined,
+        startDate: chart.startDate,
+        endDate: chart.endDate,
+        granularity: chart.granularity,
+        checks: chart.checks,
       }));
 
       await sql`

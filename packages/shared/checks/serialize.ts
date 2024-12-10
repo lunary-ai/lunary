@@ -12,7 +12,7 @@ function paramSerializer(param: CheckParam, value: any) {
     case "select":
       if (param.multiple) {
         if (!value.length) return undefined;
-        return value.map(encode).join(",");
+        return value.map((value: string) => encode(encode(value))).join(",");
       } else {
         return encode(value);
       }

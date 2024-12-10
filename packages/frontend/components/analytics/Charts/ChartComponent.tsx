@@ -4,10 +4,11 @@ import { Center, Flex, Loader, Overlay, Text } from "@mantine/core";
 import { useMemo } from "react";
 import { Chart, LogicNode } from "shared";
 import { generateSeries } from "../ChartCreator";
-import { default as TopLanguages, default as TopUsers } from "../TopLanguages";
 import TopTemplates from "../TopTemplates";
 import AreaChartComponent from "./AreaChartComponent";
 import TopModels from "./TopModels";
+import TopLanguages from "../TopLanguages";
+import TopUsers from "../TopUsers";
 
 interface ChartProps {
   id: string;

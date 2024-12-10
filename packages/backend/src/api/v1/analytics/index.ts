@@ -1120,42 +1120,39 @@ analytics.get("/feedback-ratio", async (ctx: Context) => {
   }
 });
 
-analytics.get(
-  "/models/top",
-  checkAccess("analytics", "read"),
-  async (ctx: Context) => {
-    const querySchema = z.object({
-      startDate: z.string().datetime().optional(),
-      endDate: z.string().datetime().optional(),
-      timeZone: z.string().optional(),
-      userId: z.string().optional(),
-      name: z.string().optional(),
-      checks: z.string().optional(),
-    });
-    const { projectId } = ctx.state;
-    const { startDate, endDate, timeZone, userId, name, checks } =
-      querySchema.parse(ctx.request.query);
-    const filtersQuery = buildFiltersQuery(checks || "");
+analytics.get("/models/top", async (ctx: Context) => {
+  const querySchema = z.object({
+    startDate: z.string().datetime().optional(),
+    endDate: z.string().datetime().optional(),
+    timeZone: z.string().optional(),
+    userId: z.string().optional(),
+    name: z.string().optional(),
+    checks: z.string().optional(),
+  });
+  const { projectId } = ctx.state;
+  const { startDate, endDate, timeZone, userId, name, checks } =
+    querySchema.parse(ctx.request.query);
+  const filtersQuery = buildFiltersQuery(checks || "");
 
-    let dateFilter = sql``;
-    if (startDate && endDate && timeZone) {
-      dateFilter = sql`
+  let dateFilter = sql``;
+  if (startDate && endDate && timeZone) {
+    dateFilter = sql`
         and date_trunc('day', r.created_at at time zone ${timeZone})::timestamp  >= ${startDate}
         and date_trunc('day', r.created_at at time zone ${timeZone})::timestamp  <= ${endDate}
       `;
-    }
+  }
 
-    let userFilter = sql``;
-    if (userId) {
-      userFilter = sql`and r.external_user_id = ${userId}`;
-    }
+  let userFilter = sql``;
+  if (userId) {
+    userFilter = sql`and r.external_user_id = ${userId}`;
+  }
 
-    let nameFilter = sql``;
-    if (name) {
-      nameFilter = sql`and r.name = ${name}`;
-    }
+  let nameFilter = sql``;
+  if (name) {
+    nameFilter = sql`and r.name = ${name}`;
+  }
 
-    const topModels = await sql`
+  const topModels = await sql`
       select
         name,
         coalesce(sum(prompt_tokens), 0)::bigint as prompt_tokens,
@@ -1180,9 +1177,8 @@ analytics.get(
       limit 5
     `;
 
-    ctx.body = topModels;
-  },
-);
+  ctx.body = topModels;
+});
 
 analytics.get("/templates/top", async (ctx: Context) => {
   const querySchema = z.object({
