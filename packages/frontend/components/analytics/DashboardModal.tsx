@@ -48,6 +48,7 @@ export default function DashboardModal({
   const [selectedCharts, setSelectedCharts] = useState<string[]>([]);
   const [isCreatingCustomChart, setIsCreatingCustomChart] = useState(false);
   const [chartToEdit, setChartToEdit] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<string>("default");
 
   function handleApply() {
     onApply(selectedCharts);
@@ -58,6 +59,7 @@ export default function DashboardModal({
   const handleEditChart = (chart: any) => {
     setChartToEdit(chart);
     setIsCreatingCustomChart(true);
+    setActiveTab("custom");
   };
 
   return (
@@ -96,6 +98,8 @@ export default function DashboardModal({
           onClose={close}
           onApply={handleApply}
           onEditChart={handleEditChart}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
         />
       )}
     </Modal>
@@ -112,6 +116,8 @@ interface ChartSelectionPanelProps {
   onClose: () => void;
   onApply: () => void;
   onEditChart: (chart: any) => void;
+  activeTab: string;
+  setActiveTab: React.Dispatch<React.SetStateAction<string>>;
 }
 
 function ChartSelectionPanel({
@@ -124,6 +130,8 @@ function ChartSelectionPanel({
   onClose,
   onApply,
   onEditChart,
+  activeTab,
+  setActiveTab,
 }: ChartSelectionPanelProps) {
   const defaultCharts = Object.values(DEFAULT_CHARTS);
   const { customCharts, isLoading: customChartsLoading } = useCustomCharts();
@@ -138,9 +146,10 @@ function ChartSelectionPanel({
     );
   }
 
+  console.log(activeTab);
   return (
     <>
-      <Tabs defaultValue="default" pb="xl" variant="outline">
+      <Tabs value={activeTab} onChange={setActiveTab} pb="xl" variant="outline">
         <Tabs.List mt="md">
           <Tabs.Tab value="default">Default Charts</Tabs.Tab>
           <Tabs.Tab value="custom">Custom Charts</Tabs.Tab>
