@@ -130,9 +130,14 @@ export function GranularitySelect({
     const diffDays = getDiffDays(dateRange);
     let allowedOptions: { value: Granularity; label: string }[] = [];
 
-    if (diffDays <= 1) {
+    console.log("diffDays", diffDays);
+    if (diffDays < 1) {
+      console.log(1);
       allowedOptions = [{ value: "hourly", label: "Hourly" }];
-    } else if (diffDays <= 30) {
+    } else if (diffDays <= 7) {
+      allowedOptions = [{ value: "daily", label: "Daily" }];
+    } else if (diffDays >= 7 && diffDays <= 31) {
+      console.log(3);
       allowedOptions = [
         { value: "daily", label: "Daily" },
         { value: "weekly", label: "Weekly" },
