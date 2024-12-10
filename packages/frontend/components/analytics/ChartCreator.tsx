@@ -89,9 +89,10 @@ export function CustomChartCreator({
       const chartTitle = isCustomEventsMetric
         ? "Custom events"
         : `Total Active Users by ${primaryDimension} and ${secondaryDimension}`;
-      setName((prev) => prev || chartTitle);
+      setName(chartTitle);
     }
   }, [primaryDimension, secondaryDimension, isCustomEventsMetric, config?.id]);
+  console.log(primaryDimension);
 
   const { startDate, endDate, setDateRange, granularity, setGranularity } =
     useDateRangeGranularity();
