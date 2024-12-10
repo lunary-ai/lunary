@@ -123,6 +123,34 @@ export default function Dashboard() {
     };
     return JSON.stringify(current) !== JSON.stringify(initial);
   }, [dashboard, checks, startDate, endDate, granularity, charts]);
+  useEffect(() => {
+    const beforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        return "";
+      }
+    };
+
+    const handleRouteChange = (url: string) => {
+      if (
+        isDirty &&
+        !confirm("You have unsaved changes. Do you really want to leave?")
+      ) {
+        router.events.emit("routeChangeError");
+        throw "Route change aborted by user";
+      }
+    };
+
+    if (isDirty) {
+      window.addEventListener("beforeunload", beforeUnload);
+      router.events.on("routeChangeStart", handleRouteChange);
+    }
+
+    return () => {
+      window.removeEventListener("beforeunload", beforeUnload);
+      router.events.off("routeChangeStart", handleRouteChange);
+    };
+  }, [isDirty, router.events]);
 
   if (dashboardIsLoading || !dashboard) {
     return (
