@@ -1247,7 +1247,8 @@ analytics.get("/languages/top", async (ctx: Context) => {
         lang->>'isoCode' as iso_code,
         count(distinct r.id) as count
       from 
-          filtered_runs r 
+        dates d
+        left join filtered_runs r on d.date = r.local_created_at
         join evaluation_result_v2 er on r.id = er.run_id
         join evaluator e on er.evaluator_id = e.id
         cross join lateral (
