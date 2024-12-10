@@ -50,7 +50,7 @@ export function useTraceUpdate(props: any) {
       {},
     );
     if (Object.keys(changedProps).length > 0) {
-      console.log("Changed props:", changedProps);
+      console.info("Changed props:", changedProps);
     }
     prev.current = props;
   });
@@ -116,12 +116,6 @@ export function useSortParams() {
     "sortDirection",
     parseAsStringEnum(["asc", "desc"]).withDefault("desc"),
   );
-
-  useEffect(() => {
-    // Update the url query, because nuqs does not set query params in the URL when we provide a default value
-    setSortField(sortField);
-    setSortDirection(sortDirection);
-  }, []);
 
   const sortParams = useMemo(() => {
     if (sortField && sortDirection) {

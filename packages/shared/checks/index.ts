@@ -9,8 +9,8 @@ import {
 
 import type { Check } from "./types";
 
-export * from "./types";
 export * from "./serialize";
+export * from "./types";
 
 const ALL_LANGUAGES = [
   "en", // English
@@ -144,6 +144,26 @@ export const CHECKS: Check[] = [
         id: "models",
         width: 100,
         options: (type) => `/filters/models`,
+      },
+    ],
+  },
+  {
+    id: "custom-events",
+    name: "Custom Events",
+    uniqueInBar: true,
+    uiType: "basic",
+    disableInEvals: true,
+    params: [
+      {
+        type: "label",
+        label: "Event name is",
+      },
+      {
+        type: "select",
+        multiple: true,
+        id: "custom-events",
+        width: 100,
+        options: () => `/filters/custom-events`,
       },
     ],
   },

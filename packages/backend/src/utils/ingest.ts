@@ -313,5 +313,4 @@ export async function ingestChatEvent(
       UPDATE run SET ${sql({ ...shared, ...update })} WHERE id = ${previousRun.id}
     `;
   }
-  // console.log(operation, update, shared, "\n\n");
 }

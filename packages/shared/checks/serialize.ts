@@ -12,7 +12,7 @@ function paramSerializer(param: CheckParam, value: any) {
     case "select":
       if (param.multiple) {
         if (!value.length) return undefined;
-        return value.map(encode).join(",");
+        return value.map((value: string) => encode(encode(value))).join(",");
       } else {
         return encode(value);
       }
@@ -103,7 +103,7 @@ export function serializeLogic(logic: CheckLogic): string {
 export function deserializeLogic(
   logicString: string,
   returnEmpty?: boolean,
-): CheckLogic | undefined {
+): CheckLogic {
   const deserializeParam = (param: string): any => {
     const [id, params] = param.split("=");
 
@@ -155,5 +155,5 @@ export function deserializeLogic(
     .map(deserializeParam)
     .filter(Boolean);
 
-  return [isOrLogic ? "OR" : "AND", ...logic] as CheckLogic;
+  return [isOrLogic ? "OR" : "AND", ...logic];
 }

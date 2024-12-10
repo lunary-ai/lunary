@@ -75,14 +75,14 @@ async function resetPlaygroundAllowance() {
 
 export default async function resetUsage() {
   try {
-    console.log("[JOB]: resetting AI allowance");
+    console.info("[JOB]: resetting AI allowance");
     await resetPlaygroundAllowance();
   } catch (error) {
     console.error(error);
   }
 
   try {
-    console.log("[JOB]: updating limited status");
+    console.info("[JOB]: updating limited status");
     await updateLimitedStatus();
   } catch (error) {
     console.error(error);

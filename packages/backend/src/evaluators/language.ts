@@ -141,6 +141,6 @@ async function detectLanguages(texts: string[]): Promise<any> {
     return callML("language", { texts });
   } catch (error) {
     console.error(error);
-    console.log(texts);
+    console.error(texts);
   }
 }

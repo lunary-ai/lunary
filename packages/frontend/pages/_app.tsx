@@ -1,13 +1,13 @@
+import "@mantine/charts/styles.css";
 import "@mantine/core/styles.css";
-import "@mantine/notifications/styles.css";
-// import "@mantine/charts/styles.css"
 import "@mantine/dates/styles.css";
+import "@mantine/notifications/styles.css";
 import "../styles/globals.css";
 
-import { NuqsAdapter } from "nuqs/adapters/next/pages";
 import { MantineProvider } from "@mantine/core";
 import type { AppProps } from "next/app";
 import Head from "next/head";
+import { NuqsAdapter } from "nuqs/adapters/next/pages";
 
 import Layout from "@/components/layout";
 import AnalyticsWrapper from "@/components/layout/Analytics";
@@ -20,8 +20,9 @@ import { fetcher } from "@/utils/fetcher";
 import { useProjectIdStorage } from "@/utils/hooks";
 import { circularPro, themeOverride } from "@/utils/theme";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 import { SWRConfig } from "swr";
-import config from "@/utils/config";
 
 export default function App({ Component, pageProps }: AppProps) {
   const [projectId, setProjectId] = useProjectIdStorage();
@@ -64,9 +65,11 @@ export default function App({ Component, pageProps }: AppProps) {
                     <ProjectContext.Provider
                       value={{ projectId, setProjectId }}
                     >
-                      <Layout>
-                        <Component {...pageProps} />
-                      </Layout>
+                      <DndProvider backend={HTML5Backend}>
+                        <Layout>
+                          <Component {...pageProps} />
+                        </Layout>
+                      </DndProvider>
                     </ProjectContext.Provider>
                   </AnalyticsWrapper>
                 </MantineProvider>

@@ -14,7 +14,6 @@ dataWarehouse.get("/bigquery", async (ctx: Context) => {
   const [connector] =
     await sql`select * from _data_warehouse_connector where project_id = ${projectId}`;
 
-  console.log(connector);
   ctx.body = connector;
 });
 

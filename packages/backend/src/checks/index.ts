@@ -200,7 +200,6 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       ]);
     },
   },
-
   {
     id: "sentiment",
     sql: ({
@@ -295,6 +294,14 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     },
   },
   {
+    id: "custom-events",
+    sql: ({ customEvents }: { customEvents: string[] | null }) => {
+      if (!customEvents || !customEvents.length)
+        return sql`(r.type = 'custom-event')`;
+      return sql`(r.type = 'custom-event' and r.name = any(${sql.array(customEvents)}))`;
+    },
+  },
+  {
     id: "json",
     evaluator: async (run, params) => {
       const { field, type } = params;
@@ -334,66 +341,6 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       };
     },
   },
-  // {
-  //   id: "xml",
-  //   name: "XML / HTML",
-  //   uiType: "smart",
-  //   params: [
-  //     {
-  //       label: "Response",
-  //       type: "label",
-  //     },
-  //     FORMAT_PARAM,
-  //     {
-  //       type: "label",
-  //       label: "XML / HTML",
-  //     },
-  //   ],
-  //   evaluator: async (run) => {
-  //     let parsable = false
-  //     let passed = false
-
-  //     try {
-  //       if (!run.output.startsWith("<")) throw "Not an object"
-  //       // TODO: use a real XML parser
-  //       // new DOMParser().parseFromString(run.output, "text/xml")
-  //       parsable = true
-  //       partial = true
-  //     } catch (e) {}
-
-  //     return {
-  //       parsable,
-  //       partial,
-  //     }
-  //   },
-
-  // },
-  // {
-  //   id: "cc",
-  //   sql: ({ field, type }) => {
-  //     const operator = type === "contains" ? sql`~` : sql`!~`
-
-  //     return sql`${sql(field + "_text")} ${operator} '(?:4[0-9]{3}(?:[ -]?[0-9]{4}){3}|[25][1-7][0-9]{2}(?:[ -]?[0-9]{4}){3}|6(?:011|5[0-9]{2})(?:[ -]?[0-9]{4}){3}|3[47][0-9]{2}(?:[ -]?[0-9]{4}){3}|3(?:0[0-5]|[68][0-9])(?:[ -]?[0-9]{4}){2}|(?:2131|1800|35\d{2})\d{2}(?:[ -]?\d{4}){3})'`
-  //   },
-  // },
-  // {
-  //   id: "email",
-  //   sql: ({ field, type }) => {
-  //     const regexPattern = sql`[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+`
-  //     const operator = type === "contains" ? sql`~` : sql`!~`
-
-  //     return sql`${sql(field + "_text")}::text ${operator} '${regexPattern}'`
-  //   },
-  // },
-  // {
-  //   id: "phone",
-  //   sql: ({ field, type }) => {
-  //     const regexPattern = sql`^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$`
-  //     const operator = type === "contains" ? sql`~` : sql`!~`
-
-  //     return sql`${sql(field + "_text")} ${operator} '${regexPattern}'`
-  //   },
-  // },
   {
     id: "length",
     sql: ({ field, operator, length }) =>

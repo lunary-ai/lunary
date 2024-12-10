@@ -31,7 +31,7 @@ const sql = postgres(process.env.DATABASE_URL!, {
     application_name: `backend-${isProduction ? "production" : "development"}-${new Date().getTime()}`,
   },
   debug: process.env.LUNARY_DEBUG ? debugFn : () => {},
-  onnotice: process.env.LUNARY_DEBUG ? console.log : () => {},
+  onnotice: process.env.LUNARY_DEBUG ? console.warn : () => {},
 });
 
 function debugFn(
@@ -45,17 +45,17 @@ function debugFn(
     query = query.replace(regex, `'${parameters[i]}'`);
   }
 
-  console.log("connection:", connection);
-  console.log("query:", query);
-  console.log("parameters:", parameters);
-  console.log("paramTypes:", paramTypes);
-  console.log("-----\n");
+  console.debug("connection:", connection);
+  console.debug("query:", query);
+  console.debug("parameters:", parameters);
+  console.debug("paramTypes:", paramTypes);
+  console.debug("-----\n");
 }
 
 export async function checkDbConnection() {
   try {
     await sql`select 1`;
-    console.log("✅ Connected to database");
+    console.info("✅ Connected to database");
   } catch (error) {
     console.error("❌ Could not connect to database");
     process.exit(1);

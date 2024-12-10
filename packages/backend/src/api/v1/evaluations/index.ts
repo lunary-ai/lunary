@@ -82,7 +82,7 @@ evaluations.post(
               checklistId,
               orgId,
             });
-            console.log(`Task ${count} don with model ${provider.model} done`);
+            console.info(`Task ${count} don with model ${provider.model} done`);
           });
         }
       }
@@ -98,14 +98,14 @@ evaluations.post(
     queue.on("dequeue", () => {
       done++;
       const percentDone = (1 - (count - done) / count) * 100;
-      console.log(`Active: ${done} of ${count} (${percentDone}%)`);
+      console.debug(`Active: ${done} of ${count} (${percentDone}%)`);
       stream.write(JSON.stringify({ percentDone }) + "\n");
     });
 
-    console.log(`Queue started with ${count} tasks`);
+    console.debug(`Queue started with ${count} tasks`);
 
     queue.on("end", () => {
-      console.log("Queue is empty now");
+      console.debug("Queue is empty now");
 
       stream.write(JSON.stringify({ id: evaluation?.id }) + "\n");
 
