@@ -54,7 +54,6 @@ export default function Dashboard() {
   const router = useRouter();
   const dashboardId = router.query.id as string;
   const { org } = useOrg();
-  console.log(org);
 
   const {
     dashboard,
