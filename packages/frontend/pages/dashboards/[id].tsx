@@ -7,6 +7,7 @@ import DateRangeGranularityPicker, {
 import ErrorBoundary from "@/components/blocks/ErrorBoundary";
 import RenamableField from "@/components/blocks/RenamableField";
 import CheckPicker from "@/components/checks/Picker";
+import { useOrg } from "@/utils/dataHooks";
 import {
   useCustomCharts,
   useDashboard,
@@ -52,6 +53,8 @@ function getSpan(index: number) {
 export default function Dashboard() {
   const router = useRouter();
   const dashboardId = router.query.id as string;
+  const { org } = useOrg();
+  console.log(org);
 
   const {
     dashboard,
@@ -305,27 +308,36 @@ export default function Dashboard() {
               </Group>
             </Group>
             <Group>
-              <Button
-                onClick={openModal}
-                variant="default"
-                leftSection={<IconPlus size={14} />}
-              >
-                Add Charts
-              </Button>
-              <Button
-                variant={isEditing ? "filled" : "default"}
-                leftSection={isEditing ? null : <IconSettings size="18px" />}
-                onClick={() => setIsEditing(!isEditing)}
-              >
-                {isEditing ? "Done" : "Edit"}
-              </Button>
-              <Button
-                onClick={saveDashboard}
-                leftSection={dashboardIsMutating ? <Loader size="sm" /> : null}
-                disabled={!isDirty || isEditing}
-              >
-                Save
-              </Button>
+              {((org?.license && org.license.customDashboardsEnabled) ||
+                org?.customDashboardsEnabled) && (
+                <>
+                  <Button
+                    onClick={openModal}
+                    variant="default"
+                    leftSection={<IconPlus size={14} />}
+                  >
+                    Add Charts
+                  </Button>
+                  <Button
+                    variant={isEditing ? "filled" : "default"}
+                    leftSection={
+                      isEditing ? null : <IconSettings size="18px" />
+                    }
+                    onClick={() => setIsEditing(!isEditing)}
+                  >
+                    {isEditing ? "Done" : "Edit"}
+                  </Button>
+                  <Button
+                    onClick={saveDashboard}
+                    leftSection={
+                      dashboardIsMutating ? <Loader size="sm" /> : null
+                    }
+                    disabled={!isDirty || isEditing}
+                  >
+                    Save
+                  </Button>
+                </>
+              )}
             </Group>
           </Group>
           <Group justify="space-between">
