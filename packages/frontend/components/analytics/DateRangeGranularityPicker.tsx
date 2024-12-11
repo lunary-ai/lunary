@@ -24,7 +24,7 @@ export function getDateRangeFromPreset(preset: PresetDateRange): DateRange {
   return [startDate, endOfDay];
 }
 
-function getDiffDays(dateRange: [Date, Date]) {
+export function getDiffDays(dateRange: [Date, Date]) {
   const [startDate, endDate] = dateRange;
   return (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
 }

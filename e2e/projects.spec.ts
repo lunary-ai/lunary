@@ -26,5 +26,5 @@ test("create new project, rename it and delete it", async ({ page }) => {
   // await page.getByTestId("delete-project-popover-button").click();
 
   // If the project was deleted successfully, it redirects to the analytics page
-  // await page.waitForURL("**/analytics");
+  // await page.waitForURL("**/dashboards");
 });

@@ -4,7 +4,7 @@ create table dashboard (
     id uuid default uuid_generate_v4() primary key,
     created_at timestamptz default now(),
     updated_at timestamptz default now(),
-    owner_id uuid not null,
+    owner_id uuid,
     project_id uuid not null,
     name text not null,
     description text null,

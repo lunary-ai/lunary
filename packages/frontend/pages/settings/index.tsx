@@ -307,19 +307,17 @@ export default function Settings() {
     <Container className="unblockable">
       <NextSeo title="Settings" />
       <Stack gap="xl">
+        {hasAccess(user.role, "projects", "update") ? (
+          <RenamableField
+            defaultValue={project?.name}
+            onRename={(name) => update(name)}
+          />
+        ) : (
+          <Text size="xl" fw="bold">
+            {project?.name}
+          </Text>
+        )}
         <LineChart
-          title={
-            hasAccess(user.role, "projects", "update") ? (
-              <RenamableField
-                defaultValue={project?.name}
-                onRename={(name) => update(name)}
-              />
-            ) : (
-              <Text size="xl" fw="bold">
-                {project?.name}
-              </Text>
-            )
-          }
           data={projectUsage}
           cleanData={false}
           agg="sum"

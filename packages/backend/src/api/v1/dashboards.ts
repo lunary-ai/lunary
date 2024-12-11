@@ -31,7 +31,7 @@ dashboards.get("/", async (ctx: Context) => {
           checks: ["and"],
           start_date: null,
           end_date: null,
-          granularity: null,
+          granularity: "daily",
           is_home: true,
         })}
         returning *
