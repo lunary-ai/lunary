@@ -169,7 +169,6 @@ async function registerRunEvent(
    * The projectId passed to this function is the public key, so it may not necessarily be the correct one for the current event.
    */
   const apiKey = event.appId;
-  // console.log(apiKey, projectId);
   if (typeof apiKey === "string") {
     const [project] = await sql`
       select project_id from api_key where api_key = ${apiKey}
@@ -234,7 +233,7 @@ async function registerRunEvent(
       console.warn(`Error getting parent run user.`);
 
       if (allowRetry) {
-        console.log(
+        console.info(
           "Retrying insertion in 2s in case parent not inserted yet...",
         );
 
@@ -535,7 +534,7 @@ export async function processEventsIngestion(
     }
   }
 
-  console.log(`Inserted ${insertedIds.size} run for project ${projectId}`);
+  console.info(`Inserted ${insertedIds.size} run for project ${projectId}`);
   return results;
 }
 

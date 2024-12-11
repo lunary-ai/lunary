@@ -42,7 +42,7 @@ export type LogicData = {
   params: any;
 };
 
-type LogicNode = ["AND" | "OR", ...LogicElement[]];
+export type LogicNode = ["AND" | "OR", ...LogicElement[]];
 
 export type LogicElement = LogicData | LogicNode;
 

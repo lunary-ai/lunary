@@ -40,7 +40,7 @@ projects.get("/", checkAccess("projects", "read"), async (ctx: Context) => {
 });
 
 projects.post("/", checkAccess("projects", "create"), async (ctx: Context) => {
-  const { orgId } = ctx.state;
+  const { orgId, userId } = ctx.state;
 
   const bodySchema = z.object({
     name: z.string(),
@@ -84,6 +84,7 @@ projects.post("/", checkAccess("projects", "create"), async (ctx: Context) => {
     },
   ];
   await sql`insert into api_key ${sql(privateKey)}`;
+
   ctx.body = project;
 });
 
@@ -153,8 +154,6 @@ projects.post(
         where project_id = ${projectId}
           and type = 'private'
       `;
-
-      console.log("Private key regenerated", newKey);
     }
 
     ctx.status = 200;

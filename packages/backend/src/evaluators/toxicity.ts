@@ -60,6 +60,6 @@ async function detectToxicity(texts: string[]): Promise<any> {
     return callML("toxicity", { texts });
   } catch (error) {
     console.error(error);
-    console.log(texts);
+    console.error(texts);
   }
 }

@@ -77,6 +77,6 @@ async function detectPIIs(
     });
   } catch (error) {
     console.error(error);
-    console.log(texts);
+    console.error(texts);
   }
 }

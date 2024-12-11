@@ -56,7 +56,7 @@ async function main() {
     }
 
     for (const migrationFile of pendingMigrations) {
-      console.log(`Running migration: ${migrationFile}`);
+      console.info(`Running migration: ${migrationFile}`);
       const migrationPath = path.join(migrationsDir, migrationFile);
       await sql.begin(async (sql) => {
         await sql.file(migrationPath);
@@ -65,7 +65,7 @@ async function main() {
       });
     }
 
-    console.log("✅ DB migrations done");
+    console.info("✅ DB migrations done");
   } catch (error) {
     console.error(error);
     exitCode = 1;

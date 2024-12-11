@@ -355,13 +355,6 @@ templates.patch(
 
     const { slug, mode } = bodySchema.parse(ctx.request.body);
 
-    console.log(
-      clearUndefined({
-        slug,
-        mode,
-      }),
-    );
-
     const [template] = await sql`
     update template set ${sql(
       clearUndefined({

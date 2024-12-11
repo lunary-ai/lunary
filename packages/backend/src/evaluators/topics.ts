@@ -73,6 +73,6 @@ async function detectTopics(
     });
   } catch (error) {
     console.error(error);
-    console.log(texts);
+    console.error(texts);
   }
 }

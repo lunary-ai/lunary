@@ -25,7 +25,7 @@ export async function errorMiddleware(ctx: Context, next: Next) {
         error: "Error",
         message: error.errors[0].message,
       };
-      console.log("ZOD ERROR", error.errors[0]);
+      console.error("ZOD ERROR", JSON.stringify(error.errors[0]));
       return;
     }
 

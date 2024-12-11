@@ -2,26 +2,17 @@ import {
   Alert,
   Box,
   Button,
-  Card,
   Center,
-  Tooltip as MantineTooltip,
-  Group,
-  Overlay,
-  Text,
-  Title,
   Loader,
+  Overlay,
+  Paper,
+  Text,
 } from "@mantine/core";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-} from "recharts";
+import { ResponsiveContainer } from "recharts";
 
 import { formatLargeNumber } from "@/utils/format";
-import { IconBolt, IconInfoCircle } from "@tabler/icons-react";
+import { AreaChart, getFilteredChartTooltipPayload } from "@mantine/charts";
+import { IconBolt } from "@tabler/icons-react";
 import {
   eachDayOfInterval,
   eachHourOfInterval,
@@ -29,11 +20,41 @@ import {
   format,
   parseISO,
 } from "date-fns";
-import { Fragment } from "react";
-import ErrorBoundary from "../blocks/ErrorBoundary";
+import { useMemo } from "react";
 import { openUpgrade } from "../layout/UpgradeModal";
-import { theme } from "@/utils/theme";
-import { slugify } from "@/utils/format";
+import { generateSeries } from "./ChartCreator";
+import { Granularity } from "./DateRangeGranularityPicker";
+
+interface ChartTooltipProps {
+  label: string;
+  payload: Record<string, any>[] | undefined;
+}
+
+function ChartTooltip({ label, payload }: ChartTooltipProps) {
+  if (!payload) return null;
+
+  if (
+    payload.filter(({ value }) => typeof value === "number" && value !== 0)
+      .length === 0
+  ) {
+    return null;
+  }
+
+  return (
+    <Paper px="md" py="sm" withBorder shadow="md" radius="md">
+      <Text fw={500} mb={5}>
+        {label}
+      </Text>
+      {getFilteredChartTooltipPayload(payload)
+        .filter((item) => typeof item.value === "number" && item.value !== 0)
+        .map((item: any) => (
+          <Text key={item.name} c={item.color} fz="sm">
+            {item.name}: {item.value}
+          </Text>
+        ))}
+    </Paper>
+  );
+}
 
 function prepareDataForRecharts(
   data: any[],
@@ -143,7 +164,7 @@ function getDateFormat(granularity: "daily" | "hourly" | "weekly"): string {
       : "yyyy-'W'ww";
 }
 
-const formatDate = (date, granularity) => {
+const formatDate = (date, granularity: Granularity) => {
   if (!date) return;
   switch (granularity) {
     case "daily":
@@ -154,6 +175,7 @@ const formatDate = (date, granularity) => {
       return format(parseISO(date), "MMM d");
   }
 };
+
 const CustomizedAxisTick = ({ x, y, payload, index, data, granularity }) => {
   // // Hide the first and last tick
   // if (index === 0 || index === data.length - 1) {
@@ -180,7 +202,7 @@ type LineChartData = {
 type LineChartProps = {
   data: LineChartData;
   title: string | JSX.Element;
-  props: string[];
+  props?: string[];
   blocked?: boolean;
   formatter?: (value: number) => string;
   height?: number;
@@ -196,6 +218,8 @@ type LineChartProps = {
   stat?: number;
   colors?: string[];
   cleanData?: boolean;
+
+  extraProps: any;
 };
 
 function getFigure(agg: string, data: any[], prop: string) {
@@ -229,14 +253,12 @@ function getFigure(agg: string, data: any[], prop: string) {
   }
   return 0;
 }
-function LineChartComponent({
+export default function LineChartComponent({
   data,
-  title,
-  props,
+  props = ["value"],
   blocked = false,
   formatter = formatLargeNumber,
   height = 230,
-  description,
   loading = false,
   splitBy = undefined,
   startDate,
@@ -290,26 +312,27 @@ function LineChartComponent({
       ? getFigure(agg, cleanedData, props[0])
       : stat;
 
+  const series = useMemo(() => {
+    if (!cleanedData || cleanedData.length === 0) {
+      return [];
+    }
+
+    const seriesSet = new Set<string>();
+    cleanedData.forEach((item) => {
+      Object.keys(item).forEach((key) => {
+        if (key !== "value") {
+          seriesSet.add(key);
+        }
+      });
+    });
+
+    const seriesNames = Array.from(seriesSet);
+
+    return generateSeries(seriesNames);
+  }, [cleanedData]);
+
   return (
-    <Card withBorder p={0} className="lineChart" radius="md">
-      <Group gap="xs">
-        {typeof title === "string" ? (
-          <Text c="dimmed" fw={50} fz="md" m="md" mr={0}>
-            {title}
-          </Text>
-        ) : (
-          <Box m="lg" mb="sm">
-            {title}
-          </Box>
-        )}
-
-        {description && (
-          <MantineTooltip label={description}>
-            <IconInfoCircle size={16} opacity={0.5} />
-          </MantineTooltip>
-        )}
-      </Group>
-
+    <>
       {loading && (
         <>
           <Overlay
@@ -334,52 +357,12 @@ function LineChartComponent({
       )}
 
       {typeof total === "number" && (
-        <Text fw={500} fz={24} mt={-12} ml="md">
+        <Text fw={500} fz={24} ml="md">
           {formatter(total)}
         </Text>
       )}
 
       <Box mt="sm" pos="relative">
-        {blocked && (
-          <>
-            <Overlay
-              h="100%"
-              blur={15}
-              backgroundOpacity={0.1}
-              p="lg"
-              zIndex={1}
-            />
-            <Center
-              ta="center"
-              style={{
-                position: "absolute",
-                zIndex: 2,
-              }}
-              h="100%"
-              w="100%"
-            >
-              <Alert
-                title="Advanced Analytics"
-                bg="var(--mantine-primary-color-light)"
-                p="12"
-              >
-                Upgrade to <b>Team</b> to unlock this chart
-                <br />
-                <Button
-                  mt="md"
-                  onClick={() => openUpgrade("analytics")}
-                  size="xs"
-                  variant="gradient"
-                  gradient={{ from: "#0788ff", to: "#9900ff", deg: 30 }}
-                  leftSection={<IconBolt size="16" />}
-                >
-                  Upgrade
-                </Button>
-              </Alert>
-            </Center>
-          </>
-        )}
-
         {!hasData && (
           <>
             <Overlay blur={5} opacity={0.1} p="lg" zIndex={1} />
@@ -396,117 +379,37 @@ function LineChartComponent({
 
         <ResponsiveContainer width="100%" height={height}>
           <AreaChart
-            width={500}
-            height={420}
-            data={hasData ? cleanedData : []}
-            margin={{
-              top: 10,
-              right: 0,
-              left: 0,
-              bottom: 10,
-            }}
-          >
-            {hasData && (
-              <CartesianGrid
-                strokeDasharray="3 3"
-                horizontal={true}
-                opacity={0.5}
-                vertical={false}
-              />
-            )}
-            <XAxis
-              dataKey="date"
-              tick={({ x, y, payload, index }) => {
-                return (
-                  <CustomizedAxisTick
-                    x={x}
-                    y={y}
-                    payload={payload}
-                    index={index}
-                    data={cleanedData}
-                    granularity={granularity}
-                  />
-                );
-              }}
-              interval={0}
-              ticks={[
+            h={300}
+            data={cleanedData || []}
+            dataKey="date"
+            type="stacked"
+            series={series}
+            withDots={false}
+            withYAxis={false}
+            xAxisProps={{
+              tick: ({ x, y, payload, index }) => (
+                <CustomizedAxisTick
+                  x={x}
+                  y={y}
+                  payload={payload}
+                  index={index}
+                  data={cleanedData}
+                  granularity={granularity}
+                />
+              ),
+              interval: 0,
+              ticks: [
                 // only show the first and last tick
                 cleanedData[0]?.date,
                 cleanedData[cleanedData.length - 1]?.date,
-              ]}
-              padding={{ left: 0, right: 0 }}
-              axisLine={false}
-              tickLine={false}
-            />
-
-            <Tooltip
-              formatter={formatter}
-              content={({ active, payload, label }) => {
-                if (active && payload && payload.length) {
-                  return (
-                    <Card shadow="md" withBorder>
-                      <Title order={3} size="sm">
-                        {formatDate(label, granularity)}
-                      </Title>
-                      {payload.map(
-                        (item, i) =>
-                          item.value !== 0 && (
-                            <Text key={i}>{`${item.name}: ${formatter(
-                              item.value,
-                            )}`}</Text>
-                          ),
-                      )}
-                    </Card>
-                  );
-                }
-
-                return null;
-              }}
-            />
-
-            {cleanedData[0] &&
-              Object.keys(cleanedData[0])
-                .filter((prop) => prop !== "date")
-                .map((prop, i) => (
-                  <Fragment key={prop}>
-                    <defs key={prop}>
-                      <linearGradient
-                        color={theme.colors[colors[i % colors.length]][6]}
-                        id={slugify(prop)}
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="5%"
-                          stopColor="currentColor"
-                          stopOpacity={0.4}
-                        />
-                        <stop
-                          offset="95%"
-                          stopColor="currentColor"
-                          stopOpacity={0}
-                        />
-                      </linearGradient>
-                    </defs>
-                    <Area
-                      type="monotone"
-                      color={theme.colors[colors[i % colors.length]][4]}
-                      dataKey={prop}
-                      stackId="1"
-                      stroke="currentColor"
-                      dot={false}
-                      fill={`url(#${slugify(prop)})`}
-                      strokeWidth={2}
-                      strokeLinejoin="round"
-                      strokeLinecap="round"
-                    />
-                  </Fragment>
-                ))}
-
-            {chartExtra}
-          </AreaChart>
+              ],
+            }}
+            tooltipProps={{
+              content: ({ label, payload }) => (
+                <ChartTooltip label={label} payload={payload} />
+              ),
+            }}
+          />
         </ResponsiveContainer>
       </Box>
       <style jsx>{`
@@ -514,14 +417,6 @@ function LineChartComponent({
           justify-content: center;
         }
       `}</style>
-    </Card>
+    </>
   );
 }
-
-const LineChart = (props: LineChartProps) => (
-  <ErrorBoundary>
-    <LineChartComponent {...props} />
-  </ErrorBoundary>
-);
-
-export default LineChart;
