@@ -82,13 +82,13 @@ async function evaluatorJob() {
     const runs = await getEvaluatorRuns(evaluator);
 
     if (!runs.length) {
-      console.log(
+      console.info(
         `Skipping Real-time Evaluator ${evaluator.id} (${i} / ${evaluators.length})`,
       );
       continue;
     }
 
-    console.log(
+    console.info(
       `Starting Real-time Evaluator ${evaluator.id} - ${runs.length} runs (${i + 1} / ${evaluators.length})`,
     );
 

@@ -214,10 +214,10 @@ export async function createNewDatastream(
   };
 
   const [operation] = await datastreamClient.createStream(request);
-  console.log(`Stream creation initiated. Operation name: ${operation.name}`);
+  console.info(`Stream creation initiated. Operation name: ${operation.name}`);
 
   const [response] = await operation.promise();
-  console.log("Stream created successfully:", response);
+  console.info("Stream created successfully:", response);
 
   if (typeof operation.result?.name !== "string") {
     throw new Error("Stream creation failed:", response);
@@ -235,7 +235,7 @@ export async function createNewDatastream(
 
   const [updateOperation] =
     await datastreamClient.updateStream(updateStreamRequest);
-  console.log(
+  console.info(
     `Stream update initiated. Operation name: ${updateOperation.name}`,
   );
   await sql`

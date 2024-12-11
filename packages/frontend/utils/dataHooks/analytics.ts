@@ -1,24 +1,43 @@
+import { LogicNode, serializeLogic } from "shared";
 import { useProjectSWR } from ".";
 
-export function useAnalyticsChartData(
+function getPrefix(key: string) {
+  if (key === "users/top") {
+    return "/external-users";
+  }
+
+  return `/analytics/${key}`;
+}
+
+// TODO: Generics
+export function useAnalyticsChartData<T>(
   key: string | null | undefined,
   startDate: Date,
   endDate: Date,
   granularity: string,
-  checks?: string,
+  checks?: LogicNode,
+  firstDimensionKey: string | null = null,
+  secondDimensionKey: string | null = null,
 ) {
   const timeZone = new window.Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const checksParam = checks ? `&checks=${checks}` : "";
-  const { data, isLoading } = useProjectSWR(
+  const checksParam = checks ? `&checks=${serializeLogic(checks)}` : "";
+  const firstDimensionParam = firstDimensionKey
+    ? `&firstDimension=${firstDimensionKey}`
+    : "";
+  const secondDimensionParam = secondDimensionKey
+    ? `&secondDimension=${secondDimensionKey}`
+    : "";
+
+  const { data, isLoading, error } = useProjectSWR<T[]>(
     key
-      ? `/analytics/${key}?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&timeZone=${timeZone}&granularity=${granularity}${checksParam}`
+      ? `${getPrefix(key)}?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&timeZone=${timeZone}&granularity=${granularity}${checksParam}${firstDimensionParam}${secondDimensionParam}`
       : undefined,
   );
 
-  return { data, isLoading };
+  return { data: data || [], stat: data?.stat || null, isLoading, error };
 }
 
-export function useTopModels(params: {
+export function useTopModels<T>(params: {
   startDate?: Date;
   endDate?: Date;
   checks?: string;
@@ -38,21 +57,21 @@ export function useTopModels(params: {
     queryParams.append("checks", checks);
   }
 
-  const { data, isLoading } = useProjectSWR(
-    params && `/analytics/top/models?${queryParams.toString()}`,
+  const { data, isLoading } = useProjectSWR<T>(
+    params && `/analytics/models/top?${queryParams.toString()}`,
   );
 
   return { data, isLoading };
 }
 
-export function useTopTemplates(
+export function useTopTemplates<T>(
   startDate: Date,
   endDate: Date,
-  checks: string,
+  checks?: string,
 ) {
   const timeZone = new window.Intl.DateTimeFormat().resolvedOptions().timeZone;
   const checksParam = checks ? `&checks=${checks}` : "";
-  const { data, isLoading } = useProjectSWR(
+  const { data, isLoading } = useProjectSWR<T>(
     `/analytics/top/templates?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&timeZone=${timeZone}${checksParam}`,
   );
 

@@ -18,6 +18,8 @@ import analytics from "./analytics";
 import views from "./views";
 import models from "./models";
 import dataWarehouse from "./data-warehouse";
+import dashboards from "./dashboards";
+import charts from "./charts";
 import openapi from "./openapi";
 
 const v1 = new Router({
@@ -57,6 +59,8 @@ v1.use(analytics.routes());
 v1.use(views.routes());
 v1.use(models.routes());
 v1.use(dataWarehouse.routes());
+v1.use(dashboards.routes());
+v1.use(charts.routes());
 v1.use(openapi.routes());
 
 v1.use("/template-versions", templateVersions.routes());

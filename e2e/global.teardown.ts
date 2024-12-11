@@ -1,6 +1,7 @@
-import { test } from "@playwright/test"
-import { deleteOrg } from "./utils/db"
+import { test } from "@playwright/test";
+import { deleteOrg } from "./utils/db";
 
 test("clean up database", async ({}) => {
-  await deleteOrg()
-})
+  test.slow();
+  await deleteOrg();
+});

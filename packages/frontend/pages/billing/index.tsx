@@ -1,4 +1,4 @@
-import LineChart from "@/components/analytics/LineChart";
+import LineChart from "@/components/analytics/OldLineChart";
 import { UpgradePlans, openUpgrade } from "@/components/layout/UpgradeModal";
 import errorHandler from "@/utils/errors";
 import { useOrg } from "@/utils/dataHooks";

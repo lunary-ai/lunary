@@ -27,7 +27,6 @@ async function getGithubUserInfo(accessToken: string) {
   }
 
   const userData = await userResponse.json();
-  console.log(userData);
   const emails = await emailResponse.json();
 
   const email = emails?.find((email: any) => email.primary);

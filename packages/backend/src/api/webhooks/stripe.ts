@@ -18,7 +18,7 @@ const router = new Router({
 });
 
 async function setupSubscription(object: Stripe.Checkout.Session) {
-  console.log("🔔 setupSubscription", object);
+  console.info("🔔 setupSubscription", object);
   const { customer, client_reference_id, mode, subscription, metadata } =
     object;
 
@@ -88,7 +88,7 @@ async function updateSubscription(object: Stripe.Subscription) {
     ((!plan && !period) ||
       (currentOrg.plan === plan && currentOrg.planPeriod === period))
   ) {
-    console.log(`🔥 updateSubscription: nothing to update`);
+    console.error(`🔥 updateSubscription: nothing to update`);
     return;
   }
 

@@ -89,4 +89,21 @@ filters.get("/templates", async (ctx) => {
   ctx.body = rows;
 });
 
+filters.get("/custom-events", async (ctx) => {
+  const { projectId } = ctx.state;
+
+  const rows = await sql`
+    select 
+      distinct name as value,
+      name as label
+    from 
+      run r 
+    where 
+      project_id = ${projectId}
+      and r.type = 'custom-event'
+  `;
+
+  ctx.body = rows;
+});
+
 export default filters;

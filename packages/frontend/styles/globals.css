@@ -41,3 +41,11 @@ span.limited,
 .mantine-Badge-root {
   max-width: 100%;
 }
+
+.recharts-cartesian-axis-tick:first-child:not(.bar-chart *) {
+  transform: translateX(20px);
+}
+
+.recharts-cartesian-axis-tick:last-child:not(.bar-chart *) {
+  transform: translateX(-20px);
+}
