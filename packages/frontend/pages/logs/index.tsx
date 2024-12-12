@@ -248,9 +248,6 @@ export default function Logs() {
       mutateLogs();
       setShouldMutate(null);
     }
-    if (!hasAccess(user?.role, "settings", "read")) {
-      router.push("/dashboards");
-    }
   }, [shouldMutate]);
 
   const {
