@@ -1,5 +1,4 @@
 # Based on https://raw.githubusercontent.com/github/gitignore/main/Node.gitignore
-Dockerfile
 
 # VScode
 packages/frontend/Frontend.code-workspace
@@ -184,9 +183,6 @@ dist
 
 
 bun.lockb
-
-*.Dockerfile
-docker-compose*
 
 
 entrypoint.sh

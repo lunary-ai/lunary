@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: .
+      dockerfile: packages/backend/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/postgres
+      JWT_SECRET: localsecret123
+      APP_URL: http://localhost:8080
+      API_URL: http://localhost:3333
+    ports:
+      - "3333:3333"
+    depends_on:
+      - postgres
+    volumes:
+      - ./packages/backend:/app/packages/backend
+      - ./packages/shared:/app/packages/shared
+      - ./packages/db:/app/packages/db
+    command: >
+      sh -c "
+        cp /app/packages/backend/.env.example /app/packages/backend/.env &&
+        sed -i 's|your-host|postgres|g' /app/packages/backend/.env &&
+        sed -i 's|yoursupersecret|localsecret123|g' /app/packages/backend/.env &&
+        npm install &&
+        npm run migrate:db &&
+        npm run dev
+      "
+
+  frontend:
+    build:
+      context: .
+      dockerfile: packages/frontend/Dockerfile
+    environment:
+      API_URL: http://localhost:3333
+      NEXT_PUBLIC_API_URL: http://localhost:3333
+    ports:
+      - "8080:8080"
+    depends_on:
+      - backend
+    volumes:
+      - ./packages/frontend:/app/packages/frontend
+      - ./packages/shared:/app/packages/shared
+    command: >
+      sh -c "
+        cp /app/packages/frontend/.env.example /app/packages/frontend/.env &&
+        npm install &&
+        npm run dev
+      "
+
+volumes:
+  postgres_data:
