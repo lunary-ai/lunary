@@ -2,9 +2,7 @@
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "targetDefaults": {
     "load-env": {
-      "dependsOn": [
-        "^load-env"
-      ]
+      "dependsOn": ["^load-env"]
     }
   },
   "defaultBase": "main",
@@ -18,5 +16,6 @@
         "serveStaticTargetName": "serve-static"
       }
     }
-  ]
+  ],
+  "nxCloudId": "6764ef0690f14c35befecfa1"
 }
