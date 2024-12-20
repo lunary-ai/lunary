@@ -1,0 +1,31 @@
+FROM vm/ubuntu:18.04
+
+# install the latest version of Docker, as in the official Docker installation tutorial.
+RUN apt-get update && \
+    apt-get install ca-certificates curl gnupg lsb-release && \
+    sudo mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
+    echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" |\
+    sudo tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    apt-get update && \
+    apt-get install docker-ce docker-ce-cli containerd.io
+
+COPY . .
+
+RUN sudo apt-get install postgresql-client-common
+RUN sudo apt-get install postgresql-client
+
+RUN docker build -t image .
+RUN docker run -d -t -p 5432:5432 image
+
+RUN curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+RUN sudo apt-get install -y nodejs
+RUN sudo npm install npm@latest -g
+
+COPY . .
+RUN npm install
+RUN npm run migrate:db
+RUN npm run build
+RUN BACKGROUND npm run start
+EXPOSE WEBSITE localhost:3355

@@ -4,7 +4,7 @@
   "scripts": {
     "start": "npm run load-env && nx next:start -H 0.0.0.0 -p 8080",
     "dev": "nx next:dev -p 8080",
-    "build": "rm -rf .next && nx next:build",
+    "build": "sudo rm -rf .next && nx next:build",
     "load-env": "bash ./load-env.sh"
   },
   "dependencies": {
