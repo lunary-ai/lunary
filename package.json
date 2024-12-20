@@ -22,13 +22,18 @@
   ],
   "dependencies": {
     "concurrently": "^9.1.0",
-    "patch-package": "^8.0.0"
+    "next": "14.2.16",
+    "patch-package": "^8.0.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
   },
   "devDependencies": {
+    "@nx/next": "20.2.2",
     "@playwright/test": "^1.49.0",
     "@types/node": "^22.10.0",
     "dotenv": "^16.4.5",
     "json-2-csv": "^5.5.7",
+    "nx": "20.2.2",
     "prettier": "^3.4.1",
     "tsup": "^8.3.5",
     "tsx": "^4.19.2",
