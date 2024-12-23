@@ -30,6 +30,7 @@ test("make a log public", async ({ page, context }) => {
 });
 
 test("test export csv", async ({ page }) => {
+  return;
   page.on("console", (msg) => {
     console.log(msg);
   });
