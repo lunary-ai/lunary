@@ -47,7 +47,7 @@
     "shared": "*",
     "stripe": "^16.10.0",
     "swagger-jsdoc": "^6.2.8",
-    "tiktoken": "^1.0.16",
+    "tiktoken": "^1.0.18",
     "washyourmouthoutwithsoap": "^1.0.2",
     "zod": "^3.23.8"
   },
