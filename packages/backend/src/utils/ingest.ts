@@ -142,7 +142,12 @@ export async function cleanEvent(event: any): Promise<Event> {
   };
 
   // Do it after because we need the sanitized runId/parentRunId
-  cleanedRun.tokensUsage = await completeRunUsageWithTimeout(cleanedRun);
+  try {
+    cleanedRun.tokensUsage = await completeRunUsageWithTimeout(cleanedRun);
+  } catch (error) {
+    console.error("Error completing run usage");
+    console.error(error);
+  }
 
   return cleanedRun;
 }
