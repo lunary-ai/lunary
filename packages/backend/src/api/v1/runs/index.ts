@@ -9,8 +9,9 @@ import { z } from "zod";
 import { fileExport } from "./export";
 import ingest from "./ingest";
 
-import crypto from "crypto";
 import Context from "@/src/utils/koa";
+import crypto from "crypto";
+import { getRelatedRuns } from "./queries";
 
 /**
  * @openapi
@@ -169,7 +170,7 @@ function processParams(params: any) {
   return params;
 }
 
-function formatRun(run: any) {
+export function formatRun(run: any) {
   const formattedRun = {
     id: run.id,
     projectId: run.projectId,
@@ -1094,46 +1095,7 @@ runs.get("/:id/related", checkAccess("logs", "read"), async (ctx) => {
   const id = ctx.params.id;
   const { projectId } = ctx.state;
 
-  const relatedRuns = await sql`
-    with recursive related_runs as (
-      select 
-        r1.*
-      from 
-        run r1
-      where
-        r1.id = ${id}
-        and project_id = ${projectId}
-
-      union all 
-
-      select 
-        r2.*
-      from 
-        run r2
-        inner join related_runs rr on rr.id = r2.parent_run_id
-  )
-  select 
-    rr.created_at, 
-    rr.tags, 
-    rr.project_id, 
-    rr.id, 
-    rr.status, 
-    rr.name, 
-    rr.ended_at, 
-    rr.error, 
-    rr.input, 
-    rr.output, 
-    rr.params, 
-    rr.type, 
-    rr.parent_run_id, 
-    rr.completion_tokens, 
-    rr.prompt_tokens, 
-    coalesce(rr.cost, 0) as cost,
-    rr.feedback, 
-    rr.metadata
-  from 
-    related_runs rr;
-  `;
+  const relatedRuns = getRelatedRuns(id, projectId);
 
   ctx.body = relatedRuns;
 });

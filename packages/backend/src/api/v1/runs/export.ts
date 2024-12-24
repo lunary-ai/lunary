@@ -3,6 +3,7 @@ import { Parser } from "@json2csv/plainjs";
 import { Context } from "koa";
 import { Run } from "shared";
 import { Readable } from "stream";
+import { getMessages } from "./queries";
 
 interface ExportType {
   sql: any;
@@ -126,6 +127,20 @@ export async function fileExport(
           if (exportType === "trace") {
             const related = await getRelatedRuns(sql, row.id, projectId);
             line = parser.parse(getTraceChildren(formatRun(row), related));
+          } else if (exportType === "thread") {
+            const formattedRun = formatRun(row);
+            formattedRun.messages = await getMessages(
+              formattedRun.id,
+              projectId,
+            );
+            delete formattedRun.parentFeedback;
+            delete formattedRun.input;
+            delete formattedRun.siblingRunId;
+            delete formattedRun.traceId;
+            delete formattedRun.feedback;
+            delete formattedRun.params;
+
+            line = parser.parse(formattedRun);
           } else {
             line = parser.parse(formatRun(row));
           }
@@ -162,7 +177,6 @@ export async function fileExport(
             }
           }
         }
-        yield "exports";
       },
     });
     ctx.body = stream;
@@ -177,6 +191,16 @@ export async function fileExport(
           if (exportType === "trace") {
             const related = await getRelatedRuns(sql, row.id, projectId);
             line = JSON.stringify(getTraceChildren(row, related));
+          } else if (exportType === "thread") {
+            const messages = await getMessages(row.id, projectId);
+            row.messages = messages;
+            delete row.parentFeedback;
+            delete row.input;
+            delete row.siblingRunId;
+            delete row.traceId;
+            delete row.feedback;
+            delete row.params;
+            line = JSON.stringify(row);
           } else {
             line = JSON.stringify(row);
           }
@@ -184,7 +208,6 @@ export async function fileExport(
             yield line + "\n";
           }
         }
-        yield "exports";
       },
     });
     ctx.body = stream;
