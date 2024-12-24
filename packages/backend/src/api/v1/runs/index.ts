@@ -1095,7 +1095,7 @@ runs.get("/:id/related", checkAccess("logs", "read"), async (ctx) => {
   const id = ctx.params.id;
   const { projectId } = ctx.state;
 
-  const relatedRuns = getRelatedRuns(id, projectId);
+  const relatedRuns = await getRelatedRuns(id, projectId);
 
   ctx.body = relatedRuns;
 });
