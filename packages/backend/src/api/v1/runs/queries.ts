@@ -51,13 +51,12 @@ export async function getMessages(threadId: string, projectId: string) {
 
   let messages = [];
   for (const run of filteredRuns) {
-    if (run.input) {
+    if (Array.isArray(run.input)) {
       messages.push(...run.input);
     }
-    if (run.output) {
+    if (Array.isArray(run.output)) {
       messages.push(...run.output);
     }
   }
-  console.log(messages);
   return messages;
 }
