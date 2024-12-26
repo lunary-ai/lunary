@@ -5,13 +5,11 @@ import { deleteOrg, populateLogs } from "./utils/db";
 const authFile = "e2e/.auth/user.json";
 
 test.beforeAll(async () => {
-  test.slow();
-  // Sometimes the teardown isn't called, so we need to clean up the database before running the tests
+  // if teardown hasn't been call, we need to clean up the database before running the tests
   await deleteOrg();
 });
 
 test("signup flow", async ({ page }) => {
-  test.slow();
   await page.goto("/");
 
   await page.getByRole("link", { name: "Sign Up" }).click();
