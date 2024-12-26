@@ -3,9 +3,13 @@ on:
   pull_request:
     types: [opened, synchronize]
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   run-tests:
-    if: ${{ !contains(github.head_ref, 'ci:') && !contains(github.ref, 'ci/') }}
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -30,7 +34,7 @@ jobs:
           cache: "npm"
       - name: Setup application
         run: npm ci
-      - name: Install Playwright Browsers
+      - name: Install Playwright Browser
         run: npx playwright install --with-deps chromium
 
       - name: Start backend and frontend
