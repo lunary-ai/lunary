@@ -254,7 +254,7 @@ export default function Dashboard() {
           dashboardGranularity={granularity}
         />
       )}
-      <Stack pt="24px">
+      <Stack>
         <Stack>
           <Group justify="space-between">
             <Group>

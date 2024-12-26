@@ -9,7 +9,6 @@ test.afterAll(async () => {
   await setOrgFree();
 });
 
-// run tests one after another
 test.describe.configure({ mode: "serial" });
 
 test("create new template and test basic playground", async ({ page }) => {
@@ -17,7 +16,6 @@ test("create new template and test basic playground", async ({ page }) => {
 
   await page.waitForLoadState("networkidle");
 
-  return;
   await page.getByTestId("empty-action").click();
 
   await page.getByTestId("rename-template-input").fill("first-template");
@@ -27,7 +25,6 @@ test("create new template and test basic playground", async ({ page }) => {
 
   await page.getByTestId("run-playground").click();
 
-  // assistant's response
   await expect(page.getByText("Hello!")).toBeVisible();
   await expect(page.locator("#HERE").getByText("assistant")).toBeVisible();
 });
@@ -37,6 +34,7 @@ test("create new chat template and deploy", async ({ page }) => {
 
   await page.waitForLoadState("networkidle");
 
+  await page.waitForSelector("[data-testid=create-template]");
   await page.getByTestId("create-template").click();
 
   await page.getByTestId("rename-template-input").fill("test-chat-template");

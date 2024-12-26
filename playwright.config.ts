@@ -1,23 +1,22 @@
-import { defineConfig, devices } from "@playwright/test"
+import { defineConfig, devices } from "@playwright/test";
 
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
  */
-import dotenv from "dotenv"
+import dotenv from "dotenv";
 
 // Read from default ".env" file.
-dotenv.config({ path: "./packages/backend/.env" })
+dotenv.config({ path: "./packages/backend/.env" });
 
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
+  workers: 2,
   testDir: "./e2e",
-  /* Timeout config */
-
   /* Run tests in files in parallel */
-  fullyParallel: true,
+  fullyParallel: false,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
@@ -42,16 +41,25 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
-    { name: "setup", testMatch: /.*\.setup\.ts/ },
-
+    { name: "setup", testMatch: "auth.setup.ts" },
     {
-      name: "chromium",
-      testMatch: /.*\.spec\.ts/,
+      // Projects tests need to be ran before all other tests to avoid project mismatches.
+      name: "projects",
+      testMatch: "projects.setup.ts",
       use: {
         ...devices["Desktop Chrome"],
         storageState: "e2e/.auth/user.json",
       },
       dependencies: ["setup"],
+    },
+    {
+      name: "chromium",
+      dependencies: ["setup", "projects"],
+      testMatch: /.*\.spec\.ts/,
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: "e2e/.auth/user.json",
+      },
       teardown: "teardown",
     },
     {
@@ -66,4 +74,4 @@ export default defineConfig({
   //   url: "http://127.0.0.1:8080",
   //   reuseExistingServer: !process.env.CI,
   // },
-})
+});
