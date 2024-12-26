@@ -18,38 +18,19 @@ jobs:
           - 5432:5432
         options: >-
           --health-cmd pg_isready
-          --health-interval 10s
+          --health-interval 5s
           --health-timeout 5s
-          --health-retries 5
+          --health-retries 3
 
     steps:
       - uses: actions/checkout@v4
-      - name: Cache node modules
-        id: cache-npm
-        uses: actions/cache@v4
-        env:
-          cache-name: cache-node-modules
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
-      - name: Cache Playwright binaries
-        uses: actions/cache@v4
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-playwright-
-      - name: Install dependencies
-        run: npm ci
-      - name: Install Playwright
-        run: npx playwright install --with-deps chromium
+      - name: Setup application
+        run: |
+          npm ci &
+          npx playwright install --with-deps chromium &
+          wait
 
-      - name: Start backend
+      - name: Start backend and frontend
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
@@ -57,19 +38,14 @@ jobs:
           API_URL: http://0.0.0.0:3333
           LUNARY_PUBLIC_KEY: 259d2d94-9446-478a-ae04-484de705b522
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        timeout-minutes: 1
-        run: npm run migrate:db && npm run start:backend & npx wait-on http://localhost:3333/v1/health
-      - name: Start frontend
-        env:
-          API_URL: http://0.0.0.0:3333
           NEXT_PUBLIC_API_URL: http://0.0.0.0:3333
         timeout-minutes: 3
-        run: (npm run dev:frontend)  & npx wait-on http://0.0.0.0:8080/
-      - name: Run tests
-        run: npx playwright test
-        env:
-          BASE_URL: http://0.0.0.0:8080
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        run: |
+          npm run migrate:db
+          npm run start:backend &
+          npm run dev:frontend &
+          npx wait-on http://localhost:3333/v1/health http://0.0.0.0:8080/
+
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
