@@ -27,7 +27,6 @@ test("regenerate api keys", async ({ page }) => {
   await page.getByTestId("confirm-button").click();
 
   await page.waitForResponse((resp) => {
-    console.log(resp.url());
     return resp.url().includes("/regenerate-key");
   });
 

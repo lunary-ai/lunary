@@ -1,23 +1,21 @@
-import { defineConfig, devices } from "@playwright/test"
+import { defineConfig, devices } from "@playwright/test";
 
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
  */
-import dotenv from "dotenv"
+import dotenv from "dotenv";
 
 // Read from default ".env" file.
-dotenv.config({ path: "./packages/backend/.env" })
+dotenv.config({ path: "./packages/backend/.env" });
 
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
   testDir: "./e2e",
-  /* Timeout config */
-
   /* Run tests in files in parallel */
-  fullyParallel: true,
+  fullyParallel: false,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
@@ -66,4 +64,4 @@ export default defineConfig({
   //   url: "http://127.0.0.1:8080",
   //   reuseExistingServer: !process.env.CI,
   // },
-})
+});
