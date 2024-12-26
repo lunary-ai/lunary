@@ -1,7 +1,5 @@
 import { expect, test } from "@playwright/test";
 
-test.describe.configure({ mode: "serial" });
-
 test("create new project, rename it and delete it", async ({ page }) => {
   await page.goto("/");
 

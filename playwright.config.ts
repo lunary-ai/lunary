@@ -13,7 +13,7 @@ dotenv.config({ path: "./packages/backend/.env" });
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  workers: 1,
+  workers: 2,
   testDir: "./e2e",
   /* Run tests in files in parallel */
   fullyParallel: false,
@@ -41,16 +41,25 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
-    { name: "setup", testMatch: /.*\.setup\.ts/ },
-
+    { name: "setup", testMatch: "auth.setup.ts" },
     {
-      name: "chromium",
-      testMatch: /.*\.spec\.ts/,
+      // Projects tests need to be ran before all other tests to avoid project mismatches.
+      name: "projects",
+      testMatch: "projects.spec.ts",
       use: {
         ...devices["Desktop Chrome"],
         storageState: "e2e/.auth/user.json",
       },
       dependencies: ["setup"],
+    },
+    {
+      name: "chromium",
+      dependencies: ["setup", "projects"],
+      testMatch: /.*\.spec\.ts/,
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: "e2e/.auth/user.json",
+      },
       teardown: "teardown",
     },
     {

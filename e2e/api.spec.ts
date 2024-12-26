@@ -16,22 +16,22 @@ test("regenerate api keys", async ({ page }) => {
   publicKey = await page.getByTestId("public-key").textContent();
 
   const firstPrivateKey = await page.getByTestId("private-key").textContent();
+  if (typeof firstPrivateKey !== "string") {
+    throw new Error("Private key is not a string");
+  }
 
-  expect(publicKey).toHaveLength(36); // uuid length
-  expect(firstPrivateKey).toHaveLength(36); // uuid length
+  expect(publicKey).toHaveLength(36);
+  expect(firstPrivateKey).toHaveLength(36);
 
-  await page.waitForTimeout(300); // helps with flakiness in local
-
+  const responsePromise = page.waitForResponse((response) =>
+    response.url().includes("regenerate-key"),
+  );
   await page.getByTestId("regenerate-private-key-button").click();
 
   await page.getByTestId("confirm-button").click();
+  await responsePromise;
 
-  await page.waitForResponse((resp) => {
-    return resp.url().includes("/regenerate-key");
-  });
-
-  await page.waitForTimeout(1000);
-
+  await expect(page.getByTestId("private-key")).not.toHaveText(firstPrivateKey);
   const secondPrivateKey = await page.getByTestId("private-key").textContent();
 
   expect(firstPrivateKey).not.toEqual(secondPrivateKey);
