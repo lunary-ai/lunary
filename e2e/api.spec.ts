@@ -1,41 +1,44 @@
-import { test, expect } from "@playwright/test"
+import { test, expect } from "@playwright/test";
 
-let privateKey = null
-let publicKey = null
+let privateKey = null;
+let publicKey = null;
 
 // run tests one after another
-test.describe.configure({ mode: "serial" })
+test.describe.configure({ mode: "serial" });
 
-const apiUrl = process.env.API_URL || "http://localhost:3333"
+const apiUrl = process.env.API_URL || "http://localhost:3333";
 
 test("regenerate api keys", async ({ page }) => {
-  await page.goto("/settings")
+  await page.goto("/settings");
 
-  await page.waitForLoadState("networkidle")
+  await page.waitForLoadState("networkidle");
 
-  publicKey = await page.getByTestId("public-key").textContent()
+  publicKey = await page.getByTestId("public-key").textContent();
 
-  const firstPrivateKey = await page.getByTestId("private-key").textContent()
+  const firstPrivateKey = await page.getByTestId("private-key").textContent();
 
-  expect(publicKey).toHaveLength(36) // uuid length
-  expect(firstPrivateKey).toHaveLength(36) // uuid length
+  expect(publicKey).toHaveLength(36); // uuid length
+  expect(firstPrivateKey).toHaveLength(36); // uuid length
 
-  await page.waitForTimeout(300) // helps with flakiness in local
+  await page.waitForTimeout(300); // helps with flakiness in local
 
-  await page.getByTestId("regenerate-private-key-button").click()
+  await page.getByTestId("regenerate-private-key-button").click();
 
-  await page.getByTestId("confirm-button").click()
+  await page.getByTestId("confirm-button").click();
 
-  await page.waitForResponse((resp) => resp.url().includes("/regenerate-key"))
+  await page.waitForResponse((resp) => {
+    console.log(resp.url());
+    return resp.url().includes("/regenerate-key");
+  });
 
-  await page.waitForTimeout(1000)
+  await page.waitForTimeout(1000);
 
-  const secondPrivateKey = await page.getByTestId("private-key").textContent()
+  const secondPrivateKey = await page.getByTestId("private-key").textContent();
 
-  expect(firstPrivateKey).not.toEqual(secondPrivateKey)
+  expect(firstPrivateKey).not.toEqual(secondPrivateKey);
 
-  privateKey = secondPrivateKey
-})
+  privateKey = secondPrivateKey;
+});
 
 test("private api /logs", async ({ page }) => {
   // Test API query
@@ -46,11 +49,11 @@ test("private api /logs", async ({ page }) => {
       "Content-Type": "application/json",
       "X-API-Key": privateKey!,
     },
-  })
+  });
 
-  const json = await res.json()
-  expect(json.data).toBeInstanceOf(Array)
-})
+  const json = await res.json();
+  expect(json.data).toBeInstanceOf(Array);
+});
 
 test("create dataset", async ({ page }) => {
   // Test API query
@@ -65,11 +68,11 @@ test("create dataset", async ({ page }) => {
       slug: "test-dataset",
       type: "chat",
     }),
-  })
+  });
 
-  const json = await res.json()
-  expect(json.slug).toEqual("test-dataset")
-})
+  const json = await res.json();
+  expect(json.slug).toEqual("test-dataset");
+});
 
 test("get dataset publicly via slug", async ({ page }) => {
   // Test API query
@@ -81,8 +84,8 @@ test("get dataset publicly via slug", async ({ page }) => {
       "Content-Type": "application/json",
       Authorization: `Bearer ${publicKey!}`,
     },
-  })
+  });
 
-  const json = await res.json()
-  expect(json.items).toBeInstanceOf(Array)
-})
+  const json = await res.json();
+  expect(json.items).toBeInstanceOf(Array);
+});

@@ -7,6 +7,7 @@ const authFile = "e2e/.auth/user.json";
 test.beforeAll(async () => {
   test.slow();
   // Sometimes the teardown isn't called, so we need to clean up the database before running the tests
+  console.log("deleting org");
   await deleteOrg();
 });
 

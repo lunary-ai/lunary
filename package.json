@@ -12,7 +12,7 @@
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
     "dev:frontend": "npm -w packages/frontend run dev",
     "dev:backend": "npm -w packages/backend run dev",
-    "test": "npx playwright test",
+    "test": "npx playwright test --workers=1",
     "test:ui": "npx playwright test --ui",
     "postinstall": "npx patch-package",
     "clean": "rm -rf package-lock.json && rm -rf node_modules &&  rm -rf packages/frontend/node_modules && rm -rf packages/backend/node_modules && rm -rf packages/frontend/.next"
