@@ -26,9 +26,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Setup application
         run: |
-          npm ci &
-          npx playwright install --with-deps chromium &
-          wait
+          npm ci && npx playwright install --with-deps chromium
 
       - name: Start backend and frontend
         env:
@@ -45,6 +43,12 @@ jobs:
           npm run start:backend &
           npm run dev:frontend &
           npx wait-on http://localhost:3333/v1/health http://0.0.0.0:8080/
+
+      - name: Run tests
+        run: npx playwright test
+        env:
+          BASE_URL: http://0.0.0.0:8080
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
