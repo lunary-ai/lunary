@@ -1,14 +1,14 @@
 import sql from "../../packages/backend/src/utils/db";
 
-export function setOrgPro() {
+export async function setOrgPro() {
   return sql`update org set plan = 'pro' where name = 'test test''s Org'`;
 }
 
-export function setOrgFree() {
+export async function setOrgFree() {
   return sql`update org set plan = 'free' where name = 'test test''s Org'`;
 }
 
-export function deleteOrg() {
+export async function deleteOrg() {
   return sql`delete from org where name = 'test test''s Org'`;
 }
 
