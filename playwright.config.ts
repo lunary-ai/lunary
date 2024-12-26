@@ -45,7 +45,7 @@ export default defineConfig({
     {
       // Projects tests need to be ran before all other tests to avoid project mismatches.
       name: "projects",
-      testMatch: "projects.spec.ts",
+      testMatch: "projects.setup.ts",
       use: {
         ...devices["Desktop Chrome"],
         storageState: "e2e/.auth/user.json",
