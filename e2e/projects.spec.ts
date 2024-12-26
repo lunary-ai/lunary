@@ -22,9 +22,8 @@ test("create new project, rename it and delete it", async ({ page }) => {
   await page.getByRole("button", { name: "Project #12" }).click();
   await page.goto("/settings");
 
-  // await page.getByTestId("delete-project-button").click();
-  // await page.getByTestId("delete-project-popover-button").click();
+  await page.getByTestId("delete-project-button").click();
+  await page.getByTestId("delete-project-popover-button").click();
 
-  // If the project was deleted successfully, it redirects to the analytics page
-  // await page.waitForURL("**/dashboards");
+  await page.waitForURL("**/dashboards/**");
 });
