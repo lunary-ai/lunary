@@ -13,6 +13,7 @@ dotenv.config({ path: "./packages/backend/.env" });
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
+  workers: 1,
   testDir: "./e2e",
   /* Run tests in files in parallel */
   fullyParallel: false,
