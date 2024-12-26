@@ -1,7 +1,16 @@
- if: ${{ !contains(github.head_ref, 'ci:') && !contains(github.ref, 'ci/') }}
-     runs-on: ubuntu-latest
-     steps:
-       - name: Skip tests
-         run: |
-           echo "Tests temporarily disabled"
-           exit 0
+name: Run tests
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  workflow_dispatch:
+
+jobs:
+  run-tests:
+    if: ${{ !contains(github.head_ref, 'ci:') && !contains(github.ref, 'ci/') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip tests
+        run: |
+          echo "Tests temporarily disabled"
+          exit 0
