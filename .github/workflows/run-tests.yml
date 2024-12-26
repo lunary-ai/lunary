@@ -29,7 +29,9 @@ jobs:
           node-version: 21
           cache: "npm"
       - name: Setup application
-        run: npm ci && npx playwright install --with-deps chromium
+        run: npm ci
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
 
       - name: Start backend and frontend
         env:
