@@ -43,7 +43,7 @@ export default defineConfig({
   projects: [
     { name: "setup", testMatch: "auth.setup.ts" },
     {
-      // Projects tests need to be ran before all other tests to avoid project mismatches.
+      // Projects related tests need to be ran before all other tests to avoid project mismatches.
       name: "projects",
       testMatch: "projects.setup.ts",
       use: {
