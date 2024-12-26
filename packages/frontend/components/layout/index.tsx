@@ -78,7 +78,8 @@ export default function Layout({ children }: { children: ReactNode }) {
   const isDashboardPage = router.pathname.startsWith("/dashboards/");
   const isPromptPage = router.pathname.startsWith("/prompt");
   const isTracePage = router.pathname.startsWith("/traces");
-  const disablePagePadding = isPromptPage || isTracePage || isAuthPage;
+  const disablePagePadding =
+    isPromptPage || isTracePage || isAuthPage || isDashboardPage;
 
   useEffect(() => {
     if (user) {
@@ -110,10 +111,8 @@ export default function Layout({ children }: { children: ReactNode }) {
           }}
         >
           {!isAuthPage && !isPublicPage && <Sidebar />}
-
           <Box
             p={disablePagePadding ? 0 : 24}
-            pt={isDashboardPage ? 0 : 24}
             pos="relative"
             flex={1}
             style={{
