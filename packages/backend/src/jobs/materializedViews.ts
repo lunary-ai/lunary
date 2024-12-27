@@ -2,6 +2,7 @@ import sql from "../utils/db";
 import { sleep } from "../utils/misc";
 
 export async function startMaterializedViewRefreshJob() {
+  return;
   try {
     const views = ["run_parent_feedback_cache"];
 
