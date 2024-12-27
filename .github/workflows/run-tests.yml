@@ -52,8 +52,13 @@ jobs:
         run: npm run test
         env:
           BASE_URL: http://0.0.0.0:8080
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          APP_URL: http://0.0.0.0:8080
+          API_URL: http://0.0.0.0:3333
+          LUNARY_PUBLIC_KEY: 259d2d94-9446-478a-ae04-484de705b522
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          NEXT_PUBLIC_API_URL: http://0.0.0.0:3333
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
