@@ -23,6 +23,7 @@ test("create new template and test basic playground", async ({ page }) => {
 
   await expect(page.getByText("first-template")).toBeVisible();
 
+  await page.waitForSelector("[data-testid=run-playground]");
   await page.getByTestId("run-playground").click();
 
   await expect(page.getByText("Hello!")).toBeVisible();
@@ -65,5 +66,5 @@ test("create new text template and deploy", async ({ page }) => {
 
   await page.getByTestId("deploy-template").click();
 
-  await expect(page.getByText("Template deployed")).toBeVisible();
+  await expect(await page.getByText("Template deployed")).toBeVisible();
 });
