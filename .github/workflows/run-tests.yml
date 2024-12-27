@@ -45,7 +45,8 @@ jobs:
         run: |
           npm run migrate:db
           npm run start:backend &
-          npm run dev:frontend &
+          npm run build:frontend
+          npm run start:frontend &
           npx wait-on http://localhost:3333/v1/health http://0.0.0.0:8080/
 
       - name: Run tests
