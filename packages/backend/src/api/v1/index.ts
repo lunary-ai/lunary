@@ -22,6 +22,7 @@ import dashboards from "./dashboards";
 import charts from "./charts";
 import openapi from "./openapi";
 
+console.log("new");
 const v1 = new Router({
   prefix: "/v1",
 });

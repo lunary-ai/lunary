@@ -146,8 +146,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.PRODUCTION_PORT }}
           script: |
-            docker image prune -f
             cd /opt/lunary
-            docker compose pull
-            docker compose down
-            docker compose up -d
+            docker compose pull backend enrichers
+            docker compose up -d backend enrichers 
+            docker image prune -f
