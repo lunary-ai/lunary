@@ -58,6 +58,7 @@ function TableBody({ table, tableContainerRef, onRowClicked }: TableBodyProps) {
             {row.getVisibleCells().map((cell) => (
               <td
                 key={cell.id}
+                className={`${cell.column.id}-cell`}
                 style={{
                   width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
                 }}

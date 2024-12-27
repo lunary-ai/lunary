@@ -12,25 +12,23 @@
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
     "dev:frontend": "npm -w packages/frontend run dev",
     "dev:backend": "npm -w packages/backend run dev",
-    "test": "npx playwright test",
-    "test:ui": "npx playwright test --ui",
+    "test": "npm -w packages/e2e run test",
+    "test:ui": "npm -w packages/e2e run test -- --ui",
     "postinstall": "npx patch-package",
-    "clean": "rm -rf package-lock.json && rm -rf node_modules &&  rm -rf packages/frontend/node_modules && rm -rf packages/backend/node_modules && rm -rf packages/frontend/.next"
+    "clean": "rm -rf package-lock.json && rm -rf node_modules &&  rm -rf packages/frontend/node_modules && rm -rf packages/backend/node_modules && rm -rf packages/frontend/.next && rm -rf packages/e2e/node_modules"
   },
   "workspaces": [
     "packages/*"
   ],
   "dependencies": {
-    "concurrently": "^9.1.0",
+    "concurrently": "^9.1.1",
     "patch-package": "^8.0.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.49.1",
-    "@types/node": "^22.10.0",
-    "dotenv": "^16.4.5",
+    "@types/node": "^22.10.2",
+    "dotenv": "^16.4.7",
     "json-2-csv": "^5.5.7",
     "prettier": "^3.4.2",
-    "tsup": "^8.3.5",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   }

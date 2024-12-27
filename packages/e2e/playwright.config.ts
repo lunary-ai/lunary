@@ -7,14 +7,14 @@ import { defineConfig, devices } from "@playwright/test";
 import dotenv from "dotenv";
 
 // Read from default ".env" file.
-dotenv.config({ path: "./packages/backend/.env" });
+dotenv.config({ path: "../backend/.env" });
 
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
   workers: 2,
-  testDir: "./e2e",
+  testDir: "./",
   /* Run tests in files in parallel */
   fullyParallel: false,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -33,7 +33,7 @@ export default defineConfig({
     baseURL: process.env.CI ? process.env.BASE_URL : "http://127.0.0.1:8080",
     permissions: ["clipboard-read", "clipboard-write"],
 
-    video: "retain-on-failure",
+    video: "on",
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
@@ -48,7 +48,7 @@ export default defineConfig({
       testMatch: "projects.setup.ts",
       use: {
         ...devices["Desktop Chrome"],
-        storageState: "e2e/.auth/user.json",
+        storageState: ".auth/user.json",
       },
       dependencies: ["setup"],
     },
@@ -58,7 +58,7 @@ export default defineConfig({
       testMatch: /.*\.spec\.ts/,
       use: {
         ...devices["Desktop Chrome"],
-        storageState: "e2e/.auth/user.json",
+        storageState: ".auth/user.json",
       },
       teardown: "teardown",
     },

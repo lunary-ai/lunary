@@ -1,15 +1,68 @@
-import {
-  expect,
-  PlaywrightTestArgs,
-  PlaywrightTestOptions,
-  test,
-} from "@playwright/test";
-import { setOrgPro } from "./utils/db";
+import { expect, test } from "@playwright/test";
 import fs from "fs";
+import { setOrgPro } from "./utils/db";
 
 test.describe.configure({ mode: "serial" });
 
 let publicLogUrl: string;
+
+test("llm calls are visible", async ({ page }) => {
+  await page.goto("/logs?type=llm");
+  await page.waitForLoadState("networkidle");
+
+  const tableContent = await page.getByRole("table").textContent();
+  await expect(tableContent).toContain("xyzTESTxyz");
+});
+
+test("traces are visible", async ({ page }) => {
+  await page.goto("/logs?type=trace");
+  await page.waitForLoadState("networkidle");
+
+  const inputContent = await page
+    .locator("td.input-cell")
+    .first()
+    .textContent();
+  await expect(inputContent).toContain("ice cream");
+  const outputContent = await page
+    .locator("td.output-cell")
+    .first()
+    .textContent();
+  expect(typeof outputContent).toBe("string");
+  expect(outputContent?.length).toBeGreaterThan(0);
+});
+
+test("threads are visible", async ({ page }) => {
+  await page.goto("/logs?type=thread");
+  await page.waitForLoadState("networkidle");
+
+  const inputContent = await page
+    .locator("td.input-cell")
+    .first()
+    .textContent();
+  await expect(inputContent).toContain("Hello, how can I help you?");
+});
+
+test("specific trace page is visible", async ({ page }) => {
+  await page.goto("/logs?type=trace");
+  await page.waitForLoadState("networkidle");
+
+  const row = await page.locator("td").first();
+  await row.click();
+  await page.waitForLoadState("networkidle");
+  await page.waitForSelector("#trace-page");
+  await expect(page.locator("#trace-page")).toBeVisible();
+});
+
+test("thread side panel is visible", async ({ page }) => {
+  await page.goto("/logs?type=thread");
+  await page.waitForLoadState("networkidle");
+
+  const row = await page.locator("td").first();
+  await row.click();
+  await page.waitForLoadState("networkidle");
+  await page.waitForSelector("#chat-replay");
+  await expect(page.locator("#chat-replay")).toBeVisible();
+});
 
 test("make a log public", async ({ page, context }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
