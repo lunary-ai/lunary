@@ -247,7 +247,7 @@ export function ChatReplay({ run, mutateLogs, deleteRun }) {
   }
 
   return (
-    <Stack>
+    <Stack id="chat-replay">
       <Group justify="right">
         <Menu>
           <Menu.Target>

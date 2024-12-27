@@ -265,7 +265,7 @@ export default function Trace({}) {
   const focusedRun = relatedRuns?.find((run) => run.id === focused);
 
   return (
-    <Stack p="24px 24px 0 24px" h="100vh" gap="xl">
+    <Stack p="24px 24px 0 24px" h="100vh" gap="xl" id="trace-page">
       <Title order={1}>
         {capitalize(run?.type)} Trace {run.name ? `(${run.name})` : ""}
       </Title>

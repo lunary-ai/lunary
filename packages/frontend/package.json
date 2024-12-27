@@ -48,7 +48,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@types/node": "20.10.5",
+    "@types/node": "22.10.2",
     "@types/react": "18.2.45",
     "@types/react-dom": "^18.2.18",
     "@types/streamsaver": "^2.0.5",
