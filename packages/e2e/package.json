@@ -1,0 +1,13 @@
+{
+  "name": "@lunary/e2e",
+  "scripts": {
+    "test": "NODE_OPTIONS=--no-deprecation playwright test"
+  },
+  "dependencies": {
+    "@langchain/core": "^0.3.26",
+    "@langchain/openai": "^0.3.16",
+    "@playwright/test": "^1.49.1",
+    "lunary": "^0.8.4",
+    "backend": "*"
+  }
+}

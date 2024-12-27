@@ -1,11 +1,11 @@
-import { test, expect } from "@playwright/test";
+import { test } from "@playwright/test";
 
 import { deleteOrg, populateLogs } from "./utils/db";
 
-const authFile = "e2e/.auth/user.json";
+const authFile = ".auth/user.json";
 
 test.beforeAll(async () => {
-  // if teardown hasn't been call, we need to clean up the database before running the tests
+  // ensure the database is clean before we run the tests
   await deleteOrg();
 });
 
