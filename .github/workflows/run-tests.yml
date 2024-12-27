@@ -53,6 +53,7 @@ jobs:
         run: npm run test
         env:
           BASE_URL: http://0.0.0.0:8080
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
 
       - uses: actions/upload-artifact@v4
