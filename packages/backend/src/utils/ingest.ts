@@ -313,8 +313,6 @@ export async function ingestChatEvent(
     `;
   } else if (operation === "update") {
     update.endedAt = timestamp;
-    delete shared.id;
-    delete update.id;
 
     await sql`
       UPDATE run SET ${sql({ ...shared, ...update })} WHERE id = ${previousRun.id}
