@@ -29,7 +29,7 @@ jobs:
           cache: "npm"
       - name: Setup application
         run: npm ci
-      - name: Install Playwright Browsers
+      - name: Install Chromium for Playwright
         run: npx playwright install --with-deps chromium
 
       - name: Start backend and frontend
