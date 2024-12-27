@@ -66,5 +66,5 @@ test("create new text template and deploy", async ({ page }) => {
 
   await page.getByTestId("deploy-template").click();
 
-  await expect(page.getByText("Template deployed")).toBeVisible();
+  await expect(await page.getByText("Template deployed")).toBeVisible();
 });
