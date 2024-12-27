@@ -50,7 +50,7 @@ jobs:
           npx wait-on http://localhost:3333/v1/health http://0.0.0.0:8080/
 
       - name: Run tests
-        run: npx playwright test
+        run: npm run test
         env:
           BASE_URL: http://0.0.0.0:8080
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
