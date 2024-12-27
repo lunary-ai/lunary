@@ -135,6 +135,7 @@ jobs:
 
   deploy:
     needs: build-push
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to Production
