@@ -23,6 +23,7 @@ test("create new template and test basic playground", async ({ page }) => {
 
   await expect(page.getByText("first-template")).toBeVisible();
 
+  await page.waitForSelector("[data-testid=run-playground]");
   await page.getByTestId("run-playground").click();
 
   await expect(page.getByText("Hello!")).toBeVisible();
