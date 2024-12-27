@@ -38,7 +38,7 @@
     "nodemailer": "^6.9.15",
     "openai": "^4.28.4",
     "p-queue": "^8.0.1",
-    "postgres": "^3.4.4",
+    "postgres": "3.4.5",
     "prexit": "^2.3.0",
     "queue-promise": "^2.2.1",
     "re2": "^1.21.4",
