@@ -9,6 +9,8 @@ import { randomBytes } from "crypto";
 import { SignJWT } from "jose";
 import z from "zod";
 import { aggressiveRatelimit } from "@/src/utils/ratelimit";
+import { checkAccess } from "@/src/utils/authorization";
+import { hasAccess } from "shared";
 
 // Required for SAMLify to work
 samlify.setSchemaValidator(validator);
@@ -149,7 +151,8 @@ route.post("/download-idp-xml", aggressiveRatelimit, async (ctx: Context) => {
     }
   }
 
-  await sql`
+  if (hasAccess(user?.role, "settings", "create")) {
+    await sql`
     update 
      org 
     set 
@@ -158,6 +161,7 @@ route.post("/download-idp-xml", aggressiveRatelimit, async (ctx: Context) => {
     where 
       id = ${orgId}
     `;
+  }
 
   ctx.body = { success: true };
   ctx.status = 201;
