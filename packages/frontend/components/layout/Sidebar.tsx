@@ -353,15 +353,6 @@ export default function Sidebar() {
           resource: "prompts",
         },
         {
-          label: "Playground",
-          icon: IconFlask,
-          link: "/evaluations/new",
-          resource: "evaluations",
-          disabled: isSelfHosted
-            ? org.license && !org.license.evalEnabled
-            : false,
-        },
-        {
           label: "Datasets",
           icon: IconDatabase,
           link: "/datasets",
