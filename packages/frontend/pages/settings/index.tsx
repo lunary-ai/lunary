@@ -400,7 +400,7 @@ export default function Settings() {
           </SettingsCard>
         )}
 
-        {(frontendVersion || backendVersion) && (
+        {config.IS_SELF_HOSTED && (frontendVersion || backendVersion) && (
           <Group justify="flex-end">
             {frontendVersion && (
               <Text c="dimmed" size="sm">
