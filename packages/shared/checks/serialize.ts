@@ -34,7 +34,9 @@ function deserializeParamValue(
   switch (filterParam.type) {
     case "select":
       if (filterParam.multiple) {
-        return value.split(",").map(decodeURIComponent);
+        return value
+          .split(",")
+          .map((v) => decodeURIComponent(decodeURIComponent(v)));
       } else {
         return decodeURIComponent(value);
       }
