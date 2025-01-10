@@ -402,7 +402,10 @@ export default function RunInputOutput({
                     )}
 
                     {Object.entries(run.metadata || {})
-                      .filter(([key]) => key !== "enrichment")
+                      .filter(
+                        ([key]) =>
+                          key !== "enrichment" && key !== "parentRunId",
+                      )
                       .map(([key, value]) => {
                         if (!value || value.hasOwnProperty("toString")) {
                           return null;
