@@ -1,7 +1,8 @@
-import sql from "@/src/utils/db";
-import Router from "koa-router";
-import { Context } from "koa";
 import { checkAccess } from "@/src/utils/authorization";
+import sql from "@/src/utils/db";
+import { Context } from "koa";
+import Router from "koa-router";
+import { deserializeLogic } from "shared";
 import { z } from "zod";
 import { buildFiltersQuery } from "./analytics/utils";
 
@@ -112,6 +113,9 @@ users.get(
       checks,
     } = querySchema.parse(ctx.request.query);
 
+    const deserializedChecks = deserializeLogic(ctx.querystring);
+    const filtersQuery = buildFiltersQuery(deserializedChecks);
+
     let searchQuery = sql``;
     if (search) {
       searchQuery = sql`and (
@@ -128,8 +132,6 @@ users.get(
       and r.created_at at time zone ${timeZone} <= ${endDate}
     `;
     }
-
-    const filtersQuery = buildFiltersQuery(checks || "");
 
     const sortMapping = {
       createdAt: "eu.created_at",

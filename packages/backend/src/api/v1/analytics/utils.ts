@@ -1,17 +1,18 @@
 import { convertChecksToSQL } from "@/src/utils/checks";
 import sql from "@/src/utils/db";
-import Context from "@/src/utils/koa";
-import { deserializeLogic } from "shared";
+import { deserializeLogic, LogicNode } from "shared";
 import { z } from "zod";
 
-export function buildFiltersQuery(checks: string) {
-  const deserializedChecks = deserializeLogic(checks);
+export function buildFiltersQuery(deserializedChecks: LogicNode) {
   return deserializedChecks?.length && deserializedChecks.length > 1
     ? convertChecksToSQL(deserializedChecks)
     : sql`1 = 1`;
 }
 
-export function parseQuery(projectId: string, query: unknown) {
+export function parseQuery(projectId: string, queryString: string, query: any) {
+  const deserializedChecks = deserializeLogic(queryString);
+  const filtersQuery = buildFiltersQuery(deserializedChecks);
+
   return z
     .object({
       startDate: z.string().datetime(),
@@ -26,7 +27,6 @@ export function parseQuery(projectId: string, query: unknown) {
       checks: z.string().optional(),
     })
     .transform(({ startDate, endDate, timeZone, granularity, checks }) => {
-      const filtersQuery = buildFiltersQuery(checks || "");
       const granularityToIntervalMap = {
         hourly: "1 hour",
         daily: "1 day",

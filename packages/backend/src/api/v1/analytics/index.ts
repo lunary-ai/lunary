@@ -1,4 +1,3 @@
-import { checkAccess } from "@/src/utils/authorization";
 import sql from "@/src/utils/db";
 import Context from "@/src/utils/koa";
 import Router from "koa-router";
@@ -14,6 +13,7 @@ analytics.get("/tokens", async (ctx: Context) => {
   const { projectId } = ctx.state;
   const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
     projectId,
+    ctx.querystring,
     ctx.query,
   );
 
@@ -79,6 +79,7 @@ analytics.get("/costs", async (ctx: Context) => {
   const { projectId } = ctx.state;
   const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
     projectId,
+    ctx.querystring,
     ctx.query,
   );
 
@@ -144,6 +145,7 @@ analytics.get("/errors", async (ctx: Context) => {
   const { projectId } = ctx.state;
   const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
     projectId,
+    ctx.querystring,
     ctx.query,
   );
 
@@ -216,7 +218,7 @@ analytics.get("/users/new", async (ctx: Context) => {
     startDate,
     endDate,
     filteredRunsQuery,
-  } = parseQuery(projectId, ctx.query);
+  } = parseQuery(projectId, ctx.querystring, ctx.query);
 
   const distinctMap = {
     hourly: sql`distinct on (r.external_user_id, date_trunc('hour', r.created_at at time zone ${timeZone})::timestamp)`,
@@ -539,7 +541,7 @@ analytics.get("/users/active", async (ctx: Context) => {
     startDate,
     endDate,
     filteredRunsQuery,
-  } = parseQuery(projectId, ctx.query);
+  } = parseQuery(projectId, ctx.querystring, ctx.query);
 
   const distinctMap = {
     hourly: sql`distinct on (r.external_user_id, date_trunc('hour', r.created_at at time zone ${timeZone})::timestamp)`,
@@ -776,7 +778,7 @@ analytics.get("/users/average-cost", async (ctx: Context) => {
     localCreatedAt,
     startDate,
     endDate,
-  } = parseQuery(projectId, ctx.query);
+  } = parseQuery(projectId, ctx.querystring, ctx.query);
 
   const [{ stat }] = await sql`
       with total_costs as (
@@ -888,6 +890,7 @@ analytics.get("/run-types", async (ctx: Context) => {
   const { projectId } = ctx.state;
   const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
     projectId,
+    ctx.querystring,
     ctx.query,
   );
 
@@ -959,7 +962,7 @@ analytics.get("/latency", async (ctx: Context) => {
     startDate,
     endDate,
     timeZone,
-  } = parseQuery(projectId, ctx.query);
+  } = parseQuery(projectId, ctx.querystring, ctx.query);
 
   const [{ stat }] = await sql`
       select
@@ -1032,6 +1035,7 @@ analytics.get("/feedback-ratio", async (ctx: Context) => {
   const { projectId } = ctx.state;
   const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
     projectId,
+    ctx.querystring,
     ctx.query,
   );
 
@@ -1130,9 +1134,12 @@ analytics.get("/models/top", async (ctx: Context) => {
     checks: z.string().optional(),
   });
   const { projectId } = ctx.state;
-  const { startDate, endDate, timeZone, userId, name, checks } =
-    querySchema.parse(ctx.request.query);
-  const filtersQuery = buildFiltersQuery(checks || "");
+  const { startDate, endDate, timeZone, userId, name } = querySchema.parse(
+    ctx.request.query,
+  );
+
+  const deserializedChecks = deserializeLogic(ctx.querystring);
+  const filtersQuery = buildFiltersQuery(deserializedChecks);
 
   let dateFilter = sql``;
   if (startDate && endDate && timeZone) {
@@ -1191,7 +1198,8 @@ analytics.get("/templates/top", async (ctx: Context) => {
   const { startDate, endDate, timeZone, checks } = querySchema.parse(
     ctx.request.query,
   );
-  const filtersQuery = buildFiltersQuery(checks || "");
+  const deserializedChecks = deserializeLogic(ctx.querystring);
+  const filtersQuery = buildFiltersQuery(deserializedChecks);
 
   const topTemplates = await sql`
       select
@@ -1223,22 +1231,13 @@ analytics.get("/templates/top", async (ctx: Context) => {
 
 analytics.get("/languages/top", async (ctx: Context) => {
   const { projectId } = ctx.state;
+  ctx.query.granularity = "daily";
   const { datesQuery, startDate, endDate, timeZone, filteredRunsQuery } =
-    parseQuery(projectId, ctx.query);
+    parseQuery(projectId, ctx.querystring, ctx.query);
 
   const data = await sql`
       with dates as (
-        select
-          *
-        from (
-          select generate_series(
-            ${startDate} at time zone ${timeZone},
-            ${endDate} at time zone ${timeZone},
-            '1 day'::interval
-          )::timestamp as date) t
-        where 
-          date <=current_timestamp at time zone ${timeZone}
-        
+        ${datesQuery}
       ),
       filtered_runs as (
         ${filteredRunsQuery}
@@ -1274,6 +1273,7 @@ analytics.get("/custom-events", async (ctx: Context) => {
   const { projectId } = ctx.state;
   const { startDate, endDate, timeZone, filteredRunsQuery } = parseQuery(
     projectId,
+    ctx.querystring,
     ctx.query,
   );
 
