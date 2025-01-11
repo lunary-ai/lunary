@@ -1,11 +1,11 @@
-import { LogicNode } from "../checks";
-
-export function getDefaultDateRange() {
+export function getDefaultDateRange(
+  nbDaysFromToday: number = 30,
+): [Date, Date] {
   const endOfToday = new Date();
   endOfToday.setHours(23, 59, 59, 999);
 
   const oneWeekAgoDate = new Date(endOfToday);
-  oneWeekAgoDate.setDate(oneWeekAgoDate.getDate() - 30);
+  oneWeekAgoDate.setDate(oneWeekAgoDate.getDate() - nbDaysFromToday);
   oneWeekAgoDate.setHours(0, 0, 0, 0);
   const defaultRange: [Date, Date] = [oneWeekAgoDate, endOfToday];
   return defaultRange;
