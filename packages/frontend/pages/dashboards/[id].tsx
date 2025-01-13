@@ -288,6 +288,7 @@ export default function Dashboard() {
                           return;
                         }
                         removeDashboard();
+                        router.push(`/dashboards`);
                       }}
                     >
                       Delete
