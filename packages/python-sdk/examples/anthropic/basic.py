@@ -18,5 +18,3 @@ message = client.messages.create(
     ],
     model="claude-3-opus-20240229",
 )
-
-print(message.ro
