@@ -20,6 +20,7 @@ import {
   IconAnalyze,
   IconBinaryTree2,
   IconBrandOpenai,
+  IconChecklist,
   IconCreditCard,
   IconDatabase,
   IconHelpOctagon,
@@ -347,6 +348,15 @@ export default function Sidebar() {
           icon: IconDatabase,
           link: "/datasets",
           resource: "datasets",
+          disabled: isSelfHosted
+            ? org.license && !org.license.evalEnabled
+            : false,
+        },
+        {
+          label: "Checklists",
+          icon: IconChecklist,
+          link: "/checklists",
+          resource: "checklists",
           disabled: isSelfHosted
             ? org.license && !org.license.evalEnabled
             : false,
