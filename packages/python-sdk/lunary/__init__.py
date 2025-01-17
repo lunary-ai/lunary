@@ -1075,8 +1075,8 @@ try:
                 )  # Sometimes, for example with ChatAnthropic, `invocation_params` is empty
 
                 name = (
-                    metadata.get("ls_model_name") # for Azure OpenAI
-                    or metadata.get("model_name") # custom model name 
+                    metadata.get("model_name") # custom model name 
+                    or metadata.get("ls_model_name") # for Azure OpenAI
                     or params.get("model")
                     or params.get("model_name")
                     or params.get("model_id")
@@ -1135,8 +1135,8 @@ try:
                 )  # Sometimes, for example with ChatAnthropic, `invocation_params` is empty
 
                 name = (
-                    metadata.get("ls_model_name") # for Azure OpenAI
-                    or metadata.get("model_name") # custom model name
+                    metadata.get("model_name") # custom model name
+                    or metadata.get("ls_model_name") # for Azure OpenAI
                     or params.get("model")
                     or params.get("model_name")
                     or params.get("model_id")
