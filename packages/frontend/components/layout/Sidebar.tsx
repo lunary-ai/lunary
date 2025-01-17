@@ -20,10 +20,8 @@ import {
   IconAnalyze,
   IconBinaryTree2,
   IconBrandOpenai,
-  IconChevronDown,
   IconCreditCard,
   IconDatabase,
-  IconFlask,
   IconHelpOctagon,
   IconHelpSmall,
   IconListSearch,
@@ -55,20 +53,12 @@ import { IconPlus } from "@tabler/icons-react";
 import { useAuth } from "@/utils/auth";
 import config from "@/utils/config";
 import { useProject, useProjects } from "@/utils/dataHooks";
-import { useDashboards } from "@/utils/dataHooks/dashboards";
 import { useViews } from "@/utils/dataHooks/views";
 import { useDisclosure, useFocusTrap } from "@mantine/hooks";
 import { useEffect, useState } from "react";
-import {
-  DEFAULT_CHARTS,
-  ResourceName,
-  getDefaultDateRange,
-  hasAccess,
-  hasReadAccess,
-  serializeLogic,
-} from "shared";
-import { getIconComponent } from "../blocks/IconPicker";
+import { ResourceName, hasAccess, hasReadAccess, serializeLogic } from "shared";
 import DashboardsSidebarButton from "../analytics/DashboardsSidebarButton";
+import { getIconComponent } from "../blocks/IconPicker";
 
 interface NavbarLinkProps {
   icon: any;
@@ -310,7 +300,7 @@ export default function Sidebar() {
           label: "Dashboards",
           icon: IconTimeline,
           link: "/dashboards",
-          resource: "dashboards",
+          resource: "analytics",
         },
         {
           label: "LLM",
