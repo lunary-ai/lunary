@@ -1076,6 +1076,7 @@ try:
 
                 name = (
                     metadata.get("ls_model_name") # for Azure OpenAI
+                    or metadata.get("model_name") # custom model name 
                     or params.get("model")
                     or params.get("model_name")
                     or params.get("model_id")
@@ -1135,6 +1136,7 @@ try:
 
                 name = (
                     metadata.get("ls_model_name") # for Azure OpenAI
+                    or metadata.get("model_name") # custom model name
                     or params.get("model")
                     or params.get("model_name")
                     or params.get("model_id")
