@@ -1278,7 +1278,7 @@ analytics.get("/custom-events", async (ctx: Context) => {
   );
 
   const checks = deserializeLogic(
-    ctx.query?.checks as string | undefined | '["AND"]',
+    (ctx.query?.checks as string | undefined) || '["AND"]',
   );
 
   let eventFilter = sql`(r.type = 'custom-event')`;
