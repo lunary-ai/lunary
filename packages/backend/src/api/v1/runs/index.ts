@@ -1254,4 +1254,79 @@ runs.get("/exports/:token", async (ctx) => {
   await sql`update account set export_single_use_token = null where id = ${ctx.state.userId}`;
 });
 
+function buildBaseRunsQuery(ctx: Context) {
+  const { projectId } = ctx.state;
+
+  const queryString = ctx.querystring;
+  const deserializedChecks = deserializeLogic(queryString);
+
+  const filtersQuery =
+    deserializedChecks?.length && deserializedChecks.length > 1
+      ? convertChecksToSQL(deserializedChecks)
+      : sql`(((r.type in ('agent','chain') and (parent_run_id is null OR EXISTS (SELECT 1 FROM run AS parent_run WHERE parent_run.id = r.parent_run_id AND parent_run.type = 'chat')))))`;
+
+  const { parentRunId, sortField, sortDirection } = ctx.query as Query;
+
+  const sortMapping: { [index: string]: string } = {
+    createdAt: "r.created_at",
+    duration: "r.duration",
+    tokens: "(r.prompt_tokens + r.completion_tokens)",
+    cost: "r.cost",
+  };
+  let orderByExpr = "r.created_at desc nulls last";
+  if (sortField && sortMapping[sortField]) {
+    const direction = sortDirection === "desc" ? "desc" : "asc";
+    orderByExpr = `${sortMapping[sortField]} ${direction} nulls last`;
+  }
+
+  const coreQuery = sql`
+    from 
+      public.run r
+      left join external_user eu on r.external_user_id = eu.id
+      left join run_parent_feedback_cache rpfc on r.id = rpfc.id
+      left join template_version tv ON r.template_version_id = tv.id
+      left join template t on tv.template_id = t.id
+      left join evaluation_result_v2 er ON r.id = er.run_id
+      left join evaluator e on er.evaluator_id = e.id
+    where r.project_id = ${projectId}
+      and (${filtersQuery})
+    order by ${sql.unsafe(orderByExpr)}
+  `;
+
+  return { coreQuery, orderByExpr };
+}
+
+runs.get("/:id/neighbors", async (ctx: Context) => {
+  const { id } = ctx.params;
+  const { coreQuery, orderByExpr } = buildBaseRunsQuery(ctx);
+
+  const [row] = await sql`
+    with ordered_runs as (
+      select
+        r.id,
+        row_number() over (order by ${sql.unsafe(orderByExpr)}) as rn
+      ${coreQuery} 
+    ),
+    neighbors AS (
+      select
+        id,
+        lag(id)  over (order by rn) AS next_id,
+        lead(id) OVER (order by rn) AS previous_id 
+      FROM ordered_runs
+    )
+    select 
+      previous_id, 
+      next_id 
+    from 
+      neighbors
+    where 
+      id = ${id}
+  `;
+
+  ctx.body = {
+    previousId: row?.previousId || null,
+    nextId: row?.nextId || null,
+  };
+});
+
 export default runs;
