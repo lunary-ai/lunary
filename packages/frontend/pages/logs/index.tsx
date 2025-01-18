@@ -51,7 +51,7 @@ import { ChatReplay } from "@/components/blocks/RunChat";
 import RunInputOutput from "@/components/blocks/RunInputOutput";
 import SearchBar from "@/components/blocks/SearchBar";
 import CheckPicker from "@/components/checks/Picker";
-import Empty, { EmptyOnboarding } from "@/components/layout/Empty";
+import { EmptyOnboarding } from "@/components/layout/Empty";
 import { openUpgrade } from "@/components/layout/UpgradeModal";
 
 import analytics from "@/utils/analytics";
@@ -78,7 +78,7 @@ import { useRouter } from "next/router";
 import IconPicker from "@/components/blocks/IconPicker";
 import { useEnrichers } from "@/utils/dataHooks/evaluators";
 import { useSortParams } from "@/utils/hooks";
-import { deserializeLogic, hasAccess, serializeLogic } from "shared";
+import { deserializeLogic, serializeLogic } from "shared";
 
 export const defaultColumns = {
   llm: [
@@ -604,7 +604,10 @@ export default function Logs() {
         onRowClicked={(row) => {
           if (["agent", "chain"].includes(row.type)) {
             analytics.trackOnce("OpenTrace");
-            router.push(`/traces/${row.id}`);
+            router.push({
+              pathname: `/traces/${row.id}`,
+              query: { checks: serializedChecks, sortParams },
+            });
           } else {
             analytics.trackOnce("OpenRun");
             setSelectedRunId(row.id);
