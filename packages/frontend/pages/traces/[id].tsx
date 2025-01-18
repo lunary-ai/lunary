@@ -10,14 +10,18 @@ import {
   Box,
   Card,
   Group,
+  Kbd,
   Loader,
   Menu,
   Stack,
   Text,
   ThemeIcon,
   Title,
+  Tooltip,
 } from "@mantine/core";
 import {
+  IconChevronDown,
+  IconChevronUp,
   IconCloudDownload,
   IconCode,
   IconDotsVertical,
@@ -35,6 +39,7 @@ import { getColorForRunType } from "../../utils/colors";
 
 import RunsChat from "@/components/blocks/RunChat";
 import errorHandler from "@/utils/errors";
+import { useHotkeys } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { hasAccess } from "shared";
 
@@ -212,12 +217,23 @@ function RenderRun({ run, relatedRuns }) {
 
 export default function Trace({}) {
   const router = useRouter();
-  const { id } = router.query;
+  const { id, checks, sortParams } = router.query;
   const { user } = useUser();
 
   const [focused, setFocused] = useState(id);
 
   const { run, deleteRun, runDeleted } = useRun(id as string);
+
+  const { data: neighbors } = useProjectSWR(
+    `/runs/${id}/neighbors?${checks}${sortParams}`,
+  );
+
+  useHotkeys([
+    ["ArrowUp", handleUpClick],
+    ["k", handleUpClick],
+    ["ArrowDown", handleDownClick],
+    ["j", handleDownClick],
+  ]);
 
   function openModal() {
     modals.openConfirmModal({
@@ -264,6 +280,24 @@ export default function Trace({}) {
 
   const focusedRun = relatedRuns?.find((run) => run.id === focused);
 
+  function handleDownClick() {
+    if (neighbors?.previousId) {
+      router.push({
+        pathname: `/traces/${neighbors.previousId}`,
+        query: { checks, sortParams },
+      });
+    }
+  }
+
+  function handleUpClick() {
+    if (neighbors?.nextId) {
+      router.push({
+        pathname: `/traces/${neighbors.nextId}`,
+        query: { checks, sortParams },
+      });
+    }
+  }
+
   return (
     <Stack p="24px 24px 0 24px" h="100vh" gap="xl" id="trace-page">
       <Title order={1}>
@@ -287,28 +321,61 @@ export default function Trace({}) {
             <DurationBadge createdAt={run.createdAt} endedAt={run.endedAt} />
           )}
         </Group>
-        {hasAccess(user?.role, "logs", "delete") && (
-          <Menu>
-            <Menu.Target>
-              <ActionIcon variant="default">
-                <IconDotsVertical size={16} />
-              </ActionIcon>
-            </Menu.Target>
-            <Menu.Dropdown>
-              <Menu.Item
-                leftSection={
-                  <IconTrash
-                    size={16}
-                    color="var(--mantine-color-red-filled)"
-                  />
+        <Group>
+          <Group gap="xs">
+            {neighbors?.nextId && (
+              <Tooltip
+                py="8px"
+                label={
+                  <>
+                    Navigate Up<Kbd ml="6px">K</Kbd>
+                  </>
                 }
-                onClick={openModal}
               >
-                <Text c="red">Delete Trace</Text>
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
-        )}
+                <ActionIcon variant="default" onClick={handleUpClick}>
+                  <IconChevronUp />
+                </ActionIcon>
+              </Tooltip>
+            )}
+            {neighbors?.previousId && (
+              <Tooltip
+                py="8px"
+                label={
+                  <>
+                    Navigate Down<Kbd ml="6px">J</Kbd>
+                  </>
+                }
+              >
+                <ActionIcon variant="default" onClick={handleDownClick}>
+                  <IconChevronDown />
+                </ActionIcon>
+              </Tooltip>
+            )}
+          </Group>
+
+          {hasAccess(user?.role, "logs", "delete") && (
+            <Menu>
+              <Menu.Target>
+                <ActionIcon variant="default">
+                  <IconDotsVertical size={16} />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item
+                  leftSection={
+                    <IconTrash
+                      size={16}
+                      color="var(--mantine-color-red-filled)"
+                    />
+                  }
+                  onClick={openModal}
+                >
+                  <Text c="red">Delete Trace</Text>
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          )}
+        </Group>
       </Group>
       <Group style={{ flex: 1, minHeight: 0 }}>
         <Box style={{ flex: "0 0 600px", overflowY: "auto", height: "100%" }}>
@@ -335,7 +402,9 @@ export default function Trace({}) {
                 overflow: "auto",
               }}
             >
-              <RenderRun run={focusedRun} relatedRuns={relatedRuns} />
+              {focusedRun && (
+                <RenderRun run={focusedRun} relatedRuns={relatedRuns} />
+              )}
             </Card>
           </Box>
         </Box>
