@@ -139,8 +139,38 @@ export const MODELS = [
     provider: "openrouter",
   },
   {
-    id: "meta-llama/llama-2-70b-chat",
-    name: "llama-2-70b-chat",
+    id: "meta-llama/llama-3-70b-instruct",
+    name: "llama-3-70b-instruct",
+    provider: "openrouter",
+  },
+  {
+    id: "meta-llama/llama-3-8b-instruct",
+    name: "llama-3-8b-instruct",
+    provider: "openrouter",
+  },
+  {
+    id: "meta-llama/llama-3.1-70b-instruct",
+    name: "llama-3.1-70b-instruct",
+    provider: "openrouter",
+  },
+  {
+    id: "meta-llama/llama-3.1-8b-instruct",
+    name: "llama-3.1-8b-instruct",
+    provider: "openrouter",
+  },
+  {
+    id: "meta-llama/llama-3.2-1b-instruct",
+    name: "llama-3.2-1b-instruct",
+    provider: "openrouter",
+  },
+  {
+    id: "meta-llama/llama-3.2-3b-instruct",
+    name: "llama-3.2-3b-instruct",
+    provider: "openrouter",
+  },
+  {
+    id: "meta-llama/llama-3.3-70b-instruct",
+    name: "llama-3.3-70b-instruct",
     provider: "openrouter",
   },
 ];
