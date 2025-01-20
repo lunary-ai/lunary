@@ -88,7 +88,22 @@ export const MODELS = [
   { id: "gpt-3.5-turbo-16k", name: "gpt-3.5-turbo-16k", provider: "openai" },
   {
     id: "google/gemini-pro",
-    name: "gemini-pro",
+    name: "gemini-pro-1.0",
+    provider: "openrouter",
+  },
+  {
+    id: "google/gemini-pro-1.5",
+    name: "gemini-pro-1.5",
+    provider: "openrouter",
+  },
+  {
+    id: "google/gemini-flash-1.5",
+    name: "gemini-flash-1.5",
+    provider: "openrouter",
+  },
+  {
+    id: "google/gemini-flash-1.5-8b",
+    name: "gemini-flash-1.5-8b",
     provider: "openrouter",
   },
   { id: "claude-2", name: "claude-2", provider: "anthropic" },
@@ -171,6 +186,16 @@ export const MODELS = [
   {
     id: "meta-llama/llama-3.3-70b-instruct",
     name: "llama-3.3-70b-instruct",
+    provider: "openrouter",
+  },
+  {
+    id: "x-ai/grok-2",
+    name: "grok-2",
+    provider: "openrouter",
+  },
+  {
+    id: "x-ai/grok-2-1212",
+    name: "grok-2-1212",
     provider: "openrouter",
   },
 ];
