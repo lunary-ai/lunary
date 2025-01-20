@@ -154,8 +154,8 @@ export const MODELS = [
     provider: "openrouter",
   },
   {
-    id: "meta-llama/llama-3-70b-instruct",
-    name: "llama-3-70b-instruct",
+    id: "meta-llama/llama-2-70b-chat",
+    name: "llama-2-70b-chat",
     provider: "openrouter",
   },
   {
