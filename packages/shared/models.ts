@@ -198,4 +198,9 @@ export const MODELS = [
     name: "grok-2-1212",
     provider: "openrouter",
   },
+  {
+    id: "perplexity/llama-3.1-sonar-large-128k-online",
+    name: "perplexity-llama-3.1-sonar-large-128k-online",
+    provider: "openrouter",
+  },
 ];

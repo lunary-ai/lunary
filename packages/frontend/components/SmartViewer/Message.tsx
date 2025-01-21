@@ -224,10 +224,10 @@ function TextMessage({
 }) {
   const text = data.content || data.text;
 
-  return (
-    <Code className={classes.textMessage}>
-      <ProtectedText>
-        {editable ? (
+  if (editable) {
+    return (
+      <Code className={classes.textMessage}>
+        <ProtectedText>
           <Textarea
             value={data.content || data.text}
             placeholder="Content"
@@ -235,7 +235,26 @@ function TextMessage({
             onChange={(e) => onChange({ ...data, content: e.target.value })}
             {...ghostTextAreaStyles}
           />
-        ) : (
+        </ProtectedText>
+      </Code>
+    );
+  } else if (data.citations) {
+    const textWithLinks = text.replace(/\[(\d+)\]/g, (match, numberStr) => {
+      const idx = parseInt(numberStr, 10) - 1;
+      if (data.citations[idx]) {
+        return `<a href="${data.citations[idx]}" target="_blank" class="${classes.citationLink}">[${numberStr}]</a>`;
+      }
+      return match;
+    });
+    return (
+      <Code className={classes.textMessage}>
+        <Text size="sm" dangerouslySetInnerHTML={{ __html: textWithLinks }} />
+      </Code>
+    );
+  } else {
+    return (
+      <Code className={classes.textMessage}>
+        <ProtectedText>
           <HighlightPii
             text={
               compact
@@ -244,10 +263,10 @@ function TextMessage({
             }
             piiDetection={piiDetection}
           />
-        )}
-      </ProtectedText>
-    </Code>
-  );
+        </ProtectedText>
+      </Code>
+    );
+  }
 }
 
 function ResponsiveImage({ src }) {
