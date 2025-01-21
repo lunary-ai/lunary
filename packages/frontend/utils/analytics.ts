@@ -169,7 +169,9 @@ function track(event: string, data?: any) {
   try {
     posthog?.capture(event, data);
 
-    w?.crisp?.push(["set", "session:event", [[[event, data]]]]);
+    if (typeof w?.crisp?.push === "function") {
+      w?.crisp?.push(["set", "session:event", [[[event, data]]]]);
+    }
   } catch (e) {
     console.error(e);
   }

@@ -343,7 +343,7 @@ const IntegrationStepper = ({ integration }: { integration: string }) => {
                 </Text>
                 <Button
                   onClick={() => {
-                    $crisp.push(["do", "chat:open"]);
+                    $crisp?.push(["do", "chat:open"]);
                   }}
                   size="compact-xs"
                   variant="outline"
@@ -696,7 +696,7 @@ export default function Empty({
                     color="blue"
                     variant="light"
                     onClick={() => {
-                      $crisp.push(["do", "chat:open"]);
+                      $crisp?.push(["do", "chat:open"]);
                     }}
                   >
                     Chat with us
