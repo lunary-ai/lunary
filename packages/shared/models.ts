@@ -203,4 +203,14 @@ export const MODELS = [
     name: "perplexity-llama-3.1-sonar-large-128k-online",
     provider: "openrouter",
   },
+  {
+    id: "deepseek/deepseek-r1",
+    name: "deepseek-r1",
+    provider: "openrouter",
+  },
+  {
+    id: "microsoft/phi-4",
+    name: "phi-4",
+    provider: "openrouter",
+  },
 ];
