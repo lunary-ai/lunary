@@ -374,7 +374,11 @@ function Playground() {
               citations = parsedLine.citations;
             }
 
-            setOutput({ ...parsedLine.choices[0]?.message, citations });
+            let output = parsedLine.choices[0]?.message;
+            if (citations) {
+              output.citations = citations;
+            }
+            setOutput(output);
             setOutputTokens(parsedLine.usage?.completion_tokens || 0);
             setError(null);
           } catch (error) {
@@ -382,8 +386,6 @@ function Playground() {
           }
         },
       );
-
-      // setOutput({ ...output, citations });
 
       // scroll template-input-area to the end
       const element = document.getElementById("template-input-area");
