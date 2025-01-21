@@ -47,7 +47,7 @@ function TeamFull({ orgName }) {
               component="button"
               type="button"
               onClick={() => {
-                $crisp.push(["do", "chat:open"]);
+                $crisp?.push(["do", "chat:open"]);
               }}
             >
               Contact support →

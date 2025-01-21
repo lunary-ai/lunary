@@ -182,7 +182,7 @@ export default function ChecksModal({
           <Anchor
             href="#"
             onClick={() => {
-              $crisp.push(["do", "chat:open"]);
+              $crisp?.push(["do", "chat:open"]);
             }}
             variant="transparent"
           >

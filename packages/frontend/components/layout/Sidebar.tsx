@@ -581,7 +581,7 @@ export default function Sidebar() {
                     <Menu.Item
                       leftSection={<IconMessage2 size={14} />}
                       onClick={() => {
-                        $crisp.push(["do", "chat:open"]);
+                        $crisp?.push(["do", "chat:open"]);
                       }}
                     >
                       Feedback
