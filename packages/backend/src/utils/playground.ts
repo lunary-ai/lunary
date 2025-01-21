@@ -109,6 +109,7 @@ export async function handleStream(
 
       res = {
         choices,
+        citations: part.citations, // perplexity models return an array of citations links
         usage: {
           completion_tokens: tokens,
         },
@@ -421,7 +422,7 @@ export async function runAImodel(
   let res = await openai.chat.completions.create({
     model,
     messages,
-    stream: stream,
+    stream,
     temperature: extra?.temperature,
     max_tokens: extra?.max_tokens,
     top_p: extra?.top_p,

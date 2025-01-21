@@ -199,7 +199,6 @@ function Playground() {
           setTemplate({ mode: "openai" });
 
           setOutput(run.output);
-
           setOutputTokens(run.tokens?.completion);
         }
 
@@ -358,6 +357,8 @@ function Playground() {
     setOutputTokens(0);
     setStreaming(true);
 
+    let citations = null;
+
     try {
       await fetcher.getStream(
         `/orgs/${org?.id}/playground`,
@@ -369,8 +370,11 @@ function Playground() {
         (chunk) => {
           try {
             const parsedLine = JSON.parse(chunk);
+            if (parsedLine.citations && !citations) {
+              citations = parsedLine.citations;
+            }
 
-            setOutput(parsedLine.choices[0]?.message);
+            setOutput({ ...parsedLine.choices[0]?.message, citations });
             setOutputTokens(parsedLine.usage?.completion_tokens || 0);
             setError(null);
           } catch (error) {
@@ -378,6 +382,8 @@ function Playground() {
           }
         },
       );
+
+      // setOutput({ ...output, citations });
 
       // scroll template-input-area to the end
       const element = document.getElementById("template-input-area");
