@@ -213,4 +213,24 @@ export const MODELS = [
     name: "phi-4",
     provider: "openrouter",
   },
+  {
+    id: "ibm/granite-20b-code-instruct",
+    name: "granite-20b-code-instruct",
+    provider: "ibm-watsonx-ai",
+  },
+  {
+    id: "ibm/granite-3-2b-instruct",
+    name: "granite-3-2b-instruct",
+    provider: "ibm-watsonx-ai",
+  },
+  {
+    id: "ibm/granite-3-8b-instruct",
+    name: "granite-3-8b-instruct",
+    provider: "ibm-watsonx-ai",
+  },
+  {
+    id: "ibm/granite-34b-code-instruct",
+    name: "granite-34b-code-instruct",
+    provider: "ibm-watsonx-ai",
+  },
 ];
