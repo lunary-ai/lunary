@@ -18,11 +18,13 @@ import { initSentry, requestHandler, tracingMiddleWare } from "./utils/sentry";
 import licenseMiddleware from "./utils/license";
 import config from "./utils/config";
 import { startMaterializedViewRefreshJob } from "./jobs/materializedViews";
+import { createIndexes } from "./create-indexes";
 
 checkDbConnection();
 setupCronJobs();
 
 if (process.env.NODE_ENV === "production") {
+  createIndexes();
   startMaterializedViewRefreshJob();
 }
 initSentry();
