@@ -24,8 +24,8 @@ checkDbConnection();
 setupCronJobs();
 
 if (process.env.NODE_ENV === "production") {
-  startMaterializedViewRefreshJob();
   createIndexes();
+  startMaterializedViewRefreshJob();
 }
 initSentry();
 
