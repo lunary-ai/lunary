@@ -6,6 +6,7 @@ import sql from "./db";
 import { clearUndefined } from "./ingest";
 import { getOpenAIParams } from "./openai";
 import stripe from "./stripe";
+import watsonxAi from "./ibm";
 
 function convertInputToOpenAIMessages(input: any[]) {
   return input.map(
@@ -385,6 +386,24 @@ export async function runAImodel(
     });
 
     return getOpenAIMessage(res);
+  }
+
+  if (modelObj?.provider === "ibm-watsonx-ai") {
+    if (!watsonxAi) {
+      throw Error("Environment variables for WatsonX AI not found");
+    }
+    const { result } = await watsonxAi.textChat({
+      modelId: model,
+      projectId: process.env.WATSONX_AI_PROJECT_ID,
+      messages,
+      temperature: extra?.temperature,
+      maxTokens: extra?.max_tokens,
+      topP: extra?.top_p,
+      presencePenalty: extra?.presence_penalty,
+      frequencyPenalty: extra?.frequency_penalty,
+    });
+
+    return result;
   }
 
   let clientParams = {};
