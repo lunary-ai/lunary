@@ -17,7 +17,7 @@ import ratelimit from "./utils/ratelimit";
 import { initSentry, requestHandler, tracingMiddleWare } from "./utils/sentry";
 import licenseMiddleware from "./utils/license";
 import config from "./utils/config";
-import { startMaterializedViewRefreshJob } from "./jobs/materializedViews";
+import { startMaterializedViewRefreshJob } from "./jobs/materialized-views";
 import { createIndexes } from "./create-indexes";
 
 checkDbConnection();
