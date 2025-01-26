@@ -1,5 +1,6 @@
 import sql from "./utils/db";
 
+// TODO: rename to "async migration" or something like this
 export async function createIndexes() {
   await sql`select pg_advisory_lock(123456789)`;
 
@@ -11,7 +12,7 @@ export async function createIndexes() {
         operation,
         statement
       from 
-        _db_migration_index
+        _db_migration_async
        where 
         status in ('pending', 'failed')
        order 
@@ -24,7 +25,7 @@ export async function createIndexes() {
       try {
         await sql`
           update 
-            _db_migration_index
+            _db_migration_async
           set 
             status = 'in-progress'
            where 
@@ -33,6 +34,7 @@ export async function createIndexes() {
 
         await sql.unsafe(statement);
 
+        // TODO: rename to "create_index" and "drop_index"
         if (operation === "create") {
           const [validCheck] = await sql`
           select 
@@ -49,7 +51,7 @@ export async function createIndexes() {
           if (validCheck) {
             await sql`
             update 
-              _db_migration_index
+              _db_migration_async
             set 
               status = 'done'
             where 
@@ -60,7 +62,7 @@ export async function createIndexes() {
             await sql.unsafe(`drop index if exists ${name}`);
             await sql`
             update 
-              _db_migration_index
+              _db_migration_async
             set 
               status = 'failed'
             where 
@@ -83,7 +85,7 @@ export async function createIndexes() {
           if (!stillExists) {
             await sql`
               update 
-                _db_migration_index
+                _db_migration_async
               set 
                 status = 'done'
               where 
@@ -93,7 +95,7 @@ export async function createIndexes() {
           } else {
             await sql`
               update 
-                _db_migration_index
+                _db_migration_async
               set 
                 status = 'failed'
               where 
@@ -101,13 +103,25 @@ export async function createIndexes() {
         `;
             console.warn(`Index drop "${name}" failed; index still exists.`);
           }
+        } else if (operation === "create-materialized-view") {
+          await sql`
+            update 
+              _db_migration_async
+            set 
+              status = 'done'
+            where 
+              id = ${id}
+          `;
+          console.log(
+            `Materialized view migration "${name}" completed successfully.`,
+          );
         }
       } catch (err) {
         console.error(`Index migration "${name}" errored:`, err);
-        await sql.unsafe(`drop index if exists ${name}`);
+        await sql.unsafe(`drop index if exists ${name}`); // TODO: only drop if it was an index, not a materialized views
         await sql`
           update 
-            _db_migration_index
+            _db_migration_async
           set 
             status = 'failed'
           where 
