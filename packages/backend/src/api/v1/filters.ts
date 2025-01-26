@@ -45,12 +45,11 @@ filters.get("/metadata", async (ctx: Context) => {
 
   const rows = await sql`
     select distinct
-      jsonb_object_keys(metadata) as key
+      key
     from
-      run
+      metadata_cache
     where
-      project_id = ${projectId} 
-      and metadata is not null
+      project_id = ${projectId}
     order by
       key;
   `;
