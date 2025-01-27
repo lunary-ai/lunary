@@ -233,4 +233,14 @@ export const MODELS = [
     name: "granite-34b-code-instruct",
     provider: "ibm-watsonx-ai",
   },
+  {
+    id: "sonar",
+    name: "sonar",
+    provider: "perplexity",
+  },
+  {
+    id: "sonar-pro",
+    name: "sonar-pro",
+    provider: "perplexity",
+  },
 ];

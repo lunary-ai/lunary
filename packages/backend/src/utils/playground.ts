@@ -434,6 +434,15 @@ export async function runAImodel(
         defaultHeaders: OPENROUTER_HEADERS,
       };
       break;
+    case "perplexity":
+      if (!process.env.PERPLEXITY_API_KEY)
+        throw Error("No Perplexity API key found");
+
+      clientParams = {
+        baseURL: "https://api.perplexity.ai",
+        apiKey: process.env.PERPLEXITY_API_KEY,
+      };
+      break;
   }
 
   const openai = new OpenAI(clientParams);
@@ -453,6 +462,7 @@ export async function runAImodel(
     seed: extra?.seed,
     ...paramsOverwrite,
   });
+  console.log(res);
 
   const useOpenRouter = modelObj?.provider === "openrouter";
 
