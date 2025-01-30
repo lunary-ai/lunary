@@ -243,4 +243,9 @@ export const MODELS = [
     name: "sonar-pro",
     provider: "perplexity",
   },
+  {
+    id: "sonar-reasoning",
+    name: "sonar-reasoning",
+    provider: "perplexity",
+  },
 ];
