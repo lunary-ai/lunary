@@ -36,7 +36,7 @@
     "lunary": "^0.8.4",
     "node-cron": "^3.0.3",
     "nodemailer": "^6.9.16",
-    "openai": "^4.77.0",
+    "openai": "^4.82.0",
     "p-queue": "^8.0.1",
     "postgres": "3.4.5",
     "prexit": "^2.3.0",

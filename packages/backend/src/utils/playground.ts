@@ -450,9 +450,9 @@ export async function runAImodel(
   let res = await openai.chat.completions.create({
     model,
     messages,
-    stream,
+    stream: modelObj?.streamingDisabled ? false : stream,
     temperature: extra?.temperature,
-    max_tokens: extra?.max_tokens,
+    max_completion_tokens: extra?.max_tokens,
     top_p: extra?.top_p,
     presence_penalty: extra?.presence_penalty,
     frequency_penalty: extra?.frequency_penalty,
@@ -462,7 +462,6 @@ export async function runAImodel(
     seed: extra?.seed,
     ...paramsOverwrite,
   });
-  console.log(res);
 
   const useOpenRouter = modelObj?.provider === "openrouter";
 
