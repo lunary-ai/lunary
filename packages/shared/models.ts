@@ -5,6 +5,24 @@ export const MODELS = [
     provider: "openai",
   },
   {
+    id: "o3-mini",
+    name: "o3-mini",
+    provider: "openai",
+    streamingDisabled: true,
+  },
+  {
+    id: "o1",
+    name: "o1",
+    provider: "openai",
+    streamingDisabled: true,
+  },
+  {
+    id: "o1-mini",
+    name: "o1-mini",
+    provider: "openai",
+    streamingDisabled: true,
+  },
+  {
     id: "gpt-4o-mini",
     name: "gpt-4o-mini",
     provider: "openai",
