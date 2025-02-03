@@ -662,4 +662,9 @@ function Playground() {
   );
 }
 
-export default Playground;
+export default function ProjectScopedPlayground() {
+  const { project } = useProject();
+
+  if (!project) return null;
+  return <Playground key={project.id} />;
+}
