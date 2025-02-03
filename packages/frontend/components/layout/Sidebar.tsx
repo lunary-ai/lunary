@@ -434,13 +434,17 @@ export default function Sidebar() {
             <Combobox
               store={projectsCombobox}
               withinPortal={false}
-              onOptionSubmit={(id) => {
+              onOptionSubmit={async (id) => {
+                if (router.pathname.startsWith("/dashboards/")) {
+                  await router.push("/dashboards");
+                }
+
+                if (router.pathname.startsWith("/prompts/")) {
+                  await router.push("/prompts");
+                }
+
                 setProjectId(id);
                 projectsCombobox.closeDropdown();
-
-                if (router.pathname.startsWith("/dashboards/")) {
-                  router.push(`/dashboards`);
-                }
               }}
               styles={{
                 dropdown: { minWidth: "fit-content", maxWidth: 600 },
