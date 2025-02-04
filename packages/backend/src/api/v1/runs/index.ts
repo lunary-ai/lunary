@@ -1,7 +1,7 @@
 import sql from "@/src/utils/db";
 import Router from "koa-router";
 
-import { checkAccess, checkProjectAccess } from "@/src/utils/authorization";
+import { checkAccess } from "@/src/utils/authorization";
 import { convertChecksToSQL } from "@/src/utils/checks";
 import { jsonrepair } from "jsonrepair";
 import { Feedback, Score, deserializeLogic } from "shared";
@@ -830,13 +830,16 @@ runs.get("/:id", async (ctx) => {
           'updatedAt', er.updated_at
         )
       ) filter (where er.run_id is not null), '{}') as evaluation_results,
-      coalesce(array_agg(
-        json_build_object(
-          'label', rs.label,
-          'value', rs.value, 
-          'comment', rs.comment
-      )
-    ) filter (where rs.run_id is not null), '{}') as scores 
+      coalesce(
+          jsonb_agg(
+            distinct jsonb_build_object(
+              'value', rs.value,
+              'label', rs.label,
+              'comment', rs.comment
+            )
+          ) filter (where rs.run_id is not null),
+          '[]'::jsonb
+        ) as scores
     from
       run r
       left join run_score rs on r.id = rs.run_id
@@ -1046,13 +1049,7 @@ runs.patch(
   checkAccess("logs", "update"),
   async (ctx: Context) => {
     const { id: runId } = ctx.params;
-    const { projectId, userId } = ctx.state;
     const { label, value, comment } = Score.parse(ctx.request.body);
-
-    const hasProjectAccess = await checkProjectAccess(projectId, userId);
-    if (!hasProjectAccess) {
-      ctx.throw(401, "Unauthorized");
-    }
 
     let [existingScore] =
       await sql`select * from run_score where run_id = ${runId} and label = ${label}`;
@@ -1060,7 +1057,7 @@ runs.patch(
     if (!existingScore) {
       await sql`insert into run_score ${sql({ runId, label, value, comment })}`;
     } else {
-      await sql`update run_score set ${sql({ label, value, comment })} where run_id = ${runId}`;
+      await sql`update run_score set ${sql({ label, value, comment })} where run_id = ${runId} and label = ${label}`;
     }
 
     ctx.status = 200;

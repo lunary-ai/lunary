@@ -1978,7 +1978,7 @@ def get_dataset(slug: str, app_id: str | None = None, api_url: str | None = None
     except Exception as e:
         raise DatasetError(f"Error fetching dataset: {str(e)}")
     
-def score(run_id: str, label: str, value: int | float | str | bool, comment: str | None, app_id: str | None = None, api_url: str | None = None):
+def score(run_id: str, label: str, value: int | float | str | bool, comment: str | None = None, app_id: str | None = None, api_url: str | None = None):
     """
     Scores a run based on the provided label, value, and optional comment.
 
