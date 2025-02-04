@@ -1,7 +1,7 @@
 import sql from "@/src/utils/db";
 import Router from "koa-router";
 
-import { checkAccess, checkProjectAccess } from "@/src/utils/authorization";
+import { checkAccess } from "@/src/utils/authorization";
 import { convertChecksToSQL } from "@/src/utils/checks";
 import { jsonrepair } from "jsonrepair";
 import { Feedback, Score, deserializeLogic } from "shared";
@@ -1049,16 +1049,17 @@ runs.patch(
   checkAccess("logs", "update"),
   async (ctx: Context) => {
     const { id: runId } = ctx.params;
-    const { projectId, userId } = ctx.state;
     const { label, value, comment } = Score.parse(ctx.request.body);
 
     let [existingScore] =
       await sql`select * from run_score where run_id = ${runId} and label = ${label}`;
 
+    console.log(runId, label, existingScore);
+
     if (!existingScore) {
       await sql`insert into run_score ${sql({ runId, label, value, comment })}`;
     } else {
-      await sql`update run_score set ${sql({ label, value, comment })} where run_id = ${runId}`;
+      await sql`update run_score set ${sql({ label, value, comment })} where run_id = ${runId} and label = ${label}`;
     }
 
     ctx.status = 200;
