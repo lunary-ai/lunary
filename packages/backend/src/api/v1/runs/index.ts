@@ -1054,8 +1054,6 @@ runs.patch(
     let [existingScore] =
       await sql`select * from run_score where run_id = ${runId} and label = ${label}`;
 
-    console.log(runId, label, existingScore);
-
     if (!existingScore) {
       await sql`insert into run_score ${sql({ runId, label, value, comment })}`;
     } else {
