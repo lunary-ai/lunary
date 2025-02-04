@@ -830,13 +830,16 @@ runs.get("/:id", async (ctx) => {
           'updatedAt', er.updated_at
         )
       ) filter (where er.run_id is not null), '{}') as evaluation_results,
-      coalesce(array_agg(
-        json_build_object(
-          'label', rs.label,
-          'value', rs.value, 
-          'comment', rs.comment
-      )
-    ) filter (where rs.run_id is not null), '{}') as scores 
+      coalesce(
+          jsonb_agg(
+            distinct jsonb_build_object(
+              'value', rs.value,
+              'label', rs.label,
+              'comment', rs.comment
+            )
+          ) filter (where rs.run_id is not null),
+          '[]'::jsonb
+        ) as scores
     from
       run r
       left join run_score rs on r.id = rs.run_id
@@ -1048,11 +1051,6 @@ runs.patch(
     const { id: runId } = ctx.params;
     const { projectId, userId } = ctx.state;
     const { label, value, comment } = Score.parse(ctx.request.body);
-
-    const hasProjectAccess = await checkProjectAccess(projectId, userId);
-    if (!hasProjectAccess) {
-      ctx.throw(401, "Unauthorized");
-    }
 
     let [existingScore] =
       await sql`select * from run_score where run_id = ${runId} and label = ${label}`;

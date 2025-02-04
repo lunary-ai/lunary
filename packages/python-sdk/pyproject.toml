@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "lunary"
-version = "1.4.4"
+version = "1.4.5"
 description = "Observability, analytics and evaluations for AI agents and chatbots."
 authors = ["lunary <hello@lunary.ai>"]
 readme = "README.md"
