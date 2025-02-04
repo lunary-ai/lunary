@@ -43,10 +43,11 @@ export function durationColumn(unit = "s"): ColumnDef<any> {
     cell: (props) => {
       const value = props?.getValue() || 0;
       const duration =
-        new Date(props.row.original.createdAt) -
-        new Date(props.row.original.endedAt);
+        new Date(props.row.original.endedAt) -
+        new Date(props.row.original.createdAt);
       const metadata = props.row.original.metadata?.cache;
 
+      console.log(duration);
       const isCached = metadata?.cached || duration < 0.01 * 1000;
 
       if (isCached) {
