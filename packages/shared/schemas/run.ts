@@ -12,9 +12,9 @@ export type Feedback = z.infer<typeof Feedback>;
 export const Score = z.object({
   label: z.string(),
   value: z.union([z.number(), z.string(), z.boolean()]),
-  comment: z.string().nullable(),
+  comment: z.string().nullable().optional(),
 });
-export type Score = z.infer<typeof Scor>;
+export type Score = z.infer<typeof Score>;
 
 export interface Run {
   id: string;
