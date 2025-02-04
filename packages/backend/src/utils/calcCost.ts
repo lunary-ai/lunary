@@ -185,7 +185,7 @@ export function calcRunCostLegacy(run: any) {
 }
 
 export async function calcRunCost(run: any) {
-  if (run.duration && run.duration < 0.01 * 1000) return null; // cached llm calls
+  if (!run.duration || run.duration < 0.01 * 1000) return null; // cached llm calls
   if (run.type !== "llm" || !run.name) return null;
 
   // Look at table model_mapping, in this logic:
