@@ -299,7 +299,7 @@ async function registerRunEvent(
         promptTokens: tokensUsage?.prompt,
         completionTokens: tokensUsage?.completion,
         name: runData?.name,
-        duration: +timestamp - +runData?.createdAt,
+        duration: new Date(timestamp) - new Date(runData?.createdAt),
         projectId,
       });
     }

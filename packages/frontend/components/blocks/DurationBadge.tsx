@@ -11,7 +11,7 @@ export default function DurationBadge({
     ? new Date(endedAt).getTime() - new Date(createdAt).getTime()
     : NaN;
 
-  if (cached) {
+  if (cached || duration < 0.01 * 1000) {
     return (
       <Badge
         variant="light"
