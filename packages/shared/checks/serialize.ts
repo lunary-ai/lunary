@@ -9,9 +9,12 @@ function paramSerializer(param: CheckParam, value: any) {
     return undefined;
   }
   switch (param.type) {
+    case "users":
+      return value.map((value: string) => encode(encode(value))).join(",");
     case "select":
       if (param.multiple) {
         if (!value.length) return undefined;
+
         return value.map((value: string) => encode(encode(value))).join(",");
       } else {
         return encode(value);
@@ -32,6 +35,10 @@ function deserializeParamValue(
 ): any | undefined {
   // Deserialize based on the filter parameter type
   switch (filterParam.type) {
+    case "users":
+      return value
+        .split(",")
+        .map((v) => decodeURIComponent(decodeURIComponent(v)));
     case "select":
       if (filterParam.multiple) {
         return value

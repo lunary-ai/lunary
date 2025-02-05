@@ -547,7 +547,9 @@ export default function Logs() {
             <CheckPicker
               minimal
               value={checks}
-              onChange={setChecks}
+              onChange={(value) => {
+                setChecks(value);
+              }}
               restrictTo={(f) => CHECKS_BY_TYPE[type].includes(f.id)}
             />
           </Group>

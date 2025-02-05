@@ -1,6 +1,7 @@
 import sql from "@/src/utils/db";
 import Router from "koa-router";
 import { Context } from "koa";
+import { z } from "zod";
 
 const filters = new Router({
   prefix: "/filters",
@@ -59,6 +60,12 @@ filters.get("/metadata", async (ctx: Context) => {
 
 filters.get("/users", async (ctx) => {
   const { projectId } = ctx.state;
+  const querySchema = z.object({
+    limit: z.coerce.number().optional().default(3),
+    page: z.coerce.number().optional().default(0),
+    search: z.string().optional(),
+  });
+  const { limit, page, search } = querySchema.parse(ctx.request.query);
 
   const rows = await sql`
     select
@@ -67,6 +74,24 @@ filters.get("/users", async (ctx) => {
       external_user
     where
       project_id = ${projectId}
+      ${
+        search
+          ? sql`and ( 
+          external_id ilike ${"%" + search + "%"}
+          or props->>'email' ilike ${"%" + search + "%"}
+          or props->>'name' ilike ${"%" + search + "%"}
+          or props->>'firstName' ilike ${"%" + search + "%"}
+          or props->>'lastName' ilike ${"%" + search + "%"}
+          or props->>'orgId' ilike ${"%" + search + "%"}
+        )`
+          : sql``
+      }
+    order by
+      external_id 
+    limit
+      ${limit}
+    offset 
+      ${page * limit}
   `;
 
   ctx.body = rows;
