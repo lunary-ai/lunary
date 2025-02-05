@@ -266,7 +266,7 @@ export const CHECKS: Check[] = [
         label: "Users",
       },
       {
-        type: "user",
+        type: "users",
         multiple: true,
         width: 100,
         id: "users",

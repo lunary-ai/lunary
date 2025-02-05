@@ -217,9 +217,6 @@ export default function Logs() {
     parser.withDefault(DEFAULT_CHECK).withOptions({ clearOnDefault: true }),
   );
 
-  const [users] = useQueryState("users");
-  console.log(users);
-
   const { sortParams } = useSortParams();
 
   const {
@@ -230,15 +227,9 @@ export default function Logs() {
   } = useView(viewId);
 
   const serializedChecks = useMemo(() => {
-    const checksWithType = editCheck(
-      editCheck(checks, "type", { type }),
-      "users",
-      { users },
-    );
+    const checksWithType = editCheck(checks, "type", { type });
     return serializeLogic(checksWithType);
-  }, [checks, type, view, users]);
-
-  console.log(serializedChecks);
+  }, [checks, type, view]);
 
   const { enrichers: evaluators } = useEnrichers();
 
@@ -556,7 +547,9 @@ export default function Logs() {
             <CheckPicker
               minimal
               value={checks}
-              onChange={setChecks}
+              onChange={(value) => {
+                setChecks(value);
+              }}
               restrictTo={(f) => CHECKS_BY_TYPE[type].includes(f.id)}
             />
           </Group>

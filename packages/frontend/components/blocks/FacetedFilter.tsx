@@ -85,7 +85,6 @@ export default function FacetedCheck({
 
   const searchCheck = withUserSearch ? userSearchCheck : defaultSearchCheck;
 
-  console.log(items);
   const options = items.filter(searchCheck).map((item) => (
     <Combobox.Option value={item} key={item}>
       <Group gap="sm">

@@ -74,7 +74,20 @@ filters.get("/users", async (ctx) => {
       external_user
     where
       project_id = ${projectId}
-      ${search ? sql`and id::text ilike ${"%" + search + "%"} ` : sql``}
+      ${
+        search
+          ? sql`and ( 
+          external_id ilike ${"%" + search + "%"}
+          or props->>'email' ilike ${"%" + search + "%"}
+          or props->>'name' ilike ${"%" + search + "%"}
+          or props->>'firstName' ilike ${"%" + search + "%"}
+          or props->>'lastName' ilike ${"%" + search + "%"}
+          or props->>'orgId' ilike ${"%" + search + "%"}
+        )`
+          : sql``
+      }
+    order by
+      external_id 
     limit
       ${limit}
     offset 

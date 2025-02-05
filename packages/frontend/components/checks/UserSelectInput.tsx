@@ -11,12 +11,16 @@ import {
   PillsInput,
   Pill,
   Text,
+  Group,
+  CheckIcon,
 } from "@mantine/core";
 import { parseAsArrayOf, parseAsInteger, useQueryState } from "nuqs";
+import AppUserAvatar from "../blocks/AppUserAvatar";
 
 const PAGE_SIZE = 10;
 
-export default function UserSelectInput({ values = [], onChange }) {
+export default function UserSelectInput({ value, onChange, width }) {
+  const values = value || [];
   const { projectId } = useContext(ProjectContext);
   // search holds the term used for filtering.
   const [search, setSearch] = useState("");
@@ -73,14 +77,16 @@ export default function UserSelectInput({ values = [], onChange }) {
     // );
     // setSelectedUser(val);
     // combobox.closeDropdown();
-    if (selectedUsers.includes(val)) {
-      setSelectedUsers(selectedUsers.filter((v) => v !== val));
+    if (values.includes(val)) {
+      onChange(values.filter((v) => v !== val));
     } else {
-      setSelectedUsers([...selectedUsers, val]);
+      onChange([...values, val]);
     }
   }
 
-  console.log(values);
+  function handleValueRemove(val) {
+    onChange(values.filter((v) => v !== val));
+  }
 
   if (error) {
     return <div>Error loading users.</div>;
@@ -89,49 +95,87 @@ export default function UserSelectInput({ values = [], onChange }) {
   return (
     <Combobox store={combobox} onOptionSubmit={handleValueSelect}>
       <Combobox.DropdownTarget>
-        <PillsInput onClick={() => combobox.openDropdown()}>
+        <PillsInput
+          onClick={() => combobox.openDropdown()}
+          variant="unstyled"
+          size="xs"
+          miw={width}
+          w="min-content"
+        >
           <Combobox.Target>
-            <Pill.Group>{1}</Pill.Group>
+            <Pill.Group
+              style={{
+                flexWrap: "nowrap",
+                overflow: "hidden",
+              }}
+            >
+              {values.length >= 4 ? (
+                <Pill>{values.length} selected</Pill>
+              ) : (
+                values.map((value) => (
+                  <Pill
+                    key={value}
+                    withRemoveButton
+                    maw="130"
+                    onRemove={() => handleValueRemove(value)}
+                  >
+                    {value}
+                  </Pill>
+                ))
+              )}
+            </Pill.Group>
           </Combobox.Target>
         </PillsInput>
       </Combobox.DropdownTarget>
 
       <Combobox.Dropdown
         miw={180}
-        style={{ maxHeight: 500, overflowY: "scroll" }}
+        style={{ maxHeight: 300, overflowY: "scroll" }}
       >
         <Combobox.Search
           value={search}
           onChange={(event) => setSearch(event.currentTarget.value)}
-          placeholder="Search users..."
+          placeholder="Search..."
+          style={{ tope: 0, zIndex: 2, position: "sticky" }}
         />
 
-        {/* Render the options list inside a scrollable area */}
         <ScrollArea.Autosize
           type="scroll"
-          mah={200}
+          mah={250}
           onBottomReached={() =>
             !isReachingEnd && !isLoadingMore && setSize(size + 1)
           }
         >
           <Combobox.Options>
-            {users.length > 0 ? (
-              users.map((user) => (
-                <Combobox.Option key={user.id} value={user.id}>
-                  {user.id}
-                </Combobox.Option>
-              ))
-            ) : (
-              <Combobox.Empty>No users found</Combobox.Empty>
-            )}
+            {users.length > 0
+              ? users.map((user) => (
+                  <Combobox.Option
+                    key={user.id}
+                    value={user.id}
+                    active={values.includes(user.id)}
+                  >
+                    <Group gap="sm" wrap="nowrap">
+                      {values.includes(user.id) ? (
+                        <CheckIcon size={12} />
+                      ) : null}
+                      <AppUserAvatar user={user} withName={true} size="sm" />
+                    </Group>
+                  </Combobox.Option>
+                ))
+              : !isLoadingMore && (
+                  <Combobox.Empty>No users found</Combobox.Empty>
+                )}
           </Combobox.Options>
+          {isLoadingMore && (
+            <Text
+              size="12px"
+              c="gray"
+              style={{ padding: "0.5rem", textAlign: "center" }}
+            >
+              Fetching...
+            </Text>
+          )}
         </ScrollArea.Autosize>
-
-        {isLoadingMore && (
-          <Text size="sm" style={{ padding: "0.5rem", textAlign: "center" }}>
-            Fetching...
-          </Text>
-        )}
       </Combobox.Dropdown>
     </Combobox>
   );

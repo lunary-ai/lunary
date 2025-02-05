@@ -11,7 +11,7 @@ const maxDate = new Date();
 
 const CheckInputs = {
   select: SmartCheckSelect,
-  user: UserSelectInput,
+  users: UserSelectInput,
 
   number: ({ placeholder, width, min, max, step, value, onChange, unit }) => {
     return (
