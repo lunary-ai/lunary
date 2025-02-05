@@ -130,4 +130,20 @@ filters.get("/custom-events", async (ctx) => {
   ctx.body = rows;
 });
 
+filters.get("/topics", async (ctx) => {
+  const { projectId } = ctx.state;
+
+  const [{ topics }] = await sql`
+    select
+      coalesce(params->>'topics', null) as topics
+    from
+      evaluator
+    where
+      project_id =  ${projectId}
+      and type = 'topics';
+  `;
+
+  ctx.body = topics;
+});
+
 export default filters;

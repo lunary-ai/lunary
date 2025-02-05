@@ -229,6 +229,10 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     },
   },
   {
+    id: "topics",
+    sql: ({ topics }) => sql`(topics.topics =  ${sql.json(topics)})`,
+  },
+  {
     id: "users",
     sql: ({ users }) => sql`(external_user_id = ANY(${sql.array(users, 20)}))`, // 20 is to specify it's a postgres int4
     ingestionCheck: async (run, params) => {

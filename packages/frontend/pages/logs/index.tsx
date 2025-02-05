@@ -136,6 +136,7 @@ export const CHECKS_BY_TYPE = {
     "cost",
     "duration",
     "tokens",
+    "topics",
   ],
   trace: [
     "date",
