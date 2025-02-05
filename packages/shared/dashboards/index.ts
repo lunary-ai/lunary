@@ -126,6 +126,14 @@ export const DEFAULT_CHARTS = {
     dataKey: "languages/top",
     aggregationMethod: null,
   },
+  "topics/top": {
+    id: "topics/top",
+    name: "Top Topics",
+    description: "The number of topics occurrence in your project",
+    type: "Top",
+    dataKey: "topics/top",
+    aggregationMethod: null,
+  },
 };
 
 export const chartProps = Object.keys(DEFAULT_CHARTS);
