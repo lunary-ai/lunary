@@ -35,7 +35,7 @@ export default function FacetedCheck({
 }) {
   const [search, setSearch] = useState("");
 
-  const { project } = useProject();
+  const { project: app } = useProject();
 
   const prevAppIdRef = useRef<string>(null);
 

@@ -4,12 +4,14 @@ import SmartCheckSelect from "./SmartSelectInput";
 
 import { DateTimePicker } from "@mantine/dates";
 import { useEffect } from "react";
+import UserSelectInput from "./UserSelectInput";
 
 const minDate = new Date(2021, 0, 1);
 const maxDate = new Date();
 
 const CheckInputs = {
   select: SmartCheckSelect,
+  users: UserSelectInput,
 
   number: ({ placeholder, width, min, max, step, value, onChange, unit }) => {
     return (
