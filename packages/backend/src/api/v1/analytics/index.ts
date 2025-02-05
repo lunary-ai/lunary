@@ -1232,8 +1232,11 @@ analytics.get("/templates/top", async (ctx: Context) => {
 analytics.get("/languages/top", async (ctx: Context) => {
   const { projectId } = ctx.state;
   ctx.query.granularity = "daily";
-  const { datesQuery, startDate, endDate, timeZone, filteredRunsQuery } =
-    parseQuery(projectId, ctx.querystring, ctx.query);
+  const { datesQuery, filteredRunsQuery } = parseQuery(
+    projectId,
+    ctx.querystring,
+    ctx.query,
+  );
 
   const data = await sql`
       with dates as (
@@ -1265,6 +1268,48 @@ analytics.get("/languages/top", async (ctx: Context) => {
       limit 5
       ;
       `;
+
+  ctx.body = { data };
+});
+
+analytics.get("/topics/top", async (ctx: Context) => {
+  const { projectId } = ctx.state;
+  ctx.query.granularity = "daily";
+  const { datesQuery, filteredRunsQuery } = parseQuery(
+    projectId,
+    ctx.querystring,
+    ctx.query,
+  );
+
+  const data = await sql`
+      with dates as (
+        ${datesQuery}
+      ),
+      filtered_runs as (
+        ${filteredRunsQuery}
+      )
+      select
+        t.topic,
+        count(*) as count
+      from
+        dates d
+        left join filtered_runs r on d.date = r.local_created_at
+        join evaluation_result_v2 er on r.id = er.run_id
+        join evaluator e on er.evaluator_id = e.id
+        cross join lateral (
+          select distinct
+            elem #>> '{}' as topic
+          from
+            jsonb_array_elements(jsonb_path_query_array(er.result, '$.input[*].topic') || jsonb_path_query_array(er.result, '$.output[*].topic')) as elem
+        ) t
+      where
+        e.type = 'topics'
+        and t.topic is not null
+      group by
+        t.topic
+      order by
+        count desc;
+      ;`;
 
   ctx.body = { data };
 });

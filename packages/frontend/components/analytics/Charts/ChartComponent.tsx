@@ -4,11 +4,12 @@ import { Center, Flex, Loader, Overlay, Text } from "@mantine/core";
 import { useMemo } from "react";
 import { Chart, LogicNode } from "shared";
 import { generateSeries } from "../ChartCreator";
+import TopLanguages from "../TopLanguages";
 import TopTemplates from "../TopTemplates";
+import TopTopics from "../TopTopics";
+import TopUsers from "../TopUsers";
 import AreaChartComponent from "./AreaChartComponent";
 import TopModels from "./TopModels";
-import TopLanguages from "../TopLanguages";
-import TopUsers from "../TopUsers";
 
 interface ChartProps {
   id: string;
@@ -132,6 +133,10 @@ export default function ChartComponent({
 
   if (dataKey === "languages/top") {
     return <TopLanguages data={data} />;
+  }
+
+  if (dataKey === "topics/top") {
+    return <TopTopics data={data} />;
   }
 
   if (
