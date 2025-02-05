@@ -1,20 +1,18 @@
-import React, { useContext, useState, useEffect } from "react";
-import useSWRInfinite from "swr/infinite";
 import { ProjectContext } from "@/utils/context";
 import { fetcher } from "@/utils/fetcher";
 import {
-  Combobox,
-  useCombobox,
-  TextInput,
-  Button,
-  ScrollArea,
-  PillsInput,
-  Pill,
-  Text,
-  Group,
   CheckIcon,
+  Combobox,
+  Group,
+  Pill,
+  PillsInput,
+  ScrollArea,
+  Text,
+  useCombobox,
 } from "@mantine/core";
 import { parseAsArrayOf, parseAsInteger, useQueryState } from "nuqs";
+import { useContext, useEffect, useState } from "react";
+import useSWRInfinite from "swr/infinite";
 import AppUserAvatar from "../blocks/AppUserAvatar";
 
 const PAGE_SIZE = 10;
@@ -158,7 +156,12 @@ export default function UserSelectInput({ value, onChange, width }) {
                       {values.includes(user.id) ? (
                         <CheckIcon size={12} />
                       ) : null}
-                      <AppUserAvatar user={user} withName={true} size="sm" />
+                      <AppUserAvatar
+                        user={user}
+                        withName={true}
+                        size="sm"
+                        maw="150px"
+                      />
                     </Group>
                   </Combobox.Option>
                 ))
