@@ -1,5 +1,8 @@
+import { capitalize, formatAppUser, getFlagEmoji } from "@/utils/format";
+import { Text } from "@mantine/core";
 import {
   IconAt,
+  IconBadge,
   IconBiohazard,
   IconBraces,
   IconBracketsContainStart,
@@ -15,7 +18,6 @@ import {
   IconEditCircle,
   IconEyeCheck,
   IconFilter,
-  IconFocus,
   IconHelpCircle,
   IconHtml,
   IconIdBadge,
@@ -29,7 +31,6 @@ import {
   IconRuler2,
   IconRulerMeasure,
   IconSearch,
-  IconShieldBolt,
   IconTag,
   IconTarget,
   IconTextWrap,
@@ -40,10 +41,8 @@ import {
   IconUserCheck,
   IconWorldWww,
 } from "@tabler/icons-react";
-import Feedback from "../blocks/OldFeedback";
 import AppUserAvatar from "../blocks/AppUserAvatar";
-import { Group, Text } from "@mantine/core";
-import { capitalize, formatAppUser, getFlagEmoji } from "@/utils/format";
+import Feedback from "../blocks/OldFeedback";
 
 type CheckUI = {
   icon: React.FC<any>;
@@ -80,6 +79,10 @@ const CHECKS_UI_DATA: ChecksUIData = {
       </>
     ),
     renderLabel: (item) => formatAppUser(item),
+  },
+  topics: {
+    icon: IconBadge,
+    color: "blue",
   },
   templates: {
     icon: IconEditCircle,

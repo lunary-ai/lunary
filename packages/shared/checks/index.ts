@@ -267,28 +267,28 @@ export const CHECKS: Check[] = [
       },
       {
         type: "users",
-        multiple: true,
         width: 100,
         id: "users",
-        options: () => `/filters/users`,
-        searchable: true,
-        getItemValue: (item) => `${item.id}`,
-        customSearch: (search, item) => {
-          const searchTerm = search.toLowerCase().trim();
-
-          const toCheck = [
-            item.externalId,
-            item.props?.email,
-            item.props?.name,
-            item.props?.firstName,
-            item.props?.lastName,
-            item.props?.orgId,
-          ];
-
-          return toCheck.some((check) =>
-            check?.toLowerCase().includes(searchTerm),
-          );
-        },
+      },
+    ],
+  },
+  {
+    id: "topics",
+    name: "Topics",
+    uiType: "basic",
+    uniqueInBar: true,
+    disableInEvals: true,
+    params: [
+      {
+        type: "label",
+        label: "Topics",
+      },
+      {
+        type: "select",
+        multiple: true,
+        id: "topics",
+        width: 100,
+        options: () => `/filters/topics`,
       },
     ],
   },

@@ -364,6 +364,9 @@ function getRunQuery(ctx: Context, isExport = false) {
         left join template t on tv.template_id = t.id
         left join evaluation_result_v2 er on r.id = er.run_id
         left join evaluator e on er.evaluator_id = e.id
+        cross join lateral (
+          select jsonb_path_query_array(er.result, '$.input[*].topic') || jsonb_path_query_array(er.result, '$.output[*].topic') 
+        ) topics(topics)
     where
         r.project_id = ${projectId}
         ${parentRunCheck}
@@ -578,6 +581,9 @@ runs.get("/", async (ctx: Context) => {
         left join template t on tv.template_id = t.id
         left join evaluation_result_v2 er on r.id = er.run_id
         left join evaluator e on er.evaluator_id = e.id
+            cross join lateral (
+          select jsonb_path_query_array(er.result, '$.input[*].topic') || jsonb_path_query_array(er.result, '$.output[*].topic') 
+        ) topics(topics)
     where
         r.project_id = ${projectId}
         ${parentRunCheck}
