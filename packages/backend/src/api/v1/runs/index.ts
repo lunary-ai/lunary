@@ -421,6 +421,8 @@ function getRunQuery(ctx: Context, isExport = false) {
     runs r
     left join evaluation_results er on r.id = er.id
     left join run_scores rs on r.id = rs.run_id 
+  order by
+    ${sql.unsafe(orderByClause)}  
   `;
 
   return { query, projectId, parentRunCheck, filtersQuery, page, limit };
