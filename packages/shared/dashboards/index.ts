@@ -58,6 +58,14 @@ export const DEFAULT_CHARTS: Record<string, DefaultChart> = {
     dataKey: "tokens",
     aggregationMethod: "sum",
   },
+  "agents/top": {
+    id: "agents/top",
+    name: "Top Agents",
+    description: "The top agents in your project",
+    type: "Top",
+    dataKey: "agents/top",
+    aggregationMethod: null,
+  },
   threads: {
     id: "threads",
     name: "Active Conversations",
