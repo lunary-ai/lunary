@@ -162,7 +162,6 @@ export default function AreaChartComponent({
           fontSize: "45px",
           tickFormatter: (value, index) => {
             if (value === data[0].date || value === data.at(-1).date) {
-              console.log(value, formatDate(value, "daily") || "");
               return formatDate(value, "daily") || "";
             }
             return "";
