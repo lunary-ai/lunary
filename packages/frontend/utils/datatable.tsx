@@ -265,3 +265,28 @@ export function enrichmentColumn(
     },
   });
 }
+
+export function scoresColumn() {
+  return columnHelper.accessor("scores", {
+    header: "Scores",
+    enableSorting: false,
+    size: 430,
+    cell: (props) => {
+      const scores = props.getValue();
+      if (scores && scores.length) {
+        return (
+          <Group gap="sm" wrap="nowrap">
+            {scores?.map((score, i) => (
+              <Badge key={i} variant="outline" color="blue">
+                {score.label}:{" "}
+                {typeof score.value === "number"
+                  ? score.value.toFixed(4)
+                  : score.value}
+              </Badge>
+            ))}
+          </Group>
+        );
+      }
+    },
+  });
+}
