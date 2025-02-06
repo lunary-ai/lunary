@@ -186,14 +186,16 @@ export default function AreaChartComponent({
                   ...Object.fromEntries(
                     Object.entries(item.payload).map(([key, value]) => [
                       key,
-                      typeof value === "number" && value % 1 !== 0
-                        ? value.toFixed(6)
-                        : value,
+                      formatAggValue(
+                        getAggValue(data, aggregationMethod, stat, dataKey),
+                        dataKey,
+                      ),
                     ]),
                   ),
                 },
               }));
 
+            console.log(filteredPayload);
             if (filteredPayload.length === 0) {
               return null;
             }
