@@ -563,23 +563,27 @@ runs.get("/", async (ctx: Context) => {
   const runs = rows.map(formatRun);
 
   // TODO: improve this
-  for (const run of runs) {
-    try {
-      run.input = run.input[run.input.length - 1];
-      if (
-        typeof run.input === "object" &&
-        typeof run.input.content === "string"
-      ) {
-        run.input.content = run.input.content.substring(0, 100);
+  if (ctx.query.type === "llm") {
+    for (const run of runs) {
+      try {
+        if (Array.isArray(run.input)) {
+          run.input = run.input[run.input.length - 1];
+        }
+        if (
+          typeof run.input === "object" &&
+          typeof run.input.content === "string"
+        ) {
+          run.input.content = run.input.content.substring(0, 100);
+        }
+        if (
+          typeof run.output === "object" &&
+          typeof run.output?.content === "string"
+        ) {
+          run.output.content = run.output.content.substring(0, 100);
+        }
+      } catch (error) {
+        console.error(error);
       }
-      if (
-        typeof run.output === "object" &&
-        typeof run.output?.content === "string"
-      ) {
-        run.output.content = run.output.content.substring(0, 100);
-      }
-    } catch (error) {
-      console.error(error);
     }
   }
 

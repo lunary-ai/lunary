@@ -6,12 +6,13 @@ export default function DurationBadge({
   createdAt,
   endedAt,
   minimal = false,
+  type,
 }) {
   const duration = endedAt
     ? new Date(endedAt).getTime() - new Date(createdAt).getTime()
     : NaN;
 
-  if (cached || duration < 0.01 * 1000) {
+  if (type === "llm" && (cached || duration < 0.01 * 1000)) {
     return (
       <Badge
         variant="light"

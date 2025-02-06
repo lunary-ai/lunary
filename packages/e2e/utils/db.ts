@@ -39,10 +39,15 @@ export async function populateLogs() {
       status: "success",
       name: "gpt-3.5-turbo",
       error: null,
-      input:
-        '{"role": "user", "content": "xyzTESTxyz Tell me a short joke about ice cream"}',
-      output:
-        '{"role": "assistant", "content": "Why did the ice cream break up with the cone? It couldn\'t handle the rocky road ahead!"}',
+      input: {
+        role: "user",
+        content: "xyzTESTxyz Tell me a short joke about ice cream",
+      },
+      output: {
+        role: "assistant",
+        content:
+          "Why did the ice cream break up with the cone? It couldn\'t handle the rocky road ahead!",
+      },
       params: "{}",
       type: "llm",
       prompt_tokens: 15,
