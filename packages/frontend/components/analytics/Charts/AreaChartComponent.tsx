@@ -195,7 +195,6 @@ export default function AreaChartComponent({
                 },
               }));
 
-            console.log(filteredPayload);
             if (filteredPayload.length === 0) {
               return null;
             }

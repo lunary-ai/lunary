@@ -394,13 +394,33 @@ function getRunQuery(ctx: Context, isExport = false) {
     left join evaluation_result_v2 er on r.id = er.run_id
     left join evaluator e on er.evaluator_id = e.id
     group by r.id
+  ),
+  run_scores as (
+    select 
+      rs.run_id,
+      coalesce(
+        jsonb_agg(
+          distinct jsonb_build_object(
+            'value', rs.value,
+            'label', rs.label,
+            'comment', rs.comment
+          )
+        ) filter (where rs.run_id is not null),
+        '[]'::jsonb
+      ) as scores
+    from
+      run_score rs 
+    group by
+      rs.run_id
   )
   select
     r.*,
-    er.evaluation_results
+    er.evaluation_results,
+    rs.*
   from
     runs r
     left join evaluation_results er on r.id = er.id
+    left join run_scores rs on r.id = rs.run_id 
   `;
 
   return { query, projectId, parentRunCheck, filtersQuery, page, limit };
