@@ -28,6 +28,7 @@ import {
   inputColumn,
   nameColumn,
   outputColumn,
+  scoresColumn,
   tagsColumn,
   templateColumn,
   timeColumn,
@@ -110,6 +111,7 @@ export const defaultColumns = {
     tagsColumn(),
     inputColumn("Input"),
     outputColumn(),
+    scoresColumn(),
   ],
   thread: [
     timeColumn("createdAt", "Started at"),
@@ -146,6 +148,7 @@ export const CHECKS_BY_TYPE = {
     "feedback",
     "duration",
     "metadata",
+    "scores",
   ],
   thread: ["date", "tags", "users", "feedback", "metadata"],
 };
