@@ -8,8 +8,12 @@ function paramSerializer(param: CheckParam, value: any) {
   if (value == undefined) {
     return undefined;
   }
+
   switch (param.type) {
     case "users":
+      if (!Array.isArray(value)) {
+        return undefined;
+      }
       return value.map((value: string) => encode(encode(value))).join(",");
     case "select":
       if (param.multiple) {
