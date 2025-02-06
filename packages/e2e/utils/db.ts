@@ -4,6 +4,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import lunary from "lunary";
 import { LunaryHandler } from "lunary/langchain";
 import sql from "../../backend/src/utils/db";
+import { sleep } from "../../backend/src/utils/misc";
 
 export async function setOrgPro() {
   return sql`update org set plan = 'pro' where name = 'test test''s Org'`;
@@ -73,7 +74,7 @@ async function populateTrace(projectId: string) {
 
   const chain = prompt.pipe(model).pipe(outputParser);
 
-  await chain.invoke(
+  const res = await chain.invoke(
     {
       topic: "ice cream",
     },
@@ -81,7 +82,8 @@ async function populateTrace(projectId: string) {
       callbacks: [handler],
     },
   );
-  await lunary.flush();
+  await sleep(2000);
+  // await lunary.flush();
 }
 
 async function populateThread(projectId: string) {
@@ -98,5 +100,6 @@ async function populateThread(projectId: string) {
     content: "Hello, how can I help you?",
   });
 
+  await sleep(2000);
   await lunary.flush();
 }
