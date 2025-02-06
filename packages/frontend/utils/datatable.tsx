@@ -42,14 +42,13 @@ export function durationColumn(unit = "s"): ColumnDef<any> {
     enableSorting: true,
     cell: (props) => {
       const value = props?.getValue() || 0;
-      const duration =
-        new Date(props.row.original.endedAt) -
-        new Date(props.row.original.createdAt);
+      const run = props.row.original;
+      const duration = new Date(run.endedAt) - new Date(run.createdAt);
       const metadata = props.row.original.metadata?.cache;
 
       const isCached = metadata?.cached || duration < 0.01 * 1000;
 
-      if (isCached) {
+      if (isCached && run.type === "llm" && run.output) {
         return "Cached";
       }
 

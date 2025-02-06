@@ -67,7 +67,8 @@ analytics.get("/tokens", async (ctx: Context) => {
         group by 
           d.date,
           r.name
-        order by d.date;
+        order by 
+          d.date;
     `;
 
     ctx.body = { data: res };
@@ -1029,6 +1030,81 @@ analytics.get("/latency", async (ctx: Context) => {
     ctx.body = { data, stat: stat || 0 };
     return;
   }
+});
+
+analytics.get("/threads", async (ctx: Context) => {
+  const { projectId } = ctx.state;
+  const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
+    projectId,
+    ctx.querystring,
+    ctx.query,
+  );
+
+  let data;
+  if (granularity === "weekly") {
+    data = await sql`
+      with dates as (
+        ${datesQuery}
+      ),
+      filtered_runs as (
+        ${filteredRunsQuery}
+      ),
+      weekly_active as (
+        select
+          d.date,
+          count(distinct r.parent_run_id) as active_conversations
+        from
+          dates d
+        left join filtered_runs r 
+          on r.local_created_at >= d.date 
+          and r.local_created_at < d.date + interval '7 days'
+          and r.type = 'chat'
+        group by
+          d.date
+      )
+      select
+        d.date,
+        coalesce(weekly_active.active_conversations, 0)::int as value,
+        'Count' as name
+      from
+        dates d
+        left join weekly_active on d.date = weekly_active.date
+      order by
+        d.date;
+    `;
+  } else {
+    data = await sql`
+      with dates as (
+        ${datesQuery}
+      ),
+      filtered_runs as (
+        ${filteredRunsQuery}
+      ),
+      active_conversations as (
+        select
+          date(created_at) as date,
+          count(distinct parent_run_id) as active_conversations
+        from
+          filtered_runs r
+        where
+          type = 'chat'
+          and created_at >= now() - interval '1 month'
+        group by
+          date(created_at)
+      )
+      select
+        d.date,
+        coalesce(a.active_conversations, 0)::int AS value,
+        'Count' as name
+      from
+        dates d
+        left join active_conversations a on d.date = a.date 
+      order by
+        d.date
+    `;
+  }
+
+  ctx.body = { data };
 });
 
 analytics.get("/feedback-ratio", async (ctx: Context) => {

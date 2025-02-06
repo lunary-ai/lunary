@@ -147,6 +147,7 @@ export default function ChartComponent({
       "users/new",
       "users/active",
       "users/average-cost",
+      "threads",
       "run-types",
       "latency",
       "feedback-ratio",
