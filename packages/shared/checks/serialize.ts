@@ -4,11 +4,12 @@ import { CHECKS } from ".";
 // because dots are used to separate filter parameters, we need to encode them
 const encode = (str: string) => encodeURIComponent(str).replace(/\./g, "%2E");
 
+// TODO: document this file
 function paramSerializer(param: CheckParam, value: any) {
   if (value == undefined) {
     return undefined;
   }
-
+  // TODO: replace switch by if else
   switch (param.type) {
     case "users":
       if (!Array.isArray(value)) {

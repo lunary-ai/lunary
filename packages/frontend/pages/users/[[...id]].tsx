@@ -17,11 +17,21 @@ import {
 import { costColumn, timeColumn } from "@/utils/datatable";
 
 import AppUserAvatar from "@/components/blocks/AppUserAvatar";
+import CopyText from "@/components/blocks/CopyText";
 import SearchBar from "@/components/blocks/SearchBar";
 import Empty from "@/components/layout/Empty";
+import SmartViewer from "@/components/SmartViewer";
+import { useProjectSWR } from "@/utils/dataHooks";
+import {
+  useAnalyticsChartData,
+  useTopModels,
+} from "@/utils/dataHooks/analytics";
 import { useExternalUsers } from "@/utils/dataHooks/external-users";
+import { fetcher } from "@/utils/fetcher";
 import { formatAppUser } from "@/utils/format";
 import { useDebouncedValue, useLocalStorage } from "@mantine/hooks";
+import { modals } from "@mantine/modals";
+import { notifications } from "@mantine/notifications";
 import {
   IconActivity,
   IconChartAreaLine,
@@ -31,28 +41,15 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { NextSeo } from "next-seo";
-import Router from "next/router";
+import Router, { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import analytics, { deserializeDateRange } from "../../utils/analytics";
-import CopyText from "@/components/blocks/CopyText";
-import { modals } from "@mantine/modals";
-import { notifications } from "@mantine/notifications";
-import { fetcher } from "@/utils/fetcher";
-import {
-  useAnalyticsChartData,
-  useTopModels,
-} from "@/utils/dataHooks/analytics";
-import SmartViewer from "@/components/SmartViewer";
-import { useProjectSWR } from "@/utils/dataHooks";
-import { useRouter } from "next/router";
-import TopModels from "@/components/analytics/Charts/TopModels";
+import analytics from "../../utils/analytics";
 
-import LineChart from "@/components/analytics/OldLineChart";
+import AnalyticsCard from "@/components/analytics/AnalyticsCard";
+import ChartComponent from "@/components/analytics/Charts/ChartComponent";
 import Link from "next/link";
 import { parseAsString, useQueryState } from "nuqs";
 import { deserializeLogic, getDefaultDateRange } from "shared";
-import ChartComponent from "@/components/analytics/Charts/ChartComponent";
-import AnalyticsCard from "@/components/analytics/AnalyticsCard";
 
 const columns = [
   {
