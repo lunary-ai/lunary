@@ -226,11 +226,20 @@ function ChartSelectionPanel({
                         <ChartComponent
                           id={chart.id}
                           dataKey={chart.dataKey}
-                          startDate={startDate}
-                          endDate={endDate}
-                          granularity={granularity}
-                          checks={checks}
-                          isCustom={false}
+                          startDate={new Date(chart.startDate || startDate)}
+                          endDate={new Date(chart.endDate || endDate)}
+                          granularity={chart.granularity || granularity}
+                          checks={[
+                            ...(Array.isArray(chart.checks)
+                              ? chart.checks
+                              : []),
+                            ...checks,
+                          ]}
+                          color={chart.color}
+                          aggregationMethod={chart.aggregationMethod}
+                          isCustom={chart.isCustom}
+                          primaryDimension={chart.primaryDimension}
+                          secondaryDimension={chart.secondaryDimension}
                           chart={chart}
                         />
                       </AnalyticsCard>
@@ -321,11 +330,17 @@ function ChartSelectionPanel({
                                 }
                                 endDate={new Date(chart.endDate || endDate)}
                                 granularity={chart.granularity || granularity}
-                                checks={chart.checks || checks}
+                                checks={[
+                                  ...(Array.isArray(chart.checks)
+                                    ? chart.checks
+                                    : []),
+                                  ...checks,
+                                ]}
+                                color={chart.color}
+                                aggregationMethod={chart.aggregationMethod}
+                                isCustom={chart.isCustom}
                                 primaryDimension={chart.primaryDimension}
                                 secondaryDimension={chart.secondaryDimension}
-                                aggregationMethod={chart.aggregationMethod}
-                                isCustom={true}
                                 chart={chart}
                               />
                             </AnalyticsCard>
