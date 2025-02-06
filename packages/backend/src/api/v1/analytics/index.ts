@@ -1107,6 +1107,75 @@ analytics.get("/threads", async (ctx: Context) => {
   ctx.body = { data };
 });
 
+analytics.get("/agents/top", async (ctx: Context) => {
+  const { projectId } = ctx.state;
+  const { startDate, endDate, timeZone } = parseQuery(
+    projectId,
+    ctx.querystring,
+    ctx.query,
+  );
+
+  const data = await sql`
+    with recursive
+      agent_tree as (
+        select
+          r.id,
+          r.name,
+          r.type,
+          r.cost,
+          r.created_at,
+          r.parent_run_id,
+          r.id as agent_id, 
+          r.name as agent_name,
+          coalesce(r.prompt_tokens, 0) as prompt_tokens,
+          coalesce(r.completion_tokens, 0) as completion_tokens,
+          coalesce(r.prompt_tokens + r.completion_tokens, 0) as tokens        
+        from
+          run r
+        where 
+          (r.type = 'agent' or r.type = 'chain') 
+          and (parent_run_id is null or exists (select 1 from run as parent_run where parent_run.id = r.parent_run_id and parent_run.type = 'chat'))
+          and project_id = ${projectId} 
+
+        union all
+
+        select
+          child.id,
+          child.name,
+          child.type,
+          child.cost,
+          child.created_at,
+          child.parent_run_id,
+          at.agent_id,
+          at.agent_name,
+          coalesce(child.prompt_tokens, 0) as prompt_tokens,
+          coalesce(child.completion_tokens, 0) as completion_tokens,
+          coalesce(child.prompt_tokens + child.completion_tokens, 0) as tokens
+        from
+          run child
+          join agent_tree at on child.parent_run_id = at.id
+      )
+    select
+      agent_name as name,
+        coalesce(sum(prompt_tokens), 0)::bigint as prompt_tokens,
+        coalesce(sum(completion_tokens), 0)::bigint as completion_tokens,
+        coalesce(sum(prompt_tokens + completion_tokens), 0)::bigint as total_tokens,
+        coalesce(sum(cost), 0)::float as cost
+    from
+      agent_tree
+    where
+      type = 'llm'
+      and date_trunc('day', created_at at time zone ${timeZone})::timestamp >= ${startDate}
+      and date_trunc('day', created_at at time zone ${timeZone})::timestamp <= ${endDate}
+    group by
+      agent_name
+    order by
+      cost desc; 
+  `;
+
+  ctx.body = { data };
+});
+
 analytics.get("/feedback-ratio", async (ctx: Context) => {
   const { projectId } = ctx.state;
   const { datesQuery, filteredRunsQuery, granularity } = parseQuery(

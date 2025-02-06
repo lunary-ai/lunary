@@ -10,6 +10,7 @@ import TopTopics from "../TopTopics";
 import TopUsers from "../TopUsers";
 import AreaChartComponent from "./AreaChartComponent";
 import TopModels from "./TopModels";
+import TopAgents from "./TopAgents";
 
 interface ChartProps {
   id: string;
@@ -137,6 +138,10 @@ export default function ChartComponent({
 
   if (dataKey === "topics/top") {
     return <TopTopics data={data} />;
+  }
+
+  if (dataKey === "agents/top") {
+    return <TopAgents data={data} />;
   }
 
   if (
