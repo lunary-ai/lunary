@@ -562,6 +562,27 @@ runs.get("/", async (ctx: Context) => {
   const rows = await query;
   const runs = rows.map(formatRun);
 
+  // TODO: improve this
+  for (const run of runs) {
+    try {
+      run.input = run.input[run.input.length - 1];
+      if (
+        typeof run.input === "object" &&
+        typeof run.input.content === "string"
+      ) {
+        run.input.content = run.input.content.substring(0, 100);
+      }
+      if (
+        typeof run.output === "object" &&
+        typeof run.output?.content === "string"
+      ) {
+        run.output.content = run.output.content.substring(0, 100);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   const total = await sql`
     with runs as (
       select distinct on (r.id)

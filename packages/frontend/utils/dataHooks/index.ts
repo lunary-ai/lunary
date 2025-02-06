@@ -64,7 +64,7 @@ export function useProjectMutation(
 }
 
 export function useProjectInfiniteSWR(key: string, ...args: any[]) {
-  const PAGE_SIZE = 100;
+  const PAGE_SIZE = 30;
 
   const { projectId } = useContext(ProjectContext);
 
