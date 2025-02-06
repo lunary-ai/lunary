@@ -90,7 +90,7 @@ export default function DataTable({
       if (containerRefElement) {
         const { scrollHeight, scrollTop, clientHeight } = containerRefElement;
         if (
-          scrollHeight - scrollTop - clientHeight < 600 &&
+          scrollHeight - scrollTop - clientHeight < 1300 &&
           !loading &&
           loadMore
         ) {

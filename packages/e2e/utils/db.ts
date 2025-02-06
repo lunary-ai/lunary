@@ -4,6 +4,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import lunary from "lunary";
 import { LunaryHandler } from "lunary/langchain";
 import sql from "../../backend/src/utils/db";
+import { sleep } from "../../backend/src/utils/misc";
 
 export async function setOrgPro() {
   return sql`update org set plan = 'pro' where name = 'test test''s Org'`;
@@ -38,10 +39,15 @@ export async function populateLogs() {
       status: "success",
       name: "gpt-3.5-turbo",
       error: null,
-      input:
-        '{"role": "user", "content": "xyzTESTxyz Tell me a short joke about ice cream"}',
-      output:
-        '{"role": "assistant", "content": "Why did the ice cream break up with the cone? It couldn\'t handle the rocky road ahead!"}',
+      input: {
+        role: "user",
+        content: "xyzTESTxyz Tell me a short joke about ice cream",
+      },
+      output: {
+        role: "assistant",
+        content:
+          "Why did the ice cream break up with the cone? It couldn\'t handle the rocky road ahead!",
+      },
       params: "{}",
       type: "llm",
       prompt_tokens: 15,
@@ -73,7 +79,7 @@ async function populateTrace(projectId: string) {
 
   const chain = prompt.pipe(model).pipe(outputParser);
 
-  await chain.invoke(
+  const res = await chain.invoke(
     {
       topic: "ice cream",
     },
@@ -81,7 +87,8 @@ async function populateTrace(projectId: string) {
       callbacks: [handler],
     },
   );
-  await lunary.flush();
+  await sleep(2000);
+  // await lunary.flush();
 }
 
 async function populateThread(projectId: string) {
@@ -98,5 +105,6 @@ async function populateThread(projectId: string) {
     content: "Hello, how can I help you?",
   });
 
+  await sleep(2000);
   await lunary.flush();
 }
