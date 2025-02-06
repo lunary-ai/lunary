@@ -4,7 +4,7 @@ export type CheckLabel = {
 };
 
 export type CheckParam = {
-  type: "select" | "text" | "number" | "date";
+  type: "select" | "text" | "number" | "date" | "users";
   id: string;
   unit?: string;
   max?: number;
