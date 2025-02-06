@@ -12,6 +12,9 @@ function paramSerializer(param: CheckParam, value: any) {
   // TODO: replace switch by if else
   switch (param.type) {
     case "users":
+      if (!Array.isArray(value)) {
+        return undefined;
+      }
       return value.map((value: string) => encode(encode(value))).join(",");
     case "select":
       if (param.multiple) {
