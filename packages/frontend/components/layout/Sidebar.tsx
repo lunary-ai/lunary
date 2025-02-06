@@ -316,7 +316,7 @@ export default function Sidebar() {
           resource: "logs",
         },
         {
-          label: "Threads",
+          label: "Conversations",
           icon: IconMessages,
           link: "/logs?type=thread",
           resource: "logs",
