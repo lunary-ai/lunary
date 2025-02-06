@@ -161,7 +161,7 @@ export default function AreaChartComponent({
         xAxisProps={{
           fontSize: "45px",
           tickFormatter: (value, index) => {
-            if (index === 0 || index === formattedData.length - 1) {
+            if (value === data[0].date || value === data.at(-1).date) {
               return formatDate(value, "daily") || "";
             }
             return "";
