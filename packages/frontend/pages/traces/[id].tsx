@@ -172,6 +172,7 @@ function TraceTree({
 
           {run.endedAt && (
             <DurationBadge
+              type={run.type}
               cached={run.metadata?.cache}
               createdAt={run.createdAt}
               endedAt={run.endedAt}
