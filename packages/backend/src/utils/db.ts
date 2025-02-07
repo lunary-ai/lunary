@@ -30,8 +30,8 @@ const sql = postgres(process.env.DATABASE_URL!, {
   connection: {
     application_name: `backend-${isProduction ? "production" : "development"}-${new Date().getTime()}`,
   },
-  debug: process.env.LUNARY_DEBUG ? debugFn : () => {},
-  onnotice: process.env.LUNARY_DEBUG ? console.warn : () => {},
+  debug: process.env.LUNARY_DB_DEBUG ? debugFn : () => {},
+  onnotice: process.env.LUNARY_DB_DEBUG ? console.warn : () => {},
 });
 
 function debugFn(

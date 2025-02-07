@@ -1,6 +1,5 @@
 import { convertChecksToSQL } from "@/src/utils/checks";
 import sql from "@/src/utils/db";
-import * as Sentry from "@sentry/node";
 import { Run } from "shared";
 import { RealtimeEvaluator } from "shared/enrichers";
 import { sleep } from "../utils/misc";
@@ -27,7 +26,7 @@ async function runEvaluator(evaluator: RealtimeEvaluator, run: Run) {
     }
   } catch (error) {
     if (process.env.NODE_ENV === "production") {
-      Sentry.captureException(error);
+      // Sentry.captureException(error);
     }
     console.error(
       `Error while evaluating run ${run.id} with evaluator ${evaluator.id}: `,
@@ -72,6 +71,7 @@ async function evaluatorJob() {
       evaluator e 
     where
       mode = 'realtime' 
+      and project_id = 'dedc86a5-6cba-481c-9ce5-8b6fa3dcd8e6'
     order by 
       random()
   `;
@@ -103,7 +103,7 @@ export default async function runEvaluatorsJob() {
     } catch (error) {
       await sleep(3000); // Avoid spamming the ml service when there are connection errors
       if (process.env.NODE_ENV === "production") {
-        Sentry.captureException(error);
+        // Sentry.captureException(error);
       }
       console.error(error);
     }

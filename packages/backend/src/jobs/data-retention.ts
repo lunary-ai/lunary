@@ -1,6 +1,5 @@
 import config from "../utils/config";
 import sql from "../utils/db";
-import * as Sentry from "@sentry/node";
 
 export default async function purgeRuns() {
   if (config.IS_SELF_HOSTED) {
@@ -62,7 +61,7 @@ export default async function purgeRuns() {
   } catch (error) {
     console.error(error);
     if (process.env.NODE_ENV === "production") {
-      Sentry.captureException(error);
+      // Sentry.captureException(error);
     }
   }
 }
