@@ -8,7 +8,16 @@ import aiSimilarity from "./ai/similarity";
 import rouge from "rouge";
 import { and, or } from "../utils/checks";
 import { CleanRun } from "../utils/ingest";
-import { isOpenAIMessage } from "../utils/misc";
+
+export const isOpenAIMessage = (field: any) =>
+  field &&
+  typeof field === "object" &&
+  field.role &&
+  (field.content ||
+    field.toolCalls ||
+    field.functionCall ||
+    field.tool_calls ||
+    field.function_call);
 
 function getTextsTypes(field: "any" | "input" | "output", run: any) {
   let textsToCheck = [];
