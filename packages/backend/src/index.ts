@@ -14,7 +14,6 @@ import sql, { checkDbConnection } from "./utils/db";
 import { errorMiddleware } from "./utils/errors";
 import { setDefaultBody } from "./utils/misc";
 import ratelimit from "./utils/ratelimit";
-import { initSentry, requestHandler, tracingMiddleWare } from "./utils/sentry";
 import licenseMiddleware from "./utils/license";
 import config from "./utils/config";
 import { startMaterializedViewRefreshJob } from "./jobs/materialized-views";
@@ -27,7 +26,6 @@ if (process.env.NODE_ENV === "production") {
   createIndexes();
   startMaterializedViewRefreshJob();
 }
-initSentry();
 
 const app = new Koa();
 
@@ -35,13 +33,17 @@ const app = new Koa();
 app.proxy = true;
 
 // MiddleWares
-app.use(requestHandler);
-app.use(tracingMiddleWare);
 app.use(errorMiddleware);
-app.use(logger());
+
+if (
+  process.env.NODE_ENV === "production" ||
+  process.env.LUNARY_DEBUG === "true"
+) {
+  app.use(logger());
+}
+
 app.use(corsMiddleware);
 app.use(authMiddleware);
-
 app.use(ratelimit);
 
 app.use(

@@ -23,14 +23,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: "npm"
+      - uses: oven-sh/setup-bun@v2
       - name: Setup application
-        run: npm ci
+        run: bun install
       - name: Install Chromium for Playwright
-        run: npx playwright install --with-deps chromium
+        run: bunx playwright install --with-deps chromium
 
       - name: Start backend and frontend
         env:
@@ -43,11 +40,11 @@ jobs:
           NEXT_PUBLIC_API_URL: http://0.0.0.0:3333
         timeout-minutes: 3
         run: |
-          npm run migrate:db
-          npm run start:backend &
-          npm run build:frontend
-          npm run start:frontend &
-          npx wait-on http://localhost:3333/v1/health http://0.0.0.0:8080/
+          bun run migrate:db
+          bun run start:backend &
+          bun run build:frontend
+          bun run start:frontend &
+          bunx wait-on http://localhost:3333/v1/health http://0.0.0.0:8080/
 
       - name: Run tests
         run: npm run test
