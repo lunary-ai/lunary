@@ -10,7 +10,6 @@ import {
   ingestChatEvent,
 } from "@/src/utils/ingest";
 import Context from "@/src/utils/koa";
-import * as Sentry from "@sentry/node";
 import Router from "koa-router";
 import { z } from "zod";
 
@@ -515,10 +514,10 @@ export async function processEventsIngestion(
         !(error instanceof DuplicateError) &&
         !(error instanceof ProjectNotFoundError)
       ) {
-        Sentry.withScope((scope) => {
-          scope.setExtras({ event: JSON.stringify(event) });
-          Sentry.captureException(error);
-        });
+        // Sentry.withScope((scope) => {
+        //   scope.setExtras({ event: JSON.stringify(event) });
+        //   Sentry.captureException(error);
+        // });
       }
 
       console.error(`Error ingesting event`, {

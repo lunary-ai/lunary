@@ -5,11 +5,19 @@ import aiFact from "./ai/fact";
 import aiSimilarity from "./ai/similarity";
 // import aiNER from "./ai/ner"
 // import aiToxicity from "./ai/toxic"
-import RE2 from "re2";
 import rouge from "rouge";
 import { and, or } from "../utils/checks";
 import { CleanRun } from "../utils/ingest";
-import { isOpenAIMessage } from "../utils/misc";
+
+export const isOpenAIMessage = (field: any) =>
+  field &&
+  typeof field === "object" &&
+  field.role &&
+  (field.content ||
+    field.toolCalls ||
+    field.functionCall ||
+    field.tool_calls ||
+    field.function_call);
 
 function getTextsTypes(field: "any" | "input" | "output", run: any) {
   let textsToCheck = [];
@@ -278,7 +286,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     evaluator: async (run, params) => {
       const { regex, type, field } = params;
 
-      const re = new RE2(regex);
+      const re = new RegExp(regex);
 
       const runField =
         typeof run[field] === "string"
@@ -327,7 +335,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
           passed = false;
         } catch (e) {}
       } else if (type === "contains") {
-        const regex = new RE2(/{.*?}/g);
+        const regex = new RegExp(/{.*?}/g);
         const matches = fieldText.match(regex);
         if (matches) {
           passed = matches.some((match) => {

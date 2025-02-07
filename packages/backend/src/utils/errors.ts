@@ -1,6 +1,5 @@
 import { Context, Next } from "koa";
 import { z } from "zod";
-import * as Sentry from "@sentry/node";
 
 export async function errorMiddleware(ctx: Context, next: Next) {
   try {
@@ -10,15 +9,6 @@ export async function errorMiddleware(ctx: Context, next: Next) {
       ctx.throw(404, "Not Found");
     }
   } catch (error: any) {
-    console.error(error);
-
-    if (
-      process.env.NODE_ENV === "production" &&
-      ctx.message !== "Invalid API key"
-    ) {
-      Sentry.captureException(error);
-    }
-
     if (error instanceof z.ZodError) {
       ctx.status = 422;
       ctx.body = {

@@ -2,34 +2,22 @@
   "name": "lunary",
   "private": "true",
   "scripts": {
-    "start": "concurrently -n frontend,backend \"npm run start:frontend\" \"npm run start:backend\"",
-    "start:with-ml": "concurrently -n frontend,backend \"npm run start:frontend\" \"npm run start:backend\" \"npm run start:ml\"",
-    "start:frontend": "npm -w packages/frontend run start",
-    "start:backend": "npm -w packages/backend run start",
-    "start:ml": ". ./packages/ml/venv/bin/activate && cd packages/ml && waitress-serve --port 4242 main:app",
-    "build:frontend": "npm -w packages/frontend run build",
-    "migrate:db": "npm -w packages/backend run migrate:db",
-    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
-    "dev:frontend": "npm -w packages/frontend run dev",
-    "dev:backend": "npm -w packages/backend run dev",
-    "test": "npm -w packages/e2e run test",
-    "test:ui": "npm -w packages/e2e run test -- --ui",
-    "postinstall": "npx patch-package",
-    "clean": "rm -rf package-lock.json && rm -rf node_modules &&  rm -rf packages/frontend/node_modules && rm -rf packages/backend/node_modules && rm -rf packages/frontend/.next && rm -rf packages/e2e/node_modules"
+    "start": "bun --filter './packages/frontend' --filter './packages/backend' start",
+    "start:backend": "bun --filter './packages/backend' start",
+    "start:frontend": "bun --filter './packages/frontend' start",
+    "build:frontend": "bun --filter './packages/frontend' build",
+    "migrate:db": "bun --filter './packages/backend' migrate:db",
+    "dev": "bun --filter '*' dev",
+    "test": "bun --filter './packages/e2e' test"
   },
   "workspaces": [
     "packages/*"
   ],
-  "dependencies": {
-    "concurrently": "^9.1.1",
-    "patch-package": "^8.0.0"
-  },
   "devDependencies": {
-    "@types/node": "^22.10.2",
     "dotenv": "^16.4.7",
-    "json-2-csv": "^5.5.7",
-    "prettier": "^3.4.2",
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "prettier": "^3.4.2"
+  },
+  "patchedDependencies": {
+    "postgres@3.4.5": "patches/postgres@3.4.5.patch"
   }
 }
