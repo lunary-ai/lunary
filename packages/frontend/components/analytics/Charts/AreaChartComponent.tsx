@@ -241,7 +241,7 @@ function formatDate(date, granularity) {
     case "daily":
       return format(parseISO(date), "MMM do");
     case "hourly":
-      return format(parseISO(date), "eee, HH'h'");
+      return format(parseISO(date), "hh:mm a");
     case "weekly":
       return format(parseISO(date), "MMM d");
   }
