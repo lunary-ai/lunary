@@ -119,6 +119,32 @@ function getAggValue(
   return null;
 }
 
+function formatValue(value: unknown, dataKey: string) {
+  if (!value) {
+    return;
+  }
+  let formattedValue: number;
+  if (typeof value === "number") {
+    if (dataKey.includes("cost")) {
+      formattedValue = parseFloat(value.toFixed(6));
+    } else {
+      formattedValue = parseFloat(value.toFixed(2));
+    }
+
+    if (dataKey.includes("latency")) {
+      return `${formattedValue}s`;
+    }
+
+    if (dataKey.includes("cost")) {
+      return `$${formattedValue}`;
+    }
+
+    return formattedValue;
+  }
+
+  return value;
+}
+
 function formatAggValue(aggValue: any, dataKey?: string) {
   if (dataKey?.includes("latency")) {
     return `${aggValue}s`;
@@ -186,10 +212,7 @@ export default function AreaChartComponent({
                   ...Object.fromEntries(
                     Object.entries(item.payload).map(([key, value]) => [
                       key,
-                      formatAggValue(
-                        getAggValue(data, aggregationMethod, stat, dataKey),
-                        dataKey,
-                      ),
+                      formatValue(value, dataKey),
                     ]),
                   ),
                 },
