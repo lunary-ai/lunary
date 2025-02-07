@@ -1,7 +1,6 @@
 import config from "../utils/config";
 import sql from "../utils/db";
 import stripe from "../utils/stripe";
-import * as Sentry from "@sentry/node";
 
 // Count the run events in the past hour and send them to Stripe
 // for all orgs with a stripe_customer
@@ -43,7 +42,7 @@ export default async function stripeCounters() {
       });
     } catch (e) {
       console.error(`Error counting runs for org ${org.id}: ${e.message}`);
-      Sentry.captureException(e);
+      // Sentry.captureException(e);
     }
 
     // Count team members and update quantity of 'team_seats' sub item if needed
@@ -72,7 +71,7 @@ export default async function stripeCounters() {
       console.error(
         `Error counting team members for org ${org.id}: ${e.message}`,
       );
-      Sentry.captureException(e);
+      // Sentry.captureException(e);
     }
   }
 }

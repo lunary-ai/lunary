@@ -1,8 +1,6 @@
-import * as Sentry from "@sentry/node";
 import { setTimeout } from "timers/promises";
 import sql from "./db";
 import { findAsyncSequential } from "./misc";
-import RE2 from "re2";
 
 interface ModelCost {
   models: string[];
@@ -213,7 +211,7 @@ export async function calcRunCost(run: any) {
 
     const mapping = await findAsyncSequential(mappings, async (mapping) => {
       try {
-        const regex = new RE2(mapping.pattern);
+        const regex = new RegExp(mapping.pattern);
         return regex.test(run.name);
       } catch (error) {
         console.error(`Invalid regex pattern: ${mapping.pattern}`, error);
@@ -267,7 +265,7 @@ export async function calcRunCost(run: any) {
       "Error calculating run cost, defaulting to legacy method",
       error,
     );
-    Sentry.captureException(error);
+    // Sentry.captureException(error);
 
     return calcRunCostLegacy(run);
   }

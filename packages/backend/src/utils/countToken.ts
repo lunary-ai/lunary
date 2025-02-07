@@ -1,4 +1,3 @@
-import * as Sentry from "@sentry/node";
 import sql from "./db";
 import { withTimeout } from "./timeout";
 import { countGoogleTokens, isGoogleModel } from "./tokens/google";
@@ -217,7 +216,7 @@ export async function completeRunUsageWithTimeout(run: any) {
     );
   } catch (error: unknown) {
     console.error(error, JSON.stringify(run, null, 2));
-    Sentry.captureException(error, { contexts: { run } });
+    // Sentry.captureException(error, { contexts: { run } });
     return run.tokenUsage;
   }
 }
