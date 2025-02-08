@@ -1,29 +1,75 @@
+diff --git a/cf/src/types.js b/cf/src/types.js
+index aa2ead29faf359da3b8b7ee443b05fe8e77d0547..9f265a6cb2c9a831a67be90bc92a5716b7986af2 100644
+--- a/cf/src/types.js
++++ b/cf/src/types.js
+@@ -318,16 +318,26 @@ function arrayParserLoop(s, x, parser, typarray) {
+ 
+ export const toCamel = x => {
+   let str = x[0]
+-  for (let i = 1; i < x.length; i++)
+-    str += x[i] === '_' ? x[++i].toUpperCase() : x[i]
+-  return str
++  for (let i = 1; i < x.length; i++) {
++    if (x[i] === '_' && i + 1 < x.length) {
++      str += x[++i].toUpperCase()
++    } else if (x[i] !== '_') {
++      str += x[i]
++    }   
++  }
++  return str 
+ }
+ 
+ export const toPascal = x => {
+   let str = x[0].toUpperCase()
+-  for (let i = 1; i < x.length; i++)
+-    str += x[i] === '_' ? x[++i].toUpperCase() : x[i]
+-  return str
++  for (let i = 1; i < x.length; i++) {
++    if (x[i] === '_' && i + 1 < x.length) {
++      str += x[++i].toUpperCase()
++    } else if (x[i] !== '_') {
++      str += x[i]
++    }   
++  }
++  return str 
+ }
+ 
+ export const toKebab = x => x.replace(/_/g, '-')
 diff --git a/cjs/src/types.js b/cjs/src/types.js
-index 0578284c5a691d0cb535cda8dc40177d87cd62a1..5b54dbf072e08b53dfe0355b3439cd62d998e879 100644
+index 0578284c5a691d0cb535cda8dc40177d87cd62a1..b355d2d4cb1ccba64a244faa12a551f28b903c17 100644
 --- a/cjs/src/types.js
 +++ b/cjs/src/types.js
-@@ -317,15 +317,21 @@ function arrayParserLoop(s, x, parser, typarray) {
+@@ -317,16 +317,26 @@ function arrayParserLoop(s, x, parser, typarray) {
  
  const toCamel = module.exports.toCamel = x => {
    let str = x[0]
 -  for (let i = 1; i < x.length; i++)
 -    str += x[i] === '_' ? x[++i].toUpperCase() : x[i]
+-  return str
+-}
 +  for (let i = 1; i < x.length; i++) {
-+    if (x[i] === "_" && i + 1 === x.length) {
-+      str += "_"
-+      i++
-+    } else {
-+      str += x[i] === "_" ? x[++i].toUpperCase() : x[i]
-+    }
++    if (x[i] === '_' && i + 1 < x.length) {
++      str += x[++i].toUpperCase()
++    } else if (x[i] !== '_') {
++      str += x[i]
++    }   
 +  }
-   return str
- }
++  return str 
++ }
  
  const toPascal = module.exports.toPascal = x => {
    let str = x[0].toUpperCase()
-   for (let i = 1; i < x.length; i++)
+-  for (let i = 1; i < x.length; i++)
 -    str += x[i] === '_' ? x[++i].toUpperCase() : x[i]
-+    str += x[i] === '_' ? x[++i]?.toUpperCase() : x[i]
-   return str
+-  return str
++  for (let i = 1; i < x.length; i++) {
++    if (x[i] === '_' && i + 1 < x.length) {
++      str += x[++i].toUpperCase()
++    } else if (x[i] !== '_') {
++      str += x[i]
++    }   
++  }
++  return str 
  }
  
+ const toKebab = module.exports.toKebab = x => x.replace(/_/g, '-')
