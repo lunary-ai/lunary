@@ -11,18 +11,14 @@ export async function errorMiddleware(ctx: Context, next: Next) {
   } catch (error: any) {
     if (error instanceof z.ZodError) {
       ctx.status = 422;
-      ctx.body = {
-        error: "Error",
-        message: error.errors[0].message,
-      };
+      ctx.body = { error: "Error", message: error.errors[0].message };
       console.error("ZOD ERROR", JSON.stringify(error.errors[0]));
       return;
     }
 
+    console.error(error);
     ctx.status = error.statusCode || error.status || 500;
-    ctx.body = {
-      message: error.message || "An unexpected error occurred",
-    };
+    ctx.body = { message: error.message || "An unexpected error occurred" };
   }
 }
 
