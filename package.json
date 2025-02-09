@@ -7,7 +7,7 @@
     "start:frontend": "bun --filter './packages/frontend' start",
     "build:frontend": "bun --filter './packages/frontend' build",
     "migrate:db": "bun --filter './packages/backend' migrate:db",
-    "dev": "bun --filter '*' dev",
+    "dev": "bun --elide-lines 0 --filter '*' dev ",
     "test": "bun --filter './packages/e2e' test"
   },
   "workspaces": [

@@ -71,7 +71,7 @@ const server = app.listen(PORT, () =>
   console.info(`✅ Lunary API server listening on port ${PORT}`),
 );
 
-prexit(async () => {
+process.on("exit", async () => {
   console.info("Shutting down server...");
   await sql.end({ timeout: 5 });
   await new Promise((r) => server.close(r));
