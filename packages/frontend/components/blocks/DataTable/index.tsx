@@ -120,11 +120,10 @@ export default function DataTable({
             <Menu.Target>
               <ActionIcon
                 component="span"
-                variant="light"
-                color="gray"
+                variant="default"
                 className={classes.columnIcon}
               >
-                <IconColumns3 size={16} />
+                <IconColumns3 size={16} color="black" />
               </ActionIcon>
             </Menu.Target>
             <Menu.Dropdown>
