@@ -159,8 +159,12 @@ export default function DataTable({
             <thead>
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHeader key={header.id} header={header} />
+                  {headerGroup.headers.map((header, i) => (
+                    <TableHeader
+                      key={header.id}
+                      header={header}
+                      isLastColumn={i + 1 === headerGroup.headers.length}
+                    />
                   ))}
                 </tr>
               ))}
