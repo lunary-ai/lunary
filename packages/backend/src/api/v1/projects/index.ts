@@ -70,6 +70,13 @@ projects.post("/", checkAccess("projects", "create"), async (ctx: Context) => {
     where account.org_id = ${orgId} and (account.role = 'owner' or account.role = 'admin')
   `;
 
+  await sql`
+    insert into
+      evaluator ("name", "slug", "type", "mode", "params", "filters", "project_id")
+    values
+      ('Language', 'language', 'language', 'realtime', '{}', '["OR", {"id": "type", "params": {"type": "llm"}}, {"id": "type", "params": {"type": "chat"}}]', ${project.id});
+  `;
+
   const publicKey = {
     type: "public",
     projectId: project.id,

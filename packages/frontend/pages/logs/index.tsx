@@ -276,9 +276,7 @@ export default function Logs() {
       if (Array.isArray(evaluators)) {
         for (const evaluator of evaluators) {
           const id = "enrichment-" + evaluator.id;
-          newColumns.llm.splice(
-            3,
-            0,
+          newColumns.llm.push(
             enrichmentColumn(evaluator.name, evaluator.id, evaluator.type),
           );
         }

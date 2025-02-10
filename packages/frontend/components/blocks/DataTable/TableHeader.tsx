@@ -24,9 +24,13 @@ function SortIcon({ status }: SortIconProps) {
 
 interface TableHeaderProps {
   header: Header<any, unknown>;
+  isLastColumn: boolean;
 }
 
-export default function TableHeader({ header }: TableHeaderProps) {
+export default function TableHeader({
+  header,
+  isLastColumn,
+}: TableHeaderProps) {
   const { sortField, setSortField, sortDirection, setSortDirection } =
     useSortParams();
 
@@ -57,7 +61,8 @@ export default function TableHeader({ header }: TableHeaderProps) {
         userSelect: "none",
         WebkitUserSelect: "none",
         MozUserSelect: "none",
-        width: `calc(var(--header-${header?.id}-size) * 1px)`,
+        width: `calc(var(--header-${header?.id}-size) * 1px ${isLastColumn ? "+ 30px" : ""})`,
+        // lastColumn has a 40px padding to account for the column selector icon
       }}
     >
       <Group onClick={handleClick}>
