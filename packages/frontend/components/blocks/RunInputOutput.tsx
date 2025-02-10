@@ -379,7 +379,12 @@ export default function RunInputOutput({
                         name="User"
                         value={run.user}
                         render={(user) => (
-                          <AppUserAvatar size="sm" user={user} withName />
+                          <AppUserAvatar
+                            size="sm"
+                            user={user}
+                            withName
+                            withLink
+                          />
                         )}
                       />
                     )}
