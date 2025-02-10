@@ -46,7 +46,7 @@ function debugFn(
   }
 
   console.debug("connection:", connection);
-  console.debug("query:", query);
+  console.debug("query:\n", query, "\n");
   console.debug("parameters:", parameters);
   console.debug("paramTypes:", paramTypes);
   console.debug("-----\n");
