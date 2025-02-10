@@ -334,7 +334,7 @@ export default function Trace({}) {
                 }
               >
                 <ActionIcon variant="default" onClick={handleUpClick}>
-                  <IconChevronUp />
+                  <IconChevronUp height="16px" />
                 </ActionIcon>
               </Tooltip>
             )}
@@ -348,7 +348,7 @@ export default function Trace({}) {
                 }
               >
                 <ActionIcon variant="default" onClick={handleDownClick}>
-                  <IconChevronDown />
+                  <IconChevronDown height="16px" />
                 </ActionIcon>
               </Tooltip>
             )}
