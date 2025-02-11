@@ -516,7 +516,7 @@ function RoleSelector({ data, color, scheme, onChange }) {
         },
       }}
       value={data?.role}
-      data={["system", "user", "assistant", "tool"]}
+      data={["system", "user", "assistant", "tool", "developer"]}
       onChange={(role) => onChange({ ...data, role })}
     />
   );
