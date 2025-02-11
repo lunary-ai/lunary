@@ -123,7 +123,10 @@ export default function DataTable({
                 variant="default"
                 className={classes.columnIcon}
               >
-                <IconColumns3 size={16} color="black" />
+                <IconColumns3
+                  size={16}
+                  color={scheme === "dark" ? "white" : "black"}
+                />
               </ActionIcon>
             </Menu.Target>
             <Menu.Dropdown>
