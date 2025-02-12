@@ -27,8 +27,8 @@ Lunary helps developers of LLM Chatbots develop and improve them.
 
 It also designed to be:
 
-- 📝 Easy to use (2 minutes to integrate)
-- 📦 Easy to integrate (2 minutes)
+- 📝 Easy to use
+- 📦 Fast to integrate (2 minutes)
 - 🧑‍💻 Self-hostable
 
 ## 1-min Demo
