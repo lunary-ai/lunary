@@ -106,6 +106,7 @@ test("test export csv", async ({ page }) => {
     "isPublic",
     "feedback",
     "parentFeedback",
+    "feedbacks",
     "type",
     "name",
     "createdAt",

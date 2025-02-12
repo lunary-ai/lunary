@@ -210,33 +210,51 @@ export function costColumn() {
   });
 }
 
-export function feedbackColumn(withRelatedRuns = false) {
-  const cell = withRelatedRuns
-    ? (props) => {
-        const run = props.row.original;
+export function feedbackColumn(type: "llm" | "traces" | "threads") {
+  let cell;
+  if (type === "traces") {
+    cell = (props) => {
+      const run = props.row.original;
 
-        const { data: relatedRuns } = useProjectSWR(`/runs/${run.id}/related`);
+      const { data: relatedRuns } = useProjectSWR(`/runs/${run.id}/related`);
 
-        const allFeedbacks = [run, ...(relatedRuns || [])]
-          .filter((run) => run.feedback)
-          .map((run) => run.feedback);
+      const allFeedbacks = [run, ...(relatedRuns || [])]
+        .filter((run) => run.feedback)
+        .map((run) => run.feedback)
+        .filter((feedback) => {
+          return feedback.thumb || feedback.comment;
+        });
 
-        return (
-          <Group gap="xs">
-            {allFeedbacks?.map((feedback, i) => (
-              <Feedback data={feedback} key={i} />
-            ))}
-          </Group>
-        );
-      }
-    : (props) => {
-        const run = props.row.original;
+      return (
+        <Group gap="xs" justify="flex-start">
+          {allFeedbacks
+            ?.filter((feedback) => feedback)
+            .map((feedback, i) => <Feedback data={feedback} key={i} />)}
+        </Group>
+      );
+    };
+  } else if (type === "threads") {
+    cell = (props) => {
+      const run = props.row.original;
 
-        const feedback = run.feedback || run.parentFeedback;
-        const isParentFeedback = !run.feedback && run.parentFeedback;
+      return (
+        <Group gap="xs" justify="left">
+          {run.feedbacks?.map((feedback, i) => (
+            <Feedback data={feedback} key={i} />
+          ))}
+        </Group>
+      );
+    };
+  } else if (type === "llm") {
+    cell = (props) => {
+      const run = props.row.original;
 
-        return <Feedback data={feedback} isFromParent={isParentFeedback} />;
-      };
+      const feedback = run.feedback || run.parentFeedback;
+      const isParentFeedback = !run.feedback && run.parentFeedback;
+
+      return <Feedback data={feedback} isFromParent={isParentFeedback} />;
+    };
+  }
 
   return columnHelper.accessor("feedback", {
     header: "Feedback",

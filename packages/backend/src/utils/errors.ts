@@ -13,6 +13,7 @@ export async function errorMiddleware(ctx: Context, next: Next) {
       ctx.status = 422;
       ctx.body = { error: "Error", message: error.errors[0].message };
       console.error("ZOD ERROR", JSON.stringify(error.errors[0]));
+      console.error(error);
       return;
     }
 
