@@ -177,6 +177,7 @@ export function formatRun(run: any) {
     isPublic: run.isPublic,
     feedback: run.feedback,
     parentFeedback: run.parentFeedback,
+    feedbacks: run.feedbacks,
 
     type: run.type,
     name: run.name,
@@ -355,8 +356,16 @@ function getRunQuery(ctx: Context, isExport = false) {
         eu.last_seen as user_last_seen,
         eu.props as user_props,
         t.slug as template_slug,
-        rpfc.feedback as parent_feedback
-    from
+        rpfc.feedback as parent_feedback,
+        coalesce(
+        (
+            select jsonb_agg(feedback) 
+            from run 
+            where parent_run_id = r.id 
+            and type = 'chat'
+        ), '[]'::jsonb
+    ) as feedbacks
+      from
         public.run r
         left join external_user eu on r.external_user_id = eu.id
         left join run_parent_feedback_cache rpfc on r.id = rpfc.id
