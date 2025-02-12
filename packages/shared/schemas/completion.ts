@@ -271,7 +271,7 @@ export namespace ChatCompletionChunk {
       /**
        * The role of the author of this message.
        */
-      role?: "system" | "user" | "assistant" | "tool";
+      role?: "system" | "user" | "assistant" | "tool" | "";
 
       tool_calls?: Array<Delta.ToolCall>;
     }
