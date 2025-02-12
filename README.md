@@ -1,14 +1,14 @@
 <div align="center">
 
 <p align="center">
-  <img src="https://lunary.ai/logo-blue-bg.svg" alt="Lunary Logo" width="200" height="200">
+  <img src="https://lunary.ai/banner.jpeg" alt="Abso banner" width=1040 />
 </p>
 
 # lunary
 
-**Developer toolkit for LLM chatbots**
+**Toolkit for LLM chatbots**
 
-[website](https://lunary.ai) - [docs](https://lunary.ai/docs)
+[website](https://lunary.ai) - [docs](https://lunary.ai/docs) - [llm sdk](https://github.com/lunary-ai/abso)
 
 [![npm version](https://badge.fury.io/js/lunary.svg)](https://badge.fury.io/js/lunary) ![PyPI - Version](https://img.shields.io/pypi/v/lunary) ![GitHub last commit (by committer)](https://img.shields.io/github/last-commit/lunary-ai/lunary) ![GitHub commit activity (branch)](https://img.shields.io/github/commit-activity/w/lunary-ai/lunary)
 
@@ -22,12 +22,12 @@ Lunary helps developers of LLM Chatbots develop and improve them.
 - 💵 Analytics (costs, token, latency, ..)
 - 🔍 Debugging (logs, traces, user tracking, ..)
 - ⛩️ Prompt Directory (versioning, team collaboration, ..)
-- 🏷️ Create fine-tuning datasets
-- 🧪 Automatic topic classification
+- 🏷️ Datasets (for evaluation, fine-tuning, ..)
+- 🧪 Topic & sentiment analysis
 
 It also designed to be:
 
-- 🤖 Usable with any model, not just OpenAI
+- 📝 Easy to use (2 minutes to integrate)
 - 📦 Easy to integrate (2 minutes)
 - 🧑‍💻 Self-hostable
 
@@ -44,6 +44,7 @@ Modules available for:
 
 Lunary natively supports:
 
+- [Abso](https://github.com/lunary-ai/abso)
 - [LangChain](https://lunary.ai/docs/langchain) (JS & Python)
 - [OpenAI module](https://lunary.ai/docs/js/openai)
 - [LiteLLM](https://docs.litellm.ai/docs/observability/lunary_integration)
@@ -57,7 +58,7 @@ Full documentation is available [on the website](https://lunary.ai/docs/intro).
 
 ## ☁️ Hosted version
 
-We offer [a hosted version](https://lunary.ai) with a free plan of up to 10k requests / month.
+We offer [a hosted version](https://lunary.ai) with a generous free tier.
 
 With the hosted version:
 
