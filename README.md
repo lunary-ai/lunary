@@ -33,7 +33,7 @@ It also designed to be:
 
 ## 1-min Demo
 
-https://github.com/lunary-ai/lunary/assets/5092466/a2b4ba9b-4afb-46e3-9b6b-faf7ddb4a931
+https://github.com/user-attachments/assets/4f95d952-a89b-442b-854a-e71e036073bb
 
 ## ⚙️ Integration
 
