@@ -576,6 +576,7 @@ export default function Sidebar() {
                   title={<Text size="sm">Star Lunary</Text>}
                   w="100%"
                   withBorder
+                  style={{ boxShadow: "none" }}
                   onClose={() => setNotificationDismissed(true)}
                 >
                   <Text my="sm" size="sm">
