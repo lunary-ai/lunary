@@ -585,6 +585,11 @@ export default function Sidebar() {
                   <Anchor
                     target="_blank"
                     href="https://github.com/lunary-ai/lunary"
+                    onClick={() =>
+                      analytics.track("Github Notification Link Clicked", {
+                        user,
+                      })
+                    }
                   >
                     <img
                       alt="Lunary Github stars"
