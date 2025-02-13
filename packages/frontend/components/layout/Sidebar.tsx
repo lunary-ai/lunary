@@ -1,11 +1,13 @@
 import {
   ActionIcon,
+  Anchor,
   Box,
   Collapse,
   Flex,
   Group,
   Menu,
   NavLink,
+  Notification,
   SegmentedControl,
   Stack,
   Text,
@@ -55,11 +57,12 @@ import { useAuth } from "@/utils/auth";
 import config from "@/utils/config";
 import { useProject, useProjects } from "@/utils/dataHooks";
 import { useViews } from "@/utils/dataHooks/views";
-import { useDisclosure, useFocusTrap } from "@mantine/hooks";
+import { useDisclosure, useFocusTrap, useLocalStorage } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 import { ResourceName, hasAccess, hasReadAccess, serializeLogic } from "shared";
 import DashboardsSidebarButton from "../analytics/DashboardsSidebarButton";
 import { getIconComponent } from "../blocks/IconPicker";
+import styles from "./sidebar.module.css";
 
 interface NavbarLinkProps {
   icon: any;
@@ -256,6 +259,11 @@ export default function Sidebar() {
 
   const { colorScheme, setColorScheme } = useMantineColorScheme({});
   const [createProjectLoading, setCreateProjectLoading] = useState(false);
+  const [notificationDismissed, setNotificationDismissed] = useLocalStorage({
+    key: "github-notification-dismissed",
+    defaultValue: false,
+    getInitialValueInEffect: false,
+  });
 
   const projectsCombobox = useCombobox({
     onDropdownClose: () => {
@@ -558,8 +566,32 @@ export default function Sidebar() {
                 }
               />
             )}
-
             <Group p="sm" justify="space-between">
+              {!notificationDismissed && (
+                <Notification
+                  pl="10"
+                  mb="lg"
+                  classNames={{ closeButton: styles.closeButton }}
+                  color="transparent"
+                  title={<Text size="sm">Star Lunary</Text>}
+                  w="100%"
+                  withBorder
+                  onClose={() => setNotificationDismissed(true)}
+                >
+                  <Text my="sm" size="sm">
+                    Help grow the community on GitHub
+                  </Text>
+                  <Anchor
+                    target="_blank"
+                    href="https://github.com/lunary-ai/lunary"
+                  >
+                    <img
+                      alt="Lunary Github stars"
+                      src="https://img.shields.io/github/stars/lunary-ai/lunary?label=lunary&amp;style=social"
+                    />
+                  </Anchor>
+                </Notification>
+              )}
               <Menu>
                 <Menu.Target>
                   <ActionIcon
@@ -676,7 +708,6 @@ export default function Sidebar() {
                         </Menu.Item>
                       </>
                     )}
-
                   {hasAccess(user.role, "teamMembers", "list") && (
                     <Menu.Item
                       leftSection={<IconUsers opacity={0.6} size={14} />}
