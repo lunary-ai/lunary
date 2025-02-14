@@ -346,53 +346,70 @@ function getRunQuery(ctx: Context, isExport = false) {
   }
 
   const query = sql`
-    with runs as (
-      select distinct
-        r.*,
-        (r.prompt_tokens + r.completion_tokens) as total_tokens,
-        eu.id as user_id,
-        eu.external_id as user_external_id,
-        eu.created_at as user_created_at,
-        eu.last_seen as user_last_seen,
-        eu.props as user_props,
-        t.slug as template_slug,
-        parent_feedback.feedback as parent_feedback,
-        coalesce(
-        (
-            select jsonb_agg(feedback) 
-            from run 
-            where parent_run_id = r.id 
-            and type = 'chat'
-        ), '[]'::jsonb
-    ) as feedbacks
-      from
-        public.run r
-        left join external_user eu on r.external_user_id = eu.id
-        left join template_version tv on r.template_version_id = tv.id
-        left join template t on tv.template_id = t.id
-        left join evaluation_result_v2 er on r.id = er.run_id
-        left join evaluator e on er.evaluator_id = e.id
-        cross join lateral (
-          select jsonb_path_query_array(er.result, '$.input[*].topic') || jsonb_path_query_array(er.result, '$.output[*].topic') 
-        ) topics(topics)
-        left join lateral (
-          with recursive parent_runs as (
-              select id, parent_run_id, feedback from run where id = r.id
-              union all
-              select 
-                r.id, r.parent_run_id, r.feedback from run r
-              join parent_runs on parent_runs.parent_run_id = r.id
-              where
-                r.parent_run_id is not null
-                and r.type = 'chat'
-            )
-          select
-            feedback 
-          from
-            parent_runs
-          where
-            parent_runs.id != r.id
-        ) parent_feedback on true
+    select 
+      r.*,
+      (r.prompt_tokens + r.completion_tokens) as total_tokens,
+      eu.id as user_id,
+      eu.external_id as user_external_id,
+      eu.created_at as user_created_at,
+      eu.last_seen as user_last_seen,
+      eu.props as user_props,
+      t.slug as template_slug,
+      coalesce(er.results, '[]') as evaluation_results,
+      parent_feedback.feedback as parent_feedback,
+      chat_feedbacks.feedbacks as feedbacks,
+      coalesce(scores, '[]'::json) as scores
+    from
+      public.run r
+      left join external_user eu on r.external_user_id = eu.id
+      left join template_version tv on r.template_version_id = tv.id
+      left join template t on tv.template_id = t.id
+      left join lateral (
+        select 
+          json_agg(jsonb_build_object('evaluatorName', e.name, 'evaluatorSlug', e.slug, 'evaluatorType', e.type, 'evaluatorId', e.id, 'result', er.result)) as results
+        from 
+          evaluation_result_v2 er
+          left join evaluator e on er.evaluator_id = e.id
+        where 
+          er.run_id = r.id
+        group by
+          r.id
+      ) as er on true
+      left join lateral (
+        select 
+          json_agg(jsonb_build_object('value', rs.value, 'label', rs.label, 'comment', rs.comment)) as scores
+        from
+          run_score rs
+        where
+          rs.run_id = r.id
+        group by
+          r.id
+      ) as rs on true
+      left join lateral (
+				with recursive parent_runs as (
+          select id, parent_run_id, feedback from run where id = r.id
+					union all
+					select r.id, r.parent_run_id, r.feedback
+					from run r
+					join parent_runs on parent_runs.parent_run_id = r.id
+					where r.parent_run_id is not null and r.type = 'chat'
+				)
+				select
+					feedback
+				from
+					parent_runs
+				where
+					parent_runs.id != r.id
+			) parent_feedback on true
+      left join lateral (
+        select
+          json_agg(feedback) as feedbacks
+        from
+          run r2
+        where
+          r2.parent_run_id = r.id
+          and r2.type = 'chat'
+      ) as chat_feedbacks on true
     where
         r.project_id = ${projectId}
         ${parentRunCheck}
@@ -401,54 +418,6 @@ function getRunQuery(ctx: Context, isExport = false) {
         ${sql.unsafe(orderByClause)}  
     limit ${isExport ? sql`all` : Number(limit)}
     offset ${Number(page) * Number(limit)}
-  ),
-  evaluation_results as (
-    select
-        r.id,
-        coalesce(array_agg(
-            jsonb_build_object(
-                'evaluatorName', e.name,
-                'evaluatorSlug', e.slug,
-                'evaluatorType', e.type,
-                'evaluatorId', e.id,
-                'result', er.result, 
-                'createdAt', er.created_at,
-                'updatedAt', er.updated_at
-            )
-        ) filter (where er.run_id is not null), '{}') as evaluation_results
-    from runs r
-    left join evaluation_result_v2 er on r.id = er.run_id
-    left join evaluator e on er.evaluator_id = e.id
-    group by r.id
-  ),
-  run_scores as (
-    select 
-      rs.run_id,
-      coalesce(
-        jsonb_agg(
-          distinct jsonb_build_object(
-            'value', rs.value,
-            'label', rs.label,
-            'comment', rs.comment
-          )
-        ) filter (where rs.run_id is not null),
-        '[]'::jsonb
-      ) as scores
-    from
-      run_score rs 
-    group by
-      rs.run_id
-  )
-  select
-    r.*,
-    er.evaluation_results,
-    rs.*
-  from
-    runs r
-    left join evaluation_results er on r.id = er.id
-    left join run_scores rs on r.id = rs.run_id 
-  order by
-    ${sql.unsafe(orderByClause)}  
   `;
 
   return { query, projectId, parentRunCheck, filtersQuery, page, limit };
@@ -604,10 +573,12 @@ runs.use("/ingest", ingest.routes());
  *                   metadata: null
  */
 runs.get("/", async (ctx: Context) => {
-  const { query, projectId, parentRunCheck, filtersQuery, page, limit } =
-    getRunQuery(ctx);
+  const { query, page, limit } = getRunQuery(ctx);
 
-  const rows = await query;
+  const [rows, total] = await Promise.all([
+    query,
+    sql`select count(*) from (${query}) c`,
+  ]);
   const runs = rows.map(formatRun);
 
   // TODO: improve this
@@ -635,56 +606,6 @@ runs.get("/", async (ctx: Context) => {
     }
   }
 
-  const total = await sql`
-    with runs as (
-      select distinct on (r.id)
-        r.*,
-        eu.id as user_id,
-        eu.external_id as user_external_id,
-        eu.created_at as user_created_at,
-        eu.last_seen as user_last_seen,
-        eu.props as user_props,
-        t.slug as template_slug,
-        parent_feedback.feedback as parent_feedback
-    from
-        public.run r
-        left join external_user eu on r.external_user_id = eu.id
-        left join template_version tv on r.template_version_id = tv.id
-        left join template t on tv.template_id = t.id
-        left join evaluation_result_v2 er on r.id = er.run_id
-        left join evaluator e on er.evaluator_id = e.id
-            cross join lateral (
-          select jsonb_path_query_array(er.result, '$.input[*].topic') || jsonb_path_query_array(er.result, '$.output[*].topic') 
-        ) topics(topics)
-        left join lateral (
-          with recursive parent_runs as (
-              select id, parent_run_id, feedback from run where id = r.id
-              union all
-              select 
-                r.id, r.parent_run_id, r.feedback from run r
-              join parent_runs on parent_runs.parent_run_id = r.id
-              where
-                r.parent_run_id is not null
-                and r.type = 'chat'
-            )
-          select
-            feedback 
-          from
-            parent_runs
-          where
-            parent_runs.id != r.id
-        ) parent_feedback on true
-    where
-        r.project_id = ${projectId}
-        ${parentRunCheck}
-        and (${filtersQuery})
-    )
-    select
-      count(*) 
-    from
-      runs;
-  `;
-
   ctx.body = {
     total: +total[0].count,
     page: Number(page),
@@ -694,71 +615,9 @@ runs.get("/", async (ctx: Context) => {
 });
 
 runs.get("/count", async (ctx: Context) => {
-  const { projectId } = ctx.state;
-
-  const queryString = ctx.querystring;
-  const deserializedChecks = deserializeLogic(queryString);
-
-  const filtersQuery =
-    deserializedChecks?.length && deserializedChecks.length > 1 // first is always ["AND"]
-      ? convertChecksToSQL(deserializedChecks)
-      : sql`r.type = 'llm'`; // default to type llm
-
-  const { parentRunId } = ctx.query as Query;
-
-  let parentRunCheck = sql``;
-  if (parentRunId) {
-    parentRunCheck = sql`and parent_run_id = ${parentRunId}`;
-  }
-
-  const [{ count }] = await sql`
-   with runs as (
-      select distinct on (r.id)
-        r.*,
-        eu.id as user_id,
-        eu.external_id as user_external_id,
-        eu.created_at as user_created_at,
-        eu.last_seen as user_last_seen,
-        eu.props as user_props,
-        t.slug as template_slug,
-        parent_feedback.feedback as parent_feedback
-    from
-        public.run r
-        left join external_user eu on r.external_user_id = eu.id
-        left join template_version tv on r.template_version_id = tv.id
-        left join template t on tv.template_id = t.id
-        left join evaluation_result_v2 er on r.id = er.run_id
-        left join evaluator e on er.evaluator_id = e.id
-        left join lateral (
-          with recursive parent_runs as (
-              select id, parent_run_id, feedback from run where id = r.id
-              union all
-              select 
-                r.id, r.parent_run_id, r.feedback from run r
-              join parent_runs on parent_runs.parent_run_id = r.id
-              where
-                r.parent_run_id is not null
-                and r.type = 'chat'
-            )
-          select
-            feedback 
-          from
-            parent_runs
-          where
-            parent_runs.id != r.id
-        ) parent_feedback on true
-    where
-        r.project_id = ${projectId}
-        ${parentRunCheck}
-        and (${filtersQuery})
-    )
-    select
-      count(*) 
-    from
-      runs;
-`;
-
-  ctx.body = count;
+  const { query } = getRunQuery(ctx);
+  const total = await sql`select count(*) from (${query}) c`;
+  ctx.body = +total[0].count;
 });
 
 /**
