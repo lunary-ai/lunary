@@ -356,7 +356,7 @@ function getRunQuery(ctx: Context, isExport = false) {
         eu.last_seen as user_last_seen,
         eu.props as user_props,
         t.slug as template_slug,
-        rpfc.feedback as parent_feedback,
+        parent_feedback.feedback as parent_feedback,
         coalesce(
         (
             select jsonb_agg(feedback) 
@@ -376,6 +376,24 @@ function getRunQuery(ctx: Context, isExport = false) {
         cross join lateral (
           select jsonb_path_query_array(er.result, '$.input[*].topic') || jsonb_path_query_array(er.result, '$.output[*].topic') 
         ) topics(topics)
+        left join lateral (
+          with recursive parent_runs as (
+              select id, parent_run_id, feedback from run where id = r.id
+              union all
+              select 
+                r.id, r.parent_run_id, r.feedback from run r
+              join parent_runs on parent_runs.parent_run_id = r.id
+              where
+                r.parent_run_id is not null
+                and r.type = 'chat'
+            )
+          select
+            feedback 
+          from
+            parent_runs
+          where
+            parent_runs.id != r.id
+        ) parent_feedback on true
     where
         r.project_id = ${projectId}
         ${parentRunCheck}
