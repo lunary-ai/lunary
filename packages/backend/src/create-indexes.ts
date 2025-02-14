@@ -115,6 +115,18 @@ export async function createIndexes() {
           console.log(
             `Materialized view migration "${name}" completed successfully.`,
           );
+        } else if (operation === "alter-table") {
+          await sql`
+            update 
+              _db_migration_async
+            set 
+              status = 'done'
+            where 
+              id = ${id}
+          `;
+          console.log(
+            `Alter table migration "${name}" completed successfully.`,
+          );
         }
       } catch (err) {
         console.error(`Index migration "${name}" errored:`, err);
