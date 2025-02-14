@@ -7,7 +7,7 @@ export async function startMaterializedViewRefreshJob() {
     return;
   }
   try {
-    const views = ["run_parent_feedback_cache", "metadata_cache"];
+    const views = ["metadata_cache"];
 
     while (true) {
       for (const view of views) {
@@ -19,7 +19,7 @@ export async function startMaterializedViewRefreshJob() {
         );
       }
 
-      await sleep(60000);
+      await sleep(5 * 60 * 1000);
     }
   } catch (error) {
     console.error(error);
