@@ -577,7 +577,10 @@ export default function Sidebar() {
                   w="100%"
                   withBorder
                   style={{ boxShadow: "none" }}
-                  onClose={() => setNotificationDismissed(true)}
+                  onClose={() => {
+                    setNotificationDismissed(true);
+                    analytics.track("Github Notification Dismissed", { user });
+                  }}
                 >
                   <Text my="sm" size="sm">
                     Help grow the community on GitHub
