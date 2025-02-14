@@ -573,12 +573,9 @@ runs.use("/ingest", ingest.routes());
  *                   metadata: null
  */
 runs.get("/", async (ctx: Context) => {
-  const { query, page, limit } = getRunQuery(ctx);
+  const { query, page, limit } = getRunQuery(ctx, false);
 
-  const [rows, total] = await Promise.all([
-    query,
-    sql`select count(*) from (${query}) c`,
-  ]);
+  const rows = await query;
   const runs = rows.map(formatRun);
 
   // TODO: improve this
@@ -607,7 +604,6 @@ runs.get("/", async (ctx: Context) => {
   }
 
   ctx.body = {
-    total: +total[0].count,
     page: Number(page),
     limit: Number(limit),
     data: runs,
