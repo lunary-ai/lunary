@@ -271,11 +271,11 @@ export const CHECK_RUNNERS: CheckRunner[] = [
 
           if (key === "comment") {
             // comment is a special case because there can be infinite values
-            return sql`(r.feedback->${key} is not null or rpfc.feedback->${key} is not null)`;
+            return sql`(r.feedback->${key} is not null or parent_feedback.feedback->${key} is not null)`;
           } else if (key === "thumb") {
-            return sql`(r.feedback->>'thumbs' = ${value} or rpfc.feedback->>'thumbs' = ${value} or r.feedback->>'thumb' = ${value} or rpfc.feedback->>'thumb' = ${value})`;
+            return sql`(r.feedback->>'thumbs' = ${value} or parent_feedback.feedback->>'thumbs' = ${value} or r.feedback->>'thumb' = ${value} or parent_feedback.feedback->>'thumb' = ${value})`;
           } else {
-            return sql`(r.feedback->>${key} = ${value} OR rpfc.feedback->>${key} = ${value})`;
+            return sql`(r.feedback->>${key} = ${value} OR parent_feedback.feedback->>${key} = ${value})`;
           }
         }),
       );

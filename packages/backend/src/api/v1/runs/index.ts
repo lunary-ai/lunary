@@ -368,7 +368,6 @@ function getRunQuery(ctx: Context, isExport = false) {
       from
         public.run r
         left join external_user eu on r.external_user_id = eu.id
-        left join run_parent_feedback_cache rpfc on r.id = rpfc.id
         left join template_version tv on r.template_version_id = tv.id
         left join template t on tv.template_id = t.id
         left join evaluation_result_v2 er on r.id = er.run_id
@@ -646,11 +645,10 @@ runs.get("/", async (ctx: Context) => {
         eu.last_seen as user_last_seen,
         eu.props as user_props,
         t.slug as template_slug,
-        rpfc.feedback as parent_feedback
+        parent_feedback.feedback as parent_feedback
     from
         public.run r
         left join external_user eu on r.external_user_id = eu.id
-        left join run_parent_feedback_cache rpfc on r.id = rpfc.id
         left join template_version tv on r.template_version_id = tv.id
         left join template t on tv.template_id = t.id
         left join evaluation_result_v2 er on r.id = er.run_id
@@ -658,6 +656,24 @@ runs.get("/", async (ctx: Context) => {
             cross join lateral (
           select jsonb_path_query_array(er.result, '$.input[*].topic') || jsonb_path_query_array(er.result, '$.output[*].topic') 
         ) topics(topics)
+        left join lateral (
+          with recursive parent_runs as (
+              select id, parent_run_id, feedback from run where id = r.id
+              union all
+              select 
+                r.id, r.parent_run_id, r.feedback from run r
+              join parent_runs on parent_runs.parent_run_id = r.id
+              where
+                r.parent_run_id is not null
+                and r.type = 'chat'
+            )
+          select
+            feedback 
+          from
+            parent_runs
+          where
+            parent_runs.id != r.id
+        ) parent_feedback on true
     where
         r.project_id = ${projectId}
         ${parentRunCheck}
@@ -705,15 +721,32 @@ runs.get("/count", async (ctx: Context) => {
         eu.last_seen as user_last_seen,
         eu.props as user_props,
         t.slug as template_slug,
-        rpfc.feedback as parent_feedback
+        parent_feedback.feedback as parent_feedback
     from
         public.run r
         left join external_user eu on r.external_user_id = eu.id
-        left join run_parent_feedback_cache rpfc on r.id = rpfc.id
         left join template_version tv on r.template_version_id = tv.id
         left join template t on tv.template_id = t.id
         left join evaluation_result_v2 er on r.id = er.run_id
         left join evaluator e on er.evaluator_id = e.id
+        left join lateral (
+          with recursive parent_runs as (
+              select id, parent_run_id, feedback from run where id = r.id
+              union all
+              select 
+                r.id, r.parent_run_id, r.feedback from run r
+              join parent_runs on parent_runs.parent_run_id = r.id
+              where
+                r.parent_run_id is not null
+                and r.type = 'chat'
+            )
+          select
+            feedback 
+          from
+            parent_runs
+          where
+            parent_runs.id != r.id
+        ) parent_feedback on true
     where
         r.project_id = ${projectId}
         ${parentRunCheck}
@@ -924,7 +957,6 @@ runs.get("/:id", async (ctx) => {
       run r
       left join run_score rs on r.id = rs.run_id
       left join external_user eu on r.external_user_id = eu.id
-      left join run_parent_feedback_cache rpfc on r.id = rpfc.id
       left join template_version tv on r.template_version_id = tv.id
       left join template t on tv.template_id = t.id
       left join evaluation_result_v2 er on r.id = er.run_id 
@@ -1360,7 +1392,6 @@ function buildBaseRunsQuery(ctx: Context) {
     from 
       public.run r
       left join external_user eu on r.external_user_id = eu.id
-      left join run_parent_feedback_cache rpfc on r.id = rpfc.id
       left join template_version tv ON r.template_version_id = tv.id
       left join template t on tv.template_id = t.id
       left join evaluation_result_v2 er ON r.id = er.run_id
