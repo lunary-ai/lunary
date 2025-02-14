@@ -10,18 +10,32 @@ const filters = new Router({
 filters.get("/models", async (ctx: Context) => {
   const { projectId } = ctx.state;
 
+  // Using distinct is slow, so we use emulate Loose Index Scan as described here: https://wiki.postgresql.org/wiki/Loose_indexscan
   const rows = await sql`
-    select distinct
-      r.name
-    from
-      run r
-    where
-      r.project_id = ${projectId} 
-      and r.type = 'llm'
-      and r.name is not null
-    order by
-      name;
-  `;
+    with recursive t as (
+      select
+        min(name) as name
+      from
+        run
+      where
+        project_id = ${projectId}
+        and run.type = 'llm'
+      
+    union all
+
+    select(
+      select 
+        min(name) as name
+      from
+        run
+      where
+        name > t.name
+        and project_id = ${projectId}
+        and run.type = 'llm'
+      ) from t where t.name is not null
+    )  
+    select name from t where name is not null;
+    `;
 
   ctx.body = rows.map((row) => row.name);
 });
