@@ -76,12 +76,10 @@ export function useProjectInfiniteSWR(key: string, ...args: any[]) {
   const { data, isLoading, isValidating, size, setSize, mutate } =
     useSWRInfinite(getKey, ...(args as [any]));
 
-  const total = data?.[0]?.total;
   const items = data?.map((d) => d?.data).flat();
+  const hasMore = items && items.length === PAGE_SIZE * size;
 
   function loadMore() {
-    const hasMore = items && items?.length < total;
-
     if (hasMore) {
       setSize((size) => size + 1);
     }
@@ -89,7 +87,6 @@ export function useProjectInfiniteSWR(key: string, ...args: any[]) {
 
   return {
     data: items,
-    total,
     isLoading,
     isValidating,
     loadMore,
