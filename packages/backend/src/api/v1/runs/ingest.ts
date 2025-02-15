@@ -269,7 +269,6 @@ async function registerRunEvent(
           id: runId,
           externalUserId,
           createdAt: timestamp,
-          tags,
           name,
           status: "started",
           params: params || extra,
@@ -281,6 +280,10 @@ async function registerRunEvent(
         }),
       )}
     `;
+    const tagsToInsert = tags?.map((tag: string) => ({ tag, runId }));
+    if (Array.isArray(tagsToInsert)) {
+      await sql`insert into run_tag ${sql(tagsToInsert)}`;
+    }
   } else if (eventName === "end") {
     let cost = undefined;
 
@@ -394,15 +397,18 @@ async function registerRunEvent(
           type: "thread",
           projectId,
           externalUserId,
-          tags: threadTags,
         }),
       )}
       on conflict (id)
       do update set
         external_user_id = excluded.external_user_id,
-        tags = excluded.tags
       returning *
     `;
+
+    if (Array.isArray(threadTags)) {
+      const tags = threadTags.map((tag: string) => ({ tag, runId: thread.id }));
+      await sql`insert into run_tag ${sql(tags)} on conflict do update set tag = excluded.tag`;
+    }
 
     await sql`insert into run ${sql({
       id: runId,

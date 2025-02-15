@@ -342,7 +342,7 @@ function getRunQuery(ctx: Context, isExport = false) {
   let orderByClause = `r.created_at desc nulls last`;
   if (sortField && sortField in sortMapping) {
     const direction = sortDirection === "desc" ? `desc` : `asc`;
-    orderByClause = `${sortMapping[sortField]} ${direction} nulls last`;
+    orderByClause = `${sortMapping[sortField]} ${direction}`;
   }
 
   const query = sql`
@@ -392,7 +392,7 @@ function getRunQuery(ctx: Context, isExport = false) {
 					select r.id, r.parent_run_id, r.feedback
 					from run r
 					join parent_runs on parent_runs.parent_run_id = r.id
-					where r.parent_run_id is not null and r.type = 'chat'
+					where r.parent_run_id is not null and r.type = 'chat' 
 				)
 				select
 					feedback
@@ -610,6 +610,7 @@ runs.get("/", async (ctx: Context) => {
   };
 });
 
+// TODO: delete
 runs.get("/count", async (ctx: Context) => {
   const { query } = getRunQuery(ctx);
   const total = await sql`select count(*) from (${query}) c`;

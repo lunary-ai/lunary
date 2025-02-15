@@ -194,17 +194,20 @@ export async function ingestChatEvent(
         type: "thread",
         projectId,
         externalUserId,
-        tags: threadTags,
         input: coreMessage,
       }),
     )}
     on conflict (id)
     do update set 
       external_user_id = excluded.external_user_id,
-      tags = excluded.tags,
       input = excluded.input
     returning *
   `;
+
+  if (Array.isArray(threadTags)) {
+    const tags = threadTags.map((tag: string) => ({ tag, runId: result.id }));
+    await sql`insert into run_tag ${sql(tags)} on conflict do update set tag = excluded.tag`;
+  }
 
   if (!result) {
     throw new Error("Error upserting run");
@@ -239,7 +242,6 @@ export async function ingestChatEvent(
   const shared = clearUndefined({
     id,
     projectId,
-    tags,
     metadata: metadata || extra,
     externalUserId,
     feedback,
@@ -308,14 +310,27 @@ export async function ingestChatEvent(
     update.endedAt = timestamp;
     update.parentRunId = run.parentRunId;
 
-    await sql`
-      INSERT INTO run ${sql({ ...shared, ...update })}
+    const [run] = await sql`
+      INSERT INTO run ${sql({ ...shared, ...update })} returning *
     `;
+
+    if (Array.isArray(tags)) {
+      const runTags = tags.map((tag: string) => ({ tag, runId: run.id }));
+      await sql`insert into run_tag ${sql(runTags)} on conflict do update set tag = excluded.tag`;
+    }
   } else if (operation === "update") {
     update.endedAt = timestamp;
 
     await sql`
       UPDATE run SET ${sql({ ...shared, ...update })} WHERE id = ${previousRun.id}
     `;
+
+    if (Array.isArray(tags)) {
+      const runTags = tags.map((tag: string) => ({
+        tag,
+        runId: previousRun.id,
+      }));
+      await sql`insert into run_tag ${sql(runTags)} on conflict do update set tag = excluded.tag`;
+    }
   }
 }
