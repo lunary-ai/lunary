@@ -106,7 +106,16 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   },
   {
     id: "models",
-    sql: ({ models }) => sql`(r.name = any(${models}))`,
+    sql: ({ models }) => {
+      if (models.length === 1) {
+        return sql`(r.name = ${models[0]})`;
+      }
+      let filter = sql`(r.name = ${models[0]}`;
+      for (let i = 1; i < models.length; i++) {
+        filter = sql`${filter} or r.name = ${models[i]}`;
+      }
+      return sql`${filter})`;
+    },
     ingestionCheck: async (run, params) => {
       const { models } = params;
       for (const model of models) {
