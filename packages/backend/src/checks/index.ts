@@ -273,9 +273,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
             // comment is a special case because there can be infinite values
             return sql`(r.feedback->${key} is not null or parent_feedback.feedback->${key} is not null)`;
           } else if (key === "thumb") {
-            return sql`(r.feedback->>'thumb' = ${value} or parent_feedback.feedback->>'thumbs' = ${value})`;
-          } else {
-            return sql`(r.feedback->>${key} = ${value} OR parent_feedback.feedback->>${key} = ${value})`;
+            return sql`(r.feedback->>'thumb' = ${value})`;
           }
         }),
       );
