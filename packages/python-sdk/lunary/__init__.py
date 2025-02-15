@@ -28,7 +28,7 @@ from .users import (
     identify,
 )  # DO NOT REMOVE `identify`` import
 from .tags import tags_ctx, tags  # DO NOT REMOVE `tags` import
-from .parent import parent_ctx, parent, get_parent  # DO NOT REMOVE `parent` import
+from .parent import parent_ctx, parent # DO NOT REMOVE `parent` import
 from .project import project_ctx  # DO NOT REMOVE `project` import
 
 logging.basicConfig()
@@ -49,14 +49,6 @@ class LunaryException(Exception):
 
 jsonpickle.handlers.register(BaseModel, PydanticHandler, base=True)
 
-def get_parent():
-    parent = parent_ctx.get()
-    if parent and parent.get("retrieved", False) == False:
-        parent_ctx.set({"message_id": parent["message_id"], "retrieved": True})
-        return parent.get("message_id", None)
-    return None
-
-
 def config(
     app_id: str | None = None,
     verbose: str | None = None,
@@ -70,8 +62,8 @@ def get_parent_run_id(parent_run_id: str, run_type: str, app_id: str, run_id: st
     if parent_run_id == "None":
         parent_run_id = None
 
-    parent_from_ctx = get_parent()
-    if parent_from_ctx and run_type != "thread":
+    parent_from_ctx = parent_ctx.get().get("message_id") if parent_ctx.get() else None
+    if not parent_run_id and parent_from_ctx and run_type != "thread":
         return str(create_uuid_from_string(str(parent_from_ctx) + str(app_id)))
 
     if parent_run_id:
