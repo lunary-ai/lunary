@@ -23,7 +23,7 @@ export function useModelMappings() {
   );
 
   return {
-    models: data,
+    customModels: data,
     insert,
     isInserting,
     update,
