@@ -16,10 +16,3 @@ class ParentContextManager:
 
 def parent(id: str) -> ParentContextManager:
     return ParentContextManager(id)
-
-def get_parent():
-  parent = parent_ctx.get()
-  if parent and parent.get("retrieved", False) == False:
-    parent_ctx.set({"message_id": parent["message_id"], "retrieved": True})
-    return parent.get("message_id", None)
-  return None
