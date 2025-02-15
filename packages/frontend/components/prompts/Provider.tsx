@@ -2,6 +2,7 @@ import { jsonrepair } from "jsonrepair";
 
 import {
   ActionIcon,
+  Anchor,
   Button,
   Checkbox,
   Group,
@@ -18,9 +19,14 @@ import {
 import { notifications } from "@mantine/notifications";
 
 import { MODELS, Provider } from "shared";
-import { useState } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { IconInfoCircle, IconTools } from "@tabler/icons-react";
+import { IconInfoCircle, IconSettings, IconTools } from "@tabler/icons-react";
+import {
+  useAllProviderModels,
+  useProviderModels,
+} from "@/utils/dataHooks/providers";
+import { useRouter } from "next/router";
 
 function convertOpenAIToolsToAnthropic(openAITools) {
   return openAITools.map((openAITool) => {
@@ -94,6 +100,15 @@ export default function ProviderEditor({
 }) {
   const [tempJSON, setTempJSON] = useState<any>("");
   const [jsonModalOpened, setJsonModalOpened] = useState(false);
+  const [models, setModels] = useState(MODELS);
+  const { customModels } = useAllProviderModels();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (customModels) {
+      setModels([...MODELS, ...customModels]);
+    }
+  }, [customModels]);
 
   const configHandler = (key: string, isCheckbox?: boolean) => ({
     size: "xs",
@@ -125,65 +140,72 @@ export default function ProviderEditor({
       <ParamItem
         name="Model"
         value={
-          <Select
-            data={MODELS.map((model) => ({
-              value: model.id,
-              label: model.name,
-            }))}
-            w={250}
-            size="xs"
-            searchable
-            inputMode="search"
-            value={value?.model}
-            onChange={(model) => {
-              if (!model || !value.model) {
-                return;
-              }
-              // Handle conversion between OpenAI and Anthropic tools format
-              const isPreviousProviderOpenAI =
-                value.model.startsWith("gpt") ||
-                value.model.includes("mistral");
-              const isNewProviderOpenAI =
-                model.startsWith("gpt") || model.includes("mistral");
+          <Group>
+            <Select
+              data={models.map((model) => ({
+                value: model.id,
+                label: `${model.name} ${model.providerName ? `(${model.providerName})` : ""}`,
+              }))}
+              w={250}
+              size="xs"
+              searchable
+              inputMode="search"
+              value={value?.model}
+              onChange={(model) => {
+                if (!model || !value.model) {
+                  return;
+                }
+                // Handle conversion between OpenAI and Anthropic tools format
+                const isPreviousProviderOpenAI =
+                  value.model.startsWith("gpt") ||
+                  value.model.includes("mistral");
+                const isNewProviderOpenAI =
+                  model.startsWith("gpt") || model.includes("mistral");
 
-              const isPreviousProviderAnthropic =
-                value.model.startsWith("claude");
+                const isPreviousProviderAnthropic =
+                  value.model.startsWith("claude");
 
-              const isNewProviderAnthropic = model.startsWith("claude");
+                const isNewProviderAnthropic = model.startsWith("claude");
 
-              let updatedTools = value.config.tools;
+                let updatedTools = value.config.tools;
 
-              if (
-                isPreviousProviderOpenAI &&
-                isNewProviderAnthropic &&
-                value.config.tools
-              ) {
-                updatedTools = convertOpenAIToolsToAnthropic(
-                  value.config.tools,
-                );
-              } else if (
-                isPreviousProviderAnthropic &&
-                isNewProviderOpenAI &&
-                value.config.tools
-              ) {
-                updatedTools = convertAnthropicToolsToOpenAI(
-                  value.config.tools,
-                );
-              }
+                if (
+                  isPreviousProviderOpenAI &&
+                  isNewProviderAnthropic &&
+                  value.config.tools
+                ) {
+                  updatedTools = convertOpenAIToolsToAnthropic(
+                    value.config.tools,
+                  );
+                } else if (
+                  isPreviousProviderAnthropic &&
+                  isNewProviderOpenAI &&
+                  value.config.tools
+                ) {
+                  updatedTools = convertAnthropicToolsToOpenAI(
+                    value.config.tools,
+                  );
+                }
 
-              onChange({
-                ...value,
-                model,
-                config: {
-                  ...value.config,
-                  tools: updatedTools,
-                },
-              });
-            }}
-          />
+                onChange({
+                  ...value,
+                  model,
+                  config: {
+                    ...value.config,
+                    tools: updatedTools,
+                  },
+                });
+              }}
+            />
+            <ActionIcon
+              variant="default"
+              onClick={() => router.push("/settings/providers")}
+            >
+              <IconSettings width={18} opacity="0.7" />
+            </ActionIcon>
+          </Group>
         }
       />
-
       <ParamItem
         name="Temperature"
         value={
@@ -198,7 +220,6 @@ export default function ProviderEditor({
           />
         }
       />
-
       <ParamItem
         name="Max tokens"
         value={
@@ -211,7 +232,6 @@ export default function ProviderEditor({
           />
         }
       />
-
       <ParamItem
         name="Freq. Penalty"
         value={
@@ -225,7 +245,6 @@ export default function ProviderEditor({
           />
         }
       />
-
       <ParamItem
         name="Pres. Penalty"
         value={
@@ -239,7 +258,6 @@ export default function ProviderEditor({
           />
         }
       />
-
       <ParamItem
         name="Top P"
         value={
@@ -253,12 +271,10 @@ export default function ProviderEditor({
           />
         }
       />
-
       <ParamItem
         name="Stream"
         value={<Checkbox {...configHandler("stream", true)} />}
       />
-
       <ParamItem
         name="Tool Calls"
         value={
