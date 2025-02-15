@@ -1,3 +1,4 @@
+import { useState } from "react";
 import DurationBadge from "@/components/blocks/DurationBadge";
 import RunInputOutput from "@/components/blocks/RunInputOutput";
 import StatusBadge from "@/components/blocks/StatusBadge";
@@ -21,6 +22,7 @@ import {
 } from "@mantine/core";
 import {
   IconChevronDown,
+  IconChevronRight, // added for collapsed state
   IconChevronUp,
   IconCloudDownload,
   IconCode,
@@ -34,7 +36,7 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { getColorForRunType } from "../../utils/colors";
 
 import RunsChat from "@/components/blocks/RunChat";
@@ -64,10 +66,12 @@ function TraceTree({
   onSelect,
   firstDate,
 }) {
+  const [collapsed, setCollapsed] = useState(false);
+
   // each run contains a child_runs array containing the ids of the runs it spawned
   const run = runs.find((run) => run.id === parentId);
   if (!run) {
-    return;
+    return null;
   }
   if (run.input === "__NOT_INGESTED__") {
     run.status = "filtered";
@@ -84,7 +88,7 @@ function TraceTree({
   const isActive = run.id === focused;
 
   const shownRuns = runs
-    .filter((run) => run.parentRunId === parentId)
+    .filter((r) => r.parentRunId === parentId)
     .sort(
       (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
@@ -140,7 +144,31 @@ function TraceTree({
           onClick={() => onSelect(run.id)}
           style={{ cursor: "pointer" }}
         >
-          {showStatus && <StatusBadge minimal status={run.status} />}
+          {showStatus && (
+            <Group gap="xs">
+              <StatusBadge minimal status={run.status} />
+              {shownRuns.length > 0 && (
+                <ActionIcon
+                  variant="transparent"
+                  styles={{
+                    root: {
+                      "--ai-hover": "var(--mantine-color-default-hover)",
+                    },
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCollapsed(!collapsed);
+                  }}
+                >
+                  {collapsed ? (
+                    <IconChevronRight size={16} />
+                  ) : (
+                    <IconChevronDown size={16} />
+                  )}
+                </ActionIcon>
+              )}
+            </Group>
+          )}
 
           <Badge
             variant={isActive ? "filled" : "outline"}
@@ -178,25 +206,21 @@ function TraceTree({
               endedAt={run.endedAt}
             />
           )}
-
-          {/* {timeAfterFirst > 0 && (
-              <Text c="dimmed" fz="xs">
-                T + {(timeAfterFirst / 1000).toFixed(2)}s
-              </Text>
-            )} */}
         </Group>
 
-        {shownRuns.map((run, k) => (
-          <TraceTree
-            key={run.id}
-            isLastOfParent={k === shownRuns.length - 1}
-            parentId={run.id}
-            focused={focused}
-            runs={runs}
-            onSelect={onSelect}
-            firstDate={firstDate}
-          />
-        ))}
+        {/* Only render children if not collapsed */}
+        {!collapsed &&
+          shownRuns.map((childRun, k) => (
+            <TraceTree
+              key={childRun.id}
+              isLastOfParent={k === shownRuns.length - 1}
+              parentId={childRun.id}
+              focused={focused}
+              runs={runs}
+              onSelect={onSelect}
+              firstDate={firstDate}
+            />
+          ))}
       </div>
     </Group>
   );

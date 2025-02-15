@@ -16,8 +16,8 @@ export async function errorMiddleware(ctx: Context, next: Next) {
       console.error(error);
       return;
     }
-
     console.error(error);
+
     ctx.status = error.statusCode || error.status || 500;
     ctx.body = { message: error.message || "An unexpected error occurred" };
   }

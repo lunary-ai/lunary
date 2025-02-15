@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import OpenAI from "openai";
+import OpenAI, { AzureOpenAI } from "openai";
 import { MODELS } from "shared";
 import { ReadableStream } from "stream/web";
 import sql from "./db";
@@ -325,13 +325,69 @@ function getAnthropicMessage(message: any): any {
   return res;
 }
 
+interface AzureClientOptions {
+  apiKey: string;
+  resourceName: string;
+}
+async function runAzureOpenAI(
+  messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
+  params: any = {},
+  stream: boolean = false,
+  modelId: string,
+) {
+  const [res] = await sql`
+    select 
+      cm.name as model_name,
+      pa.api_key as api_key,
+      pa.resource_name as resource_name
+    from
+      custom_model cm
+      left join provider_azure pa on cm.provider_id = pa.id 
+    where
+      cm.id = ${modelId}
+  `;
+
+  const clientOptions: AzureClientOptions = {
+    apiKey: res.apiKey,
+    resourceName: res.resourceName,
+  };
+
+  console.log(res);
+  const modelName = res.modelName;
+  const endpoint = `https://${clientOptions.resourceName}.openai.azure.com/`;
+
+  const client = new AzureOpenAI({
+    apiVersion: "2025-01-01-preview",
+    apiKey: clientOptions.apiKey,
+    endpoint,
+  });
+
+  const chatCompletion = await client.chat.completions.create({
+    model: modelName,
+    messages: messages,
+    stream: stream,
+    temperature: params?.temperature,
+    max_tokens: params?.max_tokens,
+    top_p: params?.top_p,
+    presence_penalty: params?.presence_penalty,
+    frequency_penalty: params?.frequency_penalty,
+    stop: params?.stop,
+    functions: params?.functions,
+    tools: validateToolCalls("gpt", params?.tools),
+    seed: params?.seed,
+  });
+
+  return chatCompletion;
+}
+
 export async function runAImodel(
   content: any,
-  extra: any,
+  completionsParams: any,
   variables: Record<string, string> | undefined = undefined,
   model: string,
   stream: boolean = false,
   orgId: string,
+  projectId: string,
 ) {
   if (orgId) {
     const [{ stripeCustomer }] =
@@ -357,6 +413,16 @@ export async function runAImodel(
   const copy = compilePrompt(content, variables);
 
   const messages = convertInputToOpenAIMessages(copy);
+  const uuidPattern = /^[0-9A-Fa-f]{8}(-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}$/;
+  if (uuidPattern.test(model)) {
+    const chatCompletion = await runAzureOpenAI(
+      messages,
+      completionsParams,
+      stream,
+      model,
+    );
+    return chatCompletion;
+  }
   const modelObj = MODELS.find((m) => m.id === model);
 
   const useAnthropic = modelObj?.provider === "anthropic";
@@ -375,14 +441,14 @@ export async function runAImodel(
         .map(getAnthropicMessage),
       system: messages.filter((m) => m.role === "system")[0]?.content,
       stream: false,
-      temperature: extra?.temperature,
-      max_tokens: extra?.max_tokens || 4096,
-      top_p: extra?.top_p,
-      presence_penalty: extra?.presence_penalty,
-      frequency_penalty: extra?.frequency_penalty,
-      functions: extra?.functions,
-      tools: validateToolCalls(model, extra?.tools),
-      seed: extra?.seed,
+      temperature: completionsParams?.temperature,
+      max_tokens: completionsParams?.max_tokens || 4096,
+      top_p: completionsParams?.top_p,
+      presence_penalty: completionsParams?.presence_penalty,
+      frequency_penalty: completionsParams?.frequency_penalty,
+      functions: completionsParams?.functions,
+      tools: validateToolCalls(model, completionsParams?.tools),
+      seed: completionsParams?.seed,
     });
 
     return getOpenAIMessage(res);
@@ -396,11 +462,11 @@ export async function runAImodel(
       modelId: model,
       projectId: process.env.WATSONX_AI_PROJECT_ID,
       messages,
-      temperature: extra?.temperature,
-      maxTokens: extra?.max_tokens,
-      topP: extra?.top_p,
-      presencePenalty: extra?.presence_penalty,
-      frequencyPenalty: extra?.frequency_penalty,
+      temperature: completionsParams?.temperature,
+      maxTokens: completionsParams?.max_tokens,
+      topP: completionsParams?.top_p,
+      presencePenalty: completionsParams?.presence_penalty,
+      frequencyPenalty: completionsParams?.frequency_penalty,
     });
 
     return result;
@@ -451,15 +517,15 @@ export async function runAImodel(
     model,
     messages,
     stream: modelObj?.streamingDisabled ? false : stream,
-    temperature: extra?.temperature,
-    max_completion_tokens: extra?.max_tokens,
-    top_p: extra?.top_p,
-    presence_penalty: extra?.presence_penalty,
-    frequency_penalty: extra?.frequency_penalty,
-    stop: extra?.stop,
-    functions: extra?.functions,
-    tools: validateToolCalls(model, extra?.tools),
-    seed: extra?.seed,
+    temperature: completionsParams?.temperature,
+    max_completion_tokens: completionsParams?.max_tokens,
+    top_p: completionsParams?.top_p,
+    presence_penalty: completionsParams?.presence_penalty,
+    frequency_penalty: completionsParams?.frequency_penalty,
+    stop: completionsParams?.stop,
+    functions: completionsParams?.functions,
+    tools: validateToolCalls(model, completionsParams?.tools),
+    seed: completionsParams?.seed,
     ...paramsOverwrite,
   });
 

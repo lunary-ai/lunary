@@ -188,7 +188,7 @@ orgs.post(
   "/playground",
   checkAccess("prompts", "run"),
   async (ctx: Context) => {
-    const orgId = ctx.state.orgId as string;
+    const { orgId, projectId } = ctx.state;
     const requestBodySchema = z.object({
       content: z.array(z.any()).or(z.string()),
       extra: z.any(),
@@ -228,7 +228,15 @@ orgs.post(
   `;
     const model = extra?.model || "gpt-3.5-turbo";
 
-    const res = await runAImodel(content, extra, variables, model, true, orgId);
+    const res = await runAImodel(
+      content,
+      extra,
+      variables,
+      model,
+      true,
+      orgId,
+      projectId,
+    );
 
     const stream = new PassThrough();
     stream.pipe(ctx.res);
