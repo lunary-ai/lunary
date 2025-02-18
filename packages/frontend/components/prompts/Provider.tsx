@@ -197,12 +197,12 @@ export default function ProviderEditor({
                 });
               }}
             />
-            <ActionIcon
+            {/* <ActionIcon
               variant="default"
               onClick={() => router.push("/settings/providers")}
             >
               <IconSettings width={18} opacity="0.7" />
-            </ActionIcon>
+            </ActionIcon> */}
           </Group>
         }
       />

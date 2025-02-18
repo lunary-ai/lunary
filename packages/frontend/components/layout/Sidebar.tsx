@@ -311,6 +311,17 @@ export default function Sidebar() {
           link: "/dashboards",
           resource: "analytics",
         },
+        // Only for Mock Lunary for now
+        ...(project?.id === "dedc86a5-6cba-481c-9ce5-8b6fa3dcd8e6"
+          ? [
+              {
+                label: "Intelligence",
+                icon: IconSparkles,
+                link: "/intelligence",
+                resource: "analytics",
+              },
+            ]
+          : []),
         {
           label: "LLM",
           icon: IconBrandOpenai,
