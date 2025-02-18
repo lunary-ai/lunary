@@ -17,6 +17,7 @@ import {
   signJWT,
   verifyJWT,
   verifyPassword,
+  verifyRecaptcha,
 } from "./utils";
 import github from "./github";
 
@@ -62,6 +63,7 @@ auth.post("/signup", async (ctx: Context) => {
     whereFindUs: z.string().optional(),
     redirectUrl: z.string().optional(),
     signupMethod: z.enum(["signup", "join"]),
+    recaptchaToken: z.string().optional(),
   });
 
   const {
@@ -76,11 +78,19 @@ auth.post("/signup", async (ctx: Context) => {
     whereFindUs,
     redirectUrl,
     token,
+    recaptchaToken,
   } = bodySchema.parse(ctx.request.body);
 
   // Prevent spaming
   if (orgName?.includes("https://") || name.includes("http://")) {
     ctx.throw(403, "Bad request");
+  }
+
+  if (config.IS_SELF_HOSTED) {
+    const recaptchaResponse = await verifyRecaptcha(recaptchaToken!);
+    if (!recaptchaResponse.success) {
+      ctx.throw(400, "Failed reCAPTCHA verification");
+    }
   }
 
   if (signupMethod === "signup") {

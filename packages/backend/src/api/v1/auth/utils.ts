@@ -9,6 +9,7 @@ import bcrypt from "bcrypt";
 import { validateUUID } from "@/src/utils/misc";
 import { sendEmail, RESET_PASSWORD } from "@/src/emails";
 import { JWTExpired } from "jose/errors";
+import config from "@/src/utils/config";
 
 export function sanitizeEmail(email: string) {
   return email.toLowerCase().trim();
@@ -66,6 +67,26 @@ export async function isJWTExpired(token: string) {
   } catch (error) {
     return true;
   }
+}
+
+export async function verifyRecaptcha(token: string) {
+  const secretKey = config.RECAPTCHA_SECRET_KEY;
+
+  const params = new URLSearchParams();
+  params.append("secret", secretKey);
+  params.append("response", token);
+
+  const response = await fetch(
+    "https://www.google.com/recaptcha/api/siteverify",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString(),
+    },
+  );
+
+  const data = await response.json();
+  return data;
 }
 
 // TODO: shared
