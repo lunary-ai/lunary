@@ -77,7 +77,9 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   const isPromptPage = router.pathname.startsWith("/prompt");
   const isTracePage = router.pathname.startsWith("/traces");
-  const disablePagePadding = isPromptPage || isTracePage || isAuthPage;
+  const isIntelligencePage = router.pathname.startsWith("/intelligence");
+  const disablePagePadding =
+    isPromptPage || isTracePage || isAuthPage || isIntelligencePage;
 
   useEffect(() => {
     if (user) {
