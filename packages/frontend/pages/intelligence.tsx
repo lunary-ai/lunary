@@ -23,11 +23,12 @@ import {
   IconTrendingDown,
   IconClock,
 } from "@tabler/icons-react";
+import { format } from "date-fns";
 
-type LineChartData = {
+type LineChartData = Array<{
   date: string;
-  value: number;
-}[];
+  [key: string]: string | number; // Allow any string key with string or number value
+}>;
 
 // Mock data
 const topicsData = [
@@ -204,14 +205,6 @@ const emotionsData = [
 ];
 
 const mockConversations = [
-  {
-    id: 1,
-    user: "david.chen@acme-corp.com",
-    message:
-      "We're getting charged twice for the same API calls. This is urgent!",
-    sentiment: "negative",
-    date: "2024-03-20T10:30:00Z",
-  },
   {
     id: 2,
     user: "rachel.patel@techstart.io",
@@ -456,24 +449,33 @@ export default function Intelligence() {
               granularity="daily"
               height={200}
               agg="sum"
-              props={["value"]}
+              props={["conversations"]}
               title="Conversations"
               extraProps={{}}
+              cleanData={true}
+              colors={["blue.6"]}
+              formatter={(value) => value.toLocaleString()}
             />
 
             <Text size="lg" fw={500} mt="xl" mb="md">
               Sentiment Over Time
             </Text>
             <LineChartComponent
-              data={generateMockTimeSeriesData(30, 3.5, 0.15)}
+              data={generateMockTimeSeriesData(30, 3.5, 0.15).map((d) => ({
+                date: d.date,
+                sentiment: d.conversations,
+              }))}
               startDate={new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)}
               endDate={new Date()}
               granularity="daily"
               height={200}
               agg="avg"
-              props={["value"]}
+              props={["sentiment"]}
               title="Sentiment"
               extraProps={{}}
+              cleanData={true}
+              colors={["violet.6"]}
+              formatter={(value) => value.toFixed(1)}
             />
 
             <Text size="lg" fw={500} mt="xl" mb="md">
@@ -541,9 +543,11 @@ const generateMockTimeSeriesData = (
       currentValue *= 0.7;
     }
 
+    const formattedDate = format(date, "yyyy-MM-dd");
+
     data.push({
-      date: date.toISOString(),
-      value: Math.max(0, Math.round(currentValue)),
+      date: formattedDate,
+      conversations: Math.max(0, Math.round(currentValue)),
     });
 
     if (Math.random() < 0.1) {
