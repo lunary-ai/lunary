@@ -48,6 +48,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/grecaptcha": "^3.0.9",
     "@types/node": "22.10.2",
     "@types/react": "18.2.45",
     "@types/react-dom": "^18.2.18",
