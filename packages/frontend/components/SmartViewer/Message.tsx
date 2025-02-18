@@ -6,8 +6,8 @@ import {
   Code,
   Flex,
   Group,
-  Paper,
   HoverCard,
+  Paper,
   Select,
   Space,
   Stack,
@@ -15,12 +15,13 @@ import {
   TextInput,
   Textarea,
   ThemeIcon,
+  Title,
   Tooltip,
   useComputedColorScheme,
-  Title,
 } from "@mantine/core";
 import {
   IconCircleMinus,
+  IconCopy,
   IconInfoCircle,
   IconRobot,
   IconTool,
@@ -35,10 +36,11 @@ import { useEffect, useMemo } from "react";
 
 import { SentimentEnrichment2 } from "@/utils/enrichment";
 import { getFlagEmoji, getLanguageName } from "@/utils/format";
+import { useClipboard } from "@mantine/hooks";
 import { openConfirmModal } from "@mantine/modals";
-import HighlightPii from "./HighlightPii";
 import AppUserAvatar from "../blocks/AppUserAvatar";
 import { AudioPlayer } from "./AudioPlayer";
+import HighlightPii from "./HighlightPii";
 
 const ghostTextAreaStyles = {
   variant: "unstyled",
@@ -534,6 +536,8 @@ export function ChatMessage({
   onChange?: any;
   compact?: boolean;
 }) {
+  const clipboard = useClipboard({ timeout: 500 });
+
   const scheme = useComputedColorScheme();
 
   const color = getColorForRole(data?.role);
@@ -600,6 +604,7 @@ export function ChatMessage({
 
   return (
     <Paper
+      pt="0"
       className={`${classes.paper} ${compact ? classes.compact : ""}`}
       bg={`var(--mantine-color-${color}-${
         scheme === "light" ? 2 : color === "gray" ? 7 : 9
@@ -607,7 +612,7 @@ export function ChatMessage({
       {...props}
     >
       {!compact && (
-        <Group justify="space-between">
+        <Group justify="space-between" py="4px">
           {editable ? (
             <RoleSelector
               data={data}
@@ -634,6 +639,19 @@ export function ChatMessage({
                   <Box>{getFlagEmoji(language.isoCode)}</Box>
                 </Tooltip>
               )}
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                color="black"
+                onClick={() => {
+                  console.log(data);
+                  clipboard.copy(
+                    data.content || data.text || JSON.stringify(data.toolCalls),
+                  );
+                }}
+              >
+                <IconCopy size="15px" />
+              </ActionIcon>
             </Group>
           )}
         </Group>
