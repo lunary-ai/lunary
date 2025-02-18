@@ -1,0 +1,2 @@
+insert into _db_migration_async (name, operation, statement) values
+('run_project_id_type_idx1', 'create', 'create index concurrently run_project_id_type_idx1 on run(project_id, type) where type in (''chain'', ''agent'') and parent_run_id is null');

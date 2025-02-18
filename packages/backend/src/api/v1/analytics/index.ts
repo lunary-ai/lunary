@@ -1116,62 +1116,67 @@ analytics.get("/agents/top", async (ctx: Context) => {
   );
 
   const data = await sql`
-    with recursive
-      agent_tree as (
-        select
-          r.id,
-          r.name,
-          r.type,
-          r.cost,
-          r.created_at,
-          r.parent_run_id,
-          r.id as agent_id, 
-          r.name as agent_name,
-          coalesce(r.prompt_tokens, 0) as prompt_tokens,
-          coalesce(r.completion_tokens, 0) as completion_tokens,
-          coalesce(r.prompt_tokens + r.completion_tokens, 0) as tokens        
-        from
-          run r
-        where 
-          (r.type = 'agent' or r.type = 'chain') 
-          and (parent_run_id is null or exists (select 1 from run as parent_run where parent_run.id = r.parent_run_id and parent_run.type = 'chat'))
-          and project_id = ${projectId} 
-
-        union all
-
-        select
-          child.id,
-          child.name,
-          child.type,
-          child.cost,
-          child.created_at,
-          child.parent_run_id,
-          at.agent_id,
-          at.agent_name,
-          coalesce(child.prompt_tokens, 0) as prompt_tokens,
-          coalesce(child.completion_tokens, 0) as completion_tokens,
-          coalesce(child.prompt_tokens + child.completion_tokens, 0) as tokens
-        from
-          run child
-          join agent_tree at on child.parent_run_id = at.id
-      )
-    select
+    with recursive chat_runs as (
+      select
+        id
+      from
+        run r
+      where
+        project_id = ${projectId} 
+        and r.type = 'chat'
+        and date_trunc('day', r.created_at at time zone ${timeZone})::timestamp >= ${startDate}
+        and date_trunc('day', r.created_at at time zone ${timeZone})::timestamp <= ${endDate}
+    ),
+    agent_ids as (
+      select
+        r.id,
+        r.cost,
+        r.name,
+        r.prompt_tokens,
+        r.completion_tokens
+      from
+        run r
+        inner join chat_runs on r.parent_run_id = chat_runs.id
+      where
+        project_id = ${projectId} 
+        and r.type in ('chain', 'agent')
+        and (parent_run_id is null or chat_runs.id is not null)
+        and date_trunc('day', r.created_at at time zone ${timeZone})::timestamp >= ${startDate}
+        and date_trunc('day', r.created_at at time zone ${timeZone})::timestamp <= ${endDate} 
+    ),
+    agents_tree as (
+      select 
+        id, 
+        name as agent_name,
+        cost,
+        prompt_tokens,
+        completion_tokens
+      from 
+        agent_ids
+      
+      union all
+      
+      select 
+        child.id,
+        at.agent_name,
+        child.cost,
+        child.prompt_tokens,
+        child.completion_tokens
+      from
+        run child
+            inner join agents_tree at on child.parent_run_id = at.id
+    )
+    select 
       agent_name as name,
-        coalesce(sum(prompt_tokens), 0)::bigint as prompt_tokens,
-        coalesce(sum(completion_tokens), 0)::bigint as completion_tokens,
-        coalesce(sum(prompt_tokens + completion_tokens), 0)::bigint as total_tokens,
-        coalesce(sum(cost), 0)::float as cost
+      coalesce(sum(cost), 0)::float as cost,
+      coalesce(sum(prompt_tokens), 0)::bigint as prompt_tokens,
+      coalesce(sum(completion_tokens), 0)::bigint as completion_tokens,
+      coalesce(sum(prompt_tokens + completion_tokens), 0)::bigint as total_tokens
     from
-      agent_tree
-    where
-      type = 'llm'
-      and date_trunc('day', created_at at time zone ${timeZone})::timestamp >= ${startDate}
-      and date_trunc('day', created_at at time zone ${timeZone})::timestamp <= ${endDate}
+      agents_tree 
     group by
-      agent_name
-    order by
-      cost desc; 
-  `;
+      agent_name;
+`;
 
   ctx.body = { data };
 });
