@@ -125,17 +125,17 @@ function formatValue(value: unknown, dataKey: string) {
   }
   let formattedValue: number;
   if (typeof value === "number") {
-    if (dataKey.includes("cost")) {
+    if (dataKey?.includes("cost")) {
       formattedValue = parseFloat(value.toFixed(6));
     } else {
       formattedValue = parseFloat(value.toFixed(2));
     }
 
-    if (dataKey.includes("latency")) {
+    if (dataKey?.includes("latency")) {
       return `${formattedValue}s`;
     }
 
-    if (dataKey.includes("cost")) {
+    if (dataKey?.includes("cost")) {
       return `$${formattedValue}`;
     }
 
