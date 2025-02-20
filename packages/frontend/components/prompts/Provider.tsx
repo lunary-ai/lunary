@@ -101,7 +101,8 @@ export default function ProviderEditor({
   const [tempJSON, setTempJSON] = useState<any>("");
   const [jsonModalOpened, setJsonModalOpened] = useState(false);
   const [models, setModels] = useState(MODELS);
-  const { customModels } = useAllProviderModels();
+  // const { customModels } = useAllProviderModels();
+  const customModels = [];
   const router = useRouter();
 
   useEffect(() => {

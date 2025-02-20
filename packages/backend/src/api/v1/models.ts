@@ -45,7 +45,6 @@ models.get("/", checkAccess("logs", "list"), async (ctx: Context) => {
 
 models.get("/custom", async (ctx: Context) => {
   const { projectId } = ctx.state;
-  console.log(projectId);
   const models = await sql`
     select 
       custom_model.id, 
