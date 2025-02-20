@@ -227,7 +227,7 @@ export const MODELS = [
     provider: "openrouter",
   },
   {
-    id: "deepseek/deepseek-v3",
+    id: "deepseek/deepseek-chat",
     name: "deepseek-v3",
     provider: "openrouter",
   },
