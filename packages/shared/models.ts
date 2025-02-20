@@ -227,6 +227,11 @@ export const MODELS = [
     provider: "openrouter",
   },
   {
+    id: "deepseek/deepseek-chat",
+    name: "deepseek-v3",
+    provider: "openrouter",
+  },
+  {
     id: "microsoft/phi-4",
     name: "phi-4",
     provider: "openrouter",
