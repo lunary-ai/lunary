@@ -290,12 +290,15 @@ datasets.post(
   checkAccess("datasets", "update"),
   async (ctx: Context) => {
     const { projectId } = ctx.state;
+    const bodySchema = z.object({
+      datasetId: z.string(),
+      messages: z.array(z.object({ role: z.string(), content: z.string() })),
+      idealOutput: z.string(),
+    });
 
-    const { datasetId, messages, idealOutput } = ctx.request.body as {
-      datasetId: string;
-      messages: any;
-      idealOutput: string;
-    };
+    const { datasetId, messages, idealOutput } = bodySchema.parse(
+      ctx.request.body,
+    );
 
     const [{ format }] =
       await sql`select format from dataset where id = ${datasetId} and project_id = ${projectId}`;
