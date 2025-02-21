@@ -285,25 +285,22 @@ datasets.delete(
  *             schema:
  *               $ref: '#/components/schemas/DatasetPrompt'
  */
-datasets.post(
-  "/prompts",
-  checkAccess("datasets", "update"),
-  async (ctx: Context) => {
-    const { projectId } = ctx.state;
-    const bodySchema = z.object({
-      datasetId: z.string(),
-      messages: z.array(z.object({ role: z.string(), content: z.string() })),
-      idealOutput: z.string(),
-    });
+datasets.post("/prompts", async (ctx: Context) => {
+  const { projectId } = ctx.state;
+  const bodySchema = z.object({
+    datasetId: z.string(),
+    messages: z.array(z.object({ role: z.string(), content: z.string() })),
+    idealOutput: z.string(),
+  });
 
-    const { datasetId, messages, idealOutput } = bodySchema.parse(
-      ctx.request.body,
-    );
+  const { datasetId, messages, idealOutput } = bodySchema.parse(
+    ctx.request.body,
+  );
 
-    const [{ format }] =
-      await sql`select format from dataset where id = ${datasetId} and project_id = ${projectId}`;
+  const [{ format }] =
+    await sql`select format from dataset where id = ${datasetId} and project_id = ${projectId}`;
 
-    const [prompt] = await sql`insert into dataset_prompt
+  const [prompt] = await sql`insert into dataset_prompt
     ${sql({
       datasetId,
       messages: messages || DEFAULT_PROMPT[format as keyof DefaultPrompt],
@@ -311,7 +308,7 @@ datasets.post(
     returning *
   `;
 
-    await sql`
+  await sql`
       insert into dataset_prompt_variation
         ${sql({
           promptId: prompt.id,
@@ -321,9 +318,8 @@ datasets.post(
       returning *
     `;
 
-    ctx.body = prompt;
-  },
-);
+  ctx.body = prompt;
+});
 
 /**
  * @openapi
