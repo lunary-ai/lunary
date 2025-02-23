@@ -240,10 +240,10 @@ analytics.get("/users/new", async (ctx: Context) => {
     where
       r.project_id = ${projectId}
       and r.external_user_id is not null
-      and r.created_at >= ${startDate} at time zone ${timeZone}
-      and r.created_at <= ${endDate} at time zone ${timeZone}
-      and eu.created_at <= r.created_at
-      and eu.created_at >= r.created_at - interval '7 days'
+      and r.created_at at time zone ${timeZone} >= ${startDate} at time zone ${timeZone}
+      and r.created_at at time zone ${timeZone} <= ${endDate} at time zone ${timeZone}
+      and eu.created_at at time zone ${timeZone} <= r.created_at
+      and eu.created_at at time zone ${timeZone}>= r.created_at - interval '7 days'
   `;
 
   if (firstDimensionKey === "undefined" || secondDimensionKey === "undefined") {
@@ -562,8 +562,8 @@ analytics.get("/users/active", async (ctx: Context) => {
       where
         r.project_id = ${projectId} 
         and r.external_user_id is not null
-        and created_at >= ${startDate} at time zone ${timeZone} 
-        and created_at <= ${endDate} at time zone ${timeZone} 
+        and created_at at time zone ${timeZone} >= ${startDate} at time zone ${timeZone} 
+        and created_at at time zone ${timeZone} <= ${endDate} at time zone ${timeZone} 
     `;
 
   if (firstDimensionKey === "undefined" || secondDimensionKey === "undefined") {
