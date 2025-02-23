@@ -1,12 +1,22 @@
 [tool.poetry]
 name = "lunary"
-version = "1.4.6"
-description = "Observability, analytics and evaluations for AI agents and chatbots."
+version = "1.4.7"
+description = "Python SDK for Lunary, the open-source platform where GenAI teams manage and improve LLM chatbots."
 authors = ["lunary <hello@lunary.ai>"]
 readme = "README.md"
-repository = "https://github.com/lunary-ai/lunary-py"
+repository = "https://github.com/lunary-ai/lunary/tree/main/packages/python-sdk"
 documentation = "https://lunary.ai/docs/py"
-keywords = ["Lunary", "lunary.ai", "Langchain", "AI", "Analytics", "Monitoring"]
+keywords = [
+  "Lunary",
+  "lunary.ai",
+  "Langchain",
+  "AI",
+  "Analytics",
+  "Monitoring",
+  "LLM",
+  "GenAI",
+  "SDK",
+]
 
 [tool.poetry.dependencies]
 python = ">=3.10.0,<4.0.0"
