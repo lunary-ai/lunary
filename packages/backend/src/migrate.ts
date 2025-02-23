@@ -1,4 +1,3 @@
-import "dotenv/config";
 import sql from "./utils/db";
 import fs from "fs";
 import path from "path";
