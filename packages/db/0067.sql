@@ -1,0 +1,1 @@
+alter table org rename column custom_dashboards_enabled to custom_charts_enabled; 

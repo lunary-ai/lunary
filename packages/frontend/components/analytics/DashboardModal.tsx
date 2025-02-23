@@ -10,6 +10,7 @@ import {
   SimpleGrid,
   Stack,
   Tabs,
+  Tooltip,
 } from "@mantine/core";
 import { useColorScheme } from "@mantine/hooks";
 import {
@@ -24,6 +25,7 @@ import AnalyticsCard from "./AnalyticsCard";
 import { CustomChartCreator } from "./ChartCreator";
 import ChartComponent from "./Charts/ChartComponent";
 import { Granularity } from "./DateRangeGranularityPicker";
+import { useOrg } from "@/utils/dataHooks";
 
 interface DashboardModalProps {
   opened: boolean;
@@ -50,6 +52,7 @@ export default function DashboardModal({
   dashboardEndDate,
   dashboardGranularity,
 }: DashboardModalProps): JSX.Element {
+  const { org } = useOrg();
   const [selectedCharts, setSelectedCharts] = useState<string[]>([]);
   const [isCreatingCustomChart, setIsCreatingCustomChart] = useState(false);
   const [chartToEdit, setChartToEdit] = useState<any>(null);
@@ -66,18 +69,23 @@ export default function DashboardModal({
     setIsCreatingCustomChart(true);
     setActiveTab("custom");
   };
+  const customChartsEnabled =
+    org?.license?.customChartsEnabled || org?.customChartsEnabled;
 
   return (
     <Modal opened={opened} onClose={close} withCloseButton={false} size="80vw">
       {!isCreatingCustomChart && (
         <Group justify="right">
-          <Button
-            variant="outline"
-            leftSection={<IconPlus />}
-            onClick={() => setIsCreatingCustomChart(true)}
-          >
-            Create Chart
-          </Button>
+          <Tooltip label="Feature available to selected customers. Please contact us at hello@lunary.ai or on the chat to request access.">
+            <Button
+              variant="outline"
+              leftSection={<IconPlus />}
+              onClick={() => setIsCreatingCustomChart(true)}
+              data-disabled={!customChartsEnabled}
+            >
+              Create Chart
+            </Button>
+          </Tooltip>
         </Group>
       )}
 
@@ -140,6 +148,7 @@ function ChartSelectionPanel({
   setActiveTab,
 }: ChartSelectionPanelProps) {
   const defaultCharts = Object.values(DEFAULT_CHARTS);
+  const { org } = useOrg();
   const {
     customCharts,
     isLoading: customChartsLoading,
@@ -148,6 +157,9 @@ function ChartSelectionPanel({
   } = useCustomCharts();
   const colorScheme = useColorScheme();
   const backgroundColor = colorScheme === "light" ? "#fcfcfc" : "inherit";
+
+  const customChartsEnabled =
+    org?.license?.customChartsEnabled || org?.customChartsEnabled;
 
   function toggleChartSelection(chartId: string) {
     setSelectedCharts((prev) =>
@@ -180,7 +192,9 @@ function ChartSelectionPanel({
       <Tabs value={activeTab} onChange={setActiveTab} pb="xl" variant="outline">
         <Tabs.List mt="md">
           <Tabs.Tab value="default">Default Charts</Tabs.Tab>
-          <Tabs.Tab value="custom">Custom Charts</Tabs.Tab>
+          {customChartsEnabled && (
+            <Tabs.Tab value="custom">Custom Charts</Tabs.Tab>
+          )}
         </Tabs.List>
 
         <Tabs.Panel value="default" pt="lg">

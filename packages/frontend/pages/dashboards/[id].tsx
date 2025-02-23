@@ -82,12 +82,6 @@ export default function Dashboard() {
     setCharts(orderedCharts);
   }
 
-  // useEffect(() => {
-  //   if (router.query.id !== dashboardId) {
-  //     router.push("/");
-  //   }
-  // }, [router.query.id, dashboardId]);
-
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -308,36 +302,28 @@ export default function Dashboard() {
               </Group>
             </Group>
             <Group>
-              {((org?.license && org.license.customDashboardsEnabled) ||
-                org?.customDashboardsEnabled) && (
-                <>
-                  <Button
-                    onClick={openModal}
-                    variant="default"
-                    leftSection={<IconPlus size={14} />}
-                  >
-                    Add Charts
-                  </Button>
-                  <Button
-                    variant={isEditing ? "filled" : "default"}
-                    leftSection={
-                      isEditing ? null : <IconSettings size="18px" />
-                    }
-                    onClick={() => setIsEditing(!isEditing)}
-                  >
-                    {isEditing ? "Done" : "Edit"}
-                  </Button>
-                  <Button
-                    onClick={saveDashboard}
-                    leftSection={
-                      dashboardIsMutating ? <Loader size="sm" /> : null
-                    }
-                    disabled={!isDirty || isEditing}
-                  >
-                    Save
-                  </Button>
-                </>
-              )}
+              <Button
+                onClick={openModal}
+                variant="default"
+                leftSection={<IconPlus size={14} />}
+              >
+                Add Charts
+              </Button>
+
+              <Button
+                variant={isEditing ? "filled" : "default"}
+                leftSection={isEditing ? null : <IconSettings size="18px" />}
+                onClick={() => setIsEditing(!isEditing)}
+              >
+                {isEditing ? "Done" : "Edit"}
+              </Button>
+              <Button
+                onClick={saveDashboard}
+                leftSection={dashboardIsMutating ? <Loader size="sm" /> : null}
+                disabled={!isDirty || isEditing}
+              >
+                Save
+              </Button>
             </Group>
           </Group>
           <Group justify="space-between">
