@@ -6,6 +6,7 @@ authors = ["lunary <hello@lunary.ai>"]
 readme = "README.md"
 repository = "https://github.com/lunary-ai/lunary/tree/main/packages/python-sdk"
 documentation = "https://lunary.ai/docs/py"
+homepage = "https://lunary.ai/docs/py"
 keywords = [
   "Lunary",
   "lunary.ai",
