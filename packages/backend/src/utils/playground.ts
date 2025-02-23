@@ -352,7 +352,6 @@ async function runAzureOpenAI(
     resourceName: res.resourceName,
   };
 
-  console.log(res);
   const modelName = res.modelName;
   const endpoint = `https://${clientOptions.resourceName}.openai.azure.com/`;
 
