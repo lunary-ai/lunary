@@ -13,12 +13,10 @@ const azureProviderSchema = z.object({
 });
 
 providers.get("/", async (ctx: Context) => {
-  console.log(2);
   const { projectId } = ctx.state;
   const providers = await sql`
       select * from provider_azure where project_id = ${projectId}`;
 
-  console.log(providers);
   ctx.body = providers;
 });
 
@@ -36,8 +34,6 @@ providers.get("/:id/models", async (ctx: Context) => {
       left join provider_azure on custom_model.provider_id = provider_azure.id
     where 
       provider_id = ${id}`;
-
-  console.log(models);
 
   ctx.body = models;
 });
@@ -61,7 +57,6 @@ providers.get("/models", async (ctx: Context) => {
 });
 
 providers.get("/:id", async (ctx: Context) => {
-  console.log(1);
   const { id } = ctx.params;
 
   const [provider] = await sql`select * from provider_azure where id = ${id}`;
