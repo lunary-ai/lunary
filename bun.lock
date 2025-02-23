@@ -4,8 +4,7 @@
     "": {
       "name": "lunary",
       "devDependencies": {
-        "dotenv": "^16.4.7",
-        "prettier": "^3.4.2",
+        "prettier": "^3.5.2",
       },
     },
     "packages/backend": {
@@ -66,9 +65,9 @@
     "packages/e2e": {
       "name": "@lunary/e2e",
       "dependencies": {
-        "@langchain/core": "^0.3.26",
-        "@langchain/openai": "^0.3.16",
-        "@playwright/test": "^1.49.1",
+        "@langchain/core": "^0.3.40",
+        "@langchain/openai": "^0.3.17",
+        "@playwright/test": "^1.50.1",
         "backend": "*",
         "lunary": "^0.8.4",
       },
