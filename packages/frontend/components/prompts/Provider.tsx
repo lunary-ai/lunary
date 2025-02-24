@@ -102,14 +102,13 @@ export default function ProviderEditor({
   const [jsonModalOpened, setJsonModalOpened] = useState(false);
   const [models, setModels] = useState(MODELS);
   // const { customModels } = useAllProviderModels();
-  const customModels = [];
   const router = useRouter();
 
-  useEffect(() => {
-    if (customModels) {
-      setModels([...MODELS, ...customModels]);
-    }
-  }, [customModels]);
+  // useEffect(() => {
+  // if (customModels) {
+  //   setModels([...MODELS, ...customModels]);
+  // }
+  // }, [customModels]);
 
   const configHandler = (key: string, isCheckbox?: boolean) => ({
     size: "xs",
