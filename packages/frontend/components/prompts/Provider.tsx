@@ -2,31 +2,24 @@ import { jsonrepair } from "jsonrepair";
 
 import {
   ActionIcon,
-  Anchor,
   Button,
   Checkbox,
   Group,
   JsonInput,
   Modal,
-  NavLink,
   NumberInput,
-  Popover,
-  Select,
   Text,
   Tooltip,
 } from "@mantine/core";
 
 import { notifications } from "@mantine/notifications";
 
-import { MODELS, Provider } from "shared";
-import { use, useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { IconInfoCircle, IconSettings, IconTools } from "@tabler/icons-react";
-import {
-  useAllProviderModels,
-  useProviderModels,
-} from "@/utils/dataHooks/providers";
+import Link from "next/link";
 import { useRouter } from "next/router";
+import { useState } from "react";
+import { MODELS, Provider } from "shared";
+import ModelSelect from "./ModelSelect";
 
 function convertOpenAIToolsToAnthropic(openAITools) {
   return openAITools.map((openAITool) => {
@@ -135,74 +128,61 @@ export default function ProviderEditor({
     },
   });
 
+  function handleModelSelectChange(model) {
+    if (!model || !value.model) {
+      return;
+    }
+    // Handle conversion between OpenAI and Anthropic tools format
+    const isPreviousProviderOpenAI =
+      value.model.startsWith("gpt") || value.model.includes("mistral");
+    const isNewProviderOpenAI =
+      model.startsWith("gpt") || model.includes("mistral");
+
+    const isPreviousProviderAnthropic = value.model.startsWith("claude");
+
+    const isNewProviderAnthropic = model.startsWith("claude");
+
+    let updatedTools = value.config.tools;
+
+    if (
+      isPreviousProviderOpenAI &&
+      isNewProviderAnthropic &&
+      value.config.tools
+    ) {
+      updatedTools = convertOpenAIToolsToAnthropic(value.config.tools);
+    } else if (
+      isPreviousProviderAnthropic &&
+      isNewProviderOpenAI &&
+      value.config.tools
+    ) {
+      updatedTools = convertAnthropicToolsToOpenAI(value.config.tools);
+    }
+    onChange({
+      ...value,
+      model,
+      config: {
+        ...value.config,
+        tools: updatedTools,
+      },
+    });
+  }
+
   return (
     <>
       <ParamItem
         name="Model"
         value={
           <Group>
-            <Select
-              data={models.map((model) => ({
-                value: model.id,
-                label: `${model.name} ${model.providerName ? `(${model.providerName})` : ""}`,
-              }))}
-              w={250}
-              size="xs"
-              searchable
-              inputMode="search"
-              value={value?.model}
-              onChange={(model) => {
-                if (!model || !value.model) {
-                  return;
-                }
-                // Handle conversion between OpenAI and Anthropic tools format
-                const isPreviousProviderOpenAI =
-                  value.model.startsWith("gpt") ||
-                  value.model.includes("mistral");
-                const isNewProviderOpenAI =
-                  model.startsWith("gpt") || model.includes("mistral");
-
-                const isPreviousProviderAnthropic =
-                  value.model.startsWith("claude");
-
-                const isNewProviderAnthropic = model.startsWith("claude");
-
-                let updatedTools = value.config.tools;
-
-                if (
-                  isPreviousProviderOpenAI &&
-                  isNewProviderAnthropic &&
-                  value.config.tools
-                ) {
-                  updatedTools = convertOpenAIToolsToAnthropic(
-                    value.config.tools,
-                  );
-                } else if (
-                  isPreviousProviderAnthropic &&
-                  isNewProviderOpenAI &&
-                  value.config.tools
-                ) {
-                  updatedTools = convertAnthropicToolsToOpenAI(
-                    value.config.tools,
-                  );
-                }
-
-                onChange({
-                  ...value,
-                  model,
-                  config: {
-                    ...value.config,
-                    tools: updatedTools,
-                  },
-                });
-              }}
+            <ModelSelect
+              handleChange={handleModelSelectChange}
+              selectedModel={value.model}
             />
-            {/* <ActionIcon
+            <ActionIcon
               variant="default"
               onClick={() => router.push("/settings/providers")}
             >
               <IconSettings width={18} opacity="0.7" />
-            </ActionIcon> */}
+            </ActionIcon>
           </Group>
         }
       />
