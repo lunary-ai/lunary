@@ -1466,15 +1466,8 @@ analytics.get("/topics/top", async (ctx: Context) => {
 
 analytics.get("/custom-events", async (ctx: Context) => {
   const { projectId } = ctx.state;
-  const { startDate, endDate, timeZone, filteredRunsQuery } = parseQuery(
-    projectId,
-    ctx.querystring,
-    ctx.query,
-  );
-
-  const checks = deserializeLogic(
-    (ctx.query?.checks as string | undefined) || '["AND"]',
-  );
+  const { startDate, endDate, timeZone, filteredRunsQuery, checks } =
+    parseQuery(projectId, ctx.querystring, ctx.query);
 
   let eventFilter = sql`(r.type = 'custom-event')`;
   const eventNames = checks?.find((check) => check?.id === "custom-events")
