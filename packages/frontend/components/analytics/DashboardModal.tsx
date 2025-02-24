@@ -76,12 +76,15 @@ export default function DashboardModal({
     <Modal opened={opened} onClose={close} withCloseButton={false} size="80vw">
       {!isCreatingCustomChart && (
         <Group justify="right">
-          <Tooltip label="Feature available to selected customers. Please contact us at hello@lunary.ai or on the chat to request access.">
+          <Tooltip
+            label="Feature available to selected customers. Please contact us at hello@lunary.ai or on the chat to request access."
+            disabled={customChartsEnabled}
+          >
             <Button
               variant="outline"
               leftSection={<IconPlus />}
               onClick={() => setIsCreatingCustomChart(true)}
-              data-disabled={!customChartsEnabled}
+              disabled={!customChartsEnabled}
             >
               Create Chart
             </Button>
