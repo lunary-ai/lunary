@@ -18,7 +18,7 @@ import { IconInfoCircle, IconSettings, IconTools } from "@tabler/icons-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useState } from "react";
-import { MODELS, Provider } from "shared";
+import { MODELS, OldProvider } from "shared";
 import ModelSelect from "./ModelSelect";
 
 function convertOpenAIToolsToAnthropic(openAITools) {
@@ -88,8 +88,8 @@ export default function ProviderEditor({
   value,
   onChange,
 }: {
-  value: Provider;
-  onChange: (value: Provider) => void;
+  value: OldProvider;
+  onChange: (value: OldProvider) => void;
 }) {
   const [tempJSON, setTempJSON] = useState<any>("");
   const [jsonModalOpened, setJsonModalOpened] = useState(false);

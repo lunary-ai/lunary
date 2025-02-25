@@ -2,14 +2,14 @@ import { runChecksOnRun } from "@/src/checks/runChecks";
 import { calcRunCost } from "@/src/utils/calcCost";
 import sql from "@/src/utils/db";
 import { compilePrompt, runAImodel } from "@/src/utils/playground";
-import { Provider } from "shared";
+import { OldProvider } from "shared";
 
 interface RunEvalParams {
   projectId: string;
   evaluationId: string;
   promptId: string;
   checklistId: string;
-  provider: Provider;
+  provider: OldProvider;
   prompt: any;
   variation: any;
   orgId: string;

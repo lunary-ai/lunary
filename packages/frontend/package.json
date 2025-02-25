@@ -2,7 +2,7 @@
   "name": "@lunary/frontend",
   "main": "pages/index.ts",
   "scripts": {
-    "start": "npm run load-env && next start -H 0.0.0.0 -p 8080",
+    "start": "bun run load-env && next start -H 0.0.0.0 -p 8080",
     "dev": "next dev -p 8080",
     "build": "rm -rf .next && next build",
     "load-env": "bash ./load-env.sh"
@@ -45,6 +45,7 @@
     "shared": "*",
     "streamsaver": "^2.0.6",
     "swr": "^2.2.5",
+    "uuid": "^11.1.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
