@@ -389,7 +389,7 @@ datasets.get(
     ctx.body = prompt;
   },
 );
-
+ 
 /**
  * @openapi
  * /v1/datasets/prompts/{id}:
