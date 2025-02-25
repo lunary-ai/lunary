@@ -292,8 +292,10 @@ datasets.post(
     const { projectId } = ctx.state;
     const bodySchema = z.object({
       datasetId: z.string(),
-      messages: z.array(z.object({ role: z.string(), content: z.string() })),
-      idealOutput: z.string(),
+      messages: z
+        .array(z.object({ role: z.string(), content: z.string() }))
+        .optional(),
+      idealOutput: z.string().optional(),
     });
 
     const { datasetId, messages, idealOutput } = bodySchema.parse(
@@ -387,7 +389,7 @@ datasets.get(
     ctx.body = prompt;
   },
 );
-
+ 
 /**
  * @openapi
  * /v1/datasets/prompts/{id}:
