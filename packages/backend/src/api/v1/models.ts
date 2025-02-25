@@ -43,22 +43,6 @@ models.get("/", checkAccess("logs", "list"), async (ctx: Context) => {
         order by updated_at desc`;
 });
 
-models.get("/custom", async (ctx: Context) => {
-  const { projectId } = ctx.state;
-  const models = await sql`
-    select 
-      custom_model.id, 
-      custom_model.name, 
-      custom_model.provider_id,
-      'azure' as provider_name
-    from 
-      custom_model 
-      left join provider_azure on custom_model.provider_id = provider_azure.id
-    where 
-      project_id = ${projectId}`;
-
-  ctx.body = models;
-});
 /**
  * @openapi
  * /v1/models:

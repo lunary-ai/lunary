@@ -1,8 +1,9 @@
 import { Select } from "@mantine/core";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MODELS } from "shared";
 import classes from "./ModelSelect.module.css";
+import { useCustomModels } from "@/utils/dataHooks/provider-configs";
 
 interface Model {
   id: string;
@@ -12,7 +13,15 @@ interface Model {
 export default function ModelSelect({ handleChange, selectedModel }) {
   const router = useRouter();
   const [models, setModels] = useState<Model[]>(MODELS);
+  const { customModels } = useCustomModels();
 
+  useEffect(() => {
+    if (customModels.length) {
+      setModels([...models, ...customModels]);
+    }
+  }, [customModels]);
+
+  console.log(models);
   const groupedModels = groupModelsByProvider(models);
 
   // TODO: display provider name instead of provider id

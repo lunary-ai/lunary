@@ -42,6 +42,12 @@ export interface ConfiguredProvider {
   metadata: ProviderMetadata;
   config?: ProviderConfig;
 }
+export interface CustomModel {
+  id: string;
+  name: string;
+  providerId: string;
+  provider: string;
+}
 
 /**
  * The organization that builds models. They do not necessarily are providers, env though they often are.
@@ -96,6 +102,7 @@ export const PROVIDERS: ProviderMetadata[] = [
     apiUrl: "https://api.anthropic.com",
     iconUrl: "https://anthropic.com/favicon.ico",
     description: "Anthropic's platform for LLM model access.",
+    disabled: true,
   },
   {
     name: "x_ai",
@@ -103,5 +110,6 @@ export const PROVIDERS: ProviderMetadata[] = [
     apiUrl: "https://api.x.ai",
     iconUrl: "https://x.ai/favicon.ico",
     description: "X AI provides access to LLM models.",
+    disabled: true,
   },
 ];

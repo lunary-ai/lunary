@@ -1,28 +1,105 @@
 import { useProviderConfig } from "@/utils/dataHooks/provider-configs";
-import { Button, Container, Group, PasswordInput, Text } from "@mantine/core";
+import {
+  Box,
+  Button,
+  Container,
+  Group,
+  PasswordInput,
+  Stack,
+  TagsInput,
+  Text,
+  Title,
+} from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 
 export default function ProviderSettings() {
   const router = useRouter();
   const configId = z.string().parse(router.query.id);
-  const { config, isLoading } = useProviderConfig(configId);
-  const [apiKey, setApiKey] = useState(config?.apiKey);
+  const { config, metadata, update, isLoading } = useProviderConfig(configId);
+  const [apiKey, setApiKey] = useState("");
+  const [models, setModels] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!config) return;
+    if (config.apiKey) {
+      setApiKey(config.apiKey);
+    }
+    if (config.models) {
+      setModels(config.models);
+    }
+  }, [config]);
+
+  async function handleSave() {
+    try {
+      await update({
+        id: configId,
+        apiKey,
+        providerName: router.query.providerName,
+        models,
+      });
+
+      notifications.show({
+        title: "Success",
+        message: "Your API key has been saved",
+      });
+    } catch (error) {
+      console.error("Failed to update API key:", error);
+    }
+  }
+
+  async function handleSaveModels() {
+    try {
+      await update({
+        id: configId,
+        apiKey,
+        providerName: router.query.providerName,
+        models,
+      });
+
+      notifications.show({
+        title: "Success",
+        message: "Your models have been saved",
+      });
+    } catch (error) {
+      console.error("Failed to update models:", error);
+    }
+  }
+
+  if (isLoading) {
+    return <Text>Loading...</Text>;
+  }
 
   return (
     <Container size="md" my="xl">
-      <Text mb="xl">OpenAI Configuration</Text>
+      <Title order={1} mb="xl">
+        {metadata?.displayName} Settings
+      </Title>
+      <Stack>
+        <Group align="end" justify="space-between">
+          <PasswordInput
+            type="text"
+            label="Api Key"
+            placeholder="Your API Key"
+            value={apiKey}
+            onChange={(event) => setApiKey(event.currentTarget.value)}
+            w="70%"
+          />
+          <Button w="28%" onClick={handleSave}>
+            Save Key
+          </Button>
+        </Group>
 
-      <Group>
-        <PasswordInput
-          label="Api Key"
-          placeholder="Your "
-          value={apiKey}
-          onChange={(event) => setApiKey(event.currentTarget.value)}
+        <TagsInput
+          label="Please enter your model list"
+          data={[]}
+          value={models}
+          onChange={setModels}
         />
-        <Button>Save Key</Button>
-      </Group>
+        <Button onClick={handleSaveModels}>Save Models</Button>
+      </Stack>
     </Container>
   );
 }

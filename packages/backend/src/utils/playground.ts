@@ -342,7 +342,7 @@ async function runAzureOpenAI(
       pa.resource_name as resource_name
     from
       custom_model cm
-      left join provider_azure pa on cm.provider_id = pa.id 
+      left join  pa on cm.provider_id = pa.id 
     where
       cm.id = ${modelId}
   `;

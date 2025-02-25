@@ -47,6 +47,7 @@ export function ProviderCard({
         <ButtonConfigure
           disabled={metadata.disabled}
           providerConfigId={configId}
+          providerName={metadata.name}
         />
       </Stack>
     </Paper>
@@ -56,9 +57,11 @@ export function ProviderCard({
 function ButtonConfigure({
   disabled,
   providerConfigId,
+  providerName,
 }: {
   disabled?: boolean;
   providerConfigId: string;
+  providerName: string;
 }) {
   if (disabled) {
     return (
@@ -78,7 +81,10 @@ function ButtonConfigure({
     <Button
       color="black"
       component={Link}
-      href={`/settings/providers/${providerConfigId}`}
+      href={{
+        pathname: `/settings/providers/${providerConfigId}`,
+        query: { providerName },
+      }}
     >
       Configure
     </Button>
