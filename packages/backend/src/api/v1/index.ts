@@ -21,7 +21,7 @@ import dataWarehouse from "./data-warehouse";
 import dashboards from "./dashboards";
 import charts from "./charts";
 import openapi from "./openapi";
-import providers from "./providers";
+import providerConfigs from "./provider-configs";
 
 const v1 = new Router({
   prefix: "/v1",
@@ -63,7 +63,7 @@ v1.use(dataWarehouse.routes());
 v1.use(dashboards.routes());
 v1.use(charts.routes());
 v1.use(openapi.routes());
-v1.use(providers.routes());
+v1.use(providerConfigs.routes());
 
 v1.use("/template-versions", templateVersions.routes());
 v1.use("/template_versions", templateVersions.routes()); // Legacy route, keep for previous versions of SDKs
