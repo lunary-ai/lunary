@@ -266,6 +266,8 @@ dashboards.get("/charts/custom", async (ctx: Context) => {
       custom_chart
     where
       project_id = ${projectId}
+    order by 
+      created_at desc
   `;
 
   ctx.body = customCharts;

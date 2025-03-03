@@ -10,8 +10,8 @@ export function buildFiltersQuery(deserializedChecks: LogicNode) {
 }
 
 export function parseQuery(projectId: string, queryString: string, query: any) {
-  const deserializedChecks = deserializeLogic(queryString);
-  const filtersQuery = buildFiltersQuery(deserializedChecks);
+  const checks = deserializeLogic(queryString);
+  const filtersQuery = buildFiltersQuery(checks);
 
   return z
     .object({
@@ -24,9 +24,8 @@ export function parseQuery(projectId: string, queryString: string, query: any) {
         z.literal("weekly"),
         z.literal("monthly"),
       ]),
-      checks: z.string().optional(),
     })
-    .transform(({ startDate, endDate, timeZone, granularity, checks }) => {
+    .transform(({ startDate, endDate, timeZone, granularity }) => {
       const granularityToIntervalMap = {
         hourly: "1 hour",
         daily: "1 day",
@@ -73,6 +72,7 @@ export function parseQuery(projectId: string, queryString: string, query: any) {
         granularity,
         timeZone,
         localCreatedAt,
+        checks,
       };
     })
     .parse(query);

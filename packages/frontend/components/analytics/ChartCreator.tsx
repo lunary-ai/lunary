@@ -8,6 +8,8 @@ import {
   Loader,
   Select,
   Stack,
+  Textarea,
+  TextInput,
 } from "@mantine/core";
 import { useEffect, useMemo, useState } from "react";
 
@@ -60,6 +62,7 @@ export function CustomChartCreator({
   dashboardGranularity?: string;
 }) {
   const [name, setName] = useState(config?.name || "");
+  const [description, setDescription] = useState(config?.description || "");
   const [metric, setMetric] = useState(config?.dataKey || "users/active");
   const [primaryDimension, setPrimaryDimension] = useState<string | undefined>(
     config?.primaryDimension || undefined,
@@ -171,6 +174,7 @@ export function CustomChartCreator({
 
     const chartPayload = {
       name: chartName,
+      description, // Pass custom description here
       type: isCustomEventsMetric
         ? "area"
         : secondaryDimension === "date"
@@ -198,6 +202,13 @@ export function CustomChartCreator({
   return (
     <Stack p="xl">
       <RenamableField value={name} onRename={setName} defaultValue={name} />
+      <TextInput
+        w="500px"
+        label="Description (optional)"
+        placeholder="Enter a custom description"
+        value={description}
+        onChange={(e) => setDescription(e.currentTarget.value)}
+      />
       <Group mb="lg" mt="md">
         <Select
           label="Metric"

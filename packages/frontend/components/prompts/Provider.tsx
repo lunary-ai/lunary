@@ -146,7 +146,6 @@ export default function ProviderEditor({
     ) {
       updatedTools = convertAnthropicToolsToOpenAI(value.config.tools);
     }
-
     onChange({
       ...value,
       model,
