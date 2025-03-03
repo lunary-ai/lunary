@@ -73,8 +73,8 @@ providerConfigs.patch("/:id", async (ctx: Context) => {
 
   const [providerConfig] = await sql<
     ProviderConfig[]
-  >`insert into provider_config ${sql(clearUndefined({ id, projectId, apiKey, providerName, config: extraConfig }))} 
-    on conflict (id) do update set ${sql(clearUndefined({ apiKey, providerName, config: extraConfig }))}
+  >`insert into provider_config ${sql(clearUndefined({ id, projectId, apiKey, providerName, extraConfig }))} 
+    on conflict (id) do update set ${sql(clearUndefined({ apiKey, providerName, extraConfig }))}
     returning *`;
 
   for (const model of models) {

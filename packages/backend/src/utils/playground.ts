@@ -338,7 +338,7 @@ async function runAzureOpenAI(
   const [res] = await sql`
     select
       pc.api_key,
-      pc.config->>'resourceName' as resource_name,
+      pc.extra_config->>'resourceName' as resource_name,
       pcm.name as model_name
     from
       provider_config_model pcm
@@ -529,7 +529,7 @@ export async function runAImodel(
   const openai = new OpenAI(clientParams);
 
   let res = await openai.chat.completions.create({
-    model: model.name,
+    model: model.name || "gpt-4o",
     messages,
     stream: stream,
     temperature: completionsParams?.temperature,

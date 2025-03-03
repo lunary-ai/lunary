@@ -35,9 +35,9 @@ export default function ProviderSettings() {
     // Only update resourceName if providerName is azure_openai
     if (
       router.query.providerName === "azure_openai" &&
-      config.config.resourceName
+      config.extraConfig.resourceName
     ) {
-      setResourceName(config.config.resourceName);
+      setResourceName(config.extraConfig.resourceName);
     }
   }, [config, router.query.providerName]);
 

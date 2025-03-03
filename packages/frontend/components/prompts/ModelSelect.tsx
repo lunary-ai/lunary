@@ -33,7 +33,6 @@ export default function ModelSelect({ handleChange }) {
 
   const groupedModels = groupModelsByProvider(models);
 
-  // TODO: display provider name instead of provider id
   const uniqueOptions = Array.from(
     new Map(
       models.map((model) => [
@@ -41,7 +40,7 @@ export default function ModelSelect({ handleChange }) {
         { value: model.id, label: model.name, isCustom: model.isCustom },
       ]),
     ),
-  );
+  ).map((entry) => entry[1]);
 
   return (
     <Select
@@ -69,13 +68,14 @@ export default function ModelSelect({ handleChange }) {
       rightSectionWidth={selectedModel.isCustom ? 80 : 30}
       rightSectionPointerEvents="none"
       onChange={(_value, model) => {
-        console.log(model);
-        setSelectedModel({
-          value: model.value,
-          label: model.label,
-          isCustom: models.find((m) => m.id === model.value)?.isCustom,
-        });
-        handleChange(models.find((m) => m.id === model.value));
+        if (model) {
+          setSelectedModel({
+            value: model.value,
+            label: model.label,
+            isCustom: models.find((m) => m.id === model.value)?.isCustom,
+          });
+          handleChange(models.find((m) => m.id === model.value));
+        }
       }}
     />
   );
