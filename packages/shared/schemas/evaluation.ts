@@ -18,7 +18,7 @@ export interface Variation {
   idealOutput?: string;
 }
 
-export interface Provider {
+export interface OldProvider {
   model: string;
   config: Record<string, any>;
 }

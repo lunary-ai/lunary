@@ -12,7 +12,7 @@ import classes from "./index.module.css";
 import { formatCost } from "@/utils/format";
 import { ChatMessage } from "../SmartViewer/Message";
 import SmartViewer from "../SmartViewer";
-import { MODELS, Provider } from "shared";
+import { MODELS, OldProvider } from "shared";
 import { IconFileExport } from "@tabler/icons-react";
 
 import { json2csv } from "json-2-csv";
@@ -144,7 +144,7 @@ export default function ResultsMatrix({ data, showTestIndicator }) {
     new Set(data.map((result) => JSON.stringify(result.messages))),
   ).map((result: any) => JSON.parse(result));
 
-  const providers: Provider[] = Array.from(
+  const providers: OldProvider[] = Array.from(
     new Set(data.map((result) => JSON.stringify(result.provider))),
   ).map((provider: any) => JSON.parse(provider));
 

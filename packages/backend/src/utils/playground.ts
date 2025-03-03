@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import OpenAI, { AzureOpenAI } from "openai";
-import { MODELS } from "shared";
+import { Model, MODELS } from "shared";
 import { ReadableStream } from "stream/web";
 import sql from "./db";
 import { clearUndefined } from "./ingest";
@@ -336,15 +336,15 @@ async function runAzureOpenAI(
   modelId: string,
 ) {
   const [res] = await sql`
-    select 
-      cm.name as model_name,
-      pa.api_key as api_key,
-      pa.resource_name as resource_name
+    select
+      pc.api_key,
+      pc.extra_config->>'resourceName' as resource_name,
+      pcm.name as model_name
     from
-      custom_model cm
-      left join provider_azure pa on cm.provider_id = pa.id 
+      provider_config_model pcm
+      left join provider_config pc on pcm.provider_config_id = pc.id
     where
-      cm.id = ${modelId}
+      pcm.id = ${modelId}
   `;
 
   const clientOptions: AzureClientOptions = {
@@ -383,7 +383,7 @@ export async function runAImodel(
   content: any,
   completionsParams: any,
   variables: Record<string, string> | undefined = undefined,
-  model: string,
+  model: Model,
   stream: boolean = false,
   orgId: string,
   projectId: string,
@@ -410,21 +410,25 @@ export async function runAImodel(
   }
 
   const copy = compilePrompt(content, variables);
-
   const messages = convertInputToOpenAIMessages(copy);
-  const uuidPattern = /^[0-9A-Fa-f]{8}(-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}$/;
-  if (uuidPattern.test(model)) {
+
+  let providerConfig;
+  if (model.isCustom) {
+    [providerConfig] =
+      await sql`select * from provider_config where id = ${model.providerConfigId}`;
+  }
+
+  if (model.isCustom && model.provider === "azure_openai") {
     const chatCompletion = await runAzureOpenAI(
       messages,
       completionsParams,
       stream,
-      model,
+      model.id,
     );
     return chatCompletion;
   }
-  const modelObj = MODELS.find((m) => m.id === model);
 
-  const useAnthropic = modelObj?.provider === "anthropic";
+  const useAnthropic = model?.provider === "anthropic";
   if (useAnthropic) {
     if (!process.env.ANTHROPIC_API_KEY)
       throw Error("No Anthropic API key found");
@@ -434,7 +438,7 @@ export async function runAImodel(
     });
 
     const res = await anthropic.messages.create({
-      model,
+      model: model.name,
       messages: messages
         .filter((m) => m.role !== "system")
         .map(getAnthropicMessage),
@@ -446,19 +450,19 @@ export async function runAImodel(
       presence_penalty: completionsParams?.presence_penalty,
       frequency_penalty: completionsParams?.frequency_penalty,
       functions: completionsParams?.functions,
-      tools: validateToolCalls(model, completionsParams?.tools),
+      tools: validateToolCalls(model.name, completionsParams?.tools),
       seed: completionsParams?.seed,
     });
 
     return getOpenAIMessage(res);
   }
 
-  if (modelObj?.provider === "ibm-watsonx-ai") {
+  if (model?.provider === "ibm-watsonx-ai") {
     if (!watsonxAi) {
       throw Error("Environment variables for WatsonX AI not found");
     }
     const { result } = await watsonxAi.textChat({
-      modelId: model,
+      modelId: model.name,
       projectId: process.env.WATSONX_AI_PROJECT_ID,
       messages,
       temperature: completionsParams?.temperature,
@@ -474,12 +478,15 @@ export async function runAImodel(
   let clientParams = {};
   let paramsOverwrite = {};
 
-  switch (modelObj?.provider) {
+  switch (model?.provider) {
     case "openai":
+      if (model.isCustom) {
+        clientParams.apiKey = providerConfig.apiKey;
+        break;
+      }
       const params = getOpenAIParams();
       if (!params) throw Error("No OpenAI API key found");
 
-      clientParams = params;
       break;
     case "mistral":
       if (!process.env.MISTRAL_API_KEY) throw Error("No Mistral API key found");
@@ -508,14 +515,23 @@ export async function runAImodel(
         apiKey: process.env.PERPLEXITY_API_KEY,
       };
       break;
+    case "x_ai":
+      if (model.isCustom) {
+        clientParams = {
+          apiKey: providerConfig.apiKey,
+          baseURL: "https://api.x.ai/v1/",
+        };
+        break;
+      }
   }
 
+  console.log(clientParams);
   const openai = new OpenAI(clientParams);
 
   let res = await openai.chat.completions.create({
-    model,
+    model: model.name || "gpt-4o",
     messages,
-    stream: modelObj?.streamingDisabled ? false : stream,
+    stream: stream,
     temperature: completionsParams?.temperature,
     max_completion_tokens: completionsParams?.max_tokens,
     top_p: completionsParams?.top_p,
@@ -523,12 +539,12 @@ export async function runAImodel(
     frequency_penalty: completionsParams?.frequency_penalty,
     stop: completionsParams?.stop,
     functions: completionsParams?.functions,
-    tools: validateToolCalls(model, completionsParams?.tools),
+    tools: validateToolCalls(model.name, completionsParams?.tools),
     seed: completionsParams?.seed,
     ...paramsOverwrite,
   });
 
-  const useOpenRouter = modelObj?.provider === "openrouter";
+  const useOpenRouter = model?.provider === "openrouter";
 
   // openrouter requires a second request to get usage
   if (!stream && useOpenRouter && res.id) {

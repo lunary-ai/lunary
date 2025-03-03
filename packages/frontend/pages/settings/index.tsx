@@ -338,6 +338,19 @@ export default function Settings() {
             Edit Mappings
           </Button>
         </SettingsCard>
+
+        <SettingsCard title={<>LLM Providers Configuration</>} align="start">
+          <Button
+            color="blue"
+            variant="default"
+            component={Link}
+            href={`/settings/providers`}
+            leftSection={<IconPencil size={16} />}
+          >
+            Configure
+          </Button>
+        </SettingsCard>
+
         <SmartDataRule />
         <SettingsCard
           title={<>Guardrails 🔒</>}
