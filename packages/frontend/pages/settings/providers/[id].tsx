@@ -98,9 +98,6 @@ export default function ProviderSettings() {
             onChange={(event) => setApiKey(event.currentTarget.value)}
             w="70%"
           />
-          <Button w="28%" onClick={handleSave}>
-            Save Key
-          </Button>
         </Group>
         {router.query.providerName === "azure_openai" && (
           <TextInput
