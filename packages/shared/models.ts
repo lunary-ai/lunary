@@ -1,4 +1,6 @@
-export const MODELS = [
+import { LunaryProvidedModel } from "./providers";
+
+export const MODELS: LunaryProvidedModel[] = [
   {
     id: "gpt-4o",
     name: "gpt-4o",
@@ -8,19 +10,17 @@ export const MODELS = [
     id: "o3-mini",
     name: "o3-mini",
     provider: "openai",
-    streamingDisabled: true,
+    // TODO: verify we can stream with o models
   },
   {
     id: "o1",
     name: "o1",
     provider: "openai",
-    streamingDisabled: true,
   },
   {
     id: "o1-mini",
     name: "o1-mini",
     provider: "openai",
-    streamingDisabled: true,
   },
   {
     id: "gpt-4o-mini",
@@ -140,7 +140,6 @@ export const MODELS = [
     name: "mistral-7b-openorca",
     provider: "openrouter",
   },
-
   {
     id: "mistralai/mistral-7b-instruct",
     name: "mistral-7b-instruct",

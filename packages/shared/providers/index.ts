@@ -42,13 +42,28 @@ export interface ConfiguredProvider {
   metadata: ProviderMetadata;
   config?: ProviderConfig;
 }
+
+export interface LunaryProvidedModel {
+  id: string;
+  name: string;
+  provider: string;
+  isCustom?: false;
+}
+
 export interface CustomModel {
   id: string;
   name: string;
-  providerId: string;
   provider: string;
+  isCustom: true;
+  providerConfigId: string;
 }
 
+export type Model = LunaryProvidedModel | CustomModel;
+
+// TODO: handle that shit
+let a: Model = {} as Model;
+// if (a.providerConfigId) {
+// }
 /**
  * The organization that builds models. They do not necessarily are providers, env though they often are.
  */
@@ -102,7 +117,6 @@ export const PROVIDERS: ProviderMetadata[] = [
     apiUrl: "https://api.anthropic.com",
     iconUrl: "https://anthropic.com/favicon.ico",
     description: "Anthropic's platform for LLM model access.",
-    disabled: true,
   },
   {
     name: "x_ai",
@@ -110,6 +124,5 @@ export const PROVIDERS: ProviderMetadata[] = [
     apiUrl: "https://api.x.ai",
     iconUrl: "https://x.ai/favicon.ico",
     description: "X AI provides access to LLM models.",
-    disabled: true,
   },
 ];

@@ -6,17 +6,6 @@ export function getOpenAIParams() {
     return {
       apiKey: process.env.OPENAI_API_KEY,
     };
-  } else if (process.env.AZURE_OPENAI_API_KEY) {
-    const apiKey = process.env.AZURE_OPENAI_API_KEY;
-    const model = process.env.AZURE_OPENAI_DEPLOYMENT_ID;
-    const resource = process.env.AZURE_OPENAI_RESOURCE_NAME;
-
-    return {
-      apiKey,
-      baseURL: `https://${resource}.openai.azure.com/openai/deployments/${model}`,
-      defaultQuery: { "api-version": "2024-02-01" },
-      defaultHeaders: { "api-key": apiKey },
-    };
   } else {
     return null;
   }

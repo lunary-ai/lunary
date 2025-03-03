@@ -25,7 +25,7 @@ providerConfigs.get("/models", async (ctx: Context) => {
   const models = await sql`
     select
       pcm.id as id,
-      pcm.name || ' (custom)' as name,
+      pcm.name as name,
       pcm.provider_config_id,
       pc.provider_name as provider,
       true as is_custom
@@ -73,12 +73,14 @@ providerConfigs.patch("/:id", async (ctx: Context) => {
 
   const [providerConfig] = await sql<
     ProviderConfig[]
-  >`insert into provider_config ${sql(clearUndefined({ id, projectId, apiKey, providerName, extraConfig }))} 
-    on conflict (id) do update set ${sql(clearUndefined({ apiKey, providerName, extraConfig }))}
+  >`insert into provider_config ${sql(clearUndefined({ id, projectId, apiKey, providerName, config: extraConfig }))} 
+    on conflict (id) do update set ${sql(clearUndefined({ apiKey, providerName, config: extraConfig }))}
     returning *`;
 
   for (const model of models) {
-    await sql`insert into provider_config_model ${sql({ providerConfigId: providerConfig.id, name: model })}`;
+    await sql`insert into provider_config_model ${sql({ providerConfigId: providerConfig.id, name: model })}
+              on conflict (provider_config_id, name) do nothing 
+              `;
   }
 
   ctx.body = providerConfig;

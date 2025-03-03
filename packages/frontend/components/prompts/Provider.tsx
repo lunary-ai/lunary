@@ -18,7 +18,7 @@ import { IconInfoCircle, IconSettings, IconTools } from "@tabler/icons-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useState } from "react";
-import { MODELS, OldProvider } from "shared";
+import { CustomModel, Model, MODELS, OldProvider } from "shared";
 import ModelSelect from "./ModelSelect";
 
 function convertOpenAIToolsToAnthropic(openAITools) {
@@ -93,15 +93,7 @@ export default function ProviderEditor({
 }) {
   const [tempJSON, setTempJSON] = useState<any>("");
   const [jsonModalOpened, setJsonModalOpened] = useState(false);
-  const [models, setModels] = useState(MODELS);
-  // const { customModels } = useAllProviderModels();
   const router = useRouter();
-
-  // useEffect(() => {
-  // if (customModels) {
-  //   setModels([...MODELS, ...customModels]);
-  // }
-  // }, [customModels]);
 
   const configHandler = (key: string, isCheckbox?: boolean) => ({
     size: "xs",
@@ -128,19 +120,16 @@ export default function ProviderEditor({
     },
   });
 
-  function handleModelSelectChange(model) {
-    if (!model || !value.model) {
-      return;
-    }
-    // Handle conversion between OpenAI and Anthropic tools format
+  function handleModelSelectChange(model: Model) {
+    const modelId = model.id;
+
     const isPreviousProviderOpenAI =
-      value.model.startsWith("gpt") || value.model.includes("mistral");
+      modelId.startsWith("gpt") || modelId.includes("mistral");
     const isNewProviderOpenAI =
-      model.startsWith("gpt") || model.includes("mistral");
+      modelId.startsWith("gpt") || modelId.includes("mistral");
 
-    const isPreviousProviderAnthropic = value.model.startsWith("claude");
-
-    const isNewProviderAnthropic = model.startsWith("claude");
+    const isPreviousProviderAnthropic = modelId.startsWith("claude");
+    const isNewProviderAnthropic = modelId.startsWith("claude");
 
     let updatedTools = value.config.tools;
 
@@ -157,6 +146,7 @@ export default function ProviderEditor({
     ) {
       updatedTools = convertAnthropicToolsToOpenAI(value.config.tools);
     }
+
     onChange({
       ...value,
       model,
@@ -173,10 +163,7 @@ export default function ProviderEditor({
         name="Model"
         value={
           <Group>
-            <ModelSelect
-              handleChange={handleModelSelectChange}
-              selectedModel={value.model}
-            />
+            <ModelSelect handleChange={handleModelSelectChange} />
             <ActionIcon
               variant="default"
               onClick={() => router.push("/settings/providers")}

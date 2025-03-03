@@ -8,6 +8,7 @@ import {
   Stack,
   TagsInput,
   Text,
+  TextInput,
   Title,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
@@ -21,6 +22,7 @@ export default function ProviderSettings() {
   const { config, metadata, update, isLoading } = useProviderConfig(configId);
   const [apiKey, setApiKey] = useState("");
   const [models, setModels] = useState<string[]>([]);
+  const [resourceName, setResourceName] = useState();
 
   useEffect(() => {
     if (!config) return;
@@ -30,7 +32,14 @@ export default function ProviderSettings() {
     if (config.models) {
       setModels(config.models);
     }
-  }, [config]);
+    // Only update resourceName if providerName is azure_openai
+    if (
+      router.query.providerName === "azure_openai" &&
+      config.config.resourceName
+    ) {
+      setResourceName(config.config.resourceName);
+    }
+  }, [config, router.query.providerName]);
 
   async function handleSave() {
     try {
@@ -39,6 +48,7 @@ export default function ProviderSettings() {
         apiKey,
         providerName: router.query.providerName,
         models,
+        extraConfig: resourceName ? { resourceName } : null,
       });
 
       notifications.show({
@@ -57,6 +67,7 @@ export default function ProviderSettings() {
         apiKey,
         providerName: router.query.providerName,
         models,
+        extraConfig: resourceName ? { resourceName } : null,
       });
 
       notifications.show({
@@ -91,14 +102,21 @@ export default function ProviderSettings() {
             Save Key
           </Button>
         </Group>
-
+        {router.query.providerName === "azure_openai" && (
+          <TextInput
+            label="Resource Name"
+            placeholder="Your resource name"
+            value={resourceName}
+            onChange={(event) => setResourceName(event.currentTarget.value)}
+          />
+        )}
         <TagsInput
           label="Please enter your model list"
           data={[]}
           value={models}
           onChange={setModels}
         />
-        <Button onClick={handleSaveModels}>Save Models</Button>
+        <Button onClick={handleSaveModels}>Save</Button>
       </Stack>
     </Container>
   );
