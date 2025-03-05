@@ -555,7 +555,7 @@ export async function processEventsIngestion(
  *       For a full step-by-step guide on sending LLM data to the Lunary API, see the [Custom Integration](/docs/integrations/custom) guide.
  *     tags: [Runs]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:

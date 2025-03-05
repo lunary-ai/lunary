@@ -116,25 +116,41 @@ datasets.get("/:identifier", async (ctx: Context) => {
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               slug:
- *                 type: string
- *               format:
- *                 type: string
- *                 enum: [text, chat]
- *                 default: "text"
- *               prompt:
- *                 oneOf:
- *                   - type: string
- *                   - type: array
- *                     items:
- *                       type: object
- *                       properties:
- *                         role:
- *                           type: string
- *                         content:
- *                           type: string
+ *             oneOf:
+ *               - type: object
+ *                 properties:
+ *                   slug:
+ *                     type: string
+ *                   format:
+ *                     type: string
+ *                     enum: [text]
+ *                   prompt:
+ *                     type: string
+ *                 required:
+ *                   - slug
+ *               - type: object
+ *                 properties:
+ *                   slug:
+ *                     type: string
+ *                   format:
+ *                     type: string
+ *                     enum: [chat]
+ *                   prompt:
+ *                     oneOf:
+ *                       - type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             role:
+ *                               type: string
+ *                             content:
+ *                               type: string
+ *                           required:
+ *                             - role
+ *                             - content
+ *                       - type: string
+ *                 required:
+ *                   - slug
  *     responses:
  *       200:
  *         description: Created dataset
@@ -144,7 +160,6 @@ datasets.get("/:identifier", async (ctx: Context) => {
  *               $ref: '#/components/schemas/Dataset'
  */
 datasets.post("/", checkAccess("datasets", "create"), async (ctx: Context) => {
-  // Preprocess input to default missing format to "text" and use a discriminated union.
   const createDatasetSchema = z.preprocess(
     (arg) => {
       const obj = typeof arg === "object" && arg !== null ? arg : {};
@@ -312,7 +327,6 @@ datasets.delete(
  *                 type: string
  *               messages:
  *                 oneOf:
- *                   - type: string
  *                   - type: array
  *                     items:
  *                       type: object
@@ -321,6 +335,7 @@ datasets.delete(
  *                           type: string
  *                         content:
  *                           type: string
+ *                   - type: string
  *               idealOutput:
  *                 type: string
  *     responses:
@@ -524,7 +539,6 @@ datasets.delete(
  *             properties:
  *               messages:
  *                 oneOf:
- *                   - type: string
  *                   - type: array
  *                     items:
  *                       type: object
@@ -533,6 +547,7 @@ datasets.delete(
  *                           type: string
  *                         content:
  *                           type: string
+ *                   - type: string
  *     responses:
  *       200:
  *         description: Updated prompt
@@ -860,7 +875,6 @@ datasets.post(
  *           type: string
  *         messages:
  *           oneOf:
- *             - type: string
  *             - type: array
  *               items:
  *                 type: object
@@ -869,6 +883,7 @@ datasets.post(
  *                     type: string
  *                   content:
  *                     type: string
+ *             - type: string
  *     DatasetPromptVariation:
  *       type: object
  *       properties:
