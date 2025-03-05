@@ -144,43 +144,33 @@ datasets.get("/:identifier", async (ctx: Context) => {
  *               $ref: '#/components/schemas/Dataset'
  */
 datasets.post("/", checkAccess("datasets", "create"), async (ctx: Context) => {
-  const body = z
-    .object({
-      slug: z.string(),
-      format: z.enum(["text", "chat"]).default("text"),
-      prompt: z
-        .union([
-          z.string(),
-          z.array(z.object({ role: z.string(), content: z.string() })),
-        ])
-        .optional(),
-    })
-    .superRefine((data, ctx) => {
-      if (
-        data.format === "text" &&
-        data.prompt !== undefined &&
-        Array.isArray(data.prompt)
-      ) {
-        ctx.addIssue({
-          code: "custom",
-          message: "For text format, prompt must be a string.",
-          path: ["prompt"],
-        });
-      }
-      if (
-        data.format === "chat" &&
-        data.prompt !== undefined &&
-        typeof data.prompt === "string"
-      ) {
-        ctx.addIssue({
-          code: "custom",
-          message: "For chat format, prompt must be an array of messages.",
-          path: ["prompt"],
-        });
-      }
-    });
+  // Preprocess input to default missing format to "text" and use a discriminated union.
+  const createDatasetSchema = z.preprocess(
+    (arg) => {
+      const obj = typeof arg === "object" && arg !== null ? arg : {};
+      return { format: "text", ...obj };
+    },
+    z.discriminatedUnion("format", [
+      z.object({
+        slug: z.string(),
+        format: z.literal("text"),
+        prompt: z.string().optional(),
+      }),
+      z.object({
+        slug: z.string(),
+        format: z.literal("chat"),
+        prompt: z
+          .array(z.object({ role: z.string(), content: z.string() }))
+          .optional(),
+      }),
+    ]),
+  );
 
-  const { slug, format, prompt: customPrompt } = body.parse(ctx.request.body);
+  const {
+    slug,
+    format,
+    prompt: customPrompt,
+  } = createDatasetSchema.parse(ctx.request.body);
   const { projectId, userId } = ctx.state;
 
   const [dataset] = await sql`
@@ -192,8 +182,7 @@ datasets.post("/", checkAccess("datasets", "create"), async (ctx: Context) => {
     })} returning *
   `;
 
-  const promptMessages =
-    customPrompt || DEFAULT_PROMPT[format as keyof DefaultPrompt];
+  const promptMessages = customPrompt ?? DEFAULT_PROMPT[format];
 
   const [promptRecord] = await sql`insert into dataset_prompt
     ${sql({
@@ -262,8 +251,8 @@ datasets.patch(
       set 
         slug = ${slug} 
       where 
-      id = ${id} 
-      and project_id = ${projectId} 
+        id = ${id} 
+        and project_id = ${projectId} 
       returning *
     `;
 
@@ -320,7 +309,16 @@ datasets.delete(
  *               datasetId:
  *                 type: string
  *               messages:
- *                 type: array
+ *                 oneOf:
+ *                   - type: string
+ *                   - type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         role:
+ *                           type: string
+ *                         content:
+ *                           type: string
  *               idealOutput:
  *                 type: string
  *     responses:
@@ -339,7 +337,10 @@ datasets.post(
     const bodySchema = z.object({
       datasetId: z.string(),
       messages: z
-        .array(z.object({ role: z.string(), content: z.string() }))
+        .union([
+          z.string(),
+          z.array(z.object({ role: z.string(), content: z.string() })),
+        ])
         .optional(),
       idealOutput: z.string().optional(),
     });
@@ -351,13 +352,28 @@ datasets.post(
     const [{ format }] =
       await sql`select format from dataset where id = ${datasetId} and project_id = ${projectId}`;
 
+    if (
+      format === "text" &&
+      messages !== undefined &&
+      typeof messages !== "string"
+    ) {
+      ctx.throw(400, "For text format, prompt must be a string.");
+    }
+    if (
+      format === "chat" &&
+      messages !== undefined &&
+      !Array.isArray(messages)
+    ) {
+      ctx.throw(400, "For chat format, prompt must be an array of messages.");
+    }
+
     const [prompt] = await sql`insert into dataset_prompt
-    ${sql({
-      datasetId,
-      messages: messages || DEFAULT_PROMPT[format as keyof DefaultPrompt],
-    })}
-    returning *
-  `;
+      ${sql({
+        datasetId,
+        messages: messages ?? DEFAULT_PROMPT[format as keyof DefaultPrompt],
+      })}
+      returning *
+    `;
 
     await sql`
       insert into dataset_prompt_variation
@@ -505,7 +521,16 @@ datasets.delete(
  *             type: object
  *             properties:
  *               messages:
- *                 type: array
+ *                 oneOf:
+ *                   - type: string
+ *                   - type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         role:
+ *                           type: string
+ *                         content:
+ *                           type: string
  *     responses:
  *       200:
  *         description: Updated prompt
@@ -520,26 +545,46 @@ datasets.patch(
   async (ctx: Context) => {
     const { id } = ctx.params;
     const { projectId } = ctx.state;
-    const { messages } = ctx.request.body as {
-      messages: string;
-    };
+    const bodySchema = z.object({
+      messages: z.union([
+        z.string(),
+        z.array(z.object({ role: z.string(), content: z.string() })),
+      ]),
+    });
 
-    const [dataset] = await sql`
+    const { messages } = bodySchema.parse(ctx.request.body);
+
+    const [record] = await sql`
       select 
-        d.id 
+        d.format
       from 
         dataset_prompt dp
-        left join dataset d on dp.dataset_id = d.id
-      where
-        d.project_id = ${projectId}
+      left join dataset d on dp.dataset_id = d.id
+      where 
+        dp.id = ${id} and d.project_id = ${projectId}
     `;
 
-    if (!dataset) {
+    if (!record) {
       ctx.throw(403, "Unauthorized");
     }
 
+    if (
+      record.format === "text" &&
+      messages !== undefined &&
+      typeof messages !== "string"
+    ) {
+      ctx.throw(400, "For text format, prompt must be a string.");
+    }
+    if (
+      record.format === "chat" &&
+      messages !== undefined &&
+      !Array.isArray(messages)
+    ) {
+      ctx.throw(400, "For chat format, prompt must be an array of messages.");
+    }
+
     const [prompt] =
-      await sql`update dataset_prompt set messages = ${messages} where id = ${id} returning *`;
+      await sql`update dataset_prompt set messages = ${sql.json(messages)} where id = ${id} returning *`;
 
     ctx.body = prompt;
   },
@@ -799,6 +844,7 @@ datasets.post(
  *           type: string
  *         format:
  *           type: string
+ *           enum: [text, chat]
  *         ownerId:
  *           type: string
  *         projectId:
@@ -811,7 +857,16 @@ datasets.post(
  *         datasetId:
  *           type: string
  *         messages:
- *           type: array
+ *           oneOf:
+ *             - type: string
+ *             - type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   role:
+ *                     type: string
+ *                   content:
+ *                     type: string
  *     DatasetPromptVariation:
  *       type: object
  *       properties:
