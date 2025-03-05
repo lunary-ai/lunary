@@ -529,9 +529,7 @@ runs.use("/ingest", ingest.routes());
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/Run'
- *         examples:
- *           application/json:
- *             value:
+ *             example:
  *               total: 200
  *               page: 1
  *               limit: 10
