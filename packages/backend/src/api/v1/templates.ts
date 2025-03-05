@@ -486,6 +486,28 @@ templates.post("/:id/versions", async (ctx: Context) => {
  * @openapi
  * components:
  *   schemas:
+ *     TemplateVersion:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         templateId:
+ *           type: string
+ *         content:
+ *           type: array
+ *         extra:
+ *           type: object
+ *         testValues:
+ *           type: object
+ *         isDraft:
+ *           type: boolean
+ *         notes:
+ *           type: string
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         version:
+ *           type: number
  *     Template:
  *       type: object
  *       properties:
@@ -509,28 +531,6 @@ templates.post("/:id/versions", async (ctx: Context) => {
  *           type: array
  *           items:
  *             $ref: '#/components/schemas/TemplateVersion'
- *     TemplateVersion:
- *       type: object
- *       properties:
- *         id:
- *           type: string
- *         templateId:
- *           type: string
- *         content:
- *           type: array
- *         extra:
- *           type: object
- *         testValues:
- *           type: object
- *         isDraft:
- *           type: boolean
- *         notes:
- *           type: string
- *         createdAt:
- *           type: string
- *           format: date-time
- *         version:
- *           type: number
  *     TemplateInput:
  *       type: object
  *       required:
@@ -581,7 +581,9 @@ templates.post("/:id/versions", async (ctx: Context) => {
  *       type: object
  *       properties:
  *         content:
- *           type: [array, string]
+ *           oneOf:
+ *             - type: array
+ *             - type: string
  *         extra:
  *           type: object
  *         testValues:
@@ -591,5 +593,4 @@ templates.post("/:id/versions", async (ctx: Context) => {
  *         notes:
  *           type: string
  */
-
 export default templates;
