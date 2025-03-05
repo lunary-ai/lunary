@@ -1000,7 +1000,14 @@ runs.patch(
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Score'
+ *             type: object
+ *             properties:
+ *               label:
+ *                 type: string
+ *               value:
+ *                 type: number
+ *               comment:
+ *                 type: string
  *           example:
  *             label: "accuracy"
  *             value: 0.95
