@@ -200,7 +200,9 @@ datasets.post("/", checkAccess("datasets", "create"), async (ctx: Context) => {
     returning *
   `;
 
-  ctx.body = dataset;
+  const fullDataset = await getDatasetById(dataset.id, projectId);
+
+  ctx.body = fullDataset;
 });
 
 /**
