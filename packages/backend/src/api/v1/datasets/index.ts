@@ -122,7 +122,19 @@ datasets.get("/:identifier", async (ctx: Context) => {
  *                 type: string
  *               format:
  *                 type: string
+ *                 enum: [text, chat]
  *                 default: "text"
+ *               prompt:
+ *                 oneOf:
+ *                   - type: string
+ *                   - type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         role:
+ *                           type: string
+ *                         content:
+ *                           type: string
  *     responses:
  *       200:
  *         description: Created dataset
@@ -132,13 +144,44 @@ datasets.get("/:identifier", async (ctx: Context) => {
  *               $ref: '#/components/schemas/Dataset'
  */
 datasets.post("/", checkAccess("datasets", "create"), async (ctx: Context) => {
-  const { projectId, userId } = ctx.state;
-  const body = z.object({
-    slug: z.string(),
-    format: z.string().optional().default("text"),
-  });
+  const body = z
+    .object({
+      slug: z.string(),
+      format: z.enum(["text", "chat"]).default("text"),
+      prompt: z
+        .union([
+          z.string(),
+          z.array(z.object({ role: z.string(), content: z.string() })),
+        ])
+        .optional(),
+    })
+    .superRefine((data, ctx) => {
+      if (
+        data.format === "text" &&
+        data.prompt !== undefined &&
+        Array.isArray(data.prompt)
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          message: "For text format, prompt must be a string.",
+          path: ["prompt"],
+        });
+      }
+      if (
+        data.format === "chat" &&
+        data.prompt !== undefined &&
+        typeof data.prompt === "string"
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          message: "For chat format, prompt must be an array of messages.",
+          path: ["prompt"],
+        });
+      }
+    });
 
-  const { slug, format } = body.parse(ctx.request.body);
+  const { slug, format, prompt: customPrompt } = body.parse(ctx.request.body);
+  const { projectId, userId } = ctx.state;
 
   const [dataset] = await sql`
     insert into dataset ${sql({
@@ -149,16 +192,19 @@ datasets.post("/", checkAccess("datasets", "create"), async (ctx: Context) => {
     })} returning *
   `;
 
-  const [prompt] = await sql`insert into dataset_prompt
+  const promptMessages =
+    customPrompt || DEFAULT_PROMPT[format as keyof DefaultPrompt];
+
+  const [promptRecord] = await sql`insert into dataset_prompt
     ${sql({
       datasetId: dataset.id,
-      messages: DEFAULT_PROMPT[format as keyof DefaultPrompt],
+      messages: promptMessages,
     })}
     returning *
   `;
   await sql`insert into dataset_prompt_variation
     ${sql({
-      promptId: prompt.id,
+      promptId: promptRecord.id,
       variables: {},
       idealOutput: "",
     })}
@@ -389,7 +435,7 @@ datasets.get(
     ctx.body = prompt;
   },
 );
- 
+
 /**
  * @openapi
  * /v1/datasets/prompts/{id}:
