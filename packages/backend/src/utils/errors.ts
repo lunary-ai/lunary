@@ -1,5 +1,6 @@
 import { Context, Next } from "koa";
 import { z } from "zod";
+import { fromZodError } from "zod-validation-error";
 
 export async function errorMiddleware(ctx: Context, next: Next) {
   try {
@@ -11,7 +12,7 @@ export async function errorMiddleware(ctx: Context, next: Next) {
   } catch (error: any) {
     if (error instanceof z.ZodError) {
       ctx.status = 422;
-      ctx.body = { error: "Error", message: error.errors[0].message };
+      ctx.body = { error: "Error", message: fromZodError(error).toString() };
       console.error("ZOD ERROR", JSON.stringify(error.errors[0]));
       console.error(error);
       return;
