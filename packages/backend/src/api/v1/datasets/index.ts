@@ -126,6 +126,7 @@ datasets.get("/:identifier", async (ctx: Context) => {
  *                     enum: [text]
  *                   prompt:
  *                     type: string
+ *                     nullable: true
  *                 required:
  *                   - slug
  *               - type: object
@@ -149,6 +150,7 @@ datasets.get("/:identifier", async (ctx: Context) => {
  *                             - role
  *                             - content
  *                       - type: string
+ *                     nullable: true
  *                 required:
  *                   - slug
  *     responses:
