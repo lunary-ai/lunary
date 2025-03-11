@@ -480,7 +480,7 @@ export async function runAImodel(
         .filter((m) => m.role !== "system")
         .map(getAnthropicMessage),
       system: messages.filter((m) => m.role === "system")[0]?.content,
-      stream,
+      stream: false,
       temperature: completionsParams?.temperature,
       max_tokens: completionsParams?.max_tokens || 4096,
       top_p: completionsParams?.top_p,
