@@ -38,6 +38,8 @@ jobs:
           LUNARY_PUBLIC_KEY: 259d2d94-9446-478a-ae04-484de705b522
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           NEXT_PUBLIC_API_URL: http://0.0.0.0:3333
+          IS_SELF_HOSTED: true
+          NEXT_PUBLIC_IS_SELF_HOSTED: true
         timeout-minutes: 3
         run: |
           bun run migrate:db
