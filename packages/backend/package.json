@@ -9,6 +9,7 @@
     "dev": "bun run --watch src/index.ts"
   },
   "dependencies": {
+    "@ai-sdk/amazon-bedrock": "^2.1.1",
     "@anthropic-ai/sdk": "^0.33.1",
     "@authenio/samlify-node-xmllint": "^2.0.0",
     "@aws-sdk/client-comprehend": "^3.645.0",
@@ -18,6 +19,7 @@
     "@json2csv/plainjs": "^7.0.6",
     "@koa/cors": "^5.0.0",
     "@xenova/transformers": "^2.14.2",
+    "ai": "^4.1.54",
     "argon2": "^0.41.1",
     "bcrypt": "^5.1.1",
     "google-auth-library": "^9.14.2",

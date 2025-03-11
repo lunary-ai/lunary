@@ -92,7 +92,6 @@ export const PROVIDERS: ProviderMetadata[] = [
     iconUrl:
       "https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/dark/bedrock-color.png",
     description: "AWS service providing access to LLM models.",
-    disabled: true,
   },
   {
     name: "google_ai_studio",
