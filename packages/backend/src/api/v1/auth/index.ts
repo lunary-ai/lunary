@@ -86,7 +86,7 @@ auth.post("/signup", async (ctx: Context) => {
     ctx.throw(403, "Bad request");
   }
 
-  if (config.IS_SELF_HOSTED) {
+  if (!config.IS_SELF_HOSTED) {
     const recaptchaResponse = await verifyRecaptcha(recaptchaToken!);
     if (!recaptchaResponse.success) {
       ctx.throw(400, "Failed reCAPTCHA verification");
