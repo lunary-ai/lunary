@@ -169,13 +169,14 @@ datasets.post("/", checkAccess("datasets", "create"), async (ctx: Context) => {
       z.object({
         slug: z.string(),
         format: z.literal("text"),
-        prompt: z.string().optional(),
+        prompt: z.string().nullable().optional(),
       }),
       z.object({
         slug: z.string(),
         format: z.literal("chat"),
         prompt: z
           .array(z.object({ role: z.string(), content: z.string() }))
+          .nullable()
           .optional(),
       }),
     ]),
@@ -197,16 +198,17 @@ datasets.post("/", checkAccess("datasets", "create"), async (ctx: Context) => {
     })} returning *
   `;
 
-  const promptMessages = customPrompt ?? DEFAULT_PROMPT[format];
+  if (customPrompt !== null) {
+    const promptMessages = customPrompt ?? DEFAULT_PROMPT[format];
 
-  const [promptRecord] = await sql`insert into dataset_prompt
+    const [promptRecord] = await sql`insert into dataset_prompt
     ${sql({
       datasetId: dataset.id,
       messages: promptMessages,
     })}
     returning *
   `;
-  await sql`insert into dataset_prompt_variation
+    await sql`insert into dataset_prompt_variation
     ${sql({
       promptId: promptRecord.id,
       variables: {},
@@ -214,6 +216,7 @@ datasets.post("/", checkAccess("datasets", "create"), async (ctx: Context) => {
     })}
     returning *
   `;
+  }
 
   const fullDataset = await getDatasetById(dataset.id, projectId);
 
