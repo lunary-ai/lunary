@@ -1,12 +1,14 @@
+import { createAmazonBedrock } from "@ai-sdk/amazon-bedrock";
 import Anthropic from "@anthropic-ai/sdk";
+import { generateText } from "ai";
 import OpenAI, { AzureOpenAI } from "openai";
-import { Model, MODELS } from "shared";
+import { Model } from "shared";
 import { ReadableStream } from "stream/web";
 import sql from "./db";
+import watsonxAi from "./ibm";
 import { clearUndefined } from "./ingest";
 import { getOpenAIParams } from "./openai";
 import stripe from "./stripe";
-import watsonxAi from "./ibm";
 
 function convertInputToOpenAIMessages(input: any[]) {
   return input.map(
@@ -428,6 +430,41 @@ export async function runAImodel(
     return chatCompletion;
   }
 
+  if (model.isCustom && model.provider === "amazon_bedrock") {
+    const extraConfig = providerConfig.extraConfig || {};
+    const accessKeyId = extraConfig.accessKeyId;
+    const secretAccessKey = extraConfig.secretAccessKey;
+    const region = extraConfig.region;
+
+    if (!accessKeyId || !secretAccessKey || !region) {
+      throw new Error("Missing Bedrock credentials in provider configuration");
+    }
+
+    const bedrock = createAmazonBedrock({
+      accessKeyId,
+      secretAccessKey,
+      region,
+    });
+
+    const { response } = await generateText({
+      model: bedrock(model.name),
+      messages,
+      temperature: completionsParams?.temperature,
+      maxTokens: completionsParams?.max_tokens,
+      topP: completionsParams?.top_p,
+      presencePenalty: completionsParams?.presence_penalty,
+      frequencyPenalty: completionsParams?.frequency_penalty,
+    });
+
+    return {
+      id: response.id,
+      choices: response.messages.map((message, index) => ({
+        index,
+        message,
+      })),
+    };
+  }
+
   const useAnthropic = model?.provider === "anthropic";
   if (useAnthropic) {
     if (!process.env.ANTHROPIC_API_KEY)
@@ -438,12 +475,12 @@ export async function runAImodel(
     });
 
     const res = await anthropic.messages.create({
-      model: model.name,
+      model: model.id,
       messages: messages
         .filter((m) => m.role !== "system")
         .map(getAnthropicMessage),
       system: messages.filter((m) => m.role === "system")[0]?.content,
-      stream: false,
+      stream,
       temperature: completionsParams?.temperature,
       max_tokens: completionsParams?.max_tokens || 4096,
       top_p: completionsParams?.top_p,
@@ -525,13 +562,12 @@ export async function runAImodel(
       }
   }
 
-  console.log(clientParams);
   const openai = new OpenAI(clientParams);
 
   let res = await openai.chat.completions.create({
     model: model.name || "gpt-4o",
     messages,
-    stream: stream,
+    stream: false,
     temperature: completionsParams?.temperature,
     max_completion_tokens: completionsParams?.max_tokens,
     top_p: completionsParams?.top_p,

@@ -1,13 +1,6 @@
 import { ProviderCard } from "@/components/providers/ProviderCard";
 import { useProviderConfigs } from "@/utils/dataHooks/provider-configs";
-import {
-  Container,
-  Flex,
-  Loader,
-  SimpleGrid,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Container, SimpleGrid, Text, Title } from "@mantine/core";
 
 export default function ProvidersManager() {
   const { configuredProviders, isLoading } = useProviderConfigs();
