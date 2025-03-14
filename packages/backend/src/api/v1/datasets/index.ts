@@ -102,7 +102,6 @@ datasets.get("/:identifier", async (ctx: Context) => {
     return;
   }
 });
-
 /**
  * @openapi
  * /v1/datasets:
@@ -127,8 +126,12 @@ datasets.get("/:identifier", async (ctx: Context) => {
  *                   prompt:
  *                     type: string
  *                     nullable: true
+ *                   withPromptVariation:
+ *                     type: boolean
+ *                     default: true
  *                 required:
  *                   - slug
+ *                   - format
  *               - type: object
  *                 properties:
  *                   slug:
@@ -151,8 +154,12 @@ datasets.get("/:identifier", async (ctx: Context) => {
  *                             - content
  *                       - type: string
  *                     nullable: true
+ *                   withPromptVariation:
+ *                     type: boolean
+ *                     default: true
  *                 required:
  *                   - slug
+ *                   - format
  *     responses:
  *       200:
  *         description: Created dataset
@@ -172,14 +179,21 @@ datasets.post("/", checkAccess("datasets", "create"), async (ctx: Context) => {
         slug: z.string(),
         format: z.literal("text"),
         prompt: z.string().nullable().optional(),
+        withPromptVariation: z.boolean().default(true),
       }),
       z.object({
         slug: z.string(),
         format: z.literal("chat"),
         prompt: z
-          .array(z.object({ role: z.string(), content: z.string() }))
+          .array(
+            z.object({
+              role: z.string(),
+              content: z.string(),
+            }),
+          )
           .nullable()
           .optional(),
+        withPromptVariation: z.boolean().default(true),
       }),
     ]),
   );
@@ -210,6 +224,7 @@ datasets.post("/", checkAccess("datasets", "create"), async (ctx: Context) => {
     })}
     returning *
   `;
+
     await sql`insert into dataset_prompt_variation
     ${sql({
       promptId: promptRecord.id,
@@ -326,13 +341,31 @@ datasets.delete(
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               datasetId:
- *                 type: string
- *               messages:
- *                 oneOf:
- *                   - type: array
+ *             oneOf:
+ *               - type: object
+ *                 properties:
+ *                   datasetId:
+ *                     type: string
+ *                   format:
+ *                     type: string
+ *                     enum: [text]
+ *                   messages:
+ *                     type: string
+ *                     nullable: true
+ *                   idealOutput:
+ *                     type: string
+ *                 required:
+ *                   - datasetId
+ *                   - format
+ *               - type: object
+ *                 properties:
+ *                   datasetId:
+ *                     type: string
+ *                   format:
+ *                     type: string
+ *                     enum: [chat]
+ *                   messages:
+ *                     type: array
  *                     items:
  *                       type: object
  *                       properties:
@@ -340,9 +373,69 @@ datasets.delete(
  *                           type: string
  *                         content:
  *                           type: string
- *                   - type: string
- *               idealOutput:
- *                 type: string
+ *                       required:
+ *                         - role
+ *                         - content
+ *                     nullable: true
+ *                   idealOutput:
+ *                     type: string
+ *                 required:
+ *                   - datasetId
+ *                   - format
+ *     responses:
+ *       200:
+ *         description: Created prompt
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DatasetPrompt'
+ */
+/**
+ * @openapi
+ * /v1/datasets/prompts:
+ *   post:
+ *     summary: Create a new prompt
+ *     tags: [Datasets, Prompts]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             oneOf:
+ *               - type: object
+ *                 properties:
+ *                   datasetId:
+ *                     type: string
+ *                   messages:
+ *                     type: string
+ *                     nullable: true
+ *                   idealOutput:
+ *                     type: string
+ *                 required:
+ *                   - datasetId
+ *               - type: object
+ *                 properties:
+ *                   datasetId:
+ *                     type: string
+ *                   messages:
+ *                     type: array
+ *                     nullable: true
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         role:
+ *                           type: string
+ *                         content:
+ *                           type: string
+ *                       required:
+ *                         - role
+ *                         - content
+ *                   idealOutput:
+ *                     type: string
+ *                 required:
+ *                   - datasetId
  *     responses:
  *       200:
  *         description: Created prompt
@@ -356,16 +449,22 @@ datasets.post(
   checkAccess("datasets", "update"),
   async (ctx: Context) => {
     const { projectId } = ctx.state;
-    const bodySchema = z.object({
-      datasetId: z.string(),
-      messages: z
-        .union([
-          z.string(),
-          z.array(z.object({ role: z.string(), content: z.string() })),
-        ])
-        .optional(),
-      idealOutput: z.string().optional(),
-    });
+
+    const bodySchema = z.union([
+      z.object({
+        datasetId: z.string(),
+        messages: z.string().nullable().optional(),
+        idealOutput: z.string().optional(),
+      }),
+      z.object({
+        datasetId: z.string(),
+        messages: z
+          .array(z.object({ role: z.string(), content: z.string() }))
+          .nullable()
+          .optional(),
+        idealOutput: z.string().optional(),
+      }),
+    ]);
 
     const { datasetId, messages, idealOutput } = bodySchema.parse(
       ctx.request.body,
