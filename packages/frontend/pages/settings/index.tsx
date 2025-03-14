@@ -351,6 +351,23 @@ export default function Settings() {
           </Button>
         </SettingsCard>
 
+        {["admin", "owner"].includes(user.role) && (
+          <SettingsCard title={<>Audit Logs</>} align="start">
+            <Text mb="md">
+              View a history of user actions and activities in your organization.
+            </Text>
+            <Button
+              color="blue"
+              variant="default"
+              component={Link}
+              href={`/settings/audit-logs`}
+              leftSection={<IconShieldCog size={16} />}
+            >
+              View Logs
+            </Button>
+          </SettingsCard>
+        )}
+
         <SmartDataRule />
 
         <DataWarehouseCard />

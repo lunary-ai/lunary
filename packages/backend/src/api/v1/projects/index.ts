@@ -1,4 +1,5 @@
 import { checkAccess, checkProjectAccess } from "@/src/utils/authorization";
+import { logAction } from "@/src/utils/audit";
 import sql from "@/src/utils/db";
 import Context from "@/src/utils/koa";
 import { randomUUID } from "crypto";
@@ -92,6 +93,15 @@ projects.post("/", checkAccess("projects", "create"), async (ctx: Context) => {
   ];
   await sql`insert into api_key ${sql(privateKey)}`;
 
+  await logAction(
+    ctx,
+    "create",
+    "project",
+    project.id,
+    project.id,
+    project.name,
+  );
+
   ctx.body = project;
 });
 
@@ -112,7 +122,18 @@ projects.delete(
       await sql`select count(*)::int from  project where org_id = ${orgId}`;
 
     if (count > 1) {
+      const [project] =
+        await sql`select name from project where id = ${projectId}`;
+      await logAction(
+        ctx,
+        "delete",
+        "project",
+        projectId,
+        projectId,
+        project?.name,
+      );
       await sql`delete from project where id = ${projectId}`;
+
       ctx.status = 200;
       ctx.body = {};
       return;
@@ -161,6 +182,20 @@ projects.post(
         where project_id = ${projectId}
           and type = 'private'
       `;
+
+      // Get project name
+      const [project] =
+        await sql`SELECT name FROM project WHERE id = ${projectId}`;
+
+      // Log API key regeneration
+      await logAction(
+        ctx,
+        "regenerate",
+        "api_key",
+        projectId,
+        projectId,
+        project?.name,
+      );
     }
 
     ctx.status = 200;
@@ -189,6 +224,9 @@ projects.patch(
       await sql`
         update project set name = ${name} where id = ${projectId}
       `;
+
+      // Log project rename
+      await logAction(ctx, "update", "project", projectId, projectId, name);
     }
 
     ctx.status = 200;

@@ -6,6 +6,7 @@ import {
 } from "@/src/emails";
 import { checkAccess } from "@/src/utils/authorization";
 import config from "@/src/utils/config";
+import { logAction } from "@/src/utils/audit";
 import sql from "@/src/utils/db";
 import Context from "@/src/utils/koa";
 import { jwtVerify } from "jose";
@@ -268,6 +269,9 @@ users.post("/", checkAccess("teamMembers", "create"), async (ctx: Context) => {
     group by account.id
   `;
 
+  // Log the user creation action
+  await logAction(ctx, 'create', 'user', user.id);
+
   const link = org.samlEnabled
     ? process.env.APP_URL
     : `${process.env.APP_URL}/join?token=${token}`;
@@ -305,6 +309,9 @@ users.delete(
     }
 
     await sql`delete from account where id = ${userToDeleteId}`;
+    
+    // Log the user deletion action
+    await logAction(ctx, 'delete', 'user', userToDeleteId);
 
     ctx.status = 200;
     ctx.body = {};
@@ -397,6 +404,9 @@ users.patch(
         do nothing
       `;
     }
+
+    // Log the user update action
+    await logAction(ctx, 'update', 'user', userId);
 
     ctx.status = 200;
     ctx.body = { message: "User updated successfully" };

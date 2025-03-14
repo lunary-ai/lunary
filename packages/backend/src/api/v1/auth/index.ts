@@ -1,5 +1,6 @@
 import { sendVerifyEmail } from "@/src/emails";
 import { Db } from "@/src/types";
+import { logAction } from "@/src/utils/audit";
 import config from "@/src/utils/config";
 import sql from "@/src/utils/db";
 import Context from "@/src/utils/koa";
@@ -275,6 +276,11 @@ auth.post("/login", async (ctx: Context) => {
   // update last login
   await sql`update account set last_login_at = now() where id = ${user.id}`;
 
+  ctx.state.userId = user.id;
+  ctx.state.orgId = user.orgId;
+
+  await logAction(ctx, "login", "user", user.id);
+
   const token = await signJWT({
     userId: user.id,
     email: user.email,
@@ -343,6 +349,8 @@ auth.post("/reset-password", async (ctx: Context) => {
       email = ${email} 
     returning *
   `;
+
+  await logAction(ctx, "reset_password", "user", user.id);
 
   const authToken = await signJWT({
     userId: user.id,
