@@ -352,24 +352,7 @@ export default function Settings() {
         </SettingsCard>
 
         <SmartDataRule />
-        <SettingsCard
-          title={<>Guardrails 🔒</>}
-          align="start"
-          paywallConfig={{
-            Icon: IconShieldCog,
-            feature: "Guardrails",
-            p: 12,
-            plan: "enterprise",
-            list: [
-              "Ban certain topics",
-              "Intercept prompt injections",
-              "Ensure no PII is leaked",
-            ],
-            enabled: true,
-          }}
-        >
-          <Button>Open Guardrails settings</Button>
-        </SettingsCard>
+
         <DataWarehouseCard />
         {user && hasAccess(user.role, "projects", "delete") && (
           <SettingsCard title="Danger Zone" align="start">
