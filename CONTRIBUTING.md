@@ -4,9 +4,9 @@
 2. Setup a PostgreSQL instance (version 15 minimum)
 3. Copy the content of `packages/backend/.env.example` to `packages/backend/.env` and fill the missing values
 4. Copy the content of `packages/frontend/.env.example` to `packages/backend/.env`
-5. Run `npm install`
-6. Run `npm run migrate:db`
-7. Run `npm run dev`
+5. Run `bun install`
+6. Run `bun run migrate:db`
+7. Run `bun run dev`
 
 You can now open the dashboard at `http://localhost:8080`. When using our JS or Python SDK, you need to set the environment variable `LUNARY_API_URL` to `http://localhost:3333`. You can use `LUNARY_VERBOSE=True` to see all the event sent by the SDK
 
