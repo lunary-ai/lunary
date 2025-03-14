@@ -202,6 +202,7 @@ datasets.post("/", checkAccess("datasets", "create"), async (ctx: Context) => {
     slug,
     format,
     prompt: customPrompt,
+    withPromptVariation,
   } = createDatasetSchema.parse(ctx.request.body);
   const { projectId, userId } = ctx.state;
 
@@ -225,14 +226,15 @@ datasets.post("/", checkAccess("datasets", "create"), async (ctx: Context) => {
     returning *
   `;
 
-    await sql`insert into dataset_prompt_variation
-    ${sql({
-      promptId: promptRecord.id,
-      variables: {},
-      idealOutput: "",
-    })}
-    returning *
-  `;
+    if (withPromptVariation) {
+      await sql`insert into dataset_prompt_variation
+      ${sql({
+        promptId: promptRecord.id,
+        variables: {},
+        idealOutput: "",
+      })}
+    `;
+    }
   }
 
   const fullDataset = await getDatasetById(dataset.id, projectId);
@@ -346,73 +348,14 @@ datasets.delete(
  *                 properties:
  *                   datasetId:
  *                     type: string
- *                   format:
- *                     type: string
- *                     enum: [text]
  *                   messages:
  *                     type: string
  *                     nullable: true
  *                   idealOutput:
  *                     type: string
- *                 required:
- *                   - datasetId
- *                   - format
- *               - type: object
- *                 properties:
- *                   datasetId:
- *                     type: string
- *                   format:
- *                     type: string
- *                     enum: [chat]
- *                   messages:
- *                     type: array
- *                     items:
- *                       type: object
- *                       properties:
- *                         role:
- *                           type: string
- *                         content:
- *                           type: string
- *                       required:
- *                         - role
- *                         - content
- *                     nullable: true
- *                   idealOutput:
- *                     type: string
- *                 required:
- *                   - datasetId
- *                   - format
- *     responses:
- *       200:
- *         description: Created prompt
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/DatasetPrompt'
- */
-/**
- * @openapi
- * /v1/datasets/prompts:
- *   post:
- *     summary: Create a new prompt
- *     tags: [Datasets, Prompts]
- *     security:
- *       - BearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             oneOf:
- *               - type: object
- *                 properties:
- *                   datasetId:
- *                     type: string
- *                   messages:
- *                     type: string
- *                     nullable: true
- *                   idealOutput:
- *                     type: string
+ *                   withPromptVariation:
+ *                     type: boolean
+ *                     default: true
  *                 required:
  *                   - datasetId
  *               - type: object
@@ -434,6 +377,9 @@ datasets.delete(
  *                         - content
  *                   idealOutput:
  *                     type: string
+ *                   withPromptVariation:
+ *                     type: boolean
+ *                     default: true
  *                 required:
  *                   - datasetId
  *     responses:
@@ -455,6 +401,7 @@ datasets.post(
         datasetId: z.string(),
         messages: z.string().nullable().optional(),
         idealOutput: z.string().optional(),
+        withPromptVariation: z.boolean().default(true),
       }),
       z.object({
         datasetId: z.string(),
@@ -463,12 +410,12 @@ datasets.post(
           .nullable()
           .optional(),
         idealOutput: z.string().optional(),
+        withPromptVariation: z.boolean().default(true),
       }),
     ]);
 
-    const { datasetId, messages, idealOutput } = bodySchema.parse(
-      ctx.request.body,
-    );
+    const { datasetId, messages, idealOutput, withPromptVariation } =
+      bodySchema.parse(ctx.request.body);
 
     const [{ format }] =
       await sql`select format from dataset where id = ${datasetId} and project_id = ${projectId}`;
@@ -496,7 +443,8 @@ datasets.post(
       returning *
     `;
 
-    await sql`
+    if (withPromptVariation) {
+      await sql`
       insert into dataset_prompt_variation
         ${sql({
           promptId: prompt.id,
@@ -505,6 +453,7 @@ datasets.post(
         })}
       returning *
     `;
+    }
 
     ctx.body = prompt;
   },
