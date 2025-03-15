@@ -131,7 +131,6 @@ export const CHECKS_BY_TYPE = {
     "languages",
     "entities",
     "templates",
-    "sentiment",
     "status",
     "metadata",
     "feedback",

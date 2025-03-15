@@ -23,6 +23,7 @@
         "ai": "^4.1.54",
         "argon2": "^0.41.1",
         "bcrypt": "^5.1.1",
+        "eld": "^1.0.1",
         "google-auth-library": "^9.14.2",
         "jose": "^5.8.0",
         "jsonrepair": "^3.8.0",
@@ -847,6 +848,8 @@
     "ee-first": ["ee-first@1.1.1", "", {}, "sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow=="],
 
     "efrt": ["efrt@2.7.0", "", {}, "sha512-/RInbCy1d4P6Zdfa+TMVsf/ufZVotat5hCw3QXmWtjU+3pFEOvOQ7ibo3aIxyCJw2leIeAMjmPj+1SLJiCpdrQ=="],
+
+    "eld": ["eld@1.0.1", "", {}, "sha512-+6BuR0EY2CsUZZGgGfOhV5iq9b7HdhwqwvxkdcxI+w/Mr3P22ic9VuxYnPkwh2HZNJC23wPI4pIYe+hKEbiyYA=="],
 
     "emoji-regex": ["emoji-regex@8.0.0", "", {}, "sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A=="],
 
