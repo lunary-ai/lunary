@@ -22,6 +22,7 @@
     "ai": "^4.1.54",
     "argon2": "^0.41.1",
     "bcrypt": "^5.1.1",
+    "eld": "^1.0.1",
     "google-auth-library": "^9.14.2",
     "jose": "^5.8.0",
     "jsonrepair": "^3.8.0",

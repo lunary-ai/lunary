@@ -174,15 +174,16 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     sql: ({ field, codes }) => {
       if (!codes || !codes.length) return sql`true`;
 
-      return and([
-        sql`e.type = 'language'`,
-        or(
-          codes.map((code: string) => {
-            const jsonSql = [{ isoCode: code }];
-            return sql`er.result::jsonb -> ${field} @> ${sql.json(jsonSql)}`;
-          }),
-        ),
-      ]);
+      return sql`(
+        e2.type = 'language'
+        and jsonb_typeof(er2.result->${field}) = 'array'
+        and exists (
+            select 1
+            from jsonb_array_elements(er2.result->'input') as elem
+            where elem->>'isoCode' =  any(${sql.array(codes)})
+        )
+      )
+      `;
     },
   },
   {
