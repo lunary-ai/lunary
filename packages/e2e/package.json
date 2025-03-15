@@ -1,7 +1,7 @@
 {
   "name": "@lunary/e2e",
   "scripts": {
-    "test": "bun --env-file=../backend/env playwright test"
+    "test": "bun --env-file=../backend/.env playwright test"
   },
   "dependencies": {
     "@langchain/core": "^0.3.40",
