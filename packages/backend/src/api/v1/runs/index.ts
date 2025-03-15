@@ -435,12 +435,17 @@ function getRunQuery(ctx: Context, isExport = false) {
         r.project_id = ${projectId}
         ${parentRunCheck}
         and (${filtersQuery})
-        and exists (
+        ${
+          evaluatorChecks?.length > 1
+            ? sql`and exists (
           select 1
           from evaluation_result_v2 er2
           join evaluator e2 on er2.evaluator_id = e2.id
           where er2.run_id = r.id and ${evaluatorFiltersQuery} 
         )
+        `
+            : sql``
+        }
     order by
         ${sql.unsafe(orderByClause)}  
     limit ${isExport ? sql`all` : Number(limit)}
