@@ -213,6 +213,14 @@ export function useProject() {
     mutate(newProjects);
   }
 
+  async function updateDataRetention(dataRetentionDays: string) {
+    await updateMutation({ dataRetentionDays });
+    const newProjects = projects.map((p) =>
+      p.id === projectId ? { ...p, dataRetentionDays } : p,
+    );
+    mutate(newProjects);
+  }
+
   async function drop(): Promise<Boolean> {
     try {
       await dropMutation();
@@ -228,6 +236,7 @@ export function useProject() {
   return {
     project,
     update,
+    updateDataRetention,
     drop,
     dropLoading,
     setProjectId,

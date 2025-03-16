@@ -9,6 +9,7 @@ import {
   Group,
   Loader,
   Popover,
+  Select,
   Stack,
   Switch,
   Tabs,
@@ -32,14 +33,13 @@ import {
 import errorHandler from "@/utils/errors";
 import { fetcher } from "@/utils/fetcher";
 import { modals } from "@mantine/modals";
-import { notifications } from "@mantine/notifications";
+import { notifications, showNotification } from "@mantine/notifications";
 import {
   IconCheck,
   IconFilter,
   IconIdBadge,
   IconPencil,
   IconRefreshAlert,
-  IconShieldCog,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -281,7 +281,17 @@ function SmartDataRule() {
 
 export default function Settings() {
   const { org } = useOrg();
-  const { update, project, setProjectId, drop, dropLoading } = useProject();
+  const {
+    update,
+    project,
+    setProjectId,
+    drop,
+    dropLoading,
+    updateDataRetention,
+  } = useProject();
+
+  const [dataRetentionDays, setDataRetentionDays] =
+    useState<string>("unlimited");
 
   const { backendVersion, frontendVersion } = useLunaryVersion();
   const router = useRouter();
@@ -292,6 +302,12 @@ export default function Settings() {
   const { data: projectUsage, isLoading: projectUsageLoading } = useSWR(
     project?.id && org && `/orgs/${org.id}/usage?projectId=${project?.id}`,
   );
+
+  useEffect(() => {
+    if (project?.dataRetentionDays) {
+      setDataRetentionDays(project.dataRetentionDays || "unlimited");
+    }
+  }, [project]);
 
   useEffect(() => {
     if (!hasAccess(user?.role, "settings", "read")) {
@@ -352,6 +368,51 @@ export default function Settings() {
         </SettingsCard>
 
         <SmartDataRule />
+
+        {user && ["admin", "owner"].includes(user.role) && (
+          <SettingsCard title="Data Retention Policy" align="start">
+            <Text>
+              Define a retention period for this Project data. The data will be
+              automatically deleted after the defined time.
+            </Text>
+            <Select
+              defaultValue="Unlimited"
+              value={String(dataRetentionDays)}
+              onChange={setDataRetentionDays}
+              data={[
+                { label: "Unlimited", value: "unlimited" },
+                { label: "1 year", value: "365" },
+                { label: "180 days", value: "180" },
+                { label: "90 days", value: "90" },
+                { label: "60 days", value: "60" },
+                { label: "30 days", value: "30" },
+              ]}
+            />
+
+            <Group w="100%" justify="end">
+              <Button
+                onClick={() => {
+                  if (dataRetentionDays !== "unlimited") {
+                    confirm(
+                      `If you confirm, all data older than ${dataRetentionDays} days will be deleted permanently.`,
+                    );
+                    updateDataRetention(dataRetentionDays);
+                  } else if (dataRetentionDays === "unlimited") {
+                    updateDataRetention("unlimited");
+                  }
+                  showNotification({
+                    title: "Data retention policy updated",
+                    message: `Data retention policy updated to ${dataRetentionDays} days`,
+                    icon: <IconCheck />,
+                    color: "green",
+                  });
+                }}
+              >
+                Save
+              </Button>
+            </Group>
+          </SettingsCard>
+        )}
 
         <DataWarehouseCard />
         {user && hasAccess(user.role, "projects", "delete") && (
