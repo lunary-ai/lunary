@@ -10,7 +10,7 @@ import { useComputedColorScheme } from "@mantine/core";
 import { useAuth } from "../auth";
 import { fetcher } from "../fetcher";
 
-function generateKey(
+export function generateKey(
   baseKey: Key,
   projectId: string | undefined,
   extraParams?: string,
@@ -109,7 +109,6 @@ export function useUser() {
 
   const scheme = useComputedColorScheme();
 
-  // console.trace();
   const { data, isLoading, mutate, error } = useSWR(
     () => isSignedIn && `/users/me`,
   );
@@ -763,3 +762,5 @@ export function useCustomEventsNames() {
     isLoading,
   };
 }
+
+export * from "./audit-logs";

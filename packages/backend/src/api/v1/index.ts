@@ -22,6 +22,7 @@ import dashboards from "./dashboards";
 import charts from "./charts";
 import openapi from "./openapi";
 import providerConfigs from "./provider-configs";
+import auditLogs from "./audit-logs";
 
 const v1 = new Router({
   prefix: "/v1",
@@ -64,6 +65,7 @@ v1.use(dashboards.routes());
 v1.use(charts.routes());
 v1.use(openapi.routes());
 v1.use(providerConfigs.routes());
+v1.use(auditLogs.routes());
 
 v1.use("/template-versions", templateVersions.routes());
 v1.use("/template_versions", templateVersions.routes()); // Legacy route, keep for previous versions of SDKs

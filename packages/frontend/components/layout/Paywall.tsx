@@ -37,25 +37,23 @@ export const ListFeatures = ({ features }) => {
   );
 };
 
-export default function Paywall({
-  plan,
-  feature,
-  children,
-  enabled,
-  list,
-  description,
-  Icon,
-  p,
-}: {
+export interface PaywallConfig {
   plan: string;
   feature: string;
   description: string;
   enabled?: boolean;
   list?: string[];
-  children: React.ReactNode;
   Icon?: React.ComponentType<any>;
   p?: number;
-}) {
+}
+
+interface PaywallProps extends PaywallConfig {
+  children: React.ReactNode;
+}
+
+export default function Paywall(props: PaywallProps) {
+  const { plan, feature, children, enabled, list, description, Icon, p } =
+    props;
   const { org } = useOrg();
 
   // Automatically disable paywall in these cases

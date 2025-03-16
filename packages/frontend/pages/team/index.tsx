@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { forwardRef, useEffect, useState } from "react";
 
 import {
   ActionIcon,
@@ -31,6 +31,7 @@ import {
   IconDotsVertical,
   IconDownload,
   IconLogin,
+  IconShieldCog,
   IconTrash,
 } from "@tabler/icons-react";
 import { NextSeo } from "next-seo";
@@ -58,11 +59,12 @@ import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { hasAccess, roles } from "shared";
 import classes from "./team.module.css";
+import Link from "next/link";
 
 function SAMLConfig() {
   const { org, updateOrg, mutate } = useOrg();
 
-  const [idpXml, setIdpXml] = useState(org?.samlIdpXml);
+  const [idpXml, setIdpXml] = useState(org?.samlIdpXml || "");
   const [idpLoading, setIdpLoading] = useState(false);
   const [spLoading, setSpLoading] = useState(false);
 
@@ -155,7 +157,7 @@ function SAMLConfig() {
           <Table.Tr>
             <Table.Td>Identifier (Entity ID):</Table.Td>
             <Table.Td>
-              <CopyInput value={"urn:lunary.ai:saml:sp"} />
+              <CopyInput value={"urn:lunary.ai:saml:sp"} readOnly />
             </Table.Td>
           </Table.Tr>
           <Table.Tr>
@@ -163,6 +165,7 @@ function SAMLConfig() {
             <Table.Td>
               <CopyInput
                 value={`${process.env.NEXT_PUBLIC_API_URL}/auth/saml/${org?.id}/acs`}
+                readOnly
               />
             </Table.Td>
           </Table.Tr>
@@ -171,6 +174,7 @@ function SAMLConfig() {
             <Table.Td>
               <CopyInput
                 value={`${process.env.NEXT_PUBLIC_API_URL}/auth/saml/${org?.id}/slo`}
+                readOnly
               />
             </Table.Td>
           </Table.Tr>
@@ -179,6 +183,7 @@ function SAMLConfig() {
             <Table.Td>
               <CopyInput
                 value={`${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/login`}
+                readOnly
               />
             </Table.Td>
           </Table.Tr>
@@ -187,6 +192,7 @@ function SAMLConfig() {
             <Table.Td>
               <CopyInput
                 value={`${process.env.NEXT_PUBLIC_API_URL}/auth/saml/${org?.id}/slo`}
+                readOnly
               />
             </Table.Td>
           </Table.Tr>
@@ -420,18 +426,18 @@ export function RoleSelect({
   );
 }
 
-function ProjectMultiSelect({ value, setValue, disabled }) {
+const ProjectMultiSelect = forwardRef((props, ref) => {
+  const { value, setValue, disabled } = props;
   const { projects } = useProjects();
 
-  const data = [
-    ...projects.map((project) => ({
-      value: project.id,
-      label: project.name,
-    })),
-  ];
+  const data = projects.map((project) => ({
+    value: project.id,
+    label: project.name,
+  }));
 
   return (
     <MultiSelect
+      ref={ref}
       value={value}
       data={data}
       onChange={(projectIds) => setValue(projectIds)}
@@ -440,7 +446,7 @@ function ProjectMultiSelect({ value, setValue, disabled }) {
       readOnly={disabled}
     />
   );
-}
+});
 
 function InviteMemberCard() {
   const [role, setRole] = useState("member");
@@ -879,6 +885,23 @@ export default function Team() {
         {hasAccess(user.role, "teamMembers", "create") && <InviteMemberCard />}
         <MemberListCard />
         {["admin", "owner"].includes(user.role) && <SAMLConfig />}
+        {["admin", "owner"].includes(user.role) && (
+          <SettingsCard title={<>Audit Logs</>} align="start">
+            <Text mb="md">
+              View a history of user actions and activities in your
+              organization.
+            </Text>
+            <Button
+              color="blue"
+              variant="default"
+              component={Link}
+              href={`/team/audit-logs`}
+              leftSection={<IconShieldCog size={16} />}
+            >
+              View Logs
+            </Button>
+          </SettingsCard>
+        )}
       </Stack>
     </Container>
   );
