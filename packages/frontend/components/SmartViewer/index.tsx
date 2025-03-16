@@ -79,10 +79,11 @@ export default function SmartViewer({
     if (
       typeof parsedData === "object" &&
       parsedData !== null &&
-      parsedData.enrichments
+      parsedData.enrichments &&
+      Array.isArray(parsedData.enrichments) &&
+      parsedData.enrichments.length === 0
     ) {
-      const { enrichments, ...rest } = parsedData;
-      return rest;
+      delete parsedData.enrichments; // to avoid displaying empty array in json in traces (agents, chains etc.)
     }
 
     return parsedData;

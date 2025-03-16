@@ -314,10 +314,31 @@ function getRunQuery(ctx: Context, isExport = false) {
   const queryString = ctx.querystring;
   const deserializedChecks = deserializeLogic(queryString);
 
+  const mainChecks = deserializedChecks?.filter((check) => {
+    if (check === "AND" || check === "OR") {
+      return true;
+    }
+    return !["languages", "pii"].includes(check?.id);
+  });
+
+  const evaluatorChecks = deserializedChecks?.filter((check) => {
+    if (check === "AND" || check === "OR") {
+      return true;
+    }
+    return ["languages", "pii"].includes(check?.id);
+  });
+
   const filtersQuery =
     deserializedChecks?.length && deserializedChecks.length > 1 // first is always ["AND"]
-      ? convertChecksToSQL(deserializedChecks)
+      ? convertChecksToSQL(mainChecks)
       : sql`r.type = 'llm'`; // default to type llm
+
+  const evaluatorFiltersQuery =
+    evaluatorChecks?.length && evaluatorChecks.length > 1
+      ? convertChecksToSQL(evaluatorChecks)
+      : sql`true`;
+
+  console.log(evaluatorChecks);
 
   const {
     type,
@@ -414,6 +435,17 @@ function getRunQuery(ctx: Context, isExport = false) {
         r.project_id = ${projectId}
         ${parentRunCheck}
         and (${filtersQuery})
+        ${
+          evaluatorChecks?.length > 1
+            ? sql`and exists (
+          select 1
+          from evaluation_result_v2 er2
+          join evaluator e2 on er2.evaluator_id = e2.id
+          where er2.run_id = r.id and ${evaluatorFiltersQuery} 
+        )
+        `
+            : sql``
+        }
     order by
         ${sql.unsafe(orderByClause)}  
     limit ${isExport ? sql`all` : Number(limit)}

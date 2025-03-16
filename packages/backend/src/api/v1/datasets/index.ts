@@ -102,7 +102,6 @@ datasets.get("/:identifier", async (ctx: Context) => {
     return;
   }
 });
-
 /**
  * @openapi
  * /v1/datasets:
@@ -127,8 +126,12 @@ datasets.get("/:identifier", async (ctx: Context) => {
  *                   prompt:
  *                     type: string
  *                     nullable: true
+ *                   withPromptVariation:
+ *                     type: boolean
+ *                     default: true
  *                 required:
  *                   - slug
+ *                   - format
  *               - type: object
  *                 properties:
  *                   slug:
@@ -151,8 +154,12 @@ datasets.get("/:identifier", async (ctx: Context) => {
  *                             - content
  *                       - type: string
  *                     nullable: true
+ *                   withPromptVariation:
+ *                     type: boolean
+ *                     default: true
  *                 required:
  *                   - slug
+ *                   - format
  *     responses:
  *       200:
  *         description: Created dataset
@@ -172,14 +179,21 @@ datasets.post("/", checkAccess("datasets", "create"), async (ctx: Context) => {
         slug: z.string(),
         format: z.literal("text"),
         prompt: z.string().nullable().optional(),
+        withPromptVariation: z.boolean().default(true),
       }),
       z.object({
         slug: z.string(),
         format: z.literal("chat"),
         prompt: z
-          .array(z.object({ role: z.string(), content: z.string() }))
+          .array(
+            z.object({
+              role: z.string(),
+              content: z.string(),
+            }),
+          )
           .nullable()
           .optional(),
+        withPromptVariation: z.boolean().default(true),
       }),
     ]),
   );
@@ -188,6 +202,7 @@ datasets.post("/", checkAccess("datasets", "create"), async (ctx: Context) => {
     slug,
     format,
     prompt: customPrompt,
+    withPromptVariation,
   } = createDatasetSchema.parse(ctx.request.body);
   const { projectId, userId } = ctx.state;
 
@@ -210,14 +225,16 @@ datasets.post("/", checkAccess("datasets", "create"), async (ctx: Context) => {
     })}
     returning *
   `;
-    await sql`insert into dataset_prompt_variation
-    ${sql({
-      promptId: promptRecord.id,
-      variables: {},
-      idealOutput: "",
-    })}
-    returning *
-  `;
+
+    if (withPromptVariation) {
+      await sql`insert into dataset_prompt_variation
+      ${sql({
+        promptId: promptRecord.id,
+        variables: {},
+        idealOutput: "",
+      })}
+    `;
+    }
   }
 
   const fullDataset = await getDatasetById(dataset.id, projectId);
@@ -326,13 +343,28 @@ datasets.delete(
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               datasetId:
- *                 type: string
- *               messages:
- *                 oneOf:
- *                   - type: array
+ *             oneOf:
+ *               - type: object
+ *                 properties:
+ *                   datasetId:
+ *                     type: string
+ *                   messages:
+ *                     type: string
+ *                     nullable: true
+ *                   idealOutput:
+ *                     type: string
+ *                   withPromptVariation:
+ *                     type: boolean
+ *                     default: true
+ *                 required:
+ *                   - datasetId
+ *               - type: object
+ *                 properties:
+ *                   datasetId:
+ *                     type: string
+ *                   messages:
+ *                     type: array
+ *                     nullable: true
  *                     items:
  *                       type: object
  *                       properties:
@@ -340,9 +372,16 @@ datasets.delete(
  *                           type: string
  *                         content:
  *                           type: string
- *                   - type: string
- *               idealOutput:
- *                 type: string
+ *                       required:
+ *                         - role
+ *                         - content
+ *                   idealOutput:
+ *                     type: string
+ *                   withPromptVariation:
+ *                     type: boolean
+ *                     default: true
+ *                 required:
+ *                   - datasetId
  *     responses:
  *       200:
  *         description: Created prompt
@@ -356,20 +395,27 @@ datasets.post(
   checkAccess("datasets", "update"),
   async (ctx: Context) => {
     const { projectId } = ctx.state;
-    const bodySchema = z.object({
-      datasetId: z.string(),
-      messages: z
-        .union([
-          z.string(),
-          z.array(z.object({ role: z.string(), content: z.string() })),
-        ])
-        .optional(),
-      idealOutput: z.string().optional(),
-    });
 
-    const { datasetId, messages, idealOutput } = bodySchema.parse(
-      ctx.request.body,
-    );
+    const bodySchema = z.union([
+      z.object({
+        datasetId: z.string(),
+        messages: z.string().nullable().optional(),
+        idealOutput: z.string().optional(),
+        withPromptVariation: z.boolean().default(true),
+      }),
+      z.object({
+        datasetId: z.string(),
+        messages: z
+          .array(z.object({ role: z.string(), content: z.string() }))
+          .nullable()
+          .optional(),
+        idealOutput: z.string().optional(),
+        withPromptVariation: z.boolean().default(true),
+      }),
+    ]);
+
+    const { datasetId, messages, idealOutput, withPromptVariation } =
+      bodySchema.parse(ctx.request.body);
 
     const [{ format }] =
       await sql`select format from dataset where id = ${datasetId} and project_id = ${projectId}`;
@@ -397,7 +443,8 @@ datasets.post(
       returning *
     `;
 
-    await sql`
+    if (withPromptVariation) {
+      await sql`
       insert into dataset_prompt_variation
         ${sql({
           promptId: prompt.id,
@@ -406,6 +453,7 @@ datasets.post(
         })}
       returning *
     `;
+    }
 
     ctx.body = prompt;
   },

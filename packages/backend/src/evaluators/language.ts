@@ -1,4 +1,5 @@
 import { Run } from "shared";
+import { eld } from "eld";
 import { callML } from "../utils/ml";
 import { sleep } from "../utils/misc";
 
@@ -110,7 +111,7 @@ function parseMessages(messages: unknown) {
 
   return [""];
 }
-// Output format: {"input": [ {iso_code: 'en', confidence: 1} ], "output": ..., "errror" : ... }
+// Output format: {"input": [ {iso_code: 'en', confidence: 1} ], "output": ..., "error" : ... }
 // TODO: document the data format (array of string for each message in input, output array of isocode, null if no detection) + json schema in the db
 // TODO: there shouldn't be output and error at the same time for a run in the DB
 
@@ -119,16 +120,48 @@ export async function evaluate(run: Run, params: unknown) {
   const output = parseMessages(run.output);
   const error = parseMessages(run.error);
 
-  const [inputLanguages, outputLanguages, errrorLanguages] = await Promise.all([
-    detectLanguages(input),
-    detectLanguages(output),
-    detectLanguages(error),
-  ]);
+  const inputLanguages = input.map((input) => {
+    if (input.length < 30) {
+      return null;
+    }
+    const res = eld.detect(input);
+    const isoCode = res.language;
+    if (isoCode === "") {
+      return null;
+    }
+    const scores = res.getScores();
+    const confidence = scores[isoCode];
+    if (confidence >= 0.5) {
+      return { isoCode, confidence };
+    }
+
+    return null;
+  });
+  const outputLanguages = output.map((output) => {
+    if (output.length < 30) {
+      return null;
+    }
+    const res = eld.detect(output);
+    const isoCode = res.language;
+    if (isoCode === "") {
+      return null;
+    }
+    const scores = res.getScores();
+    const confidence = scores[isoCode];
+    if (confidence >= 0.5) {
+      return { isoCode, confidence };
+    }
+
+    return null;
+  });
+  const errorLanguages = error.map((error) => {
+    return null;
+  });
 
   const languages = {
     input: inputLanguages,
     output: outputLanguages,
-    error: errrorLanguages,
+    error: errorLanguages,
   };
 
   // TODO: zod for languages, SHOLUD NOT INGEST IN DB IF NOT CORRECT FORMAT
