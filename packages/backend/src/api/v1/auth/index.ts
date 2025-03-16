@@ -1,6 +1,5 @@
 import { sendVerifyEmail } from "@/src/emails";
 import { Db } from "@/src/types";
-import { logAction } from "@/src/utils/audit";
 import config from "@/src/utils/config";
 import sql from "@/src/utils/db";
 import Context from "@/src/utils/koa";
@@ -21,6 +20,7 @@ import {
   verifyRecaptcha,
 } from "./utils";
 import github from "./github";
+import { recordAuditLog } from "../audit-logs/utils";
 
 const auth = new Router({
   prefix: "/auth",
@@ -278,8 +278,7 @@ auth.post("/login", async (ctx: Context) => {
 
   ctx.state.userId = user.id;
   ctx.state.orgId = user.orgId;
-
-  await logAction(ctx, "login", "user", user.id);
+  recordAuditLog("team_member", "login", ctx, user.id);
 
   const token = await signJWT({
     userId: user.id,
@@ -349,8 +348,6 @@ auth.post("/reset-password", async (ctx: Context) => {
       email = ${email} 
     returning *
   `;
-
-  await logAction(ctx, "reset_password", "user", user.id);
 
   const authToken = await signJWT({
     userId: user.id,

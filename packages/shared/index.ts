@@ -5,3 +5,4 @@ export * from "./access-control";
 export * from "./enrichers";
 export * from "./dashboards";
 export * from "./providers";
+export * from "./audit-logs";

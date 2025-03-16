@@ -1,11 +1,11 @@
 import { checkAccess, checkProjectAccess } from "@/src/utils/authorization";
-import { logAction } from "@/src/utils/audit";
 import sql from "@/src/utils/db";
 import Context from "@/src/utils/koa";
 import { randomUUID } from "crypto";
 import Router from "koa-router";
 import { hasAccess } from "shared";
-import { z } from "zod";
+import { record, z } from "zod";
+import { recordAuditLog } from "../audit-logs/utils";
 
 const projects = new Router({
   prefix: "/projects",
@@ -93,14 +93,7 @@ projects.post("/", checkAccess("projects", "create"), async (ctx: Context) => {
   ];
   await sql`insert into api_key ${sql(privateKey)}`;
 
-  await logAction(
-    ctx,
-    "create",
-    "project",
-    project.id,
-    project.id,
-    project.name,
-  );
+  recordAuditLog("project", "create", ctx, project.id);
 
   ctx.body = project;
 });
@@ -124,15 +117,10 @@ projects.delete(
     if (count > 1) {
       const [project] =
         await sql`select name from project where id = ${projectId}`;
-      await logAction(
-        ctx,
-        "delete",
-        "project",
-        projectId,
-        projectId,
-        project?.name,
-      );
+
       await sql`delete from project where id = ${projectId}`;
+
+      recordAuditLog("project", "delete", ctx, projectId);
 
       ctx.status = 200;
       ctx.body = {};
@@ -187,15 +175,7 @@ projects.post(
       const [project] =
         await sql`SELECT name FROM project WHERE id = ${projectId}`;
 
-      // Log API key regeneration
-      await logAction(
-        ctx,
-        "regenerate",
-        "api_key",
-        projectId,
-        projectId,
-        project?.name,
-      );
+      recordAuditLog("api_key", "regenerate", ctx);
     }
 
     ctx.status = 200;
@@ -225,8 +205,7 @@ projects.patch(
         update project set name = ${name} where id = ${projectId}
       `;
 
-      // Log project rename
-      await logAction(ctx, "update", "project", projectId, projectId, name);
+      recordAuditLog("project", "rename", ctx, projectId);
     }
 
     ctx.status = 200;

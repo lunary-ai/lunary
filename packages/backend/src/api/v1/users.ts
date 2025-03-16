@@ -6,7 +6,6 @@ import {
 } from "@/src/emails";
 import { checkAccess } from "@/src/utils/authorization";
 import config from "@/src/utils/config";
-import { logAction } from "@/src/utils/audit";
 import sql from "@/src/utils/db";
 import Context from "@/src/utils/koa";
 import { jwtVerify } from "jose";
@@ -15,6 +14,7 @@ import { hasAccess, roles } from "shared";
 import { z } from "zod";
 import { signJWT } from "./auth/utils";
 import { sendSlackMessage } from "@/src/utils/notifications";
+import { recordAuditLog } from "./audit-logs/utils";
 
 const users = new Router({
   prefix: "/users",
@@ -269,8 +269,7 @@ users.post("/", checkAccess("teamMembers", "create"), async (ctx: Context) => {
     group by account.id
   `;
 
-  // Log the user creation action
-  await logAction(ctx, 'create', 'user', user.id);
+  recordAuditLog("team_member", "invite", ctx, finalUser.id);
 
   const link = org.samlEnabled
     ? process.env.APP_URL
@@ -309,9 +308,8 @@ users.delete(
     }
 
     await sql`delete from account where id = ${userToDeleteId}`;
-    
-    // Log the user deletion action
-    await logAction(ctx, 'delete', 'user', userToDeleteId);
+
+    recordAuditLog("team_member", "remove_from_team", ctx, userToDeleteId);
 
     ctx.status = 200;
     ctx.body = {};
@@ -405,8 +403,7 @@ users.patch(
       `;
     }
 
-    // Log the user update action
-    await logAction(ctx, 'update', 'user', userId);
+    recordAuditLog("team_member", "update", ctx, userId);
 
     ctx.status = 200;
     ctx.body = { message: "User updated successfully" };
