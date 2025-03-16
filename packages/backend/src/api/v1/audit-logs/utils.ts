@@ -10,7 +10,6 @@ export async function recordAuditLog<T extends AuditLogResourceType>(
   resourceId?: string,
 ) {
   const { userId, orgId, projectId } = ctx.state;
-  console.log(projectId);
   const ipAddress = ctx.request.ip;
   const userAgent = ctx.request.headers["user-agent"] || "";
 
