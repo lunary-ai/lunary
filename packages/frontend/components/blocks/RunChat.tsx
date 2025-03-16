@@ -228,12 +228,12 @@ export function ChatReplay({ run, mutateLogs, deleteRun }) {
 
   async function handleDeleteThread() {
     modals.openConfirmModal({
-      title: "Delete Thread",
+      title: "Delete Conversation",
       children: (
         <Text size="sm">
-          Are you sure you want to delete this Thread? This action will
-          permanently remove the Thread and all its children. This cannot be
-          undone.
+          Are you sure you want to delete this Conversation? This action will
+          permanently remove the Conversation and all its children. This cannot
+          be undone.
         </Text>
       ),
       labels: { confirm: "Delete", cancel: "Cancel" },

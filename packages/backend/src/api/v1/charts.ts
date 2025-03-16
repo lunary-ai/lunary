@@ -3,7 +3,6 @@ import sql from "@/src/utils/db";
 import { clearUndefined } from "@/src/utils/ingest";
 import Context from "@/src/utils/koa";
 import Router from "koa-router";
-
 import { z } from "zod";
 
 const charts = new Router({

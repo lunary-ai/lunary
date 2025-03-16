@@ -24,7 +24,8 @@ export type ResourceName =
   | "enrichments"
   | "settings"
   | "dashboards"
-  | "charts";
+  | "charts"
+  | "auditLogs";
 
 export type Action =
   | "create"
@@ -159,6 +160,10 @@ export const roles: Record<
         delete: true,
         list: true,
       },
+      auditLogs: {
+        list: true,
+        read: true,
+      },
     },
   },
   admin: {
@@ -271,6 +276,10 @@ export const roles: Record<
         update: true,
         delete: true,
         list: true,
+      },
+      auditLogs: {
+        list: true,
+        read: true,
       },
     },
   },

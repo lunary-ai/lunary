@@ -25,7 +25,7 @@ import { modals } from "@mantine/modals";
 import { IconTrash } from "@tabler/icons-react";
 
 export default function Models() {
-  const { models, insert, isInserting, mutate } = useModelMappings();
+  const { customModels, insert, isInserting, mutate } = useModelMappings();
 
   const form = useForm({
     initialValues: {
@@ -180,10 +180,11 @@ export default function Models() {
                 <Table.Th>Input $ / M</Table.Th>
                 <Table.Th>Output $ / M</Table.Th>
                 <Table.Th>Tokenizer</Table.Th>
+                <Table.Th></Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {models?.map((model) => (
+              {customModels?.map((model) => (
                 <Table.Tr key={model.id}>
                   <Table.Td>
                     {model.orgId ? (
@@ -214,9 +215,11 @@ export default function Models() {
                   </Table.Td>
                   <Table.Td>${model.inputCost}</Table.Td>
                   <Table.Td>${model.outputCost}</Table.Td>
-                  <Table.Td>{model.tokenizer}</Table.Td>
-                  {model.orgId && (
-                    <Table.Td>
+                  <Table.Td>
+                    {model.tokenizer !== "TODO" ? model.tokenizer : ""}
+                  </Table.Td>
+                  <Table.Td>
+                    {model.orgId && (
                       <ActionIcon
                         color="red"
                         variant="light"
@@ -226,8 +229,8 @@ export default function Models() {
                       >
                         <IconTrash size={14} />
                       </ActionIcon>
-                    </Table.Td>
-                  )}
+                    )}
+                  </Table.Td>
                 </Table.Tr>
               ))}
             </Table.Tbody>

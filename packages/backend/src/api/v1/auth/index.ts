@@ -20,6 +20,7 @@ import {
   verifyRecaptcha,
 } from "./utils";
 import github from "./github";
+import { recordAuditLog } from "../audit-logs/utils";
 
 const auth = new Router({
   prefix: "/auth",
@@ -274,6 +275,10 @@ auth.post("/login", async (ctx: Context) => {
 
   // update last login
   await sql`update account set last_login_at = now() where id = ${user.id}`;
+
+  ctx.state.userId = user.id;
+  ctx.state.orgId = user.orgId;
+  recordAuditLog("team_member", "login", ctx, user.id);
 
   const token = await signJWT({
     userId: user.id,

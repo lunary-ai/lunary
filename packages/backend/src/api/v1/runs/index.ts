@@ -12,6 +12,7 @@ import ingest from "./ingest";
 import Context from "@/src/utils/koa";
 import crypto from "crypto";
 import { getRelatedRuns } from "./queries";
+import { recordAuditLog } from "../audit-logs/utils";
 
 /**
  * @openapi
@@ -337,8 +338,6 @@ function getRunQuery(ctx: Context, isExport = false) {
     evaluatorChecks?.length && evaluatorChecks.length > 1
       ? convertChecksToSQL(evaluatorChecks)
       : sql`true`;
-
-  console.log(evaluatorChecks);
 
   const {
     type,
@@ -1149,12 +1148,16 @@ runs.delete("/:id", checkAccess("logs", "delete"), async (ctx: Context) => {
     where 
       id = ${id}
       and project_id = ${projectId}
-    returning id
+    returning id, type
   `;
 
   if (!deletedRun) {
     ctx.status = 404;
     return;
+  }
+
+  if (deletedRun.type === "llm") {
+    recordAuditLog("llm_log", "delete", ctx, deletedRun.id);
   }
 
   ctx.status = 200;

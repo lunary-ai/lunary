@@ -14,6 +14,7 @@ import { hasAccess, roles } from "shared";
 import { z } from "zod";
 import { signJWT } from "./auth/utils";
 import { sendSlackMessage } from "@/src/utils/notifications";
+import { recordAuditLog } from "./audit-logs/utils";
 
 const users = new Router({
   prefix: "/users",
@@ -268,6 +269,8 @@ users.post("/", checkAccess("teamMembers", "create"), async (ctx: Context) => {
     group by account.id
   `;
 
+  recordAuditLog("team_member", "invite", ctx, finalUser.id);
+
   const link = org.samlEnabled
     ? process.env.APP_URL
     : `${process.env.APP_URL}/join?token=${token}`;
@@ -305,6 +308,8 @@ users.delete(
     }
 
     await sql`delete from account where id = ${userToDeleteId}`;
+
+    recordAuditLog("team_member", "remove_from_team", ctx, userToDeleteId);
 
     ctx.status = 200;
     ctx.body = {};
@@ -397,6 +402,8 @@ users.patch(
         do nothing
       `;
     }
+
+    recordAuditLog("team_member", "update", ctx, userId);
 
     ctx.status = 200;
     ctx.body = { message: "User updated successfully" };

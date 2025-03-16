@@ -183,6 +183,7 @@ export async function authMiddleware(ctx: Context, next: Next) {
 
       const [user] =
         await sql`select * from account where id = ${ctx.state.userId}`;
+
       if (!user) {
         ctx.throw(401, "This account no longer exists");
       }

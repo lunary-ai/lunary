@@ -38,6 +38,8 @@ import {
   IconSettings,
   IconSparkles,
   IconSun,
+  IconTerminal,
+  IconTerminal2,
   IconTimeline,
   IconUsers,
 } from "@tabler/icons-react";
@@ -323,8 +325,8 @@ export default function Sidebar() {
             ]
           : []),
         {
-          label: "LLM",
-          icon: IconBrandOpenai,
+          label: "LLM Logs",
+          icon: IconTerminal2,
           link: "/logs?type=llm",
           resource: "logs",
         },
