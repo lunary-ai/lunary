@@ -2,6 +2,21 @@ import config from "../utils/config";
 import sql from "../utils/db";
 
 export default async function purgeRuns() {
+  await sql`
+    update run r
+    set 
+        input = null,
+        output = null,
+        error = null,
+        metadata = null,
+        is_deleted = true
+    from project p
+    where 
+        p.id = r.project_id 
+        and p.data_retention_days in (30, 60, 90, 180, 365)
+        and r.created_at <= now() - (interval '1 day' * p.data_retention_days);
+  `;
+
   if (config.IS_SELF_HOSTED) {
     return;
   }

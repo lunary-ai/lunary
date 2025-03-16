@@ -19,10 +19,7 @@ projects.get("/", checkAccess("projects", "read"), async (ctx: Context) => {
 
   const rows = await sql`
     select distinct on (p.id)
-      p.id,
-      p.created_at,
-      p.name,
-      p.org_id,
+      p.*,
       ingestion_rule.filters,
       exists(select * from run where project_id = p.id) as activated,
       (select api_key from api_key where project_id = p.id and type = 'public') as public_api_key,
@@ -189,8 +186,11 @@ projects.patch(
   async (ctx: Context) => {
     const bodySchema = z.object({
       name: z.string().optional(),
+      dataRetentionDays: z
+        .union([z.literal("unlimited"), z.coerce.number()])
+        .optional(),
     });
-    const { name } = bodySchema.parse(ctx.request.body);
+    const { name, dataRetentionDays } = bodySchema.parse(ctx.request.body);
     const { projectId } = ctx.params;
     const { userId } = ctx.state;
 
@@ -206,6 +206,22 @@ projects.patch(
       `;
 
       recordAuditLog("project", "rename", ctx, projectId);
+    }
+
+    if (dataRetentionDays === "unlimited") {
+      await sql`
+        update project set data_retention_days = null where id = ${projectId}
+      `;
+    }
+
+    if (
+      dataRetentionDays &&
+      dataRetentionDays !== "unlimited" &&
+      [30, 60, 90, 180, 180, 365].includes(dataRetentionDays)
+    ) {
+      await sql`
+        update project set data_retention_days = ${dataRetentionDays} where id = ${projectId}
+      `;
     }
 
     ctx.status = 200;

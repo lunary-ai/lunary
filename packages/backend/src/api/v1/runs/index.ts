@@ -432,6 +432,7 @@ function getRunQuery(ctx: Context, isExport = false) {
       ) as chat_feedbacks on true
     where
         r.project_id = ${projectId}
+        and is_deleted = false
         ${parentRunCheck}
         and (${filtersQuery})
         ${
