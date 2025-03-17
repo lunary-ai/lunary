@@ -197,35 +197,6 @@ export default function NewEnrichment() {
           </Fieldset>
         )}
 
-        <Card style={{ overflow: "visible" }} shadow="md" p="lg">
-          <Stack>
-            <Box>
-              <Text mb="5" mt="sm">
-                Select the logs to apply to:
-              </Text>
-
-              <CheckPicker
-                minimal
-                value={filters}
-                showAndOr
-                onChange={setFilters}
-                restrictTo={(filter) =>
-                  ["tags", "type", "users", "metadata", "date"].includes(
-                    filter.id,
-                  )
-                }
-              />
-            </Box>
-
-            <Text mt="sm">
-              Estimated logs:{" "}
-              <Text span fw="bold">
-                {logCount}
-              </Text>
-            </Text>
-          </Stack>
-        </Card>
-
         <Group justify="end">
           <Button
             disabled={!selectedEvaluator}
