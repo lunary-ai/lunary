@@ -129,7 +129,6 @@ export const CHECKS_BY_TYPE = {
     "tags",
     "users",
     "languages",
-    "entities",
     "templates",
     "status",
     "metadata",
@@ -137,7 +136,6 @@ export const CHECKS_BY_TYPE = {
     "cost",
     "duration",
     "tokens",
-    "topics",
   ],
   trace: [
     "date",

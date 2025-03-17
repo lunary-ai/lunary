@@ -18,11 +18,16 @@ import { getFlagEmoji } from "./format";
 import ErrorBoundary from "@/components/blocks/ErrorBoundary";
 import { useMemo } from "react";
 import { getPIIColor } from "./colors";
+import { useProjectRules } from "./dataHooks";
 
-export function renderEnrichment(data: EnrichmentData, type: EvaluatorType) {
+export function renderEnrichment(
+  data: EnrichmentData,
+  type: EvaluatorType,
+  maskPII = false,
+) {
   const renderers: Record<EvaluatorType, (data: any) => any> = {
     language: renderLanguageEnrichment,
-    pii: renderPIIEnrichment,
+    pii: () => renderPIIEnrichment(data, maskPII),
     toxicity: renderToxicityEnrichment,
     topics: renderTopicsEnrichment,
     sentiment: renderSentimentEnrichment,
@@ -79,6 +84,7 @@ function renderLanguageEnrichment(languageDetections: LanguageDetectionResult) {
 
 function renderPIIEnrichment(data: EnrichmentData) {
   const [opened, { close, open }] = useDisclosure(false);
+  const { maskingRule } = useProjectRules();
 
   const uniqueEntities: { entity: string; type: string }[] = useMemo(() => {
     const entities = new Set();
@@ -106,6 +112,7 @@ function renderPIIEnrichment(data: EnrichmentData) {
 
   const size = piiCount > 20 ? 500 : 350;
 
+  const maskPII = maskingRule?.type === "masking";
   return (
     <Popover
       width={200}
@@ -132,7 +139,7 @@ function renderPIIEnrichment(data: EnrichmentData) {
               variant="light"
               color={getPIIColor(type)}
             >
-              {entity as string}
+              {maskPII ? type : (entity as string)}
             </Badge>
           ))}
           {uniqueEntities.length > 40 && (
