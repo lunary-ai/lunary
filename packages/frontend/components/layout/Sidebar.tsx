@@ -343,6 +343,12 @@ export default function Sidebar() {
           resource: "logs",
         },
         { label: "Users", icon: IconUsers, link: "/users", resource: "users" },
+        {
+          label: "Enrichments",
+          icon: IconSparkles,
+          link: "/enrichments",
+          resource: "enrichments",
+        },
       ],
     },
     {
