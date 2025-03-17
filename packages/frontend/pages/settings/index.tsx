@@ -236,7 +236,7 @@ function SmartDataRule() {
             </Text>
 
             <Alert w="100%" icon={<IconIdBadge />}>
-              Masking requires a PII Real-time Evaluator enabled.
+              Masking requires a PII enricher enabled.
             </Alert>
             {addRulesLoading && <Loader />}
             <Switch
