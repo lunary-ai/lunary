@@ -7,7 +7,7 @@ import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
 
 import Link from "next/link";
 import { EvaluatorType } from "shared";
-import { useProjectSWR } from "./dataHooks";
+import { useProjectRules, useProjectSWR } from "./dataHooks";
 import { renderEnrichment } from "./enrichment";
 import { capitalize, formatCost, formatDateTime, msToTime } from "./format";
 const columnHelper = createColumnHelper<any>();
@@ -268,6 +268,7 @@ export function enrichmentColumn(
   name: string,
   id: string,
   evaluatorType: EvaluatorType,
+  maskPII: boolean = false,
 ) {
   return columnHelper.accessor(`enrichment-${id}`, {
     header: `${capitalize(name)} ✨`,
@@ -279,7 +280,7 @@ export function enrichmentColumn(
       if (!data) {
         return null;
       }
-      return renderEnrichment(data.result, evaluatorType);
+      return renderEnrichment(data.result, evaluatorType, maskPII);
     },
   });
 }
