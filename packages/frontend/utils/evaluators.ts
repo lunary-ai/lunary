@@ -45,6 +45,84 @@ const EVALUATOR_TYPES = {
       },
     ],
   },
+  pii: {
+    id: "pii",
+    name: "PII",
+    description:
+      "Uses AI to detect if the given field contains personal identifiable information (PII).",
+    icon: IconIdBadge,
+    color: "orange",
+    params: [
+      {
+        type: "label",
+        label: "Entities to look for",
+        description: "Select the types of entities to look for.",
+      },
+      {
+        type: "select",
+        id: "types",
+        width: 230,
+        defaultValue: ["email", "phone", "ssn", "cc", "iban"],
+        multiple: true,
+        placeholder: "Select types",
+        searchable: true,
+        options: [
+          {
+            label: "Email",
+            value: "email",
+          },
+          {
+            label: "Phone",
+            value: "phone",
+          },
+          {
+            label: "SSN",
+            value: "ssn",
+          },
+          {
+            label: "Credit Card",
+            value: "cc",
+          },
+          {
+            label: "IBAN",
+            value: "iban",
+          },
+        ],
+      },
+      {
+        type: "label",
+        label: "Custom Regex Expressions",
+        description:
+          "Add custom regex expressions to detect PII (optional). Use the PCRE Regex format.",
+      },
+      {
+        type: "select",
+        id: "customRegexes",
+        allowCustom: true,
+        multiple: true,
+        defaultValue: [],
+        placeholder: "Enter custom regex",
+        placeholderSearch: "Paste a custom regex to add",
+        width: 300,
+      },
+      {
+        type: "label",
+        label: "Exclude strings",
+        description:
+          "Add case-insentive strings to exclude from the PII detection.",
+      },
+      {
+        type: "select",
+        id: "excludedEntities",
+        allowCustom: true,
+        multiple: true,
+        defaultValue: [],
+        placeholder: "Enter a strings to exclude from detection",
+        placeholderSearch: "Enter a string to exclude",
+        width: 300,
+      },
+    ],
+  },
 };
 
 export default EVALUATOR_TYPES;
