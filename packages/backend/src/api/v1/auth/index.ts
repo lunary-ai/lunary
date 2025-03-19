@@ -87,7 +87,15 @@ auth.post("/signup", async (ctx: Context) => {
     ctx.throw(403, "Bad request");
   }
 
-  if (config.RECAPTCHA_SECRET_KEY) {
+  const whitelistedDomainsRes = await sql<
+    { domain: string }[]
+  >`select domain from _whitelisted_domain`;
+  const whiteListedDomains = whitelistedDomainsRes.map(({ domain }) => domain);
+  const emailDomain = email.split("@")[1];
+  const shouldRunRecaptcha =
+    config.RECAPTCHA_SECRET_KEY && !whiteListedDomains.includes(emailDomain);
+
+  if (shouldRunRecaptcha) {
     const recaptchaResponse = await verifyRecaptcha(recaptchaToken!);
     if (!recaptchaResponse.success) {
       ctx.throw(400, "Failed reCAPTCHA verification");
