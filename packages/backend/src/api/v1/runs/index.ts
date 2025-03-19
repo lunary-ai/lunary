@@ -742,6 +742,69 @@ runs.get("/usage", checkAccess("logs", "read"), async (ctx) => {
   ctx.body = runsUsage;
 });
 
+/**
+ * @openapi
+ * /v1/runs/exports:
+ *   get:
+ *     summary: Export runs data
+ *     tags: [Runs]
+ *     security:
+ *       - Bearer: []
+ *     description: |
+ *       This endpoint requires a valid private API key sent as a bearer token.
+ *     parameters:
+ *       - in: query
+ *         name: type
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [llm, trace, thread]
+ *       - in: query
+ *         name: exportFormat
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [csv, jsonl, ojsonl]
+ *     responses:
+ *       200:
+ *         description: Export successful
+ *         content:
+ *           application/octet-stream:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       401:
+ *         description: Invalid Private Key
+ */
+runs.get("/export", async (ctx: Context) => {
+  if (!ctx.state.privateKey) {
+    ctx.throw(401, "This endpoint requires a valid private API key");
+  }
+
+  const { type, exportFormat } = z
+    .object({
+      type: z.union([
+        z.literal("llm"),
+        z.literal("trace"),
+        z.literal("thread"),
+      ]),
+      exportFormat: z.union([
+        z.literal("csv"),
+        z.literal("jsonl"),
+        z.literal("ojsonl"),
+      ]),
+    })
+    .parse(ctx.query);
+
+  const { query, projectId } = getRunQuery(ctx, true);
+
+  await fileExport(
+    { ctx, sql, cursor: query.cursor(), formatRun, projectId },
+    exportFormat,
+    type,
+  );
+});
+
 runs.get("/:id/public", async (ctx) => {
   const { id } = ctx.params;
 
@@ -1164,23 +1227,6 @@ runs.delete("/:id", checkAccess("logs", "delete"), async (ctx: Context) => {
   ctx.status = 200;
 });
 
-/**
- * @openapi
- * /v1/runs/generate-export-token:
- *   post:
- *     summary: Generate an export token
- *     tags: [Runs]
- *     responses:
- *       200:
- *         description: Export token generated successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 token:
- *                   type: string
- */
 runs.post("/generate-export-token", async (ctx) => {
   const { userId } = ctx.state;
   const token = crypto.randomBytes(32).toString("hex");
@@ -1190,41 +1236,7 @@ runs.post("/generate-export-token", async (ctx) => {
   ctx.body = { token };
 });
 
-/**
- * @openapi
- * /v1/runs/exports/{token}:
- *   get:
- *     summary: Export runs data
- *     tags: [Runs]
- *     parameters:
- *       - in: path
- *         name: token
- *         required: true
- *         schema:
- *           type: string
- *       - in: query
- *         name: type
- *         required: true
- *         schema:
- *           type: string
- *           enum: [llm, trace, thread]
- *       - in: query
- *         name: exportFormat
- *         required: true
- *         schema:
- *           type: string
- *           enum: [csv, jsonl, ojsonl]
- *     responses:
- *       200:
- *         description: Export successful
- *         content:
- *           application/octet-stream:
- *             schema:
- *               type: string
- *               format: binary
- *       401:
- *         description: Invalid token
- */
+// for the frontend only
 runs.get("/exports/:token", async (ctx) => {
   const { type, exportFormat } = z
     .object({
