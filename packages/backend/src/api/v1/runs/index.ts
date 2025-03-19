@@ -744,7 +744,7 @@ runs.get("/usage", checkAccess("logs", "read"), async (ctx) => {
 
 /**
  * @openapi
- * /v1/runs/exports:
+ * /v1/runs/export:
  *   get:
  *     summary: Export runs data
  *     tags: [Runs]
