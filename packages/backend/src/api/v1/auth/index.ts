@@ -96,7 +96,6 @@ auth.post("/signup", async (ctx: Context) => {
     config.RECAPTCHA_SECRET_KEY && !whiteListedDomains.includes(emailDomain);
 
   if (shouldRunRecaptcha) {
-    console.log("Running reCAPTCHA");
     const recaptchaResponse = await verifyRecaptcha(recaptchaToken!);
     if (!recaptchaResponse.success) {
       ctx.throw(400, "Failed reCAPTCHA verification");
