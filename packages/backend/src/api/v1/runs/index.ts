@@ -749,7 +749,7 @@ runs.get("/usage", checkAccess("logs", "read"), async (ctx) => {
  *     summary: Export runs data
  *     tags: [Runs]
  *     security:
- *       - Bearer: []
+ *       - BearerAuth: []
  *     description: |
  *       This endpoint requires a valid private API key sent as a bearer token.
  *     parameters:
