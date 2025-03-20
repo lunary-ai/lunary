@@ -29,7 +29,13 @@ import { useRouter } from "next/router";
 function EnricherCard({ id, initialData }) {
   const { enricher, delete: deleteEnricher } = useEnricher(id, initialData);
 
-  const { description, icon: Icon } = EVALUATOR_TYPES[enricher.type];
+  const evaluator = EVALUATOR_TYPES[enricher?.type];
+
+  if (!evaluator) {
+    return null;
+  }
+
+  const { description, icon: Icon } = evaluator;
 
   return (
     <Card p="lg" withBorder>
@@ -38,7 +44,7 @@ function EnricherCard({ id, initialData }) {
           <Group>
             <Icon size={24} />
             <Title order={3} size={16}>
-              {enricher.name}
+              {enricher?.name}
             </Title>
             <Text c="dimmed" fw="semibold" size="sm">
               {description}
@@ -46,7 +52,7 @@ function EnricherCard({ id, initialData }) {
           </Group>
           <Group>
             <Text c="dimmed" fw="semibold" size="sm">
-              {slugify(enricher.name)}
+              {slugify(enricher?.name || "")}
             </Text>
           </Group>
         </Stack>
@@ -59,15 +65,6 @@ function EnricherCard({ id, initialData }) {
           </Menu.Target>
 
           <Menu.Dropdown>
-            {/* <Menu.Item
-              leftSection={
-                <IconPencil color="blue" width="15px" height="15px" />
-              }
-              disabled
-              onClick={() => {}}
-            >
-              Update
-            </Menu.Item> */}
             <Menu.Item
               leftSection={<IconTrash color="red" width="15px" height="15px" />}
               onClick={() => deleteEnricher()}
