@@ -54,8 +54,9 @@ def config(
     verbose: str | None = None,
     api_url: str | None = None,
     disable_ssl_verify: bool | None = None,
+    ssl_verify: bool | str | None = None,
 ):
-    set_config(app_id, verbose, api_url, disable_ssl_verify)
+    set_config(app_id, verbose, api_url, disable_ssl_verify, ssl_verify)
 
 
 def get_parent_run_id(parent_run_id: str, run_type: str, app_id: str, run_id: str):
