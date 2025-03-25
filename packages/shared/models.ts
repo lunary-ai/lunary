@@ -110,6 +110,46 @@ export const MODELS: LunaryProvidedModel[] = [
   { id: "gpt-3.5-turbo-0125", name: "gpt-3.5-turbo-0125", provider: "openai" },
   { id: "gpt-3.5-turbo-16k", name: "gpt-3.5-turbo-16k", provider: "openai" },
   {
+    id: "google/gemma-3-1b-it:free",
+    name: "gemma-3-1b-it",
+    provider: "openrouter",
+  },
+  {
+    id: "google/gemma-3-4b-it:free",
+    name: "gemma-3-4b-it",
+    provider: "openrouter",
+  },
+  {
+    id: "google/gemma-3-12b-it:free",
+    name: "gemma-3-12b-it",
+    provider: "openrouter",
+  },
+  {
+    id: "google/gemma-3-27b-it:free",
+    name: "gemma-3-27b-it",
+    provider: "openrouter",
+  },
+  {
+    id: "google/gemini-2.0-flash-001",
+    name: "gemini-2.0-flash-001",
+    provider: "openrouter",
+  },
+  {
+    id: "google/gemini-2.0-pro-exp-02-05:free",
+    name: "gemini-2.0-pro-exp-02-05",
+    provider: "openrouter",
+  },
+  {
+    id: "google/gemini-2.0-flash-thinking-exp-1219:free",
+    name: "gemini-2.0-flash-thinking-exp-1219",
+    provider: "openrouter",
+  },
+  {
+    id: "google/gemini-2.0-flash-exp:free",
+    name: "gemini-2.0-flash-exp",
+    provider: "openrouter",
+  },
+  {
     id: "google/gemini-pro",
     name: "gemini-pro-1.0",
     provider: "openrouter",
