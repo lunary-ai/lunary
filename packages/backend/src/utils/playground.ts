@@ -565,7 +565,7 @@ export async function runAImodel(
   const openai = new OpenAI(clientParams);
 
   let res = await openai.chat.completions.create({
-    model: model.name || "gpt-4o",
+    model: model.id || "gpt-4o",
     messages,
     stream: false,
     temperature: completionsParams?.temperature,
