@@ -54,7 +54,7 @@ Additionally you can use it with any other LLM by manually sending events.
 
 ## 📚 Documentation
 
-Full documentation is available [on the website](https://lunary.ai/docs/intro).
+Full documentation is available [on the website](https://lunary.ai/docs/).
 
 ## ☁️ Hosted version
 
