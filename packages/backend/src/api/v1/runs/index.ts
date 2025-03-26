@@ -189,8 +189,9 @@ export function formatRun(run: any) {
     templateSlug: run.templateSlug,
     cost: run.cost,
     tokens: {
-      completion: run.completionTokens,
       prompt: run.promptTokens,
+      cachedPrompt: run.cachedPromptTokens,
+      completion: run.completionTokens,
       total: run.completionTokens + run.promptTokens,
     },
     tags: run.tags,

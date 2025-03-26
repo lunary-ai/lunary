@@ -82,6 +82,7 @@ class OpenAIUtils:
                 "tokensUsage": {
                     "completion": output.usage.completion_tokens,
                     "prompt": output.usage.prompt_tokens,
+                    "promptCached": OpenAIUtils.get_property(OpenAIUtils.get_property(output.usage, "prompt_tokens_details"), "cached_tokens")
                 },
             }
         except Exception as e:

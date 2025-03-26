@@ -297,6 +297,7 @@ async function registerRunEvent(
         output,
         promptTokens: tokensUsage?.prompt,
         completionTokens: tokensUsage?.completion,
+        cachedPromptTokens: tokensUsage?.promptCached,
         name: runData?.name,
         duration: new Date(timestamp) - new Date(runData?.createdAt),
         projectId,
@@ -307,12 +308,14 @@ async function registerRunEvent(
       output = JSON.stringify(output);
     }
 
+    console.log(tokensUsage);
     const runToInsert = clearUndefined({
       endedAt: timestamp,
       output: output,
       status: "success",
       promptTokens: tokensUsage?.prompt,
       completionTokens: tokensUsage?.completion,
+      cachedPromptTokens: tokensUsage?.promptCached,
       cost,
       metadata,
     });

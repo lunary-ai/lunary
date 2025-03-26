@@ -499,7 +499,12 @@ export default function RunInputOutput({
           <Text fw="bold" size="sm">
             Input
           </Text>
-          {run?.tokens?.prompt && <TokensBadge tokens={run.tokens?.prompt} />}
+          {run?.tokens?.prompt && (
+            <TokensBadge
+              tokens={run.tokens?.prompt}
+              cachedTokens={run.tokens.cachedPrompt}
+            />
+          )}
         </Group>
 
         <SmartViewer data={run?.input} />
