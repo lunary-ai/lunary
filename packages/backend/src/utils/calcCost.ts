@@ -223,15 +223,20 @@ export async function calcRunCost(run: any) {
 
     let inputUnits = 0;
     let outputUnits = 0;
+    let inputCachedUnits = 0;
 
     let inputCost = mapping.inputCost;
     let outputCost = mapping.outputCost;
+    let inputCachingCostReduction = mapping.inputCachingCostReduction || 0;
 
     if (mapping.unit === "TOKENS") {
       inputUnits = run.promptTokens || 0;
       outputUnits = run.completionTokens || 0;
+      inputCachedUnits = run.cachedPromptTokens || 0;
 
-      inputCost = (inputCost * inputUnits) / 1_000_000;
+      inputCost =
+        (inputCost * inputUnits) / 1_000_000 -
+        (inputCachingCostReduction * inputCachedUnits) / 1_000_000;
       outputCost = (outputCost * outputUnits) / 1_000_000;
     } else if (mapping.unit === "MILLISECONDS") {
       inputUnits = run.duration || 0;

@@ -1,7 +1,13 @@
 import { Badge, ThemeIcon } from "@mantine/core";
 import { IconCashBanknote } from "@tabler/icons-react";
 
-export default function TokensBadge({ tokens }) {
+export default function TokensBadge({
+  tokens,
+  cachedTokens,
+}: {
+  tokens: number;
+  cachedTokens?: number;
+}) {
   if (!tokens) return null;
 
   return (
@@ -16,7 +22,7 @@ export default function TokensBadge({ tokens }) {
         </ThemeIcon>
       }
     >
-      {tokens} tokens
+      {tokens} tokens {cachedTokens ? `(${cachedTokens} cached)` : ""}
     </Badge>
   );
 }

@@ -1175,6 +1175,7 @@ try:
                 run_id = run_manager.end_run(run_id)
 
                 token_usage = (response.llm_output or {}).get("token_usage", {})
+
                 parsed_output: Any = [
                     (
                         _parse_lc_message(generation.message)
@@ -1196,6 +1197,7 @@ try:
                     token_usage={
                         "prompt": token_usage.get("prompt_tokens"),
                         "completion": token_usage.get("completion_tokens"),
+                        "promptCached": token_usage.get("prompt_tokens_details", {}).get("cached_tokens", 0)
                     },
                     app_id=self.__app_id,
                     api_url=self.__api_url,

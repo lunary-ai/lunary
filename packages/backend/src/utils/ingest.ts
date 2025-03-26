@@ -34,6 +34,7 @@ export interface Event {
   tokensUsage?: {
     prompt: number;
     completion: number;
+    promptCached?: number;
   };
   error?: {
     message: string;
