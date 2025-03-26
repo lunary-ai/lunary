@@ -62,7 +62,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  build-push-ml:
+  build-push-ml-and-frontend:
     if: github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
@@ -101,6 +101,13 @@ jobs:
           platforms: linux/arm64,linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Check out the private Ops repo
+        uses: actions/checkout@v4
+        with:
+          repository: lunary-ai/lunary
+          token: ${{ secrets.GH_TOKEN }}
+          submodules: "recursive"
 
       - name: Build and push frontend
         uses: docker/build-push-action@v6
