@@ -2,7 +2,7 @@ import { useAnalyticsChartData } from "@/utils/dataHooks/analytics";
 import { BarChart } from "@mantine/charts";
 import { Center, Flex, Loader, Overlay, Text } from "@mantine/core";
 import { useMemo } from "react";
-import { Chart, LogicNode } from "shared";
+import { Chart, DEFAULT_CHARTS, LogicNode } from "shared";
 import { generateSeries } from "../ChartCreator";
 import TopLanguages from "../TopLanguages";
 import TopTemplates from "../TopTemplates";
@@ -156,6 +156,9 @@ export default function ChartComponent({
       "run-types",
       "latency",
       "feedback-ratio",
+      "thumbs-up",
+      "feedback/thumb/up",
+      "feedback/thumb/down",
     ].includes(dataKey)
   ) {
     return (
@@ -163,7 +166,7 @@ export default function ChartComponent({
         data={data}
         granularity={granularity}
         dataKey={dataKey}
-        color={color}
+        color={DEFAULT_CHARTS[dataKey]?.color || color} // TODO: fix color not being saved properly in DB
         aggregationMethod={aggregationMethod}
         stat={stat}
       />
