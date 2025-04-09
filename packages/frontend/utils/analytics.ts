@@ -105,6 +105,8 @@ export const ALL_CHARTS = {
     "run-types",
     "latency",
     "feedback-ratio",
+    "feedback/thumb/up",
+    "feedback/thumb/down",
     "top-topics",
     "sentiments",
   ],
