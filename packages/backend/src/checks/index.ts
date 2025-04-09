@@ -278,6 +278,13 @@ export const CHECK_RUNNERS: CheckRunner[] = [
               exists(select feedback from run where parent_run_id = r.id and run.feedback->>'comment' = ${value}) 
             )`;
           } else if (key === "thumb") {
+            if (value === null) {
+              return sql`(
+                r.feedback->>'thumb' is null 
+                and 
+                  not exists(select feedback from run where parent_run_id = r.id and (run.feedback->>'thumb' = 'up' or run.feedback->>'thumb' = 'down')) 
+              )`;
+            }
             return sql`(
               r.feedback->>'thumb' = ${value} 
               or 

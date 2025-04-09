@@ -40,7 +40,7 @@ export default function Feedback({
   }
 
   const getIconProps = (color: string) => ({
-    size: 20,
+    size: 18,
     fillOpacity: 0.2,
     fill: scheme === "light" ? `var(--mantine-color-${color}-5)` : color,
     color: scheme === "light" ? `var(--mantine-color-${color}-5)` : color,
