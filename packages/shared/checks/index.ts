@@ -249,7 +249,7 @@ export const CHECKS: Check[] = [
         type: "select",
         multiple: true,
         id: "types",
-        options: [{ thumb: "up" }, { thumb: "down" }],
+        options: [{ thumb: "up" }, { thumb: "down" }, { thumb: null }],
         getItemValue: (item) => JSON.stringify(item),
       },
     ],

@@ -109,6 +109,14 @@ const CHECKS_UI_DATA: ChecksUIData = {
     renderListItem: (item) => {
       const key = Object.keys(item)[0];
       const value = item[key] || "";
+      if (item["thumb"] === null) {
+        return (
+          <>
+            <IconThumbUp size="18" color="gray" />
+            <Text size="xs">No Feedback</Text>
+          </>
+        );
+      }
       return (
         <>
           <Feedback data={item} />
@@ -116,7 +124,12 @@ const CHECKS_UI_DATA: ChecksUIData = {
         </>
       );
     },
-    renderLabel: (value) => <Feedback data={value} />,
+    renderLabel: (value) => {
+      if (value?.thumb === null) {
+        return <>No Feedback</>;
+      }
+      return <Feedback data={value} />;
+    },
   },
   date: {
     icon: IconCalendar,
