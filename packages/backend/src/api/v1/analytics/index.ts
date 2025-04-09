@@ -1260,7 +1260,6 @@ analytics.get("/feedback/thumb/up", async (ctx: Context) => {
         order by
           d.date ) r;
         `;
-    console.log(res);
     ctx.body = { data: res };
     return;
   }
@@ -1384,7 +1383,7 @@ analytics.get("/feedback-ratio", async (ctx: Context) => {
           coalesce(sum(fd.thumbs_down), 0) as total_thumbs_down,
           case 
             when coalesce(sum(fd.thumbs_up) + sum(fd.thumbs_down), 0) = 0 then 0 
-            else ((sum(fd.thumbs_up)::float - sum(fd.thumbs_down)::float) / (sum(fd.thumbs_up)::float + sum(fd.thumbs_down)::float)) 
+            else ((sum(fd.thumbs_up)::float / (sum(fd.thumbs_up)::float + sum(fd.thumbs_down)::float)) 
           end as ratio
         from
           dates d
@@ -1429,7 +1428,7 @@ analytics.get("/feedback-ratio", async (ctx: Context) => {
           coalesce(sum(fd.thumbs_down), 0)::int as total_thumbs_down,
           case 
             when coalesce(sum(fd.thumbs_up) + sum(fd.thumbs_down), 0) = 0 then null 
-            else ((sum(fd.thumbs_up)::float - sum(fd.thumbs_down)::float) / (sum(fd.thumbs_up)::float + sum(fd.thumbs_down)::float)) end as ratio
+            else ((sum(fd.thumbs_up)::float / (sum(fd.thumbs_up)::float + sum(fd.thumbs_down)::float)) end as ratio
         from 
           dates d
           left join feedback_data fd on d.date = fd.date
