@@ -1181,6 +1181,175 @@ analytics.get("/agents/top", async (ctx: Context) => {
   ctx.body = { data };
 });
 
+analytics.get("/feedback/thumb/up", async (ctx: Context) => {
+  const { projectId } = ctx.state;
+  const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
+    projectId,
+    ctx.querystring,
+    ctx.query,
+  );
+
+  if (granularity === "weekly") {
+    const res = await sql`
+      with dates as (
+        ${datesQuery}
+      ),
+      filtered_runs as (
+        ${filteredRunsQuery}
+      ),
+      feedback_data as (
+        select
+          r.local_created_at,
+          case when r.feedback->>'thumb' = 'up' then 1 else 0 end as thumbs_up,
+        from
+          filtered_runs r
+        where 
+          r.feedback->>'thumb' is not null 
+      ),
+      weekly_avg as (
+        select
+          d.date,
+          case when fd.local_created_at is not null then fd.local_created_at else d.date end as local_created_at,
+          coalesce(sum(fd.thumbs_up), 0) as total_thumbs_up
+        from
+          dates d
+          left join feedback_data fd on fd.local_created_at >= d.date and fd.local_created_at < d.date + interval '7 days'
+        group by 
+          d.date,
+          case when fd.local_created_at is not null then fd.local_created_at else d.date end
+        order by d.date
+      )
+      select
+        date, 
+        coalesce(total_thumbs_up, 0) as value,
+        'Thumbs Up' as name
+      from
+        weekly_avg
+      order by
+        date;
+      `;
+    ctx.body = { data: res };
+    return;
+  } else {
+    const res = await sql`
+        with dates as (
+          ${datesQuery}
+        ),
+        filtered_runs as (
+          ${filteredRunsQuery}
+        ),
+        feedback_data as (
+          select
+            r.local_created_at as date,
+            case when r.feedback->>'thumb' = 'up' then 1 else 0 end as thumbs_up
+          from
+            filtered_runs r
+          where 
+            feedback is not null
+        )
+        select 
+          date, 
+          total_thumbs_up as value, 
+          'Thumbs Up' as name from 
+            (select d.date, coalesce(sum(fd.thumbs_up), 0)::int as total_thumbs_up
+        from 
+          dates d
+          left join feedback_data fd on d.date = fd.date
+        group by 
+          d.date
+        order by
+          d.date ) r;
+        `;
+    console.log(res);
+    ctx.body = { data: res };
+    return;
+  }
+});
+
+analytics.get("/feedback/thumb/down", async (ctx: Context) => {
+  const { projectId } = ctx.state;
+  const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
+    projectId,
+    ctx.querystring,
+    ctx.query,
+  );
+
+  if (granularity === "weekly") {
+    const res = await sql`
+      with dates as (
+        ${datesQuery}
+      ),
+      filtered_runs as (
+        ${filteredRunsQuery}
+      ),
+      feedback_data as (
+        select
+          r.local_created_at,
+          case when r.feedback->>'down' = 'up' then 1 else 0 end as thumbs_down,
+        from
+          filtered_runs r
+        where 
+          r.feedback->>'down' is not null 
+      ),
+      weekly_avg as (
+        select
+          d.date,
+          case when fd.local_created_at is not null then fd.local_created_at else d.date end as local_created_at,
+          coalesce(sum(fd.thumbs_down), 0) as total_thumbs_down
+        from
+          dates d
+          left join feedback_data fd on fd.local_created_at >= d.date and fd.local_created_at < d.date + interval '7 days'
+        group by 
+          d.date,
+          case when fd.local_created_at is not null then fd.local_created_at else d.date end
+        order by d.date
+      )
+      select
+        date, 
+        coalesce(total_thumbs_down, 0) as value,
+        'Thumbs Up' as name
+      from
+        weekly_avg
+      order by
+        date;
+      `;
+    ctx.body = { data: res };
+    return;
+  } else {
+    const res = await sql`
+        with dates as (
+          ${datesQuery}
+        ),
+        filtered_runs as (
+          ${filteredRunsQuery}
+        ),
+        feedback_data as (
+          select
+            r.local_created_at as date,
+            case when r.feedback->>'thumb' = 'down' then 1 else 0 end as thumbs_down
+          from
+            filtered_runs r
+          where 
+            feedback is not null
+        )
+        select 
+          date, 
+          total_thumbs_down as value, 
+          'Thumbs Down' as name from 
+            (select d.date, coalesce(sum(fd.thumbs_down), 0)::int as total_thumbs_down
+        from 
+          dates d
+          left join feedback_data fd on d.date = fd.date
+        group by 
+          d.date
+        order by
+          d.date ) r;
+        `;
+    ctx.body = { data: res };
+    return;
+  }
+});
+
 analytics.get("/feedback-ratio", async (ctx: Context) => {
   const { projectId } = ctx.state;
   const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
