@@ -95,7 +95,7 @@ function TraceTree({
     );
 
   return (
-    <Group pos="relative">
+    <Group pos="relative" wrap="nowrap">
       {!isFirst && (
         <Box>
           {!isLastOfParent && (
@@ -143,9 +143,10 @@ function TraceTree({
           mb="sm"
           onClick={() => onSelect(run.id)}
           style={{ cursor: "pointer" }}
+          wrap="nowrap"
         >
           {showStatus && (
-            <Group gap="xs">
+            <Group gap="xs" wrap="nowrap">
               <StatusBadge minimal status={run.status} />
               {shownRuns.length > 0 && (
                 <ActionIcon
@@ -176,6 +177,7 @@ function TraceTree({
             pl={0}
             pr={5}
             maw="250px"
+            miw="100px"
             leftSection={
               Icon && (
                 <ThemeIcon
@@ -193,18 +195,20 @@ function TraceTree({
           </Badge>
 
           {run?.type === "llm" && run.cost && (
-            <Badge variant="outline" color="gray">
+            <Badge variant="outline" color="gray" miw="65px">
               {formatCost(run.cost)}
             </Badge>
           )}
 
           {run.endedAt && (
-            <DurationBadge
-              type={run.type}
-              cached={run.metadata?.cache}
-              createdAt={run.createdAt}
-              endedAt={run.endedAt}
-            />
+            <Box miw="70px">
+              <DurationBadge
+                type={run.type}
+                cached={run.metadata?.cache}
+                createdAt={run.createdAt}
+                endedAt={run.endedAt}
+              />
+            </Box>
           )}
         </Group>
 
