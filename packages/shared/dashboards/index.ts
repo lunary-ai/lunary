@@ -138,8 +138,8 @@ export const DEFAULT_CHARTS: Record<string, DefaultChart> = {
   },
   "feedback-ratio": {
     id: "feedback-ratio",
-    name: "Thumb Up/Down Ratio",
-    description: "The ratio of thumbs up to thumbs down feedback",
+    name: "Thumb Up/Down Score",
+    description: "The normalized difference of thumbs up and down feedbacks",
     type: "Area",
     dataKey: "feedback-ratio",
     aggregationMethod: "avg",
