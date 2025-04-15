@@ -153,7 +153,13 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     id: "metadata",
     sql: ({ key, value }) => {
       if (!key || !value) return sql`true`;
-      return sql`metadata @> ${sql.json({ [key]: value })}`;
+
+      return sql`metadata @> ${sql.json({ [key]: value })}
+        ${value === "true" ? sql`or metadata @> ${sql.json({ [key]: true })}` : sql``}
+        ${value === "false" ? sql`or metadata @> ${sql.json({ [key]: false })}` : sql``}
+        ${value === "null" ? sql`or metadata @> ${sql.json({ [key]: null })}` : sql``}
+        ${!isNaN(Number.parseInt(value)) ? sql`or metadata @> ${sql.json({ [key]: Number.parseInt(value) })}` : sql``}
+      `;
     },
     ingestionCheck: async (run, params) => {
       const { key, value } = params;
