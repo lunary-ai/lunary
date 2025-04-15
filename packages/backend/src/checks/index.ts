@@ -153,7 +153,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     id: "metadata",
     sql: ({ key, value }) => {
       if (!key || !value) return sql`true`;
-      return sql`(CAST(metadata->>${key} AS TEXT) = ${value})`;
+      return sql`metadata @> ${sql.json({ [key]: value })}`;
     },
     ingestionCheck: async (run, params) => {
       const { key, value } = params;
