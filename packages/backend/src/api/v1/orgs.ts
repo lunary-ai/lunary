@@ -233,7 +233,7 @@ orgs.post(
       extra,
       variables,
       model,
-      true,
+      extra?.stream || false,
       orgId,
       projectId,
     );
