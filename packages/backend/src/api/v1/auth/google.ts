@@ -56,7 +56,8 @@ google.post("/", async (ctx: Context) => {
         update account 
         set 
           last_login_at = now(),
-          avatar_url = coalesce(${userData.picture}, avatar_url)
+          avatar_url = coalesce(${userData.picture}, avatar_url),
+          verified = ${true}
         where 
           id = ${existingUser.id}
       `;
@@ -95,6 +96,7 @@ google.post("/", async (ctx: Context) => {
         returning *
       `;
 
+    console.log(user);
     const [project] = await sql`
         insert into project ${sql({
           name: "My First Project",
