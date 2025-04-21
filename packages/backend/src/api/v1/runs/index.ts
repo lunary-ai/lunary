@@ -11,8 +11,8 @@ import ingest from "./ingest";
 
 import Context from "@/src/utils/koa";
 import crypto from "crypto";
-import { getRelatedRuns } from "./queries";
 import { recordAuditLog } from "../audit-logs/utils";
+import { getRelatedRuns } from "./queries";
 
 /**
  * @openapi
@@ -1327,9 +1327,9 @@ runs.get("/:id/neighbors", async (ctx: Context) => {
     neighbors AS (
       select
         id,
-        lag(id)  over (order by rn) AS next_id,
-        lead(id) OVER (order by rn) AS previous_id 
-      FROM ordered_runs
+        lag(id)  over (order by rn) as next_id,
+        lead(id) over (order by rn) as previous_id 
+      from ordered_runs
     )
     select 
       previous_id, 

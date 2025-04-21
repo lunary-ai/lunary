@@ -209,6 +209,7 @@ export async function calcRunCost(run: any) {
         start_date desc nulls last, org_id is not null desc
     `;
 
+    // TODO: why async?
     const mapping = await findAsyncSequential(mappings, async (mapping) => {
       try {
         const regex = new RegExp(mapping.pattern);
@@ -270,7 +271,6 @@ export async function calcRunCost(run: any) {
       "Error calculating run cost, defaulting to legacy method",
       error,
     );
-    // Sentry.captureException(error);
 
     return calcRunCostLegacy(run);
   }
