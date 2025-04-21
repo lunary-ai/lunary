@@ -8,13 +8,13 @@ import { checkAccess } from "@/src/utils/authorization";
 import config from "@/src/utils/config";
 import sql from "@/src/utils/db";
 import Context from "@/src/utils/koa";
+import { sendSlackMessage } from "@/src/utils/notifications";
 import { jwtVerify } from "jose";
 import Router from "koa-router";
 import { hasAccess, roles } from "shared";
 import { z } from "zod";
-import { sanitizeEmail, signJWT } from "./auth/utils";
-import { sendSlackMessage } from "@/src/utils/notifications";
 import { recordAuditLog } from "./audit-logs/utils";
+import { sanitizeEmail, signJWT } from "./auth/utils";
 
 const users = new Router({
   prefix: "/users",
@@ -111,18 +111,20 @@ users.get("/verify-email", async (ctx: Context) => {
     payload: { email: string };
   } = await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET));
 
-  // check if email is already verified
-  let verified;
-  {
-    const result = await sql`
-      select verified
+  const [account] = await sql`
+      select *
       from account
       where email = ${email}
     `;
-    verified = result[0]?.verified;
+
+  const [orgInvitation] =
+    await sql`select * from org_invitation where email = ${account.email}`;
+  console.log(account, orgInvitation);
+  if (orgInvitation) {
+    await sql`update org_invitation set email_verified = true where id = ${orgInvitation.id}`;
   }
 
-  if (verified) {
+  if (account.verified) {
     ctx.body = { message: "Email already verified" };
     return;
   }

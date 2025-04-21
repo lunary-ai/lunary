@@ -192,7 +192,14 @@ auth.post("/signup", async (ctx: Context) => {
 
     // user already owner of an org
     if (payload.oldRole === "owner") {
-      const [user] = await sql`select * from account where email = ${email}`;
+      const [orgInvitation] =
+        await sql`select * from org_invitation where email = ${email} and org_id = ${payload.orgId as string}`;
+      if (!orgInvitation.emailVerified) {
+        // prevent malicious user from deleting other orgs
+        ctx.throw(403, "Email not verified");
+      }
+      const [user] =
+        await sql`select * from account where email = ${email} order by created_at desc limit 1`;
       const [org] = await sql`select * from org where id = ${user.orgId}`;
       await sql`delete from org where id = ${org.id}`;
 
@@ -202,7 +209,7 @@ auth.post("/signup", async (ctx: Context) => {
         email,
         orgId: payload.orgId as string,
         role: payload.role as string,
-        verified: config.SKIP_EMAIL_VERIFY,
+        verified: true,
         lastLoginAt: new Date(),
       };
 
@@ -225,6 +232,12 @@ auth.post("/signup", async (ctx: Context) => {
 
     // user is part of an org, but not owner
     if (payload.oldRole && payload.oldRole !== "owner") {
+      // prevent malicious user from deleting other orgs
+      const [orgInvitation] =
+        await sql`select * from org_invitation where email = ${email} and org_id = ${payload.orgId as string}`;
+      if (!orgInvitation.emailVerified) {
+        ctx.throw(403, "Email not verified");
+      }
       const [user] = await sql`select * from account where email = ${email}`;
       await sql`delete from account where id = ${user.id}`;
 
@@ -234,7 +247,7 @@ auth.post("/signup", async (ctx: Context) => {
         email,
         orgId: payload.orgId as string,
         role: payload.role as string,
-        verified: config.SKIP_EMAIL_VERIFY,
+        verified: true,
         lastLoginAt: new Date(),
       };
 
