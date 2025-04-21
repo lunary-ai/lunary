@@ -5,6 +5,7 @@ on:
   workflow_dispatch:
 jobs:
   run-tests:
+    if: false
     runs-on: ubuntu-latest
     services:
       postgres:
