@@ -25,7 +25,8 @@ export type ResourceName =
   | "settings"
   | "dashboards"
   | "charts"
-  | "auditLogs";
+  | "auditLogs"
+  | "jobs";
 
 export type Action =
   | "create"
@@ -164,6 +165,13 @@ export const roles: Record<
         list: true,
         read: true,
       },
+      jobs: {
+        create: true,
+        read: true,
+        update: true,
+        delete: true,
+        list: true,
+      },
     },
   },
   admin: {
@@ -280,6 +288,13 @@ export const roles: Record<
       auditLogs: {
         list: true,
         read: true,
+      },
+      jobs: {
+        create: true,
+        read: true,
+        update: true,
+        delete: true,
+        list: true,
       },
     },
   },

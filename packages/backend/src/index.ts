@@ -1,26 +1,27 @@
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import logger from "koa-logger";
-import prexit from "prexit";
 
 import v1 from "./api/v1";
 import auth from "./api/v1/auth";
 import { authMiddleware } from "./api/v1/auth/utils";
 import redirections from "./api/v1/redirections";
 import webhooks from "./api/webhooks";
+import { createIndexes } from "./create-indexes";
+import { startMaterializedViewRefreshJob } from "./jobs/materialized-views";
+import config from "./utils/config";
 import { corsMiddleware } from "./utils/cors";
 import { setupCronJobs } from "./utils/cron";
 import sql, { checkDbConnection } from "./utils/db";
 import { errorMiddleware } from "./utils/errors";
+import licenseMiddleware from "./utils/license";
 import { setDefaultBody } from "./utils/misc";
 import ratelimit from "./utils/ratelimit";
-import licenseMiddleware from "./utils/license";
-import config from "./utils/config";
-import { startMaterializedViewRefreshJob } from "./jobs/materialized-views";
-import { createIndexes } from "./create-indexes";
+import { startJobWorker } from "./jobs";
 
 checkDbConnection();
 setupCronJobs();
+startJobWorker();
 
 if (process.env.NODE_ENV === "production") {
   createIndexes();
