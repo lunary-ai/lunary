@@ -4,7 +4,9 @@ import {
   Anchor,
   Button,
   Container,
+  Divider,
   Flex,
+  Group,
   Loader,
   Paper,
   PasswordInput,
@@ -17,25 +19,28 @@ import {
 import { useForm } from "@mantine/form";
 import { IconAnalyze, IconAt, IconCheck, IconUser } from "@tabler/icons-react";
 
+import GithubButton from "@/components/blocks/OAuth/GithubButton";
+import GoogleButton from "@/components/blocks/OAuth/GoogleButton";
+
 import analytics from "@/utils/analytics";
+import config from "@/utils/config";
+import { useJoinData } from "@/utils/dataHooks";
 import errorHandler from "@/utils/errors";
 import { fetcher } from "@/utils/fetcher";
 import { SEAT_ALLOWANCE } from "@/utils/pricing";
+import { notifications } from "@mantine/notifications";
 import { NextSeo } from "next-seo";
 import Router, { useRouter } from "next/router";
 import Confetti from "react-confetti";
-import { notifications } from "@mantine/notifications";
-import { useJoinData } from "@/utils/dataHooks";
-import config from "@/utils/config";
 
-function TeamFull({ orgName }) {
+function TeamFull({ orgName }: { orgName: string }) {
   return (
     <Container py={100} size={600}>
       <NextSeo title="Signup" />
       <Stack align="center" gap={30}>
         <IconAnalyze color={"#206dce"} size={60} />
         <Title order={2} fw={700} size={40} ta="center">
-          Sorry, ${orgName} is full
+          Sorry, {orgName} is full
         </Title>
 
         <Flex align="center" gap={30}>
@@ -47,6 +52,7 @@ function TeamFull({ orgName }) {
               component="button"
               type="button"
               onClick={() => {
+                // @ts-ignore - crisp global
                 $crisp?.push(["do", "chat:open"]);
               }}
             >
@@ -58,6 +64,7 @@ function TeamFull({ orgName }) {
     </Container>
   );
 }
+
 export default function Join() {
   const router = useRouter();
   const { token } = router.query;
@@ -117,7 +124,7 @@ export default function Join() {
       token,
       password,
       redirectUrl,
-    };
+    } as any;
 
     const ok = await errorHandler(
       fetcher.post("/auth/signup", {
@@ -183,7 +190,7 @@ export default function Join() {
   const { orgUserCount, orgName, orgId, orgPlan, orgSeatAllowance } = joinData;
   const seatAllowance = orgSeatAllowance || SEAT_ALLOWANCE[orgPlan];
 
-  if (orgUserCount > seatAllowance) {
+  if (orgUserCount >= seatAllowance) {
     return <TeamFull orgName={orgName} />;
   }
 
@@ -235,7 +242,10 @@ export default function Join() {
                       <PasswordInput
                         label="Confirm Password"
                         autoComplete="new-password"
-                        error={form.errors.password && "Invalid password"}
+                        error={
+                          form.errors.confirmPassword &&
+                          "Passwords do not match"
+                        }
                         placeholder="Your password"
                         {...form.getInputProps("confirmPassword")}
                       />
@@ -288,6 +298,21 @@ export default function Join() {
               )}
             </Stack>
           </form>
+
+          {step === 1 && (
+            <Stack mt="lg">
+              <Group w="100%">
+                <Divider
+                  size="xs"
+                  w="100%"
+                  c="dimmed"
+                  label={<Text size="sm">OR</Text>}
+                />
+              </Group>
+              <GoogleButton />
+              <GithubButton accessToken={router.query.code as string} />
+            </Stack>
+          )}
         </Paper>
       </Stack>
     </Container>

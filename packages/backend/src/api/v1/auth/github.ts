@@ -83,7 +83,8 @@ github.post("/", async (ctx: Context) => {
         update account 
         set 
           last_login_at = now(),
-          avatar_url = coalesce(${userData.avatar_url}, avatar_url)
+          avatar_url = coalesce(${userData.avatar_url}, avatar_url),
+          verified = ${true}
         where 
           id = ${existingUser.id}
       `;
