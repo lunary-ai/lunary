@@ -118,6 +118,10 @@ function getAggValue(
     if (dataKey?.includes("latency")) {
       return `${value}s`;
     }
+
+    if (dataKey === "runs") {
+      return `${value} events`;
+    }
     return value;
   }
   return null;
@@ -141,6 +145,10 @@ function formatValue(value: unknown, dataKey: string) {
 
     if (dataKey?.includes("cost")) {
       return `$${formattedValue}`;
+    }
+
+    if (dataKey === "runs") {
+      return `${formattedValue} events`;
     }
 
     return formattedValue;
@@ -177,7 +185,12 @@ export default function AreaChartComponent({
 
   return (
     <>
-      <Text fw={500} fz={24} mb="md" px="md">
+      <Text
+        fw={dataKey === "runs" ? 300 : 500}
+        fz={dataKey === "runs" ? 16 : 24}
+        mb="md"
+        px="md"
+      >
         {aggValue || <Box h="24px" />}
       </Text>
       {!aggValue && <Box h="24px" />}
