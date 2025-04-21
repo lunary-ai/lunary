@@ -1,5 +1,5 @@
 import { runChecksOnRun } from "@/src/checks/runChecks";
-import { calcRunCost } from "@/src/utils/calcCost";
+import { calcRunCost } from "@/src/utils/cost";
 import sql from "@/src/utils/db";
 import { compilePrompt, runAImodel } from "@/src/utils/playground";
 import { OldProvider } from "shared";

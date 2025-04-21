@@ -22,8 +22,8 @@ import { createIndexes } from "./create-indexes";
 checkDbConnection();
 setupCronJobs();
 
+createIndexes();
 if (process.env.NODE_ENV === "production") {
-  createIndexes();
   startMaterializedViewRefreshJob();
 }
 
