@@ -1,5 +1,3 @@
-import { useEffect, useState } from "react";
-
 import {
   Anchor,
   Button,
@@ -15,19 +13,19 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
-
-import { useForm } from "@mantine/form";
+import { modals } from "@mantine/modals";
 import { IconAnalyze, IconAt, IconCheck, IconUser } from "@tabler/icons-react";
+import { useEffect, useRef, useState } from "react";
 
-import GithubButton from "@/components/blocks/OAuth/GithubButton";
 import GoogleButton from "@/components/blocks/OAuth/GoogleButton";
 
 import analytics from "@/utils/analytics";
+import { useAuth } from "@/utils/auth";
 import config from "@/utils/config";
 import { useJoinData } from "@/utils/dataHooks";
-import errorHandler from "@/utils/errors";
 import { fetcher } from "@/utils/fetcher";
 import { SEAT_ALLOWANCE } from "@/utils/pricing";
+import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { NextSeo } from "next-seo";
 import Router, { useRouter } from "next/router";
@@ -38,7 +36,7 @@ function TeamFull({ orgName }: { orgName: string }) {
     <Container py={100} size={600}>
       <NextSeo title="Signup" />
       <Stack align="center" gap={30}>
-        <IconAnalyze color={"#206dce"} size={60} />
+        <IconAnalyze color="#206dce" size={60} />
         <Title order={2} fw={700} size={40} ta="center">
           Sorry, {orgName} is full
         </Title>
@@ -52,7 +50,7 @@ function TeamFull({ orgName }: { orgName: string }) {
               component="button"
               type="button"
               onClick={() => {
-                // @ts-ignore - crisp global
+                // @ts-ignore – crisp global
                 $crisp?.push(["do", "chat:open"]);
               }}
             >
@@ -73,6 +71,74 @@ export default function Join() {
 
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const [acknowledged, setAck] = useState(false);
+  const modalOpened = useRef(false);
+  const auth = useAuth();
+
+  useEffect(() => {
+    if (!joinData || modalOpened.current) return;
+
+    const { oldRole, orgName } = joinData;
+    const isOwner = oldRole === "owner";
+    const inOrg = oldRole && oldRole !== "owner";
+
+    if (!inOrg && !isOwner) {
+      setAck(true);
+      return;
+    }
+
+    modalOpened.current = true;
+
+    modals.openConfirmModal({
+      centered: true,
+      withCloseButton: false,
+      closeOnEscape: false,
+      closeOnClickOutside: false,
+      title: (
+        <Flex align="center" gap="sm">
+          <Text fw={700} size="lg">
+            Confirmation Required
+          </Text>
+        </Flex>
+      ),
+      children: (
+        <Stack gap="xs">
+          <Text>
+            You are currently {isOwner ? "the owner" : "a member"} of an
+            organisation.
+          </Text>
+
+          {isOwner ? (
+            <Text>
+              By joining <b>Lunary</b>, your current organisation&nbsp;
+              <b>{orgName}</b> will be&nbsp;
+              <Text span fw={700} c="red">
+                permanently deleted
+              </Text>{" "}
+              along with all its data.
+            </Text>
+          ) : (
+            <Text>
+              By joining <b>Lunary</b>, you will&nbsp;
+              <Text span fw={700} c="red">
+                leave your current organisation
+              </Text>
+              .
+            </Text>
+          )}
+        </Stack>
+      ),
+      labels: {
+        confirm: isOwner
+          ? "Delete organisation & continue"
+          : "Leave organisation & continue",
+        cancel: "Cancel",
+      },
+      confirmProps: { color: "red" },
+      onConfirm: () => setAck(true),
+      onCancel: () => Router.push("/"),
+    });
+  }, [joinData]);
 
   useEffect(() => {
     if (router.isReady) {
@@ -126,25 +192,23 @@ export default function Join() {
       redirectUrl,
     } as any;
 
-    const ok = await errorHandler(
-      fetcher.post("/auth/signup", {
+    try {
+      const { authToken } = await fetcher.post("/auth/signup", {
         arg: signupData,
-      }),
-    );
+      });
 
-    if (ok) {
+      auth.setJwt(authToken);
+    } catch (error) {
+      console.error(error);
+    } finally {
       analytics.track("Join", { email, name, orgId });
-
       notifications.show({
         icon: <IconCheck size={18} />,
         color: "teal",
         message: `You have joined ${orgName}`,
       });
-
-      window.location.href = redirectUrl || "/login";
+      setLoading(false);
     }
-
-    setLoading(false);
   }
 
   const continueStep = async () => {
@@ -214,7 +278,7 @@ export default function Join() {
                     label="Full Name"
                     autoComplete="name"
                     description="Only used to address you properly."
-                    leftSection={<IconUser size="16" />}
+                    leftSection={<IconUser size={16} />}
                     placeholder="Your full name"
                     error={form.errors.name && "This field is required"}
                     {...form.getInputProps("name")}
@@ -258,8 +322,9 @@ export default function Join() {
                     type="submit"
                     fullWidth
                     loading={loading}
+                    disabled={!acknowledged}
                   >
-                    {step === 2 ? `Confirm signup →` : `Continue →`}
+                    {step === 2 ? "Confirm signup →" : "Continue →"}
                   </Button>
                 </>
               )}
@@ -279,11 +344,9 @@ export default function Join() {
                     </Title>
 
                     {!config.IS_SELF_HOSTED && (
-                      <>
-                        <Text size="lg" mt="xs" mb="xl" fw={500}>
-                          Check your emails for the confirmation link.
-                        </Text>
-                      </>
+                      <Text size="lg" mt="xs" mb="xl" fw={500}>
+                        Check your emails for the confirmation link.
+                      </Text>
                     )}
 
                     <Button
@@ -309,8 +372,8 @@ export default function Join() {
                   label={<Text size="sm">OR</Text>}
                 />
               </Group>
-              <GoogleButton />
-              <GithubButton accessToken={router.query.code as string} />
+
+              <GoogleButton joinToken={token} />
             </Stack>
           )}
         </Paper>

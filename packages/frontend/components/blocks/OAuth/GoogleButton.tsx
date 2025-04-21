@@ -8,7 +8,7 @@ import Image from "next/image";
 import { useRouter } from "next/router";
 import GoogleIconSrc from "public/assets/google-icon.svg";
 
-export default function GoogleButton() {
+export default function GoogleButton({ joinToken }) {
   const router = useRouter();
   const auth = useAuth();
   const scheme = useComputedColorScheme();
@@ -19,6 +19,7 @@ export default function GoogleButton() {
         const response = await fetcher.post("/auth/google", {
           arg: {
             accessToken: tokenResponse.access_token,
+            joinToken,
           },
         });
 

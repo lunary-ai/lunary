@@ -12,7 +12,7 @@ import { jwtVerify } from "jose";
 import Router from "koa-router";
 import { hasAccess, roles } from "shared";
 import { z } from "zod";
-import { signJWT } from "./auth/utils";
+import { sanitizeEmail, signJWT } from "./auth/utils";
 import { sendSlackMessage } from "@/src/utils/notifications";
 import { recordAuditLog } from "./audit-logs/utils";
 
@@ -76,25 +76,25 @@ users.get("/me", async (ctx: Context) => {
   const { userId } = ctx.state;
 
   const [user] = await sql`
-      select
-        account.id,
-        account.name,
-        account.created_at,
-        account.email,
-        account.org_id,
-        account.role,
-        account.verified,
-        account.avatar_url,
-        account.last_login_at,
-        array_agg(account_project.project_id) as projects
-      from
-        account
-        left join account_project on account.id = account_project.account_id
-      where
-        id = ${userId}
-      group by 
-        account.id
-    `;
+    select
+      account.id,
+      account.name,
+      account.created_at,
+      account.email,
+      account.org_id,
+      account.role,
+      account.verified,
+      account.avatar_url,
+      account.last_login_at,
+      array_agg(account_project.project_id) as projects
+    from
+      account
+      left join account_project on account.id = account_project.account_id
+    where
+      id = ${userId}
+    group by
+      account.id
+  `;
 
   ctx.body = user;
 });
@@ -128,11 +128,11 @@ users.get("/verify-email", async (ctx: Context) => {
   }
 
   const [acc] = await sql`
-      update account
-      set verified = true
-      where email = ${email}
-      returning org_id, name
-    `;
+    update account
+    set verified = true
+    where email = ${email}
+    returning org_id, name
+  `;
   const { orgId, name } = acc;
 
   const [project] = await sql`
@@ -161,6 +161,13 @@ users.post("/send-verification", async (ctx: Context) => {
   await sendVerifyEmail(email, name);
 
   ctx.body = { ok: true };
+});
+
+users.get("/invited", async (ctx: Context) => {
+  const { orgId } = ctx.state;
+  const invitedUsers =
+    await sql`select * from org_invitation where org_id = ${orgId}`;
+  ctx.body = invitedUsers;
 });
 
 users.get(
@@ -205,10 +212,7 @@ users.post("/", checkAccess("teamMembers", "create"), async (ctx: Context) => {
     role !== "admin" &&
     (org.plan === "free" || org.plan === "pro")
   ) {
-    ctx.throw(
-      401,
-      "Your plan doesn't allow you to access granular access control.",
-    );
+    ctx.throw(401, "Your plan doesn't allow granular access control");
   }
 
   const [currentUser] = await sql`select * from account where id = ${userId}`;
@@ -256,18 +260,18 @@ users.post("/", checkAccess("teamMembers", "create"), async (ctx: Context) => {
       values 
         (${user.id}, ${projectId})
       returning *
-    `;
+      `;
   }
 
   const [finalUser] = await sql`
-    select 
-      account.*, 
-      array_agg(account_project.project_id) as project_ids 
+      select
+        account.*,
+        array_agg(account_project.project_id) as project_ids
     from account 
-    left join account_project on account.id = account_project.account_id 
+        left join account_project on account.id = account_project.account_id
     where account.email = ${email} 
     group by account.id
-  `;
+    `;
 
   recordAuditLog("team_member", "invite", ctx, finalUser.id);
 
@@ -409,4 +413,58 @@ users.patch(
     ctx.body = { message: "User updated successfully" };
   },
 );
+
+users.post("/invitation", async (ctx: Context) => {
+  const bodySchema = z.object({
+    email: z.string().email().transform(sanitizeEmail),
+    role: z.enum(Object.keys(roles) as [string, ...string[]]),
+    projects: z.array(z.string()).min(1),
+  });
+  const { email, role, projects } = bodySchema.parse(ctx.request.body);
+  const { orgId } = ctx.state;
+
+  const tokenExpiry = 60 * 60 * 24 * 15;
+  const [user] = await sql`select role from account where email = ${email}`;
+
+  const token = await signJWT(
+    { email, orgId, role, projects, oldRole: user?.role },
+    tokenExpiry,
+  );
+
+  await sql`
+    insert into org_invitation (email, org_id, role, token)
+    values (${email}, ${orgId}, ${role}, ${token})
+  `;
+
+  const [existing] =
+    await sql`select id from account where lower(email)=lower(${email}) and org_id = ${orgId}`;
+
+  if (existing) {
+    ctx.throw(400, "This user is already part of your Organization.");
+  }
+
+  const [org] =
+    await sql`select name, saml_enabled from org where id = ${orgId}`;
+
+  const link = org.samlEnabled
+    ? process.env.APP_URL!
+    : `${process.env.APP_URL}/join?token=${token}`;
+
+  if (!org.samlEnabled) {
+    await sendEmail(INVITE_EMAIL(email, org.name!, link));
+  }
+
+  recordAuditLog("team_member", "invite", ctx);
+
+  ctx.body = {};
+});
+
+users.delete("/invitation/:id", async (ctx: Context) => {
+  const { id } = ctx.params;
+  const { orgId } = ctx.state;
+  await sql`delete from org_invitation where id = ${id} and org_id = ${orgId}`;
+  ctx.status = 200;
+  ctx.body = {};
+});
+
 export default users;
