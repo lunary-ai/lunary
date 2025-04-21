@@ -1,24 +1,10 @@
-import sql from "./utils/db";
+import sql from "@/src/utils/db";
 
-const defaultMappingsCache = await sql`
-select
-  *
-from
-  model_mapping
-where
-  org_id is null
-`;
-
-const customMappingsCache = await sql`
-select
-  *
-from
-  model_mapping
-where
-  org_id is not null
-`;
-
-async function auditBatch(runs: any[]) {
+export async function refreshCosts(
+  runs: any[],
+  defaultMappingsCache: any[],
+  customMappingsCache: any[],
+) {
   const updates: [number, number][] = [];
 
   for (const run of runs) {
@@ -88,14 +74,51 @@ async function auditBatch(runs: any[]) {
       where run.id = (update_data.id)::uuid
       returning run.id, run.cost
     `;
-    console.log("updated rows:", res.length);
+    console.log("Updated rows:", res.length);
   }
 }
 
-async function main() {
+export async function refreshCostsJob(
+  orgId: string,
+  updateProgress: (pct: number) => Promise<void>,
+): Promise<void> {
+  const defaultMappingsCache = await sql`
+    select
+      *
+    from
+      model_mapping
+    where
+      org_id is null
+  `;
+
+  const customMappingsCache = await sql`
+    select
+      *
+    from
+      model_mapping
+    where
+      org_id = ${orgId} 
+  `;
+
   const LIMIT = 10000;
   let page = 0;
+  const now = new Date();
 
+  const [{ count: totalRuns }] = await sql`
+    select
+      count(*) 
+    from
+      run r
+      left join project p on r.project_id = p.id
+      left join org o on p.org_id = o.id
+    where
+      r.type = 'llm'
+      and org_id = ${orgId}
+      and status = 'success'
+      and r.created_at <= ${now}
+  `;
+
+  console.log(totalRuns);
   while (true) {
     const runs = await sql`
       select
@@ -115,34 +138,25 @@ async function main() {
         left join org o on p.org_id = o.id
       where
         r.type = 'llm'
-        and r.is_deleted = false
-        and status = 'success' 
-      order by r.created_at desc
-      limit ${LIMIT}
-      offset ${page * LIMIT}
+        and org_id = ${orgId}
+        and status = 'success'
+        and r.created_at <= ${now}
+      order by 
+        r.created_at desc
+      limit 
+        ${LIMIT}
+      offset 
+        ${page * LIMIT}
     `;
 
     if (!runs.length) break;
 
     page += 1;
-    console.log(page);
 
-    await auditBatch(runs);
+    await refreshCosts(runs, defaultMappingsCache, customMappingsCache);
+
+    await updateProgress(
+      Number((((page * LIMIT) / totalRuns) * 100).toFixed(2)),
+    );
   }
 }
-
-await main();
-process.exit(0);
-/* TODO:
- * - [ ] rename completionTokens to input_tokens, promptTokens to output_tokens, cachedPromptTokens to cached_input_tokens
- * - [ ] change model_mapping table to use cached_input_tokens_price instead of input_caching_cost_reduction
- * - [ ] refacto calcRunCost
- * - [ ] separate default costs from custom costs (or use a flag in the DB)
- * - [ ] how to get historical costs?
- * - [ ] for new data structure -> look at platform.openai.com network calls to see how they do it
- *  -> maybe I need to create an object with all the models, features etc. and a table to have custom pricing
- *  -> batch pricing for openai
- *  -> anthropic prompt caching
- * make a public API and advertize it online
- * other ideas: publish trend reports/viz, compare provider pricing etc
- */

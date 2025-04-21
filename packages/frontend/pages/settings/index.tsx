@@ -1,5 +1,7 @@
 import LineChart from "@/components/analytics/OldLineChart";
 import CopyText from "@/components/blocks/CopyText";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
 
 import {
   Alert,
@@ -9,11 +11,13 @@ import {
   Group,
   Loader,
   Popover,
+  Progress,
   Select,
   Stack,
   Switch,
   Tabs,
   Text,
+  Title,
 } from "@mantine/core";
 import { NextSeo } from "next-seo";
 import Router, { useRouter } from "next/router";
@@ -30,21 +34,25 @@ import {
   useProjectRules,
   useUser,
 } from "@/utils/dataHooks";
+import { useRefreshCostsJob } from "@/utils/dataHooks/jobs";
 import errorHandler from "@/utils/errors";
 import { fetcher } from "@/utils/fetcher";
 import { modals } from "@mantine/modals";
 import { notifications, showNotification } from "@mantine/notifications";
 import {
   IconCheck,
+  IconCoin,
   IconFilter,
   IconIdBadge,
   IconPencil,
   IconRefreshAlert,
 } from "@tabler/icons-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { CheckLogic, hasAccess } from "shared";
+import { useEffect, useRef, useState } from "react";
+import { type CheckLogic, hasAccess } from "shared";
 import useSWR from "swr";
+
+dayjs.extend(relativeTime);
 
 function Keys() {
   const [regenerating, setRegenerating] = useState(false);
@@ -153,6 +161,16 @@ function Keys() {
     </SettingsCard>
   );
 }
+
+const statusColor = (s: string) =>
+  (
+    ({
+      pending: "yellow",
+      running: "blue",
+      done: "green",
+      failed: "red",
+    }) as const
+  )[s] || "gray";
 
 function SmartDataRule() {
   const { org } = useOrg();
@@ -280,6 +298,58 @@ function SmartDataRule() {
 }
 
 export default function Settings() {
+  const { user } = useUser();
+  const {
+    job: refreshJob,
+    isLoading: refreshLoading,
+    isStarting: refreshStarting,
+    start: startRefreshCosts,
+  } = useRefreshCostsJob();
+  const prevStatus = useRef<string | undefined>();
+
+  useEffect(() => {
+    if (!refreshJob) return;
+    if (refreshJob.status !== prevStatus.current) {
+      if (refreshJob.status === "done") {
+        notifications.update({
+          id: "refresh-costs",
+          title: "Cost refresh completed",
+          message: "All run costs are up‑to‑date.",
+          icon: <IconCheck />,
+          color: "green",
+          autoClose: 4000,
+        });
+      }
+      if (refreshJob.status === "failed") {
+        notifications.update({
+          id: "refresh-costs",
+          title: "Cost refresh failed",
+          message: refreshJob.error || "See logs for details",
+          color: "red",
+          autoClose: 8000,
+        });
+      }
+      prevStatus.current = refreshJob.status;
+    }
+  }, [refreshJob]);
+
+  const openRefreshCostModal = () =>
+    modals.openConfirmModal({
+      title: <Title order={4}>Refresh costs for all logs?</Title>,
+      children: (
+        <Text size="sm">
+          This will recalculate costs for every LLM log in your organization
+          using the latest pricing rules.
+        </Text>
+      ),
+      confirmProps: { loading: refreshStarting },
+      labels: { confirm: "Confirm", cancel: "Cancel" },
+      onConfirm: async () => {
+        await startRefreshCosts();
+        modals.closeAll();
+      },
+    });
+
   const { org } = useOrg();
   const {
     update,
@@ -295,8 +365,6 @@ export default function Settings() {
 
   const { backendVersion, frontendVersion } = useLunaryVersion();
   const router = useRouter();
-
-  const { user } = useUser();
 
   // TODO: better route for project usage
   const { data: projectUsage, isLoading: projectUsageLoading } = useSWR(
@@ -342,17 +410,91 @@ export default function Settings() {
           props={["count"]}
         />
         {user.role !== "viewer" && <Keys />}
-        <SettingsCard title={<>Custom Models 🧠</>} align="start">
-          <Button
-            color="blue"
-            variant="default"
-            component={Link}
-            data-testid="add-model-button"
-            href={`/settings/models`}
-            leftSection={<IconPencil size={16} />}
-          >
-            Edit Mappings
-          </Button>
+        <SettingsCard title={<>Cost Mapping</>} align="start">
+          <Stack gap="md" w="100%">
+            <Group justify="apart">
+              <Group>
+                <Button
+                  color="blue"
+                  variant="default"
+                  component={Link}
+                  data-testid="add-model-button"
+                  href={`/settings/models`}
+                  leftSection={<IconPencil size={16} />}
+                >
+                  Edit Mappings
+                </Button>
+                <Button
+                  color="blue"
+                  variant="primary"
+                  leftSection={<IconCoin size={16} />}
+                  loading={refreshStarting}
+                  disabled={
+                    refreshLoading ||
+                    (refreshJob &&
+                      ["pending", "running"].includes(refreshJob.status))
+                  }
+                  onClick={openRefreshCostModal}
+                >
+                  {refreshJob &&
+                  ["pending", "running"].includes(refreshJob.status)
+                    ? "Refreshing costs..."
+                    : "Refresh costs"}
+                </Button>
+              </Group>
+            </Group>
+
+            {refreshJob && (
+              <Stack gap="xs" w="100%">
+                {["pending", "running"].includes(refreshJob.status) && (
+                  <>
+                    <Group justify="space-between">
+                      <Text size="sm" c="dimmed">
+                        Refreshing costs
+                      </Text>
+                      <Text size="sm" c="dimmed">
+                        {(refreshJob.progress ?? 0).toFixed(2)}%
+                      </Text>
+                    </Group>
+                    <Progress
+                      value={refreshJob.progress ?? 0}
+                      size="md"
+                      radius="sm"
+                    />
+                  </>
+                )}
+
+                {refreshJob.status === "done" &&
+                  refreshJob.endedAt &&
+                  dayjs(refreshJob.endedAt).isAfter(
+                    dayjs().subtract(1, "hour"),
+                  ) && (
+                    <Alert
+                      icon={<IconCheck size={16} />}
+                      title="Refresh Complete"
+                      color="green"
+                      variant="light"
+                    >
+                      All LLM run costs have been successfully recalculated
+                      using the latest pricing rules{" "}
+                      {dayjs(refreshJob.endedAt).fromNow()}.
+                    </Alert>
+                  )}
+
+                {refreshJob.status === "failed" && (
+                  <Alert
+                    icon={<IconRefreshAlert size={16} />}
+                    title="Refresh Failed"
+                    color="red"
+                    variant="light"
+                  >
+                    {refreshJob.error ||
+                      "An error occurred while refreshing costs. Please try again."}
+                  </Alert>
+                )}
+              </Stack>
+            )}
+          </Stack>
         </SettingsCard>
 
         <SettingsCard title={<>LLM Providers Configuration</>} align="start">
