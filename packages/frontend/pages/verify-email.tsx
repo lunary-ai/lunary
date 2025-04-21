@@ -1,10 +1,11 @@
+import { useUser } from "@/utils/dataHooks";
 import { fetcher } from "@/utils/fetcher";
 import { Container, Loader, Stack, Text, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconAnalyze, IconCheck, IconCross } from "@tabler/icons-react";
 import { NextSeo } from "next-seo";
-import Router from "next/router";
-import { useEffect, useState } from "react";
+import Router, { useRouter } from "next/router";
+import { useCallback, useEffect, useState } from "react";
 
 function VerifiedContent() {
   return (
@@ -13,9 +14,6 @@ function VerifiedContent() {
       <Title order={2} fw={700} size={40} ta="center">
         Email verified
       </Title>
-      <Text c="dimmed" fz="sm" ta="center">
-        Redirecting...
-      </Text>
     </>
   );
 }
@@ -52,16 +50,21 @@ function VerificationContent({ status }) {
 }
 
 export default function VerifyEmailPage() {
-  const [verificationStatus, setVerificationStatus] = useState("error");
-  const { token } = Router.query;
+  const router = useRouter();
+  const { isReady, query } = router;
+  const { user } = useUser();
+  const token = Array.isArray(query.token) ? query.token[0] : query.token;
 
-  const verifyEmail = async ({ token }: { token: string }) => {
+  const [verificationStatus, setVerificationStatus] = useState<
+    "idle" | "verifying" | "verified" | "error"
+  >("idle");
+
+  const verifyEmail = useCallback(async (token: string) => {
     setVerificationStatus("verifying");
-
     try {
       await fetcher.get(`/users/verify-email?token=${token}`);
-
       setVerificationStatus("verified");
+
       notifications.show({
         icon: <IconCheck size={18} />,
         color: "teal",
@@ -69,25 +72,27 @@ export default function VerifyEmailPage() {
         message: "Email verified successfully",
       });
 
-      setTimeout(() => Router.push("/"), 100);
-    } catch (error) {
-      console.error(error);
-
+      if (user) {
+        setTimeout(() => Router.push("/"), 100);
+      }
+    } catch (err: any) {
+      console.error(err);
       setVerificationStatus("error");
+
       notifications.show({
         icon: <IconCross size={18} />,
         color: "red",
         title: "Error",
-        message: error.message,
+        message: err.message ?? "Something went wrong",
       });
     }
-  };
+  }, []);
 
   useEffect(() => {
-    if (token) {
-      verifyEmail({ token: token as string });
-    }
-  }, [token]);
+    if (isReady && token) verifyEmail(token);
+  }, [isReady, token, verifyEmail]);
+
+  if (!isReady) return <Loader />;
 
   return (
     <Container py={100} size={600}>

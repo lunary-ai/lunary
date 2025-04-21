@@ -14,7 +14,13 @@ import {
   Title,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { IconAnalyze, IconAt, IconCheck, IconUser } from "@tabler/icons-react";
+import {
+  IconAnalyze,
+  IconAt,
+  IconCheck,
+  IconMailCheck,
+  IconUser,
+} from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 
 import GoogleButton from "@/components/blocks/OAuth/GoogleButton";
@@ -61,6 +67,14 @@ function TeamFull({ orgName }: { orgName: string }) {
       </Stack>
     </Container>
   );
+}
+
+async function sendVerificationEmail(email: string, name: string) {
+  await fetcher.post("/users/send-verification", { arg: { email, name } });
+  notifications.show({
+    icon: <IconMailCheck size={18} />,
+    message: `Verification link sent to ${email}`,
+  });
 }
 
 export default function Join() {
@@ -159,11 +173,11 @@ export default function Join() {
       email: (val) => (/^\S+@\S+$/.test(val) ? null : "Invalid email"),
       name: (val) => (val.length <= 2 ? "Your name that short :) ?" : null),
       password: (val) =>
-        step === 2 && val.length < 6
+        step === 3 && val.length < 6
           ? "Password must be at least 6 characters"
           : null,
       confirmPassword: (val) =>
-        step === 2 && val !== form.values.password
+        step === 3 && val !== form.values.password
           ? "Passwords do not match"
           : null,
     },
@@ -198,17 +212,17 @@ export default function Join() {
       });
 
       auth.setJwt(authToken);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      analytics.track("Join", { email, name, orgId });
       notifications.show({
         icon: <IconCheck size={18} />,
         color: "teal",
         message: `You have joined ${orgName}`,
       });
+      analytics.track("Join", { email, name, orgId });
+    } catch (error) {
       setLoading(false);
+      throw error;
     }
+    setLoading(false);
   }
 
   const continueStep = async () => {
@@ -218,10 +232,17 @@ export default function Join() {
     try {
       if (step === 1) {
         const { method, redirect } = await fetcher.post("/auth/method", {
-          arg: {
-            email,
-          },
+          arg: { email },
         });
+
+        const mustVerify = !!joinData?.oldRole && method === "password";
+
+        if (mustVerify) {
+          await sendVerificationEmail(email, name);
+          setStep(2);
+          setLoading(false);
+          return;
+        }
 
         if (method === "saml") {
           await handleSignup({
@@ -229,17 +250,23 @@ export default function Join() {
             name,
             redirectUrl: redirect,
           });
+          setStep(4);
         } else {
-          setStep(2);
+          setStep(3);
         }
       } else if (step === 2) {
-        await handleSignup({
-          email,
-          name,
-          password,
-        });
-
         setStep(3);
+      } else if (step === 3) {
+        try {
+          await handleSignup({
+            email,
+            name,
+            password,
+          });
+          setStep(4);
+        } catch (error) {
+          alert("Email not verified");
+        }
       }
     } catch (error) {
       console.error(error);
@@ -264,7 +291,7 @@ export default function Join() {
 
       <Stack align="center" gap={50}>
         <Stack align="center">
-          <IconAnalyze color={"#206dce"} size={60} />
+          <IconAnalyze color="#206dce" size={60} />
           <Title order={2} fw={700} size={40} ta="center">
             Join {orgName}
           </Title>
@@ -272,7 +299,7 @@ export default function Join() {
         <Paper radius="md" p="xl" withBorder miw={350}>
           <form onSubmit={form.onSubmit(continueStep)}>
             <Stack gap="lg">
-              {step < 3 && (
+              {step === 1 && (
                 <>
                   <TextInput
                     label="Full Name"
@@ -294,28 +321,6 @@ export default function Join() {
                     {...form.getInputProps("email")}
                   />
 
-                  {step === 2 && (
-                    <>
-                      <PasswordInput
-                        label="Password"
-                        autoComplete="new-password"
-                        error={form.errors.password && "Invalid password"}
-                        placeholder="Your password"
-                        {...form.getInputProps("password")}
-                      />
-                      <PasswordInput
-                        label="Confirm Password"
-                        autoComplete="new-password"
-                        error={
-                          form.errors.confirmPassword &&
-                          "Passwords do not match"
-                        }
-                        placeholder="Your password"
-                        {...form.getInputProps("confirmPassword")}
-                      />
-                    </>
-                  )}
-
                   <Button
                     size="md"
                     mt="md"
@@ -324,12 +329,71 @@ export default function Join() {
                     loading={loading}
                     disabled={!acknowledged}
                   >
-                    {step === 2 ? "Confirm signup →" : "Continue →"}
+                    Continue →
                   </Button>
                 </>
               )}
 
+              {step === 2 && (
+                <Stack align="center" gap="lg">
+                  <IconMailCheck size={48} stroke={1.2} color="#206dce" />
+                  <Title order={3} ta="center">
+                    Verify your email
+                  </Title>
+                  <Text ta="center" c="dimmed">
+                    We’ve sent a verification link to {form.values.email}. Click
+                    it, then come back here.
+                  </Text>
+                  <Button size="md" loading={loading} fullWidth type="submit">
+                    I have verified →
+                  </Button>
+                  <Anchor
+                    component="button"
+                    size="sm"
+                    onClick={async () => {
+                      await sendVerificationEmail(
+                        form.values.email,
+                        form.values.name,
+                      );
+                    }}
+                  >
+                    Resend email
+                  </Anchor>
+                </Stack>
+              )}
+
               {step === 3 && (
+                <>
+                  <PasswordInput
+                    label="Password"
+                    autoComplete="new-password"
+                    error={form.errors.password && "Invalid password"}
+                    placeholder="Your password"
+                    {...form.getInputProps("password")}
+                  />
+                  <PasswordInput
+                    label="Confirm Password"
+                    autoComplete="new-password"
+                    error={
+                      form.errors.confirmPassword && "Passwords do not match"
+                    }
+                    placeholder="Your password"
+                    {...form.getInputProps("confirmPassword")}
+                  />
+
+                  <Button
+                    size="md"
+                    mt="md"
+                    type="submit"
+                    fullWidth
+                    loading={loading}
+                  >
+                    Confirm signup →
+                  </Button>
+                </>
+              )}
+
+              {step === 4 && (
                 <>
                   <Confetti
                     recycle={false}
@@ -338,7 +402,7 @@ export default function Join() {
                   />
 
                   <Stack align="center">
-                    <IconAnalyze color={"#206dce"} size={60} />
+                    <IconAnalyze color="#206dce" size={60} />
                     <Title order={2} fw={700} size={40} ta="center">
                       You're all set 🎉
                     </Title>

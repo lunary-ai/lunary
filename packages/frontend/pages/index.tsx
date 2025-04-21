@@ -14,6 +14,7 @@ function IndexPage() {
     if (!router.isReady) {
       return;
     }
+
     if (!isSignedIn) {
       router.replace("/login");
       return;
