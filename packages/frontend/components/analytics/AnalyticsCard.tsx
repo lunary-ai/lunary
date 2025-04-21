@@ -4,8 +4,8 @@ import { IconInfoCircle, IconX } from "@tabler/icons-react";
 import { ReactNode } from "react";
 
 interface AnalyticsCardProps {
-  title: string;
-  description: string | null;
+  title: string | ReactNode;
+  description?: string | null;
   isEditing?: boolean;
   onDelete?: () => void;
   children: ReactNode;
@@ -46,13 +46,19 @@ function AnalyticsCard({
     >
       <Group justify="space-between" px="md">
         <Group>
-          <Text c="dimmed" fw={50} fz="md">
-            {title}
-          </Text>
+          {typeof title === "string" ? (
+            <Text c="dimmed" fw={50} fz="md">
+              {title}
+            </Text>
+          ) : (
+            title
+          )}
 
-          <Tooltip label={description || "No description available"}>
-            <IconInfoCircle style={{ zIndex: 2 }} size={16} opacity={0.5} />
-          </Tooltip>
+          {description !== null && (
+            <Tooltip label={description || "No description available"}>
+              <IconInfoCircle style={{ zIndex: 2 }} size={16} opacity={0.5} />
+            </Tooltip>
+          )}
         </Group>
         {isEditing && (
           <ActionIcon
