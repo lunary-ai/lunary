@@ -1,5 +1,5 @@
 import { checkIngestionRule } from "@/src/checks/runChecks";
-import { calcRunCost } from "@/src/utils/calcCost";
+import { calcRunCost } from "@/src/utils/cost";
 import sql from "@/src/utils/db";
 import { DuplicateError, ProjectNotFoundError } from "@/src/utils/errors";
 import {
@@ -308,7 +308,6 @@ async function registerRunEvent(
       output = JSON.stringify(output);
     }
 
-    console.log(tokensUsage);
     const runToInsert = clearUndefined({
       endedAt: timestamp,
       output: output,

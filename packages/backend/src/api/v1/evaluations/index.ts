@@ -1,6 +1,6 @@
 import { runChecksOnRun } from "@/src/checks/runChecks";
 import { checkAccess } from "@/src/utils/authorization";
-import { calcRunCost } from "@/src/utils/calcCost";
+import { calcRunCost } from "@/src/utils/cost";
 import { getReadableDateTime } from "@/src/utils/date";
 import sql from "@/src/utils/db";
 import Context from "@/src/utils/koa";
