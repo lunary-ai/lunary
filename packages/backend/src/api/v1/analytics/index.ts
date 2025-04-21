@@ -954,6 +954,73 @@ analytics.get("/run-types", async (ctx: Context) => {
   }
 });
 
+analytics.get("/runs", async (ctx: Context) => {
+  const { projectId } = ctx.state;
+  const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
+    projectId,
+    ctx.querystring,
+    ctx.query,
+  );
+
+  if (granularity === "weekly") {
+    const res = await sql`
+        with dates as (
+          ${datesQuery}
+        ),
+        filtered_runs as (
+          ${filteredRunsQuery}
+        ),
+        weekly_sums as (
+          select
+            d.date,
+            coalesce(count(r.type)::int, 0) as runs,
+            'Runs' as name 
+          from
+            dates d
+          left join
+            filtered_runs r on r.local_created_at >= d.date and r.local_created_at < d.date + interval '7 days'
+          group by 
+            d.date
+          order by d.date
+        )
+        select
+          date, 
+          runs as value, 
+          name
+        from
+          weekly_sums
+        order by
+          date;
+      `;
+    ctx.body = { data: res };
+    return;
+  } else {
+    const res = await sql`
+        with dates as (
+          ${datesQuery}
+        ),
+        filtered_runs as (
+          ${filteredRunsQuery}
+        )
+        select
+          d.date,
+          coalesce(count(r.type)::int, 0) as value,
+          'Runs' as name 
+        from
+          dates d
+          left join filtered_runs r on d.date = r.local_created_at
+        group by 
+          d.date
+        order by d.date;
+    `;
+    const data = res.every((row: { value: number }) => row.value === 0)
+      ? []
+      : res;
+    ctx.body = { data };
+    return;
+  }
+});
+
 analytics.get("/latency", async (ctx: Context) => {
   const { projectId } = ctx.state;
   const {
@@ -1260,7 +1327,6 @@ analytics.get("/feedback/thumb/up", async (ctx: Context) => {
         order by
           d.date ) r;
         `;
-    console.log(res);
     ctx.body = { data: res };
     return;
   }

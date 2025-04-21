@@ -159,6 +159,7 @@ export default function ChartComponent({
       "thumbs-up",
       "feedback/thumb/up",
       "feedback/thumb/down",
+      "runs",
     ].includes(dataKey)
   ) {
     return (

@@ -1,10 +1,10 @@
-import LineChart from "@/components/analytics/OldLineChart";
 import CopyText from "@/components/blocks/CopyText";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 
 import {
   Alert,
+  Box,
   Button,
   Container,
   Flex,
@@ -22,6 +22,8 @@ import {
 import { NextSeo } from "next-seo";
 import Router, { useRouter } from "next/router";
 
+import AnalyticsCard from "@/components/analytics/AnalyticsCard";
+import ChartComponent from "@/components/analytics/Charts/ChartComponent";
 import RenamableField from "@/components/blocks/RenamableField";
 import { SettingsCard } from "@/components/blocks/SettingsCard";
 import CheckPicker from "@/components/checks/Picker";
@@ -383,9 +385,12 @@ export default function Settings() {
     }
   }, [user.role]);
 
-  if (projectUsageLoading || !user.role) {
+  if (!user.role) {
     return <Loader />;
   }
+
+  const startDate = dayjs().subtract(30, "days").toDate();
+  startDate.setHours(0, 0, 0, 0);
 
   return (
     <Container className="unblockable">
@@ -401,14 +406,22 @@ export default function Settings() {
             {project?.name}
           </Text>
         )}
-        <LineChart
-          data={projectUsage}
-          cleanData={false}
-          agg="sum"
-          loading={projectUsageLoading}
-          formatter={(val) => `${val} runs`}
-          props={["count"]}
-        />
+
+        <AnalyticsCard title="Monthly Project Usage" description={null}>
+          <Box h="280px">
+            <ChartComponent
+              dataKey="runs"
+              startDate={startDate}
+              endDate={new Date()}
+              granularity={"daily"}
+              isCustom={false}
+              checks={["AND"]}
+              color="blue"
+              aggregationMethod="sum"
+            />
+          </Box>
+        </AnalyticsCard>
+
         {user.role !== "viewer" && <Keys />}
         <SettingsCard title={<>Cost Mapping</>} align="start">
           <Stack gap="md" w="100%">
