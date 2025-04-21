@@ -1,1 +1,0 @@
-alter table model_mapping alter column input_caching_cost_reduction drop not null
