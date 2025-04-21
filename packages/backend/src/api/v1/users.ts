@@ -8,13 +8,13 @@ import { checkAccess } from "@/src/utils/authorization";
 import config from "@/src/utils/config";
 import sql from "@/src/utils/db";
 import Context from "@/src/utils/koa";
+import { sendSlackMessage } from "@/src/utils/notifications";
 import { jwtVerify } from "jose";
 import Router from "koa-router";
 import { hasAccess, roles } from "shared";
 import { z } from "zod";
-import { sanitizeEmail, signJWT } from "./auth/utils";
-import { sendSlackMessage } from "@/src/utils/notifications";
 import { recordAuditLog } from "./audit-logs/utils";
+import { sanitizeEmail, signJWT } from "./auth/utils";
 
 const users = new Router({
   prefix: "/users",
