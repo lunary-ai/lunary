@@ -44,22 +44,17 @@ import { SettingsCard } from "@/components/blocks/SettingsCard";
 import UserAvatar from "@/components/blocks/UserAvatar";
 import { openUpgrade } from "@/components/layout/UpgradeModal";
 import config from "@/utils/config";
-import {
-  // useInvitations,
-  useOrg,
-  useOrgUser,
-  useProjects,
-  useUser,
-} from "@/utils/dataHooks";
+import { useOrg, useOrgUser, useProjects, useUser } from "@/utils/dataHooks";
+import { useInvitedUsers, useInviteUser } from "@/utils/dataHooks/users";
 import errorHandler from "@/utils/errors";
 import { fetcher } from "@/utils/fetcher";
 import { SEAT_ALLOWANCE } from "@/utils/pricing";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
+import Link from "next/link";
 import { hasAccess, roles } from "shared";
 import classes from "./team.module.css";
-import Link from "next/link";
 
 function SAMLConfig() {
   const { org, updateOrg, mutate } = useOrg();
@@ -240,12 +235,16 @@ function InviteLinkModal({ opened, setOpened, link }) {
   );
 }
 
-// TODO: split in two components (instead of useInvitation)
+/* -------------------------------------------------------------------------- */
+/* USER MENU                                                                 */
+/* -------------------------------------------------------------------------- */
+
 function UserMenu({ user, isInvitation }) {
   const [opened, { open, close }] = useDisclosure(false);
   const [isLoading, setIsLoading] = useState(false);
   const { user: currentUser } = useUser();
   const { removeUserFromOrg } = useOrgUser(user.id);
+  const { mutate: mutateInvited } = useInvitedUsers();
 
   if (["admin", "owner"].includes(user.role) && currentUser?.role !== "owner") {
     return null;
@@ -257,7 +256,19 @@ function UserMenu({ user, isInvitation }) {
 
   async function confirm() {
     setIsLoading(true);
-    await removeUserFromOrg();
+    if (isInvitation) {
+      // delete pending invitation
+      await errorHandler(fetcher.delete(`/users/invitation/${user.id}`));
+      await mutateInvited();
+      notifications.show({
+        title: "Invitation cancelled",
+        message: "",
+        icon: <IconCheck size={18} />,
+        color: "green",
+      });
+    } else {
+      await removeUserFromOrg();
+    }
     setIsLoading(false);
     close();
   }
@@ -308,8 +319,9 @@ function UserMenu({ user, isInvitation }) {
           {isInvitation && (
             <Menu.Item
               onClick={() => {
+                const tok = user.token || user.singleUseToken;
                 navigator.clipboard.writeText(
-                  `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/join?token=${user.singleUseToken}`,
+                  `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/join?token=${tok}`,
                 );
                 notifications.show({
                   icon: <IconCheck size={18} />,
@@ -356,7 +368,7 @@ export function RoleSelect({
 
   const options = Object.values(roles).map(
     ({ value, name, description, free }) =>
-      (value === "owner" ? currentUser.role === "owner" : true) && (
+      value === "owner" && currentUser.role !== "owner" ? null : (
         <Tooltip
           key={value}
           label={
@@ -426,38 +438,50 @@ export function RoleSelect({
   );
 }
 
-const ProjectMultiSelect = forwardRef((props, ref) => {
-  const { value, setValue, disabled } = props;
-  const { projects } = useProjects();
+/* -------------------------------------------------------------------------- */
+/* PROJECT MULTI SELECT                                                      */
+/* -------------------------------------------------------------------------- */
 
-  const data = projects.map((project) => ({
-    value: project.id,
-    label: project.name,
-  }));
+type ProjectMultiProps = {
+  value: string[];
+  setValue: (v: string[]) => void;
+  disabled: boolean;
+};
 
-  return (
-    <MultiSelect
-      ref={ref}
-      value={value}
-      data={data}
-      onChange={(projectIds) => setValue(projectIds)}
-      classNames={{ pillsList: classes.pillsList }}
-      disabled={disabled}
-      readOnly={disabled}
-    />
-  );
-});
+const ProjectMultiSelect = forwardRef<HTMLInputElement, ProjectMultiProps>(
+  (props, ref) => {
+    const { value, setValue, disabled } = props;
+    const { projects } = useProjects();
+
+    const data = projects.map((project) => ({
+      value: project.id,
+      label: project.name,
+    }));
+
+    return (
+      <MultiSelect
+        ref={ref}
+        value={value}
+        data={data}
+        onChange={(projectIds) => setValue(projectIds)}
+        classNames={{ pillsList: classes.pillsList }}
+        disabled={disabled}
+        readOnly={disabled}
+      />
+    );
+  },
+);
+ProjectMultiSelect.displayName = "ProjectMultiSelect";
 
 function InviteMemberCard() {
   const [role, setRole] = useState("member");
   const { projects } = useProjects();
-  const [selectedProjects, setSelectedProjects] = useState([]);
+  const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const [opened, setOpened] = useState(false);
   const [inviteLink, setInviteLink] = useState("");
-  const { org, mutate } = useOrg();
+  const { org } = useOrg();
 
-  const [isLoading, setIsLoading] = useState(false);
-  const { addUserToOrg } = useOrg();
+  const { invite, isInviting } = useInviteUser();
 
   useEffect(() => {
     setSelectedProjects(projects.map((p) => p.id));
@@ -480,19 +504,18 @@ function InviteMemberCard() {
     },
   });
 
-  async function invite({ email }) {
+  async function onInvite({ email }: { email: string }) {
     const seatAllowance = org?.seatAllowance || SEAT_ALLOWANCE[org?.plan];
     if (org?.users?.length >= seatAllowance) {
       return openUpgrade("team");
     }
 
     try {
-      setIsLoading(true);
-      const { user: newUser } = await addUserToOrg({
+      const res = (await invite({
         email,
         role,
         projects: selectedProjects,
-      });
+      })) as any;
 
       if (!config.IS_SELF_HOSTED) {
         notifications.show({
@@ -501,21 +524,17 @@ function InviteMemberCard() {
           icon: <IconCheck />,
           color: "green",
         });
-
-        mutate();
-
         return;
-      } else {
-        const link = `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/join?token=${newUser.singleUseToken}`;
-        setIsLoading(false);
+      }
+
+      const tok = res?.token || res?.user?.token;
+      if (tok) {
+        const link = `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/join?token=${tok}`;
         setInviteLink(link);
         setOpened(true);
-        return;
       }
     } catch (error) {
       console.error(error);
-    } finally {
-      setIsLoading(false);
     }
   }
 
@@ -529,7 +548,7 @@ function InviteMemberCard() {
         link={inviteLink}
       />
 
-      <form onSubmit={form.onSubmit(invite)}>
+      <form onSubmit={form.onSubmit(onInvite)}>
         <Group grow={true}>
           <TextInput
             label="Email"
@@ -559,7 +578,12 @@ function InviteMemberCard() {
         </Group>
 
         <Group mt="lg" justify="end">
-          <Button variant="default" size="md" type="submit" loading={isLoading}>
+          <Button
+            variant="default"
+            size="md"
+            type="submit"
+            loading={isInviting}
+          >
             Invite
           </Button>
         </Group>
@@ -634,6 +658,10 @@ function UpdateUserForm({ user, onClose, setShowConfirmation, setOnConfirm }) {
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* MEMBER LIST                                                               */
+/* -------------------------------------------------------------------------- */
+
 function MemberList({ users, isInvitation }) {
   const { user: currentUser } = useUser();
   const { projects } = useProjects();
@@ -702,8 +730,8 @@ function MemberList({ users, isInvitation }) {
         title={<Title size="h3">Transfer organization ownership?</Title>}
       >
         <Text size="sm">
-          Are you sure you want to transfer the ownership of your organizationto
-          this this user? This action will make you an admin.
+          Are you sure you want to transfer the ownership of your organization
+          to this user? This action will make you an admin.
         </Text>
 
         <Group mt="md" justify="end">
@@ -778,12 +806,7 @@ function MemberList({ users, isInvitation }) {
                           opened={opened}
                         >
                           <Popover.Target>
-                            <Badge
-                              // TODO: bug when hovering its opens for all users
-                              // onMouseEnter={open}
-                              // onMouseLeave={close}
-                              variant="light"
-                            >
+                            <Badge variant="light">
                               {user.projects.length} projects
                             </Badge>
                           </Popover.Target>
@@ -821,33 +844,29 @@ function MemberList({ users, isInvitation }) {
           </Card>
         ) : (
           <Card withBorder p="lg">
-            <Text c="gray.8">Nothing here.</Text>
+            <Text>Nothing pending invitations.</Text>
           </Card>
         )}
       </Stack>
     </>
   );
 }
+
 function MemberListCard() {
   const { org } = useOrg();
+  const { invitedUsers } = useInvitedUsers();
 
-  const invitedUsers = org?.users?.filter(
-    (user) => user.verified === false && user.role !== "owner",
-  );
-  const activatedUsers = org?.users?.filter(
-    (user) => user.verified === true || user.role === "owner",
-  );
+  const teamMembers = org?.users;
 
   return (
     <Tabs defaultValue="members">
       <Tabs.List>
         <Tabs.Tab value="members">Team Members</Tabs.Tab>
-
         <Tabs.Tab value="invitations">Pending Invitations</Tabs.Tab>
       </Tabs.List>
 
       <Tabs.Panel value="members">
-        <MemberList users={activatedUsers} isInvitation={false} />
+        <MemberList users={teamMembers} isInvitation={false} />
       </Tabs.Panel>
 
       <Tabs.Panel value="invitations">
@@ -857,13 +876,9 @@ function MemberListCard() {
   );
 }
 
-// TODO: put back at root level
 export default function Team() {
   const { org, updateOrg, mutate } = useOrg();
   const { user } = useUser();
-  const samlEnabled = config.IS_SELF_HOSTED
-    ? org.license.samlEnabled
-    : org.samlEnabled;
 
   return (
     <Container className="unblockable">

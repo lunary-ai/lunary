@@ -3,7 +3,7 @@ import Context from "@/src/utils/koa";
 import { sendSlackMessage } from "@/src/utils/notifications";
 import Router from "koa-router";
 import { z } from "zod";
-import { signJWT } from "./utils";
+import { signJWT, verifyJWT } from "./utils";
 
 const google = new Router({
   prefix: "/google",
@@ -36,9 +36,10 @@ async function getGoogleUserInfo(accessToken: string) {
 google.post("/", async (ctx: Context) => {
   const bodySchema = z.object({
     accessToken: z.string(),
+    joinToken: z.string().optional(),
   });
 
-  const { accessToken } = bodySchema.parse(ctx.request.body);
+  const { accessToken, joinToken } = bodySchema.parse(ctx.request.body);
 
   const userData = await getGoogleUserInfo(accessToken).catch(() =>
     ctx.throw(400, "Failed to verify Google account"),
@@ -48,27 +49,103 @@ google.post("/", async (ctx: Context) => {
     ctx.throw(400, "Invalid email or unverified account");
   }
 
-  const [existingUser] =
-    await sql`select * from account where email = ${userData.email}`;
+  if (joinToken) {
+    const { payload } = await verifyJWT(joinToken);
 
-  if (existingUser) {
-    await sql`
-        update account 
-        set 
-          last_login_at = now(),
-          avatar_url = coalesce(${userData.picture}, avatar_url),
-          verified = ${true}
-        where 
-          id = ${existingUser.id}
-      `;
+    if (payload.email !== userData.email) {
+      ctx.throw(403, "Invalid token");
+    }
 
-    const jwt = await signJWT({
-      userId: existingUser.id,
-      email: existingUser.email,
-      orgId: existingUser.orgId,
+    // user already owner of an org
+    if (payload.oldRole === "owner") {
+      const [user] =
+        await sql`select * from account where email = ${userData.email}`;
+      const [org] = await sql`select * from org where id = ${user.orgId}`;
+      await sql`delete from org where id = ${org.id}`;
+
+      const newUser = {
+        name: userData.name,
+        email: userData.email,
+        avatarUrl: userData.picture,
+        orgId: payload.orgId as string,
+        role: payload.role as string,
+        verified: true,
+        lastLoginAt: new Date(),
+      };
+
+      const [createdUser] =
+        await sql`insert into account ${sql(newUser)} returning *`;
+      await sql`delete from org_invitation where email = ${userData.email}`;
+
+      for (const projectId of payload.projects as string[]) {
+        await sql`insert into account_project ${sql({ accountId: createdUser.id, projectId })}`;
+      }
+
+      const authToken = await signJWT({
+        userId: createdUser.id,
+        email: createdUser.email,
+        orgId: createdUser.orgId,
+      });
+      ctx.body = { token: authToken };
+      return;
+    }
+
+    // user is part of an org, but not owner
+    if (payload.oldRole && payload.oldRole !== "owner") {
+      const [user] =
+        await sql`select * from account where email = ${userData.email}`;
+      await sql`delete from account where id = ${user.id}`;
+
+      const newUser = {
+        name: userData.name,
+        email: userData.email,
+        avatarUrl: userData.picture,
+        orgId: payload.orgId as string,
+        role: payload.role as string,
+        verified: true,
+        lastLoginAt: new Date(),
+      };
+
+      const [createdUser] =
+        await sql`insert into account ${sql(newUser)} returning *`;
+      await sql`delete from org_invitation where email = ${userData.email}`;
+
+      for (const projectId of payload.projects as string[]) {
+        await sql`insert into account_project ${sql({ accountId: createdUser.id, projectId })}`;
+      }
+      const authToken = await signJWT({
+        userId: createdUser.id,
+        email: createdUser.email,
+        orgId: createdUser.orgId,
+      });
+      ctx.body = { token: authToken };
+      return;
+    }
+
+    const newUser = {
+      name: userData.name,
+      email: userData.email,
+      avatarUrl: userData.picture,
+      orgId: payload.orgId as string,
+      role: payload.role as string,
+      verified: true,
+      lastLoginAt: new Date(),
+    };
+
+    const [createdUser] =
+      await sql`insert into account ${sql(newUser)} returning *`;
+    await sql`delete from org_invitation where email = ${userData.email}`;
+
+    for (const projectId of payload.projects as string[]) {
+      await sql`insert into account_project ${sql({ accountId: createdUser.id, projectId })}`;
+    }
+
+    const authToken = await signJWT({
+      userId: createdUser.id,
+      email: createdUser.email,
+      orgId: createdUser.orgId,
     });
-
-    ctx.body = { token: jwt, isNewUser: false };
+    ctx.body = { token: authToken };
     return;
   }
 
@@ -96,7 +173,6 @@ google.post("/", async (ctx: Context) => {
         returning *
       `;
 
-    console.log(user);
     const [project] = await sql`
         insert into project ${sql({
           name: "My First Project",
