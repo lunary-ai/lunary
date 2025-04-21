@@ -974,7 +974,7 @@ analytics.get("/runs", async (ctx: Context) => {
           select
             d.date,
             coalesce(count(r.type)::int, 0) as runs,
-            'Runs' as name 
+            'Events' as name 
           from
             dates d
           left join
@@ -1005,7 +1005,7 @@ analytics.get("/runs", async (ctx: Context) => {
         select
           d.date,
           coalesce(count(r.type)::int, 0) as value,
-          'Runs' as name 
+          'Events' as name 
         from
           dates d
           left join filtered_runs r on d.date = r.local_created_at

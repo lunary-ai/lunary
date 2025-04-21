@@ -18,13 +18,13 @@ import {
   Tabs,
   Text,
   Title,
+  TextInput,
 } from "@mantine/core";
 import { NextSeo } from "next-seo";
 import Router, { useRouter } from "next/router";
 
 import AnalyticsCard from "@/components/analytics/AnalyticsCard";
 import ChartComponent from "@/components/analytics/Charts/ChartComponent";
-import RenamableField from "@/components/blocks/RenamableField";
 import { SettingsCard } from "@/components/blocks/SettingsCard";
 import CheckPicker from "@/components/checks/Picker";
 import DataWarehouseCard from "@/components/settings/data-warehouse";
@@ -164,16 +164,6 @@ function Keys() {
   );
 }
 
-const statusColor = (s: string) =>
-  (
-    ({
-      pending: "yellow",
-      running: "blue",
-      done: "green",
-      failed: "red",
-    }) as const
-  )[s] || "gray";
-
 function SmartDataRule() {
   const { org } = useOrg();
   const { addRule, addRulesLoading, deleteRule, maskingRule, filteringRule } =
@@ -209,7 +199,7 @@ function SmartDataRule() {
     >
       <Text>Filter out or hide sensitive data from your project.</Text>
 
-      <Tabs variant="outline" defaultValue="filtering" w={"100%"}>
+      <Tabs variant="outline" defaultValue="filtering" w="100%">
         <Tabs.List>
           <Tabs.Tab value="filtering">Ingestion Filtering</Tabs.Tab>
           <Tabs.Tab value="masking">PII Masking</Tabs.Tab>
@@ -224,8 +214,8 @@ function SmartDataRule() {
               matching will be redacted.
             </Text>
             <CheckPicker
-              minimal={true}
-              showAndOr={true}
+              minimal
+              showAndOr
               value={checks}
               onChange={setChecks}
               buttonText="Add filter"
@@ -270,31 +260,58 @@ function SmartDataRule() {
                   addRule({
                     type: "masking",
                   });
-                } else {
+                } else if (maskingRule) {
                   deleteRule(maskingRule.id);
                 }
               }}
             />
-
-            {/* // <Flex justify="flex-end">
-            //   <Button
-            //     loading={addRulesLoading}
-            //     style={{ float: "right" }}
-            //     onClick={async () => {
-            //       addRule({
-            //         type: "masking",
-            //         filters: ["AND"],
-            //         enabled: true,
-            //       })
-            //     }}
-            //     variant="full"
-            //   >
-            //     Save
-            //   </Button>
-            // </Flex> */}
           </Stack>
         </Tabs.Panel>
       </Tabs>
+    </SettingsCard>
+  );
+}
+
+function ProjectNameCard() {
+  const { project, update } = useProject();
+  const [name, setName] = useState(project?.name ?? "");
+  const [saving, setSaving] = useState(false);
+
+  const dirty = name.trim() !== (project?.name ?? "");
+
+  async function save() {
+    if (!dirty) return;
+    setSaving(true);
+    await update(name.trim());
+    setSaving(false);
+  }
+
+  useEffect(() => {
+    if (project) {
+      setName(project.name);
+    }
+  }, [project]);
+
+  return (
+    <SettingsCard title="Project Name">
+      <Stack gap="sm">
+        <Text c="dimmed">
+          This is your project’s visible name within Lunary. For example, the
+          name of your company or department.
+        </Text>
+
+        <TextInput
+          data-testid="project-name-input"
+          value={name}
+          onChange={(e) => setName(e.currentTarget.value)}
+        />
+
+        <Group justify="end">
+          <Button onClick={save} disabled={!dirty} loading={saving}>
+            Save
+          </Button>
+        </Group>
+      </Stack>
     </SettingsCard>
   );
 }
@@ -354,7 +371,7 @@ export default function Settings() {
 
   const { org } = useOrg();
   const {
-    update,
+    update: updateProjectName, // kept for backward compatibility if needed elsewhere
     project,
     setProjectId,
     drop,
@@ -393,240 +410,269 @@ export default function Settings() {
   startDate.setHours(0, 0, 0, 0);
 
   return (
-    <Container className="unblockable">
+    <>
       <NextSeo title="Settings" />
-      <Stack gap="xl">
-        {hasAccess(user.role, "projects", "update") ? (
-          <RenamableField
-            defaultValue={project?.name}
-            onRename={(name) => update(name)}
-          />
-        ) : (
-          <Text size="xl" fw="bold">
-            {project?.name}
-          </Text>
-        )}
 
-        <AnalyticsCard title="Monthly Project Usage" description={null}>
-          <Box h="280px">
-            <ChartComponent
-              dataKey="runs"
-              startDate={startDate}
-              endDate={new Date()}
-              granularity={"daily"}
-              isCustom={false}
-              checks={["AND"]}
-              color="blue"
-              aggregationMethod="sum"
-            />
-          </Box>
-        </AnalyticsCard>
+      <Title order={4} mb="xs">
+        Settings
+      </Title>
+      <Tabs defaultValue="project" variant="default" keepMounted={false}>
+        <Tabs.List>
+          <Tabs.Tab px="0" value="project" mr="md">
+            Project
+          </Tabs.Tab>
+          <Tabs.Tab px="0" value="org">
+            Organization
+          </Tabs.Tab>
+        </Tabs.List>
 
-        {user.role !== "viewer" && <Keys />}
-        <SettingsCard title={<>Cost Mapping</>} align="start">
-          <Stack gap="md" w="100%">
-            <Group justify="apart">
-              <Group>
+        {/* ----------------------------- PROJECT TAB */}
+        <Tabs.Panel value="project" pt="md">
+          <Container px="0">
+            <Stack gap="xl">
+              {hasAccess(user.role, "projects", "update") ? (
+                <ProjectNameCard />
+              ) : (
+                <Text size="xl" fw="bold">
+                  {project?.name}
+                </Text>
+              )}
+
+              <AnalyticsCard
+                title={<Title order={4}>Monthly Project Usage</Title>}
+                description={null}
+              >
+                <Box h="280px">
+                  <ChartComponent
+                    dataKey="runs"
+                    startDate={startDate}
+                    endDate={new Date()}
+                    granularity="daily"
+                    isCustom={false}
+                    checks={["AND"]}
+                    color="blue"
+                    aggregationMethod="sum"
+                  />
+                </Box>
+              </AnalyticsCard>
+
+              {user.role !== "viewer" && <Keys />}
+
+              <SettingsCard
+                title={<>LLM Providers Configuration</>}
+                align="start"
+              >
                 <Button
                   color="blue"
                   variant="default"
                   component={Link}
-                  data-testid="add-model-button"
-                  href={`/settings/models`}
+                  href={`/settings/providers`}
                   leftSection={<IconPencil size={16} />}
                 >
-                  Edit Mappings
+                  Configure
                 </Button>
-                <Button
-                  color="blue"
-                  variant="primary"
-                  leftSection={<IconCoin size={16} />}
-                  loading={refreshStarting}
-                  disabled={
-                    refreshLoading ||
-                    (refreshJob &&
-                      ["pending", "running"].includes(refreshJob.status))
-                  }
-                  onClick={openRefreshCostModal}
-                >
-                  {refreshJob &&
-                  ["pending", "running"].includes(refreshJob.status)
-                    ? "Refreshing costs..."
-                    : "Refresh costs"}
-                </Button>
-              </Group>
-            </Group>
+              </SettingsCard>
 
-            {refreshJob && (
-              <Stack gap="xs" w="100%">
-                {["pending", "running"].includes(refreshJob.status) && (
-                  <>
-                    <Group justify="space-between">
-                      <Text size="sm" c="dimmed">
-                        Refreshing costs
-                      </Text>
-                      <Text size="sm" c="dimmed">
-                        {(refreshJob.progress ?? 0).toFixed(2)}%
-                      </Text>
-                    </Group>
-                    <Progress
-                      value={refreshJob.progress ?? 0}
-                      size="md"
-                      radius="sm"
-                    />
-                  </>
-                )}
+              <SmartDataRule />
 
-                {refreshJob.status === "done" &&
-                  refreshJob.endedAt &&
-                  dayjs(refreshJob.endedAt).isAfter(
-                    dayjs().subtract(1, "hour"),
-                  ) && (
-                    <Alert
-                      icon={<IconCheck size={16} />}
-                      title="Refresh Complete"
-                      color="green"
-                      variant="light"
+              {user && ["admin", "owner"].includes(user.role) && (
+                <SettingsCard title="Data Retention Policy" align="start">
+                  <Text>
+                    Define a retention period for this Project data. The data
+                    will be automatically deleted after the defined time.
+                  </Text>
+                  <Select
+                    defaultValue="Unlimited"
+                    value={String(dataRetentionDays)}
+                    onChange={setDataRetentionDays}
+                    data={[
+                      { label: "Unlimited", value: "unlimited" },
+                      { label: "1 year", value: "365" },
+                      { label: "180 days", value: "180" },
+                      { label: "90 days", value: "90" },
+                      { label: "60 days", value: "60" },
+                      { label: "30 days", value: "30" },
+                    ]}
+                  />
+
+                  <Group w="100%" justify="end">
+                    <Button
+                      onClick={() => {
+                        if (dataRetentionDays !== "unlimited") {
+                          // eslint-disable-next-line no-alert
+                          confirm(
+                            `If you confirm, all data older than ${dataRetentionDays} days will be deleted permanently.`,
+                          );
+                          updateDataRetention(dataRetentionDays);
+                        } else if (dataRetentionDays === "unlimited") {
+                          updateDataRetention("unlimited");
+                        }
+                        showNotification({
+                          title: "Data retention policy updated",
+                          message: `Data retention policy updated to ${dataRetentionDays} days`,
+                          icon: <IconCheck />,
+                          color: "green",
+                        });
+                      }}
                     >
-                      All LLM run costs have been successfully recalculated
-                      using the latest pricing rules{" "}
-                      {dayjs(refreshJob.endedAt).fromNow()}.
-                    </Alert>
+                      Save
+                    </Button>
+                  </Group>
+                </SettingsCard>
+              )}
+
+              {user && hasAccess(user.role, "projects", "delete") && (
+                <SettingsCard title="Danger Zone" align="start">
+                  <Text>
+                    Deleting your project is irreversible and it will delete all
+                    associated data.
+                    <br />
+                    We <b>cannot</b> recover your data once it&apos;s deleted.
+                  </Text>
+
+                  <Popover width={200} position="bottom" shadow="md">
+                    <Popover.Target>
+                      <Button color="red" data-testid="delete-project-button">
+                        Delete Project
+                      </Button>
+                    </Popover.Target>
+                    <Popover.Dropdown>
+                      <Text mb="md">
+                        Are you sure you want to delete this project? This
+                        action is irreversible and it will delete all associated
+                        data.
+                      </Text>
+                      <Group align="start">
+                        <Button
+                          color="red"
+                          w={80}
+                          data-testid="delete-project-popover-button"
+                          loading={dropLoading}
+                          onClick={async () => {
+                            const dropped = await drop();
+                            if (dropped) {
+                              setProjectId(null);
+                              Router.push("/");
+                            }
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      </Group>
+                    </Popover.Dropdown>
+                  </Popover>
+                </SettingsCard>
+              )}
+
+              {config.IS_SELF_HOSTED && (frontendVersion || backendVersion) && (
+                <Group justify="flex-end">
+                  {frontendVersion && (
+                    <Text c="dimmed" size="sm">
+                      Frontend: {frontendVersion}
+                    </Text>
                   )}
-
-                {refreshJob.status === "failed" && (
-                  <Alert
-                    icon={<IconRefreshAlert size={16} />}
-                    title="Refresh Failed"
-                    color="red"
-                    variant="light"
-                  >
-                    {refreshJob.error ||
-                      "An error occurred while refreshing costs. Please try again."}
-                  </Alert>
-                )}
-              </Stack>
-            )}
-          </Stack>
-        </SettingsCard>
-
-        <SettingsCard title={<>LLM Providers Configuration</>} align="start">
-          <Button
-            color="blue"
-            variant="default"
-            component={Link}
-            href={`/settings/providers`}
-            leftSection={<IconPencil size={16} />}
-          >
-            Configure
-          </Button>
-        </SettingsCard>
-
-        <SmartDataRule />
-
-        {user && ["admin", "owner"].includes(user.role) && (
-          <SettingsCard title="Data Retention Policy" align="start">
-            <Text>
-              Define a retention period for this Project data. The data will be
-              automatically deleted after the defined time.
-            </Text>
-            <Select
-              defaultValue="Unlimited"
-              value={String(dataRetentionDays)}
-              onChange={setDataRetentionDays}
-              data={[
-                { label: "Unlimited", value: "unlimited" },
-                { label: "1 year", value: "365" },
-                { label: "180 days", value: "180" },
-                { label: "90 days", value: "90" },
-                { label: "60 days", value: "60" },
-                { label: "30 days", value: "30" },
-              ]}
-            />
-
-            <Group w="100%" justify="end">
-              <Button
-                onClick={() => {
-                  if (dataRetentionDays !== "unlimited") {
-                    confirm(
-                      `If you confirm, all data older than ${dataRetentionDays} days will be deleted permanently.`,
-                    );
-                    updateDataRetention(dataRetentionDays);
-                  } else if (dataRetentionDays === "unlimited") {
-                    updateDataRetention("unlimited");
-                  }
-                  showNotification({
-                    title: "Data retention policy updated",
-                    message: `Data retention policy updated to ${dataRetentionDays} days`,
-                    icon: <IconCheck />,
-                    color: "green",
-                  });
-                }}
-              >
-                Save
-              </Button>
-            </Group>
-          </SettingsCard>
-        )}
-
-        <DataWarehouseCard />
-        {user && hasAccess(user.role, "projects", "delete") && (
-          <SettingsCard title="Danger Zone" align="start">
-            <Text>
-              Deleting your project is irreversible and it will delete all
-              associated data.
-              <br />
-              We <b>cannot</b> recover your data once it&apos;s deleted.
-            </Text>
-
-            <Popover width={200} position="bottom" shadow="md">
-              <Popover.Target>
-                <Button color="red" data-testid="delete-project-button">
-                  Delete Project
-                </Button>
-              </Popover.Target>
-              <Popover.Dropdown>
-                <Text mb="md">
-                  Are you sure you want to delete this project? This action is
-                  irreversible and it will delete all associated data.
-                </Text>
-                <Group align="start">
-                  <Button
-                    color="red"
-                    w={80}
-                    data-testid="delete-project-popover-button"
-                    loading={dropLoading}
-                    onClick={async () => {
-                      const dropped = await drop();
-                      if (dropped) {
-                        setProjectId(null);
-                        Router.push("/");
-                      }
-                    }}
-                  >
-                    Delete
-                  </Button>
+                  {backendVersion && (
+                    <Text c="dimmed" size="sm">
+                      Backend: {backendVersion}
+                    </Text>
+                  )}
                 </Group>
-              </Popover.Dropdown>
-            </Popover>
-          </SettingsCard>
-        )}
+              )}
+            </Stack>
+          </Container>
+        </Tabs.Panel>
 
-        {config.IS_SELF_HOSTED && (frontendVersion || backendVersion) && (
-          <Group justify="flex-end">
-            {frontendVersion && (
-              <Text c="dimmed" size="sm">
-                Frontend: {frontendVersion}
-              </Text>
-            )}
-            {backendVersion && (
-              <Text c="dimmed" size="sm">
-                Backend: {backendVersion}
-              </Text>
-            )}
-          </Group>
-        )}
-      </Stack>
-    </Container>
+        {/* ----------------------------- ORG TAB */}
+        <Tabs.Panel value="org" pt="md">
+          <Container px="0">
+            <Stack gap="xl">
+              <SettingsCard title={<>Cost Mapping</>} align="start">
+                <Stack gap="md" w="100%">
+                  <Group justify="apart">
+                    <Group>
+                      <Button
+                        color="blue"
+                        variant="default"
+                        component={Link}
+                        data-testid="add-model-button"
+                        href={`/settings/models`}
+                        leftSection={<IconPencil size={16} />}
+                      >
+                        Edit Mappings
+                      </Button>
+                      <Button
+                        color="blue"
+                        variant="primary"
+                        leftSection={<IconCoin size={16} />}
+                        loading={refreshStarting}
+                        disabled={
+                          refreshLoading ||
+                          (refreshJob &&
+                            ["pending", "running"].includes(refreshJob.status))
+                        }
+                        onClick={openRefreshCostModal}
+                      >
+                        {refreshJob &&
+                        ["pending", "running"].includes(refreshJob.status)
+                          ? "Refreshing costs..."
+                          : "Refresh costs"}
+                      </Button>
+                    </Group>
+                  </Group>
+
+                  {refreshJob && (
+                    <Stack gap="xs" w="100%">
+                      {["pending", "running"].includes(refreshJob.status) && (
+                        <>
+                          <Group justify="space-between">
+                            <Text size="sm" c="dimmed">
+                              Refreshing costs
+                            </Text>
+                            <Text size="sm" c="dimmed">
+                              {(refreshJob.progress ?? 0).toFixed(2)}%
+                            </Text>
+                          </Group>
+                          <Progress
+                            value={refreshJob.progress ?? 0}
+                            size="md"
+                            radius="sm"
+                          />
+                        </>
+                      )}
+
+                      {refreshJob.status === "done" && refreshJob.endedAt && (
+                        <Alert
+                          icon={<IconCheck size={16} />}
+                          title={`Refresh completed ${dayjs(refreshJob.endedAt).fromNow()}`}
+                          color="green"
+                          variant="light"
+                        >
+                          All LLM run costs have been successfully recalculated
+                          using the latest pricing rules.
+                        </Alert>
+                      )}
+
+                      {refreshJob.status === "failed" && (
+                        <Alert
+                          icon={<IconRefreshAlert size={16} />}
+                          title="Refresh Failed"
+                          color="red"
+                          variant="light"
+                        >
+                          {refreshJob.error ||
+                            "An error occurred while refreshing costs. Please try again."}
+                        </Alert>
+                      )}
+                    </Stack>
+                  )}
+                </Stack>
+              </SettingsCard>
+
+              <DataWarehouseCard />
+            </Stack>
+          </Container>
+        </Tabs.Panel>
+      </Tabs>
+    </>
   );
 }
