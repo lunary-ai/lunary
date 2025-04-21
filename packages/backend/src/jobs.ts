@@ -38,11 +38,6 @@ export async function startJobWorker(pollIntervalMs = 2_000) {
     `;
 
     if (!job) {
-      console.debug(
-        "[JOB] no pending job found, sleeping for",
-        pollIntervalMs,
-        "ms",
-      );
       await new Promise((r) => setTimeout(r, pollIntervalMs));
       continue;
     }
