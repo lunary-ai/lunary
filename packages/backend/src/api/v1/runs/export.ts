@@ -129,6 +129,11 @@ export async function fileExport(
             line = parser.parse(getTraceChildren(formatRun(row), related));
           } else if (exportType === "thread") {
             const formattedRun = formatRun(row);
+            const related = await getRelatedRuns(sql, row.id, projectId);
+            formattedRun.children = getTraceChildren(
+              formattedRun,
+              related,
+            ).children;
             formattedRun.messages = await getMessages(
               formattedRun.id,
               projectId,
