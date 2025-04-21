@@ -24,10 +24,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.4
       - name: Setup application
         run: bun install
       - name: Install Chromium for Playwright
-        run: npx playwright install --with-deps chromium
+        run: bunx playwright install --with-deps chromium
 
       - name: Start backend and frontend
         env:
