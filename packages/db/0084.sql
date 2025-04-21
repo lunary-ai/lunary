@@ -1,0 +1,1 @@
+alter table org_invitation add column email_verified boolean default null;
