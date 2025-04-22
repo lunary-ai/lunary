@@ -385,6 +385,9 @@ function getRunQuery(ctx: Context, isExport = false) {
       left join external_user eu on r.external_user_id = eu.id
       left join template_version tv on r.template_version_id = tv.id
       left join template t on tv.template_id = t.id
+      left join run pr
+        on  pr.id   = r.parent_run_id
+        and pr.type = 'chat'
       left join lateral (
         select 
           json_agg(jsonb_build_object('evaluatorName', e.name, 'evaluatorSlug', e.slug, 'evaluatorType', e.type, 'evaluatorId', e.id, 'result', er.result)) as results
@@ -433,7 +436,7 @@ function getRunQuery(ctx: Context, isExport = false) {
       ) as chat_feedbacks on true
     where
         r.project_id = ${projectId}
-        and is_deleted = false
+        and r.is_deleted = false
         ${parentRunCheck}
         and (${filtersQuery})
         ${
