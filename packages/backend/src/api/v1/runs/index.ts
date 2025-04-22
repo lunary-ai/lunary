@@ -1311,6 +1311,9 @@ function buildBaseRunsQuery(ctx: Context) {
       left join template t on tv.template_id = t.id
       left join evaluation_result_v2 er ON r.id = er.run_id
       left join evaluator e on er.evaluator_id = e.id
+      left join run pr
+        on  pr.id   = r.parent_run_id
+        and pr.type = 'chat'
     where r.project_id = ${projectId}
       and (${filtersQuery})
     order by ${sql.unsafe(orderByExpr)}
