@@ -351,7 +351,7 @@ function getRunQuery(ctx: Context, isExport = false) {
 
   let parentRunCheck = sql``;
   if (parentRunId) {
-    parentRunCheck = sql`and parent_run_id = ${parentRunId}`;
+    parentRunCheck = sql`and r.parent_run_id = ${parentRunId}`;
   }
 
   const sortMapping: { [index: string]: string } = {
@@ -1287,7 +1287,7 @@ function buildBaseRunsQuery(ctx: Context) {
   const filtersQuery =
     deserializedChecks?.length && deserializedChecks.length > 1
       ? convertChecksToSQL(deserializedChecks)
-      : sql`(((r.type in ('agent','chain') and (parent_run_id is null OR EXISTS (SELECT 1 FROM run AS parent_run WHERE parent_run.id = r.parent_run_id AND parent_run.type = 'chat')))))`;
+      : sql`(((r.type in ('agent','chain') and (r.parent_run_id is null OR EXISTS (SELECT 1 FROM run AS parent_run WHERE parent_run.id = r.parent_run_id AND parent_run.type = 'chat')))))`;
 
   const { parentRunId, sortField, sortDirection } = ctx.query as Query;
 
