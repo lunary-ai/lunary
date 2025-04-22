@@ -479,7 +479,6 @@ export default function Logs() {
                   <Menu.Item
                     data-testid="export-raw-jsonl-button"
                     color="dimmed"
-                    // disabled={type === "thread"}
                     leftSection={<IconBraces size={16} />}
                     {...exportButton({
                       serializedChecks,
@@ -602,13 +601,24 @@ export default function Logs() {
 
       <DataTable
         type={type}
-        onRowClicked={(row) => {
+        onRowClicked={(row, event) => {
+          const isSecondaryClick =
+            event.metaKey || event.ctrlKey || event.button === 1;
+
           if (["agent", "chain"].includes(row.type)) {
             analytics.trackOnce("OpenTrace");
-            router.push({
-              pathname: `/traces/${row.id}`,
-              query: { checks: serializedChecks, sortParams },
-            });
+
+            if (!isSecondaryClick) {
+              router.push({
+                pathname: `/traces/${row.id}`,
+                query: { checks: serializedChecks, sortParams },
+              });
+            } else {
+              window.open(
+                `/traces/${row.id}?checks=${serializedChecks}&sortParams=${sortParams}`,
+                "_blank",
+              );
+            }
           } else {
             analytics.trackOnce("OpenRun");
             setSelectedRunId(row.id);
@@ -624,7 +634,6 @@ export default function Logs() {
             ...prev,
             ...newState,
           }));
-
           setColumnsTouched(true);
         }}
         data={logs}

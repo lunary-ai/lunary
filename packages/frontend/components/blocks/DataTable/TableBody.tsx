@@ -47,7 +47,7 @@ function TableBody({ table, tableContainerRef, onRowClicked }: TableBodyProps) {
           <tr
             key={row.id}
             data-index={virtualRow.index}
-            onClick={() => onRowClicked?.(row.original)}
+            onClick={(event) => onRowClicked?.(row.original, event)}
             className={virtualRow.index % 2 ? "ListItemOdd" : "ListItemEven"}
             ref={(node) => rowVirtualizer.measureElement(node)}
             style={{
