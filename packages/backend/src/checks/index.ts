@@ -130,7 +130,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   },
   {
     id: "tags",
-    sql: ({ tags }) => sql`(tags && ${sql.array(tags)})`,
+    sql: ({ tags }) => sql`(r.tags && ${sql.array(tags)})`,
     ingestionCheck: async (run, params) => {
       const { tags } = params;
 
@@ -154,11 +154,11 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     sql: ({ key, value }) => {
       if (!key || !value) return sql`true`;
 
-      return sql`metadata @> ${sql.json({ [key]: value })}
-        ${value === "true" ? sql`or metadata @> ${sql.json({ [key]: true })}` : sql``}
-        ${value === "false" ? sql`or metadata @> ${sql.json({ [key]: false })}` : sql``}
-        ${value === "null" ? sql`or metadata @> ${sql.json({ [key]: null })}` : sql``}
-        ${!isNaN(Number.parseInt(value)) ? sql`or metadata @> ${sql.json({ [key]: Number.parseInt(value) })}` : sql``}
+      return sql`r.metadata @> ${sql.json({ [key]: value })}
+        ${value === "true" ? sql`or r.metadata @> ${sql.json({ [key]: true })}` : sql``}
+        ${value === "false" ? sql`or r.metadata @> ${sql.json({ [key]: false })}` : sql``}
+        ${value === "null" ? sql`or r.metadata @> ${sql.json({ [key]: null })}` : sql``}
+        ${!isNaN(Number.parseInt(value)) ? sql`or r.metadata @> ${sql.json({ [key]: Number.parseInt(value) })}` : sql``}
       `;
     },
     ingestionCheck: async (run, params) => {
@@ -173,7 +173,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   },
   {
     id: "status",
-    sql: ({ status }) => sql`(status = ${status})`,
+    sql: ({ status }) => sql`(r.status = ${status})`,
   },
   {
     id: "languages",
@@ -249,7 +249,8 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   },
   {
     id: "users",
-    sql: ({ users }) => sql`(external_user_id = ANY(${sql.array(users, 20)}))`, // 20 is to specify it's a postgres int4
+    sql: ({ users }) =>
+      sql`(r.external_user_id = ANY(${sql.array(users, 20)}))`, // 20 is to specify it's a postgres int4
     ingestionCheck: async (run, params) => {
       const { users } = params;
 
