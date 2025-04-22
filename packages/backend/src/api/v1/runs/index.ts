@@ -913,6 +913,9 @@ runs.get("/:id", async (ctx) => {
       left join template t on tv.template_id = t.id
       left join evaluation_result_v2 er on r.id = er.run_id 
       left join evaluator e on er.evaluator_id = e.id
+      left join run pr
+        on  pr.id   = r.parent_run_id
+        and pr.type = 'chat'
     where
       r.project_id in (select id from project where org_id = ${orgId})
       and r.id = ${id}
