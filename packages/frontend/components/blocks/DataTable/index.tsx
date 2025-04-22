@@ -1,4 +1,5 @@
 import {
+  MouseEvent,
   ReactNode,
   useCallback,
   useEffect,
@@ -49,7 +50,10 @@ export default function DataTable({
   visibleColumns?: VisibilityState;
   setVisibleColumns?: (columns: VisibilityState) => void;
   loading?: boolean;
-  onRowClicked?: (row: any) => void;
+  onRowClicked?: (
+    row: any,
+    event: MouseEvent<HTMLTableRowElement, MouseEvent>,
+  ) => void;
   loadMore?: (() => void) | null;
   defaultSortBy?: string;
 }) {
