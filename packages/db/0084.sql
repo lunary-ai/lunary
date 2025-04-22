@@ -8,5 +8,4 @@ create table org_invitation (
   token text not null,
   email_verified boolean,
   constraint org_invitation_account_id_fkey foreign key (org_id) references org(id) on delete cascade
-  primary key (id)
 );
