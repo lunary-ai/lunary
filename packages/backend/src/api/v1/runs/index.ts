@@ -357,7 +357,7 @@ function getRunQuery(ctx: Context, isExport = false) {
   const sortMapping: { [index: string]: string } = {
     createdAt: "r.created_at",
     duration: "r.duration",
-    tokens: "total_tokens",
+    tokens: "(r.prompt_tokens + r.completion_tokens)",
     cost: "r.cost",
   };
   let orderByClause = `r.created_at desc nulls last`;
