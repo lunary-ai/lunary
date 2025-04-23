@@ -407,7 +407,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       if (!tokens) return sql`true`;
 
       if (field === "total") {
-        return sql`completion_tokens + prompt_tokens ${postgresOperators(
+        return sql`r.prompt_tokens + r.completion_tokens ${postgresOperators(
           operator,
         )} ${tokens}`;
       } else {
