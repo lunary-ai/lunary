@@ -149,6 +149,30 @@ google.post("/", async (ctx: Context) => {
     return;
   }
 
+  const [existingUser] =
+    await sql`select * from account where email = ${userData.email}`;
+
+  if (existingUser) {
+    await sql`
+        update account 
+        set 
+          last_login_at = now(),
+          avatar_url = coalesce(${userData.picture}, avatar_url),
+          verified = ${true}
+        where 
+          id = ${existingUser.id}
+      `;
+
+    const jwt = await signJWT({
+      userId: existingUser.id,
+      email: existingUser.email,
+      orgId: existingUser.orgId,
+    });
+
+    ctx.body = { token: jwt, isNewUser: false };
+    return;
+  }
+
   const { user, org } = await sql.begin(async (sql) => {
     const plan = process.env.DEFAULT_PLAN || "free";
 
