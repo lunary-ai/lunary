@@ -18,6 +18,7 @@ import licenseMiddleware from "./utils/license";
 import { setDefaultBody } from "./utils/misc";
 import ratelimit from "./utils/ratelimit";
 import { startJobWorker } from "./jobs";
+import { protobufMiddleware } from "./utils/protobuf";
 
 checkDbConnection();
 setupCronJobs();
@@ -34,6 +35,7 @@ const app = new Koa();
 app.proxy = true;
 
 // MiddleWares
+app.use(protobufMiddleware);
 app.use(errorMiddleware);
 
 if (
