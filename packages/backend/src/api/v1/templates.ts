@@ -458,7 +458,7 @@ templates.post("/:id/versions", async (ctx: Context) => {
   }
 
   if (extra.model && typeof extra.model === "object") {
-    extra.model = extra.model.id;
+    extra.model = extra.model.name;
   }
 
   const [template] =
