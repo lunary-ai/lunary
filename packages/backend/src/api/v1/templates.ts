@@ -457,6 +457,10 @@ templates.post("/:id/versions", async (ctx: Context) => {
     return;
   }
 
+  if (extra.model && typeof extra.model === "object") {
+    extra.model = extra.model.id;
+  }
+
   const [template] =
     await sql`select id from template where id = ${templateId} and project_id = ${projectId}
     `;
