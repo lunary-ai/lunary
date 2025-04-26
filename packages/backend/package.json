@@ -38,6 +38,7 @@
     "p-queue": "^8.0.1",
     "postgres": "3.4.5",
     "prexit": "^2.3.0",
+    "protobufjs": "^7.5.0",
     "queue-promise": "^2.2.1",
     "rouge": "^1.0.3",
     "samlify": "^2.8.11",
