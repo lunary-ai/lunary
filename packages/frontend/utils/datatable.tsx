@@ -2,7 +2,7 @@ import SmartViewer from "@/components/SmartViewer";
 import AppUserAvatar from "@/components/blocks/AppUserAvatar";
 import Feedback from "@/components/blocks/OldFeedback";
 import ProtectedText from "@/components/blocks/ProtectedText";
-import { Badge, Button, Group } from "@mantine/core";
+import { Badge, Button, Checkbox, Group } from "@mantine/core";
 import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
 
 import Link from "next/link";
@@ -11,6 +11,38 @@ import { useProjectRules, useProjectSWR } from "./dataHooks";
 import { renderEnrichment } from "./enrichment";
 import { capitalize, formatCost, formatDateTime, msToTime } from "./format";
 const columnHelper = createColumnHelper<any>();
+
+export function selectColumn() {
+  return columnHelper.accessor("select", {
+    id: "select",
+    header: ({ table }: { table: any }) => (
+      <Checkbox
+        size="xs"
+        radius="sm"
+        checked={table.getIsAllRowsSelected()}
+        indeterminate={table.getIsSomeRowsSelected()}
+        onChange={table.getToggleAllRowsSelectedHandler()}
+        onClick={(e) => e.stopPropagation()}
+      />
+    ),
+    cell: ({ row }: { row: any }) => (
+      <Checkbox
+        size="xs"
+        radius="sm"
+        styles={{ input: { cursor: "pointer" } }}
+        checked={row.getIsSelected()}
+        indeterminate={row.getIsSomeSelected()}
+        disabled={!row.getCanSelect?.()}
+        onChange={row.getToggleSelectedHandler()}
+        onClick={(e) => e.stopPropagation()}
+      />
+    ),
+    size: 40,
+    enableSorting: false,
+    enableResizing: false,
+    enableHiding: false,
+  });
+}
 
 export function timeColumn(timeColumn, label = "Time") {
   return columnHelper.accessor(timeColumn, {

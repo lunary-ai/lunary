@@ -29,6 +29,7 @@ import {
   nameColumn,
   outputColumn,
   scoresColumn,
+  selectColumn,
   tagsColumn,
   templateColumn,
   timeColumn,
@@ -40,6 +41,7 @@ import {
   IconBrandOpenai,
   IconDotsVertical,
   IconFileExport,
+  IconPencil,
   IconStack2,
   IconStackPop,
   IconTrash,
@@ -83,6 +85,7 @@ import { deserializeLogic, serializeLogic } from "shared";
 
 export const defaultColumns = {
   llm: [
+    selectColumn(),
     timeColumn("createdAt"),
     nameColumn("Model"),
     durationColumn(),
@@ -217,6 +220,9 @@ export default function Logs() {
     "filters",
     parser.withDefault(DEFAULT_CHECK).withOptions({ clearOnDefault: true }),
   );
+
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [rowSelection, setRowSelection] = useState({});
 
   const { sortParams } = useSortParams();
 
@@ -447,6 +453,17 @@ export default function Logs() {
                   </ActionIcon>
                 </Menu.Target>
                 <Menu.Dropdown>
+                  {type === "llm" && (
+                    <Menu.Item
+                      data-testid="export-openai-jsonl-button"
+                      color="dimmed"
+                      leftSection={<IconPencil size={16} />}
+                      onClick={() => setIsSelectMode(true)}
+                    >
+                      Select Rows
+                    </Menu.Item>
+                  )}
+
                   <Menu.Item
                     data-testid="export-csv-button"
                     leftSection={<IconFileExport size={16} />}
@@ -602,31 +619,39 @@ export default function Logs() {
       <DataTable
         type={type}
         onRowClicked={(row, event) => {
+          const rowData = row.original;
+          console.log(row);
           const isSecondaryClick =
             event.metaKey || event.ctrlKey || event.button === 1;
 
-          if (["agent", "chain"].includes(row.type)) {
+          if (["agent", "chain"].includes(rowData.type)) {
             analytics.trackOnce("OpenTrace");
 
             if (!isSecondaryClick) {
               router.push({
-                pathname: `/traces/${row.id}`,
+                pathname: `/traces/${rowData.id}`,
                 query: { checks: serializedChecks, sortParams },
               });
             } else {
               window.open(
-                `/traces/${row.id}?checks=${serializedChecks}&sortParams=${sortParams}`,
+                `/traces/${rowData.id}?checks=${serializedChecks}&sortParams=${sortParams}`,
                 "_blank",
               );
             }
           } else {
-            analytics.trackOnce("OpenRun");
-            setSelectedRunId(row.id);
+            if (isSelectMode) {
+              row.toggleSelected();
+              console.log(row.getIsSelected());
+            } else {
+              analytics.trackOnce("OpenRun");
+              setSelectedRunId(rowData.id);
+            }
           }
         }}
         key={allColumns[type].length}
         loading={runsLoading || runsValidating}
         loadMore={loadMore}
+        isSelectMode={isSelectMode}
         availableColumns={allColumns[type]}
         visibleColumns={visibleColumns}
         setVisibleColumns={(newState) => {
@@ -637,6 +662,7 @@ export default function Logs() {
           setColumnsTouched(true);
         }}
         data={logs}
+        rowSelection={rowSelection}
       />
     </Stack>
   );
