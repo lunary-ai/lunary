@@ -16,6 +16,7 @@ import {
   Group,
   Loader,
   Menu,
+  Select,
   Stack,
   Text,
 } from "@mantine/core";
@@ -39,6 +40,7 @@ import {
 import {
   IconBraces,
   IconBrandOpenai,
+  IconCheck,
   IconDotsVertical,
   IconFileExport,
   IconPencil,
@@ -59,6 +61,7 @@ import { openUpgrade } from "@/components/layout/UpgradeModal";
 
 import analytics from "@/utils/analytics";
 import {
+  useDatasets,
   useOrg,
   useProject,
   useProjectInfiniteSWR,
@@ -222,7 +225,7 @@ export default function Logs() {
   );
 
   const [isSelectMode, setIsSelectMode] = useState(false);
-  const [rowSelection, setRowSelection] = useState({});
+  const [selectedRows, setSelectedRows] = useState([]);
 
   const { sortParams } = useSortParams();
 
@@ -248,7 +251,11 @@ export default function Logs() {
     isValidating: runsValidating,
     loadMore,
     mutate: mutateLogs,
-  } = useProjectInfiniteSWR(`/runs?${serializedChecks}${sortParams}`);
+  } = useProjectInfiniteSWR(`/runs?${serializedChecks}${sortParams}`, {
+    refreshInterval: 1000,
+  });
+
+  const { datasets, insertPrompts } = useDatasets();
 
   useEffect(() => {
     if (shouldMutate) {
@@ -325,6 +332,10 @@ export default function Logs() {
     setVisibleColumns(view.columns);
   }, [view, viewId]);
 
+  useEffect(() => {
+    setIsSelectMode(false);
+  }, [type]);
+
   function exportButton({ serializedChecks, projectId, type, format }) {
     return {
       component: "a",
@@ -374,6 +385,7 @@ export default function Logs() {
     setColumnsTouched(false);
   }
 
+  console.log(isSelectMode);
   async function deleteView() {
     modals.openConfirmModal({
       title: "Please confirm your action",
@@ -568,17 +580,48 @@ export default function Logs() {
               restrictTo={(f) => CHECKS_BY_TYPE[type].includes(f.id)}
             />
           </Group>
-          {!!showSaveView && (
-            <Button
-              leftSection={<IconStack2 size={16} />}
-              size="xs"
-              onClick={() => saveView()}
-              variant="default"
-              loading={isInsertingView}
-            >
-              Save View
-            </Button>
-          )}
+          <Group>
+            {!!showSaveView && (
+              <Button
+                leftSection={<IconStack2 size={16} />}
+                size="xs"
+                onClick={() => saveView()}
+                variant="default"
+                loading={isInsertingView}
+              >
+                Save View
+              </Button>
+            )}
+
+            {isSelectMode && (
+              <Select
+                searchable
+                size="xs"
+                placeholder="Add to dataset"
+                w={160}
+                data={datasets?.map((d) => ({
+                  label: d.slug,
+                  value: d.id,
+                }))}
+                disabled={selectedRows.length === 0}
+                onChange={async (datasetId) => {
+                  if (selectedRows.length === 0) return;
+
+                  await insertPrompts({
+                    datasetId: datasetId,
+                    runIds: selectedRows,
+                  });
+                  setIsSelectMode(false);
+                  notifications.show({
+                    title: "The runs has been added to the dataset",
+                    message: "",
+                    icon: <IconCheck />,
+                    color: "green",
+                  });
+                }}
+              />
+            )}
+          </Group>
         </Group>
       </Stack>
 
@@ -620,7 +663,6 @@ export default function Logs() {
         type={type}
         onRowClicked={(row, event) => {
           const rowData = row.original;
-          console.log(row);
           const isSecondaryClick =
             event.metaKey || event.ctrlKey || event.button === 1;
 
@@ -641,7 +683,6 @@ export default function Logs() {
           } else {
             if (isSelectMode) {
               row.toggleSelected();
-              console.log(row.getIsSelected());
             } else {
               analytics.trackOnce("OpenRun");
               setSelectedRunId(rowData.id);
@@ -662,7 +703,7 @@ export default function Logs() {
           setColumnsTouched(true);
         }}
         data={logs}
-        rowSelection={rowSelection}
+        setSelectedRows={setSelectedRows}
       />
     </Stack>
   );

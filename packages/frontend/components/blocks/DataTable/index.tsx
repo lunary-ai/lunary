@@ -46,6 +46,7 @@ type DataTableProps = {
   ) => void;
   loadMore?: (() => void) | null;
   defaultSortBy?: string;
+  setSelectedRows: (rows: any[]) => void;
 };
 
 export default function DataTable({
@@ -58,7 +59,7 @@ export default function DataTable({
   isSelectMode = false,
   onRowClicked,
   loadMore,
-  defaultSortBy = "createdAt",
+  setSelectedRows,
 }: DataTableProps) {
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
@@ -71,6 +72,7 @@ export default function DataTable({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     manualSorting: true,
+    getRowId: (row) => row.id,
     onColumnVisibilityChange: (fn) => {
       if (!fn || !setVisibleColumns) return;
       const data = fn();
@@ -80,17 +82,29 @@ export default function DataTable({
       columnVisibility: visibleColumns,
       // rowSelection,
     },
-    // onRowSelectionChange: setRowSelection,
     enableRowSelection: true,
   });
 
-  /* NEW: keep the “select” column in sync with the flag */
+  const selectedRows = useEffect(() => {
+    const rowSelection = table.getState().rowSelection;
+    const rowIds = Object.keys(rowSelection);
+    if (rowIds) {
+      setSelectedRows(rowIds);
+    }
+  }, [table.getState().rowSelection]);
+
   useEffect(() => {
     table.setColumnVisibility((old) => ({
       ...old,
       select: isSelectMode,
     }));
   }, [isSelectMode, table]);
+
+  useEffect(() => {
+    if (isSelectMode === false) {
+      table.setRowSelection({});
+    }
+  }, [isSelectMode]);
 
   const columnSizeVars = useMemo(() => {
     const headers = table.getFlatHeaders();

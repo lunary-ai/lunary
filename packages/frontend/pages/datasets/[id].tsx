@@ -308,9 +308,7 @@ export default function NewDataset() {
                   }}
                 />
               )}
-              <Badge variant="light" color="violet">
-                Beta
-              </Badge>
+
               <Badge variant="light" radius="sm" color="blue" size="md">
                 {`${dataset?.format} dataset`}
               </Badge>

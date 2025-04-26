@@ -5,7 +5,8 @@ import datasets from "./datasets";
 import orgs from "./orgs";
 
 import checklists from "./checklists";
-import evaluations from "./evaluations";
+import oldEvaluations from "./evaluations";
+import evaluations from "./evaluations/v2";
 import projectUsers from "./external-users";
 import filters from "./filters";
 import projects from "./projects";
@@ -55,6 +56,7 @@ v1.use(datasets.routes());
 v1.use(templates.routes());
 
 v1.use(filters.routes());
+v1.use(oldEvaluations.routes());
 v1.use(evaluations.routes());
 v1.use(projectUsers.routes());
 v1.use(checklists.routes());

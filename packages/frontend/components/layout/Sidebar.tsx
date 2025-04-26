@@ -23,6 +23,7 @@ import {
   IconBinaryTree2,
   IconBrandOpenai,
   IconChecklist,
+  IconCompass,
   IconCreditCard,
   IconDatabase,
   IconHelpOctagon,
@@ -360,6 +361,12 @@ export default function Sidebar() {
           icon: IconNotebook,
           link: "/prompts",
           resource: "prompts",
+        },
+        {
+          label: "Evaluations",
+          icon: IconCompass,
+          link: "/evaluations",
+          resource: "evaluations",
         },
         {
           label: "Datasets",
