@@ -115,6 +115,7 @@ const publicRoutes = [
   "/v1/users/send-verification",
   new RegExp(`/v1/datasets/.+`), // getDataSets in SDKs
   `/v1/evaluations/run`,
+  new RegExp("/v1/otel/.+"), // OpenTelemetry
 ];
 
 async function checkApiKey(ctx: Context, key: string) {
