@@ -40,7 +40,7 @@ export function selectColumn() {
     size: 40,
     enableSorting: false,
     enableResizing: false,
-    enableHiding: false,
+    enableHiding: true,
   });
 }
 

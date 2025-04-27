@@ -88,7 +88,6 @@ import { deserializeLogic, serializeLogic } from "shared";
 
 export const defaultColumns = {
   llm: [
-    selectColumn(),
     timeColumn("createdAt"),
     nameColumn("Model"),
     durationColumn(),
@@ -291,10 +290,20 @@ export default function Logs() {
           );
         }
       }
+
+      if (isSelectMode) {
+        newColumns.llm.unshift(selectColumn());
+      }
+    }
+
+    if (type !== "llm" || !isSelectMode) {
+      if (newColumns.llm[0]?.id === "select") {
+        newColumns.llm.shift();
+      }
     }
 
     setAllColumns(newColumns);
-  }, [type, evaluators]);
+  }, [type, evaluators, isSelectMode]);
 
   useEffect(() => {
     if (selectedRun && selectedRun.projectId !== projectId) {
@@ -469,9 +478,9 @@ export default function Logs() {
                       data-testid="export-openai-jsonl-button"
                       color="dimmed"
                       leftSection={<IconPencil size={16} />}
-                      onClick={() => setIsSelectMode(true)}
+                      onClick={() => setIsSelectMode((prev) => !prev)}
                     >
-                      Select Rows
+                      {!isSelectMode ? "Select Mode" : "Exit Select Mode"}
                     </Menu.Item>
                   )}
 
@@ -699,15 +708,12 @@ export default function Logs() {
         setVisibleColumns={(newState) => {
           const next = { ...visibleColumns, ...newState };
 
-          // 2.  Did anything *other* than "select" change?
           const hasMeaningfulChange = Object.keys(next).some(
             (key) => key !== "select" && next[key] !== visibleColumns[key],
           );
 
-          // 3.  Persist the visibility state
           setVisibleColumns((prev) => ({ ...prev, ...newState }));
 
-          // 4.  Flag the view as dirty only when a real column moved
           if (hasMeaningfulChange) {
             setColumnsTouched(true);
           }
