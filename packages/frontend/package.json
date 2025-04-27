@@ -3,7 +3,7 @@
   "main": "pages/index.ts",
   "scripts": {
     "start": "bun run load-env && NODE_ENV=production bun --bun next start -H 0.0.0.0 -p 8080",
-    "dev": "bun --bun next dev -p 8080",
+    "dev": "bun --bun next dev --turbopack -p 8080",
     "build": "rm -rf .next && NODE_ENV=production bun --bun next build",
     "load-env": "bash ./load-env.sh"
   },
