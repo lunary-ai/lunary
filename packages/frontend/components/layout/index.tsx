@@ -9,15 +9,16 @@ import Sidebar from "./Sidebar";
 
 import analytics from "@/utils/analytics";
 import { useAuth } from "@/utils/auth";
-import { useOrg, useUser } from "@/utils/dataHooks";
+import { useOrg, useProjects, useUser } from "@/utils/dataHooks";
+import { showErrorNotification } from "@/utils/errors";
 import { ModalsProvider } from "@mantine/modals";
 import UpgradeModal from "./UpgradeModal";
-import { showErrorNotification } from "@/utils/errors";
 
 export default function Layout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { user } = useUser();
   const { org } = useOrg();
+  const { projects } = useProjects();
 
   const colorScheme = useComputedColorScheme();
   const { isSignedIn, signOut } = useAuth();
@@ -91,7 +92,11 @@ export default function Layout({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
-  if (!isAuthPage && !isPublicPage && (!user || !org)) {
+  if (
+    !isAuthPage &&
+    !isPublicPage &&
+    (!user || !org || projects.length === 0)
+  ) {
     return (
       <Flex align="center" justify="center" h="100vh">
         <Loader />

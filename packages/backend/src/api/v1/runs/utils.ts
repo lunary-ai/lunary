@@ -118,7 +118,6 @@ export async function refreshCostsJob(
       and r.created_at <= ${now}
   `;
 
-  console.log(totalRuns);
   while (true) {
     const runs = await sql`
       select
