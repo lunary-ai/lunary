@@ -259,7 +259,7 @@ const mockConversations = [
 
 import LineChartComponent from "@/components/analytics/OldLineChart";
 
-export default function Intelligence() {
+export default function Insights() {
   const [activeTab, setActiveTab] = useState<string | null>("topics");
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
 
