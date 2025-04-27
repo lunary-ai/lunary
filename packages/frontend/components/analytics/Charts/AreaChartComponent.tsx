@@ -159,7 +159,7 @@ function formatValue(value: unknown, dataKey: string) {
 
 function formatAggValue(aggValue: any, dataKey?: string) {
   if (dataKey?.includes("latency")) {
-    return `${aggValue}s`;
+    return;
   }
   if (dataKey?.includes("cost")) {
     return `$${aggValue}`;
@@ -216,6 +216,7 @@ export default function AreaChartComponent({
             opacity: 0.8,
           },
         }}
+        withLegend={["latency", "run-types"].includes(dataKey)}
         tooltipProps={{
           content: ({ label, payload }) => {
             const filteredPayload = (payload || [])
