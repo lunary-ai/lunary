@@ -610,6 +610,9 @@ export function useDatasets() {
     fetcher.patch,
   );
 
+  const { trigger: insertPrompts, isMutating: isInsertingPrompts } =
+    useProjectMutation(`/datasets/prompts/attach`, fetcher.post);
+
   return {
     datasets: data || [],
     insert,
@@ -619,6 +622,8 @@ export function useDatasets() {
     mutate,
     isLoading,
     insertPrompt,
+    insertPrompts,
+    isInsertingPrompts,
   };
 }
 

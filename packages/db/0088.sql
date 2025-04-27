@@ -1,0 +1,1 @@
+alter table org add column beta boolean not null default false;

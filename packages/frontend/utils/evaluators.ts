@@ -19,6 +19,16 @@ const EVALUATOR_TYPES = {
     description: "Uses AI to detect the language of the interaction.",
     params: [],
   },
+  bias: {
+    id: "bias",
+    name: "Bias",
+    icon: IconEyeCheck,
+    color: "red",
+    description:
+      "Uses AI to detect if the interaction contains bias or hate speech.",
+    params: [],
+    beta: true,
+  },
   topics: {
     name: "Topics",
     id: "topics",

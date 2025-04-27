@@ -5,6 +5,7 @@ import {
   useDataset,
   useDatasetPrompt,
   useDatasetPromptVariation,
+  useOrg,
 } from "@/utils/dataHooks";
 import { cleanSlug, formatCompactFromNow } from "@/utils/format";
 import {
@@ -36,6 +37,7 @@ function PromptVariation({ i, variationId, content, onDelete, markSaved }) {
   const { variation, update, remove, mutate } =
     useDatasetPromptVariation(variationId);
 
+  const { org } = useOrg();
   const { prompt } = useDatasetPrompt(variation?.promptId);
 
   const [debouncedVariation, setDebouncedVariation] = useDebouncedState(
@@ -132,6 +134,7 @@ function PromptTab({ isText, promptId, onDelete, markSaved, canBeDeleted }) {
 
   const promptVariables = usePromptVariables(prompt?.messages);
   const hasVariables = Object.keys(promptVariables).length > 0;
+  const { org } = useOrg();
 
   const [debouncedMessages, setDebouncedMessages] = useDebouncedState(
     null,
@@ -165,23 +168,24 @@ function PromptTab({ isText, promptId, onDelete, markSaved, canBeDeleted }) {
         value={prompt?.messages}
         isText={isText}
       />
-      {prompt?.variations?.map((variation, i) => (
-        <PromptVariation
-          key={i}
-          i={i}
-          content={prompt.messages}
-          markSaved={markSaved}
-          variationId={variation.id}
-          onDelete={() => {
-            mutate({
-              ...prompt,
-              variations: prompt.variations.filter(
-                (v) => v.id !== variation.id,
-              ),
-            });
-          }}
-        />
-      ))}
+      {!org.beta &&
+        prompt?.variations?.map((variation, i) => (
+          <PromptVariation
+            key={i}
+            i={i}
+            content={prompt.messages}
+            markSaved={markSaved}
+            variationId={variation.id}
+            onDelete={() => {
+              mutate({
+                ...prompt,
+                variations: prompt.variations.filter(
+                  (v) => v.id !== variation.id,
+                ),
+              });
+            }}
+          />
+        ))}
       {hasVariables && (
         <>
           <Text size="sm" c="dimmed">
@@ -308,9 +312,7 @@ export default function NewDataset() {
                   }}
                 />
               )}
-              <Badge variant="light" color="violet">
-                Beta
-              </Badge>
+
               <Badge variant="light" radius="sm" color="blue" size="md">
                 {`${dataset?.format} dataset`}
               </Badge>
@@ -321,10 +323,6 @@ export default function NewDataset() {
               </Text>
             )}
           </Group>
-          <Text size="lg" mb="md">
-            A dataset is a collection of prompts that you can use as a basis for
-            evaluations.
-          </Text>
         </Stack>
 
         <Tabs value={activePrompt} onChange={setActivePrompt} variant="pills">

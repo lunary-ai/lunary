@@ -2,9 +2,9 @@
   "name": "shared",
   "type": "module",
   "dependencies": {
-    "compromise": "^14.13.0",
+    "compromise": "^14.14.4",
     "franc": "^6.2.0",
     "postgres": "3.4.5",
-    "zod": "^3.22.4"
+    "zod": "^3.24.3"
   }
 }

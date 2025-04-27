@@ -15,7 +15,7 @@
     "packages/*"
   ],
   "devDependencies": {
-    "prettier": "^3.5.2"
+    "prettier": "^3.5.3"
   },
   "patchedDependencies": {
     "postgres@3.4.5": "patches/postgres@3.4.5.patch"

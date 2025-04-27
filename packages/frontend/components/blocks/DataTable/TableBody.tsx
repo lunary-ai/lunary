@@ -6,6 +6,7 @@ interface TableBodyProps {
   table: ReturnType<typeof useReactTable>;
   tableContainerRef: React.RefObject<HTMLDivElement>;
   onRowClicked?: (row: any) => void;
+  rowSelection?: any;
 }
 function TableBody({ table, tableContainerRef, onRowClicked }: TableBodyProps) {
   const { rows } = table.getRowModel();
@@ -47,7 +48,7 @@ function TableBody({ table, tableContainerRef, onRowClicked }: TableBodyProps) {
           <tr
             key={row.id}
             data-index={virtualRow.index}
-            onClick={(event) => onRowClicked?.(row.original, event)}
+            onClick={(event) => onRowClicked?.(row, event)}
             className={virtualRow.index % 2 ? "ListItemOdd" : "ListItemEven"}
             ref={(node) => rowVirtualizer.measureElement(node)}
             style={{
@@ -79,9 +80,10 @@ function TableBody({ table, tableContainerRef, onRowClicked }: TableBodyProps) {
 }
 
 // Avoid unnecessary rerendering of the body (for example when the column size is changed)
-export default memo(TableBody, (prevProps, nextProps) => {
+export default memo(TableBody, (prev, next) => {
   return (
-    prevProps.table.options.data === nextProps.table.options.data &&
-    prevProps.onRowClicked === nextProps.onRowClicked
+    prev.table.options.data === next.table.options.data &&
+    prev.onRowClicked === next.onRowClicked &&
+    prev.rowSelection === next.rowSelection
   );
 });
