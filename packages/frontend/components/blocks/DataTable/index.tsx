@@ -71,7 +71,7 @@ export default function DataTable({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     manualSorting: true,
-    getRowId: (row) => row.id,
+    getRowId: (row) => row?.id,
     // onColumnVisibilityChange: setColumnVisibility,
     onColumnVisibilityChange: (fn) => {
       if (!fn || !setVisibleColumns) return;

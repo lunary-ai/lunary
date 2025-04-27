@@ -62,7 +62,7 @@ import config from "@/utils/config";
 import { useProject, useProjects } from "@/utils/dataHooks";
 import { useViews } from "@/utils/dataHooks/views";
 import { useDisclosure, useFocusTrap, useLocalStorage } from "@mantine/hooks";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ResourceName, hasAccess, hasReadAccess, serializeLogic } from "shared";
 import DashboardsSidebarButton from "../analytics/DashboardsSidebarButton";
 import { getIconComponent } from "../blocks/IconPicker";
@@ -91,27 +91,31 @@ export function NavbarLink({
 
   // For logs pages, we want to compare the view param to see if a view is selected
 
-  const active = (() => {
-    const linkParams = new URLSearchParams(link.split("?")[1]);
+  const active = useMemo(() => {
+    if (disabled || soon) return false;
+
     if (router.pathname.startsWith("/logs")) {
-      if (router.asPath.includes(`view=`)) {
-        const viewParam = linkParams.get("view");
-        if (viewParam) {
-          return router.asPath.includes(`view=${viewParam}`);
-        }
+      const search = link.includes("?") ? link.split("?")[1] : "";
+      const params = new URLSearchParams(search);
+
+      if (params.has("view")) {
+        return router.asPath.includes(`view=${params.get("view")}`);
       }
       return router.asPath.startsWith(link);
     }
+
     if (
       router.pathname.startsWith("/dashboards/[id]") &&
       link.startsWith("/dashboards")
     ) {
       return true;
     }
-    return router.pathname.startsWith(link);
-  })();
 
-  if (disabled) return;
+    return router.pathname.startsWith(link);
+  }, [router.asPath, router.pathname, link, disabled, soon]);
+
+  if (disabled) return null;
+
   return (
     <NavLink
       w="100%"

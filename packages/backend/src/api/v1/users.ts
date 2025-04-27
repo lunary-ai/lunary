@@ -119,7 +119,6 @@ users.get("/verify-email", async (ctx: Context) => {
 
   const [orgInvitation] =
     await sql`select * from org_invitation where email = ${account.email}`;
-  console.log(account, orgInvitation);
   if (orgInvitation) {
     await sql`update org_invitation set email_verified = true where id = ${orgInvitation.id}`;
   }
