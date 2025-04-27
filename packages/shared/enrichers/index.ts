@@ -10,6 +10,7 @@ export type EvaluatorType =
   | "factualness"
   | "geval"
   | "guidelines"
+  | "bias"
   | "replies";
 export type EvaluatorMode = "normal" | "realtime";
 

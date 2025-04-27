@@ -303,7 +303,7 @@ export function enrichmentColumn(
   maskPII: boolean = false,
 ) {
   return columnHelper.accessor(`enrichment-${id}`, {
-    header: `${capitalize(name)} ✨`,
+    header: `${capitalize(name)}`,
     id: `enrichment-${id}`,
     size: 120,
     enableSorting: false,

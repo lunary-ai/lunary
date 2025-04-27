@@ -34,14 +34,15 @@ function parseMessages(messages: unknown) {
   return [""];
 }
 
-export async function evaluate(run: Run) {
+export async function evaluate(run: Run, params: { threshold?: number }) {
+  const { threshold = 0.5 } = params;
   const input = parseMessages(run.input);
   const output = parseMessages(run.output);
   const error = parseMessages(run.error);
 
   const [inputToxicity, outputToxicity] = await Promise.all([
-    detectToxicity(input),
-    detectToxicity(output),
+    detectToxicity(input, threshold),
+    detectToxicity(output, threshold),
   ]);
 
   const toxicity = {
@@ -55,9 +56,12 @@ export async function evaluate(run: Run) {
 }
 
 // TODO: type
-async function detectToxicity(texts: string[]): Promise<any> {
+async function detectToxicity(
+  texts: string[],
+  threshold: number,
+): Promise<any> {
   try {
-    return callML("toxicity", { texts });
+    return callML("toxicity", { outputs: texts, threshold });
   } catch (error) {
     console.error(error);
     console.error(texts);

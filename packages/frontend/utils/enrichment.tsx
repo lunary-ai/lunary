@@ -28,7 +28,6 @@ export function renderEnrichment(
   const renderers: Record<EvaluatorType, (data: any) => any> = {
     language: renderLanguageEnrichment,
     pii: () => renderPIIEnrichment(data, maskPII),
-    toxicity: renderToxicityEnrichment,
     topics: renderTopicsEnrichment,
     sentiment: renderSentimentEnrichment,
     assertion: renderAssertionEnrichment,
@@ -36,6 +35,7 @@ export function renderEnrichment(
     guidelines: renderGuidelinesEnrichment,
     replies: renderRepliesEnrichment,
     bias: renderBiasEnrichment,
+    toxicity: renderToxicityEnrichment,
   };
 
   const renderer = renderers[type] || JSON.stringify;
@@ -43,6 +43,21 @@ export function renderEnrichment(
 }
 
 function renderBiasEnrichment(data: EnrichmentData) {
+  if (!(data && data.output && Array.isArray(data.output))) {
+    return null;
+  }
+  data = data.output[0];
+  return (
+    <Tooltip label={data.reason}>
+      <Text size="lg">{data.score}</Text>
+    </Tooltip>
+  );
+}
+
+function renderToxicityEnrichment(data: EnrichmentData) {
+  if (!(data && data.output && Array.isArray(data.output))) {
+    return null;
+  }
   data = data.output[0];
   return (
     <Tooltip label={data.reason}>
@@ -161,42 +176,6 @@ function renderPIIEnrichment(data: EnrichmentData) {
       </Popover.Dropdown>
     </Popover>
   );
-}
-
-function renderToxicityEnrichment(data: EnrichmentData) {
-  const [opened, { close, open }] = useDisclosure(false);
-
-  if (data.length === 0) {
-    return "";
-  }
-
-  const toxicityCategories = [
-    ...new Set([...data.input, ...data.output]),
-  ].filter((category) => category);
-
-  if (toxicityCategories.length) {
-    return (
-      <Popover
-        width={200}
-        position="bottom"
-        withArrow
-        shadow="md"
-        opened={opened}
-      >
-        <Popover.Target>
-          <Badge onMouseEnter={open} onMouseLeave={close} color="red">
-            Toxicity
-          </Badge>
-        </Popover.Target>
-        <Popover.Dropdown style={{ pointerEvents: "none" }} w="300">
-          <Text size="sm">
-            <strong>Toxic Comments:</strong>
-            {/* <div>{data.join(", ")}</div> */}
-          </Text>
-        </Popover.Dropdown>
-      </Popover>
-    );
-  }
 }
 
 function renderTopicsEnrichment(data: EnrichmentData) {
