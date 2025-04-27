@@ -129,12 +129,13 @@ export const DEFAULT_CHARTS: Record<string, DefaultChart> = {
   },
   latency: {
     id: "latency",
-    name: "Avg. LLM Latency",
-    description: "The average duration of your LLM Calls",
+    name: "LLM Latencies",
+    description: "The percentile latencies of your LLM Calls",
     type: "Area",
     dataKey: "latency",
-    color: "purple",
+    // color: "purple",
     aggregationMethod: "avg",
+    splitBy: "name",
   },
   "feedback-ratio": {
     id: "feedback-ratio",

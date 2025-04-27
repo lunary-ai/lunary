@@ -1052,25 +1052,38 @@ analytics.get("/latency", async (ctx: Context) => {
         filtered_runs as (
           ${filteredRunsQuery}
         ),
-        weekly_avg as (
-          select
-            d.date,
-            coalesce(avg(extract(epoch from r.duration))::float, 0) as avg_duration
-          from
-            dates d
-            left join filtered_runs r on r.local_created_at >= d.date and r.local_created_at < d.date + interval '7 days'
-          group by 
-            d.date, r.local_created_at
-          order by d.date
-        )
+      stats as (
         select
-          date, 
-          avg_duration as value,
-          'Latency' as name
+          d.date,
+          percentile_cont(0.50) within group (order by extract(epoch from r.duration)::double precision) as p50,
+          percentile_cont(0.75) within group (order by extract(epoch from r.duration)::double precision) as p75,
+          percentile_cont(0.90) within group (order by extract(epoch from r.duration)::double precision) as p90,
+          percentile_cont(0.95) within group (order by extract(epoch from r.duration)::double precision) as p95,
+          percentile_cont(0.99) within group (order by extract(epoch from r.duration)::double precision) as p99
         from
-          weekly_avg
-        order by
-          date;
+          dates d
+          left join filtered_runs r
+            on r.local_created_at >= d.date
+          and r.local_created_at <  d.date + interval '7 days'
+        group by
+          d.date
+      )
+      select
+        date,
+        coalesce(value, 0)  as value,
+        name
+      from
+        stats
+        cross join lateral (
+          values
+            (p50, 'p50'),
+            (p75, 'p75'),
+            (p90, 'p90'),
+            (p95, 'p95'),
+            (p99, 'p99')
+        ) as v(value, name)
+      order by
+        date;
       `;
     ctx.body = { data, stat: stat || 0 };
     return;
@@ -1081,17 +1094,41 @@ analytics.get("/latency", async (ctx: Context) => {
         ),
         filtered_runs as (
           ${filteredRunsQuery}
+        ),
+        stats as (
+          select
+            d.date,
+            percentile_cont(array[0.50, 0.75, 0.90, 0.95, 0.99])
+              within group (order by extract(epoch from r.duration)::float) as pct_values
+          from
+            dates d
+            left join filtered_runs r
+              on d.date = r.local_created_at
+          group by
+            d.date
         )
+
         select
-          d.date,
-          coalesce(avg(extract(epoch from r.duration))::float, 0) as value,
-          'Latency' as name
+          s.date,
+          coalesce(p.value, 0) as value,
+          case p.percentile
+              when 0.50 then 'p50'
+              when 0.75 then 'p75'   -- was labelled p90 in your original
+              when 0.90 then 'p90'
+              when 0.95 then 'p95'
+              when 0.99 then 'p99'
+          end as name
         from
-          dates d
-          left join filtered_runs r on d.date = r.local_created_at
-        group by 
-          d.date
-        order by d.date;
+          stats s
+          cross join lateral unnest(
+            array[0.50, 0.75, 0.90, 0.95, 0.99],
+            pct_values
+          ) as p(percentile, value)
+        order by
+          s.date,
+          p.percentile;
+        
+        ;
     `;
 
     ctx.body = { data, stat: stat || 0 };
@@ -1267,7 +1304,7 @@ analytics.get("/feedback/thumb/up", async (ctx: Context) => {
       feedback_data as (
         select
           r.local_created_at,
-          case when r.feedback->>'thumb' = 'up' then 1 else 0 end as thumbs_up,
+          case when r.feedback->>'thumb' = 'up' then 1 else 0 end as thumbs_up
         from
           filtered_runs r
         where 
@@ -1351,7 +1388,7 @@ analytics.get("/feedback/thumb/down", async (ctx: Context) => {
       feedback_data as (
         select
           r.local_created_at,
-          case when r.feedback->>'down' = 'up' then 1 else 0 end as thumbs_down,
+          case when r.feedback->>'down' = 'up' then 1 else 0 end as thumbs_down
         from
           filtered_runs r
         where 
