@@ -346,7 +346,7 @@ export default function Sidebar() {
         {
           label: "Insights",
           icon: IconTelescope,
-          link: "/intelligence",
+          link: "/insights",
           resource: "analytics",
           disabled: !org.beta,
         },
