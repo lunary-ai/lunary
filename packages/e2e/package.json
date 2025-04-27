@@ -4,8 +4,8 @@
     "test": "bun --env-file=../backend/.env playwright test"
   },
   "dependencies": {
-    "@langchain/core": "^0.3.45",
-    "@langchain/openai": "^0.5.6",
+    "@langchain/core": "^0.3.49",
+    "@langchain/openai": "^0.5.7",
     "@playwright/test": "^1.52.0",
     "lunary": "^0.8.8",
     "backend": "*"
