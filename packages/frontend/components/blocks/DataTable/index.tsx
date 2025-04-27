@@ -5,7 +5,6 @@ import {
   useEffect,
   useMemo,
   useRef,
-  useState,
 } from "react";
 
 import {
@@ -73,6 +72,7 @@ export default function DataTable({
     getSortedRowModel: getSortedRowModel(),
     manualSorting: true,
     getRowId: (row) => row.id,
+    // onColumnVisibilityChange: setColumnVisibility,
     onColumnVisibilityChange: (fn) => {
       if (!fn || !setVisibleColumns) return;
       const data = fn();
@@ -94,19 +94,6 @@ export default function DataTable({
     }
   }, [table.getState().rowSelection, setSelectedRows]);
 
-  useEffect(() => {
-    table.setColumnVisibility((old) => ({
-      ...old,
-      select: isSelectMode,
-    }));
-  }, [isSelectMode, table]);
-
-  useEffect(() => {
-    if (isSelectMode === false) {
-      table.setRowSelection({});
-    }
-  }, [isSelectMode]);
-
   const columnSizeVars = useMemo(() => {
     const headers = table.getFlatHeaders();
     const sizes: Record<string, number> = {};
@@ -116,8 +103,6 @@ export default function DataTable({
     });
     return sizes;
   }, [table.getState().columnSizingInfo, table.getState().columnSizing]);
-
-  table.getColumn("select")?.getToggleVisibilityHandler();
 
   const fetchMoreOnBottomReached = useCallback(
     (containerRefElement?: HTMLDivElement | null) => {
@@ -162,7 +147,7 @@ export default function DataTable({
           <Menu.Dropdown>
             {table
               .getAllColumns()
-              .filter((column) => column.getCanHide())
+              .filter((column) => column.getCanHide() && column.id !== "select")
               .map((column) => (
                 <Menu.Item
                   key={column.id}
