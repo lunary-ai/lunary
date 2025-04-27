@@ -32,6 +32,7 @@
         "koa-logger": "^3.2.1",
         "koa-ratelimit": "^5.1.0",
         "koa-router": "^13.0.1",
+        "lru-cache": "^11.1.0",
         "lunary": "^0.8.8",
         "node-cron": "^3.0.3",
         "nodemailer": "^6.10.1",
@@ -1165,6 +1166,8 @@
     "loose-envify": ["loose-envify@1.4.0", "", { "dependencies": { "js-tokens": "^3.0.0 || ^4.0.0" }, "bin": { "loose-envify": "cli.js" } }, "sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q=="],
 
     "lower-case": ["lower-case@2.0.2", "", { "dependencies": { "tslib": "^2.0.3" } }, "sha512-7fm3l3NAF9WfN6W3JOmf5drwpVqX78JtoGJ3A6W0a6ZnldM41w2fV5D490psKFTpMds8TJse/eHLFFsNHHjHgg=="],
+
+    "lru-cache": ["lru-cache@11.1.0", "", {}, "sha512-QIXZUBJUx+2zHUdQujWejBkcD9+cs94tLn0+YL8UrCh+D5sCXZ4c7LaEH48pNwRY3MLDgqUFyhlCyjJPf1WP0A=="],
 
     "lunary": ["lunary@0.8.8", "", { "dependencies": { "unctx": "^2.3.1" }, "peerDependencies": { "@anthropic-ai/sdk": ">=0.31.0", "openai": "^4.0.0", "react": ">=17.0.0" }, "optionalPeers": ["@anthropic-ai/sdk", "openai", "react"] }, "sha512-/7jel44BCOURynPdGvxoOeZkUb8DKJv2dlay4A0f0addEnhqGyyOjglZHEJaiKU21lK6TyQxJS5SnfGp4owWyw=="],
 
