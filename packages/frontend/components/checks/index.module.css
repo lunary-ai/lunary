@@ -6,10 +6,6 @@
 
   align-items: center;
 
-  > :globals(.mantine-MultiSelect-root) {
-    min-width: 80px;
-  }
-
   &.minimal {
     border: 1px solid var(--mantine-color-default-border);
     border-radius: var(--mantine-radius-default);
