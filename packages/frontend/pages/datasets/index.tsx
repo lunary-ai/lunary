@@ -140,9 +140,6 @@ export default function Datasets() {
         <Group align="center" justify="space-between">
           <Group align="center">
             <Title>Datasets</Title>
-            <Badge variant="light" color="violet">
-              Beta
-            </Badge>
           </Group>
 
           {hasAccess(user.role, "datasets", "create") && (
@@ -177,10 +174,6 @@ export default function Datasets() {
             </Menu>
           )}
         </Group>
-        <Text size="lg" mb="md">
-          Datasets are collections of prompts that you can use as a basis for
-          evaluations.
-        </Text>
 
         {isLoading ? (
           <Loader />

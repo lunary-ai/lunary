@@ -146,9 +146,6 @@ export default function Enrichments() {
           <Group align="center" justify="space-between">
             <Group align="center">
               <Title>Data Enrichment</Title>
-              <Badge variant="light" color="blue">
-                Beta
-              </Badge>
             </Group>
 
             <Button

@@ -23,6 +23,7 @@ import {
   IconBinaryTree2,
   IconBrandOpenai,
   IconChecklist,
+  IconCompass,
   IconCreditCard,
   IconDatabase,
   IconHelpOctagon,
@@ -38,6 +39,7 @@ import {
   IconSettings,
   IconSparkles,
   IconSun,
+  IconTelescope,
   IconTerminal,
   IconTerminal2,
   IconTimeline,
@@ -109,6 +111,7 @@ export function NavbarLink({
     return router.pathname.startsWith(link);
   })();
 
+  if (disabled) return;
   return (
     <NavLink
       w="100%"
@@ -303,7 +306,7 @@ export default function Sidebar() {
 
   const APP_MENU: MenuItem[] = [
     {
-      label: "Observe",
+      label: "",
       isSection: true,
       c: "blue",
       subMenu: [
@@ -313,17 +316,14 @@ export default function Sidebar() {
           link: "/dashboards",
           resource: "analytics",
         },
-        // Only for Mock Lunary for now
-        ...(project?.id === "dedc86a5-6cba-481c-9ce5-8b6fa3dcd8e6"
-          ? [
-              {
-                label: "Intelligence",
-                icon: IconSparkles,
-                link: "/intelligence",
-                resource: "analytics",
-              },
-            ]
-          : []),
+      ],
+    },
+
+    {
+      label: "Observe",
+      isSection: true,
+      c: "blue",
+      subMenu: [
         {
           label: "LLM Logs",
           icon: IconTerminal2,
@@ -344,15 +344,16 @@ export default function Sidebar() {
         },
         { label: "Users", icon: IconUsers, link: "/users", resource: "users" },
         {
-          label: "Enrichments",
-          icon: IconSparkles,
-          link: "/enrichments",
-          resource: "enrichments",
+          label: "Insights",
+          icon: IconTelescope,
+          link: "/intelligence",
+          resource: "analytics",
+          disabled: !org.beta,
         },
       ],
     },
     {
-      label: "Build",
+      label: "Improve",
       c: "violet",
       subMenu: [
         {
@@ -360,6 +361,13 @@ export default function Sidebar() {
           icon: IconNotebook,
           link: "/prompts",
           resource: "prompts",
+        },
+        {
+          label: "Evaluations",
+          icon: IconCompass,
+          link: "/evals",
+          resource: "evaluations",
+          disabled: !org.beta,
         },
         {
           label: "Datasets",
@@ -377,7 +385,16 @@ export default function Sidebar() {
           resource: "checklists",
           disabled: isSelfHosted
             ? org.license && !org.license.evalEnabled
-            : false,
+            : org.beta
+              ? true
+              : false,
+        },
+
+        {
+          label: "Enrichments",
+          icon: IconSparkles,
+          link: "/enrichments",
+          resource: "enrichments",
         },
       ],
     },

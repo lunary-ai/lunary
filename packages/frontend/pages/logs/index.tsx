@@ -16,6 +16,7 @@ import {
   Group,
   Loader,
   Menu,
+  Select,
   Stack,
   Text,
 } from "@mantine/core";
@@ -29,6 +30,7 @@ import {
   nameColumn,
   outputColumn,
   scoresColumn,
+  selectColumn,
   tagsColumn,
   templateColumn,
   timeColumn,
@@ -38,8 +40,10 @@ import {
 import {
   IconBraces,
   IconBrandOpenai,
+  IconCheck,
   IconDotsVertical,
   IconFileExport,
+  IconPencil,
   IconStack2,
   IconStackPop,
   IconTrash,
@@ -57,6 +61,7 @@ import { openUpgrade } from "@/components/layout/UpgradeModal";
 
 import analytics from "@/utils/analytics";
 import {
+  useDatasets,
   useOrg,
   useProject,
   useProjectInfiniteSWR,
@@ -83,6 +88,7 @@ import { deserializeLogic, serializeLogic } from "shared";
 
 export const defaultColumns = {
   llm: [
+    selectColumn(),
     timeColumn("createdAt"),
     nameColumn("Model"),
     durationColumn(),
@@ -218,6 +224,9 @@ export default function Logs() {
     parser.withDefault(DEFAULT_CHECK).withOptions({ clearOnDefault: true }),
   );
 
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedRows, setSelectedRows] = useState([]);
+
   const { sortParams } = useSortParams();
 
   const {
@@ -242,7 +251,11 @@ export default function Logs() {
     isValidating: runsValidating,
     loadMore,
     mutate: mutateLogs,
-  } = useProjectInfiniteSWR(`/runs?${serializedChecks}${sortParams}`);
+  } = useProjectInfiniteSWR(`/runs?${serializedChecks}${sortParams}`, {
+    refreshInterval: 1000,
+  });
+
+  const { datasets, insertPrompts } = useDatasets();
 
   useEffect(() => {
     if (shouldMutate) {
@@ -318,6 +331,10 @@ export default function Logs() {
     setChecks(view.data || []);
     setVisibleColumns(view.columns);
   }, [view, viewId]);
+
+  useEffect(() => {
+    setIsSelectMode(false);
+  }, [type]);
 
   function exportButton({ serializedChecks, projectId, type, format }) {
     return {
@@ -447,6 +464,17 @@ export default function Logs() {
                   </ActionIcon>
                 </Menu.Target>
                 <Menu.Dropdown>
+                  {type === "llm" && (
+                    <Menu.Item
+                      data-testid="export-openai-jsonl-button"
+                      color="dimmed"
+                      leftSection={<IconPencil size={16} />}
+                      onClick={() => setIsSelectMode(true)}
+                    >
+                      Select Rows
+                    </Menu.Item>
+                  )}
+
                   <Menu.Item
                     data-testid="export-csv-button"
                     leftSection={<IconFileExport size={16} />}
@@ -551,17 +579,50 @@ export default function Logs() {
               restrictTo={(f) => CHECKS_BY_TYPE[type].includes(f.id)}
             />
           </Group>
-          {!!showSaveView && (
-            <Button
-              leftSection={<IconStack2 size={16} />}
-              size="xs"
-              onClick={() => saveView()}
-              variant="default"
-              loading={isInsertingView}
-            >
-              Save View
-            </Button>
-          )}
+          <Group>
+            {!!showSaveView && (
+              <Button
+                leftSection={<IconStack2 size={16} />}
+                size="xs"
+                onClick={() => saveView()}
+                variant="default"
+                loading={isInsertingView}
+              >
+                Save View
+              </Button>
+            )}
+
+            {isSelectMode && (
+              <Select
+                searchable
+                size="xs"
+                placeholder={
+                  datasets.length === 0 ? "No datasets" : "Add to dataset"
+                }
+                w={160}
+                data={datasets?.map((d) => ({
+                  label: d.slug,
+                  value: d.id,
+                }))}
+                disabled={selectedRows.length === 0 || datasets.length === 0}
+                onChange={async (datasetId) => {
+                  if (selectedRows.length === 0) return;
+
+                  await insertPrompts({
+                    datasetId: datasetId,
+                    runIds: selectedRows,
+                  });
+                  setIsSelectMode(false);
+                  notifications.show({
+                    title: "The runs has been added to the dataset",
+                    message: "",
+                    icon: <IconCheck />,
+                    color: "green",
+                  });
+                }}
+              />
+            )}
+          </Group>
         </Group>
       </Stack>
 
@@ -602,41 +663,57 @@ export default function Logs() {
       <DataTable
         type={type}
         onRowClicked={(row, event) => {
+          const rowData = row.original;
           const isSecondaryClick =
             event.metaKey || event.ctrlKey || event.button === 1;
 
-          if (["agent", "chain"].includes(row.type)) {
+          if (["agent", "chain"].includes(rowData.type)) {
             analytics.trackOnce("OpenTrace");
 
             if (!isSecondaryClick) {
               router.push({
-                pathname: `/traces/${row.id}`,
+                pathname: `/traces/${rowData.id}`,
                 query: { checks: serializedChecks, sortParams },
               });
             } else {
               window.open(
-                `/traces/${row.id}?checks=${serializedChecks}&sortParams=${sortParams}`,
+                `/traces/${rowData.id}?checks=${serializedChecks}&sortParams=${sortParams}`,
                 "_blank",
               );
             }
           } else {
-            analytics.trackOnce("OpenRun");
-            setSelectedRunId(row.id);
+            if (isSelectMode) {
+              row.toggleSelected();
+            } else {
+              analytics.trackOnce("OpenRun");
+              setSelectedRunId(rowData.id);
+            }
           }
         }}
         key={allColumns[type].length}
         loading={runsLoading || runsValidating}
         loadMore={loadMore}
+        isSelectMode={isSelectMode}
         availableColumns={allColumns[type]}
         visibleColumns={visibleColumns}
         setVisibleColumns={(newState) => {
-          setVisibleColumns((prev) => ({
-            ...prev,
-            ...newState,
-          }));
-          setColumnsTouched(true);
+          const next = { ...visibleColumns, ...newState };
+
+          // 2.  Did anything *other* than "select" change?
+          const hasMeaningfulChange = Object.keys(next).some(
+            (key) => key !== "select" && next[key] !== visibleColumns[key],
+          );
+
+          // 3.  Persist the visibility state
+          setVisibleColumns((prev) => ({ ...prev, ...newState }));
+
+          // 4.  Flag the view as dirty only when a real column moved
+          if (hasMeaningfulChange) {
+            setColumnsTouched(true);
+          }
         }}
         data={logs}
+        setSelectedRows={setSelectedRows}
       />
     </Stack>
   );

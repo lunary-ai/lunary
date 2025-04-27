@@ -21,10 +21,10 @@ import { startJobWorker } from "./jobs";
 
 checkDbConnection();
 setupCronJobs();
-startJobWorker();
 
 if (process.env.NODE_ENV === "production") {
   createIndexes();
+  startJobWorker();
   startMaterializedViewRefreshJob();
 }
 

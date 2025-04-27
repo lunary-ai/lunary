@@ -49,7 +49,6 @@ export default function App({ Component, pageProps }: AppProps) {
               <SWRConfig
                 value={{
                   fetcher: fetcher.get,
-                  dedupingInterval: 10000,
                 }}
               >
                 <DefaultSeo
