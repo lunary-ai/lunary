@@ -49,3 +49,7 @@ span.limited,
 .recharts-cartesian-axis-tick:last-child:not(.bar-chart *) {
   transform: translateX(-20px);
 }
+
+.custom-input > .mantine-MultiSelect-root {
+  min-width: 80px;
+}
