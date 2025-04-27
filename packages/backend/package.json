@@ -31,6 +31,7 @@
     "koa-logger": "^3.2.1",
     "koa-ratelimit": "^5.1.0",
     "koa-router": "^13.0.1",
+    "lru-cache": "^11.1.0",
     "lunary": "^0.8.8",
     "node-cron": "^3.0.3",
     "nodemailer": "^6.10.1",
