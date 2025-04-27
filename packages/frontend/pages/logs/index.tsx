@@ -385,7 +385,6 @@ export default function Logs() {
     setColumnsTouched(false);
   }
 
-  console.log(isSelectMode);
   async function deleteView() {
     modals.openConfirmModal({
       title: "Please confirm your action",

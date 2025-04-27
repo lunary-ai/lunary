@@ -85,13 +85,14 @@ export default function DataTable({
     enableRowSelection: true,
   });
 
-  const selectedRows = useEffect(() => {
+  useEffect(() => {
+    if (!setSelectedRows) return;
     const rowSelection = table.getState().rowSelection;
     const rowIds = Object.keys(rowSelection);
     if (rowIds) {
       setSelectedRows(rowIds);
     }
-  }, [table.getState().rowSelection]);
+  }, [table.getState().rowSelection, setSelectedRows]);
 
   useEffect(() => {
     table.setColumnVisibility((old) => ({

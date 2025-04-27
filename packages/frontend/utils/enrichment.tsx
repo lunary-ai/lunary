@@ -35,10 +35,20 @@ export function renderEnrichment(
     tone: renderToneEnrichment,
     guidelines: renderGuidelinesEnrichment,
     replies: renderRepliesEnrichment,
+    bias: renderBiasEnrichment,
   };
 
   const renderer = renderers[type] || JSON.stringify;
   return <ErrorBoundary>{renderer(data)}</ErrorBoundary>;
+}
+
+function renderBiasEnrichment(data: EnrichmentData) {
+  data = data.output[0];
+  return (
+    <Tooltip label={data.reason}>
+      <Text size="lg">{data.score}</Text>
+    </Tooltip>
+  );
 }
 
 function renderLanguageEnrichment(languageDetections: LanguageDetectionResult) {

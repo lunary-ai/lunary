@@ -6,7 +6,6 @@ import orgs from "./orgs";
 
 import checklists from "./checklists";
 import oldEvaluations from "./evaluations";
-import evaluations from "./evaluations/v2";
 import projectUsers from "./external-users";
 import filters from "./filters";
 import projects from "./projects";
@@ -25,6 +24,7 @@ import openapi from "./openapi";
 import providerConfigs from "./provider-configs";
 import auditLogs from "./audit-logs";
 import jobs from "./jobs";
+import evals from "./evals";
 
 const v1 = new Router({
   prefix: "/v1",
@@ -57,7 +57,6 @@ v1.use(templates.routes());
 
 v1.use(filters.routes());
 v1.use(oldEvaluations.routes());
-v1.use(evaluations.routes());
 v1.use(projectUsers.routes());
 v1.use(checklists.routes());
 v1.use(analytics.routes());
@@ -70,6 +69,7 @@ v1.use(openapi.routes());
 v1.use(providerConfigs.routes());
 v1.use(auditLogs.routes());
 v1.use(jobs.routes());
+v1.use(evals.routes());
 
 v1.use("/template-versions", templateVersions.routes());
 v1.use("/template_versions", templateVersions.routes()); // Legacy route, keep for previous versions of SDKs

@@ -1,11 +1,10 @@
-import CheckPicker, { RenderCheckNode } from "@/components/checks/Picker";
-import { useLogCount, useUser } from "@/utils/dataHooks";
+import { RenderCheckNode } from "@/components/checks/Picker";
+import { useLogCount, useOrg, useUser } from "@/utils/dataHooks";
 import { useEnrichers } from "@/utils/dataHooks/evaluators";
 import EVALUATOR_TYPES from "@/utils/evaluators";
 import { slugify } from "@/utils/format";
 import { theme } from "@/utils/theme";
 import {
-  Box,
   Button,
   Card,
   Container,
@@ -14,7 +13,6 @@ import {
   Group,
   SimpleGrid,
   Stack,
-  Switch,
   Text,
   TextInput,
   Title,
@@ -25,7 +23,7 @@ import { notifications } from "@mantine/notifications";
 import { IconCircleCheck, IconCirclePlus, IconX } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { CHECKS, CheckLogic, serializeLogic } from "shared";
+import { CheckLogic, serializeLogic } from "shared";
 
 function EvaluatorCard({
   evaluator,
@@ -98,9 +96,14 @@ export default function NewEnrichment() {
 
   const serializedFilters = serializeLogic(filters);
 
-  const { count: logCount } = useLogCount(serializedFilters);
+  const { org } = useOrg();
 
-  const evaluatorTypes = Object.values(EVALUATOR_TYPES);
+  const evaluatorTypes = Object.values(EVALUATOR_TYPES).filter((evaluator) => {
+    if (evaluator.beta && !org.beta) {
+      return false;
+    }
+    return true;
+  });
 
   const selectedEvaluator = evaluatorTypes.find(
     (evaluator) => evaluator.id === type,

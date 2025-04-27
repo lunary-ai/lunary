@@ -110,6 +110,7 @@ export function NavbarLink({
     return router.pathname.startsWith(link);
   })();
 
+  if (disabled) return;
   return (
     <NavLink
       w="100%"
@@ -365,8 +366,9 @@ export default function Sidebar() {
         {
           label: "Evaluations",
           icon: IconCompass,
-          link: "/evaluations",
+          link: "/evals",
           resource: "evaluations",
+          disabled: !org.beta,
         },
         {
           label: "Datasets",
