@@ -44,7 +44,7 @@ export function selectColumn() {
   });
 }
 
-export function timeColumn(timeColumn, label = "Time") {
+export function timeColumn(timeColumn, label = "Date") {
   return columnHelper.accessor(timeColumn, {
     header: label,
     id: timeColumn,
@@ -194,7 +194,7 @@ export function templateColumn() {
 export function userColumn() {
   return columnHelper.accessor("user", {
     header: "User",
-    size: 130,
+    size: 170,
     enableSorting: false,
     cell: (props) => {
       const user = props.getValue();
@@ -209,7 +209,7 @@ export function userColumn() {
 export function nameColumn(label = "Name") {
   return columnHelper.accessor("name", {
     header: label,
-    size: 100,
+    size: 120,
     minSize: 30,
     enableSorting: false,
     cell: (props) => {

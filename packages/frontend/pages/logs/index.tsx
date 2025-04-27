@@ -596,13 +596,15 @@ export default function Logs() {
               <Select
                 searchable
                 size="xs"
-                placeholder="Add to dataset"
+                placeholder={
+                  datasets.length === 0 ? "No datasets" : "Add to dataset"
+                }
                 w={160}
                 data={datasets?.map((d) => ({
                   label: d.slug,
                   value: d.id,
                 }))}
-                disabled={selectedRows.length === 0}
+                disabled={selectedRows.length === 0 || datasets.length === 0}
                 onChange={async (datasetId) => {
                   if (selectedRows.length === 0) return;
 
@@ -695,11 +697,20 @@ export default function Logs() {
         availableColumns={allColumns[type]}
         visibleColumns={visibleColumns}
         setVisibleColumns={(newState) => {
-          setVisibleColumns((prev) => ({
-            ...prev,
-            ...newState,
-          }));
-          setColumnsTouched(true);
+          const next = { ...visibleColumns, ...newState };
+
+          // 2.  Did anything *other* than "select" change?
+          const hasMeaningfulChange = Object.keys(next).some(
+            (key) => key !== "select" && next[key] !== visibleColumns[key],
+          );
+
+          // 3.  Persist the visibility state
+          setVisibleColumns((prev) => ({ ...prev, ...newState }));
+
+          // 4.  Flag the view as dirty only when a real column moved
+          if (hasMeaningfulChange) {
+            setColumnsTouched(true);
+          }
         }}
         data={logs}
         setSelectedRows={setSelectedRows}

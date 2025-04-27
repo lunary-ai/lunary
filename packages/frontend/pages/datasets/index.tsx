@@ -174,10 +174,6 @@ export default function Datasets() {
             </Menu>
           )}
         </Group>
-        <Text size="lg" mb="md">
-          Datasets are collections of prompts that you can use as a basis for
-          evaluations.
-        </Text>
 
         {isLoading ? (
           <Loader />
