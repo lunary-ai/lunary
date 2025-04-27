@@ -1,29 +1,25 @@
+import { useProject } from "@/utils/dataHooks";
 import { useDashboards } from "@/utils/dataHooks/dashboards";
-import {
-  ActionIcon,
-  Box,
-  Button,
-  Group,
-  Menu,
-  Text,
-  Tooltip,
-} from "@mantine/core";
+import { ActionIcon, Box, Button, Group, Menu, Text } from "@mantine/core";
 import {
   IconAnalyze,
   IconChevronDown,
   IconHome2,
   IconPlus,
 } from "@tabler/icons-react";
+import { useRouter } from "next/router";
 import { useRef } from "react";
 import { NavbarLink } from "../layout/Sidebar";
-import { useRouter } from "next/router";
 
 export default function DashboardsSidebarButton() {
+  const { project } = useProject();
   const { dashboards, insert: insertDashboard } = useDashboards();
   const router = useRouter();
   const menuTargetRef = useRef<HTMLElement>(null);
 
-  const homeDashboardId = dashboards.find((dashboard) => dashboard.isHome)?.id;
+  const homeDashboardId =
+    project?.homeDashboardId ??
+    dashboards.find((dashboard) => dashboard.isHome)?.id;
 
   async function handleCreateDashboard() {
     const newDashboard = await insertDashboard();
