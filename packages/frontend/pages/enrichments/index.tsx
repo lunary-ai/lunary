@@ -46,13 +46,10 @@ function EnricherCard({ id, initialData }) {
             <Title order={3} size={16}>
               {enricher?.name}
             </Title>
-            <Text c="dimmed" fw="semibold" size="sm">
-              {description}
-            </Text>
           </Group>
           <Group>
             <Text c="dimmed" fw="semibold" size="sm">
-              {slugify(enricher?.name || "")}
+              {description}
             </Text>
           </Group>
         </Stack>

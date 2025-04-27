@@ -6,6 +6,7 @@ import {
   IconIdBadge,
   IconLanguage,
   IconMoodSmile,
+  IconNotebook,
   IconTextWrap,
 } from "@tabler/icons-react";
 
@@ -16,16 +17,26 @@ const EVALUATOR_TYPES = {
     name: "Language",
     icon: IconLanguage,
     color: "green",
-    description: "Uses AI to detect the language of the interaction.",
+    description:
+      "Detect the languages used for each messages of your conversations.",
     params: [],
   },
   bias: {
     id: "bias",
     name: "Bias",
     icon: IconEyeCheck,
-    color: "red",
+    color: "blue",
     description:
-      "Uses AI to detect if the interaction contains bias or hate speech.",
+      "Detects if the LLM output contains gender, racial, or political bias.",
+    params: [],
+    beta: true,
+  },
+  toxicity: {
+    id: "toxicity",
+    name: "Toxicity",
+    icon: IconBiohazard,
+    color: "red",
+    description: "Detects the toxicness in your LLM outputs.",
     params: [],
     beta: true,
   },
