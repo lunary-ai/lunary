@@ -325,7 +325,7 @@ export default function Sidebar() {
     },
 
     {
-      label: "Observe",
+      label: "Explore",
       isSection: true,
       c: "blue",
       subMenu: [
@@ -407,7 +407,7 @@ export default function Sidebar() {
 
   if (projectViews.length) {
     APP_MENU.push({
-      label: "Smart Views",
+      label: "Views",
       icon: IconListSearch,
       searchable: true,
       resource: "logs",
