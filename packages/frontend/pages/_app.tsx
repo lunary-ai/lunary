@@ -23,9 +23,14 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { SWRConfig } from "swr";
+import Intercom from "@intercom/messenger-js-sdk";
 
 export default function App({ Component, pageProps }: AppProps) {
   const [projectId, setProjectId] = useProjectIdStorage();
+
+  Intercom({
+    app_id: "pv95fmzm",
+  });
 
   return (
     <>

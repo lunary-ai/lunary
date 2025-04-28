@@ -8,6 +8,7 @@
     "load-env": "bash ./load-env.sh"
   },
   "dependencies": {
+    "@intercom/messenger-js-sdk": "^0.0.14",
     "@mantine/charts": "7.16.3",
     "@mantine/code-highlight": "7.16.2",
     "@mantine/colors-generator": "7.16.3",
@@ -23,7 +24,6 @@
     "@tanstack/react-virtual": "^3.13.6",
     "bcrypt": "^5.1.1",
     "chroma-js": "^3.1.2",
-    "crisp-sdk-web": "^1.0.25",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "jose": "^6.0.10",
@@ -35,10 +35,10 @@
     "posthog-js": "^1.236.7",
     "random-word-slugs": "^0.1.7",
     "react": "19.1.0",
-    "react-dom": "19.1.0",
     "react-confetti": "^6.4.0",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
+    "react-dom": "19.1.0",
     "react-highlight-words": "^0.21.0",
     "react-json-view-lite": "^2.4.1",
     "recharts": "v3.0.0-beta.0",

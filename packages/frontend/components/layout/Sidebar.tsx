@@ -67,6 +67,7 @@ import { ResourceName, hasAccess, hasReadAccess, serializeLogic } from "shared";
 import DashboardsSidebarButton from "../analytics/DashboardsSidebarButton";
 import { getIconComponent } from "../blocks/IconPicker";
 import styles from "./sidebar.module.css";
+import { show } from "@intercom/messenger-js-sdk";
 
 interface NavbarLinkProps {
   icon: any;
@@ -653,16 +654,14 @@ export default function Sidebar() {
                   </ActionIcon>
                 </Menu.Target>
                 <Menu.Dropdown>
-                  {process.env.NEXT_PUBLIC_CRISP_ID && (
-                    <Menu.Item
-                      leftSection={<IconMessage2 size={14} />}
-                      onClick={() => {
-                        $crisp?.push(["do", "chat:open"]);
-                      }}
-                    >
-                      Feedback
-                    </Menu.Item>
-                  )}
+                  <Menu.Item
+                    leftSection={<IconMessage2 size={14} />}
+                    onClick={() => {
+                      config.IS_CLOUD && show();
+                    }}
+                  >
+                    Feedback
+                  </Menu.Item>
                   <Menu.Item
                     component="a"
                     href="https://lunary.ai/docs"
