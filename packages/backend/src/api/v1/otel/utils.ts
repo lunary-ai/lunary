@@ -1,5 +1,5 @@
 /* ---------- helpers ---------------------------------------------------- */
-
+import { v4 as uuid } from "uuid";
 export const nsToIso = (
   ns: number | string | { high?: number; low?: number } | undefined | null,
 ): string => {
@@ -122,3 +122,135 @@ export const omitKeys = (obj: Record<string, any>): Record<string, any> => {
 
   return out;
 };
+
+/* -------------------------------------------------------------------- */
+/* bufferToUuid ⇒ 8- or 16-byte Buffer → canonical UUID string          */
+/* -------------------------------------------------------------------- */
+import { randomUUID } from "crypto";
+import { Event } from "lunary/types";
+
+export const bufToUuid = (buf: any): string | undefined => {
+  if (!Buffer.isBuffer(buf) && !(buf instanceof Uint8Array)) return undefined;
+  // convert to 32-hex string, pad if spanId is 8 bytes
+  const hex = Buffer.from(buf).toString("hex").padStart(32, "0").slice(-32);
+  return [
+    hex.slice(0, 8),
+    hex.slice(8, 12),
+    hex.slice(12, 16),
+    hex.slice(16, 20),
+    hex.slice(20),
+  ].join("-");
+};
+
+/* ------------ robust JSON try-parse --------------------------------- */
+export const safeJson = (v: any) => {
+  if (typeof v !== "string") return v;
+  try {
+    return JSON.parse(v);
+  } catch {
+    return v;
+  }
+};
+
+/* ------------------------------------------------------------------- */
+/* flattenSpans ⇒ collect every real span that owns an `attributes`    */
+/* ------------------------------------------------------------------- */
+export const flattenSpans = (obj: any): any[] => {
+  if (!obj) return [];
+
+  if (Array.isArray(obj.attributes)) {
+    // this *is* a span
+    return [obj];
+  }
+
+  let out: any[] = [];
+
+  if (Array.isArray(obj.spans)) {
+    for (const s of obj.spans) out = out.concat(flattenSpans(s));
+  }
+  if (Array.isArray(obj.scopeSpans)) {
+    for (const ss of obj.scopeSpans) out = out.concat(flattenSpans(ss));
+  }
+  if (Array.isArray(obj.resourceSpans)) {
+    for (const rs of obj.resourceSpans) out = out.concat(flattenSpans(rs));
+  }
+
+  return out;
+};
+
+export function buildTraceEventsForOneSpan(span: any): Event[] {
+  const span1 = digForSpan(span);
+  const attrs = attrsToMap(span1.attributes);
+  //   console.log(span, "span");
+  /* ① basic ids & timing ------------------------------------------------ */
+  const runId = bufToUuid(span.spanId) ?? randomUUID();
+  const parentRunId = bufToUuid(span.parentSpanId);
+
+  // Convert timestamps to ISO string format
+  const tsStart = nsToIso(span.startTimeUnixNano);
+  const tsEnd = nsToIso(span.endTimeUnixNano);
+
+  /* ② input / output / model ------------------------------------------- */
+  /* ★ new — build input / output arrays */
+  const input = buildMessages("gen_ai.prompt.", attrs);
+  const output = buildMessages("gen_ai.completion.", attrs);
+
+  const model =
+    attrs["gen_ai.request.model"] ??
+    attrs["gen_ai.response.model"] ??
+    attrs["llm.request.model"] ??
+    span.name ??
+    "unknown-model";
+
+  /* ★ new — token usage with both gen_ai.* and llm.* fallbacks */
+  const promptTokens =
+    attrs["gen_ai.usage.prompt_tokens"] ?? attrs["llm.usage.prompt_tokens"];
+  const completionTokens =
+    attrs["gen_ai.usage.completion_tokens"] ??
+    attrs["llm.usage.completion_tokens"];
+
+  const tokensUsage =
+    promptTokens != null || completionTokens != null
+      ? {
+          prompt: Number(promptTokens ?? 0),
+          completion: Number(completionTokens ?? 0),
+          total: Number(promptTokens ?? 0) + Number(completionTokens ?? 0),
+        }
+      : undefined;
+
+  /* ④ status ------------------------------------------------------------ */
+  const statusCode = span.status?.code ?? 0; // 0=UNSET,1=OK,2=ERROR
+  const isError = statusCode === 2;
+
+  /* ⑤ events ------------------------------------------------------------ */
+  // Create start event object
+  const start = {
+    type: "chain" as const,
+    event: "start" as const,
+    runId,
+    parentRunId,
+    name: model,
+    timestamp: tsStart,
+    input,
+    metadata: omitKeys(attrs),
+  } as unknown as Event;
+
+  // Create end event object
+  const end = {
+    type: "chain" as const,
+    event: isError ? "error" : "end",
+    runId,
+    parentRunId,
+    name: model,
+    timestamp: tsEnd,
+    ...(isError
+      ? { error: { message: span.status?.message || "Unknown error" } }
+      : {
+          output,
+          ...(tokensUsage ? { tokensUsage } : {}),
+        }),
+    metadata: omitKeys(attrs),
+  } as unknown as Event;
+
+  return [start, end];
+}

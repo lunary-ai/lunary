@@ -5,12 +5,16 @@ import { Event } from "lunary/types";
 import { v4 as uuid } from "uuid";
 import {
   attrsToMap,
+  bufToUuid,
   buildMessages,
+  buildTraceEventsForOneSpan,
   digForSpan,
   nsToIso,
   omitKeys,
+  safeJson,
 } from "./utils";
 import { processEventsIngestion } from "../runs/ingest";
+import { randomUUID } from "crypto";
 const otel = new Router({
   prefix: "/otel",
 });
@@ -18,7 +22,7 @@ const otel = new Router({
 export function convertOtelSpanToEvent(span: any): Event[] {
   const span1 = digForSpan(span);
   const attrs = attrsToMap(span1.attributes);
-
+  console.log(span, "span");
   /* ① basic ids & timing ------------------------------------------------ */
   const runId = span.spanId || uuid();
   const parentRunId =
@@ -95,6 +99,27 @@ export function convertOtelSpanToEvent(span: any): Event[] {
   return [start, end];
 }
 
+export function convertOtelSpanToTraceEvents(obj: any): Event[] {
+  // 1 ▸ collect every leaf span in this subtree -----------------------
+  const spans: any[] = [];
+  console.log(obj, "obj");
+  const collect = (node: any) => {
+    if (!node) return;
+
+    if (Array.isArray(node.attributes)) {
+      spans.push(node); // this is a real span
+      return;
+    }
+    if (Array.isArray(node.spans)) node.spans.forEach(collect);
+    if (Array.isArray(node.scopeSpans)) node.scopeSpans.forEach(collect);
+    if (Array.isArray(node.resourceSpans)) node.resourceSpans.forEach(collect);
+  };
+
+  collect(obj);
+
+  // 2 ▸ build events for each span -----------------------------------
+  return spans.flatMap(buildTraceEventsForOneSpan); // helper below
+}
 otel.post("/v1/traces", async (ctx: Context) => {
   console.log("[OTEL] TRACES ENDPOINT STARTED");
 
@@ -108,10 +133,12 @@ otel.post("/v1/traces", async (ctx: Context) => {
       msg,
     ).resourceSpans;
 
-  const events = resourceSpans.flatMap(convertOtelSpanToEvent);
+  // const events = resourceSpans.flatMap(convertOtelSpanToEvent);
 
-  console.log(events, "events");
-  await processEventsIngestion(`a5434ebd-02d4-4196-a078-00994dde404f`, events);
+  // console.log(events, "events");
+  const traceEvents = resourceSpans.flatMap(convertOtelSpanToTraceEvents);
+  // console.log(traceEvents, "traceEvents");
+  // await processEventsIngestion(`a5434ebd-02d4-4196-a078-00994dde404f`, events);
   ctx.status = 200;
 });
 
