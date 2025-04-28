@@ -62,6 +62,8 @@ export function parseQuery(projectId: string, queryString: string, query: any) {
         where
           ${filtersQuery}
           and r.project_id = ${projectId}
+          and r.created_at at time zone ${timeZone} >= ${startDate} at time zone ${timeZone}
+          and r.created_at at time zone ${timeZone} <= ${endDate} at time zone ${timeZone}
     `;
 
       return {
