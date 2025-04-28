@@ -1,12 +1,20 @@
 import {
   ActionIcon,
+  Box,
   Code,
   CopyButton,
   Group,
   Input,
+  Overlay,
   Tooltip,
 } from "@mantine/core";
-import { IconCheck, IconCopy } from "@tabler/icons-react";
+import {
+  IconCheck,
+  IconCopy,
+  IconEye,
+  IconEyeFilled,
+} from "@tabler/icons-react";
+import { useState } from "react";
 
 export const SuperCopyButton = ({ value }) => (
   <CopyButton value={value} timeout={2000}>
@@ -24,12 +32,32 @@ export const SuperCopyButton = ({ value }) => (
   </CopyButton>
 );
 
-export default function CopyText({ c = "violet", value, ...props }) {
+export default function CopyText({
+  c = "violet",
+  value,
+  isSecret = false,
+  ...props
+}) {
+  const [isVisible, setIsVisible] = useState(false);
   return (
     <Group gap={0} display="inline-flex">
-      <Code ml={5} c={c} {...props}>
-        {value}
-      </Code>
+      <Box pos="relative">
+        {isSecret && !isVisible && (
+          <Overlay backgroundOpacity={0.35} blur={4} />
+        )}
+        <Code ml={5} c={c} {...props}>
+          {value}
+        </Code>
+      </Box>
+      {isSecret && (
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          onClick={() => setIsVisible((v) => !v)}
+        >
+          <IconEye color="rgb(73, 80, 87)" stroke="2" width="20px" />
+        </ActionIcon>
+      )}
       <SuperCopyButton value={value} />
     </Group>
   );
