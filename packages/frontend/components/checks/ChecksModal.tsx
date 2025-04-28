@@ -20,6 +20,8 @@ import { CHECKS, Check } from "shared";
 import CHECKS_UI_DATA from "./ChecksUIData";
 import { useMemo, useState } from "react";
 import { theme } from "@/utils/theme";
+import { show } from "@intercom/messenger-js-sdk";
+import config from "@/utils/config";
 
 function CheckCard({
   onItemClick,
@@ -182,7 +184,7 @@ export default function ChecksModal({
           <Anchor
             href="#"
             onClick={() => {
-              $crisp?.push(["do", "chat:open"]);
+              config.IS_CLOUD && show();
             }}
             variant="transparent"
           >

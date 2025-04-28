@@ -36,6 +36,7 @@ import RingLoader from "../blocks/RingLoader";
 import { useState } from "react";
 import { notifications } from "@mantine/notifications";
 import { fetcher } from "@/utils/fetcher";
+import { show } from "@intercom/messenger-js-sdk";
 
 const IntegrationButton = ({
   value,
@@ -343,7 +344,7 @@ const IntegrationStepper = ({ integration }: { integration: string }) => {
                 </Text>
                 <Button
                   onClick={() => {
-                    $crisp?.push(["do", "chat:open"]);
+                    config.IS_CLOUD && show();
                   }}
                   size="compact-xs"
                   variant="outline"
@@ -696,7 +697,7 @@ export default function Empty({
                     color="blue"
                     variant="light"
                     onClick={() => {
-                      $crisp?.push(["do", "chat:open"]);
+                      config.IS_CLOUD && show();
                     }}
                   >
                     Chat with us

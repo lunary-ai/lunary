@@ -1,5 +1,7 @@
 import posthog from "posthog-js";
 import { getDefaultDateRange } from "shared";
+import config from "./config";
+import { update } from "@intercom/messenger-js-sdk";
 
 const getPreviousDate = (day) => {
   const date = new Date();
@@ -150,19 +152,6 @@ if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
   });
 }
 
-const w = {
-  // @ts-ignore
-  get crisp() {
-    if (
-      typeof window !== "undefined" &&
-      typeof window["$crisp"] !== "undefined"
-    )
-      return window["$crisp"];
-
-    return () => {};
-  },
-};
-
 async function handleRouteChange() {
   posthog?.capture("$pageview");
 }
@@ -170,10 +159,6 @@ async function handleRouteChange() {
 function track(event: string, data?: any) {
   try {
     posthog?.capture(event, data);
-
-    if (typeof w?.crisp?.push === "function") {
-      w?.crisp?.push(["set", "session:event", [[[event, data]]]]);
-    }
   } catch (e) {
     console.error(e);
   }
@@ -193,34 +178,10 @@ function trackOnce(event: string, data?: any) {
 
 function identify(userId: string, traits: any) {
   try {
-    posthog?.identify(userId, traits);
-
-    if (!w?.crisp?.push) return;
-
-    if (typeof CRISP_TOKEN_ID !== "undefined") CRISP_TOKEN_ID = userId;
-    if (typeof CRISP_RUNTIME_CONFIG !== "undefined")
-      CRISP_RUNTIME_CONFIG = {
-        session_merge: true,
-      };
-
-    if (traits.email) w?.crisp?.push(["set", "user:email", traits.email]);
-    if (traits.name) w?.crisp?.push(["set", "user:nickname", traits.name]);
-
-    w?.crisp?.push([
-      "set",
-      "session:data",
-      [
-        [
-          ...Object.entries(traits)
-            .map(([key, value]) => [key, value])
-            .filter(([key]) => key !== "email" && key !== "name")
-            .filter(([key, value]) => value),
-          ["user-id", userId],
-        ],
-      ],
-    ]);
-
-    // H?.identify(userId, traits)
+    if (config.IS_CLOUD) {
+      posthog?.identify(userId, traits);
+      update({ user_id: userId, ...traits });
+    }
   } catch (e) {
     console.error(e);
   }

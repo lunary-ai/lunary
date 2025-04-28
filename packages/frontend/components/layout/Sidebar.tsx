@@ -67,6 +67,7 @@ import { ResourceName, hasAccess, hasReadAccess, serializeLogic } from "shared";
 import DashboardsSidebarButton from "../analytics/DashboardsSidebarButton";
 import { getIconComponent } from "../blocks/IconPicker";
 import styles from "./sidebar.module.css";
+import { show } from "@intercom/messenger-js-sdk";
 
 interface NavbarLinkProps {
   icon: any;
@@ -657,7 +658,7 @@ export default function Sidebar() {
                     <Menu.Item
                       leftSection={<IconMessage2 size={14} />}
                       onClick={() => {
-                        $crisp?.push(["do", "chat:open"]);
+                        config.IS_CLOUD && show();
                       }}
                     >
                       Feedback
