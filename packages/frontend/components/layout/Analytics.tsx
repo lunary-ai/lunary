@@ -22,8 +22,6 @@ export default function AnalyticsWrapper({ children }) {
 
   return (
     <>
-      {process.env.NEXT_PUBLIC_CRISP_ID && <CrispChat />}
-
       {process.env.NEXT_PUBLIC_CUSTOM_SCRIPT && (
         <Script
           id="custom-script"

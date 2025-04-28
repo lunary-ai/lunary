@@ -654,16 +654,14 @@ export default function Sidebar() {
                   </ActionIcon>
                 </Menu.Target>
                 <Menu.Dropdown>
-                  {process.env.NEXT_PUBLIC_CRISP_ID && (
-                    <Menu.Item
-                      leftSection={<IconMessage2 size={14} />}
-                      onClick={() => {
-                        config.IS_CLOUD && show();
-                      }}
-                    >
-                      Feedback
-                    </Menu.Item>
-                  )}
+                  <Menu.Item
+                    leftSection={<IconMessage2 size={14} />}
+                    onClick={() => {
+                      config.IS_CLOUD && show();
+                    }}
+                  >
+                    Feedback
+                  </Menu.Item>
                   <Menu.Item
                     component="a"
                     href="https://lunary.ai/docs"

@@ -36,6 +36,7 @@ import { notifications } from "@mantine/notifications";
 import { NextSeo } from "next-seo";
 import Router, { useRouter } from "next/router";
 import Confetti from "react-confetti";
+import { show } from "@intercom/messenger-js-sdk";
 
 function TeamFull({ orgName }: { orgName: string }) {
   return (
@@ -56,8 +57,7 @@ function TeamFull({ orgName }: { orgName: string }) {
               component="button"
               type="button"
               onClick={() => {
-                // @ts-ignore – crisp global
-                $crisp?.push(["do", "chat:open"]);
+                config.IS_CLOUD && show();
               }}
             >
               Contact support →
