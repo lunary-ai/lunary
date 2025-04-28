@@ -17,8 +17,8 @@ import {
   Switch,
   Tabs,
   Text,
-  Title,
   TextInput,
+  Title,
 } from "@mantine/core";
 import { NextSeo } from "next-seo";
 import Router, { useRouter } from "next/router";
@@ -118,6 +118,7 @@ function Keys() {
                   c="red.8"
                   value={project?.privateApiKey}
                   data-testid="private-key"
+                  isSecret
                 />
               </Group>
               <Button
