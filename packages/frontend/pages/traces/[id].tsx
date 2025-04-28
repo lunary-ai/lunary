@@ -44,6 +44,7 @@ import errorHandler from "@/utils/errors";
 import { useHotkeys } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { hasAccess } from "shared";
+import TraceTimeline from "@/components/blocks/TraceTimeline";
 
 const typeIcon = {
   convo: IconMessages,
@@ -406,6 +407,7 @@ export default function Trace({}) {
           )}
         </Group>
       </Group>
+      {relatedRuns && <TraceTimeline runs={[run, ...relatedRuns]} />}
       <Group style={{ flex: 1, minHeight: 0 }}>
         <Box style={{ flex: "0 0 600px", overflowY: "auto", height: "100%" }}>
           {relatedRuns && (
@@ -419,7 +421,6 @@ export default function Trace({}) {
             />
           )}
         </Box>
-
         <Box style={{ flex: "1 1 400px", overflowY: "auto", height: "100%" }}>
           <Box p="md">
             <Card
