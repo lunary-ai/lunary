@@ -36,7 +36,6 @@ import { useRouter } from "next/router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { Chart, DEFAULT_CHARTS, LogicNode } from "shared";
-import { mutate } from "swr";
 
 function getSpan(index: number) {
   if ([0, 1, 2].includes(index)) {
@@ -50,10 +49,18 @@ function getSpan(index: number) {
   return 6;
 }
 
+type ChartWithSpan = Chart & {
+  span?: number;
+  sortOrder?: number;
+  startDate?: string;
+  endDate?: string;
+  granularity?: string;
+  checks?: LogicNode;
+};
+
 export default function Dashboard() {
   const router = useRouter();
   const dashboardId = router.query.id as string;
-  const { org } = useOrg();
 
   const {
     dashboard,
@@ -67,7 +74,7 @@ export default function Dashboard() {
   const { customCharts } = useCustomCharts();
 
   const [checks, setChecks] = useState<LogicNode>(["AND"]);
-  const [charts, setCharts] = useState<Chart[]>([]);
+  const [charts, setCharts] = useState<ChartWithSpan[]>([]);
 
   const { startDate, endDate, setDateRange, granularity, setGranularity } =
     useDateRangeGranularity();
@@ -77,8 +84,12 @@ export default function Dashboard() {
 
   const [isEditing, setIsEditing] = useState(false);
 
-  function setChartsWithSortOrder(newCharts: Chart[]) {
-    const orderedCharts = newCharts.map((c, i) => ({ ...c, sortOrder: i }));
+  function setChartsWithSortOrder(newCharts: ChartWithSpan[]) {
+    const orderedCharts = newCharts.map((c, i) => ({
+      ...c,
+      sortOrder: i,
+      span: c.span ?? getSpan(i), // respect initial 1/3 on first row
+    }));
     setCharts(orderedCharts);
   }
 
@@ -123,34 +134,6 @@ export default function Dashboard() {
     };
     return JSON.stringify(current) !== JSON.stringify(initial);
   }, [dashboard, checks, startDate, endDate, granularity, charts]);
-  // useEffect(() => {
-  //   const beforeUnload = (e: BeforeUnloadEvent) => {
-  //     if (isDirty) {
-  //       e.preventDefault();
-  //       return "";
-  //     }
-  //   };
-
-  //   const handleRouteChange = (url: string) => {
-  //     if (
-  //       isDirty &&
-  //       !confirm("You have unsaved changes. Do you really want to leave?")
-  //     ) {
-  //       router.events.emit("routeChangeError");
-  //       throw "Route change aborted by user";
-  //     }
-  //   };
-
-  //   if (isDirty) {
-  //     window.addEventListener("beforeunload", beforeUnload);
-  //     router.events.on("routeChangeStart", handleRouteChange);
-  //   }
-
-  //   return () => {
-  //     window.removeEventListener("beforeunload", beforeUnload);
-  //     router.events.off("routeChangeStart", handleRouteChange);
-  //   };
-  // }, [isDirty, router.events]);
 
   if (dashboardIsLoading || !dashboard) {
     return (
@@ -191,22 +174,22 @@ export default function Dashboard() {
     for (const id of selectedChartIds) {
       const base = DEFAULT_CHARTS[id];
       if (base && !existingIds.has(id)) {
-        const newChart: Chart = {
+        const newChart = {
           id,
           name: base.name,
           description: base.description,
           type: base.type,
           dataKey: base.dataKey,
           aggregationMethod: base.aggregationMethod || null,
-          primaryDimension: base.primaryDimension || null,
-          secondaryDimension: base.secondaryDimension || null,
+          primaryDimension: null,
+          secondaryDimension: null,
           isCustom: false,
-        };
+        } as ChartWithSpan;
         finalCharts.push(newChart);
       } else {
         const customChart = customCharts.find((cc) => cc.id === id);
         if (customChart && !existingIds.has(customChart.id)) {
-          const newChart: Chart = {
+          const newChart = {
             id: customChart.id,
             name: customChart.name,
             description: customChart.description,
@@ -216,13 +199,12 @@ export default function Dashboard() {
             primaryDimension: customChart.primaryDimension,
             secondaryDimension: customChart.secondaryDimension,
             isCustom: true,
-            customChartId: customChart.id,
             color: customChart.color,
             startDate: customChart.startDate,
             endDate: customChart.endDate,
             granularity: customChart.granularity,
             checks: customChart.checks,
-          };
+          } as ChartWithSpan;
           finalCharts.push(newChart);
         }
       }
@@ -230,6 +212,19 @@ export default function Dashboard() {
 
     setChartsWithSortOrder(finalCharts);
     closeModal();
+  }
+
+  function handleResize(index: number) {
+    // first row always one-third, skip resize for indices 0-2
+    if (index < 3) {
+      return;
+    }
+    const spans = [6, 12];
+    const newCharts = structuredClone(charts);
+    const current = newCharts[index].span ?? getSpan(index);
+    const next = spans[(spans.indexOf(current as number) + 1) % spans.length];
+    newCharts[index].span = next;
+    setChartsWithSortOrder(newCharts);
   }
 
   return (
@@ -358,18 +353,29 @@ export default function Dashboard() {
         >
           <Grid>
             {charts.map((chart, index) => (
-              <Grid.Col span={getSpan(index)} key={chart.id} h="350px">
+              <Grid.Col span={chart.span} key={chart.id} h="350px">
                 <ErrorBoundary>
                   <Droppable
                     index={index}
-                    onDrop={handleDrop}
-                    scrollContainerRef={scrollableContainerRef}
+                    scrollContainerRef={
+                      scrollableContainerRef as React.RefObject<HTMLDivElement | null>
+                    }
                   >
                     <Draggable index={index} isEditing={isEditing}>
                       <AnalyticsCard
                         title={chart.name}
                         description={chart.description}
                         isEditing={isEditing}
+                        // only allow resize on rows beyond first with dynamic tooltip
+                        {...(isEditing && index >= 3
+                          ? {
+                              onResize: () => handleResize(index),
+                              resizeLabel:
+                                chart.span === 6
+                                  ? "Expand to full width"
+                                  : "Shrink to half width",
+                            }
+                          : {})}
                         onDelete={() => handleRemoveChart(index)}
                       >
                         <ChartComponent
@@ -378,12 +384,14 @@ export default function Dashboard() {
                           startDate={new Date(chart.startDate || startDate)}
                           endDate={new Date(chart.endDate || endDate)}
                           granularity={chart.granularity || granularity}
-                          checks={[
-                            ...(Array.isArray(chart.checks)
-                              ? chart.checks
-                              : []),
-                            ...checks,
-                          ]}
+                          checks={
+                            [
+                              ...(Array.isArray(chart.checks)
+                                ? chart.checks
+                                : []),
+                              ...checks,
+                            ] as LogicNode
+                          }
                           color={chart.color}
                           aggregationMethod={chart.aggregationMethod}
                           isCustom={chart.isCustom}
@@ -434,7 +442,7 @@ function Draggable({
 
   return (
     <Box
-      ref={drag}
+      ref={drag as any}
       style={{
         height: "100%",
         opacity: isDragging ? 0.5 : 1,
@@ -455,7 +463,7 @@ function Droppable({
   children: React.ReactNode;
   onDrop: (dragIndex: number, dropIndex: number) => void;
   index: number;
-  scrollContainerRef: React.RefObject<HTMLDivElement>;
+  scrollContainerRef: React.RefObject<HTMLDivElement | null>;
 }) {
   const [{ isOver }, drop] = useDrop(
     () => ({
@@ -485,7 +493,10 @@ function Droppable({
   );
 
   return (
-    <div ref={drop} style={{ height: "100%", opacity: isOver ? 0.4 : 1 }}>
+    <div
+      ref={drop as any}
+      style={{ height: "100%", opacity: isOver ? 0.4 : 1 }}
+    >
       {children}
     </div>
   );
