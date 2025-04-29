@@ -40,9 +40,14 @@ function debugFn(
   parameters: any[],
   paramTypes: any[],
 ) {
-  for (let i = 0; i <= parameters.length; i++) {
-    let regex = new RegExp(`\\$${i + 1}`, "g");
-    query = query.replace(regex, `'${parameters[i]}'`);
+  for (let i = parameters.length - 1; i >= 0; i--) {
+    const value =
+      parameters[i] == null
+        ? "null"
+        : `'${String(parameters[i]).replace(/'/g, "''")}'`;
+
+    const re = new RegExp(`\\$${i + 1}(?!\\d)`, "g");
+    query = query.replace(re, value);
   }
 
   console.debug("connection:", connection);
