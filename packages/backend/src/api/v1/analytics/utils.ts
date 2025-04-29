@@ -1,5 +1,6 @@
 import { convertChecksToSQL } from "@/src/utils/checks";
 import sql from "@/src/utils/db";
+import { DateTime } from "luxon";
 import { deserializeLogic, LogicNode } from "shared";
 import { z } from "zod";
 
@@ -26,6 +27,12 @@ export function parseQuery(projectId: string, queryString: string, query: any) {
       ]),
     })
     .transform(({ startDate, endDate, timeZone, granularity }) => {
+      const startUtc = DateTime.fromISO(startDate, { zone: timeZone })
+        .toUTC()
+        .toISO();
+      const endUtc = DateTime.fromISO(endDate, { zone: timeZone })
+        .toUTC()
+        .toISO();
       const granularityToIntervalMap = {
         hourly: "1 hour",
         daily: "1 day",
@@ -41,34 +48,31 @@ export function parseQuery(projectId: string, queryString: string, query: any) {
       const localCreatedAt = localCreatedAtMap[granularity];
 
       const datesQuery = sql`
-        select 
-          * 
-        from (
-          select generate_series(
-            ${startDate} at time zone ${timeZone},
-            ${endDate} at time zone ${timeZone},
-            ${interval}::interval
-          )::timestamp as date) t
-        where
-          date <= current_timestamp at time zone ${timeZone} 
-      `;
+      select (gs at time zone ${timeZone})::timestamp as date          
+      from   generate_series(
+               ${startUtc}::timestamptz,
+               ${endUtc}  ::timestamptz,
+               ${interval}::interval
+             ) gs
+      where  gs <= current_timestamp                      
+    `;
 
       const filteredRunsQuery = sql`
-        select 
-          *,
-          ${localCreatedAt}
-        from
-          run r
-        where
-          ${filtersQuery}
-          and r.project_id = ${projectId}
-          and r.created_at at time zone ${timeZone} >= ${startDate} at time zone ${timeZone}
-          and r.created_at at time zone ${timeZone} <= ${endDate} at time zone ${timeZone}
+      select
+        *,
+        ${localCreatedAt}                                
+      from   run r
+      where  ${filtersQuery}
+        and  r.project_id = ${projectId}
+        and  r.created_at >= ${startUtc}::timestamptz     
+        and  r.created_at <  ${endUtc}  ::timestamptz     
     `;
 
       return {
         startDate,
         endDate,
+        startUtc,
+        endUtc,
         datesQuery,
         filteredRunsQuery,
         granularity,
