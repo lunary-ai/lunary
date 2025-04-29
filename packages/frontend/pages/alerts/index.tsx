@@ -16,6 +16,7 @@ import {
 } from "@mantine/core";
 import { IconBell, IconPencil, IconTrash, IconPlus } from "@tabler/icons-react";
 import { useRouter } from "next/router";
+import { useAlerts, useAlert, useAlertHistory } from "@/utils/dataHooks/alerts";
 
 export type Metric =
   | "error"
@@ -39,14 +40,13 @@ const metricOptions: { value: Metric; label: string }[] = [
 ];
 
 function formatThreshold(metric: Metric, value: number) {
-  switch (metric) {
-    case "error":
-    case "feedback":
-      return `${value}%`;
-    case "cost":
-      return `$${value}`;
-    default:
-      return `${value}s`;
+  console.log(metric);
+  if (metric === "error" || metric === "feedback") {
+    return `${value}%`;
+  } else if (metric === "cost") {
+    return `$${value}`;
+  } else {
+    return `${value}s`;
   }
 }
 
@@ -73,72 +73,42 @@ export interface AlertHistory {
 
 function AlertsPage() {
   const router = useRouter();
-  // state -------------------------------------------------------------------
-  const [activeAlerts, setActiveAlerts] = useState<Alert[]>([
-    {
-      id: "1745933423983",
-      createdAt: "2025-04-29T13:30:23.983Z",
-      status: "healthy",
-      name: "Error rate",
-      threshold: 5,
-      metric: "error",
-      timeFrameMinutes: 10,
-      email: "admin@example.com",
-      webhookUrl: "https://hooks.example.com/error-rate",
-    },
-  ]);
 
-  const [alertHistory, setAlertHistory] = useState<AlertHistory[]>([
-    {
-      id: "hist1",
-      alertId: "1745933423983",
-      startTime: "2025-04-28T10:00:00Z",
-      endTime: "2025-04-28T10:05:00Z",
-      trigger: 8,
-      status: "resolved",
-    },
-    {
-      id: "hist2",
-      alertId: "1745933423983",
-      startTime: "2025-04-27T18:12:00Z",
-      endTime: "2025-04-27T18:17:00Z",
-      trigger: 11,
-      status: "resolved",
-    },
-    {
-      id: "hist3",
-      alertId: "1745933423983",
-      startTime: "2025-04-26T09:20:00Z",
-      endTime: "2025-04-26T09:28:00Z",
-      trigger: 7,
-      status: "resolved",
-    },
-    {
-      id: "hist4",
-      alertId: "1745933423983",
-      startTime: "2025-04-25T14:40:00Z",
-      endTime: "2025-04-25T14:46:00Z",
-      trigger: 9,
-      status: "resolved",
-    },
-  ]);
+  // data hooks for alerts and history
+  const {
+    alerts: activeAlerts,
+    isLoading: loadingAlerts,
+    create,
+    isCreating,
+    mutate: mutateAlerts,
+  } = useAlerts();
+  const {
+    history: alertHistory,
+    isLoading: loadingHistory,
+    mutate: mutateHistory,
+  } = useAlertHistory();
 
+  // state for modal & selected
   const [modalMode, setModalMode] = useState<"create" | "edit" | null>(null);
   const [current, setCurrent] = useState<Alert | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Alert | null>(null);
 
-  // open modal via query -----------------------------------------------------
+  // hook for updating current alert
+  const { update } = useAlert(current?.id || "");
+  // hook for deleting selected alert
+  const { remove: deleteAlert } = useAlert(deleteTarget?.id || "");
+
+  // open modal via query
   useEffect(() => {
-    const q = router.query;
-    if (q.modal === "create") openCreate();
-    if (q.modal === "edit" && typeof q.id === "string") {
-      const target = activeAlerts.find((a) => a.id === q.id);
+    const { modal, id } = router.query;
+    if (modal === "create") openCreate();
+    if (modal === "edit" && typeof id === "string") {
+      const target = activeAlerts.find((a) => a.id === id);
       if (target) openEdit(target);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router.query]);
+  }, [router.query, activeAlerts]);
 
-  // helpers -----------------------------------------------------------------
+  // helpers
   const openCreate = () => {
     setCurrent(null);
     setModalMode("create");
@@ -151,46 +121,45 @@ function AlertsPage() {
     setDeleteTarget(alert);
   };
 
-  const handleSave = (data: Omit<Alert, "id" | "createdAt" | "status">) => {
+  // handle save
+  async function handleSave(data: Omit<Alert, "id" | "createdAt" | "status">) {
+    // omit empty optional fields to satisfy backend zod schema
+    const payload = {
+      name: data.name,
+      threshold: data.threshold,
+      metric: data.metric,
+      timeFrameMinutes: data.timeFrameMinutes,
+      ...(data.email ? { email: data.email } : {}),
+      ...(data.webhookUrl ? { webhookUrl: data.webhookUrl } : {}),
+    };
     if (modalMode === "create") {
-      const newAlert: Alert = {
-        id: Date.now().toString(),
-        createdAt: new Date().toISOString(),
-        status: "healthy",
-        ...data,
-      };
-      setActiveAlerts([newAlert, ...activeAlerts]);
+      await create(payload);
     } else if (modalMode === "edit" && current) {
-      const updated = { ...current, ...data } as Alert;
-      setActiveAlerts(
-        activeAlerts.map((a) => (a.id === current.id ? updated : a)),
-      );
+      await update(payload);
     }
+    await mutateAlerts();
+    await mutateHistory();
     setModalMode(null);
     setCurrent(null);
     router.replace("/alerts", undefined, { shallow: true });
-  };
+  }
 
-  const handleDelete = () => {
+  // handle delete
+  async function handleDelete() {
     if (deleteTarget) {
-      setAlertHistory([
-        {
-          id: Date.now().toString(),
-          alertId: deleteTarget.id,
-          startTime: deleteTarget.createdAt,
-          endTime: new Date().toISOString(),
-          trigger: deleteTarget.threshold,
-          status: "resolved",
-        },
-        ...alertHistory,
-      ]);
-      // remove
-      setActiveAlerts(activeAlerts.filter((a) => a.id !== deleteTarget.id));
+      const { id } = deleteTarget;
+      await deleteAlert();
+      await mutateAlerts();
+      await mutateHistory();
       setDeleteTarget(null);
     }
-  };
+  }
 
-  // -------------------------------------------------------------------------
+  // show loading state if needed
+  if (loadingAlerts) {
+    return <Text>Loading alerts...</Text>;
+  }
+
   return (
     <Stack style={{ gap: 24, padding: 16 }}>
       {activeAlerts.length === 0 ? (
@@ -325,7 +294,7 @@ function AlertsPage() {
                         {activeAlerts.find((a) => a.id === h.alertId)?.name ||
                           "—"}
                       </Table.Td>
-                      <Table.Td>{formatThreshold("error", h.trigger)}</Table.Td>
+                      <Table.Td>{h.trigger}</Table.Td>
                       <Table.Td>
                         <Badge
                           color={h.status === "resolved" ? "green" : "yellow"}
@@ -384,11 +353,15 @@ function AlertsPage() {
 
 // ---------------------------------------------------------------------------
 // Form component
-const AlertForm: React.FC<{
+function AlertForm({
+  initial,
+  onCancel,
+  onSave,
+}: {
   initial: Alert | null;
   onCancel: () => void;
   onSave: (data: Omit<Alert, "id" | "createdAt" | "status">) => void;
-}> = ({ initial, onCancel, onSave }) => {
+}) {
   const [name, setName] = useState(initial?.name || "");
   const [threshold, setThreshold] = useState(
     initial ? initial.threshold.toString() : "5",
@@ -466,6 +439,6 @@ const AlertForm: React.FC<{
       </Stack>
     </form>
   );
-};
+}
 
 export default AlertsPage;

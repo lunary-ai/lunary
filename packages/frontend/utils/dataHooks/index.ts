@@ -55,10 +55,15 @@ export function useProjectMutation(
   options?: SWRMutationConfiguration<any, any>,
 ) {
   const { projectId } = useContext(ProjectContext);
+  // Wrap customFetcher to accept direct data payload
+  const fetcherWrapper = (_key: string, data: any) => {
+    return customFetcher(_key, { arg: data });
+  };
 
   return useSWRMutation(
     () => generateKey(key, projectId),
-    customFetcher,
+    // mutationFn receives (url, { arg: payload })
+    (url, { arg }) => customFetcher(url, { arg }),
     options,
   );
 }
