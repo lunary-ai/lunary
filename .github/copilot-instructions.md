@@ -156,6 +156,7 @@ All code should live in one of the `packages/*` workspaces (JS/TS managed by Bun
 - Validate request payloads against schemas/OpenAPI.
 - Interact with PostgreSQL via the `db.ts` helper.
 - Write migration scripts under `packages/db` and run via `bun run migrate:db`.
+- All the sql columns are autoCamelize on select and insert. 
 
 ### Shared (packages/shared)
 - **Purpose**: shared TypeScript types, schemas, and utility functions.
