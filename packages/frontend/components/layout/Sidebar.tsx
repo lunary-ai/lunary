@@ -20,12 +20,14 @@ import {
 import {
   IconActivity,
   IconAnalyze,
+  IconBell,
   IconBinaryTree2,
-  IconBrandOpenai,
+  IconCheckbox,
   IconChecklist,
   IconCompass,
   IconCreditCard,
   IconDatabase,
+  IconFilterCog,
   IconHelpOctagon,
   IconHelpSmall,
   IconListSearch,
@@ -37,10 +39,10 @@ import {
   IconPaint,
   IconSearch,
   IconSettings,
+  IconShieldHalf,
   IconSparkles,
   IconSun,
   IconTelescope,
-  IconTerminal,
   IconTerminal2,
   IconTimeline,
   IconUsers,
@@ -61,13 +63,13 @@ import { useAuth } from "@/utils/auth";
 import config from "@/utils/config";
 import { useProject, useProjects } from "@/utils/dataHooks";
 import { useViews } from "@/utils/dataHooks/views";
+import { show } from "@intercom/messenger-js-sdk";
 import { useDisclosure, useFocusTrap, useLocalStorage } from "@mantine/hooks";
 import { useEffect, useMemo, useState } from "react";
 import { ResourceName, hasAccess, hasReadAccess, serializeLogic } from "shared";
 import DashboardsSidebarButton from "../analytics/DashboardsSidebarButton";
 import { getIconComponent } from "../blocks/IconPicker";
 import styles from "./sidebar.module.css";
-import { show } from "@intercom/messenger-js-sdk";
 
 interface NavbarLinkProps {
   icon: any;
@@ -168,6 +170,10 @@ function MenuSection({ item }) {
   const filtered = item.subMenu?.filter((subItem) =>
     subItem.label.toLowerCase().includes(query.toLowerCase()),
   );
+
+  if (filtered.filter((item) => !item.disabled).length === 0) {
+    return null;
+  }
 
   return (
     <Box mb="sm" mt="md">
@@ -368,9 +374,9 @@ export default function Sidebar() {
           resource: "prompts",
         },
         {
-          label: "Evaluations",
+          label: "Evaluators",
           icon: IconCompass,
-          link: "/evals",
+          link: "/evaluators",
           resource: "evaluations",
           disabled: !org.beta,
         },
@@ -384,6 +390,13 @@ export default function Sidebar() {
             : false,
         },
         {
+          label: "Tests",
+          icon: IconCheckbox,
+          link: "/tests",
+          resource: "evaluations",
+          disabled: !org.beta,
+        },
+        {
           label: "Checklists",
           icon: IconChecklist,
           link: "/checklists",
@@ -394,12 +407,40 @@ export default function Sidebar() {
               ? true
               : false,
         },
-
         {
           label: "Enrichments",
           icon: IconSparkles,
           link: "/enrichments",
           resource: "enrichments",
+          disabled: org.beta,
+        },
+      ],
+    },
+    {
+      label: "Protect",
+      isSection: true,
+      c: "blue",
+      subMenu: [
+        {
+          label: "Guardrails",
+          icon: IconShieldHalf,
+          link: "/guardrails",
+          resource: "enrichments",
+          disabled: !org.beta,
+        },
+        {
+          label: "Data Rules",
+          icon: IconFilterCog,
+          link: "/data-rules",
+          resource: "enrichments",
+          disabled: !org.beta,
+        },
+        {
+          label: "Alerts",
+          icon: IconBell,
+          link: "/alerts",
+          resource: "enrichments",
+          disabled: !org.beta,
         },
       ],
     },

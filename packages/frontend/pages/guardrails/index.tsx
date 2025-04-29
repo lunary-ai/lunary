@@ -145,6 +145,8 @@ export default function Filters() {
           </Badge>
         </Group>
 
+        <Group>Select Model</Group>
+
         <SettingsCard title="Blocked Message">
           <Text>
             Define the message that will be displayed when a model's response or
@@ -209,60 +211,6 @@ export default function Filters() {
               />
             </Stack>
           </Radio.Group>
-        </SettingsCard>
-        <SettingsCard title="Hallucinations">
-          <Text>
-            Configure settings to reduce model hallucinations and ensure
-            responses are grounded in factual information.
-          </Text>
-
-          <Switch
-            size="md"
-            label="Enable grounding check"
-            description="Validate if model responses are grounded and factually correct based on the reference source."
-          />
-
-          <Text size="sm" c="dimmed">
-            Grounding score threshold
-          </Text>
-          <Slider
-            min={0}
-            max={1}
-            w="80%"
-            mx="auto"
-            step={0.01}
-            defaultValue={0.85}
-            label={(value) => value.toFixed(2)}
-            marks={[
-              { value: 0, label: "Blocks nothing" },
-              { value: 1, label: "Blocks almost everything" },
-            ]}
-          />
-
-          <Switch
-            size="md"
-            mt="xl"
-            label="Relevance check"
-            description="Validate if model responses are relevant to the user's query."
-          />
-
-          <Text size="sm" c="dimmed">
-            Relevance score threshold
-          </Text>
-          <Slider
-            min={0}
-            max={1}
-            step={0.01}
-            w="80%"
-            mb="xl"
-            mx="auto"
-            defaultValue={0.55}
-            label={(value) => value.toFixed(2)}
-            marks={[
-              { value: 0, label: "Blocks nothing" },
-              { value: 1, label: "Blocks almost everything" },
-            ]}
-          />
         </SettingsCard>
       </Stack>
     </Container>

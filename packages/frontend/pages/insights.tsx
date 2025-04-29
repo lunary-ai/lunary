@@ -1,29 +1,30 @@
-import { useState } from "react";
 import {
-  Container,
-  Tabs,
-  Table,
-  Text,
-  Group,
-  Badge,
   ActionIcon,
-  Tooltip,
+  Badge,
   Box,
-  ThemeIcon,
   Card,
+  Container,
   Drawer,
+  Group,
+  Table,
+  Tabs,
+  Text,
+  ThemeIcon,
+  Title,
+  Tooltip,
 } from "@mantine/core";
 import {
   IconBrain,
-  IconMoodHappy,
-  IconTarget,
-  IconPlus,
-  IconMinus,
-  IconTrendingUp,
-  IconTrendingDown,
   IconClock,
+  IconMinus,
+  IconMoodHappy,
+  IconPlus,
+  IconTarget,
+  IconTrendingDown,
+  IconTrendingUp,
 } from "@tabler/icons-react";
 import { format } from "date-fns";
+import { useState } from "react";
 
 type LineChartData = Array<{
   date: string;
@@ -286,6 +287,10 @@ export default function Insights() {
 
   return (
     <Container size="xl" py="xl">
+      <Group>
+        <Title order={3}>Insights</Title>
+        <Badge variant="light">Alpha</Badge>
+      </Group>
       <Tabs value={activeTab} onChange={setActiveTab}>
         <Tabs.List>
           <Tabs.Tab value="topics" leftSection={<IconBrain size={16} />}>
