@@ -124,6 +124,8 @@ export default function DataTable({
     fetchMoreOnBottomReached(tableContainerRef.current);
   }, [fetchMoreOnBottomReached]);
 
+  const rowNumber = table.getRowModel().rows.length;
+
   return (
     <Card withBorder p={0} className={scheme} h="auto">
       <div
@@ -195,7 +197,7 @@ export default function DataTable({
           />
         </table>
 
-        {loading && (
+        {!rowNumber && loading && (
           <Text m="auto" p="md" c="dimmed" size="xs" ta="center">
             Fetching...
           </Text>
