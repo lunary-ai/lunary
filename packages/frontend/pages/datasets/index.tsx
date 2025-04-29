@@ -150,7 +150,7 @@ export default function Datasets() {
                   variant="default"
                   loading={isInserting}
                 >
-                  New Dataset
+                  Crete Dataset
                 </Button>
               </Menu.Target>
               <Menu.Dropdown>
