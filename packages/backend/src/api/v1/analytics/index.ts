@@ -1,6 +1,7 @@
 import sql from "@/src/utils/db";
 import Context from "@/src/utils/koa";
 import Router from "koa-router";
+import { DateTime } from "luxon";
 import { deserializeLogic } from "shared";
 import { z } from "zod";
 import { buildFiltersQuery, parseQuery } from "./utils";
@@ -218,6 +219,8 @@ analytics.get("/users/new", async (ctx: Context) => {
     localCreatedAt,
     startDate,
     endDate,
+    startUtc,
+    endUtc,
     filteredRunsQuery,
   } = parseQuery(projectId, ctx.querystring, ctx.query);
 
@@ -240,8 +243,8 @@ analytics.get("/users/new", async (ctx: Context) => {
     where
       r.project_id = ${projectId}
       and r.external_user_id is not null
-      and r.created_at at time zone ${timeZone} >= ${startDate} at time zone ${timeZone}
-      and r.created_at at time zone ${timeZone} <= ${endDate} at time zone ${timeZone}
+      and  r.created_at >= ${startUtc}::timestamptz     
+      and  r.created_at <  ${endUtc}::timestamptz     
       and eu.created_at at time zone ${timeZone} <= r.created_at
       and eu.created_at at time zone ${timeZone}>= r.created_at - interval '7 days'
   `;
@@ -423,8 +426,8 @@ analytics.get("/users/new", async (ctx: Context) => {
             left join external_user eu on eu.id = r.external_user_id
           where
             r.external_user_id = eu.id
-            and r.created_at >= ${startDate} at time zone ${timeZone}
-            and r.ended_at <= ${endDate} at time zone ${timeZone}
+            and  r.created_at >= ${startUtc}::timestamptz     
+            and  r.created_at <  ${endUtc}::timestamptz     
             and eu.created_at <= r.created_at
             and eu.created_at >= r.created_at - interval '7 days'
         )
@@ -458,8 +461,8 @@ analytics.get("/users/new", async (ctx: Context) => {
           where
             r.project_id = ${projectId}
             and r.external_user_id is not null
-            and r.created_at >= ${startDate} at time zone ${timeZone}
-            and r.created_at <= ${endDate} at time zone ${timeZone}
+            and r.created_at >= ${startUtc}::timestamptz     
+            and r.created_at <  ${endUtc}::timestamptz     
             and eu.created_at <= r.created_at
             and eu.created_at >= r.created_at - interval '7 days'
         )
@@ -541,6 +544,8 @@ analytics.get("/users/active", async (ctx: Context) => {
     localCreatedAt,
     startDate,
     endDate,
+    startUtc,
+    endUtc,
     filteredRunsQuery,
   } = parseQuery(projectId, ctx.querystring, ctx.query);
 
@@ -562,8 +567,8 @@ analytics.get("/users/active", async (ctx: Context) => {
       where
         r.project_id = ${projectId} 
         and r.external_user_id is not null
-        and created_at at time zone ${timeZone} >= ${startDate} at time zone ${timeZone} 
-        and created_at at time zone ${timeZone} <= ${endDate} at time zone ${timeZone} 
+        and  r.created_at >= ${startUtc}::timestamptz     
+        and  r.created_at <  ${endUtc}::timestamptz     
     `;
 
   if (firstDimensionKey === "undefined" || secondDimensionKey === "undefined") {
@@ -663,8 +668,8 @@ analytics.get("/users/active", async (ctx: Context) => {
             left join external_user eu on eu.id = r.external_user_id 
           where
             r.external_user_id = eu.id
-            and r.created_at >= ${startDate} at time zone ${timeZone}
-            and r.ended_at <= ${endDate} at time zone ${timeZone}
+            and  r.created_at >= ${startUtc}::timestamptz     
+            and  r.created_at <  ${endUtc}::timestamptz     
         )
         select
           sd.value as value, 
@@ -683,36 +688,36 @@ analytics.get("/users/active", async (ctx: Context) => {
     } else {
       // secondDimensionKey === 'date'
       rows = await sql<{ date: Date; name: string; value: number }[]>`
-with dates as (
-  ${datesQuery}
-),
-filtered_runs as (
-  select
-    r.external_user_id,
-    date_trunc('day', r.created_at at time zone ${timeZone})::timestamp as local_created_at,
-    eu.props ->> ${firstDimensionKey as string} as first_dimension_value
-  from
-    run r
-  left join external_user eu on eu.id = r.external_user_id
-  where
-    r.project_id = ${projectId}
-    and r.external_user_id is not null
-    and r.created_at >= ${startDate} at time zone ${timeZone}
-    and r.created_at <= ${endDate} at time zone ${timeZone}
-)
-select
-  d.date,
-  coalesce(fr.first_dimension_value, 'Unknown') as name,
-  coalesce(count(distinct fr.external_user_id)::int, 0) as value 
-from
-  dates d
-  left join filtered_runs fr on d.date = fr.local_created_at
-group by
-  d.date,
-  first_dimension_value
-order by
-  d.date;
-  `;
+        with dates as (
+          ${datesQuery}
+        ),
+        filtered_runs as (
+          select
+            r.external_user_id,
+            date_trunc('day', r.created_at at time zone ${timeZone})::timestamp as local_created_at,
+            eu.props ->> ${firstDimensionKey as string} as first_dimension_value
+          from
+            run r
+          left join external_user eu on eu.id = r.external_user_id
+          where
+            r.project_id = ${projectId}
+            and r.external_user_id is not null
+            and  r.created_at >= ${startUtc}::timestamptz     
+            and  r.created_at <  ${endUtc}::timestamptz     
+        )
+        select
+          d.date,
+          coalesce(fr.first_dimension_value, 'Unknown') as name,
+          coalesce(count(distinct fr.external_user_id)::int, 0) as value 
+        from
+          dates d
+          left join filtered_runs fr on d.date = fr.local_created_at
+        group by
+          d.date,
+          first_dimension_value
+        order by
+          d.date;
+      `;
 
       let dateObj: {
         [dateStr: string]: {
@@ -779,6 +784,8 @@ analytics.get("/users/average-cost", async (ctx: Context) => {
     localCreatedAt,
     startDate,
     endDate,
+    startUtc,
+    endUtc,
   } = parseQuery(projectId, ctx.querystring, ctx.query);
 
   const [{ stat }] = await sql`
@@ -790,8 +797,8 @@ analytics.get("/users/average-cost", async (ctx: Context) => {
           run
         where
           project_id = ${projectId} 
-          and created_at >= ${startDate} at time zone ${timeZone} 
-          and created_at <= ${endDate} at time zone ${timeZone} 
+          and  created_at >= ${startUtc}::timestamptz     
+          and  created_at <  ${endUtc}::timestamptz     
           and cost is not null
           and external_user_id is not null
         group by
@@ -1030,6 +1037,8 @@ analytics.get("/latency", async (ctx: Context) => {
     startDate,
     endDate,
     timeZone,
+    startUtc,
+    endUtc,
   } = parseQuery(projectId, ctx.querystring, ctx.query);
 
   const [{ stat }] = await sql`
@@ -1040,8 +1049,8 @@ analytics.get("/latency", async (ctx: Context) => {
       where
         r.project_id = ${projectId} 
         and type = 'llm'
-        and created_at >= ${startDate} at time zone ${timeZone} 
-        and created_at <= ${endDate} at time zone ${timeZone} 
+        and  r.created_at >= ${startUtc}::timestamptz     
+        and  r.created_at <  ${endUtc}  ::timestamptz  
     `;
 
   if (granularity === "weekly") {
@@ -1213,7 +1222,7 @@ analytics.get("/threads", async (ctx: Context) => {
 
 analytics.get("/agents/top", async (ctx: Context) => {
   const { projectId } = ctx.state;
-  const { startDate, endDate, timeZone } = parseQuery(
+  const { startDate, endDate, timeZone, startUtc, endUtc } = parseQuery(
     projectId,
     ctx.querystring,
     ctx.query,
@@ -1228,8 +1237,8 @@ analytics.get("/agents/top", async (ctx: Context) => {
       where
         project_id = ${projectId} 
         and r.type = 'chat'
-        and date_trunc('day', r.created_at at time zone ${timeZone})::timestamp >= ${startDate}
-        and date_trunc('day', r.created_at at time zone ${timeZone})::timestamp <= ${endDate}
+        and  r.created_at >= ${startUtc}::timestamptz     
+        and  r.created_at <  ${endUtc}::timestamptz  
     ),
     agent_ids as (
       select
@@ -1245,8 +1254,8 @@ analytics.get("/agents/top", async (ctx: Context) => {
         project_id = ${projectId} 
         and r.type in ('chain', 'agent')
         and (parent_run_id is null or chat_runs.id is not null)
-        and date_trunc('day', r.created_at at time zone ${timeZone})::timestamp >= ${startDate}
-        and date_trunc('day', r.created_at at time zone ${timeZone})::timestamp <= ${endDate} 
+        and  r.created_at >= ${startUtc}::timestamptz     
+        and  r.created_at <  ${endUtc}  ::timestamptz  
     ),
     agents_tree as (
       select 
@@ -1560,14 +1569,19 @@ analytics.get("/models/top", async (ctx: Context) => {
     ctx.request.query,
   );
 
+  const startUtc = DateTime.fromISO(startDate, { zone: timeZone })
+    .toUTC()
+    .toISO();
+  const endUtc = DateTime.fromISO(endDate, { zone: timeZone }).toUTC().toISO();
+
   const deserializedChecks = deserializeLogic(ctx.querystring);
   const filtersQuery = buildFiltersQuery(deserializedChecks);
 
   let dateFilter = sql``;
   if (startDate && endDate && timeZone) {
     dateFilter = sql`
-        and date_trunc('day', r.created_at at time zone ${timeZone})::timestamp  >= ${startDate}
-        and date_trunc('day', r.created_at at time zone ${timeZone})::timestamp  <= ${endDate}
+        and  r.created_at >= ${startUtc}::timestamptz     
+        and  r.created_at <  ${endUtc}::timestamptz  
       `;
   }
 
@@ -1620,6 +1634,11 @@ analytics.get("/templates/top", async (ctx: Context) => {
   const { startDate, endDate, timeZone, checks } = querySchema.parse(
     ctx.request.query,
   );
+
+  const startUtc = DateTime.fromISO(startDate, { zone: timeZone })
+    .toUTC()
+    .toISO();
+  const endUtc = DateTime.fromISO(endDate, { zone: timeZone }).toUTC().toISO();
   const deserializedChecks = deserializeLogic(ctx.querystring);
   const filtersQuery = buildFiltersQuery(deserializedChecks);
 
@@ -1639,8 +1658,8 @@ analytics.get("/templates/top", async (ctx: Context) => {
         ${filtersQuery}
         and r.project_id = ${projectId}
         and r.template_version_id is not null
-        and date_trunc('day', r.created_at at time zone ${timeZone})::timestamp  >= ${startDate}
-        and date_trunc('day', r.created_at at time zone ${timeZone})::timestamp  <= ${endDate}
+        and  r.created_at >= ${startUtc}::timestamptz     
+        and  r.created_at <  ${endUtc}::timestamptz  
       group by
         t.id 
       order by
