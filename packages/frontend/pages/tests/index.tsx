@@ -11,14 +11,14 @@ import { IconPlus } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { useEvals } from "@/utils/dataHooks/evals";
 
-export default function EvalsIndexPage() {
+export default function Tests() {
   const router = useRouter();
   const { evals, isLoading } = useEvals();
 
   return (
     <Stack px="lg" py="md" style={{ height: "100%" }}>
       <Group justify="space-between" mb="md">
-        <Title order={2}>evaluations</Title>
+        <Title order={2}>Tests</Title>
         <Button
           leftSection={<IconPlus size={16} />}
           onClick={() => router.push("/evals/new")}

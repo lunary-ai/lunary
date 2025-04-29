@@ -145,7 +145,7 @@ export default function EvalDetailPage() {
         </Center>
       ) : rowsData.length ? (
         <ScrollArea>
-          <Table striped highlightOnHover withBorder>
+          <Table striped highlightOnHover withRowBorders>
             <thead>
               <tr>
                 <th style={{ minWidth: 240 }}>item</th>

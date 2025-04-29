@@ -26,6 +26,7 @@ export type ResourceName =
   | "dashboards"
   | "charts"
   | "auditLogs"
+  | "guardrails"
   | "jobs";
 
 export type Action =
