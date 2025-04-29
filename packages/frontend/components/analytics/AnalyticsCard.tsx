@@ -1,6 +1,6 @@
 import { ActionIcon, Card, Group, Text, Tooltip } from "@mantine/core";
 import { useHover } from "@mantine/hooks";
-import { IconInfoCircle, IconX } from "@tabler/icons-react";
+import { IconInfoCircle, IconX, IconArrowsMaximize } from "@tabler/icons-react";
 import { ReactNode } from "react";
 
 interface AnalyticsCardProps {
@@ -8,6 +8,8 @@ interface AnalyticsCardProps {
   description?: string | null;
   isEditing?: boolean;
   onDelete?: () => void;
+  onResize?: () => void; // existing prop for resize
+  resizeLabel?: string; // new prop for tooltip label
   children: ReactNode;
 }
 
@@ -29,6 +31,8 @@ function AnalyticsCard({
   description,
   isEditing = false,
   onDelete = () => {},
+  onResize,
+  resizeLabel,
 }: AnalyticsCardProps) {
   const { hovered, ref } = useHover();
 
@@ -61,16 +65,32 @@ function AnalyticsCard({
           )}
         </Group>
         {isEditing && (
-          <ActionIcon
-            variant="light"
-            radius="lg"
-            size="sm"
-            color="gray"
-            onClick={onDelete}
-            style={{ zIndex: 2 }}
-          >
-            <IconX size={16} />
-          </ActionIcon>
+          <Group gap="xs">
+            {onResize && (
+              <Tooltip label={resizeLabel || "Resize chart width"}>
+                <ActionIcon
+                  variant="light"
+                  radius="lg"
+                  size="sm"
+                  color="gray"
+                  onClick={onResize}
+                  style={{ zIndex: 2 }}
+                >
+                  <IconArrowsMaximize size={16} />
+                </ActionIcon>
+              </Tooltip>
+            )}
+            <ActionIcon
+              variant="light"
+              radius="lg"
+              size="sm"
+              color="gray"
+              onClick={onDelete}
+              style={{ zIndex: 2 }}
+            >
+              <IconX size={16} />
+            </ActionIcon>
+          </Group>
         )}
       </Group>
       {children}
