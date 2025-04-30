@@ -34,6 +34,7 @@ export default function TopTopics({ data }: { data: TopTopicsData[] }) {
             },
           ],
           ...topic,
+          url: `/logs?filters=topics=${topic.topic}`,
         }))}
         columns={[
           {
