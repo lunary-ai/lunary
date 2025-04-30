@@ -16,6 +16,7 @@ export default function TopModels({ data }: { data: Data[] }) {
       <BarList
         data={data.map((model) => ({
           value: model.name,
+          url: `/logs?filters=models=${model.name}`,
           tokens: model.totalTokens,
           cost: model.cost,
           barSections: [

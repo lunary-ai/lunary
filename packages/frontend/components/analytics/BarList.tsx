@@ -7,6 +7,7 @@ import {
   Tooltip,
   useComputedColorScheme,
 } from "@mantine/core";
+import { useRouter } from "next/router";
 
 type BarListProps = {
   data: any[];
@@ -23,7 +24,7 @@ type BarListProps = {
 // A table of progress bars, with the progress value the proportion relative to the total
 // and the second column the value of the bar
 function BarList({ data, columns, filterZero = true }: BarListProps) {
-  // Moved to avoid unnecessary computations
+  const router = useRouter();
   if (!data) return <>No data.</>;
 
   const dataColumns = columns.filter((col) => col.key);
@@ -66,6 +67,15 @@ function BarList({ data, columns, filterZero = true }: BarListProps) {
                       pos="relative"
                       display="flex"
                       height="35px"
+                      onClick={(e) => {
+                        if (!item.url) return;
+                        if (e.metaKey || e.ctrlKey) {
+                          window.open(item.url, "_blank");
+                        } else {
+                          router.push(item.url);
+                        }
+                      }}
+                      style={item.url ? { cursor: "pointer" } : undefined}
                     >
                       <Progress.Root
                         size="lg"
@@ -80,7 +90,7 @@ function BarList({ data, columns, filterZero = true }: BarListProps) {
                               <Progress.Section
                                 value={(count / mainTotal) * 100}
                                 color={color}
-                              ></Progress.Section>
+                              />
                             </Tooltip>
                           ),
                         )}
