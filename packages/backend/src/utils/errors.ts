@@ -13,10 +13,13 @@ export async function errorMiddleware(ctx: Context, next: Next) {
     if (error instanceof z.ZodError) {
       ctx.status = 422;
       ctx.body = { error: "Error", message: fromZodError(error).toString() };
+      console.error(ctx.path);
       console.error("ZOD ERROR", JSON.stringify(error.errors[0]));
       console.error(error);
       return;
     }
+
+    console.error(ctx.path);
     console.error(error);
 
     ctx.status = error.statusCode || error.status || 500;

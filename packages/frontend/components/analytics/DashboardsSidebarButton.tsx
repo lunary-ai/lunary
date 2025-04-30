@@ -5,6 +5,10 @@ import {
   IconAnalyze,
   IconChevronDown,
   IconHome2,
+  IconPin,
+  IconPinFilled,
+  IconPinned,
+  IconPinnedFilled,
   IconPlus,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
@@ -43,11 +47,11 @@ export default function DashboardsSidebarButton() {
                 router.push(`/dashboards/${id}`);
               }}
             >
-              <Group>
+              <Group justify="space-between">
                 <Text size="sm" style={{ overflow: "hidden" }}>
                   {name}
                 </Text>
-                {isHome && <IconHome2 stroke="2px" size={18} />}
+                {isHome && <IconPinnedFilled stroke="2px" size={18} />}
               </Group>
             </Menu.Item>
           ))}
