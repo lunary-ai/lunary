@@ -7,7 +7,6 @@ import DateRangeGranularityPicker, {
 import ErrorBoundary from "@/components/blocks/ErrorBoundary";
 import RenamableField from "@/components/blocks/RenamableField";
 import CheckPicker from "@/components/checks/Picker";
-import { useOrg } from "@/utils/dataHooks";
 import {
   useCustomCharts,
   useDashboard,
@@ -28,6 +27,7 @@ import { useDisclosure } from "@mantine/hooks";
 import {
   IconDotsVertical,
   IconHome2,
+  IconPinnedFilled,
   IconPlus,
   IconSettings,
   IconTrash,
@@ -248,10 +248,11 @@ export default function Dashboard() {
           <Group justify="space-between">
             <Group>
               <Group gap="xs">
-                {dashboard.isHome && <IconHome2 stroke="2px" size={22} />}
                 <RenamableField
+                  order={4}
                   defaultValue={dashboard.name}
                   onRename={(newName) => updateDashboard({ name: newName })}
+                  hidePencil={true}
                 />
 
                 <Menu position="bottom-end">
@@ -262,7 +263,7 @@ export default function Dashboard() {
                   </Menu.Target>
                   <Menu.Dropdown>
                     <Menu.Item
-                      leftSection={<IconHome2 size={16} />}
+                      leftSection={<IconPinnedFilled size={16} />}
                       disabled={dashboard.isHome}
                       onClick={() => updateDashboard({ isHome: true })}
                     >
