@@ -1645,6 +1645,7 @@ analytics.get("/templates/top", async (ctx: Context) => {
   const topTemplates = await sql`
       select
         t.slug, 
+        t.id,
         count(*)::int as usage_count, 
         coalesce(sum(prompt_tokens), 0)::int as prompt_tokens,
         coalesce(sum(completion_tokens), 0)::int as completion_tokens,
