@@ -11,6 +11,7 @@ import {
   ActionIcon,
   Tooltip,
   Stack,
+  Select,
 } from "@mantine/core";
 import {
   IconPlayerPlay,
@@ -24,37 +25,35 @@ import type {
   PromptVersion,
   ComparisonRow,
   ComparisonColumn,
+  APIPrompt,
 } from "@/types/prompt-types";
 import type {
   EvaluatorConfig,
   EvaluationResult,
 } from "@/types/evaluator-types";
 import { EvaluationResults } from "@/components/evaluation-results";
-import { PromptVersionSelector } from "@/components/prompt-version-selector";
 import { useNotifications } from "@/hooks/use-notifications";
 
-interface ComparisonTableProps {
+export interface ComparisonTableProps {
+  availableTemplates: APIPrompt[];
   availablePromptVersions: PromptVersion[];
   comparisonColumns: ComparisonColumn[];
   comparisonRows: ComparisonRow[];
   evaluators: EvaluatorConfig[];
   updateRow: (row: ComparisonRow) => void;
   updateColumn: (column: ComparisonColumn) => void;
-  updatePromptVersion: (version: PromptVersion) => void;
-  showPrompts: boolean;
   onAddColumn: () => void;
   onRemoveRow?: (rowId: string) => void;
 }
 
 export function ComparisonTable({
+  availableTemplates,
   availablePromptVersions,
   comparisonColumns,
   comparisonRows,
   evaluators,
   updateRow,
   updateColumn,
-  updatePromptVersion,
-  showPrompts,
   onAddColumn,
   onRemoveRow,
 }: ComparisonTableProps) {
@@ -89,9 +88,16 @@ export function ComparisonTable({
     }
   };
 
-  const handleUpdateVersion = (updatedVersion: PromptVersion) => {
-    console.log("Updating version in table:", updatedVersion);
-    updatePromptVersion(updatedVersion);
+  const handleTemplateChange = (columnId: string, templateIdStr: string) => {
+    const templateId = Number(templateIdStr);
+    const column = comparisonColumns.find((c) => c.id === columnId);
+    if (column) {
+      updateColumn({
+        ...column,
+        promptTemplateId: templateId,
+        promptVersionId: null,
+      });
+    }
   };
 
   const handleRunPrompt = async (rowId: string, columnId: string) => {
@@ -394,44 +400,54 @@ export function ComparisonTable({
               <Table.Th style={{ width: "250px" }}></Table.Th>
 
               {comparisonColumns.map((column) => {
-                const promptVersion = column.promptVersionId
-                  ? availablePromptVersions.find(
-                      (v) => v.id === column.promptVersionId,
-                    )
-                  : null;
+                // derive selected template and version
 
                 return (
                   <Table.Th key={column.id} style={{ width: "300px" }}>
                     <Stack gap="xs">
-                      <PromptVersionSelector
-                        version={
-                          promptVersion || {
-                            id: "",
-                            name: "Select version",
-                            systemPrompt: "",
-                            model: "gpt-4o",
-                            temperature: 1.0,
-                            max_tokens: 2048,
-                            top_p: 1.0,
+                      <Group gap="0">
+                        <Select
+                          value={column.promptTemplateId?.toString() || ""}
+                          onChange={(val) =>
+                            handleTemplateChange(column.id, val || "")
                           }
-                        }
-                        availableVersions={availablePromptVersions}
-                        onSelectVersion={(versionId) =>
-                          handleVersionChange(column.id, versionId)
-                        }
-                        onUpdateVersion={handleUpdateVersion}
-                      />
+                          placeholder="Select prompt"
+                          data={availableTemplates.map((t) => ({
+                            value: t.id.toString(),
+                            label: t.slug,
+                          }))}
+                          w={180}
+                        />
+                        <Select
+                          value={column.promptVersionId || ""}
+                          onChange={(val) =>
+                            handleVersionChange(column.id, val || "")
+                          }
+                          placeholder="Select version"
+                          data={availablePromptVersions
+                            .filter(
+                              (v) => v.templateId === column.promptTemplateId,
+                            )
+                            .map((v) => ({ value: v.id, label: v.name }))}
+                          w={120}
+                          disabled={!column.promptTemplateId}
+                        />
 
-                      {showPrompts && promptVersion && (
-                        <Paper
-                          p="xs"
-                          withBorder
-                          bg="gray.0"
-                          style={{ whiteSpace: "pre-wrap", fontSize: "12px" }}
-                        >
-                          {promptVersion.systemPrompt}
-                        </Paper>
-                      )}
+                        {column.promptVersionId && (
+                          <Paper
+                            p="xs"
+                            withBorder
+                            bg="gray.0"
+                            style={{ whiteSpace: "pre-wrap", fontSize: "12px" }}
+                          >
+                            {
+                              availablePromptVersions.find(
+                                (v) => v.id === column.promptVersionId,
+                              )?.systemPrompt
+                            }
+                          </Paper>
+                        )}
+                      </Group>
                     </Stack>
                   </Table.Th>
                 );

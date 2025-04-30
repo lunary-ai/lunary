@@ -3,7 +3,7 @@
   "main": "pages/index.ts",
   "scripts": {
     "start": "bun run load-env && NODE_ENV=production bun --bun next start -H 0.0.0.0 -p 8080",
-    "dev": "bun --bun next dev --turbo -p 8080",
+    "dev": "bun --bun next dev -p 8080",
     "build": "rm -rf .next && NODE_ENV=production bun --bun next build",
     "load-env": "bash ./load-env.sh"
   },
@@ -30,6 +30,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
+    "fast-deep-equal": "^3.1.3",
     "jose": "^6.0.10",
     "json-2-csv": "^5.5.9",
     "jsonrepair": "^3.12.0",

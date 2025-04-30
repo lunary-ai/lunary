@@ -2,6 +2,7 @@ import type { EvaluationResult } from "./evaluator-types";
 
 export interface PromptVersion {
   id: string;
+  templateId: number;
   name: string;
   systemPrompt: string;
   model: string;
@@ -21,6 +22,7 @@ export interface ComparisonRow {
 
 export interface ComparisonColumn {
   id: string;
+  promptTemplateId: number | null;
   promptVersionId: string | null;
 }
 

@@ -28,6 +28,7 @@ import {
   IconCreditCard,
   IconDatabase,
   IconFilterCog,
+  IconFlask,
   IconHelpOctagon,
   IconHelpSmall,
   IconListSearch,
@@ -374,6 +375,13 @@ export default function Sidebar() {
           resource: "prompts",
         },
         {
+          label: "Experiments",
+          icon: IconFlask,
+          link: "/experiments",
+          resource: "prompts",
+          disabled: !org.beta,
+        },
+        {
           label: "Evaluators",
           icon: IconCompass,
           link: "/evaluators",
@@ -388,13 +396,6 @@ export default function Sidebar() {
           disabled: isSelfHosted
             ? org.license && !org.license.evalEnabled
             : false,
-        },
-        {
-          label: "Tests",
-          icon: IconCheckbox,
-          link: "/tests",
-          resource: "evaluations",
-          disabled: !org.beta,
         },
         {
           label: "Checklists",
