@@ -36,8 +36,8 @@ export const DEFAULT_CHARTS: Record<string, DefaultChart> = {
   },
   "templates/top": {
     id: "templates/top",
-    name: "Top Templates",
-    description: "The top templates in your project",
+    name: "Top Prompts",
+    description: "The top prompts in your project",
     type: "Top",
     dataKey: "templates/top",
     aggregationMethod: null,

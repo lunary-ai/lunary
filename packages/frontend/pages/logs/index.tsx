@@ -101,7 +101,7 @@ export const defaultColumns = {
       accessorFn: (row) => row.tokens.total,
     },
     costColumn(),
-    inputColumn("Prompt"),
+    inputColumn("Input"),
     outputColumn("Result"),
     tagsColumn(),
     feedbackColumn("llm"),
@@ -140,6 +140,7 @@ export const CHECKS_BY_TYPE = {
     "feedback",
     "cost",
     "duration",
+    "topics",
     "tokens",
   ],
   trace: [
