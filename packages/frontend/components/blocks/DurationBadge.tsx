@@ -8,10 +8,14 @@ export default function DurationBadge({
   minimal = false,
   type,
 }) {
+
+  console.log("type,enededat",type,endedAt,type,cached)
   const duration = endedAt
     ? new Date(endedAt).getTime() - new Date(createdAt).getTime()
     : NaN;
+    console.log("typduratione",duration)
 
+    
   if (type === "llm" && (cached || duration < 0.01 * 1000)) {
     return (
       <Badge
