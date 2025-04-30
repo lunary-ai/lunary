@@ -55,6 +55,32 @@ filters.get("/tags", async (ctx: Context) => {
   ctx.body = rows.map((row) => row.tag);
 });
 
+filters.get("/topics", async (ctx: Context) => {
+  const { projectId } = ctx.state;
+
+  const rows = await sql`
+    select
+      t.topic
+    from
+      evaluator e
+      join evaluation_result_v2 er on er.evaluator_id = e.id
+      cross join lateral (
+        select distinct
+          elem #>> '{}' as topic
+        from
+          jsonb_array_elements(jsonb_path_query_array(er.result, '$.input[*].topic') || jsonb_path_query_array(er.result, '$.output[*].topic')) as elem
+      ) t
+    where
+      e.project_id = ${projectId}
+      and e.type = 'topics'
+      and t.topic is not null
+    group by
+      t.topic
+  `;
+
+  ctx.body = rows.map((row) => row.topic);
+});
+
 filters.get("/metadata", async (ctx: Context) => {
   const { projectId } = ctx.state;
 

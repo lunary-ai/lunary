@@ -185,7 +185,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
         and jsonb_typeof(er2.result->${field}) = 'array'
         and exists (
             select 1
-            from jsonb_array_elements(er2.result->'input') as elem
+            from jsonb_array_elements(er2.result->${field}) as elem
             where elem->>'isoCode' =  any(${sql.array(codes)})
         )
       )
@@ -245,7 +245,21 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   },
   {
     id: "topics",
-    sql: ({ topics }) => sql`(topics.topics =  ${sql.json(topics)})`,
+    sql: ({ field, topics }) => {
+      console.log(topics, field);
+      if (!topics || !topics.length) return sql`true`;
+
+      return sql`(
+        e2.type = 'topics'
+        and jsonb_typeof(er2.result->${field}) = 'array'
+        and exists (
+            select 1
+            from jsonb_array_elements(er2.result->${field}) as elem
+            where elem[0]->>'topic' =  any(${sql.array(topics)})
+        )
+      )
+      `;
+    },
   },
   {
     id: "users",

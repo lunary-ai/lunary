@@ -275,18 +275,19 @@ export const CHECKS: Check[] = [
   {
     id: "topics",
     name: "Topics",
-    uiType: "basic",
+    uiType: "ai",
     uniqueInBar: true,
     disableInEvals: true,
     params: [
+      FIELD_PARAM,
       {
         type: "label",
-        label: "Topics",
+        label: "is about",
       },
       {
         type: "select",
-        multiple: true,
         id: "topics",
+        multiple: true,
         width: 100,
         options: () => `/filters/topics`,
       },

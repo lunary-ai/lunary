@@ -21,9 +21,9 @@ import { setDefaultBody } from "./utils/misc";
 import ratelimit from "./utils/ratelimit";
 
 checkDbConnection();
-setupCronJobs();
 
 if (process.env.NODE_ENV === "production") {
+  setupCronJobs();
   createIndexes();
   startJobWorker();
   startMaterializedViewRefreshJob();

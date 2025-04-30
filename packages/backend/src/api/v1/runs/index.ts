@@ -320,14 +320,14 @@ function getRunQuery(ctx: Context, isExport = false) {
     if (check === "AND" || check === "OR") {
       return true;
     }
-    return !["languages", "pii"].includes(check?.id);
+    return !["languages", "pii", "topics"].includes(check?.id);
   });
 
   const evaluatorChecks = deserializedChecks?.filter((check) => {
     if (check === "AND" || check === "OR") {
       return true;
     }
-    return ["languages", "pii"].includes(check?.id);
+    return ["languages", "pii", "topics"].includes(check?.id);
   });
 
   const filtersQuery =
