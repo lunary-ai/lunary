@@ -5,6 +5,8 @@ import { useState } from "react";
 function RenamableField({
   defaultValue,
   onRename,
+  hidePencil = false,
+  order = 3,
   ...props
 }: {
   defaultValue: string;
@@ -34,12 +36,12 @@ function RenamableField({
     </FocusTrap>
   ) : (
     <Title
-      order={3}
+      order={order}
       onClick={() => setFocused(true)}
       style={{ cursor: "pointer" }}
       {...props}
     >
-      {defaultValue} <IconPencil size="16" />
+      {defaultValue} {!hidePencil && <IconPencil size="16" />}
     </Title>
   );
 }

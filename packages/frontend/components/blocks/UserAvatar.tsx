@@ -15,7 +15,7 @@ function UserAvatar({
       variant="outline"
       radius="xl"
       size={size}
-      src={user.avatarUrl}
+      src={process.env.NODE_ENV === "production" && user.avatarUrl}
       styles={{
         placeholder: { border: "none", background: user?.color },
       }}

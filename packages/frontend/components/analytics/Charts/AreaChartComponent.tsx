@@ -176,6 +176,8 @@ export default function AreaChartComponent({
   stat,
 }: AreaChartProps) {
   const formattedData = transformData(data);
+  const firstDate = formattedData[0]?.date;
+  const lastDate = formattedData.at(-1)?.date;
   const series = generateSeries(formattedData, color);
 
   const aggValue = formatAggValue(
@@ -186,6 +188,7 @@ export default function AreaChartComponent({
   return (
     <>
       <Text
+        component="div"
         fw={dataKey === "runs" ? 300 : 500}
         fz={dataKey === "runs" ? 16 : 24}
         mb="md"
@@ -203,8 +206,8 @@ export default function AreaChartComponent({
         withYAxis={false}
         xAxisProps={{
           fontSize: "45px",
-          tickFormatter: (value, index) => {
-            if (value === data[0].date || value === data.at(-1).date) {
+          tickFormatter: (value: string) => {
+            if (value === firstDate || value === lastDate) {
               return formatDate(value, "daily") || "";
             }
             return "";
@@ -216,7 +219,7 @@ export default function AreaChartComponent({
             opacity: 0.8,
           },
         }}
-        withLegend={["latency", "run-types"].includes(dataKey)}
+        withLegend={["latency", "run-types"].includes(dataKey ?? "")}
         tooltipProps={{
           content: ({ label, payload }) => {
             const filteredPayload = (payload || [])
@@ -230,7 +233,7 @@ export default function AreaChartComponent({
                   ...Object.fromEntries(
                     Object.entries(item.payload).map(([key, value]) => [
                       key,
-                      formatValue(value, dataKey),
+                      formatValue(value, dataKey ?? ""),
                     ]),
                   ),
                 },

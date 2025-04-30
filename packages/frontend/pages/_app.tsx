@@ -24,13 +24,16 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { SWRConfig } from "swr";
 import Intercom from "@intercom/messenger-js-sdk";
+import config from "@/utils/config";
 
 export default function App({ Component, pageProps }: AppProps) {
   const [projectId, setProjectId] = useProjectIdStorage();
 
-  Intercom({
-    app_id: "pv95fmzm",
-  });
+  if (config.IS_CLOUD) {
+    Intercom({
+      app_id: "pv95fmzm",
+    });
+  }
 
   return (
     <>
