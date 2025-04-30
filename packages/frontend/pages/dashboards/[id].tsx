@@ -1,6 +1,7 @@
 import AnalyticsCard from "@/components/analytics/AnalyticsCard";
 import ChartComponent from "@/components/analytics/Charts/ChartComponent";
 import DashboardModal from "@/components/analytics/DashboardModal";
+import deepEqual from "fast-deep-equal";
 import DateRangeGranularityPicker, {
   useDateRangeGranularity,
 } from "@/components/analytics/DateRangeGranularityPicker";
@@ -36,6 +37,35 @@ import { useRouter } from "next/router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { Chart, DEFAULT_CHARTS, LogicNode } from "shared";
+
+function serialiseDashboardState({
+  checks,
+  startDate,
+  endDate,
+  granularity,
+  charts,
+}: {
+  checks: LogicNode;
+  startDate: Date | string;
+  endDate: Date | string;
+  granularity: string | null;
+  charts: ChartWithSpan[] | undefined;
+}) {
+  return {
+    checks,
+    start: new Date(startDate).toISOString(),
+    end: new Date(endDate).toISOString(),
+    granularity,
+    charts: (charts ?? [])
+      .map(({ id, span, sortOrder, ...rest }) => ({
+        id,
+        span: span ?? null,
+        sortOrder: sortOrder ?? null,
+        ...rest,
+      }))
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
+  };
+}
 
 function getSpan(index: number) {
   if ([0, 1, 2].includes(index)) {
@@ -113,53 +143,68 @@ export default function Dashboard() {
     }
   }, [dashboard, dashboardIsLoading]);
 
+  const baselineRef = useRef<ReturnType<typeof serialiseDashboardState> | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (!dashboardIsLoading && dashboard) {
+      // build the final version only once
+      const orderedCharts = (dashboard.charts ?? []).map((c, i) => ({
+        ...c,
+        sortOrder: i,
+        span: c.span ?? getSpan(i),
+      }));
+
+      setCharts(orderedCharts); // ① set state
+      setChecks(dashboard.checks);
+
+      if (dashboard.startDate && dashboard.endDate) {
+        setDateRange([
+          new Date(dashboard.startDate),
+          new Date(dashboard.endDate),
+        ]);
+      }
+      if (dashboard.granularity) setGranularity(dashboard.granularity);
+
+      // ② immediately take the snapshot **with** sortOrder/span filled in
+      baselineRef.current = serialiseDashboardState({
+        checks: dashboard.checks,
+        startDate: dashboard.startDate ?? startDate,
+        endDate: dashboard.endDate ?? endDate,
+        granularity: dashboard.granularity,
+        charts: orderedCharts,
+      });
+    }
+  }, [dashboardIsLoading, dashboard]);
+
   const isDirty = useMemo(() => {
-    if (!dashboard) return false;
-    const current = {
-      checks,
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
-      granularity,
-      charts,
-    };
-
-    // TODO: startDate and endDate are always different for new dashboards, so the dirty check always returns true
-    // when fixed, put back the alert in the useEffect below
-    const initial = {
-      checks: dashboard.checks,
-      startDate: dashboard.startDate,
-      endDate: dashboard.endDate,
-      granularity: dashboard.granularity,
-      charts: dashboard.charts,
-    };
-    return JSON.stringify(current) !== JSON.stringify(initial);
-  }, [dashboard, checks, startDate, endDate, granularity, charts]);
-
-  if (dashboardIsLoading || !dashboard) {
-    return (
-      <Flex align="center" justify="center" h="280px">
-        <Loader />
-      </Flex>
+    if (!baselineRef.current) return false;
+    return !deepEqual(
+      baselineRef.current,
+      serialiseDashboardState({
+        checks,
+        startDate,
+        endDate,
+        granularity,
+        charts,
+      }),
     );
-  }
+  }, [checks, startDate, endDate, granularity, charts]);
 
-  function saveDashboard() {
-    updateDashboard({
+  console.log(isDirty);
+
+  async function saveDashboard() {
+    const payload = {
       checks,
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
       granularity,
       charts,
-    });
-  }
+    };
 
-  function handleDrop(dragIndex: number, dropIndex: number) {
-    const newCharts = structuredClone(charts);
-    [newCharts[dragIndex], newCharts[dropIndex]] = [
-      newCharts[dropIndex],
-      newCharts[dragIndex],
-    ];
-    setChartsWithSortOrder(newCharts);
+    await updateDashboard(payload);
+    baselineRef.current = serialiseDashboardState(payload); // reset baseline
   }
 
   function handleRemoveChart(index: number) {
@@ -225,6 +270,14 @@ export default function Dashboard() {
     const next = spans[(spans.indexOf(current as number) + 1) % spans.length];
     newCharts[index].span = next;
     setChartsWithSortOrder(newCharts);
+  }
+
+  if (dashboardIsLoading || !dashboard) {
+    return (
+      <Flex align="center" justify="center" h="280px">
+        <Loader />
+      </Flex>
+    );
   }
 
   return (
