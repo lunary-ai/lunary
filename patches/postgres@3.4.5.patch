@@ -1,3 +1,28 @@
+diff --git a/node_modules/postgres/.bun-tag-c44a7f7392e949ff b/.bun-tag-c44a7f7392e949ff
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/src/connection.js b/src/connection.js
+index 97cc97e1576d6c75f958c66e9cecbf8cd11ed450..9b6353f56625408bad737ebc8bfc6a8b7e1e9416 100644
+--- a/src/connection.js
++++ b/src/connection.js
+@@ -2,7 +2,6 @@ import net from 'net'
+ import tls from 'tls'
+ import crypto from 'crypto'
+ import Stream from 'stream'
+-import { performance } from 'perf_hooks'
+ 
+ import { stringify, handleValue, arrayParser, arraySerializer } from './types.js'
+ import { Errors } from './errors.js'
+@@ -350,7 +349,8 @@ function Connection(options, queues = {}, { onopen = noop, onend = noop, onclose
+   }
+ 
+   function reconnect() {
+-    setTimeout(connect, closedDate ? closedDate + delay - performance.now() : 0)
++    const timeout = closedDate ? closedDate + delay - performance.now() : 0
++    setTimeout(connect, Math.max(0, timeout))
+   }
+ 
+   function connected() {
 diff --git a/src/types.js b/src/types.js
 index 7c7c2b93094a1bced2b9dc387edc5c403e2c5864..818b6893f1c68932c8dcb448be961e9ca10c6d2e 100644
 --- a/src/types.js
