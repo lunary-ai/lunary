@@ -9,6 +9,10 @@ import { useComputedColorScheme } from "@mantine/core";
 
 import { useAuth } from "../auth";
 import { fetcher } from "../fetcher";
+import type { APIPrompt, APIPromptVersion } from "@/types/prompt-types";
+
+// Define rule interface for project rules
+type ProjectRule = { type: string; [key: string]: any };
 
 export function generateKey(
   baseKey: Key,
@@ -230,7 +234,7 @@ export function useProject() {
     try {
       await dropMutation();
       const newProjects = projects.filter((p) => p.id !== projectId);
-      setProjectId(newProjects[0]?.id);
+      setProjectIygroundd(newProjects[0]?.id);
       mutate(newProjects);
       return true;
     } catch (error) {
@@ -257,7 +261,7 @@ export function useProjectRules() {
     data: rules,
     isLoading,
     mutate,
-  } = useProjectSWR(projectId && `/projects/${projectId}/rules`);
+  } = useProjectSWR<ProjectRule[]>(projectId && `/projects/${projectId}/rules`);
 
   const { trigger: addRule, isMutating: addRulesLoading } = useSWRMutation(
     projectId && `/projects/${projectId}/rules`,
@@ -296,8 +300,26 @@ export function useProjectRules() {
   };
 }
 
-export function useTemplates() {
-  const { data: templates, isLoading, mutate } = useProjectSWR(`/templates`);
+export function useTemplates(): {
+  templates: APIPrompt[] | undefined;
+  insert: (data: any) => Promise<APIPrompt>;
+  mutate: (
+    data?:
+      | APIPrompt[]
+      | Promise<APIPrompt[]>
+      | ((
+          current?: APIPrompt[] | undefined,
+        ) => APIPrompt[] | Promise<APIPrompt[]>),
+    shouldRevalidate?: boolean,
+  ) => Promise<APIPrompt[] | undefined>;
+  loading: boolean;
+  isInserting: boolean;
+} {
+  const {
+    data: templates,
+    isLoading,
+    mutate,
+  } = useProjectSWR<APIPrompt[]>(`/templates`);
 
   // insert mutation
   const { trigger: insert, isMutating: isInserting } = useProjectMutation(
@@ -314,12 +336,25 @@ export function useTemplates() {
   };
 }
 
-export function useTemplate(id: string) {
+export function useTemplate(id: string): {
+  template: APIPrompt | undefined;
+  insertVersion: (data: any) => Promise<APIPromptVersion>;
+  update: (data: any) => Promise<APIPrompt>;
+  remove: (data?: any) => Promise<unknown>;
+  mutate: (
+    data?:
+      | APIPrompt
+      | Promise<APIPrompt>
+      | ((current?: APIPrompt | undefined) => APIPrompt | Promise<APIPrompt>),
+    shouldRevalidate?: boolean,
+  ) => Promise<APIPrompt | undefined>;
+  loading: boolean;
+} {
   const {
     data: template,
     isLoading,
     mutate,
-  } = useProjectSWR(id && `/templates/${id}`);
+  } = useProjectSWR<APIPrompt>(id && `/templates/${id}`);
 
   const { trigger: update } = useProjectMutation(
     id && `/templates/${id}`,
@@ -334,7 +369,7 @@ export function useTemplate(id: string) {
     },
   );
 
-  // insert mutation
+  // insert version mutation
   const { trigger: insertVersion } = useProjectMutation(
     `/templates/${id}/versions`,
     fetcher.post,
@@ -350,12 +385,25 @@ export function useTemplate(id: string) {
   };
 }
 
-export function useTemplateVersion(id: string) {
+export function useTemplateVersion(id: string): {
+  templateVersion: APIPromptVersion | undefined;
+  update: (data: any) => Promise<APIPromptVersion>;
+  mutate: (
+    data?:
+      | APIPromptVersion
+      | Promise<APIPromptVersion>
+      | ((
+          current?: APIPromptVersion | undefined,
+        ) => APIPromptVersion | Promise<APIPromptVersion>),
+    shouldRevalidate?: boolean,
+  ) => Promise<APIPromptVersion | undefined>;
+  loading: boolean;
+} {
   const {
     data: templateVersion,
     isLoading,
     mutate,
-  } = useProjectSWR(id && `/template_versions/${id}`);
+  } = useProjectSWR<APIPromptVersion>(id && `/template_versions/${id}`);
 
   const { trigger: update } = useProjectMutation(
     `/template_versions/${id}`,
@@ -506,9 +554,10 @@ export function useRunsUsageByUser(range = null) {
 export function useOrgUser(userId: string) {
   const { mutate: mutateOrg } = useOrg();
 
-  const { data, isLoading, mutate } = useProjectSWR(
-    userId && `/users/${userId}`,
-  );
+  const { data, isLoading, mutate } = useProjectSWR<{
+    id: string;
+    [key: string]: any;
+  }>(userId && `/users/${userId}`);
 
   async function removeUserFromOrg() {
     await triggerDelete();
@@ -530,10 +579,7 @@ export function useOrgUser(userId: string) {
 
   const scheme = useComputedColorScheme();
 
-  const user = {
-    ...data,
-    color: getUserColor(scheme, data?.id),
-  };
+  const user = data ? { ...data, color: getUserColor(scheme, data.id) } : null;
 
   return { user, loading: isLoading, mutate, removeUserFromOrg, updateUser };
 }

@@ -1,9 +1,10 @@
 import { useMemo } from "react";
+import type { PromptMessage } from "@/types/prompt-types";
 
 // This extract handlebars variables from a string or an array of OpenAI messages
 export function usePromptVariables(
-  content: string | { role: string; content: string }[],
-) {
+  content: string | PromptMessage[],
+): Record<string, string> {
   // Parse variables from the content template (handlebars parsing)
   const variables = useMemo(() => {
     const contentVariables = {};
@@ -30,9 +31,9 @@ export function usePromptVariables(
 
 // this hook filters the initial variables to match the ones found in the content
 export function useCheckedPromptVariables(
-  content: string | { role: string; content: string }[],
-  initialVariables: Record<string, string>,
-) {
+  content: string | PromptMessage[],
+  initialVariables: Record<string, unknown>,
+): Record<string, unknown> {
   const contentVariables = usePromptVariables(content);
 
   // Clean up unused initialVariables and add new keys from content
