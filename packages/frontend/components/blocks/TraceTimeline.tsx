@@ -1,6 +1,5 @@
 import { Box } from "@mantine/core";
-
+import TravelPlanTimeline from "@/components/blocks/ui/TravelPlanTimeline"
 export default function TraceTimeline({ runs }) {
-  console.log(runs);
-  return <Box>Do the trace timeline here</Box>;
+  return <Box>ََََََََََََََََََََََِِِِِِِِِِِِِِِِ<TravelPlanTimeline runs={runs}/></Box>
 }

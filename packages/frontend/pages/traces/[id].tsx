@@ -4,7 +4,7 @@ import RunInputOutput from "@/components/blocks/RunInputOutput";
 import StatusBadge from "@/components/blocks/StatusBadge";
 import TokensBadge from "@/components/blocks/TokensBadge";
 import { useProjectSWR, useRun, useUser } from "@/utils/dataHooks";
-import { capitalize, formatCost } from "@/utils/format";
+import { capitalize, cleanSlug, formatCost } from "@/utils/format";
 import {
   ActionIcon,
   Badge,
@@ -45,6 +45,7 @@ import { useHotkeys } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { hasAccess } from "shared";
 import TraceTimeline from "@/components/blocks/TraceTimeline";
+import TravelPlanTimeline from "@/components/blocks/ui/TravelPlanTimeline";
 
 const typeIcon = {
   convo: IconMessages,
@@ -67,10 +68,14 @@ function TraceTree({
   onSelect,
   firstDate,
 }) {
+
+  console.log("runssssssssss",runs)
   const [collapsed, setCollapsed] = useState(false);
 
   // each run contains a child_runs array containing the ids of the runs it spawned
   const run = runs.find((run) => run.id === parentId);
+  
+  console.log("rudddddddddddddd",run.endedAt)
   if (!run) {
     return null;
   }
@@ -95,7 +100,8 @@ function TraceTree({
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
 
-  return (
+  return <>
+ 
     <Group pos="relative" wrap="nowrap">
       {!isFirst && (
         <Box>
@@ -163,7 +169,7 @@ function TraceTree({
                   }}
                 >
                   {collapsed ? (
-                    <IconChevronRight size={16} />
+                    <IconChevronRight size={16} />  
                   ) : (
                     <IconChevronDown size={16} />
                   )}
@@ -215,7 +221,7 @@ function TraceTree({
 
         {/* Only render children if not collapsed */}
         {!collapsed &&
-          shownRuns.map((childRun, k) => (
+          shownRuns?.map((childRun, k) => (
             <TraceTree
               key={childRun.id}
               isLastOfParent={k === shownRuns.length - 1}
@@ -228,7 +234,12 @@ function TraceTree({
           ))}
       </div>
     </Group>
-  );
+   
+
+
+
+    
+    </>
 }
 
 function RenderRun({ run, relatedRuns }) {
@@ -407,7 +418,7 @@ export default function Trace({}) {
           )}
         </Group>
       </Group>
-      {relatedRuns && <TraceTimeline runs={[run, ...relatedRuns]} />}
+      {relatedRuns && <TraceTimeline runs={[run, ...relatedRuns]} parentId={id} />}
       <Group style={{ flex: 1, minHeight: 0 }}>
         <Box style={{ flex: "0 0 600px", overflowY: "auto", height: "100%" }}>
           {relatedRuns && (
