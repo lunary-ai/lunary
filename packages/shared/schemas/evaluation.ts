@@ -1,4 +1,4 @@
-import { Message } from "./openai";
+import { Message } from "./old-openai";
 
 export interface Evaluation {
   name?: string;

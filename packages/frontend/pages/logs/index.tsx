@@ -142,6 +142,7 @@ export const CHECKS_BY_TYPE = {
     "duration",
     "topics",
     "tokens",
+    "toxicity",
   ],
   trace: [
     "date",

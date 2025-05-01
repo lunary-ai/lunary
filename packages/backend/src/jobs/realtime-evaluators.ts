@@ -5,7 +5,7 @@ import { RealtimeEvaluator } from "shared/enrichers";
 import { sleep } from "../utils/misc";
 import evaluators from "../evaluators";
 
-const RUNS_BATCH_SIZE = 20;
+const RUNS_BATCH_SIZE = 5;
 
 async function runEvaluator(evaluator: RealtimeEvaluator, run: Run) {
   try {
@@ -71,6 +71,7 @@ async function evaluatorJob() {
       evaluator e 
     where
       mode = 'realtime' 
+      and type = 'toxicity'
     order by 
       random()
   `;

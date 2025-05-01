@@ -294,6 +294,36 @@ export const CHECKS: Check[] = [
     ],
   },
   {
+    id: "toxicity",
+    name: "Toxicity",
+    uiType: "ai",
+    uniqueInBar: true,
+    disableInEvals: true,
+    params: [
+      FIELD_PARAM,
+      {
+        type: "label",
+        label: "is",
+      },
+      {
+        type: "select",
+        id: "topics",
+        multiple: true,
+        width: 100,
+        options: [
+          {
+            label: "Toxic",
+            value: "toxicity",
+          },
+          {
+            label: "Non Toxic",
+            value: "non-toxicity",
+          },
+        ],
+      },
+    ],
+  },
+  {
     id: "metadata",
     name: "Metadata",
     uiType: "basic",
@@ -1009,21 +1039,21 @@ export const CHECKS: Check[] = [
       },
     ],
   },
-  {
-    id: "toxicity",
-    name: "Toxicity",
-    uiType: "ai",
-    description:
-      "Checks if the given field contains toxic, offensive, obscene, or hateful language. English only at the moment.",
-    params: [
-      FIELD_PARAM_ANY,
-      MATCH_PARAM,
-      {
-        type: "label",
-        label: "toxicity",
-      },
-    ],
-  },
+  // {
+  //   id: "toxicity",
+  //   name: "Toxicity",
+  //   uiType: "ai",
+  //   description:
+  //     "Checks if the given field contains toxic, offensive, obscene, or hateful language. English only at the moment.",
+  //   params: [
+  //     FIELD_PARAM_ANY,
+  //     MATCH_PARAM,
+  //     {
+  //       type: "label",
+  //       label: "toxicity",
+  //     },
+  //   ],
+  // },
   {
     id: "guidelines",
     name: "System Guidelines",

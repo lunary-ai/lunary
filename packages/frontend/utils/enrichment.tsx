@@ -1,6 +1,7 @@
 import { Badge, Box, Group, Popover, Text, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
+  IconBiohazard,
   IconCheck,
   IconMoodNeutral,
   IconMoodSad,
@@ -25,6 +26,7 @@ export function renderEnrichment(
   type: EvaluatorType,
   maskPII = false,
 ) {
+  console.log(data, type);
   const renderers: Record<EvaluatorType, (data: any) => any> = {
     language: renderLanguageEnrichment,
     pii: () => renderPIIEnrichment(data, maskPII),
@@ -55,13 +57,18 @@ function renderBiasEnrichment(data: EnrichmentData) {
 }
 
 function renderToxicityEnrichment(data: EnrichmentData) {
-  if (!(data && data.output && Array.isArray(data.output))) {
-    return null;
-  }
-  data = data.output[0];
+  const hasToxic = [...(data.input ?? []), ...(data.output ?? [])].some(
+    (msg) => msg?.reason,
+  );
+
+  // Don’t render anything if nothing is toxic
+  if (!hasToxic) return null;
+
   return (
-    <Tooltip label={data.reason}>
-      <Text size="lg">{data.score}</Text>
+    <Tooltip label="Toxic content detected">
+      <Badge color="red" leftSection={<IconBiohazard width={12} />}>
+        Toxicity
+      </Badge>
     </Tooltip>
   );
 }
