@@ -4,6 +4,7 @@ import { Run } from "shared";
 import { RealtimeEvaluator } from "shared/enrichers";
 import { sleep } from "../utils/misc";
 import evaluators from "../evaluators";
+import type { ToxicityResult } from "../evaluators/toxicity";
 
 const RUNS_BATCH_SIZE = 5;
 
@@ -13,6 +14,28 @@ async function runEvaluator(evaluator: RealtimeEvaluator, run: Run) {
       run,
       evaluator.params,
     );
+
+    if (evaluator.type === "toxicity" && result) {
+      const tox = result as ToxicityResult;
+
+      // Upsert into run_toxicity (snake_case handled by porsager‑postgres)
+      await sql`
+        insert into run_toxicity ${sql({
+          runId: run.id,
+          toxicInput: tox.toxic_input,
+          toxicOutput: tox.toxic_output,
+          inputLabels: tox.input_labels,
+          outputLabels: tox.output_labels,
+          messages: tox.messages, // jsonb column
+        })}
+        on conflict (run_id) do update set
+          toxic_input   = excluded.toxic_input,
+          toxic_output  = excluded.toxic_output,
+          input_labels  = excluded.input_labels,
+          output_labels = excluded.output_labels,
+          messages      = excluded.messages
+      `;
+    }
 
     if (typeof result !== "undefined" && result !== null) {
       await sql`
@@ -40,19 +63,30 @@ async function getEvaluatorRuns(evaluator: any) {
     evaluator.filters || ["AND", { id: "type", params: { type: "llm" } }],
   );
 
+  const toxJoin =
+    evaluator.type === "toxicity"
+      ? sql`left join run_toxicity rt on r.id = rt.run_id`
+      : sql``;
+
+  const toxWhere =
+    evaluator.type === "toxicity" ? sql`and rt.run_id is null` : sql``;
+
   return await sql`
-    select 
-      r.* 
-    from 
+    select
+      r.*
+    from
       run r
-      left join evaluation_result_v2 er on r.id = er.run_id
+      ${toxJoin}
+      left join evaluation_result_v2 er
+        on r.id = er.run_id
         and er.evaluator_id = ${evaluator.id}
-    where 
+    where
       r.project_id = ${evaluator.projectId}
       and (${filtersQuery})
       and er.run_id is null
+      ${toxWhere}
       and r.is_deleted = false
-    order by 
+    order by
       r.created_at desc
     limit ${RUNS_BATCH_SIZE}
   `;

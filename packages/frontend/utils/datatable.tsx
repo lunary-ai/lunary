@@ -2,7 +2,7 @@ import SmartViewer from "@/components/SmartViewer";
 import AppUserAvatar from "@/components/blocks/AppUserAvatar";
 import Feedback from "@/components/blocks/OldFeedback";
 import ProtectedText from "@/components/blocks/ProtectedText";
-import { Badge, Button, Checkbox, Group } from "@mantine/core";
+import { Badge, Button, Checkbox, Group, Text, Tooltip } from "@mantine/core";
 import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
 
 import Link from "next/link";
@@ -340,4 +340,33 @@ export function scoresColumn() {
       }
     },
   });
+}
+
+export function toxicityColumn() {
+  return {
+    id: "toxicity",
+    header: "Toxicity",
+    accessorFn: (row) => row.toxicity, // keep full object for the cell
+    enableSorting: false,
+
+    cell: ({ getValue }) => {
+      const tox = getValue();
+
+      const isToxic = tox.input.isToxic || tox.output.isToxic;
+      if (!isToxic) return <Text c="dimmed">—</Text>;
+
+      const labels = [
+        ...(tox.input.isToxic ? tox.input.labels : []),
+        ...(tox.output.isToxic ? tox.output.labels : []),
+      ];
+
+      return (
+        <Tooltip label={labels.join(", ")} withArrow>
+          <Badge color="red" radius="sm">
+            Toxic
+          </Badge>
+        </Tooltip>
+      );
+    },
+  };
 }
