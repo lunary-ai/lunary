@@ -13,52 +13,51 @@ interface CreateEvaluatorData {
   filters?: CheckLogic;
 }
 
-export function useEnrichers() {
+export function useEvaluators() {
   const { data, isLoading, mutate } = useProjectSWR(`/evaluators`);
-
-  const { trigger: insertMutation } = useProjectMutation(
+  const { trigger: insertEvaluatorMutation } = useProjectMutation(
     `/evaluators`,
     fetcher.post,
   );
 
-  async function insert(data: CreateEvaluatorData) {
-    insertMutation(data);
+  async function insertEvaluator(data: CreateEvaluatorData) {
+    insertEvaluatorMutation(data);
   }
 
   return {
-    enrichers: data,
+    evaluators: data,
     mutate,
     isLoading,
-    insert,
+    insertEvaluator,
   };
 }
 
-export function useEnricher(id: string, initialData?: any) {
-  const { mutate: mutateEvaluators } = useEnrichers();
+export function useEvaluator(id: string, initialData?: any) {
+  const { mutate: mutateEvaluators } = useEvaluators();
 
   const { data, isLoading, mutate } = useProjectSWR(id && `/evaluators/${id}`, {
     fallbackData: initialData,
   });
 
-  const { trigger: updateMutation } = useProjectMutation(
+  const { trigger: updateEvaluatorMutation } = useProjectMutation(
     `/evaluators/${id}`,
     fetcher.patch,
   );
 
-  const { trigger: deleteMutation } = useProjectMutation(
+  const { trigger: deleteEvaluatorMutation } = useProjectMutation(
     `/evaluators/${id}`,
     fetcher.delete,
     {
       onSuccess() {
-        mutateEvaluators((evaluators) => evaluators.filter((r) => r.id !== id));
+        mutateEvaluators((vals) => vals.filter((v) => v.id !== id));
       },
     },
   );
 
   return {
-    enricher: data,
-    update: updateMutation,
-    delete: deleteMutation,
+    evaluator: data,
+    update: updateEvaluatorMutation,
+    delete: deleteEvaluatorMutation,
     mutate,
     isLoading,
   };

@@ -1,7 +1,7 @@
 import Empty from "@/components/layout/Empty";
 import Paywall from "@/components/layout/Paywall";
 import { useOrg } from "@/utils/dataHooks";
-import { useEnricher, useEnrichers } from "@/utils/dataHooks/evaluators";
+import { useEvaluator, useEvaluators } from "@/utils/dataHooks/evaluators";
 import EVALUATOR_TYPES from "@/utils/evaluators";
 import { slugify } from "@/utils/format";
 import {
@@ -26,17 +26,15 @@ import {
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 
-function EnricherCard({ id, initialData }) {
+function EvaluatorCard({ id, initialData }) {
   const router = useRouter();
-  const { enricher, delete: deleteEnricher } = useEnricher(id, initialData);
+  const { evaluator, delete: deleteEvaluator } = useEvaluator(id, initialData);
 
-  const evaluator = EVALUATOR_TYPES[enricher?.type];
+  const evalMeta = EVALUATOR_TYPES[evaluator?.type];
 
-  if (!evaluator) {
-    return null;
-  }
+  if (!evalMeta) return null;
 
-  const { description, icon: Icon } = evaluator;
+  const { description, icon: Icon } = evalMeta;
 
   return (
     <Card p="lg" withBorder>
@@ -45,7 +43,7 @@ function EnricherCard({ id, initialData }) {
           <Group>
             <Icon size={24} />
             <Title order={3} size={16}>
-              {enricher?.name}
+              {evaluator?.name}
             </Title>
           </Group>
           <Group>
@@ -65,7 +63,7 @@ function EnricherCard({ id, initialData }) {
           <Menu.Dropdown>
             <Menu.Item
               leftSection={<IconTrash color="red" width="15px" height="15px" />}
-              onClick={() => deleteEnricher()}
+              onClick={() => deleteEvaluator()}
             >
               Delete
             </Menu.Item>
@@ -73,7 +71,7 @@ function EnricherCard({ id, initialData }) {
               leftSection={
                 <IconPencil color="gray" width="15px" height="15px" />
               }
-              onClick={() => router.push(`/enrichments/new?id=${id}`)}
+              onClick={() => router.push(`/evaluators/new?id=${id}`)}
             >
               Edit
             </Menu.Item>
@@ -90,9 +88,9 @@ const FEATURE_LIST = [
   "Define custom LLM-based enrichers",
 ];
 
-export default function Enrichments() {
+export default function EvaluatorsPage() {
   const router = useRouter();
-  const { enrichers, isLoading } = useEnrichers();
+  const { evaluators, isLoading } = useEvaluators();
   const { org } = useOrg();
 
   if (isLoading) {
@@ -103,34 +101,37 @@ export default function Enrichments() {
     return (
       <Paywall
         plan="enterprise"
-        feature="Data Enrichment"
+        feature="Evaluators"
         Icon={IconActivityHeartbeat}
         p="xl"
         enabled={!org.license.realtimeEvalsEnabled}
-        description="Enrich your production data in real-time."
+        description="Evaluate your production data in realtime or batch."
         list={FEATURE_LIST}
       >
         <Container>
           <Stack>
             <Group align="center" justify="space-between">
               <Group align="center">
-                <Title>Data Enrichments</Title>
+                <Title>Evaluators</Title>
                 <Badge variant="teal" color="violet">
                   Enterprise
                 </Badge>
               </Group>
 
               <Group>
-                <Button variant="default" leftSection={<IconPlus size={12} />}>
-                  New
+                <Button
+                  variant="default"
+                  leftSection={<IconPlus size={12} />}
+                  onClick={() => router.push("/evaluators/new")}
+                >
+                  New Evaluator
                 </Button>
               </Group>
             </Group>
 
             <Text size="lg" mb="md">
-              Gain insight from your production data in real time, by adding
-              additional information, such as user sentiment analysis, topic
-              recognition, and more.
+              Gain insight from your production data in real time or batch, by
+              evaluating with different types.
             </Text>
           </Stack>
         </Container>
@@ -140,40 +141,36 @@ export default function Enrichments() {
 
   return (
     <Empty
-      enable={!enrichers.length}
+      enable={!evaluators.length}
       Icon={IconActivityHeartbeat}
-      title="Data Enrichment"
-      buttonLabel="Create First Enricher"
-      onClick={() => router.push("/enrichments/new")}
-      description="Enrich your production data in real-time."
+      title="Evaluators"
+      buttonLabel="Create First Evaluator"
+      onClick={() => router.push("/evaluators/new")}
+      description="Evaluate your production data with custom logic."
     >
       <Container>
         <Stack>
           <Group align="center" justify="space-between">
             <Group align="center">
-              <Title>Data Enrichment</Title>
+              <Title>Evaluators</Title>
             </Group>
 
             <Button
-              leftSection={<IconPlus size={12} />}
+              leftSection={<IconPlus size="12" />}
               variant="default"
-              onClick={() => router.push("/enrichments/new")}
+              onClick={() => router.push("/evaluators/new")}
             >
-              Add Data Enricher
+              Add Evaluator
             </Button>
           </Group>
 
           <Text size="xl" mb="md">
-            Enrich your production data in real-time.
+            Evaluate your production data with various evaluators.
           </Text>
 
           <Stack gap="xl">
-            {enrichers?.map((enricher) => (
-              <EnricherCard
-                key={enricher.id}
-                id={enricher.id}
-                initialData={enricher}
-              />
+            {evaluators?.map((ev) => (
+              <EvaluatorCard key={ev.id} id={ev.id} initialData={ev} />
             ))}
           </Stack>
         </Stack>
