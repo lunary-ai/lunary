@@ -12,6 +12,7 @@ import { clearUndefined } from "@/src/utils/ingest";
 import Context from "@/src/utils/koa";
 import Router from "koa-router";
 import { z } from "zod";
+import openai from "@/src/utils/openai";
 
 const evals = new Router({
   prefix: "/evals",
@@ -130,6 +131,15 @@ evals.post("/", checkAccess("evaluations", "create"), async (ctx: Context) => {
  * /v1/evals/{id}/run:
  *   post:
  *     summary: Run the evaluation (generate with gpt-4.1 then grade)
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: No Content
  */
 evals.post(
   "/:id/run",
