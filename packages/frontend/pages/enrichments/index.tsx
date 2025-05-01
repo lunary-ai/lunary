@@ -27,6 +27,7 @@ import {
 import { useRouter } from "next/router";
 
 function EnricherCard({ id, initialData }) {
+  const router = useRouter();
   const { enricher, delete: deleteEnricher } = useEnricher(id, initialData);
 
   const evaluator = EVALUATOR_TYPES[enricher?.type];
@@ -67,6 +68,14 @@ function EnricherCard({ id, initialData }) {
               onClick={() => deleteEnricher()}
             >
               Delete
+            </Menu.Item>
+            <Menu.Item
+              leftSection={
+                <IconPencil color="gray" width="15px" height="15px" />
+              }
+              onClick={() => router.push(`/enrichments/new?id=${id}`)}
+            >
+              Edit
             </Menu.Item>
           </Menu.Dropdown>
         </Menu>

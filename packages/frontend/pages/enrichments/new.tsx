@@ -1,10 +1,11 @@
-import { RenderCheckNode } from "@/components/checks/Picker";
+import CheckPicker, { RenderCheckNode } from "@/components/checks/Picker";
 import { useLogCount, useOrg, useUser } from "@/utils/dataHooks";
-import { useEnrichers } from "@/utils/dataHooks/evaluators";
+import { useEnrichers, useEnricher } from "@/utils/dataHooks/evaluators";
 import EVALUATOR_TYPES from "@/utils/evaluators";
 import { slugify } from "@/utils/format";
 import { theme } from "@/utils/theme";
 import {
+  Box,
   Button,
   Card,
   Container,
@@ -81,9 +82,13 @@ function EvaluatorCard({
 
 export default function NewEnrichment() {
   const router = useRouter();
+  const { query } = router;
+  const enricherId = typeof query.id === "string" ? query.id : undefined;
 
   const { user } = useUser();
   const { insert: insertEnricher } = useEnrichers();
+  const { enricher, update: updateEnricher } = useEnricher(enricherId);
+  const isEditing = Boolean(enricherId);
 
   const [name, setName] = useState<string>("");
   const [type, setType] = useState<string>();
@@ -95,8 +100,18 @@ export default function NewEnrichment() {
   ]);
 
   const serializedFilters = serializeLogic(filters);
+  const { count: logCount } = useLogCount(serializedFilters);
 
   const { org } = useOrg();
+
+  // populate form when editing existing enricher
+  useEffect(() => {
+    if (isEditing && enricher) {
+      setName(enricher.name);
+      setType(enricher.type);
+      setFilters(enricher.filters as CheckLogic);
+    }
+  }, [isEditing, enricher]);
 
   const evaluatorTypes = Object.values(EVALUATOR_TYPES).filter((evaluator) => {
     if (evaluator.beta && !org.beta) {
@@ -140,15 +155,27 @@ export default function NewEnrichment() {
       });
       return;
     }
-    await insertEnricher({
-      name,
-      slug: slugify(name),
-      mode: "realtime",
-      params: params.params,
-      type,
-      filters,
-      ownerId: user.id,
-    });
+    if (isEditing) {
+      await updateEnricher({
+        name,
+        slug: slugify(name),
+        mode: "realtime",
+        params: params.params,
+        type,
+        filters,
+        ownerId: user.id,
+      });
+    } else {
+      await insertEnricher({
+        name,
+        slug: slugify(name),
+        mode: "realtime",
+        params: params.params,
+        type,
+        filters,
+        ownerId: user.id,
+      });
+    }
     router.push("/enrichments");
   }
 
@@ -156,7 +183,9 @@ export default function NewEnrichment() {
     <Container>
       <Stack gap="xl">
         <Group align="center">
-          <Title>New Data Enrichment</Title>
+          <Title>
+            {isEditing ? `Edit ${enricher?.name}` : "New Data Enrichment"}
+          </Title>
         </Group>
 
         <TextInput
@@ -200,6 +229,28 @@ export default function NewEnrichment() {
           </Fieldset>
         )}
 
+        <Card style={{ overflow: "visible" }} shadow="md" p="lg">
+          <Stack>
+            <Box>
+              <Text mb="5" mt="sm">
+                Select the logs to apply to:
+              </Text>
+
+              <CheckPicker
+                minimal
+                value={filters}
+                showAndOr
+                onChange={setFilters}
+                restrictTo={(filter) =>
+                  ["tags", "type", "users", "metadata", "date"].includes(
+                    filter.id,
+                  )
+                }
+              />
+            </Box>
+          </Stack>
+        </Card>
+
         <Group justify="end">
           <Button
             disabled={!selectedEvaluator}
@@ -211,8 +262,12 @@ export default function NewEnrichment() {
             variant="default"
           >
             {selectedEvaluator
-              ? `Create ${selectedEvaluator.name} Enrichment`
-              : "Create"}
+              ? isEditing
+                ? `Save ${selectedEvaluator.name} Enrichment`
+                : `Create ${selectedEvaluator.name} Enrichment`
+              : isEditing
+                ? "Save"
+                : "Create"}
           </Button>
         </Group>
       </Stack>

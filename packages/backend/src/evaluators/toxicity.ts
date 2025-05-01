@@ -1,69 +1,36 @@
 import { callML } from "@/src/utils/ml";
 import { Run } from "shared";
+import { z } from "zod";
+import { parseMessages } from "./utils";
+import { cat } from "@xenova/transformers";
 
-// TOOD: refacto this with all the other parsing function already in use
-function parseMessages(messages: unknown) {
-  if (!messages) {
-    return [""];
-  }
-  if (typeof messages === "string" && messages.length) {
-    return [messages];
-  }
+const toxicitySchema = z.array(
+  z.union([z.null(), z.object({ reason: z.string() })]),
+);
+type Toxicity = z.infer<typeof toxicitySchema>;
 
-  if (messages === "__NOT_INGESTED__") {
-    return [""];
-  }
-
-  if (Array.isArray(messages)) {
-    let contentArray = [];
-    for (const message of messages) {
-      let content = message.content || message.text;
-      if (typeof content === "string" && content.length) {
-        contentArray.push(content);
-      } else {
-        contentArray.push(JSON.stringify(message));
-      }
-    }
-    return contentArray;
-  }
-
-  if (typeof messages === "object") {
-    return [JSON.stringify(messages)];
-  }
-
-  return [""];
+export interface ToxicityEvaluation {
+  input: Toxicity;
+  output: Toxicity;
 }
 
-export async function evaluate(run: Run, params: { threshold?: number }) {
-  const { threshold = 0.5 } = params;
-  const input = parseMessages(run.input);
-  const output = parseMessages(run.output);
-  const error = parseMessages(run.error);
-
-  const [inputToxicity, outputToxicity] = await Promise.all([
-    detectToxicity(input, threshold),
-    detectToxicity(output, threshold),
-  ]);
-
-  const toxicity = {
-    input: inputToxicity,
-    output: outputToxicity,
-    error: error.map((e) => null),
-  };
-
-  // TODO: zod for languages, SHOLUD NOT INGEST IN DB IF NOT CORRECT FORMAT
-  return toxicity;
+async function getToxicity(texts: string[]): Promise<Toxicity> {
+  const raw = await callML("toxicity", { texts });
+  return toxicitySchema.parse(raw);
 }
 
-// TODO: type
-async function detectToxicity(
-  texts: string[],
-  threshold: number,
-): Promise<any> {
+export async function evaluate(run: Run): Promise<ToxicityEvaluation | null> {
+  const inputTexts = parseMessages(run.input);
+  const outputTexts = parseMessages(run.output);
+
   try {
-    return callML("toxicity", { outputs: texts, threshold });
+    const [input, output] = await Promise.all([
+      inputTexts ? getToxicity(inputTexts) : Promise.resolve([null]),
+      outputTexts ? getToxicity(outputTexts) : Promise.resolve([null]),
+    ]);
+    return { input, output };
   } catch (error) {
     console.error(error);
-    console.error(texts);
+    return null;
   }
 }
