@@ -316,18 +316,20 @@ function getRunQuery(ctx: Context, isExport = false) {
   const queryString = ctx.querystring;
   const deserializedChecks = deserializeLogic(queryString);
 
+  const enricherFilters = ["languages", "pii", "topics", "toxicity"];
+
   const mainChecks = deserializedChecks?.filter((check) => {
     if (check === "AND" || check === "OR") {
       return true;
     }
-    return !["languages", "pii", "topics"].includes(check?.id);
+    return !enricherFilters.includes(check?.id);
   });
 
   const evaluatorChecks = deserializedChecks?.filter((check) => {
     if (check === "AND" || check === "OR") {
       return true;
     }
-    return ["languages", "pii", "topics"].includes(check?.id);
+    return enricherFilters.includes(check?.id);
   });
 
   const filtersQuery =
