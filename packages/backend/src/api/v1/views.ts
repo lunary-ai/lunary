@@ -272,7 +272,7 @@ views.delete("/:id", checkAccess("logs", "delete"), async (ctx: Context) => {
  *                     type: object
  *           example: ["AND", {"id": "models", "params": {"models": ["gpt-4"]}}]
  *         columns:
- *           type: array
+ *           type: object
  *         icon:
  *           type: string
  *           example: "chat"
