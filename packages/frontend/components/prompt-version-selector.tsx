@@ -1,13 +1,22 @@
-import { useState, useEffect } from "react"
-import { Button, Popover, Select, Text, Group, Slider, Stack, Switch } from "@mantine/core"
-import { IconSettings, IconCheck } from "@tabler/icons-react"
-import type { PromptVersion } from "@/types/prompt-types"
+import { useState, useEffect } from "react";
+import {
+  Button,
+  Popover,
+  Select,
+  Text,
+  Group,
+  Slider,
+  Stack,
+  Switch,
+} from "@mantine/core";
+import { IconSettings, IconCheck } from "@tabler/icons-react";
+import type { PromptVersion } from "@/types/prompt-types";
 
 interface PromptVersionSelectorProps {
-  version: PromptVersion
-  availableVersions: PromptVersion[]
-  onSelectVersion: (versionId: string) => void
-  onUpdateVersion: (version: PromptVersion) => void
+  version: PromptVersion;
+  availableVersions: PromptVersion[];
+  onSelectVersion: (versionId: string) => void;
+  onUpdateVersion: (version: PromptVersion) => void;
 }
 
 export function PromptVersionSelector({
@@ -16,61 +25,61 @@ export function PromptVersionSelector({
   onSelectVersion,
   onUpdateVersion,
 }: PromptVersionSelectorProps) {
-  const [syncSettings, setSyncSettings] = useState(true)
-  const [localVersion, setLocalVersion] = useState<PromptVersion>(version)
+  const [syncSettings, setSyncSettings] = useState(true);
+  const [localVersion, setLocalVersion] = useState<PromptVersion>(version);
 
   // Update local state when props change
   useEffect(() => {
-    setLocalVersion(version)
-  }, [version])
+    setLocalVersion(version);
+  }, [version]);
 
   const handleModelChange = (modelValue: string | null) => {
-    if (!modelValue) return
+    if (!modelValue) return;
 
-    console.log("Model changed to:", modelValue)
+    console.log("Model changed to:", modelValue);
     const updatedVersion = {
       ...localVersion,
       model: modelValue,
-    }
-    setLocalVersion(updatedVersion)
-    onUpdateVersion(updatedVersion)
-  }
+    };
+    setLocalVersion(updatedVersion);
+    onUpdateVersion(updatedVersion);
+  };
 
   const handleTemperatureChange = (value: number) => {
-    console.log("Temperature changed to:", value)
+    console.log("Temperature changed to:", value);
     const updatedVersion = {
       ...localVersion,
       temperature: value,
-    }
-    setLocalVersion(updatedVersion)
-    onUpdateVersion(updatedVersion)
-  }
+    };
+    setLocalVersion(updatedVersion);
+    onUpdateVersion(updatedVersion);
+  };
 
   const handleMaxTokensChange = (value: number) => {
-    console.log("Max tokens changed to:", value)
+    console.log("Max tokens changed to:", value);
     const updatedVersion = {
       ...localVersion,
       max_tokens: value,
-    }
-    setLocalVersion(updatedVersion)
-    onUpdateVersion(updatedVersion)
-  }
+    };
+    setLocalVersion(updatedVersion);
+    onUpdateVersion(updatedVersion);
+  };
 
   const handleTopPChange = (value: number) => {
-    console.log("Top P changed to:", value)
+    console.log("Top P changed to:", value);
     const updatedVersion = {
       ...localVersion,
       top_p: value,
-    }
-    setLocalVersion(updatedVersion)
-    onUpdateVersion(updatedVersion)
-  }
+    };
+    setLocalVersion(updatedVersion);
+    onUpdateVersion(updatedVersion);
+  };
 
   const models = [
     { value: "gpt-4o", label: "GPT-4o" },
     { value: "gpt-4-turbo", label: "GPT-4 Turbo" },
     { value: "gpt-3.5-turbo", label: "GPT-3.5 Turbo" },
-  ]
+  ];
 
   return (
     <Group>
@@ -78,8 +87,8 @@ export function PromptVersionSelector({
         value={version.id || ""}
         onChange={onSelectVersion}
         data={availableVersions.map((v) => ({ value: v.id, label: v.name }))}
-        placeholder="Select version"
-        w={180}
+        placeholder=""
+        w={40}
       />
 
       <Popover width={300} position="bottom" shadow="md">
@@ -98,7 +107,9 @@ export function PromptVersionSelector({
                 </Text>
                 <Switch
                   checked={syncSettings}
-                  onChange={(event) => setSyncSettings(event.currentTarget.checked)}
+                  onChange={(event) =>
+                    setSyncSettings(event.currentTarget.checked)
+                  }
                   size="md"
                   onLabel={<IconCheck size={12} />}
                   offLabel=""
@@ -150,7 +161,13 @@ export function PromptVersionSelector({
                     {localVersion.max_tokens}
                   </Text>
                 </Group>
-                <Slider min={1} max={8192} step={1} value={localVersion.max_tokens} onChange={handleMaxTokensChange} />
+                <Slider
+                  min={1}
+                  max={8192}
+                  step={1}
+                  value={localVersion.max_tokens}
+                  onChange={handleMaxTokensChange}
+                />
               </Stack>
 
               <Stack gap="xs">
@@ -162,12 +179,18 @@ export function PromptVersionSelector({
                     {localVersion.top_p.toFixed(2)}
                   </Text>
                 </Group>
-                <Slider min={0} max={1} step={0.01} value={localVersion.top_p} onChange={handleTopPChange} />
+                <Slider
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={localVersion.top_p}
+                  onChange={handleTopPChange}
+                />
               </Stack>
             </Stack>
           </Stack>
         </Popover.Dropdown>
       </Popover>
     </Group>
-  )
+  );
 }

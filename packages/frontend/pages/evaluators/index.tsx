@@ -13,10 +13,10 @@ import {
   Group,
   Loader,
   Menu,
-  Stack,
+  Box,
+  Grid,
   Text,
   Title,
-  SimpleGrid,
 } from "@mantine/core";
 import {
   IconActivityHeartbeat,
@@ -39,7 +39,13 @@ function EvaluatorCard({ id, initialData }) {
   const { description, icon: Icon } = evalMeta;
 
   return (
-    <Card p={16} withBorder>
+    <Card
+      p="lg"
+      radius="md"
+      shadow="sm"
+      withBorder
+      style={{ cursor: "pointer" }}
+    >
       <Group justify="space-between">
         <Stack>
           <Group justify="space-between">
@@ -161,15 +167,12 @@ export default function EvaluatorsPage() {
       buttonLabel="Create First Evaluator"
       onClick={() => router.push("/evaluators/new")}
     >
-      <Container>
-        <Stack>
-          <Group align="center" justify="space-between">
-            <Group align="center">
-              <Title>Evaluators</Title>
-            </Group>
-
+      <Container py="xl">
+        <Box>
+          <Group align="center" justify="space-between" mb="lg">
+            <Title>Evaluators</Title>
             <Button
-              leftSection={<IconPlus size="12" />}
+              leftSection={<IconPlus size={12} />}
               variant="default"
               onClick={() => router.push("/evaluators/new")}
             >
@@ -177,12 +180,14 @@ export default function EvaluatorsPage() {
             </Button>
           </Group>
 
-          <SimpleGrid cols={2} spacing={24}>
+          <Grid gutter="lg">
             {evaluatorsList.map((ev) => (
-              <EvaluatorCard key={ev.id} id={ev.id} initialData={ev} />
+              <Grid.Col xs={12} sm={6} key={ev.id}>
+                <EvaluatorCard id={ev.id} initialData={ev} />
+              </Grid.Col>
             ))}
-          </SimpleGrid>
-        </Stack>
+          </Grid>
+        </Box>
       </Container>
     </Empty>
   );

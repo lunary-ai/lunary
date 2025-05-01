@@ -65,10 +65,8 @@ export function PromptComparator() {
   const [comparisonRows, setComparisonRows] = useState<ComparisonRow[]>([
     {
       id: "1",
-      userMessage:
-        "Hello, I'm interested in integrating your service with our company's CRM system. We use Salesforce. Is this integration possible, and if so, could you give me an overview of how it works and what features are available?",
-      context:
-        "The user is a new customer who signed up for a 14-day trial of your Professional plan two days ago. They have not yet set up any phone numbers or made any calls. Their company is a mid-sized sales organization with 50 employees, all of whom use Salesforce as their primary CRM.",
+      userMessage: "",
+      context: "",
       responses: {},
       evaluationResults: {},
     },
@@ -130,11 +128,6 @@ export function PromptComparator() {
     }
 
     setComparisonRows(comparisonRows.filter((row) => row.id !== rowId));
-
-    notify({
-      title: "Row removed",
-      description: "The row has been removed from the table.",
-    });
   };
 
   const handleRunAll = async () => {
@@ -242,9 +235,6 @@ export function PromptComparator() {
       <Group justify="space-between" mb="md">
         <div>
           <Title order={3}>Prompt Comparator</Title>
-          <Text size="sm" c="dimmed">
-            Last saved {lastSaved}
-          </Text>
         </div>
         <Group>
           <EvaluatorSettings
