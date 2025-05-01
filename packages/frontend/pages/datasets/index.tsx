@@ -16,6 +16,7 @@ import {
   Stack,
   Text,
   Title,
+  SimpleGrid,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import {
@@ -29,11 +30,22 @@ import Router from "next/router";
 import { generateSlug } from "random-word-slugs";
 import { hasAccess } from "shared";
 
-function DatasetCard({ defaultValue, onDelete }) {
+// define Dataset type
+type Dataset = { id: string; slug: string; prompts?: any[]; format: string };
+
+function DatasetCard({
+  defaultValue,
+  onDelete,
+}: {
+  defaultValue: Dataset;
+  onDelete: () => void;
+}) {
   const { update, dataset, remove } = useDataset(
     defaultValue?.id,
     defaultValue,
   );
+  // cast dataset to Dataset type
+  const typedDataset = dataset as Dataset;
 
   return (
     <Card p="lg" withBorder pos="relative" style={{ overflow: "visible" }}>
@@ -70,9 +82,10 @@ function DatasetCard({ defaultValue, onDelete }) {
           <Group>
             <RenamableField
               style={{ cursor: "pointer" }}
-              order={3}
+              hidePencil
+              order={5}
               size={16}
-              defaultValue={dataset.slug}
+              defaultValue={typedDataset.slug}
               onRename={(newName) => {
                 update(
                   { slug: cleanSlug(newName) },
@@ -85,26 +98,25 @@ function DatasetCard({ defaultValue, onDelete }) {
                 );
               }}
             />
-            {dataset?.prompts && (
+            {typedDataset.prompts && (
               <Badge variant="light" radius="sm" color="blue" size="md">
-                {`${dataset.prompts?.length} prompt${dataset.prompts?.length > 1 ? "s" : ""}`}
+                {`${typedDataset.prompts.length} prompt${typedDataset.prompts.length > 1 ? "s" : ""}`}
               </Badge>
             )}
 
             <Badge
               variant="light"
               radius="sm"
-              color={dataset?.format === "chat" ? "violet" : "gray"}
+              color={typedDataset.format === "chat" ? "violet" : "gray"}
               size="md"
             >
-              {dataset?.format}
+              {typedDataset.format}
             </Badge>
           </Group>
-          <OrgUserBadge userId={dataset.ownerId} />
         </Stack>
 
         <Button
-          onClick={() => Router.push(`/datasets/${dataset.id}`)}
+          onClick={() => Router.push(`/datasets/${typedDataset.id}`)}
           size="sm"
           leftSection={<IconPencil size={16} />}
           variant="light"
@@ -119,6 +131,8 @@ function DatasetCard({ defaultValue, onDelete }) {
 export default function Datasets() {
   const { datasets, isLoading, mutate, insert, isInserting } = useDatasets();
   const { user } = useUser();
+  // cast datasets array for proper typing
+  const datasetsList = (datasets as Dataset[]) || [];
 
   function createDataset(format) {
     insert(
@@ -150,7 +164,7 @@ export default function Datasets() {
                   variant="default"
                   loading={isInserting}
                 >
-                  Crete Dataset
+                  Create Dataset
                 </Button>
               </Menu.Target>
               <Menu.Dropdown>
@@ -178,28 +192,24 @@ export default function Datasets() {
         {isLoading ? (
           <Loader />
         ) : (
-          <Stack gap="xl">
-            <>
-              {datasets?.length === 0 ? (
-                <Alert color="gray" title="No datasets yet" />
-              ) : (
-                datasets?.map((dataset) => (
-                  <DatasetCard
-                    key={dataset.id}
-                    defaultValue={dataset}
-                    onDelete={() => {
-                      mutate(
-                        datasets.filter((d) => d.id !== dataset.id),
-                        {
-                          revalidate: false,
-                        },
-                      );
-                    }}
-                  />
-                ))
-              )}
-            </>
-          </Stack>
+          <SimpleGrid cols={2} spacing="xl">
+            {datasetsList.length === 0 ? (
+              <Alert color="gray" title="No datasets yet" />
+            ) : (
+              datasetsList.map((dataset) => (
+                <DatasetCard
+                  key={dataset.id}
+                  defaultValue={dataset}
+                  onDelete={() => {
+                    mutate(
+                      datasetsList.filter((d) => d.id !== dataset.id),
+                      { revalidate: false },
+                    );
+                  }}
+                />
+              ))
+            )}
+          </SimpleGrid>
         )}
       </Stack>
     </Container>

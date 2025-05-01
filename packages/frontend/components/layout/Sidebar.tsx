@@ -392,6 +392,7 @@ export default function Sidebar() {
           link: "/experiments",
           resource: "prompts",
           disabled: !org.beta,
+          isAlpha: true,
         },
         {
           label: "Evaluators",
@@ -435,13 +436,6 @@ export default function Sidebar() {
       c: "blue",
       subMenu: [
         {
-          label: "Guardrails",
-          icon: IconShieldHalf,
-          link: "/guardrails",
-          resource: "enrichments",
-          disabled: !org.beta,
-        },
-        {
           label: "Data Rules",
           icon: IconFilterCog,
           link: "/data-rules",
@@ -454,6 +448,14 @@ export default function Sidebar() {
           link: "/alerts",
           resource: "enrichments",
           disabled: !org.beta,
+        },
+        {
+          label: "Guardrails",
+          icon: IconShieldHalf,
+          link: "/guardrails",
+          resource: "enrichments",
+          disabled: !org.beta,
+          isAlpha: true,
         },
       ],
     },

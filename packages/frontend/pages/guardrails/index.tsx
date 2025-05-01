@@ -145,8 +145,6 @@ export default function Filters() {
           </Badge>
         </Group>
 
-        <Group>Select Model</Group>
-
         <SettingsCard title="Blocked Message">
           <Text>
             Define the message that will be displayed when a model's response or
