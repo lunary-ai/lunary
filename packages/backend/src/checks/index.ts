@@ -193,26 +193,26 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     },
   },
   {
-    id: "entities",
-    sql: ({ types }) => {
-      if (!types.length) return sql`true`;
+    id: "pii",
+    sql: ({ type }) => {
+      if (!type) {
+        return sql`true`;
+      }
 
-      return and([
-        sql`e.type = 'pii'`,
-        or(
-          types.map((type: string) => {
-            return sql`EXISTS (
-              SELECT 1
-              FROM jsonb_array_elements(er.result -> 'input') as input_array
-              WHERE input_array @> ${sql.json([{ type }])}
-            ) OR EXISTS (
-              SELECT 1
-              FROM jsonb_array_elements(er.result -> 'output') as output_array
-              WHERE output_array @> ${sql.json([{ type }])}
-            )`;
-          }),
-        ),
-      ]);
+      return sql`(
+        e2.type = 'pii'
+        and (jsonb_typeof(er2.result->'input') = 'array' or jsonb_typeof(er2.result->'output') = 'array')
+        and exists (
+            select 1
+            from jsonb_array_elements(er2.result->'input') as input_array
+            where input_array @> ${sql.json([{ type }])}
+        ) or exists (
+          select 1  
+          from jsonb_array_elements(er2.result->'output') as output_array
+          where output_array @> ${sql.json([{ type }])}
+        )
+      )
+      `;
     },
   },
   {

@@ -100,7 +100,7 @@ export const CHECKS: Check[] = [
         searchable: false,
         options: [
           {
-            label: "LLM Call",
+            label: "LLM Logs",
             value: "llm",
           },
           {
@@ -633,7 +633,7 @@ export const CHECKS: Check[] = [
     ],
   },
   {
-    id: "entities",
+    id: "pii",
     name: "PII",
     uiType: "ai",
     disableInEvals: true,
@@ -644,7 +644,7 @@ export const CHECKS: Check[] = [
       },
       {
         type: "select",
-        id: "types",
+        id: "type",
         multiple: true,
         width: 100,
         searchable: true,
