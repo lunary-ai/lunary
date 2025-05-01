@@ -106,6 +106,7 @@ async function evaluatorJob() {
       evaluator e 
     where
       mode = 'realtime' 
+      and type = 'toxicity'
     order by 
       random()
   `;

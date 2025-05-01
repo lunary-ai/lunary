@@ -288,7 +288,7 @@ export default function Logs() {
       if (Array.isArray(evaluators)) {
         for (const evaluator of evaluators) {
           if (evaluator.type === "toxicity") {
-            newColumns.llm.push(toxicityColumn());
+            newColumns.llm.push(toxicityColumn(evaluator.id));
             continue;
           }
           const id = "enrichment-" + evaluator.id;

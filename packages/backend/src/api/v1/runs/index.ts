@@ -196,12 +196,12 @@ export function formatRun(run: any) {
     },
     toxicity: {
       input: {
-        isToxic:  run.toxicInput,
-        labels:   run.inputLabels,
+        isToxic: run.toxicInput,
+        labels: run.inputLabels,
       },
       output: {
-        isToxic:  run.toxicOutput,
-        labels:   run.outputLabels,
+        isToxic: run.toxicOutput,
+        labels: run.outputLabels,
       },
     },
     tags: run.tags,
@@ -326,7 +326,7 @@ function getRunQuery(ctx: Context, isExport = false) {
   const queryString = ctx.querystring;
   const deserializedChecks = deserializeLogic(queryString);
 
-  const enricherFilters = ["languages", "pii", "topics", "toxicity"];
+  const enricherFilters = ["languages", "pii", "topics"];
 
   const mainChecks = deserializedChecks?.filter((check) => {
     if (check === "AND" || check === "OR") {
@@ -391,11 +391,11 @@ function getRunQuery(ctx: Context, isExport = false) {
       coalesce(er.results, '[]') as evaluation_results,
       parent_feedback.feedback as parent_feedback,
       chat_feedbacks.feedbacks as feedbacks,
-      coalesce(scores, '[]'::json) as scores
-      , rt.toxic_input      as toxic_input
-      , rt.toxic_output     as toxic_output
-      , rt.input_labels     as input_labels
-      , rt.output_labels    as output_labels
+      coalesce(scores, '[]'::json) as scores,
+      rt.toxic_input,
+      rt.toxic_output,     
+      rt.input_labels,
+      rt.output_labels 
     from
       public.run r
       left join external_user eu on r.external_user_id = eu.id

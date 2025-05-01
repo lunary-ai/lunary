@@ -10,6 +10,7 @@ import { EvaluatorType } from "shared";
 import { useProjectRules, useProjectSWR } from "./dataHooks";
 import { renderEnrichment } from "./enrichment";
 import { capitalize, formatCost, formatDateTime, msToTime } from "./format";
+import { IconBiohazard } from "@tabler/icons-react";
 const columnHelper = createColumnHelper<any>();
 
 export function selectColumn() {
@@ -342,9 +343,9 @@ export function scoresColumn() {
   });
 }
 
-export function toxicityColumn() {
+export function toxicityColumn(id: string) {
   return {
-    id: "toxicity",
+    id: `toxicity-${id}`,
     header: "Toxicity",
     accessorFn: (row) => row.toxicity, // keep full object for the cell
     enableSorting: false,
@@ -353,7 +354,7 @@ export function toxicityColumn() {
       const tox = getValue();
 
       const isToxic = tox.input.isToxic || tox.output.isToxic;
-      if (!isToxic) return <Text c="dimmed">—</Text>;
+      if (!isToxic) return;
 
       const labels = [
         ...(tox.input.isToxic ? tox.input.labels : []),
@@ -362,7 +363,7 @@ export function toxicityColumn() {
 
       return (
         <Tooltip label={labels.join(", ")} withArrow>
-          <Badge color="red" radius="sm">
+          <Badge color="red" leftSection={<IconBiohazard width={12} />}>
             Toxic
           </Badge>
         </Tooltip>
