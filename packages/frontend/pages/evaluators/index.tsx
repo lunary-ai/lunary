@@ -41,7 +41,7 @@ function EvaluatorCard({ id, initialData }) {
   return (
     <Card p={16} withBorder>
       <Group justify="space-between">
-        <Stack>
+        <Stack w="100%">
           <Group justify="space-between">
             <Group>
               <Icon size={24} />

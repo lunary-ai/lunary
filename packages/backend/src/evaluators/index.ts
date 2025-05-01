@@ -1,6 +1,6 @@
 import * as pii from "./pii";
 import * as language from "./language";
-import * as assertion from "./assertion";
+import * as llm from "./llm";
 import * as tone from "./tone";
 import * as topics from "./topics";
 import * as toxicity from "./toxicity";
@@ -12,7 +12,7 @@ import * as bias from "./bias";
 const evaluators = {
   pii,
   language,
-  assertion,
+  llm,
   tone,
   topics,
   toxicity,
