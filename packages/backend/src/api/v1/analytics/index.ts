@@ -191,7 +191,7 @@ analytics.get("/errors", async (ctx: Context) => {
         ),
         filtered_runs as (
           ${filteredRunsQuery}
-          and error is not null
+          and r.error is not null
         )
         select
           d.date,
