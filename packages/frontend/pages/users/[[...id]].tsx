@@ -185,7 +185,7 @@ function SelectedUser({ id, onClose }) {
                 >
                   Activity
                 </Button>
-                <Button
+                {/* <Button
                   leftSection={<IconChartAreaLine size={16} />}
                   component={Link}
                   color="grape"
@@ -194,7 +194,7 @@ function SelectedUser({ id, onClose }) {
                   variant="outline"
                 >
                   Analytics
-                </Button>
+                </Button> */}
                 <ActionIcon
                   variant="transparent"
                   color="gray"
