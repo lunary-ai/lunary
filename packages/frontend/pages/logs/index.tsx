@@ -115,8 +115,7 @@ export const defaultColumns = {
     feedbackColumn("traces"),
     tagsColumn(),
     inputColumn("Input"),
-    outputColumn(),
-    scoresColumn(),
+    outputColumn("Output"),
   ],
   thread: [
     timeColumn("createdAt", "Started at"),
