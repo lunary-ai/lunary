@@ -43,6 +43,7 @@ users.get("/me/org", async (ctx: Context) => {
         account.id,
         account.created_at,
         account.email,
+        account.name,
         account.org_id,
         account.role,
         account.verified,
