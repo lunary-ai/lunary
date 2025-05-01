@@ -194,6 +194,16 @@ export function formatRun(run: any) {
       completion: run.completionTokens,
       total: run.completionTokens + run.promptTokens,
     },
+    toxicity: {
+      input: {
+        isToxic: run.toxicInput,
+        labels: run.inputLabels,
+      },
+      output: {
+        isToxic: run.toxicOutput,
+        labels: run.outputLabels,
+      },
+    },
     tags: run.tags,
     input: processInput(run.input),
     output: processOutput(run.output),
@@ -316,7 +326,7 @@ function getRunQuery(ctx: Context, isExport = false) {
   const queryString = ctx.querystring;
   const deserializedChecks = deserializeLogic(queryString);
 
-  const enricherFilters = ["languages", "pii", "topics", "toxicity"];
+  const enricherFilters = ["languages", "pii", "topics"];
 
   const mainChecks = deserializedChecks?.filter((check) => {
     if (check === "AND" || check === "OR") {
@@ -381,10 +391,15 @@ function getRunQuery(ctx: Context, isExport = false) {
       coalesce(er.results, '[]') as evaluation_results,
       parent_feedback.feedback as parent_feedback,
       chat_feedbacks.feedbacks as feedbacks,
-      coalesce(scores, '[]'::json) as scores
+      coalesce(scores, '[]'::json) as scores,
+      rt.toxic_input,
+      rt.toxic_output,     
+      rt.input_labels,
+      rt.output_labels 
     from
       public.run r
       left join external_user eu on r.external_user_id = eu.id
+      left join run_toxicity rt on rt.run_id = r.id
       left join template_version tv on r.template_version_id = tv.id
       left join template t on tv.template_id = t.id
       left join run pr

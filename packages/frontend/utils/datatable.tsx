@@ -2,7 +2,7 @@ import SmartViewer from "@/components/SmartViewer";
 import AppUserAvatar from "@/components/blocks/AppUserAvatar";
 import Feedback from "@/components/blocks/OldFeedback";
 import ProtectedText from "@/components/blocks/ProtectedText";
-import { Badge, Button, Checkbox, Group } from "@mantine/core";
+import { Badge, Button, Checkbox, Group, Text, Tooltip } from "@mantine/core";
 import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
 
 import Link from "next/link";
@@ -10,6 +10,7 @@ import { EvaluatorType } from "shared";
 import { useProjectRules, useProjectSWR } from "./dataHooks";
 import { renderEnrichment } from "./enrichment";
 import { capitalize, formatCost, formatDateTime, msToTime } from "./format";
+import { IconBiohazard } from "@tabler/icons-react";
 const columnHelper = createColumnHelper<any>();
 
 export function selectColumn() {
@@ -340,4 +341,33 @@ export function scoresColumn() {
       }
     },
   });
+}
+
+export function toxicityColumn(id: string) {
+  return {
+    id: `toxicity-${id}`,
+    header: "Toxicity",
+    accessorFn: (row) => row.toxicity, // keep full object for the cell
+    enableSorting: false,
+
+    cell: ({ getValue }) => {
+      const tox = getValue();
+
+      const isToxic = tox.input.isToxic || tox.output.isToxic;
+      if (!isToxic) return;
+
+      const labels = [
+        ...(tox.input.isToxic ? tox.input.labels : []),
+        ...(tox.output.isToxic ? tox.output.labels : []),
+      ];
+
+      return (
+        <Tooltip label={labels.join(", ")} withArrow>
+          <Badge color="red" leftSection={<IconBiohazard width={12} />}>
+            Toxic
+          </Badge>
+        </Tooltip>
+      );
+    },
+  };
 }

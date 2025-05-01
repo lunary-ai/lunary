@@ -264,19 +264,13 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   {
     id: "toxicity",
     sql: ({ field, type }) => {
-      if (["toxic", "non-toxic"].includes(type)) return sql`true`;
+      console.log("toxicity", field, type);
+      // if (!["toxic", "non-toxic"].includes(type)) return sql`true`;
 
-      return sql`(
-        e2.type = 'toxicity'
-        and jsonb_typeof(er2.result->${field}) = 'array'
-        and exists (
-            select 1
-            from jsonb_array_elements(er2.result->${field}) as elem
-            ${type === "toxic" ? sql.unsafe(`where elem->>'reason' is not null`) : sql``}
-            ${type === "non-toxic" ? sql.unsafe(`where elem->>'reason' is null`) : sql``} 
-        )
-      )
-      `;
+      const column = field === "input" ? "rt.toxic_input" : "rt.toxic_output";
+
+      return sql`(rt.toxic_input is true)`;
+      // return sql`(${sql.unsafe(column)} = ${type === "toxic" ? true : false})`;
     },
   },
   {
