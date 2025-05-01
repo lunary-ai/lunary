@@ -193,26 +193,44 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     },
   },
   {
-    id: "entities",
-    sql: ({ types }) => {
-      if (!types.length) return sql`true`;
+    id: "pii",
+    sql: ({ containsPii }) => {
+      if (!containsPii) {
+        return sql`true`;
+      }
 
-      return and([
-        sql`e.type = 'pii'`,
-        or(
-          types.map((type: string) => {
-            return sql`EXISTS (
-              SELECT 1
-              FROM jsonb_array_elements(er.result -> 'input') as input_array
-              WHERE input_array @> ${sql.json([{ type }])}
-            ) OR EXISTS (
-              SELECT 1
-              FROM jsonb_array_elements(er.result -> 'output') as output_array
-              WHERE output_array @> ${sql.json([{ type }])}
-            )`;
-          }),
-        ),
-      ]);
+      if (containsPii === "false") {
+        return sql`not (
+          e2.type = 'pii'
+          and (jsonb_typeof(er2.result->'input') = 'array' or jsonb_typeof(er2.result->'output') = 'array')
+          and (
+            exists (
+              select 1
+              from jsonb_array_elements(er2.result->'input') as input_array
+              where input_array[0] is not null
+            ) or exists (
+              select 1
+              from jsonb_array_elements(er2.result->'output') as output_array
+              where output_array[0] is not null
+            )
+          )
+        )`;
+      }
+
+      return sql`(
+        e2.type = 'pii'
+        and (jsonb_typeof(er2.result->'input') = 'array' or jsonb_typeof(er2.result->'output') = 'array')
+        and (exists (
+            select 1
+            from jsonb_array_elements(er2.result->'input') as input_array
+            where input_array[0] is not null
+        ) or exists (
+            select 1
+            from jsonb_array_elements(er2.result->'output') as output_array
+            where output_array[0] is not null
+        ))
+      )
+      `;
     },
   },
   {
