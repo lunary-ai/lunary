@@ -20,6 +20,7 @@ import {
   Tooltip,
   UnstyledButton,
   SegmentedControl,
+  Switch,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCircleCheck, IconCirclePlus, IconX } from "@tabler/icons-react";
@@ -98,7 +99,6 @@ export default function NewEvaluator() {
   const [filters, setFilters] = useState<CheckLogic>([
     "OR",
     { id: "type", params: { type: "llm" } },
-    { id: "type", params: { type: "chat" } },
   ]);
 
   const serializedFilters = serializeLogic(filters);
@@ -186,7 +186,7 @@ export default function NewEvaluator() {
     <Container>
       <Stack gap="xl">
         <Group align="center">
-          <Title>
+          <Title order={3}>
             {isEditing ? `Edit ${evaluator?.name}` : "New Evaluator"}
           </Title>
         </Group>
@@ -198,18 +198,9 @@ export default function NewEvaluator() {
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
-        <SegmentedControl
-          label="Mode"
-          data={[
-            { label: "Realtime", value: "realtime" },
-            { label: "Batch", value: "normal" },
-          ]}
-          value={mode}
-          onChange={setMode}
-        />
 
         <Stack>
-          <Text>Select the type of evaluator you want to add:</Text>
+          <Title order={6}>Evaluator Type:</Title>
 
           <SimpleGrid cols={5} spacing="md">
             {evaluatorTypes
@@ -241,27 +232,43 @@ export default function NewEvaluator() {
           </Fieldset>
         )}
 
-        <Card style={{ overflow: "visible" }} shadow="md" p="lg">
+        <Fieldset legend="Live Mode Configuration">
           <Stack>
             <Box>
-              <Text mb="5" mt="sm">
-                Select the logs to apply to:
-              </Text>
-
-              <CheckPicker
-                minimal
-                value={filters}
-                showAndOr
-                onChange={setFilters}
-                restrictTo={(filter) =>
-                  ["tags", "type", "users", "metadata", "date"].includes(
-                    filter.id,
-                  )
+              <Switch
+                defaultChecked
+                onLabel="On"
+                offLabel="Off"
+                size="md"
+                styles={{ trackLabel: { fontSize: "10px" } }}
+                checked={mode === "realtime"}
+                onChange={(event) =>
+                  setMode(event.currentTarget.checked ? "realtime" : "normal")
                 }
               />
+
+              {mode === "realtime" && (
+                <>
+                  <Text mb="5" mt="sm" size="sm">
+                    Filters
+                  </Text>
+
+                  <CheckPicker
+                    minimal
+                    value={filters}
+                    showAndOr
+                    onChange={setFilters}
+                    restrictTo={(filter) =>
+                      ["tags", "type", "users", "metadata", "date"].includes(
+                        filter.id,
+                      )
+                    }
+                  />
+                </>
+              )}
             </Box>
           </Stack>
-        </Card>
+        </Fieldset>
 
         <Group justify="end">
           <Button

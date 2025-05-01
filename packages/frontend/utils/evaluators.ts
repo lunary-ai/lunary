@@ -36,17 +36,17 @@ const EVALUATOR_TYPES = {
     name: "Toxicity",
     icon: IconBiohazard,
     color: "red",
-    description: "Detects the toxicness in your LLM outputs.",
+    description: "Use LLM models to detects if your LLM Logs contain toxicity.",
     params: [],
     beta: true,
   },
   topics: {
-    name: "Topics",
+    name: "Topics Detection",
     id: "topics",
     icon: IconBadge,
     color: "violet",
     description:
-      "Uses AI to detect the topics of an interaction. You can add custom topics to the model.",
+      "Uses Lunary's ML models to detect the topics of an interaction. You can add custom topics to the model.",
     params: [
       {
         type: "label",
@@ -68,9 +68,9 @@ const EVALUATOR_TYPES = {
   },
   pii: {
     id: "pii",
-    name: "PII",
+    name: "PII detection",
     description:
-      "Uses AI to detect if the given field contains personal identifiable information (PII).",
+      "Uses Lunary's ML models to detect if the given field contains personal identifiable information (PII).",
     icon: IconIdBadge,
     color: "orange",
     params: [
@@ -113,8 +113,7 @@ const EVALUATOR_TYPES = {
       {
         type: "label",
         label: "Custom Regex Expressions",
-        description:
-          "Add custom regex expressions to detect PII (optional). Use the PCRE Regex format.",
+        description: "Use the PCRE Regex format.",
       },
       {
         type: "select",

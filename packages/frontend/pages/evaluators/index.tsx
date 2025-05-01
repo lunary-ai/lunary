@@ -16,6 +16,7 @@ import {
   Stack,
   Text,
   Title,
+  SimpleGrid,
 } from "@mantine/core";
 import {
   IconActivityHeartbeat,
@@ -29,22 +30,59 @@ import { useRouter } from "next/router";
 function EvaluatorCard({ id, initialData }) {
   const router = useRouter();
   const { evaluator, delete: deleteEvaluator } = useEvaluator(id, initialData);
+  const evaluatorAny = evaluator as any;
 
-  const evalMeta = EVALUATOR_TYPES[evaluator?.type];
+  const evalMeta = EVALUATOR_TYPES[evaluatorAny?.type];
 
   if (!evalMeta) return null;
 
   const { description, icon: Icon } = evalMeta;
 
   return (
-    <Card p="lg" withBorder>
+    <Card p={16} withBorder>
       <Group justify="space-between">
         <Stack>
-          <Group>
-            <Icon size={24} />
-            <Title order={3} size={16}>
-              {evaluator?.name}
-            </Title>
+          <Group justify="space-between">
+            <Group>
+              <Icon size={24} />
+              <Title order={3} size={16}>
+                {evaluatorAny?.name}
+              </Title>
+            </Group>
+
+            <Group>
+              {evaluatorAny?.mode === "realtime" && (
+                <Badge color="green" variant="light" size="md">
+                  Live
+                </Badge>
+              )}
+              <Menu>
+                <Menu.Target>
+                  <ActionIcon variant="transparent">
+                    <IconDotsVertical color="gray" height="18px" />
+                  </ActionIcon>
+                </Menu.Target>
+
+                <Menu.Dropdown>
+                  <Menu.Item
+                    leftSection={
+                      <IconTrash color="red" width="15px" height="15px" />
+                    }
+                    onClick={() => deleteEvaluator()}
+                  >
+                    Delete
+                  </Menu.Item>
+                  <Menu.Item
+                    leftSection={
+                      <IconPencil color="gray" width="15px" height="15px" />
+                    }
+                    onClick={() => router.push(`/evaluators/new?id=${id}`)}
+                  >
+                    Edit
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+            </Group>
           </Group>
           <Group>
             <Text c="dimmed" fw="semibold" size="sm">
@@ -52,31 +90,6 @@ function EvaluatorCard({ id, initialData }) {
             </Text>
           </Group>
         </Stack>
-
-        <Menu>
-          <Menu.Target>
-            <ActionIcon variant="transparent">
-              <IconDotsVertical color="gray" />
-            </ActionIcon>
-          </Menu.Target>
-
-          <Menu.Dropdown>
-            <Menu.Item
-              leftSection={<IconTrash color="red" width="15px" height="15px" />}
-              onClick={() => deleteEvaluator()}
-            >
-              Delete
-            </Menu.Item>
-            <Menu.Item
-              leftSection={
-                <IconPencil color="gray" width="15px" height="15px" />
-              }
-              onClick={() => router.push(`/evaluators/new?id=${id}`)}
-            >
-              Edit
-            </Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
       </Group>
     </Card>
   );
@@ -91,6 +104,7 @@ const FEATURE_LIST = [
 export default function EvaluatorsPage() {
   const router = useRouter();
   const { evaluators, isLoading } = useEvaluators();
+  const evaluatorsList = (evaluators as any[]) || [];
   const { org } = useOrg();
 
   if (isLoading) {
@@ -102,10 +116,10 @@ export default function EvaluatorsPage() {
       <Paywall
         plan="enterprise"
         feature="Evaluators"
+        description="Real-time evaluators are an enterprise feature"
         Icon={IconActivityHeartbeat}
-        p="xl"
+        p={32}
         enabled={!org.license.realtimeEvalsEnabled}
-        description="Evaluate your production data in realtime or batch."
         list={FEATURE_LIST}
       >
         <Container>
@@ -141,12 +155,11 @@ export default function EvaluatorsPage() {
 
   return (
     <Empty
-      enable={!evaluators.length}
+      enable={!evaluatorsList.length}
       Icon={IconActivityHeartbeat}
       title="Evaluators"
       buttonLabel="Create First Evaluator"
       onClick={() => router.push("/evaluators/new")}
-      description="Evaluate your production data with custom logic."
     >
       <Container>
         <Stack>
@@ -164,15 +177,11 @@ export default function EvaluatorsPage() {
             </Button>
           </Group>
 
-          <Text size="xl" mb="md">
-            Evaluate your production data with various evaluators.
-          </Text>
-
-          <Stack gap="xl">
-            {evaluators?.map((ev) => (
+          <SimpleGrid cols={2} spacing={24}>
+            {evaluatorsList.map((ev) => (
               <EvaluatorCard key={ev.id} id={ev.id} initialData={ev} />
             ))}
-          </Stack>
+          </SimpleGrid>
         </Stack>
       </Container>
     </Empty>

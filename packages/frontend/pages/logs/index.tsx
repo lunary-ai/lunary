@@ -82,9 +82,9 @@ import { VisibilityState } from "@tanstack/react-table";
 import { useRouter } from "next/router";
 
 import IconPicker from "@/components/blocks/IconPicker";
-import { useEnrichers } from "@/utils/dataHooks/evaluators";
 import { useSortParams } from "@/utils/hooks";
 import { deserializeLogic, serializeLogic } from "shared";
+import { useEvaluators } from "@/utils/dataHooks/evaluators";
 
 export const defaultColumns = {
   llm: [
@@ -142,6 +142,7 @@ export const CHECKS_BY_TYPE = {
     "topics",
     "tokens",
     "toxicity",
+    "pii",
   ],
   trace: [
     "date",
@@ -241,7 +242,7 @@ export default function Logs() {
     return serializeLogic(checksWithType);
   }, [checks, type, view]);
 
-  const { enrichers: evaluators } = useEnrichers();
+  const { evaluators } = useEvaluators();
 
   const [query, setQuery] = useDebouncedState<string | null>(null, 300);
 

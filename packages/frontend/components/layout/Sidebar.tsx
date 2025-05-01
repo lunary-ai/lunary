@@ -1,6 +1,7 @@
 import {
   ActionIcon,
   Anchor,
+  Badge,
   Box,
   Collapse,
   Flex,
@@ -133,7 +134,16 @@ export function NavbarLink({
       }}
       onClick={onClick}
       h={33}
-      label={`${label}${soon ? " (soon)" : ""}`}
+      label={
+        <Group gap="xs">
+          {label}
+          {label === "Insights" && (
+            <Badge size="xs" variant="light">
+              Alpha
+            </Badge>
+          )}
+        </Group>
+      }
       disabled={disabled || soon}
       active={active}
       leftSection={
@@ -156,6 +166,7 @@ type MenuItem = {
   c?: string;
   isSection?: boolean;
   subMenu?: MenuItem[];
+  isAlpha?: boolean;
 };
 
 function MenuSection({ item }) {
@@ -361,6 +372,7 @@ export default function Sidebar() {
           link: "/insights",
           resource: "analytics",
           disabled: !org.beta,
+          isAlpha: true,
         },
       ],
     },
@@ -620,7 +632,7 @@ export default function Sidebar() {
 
           {user &&
             APP_MENU.filter((item) => !item.disabled).map((item) => {
-              return <MenuSection item={item} key={item.label} />;
+              return <MenuSection item={item} key={item.label} isAlpha />;
             })}
         </Box>
       </Stack>
