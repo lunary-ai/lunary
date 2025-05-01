@@ -51,6 +51,7 @@ async function getEvaluatorRuns(evaluator: any) {
       r.project_id = ${evaluator.projectId}
       and (${filtersQuery})
       and er.run_id is null
+      r.is_deleted = false
     order by 
       r.created_at desc
     limit ${RUNS_BATCH_SIZE}
