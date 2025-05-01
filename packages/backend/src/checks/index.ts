@@ -194,23 +194,41 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   },
   {
     id: "pii",
-    sql: ({ type }) => {
-      if (!type) {
+    sql: ({ containsPii }) => {
+      if (!containsPii) {
         return sql`true`;
+      }
+
+      if (containsPii === "false") {
+        return sql`not (
+          e2.type = 'pii'
+          and (jsonb_typeof(er2.result->'input') = 'array' or jsonb_typeof(er2.result->'output') = 'array')
+          and (
+            exists (
+              select 1
+              from jsonb_array_elements(er2.result->'input') as input_array
+              where input_array[0] is not null
+            ) or exists (
+              select 1
+              from jsonb_array_elements(er2.result->'output') as output_array
+              where output_array[0] is not null
+            )
+          )
+        )`;
       }
 
       return sql`(
         e2.type = 'pii'
         and (jsonb_typeof(er2.result->'input') = 'array' or jsonb_typeof(er2.result->'output') = 'array')
-        and exists (
+        and (exists (
             select 1
             from jsonb_array_elements(er2.result->'input') as input_array
-            where input_array @> ${sql.json([{ type }])}
+            where input_array[0] is not null
         ) or exists (
-          select 1  
-          from jsonb_array_elements(er2.result->'output') as output_array
-          where output_array @> ${sql.json([{ type }])}
-        )
+            select 1
+            from jsonb_array_elements(er2.result->'output') as output_array
+            where output_array[0] is not null
+        ))
       )
       `;
     },

@@ -640,38 +640,21 @@ export const CHECKS: Check[] = [
     params: [
       {
         type: "label",
-        label: "Contains",
+        label: "PII",
       },
       {
         type: "select",
-        id: "type",
-        multiple: true,
-        width: 100,
-        searchable: true,
+        id: "containsPii",
+        defaultValue: "success",
+        width: 140,
         options: [
           {
-            label: "Email",
-            value: "email",
+            label: "Contains PII",
+            value: "true",
           },
           {
-            label: "Phone",
-            value: "phone",
-          },
-          {
-            label: "Person",
-            value: "person",
-          },
-          {
-            label: "Location",
-            value: "location",
-          },
-          {
-            label: "Org",
-            value: "org",
-          },
-          {
-            label: "Credit Card",
-            value: "cc",
+            label: "Does not contain PII",
+            value: "false",
           },
         ],
       },
