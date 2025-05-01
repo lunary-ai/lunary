@@ -543,7 +543,7 @@ function Playground() {
             )}
 
             <ParamItem
-              name="Template Mode"
+              name="Prompt Mode"
               value={
                 <SegmentedControl
                   size="xs"

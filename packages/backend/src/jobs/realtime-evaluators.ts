@@ -71,7 +71,6 @@ async function evaluatorJob() {
       evaluator e 
     where
       mode = 'realtime' 
-      and type = 'pii'
       and project_id = 'dedc86a5-6cba-481c-9ce5-8b6fa3dcd8e6'
     order by 
       random()
