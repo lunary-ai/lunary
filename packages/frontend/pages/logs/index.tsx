@@ -22,6 +22,7 @@ import {
 } from "@mantine/core";
 
 import {
+  toxicityColumn,
   costColumn,
   durationColumn,
   enrichmentColumn,
@@ -286,6 +287,10 @@ export default function Logs() {
 
       if (Array.isArray(evaluators)) {
         for (const evaluator of evaluators) {
+          if (evaluator.type === "toxicity") {
+            newColumns.llm.push(toxicityColumn(evaluator.id));
+            continue;
+          }
           const id = "enrichment-" + evaluator.id;
           newColumns.llm.push(
             enrichmentColumn(evaluator.name, evaluator.id, evaluator.type),
