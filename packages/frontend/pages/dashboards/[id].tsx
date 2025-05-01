@@ -149,7 +149,6 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!dashboardIsLoading && dashboard) {
-      // build the final version only once
       const orderedCharts = (dashboard.charts ?? []).map((c, i) => ({
         ...c,
         sortOrder: i,
@@ -167,7 +166,6 @@ export default function Dashboard() {
       }
       if (dashboard.granularity) setGranularity(dashboard.granularity);
 
-      // ② immediately take the snapshot **with** sortOrder/span filled in
       baselineRef.current = serialiseDashboardState({
         checks: dashboard.checks,
         startDate: dashboard.startDate ?? startDate,
@@ -388,7 +386,18 @@ export default function Dashboard() {
                 value={checks}
                 onChange={setChecks}
                 restrictTo={(filter) =>
-                  ["models", "tags", "users", "metadata"].includes(filter.id)
+                  [
+                    "models",
+                    "tags",
+                    "users",
+                    "metadata",
+                    "status",
+                    "metadata",
+                    "feedback",
+                    "cost",
+                    "duration",
+                    "template",
+                  ].includes(filter.id)
                 }
               />
             </Group>
