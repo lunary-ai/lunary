@@ -48,11 +48,13 @@ import {
   IconIdBadge,
   IconPencil,
   IconRefreshAlert,
+  IconShieldCog,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { type CheckLogic, hasAccess } from "shared";
 import useSWR from "swr";
+import { SAMLConfig } from "@/components/settings/saml";
 
 dayjs.extend(relativeTime);
 
@@ -307,6 +309,46 @@ function ProjectNameCard() {
           onChange={(e) => setName(e.currentTarget.value)}
         />
 
+        <Group justify="end">
+          <Button onClick={save} disabled={!dirty} loading={saving}>
+            Save
+          </Button>
+        </Group>
+      </Stack>
+    </SettingsCard>
+  );
+}
+
+function OrgNameCard() {
+  const { org, updateOrg, mutate } = useOrg();
+  const [name, setName] = useState(org?.name ?? "");
+  const [saving, setSaving] = useState(false);
+
+  // useEffect(() => {
+  //   if (org) setName(org.name);
+  // }, [org]);
+
+  const dirty = name.trim() !== (org?.name ?? "");
+
+  async function save() {
+    if (!dirty) return;
+    setSaving(true);
+    await updateOrg({ name: name.trim() });
+    await mutate();
+    setSaving(false);
+  }
+
+  return (
+    <SettingsCard title="Organization Name">
+      <Stack gap="sm">
+        <Text c="dimmed">
+          This is your organization’s visible name within Lunary.
+        </Text>
+        <TextInput
+          data-testid="org-name-input"
+          value={name}
+          onChange={(e) => setName(e.currentTarget.value)}
+        />
         <Group justify="end">
           <Button onClick={save} disabled={!dirty} loading={saving}>
             Save
@@ -583,10 +625,10 @@ export default function Settings() {
           </Container>
         </Tabs.Panel>
 
-        {/* ----------------------------- ORG TAB */}
         <Tabs.Panel value="org" pt="md">
           <Container px="0">
             <Stack gap="xl">
+              <OrgNameCard />
               <SettingsCard title={<>Cost Mapping</>} align="start">
                 <Stack gap="md" w="100%">
                   <Group justify="apart">
@@ -641,17 +683,19 @@ export default function Settings() {
                         </>
                       )}
 
-                      {refreshJob.status === "done" && refreshJob.endedAt && (
-                        <Alert
-                          icon={<IconCheck size={16} />}
-                          title={`Refresh completed ${dayjs(refreshJob.endedAt).fromNow()}`}
-                          color="green"
-                          variant="light"
-                        >
-                          All LLM run costs have been successfully recalculated
-                          using the latest pricing rules.
-                        </Alert>
-                      )}
+                      {refreshJob.status === "done" &&
+                        refreshJob.endedAt &&
+                        dayjs().diff(dayjs(refreshJob.endedAt), "day") < 1 && (
+                          <Alert
+                            icon={<IconCheck size={16} />}
+                            title={`Refresh completed ${dayjs(refreshJob.endedAt).fromNow()}`}
+                            color="green"
+                            variant="light"
+                          >
+                            All LLM run costs have been successfully
+                            recalculated using the latest pricing rules.
+                          </Alert>
+                        )}
 
                       {refreshJob.status === "failed" && (
                         <Alert
@@ -670,6 +714,24 @@ export default function Settings() {
               </SettingsCard>
 
               <DataWarehouseCard />
+              {["admin", "owner"].includes(user.role) && (
+                <SettingsCard title={<>Audit Logs</>} align="start">
+                  <Text mb="md">
+                    View a history of user actions and activities in your
+                    organization.
+                  </Text>
+                  <Button
+                    color="blue"
+                    variant="default"
+                    component={Link}
+                    href={`/team/audit-logs`}
+                    leftSection={<IconShieldCog size={16} />}
+                  >
+                    View Logs
+                  </Button>
+                </SettingsCard>
+              )}
+              {["admin", "owner"].includes(user.role) && <SAMLConfig />}
             </Stack>
           </Container>
         </Tabs.Panel>
