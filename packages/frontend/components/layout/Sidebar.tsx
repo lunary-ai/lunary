@@ -408,6 +408,13 @@ export default function Sidebar() {
               ? true
               : false,
         },
+        {
+          label: "Enrichments",
+          icon: IconSparkles,
+          link: "/enrichments",
+          resource: "enrichments",
+          disabled: org.beta,
+        },
       ],
     },
     {
