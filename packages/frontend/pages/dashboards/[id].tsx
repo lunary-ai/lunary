@@ -113,6 +113,7 @@ export default function Dashboard() {
     useDisclosure(false);
 
   const [isEditing, setIsEditing] = useState(false);
+  const [filterIndex, setFilterIndex] = useState<number | null>(null);
 
   function setChartsWithSortOrder(newCharts: ChartWithSpan[]) {
     const orderedCharts = newCharts.map((c, i) => ({
@@ -152,7 +153,7 @@ export default function Dashboard() {
       const orderedCharts = (dashboard.charts ?? []).map((c, i) => ({
         ...c,
         sortOrder: i,
-        span: c.span ?? getSpan(i),
+        span: getSpan(i),
       }));
 
       setCharts(orderedCharts); // ① set state
@@ -270,6 +271,25 @@ export default function Dashboard() {
     setChartsWithSortOrder(newCharts);
   }
 
+  // Handle chart-level filter changes
+  function handleChartChecksChange(index: number, newChecks: LogicNode) {
+    const newCharts = structuredClone(charts);
+    newCharts[index].checks = newChecks;
+    setChartsWithSortOrder(newCharts);
+  }
+
+  function handleFilter(index: number) {
+    setFilterIndex((prev) => (prev === index ? null : index));
+  }
+
+  // Handle drag-and-drop reordering
+  function handleDrop(dragIndex: number, dropIndex: number) {
+    const newCharts = structuredClone(charts);
+    const [moved] = newCharts.splice(dragIndex, 1);
+    newCharts.splice(dropIndex, 0, moved);
+    setChartsWithSortOrder(newCharts);
+  }
+
   if (dashboardIsLoading || !dashboard) {
     return (
       <Flex align="center" justify="center" h="280px">
@@ -360,7 +380,10 @@ export default function Dashboard() {
               <Button
                 variant={isEditing ? "filled" : "default"}
                 leftSection={isEditing ? null : <IconSettings size="18px" />}
-                onClick={() => setIsEditing(!isEditing)}
+                onClick={() => {
+                  if (isEditing) setFilterIndex(null);
+                  setIsEditing(!isEditing);
+                }}
               >
                 {isEditing ? "Done" : "Edit"}
               </Button>
@@ -420,6 +443,7 @@ export default function Dashboard() {
                 <ErrorBoundary>
                   <Droppable
                     index={index}
+                    onDrop={handleDrop}
                     scrollContainerRef={
                       scrollableContainerRef as React.RefObject<HTMLDivElement | null>
                     }
@@ -440,28 +464,71 @@ export default function Dashboard() {
                             }
                           : {})}
                         onDelete={() => handleRemoveChart(index)}
+                        filterCount={
+                          Array.isArray(chart.checks)
+                            ? chart.checks.length > 1
+                              ? chart.checks.length - 1
+                              : 0
+                            : 0
+                        }
+                        onFilter={
+                          isEditing ? () => handleFilter(index) : undefined
+                        }
+                        filterLabel="Filters"
                       >
-                        <ChartComponent
-                          id={chart.id}
-                          dataKey={chart.dataKey}
-                          startDate={new Date(chart.startDate || startDate)}
-                          endDate={new Date(chart.endDate || endDate)}
-                          granularity={chart.granularity || granularity}
-                          checks={
-                            [
-                              ...(Array.isArray(chart.checks)
-                                ? chart.checks
-                                : []),
-                              ...checks,
-                            ] as LogicNode
-                          }
-                          color={chart.color}
-                          aggregationMethod={chart.aggregationMethod}
-                          isCustom={chart.isCustom}
-                          primaryDimension={chart.primaryDimension}
-                          secondaryDimension={chart.secondaryDimension}
-                          chart={chart}
-                        />
+                        {/* flip between chart view and filter editor */}
+                        {filterIndex === index ? (
+                          <div style={{ padding: "1rem" }}>
+                            <CheckPicker
+                              minimal
+                              value={
+                                Array.isArray(chart.checks) &&
+                                chart.checks.length > 0
+                                  ? (chart.checks as LogicNode)
+                                  : ["AND"]
+                              }
+                              onChange={(newChecks) =>
+                                handleChartChecksChange(index, newChecks)
+                              }
+                              restrictTo={(filter) =>
+                                [
+                                  "models",
+                                  "tags",
+                                  "users",
+                                  "metadata",
+                                  "status",
+                                  "feedback",
+                                  "cost",
+                                  "duration",
+                                  "template",
+                                ].includes(filter.id)
+                              }
+                            />
+                          </div>
+                        ) : (
+                          <ChartComponent
+                            id={chart.id}
+                            dataKey={chart.dataKey}
+                            startDate={new Date(chart.startDate || startDate)}
+                            endDate={new Date(chart.endDate || endDate)}
+                            granularity={
+                              (chart.granularity as typeof granularity) ||
+                              granularity
+                            }
+                            checks={
+                              Array.isArray(chart.checks) &&
+                              chart.checks.length > 0
+                                ? ["OR", chart.checks, checks]
+                                : checks
+                            }
+                            color={chart.color}
+                            aggregationMethod={chart.aggregationMethod}
+                            isCustom={chart.isCustom}
+                            primaryDimension={chart.primaryDimension}
+                            secondaryDimension={chart.secondaryDimension}
+                            chart={chart}
+                          />
+                        )}
                       </AnalyticsCard>
                     </Draggable>
                   </Droppable>
