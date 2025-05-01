@@ -15,6 +15,8 @@ const EVALUATOR_TYPES = {
   language: {
     id: "language",
     name: "Language",
+    beta: false,
+    soon: false,
     icon: IconLanguage,
     color: "green",
     description:
@@ -30,6 +32,7 @@ const EVALUATOR_TYPES = {
       "Detects if the LLM output contains gender, racial, or political bias.",
     params: [],
     beta: true,
+    soon: false,
   },
   toxicity: {
     id: "toxicity",
@@ -39,10 +42,13 @@ const EVALUATOR_TYPES = {
     description: "Use LLM models to detects if your LLM Logs contain toxicity.",
     params: [],
     beta: true,
+    soon: false,
   },
   topics: {
     name: "Topics Detection",
     id: "topics",
+    beta: false,
+    soon: false,
     icon: IconBadge,
     color: "violet",
     description:
@@ -69,6 +75,8 @@ const EVALUATOR_TYPES = {
   pii: {
     id: "pii",
     name: "PII detection",
+    beta: false,
+    soon: false,
     description:
       "Uses Lunary's ML models to detect if the given field contains personal identifiable information (PII).",
     icon: IconIdBadge,
@@ -142,6 +150,16 @@ const EVALUATOR_TYPES = {
         width: 300,
       },
     ],
+  },
+  llm: {
+    id: "llm",
+    name: "LLM Evaluator",
+    beta: false,
+    soon: false,
+    icon: IconNotebook,
+    color: "blue",
+    description: "Use a customizable LLM model to evaluate outputs.",
+    params: [],
   },
 };
 
