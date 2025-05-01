@@ -424,12 +424,12 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   {
     id: "duration",
     sql: ({ operator, duration }) =>
-      sql`duration ${postgresOperators(operator)} ${duration} * interval '1 second'`,
+      sql`r.duration ${postgresOperators(operator)} ${duration} * interval '1 second'`,
   },
   {
     id: "cost",
     sql: ({ operator, cost }) =>
-      sql`cost ${postgresOperators(operator)} ${cost}`,
+      sql`r.cost ${postgresOperators(operator)} ${cost}`,
   },
   {
     id: "tokens",
