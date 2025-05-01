@@ -1,6 +1,6 @@
 import CheckPicker, { RenderCheckNode } from "@/components/checks/Picker";
 import { useLogCount, useOrg, useUser } from "@/utils/dataHooks";
-import { useEnrichers, useEnricher } from "@/utils/dataHooks/evaluators";
+import { useEvaluators, useEvaluator } from "@/utils/dataHooks/evaluators";
 import EVALUATOR_TYPES from "@/utils/evaluators";
 import { slugify } from "@/utils/format";
 import { theme } from "@/utils/theme";
@@ -19,6 +19,7 @@ import {
   Title,
   Tooltip,
   UnstyledButton,
+  SegmentedControl,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCircleCheck, IconCirclePlus, IconX } from "@tabler/icons-react";
@@ -80,18 +81,19 @@ function EvaluatorCard({
   );
 }
 
-export default function NewEnrichment() {
+export default function NewEvaluator() {
   const router = useRouter();
   const { query } = router;
-  const enricherId = typeof query.id === "string" ? query.id : undefined;
+  const evaluatorId = typeof query.id === "string" ? query.id : undefined;
 
   const { user } = useUser();
-  const { insert: insertEnricher } = useEnrichers();
-  const { enricher, update: updateEnricher } = useEnricher(enricherId);
-  const isEditing = Boolean(enricherId);
+  const { insertEvaluator } = useEvaluators();
+  const { evaluator, update: updateEvaluator } = useEvaluator(evaluatorId);
+  const isEditing = Boolean(evaluatorId);
 
   const [name, setName] = useState<string>("");
   const [type, setType] = useState<string>();
+  const [mode, setMode] = useState<string>("normal");
   const [params, setParams] = useState<any>();
   const [filters, setFilters] = useState<CheckLogic>([
     "OR",
@@ -106,12 +108,13 @@ export default function NewEnrichment() {
 
   // populate form when editing existing enricher
   useEffect(() => {
-    if (isEditing && enricher) {
-      setName(enricher.name);
-      setType(enricher.type);
-      setFilters(enricher.filters as CheckLogic);
+    if (isEditing && evaluator) {
+      setName(evaluator.name);
+      setType(evaluator.type);
+      setMode(evaluator.mode);
+      setFilters(evaluator.filters as CheckLogic);
     }
-  }, [isEditing, enricher]);
+  }, [isEditing, evaluator]);
 
   const evaluatorTypes = Object.values(EVALUATOR_TYPES).filter((evaluator) => {
     if (evaluator.beta && !org.beta) {
@@ -156,27 +159,27 @@ export default function NewEnrichment() {
       return;
     }
     if (isEditing) {
-      await updateEnricher({
+      await updateEvaluator({
         name,
         slug: slugify(name),
-        mode: "realtime",
+        mode,
         params: params.params,
         type,
         filters,
         ownerId: user.id,
       });
     } else {
-      await insertEnricher({
+      await insertEvaluator({
         name,
         slug: slugify(name),
-        mode: "realtime",
+        mode,
         params: params.params,
         type,
         filters,
         ownerId: user.id,
       });
     }
-    router.push("/enrichments");
+    router.push("/evaluators");
   }
 
   return (
@@ -184,20 +187,29 @@ export default function NewEnrichment() {
       <Stack gap="xl">
         <Group align="center">
           <Title>
-            {isEditing ? `Edit ${enricher?.name}` : "New Data Enrichment"}
+            {isEditing ? `Edit ${evaluator?.name}` : "New Evaluator"}
           </Title>
         </Group>
 
         <TextInput
           label="Name"
-          placeholder="Your data enrichment name"
+          placeholder="Your evaluator name"
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
+        <SegmentedControl
+          label="Mode"
+          data={[
+            { label: "Realtime", value: "realtime" },
+            { label: "Batch", value: "normal" },
+          ]}
+          value={mode}
+          onChange={setMode}
+        />
 
         <Stack>
-          <Text>Select the type of data enrichment you want to add:</Text>
+          <Text>Select the type of evaluator you want to add:</Text>
 
           <SimpleGrid cols={5} spacing="md">
             {evaluatorTypes
@@ -254,17 +266,15 @@ export default function NewEnrichment() {
         <Group justify="end">
           <Button
             disabled={!selectedEvaluator}
-            onClick={() => {
-              createEvaluator();
-            }}
+            onClick={createEvaluator}
             leftSection={IconComponent && <IconComponent size={16} />}
             size="md"
             variant="default"
           >
             {selectedEvaluator
               ? isEditing
-                ? `Save ${selectedEvaluator.name} Enrichment`
-                : `Create ${selectedEvaluator.name} Enrichment`
+                ? `Save ${selectedEvaluator.name} Evaluator`
+                : `Create ${selectedEvaluator.name} Evaluator`
               : isEditing
                 ? "Save"
                 : "Create"}
