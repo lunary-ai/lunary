@@ -1,23 +1,17 @@
-import React from "react";
 import {
-  Card,
-  Image,
-  Text,
   Button,
-  rem,
-  Paper,
   Group,
+  Paper,
   Stack,
+  Text,
   Title,
   Tooltip,
-  Anchor,
-  ButtonProps,
-  ElementProps,
 } from "@mantine/core";
-import { ConfiguredProvider, ProviderMetadata } from "shared";
-import classes from "./ProviderCard.module.css";
 import Link from "next/link";
+import { ConfiguredProvider } from "shared";
 import { v4 as uuidv4 } from "uuid";
+import classes from "./ProviderCard.module.css";
+import Image from "next/image";
 
 export function ProviderCard({
   configuredProvider,

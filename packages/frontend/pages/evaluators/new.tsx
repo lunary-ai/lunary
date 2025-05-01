@@ -270,9 +270,10 @@ export default function NewEvaluator() {
               <SegmentedControl
                 fullWidth
                 value={params.params.scoringType || "boolean"}
+                disabled
                 data={[
                   { label: "Boolean", value: "boolean" },
-                  { label: "Categorical", value: "categorical" },
+                  { label: "Categorical (coming soon)", value: "categorical" },
                 ]}
                 onChange={(value) =>
                   setParams({
