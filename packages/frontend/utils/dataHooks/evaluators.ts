@@ -32,12 +32,15 @@ export function useEvaluators() {
   };
 }
 
-export function useEvaluator(id: string, initialData?: any) {
+export function useEvaluator(id?: string, initialData?: any) {
   const { mutate: mutateEvaluators } = useEvaluators();
 
-  const { data, isLoading, mutate } = useProjectSWR(id && `/evaluators/${id}`, {
-    fallbackData: initialData,
-  });
+  const { data, isLoading, mutate } = useProjectSWR(
+    id ? `/evaluators/${id}` : null,
+    {
+      fallbackData: initialData,
+    },
+  );
 
   const { trigger: updateEvaluatorMutation } = useProjectMutation(
     `/evaluators/${id}`,

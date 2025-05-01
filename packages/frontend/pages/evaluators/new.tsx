@@ -21,12 +21,15 @@ import {
   UnstyledButton,
   SegmentedControl,
   Switch,
+  Textarea,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCircleCheck, IconCirclePlus, IconX } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { CheckLogic, serializeLogic } from "shared";
+import { useCustomModels } from "@/utils/dataHooks/provider-configs";
+import ProviderEditor from "@/components/prompts/Provider";
 
 function EvaluatorCard({
   evaluator,
@@ -93,7 +96,7 @@ export default function NewEvaluator() {
   const isEditing = Boolean(evaluatorId);
 
   const [name, setName] = useState<string>("");
-  const [type, setType] = useState<string>();
+  const [type, setType] = useState<string | undefined>(undefined);
   const [mode, setMode] = useState<string>("normal");
   const [params, setParams] = useState<any>();
   const [filters, setFilters] = useState<CheckLogic>([
@@ -105,14 +108,24 @@ export default function NewEvaluator() {
   const { count: logCount } = useLogCount(serializedFilters);
 
   const { org } = useOrg();
+  const { customModels, isLoading: modelsLoading } = useCustomModels();
+  const evaluatorAny = evaluator as any;
 
-  // populate form when editing existing enricher
+  // populate form when editing existing evaluator
   useEffect(() => {
     if (isEditing && evaluator) {
-      setName(evaluator.name);
-      setType(evaluator.type);
-      setMode(evaluator.mode);
-      setFilters(evaluator.filters as CheckLogic);
+      const e = evaluator as any;
+      setName(e.name);
+      setType(e.type);
+      setMode(e.mode);
+      setFilters(e.filters as CheckLogic);
+      // preload llm params if editing llm
+      if (e.type === "llm" && e.params) {
+        setParams({
+          id: "llm",
+          params: { ...(e.params as Record<string, any>) },
+        });
+      }
     }
   }, [isEditing, evaluator]);
 
@@ -133,15 +146,23 @@ export default function NewEvaluator() {
 
   useEffect(() => {
     if (selectedEvaluator) {
-      setParams({
-        id: selectedEvaluator.id,
-        params: selectedEvaluator.params.reduce((acc, param) => {
-          if (param.id) {
-            acc[param.id] = param.defaultValue;
-          }
-          return acc;
-        }, {}),
-      });
+      if (selectedEvaluator.id === "llm") {
+        setParams({
+          id: "llm",
+          params: { modelId: "", scoringType: "boolean", prompt: "" },
+        });
+      } else {
+        const initialParams = (selectedEvaluator.params as any[]).reduce(
+          (acc, param) => {
+            if ("id" in param) {
+              acc[(param as any).id] = (param as any).defaultValue;
+            }
+            return acc;
+          },
+          {} as Record<string, any>,
+        );
+        setParams({ id: selectedEvaluator.id, params: initialParams });
+      }
     }
   }, [selectedEvaluator]);
 
@@ -187,7 +208,7 @@ export default function NewEvaluator() {
       <Stack gap="xl">
         <Group align="center">
           <Title order={3}>
-            {isEditing ? `Edit ${evaluator?.name}` : "New Evaluator"}
+            {isEditing ? `Edit ${evaluatorAny.name}` : "New Evaluator"}
           </Title>
         </Group>
 
@@ -224,11 +245,55 @@ export default function NewEvaluator() {
             <RenderCheckNode
               node={params}
               minimal={false}
-              setNode={(newNode) => {
-                setParams(newNode as CheckLogic);
-              }}
-              checks={[selectedEvaluator]}
+              setNode={(newNode) => setParams(newNode as CheckLogic)}
+              checks={[selectedEvaluator as any]}
             />
+          </Fieldset>
+        )}
+
+        {/* LLM Evaluator custom configuration */}
+        {type === "llm" && params && (
+          <Fieldset legend="LLM Configuration">
+            <Stack gap="md">
+              <ProviderEditor
+                value={{ model: params.params.modelId || "", config: {} }}
+                hideStream={true}
+                hideTopP={true}
+                hideToolCalls={true}
+                onChange={({ model: newModel }) =>
+                  setParams({
+                    id: "llm",
+                    params: { ...params.params, modelId: newModel },
+                  })
+                }
+              />
+              <SegmentedControl
+                fullWidth
+                value={params.params.scoringType || "boolean"}
+                data={[
+                  { label: "Boolean", value: "boolean" },
+                  { label: "Categorical", value: "categorical" },
+                ]}
+                onChange={(value) =>
+                  setParams({
+                    id: "llm",
+                    params: { ...params.params, scoringType: value },
+                  })
+                }
+              />
+              <Textarea
+                label="Evaluation Prompt"
+                placeholder="Enter the prompt to guide the evaluator"
+                minRows={10}
+                value={params.params.prompt}
+                onChange={(e) =>
+                  setParams({
+                    id: "llm",
+                    params: { ...params.params, prompt: e.currentTarget.value },
+                  })
+                }
+              />
+            </Stack>
           </Fieldset>
         )}
 
