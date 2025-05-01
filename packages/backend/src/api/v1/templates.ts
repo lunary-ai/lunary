@@ -499,6 +499,13 @@ templates.post("/:id/versions", async (ctx: Context) => {
  *           type: string
  *         content:
  *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               role:
+ *                 type: string
+ *               content:
+ *                 type: string
  *         extra:
  *           type: object
  *         testValues:
@@ -549,6 +556,13 @@ templates.post("/:id/versions", async (ctx: Context) => {
  *           enum: ["text", "openai"]
  *         content:
  *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               role:
+ *                 type: string
+ *               content:
+ *                 type: string
  *         extra:
  *           type: object
  *         testValues:
@@ -573,6 +587,13 @@ templates.post("/:id/versions", async (ctx: Context) => {
  *       properties:
  *         content:
  *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               role:
+ *                 type: string
+ *               content:
+ *                 type: string
  *         extra:
  *           type: object
  *         testValues:
