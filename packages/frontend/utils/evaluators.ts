@@ -168,7 +168,7 @@ const EVALUATOR_TYPES: EvaluatorTypes = {
     color: "blue",
     description: "Use a customizable LLM model to evaluate outputs.",
     params: [],
-    beta: false,
+    beta: true,
     soon: false,
   },
   "llm-classifier": {
@@ -179,7 +179,7 @@ const EVALUATOR_TYPES: EvaluatorTypes = {
     color: "green",
     description: "Use a customizable LLM model to classify outputs.",
     params: [],
-    beta: false,
+    beta: true,
     soon: false,
   },
   bleu: {
@@ -189,6 +189,7 @@ const EVALUATOR_TYPES: EvaluatorTypes = {
     icon: IconTextWrap,
     color: "blue",
     description: "Evaluate outputs using the BLEU metric.",
+    beta: true,
     params: [
       {
         type: "label",
@@ -219,6 +220,7 @@ const EVALUATOR_TYPES: EvaluatorTypes = {
     icon: IconTextWrap,
     color: "teal",
     description: "Evaluate outputs using the GLEU metric.",
+    beta: true,
     params: [
       {
         type: "label",
@@ -249,6 +251,7 @@ const EVALUATOR_TYPES: EvaluatorTypes = {
     icon: IconTextWrap,
     color: "red",
     description: "Evaluate outputs using the ROUGE metric.",
+    beta: true,
     params: [
       {
         type: "label",
@@ -279,6 +282,7 @@ const EVALUATOR_TYPES: EvaluatorTypes = {
     icon: IconTextWrap,
     color: "violet",
     description: "Evaluate outputs using Cosine Similarity.",
+    beta: true,
     params: [
       {
         type: "label",
@@ -309,6 +313,7 @@ const EVALUATOR_TYPES: EvaluatorTypes = {
     icon: IconTextWrap,
     color: "orange",
     description: "Evaluate outputs using Fuzzy Matching.",
+    beta: true,
     params: [
       {
         type: "label",
@@ -339,6 +344,7 @@ const EVALUATOR_TYPES: EvaluatorTypes = {
     icon: IconTextWrap,
     color: "gray",
     description: "Compare output text to a reference string.",
+    beta: true,
     params: [
       {
         type: "select",
