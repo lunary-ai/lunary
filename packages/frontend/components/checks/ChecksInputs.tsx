@@ -1,4 +1,12 @@
-import { Flex, NumberInput, Text, TextInput } from "@mantine/core";
+import {
+  Flex,
+  Group,
+  NumberInput,
+  Slider,
+  Stack,
+  Text,
+  TextInput,
+} from "@mantine/core";
 import classes from "./index.module.css";
 import SmartCheckSelect from "./SmartSelectInput";
 
@@ -12,6 +20,25 @@ const maxDate = new Date();
 const CheckInputs = {
   select: SmartCheckSelect,
   users: UserSelectInput,
+  slider: ({ placeholder, width, min, max, step, value, onChange }) => {
+    return (
+      <Stack w="100%">
+        <Group justify="space-between">
+          <Text size="sm">Passing grade</Text>
+          <Text size="sm">{value}</Text>
+        </Group>
+        <Slider
+          size="sm"
+          w="100%"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={(n) => onChange(n)}
+        />
+      </Stack>
+    );
+  },
 
   number: ({ placeholder, width, min, max, step, value, onChange, unit }) => {
     return (

@@ -546,7 +546,6 @@ function MemberList({ users, isInvitation }) {
     )
     .filter((user) => role === "all" || user.role.includes(role));
 
-  console.log(users);
   return (
     <>
       <Modal

@@ -100,14 +100,13 @@ async function evaluatorJob() {
   }
 
   const evaluators = await sql<RealtimeEvaluator[]>`
-    select 
-      * 
-    from 
-      evaluator e 
+    select
+      *
+    from
+      evaluator e
     where
-      mode = 'realtime' 
-      and type = 'toxicity'
-    order by 
+      mode = 'realtime'
+    order by
       random()
   `;
 
