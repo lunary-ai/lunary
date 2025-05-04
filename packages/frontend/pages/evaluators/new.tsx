@@ -22,6 +22,7 @@ import {
   SegmentedControl,
   Switch,
   Textarea,
+  Tabs,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCircleCheck, IconCirclePlus, IconX } from "@tabler/icons-react";
@@ -31,7 +32,7 @@ import { CheckLogic, serializeLogic } from "shared";
 import { useCustomModels } from "@/utils/dataHooks/provider-configs";
 import ProviderEditor from "@/components/prompts/Provider";
 
-function EvaluatorCard({
+export function EvaluatorCard({
   evaluator,
   isSelected,
   onItemClick,
@@ -201,6 +202,24 @@ export default function NewEvaluator() {
     router.push("/evaluators");
   }
 
+  const categories = Array.from(new Set(evaluatorTypes.map((e) => e.category)))
+    .sort((a, b) => {
+      const order: Record<string, number> = {
+        labeler: 0,
+        "text-similarity": 1,
+        custom: 2,
+      };
+      const rankA = order[a] ?? 100;
+      const rankB = order[b] ?? 100;
+      return rankA !== rankB ? rankA - rankB : a.localeCompare(b);
+    })
+    .map((cat) => {
+      if (cat === "labeler") return { name: "Model Labeler", value: "labeler" };
+      if (cat === "text-similarity")
+        return { name: "Text Similarity", value: "text-similarity" };
+      return { name: "Custom", value: "custom" };
+    });
+
   return (
     <Container>
       <Stack gap="xl">
@@ -219,23 +238,40 @@ export default function NewEvaluator() {
         />
 
         <Stack>
-          <Title order={6}>Evaluator Type:</Title>
+          <Title order={6}>Evaluator type:</Title>
 
-          <SimpleGrid cols={5} spacing="md">
-            {evaluatorTypes
-              .sort((a, b) => (a.soon ? 1 : -1))
-              .map((e) => (
-                <EvaluatorCard
-                  key={e.id}
-                  evaluator={e}
-                  isSelected={type === e.id}
-                  onItemClick={(t) => {
-                    setType(t);
-                    setName(e.name);
-                  }}
-                />
+          <Tabs
+            defaultValue={categories[0].value}
+            onChange={() => setType(undefined)}
+          >
+            <Tabs.List>
+              {categories.map((category) => (
+                <Tabs.Tab key={category.value} value={category.value}>
+                  {category.name}
+                </Tabs.Tab>
               ))}
-          </SimpleGrid>
+            </Tabs.List>
+
+            {categories.map((category) => (
+              <Tabs.Panel key={category.value} value={category.value} pt="md">
+                <SimpleGrid cols={5} spacing="md">
+                  {evaluatorTypes
+                    .filter((e) => e.category === category.value)
+                    .map((e) => (
+                      <EvaluatorCard
+                        key={e.id}
+                        evaluator={e}
+                        isSelected={type === e.id}
+                        onItemClick={(t) => {
+                          setType(t);
+                          setName(e.name);
+                        }}
+                      />
+                    ))}
+                </SimpleGrid>
+              </Tabs.Panel>
+            ))}
+          </Tabs>
         </Stack>
 
         {hasParams && selectedEvaluator && (
@@ -358,43 +394,45 @@ export default function NewEvaluator() {
           </Fieldset>
         )}
 
-        <Fieldset legend="Live Mode Configuration">
-          <Stack>
-            <Box>
-              <Switch
-                defaultChecked
-                onLabel="On"
-                offLabel="Off"
-                size="md"
-                styles={{ trackLabel: { fontSize: "10px" } }}
-                checked={mode === "realtime"}
-                onChange={(e) =>
-                  setMode(e.currentTarget.checked ? "realtime" : "normal")
-                }
-              />
+        {selectedEvaluator && (
+          <Fieldset legend="Live Mode Configuration">
+            <Stack>
+              <Box>
+                <Switch
+                  defaultChecked
+                  onLabel="On"
+                  offLabel="Off"
+                  size="md"
+                  styles={{ trackLabel: { fontSize: "10px" } }}
+                  checked={mode === "realtime"}
+                  onChange={(e) =>
+                    setMode(e.currentTarget.checked ? "realtime" : "normal")
+                  }
+                />
 
-              {mode === "realtime" && (
-                <>
-                  <Text mb="5" mt="sm" size="sm">
-                    Filters
-                  </Text>
+                {mode === "realtime" && (
+                  <>
+                    <Text mb="5" mt="sm" size="sm">
+                      Filters
+                    </Text>
 
-                  <CheckPicker
-                    minimal
-                    value={filters}
-                    showAndOr
-                    onChange={setFilters}
-                    restrictTo={(filter) =>
-                      ["tags", "type", "users", "metadata", "date"].includes(
-                        filter.id,
-                      )
-                    }
-                  />
-                </>
-              )}
-            </Box>
-          </Stack>
-        </Fieldset>
+                    <CheckPicker
+                      minimal
+                      value={filters}
+                      showAndOr
+                      onChange={setFilters}
+                      restrictTo={(filter) =>
+                        ["tags", "type", "users", "metadata", "date"].includes(
+                          filter.id,
+                        )
+                      }
+                    />
+                  </>
+                )}
+              </Box>
+            </Stack>
+          </Fieldset>
+        )}
 
         <Group justify="end">
           <Button

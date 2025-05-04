@@ -191,8 +191,6 @@ export default function Dashboard() {
     );
   }, [checks, startDate, endDate, granularity, charts]);
 
-  console.log(isDirty);
-
   async function saveDashboard() {
     const payload = {
       checks,

@@ -26,7 +26,6 @@ export function renderEnrichment(
   type: EvaluatorType,
   maskPII = false,
 ) {
-  console.log(data, type);
   const renderers: Record<EvaluatorType, (data: any) => any> = {
     language: renderLanguageEnrichment,
     pii: () => renderPIIEnrichment(data, maskPII),

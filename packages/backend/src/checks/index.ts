@@ -264,7 +264,6 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   {
     id: "toxicity",
     sql: ({ field, type }) => {
-      console.log("toxicity", field, type);
       // if (!["toxic", "non-toxic"].includes(type)) return sql`true`;
 
       const column = field === "input" ? "rt.toxic_input" : "rt.toxic_output";

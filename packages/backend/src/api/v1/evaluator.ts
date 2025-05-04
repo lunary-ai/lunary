@@ -19,10 +19,8 @@ evaluators.get(
   async (ctx: Context) => {
     const { projectId } = ctx.state;
 
-    const evaluators =
+    let evaluators =
       await sql`select * from evaluator where project_id = ${projectId}`;
-
-    // TODO: return number of runs the evaluator will be applied to
 
     ctx.body = evaluators;
   },

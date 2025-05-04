@@ -5,27 +5,48 @@ import {
   IconEyeCheck,
   IconIdBadge,
   IconLanguage,
-  IconMoodSmile,
   IconNotebook,
   IconTextWrap,
 } from "@tabler/icons-react";
 
-// TODO: typescript
-const EVALUATOR_TYPES = {
+type EvaluatorCategory = "labeler" | "text-similarity" | "custom";
+
+interface EvaluatorDefinition {
+  id: string;
+  name: string;
+  /** Lower‑case bucket name */
+  category: EvaluatorCategory;
+  /** React icon component */
+  icon: React.ComponentType<any>;
+  /** Mantine / Tailwind color key */
+  color: string;
+  description: string;
+  /** Configuration inputs shown in the UI */
+  params: any[];
+  /** Optional feature‑flag fields */
+  beta?: boolean;
+  soon?: boolean;
+}
+
+type EvaluatorTypes = Record<string, EvaluatorDefinition>;
+
+const EVALUATOR_TYPES: EvaluatorTypes = {
   language: {
     id: "language",
     name: "Language",
-    beta: false,
-    soon: false,
+    category: "labeler",
     icon: IconLanguage,
     color: "green",
     description:
       "Detect the languages used for each messages of your conversations.",
     params: [],
+    beta: false,
+    soon: false,
   },
   bias: {
     id: "bias",
     name: "Bias",
+    category: "labeler",
     icon: IconEyeCheck,
     color: "blue",
     description:
@@ -37,18 +58,18 @@ const EVALUATOR_TYPES = {
   toxicity: {
     id: "toxicity",
     name: "Toxicity",
+    category: "labeler",
     icon: IconBiohazard,
     color: "red",
-    description: "Use LLM models to detects if your LLM Logs contain toxicity.",
+    description: "Use LLM models to detect if your LLM Logs contain toxicity.",
     params: [],
     beta: true,
     soon: false,
   },
   topics: {
-    name: "Topics Detection",
     id: "topics",
-    beta: false,
-    soon: false,
+    name: "Topics Detection",
+    category: "labeler",
     icon: IconBadge,
     color: "violet",
     description:
@@ -71,16 +92,17 @@ const EVALUATOR_TYPES = {
         width: 300,
       },
     ],
+    beta: false,
+    soon: false,
   },
   pii: {
     id: "pii",
-    name: "PII detection",
-    beta: false,
-    soon: false,
-    description:
-      "Uses Lunary's ML models to detect if the given field contains personal identifiable information (PII).",
+    name: "PII Detection",
+    category: "labeler",
     icon: IconIdBadge,
     color: "orange",
+    description:
+      "Uses Lunary's ML models to detect if the given field contains personal identifiable information (PII).",
     params: [
       {
         type: "label",
@@ -96,26 +118,11 @@ const EVALUATOR_TYPES = {
         placeholder: "Select types",
         searchable: true,
         options: [
-          {
-            label: "Email",
-            value: "email",
-          },
-          {
-            label: "Phone",
-            value: "phone",
-          },
-          {
-            label: "SSN",
-            value: "ssn",
-          },
-          {
-            label: "Credit Card",
-            value: "cc",
-          },
-          {
-            label: "IBAN",
-            value: "iban",
-          },
+          { label: "Email", value: "email" },
+          { label: "Phone", value: "phone" },
+          { label: "SSN", value: "ssn" },
+          { label: "Credit Card", value: "cc" },
+          { label: "IBAN", value: "iban" },
         ],
       },
       {
@@ -137,7 +144,7 @@ const EVALUATOR_TYPES = {
         type: "label",
         label: "Exclude strings",
         description:
-          "Add case-insentive strings to exclude from the PII detection.",
+          "Add case‑insensitive strings to exclude from the PII detection.",
       },
       {
         type: "select",
@@ -145,21 +152,220 @@ const EVALUATOR_TYPES = {
         allowCustom: true,
         multiple: true,
         defaultValue: [],
-        placeholder: "Enter a strings to exclude from detection",
+        placeholder: "Enter strings to exclude from detection",
         placeholderSearch: "Enter a string to exclude",
         width: 300,
       },
     ],
+    beta: false,
+    soon: false,
   },
   llm: {
     id: "llm",
     name: "LLM Evaluator",
-    beta: false,
-    soon: false,
+    category: "custom",
     icon: IconNotebook,
     color: "blue",
     description: "Use a customizable LLM model to evaluate outputs.",
     params: [],
+    beta: true,
+    soon: false,
+  },
+  "llm-classifier": {
+    id: "llm-classifier",
+    name: "LLM Classifier",
+    category: "custom",
+    icon: IconNotebook,
+    color: "green",
+    description: "Use a customizable LLM model to classify outputs.",
+    params: [],
+    beta: true,
+    soon: false,
+  },
+  bleu: {
+    id: "bleu",
+    name: "BLEU",
+    category: "text-similarity",
+    icon: IconTextWrap,
+    color: "blue",
+    description: "Evaluate outputs using the BLEU metric.",
+    beta: true,
+    params: [
+      {
+        type: "label",
+        label: "Reference Text",
+      },
+      {
+        type: "text",
+        id: "reference",
+        label: "Reference Text",
+        placeholder: "Reference",
+      },
+      {
+        type: "slider",
+        id: "threshold",
+        label: "Passing grade",
+        description: "Minimum BLEU score (0‑1)",
+        min: 0,
+        max: 1,
+        step: 0.01,
+        defaultValue: 0.5,
+      },
+    ],
+  },
+  gleu: {
+    id: "gleu",
+    name: "GLEU",
+    category: "text-similarity",
+    icon: IconTextWrap,
+    color: "teal",
+    description: "Evaluate outputs using the GLEU metric.",
+    beta: true,
+    params: [
+      {
+        type: "label",
+        label: "Reference Text",
+      },
+      {
+        type: "text",
+        id: "reference",
+        label: "Reference Text",
+        placeholder: "Reference",
+      },
+      {
+        type: "slider",
+        id: "threshold",
+        label: "Passing grade",
+        description: "Minimum GLEU score (0‑1)",
+        min: 0,
+        max: 1,
+        step: 0.01,
+        defaultValue: 0.5,
+      },
+    ],
+  },
+  rouge: {
+    id: "rouge",
+    name: "ROUGE",
+    category: "text-similarity",
+    icon: IconTextWrap,
+    color: "red",
+    description: "Evaluate outputs using the ROUGE metric.",
+    beta: true,
+    params: [
+      {
+        type: "label",
+        label: "Reference Text",
+      },
+      {
+        type: "text",
+        id: "reference",
+        label: "Reference Text",
+        placeholder: "Reference",
+      },
+      {
+        type: "slider",
+        id: "threshold",
+        label: "Passing grade",
+        description: "Minimum ROUGE score (0‑1)",
+        min: 0,
+        max: 1,
+        step: 0.01,
+        defaultValue: 0.5,
+      },
+    ],
+  },
+  cosine: {
+    id: "cosine",
+    name: "Cosine Similarity",
+    category: "text-similarity",
+    icon: IconTextWrap,
+    color: "violet",
+    description: "Evaluate outputs using Cosine Similarity.",
+    beta: true,
+    params: [
+      {
+        type: "label",
+        label: "Reference Text",
+      },
+      {
+        type: "text",
+        id: "reference",
+        label: "Reference Text",
+        placeholder: "Reference",
+      },
+      {
+        type: "slider",
+        id: "threshold",
+        label: "Passing grade",
+        description: "Minimum Cosine Similarity (0‑1)",
+        min: 0,
+        max: 1,
+        step: 0.01,
+        defaultValue: 0.5,
+      },
+    ],
+  },
+  fuzzy: {
+    id: "fuzzy",
+    name: "Fuzzy Match",
+    category: "text-similarity",
+    icon: IconTextWrap,
+    color: "orange",
+    description: "Evaluate outputs using Fuzzy Matching.",
+    beta: true,
+    params: [
+      {
+        type: "label",
+        label: "Reference Text",
+      },
+      {
+        type: "text",
+        id: "reference",
+        label: "Reference Text",
+        placeholder: "Reference",
+      },
+      {
+        type: "slider",
+        id: "threshold",
+        label: "Passing grade",
+        description: "Minimum Fuzzy Match ratio (0‑1)",
+        min: 0,
+        max: 1,
+        step: 0.01,
+        defaultValue: 0.5,
+      },
+    ],
+  },
+  string: {
+    id: "string",
+    name: "String Comparator",
+    category: "text-similarity",
+    icon: IconTextWrap,
+    color: "gray",
+    description: "Compare output text to a reference string.",
+    beta: true,
+    params: [
+      {
+        type: "select",
+        id: "comparator",
+        label: "Comparator",
+        defaultValue: "equals",
+        options: [
+          { label: "Equals", value: "equals" },
+          { label: "Does not equal", value: "not_equals" },
+          { label: "Contains", value: "contains" },
+          { label: "Contains ignore case", value: "contains_ignore_case" },
+        ],
+      },
+      {
+        type: "text",
+        id: "target",
+        label: "Target string",
+        placeholder: "Enter reference string",
+        width: 300,
+      },
+    ],
   },
 };
 
