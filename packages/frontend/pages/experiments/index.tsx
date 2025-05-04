@@ -2,10 +2,13 @@ import HotkeysInfo from "@/components/blocks/HotkeysInfo";
 import { useOrg } from "@/utils/dataHooks";
 import { usePrompts, usePromptVersions } from "@/utils/dataHooks/prompts";
 import { fetcher } from "@/utils/fetcher";
+import { useEvaluators } from "@/utils/dataHooks/evaluators";
 import {
   Button,
   Group,
   Loader,
+  Modal,
+  MultiSelect,
   Select,
   Table,
   Text,
@@ -71,7 +74,6 @@ export function PromptVersionSelect({ promptVersion, setPromptVersion }) {
 }
 
 export function extractVariables(text: string): string[] {
-  console.log(text);
   const placeholderRE = /{{\s*([A-Za-z_]\w*)\s*}}/g;
   const vars: string[] = [];
 
@@ -86,6 +88,14 @@ export function extractVariables(text: string): string[] {
 export default function Experiments() {
   const { org } = useOrg();
   const { isLoading } = usePrompts();
+  const { evaluators = [], isLoading: isEvaluatorsLoading } = useEvaluators();
+  const [isEvalModalOpen, setEvalModalOpen] = useState(false);
+  const [selectedEvaluatorIds, setSelectedEvaluatorIds] = useState<string[]>(
+    [],
+  );
+  const evaluatorSelectData = evaluators
+    .filter((e) => e.slug === "toxicity")
+    .map((e) => ({ value: e.id.toString(), label: e.slug }));
   const [promptVersion, setPromptVersion] = useState<PromptVersion>();
   const variables = useMemo(
     () => extractVariables(JSON.stringify(promptVersion?.content)),
@@ -99,6 +109,7 @@ export default function Experiments() {
     modelOutput: string;
     modelLoading: boolean;
     compResults: Record<number, { modelOutput: string; modelLoading: boolean }>; // added for comparison results
+    evalResults: Record<number, { passed: boolean; loading: boolean }>;
   };
   const [rows, setRows] = useState<Row[]>([]);
   const [rowCounter, setRowCounter] = useState(0);
@@ -130,6 +141,7 @@ export default function Experiments() {
       modelOutput: "",
       modelLoading: false,
       compResults: {},
+      evalResults: {},
     };
     setRows([newRow]);
     setRowCounter(1);
@@ -146,17 +158,16 @@ export default function Experiments() {
       modelOutput: "",
       modelLoading: false,
       compResults: {},
+      evalResults: {},
     };
     setRows((prev) => [...prev, newRow]);
     setRowCounter((prev) => prev + 1);
   };
 
-  // handle delete row
   const handleDeleteRow = (rowId: number) => {
     setRows((prev) => prev.filter((r) => r.id !== rowId));
   };
 
-  // runs model for initial or comparison column
   const runModelRow = async (rowId: number, compId?: number) => {
     setRows((prev) =>
       prev.map((r) => {
@@ -236,6 +247,66 @@ export default function Experiments() {
     });
   };
 
+  async function handleRunEvaluators(rowId: number, compId?: number) {
+    // set loading per evaluator
+    setRows((prev) =>
+      prev.map((r) =>
+        r.id !== rowId
+          ? r
+          : {
+              ...r,
+              evalResults: selectedEvaluatorIds.reduce(
+                (acc, id) => ({
+                  ...acc,
+                  [Number(id)]: { passed: false, loading: true },
+                }),
+                {} as Row["evalResults"],
+              ),
+            },
+      ),
+    );
+
+    const targetPV =
+      compId == null
+        ? promptVersion
+        : comparisonCols.find((c) => c.id === compId)?.promptVersion;
+
+    if (!targetPV) return;
+
+    for (const id of selectedEvaluatorIds) {
+      const evaluator = evaluators.find((e) => e.id === id);
+
+      if (!evaluator) continue;
+      const row = rows.find((r) => r.id === rowId);
+      if (!row || !row.modelOutput) continue;
+      try {
+        const resp = await fetcher.post(`/evaluations/evaluate`, {
+          arg: {
+            input: targetPV.content,
+            output: { role: "assistant", content: row.modelOutput },
+            evaluatorType: evaluator.type,
+          },
+        });
+        const passed = resp.passed as boolean;
+        setRows((prev) =>
+          prev.map((r) =>
+            r.id !== rowId
+              ? r
+              : {
+                  ...r,
+                  evalResults: {
+                    ...r.evalResults,
+                    [id]: { passed, loading: false },
+                  },
+                },
+          ),
+        );
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
@@ -266,7 +337,26 @@ export default function Experiments() {
         >
           Run all
         </Button>
+        <Button size="sm" onClick={() => setEvalModalOpen(true)}>
+          Add Evaluators
+        </Button>
       </Group>
+
+      {/* Evaluators selection modal */}
+      <Modal
+        opened={isEvalModalOpen}
+        onClose={() => setEvalModalOpen(false)}
+        title="Add Evaluators"
+      >
+        <MultiSelect
+          data={evaluatorSelectData}
+          value={selectedEvaluatorIds}
+          onChange={setSelectedEvaluatorIds}
+          searchable
+          placeholder={isEvaluatorsLoading ? "Loading..." : "Select evaluators"}
+        />
+      </Modal>
+
       <Table withTableBorder withColumnBorders withRowBorders>
         <Table.Thead>
           <Table.Tr>
@@ -307,87 +397,114 @@ export default function Experiments() {
 
         <Table.Tbody>
           {promptVersion &&
-            rows.map((row) => (
-              <Table.Tr key={row.id}>
-                {variables.map((variable) => (
-                  <Table.Td key={variable} p={0}>
-                    <Textarea
-                      styles={{ input: { border: 0, borderRadius: 0 } }}
-                      value={row.variableValues[variable] || ""}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setRows((prev) =>
-                          prev.map((r) =>
-                            r.id === row.id
-                              ? {
-                                  ...r,
-                                  variableValues: {
-                                    ...r.variableValues,
-                                    [variable]: val,
-                                  },
-                                }
-                              : r,
-                          ),
-                        );
-                      }}
-                    />
-                  </Table.Td>
-                ))}
-                <Table.Td p={0}>
-                  <Button
-                    size="xs"
-                    onClick={() => runModelRow(row.id)}
-                    loading={row.modelLoading}
-                    disabled={!promptVersion}
-                  >
-                    Run
-                  </Button>
-                  {row.modelOutput && (
-                    <Text
-                      size="sm"
-                      style={{ whiteSpace: "pre-wrap", marginTop: 8 }}
-                    >
-                      {row.modelOutput}
-                    </Text>
-                  )}
-                </Table.Td>
-                {comparisonCols.map((col) => {
-                  const comp = row.compResults[col.id] || {
-                    modelOutput: "",
-                    modelLoading: false,
-                  };
-                  return (
-                    <Table.Td key={col.id} p={0}>
-                      <Button
-                        size="xs"
-                        onClick={() => runModelRow(row.id, col.id)}
-                        loading={comp.modelLoading}
-                        disabled={!col.promptVersion}
-                      >
-                        Run
-                      </Button>
-                      {comp.modelOutput && (
-                        <Text
-                          size="sm"
-                          style={{ whiteSpace: "pre-wrap", marginTop: 8 }}
-                        >
-                          {comp.modelOutput}
-                        </Text>
-                      )}
+            rows.map((row) => {
+              const anyEvalLoading = selectedEvaluatorIds.some(
+                (id) => row.evalResults[Number(id)]?.loading,
+              );
+              return (
+                <Table.Tr key={row.id}>
+                  {variables.map((variable) => (
+                    <Table.Td key={variable} p={0}>
+                      <Textarea
+                        styles={{ input: { border: 0, borderRadius: 0 } }}
+                        value={row.variableValues[variable] || ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setRows((prev) =>
+                            prev.map((r) =>
+                              r.id === row.id
+                                ? {
+                                    ...r,
+                                    variableValues: {
+                                      ...r.variableValues,
+                                      [variable]: val,
+                                    },
+                                  }
+                                : r,
+                            ),
+                          );
+                        }}
+                      />
                     </Table.Td>
-                  );
-                })}
-                <Table.Td>
-                  <Button
-                    size="xs"
-                    color="red"
-                    onClick={() => handleDeleteRow(row.id)}
-                  >
-                    Delete
-                  </Button>
-                </Table.Td>
-              </Table.Tr>
-            ))}
+                  ))}
+                  <Table.Td p={0}>
+                    <Button
+                      size="xs"
+                      onClick={() => runModelRow(row.id)}
+                      loading={row.modelLoading}
+                      disabled={!promptVersion}
+                    >
+                      Run
+                    </Button>
+                    <Button
+                      size="xs"
+                      ml="xs"
+                      color="blue"
+                      onClick={() => handleRunEvaluators(row.id)}
+                      disabled={
+                        !row.modelOutput || !selectedEvaluatorIds.length
+                      }
+                    >
+                      Evaluate
+                    </Button>
+                    {row.modelOutput && (
+                      <Text
+                        size="sm"
+                        style={{ whiteSpace: "pre-wrap", marginTop: 8 }}
+                      >
+                        {row.modelOutput}
+                      </Text>
+                    )}
+                    {selectedEvaluatorIds.map((id) => {
+                      const result = row.evalResults[id];
+                      const evaluator = evaluators.find((e) => e.id === id);
+                      return (
+                        result && (
+                          <Text key={id} size="sm">
+                            {evaluator?.type}: {result.passed ? "Pass" : "Fail"}
+                          </Text>
+                        )
+                      );
+                    })}
+                  </Table.Td>
+                  {comparisonCols.map((col) => {
+                    const comp = row.compResults[col.id] || {
+                      modelOutput: "",
+                      modelLoading: false,
+                    };
+                    return (
+                      <Table.Td key={col.id} p={0}>
+                        <Button
+                          size="xs"
+                          onClick={() => runModelRow(row.id, col.id)}
+                          loading={comp.modelLoading}
+                          disabled={!col.promptVersion}
+                        >
+                          Run
+                        </Button>
+                        {comp.modelOutput && (
+                          <Text
+                            size="sm"
+                            style={{ whiteSpace: "pre-wrap", marginTop: 8 }}
+                          >
+                            {comp.modelOutput}
+                          </Text>
+                        )}
+                      </Table.Td>
+                    );
+                  })}
+                  <Table.Td>
+                    <Button
+                      size="xs"
+                      color="red"
+                      onClick={() => handleDeleteRow(row.id)}
+                    >
+                      Delete
+                    </Button>
+                  </Table.Td>
+                </Table.Tr>
+              );
+            })}
         </Table.Tbody>
       </Table>
       <Group mt="md">

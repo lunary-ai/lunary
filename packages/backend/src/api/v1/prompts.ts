@@ -28,8 +28,6 @@ prompts.get("/:id/versions", async (ctx: Context) => {
     PromptVersion[]
   >`select * from template_version where template_id = ${templateId} order by created_at desc`;
 
-  console.log(promptVersions);
-
   let i = promptVersions.length;
   for (const promptVersion of promptVersions) {
     promptVersion.extra = unCamelObject(promptVersion.extra);

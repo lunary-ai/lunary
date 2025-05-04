@@ -16,10 +16,6 @@ import { MessageSchema } from "shared/schemas/openai";
 import { callML } from "../utils/ml";
 import { Run } from "shared";
 
-/* ------------------------------------------------------------------ */
-/*  Response schema from the Python service                           */
-/* ------------------------------------------------------------------ */
-
 const toxicLabelArr = z.array(z.string());
 
 const toxicMessage = z.object({
@@ -42,10 +38,6 @@ export const ToxicityResponseSchema = z.object({
 
 export type ToxicityResult = z.infer<typeof ToxicityResponseSchema>;
 
-/* ------------------------------------------------------------------ */
-/*  Public API                                                        */
-/* ------------------------------------------------------------------ */
-
 /**
  * Evaluate a single run for toxicity.
  *
@@ -54,20 +46,21 @@ export type ToxicityResult = z.infer<typeof ToxicityResponseSchema>;
  * @throws  ZodError if run.input or run.output are not valid OpenAI messages
  *          or if the Python service returns an unexpected payload.
  */
-export async function evaluate(run: Run): Promise<ToxicityResult> {
-  // 1️⃣  Validate / coerce the OpenAI messages
-  const inputMessages = MessageSchema.array().parse(run.input);
+export async function evaluate({
+  input,
+  output,
+}: {
+  input: unknown;
+  output: unknown;
+}): Promise<ToxicityResult> {
+  const inputMessages = MessageSchema.array().parse(input);
+  const outputMessage = output ? MessageSchema.parse(output) : null;
 
-  // run.output is either a single message or null
-  const outputMessage = run.output ? MessageSchema.parse(run.output) : null;
-
-  // 2️⃣  Call the Python ML service
   const resp = await callML("toxicity", {
     messages: outputMessage
       ? [...inputMessages, outputMessage]
       : [...inputMessages],
   });
 
-  // 3️⃣  Validate the service response
   return ToxicityResponseSchema.parse(resp);
 }
