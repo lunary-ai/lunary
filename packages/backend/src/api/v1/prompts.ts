@@ -14,7 +14,7 @@ prompts.get("/", async (ctx: Context) => {
 
   const prompts = await sql<
     Prompt[]
-  >`select * from template where project_id = ${projectId}`;
+  >`select * from template where project_id = ${projectId} order by created_at desc`;
 
   ctx.body = prompts;
 });
