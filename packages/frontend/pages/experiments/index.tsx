@@ -1,11 +1,13 @@
 import HotkeysInfo from "@/components/blocks/HotkeysInfo";
 import { useOrg } from "@/utils/dataHooks";
-import { useEvaluators } from "@/utils/dataHooks/evaluators";
+import { Evaluator } from "@/utils/dataHooks/evaluators";
 import { usePrompts, usePromptVersions } from "@/utils/dataHooks/prompts";
 import { fetcher } from "@/utils/fetcher";
 
+import EVALUATOR_TYPES from "@/utils/evaluators";
 import {
   Button,
+  Fieldset,
   Group,
   Modal,
   Select,
@@ -13,15 +15,16 @@ import {
   Stack,
   Switch,
   Table,
+  Tabs,
   Text,
   Textarea,
   Title,
 } from "@mantine/core";
 import { IconBolt, IconPlus, IconSettings } from "@tabler/icons-react";
 import { KeyboardEvent, useEffect, useMemo, useReducer, useState } from "react";
+import { CheckLogic } from "shared";
 import { Prompt, PromptVersion } from "shared/schemas/prompt";
 import { EvaluatorCard } from "../evaluators/new";
-import EVALUATOR_TYPES from "@/utils/evaluators";
 
 export function extractVariables(text = ""): string[] {
   const re = /{{\s*([A-Za-z_]\w*)\s*}}/g;
@@ -30,6 +33,29 @@ export function extractVariables(text = ""): string[] {
   while ((match = re.exec(text))) vars.push(match[1]);
   return vars;
 }
+
+const buildInitialParams = (evaluator: any): CheckLogic => {
+  if (evaluator.id === "llm") {
+    return {
+      id: "llm",
+      params: {
+        modelId: "",
+        scoringType: "boolean",
+        prompt: "",
+        categories: [],
+      },
+    };
+  }
+  // Generic param initialiser
+  const init = (evaluator.params as any[]).reduce<Record<string, any>>(
+    (acc, p) => {
+      if ("id" in p) acc[p.id] = p.defaultValue;
+      return acc;
+    },
+    {},
+  );
+  return { id: evaluator.id, params: init };
+};
 
 function PromptVersionSelect({
   promptVersion,
@@ -76,6 +102,8 @@ function PromptVersionSelect({
   );
 }
 
+/* ──────────────────────── Types & table reducer ────────────────────── */
+
 interface EvalResult {
   passed: boolean;
   loading: boolean;
@@ -90,14 +118,14 @@ interface Row {
   modelOutput: string;
   modelLoading: boolean;
   compResults: Record<number, CompResult>;
-  evalResults: Record<string, EvalResult>; // <- STRING KEYS!
+  evalResults: Record<string, EvalResult>;
 }
 interface Comparison {
   id: number;
   promptVersion?: PromptVersion;
 }
 interface State {
-  promptVersion?: PromptVersion; // **** moved to global reducer state ****
+  promptVersion?: PromptVersion;
   rows: Row[];
   nextRowId: number;
   comparisons: Comparison[];
@@ -127,7 +155,7 @@ type Action =
   | { type: "SET_EVAL_RESULT"; rowId: number; id: string; passed: boolean }
   | { type: "ADD_COMP" }
   | { type: "SET_COMP_PV"; compId: number; pv?: PromptVersion }
-  | { type: "SET_PROMPT_VERSION"; promptVersion?: PromptVersion }; // new action
+  | { type: "SET_PROMPT_VERSION"; promptVersion?: PromptVersion };
 
 function reducer(state: State, a: Action): State {
   switch (a.type) {
@@ -136,14 +164,17 @@ function reducer(state: State, a: Action): State {
 
     case "INIT_ROWS":
       return { ...state, rows: [makeRow(0, a.vars)], nextRowId: 1 };
+
     case "ADD_ROW":
       return {
         ...state,
         rows: [...state.rows, makeRow(state.nextRowId, a.vars)],
         nextRowId: state.nextRowId + 1,
       };
+
     case "DELETE_ROW":
       return { ...state, rows: state.rows.filter((r) => r.id !== a.rowId) };
+
     case "SET_VAR":
       return {
         ...state,
@@ -176,6 +207,7 @@ function reducer(state: State, a: Action): State {
           };
         }),
       };
+
     case "SET_MODEL_OUTPUT":
       return {
         ...state,
@@ -214,6 +246,7 @@ function reducer(state: State, a: Action): State {
             : r,
         ),
       };
+
     case "SET_EVAL_RESULT":
       return {
         ...state,
@@ -236,6 +269,7 @@ function reducer(state: State, a: Action): State {
         comparisons: [...state.comparisons, { id: state.nextCompId }],
         nextCompId: state.nextCompId + 1,
       };
+
     case "SET_COMP_PV":
       return {
         ...state,
@@ -251,7 +285,8 @@ function reducer(state: State, a: Action): State {
 
 export default function Experiments() {
   const { org } = useOrg();
-  const { isLoading: promptsLoading } = usePrompts();
+  usePrompts();
+
   const evaluators = Object.values(EVALUATOR_TYPES).filter((e) => {
     if (e.beta && !org.beta) return false;
     return true;
@@ -259,6 +294,8 @@ export default function Experiments() {
 
   const [showEvalModal, setShowEvalModal] = useState(false);
   const [selectedEvalIds, setSelectedEvalIds] = useState<string[]>([]);
+  const [activeEvalId, setActiveEvalId] = useState<string | undefined>();
+  const [paramsMap, setParamsMap] = useState<Record<string, CheckLogic>>({});
   const [showPrompt, setShowPrompt] = useState(true);
 
   const [state, dispatch] = useReducer(reducer, {
@@ -269,13 +306,11 @@ export default function Experiments() {
     nextCompId: 0,
   });
 
-  // ***** derive variables based on selected prompt *****
   const vars = useMemo(
     () => extractVariables(JSON.stringify(state.promptVersion?.content ?? "")),
-    [state.promptVersion?.content],
+    [state],
   );
 
-  // ***** (re) initialise rows when prompt version or its variables change *****
   useEffect(() => {
     if (state.promptVersion) dispatch({ type: "INIT_ROWS", vars });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -290,8 +325,7 @@ export default function Experiments() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state]);
+  });
 
   const runModelRow = async (rowId: number, compId?: number) => {
     dispatch({ type: "SET_MODEL_LOADING", rowId, compId, flag: true });
@@ -351,7 +385,7 @@ export default function Experiments() {
           arg: {
             input: targetPV.content,
             output: { role: "assistant", content: row.modelOutput },
-            evaluatorType: evaluator.type,
+            evaluatorType: evaluator.id,
           },
         });
         dispatch({
@@ -366,9 +400,43 @@ export default function Experiments() {
     }
   };
 
-  const evalOptions = evaluators
-    .filter((e) => e.type === "toxicity")
-    .map((e) => ({ value: e.id.toString(), label: e.type }));
+  const toggleEvaluator = (ev: Evaluator) => {
+    setSelectedEvalIds((prev) => {
+      const id = ev.id.toString();
+      if (prev.includes(id)) {
+        // Deselect
+        const next = prev.filter((x) => x !== id);
+        setActiveEvalId(next[next.length - 1]); // show previous or nothing
+        return next;
+      }
+      // Select
+      if (!paramsMap[id]) {
+        setParamsMap((m) => ({ ...m, [id]: buildInitialParams(ev) }));
+      }
+      setActiveEvalId(id); // new one becomes active
+      return [...prev, id];
+    });
+  };
+
+  const evaluatorCategories = Array.from(
+    new Set(evaluators.map((e) => e.category)),
+  )
+    .sort((a, b) => {
+      const order: Record<string, number> = {
+        labeler: 0,
+        "text-similarity": 1,
+        custom: 2,
+      };
+      const rankA = order[a] ?? 100;
+      const rankB = order[b] ?? 100;
+      return rankA !== rankB ? rankA - rankB : a.localeCompare(b);
+    })
+    .map((cat) => {
+      if (cat === "labeler") return { name: "Model Labeler", value: "labeler" };
+      if (cat === "text-similarity")
+        return { name: "Text Similarity", value: "text-similarity" };
+      return { name: "Custom", value: "custom" };
+    });
 
   const anyPrompt = state.promptVersion != null;
 
@@ -404,37 +472,69 @@ export default function Experiments() {
         </Group>
       </Group>
 
+      {/* Evaluator selector & config modal */}
       <Modal
         opened={showEvalModal}
         onClose={() => setShowEvalModal(false)}
         size="xl"
-        styles={{
-          content: {
-            backgroundColor: "rgb(252, 252, 252)",
-          },
-        }}
+        styles={{ content: { backgroundColor: "rgb(252, 252, 252)" } }}
       >
         <Stack>
-          <Title order={6}>Evaluator Type:</Title>
+          <Title order={6}>Evaluators</Title>
 
-          <SimpleGrid cols={5} spacing="md">
-            {evaluators.map((e) => (
-              <EvaluatorCard
-                key={e.id}
-                evaluator={e}
-                isSelected={selectedEvalIds.includes(e.id)}
-                onItemClick={(t) => {
-                  setSelectedEvalIds([e.id]);
-                }}
-              />
+          {/* Card grid */}
+          <Tabs
+            defaultValue={evaluatorCategories[0].value}
+            onChange={() => setActiveEvalId(undefined)}
+          >
+            <Tabs.List>
+              {evaluatorCategories.map((cat) => (
+                <Tabs.Tab key={cat.value} value={cat.value}>
+                  {cat.name}
+                </Tabs.Tab>
+              ))}
+            </Tabs.List>
+
+            {evaluatorCategories.map((cat) => (
+              <Tabs.Panel key={cat.value} value={cat.value} pt="md">
+                <SimpleGrid cols={5} spacing="md">
+                  {evaluators
+                    .filter((e) => e.category === cat.value)
+                    .map((e) => (
+                      <EvaluatorCard
+                        key={e.id}
+                        evaluator={e}
+                        isSelected={selectedEvalIds.includes(e.id.toString())}
+                        onItemClick={() => toggleEvaluator(e as any)}
+                      />
+                    ))}
+                </SimpleGrid>
+              </Tabs.Panel>
             ))}
-          </SimpleGrid>
+          </Tabs>
+
+          {activeEvalId && paramsMap[activeEvalId] && (
+            <Fieldset
+              legend={
+                evaluators.find((ev) => ev.id.toString() === activeEvalId)!
+                  .name + " Configuration"
+              }
+              style={{ overflow: "visible" }}
+            >
+              {activeEvalId}
+            </Fieldset>
+          )}
+
+          <Group justify="flex-end">
+            <Button variant="default" onClick={() => setShowEvalModal(false)}>
+              Save
+            </Button>
+          </Group>
         </Stack>
       </Modal>
 
       <Table withTableBorder withColumnBorders withRowBorders>
         <Table.Thead>
-          {/* Header row with selects */}
           <Table.Tr>
             {vars.map((v) => (
               <Table.Th key={v}></Table.Th>
@@ -475,28 +575,32 @@ export default function Experiments() {
                 <Table.Th key={v}></Table.Th>
               ))}
               <Table.Th>
-                {state.promptVersion?.content && (
-                  <Text size="xs" style={{ whiteSpace: "pre-wrap" }}>
-                    {state.promptVersion.content.map((message) => (
-                      <Stack key={message.content + message.role} gap="xs">
-                        <Title order={6}>{message.role}</Title>
-                        <Text>{message.content}</Text>
-                      </Stack>
-                    ))}
-                  </Text>
-                )}
+                <Stack
+                  mah="200"
+                  style={{ whiteSpace: "pre-wrap", overflow: "scroll" }}
+                >
+                  {state.promptVersion.content.map((msg) => (
+                    <Stack key={msg.content + msg.role} gap="0">
+                      <Title order={6}>{msg.role}</Title>
+                      <Text size="xs">{msg.content}</Text>
+                    </Stack>
+                  ))}
+                </Stack>
               </Table.Th>
               {state.comparisons.map((c) => (
                 <Table.Th key={c.id}>
                   {c.promptVersion?.content && (
-                    <Text size="xs" style={{ whiteSpace: "pre-wrap" }}>
-                      {c.promptVersion.content.map((message) => (
-                        <Stack key={message.content + message.role}>
-                          <Title order={6}>{message.role}</Title>
-                          <Text>{message.content}</Text>
+                    <Stack
+                      style={{ whiteSpace: "pre-wrap", overflow: "scroll" }}
+                      mah="200px"
+                    >
+                      {c.promptVersion.content.map((msg) => (
+                        <Stack key={msg.content + msg.role} gap="0">
+                          <Title order={6}>{msg.role}</Title>
+                          <Text size="xs">{msg.content}</Text>
                         </Stack>
                       ))}
-                    </Text>
+                    </Stack>
                   )}
                 </Table.Th>
               ))}
@@ -575,13 +679,14 @@ export default function Experiments() {
                       return (
                         res && (
                           <Text size="sm" key={id}>
-                            {ev?.type}: {res.passed ? "Pass" : "Fail"}
+                            {ev?.id}: {res.passed ? "Pass" : "Fail"}
                           </Text>
                         )
                       );
                     })}
                   </Table.Td>
 
+                  {/* comparison PV runs */}
                   {state.comparisons.map((c) => {
                     const comp = row.compResults[c.id] ?? {
                       modelOutput: "",
