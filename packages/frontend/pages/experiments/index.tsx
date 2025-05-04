@@ -97,9 +97,25 @@ export default function Experiments() {
     variableValues: Record<string, string>;
     modelOutput: string;
     modelLoading: boolean;
+    compResults: Record<number, { modelOutput: string; modelLoading: boolean }>; // added for comparison results
   };
   const [rows, setRows] = useState<Row[]>([]);
   const [rowCounter, setRowCounter] = useState(0);
+
+  // comparison columns state
+  const [comparisonCols, setComparisonCols] = useState<
+    { id: number; promptVersion?: PromptVersion }[]
+  >([]);
+  const [compCounter, setCompCounter] = useState(0);
+  const handleAddComparison = () => {
+    setComparisonCols((prev) => [...prev, { id: compCounter }]);
+    setCompCounter((prev) => prev + 1);
+  };
+  const handleCompVersionChange = (id: number, pv: PromptVersion) => {
+    setComparisonCols((prev) =>
+      prev.map((col) => (col.id === id ? { ...col, promptVersion: pv } : col)),
+    );
+  };
 
   useEffect(() => {
     if (!promptVersion) return;
@@ -112,6 +128,7 @@ export default function Experiments() {
       variableValues: initialVars,
       modelOutput: "",
       modelLoading: false,
+      compResults: {},
     };
     setRows([newRow]);
     setRowCounter(1);
@@ -127,38 +144,90 @@ export default function Experiments() {
       variableValues: initialVars,
       modelOutput: "",
       modelLoading: false,
+      compResults: {},
     };
     setRows((prev) => [...prev, newRow]);
     setRowCounter((prev) => prev + 1);
   };
 
-  const runModelRow = async (rowId: number) => {
+  // runs model for initial or comparison column
+  const runModelRow = async (rowId: number, compId?: number) => {
     setRows((prev) =>
-      prev.map((r) => (r.id === rowId ? { ...r, modelLoading: true } : r)),
+      prev.map((r) => {
+        if (r.id !== rowId) return r;
+        if (compId == null) return { ...r, modelLoading: true };
+        const prevComp = r.compResults[compId] || {
+          modelOutput: "",
+          modelLoading: false,
+        };
+        return {
+          ...r,
+          compResults: {
+            ...r.compResults,
+            [compId]: { ...prevComp, modelLoading: true },
+          },
+        };
+      }),
     );
+    const targetPV =
+      compId == null
+        ? promptVersion
+        : comparisonCols.find((c) => c.id === compId)?.promptVersion;
+    if (!targetPV) return;
     try {
       const response = await fetcher.post(`/orgs/${org?.id}/playground`, {
         arg: {
-          content: promptVersion?.content,
-          extra: promptVersion?.extra,
+          content: targetPV.content,
+          extra: targetPV.extra,
           variables: rows.find((r) => r.id === rowId)?.variableValues,
         },
       });
       const output = response.choices[0].message.content as string;
       setRows((prev) =>
-        prev.map((r) => (r.id === rowId ? { ...r, modelOutput: output } : r)),
+        prev.map((r) => {
+          if (r.id !== rowId) return r;
+          if (compId == null) return { ...r, modelOutput: output };
+          const prevComp = r.compResults[compId] || {
+            modelOutput: "",
+            modelLoading: false,
+          };
+          return {
+            ...r,
+            compResults: {
+              ...r.compResults,
+              [compId]: { ...prevComp, modelOutput: output },
+            },
+          };
+        }),
       );
     } catch (e) {
       console.error(e);
     } finally {
       setRows((prev) =>
-        prev.map((r) => (r.id === rowId ? { ...r, modelLoading: false } : r)),
+        prev.map((r) => {
+          if (r.id !== rowId) return r;
+          if (compId == null) return { ...r, modelLoading: false };
+          const prevComp = r.compResults[compId] || {
+            modelOutput: "",
+            modelLoading: false,
+          };
+          return {
+            ...r,
+            compResults: {
+              ...r.compResults,
+              [compId]: { ...prevComp, modelLoading: false },
+            },
+          };
+        }),
       );
     }
   };
 
   const runAll = () => {
-    rows.forEach((r) => runModelRow(r.id));
+    rows.forEach((r) => {
+      runModelRow(r.id);
+      comparisonCols.forEach((col) => runModelRow(r.id, col.id));
+    });
   };
 
   useEffect(() => {
@@ -170,7 +239,7 @@ export default function Experiments() {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [rows]);
+  }, [rows, comparisonCols]);
 
   if (isLoading) {
     return <Loader />;
@@ -203,8 +272,18 @@ export default function Experiments() {
                 promptVersion={promptVersion}
               />
             </Table.Th>
+            {comparisonCols.map((col) => (
+              <Table.Th key={col.id}>
+                <PromptVersionSelect
+                  setPromptVersion={(pv) => handleCompVersionChange(col.id, pv)}
+                  promptVersion={col.promptVersion}
+                />
+              </Table.Th>
+            ))}
             <Table.Th>
-              <Button>Add Comparison</Button>
+              <Button size="sm" onClick={handleAddComparison}>
+                Add Comparison
+              </Button>
             </Table.Th>
           </Table.Tr>
           <Table.Tr>
@@ -212,6 +291,9 @@ export default function Experiments() {
               <Table.Th id={variable}>{`{{${variable}}}`}</Table.Th>
             ))}
             <Table.Th>Model Output</Table.Th>
+            {comparisonCols.map((col) => (
+              <Table.Th key={col.id}>Model Output</Table.Th>
+            ))}
             <Table.Th></Table.Th>
           </Table.Tr>
         </Table.Thead>
@@ -262,6 +344,32 @@ export default function Experiments() {
                     </Text>
                   )}
                 </Table.Td>
+                {comparisonCols.map((col) => {
+                  const comp = row.compResults[col.id] || {
+                    modelOutput: "",
+                    modelLoading: false,
+                  };
+                  return (
+                    <Table.Td key={col.id} p={0}>
+                      <Button
+                        size="xs"
+                        onClick={() => runModelRow(row.id, col.id)}
+                        loading={comp.modelLoading}
+                        disabled={!col.promptVersion}
+                      >
+                        Run
+                      </Button>
+                      {comp.modelOutput && (
+                        <Text
+                          size="sm"
+                          style={{ whiteSpace: "pre-wrap", marginTop: 8 }}
+                        >
+                          {comp.modelOutput}
+                        </Text>
+                      )}
+                    </Table.Td>
+                  );
+                })}
                 <Table.Td>
                   <Button>Delete</Button>
                 </Table.Td>
