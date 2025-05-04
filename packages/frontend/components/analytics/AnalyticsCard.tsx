@@ -5,6 +5,8 @@ import {
   IconX,
   IconArrowsMaximize,
   IconFilter,
+  IconSettings,
+  IconPencil,
 } from "@tabler/icons-react";
 import { ReactNode } from "react";
 
@@ -100,7 +102,7 @@ function AnalyticsCard({
                 onClick={onFilter}
                 style={{ zIndex: 2 }}
               >
-                <IconFilter size={16} />
+                <IconPencil size={16} />
               </ActionIcon>
             </Tooltip>
           )}
