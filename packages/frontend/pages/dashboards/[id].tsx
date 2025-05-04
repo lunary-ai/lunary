@@ -23,6 +23,9 @@ import {
   Loader,
   Menu,
   Stack,
+  Textarea,
+  TextInput,
+  Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
@@ -242,10 +245,7 @@ export default function Dashboard() {
             secondaryDimension: customChart.secondaryDimension,
             isCustom: true,
             color: customChart.color,
-            startDate: customChart.startDate,
-            endDate: customChart.endDate,
-            granularity: customChart.granularity,
-            checks: customChart.checks,
+            // optional timeline and filter properties omitted for custom charts
           } as ChartWithSpan;
           finalCharts.push(newChart);
         }
@@ -273,6 +273,19 @@ export default function Dashboard() {
   function handleChartChecksChange(index: number, newChecks: LogicNode) {
     const newCharts = structuredClone(charts);
     newCharts[index].checks = newChecks;
+    setChartsWithSortOrder(newCharts);
+  }
+
+  // add handlers for editing chart name and description
+  function handleChartRename(index: number, newName: string) {
+    const newCharts = structuredClone(charts);
+    newCharts[index].name = newName;
+    setChartsWithSortOrder(newCharts);
+  }
+
+  function handleChartDescriptionChange(index: number, newDescription: string) {
+    const newCharts = structuredClone(charts);
+    newCharts[index].description = newDescription;
     setChartsWithSortOrder(newCharts);
   }
 
@@ -472,11 +485,32 @@ export default function Dashboard() {
                         onFilter={
                           isEditing ? () => handleFilter(index) : undefined
                         }
-                        filterLabel="Filters"
+                        filterLabel="Edit Chart"
                       >
-                        {/* flip between chart view and filter editor */}
                         {filterIndex === index ? (
-                          <div style={{ padding: "1rem" }}>
+                          <Box style={{ padding: "1rem", overflow: "scroll" }}>
+                            <TextInput
+                              label="Name"
+                              value={chart.name ?? ""}
+                              onChange={(e) =>
+                                handleChartRename(index, e.currentTarget.value)
+                              }
+                              mb="md"
+                            />
+                            <TextInput
+                              label="Description"
+                              value={chart.description ?? ""}
+                              onChange={(e) =>
+                                handleChartDescriptionChange(
+                                  index,
+                                  e.currentTarget.value,
+                                )
+                              }
+                              mb="md"
+                            />
+                            <Title order={5} mb="xs">
+                              Filters
+                            </Title>
                             <CheckPicker
                               minimal
                               value={
@@ -502,7 +536,7 @@ export default function Dashboard() {
                                 ].includes(filter.id)
                               }
                             />
-                          </div>
+                          </Box>
                         ) : (
                           <ChartComponent
                             id={chart.id}
