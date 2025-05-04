@@ -400,8 +400,6 @@ export function ComparisonTable({
               <Table.Th style={{ width: "250px" }}></Table.Th>
 
               {comparisonColumns.map((column) => {
-                // derive selected template and version
-
                 return (
                   <Table.Th key={column.id} style={{ width: "300px" }}>
                     <Stack gap="xs">

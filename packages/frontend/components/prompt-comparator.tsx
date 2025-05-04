@@ -234,7 +234,7 @@ export function PromptComparator() {
     <Container size="xl" py="md">
       <Group justify="space-between" mb="md">
         <div>
-          <Title order={3}>Prompt Comparator</Title>
+          <Title order={3}>Experiments</Title>
         </div>
         <Group>
           <EvaluatorSettings
