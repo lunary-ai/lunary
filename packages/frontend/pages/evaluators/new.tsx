@@ -31,7 +31,7 @@ import { CheckLogic, serializeLogic } from "shared";
 import { useCustomModels } from "@/utils/dataHooks/provider-configs";
 import ProviderEditor from "@/components/prompts/Provider";
 
-function EvaluatorCard({
+export function EvaluatorCard({
   evaluator,
   isSelected,
   onItemClick,

@@ -1,284 +1,341 @@
+// Experiments.tsx
 import HotkeysInfo from "@/components/blocks/HotkeysInfo";
 import { useOrg } from "@/utils/dataHooks";
+import { useEvaluators } from "@/utils/dataHooks/evaluators";
 import { usePrompts, usePromptVersions } from "@/utils/dataHooks/prompts";
 import { fetcher } from "@/utils/fetcher";
-import { useEvaluators } from "@/utils/dataHooks/evaluators";
+
 import {
   Button,
   Group,
-  Loader,
   Modal,
-  MultiSelect,
   Select,
+  SimpleGrid,
+  Stack,
   Table,
   Text,
   Textarea,
   Title,
 } from "@mantine/core";
-import { IconBolt } from "@tabler/icons-react";
-import { useEffect, useMemo, useState } from "react";
+import { IconBolt, IconSettings } from "@tabler/icons-react";
+import { KeyboardEvent, useEffect, useMemo, useReducer, useState } from "react";
 import { Prompt, PromptVersion } from "shared/schemas/prompt";
+import { EvaluatorCard } from "../evaluators/new";
+import EVALUATOR_TYPES from "@/utils/evaluators";
 
-export function PromptVersionSelect({ promptVersion, setPromptVersion }) {
+export function extractVariables(text = ""): string[] {
+  const re = /{{\s*([A-Za-z_]\w*)\s*}}/g;
+  const vars: string[] = [];
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(text))) vars.push(match[1]);
+  return vars;
+}
+
+function PromptVersionSelect({
+  promptVersion,
+  setPromptVersion,
+}: {
+  promptVersion?: PromptVersion;
+  setPromptVersion: (pv?: PromptVersion) => void;
+}) {
   const { prompts } = usePrompts();
   const [selectedPrompt, setSelectedPrompt] = useState<Prompt>();
-
   const { promptVersions } = usePromptVersions(selectedPrompt?.id);
 
-  const promptSelectData = prompts.map((prompt) => ({
-    value: prompt.id.toString(),
-    label: prompt.slug,
+  const promptOpts = prompts.map((p) => ({
+    value: p.id.toString(),
+    label: p.slug,
   }));
-
-  const promptVersionSelectData = promptVersions.map((promptVersion) => ({
-    value: promptVersion.id.toString(),
-    label: `v${promptVersion.version}`,
+  const versionOpts = promptVersions.map((pv) => ({
+    value: pv.id.toString(),
+    label: `v${pv.version}`,
   }));
-
-  function onPromptChangeHandler(value: string | null) {
-    if (value) {
-      const promptId = Number.parseInt(value);
-      const prompt = prompts.find((prompt) => prompt.id === promptId);
-      setSelectedPrompt(prompt);
-    }
-  }
-
-  function onPromptVersionChangeHandler(value: string | null) {
-    if (value) {
-      const promptVersionId = Number.parseInt(value);
-      const promptVersion = promptVersions.find(
-        (promptVersion) => promptVersion.id === promptVersionId,
-      );
-      setPromptVersion(promptVersion);
-    }
-  }
 
   return (
     <Group gap="0">
       <Select
         placeholder="Choose prompt"
-        data={promptSelectData}
-        onChange={onPromptChangeHandler}
+        data={promptOpts}
+        onChange={(v) =>
+          setSelectedPrompt(prompts.find((p) => p.id === Number(v)))
+        }
         styles={{ input: { borderRadius: "8px 0 0 8px" } }}
       />
       <Select
         placeholder="Choose version"
-        disabled={selectedPrompt === undefined}
-        data={promptVersionSelectData}
-        onChange={onPromptVersionChangeHandler}
+        disabled={!selectedPrompt}
+        data={versionOpts}
+        onChange={(v) =>
+          setPromptVersion(promptVersions.find((pv) => pv.id === Number(v)))
+        }
         w={150}
-        styles={{ input: { borderRadius: "0 8px 8px 0", borderLeft: "0" } }}
+        styles={{ input: { borderRadius: "0 8px 8px 0", borderLeft: 0 } }}
       />
     </Group>
   );
 }
 
-export function extractVariables(text: string): string[] {
-  const placeholderRE = /{{\s*([A-Za-z_]\w*)\s*}}/g;
-  const vars: string[] = [];
+interface EvalResult {
+  passed: boolean;
+  loading: boolean;
+}
+interface CompResult {
+  modelOutput: string;
+  modelLoading: boolean;
+}
+interface Row {
+  id: number;
+  variableValues: Record<string, string>;
+  modelOutput: string;
+  modelLoading: boolean;
+  compResults: Record<number, CompResult>;
+  evalResults: Record<string, EvalResult>; // <- STRING KEYS!
+}
+interface Comparison {
+  id: number;
+  promptVersion?: PromptVersion;
+}
+interface State {
+  rows: Row[];
+  nextRowId: number;
+  comparisons: Comparison[];
+  nextCompId: number;
+}
 
-  let match: RegExpExecArray | null;
-  while ((match = placeholderRE.exec(text)) !== null) {
-    vars.push(match[1]);
+const emptyVarMap = (vars: string[]) =>
+  vars.reduce((acc, v) => ({ ...acc, [v]: "" }), {} as Record<string, string>);
+
+const makeRow = (id: number, vars: string[]): Row => ({
+  id,
+  variableValues: emptyVarMap(vars),
+  modelOutput: "",
+  modelLoading: false,
+  compResults: {},
+  evalResults: {},
+});
+
+type Action =
+  | { type: "INIT_ROWS"; vars: string[] }
+  | { type: "ADD_ROW"; vars: string[] }
+  | { type: "DELETE_ROW"; rowId: number }
+  | { type: "SET_VAR"; rowId: number; varName: string; value: string }
+  | { type: "SET_MODEL_LOADING"; rowId: number; compId?: number; flag: boolean }
+  | { type: "SET_MODEL_OUTPUT"; rowId: number; compId?: number; output: string }
+  | { type: "SET_EVAL_LOADING"; rowId: number; ids: string[] }
+  | { type: "SET_EVAL_RESULT"; rowId: number; id: string; passed: boolean }
+  | { type: "ADD_COMP" }
+  | { type: "SET_COMP_PV"; compId: number; pv?: PromptVersion };
+
+function reducer(state: State, a: Action): State {
+  switch (a.type) {
+    case "INIT_ROWS":
+      return { ...state, rows: [makeRow(0, a.vars)], nextRowId: 1 };
+    case "ADD_ROW":
+      return {
+        ...state,
+        rows: [...state.rows, makeRow(state.nextRowId, a.vars)],
+        nextRowId: state.nextRowId + 1,
+      };
+    case "DELETE_ROW":
+      return { ...state, rows: state.rows.filter((r) => r.id !== a.rowId) };
+    case "SET_VAR":
+      return {
+        ...state,
+        rows: state.rows.map((r) =>
+          r.id === a.rowId
+            ? {
+                ...r,
+                variableValues: { ...r.variableValues, [a.varName]: a.value },
+              }
+            : r,
+        ),
+      };
+
+    case "SET_MODEL_LOADING":
+      return {
+        ...state,
+        rows: state.rows.map((r) => {
+          if (r.id !== a.rowId) return r;
+          if (a.compId == null) return { ...r, modelLoading: a.flag };
+          const prev = r.compResults[a.compId] ?? {
+            modelOutput: "",
+            modelLoading: false,
+          };
+          return {
+            ...r,
+            compResults: {
+              ...r.compResults,
+              [a.compId]: { ...prev, modelLoading: a.flag },
+            },
+          };
+        }),
+      };
+    case "SET_MODEL_OUTPUT":
+      return {
+        ...state,
+        rows: state.rows.map((r) => {
+          if (r.id !== a.rowId) return r;
+          if (a.compId == null) return { ...r, modelOutput: a.output };
+          const prev = r.compResults[a.compId] ?? {
+            modelOutput: "",
+            modelLoading: false,
+          };
+          return {
+            ...r,
+            compResults: {
+              ...r.compResults,
+              [a.compId]: { ...prev, modelOutput: a.output },
+            },
+          };
+        }),
+      };
+
+    case "SET_EVAL_LOADING":
+      return {
+        ...state,
+        rows: state.rows.map((r) =>
+          r.id === a.rowId
+            ? {
+                ...r,
+                evalResults: a.ids.reduce<Record<string, EvalResult>>(
+                  (acc, id) => ({
+                    ...acc,
+                    [id]: { passed: false, loading: true },
+                  }),
+                  { ...r.evalResults },
+                ),
+              }
+            : r,
+        ),
+      };
+    case "SET_EVAL_RESULT":
+      return {
+        ...state,
+        rows: state.rows.map((r) =>
+          r.id === a.rowId
+            ? {
+                ...r,
+                evalResults: {
+                  ...r.evalResults,
+                  [a.id]: { passed: a.passed, loading: false },
+                },
+              }
+            : r,
+        ),
+      };
+
+    case "ADD_COMP":
+      return {
+        ...state,
+        comparisons: [...state.comparisons, { id: state.nextCompId }],
+        nextCompId: state.nextCompId + 1,
+      };
+    case "SET_COMP_PV":
+      return {
+        ...state,
+        comparisons: state.comparisons.map((c) =>
+          c.id === a.compId ? { ...c, promptVersion: a.pv } : c,
+        ),
+      };
+
+    default:
+      return state;
   }
-
-  return vars;
 }
 
 export default function Experiments() {
   const { org } = useOrg();
-  const { isLoading } = usePrompts();
-  const { evaluators = [], isLoading: isEvaluatorsLoading } = useEvaluators();
-  const [isEvalModalOpen, setEvalModalOpen] = useState(false);
-  const [selectedEvaluatorIds, setSelectedEvaluatorIds] = useState<string[]>(
-    [],
-  );
-  const evaluatorSelectData = evaluators
-    .filter((e) => e.slug === "toxicity")
-    .map((e) => ({ value: e.id.toString(), label: e.slug }));
+  const { isLoading: promptsLoading } = usePrompts();
+  const evaluators = Object.values(EVALUATOR_TYPES).filter((e) => {
+    if (e.beta && !org.beta) return false;
+    return true;
+  });
+  console.log(evaluators);
+
   const [promptVersion, setPromptVersion] = useState<PromptVersion>();
-  const variables = useMemo(
-    () => extractVariables(JSON.stringify(promptVersion?.content)),
+  const [showEvalModal, setShowEvalModal] = useState(false);
+  const [selectedEvalIds, setSelectedEvalIds] = useState<string[]>([]);
+
+  const vars = useMemo(
+    () => extractVariables(JSON.stringify(promptVersion?.content ?? "")),
     [promptVersion?.content],
   );
 
-  // manage multiple rows with unique IDs
-  type Row = {
-    id: number;
-    variableValues: Record<string, string>;
-    modelOutput: string;
-    modelLoading: boolean;
-    compResults: Record<number, { modelOutput: string; modelLoading: boolean }>; // added for comparison results
-    evalResults: Record<number, { passed: boolean; loading: boolean }>;
-  };
-  const [rows, setRows] = useState<Row[]>([]);
-  const [rowCounter, setRowCounter] = useState(0);
-
-  // comparison columns state
-  const [comparisonCols, setComparisonCols] = useState<
-    { id: number; promptVersion?: PromptVersion }[]
-  >([]);
-  const [compCounter, setCompCounter] = useState(0);
-  const handleAddComparison = () => {
-    setComparisonCols((prev) => [...prev, { id: compCounter }]);
-    setCompCounter((prev) => prev + 1);
-  };
-  const handleCompVersionChange = (id: number, pv: PromptVersion) => {
-    setComparisonCols((prev) =>
-      prev.map((col) => (col.id === id ? { ...col, promptVersion: pv } : col)),
-    );
-  };
+  const [state, dispatch] = useReducer(reducer, {
+    rows: [],
+    nextRowId: 0,
+    comparisons: [],
+    nextCompId: 0,
+  });
 
   useEffect(() => {
-    if (!promptVersion) return;
-    const initialVars: Record<string, string> = {};
-    variables.forEach((v) => {
-      initialVars[v] = "";
-    });
-    const newRow: Row = {
-      id: 0,
-      variableValues: initialVars,
-      modelOutput: "",
-      modelLoading: false,
-      compResults: {},
-      evalResults: {},
-    };
-    setRows([newRow]);
-    setRowCounter(1);
-  }, [promptVersion?.id, variables]);
+    if (promptVersion) dispatch({ type: "INIT_ROWS", vars });
+  }, [promptVersion?.id, vars.join(",")]);
 
-  const handleAddRow = () => {
-    const initialVars: Record<string, string> = {};
-    variables.forEach((v) => {
-      initialVars[v] = "";
-    });
-    const newRow: Row = {
-      id: rowCounter,
-      variableValues: initialVars,
-      modelOutput: "",
-      modelLoading: false,
-      compResults: {},
-      evalResults: {},
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault();
+        runAll();
+      }
     };
-    setRows((prev) => [...prev, newRow]);
-    setRowCounter((prev) => prev + 1);
-  };
-
-  const handleDeleteRow = (rowId: number) => {
-    setRows((prev) => prev.filter((r) => r.id !== rowId));
-  };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
 
   const runModelRow = async (rowId: number, compId?: number) => {
-    setRows((prev) =>
-      prev.map((r) => {
-        if (r.id !== rowId) return r;
-        if (compId == null) return { ...r, modelLoading: true };
-        const prevComp = r.compResults[compId] || {
-          modelOutput: "",
-          modelLoading: false,
-        };
-        return {
-          ...r,
-          compResults: {
-            ...r.compResults,
-            [compId]: { ...prevComp, modelLoading: true },
-          },
-        };
-      }),
-    );
+    dispatch({ type: "SET_MODEL_LOADING", rowId, compId, flag: true });
+
     const targetPV =
       compId == null
         ? promptVersion
-        : comparisonCols.find((c) => c.id === compId)?.promptVersion;
+        : state.comparisons.find((c) => c.id === compId)?.promptVersion;
     if (!targetPV) return;
+
+    const row = state.rows.find((r) => r.id === rowId);
+    if (!row) return;
+
     try {
-      const response = await fetcher.post(`/orgs/${org?.id}/playground`, {
+      const resp = await fetcher.post(`/orgs/${org?.id}/playground`, {
         arg: {
           content: targetPV.content,
           extra: targetPV.extra,
-          variables: rows.find((r) => r.id === rowId)?.variableValues,
+          variables: row.variableValues,
         },
       });
-      const output = response.choices[0].message.content as string;
-      setRows((prev) =>
-        prev.map((r) => {
-          if (r.id !== rowId) return r;
-          if (compId == null) return { ...r, modelOutput: output };
-          const prevComp = r.compResults[compId] || {
-            modelOutput: "",
-            modelLoading: false,
-          };
-          return {
-            ...r,
-            compResults: {
-              ...r.compResults,
-              [compId]: { ...prevComp, modelOutput: output },
-            },
-          };
-        }),
-      );
-    } catch (e) {
-      console.error(e);
+      const output = resp.choices[0].message.content as string;
+      dispatch({ type: "SET_MODEL_OUTPUT", rowId, compId, output });
+    } catch (err) {
+      console.error(err);
     } finally {
-      setRows((prev) =>
-        prev.map((r) => {
-          if (r.id !== rowId) return r;
-          if (compId == null) return { ...r, modelLoading: false };
-          const prevComp = r.compResults[compId] || {
-            modelOutput: "",
-            modelLoading: false,
-          };
-          return {
-            ...r,
-            compResults: {
-              ...r.compResults,
-              [compId]: { ...prevComp, modelLoading: false },
-            },
-          };
-        }),
-      );
+      dispatch({ type: "SET_MODEL_LOADING", rowId, compId, flag: false });
     }
   };
 
   const runAll = () => {
-    rows.forEach((r) => {
+    state.rows.forEach((r) => {
       runModelRow(r.id);
-      comparisonCols.forEach((col) => runModelRow(r.id, col.id));
+      state.comparisons.forEach((c) => runModelRow(r.id, c.id));
     });
   };
 
-  async function handleRunEvaluators(rowId: number, compId?: number) {
-    // set loading per evaluator
-    setRows((prev) =>
-      prev.map((r) =>
-        r.id !== rowId
-          ? r
-          : {
-              ...r,
-              evalResults: selectedEvaluatorIds.reduce(
-                (acc, id) => ({
-                  ...acc,
-                  [Number(id)]: { passed: false, loading: true },
-                }),
-                {} as Row["evalResults"],
-              ),
-            },
-      ),
-    );
+  const runEvaluators = async (rowId: number, compId?: number) => {
+    if (!selectedEvalIds.length) return;
+    dispatch({ type: "SET_EVAL_LOADING", rowId, ids: selectedEvalIds });
 
     const targetPV =
       compId == null
         ? promptVersion
-        : comparisonCols.find((c) => c.id === compId)?.promptVersion;
-
+        : state.comparisons.find((c) => c.id === compId)?.promptVersion;
     if (!targetPV) return;
 
-    for (const id of selectedEvaluatorIds) {
-      const evaluator = evaluators.find((e) => e.id === id);
+    const row = state.rows.find((r) => r.id === rowId);
+    if (!row?.modelOutput) return;
 
+    for (const id of selectedEvalIds) {
+      const evaluator = evaluators.find((e) => e.id.toString() === id);
       if (!evaluator) continue;
-      const row = rows.find((r) => r.id === rowId);
-      if (!row || !row.modelOutput) continue;
+
       try {
         const resp = await fetcher.post(`/evaluations/evaluate`, {
           arg: {
@@ -287,205 +344,204 @@ export default function Experiments() {
             evaluatorType: evaluator.type,
           },
         });
-        const passed = resp.passed as boolean;
-        setRows((prev) =>
-          prev.map((r) =>
-            r.id !== rowId
-              ? r
-              : {
-                  ...r,
-                  evalResults: {
-                    ...r.evalResults,
-                    [id]: { passed, loading: false },
-                  },
-                },
-          ),
-        );
-      } catch (e) {
-        console.error(e);
+        dispatch({
+          type: "SET_EVAL_RESULT",
+          rowId,
+          id,
+          passed: resp.passed as boolean,
+        });
+      } catch (err) {
+        console.error(err);
       }
     }
-  }
+  };
 
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-        e.preventDefault();
-        runAll();
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [rows, comparisonCols]);
+  const evalOptions = evaluators
+    .filter((e) => e.type === "toxicity")
+    .map((e) => ({ value: e.id.toString(), label: e.type }));
 
-  if (isLoading) {
-    return <Loader />;
-  }
+  const anyPrompt = promptVersion != null;
 
   return (
     <>
       <Group justify="space-between" mb="sm">
         <Title order={3}>Experiments</Title>
-        <Button
-          leftSection={<IconBolt size="16" />}
-          size="sm"
-          disabled={!promptVersion}
-          onClick={runAll}
-          rightSection={
-            <HotkeysInfo hot="Enter" size="sm" style={{ marginTop: -4 }} />
-          }
-        >
-          Run all
-        </Button>
-        <Button size="sm" onClick={() => setEvalModalOpen(true)}>
-          Add Evaluators
-        </Button>
+        <Group>
+          <Button
+            size="sm"
+            onClick={() => setShowEvalModal(true)}
+            variant="outline"
+            leftSection={<IconSettings width="16" />}
+          >
+            Configure Evaluators
+          </Button>
+          <Button
+            leftSection={<IconBolt size={16} />}
+            size="sm"
+            disabled={!anyPrompt}
+            onClick={runAll}
+            rightSection={<HotkeysInfo hot="Enter" size="sm" />}
+          >
+            Run all
+          </Button>
+        </Group>
       </Group>
 
-      {/* Evaluators selection modal */}
       <Modal
-        opened={isEvalModalOpen}
-        onClose={() => setEvalModalOpen(false)}
-        title="Add Evaluators"
+        opened={showEvalModal}
+        onClose={() => setShowEvalModal(false)}
+        size="xl"
+        styles={{
+          content: {
+            backgroundColor: "rgb(252, 252, 252)",
+          },
+        }}
       >
-        <MultiSelect
-          data={evaluatorSelectData}
-          value={selectedEvaluatorIds}
-          onChange={setSelectedEvaluatorIds}
-          searchable
-          placeholder={isEvaluatorsLoading ? "Loading..." : "Select evaluators"}
-        />
+        <Stack>
+          <Title order={6}>Evaluator Type:</Title>
+
+          <SimpleGrid cols={5} spacing="md">
+            {evaluators.map((e) => (
+              <EvaluatorCard
+                key={e.id}
+                evaluator={e}
+                isSelected={selectedEvalIds.includes(e.id)}
+                onItemClick={(t) => {
+                  setSelectedEvalIds([e.id]);
+                }}
+              />
+            ))}
+          </SimpleGrid>
+        </Stack>
       </Modal>
 
       <Table withTableBorder withColumnBorders withRowBorders>
         <Table.Thead>
           <Table.Tr>
-            {variables.map((variable) => (
-              <Table.Th id={variable}></Table.Th>
+            {vars.map((v) => (
+              <Table.Th key={v}></Table.Th>
             ))}
             <Table.Th>
               <PromptVersionSelect
-                setPromptVersion={setPromptVersion}
                 promptVersion={promptVersion}
+                setPromptVersion={setPromptVersion}
               />
             </Table.Th>
-            {comparisonCols.map((col) => (
-              <Table.Th key={col.id}>
+            {state.comparisons.map((c) => (
+              <Table.Th key={c.id}>
                 <PromptVersionSelect
-                  setPromptVersion={(pv) => handleCompVersionChange(col.id, pv)}
-                  promptVersion={col.promptVersion}
+                  promptVersion={c.promptVersion}
+                  setPromptVersion={(pv) =>
+                    dispatch({ type: "SET_COMP_PV", compId: c.id, pv })
+                  }
                 />
               </Table.Th>
             ))}
             <Table.Th>
-              <Button size="sm" onClick={handleAddComparison}>
+              <Button size="sm" onClick={() => dispatch({ type: "ADD_COMP" })}>
                 Add Comparison
               </Button>
             </Table.Th>
           </Table.Tr>
+
           <Table.Tr>
-            {variables.map((variable) => (
-              <Table.Th id={variable}>{`{{${variable}}}`}</Table.Th>
+            {vars.map((v) => (
+              <Table.Th key={v}>{`{{${v}}}`}</Table.Th>
             ))}
             <Table.Th>Model Output</Table.Th>
-            {comparisonCols.map((col) => (
-              <Table.Th key={col.id}>Model Output</Table.Th>
+            {state.comparisons.map((c) => (
+              <Table.Th key={c.id}>Model Output</Table.Th>
             ))}
-            <Table.Th></Table.Th>
+            <Table.Th />
           </Table.Tr>
         </Table.Thead>
 
         <Table.Tbody>
-          {promptVersion &&
-            rows.map((row) => {
-              const anyEvalLoading = selectedEvaluatorIds.some(
-                (id) => row.evalResults[Number(id)]?.loading,
+          {anyPrompt &&
+            state.rows.map((row) => {
+              const anyEvalLoading = selectedEvalIds.some(
+                (id) => row.evalResults[id]?.loading,
               );
               return (
                 <Table.Tr key={row.id}>
-                  {variables.map((variable) => (
-                    <Table.Td key={variable} p={0}>
+                  {/* variable editors */}
+                  {vars.map((v) => (
+                    <Table.Td key={v} p={0}>
                       <Textarea
                         styles={{ input: { border: 0, borderRadius: 0 } }}
-                        value={row.variableValues[variable] || ""}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setRows((prev) =>
-                            prev.map((r) =>
-                              r.id === row.id
-                                ? {
-                                    ...r,
-                                    variableValues: {
-                                      ...r.variableValues,
-                                      [variable]: val,
-                                    },
-                                  }
-                                : r,
-                            ),
-                          );
-                        }}
+                        value={row.variableValues[v]}
+                        onChange={(e) =>
+                          dispatch({
+                            type: "SET_VAR",
+                            rowId: row.id,
+                            varName: v,
+                            value: e.currentTarget.value,
+                          })
+                        }
                       />
                     </Table.Td>
                   ))}
+
                   <Table.Td p={0}>
                     <Button
                       size="xs"
                       onClick={() => runModelRow(row.id)}
                       loading={row.modelLoading}
-                      disabled={!promptVersion}
+                      disabled={!anyPrompt}
                     >
                       Run
                     </Button>
                     <Button
-                      size="xs"
                       ml="xs"
+                      size="xs"
                       color="blue"
-                      onClick={() => handleRunEvaluators(row.id)}
+                      onClick={() => runEvaluators(row.id)}
                       disabled={
-                        !row.modelOutput || !selectedEvaluatorIds.length
+                        !row.modelOutput ||
+                        !selectedEvalIds.length ||
+                        anyEvalLoading
                       }
                     >
                       Evaluate
                     </Button>
                     {row.modelOutput && (
-                      <Text
-                        size="sm"
-                        style={{ whiteSpace: "pre-wrap", marginTop: 8 }}
-                      >
+                      <Text size="sm" mt={8} style={{ whiteSpace: "pre-wrap" }}>
                         {row.modelOutput}
                       </Text>
                     )}
-                    {selectedEvaluatorIds.map((id) => {
-                      const result = row.evalResults[id];
-                      const evaluator = evaluators.find((e) => e.id === id);
+                    {selectedEvalIds.map((id) => {
+                      const res = row.evalResults[id];
+                      const ev = evaluators.find((e) => e.id.toString() === id);
                       return (
-                        result && (
-                          <Text key={id} size="sm">
-                            {evaluator?.type}: {result.passed ? "Pass" : "Fail"}
+                        res && (
+                          <Text size="sm" key={id}>
+                            {ev?.type}: {res.passed ? "Pass" : "Fail"}
                           </Text>
                         )
                       );
                     })}
                   </Table.Td>
-                  {comparisonCols.map((col) => {
-                    const comp = row.compResults[col.id] || {
+
+                  {state.comparisons.map((c) => {
+                    const comp = row.compResults[c.id] ?? {
                       modelOutput: "",
                       modelLoading: false,
                     };
                     return (
-                      <Table.Td key={col.id} p={0}>
+                      <Table.Td key={c.id} p={0}>
                         <Button
                           size="xs"
-                          onClick={() => runModelRow(row.id, col.id)}
+                          onClick={() => runModelRow(row.id, c.id)}
                           loading={comp.modelLoading}
-                          disabled={!col.promptVersion}
+                          disabled={!c.promptVersion}
                         >
                           Run
                         </Button>
                         {comp.modelOutput && (
                           <Text
                             size="sm"
-                            style={{ whiteSpace: "pre-wrap", marginTop: 8 }}
+                            mt={8}
+                            style={{ whiteSpace: "pre-wrap" }}
                           >
                             {comp.modelOutput}
                           </Text>
@@ -493,11 +549,14 @@ export default function Experiments() {
                       </Table.Td>
                     );
                   })}
+
                   <Table.Td>
                     <Button
                       size="xs"
                       color="red"
-                      onClick={() => handleDeleteRow(row.id)}
+                      onClick={() =>
+                        dispatch({ type: "DELETE_ROW", rowId: row.id })
+                      }
                     >
                       Delete
                     </Button>
@@ -507,8 +566,9 @@ export default function Experiments() {
             })}
         </Table.Tbody>
       </Table>
+
       <Group mt="md">
-        <Button size="sm" onClick={handleAddRow}>
+        <Button size="sm" onClick={() => dispatch({ type: "ADD_ROW", vars })}>
           Add row
         </Button>
       </Group>

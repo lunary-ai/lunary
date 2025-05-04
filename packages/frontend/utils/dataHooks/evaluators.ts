@@ -1,7 +1,7 @@
 import { CheckLogic } from "shared";
 import { useProjectMutation, useProjectSWR } from ".";
+import EVALUATOR_TYPES from "../evaluators";
 import { fetcher } from "../fetcher";
-import type { SWRConfiguration } from "swr";
 
 // define Evaluator type
 export interface Evaluator {
@@ -28,13 +28,19 @@ export function useEvaluators() {
     `/evaluators`,
     fetcher.post,
   );
-
   async function insertEvaluator(data: CreateEvaluatorData) {
     insertEvaluatorMutation(data);
   }
 
   return {
-    evaluators: data || ([] as Evaluator[]),
+    evaluators:
+      data?.map((evaluator) => ({
+        ...evaluator,
+        color: EVALUATOR_TYPES[evaluator.type].color,
+        name: EVALUATOR_TYPES[evaluator.type].name,
+        soon: EVALUATOR_TYPES[evaluator.type].soon,
+        icon: EVALUATOR_TYPES[evaluator.type].icon,
+      })) || ([] as Evaluator[]),
     mutate,
     isLoading,
     insertEvaluator,
