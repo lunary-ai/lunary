@@ -4,7 +4,7 @@ import RunInputOutput from "@/components/blocks/RunInputOutput";
 import StatusBadge from "@/components/blocks/StatusBadge";
 import TokensBadge from "@/components/blocks/TokensBadge";
 import { useProjectSWR, useRun, useUser } from "@/utils/dataHooks";
-import { capitalize, formatCost } from "@/utils/format";
+import { capitalize, cleanSlug, formatCost } from "@/utils/format";
 import {
   ActionIcon,
   Badge,
@@ -19,6 +19,7 @@ import {
   ThemeIcon,
   Title,
   Tooltip,
+  Switch,
 } from "@mantine/core";
 import {
   IconChevronDown,
@@ -44,7 +45,9 @@ import errorHandler from "@/utils/errors";
 import { useHotkeys } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { hasAccess } from "shared";
-
+import TraceTimeline from "@/components/blocks/TraceTimeline";
+import TravelPlanTimeline from "@/components/blocks/ui/TravelPlanTimeline";
+import TimeRuler from "@/components/blocks/ui/TimeRuler";
 const typeIcon = {
   convo: IconMessages,
   chain: IconLink,
@@ -95,138 +98,673 @@ function TraceTree({
     );
 
   return (
-    <Group pos="relative" wrap="nowrap">
-      {!isFirst && (
-        <Box>
-          {!isLastOfParent && (
+    <>
+      <Group pos="relative" wrap="nowrap">
+        {!isFirst && (
+          <Box>
+            {!isLastOfParent && (
+              <svg
+                width={20}
+                strokeWidth={1}
+                stroke="var(--mantine-color-gray-5)"
+                fill="none"
+                style={{
+                  position: "absolute",
+                  left: 1,
+                  top: -3,
+                  height: "calc(100% + 3px",
+                }}
+              >
+                <line x1={10} y1="0" x2={10} y2="100%" />
+              </svg>
+            )}
             <svg
-              width={20}
-              strokeWidth={1}
-              stroke="var(--mantine-color-gray-5)"
-              fill="none"
+              width="38"
+              height="38"
               style={{
                 position: "absolute",
-                left: 1,
-                top: -3,
-                height: "calc(100% + 3px",
+                left: 3,
+                top: -20,
               }}
+              viewBox="0 0 24 24"
+              strokeWidth={1}
+              strokeLinecap="square"
+              stroke="var(--mantine-color-gray-5)"
+              fill="none"
+              strokeLinejoin="round"
             >
-              <line x1={10} y1="0" x2={10} y2="100%" />
-            </svg>
-          )}
-          <svg
-            width="38"
-            height="38"
-            style={{
-              position: "absolute",
-              left: 3,
-              top: -20,
-            }}
-            viewBox="0 0 24 24"
-            strokeWidth={1}
-            strokeLinecap="square"
-            stroke="var(--mantine-color-gray-5)"
-            fill="none"
-            strokeLinejoin="round"
-          >
-            <path
-              d="M19 19h-6a8 8 0 0 1 -8 -8v-6"
-              vectorEffect="non-scaling-stroke"
-            />
-          </svg>
-
-          <Text>&emsp;</Text>
-        </Box>
-      )}
-      <div>
-        <Group
-          mb="sm"
-          onClick={() => onSelect(run.id)}
-          style={{ cursor: "pointer" }}
-          wrap="nowrap"
-        >
-          {showStatus && (
-            <Group gap="xs" wrap="nowrap">
-              <StatusBadge minimal status={run.status} />
-              {shownRuns.length > 0 && (
-                <ActionIcon
-                  variant="transparent"
-                  styles={{
-                    root: {
-                      "--ai-hover": "var(--mantine-color-default-hover)",
-                    },
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCollapsed(!collapsed);
-                  }}
-                >
-                  {collapsed ? (
-                    <IconChevronRight size={16} />
-                  ) : (
-                    <IconChevronDown size={16} />
-                  )}
-                </ActionIcon>
-              )}
-            </Group>
-          )}
-
-          <Badge
-            variant={isActive ? "filled" : "outline"}
-            color={color}
-            pl={0}
-            pr={5}
-            maw="250px"
-            miw="100px"
-            leftSection={
-              Icon && (
-                <ThemeIcon
-                  variant="subtle"
-                  color={isActive ? "white" : color}
-                  size="xs"
-                  radius="lg"
-                >
-                  <Icon strokeWidth={2} size={13} />
-                </ThemeIcon>
-              )
-            }
-          >
-            {run?.name || run?.type}
-          </Badge>
-
-          {run?.type === "llm" && run.cost && (
-            <Badge variant="outline" color="gray" miw="65px">
-              {formatCost(run.cost)}
-            </Badge>
-          )}
-
-          {run.endedAt && (
-            <Box miw="70px">
-              <DurationBadge
-                type={run.type}
-                cached={run.metadata?.cache}
-                createdAt={run.createdAt}
-                endedAt={run.endedAt}
+              <path
+                d="M19 19h-6a8 8 0 0 1 -8 -8v-6"
+                vectorEffect="non-scaling-stroke"
               />
-            </Box>
-          )}
-        </Group>
+            </svg>
 
-        {/* Only render children if not collapsed */}
-        {!collapsed &&
-          shownRuns.map((childRun, k) => (
-            <TraceTree
-              key={childRun.id}
-              isLastOfParent={k === shownRuns.length - 1}
-              parentId={childRun.id}
-              focused={focused}
-              runs={runs}
-              onSelect={onSelect}
-              firstDate={firstDate}
-            />
-          ))}
-      </div>
-    </Group>
+            <Text>&emsp;</Text>
+          </Box>
+        )}
+        <div>
+          <Group
+            mb="sm"
+            onClick={() => onSelect(run.id)}
+            style={{ cursor: "pointer" }}
+            wrap="nowrap"
+          >
+            {showStatus && (
+              <Group gap="xs" wrap="nowrap">
+                <StatusBadge minimal status={run.status} />
+                {shownRuns.length > 0 && (
+                  <ActionIcon
+                    variant="transparent"
+                    styles={{
+                      root: {
+                        "--ai-hover": "var(--mantine-color-default-hover)",
+                      },
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCollapsed(!collapsed);
+                    }}
+                  >
+                    {collapsed ? (
+                      <IconChevronRight size={16} />
+                    ) : (
+                      <IconChevronDown size={16} />
+                    )}
+                  </ActionIcon>
+                )}
+              </Group>
+            )}
+
+            <Badge
+              variant={isActive ? "filled" : "outline"}
+              color={color}
+              pl={0}
+              pr={5}
+              maw="250px"
+              miw="100px"
+              leftSection={
+                Icon && (
+                  <ThemeIcon
+                    variant="subtle"
+                    color={isActive ? "white" : color}
+                    size="xs"
+                    radius="lg"
+                  >
+                    <Icon strokeWidth={2} size={13} />
+                  </ThemeIcon>
+                )
+              }
+            >
+              {run?.name || run?.type}
+            </Badge>
+
+            {run?.type === "llm" && run.cost && (
+              <Badge variant="outline" color="gray" miw="65px">
+                {formatCost(run.cost)}
+              </Badge>
+            )}
+
+            {run.endedAt && (
+              <Box miw="70px">
+                <DurationBadge
+                  type={run.type}
+                  cached={run.metadata?.cache}
+                  createdAt={run.createdAt}
+                  endedAt={run.endedAt}
+                />
+              </Box>
+            )}
+          </Group>
+
+          {/* Only render children if not collapsed */}
+          {!collapsed &&
+            shownRuns?.map((childRun, k) => (
+              <TraceTree
+                key={childRun.id}
+                isLastOfParent={k === shownRuns.length - 1}
+                parentId={childRun.id}
+                focused={focused}
+                runs={runs}
+                onSelect={onSelect}
+                firstDate={firstDate}
+              />
+            ))}
+        </div>
+      </Group>
+    </>
+  );
+}
+
+function TraceTreeChild1({
+  isFirst = false,
+  isLastOfParent = false,
+  focused,
+  parentId,
+  runs,
+  onSelect,
+  firstDate,
+}) {
+  const [collapsed, setCollapsed] = useState(false);
+
+  // each run contains a child_runs array containing the ids of the runs it spawned
+  const run = runs.find((run) => run.id === parentId);
+  if (!run) {
+    return null;
+  }
+  if (run.input === "__NOT_INGESTED__") {
+    run.status = "filtered";
+  }
+
+  const color = getColorForRunType(run?.type);
+
+  const showStatus = !["convo", "thread", "chat", "custom-event"].includes(
+    run?.type,
+  );
+
+  const Icon = typeIcon[run?.type];
+
+  const isActive = run.id === focused;
+
+  const shownRuns = runs
+    .filter((r) => r.parentRunId === parentId)
+    .sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
+
+  const pixelPerSecond = 400;
+  const duration = run.endedAt
+    ? new Date(run.endedAt).getTime() - new Date(run.createdAt).getTime()
+    : NaN;
+  const finalDuration = Number((duration / 1000).toFixed(2)) * pixelPerSecond;
+
+  return (
+    <>
+      <Group pos="relative" wrap="nowrap">
+        {!isFirst && (
+          <Box>
+            {!isLastOfParent && (
+              <svg
+                width={20}
+                strokeWidth={1}
+                stroke="var(--mantine-color-gray-5)"
+                fill="none"
+                style={{
+                  position: "absolute",
+                  left: 1,
+                  top: -3,
+                  height: "calc(100% + 3px",
+                }}
+              >
+                <line x1={10} y1="0" x2={10} y2="100%" />
+              </svg>
+            )}
+            <svg
+              width="38"
+              height="38"
+              style={{
+                position: "absolute",
+                left: 3,
+                top: -20,
+              }}
+              viewBox="0 0 24 24"
+              strokeWidth={1}
+              strokeLinecap="square"
+              stroke="var(--mantine-color-gray-5)"
+              fill="none"
+              strokeLinejoin="round"
+            >
+              <path
+                d="M19 19h-6a8 8 0 0 1 -8 -8v-6"
+                vectorEffect="non-scaling-stroke"
+              />
+            </svg>
+
+            <Text>&emsp;</Text>
+          </Box>
+        )}
+        <div>
+          <Group
+            mb="sm"
+            onClick={() => onSelect(run.id)}
+            style={{ cursor: "pointer" }}
+            wrap="nowrap"
+          >
+            {showStatus && (
+              <Group gap="xs" wrap="nowrap">
+                {/* <StatusBadge minimal status={run.status} /> */}
+                {shownRuns.length > 0 && (
+                  <ActionIcon
+                    variant="transparent"
+                    styles={{
+                      root: {
+                        "--ai-hover": "var(--mantine-color-default-hover)",
+                      },
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCollapsed(!collapsed);
+                    }}
+                  >
+                    {collapsed ? (
+                      <IconChevronRight size={16} />
+                    ) : (
+                      <IconChevronDown size={16} />
+                    )}
+                  </ActionIcon>
+                )}
+              </Group>
+            )}
+
+            <Badge
+              // variant={isActive ? "filled" : "outline"}
+              color={color}
+              pl={0}
+              pr={5}
+              maw={finalDuration}
+              miw={finalDuration}
+              // leftSection={
+              //   Icon && (
+              //     <ThemeIcon
+              //       variant="subtle"
+              //       color={isActive ? "white" : color}
+              //       size="xs"
+              //       radius="lg"
+              //     >
+              //       <Icon strokeWidth={2} size={13} />
+              //     </ThemeIcon>
+              //   )
+              // }
+            ></Badge>
+            {run?.name || run?.type}
+
+            {run?.type === "llm" && run.cost && (
+              <Badge variant="outline" color="gray" miw="65px">
+                {formatCost(run.cost)}
+              </Badge>
+            )}
+
+            {run.endedAt && (
+              <Box miw="70px">
+                <DurationBadge
+                  type={run.type}
+                  cached={run.metadata?.cache}
+                  createdAt={run.createdAt}
+                  endedAt={run.endedAt}
+                />
+              </Box>
+            )}
+          </Group>
+
+          {/* Only render children if not collapsed */}
+          {!collapsed &&
+            shownRuns?.map((childRun, k) => (
+              <TraceTree
+                key={childRun.id}
+                isLastOfParent={k === shownRuns.length - 1}
+                parentId={childRun.id}
+                focused={focused}
+                runs={runs}
+                onSelect={onSelect}
+                firstDate={firstDate}
+              />
+            ))}
+        </div>
+      </Group>
+    </>
+  );
+}
+
+function TraceTreeChild({
+  isFirst = false,
+  isLastOfParent = false,
+  focused,
+  parentId,
+  runs,
+  onSelect,
+  firstDate,
+}) {
+  const [collapsed, setCollapsed] = useState(false);
+
+  // each run contains a child_runs array containing the ids of the runs it spawned
+  const run = runs.find((run) => run.id === parentId);
+  if (!run) {
+    return null;
+  }
+  if (run.input === "__NOT_INGESTED__") {
+    run.status = "filtered";
+  }
+
+  const color = getColorForRunType(run?.type);
+
+  const showStatus = !["convo", "thread", "chat", "custom-event"].includes(
+    run?.type,
+  );
+
+  const Icon = typeIcon[run?.type];
+
+  const isActive = run.id === focused;
+
+  const shownRuns = runs
+    .filter((r) => r.parentRunId === parentId)
+    .sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
+
+  const pixelPerSecond = 400;
+  const duration = run.endedAt
+    ? new Date(run.endedAt).getTime() - new Date(run.createdAt).getTime()
+    : NaN;
+  const finalDuration = Number((duration / 1000).toFixed(2)) * pixelPerSecond;
+
+  return (
+    <>
+      <Group pos="relative" wrap="nowrap">
+        {!isFirst && (
+          <Box>
+            {!isLastOfParent && (
+              <svg
+                width={20}
+                strokeWidth={1}
+                stroke="var(--mantine-color-gray-5)"
+                fill="none"
+                style={{
+                  position: "absolute",
+                  left: 1,
+                  top: -3,
+                  height: "calc(100% + 3px",
+                }}
+              >
+                <line x1={10} y1="0" x2={10} y2="100%" />
+              </svg>
+            )}
+            <svg
+              width="38"
+              height="38"
+              style={{
+                position: "absolute",
+                left: 3,
+                top: -20,
+              }}
+              viewBox="0 0 24 24"
+              strokeWidth={1}
+              strokeLinecap="square"
+              stroke="var(--mantine-color-gray-5)"
+              fill="none"
+              strokeLinejoin="round"
+            >
+              <path
+                d="M19 19h-6a8 8 0 0 1 -8 -8v-6"
+                vectorEffect="non-scaling-stroke"
+              />
+            </svg>
+
+            <Text>&emsp;</Text>
+          </Box>
+        )}
+        <div>
+          <Group
+            mb="sm"
+            onClick={() => onSelect(run.id)}
+            style={{ cursor: "pointer" }}
+            wrap="nowrap"
+          >
+            {showStatus && (
+              <Group gap="xs" wrap="nowrap">
+                {/* <StatusBadge minimal status={run.status} /> */}
+                {shownRuns.length > 0 && (
+                  <ActionIcon
+                    variant="transparent"
+                    styles={{
+                      root: {
+                        "--ai-hover": "var(--mantine-color-default-hover)",
+                      },
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCollapsed(!collapsed);
+                    }}
+                  >
+                    {collapsed ? (
+                      <IconChevronRight size={16} />
+                    ) : (
+                      <IconChevronDown size={16} />
+                    )}
+                  </ActionIcon>
+                )}
+              </Group>
+            )}
+
+            <Badge
+              // variant={isActive ? "filled" : "outline"}
+              color={color}
+              pl={0}
+              pr={5}
+              maw={finalDuration}
+              miw={finalDuration}
+              h={"36px"}
+              radius={"md"}
+            ></Badge>
+            {run?.name || run?.type}
+
+            {run?.type === "llm" && run.cost && (
+              <Badge variant="outline" color="gray" miw="65px">
+                {formatCost(run.cost)}
+              </Badge>
+            )}
+
+            {run.endedAt && (
+              <Box miw="70px">
+                <DurationBadge
+                  type={run.type}
+                  cached={run.metadata?.cache}
+                  createdAt={run.createdAt}
+                  endedAt={run.endedAt}
+                />
+              </Box>
+            )}
+          </Group>
+
+          {/* Only render children if not collapsed */}
+          {!collapsed &&
+            shownRuns?.map((childRun, k) => (
+              <TraceTreeChild1
+                key={childRun.id}
+                isLastOfParent={k === shownRuns.length - 1}
+                parentId={childRun.id}
+                focused={focused}
+                runs={runs}
+                onSelect={onSelect}
+                firstDate={firstDate}
+              />
+            ))}
+        </div>
+      </Group>
+    </>
+  );
+}
+
+function TraceTreeParent({
+  isFirst = false,
+  isLastOfParent = false,
+  focused,
+  parentId,
+  runs,
+  onSelect,
+  firstDate,
+}) {
+  console.log("runssssssssss", runs);
+  const [collapsed, setCollapsed] = useState(false);
+
+  // each run contains a child_runs array containing the ids of the runs it spawned
+  const run = runs.find((run) => run.id === parentId);
+
+  console.log("rudddddddddddddd", run.endedAt);
+  if (!run) {
+    return null;
+  }
+  if (run.input === "__NOT_INGESTED__") {
+    run.status = "filtered";
+  }
+
+  const color = getColorForRunType(run?.type);
+
+  const showStatus = !["convo", "thread", "chat", "custom-event"].includes(
+    run?.type,
+  );
+
+  const Icon = typeIcon[run?.type];
+
+  const isActive = run.id === focused;
+
+  const shownRuns = runs
+    .filter((r) => r.parentRunId === parentId)
+    .sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
+  const pixelPerSecond = 400;
+  const duration = run.endedAt
+    ? new Date(run.endedAt).getTime() - new Date(run.createdAt).getTime()
+    : NaN;
+  const finalDuration = Number((duration / 1000).toFixed(2)) * pixelPerSecond;
+  return (
+    <>
+      <Group pos="relative" wrap="nowrap">
+        {!isFirst && (
+          <Box>
+            {!isLastOfParent && (
+              <svg
+                width={20}
+                strokeWidth={1}
+                stroke="var(--mantine-color-gray-5)"
+                fill="none"
+                style={{
+                  position: "absolute",
+                  left: 1,
+                  top: -3,
+                  height: "calc(100% + 3px",
+                }}
+              >
+                <line x1={10} y1="0" x2={10} y2="100%" />
+              </svg>
+            )}
+            <svg
+              width="38"
+              height="38"
+              style={{
+                position: "absolute",
+                left: 3,
+                top: -20,
+              }}
+              viewBox="0 0 24 24"
+              strokeWidth={1}
+              strokeLinecap="square"
+              stroke="var(--mantine-color-gray-5)"
+              fill="none"
+              strokeLinejoin="round"
+            >
+              <path
+                d="M19 19h-6a8 8 0 0 1 -8 -8v-6"
+                vectorEffect="non-scaling-stroke"
+              />
+            </svg>
+
+            <Text>&emsp;</Text>
+          </Box>
+        )}
+        <div>
+          <Group
+            mb="sm"
+            onClick={() => onSelect(run.id)}
+            style={{ cursor: "pointer" }}
+            wrap="nowrap"
+          >
+            {showStatus && (
+              <Group gap="xs" wrap="nowrap">
+                {/* <StatusBadge minimal status={run.status} /> */}
+                {shownRuns.length > 0 && (
+                  <ActionIcon
+                    variant="transparent"
+                    styles={{
+                      root: {
+                        "--ai-hover": "var(--mantine-color-default-hover)",
+                      },
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCollapsed(!collapsed);
+                    }}
+                  >
+                    {collapsed ? (
+                      <IconChevronRight size={16} />
+                    ) : (
+                      <IconChevronDown size={16} />
+                    )}
+                  </ActionIcon>
+                )}
+              </Group>
+            )}
+
+            <Badge
+              // variant={isActive ? "filled" : "outline"}
+              color={color}
+              pl={0}
+              pr={5}
+              maw={finalDuration}
+              miw={finalDuration}
+              h={"36px"}
+              radius={"md"}
+              // leftSection={
+              //   Icon && (
+              //     <ThemeIcon
+              //       variant="subtle"
+              //       color={isActive ? "white" : color}
+              //       size="xs"
+              //       radius="lg"
+              //     >
+              //       <Icon strokeWidth={2} size={13} />
+              //     </ThemeIcon>
+              //   )
+              // }
+            ></Badge>
+            {run?.name || run?.type}
+
+            {run?.type === "llm" && run.cost && (
+              <Badge variant="outline" color="gray" miw="65px">
+                {formatCost(run.cost)}
+              </Badge>
+            )}
+
+            {run.endedAt && (
+              <Box miw="70px">
+                <DurationBadge
+                  type={run.type}
+                  cached={run.metadata?.cache}
+                  createdAt={run.createdAt}
+                  endedAt={run.endedAt}
+                />
+              </Box>
+            )}
+          </Group>
+
+          {/* Only render children if not collapsed */}
+          {!collapsed &&
+            shownRuns?.map((childRun, k) => (
+              <TraceTreeChild
+                key={childRun.id}
+                isLastOfParent={k === shownRuns.length - 1}
+                parentId={childRun.id}
+                focused={focused}
+                runs={runs}
+                onSelect={onSelect}
+                firstDate={firstDate}
+              />
+            ))}
+        </div>
+      </Group>
+    </>
   );
 }
 
@@ -250,6 +788,9 @@ export default function Trace({}) {
   const { user } = useUser();
 
   const [focused, setFocused] = useState(id);
+
+  // Inside the Trace component
+  const [showTraceTree, setShowTraceTree] = useState(false); // Add this state
 
   const { run, deleteRun, runDeleted } = useRun(id as string);
 
@@ -385,9 +926,17 @@ export default function Trace({}) {
           {hasAccess(user?.role, "logs", "delete") && (
             <Menu>
               <Menu.Target>
-                <ActionIcon variant="default">
-                  <IconDotsVertical size={16} />
-                </ActionIcon>
+                <Group>
+                  <Switch
+                    checked={showTraceTree}
+                    onChange={(event) =>
+                      setShowTraceTree(event.currentTarget.checked)
+                    }
+                  />
+                  <ActionIcon variant="default">
+                    <IconDotsVertical size={16} />
+                  </ActionIcon>
+                </Group>
               </Menu.Target>
               <Menu.Dropdown>
                 <Menu.Item
@@ -406,38 +955,81 @@ export default function Trace({}) {
           )}
         </Group>
       </Group>
-      <Group style={{ flex: 1, minHeight: 0 }}>
-        <Box style={{ flex: "0 0 600px", overflowY: "auto", height: "100%" }}>
-          {relatedRuns && (
-            <TraceTree
-              isFirst
-              focused={focused}
-              onSelect={setFocused}
-              parentId={id}
-              runs={relatedRuns}
-              firstDate={run.createdAt}
-            />
-          )}
-        </Box>
 
-        <Box style={{ flex: "1 1 400px", overflowY: "auto", height: "100%" }}>
-          <Box p="md">
-            <Card
-              withBorder
-              style={{
-                position: "sticky",
-                top: 0,
-                maxHeight: "calc(100vh - 200px)",
-                overflow: "auto",
-              }}
-            >
-              {focusedRun && (
-                <RenderRun run={focusedRun} relatedRuns={relatedRuns} />
-              )}
-            </Card>
-          </Box>
+      {showTraceTree && relatedRuns && (
+  <>
+    <TimeRuler />
+    <Group style={{ flex: 1, minHeight: 0, width: "100%" }}>
+      {/* Left Panel: 70% width */}
+      <Box style={{ width: "67%", overflowY: "auto", height: "100%" }}>
+        <TraceTreeParent
+          isFirst
+          focused={focused}
+          onSelect={setFocused}
+          parentId={id}
+          runs={relatedRuns}
+          firstDate={run.createdAt}
+        />
+      </Box>
+
+      {/* Right Panel: 30% width */}
+      <Box style={{ width: "30%", overflowY: "auto", height: "100%" }}>
+        <Box p="md">
+          <Card
+            withBorder
+            style={{
+              position: "sticky",
+              top: 0,
+              maxHeight: "calc(100vh - 200px)",
+              overflow: "auto",
+            }}
+          >
+            {focusedRun && (
+              <RenderRun run={focusedRun} relatedRuns={relatedRuns} />
+            )}
+          </Card>
         </Box>
-      </Group>
+      </Box>
+    </Group>
+  </>
+)}
+
+    
+
+      {!showTraceTree && (
+        <Group style={{ flex: 1, minHeight: 0 }}>
+          <Box style={{ flex: "0 0 600px", overflowY: "auto", height: "100%" }}>
+            {relatedRuns && (
+              <TraceTree
+                isFirst
+                focused={focused}
+                onSelect={setFocused}
+                parentId={id}
+                runs={relatedRuns}
+                firstDate={run.createdAt}
+              />
+            )}
+          </Box>
+
+          <Box style={{ flex: "1 1 400px", overflowY: "auto", height: "100%" }}>
+            <Box p="md">
+              <Card
+                withBorder
+                style={{
+                  position: "sticky",
+                  top: 0,
+                  maxHeight: "calc(100vh - 200px)",
+                  overflow: "auto",
+                }}
+              >
+                {focusedRun && (
+                  <RenderRun run={focusedRun} relatedRuns={relatedRuns} />
+                )}
+              </Card>
+            </Box>
+          </Box>
+        </Group>
+      )}
     </Stack>
   );
 }
