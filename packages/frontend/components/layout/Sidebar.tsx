@@ -399,7 +399,6 @@ export default function Sidebar() {
           icon: IconCompass,
           link: "/evaluators",
           resource: "evaluations",
-          disabled: !org.beta,
         },
         {
           label: "Datasets",
@@ -420,13 +419,6 @@ export default function Sidebar() {
             : org.beta
               ? true
               : false,
-        },
-        {
-          label: "Enrichments",
-          icon: IconSparkles,
-          link: "/enrichments",
-          resource: "enrichments",
-          disabled: org.beta,
         },
       ],
     },
