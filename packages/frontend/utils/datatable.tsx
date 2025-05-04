@@ -304,7 +304,7 @@ export function enrichmentColumn(
   maskPII: boolean = false,
 ) {
   return columnHelper.accessor(`enrichment-${id}`, {
-    header: `${capitalize(name)}`,
+    header: evaluatorType === "topics" ? "Topics" : `${capitalize(name)}`,
     id: `enrichment-${id}`,
     size: 120,
     enableSorting: false,

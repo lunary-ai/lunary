@@ -20,7 +20,7 @@ export const promptVersionSchema = z.object({
     max_tokens: z.number().default(4096),
     temperature: z.number().default(1),
   }),
-  content: z.union([z.string(), z.array(MessageSchema)]),
+  content: z.array(MessageSchema),
   version: z.number(),
   isDraft: z.boolean(),
 });

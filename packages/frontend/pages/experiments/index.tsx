@@ -1,4 +1,3 @@
-// Experiments.tsx
 import HotkeysInfo from "@/components/blocks/HotkeysInfo";
 import { useOrg } from "@/utils/dataHooks";
 import { useEvaluators } from "@/utils/dataHooks/evaluators";
@@ -12,12 +11,13 @@ import {
   Select,
   SimpleGrid,
   Stack,
+  Switch,
   Table,
   Text,
   Textarea,
   Title,
 } from "@mantine/core";
-import { IconBolt, IconSettings } from "@tabler/icons-react";
+import { IconBolt, IconPlus, IconSettings } from "@tabler/icons-react";
 import { KeyboardEvent, useEffect, useMemo, useReducer, useState } from "react";
 import { Prompt, PromptVersion } from "shared/schemas/prompt";
 import { EvaluatorCard } from "../evaluators/new";
@@ -68,8 +68,9 @@ function PromptVersionSelect({
         onChange={(v) =>
           setPromptVersion(promptVersions.find((pv) => pv.id === Number(v)))
         }
-        w={150}
+        w={promptVersion ? 60 : 150}
         styles={{ input: { borderRadius: "0 8px 8px 0", borderLeft: 0 } }}
+        comboboxProps={{ width: 80 }}
       />
     </Group>
   );
@@ -96,6 +97,7 @@ interface Comparison {
   promptVersion?: PromptVersion;
 }
 interface State {
+  promptVersion?: PromptVersion; // **** moved to global reducer state ****
   rows: Row[];
   nextRowId: number;
   comparisons: Comparison[];
@@ -124,10 +126,14 @@ type Action =
   | { type: "SET_EVAL_LOADING"; rowId: number; ids: string[] }
   | { type: "SET_EVAL_RESULT"; rowId: number; id: string; passed: boolean }
   | { type: "ADD_COMP" }
-  | { type: "SET_COMP_PV"; compId: number; pv?: PromptVersion };
+  | { type: "SET_COMP_PV"; compId: number; pv?: PromptVersion }
+  | { type: "SET_PROMPT_VERSION"; promptVersion?: PromptVersion }; // new action
 
 function reducer(state: State, a: Action): State {
   switch (a.type) {
+    case "SET_PROMPT_VERSION":
+      return { ...state, promptVersion: a.promptVersion };
+
     case "INIT_ROWS":
       return { ...state, rows: [makeRow(0, a.vars)], nextRowId: 1 };
     case "ADD_ROW":
@@ -250,27 +256,30 @@ export default function Experiments() {
     if (e.beta && !org.beta) return false;
     return true;
   });
-  console.log(evaluators);
 
-  const [promptVersion, setPromptVersion] = useState<PromptVersion>();
   const [showEvalModal, setShowEvalModal] = useState(false);
   const [selectedEvalIds, setSelectedEvalIds] = useState<string[]>([]);
-
-  const vars = useMemo(
-    () => extractVariables(JSON.stringify(promptVersion?.content ?? "")),
-    [promptVersion?.content],
-  );
+  const [showPrompt, setShowPrompt] = useState(true);
 
   const [state, dispatch] = useReducer(reducer, {
+    promptVersion: undefined,
     rows: [],
     nextRowId: 0,
     comparisons: [],
     nextCompId: 0,
   });
 
+  // ***** derive variables based on selected prompt *****
+  const vars = useMemo(
+    () => extractVariables(JSON.stringify(state.promptVersion?.content ?? "")),
+    [state.promptVersion?.content],
+  );
+
+  // ***** (re) initialise rows when prompt version or its variables change *****
   useEffect(() => {
-    if (promptVersion) dispatch({ type: "INIT_ROWS", vars });
-  }, [promptVersion?.id, vars.join(",")]);
+    if (state.promptVersion) dispatch({ type: "INIT_ROWS", vars });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.promptVersion?.id, vars.join(",")]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -281,14 +290,15 @@ export default function Experiments() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
 
   const runModelRow = async (rowId: number, compId?: number) => {
     dispatch({ type: "SET_MODEL_LOADING", rowId, compId, flag: true });
 
     const targetPV =
       compId == null
-        ? promptVersion
+        ? state.promptVersion
         : state.comparisons.find((c) => c.id === compId)?.promptVersion;
     if (!targetPV) return;
 
@@ -325,7 +335,7 @@ export default function Experiments() {
 
     const targetPV =
       compId == null
-        ? promptVersion
+        ? state.promptVersion
         : state.comparisons.find((c) => c.id === compId)?.promptVersion;
     if (!targetPV) return;
 
@@ -360,13 +370,20 @@ export default function Experiments() {
     .filter((e) => e.type === "toxicity")
     .map((e) => ({ value: e.id.toString(), label: e.type }));
 
-  const anyPrompt = promptVersion != null;
+  const anyPrompt = state.promptVersion != null;
 
   return (
     <>
       <Group justify="space-between" mb="sm">
         <Title order={3}>Experiments</Title>
         <Group>
+          <Switch
+            size="sm"
+            label="Show Prompt"
+            checked={showPrompt}
+            onChange={(e) => setShowPrompt(e.currentTarget.checked)}
+            mr="sm"
+          />
           <Button
             size="sm"
             onClick={() => setShowEvalModal(true)}
@@ -417,14 +434,17 @@ export default function Experiments() {
 
       <Table withTableBorder withColumnBorders withRowBorders>
         <Table.Thead>
+          {/* Header row with selects */}
           <Table.Tr>
             {vars.map((v) => (
               <Table.Th key={v}></Table.Th>
             ))}
             <Table.Th>
               <PromptVersionSelect
-                promptVersion={promptVersion}
-                setPromptVersion={setPromptVersion}
+                promptVersion={state.promptVersion}
+                setPromptVersion={(pv) =>
+                  dispatch({ type: "SET_PROMPT_VERSION", promptVersion: pv })
+                }
               />
             </Table.Th>
             {state.comparisons.map((c) => (
@@ -438,11 +458,51 @@ export default function Experiments() {
               </Table.Th>
             ))}
             <Table.Th>
-              <Button size="sm" onClick={() => dispatch({ type: "ADD_COMP" })}>
+              <Button
+                leftSection={<IconPlus />}
+                size="sm"
+                variant="subtle"
+                onClick={() => dispatch({ type: "ADD_COMP" })}
+              >
                 Add Comparison
               </Button>
             </Table.Th>
           </Table.Tr>
+
+          {showPrompt && state.promptVersion && (
+            <Table.Tr>
+              {vars.map((v) => (
+                <Table.Th key={v}></Table.Th>
+              ))}
+              <Table.Th>
+                {state.promptVersion?.content && (
+                  <Text size="xs" style={{ whiteSpace: "pre-wrap" }}>
+                    {state.promptVersion.content.map((message) => (
+                      <Stack key={message.content + message.role} gap="xs">
+                        <Title order={6}>{message.role}</Title>
+                        <Text>{message.content}</Text>
+                      </Stack>
+                    ))}
+                  </Text>
+                )}
+              </Table.Th>
+              {state.comparisons.map((c) => (
+                <Table.Th key={c.id}>
+                  {c.promptVersion?.content && (
+                    <Text size="xs" style={{ whiteSpace: "pre-wrap" }}>
+                      {c.promptVersion.content.map((message) => (
+                        <Stack key={message.content + message.role}>
+                          <Title order={6}>{message.role}</Title>
+                          <Text>{message.content}</Text>
+                        </Stack>
+                      ))}
+                    </Text>
+                  )}
+                </Table.Th>
+              ))}
+              <Table.Th />
+            </Table.Tr>
+          )}
 
           <Table.Tr>
             {vars.map((v) => (
