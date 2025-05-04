@@ -1,19 +1,20 @@
+import HotkeysInfo from "@/components/blocks/HotkeysInfo";
+import { useOrg } from "@/utils/dataHooks";
 import { usePrompts, usePromptVersions } from "@/utils/dataHooks/prompts";
+import { fetcher } from "@/utils/fetcher";
 import {
+  Button,
   Group,
   Loader,
   Select,
   Table,
-  Textarea,
-  Button,
   Text,
+  Textarea,
+  Title,
 } from "@mantine/core";
-import { useEffect, useState, useMemo } from "react";
-import { Prompt, PromptVersion } from "shared/schemas/prompt";
-import { useOrg } from "@/utils/dataHooks";
-import { fetcher } from "@/utils/fetcher";
 import { IconBolt } from "@tabler/icons-react";
-import HotkeysInfo from "@/components/blocks/HotkeysInfo";
+import { useEffect, useMemo, useState } from "react";
+import { Prompt, PromptVersion } from "shared/schemas/prompt";
 
 export function PromptVersionSelect({ promptVersion, setPromptVersion }) {
   const { prompts } = usePrompts();
@@ -150,6 +151,11 @@ export default function Experiments() {
     setRowCounter((prev) => prev + 1);
   };
 
+  // handle delete row
+  const handleDeleteRow = (rowId: number) => {
+    setRows((prev) => prev.filter((r) => r.id !== rowId));
+  };
+
   // runs model for initial or comparison column
   const runModelRow = async (rowId: number, compId?: number) => {
     setRows((prev) =>
@@ -247,7 +253,8 @@ export default function Experiments() {
 
   return (
     <>
-      <Group justify="end" mb="sm">
+      <Group justify="space-between" mb="sm">
+        <Title order={3}>Experiments</Title>
         <Button
           leftSection={<IconBolt size="16" />}
           size="sm"
@@ -371,7 +378,13 @@ export default function Experiments() {
                   );
                 })}
                 <Table.Td>
-                  <Button>Delete</Button>
+                  <Button
+                    size="xs"
+                    color="red"
+                    onClick={() => handleDeleteRow(row.id)}
+                  >
+                    Delete
+                  </Button>
                 </Table.Td>
               </Table.Tr>
             ))}
