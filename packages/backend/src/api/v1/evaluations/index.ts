@@ -180,7 +180,14 @@ evaluations.get(
 evaluations.post("/run", async (ctx: Context) => {
   const { projectId } = ctx.state;
   const { checklist, input, output, idealOutput, duration, model } = ctx.request
-    .body as any;
+    .body as {
+    checklist: string;
+    input: any;
+    output: any;
+    duration?: number;
+    idealOutput?: string;
+    model?: string;
+  };
 
   const [checklistData] =
     await sql` select * from checklist where slug = ${checklist} and project_id = ${projectId}`;
@@ -191,8 +198,7 @@ evaluations.post("/run", async (ctx: Context) => {
 
   const checks = checklistData.data;
 
-  // deprecated: build run event without strict typing
-  const virtualRun = {
+  const virtualRun: RunEvent = {
     type: "llm",
     input,
     output,
@@ -211,10 +217,11 @@ evaluations.post("/run", async (ctx: Context) => {
     projectId: "00000000-0000-4000-8000-000000000000",
     isPublic: false,
     cost: 0,
+    cachedPromptTokens: 0,
   };
 
   const cost = await calcRunCost(virtualRun);
-  virtualRun.cost = cost ?? 0;
+  virtualRun.cost = cost;
   virtualRun.duration = virtualRun.duration / 1000; // needs to be in ms in calcRunCost, but needs to be in seconds in the checks
 
   // run checks
@@ -223,7 +230,6 @@ evaluations.post("/run", async (ctx: Context) => {
   ctx.body = { passed, results };
 });
 
-// new evaluator endpoint
 evaluations.post(
   "/evaluate",
   checkAccess("evaluations", "create"),

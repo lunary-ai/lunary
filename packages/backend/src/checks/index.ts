@@ -419,7 +419,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   {
     id: "length",
     sql: ({ field, operator, length }) =>
-      sql`length(${sql(field + "_text")}) ${postgresOperators(operator)} ${length}`,
+      sql`length(${sql(field)}::text) ${postgresOperators(operator)} ${length}`,
   },
   {
     id: "date",
