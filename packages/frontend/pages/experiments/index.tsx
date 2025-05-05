@@ -6,6 +6,7 @@ import { fetcher } from "@/utils/fetcher";
 
 import EVALUATOR_TYPES from "@/utils/evaluators";
 import {
+  ActionIcon,
   Button,
   Fieldset,
   Group,
@@ -19,8 +20,19 @@ import {
   Text,
   Textarea,
   Title,
+  Menu,
 } from "@mantine/core";
-import { IconBolt, IconPlus, IconSettings } from "@tabler/icons-react";
+import {
+  IconBolt,
+  IconPlayerPlayFilled,
+  IconPlus,
+  IconSettings,
+  IconTestPipe,
+  IconDotsVertical,
+  IconCopy,
+  IconTrash,
+  IconDownload,
+} from "@tabler/icons-react";
 import { KeyboardEvent, useEffect, useMemo, useReducer, useState } from "react";
 import { CheckLogic } from "shared";
 import { Prompt, PromptVersion } from "shared/schemas/prompt";
@@ -155,7 +167,9 @@ type Action =
   | { type: "SET_EVAL_RESULT"; rowId: number; id: string; passed: boolean }
   | { type: "ADD_COMP" }
   | { type: "SET_COMP_PV"; compId: number; pv?: PromptVersion }
-  | { type: "SET_PROMPT_VERSION"; promptVersion?: PromptVersion };
+  | { type: "DELETE_COMP"; compId: number }
+  | { type: "SET_PROMPT_VERSION"; promptVersion?: PromptVersion }
+  | { type: "DUPLICATE_ROW"; rowId: number };
 
 function reducer(state: State, a: Action): State {
   switch (a.type) {
@@ -276,6 +290,35 @@ function reducer(state: State, a: Action): State {
         comparisons: state.comparisons.map((c) =>
           c.id === a.compId ? { ...c, promptVersion: a.pv } : c,
         ),
+      };
+
+    case "DELETE_COMP":
+      return {
+        ...state,
+        comparisons: state.comparisons.filter((c) => c.id !== a.compId),
+        rows: state.rows.map((r) => {
+          const { [a.compId]: _, ...rest } = r.compResults;
+          return { ...r, compResults: rest };
+        }),
+      };
+
+    case "DUPLICATE_ROW":
+      const orig = state.rows.find((r) => r.id === a.rowId);
+      if (!orig) return state;
+      return {
+        ...state,
+        rows: [
+          ...state.rows,
+          {
+            id: state.nextRowId,
+            variableValues: { ...orig.variableValues },
+            modelOutput: "",
+            modelLoading: false,
+            compResults: {},
+            evalResults: {},
+          },
+        ],
+        nextRowId: state.nextRowId + 1,
       };
 
     default:
@@ -440,6 +483,33 @@ export default function Experiments() {
 
   const anyPrompt = state.promptVersion != null;
 
+  const exportToCsv = (): void => {
+    const header = [
+      ...vars,
+      "Model Output",
+      ...state.comparisons.map(() => "Model Output"),
+    ];
+    const rows = state.rows.map((row) => {
+      const values = [
+        ...vars.map((v) => `"${row.variableValues[v] || ""}"`),
+        `"${row.modelOutput}"`,
+        ...state.comparisons.map((c) => {
+          const comp = row.compResults[c.id]?.modelOutput || "";
+          return `"${comp}"`;
+        }),
+      ];
+      return values.join(",");
+    });
+    const csvContent = [header.join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "export.csv");
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <>
       <Group justify="space-between" mb="sm">
@@ -549,12 +619,32 @@ export default function Experiments() {
             </Table.Th>
             {state.comparisons.map((c) => (
               <Table.Th key={c.id}>
-                <PromptVersionSelect
-                  promptVersion={c.promptVersion}
-                  setPromptVersion={(pv) =>
-                    dispatch({ type: "SET_COMP_PV", compId: c.id, pv })
-                  }
-                />
+                <Group align="center" gap="xs">
+                  <PromptVersionSelect
+                    promptVersion={c.promptVersion}
+                    setPromptVersion={(pv) =>
+                      dispatch({ type: "SET_COMP_PV", compId: c.id, pv })
+                    }
+                  />
+                  <Menu>
+                    <Menu.Target>
+                      <ActionIcon variant="subtle">
+                        <IconDotsVertical size={16} />
+                      </ActionIcon>
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      <Menu.Item
+                        color="red"
+                        leftSection={<IconTrash size={14} />}
+                        onClick={() =>
+                          dispatch({ type: "DELETE_COMP", compId: c.id })
+                        }
+                      >
+                        Delete
+                      </Menu.Item>
+                    </Menu.Dropdown>
+                  </Menu>
+                </Group>
               </Table.Th>
             ))}
             <Table.Th>
@@ -582,7 +672,21 @@ export default function Experiments() {
                   {state.promptVersion.content.map((msg) => (
                     <Stack key={msg.content + msg.role} gap="0">
                       <Title order={6}>{msg.role}</Title>
-                      <Text size="xs">{msg.content}</Text>
+                      <Text size="xs" style={{ whiteSpace: "pre-wrap" }}>
+                        {msg.content
+                          .split(/({{\s*[A-Za-z_]\w*\s*}})/g)
+                          .map((part, idx) =>
+                            /{{\s*([A-Za-z_]\w*)\s*}}/.test(part) ? (
+                              <Text component="span" key={idx} color="blue">
+                                {part}
+                              </Text>
+                            ) : (
+                              <Text component="span" key={idx}>
+                                {part}
+                              </Text>
+                            ),
+                          )}
+                      </Text>
                     </Stack>
                   ))}
                 </Stack>
@@ -597,7 +701,21 @@ export default function Experiments() {
                       {c.promptVersion.content.map((msg) => (
                         <Stack key={msg.content + msg.role} gap="0">
                           <Title order={6}>{msg.role}</Title>
-                          <Text size="xs">{msg.content}</Text>
+                          <Text size="xs" style={{ whiteSpace: "pre-wrap" }}>
+                            {msg.content
+                              .split(/({{\s*[A-Za-z_]\w*\s*}})/g)
+                              .map((part, idx) =>
+                                /{{\s*([A-Za-z_]\w*)\s*}}/.test(part) ? (
+                                  <Text component="span" key={idx} color="blue">
+                                    {part}
+                                  </Text>
+                                ) : (
+                                  <Text component="span" key={idx}>
+                                    {part}
+                                  </Text>
+                                ),
+                              )}
+                          </Text>
                         </Stack>
                       ))}
                     </Stack>
@@ -647,27 +765,31 @@ export default function Experiments() {
                   ))}
 
                   <Table.Td p={0}>
-                    <Button
-                      size="xs"
-                      onClick={() => runModelRow(row.id)}
-                      loading={row.modelLoading}
-                      disabled={!anyPrompt}
-                    >
-                      Run
-                    </Button>
-                    <Button
-                      ml="xs"
-                      size="xs"
-                      color="blue"
-                      onClick={() => runEvaluators(row.id)}
-                      disabled={
-                        !row.modelOutput ||
-                        !selectedEvalIds.length ||
-                        anyEvalLoading
-                      }
-                    >
-                      Evaluate
-                    </Button>
+                    <Group mt="xs" ml="xs">
+                      <ActionIcon
+                        size="md"
+                        onClick={() => runModelRow(row.id)}
+                        loading={row.modelLoading}
+                        disabled={!anyPrompt}
+                        variant="subtle"
+                      >
+                        <IconPlayerPlayFilled size={16} />
+                      </ActionIcon>
+                      <ActionIcon
+                        ml="xs"
+                        size="md"
+                        color="blue"
+                        variant="subtle"
+                        onClick={() => runEvaluators(row.id)}
+                        disabled={
+                          !row.modelOutput ||
+                          !selectedEvalIds.length ||
+                          anyEvalLoading
+                        }
+                      >
+                        <IconTestPipe size={16} />
+                      </ActionIcon>
+                    </Group>
                     {row.modelOutput && (
                       <Text size="sm" mt={8} style={{ whiteSpace: "pre-wrap" }}>
                         {row.modelOutput}
@@ -716,15 +838,32 @@ export default function Experiments() {
                   })}
 
                   <Table.Td>
-                    <Button
-                      size="xs"
-                      color="red"
-                      onClick={() =>
-                        dispatch({ type: "DELETE_ROW", rowId: row.id })
-                      }
-                    >
-                      Delete
-                    </Button>
+                    <Menu>
+                      <Menu.Target>
+                        <ActionIcon variant="subtle">
+                          <IconDotsVertical size={16} />
+                        </ActionIcon>
+                      </Menu.Target>
+                      <Menu.Dropdown>
+                        <Menu.Item
+                          leftSection={<IconCopy size={14} />}
+                          onClick={() =>
+                            dispatch({ type: "DUPLICATE_ROW", rowId: row.id })
+                          }
+                        >
+                          Duplicate
+                        </Menu.Item>
+                        <Menu.Item
+                          color="red"
+                          leftSection={<IconTrash size={14} />}
+                          onClick={() =>
+                            dispatch({ type: "DELETE_ROW", rowId: row.id })
+                          }
+                        >
+                          Delete
+                        </Menu.Item>
+                      </Menu.Dropdown>
+                    </Menu>
                   </Table.Td>
                 </Table.Tr>
               );
@@ -733,8 +872,21 @@ export default function Experiments() {
       </Table>
 
       <Group mt="md">
-        <Button size="sm" onClick={() => dispatch({ type: "ADD_ROW", vars })}>
+        <Button
+          leftSection={<IconPlus width={16} />}
+          variant="outline"
+          size="xs"
+          onClick={() => dispatch({ type: "ADD_ROW", vars })}
+        >
           Add row
+        </Button>
+        <Button
+          leftSection={<IconDownload size={16} />}
+          variant="outline"
+          size="xs"
+          onClick={exportToCsv}
+        >
+          Export CSV
         </Button>
       </Group>
     </>
