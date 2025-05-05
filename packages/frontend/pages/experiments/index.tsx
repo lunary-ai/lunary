@@ -1,23 +1,3 @@
-/**************************************************************************************************
- *  Experiments.tsx
- *
- *  Major change: Evaluator configuration re-worked to support multiple evaluations of the **same
- *  type** with independent parameter sets.
- *
- *  ── How it works ────────────────────────────────────────────────────────────────────────────────
- *  • “Configure Evaluators” now opens a **two-page modal**:
- *        1. **List page** – shows every evaluator you’ve already configured.
- *           Has “Add Evaluator” to create a new one and a bin-icon to delete.
- *        2. **Add page** – lets you pick an evaluator type, tweak its params, and add it.
- *           On “Add” it’s appended to the list (duplicates allowed); you’re returned to page 1.
- *  • Internally every evaluator instance gets a unique `instanceId`, so duplicates work end-to-end.
- *  • All evaluation logic (run all, per-row “Test”) now iterates over `evaluatorConfigs`
- *    instead of the old `selectedEvalIds`.
- *
- *  NOTE  If you have custom param UIs per evaluator, plug them into the `Fieldset`
- *         where marked. The example keeps params unchanged for brevity.
- *************************************************************************************************/
-
 import HotkeysInfo from "@/components/blocks/HotkeysInfo";
 import { useOrg } from "@/utils/dataHooks";
 import { Evaluator } from "@/utils/dataHooks/evaluators";
@@ -70,7 +50,7 @@ import { EvaluatorCard } from "../evaluators/new";
 import ModelSelect from "@/components/prompts/ModelSelect";
 import { Model } from "shared";
 
-/* ───────────────────────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────────────────── */
 
 const PROMPT_COLUMN_WIDTH = 600; // px
 
@@ -105,7 +85,7 @@ const buildInitialParams = (evaluator: any): CheckLogic => {
   return { id: evaluator.id, params: init };
 };
 
-/* ───────────────────────────── Types ──────────────────────────────────────── */
+/* ───────────────────────────── Types ─────────────────────────────────────── */
 
 interface EvalResult {
   passed: boolean;
@@ -118,7 +98,6 @@ interface CompResult {
   duration?: number;
   tokens?: number;
 }
-
 interface Row {
   id: number;
   variableValues: Record<string, string>;
@@ -128,14 +107,12 @@ interface Row {
   duration?: number;
   tokens?: number;
   compResults: Record<number, CompResult>;
-  evalResults: Record<number, EvalResult>; // keyed by evaluator instanceId
+  evalResults: Record<number, EvalResult>;
 }
-
 interface Comparison {
   id: number;
   promptVersion?: PromptVersion;
 }
-
 interface State {
   promptVersion?: PromptVersion;
   rows: Row[];
@@ -143,22 +120,20 @@ interface State {
   comparisons: Comparison[];
   nextCompId: number;
 }
-
 /* evaluator instance config */
 interface EvaluatorConfig {
   instanceId: number;
   evaluator: Evaluator;
   params: CheckLogic;
 }
-
-/* metadata shown under each cell */
+/* metadata under each cell */
 interface UsageMetadata {
   cost?: number;
   duration: number;
   tokens: number;
 }
 
-/* ─────────────────────────── Reducer helpers ─────────────────────────────── */
+/* ───────────────────────── Reducer helpers ──────────────────────────────── */
 
 const emptyVarMap = (vars: string[]) =>
   vars.reduce((acc, v) => ({ ...acc, [v]: "" }), {} as Record<string, string>);
@@ -172,7 +147,7 @@ const makeRow = (id: number, vars: string[]): Row => ({
   evalResults: {},
 });
 
-/* ───────────────────────────── State actions ─────────────────────────────── */
+/* ───────────────────────────── State actions ────────────────────────────── */
 
 type Action =
   | { type: "SET_PROMPT_VERSION"; promptVersion?: PromptVersion }
@@ -362,7 +337,30 @@ function reducer(state: State, a: Action): State {
   }
 }
 
-/* ────────────────────────── Eval cell component ──────────────────────────── */
+/* ─────────────────── Shared helper: buildPlaygroundArg ──────────────────── */
+/** Consolidates per-column model config into the payload expected by /playground. */
+function buildPlaygroundArg(
+  pv: PromptVersion,
+  cfg: { model: Model | null; temperature: number; maxTokens: number },
+  variables: Record<string, string>,
+) {
+  const extra = {
+    ...(pv.extra ?? {}),
+    model: cfg.model ?? null,
+    temperature: cfg.temperature,
+    maxTokens: cfg.maxTokens,
+  };
+  return {
+    modelId: extra.model, // ← server uses this field directly
+    temperature: cfg.temperature,
+    maxTokens: cfg.maxTokens,
+    content: pv.content,
+    extra, // ← full config forwarded
+    variables,
+  };
+}
+
+/* ────────────────────── Eval cell component ────────────────────────────── */
 
 function EvalCell({
   output,
@@ -431,7 +429,7 @@ function EvalCell({
   );
 }
 
-/* ───────────────────────────── Main component ────────────────────────────── */
+/* ───────────────────────────── Main component ───────────────────────────── */
 
 export default function Experiments() {
   const { org } = useOrg();
@@ -457,7 +455,7 @@ export default function Experiments() {
 
   const [showPrompt, setShowPrompt] = useState(true);
 
-  /* per-column model configuration state */
+  /* per-column model configuration */
   const [openConfigColumn, setOpenConfigColumn] = useState<string | null>();
   const [modelConfigs, setModelConfigs] = useState<
     Record<
@@ -513,7 +511,6 @@ export default function Experiments() {
 
   const runModelRow = async (rowId: number, compId?: number) => {
     dispatch({ type: "SET_MODEL_LOADING", rowId, compId, flag: true });
-    const start = Date.now();
 
     const targetPV =
       compId == null
@@ -526,25 +523,23 @@ export default function Experiments() {
 
     try {
       const key = compId == null ? "base" : compId.toString();
+      console.log(modelConfigs);
       const cfg = modelConfigs[key] || {
         model: null,
         temperature: 1,
         maxTokens: 256,
       };
+
+      const start = Date.now();
       const resp = await fetcher.post(`/orgs/${org?.id}/playground`, {
-        arg: {
-          modelId: cfg.model?.id,
-          temperature: cfg.temperature,
-          maxTokens: cfg.maxTokens,
-          content: targetPV.content,
-          extra: targetPV.extra,
-          variables: row.variableValues,
-        },
+        arg: buildPlaygroundArg(targetPV, cfg, row.variableValues),
       });
+
       const duration = Date.now() - start;
       const tokens = resp.usage?.completion_tokens ?? 0;
       const cost = tokens * 0.00002;
       const output = resp.choices[0].message.content as string;
+
       dispatch({
         type: "SET_MODEL_OUTPUT",
         rowId,
@@ -561,31 +556,27 @@ export default function Experiments() {
     }
   };
 
-  // fetchModelResult returns the output for a given row and optional comparison without dispatching
+  // Helper used by runAll()
   async function fetchModelResult(rowId: number, compId?: number) {
-    const start = Date.now();
     const targetPV =
       compId == null
         ? state.promptVersion
         : state.comparisons.find((c) => c.id === compId)?.promptVersion;
     if (!targetPV) throw new Error("No prompt version");
+
     const row = state.rows.find((r) => r.id === rowId);
-    if (!row) throw new Error("No row found");
+    if (!row) throw new Error("Row not found");
+
     const key = compId == null ? "base" : compId.toString();
     const cfg = modelConfigs[key] || {
       model: null,
       temperature: 1,
       maxTokens: 256,
     };
+
+    const start = Date.now();
     const resp = await fetcher.post(`/orgs/${org?.id}/playground`, {
-      arg: {
-        modelId: cfg.model?.id,
-        temperature: cfg.temperature,
-        maxTokens: cfg.maxTokens,
-        content: targetPV.content,
-        extra: targetPV.extra,
-        variables: row.variableValues,
-      },
+      arg: buildPlaygroundArg(targetPV, cfg, row.variableValues),
     });
     const duration = Date.now() - start;
     const tokens = resp.usage?.completion_tokens ?? 0;
@@ -607,7 +598,7 @@ export default function Experiments() {
     const comps = state.comparisons;
     const evalInstanceIds = evaluatorConfigs.map((c) => c.instanceId);
 
-    // mark everything loading
+    // Mark loading
     rows.forEach((r) => {
       dispatch({ type: "SET_MODEL_LOADING", rowId: r.id, flag: true });
       if (evalInstanceIds.length)
@@ -616,19 +607,18 @@ export default function Experiments() {
           rowId: r.id,
           instanceIds: evalInstanceIds,
         });
-      comps.forEach((c) => {
+      comps.forEach((c) =>
         dispatch({
           type: "SET_MODEL_LOADING",
           rowId: r.id,
           compId: c.id,
           flag: true,
-        });
-      });
+        }),
+      );
     });
 
-    // tasks: model outputs + evals
+    // Gather tasks
     const tasks = rows.flatMap((r) => {
-      // base prompt run
       const baseTask = (async () => {
         const { rowId, output, duration, tokens, cost } =
           await fetchModelResult(r.id);
@@ -650,7 +640,7 @@ export default function Experiments() {
         );
         return {
           rowId,
-          compId: undefined as number | undefined,
+          compId: undefined,
           output,
           evals,
           duration,
@@ -659,7 +649,6 @@ export default function Experiments() {
         };
       })();
 
-      // comparison runs
       const compTasks = comps.map((c) =>
         (async () => {
           const { rowId, compId, output, duration, tokens, cost } =
@@ -694,7 +683,6 @@ export default function Experiments() {
           };
         })(),
       );
-
       return [baseTask, ...compTasks];
     });
 
@@ -1040,12 +1028,14 @@ export default function Experiments() {
                   <Popover.Dropdown>
                     <Stack gap="sm">
                       <ModelSelect
-                        handleChange={(m) =>
+                        handleChange={(m) => {
+                          console.log(m);
+
                           setModelConfigs((prev) => ({
                             ...prev,
                             base: { ...prev.base, model: m },
-                          }))
-                        }
+                          }));
+                        }}
                       />
                       <NumberInput
                         label="Temperature"
