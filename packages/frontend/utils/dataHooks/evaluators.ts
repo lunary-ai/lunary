@@ -2,6 +2,13 @@ import { CheckLogic } from "shared";
 import { useProjectMutation, useProjectSWR } from ".";
 import { fetcher } from "../fetcher";
 
+// define Evaluator type
+export interface Evaluator {
+  id: string;
+  type: string;
+  name: string;
+}
+
 interface CreateEvaluatorData {
   ownerId?: string;
   name: string;
@@ -14,18 +21,19 @@ interface CreateEvaluatorData {
 }
 
 export function useEvaluators() {
-  const { data, isLoading, mutate } = useProjectSWR(`/evaluators`);
+  const { data, isLoading, mutate } = useProjectSWR<Evaluator[]>(
+    `/evaluators` as string,
+  );
   const { trigger: insertEvaluatorMutation } = useProjectMutation(
     `/evaluators`,
     fetcher.post,
   );
-
   async function insertEvaluator(data: CreateEvaluatorData) {
     insertEvaluatorMutation(data);
   }
 
   return {
-    evaluators: data,
+    evaluators: data || ([] as Evaluator[]),
     mutate,
     isLoading,
     insertEvaluator,

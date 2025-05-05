@@ -22,6 +22,7 @@ import {
   SegmentedControl,
   Switch,
   Textarea,
+  Tabs,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCircleCheck, IconCirclePlus, IconX } from "@tabler/icons-react";
@@ -31,7 +32,7 @@ import { CheckLogic, serializeLogic } from "shared";
 import { useCustomModels } from "@/utils/dataHooks/provider-configs";
 import ProviderEditor from "@/components/prompts/Provider";
 
-function EvaluatorCard({
+export function EvaluatorCard({
   evaluator,
   isSelected,
   onItemClick,
@@ -108,10 +109,9 @@ export default function NewEvaluator() {
   const { count: logCount } = useLogCount(serializedFilters);
 
   const { org } = useOrg();
-  const { customModels, isLoading: modelsLoading } = useCustomModels();
+  const { customModels } = useCustomModels();
   const evaluatorAny = evaluator as any;
 
-  // populate form when editing existing evaluator
   useEffect(() => {
     if (isEditing && evaluator) {
       const e = evaluator as any;
@@ -119,7 +119,6 @@ export default function NewEvaluator() {
       setType(e.type);
       setMode(e.mode);
       setFilters(e.filters as CheckLogic);
-      // preload llm params if editing llm
       if (e.type === "llm" && e.params) {
         setParams({
           id: "llm",
@@ -129,19 +128,13 @@ export default function NewEvaluator() {
     }
   }, [isEditing, evaluator]);
 
-  const evaluatorTypes = Object.values(EVALUATOR_TYPES).filter((evaluator) => {
-    if (evaluator.beta && !org.beta) {
-      return false;
-    }
+  const evaluatorTypes = Object.values(EVALUATOR_TYPES).filter((e) => {
+    if (e.beta && !org.beta) return false;
     return true;
   });
 
-  const selectedEvaluator = evaluatorTypes.find(
-    (evaluator) => evaluator.id === type,
-  );
-
+  const selectedEvaluator = evaluatorTypes.find((e) => e.id === type);
   const hasParams = Boolean(selectedEvaluator?.params?.length);
-
   const IconComponent = selectedEvaluator?.icon;
 
   useEffect(() => {
@@ -149,14 +142,18 @@ export default function NewEvaluator() {
       if (selectedEvaluator.id === "llm") {
         setParams({
           id: "llm",
-          params: { modelId: "", scoringType: "boolean", prompt: "" },
+          params: {
+            modelId: "",
+            scoringType: "boolean",
+            prompt: "",
+            categories: [],
+          },
         });
       } else {
         const initialParams = (selectedEvaluator.params as any[]).reduce(
           (acc, param) => {
-            if ("id" in param) {
+            if ("id" in param)
               acc[(param as any).id] = (param as any).defaultValue;
-            }
             return acc;
           },
           {} as Record<string, any>,
@@ -166,8 +163,26 @@ export default function NewEvaluator() {
     }
   }, [selectedEvaluator]);
 
+  function updateCategories(newCats: any[]) {
+    setParams({
+      id: "llm",
+      params: { ...params.params, categories: newCats },
+    });
+  }
+
+  function createEvaluatorBody() {
+    return {
+      name,
+      slug: slugify(name),
+      mode,
+      params: params.params,
+      type,
+      filters,
+      ownerId: user.id,
+    };
+  }
+
   async function createEvaluator() {
-    // TODO: validation
     if (!name) {
       notifications.show({
         icon: <IconX size={18} />,
@@ -180,28 +195,30 @@ export default function NewEvaluator() {
       return;
     }
     if (isEditing) {
-      await updateEvaluator({
-        name,
-        slug: slugify(name),
-        mode,
-        params: params.params,
-        type,
-        filters,
-        ownerId: user.id,
-      });
+      await updateEvaluator(createEvaluatorBody());
     } else {
-      await insertEvaluator({
-        name,
-        slug: slugify(name),
-        mode,
-        params: params.params,
-        type,
-        filters,
-        ownerId: user.id,
-      });
+      await insertEvaluator(createEvaluatorBody());
     }
     router.push("/evaluators");
   }
+
+  const categories = Array.from(new Set(evaluatorTypes.map((e) => e.category)))
+    .sort((a, b) => {
+      const order: Record<string, number> = {
+        labeler: 0,
+        "text-similarity": 1,
+        custom: 2,
+      };
+      const rankA = order[a] ?? 100;
+      const rankB = order[b] ?? 100;
+      return rankA !== rankB ? rankA - rankB : a.localeCompare(b);
+    })
+    .map((cat) => {
+      if (cat === "labeler") return { name: "Model Labeler", value: "labeler" };
+      if (cat === "text-similarity")
+        return { name: "Text Similarity", value: "text-similarity" };
+      return { name: "Custom", value: "custom" };
+    });
 
   return (
     <Container>
@@ -221,23 +238,40 @@ export default function NewEvaluator() {
         />
 
         <Stack>
-          <Title order={6}>Evaluator Type:</Title>
+          <Title order={6}>Evaluator type:</Title>
 
-          <SimpleGrid cols={5} spacing="md">
-            {evaluatorTypes
-              .sort((a, b) => (a.soon ? 1 : -1))
-              .map((evaluator) => (
-                <EvaluatorCard
-                  key={evaluator.id}
-                  evaluator={evaluator}
-                  isSelected={type === evaluator.id}
-                  onItemClick={(type) => {
-                    setType(type);
-                    setName(evaluator.name);
-                  }}
-                />
+          <Tabs
+            defaultValue={categories[0].value}
+            onChange={() => setType(undefined)}
+          >
+            <Tabs.List>
+              {categories.map((category) => (
+                <Tabs.Tab key={category.value} value={category.value}>
+                  {category.name}
+                </Tabs.Tab>
               ))}
-          </SimpleGrid>
+            </Tabs.List>
+
+            {categories.map((category) => (
+              <Tabs.Panel key={category.value} value={category.value} pt="md">
+                <SimpleGrid cols={5} spacing="md">
+                  {evaluatorTypes
+                    .filter((e) => e.category === category.value)
+                    .map((e) => (
+                      <EvaluatorCard
+                        key={e.id}
+                        evaluator={e}
+                        isSelected={type === e.id}
+                        onItemClick={(t) => {
+                          setType(t);
+                          setName(e.name);
+                        }}
+                      />
+                    ))}
+                </SimpleGrid>
+              </Tabs.Panel>
+            ))}
+          </Tabs>
         </Stack>
 
         {hasParams && selectedEvaluator && (
@@ -251,41 +285,46 @@ export default function NewEvaluator() {
           </Fieldset>
         )}
 
-        {/* LLM Evaluator custom configuration */}
         {type === "llm" && params && (
           <Fieldset legend="LLM Configuration">
             <Stack gap="md">
               <ProviderEditor
                 value={{ model: params.params.modelId || "", config: {} }}
-                hideStream={true}
-                hideTopP={true}
-                hideToolCalls={true}
-                onChange={({ model: newModel }) =>
+                hideStream
+                hideTopP
+                hideToolCalls
+                onChange={({ model }) =>
                   setParams({
                     id: "llm",
-                    params: { ...params.params, modelId: newModel },
+                    params: { ...params.params, modelId: model },
                   })
                 }
               />
               <SegmentedControl
                 fullWidth
                 value={params.params.scoringType || "boolean"}
-                disabled
                 data={[
                   { label: "Boolean", value: "boolean" },
-                  { label: "Categorical (coming soon)", value: "categorical" },
+                  { label: "Categorical", value: "categorical" },
                 ]}
                 onChange={(value) =>
                   setParams({
                     id: "llm",
-                    params: { ...params.params, scoringType: value },
+                    params: {
+                      ...params.params,
+                      scoringType: value,
+                      categories:
+                        value === "categorical"
+                          ? (params.params.categories ?? [])
+                          : [],
+                    },
                   })
                 }
               />
               <Textarea
                 label="Evaluation Prompt"
                 placeholder="Enter the prompt to guide the evaluator"
-                minRows={10}
+                minRows={20}
                 value={params.params.prompt}
                 onChange={(e) =>
                   setParams({
@@ -294,47 +333,106 @@ export default function NewEvaluator() {
                   })
                 }
               />
+              {params.params.scoringType === "categorical" && (
+                <Stack gap="sm">
+                  <Title order={6}>Labels</Title>
+                  {params.params.categories.map(
+                    (cat: { label: string; pass: boolean }, idx: number) => (
+                      <Group key={idx} align="flex-start" wrap="nowrap">
+                        <TextInput
+                          style={{ flex: 1 }}
+                          placeholder="Label name"
+                          value={cat.label}
+                          onChange={(e) => {
+                            const cats = [...params.params.categories];
+                            cats[idx] = { ...cats[idx], label: e.target.value };
+                            updateCategories(cats);
+                          }}
+                        />
+                        <SegmentedControl
+                          data={[
+                            { label: "Pass", value: "pass" },
+                            { label: "Fail", value: "fail" },
+                          ]}
+                          value={cat.pass ? "pass" : "fail"}
+                          onChange={(val) => {
+                            const cats = [...params.params.categories];
+                            cats[idx] = { ...cats[idx], pass: val === "pass" };
+                            updateCategories(cats);
+                          }}
+                        />
+                        <Button
+                          variant="subtle"
+                          p={0}
+                          onClick={() => {
+                            const cats = params.params.categories.filter(
+                              (_: any, i: number) => i !== idx,
+                            );
+                            updateCategories(cats);
+                          }}
+                        >
+                          <IconX size={16} />
+                        </Button>
+                      </Group>
+                    ),
+                  )}
+                  <Button
+                    variant="default"
+                    leftSection={<IconCirclePlus size={16} />}
+                    onClick={() =>
+                      updateCategories([
+                        ...params.params.categories,
+                        { label: "", pass: true },
+                      ])
+                    }
+                  >
+                    Add label
+                  </Button>
+                </Stack>
+              )}
             </Stack>
           </Fieldset>
         )}
 
-        <Fieldset legend="Live Mode Configuration">
-          <Stack>
-            <Box>
-              <Switch
-                defaultChecked
-                onLabel="On"
-                offLabel="Off"
-                size="md"
-                styles={{ trackLabel: { fontSize: "10px" } }}
-                checked={mode === "realtime"}
-                onChange={(event) =>
-                  setMode(event.currentTarget.checked ? "realtime" : "normal")
-                }
-              />
+        {selectedEvaluator && (
+          <Fieldset legend="Live Mode Configuration">
+            <Stack>
+              <Box>
+                <Switch
+                  defaultChecked
+                  onLabel="On"
+                  offLabel="Off"
+                  size="md"
+                  styles={{ trackLabel: { fontSize: "10px" } }}
+                  checked={mode === "realtime"}
+                  onChange={(e) =>
+                    setMode(e.currentTarget.checked ? "realtime" : "normal")
+                  }
+                />
 
-              {mode === "realtime" && (
-                <>
-                  <Text mb="5" mt="sm" size="sm">
-                    Filters
-                  </Text>
+                {mode === "realtime" && (
+                  <>
+                    <Text mb="5" mt="sm" size="sm">
+                      Filters
+                    </Text>
 
-                  <CheckPicker
-                    minimal
-                    value={filters}
-                    showAndOr
-                    onChange={setFilters}
-                    restrictTo={(filter) =>
-                      ["tags", "type", "users", "metadata", "date"].includes(
-                        filter.id,
-                      )
-                    }
-                  />
-                </>
-              )}
-            </Box>
-          </Stack>
-        </Fieldset>
+                    <CheckPicker
+                      minimal
+                      value={filters}
+                      showAndOr
+                      onChange={setFilters}
+                      restrictTo={(filter) =>
+                        ["tags", "type", "users", "metadata", "date"].includes(
+                          filter.id,
+                        )
+                      }
+                    />
+                  </>
+                )}
+              </Box>
+            </Stack>
+          </Fieldset>
+        )}
 
         <Group justify="end">
           <Button

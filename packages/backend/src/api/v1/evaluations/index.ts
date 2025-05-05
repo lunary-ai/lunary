@@ -10,6 +10,10 @@ import { RunEvent } from "lunary/types";
 import Queue from "queue-promise";
 import { PassThrough } from "stream";
 import { runEval } from "./utils";
+import { evaluate as evaluateToxicity } from "@/src/evaluators/toxicity";
+import type { Run } from "shared";
+import { MessageSchema } from "shared/schemas/openai";
+import { z } from "zod";
 
 const evaluations = new Router({ prefix: "/evaluations" });
 
@@ -173,59 +177,76 @@ evaluations.get(
 );
 
 // special route used by the SDK to run evaluations
+evaluations.post("/run", async (ctx: Context) => {
+  const { projectId } = ctx.state;
+  const { checklist, input, output, idealOutput, duration, model } = ctx.request
+    .body as any;
+
+  const [checklistData] =
+    await sql` select * from checklist where slug = ${checklist} and project_id = ${projectId}`;
+
+  if (!checklistData) {
+    ctx.throw(400, "Invalid checklist, is the slug correct?");
+  }
+
+  const checks = checklistData.data;
+
+  // deprecated: build run event without strict typing
+  const virtualRun = {
+    type: "llm",
+    input,
+    output,
+    status: "success",
+    // params: extra,
+    name: model || "custom",
+    duration: duration || 0,
+    promptTokens: 0,
+    completionTokens: 0,
+    createdAt: new Date(),
+    endedAt: new Date(),
+    // Eval-only fields:
+    idealOutput,
+    // So the SQL queries don't fail:
+    id: "00000000-0000-4000-8000-000000000000",
+    projectId: "00000000-0000-4000-8000-000000000000",
+    isPublic: false,
+    cost: 0,
+  };
+
+  const cost = await calcRunCost(virtualRun);
+  virtualRun.cost = cost ?? 0;
+  virtualRun.duration = virtualRun.duration / 1000; // needs to be in ms in calcRunCost, but needs to be in seconds in the checks
+
+  // run checks
+  const { passed, results } = await runChecksOnRun(virtualRun, checks);
+
+  ctx.body = { passed, results };
+});
+
+// new evaluator endpoint
 evaluations.post(
-  "/run",
-  // checkAccess("evaluations", "create"),
+  "/evaluate",
+  checkAccess("evaluations", "create"),
   async (ctx: Context) => {
-    const { projectId } = ctx.state;
-    const { checklist, input, output, idealOutput, duration, model } = ctx
-      .request.body as {
-      checklist: string;
-      input: any;
-      output: any;
-      duration?: number;
-      idealOutput?: string;
-      model?: string;
-    };
+    const bodySchema = z.object({
+      input: z.array(MessageSchema),
+      output: MessageSchema,
+      evaluatorType: z.enum(["toxicity"]),
+    });
+    const { evaluatorType, input, output } = bodySchema.parse(ctx.request.body);
 
-    const [checklistData] =
-      await sql` select * from checklist where slug = ${checklist} and project_id = ${projectId}`;
+    let passed: Boolean = false;
 
-    if (!checklistData) {
-      ctx.throw(400, "Invalid checklist, is the slug correct?");
+    if (evaluatorType === "toxicity") {
+      const result = await evaluateToxicity({ input, output });
+      if (result.toxic_input === false && result.toxic_output === false) {
+        ctx.passed = true;
+      }
+    } else {
+      ctx.throw(400, `Unknown evaluator type: ${evaluatorType}`);
     }
 
-    const checks = checklistData.data;
-
-    const virtualRun: RunEvent = {
-      type: "llm",
-      input,
-      output,
-      status: "success",
-      // params: extra,
-      name: model || "custom",
-      duration: duration || 0,
-      promptTokens: 0,
-      completionTokens: 0,
-      createdAt: new Date(),
-      endedAt: new Date(),
-      // Eval-only fields:
-      idealOutput,
-      // So the SQL queries don't fail:
-      id: "00000000-0000-4000-8000-000000000000",
-      projectId: "00000000-0000-4000-8000-000000000000",
-      isPublic: false,
-      cost: 0,
-    };
-
-    const cost = await calcRunCost(virtualRun);
-    virtualRun.cost = cost;
-    virtualRun.duration = virtualRun.duration / 1000; // needs to be in ms in calcRunCost, but needs to be in seconds in the checks
-
-    // run checks
-    const { passed, results } = await runChecksOnRun(virtualRun, checks);
-
-    ctx.body = { passed, results };
+    ctx.body = { passed };
   },
 );
 

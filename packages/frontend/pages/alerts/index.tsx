@@ -40,7 +40,6 @@ const metricOptions: { value: Metric; label: string }[] = [
 ];
 
 function formatThreshold(metric: Metric, value: number) {
-  console.log(metric);
   if (metric === "error" || metric === "feedback") {
     return `${value}%`;
   } else if (metric === "cost") {

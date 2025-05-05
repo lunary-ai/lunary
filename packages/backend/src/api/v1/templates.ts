@@ -9,6 +9,7 @@ import { z } from "zod";
 import { unCamelExtras } from "./template-versions";
 import { hasAccess } from "shared";
 
+// TODO: to remove to "prompts"
 const templates = new Router({
   prefix: "/templates",
 });
@@ -44,11 +45,9 @@ templates.get("/", async (ctx: Context) => {
       t.project_id = ${ctx.state.projectId}
     group by 
       t.id, 
-      t.name, 
       t.slug, 
       t.mode, 
       t.created_at, 
-      t.group, 
       t.project_id
     order by 
       t.created_at desc

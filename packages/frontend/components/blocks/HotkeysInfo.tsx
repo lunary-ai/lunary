@@ -1,6 +1,6 @@
 import { Kbd, Text } from "@mantine/core";
 
-export default function HotkeysInfo({ hot, size, style }) {
+export default function HotkeysInfo({ hot, size, style = {} }) {
   const fz = size === "xs" ? 10 : 14;
 
   return (
