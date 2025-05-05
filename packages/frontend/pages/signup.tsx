@@ -161,7 +161,7 @@ function SignupPage() {
       }
     }
 
-    if (!config.IS_SELF_HOSTED) {
+    if (config.IS_CLOUD) {
       grecaptcha.ready(async () => {
         try {
           const recaptchaToken = await grecaptcha.execute(

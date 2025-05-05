@@ -87,10 +87,13 @@ auth.post("/signup", async (ctx: Context) => {
   const whitelistedDomainsRes = await sql<
     { domain: string }[]
   >`select domain from _whitelisted_domain`;
+
   const whiteListedDomains = whitelistedDomainsRes.map(({ domain }) => domain);
   const emailDomain = email.split("@")[1];
   const shouldRunRecaptcha =
     config.RECAPTCHA_SECRET_KEY && !whiteListedDomains.includes(emailDomain);
+
+  console.debug(1);
 
   if (shouldRunRecaptcha) {
     const recaptchaResponse = await verifyRecaptcha(recaptchaToken!);
@@ -99,6 +102,7 @@ auth.post("/signup", async (ctx: Context) => {
     }
   }
 
+  console.debug(2);
   if (signupMethod === "signup") {
     const { user, org } = await sql.begin(async (sql) => {
       const plan = process.env.DEFAULT_PLAN || "free";
@@ -106,6 +110,7 @@ auth.post("/signup", async (ctx: Context) => {
       const [existingUser] = await sql`
         select * from account where lower(email) = lower(${email})
       `;
+      console.debug(3);
 
       if (!password) {
         ctx.throw(403, "Password is required");
@@ -145,6 +150,7 @@ auth.post("/signup", async (ctx: Context) => {
         insert into account_project ${sql({ accountId: user.id, projectId: project.id })}
       `;
 
+      console.debug(4);
       const publicKey = {
         type: "public",
         projectId: project.id,
@@ -164,22 +170,21 @@ auth.post("/signup", async (ctx: Context) => {
         insert into api_key ${sql(privateKey)}
       `;
 
+      console.debug(5);
       return { user, org };
     });
 
+    console.debug(6);
     const token = await signJWT({
       userId: user.id,
       email: user.email,
       orgId: org.id,
     });
 
-    await sendVerifyEmail(email, name);
-    await sendSlackMessage(
-      signupMethod === "signup"
-        ? `🔔 New signup from ${name} (${email})`
-        : `🔔 ${name} (${email}) joined ${orgName} `,
-      "users",
-    );
+    console.log("token", token);
+
+    sendVerifyEmail(email, name);
+
     ctx.body = { token };
 
     return;
