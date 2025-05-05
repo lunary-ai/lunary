@@ -26,6 +26,7 @@ import {
   Textarea,
   TextInput,
   Title,
+  SegmentedControl,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
@@ -289,6 +290,12 @@ export default function Dashboard() {
     setChartsWithSortOrder(newCharts);
   }
 
+  function handleChartTypeChange(index: number, newType: string) {
+    const newCharts = structuredClone(charts);
+    newCharts[index].type = newType;
+    setChartsWithSortOrder(newCharts);
+  }
+
   function handleFilter(index: number) {
     setFilterIndex((prev) => (prev === index ? null : index));
   }
@@ -508,6 +515,23 @@ export default function Dashboard() {
                               }
                               mb="md"
                             />
+                            <Title order={5} mb="xs">
+                              Chart Type
+                            </Title>
+                            {["Bar", "Area"].includes(chart.type) && (
+                              <SegmentedControl
+                                fullWidth
+                                value={chart.type}
+                                onChange={(value) =>
+                                  handleChartTypeChange(index, value)
+                                }
+                                data={[
+                                  { label: "Bar", value: "Bar" },
+                                  { label: "Area", value: "Area" },
+                                ]}
+                                mb="md"
+                              />
+                            )}
                             <Title order={5} mb="xs">
                               Filters
                             </Title>
