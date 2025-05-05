@@ -839,24 +839,25 @@ export default function Experiments() {
           <Title order={6}>Evaluators</Title>
 
           {/* Card grid and config panels here */}
-          <SimpleGrid cols={3}>
+          <Stack>
             {evaluatorCategories.map((cat) => (
-              <Stack key={cat.value}>
+              <>
                 <Title order={6}>{cat.name}</Title>
-                {evaluators
-                  .filter((e) => e.category === cat.value)
-                  .map((ev) => (
-                    <EvaluatorCard
-                      key={ev.id}
-                      evaluator={ev}
-                      selected={selectedEvalIds.includes(ev.id.toString())}
-                      onClick={() => toggleEvaluator(ev)}
-                    />
-                  ))}
-              </Stack>
+                <SimpleGrid cols={3} key={cat.value}>
+                  {evaluators
+                    .filter((e) => e.category === cat.value)
+                    .map((ev) => (
+                      <EvaluatorCard
+                        key={ev.id}
+                        evaluator={ev}
+                        isSelected={selectedEvalIds.includes(ev.id.toString())}
+                        onItemClick={() => toggleEvaluator(ev)}
+                      />
+                    ))}
+                </SimpleGrid>
+              </>
             ))}
-          </SimpleGrid>
-
+          </Stack>
           {activeEvalId && (
             <Fieldset
               legend="Evaluator Configuration"
