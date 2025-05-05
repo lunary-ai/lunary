@@ -1,3 +1,23 @@
+/**************************************************************************************************
+ *  Experiments.tsx
+ *
+ *  Major change: Evaluator configuration re-worked to support multiple evaluations of the **same
+ *  type** with independent parameter sets.
+ *
+ *  ── How it works ────────────────────────────────────────────────────────────────────────────────
+ *  • “Configure Evaluators” now opens a **two-page modal**:
+ *        1. **List page** – shows every evaluator you’ve already configured.
+ *           Has “Add Evaluator” to create a new one and a bin-icon to delete.
+ *        2. **Add page** – lets you pick an evaluator type, tweak its params, and add it.
+ *           On “Add” it’s appended to the list (duplicates allowed); you’re returned to page 1.
+ *  • Internally every evaluator instance gets a unique `instanceId`, so duplicates work end-to-end.
+ *  • All evaluation logic (run all, per-row “Test”) now iterates over `evaluatorConfigs`
+ *    instead of the old `selectedEvalIds`.
+ *
+ *  NOTE  If you have custom param UIs per evaluator, plug them into the `Fieldset`
+ *         where marked. The example keeps params unchanged for brevity.
+ *************************************************************************************************/
+
 import HotkeysInfo from "@/components/blocks/HotkeysInfo";
 import { useOrg } from "@/utils/dataHooks";
 import { Evaluator } from "@/utils/dataHooks/evaluators";
@@ -25,6 +45,7 @@ import {
   Collapse,
   Popover,
   NumberInput,
+  Center,
 } from "@mantine/core";
 import {
   IconBolt,
@@ -48,6 +69,8 @@ import { Prompt, PromptVersion } from "shared/schemas/prompt";
 import { EvaluatorCard } from "../evaluators/new";
 import ModelSelect from "@/components/prompts/ModelSelect";
 import { Model } from "shared";
+
+/* ───────────────────────────────────────────────────────────────────────────── */
 
 const PROMPT_COLUMN_WIDTH = 600; // px
 
@@ -82,52 +105,7 @@ const buildInitialParams = (evaluator: any): CheckLogic => {
   return { id: evaluator.id, params: init };
 };
 
-function PromptVersionSelect({
-  promptVersion,
-  setPromptVersion,
-}: {
-  promptVersion?: PromptVersion;
-  setPromptVersion: (pv?: PromptVersion) => void;
-}) {
-  const { prompts } = usePrompts();
-  const [selectedPrompt, setSelectedPrompt] = useState<Prompt>();
-  const { promptVersions } = usePromptVersions(selectedPrompt?.id);
-
-  const promptOpts = prompts.map((p) => ({
-    value: p.id.toString(),
-    label: p.slug,
-  }));
-  const versionOpts = promptVersions.map((pv) => ({
-    value: pv.id.toString(),
-    label: `v${pv.version}`,
-  }));
-
-  return (
-    <Group gap="0">
-      <Select
-        placeholder="Choose prompt"
-        data={promptOpts}
-        onChange={(v) =>
-          setSelectedPrompt(prompts.find((p) => p.id === Number(v)))
-        }
-        styles={{ input: { borderRadius: "8px 0 0 8px" } }}
-      />
-      <Select
-        placeholder="Choose version"
-        disabled={!selectedPrompt}
-        data={versionOpts}
-        onChange={(v) =>
-          setPromptVersion(promptVersions.find((pv) => pv.id === Number(v)))
-        }
-        w={promptVersion ? 70 : 150}
-        styles={{ input: { borderRadius: "0 8px 8px 0", borderLeft: 0 } }}
-        comboboxProps={{ width: 80 }}
-      />
-    </Group>
-  );
-}
-
-/* ──────────────────────── Types & table reducer ────────────────────── */
+/* ───────────────────────────── Types ──────────────────────────────────────── */
 
 interface EvalResult {
   passed: boolean;
@@ -140,6 +118,7 @@ interface CompResult {
   duration?: number;
   tokens?: number;
 }
+
 interface Row {
   id: number;
   variableValues: Record<string, string>;
@@ -149,12 +128,14 @@ interface Row {
   duration?: number;
   tokens?: number;
   compResults: Record<number, CompResult>;
-  evalResults: Record<string, EvalResult>;
+  evalResults: Record<number, EvalResult>; // keyed by evaluator instanceId
 }
+
 interface Comparison {
   id: number;
   promptVersion?: PromptVersion;
 }
+
 interface State {
   promptVersion?: PromptVersion;
   rows: Row[];
@@ -162,6 +143,22 @@ interface State {
   comparisons: Comparison[];
   nextCompId: number;
 }
+
+/* evaluator instance config */
+interface EvaluatorConfig {
+  instanceId: number;
+  evaluator: Evaluator;
+  params: CheckLogic;
+}
+
+/* metadata shown under each cell */
+interface UsageMetadata {
+  cost?: number;
+  duration: number;
+  tokens: number;
+}
+
+/* ─────────────────────────── Reducer helpers ─────────────────────────────── */
 
 const emptyVarMap = (vars: string[]) =>
   vars.reduce((acc, v) => ({ ...acc, [v]: "" }), {} as Record<string, string>);
@@ -175,7 +172,10 @@ const makeRow = (id: number, vars: string[]): Row => ({
   evalResults: {},
 });
 
+/* ───────────────────────────── State actions ─────────────────────────────── */
+
 type Action =
+  | { type: "SET_PROMPT_VERSION"; promptVersion?: PromptVersion }
   | { type: "INIT_ROWS"; vars: string[] }
   | { type: "ADD_ROW"; vars: string[] }
   | { type: "DELETE_ROW"; rowId: number }
@@ -190,20 +190,17 @@ type Action =
       duration?: number;
       tokens?: number;
     }
-  | { type: "SET_EVAL_LOADING"; rowId: number; ids: string[] }
-  | { type: "SET_EVAL_RESULT"; rowId: number; id: string; passed: boolean }
+  | { type: "SET_EVAL_LOADING"; rowId: number; instanceIds: number[] }
+  | {
+      type: "SET_EVAL_RESULT";
+      rowId: number;
+      instanceId: number;
+      passed: boolean;
+    }
   | { type: "ADD_COMP" }
   | { type: "SET_COMP_PV"; compId: number; pv?: PromptVersion }
   | { type: "DELETE_COMP"; compId: number }
-  | { type: "SET_PROMPT_VERSION"; promptVersion?: PromptVersion }
   | { type: "DUPLICATE_ROW"; rowId: number };
-
-// define metadata type
-interface UsageMetadata {
-  cost?: number;
-  duration: number;
-  tokens: number;
-}
 
 function reducer(state: State, a: Action): State {
   switch (a.type) {
@@ -296,7 +293,7 @@ function reducer(state: State, a: Action): State {
           r.id === a.rowId
             ? {
                 ...r,
-                evalResults: a.ids.reduce<Record<string, EvalResult>>(
+                evalResults: a.instanceIds.reduce<Record<number, EvalResult>>(
                   (acc, id) => ({
                     ...acc,
                     [id]: { passed: false, loading: true },
@@ -317,7 +314,7 @@ function reducer(state: State, a: Action): State {
                 ...r,
                 evalResults: {
                   ...r.evalResults,
-                  [a.id]: { passed: a.passed, loading: false },
+                  [a.instanceId]: { passed: a.passed, loading: false },
                 },
               }
             : r,
@@ -365,28 +362,29 @@ function reducer(state: State, a: Action): State {
   }
 }
 
-// New EvalCell component to display output with collapsible evaluation results
+/* ────────────────────────── Eval cell component ──────────────────────────── */
+
 function EvalCell({
   output,
   evalResults,
   isComplete,
-  selectedEvalIds,
-  evaluators,
+  evaluatorConfigs,
   metadata,
 }: {
   output: string;
-  evalResults: Record<string, EvalResult>;
+  evalResults: Record<number, EvalResult>;
   isComplete: boolean;
-  selectedEvalIds: string[];
-  evaluators: any[];
+  evaluatorConfigs: EvaluatorConfig[];
   metadata?: UsageMetadata;
 }) {
   const [open, setOpen] = useState(false);
-  const total = selectedEvalIds.length;
-  const passedCount = selectedEvalIds.filter(
-    (id) => evalResults[id]?.passed,
+  const total = evaluatorConfigs.length;
+  const passedCount = evaluatorConfigs.filter(
+    (cfg) => evalResults[cfg.instanceId]?.passed,
   ).length;
+
   if (!isComplete || !output) return null;
+
   return (
     <Box style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <Box style={{ overflow: "auto", flex: 1 }}>
@@ -394,6 +392,7 @@ function EvalCell({
           {output}
         </Text>
       </Box>
+
       {metadata && (
         <Box p="xs">
           <Text size="xs" c="dimmed">
@@ -402,10 +401,13 @@ function EvalCell({
           </Text>
         </Box>
       )}
+
       <Box p="sm">
         <Group justify="space-between" align="center">
           <Group gap="xs">
-            {passedCount === total && <IconCheck color="green" size={16} />}
+            {passedCount === total && total > 0 && (
+              <IconCheck color="green" size={16} />
+            )}
             <Text size="sm">{`${passedCount}/${total} tests passed`}</Text>
           </Group>
           <ActionIcon onClick={() => setOpen((o) => !o)}>
@@ -413,14 +415,14 @@ function EvalCell({
           </ActionIcon>
         </Group>
         <Collapse in={open}>
-          {selectedEvalIds.map((id) => {
-            const res = evalResults[id];
-            const ev = evaluators.find((e) => e.id.toString() === id);
+          {evaluatorConfigs.map((cfg) => {
+            const res = evalResults[cfg.instanceId];
             return (
-              <Text
-                size="sm"
-                key={id}
-              >{`${ev?.id}: ${res.passed ? "Pass" : "Fail"}`}</Text>
+              <Text size="sm" key={cfg.instanceId}>
+                {`${cfg.evaluator.id} (#${cfg.instanceId}): ${
+                  res?.passed ? "Pass" : "Fail"
+                }`}
+              </Text>
             );
           })}
         </Collapse>
@@ -429,22 +431,33 @@ function EvalCell({
   );
 }
 
+/* ───────────────────────────── Main component ────────────────────────────── */
+
 export default function Experiments() {
   const { org } = useOrg();
   usePrompts();
 
-  const evaluators = Object.values(EVALUATOR_TYPES).filter((e) => {
-    if (e.beta && !org.beta) return false;
+  const allEvaluators = Object.values(EVALUATOR_TYPES).filter((e) => {
+    if (e.beta && !org?.beta) return false;
     return true;
   });
 
+  /* Evaluator instance state */
+  const [evaluatorConfigs, setEvaluatorConfigs] = useState<EvaluatorConfig[]>(
+    [],
+  );
+  const [nextEvalInstanceId, setNextEvalInstanceId] = useState(0);
+
+  /* Modal UI state */
   const [showEvalModal, setShowEvalModal] = useState(false);
-  const [selectedEvalIds, setSelectedEvalIds] = useState<string[]>([]);
-  const [activeEvalId, setActiveEvalId] = useState<string | undefined>();
-  const [paramsMap, setParamsMap] = useState<Record<string, CheckLogic>>({});
+  const [evalModalPage, setEvalModalPage] = useState<"list" | "add">("list");
+  const [selectedAddEvaluator, setSelectedAddEvaluator] =
+    useState<Evaluator | null>(null);
+  const [addEvaluatorParams, setAddEvaluatorParams] = useState<CheckLogic>();
+
   const [showPrompt, setShowPrompt] = useState(true);
 
-  // per-column model configuration state
+  /* per-column model configuration state */
   const [openConfigColumn, setOpenConfigColumn] = useState<string | null>();
   const [modelConfigs, setModelConfigs] = useState<
     Record<
@@ -455,6 +468,7 @@ export default function Experiments() {
     base: { model: null, temperature: 1, maxTokens: 256 },
   });
 
+  /* Variable / prompt state */
   const [state, dispatch] = useReducer(reducer, {
     promptVersion: undefined,
     rows: [],
@@ -462,7 +476,8 @@ export default function Experiments() {
     comparisons: [],
     nextCompId: 0,
   });
-  // state to track which variable cell is expanded in modal
+
+  /* variable / prompt modals */
   const [variableModal, setVariableModal] = useState<{
     rowId: number;
     varName: string;
@@ -475,6 +490,8 @@ export default function Experiments() {
     () => extractVariables(JSON.stringify(state.promptVersion?.content ?? "")),
     [state],
   );
+
+  /* ───────────────────────── hotkeys ────────────────────────── */
 
   useEffect(() => {
     if (state.promptVersion) dispatch({ type: "INIT_ROWS", vars });
@@ -491,6 +508,8 @@ export default function Experiments() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   });
+
+  /* ────────────────────────── Model runners ───────────────────────── */
 
   const runModelRow = async (rowId: number, compId?: number) => {
     dispatch({ type: "SET_MODEL_LOADING", rowId, compId, flag: true });
@@ -581,21 +600,22 @@ export default function Experiments() {
     };
   }
 
-  // Run all rows and comparisons, wait for all to complete, then update cells
+  /* ────────────────────── Run everything at once ───────────────────── */
+
   async function runAll() {
     const rows = state.rows;
     const comps = state.comparisons;
-    // set all loading flags
+    const evalInstanceIds = evaluatorConfigs.map((c) => c.instanceId);
+
+    // mark everything loading
     rows.forEach((r) => {
-      // base cell loading
       dispatch({ type: "SET_MODEL_LOADING", rowId: r.id, flag: true });
-      if (selectedEvalIds.length)
+      if (evalInstanceIds.length)
         dispatch({
           type: "SET_EVAL_LOADING",
           rowId: r.id,
-          ids: selectedEvalIds,
+          instanceIds: evalInstanceIds,
         });
-      // comparison cells loading
       comps.forEach((c) => {
         dispatch({
           type: "SET_MODEL_LOADING",
@@ -603,29 +623,29 @@ export default function Experiments() {
           compId: c.id,
           flag: true,
         });
-        if (selectedEvalIds.length)
-          dispatch({
-            type: "SET_EVAL_LOADING",
-            rowId: r.id,
-            ids: selectedEvalIds,
-          });
       });
     });
-    // prepare tasks for model + evaluator calls
+
+    // tasks: model outputs + evals
     const tasks = rows.flatMap((r) => {
-      const base = (async () => {
+      // base prompt run
+      const baseTask = (async () => {
         const { rowId, output, duration, tokens, cost } =
           await fetchModelResult(r.id);
         const evals = await Promise.all(
-          selectedEvalIds.map(async (id) => {
+          evaluatorConfigs.map(async (cfg) => {
             const resp = await fetcher.post(`/evaluations/evaluate`, {
               arg: {
                 input: state.promptVersion?.content,
                 output: { role: "assistant", content: output },
-                evaluatorType: id,
+                evaluatorType: cfg.evaluator.id,
+                params: cfg.params.params,
               },
             });
-            return { id, passed: resp.passed as boolean };
+            return {
+              instanceId: cfg.instanceId,
+              passed: resp.passed as boolean,
+            };
           }),
         );
         return {
@@ -638,28 +658,34 @@ export default function Experiments() {
           cost,
         };
       })();
-      const compsTasks = comps.map((c) =>
+
+      // comparison runs
+      const compTasks = comps.map((c) =>
         (async () => {
           const { rowId, compId, output, duration, tokens, cost } =
             await fetchModelResult(r.id, c.id);
+          const targetPV = state.comparisons.find(
+            (x) => x.id === c.id,
+          )?.promptVersion;
           const evals = await Promise.all(
-            selectedEvalIds.map(async (id) => {
-              const targetPV = state.comparisons.find(
-                (x) => x.id === c.id,
-              )?.promptVersion;
+            evaluatorConfigs.map(async (cfg) => {
               const resp = await fetcher.post(`/evaluations/evaluate`, {
                 arg: {
                   input: targetPV?.content,
                   output: { role: "assistant", content: output },
-                  evaluatorType: id,
+                  evaluatorType: cfg.evaluator.id,
+                  params: cfg.params.params,
                 },
               });
-              return { id, passed: resp.passed as boolean };
+              return {
+                instanceId: cfg.instanceId,
+                passed: resp.passed as boolean,
+              };
             }),
           );
           return {
             rowId,
-            compId: c.id,
+            compId,
             output,
             evals,
             duration,
@@ -668,11 +694,12 @@ export default function Experiments() {
           };
         })(),
       );
-      return [base, ...compsTasks];
+
+      return [baseTask, ...compTasks];
     });
-    // wait for all
+
     const results = await Promise.all(tasks);
-    // dispatch updates once complete
+
     results.forEach(
       ({ rowId, compId, output, evals, duration, tokens, cost }) => {
         dispatch({
@@ -685,16 +712,19 @@ export default function Experiments() {
           cost,
         });
         dispatch({ type: "SET_MODEL_LOADING", rowId, compId, flag: false });
-        evals.forEach(({ id, passed }) => {
-          dispatch({ type: "SET_EVAL_RESULT", rowId, id, passed });
+        evals.forEach(({ instanceId, passed }) => {
+          dispatch({ type: "SET_EVAL_RESULT", rowId, instanceId, passed });
         });
       },
     );
   }
 
+  /* ────────────────────── Run evaluators for a row ─────────────────── */
+
   const runEvaluators = async (rowId: number, compId?: number) => {
-    if (!selectedEvalIds.length) return;
-    dispatch({ type: "SET_EVAL_LOADING", rowId, ids: selectedEvalIds });
+    if (!evaluatorConfigs.length) return;
+    const instanceIds = evaluatorConfigs.map((c) => c.instanceId);
+    dispatch({ type: "SET_EVAL_LOADING", rowId, instanceIds });
 
     const targetPV =
       compId == null
@@ -703,24 +733,24 @@ export default function Experiments() {
     if (!targetPV) return;
 
     const row = state.rows.find((r) => r.id === rowId);
-    if (!row?.modelOutput) return;
+    const modelOutput =
+      compId == null ? row?.modelOutput : row?.compResults[compId]?.modelOutput;
+    if (!modelOutput) return;
 
-    for (const id of selectedEvalIds) {
-      const evaluator = evaluators.find((e) => e.id.toString() === id);
-      if (!evaluator) continue;
-
+    for (const cfg of evaluatorConfigs) {
       try {
         const resp = await fetcher.post(`/evaluations/evaluate`, {
           arg: {
             input: targetPV.content,
-            output: { role: "assistant", content: row.modelOutput },
-            evaluatorType: evaluator.id,
+            output: { role: "assistant", content: modelOutput },
+            evaluatorType: cfg.evaluator.id,
+            params: cfg.params.params,
           },
         });
         dispatch({
           type: "SET_EVAL_RESULT",
           rowId,
-          id,
+          instanceId: cfg.instanceId,
           passed: resp.passed as boolean,
         });
       } catch (err) {
@@ -729,45 +759,7 @@ export default function Experiments() {
     }
   };
 
-  const toggleEvaluator = (ev: Evaluator) => {
-    setSelectedEvalIds((prev) => {
-      const id = ev.id.toString();
-      if (prev.includes(id)) {
-        // Deselect
-        const next = prev.filter((x) => x !== id);
-        setActiveEvalId(next[next.length - 1]); // show previous or nothing
-        return next;
-      }
-      // Select
-      if (!paramsMap[id]) {
-        setParamsMap((m) => ({ ...m, [id]: buildInitialParams(ev) }));
-      }
-      setActiveEvalId(id); // new one becomes active
-      return [...prev, id];
-    });
-  };
-
-  const evaluatorCategories = Array.from(
-    new Set(evaluators.map((e) => e.category)),
-  )
-    .sort((a, b) => {
-      const order: Record<string, number> = {
-        labeler: 0,
-        "text-similarity": 1,
-        custom: 2,
-      };
-      const rankA = order[a] ?? 100;
-      const rankB = order[b] ?? 100;
-      return rankA !== rankB ? rankA - rankB : a.localeCompare(b);
-    })
-    .map((cat) => {
-      if (cat === "labeler") return { name: "Model Labeler", value: "labeler" };
-      if (cat === "text-similarity")
-        return { name: "Text Similarity", value: "text-similarity" };
-      return { name: "Custom", value: "custom" };
-    });
-
-  const anyPrompt = state.promptVersion != null;
+  /* ────────────────────── Export CSV helper ────────────────────────── */
 
   const exportToCsv = (): void => {
     const header = [
@@ -796,8 +788,34 @@ export default function Experiments() {
     URL.revokeObjectURL(url);
   };
 
+  /* ──────────────────────── Evaluator categories ───────────────────── */
+
+  const evaluatorCategories = Array.from(
+    new Set(allEvaluators.map((e) => e.category)),
+  )
+    .sort((a, b) => {
+      const order: Record<string, number> = {
+        labeler: 0,
+        "text-similarity": 1,
+        custom: 2,
+      };
+      const rankA = order[a] ?? 100;
+      const rankB = order[b] ?? 100;
+      return rankA !== rankB ? rankA - rankB : a.localeCompare(b);
+    })
+    .map((cat) => {
+      if (cat === "labeler") return { name: "Model Labeler", value: "labeler" };
+      if (cat === "text-similarity")
+        return { name: "Text Similarity", value: "text-similarity" };
+      return { name: "Custom", value: "custom" };
+    });
+
+  const anyPrompt = state.promptVersion != null;
+
+  /* ─────────────────────── Render begins here ─────────────────────── */
   return (
     <>
+      {/* ───────── Top bar ───────── */}
       <Group justify="space-between" mb="sm">
         <Title order={3}>Experiments</Title>
         <Group>
@@ -810,7 +828,10 @@ export default function Experiments() {
           />
           <Button
             size="sm"
-            onClick={() => setShowEvalModal(true)}
+            onClick={() => {
+              setEvalModalPage("list");
+              setShowEvalModal(true);
+            }}
             variant="outline"
             leftSection={<IconSettings width="16" />}
           >
@@ -828,60 +849,161 @@ export default function Experiments() {
         </Group>
       </Group>
 
-      {/* Evaluator selector & config modal */}
+      {/* ───────── Evaluator modal ───────── */}
       <Modal
         opened={showEvalModal}
         onClose={() => setShowEvalModal(false)}
         size="xl"
         styles={{ content: { backgroundColor: "rgb(252, 252, 252)" } }}
       >
-        <Stack>
-          <Title order={6}>Evaluators</Title>
+        {evalModalPage === "list" && (
+          <Stack>
+            <Title order={6}>Configured Evaluators</Title>
 
-          <Tabs defaultValue={evaluatorCategories[0]?.value}>
-            <Tabs.List>
-              {evaluatorCategories.map((cat) => (
-                <Tabs.Tab key={cat.value} value={cat.value}>
-                  {cat.name}
-                </Tabs.Tab>
-              ))}
-            </Tabs.List>
+            {evaluatorConfigs.length === 0 && (
+              <Center>
+                <Text c="dimmed">No evaluators configured yet.</Text>
+              </Center>
+            )}
 
-            {evaluatorCategories.map((cat) => (
-              <Tabs.Panel key={cat.value} value={cat.value} pt="sm">
-                <SimpleGrid cols={3}>
-                  {evaluators
-                    .filter((e) => e.category === cat.value)
-                    .map((ev) => (
-                      <EvaluatorCard
-                        key={ev.id}
-                        evaluator={ev}
-                        isSelected={selectedEvalIds.includes(ev.id.toString())}
-                        onItemClick={() => toggleEvaluator(ev)}
-                      />
-                    ))}
-                </SimpleGrid>
-              </Tabs.Panel>
-            ))}
-          </Tabs>
+            {evaluatorConfigs.length > 0 && (
+              <SimpleGrid cols={3}>
+                {evaluatorConfigs.map((cfg) => (
+                  <Box
+                    key={cfg.instanceId}
+                    style={{
+                      position: "relative",
+                      border: "1px solid #e2e2e2",
+                      borderRadius: 6,
+                      padding: 8,
+                    }}
+                  >
+                    {/* Re-use EvaluatorCard just for display */}
+                    <EvaluatorCard
+                      evaluator={cfg.evaluator}
+                      isSelected={false}
+                      onItemClick={() => {}}
+                    />
+                    <ActionIcon
+                      variant="subtle"
+                      color="red"
+                      style={{ position: "absolute", top: 4, right: 4 }}
+                      onClick={() =>
+                        setEvaluatorConfigs((prev) =>
+                          prev.filter((c) => c.instanceId !== cfg.instanceId),
+                        )
+                      }
+                    >
+                      <IconTrash size={14} />
+                    </ActionIcon>
+                  </Box>
+                ))}
+              </SimpleGrid>
+            )}
 
-          {activeEvalId && (
-            <Fieldset
-              legend="Evaluator Configuration"
-              style={{ overflow: "visible" }}
+            <Group justify="space-between" mt="md">
+              <Button variant="default" onClick={() => setShowEvalModal(false)}>
+                Close
+              </Button>
+              <Button
+                leftSection={<IconPlus size={16} />}
+                onClick={() => {
+                  setSelectedAddEvaluator(null);
+                  setAddEvaluatorParams(undefined);
+                  setEvalModalPage("add");
+                }}
+              >
+                Add Evaluator
+              </Button>
+            </Group>
+          </Stack>
+        )}
+
+        {evalModalPage === "add" && (
+          <Stack>
+            <Title order={6}>Add Evaluator</Title>
+            <Tabs
+              defaultValue={evaluatorCategories[0]?.value}
+              value={
+                selectedAddEvaluator
+                  ? selectedAddEvaluator.category
+                  : evaluatorCategories[0]?.value
+              }
+              onTabChange={() => setSelectedAddEvaluator(null)}
             >
-              {activeEvalId}
-            </Fieldset>
-          )}
+              <Tabs.List>
+                {evaluatorCategories.map((cat) => (
+                  <Tabs.Tab key={cat.value} value={cat.value}>
+                    {cat.name}
+                  </Tabs.Tab>
+                ))}
+              </Tabs.List>
 
-          <Group justify="flex-end">
-            <Button variant="default" onClick={() => setShowEvalModal(false)}>
-              Save
-            </Button>
-          </Group>
-        </Stack>
+              {evaluatorCategories.map((cat) => (
+                <Tabs.Panel key={cat.value} value={cat.value} pt="sm">
+                  <SimpleGrid cols={3}>
+                    {allEvaluators
+                      .filter((e) => e.category === cat.value)
+                      .map((ev) => (
+                        <EvaluatorCard
+                          key={ev.id}
+                          evaluator={ev}
+                          isSelected={selectedAddEvaluator?.id === ev.id}
+                          onItemClick={() => {
+                            setSelectedAddEvaluator(ev);
+                            setAddEvaluatorParams(buildInitialParams(ev));
+                          }}
+                        />
+                      ))}
+                  </SimpleGrid>
+                </Tabs.Panel>
+              ))}
+            </Tabs>
+
+            {selectedAddEvaluator && (
+              <Fieldset legend="Evaluator Configuration">
+                {/* TODO: custom param editing UI. */}
+                <Text size="sm" c="dimmed">
+                  Parameters will use defaults. Extend here if needed.
+                </Text>
+              </Fieldset>
+            )}
+
+            <Group justify="flex-end">
+              <Button
+                variant="default"
+                onClick={() => {
+                  setEvalModalPage("list");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                disabled={!selectedAddEvaluator}
+                onClick={() => {
+                  if (!selectedAddEvaluator) return;
+                  setEvaluatorConfigs((prev) => [
+                    ...prev,
+                    {
+                      instanceId: nextEvalInstanceId,
+                      evaluator: selectedAddEvaluator,
+                      params:
+                        addEvaluatorParams ??
+                        buildInitialParams(selectedAddEvaluator),
+                    },
+                  ]);
+                  setNextEvalInstanceId((n) => n + 1);
+                  setEvalModalPage("list");
+                }}
+              >
+                Add
+              </Button>
+            </Group>
+          </Stack>
+        )}
       </Modal>
 
+      {/* ───────── Table header ───────── */}
       <Table withTableBorder withColumnBorders withRowBorders>
         <Table.Thead>
           <Table.Tr>
@@ -1086,6 +1208,7 @@ export default function Experiments() {
             </Table.Th>
           </Table.Tr>
 
+          {/* ───────── Row showing prompt content ───────── */}
           {showPrompt && state.promptVersion && (
             <Table.Tr>
               {vars.map((v) => (
@@ -1168,17 +1291,21 @@ export default function Experiments() {
           </Table.Tr>
         </Table.Thead>
 
+        {/* ───────── Table body ───────── */}
         <Table.Tbody>
           {anyPrompt &&
             state.rows.map((row) => {
-              const anyEvalLoading = selectedEvalIds.some(
-                (id) => row.evalResults[id]?.loading,
+              const anyEvalLoading = evaluatorConfigs.some(
+                (cfg) => row.evalResults[cfg.instanceId]?.loading,
               );
               const allEvalComplete =
-                selectedEvalIds.length === 0 ||
-                selectedEvalIds.every(
-                  (id) => row.evalResults[id] && !row.evalResults[id].loading,
+                evaluatorConfigs.length === 0 ||
+                evaluatorConfigs.every(
+                  (cfg) =>
+                    row.evalResults[cfg.instanceId] &&
+                    !row.evalResults[cfg.instanceId].loading,
                 );
+
               return (
                 <Table.Tr key={row.id}>
                   {/* variable editors */}
@@ -1209,6 +1336,7 @@ export default function Experiments() {
                     </Table.Td>
                   ))}
 
+                  {/* base prompt run */}
                   <Table.Td p={0}>
                     <Group mt="xs" ml="xs">
                       <ActionIcon
@@ -1228,7 +1356,7 @@ export default function Experiments() {
                         onClick={() => runEvaluators(row.id)}
                         disabled={
                           !row.modelOutput ||
-                          !selectedEvalIds.length ||
+                          !evaluatorConfigs.length ||
                           anyEvalLoading
                         }
                       >
@@ -1240,8 +1368,7 @@ export default function Experiments() {
                         output={row.modelOutput}
                         evalResults={row.evalResults}
                         isComplete={allEvalComplete}
-                        selectedEvalIds={selectedEvalIds}
-                        evaluators={evaluators}
+                        evaluatorConfigs={evaluatorConfigs}
                         metadata={{
                           duration: row.duration!,
                           tokens: row.tokens!,
@@ -1251,7 +1378,7 @@ export default function Experiments() {
                     )}
                   </Table.Td>
 
-                  {/* comparison PV runs */}
+                  {/* comparison prompt runs */}
                   {state.comparisons.map((c) => {
                     const comp = row.compResults[c.id] ?? {
                       modelOutput: "",
@@ -1276,8 +1403,8 @@ export default function Experiments() {
                             variant="subtle"
                             onClick={() => runEvaluators(row.id, c.id)}
                             disabled={
-                              !row.modelOutput ||
-                              !selectedEvalIds.length ||
+                              !comp.modelOutput ||
+                              !evaluatorConfigs.length ||
                               anyEvalLoading
                             }
                           >
@@ -1285,13 +1412,12 @@ export default function Experiments() {
                           </ActionIcon>
                         </Group>
 
-                        {allEvalComplete && (
+                        {allEvalComplete && comp.modelOutput && (
                           <EvalCell
                             output={comp.modelOutput}
                             evalResults={row.evalResults}
                             isComplete={allEvalComplete}
-                            selectedEvalIds={selectedEvalIds}
-                            evaluators={evaluators}
+                            evaluatorConfigs={evaluatorConfigs}
                             metadata={{
                               duration: comp.duration!,
                               tokens: comp.tokens!,
@@ -1337,6 +1463,7 @@ export default function Experiments() {
         </Table.Tbody>
       </Table>
 
+      {/* ───────── Table footer buttons ───────── */}
       <Group mt="md">
         <Button
           leftSection={<IconPlus width={16} />}
@@ -1356,7 +1483,7 @@ export default function Experiments() {
         </Button>
       </Group>
 
-      {/* Modal for editing variable in larger view */}
+      {/* ───────── Variable edit modal ───────── */}
       {variableModal && (
         <Modal
           opened
@@ -1385,7 +1512,7 @@ export default function Experiments() {
         </Modal>
       )}
 
-      {/* Modal to edit prompt content of last column */}
+      {/* ───────── Prompt content edit modal ───────── */}
       {promptContentModal && (
         <Modal
           opened
@@ -1440,5 +1567,52 @@ export default function Experiments() {
         </Modal>
       )}
     </>
+  );
+}
+
+/* ────────────────────────── PromptVersionSelect ─────────────────────────── */
+
+function PromptVersionSelect({
+  promptVersion,
+  setPromptVersion,
+}: {
+  promptVersion?: PromptVersion;
+  setPromptVersion: (pv?: PromptVersion) => void;
+}) {
+  const { prompts } = usePrompts();
+  const [selectedPrompt, setSelectedPrompt] = useState<Prompt>();
+  const { promptVersions } = usePromptVersions(selectedPrompt?.id);
+
+  const promptOpts = prompts.map((p) => ({
+    value: p.id.toString(),
+    label: p.slug,
+  }));
+  const versionOpts = promptVersions.map((pv) => ({
+    value: pv.id.toString(),
+    label: `v${pv.version}`,
+  }));
+
+  return (
+    <Group gap="0">
+      <Select
+        placeholder="Choose prompt"
+        data={promptOpts}
+        onChange={(v) =>
+          setSelectedPrompt(prompts.find((p) => p.id === Number(v)))
+        }
+        styles={{ input: { borderRadius: "8px 0 0 8px" } }}
+      />
+      <Select
+        placeholder="Choose version"
+        disabled={!selectedPrompt}
+        data={versionOpts}
+        onChange={(v) =>
+          setPromptVersion(promptVersions.find((pv) => pv.id === Number(v)))
+        }
+        w={promptVersion ? 70 : 150}
+        styles={{ input: { borderRadius: "0 8px 8px 0", borderLeft: 0 } }}
+        comboboxProps={{ width: 80 }}
+      />
+    </Group>
   );
 }
