@@ -60,7 +60,7 @@ jobs:
         run: |
           bun run migrate:db
           bun run start:backend &
-          bun run build:frontend
+          bun run build:frontend --turbo
           bun run start:frontend &
           bunx wait-on http://localhost:3333/v1/health http://0.0.0.0:8080/
 
