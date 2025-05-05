@@ -93,8 +93,6 @@ auth.post("/signup", async (ctx: Context) => {
   const shouldRunRecaptcha =
     config.RECAPTCHA_SECRET_KEY && !whiteListedDomains.includes(emailDomain);
 
-  console.debug(1);
-
   if (shouldRunRecaptcha) {
     const recaptchaResponse = await verifyRecaptcha(recaptchaToken!);
     if (!recaptchaResponse.success) {
@@ -102,7 +100,6 @@ auth.post("/signup", async (ctx: Context) => {
     }
   }
 
-  console.debug(2);
   if (signupMethod === "signup") {
     const { user, org } = await sql.begin(async (sql) => {
       const plan = process.env.DEFAULT_PLAN || "free";
@@ -110,7 +107,6 @@ auth.post("/signup", async (ctx: Context) => {
       const [existingUser] = await sql`
         select * from account where lower(email) = lower(${email})
       `;
-      console.debug(3);
 
       if (!password) {
         ctx.throw(403, "Password is required");
@@ -150,7 +146,6 @@ auth.post("/signup", async (ctx: Context) => {
         insert into account_project ${sql({ accountId: user.id, projectId: project.id })}
       `;
 
-      console.debug(4);
       const publicKey = {
         type: "public",
         projectId: project.id,
@@ -170,18 +165,14 @@ auth.post("/signup", async (ctx: Context) => {
         insert into api_key ${sql(privateKey)}
       `;
 
-      console.debug(5);
       return { user, org };
     });
 
-    console.debug(6);
     const token = await signJWT({
       userId: user.id,
       email: user.email,
       orgId: org.id,
     });
-
-    console.log("token", token);
 
     sendVerifyEmail(email, name);
 
