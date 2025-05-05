@@ -23,6 +23,8 @@ import {
   Menu,
   Box,
   Collapse,
+  Popover,
+  NumberInput,
 } from "@mantine/core";
 import {
   IconBolt,
@@ -42,6 +44,8 @@ import { KeyboardEvent, useEffect, useMemo, useReducer, useState } from "react";
 import { CheckLogic } from "shared";
 import { Prompt, PromptVersion } from "shared/schemas/prompt";
 import { EvaluatorCard } from "../evaluators/new";
+import ModelSelect from "@/components/prompts/ModelSelect";
+import { Model } from "shared";
 
 export function extractVariables(text = ""): string[] {
   const re = /{{\s*([A-Za-z_]\w*)\s*}}/g;
@@ -394,6 +398,19 @@ export default function Experiments() {
   const [paramsMap, setParamsMap] = useState<Record<string, CheckLogic>>({});
   const [showPrompt, setShowPrompt] = useState(true);
 
+  // per-column model configuration state
+  const [openConfigColumn, setOpenConfigColumn] = useState<string | null>(
+    "base",
+  );
+  const [modelConfigs, setModelConfigs] = useState<
+    Record<
+      string,
+      { model: Model | null; temperature: number; maxTokens: number }
+    >
+  >({
+    base: { model: null, temperature: 1, maxTokens: 256 },
+  });
+
   const [state, dispatch] = useReducer(reducer, {
     promptVersion: undefined,
     rows: [],
@@ -436,8 +453,17 @@ export default function Experiments() {
     if (!row) return;
 
     try {
+      const key = compId == null ? "base" : compId.toString();
+      const cfg = modelConfigs[key] || {
+        model: null,
+        temperature: 1,
+        maxTokens: 256,
+      };
       const resp = await fetcher.post(`/orgs/${org?.id}/playground`, {
         arg: {
+          modelId: cfg.model?.id,
+          temperature: cfg.temperature,
+          maxTokens: cfg.maxTokens,
           content: targetPV.content,
           extra: targetPV.extra,
           variables: row.variableValues,
@@ -461,8 +487,17 @@ export default function Experiments() {
     if (!targetPV) throw new Error("No prompt version");
     const row = state.rows.find((r) => r.id === rowId);
     if (!row) throw new Error("No row found");
+    const key = compId == null ? "base" : compId.toString();
+    const cfg = modelConfigs[key] || {
+      model: null,
+      temperature: 1,
+      maxTokens: 256,
+    };
     const resp = await fetcher.post(`/orgs/${org?.id}/playground`, {
       arg: {
+        modelId: cfg.model?.id,
+        temperature: cfg.temperature,
+        maxTokens: cfg.maxTokens,
         content: targetPV.content,
         extra: targetPV.extra,
         variables: row.variableValues,
@@ -763,12 +798,70 @@ export default function Experiments() {
               <Table.Th key={v}></Table.Th>
             ))}
             <Table.Th>
-              <PromptVersionSelect
-                promptVersion={state.promptVersion}
-                setPromptVersion={(pv) =>
-                  dispatch({ type: "SET_PROMPT_VERSION", promptVersion: pv })
-                }
-              />
+              <Group align="center" spacing="xs">
+                <PromptVersionSelect
+                  promptVersion={state.promptVersion}
+                  setPromptVersion={(pv) =>
+                    dispatch({ type: "SET_PROMPT_VERSION", promptVersion: pv })
+                  }
+                />
+                <Popover
+                  opened={openConfigColumn === "base"}
+                  onClose={() => setOpenConfigColumn(null)}
+                  position="bottom"
+                  withArrow
+                >
+                  <Popover.Target>
+                    <ActionIcon
+                      size="sm"
+                      onClick={() =>
+                        setOpenConfigColumn(
+                          openConfigColumn === "base" ? null : "base",
+                        )
+                      }
+                    >
+                      <IconSettings size={16} />
+                    </ActionIcon>
+                  </Popover.Target>
+                  <Popover.Dropdown>
+                    <Stack spacing="sm">
+                      <ModelSelect
+                        handleChange={(m) =>
+                          setModelConfigs((prev) => ({
+                            ...prev,
+                            base: { ...prev.base, model: m },
+                          }))
+                        }
+                      />
+                      <NumberInput
+                        label="Temperature"
+                        min={0}
+                        max={1}
+                        step={0.01}
+                        value={modelConfigs["base"].temperature}
+                        onChange={(value: number) =>
+                          setModelConfigs((prev) => ({
+                            ...prev,
+                            base: { ...prev.base, temperature: value },
+                          }))
+                        }
+                      />
+                      <NumberInput
+                        label="Max Tokens"
+                        min={1}
+                        step={1}
+                        value={modelConfigs["base"].maxTokens}
+                        onChange={(value: number) =>
+                          setModelConfigs((prev) => ({
+                            ...prev,
+                            base: { ...prev.base, maxTokens: value },
+                          }))
+                        }
+                      />
+                    </Stack>
+                  </Popover.Dropdown>
+                </Popover>
+              </Group>
             </Table.Th>
             {state.comparisons.map((c) => (
               <Table.Th key={c.id}>
@@ -779,6 +872,81 @@ export default function Experiments() {
                       dispatch({ type: "SET_COMP_PV", compId: c.id, pv })
                     }
                   />
+                  {/* model config for this comparison column */}
+                  <Popover
+                    opened={openConfigColumn === c.id.toString()}
+                    onClose={() => setOpenConfigColumn(null)}
+                    position="bottom"
+                    withArrow
+                  >
+                    <Popover.Target>
+                      <ActionIcon
+                        size="sm"
+                        onClick={() =>
+                          setOpenConfigColumn(
+                            openConfigColumn === c.id.toString()
+                              ? null
+                              : c.id.toString(),
+                          )
+                        }
+                      >
+                        <IconSettings size={16} />
+                      </ActionIcon>
+                    </Popover.Target>
+                    <Popover.Dropdown>
+                      <Stack spacing="sm">
+                        <ModelSelect
+                          handleChange={(m) =>
+                            setModelConfigs((prev) => ({
+                              ...prev,
+                              [c.id]: {
+                                model: m,
+                                temperature: prev[c.id]?.temperature ?? 1,
+                                maxTokens: prev[c.id]?.maxTokens ?? 256,
+                              },
+                            }))
+                          }
+                        />
+                        <NumberInput
+                          label="Temperature"
+                          min={0}
+                          max={1}
+                          step={0.01}
+                          value={modelConfigs[c.id]?.temperature ?? 1}
+                          onChange={(value: number) =>
+                            setModelConfigs((prev) => ({
+                              ...prev,
+                              [c.id]: {
+                                ...(prev[c.id] || {
+                                  model: null,
+                                  maxTokens: 256,
+                                }),
+                                temperature: value,
+                              },
+                            }))
+                          }
+                        />
+                        <NumberInput
+                          label="Max Tokens"
+                          min={1}
+                          step={1}
+                          value={modelConfigs[c.id]?.maxTokens ?? 256}
+                          onChange={(value: number) =>
+                            setModelConfigs((prev) => ({
+                              ...prev,
+                              [c.id]: {
+                                ...(prev[c.id] || {
+                                  model: null,
+                                  temperature: 1,
+                                }),
+                                maxTokens: value,
+                              },
+                            }))
+                          }
+                        />
+                      </Stack>
+                    </Popover.Dropdown>
+                  </Popover>
                   <Menu>
                     <Menu.Target>
                       <ActionIcon variant="subtle">
