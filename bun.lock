@@ -75,6 +75,7 @@
         "@langchain/openai": "^0.5.7",
         "@playwright/test": "^1.52.0",
         "backend": "*",
+        "dotenv": "^16.5.0",
         "lunary": "^0.8.8",
       },
     },

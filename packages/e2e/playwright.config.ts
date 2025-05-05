@@ -1,4 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
+import dotenv from "dotenv";
+import path from "path";
+
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config({ path: path.resolve(__dirname, "../backend/.env") });
+}
 
 /**
  * See https://playwright.dev/docs/test-configuration.
