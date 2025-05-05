@@ -838,12 +838,18 @@ export default function Experiments() {
         <Stack>
           <Title order={6}>Evaluators</Title>
 
-          {/* Card grid and config panels here */}
-          <Stack>
+          <Tabs defaultValue={evaluatorCategories[0]?.value}>
+            <Tabs.List>
+              {evaluatorCategories.map((cat) => (
+                <Tabs.Tab key={cat.value} value={cat.value}>
+                  {cat.name}
+                </Tabs.Tab>
+              ))}
+            </Tabs.List>
+
             {evaluatorCategories.map((cat) => (
-              <>
-                <Title order={6}>{cat.name}</Title>
-                <SimpleGrid cols={3} key={cat.value}>
+              <Tabs.Panel key={cat.value} value={cat.value} pt="sm">
+                <SimpleGrid cols={3}>
                   {evaluators
                     .filter((e) => e.category === cat.value)
                     .map((ev) => (
@@ -855,9 +861,10 @@ export default function Experiments() {
                       />
                     ))}
                 </SimpleGrid>
-              </>
+              </Tabs.Panel>
             ))}
-          </Stack>
+          </Tabs>
+
           {activeEvalId && (
             <Fieldset
               legend="Evaluator Configuration"
