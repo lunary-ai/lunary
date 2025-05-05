@@ -29,7 +29,8 @@ jobs:
       - name: Get Playwright version
         id: pw-version
         run: |
-          echo "PW_VERSION=$(bunx --silent node -e \"console.log(require('./package.json').devDependencies?.['@playwright/test'] ?? require('./package.json').dependencies?.['@playwright/test'])\")" >>"$GITHUB_ENV"
+          PW_VERSION=$(jq -r '.devDependencies["@playwright/test"] // .dependencies["@playwright/test"]' package.json)
+          echo "PW_VERSION=$PW_VERSION" >> "$GITHUB_ENV"
 
       - name: Cache Playwright browsers
         id: pw-cache
