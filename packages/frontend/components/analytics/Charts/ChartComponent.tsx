@@ -163,7 +163,7 @@ export default function ChartComponent({
       "runs",
     ].includes(dataKey)
   ) {
-    if (chart.type === "Bar") {
+    if (chart?.type === "Bar") {
       return (
         <BarChartComponent
           data={data}
