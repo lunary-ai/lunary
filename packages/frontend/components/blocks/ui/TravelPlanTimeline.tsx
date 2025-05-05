@@ -1,5 +1,3 @@
-"use client";
-
 import { Card, CardContent } from "@/components/blocks/ui/card";
 import { Box, Text } from "@mantine/core";
 import TimeRule from "./TimeRuler";
@@ -81,17 +79,7 @@ const tasks = [
   },
 ];
 
-export default function TravelPlanTimeline({ runs, parentId, firstDate }) {
-  console.log("rrrrrrrrrrrrrrrrrrrrrrrrrrr", runs);
-
-  const color = getColorForRunType(runs?.type);
-
-  console.log("colorvvvvvvvvv", color);
-
-  const showStatus = !["convo", "thread", "chat", "custom-event"].includes(
-    runs?.type,
-  );
-  // console.log("showStatus", showStatus)
+export default function TravelPlanTimeline({ runs, parentId }) {
   const shownRuns = runs
     .filter((r) => r.parentRunId === parentId)
     .sort(
@@ -99,11 +87,7 @@ export default function TravelPlanTimeline({ runs, parentId, firstDate }) {
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
 
-  console.log("shownRuns bottom", shownRuns);
-
   const displayTasks = shownRuns?.length ? generateTasks(shownRuns) : tasks;
-
-  console.log("displayTasks", displayTasks);
 
   return (
     <>
