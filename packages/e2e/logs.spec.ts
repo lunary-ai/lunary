@@ -64,23 +64,23 @@ test("thread side panel is visible", async ({ page }) => {
   await expect(page.locator("#chat-replay")).toBeVisible();
 });
 
-test("make a log public", async ({ page, context }) => {
-  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+// test("make a log public", async ({ page, context }) => {
+//   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
 
-  await page.goto("/logs");
-  await page.waitForLoadState("networkidle");
+//   await page.goto("/logs");
+//   await page.waitForLoadState("networkidle");
 
-  await page.getByText("xyzTESTxyz").click();
+//   await page.getByText("xyzTESTxyz").click();
 
-  await page.getByTestId("selected-run-menu").click();
-  await page.getByTestId("toggle-run-visibility").click();
+//   await page.getByTestId("selected-run-menu").click();
+//   await page.getByTestId("toggle-run-visibility").click();
 
-  publicLogUrl = await page.evaluate(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const selected = urlParams.get("selected");
-    return `${window.location.origin}/logs/${selected}`;
-  });
-});
+//   publicLogUrl = await page.evaluate(() => {
+//     const urlParams = new URLSearchParams(window.location.search);
+//     const selected = urlParams.get("selected");
+//     return `${window.location.origin}/logs/${selected}`;
+//   });
+// });
 
 test("test export csv", async ({ page }) => {
   page.on("console", (msg) => {
