@@ -1,7 +1,5 @@
 // components/ui/progress.tsx
 
-"use client";
-
 import { Progress as MantineProgress } from "@mantine/core";
 
 interface ProgressProps {

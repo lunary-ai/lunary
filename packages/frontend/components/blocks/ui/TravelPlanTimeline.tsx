@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/blocks/ui/card";
 import { Box, Text } from "@mantine/core";
-import TimeRuler from "./TimeRuler";
+import TimeRule from "./TimeRuler";
 
 import { getColorForRunType } from "../../../utils/colors";
 
@@ -14,7 +14,7 @@ const generateTasks = (runs) => {
   if (!runs?.length) return [];
 
   const firstTime = new Date(runs[0].createdAt).getTime();
-  const maxCost = Math.max(...runs.map(run => run.cost || 0.001));
+  const maxCost = Math.max(...runs.map((run) => run.cost || 0.001));
 
   return runs.map((run) => {
     const startTime = new Date(run.createdAt).getTime();
@@ -24,7 +24,7 @@ const generateTasks = (runs) => {
     return {
       title: run.name,
       progress: progress,
-      color: getColorForRunType(run.type) || '#cbd5e1',
+      color: getColorForRunType(run.type) || "#cbd5e1",
       start: start,
     };
   });
@@ -81,13 +81,13 @@ const tasks = [
   },
 ];
 
-export default function TravelPlanTimeline({runs, parentId, firstDate}) {
-  console.log("rrrrrrrrrrrrrrrrrrrrrrrrrrr",runs)
+export default function TravelPlanTimeline({ runs, parentId, firstDate }) {
+  console.log("rrrrrrrrrrrrrrrrrrrrrrrrrrr", runs);
 
   const color = getColorForRunType(runs?.type);
 
-  console.log("colorvvvvvvvvv", color)
-  
+  console.log("colorvvvvvvvvv", color);
+
   const showStatus = !["convo", "thread", "chat", "custom-event"].includes(
     runs?.type,
   );
@@ -99,15 +99,15 @@ export default function TravelPlanTimeline({runs, parentId, firstDate}) {
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
 
-    console.log("shownRuns bottom", shownRuns)
+  console.log("shownRuns bottom", shownRuns);
 
   const displayTasks = shownRuns?.length ? generateTasks(shownRuns) : tasks;
 
-  console.log("displayTasks", displayTasks)
+  console.log("displayTasks", displayTasks);
 
   return (
     <>
-      <TimeRuler />
+      <TimeRule />
       <Box p="xl" style={{ overflowX: "auto" }}>
         <Card>
           <CardContent>
