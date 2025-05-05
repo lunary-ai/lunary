@@ -21,6 +21,8 @@ import {
   Textarea,
   Title,
   Menu,
+  Box,
+  Collapse,
 } from "@mantine/core";
 import {
   IconBolt,
@@ -32,6 +34,9 @@ import {
   IconCopy,
   IconTrash,
   IconDownload,
+  IconCheck,
+  IconChevronUp,
+  IconChevronDown,
 } from "@tabler/icons-react";
 import { KeyboardEvent, useEffect, useMemo, useReducer, useState } from "react";
 import { CheckLogic } from "shared";
@@ -106,7 +111,7 @@ function PromptVersionSelect({
         onChange={(v) =>
           setPromptVersion(promptVersions.find((pv) => pv.id === Number(v)))
         }
-        w={promptVersion ? 60 : 150}
+        w={promptVersion ? 70 : 150}
         styles={{ input: { borderRadius: "0 8px 8px 0", borderLeft: 0 } }}
         comboboxProps={{ width: 80 }}
       />
@@ -326,6 +331,54 @@ function reducer(state: State, a: Action): State {
   }
 }
 
+// New EvalCell component to display output with collapsible evaluation results
+function EvalCell({
+  output,
+  evalResults,
+  isComplete,
+  selectedEvalIds,
+  evaluators,
+}) {
+  const [open, setOpen] = useState(false);
+  const total = selectedEvalIds.length;
+  const passedCount = selectedEvalIds.filter(
+    (id) => evalResults[id]?.passed,
+  ).length;
+  if (!isComplete || !output) return null;
+  return (
+    <Box style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <Box style={{ overflow: "auto", flex: 1 }}>
+        <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+          {output}
+        </Text>
+      </Box>
+      <Box p="sm">
+        <Group position="apart" align="center">
+          <Group spacing="xs">
+            {passedCount === total && <IconCheck color="green" size={16} />}
+            <Text size="sm">{`${passedCount}/${total} tests passed`}</Text>
+          </Group>
+          <ActionIcon onClick={() => setOpen((o) => !o)}>
+            {open ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
+          </ActionIcon>
+        </Group>
+        <Collapse in={open}>
+          {selectedEvalIds.map((id) => {
+            const res = evalResults[id];
+            const ev = evaluators.find((e) => e.id.toString() === id);
+            return (
+              <Text
+                size="sm"
+                key={id}
+              >{`${ev?.id}: ${res.passed ? "Pass" : "Fail"}`}</Text>
+            );
+          })}
+        </Collapse>
+      </Box>
+    </Box>
+  );
+}
+
 export default function Experiments() {
   const { org } = useOrg();
   usePrompts();
@@ -399,12 +452,112 @@ export default function Experiments() {
     }
   };
 
-  const runAll = () => {
-    state.rows.forEach((r) => {
-      runModelRow(r.id);
-      state.comparisons.forEach((c) => runModelRow(r.id, c.id));
+  // fetchModelResult returns the output for a given row and optional comparison without dispatching
+  async function fetchModelResult(rowId: number, compId?: number) {
+    const targetPV =
+      compId == null
+        ? state.promptVersion
+        : state.comparisons.find((c) => c.id === compId)?.promptVersion;
+    if (!targetPV) throw new Error("No prompt version");
+    const row = state.rows.find((r) => r.id === rowId);
+    if (!row) throw new Error("No row found");
+    const resp = await fetcher.post(`/orgs/${org?.id}/playground`, {
+      arg: {
+        content: targetPV.content,
+        extra: targetPV.extra,
+        variables: row.variableValues,
+      },
     });
-  };
+    return { rowId, compId, output: resp.choices[0].message.content as string };
+  }
+
+  // Run all rows and comparisons, wait for all to complete, then update cells
+  async function runAll() {
+    const rows = state.rows;
+    const comps = state.comparisons;
+    // set all loading flags
+    rows.forEach((r) => {
+      // base cell loading
+      dispatch({ type: "SET_MODEL_LOADING", rowId: r.id, flag: true });
+      if (selectedEvalIds.length)
+        dispatch({
+          type: "SET_EVAL_LOADING",
+          rowId: r.id,
+          ids: selectedEvalIds,
+        });
+      // comparison cells loading
+      comps.forEach((c) => {
+        dispatch({
+          type: "SET_MODEL_LOADING",
+          rowId: r.id,
+          compId: c.id,
+          flag: true,
+        });
+        if (selectedEvalIds.length)
+          dispatch({
+            type: "SET_EVAL_LOADING",
+            rowId: r.id,
+            ids: selectedEvalIds,
+          });
+      });
+    });
+    // prepare tasks for model + evaluator calls
+    const tasks = rows.flatMap((r) => {
+      const base = (async () => {
+        const { rowId, output } = await fetchModelResult(r.id);
+        const evals = await Promise.all(
+          selectedEvalIds.map(async (id) => {
+            const resp = await fetcher.post(`/evaluations/evaluate`, {
+              arg: {
+                input: state.promptVersion?.content,
+                output: { role: "assistant", content: output },
+                evaluatorType: id,
+              },
+            });
+            return { id, passed: resp.passed as boolean };
+          }),
+        );
+        return {
+          rowId,
+          compId: undefined as number | undefined,
+          output,
+          evals,
+        };
+      })();
+      const compsTasks = comps.map((c) =>
+        (async () => {
+          const { rowId, compId, output } = await fetchModelResult(r.id, c.id);
+          const evals = await Promise.all(
+            selectedEvalIds.map(async (id) => {
+              const targetPV = state.comparisons.find(
+                (x) => x.id === c.id,
+              )?.promptVersion;
+              const resp = await fetcher.post(`/evaluations/evaluate`, {
+                arg: {
+                  input: targetPV?.content,
+                  output: { role: "assistant", content: output },
+                  evaluatorType: id,
+                },
+              });
+              return { id, passed: resp.passed as boolean };
+            }),
+          );
+          return { rowId, compId: c.id, output, evals };
+        })(),
+      );
+      return [base, ...compsTasks];
+    });
+    // wait for all
+    const results = await Promise.all(tasks);
+    // dispatch updates once complete
+    results.forEach(({ rowId, compId, output, evals }) => {
+      dispatch({ type: "SET_MODEL_OUTPUT", rowId, compId, output });
+      dispatch({ type: "SET_MODEL_LOADING", rowId, compId, flag: false });
+      evals.forEach(({ id, passed }) => {
+        dispatch({ type: "SET_EVAL_RESULT", rowId, id, passed });
+      });
+    });
+  }
 
   const runEvaluators = async (rowId: number, compId?: number) => {
     if (!selectedEvalIds.length) return;
@@ -744,6 +897,11 @@ export default function Experiments() {
               const anyEvalLoading = selectedEvalIds.some(
                 (id) => row.evalResults[id]?.loading,
               );
+              const allEvalComplete =
+                selectedEvalIds.length === 0 ||
+                selectedEvalIds.every(
+                  (id) => row.evalResults[id] && !row.evalResults[id].loading,
+                );
               return (
                 <Table.Tr key={row.id}>
                   {/* variable editors */}
@@ -790,22 +948,15 @@ export default function Experiments() {
                         <IconTestPipe size={16} />
                       </ActionIcon>
                     </Group>
-                    {row.modelOutput && (
-                      <Text size="sm" mt={8} style={{ whiteSpace: "pre-wrap" }}>
-                        {row.modelOutput}
-                      </Text>
+                    {allEvalComplete && row.modelOutput && (
+                      <EvalCell
+                        output={row.modelOutput}
+                        evalResults={row.evalResults}
+                        isComplete={allEvalComplete}
+                        selectedEvalIds={selectedEvalIds}
+                        evaluators={evaluators}
+                      />
                     )}
-                    {selectedEvalIds.map((id) => {
-                      const res = row.evalResults[id];
-                      const ev = evaluators.find((e) => e.id.toString() === id);
-                      return (
-                        res && (
-                          <Text size="sm" key={id}>
-                            {ev?.id}: {res.passed ? "Pass" : "Fail"}
-                          </Text>
-                        )
-                      );
-                    })}
                   </Table.Td>
 
                   {/* comparison PV runs */}
@@ -816,22 +967,40 @@ export default function Experiments() {
                     };
                     return (
                       <Table.Td key={c.id} p={0}>
-                        <Button
-                          size="xs"
-                          onClick={() => runModelRow(row.id, c.id)}
-                          loading={comp.modelLoading}
-                          disabled={!c.promptVersion}
-                        >
-                          Run
-                        </Button>
-                        {comp.modelOutput && (
-                          <Text
-                            size="sm"
-                            mt={8}
-                            style={{ whiteSpace: "pre-wrap" }}
+                        <Group mt="xs" ml="xs">
+                          <ActionIcon
+                            size="md"
+                            variant="subtle"
+                            onClick={() => runModelRow(row.id, c.id)}
+                            loading={comp.modelLoading}
+                            disabled={!c.promptVersion}
                           >
-                            {comp.modelOutput}
-                          </Text>
+                            <IconPlayerPlayFilled size={16} />
+                          </ActionIcon>
+                          <ActionIcon
+                            ml="xs"
+                            size="md"
+                            color="blue"
+                            variant="subtle"
+                            onClick={() => runEvaluators(row.id, c.id)}
+                            disabled={
+                              !row.modelOutput ||
+                              !selectedEvalIds.length ||
+                              anyEvalLoading
+                            }
+                          >
+                            <IconTestPipe size={16} />
+                          </ActionIcon>
+                        </Group>
+
+                        {allEvalComplete && (
+                          <EvalCell
+                            output={comp.modelOutput}
+                            evalResults={row.evalResults}
+                            isComplete={allEvalComplete}
+                            selectedEvalIds={selectedEvalIds}
+                            evaluators={evaluators}
+                          />
                         )}
                       </Table.Td>
                     );
