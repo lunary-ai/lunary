@@ -594,13 +594,10 @@ function TraceTreeParent({
   onSelect,
   firstDate,
 }) {
-  console.log("runssssssssss", runs);
   const [collapsed, setCollapsed] = useState(false);
 
   // each run contains a child_runs array containing the ids of the runs it spawned
   const run = runs.find((run) => run.id === parentId);
-
-  console.log("rudddddddddddddd", run.endedAt);
   if (!run) {
     return null;
   }
@@ -957,44 +954,42 @@ export default function Trace({}) {
       </Group>
 
       {showTraceTree && relatedRuns && (
-  <>
-    <TimeRuler />
-    <Group style={{ flex: 1, minHeight: 0, width: "100%" }}>
-      {/* Left Panel: 70% width */}
-      <Box style={{ width: "67%", overflowY: "auto", height: "100%" }}>
-        <TraceTreeParent
-          isFirst
-          focused={focused}
-          onSelect={setFocused}
-          parentId={id}
-          runs={relatedRuns}
-          firstDate={run.createdAt}
-        />
-      </Box>
+        <>
+          <TimeRuler />
+          <Group style={{ flex: 1, minHeight: 0, width: "100%" }}>
+            {/* Left Panel: 70% width */}
+            <Box style={{ width: "67%", overflowY: "auto", height: "100%" }}>
+              <TraceTreeParent
+                isFirst
+                focused={focused}
+                onSelect={setFocused}
+                parentId={id}
+                runs={relatedRuns}
+                firstDate={run.createdAt}
+              />
+            </Box>
 
-      {/* Right Panel: 30% width */}
-      <Box style={{ width: "30%", overflowY: "auto", height: "100%" }}>
-        <Box p="md">
-          <Card
-            withBorder
-            style={{
-              position: "sticky",
-              top: 0,
-              maxHeight: "calc(100vh - 200px)",
-              overflow: "auto",
-            }}
-          >
-            {focusedRun && (
-              <RenderRun run={focusedRun} relatedRuns={relatedRuns} />
-            )}
-          </Card>
-        </Box>
-      </Box>
-    </Group>
-  </>
-)}
-
-    
+            {/* Right Panel: 30% width */}
+            <Box style={{ width: "30%", overflowY: "auto", height: "100%" }}>
+              <Box p="md">
+                <Card
+                  withBorder
+                  style={{
+                    position: "sticky",
+                    top: 0,
+                    maxHeight: "calc(100vh - 200px)",
+                    overflow: "auto",
+                  }}
+                >
+                  {focusedRun && (
+                    <RenderRun run={focusedRun} relatedRuns={relatedRuns} />
+                  )}
+                </Card>
+              </Box>
+            </Box>
+          </Group>
+        </>
+      )}
 
       {!showTraceTree && (
         <Group style={{ flex: 1, minHeight: 0 }}>
