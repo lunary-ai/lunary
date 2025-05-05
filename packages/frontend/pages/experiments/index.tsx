@@ -39,6 +39,8 @@ import {
   IconCheck,
   IconChevronUp,
   IconChevronDown,
+  IconMaximize,
+  IconPencil,
 } from "@tabler/icons-react";
 import { KeyboardEvent, useEffect, useMemo, useReducer, useState } from "react";
 import { CheckLogic } from "shared";
@@ -46,6 +48,8 @@ import { Prompt, PromptVersion } from "shared/schemas/prompt";
 import { EvaluatorCard } from "../evaluators/new";
 import ModelSelect from "@/components/prompts/ModelSelect";
 import { Model } from "shared";
+
+const PROMPT_COLUMN_WIDTH = 600; // px
 
 export function extractVariables(text = ""): string[] {
   const re = /{{\s*([A-Za-z_]\w*)\s*}}/g;
@@ -132,12 +136,18 @@ interface EvalResult {
 interface CompResult {
   modelOutput: string;
   modelLoading: boolean;
+  cost?: number;
+  duration?: number;
+  tokens?: number;
 }
 interface Row {
   id: number;
   variableValues: Record<string, string>;
   modelOutput: string;
   modelLoading: boolean;
+  cost?: number;
+  duration?: number;
+  tokens?: number;
   compResults: Record<number, CompResult>;
   evalResults: Record<string, EvalResult>;
 }
@@ -171,7 +181,15 @@ type Action =
   | { type: "DELETE_ROW"; rowId: number }
   | { type: "SET_VAR"; rowId: number; varName: string; value: string }
   | { type: "SET_MODEL_LOADING"; rowId: number; compId?: number; flag: boolean }
-  | { type: "SET_MODEL_OUTPUT"; rowId: number; compId?: number; output: string }
+  | {
+      type: "SET_MODEL_OUTPUT";
+      rowId: number;
+      compId?: number;
+      output: string;
+      cost?: number;
+      duration?: number;
+      tokens?: number;
+    }
   | { type: "SET_EVAL_LOADING"; rowId: number; ids: string[] }
   | { type: "SET_EVAL_RESULT"; rowId: number; id: string; passed: boolean }
   | { type: "ADD_COMP" }
@@ -179,6 +197,13 @@ type Action =
   | { type: "DELETE_COMP"; compId: number }
   | { type: "SET_PROMPT_VERSION"; promptVersion?: PromptVersion }
   | { type: "DUPLICATE_ROW"; rowId: number };
+
+// define metadata type
+interface UsageMetadata {
+  cost?: number;
+  duration: number;
+  tokens: number;
+}
 
 function reducer(state: State, a: Action): State {
   switch (a.type) {
@@ -236,7 +261,14 @@ function reducer(state: State, a: Action): State {
         ...state,
         rows: state.rows.map((r) => {
           if (r.id !== a.rowId) return r;
-          if (a.compId == null) return { ...r, modelOutput: a.output };
+          if (a.compId == null)
+            return {
+              ...r,
+              modelOutput: a.output,
+              cost: a.cost,
+              duration: a.duration,
+              tokens: a.tokens,
+            };
           const prev = r.compResults[a.compId] ?? {
             modelOutput: "",
             modelLoading: false,
@@ -245,7 +277,13 @@ function reducer(state: State, a: Action): State {
             ...r,
             compResults: {
               ...r.compResults,
-              [a.compId]: { ...prev, modelOutput: a.output },
+              [a.compId]: {
+                ...prev,
+                modelOutput: a.output,
+                cost: a.cost,
+                duration: a.duration,
+                tokens: a.tokens,
+              },
             },
           };
         }),
@@ -305,28 +343,20 @@ function reducer(state: State, a: Action): State {
       return {
         ...state,
         comparisons: state.comparisons.filter((c) => c.id !== a.compId),
-        rows: state.rows.map((r) => {
-          const { [a.compId]: _, ...rest } = r.compResults;
-          return { ...r, compResults: rest };
-        }),
       };
 
     case "DUPLICATE_ROW":
-      const orig = state.rows.find((r) => r.id === a.rowId);
-      if (!orig) return state;
+      const rowToDuplicate = state.rows.find((r) => r.id === a.rowId);
+      if (!rowToDuplicate) return state;
+      const newRow = {
+        ...rowToDuplicate,
+        id: state.nextRowId,
+        evalResults: {},
+        compResults: {},
+      };
       return {
         ...state,
-        rows: [
-          ...state.rows,
-          {
-            id: state.nextRowId,
-            variableValues: { ...orig.variableValues },
-            modelOutput: "",
-            modelLoading: false,
-            compResults: {},
-            evalResults: {},
-          },
-        ],
+        rows: [...state.rows, newRow],
         nextRowId: state.nextRowId + 1,
       };
 
@@ -342,6 +372,14 @@ function EvalCell({
   isComplete,
   selectedEvalIds,
   evaluators,
+  metadata,
+}: {
+  output: string;
+  evalResults: Record<string, EvalResult>;
+  isComplete: boolean;
+  selectedEvalIds: string[];
+  evaluators: any[];
+  metadata?: UsageMetadata;
 }) {
   const [open, setOpen] = useState(false);
   const total = selectedEvalIds.length;
@@ -356,9 +394,17 @@ function EvalCell({
           {output}
         </Text>
       </Box>
+      {metadata && (
+        <Box p="xs">
+          <Text size="xs" c="dimmed">
+            {`${metadata.duration} ms | ${metadata.tokens} tokens`}
+            {metadata.cost != null && ` | $${metadata.cost.toFixed(4)}`}
+          </Text>
+        </Box>
+      )}
       <Box p="sm">
-        <Group position="apart" align="center">
-          <Group spacing="xs">
+        <Group justify="space-between" align="center">
+          <Group gap="xs">
             {passedCount === total && <IconCheck color="green" size={16} />}
             <Text size="sm">{`${passedCount}/${total} tests passed`}</Text>
           </Group>
@@ -399,9 +445,7 @@ export default function Experiments() {
   const [showPrompt, setShowPrompt] = useState(true);
 
   // per-column model configuration state
-  const [openConfigColumn, setOpenConfigColumn] = useState<string | null>(
-    "base",
-  );
+  const [openConfigColumn, setOpenConfigColumn] = useState<string | null>();
   const [modelConfigs, setModelConfigs] = useState<
     Record<
       string,
@@ -418,6 +462,14 @@ export default function Experiments() {
     comparisons: [],
     nextCompId: 0,
   });
+  // state to track which variable cell is expanded in modal
+  const [variableModal, setVariableModal] = useState<{
+    rowId: number;
+    varName: string;
+  } | null>(null);
+  const [promptContentModal, setPromptContentModal] = useState<{
+    compId?: number;
+  } | null>(null);
 
   const vars = useMemo(
     () => extractVariables(JSON.stringify(state.promptVersion?.content ?? "")),
@@ -442,6 +494,7 @@ export default function Experiments() {
 
   const runModelRow = async (rowId: number, compId?: number) => {
     dispatch({ type: "SET_MODEL_LOADING", rowId, compId, flag: true });
+    const start = Date.now();
 
     const targetPV =
       compId == null
@@ -469,8 +522,19 @@ export default function Experiments() {
           variables: row.variableValues,
         },
       });
+      const duration = Date.now() - start;
+      const tokens = resp.usage?.completion_tokens ?? 0;
+      const cost = tokens * 0.00002;
       const output = resp.choices[0].message.content as string;
-      dispatch({ type: "SET_MODEL_OUTPUT", rowId, compId, output });
+      dispatch({
+        type: "SET_MODEL_OUTPUT",
+        rowId,
+        compId,
+        output,
+        cost,
+        duration,
+        tokens,
+      });
     } catch (err) {
       console.error(err);
     } finally {
@@ -480,6 +544,7 @@ export default function Experiments() {
 
   // fetchModelResult returns the output for a given row and optional comparison without dispatching
   async function fetchModelResult(rowId: number, compId?: number) {
+    const start = Date.now();
     const targetPV =
       compId == null
         ? state.promptVersion
@@ -503,7 +568,17 @@ export default function Experiments() {
         variables: row.variableValues,
       },
     });
-    return { rowId, compId, output: resp.choices[0].message.content as string };
+    const duration = Date.now() - start;
+    const tokens = resp.usage?.completion_tokens ?? 0;
+    const cost = tokens * 0.00002;
+    return {
+      rowId,
+      compId,
+      output: resp.choices[0].message.content as string,
+      duration,
+      tokens,
+      cost,
+    };
   }
 
   // Run all rows and comparisons, wait for all to complete, then update cells
@@ -539,7 +614,8 @@ export default function Experiments() {
     // prepare tasks for model + evaluator calls
     const tasks = rows.flatMap((r) => {
       const base = (async () => {
-        const { rowId, output } = await fetchModelResult(r.id);
+        const { rowId, output, duration, tokens, cost } =
+          await fetchModelResult(r.id);
         const evals = await Promise.all(
           selectedEvalIds.map(async (id) => {
             const resp = await fetcher.post(`/evaluations/evaluate`, {
@@ -557,11 +633,15 @@ export default function Experiments() {
           compId: undefined as number | undefined,
           output,
           evals,
+          duration,
+          tokens,
+          cost,
         };
       })();
       const compsTasks = comps.map((c) =>
         (async () => {
-          const { rowId, compId, output } = await fetchModelResult(r.id, c.id);
+          const { rowId, compId, output, duration, tokens, cost } =
+            await fetchModelResult(r.id, c.id);
           const evals = await Promise.all(
             selectedEvalIds.map(async (id) => {
               const targetPV = state.comparisons.find(
@@ -577,7 +657,15 @@ export default function Experiments() {
               return { id, passed: resp.passed as boolean };
             }),
           );
-          return { rowId, compId: c.id, output, evals };
+          return {
+            rowId,
+            compId: c.id,
+            output,
+            evals,
+            duration,
+            tokens,
+            cost,
+          };
         })(),
       );
       return [base, ...compsTasks];
@@ -585,13 +673,23 @@ export default function Experiments() {
     // wait for all
     const results = await Promise.all(tasks);
     // dispatch updates once complete
-    results.forEach(({ rowId, compId, output, evals }) => {
-      dispatch({ type: "SET_MODEL_OUTPUT", rowId, compId, output });
-      dispatch({ type: "SET_MODEL_LOADING", rowId, compId, flag: false });
-      evals.forEach(({ id, passed }) => {
-        dispatch({ type: "SET_EVAL_RESULT", rowId, id, passed });
-      });
-    });
+    results.forEach(
+      ({ rowId, compId, output, evals, duration, tokens, cost }) => {
+        dispatch({
+          type: "SET_MODEL_OUTPUT",
+          rowId,
+          compId,
+          output,
+          duration,
+          tokens,
+          cost,
+        });
+        dispatch({ type: "SET_MODEL_LOADING", rowId, compId, flag: false });
+        evals.forEach(({ id, passed }) => {
+          dispatch({ type: "SET_EVAL_RESULT", rowId, id, passed });
+        });
+      },
+    );
   }
 
   const runEvaluators = async (rowId: number, compId?: number) => {
@@ -740,43 +838,28 @@ export default function Experiments() {
         <Stack>
           <Title order={6}>Evaluators</Title>
 
-          {/* Card grid */}
-          <Tabs
-            defaultValue={evaluatorCategories[0].value}
-            onChange={() => setActiveEvalId(undefined)}
-          >
-            <Tabs.List>
-              {evaluatorCategories.map((cat) => (
-                <Tabs.Tab key={cat.value} value={cat.value}>
-                  {cat.name}
-                </Tabs.Tab>
-              ))}
-            </Tabs.List>
-
+          {/* Card grid and config panels here */}
+          <SimpleGrid cols={3}>
             {evaluatorCategories.map((cat) => (
-              <Tabs.Panel key={cat.value} value={cat.value} pt="md">
-                <SimpleGrid cols={5} spacing="md">
-                  {evaluators
-                    .filter((e) => e.category === cat.value)
-                    .map((e) => (
-                      <EvaluatorCard
-                        key={e.id}
-                        evaluator={e}
-                        isSelected={selectedEvalIds.includes(e.id.toString())}
-                        onItemClick={() => toggleEvaluator(e as any)}
-                      />
-                    ))}
-                </SimpleGrid>
-              </Tabs.Panel>
+              <Stack key={cat.value}>
+                <Title order={6}>{cat.name}</Title>
+                {evaluators
+                  .filter((e) => e.category === cat.value)
+                  .map((ev) => (
+                    <EvaluatorCard
+                      key={ev.id}
+                      evaluator={ev}
+                      selected={selectedEvalIds.includes(ev.id.toString())}
+                      onClick={() => toggleEvaluator(ev)}
+                    />
+                  ))}
+              </Stack>
             ))}
-          </Tabs>
+          </SimpleGrid>
 
-          {activeEvalId && paramsMap[activeEvalId] && (
+          {activeEvalId && (
             <Fieldset
-              legend={
-                evaluators.find((ev) => ev.id.toString() === activeEvalId)!
-                  .name + " Configuration"
-              }
+              legend="Evaluator Configuration"
               style={{ overflow: "visible" }}
             >
               {activeEvalId}
@@ -797,8 +880,8 @@ export default function Experiments() {
             {vars.map((v) => (
               <Table.Th key={v}></Table.Th>
             ))}
-            <Table.Th>
-              <Group align="center" spacing="xs">
+            <Table.Th style={{ width: `${PROMPT_COLUMN_WIDTH}px` }}>
+              <Group align="center" gap="xs">
                 <PromptVersionSelect
                   promptVersion={state.promptVersion}
                   setPromptVersion={(pv) =>
@@ -807,6 +890,7 @@ export default function Experiments() {
                 />
                 <Popover
                   opened={openConfigColumn === "base"}
+                  closeOnClickOutside={true}
                   onClose={() => setOpenConfigColumn(null)}
                   position="bottom"
                   withArrow
@@ -824,7 +908,7 @@ export default function Experiments() {
                     </ActionIcon>
                   </Popover.Target>
                   <Popover.Dropdown>
-                    <Stack spacing="sm">
+                    <Stack gap="sm">
                       <ModelSelect
                         handleChange={(m) =>
                           setModelConfigs((prev) => ({
@@ -863,111 +947,125 @@ export default function Experiments() {
                 </Popover>
               </Group>
             </Table.Th>
-            {state.comparisons.map((c) => (
-              <Table.Th key={c.id}>
-                <Group align="center" gap="xs">
-                  <PromptVersionSelect
-                    promptVersion={c.promptVersion}
-                    setPromptVersion={(pv) =>
-                      dispatch({ type: "SET_COMP_PV", compId: c.id, pv })
-                    }
-                  />
-                  {/* model config for this comparison column */}
-                  <Popover
-                    opened={openConfigColumn === c.id.toString()}
-                    onClose={() => setOpenConfigColumn(null)}
-                    position="bottom"
-                    withArrow
-                  >
-                    <Popover.Target>
+            {state.comparisons.map((c, idx) => {
+              const isLast = idx === state.comparisons.length - 1;
+              return (
+                <Table.Th
+                  key={c.id}
+                  style={{ width: `${PROMPT_COLUMN_WIDTH}px` }}
+                >
+                  <Group align="center" gap="xs">
+                    <PromptVersionSelect
+                      promptVersion={c.promptVersion}
+                      setPromptVersion={(pv) =>
+                        dispatch({ type: "SET_COMP_PV", compId: c.id, pv })
+                      }
+                    />
+                    <Popover
+                      opened={openConfigColumn === c.id.toString()}
+                      closeOnClickOutside
+                      onClose={() => setOpenConfigColumn(null)}
+                      position="bottom"
+                      withArrow
+                    >
+                      <Popover.Target>
+                        <ActionIcon
+                          size="sm"
+                          onClick={() =>
+                            setOpenConfigColumn(
+                              openConfigColumn === c.id.toString()
+                                ? null
+                                : c.id.toString(),
+                            )
+                          }
+                        >
+                          <IconSettings size={16} />
+                        </ActionIcon>
+                      </Popover.Target>
+                      <Popover.Dropdown>
+                        <Stack gap="sm">
+                          <ModelSelect
+                            handleChange={(m) =>
+                              setModelConfigs((prev) => ({
+                                ...prev,
+                                [c.id]: {
+                                  model: m,
+                                  temperature: prev[c.id]?.temperature ?? 1,
+                                  maxTokens: prev[c.id]?.maxTokens ?? 256,
+                                },
+                              }))
+                            }
+                          />
+                          <NumberInput
+                            label="Temperature"
+                            min={0}
+                            max={1}
+                            step={0.01}
+                            value={modelConfigs[c.id]?.temperature ?? 1}
+                            onChange={(value: number) =>
+                              setModelConfigs((prev) => ({
+                                ...prev,
+                                [c.id]: {
+                                  ...(prev[c.id] || {
+                                    model: null,
+                                    maxTokens: 256,
+                                  }),
+                                  temperature: value,
+                                },
+                              }))
+                            }
+                          />
+                          <NumberInput
+                            label="Max Tokens"
+                            min={1}
+                            step={1}
+                            value={modelConfigs[c.id]?.maxTokens ?? 256}
+                            onChange={(value: number) =>
+                              setModelConfigs((prev) => ({
+                                ...prev,
+                                [c.id]: {
+                                  ...(prev[c.id] || {
+                                    model: null,
+                                    temperature: 1,
+                                  }),
+                                  maxTokens: value,
+                                },
+                              }))
+                            }
+                          />
+                        </Stack>
+                      </Popover.Dropdown>
+                    </Popover>
+                    <Menu>
+                      <Menu.Target>
+                        <ActionIcon variant="subtle">
+                          <IconDotsVertical size={16} />
+                        </ActionIcon>
+                      </Menu.Target>
+                      <Menu.Dropdown>
+                        <Menu.Item
+                          color="red"
+                          leftSection={<IconTrash size={14} />}
+                          onClick={() =>
+                            dispatch({ type: "DELETE_COMP", compId: c.id })
+                          }
+                        >
+                          Delete
+                        </Menu.Item>
+                      </Menu.Dropdown>
+                    </Menu>
+                    {isLast && (
                       <ActionIcon
-                        size="sm"
-                        onClick={() =>
-                          setOpenConfigColumn(
-                            openConfigColumn === c.id.toString()
-                              ? null
-                              : c.id.toString(),
-                          )
-                        }
+                        size="xs"
+                        onClick={() => setPromptContentModal({ compId: c.id })}
                       >
-                        <IconSettings size={16} />
+                        <IconPencil size={14} />
                       </ActionIcon>
-                    </Popover.Target>
-                    <Popover.Dropdown>
-                      <Stack spacing="sm">
-                        <ModelSelect
-                          handleChange={(m) =>
-                            setModelConfigs((prev) => ({
-                              ...prev,
-                              [c.id]: {
-                                model: m,
-                                temperature: prev[c.id]?.temperature ?? 1,
-                                maxTokens: prev[c.id]?.maxTokens ?? 256,
-                              },
-                            }))
-                          }
-                        />
-                        <NumberInput
-                          label="Temperature"
-                          min={0}
-                          max={1}
-                          step={0.01}
-                          value={modelConfigs[c.id]?.temperature ?? 1}
-                          onChange={(value: number) =>
-                            setModelConfigs((prev) => ({
-                              ...prev,
-                              [c.id]: {
-                                ...(prev[c.id] || {
-                                  model: null,
-                                  maxTokens: 256,
-                                }),
-                                temperature: value,
-                              },
-                            }))
-                          }
-                        />
-                        <NumberInput
-                          label="Max Tokens"
-                          min={1}
-                          step={1}
-                          value={modelConfigs[c.id]?.maxTokens ?? 256}
-                          onChange={(value: number) =>
-                            setModelConfigs((prev) => ({
-                              ...prev,
-                              [c.id]: {
-                                ...(prev[c.id] || {
-                                  model: null,
-                                  temperature: 1,
-                                }),
-                                maxTokens: value,
-                              },
-                            }))
-                          }
-                        />
-                      </Stack>
-                    </Popover.Dropdown>
-                  </Popover>
-                  <Menu>
-                    <Menu.Target>
-                      <ActionIcon variant="subtle">
-                        <IconDotsVertical size={16} />
-                      </ActionIcon>
-                    </Menu.Target>
-                    <Menu.Dropdown>
-                      <Menu.Item
-                        color="red"
-                        leftSection={<IconTrash size={14} />}
-                        onClick={() =>
-                          dispatch({ type: "DELETE_COMP", compId: c.id })
-                        }
-                      >
-                        Delete
-                      </Menu.Item>
-                    </Menu.Dropdown>
-                  </Menu>
-                </Group>
-              </Table.Th>
-            ))}
+                    )}
+                  </Group>
+                </Table.Th>
+              );
+            })}
             <Table.Th>
               <Button
                 leftSection={<IconPlus />}
@@ -985,7 +1083,7 @@ export default function Experiments() {
               {vars.map((v) => (
                 <Table.Th key={v}></Table.Th>
               ))}
-              <Table.Th>
+              <Table.Th style={{ width: `${PROMPT_COLUMN_WIDTH}px` }}>
                 <Stack
                   mah="200"
                   style={{ whiteSpace: "pre-wrap", overflow: "scroll" }}
@@ -1013,7 +1111,10 @@ export default function Experiments() {
                 </Stack>
               </Table.Th>
               {state.comparisons.map((c) => (
-                <Table.Th key={c.id}>
+                <Table.Th
+                  key={c.id}
+                  style={{ width: `${PROMPT_COLUMN_WIDTH}px` }}
+                >
                   {c.promptVersion?.content && (
                     <Stack
                       style={{ whiteSpace: "pre-wrap", overflow: "scroll" }}
@@ -1075,18 +1176,28 @@ export default function Experiments() {
                   {/* variable editors */}
                   {vars.map((v) => (
                     <Table.Td key={v} p={0}>
-                      <Textarea
-                        styles={{ input: { border: 0, borderRadius: 0 } }}
-                        value={row.variableValues[v]}
-                        onChange={(e) =>
-                          dispatch({
-                            type: "SET_VAR",
-                            rowId: row.id,
-                            varName: v,
-                            value: e.currentTarget.value,
-                          })
-                        }
-                      />
+                      <Group noWrap spacing={4} align="center">
+                        <Textarea
+                          styles={{ input: { border: 0, borderRadius: 0 } }}
+                          value={row.variableValues[v]}
+                          onChange={(e) =>
+                            dispatch({
+                              type: "SET_VAR",
+                              rowId: row.id,
+                              varName: v,
+                              value: e.currentTarget.value,
+                            })
+                          }
+                        />
+                        <ActionIcon
+                          size="xs"
+                          onClick={() =>
+                            setVariableModal({ rowId: row.id, varName: v })
+                          }
+                        >
+                          <IconMaximize size={14} />
+                        </ActionIcon>
+                      </Group>
                     </Table.Td>
                   ))}
 
@@ -1123,6 +1234,11 @@ export default function Experiments() {
                         isComplete={allEvalComplete}
                         selectedEvalIds={selectedEvalIds}
                         evaluators={evaluators}
+                        metadata={{
+                          duration: row.duration!,
+                          tokens: row.tokens!,
+                          cost: row.cost,
+                        }}
                       />
                     )}
                   </Table.Td>
@@ -1168,6 +1284,11 @@ export default function Experiments() {
                             isComplete={allEvalComplete}
                             selectedEvalIds={selectedEvalIds}
                             evaluators={evaluators}
+                            metadata={{
+                              duration: comp.duration!,
+                              tokens: comp.tokens!,
+                              cost: comp.cost,
+                            }}
                           />
                         )}
                       </Table.Td>
@@ -1226,6 +1347,90 @@ export default function Experiments() {
           Export CSV
         </Button>
       </Group>
+
+      {/* Modal for editing variable in larger view */}
+      {variableModal && (
+        <Modal
+          opened
+          onClose={() => setVariableModal(null)}
+          title={`Edit variable ${variableModal.varName}`}
+        >
+          <Textarea
+            autosize
+            minRows={4}
+            value={
+              state.rows.find((r) => r.id === variableModal.rowId)
+                ?.variableValues[variableModal.varName] || ""
+            }
+            onChange={(e) =>
+              dispatch({
+                type: "SET_VAR",
+                rowId: variableModal.rowId,
+                varName: variableModal.varName,
+                value: e.currentTarget.value,
+              })
+            }
+          />
+          <Group position="right" mt="md">
+            <Button onClick={() => setVariableModal(null)}>Close</Button>
+          </Group>
+        </Modal>
+      )}
+
+      {/* Modal to edit prompt content of last column */}
+      {promptContentModal && (
+        <Modal
+          opened
+          onClose={() => setPromptContentModal(null)}
+          title="Edit prompt content"
+          size="lg"
+        >
+          <Stack>
+            {(promptContentModal.compId != null
+              ? state.comparisons.find(
+                  (c) => c.id === promptContentModal.compId,
+                )?.promptVersion?.content
+              : state.promptVersion?.content || []
+            ).map((msg, i) => (
+              <div key={i}>
+                <Text size="sm" weight={500}>{`role: ${msg.role}`}</Text>
+                <Textarea
+                  autosize
+                  minRows={2}
+                  value={msg.content || ""}
+                  onChange={(e) => {
+                    const compId = promptContentModal.compId;
+                    const currentPV =
+                      compId == null
+                        ? state.promptVersion
+                        : state.comparisons.find((c) => c.id === compId)
+                            ?.promptVersion;
+                    if (!currentPV) return;
+                    const newContent = currentPV.content.map((m, idx) =>
+                      idx === i ? { ...m, content: e.currentTarget.value } : m,
+                    );
+                    const updatedPV = { ...currentPV, content: newContent };
+                    if (compId == null)
+                      dispatch({
+                        type: "SET_PROMPT_VERSION",
+                        promptVersion: updatedPV,
+                      });
+                    else
+                      dispatch({
+                        type: "SET_COMP_PV",
+                        compId,
+                        pv: updatedPV,
+                      });
+                  }}
+                />
+              </div>
+            ))}
+            <Group position="right" mt="md">
+              <Button onClick={() => setPromptContentModal(null)}>Close</Button>
+            </Group>
+          </Stack>
+        </Modal>
+      )}
     </>
   );
 }
