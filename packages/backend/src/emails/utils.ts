@@ -20,5 +20,6 @@ export async function sendVerifyEmail(email: string, name: string = "") {
 
   if (!config.IS_SELF_HOSTED) {
     await sendEmail(CONFIRM_EMAIL(email, name, confirmLink));
+    console.info("[EMAIL] Sent verification email to", email);
   }
 }
