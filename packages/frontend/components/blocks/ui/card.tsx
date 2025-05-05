@@ -1,7 +1,5 @@
 // components/ui/card.tsx
 
-"use client";
-
 import { Card as MantineCard } from "@mantine/core";
 
 export function Card({

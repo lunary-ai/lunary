@@ -1,6 +1,6 @@
-import { Box, Text } from '@mantine/core';
+import { Box, Text } from "@mantine/core";
 
-const TimeRuler = () => {
+function TimeRule() {
   const width = 900;
   const interval = 0.25; // seconds
   const totalDuration = 2.25; // seconds
@@ -13,9 +13,7 @@ const TimeRuler = () => {
   }
 
   return (
-    <Box pos="relative" w={width} h={32} left={45}
-
-    >
+    <Box pos="relative" w={width} h={32} left={45}>
       {ticks.map(({ time, left }, index) => (
         <Box
           key={index}
@@ -24,7 +22,7 @@ const TimeRuler = () => {
           left={left}
           h="100%"
           style={{
-            borderLeft: '1px solid #ccc',
+            borderLeft: "1px solid #ccc",
           }}
         >
           <Text
@@ -47,11 +45,11 @@ const TimeRuler = () => {
         left={width}
         h="100%"
         style={{
-          borderRight: '1px dashed #ccc',
+          borderRight: "1px dashed #ccc",
         }}
       />
     </Box>
   );
-};
+}
 
-export default TimeRuler;
+export default TimeRule;
