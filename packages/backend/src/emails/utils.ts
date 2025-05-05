@@ -18,7 +18,7 @@ export async function sendVerifyEmail(email: string, name: string = "") {
 
   const confirmLink = `${process.env.APP_URL}/verify-email?token=${token}`;
 
-  if (!config.IS_SELF_HOSTED) {
+  if (config.IS_CLOUD) {
     await sendEmail(CONFIRM_EMAIL(email, name, confirmLink));
     console.info("[EMAIL] Sent verification email to", email);
   }
