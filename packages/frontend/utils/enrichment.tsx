@@ -26,7 +26,6 @@ export function renderEnrichment(
   type: EvaluatorType,
   maskPII = false,
 ) {
-  console.log(data, type);
   const renderers: Record<EvaluatorType, (data: any) => any> = {
     language: renderLanguageEnrichment,
     pii: () => renderPIIEnrichment(data, maskPII),
@@ -38,10 +37,26 @@ export function renderEnrichment(
     replies: renderRepliesEnrichment,
     bias: renderBiasEnrichment,
     toxicity: renderToxicityEnrichment,
+    llm: renderLLMEnrichment,
   };
 
   const renderer = renderers[type] || JSON.stringify;
   return <ErrorBoundary>{renderer(data)}</ErrorBoundary>;
+}
+
+function renderLLMEnrichment(data: { passed: boolean; reason: string }) {
+  if (typeof data !== "object" || typeof data.passed !== "boolean") return null;
+
+  return (
+    <Tooltip
+      label={data.reason}
+      disabled={!data.reason?.length}
+      w="200"
+      multiline
+    >
+      {data.passed ? <IconCheck color="green" /> : <IconX color="red" />}
+    </Tooltip>
+  );
 }
 
 function renderBiasEnrichment(data: EnrichmentData) {

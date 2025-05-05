@@ -22,6 +22,7 @@ import {
 } from "@mantine/core";
 
 import {
+  toxicityColumn,
   costColumn,
   durationColumn,
   enrichmentColumn,
@@ -275,36 +276,37 @@ export default function Logs() {
     return <Loader />;
   }
 
-  useEffect(() => {
-    const newColumns = { ...allColumns };
+  const sameCols = (a, b) =>
+    a.length === b.length && a.every((c, i) => c.id === b[i].id);
 
-    if (type === "llm") {
-      newColumns.llm = newColumns.llm.filter(
+  useEffect(() => {
+    setAllColumns((prev) => {
+      const next: typeof prev = { ...prev, llm: [...prev.llm] };
+
+      next.llm = next.llm.filter(
         (col) =>
-          !(col.accessorKey && col.accessorKey.startsWith("enrichment-")),
+          !(type === "llm" && col.accessorKey?.startsWith("enrichment-")),
       );
 
-      if (Array.isArray(evaluators)) {
-        for (const evaluator of evaluators) {
-          const id = "enrichment-" + evaluator.id;
-          newColumns.llm.push(
-            enrichmentColumn(evaluator.name, evaluator.id, evaluator.type),
-          );
+      if (type === "llm") {
+        if (Array.isArray(evaluators)) {
+          console.log(evaluators);
+          evaluators.forEach((ev) => {
+            next.llm.push(
+              ev.type === "toxicity"
+                ? toxicityColumn(ev.id)
+                : enrichmentColumn(ev.name, ev.id, ev.type),
+            );
+          });
         }
+
+        if (isSelectMode) next.llm.unshift(selectColumn());
+      } else if (next.llm[0]?.id === "select") {
+        next.llm.shift();
       }
 
-      if (isSelectMode) {
-        newColumns.llm.unshift(selectColumn());
-      }
-    }
-
-    if (type !== "llm" || !isSelectMode) {
-      if (newColumns.llm[0]?.id === "select") {
-        newColumns.llm.shift();
-      }
-    }
-
-    setAllColumns(newColumns);
+      return sameCols(prev.llm, next.llm) ? prev : next;
+    });
   }, [type, evaluators, isSelectMode]);
 
   useEffect(() => {

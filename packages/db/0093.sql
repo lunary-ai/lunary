@@ -1,0 +1,1 @@
+alter table evaluator drop constraint evaluator_project_id_slug_unique;

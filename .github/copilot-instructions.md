@@ -134,14 +134,14 @@ All code should live in one of the `packages/*` workspaces (JS/TS managed by Bun
 ## Package-Specific Guidelines
 
 ### Frontend (packages/frontend)
-- **Framework**: Next.js with React + TypeScript.
+- **Framework**: Next.js with React + TypeScript + Mantine.
 - Place pages in `pages/`, UI components in `components/`, utilities in `utils/`, and styles in `styles/` or component-specific CSS modules.
 - Use path aliases (`@/components`, `@/utils`).
 - Prefer **functional components** and React **hooks**.
 - Leverage Next.js features:
   - `getStaticProps` / `getServerSideProps` appropriately.
   - API routes in `pages/api/`.
-- Style with CSS Modules (`.module.css`) or Tailwind (if added).
+- Style with CSS Modules (`.module.css`) 
 - Test UI with **React Testing Library** and **Jest**.
 
 ### Backend (packages/backend)

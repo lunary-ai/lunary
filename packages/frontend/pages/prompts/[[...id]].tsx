@@ -112,8 +112,6 @@ function Playground() {
   const [templateVersion, setTemplateVersion] = useState<any>(
     defaultTemplateVersion,
   );
-  console.log(template);
-  console.log(templateVersion);
 
   const [hasChanges, setHasChanges] = useState(false);
 
