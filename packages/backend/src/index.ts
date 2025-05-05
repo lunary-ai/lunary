@@ -8,6 +8,7 @@ import { authMiddleware } from "./api/v1/auth/utils";
 import redirections from "./api/v1/redirections";
 import webhooks from "./api/webhooks";
 import { createIndexes } from "./create-indexes";
+import { checkEmailServerConnection } from "./emails";
 import { startJobWorker } from "./jobs";
 import { startMaterializedViewRefreshJob } from "./jobs/materialized-views";
 import { cacheAnalyticsMiddleware } from "./utils/cache";
@@ -21,6 +22,7 @@ import { setDefaultBody } from "./utils/misc";
 import ratelimit from "./utils/ratelimit";
 
 checkDbConnection();
+checkEmailServerConnection();
 
 if (process.env.NODE_ENV === "production") {
   setupCronJobs();

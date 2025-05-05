@@ -147,7 +147,7 @@ users.get("/verify-email", async (ctx: Context) => {
     `;
   const id = project?.id;
 
-  if (!config.IS_SELF_HOSTED) {
+  if (config.IS_CLOUD) {
     await sendEmail(WELCOME_EMAIL(email, name, id));
   }
   ctx.redirect(process.env.APP_URL!);
