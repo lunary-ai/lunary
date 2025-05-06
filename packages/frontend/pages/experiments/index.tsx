@@ -26,6 +26,8 @@ import {
   Popover,
   NumberInput,
   Center,
+  Divider,
+  Accordion,
 } from "@mantine/core";
 import {
   IconBolt,
@@ -384,15 +386,20 @@ function EvalCell({
   if (!isComplete || !output) return null;
 
   return (
-    <Box style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <Box style={{ overflow: "auto", flex: 1 }}>
+    <Box
+      style={{ display: "flex", flexDirection: "column", height: "100%" }}
+      mt="sm"
+    >
+      <Box style={{ overflow: "auto", flex: 1 }} p="xs">
         <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
           {output}
         </Text>
       </Box>
 
+      <Divider my="sm" />
+
       {metadata && (
-        <Box p="xs">
+        <Box p="sm">
           <Text size="xs" c="dimmed">
             {`${metadata.duration} ms | ${metadata.tokens} tokens`}
             {metadata.cost != null && ` | $${metadata.cost.toFixed(4)}`}
@@ -400,31 +407,38 @@ function EvalCell({
         </Box>
       )}
 
-      <Box p="sm">
-        <Group justify="space-between" align="center">
-          <Group gap="xs">
-            {passedCount === total && total > 0 && (
-              <IconCheck color="green" size={16} />
-            )}
-            <Text size="sm">{`${passedCount}/${total} tests passed`}</Text>
-          </Group>
-          <ActionIcon onClick={() => setOpen((o) => !o)}>
-            {open ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
-          </ActionIcon>
-        </Group>
-        <Collapse in={open}>
-          {evaluatorConfigs.map((cfg) => {
-            const res = evalResults[cfg.instanceId];
-            return (
-              <Text size="sm" key={cfg.instanceId}>
-                {`${cfg.evaluator.id} (#${cfg.instanceId}): ${
-                  res?.passed ? "Pass" : "Fail"
-                }`}
-              </Text>
-            );
-          })}
-        </Collapse>
-      </Box>
+      {total > 0 && (
+        <Box p="sm">
+          <Accordion
+            variant="separated"
+            style={{
+              border: "1px solid var(--matine-color-gray-3)",
+              borderRadius: 6,
+            }}
+          >
+            <Accordion.Item value={"evals"}>
+              <Accordion.Control>
+                <Group gap="xs">
+                  {passedCount === total && total > 0 && (
+                    <IconCheck color="green" size={16} />
+                  )}
+                  <Text size="sm">{`${passedCount}/${total} tests passed`}</Text>
+                </Group>
+              </Accordion.Control>
+              <Accordion.Panel>
+                {evaluatorConfigs.map((cfg) => {
+                  const res = evalResults[cfg.instanceId];
+                  return (
+                    <Text size="sm" key={cfg.instanceId}>
+                      {`${res?.passed ? "✅" : "❌"} ${cfg.evaluator.name}`}
+                    </Text>
+                  );
+                })}
+              </Accordion.Panel>
+            </Accordion.Item>
+          </Accordion>
+        </Box>
+      )}
     </Box>
   );
 }
@@ -523,7 +537,6 @@ export default function Experiments() {
 
     try {
       const key = compId == null ? "base" : compId.toString();
-      console.log(modelConfigs);
       const cfg = modelConfigs[key] || {
         model: null,
         temperature: 1,
@@ -823,7 +836,7 @@ export default function Experiments() {
             variant="outline"
             leftSection={<IconSettings width="16" />}
           >
-            Configure Evaluators
+            Test Cases
           </Button>
           <Button
             leftSection={<IconBolt size={16} />}
@@ -842,15 +855,14 @@ export default function Experiments() {
         opened={showEvalModal}
         onClose={() => setShowEvalModal(false)}
         size="xl"
-        styles={{ content: { backgroundColor: "rgb(252, 252, 252)" } }}
+        styles={{ root: { backgroundColor: "rgb(252, 252, 252)" } }}
+        title="Test cases"
       >
         {evalModalPage === "list" && (
           <Stack>
-            <Title order={6}>Configured Evaluators</Title>
-
             {evaluatorConfigs.length === 0 && (
               <Center>
-                <Text c="dimmed">No evaluators configured yet.</Text>
+                <Text c="dimmed">No test cases configured</Text>
               </Center>
             )}
 
@@ -866,11 +878,11 @@ export default function Experiments() {
                       padding: 8,
                     }}
                   >
-                    {/* Re-use EvaluatorCard just for display */}
                     <EvaluatorCard
                       evaluator={cfg.evaluator}
                       isSelected={false}
                       onItemClick={() => {}}
+                      hideAddIcon={true}
                     />
                     <ActionIcon
                       variant="subtle"
@@ -889,19 +901,15 @@ export default function Experiments() {
               </SimpleGrid>
             )}
 
-            <Group justify="space-between" mt="md">
-              <Button variant="default" onClick={() => setShowEvalModal(false)}>
-                Close
-              </Button>
+            <Group justify="flex-end" mt="md">
               <Button
-                leftSection={<IconPlus size={16} />}
                 onClick={() => {
                   setSelectedAddEvaluator(null);
                   setAddEvaluatorParams(undefined);
                   setEvalModalPage("add");
                 }}
               >
-                Add Evaluator
+                Save
               </Button>
             </Group>
           </Stack>
@@ -909,16 +917,7 @@ export default function Experiments() {
 
         {evalModalPage === "add" && (
           <Stack>
-            <Title order={6}>Add Evaluator</Title>
-            <Tabs
-              defaultValue={evaluatorCategories[0]?.value}
-              value={
-                selectedAddEvaluator
-                  ? selectedAddEvaluator.category
-                  : evaluatorCategories[0]?.value
-              }
-              onTabChange={() => setSelectedAddEvaluator(null)}
-            >
+            <Tabs defaultValue={evaluatorCategories[0]?.value}>
               <Tabs.List>
                 {evaluatorCategories.map((cat) => (
                   <Tabs.Tab key={cat.value} value={cat.value}>
@@ -948,14 +947,34 @@ export default function Experiments() {
               ))}
             </Tabs>
 
-            {selectedAddEvaluator && (
-              <Fieldset legend="Evaluator Configuration">
-                {/* TODO: custom param editing UI. */}
-                <Text size="sm" c="dimmed">
-                  Parameters will use defaults. Extend here if needed.
-                </Text>
-              </Fieldset>
-            )}
+            {selectedAddEvaluator &&
+              ["toxicity", "llm"].includes(selectedAddEvaluator.id) && (
+                <Fieldset legend="Evaluator Configuration">
+                  {selectedAddEvaluator.id === "llm" && (
+                    <Textarea
+                      label="LLM Prompt"
+                      autosize
+                      minRows={2}
+                      value={addEvaluatorParams?.params.prompt || ""}
+                      onChange={(e) => {
+                        const newPrompt = e.currentTarget.value;
+                        setAddEvaluatorParams((prev) => {
+                          const base = prev ?? {
+                            params: { assertion: "" },
+                          };
+                          return {
+                            ...base,
+                            params: {
+                              ...base.params,
+                              prompt: newPrompt,
+                            },
+                          };
+                        });
+                      }}
+                    />
+                  )}
+                </Fieldset>
+              )}
 
             <Group justify="flex-end">
               <Button
@@ -994,7 +1013,7 @@ export default function Experiments() {
       {/* ───────── Table header ───────── */}
       <Table withTableBorder withColumnBorders withRowBorders>
         <Table.Thead>
-          <Table.Tr>
+          <Table.Tr bg="gray.0">
             {vars.map((v) => (
               <Table.Th key={v}></Table.Th>
             ))}
@@ -1016,11 +1035,14 @@ export default function Experiments() {
                   <Popover.Target>
                     <ActionIcon
                       size="sm"
+                      radius="sm"
                       onClick={() =>
                         setOpenConfigColumn(
                           openConfigColumn === "base" ? null : "base",
                         )
                       }
+                      color="gray"
+                      variant="light"
                     >
                       <IconSettings size={16} />
                     </ActionIcon>
@@ -1039,6 +1061,7 @@ export default function Experiments() {
                       />
                       <NumberInput
                         label="Temperature"
+                        size="xs"
                         min={0}
                         max={1}
                         step={0.01}
@@ -1054,6 +1077,7 @@ export default function Experiments() {
                         label="Max Tokens"
                         min={1}
                         step={1}
+                        size="xs"
                         value={modelConfigs["base"].maxTokens}
                         onChange={(value: number) =>
                           setModelConfigs((prev) => ({
@@ -1065,6 +1089,9 @@ export default function Experiments() {
                     </Stack>
                   </Popover.Dropdown>
                 </Popover>
+                <Text size="xs" c="dimmed">
+                  {modelConfigs["base"].model?.name ?? "gpt-4.1"}
+                </Text>
               </Group>
             </Table.Th>
             {state.comparisons.map((c, idx) => {
@@ -1083,7 +1110,7 @@ export default function Experiments() {
                     />
                     <Popover
                       opened={openConfigColumn === c.id.toString()}
-                      closeOnClickOutside
+                      closeOnClickOutside={true}
                       onClose={() => setOpenConfigColumn(null)}
                       position="bottom"
                       withArrow
@@ -1098,6 +1125,8 @@ export default function Experiments() {
                                 : c.id.toString(),
                             )
                           }
+                          color="gray"
+                          variant="light"
                         >
                           <IconSettings size={16} />
                         </ActionIcon>
@@ -1118,6 +1147,7 @@ export default function Experiments() {
                           />
                           <NumberInput
                             label="Temperature"
+                            size="xs"
                             min={0}
                             max={1}
                             step={0.01}
@@ -1137,6 +1167,7 @@ export default function Experiments() {
                           />
                           <NumberInput
                             label="Max Tokens"
+                            size="xs"
                             min={1}
                             step={1}
                             value={modelConfigs[c.id]?.maxTokens ?? 256}
@@ -1158,7 +1189,7 @@ export default function Experiments() {
                     </Popover>
                     <Menu>
                       <Menu.Target>
-                        <ActionIcon variant="subtle">
+                        <ActionIcon variant="transparent" color="gray" c="gray">
                           <IconDotsVertical size={16} />
                         </ActionIcon>
                       </Menu.Target>
@@ -1172,16 +1203,18 @@ export default function Experiments() {
                         >
                           Delete
                         </Menu.Item>
+                        {isLast && (
+                          <Menu.Item
+                            leftSection={<IconPencil size={14} />}
+                            onClick={() =>
+                              setPromptContentModal({ compId: c.id })
+                            }
+                          >
+                            Edit Prompt
+                          </Menu.Item>
+                        )}
                       </Menu.Dropdown>
                     </Menu>
-                    {isLast && (
-                      <ActionIcon
-                        size="xs"
-                        onClick={() => setPromptContentModal({ compId: c.id })}
-                      >
-                        <IconPencil size={14} />
-                      </ActionIcon>
-                    )}
                   </Group>
                 </Table.Th>
               );
@@ -1198,9 +1231,8 @@ export default function Experiments() {
             </Table.Th>
           </Table.Tr>
 
-          {/* ───────── Row showing prompt content ───────── */}
           {showPrompt && state.promptVersion && (
-            <Table.Tr>
+            <Table.Tr bg="gray.0">
               {vars.map((v) => (
                 <Table.Th key={v}></Table.Th>
               ))}
@@ -1301,10 +1333,17 @@ export default function Experiments() {
                   {/* variable editors */}
                   {vars.map((v) => (
                     <Table.Td key={v} p={0}>
-                      <Group noWrap spacing={4} align="center">
+                      <Group wrap="nowrap" gap={4} align="center">
                         <Textarea
-                          styles={{ input: { border: 0, borderRadius: 0 } }}
+                          styles={{
+                            input: {
+                              border: 0,
+                              borderRadius: 0,
+                              background: "transparent",
+                            },
+                          }}
                           value={row.variableValues[v]}
+                          flex="1"
                           onChange={(e) =>
                             dispatch({
                               type: "SET_VAR",
@@ -1314,8 +1353,11 @@ export default function Experiments() {
                             })
                           }
                         />
+
                         <ActionIcon
+                          style={{ alignSelf: "flex-start" }}
                           size="xs"
+                          variant="subtle"
                           onClick={() =>
                             setVariableModal({ rowId: row.id, varName: v })
                           }
@@ -1328,7 +1370,7 @@ export default function Experiments() {
 
                   {/* base prompt run */}
                   <Table.Td p={0}>
-                    <Group mt="xs" ml="xs">
+                    <Group my="xs" ml="xs">
                       <ActionIcon
                         size="md"
                         onClick={() => runModelRow(row.id)}
@@ -1338,7 +1380,7 @@ export default function Experiments() {
                       >
                         <IconPlayerPlayFilled size={16} />
                       </ActionIcon>
-                      <ActionIcon
+                      {/* <ActionIcon
                         ml="xs"
                         size="md"
                         color="blue"
@@ -1351,7 +1393,7 @@ export default function Experiments() {
                         }
                       >
                         <IconTestPipe size={16} />
-                      </ActionIcon>
+                      </ActionIcon> */}
                     </Group>
                     {allEvalComplete && row.modelOutput && (
                       <EvalCell
@@ -1376,7 +1418,7 @@ export default function Experiments() {
                     };
                     return (
                       <Table.Td key={c.id} p={0}>
-                        <Group mt="xs" ml="xs">
+                        <Group my="xs" ml="xs">
                           <ActionIcon
                             size="md"
                             variant="subtle"
@@ -1386,7 +1428,7 @@ export default function Experiments() {
                           >
                             <IconPlayerPlayFilled size={16} />
                           </ActionIcon>
-                          <ActionIcon
+                          {/* <ActionIcon
                             ml="xs"
                             size="md"
                             color="blue"
@@ -1399,7 +1441,7 @@ export default function Experiments() {
                             }
                           >
                             <IconTestPipe size={16} />
-                          </ActionIcon>
+                          </ActionIcon> */}
                         </Group>
 
                         {allEvalComplete && comp.modelOutput && (
@@ -1496,9 +1538,6 @@ export default function Experiments() {
               })
             }
           />
-          <Group position="right" mt="md">
-            <Button onClick={() => setVariableModal(null)}>Close</Button>
-          </Group>
         </Modal>
       )}
 
@@ -1550,9 +1589,6 @@ export default function Experiments() {
                 />
               </div>
             ))}
-            <Group position="right" mt="md">
-              <Button onClick={() => setPromptContentModal(null)}>Close</Button>
-            </Group>
           </Stack>
         </Modal>
       )}

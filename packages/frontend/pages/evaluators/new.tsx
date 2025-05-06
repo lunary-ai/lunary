@@ -36,10 +36,12 @@ export function EvaluatorCard({
   evaluator,
   isSelected,
   onItemClick,
+  hideAddIcon = false,
 }: {
   onItemClick: (type: string) => void;
   isSelected: boolean;
   evaluator: any;
+  hideAddIcon?: boolean;
 }) {
   return (
     <Card
@@ -51,20 +53,22 @@ export function EvaluatorCard({
     >
       <Tooltip label={evaluator.description} hidden={!evaluator.description}>
         <UnstyledButton disabled={evaluator.soon}>
-          <Flex
-            justify="right"
-            pos="absolute"
-            top="6px"
-            right="6px"
-            h="30"
-            w="30"
-          >
-            {isSelected ? (
-              <IconCircleCheck size="20" color="#4589df" />
-            ) : (
-              <IconCirclePlus size="20" color="#bfc4cd" />
-            )}
-          </Flex>
+          {!hideAddIcon && (
+            <Flex
+              justify="right"
+              pos="absolute"
+              top="6px"
+              right="6px"
+              h="30"
+              w="30"
+            >
+              {isSelected ? (
+                <IconCircleCheck size="20" color="#4589df" />
+              ) : (
+                <IconCirclePlus size="20" color="#bfc4cd" />
+              )}
+            </Flex>
+          )}
 
           <Stack align="center" gap="0" pt={5} maw="100%" justify="center">
             <evaluator.icon

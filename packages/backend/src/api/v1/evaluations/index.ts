@@ -14,6 +14,7 @@ import { evaluate as evaluateToxicity } from "@/src/evaluators/toxicity";
 import type { Run } from "shared";
 import { MessageSchema } from "shared/schemas/openai";
 import { z } from "zod";
+import aiAssert from "@/src/checks/ai/assert";
 
 const evaluations = new Router({ prefix: "/evaluations" });
 
@@ -237,17 +238,24 @@ evaluations.post(
     const bodySchema = z.object({
       input: z.array(MessageSchema),
       output: MessageSchema,
-      evaluatorType: z.enum(["toxicity"]),
+      evaluatorType: z.enum(["toxicity", "llm"]),
+      params: z.any().optional(),
     });
-    const { evaluatorType, input, output } = bodySchema.parse(ctx.request.body);
+    const { evaluatorType, input, output, params } = bodySchema.parse(
+      ctx.request.body,
+    );
 
     let passed: Boolean = false;
+    console.log(params, evaluatorType);
 
     if (evaluatorType === "toxicity") {
       const result = await evaluateToxicity({ input, output });
       if (result.toxic_input === false && result.toxic_output === false) {
         ctx.passed = true;
       }
+    } else if (evaluatorType === "llm") {
+      const res = await aiAssert(output.content as string, params.prompt);
+      passed = res.passed;
     } else {
       ctx.throw(400, `Unknown evaluator type: ${evaluatorType}`);
     }
