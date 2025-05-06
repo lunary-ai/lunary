@@ -142,6 +142,11 @@ export function NavbarLink({
               Alpha
             </Badge>
           )}
+          {label === "Experiments" && (
+            <Badge size="xs" variant="light">
+              Beta
+            </Badge>
+          )}
         </Group>
       }
       disabled={disabled || soon}
@@ -626,7 +631,7 @@ export default function Sidebar() {
 
           {user &&
             APP_MENU.filter((item) => !item.disabled).map((item) => {
-              return <MenuSection item={item} key={item.label} isAlpha />;
+              return <MenuSection item={item} key={item.label} />;
             })}
         </Box>
       </Stack>
