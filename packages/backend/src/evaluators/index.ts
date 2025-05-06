@@ -17,7 +17,6 @@ const evaluators = {
   pii,
   language,
   llm,
-  tone,
   topics,
   toxicity,
   sentiment,
