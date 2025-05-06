@@ -1,0 +1,1 @@
+create index external_user_props_gin on external_user using gin (props jsonb_path_ops);
