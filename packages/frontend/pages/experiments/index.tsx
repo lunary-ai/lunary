@@ -1011,11 +1011,16 @@ export default function Experiments() {
       </Modal>
 
       {/* ───────── Table header ───────── */}
-      <Table withTableBorder withColumnBorders withRowBorders>
+      <Table
+        withTableBorder
+        withColumnBorders
+        withRowBorders
+        style={{ overflowY: "scroll" }}
+      >
         <Table.Thead>
           <Table.Tr bg="gray.0">
             {vars.map((v) => (
-              <Table.Th key={v}></Table.Th>
+              <Table.Th key={v} w="300px"></Table.Th>
             ))}
             <Table.Th style={{ width: `${PROMPT_COLUMN_WIDTH}px` }}>
               <Group align="center" gap="xs">
@@ -1626,6 +1631,7 @@ function PromptVersionSelect({
         onChange={(v) =>
           setSelectedPrompt(prompts.find((p) => p.id === Number(v)))
         }
+        w={180}
         styles={{ input: { borderRadius: "8px 0 0 8px" } }}
       />
       <Select
