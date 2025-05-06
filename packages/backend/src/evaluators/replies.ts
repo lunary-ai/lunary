@@ -1,25 +1,51 @@
 import { Run } from "shared";
 import { lastMsg } from "../checks";
 import openai from "@/src/utils/openai";
-import lunary from "lunary";
+import { z } from "zod";
+import { zodTextFormat } from "openai/helpers/zod";
 
 export async function evaluate(run: Run) {
-  if (!run.input || !run.output) {
-    return null;
-  }
+  if (!run.input || !run.output) return null;
 
-  const template = await lunary.renderTemplate("replied-question", {
-    question: lastMsg(run.input),
-    answer: lastMsg(run.output),
+  const question = lastMsg(run.input);
+  const answer = lastMsg(run.output);
+  if (!question || !answer) return null;
+
+  const evalSchema = z.object({
+    result: z.enum(["YES", "NO"]),
+    reason: z.string().optional().default(""),
   });
 
-  const res = await openai.chat.completions.create(template);
+  const completion = await openai!.responses.parse({
+    model: "gpt-4.1",
+    instructions: `
+You judge whether the ANSWER actually addresses the QUESTION / instruction.
 
-  const output = res.choices[0]?.message?.content;
+• Return "YES" if it does.  
+• Return "NO" if it does not.  
+• If the prompt isn’t really a question (e.g.\ a statement), treat it as answered and return "YES".
 
-  if (!output) "";
+Reply *only* with JSON matching the schema.
+    `,
+    input: `
+QUESTION:
+${question}
 
-  const result = output.split("\n")[0].toLowerCase().replace(".", "").trim();
+ANSWER:
+${answer}
+    `,
+    text: {
+      format: zodTextFormat(evalSchema, "evaluation"),
+    },
+  });
 
-  return result.includes("yes") + "";
+  if (completion.output_parsed === null)
+    throw new Error("Failed to parse completion");
+
+  const { result, reason } = completion.output_parsed;
+
+  return {
+    result: result === "YES",
+    reason,
+  };
 }

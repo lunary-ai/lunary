@@ -1,4 +1,3 @@
-import { monitorOpenAI } from "lunary/openai";
 import OpenAI from "openai";
 
 export function getOpenAIParams() {
@@ -12,4 +11,4 @@ export function getOpenAIParams() {
 }
 const clientParams = getOpenAIParams();
 
-export default clientParams ? monitorOpenAI(new OpenAI(clientParams)) : null;
+export default clientParams ? new OpenAI(clientParams) : null;

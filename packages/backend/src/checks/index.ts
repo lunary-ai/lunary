@@ -8,6 +8,7 @@ import aiSimilarity from "./ai/similarity";
 import rouge from "rouge";
 import { and, or } from "../utils/checks";
 import { CleanRun } from "../utils/ingest";
+import aiSentiment from "./ai/sentiment";
 
 export const isOpenAIMessage = (field: any) =>
   field &&
@@ -259,6 +260,27 @@ export const CHECK_RUNNERS: CheckRunner[] = [
           )`,
         ]),
       ]);
+    },
+    async evaluator(run, params) {
+      const { field, sentiment } = params;
+
+      const score = await aiSentiment(lastMsg(run[field]));
+
+      let passed = false;
+
+      if (sentiment === "positive") {
+        passed = score >= 0.7;
+      } else if (sentiment === "negative") {
+        passed = score <= 0.4;
+      } else {
+        passed = score >= 0.4 && score <= 0.7;
+      }
+
+      return {
+        passed,
+        reason: `Sentiment score: ${score}`,
+        details: { sentiment: score },
+      };
     },
   },
   {
@@ -518,30 +540,6 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       };
     },
   },
-  // {
-  //   id: "sentiment",
-  //   async evaluator(run, params) {
-  //     const { field, sentiment } = params
-
-  //     const score = await aiSentiment(lastMsg(run[field]))
-
-  //     let passed = false
-
-  //     if (sentiment === "positive") {
-  //       passed = score >= 0.7
-  //     } else if (sentiment === "negative") {
-  //       passed = score <= 0.4
-  //     } else {
-  //       passed = score >= 0.4 && score <= 0.7
-  //     }
-
-  //     return {
-  //       passed,
-  //       reason: `Sentiment score: ${score}`,
-  //       details: { sentiment: score },
-  //     }
-  //   },
-  // },
   {
     id: "tone",
     async evaluator(run, params) {
