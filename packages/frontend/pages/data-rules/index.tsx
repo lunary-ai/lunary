@@ -1,7 +1,13 @@
 import { SettingsCard } from "@/components/blocks/SettingsCard";
 import CheckPicker from "@/components/checks/Picker";
 import config from "@/utils/config";
-import { useOrg, useProjectRules } from "@/utils/dataHooks";
+import {
+  useOrg,
+  useProject,
+  useProjectRules,
+  useProjects,
+  useUser,
+} from "@/utils/dataHooks";
 import {
   Stack,
   Flex,
@@ -13,8 +19,11 @@ import {
   Box,
   Loader,
   Container,
+  Select,
+  Group,
 } from "@mantine/core";
-import { IconIdBadge } from "@tabler/icons-react";
+import { showNotification } from "@mantine/notifications";
+import { IconCheck, IconIdBadge } from "@tabler/icons-react";
 import { useState, useEffect } from "react";
 import { CheckLogic } from "shared";
 
@@ -22,6 +31,11 @@ function SmartDataRule() {
   const { org } = useOrg();
   const { addRule, addRulesLoading, deleteRule, maskingRule, filteringRule } =
     useProjectRules();
+
+  const { user } = useUser();
+  const { updateDataRetention } = useProject();
+  const [dataRetentionDays, setDataRetentionDays] =
+    useState<string>("unlimited");
 
   const [checks, setChecks] = useState<CheckLogic>(["AND"]);
 
@@ -98,6 +112,52 @@ function SmartDataRule() {
             />
           </Stack>
         </SettingsCard>
+
+        {user && ["admin", "owner"].includes(user.role) && (
+          <SettingsCard title="Data Retention Policy" align="start">
+            <Text>
+              Define a retention period for this Project data. The data will be
+              automatically deleted after the defined time.
+            </Text>
+            <Select
+              defaultValue="Unlimited"
+              value={String(dataRetentionDays)}
+              onChange={setDataRetentionDays}
+              data={[
+                { label: "Unlimited", value: "unlimited" },
+                { label: "1 year", value: "365" },
+                { label: "180 days", value: "180" },
+                { label: "90 days", value: "90" },
+                { label: "60 days", value: "60" },
+                { label: "30 days", value: "30" },
+              ]}
+            />
+
+            <Group w="100%" justify="end">
+              <Button
+                onClick={() => {
+                  if (dataRetentionDays !== "unlimited") {
+                    // eslint-disable-next-line no-alert
+                    confirm(
+                      `If you confirm, all data older than ${dataRetentionDays} days will be deleted permanently.`,
+                    );
+                    updateDataRetention(dataRetentionDays);
+                  } else if (dataRetentionDays === "unlimited") {
+                    updateDataRetention("unlimited");
+                  }
+                  showNotification({
+                    title: "Data retention policy updated",
+                    message: `Data retention policy updated to ${dataRetentionDays} days`,
+                    icon: <IconCheck />,
+                    color: "green",
+                  });
+                }}
+              >
+                Save
+              </Button>
+            </Group>
+          </SettingsCard>
+        )}
       </Stack>
     </Container>
   );

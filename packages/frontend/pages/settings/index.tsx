@@ -408,52 +408,6 @@ export default function Settings() {
                 </Button>
               </SettingsCard>
 
-              {user && ["admin", "owner"].includes(user.role) && (
-                <SettingsCard title="Data Retention Policy" align="start">
-                  <Text>
-                    Define a retention period for this Project data. The data
-                    will be automatically deleted after the defined time.
-                  </Text>
-                  <Select
-                    defaultValue="Unlimited"
-                    value={String(dataRetentionDays)}
-                    onChange={setDataRetentionDays}
-                    data={[
-                      { label: "Unlimited", value: "unlimited" },
-                      { label: "1 year", value: "365" },
-                      { label: "180 days", value: "180" },
-                      { label: "90 days", value: "90" },
-                      { label: "60 days", value: "60" },
-                      { label: "30 days", value: "30" },
-                    ]}
-                  />
-
-                  <Group w="100%" justify="end">
-                    <Button
-                      onClick={() => {
-                        if (dataRetentionDays !== "unlimited") {
-                          // eslint-disable-next-line no-alert
-                          confirm(
-                            `If you confirm, all data older than ${dataRetentionDays} days will be deleted permanently.`,
-                          );
-                          updateDataRetention(dataRetentionDays);
-                        } else if (dataRetentionDays === "unlimited") {
-                          updateDataRetention("unlimited");
-                        }
-                        showNotification({
-                          title: "Data retention policy updated",
-                          message: `Data retention policy updated to ${dataRetentionDays} days`,
-                          icon: <IconCheck />,
-                          color: "green",
-                        });
-                      }}
-                    >
-                      Save
-                    </Button>
-                  </Group>
-                </SettingsCard>
-              )}
-
               {user && hasAccess(user.role, "projects", "delete") && (
                 <SettingsCard title="Danger Zone" align="start">
                   <Text>
