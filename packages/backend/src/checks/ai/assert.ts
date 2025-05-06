@@ -1,23 +1,36 @@
 import openai from "@/src/utils/openai";
-import lunary from "lunary";
+import { zodTextFormat } from "openai/helpers/zod";
+import { z } from "zod";
 
 export default async function aiAssert(sentence: string, assertion: string) {
-  const template = await lunary.renderTemplate("assert", {
-    response: sentence,
-    assertion,
+  const assertSchema = z.object({
+    passed: z.boolean(),
+    reason: z.string(),
   });
 
-  const res = await openai.chat.completions.create(template);
+  const completion = await openai!.responses.parse({
+    model: "gpt-4.1",
+    instructions: `
+You help evaluate if a given response from an AI matches a given assertion.
+Return a JSON object with:
+passed → true if the assertion is fully satisfied, false otherwise
+reason → brief explanation
+`,
+    input: `
+AI Response:
+\`${sentence}\`
 
-  const output = res.choices[0]?.message?.content;
+Assertion:
+\`${assertion}\`
+`,
+    text: { format: zodTextFormat(assertSchema, "assert") },
+  });
 
-  if (!output) throw new Error("No output from AI");
+  if (completion.output_parsed === null) {
+    throw new Error("Failed to parse completion");
+  }
 
-  const result = output.split("\n")[0].toLowerCase().replace(".", "").trim();
-  const reason = output.split("\n").slice(1).join("\n");
+  const { passed, reason } = completion.output_parsed;
 
-  return {
-    passed: result === "yes",
-    reason,
-  };
+  return { passed, reason };
 }

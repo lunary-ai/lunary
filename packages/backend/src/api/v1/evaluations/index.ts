@@ -221,7 +221,7 @@ evaluations.post("/run", async (ctx: Context) => {
   };
 
   const cost = await calcRunCost(virtualRun);
-  virtualRun.cost = cost;
+  virtualRun.cost = cost ?? 0;
   virtualRun.duration = virtualRun.duration / 1000; // needs to be in ms in calcRunCost, but needs to be in seconds in the checks
 
   // run checks

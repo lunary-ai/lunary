@@ -1,86 +1,80 @@
 import openai from "@/src/utils/openai";
-import lunary from "lunary";
+import { z } from "zod";
+import { zodTextFormat } from "openai/helpers/zod";
+
+/* ---------- local helpers ---------- */
 
 function cosinesim(A: number[], B: number[]): number {
-  var dotproduct = 0;
-  var mA = 0;
-  var mB = 0;
-
-  for (var i = 0; i < A.length; i++) {
-    dotproduct += A[i] * B[i];
-    mA += A[i] * A[i];
-    mB += B[i] * B[i];
+  let dot = 0,
+    mA = 0,
+    mB = 0;
+  for (let i = 0; i < A.length; i++) {
+    dot += A[i] * B[i];
+    mA += A[i] ** 2;
+    mB += B[i] ** 2;
   }
-
-  mA = Math.sqrt(mA);
-  mB = Math.sqrt(mB);
-  var similarity = dotproduct / (mA * mB);
-
-  return similarity * 100;
+  return (dot / (Math.sqrt(mA) * Math.sqrt(mB))) * 100;
 }
 
-function jaccardIndexSimilarity(str1: string, str2: string) {
-  // Tokenize the strings into sets of words
+function jaccardIndexSimilarity(str1: string, str2: string): number {
   const set1 = new Set(str1.split(/\s+/));
   const set2 = new Set(str2.split(/\s+/));
-
-  // Find the intersection of two sets
   const intersection = new Set([...set1].filter((x) => set2.has(x)));
-
-  // Find the union of two sets
   const union = new Set([...set1, ...set2]);
-
-  // Calculate Jaccard Index
-  const jaccardIndex = intersection.size / union.size;
-
-  // Scale to 1-100
-  const scaledJaccardIndex = 1 + jaccardIndex * (100 - 1);
-
-  return scaledJaccardIndex;
+  const j = intersection.size / union.size;
+  return 1 + j * 99; // scale 0‒1 ➞ 1‒100
 }
 
 const embedText = async (text: string) => {
-  const embedding = await openai.embeddings.create({
+  const { data } = await openai!.embeddings.create({
     model: "text-embedding-3-large",
     input: text,
     encoding_format: "float",
   });
-
-  return embedding.data[0].embedding;
+  return data[0].embedding;
 };
 
 export default async function aiSimilarity(
   text1: string,
   text2: string,
-  type: string,
+  type: "cosine" | "jaccard" | "ai" = "ai",
 ) {
   switch (type) {
-    case "cosine":
-      const embedding1 = await embedText(text1);
+    case "cosine": {
+      const [e1, e2] = await Promise.all([embedText(text1), embedText(text2)]);
+      return cosinesim(e1, e2);
+    }
 
-      const embedding2 = await embedText(text2);
-
-      const similarity = cosinesim(embedding1, embedding2);
-
-      return similarity;
     case "jaccard":
       return jaccardIndexSimilarity(text1, text2);
 
     case "ai":
-    default:
-      const template = await lunary.renderTemplate("distance", {
-        text1,
-        text2,
+    default: {
+      const similaritySchema = z.object({
+        score: z.number().min(0).max(100),
       });
 
-      const res = await openai.chat.completions.create(template);
+      const completion = await openai!.responses.parse({
+        model: "gpt-4.1",
+        instructions: `
+You are a similarity estimator.  
+Return the similarity *score* between two texts on a 0 – 100 scale:
 
-      const output = res.choices[0]?.message?.content;
+  0   → texts have nothing in common  
+  100 → texts are exactly the same  
 
-      if (!output) throw new Error("No output from AI");
+Respond **only** with JSON matching the schema.
+        `,
+        input: `Text 1:\n${text1}\n\nText 2:\n${text2}`,
+        text: {
+          format: zodTextFormat(similaritySchema, "similarity"),
+        },
+      });
 
-      const result = parseInt(output);
+      if (completion.output_parsed === null)
+        throw new Error("Failed to parse completion");
 
-      return result;
+      return completion.output_parsed.score;
+    }
   }
 }
