@@ -515,7 +515,7 @@ export default function Dashboard() {
                               }
                               mb="md"
                             />
-                            <Title order={5} mb="xs">
+                            {/* <Title order={5} mb="xs">
                               Chart Type
                             </Title>
                             {["Bar", "Area"].includes(chart.type) && (
@@ -531,7 +531,7 @@ export default function Dashboard() {
                                 ]}
                                 mb="md"
                               />
-                            )}
+                            )} */}
                             <Title order={5} mb="xs">
                               Filters
                             </Title>
