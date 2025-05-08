@@ -199,6 +199,8 @@ function ProjectNameCard() {
           data-testid="project-name-input"
           value={name}
           onChange={(e) => setName(e.currentTarget.value)}
+          className="project-name"
+          placeholder="project-name"
         />
 
         <Group justify="end">

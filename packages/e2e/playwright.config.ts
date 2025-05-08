@@ -28,7 +28,7 @@ export default defineConfig({
     // Uses Vercel deployment URL in CI, otherwise uses localhost.
     baseURL: process.env.CI ? process.env.BASE_URL : "http://127.0.0.1:8080",
     permissions: ["clipboard-read", "clipboard-write"],
-
+ 
     video: "on",
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
@@ -71,3 +71,4 @@ export default defineConfig({
   //   reuseExistingServer: !process.env.CI,
   // },
 });
+

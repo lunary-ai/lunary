@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 
 import { deleteOrg, populateLogs } from "./utils/db";
 
@@ -29,7 +29,7 @@ test("signup flow", async ({ page }) => {
 
   await page.waitForURL("**/dashboards*");
 
-  await page.context().storageState({ path: authFile });
+  // await page.context().storageState({ path: authFile });
 
-  await populateLogs();
+  // await populateLogs();
 });
