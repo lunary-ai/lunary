@@ -18,6 +18,7 @@ const router = new Router({
 });
 
 async function setupSubscription(object: Stripe.Checkout.Session) {
+  return;
   console.info("🔔 setupSubscription", object);
   const { customer, client_reference_id, mode, subscription, metadata } =
     object;
