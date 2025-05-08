@@ -175,8 +175,15 @@ router.post("/", async (ctx: Context) => {
 
     switch (event.type) {
       case "checkout.session.completed":
-        // reconcile user with customer using client_reference_id
-        await setupSubscription(event.data.object);
+        const session = event.data.object as Stripe.Checkout.Session;
+
+        if (session.payment_status === "paid") {
+          await setupSubscription(session);
+        } else {
+          console.info(
+            `Skip setup: session ${session.id} completed with payment_status=${session.payment_status}`,
+          );
+        }
         break;
 
       case "customer.subscription.updated":
