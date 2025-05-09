@@ -105,4 +105,4 @@ const sentryConfig = withSentryConfig(baseConfig, {
   },
 });
 
-export default config.IS_CLOUD ? sentryConfig : baseConfig;
+export default sentryConfig;
