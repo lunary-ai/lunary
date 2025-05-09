@@ -3,7 +3,7 @@
   "main": "pages/index.ts",
   "scripts": {
     "start": "bun run load-env && NODE_ENV=production bun --bun next start -H 0.0.0.0 -p 8080",
-    "dev": "bun --bun next dev -p 8080",
+    "dev": "bun --bun next dev -p 8080 --turbo",
     "build": "rm -rf .next && NODE_ENV=production bun --bun next build",
     "build:turbo": "rm -rf .next && NODE_ENV=production bun --bun next build --turbo",
     "load-env": "bash ./load-env.sh"
@@ -21,6 +21,7 @@
     "@mantine/notifications": "^7.16.3",
     "@radix-ui/react-toast": "^1.2.11",
     "@react-oauth/google": "^0.12.1",
+    "@sentry/nextjs": "^9.17.0",
     "@tabler/icons-react": "^3.31.0",
     "@tailwindcss/postcss": "^4.1.5",
     "@tanstack/react-table": "^8.21.3",
@@ -36,7 +37,7 @@
     "json-2-csv": "^5.5.9",
     "jsonrepair": "^3.12.0",
     "lucide-react": "^0.503.0",
-    "next": "^15.3.1",
+    "next": "^15.3.2",
     "next-seo": "^6.6.0",
     "nuqs": "^2.4.3",
     "openai": "^4.96.2",
