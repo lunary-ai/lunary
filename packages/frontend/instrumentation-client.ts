@@ -3,12 +3,9 @@
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
 import * as Sentry from "@sentry/nextjs";
-import config from "./utils/config";
 
 Sentry.init({
-  dsn: config.IS_CLOUD
-    ? "https://c714dfeb448caef6e12e281ad1e9250e@o4509293498728448.ingest.de.sentry.io/4509293501808720"
-    : null,
+  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
   // Add optional integrations for additional features
   integrations: [Sentry.replayIntegration()],
