@@ -46,5 +46,3 @@ jspm_packages
 
 
 public/config.js
-# Sentry Config File
-.env.sentry-build-plugin
