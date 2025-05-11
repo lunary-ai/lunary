@@ -297,7 +297,7 @@ async function registerRunEvent(
         output,
         promptTokens: tokensUsage?.prompt,
         completionTokens: tokensUsage?.completion,
-        cachedPromptTokens: tokensUsage?.promptCached,
+        cachedPromptTokens: tokensUsage?.promptCached || 0,
         name: runData?.name,
         duration: new Date(timestamp) - new Date(runData?.createdAt),
         projectId,
@@ -314,7 +314,7 @@ async function registerRunEvent(
       status: "success",
       promptTokens: tokensUsage?.prompt,
       completionTokens: tokensUsage?.completion,
-      cachedPromptTokens: tokensUsage?.promptCached,
+      cachedPromptTokens: tokensUsage?.promptCached ?? 0,
       cost,
       metadata,
     });
