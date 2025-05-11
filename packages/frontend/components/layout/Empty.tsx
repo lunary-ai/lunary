@@ -119,6 +119,24 @@ response = completion(
     messages=[{"role": "user", "content": "Hello!"}]
 )`,
   },
+  mistral: {
+    py: `
+import os
+from openai import OpenAI
+import lunary
+
+MISTRAL_API_KEY = os.environ.get("MISTRAL_API_KEY")
+
+client = OpenAI(api_key=MISTRAL_API_KEY, base_url="https://api.mistral.ai/v1/")
+
+lunary.monitor(client)  # This line sets up monitoring for all calls made through the 'openai' module
+
+chat_completion = client.chat.completions.create(
+  model="mistral-small-latest",
+  messages=[{"role": "user", "content": "Hello world"}]
+)
+    `,
+  },
   custom: {
     curl: `curl -X POST "https://api.lunary.ai/v1/runs/ingest" \
   -H "Content-Type: application/json" \
@@ -435,7 +453,6 @@ const RequestIntegrationForm = ({
       <Text>Let us know which integration you'd like to see next!</Text>
       <TextInput
         label="Describe your integration"
-        placeholder="e.g. Mistral, Together AI, etc."
         defaultValue={
           integrationName ? `I want to integrate with ${integrationName}` : ""
         }
@@ -498,6 +515,11 @@ export function EmptyOnboarding() {
             <IntegrationButton
               value="flowise"
               label="Flowise"
+              onClick={setIntegration}
+            />
+            <IntegrationButton
+              value="mistral"
+              label="Mistral"
               onClick={setIntegration}
             />
             <IntegrationButton
