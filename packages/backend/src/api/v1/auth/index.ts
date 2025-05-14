@@ -1,9 +1,9 @@
 import { sendVerifyEmail } from "@/src/emails";
+import * as Sentry from "@sentry/bun";
 import { Db } from "@/src/types";
 import config from "@/src/utils/config";
 import sql from "@/src/utils/db";
 import Context from "@/src/utils/koa";
-import { sendSlackMessage } from "@/src/utils/notifications";
 import Router from "koa-router";
 import { z } from "zod";
 import google from "./google";
@@ -402,6 +402,7 @@ auth.post("/request-password-reset", async (ctx: Context) => {
     await requestPasswordReset(email);
     ctx.body = { ok: true };
   } catch (error) {
+    Sentry.captureException(error);
     console.error(error);
     // Do not send error message to client if email is not found
     ctx.body = { ok: true };

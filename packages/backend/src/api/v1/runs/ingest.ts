@@ -12,6 +12,7 @@ import {
 import Context from "@/src/utils/koa";
 import Router from "koa-router";
 import { z } from "zod";
+import * as Sentry from "@sentry/bun";
 
 /**
  * @openapi
@@ -516,21 +517,18 @@ export async function processEventsIngestion(
         !(error instanceof DuplicateError) &&
         !(error instanceof ProjectNotFoundError)
       ) {
-        // Sentry.withScope((scope) => {
-        //   scope.setExtras({ event: JSON.stringify(event) });
-        //   Sentry.captureException(error);
-        // });
-      }
 
       console.error(`Error ingesting event`, {
         error: error,
         event,
       });
 
+      Sentry.captureException(error, { contexts: { event } });
+
       results.push({
         id: event.runId,
         success: false,
-        error: error.message,
+        error: error?.message || "Unknown error",
       });
     }
   }
