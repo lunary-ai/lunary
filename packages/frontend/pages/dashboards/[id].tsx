@@ -72,15 +72,7 @@ function serialiseDashboardState({
 }
 
 function getSpan(index: number) {
-  if ([0, 1, 2].includes(index)) {
-    return 4;
-  }
-
-  if (index === 3) {
-    return 12;
-  }
-
-  return 6;
+  return index < 3 ? 4 : 6;
 }
 
 type ChartWithSpan = Chart & {
@@ -120,11 +112,12 @@ export default function Dashboard() {
   const [filterIndex, setFilterIndex] = useState<number | null>(null);
 
   function setChartsWithSortOrder(newCharts: ChartWithSpan[]) {
-    const orderedCharts = newCharts.map((c, i) => ({
-      ...c,
-      sortOrder: i,
-      span: c.span ?? getSpan(i), // respect initial 1/3 on first row
-    }));
+    const orderedCharts = newCharts.map((c, i) => {
+      const defaultSpan = getSpan(i);
+      // first row always one-third; other rows default to half unless manually expanded (span===12)
+      const span = i < 3 ? defaultSpan : c.span === 12 ? 12 : defaultSpan;
+      return { ...c, sortOrder: i, span };
+    });
     setCharts(orderedCharts);
   }
 
