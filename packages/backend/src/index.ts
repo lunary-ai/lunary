@@ -20,6 +20,9 @@ import { errorMiddleware } from "./utils/errors";
 import licenseMiddleware from "./utils/license";
 import { setDefaultBody } from "./utils/misc";
 import ratelimit from "./utils/ratelimit";
+import { initSentry } from "./utils/instrument";
+
+initSentry();
 
 checkDbConnection();
 checkEmailServerConnection();
