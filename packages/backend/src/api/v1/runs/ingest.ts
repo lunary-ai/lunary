@@ -517,6 +517,8 @@ export async function processEventsIngestion(
         !(error instanceof DuplicateError) &&
         !(error instanceof ProjectNotFoundError)
       ) {
+        Sentry.captureException(error, { contexts: { event } });
+      }
 
       console.error(`Error ingesting event`, {
         error: error,
