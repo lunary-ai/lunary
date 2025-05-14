@@ -20,6 +20,9 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function checkEmailServerConnection() {
+  if (process.env.NODE_ENV !== "production") {
+    return;
+  }
   if (
     config.SMTP_HOST ||
     config.SMTP_PORT ||
