@@ -10,6 +10,7 @@ import { PassThrough } from "stream";
 
 import { handleStream, runAImodel } from "@/src/utils/playground";
 import { checkAccess } from "@/src/utils/authorization";
+import * as Sentry from "@sentry/bun";
 
 const orgs = new Router({
   prefix: "/orgs/:orgId",
@@ -255,6 +256,7 @@ orgs.post(
         ctx.status = 500;
         ctx.body = { message: "An unexpected error occurred" };
         console.error(error);
+        Sentry.captureException(error);
         stream.end();
       },
     );

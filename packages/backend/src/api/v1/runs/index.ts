@@ -4,6 +4,7 @@ import Router from "koa-router";
 import { checkAccess } from "@/src/utils/authorization";
 import { convertChecksToSQL } from "@/src/utils/checks";
 import { jsonrepair } from "jsonrepair";
+import * as Sentry from "@sentry/bun";
 import { Feedback, Score, deserializeLogic } from "shared";
 import { z } from "zod";
 import { fileExport } from "./export";
@@ -167,6 +168,7 @@ function processParams(params: any) {
   } catch (e) {
     console.error(e);
     console.error("Error parsing tools");
+    Sentry.captureException(e);
   }
   return params;
 }
@@ -313,6 +315,7 @@ export function formatRun(run: any) {
         evaluationResult;
     }
   } catch (error) {
+    Sentry.captureException(error);
     console.error(error);
   }
 
@@ -649,6 +652,7 @@ runs.get("/", async (ctx: Context) => {
           run.output.content = run.output.content.substring(0, 100);
         }
       } catch (error) {
+        Sentry.captureException(error);
         console.error(error);
       }
     }
