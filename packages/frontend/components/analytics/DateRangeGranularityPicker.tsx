@@ -195,6 +195,7 @@ export function DateRangeSelect({ dateRange, setDateRange }) {
 
   return (
     <Select
+      data-testid="date-range-select"
       placeholder="Select date range"
       w="100"
       size="xs"
@@ -235,6 +236,7 @@ export function DateRangePicker({ dateRange, setDateRange }) {
   }
   return (
     <DatePickerInput
+     data-testid="date-picker-input"
       type="range"
       placeholder="Pick date range"
       leftSection={<IconCalendar size={18} stroke={1.5} />}
@@ -269,14 +271,15 @@ export default function DateRangeGranularityPicker({
   disableWeekly = false, // default false
 }: DateRangeGranularityPickerProps) {
   return (
-    <Group gap={0}>
-      <DateRangeSelect dateRange={dateRange} setDateRange={setDateRange} />
-      <DateRangePicker dateRange={dateRange} setDateRange={setDateRange} />
+    <Group gap={0} data-testid="date-range-granularity-picker" >
+      <DateRangeSelect dateRange={dateRange} setDateRange={setDateRange} data-testid="date-range-picker"/>
+      <DateRangePicker dateRange={dateRange} setDateRange={setDateRange} data-testid="date-picker-input" />
       <GranularitySelect
         granularity={granularity}
         setGranularity={setGranularity}
         dateRange={dateRange}
         disableWeekly={disableWeekly}
+        data-testid="granularity-select"
       />
     </Group>
   );

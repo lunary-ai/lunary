@@ -271,7 +271,7 @@ function MenuSection({ item }) {
               );
             }
             return (
-              <NavbarLink {...subItem} key={subItem.link || subItem.label} />
+              <NavbarLink {...subItem} key={subItem.link || subItem.label} data-testid="dashboard-sidebar-link"/>
             );
           })}
       </Collapse>
