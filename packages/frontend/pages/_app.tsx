@@ -8,6 +8,7 @@ import { MantineProvider } from "@mantine/core";
 import type { AppProps } from "next/app";
 import Head from "next/head";
 import { NuqsAdapter } from "nuqs/adapters/next/pages";
+import * as Sentry from "@sentry/nextjs";
 
 import Layout from "@/components/layout";
 import AnalyticsWrapper from "@/components/layout/Analytics";
@@ -57,6 +58,9 @@ export default function App({ Component, pageProps }: AppProps) {
               <SWRConfig
                 value={{
                   fetcher: fetcher.get,
+                  onError: (error) => {
+                    Sentry.captureException(error);
+                  },
                 }}
               >
                 <DefaultSeo
