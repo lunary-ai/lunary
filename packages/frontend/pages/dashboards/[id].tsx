@@ -346,11 +346,11 @@ export default function Dashboard() {
 
                 <Menu position="bottom-end">
                   <Menu.Target>
-                    <ActionIcon variant="subtle">
+                    <ActionIcon variant="subtle" data-testid="dashboard-menu-button" >
                       <IconDotsVertical size={12} />
                     </ActionIcon>
                   </Menu.Target>
-                  <Menu.Dropdown>
+                  <Menu.Dropdown data-testid="dashboard-menu-dropdown">
                     <Menu.Item
                       leftSection={<IconPinnedFilled size={16} />}
                       disabled={dashboard.isHome}

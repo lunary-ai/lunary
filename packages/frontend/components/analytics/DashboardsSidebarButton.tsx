@@ -34,14 +34,15 @@ export default function DashboardsSidebarButton() {
     return (
       <Menu position="bottom-end" withArrow={false} offset={3}>
         <Menu.Target ref={menuTargetRef}>
-          <ActionIcon variant="subtle">
+          <ActionIcon variant="subtle" data-testid="dashboard-menu-toggle">
             <IconChevronDown size={12} />
           </ActionIcon>
         </Menu.Target>
-        <Menu.Dropdown>
+        <Menu.Dropdown data-testid="dashboard-menu-dropdown">
           {dashboards.map(({ id, name, isHome }) => (
             <Menu.Item
               key={id}
+              data-testid={`dashboard-menu-item-${id}`}
               onClick={(event) => {
                 event.preventDefault();
                 router.push(`/dashboards/${id}`);
@@ -63,6 +64,8 @@ export default function DashboardsSidebarButton() {
               fullWidth
               leftSection={<IconPlus size={12} />}
               onClick={handleCreateDashboard}
+              data-testid="create-dashboard-button" // Test ID for the create button
+
             >
               Create Dashboard
             </Button>
@@ -85,6 +88,7 @@ export default function DashboardsSidebarButton() {
         icon={IconAnalyze}
         link={`/dashboards/${homeDashboardId}`}
         rightSection={<DashboardsMenu />}
+        data-testid="dashboard-sidebar-link"
       />
     </Group>
   );
