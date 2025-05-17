@@ -367,10 +367,11 @@ export default function RunInputOutput({
                         name="Model"
                         value={run.name}
                         render={(value) => (
-                          <Badge variant="light" color="blue">
+                          <Badge variant="light" color="blue" data-testid="model-info">
                             {value}
                           </Badge>
                         )}
+                        
                       />
                     )}
 

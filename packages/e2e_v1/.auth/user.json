@@ -9,12 +9,8 @@
           "value": "false"
         },
         {
-          "name": "projectId",
-          "value": "b7ef26f1-8073-4726-b462-6c67cb2fec7d"
-        },
-        {
           "name": "auth-token",
-          "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1MjVkMWM2Mi1lMTZmLTRlOTAtYWMwNS0wZDQxMWE2M2NjYzIiLCJlbWFpbCI6InRlc3RAbHVuYXJ5LmFpIiwib3JnSWQiOiI3MDU3MmMxZi0xMmJlLTRkOWYtYjE2ZS1iOTQ5ODQ0ZGM4YTciLCJleHAiOjE3NDk4MjY4MjIsImlhdCI6MTc0NzIzNDgyMiwibmJmIjoxNzQ3MjM0ODIyfQ.18C2nsY--tF-c9-WwIgpAiNbb0Hss_4hmHQJdAY2rYw"
+          "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJlNzhlNTMzNC1mMDk4LTQ2YjAtOWJkZi0yNTVhOTNhOTE3NDQiLCJlbWFpbCI6Imx1bmFyeXRlc3QyQGx1bmFyeS5haSIsIm9yZ0lkIjoiNWU5MzgwODItYWJlOS00NDIxLWIxNTItOTk4YTM3OWY4YjkwIiwiZXhwIjoxNzQ5OTk4ODAzLCJpYXQiOjE3NDc0MDY4MDMsIm5iZiI6MTc0NzQwNjgwM30.csPkAq1qzZ2sinnlt7ihaok0QPD-O-6Gf6nJm_VT9PQ"
         }
       ]
     }

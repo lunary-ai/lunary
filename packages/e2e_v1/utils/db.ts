@@ -4,9 +4,9 @@ import { ChatOpenAI } from "@langchain/openai";
 import lunary from "lunary";
 import { LunaryHandler } from "lunary/langchain";
 import sql from "../../backend/src/utils/db";
-import misc from '../../backend/src/utils/misc';
-const { sleep } = misc;
-
+import { sleep } from "../../backend/src/utils/misc";
+import dotenv from "dotenv";
+dotenv.config();
 export async function setOrgPro() {
   return sql`update org set plan = 'pro' where name = 'test test''s Org'`;
 }
@@ -30,13 +30,13 @@ export async function populateLogs() {
       org.name = 'test test''s Org'
   `;
 
-  await sql`insert into external_user ${sql({ id: 91823, projectId: project.id, externalId: "Salut-123" })}`;
+  await sql`insert into external_user ${sql({ id: 91823, projectId: project?.id, externalId: "Salut-123" })}`;
   const logs = [
     {
       created_at: "2024-04-11 02:32:30.457+00",
       ended_at: "2024-04-11 02:32:31.594+00",
       tags: "{my_tag}",
-      project_id: project.id,
+      project_id: project?.id,
       status: "success",
       name: "gpt-3.5-turbo",
       error: null,
@@ -62,11 +62,14 @@ export async function populateLogs() {
     },
   ];
   await sql`insert into run ${sql(logs)}`;
-  await populateTrace(project.id);
-  await populateThread(project.id);
+  await populateTrace(project?.id);
+  await populateThread(project?.id);
 }
 
-async function populateTrace(projectId: string) {
+async function populateTrace(projectId: string | undefined) {
+  if (!projectId) {
+    throw new Error("Project ID is required");
+  }
   const handler = new LunaryHandler({
     apiUrl: "http://localhost:3333",
     publicKey: projectId,
@@ -75,7 +78,7 @@ async function populateTrace(projectId: string) {
   const prompt = ChatPromptTemplate.fromMessages([
     ["human", "Tell me a short joke about {topic}"],
   ]);
-  const model = new ChatOpenAI({});
+  const model = new ChatOpenAI({openAIApiKey:process.env.OPENAI_API_KEY});
   const outputParser = new StringOutputParser();
 
   const chain = prompt.pipe(model).pipe(outputParser);
@@ -92,7 +95,10 @@ async function populateTrace(projectId: string) {
   // await lunary.flush();
 }
 
-async function populateThread(projectId: string) {
+async function populateThread(projectId: string  | undefined) {
+  if (!projectId) {
+    throw new Error("Project ID is required");
+  }
   lunary.init({ publicKey: projectId, apiUrl: "http://localhost:3333" });
   const thread = lunary.openThread();
 
