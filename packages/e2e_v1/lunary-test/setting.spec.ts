@@ -344,5 +344,60 @@ test.describe("Settings page flows", () => {
       await expect(action).toBeVisible({ timeout: 5_000 });
     }
   });
+  test("show error message", async ({ page }) => {
+    const NEW_NAME = `E2E Renamed ${Date.now()}`;
+
+    // go straight to settings (we're already logged in)
+    await page.goto("/settings");
+
+    // edit the project-name input
+    const projectInput = page.getByTestId("project-name-input");
+    await expect(projectInput).toBeVisible();
+    await projectInput.fill("");
+
+    // click Save and verify it sticks
+    const saveBtn = page.getByRole("button", { name: "Save" });
+    await expect(saveBtn).toBeEnabled();
+    await saveBtn.click();
+    await expect(saveBtn).toBeDisabled();
+    
+    await expect(projectInput).toHaveValue("");
+    await expect(page.getByText("Project name is required")).toBeVisible();
+  });
+
+  test('Edit cost mapping and refresh cost', async ({ page }) => {
+    // Navigate to the settings page
+    await page.goto('/settings');
+    const projectTab = page.getByRole("tab", { name: "Project" });
+    const orgTab = page.getByRole("tab", { name: "Organization" });
+
+    // 2) By default, Project should be selected and its content visible
+    await expect(projectTab).toHaveAttribute("aria-selected", "true");
+    await expect(page.getByTestId("project-name-input")).toBeVisible();
+    await expect(page.getByTestId("org-name-input")).toBeHidden();
+
+    // 3) Click Organization → its content should show up
+    await orgTab.click();
+    // === Step 1: Edit cost mapping ===
+    const editButton = page.getByRole('button', { name: /Edit Mappings/i }).first();
+    await editButton.click();
   
+    const input = page.getByPlaceholder('e.g. $0.002 per token');
+    await input.fill('0.004');
+  
+    await page.getByRole('button', { name: /save/i }).click();
+  
+    await expect(page.getByText(/updated successfully/i)).toBeVisible();
+  
+    // === Step 2: Refresh cost and confirm modal ===
+    const refreshButton = page.getByRole('button', { name: /refresh cost/i });
+    await refreshButton.click();
+  
+    const modal = page.getByRole('dialog');
+    await expect(modal).toBeVisible();
+  
+    await modal.getByRole('button', { name: /confirm/i }).click();
+  
+    await expect(page.getByText(/refresh started/i)).toBeVisible(); // or "refreshed successfully"
+  });
 })
