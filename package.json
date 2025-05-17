@@ -5,6 +5,7 @@
     "start": "bun --filter './packages/frontend' --filter './packages/backend' start",
     "start:backend": "bun --filter './packages/backend' start",
     "start:frontend": "bun --filter './packages/frontend' start",
+    "start:tokenizer": "bun --filter './packages/tokenizer' start",
     "build:frontend": "bun --filter './packages/frontend' build",
     "migrate:db": "bun --filter './packages/backend' migrate:db",
     "dev": "bun --elide-lines 0 --filter '*' dev ",
