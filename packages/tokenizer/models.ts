@@ -4,12 +4,15 @@ import { CostType, Model } from "./types"
 const cache = new NodeCache({ stdTTL: 600 }) // Cache TTL (time to live) is 600 seconds (10 minutes)
 
 const getLatestModelsByPattern = (models: Model[]): Model[] => {
-  const grouped: Record<string, Model[]> = models.reduce((acc, model) => {
-    const { pattern } = model
-    acc[pattern] = acc[pattern] || []
-    acc[pattern].push(model)
-    return acc
-  }, {} as Record<string, Model[]>)
+  const grouped: Record<string, Model[]> = models.reduce(
+    (acc, model) => {
+      const { pattern } = model
+      acc[pattern] = acc[pattern] || []
+      acc[pattern].push(model)
+      return acc
+    },
+    {} as Record<string, Model[]>,
+  )
 
   return Object.values(grouped).map(
     (group) =>
@@ -17,14 +20,14 @@ const getLatestModelsByPattern = (models: Model[]): Model[] => {
         const dateA = a.startDate ? new Date(a.startDate) : new Date(0)
         const dateB = b.startDate ? new Date(b.startDate) : new Date(0)
         return dateB.getTime() - dateA.getTime()
-      })[0]
+      })[0],
   )
 }
 
 const fetchModelsFromAPI = async (): Promise<Model[]> => {
   const response = await fetch("https://api.lunary.ai/v1/models", {
     headers: {
-      Authorization: "Bearer 8985ed63-e122-43a5-8455-6e64525fca56",
+      Authorization: `Bearer ${process.env.LUNARY_PRIVATE_KEY}`,
     },
   })
 
@@ -54,7 +57,7 @@ const getCachedModels = async (): Promise<Model[]> => {
 const calculateCost = (
   numTokens: number,
   model: Model,
-  type: CostType
+  type: CostType,
 ): number => {
   if (type === "prompt") {
     return (numTokens * model.inputCost) / 1_000_000
