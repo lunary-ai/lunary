@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [backend, frontend, realtime-evaluators]
+        service: [backend, frontend, realtime-evaluators, tokenizer]
     steps:
       - name: Check out the private Ops repo
         uses: actions/checkout@v4
