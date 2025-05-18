@@ -1,3 +1,4 @@
 [submodule "ops"]
 	path = ops
 	url = git@github.com:lunary-ai/ops.git
+	branch = main
