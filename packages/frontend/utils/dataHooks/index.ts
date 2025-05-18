@@ -435,8 +435,6 @@ export function useLogs(params: any) {
 }
 
 export function useRun(id: string | null, initialData?: any) {
-  // const [runDeleted, setRunDeleted] = useState(false);
-
   const {
     data: run,
     isLoading,
