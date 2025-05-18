@@ -290,7 +290,6 @@ export default function Logs() {
 
       if (type === "llm") {
         if (Array.isArray(evaluators)) {
-          console.log(evaluators);
           evaluators.forEach((ev) => {
             next.llm.push(
               ev.type === "toxicity"
