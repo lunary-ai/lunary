@@ -484,6 +484,16 @@ export function useRun(id: string | null, initialData?: any) {
     loading: isLoading,
   };
 }
+
+export function useDeleteRunById() {
+  const { projectId } = useContext(ProjectContext);
+
+  async function deleteRunById(id: string) {
+    await fetcher.delete(generateKey(`/runs/${id}`, projectId));
+  }
+
+  return { deleteRun: deleteRunById };
+}
 export function useLogCount(filters: any) {
   const { data, isLoading } = useProjectSWR(`/runs/count?${filters}`);
 
