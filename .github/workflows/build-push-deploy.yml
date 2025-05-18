@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [backend, frontend, realtime-evaluators, tokenizer]
+        service: [backend, realtime-evaluators, tokenizer]
     steps:
       - name: Check out the private Ops repo
         uses: actions/checkout@v4
@@ -62,7 +62,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  build-push-ml:
+  build-push-ml-and-frontend:
     if: github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
@@ -98,6 +98,26 @@ jobs:
           tags: |
             lunary/ml:latest
             ${{ github.event.release.tag_name != '' && format('lunary/ml:{0}', steps.release_tag.outputs.tag) || '' }}
+          platforms: linux/arm64,linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Check out the private Ops repo
+        uses: actions/checkout@v4
+        with:
+          repository: lunary-ai/lunary
+          token: ${{ secrets.GH_TOKEN }}
+          submodules: "recursive"
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./frontend/Dockerfile
+          push: true
+          tags: |
+            lunary/frontend:latest
+            ${{ github.event.release.tag_name != '' && format('lunary/frontend:{0}', steps.release_tag.outputs.tag) || '' }}
           platforms: linux/arm64,linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
