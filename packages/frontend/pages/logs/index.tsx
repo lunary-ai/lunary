@@ -70,6 +70,7 @@ import {
   useUser,
 } from "@/utils/dataHooks";
 import { buildUrl, fetcher } from "@/utils/fetcher";
+import errorHandler from "@/utils/errors";
 import { formatDateTime } from "@/utils/format";
 
 import { ProjectContext } from "@/utils/context";
@@ -433,6 +434,30 @@ export default function Logs() {
     }
   }
 
+  function openBulkDeleteModal() {
+    modals.openConfirmModal({
+      title: "Delete Logs",
+      confirmProps: { color: "red" },
+      children: (
+        <Text size="sm">
+          Are you sure you want to delete the selected logs? This action cannot
+          be undone.
+        </Text>
+      ),
+      labels: { confirm: "Confirm", cancel: "Cancel" },
+      onConfirm: async () => {
+        await Promise.all(
+          selectedRows.map((id) =>
+            errorHandler(fetcher.delete(`/runs/${id}`)),
+          ),
+        );
+        setIsSelectMode(false);
+        setSelectedRows([]);
+        setShouldMutate(true);
+      },
+    });
+  }
+
   // Show button if column changed or view has changes, or it's not a view
   const showSaveView = useMemo(
     () =>
@@ -633,6 +658,16 @@ export default function Logs() {
                   });
                 }}
               />
+              <Button
+                size="xs"
+                color="red"
+                variant="light"
+                leftSection={<IconTrash size={16} />}
+                disabled={selectedRows.length === 0}
+                onClick={openBulkDeleteModal}
+              >
+                Delete
+              </Button>
             )}
           </Group>
         </Group>
