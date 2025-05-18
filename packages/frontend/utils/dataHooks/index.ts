@@ -435,28 +435,26 @@ export function useLogs(params: any) {
 }
 
 export function useRun(id: string | null, initialData?: any) {
-  const [runDeleted, setRunDeleted] = useState(false);
-
   const {
     data: run,
     isLoading,
     mutate,
-  } = useProjectSWR(id && !runDeleted ? `/runs/${id}` : null, {
+  } = useProjectSWR(id && `/runs/${id}`, {
     fallbackData: initialData,
   });
 
   const { trigger: updateVisibilityTrigger } = useProjectMutation(
-    id && !runDeleted ? `/runs/${id}/visibility` : null,
+    id && `/runs/${id}/visibility`,
     fetcher.patch,
   );
 
   const { trigger: updateFeedbackTrigger } = useProjectMutation(
-    id && !runDeleted ? `/runs/${id}/feedback` : null,
+    id && `/runs/${id}/feedback`,
     fetcher.patch,
   );
 
   const { trigger: deleteTrigger } = useProjectMutation(
-    id && !runDeleted ? `/runs/${id}` : null,
+    id && `/runs/${id}`,
     fetcher.delete,
     {
       revalidate: false,
@@ -475,7 +473,6 @@ export function useRun(id: string | null, initialData?: any) {
 
   async function deleteRun() {
     await deleteTrigger();
-    setRunDeleted(true);
   }
 
   return {
@@ -485,7 +482,6 @@ export function useRun(id: string | null, initialData?: any) {
     deleteRun,
     mutate,
     loading: isLoading,
-    runDeleted,
   };
 }
 export function useLogCount(filters: any) {
