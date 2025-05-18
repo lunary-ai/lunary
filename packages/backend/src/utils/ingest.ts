@@ -15,7 +15,7 @@ export interface Event {
     | "convo" // deprecated
     | "message"
     | "thread";
-  event?: string;
+  event?: "start" | "end" | "error" | "custom-event";
   level?: string;
   runId?: string;
   parentRunId?: string;

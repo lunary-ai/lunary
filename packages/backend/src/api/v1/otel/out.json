@@ -1,0 +1,91 @@
+[
+  {
+    "resource": {
+      "attributes": [
+        {
+          "key": "telemetry.sdk.language",
+          "value": {
+            "stringValue": "python"
+          }
+        },
+        {
+          "key": "telemetry.sdk.name",
+          "value": {
+            "stringValue": "opentelemetry"
+          }
+        },
+        {
+          "key": "telemetry.sdk.version",
+          "value": {
+            "stringValue": "1.33.1"
+          }
+        },
+        {
+          "key": "service.name",
+          "value": {
+            "stringValue": "unknown_service"
+          }
+        }
+      ]
+    },
+    "scopeSpans": [
+      {
+        "scope": {
+          "name": "__main__"
+        },
+        "spans": [
+          {
+            "traceId": {
+              "type": "Buffer",
+              "data": [
+                235, 47, 181, 23, 121, 168, 86, 118, 23, 16, 126, 60, 88, 127,
+                16, 20
+              ]
+            },
+            "spanId": {
+              "type": "Buffer",
+              "data": [128, 55, 16, 135, 179, 19, 213, 231]
+            },
+            "name": "My LLM Call",
+            "kind": 1,
+            "startTimeUnixNano": {
+              "low": -36849904,
+              "high": 406889823,
+              "unsigned": true
+            },
+            "endTimeUnixNano": {
+              "low": -36833904,
+              "high": 406889823,
+              "unsigned": true
+            },
+            "attributes": [
+              {
+                "key": "gen_ai.request.model",
+                "value": {
+                  "stringValue": "gpt-4.1"
+                }
+              },
+              {
+                "key": "gen_ai.prompt.0.content",
+                "value": {
+                  "stringValue": "Hello, LLM world!"
+                }
+              },
+              {
+                "key": "gen_ai.usage.prompt_tokens",
+                "value": {
+                  "intValue": {
+                    "low": 25,
+                    "high": 0,
+                    "unsigned": false
+                  }
+                }
+              }
+            ],
+            "status": {}
+          }
+        ]
+      }
+    ]
+  }
+]

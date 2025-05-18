@@ -1,256 +1,393 @@
-/* ---------- helpers ---------------------------------------------------- */
-import { v4 as uuid } from "uuid";
-export const nsToIso = (
-  ns: number | string | { high?: number; low?: number } | undefined | null,
-): string => {
-  // Fallback to “now” if the field is missing
-  if (ns == null) return new Date().toISOString();
+// utils.ts – tweaks for chains & tools: better names, extra tool args, wider token keys
 
-  // Plain string | number
-  if (typeof ns === "string" || typeof ns === "number")
-    return new Date(Number(BigInt(ns) / 1_000_000n)).toISOString();
+/*********************************
+ * Generic helpers               *
+ *********************************/
 
-  // Protobuf Long variant with high/low
-  if (typeof ns.high === "number" && typeof ns.low === "number") {
-    const big = (BigInt(ns.high) << 32n) | BigInt(ns.low >>> 0);
-    return new Date(Number(big / 1_000_000n)).toISOString();
+import { Event } from "@/src/utils/ingest";
+import {
+  AnyValue,
+  KeyValue,
+  Span,
+  SpanEvent,
+  Status,
+  StatusCode,
+} from "./types";
+
+export function anyValueToJs(v: AnyValue): unknown {
+  if (v.stringValue !== undefined) return v.stringValue;
+  if (v.boolValue !== undefined) return v.boolValue;
+  if (v.intValue !== undefined) return Number(v.intValue);
+  if (v.doubleValue !== undefined) return Number(v.doubleValue);
+  if (v.arrayValue) return v.arrayValue.map(anyValueToJs);
+  if (v.kvlistValue) {
+    const obj: Record<string, unknown> = {};
+    for (const kv of v.kvlistValue) obj[kv.key] = anyValueToJs(kv.value);
+    return obj;
   }
+  if (v.bytesValue) return Buffer.from(v.bytesValue).toString("base64");
+  return undefined;
+}
 
-  // Any other “Long” that only has toString()
-  if (typeof (ns as any).toString === "function") {
-    return new Date(
-      Number(BigInt((ns as any).toString()) / 1_000_000n),
-    ).toISOString();
-  }
+export function attrsToObj(attrs: KeyValue[] = []): Record<string, unknown> {
+  const obj: Record<string, unknown> = {};
+  for (const kv of attrs) obj[kv.key] = anyValueToJs(kv.value);
+  return obj;
+}
 
-  // Worst-case fallback
-  return new Date().toISOString();
-};
+export const bytesToHex = (b?: Uint8Array): string | undefined =>
+  b && b.length ? Buffer.from(b).toString("hex") : undefined;
 
-const anyVal = (v: any): any => {
-  if (!v) return undefined;
-  if ("stringValue" in v) return v.stringValue;
-  if ("boolValue" in v) return v.boolValue;
-  if ("intValue" in v) return Number(v.intValue);
-  if ("doubleValue" in v) return v.doubleValue;
-  if ("bytesValue" in v) return Buffer.from(v.bytesValue).toString("base64");
-  if ("arrayValue" in v) return (v.arrayValue.values || []).map(anyVal);
-  if ("kvlistValue" in v)
-    return Object.fromEntries(
-      (v.kvlistValue.values || []).map((kv: any) => [kv.key, anyVal(kv.value)]),
-    );
-  return v;
-};
+export function nsToIso(nano?: number | string): string {
+  if (!nano) return new Date().toISOString();
+  const n = typeof nano === "string" ? Number(nano) : nano;
+  return new Date(n / 1e6).toISOString();
+}
 
-export const attrsToMap = (
-  arr: Array<{ key: string; value: any }> | undefined,
-): Record<string, any> => {
-  if (!Array.isArray(arr)) return {};
-  const out: Record<string, any> = {};
-  for (const { key, value } of arr) out[key] = anyVal(value);
-  return out;
-};
+/*********************************
+ * Gen-AI helpers                *
+ *********************************/
 
-/* ★ new — helper to turn indexed prompt / completion keys into arrays */
-export const buildMessages = (
-  prefix: string,
-  attrs: Record<string, any>,
-): Array<{ role: string; content: string }> | undefined => {
-  const buf: Record<number, { role?: string; content?: string }> = {};
+export function detectType(attrs: Record<string, unknown>): Event["type"] {
+  if (
+    "gen_ai.tool.name" in attrs ||
+    "tool_arguments" in attrs ||
+    "gen_ai.tool.call.id" in attrs
+  )
+    return "tool";
+  if ("gen_ai.agent.name" in attrs || "agent_name" in attrs) return "agent";
+  if (
+    "gen_ai.request.model" in attrs ||
+    "gen_ai.response.model" in attrs ||
+    "model_name" in attrs
+  )
+    return "llm";
+  return "chain";
+}
 
-  for (const [key, val] of Object.entries(attrs)) {
-    if (!key.startsWith(prefix)) continue; // skip unrelated keys
-    const rest = key.slice(prefix.length); // "0.role", "0.finish_reason", …
-    const [idxStr, field] = rest.split(".");
-    if (field === "finish_reason") continue; // <<-- ignore this field
+export function buildError(status?: Status): Event["error"] {
+  return status?.code === StatusCode.ERROR
+    ? { message: status.message ?? "unknown error" }
+    : undefined;
+}
 
-    const idx = Number(idxStr);
-    if (!buf[idx]) buf[idx] = {};
-    (buf[idx] as any)[field] = val;
-  }
+export function tokensUsage(
+  attrs: Record<string, unknown>,
+): Event["tokensUsage"] | undefined {
+  const toNum = (v: unknown): number | undefined => {
+    if (v === undefined || v === null) return undefined;
+    if (typeof v === "number") return v;
+    if (typeof v === "string" && v.trim()) {
+      const n = Number(v);
+      return isNaN(n) ? undefined : n;
+    }
+    return undefined;
+  };
 
-  const ordered = Object.keys(buf)
-    .map(Number)
-    .sort((a, b) => a - b)
-    .map((i) => buf[i]);
+  // Accept gen_ai.*, llm.* and plain *_tokens keys
+  const promptAttr =
+    attrs["gen_ai.usage.prompt_tokens"] ??
+    attrs["gen_ai.usage.input_tokens"] ??
+    attrs["llm.usage.prompt_tokens"] ??
+    attrs["llm.usage.input_tokens"] ??
+    attrs["input_tokens"];
 
-  return ordered.length ? (ordered as any) : undefined;
-};
-
-export const digForSpan = (obj: any): any => {
-  if (!obj) return {};
-  if (Array.isArray(obj.attributes)) return obj; // got it
-  if (Array.isArray(obj.spans)) return digForSpan(obj.spans[0]);
-  if (Array.isArray(obj.scopeSpans)) return digForSpan(obj.scopeSpans[0]);
-  if (Array.isArray(obj.resourceSpans)) return digForSpan(obj.resourceSpans[0]);
-  return obj; // last resort
-};
-
-/* --------------------------------------------------------------- */
-/* omitKeys ⇒ drops the noisy attributes                        */
-/* --------------------------------------------------------------- */
-/* keys you don’t want after prefix removal */
-const OMIT_KEYS = new Set([
-  "prompt.0.content",
-  "completion.0.role",
-  "request.model",
-  "usage.completion_tokens",
-  "llm.usage.total_tokens",
-  "prompt.0.role",
-]);
-
-/**
- *  stripAndOmit ─ remove known prefixes, then drop unwanted keys
- */
-export const omitKeys = (obj: Record<string, any>): Record<string, any> => {
-  const out: Record<string, any> = {};
-
-  for (const [fullKeyOrig, value] of Object.entries(obj)) {
-    /* 2.1  strip known prefixes */
-    let key = fullKeyOrig;
-    if (key.startsWith("gen_ai.")) key = key.slice("gen_ai.".length);
-    else if (key.startsWith("genAI.")) key = key.slice("genAI.".length);
-    if (key.startsWith("openai.")) key = key.slice("openai.".length);
-
-    /* 2.2  omit by *full* key (after prefix strip) */
-    if (OMIT_KEYS.has(key)) continue;
-
-    /* 2.3  keep only the last segment */
-    const tail = key.slice(key.lastIndexOf(".") + 1);
-    out[tail] = value;
-  }
-
-  return out;
-};
-
-/* -------------------------------------------------------------------- */
-/* bufferToUuid ⇒ 8- or 16-byte Buffer → canonical UUID string          */
-/* -------------------------------------------------------------------- */
-import { randomUUID } from "crypto";
-import { Event } from "lunary/types";
-
-export const bufToUuid = (buf: any): string | undefined => {
-  if (!Buffer.isBuffer(buf) && !(buf instanceof Uint8Array)) return undefined;
-  // convert to 32-hex string, pad if spanId is 8 bytes
-  const hex = Buffer.from(buf).toString("hex").padStart(32, "0").slice(-32);
-  return [
-    hex.slice(0, 8),
-    hex.slice(8, 12),
-    hex.slice(12, 16),
-    hex.slice(16, 20),
-    hex.slice(20),
-  ].join("-");
-};
-
-/* ------------ robust JSON try-parse --------------------------------- */
-export const safeJson = (v: any) => {
-  if (typeof v !== "string") return v;
-  try {
-    return JSON.parse(v);
-  } catch {
-    return v;
-  }
-};
-
-/* ------------------------------------------------------------------- */
-/* flattenSpans ⇒ collect every real span that owns an `attributes`    */
-/* ------------------------------------------------------------------- */
-export const flattenSpans = (obj: any): any[] => {
-  if (!obj) return [];
-
-  if (Array.isArray(obj.attributes)) {
-    // this *is* a span
-    return [obj];
-  }
-
-  let out: any[] = [];
-
-  if (Array.isArray(obj.spans)) {
-    for (const s of obj.spans) out = out.concat(flattenSpans(s));
-  }
-  if (Array.isArray(obj.scopeSpans)) {
-    for (const ss of obj.scopeSpans) out = out.concat(flattenSpans(ss));
-  }
-  if (Array.isArray(obj.resourceSpans)) {
-    for (const rs of obj.resourceSpans) out = out.concat(flattenSpans(rs));
-  }
-
-  return out;
-};
-
-export function buildTraceEventsForOneSpan(span: any): Event[] {
-  const span1 = digForSpan(span);
-  const attrs = attrsToMap(span1.attributes);
-  //   console.log(span, "span");
-  /* ① basic ids & timing ------------------------------------------------ */
-  const runId = bufToUuid(span.spanId) ?? randomUUID();
-  const parentRunId = bufToUuid(span.parentSpanId);
-
-  // Convert timestamps to ISO string format
-  const tsStart = nsToIso(span.startTimeUnixNano);
-  const tsEnd = nsToIso(span.endTimeUnixNano);
-
-  /* ② input / output / model ------------------------------------------- */
-  /* ★ new — build input / output arrays */
-  const input = buildMessages("gen_ai.prompt.", attrs);
-  const output = buildMessages("gen_ai.completion.", attrs);
-
-  const model =
-    attrs["gen_ai.request.model"] ??
-    attrs["gen_ai.response.model"] ??
-    attrs["llm.request.model"] ??
-    span.name ??
-    "unknown-model";
-
-  /* ★ new — token usage with both gen_ai.* and llm.* fallbacks */
-  const promptTokens =
-    attrs["gen_ai.usage.prompt_tokens"] ?? attrs["llm.usage.prompt_tokens"];
-  const completionTokens =
+  const completionAttr =
     attrs["gen_ai.usage.completion_tokens"] ??
-    attrs["llm.usage.completion_tokens"];
+    attrs["gen_ai.usage.output_tokens"] ??
+    attrs["llm.usage.completion_tokens"] ??
+    attrs["llm.usage.output_tokens"] ??
+    attrs["output_tokens"];
 
-  const tokensUsage =
-    promptTokens != null || completionTokens != null
-      ? {
-          prompt: Number(promptTokens ?? 0),
-          completion: Number(completionTokens ?? 0),
-          total: Number(promptTokens ?? 0) + Number(completionTokens ?? 0),
-        }
-      : undefined;
+  const cachedAttr =
+    attrs["gen_ai.usage.cache_read_input_tokens"] ??
+    attrs["llm.usage.cache_read_input_tokens"];
 
-  /* ④ status ------------------------------------------------------------ */
-  const statusCode = span.status?.code ?? 0; // 0=UNSET,1=OK,2=ERROR
-  const isError = statusCode === 2;
+  const totalAttr =
+    attrs["gen_ai.usage.total_tokens"] ?? attrs["llm.usage.total_tokens"];
 
-  /* ⑤ events ------------------------------------------------------------ */
-  // Create start event object
-  const start = {
-    type: "chain" as const,
-    event: "start" as const,
+  let prompt = toNum(promptAttr);
+  let completion = toNum(completionAttr);
+  const promptCached = toNum(cachedAttr);
+  const total = toNum(totalAttr);
+
+  if (total !== undefined) {
+    if (prompt === undefined && completion !== undefined)
+      prompt = total - completion;
+    if (completion === undefined && prompt !== undefined)
+      completion = total - prompt;
+  }
+
+  if (
+    prompt === undefined &&
+    completion === undefined &&
+    promptCached === undefined
+  )
+    return undefined;
+
+  return { prompt: prompt ?? 0, completion: completion ?? 0, promptCached };
+}
+
+export function extractExtra(attrs: Record<string, unknown>): unknown {
+  const extra: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k.startsWith("gen_ai.request."))
+      extra[k.slice("gen_ai.request.".length)] = v;
+    if (k === "model_request_parameters") extra[k] = v;
+    if (k === "tool_arguments") extra[k] = v; // bring tool args into extra
+  }
+  return Object.keys(extra).length ? extra : undefined;
+}
+
+export function extractMetadata(attrs: Record<string, unknown>): unknown {
+  const meta: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(attrs)) {
+    if (!k.startsWith("gen_ai.")) meta[k] = v;
+  }
+  return Object.keys(meta).length ? meta : undefined;
+}
+
+function selectName(
+  type: Event["type"],
+  attrs: Record<string, unknown>,
+  spanName: string,
+): string {
+  if (type === "tool") {
+    return (
+      (attrs["gen_ai.tool.name"] as string | undefined) ||
+      (attrs["tool_name"] as string | undefined) ||
+      spanName
+    );
+  }
+  if (type === "agent") {
+    return (
+      (attrs["agent_name"] as string | undefined) ||
+      (attrs["gen_ai.agent.name"] as string | undefined) ||
+      spanName
+    );
+  }
+  // llm or chain
+  return (
+    (attrs["gen_ai.request.model"] as string | undefined) ||
+    (attrs["gen_ai.response.model"] as string | undefined) ||
+    (attrs["model_name"] as string | undefined) ||
+    spanName
+  );
+}
+
+/*********************************
+ * Message helpers               *
+ *********************************/
+
+interface Msg {
+  role: string;
+  content: string;
+}
+
+type MsgExtraction = { input?: Msg[]; output?: Msg };
+
+// (previous functions unchanged)...
+
+function parseIndexedMessages(
+  attrs: Record<string, unknown>,
+  prefix: string,
+): Msg[] {
+  const map: Record<string, Partial<Msg>> = {};
+  const re = new RegExp(`^${prefix}\\.(\\d+)\\.(role|content)$`);
+  for (const [k, v] of Object.entries(attrs)) {
+    const m = re.exec(k);
+    if (!m) continue;
+    const idx = m[1];
+    const field = m[2] as "role" | "content";
+    if (!map[idx]) map[idx] = {};
+    map[idx][field] = v as string;
+  }
+  return Object.keys(map)
+    .sort((a, b) => Number(a) - Number(b))
+    .flatMap((idx) => {
+      const msg = map[idx];
+      return msg.role && msg.content
+        ? [{ role: msg.role, content: msg.content }]
+        : [];
+    });
+}
+
+// messagesFromEventsArray, messagesFromEvents, parseJsonEventAttributes remain unchanged...
+
+function messagesFromEventsArray(list: unknown[]): MsgExtraction {
+  const input: Msg[] = [];
+  let output: Msg | undefined;
+
+  for (const item of list) {
+    if (typeof item !== "object" || !item) continue;
+    const ev = item as Record<string, any>;
+    const name = ev["event.name"] as string | undefined;
+    if (!name) continue;
+
+    switch (name) {
+      case "gen_ai.system.message":
+      case "gen_ai.user.message":
+      case "gen_ai.tool.message": {
+        const role = (ev.role as string | undefined) ?? name.split(".")[0];
+        const content = ev.content;
+        if (content)
+          input.push({
+            role,
+            content:
+              typeof content === "string" ? content : JSON.stringify(content),
+          });
+        break;
+      }
+      case "gen_ai.assistant.message": {
+        const content = ev.content;
+        if (content && !output)
+          output = {
+            role: "assistant",
+            content:
+              typeof content === "string" ? content : JSON.stringify(content),
+          };
+        break;
+      }
+      case "gen_ai.choice": {
+        const msg = ev.message as Record<string, any> | undefined;
+        if (!msg) break;
+        const content = msg.content;
+        const role = (msg.role as string | undefined) ?? "assistant";
+        if (content && !output) output = { role, content };
+        break;
+      }
+    }
+  }
+
+  return { input: input.length ? input : undefined, output };
+}
+
+function messagesFromEvents(events: SpanEvent[]): MsgExtraction {
+  const input: Msg[] = [];
+  let output: Msg | undefined;
+  for (const ev of events) {
+    const evAttrs = attrsToObj(ev.attributes);
+    const content = evAttrs["content"] as string | undefined;
+    if (!content) continue;
+
+    const name = ev.name;
+    if (
+      name === "gen_ai.system.message" ||
+      name === "gen_ai.user.message" ||
+      name === "gen_ai.tool.message"
+    ) {
+      const role =
+        (evAttrs["role"] as string | undefined) ?? name.split(".")[0];
+      input.push({ role, content });
+      continue;
+    }
+    if (
+      (name === "gen_ai.assistant.message" || name === "gen_ai.choice") &&
+      !output
+    ) {
+      output = { role: "assistant", content };
+    }
+  }
+  return { input: input.length ? input : undefined, output };
+}
+
+function parseJsonEventAttributes(
+  attrs: Record<string, unknown>,
+): MsgExtraction | null {
+  for (const key of ["events", "all_messages_events", "messages_events"]) {
+    const raw = attrs[key];
+    if (typeof raw === "string" && raw.trim().startsWith("[")) {
+      try {
+        const list = JSON.parse(raw);
+        if (Array.isArray(list)) return messagesFromEventsArray(list);
+      } catch {
+        /* swallow */
+      }
+    }
+  }
+  return null;
+}
+
+export function pullMessages(
+  span: Span,
+  attrs: Record<string, unknown>,
+): MsgExtraction {
+  if (Object.keys(attrs).some((k) => k.startsWith("gen_ai.prompt."))) {
+    const input = parseIndexedMessages(attrs, "gen_ai.prompt");
+    const outputMsgs = parseIndexedMessages(attrs, "gen_ai.completion");
+    return { input: input.length ? input : undefined, output: outputMsgs[0] };
+  }
+  const jsonExtract = parseJsonEventAttributes(attrs);
+  if (jsonExtract) return jsonExtract;
+  return messagesFromEvents(span.events);
+}
+
+/*********************************
+ * Span → two Lunary events      *
+ *********************************/
+
+export function spanToLunary(
+  span: Span,
+  resourceAttrs: Record<string, unknown>,
+): Event[] {
+  const spanAttrs = attrsToObj(span.attributes);
+  const allAttrs = { ...resourceAttrs, ...spanAttrs };
+
+  const type = detectType(allAttrs);
+  const name = selectName(type, allAttrs, span.name);
+
+  // ----------- messages / arguments → input / output -------------
+  const { input: msgInput, output } = pullMessages(span, allAttrs);
+  let input = msgInput;
+
+  if (!input && type === "tool") {
+    const raw = allAttrs["tool_arguments"];
+    if (raw !== undefined) {
+      const content = typeof raw === "string" ? raw : JSON.stringify(raw);
+      input = [{ role: "tool", content }];
+    }
+  }
+
+  if (!input && type === "chain") {
+    const raw = allAttrs["tools"];
+    if (raw !== undefined) {
+      const content = Array.isArray(raw)
+        ? JSON.stringify(raw)
+        : typeof raw === "string"
+          ? raw
+          : JSON.stringify(raw);
+      input = [{ role: "system", content }];
+    }
+  }
+
+  const runId = bytesToHex(span.spanId);
+  const parentRunId = bytesToHex(span.parentSpanId);
+
+  const startEvt: Event = {
+    type,
+    event: "start",
     runId,
     parentRunId,
-    name: model,
-    timestamp: tsStart,
+    timestamp: nsToIso(span.startTimeUnixNano),
     input,
-    metadata: omitKeys(attrs),
-  } as unknown as Event;
+    name,
+    extra: extractExtra(allAttrs),
+    metadata: extractMetadata(allAttrs),
+  };
 
-  // Create end event object
-  const end = {
-    type: "chain" as const,
-    event: isError ? "error" : "end",
+  const endEvt: Event = {
+    type,
+    event: buildError(span.status) ? "error" : "end",
     runId,
     parentRunId,
-    name: model,
-    timestamp: tsEnd,
-    ...(isError
-      ? { error: { message: span.status?.message || "Unknown error" } }
-      : {
-          output,
-          ...(tokensUsage ? { tokensUsage } : {}),
-        }),
-    metadata: omitKeys(attrs),
-  } as unknown as Event;
+    timestamp: nsToIso(span.endTimeUnixNano),
+    output,
+    name,
+    tokensUsage: tokensUsage(allAttrs),
+    extra: extractExtra(allAttrs),
+    metadata: extractMetadata(allAttrs),
+    error: buildError(span.status),
+  };
 
-  return [start, end];
+  return [startEvt, endEvt];
 }
