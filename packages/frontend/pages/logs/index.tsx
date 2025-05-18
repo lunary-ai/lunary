@@ -63,6 +63,7 @@ import { openUpgrade } from "@/components/layout/UpgradeModal";
 import analytics from "@/utils/analytics";
 import {
   useDatasets,
+  useDeleteRunById,
   useOrg,
   useProject,
   useProjectInfiniteSWR,
@@ -227,6 +228,7 @@ export default function Logs() {
     parser.withDefault(DEFAULT_CHECK).withOptions({ clearOnDefault: true }),
   );
 
+  const { deleteRun: deleteRunById } = useDeleteRunById();
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
 
@@ -299,15 +301,26 @@ export default function Logs() {
             );
           });
         }
-
-        if (isSelectMode) next.llm.unshift(selectColumn());
       } else if (next.llm[0]?.id === "select") {
         next.llm.shift();
       }
 
       return sameCols(prev.llm, next.llm) ? prev : next;
     });
-  }, [type, evaluators, isSelectMode]);
+  }, [type, evaluators, isSelectMode, setAllColumns]);
+
+  useEffect(() => {
+    setAllColumns((prev) => {
+      const next: typeof prev = { ...prev, [type]: [...prev[type]] };
+
+      if (isSelectMode) {
+        next[type].unshift(selectColumn());
+      } else {
+        next[type] = next[type].filter((col) => col.id !== "select");
+      }
+      return sameCols(prev[type], next[type]) ? prev : next;
+    });
+  }, [isSelectMode, type, setAllColumns]);
 
   useEffect(() => {
     if (selectedRun && selectedRun.projectId !== projectId) {
@@ -440,20 +453,22 @@ export default function Logs() {
       confirmProps: { color: "red" },
       children: (
         <Text size="sm">
-          Are you sure you want to delete the selected logs? This action cannot
-          be undone.
+          Are you sure you want to delete the selected {selectedRows.length}{" "}
+          rows? This action cannot be undone.
         </Text>
       ),
       labels: { confirm: "Confirm", cancel: "Cancel" },
       onConfirm: async () => {
-        await Promise.all(
-          selectedRows.map((id) =>
-            errorHandler(fetcher.delete(`/runs/${id}`)),
-          ),
-        );
+        await Promise.all(selectedRows.map((id) => deleteRunById(id)));
         setIsSelectMode(false);
-        setSelectedRows([]);
         setShouldMutate(true);
+
+        notifications.show({
+          title: "Resources deleted successfully",
+          message: "",
+          icon: <IconCheck />,
+          color: "green",
+        });
       },
     });
   }
@@ -501,16 +516,14 @@ export default function Logs() {
                   </ActionIcon>
                 </Menu.Target>
                 <Menu.Dropdown>
-                  {type === "llm" && (
-                    <Menu.Item
-                      data-testid="export-openai-jsonl-button"
-                      color="dimmed"
-                      leftSection={<IconPencil size={16} />}
-                      onClick={() => setIsSelectMode((prev) => !prev)}
-                    >
-                      {!isSelectMode ? "Select Mode" : "Exit Select Mode"}
-                    </Menu.Item>
-                  )}
+                  <Menu.Item
+                    data-testid="export-openai-jsonl-button"
+                    color="dimmed"
+                    leftSection={<IconPencil size={16} />}
+                    onClick={() => setIsSelectMode((prev) => !prev)}
+                  >
+                    {!isSelectMode ? "Select Mode" : "Exit Select Mode"}
+                  </Menu.Item>
 
                   <Menu.Item
                     data-testid="export-csv-button"
@@ -630,44 +643,48 @@ export default function Logs() {
             )}
 
             {isSelectMode && (
-              <Select
-                searchable
-                size="xs"
-                placeholder={
-                  datasets.length === 0 ? "No datasets" : "Add to dataset"
-                }
-                w={160}
-                data={datasets?.map((d) => ({
-                  label: d.slug,
-                  value: d.id,
-                }))}
-                disabled={selectedRows.length === 0 || datasets.length === 0}
-                onChange={async (datasetId) => {
-                  if (selectedRows.length === 0) return;
+              <Group>
+                {type === "llm" && (
+                  <Select
+                    searchable
+                    size="xs"
+                    placeholder={
+                      datasets.length === 0 ? "No datasets" : "Add to dataset"
+                    }
+                    w={160}
+                    data={datasets?.map((d) => ({
+                      label: d.slug,
+                      value: d.id,
+                    }))}
+                    disabled={
+                      selectedRows.length === 0 || datasets.length === 0
+                    }
+                    onChange={async (datasetId) => {
+                      if (selectedRows.length === 0) return;
 
-                  await insertPrompts({
-                    datasetId: datasetId,
-                    runIds: selectedRows,
-                  });
-                  setIsSelectMode(false);
-                  notifications.show({
-                    title: "The runs has been added to the dataset",
-                    message: "",
-                    icon: <IconCheck />,
-                    color: "green",
-                  });
-                }}
-              />
-              <Button
-                size="xs"
-                color="red"
-                variant="light"
-                leftSection={<IconTrash size={16} />}
-                disabled={selectedRows.length === 0}
-                onClick={openBulkDeleteModal}
-              >
-                Delete
-              </Button>
+                      await insertPrompts({
+                        datasetId: datasetId,
+                        runIds: selectedRows,
+                      });
+                      setIsSelectMode(false);
+                      notifications.show({
+                        title: "The runs has been added to the dataset",
+                        message: "",
+                        icon: <IconCheck />,
+                        color: "green",
+                      });
+                    }}
+                  />
+                )}
+                <Button
+                  size="xs"
+                  color="red"
+                  disabled={selectedRows.length === 0}
+                  onClick={openBulkDeleteModal}
+                >
+                  Delete selection
+                </Button>
+              </Group>
             )}
           </Group>
         </Group>
@@ -714,7 +731,7 @@ export default function Logs() {
           const isSecondaryClick =
             event.metaKey || event.ctrlKey || event.button === 1;
 
-          if (["agent", "chain"].includes(rowData.type)) {
+          if (["agent", "chain"].includes(rowData.type) && !isSelectMode) {
             analytics.trackOnce("OpenTrace");
 
             if (!isSecondaryClick) {
