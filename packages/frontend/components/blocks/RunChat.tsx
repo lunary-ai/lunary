@@ -269,7 +269,7 @@ export function ChatReplay({ run, mutateLogs, deleteRun }) {
                 leftSection={<IconTrash size={16} color="red" />}
                 onClick={handleDeleteThread}
               >
-                <Text c="red">Delete Thread</Text>
+                <Text c="red">Delete Conversation</Text>
               </Menu.Item>
             )}
           </Menu.Dropdown>
@@ -281,9 +281,7 @@ export function ChatReplay({ run, mutateLogs, deleteRun }) {
           {user && (
             <Group justify="space-between">
               <Text>User</Text>
-              <Text>
-                <AppUserAvatar size="sm" user={user} withName />
-              </Text>
+              <AppUserAvatar size="sm" user={user} withName />
             </Group>
           )}
           <Group justify="space-between">
