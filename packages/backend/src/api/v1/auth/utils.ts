@@ -140,8 +140,6 @@ async function checkApiKey(ctx: Context, key: string) {
 }
 
 export async function authMiddleware(ctx: Context, next: Next) {
-  ctx.state.projectId = ctx.request?.query?.projectId as string;
-
   const isPublicRoute = publicRoutes.some((route) =>
     typeof route === "string" ? route === ctx.path : route.test(ctx.path),
   );
@@ -172,12 +170,12 @@ export async function authMiddleware(ctx: Context, next: Next) {
       ctx.state.privateKey = true;
     }
   } else {
-    // Check if JWT is valid
     try {
       if (!bearer) {
         throw new Error("No bearer token provided.");
       }
       const { payload } = await verifyJWT<SessionData>(key);
+      ctx.state.projectId = ctx.request?.query?.projectId as string;
       ctx.state.userId = payload.userId;
       ctx.state.orgId = payload.orgId;
 
@@ -194,9 +192,10 @@ export async function authMiddleware(ctx: Context, next: Next) {
         const [project] = await sql`
           select * from account_project where account_id = ${ctx.state.userId} and project_id = ${ctx.state.projectId}
         `;
+        console.log("Project", project);
 
         if (!project) {
-          throw new Error("Project not found");
+          throw new Error("Unauthorized access to project");
         }
       }
     } catch (error) {
@@ -210,6 +209,13 @@ export async function authMiddleware(ctx: Context, next: Next) {
         ctx.body = { message: "Invalid access token" };
         return;
       }
+
+      if (error?.message === "Unauthorized access to project") {
+        ctx.status = 401;
+        ctx.body = { message: "Unauthorized access to project" };
+        return;
+      }
+      return;
     }
   }
 
