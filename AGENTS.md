@@ -1,0 +1,1 @@
+- Never run tests after making modifications
