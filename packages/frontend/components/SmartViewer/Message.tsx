@@ -241,16 +241,48 @@ function TextMessage({
       </Code>
     );
   } else if (data.citations) {
-    const textWithLinks = text.replace(/\[(\d+)\]/g, (match, numberStr) => {
-      const idx = parseInt(numberStr, 10) - 1;
-      if (data.citations[idx]) {
-        return `<a href="${data.citations[idx]}" target="_blank" class="${classes.citationLink}">[${numberStr}]</a>`;
+    const displayedText = compact ? text?.substring(0, 150) : text;
+    const elements: React.ReactNode[] = [];
+    const regex = /\[(\d+)\]/g;
+    let lastIndex = 0;
+    let match;
+    while ((match = regex.exec(displayedText)) !== null) {
+      if (match.index > lastIndex) {
+        const segment = displayedText.slice(lastIndex, match.index);
+        elements.push(
+          <ProtectedText key={`text-${elements.length}`}>
+            <HighlightPii text={segment} piiDetection={piiDetection} />
+          </ProtectedText>,
+        );
       }
-      return match;
-    });
+      const idx = parseInt(match[1], 10) - 1;
+      if (data.citations[idx]) {
+        elements.push(
+          <a
+            key={`citation-${elements.length}`}
+            href={data.citations[idx]}
+            target="_blank"
+            className={classes.citationLink}
+          >
+            [{match[1]}]
+          </a>,
+        );
+      } else {
+        elements.push(match[0]);
+      }
+      lastIndex = regex.lastIndex;
+    }
+    if (lastIndex < displayedText.length) {
+      const segment = displayedText.slice(lastIndex);
+      elements.push(
+        <ProtectedText key={`text-${elements.length}`}>
+          <HighlightPii text={segment} piiDetection={piiDetection} />
+        </ProtectedText>,
+      );
+    }
     return (
       <Code className={classes.textMessage}>
-        <Text size="sm" dangerouslySetInnerHTML={{ __html: textWithLinks }} />
+        <Text size="sm">{elements}</Text>
       </Code>
     );
   } else {
