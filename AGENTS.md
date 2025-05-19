@@ -1,0 +1,2 @@
+- Never run tests after making modifications.
+- This repository exclusively uses `bun`. Never use `npm`, `pnpm` or `yarn`.
