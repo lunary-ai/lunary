@@ -130,7 +130,9 @@ evals.post("/", checkAccess("evaluations", "create"), async (ctx: Context) => {
  * @openapi
  * /v1/evals/{id}/run:
  *   post:
- *     summary: Run the evaluation (generate with gpt-4.1 then grade)
+ *     summary: Run the evaluation
+ *     tags: [Evals]
+ *     security: [{ BearerAuth: [] }]
  *     parameters:
  *       - in: path
  *         name: id
