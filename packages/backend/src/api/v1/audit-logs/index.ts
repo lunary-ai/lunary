@@ -1,3 +1,4 @@
+import { checkAccess } from "@/src/utils/authorization";
 import sql from "@/src/utils/db";
 import Context from "@/src/utils/koa";
 import Router from "koa-router";
@@ -11,8 +12,10 @@ const auditLogs = new Router({ prefix: "/audit-logs" });
  * /audit-logs:
  *   get:
  *     summary: Retrieve audit logs
+ *     security:
+ *       - BearerAuth: []
  *     tags: [Audit Logs]
- *     description: Retrieve a list of audit logs for the current organization. This endpoint requires that the user has the proper access rights.
+ *     description: Retrieve a list of audit logs for the current organization. Note that this functionality is still under development and the audits logs are not fully exhaustive.
  *     parameters:
  *       - in: query
  *         name: limit
@@ -38,19 +41,8 @@ const auditLogs = new Router({ prefix: "/audit-logs" });
  *       403:
  *         description: Forbidden - user doesn't have access to this resource
  */
-auditLogs.get("/", async (ctx: Context) => {
+auditLogs.get("/", checkAccess("auditLogs", "list"), async (ctx: Context) => {
   const { userId, orgId } = ctx.state;
-
-  const [user] = await sql`select * from account where id = ${userId}`;
-
-  if (!hasAccess(user.role, "auditLogs", "list")) {
-    ctx.status = 403;
-    ctx.body = {
-      error: "Forbidden",
-      message: "You don't have access to this resource",
-    };
-    return;
-  }
 
   const { limit, page } = z
     .object({
