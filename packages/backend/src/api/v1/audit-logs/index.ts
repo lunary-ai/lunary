@@ -9,7 +9,7 @@ const auditLogs = new Router({ prefix: "/audit-logs" });
 
 /**
  * @openapi
- * /audit-logs:
+ * /v1/audit-logs:
  *   get:
  *     summary: Retrieve audit logs
  *     security:
