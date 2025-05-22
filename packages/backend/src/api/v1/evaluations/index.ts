@@ -246,7 +246,6 @@ evaluations.post(
     );
 
     let passed: Boolean = false;
-    console.log(params, evaluatorType);
 
     if (evaluatorType === "toxicity") {
       const result = await evaluateToxicity({ input, output });
