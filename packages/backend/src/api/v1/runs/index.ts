@@ -640,6 +640,7 @@ runs.get("/", async (ctx: Context) => {
           run.input = run.input[run.input.length - 1];
         }
         if (
+          run.input &&
           typeof run.input === "object" &&
           typeof run.input.content === "string"
         ) {
@@ -822,6 +823,7 @@ runs.get("/export", async (ctx: Context) => {
     .parse(ctx.query);
 
   const { query, projectId } = getRunQuery(ctx, true);
+  console.log("query");
 
   await fileExport(
     { ctx, sql, cursor: query.cursor(), formatRun, projectId },
@@ -1264,7 +1266,7 @@ runs.post("/generate-export-token", async (ctx) => {
   ctx.body = { token };
 });
 
-// for the frontend only
+// public route, ctx.state.project id is not set
 runs.get("/exports/:token", async (ctx) => {
   const { type, exportFormat } = z
     .object({
@@ -1283,10 +1285,19 @@ runs.get("/exports/:token", async (ctx) => {
   const { token } = z.object({ token: z.string() }).parse(ctx.params);
 
   const [user] =
-    await sql`select name from account where export_single_use_token = ${token}`;
+    await sql`select name, org_id from account where export_single_use_token = ${token}`;
   if (!user) {
     return ctx.throw(401, "Invalid token");
   }
+
+  const [project] =
+    await sql`select id, org_id from project where id = ${ctx.query.projectId}`;
+
+  if (project.orgId !== user.orgId) {
+    return ctx.throw(401, "Not authorized to access this project");
+  }
+
+  ctx.state.projectId = project.id;
 
   const { query, projectId } = getRunQuery(ctx, true);
 

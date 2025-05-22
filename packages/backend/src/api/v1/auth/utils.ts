@@ -192,7 +192,6 @@ export async function authMiddleware(ctx: Context, next: Next) {
         const [project] = await sql`
           select * from account_project where account_id = ${ctx.state.userId} and project_id = ${ctx.state.projectId}
         `;
-        console.log("Project", project);
 
         if (!project) {
           throw new Error("Unauthorized access to project");
