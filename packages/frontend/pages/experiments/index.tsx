@@ -1056,8 +1056,6 @@ export default function Experiments() {
                     <Stack gap="sm">
                       <ModelSelect
                         handleChange={(m) => {
-                          console.log(m);
-
                           setModelConfigs((prev) => ({
                             ...prev,
                             base: { ...prev.base, model: m },
