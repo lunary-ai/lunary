@@ -9,7 +9,7 @@ import Sidebar from "./Sidebar";
 
 import analytics from "@/utils/analytics";
 import { useAuth } from "@/utils/auth";
-import { useOrg, useProjects, useUser } from "@/utils/dataHooks";
+import { useOrg, useProject, useProjects, useUser } from "@/utils/dataHooks";
 import { showErrorNotification } from "@/utils/errors";
 import { ModalsProvider } from "@mantine/modals";
 import UpgradeModal from "./UpgradeModal";
@@ -19,6 +19,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const { user } = useUser();
   const { org } = useOrg();
   const { projects } = useProjects();
+  const { project } = useProject();
 
   const colorScheme = useComputedColorScheme();
   const { isSignedIn, signOut } = useAuth();
@@ -52,8 +53,17 @@ export default function Layout({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (isAuthPage && isSignedIn && !isSignupLastStep) {
-      router.push("/");
+    if (isAuthPage && isSignedIn && !isSignupPage && project?.id) {
+      if (project.activated) {
+        router.push("/dashboards");
+      } else {
+        router.push("/logs?type=llm");
+      }
+      return;
+    }
+
+    if (isSignedIn && isSignupPage && project?.id) {
+      router.push("/logs?type=llm");
       return;
     }
 
@@ -61,7 +71,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       router.push("/login");
       return;
     }
-  }, [isSignedIn]);
+  }, [isSignedIn, router.pathname, project]);
 
   useEffect(() => {
     if (isSignedIn && org?.license?.expiresAt) {

@@ -34,7 +34,7 @@ interface AuthContext {
 
 const AuthContext = createContext<AuthContext | null>(null);
 
-function checkJwt(jwt) {
+function checkJwt(jwt): boolean {
   try {
     const payload = decodeJwt(jwt);
     const exp = payload.exp;
@@ -57,9 +57,11 @@ export function AuthProvider({ children }) {
     defaultValue: null,
   });
 
-  const actualJwtValue = readLocalStorageValue({ key: "auth-token" });
-  const isSignedIn = useMemo(
-    () => checkJwt(jwt) && actualJwtValue, // sometimes jwt (the state) is set but the actual value in local storage is null. It's random https://linear.app/lunary/issue/LLM-2173/create-our-own-uselocalstorage-hook-because-the-mantine-one-is-not
+  const actualJwtValue = readLocalStorageValue<string | undefined>({
+    key: "auth-token",
+  });
+  const isSignedIn = useMemo<boolean>(
+    () => checkJwt(jwt) && Boolean(actualJwtValue), // sometimes jwt (the state) is set but the actual value in local storage is null. It's random https://linear.app/lunary/issue/LLM-2173/create-our-own-uselocalstorage-hook-because-the-mantine-one-is-not
     [jwt, actualJwtValue],
   );
 
