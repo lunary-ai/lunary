@@ -1,5 +1,5 @@
 import { useRouter } from "next/router";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Anchor,
@@ -28,6 +28,8 @@ import {
   IconUser,
 } from "@tabler/icons-react";
 
+import GithubButton from "@/components/blocks/OAuth/GithubButton";
+import GoogleButton from "@/components/blocks/OAuth/GoogleButton";
 import SocialProof from "@/components/blocks/SocialProof";
 import AuthLayout from "@/components/layout/AuthLayout";
 import analytics from "@/utils/analytics";
@@ -35,31 +37,14 @@ import { useAuth } from "@/utils/auth";
 import config from "@/utils/config";
 import { fetcher } from "@/utils/fetcher";
 import { NextSeo } from "next-seo";
-import GoogleButton from "@/components/blocks/OAuth/GoogleButton";
-import GithubButton from "@/components/blocks/OAuth/GithubButton";
 import Head from "next/head";
-
-function getRandomizedChoices() {
-  const choices = [
-    { label: "Google", value: "seo" },
-    { label: "X / Twitter", value: "twitter" },
-    { label: "LangChain", value: "langchain" },
-    { label: "LiteLLM", value: "litellm" },
-    { label: "Hacker News", value: "hackernews" },
-    { label: "Friend", value: "friend" },
-    { label: "LangFlow", value: "langflow" },
-    { label: "Flowise", value: "flowise" },
-    { label: "GitHub", value: "github" },
-    { label: "Other", value: "other" },
-  ];
-
-  return choices.sort(() => Math.random() - 0.5);
-}
+import { useProject } from "@/utils/dataHooks";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function SignupPage() {
   const [loading, setLoading] = useState(false);
+  const { project } = useProject();
 
   const router = useRouter();
 
@@ -142,21 +127,8 @@ function SignupPage() {
           name,
           method: "email_password",
         });
-
-        if (!config.IS_SELF_HOSTED) {
-          notifications.show({
-            icon: <IconCheck size={18} />,
-            color: "teal",
-            title: "Email sent",
-            message: "Check your emails for the confirmation link",
-            autoClose: 10000,
-          });
-        }
-
-        router.push("/");
       } catch (error) {
         console.error(error);
-      } finally {
         setLoading(false);
       }
     }

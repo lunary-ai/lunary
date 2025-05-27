@@ -94,7 +94,16 @@ users.get(
       startDate: z.string().datetime().optional(),
       endDate: z.string().datetime().optional(),
       timeZone: z.string().optional(),
-      sortField: z.string().optional().default("createdAt"),
+      sortField: z
+        .union([
+          z.literal("createdAt"),
+          z.literal("duration"),
+          z.literal("cost"),
+          z.literal("tokens"),
+          z.literal("cost"),
+        ])
+        .optional()
+        .default("createdAt"),
       sortDirection: z
         .union([z.literal("asc"), z.literal("desc")])
         .optional()
