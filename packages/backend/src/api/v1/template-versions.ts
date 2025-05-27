@@ -54,9 +54,10 @@ export function unCamelExtras(version: any) {
 versions.get("/latest", async (ctx: Context) => {
   const { projectId } = ctx.state;
 
-  const { slug } = ctx.request.query as {
-    slug: string; // Slug of template for which to fetch the latest version
-  };
+  const querySchema = z.object({
+    slug: z.string(),
+  });
+  const { slug } = querySchema.parse(ctx.request.query);
 
   const [latestVersion] = await unCameledSql`
     select 
@@ -94,7 +95,10 @@ versions.get("/latest", async (ctx: Context) => {
 });
 
 versions.get("/:id", async (ctx: Context) => {
-  const { id: versionId } = ctx.params;
+  const paramsSchema = z.object({
+    id: z.string(),
+  });
+  const { id: versionId } = paramsSchema.parse(ctx.params);
   const { projectId } = ctx.state;
 
   const [version] = await sql`

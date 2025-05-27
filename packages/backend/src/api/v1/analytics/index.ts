@@ -231,8 +231,11 @@ analytics.get("/users/new", async (ctx: Context) => {
   };
   const distinct = distinctMap[granularity];
 
-  const firstDimensionKey = ctx.query.firstDimension || "undefined";
-  const secondDimensionKey = ctx.query.secondDimension || "undefined";
+  const dimensionsSchema = z.object({
+    firstDimension: z.string().optional().default("undefined"),
+    secondDimension: z.string().optional().default("undefined")
+  });
+  const { firstDimension: firstDimensionKey, secondDimension: secondDimensionKey } = dimensionsSchema.parse(ctx.query);
 
   const [{ stat }] = await sql`
     select
@@ -556,8 +559,11 @@ analytics.get("/users/active", async (ctx: Context) => {
   };
   const distinct = distinctMap[granularity];
 
-  const firstDimensionKey = ctx.query.firstDimension || "undefined";
-  const secondDimensionKey = ctx.query.secondDimension || "undefined";
+  const dimensionsSchema = z.object({
+    firstDimension: z.string().optional().default("undefined"),
+    secondDimension: z.string().optional().default("undefined")
+  });
+  const { firstDimension: firstDimensionKey, secondDimension: secondDimensionKey } = dimensionsSchema.parse(ctx.query);
 
   const [{ stat }] = await sql`
       select

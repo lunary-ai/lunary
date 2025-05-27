@@ -68,7 +68,10 @@ users.get("/me/org", async (ctx: Context) => {
 });
 
 users.post("/feedback", async (ctx: Context) => {
-  const { text } = ctx.request.body as { text: string };
+  const bodySchema = z.object({
+    text: z.string()
+  });
+  const { text } = bodySchema.parse(ctx.request.body);
   await sendSlackMessage(text, "feedback");
   ctx.body = { ok: true };
 });

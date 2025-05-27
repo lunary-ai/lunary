@@ -242,8 +242,12 @@ templates.post("/", checkAccess("prompts", "create"), async (ctx: Context) => {
  *         description: Template not found
  */
 templates.get("/:id", async (ctx: Context) => {
+  const paramsSchema = z.object({
+    id: z.string()
+  });
+  const { id } = paramsSchema.parse(ctx.params);
   const [template] = await sql`
-    select * from template where project_id = ${ctx.state.projectId} and id = ${ctx.params.id}
+    select * from template where project_id = ${ctx.state.projectId} and id = ${id}
   `;
 
   if (!template) return ctx.throw(404, "Template not found");
@@ -278,7 +282,11 @@ templates.delete(
   "/:id",
   checkAccess("prompts", "delete"),
   async (ctx: Context) => {
-    await sql`delete from template where project_id = ${ctx.state.projectId} and id = ${ctx.params.id}`;
+    const paramsSchema = z.object({
+      id: z.string()
+    });
+    const { id } = paramsSchema.parse(ctx.params);
+    await sql`delete from template where project_id = ${ctx.state.projectId} and id = ${id}`;
     ctx.status = 204;
   },
 );
@@ -353,6 +361,10 @@ templates.patch(
     });
 
     const { slug, mode } = bodySchema.parse(ctx.request.body);
+    const paramsSchema = z.object({
+      id: z.string()
+    });
+    const { id } = paramsSchema.parse(ctx.params);
 
     const [template] = await sql`
     update template set ${sql(
@@ -361,14 +373,14 @@ templates.patch(
         mode,
       }),
     )}
-    where project_id = ${ctx.state.projectId} and id = ${ctx.params.id} returning *`;
+    where project_id = ${ctx.state.projectId} and id = ${id} returning *`;
 
     if (!template) {
       ctx.throw(404, "Template not found");
     }
 
     const versions =
-      await sql`select * from template_version where template_id = ${ctx.params.id} order by version desc`;
+      await sql`select * from template_version where template_id = ${id} order by version desc`;
 
     ctx.body = {
       ...template,
