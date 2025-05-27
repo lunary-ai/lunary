@@ -447,7 +447,10 @@ auth.post("/reset-password", async (ctx: Context) => {
 
 // Used after the SAML flow to exchange the onetime token for an auth token
 auth.post("/exchange-token", async (ctx: Context) => {
-  const { onetimeToken } = ctx.request.body as { onetimeToken: string };
+  const bodySchema = z.object({
+    onetimeToken: z.string()
+  });
+  const { onetimeToken } = bodySchema.parse(ctx.request.body);
 
   await verifyJWT(onetimeToken);
 

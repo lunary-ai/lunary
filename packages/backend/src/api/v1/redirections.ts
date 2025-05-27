@@ -1,7 +1,8 @@
+// DO NOT MODIFY THIS FILE
+
 import { Context } from "koa";
 import Router from "koa-router";
 import { processEventsIngestion } from "./runs/ingest";
-import { Event } from "@/src/utils/ingest";
 import { z } from "zod";
 import sql from "@/src/utils/db";
 

@@ -105,11 +105,10 @@ orgs.get("/billing-portal", async (ctx: Context) => {
 orgs.post("/upgrade", async (ctx: Context) => {
   const orgId = ctx.state.orgId as string;
 
-  const { origin } = ctx.request.body as {
-    // plan: string
-    // period: string
-    origin: string;
-  };
+  const bodySchema = z.object({
+    origin: z.string()
+  });
+  const { origin } = bodySchema.parse(ctx.request.body);
 
   const plan = "team";
 
