@@ -27,7 +27,7 @@ test("signup flow", async ({ page }) => {
 
   await page.getByTestId("continue-button").click();
 
-  await page.waitForURL("**/dashboards*");
+  await page.waitForURL("**/logs*");
 
   await page.context().storageState({ path: authFile });
 

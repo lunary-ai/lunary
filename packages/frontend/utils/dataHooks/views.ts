@@ -64,6 +64,6 @@ export function useView(id: string | null, initialData?: any) {
     update,
     remove,
     mutate,
-    loading: isLoading,
+    loading: id && isLoading,
   };
 }

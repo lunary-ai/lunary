@@ -18,7 +18,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { user } = useUser();
   const { org } = useOrg();
-  const { projects } = useProjects();
+  const { projects, mutate: mutateProjects } = useProjects();
   const { project } = useProject();
 
   const colorScheme = useComputedColorScheme();
@@ -47,7 +47,15 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   const isPublicPage = isLLMCallPage;
 
+  console.log(projects);
   useEffect(() => {
+    console.log(isSignedIn);
+    if (isSignedIn) {
+      mutateProjects();
+    }
+  }, [isSignedIn]);
+  useEffect(() => {
+    console.log(isSignupPage, project);
     if (isMaintenanceMode) {
       router.push("/maintenance");
       return;
@@ -62,7 +70,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (isSignedIn && isSignupPage && project?.id) {
+    if (isSignupPage && project?.id) {
       router.push("/logs?type=llm");
       return;
     }
@@ -71,7 +79,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       router.push("/login");
       return;
     }
-  }, [isSignedIn, router.pathname, project]);
+  }, [isSignedIn, router.pathname, project, isSignupPage, projects]);
 
   useEffect(() => {
     if (isSignedIn && org?.license?.expiresAt) {
