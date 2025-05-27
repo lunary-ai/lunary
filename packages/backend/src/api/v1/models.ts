@@ -111,7 +111,10 @@ models.patch(
   checkAccess("settings", "update"),
   async (ctx: Context) => {
     const { orgId } = ctx.state;
-    const { id } = ctx.params;
+    const paramsSchema = z.object({
+      id: z.string()
+    });
+    const { id } = paramsSchema.parse(ctx.params);
 
     const validatedData = ModelSchema.partial().parse(ctx.request.body);
 
@@ -147,7 +150,10 @@ models.delete(
   checkAccess("settings", "delete"),
   async (ctx: Context) => {
     const { orgId } = ctx.state;
-    const { id } = ctx.params;
+    const paramsSchema = z.object({
+      id: z.string()
+    });
+    const { id } = paramsSchema.parse(ctx.params);
 
     await sql`
     delete from model_mapping

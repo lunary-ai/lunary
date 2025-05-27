@@ -193,7 +193,10 @@ users.get(
 
 users.get("/runs/usage", checkAccess("users", "read"), async (ctx) => {
   const { projectId } = ctx.state;
-  const days = ctx.query.days as string;
+  const querySchema = z.object({
+    days: z.string().optional()
+  });
+  const { days } = querySchema.parse(ctx.query);
 
   const daysNum = days ? parseInt(days) : 1;
 
@@ -260,7 +263,10 @@ users.get("/props/keys", async (ctx: Context) => {
  *               $ref: '#/components/schemas/User'
  */
 users.get("/:id", checkAccess("users", "read"), async (ctx: Context) => {
-  const { id } = ctx.params;
+  const paramsSchema = z.object({
+    id: z.string()
+  });
+  const { id } = paramsSchema.parse(ctx.params);
   const { projectId } = ctx.state;
 
   const [row] = await sql`
@@ -293,7 +299,10 @@ users.get("/:id", checkAccess("users", "read"), async (ctx: Context) => {
  *         description: Successful deletion
  */
 users.delete("/:id", checkAccess("users", "delete"), async (ctx: Context) => {
-  const { id } = ctx.params;
+  const paramsSchema = z.object({
+    id: z.string()
+  });
+  const { id } = paramsSchema.parse(ctx.params);
   const { projectId } = ctx.state;
 
   await sql`

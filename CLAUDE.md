@@ -1,5 +1,4 @@
-
-# AGENTS.md
+# CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
@@ -58,11 +57,11 @@ Frontend requires: `API_URL`, `NEXT_PUBLIC_API_URL`
 
 ## Development Workflow
 
-1. `bun run migrate:db`
-2. `bun run dev`
+1. Setup PostgreSQL 15+ instance
+2. Configure `.env` files in backend/frontend from examples
+3. `bun install`
+4. `bun run migrate:db`
+5. `bun run dev`
 
 Dashboard: `http://localhost:8080`
 API: `http://localhost:3333`
-
-## Tests
-- Use `bun run test` to run tests after each code change

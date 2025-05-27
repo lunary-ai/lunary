@@ -2,6 +2,7 @@ import { checkAccess } from "@/src/utils/authorization";
 import sql from "@/src/utils/db";
 import Context from "@/src/utils/koa";
 import Router from "koa-router";
+import { z } from "zod";
 
 const jobs = new Router({
   prefix: "/jobs",
@@ -21,7 +22,10 @@ async function getJobByType(type: string, orgId: string) {
 
 jobs.get("/jobs/:id", checkAccess("jobs", "read"), async (ctx: Context) => {
   const { orgId } = ctx.state;
-  const { id } = ctx.params;
+  const paramsSchema = z.object({
+    id: z.string()
+  });
+  const { id } = paramsSchema.parse(ctx.params);
 
   const job = await getJobById(id, orgId);
 
@@ -33,7 +37,10 @@ jobs.get("/jobs/:id", checkAccess("jobs", "read"), async (ctx: Context) => {
 
 jobs.delete("/:id", checkAccess("jobs", "delete"), async (ctx: Context) => {
   const { orgId } = ctx.state;
-  const { id } = ctx.params;
+  const paramsSchema = z.object({
+    id: z.string()
+  });
+  const { id } = paramsSchema.parse(ctx.params);
 
   await sql`delete from _job where id = ${id} and org_id = ${orgId}`;
   ctx.status = 200;
