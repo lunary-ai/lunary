@@ -200,7 +200,7 @@ export function useProject() {
   const { projects, isLoading, mutate } = useProjects();
 
   const project = useMemo(
-    () => projects?.find((p) => p.id === projectId),
+    () => projects?.find((p) => p.id === projectId) ?? projects?.[0],
     [projects, projectId],
   );
 
