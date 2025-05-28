@@ -295,7 +295,7 @@ checklists.delete(
  *           type: string
  *         data:
  *           type: object
- *           description: The checklist data structure (CheckLogic type)
+ *           description: The checklist representation
  *         projectId:
  *           type: string
  *           format: uuid
