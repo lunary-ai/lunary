@@ -41,7 +41,7 @@ providerConfigs.get("/models", async (ctx: Context) => {
 providerConfigs.get("/:id", async (ctx: Context) => {
   const { projectId } = ctx.state;
   const paramsSchema = z.object({
-    id: z.string()
+    id: z.string(),
   });
   const { id } = paramsSchema.parse(ctx.params);
 
@@ -64,16 +64,18 @@ providerConfigs.get("/:id", async (ctx: Context) => {
 providerConfigs.patch("/:id", async (ctx: Context) => {
   const { projectId } = ctx.state;
   const paramsSchema = z.object({
-    id: z.string()
+    id: z.string(),
   });
   const { id } = paramsSchema.parse(ctx.params);
   const bodySchema = z.object({
     apiKey: z.string(),
     providerName: z.string(),
-    extraConfig: z.record(z.unknown()).optional(),
-    models: z.array(z.string()).optional().default([]),
+    extraConfig: z.record(z.unknown()).optional().nullable(),
+    models: z.array(z.string()).optional().default([]).nullable(),
   });
-  const { apiKey, providerName, extraConfig, models } = bodySchema.parse(ctx.request.body);
+  const { apiKey, providerName, extraConfig, models } = bodySchema.parse(
+    ctx.request.body,
+  );
 
   const [providerConfig] = await sql<
     ProviderConfig[]
