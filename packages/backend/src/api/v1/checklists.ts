@@ -322,8 +322,8 @@ checklists.delete(
  *           type: string
  *           description: The type of checklist
  *         data:
- *           type: object
- *           description: The checklist data structure (CheckLogic type)
+ *           type: array
+ *           description: The checklist representation
  *     ChecklistUpdateInput:
  *       type: object
  *       properties:
