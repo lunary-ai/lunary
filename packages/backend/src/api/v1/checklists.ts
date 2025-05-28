@@ -16,16 +16,16 @@ const checklists = new Router({
  *   get:
  *     summary: List all checklists
  *     description: |
- *       Retrieve all checklists for the current project filtered by type.
- *       Returns checklists ordered by most recently updated.
+ *       Retrieve all checklists for the current project.
+ *       Optionally filter by type. Returns checklists ordered by most recently updated.
  *     tags: [Checklists]
  *     parameters:
  *       - in: query
  *         name: type
- *         required: true
+ *         required: false
  *         schema:
  *           type: string
- *         description: The type of checklists to retrieve
+ *         description: The type of checklists to retrieve (optional)
  *     responses:
  *       200:
  *         description: Successful response
@@ -38,19 +38,29 @@ const checklists = new Router({
  */
 checklists.get("/", checkAccess("checklists", "list"), async (ctx: Context) => {
   const { projectId } = ctx.state;
-  const querySchema = z.object({ type: z.string() });
+  const querySchema = z.object({ type: z.string().optional() });
   const { type } = querySchema.parse(ctx.query);
 
-  const rows = await sql`
-    select 
-      * 
-    from 
-      checklist 
-    where 
-      project_id = ${projectId} 
-      and type = ${type} 
-    order by 
-      updated_at desc`;
+  const rows = type
+    ? await sql`
+        select 
+          * 
+        from 
+          checklist 
+        where 
+          project_id = ${projectId} 
+          and type = ${type} 
+        order by 
+          updated_at desc`
+    : await sql`
+        select 
+          * 
+        from 
+          checklist 
+        where 
+          project_id = ${projectId} 
+        order by 
+          updated_at desc`;
 
   ctx.body = rows;
 });
@@ -285,7 +295,7 @@ checklists.delete(
  *           type: string
  *         data:
  *           type: object
- *           description: The checklist data structure (CheckLogic type)
+ *           description: The checklist data
  *         projectId:
  *           type: string
  *           format: uuid
@@ -312,8 +322,8 @@ checklists.delete(
  *           type: string
  *           description: The type of checklist
  *         data:
- *           type: object
- *           description: The checklist data structure (CheckLogic type)
+ *           type: array
+ *           description: The checklist data
  *     ChecklistUpdateInput:
  *       type: object
  *       properties:
@@ -322,6 +332,6 @@ checklists.delete(
  *           description: Updated slug for the checklist
  *         data:
  *           type: object
- *           description: Updated checklist data structure (CheckLogic type)
+ *           description: Updated checklist data
  */
 export default checklists;
