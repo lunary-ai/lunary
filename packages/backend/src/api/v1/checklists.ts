@@ -295,7 +295,7 @@ checklists.delete(
  *           type: string
  *         data:
  *           type: object
- *           description: The checklist representation
+ *           description: The checklist data
  *         projectId:
  *           type: string
  *           format: uuid
@@ -323,7 +323,7 @@ checklists.delete(
  *           description: The type of checklist
  *         data:
  *           type: array
- *           description: The checklist representation
+ *           description: The checklist data
  *     ChecklistUpdateInput:
  *       type: object
  *       properties:
@@ -332,6 +332,6 @@ checklists.delete(
  *           description: Updated slug for the checklist
  *         data:
  *           type: object
- *           description: Updated checklist data structure (CheckLogic type)
+ *           description: Updated checklist data
  */
 export default checklists;
