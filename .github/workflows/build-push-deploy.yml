@@ -152,6 +152,9 @@ jobs:
         run: bash update.sh ${{ steps.release_tag.outputs.tag }}
 
       - name: Publish Helm chart
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         run: bash publish.sh
 
   deploy:
