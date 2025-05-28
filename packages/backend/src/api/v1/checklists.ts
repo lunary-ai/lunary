@@ -15,6 +15,8 @@ const checklists = new Router({
  * /v1/checklists:
  *   get:
  *     summary: List all checklists
+ *     security:
+ *       - BearerAuth: []
  *     description: |
  *       Retrieve all checklists for the current project.
  *       Optionally filter by type. Returns checklists ordered by most recently updated.
@@ -72,6 +74,8 @@ checklists.get("/", checkAccess("checklists", "list"), async (ctx: Context) => {
  *     summary: Get a specific checklist
  *     description: |
  *       Retrieve a specific checklist by its ID.
+ *     security:
+ *       - BearerAuth: []
  *     tags: [Checklists]
  *     parameters:
  *       - in: path
@@ -119,6 +123,8 @@ checklists.get(
  *     description: |
  *       Creates a new checklist with the provided slug, type, and data.
  *     tags: [Checklists]
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -174,6 +180,8 @@ checklists.post(
  *     description: |
  *       Update an existing checklist's slug and/or data.
  *     tags: [Checklists]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -245,6 +253,8 @@ checklists.patch(
  *     description: |
  *       Delete a specific checklist by its ID.
  *     tags: [Checklists]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
