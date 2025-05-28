@@ -63,6 +63,16 @@ export const MODELS: LunaryProvidedModel[] = [
     provider: "openai",
   },
   {
+    id: "claude-opus-4",
+    name: "claude-opus-4-20250514",
+    provider: "anthropic",
+  },
+  {
+    id: "claude-sonnet-4",
+    name: "claude-sonnet-4-20250514",
+    provider: "anthropic",
+  },
+  {
     id: "claude-3-7-sonnet-latest",
     name: "claude-3-7-sonnet",
     provider: "anthropic",
