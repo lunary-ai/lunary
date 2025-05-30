@@ -1,6 +1,7 @@
 import {
   ActionIcon,
   Anchor,
+  Badge,
   Box,
   Collapse,
   Flex,
@@ -20,11 +21,15 @@ import {
 import {
   IconActivity,
   IconAnalyze,
+  IconBell,
   IconBinaryTree2,
-  IconBrandOpenai,
+  IconCheckbox,
   IconChecklist,
+  IconCompass,
   IconCreditCard,
   IconDatabase,
+  IconFilterCog,
+  IconFlask,
   IconHelpOctagon,
   IconHelpSmall,
   IconListSearch,
@@ -36,9 +41,10 @@ import {
   IconPaint,
   IconSearch,
   IconSettings,
+  IconShieldHalf,
   IconSparkles,
   IconSun,
-  IconTerminal,
+  IconTelescope,
   IconTerminal2,
   IconTimeline,
   IconUsers,
@@ -59,8 +65,9 @@ import { useAuth } from "@/utils/auth";
 import config from "@/utils/config";
 import { useProject, useProjects } from "@/utils/dataHooks";
 import { useViews } from "@/utils/dataHooks/views";
+import { show } from "@intercom/messenger-js-sdk";
 import { useDisclosure, useFocusTrap, useLocalStorage } from "@mantine/hooks";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ResourceName, hasAccess, hasReadAccess, serializeLogic } from "shared";
 import DashboardsSidebarButton from "../analytics/DashboardsSidebarButton";
 import { getIconComponent } from "../blocks/IconPicker";
@@ -89,25 +96,30 @@ export function NavbarLink({
 
   // For logs pages, we want to compare the view param to see if a view is selected
 
-  const active = (() => {
-    const linkParams = new URLSearchParams(link.split("?")[1]);
+  const active = useMemo(() => {
+    if (disabled || soon) return false;
+
     if (router.pathname.startsWith("/logs")) {
-      if (router.asPath.includes(`view=`)) {
-        const viewParam = linkParams.get("view");
-        if (viewParam) {
-          return router.asPath.includes(`view=${viewParam}`);
-        }
+      const search = link.includes("?") ? link.split("?")[1] : "";
+      const params = new URLSearchParams(search);
+
+      if (params.has("view")) {
+        return router.asPath.includes(`view=${params.get("view")}`);
       }
       return router.asPath.startsWith(link);
     }
+
     if (
       router.pathname.startsWith("/dashboards/[id]") &&
       link.startsWith("/dashboards")
     ) {
       return true;
     }
+
     return router.pathname.startsWith(link);
-  })();
+  }, [router.asPath, router.pathname, link, disabled, soon]);
+
+  if (disabled) return null;
 
   return (
     <NavLink
@@ -122,7 +134,21 @@ export function NavbarLink({
       }}
       onClick={onClick}
       h={33}
-      label={`${label}${soon ? " (soon)" : ""}`}
+      label={
+        <Group gap="xs">
+          {label}
+          {label === "Insights" && (
+            <Badge size="xs" variant="light">
+              Alpha
+            </Badge>
+          )}
+          {label === "Experiments" && (
+            <Badge size="xs" variant="light">
+              Beta
+            </Badge>
+          )}
+        </Group>
+      }
       disabled={disabled || soon}
       active={active}
       leftSection={
@@ -145,6 +171,7 @@ type MenuItem = {
   c?: string;
   isSection?: boolean;
   subMenu?: MenuItem[];
+  isAlpha?: boolean;
 };
 
 function MenuSection({ item }) {
@@ -160,6 +187,10 @@ function MenuSection({ item }) {
   const filtered = item.subMenu?.filter((subItem) =>
     subItem.label.toLowerCase().includes(query.toLowerCase()),
   );
+
+  if (filtered.filter((item) => !item.disabled).length === 0) {
+    return null;
+  }
 
   return (
     <Box mb="sm" mt="md">
@@ -303,7 +334,7 @@ export default function Sidebar() {
 
   const APP_MENU: MenuItem[] = [
     {
-      label: "Observe",
+      label: "",
       isSection: true,
       c: "blue",
       subMenu: [
@@ -313,17 +344,14 @@ export default function Sidebar() {
           link: "/dashboards",
           resource: "analytics",
         },
-        // Only for Mock Lunary for now
-        ...(project?.id === "dedc86a5-6cba-481c-9ce5-8b6fa3dcd8e6"
-          ? [
-              {
-                label: "Intelligence",
-                icon: IconSparkles,
-                link: "/intelligence",
-                resource: "analytics",
-              },
-            ]
-          : []),
+      ],
+    },
+
+    {
+      label: "Explore",
+      isSection: true,
+      c: "blue",
+      subMenu: [
         {
           label: "LLM Logs",
           icon: IconTerminal2,
@@ -344,15 +372,17 @@ export default function Sidebar() {
         },
         { label: "Users", icon: IconUsers, link: "/users", resource: "users" },
         {
-          label: "Enrichments",
-          icon: IconSparkles,
-          link: "/enrichments",
-          resource: "enrichments",
+          label: "Insights",
+          icon: IconTelescope,
+          link: "/insights",
+          resource: "analytics",
+          disabled: !org.beta,
+          isAlpha: true,
         },
       ],
     },
     {
-      label: "Build",
+      label: "Improve",
       c: "violet",
       subMenu: [
         {
@@ -360,6 +390,20 @@ export default function Sidebar() {
           icon: IconNotebook,
           link: "/prompts",
           resource: "prompts",
+        },
+        {
+          label: "Experiments",
+          icon: IconFlask,
+          link: "/experiments",
+          resource: "prompts",
+          disabled: !org.beta,
+          isAlpha: true,
+        },
+        {
+          label: "Evaluators",
+          icon: IconCompass,
+          link: "/evaluators",
+          resource: "evaluations",
         },
         {
           label: "Datasets",
@@ -377,7 +421,38 @@ export default function Sidebar() {
           resource: "checklists",
           disabled: isSelfHosted
             ? org.license && !org.license.evalEnabled
-            : false,
+            : org.beta
+              ? true
+              : false,
+        },
+      ],
+    },
+    {
+      label: "Protect",
+      isSection: true,
+      c: "blue",
+      subMenu: [
+        {
+          label: "Data Rules",
+          icon: IconFilterCog,
+          link: "/data-rules",
+          resource: "enrichments",
+          disabled: !org.beta,
+        },
+        {
+          label: "Alerts",
+          icon: IconBell,
+          link: "/alerts",
+          resource: "enrichments",
+          disabled: !org.beta,
+        },
+        {
+          label: "Guardrails",
+          icon: IconShieldHalf,
+          link: "/guardrails",
+          resource: "enrichments",
+          disabled: !org.beta,
+          isAlpha: true,
         },
       ],
     },
@@ -385,7 +460,7 @@ export default function Sidebar() {
 
   if (projectViews.length) {
     APP_MENU.push({
-      label: "Smart Views",
+      label: "Views",
       icon: IconListSearch,
       searchable: true,
       resource: "logs",
@@ -632,16 +707,14 @@ export default function Sidebar() {
                   </ActionIcon>
                 </Menu.Target>
                 <Menu.Dropdown>
-                  {process.env.NEXT_PUBLIC_CRISP_ID && (
-                    <Menu.Item
-                      leftSection={<IconMessage2 size={14} />}
-                      onClick={() => {
-                        $crisp?.push(["do", "chat:open"]);
-                      }}
-                    >
-                      Feedback
-                    </Menu.Item>
-                  )}
+                  <Menu.Item
+                    leftSection={<IconMessage2 size={14} />}
+                    onClick={() => {
+                      config.IS_CLOUD && show();
+                    }}
+                  >
+                    Feedback
+                  </Menu.Item>
                   <Menu.Item
                     component="a"
                     href="https://lunary.ai/docs"

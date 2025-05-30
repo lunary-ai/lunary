@@ -90,7 +90,7 @@ export function WELCOME_EMAIL(
     from: config.PERSONAL_SENDER_ADDRESS || config.GENERIC_SENDER_ADDRESS!,
     text: `Hi ${extractFirstName(name)},
 
-I'm Vince, co-founder of lunary. 
+I'm Hugh, CEO of lunary. 
 
 Wanted to say welcome.
 
@@ -103,7 +103,7 @@ You can use this to integrate your app with one of our SDKs.
 In your opinion, what can we do to make lunary better?
 
 Thanks
-Vince`,
+Hugh`,
   };
 }
 

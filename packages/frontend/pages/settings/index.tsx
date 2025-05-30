@@ -17,8 +17,8 @@ import {
   Switch,
   Tabs,
   Text,
-  Title,
   TextInput,
+  Title,
 } from "@mantine/core";
 import { NextSeo } from "next-seo";
 import Router, { useRouter } from "next/router";
@@ -48,11 +48,13 @@ import {
   IconIdBadge,
   IconPencil,
   IconRefreshAlert,
+  IconShieldCog,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { type CheckLogic, hasAccess } from "shared";
 import useSWR from "swr";
+import { SAMLConfig } from "@/components/settings/saml";
 
 dayjs.extend(relativeTime);
 
@@ -118,6 +120,7 @@ function Keys() {
                   c="red.8"
                   value={project?.privateApiKey}
                   data-testid="private-key"
+                  isSecret
                 />
               </Group>
               <Button
@@ -164,114 +167,6 @@ function Keys() {
   );
 }
 
-function SmartDataRule() {
-  const { org } = useOrg();
-  const { addRule, addRulesLoading, deleteRule, maskingRule, filteringRule } =
-    useProjectRules();
-
-  const [checks, setChecks] = useState<CheckLogic>(["AND"]);
-
-  useEffect(() => {
-    if (filteringRule?.filters) {
-      setChecks(filteringRule.filters);
-    }
-  }, [filteringRule]);
-
-  const smartDataFilterEnabled = config.IS_SELF_HOSTED
-    ? org.license.dataFilteringEnabled
-    : org.dataFilteringEnabled;
-
-  return (
-    <SettingsCard
-      title={<>Smart Data Rules ✨</>}
-      align="start"
-      paywallConfig={{
-        Icon: IconFilter,
-        feature: "Smart Data Rules",
-        p: 12,
-        plan: "enterprise",
-        list: [
-          "Filter out sensitive data",
-          "LLM-powered detection or custom regex patterns",
-        ],
-        enabled: !smartDataFilterEnabled,
-      }}
-    >
-      <Text>Filter out or hide sensitive data from your project.</Text>
-
-      <Tabs variant="outline" defaultValue="filtering" w="100%">
-        <Tabs.List>
-          <Tabs.Tab value="filtering">Ingestion Filtering</Tabs.Tab>
-          <Tabs.Tab value="masking">PII Masking</Tabs.Tab>
-        </Tabs.List>
-
-        <Tabs.Panel value="filtering" p="md">
-          <Stack>
-            <Text>
-              Prevent data from being ingested into your project. Click below
-              button to add conditions and filter out data based on metadata,
-              users, tags, tools, or models. Input and output data from runs
-              matching will be redacted.
-            </Text>
-            <CheckPicker
-              minimal
-              showAndOr
-              value={checks}
-              onChange={setChecks}
-              buttonText="Add filter"
-              restrictTo={(f) =>
-                ["metadata", "users", "tags", "tools", "models"].includes(f.id)
-              }
-            />
-
-            <Flex justify="flex-end">
-              <Button
-                loading={addRulesLoading}
-                style={{ float: "right" }}
-                onClick={() => {
-                  addRule({ type: "filtering", filters: checks });
-                }}
-                variant="full"
-              >
-                Save
-              </Button>
-            </Flex>
-          </Stack>
-        </Tabs.Panel>
-
-        <Tabs.Panel value="masking" p="md">
-          <Stack>
-            <Text>
-              Masking allows you to hide sensitive data in the dashboard.
-            </Text>
-
-            <Alert w="100%" icon={<IconIdBadge />}>
-              Masking requires a PII enricher enabled.
-            </Alert>
-            {addRulesLoading && <Loader />}
-            <Switch
-              size="lg"
-              label="Enabled"
-              checked={!!maskingRule}
-              onChange={(e) => {
-                const { checked } = e.currentTarget;
-
-                if (checked) {
-                  addRule({
-                    type: "masking",
-                  });
-                } else if (maskingRule) {
-                  deleteRule(maskingRule.id);
-                }
-              }}
-            />
-          </Stack>
-        </Tabs.Panel>
-      </Tabs>
-    </SettingsCard>
-  );
-}
-
 function ProjectNameCard() {
   const { project, update } = useProject();
   const [name, setName] = useState(project?.name ?? "");
@@ -306,6 +201,46 @@ function ProjectNameCard() {
           onChange={(e) => setName(e.currentTarget.value)}
         />
 
+        <Group justify="end">
+          <Button onClick={save} disabled={!dirty} loading={saving}>
+            Save
+          </Button>
+        </Group>
+      </Stack>
+    </SettingsCard>
+  );
+}
+
+function OrgNameCard() {
+  const { org, updateOrg, mutate } = useOrg();
+  const [name, setName] = useState(org?.name ?? "");
+  const [saving, setSaving] = useState(false);
+
+  // useEffect(() => {
+  //   if (org) setName(org.name);
+  // }, [org]);
+
+  const dirty = name.trim() !== (org?.name ?? "");
+
+  async function save() {
+    if (!dirty) return;
+    setSaving(true);
+    await updateOrg({ name: name.trim() });
+    await mutate();
+    setSaving(false);
+  }
+
+  return (
+    <SettingsCard title="Organization Name">
+      <Stack gap="sm">
+        <Text c="dimmed">
+          This is your organization’s visible name within Lunary.
+        </Text>
+        <TextInput
+          data-testid="org-name-input"
+          value={name}
+          onChange={(e) => setName(e.currentTarget.value)}
+        />
         <Group justify="end">
           <Button onClick={save} disabled={!dirty} loading={saving}>
             Save
@@ -473,54 +408,6 @@ export default function Settings() {
                 </Button>
               </SettingsCard>
 
-              <SmartDataRule />
-
-              {user && ["admin", "owner"].includes(user.role) && (
-                <SettingsCard title="Data Retention Policy" align="start">
-                  <Text>
-                    Define a retention period for this Project data. The data
-                    will be automatically deleted after the defined time.
-                  </Text>
-                  <Select
-                    defaultValue="Unlimited"
-                    value={String(dataRetentionDays)}
-                    onChange={setDataRetentionDays}
-                    data={[
-                      { label: "Unlimited", value: "unlimited" },
-                      { label: "1 year", value: "365" },
-                      { label: "180 days", value: "180" },
-                      { label: "90 days", value: "90" },
-                      { label: "60 days", value: "60" },
-                      { label: "30 days", value: "30" },
-                    ]}
-                  />
-
-                  <Group w="100%" justify="end">
-                    <Button
-                      onClick={() => {
-                        if (dataRetentionDays !== "unlimited") {
-                          // eslint-disable-next-line no-alert
-                          confirm(
-                            `If you confirm, all data older than ${dataRetentionDays} days will be deleted permanently.`,
-                          );
-                          updateDataRetention(dataRetentionDays);
-                        } else if (dataRetentionDays === "unlimited") {
-                          updateDataRetention("unlimited");
-                        }
-                        showNotification({
-                          title: "Data retention policy updated",
-                          message: `Data retention policy updated to ${dataRetentionDays} days`,
-                          icon: <IconCheck />,
-                          color: "green",
-                        });
-                      }}
-                    >
-                      Save
-                    </Button>
-                  </Group>
-                </SettingsCard>
-              )}
-
               {user && hasAccess(user.role, "projects", "delete") && (
                 <SettingsCard title="Danger Zone" align="start">
                   <Text>
@@ -582,10 +469,10 @@ export default function Settings() {
           </Container>
         </Tabs.Panel>
 
-        {/* ----------------------------- ORG TAB */}
         <Tabs.Panel value="org" pt="md">
           <Container px="0">
             <Stack gap="xl">
+              <OrgNameCard />
               <SettingsCard title={<>Cost Mapping</>} align="start">
                 <Stack gap="md" w="100%">
                   <Group justify="apart">
@@ -640,17 +527,19 @@ export default function Settings() {
                         </>
                       )}
 
-                      {refreshJob.status === "done" && refreshJob.endedAt && (
-                        <Alert
-                          icon={<IconCheck size={16} />}
-                          title={`Refresh completed ${dayjs(refreshJob.endedAt).fromNow()}`}
-                          color="green"
-                          variant="light"
-                        >
-                          All LLM run costs have been successfully recalculated
-                          using the latest pricing rules.
-                        </Alert>
-                      )}
+                      {refreshJob.status === "done" &&
+                        refreshJob.endedAt &&
+                        dayjs().diff(dayjs(refreshJob.endedAt), "day") < 1 && (
+                          <Alert
+                            icon={<IconCheck size={16} />}
+                            title={`Refresh completed ${dayjs(refreshJob.endedAt).fromNow()}`}
+                            color="green"
+                            variant="light"
+                          >
+                            All LLM run costs have been successfully
+                            recalculated using the latest pricing rules.
+                          </Alert>
+                        )}
 
                       {refreshJob.status === "failed" && (
                         <Alert
@@ -669,6 +558,24 @@ export default function Settings() {
               </SettingsCard>
 
               <DataWarehouseCard />
+              {["admin", "owner"].includes(user.role) && (
+                <SettingsCard title={<>Audit Logs</>} align="start">
+                  <Text mb="md">
+                    View a history of user actions and activities in your
+                    organization.
+                  </Text>
+                  <Button
+                    color="blue"
+                    variant="default"
+                    component={Link}
+                    href={`/team/audit-logs`}
+                    leftSection={<IconShieldCog size={16} />}
+                  >
+                    View Logs
+                  </Button>
+                </SettingsCard>
+              )}
+              {["admin", "owner"].includes(user.role) && <SAMLConfig />}
             </Stack>
           </Container>
         </Tabs.Panel>

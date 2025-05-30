@@ -1,6 +1,7 @@
 import sql from "./utils/db";
 import fs from "fs";
 import path from "path";
+import * as Sentry from "@sentry/bun";
 
 const migrationsDir = path.join(__dirname, "../../db");
 
@@ -67,6 +68,7 @@ async function main() {
     console.info("✅ DB migrations done");
   } catch (error) {
     console.error(error);
+    Sentry.captureException(error);
     exitCode = 1;
   } finally {
     await sql.end();

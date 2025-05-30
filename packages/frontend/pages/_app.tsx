@@ -8,6 +8,7 @@ import { MantineProvider } from "@mantine/core";
 import type { AppProps } from "next/app";
 import Head from "next/head";
 import { NuqsAdapter } from "nuqs/adapters/next/pages";
+import * as Sentry from "@sentry/nextjs";
 
 import Layout from "@/components/layout";
 import AnalyticsWrapper from "@/components/layout/Analytics";
@@ -23,9 +24,17 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { SWRConfig } from "swr";
+import Intercom from "@intercom/messenger-js-sdk";
+import config from "@/utils/config";
 
 export default function App({ Component, pageProps }: AppProps) {
   const [projectId, setProjectId] = useProjectIdStorage();
+
+  if (config.IS_CLOUD) {
+    Intercom({
+      app_id: "pv95fmzm",
+    });
+  }
 
   return (
     <>
@@ -49,7 +58,9 @@ export default function App({ Component, pageProps }: AppProps) {
               <SWRConfig
                 value={{
                   fetcher: fetcher.get,
-                  dedupingInterval: 10000,
+                  onError: (error) => {
+                    Sentry.captureException(error);
+                  },
                 }}
               >
                 <DefaultSeo

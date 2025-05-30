@@ -1,5 +1,6 @@
 import openai from "@/src/utils/openai";
-import lunary from "lunary";
+import { z } from "zod";
+import { zodTextFormat } from "openai/helpers/zod";
 import { Run } from "shared";
 import { lastMsg } from "../checks";
 
@@ -7,31 +8,38 @@ interface AssertParams {
   conditions: string[];
 }
 
-// Used in playground
 export async function evaluate(run: Run, params: AssertParams) {
   const { conditions } = params;
+  const conditionList = conditions.map((c) => `- ${c}`).join("\n");
 
-  const conditionList = conditions
-    .map((condition) => `- ${condition}`)
-    .join("\n");
-
-  const template = await lunary.renderTemplate("assert-v2", {
-    input: lastMsg(run.input),
-    output: lastMsg(run.output),
-    conditions: conditionList,
+  const assertSchema = z.object({
+    result: z.boolean(),
+    reason: z.string(),
   });
 
-  const res = await openai.chat.completions.create(template);
+  const completion = await openai!.responses.parse({
+    model: "gpt-4.1",
+    instructions: `
+You help evaluate if a given interaction from an AI matches one or more assertions.
+Return a JSON object with:
+result → true if all assertions are satisfied, false otherwise
+reason → brief explanation
+`,
+    input: `
+User Input:
+\`${lastMsg(run.input)}\`
 
-  const output = res.choices[0]?.message?.content;
+AI Response/answer:
+\`${lastMsg(run.output)}\`
 
-  if (!output) "";
+Assertions:
+${conditionList}
+`,
+    text: { format: zodTextFormat(assertSchema, "assert") },
+  });
 
-  const result = output.split("\n")[0].toLowerCase().replace(".", "").trim();
-  const reason = output.split("\n").slice(1).join("\n");
+  if (completion.output_parsed === null) throw new Error("Failed to parse");
 
-  return {
-    result: result === "yes",
-    reason,
-  };
+  const { result, reason } = completion.output_parsed;
+  return { result, reason };
 }

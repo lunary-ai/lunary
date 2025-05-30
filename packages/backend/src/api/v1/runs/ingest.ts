@@ -12,6 +12,7 @@ import {
 import Context from "@/src/utils/koa";
 import Router from "koa-router";
 import { z } from "zod";
+import * as Sentry from "@sentry/bun";
 
 /**
  * @openapi
@@ -297,7 +298,7 @@ async function registerRunEvent(
         output,
         promptTokens: tokensUsage?.prompt,
         completionTokens: tokensUsage?.completion,
-        cachedPromptTokens: tokensUsage?.promptCached,
+        cachedPromptTokens: tokensUsage?.promptCached || 0,
         name: runData?.name,
         duration: new Date(timestamp) - new Date(runData?.createdAt),
         projectId,
@@ -314,7 +315,7 @@ async function registerRunEvent(
       status: "success",
       promptTokens: tokensUsage?.prompt,
       completionTokens: tokensUsage?.completion,
-      cachedPromptTokens: tokensUsage?.promptCached,
+      cachedPromptTokens: tokensUsage?.promptCached ?? 0,
       cost,
       metadata,
     });
@@ -516,10 +517,7 @@ export async function processEventsIngestion(
         !(error instanceof DuplicateError) &&
         !(error instanceof ProjectNotFoundError)
       ) {
-        // Sentry.withScope((scope) => {
-        //   scope.setExtras({ event: JSON.stringify(event) });
-        //   Sentry.captureException(error);
-        // });
+        Sentry.captureException(error, { contexts: { event } });
       }
 
       console.error(`Error ingesting event`, {
@@ -527,10 +525,12 @@ export async function processEventsIngestion(
         event,
       });
 
+      Sentry.captureException(error, { contexts: { event } });
+
       results.push({
         id: event.runId,
         success: false,
-        error: error.message,
+        error: error?.message || "Unknown error",
       });
     }
   }

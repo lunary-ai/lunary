@@ -1,12 +1,12 @@
+import { lastMsg } from "@/src/checks";
+import { checkAccess } from "@/src/utils/authorization";
 import sql from "@/src/utils/db";
+import { clearUndefined } from "@/src/utils/ingest";
 import Context from "@/src/utils/koa";
+import { isOpenAIMessage, validateUUID } from "@/src/utils/misc";
 import Router from "koa-router";
 import { z } from "zod";
 import { getDatasetById, getDatasetBySlug } from "./utils";
-import { validateUUID } from "@/src/utils/misc";
-import { clearUndefined } from "@/src/utils/ingest";
-import { checkAccess } from "@/src/utils/authorization";
-import { lastMsg } from "@/src/checks";
 
 interface DefaultPrompt {
   chat: { role: string; content: string }[];
@@ -329,7 +329,6 @@ datasets.delete(
     ctx.status = 200;
   },
 );
-
 /**
  * @openapi
  * /v1/datasets/prompts:
@@ -458,6 +457,41 @@ datasets.post(
     ctx.body = prompt;
   },
 );
+
+datasets.post("/prompts/attach", async (ctx: Context) => {
+  const { projectId } = ctx.state;
+
+  const { runIds, datasetId } = z
+    .object({
+      runIds: z.array(z.string().uuid()),
+      datasetId: z.string().uuid(),
+    })
+    .parse(ctx.request.body);
+
+  const runs = await sql`
+    select id, input
+    from run
+    where id = any(${runIds})
+      and project_id = ${projectId}
+  `;
+
+  const rows = runs.flatMap(({ input }) => {
+    const messages = input.filter(isOpenAIMessage);
+    return messages.length ? { datasetId, messages } : [];
+  });
+
+  if (!rows.length) {
+    ctx.body = [];
+    return;
+  }
+
+  const prompts = await sql`
+    insert into dataset_prompt ${sql(rows)}
+    returning *
+  `;
+
+  ctx.body = prompts;
+});
 
 /**
  * @openapi

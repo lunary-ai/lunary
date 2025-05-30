@@ -43,6 +43,7 @@ users.get("/me/org", async (ctx: Context) => {
         account.id,
         account.created_at,
         account.email,
+        account.name,
         account.org_id,
         account.role,
         account.verified,
@@ -67,7 +68,10 @@ users.get("/me/org", async (ctx: Context) => {
 });
 
 users.post("/feedback", async (ctx: Context) => {
-  const { text } = ctx.request.body as { text: string };
+  const bodySchema = z.object({
+    text: z.string()
+  });
+  const { text } = bodySchema.parse(ctx.request.body);
   await sendSlackMessage(text, "feedback");
   ctx.body = { ok: true };
 });
@@ -119,7 +123,6 @@ users.get("/verify-email", async (ctx: Context) => {
 
   const [orgInvitation] =
     await sql`select * from org_invitation where email = ${account.email}`;
-  console.log(account, orgInvitation);
   if (orgInvitation) {
     await sql`update org_invitation set email_verified = true where id = ${orgInvitation.id}`;
   }
@@ -147,7 +150,7 @@ users.get("/verify-email", async (ctx: Context) => {
     `;
   const id = project?.id;
 
-  if (!config.IS_SELF_HOSTED) {
+  if (config.IS_CLOUD) {
     await sendEmail(WELCOME_EMAIL(email, name, id));
   }
   ctx.redirect(process.env.APP_URL!);

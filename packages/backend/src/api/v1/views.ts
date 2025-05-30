@@ -88,7 +88,10 @@ views.get("/", checkAccess("logs", "list"), async (ctx: Context) => {
  */
 views.get("/:id", checkAccess("logs", "read"), async (ctx: Context) => {
   const { projectId } = ctx.state;
-  const { id } = ctx.params;
+  const paramsSchema = z.object({
+    id: z.string()
+  });
+  const { id } = paramsSchema.parse(ctx.params);
 
   const [view] =
     await sql`select * from view where project_id = ${projectId} and id = ${id}`;
@@ -196,7 +199,10 @@ views.post("/", async (ctx: Context) => {
  */
 views.patch("/:id", async (ctx: Context) => {
   const { projectId } = ctx.state;
-  const { id } = ctx.params;
+  const paramsSchema = z.object({
+    id: z.string()
+  });
+  const { id } = paramsSchema.parse(ctx.params);
 
   const validatedData = ViewSchema.partial().parse(ctx.request.body);
   const { name, data, columns, icon } = validatedData;
@@ -234,7 +240,10 @@ views.patch("/:id", async (ctx: Context) => {
  */
 views.delete("/:id", checkAccess("logs", "delete"), async (ctx: Context) => {
   const { projectId } = ctx.state;
-  const { id } = ctx.params;
+  const paramsSchema = z.object({
+    id: z.string()
+  });
+  const { id } = paramsSchema.parse(ctx.params);
 
   await sql`
     delete from view
@@ -272,7 +281,7 @@ views.delete("/:id", checkAccess("logs", "delete"), async (ctx: Context) => {
  *                     type: object
  *           example: ["AND", {"id": "models", "params": {"models": ["gpt-4"]}}]
  *         columns:
- *           type: array
+ *           type: object
  *         icon:
  *           type: string
  *           example: "chat"

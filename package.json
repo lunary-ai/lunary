@@ -5,6 +5,7 @@
     "start": "bun --filter './packages/frontend' --filter './packages/backend' start",
     "start:backend": "bun --filter './packages/backend' start",
     "start:frontend": "bun --filter './packages/frontend' start",
+    "start:tokenizer": "bun --filter './packages/tokenizer' start",
     "build:frontend": "bun --filter './packages/frontend' build",
     "migrate:db": "bun --filter './packages/backend' migrate:db",
     "dev": "bun --elide-lines 0 --filter '*' dev ",
@@ -15,7 +16,7 @@
     "packages/*"
   ],
   "devDependencies": {
-    "prettier": "^3.5.2"
+    "prettier": "^3.5.3"
   },
   "patchedDependencies": {
     "postgres@3.4.5": "patches/postgres@3.4.5.patch"

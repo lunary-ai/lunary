@@ -16,3 +16,7 @@ if [ -z "$API_URL" ]; then
 fi
 
 LC_ALL=C  find .next -type f -exec perl -pi -e "s|xyzPLACEHOLDERxyz|${API_URL}|g" {} +
+
+if [ -n "$GOOGLE_CLIENT_ID" ]; then
+  LC_ALL=C find .next -type f -exec perl -pi -e "s|xyzGOOGLECLIENTIDxyz|${GOOGLE_CLIENT_ID}|g" {} +
+fi

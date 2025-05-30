@@ -19,6 +19,26 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+export async function checkEmailServerConnection() {
+  if (process.env.NODE_ENV !== "production") {
+    return;
+  }
+  if (
+    config.SMTP_HOST ||
+    config.SMTP_PORT ||
+    config.SMTP_USER ||
+    config.SMTP_PASSWORD
+  ) {
+    try {
+      await transporter.verify();
+      console.info("✅ Email server is ready to send emails");
+    } catch (error) {
+      console.error("❌ Email server connection failed:");
+      console.error(error);
+    }
+  }
+}
+
 export async function sendEmail(body: MailOptions) {
   if (
     !config.SMTP_HOST ||

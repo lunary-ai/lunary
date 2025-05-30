@@ -1,0 +1,31 @@
+{
+  "name": "tokenizers",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "bun index.ts",
+    "dev": "bun --watch index.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@anthropic-ai/tokenizer": "^0.0.4",
+    "@koa/cors": "^5.0.0",
+    "@xenova/transformers": "^2.17.2",
+    "bun": "^1.1.12",
+    "js-tiktoken": "^1.0.12",
+    "koa": "^2.16.1",
+    "koa-bodyparser": "^4.4.1",
+    "koa-ratelimit": "^5.1.0",
+    "koa-router": "^12.0.1",
+    "llama3-tokenizer-js": "^1.2.0",
+    "mistral-tokenizer-js": "^1.0.0",
+    "node-cache": "^5.1.2",
+    "seed-color": "^2.0.1"
+  },
+  "prettier": {
+    "semi": false
+  }
+}

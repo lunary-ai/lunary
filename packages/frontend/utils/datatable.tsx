@@ -2,7 +2,7 @@ import SmartViewer from "@/components/SmartViewer";
 import AppUserAvatar from "@/components/blocks/AppUserAvatar";
 import Feedback from "@/components/blocks/OldFeedback";
 import ProtectedText from "@/components/blocks/ProtectedText";
-import { Badge, Button, Group } from "@mantine/core";
+import { Badge, Button, Checkbox, Group, Text, Tooltip } from "@mantine/core";
 import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
 
 import Link from "next/link";
@@ -10,9 +10,42 @@ import { EvaluatorType } from "shared";
 import { useProjectRules, useProjectSWR } from "./dataHooks";
 import { renderEnrichment } from "./enrichment";
 import { capitalize, formatCost, formatDateTime, msToTime } from "./format";
+import { IconBiohazard } from "@tabler/icons-react";
 const columnHelper = createColumnHelper<any>();
 
-export function timeColumn(timeColumn, label = "Time") {
+export function selectColumn() {
+  return columnHelper.accessor("select", {
+    id: "select",
+    header: ({ table }: { table: any }) => (
+      <Checkbox
+        size="xs"
+        radius="sm"
+        checked={table.getIsAllRowsSelected()}
+        indeterminate={table.getIsSomeRowsSelected()}
+        onChange={table.getToggleAllRowsSelectedHandler()}
+        onClick={(e) => e.stopPropagation()}
+      />
+    ),
+    cell: ({ row }: { row: any }) => (
+      <Checkbox
+        size="xs"
+        radius="sm"
+        styles={{ input: { cursor: "pointer" } }}
+        checked={row.getIsSelected()}
+        indeterminate={row.getIsSomeSelected()}
+        disabled={!row.getCanSelect?.()}
+        onChange={row.getToggleSelectedHandler()}
+        onClick={(e) => e.stopPropagation()}
+      />
+    ),
+    size: 40,
+    enableSorting: false,
+    enableResizing: false,
+    enableHiding: true,
+  });
+}
+
+export function timeColumn(timeColumn, label = "Date") {
   return columnHelper.accessor(timeColumn, {
     header: label,
     id: timeColumn,
@@ -162,7 +195,7 @@ export function templateColumn() {
 export function userColumn() {
   return columnHelper.accessor("user", {
     header: "User",
-    size: 130,
+    size: 170,
     enableSorting: false,
     cell: (props) => {
       const user = props.getValue();
@@ -177,7 +210,7 @@ export function userColumn() {
 export function nameColumn(label = "Name") {
   return columnHelper.accessor("name", {
     header: label,
-    size: 100,
+    size: 120,
     minSize: 30,
     enableSorting: false,
     cell: (props) => {
@@ -271,7 +304,7 @@ export function enrichmentColumn(
   maskPII: boolean = false,
 ) {
   return columnHelper.accessor(`enrichment-${id}`, {
-    header: `${capitalize(name)} ✨`,
+    header: evaluatorType === "topics" ? "Topics" : `${capitalize(name)}`,
     id: `enrichment-${id}`,
     size: 120,
     enableSorting: false,
@@ -308,4 +341,33 @@ export function scoresColumn() {
       }
     },
   });
+}
+
+export function toxicityColumn(id: string) {
+  return {
+    id: `toxicity-${id}`,
+    header: "Toxicity",
+    accessorFn: (row) => row.toxicity, // keep full object for the cell
+    enableSorting: false,
+
+    cell: ({ getValue }) => {
+      const tox = getValue();
+
+      const isToxic = tox.input.isToxic || tox.output.isToxic;
+      if (!isToxic) return;
+
+      const labels = [
+        ...(tox.input.isToxic ? tox.input.labels : []),
+        ...(tox.output.isToxic ? tox.output.labels : []),
+      ];
+
+      return (
+        <Tooltip label={labels.join(", ")} withArrow>
+          <Badge color="red" leftSection={<IconBiohazard width={12} />}>
+            Toxic
+          </Badge>
+        </Tooltip>
+      );
+    },
+  };
 }

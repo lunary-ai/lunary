@@ -25,10 +25,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
+
+      - name: Get Playwright version
+        id: pw-version
+        run: |
+          PW_VERSION=$(jq -r '.devDependencies["@playwright/test"] // .dependencies["@playwright/test"]' package.json)
+          echo "PW_VERSION=$PW_VERSION" >> "$GITHUB_ENV"
+
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-pw-${{ env.PW_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-pw-   # fall back to *any* Playwright version for the OS
+
       - name: Setup application
         run: bun install
-      # - name: Install Chromium for Playwright
-      #   run: npx playwright install --with-deps chromium
+      - name: Install Chromium for Playwright
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
 
       - name: Start backend and frontend
         env:
@@ -36,32 +53,30 @@ jobs:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           APP_URL: http://0.0.0.0:8080
           API_URL: http://0.0.0.0:3333
-          LUNARY_PUBLIC_KEY: 259d2d94-9446-478a-ae04-484de705b522
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           NEXT_PUBLIC_API_URL: http://0.0.0.0:3333
         timeout-minutes: 3
         run: |
           bun run migrate:db
           bun run start:backend &
-          bun run build:frontend
+          bun run build:frontend --turbo
           bun run start:frontend &
           bunx wait-on http://localhost:3333/v1/health http://0.0.0.0:8080/
 
-      # - name: Run tests
-      #   run: npm run test
-      #   env:
-      #     BASE_URL: http://0.0.0.0:8080
-      #     DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-      #     JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      #     APP_URL: http://0.0.0.0:8080
-      #     API_URL: http://0.0.0.0:3333
-      #     LUNARY_PUBLIC_KEY: 259d2d94-9446-478a-ae04-484de705b522
-      #     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      #     NEXT_PUBLIC_API_URL: http://0.0.0.0:3333
+      - name: Run tests
+        run: npm run test
+        env:
+          BASE_URL: http://0.0.0.0:8080
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          APP_URL: http://0.0.0.0:8080
+          API_URL: http://0.0.0.0:3333
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          NEXT_PUBLIC_API_URL: http://0.0.0.0:3333
 
-      # - uses: actions/upload-artifact@v4
-      #   if: ${{ !cancelled() }}
-      #   with:
-      #     name: playwright-report
-      #     path: packages/e2e/playwright-report/
-      #     retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: packages/e2e/playwright-report/
+          retention-days: 30

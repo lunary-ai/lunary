@@ -4,6 +4,7 @@ import Router from "koa-router";
 import { checkAccess } from "@/src/utils/authorization";
 import { convertChecksToSQL } from "@/src/utils/checks";
 import { jsonrepair } from "jsonrepair";
+import * as Sentry from "@sentry/bun";
 import { Feedback, Score, deserializeLogic } from "shared";
 import { z } from "zod";
 import { fileExport } from "./export";
@@ -167,6 +168,7 @@ function processParams(params: any) {
   } catch (e) {
     console.error(e);
     console.error("Error parsing tools");
+    Sentry.captureException(e);
   }
   return params;
 }
@@ -193,6 +195,16 @@ export function formatRun(run: any) {
       cachedPrompt: run.cachedPromptTokens,
       completion: run.completionTokens,
       total: run.completionTokens + run.promptTokens,
+    },
+    toxicity: {
+      input: {
+        isToxic: run.toxicInput,
+        labels: run.inputLabels,
+      },
+      output: {
+        isToxic: run.toxicOutput,
+        labels: run.outputLabels,
+      },
     },
     tags: run.tags,
     input: processInput(run.input),
@@ -303,6 +315,7 @@ export function formatRun(run: any) {
         evaluationResult;
     }
   } catch (error) {
+    Sentry.captureException(error);
     console.error(error);
   }
 
@@ -316,18 +329,20 @@ function getRunQuery(ctx: Context, isExport = false) {
   const queryString = ctx.querystring;
   const deserializedChecks = deserializeLogic(queryString);
 
+  const enricherFilters = ["languages", "pii", "topics"];
+
   const mainChecks = deserializedChecks?.filter((check) => {
     if (check === "AND" || check === "OR") {
       return true;
     }
-    return !["languages", "pii"].includes(check?.id);
+    return !enricherFilters.includes(check?.id);
   });
 
   const evaluatorChecks = deserializedChecks?.filter((check) => {
     if (check === "AND" || check === "OR") {
       return true;
     }
-    return ["languages", "pii"].includes(check?.id);
+    return enricherFilters.includes(check?.id);
   });
 
   const filtersQuery =
@@ -379,10 +394,15 @@ function getRunQuery(ctx: Context, isExport = false) {
       coalesce(er.results, '[]') as evaluation_results,
       parent_feedback.feedback as parent_feedback,
       chat_feedbacks.feedbacks as feedbacks,
-      coalesce(scores, '[]'::json) as scores
+      coalesce(scores, '[]'::json) as scores,
+      rt.toxic_input,
+      rt.toxic_output,     
+      rt.input_labels,
+      rt.output_labels 
     from
       public.run r
       left join external_user eu on r.external_user_id = eu.id
+      left join run_toxicity rt on rt.run_id = r.id
       left join template_version tv on r.template_version_id = tv.id
       left join template t on tv.template_id = t.id
       left join run pr
@@ -620,6 +640,7 @@ runs.get("/", async (ctx: Context) => {
           run.input = run.input[run.input.length - 1];
         }
         if (
+          run.input &&
           typeof run.input === "object" &&
           typeof run.input.content === "string"
         ) {
@@ -632,6 +653,7 @@ runs.get("/", async (ctx: Context) => {
           run.output.content = run.output.content.substring(0, 100);
         }
       } catch (error) {
+        Sentry.captureException(error);
         console.error(error);
       }
     }
@@ -801,6 +823,7 @@ runs.get("/export", async (ctx: Context) => {
     .parse(ctx.query);
 
   const { query, projectId } = getRunQuery(ctx, true);
+  console.log("query");
 
   await fileExport(
     { ctx, sql, cursor: query.cursor(), formatRun, projectId },
@@ -1243,7 +1266,7 @@ runs.post("/generate-export-token", async (ctx) => {
   ctx.body = { token };
 });
 
-// for the frontend only
+// public route, ctx.state.project id is not set
 runs.get("/exports/:token", async (ctx) => {
   const { type, exportFormat } = z
     .object({
@@ -1262,10 +1285,19 @@ runs.get("/exports/:token", async (ctx) => {
   const { token } = z.object({ token: z.string() }).parse(ctx.params);
 
   const [user] =
-    await sql`select name from account where export_single_use_token = ${token}`;
+    await sql`select name, org_id from account where export_single_use_token = ${token}`;
   if (!user) {
     return ctx.throw(401, "Invalid token");
   }
+
+  const [project] =
+    await sql`select id, org_id from project where id = ${ctx.query.projectId}`;
+
+  if (project.orgId !== user.orgId) {
+    return ctx.throw(401, "Not authorized to access this project");
+  }
+
+  ctx.state.projectId = project.id;
 
   const { query, projectId } = getRunQuery(ctx, true);
 

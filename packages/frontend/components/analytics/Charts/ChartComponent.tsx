@@ -11,6 +11,7 @@ import TopUsers from "../TopUsers";
 import AreaChartComponent from "./AreaChartComponent";
 import TopModels from "./TopModels";
 import TopAgents from "./TopAgents";
+import BarChartComponent from "./BarChartComponent";
 
 interface ChartProps {
   id: string;
@@ -162,6 +163,18 @@ export default function ChartComponent({
       "runs",
     ].includes(dataKey)
   ) {
+    if (chart?.type === "Bar") {
+      return (
+        <BarChartComponent
+          data={data}
+          granularity={granularity}
+          dataKey={dataKey}
+          color={DEFAULT_CHARTS[dataKey]?.color || color} // TODO: fix color not being saved properly in DB
+          aggregationMethod={aggregationMethod}
+          stat={stat}
+        />
+      );
+    }
     return (
       <AreaChartComponent
         data={data}

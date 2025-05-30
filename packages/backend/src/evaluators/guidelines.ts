@@ -1,41 +1,52 @@
 import { Run } from "shared";
 import { isOpenAIMessage, lastMsg } from "../checks";
 import openai from "@/src/utils/openai";
-import lunary from "lunary";
+import { z } from "zod";
+import { zodTextFormat } from "openai/helpers/zod";
 
 export async function evaluate(run: Run) {
-  let systemGuidelines = null;
+  if (!Array.isArray(run.input) || !run.input.every(isOpenAIMessage)) return "";
+  if (run.input[0].role !== "system") return "";
 
-  if (!Array.isArray(run.input) || !run.input.every(isOpenAIMessage)) {
-    return "";
-  }
-
-  if (run.input[0].role !== "system") {
-    return "";
-  }
-
-  systemGuidelines = run.input[0].content;
-
+  const systemGuidelines = run.input[0].content;
   const answer = lastMsg(run.output);
+  if (!answer) return "";
 
-  const template = await lunary.renderTemplate("guidelines", {
-    guidelines: systemGuidelines,
-    answer,
+  const evalSchema = z.object({
+    result: z.boolean(),
+    reason: z.string(),
   });
 
-  const res = await openai.chat.completions.create(template);
+  const completion = await openai!.responses.parse({
+    model: "gpt-4.1",
+    instructions: `
+You are judging whether an assistant answer fully complies with the provided GUIDELINES.
 
-  const output = res.choices[0]?.message?.content;
+Reply **only** with JSON matching the schema:
+{
+  "result": boolean,   // true if every guideline is followed
+  "reason": string          // short justification
+}
+    `,
+    input: `
+GUIDELINES:
+${systemGuidelines}
 
-  if (!output) {
-    return "";
-  }
+ANSWER:
+${answer}
+    `,
+    text: {
+      format: zodTextFormat(evalSchema, "evaluation"),
+    },
+  });
 
-  const result = output.split("\n")[0].toLowerCase().replace(".", "").trim();
-  const reason = output.split("\n").slice(1).join("\n");
+  if (completion.output_parsed === null)
+    throw new Error("Failed to parse completion");
+
+  const { result, reason } = completion.output_parsed;
 
   return {
-    result: result === "yes",
+    result,
     reason,
   };
 }

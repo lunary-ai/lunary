@@ -27,7 +27,7 @@ export default function ThankYou() {
           </Text>
 
           <Text size="xl">
-            <Anchor href="https://savvycal.com/vince/chat">
+            <Anchor href="https://savvycal.com/lunary/lunary">
               Schedule a call
             </Anchor>{" "}
             with us at any time.

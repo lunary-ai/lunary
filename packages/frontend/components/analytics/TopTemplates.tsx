@@ -4,6 +4,7 @@ import { Box } from "@mantine/core";
 
 interface TopTemplates {
   slug: string;
+  id: number;
   usageCount: number;
   cost: number;
   totalTokens: number;
@@ -17,6 +18,7 @@ export default function TopTemplates({ data }: { data: TopTemplates[] }) {
       <BarList
         data={data?.map((template) => ({
           value: template.slug,
+          url: `/logs?filters=templates=${template.id}`,
           usage: template.usageCount,
           tokens: template.totalTokens,
           cost: template.cost,

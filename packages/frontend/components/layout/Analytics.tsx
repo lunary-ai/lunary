@@ -8,20 +8,6 @@ import posthog from "posthog-js";
 
 import analytics from "@/utils/analytics";
 
-import { Crisp } from "crisp-sdk-web";
-
-class CrispChat extends Component {
-  componentDidMount() {
-    if (process.env.NEXT_PUBLIC_CRISP_ID) {
-      Crisp.configure(process.env.NEXT_PUBLIC_CRISP_ID);
-    }
-  }
-
-  render() {
-    return null;
-  }
-}
-
 export default function AnalyticsWrapper({ children }) {
   const router = useRouter();
 
@@ -36,8 +22,6 @@ export default function AnalyticsWrapper({ children }) {
 
   return (
     <>
-      {process.env.NEXT_PUBLIC_CRISP_ID && <CrispChat />}
-
       {process.env.NEXT_PUBLIC_CUSTOM_SCRIPT && (
         <Script
           id="custom-script"

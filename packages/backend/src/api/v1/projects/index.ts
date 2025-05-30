@@ -24,11 +24,13 @@ projects.get("/", checkAccess("projects", "read"), async (ctx: Context) => {
       exists(select * from run where project_id = p.id) as activated,
       (select api_key from api_key where project_id = p.id and type = 'public') as public_api_key,
       ${hasAccess(userRole, "privateKeys", "read") ? sql`(select api_key from api_key where project_id = p.id and type = 'private') as private_api_key,` : sql``}
-      (select array_agg(project_id) as id from account_project where account_id = ${userId}) as projects
+      (select array_agg(project_id) as id from account_project where account_id = ${userId}) as projects,
+      d.id as home_dashboard_id
     from
       project p
       left join account_project on account_project.account_id = ${userId}
       left join ingestion_rule on p.id = ingestion_rule.project_id
+      left join dashboard d on d.project_id = p.id and d.is_home = true
     where
       org_id = ${orgId}
       and p.id = account_project.project_id

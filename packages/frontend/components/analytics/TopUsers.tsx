@@ -42,6 +42,7 @@ export default function TopUsers({ data }: { data: TopUsers[] }) {
             },
           ],
           ...user,
+          url: `/logs?filters=users=${user.id}`,
         }))}
         columns={[
           {

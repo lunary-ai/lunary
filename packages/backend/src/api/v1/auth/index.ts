@@ -1,9 +1,9 @@
 import { sendVerifyEmail } from "@/src/emails";
+import * as Sentry from "@sentry/bun";
 import { Db } from "@/src/types";
 import config from "@/src/utils/config";
 import sql from "@/src/utils/db";
 import Context from "@/src/utils/koa";
-import { sendSlackMessage } from "@/src/utils/notifications";
 import Router from "koa-router";
 import { z } from "zod";
 import google from "./google";
@@ -87,6 +87,7 @@ auth.post("/signup", async (ctx: Context) => {
   const whitelistedDomainsRes = await sql<
     { domain: string }[]
   >`select domain from _whitelisted_domain`;
+
   const whiteListedDomains = whitelistedDomainsRes.map(({ domain }) => domain);
   const emailDomain = email.split("@")[1];
   const shouldRunRecaptcha =
@@ -173,13 +174,8 @@ auth.post("/signup", async (ctx: Context) => {
       orgId: org.id,
     });
 
-    await sendVerifyEmail(email, name);
-    await sendSlackMessage(
-      signupMethod === "signup"
-        ? `🔔 New signup from ${name} (${email})`
-        : `🔔 ${name} (${email}) joined ${orgName} `,
-      "users",
-    );
+    sendVerifyEmail(email, name);
+
     ctx.body = { token };
 
     return;
@@ -406,6 +402,7 @@ auth.post("/request-password-reset", async (ctx: Context) => {
     await requestPasswordReset(email);
     ctx.body = { ok: true };
   } catch (error) {
+    Sentry.captureException(error);
     console.error(error);
     // Do not send error message to client if email is not found
     ctx.body = { ok: true };
@@ -450,7 +447,10 @@ auth.post("/reset-password", async (ctx: Context) => {
 
 // Used after the SAML flow to exchange the onetime token for an auth token
 auth.post("/exchange-token", async (ctx: Context) => {
-  const { onetimeToken } = ctx.request.body as { onetimeToken: string };
+  const bodySchema = z.object({
+    onetimeToken: z.string()
+  });
+  const { onetimeToken } = bodySchema.parse(ctx.request.body);
 
   await verifyJWT(onetimeToken);
 

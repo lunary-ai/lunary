@@ -8,6 +8,7 @@ import aiSimilarity from "./ai/similarity";
 import rouge from "rouge";
 import { and, or } from "../utils/checks";
 import { CleanRun } from "../utils/ingest";
+import aiSentiment from "./ai/sentiment";
 
 export const isOpenAIMessage = (field: any) =>
   field &&
@@ -185,7 +186,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
         and jsonb_typeof(er2.result->${field}) = 'array'
         and exists (
             select 1
-            from jsonb_array_elements(er2.result->'input') as elem
+            from jsonb_array_elements(er2.result->${field}) as elem
             where elem->>'isoCode' =  any(${sql.array(codes)})
         )
       )
@@ -193,26 +194,44 @@ export const CHECK_RUNNERS: CheckRunner[] = [
     },
   },
   {
-    id: "entities",
-    sql: ({ types }) => {
-      if (!types.length) return sql`true`;
+    id: "pii",
+    sql: ({ containsPii }) => {
+      if (!containsPii) {
+        return sql`true`;
+      }
 
-      return and([
-        sql`e.type = 'pii'`,
-        or(
-          types.map((type: string) => {
-            return sql`EXISTS (
-              SELECT 1
-              FROM jsonb_array_elements(er.result -> 'input') as input_array
-              WHERE input_array @> ${sql.json([{ type }])}
-            ) OR EXISTS (
-              SELECT 1
-              FROM jsonb_array_elements(er.result -> 'output') as output_array
-              WHERE output_array @> ${sql.json([{ type }])}
-            )`;
-          }),
-        ),
-      ]);
+      if (containsPii === "false") {
+        return sql`not (
+          e2.type = 'pii'
+          and (jsonb_typeof(er2.result->'input') = 'array' or jsonb_typeof(er2.result->'output') = 'array')
+          and (
+            exists (
+              select 1
+              from jsonb_array_elements(er2.result->'input') as input_array
+              where input_array[0] is not null
+            ) or exists (
+              select 1
+              from jsonb_array_elements(er2.result->'output') as output_array
+              where output_array[0] is not null
+            )
+          )
+        )`;
+      }
+
+      return sql`(
+        e2.type = 'pii'
+        and (jsonb_typeof(er2.result->'input') = 'array' or jsonb_typeof(er2.result->'output') = 'array')
+        and (exists (
+            select 1
+            from jsonb_array_elements(er2.result->'input') as input_array
+            where input_array[0] is not null
+        ) or exists (
+            select 1
+            from jsonb_array_elements(er2.result->'output') as output_array
+            where output_array[0] is not null
+        ))
+      )
+      `;
     },
   },
   {
@@ -242,10 +261,55 @@ export const CHECK_RUNNERS: CheckRunner[] = [
         ]),
       ]);
     },
+    async evaluator(run, params) {
+      const { field, sentiment } = params;
+
+      const score = await aiSentiment(lastMsg(run[field]));
+
+      let passed = false;
+
+      if (sentiment === "positive") {
+        passed = score >= 0.7;
+      } else if (sentiment === "negative") {
+        passed = score <= 0.4;
+      } else {
+        passed = score >= 0.4 && score <= 0.7;
+      }
+
+      return {
+        passed,
+        reason: `Sentiment score: ${score}`,
+        details: { sentiment: score },
+      };
+    },
+  },
+  {
+    id: "toxicity",
+    sql: ({ field, type }) => {
+      // if (!["toxic", "non-toxic"].includes(type)) return sql`true`;
+
+      const column = field === "input" ? "rt.toxic_input" : "rt.toxic_output";
+
+      return sql`(rt.toxic_input is true)`;
+      // return sql`(${sql.unsafe(column)} = ${type === "toxic" ? true : false})`;
+    },
   },
   {
     id: "topics",
-    sql: ({ topics }) => sql`(topics.topics =  ${sql.json(topics)})`,
+    sql: ({ field, topics }) => {
+      if (!topics || !topics.length) return sql`true`;
+
+      return sql`(
+        e2.type = 'topics'
+        and jsonb_typeof(er2.result->${field}) = 'array'
+        and exists (
+            select 1
+            from jsonb_array_elements(er2.result->${field}) as elem
+            where elem[0]->>'topic' =  any(${sql.array(topics)})
+        )
+      )
+      `;
+    },
   },
   {
     id: "users",
@@ -377,7 +441,7 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   {
     id: "length",
     sql: ({ field, operator, length }) =>
-      sql`length(${sql(field + "_text")}) ${postgresOperators(operator)} ${length}`,
+      sql`length(${sql(field)}::text) ${postgresOperators(operator)} ${length}`,
   },
   {
     id: "date",
@@ -393,12 +457,12 @@ export const CHECK_RUNNERS: CheckRunner[] = [
   {
     id: "duration",
     sql: ({ operator, duration }) =>
-      sql`duration ${postgresOperators(operator)} ${duration} * interval '1 second'`,
+      sql`r.duration ${postgresOperators(operator)} ${duration} * interval '1 second'`,
   },
   {
     id: "cost",
     sql: ({ operator, cost }) =>
-      sql`cost ${postgresOperators(operator)} ${cost}`,
+      sql`r.cost ${postgresOperators(operator)} ${cost}`,
   },
   {
     id: "tokens",
@@ -476,30 +540,6 @@ export const CHECK_RUNNERS: CheckRunner[] = [
       };
     },
   },
-  // {
-  //   id: "sentiment",
-  //   async evaluator(run, params) {
-  //     const { field, sentiment } = params
-
-  //     const score = await aiSentiment(lastMsg(run[field]))
-
-  //     let passed = false
-
-  //     if (sentiment === "positive") {
-  //       passed = score >= 0.7
-  //     } else if (sentiment === "negative") {
-  //       passed = score <= 0.4
-  //     } else {
-  //       passed = score >= 0.4 && score <= 0.7
-  //     }
-
-  //     return {
-  //       passed,
-  //       reason: `Sentiment score: ${score}`,
-  //       details: { sentiment: score },
-  //     }
-  //   },
-  // },
   {
     id: "tone",
     async evaluator(run, params) {

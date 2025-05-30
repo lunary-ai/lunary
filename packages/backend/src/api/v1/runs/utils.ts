@@ -74,7 +74,6 @@ export async function refreshCosts(
       where run.id = (update_data.id)::uuid
       returning run.id, run.cost
     `;
-    console.log("Updated rows:", res.length);
   }
 }
 
@@ -118,7 +117,6 @@ export async function refreshCostsJob(
       and r.created_at <= ${now}
   `;
 
-  console.log(totalRuns);
   while (true) {
     const runs = await sql`
       select

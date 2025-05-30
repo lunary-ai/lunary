@@ -1,15 +1,15 @@
 import sql from "@/src/utils/db";
 import Context from "@/src/utils/koa";
+import * as argon2 from "argon2";
 import * as jose from "jose";
 import { SignJWT } from "jose";
 import { Next } from "koa";
-import * as argon2 from "argon2";
 
-import bcrypt from "bcrypt";
-import { validateUUID } from "@/src/utils/misc";
-import { sendEmail, RESET_PASSWORD } from "@/src/emails";
-import { JWTExpired } from "jose/errors";
+import { RESET_PASSWORD, sendEmail } from "@/src/emails";
 import config from "@/src/utils/config";
+import { validateUUID } from "@/src/utils/misc";
+import bcrypt from "bcrypt";
+import { JWSInvalid, JWTExpired } from "jose/errors";
 
 export function sanitizeEmail(email: string) {
   return email.toLowerCase().trim();
@@ -140,8 +140,6 @@ async function checkApiKey(ctx: Context, key: string) {
 }
 
 export async function authMiddleware(ctx: Context, next: Next) {
-  ctx.state.projectId = ctx.request?.query?.projectId as string;
-
   const isPublicRoute = publicRoutes.some((route) =>
     typeof route === "string" ? route === ctx.path : route.test(ctx.path),
   );
@@ -172,12 +170,12 @@ export async function authMiddleware(ctx: Context, next: Next) {
       ctx.state.privateKey = true;
     }
   } else {
-    // Check if JWT is valid
     try {
       if (!bearer) {
         throw new Error("No bearer token provided.");
       }
       const { payload } = await verifyJWT<SessionData>(key);
+      ctx.state.projectId = ctx.request?.query?.projectId as string;
       ctx.state.userId = payload.userId;
       ctx.state.orgId = payload.orgId;
 
@@ -196,15 +194,27 @@ export async function authMiddleware(ctx: Context, next: Next) {
         `;
 
         if (!project) {
-          throw new Error("Project not found");
+          throw new Error("Unauthorized access to project");
         }
       }
     } catch (error) {
-      console.error(error);
       if (error instanceof JWTExpired) {
         ctx.throw(401, "Session expired");
       }
-      ctx.throw(401, "Invalid access token");
+
+      if (error instanceof JWSInvalid) {
+        console.error("Invalid access token");
+        ctx.status = 401;
+        ctx.body = { message: "Invalid access token" };
+        return;
+      }
+
+      if (error?.message === "Unauthorized access to project") {
+        ctx.status = 401;
+        ctx.body = { message: "Unauthorized access to project" };
+        return;
+      }
+      return;
     }
   }
 

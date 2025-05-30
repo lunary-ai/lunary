@@ -16,11 +16,13 @@ import {
   Group,
   Loader,
   Menu,
+  Select,
   Stack,
   Text,
 } from "@mantine/core";
 
 import {
+  toxicityColumn,
   costColumn,
   durationColumn,
   enrichmentColumn,
@@ -29,6 +31,7 @@ import {
   nameColumn,
   outputColumn,
   scoresColumn,
+  selectColumn,
   tagsColumn,
   templateColumn,
   timeColumn,
@@ -38,8 +41,10 @@ import {
 import {
   IconBraces,
   IconBrandOpenai,
+  IconCheck,
   IconDotsVertical,
   IconFileExport,
+  IconPencil,
   IconStack2,
   IconStackPop,
   IconTrash,
@@ -57,6 +62,8 @@ import { openUpgrade } from "@/components/layout/UpgradeModal";
 
 import analytics from "@/utils/analytics";
 import {
+  useDatasets,
+  useDeleteRunById,
   useOrg,
   useProject,
   useProjectInfiniteSWR,
@@ -64,6 +71,7 @@ import {
   useUser,
 } from "@/utils/dataHooks";
 import { buildUrl, fetcher } from "@/utils/fetcher";
+import errorHandler from "@/utils/errors";
 import { formatDateTime } from "@/utils/format";
 
 import { ProjectContext } from "@/utils/context";
@@ -77,9 +85,9 @@ import { VisibilityState } from "@tanstack/react-table";
 import { useRouter } from "next/router";
 
 import IconPicker from "@/components/blocks/IconPicker";
-import { useEnrichers } from "@/utils/dataHooks/evaluators";
 import { useSortParams } from "@/utils/hooks";
 import { deserializeLogic, serializeLogic } from "shared";
+import { useEvaluators } from "@/utils/dataHooks/evaluators";
 
 export const defaultColumns = {
   llm: [
@@ -96,7 +104,7 @@ export const defaultColumns = {
       accessorFn: (row) => row.tokens.total,
     },
     costColumn(),
-    inputColumn("Prompt"),
+    inputColumn("Input"),
     outputColumn("Result"),
     tagsColumn(),
     feedbackColumn("llm"),
@@ -110,8 +118,7 @@ export const defaultColumns = {
     feedbackColumn("traces"),
     tagsColumn(),
     inputColumn("Input"),
-    outputColumn(),
-    scoresColumn(),
+    outputColumn("Output"),
   ],
   thread: [
     timeColumn("createdAt", "Started at"),
@@ -135,7 +142,10 @@ export const CHECKS_BY_TYPE = {
     "feedback",
     "cost",
     "duration",
+    "topics",
     "tokens",
+    "toxicity",
+    "pii",
   ],
   trace: [
     "date",
@@ -218,6 +228,10 @@ export default function Logs() {
     parser.withDefault(DEFAULT_CHECK).withOptions({ clearOnDefault: true }),
   );
 
+  const { deleteRun: deleteRunById } = useDeleteRunById();
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedRows, setSelectedRows] = useState([]);
+
   const { sortParams } = useSortParams();
 
   const {
@@ -232,7 +246,7 @@ export default function Logs() {
     return serializeLogic(checksWithType);
   }, [checks, type, view]);
 
-  const { enrichers: evaluators } = useEnrichers();
+  const { evaluators } = useEvaluators();
 
   const [query, setQuery] = useDebouncedState<string | null>(null, 300);
 
@@ -242,7 +256,11 @@ export default function Logs() {
     isValidating: runsValidating,
     loadMore,
     mutate: mutateLogs,
-  } = useProjectInfiniteSWR(`/runs?${serializedChecks}${sortParams}`);
+  } = useProjectInfiniteSWR(`/runs?${serializedChecks}${sortParams}`, {
+    refreshInterval: 1000,
+  });
+
+  const { datasets, insertPrompts } = useDatasets();
 
   useEffect(() => {
     if (shouldMutate) {
@@ -261,27 +279,48 @@ export default function Logs() {
     return <Loader />;
   }
 
-  useEffect(() => {
-    const newColumns = { ...allColumns };
+  const sameCols = (a, b) =>
+    a.length === b.length && a.every((c, i) => c.id === b[i].id);
 
-    if (type === "llm") {
-      newColumns.llm = newColumns.llm.filter(
+  useEffect(() => {
+    setAllColumns((prev) => {
+      const next: typeof prev = { ...prev, llm: [...prev.llm] };
+
+      next.llm = next.llm.filter(
         (col) =>
-          !(col.accessorKey && col.accessorKey.startsWith("enrichment-")),
+          !(type === "llm" && col.accessorKey?.startsWith("enrichment-")),
       );
 
-      if (Array.isArray(evaluators)) {
-        for (const evaluator of evaluators) {
-          const id = "enrichment-" + evaluator.id;
-          newColumns.llm.push(
-            enrichmentColumn(evaluator.name, evaluator.id, evaluator.type),
-          );
+      if (type === "llm") {
+        if (Array.isArray(evaluators)) {
+          evaluators.forEach((ev) => {
+            next.llm.push(
+              ev.type === "toxicity"
+                ? toxicityColumn(ev.id)
+                : enrichmentColumn(ev.name, ev.id, ev.type),
+            );
+          });
         }
+      } else if (next.llm[0]?.id === "select") {
+        next.llm.shift();
       }
-    }
 
-    setAllColumns(newColumns);
-  }, [type, evaluators]);
+      return sameCols(prev.llm, next.llm) ? prev : next;
+    });
+  }, [type, evaluators, isSelectMode, setAllColumns]);
+
+  useEffect(() => {
+    setAllColumns((prev) => {
+      const next: typeof prev = { ...prev, [type]: [...prev[type]] };
+
+      if (isSelectMode) {
+        next[type].unshift(selectColumn());
+      } else {
+        next[type] = next[type].filter((col) => col.id !== "select");
+      }
+      return sameCols(prev[type], next[type]) ? prev : next;
+    });
+  }, [isSelectMode, type, setAllColumns]);
 
   useEffect(() => {
     if (selectedRun && selectedRun.projectId !== projectId) {
@@ -318,6 +357,10 @@ export default function Logs() {
     setChecks(view.data || []);
     setVisibleColumns(view.columns);
   }, [view, viewId]);
+
+  useEffect(() => {
+    setIsSelectMode(false);
+  }, [type]);
 
   function exportButton({ serializedChecks, projectId, type, format }) {
     return {
@@ -404,6 +447,32 @@ export default function Logs() {
     }
   }
 
+  function openBulkDeleteModal() {
+    modals.openConfirmModal({
+      title: "Delete Logs",
+      confirmProps: { color: "red" },
+      children: (
+        <Text size="sm">
+          Are you sure you want to delete the selected {selectedRows.length}{" "}
+          rows? This action cannot be undone.
+        </Text>
+      ),
+      labels: { confirm: "Confirm", cancel: "Cancel" },
+      onConfirm: async () => {
+        await Promise.all(selectedRows.map((id) => deleteRunById(id)));
+        setIsSelectMode(false);
+        setShouldMutate(true);
+
+        notifications.show({
+          title: "Resources deleted successfully",
+          message: "",
+          icon: <IconCheck />,
+          color: "green",
+        });
+      },
+    });
+  }
+
   // Show button if column changed or view has changes, or it's not a view
   const showSaveView = useMemo(
     () =>
@@ -447,6 +516,15 @@ export default function Logs() {
                   </ActionIcon>
                 </Menu.Target>
                 <Menu.Dropdown>
+                  <Menu.Item
+                    data-testid="export-openai-jsonl-button"
+                    color="dimmed"
+                    leftSection={<IconPencil size={16} />}
+                    onClick={() => setIsSelectMode((prev) => !prev)}
+                  >
+                    {!isSelectMode ? "Select Mode" : "Exit Select Mode"}
+                  </Menu.Item>
+
                   <Menu.Item
                     data-testid="export-csv-button"
                     leftSection={<IconFileExport size={16} />}
@@ -551,17 +629,64 @@ export default function Logs() {
               restrictTo={(f) => CHECKS_BY_TYPE[type].includes(f.id)}
             />
           </Group>
-          {!!showSaveView && (
-            <Button
-              leftSection={<IconStack2 size={16} />}
-              size="xs"
-              onClick={() => saveView()}
-              variant="default"
-              loading={isInsertingView}
-            >
-              Save View
-            </Button>
-          )}
+          <Group>
+            {!!showSaveView && (
+              <Button
+                leftSection={<IconStack2 size={16} />}
+                size="xs"
+                onClick={() => saveView()}
+                variant="default"
+                loading={isInsertingView}
+              >
+                Save View
+              </Button>
+            )}
+
+            {isSelectMode && (
+              <Group>
+                {type === "llm" && (
+                  <Select
+                    searchable
+                    size="xs"
+                    placeholder={
+                      datasets.length === 0 ? "No datasets" : "Add to dataset"
+                    }
+                    w={160}
+                    data={datasets?.map((d) => ({
+                      label: d.slug,
+                      value: d.id,
+                    }))}
+                    disabled={
+                      selectedRows.length === 0 || datasets.length === 0
+                    }
+                    onChange={async (datasetId) => {
+                      if (selectedRows.length === 0) return;
+
+                      await insertPrompts({
+                        datasetId: datasetId,
+                        runIds: selectedRows,
+                      });
+                      setIsSelectMode(false);
+                      notifications.show({
+                        title: "The runs has been added to the dataset",
+                        message: "",
+                        icon: <IconCheck />,
+                        color: "green",
+                      });
+                    }}
+                  />
+                )}
+                <Button
+                  size="xs"
+                  color="red"
+                  disabled={selectedRows.length === 0}
+                  onClick={openBulkDeleteModal}
+                >
+                  Delete selection
+                </Button>
+              </Group>
+            )}
+          </Group>
         </Group>
       </Stack>
 
@@ -602,41 +727,54 @@ export default function Logs() {
       <DataTable
         type={type}
         onRowClicked={(row, event) => {
+          const rowData = row.original;
           const isSecondaryClick =
             event.metaKey || event.ctrlKey || event.button === 1;
 
-          if (["agent", "chain"].includes(row.type)) {
+          if (["agent", "chain"].includes(rowData.type) && !isSelectMode) {
             analytics.trackOnce("OpenTrace");
 
             if (!isSecondaryClick) {
               router.push({
-                pathname: `/traces/${row.id}`,
+                pathname: `/traces/${rowData.id}`,
                 query: { checks: serializedChecks, sortParams },
               });
             } else {
               window.open(
-                `/traces/${row.id}?checks=${serializedChecks}&sortParams=${sortParams}`,
+                `/traces/${rowData.id}?checks=${serializedChecks}&sortParams=${sortParams}`,
                 "_blank",
               );
             }
           } else {
-            analytics.trackOnce("OpenRun");
-            setSelectedRunId(row.id);
+            if (isSelectMode) {
+              row.toggleSelected();
+            } else {
+              analytics.trackOnce("OpenRun");
+              setSelectedRunId(rowData.id);
+            }
           }
         }}
         key={allColumns[type].length}
         loading={runsLoading || runsValidating}
         loadMore={loadMore}
+        isSelectMode={isSelectMode}
         availableColumns={allColumns[type]}
         visibleColumns={visibleColumns}
         setVisibleColumns={(newState) => {
-          setVisibleColumns((prev) => ({
-            ...prev,
-            ...newState,
-          }));
-          setColumnsTouched(true);
+          const next = { ...visibleColumns, ...newState };
+
+          const hasMeaningfulChange = Object.keys(next).some(
+            (key) => key !== "select" && next[key] !== visibleColumns[key],
+          );
+
+          setVisibleColumns((prev) => ({ ...prev, ...newState }));
+
+          if (hasMeaningfulChange) {
+            setColumnsTouched(true);
+          }
         }}
         data={logs}
+        setSelectedRows={setSelectedRows}
       />
     </Stack>
   );

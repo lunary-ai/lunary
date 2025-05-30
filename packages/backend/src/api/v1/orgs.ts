@@ -10,6 +10,7 @@ import { PassThrough } from "stream";
 
 import { handleStream, runAImodel } from "@/src/utils/playground";
 import { checkAccess } from "@/src/utils/authorization";
+import * as Sentry from "@sentry/bun";
 
 const orgs = new Router({
   prefix: "/orgs/:orgId",
@@ -104,11 +105,10 @@ orgs.get("/billing-portal", async (ctx: Context) => {
 orgs.post("/upgrade", async (ctx: Context) => {
   const orgId = ctx.state.orgId as string;
 
-  const { origin } = ctx.request.body as {
-    // plan: string
-    // period: string
-    origin: string;
-  };
+  const bodySchema = z.object({
+    origin: z.string()
+  });
+  const { origin } = bodySchema.parse(ctx.request.body);
 
   const plan = "team";
 
@@ -255,6 +255,7 @@ orgs.post(
         ctx.status = 500;
         ctx.body = { message: "An unexpected error occurred" };
         console.error(error);
+        Sentry.captureException(error);
         stream.end();
       },
     );

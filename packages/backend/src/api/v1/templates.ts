@@ -9,6 +9,7 @@ import { z } from "zod";
 import { unCamelExtras } from "./template-versions";
 import { hasAccess } from "shared";
 
+// TODO: to remove to "prompts"
 const templates = new Router({
   prefix: "/templates",
 });
@@ -44,11 +45,9 @@ templates.get("/", async (ctx: Context) => {
       t.project_id = ${ctx.state.projectId}
     group by 
       t.id, 
-      t.name, 
       t.slug, 
       t.mode, 
       t.created_at, 
-      t.group, 
       t.project_id
     order by 
       t.created_at desc
@@ -243,8 +242,12 @@ templates.post("/", checkAccess("prompts", "create"), async (ctx: Context) => {
  *         description: Template not found
  */
 templates.get("/:id", async (ctx: Context) => {
+  const paramsSchema = z.object({
+    id: z.string()
+  });
+  const { id } = paramsSchema.parse(ctx.params);
   const [template] = await sql`
-    select * from template where project_id = ${ctx.state.projectId} and id = ${ctx.params.id}
+    select * from template where project_id = ${ctx.state.projectId} and id = ${id}
   `;
 
   if (!template) return ctx.throw(404, "Template not found");
@@ -279,7 +282,11 @@ templates.delete(
   "/:id",
   checkAccess("prompts", "delete"),
   async (ctx: Context) => {
-    await sql`delete from template where project_id = ${ctx.state.projectId} and id = ${ctx.params.id}`;
+    const paramsSchema = z.object({
+      id: z.string()
+    });
+    const { id } = paramsSchema.parse(ctx.params);
+    await sql`delete from template where project_id = ${ctx.state.projectId} and id = ${id}`;
     ctx.status = 204;
   },
 );
@@ -354,6 +361,10 @@ templates.patch(
     });
 
     const { slug, mode } = bodySchema.parse(ctx.request.body);
+    const paramsSchema = z.object({
+      id: z.string()
+    });
+    const { id } = paramsSchema.parse(ctx.params);
 
     const [template] = await sql`
     update template set ${sql(
@@ -362,14 +373,14 @@ templates.patch(
         mode,
       }),
     )}
-    where project_id = ${ctx.state.projectId} and id = ${ctx.params.id} returning *`;
+    where project_id = ${ctx.state.projectId} and id = ${id} returning *`;
 
     if (!template) {
       ctx.throw(404, "Template not found");
     }
 
     const versions =
-      await sql`select * from template_version where template_id = ${ctx.params.id} order by version desc`;
+      await sql`select * from template_version where template_id = ${id} order by version desc`;
 
     ctx.body = {
       ...template,
@@ -457,6 +468,10 @@ templates.post("/:id/versions", async (ctx: Context) => {
     return;
   }
 
+  if (extra.model && typeof extra.model === "object") {
+    extra.model = extra.model.name;
+  }
+
   const [template] =
     await sql`select id from template where id = ${templateId} and project_id = ${projectId}
     `;
@@ -495,6 +510,13 @@ templates.post("/:id/versions", async (ctx: Context) => {
  *           type: string
  *         content:
  *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               role:
+ *                 type: string
+ *               content:
+ *                 type: string
  *         extra:
  *           type: object
  *         testValues:
@@ -545,6 +567,13 @@ templates.post("/:id/versions", async (ctx: Context) => {
  *           enum: ["text", "openai"]
  *         content:
  *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               role:
+ *                 type: string
+ *               content:
+ *                 type: string
  *         extra:
  *           type: object
  *         testValues:
@@ -569,6 +598,13 @@ templates.post("/:id/versions", async (ctx: Context) => {
  *       properties:
  *         content:
  *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               role:
+ *                 type: string
+ *               content:
+ *                 type: string
  *         extra:
  *           type: object
  *         testValues:

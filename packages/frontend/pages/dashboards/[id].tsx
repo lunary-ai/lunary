@@ -1,13 +1,13 @@
 import AnalyticsCard from "@/components/analytics/AnalyticsCard";
 import ChartComponent from "@/components/analytics/Charts/ChartComponent";
 import DashboardModal from "@/components/analytics/DashboardModal";
+import deepEqual from "fast-deep-equal";
 import DateRangeGranularityPicker, {
   useDateRangeGranularity,
 } from "@/components/analytics/DateRangeGranularityPicker";
 import ErrorBoundary from "@/components/blocks/ErrorBoundary";
 import RenamableField from "@/components/blocks/RenamableField";
 import CheckPicker from "@/components/checks/Picker";
-import { useOrg } from "@/utils/dataHooks";
 import {
   useCustomCharts,
   useDashboard,
@@ -23,11 +23,16 @@ import {
   Loader,
   Menu,
   Stack,
+  Textarea,
+  TextInput,
+  Title,
+  SegmentedControl,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconDotsVertical,
   IconHome2,
+  IconPinnedFilled,
   IconPlus,
   IconSettings,
   IconTrash,
@@ -36,24 +41,52 @@ import { useRouter } from "next/router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { Chart, DEFAULT_CHARTS, LogicNode } from "shared";
-import { mutate } from "swr";
+
+function serialiseDashboardState({
+  checks,
+  startDate,
+  endDate,
+  granularity,
+  charts,
+}: {
+  checks: LogicNode;
+  startDate: Date | string;
+  endDate: Date | string;
+  granularity: string | null;
+  charts: ChartWithSpan[] | undefined;
+}) {
+  return {
+    checks,
+    start: new Date(startDate).toISOString(),
+    end: new Date(endDate).toISOString(),
+    granularity,
+    charts: (charts ?? [])
+      .map(({ id, span, sortOrder, ...rest }) => ({
+        id,
+        span: span ?? null,
+        sortOrder: sortOrder ?? null,
+        ...rest,
+      }))
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
+  };
+}
 
 function getSpan(index: number) {
-  if ([0, 1, 2].includes(index)) {
-    return 4;
-  }
-
-  if (index === 3) {
-    return 12;
-  }
-
-  return 6;
+  return index < 3 ? 4 : 6;
 }
+
+type ChartWithSpan = Chart & {
+  span?: number;
+  sortOrder?: number;
+  startDate?: string;
+  endDate?: string;
+  granularity?: string;
+  checks?: LogicNode;
+};
 
 export default function Dashboard() {
   const router = useRouter();
   const dashboardId = router.query.id as string;
-  const { org } = useOrg();
 
   const {
     dashboard,
@@ -67,7 +100,7 @@ export default function Dashboard() {
   const { customCharts } = useCustomCharts();
 
   const [checks, setChecks] = useState<LogicNode>(["AND"]);
-  const [charts, setCharts] = useState<Chart[]>([]);
+  const [charts, setCharts] = useState<ChartWithSpan[]>([]);
 
   const { startDate, endDate, setDateRange, granularity, setGranularity } =
     useDateRangeGranularity();
@@ -76,9 +109,15 @@ export default function Dashboard() {
     useDisclosure(false);
 
   const [isEditing, setIsEditing] = useState(false);
+  const [filterIndex, setFilterIndex] = useState<number | null>(null);
 
-  function setChartsWithSortOrder(newCharts: Chart[]) {
-    const orderedCharts = newCharts.map((c, i) => ({ ...c, sortOrder: i }));
+  function setChartsWithSortOrder(newCharts: ChartWithSpan[]) {
+    const orderedCharts = newCharts.map((c, i) => {
+      const defaultSpan = getSpan(i);
+      // first row always one-third; other rows default to half unless manually expanded (span===12)
+      const span = i < 3 ? defaultSpan : c.span === 12 ? 12 : defaultSpan;
+      return { ...c, sortOrder: i, span };
+    });
     setCharts(orderedCharts);
   }
 
@@ -102,81 +141,64 @@ export default function Dashboard() {
     }
   }, [dashboard, dashboardIsLoading]);
 
+  const baselineRef = useRef<ReturnType<typeof serialiseDashboardState> | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (!dashboardIsLoading && dashboard) {
+      const orderedCharts = (dashboard.charts ?? []).map((c, i) => ({
+        ...c,
+        sortOrder: i,
+        span: getSpan(i),
+      }));
+
+      setCharts(orderedCharts); // ① set state
+      setChecks(dashboard.checks);
+
+      if (dashboard.startDate && dashboard.endDate) {
+        setDateRange([
+          new Date(dashboard.startDate),
+          new Date(dashboard.endDate),
+        ]);
+      }
+      if (dashboard.granularity) setGranularity(dashboard.granularity);
+
+      baselineRef.current = serialiseDashboardState({
+        checks: dashboard.checks,
+        startDate: dashboard.startDate ?? startDate,
+        endDate: dashboard.endDate ?? endDate,
+        granularity: dashboard.granularity,
+        charts: orderedCharts,
+      });
+    }
+  }, [dashboardIsLoading, dashboard]);
+
   const isDirty = useMemo(() => {
-    if (!dashboard) return false;
-    const current = {
-      checks,
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
-      granularity,
-      charts,
-    };
-
-    // TODO: startDate and endDate are always different for new dashboards, so the dirty check always returns true
-    // when fixed, put back the alert in the useEffect below
-    const initial = {
-      checks: dashboard.checks,
-      startDate: dashboard.startDate,
-      endDate: dashboard.endDate,
-      granularity: dashboard.granularity,
-      charts: dashboard.charts,
-    };
-    return JSON.stringify(current) !== JSON.stringify(initial);
-  }, [dashboard, checks, startDate, endDate, granularity, charts]);
-  // useEffect(() => {
-  //   const beforeUnload = (e: BeforeUnloadEvent) => {
-  //     if (isDirty) {
-  //       e.preventDefault();
-  //       return "";
-  //     }
-  //   };
-
-  //   const handleRouteChange = (url: string) => {
-  //     if (
-  //       isDirty &&
-  //       !confirm("You have unsaved changes. Do you really want to leave?")
-  //     ) {
-  //       router.events.emit("routeChangeError");
-  //       throw "Route change aborted by user";
-  //     }
-  //   };
-
-  //   if (isDirty) {
-  //     window.addEventListener("beforeunload", beforeUnload);
-  //     router.events.on("routeChangeStart", handleRouteChange);
-  //   }
-
-  //   return () => {
-  //     window.removeEventListener("beforeunload", beforeUnload);
-  //     router.events.off("routeChangeStart", handleRouteChange);
-  //   };
-  // }, [isDirty, router.events]);
-
-  if (dashboardIsLoading || !dashboard) {
-    return (
-      <Flex align="center" justify="center" h="280px">
-        <Loader />
-      </Flex>
+    if (!baselineRef.current) return false;
+    return !deepEqual(
+      baselineRef.current,
+      serialiseDashboardState({
+        checks,
+        startDate,
+        endDate,
+        granularity,
+        charts,
+      }),
     );
-  }
+  }, [checks, startDate, endDate, granularity, charts]);
 
-  function saveDashboard() {
-    updateDashboard({
+  async function saveDashboard() {
+    const payload = {
       checks,
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
       granularity,
       charts,
-    });
-  }
+    };
 
-  function handleDrop(dragIndex: number, dropIndex: number) {
-    const newCharts = structuredClone(charts);
-    [newCharts[dragIndex], newCharts[dropIndex]] = [
-      newCharts[dropIndex],
-      newCharts[dragIndex],
-    ];
-    setChartsWithSortOrder(newCharts);
+    await updateDashboard(payload);
+    baselineRef.current = serialiseDashboardState(payload); // reset baseline
   }
 
   function handleRemoveChart(index: number) {
@@ -191,22 +213,22 @@ export default function Dashboard() {
     for (const id of selectedChartIds) {
       const base = DEFAULT_CHARTS[id];
       if (base && !existingIds.has(id)) {
-        const newChart: Chart = {
+        const newChart = {
           id,
           name: base.name,
           description: base.description,
           type: base.type,
           dataKey: base.dataKey,
           aggregationMethod: base.aggregationMethod || null,
-          primaryDimension: base.primaryDimension || null,
-          secondaryDimension: base.secondaryDimension || null,
+          primaryDimension: null,
+          secondaryDimension: null,
           isCustom: false,
-        };
+        } as ChartWithSpan;
         finalCharts.push(newChart);
       } else {
         const customChart = customCharts.find((cc) => cc.id === id);
         if (customChart && !existingIds.has(customChart.id)) {
-          const newChart: Chart = {
+          const newChart = {
             id: customChart.id,
             name: customChart.name,
             description: customChart.description,
@@ -216,13 +238,9 @@ export default function Dashboard() {
             primaryDimension: customChart.primaryDimension,
             secondaryDimension: customChart.secondaryDimension,
             isCustom: true,
-            customChartId: customChart.id,
             color: customChart.color,
-            startDate: customChart.startDate,
-            endDate: customChart.endDate,
-            granularity: customChart.granularity,
-            checks: customChart.checks,
-          };
+            // optional timeline and filter properties omitted for custom charts
+          } as ChartWithSpan;
           finalCharts.push(newChart);
         }
       }
@@ -230,6 +248,65 @@ export default function Dashboard() {
 
     setChartsWithSortOrder(finalCharts);
     closeModal();
+  }
+
+  function handleResize(index: number) {
+    // first row always one-third, skip resize for indices 0-2
+    if (index < 3) {
+      return;
+    }
+    const spans = [6, 12];
+    const newCharts = structuredClone(charts);
+    const current = newCharts[index].span ?? getSpan(index);
+    const next = spans[(spans.indexOf(current as number) + 1) % spans.length];
+    newCharts[index].span = next;
+    setChartsWithSortOrder(newCharts);
+  }
+
+  // Handle chart-level filter changes
+  function handleChartChecksChange(index: number, newChecks: LogicNode) {
+    const newCharts = structuredClone(charts);
+    newCharts[index].checks = newChecks;
+    setChartsWithSortOrder(newCharts);
+  }
+
+  // add handlers for editing chart name and description
+  function handleChartRename(index: number, newName: string) {
+    const newCharts = structuredClone(charts);
+    newCharts[index].name = newName;
+    setChartsWithSortOrder(newCharts);
+  }
+
+  function handleChartDescriptionChange(index: number, newDescription: string) {
+    const newCharts = structuredClone(charts);
+    newCharts[index].description = newDescription;
+    setChartsWithSortOrder(newCharts);
+  }
+
+  function handleChartTypeChange(index: number, newType: string) {
+    const newCharts = structuredClone(charts);
+    newCharts[index].type = newType;
+    setChartsWithSortOrder(newCharts);
+  }
+
+  function handleFilter(index: number) {
+    setFilterIndex((prev) => (prev === index ? null : index));
+  }
+
+  // Handle drag-and-drop reordering
+  function handleDrop(dragIndex: number, dropIndex: number) {
+    const newCharts = structuredClone(charts);
+    const [moved] = newCharts.splice(dragIndex, 1);
+    newCharts.splice(dropIndex, 0, moved);
+    setChartsWithSortOrder(newCharts);
+  }
+
+  if (dashboardIsLoading || !dashboard) {
+    return (
+      <Flex align="center" justify="center" h="280px">
+        <Loader />
+      </Flex>
+    );
   }
 
   return (
@@ -253,10 +330,11 @@ export default function Dashboard() {
           <Group justify="space-between">
             <Group>
               <Group gap="xs">
-                {dashboard.isHome && <IconHome2 stroke="2px" size={22} />}
                 <RenamableField
+                  order={4}
                   defaultValue={dashboard.name}
                   onRename={(newName) => updateDashboard({ name: newName })}
+                  hidePencil={true}
                 />
 
                 <Menu position="bottom-end">
@@ -267,7 +345,7 @@ export default function Dashboard() {
                   </Menu.Target>
                   <Menu.Dropdown>
                     <Menu.Item
-                      leftSection={<IconHome2 size={16} />}
+                      leftSection={<IconPinnedFilled size={16} />}
                       disabled={dashboard.isHome}
                       onClick={() => updateDashboard({ isHome: true })}
                     >
@@ -313,7 +391,10 @@ export default function Dashboard() {
               <Button
                 variant={isEditing ? "filled" : "default"}
                 leftSection={isEditing ? null : <IconSettings size="18px" />}
-                onClick={() => setIsEditing(!isEditing)}
+                onClick={() => {
+                  if (isEditing) setFilterIndex(null);
+                  setIsEditing(!isEditing);
+                }}
               >
                 {isEditing ? "Done" : "Edit"}
               </Button>
@@ -339,7 +420,18 @@ export default function Dashboard() {
                 value={checks}
                 onChange={setChecks}
                 restrictTo={(filter) =>
-                  ["models", "tags", "users", "metadata"].includes(filter.id)
+                  [
+                    "models",
+                    "tags",
+                    "users",
+                    "metadata",
+                    "status",
+                    "metadata",
+                    "feedback",
+                    "cost",
+                    "duration",
+                    "template",
+                  ].includes(filter.id)
                 }
               />
             </Group>
@@ -358,39 +450,136 @@ export default function Dashboard() {
         >
           <Grid>
             {charts.map((chart, index) => (
-              <Grid.Col span={getSpan(index)} key={chart.id} h="350px">
+              <Grid.Col span={chart.span} key={chart.id} h="350px">
                 <ErrorBoundary>
                   <Droppable
                     index={index}
                     onDrop={handleDrop}
-                    scrollContainerRef={scrollableContainerRef}
+                    scrollContainerRef={
+                      scrollableContainerRef as React.RefObject<HTMLDivElement | null>
+                    }
                   >
                     <Draggable index={index} isEditing={isEditing}>
                       <AnalyticsCard
                         title={chart.name}
                         description={chart.description}
                         isEditing={isEditing}
+                        // only allow resize on rows beyond first with dynamic tooltip
+                        {...(isEditing && index >= 3
+                          ? {
+                              onResize: () => handleResize(index),
+                              resizeLabel:
+                                chart.span === 6
+                                  ? "Expand to full width"
+                                  : "Shrink to half width",
+                            }
+                          : {})}
                         onDelete={() => handleRemoveChart(index)}
+                        filterCount={
+                          Array.isArray(chart.checks)
+                            ? chart.checks.length > 1
+                              ? chart.checks.length - 1
+                              : 0
+                            : 0
+                        }
+                        onFilter={
+                          isEditing ? () => handleFilter(index) : undefined
+                        }
+                        filterLabel="Edit Chart"
                       >
-                        <ChartComponent
-                          id={chart.id}
-                          dataKey={chart.dataKey}
-                          startDate={new Date(chart.startDate || startDate)}
-                          endDate={new Date(chart.endDate || endDate)}
-                          granularity={chart.granularity || granularity}
-                          checks={[
-                            ...(Array.isArray(chart.checks)
-                              ? chart.checks
-                              : []),
-                            ...checks,
-                          ]}
-                          color={chart.color}
-                          aggregationMethod={chart.aggregationMethod}
-                          isCustom={chart.isCustom}
-                          primaryDimension={chart.primaryDimension}
-                          secondaryDimension={chart.secondaryDimension}
-                          chart={chart}
-                        />
+                        {filterIndex === index ? (
+                          <Box style={{ padding: "1rem", overflow: "scroll" }}>
+                            <TextInput
+                              label="Name"
+                              value={chart.name ?? ""}
+                              onChange={(e) =>
+                                handleChartRename(index, e.currentTarget.value)
+                              }
+                              mb="md"
+                            />
+                            <TextInput
+                              label="Description"
+                              value={chart.description ?? ""}
+                              onChange={(e) =>
+                                handleChartDescriptionChange(
+                                  index,
+                                  e.currentTarget.value,
+                                )
+                              }
+                              mb="md"
+                            />
+                            {chart.type !== "Top" && (
+                              <>
+                                <Title order={5} mb="xs">
+                                  Chart Type
+                                </Title>
+                                <SegmentedControl
+                                  fullWidth
+                                  value={chart.type}
+                                  onChange={(value) =>
+                                    handleChartTypeChange(index, value)
+                                  }
+                                  data={[
+                                    { label: "Bar", value: "Bar" },
+                                    { label: "Area", value: "Area" },
+                                  ]}
+                                  mb="md"
+                                />
+                              </>
+                            )}
+                            <Title order={5} mb="xs">
+                              Filters
+                            </Title>
+                            <CheckPicker
+                              minimal
+                              value={
+                                Array.isArray(chart.checks) &&
+                                chart.checks.length > 0
+                                  ? (chart.checks as LogicNode)
+                                  : ["AND"]
+                              }
+                              onChange={(newChecks) =>
+                                handleChartChecksChange(index, newChecks)
+                              }
+                              restrictTo={(filter) =>
+                                [
+                                  "models",
+                                  "tags",
+                                  "users",
+                                  "metadata",
+                                  "status",
+                                  "feedback",
+                                  "cost",
+                                  "duration",
+                                  "template",
+                                ].includes(filter.id)
+                              }
+                            />
+                          </Box>
+                        ) : (
+                          <ChartComponent
+                            id={chart.id}
+                            dataKey={chart.dataKey}
+                            startDate={new Date(chart.startDate || startDate)}
+                            endDate={new Date(chart.endDate || endDate)}
+                            granularity={
+                              (chart.granularity as typeof granularity) ||
+                              granularity
+                            }
+                            checks={
+                              Array.isArray(chart.checks) &&
+                              chart.checks.length > 0
+                                ? ["OR", chart.checks, checks]
+                                : checks
+                            }
+                            color={chart.color}
+                            aggregationMethod={chart.aggregationMethod}
+                            isCustom={chart.isCustom}
+                            primaryDimension={chart.primaryDimension}
+                            secondaryDimension={chart.secondaryDimension}
+                            chart={chart}
+                          />
+                        )}
                       </AnalyticsCard>
                     </Draggable>
                   </Droppable>
@@ -434,7 +623,7 @@ function Draggable({
 
   return (
     <Box
-      ref={drag}
+      ref={drag as any}
       style={{
         height: "100%",
         opacity: isDragging ? 0.5 : 1,
@@ -455,7 +644,7 @@ function Droppable({
   children: React.ReactNode;
   onDrop: (dragIndex: number, dropIndex: number) => void;
   index: number;
-  scrollContainerRef: React.RefObject<HTMLDivElement>;
+  scrollContainerRef: React.RefObject<HTMLDivElement | null>;
 }) {
   const [{ isOver }, drop] = useDrop(
     () => ({
@@ -485,7 +674,10 @@ function Droppable({
   );
 
   return (
-    <div ref={drop} style={{ height: "100%", opacity: isOver ? 0.4 : 1 }}>
+    <div
+      ref={drop as any}
+      style={{ height: "100%", opacity: isOver ? 0.4 : 1 }}
+    >
       {children}
     </div>
   );

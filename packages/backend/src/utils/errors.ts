@@ -1,6 +1,7 @@
 import { Context, Next } from "koa";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
+import * as Sentry from "@sentry/bun";
 
 export async function errorMiddleware(ctx: Context, next: Next) {
   try {
@@ -10,13 +11,17 @@ export async function errorMiddleware(ctx: Context, next: Next) {
       ctx.throw(404, "Not Found");
     }
   } catch (error: any) {
+    Sentry.captureException(error);
     if (error instanceof z.ZodError) {
       ctx.status = 422;
       ctx.body = { error: "Error", message: fromZodError(error).toString() };
+      console.error(ctx.path);
       console.error("ZOD ERROR", JSON.stringify(error.errors[0]));
       console.error(error);
       return;
     }
+
+    console.error(ctx.path);
     console.error(error);
 
     ctx.status = error.statusCode || error.status || 500;

@@ -8,7 +8,10 @@ import { authMiddleware } from "./api/v1/auth/utils";
 import redirections from "./api/v1/redirections";
 import webhooks from "./api/webhooks";
 import { createIndexes } from "./create-indexes";
+import { checkEmailServerConnection } from "./emails";
+import { startJobWorker } from "./jobs";
 import { startMaterializedViewRefreshJob } from "./jobs/materialized-views";
+import { cacheAnalyticsMiddleware } from "./utils/cache";
 import config from "./utils/config";
 import { corsMiddleware } from "./utils/cors";
 import { setupCronJobs } from "./utils/cron";
@@ -17,25 +20,25 @@ import { errorMiddleware } from "./utils/errors";
 import licenseMiddleware from "./utils/license";
 import { setDefaultBody } from "./utils/misc";
 import ratelimit from "./utils/ratelimit";
-import { startJobWorker } from "./jobs";
+import { initSentry } from "./utils/instrument";
+
+initSentry();
 
 checkDbConnection();
-setupCronJobs();
-startJobWorker();
+checkEmailServerConnection();
 
 if (process.env.NODE_ENV === "production") {
+  setupCronJobs();
   createIndexes();
+  startJobWorker();
   startMaterializedViewRefreshJob();
 }
 
 const app = new Koa();
-
-// Forward proxy headers
-app.proxy = true;
+app.proxy = true; // Forward proxy headers
 
 // MiddleWares
 app.use(errorMiddleware);
-
 if (
   process.env.NODE_ENV === "production" ||
   process.env.LUNARY_DEBUG === "true"
@@ -46,6 +49,9 @@ if (
 app.use(corsMiddleware);
 app.use(authMiddleware);
 app.use(ratelimit);
+if (process.env.NODE_ENV === "production") {
+  app.use(cacheAnalyticsMiddleware);
+}
 
 app.use(
   bodyParser({

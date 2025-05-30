@@ -100,7 +100,7 @@ export const CHECKS: Check[] = [
         searchable: false,
         options: [
           {
-            label: "LLM Call",
+            label: "LLM Logs",
             value: "llm",
           },
           {
@@ -275,20 +275,51 @@ export const CHECKS: Check[] = [
   {
     id: "topics",
     name: "Topics",
-    uiType: "basic",
+    uiType: "ai",
     uniqueInBar: true,
     disableInEvals: true,
     params: [
+      FIELD_PARAM,
       {
         type: "label",
-        label: "Topics",
+        label: "is about",
       },
       {
         type: "select",
-        multiple: true,
         id: "topics",
+        multiple: true,
         width: 100,
         options: () => `/filters/topics`,
+      },
+    ],
+  },
+  {
+    id: "toxicity",
+    name: "Toxicity",
+    uiType: "ai",
+    uniqueInBar: true,
+    disableInEvals: true,
+    params: [
+      FIELD_PARAM,
+      {
+        type: "label",
+        label: "is",
+      },
+      {
+        type: "select",
+        id: "topics",
+        multiple: true,
+        width: 100,
+        options: [
+          {
+            label: "Toxic",
+            value: "toxicity",
+          },
+          {
+            label: "Non Toxic",
+            value: "non-toxicity",
+          },
+        ],
       },
     ],
   },
@@ -352,97 +383,6 @@ export const CHECKS: Check[] = [
       },
     ],
   },
-  {
-    id: "python",
-    name: "Python",
-    description: "Checks if the given field is valid python code.",
-    soon: true,
-    uiType: "smart",
-    params: [
-      FIELD_PARAM,
-      FORMAT_PARAM,
-      {
-        type: "label",
-        label: "Python",
-      },
-    ],
-  },
-  // {
-  //   id: "xml",
-  //   name: "XML / HTML",
-  //   uiType: "smart",
-  //   params: [
-  //     {
-  //       label: "Response",
-  //       type: "label",
-  //     },
-  //     FORMAT_PARAM,
-  //     {
-  //       type: "label",
-  //       label: "XML / HTML",
-  //     },
-  //   ],
-  //   evaluator: async (run) => {
-  //     let parsable = false
-  //     let passed = false
-
-  //     try {
-  //       if (!run.output.startsWith("<")) throw "Not an object"
-  //       // TODO: use a real XML parser
-  //       // new DOMParser().parseFromString(run.output, "text/xml")
-  //       parsable = true
-  //       partial = true
-  //     } catch (e) {}
-
-  //     return {
-  //       parsable,
-  //       partial,
-  //     }
-  //   },
-
-  // },
-  // {
-  //   id: "cc",
-  //   name: "Credit Card",
-  //   disableInEvals: true,
-  //   uiType: "smart",
-  //   params: [
-  //     FIELD_PARAM,
-  //     MATCH_PARAM,
-  //     {
-  //       type: "label",
-  //       label: "Credit Card",
-  //     },
-  //   ],
-  // },
-  // {
-  //   id: "email",
-  //   name: "Email",
-  //   disableInEvals: true,
-  //   uiType: "smart",
-  //   params: [
-  //     FIELD_PARAM,
-  //     MATCH_PARAM,
-  //     {
-  //       type: "label",
-  //       label: "Email",
-  //     },
-  //   ],
-  // },
-  // {
-  //   id: "phone",
-  //   name: "Phone",
-  //   disableInEvals: true,
-  //   uiType: "smart",
-  //   params: [
-  //     FIELD_PARAM,
-  //     MATCH_PARAM,
-  //     {
-  //       type: "label",
-  //       label: "Phone",
-  //     },
-  //   ],
-  // },
   {
     id: "length",
     name: "Length",
@@ -602,45 +542,28 @@ export const CHECKS: Check[] = [
     ],
   },
   {
-    id: "entities",
+    id: "pii",
     name: "PII",
     uiType: "ai",
     disableInEvals: true,
     params: [
       {
         type: "label",
-        label: "Contains",
+        label: "PII",
       },
       {
         type: "select",
-        id: "types",
-        multiple: true,
-        width: 100,
-        searchable: true,
+        id: "containsPii",
+        defaultValue: "success",
+        width: 140,
         options: [
           {
-            label: "Email",
-            value: "email",
+            label: "Contains PII",
+            value: "true",
           },
           {
-            label: "Phone",
-            value: "phone",
-          },
-          {
-            label: "Person",
-            value: "person",
-          },
-          {
-            label: "Location",
-            value: "location",
-          },
-          {
-            label: "Org",
-            value: "org",
-          },
-          {
-            label: "Credit Card",
-            value: "cc",
+            label: "Does not contain PII",
+            value: "false",
           },
         ],
       },
@@ -760,53 +683,6 @@ export const CHECKS: Check[] = [
         width: 140,
       },
     ],
-  },
-  {
-    id: "geval",
-    name: "G-Eval",
-    uiType: "ai",
-    description:
-      "G-Eval is a framework that uses LLMs with chain-of-thoughts (CoT) to evaluate LLM outputs based on ANY custom criteria",
-    soon: true,
-    params: [
-      {
-        type: "label",
-        label: "G-Eval",
-      },
-      {
-        type: "text",
-        id: "criteria",
-        placeholder: "Is spoken like a pirate",
-        width: 140,
-      },
-    ],
-  },
-  {
-    id: "context-precision",
-    name: "Contextual Precision",
-    uiType: "ai",
-    description:
-      "The contextual precision metric measures your RAG pipeline's retriever by evaluating whether nodes in your context that are relevant to the given input are ranked higher than irrelevant ones.",
-    soon: true,
-    params: [],
-  },
-  {
-    id: "context-recall",
-    name: "Contextual Recall",
-    uiType: "ai",
-    description:
-      "The contextual recall metric measures the quality of your RAG pipeline's retriever by evaluating the extent of which the context aligns with the expected_output.",
-    soon: true,
-    params: [],
-  },
-  {
-    id: "summarization",
-    name: "Summarization",
-    uiType: "ai",
-    soon: true,
-    description:
-      "The summarization metric uses LLMs to determine whether your agent is generating factually correct summaries while including the neccessary details from the original text.",
-    params: [],
   },
   {
     id: "sentiment",
@@ -989,44 +865,8 @@ export const CHECKS: Check[] = [
     ],
   },
   {
-    id: "relevancy",
-    name: "Relevancy",
-    uiType: "ai",
-    soon: true,
-    onlyInEvals: true,
-    description:
-      "Checks if the LLM's response is relevant given the context and the prompt.",
-    params: [
-      {
-        type: "label",
-        label: "Output is >=",
-      },
-      PERCENT_PARAM,
-      {
-        type: "label",
-        label: "relevant",
-      },
-    ],
-  },
-  {
-    id: "toxicity",
-    name: "Toxicity",
-    uiType: "ai",
-    description:
-      "Checks if the given field contains toxic, offensive, obscene, or hateful language. English only at the moment.",
-    params: [
-      FIELD_PARAM_ANY,
-      MATCH_PARAM,
-      {
-        type: "label",
-        label: "toxicity",
-      },
-    ],
-  },
-  {
     id: "guidelines",
     name: "System Guidelines",
-    soon: true,
     uiType: "ai",
     onlyInEvals: true,
     description: `Checks if the output matches guidelines set in the 'system' message.`,

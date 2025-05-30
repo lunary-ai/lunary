@@ -9,6 +9,10 @@ import { useComputedColorScheme } from "@mantine/core";
 
 import { useAuth } from "../auth";
 import { fetcher } from "../fetcher";
+import type { APIPrompt, APIPromptVersion } from "@/types/prompt-types";
+
+// Define rule interface for project rules
+type ProjectRule = { type: string; [key: string]: any };
 
 export function generateKey(
   baseKey: Key,
@@ -55,10 +59,15 @@ export function useProjectMutation(
   options?: SWRMutationConfiguration<any, any>,
 ) {
   const { projectId } = useContext(ProjectContext);
+  // Wrap customFetcher to accept direct data payload
+  const fetcherWrapper = (_key: string, data: any) => {
+    return customFetcher(_key, { arg: data });
+  };
 
   return useSWRMutation(
     () => generateKey(key, projectId),
-    customFetcher,
+    // mutationFn receives (url, { arg: payload })
+    (url, { arg }) => customFetcher(url, { arg }),
     options,
   );
 }
@@ -225,7 +234,7 @@ export function useProject() {
     try {
       await dropMutation();
       const newProjects = projects.filter((p) => p.id !== projectId);
-      setProjectId(newProjects[0]?.id);
+      setProjectIygroundd(newProjects[0]?.id);
       mutate(newProjects);
       return true;
     } catch (error) {
@@ -252,7 +261,7 @@ export function useProjectRules() {
     data: rules,
     isLoading,
     mutate,
-  } = useProjectSWR(projectId && `/projects/${projectId}/rules`);
+  } = useProjectSWR<ProjectRule[]>(projectId && `/projects/${projectId}/rules`);
 
   const { trigger: addRule, isMutating: addRulesLoading } = useSWRMutation(
     projectId && `/projects/${projectId}/rules`,
@@ -291,8 +300,26 @@ export function useProjectRules() {
   };
 }
 
-export function useTemplates() {
-  const { data: templates, isLoading, mutate } = useProjectSWR(`/templates`);
+export function useTemplates(): {
+  templates: APIPrompt[] | undefined;
+  insert: (data: any) => Promise<APIPrompt>;
+  mutate: (
+    data?:
+      | APIPrompt[]
+      | Promise<APIPrompt[]>
+      | ((
+          current?: APIPrompt[] | undefined,
+        ) => APIPrompt[] | Promise<APIPrompt[]>),
+    shouldRevalidate?: boolean,
+  ) => Promise<APIPrompt[] | undefined>;
+  loading: boolean;
+  isInserting: boolean;
+} {
+  const {
+    data: templates,
+    isLoading,
+    mutate,
+  } = useProjectSWR<APIPrompt[]>(`/templates`);
 
   // insert mutation
   const { trigger: insert, isMutating: isInserting } = useProjectMutation(
@@ -309,12 +336,25 @@ export function useTemplates() {
   };
 }
 
-export function useTemplate(id: string) {
+export function useTemplate(id: string): {
+  template: APIPrompt | undefined;
+  insertVersion: (data: any) => Promise<APIPromptVersion>;
+  update: (data: any) => Promise<APIPrompt>;
+  remove: (data?: any) => Promise<unknown>;
+  mutate: (
+    data?:
+      | APIPrompt
+      | Promise<APIPrompt>
+      | ((current?: APIPrompt | undefined) => APIPrompt | Promise<APIPrompt>),
+    shouldRevalidate?: boolean,
+  ) => Promise<APIPrompt | undefined>;
+  loading: boolean;
+} {
   const {
     data: template,
     isLoading,
     mutate,
-  } = useProjectSWR(id && `/templates/${id}`);
+  } = useProjectSWR<APIPrompt>(id && `/templates/${id}`);
 
   const { trigger: update } = useProjectMutation(
     id && `/templates/${id}`,
@@ -329,7 +369,7 @@ export function useTemplate(id: string) {
     },
   );
 
-  // insert mutation
+  // insert version mutation
   const { trigger: insertVersion } = useProjectMutation(
     `/templates/${id}/versions`,
     fetcher.post,
@@ -345,12 +385,25 @@ export function useTemplate(id: string) {
   };
 }
 
-export function useTemplateVersion(id: string) {
+export function useTemplateVersion(id: string): {
+  templateVersion: APIPromptVersion | undefined;
+  update: (data: any) => Promise<APIPromptVersion>;
+  mutate: (
+    data?:
+      | APIPromptVersion
+      | Promise<APIPromptVersion>
+      | ((
+          current?: APIPromptVersion | undefined,
+        ) => APIPromptVersion | Promise<APIPromptVersion>),
+    shouldRevalidate?: boolean,
+  ) => Promise<APIPromptVersion | undefined>;
+  loading: boolean;
+} {
   const {
     data: templateVersion,
     isLoading,
     mutate,
-  } = useProjectSWR(id && `/template_versions/${id}`);
+  } = useProjectSWR<APIPromptVersion>(id && `/template_versions/${id}`);
 
   const { trigger: update } = useProjectMutation(
     `/template_versions/${id}`,
@@ -382,28 +435,26 @@ export function useLogs(params: any) {
 }
 
 export function useRun(id: string | null, initialData?: any) {
-  const [runDeleted, setRunDeleted] = useState(false);
-
   const {
     data: run,
     isLoading,
     mutate,
-  } = useProjectSWR(id && !runDeleted ? `/runs/${id}` : null, {
+  } = useProjectSWR(id && `/runs/${id}`, {
     fallbackData: initialData,
   });
 
   const { trigger: updateVisibilityTrigger } = useProjectMutation(
-    id && !runDeleted ? `/runs/${id}/visibility` : null,
+    id && `/runs/${id}/visibility`,
     fetcher.patch,
   );
 
   const { trigger: updateFeedbackTrigger } = useProjectMutation(
-    id && !runDeleted ? `/runs/${id}/feedback` : null,
+    id && `/runs/${id}/feedback`,
     fetcher.patch,
   );
 
   const { trigger: deleteTrigger } = useProjectMutation(
-    id && !runDeleted ? `/runs/${id}` : null,
+    id && `/runs/${id}`,
     fetcher.delete,
     {
       revalidate: false,
@@ -422,7 +473,6 @@ export function useRun(id: string | null, initialData?: any) {
 
   async function deleteRun() {
     await deleteTrigger();
-    setRunDeleted(true);
   }
 
   return {
@@ -432,8 +482,17 @@ export function useRun(id: string | null, initialData?: any) {
     deleteRun,
     mutate,
     loading: isLoading,
-    runDeleted,
   };
+}
+
+export function useDeleteRunById() {
+  const { projectId } = useContext(ProjectContext);
+
+  async function deleteRunById(id: string) {
+    await fetcher.delete(generateKey(`/runs/${id}`, projectId));
+  }
+
+  return { deleteRun: deleteRunById };
 }
 export function useLogCount(filters: any) {
   const { data, isLoading } = useProjectSWR(`/runs/count?${filters}`);
@@ -501,9 +560,10 @@ export function useRunsUsageByUser(range = null) {
 export function useOrgUser(userId: string) {
   const { mutate: mutateOrg } = useOrg();
 
-  const { data, isLoading, mutate } = useProjectSWR(
-    userId && `/users/${userId}`,
-  );
+  const { data, isLoading, mutate } = useProjectSWR<{
+    id: string;
+    [key: string]: any;
+  }>(userId && `/users/${userId}`);
 
   async function removeUserFromOrg() {
     await triggerDelete();
@@ -525,10 +585,7 @@ export function useOrgUser(userId: string) {
 
   const scheme = useComputedColorScheme();
 
-  const user = {
-    ...data,
-    color: getUserColor(scheme, data?.id),
-  };
+  const user = data ? { ...data, color: getUserColor(scheme, data.id) } : null;
 
   return { user, loading: isLoading, mutate, removeUserFromOrg, updateUser };
 }
@@ -610,6 +667,9 @@ export function useDatasets() {
     fetcher.patch,
   );
 
+  const { trigger: insertPrompts, isMutating: isInsertingPrompts } =
+    useProjectMutation(`/datasets/prompts/attach`, fetcher.post);
+
   return {
     datasets: data || [],
     insert,
@@ -619,6 +679,8 @@ export function useDatasets() {
     mutate,
     isLoading,
     insertPrompt,
+    insertPrompts,
+    isInsertingPrompts,
   };
 }
 

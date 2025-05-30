@@ -1,6 +1,7 @@
 import { Badge, Box, Group, Popover, Text, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
+  IconBiohazard,
   IconCheck,
   IconMoodNeutral,
   IconMoodSad,
@@ -28,17 +29,63 @@ export function renderEnrichment(
   const renderers: Record<EvaluatorType, (data: any) => any> = {
     language: renderLanguageEnrichment,
     pii: () => renderPIIEnrichment(data, maskPII),
-    toxicity: renderToxicityEnrichment,
     topics: renderTopicsEnrichment,
     sentiment: renderSentimentEnrichment,
     assertion: renderAssertionEnrichment,
     tone: renderToneEnrichment,
     guidelines: renderGuidelinesEnrichment,
     replies: renderRepliesEnrichment,
+    bias: renderBiasEnrichment,
+    toxicity: renderToxicityEnrichment,
+    llm: renderLLMEnrichment,
   };
 
   const renderer = renderers[type] || JSON.stringify;
   return <ErrorBoundary>{renderer(data)}</ErrorBoundary>;
+}
+
+function renderLLMEnrichment(data: { passed: boolean; reason: string }) {
+  if (typeof data !== "object" || typeof data.passed !== "boolean") return null;
+
+  return (
+    <Tooltip
+      label={data.reason}
+      disabled={!data.reason?.length}
+      w="200"
+      multiline
+    >
+      {data.passed ? <IconCheck color="green" /> : <IconX color="red" />}
+    </Tooltip>
+  );
+}
+
+function renderBiasEnrichment(data: EnrichmentData) {
+  if (!(data && data.output && Array.isArray(data.output))) {
+    return null;
+  }
+  data = data.output[0];
+  return (
+    <Tooltip label={data.reason}>
+      <Text size="lg">{data.score}</Text>
+    </Tooltip>
+  );
+}
+
+function renderToxicityEnrichment(data: EnrichmentData) {
+  const hasToxic = [...(data.input ?? []), ...(data.output ?? [])].some(
+    (msg) => msg?.reason,
+  );
+
+  // Don’t render anything if nothing is toxic
+  if (!hasToxic) return null;
+
+  return (
+    <Tooltip label="Toxic content detected">
+      <Badge color="red" leftSection={<IconBiohazard width={12} />}>
+        Toxicity
+      </Badge>
+    </Tooltip>
+  );
 }
 
 function renderLanguageEnrichment(languageDetections: LanguageDetectionResult) {
@@ -151,42 +198,6 @@ function renderPIIEnrichment(data: EnrichmentData) {
       </Popover.Dropdown>
     </Popover>
   );
-}
-
-function renderToxicityEnrichment(data: EnrichmentData) {
-  const [opened, { close, open }] = useDisclosure(false);
-
-  if (data.length === 0) {
-    return "";
-  }
-
-  const toxicityCategories = [
-    ...new Set([...data.input, ...data.output]),
-  ].filter((category) => category);
-
-  if (toxicityCategories.length) {
-    return (
-      <Popover
-        width={200}
-        position="bottom"
-        withArrow
-        shadow="md"
-        opened={opened}
-      >
-        <Popover.Target>
-          <Badge onMouseEnter={open} onMouseLeave={close} color="red">
-            Toxicity
-          </Badge>
-        </Popover.Target>
-        <Popover.Dropdown style={{ pointerEvents: "none" }} w="300">
-          <Text size="sm">
-            <strong>Toxic Comments:</strong>
-            {/* <div>{data.join(", ")}</div> */}
-          </Text>
-        </Popover.Dropdown>
-      </Popover>
-    );
-  }
 }
 
 function renderTopicsEnrichment(data: EnrichmentData) {
