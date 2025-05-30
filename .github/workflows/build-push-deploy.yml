@@ -1,5 +1,8 @@
 name: Build Docker Images, Push to Registry, and Deploy to Production
 
+permissions:
+  contents: read
+
 on:
   push:
     branches:
@@ -124,6 +127,8 @@ jobs:
 
   publish-helm:
     if: github.event_name == 'release'
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Check out the Helm repository
