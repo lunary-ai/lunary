@@ -11,7 +11,10 @@ export async function errorMiddleware(ctx: Context, next: Next) {
       ctx.throw(404, "Not Found");
     }
   } catch (error: any) {
-    Sentry.captureException(error);
+    if (error.status !== 401) {
+      Sentry.captureException(error);
+    }
+
     if (error instanceof z.ZodError) {
       ctx.status = 422;
       ctx.body = { error: "Error", message: fromZodError(error).toString() };
