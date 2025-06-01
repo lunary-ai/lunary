@@ -11,7 +11,7 @@ export async function errorMiddleware(ctx: Context, next: Next) {
       ctx.throw(404, "Not Found");
     }
   } catch (error: any) {
-    if (error.status !== 401) {
+    if (error.status !== 404) {
       Sentry.captureException(error);
     }
 
