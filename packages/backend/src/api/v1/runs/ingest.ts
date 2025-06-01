@@ -234,11 +234,11 @@ async function registerRunEvent(
 
       if (allowRetry) {
         console.info(
-          "Retrying insertion in 2s in case parent not inserted yet...",
+          "Retrying insertion in 5s in case parent not inserted yet...",
         );
 
         // TODO: better way to wait for parent run to be inserted
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 5000));
 
         return await registerRunEvent(projectId, event, insertedIds, false);
       } else {
@@ -250,6 +250,19 @@ async function registerRunEvent(
     // This allow user id to correctly cascade to childs runs if for example it's set on the frontend and not passed to the backend
     if (data?.externalUserId) {
       externalUserId = data?.externalUserId;
+    }
+  }
+
+  if (eventName === "end" && type === "llm" && allowRetry) {
+    const [runData] = await sql`select id from run where id = ${runId}`;
+    if (!runData?.id) {
+      console.info(
+        "Retrying insertion in 5s in case start event not inserted yet...",
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+
+      return await registerRunEvent(projectId, event, insertedIds, false);
     }
   }
 
@@ -288,6 +301,11 @@ async function registerRunEvent(
     const [runData] = await sql`
         select created_at, input, params, name, metadata from run where id = ${runId}
       `;
+
+    if (!runData) {
+      return;
+    }
+
     if (typeof runData?.metadata === "object" && metadata) {
       metadata = { ...runData.metadata, ...metadata };
     }
