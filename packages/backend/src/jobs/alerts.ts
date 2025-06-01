@@ -15,6 +15,14 @@ export async function checkAlerts() {
       const { id, projectId, status, threshold, metric, timeFrameMinutes } =
         alert;
 
+      const sanitizedTimeFrameMinutes = Math.floor(Number(timeFrameMinutes));
+      if (isNaN(sanitizedTimeFrameMinutes) || sanitizedTimeFrameMinutes <= 0) {
+        console.error(
+          `[ALERTS] Invalid timeFrameMinutes value: ${timeFrameMinutes}`,
+        );
+        continue;
+      }
+
       let value: number;
       switch (metric) {
         case "error": {
@@ -26,7 +34,7 @@ export async function checkAlerts() {
                 run
               where 
                 project_id = ${projectId}
-                ${sql.unsafe(`and created_at >= now() - '${timeFrameMinutes} minutes'::interval`)}
+                and created_at >= now() - interval '${sanitizedTimeFrameMinutes} minutes'
             )
             select 
               coalesce(avg(case when recent_runs.error is not null then 1 else 0 end) * 100, 0) as value
@@ -43,7 +51,7 @@ export async function checkAlerts() {
               run
             where 
               project_id = ${projectId}
-              ${sql.unsafe(`and created_at >= now() - '${timeFrameMinutes} minutes'::interval`)}
+              and created_at >= now() - interval '${sanitizedTimeFrameMinutes} minutes'
           `;
           value = res.value;
           break;
@@ -59,7 +67,7 @@ export async function checkAlerts() {
             ) as value
             from run
             where project_id = ${projectId}
-              and created_at >= now() - interval '${timeFrameMinutes} minutes'
+              and created_at >= now() - interval '${sanitizedTimeFrameMinutes} minutes'
           `;
           value = v;
           break;
@@ -80,7 +88,7 @@ export async function checkAlerts() {
             ) as value
             from run
             where project_id = ${projectId}
-              and created_at >= now() - interval '${timeFrameMinutes} minutes'
+              and created_at >= now() - interval '${sanitizedTimeFrameMinutes} minutes'
           `;
           value = v;
           break;
