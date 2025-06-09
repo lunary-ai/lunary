@@ -1576,7 +1576,7 @@ def open_thread(id: Optional[str] = None, tags: Optional[List[str]] = None, app_
         if not token:
             raise ThreadError("API token is required")
 
-        return Thread(track_event=track_event, id=id, tags=tags, user_id=user_id, user_props=user_props)
+        return Thread(track_event=track_event, id=id, tags=tags, user_id=user_id, user_props=user_props, app_id=token)
     except Exception as e:
         raise ThreadError(f"Error opening thread: {str(e)}")
 
