@@ -44,7 +44,7 @@ jobs:
       - name: Setup application
         run: bun install
       - name: Install Chromium for Playwright
-        if: steps.pw-cache.outputs.cache-hit != 'true'
+        # if: steps.pw-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
 
       - name: Start backend and frontend

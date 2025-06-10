@@ -523,7 +523,7 @@ export async function runAImodel(
       }
       const params = getOpenAIParams();
       if (!params) throw Error("No OpenAI API key found");
-
+      clientParams = params;
       break;
     case "mistral":
       if (!process.env.MISTRAL_API_KEY) throw Error("No Mistral API key found");
@@ -564,21 +564,76 @@ export async function runAImodel(
 
   const openai = new OpenAI(clientParams);
 
-  let res = await openai.chat.completions.create({
-    model: model.id || "gpt-4o",
-    messages,
-    stream: stream,
-    temperature: completionsParams?.temperature,
-    max_completion_tokens: completionsParams?.max_tokens,
-    top_p: completionsParams?.top_p,
-    presence_penalty: completionsParams?.presence_penalty,
-    frequency_penalty: completionsParams?.frequency_penalty,
-    stop: completionsParams?.stop,
-    functions: completionsParams?.functions,
-    tools: validateToolCalls(model.name, completionsParams?.tools),
-    seed: completionsParams?.seed,
-    ...paramsOverwrite,
-  });
+  let res;
+
+  if (model.id === "o3-pro") {
+    if (stream) {
+      throw new Error("Streaming is not supported for o3-pro model");
+    }
+
+    // Convert messages to a single prompt for the responses API
+    const prompt = messages
+      .map((msg) => {
+        if (msg.role === "system") {
+          return `System: ${msg.content}`;
+        } else if (msg.role === "user") {
+          return `User: ${msg.content}`;
+        } else if (msg.role === "assistant") {
+          return `Assistant: ${msg.content}`;
+        }
+        return msg.content;
+      })
+      .join("\n\n");
+
+    // Use the OpenAI SDK's responses.create method
+    const response = await openai.responses.create({
+      model: model.id,
+      input: prompt,
+      temperature: completionsParams?.temperature,
+      max_output_tokens: completionsParams?.max_tokens,
+      top_p: completionsParams?.top_p,
+      ...paramsOverwrite,
+    });
+
+    // Format the response to match the expected chat completion format
+    res = {
+      id: response.id || `response-${Date.now()}`,
+      object: "chat.completion",
+      created: response.created || Math.floor(Date.now() / 1000),
+      model: model.id,
+      choices: [
+        {
+          index: 0,
+          message: {
+            role: "assistant",
+            content: response.output_text || "",
+          },
+          finish_reason: response.stop_reason || "stop",
+        },
+      ],
+      usage: response.usage || {
+        prompt_tokens: 0,
+        completion_tokens: 0,
+        total_tokens: 0,
+      },
+    };
+  } else {
+    res = await openai.chat.completions.create({
+      model: model.id || "gpt-4o",
+      messages,
+      stream: stream,
+      temperature: completionsParams?.temperature,
+      max_completion_tokens: completionsParams?.max_tokens,
+      top_p: completionsParams?.top_p,
+      presence_penalty: completionsParams?.presence_penalty,
+      frequency_penalty: completionsParams?.frequency_penalty,
+      stop: completionsParams?.stop,
+      functions: completionsParams?.functions,
+      tools: validateToolCalls(model.name, completionsParams?.tools),
+      seed: completionsParams?.seed,
+      ...paramsOverwrite,
+    });
+  }
 
   const useOpenRouter = model?.provider === "openrouter";
 

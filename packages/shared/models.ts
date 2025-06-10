@@ -22,6 +22,11 @@ export const MODELS: LunaryProvidedModel[] = [
     provider: "openai",
   },
   {
+    id: "o3-pro",
+    name: "o3-pro",
+    provider: "openai",
+  },
+  {
     id: "o3",
     name: "o3",
     provider: "openai",
@@ -119,6 +124,11 @@ export const MODELS: LunaryProvidedModel[] = [
     id: "gpt-4-vision-preview",
     name: "gpt-4-vision-preview",
     provider: "openai",
+  },
+  {
+    id: "mistral",
+    name: "magistral-medium-latest",
+    provider: "mistral",
   },
   {
     id: "mistral-large-latest",
