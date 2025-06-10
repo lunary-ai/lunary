@@ -806,7 +806,7 @@ try:
     import traceback
     import warnings
     from contextvars import ContextVar
-    from typing import Any, Dict, List, Union, cast, Sequence, Optional
+    from typing import Any, Dict, List, Union, cast, Sequence, Optional, TypedDict
     from uuid import UUID
 
     import requests
@@ -964,6 +964,10 @@ try:
     ) -> List[Dict[str, Any]]:
         return [_parse_lc_message(message) for message in messages]
 
+    class IgnoreRule(TypedDict, total=False):
+        type: str
+        name: List[str]
+
     class LunaryCallbackHandler(BaseCallbackHandler):
         """Callback Handler for Lunary`.
 
@@ -973,6 +977,10 @@ try:
             - `api_url`: The url of the Lunary API. Defaults to `None`,
             which means that either `LUNARY_API_URL` environment variable
             or `https://api.lunary.ai` will be used.
+            - `ignore`: List of rules to filter out events. Each rule can specify:
+                - `type`: The type of event to ignore (e.g., "agent", "tool", "llm", "chain")
+                - `name`: List of names to ignore (supports wildcards with *)
+                Events matching these rules and their children will not be sent to Lunary.
 
         #### Raises:
             - `ValueError`: if `app_id` is not provided either as an
@@ -985,7 +993,11 @@ try:
         from langchain_openai.chat_models import ChatOpenAI
         from lunary import LunaryCallbackHandler
 
-        handler = LunaryCallbackHandler()
+        handler = LunaryCallbackHandler(ignore=[
+            {"type": "agent", "name": ["ResearchAgent", "DebugAgent"]},
+            {"type": "tool", "name": ["search_*", "debug_*"]},
+            {"name": ["_internal_*"]}  # Matches any type
+        ])
         llm = ChatOpenAI(callbacks=[handler],
                     metadata={"userId": "user-123"})
         llm.predict("Hello, how are you?")
@@ -994,11 +1006,13 @@ try:
 
         __app_id: str
         __api_url: str
+        __ignore_rules: List[IgnoreRule]
 
         def __init__(
             self,
             app_id: Union[str, None] = None,
             api_url: Union[str, None] = None,
+            ignore: Union[List[IgnoreRule], None] = None,
         ) -> None:
             super().__init__()
             config = get_config()
@@ -1037,11 +1051,48 @@ try:
                 self.__has_valid_config = False
 
             self.__api_url = api_url or config.api_url or None
+            self.__ignore_rules = ignore or []
 
             self.queue = queue
 
             if self.__has_valid_config is False:
                 return None
+
+        def _should_ignore_run(self, run_id: str, run_type: str = None, name: str = None) -> bool:
+            """
+            Check if a run should be ignored based on filtering rules or parent hierarchy.
+            Returns True if the run or any of its ancestors should be ignored.
+            """
+            if not self.__ignore_rules:
+                return False
+            
+            for rule in self.__ignore_rules:
+                if "type" in rule and run_type and rule["type"] != run_type:
+                    continue
+                
+                if "name" in rule and isinstance(rule["name"], list):
+                    if name and self._matches_any_pattern(name, rule["name"]):
+                        return True
+            
+            run = run_manager.runs.get(str(run_id))
+            while run:
+                if hasattr(run, '_ignored') and run._ignored:
+                    return True
+                
+                if run.parent_run_id:
+                    run = run_manager.runs.get(run.parent_run_id)
+                else:
+                    break
+            
+            return False
+        
+        def _matches_any_pattern(self, name: str, patterns: List[str]) -> bool:
+            """Check if name matches any of the patterns (supports * wildcard)."""
+            import fnmatch
+            for pattern in patterns:
+                if fnmatch.fnmatch(name, pattern):
+                    return True
+            return False
 
         def on_llm_start(
             self,
@@ -1058,6 +1109,9 @@ try:
                 if parent_run_id is None:
                     parent_run_id = run_manager.current_run_id
                 run = run_manager.start_run(run_id, parent_run_id)
+                
+                if self._should_ignore_run(run.id, run_type="llm"):
+                    return
 
                 user_id = _get_user_id(metadata)
                 user_props = _get_user_props(metadata)
@@ -1118,6 +1172,9 @@ try:
                 if parent_run_id is None:
                     parent_run_id = run_manager.current_run_id
                 run = run_manager.start_run(run_id, parent_run_id)
+                
+                if self._should_ignore_run(run.id, run_type="llm"):
+                    return
 
                 user_id = _get_user_id(metadata)
                 user_props = _get_user_props(metadata)
@@ -1172,6 +1229,10 @@ try:
             **kwargs: Any,
         ) -> None:
             try:
+                if self._should_ignore_run(str(run_id), run_type="llm"):
+                    run_manager.end_run(run_id)
+                    return
+                    
                 run_id = run_manager.end_run(run_id)
 
                 token_usage = (response.llm_output or {}).get("token_usage", {})
@@ -1222,6 +1283,9 @@ try:
                 if parent_run_id is None:
                     parent_run_id = run_manager.current_run_id
                 run = run_manager.start_run(run_id, parent_run_id)
+                
+                if self._should_ignore_run(run.id, run_type="tool", name=serialized.get("name")):
+                    return
 
                 user_id = _get_user_id(metadata)
                 user_props = _get_user_props(metadata)
@@ -1256,6 +1320,10 @@ try:
             **kwargs: Any,
         ) -> None:
             try:
+                if self._should_ignore_run(str(run_id), run_type="tool"):
+                    run_manager.end_run(run_id)
+                    return
+                    
                 run_id = run_manager.end_run(run_id)
                 self.__track_event(
                     "tool",
@@ -1308,6 +1376,9 @@ try:
                     type = "chain"
                     name = kwargs.get("name", name)
 
+                if self._should_ignore_run(run.id, run_type=type, name=name):
+                    run._ignored = True
+                    return
 
                 user_id = _get_user_id(metadata)
                 user_props = _get_user_props(metadata)
@@ -1341,6 +1412,10 @@ try:
             **kwargs: Any,
         ) -> Any:
             try:
+                if self._should_ignore_run(str(run_id), run_type="chain"):
+                    run_manager.end_run(run_id)
+                    return
+                    
                 run_id = run_manager.end_run(run_id)
 
                 output = _parse_output(outputs)
@@ -1367,6 +1442,10 @@ try:
             **kwargs: Any,
         ) -> Any:
             try:
+                if self._should_ignore_run(str(run_id), run_type="agent"):
+                    run_manager.end_run(run_id)
+                    return
+                    
                 run_id = run_manager.end_run(run_id)
 
                 output = _parse_output(finish.return_values)
@@ -1393,6 +1472,10 @@ try:
             **kwargs: Any,
         ) -> Any:
             try:
+                if self._should_ignore_run(str(run_id), run_type="chain"):
+                    run_manager.end_run(run_id)
+                    return
+                    
                 run_id = run_manager.end_run(run_id)
 
                 self.__track_event(
@@ -1417,6 +1500,10 @@ try:
             **kwargs: Any,
         ) -> Any:
             try:
+                if self._should_ignore_run(str(run_id), run_type="tool"):
+                    run_manager.end_run(run_id)
+                    return
+                    
                 run_id = run_manager.end_run(run_id)
 
                 self.__track_event(
@@ -1441,6 +1528,10 @@ try:
             **kwargs: Any,
         ) -> Any:
             try:
+                if self._should_ignore_run(str(run_id), run_type="llm"):
+                    run_manager.end_run(run_id)
+                    return
+                    
                 run_id = run_manager.end_run(run_id)
 
                 self.__track_event(
@@ -1469,6 +1560,9 @@ try:
                 if parent_run_id is None:
                     parent_run_id = run_manager.current_run_id
                 run = run_manager.start_run(run_id, parent_run_id)
+                
+                if self._should_ignore_run(run.id, run_type="retriever", name=name or (serialized.get("name") if serialized else None)):
+                    return
 
                 user_id = _get_user_id(kwargs.get("metadata"))
                 user_props = _get_user_props(kwargs.get("metadata"))
@@ -1501,6 +1595,9 @@ try:
             **kwargs: Any,
         ) -> None:
             try:
+                if self._should_ignore_run(str(run_id), run_type="retriever"):
+                    return
+                    
                 run = run_manager.start_run(run_id, parent_run_id)
 
                 # only report the metadata
@@ -1535,6 +1632,10 @@ try:
             **kwargs: Any,
         ) -> None:
             try:
+                if self._should_ignore_run(str(run_id), run_type="retriever"):
+                    run_manager.end_run(run_id)
+                    return
+                    
                 run_id = run_manager.end_run(run_id)
 
                 self.__track_event(
