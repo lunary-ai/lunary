@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "lunary"
-version = "1.4.14"
+version = "1.4.16"
 description = "Python SDK for Lunary, the open-source platform where GenAI teams manage and improve LLM chatbots."
 authors = ["lunary <hello@lunary.ai>"]
 readme = "README.md"
