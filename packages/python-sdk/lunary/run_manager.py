@@ -76,16 +76,13 @@ class RunManager:
         return run_id in self.runs
 
     def _delete_run(self, run: Run) -> None:
-        for child in run.children:
-            self._delete_run(child)
+         for child in list(run.children): # iterate over a copy
+             self._delete_run(child)
 
-        if run.parent_run_id:
-            parent_run = self.runs.get(run.parent_run_id)
-            if parent_run:
-                parent_run.children.remove(run)
+         if run.parent_run_id:
+             parent_run = self.runs.get(run.parent_run_id)
+             if parent_run and run in parent_run.children:  # membership guard
+                 parent_run.children.remove(run)
 
-        if run.id in [r.id for r in self._run_stack]:
-            self._run_stack = [r for r in self._run_stack if r.id != run.id]
-
-        if self.runs.get(run.id):
-            del self.runs[run.id]
+         self._run_stack = [r for r in self._run_stack if r.id != run.id]
+         self.runs.pop(run.id, None)              # safe pop 
