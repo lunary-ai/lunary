@@ -1,6 +1,10 @@
 [tool.poetry]
 name = "lunary"
+<<<<<<< Updated upstream
 version = "1.4.14"
+=======
+version = "1.4.17"
+>>>>>>> Stashed changes
 description = "Python SDK for Lunary, the open-source platform where GenAI teams manage and improve LLM chatbots."
 authors = ["lunary <hello@lunary.ai>"]
 readme = "README.md"

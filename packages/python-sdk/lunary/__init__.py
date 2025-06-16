@@ -1067,6 +1067,8 @@ try:
                 return False
             
             for rule in self.__ignore_rules:
+                if "type" in rule and rule["type"] == "agent":
+                    rule["type"] = "chain"  # Agents are treated as chains in Lunary
                 if "type" in rule and run_type and rule["type"] != run_type:
                     continue
                 
@@ -1111,7 +1113,19 @@ try:
                 run = run_manager.start_run(run_id, parent_run_id)
                 
                 if self._should_ignore_run(run.id, run_type="llm"):
-                    return
+                    self.__track_event(
+                        "llm",
+                        "start",
+                        run_id=run.id,
+                        parent_run_id=run.parent_run_id,
+                        input="__NOT_INGESTED__",
+                        output="__NOT_INGESTED__",
+                        app_id=self.__app_id,
+                        api_url=self.__api_url,
+                        callback_queue=self.queue,
+                        runtime="langchain-py",
+                    )
+                    return 
 
                 user_id = _get_user_id(metadata)
                 user_props = _get_user_props(metadata)
@@ -1174,6 +1188,18 @@ try:
                 run = run_manager.start_run(run_id, parent_run_id)
                 
                 if self._should_ignore_run(run.id, run_type="llm"):
+                    self.__track_event(
+                        "llm",
+                        "start",
+                        run_id=run.id,
+                        parent_run_id=run.parent_run_id,
+                        input="__NOT_INGESTED__",
+                        output="__NOT_INGESTED__",
+                        app_id=self.__app_id,
+                        api_url=self.__api_url,
+                        callback_queue=self.queue,
+                        runtime="langchain-py",
+                    )
                     return
 
                 user_id = _get_user_id(metadata)
@@ -1230,6 +1256,17 @@ try:
         ) -> None:
             try:
                 if self._should_ignore_run(str(run_id), run_type="llm"):
+                    self.__track_event(
+                        "llm",
+                        "end",
+                        run_id=str(run_id),
+                        input="__NOT_INGESTED__",
+                        output="__NOT_INGESTED__",
+                        app_id=self.__app_id,
+                        api_url=self.__api_url,
+                        callback_queue=self.queue,
+                        runtime="langchain-py",
+                    )
                     run_manager.end_run(run_id)
                     return
                     
@@ -1285,6 +1322,18 @@ try:
                 run = run_manager.start_run(run_id, parent_run_id)
                 
                 if self._should_ignore_run(run.id, run_type="tool", name=serialized.get("name")):
+                    self.__track_event(
+                        "tool",
+                        "start",
+                        run_id=run.id,
+                        parent_run_id=run.parent_run_id,
+                        input="__NOT_INGESTED__",
+                        output="__NOT_INGESTED__",
+                        app_id=self.__app_id,
+                        api_url=self.__api_url,
+                        callback_queue=self.queue,
+                        runtime="langchain-py",
+                    )
                     return
 
                 user_id = _get_user_id(metadata)
@@ -1321,6 +1370,17 @@ try:
         ) -> None:
             try:
                 if self._should_ignore_run(str(run_id), run_type="tool"):
+                    self.__track_event(
+                        "tool",
+                        "end",
+                        run_id=str(run_id),
+                        input="__NOT_INGESTED__",
+                        output="__NOT_INGESTED__",
+                        app_id=self.__app_id,
+                        api_url=self.__api_url,
+                        callback_queue=self.queue,
+                        runtime="langchain-py",
+                    )
                     run_manager.end_run(run_id)
                     return
                     
@@ -1367,17 +1427,29 @@ try:
 
                 agent_name = metadata.get("agent_name", metadata.get("agentName"))
 
-                if name == "AgentExecutor" or name == "PlanAndExecute":
+                if name == "AgentExecutor" or name == "PlanAndExecute" or name == "LangGraph":
                     type = "agent"
                 if agent_name is not None:
                     type = "agent"
                     name = agent_name
-                if parent_run_id is not None:
+                if parent_run_id is not None and type != "agent":
                     type = "chain"
                     name = kwargs.get("name", name)
 
                 if self._should_ignore_run(run.id, run_type=type, name=name):
                     run._ignored = True
+                    self.__track_event(
+                        type,
+                        "start",
+                        run_id=run.id,
+                        parent_run_id=run.parent_run_id,
+                        input="__NOT_INGESTED__",
+                        output="__NOT_INGESTED__",
+                        app_id=self.__app_id,
+                        api_url=self.__api_url,
+                        callback_queue=self.queue,
+                        runtime="langchain-py",
+                    )
                     return
 
                 user_id = _get_user_id(metadata)
@@ -1413,6 +1485,17 @@ try:
         ) -> Any:
             try:
                 if self._should_ignore_run(str(run_id), run_type="chain"):
+                    self.__track_event(
+                        "chain",
+                        "end",
+                        run_id=str(run_id),
+                        input="__NOT_INGESTED__",
+                        output="__NOT_INGESTED__",
+                        app_id=self.__app_id,
+                        api_url=self.__api_url,
+                        callback_queue=self.queue,
+                        runtime="langchain-py",
+                    )
                     run_manager.end_run(run_id)
                     return
                     
@@ -1443,6 +1526,17 @@ try:
         ) -> Any:
             try:
                 if self._should_ignore_run(str(run_id), run_type="agent"):
+                    self.__track_event(
+                        "agent",
+                        "end",
+                        run_id=str(run_id),
+                        input="__NOT_INGESTED__",
+                        output="__NOT_INGESTED__",
+                        app_id=self.__app_id,
+                        api_url=self.__api_url,
+                        callback_queue=self.queue,
+                        runtime="langchain-py",
+                    )
                     run_manager.end_run(run_id)
                     return
                     
@@ -1473,6 +1567,17 @@ try:
         ) -> Any:
             try:
                 if self._should_ignore_run(str(run_id), run_type="chain"):
+                    self.__track_event(
+                        "chain",
+                        "error",
+                        run_id=str(run_id),
+                        input="__NOT_INGESTED__",
+                        output="__NOT_INGESTED__",
+                        app_id=self.__app_id,
+                        api_url=self.__api_url,
+                        callback_queue=self.queue,
+                        runtime="langchain-py",
+                    )
                     run_manager.end_run(run_id)
                     return
                     
@@ -1501,6 +1606,17 @@ try:
         ) -> Any:
             try:
                 if self._should_ignore_run(str(run_id), run_type="tool"):
+                    self.__track_event(
+                        "tool",
+                        "error",
+                        run_id=str(run_id),
+                        input="__NOT_INGESTED__",
+                        output="__NOT_INGESTED__",
+                        app_id=self.__app_id,
+                        api_url=self.__api_url,
+                        callback_queue=self.queue,
+                        runtime="langchain-py",
+                    )
                     run_manager.end_run(run_id)
                     return
                     
@@ -1529,6 +1645,17 @@ try:
         ) -> Any:
             try:
                 if self._should_ignore_run(str(run_id), run_type="llm"):
+                    self.__track_event(
+                        "llm",
+                        "error",
+                        run_id=str(run_id),
+                        input="__NOT_INGESTED__",
+                        output="__NOT_INGESTED__",
+                        app_id=self.__app_id,
+                        api_url=self.__api_url,
+                        callback_queue=self.queue,
+                        runtime="langchain-py",
+                    )
                     run_manager.end_run(run_id)
                     return
                     
@@ -1562,6 +1689,18 @@ try:
                 run = run_manager.start_run(run_id, parent_run_id)
                 
                 if self._should_ignore_run(run.id, run_type="retriever", name=name or (serialized.get("name") if serialized else None)):
+                    self.__track_event(
+                        "retriever",
+                        "start",
+                        run_id=run.id,
+                        parent_run_id=run.parent_run_id,
+                        input="__NOT_INGESTED__",
+                        output="__NOT_INGESTED__",
+                        app_id=self.__app_id,
+                        api_url=self.__api_url,
+                        callback_queue=self.queue,
+                        runtime="langchain-py",
+                    )
                     return
 
                 user_id = _get_user_id(kwargs.get("metadata"))
@@ -1596,6 +1735,17 @@ try:
         ) -> None:
             try:
                 if self._should_ignore_run(str(run_id), run_type="retriever"):
+                    self.__track_event(
+                        "retriever",
+                        "end",
+                        run_id=str(run_id),
+                        input="__NOT_INGESTED__",
+                        output="__NOT_INGESTED__",
+                        app_id=self.__app_id,
+                        api_url=self.__api_url,
+                        callback_queue=self.queue,
+                        runtime="langchain-py",
+                    )
                     return
                     
                 run = run_manager.start_run(run_id, parent_run_id)
@@ -1633,6 +1783,17 @@ try:
         ) -> None:
             try:
                 if self._should_ignore_run(str(run_id), run_type="retriever"):
+                    self.__track_event(
+                        "retriever",
+                        "error",
+                        run_id=str(run_id),
+                        input="__NOT_INGESTED__",
+                        output="__NOT_INGESTED__",
+                        app_id=self.__app_id,
+                        api_url=self.__api_url,
+                        callback_queue=self.queue,
+                        runtime="langchain-py",
+                    )
                     run_manager.end_run(run_id)
                     return
                     
