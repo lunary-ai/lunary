@@ -2,6 +2,103 @@ import { completeRunUsageWithTimeout } from "./countToken";
 import sql from "./db";
 import { ProjectNotFoundError } from "./errors";
 
+/* -------------------------------------------------------------------------- */
+/*                              Helper sub-types                              */
+/* -------------------------------------------------------------------------- */
+
+export interface FunctionCall {
+  name: string;
+  /**
+   * JSON-encoded arguments as specified by the OpenAI tool calling format.
+   */
+  arguments: string;
+}
+
+export interface ToolFunctionSpec {
+  /** Tool/function name */
+  name: string;
+  description?: string;
+  /** OpenAI / JSON schema for the parameters */
+  parameters?: Record<string, unknown>;
+  /** LangChain (legacy) input schema */
+  inputSchema?: Record<string, unknown>;
+}
+
+export interface ToolCall {
+  id?: string; // OpenAI tool call id
+  index?: number;
+  type?: string;
+  function?: FunctionCall & { name?: string };
+  toolSpec?: ToolFunctionSpec; // LangChain naming
+}
+
+/**
+ * Sub-set of the OpenAI chat message schema we rely on across the codebase.
+ */
+export interface ChatMessage {
+  id?: string; // Used in thread messages
+  role: "system" | "user" | "assistant" | "tool" | "function" | string;
+  content?: string | null;
+  name?: string; // e.g. name of the tool / function
+  functionCall?: FunctionCall; // camelCase – Bun side
+  function_call?: FunctionCall; // snake_case – Python side
+  toolCalls?: ToolCall[]; // camelCase
+  tool_calls?: ToolCall[]; // snake_case
+  isRetry?: boolean; // thread retry flag
+  tags?: string[];
+  metadata?: Record<string, unknown>;
+  /** LangChain’s `additional_kwargs` or Anthropic’s message attributes */
+  [key: string]: unknown;
+}
+
+export interface LlmParams {
+  // Core sampling params
+  temperature?: number;
+  topP?: number;
+  topK?: number;
+  presencePenalty?: number;
+  frequencyPenalty?: number;
+
+  // Token limits
+  maxTokens?: number;
+  maxCompletionTokens?: number;
+
+  // Stopping criteria
+  stop?: string | string[];
+  seed?: number;
+
+  // Audio generation / TTS
+  audio?: {
+    voice?: string;
+    format?: string;
+  };
+
+  // Multimodal / Vision
+  modalities?: string[];
+
+  // Logit manipulation
+  logitBias?: Record<string, number>;
+
+  // Tool calling
+  tools?: ToolFunctionSpec[];
+  toolChoice?: "auto" | "required" | string;
+
+  [key: string]: unknown;
+}
+
+export interface TokenUsage {
+  prompt: number | null;
+  completion: number | null;
+  /** Number of prompt tokens that were served from cache */
+  promptCached?: number;
+}
+
+export interface RunError {
+  message: string;
+  stack?: string;
+  code?: string | number;
+}
+
 export interface Event {
   type:
     | "llm"
@@ -21,26 +118,86 @@ export interface Event {
   parentRunId?: string;
   // convo?: string
   timestamp: string;
-  input?: any;
+  /**
+   * For LLM / chain / agent / tool calls this is generally an array of chat
+   * messages (OpenAI format) but can also be raw strings, JSON payloads, etc.
+   */
+  input?: ChatMessage[] | string | Record<string, unknown>;
   tags?: string[];
-  name?: string;
-  output?: any;
+  // formerly held `name`, now declared further below for clarity
+  /**
+   * Same structure as `input`.  On streaming calls the backend mutates this
+   * field once the complete response has been assembled.
+   */
+  output?: ChatMessage[] | string | Record<string, unknown>;
   message?: string | any; // deprecated (for logs)
-  extra?: any;
+  /**
+   * Legacy field used by the early versions of the SDK to transport call
+   * parameters.  Newer SDKs populate `params` instead.
+   */
+  extra?: LlmParams & Record<string, unknown>;
   feedback?: any;
   templateId?: string; // deprecated, use templateVersionId
   templateVersionId?: string;
   metadata?: any;
-  tokensUsage?: {
-    prompt: number;
-    completion: number;
-    promptCached?: number;
-  };
-  error?: {
-    message: string;
-    stack?: string;
-  };
+  tokensUsage?: TokenUsage;
+  error?: RunError;
   appId?: string;
+
+  /* === User & Thread context ================================================= */
+  /**
+   * External (application-level) user identifier as provided by the SDK.
+   * Will be up-serted in the `external_user` table and linked to the run via
+   * `external_user_id`.
+   */
+  userId?: string;
+
+  /**
+   * Optional user properties bag.  The Python SDK forwards the content of
+   * `identify()` here so we keep it as a free-form object.
+   */
+  userProps?: Record<string, unknown>;
+
+  /**
+   * Internal – the backend sets this after resolving the numeric identifier in
+   * the `external_user` table.  It should **not** be sent by the SDK but it can
+   * appear in events coming from the frontend so we declare it here for
+   * completeness.
+   */
+  externalUserId?: string;
+
+  /**
+   * Tags applied at the thread (conversation) level.  They are stored on the
+   * parent run (type = `thread`) and inherited by its children.
+   */
+  threadTags?: string[];
+
+  /* === Model / Call parameters ============================================== */
+
+  /**
+   * The parameters used to call the model / tool (temperature, maxTokens …).
+   * Formerly transported via `extra`, but the new SDK places them here.
+   */
+  params?: LlmParams & Record<string, unknown>;
+
+  /**
+   * Runtime that generated the event – e.g. `lunary-py`, `langchain-js` …  This
+   * allows us to pivot analytics on the origin SDK.
+   */
+  runtime?: string;
+
+  /* === Chat-specific helper fields ========================================== */
+
+
+
+  /* === Misc.================================================================ */
+
+  /**
+   * Arbitrary custom event name when `type === "thread"` and `event ===
+   * "custom-event"`.
+   */
+  name?: string;
+
   [key: string]: unknown;
 }
 
