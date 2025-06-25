@@ -106,6 +106,7 @@ const publicRoutes = [
   "/webhooks/stripe",
   "/auth/user/password/reset",
   `/v1/runs/ingest`,
+  `/ingest/otel`,
   new RegExp(`/v1/runs/.+/public`), // public run data
   new RegExp(`/v1/runs/.+/feedback`), // getFeedback in SDKs
   new RegExp(`/v1/runs/exports/.+`), // run exports

@@ -1,0 +1,435 @@
+Overriding of current TracerProvider is not allowed
+/Users/hughcrt/Developer/lunary/lunary/test_pydantic_ai.py:215: DeprecationWarning: `result.data` is deprecated, use `result.output` instead.
+  print(f"Response: {result.data}")
+/Users/hughcrt/Developer/lunary/lunary/test_pydantic_ai.py:225: DeprecationWarning: `result.data` is deprecated, use `result.output` instead.
+  print(f"Response: {result.data}")
+/Users/hughcrt/Developer/lunary/lunary/test_pydantic_ai.py:239: DeprecationWarning: `result.data` is deprecated, use `result.output` instead.
+  print(f"Response: {result.data}")
+Exception while exporting Span.
+Traceback (most recent call last):
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/connection.py", line 565, in getresponse
+    httplib_response = super().getresponse()
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/http/client.py", line 1430, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/http/client.py", line 331, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/http/client.py", line 292, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+TimeoutError: timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/requests/adapters.py", line 667, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/util/retry.py", line 474, in increment
+    raise reraise(type(error), error, _stacktrace)
+          ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/util/util.py", line 39, in reraise
+    raise value
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/connectionpool.py", line 536, in _make_request
+    self._raise_timeout(err=e, url=url, timeout_value=read_timeout)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/connectionpool.py", line 367, in _raise_timeout
+    raise ReadTimeoutError(
+        self, url, f"Read timed out. (read timeout={timeout_value})"
+    ) from err
+urllib3.exceptions.ReadTimeoutError: HTTPConnectionPool(host='localhost', port=4318): Read timed out. (read timeout=10)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/opentelemetry/sdk/_shared_internal/__init__.py", line 152, in _export
+    self._exporter.export(
+    ~~~~~~~~~~~~~~~~~~~~~^
+        [
+        ^
+    ...<8 lines>...
+        ]
+        ^
+    )
+    ^
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/opentelemetry/exporter/otlp/proto/http/trace_exporter/__init__.py", line 204, in export
+    return self._export_serialized_spans(serialized_data)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/opentelemetry/exporter/otlp/proto/http/trace_exporter/__init__.py", line 174, in _export_serialized_spans
+    resp = self._export(serialized_data)
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/opentelemetry/exporter/otlp/proto/http/trace_exporter/__init__.py", line 139, in _export
+    resp = self._session.post(
+        url=self._endpoint,
+    ...<3 lines>...
+        cert=self._client_cert,
+    )
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/requests/sessions.py", line 637, in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/requests/adapters.py", line 713, in send
+    raise ReadTimeout(e, request=request)
+requests.exceptions.ReadTimeout: HTTPConnectionPool(host='localhost', port=4318): Read timed out. (read timeout=10)
+/Users/hughcrt/Developer/lunary/lunary/test_pydantic_ai.py:174: DeprecationWarning: `result.data` is deprecated, use `result.output` instead.
+  return f"Travel advice: {result.data.model_dump_json()}"
+Exception while exporting Span.
+Traceback (most recent call last):
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/connection.py", line 565, in getresponse
+    httplib_response = super().getresponse()
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/http/client.py", line 1430, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/http/client.py", line 331, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/http/client.py", line 292, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+TimeoutError: timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/requests/adapters.py", line 667, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/util/retry.py", line 474, in increment
+    raise reraise(type(error), error, _stacktrace)
+          ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/util/util.py", line 39, in reraise
+    raise value
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/connectionpool.py", line 536, in _make_request
+    self._raise_timeout(err=e, url=url, timeout_value=read_timeout)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/connectionpool.py", line 367, in _raise_timeout
+    raise ReadTimeoutError(
+        self, url, f"Read timed out. (read timeout={timeout_value})"
+    ) from err
+urllib3.exceptions.ReadTimeoutError: HTTPConnectionPool(host='localhost', port=4318): Read timed out. (read timeout=10)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/opentelemetry/sdk/_shared_internal/__init__.py", line 152, in _export
+    self._exporter.export(
+    ~~~~~~~~~~~~~~~~~~~~~^
+        [
+        ^
+    ...<8 lines>...
+        ]
+        ^
+    )
+    ^
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/opentelemetry/exporter/otlp/proto/http/trace_exporter/__init__.py", line 204, in export
+    return self._export_serialized_spans(serialized_data)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/opentelemetry/exporter/otlp/proto/http/trace_exporter/__init__.py", line 174, in _export_serialized_spans
+    resp = self._export(serialized_data)
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/opentelemetry/exporter/otlp/proto/http/trace_exporter/__init__.py", line 139, in _export
+    resp = self._session.post(
+        url=self._endpoint,
+    ...<3 lines>...
+        cert=self._client_cert,
+    )
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/requests/sessions.py", line 637, in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/requests/adapters.py", line 713, in send
+    raise ReadTimeout(e, request=request)
+requests.exceptions.ReadTimeout: HTTPConnectionPool(host='localhost', port=4318): Read timed out. (read timeout=10)
+/Users/hughcrt/Developer/lunary/lunary/test_pydantic_ai.py:166: DeprecationWarning: `result.data` is deprecated, use `result.output` instead.
+  return f"Math analysis result: {result.data}"
+/Users/hughcrt/Developer/lunary/lunary/test_pydantic_ai.py:251: DeprecationWarning: `result.data` is deprecated, use `result.output` instead.
+  print(f"Response: {result.data}")
+================================================================================
+TEST 1: BASIC AGENT WITH SIMPLE RESPONSE
+================================================================================
+
+================================================================================
+TEST 2: AGENT WITH TOOLS
+================================================================================
+
+================================================================================
+TEST 3: COMPLEX AGENT WITH DEPENDENCIES
+================================================================================
+
+================================================================================
+TEST 4: NESTED AGENT CALLS (TRACE HIERARCHY)
+================================================================================
+
+================================================================================
+TEST 5: STREAMING RESPONSES
+================================================================================
+
+================================================================================
+TEST 6: ERROR HANDLING
+================================================================================
+
+Running basic agent test...
+Response: The capital of France is Paris.
+Usage: Usage(requests=1, request_tokens=30, response_tokens=7, total_tokens=37, details={'accepted_prediction_tokens': 0, 'audio_tokens': 0, 'reasoning_tokens': 0, 'rejected_prediction_tokens': 0, 'cached_tokens': 0})
+
+Running agent with tools test...
+Tool called: multiply(5, 3)
+Tool called: power(2, 4)
+Tool called: add(15, 16)
+Response: The result of \( (5 \times 3) + (2^4) \) is 31.
+Usage: Usage(requests=2, request_tokens=328, response_tokens=91, total_tokens=419, details={'accepted_prediction_tokens': 0, 'audio_tokens': 0, 'reasoning_tokens': 0, 'rejected_prediction_tokens': 0, 'cached_tokens': 0})
+
+Running complex agent test...
+Tool called: get_city_info(Paris) -> Weather: Cloudy, 15.5°C
+Response: city='Paris' reason="The weather is currently cloudy with a temperature of 15.5°C. It's a good time to visit and explore the city." best_time_to_visit='spring or fall' must_see_attractions=['Eiffel Tower', 'Louvre Museum', 'Notre Dame Cathedral']
+Usage: Usage(requests=2, request_tokens=318, response_tokens=87, total_tokens=405, details={'accepted_prediction_tokens': 0, 'audio_tokens': 0, 'reasoning_tokens': 0, 'rejected_prediction_tokens': 0, 'cached_tokens': 0})
+
+Running nested agents test...
+Delegating to math agent: 15 * 7 + 3^2
+Delegating to travel agent for: Tokyo
+Tool called: multiply(15, 7)
+Tool called: add(105, 9)
+Tool called: power(3, 2)
+Tool called: get_city_info(Tokyo) -> Weather: Sunny, 22.0°C
+Response: 1) The result of \(15 \times 7 + 3^2\) is 114.
+
+2) Travel advice for Tokyo:
+- City: Tokyo
+- Reason: The weather is sunny, with a temperature of 22°C, making it a great time to visit.
+- Best time to visit: Spring or autumn
+- Must-see attractions: Senso-ji Temple, Shibuya Crossing, Tokyo Disneyland
+Usage: Usage(requests=2, request_tokens=413, response_tokens=143, total_tokens=556, details={'accepted_prediction_tokens': 0, 'audio_tokens': 0, 'reasoning_tokens': 0, 'rejected_prediction_tokens': 0, 'cached_tokens': 0})
+
+Running streaming test...
+Streaming response: Traceback (most recent call last):
+  File "/Users/hughcrt/Developer/lunary/lunary/test_pydantic_ai.py", line 295, in <module>
+    asyncio.run(run_tests())
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/base_events.py", line 725, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/Users/hughcrt/Developer/lunary/lunary/test_pydantic_ai.py", line 262, in run_tests
+    async for chunk in stream:
+                       ^^^^^^
+TypeError: 'async for' requires an object with __aiter__ method, got StreamedRunResult
+Exception while exporting Span.
+Traceback (most recent call last):
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/connection.py", line 565, in getresponse
+    httplib_response = super().getresponse()
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/http/client.py", line 1430, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/http/client.py", line 331, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/http/client.py", line 292, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+TimeoutError: timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/requests/adapters.py", line 667, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/util/retry.py", line 474, in increment
+    raise reraise(type(error), error, _stacktrace)
+          ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/util/util.py", line 39, in reraise
+    raise value
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/connectionpool.py", line 536, in _make_request
+    self._raise_timeout(err=e, url=url, timeout_value=read_timeout)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/connectionpool.py", line 367, in _raise_timeout
+    raise ReadTimeoutError(
+        self, url, f"Read timed out. (read timeout={timeout_value})"
+    ) from err
+urllib3.exceptions.ReadTimeoutError: HTTPConnectionPool(host='localhost', port=4318): Read timed out. (read timeout=10)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/opentelemetry/sdk/_shared_internal/__init__.py", line 152, in _export
+    self._exporter.export(
+    ~~~~~~~~~~~~~~~~~~~~~^
+        [
+        ^
+    ...<8 lines>...
+        ]
+        ^
+    )
+    ^
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/opentelemetry/exporter/otlp/proto/http/trace_exporter/__init__.py", line 204, in export
+    return self._export_serialized_spans(serialized_data)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/opentelemetry/exporter/otlp/proto/http/trace_exporter/__init__.py", line 174, in _export_serialized_spans
+    resp = self._export(serialized_data)
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/opentelemetry/exporter/otlp/proto/http/trace_exporter/__init__.py", line 139, in _export
+    resp = self._session.post(
+        url=self._endpoint,
+    ...<3 lines>...
+        cert=self._client_cert,
+    )
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/requests/sessions.py", line 637, in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/requests/adapters.py", line 713, in send
+    raise ReadTimeout(e, request=request)
+requests.exceptions.ReadTimeout: HTTPConnectionPool(host='localhost', port=4318): Read timed out. (read timeout=10)
+Exception while exporting Span.
+Traceback (most recent call last):
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/connection.py", line 565, in getresponse
+    httplib_response = super().getresponse()
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/http/client.py", line 1430, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/http/client.py", line 331, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/http/client.py", line 292, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.5/Frameworks/Python.framework/Versions/3.13/lib/python3.13/socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+TimeoutError: timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/requests/adapters.py", line 667, in send
+    resp = conn.urlopen(
+        method=request.method,
+    ...<9 lines>...
+        chunked=chunked,
+    )
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+        method, url, error=new_e, _pool=self, _stacktrace=sys.exc_info()[2]
+    )
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/util/retry.py", line 474, in increment
+    raise reraise(type(error), error, _stacktrace)
+          ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/util/util.py", line 39, in reraise
+    raise value
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/connectionpool.py", line 536, in _make_request
+    self._raise_timeout(err=e, url=url, timeout_value=read_timeout)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/urllib3/connectionpool.py", line 367, in _raise_timeout
+    raise ReadTimeoutError(
+        self, url, f"Read timed out. (read timeout={timeout_value})"
+    ) from err
+urllib3.exceptions.ReadTimeoutError: HTTPConnectionPool(host='localhost', port=4318): Read timed out. (read timeout=10)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/opentelemetry/sdk/_shared_internal/__init__.py", line 152, in _export
+    self._exporter.export(
+    ~~~~~~~~~~~~~~~~~~~~~^
+        [
+        ^
+    ...<8 lines>...
+        ]
+        ^
+    )
+    ^
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/opentelemetry/exporter/otlp/proto/http/trace_exporter/__init__.py", line 204, in export
+    return self._export_serialized_spans(serialized_data)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/opentelemetry/exporter/otlp/proto/http/trace_exporter/__init__.py", line 174, in _export_serialized_spans
+    resp = self._export(serialized_data)
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/opentelemetry/exporter/otlp/proto/http/trace_exporter/__init__.py", line 139, in _export
+    resp = self._session.post(
+        url=self._endpoint,
+    ...<3 lines>...
+        cert=self._client_cert,
+    )
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/requests/sessions.py", line 637, in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "/Users/hughcrt/Developer/lunary/lunary/env/lib/python3.13/site-packages/requests/adapters.py", line 713, in send
+    raise ReadTimeout(e, request=request)
+requests.exceptions.ReadTimeout: HTTPConnectionPool(host='localhost', port=4318): Read timed out. (read timeout=10)

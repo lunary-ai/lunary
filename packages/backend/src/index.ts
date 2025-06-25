@@ -7,6 +7,7 @@ import auth from "./api/v1/auth";
 import { authMiddleware } from "./api/v1/auth/utils";
 import redirections from "./api/v1/redirections";
 import webhooks from "./api/webhooks";
+import otelIngest from "./api/otel";
 import { createIndexes } from "./create-indexes";
 import { checkEmailServerConnection } from "./emails";
 import { startJobWorker } from "./jobs";
@@ -72,6 +73,7 @@ app.use(redirections.routes());
 app.use(v1.routes());
 app.use(auth.routes());
 app.use(webhooks.routes());
+app.use(otelIngest.routes());
 
 const PORT = Number(process.env.PORT || 3333);
 const server = app.listen(PORT, () =>

@@ -478,6 +478,7 @@ export async function processEventsIngestion(
   projectId: string,
   events: Event | Event[],
 ): Promise<{ id?: string; success: boolean; error?: string }[]> {
+  console.log(events);
   // Used to check if parentRunId was already inserted
   const insertedIds = new Set<string>();
 

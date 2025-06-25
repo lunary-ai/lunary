@@ -14,6 +14,52 @@ import {
   ExportLogsServiceResponse,
 } from "./gen/opentelemetry/proto/collector/logs/v1/logs_service.ts";
 
+// Transformer util
+import { spanToEvents, logToEvents, anyValueToJs, getSpanContent } from "./transform";
+
+// Where to send events
+const BACKEND_INGEST_URL =
+  process.env.LUNARY_BACKEND_URL || "http://localhost:3333/ingest/otel";
+
+async function forward(events: any[]) {
+  if (!events.length) return;
+
+  console.log(`\n📥 Forwarding ${events.length} events to backend`);
+  console.log("Events:", JSON.stringify(events, null, 2));
+
+  // Try to find project key in the batch metadata (resource attribute
+  // `lunary.project_key` is mapped to event.metadata.project_key).
+  const first = events[0];
+  const projectKey =
+    first?.metadata?.project_key ||
+    first?.metadata?.projectKey ||
+    process.env.LUNARY_PUBLIC_KEY;
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (projectKey) headers["lunary-project-key"] = projectKey;
+
+  console.log(`Using project key: ${projectKey}`);
+
+  try {
+    const response = await fetch(BACKEND_INGEST_URL, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(events),
+    });
+    
+    if (!response.ok) {
+      const text = await response.text();
+      console.error(`❌ Backend returned ${response.status}: ${text}`);
+    } else {
+      console.log("✅ Successfully forwarded to backend");
+    }
+  } catch (err) {
+    console.error("❌ Error forwarding OTEL batch to backend:", err);
+  }
+}
+
 // Helpers --------------------------------------------------------------------
 const PROTO = "application/x-protobuf";
 function bad(msg: string, code = 415) {
@@ -37,12 +83,30 @@ serve({
     switch (path) {
       case "/v1/traces": {
         const batch = ExportTraceServiceRequest.decode(body);
-        console.log(
-          `📦 traces: ${batch.resourceSpans.length} ResourceSpans, ` +
-            `${
-              batch.resourceSpans.flatMap((r) => r.scopeSpans).length
-            } ScopeSpans`
-        );
+        console.log(`\n🔭 Received traces: ${batch.resourceSpans.length} ResourceSpans`);
+        
+        // Transform to Lunary events and forward
+        const events: any[] = [];
+        for (const rs of batch.resourceSpans) {
+          const resAttrs = Object.fromEntries(
+            (rs.resource?.attributes || []).map((kv) => [
+              kv.key,
+              anyValueToJs(kv.value),
+            ]),
+          );
+          console.log("Resource attributes:", resAttrs);
+          
+          for (const ss of rs.scopeSpans) {
+            for (const span of ss.spans) {
+              const spanEvents = spanToEvents(span, resAttrs);
+              console.log(`Processing span ${span.name} -> ${spanEvents.length} events`);
+              events.push(...spanEvents);
+            }
+          }
+        }
+
+        await forward(events);
+
         const resp = ExportTraceServiceResponse.create(); // empty = “success”
         return ok(ExportTraceServiceResponse.encode(resp).finish());
       }
@@ -50,7 +114,7 @@ serve({
       case "/v1/metrics": {
         const batch = ExportMetricsServiceRequest.decode(body);
         console.log(
-          `📊 metrics: ${batch.resourceMetrics.length} ResourceMetrics`
+          `📊 metrics: ${batch.resourceMetrics.length} ResourceMetrics`,
         );
         const resp = ExportMetricsServiceResponse.create();
         return ok(ExportMetricsServiceResponse.encode(resp).finish());
@@ -58,7 +122,22 @@ serve({
 
       case "/v1/logs": {
         const batch = ExportLogsServiceRequest.decode(body);
-        console.log(`📝 logs: ${batch.resourceLogs.length} ResourceLogs`);
+        const events: any[] = [];
+        for (const rl of batch.resourceLogs) {
+          const resAttrs = Object.fromEntries(
+            (rl.resource?.attributes || []).map((kv) => [
+              kv.key,
+              anyValueToJs(kv.value),
+            ]),
+          );
+          for (const sl of rl.scopeLogs) {
+            for (const log of sl.logRecords) {
+              events.push(...logToEvents(log, resAttrs));
+            }
+          }
+        }
+        await forward(events);
+
         const resp = ExportLogsServiceResponse.create();
         return ok(ExportLogsServiceResponse.encode(resp).finish());
       }

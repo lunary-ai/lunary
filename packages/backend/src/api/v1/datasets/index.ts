@@ -896,9 +896,10 @@ datasets.patch(
  */
 datasets.post(
   "/variations",
-  checkAccess("datasets", "update"),
+  // checkAccess("datasets", "update"),
   async (ctx: Context) => {
     const { projectId } = ctx.state;
+    console.log(projectId);
     const { promptId, variables, idealOutput } = ctx.request.body as {
       promptId: string;
       variables: any;
