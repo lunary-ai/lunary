@@ -1112,21 +1112,6 @@ try:
                     parent_run_id = run_manager.current_run_id
                 run = run_manager.start_run(run_id, parent_run_id)
                 
-                if self._should_ignore_run(run.id, run_type="llm"):
-                    self.__track_event(
-                        "llm",
-                        "start",
-                        run_id=run.id,
-                        parent_run_id=run.parent_run_id,
-                        input="__NOT_INGESTED__",
-                        output="__NOT_INGESTED__",
-                        app_id=self.__app_id,
-                        api_url=self.__api_url,
-                        callback_queue=self.queue,
-                        runtime="langchain-py",
-                    )
-                    return 
-
                 user_id = _get_user_id(metadata)
                 user_props = _get_user_props(metadata)
 
@@ -1144,6 +1129,22 @@ try:
                     or params.get("deployment_name")
                     or params.get("azure_deployment")
                 )
+                
+                if self._should_ignore_run(run.id, run_type="llm"):
+                    self.__track_event(
+                        "llm",
+                        "start",
+                        run_id=run.id,
+                        parent_run_id=run.parent_run_id,
+                        name=name,
+                        input="__NOT_INGESTED__",
+                        output="__NOT_INGESTED__",
+                        app_id=self.__app_id,
+                        api_url=self.__api_url,
+                        callback_queue=self.queue,
+                        runtime="langchain-py",
+                    )
+                    return
 
                 if not name and "anthropic" in params.get("_type"):
                     name = "claude-2"
@@ -1187,21 +1188,6 @@ try:
                     parent_run_id = run_manager.current_run_id
                 run = run_manager.start_run(run_id, parent_run_id)
                 
-                if self._should_ignore_run(run.id, run_type="llm"):
-                    self.__track_event(
-                        "llm",
-                        "start",
-                        run_id=run.id,
-                        parent_run_id=run.parent_run_id,
-                        input="__NOT_INGESTED__",
-                        output="__NOT_INGESTED__",
-                        app_id=self.__app_id,
-                        api_url=self.__api_url,
-                        callback_queue=self.queue,
-                        runtime="langchain-py",
-                    )
-                    return
-
                 user_id = _get_user_id(metadata)
                 user_props = _get_user_props(metadata)
 
@@ -1219,6 +1205,22 @@ try:
                     or params.get("deployment_name")
                     or params.get("azure_deployment")
                 )
+                
+                if self._should_ignore_run(run.id, run_type="llm"):
+                    self.__track_event(
+                        "llm",
+                        "start",
+                        run_id=run.id,
+                        parent_run_id=run.parent_run_id,
+                        name=name,
+                        input="__NOT_INGESTED__",
+                        output="__NOT_INGESTED__",
+                        app_id=self.__app_id,
+                        api_url=self.__api_url,
+                        callback_queue=self.queue,
+                        runtime="langchain-py",
+                    )
+                    return
 
                 if not name and "anthropic" in params.get("_type"):
                     name = "claude-2"
@@ -1321,12 +1323,17 @@ try:
                     parent_run_id = run_manager.current_run_id
                 run = run_manager.start_run(run_id, parent_run_id)
                 
-                if self._should_ignore_run(run.id, run_type="tool", name=serialized.get("name")):
+                user_id = _get_user_id(metadata)
+                user_props = _get_user_props(metadata)
+                name = serialized.get("name")
+                
+                if self._should_ignore_run(run.id, run_type="tool", name=name):
                     self.__track_event(
                         "tool",
                         "start",
                         run_id=run.id,
                         parent_run_id=run.parent_run_id,
+                        name=name,
                         input="__NOT_INGESTED__",
                         output="__NOT_INGESTED__",
                         app_id=self.__app_id,
@@ -1335,10 +1342,6 @@ try:
                         runtime="langchain-py",
                     )
                     return
-
-                user_id = _get_user_id(metadata)
-                user_props = _get_user_props(metadata)
-                name = serialized.get("name")
 
                 self.__track_event(
                     "tool",
@@ -1443,6 +1446,7 @@ try:
                         "start",
                         run_id=run.id,
                         parent_run_id=run.parent_run_id,
+                        name=name,
                         input="__NOT_INGESTED__",
                         output="__NOT_INGESTED__",
                         app_id=self.__app_id,
@@ -1688,12 +1692,19 @@ try:
                     parent_run_id = run_manager.current_run_id
                 run = run_manager.start_run(run_id, parent_run_id)
                 
-                if self._should_ignore_run(run.id, run_type="retriever", name=name or (serialized.get("name") if serialized else None)):
+                user_id = _get_user_id(kwargs.get("metadata"))
+                user_props = _get_user_props(kwargs.get("metadata"))
+
+                if name is None and serialized:
+                    name = serialized.get("name")
+                
+                if self._should_ignore_run(run.id, run_type="retriever", name=name):
                     self.__track_event(
                         "retriever",
                         "start",
                         run_id=run.id,
                         parent_run_id=run.parent_run_id,
+                        name=name,
                         input="__NOT_INGESTED__",
                         output="__NOT_INGESTED__",
                         app_id=self.__app_id,
@@ -1702,12 +1713,6 @@ try:
                         runtime="langchain-py",
                     )
                     return
-
-                user_id = _get_user_id(kwargs.get("metadata"))
-                user_props = _get_user_props(kwargs.get("metadata"))
-
-                if name is None and serialized:
-                    name = serialized.get("name")
 
                 self.__track_event(
                     "retriever",
