@@ -29,10 +29,12 @@ const auth = new Router({
 auth.post("/method", async (ctx: Context) => {
   const bodySchema = z.object({
     email: z.string().email().transform(sanitizeEmail),
+    joinToken: z.string().optional(),
   });
 
-  const { email } = bodySchema.parse(ctx.request.body);
+  const { email, joinToken } = bodySchema.parse(ctx.request.body);
 
+  // First check if there's an existing account with SAML
   const [samlOrg] = await sql`
     select org.* from org
     join account on account.org_id = org.id
@@ -41,10 +43,29 @@ auth.post("/method", async (ctx: Context) => {
     and org.saml_idp_xml is not null
   `;
 
-  if (!samlOrg || !samlOrg.samlIdpXml) {
+  // If no existing account but we have a join token, check the org from the token
+  let orgToCheck = samlOrg;
+  if (!samlOrg && joinToken) {
+    try {
+      const { payload } = await verifyJWT(joinToken);
+      if (payload.email === email && payload.orgId) {
+        const [inviteOrg] = await sql`
+          select * from org
+          where id = ${payload.orgId}
+          and saml_enabled = true
+          and saml_idp_xml is not null
+        `;
+        orgToCheck = inviteOrg;
+      }
+    } catch (error) {
+      // Invalid token, ignore
+    }
+  }
+
+  if (!orgToCheck || !orgToCheck.samlIdpXml) {
     ctx.body = { method: "password" };
   } else {
-    const url = await getLoginUrl(samlOrg.id);
+    const url = await getLoginUrl(orgToCheck.id, joinToken);
 
     ctx.body = { method: "saml", redirect: url };
   }
@@ -320,6 +341,7 @@ auth.get("/join-data", async (ctx: Context) => {
 
 auth.get("/saml-url/:orgId", async (ctx: Context) => {
   const orgId = z.string().parse(ctx.params.orgId);
+  const joinToken = z.string().optional().parse(ctx.query.joinToken);
 
   const [org] = await sql`
     select saml_enabled, saml_idp_xml from org where id = ${orgId}
@@ -331,7 +353,7 @@ auth.get("/saml-url/:orgId", async (ctx: Context) => {
     return;
   }
 
-  const url = await getLoginUrl(orgId);
+  const url = await getLoginUrl(orgId, joinToken);
   ctx.body = { url };
 });
 
