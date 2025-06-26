@@ -161,6 +161,25 @@ export default function Join() {
     }
   }, [step, router.isReady]);
 
+  // Redirect to SAML if org has SAML enabled and user has acknowledged
+  useEffect(() => {
+    async function checkSamlRedirect() {
+      if (!joinData || !acknowledged || !token) return;
+      
+      const { samlEnabled, orgId } = joinData;
+      
+      if (samlEnabled) {
+        try {
+          const { url } = await fetcher.get(`/auth/saml-url/${orgId}?joinToken=${token}`);
+          window.location.href = url;
+        } catch (error) {
+          console.error("Failed to get SAML URL:", error);
+        }
+      }
+    }
+    
+    checkSamlRedirect();
+  }, [joinData, acknowledged, token]);
 
   const form = useForm({
     initialValues: {
@@ -275,13 +294,24 @@ export default function Join() {
     return <Loader />;
   }
 
-  const { orgUserCount, orgName, orgId, orgPlan, orgSeatAllowance } = joinData;
+  const { orgUserCount, orgName, orgId, orgPlan, orgSeatAllowance, samlEnabled } = joinData;
   const seatAllowance = orgSeatAllowance || SEAT_ALLOWANCE[orgPlan];
 
   if (orgUserCount >= seatAllowance) {
     return <TeamFull orgName={orgName} />;
   }
 
+  // Show loading state while redirecting to SAML
+  if (samlEnabled && acknowledged) {
+    return (
+      <Container py={100} size={600}>
+        <Stack align="center" gap={30}>
+          <Loader size="lg" />
+          <Title order={3}>Redirecting to your organization's login...</Title>
+        </Stack>
+      </Container>
+    );
+  }
 
   return (
     <Container py={100} size={600}>
