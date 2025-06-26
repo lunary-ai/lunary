@@ -65,7 +65,7 @@ auth.post("/method", async (ctx: Context) => {
   if (!orgToCheck || !orgToCheck.samlIdpXml) {
     ctx.body = { method: "password" };
   } else {
-    const url = await getLoginUrl(orgToCheck.id, joinToken);
+    const url = await getLoginUrl(orgToCheck.id);
 
     ctx.body = { method: "saml", redirect: url };
   }
