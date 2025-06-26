@@ -11,6 +11,7 @@ import z from "zod";
 import { aggressiveRatelimit } from "@/src/utils/ratelimit";
 import { checkAccess } from "@/src/utils/authorization";
 import { hasAccess } from "shared";
+import { verifyJWT } from "./utils";
 
 // Required for SAMLify to work
 samlify.setSchemaValidator(validator);
@@ -71,11 +72,17 @@ async function getOrgSp(orgId: string) {
   });
 }
 
-export async function getLoginUrl(orgId: string) {
+export async function getLoginUrl(orgId: string, relayState?: string) {
   const idp = await getOrgIdp(orgId);
   const sp = await getOrgSp(orgId);
-  const { context } = sp.createLoginRequest(idp, "redirect");
-  return context;
+  
+  if (relayState) {
+    const { context } = sp.createLoginRequest(idp, "redirect", { relayState });
+    return context;
+  } else {
+    const { context } = sp.createLoginRequest(idp, "redirect");
+    return context;
+  }
 }
 
 // This function parses the attributes from the SAML response
@@ -176,7 +183,7 @@ route.post("/acs", async (ctx: Context) => {
 
   const parsedResult = await sp.parseLoginResponse(idp, "post", ctx.request);
 
-  const { attributes, conditions, nameID } = parsedResult.extract;
+  const { attributes, conditions, nameID, relayState } = parsedResult.extract;
 
   if (!attributes) {
     ctx.throw(400, "No attributes found");
@@ -196,16 +203,60 @@ route.post("/acs", async (ctx: Context) => {
 
   const singleUseToken = await generateOneTimeToken();
 
-  const [account] = await sql`
-    update 
-      account 
-    set 
-      ${sql({ name, singleUseToken, lastLoginAt: new Date() })} 
-    where 
-      email = ${email} 
-      and org_id = ${orgId} 
-    returning *
-  `;
+  // Check if this is a join flow (RelayState contains the join token)
+  let account;
+  if (relayState) {
+    try {
+      const { payload } = await verifyJWT(relayState);
+      if (payload.orgId === orgId && payload.email === email) {
+        // This is a join flow, create the account
+        const newUser = {
+          name,
+          email,
+          orgId,
+          role: payload.role as string,
+          verified: true,
+          lastLoginAt: new Date(),
+          singleUseToken,
+        };
+
+        [account] = await sql`
+          insert into account ${sql(newUser)} 
+          on conflict (email, org_id) do update set
+            name = ${name},
+            single_use_token = ${singleUseToken},
+            last_login_at = ${new Date()}
+          returning *
+        `;
+
+        // Add user to projects if specified in the invitation
+        if (payload.projects && Array.isArray(payload.projects)) {
+          for (const projectId of payload.projects) {
+            await sql`insert into account_project ${sql({ accountId: account.id, projectId })} on conflict do nothing`;
+          }
+        }
+
+        // Delete the invitation
+        await sql`delete from org_invitation where email = ${email} and org_id = ${orgId}`;
+      }
+    } catch (error) {
+      // Invalid or expired token, fall through to regular login
+    }
+  }
+
+  // If not a join flow or join failed, try regular login
+  if (!account) {
+    [account] = await sql`
+      update 
+        account 
+      set 
+        ${sql({ name, singleUseToken, lastLoginAt: new Date() })} 
+      where 
+        email = ${email} 
+        and org_id = ${orgId} 
+      returning *
+    `;
+  }
 
   if (!account) {
     ctx.throw(
