@@ -299,7 +299,7 @@ auth.get("/join-data", async (ctx: Context) => {
   } = await verifyJWT(token);
 
   const [org] = await sql`
-    select name, plan, seat_allowance from org where id = ${orgId}
+    select name, plan, seat_allowance, saml_enabled, saml_idp_xml from org where id = ${orgId}
   `;
 
   const [orgUserCountResult] = await sql`
@@ -314,7 +314,25 @@ auth.get("/join-data", async (ctx: Context) => {
     orgId: orgId,
     orgSeatAllowance: org?.seatAllowance,
     oldRole,
+    samlEnabled: org?.samlEnabled && !!org?.samlIdpXml,
   };
+});
+
+auth.get("/saml-url/:orgId", async (ctx: Context) => {
+  const orgId = z.string().parse(ctx.params.orgId);
+
+  const [org] = await sql`
+    select saml_enabled, saml_idp_xml from org where id = ${orgId}
+  `;
+
+  if (!org || !org.samlEnabled || !org.samlIdpXml) {
+    ctx.status = 404;
+    ctx.body = { error: "SAML not enabled for this organization" };
+    return;
+  }
+
+  const url = await getLoginUrl(orgId);
+  ctx.body = { url };
 });
 
 auth.post("/login", async (ctx: Context) => {
