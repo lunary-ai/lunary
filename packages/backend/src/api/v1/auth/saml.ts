@@ -183,7 +183,8 @@ route.post("/acs", async (ctx: Context) => {
 
   const parsedResult = await sp.parseLoginResponse(idp, "post", ctx.request);
 
-  const { attributes, conditions, nameID, relayState } = parsedResult.extract;
+  const { attributes, conditions, nameID } = parsedResult.extract;
+  const relayState = (ctx.request.body as any)?.RelayState || parsedResult.extract?.relayState;
 
   if (!attributes) {
     ctx.throw(400, "No attributes found");
