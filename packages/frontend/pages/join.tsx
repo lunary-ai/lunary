@@ -82,6 +82,7 @@ export default function Join() {
   const { token } = router.query;
 
   const { data: joinData } = useJoinData(token as string);
+  const [samlRedirected, setSamlRedirected] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
@@ -160,6 +161,27 @@ export default function Join() {
       router.replace(router);
     }
   }, [step, router.isReady]);
+
+  useEffect(() => {
+    async function checkSamlRedirect() {
+      if (!joinData || !acknowledged || samlRedirected) return;
+      
+      const { samlEnabled, orgId } = joinData;
+      
+      if (samlEnabled) {
+        setSamlRedirected(true);
+        try {
+          const { url } = await fetcher.get(`/auth/saml-url/${orgId}`);
+          window.location.href = url;
+        } catch (error) {
+          console.error("Failed to get SAML URL:", error);
+          setSamlRedirected(false);
+        }
+      }
+    }
+    
+    checkSamlRedirect();
+  }, [joinData, acknowledged, samlRedirected]);
 
   const form = useForm({
     initialValues: {
@@ -278,11 +300,22 @@ export default function Join() {
     return <Loader />;
   }
 
-  const { orgUserCount, orgName, orgId, orgPlan, orgSeatAllowance } = joinData;
+  const { orgUserCount, orgName, orgId, orgPlan, orgSeatAllowance, samlEnabled } = joinData;
   const seatAllowance = orgSeatAllowance || SEAT_ALLOWANCE[orgPlan];
 
   if (orgUserCount >= seatAllowance) {
     return <TeamFull orgName={orgName} />;
+  }
+
+  if (samlEnabled && acknowledged && !samlRedirected) {
+    return (
+      <Container py={100} size={600}>
+        <Stack align="center" gap={30}>
+          <Loader size="lg" />
+          <Title order={3}>Redirecting to your organization's login...</Title>
+        </Stack>
+      </Container>
+    );
   }
 
   return (
