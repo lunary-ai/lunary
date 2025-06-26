@@ -183,8 +183,11 @@ route.post("/acs", async (ctx: Context) => {
 
   const parsedResult = await sp.parseLoginResponse(idp, "post", ctx.request);
 
+  console.log("[SAML ACS] Request body keys:", Object.keys(ctx.request.body || {}));
+  console.log("[SAML ACS] Parsed result extract keys:", Object.keys(parsedResult.extract || {}));
+
   const { attributes, conditions, nameID } = parsedResult.extract;
-  const relayState = (ctx.request.body as any)?.RelayState || parsedResult.extract?.relayState;
+  const relayState = (ctx.request.body as any)?.RelayState || parsedResult.extract?.relayState || parsedResult.extract?.RelayState;
 
   if (!attributes) {
     ctx.throw(400, "No attributes found");
@@ -204,31 +207,67 @@ route.post("/acs", async (ctx: Context) => {
 
   const singleUseToken = await generateOneTimeToken();
 
+  console.log("[SAML ACS] Processing for email:", email, "orgId:", orgId);
+  console.log("[SAML ACS] RelayState:", relayState);
+
   // Check if this is a join flow (RelayState contains the join token)
   let account;
   if (relayState) {
     try {
       const { payload } = await verifyJWT(relayState);
-      if (payload.orgId === orgId && payload.email === email) {
+      console.log("[SAML ACS] JWT payload:", payload);
+      
+      // Check if this is a valid join token for this org and email
+      if (payload.orgId === orgId && payload.email?.toLowerCase() === email?.toLowerCase()) {
+        console.log("[SAML ACS] Join flow detected, creating account");
+        console.log("[SAML ACS] Token email:", payload.email, "SAML email:", email);
         // This is a join flow, create the account
         const newUser = {
           name,
           email,
-          orgId,
+          org_id: orgId,  // Note: using org_id not orgId
           role: payload.role as string,
           verified: true,
-          lastLoginAt: new Date(),
-          singleUseToken,
+          last_login_at: new Date(),
+          single_use_token: singleUseToken,
+          password_hash: null,  // SAML users don't have passwords
+          created_at: new Date(),
         };
 
-        [account] = await sql`
-          insert into account ${sql(newUser)} 
-          on conflict (email, org_id) do update set
-            name = ${name},
-            single_use_token = ${singleUseToken},
-            last_login_at = ${new Date()}
-          returning *
-        `;
+        console.log("[SAML ACS] Creating user with data:", newUser);
+
+        try {
+          // First check if account already exists for this email/org combination
+          const [existingAccount] = await sql`
+            select * from account 
+            where email = ${email} 
+            and org_id = ${orgId}
+          `;
+
+          if (existingAccount) {
+            console.log("[SAML ACS] Account already exists, updating...");
+            [account] = await sql`
+              update account set
+                name = ${name},
+                single_use_token = ${singleUseToken},
+                last_login_at = ${new Date()},
+                verified = true
+              where email = ${email} 
+              and org_id = ${orgId}
+              returning *
+            `;
+          } else {
+            console.log("[SAML ACS] Creating new account");
+            [account] = await sql`
+              insert into account ${sql(newUser)} 
+              returning *
+            `;
+          }
+          console.log("[SAML ACS] Account created/updated:", account?.id);
+        } catch (sqlError) {
+          console.error("[SAML ACS] SQL Error creating account:", sqlError);
+          throw sqlError;
+        }
 
         // Add user to projects if specified in the invitation
         if (payload.projects && Array.isArray(payload.projects)) {
@@ -239,27 +278,37 @@ route.post("/acs", async (ctx: Context) => {
 
         // Delete the invitation
         await sql`delete from org_invitation where email = ${email} and org_id = ${orgId}`;
+      } else {
+        console.log("[SAML ACS] Email/OrgId mismatch - payload:", payload.email, payload.orgId, "vs actual:", email, orgId);
       }
     } catch (error) {
+      console.error("[SAML ACS] Error processing join token:", error);
       // Invalid or expired token, fall through to regular login
     }
+  } else {
+    console.log("[SAML ACS] No RelayState found");
   }
 
   // If not a join flow or join failed, try regular login
   if (!account) {
+    console.log("[SAML ACS] Trying regular login update");
     [account] = await sql`
       update 
         account 
       set 
-        ${sql({ name, singleUseToken, lastLoginAt: new Date() })} 
+        name = ${name},
+        single_use_token = ${singleUseToken},
+        last_login_at = ${new Date()}
       where 
         email = ${email} 
         and org_id = ${orgId} 
       returning *
     `;
+    console.log("[SAML ACS] Regular login result:", account?.id);
   }
 
   if (!account) {
+    console.error("[SAML ACS] No account found or created for:", email, "in org:", orgId);
     ctx.throw(
       400,
       "Account not found. Please ask your administrator to invite you.",
