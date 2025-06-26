@@ -171,7 +171,7 @@ export default function Join() {
       if (samlEnabled) {
         setSamlRedirected(true);
         try {
-          const { url } = await fetcher.get(`/auth/saml-url/${orgId}`);
+          const { url } = await fetcher.get(`/auth/saml-url/${orgId}?joinToken=${token}`);
           window.location.href = url;
         } catch (error) {
           console.error("Failed to get SAML URL:", error);
@@ -181,7 +181,7 @@ export default function Join() {
     }
     
     checkSamlRedirect();
-  }, [joinData, acknowledged, samlRedirected]);
+  }, [joinData, acknowledged, samlRedirected, token]);
 
   const form = useForm({
     initialValues: {
@@ -254,7 +254,7 @@ export default function Join() {
     try {
       if (step === 1) {
         const { method, redirect } = await fetcher.post("/auth/method", {
-          arg: { email },
+          arg: { email, joinToken: token },
         });
 
         const mustVerify = !!joinData?.oldRole && method === "password";
