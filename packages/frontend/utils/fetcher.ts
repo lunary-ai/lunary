@@ -149,9 +149,10 @@ async function handleResponse(res: Response) {
     const { error, message } = await res.json();
 
     if (message === "Session expired") {
-      showErrorNotification(message, "Please log in again.");
+      signOut();
       return;
     } else if (message === "Invalid access token") {
+      signOut();
       return;
     }
     showErrorNotification(error, message);
