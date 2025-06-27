@@ -8,6 +8,7 @@ import {
   JsonInput,
   Modal,
   NumberInput,
+  Stack,
   Text,
   Tooltip,
 } from "@mantine/core";
@@ -18,7 +19,7 @@ import { IconInfoCircle, IconSettings, IconTools } from "@tabler/icons-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useState } from "react";
-import { CustomModel, Model, MODELS, OldProvider } from "shared";
+import { Model, OldProvider } from "shared";
 import ModelSelect from "./ModelSelect";
 
 function convertOpenAIToolsToAnthropic(openAITools) {
@@ -90,9 +91,14 @@ export default function ProviderEditor({
   hideStream = false,
   hideTopP = false,
   hideToolCalls = false,
+  hideModel = false,
 }: {
   value: OldProvider;
   onChange: (value: OldProvider) => void;
+  hideStream?: boolean;
+  hideTopP?: boolean;
+  hideToolCalls?: boolean;
+  hideModel?: boolean;
 }) {
   const [tempJSON, setTempJSON] = useState<any>("");
   const [jsonModalOpened, setJsonModalOpened] = useState(false);
@@ -160,122 +166,125 @@ export default function ProviderEditor({
   }
 
   return (
-    <>
-      <ParamItem
-        name="Model"
-        value={
-          <Group>
-            <ModelSelect handleChange={handleModelSelectChange} />
-            <ActionIcon
-              variant="default"
-              onClick={() => router.push("/settings/providers")}
-            >
-              <IconSettings width={18} opacity="0.7" />
-            </ActionIcon>
-          </Group>
-        }
-      />
-      <ParamItem
-        name="Temperature"
-        value={
-          <NumberInput
-            min={0}
-            max={2}
-            step={0.1}
-            decimalScale={2}
-            style={{ zIndex: 0 }}
-            w={90}
-            {...configHandler("temperature")}
-          />
-        }
-      />
-      <ParamItem
-        name="Max tokens"
-        value={
-          <NumberInput
-            min={1}
-            max={32000}
-            step={100}
-            w={90}
-            {...configHandler("max_tokens")}
-          />
-        }
-      />
-      <ParamItem
-        name="Freq. Penalty"
-        value={
-          <NumberInput
-            min={-2}
-            max={2}
-            decimalScale={2}
-            step={0.1}
-            w={90}
-            {...configHandler("frequency_penalty")}
-          />
-        }
-      />
-      <ParamItem
-        name="Pres. Penalty"
-        value={
-          <NumberInput
-            min={-2}
-            max={2}
-            decimalScale={2}
-            step={0.1}
-            w={90}
-            {...configHandler("presence_penalty")}
-          />
-        }
-      />
-      {!hideTopP && (
+    <Stack gap={hideModel ? "md" : 0}>
+      {!hideModel && (
         <ParamItem
-          name="Top P"
+          name="Model"
           value={
-            <NumberInput
-              min={0.1}
-              max={1}
-              decimalScale={2}
-              step={0.1}
-              w={90}
-              {...configHandler("top_p")}
-            />
+            <Group>
+              <ModelSelect handleChange={handleModelSelectChange} />
+              <ActionIcon
+                variant="default"
+                onClick={() => router.push("/settings/providers")}
+              >
+                <IconSettings width={18} opacity="0.7" />
+              </ActionIcon>
+            </Group>
           }
         />
       )}
-      {!hideStream && (
+      <Stack gap="md">
         <ParamItem
-          name="Stream"
-          value={<Checkbox {...configHandler("stream", true)} />}
-        />
-      )}
-      {!hideToolCalls && (
-        <ParamItem
-          name="Tool Calls"
+          name="Temperature"
           value={
-            <>
-              <Modal
-                size="lg"
-                opened={jsonModalOpened}
-                onClose={() => setJsonModalOpened(false)}
-                title={
-                  <Group>
-                    Tool Calls Definition
-                    <Button
-                      size="xs"
-                      variant="light"
-                      leftSection={<IconTools size={14} />}
-                      component={Link}
-                      href="https://lunary.ai/tool-calls-generator"
-                      target="_blank"
-                    >
-                      Tool Calls Generator
-                    </Button>
-                  </Group>
-                }
-              >
-                <JsonInput
-                  autosize
-                  placeholder={`[
+            <NumberInput
+              min={0}
+              max={2}
+              step={0.1}
+              decimalScale={2}
+              style={{ zIndex: 0 }}
+              w={90}
+              {...configHandler("temperature")}
+            />
+          }
+        />
+        <ParamItem
+          name="Max tokens"
+          value={
+            <NumberInput
+              min={1}
+              max={32000}
+              step={100}
+              w={90}
+              {...configHandler("max_tokens")}
+            />
+          }
+        />
+        <ParamItem
+          name="Freq. Penalty"
+          value={
+            <NumberInput
+              min={-2}
+              max={2}
+              decimalScale={2}
+              step={0.1}
+              w={90}
+              {...configHandler("frequency_penalty")}
+            />
+          }
+        />
+        <ParamItem
+          name="Pres. Penalty"
+          value={
+            <NumberInput
+              min={-2}
+              max={2}
+              decimalScale={2}
+              step={0.1}
+              w={90}
+              {...configHandler("presence_penalty")}
+            />
+          }
+        />
+        {!hideTopP && (
+          <ParamItem
+            name="Top P"
+            value={
+              <NumberInput
+                min={0.1}
+                max={1}
+                decimalScale={2}
+                step={0.1}
+                w={90}
+                {...configHandler("top_p")}
+              />
+            }
+          />
+        )}
+        {!hideStream && (
+          <ParamItem
+            name="Stream"
+            value={<Checkbox {...configHandler("stream", true)} />}
+          />
+        )}
+        {!hideToolCalls && (
+          <ParamItem
+            name="Tool Calls"
+            value={
+              <>
+                <Modal
+                  size="lg"
+                  opened={jsonModalOpened}
+                  onClose={() => setJsonModalOpened(false)}
+                  title={
+                    <Group>
+                      Tool Calls Definition
+                      <Button
+                        size="xs"
+                        variant="light"
+                        leftSection={<IconTools size={14} />}
+                        component={Link}
+                        href="https://lunary.ai/tool-calls-generator"
+                        target="_blank"
+                      >
+                        Tool Calls Generator
+                      </Button>
+                    </Group>
+                  }
+                >
+                  <JsonInput
+                    autosize
+                    placeholder={`[
   {
     "type": "function",
     "function": {
@@ -294,73 +303,75 @@ export default function ProviderEditor({
     }
   }
 ]`}
-                  value={tempJSON}
-                  onChange={(val) => {
-                    setTempJSON(val);
-                  }}
-                />
-                <Group mt="sm" align="right">
-                  <Button
-                    ml="auto"
-                    size="xs"
-                    variant="default"
-                    onClick={() => {
-                      try {
-                        const empty = !tempJSON?.trim().length;
-
-                        if (!empty && tempJSON?.trim()[0] !== "[") {
-                          throw new Error("Not an array");
-                        }
-
-                        const repaired = empty
-                          ? undefined
-                          : JSON.parse(jsonrepair(tempJSON.trim()));
-
-                        if (!empty && !validateToolCalls(repaired)) {
-                          throw new Error("Invalid tool calls format");
-                        }
-
-                        onChange({
-                          ...value,
-                          config: {
-                            ...value.config,
-                            tools: empty ? undefined : repaired,
-                          },
-                        });
-                        setJsonModalOpened(false);
-                      } catch (e) {
-                        console.error(e);
-                        notifications.show({
-                          title: "Please enter valid tool calls. " + e.message,
-                          message: "Click here to open the docs.",
-                          color: "red",
-                          onClick: () =>
-                            window.open(
-                              "https://platform.openai.com/docs/guides/function-calling",
-                              "_blank",
-                            ),
-                        });
-                      }
+                    value={tempJSON}
+                    onChange={(val) => {
+                      setTempJSON(val);
                     }}
-                  >
-                    Save
-                  </Button>
-                </Group>
-              </Modal>
-              <Button
-                size="compact-xs"
-                variant="outline"
-                onClick={() => {
-                  setTempJSON(JSON.stringify(value?.config?.tools, null, 2));
-                  setJsonModalOpened(true);
-                }}
-              >
-                {`Edit ${value?.config?.tools?.length ? `(${value.config.tools.length})` : ""}`}
-              </Button>
-            </>
-          }
-        />
-      )}
-    </>
+                  />
+                  <Group mt="sm" align="right">
+                    <Button
+                      ml="auto"
+                      size="xs"
+                      variant="default"
+                      onClick={() => {
+                        try {
+                          const empty = !tempJSON?.trim().length;
+
+                          if (!empty && tempJSON?.trim()[0] !== "[") {
+                            throw new Error("Not an array");
+                          }
+
+                          const repaired = empty
+                            ? undefined
+                            : JSON.parse(jsonrepair(tempJSON.trim()));
+
+                          if (!empty && !validateToolCalls(repaired)) {
+                            throw new Error("Invalid tool calls format");
+                          }
+
+                          onChange({
+                            ...value,
+                            config: {
+                              ...value.config,
+                              tools: empty ? undefined : repaired,
+                            },
+                          });
+                          setJsonModalOpened(false);
+                        } catch (e) {
+                          console.error(e);
+                          notifications.show({
+                            title:
+                              "Please enter valid tool calls. " + e.message,
+                            message: "Click here to open the docs.",
+                            color: "red",
+                            onClick: () =>
+                              window.open(
+                                "https://platform.openai.com/docs/guides/function-calling",
+                                "_blank",
+                              ),
+                          });
+                        }
+                      }}
+                    >
+                      Save
+                    </Button>
+                  </Group>
+                </Modal>
+                <Button
+                  size="compact-xs"
+                  variant="outline"
+                  onClick={() => {
+                    setTempJSON(JSON.stringify(value?.config?.tools, null, 2));
+                    setJsonModalOpened(true);
+                  }}
+                >
+                  {`Edit ${value?.config?.tools?.length ? `(${value.config.tools.length})` : ""}`}
+                </Button>
+              </>
+            }
+          />
+        )}
+      </Stack>
+    </Stack>
   );
 }

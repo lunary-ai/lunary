@@ -19,6 +19,7 @@
     "@mantine/hooks": "7.16.2",
     "@mantine/modals": "7.16.3",
     "@mantine/notifications": "^7.16.3",
+    "@monaco-editor/react": "^4.7.0",
     "@radix-ui/react-toast": "^1.2.11",
     "@react-oauth/google": "^0.12.1",
     "@sentry/nextjs": "^9.19.0",

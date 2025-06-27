@@ -107,6 +107,17 @@ function patch(path, { arg }) {
   }).then(handleResponse);
 }
 
+function put(path, { arg }) {
+  return fetch(buildUrl(path), {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...getHeaders(),
+    },
+    body: JSON.stringify(arg),
+  }).then(handleResponse);
+}
+
 async function del(path) {
   return fetch(buildUrl(path), {
     method: "DELETE",
@@ -158,5 +169,6 @@ export const fetcher = {
   getStream,
   post,
   patch,
+  put,
   delete: del,
 };
