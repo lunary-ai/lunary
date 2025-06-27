@@ -16,6 +16,7 @@ import {
 import { notifications } from "@mantine/notifications";
 
 import { IconInfoCircle, IconSettings, IconTools } from "@tabler/icons-react";
+
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useState } from "react";
