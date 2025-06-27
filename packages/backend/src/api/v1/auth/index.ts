@@ -65,7 +65,7 @@ auth.post("/method", async (ctx: Context) => {
   if (!orgToCheck || !orgToCheck.samlIdpXml) {
     ctx.body = { method: "password" };
   } else {
-    const url = await getLoginUrl(orgToCheck.id, joinToken);
+    const url = await getLoginUrl(orgToCheck.id);
 
     ctx.body = { method: "saml", redirect: url };
   }
@@ -353,7 +353,65 @@ auth.get("/saml-url/:orgId", async (ctx: Context) => {
     return;
   }
 
-  const url = await getLoginUrl(orgId, joinToken);
+  // If we have a join token, create the account now before redirecting to SAML
+  if (joinToken) {
+    try {
+      const { payload } = await verifyJWT(joinToken);
+      const email = payload.email as string;
+      const role = payload.role as string;
+      const projects = payload.projects as string[] | undefined;
+      const oldRole = payload.oldRole as string | undefined;
+      
+      // Check if account already exists for this email/org
+      const [existingAccount] = await sql`
+        select * from account 
+        where email = ${email} 
+        and org_id = ${orgId}
+      `;
+
+      if (!existingAccount) {
+        // Handle existing account in another org based on oldRole
+        if (oldRole === "owner") {
+          // User was owner of another org, delete that org
+          const [user] = await sql<Db.Account[]>`select * from account where email = ${email} order by created_at desc limit 1`;
+          if (user) {
+            await sql`delete from org where id = ${user.orgId}`;
+          }
+        } else if (oldRole) {
+          // User was member of another org, just delete their account
+          await sql`delete from account where email = ${email}`;
+        }
+
+        // Create the account for the joining user
+        const newUser = {
+          email: email,
+          name: email, // Will be updated after SAML
+          org_id: orgId,
+          role: role,
+          verified: true,
+          password_hash: null, // SAML users don't have passwords
+        };
+
+        const [account] = await sql`
+          insert into account ${sql(newUser)} 
+          returning *
+        `;
+
+        if (account && projects && Array.isArray(projects)) {
+          for (const projectId of projects) {
+            await sql`insert into account_project ${sql({ accountId: account.id, projectId })} on conflict do nothing`;
+          }
+        }
+      }
+
+      // Delete the invitation
+      await sql`delete from org_invitation where email = ${email} and org_id = ${orgId}`;
+    } catch (error) {
+      // Error creating account from join token, silently continue
+    }
+  }
+
+  const url = await getLoginUrl(orgId);
   ctx.body = { url };
 });
 
