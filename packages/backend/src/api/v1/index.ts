@@ -27,6 +27,8 @@ import jobs from "./jobs";
 import evals from "./evals";
 import alerts from "./alerts";
 import prompts from "./prompts";
+import playgroundEndpoints from "./playground-endpoints/index";
+import testEndpoint from "./test-endpoint";
 
 const v1 = new Router({
   prefix: "/v1",
@@ -74,6 +76,8 @@ v1.use(jobs.routes());
 v1.use(evals.routes());
 v1.use(alerts.routes());
 v1.use(prompts.routes());
+v1.use(playgroundEndpoints.routes());
+v1.use(testEndpoint.routes());
 
 v1.use("/template-versions", templateVersions.routes());
 v1.use("/template_versions", templateVersions.routes()); // Legacy route, keep for previous versions of SDKs
