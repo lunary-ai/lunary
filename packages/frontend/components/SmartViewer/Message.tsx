@@ -677,7 +677,9 @@ export function ChatMessage({
                 color="black"
                 onClick={() => {
                   clipboard.copy(
-                    data.content || data.text || JSON.stringify(data.toolCalls),
+                    JSON.stringify(data.content) ||
+                      JSON.stringify(data.text) ||
+                      JSON.stringify(data.toolCalls),
                   );
                 }}
               >
