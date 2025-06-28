@@ -656,9 +656,10 @@ export function ChatMessage({
             <Text
               c={color + "." + (scheme === "dark" ? 2 : 8)}
               mb={5}
+              mt="2px"
               size="xs"
             >
-              {data.role}
+              {data.role === "api" ? "Api Response" : data.role}
             </Text>
           )}
           {!editable && (

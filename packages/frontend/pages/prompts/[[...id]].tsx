@@ -1,22 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
+  ActionIcon,
+  Badge,
   Box,
   Button,
   Card,
   Flex,
   Group,
   Modal,
+  PasswordInput,
   SegmentedControl,
+  Select,
   Stack,
   Text,
   Textarea,
-  Select,
   TextInput,
-  JsonInput,
-  PasswordInput,
-  ActionIcon,
-  Badge,
 } from "@mantine/core";
 
 import HotkeysInfo from "@/components/blocks/HotkeysInfo";
@@ -26,33 +25,31 @@ import TemplateList, {
   defaultTemplateVersion,
 } from "@/components/prompts/TemplateMenu";
 import {
+  useCreatePlaygroundEndpoint,
+  useDeletePlaygroundEndpoint,
   useOrg,
+  usePlaygroundEndpoints,
   useProject,
+  useRunEndpoint,
   useTemplate,
   useTemplates,
   useTemplateVersion,
-  useUser,
-  usePlaygroundEndpoints,
-  useCreatePlaygroundEndpoint,
-  useUpdatePlaygroundEndpoint,
-  useDeletePlaygroundEndpoint,
   useTestEndpointConnection,
-  useRunEndpoint,
+  useUpdatePlaygroundEndpoint,
+  useUser,
   type PlaygroundEndpoint,
 } from "@/utils/dataHooks";
 import { notifications } from "@mantine/notifications";
 import {
   IconBolt,
+  IconBook,
   IconBracketsAngle,
   IconCheck,
   IconDeviceFloppy,
   IconGitCommit,
   IconPlus,
-  IconTrash,
-  IconApi,
-  IconPlugConnected,
   IconSettings,
-  IconBook,
+  IconTrash,
   IconVariable,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
@@ -69,8 +66,6 @@ import { openConfirmModal } from "@mantine/modals";
 
 import PromptVariableEditor from "@/components/prompts/PromptVariableEditor";
 import ProviderEditor, { ParamItem } from "@/components/prompts/Provider";
-import ExpandableJsonInput from "@/components/prompts/ExpandableJsonInput";
-import ProtectedJsonEditor from "@/components/prompts/ProtectedJsonEditor";
 import { hasAccess } from "shared";
 
 function NotepadButton({ value, onChange }) {
@@ -170,7 +165,6 @@ function Playground() {
     headers: { "Content-Type": "application/json" },
     defaultPayload: {},
   });
-  const [customPayloadText, setCustomPayloadText] = useState("");
   const [defaultPayloadText, setDefaultPayloadText] = useState("");
   const [endpointModalOpen, setEndpointModalOpen] = useState(false);
   const [selectedEndpointId, setSelectedEndpointId] = useState<string | null>(
@@ -178,6 +172,9 @@ function Playground() {
   );
   const [isEditMode, setIsEditMode] = useState(false);
   const [variablesModalOpen, setVariablesModalOpen] = useState(false);
+  const [hoveredEndpointId, setHoveredEndpointId] = useState<string | null>(
+    null,
+  );
 
   // Hooks for API operations
   const { endpoints, isLoading: isLoadingEndpoints } = usePlaygroundEndpoints();
@@ -196,11 +193,6 @@ function Playground() {
     if (endpoints.length > 0 && !selectedEndpointId) {
       const firstEndpoint = endpoints[0];
       setSelectedEndpointId(firstEndpoint.id);
-      // Set only the user-editable portion (without protected fields)
-      const defaultPayload = firstEndpoint.defaultPayload || {};
-      delete defaultPayload.messages;
-      delete defaultPayload.model_params;
-      setCustomPayloadText(JSON.stringify(defaultPayload, null, 2));
     }
   }, [endpoints, selectedEndpointId]);
 
@@ -563,7 +555,10 @@ function Playground() {
       // If content is an array (chat mode), ensure no messages have null content
       if (Array.isArray(templateVersion.content)) {
         const hasEmptyContent = templateVersion.content.some(
-          (msg) => msg.content === null || msg.content === undefined || msg.content === ""
+          (msg) =>
+            msg.content === null ||
+            msg.content === undefined ||
+            msg.content === "",
         );
         if (hasEmptyContent) {
           notifications.show({
@@ -640,20 +635,14 @@ function Playground() {
       setStreaming(true);
 
       try {
-        // Parse the current payload text
-        let userPayload = {};
-        try {
-          userPayload = JSON.parse(customPayloadText);
-        } catch (e) {
-          // If invalid JSON, use empty object
-          userPayload = {};
-        }
+        // Get the custom payload from the endpoint
+        const customPayload = selectedEndpoint.defaultPayload || {};
 
-        // Generate the protected payload and merge with user payload
+        // Generate the protected payload and merge with custom payload
         const protectedPayload = generateProtectedPayload();
         const payload = {
-          ...userPayload,
-          ...protectedPayload, // Protected fields override user fields
+          ...customPayload,
+          ...protectedPayload, // Protected fields override custom fields
         };
 
         const data = await runEndpoint({
@@ -964,33 +953,19 @@ function Playground() {
               padding: "var(--mantine-spacing-xl)",
             }}
           >
-            <Stack gap="md">
-              <ProviderEditor
-                value={{
-                  model: templateVersion?.extra?.model,
-                  config: templateVersion?.extra,
-                }}
-                onChange={(val) => {
-                  setHasChanges(true);
-                  setTemplateVersion({
-                    ...templateVersion,
-                    extra: { ...val.config, model: val.model },
-                  });
-                }}
-              />
-
+            <Stack gap="xl">
               {template && (
                 <>
-                  <Box mt="xl">
+                  <Box>
                     <ParamItem
-                      name="Execution Target"
-                      description="Test your prompt against the default LLM provider for your model, or use your own API endpoint"
+                      name="Run Mode"
+                      description="Choose between using a model provider or your own custom endpoint"
                       value={
                         <SegmentedControl
-                          size="xs"
+                          size="sm"
                           data={[
-                            { value: "playground", label: "LLM Provider" },
-                            { value: "endpoint", label: "API Endpoint" },
+                            { value: "playground", label: "Model Provider" },
+                            { value: "endpoint", label: "Custom Endpoint" },
                           ]}
                           value={runMode}
                           onChange={(value) =>
@@ -1001,277 +976,204 @@ function Playground() {
                     />
                   </Box>
 
+                  <Box>
+                    <ProviderEditor
+                      value={{
+                        model: templateVersion?.extra?.model,
+                        config: templateVersion?.extra,
+                      }}
+                      onChange={(val) => {
+                        setHasChanges(true);
+                        setTemplateVersion({
+                          ...templateVersion,
+                          extra: { ...val.config, model: val.model },
+                        });
+                      }}
+                    />
+                  </Box>
+
                   {runMode === "endpoint" && (
-                    <Card withBorder p="sm">
-                      <Stack>
-                        <Group justify="space-between">
-                          <Text size="sm" fw="bold">
-                            Select Endpoint
-                          </Text>
-                          <Button
-                            size="compact-xs"
-                            variant="outline"
-                            leftSection={<IconPlus size={14} />}
-                            onClick={() => {
-                              // Reset to default values for new endpoint
-                              setIsEditMode(false);
-                              setEditingEndpointId(null);
-                              setCustomEndpoint({
-                                name: "",
-                                url: "",
-                                auth: null,
-                                authValue: "",
-                                apiKeyHeader: "X-API-Key",
-                                username: "",
-                                password: "",
-                                headers: { "Content-Type": "application/json" },
-                                defaultPayload: {},
-                              });
-                              setSelectedEndpointId(null);
-                              setDefaultPayloadText("");
-                              setEndpointModalOpen(true);
-                            }}
-                          >
-                            Configure New
-                          </Button>
-                        </Group>
+                    <Stack mt="sm">
+                      <Text size="sm" fw="bold">
+                        Choose Endpoint
+                      </Text>
 
-                        {isLoadingEndpoints ? (
-                          <Text size="sm" c="dimmed" ta="center">
-                            Loading endpoints...
-                          </Text>
-                        ) : endpoints.length === 0 ? (
-                          <Button
-                            variant="light"
-                            fullWidth
-                            leftSection={<IconApi size={16} />}
-                            onClick={() => {
-                              // Reset to default values for new endpoint
-                              setIsEditMode(false);
-                              setEditingEndpointId(null);
-                              setCustomEndpoint({
-                                name: "",
-                                url: "",
-                                auth: null,
-                                authValue: "",
-                                apiKeyHeader: "X-API-Key",
-                                username: "",
-                                password: "",
-                                headers: { "Content-Type": "application/json" },
-                                defaultPayload: {},
-                              });
-                              setSelectedEndpointId(null);
-                              setDefaultPayloadText("");
-                              setEndpointModalOpen(true);
-                            }}
-                          >
-                            Configure New Endpoint
-                          </Button>
-                        ) : null}
+                      {isLoadingEndpoints ? (
+                        <Text size="sm" c="dimmed" ta="center">
+                          Loading endpoints...
+                        </Text>
+                      ) : (
+                        <>
+                          {endpoints.map((endpoint) => (
+                            <Card
+                              key={endpoint.id}
+                              withBorder
+                              p="sm"
+                              style={{
+                                cursor: "pointer",
+                                borderColor:
+                                  selectedEndpointId === endpoint.id
+                                    ? "var(--mantine-color-black-6)"
+                                    : undefined,
+                                borderWidth:
+                                  selectedEndpointId === endpoint.id ? 2 : 1,
+                                backgroundColor:
+                                  hoveredEndpointId === endpoint.id
+                                    ? "var(--mantine-color-gray-0)"
+                                    : undefined,
+                                transition: "all 0.2s ease",
+                              }}
+                              onClick={() => {
+                                setSelectedEndpointId(endpoint.id);
+                              }}
+                              onMouseEnter={() =>
+                                setHoveredEndpointId(endpoint.id)
+                              }
+                              onMouseLeave={() => setHoveredEndpointId(null)}
+                            >
+                              <Group justify="space-between">
+                                <Group>
+                                  <input
+                                    type="radio"
+                                    checked={selectedEndpointId === endpoint.id}
+                                    onChange={() =>
+                                      setSelectedEndpointId(endpoint.id)
+                                    }
+                                    style={{
+                                      cursor: "pointer",
+                                      width: "12px",
+                                      height: "12px",
+                                      accentColor: "black",
+                                    }}
+                                  />
+                                  <Box>
+                                    <Text size="sm" fw={500}>
+                                      {endpoint.name}
+                                    </Text>
+                                    <Text size="xs" c="dimmed">
+                                      {endpoint.url}
+                                    </Text>
+                                  </Box>
+                                </Group>
+                                {hoveredEndpointId === endpoint.id && (
+                                  <Group gap={4}>
+                                    <ActionIcon
+                                      size="sm"
+                                      color="gray"
+                                      variant="subtle"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsEditMode(true);
+                                        setEditingEndpointId(endpoint.id);
+                                        // Convert API auth format to form format for editing
+                                        const formData = convertAPIAuthToForm(
+                                          endpoint.auth,
+                                        );
+                                        setCustomEndpoint({
+                                          ...endpoint,
+                                          ...formData,
+                                        });
+                                        setDefaultPayloadText(
+                                          JSON.stringify(
+                                            endpoint.defaultPayload || {},
+                                            null,
+                                            2,
+                                          ),
+                                        );
+                                        setEndpointModalOpen(true);
+                                      }}
+                                    >
+                                      <IconSettings size={16} />
+                                    </ActionIcon>
+                                    <ActionIcon
+                                      size="sm"
+                                      variant="subtle"
+                                      color="red"
+                                      onClick={async (e) => {
+                                        e.stopPropagation();
+                                        try {
+                                          await deleteEndpoint(endpoint.id);
+                                          if (
+                                            selectedEndpointId === endpoint.id
+                                          ) {
+                                            setSelectedEndpointId(null);
+                                          }
+                                          notifications.show({
+                                            title: "Endpoint deleted",
+                                            message:
+                                              "The endpoint has been removed successfully",
+                                            color: "green",
+                                          });
+                                        } catch (error) {
+                                          notifications.show({
+                                            title: "Error deleting endpoint",
+                                            message: error.message,
+                                            color: "red",
+                                          });
+                                        }
+                                      }}
+                                    >
+                                      <IconTrash size={16} />
+                                    </ActionIcon>
+                                  </Group>
+                                )}
+                              </Group>
+                            </Card>
+                          ))}
 
-                        {endpoints.map((endpoint) => (
                           <Card
-                            key={endpoint.id}
                             withBorder
                             p="sm"
                             style={{
+                              border: "2px dashed var(--mantine-color-gray-4)",
                               cursor: "pointer",
-                              borderColor:
-                                selectedEndpointId === endpoint.id
-                                  ? "var(--mantine-color-blue-6)"
-                                  : undefined,
-                              backgroundColor:
-                                selectedEndpointId === endpoint.id
-                                  ? "var(--mantine-color-blue-0)"
-                                  : undefined,
+                              transition: "all 0.2s ease",
                             }}
                             onClick={() => {
-                              setSelectedEndpointId(endpoint.id);
-                              // Set only the user-editable portion (without protected fields)
-                              const defaultPayload =
-                                endpoint.defaultPayload || {};
-                              delete defaultPayload.messages;
-                              delete defaultPayload.model_params;
-                              setCustomPayloadText(
-                                JSON.stringify(defaultPayload, null, 2),
-                              );
+                              // Reset to default values for new endpoint
+                              setIsEditMode(false);
+                              setEditingEndpointId(null);
+                              setCustomEndpoint({
+                                name: "",
+                                url: "",
+                                auth: null,
+                                authValue: "",
+                                apiKeyHeader: "X-API-Key",
+                                username: "",
+                                password: "",
+                                headers: { "Content-Type": "application/json" },
+                                defaultPayload: {},
+                              });
+                              setSelectedEndpointId(null);
+                              setDefaultPayloadText("");
+                              setEndpointModalOpen(true);
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.borderColor =
+                                "var(--mantine-color-gray-5)";
+                              e.currentTarget.style.backgroundColor =
+                                "var(--mantine-color-gray-0)";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.borderColor =
+                                "var(--mantine-color-gray-4)";
+                              e.currentTarget.style.backgroundColor =
+                                "transparent";
                             }}
                           >
-                            <Group justify="space-between">
-                              <Box>
-                                <Text size="sm" fw={500}>
-                                  {endpoint.name}
-                                </Text>
-                                <Text size="xs" c="dimmed">
-                                  {endpoint.url}
-                                </Text>
-                              </Box>
-                              {selectedEndpointId === endpoint.id && (
-                                <Group gap={4}>
-                                  <ActionIcon
-                                    size="sm"
-                                    variant="subtle"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setIsEditMode(true);
-                                      setEditingEndpointId(endpoint.id);
-                                      // Convert API auth format to form format for editing
-                                      const formData = convertAPIAuthToForm(
-                                        endpoint.auth,
-                                      );
-                                      setCustomEndpoint({
-                                        ...endpoint,
-                                        ...formData,
-                                      });
-                                      setDefaultPayloadText(
-                                        JSON.stringify(
-                                          endpoint.defaultPayload || {},
-                                          null,
-                                          2,
-                                        ),
-                                      );
-                                      setEndpointModalOpen(true);
-                                    }}
-                                  >
-                                    <IconSettings size={16} />
-                                  </ActionIcon>
-                                  <ActionIcon
-                                    size="sm"
-                                    variant="subtle"
-                                    color="red"
-                                    onClick={async (e) => {
-                                      e.stopPropagation();
-                                      try {
-                                        await deleteEndpoint(endpoint.id);
-                                        if (
-                                          selectedEndpointId === endpoint.id
-                                        ) {
-                                          setSelectedEndpointId(null);
-                                          setCustomPayloadText("");
-                                        }
-                                        notifications.show({
-                                          title: "Endpoint deleted",
-                                          message:
-                                            "The endpoint has been removed successfully",
-                                          color: "green",
-                                        });
-                                      } catch (error) {
-                                        notifications.show({
-                                          title: "Error deleting endpoint",
-                                          message: error.message,
-                                          color: "red",
-                                        });
-                                      }
-                                    }}
-                                  >
-                                    <IconTrash size={16} />
-                                  </ActionIcon>
-                                </Group>
-                              )}
+                            <Group justify="center" gap="xs">
+                              <IconPlus
+                                size={16}
+                                color="var(--mantine-color-gray-7)"
+                              />
+                              <Text size="sm" fw={500} c="gray.7">
+                                Configure New Endpoint
+                              </Text>
                             </Group>
                           </Card>
-                        ))}
-
-                        {selectedEndpointId && (
-                          <Card withBorder p="sm">
-                            <Stack gap="xs">
-                              <Group justify="space-between">
-                                <Text size="xs" c="dimmed">
-                                  Method
-                                </Text>
-                                <Text size="xs" ff="monospace" fw={500}>
-                                  POST
-                                </Text>
-                              </Group>
-                              <Group justify="space-between">
-                                <Text size="xs" c="dimmed">
-                                  Auth
-                                </Text>
-                                <Text size="xs" ff="monospace" fw={500}>
-                                  {selectedEndpoint?.auth?.type === "bearer" &&
-                                    "Bearer ****"}
-                                  {selectedEndpoint?.auth?.type === "api_key" &&
-                                    `${selectedEndpoint.auth.header}: ****`}
-                                  {selectedEndpoint?.auth?.type === "basic" &&
-                                    "Basic Auth"}
-                                  {!selectedEndpoint?.auth && "None"}
-                                </Text>
-                              </Group>
-                            </Stack>
-                          </Card>
-                        )}
-
-                        {selectedEndpointId && (
-                          <Box>
-                            <Text size="sm" fw="bold" mb="xs">
-                              Payload
-                            </Text>
-                            <Text size="xs" c="dimmed" mb="xs">
-                              The messages and model_params fields are
-                              automatically generated from your prompt
-                            </Text>
-                            <ProtectedJsonEditor
-                              key={`json-editor-${selectedEndpointId}`}
-                              value={(() => {
-                                try {
-                                  const userPayload =
-                                    JSON.parse(customPayloadText);
-                                  const protectedPayload =
-                                    generateProtectedPayload();
-                                  const mergedPayload = {
-                                    ...userPayload,
-                                    ...protectedPayload,
-                                  };
-
-                                  // Format JSON with helpful comments
-                                  let jsonString = JSON.stringify(
-                                    mergedPayload,
-                                    null,
-                                    2,
-                                  );
-
-                                  return jsonString;
-                                } catch {
-                                  // If JSON is invalid, just show the protected payload with comment
-                                  const protectedPayload =
-                                    generateProtectedPayload();
-                                  let jsonString = JSON.stringify(
-                                    protectedPayload,
-                                    null,
-                                    2,
-                                  );
-
-                                  // Add blank line before messages key
-                                  jsonString = jsonString.replace(
-                                    /(\n\s*)"messages":/,
-                                    '\n$1"messages":',
-                                  );
-
-                                  return jsonString;
-                                }
-                              })()}
-                              onChange={(value) => {
-                                try {
-                                  const parsedValue = JSON.parse(value);
-                                  // Remove protected keys from user's input
-                                  delete parsedValue.messages;
-                                  delete parsedValue.model_params;
-                                  setCustomPayloadText(
-                                    JSON.stringify(parsedValue, null, 2),
-                                  );
-                                } catch {
-                                  // If JSON is invalid, keep the raw text (user is still typing)
-                                  setCustomPayloadText(value);
-                                }
-                              }}
-                              protectedKeys={["messages", "model_params"]}
-                              minRows={4}
-                              maxRows={10}
-                            />
-                          </Box>
-                        )}
-                      </Stack>
-                    </Card>
+                        </>
+                      )}
+                    </Stack>
                   )}
                 </>
               )}
@@ -1301,11 +1203,7 @@ function Playground() {
                   />
                 }
               >
-                {runMode === "playground"
-                  ? template?.id
-                    ? "Test template"
-                    : "Run"
-                  : "Run on Endpoint"}
+                Run
               </Button>
             </Box>
           )}
@@ -1343,6 +1241,15 @@ function Playground() {
               setCustomEndpoint({ ...customEndpoint, url: e.target.value })
             }
           />
+
+          <Box>
+            <Text size="sm" fw={500} mb={4}>
+              Method
+            </Text>
+            <Text size="sm" c="dimmed">
+              POST
+            </Text>
+          </Box>
 
           <Select
             label="Authentication Type"
@@ -1514,18 +1421,20 @@ function Playground() {
 
           <Box>
             <Text size="sm" fw={500} mb="xs">
-              Default Payload (Optional)
+              Custom Payload (Optional)
             </Text>
             <Text size="xs" c="dimmed" mb="xs">
-              This payload will be merged with the prompt data
+              Additional fields to merge with the messages and model parameters
+              from your prompt
             </Text>
-            <ExpandableJsonInput
+            <Textarea
               placeholder='{"key": "value"}'
               autosize
               minRows={3}
-              formatOnBlur
+              maxRows={8}
               value={defaultPayloadText}
-              onChange={(value) => {
+              onChange={(e) => {
+                const value = e.currentTarget.value;
                 setDefaultPayloadText(value);
                 try {
                   const parsed = JSON.parse(value);
@@ -1536,6 +1445,21 @@ function Playground() {
                 } catch (e) {
                   // Invalid JSON, keep the text but don't update the object
                 }
+              }}
+              onBlur={() => {
+                // Format JSON on blur if valid
+                try {
+                  const parsed = JSON.parse(defaultPayloadText);
+                  setDefaultPayloadText(JSON.stringify(parsed, null, 2));
+                } catch (e) {
+                  // Invalid JSON, leave as is
+                }
+              }}
+              styles={{
+                input: {
+                  fontFamily: "monospace",
+                  fontSize: "13px",
+                },
               }}
             />
           </Box>
@@ -1615,7 +1539,7 @@ function Playground() {
                       const newEndpoint = await createEndpoint(endpointData);
                       if (newEndpoint?.id) {
                         setSelectedEndpointId(newEndpoint.id);
-                        setCustomPayloadText(
+                        setDefaultPayloadText(
                           JSON.stringify(
                             newEndpoint.defaultPayload || {},
                             null,

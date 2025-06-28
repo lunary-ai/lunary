@@ -22,6 +22,7 @@ import {
   IconInfoCircle,
   IconSettings,
   IconTools,
+  IconCode,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -187,6 +188,7 @@ export default function ProviderEditor({
             value={
               <Group gap="xs">
                 <ModelSelect handleChange={handleModelSelectChange} />
+                <Group gap="xs">
                 <Popover
               opened={paramsPopoverOpened}
               onChange={setParamsPopoverOpened}
@@ -255,34 +257,34 @@ export default function ProviderEditor({
                       <Checkbox {...configHandler("stream", true)} />
                     </Group>
                   )}
-                  {!hideToolCalls && (
-                    <ParamItem
-                      name="Tool Calls"
-                      value={
-                        <>
-                          <Modal
-                            size="lg"
-                            opened={jsonModalOpened}
-                            onClose={() => setJsonModalOpened(false)}
-                            title={
-                              <Group>
-                                Tool Calls Definition
-                                <Button
-                                  size="xs"
-                                  variant="light"
-                                  leftSection={<IconTools size={14} />}
-                                  component={Link}
-                                  href="https://lunary.ai/tool-calls-generator"
-                                  target="_blank"
-                                >
-                                  Tool Calls Generator
-                                </Button>
-                              </Group>
-                            }
-                          >
-                            <JsonInput
-                              autosize
-                              placeholder={`[
+                </Stack>
+              </Popover.Dropdown>
+            </Popover>
+            {!hideToolCalls && (
+              <>
+                <Modal
+                  size="lg"
+                  opened={jsonModalOpened}
+                  onClose={() => setJsonModalOpened(false)}
+                  title={
+                    <Group>
+                      Tool Calls Definition
+                      <Button
+                        size="xs"
+                        variant="light"
+                        leftSection={<IconTools size={14} />}
+                        component={Link}
+                        href="https://lunary.ai/tool-calls-generator"
+                        target="_blank"
+                      >
+                        Tool Calls Generator
+                      </Button>
+                    </Group>
+                  }
+                >
+                  <JsonInput
+                    autosize
+                    placeholder={`[
   {
     "type": "function",
     "function": {
@@ -301,85 +303,83 @@ export default function ProviderEditor({
     }
   }
 ]`}
-                              value={tempJSON}
-                              onChange={(val) => {
-                                setTempJSON(val);
-                              }}
-                            />
-                            <Group mt="sm" align="right">
-                              <Button
-                                ml="auto"
-                                size="xs"
-                                variant="default"
-                                onClick={() => {
-                                  try {
-                                    const empty = !tempJSON?.trim().length;
+                    value={tempJSON}
+                    onChange={(val) => {
+                      setTempJSON(val);
+                    }}
+                  />
+                  <Group mt="sm" align="right">
+                    <Button
+                      ml="auto"
+                      size="xs"
+                      variant="default"
+                      onClick={() => {
+                        try {
+                          const empty = !tempJSON?.trim().length;
 
-                                    if (!empty && tempJSON?.trim()[0] !== "[") {
-                                      throw new Error("Not an array");
-                                    }
+                          if (!empty && tempJSON?.trim()[0] !== "[") {
+                            throw new Error("Not an array");
+                          }
 
-                                    const repaired = empty
-                                      ? undefined
-                                      : JSON.parse(jsonrepair(tempJSON.trim()));
+                          const repaired = empty
+                            ? undefined
+                            : JSON.parse(jsonrepair(tempJSON.trim()));
 
-                                    if (
-                                      !empty &&
-                                      !validateToolCalls(repaired)
-                                    ) {
-                                      throw new Error(
-                                        "Invalid tool calls format",
-                                      );
-                                    }
+                          if (
+                            !empty &&
+                            !validateToolCalls(repaired)
+                          ) {
+                            throw new Error(
+                              "Invalid tool calls format",
+                            );
+                          }
 
-                                    onChange({
-                                      ...value,
-                                      config: {
-                                        ...value.config,
-                                        tools: empty ? undefined : repaired,
-                                      },
-                                    });
-                                    setJsonModalOpened(false);
-                                  } catch (e) {
-                                    console.error(e);
-                                    notifications.show({
-                                      title:
-                                        "Please enter valid tool calls. " +
-                                        e.message,
-                                      message: "Click here to open the docs.",
-                                      color: "red",
-                                      onClick: () =>
-                                        window.open(
-                                          "https://platform.openai.com/docs/guides/function-calling",
-                                          "_blank",
-                                        ),
-                                    });
-                                  }
-                                }}
-                              >
-                                Save
-                              </Button>
-                            </Group>
-                          </Modal>
-                          <Button
-                            size="compact-xs"
-                            variant="outline"
-                            onClick={() => {
-                              setTempJSON(
-                                JSON.stringify(value?.config?.tools, null, 2),
-                              );
-                              setJsonModalOpened(true);
-                            }}
-                          >
-                            {`Edit ${value?.config?.tools?.length ? `(${value.config.tools.length})` : ""}`}
-                          </Button>
-                        </>
-                      }
-                    />
-                  )}
-                </Stack>
-              </Popover.Dropdown>
-            </Popover>
+                          onChange({
+                            ...value,
+                            config: {
+                              ...value.config,
+                              tools: empty ? undefined : repaired,
+                            },
+                          });
+                          setJsonModalOpened(false);
+                        } catch (e) {
+                          console.error(e);
+                          notifications.show({
+                            title:
+                              "Please enter valid tool calls. " +
+                              e.message,
+                            message: "Click here to open the docs.",
+                            color: "red",
+                            onClick: () =>
+                              window.open(
+                                "https://platform.openai.com/docs/guides/function-calling",
+                                "_blank",
+                              ),
+                          });
+                        }
+                      }}
+                    >
+                      Save
+                    </Button>
+                  </Group>
+                </Modal>
+                <Tooltip label={`Edit tool calls${value?.config?.tools?.length ? ` (${value.config.tools.length})` : ""}`}>
+                  <ActionIcon
+                    size="lg"
+                    variant="default"
+                    onClick={() => {
+                      setTempJSON(
+                        JSON.stringify(value?.config?.tools, null, 2),
+                      );
+                      setJsonModalOpened(true);
+                    }}
+                  >
+                    <IconCode size={18} />
+                  </ActionIcon>
+                </Tooltip>
+              </>
+            )}
+              </Group>
               </Group>
             }
           />
