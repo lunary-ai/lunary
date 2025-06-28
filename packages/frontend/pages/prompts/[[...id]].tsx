@@ -16,6 +16,7 @@ import {
   JsonInput,
   PasswordInput,
   ActionIcon,
+  Badge,
 } from "@mantine/core";
 
 import HotkeysInfo from "@/components/blocks/HotkeysInfo";
@@ -52,6 +53,7 @@ import {
   IconPlugConnected,
   IconSettings,
   IconBook,
+  IconVariable,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { generateSlug } from "random-word-slugs";
@@ -111,7 +113,7 @@ function NotepadButton({ value, onChange }) {
       </Modal>
       <Button
         size="xs"
-        variant="outline"
+        variant="subtle"
         leftSection={<IconBook size={18} />}
         onClick={() => {
           setModalOpened(true);
@@ -175,6 +177,7 @@ function Playground() {
     null,
   );
   const [isEditMode, setIsEditMode] = useState(false);
+  const [variablesModalOpen, setVariablesModalOpen] = useState(false);
 
   // Hooks for API operations
   const { endpoints, isLoading: isLoadingEndpoints } = usePlaygroundEndpoints();
@@ -547,6 +550,31 @@ function Playground() {
         model,
       });
 
+      // Validate content
+      if (!templateVersion.content) {
+        notifications.show({
+          title: "No content",
+          message: "Please enter some content in your prompt",
+          color: "red",
+        });
+        return;
+      }
+
+      // If content is an array (chat mode), ensure no messages have null content
+      if (Array.isArray(templateVersion.content)) {
+        const hasEmptyContent = templateVersion.content.some(
+          (msg) => msg.content === null || msg.content === undefined || msg.content === ""
+        );
+        if (hasEmptyContent) {
+          notifications.show({
+            title: "Empty message",
+            message: "All messages must have content",
+            color: "red",
+          });
+          return;
+        }
+      }
+
       setError(null);
       setOutput(null);
       setOutputTokens(0);
@@ -803,6 +831,24 @@ function Playground() {
                   />
                 )}
 
+                {template && (
+                  <Button
+                    size="xs"
+                    variant="subtle"
+                    leftSection={<IconVariable size={18} />}
+                    rightSection={
+                      Object.keys(variables).length > 0 ? (
+                        <Badge size="xs" variant="filled" circle>
+                          {Object.keys(variables).length}
+                        </Badge>
+                      ) : null
+                    }
+                    onClick={() => setVariablesModalOpen(true)}
+                  >
+                    Variables
+                  </Button>
+                )}
+
                 {!templateVersion?.id &&
                   hasAccess(user.role, "prompts", "create") && (
                     <Button
@@ -935,27 +981,9 @@ function Playground() {
 
               {template && (
                 <>
-                  <Stack gap="xs" mt="md">
-                    <Text size="sm" fw="bold">
-                      Variables
-                    </Text>
-                    <Card withBorder p="sm">
-                      <PromptVariableEditor
-                        value={variables}
-                        onChange={(update) => {
-                          setTemplateVersion({
-                            ...templateVersion,
-                            testValues: update,
-                          });
-                        }}
-                      />
-                    </Card>
-                  </Stack>
-
-
                   <Box mt="xl">
                     <ParamItem
-                      name="Target"
+                      name="Execution Target"
                       description="Test your prompt against the default LLM provider for your model, or use your own API endpoint"
                       value={
                         <SegmentedControl
@@ -1621,6 +1649,52 @@ function Playground() {
                 Save
               </Button>
             </Group>
+          </Group>
+        </Stack>
+      </Modal>
+
+      <Modal
+        opened={variablesModalOpen}
+        onClose={() => setVariablesModalOpen(false)}
+        title="Variables"
+        size="lg"
+      >
+        <Stack>
+          {Object.keys(variables).length === 0 ? (
+            <Box ta="center" py="xl">
+              <Text size="lg" fw={500} mb="xs">
+                No variables
+              </Text>
+              <Text size="sm" c="dimmed">
+                Create variables to dynamically insert values into your prompt
+                using the{" "}
+                <Text
+                  component="span"
+                  c="blue"
+                  ff="monospace"
+                >{`{{variable_name}}`}</Text>{" "}
+                syntax
+              </Text>
+            </Box>
+          ) : (
+            <PromptVariableEditor
+              value={variables}
+              onChange={(update) => {
+                setTemplateVersion({
+                  ...templateVersion,
+                  testValues: update,
+                });
+              }}
+            />
+          )}
+          <Group justify="flex-end" mt="md">
+            <Button
+              size="xs"
+              variant="filled"
+              onClick={() => setVariablesModalOpen(false)}
+            >
+              Done
+            </Button>
           </Group>
         </Stack>
       </Modal>

@@ -181,13 +181,13 @@ export default function ProviderEditor({
   return (
     <Stack gap={0}>
       {!hideModel && (
-        <Stack gap="xs">
-          <Text size="sm" fw="bold">
-            Model
-          </Text>
-          <Group gap="xs">
-            <ModelSelect handleChange={handleModelSelectChange} />
-            <Popover
+        <Stack gap={0}>
+          <ParamItem
+            name="Model"
+            value={
+              <Group gap="xs">
+                <ModelSelect handleChange={handleModelSelectChange} />
+                <Popover
               opened={paramsPopoverOpened}
               onChange={setParamsPopoverOpened}
               position="bottom-end"
@@ -380,7 +380,9 @@ export default function ProviderEditor({
                 </Stack>
               </Popover.Dropdown>
             </Popover>
-          </Group>
+              </Group>
+            }
+          />
         </Stack>
       )}
     </Stack>

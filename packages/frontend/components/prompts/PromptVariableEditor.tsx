@@ -1,7 +1,5 @@
-import { Badge, Box, Group, Stack, Text, Tooltip } from "@mantine/core";
-import { IconInfoCircle } from "@tabler/icons-react";
+import { Badge, Box, Stack, Textarea } from "@mantine/core";
 import { TemplateVariables } from "shared";
-import VariableTextarea from "./VariableTextarea";
 
 export default function PromptVariableEditor({
   value: templateVariables = {},
@@ -10,45 +8,28 @@ export default function PromptVariableEditor({
   value: TemplateVariables;
   onChange: (value: TemplateVariables) => void;
 }) {
-  const hasVariables = Object.keys(templateVariables).length > 0;
-
   return (
     <Box>
-      {!hasVariables && (
-        <Text c="dimmed" size="sm">
-          {`No variables defined. Use {{variable}} in your prompt.`}
-        </Text>
-      )}
-      <Stack>
+      <Stack gap="md">
         {Object.entries(templateVariables)
           .sort(([nameA], [nameB]) => nameA.localeCompare(nameB))
           .map(([name, value]) => (
-            <Group
-              key={name}
-              align="center"
-              wrap="nowrap"
-              justify="space-between"
-              gap="lg"
-            >
+            <Box key={name}>
               <Badge
-                key={name}
-                miw="fit-content"
-                maw={100}
-                px="sm"
+                mb="xs"
                 variant="outline"
                 tt="none"
               >
                 {name}
               </Badge>
-              <VariableTextarea
-                size="xs"
+              <Textarea
+                size="sm"
                 w="100%"
-                required={true}
                 radius="sm"
                 placeholder="Enter content here"
-                rows={1}
-                maxRows={1}
-                name={name}
+                minRows={3}
+                maxRows={8}
+                autosize
                 value={value}
                 onChange={(e) =>
                   onChange({
@@ -57,7 +38,7 @@ export default function PromptVariableEditor({
                   })
                 }
               />
-            </Group>
+            </Box>
           ))}
       </Stack>
     </Box>

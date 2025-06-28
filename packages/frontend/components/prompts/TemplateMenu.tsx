@@ -31,8 +31,8 @@ import SearchBar from "../blocks/SearchBar";
 
 export const defaultTemplateVersion = {
   content: [
-    { content: "You are an helpful assistant.", role: "system" },
-    { content: "Hi!", role: "user" },
+    { content: "You are a helpful assistant.", role: "system" },
+    { content: "Hi! My name is {{user_name}}. Can you help me with {{task}}?", role: "user" },
   ],
   extra: {
     model: "gpt-4.1",
@@ -41,7 +41,10 @@ export const defaultTemplateVersion = {
     stream: true,
     top_p: 1.0,
   },
-  testValues: {},
+  testValues: {
+    user_name: "Alice",
+    task: "learning Python"
+  },
   isDraft: true,
 };
 
