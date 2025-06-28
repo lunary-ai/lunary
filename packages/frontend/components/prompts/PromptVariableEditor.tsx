@@ -14,21 +14,12 @@ export default function PromptVariableEditor({
 
   return (
     <Box>
-      <Group mb="md" align="center" justify="space-between">
-        <Text size="sm" fw="bold">
-          Variables
-        </Text>
-        <Tooltip label="Add variables to your template in the {{ mustache }} format">
-          <IconInfoCircle size={16} />
-        </Tooltip>
-      </Group>
-
       {!hasVariables && (
         <Text c="dimmed" size="sm">
-          {`Use {{variable}} to insert variables.`}
+          {`No variables defined. Use {{variable}} in your prompt.`}
         </Text>
       )}
-      <Stack mt="sm">
+      <Stack>
         {Object.entries(templateVariables)
           .sort(([nameA], [nameB]) => nameA.localeCompare(nameB))
           .map(([name, value]) => (

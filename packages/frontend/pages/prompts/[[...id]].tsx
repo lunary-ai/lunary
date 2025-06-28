@@ -51,6 +51,7 @@ import {
   IconApi,
   IconPlugConnected,
   IconSettings,
+  IconBook,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { generateSlug } from "random-word-slugs";
@@ -90,7 +91,7 @@ function NotepadButton({ value, onChange }) {
           autosize
           minRows={5}
           maxRows={30}
-          placeholder="Write down thoughts, ideas, or anything else you want to remember about this template."
+          placeholder="Write down thoughts, ideas, or anything else you want to remember about this template. Notes are versioned."
           defaultValue={value}
           onChange={(e) => setTempValue(e.currentTarget.value)}
         />
@@ -98,7 +99,7 @@ function NotepadButton({ value, onChange }) {
           <Button
             ml="auto"
             size="xs"
-            variant="default"
+            variant="filled"
             onClick={() => {
               onChange(tempValue);
               setModalOpened(false);
@@ -109,13 +110,14 @@ function NotepadButton({ value, onChange }) {
         </Group>
       </Modal>
       <Button
-        size="compact-xs"
+        size="xs"
         variant="outline"
+        leftSection={<IconBook size={18} />}
         onClick={() => {
           setModalOpened(true);
         }}
       >
-        {`Open`}
+        Notepad
       </Button>
     </>
   );
@@ -782,6 +784,25 @@ function Playground() {
               }}
             >
               <Group>
+                {template?.id && templateVersion?.id && (
+                  <NotepadButton
+                    value={templateVersion?.notes}
+                    onChange={async (notes) => {
+                      const data = {
+                        ...templateVersion,
+                        notes,
+                      };
+
+                      setTemplateVersion(data);
+
+                      // save directly without bumping version so no changes are lost
+                      await updateVersion(data);
+
+                      mutate();
+                    }}
+                  />
+                )}
+
                 {!templateVersion?.id &&
                   hasAccess(user.role, "prompts", "create") && (
                     <Button
@@ -914,52 +935,33 @@ function Playground() {
 
               {template && (
                 <>
-                  <Card withBorder p="sm">
-                    <PromptVariableEditor
-                      value={variables}
-                      onChange={(update) => {
-                        setTemplateVersion({
-                          ...templateVersion,
-                          testValues: update,
-                        });
-                      }}
-                    />
-                  </Card>
+                  <Stack gap="xs" mt="md">
+                    <Text size="sm" fw="bold">
+                      Variables
+                    </Text>
+                    <Card withBorder p="sm">
+                      <PromptVariableEditor
+                        value={variables}
+                        onChange={(update) => {
+                          setTemplateVersion({
+                            ...templateVersion,
+                            testValues: update,
+                          });
+                        }}
+                      />
+                    </Card>
+                  </Stack>
 
-                  {template?.id && templateVersion?.id && (
-                    <ParamItem
-                      name="Notepad"
-                      description="Write down thoughts or ideas you want to remember about this template. Notes are versioned."
-                      value={
-                        <NotepadButton
-                          value={templateVersion?.notes}
-                          onChange={async (notes) => {
-                            const data = {
-                              ...templateVersion,
-                              notes,
-                            };
-
-                            setTemplateVersion(data);
-
-                            // save directly without bumping version so no changes are lost
-                            await updateVersion(data);
-
-                            mutate();
-                          }}
-                        />
-                      }
-                    />
-                  )}
 
                   <Box mt="xl">
                     <ParamItem
-                      name="Run Mode"
-                      description="Choose whether to test directly against an LLM model or a custom API endpoint"
+                      name="Target"
+                      description="Test your prompt against the default LLM provider for your model, or use your own API endpoint"
                       value={
                         <SegmentedControl
                           size="xs"
                           data={[
-                            { value: "playground", label: "LLM Playground" },
+                            { value: "playground", label: "LLM Provider" },
                             { value: "endpoint", label: "API Endpoint" },
                           ]}
                           value={runMode}

@@ -62,7 +62,7 @@ export const ParamItem = ({ name, value, description, displayValue }) => (
   <Stack gap={4}>
     <Group justify="space-between">
       <Group gap={5}>
-        <Text size="sm">{name}</Text>
+        <Text size="sm" fw="bold">{name}</Text>
         {description && (
           <Tooltip label={description}>
             <IconInfoCircle size={14} />
