@@ -35,9 +35,11 @@ export const defaultTemplateVersion = {
     { content: "Hi!", role: "user" },
   ],
   extra: {
-    model: "gpt-4o",
+    model: "gpt-4.1",
     temperature: 1.0,
-    max_tokens: 1000,
+    max_tokens: 2048,
+    stream: true,
+    top_p: 1.0,
   },
   testValues: {},
   isDraft: true,

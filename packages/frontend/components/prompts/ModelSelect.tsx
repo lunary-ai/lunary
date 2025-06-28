@@ -59,8 +59,8 @@ export default function ModelSelect({ handleChange }) {
         }
         return <Group key={item.option.value}>{item.option.label}</Group>;
       }}
-      w={250}
-      size="xs"
+      style={{ flex: 1 }}
+      size="sm"
       searchable
       inputMode="search"
       value={selectedModel.value}

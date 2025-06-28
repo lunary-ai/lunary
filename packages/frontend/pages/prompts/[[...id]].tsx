@@ -16,8 +16,6 @@ import {
   JsonInput,
   PasswordInput,
   ActionIcon,
-  Collapse,
-  UnstyledButton,
 } from "@mantine/core";
 
 import HotkeysInfo from "@/components/blocks/HotkeysInfo";
@@ -53,8 +51,6 @@ import {
   IconApi,
   IconPlugConnected,
   IconSettings,
-  IconChevronRight,
-  IconChevronDown,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { generateSlug } from "random-word-slugs";
@@ -70,7 +66,6 @@ import { openConfirmModal } from "@mantine/modals";
 
 import PromptVariableEditor from "@/components/prompts/PromptVariableEditor";
 import ProviderEditor, { ParamItem } from "@/components/prompts/Provider";
-import ModelSelect from "@/components/prompts/ModelSelect";
 import ExpandableJsonInput from "@/components/prompts/ExpandableJsonInput";
 import ProtectedJsonEditor from "@/components/prompts/ProtectedJsonEditor";
 import { hasAccess } from "shared";
@@ -178,12 +173,13 @@ function Playground() {
     null,
   );
   const [isEditMode, setIsEditMode] = useState(false);
-  const [modelParamsCollapsed, setModelParamsCollapsed] = useState(true);
 
   // Hooks for API operations
   const { endpoints, isLoading: isLoadingEndpoints } = usePlaygroundEndpoints();
   const { createEndpoint, isCreating } = useCreatePlaygroundEndpoint();
-  const [editingEndpointId, setEditingEndpointId] = useState<string | null>(null);
+  const [editingEndpointId, setEditingEndpointId] = useState<string | null>(
+    null,
+  );
   const { updateEndpoint, isUpdating } =
     useUpdatePlaygroundEndpoint(editingEndpointId);
   const { deleteEndpoint } = useDeletePlaygroundEndpoint();
@@ -318,7 +314,17 @@ function Playground() {
     [
       "mod+S",
       () => {
-        if (hasChanges) saveTemplate();
+        // Check if save button would be enabled
+        if (template && templateVersion && !loading) {
+          // For existing templates, only save if there are changes
+          if (templateVersion?.id && hasChanges) {
+            saveTemplate();
+          }
+          // For new templates, always allow save
+          else if (!templateVersion?.id) {
+            saveTemplate();
+          }
+        }
       },
     ],
     [
@@ -629,25 +635,31 @@ function Playground() {
         if (Array.isArray(data) && data.length > 0) {
           // Check if all items look like OpenAI messages (have role and content)
           const isMessageArray = data.every(
-            item => 
-              typeof item === 'object' && 
-              item !== null && 
-              'role' in item && 
-              ('content' in item || 'tool_calls' in item || 'function_call' in item)
+            (item) =>
+              typeof item === "object" &&
+              item !== null &&
+              "role" in item &&
+              ("content" in item ||
+                "tool_calls" in item ||
+                "function_call" in item),
           );
-          
+
           if (isMessageArray) {
             // Display messages properly
             // Find the last assistant message or display all messages
-            const lastAssistantMessage = [...data].reverse().find(msg => msg.role === 'assistant');
-            
+            const lastAssistantMessage = [...data]
+              .reverse()
+              .find((msg) => msg.role === "assistant");
+
             if (lastAssistantMessage) {
               setOutput(lastAssistantMessage);
             } else {
               // If no assistant message, show all messages as they would appear in chat
               setOutput({
                 role: "assistant",
-                content: data.map(msg => `${msg.role}: ${msg.content || '[tool call]'}`).join('\n\n'),
+                content: data
+                  .map((msg) => `${msg.role}: ${msg.content || "[tool call]"}`)
+                  .join("\n\n"),
               });
             }
           } else {
@@ -749,24 +761,110 @@ function Playground() {
           />
         </Box>
         <Box
-          p="xl"
           flex="1"
           style={{
             borderRight: "1px solid rgba(120, 120, 120, 0.1)",
             height: "100vh",
-            overflowY: "auto",
+            display: "flex",
+            flexDirection: "column",
           }}
         >
-          <Box id="template-input-area">
-            <TemplateInputArea
-              template={templateVersion}
-              setTemplate={setTemplateVersion}
-              saveTemplate={saveTemplate}
-              setHasChanges={setHasChanges}
-              output={output}
-              outputTokens={outputTokens}
-              error={error}
-            />
+          {/* Header with Save and Deploy buttons */}
+          {template && templateVersion && (
+            <Box
+              px="xl"
+              style={{
+                height: "63px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-end",
+                borderBottom: "1px solid rgba(120, 120, 120, 0.1)",
+              }}
+            >
+              <Group>
+                {!templateVersion?.id &&
+                  hasAccess(user.role, "prompts", "create") && (
+                    <Button
+                      leftSection={<IconDeviceFloppy size={18} />}
+                      size="xs"
+                      loading={loading}
+                      data-testid="save-template"
+                      disabled={loading || (template?.id && !hasChanges)}
+                      variant="outline"
+                      onClick={saveTemplate}
+                      rightSection={
+                        <HotkeysInfo
+                          hot="S"
+                          size="xs"
+                          style={{ marginTop: -2 }}
+                        />
+                      }
+                    >
+                      Save as new template
+                    </Button>
+                  )}
+
+                {templateVersion?.id &&
+                  hasAccess(user.role, "prompts", "create_draft") && (
+                    <Button
+                      leftSection={<IconDeviceFloppy size={18} />}
+                      size="xs"
+                      loading={loading}
+                      data-testid="save-template"
+                      disabled={loading || (template?.id && !hasChanges)}
+                      variant="outline"
+                      onClick={saveTemplate}
+                      rightSection={
+                        <HotkeysInfo
+                          hot="S"
+                          size="xs"
+                          style={{ marginTop: -2 }}
+                        />
+                      }
+                    >
+                      Save changes
+                    </Button>
+                  )}
+
+                {hasAccess(user.role, "prompts", "update") &&
+                  templateVersion?.id && (
+                    <Button
+                      leftSection={<IconGitCommit size={18} />}
+                      size="xs"
+                      loading={loading}
+                      data-testid="deploy-template"
+                      disabled={
+                        loading || !(templateVersion?.isDraft || hasChanges)
+                      }
+                      variant="filled"
+                      onClick={commitTemplate}
+                    >
+                      Deploy
+                    </Button>
+                  )}
+              </Group>
+            </Box>
+          )}
+
+          {/* Main content area */}
+          <Box
+            p="xl"
+            flex="1"
+            style={{
+              overflowY: "auto",
+            }}
+          >
+            <Box id="template-input-area">
+              <TemplateInputArea
+                template={templateVersion}
+                setTemplate={setTemplateVersion}
+                saveTemplate={saveTemplate}
+                setHasChanges={setHasChanges}
+                output={output}
+                outputTokens={outputTokens}
+                error={error}
+              />
+            </Box>
           </Box>
         </Box>
         <Box
@@ -779,230 +877,103 @@ function Playground() {
           }}
         >
           <Box
+            px="xl"
+            style={{
+              height: "63px",
+              display: "flex",
+              alignItems: "center",
+              borderBottom: "1px solid rgba(120, 120, 120, 0.1)",
+            }}
+          >
+            <Text size="lg" fw={600}>
+              Configuration
+            </Text>
+          </Box>
+
+          <Box
             style={{
               flex: 1,
               overflowY: "auto",
               padding: "var(--mantine-spacing-xl)",
             }}
           >
-            <Stack style={{ zIndex: 0 }}>
-              {template && templateVersion && (
-                <Group>
-                  {!templateVersion?.id &&
-                    hasAccess(user.role, "prompts", "create") && (
-                      <Button
-                        leftSection={<IconDeviceFloppy size={18} />}
-                        size="xs"
-                        loading={loading}
-                        data-testid="save-template"
-                        disabled={loading || (template?.id && !hasChanges)}
-                        variant="outline"
-                        onClick={saveTemplate}
-                      >
-                        Save as new template
-                      </Button>
-                    )}
-
-                  {templateVersion?.id &&
-                    hasAccess(user.role, "prompts", "create_draft") && (
-                      <Button
-                        leftSection={<IconDeviceFloppy size={18} />}
-                        size="xs"
-                        loading={loading}
-                        data-testid="save-template"
-                        disabled={loading || (template?.id && !hasChanges)}
-                        variant="outline"
-                        onClick={saveTemplate}
-                      >
-                        Save changes
-                      </Button>
-                    )}
-
-                  {hasAccess(user.role, "prompts", "update") &&
-                    templateVersion?.id && (
-                      <Button
-                        leftSection={<IconGitCommit size={18} />}
-                        size="xs"
-                        loading={loading}
-                        data-testid="deploy-template"
-                        disabled={
-                          loading || !(templateVersion?.isDraft || hasChanges)
-                        }
-                        variant="filled"
-                        onClick={commitTemplate}
-                      >
-                        Deploy
-                      </Button>
-                    )}
-                </Group>
-              )}
-
-              <ParamItem
-                name="Prompt Mode"
-                value={
-                  <SegmentedControl
-                    size="xs"
-                    disabled={loading || !templateVersion?.isDraft}
-                    data={[
-                      {
-                        value: "chat",
-                        label: "Chat",
-                      },
-                      {
-                        value: "text",
-                        label: "Text",
-                      },
-                    ]}
-                    value={
-                      typeof templateVersion.content === "string"
-                        ? "text"
-                        : "chat"
-                    }
-                    onChange={(value) => {
-                      const newTemplateVersion = { ...templateVersion };
-                      const isTextAlready =
-                        typeof templateVersion.content === "string";
-                      if (isTextAlready && value !== "text") {
-                        // Switching from text to custom/openai
-                        newTemplateVersion.content = [
-                          { role: "user", content: templateVersion.content },
-                        ];
-                      } else if (!isTextAlready && value === "text") {
-                        // Switching from custom/openai to text
-                        const firstUserMessage = templateVersion.content[0];
-
-                        newTemplateVersion.content =
-                          firstUserMessage?.content || "";
-                      }
-                      setTemplateVersion(newTemplateVersion);
-                    }}
-                  />
-                }
+            <Stack gap="md">
+              <ProviderEditor
+                value={{
+                  model: templateVersion?.extra?.model,
+                  config: templateVersion?.extra,
+                }}
+                onChange={(val) => {
+                  setHasChanges(true);
+                  setTemplateVersion({
+                    ...templateVersion,
+                    extra: { ...val.config, model: val.model },
+                  });
+                }}
               />
-            </Stack>
 
-              <Stack gap="md" mt="md">
-                <Group justify="space-between">
-                  <ModelSelect 
-                    handleChange={(model) => {
-                      setHasChanges(true);
-                      setTemplateVersion({
-                        ...templateVersion,
-                        extra: { ...templateVersion?.extra, model },
-                      });
-                    }}
-                  />
-                  <ActionIcon
-                    variant="default"
-                    onClick={() => router.push("/settings/providers")}
-                  >
-                    <IconSettings width={18} opacity="0.7" />
-                  </ActionIcon>
-                </Group>
+              {template && (
+                <>
+                  <Card withBorder p="sm">
+                    <PromptVariableEditor
+                      value={variables}
+                      onChange={(update) => {
+                        setTemplateVersion({
+                          ...templateVersion,
+                          testValues: update,
+                        });
+                      }}
+                    />
+                  </Card>
 
-                <Card withBorder p={0}>
-                  <UnstyledButton
-                    onClick={() => setModelParamsCollapsed(!modelParamsCollapsed)}
-                    p="sm"
-                    w="100%"
-                    style={{ 
-                      borderBottom: modelParamsCollapsed ? 'none' : '1px solid var(--mantine-color-default-border)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between'
-                    }}
-                  >
-                    <Group gap="xs">
-                      {modelParamsCollapsed ? (
-                        <IconChevronRight size={16} />
-                      ) : (
-                        <IconChevronDown size={16} />
-                      )}
-                      <Text size="sm" fw={500}>Model Parameters</Text>
-                    </Group>
-                  </UnstyledButton>
-                  <Collapse in={!modelParamsCollapsed}>
-                    <Box p="sm">
-                      <ProviderEditor
-                        value={{
-                          model: templateVersion?.extra?.model,
-                          config: templateVersion?.extra,
-                        }}
-                        onChange={(val) => {
-                          setHasChanges(true);
-                          setTemplateVersion({
-                            ...templateVersion,
-                            extra: { ...val.config, model: val.model },
-                          });
-                        }}
-                        hideModel={true}
-                      />
-                    </Box>
-                  </Collapse>
-                </Card>
+                  {template?.id && templateVersion?.id && (
+                    <ParamItem
+                      name="Notepad"
+                      description="Write down thoughts or ideas you want to remember about this template. Notes are versioned."
+                      value={
+                        <NotepadButton
+                          value={templateVersion?.notes}
+                          onChange={async (notes) => {
+                            const data = {
+                              ...templateVersion,
+                              notes,
+                            };
 
-                {template && (
-                  <>
+                            setTemplateVersion(data);
+
+                            // save directly without bumping version so no changes are lost
+                            await updateVersion(data);
+
+                            mutate();
+                          }}
+                        />
+                      }
+                    />
+                  )}
+
+                  <Box mt="xl">
+                    <ParamItem
+                      name="Run Mode"
+                      description="Choose whether to test directly against an LLM model or a custom API endpoint"
+                      value={
+                        <SegmentedControl
+                          size="xs"
+                          data={[
+                            { value: "playground", label: "LLM Playground" },
+                            { value: "endpoint", label: "API Endpoint" },
+                          ]}
+                          value={runMode}
+                          onChange={(value) =>
+                            setRunMode(value as "playground" | "endpoint")
+                          }
+                        />
+                      }
+                    />
+                  </Box>
+
+                  {runMode === "endpoint" && (
                     <Card withBorder p="sm">
-                      <PromptVariableEditor
-                        value={variables}
-                        onChange={(update) => {
-                          setTemplateVersion({
-                            ...templateVersion,
-                            testValues: update,
-                          });
-                        }}
-                      />
-                    </Card>
-
-                    {template?.id && templateVersion?.id && (
-                      <ParamItem
-                        name="Notepad"
-                        description="Write down thoughts or ideas you want to remember about this template. Notes are versioned."
-                        value={
-                          <NotepadButton
-                            value={templateVersion?.notes}
-                            onChange={async (notes) => {
-                              const data = {
-                                ...templateVersion,
-                                notes,
-                              };
-
-                              setTemplateVersion(data);
-
-                              // save directly without bumping version so no changes are lost
-                              await updateVersion(data);
-
-                              mutate();
-                            }}
-                          />
-                        }
-                      />
-                    )}
-
-                    <Box mt="xl">
-                      <ParamItem
-                        name="Run Mode"
-                        description="Choose whether to test directly against an LLM model or a custom API endpoint"
-                        value={
-                          <SegmentedControl
-                            size="xs"
-                            data={[
-                              { value: "playground", label: "LLM Playground" },
-                              { value: "endpoint", label: "API Endpoint" },
-                            ]}
-                            value={runMode}
-                            onChange={(value) =>
-                              setRunMode(value as "playground" | "endpoint")
-                            }
-                          />
-                        }
-                      />
-                    </Box>
-
-                    {runMode === "endpoint" && (
-                      <Card withBorder p="sm">
-                        <Stack>
+                      <Stack>
                         <Group justify="space-between">
                           <Text size="sm" fw="bold">
                             Select Endpoint
@@ -1243,7 +1214,7 @@ function Playground() {
                                   // Add blank line before messages key
                                   jsonString = jsonString.replace(
                                     /(\n\s*)"messages":/,
-                                    '\n$1"messages":'
+                                    '\n$1"messages":',
                                   );
 
                                   return jsonString;
@@ -1271,10 +1242,10 @@ function Playground() {
                         )}
                       </Stack>
                     </Card>
-                    )}
-                  </>
-                )}
-              </Stack>
+                  )}
+                </>
+              )}
+            </Stack>
           </Box>
           {hasAccess(user.role, "prompts", "run") && (
             <Box
