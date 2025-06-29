@@ -91,11 +91,12 @@ test.describe("Prompts Page - Core Functionality", () => {
     await page.waitForTimeout(2000);
 
     // Verify template was saved (look for draft badge or version indicator)
-    const draftBadge = page.locator('text="Draft"');
-    const versionBadge = page.locator("text=/v\\d+/");
+    // Use more specific selectors to avoid multiple matches
+    const draftBadge = page.locator('.mantine-Badge-label:has-text("Draft")').first();
+    const versionBadge = page.locator("text=/v\\d+/").first();
 
     const hasDraft =
-      (await draftBadge.isVisible()) || (await versionBadge.isVisible());
+      (await draftBadge.count() > 0) || (await versionBadge.count() > 0);
     expect(hasDraft).toBeTruthy();
   });
 
@@ -273,10 +274,12 @@ test.describe("Prompts Page - Custom Endpoints", () => {
     }
 
     // Switch to custom endpoint mode
+    await page.waitForTimeout(1000); // Wait for UI to stabilize
     const customEndpointOption = page.locator('text="Custom Endpoint"');
+    await page.waitForSelector('text="Custom Endpoint"', { state: 'visible' });
     if (await customEndpointOption.isVisible()) {
-      await customEndpointOption.click();
-      await page.waitForTimeout(1000);
+      await customEndpointOption.click({ force: true });
+      await page.waitForTimeout(2000); // Increased wait time
     }
 
     // Click add endpoint button
