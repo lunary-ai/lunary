@@ -136,10 +136,8 @@ export default function SmartViewer({
         data={{
           role: "error",
           text:
-            typeof error.stack === "string"
-              ? compact
-                ? error.message || error.stack
-                : error.stack
+            typeof error === "object" && error.message
+              ? error.message
               : typeof error === "object"
                 ? JSON.stringify(error, null, 2)
                 : error,

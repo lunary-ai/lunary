@@ -8,8 +8,8 @@ import { z } from "zod";
 
 import { PassThrough } from "stream";
 
-import { handleStream, runAImodel } from "@/src/utils/playground";
 import { checkAccess } from "@/src/utils/authorization";
+import { handleStream, runAImodel } from "@/src/utils/playground";
 import * as Sentry from "@sentry/bun";
 
 const orgs = new Router({
@@ -106,7 +106,7 @@ orgs.post("/upgrade", async (ctx: Context) => {
   const orgId = ctx.state.orgId as string;
 
   const bodySchema = z.object({
-    origin: z.string()
+    origin: z.string(),
   });
   const { origin } = bodySchema.parse(ctx.request.body);
 

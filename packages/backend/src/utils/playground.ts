@@ -370,12 +370,11 @@ async function runAzureOpenAI(
     temperature: params?.temperature,
     max_tokens: params?.max_tokens,
     top_p: params?.top_p,
-    presence_penalty: params?.presence_penalty,
-    frequency_penalty: params?.frequency_penalty,
     stop: params?.stop,
     functions: params?.functions,
     tools: validateToolCalls("gpt", params?.tools),
     seed: params?.seed,
+    response_format: params?.response_format,
   });
 
   return chatCompletion;
@@ -452,8 +451,6 @@ export async function runAImodel(
       temperature: completionsParams?.temperature,
       maxTokens: completionsParams?.max_tokens,
       topP: completionsParams?.top_p,
-      presencePenalty: completionsParams?.presence_penalty,
-      frequencyPenalty: completionsParams?.frequency_penalty,
     });
 
     return {
@@ -484,8 +481,6 @@ export async function runAImodel(
       temperature: completionsParams?.temperature,
       max_tokens: completionsParams?.max_tokens || 4096,
       top_p: completionsParams?.top_p,
-      presence_penalty: completionsParams?.presence_penalty,
-      frequency_penalty: completionsParams?.frequency_penalty,
       functions: completionsParams?.functions,
       tools: validateToolCalls(model.name, completionsParams?.tools),
       seed: completionsParams?.seed,
@@ -505,8 +500,6 @@ export async function runAImodel(
       temperature: completionsParams?.temperature,
       maxTokens: completionsParams?.max_tokens,
       topP: completionsParams?.top_p,
-      presencePenalty: completionsParams?.presence_penalty,
-      frequencyPenalty: completionsParams?.frequency_penalty,
     });
 
     return result;
@@ -567,9 +560,7 @@ export async function runAImodel(
   let res;
 
   if (model.id === "o3-pro") {
-    if (stream) {
-      throw new Error("Streaming is not supported for o3-pro model");
-    }
+    stream = false;
 
     // Convert messages to a single prompt for the responses API
     const prompt = messages
@@ -625,12 +616,11 @@ export async function runAImodel(
       temperature: completionsParams?.temperature,
       max_completion_tokens: completionsParams?.max_tokens,
       top_p: completionsParams?.top_p,
-      presence_penalty: completionsParams?.presence_penalty,
-      frequency_penalty: completionsParams?.frequency_penalty,
       stop: completionsParams?.stop,
       functions: completionsParams?.functions,
       tools: validateToolCalls(model.name, completionsParams?.tools),
       seed: completionsParams?.seed,
+      response_format: completionsParams?.response_format,
       ...paramsOverwrite,
     });
   }

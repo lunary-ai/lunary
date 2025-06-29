@@ -1,23 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
+  ActionIcon,
+  Badge,
   Box,
   Button,
   Card,
   Flex,
   Group,
   Modal,
+  PasswordInput,
   SegmentedControl,
+  Select,
   Stack,
   Text,
   Textarea,
-  Select,
   TextInput,
-  JsonInput,
-  PasswordInput,
-  ActionIcon,
-  Collapse,
-  UnstyledButton,
 } from "@mantine/core";
 
 import HotkeysInfo from "@/components/blocks/HotkeysInfo";
@@ -27,34 +25,32 @@ import TemplateList, {
   defaultTemplateVersion,
 } from "@/components/prompts/TemplateMenu";
 import {
+  useCreatePlaygroundEndpoint,
+  useDeletePlaygroundEndpoint,
   useOrg,
+  usePlaygroundEndpoints,
   useProject,
+  useRunEndpoint,
   useTemplate,
   useTemplates,
   useTemplateVersion,
-  useUser,
-  usePlaygroundEndpoints,
-  useCreatePlaygroundEndpoint,
-  useUpdatePlaygroundEndpoint,
-  useDeletePlaygroundEndpoint,
   useTestEndpointConnection,
-  useRunEndpoint,
+  useUpdatePlaygroundEndpoint,
+  useUser,
   type PlaygroundEndpoint,
 } from "@/utils/dataHooks";
 import { notifications } from "@mantine/notifications";
 import {
   IconBolt,
+  IconBook,
   IconBracketsAngle,
   IconCheck,
   IconDeviceFloppy,
   IconGitCommit,
   IconPlus,
-  IconTrash,
-  IconApi,
-  IconPlugConnected,
   IconSettings,
-  IconChevronRight,
-  IconChevronDown,
+  IconTrash,
+  IconVariable,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { generateSlug } from "random-word-slugs";
@@ -70,9 +66,6 @@ import { openConfirmModal } from "@mantine/modals";
 
 import PromptVariableEditor from "@/components/prompts/PromptVariableEditor";
 import ProviderEditor, { ParamItem } from "@/components/prompts/Provider";
-import ModelSelect from "@/components/prompts/ModelSelect";
-import ExpandableJsonInput from "@/components/prompts/ExpandableJsonInput";
-import ProtectedJsonEditor from "@/components/prompts/ProtectedJsonEditor";
 import { hasAccess } from "shared";
 
 function NotepadButton({ value, onChange }) {
@@ -95,7 +88,7 @@ function NotepadButton({ value, onChange }) {
           autosize
           minRows={5}
           maxRows={30}
-          placeholder="Write down thoughts, ideas, or anything else you want to remember about this template."
+          placeholder="Write down thoughts, ideas, or anything else you want to remember about this template. Notes are versioned."
           defaultValue={value}
           onChange={(e) => setTempValue(e.currentTarget.value)}
         />
@@ -103,7 +96,7 @@ function NotepadButton({ value, onChange }) {
           <Button
             ml="auto"
             size="xs"
-            variant="default"
+            variant="filled"
             onClick={() => {
               onChange(tempValue);
               setModalOpened(false);
@@ -114,13 +107,14 @@ function NotepadButton({ value, onChange }) {
         </Group>
       </Modal>
       <Button
-        size="compact-xs"
-        variant="outline"
+        size="xs"
+        variant="subtle"
+        leftSection={<IconBook size={18} />}
         onClick={() => {
           setModalOpened(true);
         }}
       >
-        {`Open`}
+        Notepad
       </Button>
     </>
   );
@@ -171,19 +165,23 @@ function Playground() {
     headers: { "Content-Type": "application/json" },
     defaultPayload: {},
   });
-  const [customPayloadText, setCustomPayloadText] = useState("");
   const [defaultPayloadText, setDefaultPayloadText] = useState("");
   const [endpointModalOpen, setEndpointModalOpen] = useState(false);
   const [selectedEndpointId, setSelectedEndpointId] = useState<string | null>(
     null,
   );
   const [isEditMode, setIsEditMode] = useState(false);
-  const [modelParamsCollapsed, setModelParamsCollapsed] = useState(true);
+  const [variablesModalOpen, setVariablesModalOpen] = useState(false);
+  const [hoveredEndpointId, setHoveredEndpointId] = useState<string | null>(
+    null,
+  );
 
   // Hooks for API operations
   const { endpoints, isLoading: isLoadingEndpoints } = usePlaygroundEndpoints();
   const { createEndpoint, isCreating } = useCreatePlaygroundEndpoint();
-  const [editingEndpointId, setEditingEndpointId] = useState<string | null>(null);
+  const [editingEndpointId, setEditingEndpointId] = useState<string | null>(
+    null,
+  );
   const { updateEndpoint, isUpdating } =
     useUpdatePlaygroundEndpoint(editingEndpointId);
   const { deleteEndpoint } = useDeletePlaygroundEndpoint();
@@ -195,11 +193,6 @@ function Playground() {
     if (endpoints.length > 0 && !selectedEndpointId) {
       const firstEndpoint = endpoints[0];
       setSelectedEndpointId(firstEndpoint.id);
-      // Set only the user-editable portion (without protected fields)
-      const defaultPayload = firstEndpoint.defaultPayload || {};
-      delete defaultPayload.messages;
-      delete defaultPayload.model_params;
-      setCustomPayloadText(JSON.stringify(defaultPayload, null, 2));
     }
   }, [endpoints, selectedEndpointId]);
 
@@ -318,7 +311,17 @@ function Playground() {
     [
       "mod+S",
       () => {
-        if (hasChanges) saveTemplate();
+        // Check if save button would be enabled
+        if (template && templateVersion && !loading) {
+          // For existing templates, only save if there are changes
+          if (templateVersion?.id && hasChanges) {
+            saveTemplate();
+          }
+          // For new templates, always allow save
+          else if (!templateVersion?.id) {
+            saveTemplate();
+          }
+        }
       },
     ],
     [
@@ -395,6 +398,7 @@ function Playground() {
 
       fetchRun();
     } else {
+      // Only set default template for truly new prompts
       setTemplate({ mode: "openai" });
       setTemplateVersion(defaultTemplateVersion);
     }
@@ -527,6 +531,15 @@ function Playground() {
   };
 
   const runPlayground = async () => {
+    const hasEmptyVariables = Object.entries(variables).some(
+      ([key, value]) => value === "" || value === null || value === undefined,
+    );
+
+    if (hasEmptyVariables && Object.keys(variables).length > 0) {
+      setVariablesModalOpen(true);
+      return;
+    }
+
     if (runMode === "playground") {
       // Original LLM playground logic
       const model = templateVersion?.extra?.model;
@@ -538,6 +551,8 @@ function Playground() {
       analytics.track("RunPlayground", {
         model,
       });
+
+      // Note: OpenAI and other providers allow empty content, so we don't validate for it
 
       setError(null);
       setOutput(null);
@@ -604,20 +619,52 @@ function Playground() {
       setStreaming(true);
 
       try {
-        // Parse the current payload text
-        let userPayload = {};
-        try {
-          userPayload = JSON.parse(customPayloadText);
-        } catch (e) {
-          // If invalid JSON, use empty object
-          userPayload = {};
+        // Get the custom payload from the endpoint
+        const customPayload = selectedEndpoint.defaultPayload || {};
+
+        // Helper function to replace {{variable}} with actual values
+        const compileTextTemplate = (
+          content: string,
+          variables: Record<string, string>,
+        ) => {
+          const regex = /{{([^{}]*)}}/g;
+          return content.replace(regex, (_, g1) => variables[g1] || "");
+        };
+
+        // Generate the protected payload with interpolated variables
+        const variables = templateVersion?.testValues || {};
+        const content = templateVersion?.content;
+        const extra = templateVersion?.extra || {};
+
+        // Compile the content with variables
+        let compiledContent;
+        if (typeof content === "string") {
+          compiledContent = [
+            {
+              role: "user",
+              content: compileTextTemplate(content, variables),
+            },
+          ];
+        } else if (Array.isArray(content)) {
+          compiledContent = content.map((item) => ({
+            ...item,
+            content: item.content
+              ? compileTextTemplate(item.content, variables)
+              : item.content,
+          }));
+        } else {
+          compiledContent = content;
         }
 
-        // Generate the protected payload and merge with user payload
-        const protectedPayload = generateProtectedPayload();
+        const protectedPayload = {
+          content: compiledContent,
+          extra,
+          variables,
+        };
+
         const payload = {
-          ...userPayload,
-          ...protectedPayload, // Protected fields override user fields
+          ...customPayload,
+          ...protectedPayload, // Protected fields override custom fields
         };
 
         const data = await runEndpoint({
@@ -629,25 +676,31 @@ function Playground() {
         if (Array.isArray(data) && data.length > 0) {
           // Check if all items look like OpenAI messages (have role and content)
           const isMessageArray = data.every(
-            item => 
-              typeof item === 'object' && 
-              item !== null && 
-              'role' in item && 
-              ('content' in item || 'tool_calls' in item || 'function_call' in item)
+            (item) =>
+              typeof item === "object" &&
+              item !== null &&
+              "role" in item &&
+              ("content" in item ||
+                "tool_calls" in item ||
+                "function_call" in item),
           );
-          
+
           if (isMessageArray) {
             // Display messages properly
             // Find the last assistant message or display all messages
-            const lastAssistantMessage = [...data].reverse().find(msg => msg.role === 'assistant');
-            
+            const lastAssistantMessage = [...data]
+              .reverse()
+              .find((msg) => msg.role === "assistant");
+
             if (lastAssistantMessage) {
               setOutput(lastAssistantMessage);
             } else {
               // If no assistant message, show all messages as they would appear in chat
               setOutput({
                 role: "assistant",
-                content: data.map(msg => `${msg.role}: ${msg.content || '[tool call]'}`).join('\n\n'),
+                content: data
+                  .map((msg) => `${msg.role}: ${msg.content || "[tool call]"}`)
+                  .join("\n\n"),
               });
             }
           } else {
@@ -716,10 +769,15 @@ function Playground() {
       buttonLabel="Create first template"
       onClick={createTemplate}
     >
-      <Flex w="100%" h="100vh" style={{ position: "relative" }}>
+      <Flex 
+        w="100%" 
+        h="100vh" 
+        style={{ position: "relative" }}
+        data-current-template-slug={template?.slug || ""}
+        data-testid="prompts-playground"
+      >
         <Box
           flex={`0 0 230px`}
-          py="sm"
           style={{
             borderRight: "1px solid rgba(120, 120, 120, 0.1)",
             height: "100vh",
@@ -749,24 +807,147 @@ function Playground() {
           />
         </Box>
         <Box
-          p="xl"
           flex="1"
           style={{
             borderRight: "1px solid rgba(120, 120, 120, 0.1)",
             height: "100vh",
-            overflowY: "auto",
+            display: "flex",
+            flexDirection: "column",
           }}
         >
-          <Box id="template-input-area">
-            <TemplateInputArea
-              template={templateVersion}
-              setTemplate={setTemplateVersion}
-              saveTemplate={saveTemplate}
-              setHasChanges={setHasChanges}
-              output={output}
-              outputTokens={outputTokens}
-              error={error}
-            />
+          {/* Header with Save and Deploy buttons */}
+          {template && templateVersion && (
+            <Box
+              px="xl"
+              style={{
+                height: "63px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-end",
+                borderBottom: "1px solid rgba(120, 120, 120, 0.1)",
+              }}
+            >
+              <Group gap="xs">
+                {template?.id && templateVersion?.id && (
+                  <NotepadButton
+                    value={templateVersion?.notes}
+                    onChange={async (notes) => {
+                      const data = {
+                        ...templateVersion,
+                        notes,
+                      };
+
+                      setTemplateVersion(data);
+
+                      // save directly without bumping version so no changes are lost
+                      await updateVersion(data);
+
+                      mutate();
+                    }}
+                  />
+                )}
+
+                {template && (
+                  <Button
+                    size="xs"
+                    variant="subtle"
+                    leftSection={<IconVariable size={18} />}
+                    rightSection={
+                      Object.keys(variables).length > 0 ? (
+                        <Badge size="xs" variant="filled" circle>
+                          {Object.keys(variables).length}
+                        </Badge>
+                      ) : null
+                    }
+                    onClick={() => setVariablesModalOpen(true)}
+                  >
+                    Variables
+                  </Button>
+                )}
+
+                {!templateVersion?.id &&
+                  hasAccess(user.role, "prompts", "create") && (
+                    <Button
+                      leftSection={<IconDeviceFloppy size={18} />}
+                      size="xs"
+                      loading={loading}
+                      data-testid="save-template"
+                      disabled={loading || (template?.id && !hasChanges)}
+                      variant="outline"
+                      onClick={saveTemplate}
+                      rightSection={
+                        <HotkeysInfo
+                          hot="S"
+                          size="xs"
+                          style={{ marginTop: -2 }}
+                        />
+                      }
+                    >
+                      Save as new template
+                    </Button>
+                  )}
+
+                {templateVersion?.id &&
+                  hasAccess(user.role, "prompts", "create_draft") && (
+                    <Button
+                      leftSection={<IconDeviceFloppy size={18} />}
+                      size="xs"
+                      loading={loading}
+                      data-testid="save-template"
+                      disabled={loading || (template?.id && !hasChanges)}
+                      variant="outline"
+                      onClick={saveTemplate}
+                      rightSection={
+                        <HotkeysInfo
+                          hot="S"
+                          size="xs"
+                          style={{ marginTop: -2 }}
+                        />
+                      }
+                    >
+                      Save changes
+                    </Button>
+                  )}
+
+                {hasAccess(user.role, "prompts", "update") &&
+                  templateVersion?.id && (
+                    <Button
+                      leftSection={<IconGitCommit size={18} />}
+                      size="xs"
+                      loading={loading}
+                      data-testid="deploy-template"
+                      disabled={
+                        loading || !(templateVersion?.isDraft || hasChanges)
+                      }
+                      variant="filled"
+                      onClick={commitTemplate}
+                    >
+                      Deploy
+                    </Button>
+                  )}
+              </Group>
+            </Box>
+          )}
+
+          {/* Main content area */}
+          <Box
+            p="xl"
+            flex="1"
+            style={{
+              overflowY: "auto",
+            }}
+          >
+            <Box id="template-input-area">
+              <TemplateInputArea
+                template={templateVersion}
+                setTemplate={setTemplateVersion}
+                saveTemplate={saveTemplate}
+                setHasChanges={setHasChanges}
+                output={output}
+                outputTokens={outputTokens}
+                error={error}
+              />
+            </Box>
           </Box>
         </Box>
         <Box
@@ -779,502 +960,251 @@ function Playground() {
           }}
         >
           <Box
+            px="xl"
+            style={{
+              height: "63px",
+              display: "flex",
+              alignItems: "center",
+              borderBottom: "1px solid rgba(120, 120, 120, 0.1)",
+            }}
+          >
+            <Text size="lg" fw={600}>
+              Configuration
+            </Text>
+          </Box>
+
+          <Box
             style={{
               flex: 1,
               overflowY: "auto",
               padding: "var(--mantine-spacing-xl)",
             }}
           >
-            <Stack style={{ zIndex: 0 }}>
-              {template && templateVersion && (
-                <Group>
-                  {!templateVersion?.id &&
-                    hasAccess(user.role, "prompts", "create") && (
-                      <Button
-                        leftSection={<IconDeviceFloppy size={18} />}
-                        size="xs"
-                        loading={loading}
-                        data-testid="save-template"
-                        disabled={loading || (template?.id && !hasChanges)}
-                        variant="outline"
-                        onClick={saveTemplate}
-                      >
-                        Save as new template
-                      </Button>
-                    )}
-
-                  {templateVersion?.id &&
-                    hasAccess(user.role, "prompts", "create_draft") && (
-                      <Button
-                        leftSection={<IconDeviceFloppy size={18} />}
-                        size="xs"
-                        loading={loading}
-                        data-testid="save-template"
-                        disabled={loading || (template?.id && !hasChanges)}
-                        variant="outline"
-                        onClick={saveTemplate}
-                      >
-                        Save changes
-                      </Button>
-                    )}
-
-                  {hasAccess(user.role, "prompts", "update") &&
-                    templateVersion?.id && (
-                      <Button
-                        leftSection={<IconGitCommit size={18} />}
-                        size="xs"
-                        loading={loading}
-                        data-testid="deploy-template"
-                        disabled={
-                          loading || !(templateVersion?.isDraft || hasChanges)
-                        }
-                        variant="filled"
-                        onClick={commitTemplate}
-                      >
-                        Deploy
-                      </Button>
-                    )}
-                </Group>
-              )}
-
-              <ParamItem
-                name="Prompt Mode"
-                value={
-                  <SegmentedControl
-                    size="xs"
-                    disabled={loading || !templateVersion?.isDraft}
-                    data={[
-                      {
-                        value: "chat",
-                        label: "Chat",
-                      },
-                      {
-                        value: "text",
-                        label: "Text",
-                      },
-                    ]}
-                    value={
-                      typeof templateVersion.content === "string"
-                        ? "text"
-                        : "chat"
-                    }
-                    onChange={(value) => {
-                      const newTemplateVersion = { ...templateVersion };
-                      const isTextAlready =
-                        typeof templateVersion.content === "string";
-                      if (isTextAlready && value !== "text") {
-                        // Switching from text to custom/openai
-                        newTemplateVersion.content = [
-                          { role: "user", content: templateVersion.content },
-                        ];
-                      } else if (!isTextAlready && value === "text") {
-                        // Switching from custom/openai to text
-                        const firstUserMessage = templateVersion.content[0];
-
-                        newTemplateVersion.content =
-                          firstUserMessage?.content || "";
+            <Stack gap="xl">
+              {template && (
+                <>
+                  <Box>
+                    <ParamItem
+                      name="Run Mode"
+                      description="Choose between using a model provider or your own custom endpoint"
+                      value={
+                        <SegmentedControl
+                          size="sm"
+                          data={[
+                            { value: "playground", label: "Model Provider" },
+                            { value: "endpoint", label: "Custom Endpoint" },
+                          ]}
+                          value={runMode}
+                          onChange={(value) =>
+                            setRunMode(value as "playground" | "endpoint")
+                          }
+                        />
                       }
-                      setTemplateVersion(newTemplateVersion);
-                    }}
-                  />
-                }
-              />
-            </Stack>
+                    />
+                  </Box>
 
-              <Stack gap="md" mt="md">
-                <Group justify="space-between">
-                  <ModelSelect 
-                    handleChange={(model) => {
-                      setHasChanges(true);
-                      setTemplateVersion({
-                        ...templateVersion,
-                        extra: { ...templateVersion?.extra, model },
-                      });
-                    }}
-                  />
-                  <ActionIcon
-                    variant="default"
-                    onClick={() => router.push("/settings/providers")}
-                  >
-                    <IconSettings width={18} opacity="0.7" />
-                  </ActionIcon>
-                </Group>
+                  <Box>
+                    <ProviderEditor
+                      value={{
+                        model: templateVersion?.extra?.model,
+                        config: templateVersion?.extra,
+                      }}
+                      onChange={(val) => {
+                        setHasChanges(true);
+                        setTemplateVersion({
+                          ...templateVersion,
+                          extra: { ...val.config, model: val.model },
+                        });
+                      }}
+                    />
+                  </Box>
 
-                <Card withBorder p={0}>
-                  <UnstyledButton
-                    onClick={() => setModelParamsCollapsed(!modelParamsCollapsed)}
-                    p="sm"
-                    w="100%"
-                    style={{ 
-                      borderBottom: modelParamsCollapsed ? 'none' : '1px solid var(--mantine-color-default-border)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between'
-                    }}
-                  >
-                    <Group gap="xs">
-                      {modelParamsCollapsed ? (
-                        <IconChevronRight size={16} />
+                  {runMode === "endpoint" && (
+                    <Stack mt="sm">
+                      <Text size="sm" fw="bold">
+                        Choose Endpoint
+                      </Text>
+
+                      {isLoadingEndpoints ? (
+                        <Text size="sm" c="dimmed" ta="center">
+                          Loading endpoints...
+                        </Text>
                       ) : (
-                        <IconChevronDown size={16} />
-                      )}
-                      <Text size="sm" fw={500}>Model Parameters</Text>
-                    </Group>
-                  </UnstyledButton>
-                  <Collapse in={!modelParamsCollapsed}>
-                    <Box p="sm">
-                      <ProviderEditor
-                        value={{
-                          model: templateVersion?.extra?.model,
-                          config: templateVersion?.extra,
-                        }}
-                        onChange={(val) => {
-                          setHasChanges(true);
-                          setTemplateVersion({
-                            ...templateVersion,
-                            extra: { ...val.config, model: val.model },
-                          });
-                        }}
-                        hideModel={true}
-                      />
-                    </Box>
-                  </Collapse>
-                </Card>
+                        <>
+                          {endpoints.map((endpoint) => (
+                            <Card
+                              key={endpoint.id}
+                              withBorder
+                              p="sm"
+                              style={{
+                                cursor: "pointer",
+                                borderColor:
+                                  selectedEndpointId === endpoint.id
+                                    ? "var(--mantine-color-black-6)"
+                                    : undefined,
+                                borderWidth:
+                                  selectedEndpointId === endpoint.id ? 2 : 1,
+                                backgroundColor:
+                                  hoveredEndpointId === endpoint.id
+                                    ? "var(--mantine-color-gray-0)"
+                                    : undefined,
+                                transition: "all 0.2s ease",
+                              }}
+                              onClick={() => {
+                                setSelectedEndpointId(endpoint.id);
+                              }}
+                              onMouseEnter={() =>
+                                setHoveredEndpointId(endpoint.id)
+                              }
+                              onMouseLeave={() => setHoveredEndpointId(null)}
+                            >
+                              <Group justify="space-between">
+                                <Group>
+                                  <input
+                                    type="radio"
+                                    checked={selectedEndpointId === endpoint.id}
+                                    onChange={() =>
+                                      setSelectedEndpointId(endpoint.id)
+                                    }
+                                    style={{
+                                      cursor: "pointer",
+                                      width: "12px",
+                                      height: "12px",
+                                      accentColor: "black",
+                                    }}
+                                  />
+                                  <Box>
+                                    <Text size="sm" fw={500}>
+                                      {endpoint.name}
+                                    </Text>
+                                    <Text size="xs" c="dimmed">
+                                      {endpoint.url}
+                                    </Text>
+                                  </Box>
+                                </Group>
+                                {hoveredEndpointId === endpoint.id && (
+                                  <Group gap={4}>
+                                    <ActionIcon
+                                      size="sm"
+                                      color="gray"
+                                      variant="subtle"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsEditMode(true);
+                                        setEditingEndpointId(endpoint.id);
+                                        // Convert API auth format to form format for editing
+                                        const formData = convertAPIAuthToForm(
+                                          endpoint.auth,
+                                        );
+                                        setCustomEndpoint({
+                                          ...endpoint,
+                                          ...formData,
+                                        });
+                                        setDefaultPayloadText(
+                                          JSON.stringify(
+                                            endpoint.defaultPayload || {},
+                                            null,
+                                            2,
+                                          ),
+                                        );
+                                        setEndpointModalOpen(true);
+                                      }}
+                                    >
+                                      <IconSettings size={16} />
+                                    </ActionIcon>
+                                    <ActionIcon
+                                      size="sm"
+                                      variant="subtle"
+                                      color="red"
+                                      onClick={async (e) => {
+                                        e.stopPropagation();
+                                        try {
+                                          await deleteEndpoint(endpoint.id);
+                                          if (
+                                            selectedEndpointId === endpoint.id
+                                          ) {
+                                            setSelectedEndpointId(null);
+                                          }
+                                          notifications.show({
+                                            title: "Endpoint deleted",
+                                            message:
+                                              "The endpoint has been removed successfully",
+                                            color: "green",
+                                          });
+                                        } catch (error) {
+                                          notifications.show({
+                                            title: "Error deleting endpoint",
+                                            message: error.message,
+                                            color: "red",
+                                          });
+                                        }
+                                      }}
+                                    >
+                                      <IconTrash size={16} />
+                                    </ActionIcon>
+                                  </Group>
+                                )}
+                              </Group>
+                            </Card>
+                          ))}
 
-                {template && (
-                  <>
-                    <Card withBorder p="sm">
-                      <PromptVariableEditor
-                        value={variables}
-                        onChange={(update) => {
-                          setTemplateVersion({
-                            ...templateVersion,
-                            testValues: update,
-                          });
-                        }}
-                      />
-                    </Card>
-
-                    {template?.id && templateVersion?.id && (
-                      <ParamItem
-                        name="Notepad"
-                        description="Write down thoughts or ideas you want to remember about this template. Notes are versioned."
-                        value={
-                          <NotepadButton
-                            value={templateVersion?.notes}
-                            onChange={async (notes) => {
-                              const data = {
-                                ...templateVersion,
-                                notes,
-                              };
-
-                              setTemplateVersion(data);
-
-                              // save directly without bumping version so no changes are lost
-                              await updateVersion(data);
-
-                              mutate();
-                            }}
-                          />
-                        }
-                      />
-                    )}
-
-                    <Box mt="xl">
-                      <ParamItem
-                        name="Run Mode"
-                        description="Choose whether to test directly against an LLM model or a custom API endpoint"
-                        value={
-                          <SegmentedControl
-                            size="xs"
-                            data={[
-                              { value: "playground", label: "LLM Playground" },
-                              { value: "endpoint", label: "API Endpoint" },
-                            ]}
-                            value={runMode}
-                            onChange={(value) =>
-                              setRunMode(value as "playground" | "endpoint")
-                            }
-                          />
-                        }
-                      />
-                    </Box>
-
-                    {runMode === "endpoint" && (
-                      <Card withBorder p="sm">
-                        <Stack>
-                        <Group justify="space-between">
-                          <Text size="sm" fw="bold">
-                            Select Endpoint
-                          </Text>
-                          <Button
-                            size="compact-xs"
-                            variant="outline"
-                            leftSection={<IconPlus size={14} />}
-                            onClick={() => {
-                              // Reset to default values for new endpoint
-                              setIsEditMode(false);
-                              setEditingEndpointId(null);
-                              setCustomEndpoint({
-                                name: "",
-                                url: "",
-                                auth: null,
-                                authValue: "",
-                                apiKeyHeader: "X-API-Key",
-                                username: "",
-                                password: "",
-                                headers: { "Content-Type": "application/json" },
-                                defaultPayload: {},
-                              });
-                              setSelectedEndpointId(null);
-                              setDefaultPayloadText("");
-                              setEndpointModalOpen(true);
-                            }}
-                          >
-                            Configure New
-                          </Button>
-                        </Group>
-
-                        {isLoadingEndpoints ? (
-                          <Text size="sm" c="dimmed" ta="center">
-                            Loading endpoints...
-                          </Text>
-                        ) : endpoints.length === 0 ? (
-                          <Button
-                            variant="light"
-                            fullWidth
-                            leftSection={<IconApi size={16} />}
-                            onClick={() => {
-                              // Reset to default values for new endpoint
-                              setIsEditMode(false);
-                              setEditingEndpointId(null);
-                              setCustomEndpoint({
-                                name: "",
-                                url: "",
-                                auth: null,
-                                authValue: "",
-                                apiKeyHeader: "X-API-Key",
-                                username: "",
-                                password: "",
-                                headers: { "Content-Type": "application/json" },
-                                defaultPayload: {},
-                              });
-                              setSelectedEndpointId(null);
-                              setDefaultPayloadText("");
-                              setEndpointModalOpen(true);
-                            }}
-                          >
-                            Configure New Endpoint
-                          </Button>
-                        ) : null}
-
-                        {endpoints.map((endpoint) => (
                           <Card
-                            key={endpoint.id}
                             withBorder
                             p="sm"
                             style={{
+                              border: "2px dashed var(--mantine-color-gray-4)",
                               cursor: "pointer",
-                              borderColor:
-                                selectedEndpointId === endpoint.id
-                                  ? "var(--mantine-color-blue-6)"
-                                  : undefined,
-                              backgroundColor:
-                                selectedEndpointId === endpoint.id
-                                  ? "var(--mantine-color-blue-0)"
-                                  : undefined,
+                              transition: "all 0.2s ease",
                             }}
                             onClick={() => {
-                              setSelectedEndpointId(endpoint.id);
-                              // Set only the user-editable portion (without protected fields)
-                              const defaultPayload =
-                                endpoint.defaultPayload || {};
-                              delete defaultPayload.messages;
-                              delete defaultPayload.model_params;
-                              setCustomPayloadText(
-                                JSON.stringify(defaultPayload, null, 2),
-                              );
+                              // Reset to default values for new endpoint
+                              setIsEditMode(false);
+                              setEditingEndpointId(null);
+                              setCustomEndpoint({
+                                name: "",
+                                url: "",
+                                auth: null,
+                                authValue: "",
+                                apiKeyHeader: "X-API-Key",
+                                username: "",
+                                password: "",
+                                headers: { "Content-Type": "application/json" },
+                                defaultPayload: {},
+                              });
+                              setSelectedEndpointId(null);
+                              setDefaultPayloadText("");
+                              setEndpointModalOpen(true);
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.borderColor =
+                                "var(--mantine-color-gray-5)";
+                              e.currentTarget.style.backgroundColor =
+                                "var(--mantine-color-gray-0)";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.borderColor =
+                                "var(--mantine-color-gray-4)";
+                              e.currentTarget.style.backgroundColor =
+                                "transparent";
                             }}
                           >
-                            <Group justify="space-between">
-                              <Box>
-                                <Text size="sm" fw={500}>
-                                  {endpoint.name}
-                                </Text>
-                                <Text size="xs" c="dimmed">
-                                  {endpoint.url}
-                                </Text>
-                              </Box>
-                              {selectedEndpointId === endpoint.id && (
-                                <Group gap={4}>
-                                  <ActionIcon
-                                    size="sm"
-                                    variant="subtle"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setIsEditMode(true);
-                                      setEditingEndpointId(endpoint.id);
-                                      // Convert API auth format to form format for editing
-                                      const formData = convertAPIAuthToForm(
-                                        endpoint.auth,
-                                      );
-                                      setCustomEndpoint({
-                                        ...endpoint,
-                                        ...formData,
-                                      });
-                                      setDefaultPayloadText(
-                                        JSON.stringify(
-                                          endpoint.defaultPayload || {},
-                                          null,
-                                          2,
-                                        ),
-                                      );
-                                      setEndpointModalOpen(true);
-                                    }}
-                                  >
-                                    <IconSettings size={16} />
-                                  </ActionIcon>
-                                  <ActionIcon
-                                    size="sm"
-                                    variant="subtle"
-                                    color="red"
-                                    onClick={async (e) => {
-                                      e.stopPropagation();
-                                      try {
-                                        await deleteEndpoint(endpoint.id);
-                                        if (
-                                          selectedEndpointId === endpoint.id
-                                        ) {
-                                          setSelectedEndpointId(null);
-                                          setCustomPayloadText("");
-                                        }
-                                        notifications.show({
-                                          title: "Endpoint deleted",
-                                          message:
-                                            "The endpoint has been removed successfully",
-                                          color: "green",
-                                        });
-                                      } catch (error) {
-                                        notifications.show({
-                                          title: "Error deleting endpoint",
-                                          message: error.message,
-                                          color: "red",
-                                        });
-                                      }
-                                    }}
-                                  >
-                                    <IconTrash size={16} />
-                                  </ActionIcon>
-                                </Group>
-                              )}
+                            <Group justify="center" gap="xs">
+                              <IconPlus
+                                size={16}
+                                color="var(--mantine-color-gray-7)"
+                              />
+                              <Text size="sm" fw={500} c="gray.7">
+                                Configure New Endpoint
+                              </Text>
                             </Group>
                           </Card>
-                        ))}
-
-                        {selectedEndpointId && (
-                          <Card withBorder p="sm">
-                            <Stack gap="xs">
-                              <Group justify="space-between">
-                                <Text size="xs" c="dimmed">
-                                  Method
-                                </Text>
-                                <Text size="xs" ff="monospace" fw={500}>
-                                  POST
-                                </Text>
-                              </Group>
-                              <Group justify="space-between">
-                                <Text size="xs" c="dimmed">
-                                  Auth
-                                </Text>
-                                <Text size="xs" ff="monospace" fw={500}>
-                                  {selectedEndpoint?.auth?.type === "bearer" &&
-                                    "Bearer ****"}
-                                  {selectedEndpoint?.auth?.type === "api_key" &&
-                                    `${selectedEndpoint.auth.header}: ****`}
-                                  {selectedEndpoint?.auth?.type === "basic" &&
-                                    "Basic Auth"}
-                                  {!selectedEndpoint?.auth && "None"}
-                                </Text>
-                              </Group>
-                            </Stack>
-                          </Card>
-                        )}
-
-                        {selectedEndpointId && (
-                          <Box>
-                            <Text size="sm" fw="bold" mb="xs">
-                              Payload
-                            </Text>
-                            <Text size="xs" c="dimmed" mb="xs">
-                              The messages and model_params fields are
-                              automatically generated from your prompt
-                            </Text>
-                            <ProtectedJsonEditor
-                              key={`json-editor-${selectedEndpointId}`}
-                              value={(() => {
-                                try {
-                                  const userPayload =
-                                    JSON.parse(customPayloadText);
-                                  const protectedPayload =
-                                    generateProtectedPayload();
-                                  const mergedPayload = {
-                                    ...userPayload,
-                                    ...protectedPayload,
-                                  };
-
-                                  // Format JSON with helpful comments
-                                  let jsonString = JSON.stringify(
-                                    mergedPayload,
-                                    null,
-                                    2,
-                                  );
-
-                                  return jsonString;
-                                } catch {
-                                  // If JSON is invalid, just show the protected payload with comment
-                                  const protectedPayload =
-                                    generateProtectedPayload();
-                                  let jsonString = JSON.stringify(
-                                    protectedPayload,
-                                    null,
-                                    2,
-                                  );
-
-                                  // Add blank line before messages key
-                                  jsonString = jsonString.replace(
-                                    /(\n\s*)"messages":/,
-                                    '\n$1"messages":'
-                                  );
-
-                                  return jsonString;
-                                }
-                              })()}
-                              onChange={(value) => {
-                                try {
-                                  const parsedValue = JSON.parse(value);
-                                  // Remove protected keys from user's input
-                                  delete parsedValue.messages;
-                                  delete parsedValue.model_params;
-                                  setCustomPayloadText(
-                                    JSON.stringify(parsedValue, null, 2),
-                                  );
-                                } catch {
-                                  // If JSON is invalid, keep the raw text (user is still typing)
-                                  setCustomPayloadText(value);
-                                }
-                              }}
-                              protectedKeys={["messages", "model_params"]}
-                              minRows={4}
-                              maxRows={10}
-                            />
-                          </Box>
-                        )}
-                      </Stack>
-                    </Card>
-                    )}
-                  </>
-                )}
-              </Stack>
+                        </>
+                      )}
+                    </Stack>
+                  )}
+                </>
+              )}
+            </Stack>
           </Box>
           {hasAccess(user.role, "prompts", "run") && (
             <Box
@@ -1300,11 +1230,7 @@ function Playground() {
                   />
                 }
               >
-                {runMode === "playground"
-                  ? template?.id
-                    ? "Test template"
-                    : "Run"
-                  : "Run on Endpoint"}
+                Run
               </Button>
             </Box>
           )}
@@ -1342,6 +1268,15 @@ function Playground() {
               setCustomEndpoint({ ...customEndpoint, url: e.target.value })
             }
           />
+
+          <Box>
+            <Text size="sm" fw={500} mb={4}>
+              Method
+            </Text>
+            <Text size="sm" c="dimmed">
+              POST
+            </Text>
+          </Box>
 
           <Select
             label="Authentication Type"
@@ -1513,18 +1448,20 @@ function Playground() {
 
           <Box>
             <Text size="sm" fw={500} mb="xs">
-              Default Payload (Optional)
+              Custom Payload (Optional)
             </Text>
             <Text size="xs" c="dimmed" mb="xs">
-              This payload will be merged with the prompt data
+              Additional fields to merge with the messages and model parameters
+              from your prompt
             </Text>
-            <ExpandableJsonInput
+            <Textarea
               placeholder='{"key": "value"}'
               autosize
               minRows={3}
-              formatOnBlur
+              maxRows={8}
               value={defaultPayloadText}
-              onChange={(value) => {
+              onChange={(e) => {
+                const value = e.currentTarget.value;
                 setDefaultPayloadText(value);
                 try {
                   const parsed = JSON.parse(value);
@@ -1535,6 +1472,21 @@ function Playground() {
                 } catch (e) {
                   // Invalid JSON, keep the text but don't update the object
                 }
+              }}
+              onBlur={() => {
+                // Format JSON on blur if valid
+                try {
+                  const parsed = JSON.parse(defaultPayloadText);
+                  setDefaultPayloadText(JSON.stringify(parsed, null, 2));
+                } catch (e) {
+                  // Invalid JSON, leave as is
+                }
+              }}
+              styles={{
+                input: {
+                  fontFamily: "monospace",
+                  fontSize: "13px",
+                },
               }}
             />
           </Box>
@@ -1614,7 +1566,7 @@ function Playground() {
                       const newEndpoint = await createEndpoint(endpointData);
                       if (newEndpoint?.id) {
                         setSelectedEndpointId(newEndpoint.id);
-                        setCustomPayloadText(
+                        setDefaultPayloadText(
                           JSON.stringify(
                             newEndpoint.defaultPayload || {},
                             null,
@@ -1648,6 +1600,62 @@ function Playground() {
                 Save
               </Button>
             </Group>
+          </Group>
+        </Stack>
+      </Modal>
+
+      <Modal
+        opened={variablesModalOpen}
+        onClose={() => setVariablesModalOpen(false)}
+        size="lg"
+        title={
+          <Text size="lg" fw={700}>
+            Variables
+          </Text>
+        }
+      >
+        <Stack>
+          {Object.keys(variables).length === 0 ? (
+            <Box ta="center" py="xl">
+              <Text size="lg" fw={500} mb="xs">
+                No variables
+              </Text>
+              <Text size="sm" c="dimmed">
+                Create variables to dynamically insert values into your prompt
+                using the{" "}
+                <Text
+                  component="span"
+                  c="blue"
+                  ff="monospace"
+                >{`{{variable_name}}`}</Text>{" "}
+                syntax
+              </Text>
+            </Box>
+          ) : (
+            <Stack>
+              <Text size="sm" mb="md">
+                Please fill in all variable values before running your prompt
+              </Text>
+              <PromptVariableEditor
+                value={variables}
+                onChange={(update) => {
+                  setHasChanges(true);
+                  setTemplateVersion({
+                    ...templateVersion,
+                    testValues: update,
+                  });
+                }}
+              />
+            </Stack>
+          )}
+          <Group justify="flex-end" mt="md">
+            <Button
+              size="xs"
+              variant="filled"
+              onClick={() => setVariablesModalOpen(false)}
+            >
+              Done
+            </Button>
           </Group>
         </Stack>
       </Modal>
