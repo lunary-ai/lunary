@@ -7,15 +7,23 @@
  * - Text
  */
 
-import { Card, Code, Flex, Stack, Text, Tooltip } from "@mantine/core";
-import { IconShieldBolt } from "@tabler/icons-react";
+import {
+  ActionIcon,
+  Card,
+  Code,
+  Flex,
+  Stack,
+  Text,
+  Tooltip,
+} from "@mantine/core";
+import { useClipboard } from "@mantine/hooks";
+import { IconCopy, IconShieldBolt } from "@tabler/icons-react";
 import { useMemo } from "react";
 import ProtectedText from "../blocks/ProtectedText";
 import { ChatMessage } from "./Message";
 import MessageViewer from "./MessageViewer";
 import { RenderJson } from "./RenderJson";
 import classes from "./index.module.css";
-import HighlightPii from "./HighlightPii";
 
 const checkIsMessage = (obj) => {
   return (
@@ -39,8 +47,9 @@ const checkIsRetrieverObjects = (obj) => {
 };
 
 function RetrieverObject({ data, compact }) {
+  const clipboard = useClipboard({ timeout: 500 });
   return (
-    <Card withBorder p="sm">
+    <Card withBorder p="sm" pos="relative">
       <Flex direction="column" gap="sm">
         {data?.title && (
           <Text size="sm" w={700} mb="md">
@@ -51,6 +60,21 @@ function RetrieverObject({ data, compact }) {
 
         {data.source && <Text size="sm">{data.source}</Text>}
       </Flex>
+      {!compact && (
+        <ActionIcon
+          variant="subtle"
+          size="sm"
+          color="gray"
+          pos="absolute"
+          top={8}
+          right={8}
+          onClick={() => {
+            clipboard.copy(JSON.stringify(data, null, 2));
+          }}
+        >
+          <IconCopy size="15px" />
+        </ActionIcon>
+      )}
     </Card>
   );
 }
@@ -64,6 +88,7 @@ export default function SmartViewer({
   error?: any;
   compact?: boolean;
 }) {
+  const clipboard = useClipboard({ timeout: 500 });
   const parsed = useMemo(() => {
     if (!data) return null;
 
@@ -146,12 +171,44 @@ export default function SmartViewer({
               ))}
             </Stack>
           ) : (
-            <Code color="var(--mantine-color-blue-light)">
+            <Code color="var(--mantine-color-blue-light)" pos="relative">
               <RenderJson data={parsed} compact={compact} />
+              {!compact && (
+                <ActionIcon
+                  variant="subtle"
+                  size="sm"
+                  color="gray"
+                  pos="absolute"
+                  top={4}
+                  right={4}
+                  onClick={() => {
+                    clipboard.copy(JSON.stringify(parsed, null, 2));
+                  }}
+                >
+                  <IconCopy size="15px" />
+                </ActionIcon>
+              )}
             </Code>
           )
         ) : (
-          <Code color="var(--mantine-color-blue-light)">{parsed}</Code>
+          <Code color="var(--mantine-color-blue-light)" pos="relative">
+            {parsed}
+            {!compact && (
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                color="gray"
+                pos="absolute"
+                top={4}
+                right={4}
+                onClick={() => {
+                  clipboard.copy(String(parsed));
+                }}
+              >
+                <IconCopy size="15px" />
+              </ActionIcon>
+            )}
+          </Code>
         )}
       </ProtectedText>
     );

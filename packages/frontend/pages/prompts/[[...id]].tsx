@@ -66,6 +66,9 @@ import { openConfirmModal } from "@mantine/modals";
 
 import PromptVariableEditor from "@/components/prompts/PromptVariableEditor";
 import ProviderEditor, { ParamItem } from "@/components/prompts/Provider";
+import ModelSelect from "@/components/prompts/ModelSelect";
+import ExpandableJsonInput from "@/components/prompts/ExpandableJsonInput";
+import ProtectedJsonEditor from "@/components/prompts/ProtectedJsonEditor";
 import { hasAccess } from "shared";
 
 function NotepadButton({ value, onChange }) {
@@ -528,7 +531,6 @@ function Playground() {
 
     mutate();
   };
-
 
   const runPlayground = async () => {
     if (runMode === "playground") {
