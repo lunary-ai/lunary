@@ -144,6 +144,7 @@ function TraceTree({
           onClick={() => onSelect(run.id)}
           style={{ cursor: "pointer" }}
           wrap="nowrap"
+          gap="xs"
         >
           {showStatus && (
             <Group gap="xs" wrap="nowrap">

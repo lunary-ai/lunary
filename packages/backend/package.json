@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@ai-sdk/amazon-bedrock": "^2.2.8",
+    "@bufbuild/protobuf": "^2.5.2",
     "@anthropic-ai/sdk": "^0.40.0",
     "@authenio/samlify-node-xmllint": "^2.0.0",
     "@aws-sdk/client-comprehend": "^3.797.0",

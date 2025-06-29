@@ -173,7 +173,7 @@ function processParams(params: any) {
   return params;
 }
 
-export function formatRun(run: any) {
+export function formatRun(run: any, excludeEnrichments = false) {
   const formattedRun = {
     id: run.id,
     projectId: run.projectId,
@@ -226,93 +226,104 @@ export function formatRun(run: any) {
   };
 
   try {
-    // TODO: put in process input function
-    if (Array.isArray(formattedRun.input)) {
-      for (const message of formattedRun.input) {
-        if (message && typeof message === "object") {
-          message.enrichments = [];
-        }
-      }
-    } else if (formattedRun.input && typeof formattedRun.input === "object") {
-      formattedRun.input.enrichments = [];
-    }
-
-    if (Array.isArray(formattedRun.output)) {
-      for (const message of formattedRun.output) {
-        if (message && typeof message === "object") {
-          message.enrichments = [];
-        }
-      }
-    } else if (formattedRun.output && typeof formattedRun.output === "object") {
-      formattedRun.output.enrichments = [];
-    }
-
-    if (formattedRun.error && typeof formattedRun.error === "object") {
-      formattedRun.error.enrichments = [];
-    }
-
-    for (const {
-      result,
-      evaluatorType,
-      evaluatorId,
-    } of run.evaluationResults) {
-      if (!result?.input || !result?.output || !result?.error) {
-        continue;
-      }
-
+    // Skip enrichments if excludeEnrichments is true
+    if (!excludeEnrichments) {
+      // TODO: put in process input function
       if (Array.isArray(formattedRun.input)) {
-        for (let i = 0; i < formattedRun.input.length; i++) {
-          const message = formattedRun.input[i];
+        for (const message of formattedRun.input) {
           if (message && typeof message === "object") {
-            message.enrichments.push({
-              result: result.input[i],
-              type: evaluatorType,
-              id: evaluatorId,
-            });
+            message.enrichments = [];
           }
         }
       } else if (formattedRun.input && typeof formattedRun.input === "object") {
-        formattedRun.input.enrichments.push({
-          result: result.input[0],
-          type: evaluatorType,
-          id: evaluatorId,
-        });
+        formattedRun.input.enrichments = [];
       }
 
       if (Array.isArray(formattedRun.output)) {
-        for (let i = 0; i < formattedRun.output.length; i++) {
-          const message = formattedRun.output[i];
-          if (typeof message === "object") {
-            message.enrichments.push({
-              result: result.output[i],
-              type: evaluatorType,
-              id: evaluatorId,
-            });
+        for (const message of formattedRun.output) {
+          if (message && typeof message === "object") {
+            message.enrichments = [];
           }
         }
       } else if (
         formattedRun.output &&
         typeof formattedRun.output === "object"
       ) {
-        formattedRun.output.enrichments.push({
-          result: result.output[0],
-          type: evaluatorType,
-          id: evaluatorId,
-        });
+        formattedRun.output.enrichments = [];
       }
 
       if (formattedRun.error && typeof formattedRun.error === "object") {
-        formattedRun.error.enrichments.push({
-          result: result.error[0],
-          type: evaluatorType,
-          id: evaluatorId,
-        });
+        formattedRun.error.enrichments = [];
       }
     }
-    // TODO: put in an array nammed enrichment instead
-    for (let evaluationResult of run.evaluationResults || []) {
-      formattedRun[`enrichment-${evaluationResult.evaluatorId}`] =
-        evaluationResult;
+
+    if (!excludeEnrichments) {
+      for (const {
+        result,
+        evaluatorType,
+        evaluatorId,
+      } of run.evaluationResults) {
+        if (!result?.input || !result?.output || !result?.error) {
+          continue;
+        }
+
+        if (Array.isArray(formattedRun.input)) {
+          for (let i = 0; i < formattedRun.input.length; i++) {
+            const message = formattedRun.input[i];
+            if (message && typeof message === "object") {
+              message.enrichments.push({
+                result: result.input[i],
+                type: evaluatorType,
+                id: evaluatorId,
+              });
+            }
+          }
+        } else if (
+          formattedRun.input &&
+          typeof formattedRun.input === "object"
+        ) {
+          formattedRun.input.enrichments.push({
+            result: result.input[0],
+            type: evaluatorType,
+            id: evaluatorId,
+          });
+        }
+
+        if (Array.isArray(formattedRun.output)) {
+          for (let i = 0; i < formattedRun.output.length; i++) {
+            const message = formattedRun.output[i];
+            if (typeof message === "object") {
+              message.enrichments.push({
+                result: result.output[i],
+                type: evaluatorType,
+                id: evaluatorId,
+              });
+            }
+          }
+        } else if (
+          formattedRun.output &&
+          typeof formattedRun.output === "object"
+        ) {
+          formattedRun.output.enrichments.push({
+            result: result.output[0],
+            type: evaluatorType,
+            id: evaluatorId,
+          });
+        }
+
+        if (formattedRun.error && typeof formattedRun.error === "object") {
+          formattedRun.error.enrichments.push({
+            result: result.error[0],
+            type: evaluatorType,
+            id: evaluatorId,
+          });
+        }
+      }
+      // TODO: put in an array nammed enrichment instead
+      for (let evaluationResult of run.evaluationResults || []) {
+        formattedRun[`enrichment-${evaluationResult.evaluatorId}`] =
+          evaluationResult;
+      }
     }
   } catch (error) {
     Sentry.captureException(error);
