@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun run --watch src/index.ts"
+    "build:proto": "# Protobuf generation scripts here if needed"
   },
   "devDependencies": {
     "@types/bun": "latest"

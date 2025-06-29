@@ -1,0 +1,140 @@
+[
+  {
+    "state": {
+      "question": null,
+      "ask_agent_messages": [],
+      "evaluate_agent_messages": []
+    },
+    "node": {
+      "node_id": "Ask"
+    },
+    "start_ts": "2025-06-29T21:20:44.045395Z",
+    "duration": 0.5319636249987525,
+    "status": "success",
+    "kind": "node",
+    "id": "Ask:151456b7e7d3444783c1ddbe5089b35b"
+  },
+  {
+    "state": {
+      "question": "What is the capital of France?",
+      "ask_agent_messages": [
+        {
+          "parts": [
+            {
+              "content": "Ask a simple question with a single correct answer.",
+              "timestamp": "2025-06-29T21:20:44.046817Z",
+              "part_kind": "user-prompt"
+            }
+          ],
+          "instructions": null,
+          "kind": "request"
+        },
+        {
+          "parts": [
+            {
+              "content": "What is the capital of France?",
+              "part_kind": "text"
+            }
+          ],
+          "usage": {
+            "requests": 1,
+            "request_tokens": 17,
+            "response_tokens": 7,
+            "total_tokens": 24,
+            "details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_name": "gpt-4o-2024-08-06",
+          "timestamp": "2025-06-29T21:20:44Z",
+          "kind": "response",
+          "vendor_details": null,
+          "vendor_id": "chatcmpl-Bntk4K4z8299fYj6yvoDK1b6JfZLN"
+        }
+      ],
+      "evaluate_agent_messages": []
+    },
+    "node": {
+      "question": "What is the capital of France?",
+      "node_id": "Answer"
+    },
+    "start_ts": null,
+    "duration": null,
+    "status": "pending",
+    "kind": "node",
+    "id": "Answer:2752ccbc884d4b54acee4c778a134217"
+  },
+  {
+    "state": {
+      "question": null,
+      "ask_agent_messages": [],
+      "evaluate_agent_messages": []
+    },
+    "node": {
+      "node_id": "Ask"
+    },
+    "start_ts": "2025-06-29T21:20:58.287729Z",
+    "duration": 0.6546172919988749,
+    "status": "success",
+    "kind": "node",
+    "id": "Ask:5f5da17c47cb4046ae2611721e3c8d21"
+  },
+  {
+    "state": {
+      "question": "What is the capital of France?",
+      "ask_agent_messages": [
+        {
+          "parts": [
+            {
+              "content": "Ask a simple question with a single correct answer.",
+              "timestamp": "2025-06-29T21:20:58.288743Z",
+              "part_kind": "user-prompt"
+            }
+          ],
+          "instructions": null,
+          "kind": "request"
+        },
+        {
+          "parts": [
+            {
+              "content": "What is the capital of France?",
+              "part_kind": "text"
+            }
+          ],
+          "usage": {
+            "requests": 1,
+            "request_tokens": 17,
+            "response_tokens": 7,
+            "total_tokens": 24,
+            "details": {
+              "accepted_prediction_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": 0,
+              "cached_tokens": 0
+            }
+          },
+          "model_name": "gpt-4o-2024-08-06",
+          "timestamp": "2025-06-29T21:20:58Z",
+          "kind": "response",
+          "vendor_details": null,
+          "vendor_id": "chatcmpl-BntkIQsuFLBZ1YUseMOIlptncloZC"
+        }
+      ],
+      "evaluate_agent_messages": []
+    },
+    "node": {
+      "question": "What is the capital of France?",
+      "node_id": "Answer"
+    },
+    "start_ts": null,
+    "duration": null,
+    "status": "created",
+    "kind": "node",
+    "id": "Answer:c00b200ac52a495d8f87fd0cca18729c"
+  }
+]

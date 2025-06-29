@@ -1,15 +1,21 @@
-# otel
+# OpenTelemetry Integration
 
-To install dependencies:
+The OpenTelemetry receiver has been integrated directly into the Lunary backend API.
 
-```bash
-bun install
-```
+## Endpoints
 
-To run:
+The backend now accepts OTLP/HTTP protocol buffer data at:
 
-```bash
-bun run src/index.ts
-```
+- `POST http://localhost:3333/v1/traces` - For trace data
+- `POST http://localhost:3333/v1/metrics` - For metrics data
+- `POST http://localhost:3333/v1/logs` - For log data
 
-This project was created using `bun init` in bun v1.2.16. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+## Authentication
+
+Include your Lunary project key in the `lunary-project-key` header or set the `LUNARY_PUBLIC_KEY` environment variable.
+
+## Examples
+
+The examples in this directory demonstrate how to send OpenTelemetry data to Lunary using various SDKs and frameworks.
+
+Configure your OTLP exporter to point to `http://localhost:3333` (or your deployed Lunary API URL) instead of the default OTLP port 4318.

@@ -7,7 +7,7 @@ from pydantic_ai import Agent
 
 from pydantic_ai.messages import SystemPromptPart 
 
-os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = "http://localhost:4318"
+os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = "http://localhost:3333"
 os.environ["OTEL_EXPORTER_OTLP_HEADERS"] = f"Authorization=Bearer {os.environ['LUNARY_PRIVATE_KEY']}"
 
 logfire.configure()

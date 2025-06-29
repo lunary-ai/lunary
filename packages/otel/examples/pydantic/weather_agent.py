@@ -12,7 +12,7 @@ from httpx import AsyncClient
 
 from pydantic_ai import Agent, ModelRetry, RunContext
 
-os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = "http://localhost:4318"
+os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = "http://localhost:3333"
 os.environ["OTEL_EXPORTER_OTLP_HEADERS"] = f"Authorization=Bearer {os.environ['LUNARY_PRIVATE_KEY']}"
 
 logfire.configure()
