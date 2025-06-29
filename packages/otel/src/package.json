@@ -1,0 +1,14 @@
+{
+  "name": "protobuf-test",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@bufbuild/protoc-gen-es": "^2.5.2",
+    "@types/bun": "latest",
+    "ts-proto": "^2.7.5"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
