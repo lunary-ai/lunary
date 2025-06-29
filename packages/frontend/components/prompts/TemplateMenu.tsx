@@ -151,6 +151,9 @@ function TemplateListItem({
       key={template.id}
       px="md"
       active={false}
+      data-testid={`template-navlink-${template.slug}`}
+      data-template-slug={template.slug}
+      data-template-active={active ? "true" : "false"}
       onDoubleClick={() => {
         setRename(template.id);
       }}

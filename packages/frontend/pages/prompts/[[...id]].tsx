@@ -769,7 +769,13 @@ function Playground() {
       buttonLabel="Create first template"
       onClick={createTemplate}
     >
-      <Flex w="100%" h="100vh" style={{ position: "relative" }}>
+      <Flex 
+        w="100%" 
+        h="100vh" 
+        style={{ position: "relative" }}
+        data-current-template-slug={template?.slug || ""}
+        data-testid="prompts-playground"
+      >
         <Box
           flex={`0 0 230px`}
           style={{
