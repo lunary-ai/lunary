@@ -66,9 +66,6 @@ import { openConfirmModal } from "@mantine/modals";
 
 import PromptVariableEditor from "@/components/prompts/PromptVariableEditor";
 import ProviderEditor, { ParamItem } from "@/components/prompts/Provider";
-import ModelSelect from "@/components/prompts/ModelSelect";
-import ExpandableJsonInput from "@/components/prompts/ExpandableJsonInput";
-import ProtectedJsonEditor from "@/components/prompts/ProtectedJsonEditor";
 import { hasAccess } from "shared";
 
 function NotepadButton({ value, onChange }) {
@@ -401,6 +398,7 @@ function Playground() {
 
       fetchRun();
     } else {
+      // Only set default template for truly new prompts
       setTemplate({ mode: "openai" });
       setTemplateVersion(defaultTemplateVersion);
     }
@@ -533,6 +531,15 @@ function Playground() {
   };
 
   const runPlayground = async () => {
+    const hasEmptyVariables = Object.entries(variables).some(
+      ([key, value]) => value === "" || value === null || value === undefined,
+    );
+
+    if (hasEmptyVariables && Object.keys(variables).length > 0) {
+      setVariablesModalOpen(true);
+      return;
+    }
+
     if (runMode === "playground") {
       // Original LLM playground logic
       const model = templateVersion?.extra?.model;
@@ -545,33 +552,7 @@ function Playground() {
         model,
       });
 
-      // Validate content
-      if (!templateVersion.content) {
-        notifications.show({
-          title: "No content",
-          message: "Please enter some content in your prompt",
-          color: "red",
-        });
-        return;
-      }
-
-      // If content is an array (chat mode), ensure no messages have null content
-      if (Array.isArray(templateVersion.content)) {
-        const hasEmptyContent = templateVersion.content.some(
-          (msg) =>
-            msg.content === null ||
-            msg.content === undefined ||
-            msg.content === "",
-        );
-        if (hasEmptyContent) {
-          notifications.show({
-            title: "Empty message",
-            message: "All messages must have content",
-            color: "red",
-          });
-          return;
-        }
-      }
+      // Note: OpenAI and other providers allow empty content, so we don't validate for it
 
       setError(null);
       setOutput(null);
@@ -840,7 +821,7 @@ function Playground() {
                 borderBottom: "1px solid rgba(120, 120, 120, 0.1)",
               }}
             >
-              <Group>
+              <Group gap="xs">
                 {template?.id && templateVersion?.id && (
                   <NotepadButton
                     value={templateVersion?.notes}
@@ -1620,8 +1601,12 @@ function Playground() {
       <Modal
         opened={variablesModalOpen}
         onClose={() => setVariablesModalOpen(false)}
-        title="Variables"
         size="lg"
+        title={
+          <Text size="lg" fw={700}>
+            Variables
+          </Text>
+        }
       >
         <Stack>
           {Object.keys(variables).length === 0 ? (
@@ -1641,15 +1626,21 @@ function Playground() {
               </Text>
             </Box>
           ) : (
-            <PromptVariableEditor
-              value={variables}
-              onChange={(update) => {
-                setTemplateVersion({
-                  ...templateVersion,
-                  testValues: update,
-                });
-              }}
-            />
+            <Stack>
+              <Text size="sm" mb="md">
+                Please fill in all variable values before running your prompt
+              </Text>
+              <PromptVariableEditor
+                value={variables}
+                onChange={(update) => {
+                  setHasChanges(true);
+                  setTemplateVersion({
+                    ...templateVersion,
+                    testValues: update,
+                  });
+                }}
+              />
+            </Stack>
           )}
           <Group justify="flex-end" mt="md">
             <Button

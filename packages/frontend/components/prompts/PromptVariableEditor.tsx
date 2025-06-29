@@ -1,4 +1,4 @@
-import { Badge, Box, Stack, Textarea } from "@mantine/core";
+import { Badge, Box, Stack, Text, Textarea } from "@mantine/core";
 import { TemplateVariables } from "shared";
 
 export default function PromptVariableEditor({
@@ -14,19 +14,18 @@ export default function PromptVariableEditor({
         {Object.entries(templateVariables)
           .sort(([nameA], [nameB]) => nameA.localeCompare(nameB))
           .map(([name, value]) => (
-            <Box key={name}>
-              <Badge
-                mb="xs"
-                variant="outline"
-                tt="none"
-              >
-                {name}
-              </Badge>
+            <Stack key={name} gap="xs">
+              <Text
+                size="xs"
+                component="span"
+                c="blue"
+                ff="monospace"
+              >{`{{${name}}}`}</Text>
               <Textarea
                 size="sm"
                 w="100%"
                 radius="sm"
-                placeholder="Enter content here"
+                placeholder="Enter an value here"
                 minRows={3}
                 maxRows={8}
                 autosize
@@ -38,7 +37,7 @@ export default function PromptVariableEditor({
                   })
                 }
               />
-            </Box>
+            </Stack>
           ))}
       </Stack>
     </Box>
