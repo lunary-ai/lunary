@@ -53,8 +53,6 @@ testEndpoint.post("/", async (ctx: Context) => {
     )
     .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
 
-  ctx.body = [{ role: "system", content: "You are a helpful assistant." }];
-  return;
   ctx.body = {
     message: "Test endpoint successfully received your request",
     receivedAt: new Date().toISOString(),
