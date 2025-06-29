@@ -1,17 +1,28 @@
 import { Kbd, Text } from "@mantine/core";
+import { CSSProperties } from "react";
 
-export default function HotkeysInfo({ hot, size, style = {} }) {
+interface HotkeysInfoProps {
+  hot?: string;
+  size?: string;
+  style?: CSSProperties;
+}
+
+export default function HotkeysInfo({
+  hot,
+  size = "sm",
+  style = {},
+}: HotkeysInfoProps) {
   const fz = size === "xs" ? 10 : 14;
 
   return (
     <span style={style}>
-      <Kbd size="sm" py={0} fz={fz}>
+      <Kbd size={size} py={0} fz={fz}>
         ⌘
       </Kbd>
-      <Text c="dimmed" size="xs" span>
+      <Text c="dimmed" size={size} span>
         {` + `}
       </Text>
-      <Kbd size="sm" py={1}>
+      <Kbd size={size} py={1} fz={fz}>
         {hot?.replace("Enter", "⏎")}
       </Kbd>
     </span>

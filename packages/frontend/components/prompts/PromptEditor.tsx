@@ -1,5 +1,5 @@
 import { Box, Stack, Textarea, ActionIcon } from "@mantine/core";
-import { IconCircleMinus, IconCirclePlus } from "@tabler/icons-react";
+import { IconCirclePlus, IconX } from "@tabler/icons-react";
 import { ChatMessage } from "@/components/SmartViewer/Message";
 
 export function PromptEditor({
@@ -43,15 +43,14 @@ export function PromptEditor({
                 top={4}
                 right={4}
                 size="sm"
-                color="red"
-                variant="transparent"
+                variant="subtle"
                 onClick={() => {
                   const newContent = [...value];
                   newContent.splice(i, 1);
                   onChange(newContent);
                 }}
               >
-                <IconCircleMinus size="14" />
+                <IconX size="16" color="gray" />
               </ActionIcon>
             </Box>
           ))}

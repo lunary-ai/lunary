@@ -88,6 +88,8 @@
   padding: 10px;
   display: block;
   overflow: hidden;
+  max-height: 700px;
+  overflow-y: auto;
 }
 
 .pre.compact {
@@ -157,7 +159,6 @@
   width: 100%;
 }
 
-
 .citationLink {
-  text-decoration: none;;
+  text-decoration: none;
 }

@@ -22,7 +22,7 @@ async function patchedCors(ctx: Context, next: Next) {
       return ctx.get("Origin") || "*";
     },
     credentials: true,
-    allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS", "PUT"],
     allowHeaders: ["Content-Type", "Authorization", "Accept"],
   })(ctx, next);
 }

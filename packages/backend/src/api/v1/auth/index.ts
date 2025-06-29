@@ -29,10 +29,12 @@ const auth = new Router({
 auth.post("/method", async (ctx: Context) => {
   const bodySchema = z.object({
     email: z.string().email().transform(sanitizeEmail),
+    joinToken: z.string().optional(),
   });
 
-  const { email } = bodySchema.parse(ctx.request.body);
+  const { email, joinToken } = bodySchema.parse(ctx.request.body);
 
+  // First check if there's an existing account with SAML
   const [samlOrg] = await sql`
     select org.* from org
     join account on account.org_id = org.id
@@ -41,10 +43,29 @@ auth.post("/method", async (ctx: Context) => {
     and org.saml_idp_xml is not null
   `;
 
-  if (!samlOrg || !samlOrg.samlIdpXml) {
+  // If no existing account but we have a join token, check the org from the token
+  let orgToCheck = samlOrg;
+  if (!samlOrg && joinToken) {
+    try {
+      const { payload } = await verifyJWT(joinToken);
+      if (payload.email === email && payload.orgId) {
+        const [inviteOrg] = await sql`
+          select * from org
+          where id = ${payload.orgId}
+          and saml_enabled = true
+          and saml_idp_xml is not null
+        `;
+        orgToCheck = inviteOrg;
+      }
+    } catch (error) {
+      // Invalid token, ignore
+    }
+  }
+
+  if (!orgToCheck || !orgToCheck.samlIdpXml) {
     ctx.body = { method: "password" };
   } else {
-    const url = await getLoginUrl(samlOrg.id);
+    const url = await getLoginUrl(orgToCheck.id);
 
     ctx.body = { method: "saml", redirect: url };
   }
@@ -299,7 +320,7 @@ auth.get("/join-data", async (ctx: Context) => {
   } = await verifyJWT(token);
 
   const [org] = await sql`
-    select name, plan, seat_allowance from org where id = ${orgId}
+    select name, plan, seat_allowance, saml_enabled, saml_idp_xml from org where id = ${orgId}
   `;
 
   const [orgUserCountResult] = await sql`
@@ -314,7 +335,84 @@ auth.get("/join-data", async (ctx: Context) => {
     orgId: orgId,
     orgSeatAllowance: org?.seatAllowance,
     oldRole,
+    samlEnabled: org?.samlEnabled && !!org?.samlIdpXml,
   };
+});
+
+auth.get("/saml-url/:orgId", async (ctx: Context) => {
+  const orgId = z.string().parse(ctx.params.orgId);
+  const joinToken = z.string().optional().parse(ctx.query.joinToken);
+
+  const [org] = await sql`
+    select saml_enabled, saml_idp_xml from org where id = ${orgId}
+  `;
+
+  if (!org || !org.samlEnabled || !org.samlIdpXml) {
+    ctx.status = 404;
+    ctx.body = { error: "SAML not enabled for this organization" };
+    return;
+  }
+
+  // If we have a join token, create the account now before redirecting to SAML
+  if (joinToken) {
+    try {
+      const { payload } = await verifyJWT(joinToken);
+      const email = payload.email as string;
+      const role = payload.role as string;
+      const projects = payload.projects as string[] | undefined;
+      const oldRole = payload.oldRole as string | undefined;
+      
+      // Check if account already exists for this email/org
+      const [existingAccount] = await sql`
+        select * from account 
+        where email = ${email} 
+        and org_id = ${orgId}
+      `;
+
+      if (!existingAccount) {
+        // Handle existing account in another org based on oldRole
+        if (oldRole === "owner") {
+          // User was owner of another org, delete that org
+          const [user] = await sql<Db.Account[]>`select * from account where email = ${email} order by created_at desc limit 1`;
+          if (user) {
+            await sql`delete from org where id = ${user.orgId}`;
+          }
+        } else if (oldRole) {
+          // User was member of another org, just delete their account
+          await sql`delete from account where email = ${email}`;
+        }
+
+        // Create the account for the joining user
+        const newUser = {
+          email: email,
+          name: email, // Will be updated after SAML
+          org_id: orgId,
+          role: role,
+          verified: true,
+          password_hash: null, // SAML users don't have passwords
+        };
+
+        const [account] = await sql`
+          insert into account ${sql(newUser)} 
+          returning *
+        `;
+
+        if (account && projects && Array.isArray(projects)) {
+          for (const projectId of projects) {
+            await sql`insert into account_project ${sql({ accountId: account.id, projectId })} on conflict do nothing`;
+          }
+        }
+      }
+
+      // Delete the invitation
+      await sql`delete from org_invitation where email = ${email} and org_id = ${orgId}`;
+    } catch (error) {
+      // Error creating account from join token, silently continue
+    }
+  }
+
+  const url = await getLoginUrl(orgId);
+  ctx.body = { url };
 });
 
 auth.post("/login", async (ctx: Context) => {

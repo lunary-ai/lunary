@@ -28,9 +28,9 @@ initSentry();
 checkDbConnection();
 checkEmailServerConnection();
 
+createIndexes();
 if (process.env.NODE_ENV === "production") {
   setupCronJobs();
-  createIndexes();
   startJobWorker();
   startMaterializedViewRefreshJob();
 }

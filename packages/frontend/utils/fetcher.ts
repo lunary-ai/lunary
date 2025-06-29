@@ -107,6 +107,17 @@ function patch(path, { arg }) {
   }).then(handleResponse);
 }
 
+function put(path, { arg }) {
+  return fetch(buildUrl(path), {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...getHeaders(),
+    },
+    body: JSON.stringify(arg),
+  }).then(handleResponse);
+}
+
 async function del(path) {
   return fetch(buildUrl(path), {
     method: "DELETE",
@@ -138,9 +149,10 @@ async function handleResponse(res: Response) {
     const { error, message } = await res.json();
 
     if (message === "Session expired") {
-      showErrorNotification(message, "Please log in again.");
+      signOut();
       return;
     } else if (message === "Invalid access token") {
+      signOut();
       return;
     }
     showErrorNotification(error, message);
@@ -157,5 +169,6 @@ export const fetcher = {
   getStream,
   post,
   patch,
+  put,
   delete: del,
 };

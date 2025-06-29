@@ -161,6 +161,26 @@ export default function Join() {
     }
   }, [step, router.isReady]);
 
+  // Redirect to SAML if org has SAML enabled and user has acknowledged
+  useEffect(() => {
+    async function checkSamlRedirect() {
+      if (!joinData || !acknowledged || !token) return;
+      
+      const { samlEnabled, orgId } = joinData;
+      
+      if (samlEnabled) {
+        try {
+          const { url } = await fetcher.get(`/auth/saml-url/${orgId}?joinToken=${token}`);
+          window.location.href = url;
+        } catch (error) {
+          console.error("Failed to get SAML URL:", error);
+        }
+      }
+    }
+    
+    checkSamlRedirect();
+  }, [joinData, acknowledged, token]);
+
   const form = useForm({
     initialValues: {
       email: "",
@@ -232,7 +252,7 @@ export default function Join() {
     try {
       if (step === 1) {
         const { method, redirect } = await fetcher.post("/auth/method", {
-          arg: { email },
+          arg: { email, joinToken: token },
         });
 
         const mustVerify = !!joinData?.oldRole && method === "password";
@@ -245,12 +265,8 @@ export default function Join() {
         }
 
         if (method === "saml") {
-          await handleSignup({
-            email,
-            name,
-            redirectUrl: redirect,
-          });
-          setStep(4);
+          // Redirect to SAML provider with the join token
+          window.location.href = redirect;
         } else {
           setStep(3);
         }
@@ -278,11 +294,23 @@ export default function Join() {
     return <Loader />;
   }
 
-  const { orgUserCount, orgName, orgId, orgPlan, orgSeatAllowance } = joinData;
+  const { orgUserCount, orgName, orgId, orgPlan, orgSeatAllowance, samlEnabled } = joinData;
   const seatAllowance = orgSeatAllowance || SEAT_ALLOWANCE[orgPlan];
 
   if (orgUserCount >= seatAllowance) {
     return <TeamFull orgName={orgName} />;
+  }
+
+  // Show loading state while redirecting to SAML
+  if (samlEnabled && acknowledged) {
+    return (
+      <Container py={100} size={600}>
+        <Stack align="center" gap={30}>
+          <Loader size="lg" />
+          <Title order={3}>Redirecting to your organization's login...</Title>
+        </Stack>
+      </Container>
+    );
   }
 
   return (

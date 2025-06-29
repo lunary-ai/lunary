@@ -11,19 +11,22 @@ export const Json = ({ data, compact, piiDetection }) => {
   const parsed = useMemo(() => {
     if (!data) return null;
 
-    if (typeof data === "string" && data?.startsWith("{")) {
-      try {
-        const parsedData = JSON.parse(data);
-        if (
-          typeof parsedData === "object" &&
-          Object.keys(parsedData).length === 1 &&
-          "result" in parsedData
-        ) {
-          return parsedData.result;
+    if (typeof data === "string") {
+      const trimmedData = data.trim();
+      if (trimmedData.startsWith("{") || trimmedData.startsWith("[")) {
+        try {
+          const parsedData = JSON.parse(trimmedData);
+          if (
+            typeof parsedData === "object" &&
+            Object.keys(parsedData).length === 1 &&
+            "result" in parsedData
+          ) {
+            return parsedData.result;
+          }
+          return parsedData;
+        } catch (e) {
+          return data;
         }
-        return parsedData;
-      } catch (e) {
-        return data;
       }
     }
 

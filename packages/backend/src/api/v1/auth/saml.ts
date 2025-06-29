@@ -196,11 +196,14 @@ route.post("/acs", async (ctx: Context) => {
 
   const singleUseToken = await generateOneTimeToken();
 
+  // Simply update the existing account (created during join flow)
   const [account] = await sql`
     update 
       account 
     set 
-      ${sql({ name, singleUseToken, lastLoginAt: new Date() })} 
+      name = ${name},
+      single_use_token = ${singleUseToken},
+      last_login_at = ${new Date()}
     where 
       email = ${email} 
       and org_id = ${orgId} 

@@ -1,6 +1,7 @@
 import {
   ActionIcon,
   Badge,
+  Divider,
   FocusTrap,
   Group,
   Loader,
@@ -31,15 +32,23 @@ import SearchBar from "../blocks/SearchBar";
 
 export const defaultTemplateVersion = {
   content: [
-    { content: "You are an helpful assistant.", role: "system" },
-    { content: "Hi!", role: "user" },
+    { content: "You are a helpful assistant.", role: "system" },
+    {
+      content: "Hi! My name is {{user_name}}. Can you help me with {{task}}?",
+      role: "user",
+    },
   ],
   extra: {
-    model: "gpt-4o",
+    model: "gpt-4.1",
     temperature: 1.0,
-    max_tokens: 1000,
+    max_tokens: 2048,
+    stream: true,
+    top_p: 1.0,
   },
-  testValues: {},
+  testValues: {
+    user_name: "Alice",
+    task: "learning Python",
+  },
   isDraft: true,
 };
 
@@ -67,7 +76,11 @@ function TemplateListItem({
 
   const confirmDelete = () => {
     modals.openConfirmModal({
-      title: "Please confirm your action",
+      title: (
+        <Text size="lg" fw={700}>
+          Please confirm your action
+        </Text>
+      ),
       confirmProps: { color: "red", "data-testid": "confirm" },
       children: (
         <Text size="sm">
@@ -137,7 +150,10 @@ function TemplateListItem({
       ref={ref}
       key={template.id}
       px="md"
-      active={active}
+      active={false}
+      data-testid={`template-navlink-${template.slug}`}
+      data-template-slug={template.slug}
+      data-template-active={active ? "true" : "false"}
       onDoubleClick={() => {
         setRename(template.id);
       }}
@@ -165,6 +181,7 @@ function TemplateListItem({
         textOverflow: "ellipsis",
         overflow: "hidden",
         whiteSpace: "nowrap",
+        paddingInlineStart: "2px",
       }}
       leftSection={
         (hasAccess(user.role, "prompts", "create") ||
@@ -173,7 +190,7 @@ function TemplateListItem({
           <Menu>
             <Menu.Target>
               {active || hovered ? (
-                <ActionIcon size="sm" radius="sm" variant="light">
+                <ActionIcon size="sm" radius="sm" variant="subtle">
                   <IconDotsVertical size={12} />
                 </ActionIcon>
               ) : (
@@ -286,26 +303,31 @@ function TemplateList({
 
   return (
     <ScrollArea h="100%">
-      <NavLink
-        p="md"
-        label="Prompts Directory"
-        fw="bold"
-        variant="subtle"
-        rightSection={
-          hasAccess(user.role, "prompts", "create") && (
-            <ActionIcon
-              size="xs"
-              radius="sm"
-              variant="outline"
-              loading={isInserting}
-              data-testid="create-template"
-              onClick={createTemplate}
-            >
-              <IconPlus size={12} />
-            </ActionIcon>
-          )
-        }
-      />
+      <div style={{ height: "63px", display: "flex", alignItems: "center" }}>
+        <NavLink
+          p="md"
+          label="Prompt directory"
+          fw="bold"
+          variant="subtle"
+          style={{ width: "100%" }}
+          rightSection={
+            hasAccess(user.role, "prompts", "create") && (
+              <ActionIcon
+                size="xs"
+                radius="sm"
+                variant="outline"
+                loading={isInserting}
+                data-testid="create-template"
+                onClick={createTemplate}
+              >
+                <IconPlus size={12} />
+              </ActionIcon>
+            )
+          }
+        />
+      </div>
+
+      <Divider />
 
       <SearchBar
         placeholder="Filter..."

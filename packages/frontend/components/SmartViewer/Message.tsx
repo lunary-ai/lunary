@@ -194,7 +194,7 @@ function ToolCallsMessage({
               right="2px"
               onClick={() => {
                 openConfirmModal({
-                  title: "Are you sure?",
+                  title: <Text size="lg" fw={700}>Are you sure?</Text>,
                   confirmProps: { color: "red" },
                   labels: {
                     cancel: "Cancel",
@@ -225,6 +225,19 @@ function TextMessage({
   editable = false,
 }) {
   const text = data.content || data.text;
+
+  // Check if text is valid JSON for assistant messages
+  const isAssistantJson = useMemo(() => {
+    if (data.role !== "assistant" || !text || typeof text !== "string") {
+      return false;
+    }
+    try {
+      JSON.parse(text.trim());
+      return true;
+    } catch {
+      return false;
+    }
+  }, [data.role, text]);
 
   if (editable) {
     return (
@@ -283,6 +296,13 @@ function TextMessage({
     return (
       <Code className={classes.textMessage}>
         <Text size="sm">{elements}</Text>
+      </Code>
+    );
+  } else if (isAssistantJson) {
+    // Use RenderJson for prettified JSON display
+    return (
+      <Code className={classes.textMessage}>
+        <RenderJson data={text.trim()} compact={compact} piiDetection={piiDetection} />
       </Code>
     );
   } else {
@@ -656,9 +676,10 @@ export function ChatMessage({
             <Text
               c={color + "." + (scheme === "dark" ? 2 : 8)}
               mb={5}
+              mt="2px"
               size="xs"
             >
-              {data.role}
+              {data.role === "api" ? "Api Response" : data.role}
             </Text>
           )}
           {!editable && (
@@ -677,7 +698,9 @@ export function ChatMessage({
                 color="black"
                 onClick={() => {
                   clipboard.copy(
-                    data.content || data.text || JSON.stringify(data.toolCalls),
+                    JSON.stringify(data.content, null, 2) ||
+                      JSON.stringify(data.text, null, 2) ||
+                      JSON.stringify(data.toolCalls, null, 2),
                   );
                 }}
               >

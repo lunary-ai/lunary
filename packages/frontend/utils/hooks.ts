@@ -8,6 +8,18 @@ export function useGlobalShortcut(shortcuts: Shortcut[]) {
     let timeoutId: number | null = null;
 
     const handleKeyDown = (evt: KeyboardEvent) => {
+      // Check if any shortcut matches immediately to prevent default
+      const matchingShortcut = shortcuts.find(([keyCombination]) => {
+        const [mod, key] = keyCombination.split("+");
+        const isModPressed =
+          mod === "mod" ? evt.ctrlKey || evt.metaKey : evt[`${mod}Key`];
+        return isModPressed && evt.key.toLowerCase() === key.toLowerCase();
+      });
+
+      if (matchingShortcut) {
+        evt.preventDefault();
+      }
+
       if (timeoutId !== null) {
         clearTimeout(timeoutId);
       }
@@ -19,7 +31,6 @@ export function useGlobalShortcut(shortcuts: Shortcut[]) {
             mod === "mod" ? evt.ctrlKey || evt.metaKey : evt[`${mod}Key`];
           if (isModPressed && evt.key.toLowerCase() === key.toLowerCase()) {
             action();
-            evt.preventDefault();
           }
         });
       }, 10);

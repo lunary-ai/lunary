@@ -13,6 +13,7 @@ export function getColorForRole(role) {
     function: "violet",
     tool: "violet",
     system: "gray",
+    api: "orange",
   };
 
   return colorMap[role] || defaultColor;

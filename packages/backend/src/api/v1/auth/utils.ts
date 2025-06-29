@@ -118,6 +118,8 @@ const publicRoutes = [
   "/v1/traces", // OTEL traces endpoint
   "/v1/metrics", // OTEL metrics endpoint
   "/v1/logs", // OTEL logs endpoint
+  "/v1/test-endpoint", // public test endpoint
+  "/v1/test-endpoint/auth", // public test endpoint with auth check
 ];
 
 async function checkApiKey(ctx: Context, key: string) {

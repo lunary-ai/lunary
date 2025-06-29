@@ -171,17 +171,6 @@ const EVALUATOR_TYPES: EvaluatorTypes = {
     beta: true,
     soon: false,
   },
-  "llm-classifier": {
-    id: "llm-classifier",
-    name: "LLM Classifier",
-    category: "custom",
-    icon: IconNotebook,
-    color: "green",
-    description: "Use a customizable LLM model to classify outputs.",
-    params: [],
-    beta: true,
-    soon: false,
-  },
   bleu: {
     id: "bleu",
     name: "BLEU",
