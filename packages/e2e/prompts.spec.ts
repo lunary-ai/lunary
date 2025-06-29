@@ -83,7 +83,10 @@ test.describe("Prompts Page - Core Functionality", () => {
     await page.waitForTimeout(2000);
     
     // Verify template was saved (look for draft badge or version indicator)
-    const hasDraft = await page.locator('text=/draft|v[0-9]+/i').isVisible();
+    const draftBadge = page.locator('text="Draft"');
+    const versionBadge = page.locator('text=/v\\d+/');
+    
+    const hasDraft = await draftBadge.isVisible() || await versionBadge.isVisible();
     expect(hasDraft).toBeTruthy();
   });
 
@@ -106,7 +109,7 @@ test.describe("Prompts Page - Core Functionality", () => {
       await page.waitForTimeout(2000);
       
       // Verify deployment (look for version number)
-      const hasVersion = await page.locator('text=/v[0-9]+/').isVisible();
+      const hasVersion = await page.locator('text=/v\\d+/').isVisible();
       expect(hasVersion).toBeTruthy();
     }
   });
@@ -349,5 +352,195 @@ test.describe("Prompts Page - UI Elements", () => {
         await expect(page.locator('text="Role"')).not.toBeVisible();
       }
     }
+  });
+});
+
+test.describe("Prompts Page - Response Format", () => {
+  test("response format dropdown for OpenAI models", async ({ page }) => {
+    await page.goto("/prompts");
+    await page.waitForLoadState("networkidle");
+    
+    // Navigate to a template
+    const firstTemplate = page.locator('[class*="NavLink"]').first();
+    if (await firstTemplate.isVisible()) {
+      await firstTemplate.click();
+    } else {
+      const createButton = page.getByRole("button", { name: "Create first template" });
+      if (await createButton.isVisible()) {
+        await createButton.click();
+      }
+    }
+    
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(1000);
+    
+    // Open model parameters popover
+    const paramsButton = page.locator('button').filter({ has: page.locator('svg').nth(1) }).first();
+    if (await paramsButton.isVisible()) {
+      await paramsButton.click();
+      await page.waitForTimeout(500);
+      
+      // Response format should be visible for OpenAI models
+      const responseFormatLabel = page.locator('text="Response format"');
+      if (await responseFormatLabel.isVisible()) {
+        // Find the select dropdown next to it
+        const responseFormatRow = page.locator('text="Response format"').locator('..');
+        const responseFormatSelect = responseFormatRow.locator('[role="combobox"]').or(responseFormatRow.locator('input'));
+        
+        if (await responseFormatSelect.isVisible()) {
+          // Click on the select to open options
+          await responseFormatSelect.click();
+          await page.waitForTimeout(500);
+          
+          // Verify options are available
+          await expect(page.locator('[role="option"]').filter({ hasText: "json_object" })).toBeVisible();
+          await expect(page.locator('[role="option"]').filter({ hasText: "json_schema" })).toBeVisible();
+          
+          // Select json_schema
+          await page.locator('[role="option"]').filter({ hasText: "json_schema" }).click();
+          await page.waitForTimeout(500);
+          
+          // Modal should open
+          await expect(page.locator('text="Add response format"')).toBeVisible();
+        }
+      }
+      
+      // Close modal if open
+      const cancelButton = page.locator('button').filter({ hasText: "Cancel" });
+      if (await cancelButton.isVisible()) {
+        await cancelButton.click();
+      }
+      
+      // Close popover
+      await page.keyboard.press("Escape");
+    }
+  });
+  
+  test("json schema modal functionality", async ({ page }) => {
+    await page.goto("/prompts");
+    await page.waitForLoadState("networkidle");
+    
+    // Navigate to template
+    const firstTemplate = page.locator('[class*="NavLink"]').first();
+    if (await firstTemplate.isVisible()) {
+      await firstTemplate.click();
+      await page.waitForLoadState("networkidle");
+    }
+    
+    // Open model parameters and select json_schema
+    const paramsButton = page.locator('button').filter({ has: page.locator('svg').nth(1) }).first();
+    if (await paramsButton.isVisible()) {
+      await paramsButton.click();
+      await page.waitForTimeout(500);
+      
+      const responseFormatLabel = page.locator('text="Response format"');
+      if (await responseFormatLabel.isVisible()) {
+        const responseFormatRow = page.locator('text="Response format"').locator('..');
+        const responseFormatSelect = responseFormatRow.locator('[role="combobox"]').or(responseFormatRow.locator('input'));
+        
+        if (await responseFormatSelect.isVisible()) {
+          await responseFormatSelect.click();
+          await page.waitForTimeout(500);
+          await page.locator('[role="option"]').filter({ hasText: "json_schema" }).click();
+          await page.waitForTimeout(1000);
+          
+          // Modal should be open
+          const modal = page.locator('text="Add response format"');
+          if (await modal.isVisible()) {
+            // Check for example dropdown
+            const examplesDropdown = page.locator('[placeholder="Examples"]');
+            if (await examplesDropdown.isVisible()) {
+              await examplesDropdown.click();
+              await page.waitForTimeout(500);
+              
+              // Verify examples are available
+              await expect(page.locator('[role="option"]').filter({ hasText: "math_response" })).toBeVisible();
+              await expect(page.locator('[role="option"]').filter({ hasText: "paper_metadata" })).toBeVisible();
+              await expect(page.locator('[role="option"]').filter({ hasText: "moderation" })).toBeVisible();
+              
+              // Select an example
+              await page.locator('[role="option"]').filter({ hasText: "math_response" }).click();
+              await page.waitForTimeout(500);
+              
+              // Verify JSON input is populated
+              const jsonTextarea = page.locator('textarea').filter({ hasText: "math_response" });
+              const hasContent = await jsonTextarea.count() > 0;
+              expect(hasContent).toBeTruthy();
+            }
+            
+            // Save the schema
+            const saveButton = page.locator('button').filter({ hasText: "Save" }).last();
+            if (await saveButton.isVisible()) {
+              await saveButton.click();
+              await page.waitForTimeout(500);
+              
+              // Modal should close
+              await expect(page.locator('text="Add response format"')).not.toBeVisible();
+            }
+          }
+        }
+      }
+    }
+  });
+});
+
+test.describe("Prompts Page - JSON Prettification", () => {
+  test("verify JSON prettification setup", async ({ page }) => {
+    await page.goto("/prompts");
+    await page.waitForLoadState("networkidle");
+    
+    // Navigate to a template
+    const firstTemplate = page.locator('[class*="NavLink"]').first();
+    if (await firstTemplate.isVisible()) {
+      await firstTemplate.click();
+    } else {
+      const createButton = page.getByRole("button", { name: "Create first template" });
+      if (await createButton.isVisible()) {
+        await createButton.click();
+      }
+    }
+    
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(1000);
+    
+    // Set up a prompt that will return JSON
+    const textareas = await page.locator('textarea').all();
+    for (const textarea of textareas) {
+      if (await textarea.isVisible()) {
+        await textarea.fill("Return a JSON object with name and age fields for a person");
+        break;
+      }
+    }
+    
+    // Open model parameters and set response format to json_object
+    const paramsButton = page.locator('button').filter({ has: page.locator('svg').nth(1) }).first();
+    if (await paramsButton.isVisible()) {
+      await paramsButton.click();
+      await page.waitForTimeout(500);
+      
+      const responseFormatLabel = page.locator('text="Response format"');
+      if (await responseFormatLabel.isVisible()) {
+        const responseFormatRow = page.locator('text="Response format"').locator('..');
+        const responseFormatSelect = responseFormatRow.locator('[role="combobox"]').or(responseFormatRow.locator('input'));
+        
+        if (await responseFormatSelect.isVisible()) {
+          await responseFormatSelect.click();
+          await page.waitForTimeout(500);
+          
+          const jsonObjectOption = page.locator('[role="option"]').filter({ hasText: "json_object" });
+          if (await jsonObjectOption.isVisible()) {
+            await jsonObjectOption.click();
+            await page.waitForTimeout(500);
+          }
+        }
+      }
+      
+      // Close popover
+      await page.keyboard.press("Escape");
+    }
+    
+    // Verify run button is available
+    const runButton = page.locator('[data-testid="run-playground"]');
+    expect(await runButton.isVisible()).toBeTruthy();
   });
 });

@@ -7,7 +7,6 @@ import {
   Text,
   Textarea,
   TextareaProps,
-  Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconArrowsMaximize } from "@tabler/icons-react";
@@ -34,7 +33,7 @@ export default function VariableTextarea({
       <Modal
         opened={opened}
         onClose={close}
-        title={<Title order={3}>Edit variable content</Title>}
+        title={<Text size="lg" fw={700}>Edit variable content</Text>}
         overlayProps={{
           backgroundOpacity: 0.55,
           blur: 3,

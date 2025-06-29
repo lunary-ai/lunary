@@ -374,6 +374,7 @@ async function runAzureOpenAI(
     functions: params?.functions,
     tools: validateToolCalls("gpt", params?.tools),
     seed: params?.seed,
+    response_format: params?.response_format,
   });
 
   return chatCompletion;
@@ -619,6 +620,7 @@ export async function runAImodel(
       functions: completionsParams?.functions,
       tools: validateToolCalls(model.name, completionsParams?.tools),
       seed: completionsParams?.seed,
+      response_format: completionsParams?.response_format,
       ...paramsOverwrite,
     });
   }

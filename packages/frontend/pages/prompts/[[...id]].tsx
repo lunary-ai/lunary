@@ -529,6 +529,7 @@ function Playground() {
     mutate();
   };
 
+
   const runPlayground = async () => {
     if (runMode === "playground") {
       // Original LLM playground logic
@@ -638,8 +639,46 @@ function Playground() {
         // Get the custom payload from the endpoint
         const customPayload = selectedEndpoint.defaultPayload || {};
 
-        // Generate the protected payload and merge with custom payload
-        const protectedPayload = generateProtectedPayload();
+        // Helper function to replace {{variable}} with actual values
+        const compileTextTemplate = (
+          content: string,
+          variables: Record<string, string>,
+        ) => {
+          const regex = /{{([^{}]*)}}/g;
+          return content.replace(regex, (_, g1) => variables[g1] || "");
+        };
+
+        // Generate the protected payload with interpolated variables
+        const variables = templateVersion?.testValues || {};
+        const content = templateVersion?.content;
+        const extra = templateVersion?.extra || {};
+
+        // Compile the content with variables
+        let compiledContent;
+        if (typeof content === "string") {
+          compiledContent = [
+            {
+              role: "user",
+              content: compileTextTemplate(content, variables),
+            },
+          ];
+        } else if (Array.isArray(content)) {
+          compiledContent = content.map((item) => ({
+            ...item,
+            content: item.content
+              ? compileTextTemplate(item.content, variables)
+              : item.content,
+          }));
+        } else {
+          compiledContent = content;
+        }
+
+        const protectedPayload = {
+          content: compiledContent,
+          extra,
+          variables,
+        };
+
         const payload = {
           ...customPayload,
           ...protectedPayload, // Protected fields override custom fields
@@ -750,7 +789,6 @@ function Playground() {
       <Flex w="100%" h="100vh" style={{ position: "relative" }}>
         <Box
           flex={`0 0 230px`}
-          py="sm"
           style={{
             borderRight: "1px solid rgba(120, 120, 120, 0.1)",
             height: "100vh",
