@@ -115,6 +115,9 @@ const publicRoutes = [
   "/v1/users/send-verification",
   new RegExp(`/v1/datasets/.+`), // getDataSets in SDKs
   `/v1/evaluations/run`,
+  "/v1/traces", // OTEL traces endpoint
+  "/v1/metrics", // OTEL metrics endpoint
+  "/v1/logs", // OTEL logs endpoint
 ];
 
 async function checkApiKey(ctx: Context, key: string) {

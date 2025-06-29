@@ -1,4 +1,4 @@
-import type { Event } from "../../backend/src/utils/ingest.ts";
+import { Event } from "@/src/utils/ingest.ts";
 import type { KeyValue } from "./gen/opentelemetry/proto/common/v1/common.ts";
 import { Span } from "./gen/opentelemetry/proto/trace/v1/trace.ts";
 import type { GenAIAttributes, GenAIOperationName } from "./types.ts";
@@ -77,7 +77,9 @@ export function spanToEvents(span: Span): Event[] {
       type: "agent",
       event: "start",
       name: (attributes["agent_name"] as string | undefined) || "Agent",
-      input: attributes["all_messages_events"][0],
+      input: !parentRunId
+        ? attributes["all_messages_events"][0]
+        : attributes["all_messages_events"],
       timestamp: nsToIso(span.startTimeUnixNano),
     };
     // console.log(type);

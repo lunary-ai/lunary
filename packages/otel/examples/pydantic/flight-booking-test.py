@@ -1,6 +1,7 @@
 """Example of a multi-agent flow where one agent delegates work to another.
 
 In this scenario, a group of agents work together to find flights for a user.
+Modified version for automated testing without interactive prompts.
 """
 
 import datetime
@@ -9,7 +10,6 @@ from typing import Literal
 
 import logfire
 from pydantic import BaseModel, Field
-from rich.prompt import Prompt
 
 from pydantic_ai import Agent, ModelRetry, RunContext
 from pydantic_ai.messages import ModelMessage
@@ -17,7 +17,6 @@ from pydantic_ai.usage import Usage, UsageLimits
 import os 
 os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = "http://localhost:3333"
 os.environ["OTEL_EXPORTER_OTLP_HEADERS"] = f"Authorization=Bearer {os.environ['LUNARY_PRIVATE_KEY']}"
-
 
 # 'if-token-present' means nothing will be sent (and the example will work) if you don't have logfire configured
 logfire.configure()
@@ -37,7 +36,6 @@ class FlightDetails(BaseModel):
 class NoFlightFound(BaseModel):
     """When no valid flight is found."""
 
-Agent.instrument_all()
 
 @dataclass
 class Deps:
@@ -188,56 +186,41 @@ async def main():
     )
     message_history: list[ModelMessage] | None = None
     usage: Usage = Usage()
-    # run the agent until a satisfactory flight is found
-    while True:
-        result = await search_agent.run(
-            f'Find me a flight from {deps.req_origin} to {deps.req_destination} on {deps.req_date}',
-            deps=deps,
-            usage=usage,
-            message_history=message_history,
-            usage_limits=usage_limits,
-        )
-        if isinstance(result.output, NoFlightFound):
-            print('No flight found')
-            break
-        else:
-            flight = result.output
-            print(f'Flight found: {flight}')
-            answer = Prompt.ask(
-                'Do you want to buy this flight, or keep searching? (buy/*search)',
-                choices=['buy', 'search', ''],
-                show_choices=False,
-            )
-            if answer == 'buy':
-                seat = await find_seat(usage)
-                await buy_tickets(flight, seat)
-                break
-            else:
-                message_history = result.all_messages(
-                    output_tool_return_content='Please suggest another flight'
-                )
-
-
-async def find_seat(usage: Usage) -> SeatPreference:
-    message_history: list[ModelMessage] | None = None
-    while True:
-        answer = Prompt.ask('What seat would you like?')
-
-        result = await seat_preference_agent.run(
-            answer,
-            message_history=message_history,
+    
+    # Run just one search iteration for testing
+    print("🔍 Searching for flights...")
+    result = await search_agent.run(
+        f'Find me a flight from {deps.req_origin} to {deps.req_destination} on {deps.req_date}',
+        deps=deps,
+        usage=usage,
+        message_history=message_history,
+        usage_limits=usage_limits,
+    )
+    
+    if isinstance(result.output, NoFlightFound):
+        print('❌ No flight found')
+    else:
+        flight = result.output
+        print(f'✅ Flight found: {flight}')
+        print(f'   Flight number: {flight.flight_number}')
+        print(f'   Price: ${flight.price}')
+        print(f'   Route: {flight.origin} → {flight.destination}')
+        print(f'   Date: {flight.date}')
+        
+        # Test seat selection without interactive prompt
+        print("\n💺 Testing seat selection...")
+        seat_result = await seat_preference_agent.run(
+            "I'd like window seat 14A please",
             usage=usage,
             usage_limits=usage_limits,
         )
-        if isinstance(result.output, SeatPreference):
-            return result.output
+        
+        if isinstance(seat_result.output, SeatPreference):
+            print(f'✅ Seat selected: {seat_result.output.row}{seat_result.output.seat}')
         else:
-            print('Could not understand seat preference. Please try again.')
-            message_history = result.all_messages()
-
-
-async def buy_tickets(flight_details: FlightDetails, seat: SeatPreference):
-    print(f'Purchasing flight {flight_details=!r} {seat=!r}...')
+            print('❌ Could not understand seat preference')
+    
+    print(f"\n📊 Total usage: {usage.requests} requests")
 
 
 if __name__ == '__main__':

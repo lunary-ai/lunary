@@ -55,6 +55,35 @@ function RetrieverObject({ data, compact }) {
   );
 }
 
+// Helper function to recursively remove enrichments from nested objects
+const removeEnrichmentsRecursively = (obj: any): any => {
+  if (obj === null || obj === undefined) return obj;
+  
+  if (Array.isArray(obj)) {
+    return obj.map(item => removeEnrichmentsRecursively(item));
+  }
+  
+  if (typeof obj === "object") {
+    const newObj = { ...obj };
+    
+    // Remove enrichments if it's an empty array or exists
+    if (newObj.enrichments && (Array.isArray(newObj.enrichments) && newObj.enrichments.length === 0)) {
+      delete newObj.enrichments;
+    }
+    
+    // Recursively process all properties
+    for (const key in newObj) {
+      if (key !== "enrichments" && newObj.hasOwnProperty(key)) {
+        newObj[key] = removeEnrichmentsRecursively(newObj[key]);
+      }
+    }
+    
+    return newObj;
+  }
+  
+  return obj;
+};
+
 export default function SmartViewer({
   data,
   error,
@@ -76,15 +105,8 @@ export default function SmartViewer({
       }
     }
 
-    if (
-      typeof parsedData === "object" &&
-      parsedData !== null &&
-      parsedData.enrichments &&
-      Array.isArray(parsedData.enrichments) &&
-      parsedData.enrichments.length === 0
-    ) {
-      delete parsedData.enrichments; // to avoid displaying empty array in json in traces (agents, chains etc.)
-    }
+    // Recursively remove empty enrichments arrays from all nested objects
+    parsedData = removeEnrichmentsRecursively(parsedData);
 
     return parsedData;
   }, [data]);
