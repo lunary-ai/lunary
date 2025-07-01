@@ -4,7 +4,6 @@ import { Span } from "./gen/opentelemetry/proto/trace/v1/trace.ts";
 import type { GenAIAttributes, GenAIOperationName } from "./types.ts";
 
 export function spanToEvents(span: Span): Event[] {
-  // TODO: detect if it's pydantic
   const attributes = parseAttributes(span.attributes);
 
   const runId = Buffer.from(span.spanId).toString("hex");
@@ -13,11 +12,9 @@ export function spanToEvents(span: Span): Event[] {
     : undefined;
 
   const opName = attributes["gen_ai.operation.name"];
-  console.log(attributes, "\n\n\n");
   let type =
     opName && opName in OP_NAME_TO_TYPE ? OP_NAME_TO_TYPE[opName] : null;
 
-  // for Pydantic AI
   if (attributes["agent_name"]) {
     type = "agent";
   }
@@ -25,12 +22,11 @@ export function spanToEvents(span: Span): Event[] {
   if (attributes["gen_ai.tool.name"]) {
     type = "tool";
   }
-
-  // todo: spans.events if they exist
   let events = Array.isArray(attributes.events)
     ? attributes.events
     : span.events;
 
+  // TODO: track errors
   if (type === "llm") {
     const input = events.slice(0, -1);
     const output = events.at(-1).message;
@@ -42,14 +38,17 @@ export function spanToEvents(span: Span): Event[] {
       name: attributes["gen_ai.request.model"],
       timestamp: nsToIso(span.startTimeUnixNano),
       input,
+      params: {
+        temperature: attributes["gen_ai.request.temperature"],
+        topP: attributes["gen_ai.request.top_p"],
+        maxTokens: attributes["gen_ai.request.max_tokens"],
+        topK: attributes["gen_ai.request.top_k"],
+        frequencyPenalty: attributes["gen_ai.request.frequency_penalty"],
+        presencePenalty: attributes["gen_ai.request.presence_penalty"],
+        seed: attributes["gen_ai.request.seed"],
+        stopSequences: attributes["gen_ai.request.stop_sequences"],
+      },
     };
-
-    // console.log(type);
-    // console.log("\n\n");
-    // console.log(attributes);
-    // console.log("\n\n");
-    // console.log(events);
-    // console.log("\n\n\n----\n\n\n");
 
     const endEvent: Event = {
       runId,
@@ -60,7 +59,6 @@ export function spanToEvents(span: Span): Event[] {
       timestamp: nsToIso(span.endTimeUnixNano),
       output,
 
-      // error,
       tokensUsage: {
         prompt: attributes["gen_ai.usage.input_tokens"]!,
         completion: attributes["gen_ai.usage.output_tokens"]!,
@@ -77,17 +75,9 @@ export function spanToEvents(span: Span): Event[] {
       type: "agent",
       event: "start",
       name: (attributes["agent_name"] as string | undefined) || "Agent",
-      input: !parentRunId
-        ? attributes["all_messages_events"][0]
-        : attributes["all_messages_events"],
+      input: attributes["all_messages_events"],
       timestamp: nsToIso(span.startTimeUnixNano),
     };
-    // console.log(type);
-    // console.log("\n\n");
-    // console.log(span, attributes);
-    // console.log("\n\n");
-    // console.log(events);
-    // console.log("\n\n\n----\n\n\n");
 
     const endEvent: Event = {
       runId,
@@ -103,6 +93,33 @@ export function spanToEvents(span: Span): Event[] {
   }
 
   if (type === "tool") {
+    let toolInput = attributes["tool_arguments"];
+
+    if (attributes["attributes_json_schema"]) {
+      try {
+        const schema =
+          typeof attributes["attributes_json_schema"] === "string"
+            ? JSON.parse(attributes["attributes_json_schema"])
+            : attributes["attributes_json_schema"];
+
+        if (schema.properties) {
+          const input: Record<string, any> = {};
+          for (const [key, _] of Object.entries(schema.properties)) {
+            if (key in attributes) {
+              input[key] = attributes[key];
+              console.log(`Extracted ${key}:`, attributes[key]);
+            }
+          }
+          if (Object.keys(input).length > 0) {
+            toolInput = input;
+            console.log("Final tool input:", toolInput);
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to parse attributes_json_schema:", e);
+      }
+    }
+
     const startEvent: Event = {
       runId,
       parentRunId,
@@ -110,7 +127,7 @@ export function spanToEvents(span: Span): Event[] {
       event: "start",
       name: attributes["gen_ai.tool.name"] as string,
       timestamp: nsToIso(span.startTimeUnixNano),
-      input: attributes["tool_arguments"],
+      input: toolInput,
     };
 
     const endEvent: Event = {
@@ -120,7 +137,6 @@ export function spanToEvents(span: Span): Event[] {
       event: "end",
       name: attributes["gen_ai.tool.name"] as string,
       timestamp: nsToIso(span.endTimeUnixNano),
-      // Tool output will be in events or attributes
       output: events?.length > 0 ? events : attributes["tool_output"],
     };
 

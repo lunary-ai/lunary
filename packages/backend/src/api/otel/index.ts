@@ -28,22 +28,17 @@ async function processEvents(ctx: Context, events: any[]) {
     return [];
   }
 
-  console.log(`\n📥 Processing ${events.length} OTEL events`);
-
-  // Get project ID from authentication
   const projectId = ctx.state.projectId;
 
   if (!projectId) {
-    // Try to extract project key from Authorization header first
     const authHeader = ctx.headers["authorization"];
     let projectKey = null;
 
     if (authHeader && authHeader.startsWith("Bearer ")) {
-      projectKey = authHeader.substring(7); // Remove "Bearer " prefix
+      projectKey = authHeader.substring(7);
       console.log("Found project key in Authorization header");
     }
 
-    // If not in auth header, try other sources
     if (!projectKey) {
       const first = events[0];
       projectKey =
@@ -57,7 +52,6 @@ async function processEvents(ctx: Context, events: any[]) {
       throw new Error("No project key provided");
     }
 
-    // Get project ID from key
     const [project] = await sql`
       select id from project 
       where public_key = ${projectKey} or private_key = ${projectKey}
@@ -68,25 +62,17 @@ async function processEvents(ctx: Context, events: any[]) {
       throw new Error("Invalid project key");
     }
 
-    console.log(`Found project ID ${project.id} for key`);
-
-    // Sort events to ensure parents are processed before children
     const sortedEvents = sortEventsByDependencies(events);
 
-    // Process events through the ingestion pipeline
     return await processEventsIngestion(project.id, sortedEvents);
   }
 
-  // Sort events to ensure parents are processed before children
   const sortedEvents = sortEventsByDependencies(events);
 
-  // Process events through the ingestion pipeline
   return await processEventsIngestion(projectId, sortedEvents);
 }
 
-// Sort events so that parent runs are processed before their children
 function sortEventsByDependencies(events: any[]) {
-  // First group events by runId
   const eventsByRunId = new Map<string, any[]>();
   for (const event of events) {
     if (!eventsByRunId.has(event.runId)) {
@@ -95,7 +81,6 @@ function sortEventsByDependencies(events: any[]) {
     eventsByRunId.get(event.runId)!.push(event);
   }
 
-  // Build dependency graph
   const runIdToParentRunId = new Map<string, string | undefined>();
   for (const event of events) {
     if (event.runId && event.parentRunId) {
@@ -105,7 +90,6 @@ function sortEventsByDependencies(events: any[]) {
     }
   }
 
-  // Topological sort of runIds
   const sortedRunIds: string[] = [];
   const visited = new Set<string>();
 
@@ -121,16 +105,13 @@ function sortEventsByDependencies(events: any[]) {
     sortedRunIds.push(runId);
   }
 
-  // Visit all runIds
   for (const runId of runIdToParentRunId.keys()) {
     visit(runId);
   }
 
-  // Rebuild events array in sorted order
   const sortedEvents: any[] = [];
   for (const runId of sortedRunIds) {
     const runEvents = eventsByRunId.get(runId) || [];
-    // Sort events within a run by timestamp and event type (start before end)
     runEvents.sort((a, b) => {
       const timeDiff =
         new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
@@ -156,10 +137,6 @@ router.post("/v1/traces", async (ctx) => {
   const body = new Uint8Array(ctx.request.body as any);
   const batch = ExportTraceServiceRequest.decode(body);
 
-  console.log(
-    `\n🔭 Received traces: ${batch.resourceSpans.length} ResourceSpans`,
-  );
-
   const events: any[] = [];
   for (const rs of batch.resourceSpans) {
     const resAttrs = Object.fromEntries(
@@ -181,19 +158,11 @@ router.post("/v1/traces", async (ctx) => {
     }
   }
 
-  // Return OTLP success response immediately
   const resp = ExportTraceServiceResponse.create();
   ctx.type = PROTO;
   ctx.body = ExportTraceServiceResponse.encode(resp).finish();
 
-  // Process events asynchronously to avoid timeout
-  processEvents(ctx, orderEvents(events))
-    .then((results) => {
-      console.log(`✅ Successfully processed ${results.length} events`);
-    })
-    .catch((error) => {
-      console.error("❌ Error processing traces:", error);
-    });
+  processEvents(ctx, orderEvents(events));
 });
 
 router.post("/v1/metrics", async (ctx) => {
@@ -233,25 +202,16 @@ router.post("/v1/logs", async (ctx) => {
     );
     for (const sl of rl.scopeLogs) {
       for (const log of sl.logRecords) {
-        console.log("LOG", log);
         events.push(...logToEvents(log, resAttrs));
       }
     }
   }
 
-  // Return OTLP success response immediately
   const resp = ExportLogsServiceResponse.create();
   ctx.type = PROTO;
   ctx.body = ExportLogsServiceResponse.encode(resp).finish();
 
-  // Process events asynchronously to avoid timeout
-  processEvents(ctx, orderEvents(events))
-    .then((results) => {
-      console.log(`✅ Successfully processed ${results.length} log events`);
-    })
-    .catch((error) => {
-      console.error("❌ Error processing logs:", error);
-    });
+  processEvents(ctx, orderEvents(events));
 });
 
 export default router;

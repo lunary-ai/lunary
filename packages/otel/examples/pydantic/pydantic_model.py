@@ -10,7 +10,7 @@ from pydantic_ai.messages import SystemPromptPart
 os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = "http://localhost:3333"
 os.environ["OTEL_EXPORTER_OTLP_HEADERS"] = f"Authorization=Bearer {os.environ['LUNARY_PRIVATE_KEY']}"
 
-logfire.configure()
+logfire.configure(send_to_logfire=False)
 logfire.instrument_pydantic_ai()
 
 
@@ -21,7 +21,8 @@ class MyModel(BaseModel):
 
 model = os.getenv('PYDANTIC_AI_MODEL', 'openai:gpt-4o')
 print(f'Using model: {model}')
-agent = Agent(model, output_type=MyModel)
+
+agent = Agent(model, output_type=MyModel, model_settings={'temperature': 0.7})
 
 import datetime
 
