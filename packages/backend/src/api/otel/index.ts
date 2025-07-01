@@ -36,7 +36,6 @@ async function processEvents(ctx: Context, events: any[]) {
 
     if (authHeader && authHeader.startsWith("Bearer ")) {
       projectKey = authHeader.substring(7);
-      console.log("Found project key in Authorization header");
     }
 
     if (!projectKey) {
@@ -149,9 +148,6 @@ router.post("/v1/traces", async (ctx) => {
     for (const ss of rs.scopeSpans) {
       for (const span of ss.spans) {
         const spanEvents = spanToEvents(span);
-        console.log(
-          `Processing span ${span.name} -> ${spanEvents.length} events`,
-        );
 
         events.push(...spanEvents);
       }
@@ -174,8 +170,6 @@ router.post("/v1/metrics", async (ctx) => {
 
   const body = new Uint8Array(ctx.request.body as any);
   const batch = ExportMetricsServiceRequest.decode(body);
-
-  console.log(`📊 metrics: ${batch.resourceMetrics.length} ResourceMetrics`);
 
   const resp = ExportMetricsServiceResponse.create();
   ctx.type = PROTO;

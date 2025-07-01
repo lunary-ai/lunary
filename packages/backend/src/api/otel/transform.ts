@@ -105,12 +105,31 @@ type GenAIAttributes = {
   [key: string]: unknown;
 };
 
+// Helper function to safely convert values that might contain BigInt
+function safeBigIntConvert(value: unknown): unknown {
+  if (typeof value === 'bigint') {
+    return Number(value);
+  }
+  if (Array.isArray(value)) {
+    return value.map(safeBigIntConvert);
+  }
+  if (value && typeof value === 'object') {
+    const result: Record<string, unknown> = {};
+    for (const [key, val] of Object.entries(value)) {
+      result[key] = safeBigIntConvert(val);
+    }
+    return result;
+  }
+  return value;
+}
+
 function kvToRecord(attrs: KeyValue[]): GenAIAttributes {
   const out: GenAIAttributes = {};
   for (const kv of attrs) {
     const key = kv.key;
     const value = anyValueToJs(kv.value);
-    out[key as keyof GenAIAttributes] = value;
+    // Ensure no BigInt values in the attributes
+    out[key as keyof GenAIAttributes] = safeBigIntConvert(value);
   }
   return out;
 }

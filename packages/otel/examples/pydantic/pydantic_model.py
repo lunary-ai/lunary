@@ -1,8 +1,6 @@
 import os
-
 import logfire
 from pydantic import BaseModel
-
 from pydantic_ai import Agent
 
 from pydantic_ai.messages import SystemPromptPart 
@@ -18,16 +16,8 @@ class MyModel(BaseModel):
     city: str
     country: str
 
-
-model = os.getenv('PYDANTIC_AI_MODEL', 'openai:gpt-4o')
-print(f'Using model: {model}')
-
-agent = Agent(model, output_type=MyModel, model_settings={'temperature': 0.7})
-
-import datetime
+agent = Agent(model='open:gpt-4.1', output_type=MyModel, model_settings={'temperature': 0.7})
 
 if __name__ == '__main__':
-    import datetime
     result = agent.run_sync('The windy city in the US of A.')
     print(result.output)
-    print(result.usage())

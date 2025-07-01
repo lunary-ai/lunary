@@ -1,7 +1,7 @@
-import { Event } from "@/src/utils/ingest.ts";
-import type { KeyValue } from "./gen/opentelemetry/proto/common/v1/common.ts";
-import { Span } from "./gen/opentelemetry/proto/trace/v1/trace.ts";
-import type { GenAIAttributes, GenAIOperationName } from "./types.ts";
+import { Event } from "@/src/utils/ingest";
+import type { KeyValue } from "./gen/opentelemetry/proto/common/v1/common";
+import { Span } from "./gen/opentelemetry/proto/trace/v1/trace";
+import type { GenAIAttributes, GenAIOperationName } from "./types";
 
 export function spanToEvents(span: Span): Event[] {
   const attributes = parseAttributes(span.attributes);
@@ -173,7 +173,8 @@ function parseAttributes(spanAttributes: Span["attributes"]): GenAIAttributes {
   for (const kv of spanAttributes) {
     const key = kv.key;
     const value = anyValueToJs(kv.value);
-    out[key as keyof GenAIAttributes] = value;
+    // Ensure no BigInt values in the attributes
+    out[key as keyof GenAIAttributes] = safeBigIntConvert(value);
   }
   return out;
 }
@@ -200,6 +201,24 @@ export function anyValueToJs(value?: KeyValue["value"]): unknown {
     return obj;
   }
   return undefined;
+}
+
+// Helper function to safely convert values that might contain BigInt
+function safeBigIntConvert(value: unknown): unknown {
+  if (typeof value === 'bigint') {
+    return Number(value);
+  }
+  if (Array.isArray(value)) {
+    return value.map(safeBigIntConvert);
+  }
+  if (value && typeof value === 'object') {
+    const result: Record<string, unknown> = {};
+    for (const [key, val] of Object.entries(value)) {
+      result[key] = safeBigIntConvert(val);
+    }
+    return result;
+  }
+  return value;
 }
 
 function nsToIso(nano: bigint | number | string): string {

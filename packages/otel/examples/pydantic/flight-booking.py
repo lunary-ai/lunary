@@ -20,7 +20,7 @@ os.environ["OTEL_EXPORTER_OTLP_HEADERS"] = f"Authorization=Bearer {os.environ['L
 
 
 # 'if-token-present' means nothing will be sent (and the example will work) if you don't have logfire configured
-logfire.configure()
+logfire.configure(send_to_logfire=False)
 logfire.instrument_pydantic_ai()
 
 
