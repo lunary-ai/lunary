@@ -7,13 +7,11 @@ import {
   Input,
   Loader,
   Select,
+  SegmentedControl,
   Stack,
-  Textarea,
   TextInput,
 } from "@mantine/core";
 import { useEffect, useMemo, useState } from "react";
-
-import { BarChart } from "@mantine/charts";
 
 import RenamableField from "@/components/blocks/RenamableField";
 import CheckPicker from "@/components/checks/Picker";
@@ -25,6 +23,8 @@ import AreaChartComponent from "./Charts/AreaChartComponent";
 import DateRangeGranularityPicker, {
   useDateRangeGranularity,
 } from "./DateRangeGranularityPicker";
+import BarChartComponent from "./Charts/BarChartComponent";
+import { BarChart } from "@mantine/charts";
 
 const COLOR_PALETTE = [
   "violet.6",
@@ -60,6 +60,7 @@ export function CustomChartCreator({
   dashboardStartDate?: Date;
   dashboardEndDate?: Date;
   dashboardGranularity?: string;
+  setActiveTab?: (tab: string) => void;
 }) {
   const [name, setName] = useState(config?.name || "");
   const [description, setDescription] = useState(config?.description || "");
@@ -71,8 +72,11 @@ export function CustomChartCreator({
     string | undefined
   >(config?.secondaryDimension || undefined);
   const [checks, setChecks] = useState<LogicNode>(config?.checks || ["AND"]);
+  const [chartType, setChartType] = useState<"bar" | "area">(
+    config?.type || "area",
+  );
 
-  const { props, isLoading: usersPropsLoading } = useExternalUsersProps();
+  const { props } = useExternalUsersProps();
 
   const isCustomEventsMetric = metric === "custom-events";
 
@@ -98,6 +102,18 @@ export function CustomChartCreator({
     }
   }, [primaryDimension, secondaryDimension, isCustomEventsMetric, config?.id]);
 
+  // Automatically set chart type based on conditions, but only if not manually changed
+  useEffect(() => {
+    if (!config?.type) {
+      const automaticType = isCustomEventsMetric
+        ? "area"
+        : secondaryDimension === "date"
+          ? "area"
+          : "bar";
+      setChartType(automaticType);
+    }
+  }, [isCustomEventsMetric, secondaryDimension, config?.type]);
+
   const { startDate, endDate, setDateRange, granularity, setGranularity } =
     useDateRangeGranularity();
 
@@ -106,8 +122,12 @@ export function CustomChartCreator({
       setDateRange([new Date(config.startDate), new Date(config.endDate)]);
       setGranularity(config.granularity);
     } else {
-      setDateRange([dashboardStartDate, dashboardEndDate]);
-      setGranularity(dashboardGranularity);
+      if (dashboardStartDate && dashboardEndDate) {
+        setDateRange([dashboardStartDate, dashboardEndDate]);
+      }
+      if (dashboardGranularity) {
+        setGranularity(dashboardGranularity as any);
+      }
     }
   }, [dashboardStartDate, dashboardEndDate, dashboardGranularity, config]);
 
@@ -132,18 +152,24 @@ export function CustomChartCreator({
     appliedSecondaryDimension,
   );
 
+  const chartData = useMemo(() => {
+    if (!data) return [];
+    // Handle both data formats: direct array or nested data.data
+    return Array.isArray(data) ? data : (data as any).data || [];
+  }, [data]);
+
   const series = useMemo(() => {
-    if (!data?.data || data.data.length === 0) return [];
+    if (!chartData || chartData.length === 0) return [];
     const seriesSet = new Set<string>();
-    data.data.forEach((item: Record<string, any>) => {
+    chartData.forEach((item: Record<string, any>) => {
       Object.keys(item).forEach((key) => {
-        if (key !== "value") {
+        if (key !== "value" && key !== "date") {
           seriesSet.add(key);
         }
       });
     });
     return generateSeries(Array.from(seriesSet));
-  }, [data]);
+  }, [chartData]);
 
   const breakdownSelectValues = (props || []).map((prop) => ({
     value: prop,
@@ -175,11 +201,7 @@ export function CustomChartCreator({
     const chartPayload = {
       name: chartName,
       description, // Pass custom description here
-      type: isCustomEventsMetric
-        ? "area"
-        : secondaryDimension === "date"
-          ? "area"
-          : "bar",
+      type: chartType,
       dataKey: metric,
       primaryDimension: isCustomEventsMetric ? null : primaryDimension,
       secondaryDimension: isCustomEventsMetric ? null : secondaryDimension,
@@ -192,10 +214,12 @@ export function CustomChartCreator({
     if (isEditing) {
       await updateCustomChart(config.id, chartPayload);
     } else {
-      await insertCustomChart(chartPayload);
+      await insertCustomChart(chartPayload as any);
     }
 
-    setActiveTab("custom");
+    if (setActiveTab) {
+      setActiveTab("custom");
+    }
     onConfirm();
   }
 
@@ -261,6 +285,22 @@ export function CustomChartCreator({
           />
         </Input.Wrapper>
       </Group>
+
+      {secondaryDimension === "date" && !isCustomEventsMetric && (
+        <Input.Wrapper label="Chart Type">
+          <br />
+          <SegmentedControl
+            value={chartType}
+            size="xs"
+            onChange={(value) => setChartType(value as "bar" | "area")}
+            data={[
+              { label: "Bar", value: "bar" },
+              { label: "Area", value: "area" },
+            ]}
+          />
+        </Input.Wrapper>
+      )}
+
       {isCustomEventsMetric && (
         <Box>
           <CheckPicker
@@ -271,23 +311,32 @@ export function CustomChartCreator({
           />
         </Box>
       )}
-      {isCustomEventsMetric ? (
-        <AreaChartComponent
-          data={data?.data || []}
-          granularity="daily"
-          color={null}
-          aggregationMethod={null}
-          stat={null}
-        />
-      ) : appliedSecondaryDimension === "date" && series.length > 0 ? (
-        <AreaChartComponent
-          data={data?.data || []}
-          granularity={granularity}
-          color={null}
-          aggregationMethod={null}
-          stat={null}
-        />
-      ) : series.length > 0 ? (
+
+      {appliedSecondaryDimension === "date" &&
+        chartData.length &&
+        chartType === "area" && (
+          <AreaChartComponent
+            data={chartData}
+            granularity={isCustomEventsMetric ? "daily" : granularity}
+            color={null}
+            aggregationMethod={null}
+            stat={null}
+          />
+        )}
+
+      {appliedSecondaryDimension === "date" &&
+        chartData.length &&
+        chartType === "bar" && (
+          <BarChartComponent
+            data={chartData}
+            granularity={isCustomEventsMetric ? "daily" : granularity}
+            color={null}
+            aggregationMethod={null}
+            stat={null}
+          />
+        )}
+
+      {chartData.length > 0 && appliedSecondaryDimension !== "date" && (
         <BarChart
           h={300}
           withYAxis={false}
@@ -297,13 +346,16 @@ export function CustomChartCreator({
           series={series}
           withLegend
         />
-      ) : !chartLoading ? (
-        <Alert title="No Data" color="yellow">
-          No series available to display the chart.
-        </Alert>
-      ) : (
-        <Loader h="400px" w="100%" />
       )}
+
+      {chartLoading && <Loader h="400px" w="100%" />}
+
+      {!chartLoading && chartData.length === 0 && (
+        <Alert title="No Data" color="yellow">
+          No data available for this period.
+        </Alert>
+      )}
+
       <Group gap="sm" justify="right" mt="xl">
         <Button onClick={handleSave}>{isEditing ? "Update" : "Save"}</Button>
       </Group>
