@@ -3,7 +3,6 @@ alter table org add column if not exists eval_allowance integer default 500;
 
 -- Update to runs to save metadatas
 alter table run add column if not exists metadata jsonb;
-create index if not exists run_metadata_idx on run using gin (metadata);
 
 -- Migration of radars with PII
 
