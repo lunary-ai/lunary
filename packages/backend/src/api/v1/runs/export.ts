@@ -126,9 +126,10 @@ export async function fileExport(
           let line;
           if (exportType === "trace") {
             const related = await getRelatedRuns(sql, row.id, projectId);
-            line = parser.parse(getTraceChildren(formatRun(row), related));
+            const formattedRelated = related.map(r => formatRun(r, true));
+            line = parser.parse(getTraceChildren(formatRun(row, true), formattedRelated));
           } else if (exportType === "thread") {
-            const formattedRun = formatRun(row);
+            const formattedRun = formatRun(row, true);
             const related = await getRelatedRuns(sql, row.id, projectId);
             formattedRun.children = getTraceChildren(
               formattedRun,
@@ -149,7 +150,7 @@ export async function fileExport(
           } else {
             console.log("here");
             console.log(row);
-            line = parser.parse(formatRun(row));
+            line = parser.parse(formatRun(row, true));
           }
           if (isFirst) {
             isFirst = false;
@@ -198,19 +199,21 @@ export async function fileExport(
           let line;
           if (exportType === "trace") {
             const related = await getRelatedRuns(sql, row.id, projectId);
-            line = JSON.stringify(getTraceChildren(row, related));
+            const formattedRelated = related.map(r => formatRun(r, true));
+            line = JSON.stringify(getTraceChildren(formatRun(row, true), formattedRelated));
           } else if (exportType === "thread") {
             const messages = await getMessages(row.id, projectId);
-            row.messages = messages;
-            delete row.parentFeedback;
-            delete row.input;
-            delete row.siblingRunId;
-            delete row.traceId;
-            delete row.feedback;
-            delete row.params;
-            line = JSON.stringify(row);
+            const formattedRun = formatRun(row, true);
+            formattedRun.messages = messages;
+            delete formattedRun.parentFeedback;
+            delete formattedRun.input;
+            delete formattedRun.siblingRunId;
+            delete formattedRun.traceId;
+            delete formattedRun.feedback;
+            delete formattedRun.params;
+            line = JSON.stringify(formattedRun);
           } else {
-            line = JSON.stringify(row);
+            line = JSON.stringify(formatRun(row, true));
           }
           if (line.length > 0) {
             yield line + "\n";
