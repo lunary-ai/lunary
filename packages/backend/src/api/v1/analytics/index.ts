@@ -233,9 +233,12 @@ analytics.get("/users/new", async (ctx: Context) => {
 
   const dimensionsSchema = z.object({
     firstDimension: z.string().optional().default("undefined"),
-    secondDimension: z.string().optional().default("undefined")
+    secondDimension: z.string().optional().default("undefined"),
   });
-  const { firstDimension: firstDimensionKey, secondDimension: secondDimensionKey } = dimensionsSchema.parse(ctx.query);
+  const {
+    firstDimension: firstDimensionKey,
+    secondDimension: secondDimensionKey,
+  } = dimensionsSchema.parse(ctx.query);
 
   const [{ stat }] = await sql`
     select
@@ -390,19 +393,19 @@ analytics.get("/users/new", async (ctx: Context) => {
     } = {};
 
     for (const row of rows) {
-      let dateStr = row.date.toISOString().split("T")[0];
-      const name = row.name;
+      const dateStr = row.date.toLocaleDateString("en", {
+        timeZone,
+      });
+      const name = row.name ?? "Unknown";
+      const key = `${dateStr}:${name}`;
 
-      dateObj[dateStr] = dateObj[dateStr] || { date: row.date };
-      if (!dateObj[dateStr].value) {
-        dateObj[dateStr].value = 0;
+      if (!dateObj[key]) {
+        dateObj[key] = { date: row.date, name, value: 0 };
       }
-      dateObj[dateStr].value += row.value;
-      dateObj[dateStr].name = name;
+      dateObj[key].value += row.value;
     }
 
-    const data = Object.values(dateObj);
-
+    const data = Object.values(dateObj).sort((a, b) => a.date - b.date);
     ctx.body = { data, stat: stat || 0 };
     return;
   } else {
@@ -482,7 +485,6 @@ analytics.get("/users/new", async (ctx: Context) => {
         order by
           d.date;
       `;
-
       let dateObj: {
         [dateStr: string]: {
           date: Date;
@@ -492,19 +494,19 @@ analytics.get("/users/new", async (ctx: Context) => {
       } = {};
 
       for (const row of rows) {
-        let dateStr = row.date.toISOString().split("T")[0];
-        const name = row.name;
+        const dateStr = row.date.toLocaleDateString("en", {
+          timeZone,
+        });
+        const name = row.name ?? "Unknown";
+        const key = `${dateStr}:${name}`;
 
-        dateObj[dateStr] = dateObj[dateStr] || { date: row.date };
-        if (!dateObj[dateStr].value) {
-          dateObj[dateStr].value = 0;
+        if (!dateObj[key]) {
+          dateObj[key] = { date: row.date, name, value: 0 };
         }
-        dateObj[dateStr].value += row.value;
-        dateObj[dateStr].name = name;
+        dateObj[key].value += row.value;
       }
 
-      const data = Object.values(dateObj);
-
+      const data = Object.values(dateObj).sort((a, b) => a.date - b.date);
       ctx.body = { data, stat: stat || 0 };
       return;
     }
@@ -561,9 +563,12 @@ analytics.get("/users/active", async (ctx: Context) => {
 
   const dimensionsSchema = z.object({
     firstDimension: z.string().optional().default("undefined"),
-    secondDimension: z.string().optional().default("undefined")
+    secondDimension: z.string().optional().default("undefined"),
   });
-  const { firstDimension: firstDimensionKey, secondDimension: secondDimensionKey } = dimensionsSchema.parse(ctx.query);
+  const {
+    firstDimension: firstDimensionKey,
+    secondDimension: secondDimensionKey,
+  } = dimensionsSchema.parse(ctx.query);
 
   const [{ stat }] = await sql`
       select
@@ -734,19 +739,19 @@ analytics.get("/users/active", async (ctx: Context) => {
       } = {};
 
       for (const row of rows) {
-        let dateStr = row.date.toISOString().split("T")[0];
-        const name = row.name;
+        const dateStr = row.date.toLocaleDateString("en", {
+          timeZone,
+        });
+        const name = row.name ?? "Unknown";
+        const key = `${dateStr}:${name}`;
 
-        dateObj[dateStr] = dateObj[dateStr] || { date: row.date };
-        if (!dateObj[dateStr].value) {
-          dateObj[dateStr].value = 0;
+        if (!dateObj[key]) {
+          dateObj[key] = { date: row.date, name, value: 0 };
         }
-        dateObj[dateStr].value += row.value;
-        dateObj[dateStr].name = name;
+        dateObj[key].value += row.value;
       }
 
-      const data = Object.values(dateObj);
-
+      const data = Object.values(dateObj).sort((a, b) => a.date - b.date);
       ctx.body = { data, stat: stat || 0 };
       return;
     }

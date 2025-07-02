@@ -74,7 +74,7 @@ export function parseQuery(projectId: string, queryString: string, query: any) {
       const localCreatedAt = localCreatedAtMap[granularity];
 
       const datesQuery = sql`
-      select (gs at time zone ${timeZone})::timestamp as date          
+      select date_trunc('day', gs at time zone ${timeZone})::timestamp as date          
       from   generate_series(
                ${startUtc}::timestamptz,
                ${endUtc}  ::timestamptz,
