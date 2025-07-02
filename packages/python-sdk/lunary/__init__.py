@@ -1685,6 +1685,8 @@ try:
             run_id: Optional[UUID] = None,
             parent_run_id: Optional[UUID] = None,
             name: Union[str, None] = None,
+            tags: Optional[list[str]] = None,
+            metadata: Optional[dict[str, Any]] = None,
             **kwargs: Any,
         ) -> None:
             try:
@@ -1727,6 +1729,8 @@ try:
                     api_url=self.__api_url,
                     callback_queue=self.queue,
                     runtime="langchain-py",
+                    metadata=metadata,
+                    tags=tags
                 )
             except Exception as e:
                 logger.exception(f"An error occurred in `on_retriever_start`: {e}")

@@ -7,6 +7,7 @@ import errorHandler from "@/utils/errors";
 import { formatDateTime } from "@/utils/format";
 import {
   ActionIcon,
+  Button,
   Card,
   Center,
   Group,
@@ -18,8 +19,9 @@ import {
   Title,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { IconDots, IconNeedleThread, IconTrash } from "@tabler/icons-react";
-import Router, { useRouter } from "next/router";
+import { IconBinaryTree2, IconDots, IconTrash } from "@tabler/icons-react";
+import Link from "next/link";
+import { useRouter } from "next/router";
 import { parseAsString, useQueryState } from "nuqs";
 import { hasAccess } from "shared";
 import { mutate } from "swr";
@@ -248,7 +250,19 @@ export function ChatReplay({ run, mutateLogs, deleteRun }) {
 
   return (
     <Stack id="chat-replay">
-      <Group justify="right">
+      <Group justify="flex-end">
+        <Button
+          variant="outline"
+          color="yellow"
+          size="xs"
+          w="fit-content"
+          display="inline"
+          rightSection={<IconBinaryTree2 size="14" />}
+          component={Link}
+          href={`/traces/${run.id}`}
+        >
+          View Trace
+        </Button>
         <Menu>
           <Menu.Target>
             <ActionIcon variant="default">
@@ -256,14 +270,6 @@ export function ChatReplay({ run, mutateLogs, deleteRun }) {
             </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
-            <Menu.Item
-              leftSection={<IconNeedleThread size={16} />}
-              onClick={() => {
-                Router.push(`/traces/${run.id}`);
-              }}
-            >
-              View Trace
-            </Menu.Item>
             {hasAccess(currentUser.role, "logs", "delete") && (
               <Menu.Item
                 leftSection={<IconTrash size={16} color="red" />}

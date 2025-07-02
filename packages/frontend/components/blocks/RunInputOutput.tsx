@@ -487,12 +487,36 @@ export default function RunInputOutput({
           </>
         )}
 
-        {run?.type !== "llm" && (
-          <Group>
-            {run?.tags?.length > 0 && (
-              <ParamItem name="Tags" value={run.tags} />
-            )}
-          </Group>
+        {run?.type !== "llm" && (run?.tags?.length > 0 || Object.keys(run.metadata || {}).some(key => key !== "enrichment" && key !== "parentRunId")) && (
+          <Card withBorder radius="md">
+            <Stack gap={10}>
+              {run?.tags?.length > 0 && (
+                <ParamItem name="Tags" value={run.tags} />
+              )}
+              {Object.entries(run.metadata || {})
+                .filter(
+                  ([key]) =>
+                    key !== "enrichment" && key !== "parentRunId",
+                )
+                .map(([key, value]) => {
+                  if (!value || value.hasOwnProperty("toString")) {
+                    return null;
+                  }
+
+                  return (
+                    <ParamItem
+                      key={key}
+                      name={key}
+                      color="blue"
+                      value={value}
+                      render={(value) => (
+                        <CopyText ml={0} value={value.toString()} />
+                      )}
+                    />
+                  );
+                })}
+            </Stack>
+          </Card>
         )}
 
         <Group justify="space-between">

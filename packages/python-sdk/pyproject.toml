@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "lunary"
-version = "1.4.20"
+version = "1.4.21"
 description = "Python SDK for Lunary, the open-source platform where GenAI teams manage and improve LLM chatbots."
 authors = ["lunary <hello@lunary.ai>"]
 readme = "README.md"
@@ -37,6 +37,9 @@ openai = "^1.12.0"
 pytest = "^8.3.3"
 greenlet = "^3.1.1"
 # ibm-watsonx-ai = "^1.1.26"
+langchain-community = "^0.3.26"
+langchain-openai = "^0.3.27"
+faiss-cpu = "^1.11.0"
 
 [build-system]
 requires = ["poetry-core"]
