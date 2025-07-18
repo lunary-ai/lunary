@@ -7,7 +7,7 @@ from packaging import version
 from importlib.metadata import PackageNotFoundError
 from contextvars import ContextVar
 from datetime import datetime, timezone
-from typing import Optional, Any, Callable, Union
+from typing import Optional, Any, Callable, Union, Dict
 import jsonpickle
 from pydantic import BaseModel
 import humps
@@ -98,6 +98,7 @@ def track_event(
     app_id=None, 
     api_url=None,
     callback_queue=None,
+    thread_metadata=None
 ):
     try:
         config = get_config()
@@ -134,6 +135,7 @@ def track_event(
             "params": params,
             "templateId": template_id,
             "appId": custom_app_id, # should only be set when a custom app_id is provided, otherwise the app_id is set in consumer.py 
+            "threadMetadata": thread_metadata
         }
 
         if callback_queue is not None:
@@ -1825,7 +1827,7 @@ except Exception as e:
     # Do not raise or print error for users that do not have Langchain installed
     pass
 
-def open_thread(id: Optional[str] = None, tags: Optional[List[str]] = None, app_id: str | None = None, user_id: str | None = None, user_props: Any | None = None):
+def open_thread(id: Optional[str] = None, tags: Optional[List[str]] = None, app_id: str | None = None, user_id: str | None = None, user_props: Any | None = None, metadata: Dict[str, Any] | None = None):
     """
     Opens a new thread or connects to an existing one.
 
@@ -1833,6 +1835,9 @@ def open_thread(id: Optional[str] = None, tags: Optional[List[str]] = None, app_
         id: Optional thread identifier
         tags: Optional list of tags for the thread
         app_id: Optional app ID override
+        user_id: Optional user ID for the thread
+        user_props: Optional user properties
+        metadata: Optional metadata for the thread
 
     Returns:
         Thread object
@@ -1847,7 +1852,7 @@ def open_thread(id: Optional[str] = None, tags: Optional[List[str]] = None, app_
         if not token:
             raise ThreadError("API token is required")
 
-        return Thread(track_event=track_event, id=id, tags=tags, user_id=user_id, user_props=user_props, app_id=token)
+        return Thread(track_event=track_event, id=id, tags=tags, user_id=user_id, user_props=user_props, app_id=token, metadata=metadata)
     except Exception as e:
         raise ThreadError(f"Error opening thread: {str(e)}")
 

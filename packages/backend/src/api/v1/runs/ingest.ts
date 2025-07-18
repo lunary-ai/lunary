@@ -162,6 +162,7 @@ async function registerRunEvent(
     error,
     feedback,
     metadata,
+    threadMetadata,
     runtime,
   } = event as CleanRun;
 
@@ -416,6 +417,7 @@ async function registerRunEvent(
           projectId,
           externalUserId,
           tags: threadTags,
+          metadata: threadMetadata,
         }),
       )}
       on conflict (id)
