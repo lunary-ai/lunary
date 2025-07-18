@@ -83,6 +83,10 @@ filters.get("/topics", async (ctx: Context) => {
 
 filters.get("/metadata", async (ctx: Context) => {
   const { projectId } = ctx.state;
+  const querySchema = z.object({
+    type: z.string().optional(),
+  });
+  const { type } = querySchema.parse(ctx.query);
 
   const rows = await sql`
     select distinct
@@ -91,6 +95,7 @@ filters.get("/metadata", async (ctx: Context) => {
       metadata_cache
     where
       project_id = ${projectId}
+      ${type ? sql`and type = ${type}` : sql``}
     order by
       key;
   `;

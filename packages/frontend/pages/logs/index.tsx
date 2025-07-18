@@ -36,6 +36,7 @@ import {
   templateColumn,
   timeColumn,
   userColumn,
+  metadataColumn,
 } from "@/utils/datatable";
 
 import {
@@ -69,6 +70,7 @@ import {
   useProjectInfiniteSWR,
   useRun,
   useUser,
+  useMetadataKeys,
 } from "@/utils/dataHooks";
 import { buildUrl, fetcher } from "@/utils/fetcher";
 import errorHandler from "@/utils/errors";
@@ -241,12 +243,25 @@ export default function Logs() {
     loading: viewLoading,
   } = useView(viewId);
 
+  useEffect(() => {
+    const savedVisibility = localStorage.getItem(`columnVisibility-${type}`);
+    if (savedVisibility && !view) {
+      try {
+        const parsed = JSON.parse(savedVisibility);
+        setVisibleColumns(parsed);
+      } catch (e) {
+        console.error("Failed to parse saved column visibility", e);
+      }
+    }
+  }, [type, view]);
+
   const serializedChecks = useMemo(() => {
     const checksWithType = editCheck(checks, "type", { type });
     return serializeLogic(checksWithType);
   }, [checks, type, view]);
 
   const { evaluators } = useEvaluators();
+  const { metadataKeys } = useMetadataKeys(type);
 
   const [query, setQuery] = useDebouncedState<string | null>(null, 300);
 
@@ -323,6 +338,47 @@ export default function Logs() {
   }, [isSelectMode, type, setAllColumns]);
 
   useEffect(() => {
+    if (!Array.isArray(metadataKeys)) return;
+
+    setAllColumns((prev) => {
+      const next: typeof prev = {
+        llm: [...prev.llm],
+        trace: [...prev.trace],
+        thread: [...prev.thread],
+      };
+
+      next.thread = next.thread.filter(
+        (col) => !col.id?.startsWith("metadata-"),
+      );
+
+      if (metadataKeys.length > 0 && type === "thread") {
+        const newMetadataColumns = metadataKeys.map((key) =>
+          metadataColumn(key),
+        );
+        next.thread = [...next.thread, ...newMetadataColumns];
+
+        // If we're adding new metadata columns and there's no saved visibility state,
+        // ensure they are hidden by default
+        if (!view && !localStorage.getItem(`columnVisibility-${type}`)) {
+          setVisibleColumns((prev) => {
+            const updated = { ...prev };
+            newMetadataColumns.forEach((col) => {
+              if (col.id && !(col.id in updated)) {
+                updated[col.id] = false;
+              }
+            });
+            return updated;
+          });
+        }
+      }
+
+      const hasChanged = !sameCols(prev.thread, next.thread);
+
+      return hasChanged ? next : prev;
+    });
+  }, [metadataKeys, type, view]);
+
+  useEffect(() => {
     if (selectedRun && selectedRun.projectId !== projectId) {
       setProjectId(selectedRun.projectId);
     }
@@ -345,10 +401,27 @@ export default function Logs() {
     // Update visible columns if view changes
     if (view?.columns) {
       setVisibleColumns(view.columns);
-    } else {
-      setVisibleColumns(allColumns[type]);
+    } else if (
+      allColumns[type] &&
+      !localStorage.getItem(`columnVisibility-${type}`)
+    ) {
+      // Only update if columns exist and are different
+      setVisibleColumns((prev) => {
+        const newColumns = {};
+        allColumns[type].forEach((col) => {
+          if (col.id) {
+            // Hide metadata columns by default
+            if (col.id.startsWith("metadata-")) {
+              newColumns[col.id] = false;
+            } else {
+              newColumns[col.id] = prev[col.id] !== false;
+            }
+          }
+        });
+        return newColumns;
+      });
     }
-  }, [view, type, allColumns]);
+  }, [view, type]);
 
   useEffect(() => {
     if (!view) return;
@@ -754,7 +827,7 @@ export default function Logs() {
             }
           }
         }}
-        key={allColumns[type].length}
+        key={`${type}-${allColumns[type].map((c) => c.id).join(",")}`}
         loading={runsLoading || runsValidating}
         loadMore={loadMore}
         isSelectMode={isSelectMode}
@@ -770,7 +843,24 @@ export default function Logs() {
           setVisibleColumns((prev) => ({ ...prev, ...newState }));
 
           if (hasMeaningfulChange) {
-            setColumnsTouched(true);
+            // Only set columnsTouched if non-metadata columns changed
+            const nonMetadataColumnChanged = Object.keys(next).some(
+              (key) => key !== "select" && 
+                      !key.startsWith("metadata-") && 
+                      next[key] !== visibleColumns[key]
+            );
+            
+            if (nonMetadataColumnChanged) {
+              setColumnsTouched(true);
+            }
+            
+            // Save column visibility to localStorage when not in a view
+            if (!view) {
+              localStorage.setItem(
+                `columnVisibility-${type}`,
+                JSON.stringify(next),
+              );
+            }
           }
         }}
         data={logs}
