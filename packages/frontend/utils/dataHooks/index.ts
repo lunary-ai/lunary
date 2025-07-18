@@ -834,5 +834,17 @@ export function useCustomEventsNames() {
   };
 }
 
+export function useMetadataKeys(type?: string) {
+  const { data, isLoading, error } = useProjectSWR(
+    type ? `/filters/metadata?type=${type}` : "/filters/metadata"
+  );
+
+  return {
+    metadataKeys: data || [],
+    isLoading,
+    error,
+  };
+}
+
 export * from "./audit-logs";
 export * from "./playground-endpoints";

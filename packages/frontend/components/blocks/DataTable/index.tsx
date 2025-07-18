@@ -5,6 +5,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
 
 import {
@@ -64,6 +65,30 @@ export default function DataTable({
 
   const scheme = useComputedColorScheme();
 
+  // Initialize column sizing based on column definitions
+  const [columnSizing, setColumnSizing] = useState(() => {
+    const sizing = {};
+    availableColumns.forEach((col) => {
+      if (col.size) {
+        sizing[col.id] = col.size;
+      }
+    });
+    return sizing;
+  });
+
+  // Update column sizing when columns change
+  useEffect(() => {
+    setColumnSizing((prev) => {
+      const newSizing = { ...prev };
+      availableColumns.forEach((col) => {
+        if (col.size && !newSizing[col.id]) {
+          newSizing[col.id] = col.size;
+        }
+      });
+      return newSizing;
+    });
+  }, [availableColumns]);
+
   const table = useReactTable({
     data: data ?? emptyArray,
     columns: availableColumns,
@@ -73,13 +98,31 @@ export default function DataTable({
     manualSorting: true,
     getRowId: (row) => row?.id,
     // onColumnVisibilityChange: setColumnVisibility,
-    onColumnVisibilityChange: (fn) => {
-      if (!fn || !setVisibleColumns) return;
-      const data = fn();
-      setVisibleColumns(data as VisibilityState);
+    onColumnVisibilityChange: (updater) => {
+      if (!updater || !setVisibleColumns) return;
+
+      const newVisibility = updater();
+      const oldVisibility = table.getState().columnVisibility;
+
+      Object.keys(newVisibility).forEach((columnId) => {
+        if (newVisibility[columnId] && !oldVisibility[columnId]) {
+          // Column is becoming visible, ensure it has the correct size
+          const column = availableColumns.find((col) => col.id === columnId);
+          if (column && column.size) {
+            setColumnSizing((prev) => ({
+              ...prev,
+              [columnId]: column.size,
+            }));
+          }
+        }
+      });
+
+      setVisibleColumns(newVisibility as VisibilityState);
     },
+    onColumnSizingChange: setColumnSizing,
     state: {
       columnVisibility: visibleColumns,
+      columnSizing,
       // rowSelection,
     },
     enableRowSelection: true,

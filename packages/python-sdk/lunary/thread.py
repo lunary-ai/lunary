@@ -46,7 +46,7 @@ class Thread:
             thread_tags=self.tags,
             feedback=feedback,
             message=message,
-            metadata=metadata or self.metadata,
+            metadata=self.metadata,
             thread_metadata=self.metadata,
             app_id=self.app_id,
             api_url=self.api_url 
