@@ -8,6 +8,7 @@ import {
   Group,
   JsonInput,
   Modal,
+  NumberInput,
   Popover,
   Select,
   Slider,
@@ -58,7 +59,17 @@ function convertAnthropicToolsToOpenAI(anthropicTools) {
   }));
 }
 
-export const ParamItem = ({ name, value, description, displayValue }) => (
+export const ParamItem = ({
+  name,
+  value,
+  description,
+  displayValue,
+  onValueChange,
+  min,
+  max,
+  step,
+  precision,
+}) => (
   <Stack gap={4}>
     <Group justify="space-between">
       <Group gap={5}>
@@ -71,7 +82,20 @@ export const ParamItem = ({ name, value, description, displayValue }) => (
           </Tooltip>
         )}
       </Group>
-      {displayValue !== undefined ? (
+      {displayValue !== undefined && onValueChange ? (
+        <NumberInput
+          value={displayValue}
+          onChange={onValueChange}
+          min={min}
+          max={max}
+          step={step}
+          size="xs"
+          variant="unstyled"
+          styles={{
+            input: { textAlign: "right", paddingRight: 20 },
+          }}
+        />
+      ) : displayValue !== undefined ? (
         <Text size="sm" color="dimmed">
           {displayValue}
         </Text>
@@ -315,7 +339,7 @@ export default function ProviderEditor({
                     </ActionIcon>
                   </Popover.Target>
                   <Popover.Dropdown>
-                    <Stack gap="md">
+                    <Stack gap="lg">
                       {isOpenAIModel(value?.model) && (
                         <Group justify="space-between">
                           <Text size="sm" fw="bold">
@@ -386,6 +410,19 @@ export default function ProviderEditor({
                       <ParamItem
                         name="Temperature"
                         displayValue={value?.config?.temperature || 0}
+                        onValueChange={(val) => {
+                          onChange({
+                            ...value,
+                            config: {
+                              ...value.config,
+                              temperature: val,
+                            },
+                          });
+                        }}
+                        min={0}
+                        max={2}
+                        step={0.01}
+                        precision={2}
                         value={
                           <Slider
                             min={0}
@@ -401,6 +438,18 @@ export default function ProviderEditor({
                       <ParamItem
                         name="Max tokens"
                         displayValue={value?.config?.max_tokens || 1}
+                        onValueChange={(val) => {
+                          onChange({
+                            ...value,
+                            config: {
+                              ...value.config,
+                              max_tokens: val,
+                            },
+                          });
+                        }}
+                        min={1}
+                        max={32768}
+                        step={1}
                         value={
                           <Slider
                             min={1}
@@ -415,6 +464,19 @@ export default function ProviderEditor({
                         <ParamItem
                           name="Top P"
                           displayValue={value?.config?.top_p || 0}
+                          onValueChange={(val) => {
+                            onChange({
+                              ...value,
+                              config: {
+                                ...value.config,
+                                top_p: val,
+                              },
+                            });
+                          }}
+                          min={0}
+                          max={1}
+                          step={0.01}
+                          precision={2}
                           value={
                             <Slider
                               min={0}
