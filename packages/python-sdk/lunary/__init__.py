@@ -969,6 +969,7 @@ try:
     class IgnoreRule(TypedDict, total=False):
         type: str
         name: List[str]
+        ignore_children: bool
 
     class LunaryCallbackHandler(BaseCallbackHandler):
         """Callback Handler for Lunary`.
@@ -982,7 +983,9 @@ try:
             - `ignore`: List of rules to filter out events. Each rule can specify:
                 - `type`: The type of event to ignore (e.g., "agent", "tool", "llm", "chain")
                 - `name`: List of names to ignore (supports wildcards with *)
-                Events matching these rules and their children will not be sent to Lunary.
+                - `ignore_children`: Whether to ignore children of matching runs (default: True)
+                Events matching these rules will not be sent to Lunary. By default, children
+                of ignored runs are also ignored unless `ignore_children` is set to False.
 
         #### Raises:
             - `ValueError`: if `app_id` is not provided either as an
@@ -998,7 +1001,8 @@ try:
         handler = LunaryCallbackHandler(ignore=[
             {"type": "agent", "name": ["ResearchAgent", "DebugAgent"]},
             {"type": "tool", "name": ["search_*", "debug_*"]},
-            {"name": ["_internal_*"]}  # Matches any type
+            {"name": ["_internal_*"]},  # Matches any type
+            {"type": "chain", "name": ["DebugChain"], "ignore_children": False}  # Ignore chain but track its children
         ])
         llm = ChatOpenAI(callbacks=[handler],
                     metadata={"userId": "user-123"})
@@ -1060,33 +1064,48 @@ try:
             if self.__has_valid_config is False:
                 return None
 
+        def _get_matching_ignore_rule(self, run_type: str = None, name: str = None) -> Union[IgnoreRule, None]:
+            """
+            Find the first matching ignore rule for the given run type and name.
+            Returns the matching rule or None if no match.
+            """
+            if not self.__ignore_rules:
+                return None
+                
+            for rule in self.__ignore_rules:
+                rule_type = rule.get("type")
+                if rule_type == "agent":
+                    rule_type = "chain"  # Agents are treated as chains in Lunary
+                if rule_type and run_type and rule_type != run_type:
+                    continue
+                
+                if "name" in rule and isinstance(rule["name"], list):
+                    if name and self._matches_any_pattern(name, rule["name"]):
+                        return rule
+            
+            return None
+
         def _should_ignore_run(self, run_id: str, run_type: str = None, name: str = None) -> bool:
             """
             Check if a run should be ignored based on filtering rules or parent hierarchy.
             Returns True if the run or any of its ancestors should be ignored.
             """
-            if not self.__ignore_rules:
-                return False
+            # Check if this run matches any ignore rule
+            matching_rule = self._get_matching_ignore_rule(run_type, name)
+            if matching_rule:
+                return True
             
-            for rule in self.__ignore_rules:
-                if "type" in rule and rule["type"] == "agent":
-                    rule["type"] = "chain"  # Agents are treated as chains in Lunary
-                if "type" in rule and run_type and rule["type"] != run_type:
-                    continue
-                
-                if "name" in rule and isinstance(rule["name"], list):
-                    if name and self._matches_any_pattern(name, rule["name"]):
-                        return True
-            
+            # Check parent hierarchy for inherited ignoring
             run = run_manager.runs.get(str(run_id))
-            while run:
-                if hasattr(run, '_ignored') and run._ignored:
+            while run and run.parent_run_id:
+                parent = run_manager.runs.get(run.parent_run_id)
+                if parent and hasattr(parent, '_ignored') and parent._ignored:
+                    # Check if parent has ignore_children=False
+                    if hasattr(parent, '_ignore_children') and not parent._ignore_children:
+                        # Parent is ignored but doesn't ignore children, so this run is not ignored
+                        return False
                     return True
-                
-                if run.parent_run_id:
-                    run = run_manager.runs.get(run.parent_run_id)
-                else:
-                    break
+                run = parent
             
             return False
         
@@ -1443,6 +1462,11 @@ try:
 
                 if self._should_ignore_run(run.id, run_type=type, name=name):
                     run._ignored = True
+                    matching_rule = self._get_matching_ignore_rule(run_type=type, name=name)
+                    if matching_rule:
+                        run._ignore_children = matching_rule.get("ignore_children", True)
+                    else:
+                        run._ignore_children = True  # Default behavior
                     self.__track_event(
                         type,
                         "start",
@@ -1827,6 +1851,7 @@ except Exception as e:
     # Do not raise or print error for users that do not have Langchain installed
     pass
 
+# TODO: depracte a use a new function nammed `open_conversation`?
 def open_thread(id: Optional[str] = None, tags: Optional[List[str]] = None, app_id: str | None = None, user_id: str | None = None, user_props: Any | None = None, metadata: Dict[str, Any] | None = None):
     """
     Opens a new thread or connects to an existing one.
