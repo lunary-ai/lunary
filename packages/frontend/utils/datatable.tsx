@@ -262,7 +262,9 @@ export function feedbackColumn(type: "llm" | "traces" | "threads") {
         <Group gap="xs" justify="flex-start">
           {allFeedbacks
             ?.filter((feedback) => feedback)
-            .map((feedback, i) => <Feedback data={feedback} key={i} />)}
+            .map((feedback, i) => (
+              <Feedback data={feedback} key={i} />
+            ))}
         </Group>
       );
     };
@@ -370,4 +372,33 @@ export function toxicityColumn(id: string) {
       );
     },
   };
+}
+
+export function metadataColumn(key: string, label?: string) {
+  return columnHelper.accessor(`metadata.${key}`, {
+    id: `metadata-${key}`,
+    header: label || capitalize(key),
+    size: 120,
+    minSize: 80,
+    maxSize: 250,
+    enableSorting: false,
+    enableResizing: true,
+    cell: (props) => {
+      const value = props.getValue();
+
+      if (value === null || value === undefined) {
+        return null;
+      }
+
+      if (typeof value === "object") {
+        return <SmartViewer data={value} compact />;
+      }
+
+      return (
+        <Badge variant="outline">
+          <ProtectedText>{String(value)}</ProtectedText>
+        </Badge>
+      );
+    },
+  });
 }

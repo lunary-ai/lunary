@@ -168,6 +168,7 @@ export async function ingestChatEvent(
     feedback,
     threadTags,
     timestamp,
+    threadMetadata,
   } = run;
 
   const { role, isRetry, tags, content, extra, metadata } = run.message as any;
@@ -197,6 +198,7 @@ export async function ingestChatEvent(
         externalUserId,
         tags: threadTags,
         input: coreMessage,
+        metadata: threadMetadata,
       }),
     )}
     on conflict (id)

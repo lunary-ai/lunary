@@ -7,6 +7,7 @@ import errorHandler from "@/utils/errors";
 import { formatDateTime } from "@/utils/format";
 import {
   ActionIcon,
+  Badge,
   Button,
   Card,
   Center,
@@ -27,6 +28,8 @@ import { hasAccess } from "shared";
 import { mutate } from "swr";
 import AppUserAvatar from "./AppUserAvatar";
 import Feedbacks from "./Feedbacks";
+import CopyText from "./CopyText";
+import SmartViewer from "../SmartViewer";
 
 const OUTPUT_ROLES = ["assistant", "ai", "system", "tool"];
 const INPUT_ROLES = ["user"];
@@ -300,6 +303,38 @@ export function ChatReplay({ run, mutateLogs, deleteRun }) {
               <Text>{formatDateTime(sorted[sorted.length - 1].createdAt)}</Text>
             </Group>
           )}
+          
+          {run.tags?.length > 0 && (
+            <Group justify="space-between">
+              <Text>Tags</Text>
+              <Group gap="xs">
+                {run.tags.map((tag, i) => (
+                  <Badge key={i} variant="light" color="blue">
+                    {tag}
+                  </Badge>
+                ))}
+              </Group>
+            </Group>
+          )}
+          
+          {Object.entries(run.metadata || {})
+            .filter(([key]) => key !== "enrichment" && key !== "parentRunId")
+            .map(([key, value]) => {
+              if (value === null || value === undefined) {
+                return null;
+              }
+              
+              return (
+                <Group key={key} justify="space-between" align="flex-start">
+                  <Text>{key}:</Text>
+                  {typeof value === 'object' ? (
+                    <SmartViewer data={value} compact />
+                  ) : (
+                    <CopyText ml={0} value={value.toString()} />
+                  )}
+                </Group>
+              );
+            })}
         </Stack>
       </Card>
 

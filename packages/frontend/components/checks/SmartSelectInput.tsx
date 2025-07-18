@@ -8,7 +8,7 @@ import {
   PillsInput,
   useCombobox,
 } from "@mantine/core";
-import local from "next/font/local";
+import { useRouter } from "next/router";
 
 import { useEffect, useState } from "react";
 
@@ -28,6 +28,7 @@ export default function SmartCheckSelect({
   value,
   onChange,
 }) {
+  const router = useRouter();
   const combobox = useCombobox({
     onDropdownClose: () => {
       combobox.resetSelectedOption();
@@ -46,7 +47,7 @@ export default function SmartCheckSelect({
   );
 
   const { data: swrCheckData, isLoading } = useProjectSWR(
-    useSWRforData ? options() : null,
+    useSWRforData ? options(null, router.query.type) : null,
   );
 
   const data = useSWRforData ? swrCheckData || [] : localData;

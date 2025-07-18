@@ -26,11 +26,23 @@ Lunary is an LLM observability and development platform providing conversation t
 
 **Package Manager:** This repository exclusively uses `bun`. Never use `npm`, `pnpm`, or `yarn`.
 
-**API Response Format:** 
+**API Response Format & Database Naming:** 
 - All API responses MUST use camelCase for root-level keys
 - The SQL client (`sql` from `@/src/utils/db`) automatically converts between snake_case (database) and camelCase (API)
 - Example: `default_payload` in DB becomes `defaultPayload` in API response
 - Do NOT manually convert case - the SQL client handles this automatically
+
+**IMPORTANT - SQL Query Case Conversion:**
+- When writing SQL queries, ALWAYS use snake_case for column names (as they exist in the database)
+- When accessing result fields in JavaScript, use camelCase
+- Example:
+  ```sql
+  select project_id, run_id from metadata_cache  -- Use snake_case in SQL
+  ```
+  ```js
+  rows.map(row => row.projectId)  // Access with camelCase in JS
+  ```
+- The postgres client auto-camelizes on SELECT and de-camelizes on INSERT/UPDATE
 
 ## Architecture
 

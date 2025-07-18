@@ -143,7 +143,7 @@ export const CHECKS: Check[] = [
         multiple: true,
         id: "models",
         width: 100,
-        options: (type) => `/filters/models`,
+        options: () => `/filters/models`,
       },
     ],
   },
@@ -338,7 +338,8 @@ export const CHECKS: Check[] = [
         width: 100,
         id: "key",
         searchable: true,
-        options: () => `/filters/metadata`,
+        options: (projectId, type) =>
+          type ? `/filters/metadata?type=${type}` : "/filters/metadata",
       },
       {
         type: "label",
