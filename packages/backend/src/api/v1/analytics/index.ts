@@ -1157,6 +1157,10 @@ analytics.get("/latency", async (ctx: Context) => {
 });
 
 analytics.get("/threads", async (ctx: Context) => {
+  const params = new URLSearchParams(ctx.querystring);
+  params.set("type", "thread");
+  ctx.querystring = params.toString();
+
   const { projectId } = ctx.state;
   const { datesQuery, filteredRunsQuery, granularity } = parseQuery(
     projectId,
@@ -1176,13 +1180,13 @@ analytics.get("/threads", async (ctx: Context) => {
       weekly_active as (
         select
           d.date,
-          count(distinct r.parent_run_id) as active_conversations
+          count(*) as active_conversations
         from
           dates d
         left join filtered_runs r 
           on r.local_created_at >= d.date 
           and r.local_created_at < d.date + interval '7 days'
-          and r.type = 'chat'
+          and r.type = 'thread'
         group by
           d.date
       )
@@ -1207,11 +1211,11 @@ analytics.get("/threads", async (ctx: Context) => {
       active_conversations as (
         select
           date(created_at) as date,
-          count(distinct parent_run_id) as active_conversations
+          count(*) as active_conversations
         from
           filtered_runs r
         where
-          type = 'chat'
+          type = 'thread'
           and created_at >= now() - interval '1 month'
         group by
           date(created_at)
