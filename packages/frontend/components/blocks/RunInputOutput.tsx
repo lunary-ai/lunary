@@ -1,6 +1,7 @@
 import config from "@/utils/config";
 import { useDatasets, useOrg, useRun, useUser } from "@/utils/dataHooks";
 import errorHandler from "@/utils/errors";
+import { formatCost } from "@/utils/format";
 import {
   ActionIcon,
   Badge,
@@ -368,6 +369,18 @@ export default function RunInputOutput({
                         render={(value) => (
                           <Badge variant="light" color="blue">
                             {value}
+                          </Badge>
+                        )}
+                      />
+                    )}
+
+                    {run.cost && (
+                      <ParamItem
+                        name="Cost"
+                        value={run.cost}
+                        render={(value) => (
+                          <Badge variant="outline" miw="65px" color="green.6">
+                            {formatCost(value)}
                           </Badge>
                         )}
                       />
