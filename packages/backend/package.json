@@ -28,7 +28,7 @@
     "google-auth-library": "^9.15.1",
     "jose": "^6.0.10",
     "jsonrepair": "^3.12.0",
-    "koa": "^2.16.1",
+    "koa": "^2.16.2",
     "koa-bodyparser": "^4.4.1",
     "koa-logger": "^3.2.1",
     "koa-ratelimit": "^5.1.0",
