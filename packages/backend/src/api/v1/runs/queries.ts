@@ -39,9 +39,7 @@ export async function getRelatedRuns(runId: string, projectId: string) {
     rr.feedback, 
     rr.metadata
   from 
-    related_runs rr;
-  order by 
-    rr.created_at desc
+    related_runs rr
   `;
 
   return relatedRuns;

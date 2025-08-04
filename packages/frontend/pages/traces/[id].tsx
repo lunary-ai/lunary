@@ -196,7 +196,16 @@ function TraceTree({
           </Badge>
 
           {run?.type === "llm" && run.cost && (
-            <Badge variant="outline" color="gray" miw="65px">
+            <Badge
+              variant="outline"
+              miw="65px"
+              color="gray"
+              styles={{
+                label: {
+                  overflow: "visible",
+                },
+              }}
+            >
               {formatCost(run.cost)}
             </Badge>
           )}
@@ -255,7 +264,7 @@ export default function Trace({}) {
   const { run, deleteRun, runDeleted } = useRun(id as string);
 
   const { data: neighbors } = useProjectSWR(
-    `/runs/${id}/neighbors?${checks}${sortParams}`,
+    id && `/runs/${id}/neighbors?${checks}${sortParams}`,
   );
 
   useHotkeys([
