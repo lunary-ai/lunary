@@ -85,6 +85,8 @@ async function getRelatedRuns(sql: any, runId: string, projectId: string) {
     rr.metadata
   from 
     related_runs rr;
+  order by
+    rr.created_at desc
   `;
   return related;
 }
@@ -126,8 +128,10 @@ export async function fileExport(
           let line;
           if (exportType === "trace") {
             const related = await getRelatedRuns(sql, row.id, projectId);
-            const formattedRelated = related.map(r => formatRun(r, true));
-            line = parser.parse(getTraceChildren(formatRun(row, true), formattedRelated));
+            const formattedRelated = related.map((r) => formatRun(r, true));
+            line = parser.parse(
+              getTraceChildren(formatRun(row, true), formattedRelated),
+            );
           } else if (exportType === "thread") {
             const formattedRun = formatRun(row, true);
             const related = await getRelatedRuns(sql, row.id, projectId);
@@ -199,8 +203,10 @@ export async function fileExport(
           let line;
           if (exportType === "trace") {
             const related = await getRelatedRuns(sql, row.id, projectId);
-            const formattedRelated = related.map(r => formatRun(r, true));
-            line = JSON.stringify(getTraceChildren(formatRun(row, true), formattedRelated));
+            const formattedRelated = related.map((r) => formatRun(r, true));
+            line = JSON.stringify(
+              getTraceChildren(formatRun(row, true), formattedRelated),
+            );
           } else if (exportType === "thread") {
             const messages = await getMessages(row.id, projectId);
             const formattedRun = formatRun(row, true);
