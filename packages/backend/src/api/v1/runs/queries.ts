@@ -54,11 +54,20 @@ export async function getMessages(threadId: string, projectId: string) {
   let messages = [];
   for (const run of filteredRuns) {
     if (Array.isArray(run.input)) {
-      messages.push(...run.input);
+      messages.push(
+        ...run.input.map((msg) => ({ ...msg, createdAt: run.createdAt })),
+      );
     }
     if (Array.isArray(run.output)) {
-      messages.push(...run.output);
+      messages.push(
+        ...run.output.map((msg) => ({ ...msg, createdAt: run.createdAt })),
+      );
     }
   }
+
+  if (threadId === "526072af-c4d6-ea93-f0ea-740eba3ce635") {
+    console.log(JSON.stringify(relatedRuns, null, 2), messages);
+  }
+
   return messages;
 }
