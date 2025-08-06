@@ -40,8 +40,9 @@ export async function getRelatedRuns(runId: string, projectId: string) {
     rr.metadata
   from 
     related_runs rr
+    where type != 'thread'
   order by 
-    created_at
+    rr.created_at
   `;
 
   return relatedRuns;
@@ -49,10 +50,9 @@ export async function getRelatedRuns(runId: string, projectId: string) {
 
 export async function getMessages(threadId: string, projectId: string) {
   const relatedRuns = await getRelatedRuns(threadId, projectId);
-  const filteredRuns = relatedRuns.filter((_, i) => i !== 0);
 
   let messages = [];
-  for (const run of filteredRuns) {
+  for (const run of relatedRuns) {
     if (Array.isArray(run.input)) {
       messages.push(
         ...run.input.map((msg) => ({ ...msg, createdAt: run.createdAt })),
@@ -65,7 +65,5 @@ export async function getMessages(threadId: string, projectId: string) {
     }
   }
 
-  return messages.sort((a, b) => 
-    new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-  );
+  return messages;
 }
