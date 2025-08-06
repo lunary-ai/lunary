@@ -65,9 +65,7 @@ export async function getMessages(threadId: string, projectId: string) {
     }
   }
 
-  if (threadId === "526072af-c4d6-ea93-f0ea-740eba3ce635") {
-    console.log(JSON.stringify(relatedRuns, null, 2), messages);
-  }
-
-  return messages;
+  return messages.sort((a, b) => 
+    new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
 }
