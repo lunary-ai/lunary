@@ -446,6 +446,7 @@ function ChatMessageContent({
         withBorder
         styles={{
           root: {
+            overflowWrap: "break-word",
             borderColor: "var(--mantine-color-red-3)",
           },
         }}
@@ -666,7 +667,6 @@ export function ChatMessage({
     <Paper
       pt="0"
       className={`${classes.paper} ${compact ? classes.compact : ""}`}
-      style={{ overflowWrap: "break-word" }}
       bg={`var(--mantine-color-${color}-${
         scheme === "light" ? 2 : color === "gray" ? 7 : 9
       })`}
