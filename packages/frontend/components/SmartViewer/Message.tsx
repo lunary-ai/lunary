@@ -194,7 +194,11 @@ function ToolCallsMessage({
               right="2px"
               onClick={() => {
                 openConfirmModal({
-                  title: <Text size="lg" fw={700}>Are you sure?</Text>,
+                  title: (
+                    <Text size="lg" fw={700}>
+                      Are you sure?
+                    </Text>
+                  ),
                   confirmProps: { color: "red" },
                   labels: {
                     cancel: "Cancel",
@@ -302,7 +306,11 @@ function TextMessage({
     // Use RenderJson for prettified JSON display
     return (
       <Code className={classes.textMessage}>
-        <RenderJson data={text.trim()} compact={compact} piiDetection={piiDetection} />
+        <RenderJson
+          data={text.trim()}
+          compact={compact}
+          piiDetection={piiDetection}
+        />
       </Code>
     );
   } else {
@@ -658,6 +666,7 @@ export function ChatMessage({
     <Paper
       pt="0"
       className={`${classes.paper} ${compact ? classes.compact : ""}`}
+      style={{ overflowWrap: "break-word" }}
       bg={`var(--mantine-color-${color}-${
         scheme === "light" ? 2 : color === "gray" ? 7 : 9
       })`}
