@@ -86,7 +86,7 @@ async function getRelatedRuns(sql: any, runId: string, projectId: string) {
   from 
     related_runs rr
   order by
-    rr.created_at desc
+    rr.created_at
   `;
   return related;
 }
