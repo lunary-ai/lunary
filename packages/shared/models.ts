@@ -2,6 +2,21 @@ import { LunaryProvidedModel } from "./providers";
 
 export const MODELS: LunaryProvidedModel[] = [
   {
+    id: "gpt-5",
+    name: "gpt-5",
+    provider: "openai",
+  },
+  {
+    id: "gpt-5-mini",
+    name: "gpt-5-mini",
+    provider: "openai",
+  },
+  {
+    id: "gpt-5-nano",
+    name: "gpt-5-nano",
+    provider: "openai",
+  },
+  {
     id: "gpt-4.1",
     name: "gpt-4.1",
     provider: "openai",
