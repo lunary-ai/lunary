@@ -131,27 +131,22 @@ function formatValue(value: unknown, dataKey: string) {
   if (!value) {
     return;
   }
-  let formattedValue: number;
   if (typeof value === "number") {
-    if (dataKey?.includes("cost")) {
-      formattedValue = parseFloat(value.toFixed(6));
-    } else {
-      formattedValue = parseFloat(value.toFixed(2));
-    }
-
     if (dataKey?.includes("latency")) {
-      return `${formattedValue}s`;
+      const secs = parseFloat(value.toFixed(2));
+      return `${secs}s`;
     }
 
     if (dataKey?.includes("cost")) {
-      return `$${formattedValue}`;
+      const cost = parseFloat(value.toFixed(6));
+      return `$${cost}`;
     }
 
+    const compact = formatLargeNumber(value);
     if (dataKey === "runs") {
-      return `${formattedValue} events`;
+      return `${compact} events`;
     }
-
-    return formattedValue;
+    return compact;
   }
 
   return value;

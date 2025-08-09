@@ -49,7 +49,7 @@ function ChartTooltip({ label, payload }: ChartTooltipProps) {
         .filter((item) => typeof item.value === "number" && item.value !== 0)
         .map((item: any) => (
           <Text key={item.name} c={item.color} fz="sm">
-            {item.name}: {item.value}
+            {item.name}: {formatLargeNumber(item.value)}
           </Text>
         ))}
     </Paper>
