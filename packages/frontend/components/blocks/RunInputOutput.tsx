@@ -72,11 +72,18 @@ const ParamItem = ({
               {value}
             </Badge>
           ) : Array.isArray(value) ? (
-            value.map((v, i) => (
-              <Badge key={i} variant="outline" mr="xs">
-                {v}
-              </Badge>
-            ))
+            value.map((v, i) => {
+              const isPrimitive =
+                typeof v === "string" ||
+                typeof v === "number" ||
+                typeof v === "boolean";
+              const label = isPrimitive ? String(v) : JSON.stringify(v);
+              return (
+                <Badge key={i} variant="outline" mr="xs">
+                  {label}
+                </Badge>
+              );
+            })
           ) : (
             JSON.stringify(value)
           )}
@@ -87,24 +94,62 @@ const ParamItem = ({
 };
 
 function RenderTools({ tools }) {
-  return tools?.map((tool, i) => {
-    const toolObject = tool.function || tool.toolSpec; // toolSpec is for langchain I believe
+  if (!tools) return null;
 
+  // Normalize tools into an array of objects
+  let normalized: any[] = [];
+  if (Array.isArray(tools)) {
+    normalized = tools;
+  } else if (typeof tools === "string") {
+    try {
+      const parsed = JSON.parse(tools);
+      if (Array.isArray(parsed)) normalized = parsed;
+      else if (parsed && typeof parsed === "object") normalized = [parsed];
+      else normalized = [{ name: tools }];
+    } catch {
+      normalized = [{ name: tools }];
+    }
+  } else if (typeof tools === "object") {
+    normalized = [tools];
+  }
+
+  const toText = (val: any) => {
+    if (val === null || val === undefined) return "";
+    if (
+      typeof val === "string" ||
+      typeof val === "number" ||
+      typeof val === "boolean"
+    )
+      return String(val);
+    try {
+      return JSON.stringify(val);
+    } catch {
+      return String(val);
+    }
+  };
+
+  return normalized.map((tool, i) => {
+    const toolObject = tool?.function || tool?.toolSpec || tool;
     const spec = toolObject?.parameters || toolObject?.inputSchema;
+
+    const name = toText(
+      toolObject?.name?.Name || toolObject?.name || "Unknown",
+    );
+    const description = toolObject?.description
+      ? toText(toolObject.description)
+      : null;
 
     return (
       <HoverCard key={i}>
         <HoverCard.Target>
-          <Badge maw="120px" color="pink" variant="outline">
-            {toolObject?.name || "Unknown"}
+          <Badge maw="200px" color="pink" variant="outline">
+            {name}
           </Badge>
         </HoverCard.Target>
-        <HoverCard.Dropdown maw={400}>
+        <HoverCard.Dropdown maw={420}>
           <ScrollArea.Autosize mah={300}>
             <Stack>
-              {toolObject?.description && (
-                <Text size="sm">{toolObject?.description}</Text>
-              )}
+              {description && <Text size="sm">{description}</Text>}
               {spec && (
                 <Text size="sm">
                   <pre>{JSON.stringify(spec, null, 2)}</pre>

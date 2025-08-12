@@ -53,12 +53,20 @@ function RetrieverObject({ data, compact }) {
       <Flex direction="column" gap="sm">
         {data?.title && (
           <Text size="sm" w={700} mb="md">
-            {data.title}
+            {typeof data.title === "string" ? data.title : JSON.stringify(data.title)}
           </Text>
         )}
-        {data.summary && <Text size="xs">{data.summary}</Text>}
+        {data.summary && (
+          <Text size="xs">
+            {typeof data.summary === "string" ? data.summary : JSON.stringify(data.summary)}
+          </Text>
+        )}
 
-        {data.source && <Text size="sm">{data.source}</Text>}
+        {data.source && (
+          <Text size="sm">
+            {typeof data.source === "string" ? data.source : JSON.stringify(data.source)}
+          </Text>
+        )}
       </Flex>
       {!compact && (
         <ActionIcon
