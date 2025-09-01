@@ -10,6 +10,25 @@ const google = new Router({
   prefix: "/google",
 });
 
+async function verifyToken(accessToken: string) {
+  const tokenInfoResponse = await fetch(
+    `https://oauth2.googleapis.com/tokeninfo?access_token=${accessToken}`,
+  );
+
+  if (!tokenInfoResponse.ok) {
+    throw new Error(`Google API error: ${tokenInfoResponse.statusText}`);
+  }
+
+  const tokenInfo = await tokenInfoResponse.json();
+
+  if (tokenInfo.aud !== config.GOOGLE_CLIENT_ID) {
+    console.error("Invalid audience");
+    throw new Error("Invalid audience");
+  }
+
+  return tokenInfo;
+}
+
 async function getGoogleUserInfo(accessToken: string) {
   const response = await fetch(
     "https://www.googleapis.com/oauth2/v3/userinfo",
@@ -26,15 +45,6 @@ async function getGoogleUserInfo(accessToken: string) {
 
   const data = await response.json();
 
-  console.log("\n\n\nGOOGLE DATA:");
-  console.log(data);
-  console.log(config);
-  console.log("\n\n\n");
-  if (data.aud !== config.GOOGLE_CLIENT_ID) {
-    console.error("Invalid audience");
-    throw new Error("Invalid audience");
-  }
-
   return {
     email: data.email,
     name: data.name,
@@ -50,6 +60,10 @@ google.post("/", async (ctx: Context) => {
   });
 
   const { accessToken, joinToken } = bodySchema.parse(ctx.request.body);
+
+  await verifyToken(accessToken).catch(() =>
+    ctx.throw(400, "Failed to verify Google token"),
+  );
 
   const userData = await getGoogleUserInfo(accessToken).catch(() =>
     ctx.throw(400, "Failed to verify Google account"),
