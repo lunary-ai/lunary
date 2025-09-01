@@ -26,6 +26,10 @@ async function getGoogleUserInfo(accessToken: string) {
 
   const data = await response.json();
 
+  console.log("\n\n\nGOOGLE DATA:");
+  console.log(data);
+  console.log(config);
+  console.log("\n\n\n");
   if (data.aud !== config.GOOGLE_CLIENT_ID) {
     console.error("Invalid audience");
     throw new Error("Invalid audience");
