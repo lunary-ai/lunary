@@ -12,7 +12,9 @@ const google = new Router({
 
 async function verifyToken(accessToken: string) {
   if (config.IS_SELF_HOSTED && !config.GOOGLE_CLIENT_ID) {
-    throw new Error("Google Client ID is not configured");
+    throw new Error(
+      "Google Client ID is not configured. Please set GOOGLE_CLIENT_ID in your environment variables.",
+    );
   }
 
   const tokenInfoResponse = await fetch(
