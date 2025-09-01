@@ -17,6 +17,7 @@ const config = {
   SMTP_PASSWORD: process.env.SMTP_PASSWORD,
   DATA_WAREHOUSE_EXPORTS_ALLOWED: process.env.ALLOW_DATA_WAREHOUSE_EXPORTS, // WARNING: this should only enabled for deployments with one organization, because all the database will be exported
   RECAPTCHA_SECRET_KEY: process.env.RECAPTCHA_SECRET_KEY,
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
 };
 
 export default config;
