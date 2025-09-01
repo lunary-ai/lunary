@@ -11,6 +11,10 @@ const google = new Router({
 });
 
 async function verifyToken(accessToken: string) {
+  if (config.IS_SELF_HOSTED && !config.GOOGLE_CLIENT_ID) {
+    throw new Error("Google Client ID is not configured");
+  }
+
   const tokenInfoResponse = await fetch(
     `https://oauth2.googleapis.com/tokeninfo?access_token=${accessToken}`,
   );
@@ -61,12 +65,12 @@ google.post("/", async (ctx: Context) => {
 
   const { accessToken, joinToken } = bodySchema.parse(ctx.request.body);
 
-  await verifyToken(accessToken).catch(() =>
-    ctx.throw(400, "Failed to verify Google token"),
+  await verifyToken(accessToken).catch((error) =>
+    ctx.throw(400, error.message || "Failed to verify Google token"),
   );
 
-  const userData = await getGoogleUserInfo(accessToken).catch(() =>
-    ctx.throw(400, "Failed to verify Google account"),
+  const userData = await getGoogleUserInfo(accessToken).catch((error) =>
+    ctx.throw(400, error.message || "Failed to retrieve Google user info"),
   );
 
   if (!userData.email || !userData.verified) {
