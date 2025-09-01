@@ -4,6 +4,7 @@ import { sendSlackMessage } from "@/src/utils/notifications";
 import Router from "koa-router";
 import { z } from "zod";
 import { signJWT, verifyJWT } from "./utils";
+import config from "@/src/utils/config";
 
 const google = new Router({
   prefix: "/google",
@@ -24,6 +25,11 @@ async function getGoogleUserInfo(accessToken: string) {
   }
 
   const data = await response.json();
+
+  if (data.aud !== config.GOOGLE_CLIENT_ID) {
+    console.error("Invalid audience");
+    throw new Error("Invalid audience");
+  }
 
   return {
     email: data.email,
