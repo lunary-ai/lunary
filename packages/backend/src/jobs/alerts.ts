@@ -4,6 +4,7 @@ import { z } from "zod";
 
 // check alerts and record history
 export async function checkAlerts() {
+  return;
   try {
     const alerts = await sql`
     select id, project_id, status, threshold, metric, time_frame_minutes 
