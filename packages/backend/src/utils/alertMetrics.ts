@@ -12,7 +12,7 @@ export async function computeError(
       select error
       from run
       where project_id = ${projectId}
-        and created_at >= now() - interval '${intervalMinutes} minutes'
+        and created_at >= now() - interval '1 minute' * ${intervalMinutes}
     )
     select
       coalesce(avg(case when window.error is not null then 1 else 0 end) * 100, 0) as value
@@ -33,7 +33,7 @@ export async function computeCost(
       coalesce(sum(cost), 0) as value
     from run
     where project_id = ${projectId}
-      and created_at >= now() - interval '${intervalMinutes} minutes'
+      and created_at >= now() - interval '1 minute' * ${intervalMinutes}
   `;
   return value;
 }
@@ -53,7 +53,7 @@ export async function computeFeedback(
       ) as value
     from run
     where project_id = ${projectId}
-      and created_at >= now() - interval '${intervalMinutes} minutes'
+      and created_at >= now() - interval '1 minute' * ${intervalMinutes}
   `;
   return value;
 }
@@ -77,7 +77,7 @@ export async function computeLatencyPercentile(
       ) as value
     from run
     where project_id = ${projectId}
-      and created_at >= now() - interval '${intervalMinutes} minutes'
+      and created_at >= now() - interval '1 minute' * ${intervalMinutes}
   `;
   return value;
 }
