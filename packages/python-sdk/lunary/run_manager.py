@@ -27,8 +27,8 @@ class RunManager:
         return self._current_run.id if self._current_run else None
 
     def start_run(self, run_id: RunID | None = None, parent_run_id: RunID | None = None) -> Run | None:
-        if parent_run_id is None and self._current_run is not None:
-            parent_run_id = self._current_run.id
+        # if parent_run_id is None and self._current_run is not None:
+        #     parent_run_id = self._current_run.id
 
         if run_id is not None and run_id == parent_run_id:
             logging.error("A run cannot be its own parent.")

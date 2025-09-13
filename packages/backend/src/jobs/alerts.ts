@@ -4,13 +4,12 @@ import { z } from "zod";
 
 // check alerts and record history
 export async function checkAlerts() {
-  return;
   try {
     const alerts = await sql`
-    select id, project_id, status, threshold, metric, time_frame_minutes 
-    from alert
-    where status != 'disabled'
-  `;
+      select id, project_id, status, threshold, metric, time_frame_minutes 
+      from alert
+      where status != 'disabled'
+    `;
 
     for (const alert of alerts) {
       const { id, projectId, status, threshold, metric, timeFrameMinutes } =
@@ -35,7 +34,7 @@ export async function checkAlerts() {
                 run
               where 
                 project_id = ${projectId}
-                and created_at >= now() - interval '${sanitizedTimeFrameMinutes} minutes'
+                and created_at >= now() - interval '1 minute' * ${sanitizedTimeFrameMinutes}
             )
             select 
               coalesce(avg(case when recent_runs.error is not null then 1 else 0 end) * 100, 0) as value
@@ -52,7 +51,7 @@ export async function checkAlerts() {
               run
             where 
               project_id = ${projectId}
-              and created_at >= now() - interval '${sanitizedTimeFrameMinutes} minutes'
+              and created_at >= now() - interval '1 minute' * ${sanitizedTimeFrameMinutes}
           `;
           value = res.value;
           break;
@@ -68,7 +67,7 @@ export async function checkAlerts() {
             ) as value
             from run
             where project_id = ${projectId}
-              and created_at >= now() - interval '${sanitizedTimeFrameMinutes} minutes'
+              and created_at >= now() - interval '1 minute' * ${sanitizedTimeFrameMinutes}
           `;
           value = v;
           break;
@@ -89,7 +88,7 @@ export async function checkAlerts() {
             ) as value
             from run
             where project_id = ${projectId}
-              and created_at >= now() - interval '${sanitizedTimeFrameMinutes} minutes'
+              and created_at >= now() - interval '1 minute' * ${sanitizedTimeFrameMinutes}
           `;
           value = v;
           break;
