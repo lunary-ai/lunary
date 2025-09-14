@@ -19,7 +19,7 @@ const getLatestModelsByPattern = (models: Model[]): Model[] => {
       group.sort((a, b) => {
         const dateA = a.startDate ? new Date(a.startDate) : new Date(0)
         const dateB = b.startDate ? new Date(b.startDate) : new Date(0)
-        return dateB.getTime() - dateA.getTime()
+        return dateA.getTime() - dateB.getTime()
       })[0],
   )
 }
