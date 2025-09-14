@@ -1,6 +1,5 @@
 import sql from "@/src/utils/db";
 import { clearUndefined } from "@/src/utils/ingest";
-import { z } from "zod";
 
 // check alerts and record history
 export async function checkAlerts() {
@@ -22,6 +21,7 @@ export async function checkAlerts() {
         );
         continue;
       }
+      const windowInterval = sql`make_interval(mins => ${sanitizedTimeFrameMinutes}::int)`;
 
       let value: number;
       switch (metric) {
@@ -34,7 +34,7 @@ export async function checkAlerts() {
                 run
               where 
                 project_id = ${projectId}
-                and created_at >= now() - interval '1 minute' * ${sanitizedTimeFrameMinutes}
+                and created_at >= now() - ${windowInterval}
             )
             select 
               coalesce(avg(case when recent_runs.error is not null then 1 else 0 end) * 100, 0) as value
@@ -51,7 +51,7 @@ export async function checkAlerts() {
               run
             where 
               project_id = ${projectId}
-              and created_at >= now() - interval '1 minute' * ${sanitizedTimeFrameMinutes}
+              and created_at >= now() - ${windowInterval}
           `;
           value = res.value;
           break;
@@ -67,7 +67,7 @@ export async function checkAlerts() {
             ) as value
             from run
             where project_id = ${projectId}
-              and created_at >= now() - interval '1 minute' * ${sanitizedTimeFrameMinutes}
+              and created_at >= now() - ${windowInterval}
           `;
           value = v;
           break;
@@ -88,7 +88,7 @@ export async function checkAlerts() {
             ) as value
             from run
             where project_id = ${projectId}
-              and created_at >= now() - interval '1 minute' * ${sanitizedTimeFrameMinutes}
+              and created_at >= now() - ${windowInterval}
           `;
           value = v;
           break;
