@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "lunary"
-version = "1.4.27"
+version = "1.4.28"
 description = "Python SDK for Lunary, the open-source platform where GenAI teams manage and improve LLM chatbots."
 authors = ["lunary <hello@lunary.ai>"]
 readme = "README.md"
@@ -30,6 +30,7 @@ pyhumps = "^3.8.0"
 aiohttp = "^3.11.11"
 jsonpickle = "^3.0.4"
 pydantic = "^2.10.2"
+langchain-community = "^0.3.29"
 
 [tool.poetry.group.dev.dependencies]
 langchain-core = "^0.3.13"
