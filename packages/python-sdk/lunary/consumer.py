@@ -36,14 +36,14 @@ class Consumer(Thread):
         if len(batch) > 0:
             token = batch[0].get("appId") or self.app_id or config.app_id
             if not token:
-                return logger.error("API key not found. Please provide an API key.")
+                logger.error("API key not found. Please provide an API key.")
+                return
 
-            if verbose:
-                logging.info(f"Sending {len(batch)} events.")
+    
+            logger.debug(f"Sending {len(batch)} events.")
 
             try:
-                if verbose:
-                    logging.info("Sending events to ", api_url)
+                logger.debug(f"Sending events to {api_url}")
 
                 headers = {
                     'Authorization': f'Bearer {token}',
@@ -58,13 +58,12 @@ class Consumer(Thread):
                     verify=config.ssl_verify)
                 response.raise_for_status()
 
-                if verbose:
-                    logging.info("Events sent.", response.status_code)
+                logger.debug("Events sent.", response.status_code)
             except Exception as e:
                 if verbose:
-                    logging.exception(f"Error sending events: {e}")
+                    logger.exception(f"Error sending events.")
                 else:
-                    logging.error(f"Error sending events")
+                    logger.error(f"Error sending events.")
 
                 self.event_queue.append(batch)
 

@@ -2,6 +2,8 @@ import logging
 from typing import Optional, Dict, List
 from uuid import uuid4, UUID
 
+logger = logging.getLogger(__name__)
+
 RunID = str | UUID
 
 class Run:
@@ -31,7 +33,7 @@ class RunManager:
         #     parent_run_id = self._current_run.id
 
         if run_id is not None and run_id == parent_run_id:
-            logging.error("A run cannot be its own parent.")
+            logger.warning("A run cannot be its own parent.")
             return None
 
         if isinstance(run_id, UUID):

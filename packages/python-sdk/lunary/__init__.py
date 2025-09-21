@@ -1,5 +1,20 @@
+import os
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
+
+if os.getenv("LUNARY_VERBOSE") == "True" or os.getenv("LUNARY_VERBOSE") == "true":
+    # TODO: later, allow the user to keep the global handlers in verbose mode
+    # TODO: the verbose mode should be taken from config, and be dynamic if config changes
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
+    logger.propagate = False # Avoid the global logging config to prevent verbose logs to be logged
+
 from inspect import signature
-import traceback, logging, copy, time, chevron, aiohttp, copy
+import traceback, copy, time, chevron, aiohttp, copy
 from functools import wraps
 
 
@@ -26,14 +41,11 @@ from .users import (
     user_ctx,
     user_props_ctx,
     identify,
-)  # DO NOT REMOVE `identify`` import
+)  # DO NOT REMOVE `identify` import
 from .tags import tags_ctx, tags  # DO NOT REMOVE `tags` import
 from .parent import parent_ctx, parent # DO NOT REMOVE `parent` import
 from .project import project_ctx  # DO NOT REMOVE `project` import
 
-logging.basicConfig()
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 
 event_queue_ctx = ContextVar("event_queue_ctx")
@@ -146,15 +158,13 @@ def track_event(
         if config.verbose:
             try:
                 serialized_event = jsonpickle.encode(clean_nones(event), unpicklable=False, indent=4)
-                logger.info(
-                    f"\nAdd event: {serialized_event}\n"
-                )
+                logger.debug(f"\nAdd event: {serialized_event}\n")
             except Exception as e:
-                logger.warning(f"Could not serialize event: {event}\n {e}")
+                logger.exception(f"Could not serialize event: {event}")
 
 
     except Exception as e:
-        logger.exception("Error in `track_event`", e)
+        logger.exception("Error in `track_event`")
 
 
 def default_stream_handler(fn, run_id, name, type, *args, **kwargs):
@@ -425,7 +435,7 @@ def wrap(
                     app_id=app_id,
                 )
             except Exception as e:
-                logging.exception(e)
+                logger.exception(e)
 
             if stream == True:
                 return stream_handler(
@@ -464,7 +474,7 @@ def wrap(
                 )
                 return output
             except Exception as e:
-                logger.exception(e)(e)
+                logger.exception(e)
             finally:
                 return output
         finally:
@@ -555,7 +565,7 @@ def async_wrap(
                     )
                     return output
                 except Exception as e:
-                    logger.exception(e)(e)
+                    logger.exception(e)
                 finally:
                     return output
             finally:
@@ -643,7 +653,7 @@ def monitor(object):
                     name=model_name,
                 )
             else:
-                logging.warning("Version 1.0.0 or higher of ibm-watsonx-ai is required")
+                logger.warning("Version 1.0.0 or higher of ibm-watsonx-ai is required")
             return
 
         if package_name == "openai":    
@@ -659,7 +669,7 @@ def monitor(object):
                             output_parser=OpenAIUtils.parse_output,
                         )
                     except Exception as e:
-                        logging.info(
+                        logger.warning(
                             "Please use `lunary.monitor(openai)` or `lunary.monitor(client)` after setting the OpenAI api key"
                         )
                 elif client_name == "AsyncOpenAI" or client_name == "AsyncAzureOpenAI":
@@ -671,7 +681,7 @@ def monitor(object):
                     )
                 return
     except PackageNotFoundError:
-        logging.warning("You need to install either `openai` or `ibm-watsonx-ai` to monitor your LLM calls.")
+        logger.warning("You need to install either `openai` or `ibm-watsonx-ai` to monitor your LLM calls.")
 
 
 def agent(name=None, user_id=None, user_props=None, tags=None, app_id=None):
@@ -820,7 +830,6 @@ try:
     from langchain_core.load import dumps
     from packaging.version import parse
 
-    logger = logging.getLogger(__name__)
 
     DEFAULT_API_URL = "https://api.lunary.ai"
 
