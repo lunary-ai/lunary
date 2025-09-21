@@ -1,0 +1,1236 @@
+/Users/hughcrt/Developer/lunary/lunary node_modules
+[2m├──[0m @ai-sdk/amazon-bedrock[2m@2.2.12[0m
+[2m├──[0m @ai-sdk/provider[2m@1.1.3[0m
+[2m├──[0m @ai-sdk/provider-utils[2m@2.2.8[0m
+[2m├──[0m @ai-sdk/react[2m@1.2.12[0m
+[2m├──[0m @ai-sdk/ui-utils[2m@1.2.11[0m
+[2m├──[0m @alloc/quick-lru[2m@5.2.0[0m
+[2m├──[0m @anthropic-ai/sdk[2m@0.40.1[0m
+[2m│[0m   [2m└──[0m @types/node[2m@18.19.127[0m
+[2m│[0m       [2m└──[0m undici-types[2m@5.26.5[0m
+[2m├──[0m @anthropic-ai/tokenizer[2m@0.0.4[0m
+[2m│[0m   [2m└──[0m @types/node[2m@18.19.127[0m
+[2m│[0m       [2m└──[0m undici-types[2m@5.26.5[0m
+[2m├──[0m @apidevtools/json-schema-ref-parser[2m@9.1.2[0m
+[2m│[0m   [2m└──[0m js-yaml[2m@4.1.0[0m
+[2m│[0m       [2m└──[0m argparse[2m@2.0.1[0m
+[2m├──[0m @apidevtools/openapi-schemas[2m@2.1.0[0m
+[2m├──[0m @apidevtools/swagger-methods[2m@3.0.2[0m
+[2m├──[0m @apidevtools/swagger-parser[2m@10.0.3[0m
+[2m├──[0m @authenio/samlify-node-xmllint[2m@2.0.0[0m
+[2m├──[0m @authenio/xml-encryption[2m@2.0.2[0m
+[2m├──[0m @aws-crypto/crc32[2m@5.2.0[0m
+[2m├──[0m @aws-crypto/sha256-browser[2m@5.2.0[0m
+[2m│[0m   [2m└──[0m @smithy/util-utf8[2m@2.3.0[0m
+[2m│[0m       [2m└──[0m @smithy/util-buffer-from[2m@2.2.0[0m
+[2m│[0m           [2m└──[0m @smithy/is-array-buffer[2m@2.2.0[0m
+[2m├──[0m @aws-crypto/sha256-js[2m@5.2.0[0m
+[2m├──[0m @aws-crypto/supports-web-crypto[2m@5.2.0[0m
+[2m├──[0m @aws-crypto/util[2m@5.2.0[0m
+[2m│[0m   [2m└──[0m @smithy/util-utf8[2m@2.3.0[0m
+[2m│[0m       [2m└──[0m @smithy/util-buffer-from[2m@2.2.0[0m
+[2m│[0m           [2m└──[0m @smithy/is-array-buffer[2m@2.2.0[0m
+[2m├──[0m @aws-sdk/client-comprehend[2m@3.893.0[0m
+[2m│[0m   [2m└──[0m uuid[2m@9.0.1[0m
+[2m├──[0m @aws-sdk/client-ses[2m@3.893.0[0m
+[2m├──[0m @aws-sdk/client-sso[2m@3.893.0[0m
+[2m├──[0m @aws-sdk/core[2m@3.893.0[0m
+[2m├──[0m @aws-sdk/credential-provider-env[2m@3.893.0[0m
+[2m├──[0m @aws-sdk/credential-provider-http[2m@3.893.0[0m
+[2m├──[0m @aws-sdk/credential-provider-ini[2m@3.893.0[0m
+[2m├──[0m @aws-sdk/credential-provider-node[2m@3.893.0[0m
+[2m├──[0m @aws-sdk/credential-provider-process[2m@3.893.0[0m
+[2m├──[0m @aws-sdk/credential-provider-sso[2m@3.893.0[0m
+[2m├──[0m @aws-sdk/credential-provider-web-identity[2m@3.893.0[0m
+[2m├──[0m @aws-sdk/middleware-host-header[2m@3.893.0[0m
+[2m├──[0m @aws-sdk/middleware-logger[2m@3.893.0[0m
+[2m├──[0m @aws-sdk/middleware-recursion-detection[2m@3.893.0[0m
+[2m├──[0m @aws-sdk/middleware-user-agent[2m@3.893.0[0m
+[2m├──[0m @aws-sdk/nested-clients[2m@3.893.0[0m
+[2m├──[0m @aws-sdk/region-config-resolver[2m@3.893.0[0m
+[2m├──[0m @aws-sdk/token-providers[2m@3.893.0[0m
+[2m├──[0m @aws-sdk/types[2m@3.893.0[0m
+[2m├──[0m @aws-sdk/util-endpoints[2m@3.893.0[0m
+[2m├──[0m @aws-sdk/util-locate-window[2m@3.893.0[0m
+[2m├──[0m @aws-sdk/util-user-agent-browser[2m@3.893.0[0m
+[2m├──[0m @aws-sdk/util-user-agent-node[2m@3.893.0[0m
+[2m├──[0m @aws-sdk/xml-builder[2m@3.893.0[0m
+[2m├──[0m @aws/lambda-invoke-store[2m@0.0.1[0m
+[2m├──[0m @babel/code-frame[2m@7.27.1[0m
+[2m├──[0m @babel/compat-data[2m@7.28.4[0m
+[2m├──[0m @babel/core[2m@7.28.4[0m
+[2m│[0m   [2m└──[0m semver[2m@6.3.1[0m
+[2m├──[0m @babel/generator[2m@7.28.3[0m
+[2m├──[0m @babel/helper-compilation-targets[2m@7.27.2[0m
+[2m│[0m   [2m├──[0m lru-cache[2m@5.1.1[0m
+[2m│[0m   [2m│[0m   [2m└──[0m yallist[2m@3.1.1[0m
+[2m│[0m   [2m└──[0m semver[2m@6.3.1[0m
+[2m├──[0m @babel/helper-globals[2m@7.28.0[0m
+[2m├──[0m @babel/helper-module-imports[2m@7.27.1[0m
+[2m├──[0m @babel/helper-module-transforms[2m@7.28.3[0m
+[2m├──[0m @babel/helper-string-parser[2m@7.27.1[0m
+[2m├──[0m @babel/helper-validator-identifier[2m@7.27.1[0m
+[2m├──[0m @babel/helper-validator-option[2m@7.27.1[0m
+[2m├──[0m @babel/helpers[2m@7.28.4[0m
+[2m├──[0m @babel/parser[2m@7.28.4[0m
+[2m├──[0m @babel/runtime[2m@7.28.4[0m
+[2m├──[0m @babel/template[2m@7.27.2[0m
+[2m├──[0m @babel/traverse[2m@7.28.4[0m
+[2m├──[0m @babel/types[2m@7.28.4[0m
+[2m├──[0m @bufbuild/protobuf[2m@2.9.0[0m
+[2m├──[0m @cfworker/json-schema[2m@4.1.1[0m
+[2m├──[0m @emnapi/runtime[2m@1.5.0[0m
+[2m├──[0m @floating-ui/core[2m@1.7.3[0m
+[2m├──[0m @floating-ui/dom[2m@1.7.4[0m
+[2m├──[0m @floating-ui/react[2m@0.26.28[0m
+[2m├──[0m @floating-ui/react-dom[2m@2.1.6[0m
+[2m├──[0m @floating-ui/utils[2m@0.2.10[0m
+[2m├──[0m @google-cloud/bigquery[2m@7.9.4[0m
+[2m│[0m   [2m└──[0m uuid[2m@9.0.1[0m
+[2m├──[0m @google-cloud/common[2m@5.0.2[0m
+[2m├──[0m @google-cloud/datastream[2m@4.3.0[0m
+[2m├──[0m @google-cloud/paginator[2m@5.0.2[0m
+[2m├──[0m @google-cloud/precise-date[2m@4.0.0[0m
+[2m├──[0m @google-cloud/projectify[2m@4.0.0[0m
+[2m├──[0m @google-cloud/promisify[2m@4.0.0[0m
+[2m├──[0m @grpc/grpc-js[2m@1.14.0[0m
+[2m├──[0m @grpc/proto-loader[2m@0.8.0[0m
+[2m│[0m   [2m└──[0m long[2m@5.3.2[0m
+[2m├──[0m @hapi/bourne[2m@3.0.0[0m
+[2m├──[0m @huggingface/jinja[2m@0.2.2[0m
+[2m├──[0m @ibm-cloud/watsonx-ai[2m@1.6.13[0m
+[2m│[0m   [2m└──[0m @types/node[2m@18.19.127[0m
+[2m│[0m       [2m└──[0m undici-types[2m@5.26.5[0m
+[2m├──[0m @img/colour[2m@1.0.0[0m
+[2m├──[0m @img/sharp-darwin-arm64[2m@0.34.4[0m
+[2m├──[0m @img/sharp-darwin-x64[2m@0.34.4[0m
+[2m├──[0m @img/sharp-libvips-darwin-arm64[2m@1.2.3[0m
+[2m├──[0m @img/sharp-libvips-darwin-x64[2m@1.2.3[0m
+[2m├──[0m @img/sharp-libvips-linux-arm[2m@1.2.3[0m
+[2m├──[0m @img/sharp-libvips-linux-arm64[2m@1.2.3[0m
+[2m├──[0m @img/sharp-libvips-linux-ppc64[2m@1.2.3[0m
+[2m├──[0m @img/sharp-libvips-linux-s390x[2m@1.2.3[0m
+[2m├──[0m @img/sharp-libvips-linux-x64[2m@1.2.3[0m
+[2m├──[0m @img/sharp-libvips-linuxmusl-arm64[2m@1.2.3[0m
+[2m├──[0m @img/sharp-libvips-linuxmusl-x64[2m@1.2.3[0m
+[2m├──[0m @img/sharp-linux-arm[2m@0.34.4[0m
+[2m├──[0m @img/sharp-linux-arm64[2m@0.34.4[0m
+[2m├──[0m @img/sharp-linux-ppc64[2m@0.34.4[0m
+[2m├──[0m @img/sharp-linux-s390x[2m@0.34.4[0m
+[2m├──[0m @img/sharp-linux-x64[2m@0.34.4[0m
+[2m├──[0m @img/sharp-linuxmusl-arm64[2m@0.34.4[0m
+[2m├──[0m @img/sharp-linuxmusl-x64[2m@0.34.4[0m
+[2m├──[0m @img/sharp-wasm32[2m@0.34.4[0m
+[2m├──[0m @img/sharp-win32-arm64[2m@0.34.4[0m
+[2m├──[0m @img/sharp-win32-ia32[2m@0.34.4[0m
+[2m├──[0m @img/sharp-win32-x64[2m@0.34.4[0m
+[2m├──[0m @intercom/messenger-js-sdk[2m@0.0.17[0m
+[2m├──[0m @isaacs/fs-minipass[2m@4.0.1[0m
+[2m│[0m   [2m└──[0m minipass[2m@7.1.2[0m
+[2m├──[0m @jest/types[2m@26.6.2[0m
+[2m│[0m   [2m└──[0m chalk[2m@4.1.2[0m
+[2m│[0m       [2m├──[0m ansi-styles[2m@4.3.0[0m
+[2m│[0m       [2m└──[0m supports-color[2m@7.2.0[0m
+[2m│[0m           [2m└──[0m has-flag[2m@4.0.0[0m
+[2m├──[0m @jridgewell/gen-mapping[2m@0.3.13[0m
+[2m├──[0m @jridgewell/remapping[2m@2.3.5[0m
+[2m├──[0m @jridgewell/resolve-uri[2m@3.1.2[0m
+[2m├──[0m @jridgewell/source-map[2m@0.3.11[0m
+[2m├──[0m @jridgewell/sourcemap-codec[2m@1.5.5[0m
+[2m├──[0m @jridgewell/trace-mapping[2m@0.3.31[0m
+[2m├──[0m @js-sdsl/ordered-map[2m@4.4.2[0m
+[2m├──[0m @jsdevtools/ono[2m@7.1.3[0m
+[2m├──[0m @json2csv/formatters[2m@7.0.6[0m
+[2m├──[0m @json2csv/plainjs[2m@7.0.6[0m
+[2m├──[0m @koa/cors[2m@5.0.0[0m
+[2m├──[0m @langchain/core[2m@0.3.77[0m
+[2m│[0m   [2m├──[0m p-queue[2m@6.6.2[0m
+[2m│[0m   [2m│[0m   [2m├──[0m eventemitter3[2m@4.0.7[0m
+[2m│[0m   [2m│[0m   [2m└──[0m p-timeout[2m@3.2.0[0m
+[2m│[0m   [2m└──[0m uuid[2m@10.0.0[0m
+[2m├──[0m @langchain/openai[2m@0.5.18[0m
+[2m├──[0m @lunary/backend[2m@workspace:packages/backend[0m
+[2m├──[0m @lunary/e2e[2m@workspace:packages/e2e[0m
+[2m├──[0m @lunary/frontend[2m@workspace:packages/frontend[0m
+[2m├──[0m @mantine/charts[2m@7.17.8[0m
+[2m├──[0m @mantine/code-highlight[2m@7.17.8[0m
+[2m├──[0m @mantine/colors-generator[2m@7.17.8[0m
+[2m├──[0m @mantine/core[2m@7.17.8[0m
+[2m├──[0m @mantine/dates[2m@7.17.8[0m
+[2m├──[0m @mantine/form[2m@7.17.8[0m
+[2m├──[0m @mantine/hooks[2m@7.17.8[0m
+[2m├──[0m @mantine/modals[2m@7.17.8[0m
+[2m├──[0m @mantine/notifications[2m@7.17.8[0m
+[2m├──[0m @mantine/store[2m@7.17.8[0m
+[2m├──[0m @mapbox/node-pre-gyp[2m@1.0.11[0m
+[2m├──[0m @monaco-editor/loader[2m@1.5.0[0m
+[2m├──[0m @monaco-editor/react[2m@4.7.0[0m
+[2m├──[0m @next/env[2m@15.5.3[0m
+[2m├──[0m @next/swc-darwin-arm64[2m@15.5.3[0m
+[2m├──[0m @next/swc-darwin-x64[2m@15.5.3[0m
+[2m├──[0m @next/swc-linux-arm64-gnu[2m@15.5.3[0m
+[2m├──[0m @next/swc-linux-arm64-musl[2m@15.5.3[0m
+[2m├──[0m @next/swc-linux-x64-gnu[2m@15.5.3[0m
+[2m├──[0m @next/swc-linux-x64-musl[2m@15.5.3[0m
+[2m├──[0m @next/swc-win32-arm64-msvc[2m@15.5.3[0m
+[2m├──[0m @next/swc-win32-x64-msvc[2m@15.5.3[0m
+[2m├──[0m @opentelemetry/api[2m@1.9.0[0m
+[2m├──[0m @opentelemetry/api-logs[2m@0.57.2[0m
+[2m├──[0m @opentelemetry/context-async-hooks[2m@1.30.1[0m
+[2m├──[0m @opentelemetry/core[2m@1.30.1[0m
+[2m│[0m   [2m└──[0m @opentelemetry/semantic-conventions[2m@1.28.0[0m
+[2m├──[0m @opentelemetry/instrumentation[2m@0.57.2[0m
+[2m├──[0m @opentelemetry/instrumentation-amqplib[2m@0.46.1[0m
+[2m├──[0m @opentelemetry/instrumentation-connect[2m@0.43.1[0m
+[2m├──[0m @opentelemetry/instrumentation-dataloader[2m@0.16.1[0m
+[2m├──[0m @opentelemetry/instrumentation-express[2m@0.47.1[0m
+[2m├──[0m @opentelemetry/instrumentation-fs[2m@0.19.1[0m
+[2m├──[0m @opentelemetry/instrumentation-generic-pool[2m@0.43.1[0m
+[2m├──[0m @opentelemetry/instrumentation-graphql[2m@0.47.1[0m
+[2m├──[0m @opentelemetry/instrumentation-hapi[2m@0.45.2[0m
+[2m├──[0m @opentelemetry/instrumentation-http[2m@0.57.2[0m
+[2m│[0m   [2m└──[0m @opentelemetry/semantic-conventions[2m@1.28.0[0m
+[2m├──[0m @opentelemetry/instrumentation-ioredis[2m@0.47.1[0m
+[2m├──[0m @opentelemetry/instrumentation-kafkajs[2m@0.7.1[0m
+[2m├──[0m @opentelemetry/instrumentation-knex[2m@0.44.1[0m
+[2m├──[0m @opentelemetry/instrumentation-koa[2m@0.47.1[0m
+[2m├──[0m @opentelemetry/instrumentation-lru-memoizer[2m@0.44.1[0m
+[2m├──[0m @opentelemetry/instrumentation-mongodb[2m@0.52.0[0m
+[2m├──[0m @opentelemetry/instrumentation-mongoose[2m@0.46.1[0m
+[2m├──[0m @opentelemetry/instrumentation-mysql[2m@0.45.1[0m
+[2m├──[0m @opentelemetry/instrumentation-mysql2[2m@0.45.2[0m
+[2m├──[0m @opentelemetry/instrumentation-pg[2m@0.51.1[0m
+[2m├──[0m @opentelemetry/instrumentation-redis[2m@0.53.0[0m
+[2m│[0m   [2m├──[0m @opentelemetry/instrumentation[2m@0.204.0[0m
+[2m│[0m   [2m│[0m   [2m└──[0m @opentelemetry/api-logs[2m@0.204.0[0m
+[2m│[0m   [2m└──[0m @opentelemetry/redis-common[2m@0.38.0[0m
+[2m├──[0m @opentelemetry/instrumentation-redis-4[2m@0.46.1[0m
+[2m├──[0m @opentelemetry/instrumentation-tedious[2m@0.18.1[0m
+[2m├──[0m @opentelemetry/instrumentation-undici[2m@0.10.1[0m
+[2m├──[0m @opentelemetry/redis-common[2m@0.36.2[0m
+[2m├──[0m @opentelemetry/resources[2m@1.30.1[0m
+[2m│[0m   [2m└──[0m @opentelemetry/semantic-conventions[2m@1.28.0[0m
+[2m├──[0m @opentelemetry/sdk-trace-base[2m@1.30.1[0m
+[2m│[0m   [2m└──[0m @opentelemetry/semantic-conventions[2m@1.28.0[0m
+[2m├──[0m @opentelemetry/semantic-conventions[2m@1.37.0[0m
+[2m├──[0m @opentelemetry/sql-common[2m@0.40.1[0m
+[2m├──[0m @oven/bun-darwin-aarch64[2m@1.2.22[0m
+[2m├──[0m @oven/bun-darwin-x64[2m@1.2.22[0m
+[2m├──[0m @oven/bun-darwin-x64-baseline[2m@1.2.22[0m
+[2m├──[0m @oven/bun-linux-aarch64[2m@1.2.22[0m
+[2m├──[0m @oven/bun-linux-aarch64-musl[2m@1.2.22[0m
+[2m├──[0m @oven/bun-linux-x64[2m@1.2.22[0m
+[2m├──[0m @oven/bun-linux-x64-baseline[2m@1.2.22[0m
+[2m├──[0m @oven/bun-linux-x64-musl[2m@1.2.22[0m
+[2m├──[0m @oven/bun-linux-x64-musl-baseline[2m@1.2.22[0m
+[2m├──[0m @oven/bun-windows-x64[2m@1.2.22[0m
+[2m├──[0m @oven/bun-windows-x64-baseline[2m@1.2.22[0m
+[2m├──[0m @phc/format[2m@1.0.0[0m
+[2m├──[0m @playwright/test[2m@1.55.0[0m
+[2m├──[0m @posthog/core[2m@1.1.0[0m
+[2m├──[0m @prisma/instrumentation[2m@6.11.1[0m
+[2m├──[0m @protobufjs/aspromise[2m@1.1.2[0m
+[2m├──[0m @protobufjs/base64[2m@1.1.2[0m
+[2m├──[0m @protobufjs/codegen[2m@2.0.4[0m
+[2m├──[0m @protobufjs/eventemitter[2m@1.1.0[0m
+[2m├──[0m @protobufjs/fetch[2m@1.1.0[0m
+[2m├──[0m @protobufjs/float[2m@1.0.2[0m
+[2m├──[0m @protobufjs/inquire[2m@1.1.0[0m
+[2m├──[0m @protobufjs/path[2m@1.1.2[0m
+[2m├──[0m @protobufjs/pool[2m@1.1.0[0m
+[2m├──[0m @protobufjs/utf8[2m@1.1.0[0m
+[2m├──[0m @radix-ui/primitive[2m@1.1.3[0m
+[2m├──[0m @radix-ui/react-collection[2m@1.1.7[0m
+[2m├──[0m @radix-ui/react-compose-refs[2m@1.1.2[0m
+[2m├──[0m @radix-ui/react-context[2m@1.1.2[0m
+[2m├──[0m @radix-ui/react-dismissable-layer[2m@1.1.11[0m
+[2m├──[0m @radix-ui/react-portal[2m@1.1.9[0m
+[2m├──[0m @radix-ui/react-presence[2m@1.1.5[0m
+[2m├──[0m @radix-ui/react-primitive[2m@2.1.3[0m
+[2m├──[0m @radix-ui/react-slot[2m@1.2.3[0m
+[2m├──[0m @radix-ui/react-toast[2m@1.2.15[0m
+[2m├──[0m @radix-ui/react-use-callback-ref[2m@1.1.1[0m
+[2m├──[0m @radix-ui/react-use-controllable-state[2m@1.2.2[0m
+[2m├──[0m @radix-ui/react-use-effect-event[2m@0.0.2[0m
+[2m├──[0m @radix-ui/react-use-escape-keydown[2m@1.1.1[0m
+[2m├──[0m @radix-ui/react-use-layout-effect[2m@1.1.1[0m
+[2m├──[0m @radix-ui/react-visually-hidden[2m@1.2.3[0m
+[2m├──[0m @react-dnd/asap[2m@5.0.2[0m
+[2m├──[0m @react-dnd/invariant[2m@4.0.2[0m
+[2m├──[0m @react-dnd/shallowequal[2m@4.0.2[0m
+[2m├──[0m @react-oauth/google[2m@0.12.2[0m
+[2m├──[0m @reduxjs/toolkit[2m@2.9.0[0m
+[2m│[0m   [2m└──[0m redux[2m@5.0.1[0m
+[2m├──[0m @rollup/plugin-commonjs[2m@28.0.1[0m
+[2m│[0m   [2m└──[0m estree-walker[2m@2.0.2[0m
+[2m├──[0m @rollup/pluginutils[2m@5.3.0[0m
+[2m│[0m   [2m└──[0m estree-walker[2m@2.0.2[0m
+[2m├──[0m @rollup/rollup-android-arm-eabi[2m@4.52.0[0m
+[2m├──[0m @rollup/rollup-android-arm64[2m@4.52.0[0m
+[2m├──[0m @rollup/rollup-darwin-arm64[2m@4.52.0[0m
+[2m├──[0m @rollup/rollup-darwin-x64[2m@4.52.0[0m
+[2m├──[0m @rollup/rollup-freebsd-arm64[2m@4.52.0[0m
+[2m├──[0m @rollup/rollup-freebsd-x64[2m@4.52.0[0m
+[2m├──[0m @rollup/rollup-linux-arm-gnueabihf[2m@4.52.0[0m
+[2m├──[0m @rollup/rollup-linux-arm-musleabihf[2m@4.52.0[0m
+[2m├──[0m @rollup/rollup-linux-arm64-gnu[2m@4.52.0[0m
+[2m├──[0m @rollup/rollup-linux-arm64-musl[2m@4.52.0[0m
+[2m├──[0m @rollup/rollup-linux-loong64-gnu[2m@4.52.0[0m
+[2m├──[0m @rollup/rollup-linux-ppc64-gnu[2m@4.52.0[0m
+[2m├──[0m @rollup/rollup-linux-riscv64-gnu[2m@4.52.0[0m
+[2m├──[0m @rollup/rollup-linux-riscv64-musl[2m@4.52.0[0m
+[2m├──[0m @rollup/rollup-linux-s390x-gnu[2m@4.52.0[0m
+[2m├──[0m @rollup/rollup-linux-x64-gnu[2m@4.52.0[0m
+[2m├──[0m @rollup/rollup-linux-x64-musl[2m@4.52.0[0m
+[2m├──[0m @rollup/rollup-openharmony-arm64[2m@4.52.0[0m
+[2m├──[0m @rollup/rollup-win32-arm64-msvc[2m@4.52.0[0m
+[2m├──[0m @rollup/rollup-win32-ia32-msvc[2m@4.52.0[0m
+[2m├──[0m @rollup/rollup-win32-x64-gnu[2m@4.52.0[0m
+[2m├──[0m @rollup/rollup-win32-x64-msvc[2m@4.52.0[0m
+[2m├──[0m @sentry-internal/browser-utils[2m@10.12.0[0m
+[2m│[0m   [2m└──[0m @sentry/core[2m@10.12.0[0m
+[2m├──[0m @sentry-internal/feedback[2m@10.12.0[0m
+[2m│[0m   [2m└──[0m @sentry/core[2m@10.12.0[0m
+[2m├──[0m @sentry-internal/replay[2m@10.12.0[0m
+[2m│[0m   [2m└──[0m @sentry/core[2m@10.12.0[0m
+[2m├──[0m @sentry-internal/replay-canvas[2m@10.12.0[0m
+[2m│[0m   [2m└──[0m @sentry/core[2m@10.12.0[0m
+[2m├──[0m @sentry/babel-plugin-component-annotate[2m@4.3.0[0m
+[2m├──[0m @sentry/browser[2m@10.12.0[0m
+[2m│[0m   [2m└──[0m @sentry/core[2m@10.12.0[0m
+[2m├──[0m @sentry/bun[2m@9.46.0[0m
+[2m├──[0m @sentry/bundler-plugin-core[2m@4.3.0[0m
+[2m│[0m   [2m├──[0m glob[2m@9.3.5[0m
+[2m│[0m   [2m│[0m   [2m├──[0m minimatch[2m@8.0.4[0m
+[2m│[0m   [2m│[0m   [2m└──[0m minipass[2m@4.2.8[0m
+[2m│[0m   [2m├──[0m magic-string[2m@0.30.8[0m
+[2m│[0m   [2m└──[0m unplugin[2m@1.0.1[0m
+[2m│[0m       [2m└──[0m webpack-virtual-modules[2m@0.5.0[0m
+[2m├──[0m @sentry/cli[2m@2.54.0[0m
+[2m├──[0m @sentry/cli-darwin[2m@2.54.0[0m
+[2m├──[0m @sentry/cli-linux-arm[2m@2.54.0[0m
+[2m├──[0m @sentry/cli-linux-arm64[2m@2.54.0[0m
+[2m├──[0m @sentry/cli-linux-i686[2m@2.54.0[0m
+[2m├──[0m @sentry/cli-linux-x64[2m@2.54.0[0m
+[2m├──[0m @sentry/cli-win32-arm64[2m@2.54.0[0m
+[2m├──[0m @sentry/cli-win32-i686[2m@2.54.0[0m
+[2m├──[0m @sentry/cli-win32-x64[2m@2.54.0[0m
+[2m├──[0m @sentry/core[2m@9.46.0[0m
+[2m├──[0m @sentry/nextjs[2m@10.12.0[0m
+[2m│[0m   [2m├──[0m @sentry/core[2m@10.12.0[0m
+[2m│[0m   [2m├──[0m @sentry/node[2m@10.12.0[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/context-async-hooks[2m@2.1.0[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/core[2m@2.1.0[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/instrumentation[2m@0.204.0[0m
+[2m│[0m   [2m│[0m   [2m│[0m   [2m└──[0m @opentelemetry/api-logs[2m@0.204.0[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/instrumentation-amqplib[2m@0.51.0[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/instrumentation-connect[2m@0.48.0[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/instrumentation-dataloader[2m@0.22.0[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/instrumentation-express[2m@0.53.0[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/instrumentation-fs[2m@0.24.0[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/instrumentation-generic-pool[2m@0.48.0[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/instrumentation-graphql[2m@0.52.0[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/instrumentation-hapi[2m@0.51.0[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/instrumentation-http[2m@0.204.0[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/instrumentation-ioredis[2m@0.52.0[0m
+[2m│[0m   [2m│[0m   [2m│[0m   [2m└──[0m @opentelemetry/redis-common[2m@0.38.0[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/instrumentation-kafkajs[2m@0.14.0[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/instrumentation-knex[2m@0.49.0[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/instrumentation-koa[2m@0.52.0[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/instrumentation-lru-memoizer[2m@0.49.0[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/instrumentation-mongodb[2m@0.57.0[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/instrumentation-mongoose[2m@0.51.0[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/instrumentation-mysql[2m@0.50.0[0m
+[2m│[0m   [2m│[0m   [2m│[0m   [2m└──[0m @types/mysql[2m@2.15.27[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/instrumentation-mysql2[2m@0.51.0[0m
+[2m│[0m   [2m│[0m   [2m│[0m   [2m└──[0m @opentelemetry/sql-common[2m@0.41.0[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/instrumentation-pg[2m@0.57.0[0m
+[2m│[0m   [2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/sql-common[2m@0.41.0[0m
+[2m│[0m   [2m│[0m   [2m│[0m   [2m└──[0m @types/pg[2m@8.15.5[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/instrumentation-tedious[2m@0.23.0[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/instrumentation-undici[2m@0.15.0[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/resources[2m@2.1.0[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @opentelemetry/sdk-trace-base[2m@2.1.0[0m
+[2m│[0m   [2m│[0m   [2m├──[0m @prisma/instrumentation[2m@6.15.0[0m
+[2m│[0m   [2m│[0m   [2m│[0m   [2m└──[0m @opentelemetry/instrumentation[2m@0.57.2[0m
+[2m│[0m   [2m│[0m   [2m└──[0m @sentry/node-core[2m@10.12.0[0m
+[2m│[0m   [2m└──[0m chalk[2m@3.0.0[0m
+[2m│[0m       [2m├──[0m ansi-styles[2m@4.3.0[0m
+[2m│[0m       [2m└──[0m supports-color[2m@7.2.0[0m
+[2m│[0m           [2m└──[0m has-flag[2m@4.0.0[0m
+[2m├──[0m @sentry/node[2m@9.46.0[0m
+[2m│[0m   [2m└──[0m @sentry/opentelemetry[2m@9.46.0[0m
+[2m├──[0m @sentry/node-core[2m@9.46.0[0m
+[2m│[0m   [2m└──[0m @sentry/opentelemetry[2m@9.46.0[0m
+[2m├──[0m @sentry/opentelemetry[2m@10.12.0[0m
+[2m│[0m   [2m└──[0m @sentry/core[2m@10.12.0[0m
+[2m├──[0m @sentry/react[2m@10.12.0[0m
+[2m│[0m   [2m└──[0m @sentry/core[2m@10.12.0[0m
+[2m├──[0m @sentry/vercel-edge[2m@10.12.0[0m
+[2m│[0m   [2m├──[0m @opentelemetry/resources[2m@2.1.0[0m
+[2m│[0m   [2m│[0m   [2m└──[0m @opentelemetry/core[2m@2.1.0[0m
+[2m│[0m   [2m└──[0m @sentry/core[2m@10.12.0[0m
+[2m├──[0m @sentry/webpack-plugin[2m@4.3.0[0m
+[2m│[0m   [2m├──[0m unplugin[2m@1.0.1[0m
+[2m│[0m   [2m│[0m   [2m└──[0m webpack-virtual-modules[2m@0.5.0[0m
+[2m│[0m   [2m└──[0m uuid[2m@9.0.1[0m
+[2m├──[0m @smithy/abort-controller[2m@4.1.1[0m
+[2m├──[0m @smithy/config-resolver[2m@4.2.2[0m
+[2m├──[0m @smithy/core[2m@3.11.1[0m
+[2m│[0m   [2m└──[0m uuid[2m@9.0.1[0m
+[2m├──[0m @smithy/credential-provider-imds[2m@4.1.2[0m
+[2m├──[0m @smithy/eventstream-codec[2m@4.1.1[0m
+[2m├──[0m @smithy/fetch-http-handler[2m@5.2.1[0m
+[2m├──[0m @smithy/hash-node[2m@4.1.1[0m
+[2m├──[0m @smithy/invalid-dependency[2m@4.1.1[0m
+[2m├──[0m @smithy/is-array-buffer[2m@4.1.0[0m
+[2m├──[0m @smithy/middleware-content-length[2m@4.1.1[0m
+[2m├──[0m @smithy/middleware-endpoint[2m@4.2.3[0m
+[2m├──[0m @smithy/middleware-retry[2m@4.2.4[0m
+[2m│[0m   [2m└──[0m uuid[2m@9.0.1[0m
+[2m├──[0m @smithy/middleware-serde[2m@4.1.1[0m
+[2m├──[0m @smithy/middleware-stack[2m@4.1.1[0m
+[2m├──[0m @smithy/node-config-provider[2m@4.2.2[0m
+[2m├──[0m @smithy/node-http-handler[2m@4.2.1[0m
+[2m├──[0m @smithy/property-provider[2m@4.1.1[0m
+[2m├──[0m @smithy/protocol-http[2m@5.2.1[0m
+[2m├──[0m @smithy/querystring-builder[2m@4.1.1[0m
+[2m├──[0m @smithy/querystring-parser[2m@4.1.1[0m
+[2m├──[0m @smithy/service-error-classification[2m@4.1.2[0m
+[2m├──[0m @smithy/shared-ini-file-loader[2m@4.2.0[0m
+[2m├──[0m @smithy/signature-v4[2m@5.2.1[0m
+[2m├──[0m @smithy/smithy-client[2m@4.6.3[0m
+[2m├──[0m @smithy/types[2m@4.5.0[0m
+[2m├──[0m @smithy/url-parser[2m@4.1.1[0m
+[2m├──[0m @smithy/util-base64[2m@4.1.0[0m
+[2m├──[0m @smithy/util-body-length-browser[2m@4.1.0[0m
+[2m├──[0m @smithy/util-body-length-node[2m@4.1.0[0m
+[2m├──[0m @smithy/util-buffer-from[2m@4.1.0[0m
+[2m├──[0m @smithy/util-config-provider[2m@4.1.0[0m
+[2m├──[0m @smithy/util-defaults-mode-browser[2m@4.1.3[0m
+[2m├──[0m @smithy/util-defaults-mode-node[2m@4.1.3[0m
+[2m├──[0m @smithy/util-endpoints[2m@3.1.2[0m
+[2m├──[0m @smithy/util-hex-encoding[2m@4.1.0[0m
+[2m├──[0m @smithy/util-middleware[2m@4.1.1[0m
+[2m├──[0m @smithy/util-retry[2m@4.1.2[0m
+[2m├──[0m @smithy/util-stream[2m@4.3.2[0m
+[2m├──[0m @smithy/util-uri-escape[2m@4.1.0[0m
+[2m├──[0m @smithy/util-utf8[2m@4.1.0[0m
+[2m├──[0m @smithy/util-waiter[2m@4.1.1[0m
+[2m├──[0m @standard-schema/spec[2m@1.0.0[0m
+[2m├──[0m @standard-schema/utils[2m@0.3.0[0m
+[2m├──[0m @streamparser/json[2m@0.0.20[0m
+[2m├──[0m @swc/helpers[2m@0.5.15[0m
+[2m├──[0m @tabler/icons[2m@3.35.0[0m
+[2m├──[0m @tabler/icons-react[2m@3.35.0[0m
+[2m├──[0m @tailwindcss/node[2m@4.1.13[0m
+[2m├──[0m @tailwindcss/oxide[2m@4.1.13[0m
+[2m│[0m   [2m└──[0m tar[2m@7.4.3[0m
+[2m│[0m       [2m├──[0m chownr[2m@3.0.0[0m
+[2m│[0m       [2m├──[0m minipass[2m@7.1.2[0m
+[2m│[0m       [2m├──[0m minizlib[2m@3.0.2[0m
+[2m│[0m       [2m├──[0m mkdirp[2m@3.0.1[0m
+[2m│[0m       [2m└──[0m yallist[2m@5.0.0[0m
+[2m├──[0m @tailwindcss/oxide-android-arm64[2m@4.1.13[0m
+[2m├──[0m @tailwindcss/oxide-darwin-arm64[2m@4.1.13[0m
+[2m├──[0m @tailwindcss/oxide-darwin-x64[2m@4.1.13[0m
+[2m├──[0m @tailwindcss/oxide-freebsd-x64[2m@4.1.13[0m
+[2m├──[0m @tailwindcss/oxide-linux-arm-gnueabihf[2m@4.1.13[0m
+[2m├──[0m @tailwindcss/oxide-linux-arm64-gnu[2m@4.1.13[0m
+[2m├──[0m @tailwindcss/oxide-linux-arm64-musl[2m@4.1.13[0m
+[2m├──[0m @tailwindcss/oxide-linux-x64-gnu[2m@4.1.13[0m
+[2m├──[0m @tailwindcss/oxide-linux-x64-musl[2m@4.1.13[0m
+[2m├──[0m @tailwindcss/oxide-wasm32-wasi[2m@4.1.13[0m
+[2m│[0m   [2m├──[0m @emnapi/core[2m@1.5.0[0m
+[2m│[0m   [2m├──[0m @emnapi/runtime[2m@1.5.0[0m
+[2m│[0m   [2m├──[0m @emnapi/wasi-threads[2m@1.1.0[0m
+[2m│[0m   [2m├──[0m @napi-rs/wasm-runtime[2m@0.2.12[0m
+[2m│[0m   [2m├──[0m @tybys/wasm-util[2m@0.10.1[0m
+[2m│[0m   [2m└──[0m tslib[2m@2.8.1[0m
+[2m├──[0m @tailwindcss/oxide-win32-arm64-msvc[2m@4.1.13[0m
+[2m├──[0m @tailwindcss/oxide-win32-x64-msvc[2m@4.1.13[0m
+[2m├──[0m @tailwindcss/postcss[2m@4.1.13[0m
+[2m├──[0m @tanstack/react-table[2m@8.21.3[0m
+[2m├──[0m @tanstack/react-virtual[2m@3.13.12[0m
+[2m├──[0m @tanstack/table-core[2m@8.21.3[0m
+[2m├──[0m @tanstack/virtual-core[2m@3.13.12[0m
+[2m├──[0m @tokenizer/token[2m@0.3.0[0m
+[2m├──[0m @tootallnate/once[2m@2.0.0[0m
+[2m├──[0m @types/accepts[2m@1.3.7[0m
+[2m├──[0m @types/bcrypt[2m@5.0.2[0m
+[2m├──[0m @types/body-parser[2m@1.19.6[0m
+[2m├──[0m @types/bun[2m@1.2.22[0m
+[2m├──[0m @types/caseless[2m@0.12.5[0m
+[2m├──[0m @types/connect[2m@3.4.38[0m
+[2m├──[0m @types/content-disposition[2m@0.5.9[0m
+[2m├──[0m @types/cookies[2m@0.9.1[0m
+[2m├──[0m @types/d3-array[2m@3.2.2[0m
+[2m├──[0m @types/d3-color[2m@3.1.3[0m
+[2m├──[0m @types/d3-ease[2m@3.0.2[0m
+[2m├──[0m @types/d3-interpolate[2m@3.0.4[0m
+[2m├──[0m @types/d3-path[2m@3.1.1[0m
+[2m├──[0m @types/d3-scale[2m@4.0.9[0m
+[2m├──[0m @types/d3-shape[2m@3.1.7[0m
+[2m├──[0m @types/d3-time[2m@3.0.4[0m
+[2m├──[0m @types/d3-timer[2m@3.0.2[0m
+[2m├──[0m @types/debug[2m@4.1.12[0m
+[2m├──[0m @types/diff-match-patch[2m@1.0.36[0m
+[2m├──[0m @types/eslint[2m@9.6.1[0m
+[2m├──[0m @types/eslint-scope[2m@3.7.7[0m
+[2m├──[0m @types/estree[2m@1.0.8[0m
+[2m├──[0m @types/express[2m@5.0.3[0m
+[2m├──[0m @types/express-serve-static-core[2m@5.0.7[0m
+[2m├──[0m @types/grecaptcha[2m@3.0.9[0m
+[2m├──[0m @types/http-assert[2m@1.5.6[0m
+[2m├──[0m @types/http-errors[2m@2.0.5[0m
+[2m├──[0m @types/ioredis[2m@4.28.10[0m
+[2m├──[0m @types/istanbul-lib-coverage[2m@2.0.6[0m
+[2m├──[0m @types/istanbul-lib-report[2m@3.0.3[0m
+[2m├──[0m @types/istanbul-reports[2m@3.0.4[0m
+[2m├──[0m @types/jest[2m@26.0.24[0m
+[2m├──[0m @types/json-schema[2m@7.0.15[0m
+[2m├──[0m @types/keygrip[2m@1.0.6[0m
+[2m├──[0m @types/koa[2m@2.15.0[0m
+[2m├──[0m @types/koa-bodyparser[2m@4.3.12[0m
+[2m├──[0m @types/koa-compose[2m@3.2.8[0m
+[2m├──[0m @types/koa-logger[2m@3.1.5[0m
+[2m├──[0m @types/koa-ratelimit[2m@5.0.5[0m
+[2m├──[0m @types/koa-router[2m@7.4.8[0m
+[2m├──[0m @types/koa__cors[2m@5.0.0[0m
+[2m├──[0m @types/long[2m@4.0.2[0m
+[2m├──[0m @types/luxon[2m@3.7.1[0m
+[2m├──[0m @types/mime[2m@1.3.5[0m
+[2m├──[0m @types/ms[2m@2.1.0[0m
+[2m├──[0m @types/mysql[2m@2.15.26[0m
+[2m├──[0m @types/node[2m@24.5.2[0m
+[2m├──[0m @types/node-cron[2m@3.0.11[0m
+[2m├──[0m @types/node-fetch[2m@2.6.13[0m
+[2m├──[0m @types/nodemailer[2m@6.4.19[0m
+[2m├──[0m @types/parse-json[2m@4.0.2[0m
+[2m├──[0m @types/pg[2m@8.6.1[0m
+[2m├──[0m @types/pg-pool[2m@2.0.6[0m
+[2m│[0m   [2m└──[0m @types/pg[2m@8.15.5[0m
+[2m├──[0m @types/qs[2m@6.14.0[0m
+[2m├──[0m @types/range-parser[2m@1.2.7[0m
+[2m├──[0m @types/react[2m@19.1.13[0m
+[2m├──[0m @types/request[2m@2.48.13[0m
+[2m│[0m   [2m└──[0m form-data[2m@2.5.5[0m
+[2m├──[0m @types/retry[2m@0.12.0[0m
+[2m├──[0m @types/send[2m@0.17.5[0m
+[2m├──[0m @types/serve-static[2m@1.15.8[0m
+[2m├──[0m @types/shimmer[2m@1.2.0[0m
+[2m├──[0m @types/streamsaver[2m@2.0.5[0m
+[2m├──[0m @types/swagger-jsdoc[2m@6.0.4[0m
+[2m├──[0m @types/tedious[2m@4.0.14[0m
+[2m├──[0m @types/tough-cookie[2m@4.0.5[0m
+[2m├──[0m @types/trusted-types[2m@1.0.6[0m
+[2m├──[0m @types/use-sync-external-store[2m@0.0.6[0m
+[2m├──[0m @types/uuid[2m@9.0.8[0m
+[2m├──[0m @types/yargs[2m@15.0.19[0m
+[2m├──[0m @types/yargs-parser[2m@21.0.3[0m
+[2m├──[0m @webassemblyjs/ast[2m@1.14.1[0m
+[2m├──[0m @webassemblyjs/floating-point-hex-parser[2m@1.13.2[0m
+[2m├──[0m @webassemblyjs/helper-api-error[2m@1.13.2[0m
+[2m├──[0m @webassemblyjs/helper-buffer[2m@1.14.1[0m
+[2m├──[0m @webassemblyjs/helper-numbers[2m@1.13.2[0m
+[2m├──[0m @webassemblyjs/helper-wasm-bytecode[2m@1.13.2[0m
+[2m├──[0m @webassemblyjs/helper-wasm-section[2m@1.14.1[0m
+[2m├──[0m @webassemblyjs/ieee754[2m@1.13.2[0m
+[2m├──[0m @webassemblyjs/leb128[2m@1.13.2[0m
+[2m├──[0m @webassemblyjs/utf8[2m@1.13.2[0m
+[2m├──[0m @webassemblyjs/wasm-edit[2m@1.14.1[0m
+[2m├──[0m @webassemblyjs/wasm-gen[2m@1.14.1[0m
+[2m├──[0m @webassemblyjs/wasm-opt[2m@1.14.1[0m
+[2m├──[0m @webassemblyjs/wasm-parser[2m@1.14.1[0m
+[2m├──[0m @webassemblyjs/wast-printer[2m@1.14.1[0m
+[2m├──[0m @xenova/transformers[2m@2.17.2[0m
+[2m├──[0m @xmldom/is-dom-node[2m@1.0.1[0m
+[2m├──[0m @xmldom/xmldom[2m@0.8.11[0m
+[2m├──[0m @xtuc/ieee754[2m@1.2.0[0m
+[2m├──[0m @xtuc/long[2m@4.2.2[0m
+[2m├──[0m abbrev[2m@1.1.1[0m
+[2m├──[0m abort-controller[2m@3.0.0[0m
+[2m├──[0m accepts[2m@1.3.8[0m
+[2m├──[0m acorn[2m@8.15.0[0m
+[2m├──[0m acorn-import-attributes[2m@1.9.5[0m
+[2m├──[0m acorn-import-phases[2m@1.0.4[0m
+[2m├──[0m agent-base[2m@6.0.2[0m
+[2m├──[0m agentkeepalive[2m@4.6.0[0m
+[2m├──[0m ai[2m@4.3.19[0m
+[2m├──[0m ajv[2m@8.17.1[0m
+[2m├──[0m ajv-formats[2m@2.1.1[0m
+[2m├──[0m ajv-keywords[2m@5.1.0[0m
+[2m├──[0m ansi-regex[2m@5.0.1[0m
+[2m├──[0m ansi-styles[2m@5.2.0[0m
+[2m├──[0m anymatch[2m@3.1.3[0m
+[2m│[0m   [2m└──[0m picomatch[2m@2.3.1[0m
+[2m├──[0m aproba[2m@2.1.0[0m
+[2m├──[0m are-we-there-yet[2m@2.0.0[0m
+[2m├──[0m argon2[2m@0.43.1[0m
+[2m├──[0m argparse[2m@1.0.10[0m
+[2m├──[0m arrify[2m@2.0.1[0m
+[2m├──[0m asn1[2m@0.2.6[0m
+[2m├──[0m async-ratelimiter[2m@1.6.1[0m
+[2m├──[0m asynckit[2m@0.4.0[0m
+[2m├──[0m aws4fetch[2m@1.0.20[0m
+[2m├──[0m axios[2m@1.12.2[0m
+[2m├──[0m b4a[2m@1.7.1[0m
+[2m├──[0m backend[2m@0.0.0[0m
+[2m├──[0m balanced-match[2m@1.0.2[0m
+[2m├──[0m bare-events[2m@2.7.0[0m
+[2m├──[0m bare-fs[2m@4.4.4[0m
+[2m├──[0m bare-os[2m@3.6.2[0m
+[2m├──[0m bare-path[2m@3.0.0[0m
+[2m├──[0m bare-stream[2m@2.7.0[0m
+[2m├──[0m bare-url[2m@2.2.2[0m
+[2m├──[0m base64-js[2m@1.5.1[0m
+[2m├──[0m baseline-browser-mapping[2m@2.8.6[0m
+[2m├──[0m bcrypt[2m@5.1.1[0m
+[2m│[0m   [2m└──[0m node-addon-api[2m@5.1.0[0m
+[2m├──[0m big.js[2m@6.2.2[0m
+[2m├──[0m bignumber.js[2m@9.3.1[0m
+[2m├──[0m binary-extensions[2m@2.3.0[0m
+[2m├──[0m bl[2m@4.1.0[0m
+[2m│[0m   [2m└──[0m buffer[2m@5.7.1[0m
+[2m├──[0m bowser[2m@2.12.1[0m
+[2m├──[0m brace-expansion[2m@2.0.2[0m
+[2m├──[0m braces[2m@3.0.3[0m
+[2m├──[0m browserslist[2m@4.26.2[0m
+[2m├──[0m buffer[2m@6.0.3[0m
+[2m├──[0m buffer-equal-constant-time[2m@1.0.1[0m
+[2m├──[0m buffer-from[2m@1.1.2[0m
+[2m├──[0m bun[2m@1.2.22[0m
+[2m├──[0m bun-types[2m@1.2.22[0m
+[2m├──[0m bytes[2m@3.1.2[0m
+[2m├──[0m cache-content-type[2m@1.0.1[0m
+[2m├──[0m call-bind-apply-helpers[2m@1.0.2[0m
+[2m├──[0m call-bound[2m@1.0.4[0m
+[2m├──[0m call-me-maybe[2m@1.0.2[0m
+[2m├──[0m callsites[2m@3.1.0[0m
+[2m├──[0m camel-case[2m@4.1.2[0m
+[2m├──[0m camelcase[2m@6.3.0[0m
+[2m├──[0m camelcase-css[2m@2.0.1[0m
+[2m├──[0m caniuse-lite[2m@1.0.30001743[0m
+[2m├──[0m capital-case[2m@1.0.4[0m
+[2m├──[0m chalk[2m@2.4.2[0m
+[2m│[0m   [2m└──[0m ansi-styles[2m@3.2.1[0m
+[2m│[0m       [2m└──[0m color-convert[2m@1.9.3[0m
+[2m│[0m           [2m└──[0m color-name[2m@1.1.3[0m
+[2m├──[0m change-case[2m@4.1.2[0m
+[2m├──[0m chokidar[2m@3.6.0[0m
+[2m├──[0m chownr[2m@2.0.0[0m
+[2m├──[0m chroma-js[2m@3.1.2[0m
+[2m├──[0m chrome-trace-event[2m@1.0.4[0m
+[2m├──[0m cjs-module-lexer[2m@1.4.3[0m
+[2m├──[0m class-variance-authority[2m@0.7.1[0m
+[2m├──[0m client-only[2m@0.0.1[0m
+[2m├──[0m cliui[2m@8.0.1[0m
+[2m├──[0m clone[2m@2.1.2[0m
+[2m├──[0m clsx[2m@2.1.1[0m
+[2m├──[0m co[2m@4.6.0[0m
+[2m├──[0m co-body[2m@6.2.0[0m
+[2m├──[0m collapse-white-space[2m@2.1.0[0m
+[2m├──[0m color[2m@4.2.3[0m
+[2m├──[0m color-convert[2m@2.0.1[0m
+[2m├──[0m color-name[2m@1.1.4[0m
+[2m├──[0m color-string[2m@1.9.1[0m
+[2m├──[0m color-support[2m@1.1.3[0m
+[2m├──[0m combined-stream[2m@1.0.8[0m
+[2m├──[0m commander[2m@6.2.1[0m
+[2m├──[0m commondir[2m@1.0.1[0m
+[2m├──[0m compromise[2m@14.14.4[0m
+[2m├──[0m concat-map[2m@0.0.1[0m
+[2m├──[0m console-control-strings[2m@1.1.0[0m
+[2m├──[0m console-table-printer[2m@2.14.6[0m
+[2m├──[0m constant-case[2m@3.0.4[0m
+[2m├──[0m content-disposition[2m@0.5.4[0m
+[2m├──[0m content-type[2m@1.0.5[0m
+[2m├──[0m convert-source-map[2m@2.0.0[0m
+[2m├──[0m cookies[2m@0.9.1[0m
+[2m├──[0m copy-to[2m@2.0.1[0m
+[2m├──[0m core-js[2m@3.45.1[0m
+[2m├──[0m cosmiconfig[2m@6.0.0[0m
+[2m│[0m   [2m└──[0m yaml[2m@1.10.2[0m
+[2m├──[0m cssesc[2m@3.0.0[0m
+[2m├──[0m csstype[2m@3.1.3[0m
+[2m├──[0m d3-array[2m@3.2.4[0m
+[2m├──[0m d3-color[2m@3.1.0[0m
+[2m├──[0m d3-ease[2m@3.0.1[0m
+[2m├──[0m d3-format[2m@3.1.0[0m
+[2m├──[0m d3-interpolate[2m@3.0.1[0m
+[2m├──[0m d3-path[2m@3.1.0[0m
+[2m├──[0m d3-scale[2m@4.0.2[0m
+[2m├──[0m d3-shape[2m@3.2.0[0m
+[2m├──[0m d3-time[2m@3.1.0[0m
+[2m├──[0m d3-time-format[2m@4.1.0[0m
+[2m├──[0m d3-timer[2m@3.0.1[0m
+[2m├──[0m data-uri-to-buffer[2m@4.0.1[0m
+[2m├──[0m date-fns[2m@4.1.0[0m
+[2m├──[0m dayjs[2m@1.11.18[0m
+[2m├──[0m debug[2m@4.4.3[0m
+[2m├──[0m decamelize[2m@1.2.0[0m
+[2m├──[0m decimal.js-light[2m@2.5.1[0m
+[2m├──[0m decompress-response[2m@6.0.0[0m
+[2m├──[0m deeks[2m@3.1.0[0m
+[2m├──[0m deep-equal[2m@1.0.1[0m
+[2m├──[0m deep-extend[2m@0.6.0[0m
+[2m├──[0m delayed-stream[2m@1.0.0[0m
+[2m├──[0m delegates[2m@1.0.0[0m
+[2m├──[0m depd[2m@2.0.0[0m
+[2m├──[0m dequal[2m@2.0.3[0m
+[2m├──[0m destroy[2m@1.2.0[0m
+[2m├──[0m detect-libc[2m@2.1.0[0m
+[2m├──[0m detect-node-es[2m@1.1.0[0m
+[2m├──[0m diff-match-patch[2m@1.0.5[0m
+[2m├──[0m diff-sequences[2m@26.6.2[0m
+[2m├──[0m dnd-core[2m@16.0.1[0m
+[2m├──[0m doc-path[2m@4.1.1[0m
+[2m├──[0m doctrine[2m@3.0.0[0m
+[2m├──[0m dom-helpers[2m@5.2.1[0m
+[2m├──[0m dot-case[2m@3.0.4[0m
+[2m├──[0m dotenv[2m@16.6.1[0m
+[2m├──[0m dunder-proto[2m@1.0.1[0m
+[2m├──[0m duplexify[2m@4.1.3[0m
+[2m├──[0m ecdsa-sig-formatter[2m@1.0.11[0m
+[2m├──[0m ee-first[2m@1.1.1[0m
+[2m├──[0m efrt[2m@2.7.0[0m
+[2m├──[0m eld[2m@1.0.1[0m
+[2m├──[0m electron-to-chromium[2m@1.5.222[0m
+[2m├──[0m emoji-regex[2m@8.0.0[0m
+[2m├──[0m encodeurl[2m@1.0.2[0m
+[2m├──[0m end-of-stream[2m@1.4.5[0m
+[2m├──[0m enhanced-resolve[2m@5.18.3[0m
+[2m├──[0m error-ex[2m@1.3.4[0m
+[2m├──[0m es-define-property[2m@1.0.1[0m
+[2m├──[0m es-errors[2m@1.3.0[0m
+[2m├──[0m es-module-lexer[2m@1.7.0[0m
+[2m├──[0m es-object-atoms[2m@1.1.1[0m
+[2m├──[0m es-set-tostringtag[2m@2.1.0[0m
+[2m├──[0m es-toolkit[2m@1.39.10[0m
+[2m├──[0m escalade[2m@3.2.0[0m
+[2m├──[0m escape-html[2m@1.0.3[0m
+[2m├──[0m escape-string-regexp[2m@1.0.5[0m
+[2m├──[0m eslint-scope[2m@5.1.1[0m
+[2m├──[0m esprima[2m@4.0.1[0m
+[2m├──[0m esrecurse[2m@4.3.0[0m
+[2m│[0m   [2m└──[0m estraverse[2m@5.3.0[0m
+[2m├──[0m estraverse[2m@4.3.0[0m
+[2m├──[0m estree-walker[2m@3.0.3[0m
+[2m├──[0m esutils[2m@2.0.3[0m
+[2m├──[0m event-target-shim[2m@5.0.1[0m
+[2m├──[0m eventemitter3[2m@5.0.1[0m
+[2m├──[0m events[2m@3.3.0[0m
+[2m├──[0m expand-template[2m@2.0.3[0m
+[2m├──[0m extend[2m@3.0.2[0m
+[2m├──[0m fast-deep-equal[2m@3.1.3[0m
+[2m├──[0m fast-fifo[2m@1.3.2[0m
+[2m├──[0m fast-uri[2m@3.1.0[0m
+[2m├──[0m fast-xml-parser[2m@5.2.5[0m
+[2m├──[0m fdir[2m@6.5.0[0m
+[2m├──[0m fetch-blob[2m@3.2.0[0m
+[2m│[0m   [2m└──[0m web-streams-polyfill[2m@3.3.3[0m
+[2m├──[0m fflate[2m@0.4.8[0m
+[2m├──[0m file-type[2m@16.5.4[0m
+[2m├──[0m fill-range[2m@7.1.1[0m
+[2m├──[0m find-up[2m@5.0.0[0m
+[2m├──[0m flatbuffers[2m@1.12.0[0m
+[2m├──[0m follow-redirects[2m@1.15.11[0m
+[2m├──[0m form-data[2m@4.0.4[0m
+[2m├──[0m form-data-encoder[2m@1.7.2[0m
+[2m├──[0m formdata-node[2m@4.4.1[0m
+[2m├──[0m formdata-polyfill[2m@4.0.10[0m
+[2m├──[0m forwarded-parse[2m@2.1.2[0m
+[2m├──[0m franc[2m@6.2.0[0m
+[2m├──[0m fresh[2m@0.5.2[0m
+[2m├──[0m fs-constants[2m@1.0.0[0m
+[2m├──[0m fs-minipass[2m@2.1.0[0m
+[2m│[0m   [2m└──[0m minipass[2m@3.3.6[0m
+[2m├──[0m fs.realpath[2m@1.0.0[0m
+[2m├──[0m fsevents[2m@2.3.2[0m
+[2m├──[0m function-bind[2m@1.1.2[0m
+[2m├──[0m gauge[2m@3.0.2[0m
+[2m├──[0m gaxios[2m@6.7.1[0m
+[2m│[0m   [2m├──[0m https-proxy-agent[2m@7.0.6[0m
+[2m│[0m   [2m│[0m   [2m└──[0m agent-base[2m@7.1.4[0m
+[2m│[0m   [2m└──[0m uuid[2m@9.0.1[0m
+[2m├──[0m gcp-metadata[2m@6.1.1[0m
+[2m│[0m   [2m└──[0m google-logging-utils[2m@0.0.2[0m
+[2m├──[0m gensync[2m@1.0.0-beta.2[0m
+[2m├──[0m get-caller-file[2m@2.0.5[0m
+[2m├──[0m get-intrinsic[2m@1.3.0[0m
+[2m├──[0m get-nonce[2m@1.0.1[0m
+[2m├──[0m get-proto[2m@1.0.1[0m
+[2m├──[0m github-from-package[2m@0.0.0[0m
+[2m├──[0m glob[2m@7.1.6[0m
+[2m│[0m   [2m└──[0m minimatch[2m@3.1.2[0m
+[2m│[0m       [2m└──[0m brace-expansion[2m@1.1.12[0m
+[2m├──[0m glob-parent[2m@5.1.2[0m
+[2m├──[0m glob-to-regexp[2m@0.4.1[0m
+[2m├──[0m google-auth-library[2m@9.15.1[0m
+[2m├──[0m google-gax[2m@5.0.3[0m
+[2m│[0m   [2m├──[0m google-auth-library[2m@10.3.0[0m
+[2m│[0m   [2m│[0m   [2m├──[0m gaxios[2m@7.1.1[0m
+[2m│[0m   [2m│[0m   [2m│[0m   [2m└──[0m https-proxy-agent[2m@7.0.6[0m
+[2m│[0m   [2m│[0m   [2m│[0m       [2m└──[0m agent-base[2m@7.1.4[0m
+[2m│[0m   [2m│[0m   [2m├──[0m gcp-metadata[2m@7.0.1[0m
+[2m│[0m   [2m│[0m   [2m└──[0m gtoken[2m@8.0.0[0m
+[2m│[0m   [2m├──[0m node-fetch[2m@3.3.2[0m
+[2m│[0m   [2m├──[0m object-hash[2m@3.0.0[0m
+[2m│[0m   [2m└──[0m retry-request[2m@8.0.2[0m
+[2m│[0m       [2m└──[0m teeny-request[2m@10.1.0[0m
+[2m├──[0m google-logging-utils[2m@1.1.1[0m
+[2m├──[0m gopd[2m@1.2.0[0m
+[2m├──[0m graceful-fs[2m@4.2.11[0m
+[2m├──[0m grad-school[2m@0.0.5[0m
+[2m├──[0m gtoken[2m@7.1.0[0m
+[2m├──[0m guid-typescript[2m@1.0.9[0m
+[2m├──[0m has-flag[2m@3.0.0[0m
+[2m├──[0m has-symbols[2m@1.1.0[0m
+[2m├──[0m has-tostringtag[2m@1.0.2[0m
+[2m├──[0m has-unicode[2m@2.0.1[0m
+[2m├──[0m hasown[2m@2.0.2[0m
+[2m├──[0m header-case[2m@2.0.4[0m
+[2m├──[0m highlight-words-core[2m@1.2.3[0m
+[2m├──[0m highlight.js[2m@11.11.1[0m
+[2m├──[0m hoist-non-react-statics[2m@3.3.2[0m
+[2m│[0m   [2m└──[0m react-is[2m@16.13.1[0m
+[2m├──[0m html-entities[2m@2.6.0[0m
+[2m├──[0m http-assert[2m@1.5.0[0m
+[2m├──[0m http-errors[2m@1.8.1[0m
+[2m│[0m   [2m└──[0m depd[2m@1.1.2[0m
+[2m├──[0m http-proxy-agent[2m@5.0.0[0m
+[2m├──[0m https-proxy-agent[2m@5.0.1[0m
+[2m├──[0m humanize-ms[2m@1.2.1[0m
+[2m├──[0m humanize-number[2m@0.0.2[0m
+[2m├──[0m ibm-cloud-sdk-core[2m@5.4.3[0m
+[2m│[0m   [2m└──[0m @types/node[2m@18.19.127[0m
+[2m│[0m       [2m└──[0m undici-types[2m@5.26.5[0m
+[2m├──[0m iconv-lite[2m@0.4.24[0m
+[2m├──[0m ieee754[2m@1.2.1[0m
+[2m├──[0m immer[2m@10.1.3[0m
+[2m├──[0m import-fresh[2m@3.3.1[0m
+[2m├──[0m import-in-the-middle[2m@1.14.2[0m
+[2m├──[0m inflation[2m@2.1.0[0m
+[2m├──[0m inflight[2m@1.0.6[0m
+[2m├──[0m inherits[2m@2.0.4[0m
+[2m├──[0m ini[2m@1.3.8[0m
+[2m├──[0m internmap[2m@2.0.3[0m
+[2m├──[0m is[2m@3.3.2[0m
+[2m├──[0m is-arrayish[2m@0.2.1[0m
+[2m├──[0m is-binary-path[2m@2.1.0[0m
+[2m├──[0m is-core-module[2m@2.16.1[0m
+[2m├──[0m is-extglob[2m@2.1.1[0m
+[2m├──[0m is-fullwidth-code-point[2m@3.0.0[0m
+[2m├──[0m is-generator-function[2m@1.1.0[0m
+[2m├──[0m is-glob[2m@4.0.3[0m
+[2m├──[0m is-number[2m@7.0.0[0m
+[2m├──[0m is-reference[2m@1.2.1[0m
+[2m├──[0m is-regex[2m@1.2.1[0m
+[2m├──[0m is-stream[2m@2.0.1[0m
+[2m├──[0m is-url[2m@1.2.4[0m
+[2m├──[0m isexe[2m@2.0.0[0m
+[2m├──[0m isstream[2m@0.1.2[0m
+[2m├──[0m jest-diff[2m@26.6.2[0m
+[2m│[0m   [2m└──[0m chalk[2m@4.1.2[0m
+[2m│[0m       [2m├──[0m ansi-styles[2m@4.3.0[0m
+[2m│[0m       [2m└──[0m supports-color[2m@7.2.0[0m
+[2m│[0m           [2m└──[0m has-flag[2m@4.0.0[0m
+[2m├──[0m jest-get-type[2m@26.3.0[0m
+[2m├──[0m jest-worker[2m@27.5.1[0m
+[2m│[0m   [2m└──[0m supports-color[2m@8.1.1[0m
+[2m│[0m       [2m└──[0m has-flag[2m@4.0.0[0m
+[2m├──[0m jiti[2m@2.5.1[0m
+[2m├──[0m jose[2m@6.1.0[0m
+[2m├──[0m js-tiktoken[2m@1.0.21[0m
+[2m├──[0m js-tokens[2m@4.0.0[0m
+[2m├──[0m js-yaml[2m@3.14.1[0m
+[2m├──[0m jsesc[2m@3.1.0[0m
+[2m├──[0m json-2-csv[2m@5.5.9[0m
+[2m├──[0m json-bigint[2m@1.0.0[0m
+[2m├──[0m json-parse-even-better-errors[2m@2.3.1[0m
+[2m├──[0m json-schema[2m@0.4.0[0m
+[2m├──[0m json-schema-traverse[2m@1.0.0[0m
+[2m├──[0m json5[2m@2.2.3[0m
+[2m├──[0m jsondiffpatch[2m@0.6.0[0m
+[2m│[0m   [2m└──[0m chalk[2m@5.6.2[0m
+[2m├──[0m jsonrepair[2m@3.13.1[0m
+[2m├──[0m jsonwebtoken[2m@9.0.2[0m
+[2m│[0m   [2m└──[0m jws[2m@3.2.2[0m
+[2m│[0m       [2m└──[0m jwa[2m@1.4.2[0m
+[2m├──[0m jwa[2m@2.0.1[0m
+[2m├──[0m jws[2m@4.0.0[0m
+[2m├──[0m keygrip[2m@1.1.0[0m
+[2m├──[0m klona[2m@2.0.6[0m
+[2m├──[0m koa[2m@2.16.2[0m
+[2m├──[0m koa-bodyparser[2m@4.4.1[0m
+[2m├──[0m koa-compose[2m@4.1.0[0m
+[2m├──[0m koa-convert[2m@2.0.0[0m
+[2m├──[0m koa-logger[2m@3.2.1[0m
+[2m├──[0m koa-ratelimit[2m@5.1.0[0m
+[2m├──[0m koa-router[2m@13.1.1[0m
+[2m│[0m   [2m└──[0m http-errors[2m@2.0.0[0m
+[2m│[0m       [2m└──[0m statuses[2m@2.0.1[0m
+[2m├──[0m langsmith[2m@0.3.69[0m
+[2m│[0m   [2m├──[0m @types/uuid[2m@10.0.0[0m
+[2m│[0m   [2m├──[0m chalk[2m@4.1.2[0m
+[2m│[0m   [2m│[0m   [2m├──[0m ansi-styles[2m@4.3.0[0m
+[2m│[0m   [2m│[0m   [2m└──[0m supports-color[2m@7.2.0[0m
+[2m│[0m   [2m│[0m       [2m└──[0m has-flag[2m@4.0.0[0m
+[2m│[0m   [2m├──[0m p-queue[2m@6.6.2[0m
+[2m│[0m   [2m│[0m   [2m├──[0m eventemitter3[2m@4.0.7[0m
+[2m│[0m   [2m│[0m   [2m└──[0m p-timeout[2m@3.2.0[0m
+[2m│[0m   [2m└──[0m uuid[2m@10.0.0[0m
+[2m├──[0m lightningcss[2m@1.30.1[0m
+[2m├──[0m lightningcss-darwin-arm64[2m@1.30.1[0m
+[2m├──[0m lightningcss-darwin-x64[2m@1.30.1[0m
+[2m├──[0m lightningcss-freebsd-x64[2m@1.30.1[0m
+[2m├──[0m lightningcss-linux-arm-gnueabihf[2m@1.30.1[0m
+[2m├──[0m lightningcss-linux-arm64-gnu[2m@1.30.1[0m
+[2m├──[0m lightningcss-linux-arm64-musl[2m@1.30.1[0m
+[2m├──[0m lightningcss-linux-x64-gnu[2m@1.30.1[0m
+[2m├──[0m lightningcss-linux-x64-musl[2m@1.30.1[0m
+[2m├──[0m lightningcss-win32-arm64-msvc[2m@1.30.1[0m
+[2m├──[0m lightningcss-win32-x64-msvc[2m@1.30.1[0m
+[2m├──[0m lines-and-columns[2m@1.2.4[0m
+[2m├──[0m llama3-tokenizer-js[2m@1.2.0[0m
+[2m├──[0m loader-runner[2m@4.3.0[0m
+[2m├──[0m locate-path[2m@6.0.0[0m
+[2m├──[0m lodash-node[2m@2.4.1[0m
+[2m├──[0m lodash.camelcase[2m@4.3.0[0m
+[2m├──[0m lodash.get[2m@4.4.2[0m
+[2m├──[0m lodash.includes[2m@4.3.0[0m
+[2m├──[0m lodash.isboolean[2m@3.0.3[0m
+[2m├──[0m lodash.isequal[2m@4.5.0[0m
+[2m├──[0m lodash.isinteger[2m@4.0.4[0m
+[2m├──[0m lodash.isnumber[2m@3.0.3[0m
+[2m├──[0m lodash.isplainobject[2m@4.0.6[0m
+[2m├──[0m lodash.isstring[2m@4.0.1[0m
+[2m├──[0m lodash.mergewith[2m@4.6.2[0m
+[2m├──[0m lodash.once[2m@4.1.1[0m
+[2m├──[0m long[2m@4.0.0[0m
+[2m├──[0m loose-envify[2m@1.4.0[0m
+[2m├──[0m lower-case[2m@2.0.2[0m
+[2m├──[0m lru-cache[2m@11.2.1[0m
+[2m├──[0m lucide-react[2m@0.503.0[0m
+[2m├──[0m lunary[2m@0.8.8[0m
+[2m├──[0m luxon[2m@3.7.2[0m
+[2m├──[0m magic-string[2m@0.30.19[0m
+[2m├──[0m make-dir[2m@3.1.0[0m
+[2m│[0m   [2m└──[0m semver[2m@6.3.1[0m
+[2m├──[0m math-intrinsics[2m@1.1.0[0m
+[2m├──[0m media-typer[2m@0.3.0[0m
+[2m├──[0m memoize-one[2m@4.1.0[0m
+[2m├──[0m merge-stream[2m@2.0.0[0m
+[2m├──[0m methods[2m@1.1.2[0m
+[2m├──[0m mime-db[2m@1.52.0[0m
+[2m├──[0m mime-types[2m@2.1.35[0m
+[2m├──[0m mimic-response[2m@3.1.0[0m
+[2m├──[0m minimatch[2m@9.0.5[0m
+[2m├──[0m minimist[2m@1.2.8[0m
+[2m├──[0m minipass[2m@5.0.0[0m
+[2m├──[0m minizlib[2m@2.1.2[0m
+[2m│[0m   [2m└──[0m minipass[2m@3.3.6[0m
+[2m├──[0m mistral-tokenizer-js[2m@1.0.0[0m
+[2m├──[0m mkdirp[2m@1.0.4[0m
+[2m├──[0m mkdirp-classic[2m@0.5.3[0m
+[2m├──[0m module-details-from-path[2m@1.0.4[0m
+[2m├──[0m monaco-editor[2m@0.53.0[0m
+[2m├──[0m ms[2m@2.1.3[0m
+[2m├──[0m mustache[2m@4.2.0[0m
+[2m├──[0m n-gram[2m@2.0.2[0m
+[2m├──[0m nanoid[2m@3.3.11[0m
+[2m├──[0m napi-build-utils[2m@2.0.0[0m
+[2m├──[0m negotiator[2m@0.6.3[0m
+[2m├──[0m neo-async[2m@2.6.2[0m
+[2m├──[0m next[2m@15.5.3[0m
+[2m│[0m   [2m├──[0m postcss[2m@8.4.31[0m
+[2m│[0m   [2m└──[0m sharp[2m@0.34.4[0m
+[2m├──[0m next-seo[2m@6.8.0[0m
+[2m├──[0m no-case[2m@3.0.4[0m
+[2m├──[0m node-abi[2m@3.77.0[0m
+[2m├──[0m node-addon-api[2m@8.5.0[0m
+[2m├──[0m node-cache[2m@5.1.2[0m
+[2m├──[0m node-cron[2m@3.0.3[0m
+[2m│[0m   [2m└──[0m uuid[2m@8.3.2[0m
+[2m├──[0m node-domexception[2m@1.0.0[0m
+[2m├──[0m node-fetch[2m@2.7.0[0m
+[2m├──[0m node-forge[2m@1.3.1[0m
+[2m├──[0m node-gyp-build[2m@4.8.4[0m
+[2m├──[0m node-releases[2m@2.0.21[0m
+[2m├──[0m node-rsa[2m@1.1.1[0m
+[2m├──[0m node-xmllint[2m@1.0.0[0m
+[2m├──[0m nodemailer[2m@6.10.1[0m
+[2m├──[0m nopt[2m@5.0.0[0m
+[2m├──[0m normalize-path[2m@3.0.0[0m
+[2m├──[0m npmlog[2m@5.0.1[0m
+[2m├──[0m nuqs[2m@2.6.0[0m
+[2m├──[0m object-assign[2m@4.1.1[0m
+[2m├──[0m object-hash[2m@2.2.0[0m
+[2m├──[0m object-inspect[2m@1.13.4[0m
+[2m├──[0m on-finished[2m@2.4.1[0m
+[2m├──[0m once[2m@1.4.0[0m
+[2m├──[0m only[2m@0.0.2[0m
+[2m├──[0m onnx-proto[2m@4.0.4[0m
+[2m│[0m   [2m└──[0m protobufjs[2m@6.11.4[0m
+[2m├──[0m onnxruntime-common[2m@1.14.0[0m
+[2m├──[0m onnxruntime-node[2m@1.14.0[0m
+[2m├──[0m onnxruntime-web[2m@1.14.0[0m
+[2m├──[0m openai[2m@5.22.0[0m
+[2m├──[0m openapi[2m@1.0.1[0m
+[2m├──[0m openapi-types[2m@12.1.3[0m
+[2m├──[0m p-finally[2m@1.0.0[0m
+[2m├──[0m p-limit[2m@3.1.0[0m
+[2m├──[0m p-locate[2m@5.0.0[0m
+[2m├──[0m p-queue[2m@8.1.1[0m
+[2m├──[0m p-retry[2m@4.6.2[0m
+[2m├──[0m p-timeout[2m@6.1.4[0m
+[2m├──[0m pako[2m@1.0.11[0m
+[2m├──[0m param-case[2m@3.0.4[0m
+[2m├──[0m parent-module[2m@1.0.1[0m
+[2m├──[0m parse-json[2m@5.2.0[0m
+[2m├──[0m parseurl[2m@1.3.3[0m
+[2m├──[0m pascal-case[2m@3.1.2[0m
+[2m├──[0m passthrough-counter[2m@1.0.0[0m
+[2m├──[0m path-case[2m@3.0.4[0m
+[2m├──[0m path-exists[2m@4.0.0[0m
+[2m├──[0m path-is-absolute[2m@1.0.1[0m
+[2m├──[0m path-parse[2m@1.0.7[0m
+[2m├──[0m path-scurry[2m@1.11.1[0m
+[2m│[0m   [2m├──[0m lru-cache[2m@10.4.3[0m
+[2m│[0m   [2m└──[0m minipass[2m@7.1.2[0m
+[2m├──[0m path-to-regexp[2m@6.3.0[0m
+[2m├──[0m path-type[2m@4.0.0[0m
+[2m├──[0m peek-readable[2m@4.1.0[0m
+[2m├──[0m pg-int8[2m@1.0.1[0m
+[2m├──[0m pg-protocol[2m@1.10.3[0m
+[2m├──[0m pg-types[2m@2.2.0[0m
+[2m├──[0m picocolors[2m@1.1.1[0m
+[2m├──[0m picomatch[2m@4.0.3[0m
+[2m├──[0m platform[2m@1.3.6[0m
+[2m├──[0m playwright[2m@1.55.0[0m
+[2m├──[0m playwright-core[2m@1.55.0[0m
+[2m├──[0m postcss[2m@8.5.6[0m
+[2m├──[0m postcss-js[2m@4.1.0[0m
+[2m├──[0m postcss-mixins[2m@12.1.2[0m
+[2m├──[0m postcss-nested[2m@7.0.2[0m
+[2m├──[0m postcss-preset-mantine[2m@1.18.0[0m
+[2m├──[0m postcss-selector-parser[2m@7.1.0[0m
+[2m├──[0m postcss-simple-vars[2m@7.0.1[0m
+[2m├──[0m postgres[2m@3.4.5[0m
+[2m├──[0m postgres-array[2m@2.0.0[0m
+[2m├──[0m postgres-bytea[2m@1.0.0[0m
+[2m├──[0m postgres-date[2m@1.0.7[0m
+[2m├──[0m postgres-interval[2m@1.2.0[0m
+[2m├──[0m posthog-js[2m@1.266.3[0m
+[2m├──[0m preact[2m@10.27.2[0m
+[2m├──[0m prebuild-install[2m@7.1.3[0m
+[2m│[0m   [2m└──[0m tar-fs[2m@2.1.4[0m
+[2m│[0m       [2m├──[0m chownr[2m@1.1.4[0m
+[2m│[0m       [2m└──[0m tar-stream[2m@2.2.0[0m
+[2m├──[0m prettier[2m@3.6.2[0m
+[2m├──[0m pretty-format[2m@26.6.2[0m
+[2m│[0m   [2m└──[0m ansi-styles[2m@4.3.0[0m
+[2m├──[0m prexit[2m@2.3.0[0m
+[2m├──[0m process[2m@0.11.10[0m
+[2m├──[0m progress[2m@2.0.3[0m
+[2m├──[0m prop-types[2m@15.8.1[0m
+[2m│[0m   [2m└──[0m react-is[2m@16.13.1[0m
+[2m├──[0m proto3-json-serializer[2m@3.0.2[0m
+[2m├──[0m protobufjs[2m@7.5.4[0m
+[2m│[0m   [2m└──[0m long[2m@5.3.2[0m
+[2m├──[0m proxy-from-env[2m@1.1.0[0m
+[2m├──[0m psl[2m@1.15.0[0m
+[2m├──[0m pump[2m@3.0.3[0m
+[2m├──[0m punycode[2m@2.3.1[0m
+[2m├──[0m qs[2m@6.14.0[0m
+[2m├──[0m querystringify[2m@2.2.0[0m
+[2m├──[0m queue-promise[2m@2.2.1[0m
+[2m├──[0m random-word-slugs[2m@0.1.7[0m
+[2m├──[0m randombytes[2m@2.1.0[0m
+[2m├──[0m raw-body[2m@2.5.2[0m
+[2m│[0m   [2m└──[0m http-errors[2m@2.0.0[0m
+[2m│[0m       [2m└──[0m statuses[2m@2.0.1[0m
+[2m├──[0m rc[2m@1.2.8[0m
+[2m├──[0m react[2m@19.1.1[0m
+[2m├──[0m react-confetti[2m@6.4.0[0m
+[2m├──[0m react-dnd[2m@16.0.1[0m
+[2m├──[0m react-dnd-html5-backend[2m@16.0.1[0m
+[2m├──[0m react-dom[2m@19.1.1[0m
+[2m├──[0m react-highlight-words[2m@0.21.0[0m
+[2m├──[0m react-is[2m@17.0.2[0m
+[2m├──[0m react-json-view-lite[2m@2.5.0[0m
+[2m├──[0m react-number-format[2m@5.4.4[0m
+[2m├──[0m react-redux[2m@9.2.0[0m
+[2m├──[0m react-remove-scroll[2m@2.7.1[0m
+[2m├──[0m react-remove-scroll-bar[2m@2.3.8[0m
+[2m├──[0m react-style-singleton[2m@2.2.3[0m
+[2m├──[0m react-textarea-autosize[2m@8.5.9[0m
+[2m├──[0m react-transition-group[2m@4.4.5[0m
+[2m├──[0m readable-stream[2m@3.6.2[0m
+[2m├──[0m readable-web-to-node-stream[2m@3.0.4[0m
+[2m│[0m   [2m└──[0m readable-stream[2m@4.7.0[0m
+[2m├──[0m readdirp[2m@3.6.0[0m
+[2m│[0m   [2m└──[0m picomatch[2m@2.3.1[0m
+[2m├──[0m recharts[2m@3.0.2[0m
+[2m├──[0m redux[2m@4.2.1[0m
+[2m├──[0m redux-thunk[2m@3.1.0[0m
+[2m│[0m   [2m└──[0m redux[2m@5.0.1[0m
+[2m├──[0m require-directory[2m@2.1.1[0m
+[2m├──[0m require-from-string[2m@2.0.2[0m
+[2m├──[0m require-in-the-middle[2m@7.5.2[0m
+[2m├──[0m requires-port[2m@1.0.0[0m
+[2m├──[0m reselect[2m@5.1.1[0m
+[2m├──[0m resolve[2m@1.22.8[0m
+[2m├──[0m resolve-from[2m@4.0.0[0m
+[2m├──[0m retry[2m@0.13.1[0m
+[2m├──[0m retry-axios[2m@2.6.0[0m
+[2m├──[0m retry-request[2m@7.0.2[0m
+[2m├──[0m rimraf[2m@3.0.2[0m
+[2m├──[0m rollup[2m@4.52.0[0m
+[2m├──[0m rouge[2m@1.0.3[0m
+[2m├──[0m safe-buffer[2m@5.2.1[0m
+[2m├──[0m safe-regex-test[2m@1.1.0[0m
+[2m├──[0m safer-buffer[2m@2.1.2[0m
+[2m├──[0m samlify[2m@2.10.1[0m
+[2m│[0m   [2m└──[0m uuid[2m@8.3.2[0m
+[2m├──[0m scheduler[2m@0.26.0[0m
+[2m├──[0m schema-utils[2m@4.3.2[0m
+[2m├──[0m secure-json-parse[2m@2.7.0[0m
+[2m├──[0m seed-color[2m@2.0.1[0m
+[2m├──[0m seedrandom[2m@2.4.2[0m
+[2m├──[0m semver[2m@7.7.2[0m
+[2m├──[0m sentence-case[2m@3.0.4[0m
+[2m├──[0m serialize-javascript[2m@6.0.2[0m
+[2m├──[0m set-blocking[2m@2.0.0[0m
+[2m├──[0m setprototypeof[2m@1.2.0[0m
+[2m├──[0m shared[2m@workspace:packages/shared[0m
+[2m├──[0m sharp[2m@0.32.6[0m
+[2m│[0m   [2m└──[0m node-addon-api[2m@6.1.0[0m
+[2m├──[0m shimmer[2m@1.2.1[0m
+[2m├──[0m side-channel[2m@1.1.0[0m
+[2m├──[0m side-channel-list[2m@1.0.0[0m
+[2m├──[0m side-channel-map[2m@1.0.1[0m
+[2m├──[0m side-channel-weakmap[2m@1.0.2[0m
+[2m├──[0m signal-exit[2m@3.0.7[0m
+[2m├──[0m simple-concat[2m@1.0.1[0m
+[2m├──[0m simple-get[2m@4.0.1[0m
+[2m├──[0m simple-swizzle[2m@0.2.4[0m
+[2m│[0m   [2m└──[0m is-arrayish[2m@0.3.4[0m
+[2m├──[0m simple-wcswidth[2m@1.1.2[0m
+[2m├──[0m snake-case[2m@3.0.4[0m
+[2m├──[0m source-map[2m@0.6.1[0m
+[2m├──[0m source-map-js[2m@1.2.1[0m
+[2m├──[0m source-map-support[2m@0.5.21[0m
+[2m├──[0m sprintf-js[2m@1.0.3[0m
+[2m├──[0m stacktrace-parser[2m@0.1.11[0m
+[2m│[0m   [2m└──[0m type-fest[2m@0.7.1[0m
+[2m├──[0m state-local[2m@1.0.7[0m
+[2m├──[0m statuses[2m@1.5.0[0m
+[2m├──[0m stream-events[2m@1.0.5[0m
+[2m├──[0m stream-shift[2m@1.0.3[0m
+[2m├──[0m streamsaver[2m@2.0.6[0m
+[2m├──[0m streamx[2m@2.22.1[0m
+[2m├──[0m string-width[2m@4.2.3[0m
+[2m├──[0m string_decoder[2m@1.3.0[0m
+[2m├──[0m strip-ansi[2m@6.0.1[0m
+[2m├──[0m strip-json-comments[2m@2.0.1[0m
+[2m├──[0m stripe[2m@16.12.0[0m
+[2m├──[0m strnum[2m@2.1.1[0m
+[2m├──[0m strtok3[2m@6.3.0[0m
+[2m├──[0m stubs[2m@3.0.0[0m
+[2m├──[0m styled-jsx[2m@5.1.6[0m
+[2m├──[0m suffix-thumb[2m@5.0.2[0m
+[2m├──[0m sugarss[2m@5.0.1[0m
+[2m├──[0m supports-color[2m@5.5.0[0m
+[2m├──[0m supports-preserve-symlinks-flag[2m@1.0.0[0m
+[2m├──[0m swagger-jsdoc[2m@6.2.8[0m
+[2m│[0m   [2m└──[0m commander[2m@6.2.0[0m
+[2m├──[0m swagger-parser[2m@10.0.3[0m
+[2m├──[0m swr[2m@2.3.6[0m
+[2m├──[0m tabbable[2m@6.2.0[0m
+[2m├──[0m tailwind-merge[2m@3.3.1[0m
+[2m├──[0m tailwindcss[2m@4.1.13[0m
+[2m├──[0m tapable[2m@2.2.3[0m
+[2m├──[0m tar[2m@6.2.1[0m
+[2m├──[0m tar-fs[2m@3.1.1[0m
+[2m├──[0m tar-stream[2m@3.1.7[0m
+[2m├──[0m teeny-request[2m@9.0.0[0m
+[2m│[0m   [2m└──[0m uuid[2m@9.0.1[0m
+[2m├──[0m terser[2m@5.44.0[0m
+[2m│[0m   [2m└──[0m commander[2m@2.20.3[0m
+[2m├──[0m terser-webpack-plugin[2m@5.3.14[0m
+[2m├──[0m text-decoder[2m@1.2.3[0m
+[2m├──[0m throttleit[2m@2.1.0[0m
+[2m├──[0m tiktoken[2m@1.0.22[0m
+[2m├──[0m tiny-invariant[2m@1.3.3[0m
+[2m├──[0m tinyglobby[2m@0.2.15[0m
+[2m├──[0m to-regex-range[2m@5.0.1[0m
+[2m├──[0m toidentifier[2m@1.0.1[0m
+[2m├──[0m token-types[2m@4.2.1[0m
+[2m├──[0m tokenizers[2m@workspace:packages/tokenizer[0m
+[2m│[0m   [2m└──[0m koa-router[2m@12.0.1[0m
+[2m│[0m       [2m└──[0m http-errors[2m@2.0.0[0m
+[2m│[0m           [2m└──[0m statuses[2m@2.0.1[0m
+[2m├──[0m tough-cookie[2m@4.1.4[0m
+[2m├──[0m tr46[2m@0.0.3[0m
+[2m├──[0m trigram-utils[2m@2.0.1[0m
+[2m├──[0m tslib[2m@2.8.1[0m
+[2m├──[0m tsscmp[2m@1.0.6[0m
+[2m├──[0m tunnel-agent[2m@0.6.0[0m
+[2m├──[0m tw-animate-css[2m@1.3.8[0m
+[2m├──[0m tween-functions[2m@1.2.0[0m
+[2m├──[0m type-fest[2m@4.41.0[0m
+[2m├──[0m type-is[2m@1.6.18[0m
+[2m├──[0m typescript[2m@5.9.2[0m
+[2m├──[0m unctx[2m@2.4.1[0m
+[2m├──[0m undici-types[2m@7.12.0[0m
+[2m├──[0m universalify[2m@0.2.0[0m
+[2m├──[0m unpipe[2m@1.0.0[0m
+[2m├──[0m unplugin[2m@2.3.10[0m
+[2m├──[0m update-browserslist-db[2m@1.1.3[0m
+[2m├──[0m upper-case[2m@2.0.2[0m
+[2m├──[0m upper-case-first[2m@2.0.2[0m
+[2m├──[0m url-parse[2m@1.5.10[0m
+[2m├──[0m use-callback-ref[2m@1.3.3[0m
+[2m├──[0m use-composed-ref[2m@1.4.0[0m
+[2m├──[0m use-isomorphic-layout-effect[2m@1.2.1[0m
+[2m├──[0m use-latest[2m@1.3.0[0m
+[2m├──[0m use-sidecar[2m@1.1.3[0m
+[2m├──[0m use-sync-external-store[2m@1.5.0[0m
+[2m├──[0m util-deprecate[2m@1.0.2[0m
+[2m├──[0m uuid[2m@11.1.0[0m
+[2m├──[0m validator[2m@13.15.15[0m
+[2m├──[0m vary[2m@1.1.2[0m
+[2m├──[0m victory-vendor[2m@37.3.6[0m
+[2m├──[0m washyourmouthoutwithsoap[2m@1.0.2[0m
+[2m├──[0m watchpack[2m@2.4.4[0m
+[2m├──[0m web-streams-polyfill[2m@4.0.0-beta.3[0m
+[2m├──[0m web-vitals[2m@4.2.4[0m
+[2m├──[0m webidl-conversions[2m@3.0.1[0m
+[2m├──[0m webpack[2m@5.101.3[0m
+[2m├──[0m webpack-sources[2m@3.3.3[0m
+[2m├──[0m webpack-virtual-modules[2m@0.6.2[0m
+[2m├──[0m whatwg-url[2m@5.0.0[0m
+[2m├──[0m which[2m@2.0.2[0m
+[2m├──[0m wide-align[2m@1.1.5[0m
+[2m├──[0m wrap-ansi[2m@7.0.0[0m
+[2m│[0m   [2m└──[0m ansi-styles[2m@4.3.0[0m
+[2m├──[0m wrappy[2m@1.0.2[0m
+[2m├──[0m xml[2m@1.0.1[0m
+[2m├──[0m xml-crypto[2m@6.1.2[0m
+[2m│[0m   [2m└──[0m xpath[2m@0.0.33[0m
+[2m├──[0m xml-escape[2m@1.1.0[0m
+[2m├──[0m xpath[2m@0.0.32[0m
+[2m├──[0m xtend[2m@4.0.2[0m
+[2m├──[0m y18n[2m@5.0.8[0m
+[2m├──[0m yallist[2m@4.0.0[0m
+[2m├──[0m yaml[2m@2.0.0-1[0m
+[2m├──[0m yargs[2m@17.7.2[0m
+[2m├──[0m yargs-parser[2m@21.1.1[0m
+[2m├──[0m ylru[2m@1.4.0[0m
+[2m├──[0m yocto-queue[2m@0.1.0[0m
+[2m├──[0m z-schema[2m@5.0.6[0m
+[2m│[0m   [2m└──[0m commander[2m@10.0.1[0m
+[2m├──[0m zod[2m@3.25.76[0m
+[2m├──[0m zod-to-json-schema[2m@3.24.6[0m
+[2m└──[0m zod-validation-error[2m@3.5.3[0m
