@@ -1,8 +1,9 @@
 import postgres from "postgres";
+import ssh2 from "ssh2";
 
 const isProduction = process.env.NODE_ENV === "production";
 
-const sql = postgres(process.env.DATABASE_URL!, {
+const options = {
   idle_timeout: 20,
   max_lifetime: 60 * 5,
   transform: {
@@ -32,7 +33,40 @@ const sql = postgres(process.env.DATABASE_URL!, {
   },
   debug: process.env.LUNARY_DB_DEBUG ? debugFn : () => {},
   onnotice: process.env.LUNARY_DB_DEBUG ? console.warn : () => {},
-});
+};
+
+if (process.env.NODE_ENV === "development") {
+  console.log("Using SSH tunnel for database connection");
+  const privateKey = await Bun.file(process.env.SSH_PRIVATE_KEY_PATH!).text();
+  options.socket = ({
+    host: [host],
+    port: [port],
+  }: {
+    host: string;
+    port: number;
+  }) =>
+    new Promise((resolve, reject) => {
+      const ssh = new ssh2.Client();
+      ssh
+        .on("error", (error) => {
+          console.log("SSH connection error:", error);
+          reject(error);
+        })
+        .on("ready", () =>
+          ssh.forwardOut("127.0.0.1", 12345, host, port, (err, socket) =>
+            err ? reject(err) : resolve(socket),
+          ),
+        )
+        .connect({
+          host: "88.198.48.232",
+          port: 3855,
+          username: "root",
+          privateKey,
+        });
+    });
+}
+
+const sql = postgres(process.env.DATABASE_URL!, options);
 
 function debugFn(
   connection: number,

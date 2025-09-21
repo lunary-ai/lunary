@@ -10,10 +10,10 @@
   },
   "dependencies": {
     "@ai-sdk/amazon-bedrock": "^2.2.8",
-    "@bufbuild/protobuf": "^2.5.2",
     "@anthropic-ai/sdk": "^0.40.0",
     "@authenio/samlify-node-xmllint": "^2.0.0",
     "@aws-sdk/client-comprehend": "^3.797.0",
+    "@bufbuild/protobuf": "^2.9.0",
     "@google-cloud/bigquery": "^7.9.4",
     "@google-cloud/datastream": "^4.0.1",
     "@ibm-cloud/watsonx-ai": "^1.6.4",
@@ -46,6 +46,7 @@
     "rouge": "^1.0.3",
     "samlify": "^2.9.1",
     "shared": "*",
+    "ssh2": "^1.17.0",
     "stripe": "^16.12.0",
     "swagger-jsdoc": "^6.2.8",
     "tiktoken": "^1.0.21",
@@ -66,6 +67,7 @@
     "@types/node-cron": "^3.0.11",
     "@types/nodemailer": "^6.4.17",
     "@types/swagger-jsdoc": "^6.0.4",
+    "@types/ssh2": "^1.15.5",
     "openapi": "^1.0.1"
   }
 }
