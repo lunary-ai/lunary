@@ -1,5 +1,6 @@
 import postgres from "postgres";
 import ssh2 from "ssh2";
+import fs from "fs";
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -37,7 +38,8 @@ const options = {
 
 if (process.env.NODE_ENV === "development") {
   console.log("Using SSH tunnel for database connection");
-  const privateKey = await Bun.file(process.env.SSH_PRIVATE_KEY_PATH!).text();
+  const privateKey = fs.readFileSync(process.env.SSH_PRIVATE_KEY_PATH!);
+
   options.socket = ({
     host: [host],
     port: [port],
