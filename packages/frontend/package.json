@@ -26,6 +26,8 @@
     "@tailwindcss/postcss": "^4.1.5",
     "@tanstack/react-table": "^8.21.3",
     "@tanstack/react-virtual": "^3.13.6",
+    "@vercel/analytics": "^1.5.0",
+    "@vercel/speed-insights": "^1.2.0",
     "bcrypt": "^5.1.1",
     "chroma-js": "^3.1.2",
     "class-variance-authority": "^0.7.1",

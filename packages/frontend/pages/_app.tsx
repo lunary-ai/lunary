@@ -8,6 +8,9 @@ import { MantineProvider } from "@mantine/core";
 import type { AppProps } from "next/app";
 import Head from "next/head";
 import { NuqsAdapter } from "nuqs/adapters/next/pages";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+
 import * as Sentry from "@sentry/nextjs";
 
 import Layout from "@/components/layout";
@@ -89,6 +92,8 @@ export default function App({ Component, pageProps }: AppProps) {
           </GoogleOAuthProvider>
         </NuqsAdapter>
       </ErrorBoundary>
+      <Analytics />
+      <SpeedInsights />
     </>
   );
 }
