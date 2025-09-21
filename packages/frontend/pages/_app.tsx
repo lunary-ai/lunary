@@ -9,6 +9,8 @@ import type { AppProps } from "next/app";
 import Head from "next/head";
 import { NuqsAdapter } from "nuqs/adapters/next/pages";
 import * as Sentry from "@sentry/nextjs";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
 
 import Layout from "@/components/layout";
 import AnalyticsWrapper from "@/components/layout/Analytics";
@@ -89,6 +91,8 @@ export default function App({ Component, pageProps }: AppProps) {
           </GoogleOAuthProvider>
         </NuqsAdapter>
       </ErrorBoundary>
+      <SpeedInsights />
+      <Analytics />
     </>
   );
 }
