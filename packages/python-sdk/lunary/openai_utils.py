@@ -1,6 +1,7 @@
 import json, logging
 
 logger = logging.getLogger(__name__)
+
 MONITORED_KEYS = [
     "frequency_penalty",
     "functions",
@@ -85,5 +86,5 @@ class OpenAIUtils:
                     "promptCached": OpenAIUtils.get_property(OpenAIUtils.get_property(output.usage, "prompt_tokens_details"), "cached_tokens")
                 },
             }
-        except Exception as e:
-            logging.info("[Lunary] Error parsing output: ", e)
+        except Exception:
+            logger.exception("Error parsing openai output")

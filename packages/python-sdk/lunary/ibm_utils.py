@@ -1,4 +1,4 @@
-import json, logging
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -51,8 +51,8 @@ class IBMUtils:
 
             extra = {k: v for k, v in kwargs.items() if k in KWARGS_TO_CAPTURE}
             return {"name": name, "input": messages, "extra": extra}
-        except Exception as e:
-            logger.error("Error parsing input: ", e)
+        except Exception:
+            logger.exception("Error parsing input")
 
     @staticmethod
     def parse_output(output, stream=False):
@@ -67,5 +67,5 @@ class IBMUtils:
             } 
             # TODO: get name from input
             return parsed_output
-        except Exception as e:
-            logger.error("Error parsing output: ", e)
+        except Exception:
+            logger.exception("Error parsing output")
