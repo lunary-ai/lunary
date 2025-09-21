@@ -258,7 +258,7 @@ async function registerRunEvent(
     const [runData] = await sql`select id from run where id = ${runId}`;
     if (!runData?.id) {
       console.info(
-        "Retrying insertion in 5s in case start event not inserted yet...",
+        "Retrying insertion (end event) in 5s in case start event not inserted yet...",
       );
 
       await new Promise((resolve) => setTimeout(resolve, 5000));
