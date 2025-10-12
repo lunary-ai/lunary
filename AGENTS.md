@@ -27,6 +27,8 @@ Lunary is an LLM observability and development platform providing conversation t
 
 **Package Manager:** This repository exclusively uses `bun`. Never use `npm`, `pnpm`, or `yarn`.
 
+**Database Migrations:** Migration files must not rely on implicit transactions—write them as plain SQL statements executed sequentially (no `BEGIN`/`COMMIT`, `DO $$` blocks, etc.).
+
 ## Architecture
 
 **Monorepo Structure (Bun workspaces):**
@@ -35,7 +37,7 @@ Lunary is an LLM observability and development platform providing conversation t
 - **`packages/frontend/`** - Next.js 15 + React 19 dashboard
 - **`packages/shared/`** - TypeScript types and utilities
 - **`packages/db/`** - 96 sequential PostgreSQL migrations
-- **`packages/e2e/`** - Playwright tests
+- **`packages/tests/`** - Centralized test suite (Bun unit/integration, Playwright, SDK)
 - **`packages/python-sdk/`** - Python SDK with Poetry
 - **`packages/tokenizer/`** - Token counting service
 

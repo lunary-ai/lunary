@@ -1,0 +1,22 @@
+{
+  "name": "@lunary/tests",
+  "scripts": {
+    "test": "bun run test:unit && bun run test:playwright",
+    "test:unit": "bash -lc 'cd unit && bun test'",
+    "test:playwright": "playwright test"
+  },
+  "dependencies": {
+    "@langchain/core": "^0.3.49",
+    "@langchain/openai": "^0.5.7",
+    "@playwright/test": "^1.52.0",
+    "backend": "*",
+    "dotenv": "^16.5.0",
+    "lunary": "^0.8.8",
+    "jose": "^6.0.12",
+    "react": "19.1.1",
+    "react-dom": "19.1.1"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.0"
+  }
+}

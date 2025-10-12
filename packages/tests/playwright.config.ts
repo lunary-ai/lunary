@@ -26,7 +26,7 @@ export default defineConfig({
     navigationTimeout: 10 * 1000,
 
     // Uses Vercel deployment URL in CI, otherwise uses localhost.
-    baseURL: process.env.CI ? process.env.BASE_URL : "http://127.0.0.1:8080",
+    baseURL: process.env.CI ? process.env.BASE_URL : "http://localhost:8080",
     permissions: ["clipboard-read", "clipboard-write"],
 
     video: "on",
@@ -67,7 +67,7 @@ export default defineConfig({
   /* Run your local dev server before starting the tests */
   // webServer: {
   //   command: "bun run dev",
-  //   url: "http://127.0.0.1:8080",
+  //   url: "http://localhost:8080",
   //   reuseExistingServer: !process.env.CI,
   // },
 });
