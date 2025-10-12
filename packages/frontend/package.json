@@ -63,6 +63,7 @@
   },
   "devDependencies": {
     "@types/grecaptcha": "^3.0.9",
+    "@types/node": "^24.7.2",
     "@types/react": "19.1.13",
     "@types/streamsaver": "^2.0.5",
     "postcss": "^8.5.6",
