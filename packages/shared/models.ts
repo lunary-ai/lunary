@@ -17,6 +17,16 @@ export const MODELS: LunaryProvidedModel[] = [
     provider: "openai",
   },
   {
+    id: "gpt-5-pro",
+    name: "gpt-5-pro",
+    provider: "openai",
+  },
+  {
+    id: "gpt-5-thinking",
+    name: "gpt-5-thinking",
+    provider: "openai",
+  },
+  {
     id: "gpt-4.1",
     name: "gpt-4.1",
     provider: "openai",
@@ -98,6 +108,11 @@ export const MODELS: LunaryProvidedModel[] = [
     provider: "anthropic",
   },
   {
+    id: "claude-sonnet-4.5-20250929",
+    name: "claude-sonnet-4.5",
+    provider: "anthropic",
+  },
+  {
     id: "claude-3-7-sonnet-latest",
     name: "claude-3-7-sonnet",
     provider: "anthropic",
@@ -120,6 +135,11 @@ export const MODELS: LunaryProvidedModel[] = [
   {
     id: "claude-3-haiku-20240307",
     name: "claude-3-haiku",
+    provider: "anthropic",
+  },
+  {
+    id: "claude-3.5-haiku",
+    name: "claude-3.5-haiku",
     provider: "anthropic",
   },
   {
