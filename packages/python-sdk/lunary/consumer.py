@@ -65,7 +65,7 @@ class Consumer(Thread):
                 else:
                     logger.error(f"Error sending events.")
 
-                self.event_queue.append(batch)
+                # self.event_queue.append(batch)
 
     def stop(self):
         self.running = False
