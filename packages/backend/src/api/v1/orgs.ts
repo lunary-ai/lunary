@@ -8,7 +8,9 @@ import { z } from "zod";
 
 import { PassThrough } from "stream";
 
+import { recordAuditLog } from "@/src/api/v1/audit-logs/utils";
 import { checkAccess } from "@/src/utils/authorization";
+import { regenerateOrgPrivateKey } from "@/src/utils/org-api-keys";
 import { handleStream, runAImodel } from "@/src/utils/playground";
 import * as Sentry from "@sentry/bun";
 
@@ -183,6 +185,20 @@ orgs.post("/upgrade", async (ctx: Context) => {
 
   ctx.body = { ok: true };
 });
+
+orgs.post(
+  "/api-key/regenerate",
+  checkAccess("privateKeys", "update"),
+  async (ctx: Context) => {
+    const orgId = ctx.state.orgId as string;
+
+    const apiKey = await regenerateOrgPrivateKey(orgId);
+
+    await recordAuditLog("org_api_key", "regenerate", ctx, orgId);
+
+    ctx.body = { apiKey };
+  },
+);
 
 orgs.post(
   "/playground",

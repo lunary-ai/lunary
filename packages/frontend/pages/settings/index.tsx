@@ -7,14 +7,11 @@ import {
   Box,
   Button,
   Container,
-  Flex,
   Group,
   Loader,
   Popover,
   Progress,
-  Select,
   Stack,
-  Switch,
   Tabs,
   Text,
   TextInput,
@@ -26,35 +23,31 @@ import Router, { useRouter } from "next/router";
 import AnalyticsCard from "@/components/analytics/AnalyticsCard";
 import ChartComponent from "@/components/analytics/Charts/ChartComponent";
 import { SettingsCard } from "@/components/blocks/SettingsCard";
-import CheckPicker from "@/components/checks/Picker";
 import DataWarehouseCard from "@/components/settings/data-warehouse";
+import { SAMLConfig } from "@/components/settings/saml";
 import config from "@/utils/config";
 import {
   useLunaryVersion,
   useOrg,
   useProject,
-  useProjectRules,
   useUser,
 } from "@/utils/dataHooks";
 import { useRefreshCostsJob } from "@/utils/dataHooks/jobs";
 import errorHandler from "@/utils/errors";
 import { fetcher } from "@/utils/fetcher";
 import { modals } from "@mantine/modals";
-import { notifications, showNotification } from "@mantine/notifications";
+import { notifications } from "@mantine/notifications";
 import {
   IconCheck,
   IconCoin,
-  IconFilter,
-  IconIdBadge,
   IconPencil,
   IconRefreshAlert,
   IconShieldCog,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { type CheckLogic, hasAccess } from "shared";
+import { hasAccess } from "shared";
 import useSWR from "swr";
-import { SAMLConfig } from "@/components/settings/saml";
 
 dayjs.extend(relativeTime);
 
@@ -246,6 +239,94 @@ function OrgNameCard() {
             Save
           </Button>
         </Group>
+      </Stack>
+    </SettingsCard>
+  );
+}
+
+function OrgApiKeyCard() {
+  const { org, mutate, regenerateOrgKey } = useOrg();
+  const { user } = useUser();
+  const [regenerating, setRegenerating] = useState(false);
+
+  if (!org || !["owner", "admin"].includes(user.role)) {
+    return null;
+  }
+
+  async function handleRegenerate() {
+    if (regenerating) return;
+    setRegenerating(true);
+    const res = await errorHandler(regenerateOrgKey());
+
+    if (res) {
+      notifications.show({
+        title: "Key regenerated",
+        message: "The organization API key has been rotated.",
+        icon: <IconCheck />,
+        color: "green",
+      });
+      await mutate();
+    }
+
+    setRegenerating(false);
+  }
+
+  return (
+    <SettingsCard title="Organization API Key">
+      <Stack gap="sm">
+        <Text c="dimmed">
+          Authenticate organization-level integrations with this secret key.
+          Keep it private and rotate it if you suspect exposure.
+        </Text>
+        <Alert
+          variant="light"
+          color="blue"
+          styles={{ label: { width: "100%" } }}
+          title={
+            <Group justify="space-between" w="100%">
+              <Group>
+                <Text fw={500}>Org API Key:</Text>
+                <CopyText
+                  c="blue.8"
+                  value={org.orgApiKey ?? ""}
+                  data-testid="org-api-key"
+                  isSecret
+                />
+              </Group>
+              <Button
+                ml="auto"
+                size="xs"
+                color="blue"
+                loading={regenerating}
+                leftSection={<IconRefreshAlert size={16} />}
+                onClick={() =>
+                  modals.openConfirmModal({
+                    title: "Rotate organization API key?",
+                    confirmProps: {
+                      color: "blue",
+                      "data-testid": "confirm-org-key-rotation",
+                    },
+                    children: (
+                      <Text size="sm">
+                        Regenerating the org API key immediately revokes the
+                        current key. Update your integrations afterwards.
+                      </Text>
+                    ),
+                    labels: { confirm: "Confirm", cancel: "Cancel" },
+                    onConfirm: handleRegenerate,
+                  })
+                }
+              >
+                Rotate
+              </Button>
+            </Group>
+          }
+        >
+          <Text>
+            Only owners and admins can view or rotate the organization API key.
+            It grants access to some organization-level endpoints.
+          </Text>
+        </Alert>
       </Stack>
     </SettingsCard>
   );
@@ -473,6 +554,7 @@ export default function Settings() {
           <Container px="0">
             <Stack gap="xl">
               <OrgNameCard />
+              <OrgApiKeyCard />
               <SettingsCard title={<>Cost Mapping</>} align="start">
                 <Stack gap="md" w="100%">
                   <Group justify="apart">

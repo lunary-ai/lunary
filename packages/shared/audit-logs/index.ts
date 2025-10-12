@@ -291,6 +291,16 @@ export const AUDIT_LOG_RESOURCES = {
       },
     },
   },
+  org_api_key: {
+    id: "org_api_key",
+    displayValue: "Organization API Key",
+    actions: {
+      regenerate: {
+        id: "refresh",
+        displayValue: "Regenerated",
+      },
+    },
+  },
   pii_masking: {
     id: "pii_masking",
     displayValue: "PII Masking",

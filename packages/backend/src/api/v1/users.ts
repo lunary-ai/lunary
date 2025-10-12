@@ -63,13 +63,21 @@ users.get("/me/org", async (ctx: Context) => {
         account.name
     `;
   }
+
+  if (isAdmin) {
+    const [orgKey] =
+      await sql`select api_key, created_at from api_key where org_id = ${org.id} and type = 'org_private'`;
+
+    org.orgApiKey = orgKey?.apiKey ?? null;
+  }
+
   org.license = ctx.state.license || {};
   ctx.body = org;
 });
 
 users.post("/feedback", async (ctx: Context) => {
   const bodySchema = z.object({
-    text: z.string()
+    text: z.string(),
   });
   const { text } = bodySchema.parse(ctx.request.body);
   await sendSlackMessage(text, "feedback");

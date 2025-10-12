@@ -73,7 +73,7 @@ function createMockCtx(overrides: Partial<any> = {}) {
       ip: "localhost",
       ...(overrides.request || {}),
     },
-    state: { ...(overrides.state || {}) },
+    state: { projectId: "project-ctx", ...(overrides.state || {}) },
     body: undefined,
     status: undefined,
     throw(status: number, message?: string) {
@@ -236,9 +236,7 @@ describe("authMiddleware", () => {
 
     setSqlResolver((query) => {
       if (query.includes("from api_key")) {
-        return [
-          { type: "private", projectId: "project-1", orgId: "org-1" },
-        ];
+        return [{ type: "private", projectId: "project-1", orgId: "org-1" }];
       }
       throw new Error(`Unexpected query: ${query}`);
     });
@@ -259,6 +257,36 @@ describe("authMiddleware", () => {
     expect(ctx.state.projectId).toBe("project-1");
     expect(ctx.state.orgId).toBe("org-1");
     expect(ctx.state.privateKey).toBe(true);
+    expect(next.mock.calls.length).toBe(1);
+  });
+
+  test("flags org API key access without project context", async () => {
+    const orgApiKey = crypto.randomUUID();
+
+    setSqlResolver((query) => {
+      if (query.includes("from api_key")) {
+        return [{ type: "org_private", orgId: "org-77", projectId: null }];
+      }
+      throw new Error(`Unexpected query: ${query}`);
+    });
+
+    const ctx = createMockCtx({
+      path: "/v1/orgs/org-77/new-endpoint",
+      request: {
+        headers: {
+          authorization: `Bearer ${orgApiKey}`,
+        },
+      },
+      state: {},
+    });
+    const next = mock(async () => {});
+
+    await authMiddleware(ctx, next);
+
+    expect(ctx.state.orgId).toBe("org-77");
+    expect(ctx.state.projectId).toBe("org:org-77");
+    expect(ctx.state.apiKeyType).toBe("org_private");
+    expect(ctx.state.privateKey).toBeUndefined();
     expect(next.mock.calls.length).toBe(1);
   });
 

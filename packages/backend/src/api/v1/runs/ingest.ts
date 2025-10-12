@@ -172,7 +172,7 @@ async function registerRunEvent(
   const apiKey = event.appId;
   if (typeof apiKey === "string") {
     const [project] = await sql`
-      select project_id from api_key where api_key = ${apiKey}
+      select project_id from api_key where api_key = ${apiKey} and type in ('public', 'private')
     `;
 
     if (project) {

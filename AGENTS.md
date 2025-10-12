@@ -67,7 +67,8 @@ Dashboard: `http://localhost:8080`
 API: `http://localhost:3333`
 
 ## Tests
-- Use `bun run test` to run tests after each code change
+- Use `bun run test` to run tests after each code change.
+- Before running the Playwright suite, start the full stack with `bun run dev:llm` (spawns backend + frontend + dependencies). The tests expect all services to be reachable.
 
 ## Authentication Architecture
 
