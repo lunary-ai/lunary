@@ -1,4 +1,4 @@
-import { setTimeout } from "timers/promises";
+// LEGACY FILE, never update it. Model costs are now in the database
 import sql from "./db";
 import { findAsyncSequential } from "./misc";
 
