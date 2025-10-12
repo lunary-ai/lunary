@@ -10,8 +10,8 @@
     "migrate:db": "bun --filter './packages/backend' migrate:db",
     "dev": "bun --elide-lines 0 --filter '*' dev ",
     "dev:llm": "bun --filter '*' dev",
-    "test": "bun --filter './packages/e2e' test",
-    "clean": "rm -rf bun.lock & rm -rf node_modules &&  rm -rf packages/frontend/node_modules && rm -rf packages/backend/node_modules && rm -rf packages/frontend/.next && rm -rf packages/e2e/node_modules"
+    "test": "bun --filter './packages/tests' test",
+    "clean": "rm -rf bun.lock & rm -rf node_modules &&  rm -rf packages/frontend/node_modules && rm -rf packages/backend/node_modules && rm -rf packages/frontend/.next && rm -rf packages/tests/node_modules"
   },
   "workspaces": [
     "packages/*"

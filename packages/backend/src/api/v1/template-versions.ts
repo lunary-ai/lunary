@@ -1,9 +1,8 @@
-import sql from "@/src/utils/db";
+import sql, { createSqlClient } from "@/src/utils/db";
 import { clearUndefined } from "@/src/utils/ingest";
 import { unCamelObject } from "@/src/utils/misc";
 import { Context } from "koa";
 import Router from "koa-router";
-import postgres from "postgres";
 import { hasAccess } from "shared";
 import { z } from "zod";
 
@@ -11,7 +10,16 @@ const versions = new Router();
 
 // Use unCameledSql to avoid camel casing the results so they're compatible with openai's SDK
 // Otherwise it returns stuff like maxTokens instead of max_tokens and OpenAI breaks
-const unCameledSql = postgres(process.env.DATABASE_URL!);
+// TODO: remove this, use the shared db client, and uncamel manually
+const unCameledSql = createSqlClient({
+  max: 1,
+  idle_timeout: 20,
+  max_lifetime: 60 * 5,
+
+  transform: {
+    undefined: null,
+  },
+});
 
 // Warning: This function is used to uncamelize the extras field of a template version
 // It's used to make sure OpenAI messages are not camel cased as used in the app

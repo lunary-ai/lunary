@@ -70,6 +70,15 @@ if (process.env.NODE_ENV === "development") {
 
 const sql = postgres(process.env.DATABASE_URL!, options);
 
+export function createSqlClient(
+  overrides: Partial<postgres.Options<object>> = {},
+) {
+  return postgres(process.env.DATABASE_URL!, {
+    ...options,
+    ...overrides,
+  } as postgres.Options<object>);
+}
+
 function debugFn(
   connection: number,
   query: string,
