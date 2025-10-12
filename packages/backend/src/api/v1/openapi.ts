@@ -19,6 +19,13 @@ const options: swaggerJsdoc.Options = {
           type: "http",
           scheme: "bearer",
         },
+        OrgApiKeyAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "UUID",
+          description:
+            "Use an org-level private API key issued by Lunary. Example Authorization header: `Bearer 123e4567-e89b-12d3-a456-426614174000`.",
+        },
       },
     },
   },

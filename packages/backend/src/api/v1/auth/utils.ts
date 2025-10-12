@@ -122,6 +122,8 @@ const publicRoutes = [
   "/v1/test-endpoint/auth", // public test endpoint with auth check
 ];
 
+const orgPrivateRoutes = ["/v1/analytics/org/models/top"];
+
 async function checkApiKey(ctx: Context, key: string) {
   const [apiKey] =
     await sql`select id, type, api_key, project_id, org_id from api_key where api_key = ${key}`;
@@ -144,6 +146,9 @@ export async function authMiddleware(ctx: Context, next: Next) {
   const isPublicRoute = publicRoutes.some((route) =>
     typeof route === "string" ? route === ctx.path : route.test(ctx.path),
   );
+  const isOrgPrivateRoute = orgPrivateRoutes.some((route) =>
+    typeof route === "string" ? route === ctx.path : route.test(ctx.path),
+  );
 
   const bearer = ctx.request?.headers?.authorization?.split(" ")[1] as string;
   const apiKey = ctx.request?.headers?.["x-api-key"] as string;
@@ -164,7 +169,9 @@ export async function authMiddleware(ctx: Context, next: Next) {
     ctx.state.apiKeyType = type;
 
     if (type === "org_private") {
-      ctx.state.projectId = `org:${orgId}`;
+      if (!isOrgPrivateRoute) {
+        ctx.throw(401, "Org API key cannot access this route");
+      }
     } else {
       ctx.state.projectId = projectId;
 
