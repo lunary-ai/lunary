@@ -1,14 +1,15 @@
 import { sendVerifyEmail } from "@/src/emails";
-import * as Sentry from "@sentry/bun";
 import { Db } from "@/src/types";
 import config from "@/src/utils/config";
 import sql from "@/src/utils/db";
 import Context from "@/src/utils/koa";
+import * as Sentry from "@sentry/bun";
 import Router from "koa-router";
 import { z } from "zod";
 import google from "./google";
 import saml, { getLoginUrl } from "./saml";
 
+import { ensureOrgPrivateKey } from "@/src/utils/org-api-keys";
 import { recordAuditLog } from "../audit-logs/utils";
 import github from "./github";
 import {
@@ -171,6 +172,7 @@ auth.post("/signup", async (ctx: Context) => {
         type: "public",
         projectId: project.id,
         apiKey: project.id,
+        orgId: org.id,
       };
 
       await sql`
@@ -180,6 +182,7 @@ auth.post("/signup", async (ctx: Context) => {
         {
           type: "private",
           projectId: project.id,
+          orgId: org.id,
         },
       ];
       await sql`
@@ -188,6 +191,8 @@ auth.post("/signup", async (ctx: Context) => {
 
       return { user, org };
     });
+
+    await ensureOrgPrivateKey(org.id);
 
     const token = await signJWT({
       userId: user.id,
@@ -361,7 +366,7 @@ auth.get("/saml-url/:orgId", async (ctx: Context) => {
       const role = payload.role as string;
       const projects = payload.projects as string[] | undefined;
       const oldRole = payload.oldRole as string | undefined;
-      
+
       // Check if account already exists for this email/org
       const [existingAccount] = await sql`
         select * from account 
@@ -373,7 +378,9 @@ auth.get("/saml-url/:orgId", async (ctx: Context) => {
         // Handle existing account in another org based on oldRole
         if (oldRole === "owner") {
           // User was owner of another org, delete that org
-          const [user] = await sql<Db.Account[]>`select * from account where email = ${email} order by created_at desc limit 1`;
+          const [user] = await sql<
+            Db.Account[]
+          >`select * from account where email = ${email} order by created_at desc limit 1`;
           if (user) {
             await sql`delete from org where id = ${user.orgId}`;
           }
@@ -546,7 +553,7 @@ auth.post("/reset-password", async (ctx: Context) => {
 // Used after the SAML flow to exchange the onetime token for an auth token
 auth.post("/exchange-token", async (ctx: Context) => {
   const bodySchema = z.object({
-    onetimeToken: z.string()
+    onetimeToken: z.string(),
   });
   const { onetimeToken } = bodySchema.parse(ctx.request.body);
 

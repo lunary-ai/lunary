@@ -36,7 +36,10 @@ const options = {
   onnotice: process.env.LUNARY_DB_DEBUG ? console.warn : () => {},
 };
 
-if (process.env.NODE_ENV === "development") {
+if (
+  process.env.NODE_ENV === "development" &&
+  process.env.USE_SSH_TUNNEL === "true"
+) {
   console.log("Using SSH tunnel for database connection");
   const privateKey = fs.readFileSync(process.env.SSH_PRIVATE_KEY_PATH!);
 

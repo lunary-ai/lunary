@@ -22,10 +22,15 @@ export function checkAccess(resourceName: ResourceName, action: Action) {
       return;
     }
 
-    const [user] =
-      await sql`select * from account where id = ${ctx.state.userId}`;
+    if (ctx.state.apiKeyType === "org_private") {
+      ctx.throw(401, "Org API keys cannot access this endpoint");
+      return;
+    }
 
-    const hasAccessToResource = hasAccess(user.role, resourceName, action);
+    const [{ role }] =
+      await sql`select role from account where id = ${ctx.state.userId}`;
+
+    const hasAccessToResource = hasAccess(role, resourceName, action);
 
     if (hasAccessToResource) {
       await next();

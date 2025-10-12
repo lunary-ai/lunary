@@ -1,4 +1,5 @@
 import sql from "@/src/utils/db";
+import { ensureOrgPrivateKey } from "@/src/utils/org-api-keys";
 import Context from "@/src/utils/koa";
 import { sendSlackMessage } from "@/src/utils/notifications";
 import Router from "koa-router";
@@ -246,17 +247,21 @@ google.post("/", async (ctx: Context) => {
       type: "public",
       projectId: project.id,
       apiKey: project.id,
+      orgId: org.id,
     };
     await sql`insert into api_key ${sql(publicKey)}`;
 
     const privateKey = {
       type: "private",
       projectId: project.id,
+      orgId: org.id,
     };
     await sql`insert into api_key ${sql(privateKey)}`;
 
     return { user, org };
   });
+
+  await ensureOrgPrivateKey(org.id);
 
   await sendSlackMessage(
     `🔔 New Google signup from ${userData.email}

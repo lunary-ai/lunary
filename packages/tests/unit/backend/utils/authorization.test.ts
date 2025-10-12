@@ -16,6 +16,11 @@ function createCtx(stateOverrides: Partial<any> = {}) {
     },
     status: undefined,
     body: undefined,
+    throw(status: number, message?: string) {
+      const error: any = new Error(message);
+      error.status = status;
+      throw error;
+    },
   } as any;
 }
 
@@ -73,6 +78,30 @@ describe("checkAccess middleware", () => {
       error: "Forbidden",
       message: "You don't have access to this resource",
     });
+    expect(next.mock.calls.length).toBe(0);
+  });
+
+  test("rejects requests authenticated with an org API key", async () => {
+    setSqlResolver(() => {
+      throw new Error("Database lookup should not run for org API keys");
+    });
+
+    const ctx = createCtx({
+      privateKey: false,
+      apiKeyType: "org_private",
+    });
+    const next = mock(async () => {});
+
+    let thrown;
+    try {
+      await checkAccess("projects", "read")(ctx, next);
+    } catch (error) {
+      thrown = error as any;
+    }
+
+    expect(thrown).toBeDefined();
+    expect(thrown.status).toBe(401);
+    expect(thrown.message).toBe("Org API keys cannot access this endpoint");
     expect(next.mock.calls.length).toBe(0);
   });
 });

@@ -165,9 +165,11 @@ test("POST /projects seeds both public and private keys", async () => {
   expect(publicInsert.type).toBe("public");
   expect(publicInsert.projectId).toBe("project-1");
   expect(publicInsert.apiKey).toBe("project-1");
+  expect(publicInsert.orgId).toBe("org-1");
 
   expect(privateInsert.type).toBe("private");
   expect(privateInsert.projectId).toBe("project-1");
+  expect(privateInsert.orgId).toBe("org-1");
   expect(validateUUID(privateInsert.apiKey)).toBe(true);
 
   expect(recordAuditLogMock.mock.calls.length).toBe(1);

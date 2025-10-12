@@ -123,25 +123,21 @@ const publicRoutes = [
 ];
 
 async function checkApiKey(ctx: Context, key: string) {
-  const [apiKey] = await sql`
-    select *,
-    (select org_id from project where project.id = api_key.project_id) as org_id
-    from api_key
-    where api_key.api_key = ${key}`;
+  const [apiKey] =
+    await sql`select id, type, api_key, project_id, org_id from api_key where api_key = ${key}`;
 
-  if (!apiKey) {
-    // Support public key = project id
-    const [project] =
-      await sql`select id, org_id from project where id = ${key}`;
-
-    if (!project) {
-      ctx.throw(401, "Invalid API key");
-    }
-
-    return { type: "public", projectId: project.id, orgId: project.orgId };
-  } else {
+  if (apiKey) {
     return apiKey;
   }
+
+  // Support legacy behaviour where public key = project id
+  const [project] = await sql`select id, org_id from project where id = ${key}`;
+
+  if (!project) {
+    ctx.throw(401, "Invalid API key");
+  }
+
+  return { type: "public", projectId: project.id, orgId: project.orgId };
 }
 
 export async function authMiddleware(ctx: Context, next: Next) {
@@ -164,15 +160,21 @@ export async function authMiddleware(ctx: Context, next: Next) {
   else if (validateUUID(key)) {
     const { type, projectId, orgId } = await checkApiKey(ctx, key as string);
 
-    ctx.state.projectId = projectId;
     ctx.state.orgId = orgId;
+    ctx.state.apiKeyType = type;
 
-    if (type === "public" && !isPublicRoute) {
-      ctx.throw(401, "This route requires a private API key");
-    }
+    if (type === "org_private") {
+      ctx.state.projectId = `org:${orgId}`;
+    } else {
+      ctx.state.projectId = projectId;
 
-    if (type == "private") {
-      ctx.state.privateKey = true;
+      if (type === "public" && !isPublicRoute) {
+        ctx.throw(401, "This route requires a private API key");
+      }
+
+      if (type === "private") {
+        ctx.state.privateKey = true;
+      }
     }
   } else {
     try {

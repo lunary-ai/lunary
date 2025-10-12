@@ -81,6 +81,7 @@ projects.post("/", checkAccess("projects", "create"), async (ctx: Context) => {
     type: "public",
     projectId: project.id,
     apiKey: project.id,
+    orgId,
   };
   sql`insert into api_key ${sql(publicKey)}`;
 
@@ -88,6 +89,7 @@ projects.post("/", checkAccess("projects", "create"), async (ctx: Context) => {
     {
       type: "private",
       projectId: project.id,
+      orgId,
     },
   ];
   await sql`insert into api_key ${sql(privateKey)}`;

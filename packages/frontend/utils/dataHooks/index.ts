@@ -1,4 +1,4 @@
-import { useContext, useMemo, useState } from "react";
+import { useContext, useMemo } from "react";
 import useSWR, { Key, SWRConfiguration, useSWRConfig } from "swr";
 import useSWRInfinite from "swr/infinite";
 import useSWRMutation, { SWRMutationConfiguration } from "swr/mutation";
@@ -7,9 +7,9 @@ import { ProjectContext } from "../context";
 
 import { useComputedColorScheme } from "@mantine/core";
 
+import type { APIPrompt, APIPromptVersion } from "@/types/prompt-types";
 import { useAuth } from "../auth";
 import { fetcher } from "../fetcher";
-import type { APIPrompt, APIPromptVersion } from "@/types/prompt-types";
 
 // Define rule interface for project rules
 type ProjectRule = { type: string; [key: string]: any };
@@ -156,7 +156,39 @@ export function useOrg() {
     fetcher.patch,
   );
 
-  return { org, loading: isLoading, updateOrg, addUserToOrg, mutate };
+  const { trigger: regenerateOrgKeyTrigger } = useSWRMutation(
+    org ? `/orgs/${org.id}/api-key/regenerate` : null,
+    fetcher.post,
+  );
+
+  async function regenerateOrgKey() {
+    if (!org) return null;
+    const response = await regenerateOrgKeyTrigger({});
+
+    if (response?.apiKey) {
+      mutate(
+        (current) => {
+          if (!current) return current;
+          return {
+            ...current,
+            orgApiKey: response.apiKey,
+          };
+        },
+        { revalidate: false },
+      );
+    }
+
+    return response;
+  }
+
+  return {
+    org,
+    loading: isLoading,
+    updateOrg,
+    addUserToOrg,
+    mutate,
+    regenerateOrgKey,
+  };
 }
 
 export function useJoinData(token?: string) {
@@ -836,7 +868,7 @@ export function useCustomEventsNames() {
 
 export function useMetadataKeys(type?: string) {
   const { data, isLoading, error } = useProjectSWR(
-    type ? `/filters/metadata?type=${type}` : "/filters/metadata"
+    type ? `/filters/metadata?type=${type}` : "/filters/metadata",
   );
 
   return {
