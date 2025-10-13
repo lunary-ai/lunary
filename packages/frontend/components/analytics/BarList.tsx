@@ -29,8 +29,16 @@ function BarList({ data, columns, filterZero = true }: BarListProps) {
 
   const dataColumns = columns.filter((col) => col.key);
   const main = dataColumns.find((col) => col.main) || dataColumns[0];
-  const mainTotal = data?.reduce((acc, item) => acc + (item[main.key] || 0), 0);
+  const mainValues = data.map((item) => Number(item[main.key] || 0));
+  const maxMainValue = Math.max(0, ...mainValues);
   const scheme = useComputedColorScheme();
+
+  const columnCount = columns.length;
+  const firstColumnWidth =
+    columnCount > 1 ? 50 : 100; // reserve half the table for the bar column when other columns exist
+  const remainingWidth = Math.max(100 - firstColumnWidth, 0);
+  const otherColumnWidth =
+    columnCount > 1 ? `${remainingWidth / (columnCount - 1)}%` : "0%";
 
   return (
     <Box>
@@ -46,7 +54,10 @@ function BarList({ data, columns, filterZero = true }: BarListProps) {
         <Table.Thead style={{ textAlign: "left" }}>
           <Table.Tr>
             {columns.map(({ name }, i) => (
-              <th style={{ width: i === 0 ? "60%" : "25%" }} key={i}>
+              <th
+                style={{ width: i === 0 ? `${firstColumnWidth}%` : otherColumnWidth }}
+                key={i}
+              >
                 {name || ""}
               </th>
             ))}
@@ -56,26 +67,48 @@ function BarList({ data, columns, filterZero = true }: BarListProps) {
           {data
             .sort((a, b) => b[main.key] - a[main.key])
             .filter((item) => !filterZero || item[main.key] > 0)
-            .splice(0, 5)
+            .slice(0, 5)
             .map((item, index) => (
               <Table.Tr key={index}>
-                {columns.map(({ key, render, bar }, i) =>
-                  bar ? (
+                {columns.map(({ key, render, bar }, i) => {
+                  if (!bar) {
+                    return (
+                      <Table.Td key={i}>
+                        {render ? render(item[key], item) : item[key]}
+                      </Table.Td>
+                    );
+                  }
+
+                  const rowMainValue = Number(item[main.key] || 0);
+                  const barScale =
+                    maxMainValue > 0 ? Math.min(rowMainValue / maxMainValue, 1) : 0;
+                  const sections = item.barSections ?? [];
+                  const sectionTotal =
+                    sections.reduce(
+                      (acc: number, section: any) => acc + Number(section.count || 0),
+                      0,
+                    ) || rowMainValue;
+                  const clickable = Boolean(item.url);
+
+                  return (
                     <Table.Td
                       className="progressTd"
                       key={i}
                       pos="relative"
                       display="flex"
                       height="35px"
-                      onClick={(e) => {
-                        if (!item.url) return;
-                        if (e.metaKey || e.ctrlKey) {
-                          window.open(item.url, "_blank");
-                        } else {
-                          router.push(item.url);
-                        }
-                      }}
-                      style={item.url ? { cursor: "pointer" } : undefined}
+                      onClick={
+                        clickable
+                          ? (e) => {
+                              if (e.metaKey || e.ctrlKey) {
+                                window.open(item.url, "_blank");
+                              } else {
+                                router.push(item.url);
+                              }
+                            }
+                          : undefined
+                      }
+                      style={clickable ? { cursor: "pointer" } : undefined}
                     >
                       <Progress.Root
                         size="lg"
@@ -84,16 +117,22 @@ function BarList({ data, columns, filterZero = true }: BarListProps) {
                         w="90%"
                         pos="absolute"
                       >
-                        {item.barSections?.map(
-                          ({ count, color, tooltip }, n: number) => (
+                        {sections.map(({ count, color, tooltip }, n: number) => {
+                          const numericCount = Number(count || 0);
+                          const sectionValue =
+                            sectionTotal > 0
+                              ? (numericCount / sectionTotal) * barScale * 100
+                              : 0;
+
+                          return (
                             <Tooltip id={`${n}`} label={tooltip} key={n}>
                               <Progress.Section
-                                value={(count / mainTotal) * 100}
+                                value={sectionValue}
                                 color={color}
                               />
                             </Tooltip>
-                          ),
-                        )}
+                          );
+                        })}
                       </Progress.Root>
                       <Flex
                         w="90%"
@@ -120,12 +159,8 @@ function BarList({ data, columns, filterZero = true }: BarListProps) {
                         </Text>
                       </Flex>
                     </Table.Td>
-                  ) : (
-                    <Table.Td key={i}>
-                      {render ? render(item[key], item) : item[key]}
-                    </Table.Td>
-                  ),
-                )}
+                  );
+                })}
               </Table.Tr>
             ))}
         </Table.Tbody>
