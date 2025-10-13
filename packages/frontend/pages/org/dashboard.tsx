@@ -147,6 +147,7 @@ export default function OrgDashboardPage() {
                   showProjectColumn
                   showTokenBreakdown
                   enableLinks={false}
+                  maxRows={20}
                 />
               )}
             </Box>

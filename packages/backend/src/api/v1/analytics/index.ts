@@ -1823,7 +1823,7 @@ analytics.get("/org/models/top", async (ctx: Context) => {
       order by
         total_tokens desc,
         cost desc
-      limit 5
+      limit 20
     `;
 
   ctx.body = topModels;
