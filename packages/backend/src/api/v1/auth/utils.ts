@@ -217,7 +217,7 @@ export async function authMiddleware(ctx: Context, next: Next) {
       }
 
       if (error instanceof JWSInvalid) {
-        console.error("Invalid access token");
+        console.error("Invalid access token", error, key, ctx);
         ctx.status = 401;
         ctx.body = { message: "Invalid access token" };
         return;
