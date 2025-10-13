@@ -1,6 +1,10 @@
 import AnalyticsCard from "@/components/analytics/AnalyticsCard";
 import TopModels from "@/components/analytics/Charts/TopModels";
-import { getDateRangeFromPreset } from "@/components/analytics/DateRangeGranularityPicker";
+import DateRangeGranularityPicker, {
+  Granularity,
+  determineGranularity,
+  getDateRangeFromPreset,
+} from "@/components/analytics/DateRangeGranularityPicker";
 import { useOrg } from "@/utils/dataHooks";
 import { fetcher } from "@/utils/fetcher";
 import {
@@ -40,6 +44,13 @@ export default function OrgDashboardPage() {
   const { org, loading: orgLoading } = useOrg();
   const [timeZone, setTimeZone] = useState("UTC");
   const defaultRange = useMemo(() => getDateRangeFromPreset("30 Days"), []);
+  const [dateRange, setDateRange] = useState<[Date, Date]>(() => [
+    new Date(defaultRange[0]),
+    new Date(defaultRange[1]),
+  ]);
+  const [granularity, setGranularity] = useState<Granularity>(() =>
+    determineGranularity(defaultRange),
+  );
 
   useEffect(() => {
     if (typeof Intl !== "undefined" && Intl.DateTimeFormat) {
@@ -51,8 +62,8 @@ export default function OrgDashboardPage() {
   }, []);
 
   const queryString = useMemo(
-    () => buildQuery(defaultRange, timeZone),
-    [defaultRange, timeZone],
+    () => buildQuery(dateRange, timeZone),
+    [dateRange, timeZone],
   );
 
   const requestPath = useMemo(() => {
@@ -103,27 +114,43 @@ export default function OrgDashboardPage() {
           title="Top Models"
           description="Most used models across every project in your organization"
         >
-          <Box py="md">
-            {isLoading ? (
-              <Flex align="center" justify="center" h={200}>
-                <Loader size="sm" />
-              </Flex>
-            ) : topModelsError ? (
-              <Center mih={160} px="md">
-                <Text size="sm" c="red">
-                  Failed to load org models. Please try again.
-                </Text>
-              </Center>
-            ) : !topModels || topModels.length === 0 ? (
-              <Center mih={160} px="md">
-                <Text size="sm" c="dimmed">
-                  No model activity for the selected date range.
-                </Text>
-              </Center>
-            ) : (
-              <TopModels data={topModels} />
-            )}
-          </Box>
+          <Stack gap="md" py="md">
+            <Box px="md">
+              <DateRangeGranularityPicker
+                dateRange={dateRange}
+                setDateRange={setDateRange}
+                granularity={granularity}
+                setGranularity={setGranularity}
+                disableWeekly
+              />
+            </Box>
+            <Box>
+              {isLoading ? (
+                <Flex align="center" justify="center" h={200}>
+                  <Loader size="sm" />
+                </Flex>
+              ) : topModelsError ? (
+                <Center mih={160} px="md">
+                  <Text size="sm" c="red">
+                    Failed to load org models. Please try again.
+                  </Text>
+                </Center>
+              ) : !topModels || topModels.length === 0 ? (
+                <Center mih={160} px="md">
+                  <Text size="sm" c="dimmed">
+                    No model activity for the selected date range.
+                  </Text>
+                </Center>
+              ) : (
+                <TopModels
+                  data={topModels}
+                  showProjectColumn
+                  showTokenBreakdown
+                  enableLinks={false}
+                />
+              )}
+            </Box>
+          </Stack>
         </AnalyticsCard>
       )}
     </Stack>
