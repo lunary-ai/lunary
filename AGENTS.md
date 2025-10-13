@@ -70,6 +70,13 @@ API: `http://localhost:3333`
 - Use `bun run test` to run tests after each code change.
 - Before running the Playwright suite, start the full stack with `bun run dev:llm` (spawns backend + frontend + dependencies). The tests expect all services to be reachable.
 
+## OpenAPI Documentation
+- The backend exposes its OpenAPI 3 spec by running `swagger-jsdoc` with the config in `packages/backend/src/api/v1/openapi.ts`; it sets global metadata (title, version, server URL) and registers a `/openapi` route on the versioned router.
+- `packages/backend/src/api/v1/index.ts` prefixes the router with `/v1` and mounts the OpenAPI router, so the full spec is always available at `GET /v1/openapi`.
+- Endpoint documentation lives alongside the handlers as JSDoc blocks that start with `@openapi`. Because the generator scans `packages/backend/src/api/v1/**/*.ts`, any block under that tree becomes part of the spec.
+- Those blocks contain YAML describing the path, method, parameters, and responses; keep the documented URL absolute (e.g. `/v1/runs`) so it matches the actual route path including the `/v1` prefix added by the parent router.
+- You can also declare reusable `components` in the same style—see the schema definitions near the top of `packages/backend/src/api/v1/runs/index.ts` for an example. Place the comment before the relevant handler so the spec stays readable.
+
 ## Authentication Architecture
 
 - **Request Pipeline:** `authMiddleware` in `packages/backend/src/api/v1/auth/utils.ts` runs ahead of routing (registered in `packages/backend/src/index.ts`) and populates `ctx.state` with user/org/project context. A curated `publicRoutes` allowlist lets health checks, ingestion, and auth flows bypass credentials; everything else requires either a JWT bearer token or an API key. UUID-shaped tokens are treated as project API keys and checked against `api_key`; bearer JWTs are verified and tied back to an `account` row, including optional project membership validation via the `projectId` query parameter.

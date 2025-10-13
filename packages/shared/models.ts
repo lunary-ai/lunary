@@ -17,11 +17,6 @@ export const MODELS: LunaryProvidedModel[] = [
     provider: "openai",
   },
   {
-    id: "gpt-5-pro",
-    name: "gpt-5-pro",
-    provider: "openai",
-  },
-  {
     id: "gpt-5-thinking",
     name: "gpt-5-thinking",
     provider: "openai",

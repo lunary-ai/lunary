@@ -8,6 +8,7 @@ interface Data {
   totalTokens: number;
   completionTokens: number;
   promptTokens: number;
+  projectName?: string | null;
 }
 
 export default function TopModels({ data }: { data: Data[] }) {
@@ -15,7 +16,9 @@ export default function TopModels({ data }: { data: Data[] }) {
     <Box px="md">
       <BarList
         data={data.map((model) => ({
-          value: model.name,
+          value: model.projectName
+            ? `${model.name} (${model.projectName})`
+            : model.name,
           url: `/logs?filters=models=${model.name}`,
           tokens: model.totalTokens,
           cost: model.cost,

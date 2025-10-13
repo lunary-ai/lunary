@@ -260,7 +260,7 @@ describe("authMiddleware", () => {
     expect(next.mock.calls.length).toBe(1);
   });
 
-  test("flags org API key access without project context", async () => {
+  test("rejects org API keys on disallowed routes", async () => {
     const orgApiKey = crypto.randomUUID();
 
     setSqlResolver((query) => {
@@ -271,7 +271,39 @@ describe("authMiddleware", () => {
     });
 
     const ctx = createMockCtx({
-      path: "/v1/orgs/org-77/new-endpoint",
+      path: "/v1/runs/ingest",
+      request: {
+        headers: {
+          authorization: `Bearer ${orgApiKey}`,
+        },
+      },
+      state: {},
+    });
+    const next = mock(async () => {});
+
+    let thrown;
+    try {
+      await authMiddleware(ctx, next);
+    } catch (error) {
+      thrown = error as any;
+    }
+
+    expect(thrown?.status).toBe(401);
+    expect(next.mock.calls.length).toBe(0);
+  });
+
+  test("allows org API keys on approved analytics endpoint", async () => {
+    const orgApiKey = crypto.randomUUID();
+
+    setSqlResolver((query) => {
+      if (query.includes("from api_key")) {
+        return [{ type: "org_private", orgId: "org-77", projectId: null }];
+      }
+      throw new Error(`Unexpected query: ${query}`);
+    });
+
+    const ctx = createMockCtx({
+      path: "/v1/analytics/org/models/top",
       request: {
         headers: {
           authorization: `Bearer ${orgApiKey}`,
@@ -284,9 +316,8 @@ describe("authMiddleware", () => {
     await authMiddleware(ctx, next);
 
     expect(ctx.state.orgId).toBe("org-77");
-    expect(ctx.state.projectId).toBe("org:org-77");
+    expect(ctx.state.projectId).toBeUndefined();
     expect(ctx.state.apiKeyType).toBe("org_private");
-    expect(ctx.state.privateKey).toBeUndefined();
     expect(next.mock.calls.length).toBe(1);
   });
 

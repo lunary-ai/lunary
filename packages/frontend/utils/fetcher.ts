@@ -26,6 +26,22 @@ function get(path) {
   }).then(handleResponse);
 }
 
+// TODO: probably not ideal to have this separate from get()
+function getWithHeaders(
+  path,
+  extraHeaders: Record<string, string | undefined> = {},
+  includeAuth = true,
+) {
+  const baseHeaders = includeAuth ? getHeaders() : undefined;
+
+  return fetch(buildUrl(path), {
+    headers: {
+      ...(baseHeaders ?? {}),
+      ...extraHeaders,
+    },
+  }).then(handleResponse);
+}
+
 function getText(path) {
   return fetch(buildUrl(path), {
     headers: getHeaders(),
@@ -164,6 +180,7 @@ async function handleResponse(res: Response) {
 
 export const fetcher = {
   get,
+  getWithHeaders,
   getFile,
   getText,
   getStream,

@@ -5,6 +5,7 @@ type CustomContext<
   ContextT = Koa.DefaultContext,
 > = Koa.ParameterizedContext<StateT, { a: 1 }>;
 
+// AGENTS: do not update this type without asking the user first
 type AuthenticatedState = {
   userId: string;
   orgId: string;
