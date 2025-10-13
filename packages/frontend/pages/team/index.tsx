@@ -310,6 +310,7 @@ const ProjectMultiSelect = forwardRef<HTMLInputElement, ProjectMultiProps>(
         classNames={{ pillsList: classes.pillsList }}
         disabled={disabled}
         readOnly={disabled}
+        clearable={!disabled}
       />
     );
   },
@@ -323,16 +324,25 @@ function InviteMemberCard() {
   const [opened, setOpened] = useState(false);
   const [inviteLink, setInviteLink] = useState("");
   const { org } = useOrg();
+  const [projectError, setProjectError] = useState<string | null>(null);
 
   const { invite, isInviting } = useInviteUser();
 
   useEffect(() => {
-    setSelectedProjects(projects.map((p) => p.id));
+    const ids = projects.map((p) => p.id);
+    setSelectedProjects(ids);
+    if (ids.length) {
+      setProjectError(null);
+    }
   }, [projects]);
 
   useEffect(() => {
     if (["admin", "billing"].includes(role)) {
-      setSelectedProjects(projects.map((p) => p.id));
+      const ids = projects.map((p) => p.id);
+      setSelectedProjects(ids);
+      if (ids.length) {
+        setProjectError(null);
+      }
     }
   }, [role]);
 
@@ -351,6 +361,11 @@ function InviteMemberCard() {
     const seatAllowance = org?.seatAllowance || SEAT_ALLOWANCE[org?.plan];
     if (org?.users?.length >= seatAllowance) {
       return openUpgrade("team");
+    }
+
+    if (!selectedProjects.length) {
+      setProjectError("Select at least one project");
+      return;
     }
 
     try {
@@ -403,7 +418,7 @@ function InviteMemberCard() {
           <Input.Wrapper label="Role">
             <RoleSelect value={role} setValue={setRole} />
           </Input.Wrapper>
-          <Input.Wrapper label="Projects">
+          <Input.Wrapper label="Projects" error={projectError}>
             <Tooltip
               label="Upgrade to manage project access granuarly"
               position="top"
@@ -411,7 +426,10 @@ function InviteMemberCard() {
             >
               <ProjectMultiSelect
                 value={selectedProjects}
-                setValue={setSelectedProjects}
+                setValue={(projectIds) => {
+                  setSelectedProjects(projectIds);
+                  setProjectError(projectIds.length ? null : "Select at least one project");
+                }}
                 disabled={
                   upgradeForGranular || ["admin", "billing"].includes(role)
                 }
@@ -441,6 +459,7 @@ function UpdateUserForm({ user, onClose, setShowConfirmation, setOnConfirm }) {
   const { org } = useOrg();
 
   const [userProjects, setUserProjects] = useState(user.projects);
+  const [projectError, setProjectError] = useState<string | null>(null);
   const { updateUser } = useOrgUser(user.id);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -450,7 +469,11 @@ function UpdateUserForm({ user, onClose, setShowConfirmation, setOnConfirm }) {
 
   useEffect(() => {
     if (["owner", "admin", "billing"].includes(role)) {
-      setUserProjects(projects.map((p) => p.id));
+      const ids = projects.map((p) => p.id);
+      setUserProjects(ids);
+      if (ids.length) {
+        setProjectError(null);
+      }
     }
   }, [role]);
 
@@ -459,6 +482,11 @@ function UpdateUserForm({ user, onClose, setShowConfirmation, setOnConfirm }) {
     setIsLoading(true);
 
     try {
+      if (!userProjects.length) {
+        setProjectError("Select at least one project");
+        setIsLoading(false);
+        return;
+      }
       if (role === "owner") {
         setOnConfirm(() => () => updateUser({ role, projects: userProjects }));
         setShowConfirmation(true);
@@ -479,10 +507,13 @@ function UpdateUserForm({ user, onClose, setShowConfirmation, setOnConfirm }) {
       <Input.Wrapper mt="md" label="Role">
         <RoleSelect value={role} setValue={setRole} />
       </Input.Wrapper>
-      <Input.Wrapper mt="md" label="Projects">
+      <Input.Wrapper mt="md" label="Projects" error={projectError}>
         <ProjectMultiSelect
           value={userProjects}
-          setValue={setUserProjects}
+          setValue={(projects) => {
+            setUserProjects(projects);
+            setProjectError(projects.length ? null : "Select at least one project");
+          }}
           disabled={
             ["owner", "admin", "billing"].includes(role) || !canUsePaidRoles
           }
