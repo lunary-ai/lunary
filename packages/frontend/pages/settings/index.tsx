@@ -4,6 +4,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 
 import {
   Alert,
+  Badge,
   Box,
   Button,
   Container,
@@ -38,6 +39,7 @@ import { fetcher } from "@/utils/fetcher";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import {
+  IconActivity,
   IconCheck,
   IconCoin,
   IconPencil,
@@ -555,6 +557,27 @@ export default function Settings() {
             <Stack gap="xl">
               <OrgNameCard />
               <OrgApiKeyCard />
+              <SettingsCard
+                title={
+                  <Group gap={8} align="center">
+                    <Text fw={500}>Organization Dashboard</Text>
+                    <Badge size="xs" color="yellow" variant="light">
+                      Beta
+                    </Badge>
+                  </Group>
+                }
+                align="start"
+              >
+                <Text mb="md">Explore organization-wide analytics.</Text>
+                <Button
+                  component={Link}
+                  href="/org/dashboard"
+                  variant="default"
+                  leftSection={<IconActivity size={16} />}
+                >
+                  Open Organization Dashboard
+                </Button>
+              </SettingsCard>
               <SettingsCard title={<>Cost Mapping</>} align="start">
                 <Stack gap="md" w="100%">
                   <Group justify="apart">
