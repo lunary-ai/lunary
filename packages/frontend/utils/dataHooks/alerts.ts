@@ -8,9 +8,20 @@ export interface Alert {
   threshold: number;
   metric: string;
   timeFrameMinutes: number;
-  email?: string;
-  webhookUrl?: string;
+  emails: string[];
+  webhookUrls: string[];
   createdAt: string;
+}
+
+export interface AlertWebhookTestResponse {
+  successCount: number;
+  failureCount: number;
+  results: {
+    url: string;
+    ok: boolean;
+    status?: number;
+    error?: string;
+  }[];
 }
 
 export interface AlertHistory {
@@ -31,6 +42,9 @@ export function useAlerts() {
     { onSuccess: () => mutate() },
   );
 
+  const { trigger: testWebhooks, isMutating: isTestingWebhooks } =
+    useProjectMutation("/alerts/test-webhooks", fetcher.post);
+
   return {
     alerts: data || [],
     error,
@@ -38,6 +52,8 @@ export function useAlerts() {
     create,
     isCreating,
     mutate,
+    testWebhooks,
+    isTestingWebhooks,
   };
 }
 

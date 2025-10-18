@@ -1,18 +1,30 @@
 import sql from "@/src/utils/db";
 import { clearUndefined } from "@/src/utils/ingest";
+import {
+  notifyAlertRecipients,
+  AlertNotificationEvent,
+} from "@/src/utils/alertNotifications";
 
-// check alerts and record history
 export async function checkAlerts() {
   try {
     const alerts = await sql`
-      select id, project_id, status, threshold, metric, time_frame_minutes 
+      select id, project_id, name, status, threshold, metric, time_frame_minutes, emails, webhook_urls
       from alert
       where status != 'disabled'
     `;
 
     for (const alert of alerts) {
-      const { id, projectId, status, threshold, metric, timeFrameMinutes } =
-        alert;
+      const {
+        id,
+        projectId,
+        name,
+        status,
+        threshold,
+        metric,
+        timeFrameMinutes,
+        emails,
+        webhookUrls,
+      } = alert;
 
       const sanitizedTimeFrameMinutes = Math.floor(Number(timeFrameMinutes));
       if (isNaN(sanitizedTimeFrameMinutes) || sanitizedTimeFrameMinutes <= 0) {
@@ -98,6 +110,39 @@ export async function checkAlerts() {
       }
 
       const nowDate = new Date();
+      const emailList = Array.isArray(emails) ? emails : [];
+      const webhookList = Array.isArray(webhookUrls) ? webhookUrls : [];
+      const shouldNotify = emailList.length > 0 || webhookList.length > 0;
+
+      async function sendNotification(
+        event: AlertNotificationEvent,
+        current: number,
+      ) {
+        if (!shouldNotify) return;
+
+        try {
+          await notifyAlertRecipients(
+            { emails: emailList, webhookUrls: webhookList },
+            {
+              alertId: id,
+              alertName: name,
+              projectId,
+              metric,
+              threshold,
+              value: current,
+              windowMinutes: sanitizedTimeFrameMinutes,
+              status: event,
+              timestamp: nowDate,
+            },
+          );
+        } catch (notificationError) {
+          console.error("[ALERTS] notification dispatch failed", {
+            alertId: id,
+            event,
+            error: notificationError,
+          });
+        }
+      }
 
       if (status === "healthy" && value > threshold) {
         await sql.begin(async (trx) => {
@@ -117,6 +162,8 @@ export async function checkAlerts() {
           )}
         `;
         });
+
+        await sendNotification("triggered", value);
       } else if (status === "triggered" && value <= threshold) {
         await sql.begin(async (trx) => {
           await trx`
@@ -130,6 +177,8 @@ export async function checkAlerts() {
           where alert_id = ${id} and status = 'ongoing'
         `;
         });
+
+        await sendNotification("resolved", value);
       }
     }
   } catch (error) {
