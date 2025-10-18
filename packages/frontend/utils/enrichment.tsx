@@ -91,7 +91,7 @@ function renderToxicityEnrichment(data: EnrichmentData) {
 function renderLanguageEnrichment(languageDetections: LanguageDetectionResult) {
   if (
     !languageDetections?.input ||
-    !languageDetections?.error ||
+    !languageDetections?.output ||
     !languageDetections?.error
   ) {
     return "";
