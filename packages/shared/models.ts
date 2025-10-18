@@ -103,8 +103,13 @@ export const MODELS: LunaryProvidedModel[] = [
     provider: "anthropic",
   },
   {
-    id: "claude-sonnet-4.5-20250929",
+    id: "claude-sonnet-4.5",
     name: "claude-sonnet-4.5",
+    provider: "anthropic",
+  },
+  {
+    id: "claude-haiku-4-5",
+    name: "claude-haiku-4.5",
     provider: "anthropic",
   },
   {
