@@ -1,217 +1,335 @@
-import OrgUserBadge from "@/components/blocks/OrgUserBadge";
-import RenamableField from "@/components/blocks/RenamableField";
-import { useDataset, useDatasets, useUser } from "@/utils/dataHooks";
-import { cleanSlug } from "@/utils/format";
+import { useContext, useEffect, useMemo, useState } from "react";
 import {
   ActionIcon,
-  Alert,
+  Anchor,
   Badge,
-  Box,
   Button,
-  Card,
-  Container,
   Group,
   Loader,
-  Menu,
+  Modal,
+  Pagination,
   Stack,
+  Table,
   Text,
+  TextInput,
   Title,
-  SimpleGrid,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import {
-  IconMessages,
-  IconPencil,
+  IconArrowRight,
+  IconDatabase,
   IconPlus,
-  IconTextCaption,
   IconTrash,
 } from "@tabler/icons-react";
+import Link from "next/link";
 import Router from "next/router";
-import { generateSlug } from "random-word-slugs";
-import { hasAccess } from "shared";
+import { ProjectContext } from "@/utils/context";
+import {
+  DatasetV2,
+  useCreateDatasetV2,
+  useDatasetsV2,
+  useOrg,
+} from "@/utils/dataHooks";
+import { fetcher } from "@/utils/fetcher";
 
-// define Dataset type
-type Dataset = { id: string; slug: string; prompts?: any[]; format: string };
+const PAGE_SIZE = 20;
 
-function DatasetCard({
-  defaultValue,
-  onDelete,
+function CreateDatasetModal({
+  opened,
+  onClose,
+  onCreated,
 }: {
-  defaultValue: Dataset;
-  onDelete: () => void;
+  opened: boolean;
+  onClose: () => void;
+  onCreated: (dataset: DatasetV2) => void;
 }) {
-  const { update, dataset, remove } = useDataset(
-    defaultValue?.id,
-    defaultValue,
-  );
-  // cast dataset to Dataset type
-  const typedDataset = dataset as Dataset;
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const { createDataset, creating } = useCreateDatasetV2();
 
-  return (
-    <Card p="lg" withBorder pos="relative" style={{ overflow: "visible" }}>
-      <ActionIcon
-        pos="absolute"
-        top={-15}
-        right={-15}
-        style={{ zIndex: 10 }}
-        onClick={async () => {
-          modals.openConfirmModal({
-            title: "Please confirm your action",
-            confirmProps: { color: "red" },
-            children: (
-              <Text size="sm">
-                Are you sure you want to delete this prompt? This action cannot
-                be undone and the prompt data will be lost forever.
-              </Text>
-            ),
-            labels: { confirm: "Confirm", cancel: "Cancel" },
+  async function handleSubmit() {
+    if (!name.trim()) {
+      setError("Name is required");
+      return;
+    }
 
-            onConfirm: async () => {
-              onDelete();
-              remove();
-            },
-          });
-        }}
-        color="red"
-        variant="subtle"
-      >
-        <IconTrash size={16} />
-      </ActionIcon>
-      <Group justify="space-between">
-        <Stack>
-          <Group>
-            <RenamableField
-              style={{ cursor: "pointer" }}
-              hidePencil
-              order={5}
-              size={16}
-              defaultValue={typedDataset.slug}
-              onRename={(newName) => {
-                update(
-                  { slug: cleanSlug(newName) },
-                  {
-                    optimisticData: (data) => ({
-                      ...data,
-                      slug: cleanSlug(newName),
-                    }),
-                  },
-                );
-              }}
-            />
-            {typedDataset.prompts && (
-              <Badge variant="light" radius="sm" color="blue" size="md">
-                {`${typedDataset.prompts.length} prompt${typedDataset.prompts.length > 1 ? "s" : ""}`}
-              </Badge>
-            )}
+    setError(null);
 
-            <Badge
-              variant="light"
-              radius="sm"
-              color={typedDataset.format === "chat" ? "violet" : "gray"}
-              size="md"
-            >
-              {typedDataset.format}
-            </Badge>
-          </Group>
-        </Stack>
+    try {
+      const dataset = await createDataset({
+        name: name.trim(),
+        description: description.trim() ? description.trim() : null,
+      });
 
-        <Button
-          onClick={() => Router.push(`/datasets/${typedDataset.id}`)}
-          size="sm"
-          leftSection={<IconPencil size={16} />}
-          variant="light"
-        >
-          Edit
-        </Button>
-      </Group>
-    </Card>
-  );
-}
-
-export default function Datasets() {
-  const { datasets, isLoading, mutate, insert, isInserting } = useDatasets();
-  const { user } = useUser();
-  // cast datasets array for proper typing
-  const datasetsList = (datasets as Dataset[]) || [];
-
-  function createDataset(format) {
-    insert(
-      {
-        slug: generateSlug(),
-        format,
-      },
-      {
-        onSuccess: (dataset) => {
-          Router.push(`/datasets/${dataset.id}`);
-        },
-      },
-    );
+      if (dataset) {
+        onCreated(dataset as DatasetV2);
+        setName("");
+        setDescription("");
+      }
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   return (
-    <Container>
-      <Stack>
-        <Group align="center" justify="space-between">
-          <Group align="center">
-            <Title>Datasets</Title>
-          </Group>
-
-          {hasAccess(user.role, "datasets", "create") && (
-            <Menu>
-              <Menu.Target>
-                <Button
-                  leftSection={<IconPlus size={12} />}
-                  variant="default"
-                  loading={isInserting}
-                >
-                  Create Dataset
-                </Button>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Item
-                  leftSection={<IconMessages size={12} />}
-                  onClick={() => {
-                    createDataset("chat");
-                  }}
-                >
-                  New Chat Dataset (OpenAI compatible)
-                </Menu.Item>
-                <Menu.Item
-                  leftSection={<IconTextCaption size={12} />}
-                  onClick={() => {
-                    createDataset("text");
-                  }}
-                >
-                  New Text Dataset
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
-          )}
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title={
+        <Group wrap="nowrap" gap="xs">
+          <IconDatabase size={16} />
+          <Text fw={500}>Create dataset</Text>
         </Group>
-
-        {isLoading ? (
-          <Loader />
-        ) : (
-          <SimpleGrid cols={2} spacing="xl">
-            {datasetsList.length === 0 ? (
-              <Alert color="gray" title="No datasets yet" />
-            ) : (
-              datasetsList.map((dataset) => (
-                <DatasetCard
-                  key={dataset.id}
-                  defaultValue={dataset}
-                  onDelete={() => {
-                    mutate(
-                      datasetsList.filter((d) => d.id !== dataset.id),
-                      { revalidate: false },
-                    );
-                  }}
-                />
-              ))
-            )}
-          </SimpleGrid>
-        )}
+      }
+      centered
+      size="lg"
+    >
+      <Stack>
+        <TextInput
+          label="Name"
+          placeholder="My evaluation dataset"
+          value={name}
+          onChange={(event) => setName(event.currentTarget.value)}
+          error={error}
+          required
+          autoFocus
+        />
+        <TextInput
+          label="Description"
+          placeholder="Optional context for this dataset"
+          value={description}
+          onChange={(event) => setDescription(event.currentTarget.value)}
+        />
+        <Group justify="flex-end">
+          <Button variant="default" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button loading={creating} onClick={handleSubmit}>
+            Create
+          </Button>
+        </Group>
       </Stack>
-    </Container>
+    </Modal>
+  );
+}
+
+export default function DatasetsV2Page() {
+  const { projectId } = useContext(ProjectContext);
+  const [page, setPage] = useState(1);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const { org } = useOrg();
+
+  useEffect(() => {
+    if (org?.useLegacyDatasets) {
+      Router.replace("/legacy-datasets");
+    }
+  }, [org?.useLegacyDatasets]);
+
+  if (org?.useLegacyDatasets) {
+    return null;
+  }
+
+  const {
+    datasets,
+    pagination,
+    isLoading,
+    isValidating,
+    mutate,
+  } = useDatasetsV2({
+    page,
+    pageSize: PAGE_SIZE,
+  });
+
+  const isEmptyState =
+    !isLoading && !isValidating && datasets && datasets.length === 0;
+
+  const totalPages = pagination.totalPages || 0;
+
+  function openDeleteModal(dataset: DatasetV2) {
+    modals.openConfirmModal({
+      title: "Delete dataset",
+      centered: true,
+      confirmProps: { color: "red" },
+      children: (
+        <Text size="sm">
+          Are you sure you want to delete{" "}
+          <Text span fw={600}>
+            {dataset.name}
+          </Text>
+          ? This action is permanent.
+        </Text>
+      ),
+      labels: { confirm: "Delete", cancel: "Cancel" },
+      onConfirm: async () => {
+        if (!projectId) {
+          return;
+        }
+
+        await fetcher.delete(
+          `/datasets-v2/${dataset.id}?projectId=${projectId}`,
+        );
+        mutate();
+      },
+    });
+  }
+
+  const filteredDatasets = useMemo(() => {
+    if (!search.trim()) {
+      return datasets || [];
+    }
+    const term = search.trim().toLowerCase();
+    return (datasets || []).filter((dataset) =>
+      dataset.name.toLowerCase().includes(term),
+    );
+  }, [datasets, search]);
+
+  const rows = useMemo(() => {
+    return filteredDatasets.map((dataset) => (
+      <Table.Tr key={dataset.id}>
+        <Table.Td>
+          <Stack gap={4}>
+            <Group gap="xs">
+              <Anchor
+                component={Link}
+                href={`/datasets/${dataset.id}`}
+                fw={600}
+                size="sm"
+              >
+                {dataset.name}
+              </Anchor>
+              {dataset.itemCount > 0 && (
+                <Badge variant="light" size="sm">
+                  {dataset.itemCount} item
+                  {dataset.itemCount === 1 ? "" : "s"}
+                </Badge>
+              )}
+            </Group>
+            {dataset.description && (
+              <Text size="xs" c="dimmed">
+                {dataset.description}
+              </Text>
+            )}
+            <Text size="xs" c="dimmed">
+              Created {new Date(dataset.createdAt).toLocaleString()}
+            </Text>
+          </Stack>
+        </Table.Td>
+        <Table.Td width={180}>
+          <Group gap="xs" justify="flex-end">
+            <ActionIcon
+              variant="subtle"
+              color="red"
+              onClick={() => openDeleteModal(dataset)}
+            >
+              <IconTrash size={16} />
+            </ActionIcon>
+            <ActionIcon
+              variant="light"
+              onClick={() => Router.push(`/datasets/${dataset.id}`)}
+            >
+              <IconArrowRight size={16} />
+            </ActionIcon>
+          </Group>
+        </Table.Td>
+      </Table.Tr>
+    ));
+  }, [filteredDatasets]);
+
+  const showFilteredEmpty =
+    !isLoading &&
+    !isEmptyState &&
+    filteredDatasets.length === 0 &&
+    search.trim().length > 0;
+
+  return (
+    <Stack gap="lg">
+      <Group justify="space-between" align="center">
+        <Stack gap={0}>
+          <Title order={2}>Datasets V2</Title>
+          <Text size="sm" c="dimmed">
+            Organize evaluation samples per project and edit them inline.
+          </Text>
+        </Stack>
+        <Button
+          leftSection={<IconPlus size={14} />}
+          onClick={() => setCreateOpen(true)}
+        >
+          New dataset
+        </Button>
+      </Group>
+
+      <TextInput
+        placeholder="Search datasets by name"
+        value={search}
+        onChange={(event) => {
+          setSearch(event.currentTarget.value);
+          setPage(1);
+        }}
+      />
+
+      {isLoading ? (
+        <Group justify="center" py="xl">
+          <Loader />
+        </Group>
+      ) : showFilteredEmpty ? (
+        <Stack align="center" py="5rem">
+          <IconDatabase size={42} stroke={1.2} />
+          <Stack gap={4} align="center">
+            <Text fw={600}>No datasets found</Text>
+            <Text c="dimmed" size="sm" ta="center">
+              Try a different name.
+            </Text>
+          </Stack>
+        </Stack>
+      ) : isEmptyState ? (
+        <Stack align="center" py="5rem">
+          <IconDatabase size={42} stroke={1.2} />
+          <Stack gap={4} align="center">
+            <Text fw={600}>No datasets yet</Text>
+            <Text c="dimmed" size="sm" ta="center">
+              Create a dataset to start organizing your evaluation samples.
+            </Text>
+          </Stack>
+          <Button
+            leftSection={<IconPlus size={14} />}
+            onClick={() => setCreateOpen(true)}
+          >
+            Create dataset
+          </Button>
+        </Stack>
+      ) : (
+        <Stack gap="md">
+          <Table striped highlightOnHover withTableBorder>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Dataset</Table.Th>
+                <Table.Th />
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>{rows}</Table.Tbody>
+          </Table>
+          {totalPages > 1 && (
+            <Pagination
+              value={page}
+              onChange={setPage}
+              total={totalPages}
+              size="sm"
+            />
+          )}
+        </Stack>
+      )}
+
+      <CreateDatasetModal
+        opened={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={(dataset) => {
+          setCreateOpen(false);
+          mutate();
+          Router.push(`/datasets/${dataset.id}`);
+        }}
+      />
+    </Stack>
   );
 }

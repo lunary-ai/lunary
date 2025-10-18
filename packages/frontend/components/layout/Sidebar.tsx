@@ -405,14 +405,20 @@ export default function Sidebar() {
           link: "/evaluators",
           resource: "evaluations",
         },
+        // {
+        //   label: "Datasets",
+        //   icon: IconDatabase,
+        //   link: "/legacy-datasets",
+        //   resource: "datasets",
+        //   disabled: isSelfHosted
+        //     ? org.license && !org.license.evalEnabled
+        //     : false,
+        // },
         {
           label: "Datasets",
           icon: IconDatabase,
-          link: "/datasets",
+          link: org?.useLegacyDatasets ? "/legacy-datasets" : "/datasets",
           resource: "datasets",
-          disabled: isSelfHosted
-            ? org.license && !org.license.evalEnabled
-            : false,
         },
         {
           label: "Checklists",

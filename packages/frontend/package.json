@@ -39,17 +39,17 @@
     "json-2-csv": "^5.5.9",
     "jsonrepair": "^3.13.0",
     "lucide-react": "^0.503.0",
-    "next": "^15.5.3",
+    "next": "^15.5.6",
     "next-seo": "^6.8.0",
     "nuqs": "^2.4.3",
     "openai": "^5.12.2",
     "posthog-js": "^1.259.0",
     "random-word-slugs": "^0.1.7",
-    "react": "19.1.1",
+    "react": "19.2.0",
     "react-confetti": "^6.4.0",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
-    "react-dom": "19.1.1",
+    "react-dom": "19.2.0",
     "react-highlight-words": "^0.21.0",
     "react-json-view-lite": "^2.4.1",
     "recharts": "3.0.2",
@@ -63,8 +63,8 @@
   },
   "devDependencies": {
     "@types/grecaptcha": "^3.0.9",
-    "@types/node": "^24.7.2",
-    "@types/react": "19.1.13",
+    "@types/node": "^24.8.1",
+    "@types/react": "19.2.2",
     "@types/streamsaver": "^2.0.5",
     "postcss": "^8.5.6",
     "postcss-preset-mantine": "^1.18.0",
@@ -73,6 +73,6 @@
     "typescript": "^5.9.2"
   },
   "overrides": {
-    "react-is": "19.1.0"
+    "react-is": "19.2.0"
   }
 }

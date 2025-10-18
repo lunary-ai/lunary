@@ -35,7 +35,8 @@ orgs.get("/", async (ctx: Context) => {
       stripe_customer,
       stripe_subscription,  
       name,
-      seat_allowance 
+      seat_allowance,
+      use_legacy_datasets
     from
       org
     where
@@ -47,13 +48,36 @@ orgs.get("/", async (ctx: Context) => {
 
 orgs.patch("/", checkAccess("org", "update"), async (ctx: Context) => {
   const orgId = ctx.state.orgId as string;
-  const bodySchema = z.object({
-    name: z.string(),
-  });
+  const bodySchema = z
+    .object({
+      name: z.string().trim().optional(),
+      useLegacyDatasets: z.boolean().optional(),
+    })
+    .refine((body) => Object.keys(body).length > 0, {
+      message: "No fields provided",
+    });
 
-  const { name } = bodySchema.parse(ctx.request.body);
+  const { name, useLegacyDatasets } = bodySchema.parse(ctx.request.body ?? {});
 
-  await sql`update org set name = ${name} where id = ${orgId}`;
+  const updates: any[] = [];
+  if (name !== undefined) {
+    updates.push(sql`name = ${name}`);
+  }
+  if (useLegacyDatasets !== undefined) {
+    updates.push(sql`use_legacy_datasets = ${useLegacyDatasets}`);
+  }
+
+  if (!updates.length) {
+    ctx.throw(400, "No valid fields to update");
+    return;
+  }
+
+  await sql`
+    update org
+    set ${sql.join(updates, sql`, `)}
+    where id = ${orgId}
+  `;
+
   ctx.status = 200;
 });
 

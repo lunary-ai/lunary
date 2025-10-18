@@ -2,6 +2,7 @@ import sql from "@/src/utils/db";
 import Router from "koa-router";
 
 import datasets from "./datasets";
+import datasetsV2 from "./datasets-v2";
 import orgs from "./orgs";
 
 import checklists from "./checklists";
@@ -57,6 +58,7 @@ v1.use(projects.routes());
 v1.use(runs.routes());
 v1.use(evaluators.routes());
 v1.use(datasets.routes());
+v1.use(datasetsV2.routes());
 v1.use(templates.routes());
 
 v1.use(filters.routes());

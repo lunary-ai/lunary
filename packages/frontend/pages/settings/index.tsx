@@ -12,6 +12,7 @@ import {
   Loader,
   Popover,
   Progress,
+  SegmentedControl,
   Stack,
   Tabs,
   Text,
@@ -241,6 +242,57 @@ function OrgNameCard() {
             Save
           </Button>
         </Group>
+      </Stack>
+    </SettingsCard>
+  );
+}
+
+function DatasetExperienceCard() {
+  const { org, updateOrg, mutate } = useOrg();
+  const [value, setValue] = useState("new");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (org) {
+      setValue(org.useLegacyDatasets ? "legacy" : "new");
+    }
+  }, [org?.useLegacyDatasets]);
+
+  if (!org) {
+    return null;
+  }
+
+  async function handleChange(next: string) {
+    if (saving) return;
+    const previous = value;
+    setValue(next);
+    setSaving(true);
+    try {
+      await updateOrg({ useLegacyDatasets: next === "legacy" });
+      await mutate();
+    } catch (error) {
+      setValue(previous);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <SettingsCard title="Dataset Experience">
+      <Stack gap="sm">
+        <Text c="dimmed">
+          Choose whether your organization uses the modern datasets editor or
+          the legacy interface.
+        </Text>
+        <SegmentedControl
+          value={value}
+          onChange={handleChange}
+          disabled={saving}
+          data={[
+            { label: "New editor", value: "new" },
+            { label: "Legacy editor", value: "legacy" },
+          ]}
+        />
       </Stack>
     </SettingsCard>
   );
@@ -556,6 +608,7 @@ export default function Settings() {
           <Container px="0">
             <Stack gap="xl">
               <OrgNameCard />
+              <DatasetExperienceCard />
               <OrgApiKeyCard />
               <SettingsCard
                 title={

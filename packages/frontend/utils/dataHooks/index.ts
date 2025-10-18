@@ -792,6 +792,112 @@ export function useDatasetPrompt(id: string) {
   };
 }
 
+/* ─────────────────────────────── Datasets V2 ────────────────────────────── */
+
+export interface DatasetV2 {
+  id: string;
+  projectId: string;
+  ownerId: string;
+  name: string;
+  description?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  itemCount: number;
+}
+
+export interface DatasetItemV2 {
+  id: string;
+  datasetId: string;
+  input: string;
+  expectedOutput: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+type DatasetListResponse = {
+  data: DatasetV2[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+};
+
+export function useDatasetsV2({
+  page = 1,
+  pageSize = 20,
+}: {
+  page?: number;
+  pageSize?: number;
+} = {}) {
+  const key = `/datasets-v2?page=${page}&pageSize=${pageSize}`;
+
+  const {
+    data,
+    isLoading,
+    isValidating,
+    mutate,
+    error,
+  } = useProjectSWR<DatasetListResponse>(key, {
+    keepPreviousData: true,
+  });
+
+  return {
+    datasets: data?.data ?? [],
+    pagination: {
+      page: data?.page ?? page,
+      pageSize: data?.pageSize ?? pageSize,
+      totalCount: data?.totalCount ?? 0,
+      totalPages: data?.totalPages ?? 0,
+    },
+    isLoading,
+    isValidating,
+    mutate,
+    error,
+  };
+}
+
+export function useDatasetV2(id?: string) {
+  const {
+    data,
+    isLoading,
+    isValidating,
+    mutate,
+    error,
+  } = useProjectSWR<DatasetV2>(id ? `/datasets-v2/${id}` : null);
+
+  const { trigger: update } = useProjectMutation(
+    id ? `/datasets-v2/${id}` : null,
+    fetcher.patch,
+  );
+
+  const { trigger: remove } = useProjectMutation(
+    id ? `/datasets-v2/${id}` : null,
+    fetcher.delete,
+  );
+
+  return {
+    dataset: data ?? null,
+    mutate,
+    update,
+    remove,
+    isLoading,
+    isValidating,
+    error,
+  };
+}
+
+export function useCreateDatasetV2() {
+  const { trigger, isMutating } = useProjectMutation(
+    `/datasets-v2`,
+    fetcher.post,
+  );
+
+  return {
+    createDataset: trigger,
+    creating: isMutating,
+  };
+}
+
 export function useDatasetPromptVariation(id: string) {
   const {
     data: variation,
