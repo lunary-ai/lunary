@@ -38,7 +38,7 @@ describe("processEventsIngestion", () => {
       type: "llm",
       runId: "run-abc",
       timestamp: new Date().toISOString(),
-      appId: "api-key-123",
+      appId: IDs.projectPublic,
     } as any;
 
     const results = await processEventsIngestion(initialProjectId, event);
