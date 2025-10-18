@@ -104,3 +104,7 @@ API: `http://localhost:3333`
 - **Roles & Permissions:** The `account.role` (owner/admin/member/viewer, etc.) drives feature access via the shared `hasAccess` matrix (`packages/backend/src/utils/authorization.ts`). Owners hold full rights, admins inherit most org/project controls, while members/viewers require explicit project membership entries.
 - **Invites & Transfers:** Invitations encode org ID, desired role, and project list in a join token. When accepted, backend flows promote or restructure accounts—deleting outdated rows if the invitee is moving orgs—and hydrate `account_project` with the invited project IDs before issuing a session token (`packages/backend/src/api/v1/auth/index.ts`).
 - **Lifecycle Hooks:** Creating new projects auto-subscribes all owners/admins to the project and generates fresh API keys. Deleting projects checks that the org retains at least one project. When users are removed, the code cleans up their `account_project` rows to avoid dangling access references (`packages/backend/src/api/v1/users.ts`).
+
+## Additional References
+
+- [Filter System Overview](docs/filter-system-overview.md)

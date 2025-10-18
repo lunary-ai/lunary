@@ -1,2 +1,2 @@
 [test]
-match = ["unit/**/*.test.ts"]
+match = ["unit/**/**.test.ts"]

@@ -91,14 +91,24 @@ const CHECKS_UI_DATA: ChecksUIData = {
   languages: {
     icon: IconWorldWww,
     color: "blue",
-    renderLabel({ value }) {
+    renderLabel(value) {
+      const code =
+        typeof value === "object" && value !== null && "value" in value
+          ? // Some callers pass `{ value: string }`; unwrap if present.
+            (value as { value: string }).value
+          : (value as string | undefined);
+
+      if (!code) {
+        return <Text size="sm">Unknown</Text>;
+      }
+
       const languageNames = new Intl.DisplayNames(["en"], {
         type: "language",
       });
 
       return (
         <Text size="sm">
-          {`${getFlagEmoji(value)}  ${languageNames.of(value)}`}
+          {`${getFlagEmoji(code)}  ${languageNames.of(code)}`}
         </Text>
       );
     },
