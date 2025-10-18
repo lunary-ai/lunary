@@ -28,11 +28,12 @@ jobs:
         with:
           bun-version: 1.3.0
 
-      - name: Get Playwright version
-        id: pw-version
-        run: |
-          PW_VERSION=$(jq -r '.devDependencies["@playwright/test"] // .dependencies["@playwright/test"]' package.json)
-          echo "PW_VERSION=$PW_VERSION" >> "$GITHUB_ENV"
+    - name: Get Playwright version
+      id: pw-version
+      run: |
+        FILE=packages/tests/package.json
+        PW_VERSION=$(jq -r '.devDependencies["@playwright/test"] // .dependencies["@playwright/test"] // empty' "$FILE")
+        echo "PW_VERSION=$PW_VERSION" >> "$GITHUB_ENV"
 
       - name: Cache Playwright browsers
         id: pw-cache

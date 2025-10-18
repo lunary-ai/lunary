@@ -1,6 +1,7 @@
 import { beforeAll, beforeEach, expect, test } from "bun:test";
 
 import { resetSqlMock, setSqlResolver } from "../utils/mockSql";
+import { IDs } from "../../_helpers/ids";
 
 type AnalyticsRouterModule = typeof import("@/src/api/v1/analytics/index");
 
@@ -52,7 +53,7 @@ test("GET /analytics/org/models/top requires an org API key", async () => {
   const ctx: any = {
     state: {
       apiKeyType: "private",
-      orgId: "org-123",
+      orgId: IDs.org123,
     },
     request: {
       query: {},
@@ -110,14 +111,14 @@ test("GET /analytics/org/models/top aggregates across the entire org", async () 
 
     expect(query.toLowerCase()).toContain("with filtered_runs as");
     expect(query).toContain("and p.org_id = ?");
-    expect(values).toContain("org-123");
+    expect(values).toContain(IDs.org123);
     return expectedRows;
   });
 
   const ctx: any = {
     state: {
       apiKeyType: "org_private",
-      orgId: "org-123",
+      orgId: IDs.org123,
     },
     request: {
       query: {},
