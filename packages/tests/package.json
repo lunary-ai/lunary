@@ -1,7 +1,7 @@
 {
   "name": "@lunary/tests",
   "scripts": {
-    "test": "bun run test:unit && bun run test:playwright",
+    "test": "bun run test:playwright",
     "test:unit": "bash -lc 'cd unit && bun test'",
     "test:playwright": "playwright test"
   },

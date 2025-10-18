@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 
 import { resetSqlMock, setSqlResolver } from "../utils/mockSql";
+import { IDs } from "../../_helpers/ids";
 import { processEventsIngestion } from "@/src/api/v1/runs/ingest";
 
 const insertedRuns: any[] = [];
@@ -12,8 +13,8 @@ describe("processEventsIngestion", () => {
   });
 
   test("remaps appId API keys to the owning project before inserting runs", async () => {
-    const initialProjectId = "project-public";
-    const resolvedProjectId = "project-private";
+    const initialProjectId = IDs.projectPublic;
+    const resolvedProjectId = IDs.projectPrivate;
 
     setSqlResolver((query, values) => {
       if (query.includes("from ingestion_rule")) {
@@ -37,7 +38,7 @@ describe("processEventsIngestion", () => {
       type: "llm",
       runId: "run-abc",
       timestamp: new Date().toISOString(),
-      appId: "api-key-123",
+      appId: IDs.projectPublic,
     } as any;
 
     const results = await processEventsIngestion(initialProjectId, event);

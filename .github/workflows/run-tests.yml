@@ -3,9 +3,9 @@ on:
   pull_request:
     types: [opened, synchronize]
   workflow_dispatch:
+
 jobs:
   run-tests:
-    # if: false
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -31,7 +31,8 @@ jobs:
       - name: Get Playwright version
         id: pw-version
         run: |
-          PW_VERSION=$(jq -r '.devDependencies["@playwright/test"] // .dependencies["@playwright/test"]' package.json)
+          FILE=packages/tests/package.json
+          PW_VERSION=$(jq -r '.devDependencies["@playwright/test"] // .dependencies["@playwright/test"] // empty' "$FILE")
           echo "PW_VERSION=$PW_VERSION" >> "$GITHUB_ENV"
 
       - name: Cache Playwright browsers

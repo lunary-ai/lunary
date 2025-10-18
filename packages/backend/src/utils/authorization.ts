@@ -27,10 +27,19 @@ export function checkAccess(resourceName: ResourceName, action: Action) {
       return;
     }
 
-    const [{ role }] =
+    const [user] =
       await sql`select role from account where id = ${ctx.state.userId}`;
 
-    const hasAccessToResource = hasAccess(role, resourceName, action);
+    if (!user) {
+      ctx.status = 403;
+      ctx.body = {
+        error: "Forbidden",
+        message: "You don't have access to this resource",
+      };
+      return;
+    }
+
+    const hasAccessToResource = hasAccess(user.role, resourceName, action);
 
     if (hasAccessToResource) {
       await next();
