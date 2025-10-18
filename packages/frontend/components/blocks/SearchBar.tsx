@@ -8,7 +8,6 @@ import {
   Tooltip,
   Text,
   Stack,
-  Box,
 } from "@mantine/core";
 import { useFocusWithin } from "@mantine/hooks";
 import {
@@ -76,30 +75,24 @@ export default function SearchBar({
   const leftSection = onModeChange ? (
     <Menu withinPortal position="bottom-start">
       <Menu.Target>
-        <Box>
-          <ActionIcon variant="subtle" style={{ width: 30 }} color="gray">
-            {MODE_CONFIG[currentMode].icon}
-            <IconCaretDown size={8} />
-          </ActionIcon>
-        </Box>
-        {/* <Button
-          variant="light"
-          color="gray"
-          // size="xs"
+        <Button
+          variant="subtle"
+          size="xs"
           radius="md"
+          color="gray"
           aria-label="Select search mode"
-          // styles={{
-          //   root: {
-          //     paddingInline: 10,
-          //     height: 28,
-          //   },
-          // }}
-        >
-          <Group w="20px">
-            {MODE_CONFIG[currentMode].icon}
-            <IconCaretDown size={12} color="red" />
-          </Group>
-        </Button> */}
+          leftSection={MODE_CONFIG[currentMode].icon}
+          rightSection={<IconCaretDown size={10} />}
+          styles={{
+            root: {
+              paddingInline: 10,
+              height: 28,
+              display: "flex",
+              alignItems: "center",
+            },
+            section: { display: "flex", alignItems: "center" },
+          }}
+        />
       </Menu.Target>
       <Menu.Dropdown>
         <Menu.Label>

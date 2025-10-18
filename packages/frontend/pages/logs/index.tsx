@@ -397,6 +397,13 @@ export default function Logs() {
     }
   }, [selectedRun?.projectId]);
 
+  useEffect(() => {
+    setSearchValue("");
+    setAiError(null);
+    setAiUnmatched([]);
+    setAiHints(undefined);
+  }, [projectId, type, serializedChecks]);
+
   useDidUpdate(() => {
     setChecks((prev) =>
       editCheck(prev, "search", query && query.length ? { query } : null),
@@ -442,6 +449,11 @@ export default function Logs() {
     setType(view.type || "llm");
     setChecks(view.data || []);
     setVisibleColumns(view.columns);
+    setSearchValue("");
+    setAiError(null);
+    setAiUnmatched([]);
+    setAiHints(undefined);
+    setQuery(null);
   }, [view, viewId]);
 
   useEffect(() => {
@@ -468,11 +480,11 @@ export default function Logs() {
     setAiHints(undefined);
 
     if (mode === "keyword") {
-      const next = query ?? "";
+      const next = query ?? searchValue;
       setSearchValue(next);
-    } else {
+    }
+    if (mode === "ai") {
       setQuery(null);
-      setSearchValue("");
     }
   };
 
@@ -487,9 +499,12 @@ export default function Logs() {
     setAiUnmatched([]);
 
     try {
-      const response = await fetcher.post("/filters/natural-language", {
-        arg: { text: trimmed, type },
-      });
+      const response = await fetcher.post(
+        `/filters/natural-language${projectId ? `?projectId=${projectId}` : ""}`,
+        {
+          arg: { text: trimmed, type },
+        },
+      );
 
       if (!response || !Array.isArray(response.logic)) {
         throw new Error(

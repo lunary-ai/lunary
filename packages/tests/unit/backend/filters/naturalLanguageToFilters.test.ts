@@ -141,8 +141,49 @@ test("applyHeuristicClauses infers expensive cost filter", () => {
     );
     expect(logicArray[0]).toBe("AND");
     expect(extractLeaf(logicArray, "type")).toBeTruthy();
-    expect(
-      logicArray.some((leaf: any) => leaf?.id === "not-a-real-filter"),
-    ).toBe(false);
+  expect(
+    logicArray.some((leaf: any) => leaf?.id === "not-a-real-filter"),
+  ).toBe(false);
+});
+
+test("model clause respects project allowed models", () => {
+  const plan: NormalizedPlan = {
+    op: "AND",
+    clauses: [{ id: "models", values: ["openai"] }],
+    groups: [],
+    unmatched: [],
+  };
+
+  const { logic, unmatched } = compilePlanToCheckLogic(plan, "llm", {
+    models: ["gpt-4o", "gpt-4o-mini"],
+    tags: [],
+    templates: [],
   });
+
+  expect(unmatched.some((item) => item.includes("ignored model values"))).toBe(
+    true,
+  );
+  const remainingLeaves = (logic as any[]).slice(1);
+  expect(remainingLeaves.length).toBe(1);
+  expect(remainingLeaves[0].id).toBe("type");
+
+  const familyPlan: NormalizedPlan = {
+    op: "AND",
+    clauses: [{ id: "models", values: ["gpt"] }],
+    groups: [],
+    unmatched: [],
+  };
+
+  const { logic: familyLogic, unmatched: familyUnmatched } =
+    compilePlanToCheckLogic(familyPlan, "llm", {
+      models: ["gpt-4o", "gpt-4o-mini"],
+      tags: [],
+      templates: [],
+    });
+
+  expect(familyUnmatched.length).toBe(0);
+  const modelsLeaf = (familyLogic as any[]).slice(1).find((leaf) => leaf?.id === "models");
+  expect(modelsLeaf).toBeTruthy();
+  expect(modelsLeaf.params.models).toEqual(["gpt-4o", "gpt-4o-mini"]);
+});
 });

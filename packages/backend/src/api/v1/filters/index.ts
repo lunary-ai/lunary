@@ -229,6 +229,7 @@ filters.post("/natural-language", async (ctx: Context) => {
         hints: details.hints,
         availableModels: details.availableModels,
         availableTags: details.availableTags,
+        availableTemplates: details.availableTemplates,
       },
     };
   } catch (error) {

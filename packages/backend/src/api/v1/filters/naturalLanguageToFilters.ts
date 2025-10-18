@@ -222,10 +222,16 @@ type ChatMessageParam = OpenAI.Chat.Completions.ChatCompletionMessageParam;
 async function buildFilterHints(
   projectId: string | undefined,
   runType: RunType,
-): Promise<{ text: string | null; models: string[]; tags: string[] }> {
+): Promise<{
+  text: string | null;
+  models: string[];
+  tags: string[];
+  templates: string[];
+}> {
   const lines: string[] = [];
   let availableModels: string[] = [];
   let availableTags: string[] = [];
+  let availableTemplates: string[] = [];
 
   const formatOptions = (values: Array<{ label?: string; value: any }>) =>
     values
@@ -267,73 +273,61 @@ async function buildFilterHints(
   const feedbackCheck = findCheck("feedback");
   const feedbackParam = feedbackCheck?.params.find(
     (param) => (param as CheckParam).type === "select",
-  ) as CheckParam & { options?: any[] } | undefined;
+  ) as (CheckParam & { options?: any[] }) | undefined;
   if (feedbackParam?.options && Array.isArray(feedbackParam.options)) {
     const mapped = feedbackParam.options.map((option: any) => {
       const thumb = option.thumb;
-      if (thumb === "up") return "{\"thumb\":\"up\"} (thumbs up)";
-      if (thumb === "down") return "{\"thumb\":\"down\"} (thumbs down)";
-      return "{\"thumb\":null} (no feedback)";
+      if (thumb === "up") return '{"thumb":"up"} (thumbs up)';
+      if (thumb === "down") return '{"thumb":"down"} (thumbs down)';
+      return '{"thumb":null} (no feedback)';
     });
     lines.push(`feedback: ${mapped.join(", ")}`);
   }
 
-  // Dynamic project-specific hints
   if (projectId) {
-    try {
-      const models = await sql`
+    const [models, tags, templates] = await Promise.all([
+      sql`
         select distinct name
         from run
         where project_id = ${projectId}
           ${runType ? sql`and type = ${runType}` : sql``}
           and coalesce(name, '') <> ''
         order by name asc
-        limit 8
-      `;
-      availableModels = models
-        .map((row: any) => row.name)
-        .filter((name: any) => typeof name === "string" && name.length);
-
-      if (availableModels.length) {
-        lines.push(`models (recent): ${availableModels.join(", ")}`);
-      }
-    } catch (error) {
-      // ignore DB errors; hints are optional
-    }
-
-    try {
-      const tags = await sql`
+        limit 12
+      `.catch(() => []),
+      sql`
         select distinct unnest(tags) as tag
         from run
         where project_id = ${projectId}
-        limit 8
-      `;
-      availableTags = tags
-        .map((row: any) => row.tag)
-        .filter((tag: any) => typeof tag === "string" && tag.length);
-      if (availableTags.length) {
-        lines.push(`tags: ${availableTags.join(", ")}`);
-      }
-    } catch (error) {
-      // ignore
-    }
-
-    try {
-      const templates = await sql`
+        limit 12
+      `.catch(() => []),
+      sql`
         select slug
         from template
         where project_id = ${projectId}
         order by slug asc
-        limit 8
-      `;
-      const templateValues = templates
-        .map((row: any) => row.slug)
-        .filter((slug: any) => typeof slug === "string" && slug.length);
-      if (templateValues.length) {
-        lines.push(`templates: ${templateValues.join(", ")}`);
-      }
-    } catch (error) {
-      // ignore
+        limit 12
+      `.catch(() => []),
+    ]);
+
+    availableModels = (models as any[])
+      .map((row) => row.name)
+      .filter((name: any) => typeof name === "string" && name.length);
+    availableTags = (tags as any[])
+      .map((row) => row.tag)
+      .filter((tag: any) => typeof tag === "string" && tag.length);
+    availableTemplates = (templates as any[])
+      .map((row) => row.slug)
+      .filter((slug: any) => typeof slug === "string" && slug.length);
+
+    if (availableModels.length) {
+      lines.push(`models (recent): ${availableModels.join(", ")}`);
+    }
+    if (availableTags.length) {
+      lines.push(`tags: ${availableTags.join(", ")}`);
+    }
+    if (availableTemplates.length) {
+      lines.push(`templates: ${availableTemplates.join(", ")}`);
     }
   }
 
@@ -341,6 +335,7 @@ async function buildFilterHints(
     text: lines.length ? `- ${lines.join("\n- ")}` : null,
     models: availableModels,
     tags: availableTags,
+    templates: availableTemplates,
   };
 }
 
@@ -460,7 +455,10 @@ export function applyHeuristicClauses(
 
 export async function llmToNormalizedPlan(
   text: string,
-  opts?: { hints?: string },
+  opts?: {
+    hints?: string;
+    allowed?: { models?: string[]; tags?: string[]; templates?: string[] };
+  },
 ): Promise<NormalizedPlan> {
   const client = ensureClient();
 
@@ -586,6 +584,31 @@ export async function llmToNormalizedPlan(
     });
   }
 
+  if (opts?.allowed) {
+    const parts: string[] = [];
+    if (opts.allowed.models?.length) {
+      parts.push(
+        `Valid models: ${opts.allowed.models.join(", ")}. Never invent model names; if the user gives a family label such as "gpt", expand to every listed model containing that string.`,
+      );
+    }
+    if (opts.allowed.tags?.length) {
+      parts.push(
+        `Valid tags: ${opts.allowed.tags.join(", ")}. Only emit tags from this list.`,
+      );
+    }
+    if (opts.allowed.templates?.length) {
+      parts.push(
+        `Valid templates: ${opts.allowed.templates.join(", ")}. Only emit template identifiers from this list.`,
+      );
+    }
+    if (parts.length) {
+      messages.push({
+        role: "system",
+        content: parts.join("\n"),
+      });
+    }
+  }
+
   messages.push({ role: "user", content: text });
 
   const response = await client.chat.completions.create({
@@ -707,7 +730,7 @@ const setParamValue = (
 const compileClause = (
   clause: NormalizedClause,
   unmatched: string[],
-  allowedLists: { models: string[]; tags: string[] },
+  allowedLists: { models: string[]; tags: string[]; templates: string[] },
 ): LogicElement[] => {
   const runtimeParams = getRuntimeParams(clause.id);
   if (!runtimeParams.length) {
@@ -992,14 +1015,29 @@ const compileClause = (
       let values = baseValues;
 
       if (clause.id === "models" && allowedLists.models.length) {
-        const filtered = baseValues.filter((value) =>
-          allowedLists.models.includes(value),
+        const lowerAllowed = allowedLists.models.map((value) =>
+          value.toLowerCase(),
         );
-        if (!filtered.length) {
+        const filtered = baseValues.flatMap((value) => {
+          const normalized = value.toLowerCase();
+          // Exact match
+          if (lowerAllowed.includes(normalized)) {
+            return [allowedLists.models[lowerAllowed.indexOf(normalized)]];
+          }
+          // Prefix/suffix match (e.g., "gpt" should match "gpt-4o")
+          const matching = allowedLists.models.filter((candidate) =>
+            candidate.toLowerCase().includes(normalized),
+          );
+          return matching;
+        });
+
+        const uniqueFiltered = Array.from(new Set(filtered));
+
+        if (!uniqueFiltered.length) {
           unmatched.push(`ignored model values: ${baseValues.join(",")}`);
           return [];
         }
-        values = filtered;
+        values = uniqueFiltered;
       }
 
       if (clause.id === "tags" && allowedLists.tags.length) {
@@ -1008,6 +1046,17 @@ const compileClause = (
         );
         if (!filtered.length) {
           unmatched.push(`ignored tag values: ${baseValues.join(",")}`);
+          return [];
+        }
+        values = filtered;
+      }
+
+      if (clause.id === "templates" && allowedLists.templates.length) {
+        const filtered = baseValues.filter((value) =>
+          allowedLists.templates.includes(value),
+        );
+        if (!filtered.length) {
+          unmatched.push(`ignored template values: ${baseValues.join(",")}`);
           return [];
         }
         values = filtered;
@@ -1154,7 +1203,11 @@ const compileClause = (
 export function compilePlanToCheckLogic(
   plan: NormalizedPlan,
   runType: RunType = "llm",
-  allowedLists: { models: string[]; tags: string[] } = { models: [], tags: [] },
+  allowedLists: { models: string[]; tags: string[]; templates: string[] } = {
+    models: [],
+    tags: [],
+    templates: [],
+  },
 ): { logic: CheckLogic; unmatched: string[] } {
   const unmatched = [...(plan.unmatched ?? [])];
 
@@ -1220,6 +1273,7 @@ export async function naturalLanguageToFilters(
     hints?: string;
     availableModels: string[];
     availableTags: string[];
+    availableTemplates: string[];
   };
 }> {
   const runType: RunType =
@@ -1229,6 +1283,11 @@ export async function naturalLanguageToFilters(
 
   const normalizedPlan = await llmToNormalizedPlan(text, {
     hints: hintsResult.text ?? undefined,
+    allowed: {
+      models: hintsResult.models,
+      tags: hintsResult.tags,
+      templates: hintsResult.templates,
+    },
   });
 
   const heuristicsResult = applyHeuristicClauses(text, normalizedPlan);
@@ -1260,6 +1319,7 @@ export async function naturalLanguageToFilters(
       hints: hintsResult.text ?? undefined,
       availableModels: hintsResult.models,
       availableTags: hintsResult.tags,
+      availableTemplates: hintsResult.templates,
     },
   };
 }
