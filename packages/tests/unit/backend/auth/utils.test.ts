@@ -1,6 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, mock, test } from "bun:test";
 import { SignJWT } from "jose";
 
+import { IDs } from "../../_helpers/ids";
 import { resetSqlMock, setSqlResolver } from "../utils/mockSql";
 
 const argonVerifyMock = mock(async () => true);
@@ -73,7 +74,7 @@ function createMockCtx(overrides: Partial<any> = {}) {
       ip: "localhost",
       ...(overrides.request || {}),
     },
-    state: { projectId: "project-ctx", ...(overrides.state || {}) },
+    state: { projectId: IDs.projectCtx, ...(overrides.state || {}) },
     body: undefined,
     status: undefined,
     throw(status: number, message?: string) {
@@ -137,21 +138,21 @@ describe("verifyPassword / hashPassword", () => {
 describe("JWT helpers", () => {
   test("signJWT creates verifiable tokens with future expiration", async () => {
     const token = await signJWT({
-      userId: "user-1",
-      orgId: "org-1",
+      userId: IDs.user1,
+      orgId: IDs.org1,
       email: "user@example.com",
     });
 
     const { payload } = await verifyJWT<typeof SignJWT>(token);
-    expect(payload.userId).toBe("user-1");
-    expect(payload.orgId).toBe("org-1");
+    expect(payload.userId).toBe(IDs.user1);
+    expect(payload.orgId).toBe(IDs.org1);
     expect(payload.email).toBe("user@example.com");
     expect(payload.exp).toBeGreaterThan(payload.iat);
   });
 
   test("verifyJWT rejects when secret changes", async () => {
     const originalSecret = process.env.JWT_SECRET!;
-    const token = await signJWT({ userId: "user-2" });
+    const token = await signJWT({ userId: IDs.user2 });
 
     process.env.JWT_SECRET = "other-secret";
 
@@ -168,7 +169,7 @@ describe("JWT helpers", () => {
   });
 
   test("isJWTExpired detects past expiration", async () => {
-    const expiredToken = await new SignJWT({ userId: "user-3" })
+    const expiredToken = await new SignJWT({ userId: IDs.user3 })
       .setProtectedHeader({ alg: "HS256" })
       .setIssuedAt(Math.floor(Date.now() / 1000) - 10)
       .setNotBefore(Math.floor(Date.now() / 1000) - 10)
@@ -186,7 +187,7 @@ describe("requestPasswordReset", () => {
 
     setSqlResolver((query, values) => {
       if (query.includes("select id from account")) {
-        return [{ id: "account-1" }];
+        return [{ id: IDs.account1 }];
       }
       if (query.includes("update account set recovery_token")) {
         storedToken = values[0] as string;
@@ -236,7 +237,7 @@ describe("authMiddleware", () => {
 
     setSqlResolver((query) => {
       if (query.includes("from api_key")) {
-        return [{ type: "private", projectId: "project-1", orgId: "org-1" }];
+        return [{ type: "private", projectId: IDs.project1, orgId: IDs.org1 }];
       }
       throw new Error(`Unexpected query: ${query}`);
     });
@@ -254,8 +255,8 @@ describe("authMiddleware", () => {
 
     await authMiddleware(ctx, next);
 
-    expect(ctx.state.projectId).toBe("project-1");
-    expect(ctx.state.orgId).toBe("org-1");
+    expect(ctx.state.projectId).toBe(IDs.project1);
+    expect(ctx.state.orgId).toBe(IDs.org1);
     expect(ctx.state.privateKey).toBe(true);
     expect(next.mock.calls.length).toBe(1);
   });
@@ -265,7 +266,7 @@ describe("authMiddleware", () => {
 
     setSqlResolver((query) => {
       if (query.includes("from api_key")) {
-        return [{ type: "org_private", orgId: "org-77", projectId: null }];
+        return [{ type: "org_private", orgId: IDs.org77, projectId: null }];
       }
       throw new Error(`Unexpected query: ${query}`);
     });
@@ -297,7 +298,7 @@ describe("authMiddleware", () => {
 
     setSqlResolver((query) => {
       if (query.includes("from api_key")) {
-        return [{ type: "org_private", orgId: "org-77", projectId: null }];
+        return [{ type: "org_private", orgId: IDs.org77, projectId: null }];
       }
       throw new Error(`Unexpected query: ${query}`);
     });
@@ -315,7 +316,7 @@ describe("authMiddleware", () => {
 
     await authMiddleware(ctx, next);
 
-    expect(ctx.state.orgId).toBe("org-77");
+    expect(ctx.state.orgId).toBe(IDs.org77);
     expect(ctx.state.projectId).toBeUndefined();
     expect(ctx.state.apiKeyType).toBe("org_private");
     expect(next.mock.calls.length).toBe(1);
@@ -326,7 +327,7 @@ describe("authMiddleware", () => {
 
     setSqlResolver((query) => {
       if (query.includes("from api_key")) {
-        return [{ type: "public", projectId: "project-1", orgId: "org-1" }];
+        return [{ type: "public", projectId: IDs.project1, orgId: IDs.org1 }];
       }
       throw new Error(`Unexpected query: ${query}`);
     });
@@ -354,7 +355,7 @@ describe("authMiddleware", () => {
   });
 
   test("throws session expired for expired JWT", async () => {
-    const token = await new SignJWT({ userId: "user-12", orgId: "org-9" })
+    const token = await new SignJWT({ userId: IDs.user12, orgId: IDs.org9 })
       .setProtectedHeader({ alg: "HS256" })
       .setIssuedAt(Math.floor(Date.now() / 1000) - 40)
       .setNotBefore(Math.floor(Date.now() / 1000) - 40)
@@ -385,14 +386,14 @@ describe("authMiddleware", () => {
 
   test("blocks JWT access when user lacks project membership", async () => {
     const token = await signJWT({
-      userId: "user-15",
-      orgId: "org-2",
+      userId: IDs.user15,
+      orgId: IDs.org2,
       email: "owner@example.com",
     });
 
     setSqlResolver((query) => {
       if (query.includes("from account where id")) {
-        return [{ id: "user-15", role: "member" }];
+        return [{ id: IDs.user15, role: "member" }];
       }
       if (query.includes("from account_project")) {
         return [];
@@ -406,7 +407,7 @@ describe("authMiddleware", () => {
         headers: {
           authorization: `Bearer ${token}`,
         },
-        query: { projectId: "project-2" },
+        query: { projectId: IDs.project2 },
       },
     });
     const next = mock(async () => {});

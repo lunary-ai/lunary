@@ -37,7 +37,7 @@
     "lunary": "^0.8.8",
     "luxon": "^3.6.1",
     "node-cron": "^3.0.3",
-    "nodemailer": "^6.10.1",
+    "nodemailer": "^7.0.9",
     "openai": "^5.3.0",
     "p-queue": "^8.1.0",
     "postgres": "3.4.5",
@@ -65,7 +65,7 @@
     "@types/koa__cors": "^5.0.0",
     "@types/luxon": "^3.6.2",
     "@types/node-cron": "^3.0.11",
-    "@types/nodemailer": "^6.4.17",
+    "@types/nodemailer": "^7.0.2",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/ssh2": "^1.15.5",
     "openapi": "^1.0.1"

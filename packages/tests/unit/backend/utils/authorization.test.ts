@@ -1,12 +1,13 @@
 import { beforeEach, describe, expect, mock, test } from "bun:test";
 
 import { resetSqlMock, setSqlResolver } from "../utils/mockSql";
+import { IDs } from "../../_helpers/ids";
 import { checkAccess } from "@/src/utils/authorization";
 
 function createCtx(stateOverrides: Partial<any> = {}) {
   return {
     state: {
-      userId: "user-1",
+      userId: IDs.user1,
       privateKey: false,
       ...stateOverrides,
     },

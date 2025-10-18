@@ -59,7 +59,6 @@ Backend requires: `DATABASE_URL`, `JWT_SECRET`, `APP_URL`, `API_URL`
 Frontend requires: `API_URL`, `NEXT_PUBLIC_API_URL`
 
 ## Development Workflow
-
 1. `bun run migrate:db`
 2. `bun run dev`
 

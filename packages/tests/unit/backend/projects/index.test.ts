@@ -1,6 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, mock, test } from "bun:test";
 
 import { resetSqlMock, setSqlResolver } from "../utils/mockSql";
+import { IDs } from "../../_helpers/ids";
 import { validateUUID } from "@/src/utils/misc";
 
 type ProjectsRouterModule = typeof import("@/src/api/v1/projects/index");
@@ -98,7 +99,7 @@ test("POST /projects seeds both public and private keys", async () => {
       {
         match: "insert into project",
         handle: () => [
-          { id: "project-1", name: "Observability", orgId: "org-1" },
+          { id: IDs.project1, name: "Observability", orgId: IDs.org1 },
         ],
       },
       {
@@ -131,7 +132,7 @@ test("POST /projects seeds both public and private keys", async () => {
   );
 
   const ctx: any = {
-    state: { orgId: "org-1", userId: "user-99", projectId: "project-1" },
+    state: { orgId: IDs.org1, userId: IDs.user99, projectId: IDs.project1 },
     request: {
       body: { name: "Observability" },
       headers: {},
@@ -147,22 +148,22 @@ test("POST /projects seeds both public and private keys", async () => {
   await handler(ctx);
 
   expect(ctx.body).toEqual({
-    id: "project-1",
+    id: IDs.project1,
     name: "Observability",
-    orgId: "org-1",
+    orgId: IDs.org1,
   });
 
   expect(inserted.length).toBe(2);
   const [publicInsert, privateInsert] = inserted as any[];
 
   expect(publicInsert.type).toBe("public");
-  expect(publicInsert.projectId).toBe("project-1");
-  expect(publicInsert.apiKey).toBe("project-1");
-  expect(publicInsert.orgId).toBe("org-1");
+  expect(publicInsert.projectId).toBe(IDs.project1);
+  expect(publicInsert.apiKey).toBe(IDs.project1);
+  expect(publicInsert.orgId).toBe(IDs.org1);
 
   expect(privateInsert.type).toBe("private");
-  expect(privateInsert.projectId).toBe("project-1");
-  expect(privateInsert.orgId).toBe("org-1");
+  expect(privateInsert.projectId).toBe(IDs.project1);
+  expect(privateInsert.orgId).toBe(IDs.org1);
   expect(validateUUID(privateInsert.apiKey)).toBe(true);
 
   expect(recordAuditLogMock.mock.calls.length).toBe(1);
@@ -170,8 +171,8 @@ test("POST /projects seeds both public and private keys", async () => {
     recordAuditLogMock.mock.calls[0];
   expect(resourceType).toBe("project");
   expect(action).toBe("create");
-  expect(ctxArg.state.orgId).toBe("org-1");
-  expect(resourceId).toBe("project-1");
+  expect(ctxArg.state.orgId).toBe(IDs.org1);
+  expect(resourceId).toBe(IDs.project1);
 });
 
 test("POST /:projectId/regenerate-key rotates private keys", async () => {
@@ -180,7 +181,7 @@ test("POST /:projectId/regenerate-key rotates private keys", async () => {
 
   setSqlResolver((query, values) => {
     if (query.includes("select * from account_project")) {
-      return [{ project_id: "project-1", account_id: "user-1" }];
+      return [{ project_id: IDs.project1, account_id: IDs.user1 }];
     }
     if (query.includes("select exists")) {
       return [{ exists: true }];
@@ -196,8 +197,8 @@ test("POST /:projectId/regenerate-key rotates private keys", async () => {
   });
 
   const ctx: any = {
-    params: { projectId: "project-1" },
-    state: { orgId: "org-1", userId: "user-1", projectId: "project-1" },
+    params: { projectId: IDs.project1 },
+    state: { orgId: IDs.org1, userId: IDs.user1, projectId: IDs.project1 },
     request: {
       body: { type: "private" },
       headers: {},
@@ -220,5 +221,5 @@ test("POST /:projectId/regenerate-key rotates private keys", async () => {
   const [resourceType, action, ctxArg] = recordAuditLogMock.mock.calls[0];
   expect(resourceType).toBe("api_key");
   expect(action).toBe("regenerate");
-  expect(ctxArg.state.projectId).toBe("project-1");
+  expect(ctxArg.state.projectId).toBe(IDs.project1);
 });
