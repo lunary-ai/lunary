@@ -2,7 +2,7 @@
   "name": "@lunary/tests",
   "scripts": {
     "test": "bun run test:playwright",
-    "test:unit": "bash -lc 'cd unit && bun test'",
+    "test:unit": "cd unit && bun test",
     "test:playwright": "playwright test"
   },
   "dependencies": {

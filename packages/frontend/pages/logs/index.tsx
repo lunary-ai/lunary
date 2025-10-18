@@ -9,6 +9,7 @@ import {
 
 import {
   ActionIcon,
+  Badge,
   Button,
   Card,
   Drawer,
@@ -107,7 +108,7 @@ export const defaultColumns = {
     },
     costColumn(),
     inputColumn("Input"),
-    outputColumn("Result"),
+    outputColumn("Output"),
     tagsColumn(),
     feedbackColumn("llm"),
     templateColumn(),
@@ -264,6 +265,18 @@ export default function Logs() {
   const { metadataKeys } = useMetadataKeys(type);
 
   const [query, setQuery] = useDebouncedState<string | null>(null, 300);
+  const [searchMode, setSearchMode] = useState<"keyword" | "ai">("keyword");
+  const [searchValue, setSearchValue] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiUnmatched, setAiUnmatched] = useState<string[]>([]);
+  const [aiHints, setAiHints] = useState<string | undefined>();
+
+  useEffect(() => {
+    if (searchMode === "keyword") {
+      setSearchValue(query ?? "");
+    }
+  }, [searchMode, query]);
 
   const {
     data: logs,
@@ -384,18 +397,25 @@ export default function Logs() {
     }
   }, [selectedRun?.projectId]);
 
-  useDidUpdate(() => {
-    // Update search filter
-    if (query !== null) {
-      const newChecks = editCheck(
-        checks,
-        "search",
-        query.length ? { query } : null,
-      );
+  useEffect(() => {
+    setSearchValue("");
+    setAiError(null);
+    setAiUnmatched([]);
+    setAiHints(undefined);
+  }, [projectId, type, serializedChecks]);
 
-      setChecks(newChecks);
+  useDidUpdate(() => {
+    setChecks((prev) =>
+      editCheck(prev, "search", query && query.length ? { query } : null),
+    );
+    if (searchMode === "keyword") {
+      analytics.track("LogsSearchKeyword", {
+        query: query ?? "",
+        type,
+        empty: !query,
+      });
     }
-  }, [query]);
+  }, [query, searchMode, type]);
 
   useEffect(() => {
     // Update visible columns if view changes
@@ -429,11 +449,124 @@ export default function Logs() {
     setType(view.type || "llm");
     setChecks(view.data || []);
     setVisibleColumns(view.columns);
+    setSearchValue("");
+    setAiError(null);
+    setAiUnmatched([]);
+    setAiHints(undefined);
+    setQuery(null);
   }, [view, viewId]);
 
   useEffect(() => {
     setIsSelectMode(false);
   }, [type]);
+
+  const handleSearchChange = (value: string) => {
+    setSearchValue(value);
+
+    if (searchMode === "keyword") {
+      setQuery(value);
+    } else {
+      if (aiError) setAiError(null);
+      if (aiUnmatched.length) setAiUnmatched([]);
+      setAiHints(undefined);
+    }
+  };
+
+  const handleSearchModeChange = (mode: "keyword" | "ai") => {
+    if (mode === searchMode) return;
+    setSearchMode(mode);
+    setAiError(null);
+    setAiUnmatched([]);
+    setAiHints(undefined);
+
+    if (mode === "keyword") {
+      const next = query ?? searchValue;
+      setSearchValue(next);
+    }
+    if (mode === "ai") {
+      setQuery(null);
+    }
+  };
+
+  async function applyNaturalLanguageFilters() {
+    const trimmed = searchValue.trim();
+    if (!trimmed || aiLoading) {
+      return;
+    }
+
+    setAiLoading(true);
+    setAiError(null);
+    setAiUnmatched([]);
+
+    try {
+      const response = await fetcher.post(
+        `/filters/natural-language${projectId ? `?projectId=${projectId}` : ""}`,
+        {
+          arg: { text: trimmed, type },
+        },
+      );
+
+      if (!response || !Array.isArray(response.logic)) {
+        throw new Error(
+          "Unexpected response from natural language filters endpoint",
+        );
+      }
+
+      const logic = response.logic as unknown as any[];
+      setChecks(logic);
+
+      const typeLeaf = logic.find(
+        (item) => item?.id === "type" && typeof item?.params === "object",
+      );
+      const inferredType = typeLeaf?.params?.type;
+      if (
+        typeof inferredType === "string" &&
+        inferredType !== type &&
+        ["llm", "trace", "thread"].includes(inferredType)
+      ) {
+        setType(inferredType);
+      }
+
+      setAiUnmatched(response?.debug?.unmatched ?? []);
+      setAiHints(response?.debug?.hints);
+
+      analytics.track("LogsSearchAskAI", {
+        query: trimmed,
+        type,
+        inferredType,
+        heuristicsCount: response?.debug?.heuristics?.length ?? 0,
+        unmatchedCount: response?.debug?.unmatched?.length ?? 0,
+        hadHints: Boolean(response?.debug?.hints),
+      });
+
+      if (response?.debug?.unmatched?.length) {
+        analytics.track("LogsNaturalLanguageUnmatched", {
+          count: response.debug.unmatched.length,
+        });
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "We couldn't convert your request. Try rephrasing it.";
+
+      setAiError(message);
+      setAiHints(undefined);
+      errorHandler(error);
+      notifications.show({
+        title: "Ask AI search failed",
+        message,
+        color: "red",
+      });
+      analytics.track("LogsSearchAskAIError", {
+        query: trimmed,
+        type,
+        message,
+      });
+    } finally {
+      setAiLoading(false);
+    }
+  }
 
   function exportButton({ serializedChecks, projectId, type, format }) {
     return {
@@ -572,78 +705,88 @@ export default function Logs() {
 
       <Stack>
         <Card withBorder p={2} px="sm">
-          <Flex justify="space-between">
-            <SearchBar
-              query={query}
-              ml={-8}
-              setQuery={setQuery}
-              variant="unstyled"
-              size="sm"
-            />
+          <Stack gap="xs">
+            <Flex justify="space-between" align="center" gap="sm" wrap="wrap">
+              <SearchBar
+                value={searchValue}
+                mode={searchMode}
+                onModeChange={handleSearchModeChange}
+                onChange={handleSearchChange}
+                onSubmit={
+                  searchMode === "ai" ? applyNaturalLanguageFilters : undefined
+                }
+                loading={searchMode === "ai" ? aiLoading : false}
+                variant="unstyled"
+                size="sm"
+                maw={470}
+                w="100%"
+                style={{ flex: "1 1 360px", maxWidth: 520 }}
+              />
 
-            <Group gap="xs">
-              <Menu position="bottom-end" data-testid="export-menu">
-                <Menu.Target>
-                  <ActionIcon variant="light">
-                    <IconDotsVertical size={12} />
-                  </ActionIcon>
-                </Menu.Target>
-                <Menu.Dropdown>
-                  <Menu.Item
-                    data-testid="export-openai-jsonl-button"
-                    color="dimmed"
-                    leftSection={<IconPencil size={16} />}
-                    onClick={() => setIsSelectMode((prev) => !prev)}
-                  >
-                    {!isSelectMode ? "Select Mode" : "Exit Select Mode"}
-                  </Menu.Item>
-
-                  <Menu.Item
-                    data-testid="export-csv-button"
-                    leftSection={<IconFileExport size={16} />}
-                    {...exportButton({
-                      serializedChecks,
-                      projectId,
-                      type,
-                      format: "csv",
-                    })}
-                  >
-                    Export to CSV
-                  </Menu.Item>
-
-                  {type === "llm" && (
+              <Group gap="xs">
+                <Menu position="bottom-end" data-testid="export-menu">
+                  <Menu.Target>
+                    <ActionIcon variant="light">
+                      <IconDotsVertical size={12} />
+                    </ActionIcon>
+                  </Menu.Target>
+                  <Menu.Dropdown>
                     <Menu.Item
                       data-testid="export-openai-jsonl-button"
                       color="dimmed"
-                      leftSection={<IconBrandOpenai size={16} />}
+                      leftSection={<IconPencil size={16} />}
+                      onClick={() => setIsSelectMode((prev) => !prev)}
+                    >
+                      {!isSelectMode ? "Select Mode" : "Exit Select Mode"}
+                    </Menu.Item>
+
+                    <Menu.Item
+                      data-testid="export-csv-button"
+                      leftSection={<IconFileExport size={16} />}
                       {...exportButton({
                         serializedChecks,
                         projectId,
                         type,
-                        format: "ojsonl",
+                        format: "csv",
                       })}
                     >
-                      Export to OpenAI JSONL
+                      Export to CSV
                     </Menu.Item>
-                  )}
 
-                  <Menu.Item
-                    data-testid="export-raw-jsonl-button"
-                    color="dimmed"
-                    leftSection={<IconBraces size={16} />}
-                    {...exportButton({
-                      serializedChecks,
-                      projectId,
-                      type,
-                      format: "jsonl",
-                    })}
-                  >
-                    Export to raw JSONL
-                  </Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
-            </Group>
-          </Flex>
+                    {type === "llm" && (
+                      <Menu.Item
+                        data-testid="export-openai-jsonl-button"
+                        color="dimmed"
+                        leftSection={<IconBrandOpenai size={16} />}
+                        {...exportButton({
+                          serializedChecks,
+                          projectId,
+                          type,
+                          format: "ojsonl",
+                        })}
+                      >
+                        Export to OpenAI JSONL
+                      </Menu.Item>
+                    )}
+
+                    <Menu.Item
+                      data-testid="export-raw-jsonl-button"
+                      color="dimmed"
+                      leftSection={<IconBraces size={16} />}
+                      {...exportButton({
+                        serializedChecks,
+                        projectId,
+                        type,
+                        format: "jsonl",
+                      })}
+                    >
+                      Export to raw JSONL
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
+              </Group>
+            </Flex>
+          </Stack>
         </Card>
 
         <Group justify="space-between" align="center">
@@ -845,15 +988,16 @@ export default function Logs() {
           if (hasMeaningfulChange) {
             // Only set columnsTouched if non-metadata columns changed
             const nonMetadataColumnChanged = Object.keys(next).some(
-              (key) => key !== "select" && 
-                      !key.startsWith("metadata-") && 
-                      next[key] !== visibleColumns[key]
+              (key) =>
+                key !== "select" &&
+                !key.startsWith("metadata-") &&
+                next[key] !== visibleColumns[key],
             );
-            
+
             if (nonMetadataColumnChanged) {
               setColumnsTouched(true);
             }
-            
+
             // Save column visibility to localStorage when not in a view
             if (!view) {
               localStorage.setItem(

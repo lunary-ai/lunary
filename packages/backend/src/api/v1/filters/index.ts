@@ -3,6 +3,8 @@ import Router from "koa-router";
 import { Context } from "koa";
 import { z } from "zod";
 
+import { naturalLanguageToFilters } from "./naturalLanguageToFilters";
+
 const filters = new Router({
   prefix: "/filters",
 });
@@ -45,11 +47,14 @@ filters.get("/tags", async (ctx: Context) => {
 
   const rows = await sql`
     select distinct
-      unnest(tags) as tag 
+      t.tag 
     from
-      run
+      run r
+      cross join lateral unnest(r.tags) as t(tag)
     where
       project_id = ${projectId} 
+      and r.tags is not null 
+      and cardinality(r.tags) > 0;
   `;
 
   ctx.body = rows.map((row) => row.tag);
@@ -189,6 +194,53 @@ filters.get("/topics", async (ctx) => {
   `;
 
   ctx.body = topics;
+});
+
+const naturalLanguageFiltersBodySchema = z.object({
+  text: z.string().min(1),
+  type: z.enum(["llm", "trace", "thread"]).optional(),
+});
+
+filters.post("/natural-language", async (ctx: Context) => {
+  const parsed = naturalLanguageFiltersBodySchema.safeParse(ctx.request.body);
+
+  if (!parsed.success) {
+    ctx.status = 400;
+    ctx.body = { error: parsed.error.flatten() };
+    return;
+  }
+
+  try {
+    const { text, type } = parsed.data;
+    const { projectId } = ctx.state;
+    const { logic, query, details } = await naturalLanguageToFilters(text, {
+      type,
+      projectId,
+    });
+
+    ctx.body = {
+      logic,
+      query,
+      previewUrl: `/v1/runs?${query}`,
+      debug: {
+        normalizedPlan: details.normalizedPlan,
+        unmatched: details.unmatched,
+        heuristics: details.heuristics,
+        hints: details.hints,
+        availableModels: details.availableModels,
+        availableTags: details.availableTags,
+        availableTemplates: details.availableTemplates,
+      },
+    };
+  } catch (error) {
+    ctx.status = 500;
+    ctx.body = {
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to translate natural language filters",
+    };
+  }
 });
 
 export default filters;
