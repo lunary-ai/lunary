@@ -66,9 +66,19 @@ Frontend requires: `API_URL`, `NEXT_PUBLIC_API_URL`
 Dashboard: `http://localhost:8080`
 API: `http://localhost:3333`
 
+## Commit Flow
+- Branch off `main` using a conventional-commit style prefix converted for branch syntax: replace the colon with `/` and spaces with hyphens. Example: `feat: add feature X` -> `feat/add-feature-X`.
+- Add a scope when appropriated: `feat(python-sdk): add support for XX` `feat/python-sdk/add-support-for-XX`.
+- The commits on the branch don't need to follow conventional-commit, as we'll squash and merge the branch to main the Github Pull Request.
+
 ## Tests
 - Use `bun run test` to run tests after each code change.
 - Before running the Playwright suite, start the full stack with `bun run dev:llm` (spawns backend + frontend + dependencies). The tests expect all services to be reachable.
+
+## Updating Models & Pricing
+- **Cost mapping only:** Create the next sequential migration in `packages/db/` (e.g. `packages/db/0107.sql`) inserting a `model_mapping` row. Provide the public `name`, a regex `pattern` covering all billable aliases, `unit` (`TOKENS` for chat models), per-million `input_cost`/`output_cost`, and the correct `provider`/`tokenizer`. Include optional columns (like `input_caching_cost_reduction`) when relevant and avoid wrapping statements in transactions.
+- **Prompt playground exposure:** Append the model to the `MODELS` array in `packages/shared/models.ts`. Use the API-facing model identifier for `id`, a human-readable label for `name`, and keep it grouped with models from the same provider so the playground dropdown stays organized.
+- **After either change:** Run `bun run migrate:db` to apply new pricing data locally, then reload the prompt playground (if model entries were added) to confirm selection and end-to-end execution succeed.
 
 ## OpenAPI Documentation
 - The backend exposes its OpenAPI 3 spec by running `swagger-jsdoc` with the config in `packages/backend/src/api/v1/openapi.ts`; it sets global metadata (title, version, server URL) and registers a `/openapi` route on the versioned router.
