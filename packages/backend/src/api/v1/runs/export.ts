@@ -152,8 +152,6 @@ export async function fileExport(
 
             line = parser.parse(formattedRun);
           } else {
-            console.log("here");
-            console.log(row);
             line = parser.parse(formatRun(row, true));
           }
           if (isFirst) {
@@ -163,7 +161,6 @@ export async function fileExport(
           }
           yield line + "\n";
         }
-        console.log("done");
       },
     });
     ctx.body = stream;

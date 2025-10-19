@@ -117,7 +117,9 @@ function isSlackWebhook(url: string): boolean {
 
 type SlackField = { title: string; value: string; short: boolean };
 
-function toSlackPayload(payload: Record<string, unknown>): Record<string, unknown> {
+function toSlackPayload(
+  payload: Record<string, unknown>,
+): Record<string, unknown> {
   const status = String(payload.status ?? "");
   const statusColor =
     status === "triggered"
@@ -146,29 +148,29 @@ function toSlackPayload(payload: Record<string, unknown>): Record<string, unknow
             title: "Metric",
             value: metric,
             short: true,
-        }
-      : null,
-    threshold !== undefined
-      ? {
-          title: "Threshold",
-          value: String(threshold),
-          short: true,
-        }
-      : null,
-    value !== undefined
-      ? {
-          title: "Observed",
-          value: String(value),
-          short: true,
-        }
-      : null,
-    windowMinutes !== undefined
-      ? {
-          title: "Window (minutes)",
-          value: String(windowMinutes),
-          short: true,
-        }
-      : null,
+          }
+        : null,
+      threshold !== undefined
+        ? {
+            title: "Threshold",
+            value: String(threshold),
+            short: true,
+          }
+        : null,
+      value !== undefined
+        ? {
+            title: "Observed",
+            value: String(value),
+            short: true,
+          }
+        : null,
+      windowMinutes !== undefined
+        ? {
+            title: "Window (minutes)",
+            value: String(windowMinutes),
+            short: true,
+          }
+        : null,
     ] as (SlackField | null)[]
   ).filter(Boolean) as SlackField[];
 
@@ -225,7 +227,6 @@ export async function postAlertWebhooks(
           signal: controller.signal,
         });
 
-        console.log(response);
         if (!response.ok) {
           const text = await response.text().catch(() => "");
           const snippet = text.length > 200 ? `${text.slice(0, 197)}...` : text;

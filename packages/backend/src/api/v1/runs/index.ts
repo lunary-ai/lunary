@@ -641,7 +641,7 @@ runs.get("/", async (ctx: Context) => {
   const { query, page, limit } = getRunQuery(ctx, false);
 
   const rows = await query;
-  const runs = rows.map(formatRun);
+  const runs = rows.map((run) => formatRun(run));
 
   // TODO: improve this
   if (ctx.query.type === "llm") {
