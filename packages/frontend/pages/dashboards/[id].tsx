@@ -1,18 +1,20 @@
 import AnalyticsCard from "@/components/analytics/AnalyticsCard";
 import ChartComponent from "@/components/analytics/Charts/ChartComponent";
 import DashboardModal from "@/components/analytics/DashboardModal";
-import deepEqual from "fast-deep-equal";
 import DateRangeGranularityPicker, {
   useDateRangeGranularity,
 } from "@/components/analytics/DateRangeGranularityPicker";
 import ErrorBoundary from "@/components/blocks/ErrorBoundary";
 import RenamableField from "@/components/blocks/RenamableField";
+import AiFilterSkeleton from "@/components/checks/ai-filter-skeleton";
 import CheckPicker from "@/components/checks/Picker";
+import { DASHBOARD_AI_FILTER_EXAMPLES } from "@/utils/ai-filters";
 import {
   useCustomCharts,
   useDashboard,
   useDashboards,
 } from "@/utils/dataHooks/dashboards";
+import { useAiFilter } from "@/utils/useAiFilter";
 import {
   ActionIcon,
   Box,
@@ -22,21 +24,21 @@ import {
   Group,
   Loader,
   Menu,
+  SegmentedControl,
   Stack,
-  Textarea,
   TextInput,
   Title,
-  SegmentedControl,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 import {
   IconDotsVertical,
-  IconHome2,
   IconPinnedFilled,
   IconPlus,
   IconSettings,
   IconTrash,
 } from "@tabler/icons-react";
+import deepEqual from "fast-deep-equal";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
@@ -101,9 +103,11 @@ export default function Dashboard() {
 
   const [checks, setChecks] = useState<LogicNode>(["AND"]);
   const [charts, setCharts] = useState<ChartWithSpan[]>([]);
+  const { applyAiFilter, isAiFilterLoading } = useAiFilter();
 
   const { startDate, endDate, setDateRange, granularity, setGranularity } =
     useDateRangeGranularity();
+  const globalAiLoading = isAiFilterLoading("dashboard-global");
 
   const [modalOpened, { open: openModal, close: closeModal }] =
     useDisclosure(false);
@@ -119,6 +123,32 @@ export default function Dashboard() {
       return { ...c, sortOrder: i, span };
     });
     setCharts(orderedCharts);
+  }
+
+  async function handleAiFilterSubmit(request: string) {
+    const trimmed = request.trim();
+    if (!trimmed) {
+      return;
+    }
+
+    await applyAiFilter(trimmed, {
+      key: "dashboard-global",
+      notifyOnError: false,
+      onSuccess: ({ logic }) => {
+        setChecks(logic);
+      },
+      onError: (error) => {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "We couldn't convert your request. Try rephrasing it.";
+        notifications.show({
+          title: "AI filter failed",
+          message,
+          color: "red",
+        });
+      },
+    }).catch(() => {});
   }
 
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
@@ -270,6 +300,32 @@ export default function Dashboard() {
     setChartsWithSortOrder(newCharts);
   }
 
+  async function handleChartAiFilter(index: number, request: string) {
+    const trimmed = request.trim();
+    if (!trimmed) {
+      return;
+    }
+
+    await applyAiFilter(trimmed, {
+      key: `chart-${index}`,
+      notifyOnError: false,
+      onSuccess: ({ logic }) => {
+        handleChartChecksChange(index, logic);
+      },
+      onError: (error) => {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "We couldn't convert your request. Try rephrasing it.";
+        notifications.show({
+          title: "AI filter failed",
+          message,
+          color: "red",
+        });
+      },
+    }).catch(() => {});
+  }
+
   // add handlers for editing chart name and description
   function handleChartRename(index: number, newName: string) {
     const newCharts = structuredClone(charts);
@@ -415,25 +471,34 @@ export default function Dashboard() {
                 granularity={granularity}
                 setGranularity={setGranularity}
               />
-              <CheckPicker
-                minimal={true}
-                value={checks}
-                onChange={setChecks}
-                restrictTo={(filter) =>
-                  [
-                    "models",
-                    "tags",
-                    "users",
-                    "metadata",
-                    "status",
-                    "metadata",
-                    "feedback",
-                    "cost",
-                    "duration",
-                    "template",
-                  ].includes(filter.id)
-                }
-              />
+              {globalAiLoading ? (
+                <AiFilterSkeleton wrap="wrap" px="sm" />
+              ) : (
+                <CheckPicker
+                  minimal={true}
+                  value={checks}
+                  onChange={setChecks}
+                  restrictTo={(filter) =>
+                    [
+                      "models",
+                      "tags",
+                      "users",
+                      "metadata",
+                      "status",
+                      "metadata",
+                      "feedback",
+                      "cost",
+                      "duration",
+                      "template",
+                    ].includes(filter.id)
+                  }
+                  aiFilter={{
+                    onSubmit: handleAiFilterSubmit,
+                    loading: globalAiLoading,
+                    examples: DASHBOARD_AI_FILTER_EXAMPLES,
+                  }}
+                />
+              )}
             </Group>
           </Group>
         </Stack>
@@ -554,6 +619,12 @@ export default function Dashboard() {
                                   "template",
                                 ].includes(filter.id)
                               }
+                              aiFilter={{
+                                onSubmit: (value) =>
+                                  handleChartAiFilter(index, value),
+                                loading: isAiFilterLoading(`chart-${index}`),
+                                examples: DASHBOARD_AI_FILTER_EXAMPLES,
+                              }}
                             />
                           </Box>
                         ) : (

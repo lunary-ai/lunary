@@ -169,6 +169,7 @@ export default function CheckPicker({
   defaultOpened = false,
   disabled = false,
   buttonText = "Add",
+  aiFilter,
 }: {
   value?: CheckLogic;
   onChange?: (data: CheckLogic) => void;
@@ -178,7 +179,13 @@ export default function CheckPicker({
   defaultOpened?: boolean;
   disabled?: boolean;
   buttonText?: string;
+  aiFilter?: {
+    onSubmit: (query: string) => void;
+    loading?: boolean;
+    examples?: string[];
+  };
 }) {
+  console.log(value);
   const [modalOpened, setModalOpened] = useState(false);
 
   const options = CHECKS.filter(restrictTo);
@@ -239,12 +246,15 @@ export default function CheckPicker({
                   checks={allowedToAdd}
                   onSelect={(filter) => insertChecks([filter])}
                   defaultOpened={defaultOpened}
+                  onAiFilter={aiFilter?.onSubmit}
+                  aiLoading={aiFilter?.loading}
+                  aiExamples={aiFilter?.examples}
                 />
               ) : (
                 <>
                   <Button
                     size="sm"
-                    variant="light"
+                    variant="outline"
                     onClick={() => setModalOpened(true)}
                   >
                     {buttonText}

@@ -17,6 +17,7 @@ import {
   Group,
   Loader,
   Menu,
+  Skeleton,
   Select,
   Stack,
   Text,
@@ -56,6 +57,7 @@ import { NextSeo } from "next-seo";
 import { useContext, useEffect, useMemo, useState } from "react";
 
 import { ChatReplay } from "@/components/blocks/RunChat";
+import AiFilterSkeleton from "@/components/checks/ai-filter-skeleton";
 import RunInputOutput from "@/components/blocks/RunInputOutput";
 import SearchBar from "@/components/blocks/SearchBar";
 import CheckPicker from "@/components/checks/Picker";
@@ -74,8 +76,9 @@ import {
   useMetadataKeys,
 } from "@/utils/dataHooks";
 import { buildUrl, fetcher } from "@/utils/fetcher";
-import errorHandler from "@/utils/errors";
 import { formatDateTime } from "@/utils/format";
+import { LOGS_AI_FILTER_EXAMPLES } from "@/utils/ai-filters";
+import { useAiFilter } from "@/utils/useAiFilter";
 
 import { ProjectContext } from "@/utils/context";
 import { useDebouncedState, useDidUpdate } from "@mantine/hooks";
@@ -91,7 +94,6 @@ import IconPicker from "@/components/blocks/IconPicker";
 import { useSortParams } from "@/utils/hooks";
 import { deserializeLogic, serializeLogic } from "shared";
 import { useEvaluators } from "@/utils/dataHooks/evaluators";
-
 export const defaultColumns = {
   llm: [
     timeColumn("createdAt"),
@@ -265,18 +267,13 @@ export default function Logs() {
   const { metadataKeys } = useMetadataKeys(type);
 
   const [query, setQuery] = useDebouncedState<string | null>(null, 300);
-  const [searchMode, setSearchMode] = useState<"keyword" | "ai">("keyword");
   const [searchValue, setSearchValue] = useState("");
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState<string | null>(null);
-  const [aiUnmatched, setAiUnmatched] = useState<string[]>([]);
-  const [aiHints, setAiHints] = useState<string | undefined>();
+  const { applyAiFilter, isAiFilterLoading } = useAiFilter({ projectId });
+  const aiLoading = isAiFilterLoading();
 
   useEffect(() => {
-    if (searchMode === "keyword") {
-      setSearchValue(query ?? "");
-    }
-  }, [searchMode, query]);
+    setSearchValue(query ?? "");
+  }, [query]);
 
   const {
     data: logs,
@@ -399,23 +396,18 @@ export default function Logs() {
 
   useEffect(() => {
     setSearchValue("");
-    setAiError(null);
-    setAiUnmatched([]);
-    setAiHints(undefined);
   }, [projectId, type, serializedChecks]);
 
   useDidUpdate(() => {
     setChecks((prev) =>
       editCheck(prev, "search", query && query.length ? { query } : null),
     );
-    if (searchMode === "keyword") {
-      analytics.track("LogsSearchKeyword", {
-        query: query ?? "",
-        type,
-        empty: !query,
-      });
-    }
-  }, [query, searchMode, type]);
+    analytics.track("LogsSearchKeyword", {
+      query: query ?? "",
+      type,
+      empty: !query,
+    });
+  }, [query, type]);
 
   useEffect(() => {
     // Update visible columns if view changes
@@ -450,9 +442,6 @@ export default function Logs() {
     setChecks(view.data || []);
     setVisibleColumns(view.columns);
     setSearchValue("");
-    setAiError(null);
-    setAiUnmatched([]);
-    setAiHints(undefined);
     setQuery(null);
   }, [view, viewId]);
 
@@ -463,109 +452,78 @@ export default function Logs() {
   const handleSearchChange = (value: string) => {
     setSearchValue(value);
 
-    if (searchMode === "keyword") {
-      setQuery(value);
-    } else {
-      if (aiError) setAiError(null);
-      if (aiUnmatched.length) setAiUnmatched([]);
-      setAiHints(undefined);
-    }
+    setQuery(value);
   };
 
-  const handleSearchModeChange = (mode: "keyword" | "ai") => {
-    if (mode === searchMode) return;
-    setSearchMode(mode);
-    setAiError(null);
-    setAiUnmatched([]);
-    setAiHints(undefined);
-
-    if (mode === "keyword") {
-      const next = query ?? searchValue;
-      setSearchValue(next);
-    }
-    if (mode === "ai") {
-      setQuery(null);
-    }
-  };
-
-  async function applyNaturalLanguageFilters() {
-    const trimmed = searchValue.trim();
+  async function applyNaturalLanguageFilters(request: string) {
+    const trimmed = request.trim();
     if (!trimmed || aiLoading) {
       return;
     }
 
-    setAiLoading(true);
-    setAiError(null);
-    setAiUnmatched([]);
+    setQuery(null);
+    setSearchValue("");
 
-    try {
-      const response = await fetcher.post(
-        `/filters/natural-language${projectId ? `?projectId=${projectId}` : ""}`,
-        {
-          arg: { text: trimmed, type },
-        },
-      );
+    await applyAiFilter(trimmed, {
+      type,
+      notifyOnError: false,
+      onSuccess: (result) => {
+        const logic = result.logic as unknown as any[];
+        setChecks(logic);
 
-      if (!response || !Array.isArray(response.logic)) {
-        throw new Error(
-          "Unexpected response from natural language filters endpoint",
-        );
-      }
+        const inferredType = result.inferredType;
+        if (
+          inferredType &&
+          inferredType !== type &&
+          ["llm", "trace", "thread"].includes(inferredType)
+        ) {
+          setType(inferredType);
+        }
 
-      const logic = response.logic as unknown as any[];
-      setChecks(logic);
+        const unmatched = Array.isArray(result.debug?.unmatched)
+          ? (result.debug?.unmatched as string[])
+          : [];
+        const hints =
+          typeof result.debug?.hints === "string"
+            ? (result.debug?.hints as string)
+            : undefined;
+        const heuristics = Array.isArray(result.debug?.heuristics)
+          ? (result.debug?.heuristics as unknown[])
+          : [];
 
-      const typeLeaf = logic.find(
-        (item) => item?.id === "type" && typeof item?.params === "object",
-      );
-      const inferredType = typeLeaf?.params?.type;
-      if (
-        typeof inferredType === "string" &&
-        inferredType !== type &&
-        ["llm", "trace", "thread"].includes(inferredType)
-      ) {
-        setType(inferredType);
-      }
-
-      setAiUnmatched(response?.debug?.unmatched ?? []);
-      setAiHints(response?.debug?.hints);
-
-      analytics.track("LogsSearchAskAI", {
-        query: trimmed,
-        type,
-        inferredType,
-        heuristicsCount: response?.debug?.heuristics?.length ?? 0,
-        unmatchedCount: response?.debug?.unmatched?.length ?? 0,
-        hadHints: Boolean(response?.debug?.hints),
-      });
-
-      if (response?.debug?.unmatched?.length) {
-        analytics.track("LogsNaturalLanguageUnmatched", {
-          count: response.debug.unmatched.length,
+        analytics.track("LogsSearchAskAI", {
+          query: trimmed,
+          type,
+          inferredType,
+          heuristicsCount: heuristics.length,
+          unmatchedCount: unmatched.length,
+          hadHints: Boolean(hints),
         });
-      }
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "We couldn't convert your request. Try rephrasing it.";
 
-      setAiError(message);
-      setAiHints(undefined);
-      errorHandler(error);
-      notifications.show({
-        title: "Ask AI search failed",
-        message,
-        color: "red",
-      });
-      analytics.track("LogsSearchAskAIError", {
-        query: trimmed,
-        type,
-        message,
-      });
-    } finally {
-      setAiLoading(false);
-    }
+        if (unmatched.length) {
+          analytics.track("LogsNaturalLanguageUnmatched", {
+            count: unmatched.length,
+          });
+        }
+      },
+      onError: (error) => {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "We couldn't convert your request. Try rephrasing it.";
+
+        notifications.show({
+          title: "AI search failed",
+          message,
+          color: "red",
+        });
+        analytics.track("LogsSearchAskAIError", {
+          query: trimmed,
+          type,
+          message,
+        });
+      },
+    }).catch(() => {});
   }
 
   function exportButton({ serializedChecks, projectId, type, format }) {
@@ -708,14 +666,8 @@ export default function Logs() {
           <Stack gap="xs">
             <Flex justify="space-between" align="center" gap="sm" wrap="wrap">
               <SearchBar
-                value={searchValue}
-                mode={searchMode}
-                onModeChange={handleSearchModeChange}
-                onChange={handleSearchChange}
-                onSubmit={
-                  searchMode === "ai" ? applyNaturalLanguageFilters : undefined
-                }
-                loading={searchMode === "ai" ? aiLoading : false}
+                query={searchValue}
+                setQuery={handleSearchChange}
                 variant="unstyled"
                 size="sm"
                 maw={470}
@@ -836,14 +788,23 @@ export default function Logs() {
               </Group>
             )}
 
-            <CheckPicker
-              minimal
-              value={checks}
-              onChange={(value) => {
-                setChecks(value);
-              }}
-              restrictTo={(f) => CHECKS_BY_TYPE[type].includes(f.id)}
-            />
+            {aiLoading ? (
+              <AiFilterSkeleton />
+            ) : (
+              <CheckPicker
+                minimal
+                value={checks}
+                onChange={(value) => {
+                  setChecks(value);
+                }}
+                restrictTo={(f) => CHECKS_BY_TYPE[type].includes(f.id)}
+                aiFilter={{
+                  onSubmit: applyNaturalLanguageFilters,
+                  loading: aiLoading,
+                  examples: LOGS_AI_FILTER_EXAMPLES,
+                }}
+              />
+            )}
           </Group>
           <Group>
             {!!showSaveView && (

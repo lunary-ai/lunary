@@ -1,9 +1,13 @@
 import sql from "@/src/utils/db";
-import Router from "koa-router";
 import { Context } from "koa";
+import Router from "koa-router";
 import { z } from "zod";
 
-import { naturalLanguageToFilters } from "./naturalLanguageToFilters";
+import {
+  naturalLanguageToFilters,
+  OpenAINotConfiguredError,
+  type RunType,
+} from "./natural-language-filter";
 
 const filters = new Router({
   prefix: "/filters",
@@ -213,10 +217,13 @@ filters.post("/natural-language", async (ctx: Context) => {
   try {
     const { text, type } = parsed.data;
     const { projectId } = ctx.state;
-    const { logic, query, details } = await naturalLanguageToFilters(text, {
-      type,
-      projectId,
-    });
+    const runType: RunType = type ?? "llm";
+    const result = await naturalLanguageToFilters(
+      text,
+      runType,
+      projectId ?? "",
+    );
+    const { logic, query, details } = result;
 
     ctx.body = {
       logic,
@@ -225,20 +232,24 @@ filters.post("/natural-language", async (ctx: Context) => {
       debug: {
         normalizedPlan: details.normalizedPlan,
         unmatched: details.unmatched,
-        heuristics: details.heuristics,
-        hints: details.hints,
         availableModels: details.availableModels,
         availableTags: details.availableTags,
         availableTemplates: details.availableTemplates,
       },
     };
   } catch (error) {
-    ctx.status = 500;
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Failed to translate natural language filters";
+    const isConfigError = error instanceof OpenAINotConfiguredError;
+
+    ctx.status = isConfigError ? 503 : 500;
     ctx.body = {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to translate natural language filters",
+      error: "AI filter failed",
+      message: isConfigError
+        ? "AI filter require an OpenAI API key. If you're self-hosting Lunary, set the OPENAI_API_KEY environment variable and restart the backend service."
+        : message,
     };
   }
 });

@@ -331,12 +331,12 @@ function TemplateList({
 
       <SearchBar
         placeholder="Filter..."
-        value={filter}
+        query={filter}
+        setQuery={setFilter}
         size="xs"
         w="fit-content"
         mx="md"
         my="xs"
-        onChange={setFilter}
       />
 
       {filteredTemplates?.map((template, index) => (

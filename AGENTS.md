@@ -58,6 +58,18 @@ PostgreSQL version 15+ is required. Run migrations with `bun run migrate:db` bef
 Backend requires: `DATABASE_URL`, `JWT_SECRET`, `APP_URL`, `API_URL`
 Frontend requires: `API_URL`, `NEXT_PUBLIC_API_URL`
 
+## Frontend Data Hook Conventions
+
+- All project-scoped requests go through helpers in `packages/frontend/utils/dataHooks/index.ts`: `generateKey` appends the active `projectId`, while `useProjectSWR`/`useProjectMutation` wrap SWR so GETs and mutations inherit project context and standard loading state.
+- Fetch hooks import `useProjectSWR`, return shape-tailored data (often defaulting to `[]`/`null`), and validate when needed with shared Zod schemas (see `prompts.ts`, `playground-endpoints.ts`).
+- Mutations call `useProjectMutation` with the appropriate `fetcher` verb (`post`, `patch`, `put`, `delete`) and expose the returned `trigger` under descriptive names like `create`, `update`, or `remove`, wiring cache refreshes through `onSuccess`, `optimisticData`, or direct `mutate`.
+- When SWR Mutation is insufficient (e.g., custom DELETE flows), build the URL with `generateKey`, call the shared `fetcher` directly, and manually revalidate relevant caches.
+- All HTTP verbs ultimately use `packages/frontend/utils/fetcher.ts`, which prefixes `/v1`, attaches bearer auth, enforces consistent JSON payloads (`{ arg: ... }`), and centralizes error handling / sign-out logic.
+
+## File Naming
+
+- Create every new file using kebab-case (e.g., `new-feature.ts`, `user-profile.test.ts`).
+
 ## Development Workflow
 1. `bun run migrate:db`
 2. `bun run dev`

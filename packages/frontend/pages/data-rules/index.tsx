@@ -1,5 +1,8 @@
 import { SettingsCard } from "@/components/blocks/SettingsCard";
+import AiFilterSkeleton from "@/components/checks/ai-filter-skeleton";
 import CheckPicker from "@/components/checks/Picker";
+import { DATA_RULES_AI_FILTER_EXAMPLES } from "@/utils/ai-filters";
+import { useAiFilter } from "@/utils/useAiFilter";
 import config from "@/utils/config";
 import {
   useOrg,
@@ -21,6 +24,7 @@ import {
   Container,
   Select,
   Group,
+  Skeleton,
 } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
 import { IconCheck, IconIdBadge } from "@tabler/icons-react";
@@ -33,17 +37,46 @@ function SmartDataRule() {
     useProjectRules();
 
   const { user } = useUser();
-  const { updateDataRetention } = useProject();
+  const { project, updateDataRetention } = useProject();
   const [dataRetentionDays, setDataRetentionDays] =
     useState<string>("unlimited");
 
   const [checks, setChecks] = useState<CheckLogic>(["AND"]);
+  const { applyAiFilter, isAiFilterLoading } = useAiFilter({
+    projectId: project?.id,
+  });
+  const aiLoading = isAiFilterLoading();
 
   useEffect(() => {
     if (filteringRule?.filters) {
       setChecks(filteringRule.filters);
     }
   }, [filteringRule]);
+
+  async function handleAiFilterSubmit(request: string) {
+    const trimmed = request.trim();
+    if (!trimmed) {
+      return;
+    }
+
+    await applyAiFilter(trimmed, {
+      notifyOnError: false,
+      onSuccess: ({ logic }) => {
+        setChecks(logic);
+      },
+      onError: (error) => {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "We couldn't convert your request. Try rephrasing it.";
+        showNotification({
+          title: "AI filter failed",
+          message,
+          color: "red",
+        });
+      },
+    }).catch(() => {});
+  }
 
   const smartDataFilterEnabled = config.IS_SELF_HOSTED
     ? org.license.dataFilteringEnabled
@@ -64,16 +97,27 @@ function SmartDataRule() {
               from runs matching will be redacted.
             </Text>
 
-            <CheckPicker
-              minimal
-              showAndOr
-              value={checks}
-              onChange={setChecks}
-              buttonText="Add filter"
-              restrictTo={(f) =>
-                ["metadata", "users", "tags", "tools", "models"].includes(f.id)
-              }
-            />
+            {aiLoading ? (
+              <AiFilterSkeleton />
+            ) : (
+              <CheckPicker
+                minimal
+                showAndOr
+                value={checks}
+                onChange={setChecks}
+                buttonText="Add filter"
+                restrictTo={(f) =>
+                  ["metadata", "users", "tags", "tools", "models"].includes(
+                    f.id,
+                  )
+                }
+                aiFilter={{
+                  onSubmit: handleAiFilterSubmit,
+                  loading: aiLoading,
+                  examples: DATA_RULES_AI_FILTER_EXAMPLES,
+                }}
+              />
+            )}
 
             <Flex justify="flex-end">
               <Button
@@ -87,7 +131,6 @@ function SmartDataRule() {
           </Stack>
         </SettingsCard>
 
-        {/* ── PII Masking ─────────────────────────────────────────────────────── */}
         <SettingsCard title="PII Masking" mt="md">
           <Stack>
             <Text>
