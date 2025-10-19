@@ -1,10 +1,9 @@
 import { describe, expect, test } from "bun:test";
 
 import {
-  applyHeuristicClauses,
   compilePlanToCheckLogic,
   type NormalizedPlan,
-} from "@/src/api/v1/filters/naturalLanguageToFilters";
+} from "@/src/api/v1/filters/natural-language-filter";
 import { serializeLogic } from "shared";
 
 const extractLeaf = (logic: any[], id: string) => {
@@ -30,15 +29,11 @@ describe("compilePlanToCheckLogic", () => {
       unmatched: [],
     };
 
-    const { logic, unmatched } = compilePlanToCheckLogic(plan, "llm");
+    const { logic, unmatched } = compilePlanToCheckLogic(plan);
     const logicArray = logic as unknown as any[];
 
     expect(unmatched.length).toBe(0);
     expect(logicArray[0]).toBe("AND");
-
-    const typeLeaf = extractLeaf(logicArray, "type");
-    expect(typeLeaf).toBeTruthy();
-    expect(typeLeaf.params.type).toBe("llm");
 
     const durationLeaf = extractLeaf(logicArray, "duration");
     expect(durationLeaf).toBeTruthy();
@@ -52,30 +47,10 @@ describe("compilePlanToCheckLogic", () => {
     );
 
     const query = serializeLogic(logic);
-    expect(query).toContain("type=llm");
+    expect(query).not.toContain("type=llm");
     expect(query).toMatch(/duration=.*gt/);
     expect(query).toMatch(/feedback=/);
-});
-
-test("applyHeuristicClauses infers expensive cost filter", () => {
-  const plan: NormalizedPlan = {
-    op: "AND",
-    clauses: [],
-    groups: [],
-    unmatched: [],
-  };
-
-  const { plan: updatedPlan, descriptions } = applyHeuristicClauses(
-    "show me the expensive runs",
-    plan,
-  );
-
-  expect(updatedPlan.clauses.some((clause) => clause.id === "cost")).toBe(true);
-  const costClause = updatedPlan.clauses.find((clause) => clause.id === "cost");
-  expect(costClause?.op).toBe("gt");
-  expect(costClause?.value).toBe(1);
-  expect(descriptions[0]).toContain("cost >");
-});
+  });
 
   test("creates bounded groups for between clauses", () => {
     const plan: NormalizedPlan = {
@@ -85,7 +60,7 @@ test("applyHeuristicClauses infers expensive cost filter", () => {
       unmatched: [],
     };
 
-    const { logic, unmatched } = compilePlanToCheckLogic(plan, "llm");
+    const { logic, unmatched } = compilePlanToCheckLogic(plan);
     const logicArray = logic as unknown as any[];
     expect(unmatched.length).toBe(0);
     expect(logicArray[0]).toBe("AND");
@@ -116,7 +91,7 @@ test("applyHeuristicClauses infers expensive cost filter", () => {
       unmatched: [],
     };
 
-    const { logic, unmatched } = compilePlanToCheckLogic(plan, "llm");
+    const { logic, unmatched } = compilePlanToCheckLogic(plan);
     const logicArray = logic as unknown as any[];
     expect(unmatched.length).toBe(0);
 
@@ -133,57 +108,58 @@ test("applyHeuristicClauses infers expensive cost filter", () => {
       unmatched: [],
     };
 
-    const { logic, unmatched } = compilePlanToCheckLogic(plan, "llm");
+    const { logic, unmatched } = compilePlanToCheckLogic(plan);
     const logicArray = logic as unknown as any[];
 
-    expect(unmatched.some((item) => item.includes("Unsupported filter id"))).toBe(
-      true,
-    );
+    expect(
+      unmatched.some((item) => item.includes("Unsupported filter id")),
+    ).toBe(true);
     expect(logicArray[0]).toBe("AND");
-    expect(extractLeaf(logicArray, "type")).toBeTruthy();
-  expect(
-    logicArray.some((leaf: any) => leaf?.id === "not-a-real-filter"),
-  ).toBe(false);
-});
-
-test("model clause respects project allowed models", () => {
-  const plan: NormalizedPlan = {
-    op: "AND",
-    clauses: [{ id: "models", values: ["openai"] }],
-    groups: [],
-    unmatched: [],
-  };
-
-  const { logic, unmatched } = compilePlanToCheckLogic(plan, "llm", {
-    models: ["gpt-4o", "gpt-4o-mini"],
-    tags: [],
-    templates: [],
+    expect(extractLeaf(logicArray, "type")).toBeFalsy();
+    expect(
+      logicArray.some((leaf: any) => leaf?.id === "not-a-real-filter"),
+    ).toBe(false);
   });
 
-  expect(unmatched.some((item) => item.includes("ignored model values"))).toBe(
-    true,
-  );
-  const remainingLeaves = (logic as any[]).slice(1);
-  expect(remainingLeaves.length).toBe(1);
-  expect(remainingLeaves[0].id).toBe("type");
+  test("model clause respects project allowed models", () => {
+    const plan: NormalizedPlan = {
+      op: "AND",
+      clauses: [{ id: "models", values: ["openai"] }],
+      groups: [],
+      unmatched: [],
+    };
 
-  const familyPlan: NormalizedPlan = {
-    op: "AND",
-    clauses: [{ id: "models", values: ["gpt"] }],
-    groups: [],
-    unmatched: [],
-  };
-
-  const { logic: familyLogic, unmatched: familyUnmatched } =
-    compilePlanToCheckLogic(familyPlan, "llm", {
+    const { logic, unmatched } = compilePlanToCheckLogic(plan, {
       models: ["gpt-4o", "gpt-4o-mini"],
       tags: [],
       templates: [],
     });
 
-  expect(familyUnmatched.length).toBe(0);
-  const modelsLeaf = (familyLogic as any[]).slice(1).find((leaf) => leaf?.id === "models");
-  expect(modelsLeaf).toBeTruthy();
-  expect(modelsLeaf.params.models).toEqual(["gpt-4o", "gpt-4o-mini"]);
-});
+    expect(
+      unmatched.some((item) => item.includes("ignored model values")),
+    ).toBe(true);
+    const remainingLeaves = (logic as any[]).slice(1);
+    expect(remainingLeaves.length).toBe(0);
+
+    const familyPlan: NormalizedPlan = {
+      op: "AND",
+      clauses: [{ id: "models", values: ["gpt"] }],
+      groups: [],
+      unmatched: [],
+    };
+
+    const { logic: familyLogic, unmatched: familyUnmatched } =
+      compilePlanToCheckLogic(familyPlan, {
+        models: ["gpt-4o", "gpt-4o-mini"],
+        tags: [],
+        templates: [],
+      });
+
+    expect(familyUnmatched.length).toBe(0);
+    const modelsLeaf = (familyLogic as any[])
+      .slice(1)
+      .find((leaf) => leaf?.id === "models");
+    expect(modelsLeaf).toBeTruthy();
+    expect(modelsLeaf.params.models).toEqual(["gpt-4o", "gpt-4o-mini"]);
+  });
 });

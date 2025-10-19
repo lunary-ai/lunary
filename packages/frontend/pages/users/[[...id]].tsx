@@ -353,9 +353,8 @@ export default function Users() {
         <Flex justify="space-between">
           <Card withBorder p={2} px="sm" w={"100%"}>
             <SearchBar
-              value={search}
-              onChange={setSearch}
-              mode="keyword"
+              query={search ?? ""}
+              setQuery={(value) => setSearch(value || undefined)}
               ml={-8}
               variant="unstyled"
               size="sm"

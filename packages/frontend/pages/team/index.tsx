@@ -626,9 +626,8 @@ function MemberList({ users, isInvitation }) {
       <Stack gap="0">
         <Group w="100%" wrap="nowrap">
           <SearchBar
-            value={searchValue}
-            onChange={setSearchValue}
-            mode="keyword"
+            query={searchValue}
+            setQuery={setSearchValue}
             placeholder="Filter..."
             my="md"
             w="100%"

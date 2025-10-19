@@ -313,7 +313,6 @@ export function enrichmentColumn(
     cell: (props) => {
       const data = props.row.original[`enrichment-${id}`];
 
-      console.log(props.row);
       if (!data) {
         return null;
       }
