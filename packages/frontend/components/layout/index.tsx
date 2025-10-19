@@ -1,4 +1,10 @@
-import { Box, Flex, Loader, useComputedColorScheme } from "@mantine/core";
+import {
+  Box,
+  Flex,
+  Loader,
+  Stack,
+  useComputedColorScheme,
+} from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import { ReactNode, useEffect } from "react";
 
@@ -6,6 +12,7 @@ import { useRouter } from "next/router";
 
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
+import BillingDelinquentBanner from "./billing-delinquent-banner";
 
 import analytics from "@/utils/analytics";
 import { useAuth } from "@/utils/auth";
@@ -127,6 +134,9 @@ export default function Layout({ children }: { children: ReactNode }) {
             }}
           >
             {!isAuthPage && !isPublicPage && <Navbar />}
+            {!isAuthPage && !isPublicPage && (
+              <BillingDelinquentBanner org={org} user={user} />
+            )}
             {children}
           </Box>
         </Flex>

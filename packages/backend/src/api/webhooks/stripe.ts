@@ -1,21 +1,170 @@
 import { sendSlackMessage } from "@/src/utils/notifications";
-import Stripe from "stripe";
 import stripe from "@/src/utils/stripe";
+import Stripe from "stripe";
 
-import sql from "@/src/utils/db";
-import Router from "koa-router";
-import { Context } from "koa";
-import { clearUndefined } from "@/src/utils/ingest";
 import {
-  sendEmail,
   CANCELED_EMAIL,
-  UPGRADE_EMAIL,
   FULLY_CANCELED_EMAIL,
+  sendEmail,
+  UPGRADE_EMAIL,
 } from "@/src/emails";
+import sql from "@/src/utils/db";
+import { clearUndefined } from "@/src/utils/ingest";
+import { Context } from "koa";
+import Router from "koa-router";
 
 const router = new Router({
   prefix: "/stripe",
 });
+
+const DELINQUENT_SUBSCRIPTION_STATUSES = new Set<Stripe.Subscription.Status>([
+  "past_due",
+  "unpaid",
+  "incomplete",
+  "incomplete_expired",
+]);
+
+type OrgRecord = { id: string; name: string };
+
+async function findOrgByStripeRefs({
+  customerId,
+  subscriptionId,
+}: {
+  customerId?: string | null;
+  subscriptionId?: string | null;
+}): Promise<OrgRecord | null> {
+  if (customerId && subscriptionId) {
+    const [org] = await sql`
+      select id, name
+      from org
+      where stripe_customer = ${customerId} and stripe_subscription = ${subscriptionId}
+      limit 1
+    `;
+    if (org) return org;
+  }
+
+  if (subscriptionId) {
+    const [org] = await sql`
+      select id, name
+      from org
+      where stripe_subscription = ${subscriptionId}
+      limit 1
+    `;
+    if (org) return org;
+  }
+
+  if (customerId) {
+    const [org] = await sql`
+      select id, name
+      from org
+      where stripe_customer = ${customerId}
+      limit 1
+    `;
+    if (org) return org;
+  }
+
+  return null;
+}
+
+async function markOrgBillingDelinquent(orgId: string) {
+  const [org] = await sql`
+    update org
+    set
+      billing_delinquent = true,
+      billing_delinquent_since = coalesce(billing_delinquent_since, now())
+    where id = ${orgId}
+      and (
+        billing_delinquent is distinct from true
+        or billing_delinquent_since is null
+      )
+    returning id, name
+  `;
+
+  if (org) {
+    console.info(`🔔 Org ${org.name} marked as billing delinquent`);
+  }
+}
+
+async function clearOrgBillingDelinquent(orgId: string) {
+  const [org] = await sql`
+    update org
+    set
+      billing_delinquent = false,
+      billing_delinquent_since = null
+    where id = ${orgId}
+      and (
+        billing_delinquent is distinct from false
+        or billing_delinquent_since is not null
+      )
+    returning id, name
+  `;
+
+  if (org) {
+    console.info(`✅ Org ${org.name} cleared delinquent flag`);
+  }
+}
+
+async function reconcileSubscriptionBillingStatus(
+  subscription: Stripe.Subscription,
+  existingOrg?: OrgRecord | null,
+) {
+  const org =
+    existingOrg ??
+    (await findOrgByStripeRefs({
+      customerId: subscription.customer as string | null,
+      subscriptionId: subscription.id,
+    }));
+
+  if (!org) return;
+
+  if (DELINQUENT_SUBSCRIPTION_STATUSES.has(subscription.status)) {
+    await markOrgBillingDelinquent(org.id);
+  } else if (
+    subscription.status === "active" ||
+    subscription.status === "trialing" ||
+    subscription.status === "canceled"
+  ) {
+    await clearOrgBillingDelinquent(org.id);
+  }
+}
+
+async function handleInvoicePaymentFailure(invoice: Stripe.Invoice) {
+  if (!invoice.subscription) return;
+
+  const org = await findOrgByStripeRefs({
+    customerId: invoice.customer as string | null,
+    subscriptionId: invoice.subscription as string | null,
+  });
+
+  if (!org) {
+    console.warn(
+      `⚠️ Unable to resolve org for failed invoice ${invoice.id}, customer=${invoice.customer}`,
+    );
+    return;
+  }
+
+  if (invoice.amount_due > 0) {
+    await markOrgBillingDelinquent(org.id);
+  }
+}
+
+async function handleInvoicePaymentSuccess(invoice: Stripe.Invoice) {
+  if (!invoice.subscription) return;
+
+  const org = await findOrgByStripeRefs({
+    customerId: invoice.customer as string | null,
+    subscriptionId: invoice.subscription as string | null,
+  });
+
+  if (!org) {
+    console.warn(
+      `⚠️ Unable to resolve org for paid invoice ${invoice.id}, customer=${invoice.customer}`,
+    );
+    return;
+  }
+
+  await clearOrgBillingDelinquent(org.id);
+}
 
 async function setupSubscription(object: Stripe.Checkout.Session) {
   console.info("🔔 setupSubscription", object);
@@ -40,6 +189,8 @@ async function setupSubscription(object: Stripe.Checkout.Session) {
     limited: false,
     playAllowance: 1000,
     evalAllowance: 1000,
+    billingDelinquent: false,
+    billingDelinquentSince: null,
   };
 
   const [org] = await sql`
@@ -74,7 +225,7 @@ async function updateSubscription(object: Stripe.Subscription) {
   const period = metadata?.period;
 
   const [currentOrg] = await sql`
-    SELECT plan, plan_period, canceled
+    SELECT id, name, plan, plan_period, canceled
     FROM org
     WHERE stripe_customer = ${customer as string} AND stripe_subscription = ${id}
   `;
@@ -83,27 +234,31 @@ async function updateSubscription(object: Stripe.Subscription) {
     throw new Error("Org with matching subscription not found");
   }
 
+  await reconcileSubscriptionBillingStatus(object, currentOrg);
+
   if (
     canceled === currentOrg.canceled &&
     ((!plan && !period) ||
       (currentOrg.plan === plan && currentOrg.planPeriod === period))
   ) {
-    console.error(`🔥 updateSubscription: nothing to update`);
+    console.info(`🔥 updateSubscription: nothing to update`);
     return;
   }
 
   const [org] = await sql`
     UPDATE org
     SET ${sql(clearUndefined({ plan, planPeriod: period, canceled }))}
-    WHERE stripe_customer = ${customer as string}
+    WHERE id = ${currentOrg.id}
     RETURNING id, name
   `;
+
+  const targetOrg = org ?? currentOrg;
 
   if (canceled) {
     const [users] = await sql`
       select email, name
       from account
-      where id = ${org.id}
+      where id = ${targetOrg.id}
     `;
 
     if (users.length) {
@@ -115,12 +270,12 @@ async function updateSubscription(object: Stripe.Subscription) {
     }
 
     await sendSlackMessage(
-      `😭💔 ${org.name} subscription canceled their plans`,
+      `😭💔 ${targetOrg.name} subscription canceled their plans`,
       "billing",
     );
   } else if (plan || period) {
     await sendSlackMessage(
-      `🔔 ${org.name} subscription updated to: ${plan} (${period})`,
+      `🔔 ${targetOrg.name} subscription updated to: ${plan} (${period})`,
       "billing",
     );
   }
@@ -131,7 +286,13 @@ async function cancelSubscription(object: Stripe.Subscription) {
 
   const [org] = await sql`
     UPDATE org
-    SET ${sql({ plan: "free", canceled: false, stripeSubscription: null })} 
+    SET ${sql({
+      plan: "free",
+      canceled: false,
+      stripeSubscription: null,
+      billingDelinquent: false,
+      billingDelinquentSince: null,
+    })} 
     WHERE stripe_customer = ${customer as string} AND stripe_subscription = ${id}
     RETURNING id, name
   `;
@@ -191,6 +352,15 @@ router.post("/", async (ctx: Context) => {
 
       case "customer.subscription.deleted":
         await cancelSubscription(event.data.object);
+        break;
+
+      case "invoice.payment_failed":
+      case "invoice.payment_action_required":
+        await handleInvoicePaymentFailure(event.data.object as Stripe.Invoice);
+        break;
+
+      case "invoice.paid":
+        await handleInvoicePaymentSuccess(event.data.object as Stripe.Invoice);
         break;
 
       default:
