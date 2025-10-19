@@ -102,7 +102,7 @@ async function getStream(url, args, onChunk) {
   }
 }
 
-function post(path, { arg = {} } = {}) {
+function post(path, { arg = {}, signal }: { arg?: any; signal?: AbortSignal } = {}) {
   return fetch(buildUrl(path), {
     method: "POST",
     headers: {
@@ -110,6 +110,7 @@ function post(path, { arg = {} } = {}) {
       ...getHeaders(),
     },
     body: JSON.stringify(arg),
+    signal,
   }).then(handleResponse);
 }
 function patch(path, { arg }) {

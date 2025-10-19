@@ -1,6 +1,5 @@
-import { useCallback, useContext } from "react";
+import { useCallback, useContext, useRef, useState } from "react";
 import type { CheckLogic } from "shared";
-import useSWRMutation from "swr/mutation";
 import { ProjectContext } from "./context";
 import { generateKey } from "./dataHooks";
 import { fetcher } from "./fetcher";
@@ -19,7 +18,7 @@ export const DATA_RULES_AI_FILTER_EXAMPLES = [
 export const LOGS_AI_FILTER_EXAMPLES = [
   "Return all logs where latency is > 1s",
   "Model is from OpenAI",
-  "Output is not in english and cost is high",
+  "Output is not in english",
 ];
 
 export const DASHBOARD_AI_FILTER_EXAMPLES = [
@@ -77,11 +76,8 @@ export function useNaturalLanguageFilters(projectIdOverride?: string | null) {
   const { projectId: contextProjectId } = useContext(ProjectContext);
   const resolvedProjectId = projectIdOverride ?? contextProjectId;
 
-  const { trigger, isMutating } = useSWRMutation(
-    () => generateKey("/filters/natural-language", resolvedProjectId),
-    (url: string, { arg }: { arg: { text: string; type?: RunType } }) =>
-      fetcher.post(url, { arg }),
-  );
+  const [isMutating, setIsMutating] = useState(false);
+  const pendingRequestsRef = useRef(0);
 
   const run = useCallback(
     async (
@@ -104,11 +100,49 @@ export function useNaturalLanguageFilters(projectIdOverride?: string | null) {
         payload.type = options.type;
       }
 
-      const response = await trigger(payload);
+      const url = generateKey("/filters/natural-language", resolvedProjectId);
+      if (!url) {
+        throw new Error("Unable to resolve project for AI filter request.");
+      }
 
-      return parseNaturalLanguageResponse(response);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10_000);
+
+      const wasIdle = pendingRequestsRef.current === 0;
+      pendingRequestsRef.current += 1;
+      if (wasIdle) {
+        setIsMutating(true);
+      }
+
+      try {
+        const response = await fetcher.post(url, {
+          arg: payload,
+          signal: controller.signal,
+        });
+
+        return parseNaturalLanguageResponse(response);
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") {
+          throw new Error("AI filter request timed out. Please try again.");
+        }
+
+        if (error instanceof Error) {
+          throw error;
+        }
+
+        throw new Error("We couldn't convert your request. Try rephrasing it.");
+      } finally {
+        clearTimeout(timeoutId);
+        pendingRequestsRef.current = Math.max(
+          pendingRequestsRef.current - 1,
+          0,
+        );
+        if (pendingRequestsRef.current === 0) {
+          setIsMutating(false);
+        }
+      }
     },
-    [resolvedProjectId, trigger],
+    [resolvedProjectId],
   );
 
   return { run, isMutating };

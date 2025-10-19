@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActionIcon,
   Badge,
   Button,
   Combobox,
@@ -14,9 +13,7 @@ import {
 } from "@mantine/core";
 import CHECKS_UI_DATA from "./ChecksUIData";
 import {
-  IconChevronLeft,
   IconChevronRight,
-  IconFilter,
   IconFilter2,
   IconSparkles,
 } from "@tabler/icons-react";
@@ -197,26 +194,14 @@ export function AddCheckButton({
             </>
           ) : (
             <Stack gap="xs" p="xs">
-              <Group gap="xs">
-                <ActionIcon
-                  variant="subtle"
-                  size="sm"
-                  onClick={() => {
-                    setView("root");
-                    combobox.focusSearchInput();
-                  }}
-                >
-                  <IconChevronLeft size={14} />
-                </ActionIcon>
-                <Group gap={6} align="center">
-                  <IconSparkles size={14} />
-                  <Text size="sm" fw={600}>
-                    AI Filter
-                  </Text>
-                  <Badge size="xs" variant="light">
-                    Beta
-                  </Badge>
-                </Group>
+              <Group gap={6} align="center">
+                <IconSparkles size={14} />
+                <Text size="sm" fw={600}>
+                  AI Filter
+                </Text>
+                <Badge size="xs" variant="light">
+                  Beta
+                </Badge>
               </Group>
               <TextInput
                 ref={aiInputRef}
@@ -224,33 +209,31 @@ export function AddCheckButton({
                 onChange={(event) => setAiInput(event.currentTarget.value)}
                 placeholder="Describe what you need"
                 autoComplete="off"
-                rightSectionWidth={32}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" && !event.shiftKey) {
                     event.preventDefault();
                     handleAiSubmit(aiInput);
                   }
                 }}
-                rightSection={
-                  aiLoading ? (
-                    <Loader size="xs" />
-                  ) : (
-                    <IconSparkles size={16} opacity={0.6} />
-                  )
-                }
               />
               <Stack gap={4} mt="xs">
                 {aiSuggestions.map((example) => (
                   <Button
                     key={example}
                     variant="subtle"
+                    w="100%"
                     size="xs"
-                    leftSection={<IconSparkles size={14} />}
+                    color="#2F2F2F"
+                    fullWidth
+                    justify="flex-start"
+                    leftSection={<IconSparkles size={16} />}
+                    style={{ fontWeight: 200 }}
+                    pl={4}
                     styles={{
-                      root: {
-                        paddingInline: 10,
-                        justifyContent: "flex-start",
-                        fontWeight: 400,
+                      root: {},
+                      inner: {
+                        fontSize: 14,
+                        fontWeight: 200,
                       },
                       section: { marginRight: 4 },
                     }}
