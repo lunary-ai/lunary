@@ -428,7 +428,9 @@ function InviteMemberCard() {
                 value={selectedProjects}
                 setValue={(projectIds) => {
                   setSelectedProjects(projectIds);
-                  setProjectError(projectIds.length ? null : "Select at least one project");
+                  setProjectError(
+                    projectIds.length ? null : "Select at least one project",
+                  );
                 }}
                 disabled={
                   upgradeForGranular || ["admin", "billing"].includes(role)
@@ -512,7 +514,9 @@ function UpdateUserForm({ user, onClose, setShowConfirmation, setOnConfirm }) {
           value={userProjects}
           setValue={(projects) => {
             setUserProjects(projects);
-            setProjectError(projects.length ? null : "Select at least one project");
+            setProjectError(
+              projects.length ? null : "Select at least one project",
+            );
           }}
           disabled={
             ["owner", "admin", "billing"].includes(role) || !canUsePaidRoles

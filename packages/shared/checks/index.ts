@@ -200,7 +200,7 @@ export const CHECKS: Check[] = [
       {
         type: "select",
         multiple: true,
-        width: 100,
+        width: 150,
         id: "templates",
         options: () => `/filters/templates`,
       },
@@ -220,7 +220,6 @@ export const CHECKS: Check[] = [
       {
         type: "select",
         id: "status",
-        defaultValue: "success",
         width: 140,
         options: [
           {

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Badge,
+  Box,
   Button,
   Combobox,
   Group,
@@ -119,9 +120,20 @@ export function AddCheckButton({
     <>
       <Combobox
         store={combobox}
-        width={250}
         position="bottom-start"
         withinPortal={false}
+        width="max-content"
+        styles={{
+          dropdown: {
+            paddingRight: 0,
+            paddingLeft: 0,
+            minWidth: 280,
+          },
+          search: {
+            marginInline: 0,
+            maxWidth: "100%",
+          },
+        }}
         onOptionSubmit={(val) => {
           if (val === "__ai") {
             setView("ai");
@@ -157,7 +169,7 @@ export function AddCheckButton({
           </Button>
         </Combobox.Target>
 
-        <Combobox.Dropdown w="300px">
+        <Combobox.Dropdown>
           {view === "root" ? (
             <>
               <Combobox.Search
@@ -166,29 +178,39 @@ export function AddCheckButton({
                 placeholder="Filter..."
               />
               <Combobox.Options>
-                <ScrollArea.Autosize mah={220} type="always" scrollbars="y">
+                <ScrollArea.Autosize mah="90vh" type="always" scrollbars="y">
                   {aiEnabled && (
-                    <Combobox.Option value="__ai" key="__ai" variant="">
-                      <Group justify="space-between" gap="xs">
-                        <Group gap={6}>
-                          <IconSparkles size={14} />
-                          <Text size="sm" fw={500}>
-                            AI Filter
-                          </Text>
+                    <Box
+                      pb="4px"
+                      px="3px"
+                      style={{
+                        borderBottom: "1px solid var(--mantine-color-gray-2)",
+                      }}
+                    >
+                      <Combobox.Option value="__ai" key="__ai">
+                        <Group justify="space-between" gap="xs">
+                          <Group gap={6}>
+                            <IconSparkles size={14} />
+                            <Text size="sm" fw={500}>
+                              AI Filter
+                            </Text>
+                          </Group>
+                          <IconChevronRight
+                            size={14}
+                            stroke={1.5}
+                            opacity={0.6}
+                          />
                         </Group>
-                        <IconChevronRight
-                          size={14}
-                          stroke={1.5}
-                          opacity={0.6}
-                        />
-                      </Group>
-                    </Combobox.Option>
+                      </Combobox.Option>
+                    </Box>
                   )}
-                  {filteredOptions.length > 0 ? (
-                    filteredOptions.map((item) => renderOption(item))
-                  ) : (
-                    <Combobox.Empty>Nothing found</Combobox.Empty>
-                  )}
+                  <Box px="3px">
+                    {filteredOptions.length > 0 ? (
+                      filteredOptions.map((item) => renderOption(item))
+                    ) : (
+                      <Combobox.Empty>Nothing found</Combobox.Empty>
+                    )}
+                  </Box>
                 </ScrollArea.Autosize>
               </Combobox.Options>
             </>

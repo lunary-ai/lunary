@@ -16,21 +16,20 @@ export const DATA_RULES_AI_FILTER_EXAMPLES = [
 ];
 
 export const LOGS_AI_FILTER_EXAMPLES = [
-  "Return all logs where latency is > 1s",
+  "Latency is > 1s",
   "Model is from OpenAI",
   "Output is not in english",
 ];
 
 export const DASHBOARD_AI_FILTER_EXAMPLES = [
-  "Data that contains errors",
+  "Contains errors",
   "Model is gpt-5",
-  "Data with negative feedback",
+  "Has negative feedback",
 ];
 
 export const DEFAULT_AI_FILTER_EXAMPLES = [
-  "runs with thumbs down feedback",
-  "requests tagged billing this week",
-  "traces longer than 2 seconds",
+  "Runs with thumbs down",
+  "Requests tagged billing this week",
 ];
 
 export type NaturalLanguageFilterResult = {
