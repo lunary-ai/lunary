@@ -1749,8 +1749,6 @@ analytics.get("/org/models/top", async (ctx: Context) => {
     nameFilter = sql`and r.name = ${name}`;
   }
 
-  console.log(startDate, endDate, timeZone);
-
   const topModels = await sql`
       with filtered_runs as (
         select
