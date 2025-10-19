@@ -20,7 +20,7 @@ export default function SmartCheckSelect({
   searchable,
   customSearch,
   placeholderSearch,
-  width,
+  width = 250,
   allowCustom,
   renderListItem,
   renderLabel = (item) => (typeof item === "object" ? item?.label : item),
