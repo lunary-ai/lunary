@@ -99,6 +99,10 @@ export function serializeLogic(logic: CheckLogic): string {
         .filter(Boolean)
         .join(".");
 
+      if (!data) {
+        return "";
+      }
+
       return param.id + "=" + data;
     }
     return "";

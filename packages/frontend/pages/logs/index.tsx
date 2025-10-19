@@ -282,7 +282,7 @@ export default function Logs() {
     loadMore,
     mutate: mutateLogs,
   } = useProjectInfiniteSWR(`/runs?${serializedChecks}${sortParams}`, {
-    refreshInterval: 1000,
+    refreshInterval: 5000,
   });
 
   const { datasets, insertPrompts } = useDatasets();
