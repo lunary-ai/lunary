@@ -7,10 +7,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Lunary is an LLM observability and development platform providing conversation tracking, analytics, debugging, prompt management, and evaluation tools. It's a self-hostable toolkit that integrates with major LLM providers.
 
+## Assumptions
+
+- Assume the local environment is already provisioned (database running, env vars set) and you have full access mode in this workspace.
+- In practice, you typically only need to run `bun run dev:llm` to start everything for local development.
+
 ## Essential Commands
 
 **Development:**
-- `bun run dev` - Start all services (frontend + backend)
+- `bun run dev:llm` - Start all services (frontend + backend). In most cases, this single command is enough to boot the app locally.
 - `bun run start` - Production mode
 - `bun run migrate:db` - Run database migrations
 - `bun run test` - Run e2e tests with Playwright
@@ -71,11 +76,41 @@ Frontend requires: `API_URL`, `NEXT_PUBLIC_API_URL`
 - Create every new file using kebab-case (e.g., `new-feature.ts`, `user-profile.test.ts`).
 
 ## Development Workflow
-1. `bun run migrate:db`
-2. `bun run dev`
+1. Fast path: `bun run dev:llm` (usually all you need).
+2. If your DB is fresh or after pulling new migrations: `bun run migrate:db`, then `bun run dev:llm`.
 
 Dashboard: `http://localhost:8080`
 API: `http://localhost:3333`
+
+## Playwright MCP
+
+- Purpose: Use the Playwright MCP to drive the local UI to quickly verify changes end‑to‑end, understand flows, and capture evidence (screenshots/logs). Prefer MCP over manual clicking for repeatable checks.
+
+- When to use:
+  - Smoke-test that the app boots, auth works, and key screens render.
+  - Validate a feature you just touched (e.g., prompt playground runs and returns).
+  - Reproduce or understand a bug by scripting the exact user path.
+
+- Prerequisites:
+  - Start the stack: `bun run dev:llm`.
+  - Ensure `.env` points to local URLs (default): `APP_URL=http://localhost:8080`, `API_URL=http://localhost:3333`.
+  - Use the `LUNARY_EMAIL` secret for the email/username field whenever a Lunary login flow is automated.
+  - Use the `LUNARY_PASSWORD` secret for the password field in the same flows.
+  - Retrieve both secrets in `~/.codex/.secrets`
+
+
+- Common recipes (selectors prefer `data-testid`):
+  - Open dashboard: navigate to `${APP_URL}`.
+  - Log in:
+    - Navigate to `${APP_URL}/login`.
+    - Fill email/password fields.
+    - Click `[data-testid="continue-button"]` and wait for `[data-testid="account-sidebar-item"]` or a visible dashboard element.
+
+- Tips:
+  - Prefer role/text selectors or `data-testid` over brittle CSS.
+  - Always `wait_for` the next screen’s stable text/testid to avoid flakiness.
+  - If you hit auth or 401s, confirm tokens/expiry and that the backend is reachable at `API_URL`.
+  - If DB errors occur, run `bun run migrate:db` and retry.
 
 ## Commit Flow
 - Branch off `main` using a conventional-commit style prefix converted for branch syntax: replace the colon with `/` and spaces with hyphens. Example: `feat: add feature X` -> `feat/add-feature-X`.

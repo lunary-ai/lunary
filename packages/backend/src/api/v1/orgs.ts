@@ -31,6 +31,8 @@ orgs.get("/", async (ctx: Context) => {
       verified,
       plan_period,
       canceled,
+      billing_delinquent,
+      billing_delinquent_since,
       saml_enabled,
       stripe_customer,
       stripe_subscription,  
@@ -81,7 +83,7 @@ orgs.get("/usage", async (ctx: Context) => {
   ctx.body = rows;
 });
 
-orgs.get("/billing-portal", async (ctx: Context) => {
+orgs.get("/billing-portal", checkAccess("billing", "update"), async (ctx: Context) => {
   const orgId = ctx.state.orgId as string;
 
   const [org] = await sql`
@@ -103,6 +105,42 @@ orgs.get("/billing-portal", async (ctx: Context) => {
 
   ctx.body = { url: session.url };
 });
+
+orgs.get(
+  "/billing/latest-invoice",
+  checkAccess("billing", "read"),
+  async (ctx: Context) => {
+    const orgId = ctx.state.orgId as string;
+
+    const [org] = await sql`
+      select
+        stripe_customer,
+        stripe_subscription
+      from
+        org
+      where
+        id = ${orgId}
+    `;
+
+    if (!org) throw new Error("Org not found");
+
+    if (!org.stripeCustomer) {
+      ctx.body = { hostedInvoiceUrl: null };
+      return;
+    }
+
+    const invoices = await stripe.invoices.list({
+      customer: org.stripeCustomer,
+      subscription: org.stripeSubscription ?? undefined,
+      status: "open",
+      limit: 1,
+    });
+
+    const invoice = invoices.data.find((item) => item.hosted_invoice_url);
+
+    ctx.body = { hostedInvoiceUrl: invoice?.hosted_invoice_url ?? null };
+  }
+);
 
 orgs.post("/upgrade", async (ctx: Context) => {
   const orgId = ctx.state.orgId as string;
