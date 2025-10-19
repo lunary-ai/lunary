@@ -13,9 +13,35 @@ import SmartCheckSelect from "./SmartSelectInput";
 import { DateTimePicker } from "@mantine/dates";
 import { useEffect } from "react";
 import UserSelectInput from "./UserSelectInput";
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+
+dayjs.extend(customParseFormat);
 
 const minDate = new Date(2021, 0, 1);
 const maxDate = new Date();
+
+function parseDateTime(value: unknown): Date | null {
+  if (!value) {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const parsed = dayjs(value, "YYYY-MM-DD HH:mm:ss", true);
+    if (parsed.isValid()) {
+      return parsed.toDate();
+    }
+
+    const fallback = new Date(value);
+    return Number.isNaN(fallback.getTime()) ? null : fallback;
+  }
+
+  return null;
+}
 
 const CheckInputs = {
   select: SmartCheckSelect,
@@ -102,22 +128,34 @@ const CheckInputs = {
       }
     }, []);
 
+    const resolvedValue = parseDateTime(value) ?? value ?? null;
+
     return (
       <DateTimePicker
         minDate={minDate}
         maxDate={maxDate}
         variant="unstyled"
         size="xs"
-        value={value}
+        value={resolvedValue}
         defaultValue={defaultValue}
-        onChange={(date: Date) => {
-          if (!value) {
-            date.setHours(23, 59, 59, 999);
+        onChange={(dateString) => {
+          if (!dateString) {
+            return onChange(null);
           }
-          // There's a bug in the picker, it doesn't return the exact date selected
-          date.setSeconds(0);
-          date.setMilliseconds(0);
-          return onChange(date);
+
+          const parsed = parseDateTime(dateString);
+          if (!parsed) {
+            return onChange(null);
+          }
+
+          if (!value) {
+            parsed.setHours(23, 59, 59, 999);
+          }
+
+          parsed.setSeconds(0);
+          parsed.setMilliseconds(0);
+
+          return onChange(parsed);
         }}
         placeholder={placeholder || "Select date"}
       />

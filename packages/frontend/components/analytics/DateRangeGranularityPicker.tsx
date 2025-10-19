@@ -2,6 +2,10 @@ import { Group, Select } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { IconCalendar } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+
+dayjs.extend(customParseFormat);
 
 type PresetDateRange = "Today" | "7 Days" | "30 Days" | "3 Months" | "Custom";
 type DateRange = [Date, Date];
@@ -214,6 +218,24 @@ export function DateRangeSelect({ dateRange, setDateRange }) {
   );
 }
 
+function parseDateValue(value: string | Date | null): Date | null {
+  if (!value) {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return value;
+  }
+
+  const parsed = dayjs(value, "YYYY-MM-DD", true);
+  if (parsed.isValid()) {
+    return parsed.toDate();
+  }
+
+  const fallback = new Date(value);
+  return Number.isNaN(fallback.getTime()) ? null : fallback;
+}
+
 export function DateRangePicker({ dateRange, setDateRange }) {
   const [localDateRange, setLocalDateRange] = useState<
     [Date | null, Date | null]
@@ -223,14 +245,21 @@ export function DateRangePicker({ dateRange, setDateRange }) {
     setLocalDateRange([dateRange[0], dateRange[1]]);
   }, [dateRange]);
 
-  function handleDateChange(dates: [Date | null, Date | null]) {
-    setLocalDateRange(dates);
-    if (dates[0] && dates[1]) {
-      const [startDate, endDate] = dates;
+  function handleDateChange(dates: [string | null, string | null]) {
+    const parsed: [Date | null, Date | null] = [
+      parseDateValue(dates[0]),
+      parseDateValue(dates[1]),
+    ];
+
+    setLocalDateRange(parsed);
+
+    if (parsed[0] && parsed[1]) {
+      const startDate = new Date(parsed[0]);
+      const endDate = new Date(parsed[1]);
       startDate.setHours(0, 0, 0, 0);
       endDate.setHours(23, 59, 59, 99);
 
-      setDateRange([dates[0], dates[1]]);
+      setDateRange([startDate, endDate]);
     }
   }
   return (
