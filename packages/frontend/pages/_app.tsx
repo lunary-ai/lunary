@@ -15,7 +15,7 @@ import * as Sentry from "@sentry/nextjs";
 
 import Layout from "@/components/layout";
 import AnalyticsWrapper from "@/components/layout/Analytics";
-import { DefaultSeo } from "next-seo";
+import { DefaultSeo } from "@/utils/seo";
 
 import ErrorBoundary from "@/components/blocks/ErrorBoundary";
 import { AuthProvider } from "@/utils/auth";

@@ -33,7 +33,7 @@ import { fetcher } from "@/utils/fetcher";
 import { SEAT_ALLOWANCE } from "@/utils/pricing";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
-import { NextSeo } from "next-seo";
+import { NextSeo } from "@/utils/seo";
 import Router, { useRouter } from "next/router";
 import Confetti from "react-confetti";
 import { show } from "@intercom/messenger-js-sdk";

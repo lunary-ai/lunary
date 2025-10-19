@@ -1,5 +1,5 @@
 import { Anchor, Center, Container, Stack, Text, Title } from "@mantine/core";
-import { NextSeo } from "next-seo";
+import { NextSeo } from "@/utils/seo";
 import Confetti from "react-confetti";
 
 export default function ThankYou() {

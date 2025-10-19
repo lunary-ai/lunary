@@ -18,7 +18,7 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
-import { NextSeo } from "next-seo";
+import { NextSeo } from "@/utils/seo";
 import Router, { useRouter } from "next/router";
 
 import AnalyticsCard from "@/components/analytics/AnalyticsCard";

@@ -2,7 +2,7 @@ import { Button, Paper, Stack, Text, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { IconAt, IconCheck } from "@tabler/icons-react";
-import { NextSeo } from "next-seo";
+import { NextSeo } from "@/utils/seo";
 import { useState } from "react";
 import errorHandler from "../utils/errors";
 import AuthLayout from "@/components/layout/AuthLayout";

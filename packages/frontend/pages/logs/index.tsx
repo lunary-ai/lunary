@@ -53,7 +53,7 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 
-import { NextSeo } from "next-seo";
+import { NextSeo } from "@/utils/seo";
 import { useContext, useEffect, useMemo, useState } from "react";
 
 import { ChatReplay } from "@/components/blocks/RunChat";
