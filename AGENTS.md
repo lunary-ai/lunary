@@ -94,11 +94,9 @@ API: `http://localhost:3333`
 - Prerequisites:
   - Start the stack: `bun run dev:llm`.
   - Ensure `.env` points to local URLs (default): `APP_URL=http://localhost:8080`, `API_URL=http://localhost:3333`.
-  - For Playground calls to real models, add provider API keys under Settings → LLM Providers.
   - Use the `LUNARY_EMAIL` secret for the email/username field whenever a Lunary login flow is automated.
   - Use the `LUNARY_PASSWORD` secret for the password field in the same flows.
-  - Retrieve both secrets through the Playwright MCP `secret()` helper (they are registered in `~/.codex/secret` via `--secret`).
-  - Never log or echo these secret values; only inject them into the appropriate form inputs at runtime.
+  - Retrieve both secrets in `~/.codex/.secrets`
 
 
 - Common recipes (selectors prefer `data-testid`):
