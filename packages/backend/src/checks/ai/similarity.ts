@@ -55,7 +55,7 @@ export default async function aiSimilarity(
       });
 
       const completion = await openai!.responses.parse({
-        model: "gpt-4.1",
+        model: "gpt-5.1",
         instructions: `
 You are a similarity estimator.  
 Return the similarity *score* between two texts on a 0 – 100 scale:

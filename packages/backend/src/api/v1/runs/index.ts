@@ -602,9 +602,9 @@ runs.use("/ingest", ingest.routes());
  *               limit: 10
  *               data:
  *                 - type: llm
- *                   name: gpt-4o
- *                   createdAt: "2024-01-01T12:00:00Z"
- *                   endedAt: "2024-01-01T12:00:03Z"
+ *                   name: gpt-5
+ *                   createdAt: "2025-10-01T12:00:00Z"
+ *                   endedAt: "2025-10-01T12:00:03Z"
  *                   duration: 3
  *                   tokens:
  *                     completion: 100

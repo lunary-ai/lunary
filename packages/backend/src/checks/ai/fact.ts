@@ -13,7 +13,7 @@ export default async function aiFact(
   });
 
   const completion = await openai!.responses.parse({
-    model: "gpt-4.1",
+    model: "gpt-5-mini",
     instructions: `
 You are comparing a submitted answer to an expert answer on a given question.
 

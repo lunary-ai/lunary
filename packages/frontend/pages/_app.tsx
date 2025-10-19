@@ -68,8 +68,8 @@ export default function App({ Component, pageProps }: AppProps) {
               >
                 <DefaultSeo
                   title="Dashboard"
-                  titleTemplate="%s | Lunary"
-                  defaultTitle="Dashboard | Lunary"
+                  titleTemplate="%s"
+                  defaultTitle="Dashboard"
                 />
                 <MantineProvider
                   theme={themeOverride}

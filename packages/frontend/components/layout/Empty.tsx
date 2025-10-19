@@ -147,16 +147,16 @@ chat_completion = client.chat.completions.create(
       "type": "llm", 
       "event": "start",
       "runId": "replace-with-unique-id",
-      "name": "gpt-4o",
-      "timestamp": "2022-01-01T00:00:00Z",
+      "name": "gpt-5",
+      "timestamp": "2025-10-01T00:00:00Z",
       "input": [{"role": "user", "text": "Hello world!"}]
     },
     {
       "type": "llm",
       "event": "end", 
       "runId": "some-unique-id",
-      "name": "gpt-4o",
-      "timestamp": "2022-01-01T00:00:10Z",
+      "name": "gpt-5",
+      "timestamp": "2025-10-01T00:00:10Z",
       "output": [{"role": "assistant", "text": "Hello. How are you?"}],
       "tags": ["tag1"]
     }

@@ -119,7 +119,7 @@ evals.post("/", checkAccess("evaluations", "create"), async (ctx: Context) => {
       datasetId,
       projectId,
       ownerId: userId,
-      model: "gpt-4.1",
+      model: "gpt-5-mini",
     })} returning *
   `;
 
@@ -150,7 +150,6 @@ evals.post(
     const { id } = ctx.params;
     const { projectId } = ctx.state;
 
-    /* load evaluation, dataset prompts & criteria */
     const [evaluation] =
       await sql`select * from eval where id = ${id} and project_id = ${projectId}`;
     if (!evaluation) ctx.throw(404, "evaluation not found");
@@ -161,19 +160,16 @@ evals.post(
     const criteria =
       await sql`select * from eval_criteria where eval_id = ${id}`;
 
-    /* call gpt-4.1 for every prompt (simple streaming loop) */
     for (const p of prompts) {
       const completion = await openai.chat.completions.create({
-        model: evaluation.model, // 'gpt-4.1'
+        model: evaluation.model,
         messages: p.messages,
       });
 
       const modelOutput = completion.choices[0].message.content ?? "";
 
-      /* grade against every criterion */
       for (const c of criteria) {
         const { score, passed } = { score: 1, passed: true };
-        // const { score, passed } = await gradeResult(modelOutput, p, c); // -> implement per-metric grading
 
         await sql`insert into eval_result ${sql({
           evalId: id,

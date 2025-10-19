@@ -49,7 +49,7 @@ messages = [
 
 
 completion = client.chat.completions.create(
-  model="gpt-4o",
+  model="gpt-5",
   messages=messages,
   tools=tools,
 )

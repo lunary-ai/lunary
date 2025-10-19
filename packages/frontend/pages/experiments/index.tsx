@@ -1093,7 +1093,7 @@ export default function Experiments() {
                   </Popover.Dropdown>
                 </Popover>
                 <Text size="xs" c="dimmed">
-                  {modelConfigs["base"].model?.name ?? "gpt-4.1"}
+                  {modelConfigs["base"].model?.name ?? "gpt-5"}
                 </Text>
               </Group>
             </Table.Th>
