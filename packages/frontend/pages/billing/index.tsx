@@ -19,7 +19,7 @@ import {
   IconBrandStripe,
   IconInfoTriangle,
 } from "@tabler/icons-react";
-import { NextSeo } from "next-seo";
+import { NextSeo } from "@/utils/seo";
 import { Label, ReferenceLine } from "recharts";
 import useSWR from "swr";
 import { EVENTS_ALLOWANCE } from "@/utils/pricing";

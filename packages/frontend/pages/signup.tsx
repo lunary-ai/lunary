@@ -34,7 +34,7 @@ import analytics from "@/utils/analytics";
 import { useAuth } from "@/utils/auth";
 import config from "@/utils/config";
 import { fetcher } from "@/utils/fetcher";
-import { NextSeo } from "next-seo";
+import { NextSeo } from "@/utils/seo";
 import GoogleButton from "@/components/blocks/OAuth/GoogleButton";
 import GithubButton from "@/components/blocks/OAuth/GithubButton";
 import Head from "next/head";

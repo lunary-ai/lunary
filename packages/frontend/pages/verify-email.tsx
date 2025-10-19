@@ -3,7 +3,7 @@ import { fetcher } from "@/utils/fetcher";
 import { Container, Loader, Stack, Text, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconAnalyze, IconCheck, IconCross } from "@tabler/icons-react";
-import { NextSeo } from "next-seo";
+import { NextSeo } from "@/utils/seo";
 import Router, { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
 

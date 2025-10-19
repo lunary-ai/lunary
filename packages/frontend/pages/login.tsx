@@ -23,7 +23,7 @@ import { useAuth } from "@/utils/auth";
 import config from "@/utils/config";
 import { fetcher } from "@/utils/fetcher";
 import { notifications } from "@mantine/notifications";
-import { NextSeo } from "next-seo";
+import { NextSeo } from "@/utils/seo";
 import { useRouter } from "next/router";
 
 function LoginPage() {

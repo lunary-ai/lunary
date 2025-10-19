@@ -2,7 +2,7 @@ import { Button, Paper, PasswordInput, Stack, Text } from "@mantine/core";
 
 import { useForm } from "@mantine/form";
 
-import { NextSeo } from "next-seo";
+import { NextSeo } from "@/utils/seo";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import { fetcher } from "@/utils/fetcher";

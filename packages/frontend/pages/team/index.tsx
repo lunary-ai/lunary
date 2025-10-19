@@ -29,7 +29,7 @@ import {
   IconDotsVertical,
   IconTrash,
 } from "@tabler/icons-react";
-import { NextSeo } from "next-seo";
+import { NextSeo } from "@/utils/seo";
 import { z } from "zod";
 
 import { CopyInput } from "@/components/blocks/CopyText";

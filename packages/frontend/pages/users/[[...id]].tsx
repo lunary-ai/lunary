@@ -40,7 +40,7 @@ import {
   IconUsers,
   IconX,
 } from "@tabler/icons-react";
-import { NextSeo } from "next-seo";
+import { NextSeo } from "@/utils/seo";
 import Router, { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import analytics from "../../utils/analytics";
