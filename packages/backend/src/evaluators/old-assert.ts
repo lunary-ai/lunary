@@ -18,7 +18,7 @@ export async function evaluate(run: Run, params: AssertParams) {
   });
 
   const completion = await openai!.responses.parse({
-    model: "gpt-4.1",
+    model: "gpt-5-mini",
     instructions: `
 You help evaluate if a given interaction from an AI matches one or more assertions.
 Return a JSON object with:

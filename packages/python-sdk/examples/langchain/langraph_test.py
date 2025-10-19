@@ -23,8 +23,8 @@ from langgraph.graph import StateGraph, END, START
 from langchain_core.runnables import RunnableConfig
 
 # Initialize LLMs
-llm = ChatOpenAI(model_name="gpt-4o")
-img_tool_llm = ChatOpenAI(model_name="gpt-4o")
+llm = ChatOpenAI(model_name="gpt-5")
+img_tool_llm = ChatOpenAI(model_name="gpt-5")
 
 # Create agents
 ImageProcessingAgent = create_react_agent(

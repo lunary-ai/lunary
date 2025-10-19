@@ -17,7 +17,7 @@ export async function evaluate(run: Run) {
   });
 
   const completion = await openai!.responses.parse({
-    model: "gpt-4.1",
+    model: "gpt-5-mini",
     instructions: `
 You judge whether the ANSWER actually addresses the QUESTION / instruction.
 
