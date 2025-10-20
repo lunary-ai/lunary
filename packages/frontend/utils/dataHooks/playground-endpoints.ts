@@ -28,8 +28,8 @@ const playgroundEndpointSchema = z.object({
       }),
     ])
     .nullable(),
-  headers: z.record(z.string()),
-  defaultPayload: z.record(z.any()),
+  headers: z.record(z.string(), z.string()),
+  defaultPayload: z.record(z.string(), z.any()),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 });
