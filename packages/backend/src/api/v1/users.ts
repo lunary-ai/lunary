@@ -9,6 +9,7 @@ import config from "@/src/utils/config";
 import sql from "@/src/utils/db";
 import Context from "@/src/utils/koa";
 import { sendSlackMessage } from "@/src/utils/notifications";
+import { aggressiveRatelimit } from "@/src/utils/ratelimit";
 import { jwtVerify } from "jose";
 import Router from "koa-router";
 import { hasAccess, roles } from "shared";
@@ -164,7 +165,7 @@ users.get("/verify-email", async (ctx: Context) => {
   ctx.redirect(process.env.APP_URL!);
 });
 
-users.post("/send-verification", async (ctx: Context) => {
+users.post("/send-verification", aggressiveRatelimit, async (ctx: Context) => {
   const bodySchema = z.object({
     email: z.string().email(),
     name: z.string().optional(),
