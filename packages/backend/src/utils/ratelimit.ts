@@ -1,11 +1,7 @@
 import ratelimit from "koa-ratelimit";
+import { z } from "zod";
 
 const db = new Map();
-
-const MAX_REQUESTS_PER_MINUTE = parseInt(
-  process.env.MAX_REQUESTS_PER_MINUTE || "150",
-  10,
-);
 
 export default ratelimit({
   driver: "memory",
@@ -18,7 +14,12 @@ export default ratelimit({
     reset: "Rate-Limit-Reset",
     total: "Rate-Limit-Total",
   },
-  max: MAX_REQUESTS_PER_MINUTE,
+  max: z
+    .coerce.number()
+    .int()
+    .nonnegative()
+    .catch(150)
+    .parse(process.env.MAX_REQUESTS_PER_MINUTE),
   disableHeader: false,
   whitelist: (ctx) => {
     // don't limit logged in users
@@ -38,6 +39,11 @@ export const aggressiveRatelimit = ratelimit({
     reset: "Rate-Limit-Reset",
     total: "Rate-Limit-Total",
   },
-  max: 10,
+  max: z
+    .coerce.number()
+    .int()
+    .nonnegative()
+    .catch(10)
+    .parse(process.env.AGGRESSIVE_MAX_REQUESTS_PER_MINUTE),
   disableHeader: false,
 });

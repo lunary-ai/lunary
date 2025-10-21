@@ -9,6 +9,8 @@ import { z } from "zod";
 import google from "./google";
 import saml, { getLoginUrl } from "./saml";
 
+import { aggressiveRatelimit } from "@/src/utils/ratelimit";
+
 import { ensureOrgPrivateKey } from "@/src/utils/org-api-keys";
 import { recordAuditLog } from "../audit-logs/utils";
 import github from "./github";
@@ -422,7 +424,7 @@ auth.get("/saml-url/:orgId", async (ctx: Context) => {
   ctx.body = { url };
 });
 
-auth.post("/login", async (ctx: Context) => {
+auth.post("/login", aggressiveRatelimit, async (ctx: Context) => {
   const bodySchema = z.object({
     email: z.string().email().transform(sanitizeEmail),
     password: z.string(),
