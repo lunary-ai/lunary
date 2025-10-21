@@ -9,6 +9,8 @@ import { z } from "zod";
 import google from "./google";
 import saml, { getLoginUrl } from "./saml";
 
+import { aggressiveRatelimit } from "@/src/utils/ratelimit";
+
 import { ensureOrgPrivateKey } from "@/src/utils/org-api-keys";
 import { recordAuditLog } from "../audit-logs/utils";
 import github from "./github";
@@ -27,7 +29,7 @@ const auth = new Router({
   prefix: "/auth",
 });
 
-auth.post("/method", async (ctx: Context) => {
+auth.post("/method", aggressiveRatelimit, async (ctx: Context) => {
   const bodySchema = z.object({
     email: z.string().email().transform(sanitizeEmail),
     joinToken: z.string().optional(),
@@ -73,7 +75,7 @@ auth.post("/method", async (ctx: Context) => {
 });
 
 // TODO: split signup and join
-auth.post("/signup", async (ctx: Context) => {
+auth.post("/signup", aggressiveRatelimit, async (ctx: Context) => {
   const bodySchema = z.object({
     email: z.string().email().transform(sanitizeEmail),
     password: z.string().min(6).optional(), // optional if SAML flow
@@ -422,7 +424,7 @@ auth.get("/saml-url/:orgId", async (ctx: Context) => {
   ctx.body = { url };
 });
 
-auth.post("/login", async (ctx: Context) => {
+auth.post("/login", aggressiveRatelimit, async (ctx: Context) => {
   const bodySchema = z.object({
     email: z.string().email().transform(sanitizeEmail),
     password: z.string(),
@@ -480,7 +482,7 @@ auth.post("/login", async (ctx: Context) => {
   ctx.body = { token };
 });
 
-auth.post("/request-password-reset", async (ctx: Context) => {
+auth.post("/request-password-reset", aggressiveRatelimit, async (ctx: Context) => {
   const bodySchema = z.object({
     email: z.string().email().transform(sanitizeEmail),
   });
