@@ -1,9 +1,9 @@
 export async function callML(
-  method: string,
+  path: string,
   data: any,
   baseUrl: string = process.env.ML_URL!,
 ) {
-  const response = await fetch(`${baseUrl}/${method}`, {
+  const response = await fetch(`${baseUrl}/${path}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

@@ -2,11 +2,12 @@ import { convertChecksToSQL } from "@/src/utils/checks";
 import sql from "@/src/utils/db";
 import { Run } from "shared";
 import { RealtimeEvaluator } from "shared/enrichers";
-import { sleep } from "../utils/misc";
 import evaluators from "../evaluators";
 import type { ToxicityResult } from "../evaluators/toxicity";
+import { sleep } from "../utils/misc";
 
 const RUNS_BATCH_SIZE = 5;
+const VERBOSE_MODE = process.env.LUNARY_REALTIME_EVALUATORS_VERBOSE === "true";
 
 async function runEvaluator(evaluator: RealtimeEvaluator, run: Run) {
   try {
@@ -51,10 +52,12 @@ async function runEvaluator(evaluator: RealtimeEvaluator, run: Run) {
     if (process.env.NODE_ENV === "production") {
       // Sentry.captureException(error);
     }
-    console.error(
-      `Error while evaluating run ${run.id} with evaluator ${evaluator.id}: `,
-      error,
-    );
+    if (VERBOSE_MODE) {
+      console.error(
+        `Error while evaluating run ${run.id} with evaluator ${evaluator.id}: `,
+        error,
+      );
+    }
   }
 }
 
@@ -106,6 +109,7 @@ async function evaluatorJob() {
       evaluator e
     where
       mode = 'realtime'
+      and type = 'pii'
     order by
       random()
   `;
@@ -116,29 +120,34 @@ async function evaluatorJob() {
     const runs = await getEvaluatorRuns(evaluator);
 
     if (!runs.length) {
-      console.info(
-        `Skipping Real-time Evaluator ${evaluator.id} (${i} / ${evaluators.length})`,
-      );
+      if (VERBOSE_MODE) {
+        console.info(
+          `Skipping Real-time Evaluator ${evaluator.id} (${i} / ${evaluators.length})`,
+        );
+      }
       continue;
     }
 
-    console.info(
-      `Starting Real-time Evaluator ${evaluator.id} - ${runs.length} runs (${i + 1} / ${evaluators.length})`,
-    );
+    if (VERBOSE_MODE) {
+      console.info(
+        `Starting Real-time Evaluator ${evaluator.id} - ${runs.length} runs (${i + 1} / ${evaluators.length})`,
+      );
+    }
 
     await Promise.all(runs.map((run) => runEvaluator(evaluator, run)));
   }
 }
 
 export default async function runEvaluatorsJob() {
+  console.info("Starting Real-time Evaluators Job");
   while (true) {
     try {
       await evaluatorJob();
     } catch (error) {
       await sleep(3000); // Avoid spamming the ml service when there are connection errors
-      if (process.env.NODE_ENV === "production") {
-        // Sentry.captureException(error);
-      }
+      // if (process.env.NODE_ENV === "production") {
+      // Sentry.captureException(error);
+      // }
       console.error(error);
     }
   }
