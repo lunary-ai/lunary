@@ -83,18 +83,7 @@ export default function BillingDelinquentBanner({
         </Text>
 
         <Group gap="sm">
-          {canManageBilling && (
-            <Button
-              color="red"
-              variant="white"
-              onClick={handleManageBilling}
-              loading={isRedirecting}
-            >
-              Manage billing
-            </Button>
-          )}
-
-          {invoiceUrl && !invoiceLoading && canViewBilling && (
+          {invoiceUrl && !invoiceLoading && canManageBilling && (
             <Anchor
               href={invoiceUrl}
               target="_blank"
