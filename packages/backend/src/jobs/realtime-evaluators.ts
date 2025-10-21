@@ -109,7 +109,6 @@ async function evaluatorJob() {
       evaluator e
     where
       mode = 'realtime'
-      and type = 'pii'
     order by
       random()
   `;
