@@ -57,6 +57,10 @@
   }
 }
 
+.functionIcon {
+  color: var(--mantine-color-green-text);
+}
+
 .toolCallActionIcon {
   position: absolute;
   top: 16px;
