@@ -5,23 +5,28 @@ import { formatCost } from "@/utils/format";
 import {
   ActionIcon,
   Badge,
+  Box,
   Button,
   Card,
+  Code,
+  CopyButton,
   Group,
-  HoverCard,
   Menu,
-  ScrollArea,
   Select,
   Stack,
   Text,
   Title,
   Tooltip,
+  ThemeIcon,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
+import { CodeHighlight } from "@mantine/code-highlight";
+import "@mantine/code-highlight/styles.css";
 import { notifications } from "@mantine/notifications";
 import {
   IconBinaryTree2,
   IconCheck,
+  IconCopy,
   IconDotsVertical,
   IconEye,
   IconEyeClosed,
@@ -36,6 +41,7 @@ import { parseAsBoolean, parseAsString, useQueryState } from "nuqs";
 import { useState } from "react";
 import { hasAccess } from "shared";
 import SmartViewer from "../SmartViewer";
+import FunctionIcon from "../SmartViewer/function-icon";
 import AppUserAvatar from "./AppUserAvatar";
 import CopyText, { SuperCopyButton } from "./CopyText";
 import ErrorBoundary from "./ErrorBoundary";
@@ -93,74 +99,207 @@ const ParamItem = ({
   );
 };
 
-function RenderTools({ tools }) {
-  if (!tools) return null;
+const safeStringify = (value: unknown) => {
+  if (value === null || value === undefined) return null;
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch (error) {
+    console.error("Failed to stringify tool definition", error);
+    return null;
+  }
+};
 
-  // Normalize tools into an array of objects
-  let normalized: any[] = [];
-  if (Array.isArray(tools)) {
-    normalized = tools;
-  } else if (typeof tools === "string") {
+const openToolModal = (displayName: string, definition: any) => {
+  const json = safeStringify(definition);
+
+  modals.open({
+    centered: true,
+    size: "xl",
+    radius: "md",
+    withCloseButton: true,
+    title: (
+      <Group gap="sm" align="center">
+        <ThemeIcon size={28} radius="md" color="green" variant="filled">
+          <FunctionIcon size={18} />
+        </ThemeIcon>
+        <Text fw={600}>{displayName}</Text>
+      </Group>
+    ),
+    children: json ? (
+      <Stack gap="sm">
+        <Box pos="relative">
+          <CopyButton value={json} timeout={1500}>
+            {({ copied, copy }) => (
+              <Tooltip
+                withArrow
+                label={copied ? "Copied definition" : "Copy JSON"}
+                position="left"
+              >
+                <ActionIcon
+                  variant="light"
+                  color={copied ? "teal" : "gray"}
+                  onClick={copy}
+                  aria-label={copied ? "Definition copied" : "Copy definition"}
+                  style={{
+                    position: "absolute",
+                    top: 12,
+                    right: 12,
+                    zIndex: 2,
+                  }}
+                >
+                  {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
+                </ActionIcon>
+              </Tooltip>
+            )}
+          </CopyButton>
+          <CodeHighlight
+            withCopyButton={false}
+            language="json"
+            code={json}
+            style={{
+              borderRadius: "var(--mantine-radius-md)",
+              fontSize: 13,
+            }}
+          />
+        </Box>
+      </Stack>
+    ) : (
+      <Text size="sm" c="dimmed">
+        No schema available for this tool.
+      </Text>
+    ),
+  });
+};
+
+const renderToolBadge = (
+  name: string,
+  definition: any,
+  key?: string | number,
+  ariaLabel = "View tool definition",
+) => (
+  <Badge
+    key={key ?? name}
+    maw={220}
+    variant="light"
+    color="green"
+    radius="sm"
+    leftSection={<FunctionIcon size={14} />}
+    style={{ cursor: "pointer" }}
+    onClick={() => openToolModal(name, definition)}
+    aria-label={`${ariaLabel} ${name}`}
+    mr="xs"
+  >
+    <Code style={{ fontSize: 11, fontWeight: 500 }}>{name}()</Code>
+  </Badge>
+);
+
+function normalizeTools(tools: any): any[] {
+  if (!tools) return [];
+  if (Array.isArray(tools)) return tools;
+  if (typeof tools === "string") {
     try {
       const parsed = JSON.parse(tools);
-      if (Array.isArray(parsed)) normalized = parsed;
-      else if (parsed && typeof parsed === "object") normalized = [parsed];
-      else normalized = [{ name: tools }];
+      if (Array.isArray(parsed)) return parsed;
+      if (parsed && typeof parsed === "object") return [parsed];
+      return [{ name: tools }];
     } catch {
-      normalized = [{ name: tools }];
+      return [{ name: tools }];
     }
-  } else if (typeof tools === "object") {
-    normalized = [tools];
   }
+  if (typeof tools === "object") return [tools];
+  return [];
+}
 
-  const toText = (val: any) => {
-    if (val === null || val === undefined) return "";
-    if (
-      typeof val === "string" ||
-      typeof val === "number" ||
-      typeof val === "boolean"
-    )
-      return String(val);
-    try {
-      return JSON.stringify(val);
-    } catch {
-      return String(val);
+function getToolDefinition(tool: any) {
+  return tool?.function || tool?.toolSpec || tool;
+}
+
+const toReadableName = (toolObject: any) => {
+  const value = toolObject?.name?.Name || toolObject?.name || "Unknown";
+  return typeof value === "string" ? value : String(value);
+};
+
+function RenderTools({ tools }) {
+  const normalized = normalizeTools(tools);
+  if (!normalized.length) return null;
+
+  return normalized.map((tool, index) => {
+    const toolObject = getToolDefinition(tool);
+    const name = toReadableName(toolObject);
+    return renderToolBadge(name, toolObject, index);
+  });
+}
+
+function RenderToolChoice({ toolChoice }: { toolChoice: any }) {
+  if (!toolChoice) return null;
+
+  const parseChoice = (value: any) => {
+    if (typeof value === "string") {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value;
+      }
     }
+    return value;
   };
 
-  return normalized.map((tool, i) => {
-    const toolObject = tool?.function || tool?.toolSpec || tool;
-    const spec = toolObject?.parameters || toolObject?.inputSchema;
+  const parsed = parseChoice(toolChoice);
 
-    const name = toText(
-      toolObject?.name?.Name || toolObject?.name || "Unknown",
+  if (Array.isArray(parsed)) {
+    return parsed.map((entry, index) => {
+      const normalized = parseChoice(entry);
+      if (normalized?.type === "function") {
+        const definition = normalized.function || normalized;
+        const name = definition?.name || "Unknown";
+        return renderToolBadge(
+          name,
+          definition,
+          `tool-choice-${index}`,
+          "View tool choice definition",
+        );
+      }
+
+      return (
+        <Badge
+          key={`tool-choice-${index}`}
+          variant="outline"
+          color="gray"
+          mr="xs"
+        >
+          {typeof normalized === "string"
+            ? normalized
+            : safeStringify(normalized) || "Unknown"}
+        </Badge>
+      );
+    });
+  }
+
+  if (parsed?.type === "function") {
+    const definition = parsed.function || parsed;
+    const name = definition?.name || "Unknown";
+    return renderToolBadge(
+      name,
+      definition,
+      "tool-choice",
+      "View tool choice definition",
     );
-    const description = toolObject?.description
-      ? toText(toolObject.description)
-      : null;
+  }
 
+  if (typeof parsed === "string") {
     return (
-      <HoverCard key={i}>
-        <HoverCard.Target>
-          <Badge maw="200px" color="pink" variant="outline">
-            {name}
-          </Badge>
-        </HoverCard.Target>
-        <HoverCard.Dropdown maw={420}>
-          <ScrollArea.Autosize mah={300}>
-            <Stack>
-              {description && <Text size="sm">{description}</Text>}
-              {spec && (
-                <Text size="sm">
-                  <pre>{JSON.stringify(spec, null, 2)}</pre>
-                </Text>
-              )}
-            </Stack>
-          </ScrollArea.Autosize>
-        </HoverCard.Dropdown>
-      </HoverCard>
+      <Badge variant="outline" color="gray">
+        {parsed}
+      </Badge>
     );
-  });
+  }
+
+  const fallback = safeStringify(parsed);
+  return fallback ? (
+    <Badge variant="outline" color="gray">
+      {fallback}
+    </Badge>
+  ) : null;
 }
 
 const PARAMS = [
@@ -209,7 +348,11 @@ const PARAMS = [
     name: "Tools",
     render: (value) => <RenderTools tools={value} />,
   },
-  { key: "toolChoice", name: "Tool Choice" },
+  {
+    key: "toolChoice",
+    name: "Tool Choice",
+    render: (value) => <RenderToolChoice toolChoice={value} />,
+  },
 ];
 
 export default function RunInputOutput({
@@ -424,7 +567,7 @@ export default function RunInputOutput({
                         name="Cost"
                         value={run.cost}
                         render={(value) => (
-                          <Badge variant="outline" miw="65px" color="green.6">
+                          <Badge variant="outline" miw="65px" color="grape">
                             {formatCost(value)}
                           </Badge>
                         )}

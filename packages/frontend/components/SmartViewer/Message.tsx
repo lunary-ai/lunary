@@ -41,6 +41,7 @@ import { openConfirmModal } from "@mantine/modals";
 import AppUserAvatar from "../blocks/AppUserAvatar";
 import { AudioPlayer } from "./AudioPlayer";
 import HighlightPii from "./HighlightPii";
+import FunctionIcon from "./function-icon";
 
 const ghostTextAreaStyles = {
   variant: "unstyled",
@@ -63,54 +64,75 @@ function RenderFunction({
   piiDetection,
 }) {
   return (
-    <Code className={classes.textMessage}>
-      <Text
-        component="div"
-        className={`${classes.functionCallText} ${
-          compact ? classes.compact : ""
-        }`}
-        c={color}
-      >
-        <span>{`function: `}</span>
+    <Code
+      className={classes.textMessage}
+      style={{ display: "flex", flexDirection: "row" }}
+    >
+      <Box>
+        <Text
+          component="div"
+          className={`${classes.functionCallText} ${
+            compact ? classes.compact : ""
+          }`}
+          c={color}
+        >
+          <FunctionIcon size={16} style={{ marginRight: 4 }} />
+          {editable ? (
+            <>
+              <span>{`function: `}</span>
+              <TextInput
+                value={data?.name}
+                size="compact-xs"
+                variant="filled"
+                styles={{
+                  input: {
+                    paddingInlineStart: 6,
+                  },
+                }}
+                placeholder="Function name"
+                radius="sm"
+                onChange={(e) => onChange({ ...data, name: e.target.value })}
+              />
+            </>
+          ) : (
+            <Box>
+              <b>{data?.name}</b>
+            </Box>
+          )}
+        </Text>
 
         {editable ? (
-          <TextInput
-            value={data?.name}
-            size="compact-xs"
-            variant="filled"
-            styles={{
-              input: {
-                paddingInlineStart: 6,
-              },
-            }}
-            placeholder="Function name"
-            radius="sm"
-            onChange={(e) => onChange({ ...data, name: e.target.value })}
-          />
+          <>
+            <Text size="xs">Arguments:</Text>
+            <Textarea
+              value={data?.arguments}
+              placeholder="Arguments"
+              onChange={(e) => onChange({ ...data, arguments: e.target.value })}
+              {...ghostTextAreaStyles}
+            />
+          </>
         ) : (
-          <b>{data?.name}</b>
+          <pre
+            style={{
+              marginBottom: 0,
+              ...(compact
+                ? {
+                    marginTop: 8,
+                    maxHeight: 18,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }
+                : {}),
+            }}
+          >
+            <RenderJson
+              compact={compact}
+              data={data?.arguments}
+              piiDetection={piiDetection}
+            />
+          </pre>
         )}
-      </Text>
-
-      {editable ? (
-        <>
-          <Text size="xs">Arguments:</Text>
-          <Textarea
-            value={data?.arguments}
-            placeholder="Arguments"
-            onChange={(e) => onChange({ ...data, arguments: e.target.value })}
-            {...ghostTextAreaStyles}
-          />
-        </>
-      ) : (
-        <pre style={{ marginBottom: 0 }}>
-          <RenderJson
-            compact={compact}
-            data={data?.arguments}
-            piiDetection={piiDetection}
-          />
-        </pre>
-      )}
+      </Box>
     </Code>
   );
 }

@@ -6,6 +6,7 @@ import useSWR from "swr";
 import errorHandler from "@/utils/errors";
 import { fetcher } from "@/utils/fetcher";
 import { hasAccess, roles, type Role } from "shared";
+import config from "@/utils/config";
 
 type Org = {
   id: string;
@@ -31,6 +32,9 @@ export default function BillingDelinquentBanner({
   org: Org | null;
   user: User;
 }) {
+  if (config.IS_SELF_HOSTED) {
+    return;
+  }
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   const shouldShow = !!org?.billingDelinquent;
