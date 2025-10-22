@@ -475,10 +475,24 @@ export const CHECK_RUNNERS: CheckRunner[] = [
           operator,
         )} ${tokens}`;
       } else {
-        return sql`${sql(field + "_tokens")} ${postgresisOperators(
+        return sql`${sql(field + "_tokens")} ${postgresOperators(
           operator,
         )} ${tokens}`;
       }
+    },
+  },
+  {
+    id: "messages",
+    sql: ({ operator, messages }) => {
+      const value = Number(messages);
+
+      if (!Number.isFinite(value)) {
+        return sql`true`;
+      }
+
+      return sql`coalesce(thread_stats.messages_count, 0) ${postgresOperators(
+        operator,
+      )} ${value}`;
     },
   },
   {

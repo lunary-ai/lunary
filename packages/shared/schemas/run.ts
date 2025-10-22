@@ -42,4 +42,6 @@ export interface Run {
   runtime?: string;
   metadata?: Record<string, any>;
   ipAddresses?: string[];
+  firstMessage?: unknown;
+  messagesCount?: number;
 }
