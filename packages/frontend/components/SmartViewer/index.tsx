@@ -53,18 +53,24 @@ function RetrieverObject({ data, compact }) {
       <Flex direction="column" gap="sm">
         {data?.title && (
           <Text size="sm" w={700} mb="md">
-            {typeof data.title === "string" ? data.title : JSON.stringify(data.title)}
+            {typeof data.title === "string"
+              ? data.title
+              : JSON.stringify(data.title)}
           </Text>
         )}
         {data.summary && (
           <Text size="xs">
-            {typeof data.summary === "string" ? data.summary : JSON.stringify(data.summary)}
+            {typeof data.summary === "string"
+              ? data.summary
+              : JSON.stringify(data.summary)}
           </Text>
         )}
 
         {data.source && (
           <Text size="sm">
-            {typeof data.source === "string" ? data.source : JSON.stringify(data.source)}
+            {typeof data.source === "string"
+              ? data.source
+              : JSON.stringify(data.source)}
           </Text>
         )}
       </Flex>
@@ -90,29 +96,33 @@ function RetrieverObject({ data, compact }) {
 // Helper function to recursively remove enrichments from nested objects
 const removeEnrichmentsRecursively = (obj: any): any => {
   if (obj === null || obj === undefined) return obj;
-  
+
   if (Array.isArray(obj)) {
-    return obj.map(item => removeEnrichmentsRecursively(item));
+    return obj.map((item) => removeEnrichmentsRecursively(item));
   }
-  
+
   if (typeof obj === "object") {
     const newObj = { ...obj };
-    
+
     // Remove enrichments if it's an empty array or exists
-    if (newObj.enrichments && (Array.isArray(newObj.enrichments) && newObj.enrichments.length === 0)) {
+    if (
+      newObj.enrichments &&
+      Array.isArray(newObj.enrichments) &&
+      newObj.enrichments.length === 0
+    ) {
       delete newObj.enrichments;
     }
-    
+
     // Recursively process all properties
     for (const key in newObj) {
       if (key !== "enrichments" && newObj.hasOwnProperty(key)) {
         newObj[key] = removeEnrichmentsRecursively(newObj[key]);
       }
     }
-    
+
     return newObj;
   }
-  
+
   return obj;
 };
 
@@ -245,10 +255,7 @@ export default function SmartViewer({
   }
 
   return (
-    <pre
-      className={`${classes.pre} ${compact ? classes.compact : ""}`}
-      id="HERE"
-    >
+    <pre className={`${classes.pre} ${compact ? classes.compact : ""}`}>
       {error && Message}
       {data && Message}
     </pre>

@@ -77,6 +77,12 @@ import { getRelatedRuns } from "./queries";
  *           type: object
  *         metadata:
  *           type: object
+ *         firstMessage:
+ *           type: object
+ *           description: First message captured in the conversation thread, when available.
+ *         messagesCount:
+ *           type: integer
+ *           description: Total number of messages within the conversation thread.
  *         user:
  *           type: object
  *           properties:
@@ -223,6 +229,8 @@ export function formatRun(run: any, excludeEnrichments = false) {
     },
     traceId: run.rootParentRunId,
     scores: run.scores,
+    firstMessage: run.type === "thread" ? run.firstMessage : undefined,
+    messagesCount: run.type === "thread" ? run.messagesCount : undefined,
   };
 
   try {
@@ -385,6 +393,7 @@ function getRunQuery(ctx: Context, isExport = false) {
     duration: "r.duration",
     tokens: "(r.prompt_tokens + r.completion_tokens)",
     cost: "r.cost",
+    messagesCount: "coalesce(thread_stats.messages_count, 0)",
   };
   let orderByClause = `r.created_at desc nulls last`;
   if (sortField && sortField in sortMapping) {
@@ -409,7 +418,9 @@ function getRunQuery(ctx: Context, isExport = false) {
       rt.toxic_input,
       rt.toxic_output,     
       rt.input_labels,
-      rt.output_labels 
+      rt.output_labels,
+      thread_stats.first_message,
+      thread_stats.messages_count 
     from
       public.run r
       left join external_user eu on r.external_user_id = eu.id
@@ -465,6 +476,45 @@ function getRunQuery(ctx: Context, isExport = false) {
           r2.parent_run_id = r.id
           and r2.type = 'chat'
       ) as chat_feedbacks on true
+      left join lateral (
+        with thread_messages as (
+          select
+            child.created_at,
+            msg
+          from
+            run child
+            cross join lateral jsonb_array_elements(coalesce(child.input, '[]'::jsonb)) as msg
+          where
+            child.parent_run_id = r.id
+            and child.type = 'chat'
+            and r.type = 'thread'
+          union all
+          select
+            child.created_at,
+            msg
+          from
+            run child
+            cross join lateral jsonb_array_elements(coalesce(child.output, '[]'::jsonb)) as msg
+          where
+            child.parent_run_id = r.id
+            and child.type = 'chat'
+            and r.type = 'thread'
+        )
+        select
+          (
+            select msg
+            from thread_messages
+            order by created_at asc
+            limit 1
+          ) as first_message,
+          coalesce(
+            (
+              select count(*)
+              from thread_messages
+            ),
+            0
+          )::int as messages_count
+      ) as thread_stats on true
     where
         r.project_id = ${projectId}
         and r.is_deleted = false

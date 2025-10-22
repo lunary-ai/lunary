@@ -9,7 +9,6 @@ import {
 
 import {
   ActionIcon,
-  Badge,
   Button,
   Card,
   Drawer,
@@ -17,28 +16,28 @@ import {
   Group,
   Loader,
   Menu,
-  Skeleton,
   Select,
   Stack,
   Text,
 } from "@mantine/core";
 
 import {
-  toxicityColumn,
   costColumn,
   durationColumn,
   enrichmentColumn,
   feedbackColumn,
   inputColumn,
+  messageCountColumn,
+  messagePreviewColumn,
+  metadataColumn,
   nameColumn,
   outputColumn,
-  scoresColumn,
   selectColumn,
   tagsColumn,
   templateColumn,
   timeColumn,
+  toxicityColumn,
   userColumn,
-  metadataColumn,
 } from "@/utils/datatable";
 
 import {
@@ -57,27 +56,27 @@ import { NextSeo } from "@/utils/seo";
 import { useContext, useEffect, useMemo, useState } from "react";
 
 import { ChatReplay } from "@/components/blocks/RunChat";
-import AiFilterSkeleton from "@/components/checks/ai-filter-skeleton";
 import RunInputOutput from "@/components/blocks/RunInputOutput";
 import SearchBar from "@/components/blocks/SearchBar";
+import AiFilterSkeleton from "@/components/checks/ai-filter-skeleton";
 import CheckPicker from "@/components/checks/Picker";
 import { EmptyOnboarding } from "@/components/layout/Empty";
 import { openUpgrade } from "@/components/layout/UpgradeModal";
 
+import { LOGS_AI_FILTER_EXAMPLES } from "@/utils/ai-filters";
 import analytics from "@/utils/analytics";
 import {
   useDatasets,
   useDeleteRunById,
+  useMetadataKeys,
   useOrg,
   useProject,
   useProjectInfiniteSWR,
   useRun,
   useUser,
-  useMetadataKeys,
 } from "@/utils/dataHooks";
 import { buildUrl, fetcher } from "@/utils/fetcher";
 import { formatDateTime } from "@/utils/format";
-import { LOGS_AI_FILTER_EXAMPLES } from "@/utils/ai-filters";
 import { useAiFilter } from "@/utils/useAiFilter";
 
 import { ProjectContext } from "@/utils/context";
@@ -91,9 +90,9 @@ import { VisibilityState } from "@tanstack/react-table";
 import { useRouter } from "next/router";
 
 import IconPicker from "@/components/blocks/IconPicker";
+import { useEvaluators } from "@/utils/dataHooks/evaluators";
 import { useSortParams } from "@/utils/hooks";
 import { deserializeLogic, serializeLogic } from "shared";
-import { useEvaluators } from "@/utils/dataHooks/evaluators";
 export const defaultColumns = {
   llm: [
     timeColumn("createdAt"),
@@ -127,7 +126,9 @@ export const defaultColumns = {
   ],
   thread: [
     timeColumn("createdAt", "Started at"),
+    messageCountColumn("messagesCount", "Messages"),
     userColumn(),
+    messagePreviewColumn("firstMessage", "First Message"),
     inputColumn("Last Message"),
     tagsColumn(),
     feedbackColumn("threads"),
@@ -162,7 +163,7 @@ export const CHECKS_BY_TYPE = {
     "metadata",
     "scores",
   ],
-  thread: ["date", "tags", "users", "feedback", "metadata"],
+  thread: ["date", "messages", "tags", "users", "feedback", "metadata"],
 };
 
 const VIEW_ICONS = {
