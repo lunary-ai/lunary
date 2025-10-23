@@ -30,6 +30,14 @@ jobs:
 
       - name: Setup application
         run: bun install
+        
+      - name: Cache Bun global cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-cache-${{ steps.bun.outputs['bun-version'] }}-${{ hashFiles('**/bun.lock*') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-cache-
 
       - name: Resolve Playwright version (installed)
         id: pw-version
@@ -38,7 +46,7 @@ jobs:
           VER=$(jq -r '.version' node_modules/@playwright/test/package.json)
           echo "version=$VER" >> "$GITHUB_OUTPUT"
 
-      - name: Cache Playwright browsers
+      - name: Cache Playwright browser 
         id: pw-cache
         uses: actions/cache@v4
         with:
