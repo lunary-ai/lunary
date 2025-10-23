@@ -15,6 +15,7 @@ const nextConfig = {
     ],
   },
   experimental: {
+    turbopackFileSystemCacheForDev: true,
     // browserDebugInfoInTerminal: true,
   },
   env: {
