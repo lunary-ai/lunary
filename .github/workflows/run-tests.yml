@@ -37,8 +37,15 @@ jobs:
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-cache-${{ steps.bun.outputs['bun-version'] }}-${{ hashFiles('**/bun.lock*') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-cache-
+          restore-keys: ${{ runner.os }}-bun-cache-
+      
+      - name: Cache Next.js build cache
+        uses: actions/cache@v4
+        with:
+          path: apps/web/.next/cache
+          key: ${{ runner.os }}-next-${{ hashFiles('apps/web/**/package.json', 'apps/web/next.config.*', '**/bun.lock*') }}
+          restore-keys: ${{ runner.os }}-next-
+
 
       - name: Setup application
         run: bun install
