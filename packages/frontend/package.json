@@ -26,8 +26,7 @@
     "@tanstack/react-virtual": "^3.13.12",
     "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.2.0",
-    "bcrypt": "^6.0.0",
-    "chroma-js": "^3.1.2",
+    
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.18",
@@ -35,7 +34,7 @@
     "jose": "^6.1.0",
     "json-2-csv": "^5.5.9",
     "jsonrepair": "^3.13.1",
-    "lucide-react": "^0.546.0",
+    
     "next": "16.0.0",
     "next-seo": "^7.0.1",
     "nuqs": "^2.7.2",
@@ -48,7 +47,7 @@
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "19.2.0",
     "react-highlight-words": "^0.21.0",
-    "react-json-view-lite": "^2.5.0",
+    
     "recharts": "3.3.0",
     "shared": "*",
     "swr": "^2.3.6",
