@@ -28,9 +28,6 @@ jobs:
         with:
           bun-version: 1.3.0
 
-      - name: Setup application
-        run: bun install
-        
       - name: Cache Bun global cache
         uses: actions/cache@v4
         with:
@@ -38,6 +35,9 @@ jobs:
           key: ${{ runner.os }}-bun-cache-${{ steps.bun.outputs['bun-version'] }}-${{ hashFiles('**/bun.lock*') }}
           restore-keys: |
             ${{ runner.os }}-bun-cache-
+
+      - name: Setup application
+        run: bun install
 
       - name: Resolve Playwright version (installed)
         id: pw-version
