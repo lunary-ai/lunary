@@ -30,8 +30,6 @@ import { ListFeatures } from "./Paywall";
 import config from "@/utils/config";
 import { useSessionStorage } from "@mantine/hooks";
 import { CodeHighlightTabs } from "@mantine/code-highlight";
-
-import "@mantine/code-highlight/styles.css";
 import RingLoader from "../blocks/RingLoader";
 import { useState } from "react";
 import { notifications } from "@mantine/notifications";

@@ -3,6 +3,7 @@ on:
   pull_request:
     types: [opened, synchronize]
   workflow_dispatch:
+    
 
 permissions:
   contents: read
@@ -31,6 +32,22 @@ jobs:
         with:
           bun-version: 1.3.0
 
+
+      - name: Cache Bun global cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-cache-${{ steps.bun.outputs['bun-version'] }}-${{ hashFiles('**/bun.lock*') }}
+          restore-keys: ${{ runner.os }}-bun-cache-
+      
+      - name: Cache Next.js build cache
+        uses: actions/cache@v4
+        with:
+          path: apps/web/.next/cache
+          key: ${{ runner.os }}-next-${{ hashFiles('apps/web/**/package.json', 'apps/web/next.config.*', '**/bun.lock*') }}
+          restore-keys: ${{ runner.os }}-next-
+
+
       - name: Setup application
         run: bun install
 
@@ -40,6 +57,7 @@ jobs:
         run: |
           VER=$(jq -r '.version' node_modules/@playwright/test/package.json)
           echo "version=$VER" >> "$GITHUB_OUTPUT"
+          
       - name: Cache Playwright browser
         id: pw-cache
         uses: actions/cache@v4
