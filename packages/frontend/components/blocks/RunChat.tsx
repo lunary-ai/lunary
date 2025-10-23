@@ -231,6 +231,19 @@ export function ChatReplay({ run, mutateLogs, deleteRun }) {
 
   const { user: currentUser } = useUser();
 
+  const messageCount =
+    run.messagesCount ??
+    runs?.data?.reduce((total, current) => {
+      const inputLength = Array.isArray(current.input)
+        ? current.input.length
+        : 0;
+      const outputLength = Array.isArray(current.output)
+        ? current.output.length
+        : 0;
+      return total + inputLength + outputLength;
+    }, 0) ??
+    0;
+
   async function handleDeleteThread() {
     modals.openConfirmModal({
       title: "Delete Conversation",
@@ -293,6 +306,10 @@ export function ChatReplay({ run, mutateLogs, deleteRun }) {
               <AppUserAvatar size="sm" user={user} withName />
             </Group>
           )}
+          <Group justify="space-between">
+            <Text>Messages</Text>
+            <Text>{messageCount}</Text>
+          </Group>
           <Group justify="space-between">
             <Text>First message</Text>
             <Text>{formatDateTime(run.createdAt)}</Text>

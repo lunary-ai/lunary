@@ -35,6 +35,7 @@ import {
   IconTarget,
   IconTextWrap,
   IconThumbUp,
+  IconMessages,
   IconTool,
   IconTools,
   IconUser,
@@ -160,6 +161,10 @@ const CHECKS_UI_DATA: ChecksUIData = {
   cost: {
     icon: IconCoin,
     color: "pink",
+  },
+  messages: {
+    icon: IconMessages,
+    color: "teal",
   },
 
   json: {

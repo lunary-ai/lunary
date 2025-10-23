@@ -2,7 +2,7 @@ import SmartViewer from "@/components/SmartViewer";
 import AppUserAvatar from "@/components/blocks/AppUserAvatar";
 import Feedback from "@/components/blocks/OldFeedback";
 import ProtectedText from "@/components/blocks/ProtectedText";
-import { Badge, Button, Checkbox, Group, Text, Tooltip } from "@mantine/core";
+import { Badge, Button, Checkbox, Group, Tooltip } from "@mantine/core";
 import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
 
 import Link from "next/link";
@@ -150,6 +150,32 @@ export function inputColumn(label = "input") {
     enableSorting: false,
     cell: (props) => <SmartViewer data={props.getValue()} compact />,
   });
+}
+
+export function messagePreviewColumn(accessorKey: string, label: string) {
+  return columnHelper.accessor(accessorKey, {
+    header: label,
+    minSize: 250,
+    enableSorting: false,
+    cell: (props) => <SmartViewer data={props.getValue()} compact />,
+  });
+}
+
+export function messageCountColumn(
+  accessorKey = "messagesCount",
+  label = "Messages",
+) {
+  return columnHelper.accessor(
+    (row: Record<string, any>) => row?.[accessorKey] ?? 0,
+    {
+      id: accessorKey,
+      header: label,
+      size: 110,
+      enableSorting: true,
+      sortingFn: (a, b) => (a.getValue() ?? 0) - (b.getValue() ?? 0),
+      cell: (props) => props.getValue() ?? 0,
+    },
+  );
 }
 
 export function outputColumn(label = "Response") {
