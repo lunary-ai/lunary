@@ -479,6 +479,29 @@ export const CHECKS: Check[] = [
     ],
   },
   {
+    id: "messages",
+    name: "Message count",
+    uiType: "basic",
+    disableInEvals: true,
+    params: [
+      {
+        type: "label",
+        label: "Messages",
+      },
+      {
+        ...NUMBER_PARAM,
+        defaultValue: "gte",
+      },
+      {
+        type: "number",
+        id: "messages",
+        width: 70,
+        min: 0,
+        defaultValue: 1,
+      },
+    ],
+  },
+  {
     id: "tokens",
     name: "Tokens",
     disableInEvals: true,
