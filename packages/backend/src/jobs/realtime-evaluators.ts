@@ -6,7 +6,7 @@ import evaluators from "../evaluators";
 import type { ToxicityResult } from "../evaluators/toxicity";
 import { sleep } from "../utils/misc";
 
-const RUNS_BATCH_SIZE = 5;
+const RUNS_BATCH_SIZE = 100;
 const VERBOSE_MODE = process.env.LUNARY_REALTIME_EVALUATORS_VERBOSE === "true";
 
 async function runEvaluator(evaluator: RealtimeEvaluator, run: Run) {
@@ -117,6 +117,7 @@ async function evaluatorJob() {
     const evaluator = evaluators[i];
 
     const runs = await getEvaluatorRuns(evaluator);
+    await sleep(1000);
 
     if (!runs.length) {
       if (VERBOSE_MODE) {
