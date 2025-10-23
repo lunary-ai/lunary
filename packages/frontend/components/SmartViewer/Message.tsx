@@ -367,10 +367,7 @@ function VariableHighlightTextarea({
 
   const formattedHtml = useMemo(() => {
     const escapeHtml = (input: string) =>
-      input
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
+      input.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
     const highlightVariables = (input: string) =>
       input.replace(/\{\{[^}]+\}\}/g, (match) => {
@@ -889,7 +886,7 @@ export function BubbleMessage({ role, content, extra, enrichments, user }) {
             withBorder
             maw={430}
           >
-            <span className="limited" style={{ whiteSpace: "pre-line" }}>
+            <span style={{ whiteSpace: "pre-line" }}>
               <ProtectedText>
                 <HighlightPii text={content} piiDetection={piiDetection} />
               </ProtectedText>
