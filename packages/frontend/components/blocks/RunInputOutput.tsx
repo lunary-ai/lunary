@@ -21,7 +21,6 @@ import {
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { CodeHighlight } from "@mantine/code-highlight";
-import "@mantine/code-highlight/styles.css";
 import { notifications } from "@mantine/notifications";
 import {
   IconBinaryTree2,
