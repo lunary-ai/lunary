@@ -610,11 +610,11 @@ export async function runAImodel(
     };
   } else {
     res = await openai.chat.completions.create({
-      model: model.id || "gpt-4o",
+      model: model.id || "gpt-5",
       messages,
       stream: stream,
       temperature: completionsParams?.temperature,
-      max_completion_tokens: completionsParams?.max_tokens,
+      max_tokens: completionsParams?.max_tokens,
       top_p: completionsParams?.top_p,
       stop: completionsParams?.stop,
       functions: completionsParams?.functions,

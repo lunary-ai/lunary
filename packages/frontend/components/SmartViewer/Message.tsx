@@ -269,12 +269,11 @@ function TextMessage({
     return (
       <Code className={classes.textMessage}>
         <ProtectedText>
-          <Textarea
+          <VariableHighlightTextarea
             value={data.content || data.text}
             placeholder="Content"
-            data-testid="prompt-chat-editor"
-            onChange={(e) => onChange({ ...data, content: e.target.value })}
-            {...ghostTextAreaStyles}
+            dataTestId="prompt-chat-editor"
+            onChange={(value) => onChange({ ...data, content: value })}
           />
         </ProtectedText>
       </Code>
@@ -351,6 +350,60 @@ function TextMessage({
       </Code>
     );
   }
+}
+
+function VariableHighlightTextarea({
+  value,
+  onChange,
+  placeholder,
+  dataTestId,
+}: {
+  value?: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  dataTestId?: string;
+}) {
+  const textValue = typeof value === "string" ? value : "";
+
+  const formattedHtml = useMemo(() => {
+    const escapeHtml = (input: string) =>
+      input
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+    const highlightVariables = (input: string) =>
+      input.replace(/\{\{[^}]+\}\}/g, (match) => {
+        return `<span class="${classes.variableTextareaVariable}">${match}</span>`;
+      });
+
+    const escaped = escapeHtml(textValue || "");
+    const highlighted = highlightVariables(escaped);
+
+    return highlighted.length > 0 ? highlighted : "&nbsp;";
+  }, [textValue]);
+
+  return (
+    <Box className={classes.variableTextareaWrapper}>
+      <div
+        className={classes.variableTextareaHighlight}
+        aria-hidden="true"
+        dangerouslySetInnerHTML={{ __html: formattedHtml }}
+      />
+      <Textarea
+        {...ghostTextAreaStyles}
+        value={textValue}
+        placeholder={placeholder}
+        data-testid={dataTestId}
+        onChange={(e) => onChange(e.currentTarget.value)}
+        classNames={{
+          ...ghostTextAreaStyles.classNames,
+          root: `${classes.ghostTextAreaRoot} ${classes.variableTextareaRoot}`,
+          input: `${classes.ghostTextArea} ${classes.variableTextareaInput}`,
+        }}
+      />
+    </Box>
+  );
 }
 
 function ResponsiveImage({ src }) {

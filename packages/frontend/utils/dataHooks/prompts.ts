@@ -5,11 +5,10 @@ import {
   promptVersionSchema,
 } from "shared/schemas/prompt";
 import { useProjectSWR } from ".";
-import { z } from "zod";
 
 export function usePrompts() {
   const { data, isLoading, mutate } = useProjectSWR<Prompt[]>(`/prompts`);
-  const prompts = z.array(promptSchema).parse(data || []);
+  const prompts = promptSchema.array().parse(data || []);
 
   return {
     prompts,
@@ -23,7 +22,7 @@ export function usePromptVersions(id: number | undefined) {
     id !== undefined && `/prompts/${id}/versions`,
   );
 
-  const promptVersions = z.array(promptVersionSchema).parse(data || []);
+  const promptVersions = promptVersionSchema.array().parse(data || []);
 
   return {
     promptVersions,
