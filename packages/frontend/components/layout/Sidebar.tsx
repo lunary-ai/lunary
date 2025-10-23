@@ -399,6 +399,13 @@ export default function Sidebar() {
           disabled: !org.beta,
           isAlpha: true,
         },
+      ],
+    },
+    {
+      label: "Evaluations",
+      isSection: true,
+      c: "violet",
+      subMenu: [
         {
           label: "Evaluators",
           icon: IconCompass,
@@ -408,7 +415,7 @@ export default function Sidebar() {
         {
           label: "Datasets",
           icon: IconDatabase,
-          link: "/datasets",
+          link: org?.datasetV2Enabled ? "/datasets/v2" : "/datasets",
           resource: "datasets",
           disabled: isSelfHosted
             ? org.license && !org.license.evalEnabled

@@ -14,12 +14,17 @@ export default function PromptVariableEditor({
         {Object.entries(templateVariables)
           .sort(([nameA], [nameB]) => nameA.localeCompare(nameB))
           .map(([name, value]) => (
-            <Stack key={name} gap="xs">
+            <Stack
+              key={name}
+              gap="xs"
+              data-testid={`prompt-variable-${name}`}
+            >
               <Text
                 size="xs"
                 component="span"
                 c="blue"
                 ff="monospace"
+                data-testid={`prompt-variable-label-${name}`}
               >{`{{${name}}}`}</Text>
               <Textarea
                 size="sm"

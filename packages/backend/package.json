@@ -38,7 +38,7 @@
     "luxon": "^3.6.1",
     "node-cron": "^3.0.3",
     "nodemailer": "^7.0.9",
-    "openai": "^5.3.0",
+    "openai": "^6.5.0",
     "p-queue": "^8.1.0",
     "postgres": "3.4.5",
     "prexit": "^2.3.0",

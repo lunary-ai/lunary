@@ -872,6 +872,7 @@ export default function Logs() {
         opened={!!selectedRunId}
         size="xl"
         keepMounted
+        withinPortal={false}
         position="right"
         title={selectedRun ? formatDateTime(selectedRun.createdAt) : ""}
         onClose={() => setSelectedRunId(null)}

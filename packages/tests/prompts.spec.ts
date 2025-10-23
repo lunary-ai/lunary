@@ -164,9 +164,13 @@ test.describe("Prompts Page - Variables", () => {
       await page.waitForTimeout(1000);
 
       // Variables should be detected - they appear with curly braces in the modal
-      await expect(page.locator('text="{{firstName}}"')).toBeVisible();
-      await expect(page.locator('text="{{lastName}}"')).toBeVisible();
-      await expect(page.locator('text="{{company}}"')).toBeVisible();
+      for (const variableName of ["firstName", "lastName", "company"]) {
+        const label = page.locator(
+          `[data-testid="prompt-variable-label-${variableName}"]`,
+        );
+        await expect(label, `Variable ${variableName} label should render`).toBeVisible();
+        await expect(label).toContainText(variableName);
+      }
 
       // Close modal
       await page.keyboard.press("Escape");

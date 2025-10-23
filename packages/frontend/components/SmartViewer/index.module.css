@@ -16,6 +16,47 @@
   padding: var(--mantine-spacing-xs) !important;
 }
 
+.variableTextareaWrapper {
+  position: relative;
+}
+
+.variableTextareaRoot {
+  position: relative;
+}
+
+.variableTextareaInput {
+  position: relative;
+  z-index: 1;
+  background-color: transparent !important;
+  color: transparent !important;
+  caret-color: var(--mantine-color-text);
+  white-space: pre-wrap;
+}
+
+.variableTextareaInput::placeholder {
+  color: var(--mantine-color-dimmed);
+  opacity: 1;
+}
+
+.variableTextareaHighlight {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  padding: var(--mantine-spacing-xs);
+  pointer-events: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: var(--mantine-color-text);
+}
+
+.variableTextareaVariable {
+  color: var(--mantine-color-blue-6);
+  font-weight: 500;
+}
+
 .piiBadge {
   padding: 2px 4px;
   border-radius: 4px;

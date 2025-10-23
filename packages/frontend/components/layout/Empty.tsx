@@ -483,7 +483,7 @@ export function EmptyOnboarding() {
             </ThemeIcon>
             <Title order={3}>Welcome</Title>
           </Group>
-          <Text size="lg">
+          <Text size="md">
             Select an integration and follow the steps below to send some data.
           </Text>
           <SimpleGrid cols={3} w="100%">
