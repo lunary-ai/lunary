@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   run-tests:
-    runs-on: ubuntu-latest-m
+    runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:15
