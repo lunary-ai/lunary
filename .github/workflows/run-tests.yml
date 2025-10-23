@@ -4,6 +4,9 @@ on:
     types: [opened, synchronize]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   run-tests:
     runs-on: ubuntu-latest
@@ -37,8 +40,7 @@ jobs:
         run: |
           VER=$(jq -r '.version' node_modules/@playwright/test/package.json)
           echo "version=$VER" >> "$GITHUB_OUTPUT"
-
-      - name: Cache Playwright browsers
+      - name: Cache Playwright browser
         id: pw-cache
         uses: actions/cache@v4
         with:
@@ -47,10 +49,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pw-
 
+
       - name: Install Chromium for Playwright (cache miss)
         if: steps.pw-cache.outputs.cache-hit != 'true'
         working-directory: packages/tests
-        run: bunx playwright install --with-deps chromium
+        run: bunx playwright install chromium
 
       - name: Start backend and frontend
         env:
@@ -64,7 +67,7 @@ jobs:
         run: |
           bun run migrate:db
           bun run start:backend &
-          bun run build:frontend --turbo
+          bun run build:frontend 
           bun run start:frontend &
           bunx wait-on http://localhost:3333/v1/health http://0.0.0.0:8080/
 
