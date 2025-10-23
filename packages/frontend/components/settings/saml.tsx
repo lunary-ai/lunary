@@ -4,10 +4,10 @@ import { fetcher } from "@/utils/fetcher";
 import { Flex, TextInput, Button, Text, Table } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconLogin, IconDownload } from "@tabler/icons-react";
-import config from "next/config";
 import { useState } from "react";
 import { CopyInput } from "../blocks/CopyText";
 import { SettingsCard } from "../blocks/SettingsCard";
+import config from "@/utils/config";
 
 export function SAMLConfig() {
   const { org, updateOrg, mutate } = useOrg();
