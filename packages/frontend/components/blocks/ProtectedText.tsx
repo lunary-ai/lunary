@@ -1,33 +1,39 @@
 import { useOrg } from "@/utils/dataHooks";
-import { Children, cloneElement } from "react";
+import type { ReactNode } from "react";
+import { Children, cloneElement, isValidElement } from "react";
 
-export default function ProtectedText({ children }) {
+type ProtectedTextProps = { children: ReactNode };
+
+export default function ProtectedText({ children }: ProtectedTextProps) {
   const { org } = useOrg();
-  const limited = org?.limited;
+  const limited = !!org?.limited;
 
-  const replaceText = (child) => {
-    if (child && typeof child.props.children === "string") {
-      return cloneElement(child, {
-        children: child.props.children.replace(/\S/g, "X"),
-      });
+  const mask = (text: string) => text.replace(/\S/g, "X");
+
+  const replaceNode = (node: ReactNode): ReactNode => {
+    if (node == null || typeof node === "boolean") return node;
+
+    if (typeof node === "string") return mask(node);
+    if (typeof node === "number") return mask(String(node));
+
+    if (Array.isArray(node)) {
+      return Children.map(node, replaceNode);
     }
-    if (child && Array.isArray(child.props.children)) {
-      return cloneElement(child, {
-        children: Children.map(child.props.children, replaceText),
-      });
+
+    if (isValidElement(node)) {
+      const nextChildren = replaceNode(node.props?.children as ReactNode);
+      return cloneElement(node, { children: nextChildren });
     }
-    return child;
+
+    return node;
   };
 
-  if (typeof children !== "string") {
-    if (limited) {
-      return Children.map(children, replaceText);
-    }
-    return children;
+  if (!limited) return children;
+
+  if (typeof children === "string") {
+    const fakeChars = mask(children);
+    return <span className="limited">{fakeChars}</span>;
   }
 
-  // create a string of fake characters same length and keep new lines
-  const fakeChars = children.replace(/\S/g, "X");
-
-  return limited ? <span className="limited">{fakeChars}</span> : children;
+  return Children.map(children, replaceNode);
 }

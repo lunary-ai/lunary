@@ -889,8 +889,10 @@ export function BubbleMessage({ role, content, extra, enrichments, user }) {
             withBorder
             maw={430}
           >
-            <span style={{ whiteSpace: "pre-line" }}>
-              <HighlightPii text={content} piiDetection={piiDetection} />
+            <span className="limited" style={{ whiteSpace: "pre-line" }}>
+              <ProtectedText>
+                <HighlightPii text={content} piiDetection={piiDetection} />
+              </ProtectedText>
             </span>
           </Paper>
           {extra}
