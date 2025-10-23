@@ -9,9 +9,6 @@ permissions:
   contents: read
 
 jobs:
-  concurrency:
-    group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: true
   run-tests:
     runs-on: ubuntu-latest
     services:
