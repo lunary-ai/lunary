@@ -49,8 +49,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pw-
 
-      - name: Install Playwright OS dependencies
-        run: bunx playwright install-deps
 
       - name: Install Chromium for Playwright (cache miss)
         if: steps.pw-cache.outputs.cache-hit != 'true'
