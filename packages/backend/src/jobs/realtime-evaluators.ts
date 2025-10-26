@@ -134,6 +134,7 @@ async function evaluatorJob() {
     await sleep(20000);
   }
 
+  // TODO: remove org.beta check
   const evaluators = await sql<RealtimeEvaluator[]>`
     select
       e.*
@@ -143,7 +144,7 @@ async function evaluatorJob() {
       join org o on p.org_id = o.id
     where
       e.mode = 'realtime'
-      and e.type = 'intent'
+      and o.beta = true
     order by
       random()
   `;

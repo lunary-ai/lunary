@@ -32,7 +32,9 @@ import {
   IconDeviceFloppy,
   IconDotsVertical,
   IconDownload,
+  IconHistory,
   IconPlus,
+  IconArrowBackUp,
   IconSearch,
   IconSparkles,
   IconTrash,
@@ -42,9 +44,15 @@ import { modals } from "@mantine/modals";
 import {
   DatasetImportPayload,
   DatasetV2Item,
+  DatasetV2Version,
+  DatasetV2VersionItem,
   useDatasetV2,
+  useDatasetV2Version,
+  useDatasetV2VersionMutations,
+  useDatasetV2Versions,
   useDatasetsV2,
 } from "@/utils/dataHooks/dataset";
+import { formatDateTime } from "@/utils/format";
 
 const DEFAULT_PREVIEW_MODEL = "gpt-5-mini";
 
@@ -443,6 +451,28 @@ export default function DatasetV2DetailPage() {
     generateOutput,
   } = useDatasetV2(datasetId);
 
+  const [selectedVersionId, setSelectedVersionId] = useState<"latest" | string>(
+    "latest",
+  );
+
+  const {
+    versions,
+    isLoading: isLoadingVersions,
+    mutate: mutateVersions,
+  } = useDatasetV2Versions(datasetId);
+
+  const selectedVersionQueryId =
+    selectedVersionId === "latest" ? undefined : selectedVersionId;
+
+  const {
+    version: selectedVersion,
+    items: selectedVersionItems,
+    isLoading: isLoadingVersionItems,
+  } = useDatasetV2Version(datasetId, selectedVersionQueryId);
+
+  const { createVersion, restoreVersion, isRestoring } =
+    useDatasetV2VersionMutations(datasetId);
+
   const { mutate: mutateDatasets } = useDatasetsV2();
 
   const {
@@ -480,15 +510,37 @@ export default function DatasetV2DetailPage() {
     new Set(),
   );
   const isGeneratingPreview = generatingItemIds.size > 0;
+  const versionDisplayItems = useMemo<EditableItem[]>(() => {
+    if (!selectedVersionItems) {
+      return [];
+    }
+
+    return selectedVersionItems.map((item) => ({
+      localId: item.id,
+      id: item.sourceItemId ?? undefined,
+      datasetId: item.datasetId,
+      input: item.input,
+      groundTruth: item.groundTruth,
+      createdAt: item.sourceCreatedAt ?? undefined,
+      updatedAt: item.sourceUpdatedAt ?? undefined,
+      isNew: false,
+      isDirty: false,
+    }));
+  }, [selectedVersionItems]);
+
+  const isViewingLatest = selectedVersionId === "latest";
+
+  const displayItems = useMemo(
+    () => (isViewingLatest ? localItems : versionDisplayItems),
+    [isViewingLatest, localItems, versionDisplayItems],
+  );
+
   const hasPersistedItems = useMemo(
     () =>
-      localItems.some(
-        (item) =>
-          item.id &&
-          !item.isNew &&
-          Boolean(item.input?.trim()),
+      displayItems.some(
+        (item) => item.id && !item.isNew && Boolean(item.input?.trim()),
       ),
-    [localItems],
+    [displayItems],
   );
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const theme = useMantineTheme();
@@ -505,15 +557,20 @@ export default function DatasetV2DetailPage() {
     [],
   );
 
-  const isDirty =
-    localItems.some((item) => item.isDirty || item.isNew) ||
-    deletedIds.size > 0;
+  const hasPendingChanges = useMemo(
+    () =>
+      localItems.some((item) => item.isDirty || item.isNew) ||
+      deletedIds.size > 0,
+    [localItems, deletedIds],
+  );
+
+  const isDirty = isViewingLatest && hasPendingChanges;
 
   const filteredItems = useMemo(() => {
-    let base = localItems;
+    let base = displayItems;
     if (debouncedSearch) {
       const term = debouncedSearch.toLowerCase();
-      base = localItems.filter((item) => {
+      base = displayItems.filter((item) => {
         const inputMatch = item.input?.toLowerCase().includes(term);
         const expectedMatch =
           item.groundTruth?.toLowerCase().includes(term) ?? false;
@@ -529,8 +586,8 @@ export default function DatasetV2DetailPage() {
       isDirty: false,
     } as EditableItem;
 
-    return [...base, addRowPlaceholder];
-  }, [localItems, debouncedSearch]);
+    return isViewingLatest ? [...base, addRowPlaceholder] : base;
+  }, [displayItems, debouncedSearch, isViewingLatest]);
 
   const selectableFilteredItems = useMemo(
     () => filteredItems.filter((item) => item.localId !== "__add_row__"),
@@ -542,6 +599,16 @@ export default function DatasetV2DetailPage() {
   }, [debouncedSearch]);
 
   useEffect(() => {
+    setSelectedVersionId("latest");
+  }, [datasetId]);
+
+  useEffect(() => {
+    if (!isViewingLatest) {
+      setSelectedIds(new Set());
+      setLastSelectedIndex(null);
+      return;
+    }
+
     setSelectedIds((prev) => {
       const validIds = new Set(localItems.map((item) => item.localId));
       let shouldUpdate = false;
@@ -561,7 +628,7 @@ export default function DatasetV2DetailPage() {
       });
       return next;
     });
-  }, [localItems]);
+  }, [isViewingLatest, localItems]);
 
   useEffect(() => {
     setGeneratedOutputs((prev) => {
@@ -594,6 +661,7 @@ export default function DatasetV2DetailPage() {
   );
 
   const toggleSelectAllVisible = useCallback(() => {
+    if (!isViewingLatest) return;
     setSelectedIds((prev) => {
       const next = new Set(prev);
       const shouldClear = selectableFilteredItems.every((item) =>
@@ -630,10 +698,11 @@ export default function DatasetV2DetailPage() {
       return next;
     });
     setLastSelectedIndex(null);
-  }, [selectableFilteredItems]);
+  }, [selectableFilteredItems, isViewingLatest]);
 
   const updateRowSelection = useCallback(
     (localId: string, checked: boolean, shiftKey: boolean) => {
+      if (!isViewingLatest) return;
       if (localId === "__add_row__") return;
       const currentIndex = selectableFilteredItems.findIndex(
         (item) => item.localId === localId,
@@ -694,12 +763,34 @@ export default function DatasetV2DetailPage() {
 
       setLastSelectedIndex(currentIndex);
     },
-    [selectableFilteredItems, lastSelectedIndex],
+    [selectableFilteredItems, lastSelectedIndex, isViewingLatest],
   );
 
   const selectedCount = selectedIds.size;
 
+  const currentVersionId = dataset?.currentVersionId ?? null;
+
+  const otherVersions = useMemo(
+    () => (versions ?? []).filter((version) => version.id !== currentVersionId),
+    [versions, currentVersionId],
+  );
+
+  const selectedVersionNumber = isViewingLatest
+    ? (dataset?.currentVersionNumber ?? null)
+    : (selectedVersion?.versionNumber ?? null);
+
+  const latestVersionTimestamp =
+    dataset?.currentVersionCreatedAt ?? dataset?.updatedAt ?? null;
+
+  const versionMenuLabel = selectedVersionNumber
+    ? `Version v${selectedVersionNumber}`
+    : "Versions";
+
+  const versionMenuLoading =
+    isLoadingVersions || (!isViewingLatest && isLoadingVersionItems);
+
   const handleBulkDelete = useCallback(() => {
+    if (!isViewingLatest) return;
     if (selectedIds.size === 0) return;
     const itemsToDelete = localItems.filter(
       (item) => item.localId !== "__add_row__" && selectedIds.has(item.localId),
@@ -731,7 +822,7 @@ export default function DatasetV2DetailPage() {
         setLastSelectedIndex(null);
       },
     });
-  }, [localItems, selectedIds, removeItem]);
+  }, [isViewingLatest, localItems, selectedIds, removeItem]);
 
   const rowCountExcludingAdd = useMemo(() => {
     return filteredItems.filter((item) => item.localId !== "__add_row__")
@@ -740,11 +831,12 @@ export default function DatasetV2DetailPage() {
 
   const openCellEditor = useCallback(
     (localId: string, field: "input" | "groundTruth") => {
+      if (!isViewingLatest) return;
       const index = filteredItems.findIndex((item) => item.localId === localId);
       if (index === -1 || localId === "__add_row__") return;
       setEditingCell({ index, field });
     },
-    [filteredItems],
+    [filteredItems, isViewingLatest],
   );
 
   const closeEditor = useCallback(() => {
@@ -753,6 +845,7 @@ export default function DatasetV2DetailPage() {
 
   const handleNavigateEditor = useCallback(
     (direction: "left" | "right" | "up" | "down") => {
+      if (!isViewingLatest) return;
       if (!editingCell) return;
       const { index, field } = editingCell;
       const total = filteredItems.length;
@@ -793,18 +886,20 @@ export default function DatasetV2DetailPage() {
 
       setEditingCell({ index: nextIndex, field: nextField });
     },
-    [editingCell, filteredItems],
+    [editingCell, filteredItems, isViewingLatest],
   );
 
   const handleDuplicateRow = useCallback(
     (row: EditableItem) => {
+      if (!isViewingLatest) return;
       if (row.localId === "__add_row__") return;
       addDuplicate(row);
     },
-    [addDuplicate],
+    [addDuplicate, isViewingLatest],
   );
 
   const handleAddRow = useCallback(() => {
+    if (!isViewingLatest) return;
     setLocalItems((prev) => [
       ...prev,
       {
@@ -815,7 +910,7 @@ export default function DatasetV2DetailPage() {
         isDirty: true,
       },
     ]);
-  }, [setLocalItems]);
+  }, [setLocalItems, isViewingLatest]);
 
   const navigateWithGuard = useCallback(
     (path: string) => {
@@ -841,12 +936,13 @@ export default function DatasetV2DetailPage() {
   }, [pendingNavigation, router, closeLeaveModal]);
 
   const handleGenerateOutputs = useCallback(async () => {
+    if (!isViewingLatest) return;
     const persistedItems = localItems.filter(
-    (item) =>
-      item.localId !== "__add_row__" &&
-      item.id &&
-      !item.isNew &&
-      Boolean(item.input?.trim()),
+      (item) =>
+        item.localId !== "__add_row__" &&
+        item.id &&
+        !item.isNew &&
+        Boolean(item.input?.trim()),
     ) as Array<EditableItem & { id: string }>;
 
     if (persistedItems.length === 0) {
@@ -861,8 +957,7 @@ export default function DatasetV2DetailPage() {
 
     const unsavedCount = localItems.filter(
       (item) =>
-        item.localId !== "__add_row__" &&
-        (!item.id || item.isNew === true),
+        item.localId !== "__add_row__" && (!item.id || item.isNew === true),
     ).length;
 
     const ids = persistedItems.map((item) => item.id);
@@ -880,9 +975,7 @@ export default function DatasetV2DetailPage() {
           })) as { output?: string } | null;
 
           const normalizedOutput =
-            typeof response?.output === "string"
-              ? response.output.trim()
-              : "";
+            typeof response?.output === "string" ? response.output.trim() : "";
 
           setGeneratedOutputs((prev) => ({
             ...prev,
@@ -929,7 +1022,7 @@ export default function DatasetV2DetailPage() {
         color: "red",
       });
     }
-  }, [generateOutput, localItems]);
+  }, [generateOutput, localItems, isViewingLatest]);
 
   const handleSave = useCallback(async () => {
     if (!datasetId) return false;
@@ -964,6 +1057,8 @@ export default function DatasetV2DetailPage() {
         await deleteItem(id);
       }
 
+      const versionResponse = await createVersion();
+
       const updated = await mutate();
       if (updated?.items) {
         resetDirtyState(updated.items);
@@ -971,6 +1066,21 @@ export default function DatasetV2DetailPage() {
         resetDirtyState(dataset.items);
       }
       await mutateDatasets();
+      await mutateVersions();
+
+      if (versionResponse?.version) {
+        notifications.show({
+          title: "Dataset saved",
+          message: `Saved as version v${versionResponse.version.versionNumber}`,
+          color: "green",
+        });
+      } else {
+        notifications.show({
+          title: "Dataset saved",
+          message: "Changes saved to the latest version.",
+          color: "green",
+        });
+      }
 
       success = true;
     } catch (error) {
@@ -991,7 +1101,9 @@ export default function DatasetV2DetailPage() {
     mutate,
     resetDirtyState,
     mutateDatasets,
+    mutateVersions,
     dataset,
+    createVersion,
   ]);
 
   const handleSaveAndLeave = useCallback(async () => {
@@ -1011,17 +1123,17 @@ export default function DatasetV2DetailPage() {
 
   useEffect(() => {
     const handler = (event: BeforeUnloadEvent) => {
-      if (!isDirty) return;
+      if (!hasPendingChanges) return;
       event.preventDefault();
       event.returnValue = "";
     };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
-  }, [isDirty]);
+  }, [hasPendingChanges]);
 
   useEffect(() => {
     router.beforePopState(({ as }) => {
-      if (isDirty) {
+      if (hasPendingChanges) {
         setPendingNavigation(as);
         openLeaveModal();
         return false;
@@ -1031,10 +1143,11 @@ export default function DatasetV2DetailPage() {
     return () => {
       router.beforePopState(() => true);
     };
-  }, [isDirty, openLeaveModal, router]);
+  }, [hasPendingChanges, openLeaveModal, router]);
 
   const handleDeleteRow = useCallback(
     (row: EditableItem) => {
+      if (!isViewingLatest) return;
       modals.openConfirmModal({
         title: "Delete item?",
         confirmProps: { color: "red" },
@@ -1050,7 +1163,7 @@ export default function DatasetV2DetailPage() {
         },
       });
     },
-    [removeItem],
+    [isViewingLatest, removeItem],
   );
 
   const handleSpreadsheetPaste = useCallback(
@@ -1063,6 +1176,7 @@ export default function DatasetV2DetailPage() {
       startField: "input" | "groundTruth";
       startIndex: number;
     }): SpreadsheetPasteResult | null => {
+      if (!isViewingLatest) return null;
       if (!rows.length) return null;
 
       const sanitizedRows = rows.map((cols) => cols.map((col) => col ?? ""));
@@ -1187,13 +1301,17 @@ export default function DatasetV2DetailPage() {
 
       return result;
     },
-    [filteredItems, setLocalItems],
+    [filteredItems, setLocalItems, isViewingLatest],
   );
 
   const renderGeneratedOutput = useCallback(
     (item: EditableItem) => {
       if (!item.id) {
-        return <Text size="xs" c="dimmed">—</Text>;
+        return (
+          <Text size="xs" c="dimmed">
+            —
+          </Text>
+        );
       }
 
       if (generatingItemIds.has(item.id)) {
@@ -1239,22 +1357,102 @@ export default function DatasetV2DetailPage() {
           onSuccess: async () => {
             await mutate();
             await mutateDatasets();
+            await mutateVersions();
             closeUpdateModal();
           },
         },
       );
     },
-    [datasetId, updateDataset, mutate, mutateDatasets, closeUpdateModal],
+    [
+      datasetId,
+      updateDataset,
+      mutate,
+      mutateDatasets,
+      mutateVersions,
+      closeUpdateModal,
+    ],
   );
+
+  const handleSelectVersion = useCallback(
+    (nextVersionId: "latest" | string) => {
+      if (nextVersionId === selectedVersionId) {
+        return;
+      }
+
+      if (nextVersionId !== "latest" && hasPendingChanges) {
+        notifications.show({
+          title: "Save changes first",
+          message:
+            "Save or discard your unsaved changes before switching versions.",
+          color: "yellow",
+        });
+        return;
+      }
+
+      setEditingCell(null);
+      setSelectedIds(new Set());
+      setLastSelectedIndex(null);
+      setSelectedVersionId(nextVersionId);
+    },
+    [selectedVersionId, hasPendingChanges],
+  );
+
+  const handleRestoreVersion = useCallback(async () => {
+    if (!datasetId || selectedVersionId === "latest") {
+      return;
+    }
+
+    try {
+      const restored = await restoreVersion(selectedVersionId);
+      if (restored) {
+        mutate(restored, { revalidate: false });
+        resetDirtyState(restored.items ?? []);
+        setEditingCell(null);
+        setSelectedIds(new Set());
+        setLastSelectedIndex(null);
+      }
+
+      await mutate();
+      await mutateDatasets();
+      await mutateVersions();
+
+      setSelectedVersionId("latest");
+
+      if (selectedVersion) {
+        notifications.show({
+          title: "Version restored",
+          message: `Version v${selectedVersion.versionNumber} restored as latest`,
+          color: "green",
+        });
+      } else {
+        notifications.show({
+          title: "Version restored",
+          message: "Version restored as the latest snapshot.",
+          color: "green",
+        });
+      }
+    } catch (error) {
+      // fetcher handles notification
+    }
+  }, [
+    datasetId,
+    selectedVersionId,
+    restoreVersion,
+    mutate,
+    mutateDatasets,
+    mutateVersions,
+    resetDirtyState,
+    selectedVersion,
+  ]);
 
   const handleDownload = useCallback(
     (format: "csv" | "jsonl") => {
-      if (!localItems.length) return;
+      if (!displayItems.length) return;
 
       if (format === "csv") {
         const rows = [
           `"input","ground_truth"`,
-          ...localItems.map((item) => {
+          ...displayItems.map((item) => {
             const input = `"${(item.input ?? "").replace(/"/g, '""')}"`;
             const groundTruth = item.groundTruth
               ? `"${item.groundTruth.replace(/"/g, '""')}"`
@@ -1271,7 +1469,7 @@ export default function DatasetV2DetailPage() {
         link.click();
         URL.revokeObjectURL(link.href);
       } else {
-        const lines = localItems.map((item) =>
+        const lines = displayItems.map((item) =>
           JSON.stringify({
             input: item.input,
             ground_truth: item.groundTruth,
@@ -1287,12 +1485,12 @@ export default function DatasetV2DetailPage() {
         URL.revokeObjectURL(link.href);
       }
     },
-    [localItems, dataset?.name],
+    [displayItems, dataset?.name],
   );
 
   const handleUpload = useCallback(
     async (file: File) => {
-      if (!datasetId) return;
+      if (!datasetId || !isViewingLatest) return;
 
       const extension = file.name.split(".").pop()?.toLowerCase();
       if (extension !== "csv" && extension !== "jsonl") {
@@ -1314,16 +1512,26 @@ export default function DatasetV2DetailPage() {
         }
         await mutate();
         await mutateDatasets();
+        await mutateVersions();
       } catch (error) {
         // handled globally
       } finally {
         setIsImporting(false);
       }
     },
-    [datasetId, importItems, dataset?.name, mutate, mutateDatasets],
+    [
+      datasetId,
+      importItems,
+      dataset?.name,
+      mutate,
+      mutateDatasets,
+      mutateVersions,
+      isViewingLatest,
+    ],
   );
 
   const handleUploadClick = () => {
+    if (!isViewingLatest) return;
     fileInputRef.current?.click();
   };
 
@@ -1395,6 +1603,62 @@ export default function DatasetV2DetailPage() {
             <Menu withinPortal>
               <Menu.Target>
                 <Button
+                  variant="light"
+                  leftSection={<IconHistory size={16} />}
+                  rightSection={<IconChevronDown size={14} />}
+                  loading={versionMenuLoading}
+                >
+                  {versionMenuLabel}
+                </Button>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item
+                  onClick={() => handleSelectVersion("latest")}
+                  disabled={selectedVersionId === "latest"}
+                >
+                  <Stack gap={2}>
+                    <Text size="sm">
+                      Latest (v{dataset?.currentVersionNumber ?? "–"})
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                      {latestVersionTimestamp
+                        ? formatDateTime(latestVersionTimestamp)
+                        : "Not saved yet"}
+                    </Text>
+                  </Stack>
+                </Menu.Item>
+                {otherVersions.length > 0 ? <Menu.Divider /> : null}
+                {otherVersions.length > 0 ? (
+                  otherVersions.map((version) => (
+                    <Menu.Item
+                      key={version.id}
+                      onClick={() => handleSelectVersion(version.id)}
+                      disabled={selectedVersionId === version.id}
+                    >
+                      <Stack gap={2}>
+                        <Group gap={6} justify="space-between">
+                          <Text size="sm">
+                            Version v{version.versionNumber}
+                          </Text>
+                          <Text size="xs" c="dimmed">
+                            {formatDateTime(version.createdAt)}
+                          </Text>
+                        </Group>
+                        <Text size="xs" c="dimmed">
+                          {version.itemCount} item
+                          {version.itemCount === 1 ? "" : "s"}
+                        </Text>
+                      </Stack>
+                    </Menu.Item>
+                  ))
+                ) : (
+                  <Menu.Label c="dimmed">No previous versions</Menu.Label>
+                )}
+              </Menu.Dropdown>
+            </Menu>
+            <Menu withinPortal>
+              <Menu.Target>
+                <Button
                   variant="subtle"
                   leftSection={<IconDownload size={16} />}
                   rightSection={<IconChevronDown size={14} />}
@@ -1416,6 +1680,7 @@ export default function DatasetV2DetailPage() {
               leftSection={<IconUpload size={16} />}
               onClick={handleUploadClick}
               loading={isImporting}
+              disabled={!isViewingLatest}
             >
               Upload
             </Button>
@@ -1424,19 +1689,33 @@ export default function DatasetV2DetailPage() {
               leftSection={<IconSparkles size={16} />}
               onClick={handleGenerateOutputs}
               loading={isGeneratingPreview}
-              disabled={!hasPersistedItems || isGeneratingPreview}
+              disabled={
+                !isViewingLatest || !hasPersistedItems || isGeneratingPreview
+              }
             >
               Generate output playground
             </Button>
-            <Button
-              leftSection={<IconDeviceFloppy size={16} />}
-              color="blue"
-              onClick={handleSave}
-              disabled={!isDirty || isSaving}
-              loading={isSaving}
-            >
-              Save
-            </Button>
+            {isViewingLatest ? (
+              <Button
+                leftSection={<IconDeviceFloppy size={16} />}
+                color="blue"
+                onClick={handleSave}
+                disabled={!isDirty || isSaving}
+                loading={isSaving}
+              >
+                Save
+              </Button>
+            ) : (
+              <Button
+                leftSection={<IconArrowBackUp size={16} />}
+                color="blue"
+                onClick={handleRestoreVersion}
+                loading={isRestoring}
+                disabled={isRestoring || !selectedVersion}
+              >
+                Restore version
+              </Button>
+            )}
           </Group>
         </Group>
 
@@ -1459,6 +1738,7 @@ export default function DatasetV2DetailPage() {
                   variant="filled"
                   aria-label="Delete selected rows"
                   onClick={handleBulkDelete}
+                  disabled={!isViewingLatest}
                 >
                   <IconTrash size={16} />
                 </ActionIcon>
@@ -1540,7 +1820,9 @@ export default function DatasetV2DetailPage() {
                       allVisibleSelected && selectableFilteredItems.length > 0
                     }
                     indeterminate={!allVisibleSelected && someVisibleSelected}
-                    disabled={selectableFilteredItems.length === 0}
+                    disabled={
+                      !isViewingLatest || selectableFilteredItems.length === 0
+                    }
                     onChange={(event) => {
                       event.stopPropagation();
                       toggleSelectAllVisible();
@@ -1595,6 +1877,7 @@ export default function DatasetV2DetailPage() {
                         radius="sm"
                         styles={checkboxStyles}
                         checked={selectedIds.has(item.localId)}
+                        disabled={!isViewingLatest}
                         onChange={(event) => {
                           event.stopPropagation();
                           const nativeEvent = event.nativeEvent as
@@ -1617,7 +1900,9 @@ export default function DatasetV2DetailPage() {
                     <Table.Td
                       className="dataset-table-editable"
                       onClick={() => openCellEditor(item.localId, "input")}
-                      style={{ cursor: "pointer" }}
+                      style={{
+                        cursor: isViewingLatest ? "pointer" : "default",
+                      }}
                     >
                       <Tooltip
                         label={item.input}
@@ -1633,7 +1918,9 @@ export default function DatasetV2DetailPage() {
                       onClick={() =>
                         openCellEditor(item.localId, "groundTruth")
                       }
-                      style={{ cursor: "pointer" }}
+                      style={{
+                        cursor: isViewingLatest ? "pointer" : "default",
+                      }}
                     >
                       <Tooltip
                         label={item.groundTruth ?? ""}
@@ -1650,30 +1937,36 @@ export default function DatasetV2DetailPage() {
                       {renderGeneratedOutput(item)}
                     </Table.Td>
                     <Table.Td style={{ cursor: "default" }}>
-                      <Group justify="flex-end">
-                        <Menu withinPortal>
-                          <Menu.Target>
-                            <ActionIcon variant="subtle">
-                              <IconDotsVertical size={16} />
-                            </ActionIcon>
-                          </Menu.Target>
-                          <Menu.Dropdown>
-                            <Menu.Item
-                              leftSection={<IconCopy size={14} />}
-                              onClick={() => handleDuplicateRow(item)}
-                            >
-                              Duplicate
-                            </Menu.Item>
-                            <Menu.Item
-                              color="red"
-                              leftSection={<IconTrash size={14} />}
-                              onClick={() => handleDeleteRow(item)}
-                            >
-                              Delete
-                            </Menu.Item>
-                          </Menu.Dropdown>
-                        </Menu>
-                      </Group>
+                      {isViewingLatest ? (
+                        <Group justify="flex-end">
+                          <Menu withinPortal>
+                            <Menu.Target>
+                              <ActionIcon variant="subtle">
+                                <IconDotsVertical size={16} />
+                              </ActionIcon>
+                            </Menu.Target>
+                            <Menu.Dropdown>
+                              <Menu.Item
+                                leftSection={<IconCopy size={14} />}
+                                onClick={() => handleDuplicateRow(item)}
+                              >
+                                Duplicate
+                              </Menu.Item>
+                              <Menu.Item
+                                color="red"
+                                leftSection={<IconTrash size={14} />}
+                                onClick={() => handleDeleteRow(item)}
+                              >
+                                Delete
+                              </Menu.Item>
+                            </Menu.Dropdown>
+                          </Menu>
+                        </Group>
+                      ) : (
+                        <Text size="xs" c="dimmed">
+                          Read-only
+                        </Text>
+                      )}
                     </Table.Td>
                   </Table.Tr>
                 ),

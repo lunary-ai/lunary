@@ -346,14 +346,15 @@ export default function Logs() {
 
       if (Array.isArray(evaluators)) {
         if (type === "llm") {
-          evaluators.forEach((ev) => {
-            if (!org?.beta && ev.type === "intent") return;
-            next.llm.push(
-              ev.type === "toxicity"
-                ? toxicityColumn(ev.id)
-                : enrichmentColumn(ev.name, ev.id, ev.type),
-            );
-          });
+          evaluators
+            .filter((ev) => ev.type !== "intent")
+            .forEach((ev) => {
+              next.llm.push(
+                ev.type === "toxicity"
+                  ? toxicityColumn(ev.id)
+                  : enrichmentColumn(ev.name, ev.id, ev.type),
+              );
+            });
         }
 
         if (type === "thread" && org?.beta) {
